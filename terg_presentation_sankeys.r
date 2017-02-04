@@ -5,6 +5,10 @@
 # Country-level Sankey diagrams for TERG meeting
 # -----------------------------------------------
 
+# to-do
+# - perfect the order of edges. there is still unnecessary crossing
+# - map colors to channels by name so that they are consistent regardless of order
+
 
 # -------------------
 # Set up R
@@ -100,8 +104,9 @@ data[, outcome:=as.character(outcome)]
 # ---------------------------------------------------------------------------------
 
 
-# ---------------------------------------------------------------------------------
+# --------------------------------------------
 # Define function that will make one Sankey
+# --------------------------------------------
 makeSankey = function(inputData, nodeOrder) { 
 
 	# ---------------------------------------------------------------------------------
@@ -139,6 +144,7 @@ makeSankey = function(inputData, nodeOrder) {
 		ySources = ySources + cumsum(ifelse(sourceTotals$dah>median(sourceTotals$dah), 2, 0)) 
 		yChannels = yChannels + cumsum(ifelse(channelTotals$dah>median(channelTotals$dah), 2, 0))
 		yOutcomes = yOutcomes + cumsum(ifelse(outcomeTotals$dah>median(outcomeTotals$dah), 2, 0))
+		ySources[length(ySources)] = ySources[length(ySources)] + 3 # specially padding for USA-S
 		
 		# now that the spacing is more appropriate, re-center nodes relative to the channel column
 		ySources = ySources + (median(range(yChannels))-median(range(ySources)))
@@ -149,6 +155,7 @@ makeSankey = function(inputData, nodeOrder) {
 	ID = nodes$ID
 
 	# edge colors based on the channel they connect to
+	sources = ID[ID %in% inputData$source_cat]
 	channels = ID[ID %in% inputData$channel_cat]
 	channelColors = suppressWarnings(brewer.pal(n=length(channels), 'Paired'))
 	channelColors = c(channelColors, '#a6611a', '#bdbdbd')
@@ -177,11 +184,21 @@ makeSankey = function(inputData, nodeOrder) {
 		tmp = tmp[order(tmp[,'Value']),]
 		edges[edges$N1==n,] = tmp
 	}
-
-	# this some how reverses the order that edges enter the outcome nodes
-	edges[edges$N2 =='HIV',] = edges[edges$N2 =='HIV',][rev(seq(1,nrow(edges[edges$N2=='HIV',]))),]
-	edges[edges$N2 =='TB',] = edges[edges$N2 =='TB',][rev(seq(1,nrow(edges[edges$N2=='TB',]))),]
-	edges[edges$N2 =='Malaria',] = edges[edges$N2 =='Malaria',][rev(seq(1,nrow(edges[edges$N2=='Malaria',]))),]
+	
+	# this reverses the order that edges enter the channel nodes
+	for (c in channels) {
+		edges[edges$N2==c,] = edges[edges$N2==c,][rev(seq(1,nrow(edges[edges$N2==c,]))),]
+	}
+	
+	# this reverses the order that edges enter the outcome nodes
+	edges[edges$N2=='HIV',] = edges[edges$N2=='HIV',][rev(seq(1,nrow(edges[edges$N2=='HIV',]))),]
+	edges[edges$N2=='TB',] = edges[edges$N2=='TB',][rev(seq(1,nrow(edges[edges$N2=='TB',]))),]
+	edges[edges$N2=='Malaria',] = edges[edges$N2=='Malaria',][rev(seq(1,nrow(edges[edges$N2=='Malaria',]))),]
+	
+	# this reverses the order that edges exit the source nodes
+	for (s in sources) {
+		edges[edges$N1==s,] = edges[edges$N1==s,][rev(seq(1,nrow(edges[edges$N1==s,]))),]
+	}
 	# ---------------------------------------------------------------------------------
 
 
@@ -207,16 +224,17 @@ makeSankey = function(inputData, nodeOrder) {
 	# Return plot
 	return(r2)
 	# ------------
-}
+} # end of function
+
 
 # -------------------------------------------------------------------------------------------------
 # Make plot
 
 # DRC
 # manually specify the order of nodes because it's not as simple as just descending order of size
-nodeOrder = c('United States', 'Private Philanthropy', 'BMGF', 'Other Governments', 
-		'Canada', 'Other Sources', 'United Kingdom', 'Australia', 
-		'Germany', 'France', 'Unallocable', 'United States-C', 'NGOs and Foundations', 
+nodeOrder = c('United States', 'BMGF', 'Other Governments', 
+		'Canada', 'Other Sources', 'Private Philanthropy', 'United Kingdom', 'Australia', 
+		'Germany', 'France', 'Unallocable', 'NGOs and Foundations', 'United States-C', 
 		'Global Fund', 'BMGF-C', 'UN Agencies', 'Other Bilateral Aid Agencies', 
 		'Development Banks', 'Canada-C', 'GAVI', 'United Kingdom-C', 'European Commission', 
 		'Australia-C', 'Germany-C', 'France-C', 'HIV', 'TB' ,'Malaria')
@@ -252,9 +270,9 @@ p3 = makeSankey(inputData=data[recipient_isocode=='UGA'], nodeOrder=nodeOrder)
 pdf(outFile, height=6, width=10)
 
 # make graph for DRC
-plot(p1, srt=0, node_margin=3, nodewidth=1, plot_area=.75, nsteps=200)
+plot(p1, srt=0, node_margin=3, nodewidth=1, plot_area=.75, nsteps=10)
 title(main='Democratic Republic of the Congo', line = -1.5)
-textY = max(p1$nodes$y)+2
+textY = max(p1$nodes$y)+3.5
 text(1, textY, bquote(underline('Source')), adj=c(.5,0), cex=1.25)
 text(2, textY, bquote(underline('Channel')), adj=c(.5,0), cex=1.25)
 text(3, textY, bquote(underline('Outcome')), adj=c(.5,0), cex=1.25)
@@ -262,7 +280,7 @@ text(3, textY, bquote(underline('Outcome')), adj=c(.5,0), cex=1.25)
 # make graph for GTM
 plot(p2, srt=0, node_margin=3, nodewidth=1, plot_area=.75, nsteps=200)
 title(main='Guatemala', line = -1.5)
-textY = max(p1$nodes$y)-1.25
+textY = max(p1$nodes$y)-1.5
 text(1, textY, bquote(underline('Source')), adj=c(.5,0), cex=1.25)
 text(2, textY, bquote(underline('Channel')), adj=c(.5,0), cex=1.25)
 text(3, textY, bquote(underline('Outcome')), adj=c(.5,0), cex=1.25)
