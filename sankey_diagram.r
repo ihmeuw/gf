@@ -123,31 +123,30 @@ makeSankey = function(inputData, nodeOrder) {
 	}
 	# -------------------------------------------------------------------------------------------------
 	
-	# ------------------------------------------------------------------------------------
+	
+	# --------------------------------------------------------------------------------------------------------------
 	# Put edges in more logical order
 	
-	# order edges within starting nodes
-	for(n in edges$N1) {
-		tmp = edges[edges$N1==n,]
-		tmp = tmp[order(tmp[,'Value']),]
-		edges[edges$N1==n,] = tmp
-	}
+	# 1. edges coming out of sources should be in descending value, 
+	# 2. edges entering channels should be in descending order of their source's y-value, 
+	# 3. edges exiting channels should be in descending order of their outcome's y-value
+	# 4. edges entering outcomes should be in descending order of their channel's y-value
 	
-	# this reverses the order that edges enter the channel nodes
-	for (c in channels) {
-		edges[edges$N2==c,] = edges[edges$N2==c,][rev(seq(1,nrow(edges[edges$N2==c,]))),]
-	}
+	# order edges going into outcomes/coming out of channels
+	nodeYs = nodes[, c('ID', 'y')]
+	outcomeEdges = edges[edges$N2 %in% outcomes,]
+	outcomeEdges = merge(outcomeEdges, nodeYs, by.x='N1', by.y='ID', all.x=TRUE)
+	outcomeEdges = merge(outcomeEdges, nodeYs, by.x='N2', by.y='ID', all.x=TRUE, suffixes=c('_channel', '_outcome'))
+	outcomeEdges = outcomeEdges[order(outcomeEdges$y_channel, outcomeEdges$y_outcome),]
 	
-	# this reverses the order that edges enter the outcome nodes
-	for (o in outcomes) {
-		edges[edges$N2==o,] = edges[edges$N2==o,][rev(seq(1,nrow(edges[edges$N2==o,]))),]
-	}
+	# order edges going into channels/coming out of sources
+	channelEdges = edges[edges$N2 %in% channels,]
+	channelEdges = merge(channelEdges, nodeYs, by.x='N1', by.y='ID', all.x=TRUE)
+	channelEdges = channelEdges[order(channelEdges$y, channelEdges$Value),]
 	
-	# this reverses the order that edges exit the source nodes
-	for (s in sources) {
-		edges[edges$N1==s,] = edges[edges$N1==s,][rev(seq(1,nrow(edges[edges$N1==s,]))),]
-	}
-	# ------------------------------------------------------------------------------------
+	# re-assemble sorted edges
+	edges = rbind(channelEdges[, names(edges)], outcomeEdges[, names(edges)])
+	# --------------------------------------------------------------------------------------------------------------
 
 
 	# --------------------------------------------------------------
