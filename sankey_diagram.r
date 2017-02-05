@@ -24,11 +24,9 @@
 
 # to-do
 # - make the input data.table compatible
-# - perfect the order of edges. there is still unnecessary crossing
-# - map colors to channels by name so that they are consistent regardless of order
 # - figure out a better way to place the source/channel/outcome titles
 # - improve assignment of y-axis coordinates
-# - change input cariables from source_cat/channel_cat to source/channel
+# - change input variables from source_cat/channel_cat to source/channel
 
 
 # --------------------------------------------
@@ -104,6 +102,14 @@ makeSankey = function(inputData, nodeOrder) {
 	channelColors = suppressWarnings(brewer.pal(n=length(channels), 'Paired'))
 	if (length(channels)>length(channelColors)) channelColors = c(channelColors, '#a6611a', '#bdbdbd')
 	
+	# map colors to channels by name so they're agnostic to node order
+	possibleChannels = c("United States-C", "NGOs and Foundations", "Global Fund", "UN Agencies", 
+						"Other Bilateral Aid Agencies", "GAVI", "Development Banks", "BMGF-C", 
+						'United Kingdom-C' ,'France-C', 'Canada-C', 'Australia-C', 'Germany-C')
+	possibleColors = c(brewer.pal(n=12, 'Paired'), '#a6611a', '#bdbdbd')
+	channelColors = data.table(channel=possibleChannels[1:length(possibleColors)], color=possibleColors[1:length(possibleChannels)])
+	channelColors = channelColors[channel %in% channels] # reduce to channels actually observed in inputData
+	
 	# set up edges
 	edges = data.frame()
 	for(n in seq_along(ID)) {
@@ -115,8 +121,8 @@ makeSankey = function(inputData, nodeOrder) {
 		if (node %in% channels) destination = 'outcome'
 		for(e in unique(inputData[get(origin)==node][[destination]])) {
 			v = sum(inputData[get(origin)==node & get(destination)==e]$dah)
-			if (destination=='channel_cat') c = channelColors[channels==e]
-			if (destination=='outcome') c = channelColors[channels==node]
+			if (destination=='channel_cat') c = channelColors[channel==e]$color
+			if (destination=='outcome') c = channelColors[channel==node]$color
 			newEdge = data.frame(N1=node, N2=e, Value=v, col=c, edgecol='col', stringsAsFactors=FALSE)
 			edges = rbind(edges, newEdge)
 		}
@@ -170,6 +176,8 @@ makeSankey = function(inputData, nodeOrder) {
 	
 	# ------------
 	# Return plot
-	return(r2)
+	plot(r2, srt=0, node_margin=3, nodewidth=1, plot_area=.75, nsteps=10)
+
+	# return(r2)
 	# ------------
 } # end of function
