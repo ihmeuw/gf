@@ -31,21 +31,21 @@
 # Define function
 # --------------------------------------------
 makeSankey = function(inputData, nodeOrder) { 
-
+	
 	# ---------------------------------------------------------------------------------
 	# Set up for graphs
-
+	
 	# isolate nodes
 	ID = unique(c(inputData$source_cat, inputData$channel_cat, inputData$outcome))
-
+	
 	# manually order nodes
 	ID = ID[order(match(ID, nodeOrder))]
-
+	
 	# assign x-axis coordinates to nodes based on source-channel-outcome
 	x = rep(1, length(ID))
 	x[ID %in% inputData$channel_cat] = 2
 	x[ID %in% inputData$outcome] = 3
-
+	
 	# assign y-axis coordinates to nodes based on the ammount of space the node will take up in its column
 		# each column is going to sequence from 0 to ymax
 		ymax = max(table(x))
@@ -72,17 +72,17 @@ makeSankey = function(inputData, nodeOrder) {
 		# now that the spacing is more appropriate, re-center nodes relative to the channel column
 		ySources = ySources + (median(range(yChannels))-median(range(ySources)))
 		yOutcomes = yOutcomes + (median(range(yChannels))-median(range(yOutcomes)))
-
+	
 	y = c(rev(ySources), rev(yChannels), rev(yOutcomes))
 	nodes = data.frame(ID, x, y, stringsAsFactors=FALSE)
 	ID = nodes$ID
-
+	
 	# edge colors based on the channel they connect to
 	sources = ID[ID %in% inputData$source_cat]
 	channels = ID[ID %in% inputData$channel_cat]
 	channelColors = suppressWarnings(brewer.pal(n=length(channels), 'Paired'))
 	if (length(channels)>length(channelColors)) channelColors = c(channelColors, '#a6611a', '#bdbdbd')
-
+	
 	# set up edges
 	edges = data.frame()
 	for(n in seq_along(ID)) {
@@ -100,7 +100,7 @@ makeSankey = function(inputData, nodeOrder) {
 			edges = rbind(edges, newEdge)
 		}
 	}
-
+	
 	# order edges within starting nodes
 	for(n in edges$N1) {
 		tmp = edges[edges$N1==n,]
@@ -125,9 +125,9 @@ makeSankey = function(inputData, nodeOrder) {
 	# ---------------------------------------------------------------------------------
 
 
-	# ----------------------------------------------------------------------------
+	# -----------------------------------------------------------------------------------------
 	# Make graphs
-
+	
 	# make initial graph
 	r1 = makeRiver(nodes, edges)
 	
@@ -141,7 +141,7 @@ makeSankey = function(inputData, nodeOrder) {
 	
 	# remake graph
 	r2 = makeRiver(nodes, edges, edge_styles=edgeStyles)
-	# ----------------------------------------------------------------------------
+	# -----------------------------------------------------------------------------------------
 	
 	
 	# ------------
@@ -149,4 +149,3 @@ makeSankey = function(inputData, nodeOrder) {
 	return(r2)
 	# ------------
 } # end of function
-
