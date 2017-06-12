@@ -176,8 +176,6 @@ makeSankey = function(inputData, nodeOrder) {
 	
 	# ------------
 	# Return plot
-	plot(r2, srt=0, node_margin=3, nodewidth=1, plot_area=.75, nsteps=10)
-
-	# return(r2)
+	return(r2)
 	# ------------
 } # end of function

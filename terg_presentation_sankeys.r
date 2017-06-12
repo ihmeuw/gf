@@ -1,9 +1,10 @@
-# -----------------------------------------------
+# ------------------------------------------------------------
 # David Phillips
 #
 # 2/3/2017
 # Country-level Sankey diagrams for TERG meeting
-# -----------------------------------------------
+# The current directory should be the same as sankey_diagram.r
+# ------------------------------------------------------------
 
 # to-do
 # - perfect the order of edges. there is still unnecessary crossing
@@ -32,6 +33,9 @@ inFile = paste0(root, '/IHME_DAH_DATABASE_1990_2015_Y2016M04D25.csv')
 
 # output file
 outFile = paste0(root, '/sankey_diagrams.pdf')
+
+# load sankey function
+source('./sankey_diagram.r')
 # ---------------------------------------------------------------------------------
 
 
