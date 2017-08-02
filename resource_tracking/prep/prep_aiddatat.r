@@ -120,8 +120,8 @@ ggplot(ugaAgg, aes(y=V1, x=year)) + geom_line() + labs(y='Commmitments (Millions
 # ---------------------------------------------------------------------------------
 
 
-# -----------------------------
+# ---------------------------------------------
 # Save
-write.csv(drcData, drcOutFile)
-write.csv(ugaData, ugaOutFile)
-# -----------------------------
+write.csv(drcData, drcOutFile, row.names=FALSE)
+write.csv(ugaData, ugaOutFile, row.names=FALSE)
+# ---------------------------------------------
