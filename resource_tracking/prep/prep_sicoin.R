@@ -27,11 +27,10 @@ inFile <- paste0(dir, '2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento muni
 
 # output files
 modelOutputFile <- paste0(dir, 'output.rdata')
-graphFile <- paste0(dir, 'graphs.pdf')
 
 # Load/prep data
 
-# load - figure out how to load 
+# load excel data 
 gf_data <- read_excel(inFile)
 
 # ----------------------------------------------
@@ -54,7 +53,7 @@ gf_data <- gf_data[c(which(gf_data$X__10 %in% "FONDO MUNDIAL"):which(gf_data$X__
 # remove rows with "TOTAL" (they are redundant from looking at the original file),
 gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__3, invert = TRUE) , ])
 
-# remove rows where X__10 has a value (they are redundant),
+# remove rows where X__10 is missing value (they are redundant),
 gf_subset <- na.omit(gf_subset, cols="X__10")
 # subset observations
 
@@ -67,45 +66,12 @@ budget_dataset <- budget_dataset[3:length(budget_dataset$loc_id),]
 
 # ----------------------------------------------
 
+## Create other variables 
+
 ## will want to change this part of the code when appending multiple budgets: 
 budget_dataset$source <- budget_source
 budget_dataset$start_date <- as.Date(budget_year, origin="1960-01-01")
 budget_dataset$period <- budget_period
 
 
-
-# ---------------------------------
-# Run analysis
-
-# model formula
-form <- as.formula('y ~ x + z')
-
-# run model
-glmOut <- glm(form, 'gaussian', data)
-
-# predict fitted values
-data[, pred:=predict(glmOut)]
-# ---------------------------------
-
-
 # ----------------------------------------------
-# Graph
-
-# colors
-cols <- brewer.pal(6, 'Paired')
-
-# store graph
-p <- ggplot(data, aes(y=y, x=x, color=z)) + 
-	geom_point() + 
-	geom_line(aes(y=pred)) + 
-	scale_color_gradientn('Z', colors=cols) + 
-	theme_bw()
-# ----------------------------------------------
-
-
-# --------------------------------
-# Save graphs
-pdf(graphFile, height=6, width=9)
-p
-dev.off()
-# --------------------------------
