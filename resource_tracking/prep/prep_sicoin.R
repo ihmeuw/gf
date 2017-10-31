@@ -28,18 +28,22 @@ inFile <- paste0(dir, '2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento muni
 # output files
 modelOutputFile <- paste0(dir, 'output.rdata')
 graphFile <- paste0(dir, 'graphs.pdf')
-# ----------------------------------------------
 
-
-# ----------------------------------------------
 # Load/prep data
 
 # load - figure out how to load 
 gf_data <- read_excel(inFile)
 
-## variable for the year 
-budget_year <- gf_data$X__8[13]
+# ----------------------------------------------
+##define some variables 
 
+## variable for the year 
+budget_year <- paste(c(gf_data$X__8[13],"01","01"), collapse="-")
+
+##change if time period is different 
+budget_period <- 365 
+budget_source <- 'gf'
+# ----------------------------------------------
 ## remove empty columns 
 gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
 
@@ -50,18 +54,24 @@ gf_data <- gf_data[c(which(gf_data$X__10 %in% "FONDO MUNDIAL"):which(gf_data$X__
 # remove rows with "TOTAL" (they are redundant from looking at the original file),
 gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__3, invert = TRUE) , ])
 
-# remove rows where X__9 has a value (they are redundant),
+# remove rows where X__10 has a value (they are redundant),
 gf_subset <- na.omit(gf_subset, cols="X__10")
 # subset observations
 
 ## get region + budgeted expenses 
-budget_dataset <- gf_subset[, c("X__9", "X__24"), with=FALSE]
-names(budget_dataset) <- c("loc_id", "devengado")
+budget_dataset <- gf_subset[, c("X__10", "X__19", "X__26"), with=FALSE]
+names(budget_dataset) <- c("loc_id", "vigente", "devengado")
 
-
-
+## we only want the municpalities so get rid of GF and Guatemala
+budget_dataset <- budget_dataset[3:length(budget_dataset$loc_id),]
 
 # ----------------------------------------------
+
+## will want to change this part of the code when appending multiple budgets: 
+budget_dataset$source <- budget_source
+budget_dataset$start_date <- as.Date(budget_year, origin="1960-01-01")
+budget_dataset$period <- budget_period
+
 
 
 # ---------------------------------
