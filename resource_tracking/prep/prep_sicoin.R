@@ -50,14 +50,18 @@ gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
 ##pull data between these two indices 
 gf_data <- gf_data[c(which(gf_data$X__10 %in% "FONDO MUNDIAL"):which(gf_data$X__6 %in% "0425  FONDO MUNDIAL")),]
 
-# remove rows with "TOTAL" (they are redundant from looking at the original file),
+## in the future, we may want to change this part slightly
+
+# remove rows with "TOTAL"  -> should be able to calculate total from summing municipaliies
+
 gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__3, invert = TRUE) , ])
 
-# remove rows where X__10 is missing value (they are redundant),
+# remove rows where X__10 (municipalities) are missing values
 gf_subset <- na.omit(gf_subset, cols="X__10")
-# subset observations
 
-## get region + budgeted expenses 
+
+#hi!
+## now get region + budgeted expenses 
 budget_dataset <- gf_subset[, c("X__10", "X__19", "X__26"), with=FALSE]
 names(budget_dataset) <- c("loc_id", "vigente", "devengado")
 
