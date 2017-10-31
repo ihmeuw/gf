@@ -12,6 +12,7 @@ rm(list=ls())
 library(data.table)
 library(reshape2)
 library(stringr)
+library(readxl)
 # --------------------
 
 
@@ -34,7 +35,10 @@ graphFile <- paste0(dir, 'graphs.pdf')
 # Load/prep data
 
 # load
-data <- fread(inFile)
+gf_data <- read_excel("C:/Users/irenac2/Documents/2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento municipio).xls",
+                         range='B247:AV302'
+)
+gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
 
 # subset variables
 data <- data[, c('var1','x','y','z'), with=FALSE]
