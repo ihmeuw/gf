@@ -38,14 +38,20 @@ graphFile <- paste0(dir, 'graphs.pdf')
 gf_data <- read_excel("C:/Users/irenac2/Documents/2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento municipio).xls",
                          range='B247:AV302'
 )
+## remove empty columns 
 gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
 
-# subset variables
-data <- data[, c('var1','x','y','z'), with=FALSE]
+# remove rows with "TOTAL" (they are redundant from looking at the original file),
+gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__3, invert = TRUE) , ])
 
+# remove rows where X__9 has a value (they are redundant),
+gf_subset <- na.omit(gf_subset, cols="X__9")
 # subset observations
-data <- data[!is.na(var1)]
 
+## get region + budgeted expenses 
+
+budget_dataset <- gf_subset[, c("X__9", "X__14"), with=FALSE]
+names(budget_dataset) <- c("loc_id", "budgeted_amount")
 # format variables
 
 
