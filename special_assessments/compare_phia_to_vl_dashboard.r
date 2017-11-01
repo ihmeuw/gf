@@ -141,4 +141,55 @@ colors = c('#CAF270', '#73D487', '#30B097', '#288993', '#41607A', '#453B52')
 mapColors = colorRampPalette(colors)
 mapColors = mapColors(10)
 # -------------------------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------------------------
+# Make graphs
+
+# map side-by-side
+vars1 = c('Reported Viral Load Suppression\nNational Dashboard', 'Viral Load Suppression\nPHIA')
+ggplot(mapData[variable %in% vars1], aes(x=long, y=lat, group=group, fill=value)) + 
+	geom_polygon() + 
+	geom_path(color='grey95', size=.05) + 
+	facet_wrap(~variable) + 
+	scale_fill_gradientn('%', colours=mapColors) + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	theme_minimal(base_size=16)
+
+# bar graphs
+vars2 = c('National Dashboard', 'PHIA')
+ggplot(long[variable %in% vars2], aes(x=region10_name, y=value, fill=variable)) + 
+	geom_bar(stat='identity', position='dodge') + 
+	scale_fill_manual('Data Source', values=colors[c(6,4)]) + 
+	labs(y='Viral Load Suppression (%)', x='') + 
+	theme_bw(base_size=14)
+
+# scatterplot
+min = min(data$phia_vls,data$vld_suppression)
+max = max(data$phia_vls,data$vld_suppression)
+ggplot(data, aes(x=phia_vls, y=vld_suppression)) + 
+	geom_abline(aes(color='BestFit'), slope=coefs[2], intercept=coefs[1], linetype='longdash', size=1.25) + 
+	geom_abline(aes(color='Equivalence'), slope=1, intercept=0) + 
+	geom_point(size=4.5, alpha=.7, color=colors[4], stroke=0) + 
+	scale_fill_manual('Data Source', values=colors[c(6,4)]) + 
+	labs(title='Viral Load Suppression', subtitle='Comparison of Sources', y='National Dashboard', x='PHIA') + 
+	scale_color_manual('', values=c('BestFit'='#EF6F6C', 'Equivalence'='black')) + 
+	scale_x_continuous(limits=c(min,max)) +
+	scale_y_continuous(limits=c(min,max)) +
+	theme_bw(base_size=14) + 
+	theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5))
+	
+# maps showing uncertainty
+
+
+# scatterplot incorporating uncertainty
+
+# -------------------------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------------------------
+# Save
+
 # -------------------------------------------------------------------------------------------
