@@ -13,6 +13,7 @@ library(data.table)
 library(reshape2)
 library(stringr)
 library(readxl)
+library(rlang)
 # --------------------
 
 
@@ -34,14 +35,16 @@ modelOutputFile <- paste0(dir, 'output.rdata')
 gf_data <- read_excel(inFile)
 
 # ----------------------------------------------
-##define some variables 
+##define some variables - change these when appropriate
+
+
+budget_period <- 365 
+budget_source <- 'gf'
+budget_cost <- "All"
 
 ## variable for the year 
 budget_year <- paste(c(gf_data$X__8[13],"01","01"), collapse="-")
 
-##change if time period is different 
-budget_period <- 365 
-budget_source <- 'gf'
 # ----------------------------------------------
 ## remove empty columns 
 gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
@@ -59,15 +62,20 @@ gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__3, invert = TRUE) , ])
 # remove rows where X__10 (municipalities) are missing values
 gf_subset <- na.omit(gf_subset, cols="X__10")
 
+# ----------------------------------------------
+## Code to aggregate into a dataset 
 
-#hi!
 ## now get region + budgeted expenses 
 budget_dataset <- gf_subset[, c("X__10", "X__19", "X__26"), with=FALSE]
 names(budget_dataset) <- c("loc_id", "vigente", "devengado")
 
 ## we only want the municpalities so get rid of GF and Guatemala
-budget_dataset <- budget_dataset[3:length(budget_dataset$loc_id),]
 
+toMatch <- c("MUNDIAL", "GUATEMALA")
+
+for (i in 1:length(toMatch)){
+  budget_dataset <- budget_dataset[grep(string(toMatch[i]),budget_dataset$loc_id, invert = TRUE),]
+}
 # ----------------------------------------------
 
 ## Create other variables 
@@ -76,6 +84,6 @@ budget_dataset <- budget_dataset[3:length(budget_dataset$loc_id),]
 budget_dataset$source <- budget_source
 budget_dataset$start_date <- as.Date(budget_year, origin="1960-01-01")
 budget_dataset$period <- budget_period
-
+budget_dataset$cost <- budget_cost
 
 # ----------------------------------------------
