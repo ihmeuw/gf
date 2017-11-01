@@ -170,12 +170,11 @@ ggplot(long[variable %in% vars2], aes(x=region10_name, y=value, fill=variable)) 
 min = min(data$phia_vls,data$vld_suppression)
 max = max(data$phia_vls,data$vld_suppression)
 ggplot(data, aes(x=phia_vls, y=vld_suppression)) + 
-	geom_abline(aes(color='BestFit'), slope=coefs[2], intercept=coefs[1], linetype='longdash', size=1.25) + 
-	geom_abline(aes(color='Equivalence'), slope=1, intercept=0) + 
-	geom_point(size=4.5, alpha=.7, color=colors[4], stroke=0) + 
+	geom_abline(color='red', slope=coefs[2], intercept=coefs[1], linetype='longdash', size=1.25) + 
+	geom_abline(slope=1, intercept=0) + 
+	geom_point(color=colors[4], size=4.5, alpha=.7, stroke=0) + 
 	scale_fill_manual('Data Source', values=colors[c(6,4)]) + 
 	labs(title='Viral Load Suppression', subtitle='Comparison of Sources', y='National Dashboard', x='PHIA') + 
-	scale_color_manual('', values=c('BestFit'='#EF6F6C', 'Equivalence'='black')) + 
 	scale_x_continuous(limits=c(min,max)) +
 	scale_y_continuous(limits=c(min,max)) +
 	theme_bw(base_size=14) + 
