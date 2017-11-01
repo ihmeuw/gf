@@ -33,6 +33,9 @@ distMapFile = paste0(dir, '../../mapping/uga/uga_geographies_map.csv')
 distAltMapFile = paste0(dir, '../../mapping/uga/uga_alternate_dist_names.csv')
 regAltMapFile = paste0(dir, '../../mapping/uga/uga_alternate_region_names.csv')
 
+# uganda shapefile
+shapeFile = paste0(dir, '../../mapping/uga/uga_region10_map.rdata')
+
 # output files
 outFile = paste0(dir, 'phia_vl_dashboard.pdf')
 # -------------------------------------------------------------------------------------------
@@ -65,7 +68,7 @@ if (length(t1)>0) stop('Warning! There are some districts in the VLD data that a
 if (length(t2)>0) stop('Warning! There are some districts the standard 112 list that aren\'t in in the VLD data!')
 
 # map vld data to standard regions
-distMap = distMap[, c('region10_name', 'dist112_name', 'dist112'), with=FALSE]
+distMap = distMap[, c('region10_name', 'region10', 'dist112_name', 'dist112'), with=FALSE]
 vldData = merge(vldData, distMap, by.x='dist_name', by.y='dist112_name', all.x=TRUE)
 # -------------------------------------------------------------------------------------------
 
