@@ -38,8 +38,8 @@ outFile = paste0(dir, 'phia_vl_dashboard.pdf')
 # -------------------------------------------------------------------------------------------
 
 
-# ----------------------------------------------
-# Load/prep data
+# -------------------------------------------------------------------------------------------
+# Load/prep both datasets
 
 # load
 phiaData = fread(inFilePHIA)
@@ -65,5 +65,33 @@ if (length(t1)>0) stop('Warning! There are some districts in the VLD data that a
 if (length(t2)>0) stop('Warning! There are some districts the standard 112 list that aren\'t in in the VLD data!')
 
 # map vld data to standard regions
+distMap = distMap[, c('region10_name', 'dist112_name', 'dist112'), with=FALSE]
+vldData = merge(vldData, distMap, by.x='dist_name', by.y='dist112_name', all.x=TRUE)
+# -------------------------------------------------------------------------------------------
 
-# ----------------------------------------------
+
+# -------------------------------------------------------------------------------------------
+# Merge datasets are format for analysis
+
+# merge
+facLevelData = merge(phiaData, vldData, by='region10_name')
+
+# clean up variable names
+setnames(facLevelData, c('VLS Prevalence (%)', '95% CI', 'Valid Results', 'Suppressed Results'), c('phia_vls', 'phia_vls_ci', 'samples', 'vl_suppressed_samples'))
+
+# split confidence intervals
+facLevelData[, c('phia_vls_lower', 'phia_vls_upper'):=tstrsplit(phia_vls_ci, '-', fixed=TRUE)]
+facLevelData[, phia_vls_lower:=as.numeric(phia_vls_lower)]
+facLevelData[, phia_vls_upper:=as.numeric(phia_vls_upper)]
+
+# collapse to region level
+data = facLevelData[, list(phia_vls=mean(phia_vls), 
+					phia_vls_lower=mean(phia_vls_lower), 
+					phia_vls_upper=mean(phia_vls_upper), 
+					samples=sum(samples), 
+					vl_suppressed_samples=sum(vl_suppressed_samples)), 
+					by='region10_name']
+					
+# recompute suppression from the dashboard data
+data[, vld_suppression:=vl_suppressed_samples/samples]
+# -------------------------------------------------------------------------------------------
