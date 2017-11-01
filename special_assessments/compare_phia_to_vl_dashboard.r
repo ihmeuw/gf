@@ -93,8 +93,52 @@ data = facLevelData[, list(phia_vls=mean(phia_vls),
 					phia_vls_upper=mean(phia_vls_upper), 
 					samples=sum(samples), 
 					vl_suppressed_samples=sum(vl_suppressed_samples)), 
-					by='region10_name']
+					by=c('region10_name','region10')]
 					
 # recompute suppression from the dashboard data
-data[, vld_suppression:=vl_suppressed_samples/samples]
+data[, vld_suppression:=vl_suppressed_samples/samples*100]
+# -------------------------------------------------------------------------------------------
+
+
+# ----------------------------------------
+# Store linear fit
+lmFit = lm(vld_suppression~phia_vls, data)
+coefs = lmFit$coefficients
+# ----------------------------------------
+
+
+# -------------------------------------------------------------------------------------------
+# Set up to graph
+
+# clean names
+data[, region10_name:=gsub('_', ' ', region10_name)]
+
+# load/fortify shape data
+load(shapeFile)
+mapData = data.table(fortify(map))
+
+# reshape long
+long = melt(data, id.vars='region10_name')
+long[, value:=as.numeric(value)]
+
+# merge to map and melt data
+data[, region10:=as.character(region10)]
+mapData = merge(mapData, data, by.x='id', by.y='region10', all.x=TRUE)
+mapData = melt(mapData, id.vars=c('long','lat','region10_name','id','group','order','hole','piece'))
+
+# clean up variable labels
+long[variable=='phia_vls', variable:='PHIA']
+long[variable=='vld_suppression', variable:='National Dashboard']
+mapData[variable=='phia_vls', variable:='Viral Load Suppression\nPHIA']
+mapData[variable=='vld_suppression', variable:='Reported Viral Load Suppression\nNational Dashboard']
+mapData[variable=='phia_vls_lower', variable:='Lower']
+mapData[variable=='phia_vls_upper', variable:='Upper']
+mapData[variable=='samples', variable:='N Samples']
+mapData[variable=='vl_suppressed_samples', variable:='N Samples Suppressed']
+
+# colors
+colors = c('#CAF270', '#73D487', '#30B097', '#288993', '#41607A', '#453B52')
+mapColors = colorRampPalette(colors)
+mapColors = mapColors(10)
+# -------------------------------------------------------------------------------------------
 # -------------------------------------------------------------------------------------------
