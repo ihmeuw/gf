@@ -47,10 +47,10 @@ budget_source <- 'gf'
 gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
 
 
-##pull data between these two indices 
-gf_data <- gf_data[c(which(gf_data$X__10 %in% "FONDO MUNDIAL"):which(gf_data$X__6 %in% "0425  FONDO MUNDIAL")),]
+##pull all rows from between columns that have "FONDO MUNDIAL" in them 
 
-## in the future, we may want to change this part slightly
+gf_data <- gf_data[c(grep("FONDO MUNDIAL", gf_data$X__10):(grep("FONDO MUNDIAL", gf_data$X__6))),]
+
 
 # remove rows with "TOTAL"  -> should be able to calculate total from summing municipaliies
 
