@@ -1,8 +1,8 @@
 # ----------------------------------------------
 # Irena Chen
 #
-# 10/31/2017
-# Template for prepping C-COIN budget data 
+# 11/2/2017
+# Template for prepping C-COIN cost category data 
 # Inputs:
 # inFile - name of the file to be prepped
 # year - which year the dataset corresponds to
@@ -12,15 +12,16 @@
 # ----------------------------------------------
 
 # start function
-prepSicoin = function(dir, inFile, year, disease, period, cost_category, source) {
-  
+# prepSicoin = function(dir, inFile, year, disease, period, cost_category, source) {
+
+
   # --------------------
   # Test the inputs
   if (class(inFile)!='character') stop('Error: inFile argument must be a string!')
   if (class(year)=='character') stop('Error: year argument must be a number!')
   # ----------------------------------------------
   # Files and directories
-
+  
   # Load/prep data
   gf_data <- read_excel(paste0(dir,inFile, '.xls'))
   
@@ -29,14 +30,14 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
   
   ##pull all rows from between columns that have "FONDO MUNDIAL" in them 
-  gf_data <- gf_data[c(grep("FONDO MUNDIAL", gf_data$X__10):(grep("FONDO MUNDIAL", gf_data$X__6))),]
+  gf_data <- data.table(gf_data[c(grep("SERVICIOS NO PERSONALES", gf_data$X__14):(grep("11130009-0201", gf_data$X__4))),])
   
   # remove rows with "TOTAL"  -> should be able to calculate total from summing municipaliies
   ## create a check for dropping missing data: 
-  gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__3, invert = TRUE) , ])
+  gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__15, invert = TRUE) , ])
   
   # remove rows where X__10 (municipalities) are missing values
-  gf_subset <- na.omit(gf_subset, cols="X__10")
+  gf_subset <- na.omit(gf_data, cols="X__15")
   
   # ----------------------------------------------
   ## Code to aggregate into a dataset 
