@@ -40,22 +40,29 @@ regAltMapFile = paste0(dir, '../../mapping/uga/uga_alternate_region_names.csv')
 shapeFile = paste0(dir, '../../mapping/uga/uga_region10_map.rdata')
 
 # output files
-outFile = paste0(dir, 'phia_vl_dashboard.pdf')
+outFile = paste0(dir, 'visualizations/phia_vl_dashboard.pdf')
 # -------------------------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------------------------
-# Load/prep both datasets
+# Load/prep PHIA dataset
 
 # load
 phiaData = fread(inFilePHIA)
-vldData = fread(inFileVLD)
 
 # map phia to standard regions
 regAltMap = fread(regAltMapFile)
 phiaData = merge(phiaData, regAltMap, by.x='Region', by.y='region10_alt_name', all.x=TRUE)
 phiaData[is.na(region10_name), region10_name:=Region]
 phiaData$Region = NULL
+# -------------------------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------------------------
+# Load/prep VLD dataset
+
+# load
+vldData = fread(inFileVLD)
 
 # correct non-standard district names
 distAltMap = fread(distAltMapFile)
