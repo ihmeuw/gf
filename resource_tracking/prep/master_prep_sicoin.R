@@ -34,14 +34,20 @@ file_years <- file_list$year[file_list$format=="c_coin"]
 
 # inFile <- '2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento municipio)'
 
-resource_database <- setNames(data.frame(matrix(ncol = 8, nrow = 0)), 
-                          c("loc_id","budget","disbursement", "source", 
-                            "start_date","period", "cost", "expenditures"))
+# resource_database <- setNames(data.frame(matrix(ncol = 8, nrow = 0)), 
+  #                        c("loc_id","budget","disbursement", "source", 
+ #                           "start_date","period", "cost", "expenditures"))
 
 ## loop over all of the files 
-for(i in 1:length(file_names)) {
+for(i in 1:length(file_names)){
   tmpData <- prepSicoin(dir, file_names[i], file_years[i], period, cost_category, source)
-  resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill=TRUE)
+  
+  if(i==1){
+    resource_database = tmpData
+  }
+  if(i>1){
+    resource_database = rbind(resource_database, tmpData, use.names=TRUE)
+    }
   ## trouble shoot this area b/c of error issues w/out
 }
 

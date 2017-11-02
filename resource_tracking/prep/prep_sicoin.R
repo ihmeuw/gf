@@ -10,25 +10,9 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
-# Set up R
-library(data.table)
-library(reshape2)
-library(stringr)
-library(readxl)
-library(rlang)
-
-# ----------------------------------------------
-##define some variables - change these when appropriate
-
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/ghe_s/'
-inFile <- '2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento municipio).xls'
-
-year <- 2013
-period <-365
-cost_category <- "All"
 
 # start function
-prepSicoin = function(dir, inFile, year, period, cost_category) {
+prepSicoin = function(dir, inFile, year, period, cost_category, source) {
   
   # --------------------
   # Test the inputs
@@ -38,18 +22,14 @@ prepSicoin = function(dir, inFile, year, period, cost_category) {
   # Files and directories
 
   # Load/prep data
-  
-  gf_data <- read_excel(paste0(dir,inFile))
+  gf_data <- read_excel(paste0(dir,inFile, '.xls'))
   
   # ----------------------------------------------
   ## remove empty columns 
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
   
-  
   ##pull all rows from between columns that have "FONDO MUNDIAL" in them 
-  
   gf_data <- gf_data[c(grep("FONDO MUNDIAL", gf_data$X__10):(grep("FONDO MUNDIAL", gf_data$X__6))),]
-  
   
   # remove rows with "TOTAL"  -> should be able to calculate total from summing municipaliies
   ## create a check for dropping missing data: 
@@ -75,13 +55,16 @@ prepSicoin = function(dir, inFile, year, period, cost_category) {
   
   ## Create other variables 
   
-  budget_dataset$source <- budget_source
-  budget_dataset$start_date <- as.Date(paste(c(year,"01","01"), collapse="-"), origin="1960-01-01")
+  budget_dataset$source <- source
+  budget_dataset$start_date <- as.Date(paste(c(year,"01","01"), collapse="-"),origin="1960-01-01")
   budget_dataset$period <- period
-  budget_dataset$cost_category <- cost_category
+  budget_dataset$cost <- cost_category
+  budget_dataset$expenditures <- 0 ## change this once we figure out where exp data is
   
   # ----------------------------------------------
   
   # return prepped data
   return(budget_dataset)
+  
+  
 }
