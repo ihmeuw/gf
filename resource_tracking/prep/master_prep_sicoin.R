@@ -42,7 +42,7 @@ resource_database <- setNames(data.frame(matrix(ncol = 8, nrow = 0)),
 for(i in 1:length(file_names)) {
   tmpData <- prepSicoin(dir, file_names[i], file_years[i], period, cost_category, source)
   resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill=TRUE)
-  ## trouble shoot this area b/c of error issues w/out fill=TRUE
+  ## trouble shoot this area b/c of error issues w/out
 }
 
 
