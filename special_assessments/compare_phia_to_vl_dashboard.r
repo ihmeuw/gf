@@ -11,6 +11,8 @@
 # Set up R
 rm(list=ls())
 library(data.table)
+library(readstata13)
+library(tools)
 library(reshape2)
 library(stringr)
 library(RColorBrewer)
@@ -27,6 +29,7 @@ dir = 'J:/Project/Evaluation/GF/special_assessments/uga/'
 # input files
 inFilePHIA = paste0(dir, 'phia_2016/vl_suppression_by_region.csv')
 inFileVLD = paste0(dir, 'vl_dashboard/facilities_suppression_201710311708_aug16_mar17.csv')
+inFileAIS = "J:/DATA/MACRO_AIS/UGA/2011/UGA_AIS6_2011_IND_Y2012M10D11.DTA"
 
 # district/region maps
 distMapFile = paste0(dir, '../../mapping/uga/uga_geographies_map.csv')
@@ -73,8 +76,26 @@ vldData = merge(vldData, distMap, by.x='dist_name', by.y='dist112_name', all.x=T
 # -------------------------------------------------------------------------------------------
 
 
+# ------------------------------------------------------------------------------------
+# Load/prep AIS dataset
+
+# load
+aisData = data.table(read.dta13(inFileAIS))
+
+# collapse to estimate art coverage at the region level
+aisData = aisData[, list('art_coverage'=mean(s535=='yes', na.rm=TRUE)), by='v024']
+
+# map to standard regions
+aisData[,v024:=toTitleCase(as.character(v024))]
+aisData[,v024:=gsub(' ', '_', v024)]
+aisData = merge(aisData, regAltMap, by.x='v024', by.y='region10_alt_name', all.x=TRUE)
+aisData[is.na(region10_name), region10_name:=v024]
+aisData$v024 = NULL
+# ------------------------------------------------------------------------------------
+
+
 # -------------------------------------------------------------------------------------------
-# Merge datasets are format for analysis
+# Merge datasets and format for analysis
 
 # merge
 facLevelData = merge(phiaData, vldData, by='region10_name')
@@ -97,6 +118,12 @@ data = facLevelData[, list(phia_vls=mean(phia_vls),
 					
 # recompute suppression from the dashboard data
 data[, vld_suppression:=vl_suppressed_samples/samples*100]
+
+# bring in coverage estimates
+data = merge(data, aisData, 'region10_name')
+
+# compute vld suppression adjusted for coverage
+data[, vld_suppression_adj:=vld_suppression*art_coverage]
 # -------------------------------------------------------------------------------------------
 
 
