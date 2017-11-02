@@ -136,7 +136,7 @@ data[, vld_suppression_adj:=vld_suppression*art_coverage]
 
 # ----------------------------------------
 # Store linear fit
-lmFit = lm(vld_suppression~phia_vls, data)
+lmFit = lm(vld_suppression_adj~phia_vls, data)
 coefs = lmFit$coefficients
 # ----------------------------------------
 
@@ -155,6 +155,9 @@ mapData = data.table(fortify(map))
 long = melt(data, id.vars='region10_name')
 long[, value:=as.numeric(value)]
 
+# wrap text
+long[, region10_name:=str_wrap(region10_name, 6)]
+
 # merge to map and melt data
 data[, region10:=as.character(region10)]
 mapData = merge(mapData, data, by.x='id', by.y='region10', all.x=TRUE)
@@ -162,9 +165,9 @@ mapData = melt(mapData, id.vars=c('long','lat','region10_name','id','group','ord
 
 # clean up variable labels
 long[variable=='phia_vls', variable:='PHIA']
-long[variable=='vld_suppression', variable:='National Dashboard']
+long[variable=='vld_suppression_adj', variable:='National Dashboard*']
 mapData[variable=='phia_vls', variable:='Viral Load Suppression\nPHIA']
-mapData[variable=='vld_suppression', variable:='Reported Viral Load Suppression\nNational Dashboard']
+mapData[variable=='vld_suppression_adj', variable:='Reported Viral Load Suppression\nNational Dashboard*']
 mapData[variable=='phia_vls_lower', variable:='Lower']
 mapData[variable=='phia_vls_upper', variable:='Upper']
 mapData[variable=='samples', variable:='N Samples']
@@ -181,8 +184,8 @@ mapColors = mapColors(10)
 # Make graphs
 
 # map side-by-side
-vars1 = c('Reported Viral Load Suppression\nNational Dashboard', 'Viral Load Suppression\nPHIA')
-ggplot(mapData[variable %in% vars1], aes(x=long, y=lat, group=group, fill=value)) + 
+vars1 = c('Reported Viral Load Suppression\nNational Dashboard*', 'Viral Load Suppression\nPHIA')
+p1 = ggplot(mapData[variable %in% vars1], aes(x=long, y=lat, group=group, fill=value)) + 
 	geom_polygon() + 
 	geom_path(color='grey95', size=.05) + 
 	facet_wrap(~variable) + 
@@ -190,29 +193,33 @@ ggplot(mapData[variable %in% vars1], aes(x=long, y=lat, group=group, fill=value)
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
-	theme_minimal(base_size=16)
+	labs(caption='*Adjusted for ART coverage') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.caption=element_text(size=10)) 
 
 # bar graphs
-vars2 = c('National Dashboard', 'PHIA')
-ggplot(long[variable %in% vars2], aes(x=region10_name, y=value, fill=variable)) + 
+vars2 = c('National Dashboard*', 'PHIA')
+p2 = ggplot(long[variable %in% vars2], aes(x=region10_name, y=value, fill=variable)) + 
 	geom_bar(stat='identity', position='dodge') + 
 	scale_fill_manual('Data Source', values=colors[c(6,4)]) + 
-	labs(y='Viral Load Suppression (%)', x='') + 
-	theme_bw(base_size=14)
+	labs(y='Viral Load Suppression (%)', x='', caption='*Adjusted for ART coverage') + 
+	theme_bw(base_size=14) + 
+	theme(plot.caption=element_text(size=10)) 
 
 # scatterplot
-min = min(data$phia_vls,data$vld_suppression)
-max = max(data$phia_vls,data$vld_suppression)
-ggplot(data, aes(x=phia_vls, y=vld_suppression)) + 
+min = min(data$phia_vls,data$vld_suppression_adj)
+max = max(data$phia_vls,data$vld_suppression_adj)
+p3 = ggplot(data, aes(x=phia_vls, y=vld_suppression_adj)) + 
 	geom_abline(color='red', slope=coefs[2], intercept=coefs[1], linetype='longdash', size=1.25) + 
 	geom_abline(slope=1, intercept=0) + 
 	geom_point(color=colors[4], size=4.5, alpha=.7, stroke=0) + 
 	scale_fill_manual('Data Source', values=colors[c(6,4)]) + 
-	labs(title='Viral Load Suppression', subtitle='Comparison of Sources', y='National Dashboard', x='PHIA') + 
+	labs(title='Viral Load Suppression', subtitle='Comparison of Sources', 
+		y='National Dashboard*', x='PHIA', caption='*Adjusted for ART coverage') + 
 	scale_x_continuous(limits=c(min,max)) +
 	scale_y_continuous(limits=c(min,max)) +
 	theme_bw(base_size=14) + 
-	theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5))
+	theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5), plot.caption=element_text(size=10))
 	
 # maps showing uncertainty
 
@@ -224,5 +231,9 @@ ggplot(data, aes(x=phia_vls, y=vld_suppression)) +
 
 # -------------------------------------------------------------------------------------------
 # Save
-
+pdf(outFile, height=6, width=9)
+p1
+p2
+p3
+dev.off()
 # -------------------------------------------------------------------------------------------
