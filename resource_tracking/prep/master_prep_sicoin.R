@@ -20,6 +20,8 @@ dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/ghe_s/'
 period <-365
 cost_category <- "All"
 source <- "gf"
+disease <- "malaria"
+loc_id <- "gtm"
 
 # ----------------------------------------------
 
@@ -32,9 +34,11 @@ file_names <- as.character(file_list$filename[file_list$format=="c_coin"])
 file_years <- file_list$year[file_list$format=="c_coin"]
 
 ## loop over all of the files 
-for(i in 1:length(file_names)){
-  tmpData <- prepSicoin(dir, file_names[i], file_years[i], period, cost_category, source)
-  
+for(i in 1:length(file_list$filename)){
+  if(file_list$format[i]=="c_coin_muni"){
+  tmpData <- prepSicoin(dir, file_names[i], file_years[i], disease, period, cost_category, source)
+  } else { 
+  tmpData <- prep_cost_sicoin(dir, file_names[i], file_names[i], disease, period, loc_id, source)}
   if(i==1){
     resource_database = tmpData
   }
