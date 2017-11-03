@@ -29,15 +29,15 @@ prep_cost_sicoin = function(dir, inFile, year, disease, period, loc_id, source) 
   ## remove empty columns 
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
   
-  ##pull all rows from between columns that have "FONDO MUNDIAL" in them 
-  gf_data <- data.table(gf_data[c(grep("SERVICIOS NO PERSON", gf_data$X__14):(grep("11130009-", gf_data$X__4))),])
-  
+  ##pull just the cost categories 
+  gf_data <- gf_data[c(grep("SERVICIOS NO PERSON", gf_data$X__14):(grep("MINISTERIO DE SALUD", gf_data$X__4))),]
+
   # remove rows with "TOTAL"  -> should be able to calculate total from summing municipaliies
   ## create a check for dropping missing data: 
   gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__15, invert = TRUE) , ])
   
   # remove rows where X__10 (municipalities) are missing values
-  gf_subset <- na.omit(gf_data, cols="X__15")
+  gf_subset <- na.omit(gf_subset, cols="X__15")
   
   # ----------------------------------------------
   ## Code to aggregate into a dataset 
@@ -45,8 +45,7 @@ prep_cost_sicoin = function(dir, inFile, year, disease, period, loc_id, source) 
   ## now get region + budgeted expenses 
   budget_dataset <- gf_subset[, c("X__15", "X__22", "X__29"), with=FALSE]
   names(budget_dataset) <- c("cost_category", "budget", "disbursement")
-  
-  ## we only want the municpalities so get rid of GF and Guatemala
+
   # ----------------------------------------------
   
   ## Create other variables 

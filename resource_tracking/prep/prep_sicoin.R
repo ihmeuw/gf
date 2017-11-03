@@ -58,7 +58,7 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   budget_dataset$source <- source
   budget_dataset$start_date <- as.Date(paste(c(year,"01","01"), collapse="-"),origin="1960-01-01")
   budget_dataset$period <- period
-  budget_dataset$cost <- cost_category
+  budget_dataset$cost_category <- cost_category
   budget_dataset$expenditures <- 0 ## change this once we figure out where exp data is
   budget_dataset$disease <- disease
   # ----------------------------------------------

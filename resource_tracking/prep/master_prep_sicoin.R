@@ -30,19 +30,18 @@ file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/file_for
 
 source('./prep_sicoin.r')
 
-file_names <- as.character(file_list$filename[file_list$format=="c_coin"])
-file_years <- file_list$year[file_list$format=="c_coin"]
-
 ## loop over all of the files 
 for(i in 1:length(file_list$filename)){
   if(file_list$format[i]=="c_coin_muni"){
-  tmpData <- prepSicoin(dir, file_names[i], file_years[i], disease, period, cost_category, source)
+  tmpData <- prepSicoin(dir, as.character(file_list$filename[i]), file_list$year[i], disease, period, cost_category, source)
   } else { 
-  tmpData <- prep_cost_sicoin(dir, file_names[i], file_names[i], disease, period, loc_id, source)}
+  tmpData <- prep_cost_sicoin(dir, as.character(file_list$filename[i]), file_list$year[i], disease, period, loc_id, source)}
   if(i==1){
     resource_database = tmpData
   }
   if(i>1){
-    resource_database = rbind(resource_database, tmpData, use.names=TRUE)
+    resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill=TRUE)
   }
 }
+
+
