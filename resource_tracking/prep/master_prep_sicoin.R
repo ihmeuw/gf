@@ -35,7 +35,7 @@ for(i in 1:length(file_list$filename)){
   if(file_list$format[i]=="c_coin_muni"){
   tmpData <- prepSicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$disease[i], period, cost_category, source)
   } else { 
-  tmpData <- prep_cost_sicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$disease[i], period, loc_id, source)}
+  tmpData <- prep_cost_sicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$disease[i], period, source)}
   if(i==1){
     resource_database = tmpData
   }
