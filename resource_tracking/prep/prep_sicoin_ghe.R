@@ -29,7 +29,7 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, cost_category, sou
   ## remove empty columns 
   ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
   # ----------------------------------------------
-  ## code to get diseases -- add more when 
+  ## code to get diseases -- add more if necessary
   toMatch <- c("VIH", "SIDA", "TUBER", "MALAR", "VECTOR")
   ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), ghe_data$X__10), ]
   

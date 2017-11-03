@@ -20,7 +20,7 @@ library(zoo)
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/ghe_s/'
 period <-365
 cost_category <- "All"
-source <- "gf"
+
 
 # ----------------------------------------------
 
@@ -32,11 +32,11 @@ source('./prep_sicoin.r')
 ## loop over all of the files 
 for(i in 1:length(file_list$filename)){
   if(file_list$format[i]=="c_coin_muni"){
-  tmpData <- prepSicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$disease[i], period, cost_category, source)
+  tmpData <- prepSicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$disease[i], period, cost_category, file_list$source[i])
   } else if (file_list$format[i]=="c_coin_cost") { 
-  tmpData <- prep_cost_sicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$disease[i], period, source)
+  tmpData <- prep_cost_sicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$disease[i], period, file_list$source[i])
 } else if (file_list$format[i]=="c_coin_ghe") {
-  tmpData <- prep_ghe_sicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$loc_id[i],period, cost_category, source)
+  tmpData <- prep_ghe_sicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$loc_id[i],period, cost_category, file_list$source[i])
 }
    if(i==1){
     resource_database = tmpData
@@ -45,5 +45,10 @@ for(i in 1:length(file_list$filename)){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
 }
+
+
+##output the data to the correct folder 
+write.csv(resource_database, file="J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv")
+
 
 
