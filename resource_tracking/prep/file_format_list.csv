@@ -1,4 +1,8 @@
-filename,format,year
-2012  MALARIA PRESUPUESTO POR ORGANISMOS PROGRAMA 12 ACTIVIDAD 1,c_coin_muni,2012
-2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento municipio),c_coin_muni,2013
-2011 MALARIA FM RENGLONES,c_coin_cost,2011
+filename,format,year,disease
+2012  MALARIA PRESUPUESTO POR ORGANISMOS PROGRAMA 12 ACTIVIDAD 1,c_coin_muni,2012,malaria
+2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento municipio),c_coin_muni,2013,malaria
+2014 MALARIA PRESUPUESTO POR ORGANISMO  (departamento municipio),c_coin_muni,2014,malaria 
+2015 MALARIA PRESUPUESTO POR ORGANISMO  (departamento municipio),c_coin_muni,2015,malaria
+2011 MALARIA FM RENGLONES,c_coin_cost,2011,malaria
+2012 MALARIA FM RENGLONES,c_coin_cost,2012,malaria
+2016 MALARIA FM RENGLONES,c_coin_cost,2016,malaria
