@@ -29,8 +29,9 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
   
   ##pull all rows from between columns that have "FONDO MUNDIAL" in them 
-  gf_data <- gf_data[c(grep("FONDO MUNDIAL", gf_data$X__10):(grep("FONDO MUNDIAL", gf_data$X__6))),]
-  
+  if (source=="gf"){
+    gf_data <- gf_data[c(grep("FONDO MUNDIAL", gf_data$X__10):(grep("FONDO MUNDIAL", gf_data$X__6))),]
+  } 
   # remove rows with "TOTAL"  -> should be able to calculate total from summing municipaliies
   ## create a check for dropping missing data: 
   gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__3, invert = TRUE) , ])
