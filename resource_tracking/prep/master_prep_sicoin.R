@@ -41,21 +41,23 @@ cost_category <- "All"
 # ----------------------------------------------
 
 # load csv from github repository (file_format_list.csv)
-file_list <- read.csv("github link")
+file_list <- read.csv("./file_format_list.csv")
 
 source('./prep_sicoin.r')
+source('./prep_sicoin_costcat_data.r')
+source('./prep_sicoin_ghe.r')
 
 ## loop over all of the files 
 for(i in 1:length(file_list$filename)){
   ## handles municipality data 
   if(file_list$format[i]=="c_coin_muni"){
-  tmpData <- prepSicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$disease[i], period, cost_category, file_list$source[i])
+  tmpData <- prepSicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, cost_category, file_list$source[i])
   ## handles cost category data 
   } else if (file_list$format[i]=="c_coin_cost") { 
-  tmpData <- prep_cost_sicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$disease[i], period, file_list$source[i])
+  tmpData <- prep_cost_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, file_list$source[i])
 ## handles GHE (including GF) expenditure data 
   } else if (file_list$format[i]=="c_coin_ghe") {
-  tmpData <- prep_ghe_sicoin(dir, as.character(file_list$filename[i]), file_list$year[i], file_list$loc_id[i],period, cost_category, file_list$source[i])
+  tmpData <- prep_ghe_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$loc_id[i],period, file_list$disease[i], file_list$source[i])
 }
    if(i==1){
     resource_database = tmpData
