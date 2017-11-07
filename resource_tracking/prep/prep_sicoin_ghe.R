@@ -47,6 +47,13 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source) {
   budget_dataset$expenditures <- 0 ## change this once we figure out where exp data is
   # ----------------------------------------------
   
+  # Enforce variable classes
+  if (!is.numeric(budget_dataset$budget)) budget_dataset[,budget:=as.numeric(budget)]
+  if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
+  if (!is.numeric(budget_dataset$expenditures)) budget_dataset[,expenditures:=as.numeric(expenditures)]
+
+  # ----------------------------------------------
+  
   # return prepped data
   return(budget_dataset)
 }

@@ -53,6 +53,13 @@ prep_cost_sicoin = function(dir, inFile, year, disease, period, source) {
   budget_dataset$disease <- disease
   # ----------------------------------------------
   
+  # Enforce variable classes
+  if (!is.numeric(budget_dataset$budget)) budget_dataset[,budget:=as.numeric(budget)]
+  if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
+  if (!is.numeric(budget_dataset$expenditures)) budget_dataset[,expenditures:=as.numeric(expenditures)]
+
+  # ----------------------------------------------
+  
   # return prepped data
   return(budget_dataset)
   
