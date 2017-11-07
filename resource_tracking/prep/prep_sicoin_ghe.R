@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, cost_category, source) {
+prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source) {
   
   
   # --------------------
@@ -35,13 +35,13 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, cost_category, sou
   
   ## now get region + budgeted expenses 
   budget_dataset <- ghe_data[, c("X__10", "X__17", "X__24"), with=FALSE]
-  names(budget_dataset) <- c("disease", "budget", "disbursement")
+  names(budget_dataset) <- c("cost_category", "budget", "disbursement")
   # ----------------------------------------------
   
   ## Create other variables 
   budget_dataset$source <- source
   budget_dataset$loc_id <- loc_id
-  budget_dataset$cost_category <- cost_category
+  budget_dataset$disease <- disease
   budget_dataset$start_date <- as.Date(paste(c(year,"01","01"), collapse="-"),origin="1960-01-01")
   budget_dataset$period <- period
   budget_dataset$expenditures <- 0 ## change this once we figure out where exp data is
