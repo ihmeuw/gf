@@ -64,17 +64,17 @@ melted<- melt(ghe_data,id="category")
 
 ##create quarter start dates based on value 
 
-dates <- rep(start_quarter, length(qtr_vector))
+dates <- rep(start_quarter, length(col_names)-1) # -1 because col_names includes "category" as the first value
 
-for (i in 1:length(qtr_vector)){
+for (i in 1:length(dates)){
   if (i==1){
     dates[i] <- dates[i]
   } else {
     dates[i] <- dates[i-1]%m+% months(3)
   }
 }
-##turn the list of dates into a dictionary: 
-names(dates) <- qtr_vector
+##turn the list of dates into a dictionary (but only for quarters!) : 
+names(dates) <- col_names[-1]
 
 ## now 
 kDT = data.table(variable = names(dates), value = TRUE, v = unname(dates))

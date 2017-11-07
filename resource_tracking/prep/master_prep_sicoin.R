@@ -4,8 +4,18 @@
 # 11/1/2017
 # Master prep code that runs all other functions
 # The current working directory should be the same as this code
-# ----------------------------------------------
 
+
+##NOTE: after running lines 42-59, a warning message usually appears: 
+##Warning message:
+  ## In grep("GUATEM", gf_data$X__13):.N :
+  ## numerical expression has 4 elements: only the first used
+
+## This is alright because of the way the c_coin files are set up, but in the future
+## this should be revisited to ensure that the data is being handled correctly 
+
+
+# ----------------------------------------------
 # Set up R
 library(data.table)
 library(reshape2)
@@ -14,18 +24,24 @@ library(readxl)
 library(rlang)
 library(zoo)
 
+
 # ----------------------------------------------
 #define variables: 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/ghe_s/'
+## download files from basecamp into a folder on your desktop. 
+## You will want to download the files in the multi_source and ghe_s folders, even though we will not be using all of these files 
+# (only the ones that contain actual budget/expenditure data and are in c_coin format). 
+## 
+
+dir <- 'your folder'
 period <-365
 cost_category <- "All"
 
 
 # ----------------------------------------------
 
-# load csv
-file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/file_format_list.csv")
+# load csv from github repository (file_format_list.csv)
+file_list <- read.csv("github link")
 
 source('./prep_sicoin.r')
 
