@@ -13,8 +13,18 @@ library(data.table)
 
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
 inFile <- 'GUA-M-MSPAS_SB_Y4-6a_IL8'
-start_quarter <- ymd("2014-04-01")
+start_quarter <- ymd("2014-06-01")
 period <- 90
+qtr_number <- 10
+
+col_names <- rep(0, qtr_number+1)
+for(i in 1: length(col_names)){
+  if (i==1){
+    col_names[i] <- "category"
+  } else {
+  col_names[i] <- paste("Q", i, sep="")
+  }
+}
 
 file_list <- read.csv("")
 
@@ -40,36 +50,34 @@ ghe_data <- Filter(function(x) !any(grepl(paste(toMatch, collapse="|"), x)), ghe
 ## finally, drop columns containing only NA's
 ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
 
-colnames(ghe_data) <- as.character(unlist(ghe_data[1,]))
-
-qtr_vector <- as.character(ghe_data[1])
-qtr_vector <- qtr_vector[-1]
 
 ## drop the first and last row since we only want the cost categories
-## I changed this so comment this out: ghe_data <- ghe_data[-nrow(ghe_data),]
+ghe_data <- ghe_data[-nrow(ghe_data),]
 
 ghe_data <- ghe_data[-1,]
 
+colnames(ghe_data) <- col_names
+
 ## invert the dataset so that budget expenses and quarters are grouped by category
-setDT(ghe_filter)
-melted<- melt(ghe_filter,id="category")
+setDT(ghe_data)
+melted<- melt(ghe_data,id="category")
 
 ##create quarter start dates based on value 
 
-d <- rep(start_quarter, length(qtr_vector))
+dates <- rep(start_quarter, length(qtr_vector))
 
 for (i in 1:length(qtr_vector)){
   if (i==1){
-    d[i] <- d[i]
+    dates[i] <- dates[i]
   } else {
-    d[i] <- d[i-1]%m+% months(3)
+    dates[i] <- dates[i-1]%m+% months(3)
   }
 }
 ##turn the list of dates into a dictionary: 
-names(d) <- qtr_vector
+names(dates) <- qtr_vector
 
 ## now 
-kDT = data.table(variable = names(d), value = TRUE, v = unname(d))
+kDT = data.table(variable = names(dates), value = TRUE, v = unname(dates))
 melted1 <-melted[kDT, on=.(variable), v := i.v ]
 
 melted1$period <- period
