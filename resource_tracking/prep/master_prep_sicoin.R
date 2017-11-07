@@ -67,7 +67,7 @@ for(i in 1:length(file_list$filename)){
 
 
 ##output the data to the correct folder 
-write.csv(resource_database, file="J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv")
+write.csv(resource_database, file="output location")
 
 
 
