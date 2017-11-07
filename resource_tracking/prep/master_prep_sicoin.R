@@ -43,9 +43,9 @@ cost_category <- "All"
 # load csv from github repository (file_format_list.csv)
 file_list <- read.csv("./file_format_list.csv")
 
-source('./prep_sicoin.r')
-source('./prep_sicoin_costcat_data.r')
-source('./prep_sicoin_ghe.r')
+source('./prep_sicoin.R')
+source('./prep_sicoin_costcat_data.R')
+source('./prep_sicoin_ghe.R')
 
 ## loop over all of the files 
 for(i in 1:length(file_list$filename)){
