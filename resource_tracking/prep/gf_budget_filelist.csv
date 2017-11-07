@@ -1,0 +1,3 @@
+folder,filename,extension,sheet,format,start_date,disease,loc_id,source,period,qtr_number
+gf,GUA-M-MSPAS_SB_Y4-6a_IL8,.xlsx,Summary Budget revised,gf_budget,"""2014-07-01""",malaria,gtm,gf,90,10
+gf,GUA-610-G04-T_SB_Year_6_7_ENG,.xls,Budget summary GF,gf_budget,"""2010-02-01""",tb,gtm,gf,90,18
