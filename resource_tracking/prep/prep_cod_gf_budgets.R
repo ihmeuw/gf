@@ -1,13 +1,4 @@
-# ----------------------------------------------
-# Irena Chen
-#
-# 11/7/2017
-# Template for prepping GF budget data that is grouped by "module"
-# Inputs:
-# inFile - name of the file to be prepped
-# Outputs:
-# budget_dataset - prepped data.table object
-# ----------------------------------------------
+
 prep_module_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_num) {
   
   col_names <- rep(0, qtr_num+1)
@@ -20,18 +11,21 @@ prep_module_budget = function(dir, inFile, extension, sheet_name, start_date, qt
     }
   }
   
-
+  
   ghe_data <- data.table(read_excel(paste0(dir, inFile, extension), sheet=sheet_name))
   
-  ## this type of budget data should always have 13 cost categories 
-  ghe_data <- ghe_data[c(grep("CostG", ghe_data$X__2):(grep(13, ghe_data$X__2))),]
+  ## the 1st column isn't always the same, so just call it something: 
+  colnames(ghe_data)[3] <- "cost_column"
   
- ## delete 1st two columns 
+  ## this type of budget data should always have 13 cost categories 
+  ghe_data <- ghe_data[c(grep("By Cost", ghe_data$cost_column):(grep(13, ghe_data$X__2))),]
+  
+  ## delete 1st two columns 
   ghe_data <- ghe_data[, -c(1:2)]
   
   
   ##we only want the data for each quarter, so remove extraneous values: 
-  toMatch <- c("Year", "RCC", "%", "TOTAL", "Phase", "Implem", "Total")
+  toMatch <- c("Ann","Year", "RCC", "%", "TOTAL", "Phase", "Implem", "Total")
   ghe_data <- Filter(function(x) !any(grepl(paste(toMatch, collapse="|"), x)), ghe_data)
   
   
@@ -44,7 +38,7 @@ prep_module_budget = function(dir, inFile, extension, sheet_name, start_date, qt
   
   ## rename the columns
   colnames(ghe_data) <- col_names
-
+  
   ## invert the dataset so that budget expenses and quarters are grouped by category
   setDT(ghe_data)
   melted<- melt(ghe_data,id="category", variable.name = "qtr", value.name="budget")

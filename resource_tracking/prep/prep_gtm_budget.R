@@ -1,3 +1,13 @@
+# ----------------------------------------------
+# Irena Chen
+#
+# 11/7/2017
+# Template for prepping GF budget data that is grouped by "category"
+# Inputs:
+# inFile - name of the file to be prepped
+# Outputs:
+# budget_dataset - prepped data.table object
+# ----------------------------------------------
 
 prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_num) {
 
@@ -37,7 +47,7 @@ prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_n
   ghe_data <- Filter(function(x) !any(grepl(paste(toMatch, collapse="|"), x)), ghe_data)
   
   # workaround to delete columns that have an NA in the first row - 
-  #for some reason, ghe_data <- ghe_data[,-is.na(ghe_data[1,])] isn't working.
+  #for some reason, ghe_data <- ghe_data[,-is.na(ghe_data[1,])] isn't working. Planning to go to code drop in for help
   
   colnames(ghe_data) <- as.character(ghe_data[1,])
   drop.cols <- grep("X_", colnames(ghe_data))
@@ -45,13 +55,13 @@ prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_n
   
   
   ## rename the columns
-  colnames(ghe_data) <- col_names
+  colnames(ghe_data1) <- col_names
   ## drop the first row now that we renamed the columns 
-  ghe_data <- ghe_data[-1,]
+  ghe_data1 <- ghe_data1[-1,]
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
-  setDT(ghe_data)
-  melted<- melt(ghe_data,id="category", variable.name = "qtr", value.name="budget")
+  setDT(ghe_data1)
+  melted<- melt(ghe_data1,id="category", variable.name = "qtr", value.name="budget")
   
   return(melted)
 }
