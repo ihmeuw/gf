@@ -29,24 +29,29 @@ library(zoo)
 
 
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
-file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/pdf_list_cod_budgets.csv")
+file_list <- read.csv("H:/test_cod.csv")
 
 for(i in 1:length(file_list$file_name)){
   if(file_list$type[i]=="fr"){
-    tmpData <- prep_cod_fr_budget(dir, as.character(file_list$file_name[i]), as.character(file_list$sheet[i]), ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$loc_id[i], file_list$period[i])
-  # } else if (file_list$format[i]=="gf_budget_cost"){
-    # tmpData <- prep_module_budget(dir, file_list$filename[i], file_list$extension[i], as.character(file_list$sheet[i]), ymd(file_list$start_date[i]), file_list$qtr_number[i])
-  }
+    tmpData <- prep_cod_fr_budget(dir, as.character(file_list$file_name[i]), file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i])
+   } else if (file_list$type[i]=="gtmb"){
+     tmpData <- prep_gtmb_cod_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i])
+   } else if (file_list$type[i]=="cat"){
+    tmpData <- prep_cod_cat_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i])
+   }
   ## replace the "Q1" category with the associated dates that the quarters map to   
   # tmpData1 <- map_quarters(tmpData, ymd(file_list$start_date[i]),file_list$qtr_number[i], file_list$loc_id[i], file_list$period[i],file_list$disease[i], file_list$source[i])
   if(i==1){
     resource_database = tmpData
-  } else {
+  } 
+  
+  if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
 }
 
 resource_database$budget <- as.numeric(resource_database$budget)
+resource_database$qtr <- NULL
 
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$expenditures <- 0 

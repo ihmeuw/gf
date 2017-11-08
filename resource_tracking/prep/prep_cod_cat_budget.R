@@ -1,30 +1,30 @@
 
-prep_cod_fr_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period, grant) {
+prep_cod_cat_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period, grant){
   
   ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
-  
   ## the 1st column isn't always the same, so just call it something: 
-  colnames(ghe_data)[3] <- "cost_column"
+  if(is.na(ghe_data[1,1])){
+    ghe_data[1,1] <- "category"
+  }
   
   ## this type of budget data should always have 13 cost categories 
-  ghe_data <- ghe_data[c((grep("CostGrp", ghe_data$X__2)):(grep(13, ghe_data$X__2))),]
-  
-  ## delete 1st two columns 
-  ghe_data <- ghe_data[, -c(1:2)]
-  
-  
-  ##we only want the data for each quarter, so remove extraneous values: 
+  ghe_data <- ghe_data[1:14,]
   toMatch <- c("Ann","Year", "RCC", "%", "TOTAL", "Phase", "Implem", "Total")
-  ghe_data <- Filter(function(x) !any(grepl(paste(toMatch, collapse="|"), x)), ghe_data)
+  if(any(colnames(ghe_data)%in% "X_")){
+    ##we only want the data for each quarter, so remove extraneous values: 
+    ghe_data <- Filter(function(x) !any(grepl(paste(toMatch, collapse="|"), x)), ghe_data)
+    colnames(ghe_data) <- as.character(ghe_data[1,])
+    ghe_data <- ghe_data[-1,]
+  }
   
   
-  colnames(ghe_data) <- as.character(ghe_data[1,])
+  drop.cols <- grep(paste(toMatch, collapse="|"), colnames(ghe_data))
+  ghe_data <- ghe_data[, (drop.cols) := NULL]
+  
   ## drop the first row now that we renamed the columns 
-  ghe_data <- ghe_data[-1,]
+  
   ## also drop columns containing only NA's
   ghe_data<- Filter(function(x) !all(is.na(x)), ghe_data)
-  
-  ## rename the columns
   colnames(ghe_data)[1] <- "category"
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
@@ -56,7 +56,5 @@ prep_cod_fr_budget = function(dir, inFile, sheet_name, start_date, qtr_num, dise
   budget_dataset$grant <- grant
   
   return( budget_dataset)
-  
-  
-}
 
+}
