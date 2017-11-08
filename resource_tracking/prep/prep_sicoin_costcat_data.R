@@ -41,8 +41,8 @@ prep_cost_sicoin = function(dir, inFile, year, disease, period, source) {
   ## Code to aggregate into a dataset 
   
   ## now get region + budgeted expenses 
-  budget_dataset <- gf_subset[, c("X__13","X__15", "X__22", "X__29"), with=FALSE]
-  names(budget_dataset) <- c("loc_id", "cost_category", "budget", "disbursement")
+  budget_dataset <- gf_subset[, c("X__3", "X__13","X__15", "X__22", "X__29"), with=FALSE]
+  names(budget_dataset) <- c("loc_id", "loc_name", "cost_category", "budget", "disbursement")
   # ----------------------------------------------
   
   ## Create other variables 
