@@ -11,8 +11,7 @@ prep_module_budget = function(dir, inFile, extension, sheet_name, start_date, qt
     }
   }
   
-  ##pull all rows from between columns that have "FONDO MUNDIAL" in them 
-  
+
   ghe_data <- data.table(read_excel(paste0(dir, inFile, extension), sheet=sheet_name))
   
   ## the 1st column isn't always the same, so just call it something: 
@@ -29,7 +28,6 @@ prep_module_budget = function(dir, inFile, extension, sheet_name, start_date, qt
   toMatch <- c("Year", "RCC", "%", "TOTAL", "Phase", "Implem", "Total")
   ghe_data <- Filter(function(x) !any(grepl(paste(toMatch, collapse="|"), x)), ghe_data)
   
-  ##hack to remove columns w/ NA value in 1st row  
   
   colnames(ghe_data) <- as.character(ghe_data[1,])
   ## drop the first row now that we renamed the columns 
