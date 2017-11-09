@@ -1,7 +1,11 @@
 
 prep_cod_cat_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period, grant){
   
+  if(!is.na(sheet_name)){
   ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
+  } else {
+    ghe_data <- data.table(read_excel(paste0(dir, inFile)))
+  }
   ## the 1st column isn't always the same, so just call it something: 
   if(is.na(ghe_data[1,1])){
     ghe_data[1,1] <- "category"
@@ -9,28 +13,28 @@ prep_cod_cat_budget = function(dir, inFile, sheet_name, start_date, qtr_num, dis
   
   ## this type of budget data should always have 13 cost categories 
   ghe_data <- ghe_data[1:14,]
-  toMatch <- c("Ann","Year", "RCC", "%", "TOTAL", "Phase", "Implem", "Total")
+  toMatch <- c("Ann","Year", "RCC", "%", "Phase", "Implem", "Total")
   if(any(colnames(ghe_data)%in% "X_")){
     ##we only want the data for each quarter, so remove extraneous values: 
-    ghe_data <- Filter(function(x) !any(grepl(paste(toMatch, collapse="|"), x)), ghe_data)
+    ghe_data <- Filter(function(x) !any(grepl(paste(toMatch, collapse="|"), x), ignore.case=TRUE), ghe_data)
     colnames(ghe_data) <- as.character(ghe_data[1,])
     ghe_data <- ghe_data[-1,]
   }
   
   
-  drop.cols <- grep(paste(toMatch, collapse="|"), colnames(ghe_data))
+  drop.cols <- grep(paste(toMatch, collapse="|"), ignore.case=TRUE, colnames(ghe_data))
   ghe_data <- ghe_data[, (drop.cols) := NULL]
   
-  ## drop the first row now that we renamed the columns 
+  ghe_data1 <- na.omit(ghe_data, cols=1, invert=FALSE)
   
   ## also drop columns containing only NA's
-  ghe_data<- Filter(function(x) !all(is.na(x)), ghe_data)
-  colnames(ghe_data)[1] <- "category"
+  ghe_data1<- Filter(function(x) !all(is.na(x)), ghe_data1)
+  colnames(ghe_data1)[1] <- "category"
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   ##library(reshape)
-  setDT(ghe_data)
-  ghe_data<- melt(ghe_data,id="category", variable.name = "qtr", value.name="budget")
+  setDT(ghe_data1)
+  ghe_data<- melt(ghe_data1,id="category", variable.name = "qtr", value.name="budget")
   
   
   dates <- rep(start_date, qtr_num) # 
