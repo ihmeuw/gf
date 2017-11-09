@@ -28,7 +28,7 @@ library(zoo)
 # ----------------------------------------------
 
 
-dir <- 'where the downloaded basecamp files are'
+dir <- 'H:/gf/'
 file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/cod_gf_filelist.csv", na.strings=c("","NA"))
 
 for(i in 1:length(file_list$file_name)){
