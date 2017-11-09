@@ -9,7 +9,7 @@
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
 
-prep_gtmb_cod_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period, grant) {
+prep_gtmb_cod_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period) {
   
   col_names <- rep(0, qtr_num+1)
   
@@ -21,7 +21,7 @@ prep_gtmb_cod_budget = function(dir, inFile, sheet_name, start_date, qtr_num, di
     }
   }
   
-  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
+  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)), col_names = TRUE)
   
   ## the 1st column isn't always the same, so just call it something: 
   colnames(ghe_data)[1] <- "first_column"
@@ -83,7 +83,6 @@ prep_gtmb_cod_budget = function(dir, inFile, sheet_name, start_date, qtr_num, di
   budget_dataset$disease <- disease 
   budget_dataset$loc_id <- loc_id
   budget_dataset$period <- period
-  budget_dataset$grant <- grant
   
   return( budget_dataset)
 

@@ -28,16 +28,16 @@ library(zoo)
 # ----------------------------------------------
 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
-file_list <- read.csv("H:/test_cod.csv")
+dir <- 'H:\gf'
+file_list <- read.csv("H:/test_cod_1.csv", na.strings=c("","NA"))
 
 for(i in 1:length(file_list$file_name)){
   if(file_list$type[i]=="fr"){
-    tmpData <- prep_cod_fr_budget(dir, as.character(file_list$file_name[i]), file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i])
+    tmpData <- prep_cod_fr_budget(dir, as.character(file_list$file_name[i]), file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$loc_id[i], file_list$period[i])
    } else if (file_list$type[i]=="gtmb"){
-     tmpData <- prep_gtmb_cod_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i])
+     tmpData <- prep_gtmb_cod_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i]])
    } else if (file_list$type[i]=="cat"){
-    tmpData <- prep_cod_cat_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i])
+    tmpData <- prep_cod_cat_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i])
    }
   ## replace the "Q1" category with the associated dates that the quarters map to   
   # tmpData1 <- map_quarters(tmpData, ymd(file_list$start_date[i]),file_list$qtr_number[i], file_list$loc_id[i], file_list$period[i],file_list$disease[i], file_list$source[i])

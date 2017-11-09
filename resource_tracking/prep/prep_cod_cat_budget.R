@@ -1,8 +1,8 @@
 
-prep_cod_cat_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period, grant){
+prep_cod_cat_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period){
   
   if(!is.na(sheet_name)){
-  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
+  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = TRUE))
   } else {
     ghe_data <- data.table(read_excel(paste0(dir, inFile)))
   }
@@ -10,9 +10,11 @@ prep_cod_cat_budget = function(dir, inFile, sheet_name, start_date, qtr_num, dis
   if(is.na(ghe_data[1,1])){
     ghe_data[1,1] <- "category"
   }
+
+  ##only keep data that has a value in the "category" column 
+  ghe_data <- na.omit(ghe_data, cols=1, invert=FALSE)
+
   
-  ## this type of budget data should always have 13 cost categories 
-  ghe_data <- ghe_data[1:14,]
   toMatch <- c("Ann","Year", "RCC", "%", "Phase", "Implem", "Total")
   if(any(colnames(ghe_data)%in% "X_")){
     ##we only want the data for each quarter, so remove extraneous values: 
@@ -23,18 +25,17 @@ prep_cod_cat_budget = function(dir, inFile, sheet_name, start_date, qtr_num, dis
   
   
   drop.cols <- grep(paste(toMatch, collapse="|"), ignore.case=TRUE, colnames(ghe_data))
-  ghe_data <- ghe_data[, (drop.cols) := NULL]
+  ghe_data1 <- ghe_data[, (drop.cols) := NULL]
   
-  ghe_data1 <- na.omit(ghe_data, cols=1, invert=FALSE)
   
   ## also drop columns containing only NA's
-  ghe_data1<- Filter(function(x) !all(is.na(x)), ghe_data1)
-  colnames(ghe_data1)[1] <- "category"
+  ghe_data<- Filter(function(x) !all(is.na(x)), ghe_data1)
+  colnames(ghe_data)[1] <- "category"
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   ##library(reshape)
-  setDT(ghe_data1)
-  ghe_data<- melt(ghe_data1,id="category", variable.name = "qtr", value.name="budget")
+  setDT(ghe_data)
+  ghe_data<- melt(ghe_data,id="category", variable.name = "qtr", value.name="budget")
   
   
   dates <- rep(start_date, qtr_num) # 
@@ -57,7 +58,7 @@ prep_cod_cat_budget = function(dir, inFile, sheet_name, start_date, qtr_num, dis
   budget_dataset$disease <- disease 
   budget_dataset$loc_id <- loc_id
   budget_dataset$period <- period
-  budget_dataset$grant <- grant
+
   
   return( budget_dataset)
 
