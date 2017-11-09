@@ -2,7 +2,7 @@
 prep_cod_cat_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period){
   
   if(!is.na(sheet_name)){
-  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = TRUE))
+  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))
   } else {
     ghe_data <- data.table(read_excel(paste0(dir, inFile)))
   }

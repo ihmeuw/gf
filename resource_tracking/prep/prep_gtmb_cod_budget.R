@@ -21,7 +21,7 @@ prep_gtmb_cod_budget = function(dir, inFile, sheet_name, start_date, qtr_num, di
     }
   }
   
-  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)), col_names = TRUE)
+  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)), col_names = FALSE)
   
   ## the 1st column isn't always the same, so just call it something: 
   colnames(ghe_data)[1] <- "first_column"
