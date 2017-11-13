@@ -30,8 +30,8 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source) {
   ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
   # ----------------------------------------------
   ## code to get diseases -- add more if necessary
-  toMatch <- c("VIH", "SIDA", "TUBER", "MALAR", "VECTOR")
-  ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), ghe_data$X__10), ]
+  toMatch <- c("vih", "sida", "tuber", "malar", "vector")
+  ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$X__10)), ]
   
   ## now get region + budgeted expenses 
   budget_dataset <- ghe_data[, c("X__10", "X__17", "X__24"), with=FALSE]
