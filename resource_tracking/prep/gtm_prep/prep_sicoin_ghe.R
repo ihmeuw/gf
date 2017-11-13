@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source) {
+prep_ghe_sicoin = function(dir, inFile, year, loc_id, loc_name, period, disease, source) {
   
   
   # --------------------
@@ -41,6 +41,7 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source) {
   ## Create other variables 
   budget_dataset$source <- source
   budget_dataset$loc_id <- loc_id
+  budget_dataset$loc_name <- loc_name
   budget_dataset$disease <- disease
   budget_dataset$start_date <- as.Date(paste(c(year,"01","01"), collapse="-"),origin="1960-01-01")
   budget_dataset$period <- period
@@ -53,7 +54,6 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source) {
   if (!is.numeric(budget_dataset$expenditures)) budget_dataset[,expenditures:=as.numeric(expenditures)]
 
   # ----------------------------------------------
-  
   # return prepped data
   return(budget_dataset)
 }

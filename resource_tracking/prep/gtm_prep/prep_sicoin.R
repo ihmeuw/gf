@@ -43,8 +43,8 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   ## Code to aggregate into a dataset 
   
   ## now get region + budgeted expenses 
-  budget_dataset <- gf_subset[, c("X__10", "X__19", "X__26"), with=FALSE]
-  names(budget_dataset) <- c("loc_id", "budget", "disbursement")
+  budget_dataset <- gf_subset[, c("X__3", "X__10", "X__19", "X__26"), with=FALSE]
+  names(budget_dataset) <- c("loc_id", "loc_name", "budget", "disbursement")
   
   ## we only want the municpalities so get rid of GF and Guatemala
   

@@ -1,16 +1,16 @@
-folder,filename,format,year,disease,loc_id,source
-multi_source,2012  MALARIA PRESUPUESTO POR ORGANISMOS PROGRAMA 12 ACTIVIDAD 1,c_coin_muni,2012,malaria,gtm,gf
-multi_source,2012 MALARIA PRESUPUESTO POR ORGANISMOS PROGRAMA 14 ACTIVIDAD 2,c_coin_muni,2012,malaria,gtm,gf
-multi_source,2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento municipio),c_coin_muni,2013,malaria,gtm,gf
-multi_source,2014 MALARIA PRESUPUESTO POR ORGANISMO  (departamento municipio),c_coin_muni,2014,malaria,gtm,gf
-multi_source,2015 MALARIA PRESUPUESTO POR ORGANISMO  (departamento municipio),c_coin_muni,2015,malaria,gtm,gf
-multi_source,2011 MALARIA FM RENGLONES,c_coin_cost,2011,malaria,gtm,gf
-multi_source,2012 MALARIA FM RENGLONES,c_coin_cost,2012,malaria,gtm,gf
-multi_source,2016 MALARIA FM RENGLONES,c_coin_cost,2016,malaria,gtm,gf
-ghe_s,CATALOGO PA 2013,c_coin_ghe,2013,multiple,gtm,ghe
-ghe_s,CATALOGO PA 2014,c_coin_ghe,2014,multiple,gtm,ghe
-ghe_s,CATALOGO PA 2015,c_coin_ghe,2015,multiple,gtm,ghe
-ghe_s,CATALOGO PA 2016,c_coin_ghe,2016,multiple,gtm,ghe
-multi_source,2012 vih sida programa actividad,c_coin_ghe,2012,multiple,gtm,ghe
-ghe_s,CATALOGO PA 2012,c_coin_ghe,2012,multiple,gtm,ghe
-ghe_s,2016 fondo mundial por programa por actividad especifica por departamento,,2016,multiple,gtm,ghe
+folder,filename,format,year,disease,loc_id,loc_name,source
+multi_source,2012  MALARIA PRESUPUESTO POR ORGANISMOS PROGRAMA 12 ACTIVIDAD 1,c_coin_muni,2012,malaria,gtm,gtm,gf
+multi_source,2012 MALARIA PRESUPUESTO POR ORGANISMOS PROGRAMA 14 ACTIVIDAD 2,c_coin_muni,2012,malaria,gtm,gtm,gf
+multi_source,2013 MALARIA PRESUPUESTO POR ORGANISMO (departamento municipio),c_coin_muni,2013,malaria,gtm,gtm,gf
+multi_source,2014 MALARIA PRESUPUESTO POR ORGANISMO  (departamento municipio),c_coin_muni,2014,malaria,gtm, gtm,gf
+multi_source,2015 MALARIA PRESUPUESTO POR ORGANISMO  (departamento municipio),c_coin_muni,2015,malaria,gtm,gtm,gf
+multi_source,2011 MALARIA FM RENGLONES,c_coin_cost,2011,malaria,gtm,gtm,gf
+multi_source,2012 MALARIA FM RENGLONES,c_coin_cost,2012,malaria,gtm,gtm,gf
+multi_source,2016 MALARIA FM RENGLONES,c_coin_cost,2016,malaria,gtm,gtm,gf
+ghe_s,CATALOGO PA 2013,c_coin_ghe,2013,multiple,gtm,gtm,ghe
+ghe_s,CATALOGO PA 2014,c_coin_ghe,2014,multiple,gtm,gtm,ghe
+ghe_s,CATALOGO PA 2015,c_coin_ghe,2015,multiple,gtm,gtm,ghe
+ghe_s,CATALOGO PA 2016,c_coin_ghe,2016,multiple,gtm,gtm,ghe
+multi_source,2012 vih sida programa actividad,c_coin_ghe,2012,multiple,gtm,gtm,ghe
+ghe_s,CATALOGO PA 2012,c_coin_ghe,2012,multiple,gtm,gtm,ghe
+ghe_s,2016 fondo mundial por programa por actividad especifica por departamento,,2016,multiple,gtm,gtm,ghe
