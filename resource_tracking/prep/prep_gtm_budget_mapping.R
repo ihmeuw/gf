@@ -9,7 +9,7 @@
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
 
-map_quarters = function(tmpData, start_date,qtr_num, loc_id, period, disease, source){
+map_quarters = function(tmpData, start_date, qtr_num, loc_id, period, disease, source){
   
 ## create a vector of dates that correspond to the quarters in the budget files   
 dates <- rep(start_date, qtr_num) # 
