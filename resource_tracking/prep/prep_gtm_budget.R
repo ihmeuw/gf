@@ -15,7 +15,7 @@ prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_n
   
   for(i in 1: length(col_names)){
     if (i==1){
-        col_names[i] <- "category"
+        col_names[i] <- "cost_category"
       } else {
         col_names[i] <- paste("Q", i-1, sep="")
       }
@@ -35,7 +35,7 @@ prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_n
   # drop 1st column (unnecessary)
   ghe_data[[1]] <- NULL  
   
-  ghe_data$X__1[1] <- "category"
+  ghe_data$X__1[1] <- "cost_category"
   
   
   ## also drop columns containing only NA's
@@ -61,7 +61,7 @@ prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_n
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   setDT(ghe_data1)
-  melted<- melt(ghe_data1,id="category", variable.name = "qtr", value.name="budget")
+  melted<- melt(ghe_data1,id="cost_category", variable.name = "qtr", value.name="budget")
   
   return(melted)
 }

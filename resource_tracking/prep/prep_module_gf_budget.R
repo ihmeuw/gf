@@ -14,7 +14,7 @@ prep_module_budget = function(dir, inFile, extension, sheet_name, start_date, qt
   
   for(i in 1: length(col_names)){
     if (i==1){
-      col_names[i] <- "category"
+      col_names[i] <- "cost_category"
     } else {
       col_names[i] <- paste("Q", i-1, sep="")
     }
@@ -47,7 +47,7 @@ prep_module_budget = function(dir, inFile, extension, sheet_name, start_date, qt
 
   ## invert the dataset so that budget expenses and quarters are grouped by category
   setDT(ghe_data)
-  melted<- melt(ghe_data,id="category", variable.name = "qtr", value.name="budget")
+  melted<- melt(ghe_data,id="cost_category", variable.name = "qtr", value.name="budget")
   
   
   return(melted)
