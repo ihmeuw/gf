@@ -25,33 +25,38 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   gf_data <- read_excel(paste0(dir,inFile, '.xls'))
   
   # ----------------------------------------------
+  
+  ##avoid using rlangs so manually name the columns w/ "FONDO MUNDIAL" 
+  colnames(gf_data)[11] <- "loc_id"
+  colnames(gf_data)[7] <- "col2"
+  colnames(gf_data)[4] <- "col3"
+  colnames(gf_data)[20] <- "budget"
+  colnames(gf_data)[27] <- "disbursement"
   ## remove empty columns 
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
   
+  
   ##pull all rows from between columns that have "FONDO MUNDIAL" in them 
   if (source=="gf"){
-    gf_data <- gf_data[c(grep("fondo mundial", tolower(gf_data$X__10)):(grep("fondo mundial", tolower(gf_data$X__6)))),]
+    gf_data <- gf_data[c(grep("fondo mundial", tolower(gf_data$loc_id)):(grep("fondo mundial", tolower(gf_data$col2)))),]
   } 
   # remove rows with "TOTAL"  -> should be able to calculate total from summing municipaliies
   ## create a check for dropping missing data: 
-  gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$X__3, invert = TRUE) , ])
+  gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$col3, invert = TRUE) , ])
   
   # remove rows where X__10 (municipalities) are missing values
-  gf_subset <- na.omit(gf_subset, cols="X__10")
+  gf_subset <- na.omit(gf_subset, cols="loc_id")
   
   # ----------------------------------------------
   ## Code to aggregate into a dataset 
   
   ## now get region + budgeted expenses 
-  budget_dataset <- gf_subset[, c("X__10", "X__19", "X__26"), with=FALSE]
-  names(budget_dataset) <- c("loc_id", "budget", "disbursement")
+  budget_dataset <- gf_subset[, c("loc_id", "budget", "disbursement"), with=FALSE]
   
   ## we only want the municpalities so get rid of GF and Guatemala
   
-  toMatch <- c("mundial", "guatemala")
-  for (i in 1:length(toMatch)){
-    budget_dataset <- budget_dataset[grep(string(toMatch[i]),tolower(budget_dataset$loc_id), invert = TRUE),]
-  }
+  toMatch <- c("mundial", "guate")
+  budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
   # ----------------------------------------------
   
   ## Create other variables 
