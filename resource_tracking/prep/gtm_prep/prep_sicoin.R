@@ -30,7 +30,7 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   
   ##pull all rows from between columns that have "FONDO MUNDIAL" in them 
   if (source=="gf"){
-    gf_data <- gf_data[c(grep("FONDO MUNDIAL", gf_data$X__10):(grep("FONDO MUNDIAL", gf_data$X__6))),]
+    gf_data <- gf_data[c(grep("fondo mundial", tolower(gf_data$X__10)):(grep("fondo mundial", tolower(gf_data$X__6)))),]
   } 
   # remove rows with "TOTAL"  -> should be able to calculate total from summing municipaliies
   ## create a check for dropping missing data: 
@@ -48,9 +48,9 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   
   ## we only want the municpalities so get rid of GF and Guatemala
   
-  toMatch <- c("MUNDIAL", "GUATEMALA")
+  toMatch <- c("mundial", "guatemala")
   for (i in 1:length(toMatch)){
-    budget_dataset <- budget_dataset[grep(string(toMatch[i]),budget_dataset$loc_id, invert = TRUE),]
+    budget_dataset <- budget_dataset[grep(string(toMatch[i]),tolower(budget_dataset$loc_id), invert = TRUE),]
   }
   # ----------------------------------------------
   
