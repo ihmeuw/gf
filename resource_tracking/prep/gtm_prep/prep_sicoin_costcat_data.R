@@ -49,14 +49,14 @@ prep_cost_sicoin = function(dir, inFile, year, disease, period, source) {
   budget_dataset$source <- source
   budget_dataset$start_date <- as.Date(paste(c(year,"01","01"), collapse="-"),origin="1960-01-01")
   budget_dataset$period <- period
-  budget_dataset$expenditures <- 0 ## change this once we figure out where exp data is
+  budget_dataset$expenditure <- 0 ## change this once we figure out where exp data is
   budget_dataset$disease <- disease
   # ----------------------------------------------
   
   # Enforce variable classes
   if (!is.numeric(budget_dataset$budget)) budget_dataset[,budget:=as.numeric(budget)]
   if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
-  if (!is.numeric(budget_dataset$expenditures)) budget_dataset[,expenditures:=as.numeric(expenditures)]
+  if (!is.numeric(budget_dataset$expenditure)) budget_dataset[,expenditure:=as.numeric(expenditure)]
 
   # ----------------------------------------------
   

@@ -25,10 +25,6 @@ library(rlang)
 library(zoo)
 
 
-# Here is a test change that I want to make
-print('hello')
-
-
 # ----------------------------------------------
 #define variables: 
 
@@ -37,7 +33,7 @@ print('hello')
 # (only the ones that contain actual budget/expenditure data and are in c_coin format). 
 ## 
 
-dir <- 'your folder'
+dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
 period <-365
 cost_category <- "All"
 
@@ -45,7 +41,7 @@ cost_category <- "All"
 # ----------------------------------------------
 
 # load csv from github repository (file_format_list.csv)
-file_list <- read.csv("./file_format_list.csv")
+file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/file_format_list.csv")
 
 source('./prep_sicoin.r')
 source('./prep_sicoin_costcat_data.r')
@@ -71,9 +67,10 @@ for(i in 1:length(file_list$filename)){
   }
 }
 
+resource_database$file_origin <- "SICOIN"
 
 ##output the data to the correct folder 
-write.csv(resource_database, file="output location")
+
 
 
 

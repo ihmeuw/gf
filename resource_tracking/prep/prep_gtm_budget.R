@@ -63,5 +63,16 @@ prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_n
   setDT(ghe_data1)
   melted<- melt(ghe_data1,id="cost_category", variable.name = "qtr", value.name="budget")
   
+  dates <- rep(start_date, qtr_num) # 
+  for (i in 1:length(dates)){
+    if (i==1){
+      dates[i] <- dates[i]
+    } else {
+      dates[i] <- dates[i-1]%m+% months(3)
+    }
+  }
+  
+  
+  
   return(melted)
 }

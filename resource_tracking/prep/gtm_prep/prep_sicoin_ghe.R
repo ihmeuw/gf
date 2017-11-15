@@ -30,7 +30,7 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source) {
   ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
   # ----------------------------------------------
   ## code to get diseases -- add more if necessary
-  toMatch <- c("vih", "sida", "tuber", "malar", "vector")
+  toMatch <- c("vih", "sida", "tuber", "malar", "vector", "violencia sexual")
   ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$X__10)), ]
   
   ## now get region + budgeted expenses 
@@ -42,15 +42,28 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source) {
   budget_dataset$source <- source
   budget_dataset$loc_id <- loc_id
   budget_dataset$disease <- disease
+  hivMatch <- c("vih", "sida", "violencia")
+  tbMatch <- c("tuber")
+  for(i in 1:length(budget_dataset$disease)){
+    if(grepl(paste(hivMatch, collapse = "|"), tolower(budget_dataset$cost_category[i]))){
+    budget_dataset$disease[i] <- "hiv"
+    } else if(grepl(tbMatch, tolower(budget_dataset$cost_category[i]))){
+    budget_dataset$disease[i] <- "tb"
+    } else{
+    budget_dataset$disease[i] <- "malaria"
+    }
+    i=i+1
+  }
+  
   budget_dataset$start_date <- as.Date(paste(c(year,"01","01"), collapse="-"),origin="1960-01-01")
   budget_dataset$period <- period
-  budget_dataset$expenditures <- 0 ## change this once we figure out where exp data is
+  budget_dataset$expenditure <- NA ## change this once we figure out where exp data is
   # ----------------------------------------------
   
   # Enforce variable classes
   if (!is.numeric(budget_dataset$budget)) budget_dataset[,budget:=as.numeric(budget)]
   if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
-  if (!is.numeric(budget_dataset$expenditures)) budget_dataset[,expenditures:=as.numeric(expenditures)]
+  if (!is.numeric(budget_dataset$expenditure)) budget_dataset[,expenditure:=as.numeric(expenditure)]
 
   # ----------------------------------------------
   
