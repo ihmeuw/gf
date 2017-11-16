@@ -41,7 +41,8 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source) {
   ## Create other variables 
   budget_dataset$source <- source
   budget_dataset$loc_id <- loc_id
-  budget_dataset$disease <- disease
+  budget_dataset$disease <- "multiple"
+  budget_dataset$cost_category <- as.factor(budget_dataset$cost_category)
   hivMatch <- c("vih", "sida", "violencia")
   tbMatch <- c("tuber")
   for(i in 1:length(budget_dataset$disease)){
