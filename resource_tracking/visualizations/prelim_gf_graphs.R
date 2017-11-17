@@ -10,6 +10,7 @@
 
 library(ggplot2)
 library(dplyr)
+library(data.table)
 
 # make end date
 sicoin_data[, end_date:=start_date + period-1]
@@ -77,6 +78,24 @@ muni_melted <- muni_melt[-grep(paste(c("gtm", "GUAT"),  collapse="|"), muni_melt
 
 muni_melted <- muni_melted[, list(start_date, variable, value),by="loc_id"]
 muni_melted$value[muni_melted$value == 0] <- NA
+
+muni_mapping <- cbind(unique(levels(muni_melted$loc_id)), as.numeric(1:length(unique(levels((muni_melted$loc_id))))))
+
+colnames(muni_mapping) <- c("loc_id", "muni_code")
+
+muni_merge <- merge(muni_melted, muni_mapping, by="loc_id")
+muni_merge$muni_code <- as.numeric(muni_merge$muni_code)
+
+for (i in 1:6){
+  subdata <- subset(muni_merge, muni_code%%6==i)
+  print(ggplot(subdata, aes(x = start_date, y = value/100000)) + 
+  geom_line(aes(color=variable)) +
+  facet_wrap(~loc_id) +
+  geom_point() +
+  ggtitle("Resource by Municipality")+
+  labs(x = "Start Date", y = "$$ in 100ks"))
+}
+dev.off()
 
 
 for (k in unique(muni_melted$loc_id)){

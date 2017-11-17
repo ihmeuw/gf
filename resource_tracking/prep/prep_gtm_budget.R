@@ -10,30 +10,33 @@
 # ----------------------------------------------
 
 prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_num) {
-
   col_names <- rep(0, qtr_num+1)
   
   for(i in 1: length(col_names)){
     if (i==1){
-        col_names[i] <- "cost_category"
-      } else {
-        col_names[i] <- paste("Q", i-1, sep="")
-      }
+      col_names[i] <- "cost_category"
+    } else {
+      col_names[i] <- paste("Q", i-1, sep="")
     }
-    
+  }
+  
+  
+
   ghe_data <- data.table(read_excel(paste0(dir, inFile, extension), sheet=sheet_name))
   
   ## the 1st column isn't always the same, so just call it something: 
   colnames(ghe_data)[4] <- "program_activity"
   colnames(ghe_data)[1] <- "first_column"
   ## this type of budget data should always have 13 cost categories 
-  ghe_data <- ghe_data[c(grep("PROGRAM ACTIVITY", ghe_data$first_column):(grep("TOTAL", ghe_data$first_column))),]
+  ghe_data <- ghe_data[c(grep("Service Deli", ghe_data$program_activity):(grep("Implemen", ghe_data$program_activity)-1)),]
+  
+  
+  # drop 1st three columns (unnecessary)
+  ghe_data[,1:3] <- NULL
   
   # drop first row (it's blank)
-  ghe_data <- ghe_data[-c(1:3),]
+  ghe_data <- ghe_data[-1,]
   
-  # drop 1st column (unnecessary)
-  ghe_data[,1:3] <- NULL  
   
   ghe_data$program_activity[1] <- "cost_category"
   
@@ -54,27 +57,14 @@ prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_n
   ghe_data1 <- ghe_data[, (drop.cols) := NULL]
   
   
-  ## rename the columns
-  colnames(ghe_data1) <- col_names
   ## drop the first row now that we renamed the columns 
-  ghe_data1 <- ghe_data1[-1,]
-  ghe_data1 <- ghe_data1[!is.na(ghe_data1$cost_category),]
+  ghe_data <- ghe_data1[-1,]
+  ghe_data <- ghe_data[!is.na(ghe_data$cost_category),]
+  
+  colnames(ghe_data) <- col_names
   ## invert the dataset so that budget expenses and quarters are grouped by category
-  setDT(ghe_data1)
-  
-  
-  melted<- melt(ghe_data1,id="cost_category")
-  
-  dates <- rep(start_date, qtr_num) # 
-  for (i in 1:length(dates)){
-    if (i==1){
-      dates[i] <- dates[i]
-    } else {
-      dates[i] <- dates[i-1]%m+% months(3)
-    }
-  }
-  
-  
+  setDT(ghe_data)
+  melted<- melt(ghe_data,id="cost_category", variable.name = "qtr", value.name="budget")
   
   return(melted)
 }

@@ -46,6 +46,7 @@ for(i in 1:length(file_list$filename)){
     if(i>1){
         resource_database = rbind(resource_database, tmpData1, use.names=TRUE)
     }
+  print(i)
 
 }
 
