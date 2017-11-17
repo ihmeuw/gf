@@ -60,6 +60,7 @@ prep_gtm_budget = function(dir, inFile, extension, sheet_name, start_date, qtr_n
   ## drop the first row now that we renamed the columns 
   ghe_data <- ghe_data1[-1,]
   ghe_data <- ghe_data[!is.na(ghe_data$cost_category),]
+  ghe_data <- ghe_data[!grepl("resupuesto", tolower(ghe_data$cost_category)),]
   
   colnames(ghe_data) <- col_names
   ## invert the dataset so that budget expenses and quarters are grouped by category

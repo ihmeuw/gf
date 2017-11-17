@@ -55,3 +55,4 @@ resource_database$budget <- as.numeric(resource_database$budget)
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$expenditures <- 0 
 resource_database$disbursement<- 0 
+resource_database$data_source <- "fpm_budget"
