@@ -25,11 +25,13 @@ prep_module_budget = function(dir, inFile, extension, sheet_name, start_date, qt
   
   ## this type of budget data should always have 13 cost categories 
   colnames(ghe_data)[3] <- "program_activity"
-  ghe_data <- ghe_data[c(grep("Module", ghe_data$program_activity):(grep("Total", ghe_data$program_activity))),]
+  colnames(ghe_data)[1] <- "first_column"
+  ghe_data <- ghe_data[c(grep("CatMod", ghe_data$first_column):(grep("Total", ghe_data$program_activity))),]
   
  ## delete 1st two columns 
   ghe_data <- ghe_data[, -c(1:2)]
-  
+
+  ghe_data$program_activity[1] <- "cost_category"
   colnames(ghe_data) <- as.character(ghe_data[1,])
 
   ## drop the first row now that we renamed the columns 
@@ -44,6 +46,8 @@ prep_module_budget = function(dir, inFile, extension, sheet_name, start_date, qt
 
   ## also drop columns containing only NA's
   ghe_data<- Filter(function(x) !all(is.na(x)), ghe_data)
+  
+  ghe_data <- ghe_data[!is.na(ghe_data$cost_category),]
   
   ## rename the columns
   colnames(ghe_data) <- col_names
