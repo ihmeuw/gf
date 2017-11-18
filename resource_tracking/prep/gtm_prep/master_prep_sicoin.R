@@ -67,7 +67,7 @@ for(i in 1:length(file_list$filename)){
   }
 }
 
-resource_database$file_origin <- "SICOIN"
+resource_database$data_source <- "SICOIN"
 
 ##output the data to the correct folder 
 
