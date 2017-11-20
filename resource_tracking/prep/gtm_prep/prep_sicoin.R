@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prepSicoin = function(dir, inFile, year, disease, period, cost_category, source) {
+prepSicoin = function(dir, inFile, year, disease, period, cost_category, source, grant_number) {
   
   # --------------------
   # Test the inputs
@@ -67,6 +67,7 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   budget_dataset$cost_category <- cost_category
   budget_dataset$expenditure <- NA ## change this once we figure out where exp data is
   budget_dataset$disease <- disease
+  budget_dataset$grant_number <- grant_number
   # ----------------------------------------------
   
   # Enforce variable classes
