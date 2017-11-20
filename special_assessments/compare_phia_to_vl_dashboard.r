@@ -38,39 +38,40 @@ outFile = paste0(dir, 'visualizations/phia_vl_dashboard.pdf')
 # ------------------------------------------------------------------
 
 
-# --------------------------------
-# Prep data
-data = prepVL(dir, level='region')
-# --------------------------------
+# --------------------------------------
+# Prep data at different levels
+regData = prepVL(dir, level='region')
+distData = prepVL(dir, level='district')
+# --------------------------------------
 
 
-# ----------------------------------------
+# -----------------------------------------------
 # Store linear fit
-lmFit = lm(vld_suppression_adj~phia_vls, data)
+lmFit = lm(vld_suppression_adj~phia_vls, regData)
 coefs = lmFit$coefficients
-# ----------------------------------------
+# -----------------------------------------------
 
 
 # -------------------------------------------------------------------------------------------
 # Set up to graph
 
 # clean names
-data[, region10_name:=gsub('_', ' ', region10_name)]
+regData[, region10_name:=gsub('_', ' ', region10_name)]
 
 # load/fortify shape data
 load(shapeFile)
 mapData = data.table(fortify(map))
 
 # reshape long
-long = melt(data, id.vars='region10_name')
+long = melt(regData, id.vars='region10_name')
 long[, value:=as.numeric(value)]
 
 # wrap text
 long[, region10_name:=str_wrap(region10_name, 6)]
 
 # merge to map and melt data
-data[, region10:=as.character(region10)]
-mapData = merge(mapData, data, by.x='id', by.y='region10', all.x=TRUE)
+regData[, region10:=as.character(region10)]
+mapData = merge(mapData, regData, by.x='id', by.y='region10', all.x=TRUE)
 mapData = melt(mapData, id.vars=c('long','lat','region10_name','id','group','order','hole','piece'))
 
 # clean up variable labels
@@ -117,9 +118,9 @@ p2 = ggplot(long[variable %in% vars2], aes(x=region10_name, y=value, fill=variab
 	theme(plot.caption=element_text(size=10)) 
 
 # scatterplot
-min = min(data$phia_vls,data$vld_suppression_adj)
-max = max(data$phia_vls,data$vld_suppression_adj)
-p3 = ggplot(data, aes(x=phia_vls, y=vld_suppression_adj)) + 
+min = min(regData$phia_vls,regData$vld_suppression_adj)
+max = max(regData$phia_vls,regData$vld_suppression_adj)
+p3 = ggplot(regData, aes(x=phia_vls, y=vld_suppression_adj)) + 
 	geom_abline(color='red', slope=coefs[2], intercept=coefs[1], linetype='longdash', size=1.25) + 
 	geom_abline(slope=1, intercept=0) + 
 	geom_point(color=colors[4], size=4.5, alpha=.7, stroke=0) + 

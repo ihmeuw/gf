@@ -30,9 +30,6 @@ prepVL = function(dir=NULL, level='region') {
 	# -------------------------------------------------------------------------------------------
 	# Files and directories
 
-	# data directory
-	dir = 'J:/Project/Evaluation/GF/special_assessments/uga/'
-
 	# input files
 	inFilePHIA = paste0(dir, 'phia_2016/vl_suppression_by_region.csv')
 	inFileVLD = paste0(dir, 'vl_dashboard/facilities_suppression_201710311708_aug16_mar17.csv')
@@ -42,9 +39,6 @@ prepVL = function(dir=NULL, level='region') {
 	distMapFile = paste0(dir, '../../mapping/uga/uga_geographies_map.csv')
 	distAltMapFile = paste0(dir, '../../mapping/uga/uga_alternate_dist_names.csv')
 	regAltMapFile = paste0(dir, '../../mapping/uga/uga_alternate_region_names.csv')
-
-	# uganda shapefile
-	shapeFile = paste0(dir, '../../mapping/uga/uga_region10_map.rdata')
 	# -------------------------------------------------------------------------------------------
 
 
