@@ -30,7 +30,7 @@ dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
 file_list <- read.csv("H:/CIESAR/ciesar_data.csv", stringsAsFactors = FALSE)
 
 for(i in 1:length(file_list$filename)){
-  tmpData <- prep_pudr(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i],file_list$extension[i])), as.character(file_list$sheet[i]), file_list$format[i], ymd(file_list$start_date[i]), file_list$disease[i])
+  tmpData <- prep_pudr(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i],file_list$extension[i])), as.character(file_list$sheet[i]), file_list$format[i], ymd(file_list$start_date[i]), file_list$disease[i],file_list$qtr_num[i], file_list$period[i])
   if(i==1){
     resource_database = tmpData
   }
@@ -48,5 +48,4 @@ if (!is.numeric(resource_database$expenditure))resource_database[,expenditure:=a
 
 
 ## since we only have budget data, include exp and disbursed as 0:  
-resource_database$period <- 365
 resource_database$data_source <- "pudr_budget"
