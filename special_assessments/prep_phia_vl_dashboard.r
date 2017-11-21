@@ -34,7 +34,8 @@ prepVL = function(dir=NULL, level='region') {
 	inFilePHIA = paste0(dir, 'phia_2016/vl_suppression_by_region.csv')
 	inFileVLD = paste0(dir, 'vl_dashboard/facilities_suppression_201710311708_aug16_mar17.csv')
 	inFileAIS = 'J:/DATA/MACRO_AIS/UGA/2011/UGA_AIS6_2011_IND_Y2012M10D11.DTA'
-
+	inFileART = 'J:/WORK/04_epi/01_database/02_data/hiv/spectrum/summary/170617_hotsauce_high/locations/UGA_spectrum_prep.csv'
+	
 	# district/region maps
 	distMapFile = paste0(dir, '../../mapping/uga/uga_geographies_map.csv')
 	distAltMapFile = paste0(dir, '../../mapping/uga/uga_alternate_dist_names.csv')
@@ -83,12 +84,13 @@ prepVL = function(dir=NULL, level='region') {
 
 
 	# ------------------------------------------------------------------------------------
-	# Load/prep AIS dataset
+	# Load/prep AIS dataset and ART estimates
 
 	# load
 	aisData = data.table(read.dta13(inFileAIS))
 
 	# collapse to estimate art coverage at the region level
+	national = aisData[, list('art_coverage'=mean(s535=='yes', na.rm=TRUE))]
 	aisData = aisData[, list('art_coverage'=mean(s535=='yes', na.rm=TRUE)), by='v024']
 
 	# map to standard regions
@@ -97,6 +99,11 @@ prepVL = function(dir=NULL, level='region') {
 	aisData = merge(aisData, regAltMap, by.x='v024', by.y='region10_alt_name', all.x=TRUE)
 	aisData[is.na(region10_name), region10_name:=v024]
 	aisData$v024 = NULL
+	
+	# normalize around current ART estimates
+	artData = fread(inFileART)
+	artData = artData[measure=='ART' & metric=='Rate' & year_id==2016 & sex_id==3 & age_group_id==22]
+	aisData[, art_coverage:=art_coverage*(artData$mean/national$art_coverage)]
 	# ------------------------------------------------------------------------------------
 
 
