@@ -7,15 +7,16 @@
 # Inputs:
 # dir - directory where data files exist
 # level - what level should the returned data be? Options: 'region', 'district', 'facility'
+# annual - (logical) whether VLD data should be annual or in the time frame matching PHIA
 # Outputs:
 # data - a data.table with both datasets merged together, collapsed (or not) to the specified level
 # ------------------------------------------------------------------------------------------------
 
 
-# --------------------------------------------
+# ----------------------------------------------------------
 # Start function
-prepVL = function(dir=NULL, level='region') { 
-	# ----------------------------------------
+prepVL = function(dir=NULL, level='region', annual=FALSE) { 
+	# ------------------------------------------------------
 
 
 	# -------------------------------------------------------------------------------
@@ -33,8 +34,12 @@ prepVL = function(dir=NULL, level='region') {
 	# input files
 	inFilePHIA = paste0(dir, 'phia_2016/vl_suppression_by_region.csv')
 	inFileVLD = paste0(dir, 'vl_dashboard/facilities_suppression_201710311708_aug16_mar17.csv')
+	inFileVLD15 = paste0(dir, 'vl_dashboard/facilities_suppression_201711211146_jan15_dec15.csv')
+	inFileVLD16 = paste0(dir, 'vl_dashboard/facilities_suppression_201711211213_jan16_dec16.csv')
+	inFileVLD17 = paste0(dir, 'vl_dashboard/facilities_suppression_201711211214_jan17_nov17.csv')
 	inFileAIS = 'J:/DATA/MACRO_AIS/UGA/2011/UGA_AIS6_2011_IND_Y2012M10D11.DTA'
-	inFileART = 'J:/WORK/04_epi/01_database/02_data/hiv/spectrum/summary/170617_hotsauce_high/locations/UGA_spectrum_prep.csv'
+	inDirART = 'J:/WORK/04_epi/01_database/02_data/hiv/spectrum/summary/170617_hotsauce_high'
+	inFileART = paste0(inDirART, '/locations/UGA_spectrum_prep.csv')
 	
 	# district/region maps
 	distMapFile = paste0(dir, '../../mapping/uga/uga_geographies_map.csv')
@@ -60,14 +65,27 @@ prepVL = function(dir=NULL, level='region') {
 	# -------------------------------------------------------------------------------------------
 	# Load/prep VLD dataset
 
-	# load
-	vldData = fread(inFileVLD)
+	# load data that matches PHIA time frame
+	if (!annual) vldData = fread(inFileVLD)
 
+	# load annual data if specified
+	if (annual) {
+		i=1
+		for(y in c(15,16,17)) {
+			tmp = fread(get(paste0('inFileVLD',y)))
+			tmp[, year:=2000+y]
+			if (i==1) vldData = tmp
+			if (i>1) vldData = rbind(vldData, tmp)
+			i=i+1
+		}
+	}
+	
 	# correct non-standard district names
 	distAltMap = fread(distAltMapFile)
 	vldData[, District:=gsub(' District', '', District)]
 	vldData = merge(vldData, distAltMap, by.x='District', by.y='dist_alt_name', all.x=TRUE)
 	vldData[is.na(dist_name), dist_name:=District]
+	vldData = vldData[District!='District Left Blank']
 
 	# test for matching district names
 	distMap = fread(distMapFile)
@@ -125,6 +143,9 @@ prepVL = function(dir=NULL, level='region') {
 	if (level=='region') byVars = c('region10_name','region10')
 	if (level=='district') byVars = c('region10_name','dist_name','dist112')
 	if (level=='facility') byVars = c('region10_name','dist_name','dist112','Hub','Facility')
+	
+	# include time if annual is specified
+	if (annual) byVars = c(byVars, 'year')
 	
 	# collapse to specified level
 	data = facLevelData[, list(phia_vls=mean(phia_vls), 
