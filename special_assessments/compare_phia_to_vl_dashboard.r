@@ -101,11 +101,7 @@ mapDataReg[variable=='samples', variable:='N Samples']
 mapDataReg[variable=='vl_suppressed_samples', variable:='N Samples Suppressed']
 
 # district map
-tmp = distData[,c('dist112','vld_suppression_adj','vld_suppression_hat'),with=FALSE]
-mapDataDist = merge(mapDataDist, tmp, by.x='id', by.y='dist112', all.x=TRUE)
-mapDataDist = melt(mapDataDist, id.vars=c('long','lat','id','group','order','hole','piece'))
-mapDataDist[variable=='vld_suppression_adj', variable:='Original']
-mapDataDist[variable=='vld_suppression_hat', variable:='Corrected']
+mapDataDist = merge(mapDataDist, distData, by.x='id', by.y='dist112', all.x=TRUE)
 
 # colors
 colors = c('#CAF270', '#73D487', '#30B097', '#288993', '#41607A', '#453B52')
@@ -162,26 +158,35 @@ p3 = ggplot(regData, aes(x=phia_vls, y=vld_suppression_adj)) +
 
 
 # map VLD raw and corrected at district level
-p6 = ggplot(mapDataDist, aes(x=long, y=lat, group=group, fill=value)) + 
+p6a = ggplot(mapDataDist, aes(x=long, y=lat, group=group, fill=vld_suppression_adj)) + 
 	geom_polygon() + 
 	geom_path(color='grey95', size=.05) + 
-	facet_wrap(~variable) + 
 	scale_fill_gradientn('%', colours=mapColors) + 
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
-	labs(caption='*Adjusted for ART coverage') + 
+	labs(title='Original') + 
 	theme_minimal(base_size=16) + 
-	theme(plot.caption=element_text(size=10)) 
+	theme(plot.title=element_text(hjust=0.5))
+p6b = ggplot(mapDataDist, aes(x=long, y=lat, group=group, fill=vld_suppression_hat)) + 
+	geom_polygon() + 
+	geom_path(color='grey95', size=.05) + 
+	scale_fill_gradientn('%', colours=mapColors) + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	labs(title='Corrected') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.title=element_text(hjust=0.5))
 # -------------------------------------------------------------------------------------------
 
 
-# -------------------------------------------------------------------------------------------
+# -----------------------------------------------------------
 # Save
 pdf(outFile, height=6, width=9)
 p1
 p2
 p3
-p6
+grid.arrange(p6a, p6b, ncol=2, top='Viral Load Suppression')
 dev.off()
-# -------------------------------------------------------------------------------------------
+# -----------------------------------------------------------
