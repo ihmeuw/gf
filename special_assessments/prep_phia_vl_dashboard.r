@@ -78,6 +78,7 @@ prepVL = function(dir=NULL, level='region') {
 	# map vld data to standard regions
 	distMap = distMap[, c('region10_name', 'region10', 'dist112_name', 'dist112'), with=FALSE]
 	vldData = merge(vldData, distMap, by.x='dist_name', by.y='dist112_name', all.x=TRUE)
+	vldData[, dist112:=as.character(dist112)]
 	# -------------------------------------------------------------------------------------------
 
 
@@ -115,8 +116,8 @@ prepVL = function(dir=NULL, level='region') {
 
 	# handle level input
 	if (level=='region') byVars = c('region10_name','region10')
-	if (level=='district') byVars = c('dist_name','dist112')
-	if (level=='facility') byVars = c('dist_name','dist112','Hub','Facility')
+	if (level=='district') byVars = c('region10_name','dist_name','dist112')
+	if (level=='facility') byVars = c('region10_name','dist_name','dist112','Hub','Facility')
 	
 	# collapse to specified level
 	data = facLevelData[, list(phia_vls=mean(phia_vls), 
