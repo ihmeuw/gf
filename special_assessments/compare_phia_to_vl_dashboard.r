@@ -51,16 +51,13 @@ distData = prepVL(dir, level='district')
 # Analysis
 
 # linear fit
-lmFit = lm(vld_suppression_adj~phia_vls, regData)
-coefs = lmFit$coefficients
+lmFit = lm(logit(vld_suppression_adj/100)~logit(phia_vls/100), regData)
+s = min(regData$vld_suppression_adj)
+e = max(regData$phia_vls)
+predData = data.table(phia_vls=seq(s, e, .1))
+preds = inv.logit(predict(lmFit, interval='confidence', newdata=predData))*100
+predData = cbind(predData, preds)
 
-# fixed effects for bias correction? would need to logit()
-# fe = lm(phia_vls~factor(region10_name):vld_suppression_adj, regData)
-
-# region-specific adjustment factors
-regData[, ratio:=vld_suppression_adj/phia_vls]
-ratios = regData[,c('region10_name','ratio'),with=F]
-distData = merge(distData, ratios, by='region10_name')
 distData[, vld_suppression_hat:=vld_suppression_adj/ratio]
 # distData[, vld_suppression_pred:=predict(fe, newdata=distData)]
 # -----------------------------------------------
@@ -139,22 +136,20 @@ p2 = ggplot(long[variable %in% vars2], aes(x=region10_name, y=value, fill=variab
 # scatterplot
 min = min(regData$phia_vls,regData$vld_suppression_adj)
 max = max(regData$phia_vls,regData$vld_suppression_adj)
+# predData[lwr<min, lwr:=min]
 p3 = ggplot(regData, aes(x=phia_vls, y=vld_suppression_adj)) + 
-	geom_abline(color='red', slope=coefs[2], intercept=coefs[1], linetype='longdash', size=1.25) + 
+	geom_ribbon(data=predData, aes(ymin=lwr, ymax=upr, x=phia_vls), fill='grey75', alpha=.3, inherit.aes=FALSE) + 
+	geom_line(data=predData, aes(y=fit), color='red', linetype='longdash', size=1.25) + 
 	geom_abline(slope=1, intercept=0) + 
 	geom_point(color=colors[4], size=4.5, alpha=.7, stroke=0) + 
 	scale_fill_manual('Data Source', values=colors[c(6,4)]) + 
 	labs(title='Viral Load Suppression', subtitle='Comparison of Sources', 
 		y='National Dashboard*', x='PHIA', caption='*Adjusted for ART coverage') + 
-	scale_x_continuous(limits=c(min,max)) +
-	scale_y_continuous(limits=c(min,max)) +
+	coord_cartesian(ylim=c(min,max), xlim=c(min,max)) + # zoom in rather than clip the axes to keep the ribbon
 	theme_bw(base_size=14) + 
 	theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5), plot.caption=element_text(size=10))	
 
 # maps showing uncertainty
-
-
-# scatterplot incorporating uncertainty
 
 
 # map VLD raw and corrected at district level
