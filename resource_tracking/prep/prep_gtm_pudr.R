@@ -26,15 +26,22 @@ prep_pudr = function(dir, inFile, year, disease, period, cost_category, source) 
   
   ##clean the data depending on if in spanish or english
   if(lang=="eng"){
-    colnames(gf_data)[1] <- "cost_category"
-    gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
-    gf_data <- gf_data[c(grep("cost grouping", tolower(gf_data$cost_category)):(grep("total", tolower(gf_data$cost_category)))),]
-    colnames(gf_data)[3] <- "expenditures"
+    colnames(gf_data)[4] <- "cost_category"
+    colnames(gf_data)[5] <- "budget"
+    colnames(gf_data)[7] <- "expenditures"
+    colnames(gf_data)[1] <- "programs"
+    gf_data <- gf_data[c(grep("de prestación de servicios", tolower(gf_data$cost_category)):grep("total", tolower(gf_data$programs))),]
 
-  ## drop 1st 3 rows: 
-  gf_subset <- gf_data[-(1:5), ,drop = FALSE]
-  gf_subset <- gf_subset[!grepl("grand total", tolower(gf_subset$cost_category)),]
-  budget_dataset <- gf_subset[, c("cost_category", "expenditures"), with=FALSE]
+    ## drop 1st row: 
+    gf_subset <- gf_data[-1, ,drop = FALSE]
+    budget_dataset <- gf_subset[, c("cost_category", "budget", "expenditures"), with=FALSE]
+    budget_dataset <- gf_subset[, c("cost_category", "expenditures"), with=FALSE]
+  
+  toMatch <- c("mundial", "multire", "seleccion")
+  budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$cost_category)),]
+  budget_dataset<- budget_dataset[!is.na(budget_dataset$cost_category),]
+
+  
   } else {
     colnames(gf_data)[2] <- "cost_category"
     gf_data <- gf_data[c(grep("catego", tolower(gf_data$cost_category)):(grep("otros", tolower(gf_data$cost_category)))),]
@@ -43,6 +50,8 @@ prep_pudr = function(dir, inFile, year, disease, period, cost_category, source) 
     colnames(gf_data)[5] <- "expenditures"
     gf_subset <- gf_data[-1, ,drop = FALSE]
     budget_dataset <- gf_subset[, c("cost_category", "budget" ,"expenditures")]
+    
+    
   }
   # ----------------------------------------------
   ## Code to aggregate into a dataset 
