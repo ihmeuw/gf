@@ -39,11 +39,13 @@ dir = 'J:/Project/Evaluation/GF/special_assessments/uga/'
 # --------------------------------------------------------
 
 
-# --------------------------------------
+# ---------------------------------------------------------
 # Prep data at different levels
 regData = prepVL(dir, level='region')
 distData = prepVL(dir, level='district')
-# --------------------------------------
+regDataAnnual = prepVL(dir, level='region', annual=TRUE)
+distDataAnnual = prepVL(dir, level='district', annual=TRUE)
+# ---------------------------------------------------------
 
 
 # ---------------------------------------------------------------------------
@@ -62,9 +64,17 @@ predData = cbind(predData, preds)
 # linear fit on correction factors
 lmFit2 = lmer(vld_suppression_adj/phia_vls~(1|region10_name), distData)
 
-# region-specific correction
+# region-specific correction of district-level data
 distData[, ratio:=predict(lmFit2)]
 distData[, vld_suppression_hat:=vld_suppression_adj/ratio]
+
+# region-specific correction of region-year-level data
+regDataAnnual[, ratio:=predict(lmFit2, newdata=regDataAnnual)]
+regDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
+
+# region-specific correction of district-year-level data
+distDataAnnual[, ratio:=predict(lmFit2, newdata=distDataAnnual)]
+distDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
 # ---------------------------------------------------------------------------
 
 
