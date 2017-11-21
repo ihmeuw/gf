@@ -18,10 +18,11 @@ library(reshape2)
 library(stringr)
 library(RColorBrewer)
 library(ggplot2)
+library(gridExtra)
 # --------------------
 
 
-# ------------------------------------------------------------------
+# ----------------------------------------------------------------------
 # Files and directories
 
 # prep function
@@ -31,11 +32,12 @@ source('./special_assessments/prep_phia_vl_dashboard.r')
 dir = 'J:/Project/Evaluation/GF/special_assessments/uga/'
 
 # uganda shapefile
-shapeFile = paste0(dir, '../../mapping/uga/uga_region10_map.rdata')
+shapeFileReg = paste0(dir, '../../mapping/uga/uga_region10_map.rdata')
+shapeFileDist = paste0(dir, '../../mapping/uga/uga_dist112_map.rdata')
 
 # output files
 outFile = paste0(dir, 'visualizations/phia_vl_dashboard.pdf')
-# ------------------------------------------------------------------
+# ----------------------------------------------------------------------
 
 
 # --------------------------------------
