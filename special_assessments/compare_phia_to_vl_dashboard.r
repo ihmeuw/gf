@@ -117,9 +117,9 @@ mapColors = mapColors(10)
 # -------------------------------------------------------------------------------------------
 # Make graphs
 
-# map side-by-side
+# map PHIA and VLD side-by-side
 vars1 = c('Reported Viral Load Suppression\nNational Dashboard*', 'Viral Load Suppression\nPHIA')
-p1 = ggplot(mapData[variable %in% vars1], aes(x=long, y=lat, group=group, fill=value)) + 
+p1 = ggplot(mapDataReg[variable %in% vars1], aes(x=long, y=lat, group=group, fill=value)) + 
 	geom_polygon() + 
 	geom_path(color='grey95', size=.05) + 
 	facet_wrap(~variable) + 
@@ -153,13 +153,26 @@ p3 = ggplot(regData, aes(x=phia_vls, y=vld_suppression_adj)) +
 	scale_x_continuous(limits=c(min,max)) +
 	scale_y_continuous(limits=c(min,max)) +
 	theme_bw(base_size=14) + 
-	theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5), plot.caption=element_text(size=10))
-	
+	theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5), plot.caption=element_text(size=10))	
+
 # maps showing uncertainty
 
 
 # scatterplot incorporating uncertainty
 
+
+# map VLD raw and corrected at district level
+p6 = ggplot(mapDataDist, aes(x=long, y=lat, group=group, fill=value)) + 
+	geom_polygon() + 
+	geom_path(color='grey95', size=.05) + 
+	facet_wrap(~variable) + 
+	scale_fill_gradientn('%', colours=mapColors) + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	labs(caption='*Adjusted for ART coverage') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.caption=element_text(size=10)) 
 # -------------------------------------------------------------------------------------------
 
 
@@ -169,5 +182,6 @@ pdf(outFile, height=6, width=9)
 p1
 p2
 p3
+p6
 dev.off()
 # -------------------------------------------------------------------------------------------
