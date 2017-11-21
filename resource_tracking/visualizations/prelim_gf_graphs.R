@@ -46,7 +46,7 @@ ggplot(nat_level, aes(x = start_date, y= value/1000000)) +
 
 
 ##map the program activity to the codes: 
-sicoin_mapping_test <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/sicoin_test_mapping.csv'))
+code_mapping <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_R.csv'))
 
 sicoin_mapped  <- merge(sicoin_data, sicoin_mapping_test, by=.EACHI, allow.cartesian=TRUE)
 

@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, period) {
+prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, period, grant) {
   
   # --------------------
   # Test the inputs
@@ -22,8 +22,7 @@ prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, pe
   # Files and directories
   
   # Load/prep data
-  gf_data <- data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
-  
+  gf_data <-read_excel(paste0(dir,inFile), sheet=sheet_name)
   ##clean the data depending on if in spanish or english
   if(format=="pudr_mspas"){
     colnames(gf_data)[4] <- "cost_category"
@@ -33,13 +32,15 @@ prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, pe
     gf_data <- gf_data[c(grep("de prestación de servicios", tolower(gf_data$cost_category)):grep("total", tolower(gf_data$programs))),]
 
     ## drop 1st row: 
-    gf_subset <- gf_data[-1, ,drop = FALSE]
+    gf_subset <- data.table(gf_data[-1, ,drop = FALSE])
     budget_dataset <- gf_subset[, c("cost_category", "budget", "expenditure"),with=FALSE]
     toMatch <- c("mundial", "multire", "seleccion")
     budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$cost_category)),]
     budget_dataset<- budget_dataset[!is.na(budget_dataset$cost_category),]
-    budget_dataset$start_date <- start_date
+    budget_dataset$start_date <- year
     budget_dataset$disbursement <- 0
+    
+    
     } else if (format=="pudr_categories") {
     
     colnames(gf_data)[1] <- "groups"
@@ -52,7 +53,7 @@ prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, pe
     budget_dataset <- gf_data[, c("cost_category", "budget", "expenditure"),with=FALSE]
     budget_dataset<- budget_dataset[!is.na(budget_dataset$cost_category),]
     budget_dataset <- budget_dataset[-c(1:2),]
-    budget_dataset$start_date <- start_date
+    budget_dataset$start_date <- year
     budget_dataset$disbursement <- 0
     
     } else if (format=="pudr_bud_exp"){
@@ -64,11 +65,10 @@ prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, pe
       gf_data <- gf_data[, c("cost_category", "budget", "expenditure"),with=FALSE]
       gf_subset <- gf_data[-1, ,drop = FALSE]
       budget_dataset<- gf_subset[!is.na(gf_subset$cost_category),]
-      budget_dataset$start_date <- start_date
+      budget_dataset$start_date <- year
       budget_dataset$disbursement <- 0
       
-      }
-    
+      
     }else if (format=="pudr_disbursement"){
       colnames(gf_data)[3] <- "cost_category"
       gf_data <- gf_data[c(grep("interven", tolower(gf_data$cost_category)):grep("total", tolower(gf_data$cost_category))),]
@@ -107,25 +107,22 @@ prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, pe
       budget_dataset$expenditure <- 0
       budget_dataset$qtr <- NULL
 
-
-      
   }
   # ----------------------------------------------
-  ## Code to aggregate into a dataset 
-  
-  ## now get region + budgeted expenses 
- 
+  ## Code to aggregate into a dataset
   
   ## Create other variables 
   
   budget_dataset$source <- source
   budget_dataset$period <- period
   budget_dataset$disease <- disease
+  budget_dataset$grant <- grant
   
   # ----------------------------------------------
   
   # return prepped data
   return(budget_dataset)
 }
+
   
   

@@ -8,26 +8,37 @@
 # ----------------------------------------------
 # Set up R
 
-
-sicoin_mapped$budget <- sicoin_mapped$budget*sicoin_mapped$coeff
-sicoin_mapped$disbursement <- sicoin_mapped$disbursement *sicoin_mapped$coeff
-sicoin_mapped$expenditure <- sicoin_mapped$expenditure *sicoin_mapped$coeff
-
-write.csv(sicoin_mapped, "sicoin_total.csv", fileEncoding="UTF-8")
+library(ggplot2)
+library(dplyr)
+library(data.table)
 
 
-gtm_total <- rbind(sicoin_mapped, fpm_mapped)
 
-write.csv(gtm_total, "total_gtm_data.csv", fileEncoding="UTF-8")
-write.csv(...,file=con,...)
+# ----------------------------------------------
+## Uncomment if necessary
 
-## subset by sicoin vs fpm budget 
+
+# sicoin_mapped$budget <- sicoin_mapped$budget*sicoin_mapped$coeff
+# sicoin_mapped$disbursement <- sicoin_mapped$disbursement *sicoin_mapped$coeff
+# sicoin_mapped$expenditure <- sicoin_mapped$expenditure *sicoin_mapped$coeff
+
+pudr_mapped[,1] <- NULL
+pudr_mapped$loc_id <- "gtm"
+total_gtm_data[,1] <- NULL
+# pudr_mapped[, end_date:=start_date + period-1]
+# write.csv(sicoin_mapped, "sicoin_total.csv", fileEncoding="UTF-8")
+# 
+# 
+gtm_total <- rbind(pudr_mapped, total_gtm_data, use.names=TRUE)
+# 
+# write.csv(gtm_total, "total_gtm_data.csv", fileEncoding="UTF-8")
+
+# ----------------------------------------------
+##plot national level data in aggregate 
 
 byVars = names(gtm_total)[!names(gtm_total)%in%c('budget','disbursement','expenditure','cost_category', 'coeff', 'code', 'loc_id')]
 nat_level = gtm_total[, list(budget=sum(budget), disbursement=sum(disbursement), expenditure=sum(expenditure)), by=byVars]
 
-# ----------------------------------------------
-##plot national level data in aggregate 
 
 
 # "melt" long
@@ -35,12 +46,43 @@ tmp = copy(nat_level)
 tmp$start_date = NULL
 setnames(tmp, 'end_date', 'start_date')
 nat_level$end_date = NULL
-nat_level= rbind(nat_level tmp)
+nat_level= rbind(nat_level, tmp)
 
 
-gtm_nat = melt(nat_level, id.vars=c('source', "period", "start_date", "data_source", "disease"))
+nat_level= melt(nat_level, id.vars=c('source', "period", "start_date", "data_source", "disease"))
+nat_level$value[nat_level$value==0] <- NA
 
-gtm_nat$value[gtm_nat$value==0] <- NA
+##only plot gf data (no ghe)
+gf_nat<- subset(nat_level, source=="gf")
+
+## subset by data source type 
+
+
+gf_plot <- ggplot(gf_nat, aes(x = start_date, y= value/1000000)) + 
+  geom_line(aes(color=data_source, linetype=disease)) +
+  facet_wrap(~variable) +
+  ggtitle("GF Resources by Data Source") +
+  #ylim(0, 9) + 
+  labs(x = "Start Date", y = "$$ in mil") 
+
+ggsave("gf resources by data source.pdf", 
+       plot = last_plot(), # or give ggplot object name as in myPlot,
+       width = 6, height = 9, 
+       units = "in", # other options c("in", "cm", "mm"), 
+       dpi = 300)
+
+
+
+## budget on x axis, expenditure + disbursements on y axis 
+gf_plot <- ggplot(gf_nat, aes(x = start_date, y= value/1000000)) + 
+  geom_line(aes(color=data_source, linetype=disease)) +
+  facet_wrap(~variable) +
+  ggtitle("GF Resources by Data Source") +
+  #ylim(0, 9) + 
+  labs(x = "Start Date", y = "$$ in mil") 
+
+
+
 
 nat_plots <- list()
 for (k in unique(gtm_nat$source)){
@@ -104,6 +146,11 @@ ggplot(sicoin_fpm_plot, aes(x = start_date, y=value/100000)) +
   labs(x = "Start Date", y = "$$ in mil")
 
 
+pdf("all.pdf", height=6, width=9)
+invisible(lapply(plot_list, print))
+dev.off()
+
+
 # ----------------------------------------------
 ##plot muni level sicoin data 
 
@@ -142,7 +189,7 @@ for (i in 1:6){
   }
 
 
-pdf("all.pdf")
+pdf("all.pdf", height=6, width=9)
 invisible(lapply(plot_list, print))
 dev.off()
 
