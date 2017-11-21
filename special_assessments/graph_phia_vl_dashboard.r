@@ -42,7 +42,7 @@ graphVL = function(dir=NULL) {
 	load(shapeFileDist)
 	mapSimple = gSimplify(map, tol=0.01, topologyPreserve=TRUE) # simplify for speed
 	# mapDataDist = data.table(fortify(map))
-	mapDataDist = data.table(fortify(mapSimple))
+	mapSimpleFort = data.table(fortify(mapSimple))
 
 	# reshape long
 	long = melt(regData, id.vars='region10_name')
@@ -67,7 +67,17 @@ graphVL = function(dir=NULL) {
 	mapDataReg[variable=='vl_suppressed_samples', variable:='N Samples Suppressed']
 
 	# district map
-	mapDataDist = merge(mapDataDist, distData, by.x='id', by.y='dist112', all.x=TRUE)
+	mapDataDist = merge(mapSimpleFort, distData, by.x='id', by.y='dist112', all.x=TRUE)
+	
+	# district-year map
+	mapDataDist15 = merge(mapSimpleFort, distDataAnnual[year==2015], by.x='id', by.y='dist112', all.x=TRUE)
+	mapDataDist16 = merge(mapSimpleFort, distDataAnnual[year==2016], by.x='id', by.y='dist112', all.x=TRUE)
+	mapDataDist17 = merge(mapSimpleFort, distDataAnnual[year==2017], by.x='id', by.y='dist112', all.x=TRUE)
+	mapDataDistAnnual = rbind(mapDataDist15,mapDataDist16,mapDataDist17)
+	byVars = c('id','long','lat','order','hole','piece','group','region10_name','dist_name')
+	mapDataDistChange = merge(mapDataDist16, mapDataDist17, by=byVars, suffixes=c('_2016','_2017'))
+	mapDataDistChange[, roc:=log(vld_suppression_hat_2017/vld_suppression_hat_2016)]
+	mapDataDistChange = mapDataDistChange[order(order)]
 
 	# colors
 	colors = c('#CAF270', '#73D487', '#30B097', '#288993', '#41607A', '#453B52')
@@ -142,6 +152,39 @@ graphVL = function(dir=NULL) {
 		labs(title='Corrected') + 
 		theme_minimal(base_size=16) + 
 		theme(plot.title=element_text(hjust=0.5))
+		
+	# graph showing changing equity over time
+	p6 = ggplot(distDataAnnual, aes(x=factor(year), y=vld_suppression_hat)) +
+			geom_violin(fill=colors[4], alpha=.7) + 
+			labs(title='Equity', subtitle='Geographic Spread', y='Viral Load Suppression', 
+				x=sprintf('< Density of Districts >')) + 
+			theme_minimal(base_size=16) + 
+			theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5), 
+				axis.title.x=element_text(size=11))
+	
+	# map of districts over time
+	p7 = ggplot(mapDataDistAnnual, aes(x=long, y=lat, group=group, fill=vld_suppression_hat)) + 
+		geom_polygon() + 
+		geom_path(color='grey95', size=.05) + 
+		scale_fill_gradientn('%', colours=mapColors) + 
+		coord_fixed(ratio=1) + 
+		facet_wrap(~year) + 
+		scale_x_continuous('', breaks = NULL) + 
+		scale_y_continuous('', breaks = NULL) + 
+		theme_minimal(base_size=16) + 
+		theme(plot.title=element_text(hjust=0.5))
+	
+	# map of district-level % change
+	p7 = ggplot(mapDataDistChange, aes(x=long, y=lat, group=group, fill=roc)) + 
+		geom_polygon() + 
+		geom_path(color='grey95', size=.05) + 
+		scale_fill_gradientn('% Change', colours=mapColors) + 
+		coord_fixed(ratio=1) + 
+		scale_x_continuous('', breaks = NULL) + 
+		scale_y_continuous('', breaks = NULL) + 
+		labs(title='Percent Change in Viral Load Suppression', subtitle='2016-2017') + 
+		theme_minimal(base_size=16) + 
+		theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5))
 	# -------------------------------------------------------------------------------------------
 
 
@@ -152,13 +195,14 @@ graphVL = function(dir=NULL) {
 	p2
 	p3
 	grid.arrange(p5a, p5b, ncol=2, top='Viral Load Suppression')
+	p6
+	p7
 	dev.off()
 	# -----------------------------------------------------------
 
 
 	# --------------
 	# End function
-	return(data)
 }
 # ------------------
 
