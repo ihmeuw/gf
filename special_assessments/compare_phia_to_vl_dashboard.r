@@ -73,7 +73,9 @@ regData[, region10_name:=gsub('_', ' ', region10_name)]
 load(shapeFileReg)
 mapDataReg = data.table(fortify(map))
 load(shapeFileDist)
-mapDataDist = data.table(fortify(map))
+mapSimple = gSimplify(map, tol=0.01, topologyPreserve=TRUE) # simplify for speed
+# mapDataDist = data.table(fortify(map))
+mapDataDist = data.table(fortify(mapSimple))
 
 # reshape long
 long = melt(regData, id.vars='region10_name')
