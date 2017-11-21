@@ -14,8 +14,11 @@ rm(list=ls())
 library(data.table)
 library(readstata13)
 library(tools)
+library(boot)
+library(lme4)
 library(reshape2)
 library(stringr)
+library(rgeos)
 library(RColorBrewer)
 library(ggplot2)
 library(gridExtra)
@@ -47,7 +50,7 @@ distData = prepVL(dir, level='district')
 # --------------------------------------
 
 
-# -----------------------------------------------
+# ---------------------------------------------------------------------------
 # Analysis
 
 # linear fit
@@ -58,9 +61,13 @@ predData = data.table(phia_vls=seq(s, e, .1))
 preds = inv.logit(predict(lmFit, interval='confidence', newdata=predData))*100
 predData = cbind(predData, preds)
 
+# linear fit on correction factors
+lmFit2 = lmer(vld_suppression_adj/phia_vls~(1|region10_name), distData)
+
+# region-specific correction
+distData[, ratio:=predict(lmFit2)]
 distData[, vld_suppression_hat:=vld_suppression_adj/ratio]
-# distData[, vld_suppression_pred:=predict(fe, newdata=distData)]
-# -----------------------------------------------
+# ---------------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------------------------------
