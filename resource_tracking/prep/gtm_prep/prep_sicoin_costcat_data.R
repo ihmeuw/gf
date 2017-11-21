@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prep_cost_sicoin = function(dir, inFile, year, disease, period, source) {
+prep_cost_sicoin = function(dir, inFile, year, disease, period, source, grant_number) {
 
 
   # --------------------
@@ -51,6 +51,7 @@ prep_cost_sicoin = function(dir, inFile, year, disease, period, source) {
   budget_dataset$period <- period
   budget_dataset$expenditure <- 0 ## change this once we figure out where exp data is
   budget_dataset$disease <- disease
+  budget_dataset$grant_number <- grant_number
   # ----------------------------------------------
   
   # Enforce variable classes

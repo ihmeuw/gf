@@ -13,6 +13,8 @@ sicoin_mapped$budget <- sicoin_mapped$budget*sicoin_mapped$coeff
 sicoin_mapped$disbursement <- sicoin_mapped$disbursement *sicoin_mapped$coeff
 sicoin_mapped$expenditure <- sicoin_mapped$expenditure *sicoin_mapped$coeff
 
+write.csv(sicoin_mapped, "sicoin_total.csv", fileEncoding="UTF-8")
+
 
 gtm_total <- rbind(sicoin_mapped, fpm_mapped)
 

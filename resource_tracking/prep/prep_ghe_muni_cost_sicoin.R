@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prep_gf_sicoin = function(dir, inFile, year, loc_id, period, disease, source, grant_number) {
+prep_ghe_muni_sicoin = function(dir, inFile, year, period, disease, source, grant_number) {
   
   
   # --------------------
@@ -29,22 +29,22 @@ prep_gf_sicoin = function(dir, inFile, year, loc_id, period, disease, source, gr
   ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
   # ----------------------------------------------
   ## code to get diseases -- add more if necessary
-  setnames(ghe_data, c("X__14", "X__15", "X__22", "X__29"), c("region", "cost_category", "budget", "disbursement"))
+  setnames(ghe_data, c("X__14", "X__15", "X__22", "X__29"), c("loc_id", "cost_category", "budget", "disbursement"))
   ## remove empty columns 
-  ghe_data <- ghe_data[c(grep("GUATEM", ghe_data$region):grep("11130009  MINISTERIO", ghe_data$X__4)),]
-  ghe_data$region <- na.locf(ghe_data$region, na.rm=FALSE)
+  ghe_data <- ghe_data[c(grep("GUATEM", ghe_data$loc_id):.N),]
+  ghe_data$loc_id <- na.locf(ghe_data$loc_id, na.rm=FALSE)
   
   toMatch <- c("vih", "sida", "tuber", "malar", "vector", "violencia sexual")
   ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$cost_category)), ]
   
   
-  budget_dataset <- ghe_data[, c("region", "cost_category", "budget", "disbursement"), with=FALSE]
+  budget_dataset <- ghe_data[, c("loc_id", "cost_category", "budget", "disbursement"), with=FALSE]
   # ----------------------------------------------
   
-  
+  toMatch <- c("mundial", "guate", "government", "recursos", "resources", "multire")
+  budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
   ## Create other variables 
   budget_dataset$source <- source
-  budget_dataset$loc_id <- loc_id
   budget_dataset$disease <- disease
   budget_dataset$cost_category <- as.factor(budget_dataset$cost_category)
   budget_dataset$start_date <- as.Date(paste(c(year,"01","01"), collapse="-"),origin="1960-01-01")
