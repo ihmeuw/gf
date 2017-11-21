@@ -41,7 +41,7 @@ cost_category <- "All"
 # ----------------------------------------------
 
 # load csv from github repository (file_format_list.csv)
-file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/file_format_list.csv")
+file_list <- read.csv("H:/gf_sicoin.csv")
 
 source('./prep_sicoin.r')
 source('./prep_sicoin_costcat_data.r')
@@ -51,13 +51,15 @@ source('./prep_sicoin_ghe.r')
 for(i in 1:length(file_list$filename)){
   ## handles municipality data 
   if(file_list$format[i]=="c_coin_muni"){
-  tmpData <- prepSicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, cost_category, file_list$source[i])
+  tmpData <- prepSicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, cost_category, file_list$source[i], file_list$grant_number[i])
   ## handles cost category data 
   } else if (file_list$format[i]=="c_coin_cost") { 
-  tmpData <- prep_cost_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, file_list$source[i])
+  tmpData <- prep_cost_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, file_list$source[i], file_list$grant_number[i])
 ## handles GHE (including GF) expenditure data 
   } else if (file_list$format[i]=="c_coin_ghe") {
-  tmpData <- prep_ghe_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$loc_id[i],period, file_list$disease[i], file_list$source[i])
+  tmpData <- prep_ghe_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$loc_id[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
+  }  else {
+  tmpData <- prep_gf_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$loc_id[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
 }
    if(i==1){
     resource_database = tmpData

@@ -4,7 +4,7 @@
 # 11/16/2017
 # Make preliminary graphs of sicoin data 
 
-
+## the cleaned up version of this code can be found in gtm_budget_graphs
 # ----------------------------------------------
 # Set up R
 
