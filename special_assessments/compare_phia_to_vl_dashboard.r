@@ -73,8 +73,10 @@ distData[, vld_suppression_hat:=vld_suppression_adj/ratio]
 regData[, region10_name:=gsub('_', ' ', region10_name)]
 
 # load/fortify shape data
-load(shapeFile)
-mapData = data.table(fortify(map))
+load(shapeFileReg)
+mapDataReg = data.table(fortify(map))
+load(shapeFileDist)
+mapDataDist = data.table(fortify(map))
 
 # reshape long
 long = melt(regData, id.vars='region10_name')
@@ -85,18 +87,25 @@ long[, region10_name:=str_wrap(region10_name, 6)]
 
 # merge to map and melt data
 regData[, region10:=as.character(region10)]
-mapData = merge(mapData, regData, by.x='id', by.y='region10', all.x=TRUE)
-mapData = melt(mapData, id.vars=c('long','lat','region10_name','id','group','order','hole','piece'))
+mapDataReg = merge(mapDataReg, regData, by.x='id', by.y='region10', all.x=TRUE)
+mapDataReg = melt(mapDataReg, id.vars=c('long','lat','region10_name','id','group','order','hole','piece'))
 
 # clean up variable labels
 long[variable=='phia_vls', variable:='PHIA']
 long[variable=='vld_suppression_adj', variable:='National Dashboard*']
-mapData[variable=='phia_vls', variable:='Viral Load Suppression\nPHIA']
-mapData[variable=='vld_suppression_adj', variable:='Reported Viral Load Suppression\nNational Dashboard*']
-mapData[variable=='phia_vls_lower', variable:='Lower']
-mapData[variable=='phia_vls_upper', variable:='Upper']
-mapData[variable=='samples', variable:='N Samples']
-mapData[variable=='vl_suppressed_samples', variable:='N Samples Suppressed']
+mapDataReg[variable=='phia_vls', variable:='Viral Load Suppression\nPHIA']
+mapDataReg[variable=='vld_suppression_adj', variable:='Reported Viral Load Suppression\nNational Dashboard*']
+mapDataReg[variable=='phia_vls_lower', variable:='Lower']
+mapDataReg[variable=='phia_vls_upper', variable:='Upper']
+mapDataReg[variable=='samples', variable:='N Samples']
+mapDataReg[variable=='vl_suppressed_samples', variable:='N Samples Suppressed']
+
+# district map
+tmp = distData[,c('dist112','vld_suppression_adj','vld_suppression_hat'),with=FALSE]
+mapDataDist = merge(mapDataDist, tmp, by.x='id', by.y='dist112', all.x=TRUE)
+mapDataDist = melt(mapDataDist, id.vars=c('long','lat','id','group','order','hole','piece'))
+mapDataDist[variable=='vld_suppression_adj', variable:='Original']
+mapDataDist[variable=='vld_suppression_hat', variable:='Corrected']
 
 # colors
 colors = c('#CAF270', '#73D487', '#30B097', '#288993', '#41607A', '#453B52')
