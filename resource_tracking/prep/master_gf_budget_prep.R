@@ -38,7 +38,7 @@ for(i in 1:length(file_list$filename)){
     tmpData <- prep_module_budget(dir, file_list$filename[i], file_list$extension[i], as.character(file_list$sheet[i]), ymd(file_list$start_date[i]), file_list$qtr_number[i])
   }
   ## replace the "Q1" category with the associated dates that the quarters map to   
-  tmpData1 <- map_quarters(tmpData, ymd(file_list$start_date[i]),file_list$qtr_number[i], file_list$loc_id[i], file_list$period[i],file_list$disease[i], file_list$source[i])
+  tmpData1 <- map_quarters(tmpData, ymd(file_list$start_date[i]),file_list$qtr_number[i], file_list$loc_id[i], file_list$period[i],file_list$disease[i], file_list$source[i], file_list$grant_number[i])
     if(i==1){
         resource_database = tmpData1
     }
@@ -53,6 +53,6 @@ for(i in 1:length(file_list$filename)){
 resource_database$budget <- as.numeric(resource_database$budget)
 
 ## since we only have budget data, include exp and disbursed as 0:  
-resource_database$expenditures <- 0 
+resource_database$expenditure <- 0 
 resource_database$disbursement<- 0 
 resource_database$data_source <- "fpm_budget"
