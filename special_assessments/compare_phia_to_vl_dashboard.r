@@ -48,9 +48,21 @@ distData = prepVL(dir, level='district')
 
 
 # -----------------------------------------------
-# Store linear fit
+# Analysis
+
+# linear fit
 lmFit = lm(vld_suppression_adj~phia_vls, regData)
 coefs = lmFit$coefficients
+
+# fixed effects for bias correction? would need to logit()
+# fe = lm(phia_vls~factor(region10_name):vld_suppression_adj, regData)
+
+# region-specific adjustment factors
+regData[, ratio:=vld_suppression_adj/phia_vls]
+ratios = regData[,c('region10_name','ratio'),with=F]
+distData = merge(distData, ratios, by='region10_name')
+distData[, vld_suppression_hat:=vld_suppression_adj/ratio]
+# distData[, vld_suppression_pred:=predict(fe, newdata=distData)]
 # -----------------------------------------------
 
 
