@@ -153,7 +153,7 @@ p3 = ggplot(regData, aes(x=phia_vls, y=vld_suppression_adj)) +
 
 
 # map VLD raw and corrected at district level
-p6a = ggplot(mapDataDist, aes(x=long, y=lat, group=group, fill=vld_suppression_adj)) + 
+p5a = ggplot(mapDataDist, aes(x=long, y=lat, group=group, fill=vld_suppression_adj)) + 
 	geom_polygon() + 
 	geom_path(color='grey95', size=.05) + 
 	scale_fill_gradientn('%', colours=mapColors) + 
@@ -163,7 +163,7 @@ p6a = ggplot(mapDataDist, aes(x=long, y=lat, group=group, fill=vld_suppression_a
 	labs(title='Original') + 
 	theme_minimal(base_size=16) + 
 	theme(plot.title=element_text(hjust=0.5))
-p6b = ggplot(mapDataDist, aes(x=long, y=lat, group=group, fill=vld_suppression_hat)) + 
+p5b = ggplot(mapDataDist, aes(x=long, y=lat, group=group, fill=vld_suppression_hat)) + 
 	geom_polygon() + 
 	geom_path(color='grey95', size=.05) + 
 	scale_fill_gradientn('%', colours=mapColors) + 
@@ -182,6 +182,6 @@ pdf(outFile, height=6, width=9)
 p1
 p2
 p3
-grid.arrange(p6a, p6b, ncol=2, top='Viral Load Suppression')
+grid.arrange(p5a, p5b, ncol=2, top='Viral Load Suppression')
 dev.off()
 # -----------------------------------------------------------
