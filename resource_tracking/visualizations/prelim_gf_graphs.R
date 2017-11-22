@@ -22,7 +22,7 @@ fpm_budget[,end_date:=start_date+period-1]
 byVars = names(sicoin_data)[!names(sicoin_data)%in%c('budget','disbursement','expenditure','cost_category','loc_id')]
 nat_level = sicoin_data[, list(budget=sum(budget), disbursement=sum(disbursement), expenditure=sum(expenditure)), by=byVars]
 
-
+total_guat <- rbind(pudr_mapped, total_gtm_data)
 
 tmp = copy(nat_level)
 tmp$start_date = NULL
