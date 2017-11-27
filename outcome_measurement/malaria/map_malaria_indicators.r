@@ -192,9 +192,6 @@ for(i in inds) {
 			theme_minimal(base_size=16) + 
 			theme(plot.title=element_text(hjust=.5)) 
 }
-
-# put maps together
-p2 = do.call('arrangeGrob', c(plots, ncol=3))
 # ----------------------------------------------
 
 
@@ -203,7 +200,8 @@ p2 = do.call('arrangeGrob', c(plots, ncol=3))
 pdf(graphFile, height=6, width=9)
 grid.newpage()
 grid.draw(p1)
-grid.newpage()
-grid.draw(p2)
+plots[[1]]
+plots[[2]]
+plots[[3]]
 dev.off()
 # --------------------------------
