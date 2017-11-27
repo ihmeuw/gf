@@ -23,6 +23,17 @@ library(gridExtra)
 
 
 # ----------------------------------------------
+# Parameters and settings
+
+# year
+year = 2014
+
+# indicators
+inds = c('itn','antmal','prev')
+# ----------------------------------------------
+
+
+# ----------------------------------------------
 # Files and directories
 
 # data directory
@@ -55,7 +66,11 @@ graphFile = paste0(dir, '/visualizations/graphs.pdf')
 # Load/prep data
 
 # load data
-rasterData = raster(itnFiles[grepl('2015', itnFiles)])
+if ('itn' %in% inds) rasterDataitn = raster(itnFiles[grepl(year, itnFiles)])
+if ('act' %in% inds) rasterDataact = raster(actFiles[grepl(year, itnFiles)])
+if ('irs' %in% inds) rasterDatairs = raster(irsFiles[grepl(year, irsFiles)])
+if ('antmal' %in% inds) rasterDataantmal = raster(antmalFiles[grepl(year, antmalFiles)])
+if ('prev' %in% inds) rasterDataprev = raster(prevFiles[grepl(year, prevFiles)])
 
 # load shapefile
 mapUGA = shapefile(shapeFileUGA)
