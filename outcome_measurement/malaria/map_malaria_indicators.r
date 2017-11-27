@@ -90,17 +90,17 @@ setnames(dataCOD, c('x','y','itn2014','country'))
 cols = brewer.pal(6, 'Spectral')
 border = 'grey65'
 
-# legend limits
-min = floor(min(c(dataUGA$itn2014, dataCOD$itn2014), na.rm=TRUE)*100)
-max = ceiling(max(c(dataUGA$itn2014, dataCOD$itn2014), na.rm=TRUE)*100)
+# legend limits so both countries are on same scale
+min = floor(min(c(dataUGAitn$value, dataCODitn$value), na.rm=TRUE)*100)
+max = ceiling(max(c(dataUGAitn$value, dataCODitn$value), na.rm=TRUE)*100)
 # ----------------------------------------------------------------------
 
 
 # ----------------------------------------------
-# Graph
+# Map comparing countries
 
 # store maps separately because geom_tile bug with facetting
-uga = ggplot(dataUGA, aes(y=y, x=x, fill=itn2014*100)) + 
+uga = ggplot(dataUGAitn, aes(y=y, x=x, fill=value*100)) + 
 	geom_tile() + 
 	geom_path(data=shapeDataUGA, aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
@@ -113,7 +113,7 @@ uga = ggplot(dataUGA, aes(y=y, x=x, fill=itn2014*100)) +
 	theme_minimal(base_size=16) + 
 	theme(plot.title=element_text(hjust=.5)) 
 	
-cod = ggplot(dataCOD, aes(y=y, x=x, fill=itn2014*100)) + 
+cod = ggplot(dataCODitn, aes(y=y, x=x, fill=value*100)) + 
 	geom_tile() + 
 	geom_path(data=shapeDataCOD, aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
