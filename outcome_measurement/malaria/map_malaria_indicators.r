@@ -80,21 +80,41 @@ mapCOD = shapefile(shapeFileCOD)
 mapUGA = gSimplify(mapUGA, tol=0.01, topologyPreserve=TRUE)
 mapCOD = gSimplify(mapCOD, tol=0.01, topologyPreserve=TRUE)
 
-# clip to Uganda/DRC
-rasterDataUGA = crop(rasterData, extent(mapUGA))
-rasterDataUGA = mask(rasterDataUGA, mapUGA)
-rasterDataCOD = crop(rasterData, extent(mapCOD))
-rasterDataCOD = mask(rasterDataCOD, mapCOD)
-
 # format polygons as data.table
 shapeDataUGA = data.table(fortify(mapUGA))
 shapeDataCOD = data.table(fortify(mapCOD))
 
-# format rasters as data.table
-dataUGA = data.table(as.data.frame(rasterDataUGA, xy=TRUE))
-dataCOD = data.table(as.data.frame(rasterDataCOD, xy=TRUE))
-setnames(dataUGA, c('x','y','itn2014','country'))
-setnames(dataCOD, c('x','y','itn2014','country'))
+# format rasters
+for(i in inds) {
+	
+	rasterData = get(paste0('rasterData',i))
+
+	# clip to Uganda/DRC
+	rasterDataUGA = crop(rasterData, extent(mapUGA))
+	rasterDataUGA = mask(rasterDataUGA, mapUGA)
+	rasterDataCOD = crop(rasterData, extent(mapCOD))
+	rasterDataCOD = mask(rasterDataCOD, mapCOD)
+
+	# format rasters as data.table
+	dataUGA = data.table(as.data.frame(rasterDataUGA, xy=TRUE))
+	dataCOD = data.table(as.data.frame(rasterDataCOD, xy=TRUE))
+	setnames(dataUGA, c('x','y','value'))
+	setnames(dataCOD, c('x','y','value'))
+	
+	# crop to 99th percentile so extreme points don't skew map scales
+	q1 = quantile(dataUGA$value, .005, na.rm=TRUE)
+	q99 = quantile(dataUGA$value, .995, na.rm=TRUE)
+	if (q1>0) dataUGA[value<q1, value:=q1]
+	dataUGA[value>q99, value:=q99]
+	q1 = quantile(dataCOD$value, .005, na.rm=TRUE)
+	q99 = quantile(dataCOD$value, .995, na.rm=TRUE)
+	if (q1>0) dataCOD[value<q1, value:=q1]
+	dataCOD[value>q99, value:=q99]
+	
+	# assign
+	assign(paste0('dataUGA',i), dataUGA) 
+	assign(paste0('dataCOD',i), dataCOD) 
+}
 # ----------------------------------------------------------
 
 
