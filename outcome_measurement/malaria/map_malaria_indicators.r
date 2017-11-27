@@ -34,11 +34,13 @@ actDir = paste0(dir, 'Africa Cube Public Data/ACT_use_rasters/rasters/rasters/')
 itnDir = paste0(dir, 'Africa Cube Public Data/ITN_use_year_average_adj_rasters/rasters/')
 irsDir = paste0(dir, 'Africa Cube Public Data/IRS_use_rasters/rasters/')
 antmalDir = paste0(dir, 'NEJM Rasters/spatially_disaggregated_antimalarials/')
-actFiles = paste0(artDir, list.files(actDir)[grepl('tif', list.files(artDir))])
+prevDir = paste0(dir, '/Africa Cube Public Data/Prevalence_annual_means_rasters/rasters/')
+actFiles = paste0(actDir, list.files(actDir)[grepl('tif', list.files(actDir))])
 itnFiles = paste0(itnDir, list.files(itnDir)[grepl('tif', list.files(itnDir))])
 irsFiles = paste0(irsDir, list.files(irsDir)[grepl('tif', list.files(irsDir))])
 antmalFiles = paste0(antmalDir, list.files(antmalDir)[!grepl('ovr', list.files(antmalDir))])
 antmalFiles = antmalFiles[!grepl('xml', antmalFiles)]
+prevFiles = paste0(prevDir, list.files(prevDir)[grepl('tif', list.files(prevDir))])
 
 # shapefiles
 shapeFileUGA = paste0(dir, '../../../mapping/uga/uga_dist112_map.shp')
