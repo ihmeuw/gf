@@ -159,17 +159,51 @@ cod = ggplot(dataCODitn, aes(y=y, x=x, fill=value*100)) +
 	scale_y_continuous('', breaks = NULL) + 
 	labs(title='DRC') + 
 	theme_minimal(base_size=16) + 
-	theme(plot.title=element_text(hjust=.5)) 
+	theme(plot.title=element_text(hjust=.5), legend.position='none') 
 	
 # put maps together
-p = arrangeGrob(cod, uga, ncol=2)
+p1 = arrangeGrob(cod, uga, ncol=2)
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+# Map comparing intervention coverage
+
+# store maps separately because geom_tile bug with facetting
+plots = list()
+for(i in inds) {
+		# assign title
+		if (i=='itn') title = 'ITN Usage'
+		if (i=='act') title = 'ACT Coverage'
+		if (i=='antmal') title = 'Antimalarial Coverage'
+		if (i=='irs') title = 'IRS Coverage'
+		if (i=='prev') title = 'Prevalence (PfPR)'
+		
+		# store map
+		plots[[i]] = ggplot(get(paste0('dataCOD',i)), aes(y=y, x=x, fill=value*100)) + 
+			geom_tile() + 
+			geom_path(data=shapeDataCOD, aes(x=long, y=lat, group=group)
+				, color=border, size=.05, inherit.aes=FALSE) + 
+			scale_fill_gradientn('%', colors=cols, na.value='white') + 
+			coord_fixed(ratio=1) + 
+			scale_x_continuous('', breaks = NULL) + 
+			scale_y_continuous('', breaks = NULL) + 
+			labs(title=title) + 
+			theme_minimal(base_size=16) + 
+			theme(plot.title=element_text(hjust=.5)) 
+}
+
+# put maps together
+p2 = do.call('arrangeGrob', c(plots, ncol=3))
 # ----------------------------------------------
 
 
 # --------------------------------
 # Save graphs
-# pdf(graphFile, height=6, width=9)
+pdf(graphFile, height=6, width=9)
 grid.newpage()
-grid.draw(p)
-# dev.off()
+grid.draw(p1)
+grid.newpage()
+grid.draw(p2)
+dev.off()
 # --------------------------------
