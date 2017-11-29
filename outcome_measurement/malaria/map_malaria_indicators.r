@@ -42,7 +42,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/map/')
 
 # output files
-graphFile = paste0(dir, '/visualizations/graphs.pdf')
+graphFile = paste0(dir, '/visualizations/descriptive_maps.pdf')
 # ----------------------------------------------
 
 
