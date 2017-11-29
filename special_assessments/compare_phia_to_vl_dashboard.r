@@ -25,7 +25,7 @@ library(gridExtra)
 # --------------------
 
 
-# --------------------------------------------------------
+# -----------------------------------------------------------
 # Files and directories
 
 # prep function
@@ -36,7 +36,10 @@ source('./special_assessments/graph_phia_vl_dashboard.r')
 
 # data directory
 dir = 'J:/Project/Evaluation/GF/special_assessments/uga/'
-# --------------------------------------------------------
+
+# ouptut data
+outFileDistYear = paste0(dir, 'output/district_year_vls.csv')
+# -----------------------------------------------------------
 
 
 # ---------------------------------------------------------
@@ -76,6 +79,12 @@ regDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
 distDataAnnual[, ratio:=predict(lmFit2, newdata=distDataAnnual)]
 distDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
 # ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------
+# Save estimates
+write.csv(distDataAnnual, outFileDistYear, row.names=FALSE)
+# ---------------------------------------------------------
 
 
 # ------------------
