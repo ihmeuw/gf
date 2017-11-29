@@ -31,6 +31,9 @@ year = 2014
 
 # indicators
 inds = c('itn','antmal','prev')
+
+# whether to crop to the inner 99th percentile for viz purposes
+crop = TRUE
 # ----------------------------------------------
 
 

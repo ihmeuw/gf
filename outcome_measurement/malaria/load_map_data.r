@@ -97,7 +97,7 @@ for(i in inds) {
 	if ('COD' %in% iso3s) setnames(dataCOD, c('x','y','value'))
 	
 	# crop to 99th percentile so extreme points don't skew map scales
-	if (i!='pop') {
+	if (i!='pop' & crop==TRUE) {
 		if ('UGA' %in% iso3s) { 
 			q1 = quantile(dataUGA$value, .005, na.rm=TRUE)
 			q99 = quantile(dataUGA$value, .995, na.rm=TRUE)

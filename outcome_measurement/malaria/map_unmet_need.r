@@ -35,6 +35,9 @@ inds = c('itn','antmal','prev','pop')
 
 # countries
 iso3s = 'COD'
+
+# whether to crop to the inner 99th percentile for viz purposes
+crop = TRUE
 # ----------------------------------------------
 
 
