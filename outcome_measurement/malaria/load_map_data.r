@@ -4,11 +4,16 @@
 # 11/27/2017
 # Script to load data into memory
 # Originally intended to be called by map_malaria_indicators.r and map_unmet_need.r
+# Two "inputs" should be in memory when this is called:
+# iso3s - a character vector specifying which country(s) to clip data to (currently only handles COD and UGA)
+# year - a numeric vector of length 1 specifying which year to analyze
+# inds - a character vector specifying which indicators to analyze
 # --------------------------------------------------------
 
 # to do:
 # this should eventually be turned into a more general-purpose function
 # clean up handling of input iso3s
+# add functionality for multiple years
 
 # ----------------------------------------------
 # Files and directories
