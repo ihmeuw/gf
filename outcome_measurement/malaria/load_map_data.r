@@ -73,9 +73,10 @@ if ('COD' %in% iso3s) mapCOD = as(mapCOD, 'SpatialPolygonsDataFrame')
 if ('COD' %in% iso3s) mapCOD@data = mapCODDatatmp
 
 # format polygons as data.table
-if ('UGA' %in% iso3s) shapeDataUGA = data.table(fortify(mapUGA, region='dist112_name'))
+if ('UGA' %in% iso3s) shapeDataUGA = data.table(fortify(mapUGA, region='dist112'))
+if ('UGA' %in% iso3s) shapeDataUGA[,id:=as.numeric(id)]
 if ('COD' %in% iso3s) shapeDataCOD = data.table(fortify(mapCOD, region='ID_3'))
-if ('UGA' %in% iso3s) shapeDataUGA = merge(shapeDataUGA, mapUGADatatmp, by.x='id', by.y='ID_3', all.x=TRUE)
+if ('UGA' %in% iso3s) shapeDataUGA = merge(shapeDataUGA, mapUGADatatmp, by.x='id', by.y='dist112', all.x=TRUE)
 if ('COD' %in% iso3s) shapeDataCOD = merge(shapeDataCOD, mapCODDatatmp, by.x='id', by.y='ID_3', all.x=TRUE)
 
 # format rasters
