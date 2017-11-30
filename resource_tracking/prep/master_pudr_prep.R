@@ -49,3 +49,10 @@ if (!is.numeric(resource_database$expenditure))resource_database[,expenditure:=a
 
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$data_source <- "pudr_budget"
+
+mapping_for_R <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_R.csv", fileEncoding="latin1")
+mapped_pudr <- merge(budget_dataset, mapping_for_R, by="cost_category", all.x=TRUE)
+
+mapped_pudr$budget <- mapped_pudr$budget*mapped_pudr$coeff
+mapped_pudr$disbursement <- mapped_pudr$disbursement*mapped_pudr$coeff
+mapped_pudr$expenditure <- mapped_pudr$expenditure *mapped_pudr$coeff

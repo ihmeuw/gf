@@ -22,7 +22,7 @@ prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, pe
   # Files and directories
   
   # Load/prep data
-  gf_data <-read_excel(paste0(dir,inFile), sheet=sheet_name)
+  gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   ##clean the data depending on if in spanish or english
   if(format=="pudr_mspas"){
     colnames(gf_data)[4] <- "cost_category"
@@ -95,18 +95,59 @@ prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, pe
           dates[i] <- dates[i-1]%m+% months(3)
         }
       }
+        
+        ##turn the list of dates into a dictionary (but only for quarters!) : 
+        dates <- setNames(dates,unique(melted$qtr))
+        
+        ## now match quarters with start dates 
+        kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
+        budget_dataset <-melted[kDT, on=.(qtr), start_date := i.start_date ]
+        budget_dataset$budget <- 0
+        budget_dataset$expenditure <- 0
+        budget_dataset$qtr <- NULL
+        
+      } else if (format=="pudr_mod"){
+        gf_data <- gf_data[-c(1:2),-1]
+        colnames(gf_data)[2] <- "cost_category"
+        colnames(gf_data)[1] <- "first_column"
+        gf_data <- gf_data[c(grep("ModId", gf_data$first_column):(grep("Total", gf_data$cost_category))),]
+        gf_data <- gf_data[-1,-1]
+        gf_data <- gf_data[-nrow(gf_data),1:(1+qtr_num)]
+        col_names <- rep(0, qtr_num+1)
+        for(i in 1:length(col_names)){
+          if (i == 1){
+            col_names[i] <- "cost_category"
+            } else {
+          col_names[i] <- paste("Q",i-1, sep="")
+          }
+        }
+          
+        
+        colnames(gf_data) <- col_names
+        setDT(gf_data)
+        melted<- melt(gf_data,id="cost_category", variable.name = "qtr", value.name="budget")
+        
+        
+        dates <- rep(year, qtr_num) # 
+        for (i in 1:length(dates)){
+          if (i==1){
+            dates[i] <- dates[i]
+          } else {
+            dates[i] <- dates[i-1]%m+% months(3)
+          }
+        }
+        
+        ##turn the list of dates into a dictionary (but only for quarters!) : 
+        dates <- setNames(dates,unique(melted$qtr))
+        
+        ## now match quarters with start dates 
+        kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
+        budget_dataset <-melted[kDT, on=.(qtr), start_date := i.start_date ]
+        budget_dataset$expenditure <- 0
+        budget_dataset$disbursement <- 0
+        budget_dataset$qtr <- NULL
+        
       
-      
-      ##turn the list of dates into a dictionary (but only for quarters!) : 
-      dates <- setNames(dates,unique(melted$qtr))
-      
-      ## now match quarters with start dates 
-      kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
-      budget_dataset <-melted[kDT, on=.(qtr), start_date := i.start_date ]
-      budget_dataset$budget <- 0
-      budget_dataset$expenditure <- 0
-      budget_dataset$qtr <- NULL
-
   }
   # ----------------------------------------------
   ## Code to aggregate into a dataset
@@ -124,5 +165,5 @@ prep_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, pe
   return(budget_dataset)
 }
 
-  
+
   

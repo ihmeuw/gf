@@ -57,7 +57,7 @@ nat_level$end_date = NULL
 nat_level= rbind(nat_level, tmp)
 
 
-nat_level= melt(nat_level, id.vars=c('source', "period", "start_date", "data_source", "disease", "grant_number"))
+nat_level= melt(nat_level, id.vars=c("program_activity", "source", "period", "start_date", "data_source", "disease", "grant_number"))
 nat_level$value[nat_level$value==0] <- NA
 
 ## subset by data source type 
@@ -81,6 +81,10 @@ for (k in unique(nat_level$source)){
   
   nat_plots[[k]] <- plot
 }
+
+pdf("gtm_by_source_and_disease.pdf", height=6, width=9)
+invisible(lapply(nat_plots, print))
+dev.off()
 
 ##get total (gf + ghe data) at the national level by disease and data source 
 # ----------------------------------------------
@@ -180,13 +184,6 @@ gf_plot <- ggplot(gf_nat, aes(x = start_date, y= value/1000000)) +
 
 # ----------------------------------------------
 ##plot sicoin vs fpm budget data only 
-byVars = names(nat_level)[!names(nat_level)%in%c('budget','disbursement','expenditure', 'period')]
-sicoin_fpm_plot = nat_level[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement)), expenditure=sum(na.omit(expenditure))), by=c("disease", "data_source", "start_date")]
-
-
-sicoin_fpm_plot  = melt(sicoin_fpm_plot, id.vars=c("data_source", "disease", "start_date"))
-sicoin_fpm_plot$value[sicoin_fpm_plot$value == 0] <- NA
-
 
 
 ggplot(sicoin_fpm_plot, aes(x = start_date, y=value/100000)) + 

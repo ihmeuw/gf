@@ -29,7 +29,7 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source, g
   
   # ----------------------------------------------
   ## code to get diseases -- add more if necessary
-  toMatch <- c("vih", "sida", "tuber", "malar", "vector", "violencia sexual")
+  toMatch <- c("vih", "sida", "tuber", "malar", "violencia sexual")
   ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$X__10)), ]
   
   

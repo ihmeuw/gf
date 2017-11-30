@@ -34,7 +34,7 @@ prep_ghe_muni_sicoin = function(dir, inFile, year, period, disease, source, gran
   ghe_data <- ghe_data[c(grep("GUATEM", ghe_data$loc_id):.N),]
   ghe_data$loc_id <- na.locf(ghe_data$loc_id, na.rm=FALSE)
   
-  toMatch <- c("vih", "sida", "tuber", "malar", "vector", "violencia sexual")
+  toMatch <- c("vih", "sida", "tuber", "malar", "violencia sexual")
   ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$cost_category)), ]
   
   

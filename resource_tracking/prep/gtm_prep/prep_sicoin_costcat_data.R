@@ -29,20 +29,28 @@ prep_cost_sicoin = function(dir, inFile, year, disease, period, source, grant_nu
   ## remove empty columns 
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
   
-  ##pull just the cost categories 
-  gf_data <- gf_data[c(grep("GUATEM", gf_data$X__13):.N),]
+  if(source=="ghe"){ 
+    ##pull just the cost categories 
+    gf_data <- gf_data[c(grep("GUATEM", gf_data$X__13):.N),]
+    ## grab loc_id: 
+    gf_data$X__13 <- na.locf(gf_data$X__13, na.rm=FALSE)
+    # remove rows where cost_categories are missing values
+    gf_subset <- na.omit(gf_data, cols="X__15")
+    # ----------------------------------------------
+    ## Code to aggregate into a dataset 
+    ## now get region + budgeted expenses 
+    budget_dataset <- gf_subset[, c("X__13","X__15", "X__22", "X__29"), with=FALSE]
+    names(budget_dataset) <- c("loc_id", "cost_category", "budget", "disbursement")
+  } else{
+    gf_data <- gf_data[c(grep("GUATEM", gf_data$X__11):.N),]
+    gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)
+    gf_subset <- na.omit(gf_data, cols="X__10")
+    gf_subset<- gf_subset[!grepl('GUAT',gf_subset$X__10),]
+    budget_dataset <- gf_subset[, c("X__10","X__11", "X__14", "X__26"), with=FALSE]
+    names(budget_dataset) <- c("cost_category", "loc_id", "budget", "disbursement")
+  }
 
-  ## grab loc_id: 
-  gf_data$X__13 <- na.locf(gf_data$X__13, na.rm=FALSE)
   
-  # remove rows where cost_categories are missing values
-  gf_subset <- na.omit(gf_data, cols="X__15")
-  # ----------------------------------------------
-  ## Code to aggregate into a dataset 
-  
-  ## now get region + budgeted expenses 
-  budget_dataset <- gf_subset[, c("X__13","X__15", "X__22", "X__29"), with=FALSE]
-  names(budget_dataset) <- c("loc_id", "cost_category", "budget", "disbursement")
   # ----------------------------------------------
   
   ## Create other variables 

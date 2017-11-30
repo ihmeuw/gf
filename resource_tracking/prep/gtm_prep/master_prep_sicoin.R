@@ -41,7 +41,7 @@ cost_category <- "All"
 # ----------------------------------------------
 
 # load csv from github repository (file_format_list.csv)
-file_list <- read.csv("H:/gf_sicoin.csv")
+file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/file_format_list.csv")
 
 
 source('./prep_sicoin.r')
@@ -68,12 +68,14 @@ for(i in 1:length(file_list$filename)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
+  print(i)
 }
 
 resource_database$data_source <- "SICOIN"
 
 ##output the data to the correct folder 
 
+write.csv(resource_database, "prepped_sicoin_data.csv", row.names=FALSE, fileEncoding="UTF-8")
 
 
 
