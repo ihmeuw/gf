@@ -5,51 +5,87 @@
 # 11/27/2017
 # Make graphs of program activities 
 
+# TO DO
+# fix time series graph so that there are gaps where appropriate (use `group` aesthetic)
+
 # ----------------------------------------------
 # Set up R
+rm(list=ls())
 library(ggplot2)
 library(dplyr)
+library(tools)
 library(data.table)
 library(lubridate)
 library(grDevices)
 library(RColorBrewer)
+library(readxl)
 
 # ----------------------------------------------
 ## prep sicoin data 
 sicoin <- data.table(read.csv("prepped_sicoin_data_1201.csv", fileEncoding="UTF-8"))
-sicoin$start_date <- as.Date(sicoin$start_date)
-sicoin[, end_date:=start_date + period-1]
+sicoin$start_date <- as.Date(sicoin$start_date, '%Y-%m-%d') # BE SURE THIS IS RIGHT
+
 ## national level graphs for sicoin: 
 
-
-byVars = names(sicoin)[!names(sicoin)%in%c('budget','disbursement','expenditure', 'period', 'grant_number', 'cost_category','loc_id', 'data_source')]
+# collapse to national level
+byVars = names(sicoin)[!names(sicoin)%in%c('budget','disbursement','expenditure','grant_number', 'cost_category','loc_id', 'data_source')]
 nat_level = sicoin[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
-tmp = copy(nat_level)
-tmp$start_date = NULL
-setnames(tmp, 'end_date', 'start_date')
-nat_level$end_date = NULL
-nat_level = rbind(nat_level, tmp)
-
-
-nat_level = melt(nat_level, id.vars=c('source', 'start_date', 'disease'))
+# melt quantities long
+nat_level = melt(nat_level, id.vars=c('source', 'start_date', 'disease', 'period'))
 nat_level$value[nat_level$value == 0] <- NA
 
-source_names <- c(levels(nat_level$source))
-names(source_names) <- c("Global Fund", "Government Health Expenditure")
+# compute cumulative totals
+nat_level = nat_level[order(start_date)]
+nat_level[, cumulative:=cumsum(value), by=c('source', 'disease', 'variable')]
 
+# set up to graph
+graphData = copy(nat_level)
+graphData[source=='gf', source:='Global Fund']
+graphData[source=='ghe', source:='Government']
+graphData[, variable:=toTitleCase(as.character(variable))]
+graphData = graphData[!is.na(value)]
+
+# add an "end of time series" observation so the step-line doesn't suddenly end
+tmp = graphData[year(start_date)==max(year(start_date))]
+tmp[, start_date:=start_date+period-1]
+graphData = rbind(graphData, tmp)
+
+# graph time series per disease
 nat_plots <- list()
-for (k in unique(nat_level$disease)){
-  subdata <- subset(nat_level, disease== k)
-  plot <- (ggplot(subdata, aes(x = start_date, y= value/1000000)) + 
-    geom_line(aes(color=source, linetype=variable)) +
-    ggtitle(paste(toupper(k), "data at national level")) +
-    #ylim(0, 9) + 
-    labs(x = "Start Date", y = "$$ in mil", caption="Data Source: SICOIN") +
-    theme_bw())
+for (k in unique(graphData$disease)){
+
+  plot <- ggplot(graphData[disease==k & variable=='Budget'], aes(x=start_date, y=value/1000000, color=source)) + 
+    geom_step(aes(linetype='Budget'), size=1.25, alpha=.5) +
+    geom_step(data=graphData[disease==k & variable=='Disbursement'], aes(linetype='Disbursement'), size=1.25) +
+    labs(title=paste(toupper(k), "data at national level"), 
+		x = "", y = "USD (Millions)", caption="Data Source: SICOIN", 
+		color='Source') +
+	scale_linetype_manual('Quantity', values=c('Budget'=1,'Disbursement'=4)) +
+    theme_bw(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5))
+	
   nat_plots[[k]] <- plot
 }
 
+# graph cumulative time series per disease
+for (k in unique(graphData$disease)){
+
+  plot <-  ggplot(graphData[disease==k & variable=='Budget'], 
+				aes(x=start_date, y=cumulative/1000000, color=source)) + 
+    geom_step(aes(linetype='Budget'), size=1.25, alpha=.5) +
+    geom_step(data=graphData[disease==k & variable=='Disbursement'], aes(linetype='Disbursement'), size=1.25) +
+    labs(title=paste(toupper(k), "data at national level"), 
+		x = "", y = "USD (Millions)", caption="Data Source: SICOIN", 
+		color='Source') +
+	scale_linetype_manual('Quantity', values=c('Budget'=1,'Disbursement'=4)) +
+    theme_bw(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5))
+	
+  nat_plots[[paste0(k,'cumulative')]] <- plot
+}
+
+# save graphs
 pdf("gf vs ghe over time.pdf", height=6, width=9)
 invisible(lapply(nat_plots, print))
 dev.off()
