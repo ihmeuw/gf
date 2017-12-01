@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prep_ghe_muni_sicoin = function(dir, inFile, year, period, disease, source, grant_number) {
+prep_muni_sicoin = function(dir, inFile, year, period, disease, source, grant_number) {
   
   
   # --------------------
@@ -29,21 +29,31 @@ prep_ghe_muni_sicoin = function(dir, inFile, year, period, disease, source, gran
   ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
   # ----------------------------------------------
   ## code to get diseases -- add more if necessary
-  setnames(ghe_data, c("X__14", "X__15", "X__22", "X__29"), c("loc_id", "cost_category", "budget", "disbursement"))
-  ## remove empty columns 
-  ghe_data <- ghe_data[c(grep("GUATEM", ghe_data$loc_id):.N),]
-  ghe_data$loc_id <- na.locf(ghe_data$loc_id, na.rm=FALSE)
+  if(source=="ghe"){
+    setnames(ghe_data, c("X__14", "X__15", "X__22", "X__29"), c("loc_id", "cost_category", "budget", "disbursement"))
+    ## remove empty columns 
+    ghe_data <- ghe_data[c(grep("GUATEM", ghe_data$loc_id):.N),]
+    ghe_data$loc_id <- na.locf(ghe_data$loc_id, na.rm=FALSE)
+    
+    toMatch <- c("vih", "sida", "tuber", "malar", "violencia sexual")
+    ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$cost_category)), ]
+    
+    
+    budget_dataset <- ghe_data[, c("loc_id", "cost_category", "budget", "disbursement"), with=FALSE]
+    # ----------------------------------------------
+    
+    toMatch <- c("mundial", "guate", "government", "recursos", "resources", "multire")
+    budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
+  }else{
+    ghe_data <- ghe_data[c(grep("GUATEM", ghe_data$X__10):.N),]
+    gf_subset <- na.omit(ghe_data, cols="X__10")
+    gf_subset<- gf_subset[, c("X__10", "X__17", "X__24"), with=FALSE]
+    setnames(gf_subset, c("X__10", "X__17", "X__24"), c("loc_id", "budget", "disbursement"))
+    toMatch <- c("mundial", "guate", "government", "recursos", "resources", "multire")
+    budget_dataset <- gf_subset[ !grepl(paste(toMatch, collapse="|"), tolower(gf_subset$loc_id)),]
+  }
   
-  toMatch <- c("vih", "sida", "tuber", "malar", "violencia sexual")
-  ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$cost_category)), ]
-  
-  
-  budget_dataset <- ghe_data[, c("loc_id", "cost_category", "budget", "disbursement"), with=FALSE]
-  # ----------------------------------------------
-  
-  toMatch <- c("mundial", "guate", "government", "recursos", "resources", "multire")
-  budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
-  ## Create other variables 
+    ## Create other variables 
   budget_dataset$source <- source
   budget_dataset$disease <- disease
   budget_dataset$cost_category <- as.factor(budget_dataset$cost_category)

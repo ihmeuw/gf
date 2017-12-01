@@ -26,25 +26,30 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source, g
   ghe_data <- data.table(read_excel(paste0(dir, inFile, '.xls')))
   
   # ----------------------------------------------
-  
+  if(disease=="many"){
+    ghe_data$X__11 <- na.locf(ghe_data$X__11, na.rm=FALSE)
+    ghe_data <- ghe_data[grepl("guatemala", tolower(ghe_data$X__10)), ]
+    setnames(ghe_data, c("X__10", "X__11", "X__19", "X__29"), c("loc_id", "cost_category", "budget", "disbursement"))
+    budget_dataset <- ghe_data[, c("loc_id", "cost_category", "budget", "disbursement"), with=FALSE]
   # ----------------------------------------------
   ## code to get diseases -- add more if necessary
-  toMatch <- c("vih", "sida", "tuber", "malar", "violencia sexual")
-  ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$X__10)), ]
-  
-  
-  ## remove empty columns 
-  ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
-  ## now get region + budgeted expenses 
-  colnames(ghe_data)[5] <- "vigente"
-  colnames( ghe_data)[8] <- "devengado"
-  budget_dataset <- ghe_data[, c("X__10", "vigente", "devengado"), with=FALSE]
-  names(budget_dataset) <- c("cost_category", "budget", "disbursement")
-  # ----------------------------------------------
-  
+  }
+  else {
+    ## get just the program categories 
+    toMatch <- c("vih", "sida", "tuber", "malar", "violencia sexual")
+    ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$X__10)), ]
+    ## remove empty columns 
+    ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
+    ## now get region + budgeted expenses 
+    colnames(ghe_data)[5] <- "vigente"
+    colnames( ghe_data)[8] <- "devengado"
+    budget_dataset <- ghe_data[, c("X__10", "vigente", "devengado"), with=FALSE]
+    names(budget_dataset) <- c("cost_category", "budget", "disbursement")
+    budget_dataset$loc_id <- loc_id
+    # ----------------------------------------------
+  }
   ## Create other variables 
   budget_dataset$source <- source
-  budget_dataset$loc_id <- loc_id
   budget_dataset$disease <- disease
   budget_dataset$cost_category <- as.factor(budget_dataset$cost_category)
   levels(budget_dataset$disease) = c("hiv", "malaria", "tb", "multiple")

@@ -22,25 +22,10 @@ ghe_s,CATALOGO PA 2016,c_coin_ghe,2016,multiple,gtm,ghe,unknown
 ghe_s,CATALOGO PA 2015,c_coin_ghe,2015,multiple,gtm,ghe,unknown
 ghe_s,CATALOGO PA 2013,c_coin_ghe,2013,multiple,gtm,ghe,unknown
 ghe_s,CATALOGO PA 2014,c_coin_ghe,2014,multiple,gtm,ghe,unknown
-gf,PROGRAMA VIH GF ACTIVIDAD 2011,c_coin_ghe,2011,hiv,gtm,gf,gua_311_g06_h
-gf,PROGRAMA VIH GF ACTIVIDAD 2012,c_coin_ghe,2012,hiv,gtm,gf,gua_311_g06_h
-gf,PROGRAMA VIH GF ACTIVIDAD 2013,c_coin_ghe,2013,hiv,gtm,gf,gua_311_g06_h
-gf,PROGRAMA VIH GF ACTIVIDAD 2014,c_coin_ghe,2015,hiv,gtm,gf,gua_311_g06_h
-gf,PROGRAMA VIH GF ACTIVIDAD 2015,c_coin_ghe,2015,hiv,gtm,gf,gua_311_g06_h
-ghe_s,2016 fondo mundial por programa por actividad especifica por departamento,,2016,multiple,gtm,ghe,
+gf,PROGRAMA VIH GF ACTIVIDAD 2011,c_coin_cost,2011,hiv,gtm,gf,gua_311_g06_h
+gf,PROGRAMA VIH GF ACTIVIDAD 2012,c_coin_cost,2012,hiv,gtm,gf,gua_311_g06_h
+gf,PROGRAMA VIH GF ACTIVIDAD 2013,c_coin_cost,2013,hiv,gtm,gf,gua_311_g06_h
+gf,PROGRAMA VIH GF ACTIVIDAD 2014,c_coin_cost,2015,hiv,gtm,gf,gua_311_g06_h
+gf,PROGRAMA VIH GF ACTIVIDAD 2015,c_coin_cost,2015,hiv,gtm,gf,gua_311_g06_h
 gf,PROGRAMA VIH GF ACTIVIDAD 2016,c_coin_cost,2016,hiv,gtm,gf,gua_311_g05_h
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
-,,,,,,,
+ghe_s,2016 fondo mundial por programa por actividad especifica por departamento,c_coin_ghe,2016,many,gtm,ghe,unknown

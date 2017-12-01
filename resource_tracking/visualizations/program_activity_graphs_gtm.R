@@ -101,16 +101,13 @@ gtm_gos <- subset(gos_data, Country=="Guatemala")
 
 ## first without grants, just by disease 
 
-byVars = names(gtm_gos)[!names(gtm_gos)%in%c('budget','expenditure', 'Year', 'gf_program', 'Country', "Grant Number")]
+byVars = names(gtm_gos)[!names(gtm_gos)%in%c('budget','expenditure', 'Year', 'gf_program', 'Country')]
 program_level = gtm_gos[, list(budget=sum(budget), expenditure=sum(expenditure)), by=byVars]
 
-program_level <- program_level[, -c(1:2)]
-
-mapping_for_R <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_R.csv", fileEncoding="latin1")
-mapping_for_graphs <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_graphs.csv")
+program_level <- program_level[, -c(2:3)]
 
 
-program_level_mapped <- merge(program_level, mapping_for_R, by=c("disease","cost_category"))\
+program_level_mapped <- merge(program_level, mapping_for_R, by=c("disease","cost_category"))
 ### check for dropped categories: 
 # results1 = setdiff(program_level$cost_category, program_level_mapped$cost_category) 
 
@@ -119,9 +116,9 @@ program_level <- merge(program_level_mapped, mapping_for_graphs, by="code")
 program_level$budget <- program_level$budget*program_level$coeff
 program_level$expenditure <- program_level$expenditure*program_level$coeff
 
-byVars = names(program_level)[!names(program_level)%in%c('budget','expenditure', 'coeff', 'code', 'cost_category')]
+## program only - no grants 
+byVars = names(program_level)[!names(program_level)%in%c('budget','expenditure', 'coeff', 'code', 'cost_category', 'Grant Number')]
 program_level = program_level[, list(budget=sum(budget), expenditure=sum(expenditure)), by=byVars]
-
 
 
 ## "melt" the start & end dates 
@@ -143,17 +140,55 @@ set3 <- colorRampPalette(brewer.pal('Set3',n=12))
 
 for (k in unique(program_level$disease)){
   subdata <- subset(program_level, disease==k)
-  print(ggplot() + geom_col(aes(x = year(start_date), y= value/1000000, fill=program_activity), data=subdata) + 
+  plot <- (ggplot() + geom_col(aes(x = year(start_date), y= value/1000000, fill=program_activity), data=subdata) + 
              theme_bw(base_size=16) +
              facet_wrap(~variable, drop=T, scales='free') +
              labs(x = "Year", y = "$$ in mil", caption="Source: The Global Fund")+
             scale_color_manual(values = setNames(set3(13), levels(subdata$program_activity)))+
              ggtitle(paste(k, "data at the national level"))) 
+  prog_plots[[k]] <- plot
 }
 
 pdf("gos_activity_bars.pdf", height=6, width=9)
 invisible(lapply(prog_plots, print))
 dev.off()
 
+## program only - no disease (with grants)
+byVars = names(program_level)[!names(program_level)%in%c('budget','expenditure', 'coeff', 'code', 'cost_category', 'disease')]
+grant_level = program_level[, list(budget=sum(budget), expenditure=sum(expenditure)), by=byVars]
+
+
+
+
+colnames(grant_level)[1] <- "grant_number"
+
+
+tmp = copy(grant_level)
+tmp$start_date = NULL
+setnames(tmp, 'end_date', 'start_date')
+grant_level$end_date = NULL
+grant_level = rbind(grant_level , tmp)
+
+
+grant_level= melt(grant_level, id.vars=c("program_activity", "grant_number", "start_date"))
+grant_level$value[grant_level$value==0] <- NA
+
+
+grant_plots <- list()
+for (k in unique(grant_level$grant_number)){
+  subdata <- subset(grant_level, grant_number==k)
+  plot <- (ggplot() + geom_col(aes(x = year(start_date), y= value/1000000, fill=program_activity), data=subdata) + 
+             theme_bw(base_size=16) +
+             facet_wrap(~variable, drop=T, scales='free') +
+             labs(x = "Year", y = "$$ in mil", caption="Source: The Global Fund")+
+             scale_fill_brewer(palette = "Set3") +
+             # scale_color_manual(values = setNames(set3(13), levels(subdata$program_activity)))+
+             ggtitle(paste(k, "data at the national level"))) 
+  grant_plots[[k]] <- plot
+}
+
+pdf("gos_activity_grant_bars.pdf", height=6, width=9)
+invisible(lapply(grant_plots, print))
+dev.off()
 
 

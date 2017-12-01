@@ -60,7 +60,7 @@ for(i in 1:length(file_list$filename)){
   } else if (file_list$format[i]=="c_coin_ghe") {
   tmpData <- prep_ghe_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$loc_id[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
   }  else {
-  tmpData <- prep_ghe_muni_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
+  tmpData <- prep_muni_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
 }
    if(i==1){
     resource_database = tmpData
@@ -75,7 +75,7 @@ resource_database$data_source <- "SICOIN"
 
 ##output the data to the correct folder 
 
-write.csv(resource_database, "prepped_sicoin_data.csv", row.names=FALSE, fileEncoding="UTF-8")
+write.csv(resource_database, "prepped_sicoin_data_1201.csv", row.names=FALSE, fileEncoding="UTF-8")
 
 
 
