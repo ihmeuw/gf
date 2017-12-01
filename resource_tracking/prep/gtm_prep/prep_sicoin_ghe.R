@@ -29,15 +29,15 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source, g
   if(disease=="many"){
     ghe_data$X__11 <- na.locf(ghe_data$X__11, na.rm=FALSE)
     ghe_data <- ghe_data[grepl("guatemala", tolower(ghe_data$X__10)), ]
+    ghe_data <- ghe_data[grepl("tuber", tolower(ghe_data$X__11)), ]
     setnames(ghe_data, c("X__10", "X__11", "X__19", "X__29"), c("loc_id", "cost_category", "budget", "disbursement"))
     budget_dataset <- ghe_data[, c("loc_id", "cost_category", "budget", "disbursement"), with=FALSE]
   # ----------------------------------------------
   ## code to get diseases -- add more if necessary
   }
   else {
-    ## get just the program categories 
-    toMatch <- c("vih", "sida", "tuber", "malar", "violencia sexual")
-    ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$X__10)), ]
+    ## get just the program categories
+    ghe_data <- ghe_data[grepl("tuber", tolower(ghe_data$X__10)), ]
     ## remove empty columns 
     ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
     ## now get region + budgeted expenses 

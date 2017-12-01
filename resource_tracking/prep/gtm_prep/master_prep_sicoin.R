@@ -36,12 +36,12 @@ library(zoo)
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
 period <-365
 cost_category <- "All"
-
+loc_id <- "gtm"
 
 # ----------------------------------------------
 
 # load csv from github repository (file_format_list.csv)
-file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/file_format_list.csv")
+file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/file_format_list_gtm.csv")
 
 
 source('./prep_sicoin.r')
@@ -55,12 +55,14 @@ for(i in 1:length(file_list$filename)){
   tmpData <- prepSicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, cost_category, file_list$source[i], file_list$grant_number[i])
   ## handles cost category data 
   } else if (file_list$format[i]=="c_coin_cost") { 
-  tmpData <- prep_cost_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, file_list$source[i], file_list$grant_number[i])
+  tmpData <- prep_cost_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, file_list$source[i], file_list$grant_number[i], cost_category)
 ## handles GHE (including GF) expenditure data 
   } else if (file_list$format[i]=="c_coin_ghe") {
   tmpData <- prep_ghe_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$loc_id[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
+  } else if (file_list$format[i]=="c_coin_gf") {
+    tmpData <- prep_gf_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$loc_id[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
   }  else {
-  tmpData <- prep_muni_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
+  tmpData <- prep_muni_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i],loc_id, period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
 }
    if(i==1){
     resource_database = tmpData
@@ -75,7 +77,7 @@ resource_database$data_source <- "SICOIN"
 
 ##output the data to the correct folder 
 
-write.csv(resource_database, "prepped_sicoin_data_1201.csv", row.names=FALSE, fileEncoding="UTF-8")
+write.csv(resource_database, "prepped_sicoin_data_1201_ic.csv", row.names=FALSE, fileEncoding="UTF-8")
 
 
 
