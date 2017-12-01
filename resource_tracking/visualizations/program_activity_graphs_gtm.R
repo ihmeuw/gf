@@ -205,7 +205,7 @@ names(map_disease) <- c("tb", "malaria", "hiv", "hss", "hiv/tb")
 
 kDT = data.table(map_disease = names(map_disease), value = TRUE, gos_disease = unname(map_disease))
 gos_data[kDT, on=.(gos_disease), disease := i.map_disease]
-gost_data$gos_disease <- NULL
+gos_data$gos_disease <- NULL
 
 
 gtm_gos <- subset(gos_data, Country=="Guatemala")
@@ -216,15 +216,28 @@ gtm_gos <- subset(gos_data, Country=="Guatemala")
 
 ## first without grants, just by disease 
 
-byVars = names(gtm_gos)[!names(gtm_gos)%in%c('budget','expenditure', 'Year', 'gf_program', 'Country')]
+byVars = names(gtm_gos)[!names(gtm_gos)%in%c('budget','expenditure','gf_program', 'Country')]
 program_level = gtm_gos[, list(budget=sum(budget), expenditure=sum(expenditure)), by=byVars]
 
 program_level <- program_level[, -c(2:3)]
 
 
+# test for missing SDAs from map
+sdas_in_map = unique(mapping_for_R$cost_category)
+sdas_in_data = unique(program_level$cost_category)
+if (any(!sdas_in_data %in% sdas_in_map)) { 
+	stop('Map doesn\'t include cost categories that are in this data file!')
+}
+
+# test to make sure map doesn't contain duplicates
+d1 = nrow(mapping_for_R)
+d2 = nrow(unique(mapping_for_R))
+if (d1!=d2) stop('Map contains duplicates!') 
+
 program_level_mapped <- merge(program_level, mapping_for_R, by=c("disease","cost_category"))
 ### check for dropped categories: 
 # results1 = setdiff(program_level$cost_category, program_level_mapped$cost_category) 
+
 
 program_level <- merge(program_level_mapped, mapping_for_graphs, by="code")
 
@@ -244,23 +257,23 @@ program_level$end_date = NULL
 program_level = rbind(program_level , tmp)
 
 
-program_level= melt(program_level, id.vars=c("program_activity", "disease", "start_date"))
+program_level= melt(program_level, id.vars=c("program_activity", "disease", "start_date","Year"))
 program_level$value[program_level$value==0] <- NA
 
 
 
 prog_plots <- list()
 set3 <- colorRampPalette(brewer.pal('Set3',n=12))
-
+set3 = set3(13)
 
 for (k in unique(program_level$disease)){
-  subdata <- subset(program_level, disease==k)
-  plot <- (ggplot() + geom_col(aes(x = year(start_date), y= value/1000000, fill=program_activity), data=subdata) + 
+  subdata <- program_level[disease==k & variable=='budget']
+  plot <- ggplot(data=subdata, aes(x = Year, y= value/1000000, fill=program_activity)) + 
+			geom_col() + 
              theme_bw(base_size=16) +
-             facet_wrap(~variable, drop=T, scales='free') +
-             labs(x = "Year", y = "$$ in mil", caption="Source: The Global Fund")+
-            scale_color_manual(values = setNames(set3(13), levels(subdata$program_activity)))+
-             ggtitle(paste(k, "data at the national level"))) 
+			labs(title=paste(toupper(k), "Data at National Level"), 
+				x = "", y = "USD (Millions)", caption="Data Source: GOS and GMS") +
+            scale_fill_manual('Program Activity', values=set3, levels(subdata$program_activity))
   prog_plots[[k]] <- plot
 }
 
