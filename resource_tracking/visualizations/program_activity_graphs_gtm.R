@@ -15,19 +15,48 @@ library(grDevices)
 library(RColorBrewer)
 
 # ----------------------------------------------
-sicoin <- data.table(read.csv("prepped_sicoin_data.csv", fileEncoding="UTF-8"))
+## prep sicoin data 
+sicoin <- data.table(read.csv("prepped_sicoin_data_1201.csv", fileEncoding="UTF-8"))
 sicoin$start_date <- as.Date(sicoin$start_date)
+sicoin[, end_date:=start_date + period-1]
+## national level graphs for sicoin: 
 
-mapping_for_R <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_R.csv", fileEncoding="latin1")
-mapping_for_graphs <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_graphs.csv")
 
-gtm_total_data <- merge(sicoin, mapping_for_R,  by=c("disease", "cost_category"))
+byVars = names(sicoin)[!names(sicoin)%in%c('budget','disbursement','expenditure', 'period', 'grant_number', 'cost_category','loc_id', 'data_source')]
+nat_level = sicoin[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
-gtm_total_data$budget <- gtm_total_data$budget*gtm_total_data$coeff
-gtm_total_data$disbursement <- gtm_total_data$disbursement*gtm_total_data$coeff
-gtm_total_data$expenditure <- gtm_total_data$expenditure*gtm_total_data$coeff
+tmp = copy(nat_level)
+tmp$start_date = NULL
+setnames(tmp, 'end_date', 'start_date')
+nat_level$end_date = NULL
+nat_level = rbind(nat_level, tmp)
 
-gtm_total <- merge(gtm_total_data, mapping_for_graphs, by="code")
+
+nat_level = melt(nat_level, id.vars=c('source', 'start_date', 'disease'))
+nat_level$value[nat_level$value == 0] <- NA
+
+source_names <- c(levels(nat_level$source))
+names(source_names) <- c("Global Fund", "Government Health Expenditure")
+
+nat_plots <- list()
+for (k in unique(nat_level$disease)){
+  subdata <- subset(nat_level, disease== k)
+  plot <- (ggplot(subdata, aes(x = start_date, y= value/1000000)) + 
+    geom_line(aes(color=source, linetype=variable)) +
+    ggtitle(paste(toupper(k), "data at national level")) +
+    #ylim(0, 9) + 
+    labs(x = "Start Date", y = "$$ in mil", caption="Data Source: SICOIN") +
+    theme_bw())
+  nat_plots[[k]] <- plot
+}
+
+pdf("gf vs ghe over time.pdf", height=6, width=9)
+invisible(lapply(nat_plots, print))
+dev.off()
+
+
+#### get FPM vs sicoin, etc. 
+
 
 # ----------------------------------------------
 byVars = names(total_data)[!names(total_data)%in%c('budget','disbursement','expenditure','cost_category', 'program_activity', 'loc_id', 'code', 'coeff')]
@@ -71,6 +100,56 @@ ggsave("fpm vs sicoin budget data.pdf",
        height = 6, width=9,
        units = "in", # other options c("in", "cm", "mm"), 
        dpi = 300)
+
+
+
+# ----------------------------------------------
+## mapping to get program activity 
+
+mapping_for_R <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_R.csv", fileEncoding="latin1")
+mapping_for_graphs <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_graphs.csv")
+
+gtm_total_data <- merge(sicoin, mapping_for_R,  by=c("disease", "cost_category"))
+
+gtm_total_data$budget <- gtm_total_data$budget*gtm_total_data$coeff
+gtm_total_data$disbursement <- gtm_total_data$disbursement*gtm_total_data$coeff
+gtm_total_data$expenditure <- gtm_total_data$expenditure*gtm_total_data$coeff
+
+gtm_total <- merge(gtm_total_data, mapping_for_graphs, by="code")
+
+
+# ----------------------------------------------
+## BUDGET vs DISBURSEMENT - municipality level 
+
+sicoin <- data.table(read.csv("prepped_sicoin_data_1130.csv", fileEncoding="UTF-8"))
+
+toMatch <- c("gtm", "guat")
+muni_sicoin <- sicoin[ !grepl(paste(toMatch, collapse="|"), tolower(sicoin$loc_id)),]
+
+## aggregate by disease, start_date 
+byVars = names(muni_sicoin)[!names(muni_sicoin)%in%c('budget','expenditure', 'disbursement', 'cost_category', 'period', 'data_source', 'grant_number')]
+muni_sicoin = muni_sicoin[, list(budget=sum(budget), expenditure=sum(expenditure), disbursement=sum(disbursement)), by=byVars]
+
+
+
+
+muni_plots <- list()
+
+for(k in unique(muni_sicoin$source)){
+  muni_subset <- subset(muni_sicoin, source==k)
+  muni_lm <- lm(disbursement ~budget, data=muni_subset)
+  muni_plot <- (ggplot(muni_subset, aes(x = budget/1000, y=disbursement/1000)) + 
+    geom_point(aes(color=year(start_date), shape=disease)) +
+    geom_abline(intercept=0, slope=1) + 
+    geom_smooth(method='lm') + 
+    scale_colour_gradient(low = "#73D487", high = "#FF66CC",
+                          space = "Lab", na.value = "grey50", guide = "colourbar") +
+    ggtitle(paste(k, "Budget vs Disbursement Data, regression slope =",signif(muni_lm$coef[[2]],5))) +
+    #ylim(0, 9) + 
+    labs(x = "Budget $$ (thousands)", y = "Disbursement  $$ (thousands)") +
+    theme_bw())
+  muni_plots[[k]] <- muni_plot
+}
 
 # ----------------------------------------------
 ### GOS DATA graphs 
