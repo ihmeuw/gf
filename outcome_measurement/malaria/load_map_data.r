@@ -14,6 +14,7 @@
 # this should eventually be turned into a more general-purpose function
 # clean up handling of input iso3s
 # add functionality for multiple years
+# handle clipping better so data can be projected to any raster
 
 # ----------------------------------------------
 # Files and directories
@@ -56,6 +57,7 @@ if ('act' %in% inds) rasterDataact = raster(actFiles[grepl(year, itnFiles)])
 if ('irs' %in% inds) rasterDatairs = raster(irsFiles[grepl(year, irsFiles)])
 if ('antmal' %in% inds) rasterDataantmal = raster(antmalFiles[grepl(year, antmalFiles)])
 if ('pop' %in% inds) rasterDatapop = raster(popFiles[grepl(year, popFiles) & grepl('05-15', popFiles)])
+if ('pop_total' %in% inds) rasterDatapop_total = raster(popFiles[grepl(year, popFiles) & grepl('total', popFiles)])
 if ('prev' %in% inds) rasterDataprev = raster(prevFiles[grepl(year, prevFiles)])
 
 # load shapefile
