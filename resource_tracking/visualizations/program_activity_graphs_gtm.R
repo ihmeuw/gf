@@ -82,7 +82,7 @@ for (k in unique(graphData$disease)){
 				aes(x=start_date, y=cumulative/1000000, color=source)) + 
     geom_step(aes(linetype='Budget'), size=1.25, alpha=.5) +
     geom_step(data=graphData[disease==k & variable=='Disbursement'], aes(linetype='Disbursement'), size=1.25) +
-    labs(title=paste(k, "data at national level"), 
+    labs(title=paste(k, "cumulative data at national level"), 
 		x = "", y = "USD (Millions)", caption="Data Source: SICOIN", 
 		color='Source') +
 	scale_linetype_manual('Quantity', values=c('Budget'=1,'Disbursement'=4)) +
@@ -213,20 +213,16 @@ names(map_disease) <- c("tb", "malaria", "hiv", "hss", "hiv/tb")
 kDT = data.table(map_disease = names(map_disease), value = TRUE, gos_disease = unname(map_disease))
 gos_data[kDT, on=.(gos_disease), disease := i.map_disease]
 gos_data$gos_disease <- NULL
-
-
-gtm_gos <- gos_data[Country=="Guatemala"]
-uga_gos <- gos_data[Country=="Uganda"]
-cod_gos <- gos_data[Country=="Congo (Democratic Republic)"]
+gos_data[disease=='hiv/tb', disease:='hiv']
 
 ### make program activity graphs
 
 ## first without grants, just by disease 
 
-byVars = names(gtm_gos)[!names(gtm_gos)%in%c('budget','expenditure','gf_program', 'Country')]
-program_level = gtm_gos[, list(budget=sum(budget), expenditure=sum(expenditure)), by=byVars]
+byVars = names(gos_data)[!names(gos_data)%in%c('budget','expenditure','gf_program')]
+program_level = gos_data[, list(budget=sum(budget), expenditure=sum(expenditure)), by=byVars]
 
-program_level <- program_level[, -c(2:3)]
+program_level <- program_level[, -c(3:4)]
 
 
 # test for missing SDAs from map
@@ -235,6 +231,8 @@ sdas_in_data = unique(program_level$cost_category)
 if (any(!sdas_in_data %in% sdas_in_map)) { 
 	stop('Map doesn\'t include cost categories that are in this data file!')
 }
+program_level[cost_category%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
+
 
 # test to make sure map doesn't contain duplicates
 d1 = nrow(mapping_for_R)
@@ -256,35 +254,62 @@ byVars = names(program_level)[!names(program_level)%in%c('budget','expenditure',
 program_level = program_level[, list(budget=sum(budget), expenditure=sum(expenditure)), by=byVars]
 
 
-## "melt" the start & end dates 
-tmp = copy(program_level)
-tmp$start_date = NULL
-setnames(tmp, 'end_date', 'start_date')
-program_level$end_date = NULL
-program_level = rbind(program_level , tmp)
-
-
-program_level= melt(program_level, id.vars=c("program_activity", "disease", "start_date","Year"))
+program_level= melt(program_level, id.vars=c("program_activity", "disease", "start_date","Year", "Country"))
 program_level$value[program_level$value==0] <- NA
+
+
+gtm_gos <- program_level[Country=="Guatemala"]
+uga_gos <- program_level[Country=="Uganda"]
+cod_gos <- program_level[Country=="Congo (Democratic Republic)"]
 
 
 
 prog_plots <- list()
 set3 <- colorRampPalette(brewer.pal('Set3',n=12))
-set3 = set3(13)
+set3 = set3(15)
 
-for (k in unique(program_level$disease)){
-  subdata <- program_level[disease==k & variable=='budget']
-  plot <- ggplot(data=subdata, aes(x = Year, y= value/1000000, fill=program_activity)) + 
+for (k in unique(gtm_gos$disease)){
+  subdata <- gtm_gos[disease==k & variable=='budget']
+  plot <- ggplot(data=subdata, aes(x = as.integer(Year), y= value/1000000, fill=program_activity)) + 
+    geom_col() + 
+    theme_bw(base_size=16) +
+    labs(title=paste(k, "Data at National Level"), 
+         x = "", y = "USD (Millions)", caption="Data Source: GOS and GMS") +
+    scale_fill_manual('Program Activity', values=set3, levels(subdata$program_activity))
+  prog_plots[[k]] <- plot
+}
+
+pdf("gtm_gos_activity_bars.pdf", height=6, width=9)
+invisible(lapply(prog_plots, print))
+dev.off()
+
+for (k in unique(uga_gos$disease)){
+  subdata <- uga_gos[disease==k & variable=='budget']
+  plot <- ggplot(data=subdata, aes(x = as.integer(Year), y= value/1000000, fill=program_activity)) + 
+    geom_col() + 
+    theme_bw(base_size=16) +
+    labs(title=paste(k, "Data at National Level"), 
+         x = "", y = "USD (Millions)", caption="Data Source: GOS and GMS") +
+    scale_fill_manual('Program Activity', values=set3, levels(subdata$program_activity))
+  prog_plots[[k]] <- plot
+}
+
+pdf("uga_gos_activity_bars.pdf", height=6, width=9)
+invisible(lapply(prog_plots, print))
+dev.off()
+
+for (k in unique(cod_gos$disease)){
+  subdata <- cod_gos[disease==k & variable=='budget']
+  plot <- ggplot(data=subdata, aes(x = as.integer(Year), y= value/1000000, fill=program_activity)) + 
 			geom_col() + 
              theme_bw(base_size=16) +
-			labs(title=paste(toupper(k), "Data at National Level"), 
+			labs(title=paste(k, "Data at National Level"), 
 				x = "", y = "USD (Millions)", caption="Data Source: GOS and GMS") +
             scale_fill_manual('Program Activity', values=set3, levels(subdata$program_activity))
   prog_plots[[k]] <- plot
 }
 
-pdf("gos_activity_bars.pdf", height=6, width=9)
+pdf("cod_gos_activity_bars.pdf", height=6, width=9)
 invisible(lapply(prog_plots, print))
 dev.off()
 
