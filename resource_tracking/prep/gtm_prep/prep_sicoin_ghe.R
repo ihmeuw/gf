@@ -37,7 +37,11 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source, g
   }
   else {
     ## get just the program categories
-    ghe_data <- ghe_data[grepl("tuber", tolower(ghe_data$X__10)), ]
+    if (year==2012 || year==2014){
+      ghe_data <- ghe_data[grepl("tuber", tolower(ghe_data$X__10)), ]
+    } else {
+      ghe_data <- ghe_data[grepl(paste(c("tuber", "malaria"), collapse="|"), tolower(ghe_data$X__10)), ]
+    }
     ## remove empty columns 
     ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
     ## now get region + budgeted expenses 

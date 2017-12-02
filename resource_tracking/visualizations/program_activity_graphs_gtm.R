@@ -22,8 +22,12 @@ library(readxl)
 
 # ----------------------------------------------
 ## prep sicoin data 
-sicoin <- data.table(read.csv("prepped_sicoin_data_1201.csv", fileEncoding="UTF-8"))
-sicoin$start_date <- as.Date(sicoin$start_date, '%Y-%m-%d') # BE SURE THIS IS RIGHT
+sicoin <- data.table(read.csv("prepped_sicoin_data_1201_ic.csv", fileEncoding="UTF-8"))
+sicoin$start_date <- as.Date(sicoin$start_date, '%m/%d/%Y') # BE SURE THIS IS RIGHT
+
+if (!is.numeric(sicoin$budget)) sicoin[,budget:=as.numeric(budget)]
+if (!is.numeric(sicoin$disbursement)) sicoin[,disbursement:=as.numeric(disbursement)]
+if (!is.numeric(sicoin$expenditure)) sicoin[,expenditure:=as.numeric(expenditure)]
 
 ## national level graphs for sicoin: 
 
@@ -43,6 +47,9 @@ nat_level[, cumulative:=cumsum(value), by=c('source', 'disease', 'variable')]
 graphData = copy(nat_level)
 graphData[source=='gf', source:='Global Fund']
 graphData[source=='ghe', source:='Government']
+graphData[disease=='hiv', disease:='HIV/Aids']
+graphData[disease=='malaria', disease:='Malaria']
+graphData[disease=='tb', disease:='Tuberculosis']
 graphData[, variable:=toTitleCase(as.character(variable))]
 graphData = graphData[!is.na(value)]
 
@@ -58,7 +65,7 @@ for (k in unique(graphData$disease)){
   plot <- ggplot(graphData[disease==k & variable=='Budget'], aes(x=start_date, y=value/1000000, color=source)) + 
     geom_step(aes(linetype='Budget'), size=1.25, alpha=.5) +
     geom_step(data=graphData[disease==k & variable=='Disbursement'], aes(linetype='Disbursement'), size=1.25) +
-    labs(title=paste(toupper(k), "data at national level"), 
+    labs(title=paste(k, "data at national level"), 
 		x = "", y = "USD (Millions)", caption="Data Source: SICOIN", 
 		color='Source') +
 	scale_linetype_manual('Quantity', values=c('Budget'=1,'Disbursement'=4)) +
@@ -75,7 +82,7 @@ for (k in unique(graphData$disease)){
 				aes(x=start_date, y=cumulative/1000000, color=source)) + 
     geom_step(aes(linetype='Budget'), size=1.25, alpha=.5) +
     geom_step(data=graphData[disease==k & variable=='Disbursement'], aes(linetype='Disbursement'), size=1.25) +
-    labs(title=paste(toupper(k), "data at national level"), 
+    labs(title=paste(k, "data at national level"), 
 		x = "", y = "USD (Millions)", caption="Data Source: SICOIN", 
 		color='Source') +
 	scale_linetype_manual('Quantity', values=c('Budget'=1,'Disbursement'=4)) +
@@ -208,9 +215,9 @@ gos_data[kDT, on=.(gos_disease), disease := i.map_disease]
 gos_data$gos_disease <- NULL
 
 
-gtm_gos <- subset(gos_data, Country=="Guatemala")
-
-
+gtm_gos <- gos_data[Country=="Guatemala"]
+uga_gos <- gos_data[Country=="Uganda"]
+cod_gos <- gos_data[Country=="Congo (Democratic Republic)"]
 
 ### make program activity graphs
 

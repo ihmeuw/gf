@@ -49,7 +49,7 @@ prep_muni_sicoin = function(dir, inFile, year, period, disease, source, grant_nu
     gf_subset <- na.omit(ghe_data, cols="X__10")
     gf_subset<- gf_subset[, c("X__10", "X__17", "X__24"), with=FALSE]
     setnames(gf_subset, c("X__10", "X__17", "X__24"), c("loc_id", "budget", "disbursement"))
-    toMatch <- c("mundial", "guate", "government", "recursos", "resources", "multire")
+    toMatch <- c("mundial", "government", "recursos", "resources", "multire")
     budget_dataset <- gf_subset[ !grepl(paste(toMatch, collapse="|"), tolower(gf_subset$loc_id)),]
   }
   
