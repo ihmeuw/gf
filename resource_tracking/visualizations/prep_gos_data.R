@@ -43,6 +43,54 @@ gos_data[kDT, on=.(gos_disease), disease := i.map_disease]
 gos_data$gos_disease <- NULL
 gos_data[disease=='hiv/tb', disease:='hiv']
 
+## graph budgets vs. expenditures: 
+
+# ---------------------------------------------
+graphData <- copy(gos_data)
+graphData[disease=='hiv', disease:='HIV/Aids']
+graphData[disease=='malaria', disease:='Malaria']
+graphData[disease=='tb', disease:='Tuberculosis']
+graphData[disease=='hss', disease:='HSS']
+equation = function(x) {
+  lm_coef <- list(a = round(coef(x)[1], digits = 2),
+                  b = round(coef(x)[2], digits = 2),
+                  r2 = round(summary(x)$r.squared, digits = 2));
+  lm_eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(R)^2~"="~r2,lm_coef)
+  as.character(as.expression(lm_eq));                 
+}
+
+
+gos_nat_plots <- list()
+for (k in unique(graphData$Country)){
+  fit <- lm(expenditure ~ budget, data = graphData[Country==k])
+  range = c(min(na.omit(graphData[Country==k]$expenditure/1000000)), max(na.omit(graphData[Country==k]$budget/1000000)))
+  plot <- (ggplot(graphData[Country==k], aes(x=budget/1000000, y=expenditure/1000000)) + 
+             geom_point(aes(color=Year, shape=disease)) +
+             geom_abline(intercept=0, slope=1) + 
+             xlim(range) + 
+             ylim(range)+
+             geom_smooth(method='lm') + 
+             scale_colour_gradient(low = "red", high = "blue",
+                                   space = "Lab", na.value = "grey50", guide = "colourbar") +
+             #ylim(0, 9) + 
+             labs(x = "Budget USD (Millions)", y = "Expenditure USD (Millions)", caption="Source: GOS",
+                  title=paste(k, "Budget vs Expenditure Data"),
+                  subtitle = (paste0("reg. slope: ", round(coefficients(fit)[2], digits=3))),
+                  colour="Year", shape="Disease") +
+             theme_bw(base_size=16) +
+             theme(plot.title=element_text(hjust=.5), 
+                   plot.subtitle=element_text(size=10, hjust=0.5, face="bold", color="dark green"))) 
+  gos_nat_plots[[k]] <- plot
+}
+
+
+pdf("country_gos_budget_expenditures.pdf", height=6, width=9)
+invisible(lapply(gos_nat_plots, print))
+dev.off()
+
+
+
+
 # ---------------------------------------------
 ### make program activity graphs - first without grants, just by disease 
 
@@ -70,11 +118,10 @@ d1 = nrow(mapping_for_R)
 d2 = nrow(unique(mapping_for_R))
 if (d1!=d2) stop('Map contains duplicates!') 
 
+# ---------------------------------------------
+##map program activities from GOS data to our standard categories:
+
 program_level_mapped <- merge(program_level, mapping_for_R, by=c("disease","cost_category"))
-### check for dropped categories: 
-# results1 = setdiff(program_level$cost_category, program_level_mapped$cost_category) 
-
-
 program_level <- merge(program_level_mapped, mapping_for_graphs, by="code")
 
 program_level$budget <- program_level$budget*program_level$coeff
@@ -149,11 +196,7 @@ byVars = names(program_level)[!names(program_level)%in%c('budget','expenditure',
 grant_level = program_level[, list(budget=sum(budget), expenditure=sum(expenditure)), by=byVars]
 
 
-
-
 colnames(grant_level)[1] <- "grant_number"
-
-
 tmp = copy(grant_level)
 tmp$start_date = NULL
 setnames(tmp, 'end_date', 'start_date')

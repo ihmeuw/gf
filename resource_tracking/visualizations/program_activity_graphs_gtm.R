@@ -60,7 +60,8 @@ for (k in unique(graphData$source)){
     #ylim(0, 9) + 
     labs(x = "Budget USD (Millions)", y = "Disbursement USD (Millions)", caption="Data Source: SICOIN", 
          colour="Year", shape="Disease") +
-    theme_bw(base_size=16) + 
+    theme_bw(base_size=16) +
+    ylim(0, max(graphData[source==k]$budget/1000000)) +
     theme(plot.title=element_text(hjust=.5)))
   nat_plots[[k]] <- plot
 }
