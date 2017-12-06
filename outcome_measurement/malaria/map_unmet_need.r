@@ -167,6 +167,15 @@ p4 = ggplot(hzData, aes(y=unmet_itn_rate, x=unmet_itn_rate_fal)) +
 	labs(title='Unmet ITN Need', subtitle='(% of cases)', y='Calculated Based on Health Zone Totals', x='Calculated at Pixel Level') + 
 	theme_bw(base_size=16) + 
 	theme(plot.title=element_text(hjust=.5), plot.subtitle=element_text(hjust=.5))
+
+# time series of unmet need
+p5 = ggplot(graphData[calc=='Pixel-Level' & year>2004], aes(y=value, x=year, color=variable)) + 
+	geom_line(size=2) + 
+	labs(title='Unmet Need Over Time', y='Unmet Need (% of cases)', x='') + 
+	scale_x_continuous(breaks=seq(2005,2014, by=2)) + 
+	scale_color_manual('', values=cols2[c(2,4)]) + 
+	theme_bw(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5), plot.subtitle=element_text(hjust=.5))
 # ----------------------------------------------------------------------
 
 
