@@ -93,7 +93,7 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 	
 	# loop over years
 	y=1
-	for (year in years) {
+	for(year in years) {
 		
 		# load all-country data
 		if ('itn' %in% inds) rasterDataitn = raster(itnFiles[grepl(year, itnFiles)])
