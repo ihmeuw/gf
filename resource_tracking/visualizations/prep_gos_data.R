@@ -26,7 +26,7 @@ library(readxl)
 
 gos_data  <- data.table(read_excel("J:/Project/Evaluation/GF/resource_tracking/gtm/gf/Expenditures from GMS and GOS for PCE IHME countries.xlsx", sheet = "GMS SDAs - extract", col_types = c("text", "text", "date", "date", "date", "date", "numeric", "text", "text", "numeric", "numeric", "text")))
 
-
+colnames(gos_data)[2] <- "grant_number"
 colnames(gos_data)[5] <- "start_date"
 colnames(gos_data)[6] <- "end_date"
 colnames(gos_data)[8] <- "gf_program"
@@ -51,25 +51,21 @@ graphData[disease=='hiv', disease:='HIV/Aids']
 graphData[disease=='malaria', disease:='Malaria']
 graphData[disease=='tb', disease:='Tuberculosis']
 graphData[disease=='hss', disease:='HSS']
-equation = function(x) {
-  lm_coef <- list(a = round(coef(x)[1], digits = 2),
-                  b = round(coef(x)[2], digits = 2),
-                  r2 = round(summary(x)$r.squared, digits = 2));
-  lm_eq <- substitute(italic(y) == a + b %.% italic(x)*","~~italic(R)^2~"="~r2,lm_coef)
-  as.character(as.expression(lm_eq));                 
-}
+
+
 
 
 gos_nat_plots <- list()
-for (k in unique(graphData$Country)){
-  fit <- lm(expenditure ~ budget, data = graphData[Country==k])
+for (k in unique(na.omit(graphData$Country))){
+  fit <- lm(expenditure ~ budget, data = na.omit(graphData[Country==k]))
   range = c(min(na.omit(graphData[Country==k]$expenditure/1000000)), max(na.omit(graphData[Country==k]$budget/1000000)))
-  plot <- (ggplot(graphData[Country==k], aes(x=budget/1000000, y=expenditure/1000000)) + 
+  plot <- (ggplot(na.omit(graphData[Country==k]), aes(x=budget/1000000, y=expenditure/1000000)) + 
              geom_point(aes(color=Year, shape=disease)) +
              geom_abline(intercept=0, slope=1) + 
              xlim(range) + 
              ylim(range)+
              geom_smooth(method='lm') + 
+             coord_trans(x="log10") +
              scale_colour_gradient(low = "red", high = "blue",
                                    space = "Lab", na.value = "grey50", guide = "colourbar") +
              #ylim(0, 9) + 
@@ -89,6 +85,31 @@ invisible(lapply(gos_nat_plots, print))
 dev.off()
 
 
+logData <- copy(graphData)
+logData[logData  <= 0] <- NA
+
+gos_log_plots <- list()
+for (k in unique(na.omit(logData$Country))){
+  fit <- lm(log(expenditure) ~ log(budget), data = na.omit(logData[Country==k]))
+  range = c(min(na.omit(logData[Country==k]$expenditure/1000000)), max(na.omit(logData[Country==k]$budget/1000000)))
+  plot <- (ggplot(na.omit(logData[Country==k]), aes(x=budget/1000000, y=expenditure/1000000)) + 
+             geom_point(aes(color=Year, shape=disease)) +
+             # geom_abline(intercept=0, slope=1) + 
+             # xlim(range) + 
+             # ylim(range)+
+             geom_smooth(method='glm',formula=log(y)~log(x)) + 
+             scale_colour_gradient(low = "red", high = "blue",
+                                   space = "Lab", na.value = "grey50", guide = "colourbar") +
+             #ylim(0, 9) + 
+             labs(x = "Budget USD (Millions)", y = "Expenditure USD (Millions)", caption="Source: GOS",
+                  title=paste(k, "Budget vs Expenditure Data"),
+                  subtitle = (paste0("reg. slope: ", round(coefficients(fit)[2], digits=3))),
+                  colour="Year", shape="Disease") +
+             theme_bw(base_size=16) +
+             theme(plot.title=element_text(hjust=.5), 
+                   plot.subtitle=element_text(size=10, hjust=0.5, face="bold", color="dark green"))) 
+  gos_nat_plots[[k]] <- plot
+}
 
 
 # ---------------------------------------------
@@ -132,7 +153,7 @@ byVars = names(program_level)[!names(program_level)%in%c('budget','expenditure',
 program_level = program_level[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 
-program_level= melt(program_level, id.vars=c("program_activity", "disease", "start_date", "end_date","Year", "Country"))
+program_level= melt(program_level, id.vars=c("program_activity", "disease", "start_date", "end_date","Year", "Country", "Grant Number"))
 program_level$value[program_level$value==0] <- NA
 
 
