@@ -46,6 +46,7 @@ for(i in 1:length(file_list$filename)){
     if(i>1){
         resource_database = rbind(resource_database, tmpData1, use.names=TRUE)
     }
+  print(i)
 
 }
 
@@ -53,4 +54,5 @@ resource_database$budget <- as.numeric(resource_database$budget)
 
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$expenditures <- 0 
-resource_database$disbursed <- 0 
+resource_database$disbursement<- 0 
+resource_database$data_source <- "fpm_budget"

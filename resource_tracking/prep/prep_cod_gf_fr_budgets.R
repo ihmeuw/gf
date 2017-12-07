@@ -1,7 +1,7 @@
 
-prep_cod_fr_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period, grant) {
+prep_cod_fr_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period) {
   
-  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
+  ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))
   
   ## the 1st column isn't always the same, so just call it something: 
   colnames(ghe_data)[3] <- "cost_column"
@@ -53,8 +53,6 @@ prep_cod_fr_budget = function(dir, inFile, sheet_name, start_date, qtr_num, dise
   budget_dataset$disease <- disease 
   budget_dataset$loc_id <- loc_id
   budget_dataset$period <- period
-  budget_dataset$grant <- grant
-  
   return( budget_dataset)
   
   
