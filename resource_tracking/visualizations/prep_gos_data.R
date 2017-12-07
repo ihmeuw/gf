@@ -90,18 +90,20 @@ logData[logData  <= 0] <- NA
 
 gos_log_plots <- list()
 for (k in unique(na.omit(logData$Country))){
-  fit <- lm(log(expenditure) ~ log(budget), data = na.omit(logData[Country==k]))
-  range = c(min(na.omit(logData[Country==k]$expenditure/1000000)), max(na.omit(logData[Country==k]$budget/1000000)))
-  plot <- (ggplot(na.omit(logData[Country==k]), aes(x=budget/1000000, y=expenditure/1000000)) + 
+  fit <- lm(expenditure ~ budget, data = na.omit(graphData[Country==k]))
+  range = c(min(na.omit(graphData[Country==k]$expenditure/1000000)), max(na.omit(graphData[Country==k]$budget/1000000)))
+  plot <- (ggplot(na.omit(graphData[Country==k]), aes(x=budget/1000000, y=expenditure/1000000)) + 
              geom_point(aes(color=Year, shape=disease)) +
              # geom_abline(intercept=0, slope=1) + 
              # xlim(range) + 
              # ylim(range)+
-             geom_smooth(method='glm',formula=log(y)~log(x)) + 
+             geom_smooth(method='glm',formula=y~x) + 
+             scale_x_log10(limits= c(1, max(na.omit(graphData[Country==k]$budget/1000000)))) +
+             scale_y_log10(limits= c(0.5, max(na.omit(graphData[Country==k]$budget/1000000)))) +
              scale_colour_gradient(low = "red", high = "blue",
                                    space = "Lab", na.value = "grey50", guide = "colourbar") +
              #ylim(0, 9) + 
-             labs(x = "Budget USD (Millions)", y = "Expenditure USD (Millions)", caption="Source: GOS",
+             labs(x = "log(Budget USD (Millions))", y = "log(Expenditure USD (Millions))", caption="Source: GOS",
                   title=paste(k, "Budget vs Expenditure Data"),
                   subtitle = (paste0("reg. slope: ", round(coefficients(fit)[2], digits=3))),
                   colour="Year", shape="Disease") +
