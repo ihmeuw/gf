@@ -94,12 +94,12 @@ for (k in unique(na.omit(logData$Country))){
   range = c(min(na.omit(graphData[Country==k]$expenditure/1000000)), max(na.omit(graphData[Country==k]$budget/1000000)))
   plot <- (ggplot(na.omit(graphData[Country==k]), aes(x=budget/1000000, y=expenditure/1000000)) + 
              geom_point(aes(color=Year, shape=disease)) +
-             # geom_abline(intercept=0, slope=1) + 
+             geom_abline(intercept=0, slope=1) + 
              # xlim(range) + 
              # ylim(range)+
              geom_smooth(method='glm',formula=y~x) + 
-             scale_x_log10(limits= c(1, max(na.omit(graphData[Country==k]$budget/1000000)))) +
-             scale_y_log10(limits= c(0.5, max(na.omit(graphData[Country==k]$budget/1000000)))) +
+             scale_x_log10(breaks=c(1,5,30), limits= c(1, max(na.omit(graphData[Country==k]$budget/1000000)))) +
+             scale_y_log10(breaks=c(1,5,30), limits= c(1, max(na.omit(graphData[Country==k]$budget/1000000)))) +
              scale_colour_gradient(low = "red", high = "blue",
                                    space = "Lab", na.value = "grey50", guide = "colourbar") +
              #ylim(0, 9) + 
@@ -110,7 +110,7 @@ for (k in unique(na.omit(logData$Country))){
              theme_bw(base_size=16) +
              theme(plot.title=element_text(hjust=.5), 
                    plot.subtitle=element_text(size=10, hjust=0.5, face="bold", color="dark green"))) 
-  gos_nat_plots[[k]] <- plot
+  gos_log_plots[[k]] <- plot
 }
 
 
