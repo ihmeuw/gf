@@ -3,8 +3,28 @@ prep_cod_fr_budget = function(dir, inFile, sheet_name, start_date, qtr_num, dise
   
   ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))
   
-  ## the 1st column isn't always the same, so just call it something: 
-  colnames(ghe_data)[3] <- "cost_column"
+  ## we need t ograb the budget numbers by quarter - first determine if french or english
+  if(lang=="eng"){
+    cashText <- " Cash \r\nOutflow"
+  } else if (lang=="fr"){
+    cashText <- "french"
+  }
+  
+  ## create vector of column names to grab: 
+  qtr_names <- rep("Intervention", qtr_num+1)
+  create_qtr_names = function(qtr_names, cashText){
+    for(i in 1:qtr_num+1){
+      if(i==1){
+        qtr_names[i] <- qtr_names[i]
+      } else{
+        qtr_names[i] <- paste("Q", i-1,  cashText, sep="")
+      }
+     i=i+1
+    }
+    return(qtr_names)
+  }
+  qtr_names <- create_qtr_names(qtr_names, cashText)
+  ghe_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
   
   ## this type of budget data should always have 13 cost categories 
   ghe_data <- ghe_data[c((grep("CostGrp", ghe_data$X__2)):(grep(13, ghe_data$X__2))),]
