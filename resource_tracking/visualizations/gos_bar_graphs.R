@@ -19,8 +19,11 @@ library(reshape)
 library(scales)
 
 # ---------------------------------------------
-
-gos_data <- read_gos_data()
+##load the data 
+dir <- "J:/Project/Evaluation/GF/resource_tracking/gtm/gf/"
+fileName <- "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
+sheet_name <- "GMS SDAs - extract"
+gos_data <- read_gos_data(dir, fileName, sheet_name)
 
 ### make program activity graphs - first without grants, just by disease 
 
@@ -57,72 +60,53 @@ program_level <- merge(program_level_mapped, mapping_for_graphs, by="code")
 program_level$budget <- program_level$budget*program_level$coeff
 program_level$expenditure <- program_level$expenditure*program_level$coeff
 
-## program only - no grants 
+## sum budget and exp. by country, year, program activity, disease (no grants) 
 byVars = names(program_level)[!names(program_level)%in%c('budget','expenditure', 'coeff', 'code', 'cost_category', "grant_number")]
 program_level = program_level[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 
-program_level= melt(program_level, id.vars=c("program_activity", "disease", "start_date", "end_date","Year", "Country"))
-program_level$value[program_level$value==0] <- NA
+
+##melt to get program activity 
+program_level <- program_level[,-c(3:4)]
+program_level= melt(program_level, id.vars=c("program_activity", "disease","Year", "Country"))
+program_level$value[program_level$value<=0] <- NA
+
+
 
 ##set up to graph nicely
 program_level[disease=='hiv', disease:='HIV/Aids']
 program_level[disease=='malaria', disease:='Malaria']
 program_level[disease=='tb', disease:='Tuberculosis']
 
-
-
 gtm_gos <- program_level[Country=="Guatemala"]
 uga_gos <- program_level[Country=="Uganda"]
 cod_gos <- program_level[Country=="Congo (Democratic Republic)"]
 
-prog_plots <- list()
-set3 <- colorRampPalette(brewer.pal('Set3',n=12))
-set3 = set3(15)
 
 ### percent bar charts: 
-malColors <- c('#b20000', '#660000', ##reds
+progColors <- c('#b20000', '#660000', ##reds
                '#f6ae8f', '#EE5D1F', ##oranges
                '#256325', '#92b192',##greens
                '#004c4c', '#00FFFF',##blues
                '#660066', '#bf7fbf',#purples
-               '#ff748c')
-hivColors <- c('#b20000', '#660000', ##reds
-               '#f6ae8f', '#EE5D1F', ##oranges
-               '#256325', '#92b192',##greens
-               '#004c4c', '#00FFFF',##blues
-               '#660066', '#bf7fbf',#purples
-               '#ff748c', '#ffc0cb',#pinks
-               '#a6a6a6')
-tbColors <- c('#b20000', '#660000', ##reds
-              '#f6ae8f', '#EE5D1F', ##oranges
-              '#256325', '#92b192',##greens
-              '#004c4c', '#00FFFF',##blues
-              '#660066', '#bf7fbf',#purples
-              '#ff748c', '#ffc0cb',#pinks
-              '#a6a6a6', '#d8d8d8', ## grey
-              '#c0cbff')
+               '#ff748c', "#ffc0cb", #pinks
+               '#a6a6a6', '#d8d8d8', ##greys
+               '#ffd700', '#d3a308',#yellows
+               "#35978f", "#80cdc1", ##teals
+               '#9ecae1', '#4292c6',##ocean 
+               '#7a0177') #magenta
+names(progColors) <- unique(program_level$program_activity)
 
-names(tbColors) <- unique(program_level[disease=="Tuberculosis"]$program_activity)
-names(hivColors) <- unique(program_level[disease=="HIV/Aids"]$program_activity)
-names(malColors) <- unique(program_level[disease=="Malaria"]$program_activity)
-
-
-for (k in unique(cod_gos$disease)){
-  subdata <- cod_gos[disease==k & variable=='budget']
-  if(k=="Tuberculosis"){
-  colScale <- scale_fill_manual(name="program_activity", values = tbColors) 
-  } else if (k=="Malaria"){
-    colScale <- scale_fill_manual(name="program_activity", values = malColors) 
-  } else{
-    colScale <- scale_fill_manual(name="program_activity", values = hivColors)
-  }
+prog_plots <- list()
+for (k in unique(uga_gos$disease)){
+  subdata <- uga_gos[disease==k & variable=='budget']
+  colScale <- scale_fill_manual(name="program_activity", values =progColors) 
   plot <- ggplot(data=subdata, aes(x = as.integer(Year), y= value/1000000, fill=program_activity)) + 
     geom_bar(position="fill", stat="identity") + 
     colScale +
     theme_bw(base_size=16) +
     scale_y_continuous(labels = percent_format()) +
-    labs(title=k, x="Year", y = "USD (Millions)", caption="Data Source: GOS") + 
+    labs(title=k, x="Year", y = "% of Budget", caption="Data Source: GOS") + 
     theme(legend.text=element_text(size=8)) +
     scale_x_discrete(name ="Year", 
                      limits=c(2004, 2008, 2012, 2016))
@@ -130,7 +114,7 @@ for (k in unique(cod_gos$disease)){
   prog_plots[[k]] <- plot
   }
 
-pdf("cod_gos_percent_bars.pdf", height=6, width=9)
+pdf("uga_gos_percent_bars.pdf", height=6, width=9)
 invisible(lapply(prog_plots, print))
 dev.off()
 
