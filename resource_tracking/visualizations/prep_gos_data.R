@@ -24,8 +24,10 @@ library(readxl)
 # ----------------------------------------------
 ## prep data 
 
-read_gos_data <- function(){
-  gos_data  <- data.table(read_excel("J:/Project/Evaluation/GF/resource_tracking/gtm/gf/Expenditures from GMS and GOS for PCE IHME countries.xlsx", sheet = "GMS SDAs - extract", col_types = c("text", "text", "date", "date", "date", "date", "numeric", "text", "text", "numeric", "numeric", "text")))
+
+
+read_gos_data <- function(dir, fileName, sheet_name){
+  gos_data  <- data.table(read_excel(paste(dir, fileName, sep=""), sheet=as.character(sheet_name)))
   colnames(gos_data)[2] <- "grant_number"
   colnames(gos_data)[5] <- "start_date"
   colnames(gos_data)[6] <- "end_date"
