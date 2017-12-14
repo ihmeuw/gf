@@ -33,7 +33,7 @@ library(boot)
 # Parameters and settings
 
 # inputs for load_map_data.r
-year = 2014
+years = 2014
 iso3s = 'UGA'
 inds = c('prev','pop_total','antmal','itn')
 crop = FALSE
@@ -55,6 +55,9 @@ inFilevls = paste0(dir, '../../../special_assessments/uga/output/district_year_v
 
 # output files
 graphFile = paste0(dir, '../../vfm/', iso3s, '/visualizations/unmet_need_graphs.pdf')
+
+# prep function
+source('./outcome_measurement/malaria/load_map_data.r')
 # ----------------------------------------------
 
 
@@ -62,15 +65,11 @@ graphFile = paste0(dir, '../../vfm/', iso3s, '/visualizations/unmet_need_graphs.
 # Load/prep MAP data
 
 # load
-source('./outcome_measurement/malaria/load_map_data.r')
-
-# append itn and prevalence
-dataUGAprev = dataUGAprev[order(x,y)]
-dataUGAitn = dataUGAitn[order(x,y)]
-dataUGApop_total = dataUGApop_total[order(x,y)]
-if (nrow(dataUGAprev)!=nrow(dataUGAitn)) stop('Error: cbinding rasters with different lengths is bad!')
-dataUGA = cbind(dataUGAprev, dataUGAitn$value, dataUGAantmal$value, dataUGApop_total$value)
-setnames(dataUGA, c('x','y','prev','itn','antmal','pop_total'))
+out = loadMapData(iso3s, years, inds, crop=FALSE)
+data = out$data
+map = out$maps$UGA
+shapeData = out$shapeData
+baseRaster = out$baseRasters$UGA
 # -----------------------------------------------------
 
 
@@ -90,7 +89,7 @@ povertyHighRes = raster(povertyFile)
 povertyHighResdt = data.table(as.data.frame(povertyHighRes, xy=TRUE))
 
 # aggregate to the same resolution as MAP
-poverty = projectRaster(povertyHighRes, rasterDataUGA)
+poverty = projectRaster(povertyHighRes, baseRaster)
 
 # format as data table
 poverty = data.table(as.data.frame(poverty, xy=TRUE))
@@ -102,12 +101,12 @@ setnames(poverty, c('x','y','mpi'))
 # Merge
 
 # the projectRaster function should enable perfect merging
-data = merge(poverty, dataUGA, by=c('x','y'), all=TRUE)
+data = merge(poverty, data, by=c('x','y'), all=TRUE)
 
 # aggregate to ditrict level
-dataDist = extract(rasterFromXYZ(data[,c('x','y','mpi',inds),with=FALSE]), mapUGA)
+dataDist = extract(rasterFromXYZ(data[,c('x','y','mpi',inds),with=FALSE]), map)
 dataDist = data.table(do.call('rbind',lapply(dataDist, colMeans, na.rm=TRUE)))
-dataDist[,dist112:=as.character(mapUGA@data[,'dist112'])]
+dataDist[,dist112:=as.character(map@data[,'dist112'])]
 
 # merge to VL data
 dataDist = merge(vlData, dataDist, by='dist112',all=TRUE)
@@ -149,9 +148,9 @@ labs = paste('Prevalence Quantile', seq(l))
 data[, prev_quantile:=cut(prev, qs, labels=labs)]
 
 # merge district level data to shapedata
-shapeDataUGA = shapeDataUGA[, 1:8, with=FALSE]
+shapeData = shapeData[, 1:8, with=FALSE]
 dataDist[, dist112:=as.numeric(dist112)]
-shapeDataUGA = merge(shapeDataUGA, dataDist[year==2016, c('dist112','mpi'), with=FALSE], by.x='id', by.y='dist112')
+shapeData = merge(shapeData, dataDist[year==2016, c('dist112','mpi'), with=FALSE], by.x='id', by.y='dist112')
 # ----------------------------------------------
 
 
@@ -161,7 +160,7 @@ shapeDataUGA = merge(shapeDataUGA, dataDist[year==2016, c('dist112','mpi'), with
 # map of poverty
 p1 = ggplot(povertyHighResdt, aes(y=y, x=x, fill=uga11povmpi)) + 
 	geom_tile() + 
-	geom_path(data=shapeDataUGA, aes(x=long, y=lat, group=group)
+	geom_path(data=shapeData, aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
 	scale_fill_gradientn('% Impoverished', colors=cols, na.value='white') + 
 	coord_fixed(ratio=1) + 
@@ -172,7 +171,7 @@ p1 = ggplot(povertyHighResdt, aes(y=y, x=x, fill=uga11povmpi)) +
 	theme(plot.title=element_text(hjust=.5)) 
 
 # map of district-level poverty
-ggplot(shapeDataUGA, aes(x=long, y=lat, group=group, fill=mpi)) + 
+ggplot(shapeData, aes(x=long, y=lat, group=group, fill=mpi)) + 
 	geom_polygon() + 
 	geom_path(color=border, size=.05) + 
 	scale_fill_gradientn('% Impoverished', colors=cols, na.value='white') + 
@@ -186,7 +185,7 @@ ggplot(shapeDataUGA, aes(x=long, y=lat, group=group, fill=mpi)) +
 # map of itn
 p2 = ggplot(data, aes(y=y, x=x, fill=itn)) + 
 	geom_tile() + 
-	geom_path(data=shapeDataUGA, aes(x=long, y=lat, group=group)
+	geom_path(data=shapeData, aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
 	scale_fill_gradientn('Log-Population', colors=cols, na.value='white') + 
 	coord_fixed(ratio=1) + 
