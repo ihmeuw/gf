@@ -139,6 +139,9 @@ data[, label:=str_wrap(program_activity, 22)]
 # store aggregate absorption
 agg = sum(data$expenditure)/sum(data$budget)
 
+# store average absorption by sda
+means = data[, list(absorption=mean(absorption)), by=label]
+
 # colors
 cols = c('#008080','#70a494','#b4c8a8','#f6edbd','#edbb8a','#de8a5a','#ca562c')
 
@@ -155,8 +158,10 @@ b = 14
 p1 = ggplot(data, aes(y=absorption*100, x=grant_year, group=grant_number, color=Year)) + 
 	geom_line(alpha=.85) + 
 	geom_point(alpha=.85, aes(size=budget)) + 
+	geom_hline(data=means, aes(yintercept=absorption*100, linetype='Mean')) + 
 	facet_wrap(~label, ncol=7) + 
 	scale_color_gradientn(colors=cols) + 
+	scale_linetype_manual('', values=c('Mean'='solid')) + 
 	labs(title='Absorption by Grant and Service Delivery Area', 
 			y='Absorption %', x='Year within Grant', size='Budget $\n(Millions)') + 
 	theme_bw(base_size=b) + 
@@ -166,7 +171,7 @@ p1 = ggplot(data, aes(y=absorption*100, x=grant_year, group=grant_number, color=
 p2 = ggplot(coefs1[label!='Intercept'], aes(y=est, ymin=lower, ymax=upper, x=label)) + 
 	geom_bar(stat='identity', fill='#6d819c') + 
 	geom_errorbar(width=.2, size=1.1, color='gray25') + 
-	labs(title='Regression Coefficients', subtitle='Model 1', 
+	labs(title='Regression Coefficients', subtitle='Model 1', caption='Model Intercept not Shown', 
 			y='Correlation with Absorption (logit)', x='') + 
 	theme_bw(base_size=b) + 
 	theme(plot.title=element_text(hjust=.5), plot.subtitle=element_text(hjust=.5), 
