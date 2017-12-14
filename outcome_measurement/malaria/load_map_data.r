@@ -14,6 +14,7 @@
 # 		1. data - a data.table with rows for country-pixel-years and columns for each ind
 # 		2. maps - list of spatialPolygonsDataFrames, one per iso3
 # 		3. shapeData - a data.table containing all objects in `map`, fortified and rbinded together
+# 		4. baserasters - a list of RasterLayers, one per country containing the coordinate grid everything is projected to
 # --------------------------------------------------------
 
 
@@ -22,7 +23,15 @@
 loadMapData = function(iso3s, years, inds, crop=FALSE) { 
 # ------------------------------------------------------
 
-
+	# ------------------------
+	# Load necessary packages
+	library(data.table)
+	library(raster)
+	library(rgdal)
+	library(rgeos)
+	# ------------------------
+	
+	
 	# ---------------------------------------------------------------------------------------
 	# Files and directories
 
@@ -91,6 +100,9 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 	# ----------------------------------------------------------
 	# Load/prep raster data
 	
+	# set up list for base rasters
+	baseRasters = list()
+	
 	# loop over years
 	y=1
 	for(year in years) {
@@ -117,9 +129,12 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 				rasterData = crop(rasterData, extent(maps[[iso3]]))
 				rasterData = mask(rasterData, maps[[iso3]])
 				
+				
+				# store base raster
+				if (j==1 & y==1) baseRasters[[iso3]] = rasterData
+
 				# project the current indicator to the first one
-				if (j==1) firstRaster = rasterData
-				if (j>1) rasterData = projectRaster(rasterData, firstRaster)
+				if (j>1 | y>1) rasterData = projectRaster(rasterData, baseRasters[[iso3]])
 				
 				# format raster as data.table
 				tmpData = data.table(as.data.frame(rasterData, xy=TRUE))
@@ -132,7 +147,7 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 					if (q1>0) tmpData[get(ind)<q1, get(ind):=q1]
 					tmpData[get(ind)>q99, get(ind):=q99]
 				}
-				
+								
 				# merge (projectRaster should enable perfect merging)
 				if (j==1) countryData = tmpData
 				if (j>1) countryData = merge(countryData, tmpData, by=c('x','y'),all=TRUE) 
@@ -159,7 +174,8 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 	# Return output
 	out = list('data'=data,
 		'maps'=maps,
-		'shapeData'=shapeData
+		'shapeData'=shapeData, 
+		'baseRasters'=baseRasters
 	)
 	return(out)
 	# -----------------------
