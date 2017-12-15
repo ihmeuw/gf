@@ -127,8 +127,7 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 				# clip to current country
 				rasterData = get(paste0('rasterData',inds[j]))
 				rasterData = crop(rasterData, extent(maps[[iso3]]))
-				rasterData = mask(rasterData, maps[[iso3]])
-				
+				rasterData = mask(rasterData, maps[[iso3]])		
 				
 				# store base raster
 				if (j==1 & y==1) baseRasters[[iso3]] = rasterData
