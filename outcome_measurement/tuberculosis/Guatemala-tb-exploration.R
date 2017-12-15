@@ -14,12 +14,15 @@ library(readxl)
 library(zoo)
 library(ggplot2)
 library(gridExtra)
+library(rgdal)
+library(broom)
+library(stringdist)
 # ----------------------------------------------
 # Configure script
 saveGraphs = T
 # ----------------------------------------------
 # Read the data:
-TBNotif2014 = read_excel("Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2014 GENERAL anterior.xlsx", sheet = 2, col_names = F)
+TBNotif2014 = read_excel("PCE/Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2014 GENERAL anterior.xlsx", sheet = 2, col_names = F)
 # Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
 TBNotif2014 = data.table(TBNotif2014)[3:.N,][!is.na(X3),]
 names(TBNotif2014) = c( "NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", "SEXO", "EDAD", 
@@ -28,7 +31,7 @@ names(TBNotif2014) = c( "NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SE
                         "OTRASPATOLOGIAS", "CONDICIONEGRESO", "FECHAMUERTE", "CAUSADEMUERTE", 
                         "PACIENTEPRIVADOLIBERTAD", "DEPORTADO")
 
-TBNotif2015 = read_excel("Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2015.xlsx", sheet = 2, col_names = F)
+TBNotif2015 = read_excel("PCE/Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2015.xlsx", sheet = 2, col_names = F)
 TBNotif2015 = data.table(TBNotif2015)[3:.N,][!is.na(X3),]
 names(TBNotif2015) = c("NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", "SEXO", "EDAD",
                        "RANGOEDAD", "PESOLBS", "PESOKG", "CONDICIONINGRESO", "FECHANOTIFICACION", "FECHAINICIOTX", 
@@ -36,16 +39,37 @@ names(TBNotif2015) = c("NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SER
                        "CONTACTO000_014", "CONTACTO_MAYORA_015", "CASOINDICE", "DESARROLLOTBCLASIFICACION", 
                        "OTRASPATOLOGIAS", "EMPLEADOMSPAS", "UNIDADDX", "FALLECIDOS", "FECHAMUERTE", "CAUSADEMUERTE", 
                        "PACIENTEPRIVADOLIBERTAD")
+gtmMunisIGN = readOGR("PCE/Outcome Measurement Data/GIS/GT-IGN-cartografia_basica-Division politica Administrativa (Municipios).geojson")
+munisPob = read.csv("PCE/Outcome Measurement Data/Covariates/Demographics/Guatemala_Municipios_IGN2017_worldpop2015.csv", encoding = "UTF-8")
+deptoIndgnProp = read.csv("PCE/Outcome Measurement Data/Covariates/Demographics/Guatemala_indigenousPobProp.csv")
 # Readxl has serious issues with guessing data types and handling empty cells around the document. 
 # Thus, the easiest way to load a bad excel, such as these, is to load everything without type 
 # conversion and columns definitions.
 
 # ----------------------------------------------
+# Helper function to get municipality and department codes
+deptos                = unique(munisPob[, c("DEPTO__", "COD_DEPT__") ])
+vocalesTildes         = c("á"="a", "é"="e", "í"="i", "ó"= "o", "ú"="u")
+deptos$DEPTO__        = str_replace_all(str_to_lower(deptos$DEPTO__), vocalesTildes)
+munisPob$lookupNombre = str_replace_all(str_to_lower(munisPob$NOMBRE__), vocalesTildes)
+getMuniCodeByName <- function (nombreMuni, nombreDepto, field = "COD_MUNI__") {
+    nombreMuni  = str_replace_all(str_to_lower(nombreMuni), vocalesTildes)
+    nombreDepto = str_replace_all( str_to_lower(nombreDepto), vocalesTildes)
+    depto       = deptos[which.min(stringdist(nombreDepto, deptos$DEPTO__, method = "cosine")),]
+    deptoMunis  = munisPob[munisPob$COD_DEPT__ == depto$COD_DEPT__,]
+    muni        = deptoMunis[which.min(stringdist(nombreMuni, deptoMunis$lookupNombre, method = "cosine")), field]
+    muni
+}
+# Call the function over the dataset to get municipality codes:
+
+TBNotifAll[, COD_MUNI := getMuniCodeByName(MUNICIPIO, DEPARTAMENTO), by=1:nrow(TBNotifAll)]
+
+# ----------------------------------------------
 # Prepare the data
 TBNotifAll = rbindlist(list(TBNotif2014, TBNotif2015), fill = TRUE)
-TBNotifAll = TBNotifAll[YearMonth>=201401 & YearMonth<=201512]
 TBNotifAll$NotificationDate = as.Date(as.numeric(TBNotifAll$FECHANOTIFICACION)-2, origin="1900-01-01")
 TBNotifAll$YearMonth = as.numeric(format(TBNotifAll$NotificationDate, "%Y%m"));
+TBNotifAll = TBNotifAll[YearMonth>=201401 & YearMonth<=201512]
 TBNotifAll$RANGOEDAD = trimws(TBNotifAll$RANGOEDAD)
 TBNotifAll$SEXO = str_to_lower(TBNotifAll$SEXO)
 TBNotifAll$VIH = str_to_lower(trimws(TBNotifAll$VIH))
@@ -102,3 +126,9 @@ ggplot(as.data.frame(table(TBNotifAll$METODODX, TBNotifAll$SEXO, TBNotifAll$VIH,
 if (saveGraphs) 
     ggsave("TB_Gt_Notifications_2014-2015-Dx_method-VIH.png", height=4, width=9)
 
+# ----------------------------------------------
+gtmMunisIGN@data$id = rownames(gtmMunisIGN@data)
+gtmMunisIGN@data = merge(gtmMunisIGN@data, TBNotifAll[, .(TBCases=.N),by=COD_MUNI], by.x = "COD_MUNI__", by.y="COD_MUNI", all.x=TRUE, sort=FALSE)
+gtmMunisIGN.df = fortify(gtmMunisIGN)
+gtmMunisIGN.df = merge(gtmMunisIGN.df, gtmMunisIGN, by="id", sort=FALSE)
+ggplot(data = gtmMunisIGN.df, aes(x=long, y=lat, group=group, fill=TBCases) ) + geom_polygon(colour = rgb(1,1,1,0.5)) + coord_quickmap() +   scale_fill_gradientn(colours = c("#444444", "#ddcc22", "#DD5522", "#AA1111"), values=c(0,0.005,0.5,1), trans="log10")
