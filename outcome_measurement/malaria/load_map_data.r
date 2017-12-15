@@ -92,6 +92,7 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 		shapeDatatmp[, iso3:=iso3]
 		if (i==1) shapeData = shapeDatatmp 
 		if (i>1) shapeData = rbind(shapeData, shapeDatatmp, fill=TRUE)
+		i=i+1
 		maps[[iso3]] = map
 	}
 	# ------------------------------------------------------------------------------
