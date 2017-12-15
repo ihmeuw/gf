@@ -133,8 +133,14 @@ coefs1[variable=='CountryGuatemala', label:='Country: Guatemala']
 coefs1[variable=='CountryUganda', label:='Country: Uganda']
 coefs1[variable=='log(cumulative_budget)', label:='Log-Cumulative Budget']
 coefs1[variable=='num_sdas', label:='Number of SDAs']
-coefs2[, label:=str_wrap(program_activity, 32)]
+# coefs2[, label:=str_wrap(program_activity, 32)]
+coefs2[, label:=program_activity]
+coefs2[label=='HIV/TB collaborative interventions', label:='HIV/TB collaborative\ninterventions']
 data[, label:=str_wrap(program_activity, 22)]
+
+# identify highly-comoditized program areas
+commodities = c('Case detection and diagnosis', 'Treatment', 'Malaria indoor residual spraying', 'MDR-TB treatment', 'Malaria bed nets', 'MDR-TB case detection and diagnosis', 'MDR-TB treatment', 'Prevention')
+coefs2[, commoditized:=ifelse(program_activity %in% commodities, 'Commoditized', 'Programmatic')]
 
 # store aggregate absorption
 agg = sum(data$expenditure)/sum(data$budget)
@@ -148,7 +154,6 @@ cols = c('#008080','#70a494','#b4c8a8','#f6edbd','#edbb8a','#de8a5a','#ca562c')
 # other settings
 b = 14
 # -------------------------------------------------------------------------------------------------
-
 
 
 # -------------------------------------------------------------------------------------------------
@@ -179,11 +184,12 @@ p2 = ggplot(coefs1[label!='Intercept'], aes(y=est, ymin=lower, ymax=upper, x=lab
 
 # graph model 2 predictions
 p3 = ggplot(coefs2, aes(y=fit, ymin=lwr, ymax=upr, x=reorder(label,fit))) + 
-	geom_bar(stat='identity', fill='#55967e') + 
+	geom_bar(stat='identity', aes(fill=commoditized)) + 
 	geom_errorbar(width=.25, size=1.1, color='gray25') + 
 	geom_hline(yintercept=agg, color='red', lty='longdash') + 
+	scale_fill_manual('', values=c('#55967e','#6d819c')) + 
 	annotate('text', x=coefs2[fit==max(fit)]$label, y=agg, 
-			label='Overall Absorption', hjust=1, vjust=1.2, size=5) + 
+			label='Overall Absorption', hjust=.9, vjust=1.2, size=5) + 
 	labs(title='Mean Absorption by Service Delivery Area', 
 			caption='Estimates controlling for all variables in model 1', y='Mean Absorption', x='') + 
 	theme_bw(base_size=b) + 
@@ -193,7 +199,7 @@ p3 = ggplot(coefs2, aes(y=fit, ymin=lwr, ymax=upr, x=reorder(label,fit))) +
 
 # -----------------------------
 # Save graphs
-pdf(outFile, height=6, width=10)
+pdf(outFile, height=6, width=10.5)
 p1
 p2
 p3
