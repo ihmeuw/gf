@@ -11,7 +11,7 @@ library(dplyr)
 
 # ----------------------------------------------
 # Load data
-encovi14P = read_sav("C:/DATOS/ENCOVI/ENCOVI 2014 Personas.sav")
+encovi14P = read_sav("/DATOS/ENCOVI/ENCOVI 2014 Personas.sav")
 
 # ----------------------------------------------
 # Prepare data
@@ -71,7 +71,7 @@ deptoEtnia = dcast(dtencovi14P[, sum(FACTOR), by=list(DEPTO, ETNIA) ],  DEPTO~ET
 
 indgnProp = deptoEtnia[, .(DEPTO, DEPTOPOB = Indgn/(N+Extr+Ldn+Indgn) ) ]
 #indgnProp = deptoEtnia[, .(DEPTO, Indgn/(N+Extr+Ldn+Indgn) ) ]$V2
-write.csv(indgnProp, "indgnProp_Guatemala.csv")
+write.csv(indgnProp, "./PCE/Outcome Measurement Data/Covariates/Demographics/Guatemala_indigenousPobProp.csv")
 # DEPTO           V2
 # 1:     1 0.1081559048
 # 2:     2 0.0006506686

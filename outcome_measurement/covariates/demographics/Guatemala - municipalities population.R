@@ -28,7 +28,7 @@ gtmMunis = readOGR("/DATA/municipios_gtm/municipios_GTM.shp", encoding = "utf-8"
 
 # This data comes from IGN GIS system. It contains 340 Municipalities. It seems to be less outdated.
 # This file can be found in the archive: https://archive.org/download/IGNCartografiaBasicaDivisionPoliticaAdministrativaMunicipios/IGN-cartografia_basica-Division%20politica%20Administrativa%20%28Municipios%29.geojson
-gtmMunisIGN = readOGR("/DATA/IGN-cartografia_basica-Division politica Administrativa (Municipios).geojson", encoding="utf-8")
+gtmMunisIGN = readOGR("./PCE/Outcome Measurement Data/GIS/GT-IGN-cartografia_basica-Division politica Administrativa (Municipios).geojson", encoding="utf-8")
 
 # ----------------------------------------------
 # Exploring data
@@ -69,5 +69,5 @@ munisPopIGN = extract(WorldPopGT, gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA
 # Putting the data in the municipalities database and exporting to a CSV:
 #gtmMunis[gtmMunis$Codigo > 0 & gtmMunis$Cod_Dep<23, "Poblacion"] = munisPop
 gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0), "Poblacion"] = munisPopIGN
-write.csv(gtmMunisIGN[, names(gtmMunisIGN)], "Guatemala_Municipios_IGN2017_worldpop2015.csv")
+write.csv(gtmMunisIGN[, names(gtmMunisIGN)], "./PCE/Outcome Measurement Data/Covariates/Demographics/Guatemala_Municipios_IGN2017_worldpop2015.csv")
 
