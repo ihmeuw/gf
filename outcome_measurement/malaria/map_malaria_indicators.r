@@ -26,8 +26,11 @@ library(gridExtra)
 # ----------------------------------------------
 # Parameters and settings
 
+# iso3s
+iso3s = c('COD','UGA')
+
 # year
-year = 2014
+years = 2015
 
 # indicators
 inds = c('itn','antmal','prev')
@@ -46,12 +49,19 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/map/')
 
 # output files
 graphFile = paste0(dir, '/visualizations/descriptive_maps.pdf')
+
+# load prep function
+source('./outcome_measurement/malaria/load_map_data.r')
 # ----------------------------------------------
 
 
 # ------------------------------------------------------
 # Load/prep data
-source('./outcome_measurement/malaria/load_map_data.r')
+out = loadMapData(iso3s, years, inds, crop)
+data = out$data
+mapCOD = out$maps$COD
+mapUGA = out$maps$UGA
+shapeData = out$shapeData
 # ------------------------------------------------------
 
 
@@ -59,25 +69,29 @@ source('./outcome_measurement/malaria/load_map_data.r')
 # Set up to graph
 
 # colors
-cols = brewer.pal(6, 'Spectral')
+cols1 = rev(brewer.pal(6, 'RdYlBu'))
+cols2 = brewer.pal(6, 'RdYlGn')
 border = 'grey65'
 
 # legend limits so both countries are on same scale
-min = floor(min(c(dataUGAitn$value, dataCODitn$value), na.rm=TRUE)*100)
-max = ceiling(max(c(dataUGAitn$value, dataCODitn$value), na.rm=TRUE)*100)
+limsprev = range(data$prev, na.rm=TRUE)*100
+limsitn = range(data$itn, na.rm=TRUE)*100
+limsantmal = range(data$antmal, na.rm=TRUE)*100
 # ----------------------------------------------------------------------
 
 
 # ----------------------------------------------
-# Map comparing countries
+# Maps comparing countries
 
 # store maps separately because geom_tile bug with facetting
-uga = ggplot(dataUGAitn, aes(y=y, x=x, fill=value*100)) + 
+
+# prevalence (separate legends for visibility, modify margins of drc to make it slightly larger)
+ugaprev = ggplot(data[iso3=='UGA'], aes(y=y, x=x, fill=prev*100)) + 
 	geom_tile() + 
-	geom_path(data=shapeDataUGA, aes(x=long, y=lat, group=group)
+	geom_path(data=shapeData[iso3=='UGA'], aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
-	scale_fill_gradientn('% ITN\nUsage', colors=cols, 
-		na.value='white', limits=c(min,max)) + 
+	scale_fill_gradientn('PfPR', colors=cols1, 
+		na.value='white') + 
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
@@ -85,12 +99,66 @@ uga = ggplot(dataUGAitn, aes(y=y, x=x, fill=value*100)) +
 	theme_minimal(base_size=16) + 
 	theme(plot.title=element_text(hjust=.5)) 
 	
-cod = ggplot(dataCODitn, aes(y=y, x=x, fill=value*100)) + 
+codprev = ggplot(data[iso3=='COD'], aes(y=y, x=x, fill=prev*100)) + 
 	geom_tile() + 
-	geom_path(data=shapeDataCOD, aes(x=long, y=lat, group=group)
+	geom_path(data=shapeData[iso3=='COD'], aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
-	scale_fill_gradientn('% ITN\nUsage', colors=cols, 
-		na.value='white', limits=c(min,max)) + 
+	scale_fill_gradientn('PfPR', colors=cols1, 
+		na.value='white') + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	labs(title='DRC') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5), plot.margin=unit(rep(-1,4), 'cm')) 
+
+# ITN
+ugaitn = ggplot(data[iso3=='UGA'], aes(y=y, x=x, fill=itn*100)) + 
+	geom_tile() + 
+	geom_path(data=shapeData[iso3=='UGA'], aes(x=long, y=lat, group=group)
+		, color=border, size=.05, inherit.aes=FALSE) + 
+	scale_fill_gradientn('% ITN\nUsage', colors=cols2, 
+		na.value='white', limits=limsitn) + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	labs(title='Uganda') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5)) 
+	
+coditn = ggplot(data[iso3=='COD'], aes(y=y, x=x, fill=itn*100)) + 
+	geom_tile() + 
+	geom_path(data=shapeData[iso3=='COD'], aes(x=long, y=lat, group=group)
+		, color=border, size=.05, inherit.aes=FALSE) + 
+	scale_fill_gradientn('% ITN\nUsage', colors=cols2, 
+		na.value='white', limits=limsitn) + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	labs(title='DRC') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5), legend.position='none') 
+
+# antimalarials
+ugaantmal = ggplot(data[iso3=='UGA'], aes(y=y, x=x, fill=antmal*100)) + 
+	geom_tile() + 
+	geom_path(data=shapeData[iso3=='UGA'], aes(x=long, y=lat, group=group)
+		, color=border, size=.05, inherit.aes=FALSE) + 
+	scale_fill_gradientn('Antimalarial\nCoverage %', colors=cols2, 
+		na.value='white', limits=limsantmal) + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	labs(title='Uganda') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5)) 
+	
+codantmal = ggplot(data[iso3=='COD'], aes(y=y, x=x, fill=antmal*100)) + 
+	geom_tile() + 
+	geom_path(data=shapeData[iso3=='COD'], aes(x=long, y=lat, group=group)
+		, color=border, size=.05, inherit.aes=FALSE) + 
+	scale_fill_gradientn('Antimalarial\nCoverage %', colors=cols2, 
+		na.value='white', limits=limsantmal) + 
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
@@ -99,36 +167,9 @@ cod = ggplot(dataCODitn, aes(y=y, x=x, fill=value*100)) +
 	theme(plot.title=element_text(hjust=.5), legend.position='none') 
 	
 # put maps together
-p1 = arrangeGrob(cod, uga, ncol=2)
-# ----------------------------------------------
-
-
-# ----------------------------------------------
-# Map comparing intervention coverage
-
-# store maps separately because geom_tile bug with facetting
-plots = list()
-for(i in inds) {
-		# assign title
-		if (i=='itn') title = 'ITN Usage'
-		if (i=='act') title = 'ACT Coverage'
-		if (i=='antmal') title = 'Antimalarial Coverage'
-		if (i=='irs') title = 'IRS Coverage'
-		if (i=='prev') title = 'Prevalence (PfPR)'
-		
-		# store map
-		plots[[i]] = ggplot(get(paste0('dataCOD',i)), aes(y=y, x=x, fill=value*100)) + 
-			geom_tile() + 
-			geom_path(data=shapeDataCOD, aes(x=long, y=lat, group=group)
-				, color=border, size=.05, inherit.aes=FALSE) + 
-			scale_fill_gradientn('%', colors=cols, na.value='white') + 
-			coord_fixed(ratio=1) + 
-			scale_x_continuous('', breaks = NULL) + 
-			scale_y_continuous('', breaks = NULL) + 
-			labs(title=title) + 
-			theme_minimal(base_size=16) + 
-			theme(plot.title=element_text(hjust=.5)) 
-}
+p1 = arrangeGrob(codprev, ugaprev, ncol=2)
+p2 = arrangeGrob(coditn, ugaitn, ncol=2)
+p3 = arrangeGrob(codantmal, ugaantmal, ncol=2)
 # ----------------------------------------------
 
 
@@ -137,8 +178,9 @@ for(i in inds) {
 pdf(graphFile, height=6, width=9)
 grid.newpage()
 grid.draw(p1)
-plots[[1]]
-plots[[2]]
-plots[[3]]
+grid.newpage()
+grid.draw(p2)
+grid.newpage()
+grid.draw(p3)
 dev.off()
 # --------------------------------

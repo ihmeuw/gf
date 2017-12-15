@@ -28,13 +28,13 @@ library(gridExtra)
 # Parameters and settings
 
 # year
-years = seq(2000,2015)
+years = 2015
 
 # indicators
 inds = c('itn','antmal','prev','pop')
 
 # countries
-iso3s = 'COD'
+iso3s = c('COD','UGA')
 
 # whether to crop to the inner 99th percentile for viz purposes
 crop = TRUE
@@ -60,7 +60,8 @@ source('./outcome_measurement/malaria/load_map_data.r')
 # Load/prep data
 out = loadMapData(iso3s, years, inds, crop=FALSE)
 data = out$data
-map = out$maps$COD
+mapCOD = out$maps$COD
+mapUGA = out$maps$UGA
 shapeData = out$shapeData
 # ------------------------------------------------
 
@@ -81,7 +82,7 @@ data[, unmet_antmal_num:=(1-antmal)*prev_num]
 
 # aggregate to national unmet need and "ecologically-fallacious" unmet need
 cols = c('prev_num','pop','unmet_itn_num','unmet_antmal_num','itn_num','antmal_num')
-natData = data[,lapply(.SD, sum, na.rm=TRUE), .SDcols=cols, by='year']
+natData = data[iso3=='COD',lapply(.SD, sum, na.rm=TRUE), .SDcols=cols, by='year']
 natData[, itn:=itn_num/pop]
 natData[, unmet_itn_num_fal:=(1-itn)*prev_num]
 natData[, antmal:=antmal_num/pop]
@@ -92,7 +93,7 @@ natData[, unmet_itn_rate_fal:=unmet_itn_num_fal/pop]
 natData[, unmet_antmal_rate_fal:=unmet_antmal_num_fal/pop]
 
 # aggregate to health zones and repeat
-hzData = extract(rasterFromXYZ(data[year==max(year),c('x','y',cols),with=FALSE]), map)
+hzData = extract(rasterFromXYZ(data[year==max(year) & iso3=='COD',c('x','y',cols),with=FALSE]), mapCOD)
 hzData = data.table(do.call('rbind',lapply(hzData, colSums, na.rm=TRUE)))
 hzData[, itn:=itn_num/pop]
 hzData[, unmet_itn_num_fal:=(1-itn)*prev_num] # coverage is among the population, but it makes sense to multiply by prevalence to count unmet. that's the inefficiency we're after...
@@ -118,12 +119,13 @@ graphData[variable=='unmet_itn_rate', variable:='ITN']
 graphData[variable=='unmet_antmal_rate', variable:='Antimalarial']
 
 # colors
-cols1 = brewer.pal(6, 'Spectral')
+cols1 = rev(brewer.pal(6, 'Spectral'))
 cols2 = brewer.pal(6, 'Paired')
 border = 'grey65'
 
 # limits 
 lims = c(min(hzData$unmet_itn_rate,hzData$unmet_itn_rate_fal), max(hzData$unmet_itn_rate,hzData$unmet_itn_rate_fal))
+unmetitnlims = range(data$unmet_itn, na.rm=TRUE)*100
 # ----------------------------------------
 
 
@@ -131,18 +133,30 @@ lims = c(min(hzData$unmet_itn_rate,hzData$unmet_itn_rate_fal), max(hzData$unmet_
 # Graph unmet need
 
 # map of pixel-level unmet need
-p1 = ggplot(data, aes(y=y, x=x, fill=unmet_itn*100)) + 
+p1cod = ggplot(data[iso3=='COD'], aes(y=y, x=x, fill=unmet_itn*100)) + 
 	geom_tile() + 
-	geom_path(data=shapeData, aes(x=long, y=lat, group=group)
+	geom_path(data=shapeData[iso3=='COD'], aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
-	scale_fill_gradientn('%', colors=cols1, na.value='white') + 
+	scale_fill_gradientn('', colors=cols1, na.value='white', lim=unmetitnlims) + 
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
-	labs(title='Unmet ITN Need (% of cases)') + 
+	labs(title='DRC') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5), legend.position='none') 
+p1uga = ggplot(data[iso3=='UGA'], aes(y=y, x=x, fill=unmet_itn*100)) + 
+	geom_tile() + 
+	geom_path(data=shapeData[iso3=='UGA'], aes(x=long, y=lat, group=group)
+		, color=border, size=.05, inherit.aes=FALSE) + 
+	scale_fill_gradientn('Unmet\nITN Need\n(% of\ncases)', colors=cols1, na.value='white', lim=unmetitnlims) + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	labs(title='Uganda') + 
 	theme_minimal(base_size=16) + 
 	theme(plot.title=element_text(hjust=.5)) 
-	
+p1 = arrangeGrob(p1cod, p1uga, ncol=2)
+
 # national level
 p2 = ggplot(graphData[calc=='Pixel-Level' & year==max(year)], aes(x=variable, y=value, fill=calc)) + 
 	geom_bar(stat='identity', position='dodge', fill=cols2[2]) + 
@@ -182,9 +196,11 @@ p5 = ggplot(graphData[calc=='Pixel-Level' & year>2004], aes(y=value, x=year, col
 # --------------------------------
 # Save graphs
 pdf(graphFile, height=6, width=9)
-p1
+grid.newpage()
+grid.draw(p1)
 p2
 p3
 p4
+p5
 dev.off()
 # --------------------------------
