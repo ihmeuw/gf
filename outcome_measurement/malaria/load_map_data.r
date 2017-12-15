@@ -143,8 +143,8 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 				if (ind!='pop' & crop==TRUE) {
 					q1 = quantile(tmpData[[ind]], .005, na.rm=TRUE)
 					q99 = quantile(tmpData[[ind]], .995, na.rm=TRUE)
-					if (q1>0) tmpData[get(ind)<q1, get(ind):=q1]
-					tmpData[get(ind)>q99, get(ind):=q99]
+					if (q1>0) tmpData[get(ind)<q1, (ind):=q1]
+					tmpData[get(ind)>q99, (ind):=q99]
 				}
 								
 				# merge (projectRaster should enable perfect merging)
