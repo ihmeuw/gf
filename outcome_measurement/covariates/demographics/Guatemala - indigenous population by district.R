@@ -21,7 +21,8 @@ dtencovi14P[, ETNIA := recode_factor(as.numeric(P04A11A),  `97` = "N", `99` = "N
 total = sum(dtencovi14P$FACTOR)
 
 # ----------------------------------------------
-# Attempting to get the known values container in the general report of the ENCOVI
+# Attempting to get one known value seen  in the general report of the ENCOVI
+# Found out the FACTOR variable is the weight for each sample.
 # Proporción de mujeres:
 
 sum(dtencovi14P[PPA02==2, FACTOR]) / total
