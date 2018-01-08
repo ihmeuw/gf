@@ -4,7 +4,7 @@
 # 11/16/2017
 # Make preliminary graphs of sicoin data 
 
-
+## the cleaned up version of this code can be found in gtm_budget_graphs
 # ----------------------------------------------
 # Set up R
 
@@ -22,7 +22,7 @@ fpm_budget[,end_date:=start_date+period-1]
 byVars = names(sicoin_data)[!names(sicoin_data)%in%c('budget','disbursement','expenditure','cost_category','loc_id')]
 nat_level = sicoin_data[, list(budget=sum(budget), disbursement=sum(disbursement), expenditure=sum(expenditure)), by=byVars]
 
-
+total_guat <- rbind(pudr_mapped, total_gtm_data)
 
 tmp = copy(nat_level)
 tmp$start_date = NULL
@@ -46,12 +46,9 @@ ggplot(nat_level, aes(x = start_date, y= value/1000000)) +
 
 
 ##map the program activity to the codes: 
-sicoin_mapping_test <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/sicoin_test_mapping.csv'))
+code_mapping <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_R.csv'))
 
-
-mapped_sicoin <- merge(sicoin_data, sicoin_mapping_test, by='cost_category')
-
-fpm_mapped <- merge(fpm_budget, sicoin_mapping_test, by="cost_category", allow.cartesian=TRUE)
+sicoin_mapped  <- merge(sicoin_data, sicoin_mapping_test, by=.EACHI, allow.cartesian=TRUE)
 
 
 mapped_sicoin$budget <- mapped_sicoin$budget*mapped_sicoin$coeff

@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source, grant_number) {
+prep_muni_sicoin = function(dir, inFile, year, period, disease, source, grant_number) {
   
   
   # --------------------
@@ -26,51 +26,37 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source, g
   ghe_data <- data.table(read_excel(paste0(dir, inFile, '.xls')))
   
   # ----------------------------------------------
-  if(disease=="many"){
-    ghe_data$X__11 <- na.locf(ghe_data$X__11, na.rm=FALSE)
-    ghe_data <- ghe_data[grepl("guatemala", tolower(ghe_data$X__10)), ]
-    ghe_data <- ghe_data[grepl("tuber", tolower(ghe_data$X__11)), ]
-    setnames(ghe_data, c("X__10", "X__11", "X__19", "X__29"), c("loc_id", "cost_category", "budget", "disbursement"))
-    budget_dataset <- ghe_data[, c("loc_id", "cost_category", "budget", "disbursement"), with=FALSE]
+  ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
   # ----------------------------------------------
   ## code to get diseases -- add more if necessary
-  }
-  else {
-    ## get just the program categories
-    if (year==2012 || year==2014){
-      ghe_data <- ghe_data[grepl("tuber", tolower(ghe_data$X__10)), ]
-    } else {
-      ghe_data <- ghe_data[grepl(paste(c("tuber", "malaria"), collapse="|"), tolower(ghe_data$X__10)), ]
-    }
+  if(source=="ghe"){
+    setnames(ghe_data, c("X__14", "X__15", "X__22", "X__29"), c("loc_id", "cost_category", "budget", "disbursement"))
     ## remove empty columns 
-    ghe_data<- Filter(function(x)!all(is.na(x)), ghe_data)
-    ## now get region + budgeted expenses 
-    colnames(ghe_data)[5] <- "vigente"
-    colnames( ghe_data)[8] <- "devengado"
-    budget_dataset <- ghe_data[, c("X__10", "vigente", "devengado"), with=FALSE]
-    names(budget_dataset) <- c("cost_category", "budget", "disbursement")
-    budget_dataset$loc_id <- loc_id
+    ghe_data <- ghe_data[c(grep("GUATEM", ghe_data$loc_id):.N),]
+    ghe_data$loc_id <- na.locf(ghe_data$loc_id, na.rm=FALSE)
+    
+    toMatch <- c("vih", "sida", "tuber", "malar", "violencia sexual")
+    ghe_data <- ghe_data[grepl(paste(toMatch, collapse="|"), tolower(ghe_data$cost_category)), ]
+    
+    
+    budget_dataset <- ghe_data[, c("loc_id", "cost_category", "budget", "disbursement"), with=FALSE]
     # ----------------------------------------------
+    
+    toMatch <- c("mundial", "guate", "government", "recursos", "resources", "multire")
+    budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
+  }else{
+    ghe_data <- ghe_data[c(grep("GUATEM", ghe_data$X__10):.N),]
+    gf_subset <- na.omit(ghe_data, cols="X__10")
+    gf_subset<- gf_subset[, c("X__10", "X__17", "X__24"), with=FALSE]
+    setnames(gf_subset, c("X__10", "X__17", "X__24"), c("loc_id", "budget", "disbursement"))
+    toMatch <- c("mundial", "government", "recursos", "resources", "multire")
+    budget_dataset <- gf_subset[ !grepl(paste(toMatch, collapse="|"), tolower(gf_subset$loc_id)),]
   }
-  ## Create other variables 
+  
+    ## Create other variables 
   budget_dataset$source <- source
   budget_dataset$disease <- disease
   budget_dataset$cost_category <- as.factor(budget_dataset$cost_category)
-  levels(budget_dataset$disease) = c("hiv", "malaria", "tb", "multiple")
-  hivMatch <- c("vih", "sida", "violencia")
-  tbMatch <- "tuber"
-  for(i in 1:length(budget_dataset$disease)){
-    if(grepl(paste(hivMatch, collapse = "|"), tolower(budget_dataset$cost_category[i]))){
-      budget_dataset$disease[i] <- "hiv"
-      } else if(grepl(tbMatch, tolower(budget_dataset$cost_category[i]))){
-        budget_dataset$disease[i] <- "tb"
-        } else{
-        budget_dataset$disease[i] <- "malaria"
-        }
-    i=i+1
-    }
-
-  
   budget_dataset$start_date <- as.Date(paste(c(year,"01","01"), collapse="-"),origin="1960-01-01")
   budget_dataset$period <- period
   budget_dataset$expenditure <- NA ## change this once we figure out where exp data is
@@ -82,7 +68,7 @@ prep_ghe_sicoin = function(dir, inFile, year, loc_id, period, disease, source, g
   if (!is.numeric(budget_dataset$budget)) budget_dataset[,budget:=as.numeric(budget)]
   if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
   if (!is.numeric(budget_dataset$expenditure)) budget_dataset[,expenditure:=as.numeric(expenditure)]
-
+  
   # ----------------------------------------------
   
   # return prepped data
