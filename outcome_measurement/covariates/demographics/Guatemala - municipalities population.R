@@ -71,3 +71,31 @@ munisPopIGN = extract(WorldPopGT, gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA
 gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0), "Poblacion"] = munisPopIGN
 write.csv(gtmMunisIGN[, names(gtmMunisIGN)], "./PCE/Outcome Measurement Data/Covariates/Demographics/Guatemala_Municipios_IGN2017_worldpop2015.csv")
 
+
+# ----------------------------------------------
+# Births data 
+nacs14 = read_sav("C:/DATOS/GTVitales y Censo/Nacimientos 2014.sav")
+dtnacs14 = data.table(nacs14)
+WPBirthsGT <- raster("/DATOS/WorldPop/Guatemala 1km births/GTM_births_pp_v2_2015.tif")
+
+munisNacs = extract(WPBirthsGT, gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0),], fun = sum, na.rm = TRUE )
+dtmunisNacs = data.table(NacsWP = munisNacs, Codigo = gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0), ]$COD_MUNI__)
+dtmunisNacs[,Codigo:=as.numeric(as.character(Codigo))]
+
+# From worldpop data:
+#> sum(munisNacs)
+#[1] 429374.1
+#> nrow(nacs14)
+#[1] 386195
+#> 429374/386195
+#[1] 1.111806
+nacs = merge(dtnacs14[,.(nacs=.N),by=(Muprem+Deprem*100)], dtmunisNacs, by.x="Muprem", by.y = "Codigo")
+summary(nacs[,nacs-NacsWP.V1])
+#Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+#-4792.18  -209.33   -56.60  -119.67    48.09  4065.58 
+hist(nacs[,nacs-NacsWP.V1])
+
+# munisPob = munisPopIGN
+nacs = merge(munisPob[,.(Muprem = COD_MUNI__, Poblacion)], nacs, by="Muprem")
+nacs = merge(dtnacs14[,.(nacsI = sum(PuebloPM %in% c(1,2,3)) / sum(PuebloPM>0) ),by=(Muprem+Deprem*100)], nacs, by="Muprem")
+
