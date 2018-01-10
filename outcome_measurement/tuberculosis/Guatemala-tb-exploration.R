@@ -16,6 +16,8 @@ library(ggplot2)
 library(gridExtra)
 library(rgdal)
 library(stringdist)
+
+source("PCE/gf/core/GT_helper_functions.R", encoding = "UTF-8")
 # ----------------------------------------------
 # Configure script
 saveGraphs = T
@@ -50,28 +52,6 @@ deptoIndgnProp = data.table(deptoIndgnProp)
 # conversion and columns definitions.
 
 # ----------------------------------------------
-# Helper function to get municipality and department codes
-deptos                = unique(munisPob[, c("DEPTO__", "COD_DEPT__") ])
-vocalesTildes         = c("á"="a", "é"="e", "í"="i", "ó"= "o", "ú"="u")
-deptos$DEPTO__        = str_replace_all(str_to_lower(deptos$DEPTO__), vocalesTildes)
-munisPob$lookupNombre = str_replace_all(str_to_lower(munisPob$NOMBRE__), vocalesTildes)
-getMuniCodeByName <- function (nombreMuni, nombreDepto, field = "COD_MUNI__") {
-    if (is.na(nombreMuni)) {
-        print(paste("Found an NA municipality in", nombreDepto))
-        nombreMuni = nombreDepto
-    }
-    nombreMuni  = str_replace_all(str_to_lower(nombreMuni), vocalesTildes)
-    nombreDepto = str_replace_all( str_to_lower(nombreDepto), vocalesTildes)
-    depto       = deptos[which.min(stringdist(nombreDepto, deptos$DEPTO__, method = "cosine")),]
-    deptoMunis  = munisPob[munisPob$COD_DEPT__ == depto$COD_DEPT__,]
-    muni        = deptoMunis[which.min(stringdist(nombreMuni, deptoMunis$lookupNombre, method = "cosine")), field]
-    muni
-}
-# Call the function over the dataset to get municipality codes:
-
-TBNotifAll[, COD_MUNI := getMuniCodeByName(ifelse(is.na(MUNICIPIO), SERVICIODESALUD, MUNICIPIO), DEPARTAMENTO), by=1:nrow(TBNotifAll)]
-TBNotifAll[, COD_DEPTO := floor(COD_MUNI/100)]
-# ----------------------------------------------
 # Prepare the data
 TBNotifAll = rbindlist(list(TBNotif2014, TBNotif2015), fill = TRUE)
 TBNotifAll$NotificationDate = as.Date(as.numeric(TBNotifAll$FECHANOTIFICACION)-2, origin="1900-01-01")
@@ -81,6 +61,9 @@ TBNotifAll$RANGOEDAD = trimws(TBNotifAll$RANGOEDAD)
 TBNotifAll$SEXO = str_to_lower(TBNotifAll$SEXO)
 TBNotifAll$VIH = str_to_lower(trimws(TBNotifAll$VIH))
 TBNotifAll$VIH = factor(TBNotifAll$VIH, level=c("nr", "r"), labels=c("Not Reactive", "Reactive"))
+
+TBNotifAll[, COD_MUNI := getMuniCodeByName(ifelse(is.na(MUNICIPIO), SERVICIODESALUD, MUNICIPIO), DEPARTAMENTO), by=1:nrow(TBNotifAll)]
+TBNotifAll[, COD_DEPTO := floor(COD_MUNI/100)]
 
 # TBNotifAll$RANGOEDAD = factor(TBNotifAll$RANGOEDAD, levels = order(unique(TBNotifAll$RANGOEDAD)))
 # ----------------------------------------------
@@ -191,3 +174,21 @@ if (saveGraphs) {
 # Fitting the linear model
 fit_TBIndg = lm(formula = log(TB/Pob) ~ log(INDGN/(1-INDGN) ), data = deptoData)
 summary(fit_TBIndg)
+# 
+# Call:
+#     lm(formula = log(TB/Pob) ~ log(INDGN/(1 - INDGN)), data = deptoData)
+# 
+# Residuals:
+#     Min      1Q  Median      3Q     Max 
+# -1.2313 -0.4186 -0.1030  0.4059  1.4763 
+# 
+# Coefficients:
+#     Estimate Std. Error t value Pr(>|t|)    
+# (Intercept)            -7.82236    0.16247 -48.147   <2e-16 ***
+#     log(INDGN/(1 - INDGN)) -0.03544    0.05796  -0.611    0.548    
+# ---
+#     Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+# 
+# Residual standard error: 0.6963 on 20 degrees of freedom
+# Multiple R-squared:  0.01835,	Adjusted R-squared:  -0.03073 
+# F-statistic: 0.3739 on 1 and 20 DF,  p-value: 0.5478
