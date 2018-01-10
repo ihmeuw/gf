@@ -15,9 +15,11 @@ library(sp)
 library(colorRamps)
 library(ggmap)
 library(ggplot2)
+library(haven)
+library(data.table)
 
 # ----------------------------------------------
-# Load data
+# Load worldpop population estimations for guatemala in 2015
 
 WorldPopGT <- raster("/DATA/WorldPop/GTM_ppp_v2b_2015/GTM_ppp_v2b_2015.tif")
 
@@ -73,29 +75,23 @@ write.csv(gtmMunisIGN[, names(gtmMunisIGN)], "./PCE/Outcome Measurement Data/Cov
 
 
 # ----------------------------------------------
-# Births data 
-nacs14 = read_sav("C:/DATOS/GTVitales y Censo/Nacimientos 2014.sav")
-dtnacs14 = data.table(nacs14)
+# Worldpop births data 
+nacs15 = read_sav("C:/DATOS/GTVitales y Censo/Nacimientos 2015.sav")
+dtnacs15 = data.table(nacs15)
 WPBirthsGT <- raster("/DATOS/WorldPop/Guatemala 1km births/GTM_births_pp_v2_2015.tif")
 
 munisNacs = extract(WPBirthsGT, gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0),], fun = sum, na.rm = TRUE )
-dtmunisNacs = data.table(NacsWP = munisNacs, Codigo = gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0), ]$COD_MUNI__)
+dtmunisNacs = data.table(NacsWP = munisNacs[,1], Codigo = gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0), ]$COD_MUNI__)
 dtmunisNacs[,Codigo:=as.numeric(as.character(Codigo))]
 
 # From worldpop data:
 #> sum(munisNacs)
 #[1] 429374.1
-#> nrow(nacs14)
-#[1] 386195
-#> 429374/386195
-#[1] 1.111806
-nacs = merge(dtnacs14[,.(nacs=.N),by=(Muprem+Deprem*100)], dtmunisNacs, by.x="Muprem", by.y = "Codigo")
-summary(nacs[,nacs-NacsWP.V1])
-#Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-#-4792.18  -209.33   -56.60  -119.67    48.09  4065.58 
-hist(nacs[,nacs-NacsWP.V1])
-
-# munisPob = munisPopIGN
-nacs = merge(munisPob[,.(Muprem = COD_MUNI__, Poblacion)], nacs, by="Muprem")
-nacs = merge(dtnacs14[,.(nacsI = sum(PuebloPM %in% c(1,2,3)) / sum(PuebloPM>0) ),by=(Muprem+Deprem*100)], nacs, by="Muprem")
-
+#> nrow(nacs15)
+#[1] 391425
+#> 429374/391425
+#[1] 1.097
+nacs = merge(dtnacs15[,.(NacsGT=.N),by=.(Codigo = as.numeric(as.character(Muprem)))], dtmunisNacs, by.x="Codigo", by.y = "Codigo")
+summary(nacs[,NacsGT-NacsWP])
+summary(log10(nacs[,NacsWP/NacsGT]))
+hist(log10(nacs[,NacsWP/NacsGT]),breaks=20)
