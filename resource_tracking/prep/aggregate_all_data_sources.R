@@ -43,19 +43,21 @@ names= names(fpmCod)[names(fpmCod)%in%names(mappedRej)]
 fpmCod[, names, with=FALSE]
 
 ##aggregate the rejected and approved budgets: 
-total_fpm_cod <- rbind(mappedRej, fpm_cod_budgets)
+fpmCod <- rbind(mappedRej, fpm_cod_budgets)
 
 
 ##write to csv as a backup: 
-write.csv(total_fpm_cod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/rej_and_approved_cod_fpm_1518.csv", 
+write.csv(fpmCod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/rej_and_approved_cod_fpm_1518.csv", 
           row.names = FALSE, fileEncoding = "latin1")
 
 # --------------------------------------------
 ##UGA: 
 
-mappedUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/fpm_mapped_budgets_1918.csv",
+mappedUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/all_fpm_mapped_budgets.csv",
                                  fileEncoding = "latin1"))
 
+
+mappedUga $start_date <- as.Date(mappedUga$start_date,"%Y-%m-%d")
 #create some variables: 
 mappedUga[, end_date:=start_date + period-1]
 mappedUga$country <- "Uganda"
@@ -64,12 +66,11 @@ mappedUga$year <- year(mappedUga$start_date)
 # --------------------------------------------
 ###DROP FPM DATA IF IT OVERLAPS WITH GOS DATA: 
 
-
 fpmUga <- mappedUga[!((year < 2016 &disease%in%c("hss", "tb", "hiv")) | (year < 2017 & disease%in%c("malaria")))]
 
 ##rbind with DRC data: 
 
-totalUga <- rbind(fpmUga, gos_data)
+totalData <- rbind(fpmUga, fpmCod)
 # --------------------------------------------
 ##GTM 
 
@@ -88,10 +89,9 @@ fpmGua$year <- year(fpmGua$start_date)
 totalGua<- fpmGua[!((year < 2016 &disease=="tb") | (year < 2017 & disease%in%c("malaria", "hiv")))]
 
 
-
 ##rbind with UGA data: 
 
-totalData <- rbind(totalGua, fpmUga)
+totalData <- rbind(totalGua, totalData)
 # --------------------------------------------
 ##read the already mapped gos data: 
 gos_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapped_gos_data_1918.csv", 
@@ -102,19 +102,19 @@ gos_data$start_date <- as.Date(gos_data$start_date, "%Y-%m-%d")
 gos_data$end_date <- as.Date(gos_data$end_date, "%Y-%m-%d")
 gos_data[, period:=end_date - start_date]
 gos_data$period <- as.integer(gos_data$period)
-setnames(gos_data, c("Year", "Country"), c("year", "country"))
+
+
 ##since we don't have subnational data for GOS, just make it a copy of the country variable: 
 gos_data$loc_id <- gos_data$country
 gos_data$disbursement <- 0
 gos_data$recipient <- gos_data$grant_number
 gos_data$data_source <- "gos"
 gos_data$source <- "gf"
-
+gos_data$gf_program <- NULL ##don't need this
 
 ##aggregate with gos data: 
 
-
-totalData <- rbind(totalGua, gos_data)
+totalData <- rbind(totalData, gos_data)
 
 
 

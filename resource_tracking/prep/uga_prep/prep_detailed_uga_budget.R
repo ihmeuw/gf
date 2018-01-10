@@ -43,12 +43,25 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   }
   
   ##create list of column names: 
-  qtr_names <- c("Module", "Intervention", "Recipient", rep(1, qtr_num))
+  if(start_date=="2018-01-01"){
+    qtr_names <- c("Module", "Intervention", "Implementer", rep(1, qtr_num))
+  } else {
+    qtr_names <- c("Module", "Intervention", "Recipient", rep(1, qtr_num))
+  }
   qtr_names <- create_qtr_names(qtr_names, cashText)
   
   # ----------------------------------------------
   ##read the data from excel: 
   gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=sheet_name))
+  
+
+  
+  ##approved budgets are formatted slightly differently - so this code takes care of that: 
+  if(start_date=="2018-01-01"){
+    gf_data <- gf_data[-c(1:2),]
+    colnames(gf_data) <- as.character(gf_data[1,])
+    gf_data <- gf_data[-1,]
+  }
   
   #3only grab the columns we want (program activity, recipient, and quarterly data) :
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
