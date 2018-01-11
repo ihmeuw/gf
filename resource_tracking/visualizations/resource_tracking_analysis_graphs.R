@@ -20,7 +20,7 @@ library(scales)
 # ---------------------------------------------
 ##load the dataset: 
 
-totalData <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_mapped_data.csv",
+totalData <- data.table(read.csv('FILE HERE',
                                  fileEncoding = "latin1"))
 
 # ---------------------------------------------
@@ -74,7 +74,7 @@ for (k in unique(graphData$disease)){
   prog_plots[[k]] <- plot
 }
 
-pdf("sdas_overtime.pdf", height=6, width=9)
+pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/sdas_overtime.pdf", height=6, width=9)
 invisible(lapply(prog_plots, print))
 dev.off()
 
@@ -91,9 +91,9 @@ keyData <- get_keypop_ind(graphData)
 ##set the colors - if HSS: 
 indColors <- c('#00FFFF','#bf7fbf',
                '#0000ff', '#1f78b4',
-               '#660066', '#bf7fbf',
-               '#ff748c', "#e00222",
-               '#c0c0c0','#ff3333',
+               '#660066', '#37efac',
+               '#FD5F00', "#e00222",
+               '#c0c0c0','#fff432',
                '#3a8e11') 
 names(indColors) <- c('HSS: information system', 'HSS - Procurement supply chain management (PSCM)',
                       'HSS - Health information systems and M&E', 'HSS: health workforce',
@@ -125,7 +125,7 @@ for (k in unique(hssData$disease)){
 
 
 pdf("hss_overtime_perc.pdf", height=6, width=9)
-invisible(lapply(prog_hss_plots, print))
+invisible(lapply(hss_plots, print))
 dev.off()
 
 ##-----------------------------------------------------------
