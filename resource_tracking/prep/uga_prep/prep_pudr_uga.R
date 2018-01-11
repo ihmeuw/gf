@@ -2,13 +2,23 @@
 # Irena Chen
 #
 # 10/31/2017
-# Template for prepping C-COIN budget data 
+# Template for prepping UGA PUDR data:  
 # Inputs:
 # inFile - name of the file to be prepped
 # year - which year the dataset corresponds to
 #
 # Outputs:
 # budget_dataset - prepped data.table object
+
+# ----------------------------------------------
+##download necessary packages: 
+library(lubridate)
+library(data.table)
+library(readxl)
+library(stats)
+library(stringr)
+library(rlang)
+library(zoo)
 # ----------------------------------------------
 
 # start function

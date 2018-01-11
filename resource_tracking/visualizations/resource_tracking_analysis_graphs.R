@@ -19,6 +19,7 @@ library(reshape)
 library(scales)
 
 # ---------------------------------------------
+# ### prep functions and map colors to categories (so they stay constant)
 
 ##function to create indicator between current, upcoming, and rejected budgets: 
 appr_rej_indicators <- function(year, data_source){
@@ -31,6 +32,65 @@ appr_rej_indicators <- function(year, data_source){
   }
   return(x)
 }
+
+
+##colors to map for non HSS disease categories (Malaria, TB, HIV): 
+primColors <- c('#b20000', '#660000', ##reds
+                '#f6ae8f', '#EE5D1F', ##oranges
+                '#3DCC3D', '#008000',##greens
+                '#004c4c', '#00D9D9',##blues
+                "#35978f", "#80cdc1", ##teals
+                '#3786b0', '#0097f1',##ocean 
+                '#ffd700', '#d3a308',#yellows
+                '#3d017a','#b200b2', ##magenta
+                '#660066', '#bf7fbf',#purples
+                '#ff748c', "#e00222", #pinks 
+                '#a6a6a6', '#ffc0cb', ##grey and millennial pink 
+                '#4169e1', '#00007f') ##royal and midnight blues
+
+
+names(primColors) <- c('HIV/AIDS care and support', 'Community care and outreach', ##reds
+                       'Case detection and diagnosis', 'Case Diagnosis',##oranges
+                       'Treatment','HIV/AIDS counseling and testing',##greens
+                       'HSS: health workforce', 'HSS: information system',##blues
+                       'HSS: service delivery', 'HSS: other', ##teals
+                       'Key and vulnerable populations', 'Community care and outreach',##ocean
+                       'Prevention', 'Malaria other control and prevention', ##yellows
+                       'MDR-TB case detection and diagnosis', 'MDR-TB prevention',   ##magenta
+                       'HIV/TB collaborative interventions', 'MDR-TB treatment', ##purples
+                       'Monitoring and evaluation', 'Malaria bed nets', #pinks
+                       'Other/Unidentified', 'HIV/AIDS PMTCT', ##grey and millennial pink 
+                       'PBF', 'Malaria indoor residual spraying' ##royal and midnight blues
+)
+
+##colors for HSS specific categories: 
+hssColors <- c('#a6cee3', '#1f78b4',##blues
+               '#b2df8a', "#33a02c", ##teals
+               '#fb9a99', '#e31a1c',##ocean 
+               '#f6ae8f', '#EE5D1F', ##oranges
+               '#3DCC3D', '#008000',##greens
+               '#660066', '#bf7fbf',#purples
+               '#ffd700', '#d3a308',#yellows
+               '#b20000', '#660000', ##reds 
+               '#fdbf6f', '#ff7f00', ##marigold and millennial pink 
+               '#c0c0c0') ##grey
+
+names(hssColors) <- c('HSS - Procurement supply chain management (PSCM)', 'Removing legal barriers to access'
+                      ,'HSS: service delivery',
+                      'HSS - Health information systems and M&E',
+                      'HSS: Human resources',
+                      'HSS: Community Systems Strengthening',
+                      'HSS: Information system & Operational research',
+                      'Program management', 'Supportive environment: Program management and administration'
+                      ,'Treatment: Prompt, effective anti-malarial treatment','Prevention: BCC - Mass media'
+                      ,'Treatment: Diagnosis', 'Prevention: BCC - community outreach'
+                      ,'Treatment: Prompt, effective anti-malarial treatment (Private sector)'
+                      ,'Supportive Environment: Monitoring risk of adverse reactions associated with AMFm ACT's'
+                      ,'HSS: Procurement and Supply management'
+                      ,'Treatment: Management of Malaria in Schools'
+                      ,'Operational Research', 'Planning and administration costs')
+
+
 # ---------------------------------------------
 ##load the dataset: 
 
@@ -56,49 +116,6 @@ graphData$budget[graphData$budget<=0] <- NA
 graphData$expenditure[graphData$expenditure<=0] <- NA
 
 
-##colors to map: 
-primColors <- c('#b20000', '#660000', ##reds
-                '#f6ae8f', '#EE5D1F', ##oranges
-                '#3DCC3D', '#008000',##greens
-                '#004c4c', '#00D9D9',##blues
-                "#35978f", "#80cdc1", ##teals
-                '#3786b0', '#0097f1',##ocean 
-                '#ffd700', '#d3a308',#yellows
-                '#3d017a','#b200b2', ##magenta
-                '#660066', '#bf7fbf',#purples
-                '#ff748c', "#e00222", #pinks 
-                '#a6a6a6', '#ffc0cb', ##grey and millennial pink 
-                '#4169e1', '#00007f') ##royal blue
-
-
-names(primColors) <- c('HIV/AIDS care and support', 'Community care and outreach', ##reds
-                       'Case detection and diagnosis', 'Case Diagnosis',##oranges
-                       'Treatment','HIV/AIDS counseling and testing',##greens
-                       'HSS: health workforce', 'HSS: information system',##blues
-                       'HSS: service delivery', 'HSS: other', ##teals
-                       'Key and vulnerable populations', 'Community care and outreach',##ocean
-                        'Prevention', 'Malaria other control and prevention', ##yellows
-                       'MDR-TB case detection and diagnosis', 'MDR-TB prevention',   ##magenta
-                       'HIV/TB collaborative interventions', 'MDR-TB treatment', ##purples
-                       'Monitoring and evaluation', 'Malaria bed nets', #pinks
-                       'Other/Unidentified', 'HIV/AIDS PMTCT', ##greys
-                       'PBF', 'Malaria indoor residual spraying' #royal blue and purple
-                       )
-
-
-hssColors <- c('#a6cee3', '#1f78b4',##blues
-                '#b2df8a', "#33a02c", ##teals
-                '#fb9a99', '#e31a1c',##ocean 
-               '#fdbf6f', '#ff7f00')  ##grey and millennial pink 
-
-names(hssColors) <- c('HSS - Procurement supply chain management (PSCM)',
-                      'Removing legal barriers to access',
-                      'HSS: service delivery',
-                      'HSS - Health information systems and M&E',
-                      'HSS: Human resources',
-                      'HSS: Community Systems Strengthening',
-                      'HSS: Information system & Operational research',
-                      'Program management')
 
 
 graphData$facet <- as.factor(mapply(appr_rej_indicators, graphData$year, graphData$data_source))

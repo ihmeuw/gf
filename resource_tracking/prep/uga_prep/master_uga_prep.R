@@ -30,22 +30,23 @@ source <- "gf"
 
 ## set up the directory and grab the file list: 
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/uga/gf/' ##where the files are stored locally
-file_list <- read.csv("C:/Users/irenac2/repos/ihme_gf/gf/resource_tracking/prep/uga_prep/uga_budget_file_list.csv", na.strings=c("","NA"),
+file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/uga_prep/uga_budget_file_list.csv", na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
-for(i in 1:length(file_list$file_name)){
+
+for(i in 1:length(file_list$file_name)){ ##most detailed level of budgets 
   if(file_list$type[i]=="detailed"){
     tmpData <- prep_detailed_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], cashText, file_list$grant[i], 
                                         file_list$disease[i], file_list$period[i],file_list$source[i])
     tmpData$data_source <- "fpm"
-  } else if (file_list$type[i]=="summary"){
+  } else if (file_list$type[i]=="summary"){ ##not much detail, only high level SDAs: 
     tmpData <- prep_summary_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], cashText, file_list$grant[i], 
                                        file_list$disease[i], file_list$period[i], file_list$recipient[i], file_list$source[i])
     tmpData$start_date <- ymd(tmpData$start_date)
     tmpData$data_source <- "fpm"
   ##LFA data cleaning: 
-  } else if (file_list$type[i]=="pudr"){
+  } else if (file_list$type[i]=="pudr"){ ##has expenditure data 
     tmpData <- prep_pudr_uga(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                              ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], 
                              file_list$grant[i], file_list$recipient[i],file_list$source[i])
@@ -71,7 +72,7 @@ resource_database$loc_id <- loc_id
 
 # ---------------------------------------------
 ## map program level data: 
-mapping_for_R <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_R.csv",
+mapping_for_R <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/mapping_for_R.csv",
                           fileEncoding="latin1")
 mapping_for_graphs <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_graphs.csv")
 
@@ -86,6 +87,7 @@ resource_database$stripped <- gsub("[[:punct:]]", "", resource_database$stripped
 ## we have some junk "cost categories"
 resource_database <- resource_database[!grepl(paste("0", "pleaseselect", sep="|"), resource_database$stripped),]
 resource_database$cost_category <- resource_database$stripped
+resource_database$stripped <- NULL 
 
 ## split hiv/tb into hiv or tb: 
 
@@ -111,8 +113,10 @@ sdas_in_data = unique(resource_database$cost_category)
 if (any(!sdas_in_data %in% sdas_in_map)) { 
   stop('Map doesn\'t include cost categories that are in this data file!')
 }
-unmapped_values <- resource_database[cost_category%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
-unique(unmapped_values$cost_category)
+
+# uncomment if there are unmapped cost categories - figure out which ones: 
+# unmapped_values <- resource_database[cost_category%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
+# unique(unmapped_values$cost_category)
 
 
 # test to make sure map doesn't contain duplicates
@@ -134,7 +138,7 @@ data_check2<- as.data.frame(mappedUga[, sum(budget, na.rm = TRUE),by = c("grant_
 
 ##write csv to correct folder: 
 
-write.csv(mappedUga, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/fpm_mapped_budgets_1918.csv", row.names = FALSE,
+write.csv(mappedUga, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/all_fpm_mapped_budgets.csv", row.names = FALSE,
           fileEncoding = "latin1")
 
 
