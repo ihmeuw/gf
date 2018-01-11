@@ -106,3 +106,5 @@ fpmGtm <- totalGtm[!((year < 2016 &disease=="tb") | (year < 2017 & disease%in%c(
 
 cleaned_aggregate_data <- rbind(fpmCod, fpmUga, fpmGtm, gos_data)
 
+write.csv(cleaned_aggregate_data, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv", row.names = FALSE)
+
