@@ -4,43 +4,39 @@ library(ggplot2)
 library(dplyr)
 library(data.table)
 library(lubridate)
-gos_data  <- data.table(read_excel("J:/Project/Evaluation/GF/resource_tracking/gtm/gf/Expenditures from GMS and GOS for PCE IHME countries.xlsx", sheet = "GMS SDAs - extract", col_types = c("text", "text", "date", "date", "date", "date", "numeric", "text", "text", "numeric", "numeric", "text")))
-
-gtm_gos <- subset(gos_data, Country=="Guatemala")
 
 
-## get differences and ratios: 
-
-histData <- copy(graphData)
-histData<- histData[,-c(3:6, 8:9)]
+grantData <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapped_gos_data_1918.csv",
+                                 fileEncoding = "latin1"))
 
 ##stuff for grants: 
 
-grantData <- copy(histData)
-grantData = grantData[, list(budget=sum(na.omit((budget))), expenditure=sum(na.omit(expenditure))), by=c("Country", "grant_number", "Year", "disease")]
-grantData = grantData[order(Country, Year, grant_number, disease)]
-grantData[, cumulative_budget:=cumsum(na.omit(budget)),by=c("Country",'disease','grant_number' )]
-grantData[, cumulative_exp:=cumsum(na.omit(expenditure)),by=c("Country",'disease','grant_number')]
+grantData = grantData[, list(budget=sum(na.omit((budget))), expenditure=sum(na.omit(expenditure))), by=c("country", "grant_number", "year", "disease")]
+grantData = grantData[order(country, year, grant_number, disease)]
+grantData[, cumulative_budget:=cumsum(na.omit(budget)),by=c("country",'disease','grant_number' )]
+grantData[, cumulative_exp:=cumsum(na.omit(expenditure)),by=c("country",'disease','grant_number')]
 grantData[,cum_ratio:=cumulative_exp/cumulative_budget]
 
+setnames(grantData, "grant_number", "Grant")
 
-codData <- grantData[Country=="Congo (Democratic Republic)"]
-gtmData <- grantData[Country=="Guatemala"]
-ugaData <- grantData[Country=="Uganda"]
+grantData <- disease_names_for_plots(grantData)
+codData <- grantData[country=="Congo (Democratic Republic)"]
+gtmData <- grantData[country=="Guatemala"]
+ugaData <- grantData[country=="Uganda"]
 
 gos_grant_ratio_plots <- list()
-for (k in unique(na.omit(ugaData$disease))){
-  # range = c(min(na.omit(graphData[Country==k]$expenditure/1000000)), max(na.omit(graphData[Country==k]$budget/1000000)))
-  plot <- (ggplot(na.omit(ugaData[disease==k]), aes(x=Year,y=cum_ratio)) + 
-             geom_point(aes(color=grant_number,  size=budget/1000000)) +
-             geom_line(aes(color=grant_number))+
+for (k in unique(na.omit(codData$disease))){
+  range = max(na.omit(codData[disease==k]$cum_ratio))
+  plot <- (ggplot(na.omit(codData[disease==k]), aes(x=year,y=cum_ratio)) + 
+             geom_point(aes(color=Grant,  size=budget/1000000)) +
+             geom_line(aes(color=Grant))+
             # facet_wrap(~disease, drop=T, scales='free') +
              geom_abline(intercept=0, slope=1) + 
              # xlim(range) + 
              # geom_smooth(method='auto',formula=log(y)~log(x)) +
-             #ylim(0, 9) + 
-             labs(x = "Year", y = "Ratio (Cum. Exp./Cum.Budget)", caption="Source: GOS",
-                  title=paste(k, "Cumulative Ratio over Time"), shape="Disease", size="Budget (in mil)", group="Grant") +
+             ylim(0, range) + 
+             labs(x = "Year", y = "Absorption Rate", caption="Source: GOS",
+                  title=paste(k, "Absorption over Time"), shape="Disease", size="Budget (in mil per year)", group="Grant") +
              theme_bw(base_size=16) +
              scale_x_discrete(name ="Year", 
                               limits=c(2004,2008,2012, 2016)) +
@@ -48,14 +44,9 @@ for (k in unique(na.omit(ugaData$disease))){
   gos_grant_ratio_plots[[k]] <- plot
 }
 
-pdf("uga_grant_cumul_ratios_over_time.pdf", height=6, width=9)
+pdf("J:/Project/Evaluation/GF/resource_tracking/cod/visualizations/cod_grant_cumul_ratios_over_time.pdf", height=6, width=9)
 invisible(lapply(gos_grant_ratio_plots, print))
 dev.off()
-
-
-
-
-
 
 
 ##stuff for ratios 
