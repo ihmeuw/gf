@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prepSicoin = function(dir, inFile, year, disease, period, cost_category, source) {
+prepSicoin = function(dir, inFile, year, disease, period, cost_category, source, grant_number) {
   
   # --------------------
   # Test the inputs
@@ -39,7 +39,9 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   ##pull all rows from between columns that have "FONDO MUNDIAL" in them 
   if (source=="gf"){
     gf_data <- gf_data[c(grep("fondo mundial", tolower(gf_data$loc_id)):(grep("fondo mundial", tolower(gf_data$col2)))),]
-  } 
+  } else {
+    gf_data <- gf_data[c(grep("guat", tolower(gf_data$loc_id)):.N),]
+  }
   # remove rows with "TOTAL"  -> should be able to calculate total from summing municipaliies
   ## create a check for dropping missing data: 
   gf_subset <- data.table(gf_data[ grep("TOTAL", gf_data$col3, invert = TRUE) , ])
@@ -51,11 +53,11 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   ## Code to aggregate into a dataset 
   
   ## now get region + budgeted expenses 
-  budget_dataset <- gf_subset[, c("loc_id", "budget", "disbursement"), with=FALSE]
+    budget_dataset <- gf_subset[, c("loc_id", "budget", "disbursement"), with=FALSE]
   
   ## we only want the municpalities so get rid of GF and Guatemala
   
-  toMatch <- c("mundial", "guate")
+  toMatch <- c("mundial", "guate", "government", "recursos", "resources", "multire")
   budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
   # ----------------------------------------------
   
@@ -67,6 +69,7 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   budget_dataset$cost_category <- cost_category
   budget_dataset$expenditure <- NA ## change this once we figure out where exp data is
   budget_dataset$disease <- disease
+  budget_dataset$grant_number <- grant_number
   # ----------------------------------------------
   
   # Enforce variable classes
@@ -81,3 +84,4 @@ prepSicoin = function(dir, inFile, year, disease, period, cost_category, source)
   
   
 }
+
