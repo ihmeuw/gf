@@ -29,44 +29,35 @@ totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/
 #create some variables: 
 totalCod$country <- "Congo (Democratic Republic)"
 totalCod$source <- "gf"
-totalCod$start_date <- as.Date(totalCod$start_date,"%Y-%m-%d")
-totalCod[, end_date:=start_date + period-1]
-
-
 # --------------------------------------------
-##UGA: 
+##load UGA: 
 
 totalUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/all_fpm_mapped_budgets.csv",
                                  fileEncoding = "latin1"))
 
-
-totalUga$start_date <- as.Date(totalUga$start_date,"%Y-%m-%d")
 #create some variables: 
-totalUga[, end_date:=start_date + period-1]
 totalUga$country <- "Uganda"
 totalUga$year <- year(totalUga$start_date)
 
-
-##rbind with DRC data: 
-
 # --------------------------------------------
-totalData <- rbind(totalUga, totalCod)
-
-##GTM 
+##load GTM 
 totalGtm <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/fpm_mapped_budgets_1818.csv", 
                                  fileEncoding = "latin1"))
 
-##change the start_date column to be of type "Date"
-totalGtm$start_date <- as.Date(totalGtm$start_date,"%Y-%m-%d")
-totalGtm[, end_date:=start_date + period-1]
 
 # and also create a "year" variable: 
 totalGtm$year <- year(totalGtm$start_date)
 totalGtm$country <- "Guatemala"
 
+
+# --------------------------------------------
+
 ##rbind with UGA data: 
 
-totalData <- rbind(totalGtm, totalData)
+totalData <- rbind(totalGtm, totalUga, totalCod)
+##change the start_date column to be of type "Date"
+totalData$start_date <- as.Date(totalData$start_date,"%Y-%m-%d")
+totalData[, end_date:=start_date + period-1]
 # --------------------------------------------
 ##read the already mapped gos data: 
 gos_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapped_gos_data.csv", 

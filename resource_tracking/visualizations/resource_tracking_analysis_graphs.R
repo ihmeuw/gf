@@ -74,7 +74,7 @@ for (k in unique(graphData$disease)){
   prog_plots[[k]] <- plot
 }
 
-pdf("J:/Project/Evaluation/GF/resource_tracking/uga/visualizations/sdas_over_time/sdas_overtime.pdf", height=6, width=9)
+pdf("sdas_overtime.pdf", height=6, width=9)
 invisible(lapply(prog_plots, print))
 dev.off()
 
