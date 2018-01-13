@@ -75,6 +75,7 @@ gos_data$disbursement <- 0
 gos_data$recipient <- gos_data$grant_number
 gos_data$data_source <- "gos"
 gos_data$source <- "gf"
+gos_data$X <- NULL
 
 ##aggregate with gos data: 
 
@@ -95,7 +96,11 @@ fpmUga <- totalUga[!((year < 2016 &disease%in%c("hss", "tb", "hiv")) | (year < 2
 fpmGtm <- totalGtm[!((year < 2016 &disease=="tb") | (year < 2017 & disease%in%c("malaria", "hiv")))]
 
 
-cleaned_aggregate_data <- rbind(fpmCod, fpmUga, fpmGtm, gos_data)
+totalFpm <- rbind(fpmCod, fpmUga, fpmGtm)
+totalFpm $start_date <- as.Date(totalFpm $start_date,"%Y-%m-%d")
+totalFpm[, end_date:=start_date + period-1]
+
+cleaned_aggregate_data <- rbind(totalFpm, gos_data)
 
 write.csv(cleaned_aggregate_data, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv", row.names = FALSE)
 
