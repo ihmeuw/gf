@@ -26,11 +26,9 @@ cashText <- " Cash Outflow"
 loc_id <- 'uga'
 source <- "gf"
 
-
-
 ## set up the directory and grab the file list: 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/uga/gf/' ##where the files are stored locally
-file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/uga_prep/uga_budget_file_list.csv", na.strings=c("","NA"),
+dir <- 'YOUR DIRECTORY HERE' ##where the files are stored locally
+file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 
 for(i in 1:length(file_list$file_name)){ ##most detailed level of budgets 
@@ -72,22 +70,20 @@ resource_database$loc_id <- loc_id
 
 # ---------------------------------------------
 ## map program level data: 
-mapping_for_R <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/mapping_for_R.csv",
+mapping_for_R <- read.csv(paste0(dir, "mapping_for_R.csv"),
                           fileEncoding="latin1")
-mapping_for_graphs <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_graphs.csv")
+mapping_for_graphs <- read.csv(paste0(dir, "mapping_for_graphs.csv"))
 
-## do a check on data to make sure values aren't dropped: 
-data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
+## optional: do a check on data to make sure values aren't dropped: 
+# data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
 ## get rid of spaces, special characters, unnecessary punctuation....
-resource_database$stripped <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]"), collapse="|"), "", resource_database$cost_category)
-resource_database$stripped <-tolower(resource_database$stripped)
-resource_database$stripped <- gsub("[[:punct:]]", "", resource_database$stripped)
+resource_database$cost_category <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]"), collapse="|"), "", resource_database$cost_category)
+resource_database$cost_category <-tolower(resource_database$cost_category)
+resource_database$cost_category <- gsub("[[:punct:]]", "", resource_database$cost_category)
 
 ## we have some junk "cost categories"
-resource_database <- resource_database[!grepl(paste("0", "pleaseselect", sep="|"), resource_database$stripped),]
-resource_database$cost_category <- resource_database$stripped
-resource_database$stripped <- NULL 
+resource_database <- resource_database[!grepl(paste("0", "pleaseselect", sep="|"), resource_database$cost_category),]
 
 ## split hiv/tb into hiv or tb: 
 
@@ -138,7 +134,7 @@ data_check2<- as.data.frame(mappedUga[, sum(budget, na.rm = TRUE),by = c("grant_
 
 ##write csv to correct folder: 
 
-write.csv(mappedUga, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/all_fpm_mapped_budgets.csv", row.names = FALSE,
+write.csv(mappedUga, "all_fpm_mapped_budgets.csv", row.names = FALSE,
           fileEncoding = "latin1")
 
 
