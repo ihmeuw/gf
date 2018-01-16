@@ -40,11 +40,6 @@ names(TBNotif2015) = c("NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SER
                        "CONTACTO000_014", "CONTACTO_MAYORA_015", "CASOINDICE", "DESARROLLOTBCLASIFICACION", 
                        "OTRASPATOLOGIAS", "EMPLEADOMSPAS", "UNIDADDX", "FALLECIDOS", "FECHAMUERTE", "CAUSADEMUERTE", 
                        "PACIENTEPRIVADOLIBERTAD")
-gtmMunisIGN = readOGR("PCE/Outcome Measurement Data/GIS/GT-IGN-cartografia_basica-Division politica Administrativa (Municipios).geojson")
-gtmDeptosIGN = readOGR("PCE/Outcome Measurement Data/GIS/IGN-cartografia_basica-Departamentos.geojson", encoding = "UTF-8")
-gtmDeptosIGN@data$CODIGO = floor(as.numeric(as.character(gtmDeptosIGN@data$CODIGO))/100)
-munisPob = read.csv("PCE/Outcome Measurement Data/Covariates/Demographics/Guatemala_Municipios_IGN2017_worldpop2015.csv", encoding = "UTF-8")
-munisPob = data.table(munisPob)
 deptoIndgnProp = read.csv("PCE/Outcome Measurement Data/Covariates/Demographics/Guatemala_indigenousPobProp.csv")
 deptoIndgnProp = data.table(deptoIndgnProp)
 # Readxl has serious issues with guessing data types and handling empty cells around the document. 
@@ -192,3 +187,27 @@ summary(fit_TBIndg)
 # Residual standard error: 0.6963 on 20 degrees of freedom
 # Multiple R-squared:  0.01835,	Adjusted R-squared:  -0.03073 
 # F-statistic: 0.3739 on 1 and 20 DF,  p-value: 0.5478
+
+
+
+# ----Monthly counts--------------------------------------------
+# defsData is loaded in ../Guatemala_load_outcomes_data.R
+tbDeaths = NULL
+for (year in seq(2009, 2015, 1)) {
+  temp = defsData[[year]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) | 
+                            (Caudef %in% c("A301", "A302", "J65X", "K230", "K673", "M011",
+                                           "N330", "M490", "M900", "N741", "O980", "K930",
+                                           "P370", "Z030", "Z111", "Z201", "Z232")), 
+                          .(conteo = .N), 
+                          by = .(date = paste0(year, "-", Mesocu, "-01")) ]
+  if (is.null(tbDeaths)) {
+    tbDeaths = temp
+  }
+  else { 
+    tbDeaths = rbind(tbDeaths, temp)
+  }
+}  
+
+ggplot(data = tbDeaths, aes(x= as.Date(date), y = conteo)) + geom_line()
+if (saveGraphs) 
+  ggsave(paste0(dataPath, "Graficas/GT_TB_Deaths_TS 2009-2015.png"), height=8, width=8)
