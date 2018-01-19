@@ -39,7 +39,8 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
     colnames(gf_data)[1] <- "cost_category"
     colnames(gf_data)[2] <- "budget"
     colnames(gf_data)[3] <- "expenditure"
-    ghe_data <- ghe_data[c(grep("module", tolower(ghe_data$description)):grep(0, tolower(ghe_data$cost_category))),]
+    gf_data <- gf_data[c(grep("service de", tolower(gf_data$cost_category)):grep("type of", tolower(gf_data$cost_category))),]
+    gf_data <- gf_data[-nrow(gf_data) ,drop = FALSE]
   
     } else {
     ##clean the data depending on if in spanish or english

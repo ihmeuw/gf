@@ -83,7 +83,7 @@ resource_database$cost_category <-tolower(resource_database$cost_category)
 resource_database$cost_category <- gsub("[[:punct:]]", "", resource_database$cost_category)
 
 ## we have some junk "cost categories"
-resource_database <- resource_database[!grepl(paste("0", "pleaseselect", sep="|"), resource_database$cost_category),]
+resource_database <- resource_database[!grepl(paste("0", "pleaseselect", "pa", sep="|"), resource_database$cost_category),]
 
 ## split hiv/tb into hiv or tb: 
 
@@ -134,7 +134,7 @@ data_check2<- as.data.frame(mappedUga[, sum(budget, na.rm = TRUE),by = c("grant_
 
 ##write csv to correct folder: 
 
-write.csv(mappedUga, "all_fpm_mapped_budgets.csv", row.names = FALSE,
+write.csv(mappedUga, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/all_fpm_mapped_budgets.csv", row.names = FALSE,
           fileEncoding = "latin1")
 
 
