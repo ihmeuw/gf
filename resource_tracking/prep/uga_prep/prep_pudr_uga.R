@@ -32,17 +32,26 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   # Files and directories
   
   # Load/prep data
-  ghe_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
-  ##clean the data depending on if in spanish or english
-  colnames(ghe_data)[1] <- "description"
-  colnames(ghe_data)[2] <- "cost_category"
-  colnames(ghe_data)[3] <- "budget"
-  colnames(ghe_data)[5] <- "expenditure"
-  ghe_data <- ghe_data[c(grep("module", tolower(ghe_data$description)):grep(0, tolower(ghe_data$cost_category))),]
+  gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   
+  if(grant%in%c("UGD-708-GO8-M")){
+    gf_data <- gf_data[, -c(1:3)]
+    colnames(gf_data)[1] <- "cost_category"
+    colnames(gf_data)[2] <- "budget"
+    colnames(gf_data)[3] <- "expenditure"
+    ghe_data <- ghe_data[c(grep("module", tolower(ghe_data$description)):grep(0, tolower(ghe_data$cost_category))),]
+  
+    } else {
+    ##clean the data depending on if in spanish or english
+    colnames(gf_data)[1] <- "description"
+    colnames(gf_data)[2] <- "cost_category"
+    colnames(gf_data)[3] <- "budget"
+    colnames(gf_data)[5] <- "expenditure"
+    gf_data <- gf_data[c(grep("module", tolower(gf_data$description)):grep(0, tolower(gf_data$cost_category))),]
+  }
   ## drop 1st row: 
-  ghe_data <- ghe_data[-1, ,drop = FALSE]
-  budget_dataset <- ghe_data[, c("cost_category", "budget", "expenditure"),with=FALSE]
+  gf_data <- gf_data[-1, ,drop = FALSE]
+  budget_dataset <- gf_data[, c("cost_category", "budget", "expenditure"),with=FALSE]
   budget_dataset<- budget_dataset[!is.na(budget_dataset$cost_category),]
   budget_dataset$start_date <- start_date
   budget_dataset$source <- source

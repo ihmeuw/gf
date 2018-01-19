@@ -114,10 +114,10 @@ for (k in unique(hssData$disease)){
     geom_bar(position = "fill",
              stat="identity") + 
     colScale +
+    facet_grid(~facet,scales = "free_x", space="free_x") + 
     theme_bw(base_size=16) +
     scale_y_continuous(labels = percent_format()) +
-    scale_x_discrete(name ="Year", 
-                     limits=c(2005, 2010, 2015, 2020)) +
+    scale_x_continuous(name ="Year", breaks = seq(2005, 2020,5)) +
     labs(title=paste(k, "HSS Activity over Time"), fill='HSS Ind.',
          x = "", y = "% of Budget", caption="Data Source: GOS, FPM")
   hss_plots[[k]] <- plot

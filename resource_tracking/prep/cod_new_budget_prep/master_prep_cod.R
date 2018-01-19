@@ -64,12 +64,31 @@ map_activity_descriptions <- function(program_activity, activity_description){
   return(program_activity)
 }
 
-test_dataset <- copy(resource_database)
-test_dataset$cost_category <- mapply(map_activity_descriptions,
+resource_database$cost_category <- mapply(map_activity_descriptions,
                                      resource_database$cost_category, resource_database$activity_description)
+resource_database$cost_category <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]"), collapse="|"), "", resource_database$cost_category)
+resource_database$cost_category <-tolower(resource_database$cost_category)
+resource_database$cost_category <- gsub("[[:punct:]]", "", resource_database$cost_category)
 
 
-test_dataset$cost_category <- gsub("[\u2018\u2019\u201A\u201B\u2032\u2035]", "'", test_dataset$cost_category)
+# test for missing SDAs from map
+sdas_in_map = unique(mapping_for_R$cost_category)
+sdas_in_data = unique(test_dataset$cost_category)
+if (any(!sdas_in_data %in% sdas_in_map)) { 
+  stop('Map doesn\'t include cost categories that are in this data file!')
+}
+unmapped_values <- resource_database[cost_category%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
+
+
+program_level_mapped <- merge(resource_database, mapping_for_R, by=c("disease","cost_category"), allow.cartesian=TRUE)
+mappedUga <- merge(program_level_mapped, mapping_for_graphs, by="code", allow.cartesian=TRUE) ##some categories will be split
+
+mappedUga$budget <- mappedUga$budget*mappedUga$coeff
+mappedUga$expenditure <- mappedUga$expenditure*mappedUga$coeff
+
+
+
+
 
 ## write as csv 
 write.csv(resource_database, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/new_cod_budgets.csv", fileEncoding = "latin1", row.names = FALSE)

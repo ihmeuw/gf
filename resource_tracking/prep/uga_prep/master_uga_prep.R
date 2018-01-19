@@ -27,7 +27,7 @@ loc_id <- 'uga'
 source <- "gf"
 
 ## set up the directory and grab the file list: 
-dir <- 'YOUR DIRECTORY HERE' ##where the files are stored locally
+dir <- 'H:/uga_data/' ##where the files are stored locally
 file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 

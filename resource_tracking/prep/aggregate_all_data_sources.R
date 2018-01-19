@@ -29,6 +29,8 @@ totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/
 #create some variables: 
 totalCod$country <- "Congo (Democratic Republic)"
 totalCod$source <- "gf"
+totalCod$start_date <- as.Date(totalCod$start_date,"%Y-%m-%d")
+
 # --------------------------------------------
 ##load UGA: 
 
@@ -37,6 +39,7 @@ totalUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/
 
 #create some variables: 
 totalUga$country <- "Uganda"
+totalUga$start_date <- as.Date(totalUga$start_date,"%Y-%m-%d")
 totalUga$year <- year(totalUga$start_date)
 
 # --------------------------------------------
@@ -46,6 +49,7 @@ totalGtm <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/
 
 
 # and also create a "year" variable: 
+totalGtm$start_date <- as.Date(totalGtm$start_date,"%Y-%m-%d")
 totalGtm$year <- year(totalGtm$start_date)
 totalGtm$country <- "Guatemala"
 
