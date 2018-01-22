@@ -35,3 +35,16 @@ getMuniCodeByName <- function (nombreMuni, nombreDepto, field = "COD_MUNI__") {
     }
     muni
 }
+
+getDeptoCodeByName <- function(nombreDepto) {
+    if (is.na(nombreDepto)) {
+        warning(paste("Found an NA in municipality input nombreDepto was:", nombreDepto))
+        codigo = NA
+    }
+    else {
+        nombreDepto = str_replace_all( str_to_lower(nombreDepto), vocalesTildes)
+        depto       = deptosGT[which.min(stringdist(nombreDepto, deptosGT$lookupDepto, method = "cosine")),]
+        codigo      = depto$COD_DEPT__
+    }
+    codigo
+}
