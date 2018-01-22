@@ -21,12 +21,12 @@ library(data.table)
 # ----------------------------------------------
 # Load worldpop population estimations for guatemala in 2015
 
-WorldPopGT <- raster("/DATA/WorldPop/GTM_ppp_v2b_2015/GTM_ppp_v2b_2015.tif")
+WorldPopGT <- raster("./DATOS/WorldPop/GTM_ppp_v2b_2015/GTM_ppp_v2b_2015.tif")
 
 # The municipalities shape file obtained from SEGEPLAN website is most probably outdated. I've used a shapefile in geojson format obtained from IGN (national geographic institute of Guatemala) which seems to be more up to date. This file was retrieve in mid 2017 and has been uploaded to the internet archive so it is accesible. The link is mentioned below:
 
 # Old data from SEGEPLAN data. This only contains 334 municipalities. 
-gtmMunis = readOGR("/DATA/municipios_gtm/municipios_GTM.shp", encoding = "utf-8")
+gtmMunis = readOGR("./DATOS/municipios_gtm/municipios_GTM.shp", encoding = "utf-8")
 
 # This data comes from IGN GIS system. It contains 340 Municipalities. It seems to be less outdated.
 # This file can be found in the archive: https://archive.org/download/IGNCartografiaBasicaDivisionPoliticaAdministrativaMunicipios/IGN-cartografia_basica-Division%20politica%20Administrativa%20%28Municipios%29.geojson
