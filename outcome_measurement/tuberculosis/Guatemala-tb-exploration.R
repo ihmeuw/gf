@@ -47,6 +47,9 @@ munisPob = read.csv("PCE/Outcome Measurement Data/Covariates/Demographics/Guatem
 munisPob = data.table(munisPob)
 deptoIndgnProp = read.csv("PCE/Outcome Measurement Data/Covariates/Demographics/Guatemala_indigenousPobProp.csv")
 deptoIndgnProp = data.table(deptoIndgnProp)
+
+pobrezaGT11 = data.table(read.csv(paste0(covsNOtherData, "Demographics/Guatemala-Pobreza-2011.csv")))
+
 # Readxl has serious issues with guessing data types and handling empty cells around the document. 
 # Thus, the easiest way to load a bad excel, such as these, is to load everything without type 
 # conversion and columns definitions.
@@ -132,6 +135,7 @@ plot + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fil
 if (saveGraphs) 
     ggsave("PCE/Graficas/TB_Gt_Notifications_2014-2015-Map-Muncipalities.png", height=8, width=8)
 
+# ----TB Relation with indigenous pop----------------------
 # Indigenous population proportion by department
 gtmDeptosIGN@data$id = rownames(gtmDeptosIGN@data)
 gtmDeptosIGN@data = merge(gtmDeptosIGN@data, deptoIndgnProp[, .(INDGN, DEPTO)], by.x = "CODIGO", by.y="DEPTO", all.x=TRUE, sort=FALSE)
@@ -192,3 +196,23 @@ summary(fit_TBIndg)
 # Residual standard error: 0.6963 on 20 degrees of freedom
 # Multiple R-squared:  0.01835,	Adjusted R-squared:  -0.03073 
 # F-statistic: 0.3739 on 1 and 20 DF,  p-value: 0.5478
+
+# ----TB relation with poverty-----------------------------
+
+pobrData = merge( merge(TBNotifAll[, .(TBCases=.N),by=COD_MUNI], pobrezaGT11[is.na(IsDepto)], by.x = "COD_MUNI", by.y = "Codigo"), munisPob, by.x ="COD_MUNI", by.y="COD_MUNI__" ) 
+
+hist(log(pobrezaGT11$IncidPobrezaExt))
+
+fit_TBPobr = lm(formula = log(TBCases/Poblacion) ~ log(IncidPobrezaExt), data = pobrData)
+summary(fit_TBPobr) 
+
+grid.arrange(
+    ggplot(data = pobrData, aes(y=log(TBCases/Poblacion), x=IncidPobrezaT)) + geom_point() + geom_smooth(method=lm)  + labs(title="Total Poverty Incidence vrs TB Cases per municipality", y="[Log] TB incidence, cases per 1,000 persons per 2 years", x="Total poverty incidence"),
+    ggplot(data = pobrData, aes(y=log(TBCases/Poblacion), x=IncidPobrezaExt)) + geom_point() + geom_smooth(method=lm)  + labs(title="Extreme Poverty Incidence vrs TB Cases per municipality", y="[Log] TB incidence, cases per 1,000 persons per 2 years", x="Extreme poverty incidence"),
+    ggplot(data = pobrData, aes(y=log(TBCases/Poblacion), x=Brecha_FGT1)) + geom_point() + geom_smooth(method=lm)  + labs(title="Brecha vrs TB Cases per municipality", y="[Log] TB incidence, cases per 1,000 persons per 2 years", x="Brecha"),
+    ggplot(data = pobrData, aes(y=log(TBCases/Poblacion), x=GINI)) + geom_point() + geom_smooth(method=lm)  + labs(title="GINI vrs TB Cases per municipality", y="[Log] TB incidence, cases per 1,000 persons per 2 years", x="GINI"),
+    ncol=2, nrow=2
+) 
+
+if (saveGraphs) 
+    ggsave("PCE/Graficas/TB_Gt_Notifications_2014-2015-Poverty Vars vs TBIncidence by Muni.png", height=8, width=8)
