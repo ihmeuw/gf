@@ -20,7 +20,7 @@ library(scales)
 # ---------------------------------------------
 ##load the dataset: 
 
-totalData <- data.table(read.csv('FILE HERE',
+totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data_12218.csv',
                                  fileEncoding = "latin1"))
 
 # ---------------------------------------------
@@ -102,6 +102,7 @@ names(indColors) <- c('HSS: information system', 'HSS - Procurement supply chain
                       'Other categories', 'HSS: service delivery',
                       'HSS: Procurement and Supply management')
 
+##aggregate the data by the variables of interest (disease, year, HSS type)
 byVars = names(hssData)[names(hssData)%in%c('hss_ind', 'disease', "facet", "year")]
 hssData = hssData[, list(budget=sum(na.omit(budget))), by=byVars]
 

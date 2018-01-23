@@ -106,5 +106,5 @@ totalFpm[, end_date:=start_date + period-1]
 
 cleaned_aggregate_data <- rbind(totalFpm, gos_data)
 
-write.csv(cleaned_aggregate_data, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv", row.names = FALSE)
+write.csv(cleaned_aggregate_data, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data_12218.csv", row.names = FALSE)
 
