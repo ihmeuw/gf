@@ -44,7 +44,7 @@ graphData$expenditure[graphData$expenditure<=0] <- NA
 
 ##apply the grant facet (Past/Upcoming/Rejected)
 graphData$facet <- as.factor(mapply(appr_rej_indicators, graphData$year, graphData$data_source))
-graphData$facet <- factor(graphData$facet ,levels=c("Past/Active", "In Iteration", "Upcoming"))
+graphData$facet <- factor(graphData$facet ,levels=c("Past/Active", "In Iteration", "Initial", "Upcoming"))
 
 ##make the disease text nicer for the graphs: 
 graphData <- disease_names_for_plots(graphData)
@@ -89,18 +89,10 @@ keyData <- get_keypop_ind(graphData)
 # HSS CHARTS: 
 
 ##set the colors - if HSS: 
-indColors <- c('#00FFFF','#bf7fbf',
-               '#0000ff', '#1f78b4',
-               '#660066', '#37efac',
-               '#FD5F00', "#e00222",
-               '#c0c0c0','#fff432',
-               '#3a8e11') 
-names(indColors) <- c('HSS: information system', 'HSS - Procurement supply chain management (PSCM)',
-                      'HSS - Health information systems and M&E', 'HSS: health workforce',
-                      'HSS: other', 'HSS: Human resources',
-                      'HSS: Community Systems Strengthening', 'HSS: Information system & Operational research',
-                      'Other categories', 'HSS: service delivery',
-                      'HSS: Procurement and Supply management')
+indColors <- c('#c0c0c0','#0000ff','#008000',
+               '#ffef00', '#4ca6a6') 
+names(indColors) <- c('Non RSSH', 'RSSH: information system',
+                      'RSSH: health workforce', 'RSSH: service delivery', 'RSSH: other')
 
 ##aggregate the data by the variables of interest (disease, year, HSS type)
 byVars = names(hssData)[names(hssData)%in%c('hss_ind', 'disease', "facet", "year")]
@@ -110,7 +102,7 @@ hssData = hssData[, list(budget=sum(na.omit(budget))), by=byVars]
 hss_plots <- list()
 for (k in unique(hssData$disease)){
   subdata <- hssData[disease==k]
-  colScale <- scale_fill_manual(name="HSS Activities", values =indColors) 
+  colScale <- scale_fill_manual(name="RSSH Activities", values =indColors) 
   plot <- ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=hss_ind)) + 
     geom_bar(position = "fill",
              stat="identity") + 
@@ -119,7 +111,7 @@ for (k in unique(hssData$disease)){
     theme_bw(base_size=16) +
     scale_y_continuous(labels = percent_format()) +
     scale_x_continuous(name ="Year", breaks = seq(2005, 2020,5)) +
-    labs(title=paste(k, "HSS Activity over Time"), fill='HSS Ind.',
+    labs(title=paste(k, "RSSH Activity over Time"), fill='HSS Ind.',
          x = "", y = "% of Budget", caption="Data Source: GOS, FPM")
   hss_plots[[k]] <- plot
 }

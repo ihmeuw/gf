@@ -24,6 +24,8 @@ appr_rej_indicators <- function(year, data_source){
     x <- "Past/Active"
   } else if (data_source=="rej_fpm"){
     x <- "In Iteration"
+  } else if (data_source=="init_fpm"){
+    x <- "Initial"
   }else {
     x <- "Upcoming"
   }
@@ -106,17 +108,13 @@ names(hssColors) <- c('HSS - Procurement supply chain management (PSCM)', 'Remov
 ######create hss indicator: 
 get_hss_ind <- function(dataset, program_activity){
   dataset$hss_ind <-factor(sapply(dataset$program_activity, function(x){
-    if(grepl("HSS", x)){
+    if(grepl("RSSH", x)){
       x <- as.character(x)
     } else{
-      x <- "Other categories"
+      x <- "Non RSSH"
     }
-  }), levels=c('Other categories', 'HSS: information system', 'HSS - Procurement supply chain management (PSCM)',
-               'HSS - Health information systems and M&E', 'HSS: health workforce',
-               'HSS: other', 'HSS: Human resources',
-               'HSS: Community Systems Strengthening', 
-               'HSS: Information system & Operational research',
-               'HSS: service delivery', 'HSS: Procurement and Supply management')
+  }), levels=c('Non RSSH', 'RSSH: information system', 'RSSH: health workforce',
+               'RSSH: service delivery','RSSH: other')
   )
   return(dataset)
 }

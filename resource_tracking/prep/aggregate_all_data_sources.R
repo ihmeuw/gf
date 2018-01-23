@@ -13,8 +13,6 @@ library(dplyr)
 library(tools)
 library(data.table)
 library(lubridate)
-library(grDevices)
-library(RColorBrewer)
 library(readxl)
 
 # ----------------------------------------------
@@ -96,7 +94,8 @@ write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/m
 ## some of the GOS data is missing so we'll fill it in w/ the FPM data (and drop the FPM data that overlaps): 
 
 fpmCod<- totalCod[!((year < 2016 &disease=="malaria") | (year < 2015 & disease=="hiv") | (year < 2017 & disease=="tb"))]
-fpmUga <- totalUga[!((year < 2016 &disease%in%c("hss", "tb", "hiv")) | (year < 2017 & disease%in%c("malaria")))]
+fpmUga <- totalUga[!((year < 2016 &disease%in%c("hss", "tb", "hiv"))
+                     | (year < 2017 & disease%in%c("malaria")))]
 fpmGtm <- totalGtm[!((year < 2016 &disease=="tb") | (year < 2017 & disease%in%c("malaria", "hiv")))]
 
 

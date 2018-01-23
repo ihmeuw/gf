@@ -43,6 +43,7 @@ for(i in 1:length(file_list$file_name)){ ##most detailed level of budgets
                                        file_list$disease[i], file_list$period[i], file_list$recipient[i], file_list$source[i])
     tmpData$start_date <- ymd(tmpData$start_date)
     tmpData$data_source <- "fpm"
+    tmpData$disbursement <- 0 
   ##LFA data cleaning: 
   } else if (file_list$type[i]=="pudr"){ ##has expenditure data 
     tmpData <- prep_pudr_uga(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
@@ -62,8 +63,8 @@ for(i in 1:length(file_list$file_name)){ ##most detailed level of budgets
 ##make sure to change the budget variable type to be "numeric" 
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
+resource_database$disbursement <- as.numeric(resource_database$disbursement)
 ## since we only have budget/exp data, include disbursed as 0:  
-resource_database$disbursement <- 0 
 resource_database$loc_id <- loc_id
 
 ###MAPPING CODE TO FOLLOW BELOW: 
@@ -130,7 +131,7 @@ mappedUga$budget <- mappedUga$budget*mappedUga$coeff
 mappedUga$expenditure <- mappedUga$expenditure*mappedUga$coeff
 
 ## do a check on data to make sure values aren't dropped: 
-data_check2<- as.data.frame(mappedUga[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
+data_check2<- as.data.frame(mappedUga[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
 
 ##write csv to correct folder: 
 

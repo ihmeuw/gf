@@ -109,5 +109,6 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$source <- source
   budget_dataset$grant_number <- grant
   budget_dataset$disease <- disease
+  budget_dataset$disbursement <- 0 
   return(budget_dataset)
 }
