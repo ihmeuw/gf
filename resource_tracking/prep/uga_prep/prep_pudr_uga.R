@@ -34,7 +34,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   
-  if(grant%in%c("UGD-708-GO8-M") & sheet_name=="EFR Malaria Financial Data_3B"){
+  if(grant%in%c("UGD-708-G08-M") & sheet_name=="EFR Malaria Financial Data_3B"){
     gf_data <- gf_data[, -c(1:3)]
     colnames(gf_data)[1] <- "cost_category"
     colnames(gf_data)[2] <- "budget"
@@ -46,7 +46,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
     budget_dataset$recipient <- recipient
     budget_dataset$disbursement <- 0 
   
-    } else if(grant%in%c("UGD-708-GO8-M") & sheet_name=="LFA_Annex-SR Financials"){
+    } else if(grant%in%c("UGD-708-G08-M") & sheet_name=="LFA_Annex-SR Financials"){
       gf_data <- gf_data[, -1]
       colnames(gf_data)[1] <- "recipient"
       colnames(gf_data)[5] <- "budget"

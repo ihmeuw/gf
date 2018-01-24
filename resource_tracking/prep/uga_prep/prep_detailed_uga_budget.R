@@ -46,7 +46,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ##create list of column names: 
   if(start_date=="2018-01-01"){
-    qtr_names <- c("Module", "Intervention", "Implementer", rep(1, qtr_num))
+    qtr_names <- c("Intervention", "Activity Description", "Implementer", rep(1, qtr_num))
   } else {
     qtr_names <- c("Intervention", "Activity Description", "Recipient", rep(1, qtr_num))
   }

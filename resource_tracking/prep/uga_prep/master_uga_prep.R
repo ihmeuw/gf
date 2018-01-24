@@ -67,6 +67,13 @@ resource_database$disbursement <- as.numeric(resource_database$disbursement)
 ## since we only have budget/exp data, include disbursed as 0:  
 resource_database$loc_id <- loc_id
 
+## optional: do a check on data to make sure values aren't dropped: 
+# data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
+
+## we have some junk "cost categories"
+resource_database <- resource_database[!grepl(paste("0", "Please select.", "PA", sep="|"), resource_database$cost_category),]
+
+
 ###MAPPING CODE TO FOLLOW BELOW: 
 
 # ---------------------------------------------
@@ -75,16 +82,11 @@ mapping_for_R <- read.csv(paste0(dir, "mapping_for_R.csv"),
                           fileEncoding="latin1")
 mapping_for_graphs <- read.csv(paste0(dir, "mapping_for_graphs.csv"))
 
-## optional: do a check on data to make sure values aren't dropped: 
-# data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
-
 ## get rid of spaces, special characters, unnecessary punctuation....
 resource_database$cost_category <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]"), collapse="|"), "", resource_database$cost_category)
 resource_database$cost_category <-tolower(resource_database$cost_category)
 resource_database$cost_category <- gsub("[[:punct:]]", "", resource_database$cost_category)
 
-## we have some junk "cost categories"
-resource_database <- resource_database[!grepl(paste("0", "pleaseselect", "pa", sep="|"), resource_database$cost_category),]
 
 ## split hiv/tb into hiv or tb: 
 
@@ -115,6 +117,7 @@ if (any(!sdas_in_data %in% sdas_in_map)) {
 # unmapped_values <- resource_database[cost_category%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
 # unique(unmapped_values$cost_category)
 
+## if necessary: resource_database <- resource_database[!cost_category=="pleaseselect."]
 
 # test to make sure map doesn't contain duplicates
 d1 = nrow(mapping_for_R)
