@@ -83,6 +83,13 @@ gos_data$X <- NULL
 
 totalData <- rbind(totalData, gos_data)
 
+d1 <- nrow(totalData)
+d2 <- unique(length(totalData))
+
+if(d1 !=d2){
+  stop("Your dataset has duplicates!")
+}
+
 ##export to correct folder: 
 
 write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_mapped_data.csv", row.names = FALSE)

@@ -20,7 +20,7 @@ library(scales)
 # ---------------------------------------------
 ##load the dataset: 
 
-totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data_12218.csv',
+totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv',
                                  fileEncoding = "latin1"))
 
 # ---------------------------------------------
@@ -108,7 +108,7 @@ for (k in unique(hssData$disease)){
              stat="identity") + 
     colScale +
     facet_grid(~facet,scales = "free_x", space="free_x") + 
-    theme_bw(base_size=16) +
+    theme_bw(base_size=10.5) +
     scale_y_continuous(labels = percent_format()) +
     scale_x_continuous(name ="Year", breaks = seq(2005, 2020,5)) +
     labs(title=paste(k, "RSSH Activity over Time"), fill='HSS Ind.',

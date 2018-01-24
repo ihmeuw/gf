@@ -37,7 +37,7 @@ appr_rej_indicators <- function(year, data_source){
 disease_names_for_plots <- function(gos_data){
   
   graphData <- copy(gos_data)
-  graphData[disease=='hiv', disease:='HIV/Aids']
+  graphData[disease=='hiv', disease:='HIV/AIDS']
   graphData[disease=='malaria', disease:='Malaria']
   graphData[disease=='tb', disease:='Tuberculosis']
   graphData[disease=='hss', disease:='HSS']
@@ -64,8 +64,8 @@ primColors <- c('#b20000', '#660000', ##reds
 names(primColors) <- c('HIV/AIDS care and support', 'Community care and outreach', ##reds
                        'Case detection and diagnosis', 'Case Diagnosis',##oranges
                        'Treatment','HIV/AIDS counseling and testing',##greens
-                       'HSS: health workforce', 'HSS: information system',##blues
-                       'HSS: service delivery', 'HSS: other', ##teals
+                       'RSSH: health workforce', 'RSSH: information system',##blues
+                       'RSSH: service delivery', 'RSSH: other', ##teals
                        'Key and vulnerable populations', 'Community care and outreach',##ocean
                        'Prevention', 'Malaria other control and prevention', ##yellows
                        'MDR-TB case detection and diagnosis', 'MDR-TB prevention',   ##magenta
