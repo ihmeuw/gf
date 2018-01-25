@@ -1,4 +1,8 @@
 # ----------------------------------------------
+
+# Irena Chen
+# Master code file for UGA data prep
+### this code will output a prepped and mapped file of the upcoming COD budgets: 
 rm(list=ls())
 library(lubridate)
 library(data.table)
@@ -18,11 +22,11 @@ library(zoo)
 
 
 # ----------------------------------------------
-
+##set up some variables: 
 loc_id <- 'cod'
 implementer <- "CAGF"
 
-##DOWNLOAD THE FOLDER "FPM - grant budgets" from BASECAMP ONTO YOUR LOCAL DRIVE: 
+####DOWNLOAD THE FOLDER "FPM - grant budgets" from BASECAMP ONTO YOUR LOCAL DRIVE: 
 
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/7. Grant Making/' ##where the files are stored locally
 file_list <- read.csv(paste0(dir, "cod_new_budget.csv"), na.strings=c("","NA")) 
@@ -55,10 +59,11 @@ resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- 0 
 resource_database$disbursement <- 0 
 resource_database$data_source <- "fpm"
+# ----------------------------------------------
 
 ## function to use the activity descriptions to get the program areas we want:  
 map_activity_descriptions <- function(program_activity, activity_description){
-  if(program_activity%in%c("Gestion des subventions", "Prise en charge",collapse="|")){
+  if(program_activity%in%c("Gestion des subventions", "Prise en charge", "Traitement, prise en charge et soutien", collapse="|")){
     program_activity <- activity_description
   }
   return(program_activity)
@@ -66,32 +71,51 @@ map_activity_descriptions <- function(program_activity, activity_description){
 
 resource_database$cost_category <- mapply(map_activity_descriptions,
                                      resource_database$cost_category, resource_database$activity_description)
-resource_database$cost_category <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]"), collapse="|"), "", resource_database$cost_category)
+resource_database$cost_category <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), collapse="|"), "", resource_database$cost_category)
 resource_database$cost_category <-tolower(resource_database$cost_category)
 resource_database$cost_category <- gsub("[[:punct:]]", "", resource_database$cost_category)
+
+## optional: do a check on data to make sure values aren't dropped: 
+# data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
+
+
+# ----------------------------------------------
+## map program level data: 
+mapping_for_R <- read.csv(paste0(dir, "mapping_for_R.csv"),
+                          fileEncoding="latin1")
+mapping_for_graphs <- read.csv(paste0(dir, "mapping_for_graphs.csv"))
+
 
 
 # test for missing SDAs from map
 sdas_in_map = unique(mapping_for_R$cost_category)
-sdas_in_data = unique(test_dataset$cost_category)
+sdas_in_data = unique(resource_database$cost_category)
 if (any(!sdas_in_data %in% sdas_in_map)) { 
   stop('Map doesn\'t include cost categories that are in this data file!')
 }
-unmapped_values <- resource_database[cost_category%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
+#unmapped_values <- resource_database[cost_category%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
+#View(unique(unmapped_values$cost_category))
+
+
+# test to make sure map doesn't contain duplicates
+d1 = nrow(mapping_for_R)
+d2 = nrow(unique(mapping_for_R))
+if (d1!=d2) stop('Map contains duplicates!') 
 
 
 program_level_mapped <- merge(resource_database, mapping_for_R, by=c("disease","cost_category"), allow.cartesian=TRUE)
-mappedUga <- merge(program_level_mapped, mapping_for_graphs, by="code", allow.cartesian=TRUE) ##some categories will be split
+mappedCod <- merge(program_level_mapped, mapping_for_graphs, by="code", allow.cartesian=TRUE) ##some categories will be split
 
-mappedUga$budget <- mappedUga$budget*mappedUga$coeff
-mappedUga$expenditure <- mappedUga$expenditure*mappedUga$coeff
+mappedCod$budget <- mappedCod$budget*mappedCod$coeff
+mappedCod$expenditure <- mappedCod$expenditure*mappedCod$coeff
 
 
-
+## do a check on data to make sure values aren't dropped: 
+data_check2<- as.data.frame(mappedCod[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
 
 
 ## write as csv 
-write.csv(resource_database, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/new_cod_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
+write.csv(mappedCod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/new_cod_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
 
 
 
