@@ -71,10 +71,25 @@ resource_database$loc_id <- loc_id
 # data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
 ## we have some junk "cost categories"
-resource_database <- resource_database[!grepl(paste("0", "Please select.", "PA", sep="|"), resource_database$cost_category),]
+resource_database <- resource_database[!grepl(paste("0", "Please select...", "PA", sep="|"), resource_database$cost_category),]
 
+# ---------------------------------------------
+###DUPLICATE CHECK: 
 
-###MAPPING CODE TO FOLLOW BELOW: 
+d1 <- nrow(resource_database)
+d2 <- nrow(unique(resource_database))
+if(d1 !=d2){
+  stop("Dataset has duplicates!")
+}
+
+## one reason we might have duplicates is because of the activity description: same "umbrella" module, but maybe the activities aren't:
+##commented code below sums duplicates up:
+# byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'disbursement', 'expenditure')]
+# no_duplicates <- resource_database[, list(budget=sum(na.omit(budget)),
+#                                    expenditure=sum(na.omit(expenditure)), disbursement=sum(na.omit(disbursement))), by=byVars]
+
+## data check to verify data hasn't been dropped: 
+# data_check3 <- as.data.frame(resource_database[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
 
 # ---------------------------------------------
 ## map program level data: 
@@ -134,7 +149,7 @@ mappedUga$budget <- mappedUga$budget*mappedUga$coeff
 mappedUga$expenditure <- mappedUga$expenditure*mappedUga$coeff
 
 ## do a check on data to make sure values aren't dropped: 
-data_check2<- as.data.frame(mappedUga[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
+data_check3 <- as.data.frame(mappedUga[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
 
 ##write csv to correct folder: 
 
