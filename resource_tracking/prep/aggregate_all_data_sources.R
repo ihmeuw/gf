@@ -77,7 +77,7 @@ gos_data$disbursement <- 0
 gos_data$recipient <- gos_data$grant_number
 gos_data$data_source <- "gos"
 gos_data$source <- "gf"
-gos_data$X <- NULL
+
 
 ##aggregate with gos data: 
 
