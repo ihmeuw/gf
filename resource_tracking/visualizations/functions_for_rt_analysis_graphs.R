@@ -73,36 +73,6 @@ names(primColors) <- c('HIV/AIDS care and support', 'Community care and outreach
                        'Monitoring and evaluation', 'Malaria bed nets', #pinks
                        'PBF', 'Malaria indoor residual spraying' ##royal and midnight blues
                        ,'Other/Unidentified', 'HIV/AIDS PMTCT') ##grey and millennial pink 
-# ---------------------------------------------
-
-##colors for HSS specific categories: 
-hssColors <- c('#a6cee3', '#1f78b4',##blues
-               '#b2df8a', "#33a02c", ##teals
-               '#fb9a99', '#e31a1c',##ocean 
-               '#f6ae8f', '#EE5D1F', ##oranges
-               '#3DCC3D', '#008000',##greens
-               '#660066', '#bf7fbf',#purples
-               '#ffd700', '#d3a308',#yellows
-               '#b20000', '#660000', ##reds 
-               '#fdbf6f', '#ff7f00', ##marigold and millennial pink 
-               '#c0c0c0') ##grey
-
-names(hssColors) <- c('HSS - Procurement supply chain management (PSCM)', 'Removing legal barriers to access'
-                      ,'HSS: service delivery',
-                      'HSS - Health information systems and M&E',
-                      'HSS: Human resources',
-                      'HSS: Community Systems Strengthening',
-                      'HSS: Information system & Operational research',
-                      'Program management', 'Supportive environment: Program management and administration'
-                      ,'Treatment: Prompt, effective anti-malarial treatment','Prevention: BCC - Mass media'
-                      ,'Treatment: Diagnosis', 'Prevention: BCC - community outreach'
-                      ,'Treatment: Prompt, effective anti-malarial treatment (Private sector)'
-                      ,'Supportive Environment: Monitoring risk of adverse reactions associated with AMFm ACTs'
-                      ,'HSS: Procurement and Supply management'
-                      ,'Treatment: Management of Malaria in Schools'
-                      ,'Operational Research', 'Planning and administration costs')
-
-
 
 # ---------------------------------------------
 ######create hss indicator: 
