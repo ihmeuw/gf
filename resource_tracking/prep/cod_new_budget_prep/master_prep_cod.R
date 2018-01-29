@@ -60,6 +60,7 @@ resource_database$expenditure <- 0
 resource_database$disbursement <- 0 
 resource_database$data_source <- "fpm"
 # ----------------------------------------------
+data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
 ## function to use the activity descriptions to get the program areas we want:  
 map_activity_descriptions <- function(program_activity, activity_description){

@@ -31,8 +31,18 @@ dir <- 'H:/uga_data/' ##where the files are stored locally
 file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 
-for(i in 1:length(file_list$file_name)){ ##most detailed level of budgets 
-  if(file_list$type[i]=="detailed"){
+summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
+                         c("data_source", "budget","expenditure", "disbursement", "year", "sda_detail",
+                           "geographic_detail", "period",	"grant", "disease"))
+
+for(i in 1:length(file_list$file_name)){ 
+  ##fill in the summary tracking file with what we know already: 
+  summary_file$disease[i] <- file_list$disease[i]
+  summary_file$grant[i] <- file_list$grant[i]
+  summary_file$period[i] <- file_list$period[i] 
+  summary_file$geographic_detail[i] <- "National"
+  
+  if(file_list$type[i]=="detailed"){##most detailed level of budgets 
     tmpData <- prep_detailed_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], cashText, file_list$grant[i], 
                                         file_list$disease[i], file_list$period[i],file_list$source[i])
@@ -41,7 +51,6 @@ for(i in 1:length(file_list$file_name)){ ##most detailed level of budgets
     tmpData <- prep_summary_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], cashText, file_list$grant[i], 
                                        file_list$disease[i], file_list$period[i], file_list$recipient[i], file_list$source[i])
-    tmpData$start_date <- ymd(tmpData$start_date)
     tmpData$data_source <- "fpm"
     tmpData$disbursement <- 0 
   ##LFA data cleaning: 
@@ -50,16 +59,47 @@ for(i in 1:length(file_list$file_name)){ ##most detailed level of budgets
                              ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], 
                              file_list$grant[i], file_list$recipient[i],file_list$source[i])
     tmpData$data_source <- "pudr"
-    }
+  }
   if(i==1){
     resource_database = tmpData
   } 
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
+  
+  if(file_list$type[i]=="detailed"){
+    summary_file$sda_detail[i] <- "Detailed"
+  } else if (file_list$type[i]=="summary"){
+    summary_file$sda_detail[i] <- "Summary"
+  } else if(!(tmpData$cost_category[1]=="All")){
+    summary_file$sda_detail[i] <- "Detailed"
+  } else {
+    summary_file$sda_detail[i] <- "None"
+  }
+  
+  summary_file$year[i] <- paste0(min(tmpData$year), "-", max(tmpData$year))
+  summary_file$data_source[i] <- tmpData$data_source[1]
+  if(sum(na.omit(tmpData$budget)>-1)){
+    summary_file$budget[i] <- "Yes"
+  } else {
+    summary_file$budget[i] <- "No"
+  } 
+  if(sum(na.omit(tmpData$expenditure)>0)){
+    summary_file$expenditure[i] <- "Yes"
+  } else {
+    summary_file$expenditure[i] <- "No"
+  } 
+  if(sum(na.omit(tmpData$disbursement)>0)){
+    summary_file$disbursement[i] <- "Yes"
+  } else {
+    summary_file$disbursement[i] <- "No"
+  } 
   print(i)
 }
 
+setnames(c("Data Source",	"Data Type",	"Year",	"SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant"))
+
+write.table(append = TRUE)
 ##make sure to change the budget variable type to be "numeric" 
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)

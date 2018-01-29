@@ -21,7 +21,7 @@ library(readxl)
 
 
 ###DRC: 
-totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/all_fpm_cod_budgets.csv",
+totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/cod_total_mapped.csv",
                                 fileEncoding="latin1"))
 
 #create some variables: 

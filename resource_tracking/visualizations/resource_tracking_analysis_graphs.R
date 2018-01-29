@@ -55,11 +55,7 @@ graphData <- disease_names_for_plots(graphData)
 prog_plots <- list()
 for (k in unique(graphData$disease)){
   subdata <- graphData[disease==k]
-  if(k=="HSS"){ ##HSS has different categories 
-    colScale <- scale_fill_manual(name="SDA", values =hssColors) 
-  } else {
-    colScale <- scale_fill_manual(name="SDA", values =primColors) 
-  }
+  colScale <- scale_fill_manual(name="SDA", values =primColors) 
   plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=program_activity)) + 
     geom_bar(## if you want 100% stacked graphs, uncomment: position = "fill",
       stat="identity") + 
@@ -107,7 +103,7 @@ for (k in unique(hssData$disease)){
     geom_bar(position = "fill",
              stat="identity") + 
     colScale +
-    facet_grid(~facet,scales = "free_x", space="free_x") + 
+    # facet_grid(~facet,scales = "free_x", space="free_x") + 
     theme_bw(base_size=10.5) +
     scale_y_continuous(labels = percent_format()) +
     scale_x_continuous(name ="Year", breaks = seq(2005, 2020,5)) +

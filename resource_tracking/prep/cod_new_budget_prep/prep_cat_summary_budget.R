@@ -8,7 +8,7 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
-rm(list=ls())
+
 library(lubridate)
 library(data.table)
 library(readxl)
