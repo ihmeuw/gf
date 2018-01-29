@@ -26,6 +26,8 @@ appr_rej_indicators <- function(year, data_source){
     x <- "In Iteration"
   } else if (data_source=="init_fpm"){
     x <- "Initial"
+  }else if (data_source == "init2_fpm"){
+    x <- "Iteration 2"
   }else {
     x <- "Upcoming"
   }
