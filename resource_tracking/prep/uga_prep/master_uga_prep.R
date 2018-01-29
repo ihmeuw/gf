@@ -31,8 +31,9 @@ dir <- 'H:/uga_data/' ##where the files are stored locally
 file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 
-summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
-                         c("data_source", "budget","expenditure", "disbursement", "year", "sda_detail",
+##create a summary file to track the data that we have (and that we still need)
+summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 7)), 
+                         c("data_source", "year", "sda_detail",
                            "geographic_detail", "period",	"grant", "disease"))
 
 for(i in 1:length(file_list$file_name)){ 
@@ -79,27 +80,17 @@ for(i in 1:length(file_list$file_name)){
   
   summary_file$year[i] <- paste0(min(tmpData$year), "-", max(tmpData$year))
   summary_file$data_source[i] <- tmpData$data_source[1]
-  if(sum(na.omit(tmpData$budget)>-1)){
-    summary_file$budget[i] <- "Yes"
-  } else {
-    summary_file$budget[i] <- "No"
-  } 
-  if(sum(na.omit(tmpData$expenditure)>0)){
-    summary_file$expenditure[i] <- "Yes"
-  } else {
-    summary_file$expenditure[i] <- "No"
-  } 
-  if(sum(na.omit(tmpData$disbursement)>0)){
-    summary_file$disbursement[i] <- "Yes"
-  } else {
-    summary_file$disbursement[i] <- "No"
-  } 
   print(i)
 }
 
-setnames(c("Data Source",	"Data Type",	"Year",	"SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant"))
+setnames(summary_file, c("Data Source",	"Year",	"SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease"))
 
-write.table(append = TRUE)
+##export the summary table to J Drive
+##(you might get a warning message about appending column names to the files; this should not affect the final output)
+write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/resource_tracking_data_summary.csv",
+            append = TRUE, row.names=FALSE, sep=",")
+
+
 ##make sure to change the budget variable type to be "numeric" 
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
