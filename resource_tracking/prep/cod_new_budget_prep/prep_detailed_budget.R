@@ -34,7 +34,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   }
   
   if(lang=="eng"){
-    qtr_names <- c("Module", "Recipient", "Geography/Location", rep(1, qtr_num))
+    qtr_names <- c("Module","Activity Description", "Recipient", "Geography/Location", rep(1, qtr_num))
   } else { 
     qtr_names <- c("Module","Description de l'activité", recipient, "Geography/Location", rep(1, qtr_num))
   }
@@ -114,6 +114,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ## now match quarters with start dates 
   kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
   budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date ]
+  budget_dataset <- na.omit(budget_dataset, cols=1, invert=FALSE)
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
