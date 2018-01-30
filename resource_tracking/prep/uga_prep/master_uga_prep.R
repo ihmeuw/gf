@@ -32,9 +32,13 @@ file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","
                       stringsAsFactors = FALSE) 
 
 ##create a summary file to track the data that we have (and that we still need)
-summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 7)), 
+summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 8)), 
                          c("data_source", "year", "sda_detail",
-                           "geographic_detail", "period",	"grant", "disease"))
+                           "geographic_detail", "period",	"grant", "disease", "loc_id"))
+
+summary_file$loc_id <- as.character(summary_file$loc_id)
+summary_file$loc_id <- loc_id
+
 
 for(i in 1:length(file_list$file_name)){ 
   ##fill in the summary tracking file with what we know already: 
@@ -82,8 +86,7 @@ for(i in 1:length(file_list$file_name)){
   summary_file$data_source[i] <- tmpData$data_source[1]
   print(i)
 }
-
-setnames(summary_file, c("Data Source",	"Year",	"SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease"))
+setnames(summary_file, c("Data Source",	"Year",	"SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 
 ##export the summary table to J Drive
 ##(you might get a warning message about appending column names to the files; this should not affect the final output)

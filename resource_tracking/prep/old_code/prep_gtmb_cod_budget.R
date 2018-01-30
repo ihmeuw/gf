@@ -9,13 +9,13 @@
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
 
-prep_gtmb_cod_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period, grant) {
+prep_gtmb_cod_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, loc_id, period) {
   
   col_names <- rep(0, qtr_num+1)
   
   for(i in 1: length(col_names)){
     if (i==1){
-      col_names[i] <- "Recipient"
+      col_names[i] <- "category"
     } else {
       col_names[i] <- paste("Q", i-1, sep="")
     }
@@ -24,38 +24,44 @@ prep_gtmb_cod_budget = function(dir, inFile, sheet_name, start_date, qtr_num, di
   ghe_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)), col_names = FALSE)
   
   ## the 1st column isn't always the same, so just call it something: 
-  colnames(gf_data)[1] <- "first_column"
+  colnames(ghe_data)[1] <- "first_column"
   
   ## this type of budget data should always have 13 cost categories 
-  gf_data <- gf_data[c(grep("BY IMPLEMEN", gf_data$first_column):.N),]
+  ghe_data <- ghe_data[c(grep("Category", ghe_data$X__1):(grep(13, ghe_data$first_column))),]
   
-  # drop first three rows (no use to us)
-  gf_data <-gf_data[-c(1:3),]
+  # drop first row (it's blank)
+  ghe_data <- ghe_data[-1,]
   
   # drop 1st column (unnecessary)
-  gf_data[[1]] <- NULL  
+  ghe_data[[1]] <- NULL  
   
-  ##rename the columns to be the 1st row values and then drop the first row 
-  colnames(gf_data) <- as.character(gf_data[1,])
-  gf_data <- gf_data[-1,]
-  ##rename the first column to be PR/SR: 
-  colnames(gf_data)[1] <- "first"
-  colnames(gf_data)[2] <- "Recipient"
+  ghe_data$X__1[1] <- "category"
   
-  gf_data <- gf_data[c(grep("SR", gf_data$first):.N),]
+  
   ## also drop columns containing only NA's
-  gf_data<- Filter(function(x) !all(is.na(x)), gf_data)
-  
-  gf_data <- gf_data[,names(gf_data)%in%col_names, with=FALSE]
-  
-  ##drop all rows that have an NA in the first column: 
-  gf_data <- gf_data[!is.na(Recipient)]
+  ghe_data<- Filter(function(x) !all(is.na(x)), ghe_data)
   
   
+  ##we only want the data for each quarter, so remove extraneous values: 
+  toMatch <- c("Year", "RCC", "%", "TOTAL", "Phase", "Implem")
+  ghe_data <- Filter(function(x) !any(grepl(paste(toMatch, collapse="|"), x)), ghe_data)
+  
+  # workaround to delete columns that have an NA in the first row - 
+  #for some reason, ghe_data <- ghe_data[,-is.na(ghe_data[1,])] isn't working. Planning to go to code drop in for help
+  
+  colnames(ghe_data) <- as.character(ghe_data[1,])
+  drop.cols <- grep("X_", colnames(ghe_data))
+  ghe_data <- ghe_data[, (drop.cols) := NULL]
+  
+  
+  ## rename the columns
+  colnames(ghe_data) <- col_names
+  ## drop the first row now that we renamed the columns 
+  ghe_data1<- ghe_data[-1,]
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
-  setDT(gf_data)
-  gf_data<- melt(gf_data,id="Recipient", variable.name = "qtr", value.name="budget")
+  setDT(ghe_data)
+  ghe_data<- melt(ghe_data,id="category", variable.name = "qtr", value.name="budget")
   
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
@@ -77,7 +83,6 @@ prep_gtmb_cod_budget = function(dir, inFile, sheet_name, start_date, qtr_num, di
   budget_dataset$disease <- disease 
   budget_dataset$loc_id <- loc_id
   budget_dataset$period <- period
-  budget_dataset$grant <- grant
   
   return( budget_dataset)
 

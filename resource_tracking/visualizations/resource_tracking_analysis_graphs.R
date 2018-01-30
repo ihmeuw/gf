@@ -44,7 +44,7 @@ graphData$expenditure[graphData$expenditure<=0] <- NA
 
 ##apply the grant facet (Past/Upcoming/Rejected)
 graphData$facet <- as.factor(mapply(appr_rej_indicators, graphData$year, graphData$data_source))
-graphData$facet <- factor(graphData$facet ,levels=c("Past/Active", "In Iteration", "Initial", "Upcoming"))
+graphData$facet <- factor(graphData$facet ,levels=c("Past/Active", "In Iteration", "Initial", "Upcoming", "Iteration 2"))
 
 ##make the disease text nicer for the graphs: 
 graphData <- disease_names_for_plots(graphData)
