@@ -32,8 +32,8 @@ file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","
                       stringsAsFactors = FALSE) 
 
 ##create a summary file to track the data that we have (and that we still need)
-summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 8)), 
-                         c("data_source", "year", "sda_detail",
+summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
+                         c("data_source", "year","start_date", "end_date", "sda_detail", 
                            "geographic_detail", "period",	"grant", "disease", "loc_id"))
 
 summary_file$loc_id <- as.character(summary_file$loc_id)
@@ -71,7 +71,7 @@ for(i in 1:length(file_list$file_name)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
-  
+  tmpData$start_date <- as.Date(tmpData$start_date,  "%Y-%m-%d")
   if(file_list$type[i]=="detailed"){
     summary_file$sda_detail[i] <- "Detailed"
   } else if (file_list$type[i]=="summary"){
@@ -81,12 +81,17 @@ for(i in 1:length(file_list$file_name)){
   } else {
     summary_file$sda_detail[i] <- "None"
   }
-  
+  summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
+  summary_file$start_date[i] <- min(tmpData$start_date)
   summary_file$year[i] <- paste0(min(tmpData$year), "-", max(tmpData$year))
   summary_file$data_source[i] <- tmpData$data_source[1]
   print(i)
 }
-setnames(summary_file, c("Data Source",	"Year",	"SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
+
+summary_file$end_date <- as.Date(summary_file$end_date)
+summary_file$start_date <- as.Date(summary_file$start_date)
+
+setnames(summary_file, c("Data Source",	"Year",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 
 ##export the summary table to J Drive
 ##(you might get a warning message about appending column names to the files; this should not affect the final output)
