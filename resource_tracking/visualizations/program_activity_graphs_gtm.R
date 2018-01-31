@@ -21,23 +21,20 @@ library(RColorBrewer)
 library(readxl)
 
 # ----------------------------------------------
-## prep sicoin data 
+## load the sicoin data 
 sicoin <- data.table(read.csv("prepped_sicoin_data_1201_ic.csv", fileEncoding="UTF-8"))
-sicoin$start_date <- as.Date(sicoin$start_date, '%m/%d/%Y') # BE SURE THIS IS RIGHT
+sicoin$start_date <- as.Date(sicoin$start_date, '%m/%d/%Y') 
 
 if (!is.numeric(sicoin$budget)) sicoin[,budget:=as.numeric(budget)]
 if (!is.numeric(sicoin$disbursement)) sicoin[,disbursement:=as.numeric(disbursement)]
 if (!is.numeric(sicoin$expenditure)) sicoin[,expenditure:=as.numeric(expenditure)]
 
-
-## national level graphs for sicoin: 
-
-# collapse to national level
+# collapse the data to national level - we're ignoring municipalities for now: 
 byVars = names(sicoin)[!names(sicoin)%in%c('budget','disbursement','expenditure','grant_number', 'cost_category','loc_id', 'data_source')]
 nat_level = sicoin[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 
-# set up to graph
+# remap some of the values so that they are "prettier" for the graphs: 
 graphData = copy(nat_level)
 graphData[source=='gf', source:='Global Fund']
 graphData[source=='ghe', source:='Government']
@@ -45,11 +42,10 @@ graphData[disease=='hiv', disease:='HIV/Aids']
 graphData[disease=='malaria', disease:='Malaria']
 graphData[disease=='tb', disease:='Tuberculosis']
 
-## graph sicoin budget vs disbursement 
-
-# graph time series per disease
+# ----------------------------------------------
+## This creates a scatterplot of budget & disbursement data w/ respect to disease and time (year)
 nat_plots <- list()
-for (k in unique(graphData$source)){
+for (k in unique(graphData$source)){ ##plotting GF and GHE differently for now: 
   plot <- (ggplot(graphData[source==k], aes(x=budget/1000000, y=disbursement/1000000)) + 
     geom_point(aes(color=year(start_date), shape=disease)) +
     geom_abline(intercept=0, slope=1) + 
@@ -67,23 +63,19 @@ for (k in unique(graphData$source)){
 }
 
 
-# save graphs
-pdf("SICOIN budget vs disbursement.pdf", height=6, width=9)
+# save the graphs to your desktop 
+pdf("sicoin_budget_disbursement_over_time.pdf", height=6, width=9)
 invisible(lapply(nat_plots, print))
 dev.off()
 
-
+# ----------------------------------------------
+##This code produces Budget and Disbursement time series (lines over time) comparing GF and GHE data
 # melt quantities long
 graphData = melt(graphData, id.vars=c('source', 'start_date', 'disease', 'period'))
 graphData$value[graphData$value == 0] <- NA
 
-# compute cumulative totals
-graphData = graphData[order(start_date)]
-graphData[, cumulative:=cumsum(value), by=c('source', 'disease', 'variable')]
-
-
-graphData[, variable:=toTitleCase(as.character(variable))]
-graphData = graphData[!is.na(value)]
+graphData[, variable:=toTitleCase(as.character(variable))] ##create a title 
+graphData = graphData[!is.na(value)] ##remove NAs 
 
 # add an "end of time series" observation so the step-line doesn't suddenly end
 tmp = graphData[year(start_date)==max(year(start_date))]
@@ -92,43 +84,42 @@ graphData = rbind(graphData, tmp)
 
 # graph time series per disease
 nat_plots <- list()
-for (k in unique(graphData$disease)){
-
-  plot <- ggplot(graphData[disease==k & variable=='Budget'], aes(x=start_date, y=value/1000000, color=source)) + 
-    geom_step(aes(linetype='Budget'), size=1.25, alpha=.5) +
-    geom_step(data=graphData[disease==k & variable=='Disbursement'], aes(linetype='Disbursement'), size=1.25) +
-    labs(title=paste(k, "data at national level"), 
-		x = "", y = "USD (Millions)", caption="Data Source: SICOIN", 
-		color='Source') +
-	scale_linetype_manual('Quantity', values=c('Budget'=1,'Disbursement'=4)) +
-    theme_bw(base_size=16) + 
-	theme(plot.title=element_text(hjust=.5))
-	
+for (k in unique(graphData$disease)){ ##plotting each disease separately for now 
+  plot <- (ggplot(graphData[disease==k & variable=='Budget'], aes(x=start_date, y=value/1000000, color=source)) + 
+             geom_step(aes(linetype='Budget'), size=1.25, alpha=.5) +
+             geom_step(data=graphData[disease==k & variable=='Disbursement'], aes(linetype='Disbursement'), size=1.25) +
+             labs(title=paste(k, "data at national level"), x = "", y = "USD (Millions)",
+                  caption="Data Source: SICOIN", color='Source') +
+             scale_linetype_manual('Quantity', values=c('Budget'=1,'Disbursement'=4)) +
+             theme_bw(base_size=16) + 
+             theme(plot.title=element_text(hjust=.5)))
   nat_plots[[k]] <- plot
 }
 
 # save graphs
-pdf("gf vs ghe over time.pdf", height=6, width=9)
+pdf("ghe_vs_gf_data_over_time.pdf", height=6, width=9)
 invisible(lapply(nat_plots, print))
 dev.off()
 
+
+# ----------------------------------------------
+# compute cumulative totals
+graphData = graphData[order(start_date)]
+graphData[, cumulative:=cumsum(value), by=c('source', 'disease', 'variable')]
 
 
 
 # graph cumulative time series per disease
 for (k in unique(graphData$disease)){
-
-  plot <-  ggplot(graphData[disease==k & variable=='Budget'], 
-				aes(x=start_date, y=cumulative/1000000, color=source)) + 
-    geom_step(aes(linetype='Budget'), size=1.25, alpha=.5) +
-    geom_step(data=graphData[disease==k & variable=='Disbursement'], aes(linetype='Disbursement'), size=1.25) +
-    labs(title=paste(k, "cumulative data at national level"), 
-		x = "", y = "USD (Millions)", caption="Data Source: SICOIN", 
-		color='Source') +
-	scale_linetype_manual('Quantity', values=c('Budget'=1,'Disbursement'=4)) +
-    theme_bw(base_size=16) + 
-	theme(plot.title=element_text(hjust=.5))
-	
+  plot <-  (ggplot(graphData[disease==k & variable=='Budget'], 
+                   aes(x=start_date, y=cumulative/1000000, color=source)) + 
+              geom_step(aes(linetype='Budget'), size=1.25, alpha=.5) +
+              geom_step(data=graphData[disease==k & variable=='Disbursement'], aes(linetype='Disbursement'), size=1.25) +
+              labs(title=paste(k, "cumulative data at national level")
+                   , x = "",y = "USD (Millions)", caption="Data Source: SICOIN", color='Source') +
+              scale_linetype_manual('Quantity', values=c('Budget'=1,'Disbursement'=4)) +
+              theme_bw(base_size=16) +
+              theme(plot.title=element_text(hjust=.5)))
   nat_plots[[paste0(k,'cumulative')]] <- plot
 }
 
