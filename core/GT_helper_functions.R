@@ -2,7 +2,7 @@
 # Guillermo Ambrosio (CIEAR)
 #
 # 2017-11-14
-# Explore TB outcome data from MOH notifications databases.
+# Helper functions for Guatemala data analysis
 
 dataFilePrefix = "CIESAR/PCE/"
 
