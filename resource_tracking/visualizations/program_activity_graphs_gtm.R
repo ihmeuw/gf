@@ -11,6 +11,7 @@
 # ----------------------------------------------
 # Set up R
 rm(list=ls())
+library(gsubfn)
 library(ggplot2)
 library(dplyr)
 library(tools)
@@ -124,23 +125,17 @@ for (k in unique(graphData$disease)){
 }
 
 # save graphs
-pdf("gf vs ghe over time.pdf", height=6, width=9)
+pdf("cumgraph_ghe_vs_gf_overtime.pdf", height=6, width=9)
 invisible(lapply(nat_plots, print))
 dev.off()
-
-
 
 # ----------------------------------------------
 ## BUDGET vs DISBURSEMENT - municipality level 
 
-sicoin <- data.table(read.csv("prepped_sicoin_data_1130.csv", fileEncoding="UTF-8"))
-
-toMatch <- c("gtm", "guat")
-muni_sicoin <- sicoin[ !grepl(paste(toMatch, collapse="|"), tolower(sicoin$loc_id)),]
-
-## aggregate by disease, start_date 
-byVars = names(muni_sicoin)[!names(muni_sicoin)%in%c('budget','expenditure', 'disbursement', 'cost_category', 'period', 'data_source', 'grant_number')]
-muni_sicoin = muni_sicoin[, list(budget=sum(budget), expenditure=sum(expenditure), disbursement=sum(disbursement)), by=byVars]
+## aggregate by disease and start date
+byVars = names(muni_sicoin)[names(muni_sicoin)%in%c('loc_id', 'source', 'start_date')]
+muni_sicoin = muni_sicoin[, list(budget=sum(budget), expenditure=sum(expenditure), disbursement=sum(disbursement)), 
+                          by=byVars]
 
 ##list of plots 
 muni_plots <- list()
@@ -148,7 +143,7 @@ muni_plots <- list()
 ## loop through gf/ghe to plot budgets vs. disbursements (w/ respect to disease and year)
 for(k in unique(muni_sicoin$source)){
   muni_subset <- subset(muni_sicoin, source==k)
-  muni_lm <- lm(disbursement ~budget, data=muni_subset)
+  muni_lm <- lm(disbursement~budget, data=muni_subset)
   muni_plot <- (ggplot(muni_subset, aes(x = budget/1000, y=disbursement/1000)) + 
                   geom_point(aes(color=year(start_date), shape=disease)) +
                   geom_abline(intercept=0, slope=1) + 
@@ -162,63 +157,56 @@ for(k in unique(muni_sicoin$source)){
   muni_plots[[k]] <- muni_plot
 }
 
+
 # ----------------------------------------------
-#### get FPM vs sicoin, etc. 
-byVars = names(total_data)[!names(total_data)%in%c('budget','disbursement','expenditure','cost_category', 'program_activity', 'loc_id', 'code', 'coeff')]
-nat_level = total_data[, list(budget=sum(budget), disbursement=sum(disbursement), expenditure=sum(expenditure)), by=byVars]
+##plot muni level sicoin data 
+
+# collapse cost categories
+byVars = names(sicoin)[!names(sicoin)%in%c('budget','disbursement','expenditure','cost_category', 'coeff', 'code')]
+muni_level = sicoin[, list(budget=sum(budget), disbursement=sum(disbursement), expenditure=sum(expenditure)), by=byVars]
 
 
-## reshape data to plot it better 
-nat_level = melt(nat_level, id.vars=c('source', 'disease', 'start_date', 'end_date', 'period', 'grant_number', 'data_source'))
-nat_level$value[nat_level$value == 0] <- NA
+# "melt" long
+tmp = copy(muni_level)
+tmp$start_date = NULL
+setnames(tmp, 'end_date', 'start_date')
+muni_level$end_date = NULL
+muni_level = rbind(muni_level, tmp)
+
+muni_melt = melt(muni_level, id.vars=c('loc_id', 'source', 'start_date', 'period', 'disease',
+                                       'data_source', 'grant_number'))
+muni_melt <- muni_melt[, list(start_date, disease, variable, value),by="loc_id"]
+muni_melt$value[muni_melt$value == 0] <- NA
+muni_melt$loc_id <- as.factor(muni_melt$loc_id)
 
 
-#subset to remove pudr data 
-fpm_sicoin <- nat_level[data_source != "pudr"]
+muni_mapping <- cbind(unique(levels(muni_melt$loc_id)), as.numeric(1:length(unique(levels((muni_melt$loc_id))))))
 
+colnames(muni_mapping) <- c("loc_id", "muni_code")
 
-## create fpm/sicoin indicators so we can plot one on each axis 
-fpm_sicoin$sicoin_ind <- 0
-fpm_sicoin$fpm_ind <- 0
-for(i in 1: length(fpm_sicoin$sicoin_ind)){
-  if (fpm_sicoin$data_source[i]=="SICOIN"){
-    fpm_sicoin$sicoin_ind[i] <- fpm_sicoin$value[i]
-    fpm_sicoin$fpm_ind[i] <- 0
-  } else if (fpm_sicoin$data_source[i]!="SICOIN"){
-    fpm_sicoin$sicoin_ind[i] = fpm_sicoin$sicoin_ind[i]
-    fpm_sicoin$fpm_ind[i] <- fpm_sicoin$value[i]
-  }
+muni_merge <- merge(muni_melt, muni_mapping, by="loc_id")
+muni_merge$muni_code <- as.numeric(muni_merge$muni_code)
+
+### use a loop to create plots and store them into a pdf 
+plot_list = list()
+for (i in 1:48){
+  subdata <- subset(muni_merge, muni_code%%48==i)
+  plot <- ggplot(subdata, aes(x = start_date, y = value)) + 
+    geom_line(aes(color=variable, linetype=disease)) +
+    facet_wrap(~loc_id, scales='free') +
+    theme(text = element_text(size=5),axis.text.x = element_text(angle=90, hjust=1)) +
+    geom_point() +
+    ggtitle("Municipality Level Resources by Disease") +
+    labs(x = "Start Date", y = "Resource $$", caption="data source:SICOIN")
+  plot_list[[i]] <- plot
+  
 }
 
-##plot
-ggplot(fpm_sicoin, aes(x = sicoin_ind/1000000, y=fpm_ind/1000000)) + 
-  geom_point(aes(color=year, shape=disease)) +
-  geom_abline(intercept=0, slope=1) + 
-  geom_smooth(method='lm') + 
-  scale_colour_gradient(low = "#73D487", high = "#FF66CC",
-                        space = "Lab", na.value = "grey50", guide = "colourbar") +
-  ggtitle("SICOIN vs FPM Budget Data") +
-  #ylim(0, 9) + 
-  labs(x = "SICOIN $$ in mil", y = "FPM $$ in mil") 
+pdf("gtm municipalities by disease.pdf", height=6, width=9)
+invisible(lapply(plot_list, print))
+dev.off()
 
 
-ggsave("fpm vs sicoin budget data.pdf", 
-       plot = last_plot(), # or give ggplot object name as in myPlot,
-       height = 6, width=9,
-       units = "in", # other options c("in", "cm", "mm"), 
-       dpi = 300)
 
-# ----------------------------------------------
-## mapping to get program activity 
 
-mapping_for_R <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_R.csv", fileEncoding="latin1")
-mapping_for_graphs <- read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_graphs.csv")
-
-gtm_total_data <- merge(sicoin, mapping_for_R,  by=c("disease", "cost_category"))
-
-gtm_total_data$budget <- gtm_total_data$budget*gtm_total_data$coeff
-gtm_total_data$disbursement <- gtm_total_data$disbursement*gtm_total_data$coeff
-gtm_total_data$expenditure <- gtm_total_data$expenditure*gtm_total_data$coeff
-
-gtm_total <- merge(gtm_total_data, mapping_for_graphs, by="code")
 
