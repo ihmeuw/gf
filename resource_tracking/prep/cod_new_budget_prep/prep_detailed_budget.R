@@ -47,7 +47,9 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
       } else { 
         if(lang=="eng"){
           qtr_names[i] <- paste("Q", i-4,  cashText, sep="")
-        } else {
+        } else if(lang=="fr" & qtr_num < 12){
+          qtr_names[i] <- paste(cashText, " T", i-(12-qtr_num), sep="")
+        } else{
           qtr_names[i] <- paste(cashText, " T", i-4, sep="")
         }
         i=i+1
@@ -80,9 +82,6 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     colnames(gf_data)[4] <- "loc_id"
   }
 
-  ## also drop columns containing only NA's
-  gf_data<- Filter(function(x) !all(is.na(x)), gf_data)
-
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   ##library(reshape)
@@ -92,6 +91,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     gf_data1$loc_id <- as.character(gf_data$loc_id)
   } else {
     gf_data1<- melt(gf_data,id=c("sda_orig", "activity_description", "recipient"), variable.name = "qtr", value.name="budget")
+    gf_data1$loc_id <- "cod"
   }
   
   
@@ -107,6 +107,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   if(length(dates) != length(unique(gf_data1$qtr))){
     stop('quarters were dropped!')
   }
+  
   ##turn the list of dates into a dictionary (but only for quarters!) : 
   dates <- setNames(dates,unique(gf_data1$qtr))
   
