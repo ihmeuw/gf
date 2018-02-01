@@ -28,10 +28,30 @@ implementer <- "CAGF"
 
 ####DOWNLOAD THE FOLDER "FPM - grant budgets" from BASECAMP ONTO YOUR LOCAL DRIVE: 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/7. Grant Making/' ##where the files are stored locally
-file_list <- read.csv(paste0(dir, "cod_new_budget.csv"), na.strings=c("","NA")) 
+dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/cod_budget_prep_grants/' ##where the files are stored locally
+file_list <- read.csv(paste0(dir, "cod_new_budget.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
+
+##create a summary file to track the data that we have (and that we still need)
+summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
+                         c("data_source", "year","start_date", "end_date", "sda_detail", 
+                           "geographic_detail", "period",	"grant", "disease", "loc_id"))
+
+summary_file$loc_id <- as.character(summary_file$loc_id)
+summary_file$loc_id <- loc_id
+
 
 for(i in 1:length(file_list$file_name)){
+  ##fill in the summary tracking file with what we know already: 
+  summary_file$disease[i] <- file_list$disease[i]
+  summary_file$grant[i] <- file_list$grant[i]
+  summary_file$period[i] <- file_list$period[i] 
+  if(file_list$sr[i]=="unknown"){
+    summary_file$geographic_detail[i] <- "National"
+  } else {
+    summary_file$geographic_detail[i] <- file_list$sr[i]
+  }
+  summary_file$year[i] <- file_list$grant_time[i]
+  
   if(file_list$type[i]=="summary"){
     tmpData <- prep_cat_summary_budget(dir, as.character(file_list$file_name[i]),
                                   file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i], 
@@ -41,19 +61,39 @@ for(i in 1:length(file_list$file_name)){
   } else if (file_list$type[i]=="cat"){
     tmpData <- prep_cod_recip_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$lang[i], file_list$grant[i])
   }
-  
+  tmpData$data_source <- "fpm"
   if(i==1){
     resource_database = tmpData
   } 
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
+  if(file_list$type[i]=="detailed"){
+    summary_file$sda_detail[i] <- "Detailed"
+  } else if (file_list$type[i]=="summary"){
+    summary_file$sda_detail[i] <- "Summary"
+  } else if(!(tmpData$cost_category[1]=="All")){
+    summary_file$sda_detail[i] <- "Detailed"
+  } else {
+    summary_file$sda_detail[i] <- "None"
+  }
+  summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
+  summary_file$start_date[i] <- min(tmpData$start_date)
+  summary_file$data_source[i] <- tmpData$data_source[1]
+  
   print(i) ## if the code breaks, you know which file it broke on
 }
 
+summary_file$start_date <- as.Date(summary_file$start_date)
+summary_file$end_date <- as.Date(summary_file$end_date)
+
 resource_database$budget <- as.numeric(resource_database$budget)
 
-## CHANGE THIS LATER IF WE WANT: tb/hiv map to something else: 
+
+setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Data Inventory Start Date", "Data Inventory End Date", 
+                         "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
+
+
 
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$expenditure <- 0 
