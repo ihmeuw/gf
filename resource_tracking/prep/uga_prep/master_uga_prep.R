@@ -46,6 +46,7 @@ for(i in 1:length(file_list$file_name)){
   summary_file$grant[i] <- file_list$grant[i]
   summary_file$period[i] <- file_list$period[i] 
   summary_file$geographic_detail[i] <- "National"
+  summary_file$year[i] <- file_list$grant_time[i]
   
   if(file_list$type[i]=="detailed"){##most detailed level of budgets 
     tmpData <- prep_detailed_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
@@ -83,7 +84,6 @@ for(i in 1:length(file_list$file_name)){
   }
   summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
   summary_file$start_date[i] <- min(tmpData$start_date)
-  summary_file$year[i] <- paste0(min(tmpData$year), "-", max(tmpData$year))
   summary_file$data_source[i] <- tmpData$data_source[1]
   print(i)
 }
