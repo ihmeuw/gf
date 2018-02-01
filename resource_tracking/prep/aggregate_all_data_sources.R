@@ -21,7 +21,7 @@ library(readxl)
 
 
 ###DRC: 
-totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/cod_total_mapped.csv",
+totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/all_fpm_cod_budgets.csv",
                                 fileEncoding="latin1"))
 
 #create some variables: 
@@ -33,7 +33,7 @@ totalCod$start_date <- as.Date(totalCod$start_date,"%Y-%m-%d")
 ##load UGA: 
 
 totalUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/all_fpm_mapped_budgets.csv",
-                                 fileEncoding = "latin1"))
+                                fileEncoding = "latin1"))
 
 #create some variables: 
 totalUga$country <- "Uganda"
@@ -43,7 +43,7 @@ totalUga$year <- year(totalUga$start_date)
 # --------------------------------------------
 ##load GTM 
 totalGtm <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/fpm_mapped_budgets_1818.csv", 
-                                 fileEncoding = "latin1"))
+                                fileEncoding = "latin1"))
 
 
 # and also create a "year" variable: 
@@ -63,7 +63,7 @@ totalData[, end_date:=start_date + period-1]
 # --------------------------------------------
 ##read the already mapped gos data: 
 gos_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapped_gos_data.csv", 
-                              fileEncoding = "latin1"))
+                                fileEncoding = "latin1"))
 
 ##change the dates into date format: 
 gos_data$start_date <- as.Date(gos_data$start_date, "%Y-%m-%d")
@@ -109,8 +109,13 @@ fpmGtm <- totalGtm[!((year < 2016 &disease=="tb") | (year < 2017 & disease%in%c(
 totalFpm <- rbind(fpmCod, fpmUga, fpmGtm)
 totalFpm $start_date <- as.Date(totalFpm $start_date,"%Y-%m-%d")
 totalFpm[, end_date:=start_date + period-1]
-
 cleaned_aggregate_data <- rbind(totalFpm, gos_data)
+
+byVars = names(cleaned_aggregate_data)[names(cleaned_aggregate_data)%in%c('program_activity', 'year', 'start_date', 'period', 'country', 
+                                                                          'grant_number', 'disease', 'data_source', 'source', 'recipient', 'loc_id')]
+
+cleaned_aggregate_data <- cleaned_aggregate_data[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure)), disbursement=sum(na.omit(disbursement))), by=byVars]
+
 
 write.csv(cleaned_aggregate_data, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv", row.names = FALSE)
 
