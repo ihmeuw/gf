@@ -63,7 +63,7 @@ primColors <- c('#b20000', '#660000', ##reds
                 '#c0c0c0', '#ffc0cb') ##grey and millennial pink 
 
 
-names(primColors) <- c('HIV/AIDS care and support', 'Community care and outreach', ##reds
+names(primColors) <- c('HIV/AIDS care, support and outreach', 'Community care and outreach', ##reds
                        'Case detection and diagnosis', 'Case Diagnosis',##oranges
                        'Treatment','HIV/AIDS counseling and testing',##greens
                        'RSSH: health workforce', 'RSSH: information system',##blues
@@ -73,7 +73,7 @@ names(primColors) <- c('HIV/AIDS care and support', 'Community care and outreach
                        'MDR-TB case detection and diagnosis', 'MDR-TB prevention',   ##magenta
                        'HIV/TB collaborative interventions', 'MDR-TB treatment', ##purples
                        'Monitoring and evaluation', 'Malaria bed nets', #pinks
-                       'PBF', 'Malaria indoor residual spraying' ##royal and midnight blues
+                       'Performance Based Financing', 'Malaria indoor residual spraying' ##royal and midnight blues
                        ,'Other/Unidentified', 'HIV/AIDS PMTCT') ##grey and millennial pink 
 
 # ---------------------------------------------
