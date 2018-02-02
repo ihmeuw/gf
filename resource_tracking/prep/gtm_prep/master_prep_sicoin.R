@@ -23,6 +23,7 @@ library(stringr)
 library(readxl)
 library(rlang)
 library(zoo)
+library(lubridate)
 
 
 # ----------------------------------------------
@@ -33,15 +34,13 @@ library(zoo)
 # (only the ones that contain actual budget/expenditure data and are in c_coin format). 
 ## 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
-period <-365
-cost_category <- "All"
-loc_id <- "gtm"
+dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/sicoin/hiv/'
+
 
 # ----------------------------------------------
 
 # load csv from github repository (file_format_list.csv)
-file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/file_format_list_gtm.csv")
+file_list <- read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/gf/sicoin/sicoin_file_list.csv")
 
 
 source('./prep_sicoin.r')
@@ -49,24 +48,13 @@ source('./prep_sicoin_costcat_data.r')
 source('./prep_sicoin_ghe.r')
 
 ## loop over all of the files 
-for(i in 1:length(file_list$filename)){
-  ## handles municipality data 
-  if(file_list$format[i]=="c_coin_muni"){
-  tmpData <- prepSicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, cost_category, file_list$source[i], file_list$grant_number[i])
-  ## handles cost category data 
-  } else if (file_list$format[i]=="c_coin_cost") { 
-  tmpData <- prep_cost_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$disease[i], period, file_list$source[i], file_list$grant_number[i], cost_category)
-## handles GHE (including GF) expenditure data 
-  } else if (file_list$format[i]=="c_coin_ghe") {
-  tmpData <- prep_ghe_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$loc_id[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
-  } else if (file_list$format[i]=="c_coin_gf") {
-    tmpData <- prep_gf_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i], file_list$loc_id[i],period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
-  }  else {
-  tmpData <- prep_muni_sicoin(dir, as.character(paste0(file_list$folder[i],'/',file_list$filename[i])), file_list$year[i],loc_id, period, file_list$disease[i], file_list$source[i], file_list$grant_number[i])
-}
-   if(i==1){
-    resource_database = tmpData
+for(i in 1:length(file_list$file_name)){
+  tmpData <- prep_cost_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+  
+  if(i==1){
+  resource_database = tmpData
   }
+  
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
@@ -74,6 +62,11 @@ for(i in 1:length(file_list$filename)){
 }
 
 resource_database$data_source <- "SICOIN"
+
+##remove rows where loc_ids are in the SDA column: 
+loc_ids <- unique(resource_database$loc_id)
+cleaned_database <- resource_database[!resource_database$sda_orig%in%loc_ids,]
+
 
 ##output the data to the correct folder 
 
