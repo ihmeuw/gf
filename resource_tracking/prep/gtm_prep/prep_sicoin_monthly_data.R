@@ -37,22 +37,22 @@ prep_monthly_sicoin = function(inFile, start_date, disease, period, source) {
  if (source=="gf") {
     gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)
     gf_data$X__10 <- na.locf(gf_data$X__10, na.rm=FALSE)
-    if(month(start_date)==1){
+    if(month(start_date)==12){
       budget_dataset <- gf_data[, c("X__10", "X__11","X__19", "X__25"), with=FALSE]
       names(budget_dataset) <- c("sda_orig", "loc_id", "budget","disbursement")
       
     } else {
       budget_dataset <- gf_data[, c("X__10", "X__11", "X__25"), with=FALSE]
       names(budget_dataset) <- c("sda_orig", "loc_id", "disbursement")
-      budget_dataset$budget <- NA
+      budget_dataset$budget <- 0
     }
     # remove rows where cost_categories are missing values
     budget_dataset <- na.omit(budget_dataset, cols="loc_id")
     setkeyv(budget_dataset,c("sda_orig", "loc_id"))
     budget_dataset <- unique(budget_dataset)
     ##get rid of extra rows where there are NAs or 0s: 
-    budget_dataset  <- budget_dataset[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))),
-                                   by=c("sda_orig", "loc_id")]
+    budget_dataset  <- budget_dataset[, list(budget=sum(na.omit(budget)),
+                                             disbursement=sum(na.omit(disbursement))),by=c("sda_orig", "loc_id")]
   }
   toMatch <- c("government", "recursos", "resources", "multire")
   budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
