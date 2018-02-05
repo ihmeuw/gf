@@ -54,8 +54,8 @@ summary_file$loc_id <- country
 
 ##source the functions that we will use to prep the files: 
 source('./prep_sicoin.r')
-source('./prep_sicoin_costcat_data.r')
-source('./prep_sicoin_ghe.r')
+source('./prep_sicoin_yearly_data.r')
+source('./prep_sicoin_monthly_data.r')
 
 ## loop over all of the files 
 for(i in 1:length(file_list$file_name)){
@@ -65,9 +65,9 @@ for(i in 1:length(file_list$file_name)){
   summary_file$year[i] <- "N/A"
   summary_file$start_date[i] <- ymd(file_list$start_date[i])
   summary_file$end_date[i] <- ymd(file_list$start_date[i])+file_list$period[i]
-  if(file_list$period[i]==365){
+  if(file_list$format[i]=="year"){
     tmpData <- prep_yearly_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
-  } else if (file_list$period[i]==30){
+  } else if (file_list$format[i]=="month"){
     tmpData <- prep_monthly_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   }
   
@@ -79,7 +79,7 @@ for(i in 1:length(file_list$file_name)){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
   if(!(tmpData$sda_orig[1]=="All")){
-    summary_file$sda_detail[i] <- "Detailed"
+    summary_file$sda_detail[i] <- "Summary"
   } else {
     summary_file$sda_detail[i] <- "None"
   }
