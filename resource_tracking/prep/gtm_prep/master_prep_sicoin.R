@@ -34,21 +34,38 @@ library(lubridate)
 # (only the ones that contain actual budget/expenditure data and are in c_coin format). 
 ## 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/sicoin/hiv/'
-
+country <- "gtm"
+dir <- 'H:/gtm_sicoin/'
 
 # ----------------------------------------------
 
 # load csv from github repository (file_format_list.csv)
-file_list <- read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/gf/sicoin/sicoin_file_list.csv")
+file_list <- read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/gf/sicoin/sicoin_file_list.csv"
+                      , stringsAsFactors = FALSE)
 
+##create a summary file to track the data that we have (and that we still need)
+summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
+                         c("data_source","year","start_date", "end_date", "sda_detail", 
+                           "geographic_detail", "period",	"grant", "disease", "loc_id"))
 
+summary_file$data_source<- as.character(summary_file$data_source)
+summary_file$loc_id <- as.character(summary_file$loc_id)
+summary_file$loc_id <- country
+
+##source the functions that we will use to prep the files: 
 source('./prep_sicoin.r')
 source('./prep_sicoin_costcat_data.r')
 source('./prep_sicoin_ghe.r')
 
 ## loop over all of the files 
 for(i in 1:length(file_list$file_name)){
+  summary_file$disease[i] <- file_list$disease[i]
+  summary_file$grant[i] <- file_list$grant[i]
+  summary_file$period[i] <- file_list$period[i] 
+  summary_file$year[i] <- "N/A"
+  summary_file$start_date[i] <- ymd(file_list$start_date[i])
+  summary_file$end_date[i] <- ymd(file_list$start_date[i])+file_list$period[i]
+  
   tmpData <- prep_cost_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   
   if(i==1){
@@ -58,19 +75,47 @@ for(i in 1:length(file_list$file_name)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
+  if(!(tmpData$sda_orig[1]=="All")){
+    summary_file$sda_detail[i] <- "Detailed"
+  } else {
+    summary_file$sda_detail[i] <- "None"
+  }
+  
+  if((any(!(tmpData$loc_id%in%"GUATEMALA")))){
+    summary_file$geographic_detail[i] <- "Municipality"
+  } else {
+    summary_file$geographic_detail[i] <- "National"
+  }
+
   print(i)
 }
 
-resource_database$data_source <- "SICOIN"
+summary_file$end_date <- as.Date(summary_file$end_date)
+summary_file$start_date <- as.Date(summary_file$start_date)
+resource_database$data_source <- "sicoin"
+summary_file$data_source <- "sicoin"
+
+
+setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
+
+##export the summary table to J Drive
+##(you might get a warning message about appending column names to the files; this should not affect the final output)
+write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/resource_tracking_data_summary.csv",
+            append = TRUE, row.names=FALSE, sep=",")
+
 
 ##remove rows where loc_ids are in the SDA column: 
 loc_ids <- unique(resource_database$loc_id)
 cleaned_database <- resource_database[!resource_database$sda_orig%in%loc_ids,]
 
-
 ##output the data to the correct folder 
 
-write.csv(resource_database, "prepped_sicoin_data_1201_ic.csv", row.names=FALSE, fileEncoding="UTF-8")
+
+
+
+
+
+write.csv(resource_database, "prepped_sicoin_data.csv", row.names=FALSE, fileEncoding="UTF-8")
 
 
 
