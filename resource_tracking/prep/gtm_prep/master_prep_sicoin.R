@@ -65,8 +65,11 @@ for(i in 1:length(file_list$file_name)){
   summary_file$year[i] <- "N/A"
   summary_file$start_date[i] <- ymd(file_list$start_date[i])
   summary_file$end_date[i] <- ymd(file_list$start_date[i])+file_list$period[i]
-  
-  tmpData <- prep_cost_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+  if(file_list$period[i]==365){
+    tmpData <- prep_yearly_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+  } else if (file_list$period[i]==30){
+    tmpData <- prep_monthly_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+  }
   
   if(i==1){
   resource_database = tmpData
