@@ -2,7 +2,7 @@
 # Irena Chen
 #
 # 11/2/2017
-# Template for prepping C-COIN cost category data 
+# Template for prepping SICOIN cost category data 
 # Inputs:
 # inFile - name of the file to be prepped
 # year - which year the dataset corresponds to
@@ -35,23 +35,38 @@ prep_cost_sicoin = function(inFile, start_date, disease, period, source) {
   # ----------------------------------------------
   ## remove empty columns 
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
-  if(source=="ghe"){
-    ##pull just the cost categories 
-    gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
-    ## grab loc_id: 
-    gf_data$X__14 <- na.locf(gf_data$X__14, na.rm=FALSE)
+  if(source=="ghe"&year(start_date)==2014&disease=="hiv"){
+    gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__10):grep("DONACIONES", gf_data$X__10)),]
     # remove rows where cost_categories are missing values
-    gf_data <- na.omit(gf_data, cols="X__15")
-    # ----------------------------------------------
-    ## Code to aggregate into a dataset 
-    ## now get region + budgeted expenses 
-    budget_dataset <- gf_data[, c("X__14","X__15", "X__22", "X__29"), with=FALSE]
-    names(budget_dataset) <- c("loc_id", "sda_orig", "budget", "disbursement")
-    # government resources are split by income (taxes) and "treasury" 
-    #we don't care, so sum by just the municipality and SDA: 
-    budget_dataset <- budget_dataset[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))),
-                                   by=c("loc_id", "sda_orig")]
-      
+    gf_data <- na.omit(gf_data, cols="X__10")
+    budget_dataset <- gf_data[, c("X__10","X__19", "X__26"), with=FALSE]
+    budget_dataset <- budget_dataset[-1,]
+    budget_dataset <- budget_dataset[-nrow(budget_dataset),]
+    names(budget_dataset) <- c("loc_id", "budget", "disbursement")
+    toMatch <- c("government", "recursos", "resources", "multire")
+    budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
+    budget_dataset$sda_orig <- "All"
+
+  } else if(source=="ghe"){
+      ##pull just the cost categories 
+      if(length(grep("DONACIONES", gf_data$X__12))==0){
+        gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):.N),]
+      } else{
+        gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
+      }
+      ## grab loc_id: 
+      gf_data$X__14 <- na.locf(gf_data$X__14, na.rm=FALSE)
+      # remove rows where cost_categories are missing values
+      gf_data <- na.omit(gf_data, cols="X__15")
+      # ----------------------------------------------
+      ## Code to aggregate into a dataset 
+      ## now get region + budgeted expenses 
+      budget_dataset <- gf_data[, c("X__14","X__15", "X__22", "X__29"), with=FALSE]
+      names(budget_dataset) <- c("loc_id", "sda_orig", "budget", "disbursement")
+      # government resources are split by income (taxes) and "treasury" 
+      #we don't care, so sum by just the municipality and SDA: 
+      budget_dataset <- budget_dataset[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))),
+                                     by=c("loc_id", "sda_orig")]
   } else if (source=="gf") {
     gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)
     gf_data <- na.omit(gf_data, cols="X__10")
