@@ -21,7 +21,7 @@ library(rlang)
 library(zoo)
 
 # start function
-prep_yearly_sicoin = function(inFile, start_date, disease, period, source) {
+prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
   # --------------------
   # Test the inputs
   if (class(inFile)!='character') stop('Error: inFile argument must be a string!')

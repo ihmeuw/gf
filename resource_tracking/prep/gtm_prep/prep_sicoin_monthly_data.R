@@ -19,9 +19,10 @@ library(stringr)
 library(readxl)
 library(rlang)
 library(zoo)
+library(lubridate)
 
 # start function
-prep_monthly_sicoin = function(inFile, start_date, disease, period, source) {
+prep_summary_sicoin = function(inFile, start_date, disease, period, source) {
   # --------------------
   # Test the inputs
   if (class(inFile)!='character') stop('Error: inFile argument must be a string!')
@@ -35,16 +36,27 @@ prep_monthly_sicoin = function(inFile, start_date, disease, period, source) {
   # ----------------------------------------------
   ## remove empty columns 
  if (source=="gf") {
-    gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)
-    gf_data$X__10 <- na.locf(gf_data$X__10, na.rm=FALSE)
-    if(month(start_date)==12){
-      budget_dataset <- gf_data[, c("X__10", "X__11","X__19", "X__25"), with=FALSE]
-      names(budget_dataset) <- c("sda_orig", "loc_id", "budget","disbursement")
+    if(year(start_date)==2012&disease=="malaria"){
+      gf_data <- na.omit(gf_data, cols=c("X__10"))
+      gf_data [,disb1:=as.numeric(X__25)]
+      gf_data [,disb2:=as.numeric(X__26)]
+      gf_data $disbursement <- coalesce(gf_data $disb1, gf_data$disb2)
+      gf_data <- na.omit(gf_data, cols=c("X__19", "disbursement"))
+      budget_dataset<- gf_data[, c( "X__10", "X__19", "disbursement"), with=FALSE]
+      names(budget_dataset) <- c("loc_id", "budget", "disbursement")
+      budget_dataset$sda_orig <- "REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"
       
+    } else if (month(start_date)==12){
+        gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)
+        gf_data$X__10 <- na.locf(gf_data$X__10, na.rm=FALSE)
+        budget_dataset <- gf_data[, c("X__10", "X__11","X__19", "X__25"), with=FALSE]
+        names(budget_dataset) <- c("sda_orig", "loc_id", "budget","disbursement")
     } else {
-      budget_dataset <- gf_data[, c("X__10", "X__11", "X__25"), with=FALSE]
-      names(budget_dataset) <- c("sda_orig", "loc_id", "disbursement")
-      budget_dataset$budget <- 0
+        gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)
+        gf_data$X__10 <- na.locf(gf_data$X__10, na.rm=FALSE)
+        budget_dataset <- gf_data[, c("X__10", "X__11", "X__25"), with=FALSE]
+        names(budget_dataset) <- c("sda_orig", "loc_id", "disbursement")
+        budget_dataset$budget <- 0
     }
     # remove rows where cost_categories are missing values
     budget_dataset <- na.omit(budget_dataset, cols="loc_id")
@@ -56,7 +68,6 @@ prep_monthly_sicoin = function(inFile, start_date, disease, period, source) {
   }
   toMatch <- c("government", "recursos", "resources", "multire")
   budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
-  
   
   # ----------------------------------------------
   

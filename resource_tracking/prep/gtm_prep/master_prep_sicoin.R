@@ -40,7 +40,7 @@ dir <- 'H:/gtm_sicoin/'
 # ----------------------------------------------
 
 # load csv from github repository (file_format_list.csv)
-file_list <- read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/gf/sicoin/sicoin_file_list.csv"
+file_list <- read.csv(paste0(dir, "sicoin_file_list.csv")
                       , stringsAsFactors = FALSE)
 
 ##create a summary file to track the data that we have (and that we still need)
@@ -65,10 +65,10 @@ for(i in 1:length(file_list$file_name)){
   summary_file$year[i] <- "N/A"
   summary_file$start_date[i] <- ymd(file_list$start_date[i])
   summary_file$end_date[i] <- ymd(file_list$start_date[i])+file_list$period[i]
-  if(file_list$format[i]=="year"){
-    tmpData <- prep_yearly_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
-  } else if (file_list$format[i]=="month"){
-    tmpData <- prep_monthly_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+  if(file_list$format[i]=="detailed"){
+    tmpData <- prep_detailed_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+  } else if (file_list$format[i]=="summary"){
+    tmpData <- prep_summary_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   }
   
   if(i==1){
