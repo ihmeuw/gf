@@ -161,4 +161,16 @@ invisible(lapply(key_plots, print))
 dev.off()
 
 
+### ---------------------------------------------------------------------------- 
+##SDA over time faceted by grants
+
+##depending on how large the data is, you might want to split up the data by disease: 
+## hivData <- graphData[disease=="HIV/AIDS"]
+##malData <- graphData[disease=="Malaria"]
+##tbData <- graphData[disease=="Tuberculosis"]
+
+
+
+
+
 
