@@ -100,6 +100,8 @@ resource_database$expenditure <- 0
 resource_database$disbursement <- 0 
 resource_database$data_source <- "fpm"
 # ----------------------------------------------
+
+
 data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
 ## function to use the activity descriptions to get the program areas we want:  
@@ -110,14 +112,15 @@ map_activity_descriptions <- function(program_activity, activity_description){
   return(program_activity)
 }
 
-resource_database$cost_category <- mapply(map_activity_descriptions,
-                                     resource_database$cost_category, resource_database$activity_description)
-resource_database$cost_category <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), collapse="|"), "", resource_database$cost_category)
-resource_database$cost_category <-tolower(resource_database$cost_category)
-resource_database$cost_category <- gsub("[[:punct:]]", "", resource_database$cost_category)
+resource_database$sda_orig<- mapply(map_activity_descriptions,
+                                     resource_database$sda_orig, resource_database$activity_description)
+resource_database$sda_orig<-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), collapse="|"), "", resource_database$sda_orig)
+resource_database$sda_orig <-tolower(resource_database$sda_orig)
+resource_database$sda_orig <- gsub("[[:punct:]]", "", resource_database$sda_orig)
+resource_database <- resource_database[!(sda_orig%in%c("6", "4"))]
 
 ## optional: do a check on data to make sure values aren't dropped: 
-# data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
+# data_check2<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
 
 # ----------------------------------------------
@@ -130,12 +133,12 @@ mapping_for_graphs <- read.csv(paste0(dir, "mapping_for_graphs.csv"))
 
 # test for missing SDAs from map
 sdas_in_map = unique(mapping_for_R$cost_category)
-sdas_in_data = unique(resource_database$cost_category)
+sdas_in_data = unique(resource_database$sda_orig)
 if (any(!sdas_in_data %in% sdas_in_map)) { 
   stop('Map doesn\'t include cost categories that are in this data file!')
 }
-#unmapped_values <- resource_database[cost_category%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
-#View(unique(unmapped_values$cost_category))
+#unmapped_values <- resource_database[sda_orig%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
+#View(unique(unmapped_values$sda_orig))
 
 
 # test to make sure map doesn't contain duplicates
@@ -144,19 +147,19 @@ d2 = nrow(unique(mapping_for_R))
 if (d1!=d2) stop('Map contains duplicates!') 
 
 
-program_level_mapped <- merge(resource_database, mapping_for_R, by=c("disease","cost_category"), allow.cartesian=TRUE)
+program_level_mapped <- merge(resource_database, mapping_for_R, by=c("disease","sda_orig"), allow.cartesian=TRUE)
 mappedCod <- merge(program_level_mapped, mapping_for_graphs, by="code", allow.cartesian=TRUE) ##some categories will be split
 
 mappedCod$budget <- mappedCod$budget*mappedCod$coeff
 mappedCod$expenditure <- mappedCod$expenditure*mappedCod$coeff
-
+mappedCod$year <- year(mappedCod$start_date)
 
 ## do a check on data to make sure values aren't dropped: 
 data_check2<- as.data.frame(mappedCod[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
 
 
 ## write as csv 
-write.csv(mappedCod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/new_cod_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
+write.csv(mappedCod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/fpm_cod_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
 
 
 
