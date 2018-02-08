@@ -35,7 +35,7 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
   # ----------------------------------------------
   ## remove empty columns 
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
-  if(source=="ghe"&year(start_date)==2014&disease=="hiv"){
+  if(source=="ghe"&year(start_date)==2014&disease=="hiv"&period==365){
     gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__10):grep("DONACIONES", gf_data$X__10)),]
     # remove rows where cost_categories are missing values
     gf_data <- na.omit(gf_data, cols="X__10")
