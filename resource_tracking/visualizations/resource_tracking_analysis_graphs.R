@@ -164,10 +164,48 @@ dev.off()
 ### ---------------------------------------------------------------------------- 
 ##SDA over time faceted by grants
 
+
+## we might need to reorder the grants based on start date so that they graph nicely: 
+
+##order the grants first by year, and then change the levels so that they match up according to start year: 
+
+## for DRC: 
+##graphData <- graphData[!(data_source=="init_fpm")]
+graphData <- graphData[with(graphData, order(year))]
+graphData$grant <- factor(graphData$grant_number, levels=unique(graphData$grant_number))
+graphData[grant=="COD-H-CORDAID-810", grant:="COD-H-CORDAID"]
+
+
+graphData$grant <- str_wrap(graphData$grant, width=6)
 ##depending on how large the data is, you might want to split up the data by disease: 
-## hivData <- graphData[disease=="HIV/AIDS"]
+##hivData <- graphData[disease=="HIV/AIDS"]
 ##malData <- graphData[disease=="Malaria"]
 ##tbData <- graphData[disease=="Tuberculosis"]
+
+
+
+prog_plots <- list()
+for (k in unique(tbData$grant_facet)){
+  subdata <- tbData[grant_facet==k]
+  colScale <- scale_fill_manual(name="SDA", values =primColors) 
+  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=program_activity)) + 
+             geom_bar(position = "fill",
+                      stat="identity") + 
+             colScale +
+             theme_bw(base_size=14) +
+             theme(strip.text.x = element_text(size = 8, colour = "black"), plot.caption=element_text(size=10)) +
+             facet_grid(~grant,scales = "free_x", space="free_x") + 
+             scale_y_continuous(labels = percent_format()) +
+             scale_x_continuous(name ="Year", breaks = seq(2003, 2020,2)) +
+             labs(title=paste(k, "Data at National Level"),
+                  x = "", y = "% of Budget", caption="Data Source: GOS, FPM"))
+  prog_plots[[k]] <- plot
+}
+
+
+pdf("sdas_overtime.pdf", height=6, width=9)
+invisible(lapply(prog_plots, print))
+dev.off()
 
 
 
