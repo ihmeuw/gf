@@ -31,10 +31,9 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
   
   # Load/prep data
   gf_data <- data.table(read_excel(inFile))
-  
-  # ----------------------------------------------
   ## remove empty columns 
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
+  # ----------------------------------------------
   if(source=="ghe"&year(start_date)==2014&disease=="hiv"&period==365){
     gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__10):grep("DONACIONES", gf_data$X__10)),]
     # remove rows where cost_categories are missing values
@@ -51,8 +50,10 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
       ##pull just the cost categories 
       if(length(grep("DONACIONES", gf_data$X__12))==0){
         gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):.N),]
-      } else{
+      } else if(length(grep("INGRESOS CORRIENTES", gf_data$X__12) !=0)){
         gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
+      } else {
+        gf_data <- gf_data[c(grep("RECURSOS DEL TESORO", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
       }
       ## grab loc_id: 
       gf_data$X__14 <- na.locf(gf_data$X__14, na.rm=FALSE)

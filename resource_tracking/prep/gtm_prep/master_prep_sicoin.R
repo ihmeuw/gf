@@ -35,7 +35,7 @@ library(lubridate)
 ## 
 
 country <- "gtm"
-dir <- 'H:/gtm_sicoin/'
+dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
 
 # ----------------------------------------------
 
@@ -66,9 +66,11 @@ for(i in 1:length(file_list$file_name)){
   summary_file$start_date[i] <- ymd(file_list$start_date[i])
   summary_file$end_date[i] <- ymd(file_list$start_date[i])+file_list$period[i]
   if(file_list$format[i]=="detailed"){
-    tmpData <- prep_detailed_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+    tmpData <- prep_detailed_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   } else if (file_list$format[i]=="summary"){
-    tmpData <- prep_summary_sicoin(as.character(paste0(dir,file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+    tmpData <- prep_summary_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+  } else if (file_list$format[i]=="blank"){
+    tmpData <- prep_blank_sicoin(country, ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   }
   
   if(i==1){
