@@ -80,13 +80,15 @@ for(i in 1:length(file_list$file_name)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
-  if(!(tmpData$sda_orig[1]=="All")){
+  if(is.na(tmpData$sda_orig[1])){
+    summary_file$sda_detail[i] <- "None"
+  }else if(!(tmpData$sda_orig[1]=="All")){
     summary_file$sda_detail[i] <- "Summary"
   } else {
     summary_file$sda_detail[i] <- "None"
   }
   
-  if((any(!(tmpData$loc_id%in%"GUATEMALA")))){
+  if((any(!(tmpData$loc_id%in%c("GUATEMALA", country))))){
     summary_file$geographic_detail[i] <- "Municipality"
   } else {
     summary_file$geographic_detail[i] <- "National"

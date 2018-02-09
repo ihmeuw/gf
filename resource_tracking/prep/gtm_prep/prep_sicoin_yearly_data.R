@@ -46,8 +46,9 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
     budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
     budget_dataset$sda_orig <- "All"
 
-  } else if(source=="ghe"){
+  } else if(source%in%c("donacions", "ghe")){
       ##pull just the cost categories 
+    if(source=="ghe") {
       if(length(grep("DONACIONES", gf_data$X__12))==0){
         gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):.N),]
       } else if(length(grep("INGRESOS CORRIENTES", gf_data$X__12) !=0)){
@@ -55,6 +56,9 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
       } else {
         gf_data <- gf_data[c(grep("RECURSOS DEL TESORO", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
       }
+    } else {
+      gf_data <- gf_data[c(grep("Dona", gf_data$X__12):grep("Dona", gf_data$X__6)),]
+    }
       ## grab loc_id: 
       gf_data$X__14 <- na.locf(gf_data$X__14, na.rm=FALSE)
       # remove rows where cost_categories are missing values
