@@ -34,9 +34,11 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     return(qtr_names)
   }
   
-  get_malaria_categories <- function(cost_category, program_activity){
-    x <- as.character(cost_category)
-    if(grepl("nets", tolower(program_activity))){
+  get_categories <- function(cost_category, program_activity){
+    x <- cost_category
+    if(is.na(x)){
+      x <- as.character(program_activity)
+    }else if(grepl("nets", tolower(program_activity))){
       x <- as.character(program_activity)
     }
     return(x)
@@ -44,9 +46,9 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ##create list of column names: 
   if(start_date=="2018-01-01"){
-    qtr_names <- c("Module", "Intervention", "Implementer", rep(1, qtr_num))
+    qtr_names <- c("Intervention", "Activity Description", "Implementer", rep(1, qtr_num))
   } else {
-    qtr_names <- c("Module", "Intervention", "Recipient", rep(1, qtr_num))
+    qtr_names <- c("Intervention", "Activity Description", "Recipient", rep(1, qtr_num))
   }
   qtr_names <- create_qtr_names(qtr_names, cashText)
   
@@ -54,7 +56,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ##read the data from excel: 
   gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=sheet_name))
   
-
+  
   
   ##approved budgets are formatted slightly differently - so this code takes care of that: 
   if(start_date=="2018-01-01"){
@@ -67,17 +69,15 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
   
   ##rename the columns: 
-  colnames(gf_data)[1] <- "cost_category"
-  colnames(gf_data)[2] <- "activity_description"
+  colnames(gf_data)[1] <- "module"
+  colnames(gf_data)[2] <- "cost_category"
   colnames(gf_data)[3] <- "recipient"
   
   ##only keep data that has a value in the "category" column 
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
   
-  if(disease=="malaria"){
-    gf_data$cost_category <- mapply(get_malaria_categories, gf_data$cost_category, gf_data$activity_description)
-  } 
-  gf_data$activity_description <- NULL
+  gf_data$cost_category <- mapply(get_categories, gf_data$module, gf_data$cost_category)
+  gf_data$module <- NULL
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   setDT(gf_data)
@@ -99,15 +99,17 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ##turn the list of dates into a dictionary (but only for quarters!) : 
   dates <- setNames(dates,unique(gf_data1$qtr))
   
-
+  
   ## now match quarters with start dates 
   kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
-  budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date ]
+  budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date]
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
   budget_dataset$expenditure <- 0 
   budget_dataset$source <- source
   budget_dataset$grant_number <- grant
   budget_dataset$disease <- disease
+  budget_dataset$disbursement <- 0 
+  budget_dataset$year <- year(budget_dataset$start_date)
   return(budget_dataset)
 }

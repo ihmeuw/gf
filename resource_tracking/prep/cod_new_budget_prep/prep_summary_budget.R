@@ -8,7 +8,7 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
-rm(list=ls())
+
 library(lubridate)
 library(data.table)
 library(readxl)
@@ -35,24 +35,23 @@ prep_cat_summary_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
     gf_data <- data.table(read_excel(paste0(dir, inFile)))
   }
   
-  gf_data <- gf_data[,-1]
   colnames(gf_data)[1] <- "cost_category"
   ##only keep data that has a value in the "category" column 
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
 
-  ## this type of budget data should always have 13 cost categories
+  ## grab the SDA data
   gf_data <- gf_data[c((grep("Module",gf_data$cost_category)):(grep("Cost Grouping", gf_data$cost_category))),]
   
-  ## rename the columns to make the quarter numbers the column names 
+  ##drop the last two rows (we don't need them)
   gf_data <- head(gf_data,-2)
   
-  ## drop the first row now that we renamed the columns 
+  ## rename the columns 
   colnames(gf_data) <- as.character(gf_data[1,])
   gf_data <- gf_data[-1,]
   toMatch <- c("Ann","Year", "RCC", "%", "Phase", "Implem", "Total")
   drop.cols <- grep(paste(toMatch, collapse="|"), ignore.case=TRUE, colnames(gf_data))
   gf_data <- gf_data[, (drop.cols) := NULL]
-  
+
   
   ## also drop columns containing only NA's
   gf_data<- Filter(function(x) !all(is.na(x)), gf_data)
@@ -74,7 +73,7 @@ prep_cat_summary_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date]
   
   ##rename the category column 
-  colnames(budget_dataset)[1] <- "cost_category"
+  colnames(budget_dataset)[1] <- "sda_orig"
   budget_dataset$disease <- disease
   budget_dataset$activity_description <- "none"
   budget_dataset$loc_id <- loc_id

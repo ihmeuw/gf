@@ -48,6 +48,8 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   for (i in 1:length(dates)){
     if (i==1){
       dates[i] <- start_date
+    } else if(i==2&grant=="UGD-708-G07-H"){
+      dates[i] <- ymd("2011-10-01")
     } else {
       dates[i] <- dates[i-1]%m+% months(3)
     }
@@ -70,6 +72,7 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   budget_dataset$grant_number <- grant
   budget_dataset$recipient <- recipient
   budget_dataset$source <- source
+  budget_dataset$year <- year(budget_dataset$start_date)
   return(budget_dataset)
   
 }

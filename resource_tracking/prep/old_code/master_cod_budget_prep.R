@@ -8,7 +8,6 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
-rm(list=ls())
 library(lubridate)
 library(data.table)
 library(readxl)
@@ -29,18 +28,16 @@ library(zoo)
 # ----------------------------------------------
 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
-file_list <- read.csv("C:/Users/irenac2/repos/ihme_gf/gf/resource_tracking/prep/cod_gf_filelist.csv", na.strings=c("","NA"))
+dir <- 'H:/gf/'
+file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/cod_gf_filelist.csv", na.strings=c("","NA"))
 
 for(i in 1:length(file_list$file_name)){
   if(file_list$type[i]=="fr"){
-    tmpData <- prep_cod_fr_budget(dir, as.character(file_list$file_name[i]),
-                                  file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i], 
-                                  file_list$disease[i], file_list$loc_id[i], file_list$period[i],  file_list$lang[i], file_list$grant[i])
+    tmpData <- prep_cod_fr_budget(dir, as.character(file_list$file_name[i]), file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$loc_id[i], file_list$period[i])
    } else if (file_list$type[i]=="gtmb"){
-     tmpData <- prep_gtmb_cod_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i])
+     tmpData <- prep_gtmb_cod_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i])
    } else if (file_list$type[i]=="cat"){
-    tmpData <- prep_cod_cat_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], file_list$pr[i])
+    tmpData <- prep_cod_cat_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i])
    }
   ## replace the "Q1" category with the associated dates that the quarters map to   
   # tmpData1 <- map_quarters(tmpData, ymd(file_list$start_date[i]),file_list$qtr_number[i], file_list$loc_id[i], file_list$period[i],file_list$disease[i], file_list$source[i])
@@ -51,21 +48,11 @@ for(i in 1:length(file_list$file_name)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
-  print(i) ## if the code breaks, you know which file it broke on
 }
 
 resource_database$budget <- as.numeric(resource_database$budget)
-
-##do a number check to make sure that no numbers have been dropped: 
-data_check<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = grant_number])
-
+resource_database$qtr <- NULL
 
 ## since we only have budget data, include exp and disbursed as 0:  
-resource_database$expenditure <- 0 
+resource_database$expenditures <- 0 
 resource_database$disbursed <- 0 
-resource_database$data_source <- "fpm"
-
-write.csv(resource_database, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/drc_fpm_budgets.csv", row.names = FALSE, fileEncoding = "latin1")
-
-
-
