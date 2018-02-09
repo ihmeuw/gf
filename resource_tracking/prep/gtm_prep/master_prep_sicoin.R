@@ -17,6 +17,7 @@
 
 # ----------------------------------------------
 # Set up R
+rm(list=ls())
 library(data.table)
 library(reshape2)
 library(stringr)
@@ -71,8 +72,9 @@ for(i in 1:length(file_list$file_name)){
     tmpData <- prep_summary_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   } else if (file_list$format[i]=="blank"){
     tmpData <- prep_blank_sicoin(country, ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+  } else if(file_list$format[i]=="donacions"){
+    tmpData <- prep_donacions_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   }
-  
   if(i==1){
   resource_database = tmpData
   }
