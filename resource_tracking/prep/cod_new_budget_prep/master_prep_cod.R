@@ -29,7 +29,7 @@ implementer <- "CAGF"
 ####DOWNLOAD THE FOLDER "FPM - grant budgets" from BASECAMP ONTO YOUR LOCAL DRIVE: 
 
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/cod_budget_prep_grants/' ##where the files are stored locally
-file_list <- read.csv(paste0(dir, "cod_new_budget.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
+file_list <- read.csv(paste0(dir, "cod_budget_prep.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
 
 ##create a summary file to track the data that we have (and that we still need)
 summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
@@ -92,8 +92,6 @@ resource_database$budget <- as.numeric(resource_database$budget)
 
 setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Data Inventory Start Date", "Data Inventory End Date", 
                          "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
-
-
 
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$expenditure <- 0 

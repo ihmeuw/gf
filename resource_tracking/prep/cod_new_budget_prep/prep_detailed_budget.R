@@ -75,8 +75,8 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
 
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
-  colnames(gf_data)[1] <- "sda_orig"
-  colnames(gf_data)[2] <- "activity_description"
+  colnames(gf_data)[1] <- "module"
+  colnames(gf_data)[2] <- "sda_orig"
   colnames(gf_data)[3] <- "recipient"
   if(year(start_date)==2018){
     colnames(gf_data)[4] <- "loc_id"
@@ -87,10 +87,10 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ##library(reshape)
   setDT(gf_data)
   if(year(start_date)==2018){
-    gf_data1<- melt(gf_data,id=c("sda_orig", "activity_description", "recipient", "loc_id"), variable.name = "qtr", value.name="budget")
+    gf_data1<- melt(gf_data,id=c("module","sda_orig", "recipient", "loc_id"), variable.name = "qtr", value.name="budget")
     gf_data1$loc_id <- as.character(gf_data$loc_id)
   } else {
-    gf_data1<- melt(gf_data,id=c("sda_orig", "activity_description", "recipient"), variable.name = "qtr", value.name="budget")
+    gf_data1<- melt(gf_data,id=c("module","sda_orig", "recipient"), variable.name = "qtr", value.name="budget")
     gf_data1$loc_id <- "cod"
   }
   
@@ -121,7 +121,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$grant_number <- grant
   
   ##separate tb/hiv into either one or the other in order to map programs properly - later we might want to go back and fix this
-  sep_hiv_tb <- function(sda_orig, loc_id){
+  sep_hiv_tb <- function(module, loc_id){
     x = "unknown"
     if(loc_id%in%c("VIH", "TB")){
       if(loc_id=="TB"){
@@ -130,7 +130,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
         x <- "hiv"
       }
     } else{
-      if(grepl("tuber", tolower(sda_orig))){
+      if(grepl("tuber", tolower(module))){
         x <- "tb"
       } else {
         x <- "hiv"
@@ -141,7 +141,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ##clean the hiv/tb grants: 
   if(disease!="malaria"){
-  budget_dataset$disease <- mapply(sep_hiv_tb, budget_dataset$sda_orig, budget_dataset$loc_id)
+  budget_dataset$disease <- mapply(sep_hiv_tb, budget_dataset$module, budget_dataset$loc_id)
   } else {
     budget_dataset$disease <- disease
   }
