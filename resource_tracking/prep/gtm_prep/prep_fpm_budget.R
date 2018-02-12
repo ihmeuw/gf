@@ -17,12 +17,14 @@ library(rlang)
 library(zoo)
 # ----------------------------------------------
 
-prep_gtm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
+prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
   ## we need to grab the budget numbers by quarter - first determine if french or english
   if(lang=="eng"){
     cashText <- " Cash \r\nOutflow"
+    loc_id <- "Geography/Location"
   } else{
     cashText <- "Salida de efectivo"
+    loc_id <-  "Localización"
   }
   
   ## newer budgets use the label "Implementador" and the old ones use "Receptor" 
@@ -33,9 +35,9 @@ prep_gtm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   }
   
   if(lang=="eng"){
-    qtr_names <- c("Intervention", "Recipient", "Geography/Location", rep(1, qtr_num))
+    qtr_names <- c("Intervention", "Recipient", loc_id, rep(1, qtr_num))
   } else{ 
-    qtr_names <- c("Módulo", "Descripción de la actividad",	recipient, "Localización", rep(1, qtr_num))
+    qtr_names <- c("Módulo", "Descripción de la actividad",	recipient, loc_id, rep(1, qtr_num))
   }
   
   
@@ -68,22 +70,33 @@ prep_gtm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     colnames(gf_data) <- as.character(gf_data[1,])
   }
   
-  ##only keep data that has a value in the "category" column 
+  ##only get the columns that we want
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
-  gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
-  gf_data  <- gf_data[-1,]
   
-  colnames(gf_data)[1] <- "sda_orig"
+  ##only keep data that has a value in the "category" column 
+  gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
+  
+  colnames(gf_data)[1] <- "module"
   colnames(gf_data)[2] <- "activity_description"
-  colnames(gf_data)[3] <- "recipient"
-  colnames(gf_data)[4] <- "loc_id"
+
+  if(!(recipient %in% colnames(gf_data))){
+   gf_data$recipient <- grant_number
+  } else{
+    colnames(gf_data)[3] <- "recipient" 
+    }
+  if(!(loc_id %in% colnames(gf_data))){
+    gf_data$loc_id <- "gtm"
+  } else{
+    colnames(gf_data)[4] <- "loc_id" 
+  }
   
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   ##library(reshape)
   setDT(gf_data)
-  gf_data1<- melt(gf_data,id=c("sda_orig", "activity_description", "recipient", "loc_id"), 
-                  variable.name = "qtr", value.name="budget")
+  gf_data1<- melt(gf_data,id=c("module", "activity_description", "recipient", "loc_id"), 
+                    variable.name = "qtr", value.name="budget")
+
   
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){

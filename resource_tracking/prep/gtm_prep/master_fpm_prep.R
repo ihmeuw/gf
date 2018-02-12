@@ -8,6 +8,7 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
+
 library(lubridate)
 library(data.table)
 library(readxl)
@@ -28,34 +29,31 @@ library(zoo)
 # ----------------------------------------------
 
 
-dir <- 'C:/Users/irenac2/Documents/gf_budgets/'
+dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/fpm/'
 file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/gf_budget_filelist.csv")
 
 for(i in 1:length(file_list$filename)){
-  if(file_list$format[i]=="gf_budget_cat"){
-    tmpData <- prep_gtm_budget(dir, file_list$filename[i], file_list$extension[i], as.character(file_list$sheet[i]), ymd(file_list$start_date[i]), file_list$qtr_number[i])
-  } else if (file_list$format[i]=="gf_budget_cost"){
-    tmpData <- prep_module_budget(dir, file_list$filename[i], file_list$extension[i], as.character(file_list$sheet[i]), ymd(file_list$start_date[i]), file_list$qtr_number[i])
+  if(file_list$format[i]=="detailed"){
+    tmpData <- prep_fpm_detailed_budget(dir, paste0(file_list$filename[i], file_list$extension[i]), as.character(file_list$sheet[i]),
+                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
+                                        file_list$grant_number[i], file_list$lang[i])
+  } else if (file_list$format[i]=="summary"){
+    tmpData <- prep_fpm_summary_budget(dir, file_list$filename[i], file_list$extension[i], as.character(file_list$sheet[i]), ymd(file_list$start_date[i]), file_list$qtr_number[i])
   }
-  ## replace the "Q1" category with the associated dates that the quarters map to   
-  tmpData1 <- map_quarters(tmpData, ymd(file_list$start_date[i]),file_list$qtr_number[i], file_list$loc_id[i], file_list$period[i],file_list$disease[i], file_list$source[i], file_list$grant_number[i])
     if(i==1){
-        resource_database = tmpData1
-        
+      resource_database = tmpData
     }
-  
     if(i>1){
-        resource_database = rbind(resource_database, tmpData1, use.names=TRUE)
+        resource_database = rbind(resource_database, tmpData, use.names=TRUE)
     }
-  if(file_list$file_name[i]%in%"FR100-GTM-H_DB_INCAP_06ene2018.xlsx"){
+  if(file_list$filename[i]%in%"FR100-GTM-H_DB_INCAP_06ene2018.xlsx"){
     resource_database$data_source <- "init2_fpm"
-  } else if (file_list$file_name[i]%in%"FR100-GTM-H_DB_INCAP_06ene2018.xlsx") {
+  } else if (file_list$filename[i]%in%"FR100-GTM-H_DB_INCAP_06ene2018.xlsx") {
     resource_database$data_source <- "init_fpm"
   } else {
     resource_database$data_source <- "fpm"
   }
   print(i)
-
 }
 
 resource_database$budget <- as.numeric(resource_database$budget)
@@ -69,21 +67,11 @@ resource_database$data_source <- "fpm"
 # ----------------------------------------------
 data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
-## function to use the activity descriptions to get the program areas we want:  
-map_activity_descriptions <- function(program_activity, activity_description){
-  if(program_activity%in%c("Gestión de programas", "Tratamiento, atención y apoyo", collapse="|")){
-    program_activity <- activity_description
-  }
-  return(program_activity)
-}
 
-resource_database$sda_orig <- mapply(map_activity_descriptions,
-                                          resource_database$sda_orig, resource_database$activity_description)
-resource_database$sda_orig  <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), collapse="|"), "",resource_database$sda_orig)
+resource_database$sda_orig<-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), 
+                                       collapse="|"), "", resource_database$activity_description)
 resource_database$sda_orig <-tolower(resource_database$sda_orig)
 resource_database$sda_orig <- gsub("[[:punct:]]", "", resource_database$sda_orig)
-
-
 
 # ----------------------------------------------
 ## map program level data: 
