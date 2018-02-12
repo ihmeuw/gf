@@ -1,4 +1,28 @@
 
+# ----------------------------------------------
+# Irena Chen
+#
+# 2/9/2018
+# Template for prepping SICOIN blank data 
+# Inputs:
+# inFile - name of the file to be prepped
+# year - which year the dataset corresponds to
+#
+# Outputs:
+# budget_dataset - prepped data.table object
+
+# ----------------------------------------------
+# Set up R
+
+library(data.table)
+library(reshape2)
+library(stringr)
+library(readxl)
+library(rlang)
+library(zoo)
+# --------------------
+
+
 # start function
 prep_blank_sicoin = function(loc_id, start_date, disease, period, source) {
 

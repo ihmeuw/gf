@@ -25,6 +25,35 @@ library(readxl)
 ## prep data 
 
 
+gos_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/Expenditures from GMS and GOS for PCE IHME countries.xlsx', sheet=as.character('GOS Mod-Interv - Extract')))
+
+setnames(gos_data, c("Country","Grant Number", "Year", "Financial Reporting Period Start Date",
+                     "Financial Reporting Period End Date", "Intervention", "Total Budget Amount (in budget currency)", 
+                     "Total Expenditure Amount (in Budget currency)", "Component"), 
+         c("country","grant_number", "year","start_date","end_date","sda_orig", "budget", "expenditure", "disease"))
+
+mapping_for_R <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapping_for_R.csv', fileEncoding="latin1"))
+
+gos_data$intervention <- gos_data$sda_orig
+
+##clean the activity descriptions: 
+
+gos_data$sda_orig <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), collapse="|"), "", gos_data$sda_orig)
+gos_data$sda_orig <-tolower(gos_data$sda_orig)
+gos_data$sda_orig <- gsub("[[:punct:]]", "", gos_data$sda_orig)
+
+
+# test for missing SDAs from map
+sdas_in_map = unique(mapping_for_R$sda_orig)
+sdas_in_data = unique(gos_data$sda_orig)
+if (any(!sdas_in_data %in% sdas_in_map)) { 
+  stop('Map doesn\'t include cost categories that are in this data file!')
+}
+#unmapped_values <- gos_data[sda_orig%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
+#View(unique(unmapped_values$sda_orig))
+
+
+
 
 read_gos_data <- function(dir, fileName, sheet_name){
   gos_data  <- data.table(read_excel(paste(dir, fileName, sep=""), sheet=as.character(sheet_name)))

@@ -39,6 +39,7 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
     # remove rows where cost_categories are missing values
     gf_data <- na.omit(gf_data, cols="X__10")
     budget_dataset <- gf_data[, c("X__10","X__19", "X__26"), with=FALSE]
+    
     budget_dataset <- budget_dataset[-1,]
     budget_dataset <- budget_dataset[-nrow(budget_dataset),]
     names(budget_dataset) <- c("loc_id", "budget", "disbursement")
@@ -47,7 +48,6 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
     budget_dataset$sda_orig <- "All"
 
   } else if(source=="ghe"){
-      ##pull just the cost categories 
       if(length(grep("DONACIONES", gf_data$X__12))==0){
         gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):.N),]
       } else if(length(grep("INGRESOS CORRIENTES", gf_data$X__12) !=0)){
@@ -55,6 +55,7 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
       } else {
         gf_data <- gf_data[c(grep("RECURSOS DEL TESORO", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
       }
+    
       ## grab loc_id: 
       gf_data$X__14 <- na.locf(gf_data$X__14, na.rm=FALSE)
       # remove rows where cost_categories are missing values
@@ -64,8 +65,13 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
       ## now get region + budgeted expenses 
       budget_dataset <- gf_data[, c("X__14","X__15", "X__22", "X__29"), with=FALSE]
       names(budget_dataset) <- c("loc_id", "sda_orig", "budget", "disbursement")
+     
+      ##enforce variable classes 
+      if (!is.numeric(budget_dataset$budget)) budget_dataset[,budget:=as.numeric(budget)]
+      if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
       # government resources are split by income (taxes) and "treasury" 
       #we don't care, so sum by just the municipality and SDA: 
+      
       budget_dataset <- budget_dataset[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))),
                                      by=c("loc_id", "sda_orig")]
   } else if (source=="gf") {
@@ -88,7 +94,7 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
   budget_dataset$disease <- disease
   # ----------------------------------------------
   
-  # Enforce variable classes
+  # Enforce variable classes again 
   if (!is.numeric(budget_dataset$budget)) budget_dataset[,budget:=as.numeric(budget)]
   if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
   if (!is.numeric(budget_dataset$expenditure)) budget_dataset[,expenditure:=as.numeric(expenditure)]
@@ -99,3 +105,4 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
   return(budget_dataset)
   
 }
+
