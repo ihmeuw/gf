@@ -102,20 +102,10 @@ resource_database$data_source <- "fpm"
 
 data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
-## function to use the activity descriptions to get the program areas we want:  
-map_activity_descriptions <- function(program_activity, activity_description){
-  if(program_activity%in%c("Gestion des subventions", "Prise en charge", "Traitement, prise en charge et soutien", collapse="|")){
-    program_activity <- activity_description
-  }
-  return(program_activity)
-}
-
-resource_database$sda_orig<- mapply(map_activity_descriptions,
-                                     resource_database$sda_orig, resource_database$activity_description)
-resource_database$sda_orig<-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), collapse="|"), "", resource_database$sda_orig)
+resource_database$sda_orig<-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), collapse="|"), "", resource_database$activity_description)
 resource_database$sda_orig <-tolower(resource_database$sda_orig)
 resource_database$sda_orig <- gsub("[[:punct:]]", "", resource_database$sda_orig)
-resource_database <- resource_database[!(sda_orig%in%c("6", "4"))]
+resource_database <- resource_database[!(sda_orig%in%c("8", "9"))]
 
 ## optional: do a check on data to make sure values aren't dropped: 
 # data_check2<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
@@ -123,19 +113,20 @@ resource_database <- resource_database[!(sda_orig%in%c("6", "4"))]
 
 # ----------------------------------------------
 ## map program level data: 
-mapping_for_R <- read.csv(paste0(dir, "mapping_for_R.csv"),
+mapping_for_R <- read.csv(paste0(dir, "multi_country/mapping/mapping_for_R.csv"),
                           fileEncoding="latin1")
 mapping_for_graphs <- read.csv(paste0(dir, "mapping_for_graphs.csv"))
 
 
 
 # test for missing SDAs from map
-sdas_in_map = unique(mapping_for_R$cost_category)
+sdas_in_map = unique(mapping_for_R$sda_orig)
 sdas_in_data = unique(resource_database$sda_orig)
 if (any(!sdas_in_data %in% sdas_in_map)) { 
   stop('Map doesn\'t include cost categories that are in this data file!')
 }
 #unmapped_values <- resource_database[sda_orig%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
+#unmapped_values = unmapped_values[!duplicated(unmapped_values, by=c("module", "sda_orig"))]
 #View(unique(unmapped_values$sda_orig))
 
 

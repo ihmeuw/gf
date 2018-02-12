@@ -76,7 +76,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
 
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
   colnames(gf_data)[1] <- "module"
-  colnames(gf_data)[2] <- "sda_orig"
+  colnames(gf_data)[2] <- "activity_description"
   colnames(gf_data)[3] <- "recipient"
   if(year(start_date)==2018){
     colnames(gf_data)[4] <- "loc_id"
@@ -87,10 +87,10 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ##library(reshape)
   setDT(gf_data)
   if(year(start_date)==2018){
-    gf_data1<- melt(gf_data,id=c("module","sda_orig", "recipient", "loc_id"), variable.name = "qtr", value.name="budget")
+    gf_data1<- melt(gf_data,id=c("module","activity_description", "recipient", "loc_id"), variable.name = "qtr", value.name="budget")
     gf_data1$loc_id <- as.character(gf_data$loc_id)
   } else {
-    gf_data1<- melt(gf_data,id=c("module","sda_orig", "recipient"), variable.name = "qtr", value.name="budget")
+    gf_data1<- melt(gf_data,id=c("module","activity_description", "recipient"), variable.name = "qtr", value.name="budget")
     gf_data1$loc_id <- "cod"
   }
   
