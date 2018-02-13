@@ -43,13 +43,9 @@ prep_summary_sicoin = function(inFile, start_date, disease, period, source) {
       names(budget_dataset) <- c("loc_id", "budget", "disbursement")
       budget_dataset$sda_orig <- "REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"
        
-    } else if (month(start_date)==12){
+    } else {
         budget_dataset <- gf_data[, c("X__10", "X__11","X__19", "X__25"), with=FALSE]
         names(budget_dataset) <- c("sda_orig", "loc_id", "budget","disbursement")
-    } else {
-        budget_dataset <- gf_data[, c("X__10", "X__11", "X__25"), with=FALSE]
-        names(budget_dataset) <- c("sda_orig", "loc_id", "disbursement")
-        budget_dataset$budget <- 0
     }
     # remove rows where cost_categories are missing values
     budget_dataset <- na.omit(budget_dataset, cols="loc_id")
