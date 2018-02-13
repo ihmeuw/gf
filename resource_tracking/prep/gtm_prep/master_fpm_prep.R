@@ -8,7 +8,7 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
-
+rm(list=ls())
 library(lubridate)
 library(data.table)
 library(readxl)
@@ -24,11 +24,9 @@ library(zoo)
   # length(LHS)==0; no columns to delete or assign RHS to.
 
 #But this shouldn't affect the final output. 
-
-
 # ----------------------------------------------
 
-
+loc_id <- "gtm"
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/fpm/'
 file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/gf_budget_filelist.csv")
 
@@ -36,22 +34,32 @@ for(i in 1:length(file_list$filename)){
   if(file_list$format[i]=="detailed"){
     tmpData <- prep_fpm_detailed_budget(dir, paste0(file_list$filename[i], file_list$extension[i]), as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
-                                        file_list$grant_number[i], file_list$lang[i])
+                                        file_list$lang[i], file_list$grant_number[i])
   } else if (file_list$format[i]=="summary"){
-    tmpData <- prep_fpm_summary_budget(dir, file_list$filename[i], file_list$extension[i], as.character(file_list$sheet[i]), ymd(file_list$start_date[i]), file_list$qtr_number[i])
+    tmpData <- prep_fpm_summary_budget(dir, paste0(file_list$filename[i], file_list$extension[i]), as.character(file_list$sheet[i]),
+                                       ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
+                                       file_list$grant_number[i], file_list$recipient[i])
+    tmpData$loc_id <- "gtm"
+  } else if (file_list$format[i]=="other"){
+    tmpData <- prep_other_detailed_budget(dir, paste0(file_list$filename[i], file_list$extension[i]), as.character(file_list$sheet[i]),
+                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
+                                        file_list$lang[i], file_list$grant_number[i])
+    tmpData$loc_id <- "gtm"
   }
-    if(i==1){
-      resource_database = tmpData
-    }
-    if(i>1){
-        resource_database = rbind(resource_database, tmpData, use.names=TRUE)
-    }
-  if(file_list$filename[i]%in%"FR100-GTM-H_DB_INCAP_06ene2018.xlsx"){
-    resource_database$data_source <- "init2_fpm"
-  } else if (file_list$filename[i]%in%"FR100-GTM-H_DB_INCAP_06ene2018.xlsx") {
-    resource_database$data_source <- "init_fpm"
+  
+  if(file_list$filename[i]%in%"FR100-GTM-H_DB_INCAP_06ene2018"){
+    tmpData$data_source <- "init2_fpm"
+  } else if (file_list$filename[i]%in%"FR100-GTM-H_DB_INCAP_06ene2018") {
+    tmpData$data_source <- "init_fpm"
   } else {
-    resource_database$data_source <- "fpm"
+    tmpData$data_source <- "fpm"
+  }
+  
+  if(i==1){
+    resource_database = tmpData
+  }
+  if(i>1){
+    resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
   print(i)
 }
@@ -61,7 +69,6 @@ resource_database$budget <- as.numeric(resource_database$budget)
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$expenditure <- 0 
 resource_database$disbursement<- 0 
-resource_database$data_source <- "fpm"
 
 
 # ----------------------------------------------
@@ -81,12 +88,13 @@ mapping_for_graphs <- read.csv(paste0(dir, "mapping_for_graphs.csv"))
 
 
 # test for missing SDAs from map
-sdas_in_map = unique(mapping_for_R$cost_category)
+sdas_in_map = unique(mapping_for_R$sda_orig)
 sdas_in_data = unique(resource_database$sda_orig)
 if (any(!sdas_in_data %in% sdas_in_map)) { 
   stop('Map doesn\'t include cost categories that are in this data file!')
 }
 #unmapped_values <- resource_database[sda_orig%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
+#unmapped_values = unmapped_values[!duplicated(unmapped_values, by=c("module", "sda_orig"))]
 #View(unique(unmapped_values$sda_orig))
 
 
