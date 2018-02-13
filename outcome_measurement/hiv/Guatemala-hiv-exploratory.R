@@ -80,6 +80,24 @@ for (year in seq(2009, 2015, 1)) {
   }
 }  
 
-ggplot(data = hivDeaths, aes(x= as.Date(date), y = conteo)) + geom_line()
+ggplot(data = hivDeaths, aes(x= as.Date(date), y = conteo)) + geom_line() + labs(title="HIV deaths in Gt from 2009 to 2016", y="Cases per month", x="Time")
 if (saveGraphs) 
   ggsave(paste0(dataPath, "Graficas/GT_HIV_Deaths 2009-2015.png"), height=8, width=8)
+
+hivPrivHospI = NULL
+for (year in seq(2009, 2015, 1)) {
+    temp = privHospIData[[year]][(CAUFINPRE %in% c("B20", "B21", "B22", "B23", "B24")) | (CAUFIN %in% c("R75X", "Z114", "Z206", "Z21X", "Z717")), 
+                                 .(conteo = .N), 
+                                 by = .(date = paste0(year, "-", MES, "-01")) ]
+    if (is.null(hivPrivHospI)) {
+        hivPrivHospI = temp
+    }
+    else { 
+        hivPrivHospI = rbind(hivPrivHospI, temp)
+    }
+}  
+
+ggplot(data = hivPrivHospI, aes(x= as.Date(date), y = conteo)) + geom_line() + labs(title="HIV internal private hospital services in Gt from 2009 to 2016", y="Cases per month", x="Time")
+if (saveGraphs) 
+    ggsave(paste0(dataPath, "Graficas/GT_HIV_PrivHospIntern_TS 2009-2015.png"), height=8, width=8)
+

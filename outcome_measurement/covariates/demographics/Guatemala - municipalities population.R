@@ -76,9 +76,9 @@ write.csv(gtmMunisIGN[, names(gtmMunisIGN)], "./PCE/Outcome Measurement Data/Cov
 
 # ----------------------------------------------
 # Worldpop births data 
-nacs15 = read_sav("C:/DATOS/GTVitales y Censo/Nacimientos 2015.sav")
+nacs15 = read_sav("./DATOS/GTVitales y Censo/Nacimientos 2015.sav")
 dtnacs15 = data.table(nacs15)
-WPBirthsGT <- raster("/DATOS/WorldPop/Guatemala 1km births/GTM_births_pp_v2_2015.tif")
+WPBirthsGT <- raster("./DATOS/WorldPop/Guatemala 1km births/GTM_births_pp_v2_2015.tif")
 
 munisNacs = extract(WPBirthsGT, gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0),], fun = sum, na.rm = TRUE )
 dtmunisNacs = data.table(NacsWP = munisNacs[,1], Codigo = gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0), ]$COD_MUNI__)

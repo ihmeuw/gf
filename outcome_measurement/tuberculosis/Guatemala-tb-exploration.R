@@ -17,13 +17,13 @@ library(gridExtra)
 library(rgdal)
 library(stringdist)
 
-source("PCE/gf/core/GT_helper_functions.R", encoding = "UTF-8")
+source("./PCE/gf/core/GT_helper_functions.R", encoding = "UTF-8")
 # ----------------------------------------------
 # Configure script
 saveGraphs = T
 # ----------------------------------------------
 # Read the data:
-TBNotif2014 = read_excel("PCE/Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2014 GENERAL anterior.xlsx", sheet = 2, col_names = F)
+TBNotif2014 = read_excel("./PCE/Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2014 GENERAL anterior.xlsx", sheet = 2, col_names = F)
 # Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
 TBNotif2014 = data.table(TBNotif2014)[3:.N,][!is.na(X3),]
 names(TBNotif2014) = c( "NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", "SEXO", "EDAD", 
@@ -230,6 +230,23 @@ for (year in seq(2009, 2015, 1)) {
   }
 }  
 
-ggplot(data = tbDeaths, aes(x= as.Date(date), y = conteo)) + geom_line()
+ggplot(data = tbDeaths, aes(x= as.Date(date), y = conteo)) + geom_line() + labs(title="TB deaths in Gt from 2009 to 2016", y="Cases per month", x="Time")
 if (saveGraphs) 
   ggsave(paste0(dataPath, "Graficas/GT_TB_Deaths_TS 2009-2015.png"), height=8, width=8)
+
+
+tbPrivHospI = NULL
+for (year in seq(2009, 2015, 1)) {
+    temp = privHospIData[[year]][(CAUFINPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) | (CAUFIN %in% c("A301", "A302", "J65X", "K230", "K673", "M011", "N330", "M490", "M900", "N741", "O980", "K930", "P370", "Z030", "Z111", "Z201", "Z232")),  .(conteo = .N), 
+                                 by = .(date = paste0(year, "-", MES, "-01")) ]
+    if (is.null(tbDeaths)) {
+        tbPrivHospI = temp
+    }
+    else { 
+        tbPrivHospI = rbind(tbPrivHospI, temp)
+    }
+}  
+
+ggplot(data = tbPrivHospI, aes(x= as.Date(date), y = conteo)) + geom_line()  + labs(title="TB internal private hospital services in Gt from 2009 to 2016", y="Cases per month", x="Time")
+if (saveGraphs) 
+    ggsave(paste0(dataPath, "Graficas/GT_TB_PrivHospIntern_TS 2009-2015.png"), height=8, width=8)

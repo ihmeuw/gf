@@ -4,7 +4,7 @@
 # 2017-11-14
 # Explore TB outcome data from MOH notifications databases.
 
-dataFilePrefix = "CIESAR/PCE/"
+dataFilePrefix = "./PCE/"
 
 # ----Dependencies------------------------------
 library(stringdist)
