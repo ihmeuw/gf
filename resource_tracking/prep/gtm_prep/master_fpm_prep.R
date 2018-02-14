@@ -13,7 +13,7 @@ library(lubridate)
 library(data.table)
 library(readxl)
 library(stats)
-library(stringr)
+library(stringr) 
 library(rlang)
 library(zoo)
 # ----------------------------------------------
@@ -31,16 +31,16 @@ dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/fpm/'
 file_list <- read.csv("C:/Users/irenac2/repos/gf/resource_tracking/prep/gf_budget_filelist.csv")
 
 for(i in 1:length(file_list$filename)){
-  if(file_list$format[i]=="detailed"){
+  if(file_list$format[i]=="detailed"){ ## fpm detailed budgets 
     tmpData <- prep_fpm_detailed_budget(dir, paste0(file_list$filename[i], file_list$extension[i]), as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                         file_list$lang[i], file_list$grant_number[i])
-  } else if (file_list$format[i]=="summary"){
+  } else if (file_list$format[i]=="summary"){ ## only summary level data - no municipalities 
     tmpData <- prep_fpm_summary_budget(dir, paste0(file_list$filename[i], file_list$extension[i]), as.character(file_list$sheet[i]),
                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                        file_list$grant_number[i], file_list$recipient[i])
     tmpData$loc_id <- "gtm"
-  } else if (file_list$format[i]=="other"){
+  } else if (file_list$format[i]=="other"){ ## there's an older version of detailed fpm budgets
     tmpData <- prep_other_detailed_budget(dir, paste0(file_list$filename[i], file_list$extension[i]), as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                         file_list$lang[i], file_list$grant_number[i])
