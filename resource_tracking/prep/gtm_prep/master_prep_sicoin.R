@@ -121,7 +121,8 @@ cleaned_database <- resource_database[!resource_database$sda_orig%in%loc_ids,]
 ##output the data to the correct folder 
 
 
-write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv", row.names=FALSE, fileEncoding="UTF-8")
+write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
+          ,row.names=FALSE, fileEncoding="latin1")
 
 
 
