@@ -17,40 +17,22 @@ library(rlang)
 library(zoo)
 # ----------------------------------------------
 
-prep_gtm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
-  ## we need to grab the budget numbers by quarter - first determine if french or english
-  if(lang=="eng"){
-    cashText <- " Cash \r\nOutflow"
-  } else{
-    cashText <- "Salida de efectivo"
-  }
+prep_other_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
   
-  ## newer budgets use the label "Implementador" and the old ones use "Receptor" 
-  if(year(start_date)==2018){
-    recipient <- "Implementador"
-  } else{
-    recipient <- "Receptor"
-  }
+  qtr_names <- c("Área de prestación de servicios","Actividad", "Receptor Principal", seq(21, 29, by=1))
   
-  if(lang=="eng"){
-    qtr_names <- c("Intervention", "Recipient", "Geography/Location", rep(1, qtr_num))
-  } else{ 
-    qtr_names <- c("Módulo", "Descripción de la actividad",	recipient, "Localización", rep(1, qtr_num))
-  }
-  
-  
-  create_qtr_names = function(qtr_names, cashText, lang){
-    for(i in 1:qtr_num+4){
-      if(i <5) {
+  create_qtr_names = function(qtr_names){
+    for(i in 1:length(qtr_names)){
+      if(i <4) {
         i=i+1
       } else { 
-        qtr_names[i] <- paste("Q", i-4, " ",  cashText, sep="")
+        qtr_names[i] <- paste0("Q", qtr_names[i])
         i=i+1
       }
     }
     return(qtr_names)
   }
-  qtr_names <- create_qtr_names(qtr_names, cashText, lang)
+  qtr_names <- create_qtr_names(qtr_names)
   
   if(!is.na(sheet_name)){
     gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
@@ -58,32 +40,23 @@ prep_gtm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     gf_data <- data.table(read_excel(paste0(dir, inFile)))
   }
   
-  ## drop the first  two columns (they are unnecessary)
-  gf_data <- gf_data[,-c(1:2)]
   
-  
-  ##new budgets formatted slightly differently: 
-  if(year(start_date)==2018){
-    gf_data <- gf_data[-c(1:2),]
-    colnames(gf_data) <- as.character(gf_data[1,])
-  }
+  ##only get the columns that we want
+  gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
   
   ##only keep data that has a value in the "category" column 
-  gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
-  gf_data  <- gf_data[-1,]
   
-  colnames(gf_data)[1] <- "sda_orig"
+  colnames(gf_data)[1] <- "module"
   colnames(gf_data)[2] <- "activity_description"
-  colnames(gf_data)[3] <- "recipient"
-  colnames(gf_data)[4] <- "loc_id"
-  
-  
+  colnames(gf_data)[3] <- "recipient" 
+
   ## invert the dataset so that budget expenses and quarters are grouped by category
   ##library(reshape)
   setDT(gf_data)
-  gf_data1<- melt(gf_data,id=c("sda_orig", "activity_description", "recipient", "loc_id"), 
+  gf_data1<- melt(gf_data,id=c("module", "activity_description", "recipient"), 
                   variable.name = "qtr", value.name="budget")
+  
   
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
@@ -108,7 +81,5 @@ prep_gtm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
   budget_dataset$disease <- disease
-  
-  
   return(budget_dataset)  
 }

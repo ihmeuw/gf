@@ -1,0 +1,86 @@
+file_name,format,start_date,disease,source,period,grant
+PROGRAMA VIH GF ACTIVIDAD 2011.xls,detailed,"""2011-01-01""",hiv,gf,365,unknown
+PROGRAMA VIH GF ACTIVIDAD 2012.xls,detailed,"""2012-01-01""",hiv,gf,365,unknown
+PROGRAMA VIH GF ACTIVIDAD 2013.xls,detailed,"""2013-01-01""",hiv,gf,365,unknown
+PROGRAMA VIH GF ACTIVIDAD 2014.xls,detailed,"""2014-01-01""",hiv,gf,365,unknown
+PROGRAMA VIH GF ACTIVIDAD 2015.xls,detailed,"""2015-01-01""",hiv,gf,365,unknown
+PROGRAMA VIH GF ACTIVIDAD 2016.xls,detailed,"""2016-01-01""",hiv,gf,365,unknown
+Programa VIH general fuente de financiamiento 2004.xls,detailed,"""2004-01-01""",hiv,ghe,365,unknown
+Programa VIH general fuente de financiamiento 2005.xls,detailed,"""2005-01-01""",hiv,ghe,365,unknown
+Programa VIH general fuente de financiamiento 2006.xls,detailed,"""2006-01-01""",hiv,ghe,365,unknown
+Programa VIH general fuente de financiamiento 2007.xls,detailed,"""2007-01-01""",hiv,ghe,365,unknown
+Programa VIH general fuente de financiamiento 2008.xls,detailed,"""2008-01-01""",hiv,ghe,365,unknown
+Programa VIH general fuente de financiamiento 2009.xls,detailed,"""2009-01-01""",hiv,ghe,365,unknown
+Programa VIH general fuente de financiamiento 2010.xls,detailed,"""2010-01-01""",hiv,ghe,365,unknown
+PROGRAMA VIH GENERAL ACTIVIDAD 2011.xls,detailed,"""2011-01-01""",hiv,ghe,365,unknown
+PROGRAMA VIH GENERAL ACTIVIDAD 2012.xls,detailed,"""2012-01-01""",hiv,ghe,365,unknown
+PROGRAMA VIH GENERAL ACTIVIDAD 2013.xls,detailed,"""2013-01-01""",hiv,ghe,365,unknown
+PROGRAMA VIH GENERAL ACTIVIDAD 2014.xls,detailed,"""2014-01-01""",hiv,ghe,365,unknown
+PROGRAMA VIH GENERAL ACTIVIDAD 2015.xls,detailed,"""2015-01-01""",hiv,ghe,365,unknown
+PROGRAMA VIH GENERAL ACTIVIDAD 2016.xls,detailed,"""2016-01-01""",hiv,ghe,365,unknown
+programa tuberculosis actividad 2011b.xls,detailed,"""2011-01-01""",tb,ghe,365,unknown
+programa tuberculosis actividad 2012b.xls,detailed,"""2012-01-01""",tb,ghe,365,unknown
+programa tuberculosis actividad 2013b.xls,detailed,"""2013-01-01""",tb,ghe,365,unknown
+programa tuberculosis actividad 2014b.xls,detailed,"""2014-01-01""",tb,ghe,365,unknown
+programa tuberculosis actividad 2015b.xls,detailed,"""2015-01-01""",tb,ghe,365,unknown
+programa tuberculosis actividad 2016b.xls,detailed,"""2016-01-01""",tb,ghe,365,unknown
+GF AP 2015.xls,summary,"""2015-04-01""",malaria,gf,30,unknown
+GF AUG 2015.xls,summary,"""2015-08-01""",malaria,gf,30,unknown
+GF DEC 2015.xls,summary,"""2015-12-01""",malaria,gf,30,unknown
+GF FEB 2015.xls,summary,"""2015-02-01""",malaria,gf,30,unknown
+GF JANUARY 2015.xls,summary,"""2015-01-01""",malaria,gf,30,unknown
+GF JULY 2015.xls,summary,"""2015-07-01""",malaria,gf,30,unknown
+GF JUNE 2015.xls,summary,"""2015-06-01""",malaria,gf,30,unknown
+GF MARCH 2015.xls,summary,"""2015-03-01""",malaria,gf,30,unknown
+GF MAY 2015.xls,summary,"""2015-04-01""",malaria,gf,30,unknown
+GF NOV 2015.xls,summary,"""2015-11-01""",malaria,gf,30,unknown
+GF OCT 2015.xls,summary,"""2015-10-01""",malaria,gf,30,unknown
+GF SEP 2015.xls,summary,"""2015-09-01""",malaria,gf,30,unknown
+GF APRIL 2016.xls,summary,"""2016-04-01""",malaria,gf,30,unknown
+GF AUG 2016.xls,summary,"""2016-08-01""",malaria,gf,30,unknown
+GF DEC 2016.xls,summary,"""2016-12-01""",malaria,gf,30,unknown
+GF FEB 2016.xls,summary,"""2016-02-01""",malaria,gf,30,unknown
+GF JANUARY 2016.xls,summary,"""2016-01-01""",malaria,gf,30,unknown
+GF JULY 2016.xls,summary,"""2016-07-01""",malaria,gf,30,unknown
+GF JUN 2016.xls,summary,"""2016-06-01""",malaria,gf,30,unknown
+GF MARCH 2016.xls,summary,"""2016-03-01""",malaria,gf,30,unknown
+GF MAY 2016.xls,summary,"""2016-04-01""",malaria,b ,30,unknown
+GF NOV 2016.xls,summary,"""2016-11-01""",malaria,gf,30,unknown
+GF OCT 2016.xls,summary,"""2016-10-01""",malaria,gf,30,unknown
+GF SEPT 2016.xls,summary,"""2016-09-01""",malaria,gf,30,unknown
+GF APRIL 2011.xls,summary,"""2011-04-01""",malaria,gf,30,unknown
+GF AUGUST 2011.xls,summary,"""2011-08-01""",malaria,gf,30,unknown
+GF DEC 2011.xls,summary,"""2011-12-01""",malaria,gf,30,unknown
+GF FEB 2011.xls,summary,"""2011-02-01""",malaria,gf,30,unknown
+GF JANUARY 2011.xls,summary,"""2016-01-01""",malaria,gf,30,unknown
+GF JULY 2011.xls,summary,"""2011-07-01""",malaria,gf,30,unknown
+GF JUNE 2011.xls,summary,"""2011-06-01""",malaria,gf,30,unknown
+GF MARCH 2011.xls,summary,"""2011-03-01""",malaria,gf,30,unknown
+GF MAY 2011.xls,summary,"""2011-04-01""",malaria,gf,30,unknown
+GF NOV 2011.xls,summary,"""2011-11-01""",malaria,gf,30,unknown
+GF OCT 2011.xls,summary,"""2011-10-01""",malaria,gf,30,unknown
+GF SEPT 2011.xls,summary,"""2011-09-01""",malaria,gf,30,unknown
+GF APRIL 2013.xls,summary,"""2013-04-01""",malaria,gf,30,unknown
+GF AUG 2013.xls,summary,"""2013-08-01""",malaria,gf,30,unknown
+GF DEC 2013.xls,summary,"""2013-12-01""",malaria,gf,30,unknown
+GF FEB 2013.xls,summary,"""2013-02-01""",malaria,gf,30,unknown
+GF JANUARY 2013.xls,summary,"""2013-01-01""",malaria,gf,30,unknown
+GF JULY 2013.xls,summary,"""2013-07-01""",malaria,gf,30,unknown
+GF JUNE 2013.xls,summary,"""2013-06-01""",malaria,gf,30,unknown
+GF MARCH 2013.xls,summary,"""2013-03-01""",malaria,gf,30,unknown
+GF MAY 2013.xls,summary,"""2013-04-01""",malaria,gf,30,unknown
+GF NOV 2013.xls,summary,"""2013-11-01""",malaria,gf,30,unknown
+GF OCT 2013.xls,summary,"""2013-10-01""",malaria,gf,30,unknown
+GF SEP 2013.xls,summary,"""2013-09-01""",malaria,gf,30,unknown
+MALARIA APRIL 2013 ORIGIN.xls,detailed,"""2013-04-01""",malaria,ghe,30,unknown
+MALARIA AUG 2013 ORIGIN.xls,detailed,"""2013-08-01""",malaria,ghe,30,unknown
+MALARIA DEC 2013 ORIGIN.xls,detailed,"""2013-12-01""",malaria,ghe,30,unknown
+MALARIA FEB 2013 ORIGIN.xls,detailed,"""2013-02-01""",malaria,ghe,30,unknown
+MALARIA JAN 2013 ORIGIN.xls,detailed,"""2013-01-01""",malaria,ghe,30,unknown
+MALARIA JULY 2013 ORIGIN.xls,detailed,"""2013-07-01""",malaria,ghe,30,unknown
+MALARIA JUNE 2013 ORIGIN.xls,detailed,"""2013-06-01""",malaria,ghe,30,unknown
+MALARIA MARCH 2013 ORIGIN.xls,detailed,"""2013-03-01""",malaria,ghe,30,unknown
+MALARIA MAY 2013 ORIGIN.xls,detailed,"""2013-04-01""",malaria,ghe,30,unknown
+MALARIA NOV 2013 ORIGIN.xls,detailed,"""2013-11-01""",malaria,ghe,30,unknown
+MALARIA OCT 2013 ORIGIN.xls,detailed,"""2013-10-01""",malaria,ghe,30,unknown
+MALARIA SEP 2013 ORIGIN.xls,detailed,"""2013-09-01""",malaria,ghe,30,unknown

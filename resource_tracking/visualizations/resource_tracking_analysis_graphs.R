@@ -49,7 +49,11 @@ graphData$facet <- factor(graphData$facet ,levels=c("Past/Active", "In Iteration
 ##make the disease text nicer for the graphs: 
 graphData <- disease_names_for_plots(graphData)
 
+
+graphData[program_activity=="HIV/AIDS care and support", program_activity:="HIV/AIDS care, support and outreach"]
 graphData[program_activity=="PBF", program_activity:="Performance Based Financing"]
+
+
 # ---------------------------------------------
 # stacked bar charts over time 
 
@@ -155,6 +159,4 @@ for (k in unique(keyData$disease)){
 pdf("keypop_perc.pdf", height=6, width=9)
 invisible(lapply(key_plots, print))
 dev.off()
-
-
 

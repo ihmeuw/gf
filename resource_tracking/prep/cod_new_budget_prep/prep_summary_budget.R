@@ -73,9 +73,9 @@ prep_cat_summary_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date]
   
   ##rename the category column 
-  colnames(budget_dataset)[1] <- "sda_orig"
+  colnames(budget_dataset)[1] <- "module"
   budget_dataset$disease <- disease
-  budget_dataset$activity_description <- "none"
+  budget_dataset$activity_description <- budget_dataset$module
   budget_dataset$loc_id <- loc_id
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
