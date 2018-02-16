@@ -35,6 +35,7 @@ library(lubridate)
 # (only the ones that contain actual budget/expenditure data and are in c_coin format). 
 ## 
 
+loc_id <- 94
 country <- "gtm"
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
 
@@ -72,7 +73,7 @@ for(i in 1:length(file_list$file_name)){
   } else if (file_list$format[i]=="summary"){
     tmpData <- prep_summary_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   } else if (file_list$format[i]=="blank"){
-    tmpData <- prep_blank_sicoin(country, ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+    tmpData <- prep_blank_sicoin(country, loc_id, ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   } else if(file_list$format[i]=="donacions"){
     tmpData <- prep_donacions_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   }
@@ -116,7 +117,7 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
 
 
 ##remove rows where loc_ids are in the SDA column: 
-cleaned_database <- resource_database[!resource_database$loc_id%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
+cleaned_database <- resource_database[!resource_database$loc_name%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
 
 ##output the data to the correct folder 
 

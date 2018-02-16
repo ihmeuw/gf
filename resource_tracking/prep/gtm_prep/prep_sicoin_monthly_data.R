@@ -31,7 +31,10 @@ prep_summary_sicoin = function(inFile, start_date, disease, period, source) {
   # Files and directories
   
   # Load/prep data
-  gf_data <- data.table(read_excel(inFile))
+  gf_data <- data.table(read_excel(inFile)) 
+  colnames(gf_data)[3] <- "loc_id"
+  gf_data$loc_id <- na.locf(gf_data$loc_id, na.rm=FALSE)
+  gf_data$X__3 <- na.locf(gf_data$X__3, na.rm=FALSE)
   gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)
   gf_data$X__10 <- na.locf(gf_data$X__10, na.rm=FALSE)
   # ----------------------------------------------
@@ -39,24 +42,23 @@ prep_summary_sicoin = function(inFile, start_date, disease, period, source) {
  if (source=="gf") {
    if(year(start_date)==2012&disease=="malaria"){
       gf_data <- na.omit(gf_data, cols=c("X__19", "X__25"))
-      budget_dataset<- gf_data[, c( "X__10", "X__19", "X__25"), with=FALSE]
-      names(budget_dataset) <- c("loc_id", "budget", "disbursement")
+      budget_dataset<- gf_data[, c("X__3","X__10", "X__19", "X__25"), with=FALSE]
+      names(budget_dataset) <- c("loc_id","loc_name", "budget", "disbursement")
       budget_dataset$sda_orig <- "REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"
        
     } else {
-        budget_dataset <- gf_data[, c("X__10", "X__11","X__19", "X__25"), with=FALSE]
-        names(budget_dataset) <- c("sda_orig", "loc_id", "budget","disbursement")
+        budget_dataset <- gf_data[, c("loc_id", "X__10", "X__11","X__19", "X__25"), with=FALSE]
+        names(budget_dataset) <- c("loc_id","sda_orig", "loc_name", "budget","disbursement")
     }
     # remove rows where cost_categories are missing values
-    budget_dataset <- na.omit(budget_dataset, cols="loc_id")
-    setkeyv(budget_dataset,c("sda_orig", "loc_id"))
-    budget_dataset <- unique(budget_dataset)
+    budget_dataset <- na.omit(budget_dataset, cols="loc_name")
+    budget_dataset <- unique(budget_dataset, by=c("loc_name", "sda_orig"))
     ##get rid of extra rows where there are NAs or 0s: 
     budget_dataset  <- budget_dataset[, list(budget=sum(na.omit(budget)),
-                                             disbursement=sum(na.omit(disbursement))),by=c("sda_orig", "loc_id")]
+                                             disbursement=sum(na.omit(disbursement))),by=c("loc_id","sda_orig", "loc_name")]
   }
   toMatch <- c("government", "recursos", "resources", "multire")
-  budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
+  budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_name)),]
   
   # ----------------------------------------------
   

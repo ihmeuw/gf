@@ -24,15 +24,16 @@ library(zoo)
 
 
 # start function
-prep_blank_sicoin = function(loc_id, start_date, disease, period, source) {
+prep_blank_sicoin = function(loc_name, loc_id, start_date, disease, period, source) {
 
-  budget_dataset <- setnames(data.table(matrix(nrow = 1, ncol = 9)), 
-                                          c("sda_orig","loc_id","budget", "disbursement", 
+  budget_dataset <- setnames(data.table(matrix(nrow = 1, ncol = 10)), 
+                                          c("sda_orig","loc_id","loc_name","budget", "disbursement", 
                                             "source", "period",	"start_date", "disease", "expenditure"))
 
   
-  budget_dataset$loc_id<- as.character(budget_dataset$loc_id)
-  budget_dataset$loc_id <- loc_id
+  budget_dataset$loc_name<- as.character(budget_dataset$loc_name)
+  budget_dataset$loc_name <- loc_name
+  budget_dataset$loc_name <- loc_id
   ## Create other variables 
   budget_dataset$source <- source
   budget_dataset$start_date <- start_date
