@@ -83,6 +83,7 @@ for(i in 1:length(file_list$file_name)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
+  ##add info to the summary tracking file:
   if(is.na(tmpData$sda_orig[1])){
     summary_file$sda_detail[i] <- "None"
   }else if(!(tmpData$sda_orig[1]=="All")){
@@ -115,14 +116,20 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
 
 
 ##remove rows where loc_ids are in the SDA column: 
-loc_ids <- unique(resource_database$loc_id)
-cleaned_database <- resource_database[!resource_database$sda_orig%in%loc_ids,]
+cleaned_database <- resource_database[!resource_database$loc_id%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
 
 ##output the data to the correct folder 
 
 
 write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
           ,row.names=FALSE, fileEncoding="latin1")
+
+
+
+
+
+
+
 
 
 

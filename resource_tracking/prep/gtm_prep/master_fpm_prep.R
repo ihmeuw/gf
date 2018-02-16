@@ -115,7 +115,7 @@ mappedGtm$expenditure <- mappedGtm$expenditure*mappedGtm$coeff
 data_check2<- as.data.frame(mappedGtm[, list(budget = sum(budget, na.rm = TRUE)),by = c("disease")])
 
 
-write.csv(mappedGtm, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/rejected_budgets.csv", row.names = FALSE,
+write.csv(mappedGtm, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/mapped_gtm_budgets.csv", row.names = FALSE,
           fileEncoding = "latin1")
 
 
