@@ -36,19 +36,20 @@ prep_donacions_sicoin = function(inFile, start_date, disease, period, source) {
   gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
   if(disease=="tb"){
     gf_data <- na.omit(gf_data, cols="X__10")
-    budget_dataset <- gf_data[, c("X__10","X__17", "X__24"), with=FALSE]
-    names(budget_dataset) <- c("loc_id", "budget", "disbursement")
+    budget_dataset <- gf_data[, c("X__3","X__10","X__17", "X__24"), with=FALSE]
+    names(budget_dataset) <- c("loc_id", "loc_name","budget", "disbursement")
     budget_dataset$sda_orig <- "All"
   } else if (disease=="hiv"){ 
     ## grab loc_id: 
     gf_data$X__14 <- na.locf(gf_data$X__14, na.rm=FALSE)
+    gf_data$X__4 <- na.locf(gf_data$X__4, na.rm=FALSE)
     # remove rows where cost_categories are missing values
     gf_data <- na.omit(gf_data, cols="X__15")
-    budget_dataset <- gf_data[, c("X__14","X__15", "X__22", "X__29"), with=FALSE]
-    names(budget_dataset) <- c("loc_id", "sda_orig", "budget", "disbursement")
+    budget_dataset <- gf_data[, c("X__4","X__14","X__15", "X__22", "X__29"), with=FALSE]
+    names(budget_dataset) <- c("loc_id", "loc_name","sda_orig", "budget", "disbursement")
   }
   toMatch <- c("government", "recursos", "resources", "multire")
-  budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_id)),]
+  budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_name)),]
   
   
   ##enforce variable classes 
@@ -58,7 +59,7 @@ prep_donacions_sicoin = function(inFile, start_date, disease, period, source) {
   ## in the off chance that there are duplicates by loc_id & sda_orig (NAs in the budget for instance)
   ## this gets rid of them:
   budget_dataset <- budget_dataset[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))),
-                                   by=c("loc_id", "sda_orig")]
+                                   by=c("loc_id","loc_name", "sda_orig")]
 
   # --------------------------------------------------------------
   
