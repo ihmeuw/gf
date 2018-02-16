@@ -14,7 +14,7 @@ library(jsonlite)
 library(httr)
 
 # --------------------
-asdfasdf
+
 
 # ----------------------------------------------
 # Files and directories
