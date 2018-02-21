@@ -64,7 +64,8 @@ TBNotifAll[, COD_MUNI := getMuniCodeByName(ifelse(is.na(MUNICIPIO), SERVICIODESA
 TBNotifAll[, COD_DEPTO := floor(COD_MUNI/100)]
 
 # TBNotifAll$RANGOEDAD = factor(TBNotifAll$RANGOEDAD, levels = order(unique(TBNotifAll$RANGOEDAD)))
-# ----------------------------------------------
+
+# --------Monthly Time Series--------------------------------------
 # Exploring
 # All plots group by gender
 # Plot monthly count time series
@@ -89,7 +90,7 @@ ggplot(as.data.frame(table(TBNotifAll$METODODX, TBNotifAll$SEXO, useNA = "always
     geom_bar(stat="identity", position="dodge") + theme(axis.text.x = element_text(angle = 90,hjust=0.95,vjust=0.2))  + labs(fill="Gender", x="Diagnosis methods", y="Notifications counts per month", title="Diagnosis methods")
 if (saveGraphs) 
     ggsave("PCE/Graficas/TB_Gt_Notifications_2014-2015-Dx_method.png")
-# ----------------------------------------------
+# ---------Monthly Time Series with HIV-------------------------------------
 # VIH plots
 # Monthly time series of notifications (separate by HIV and gender)
 ggplot(data = TBNotifAll, aes(factor(YearMonth), fill=SEXO))+ geom_bar(position="dodge")+ theme(axis.text.x = element_text(angle = 90)) + labs(fill="Gender", x="Month", y="Notifications counts per month", title = "Time series of notifications") + facet_wrap(~ VIH, nrow = 1, ncol=3, scales="free_y")
@@ -114,16 +115,17 @@ ggplot(as.data.frame(table(TBNotifAll$METODODX, TBNotifAll$SEXO, TBNotifAll$VIH,
 if (saveGraphs) 
     ggsave("PCE/Graficas/TB_Gt_Notifications_2014-2015-Dx_method-VIH.png", height=4, width=9)
 
-# ----------------------------------------------
+# ----------Maps------------------------------------
 # Prepare GIS data. R has a very ugly way of handling this:
 gtmMunisIGN@data$id = rownames(gtmMunisIGN@data)
 gtmMunisIGN@data = merge(gtmMunisIGN@data, TBNotifAll[, .(TBCases=.N),by=COD_MUNI], by.x = "COD_MUNI__", by.y="COD_MUNI", all.x=TRUE, sort=FALSE)
+gtmMunisIGN@data = merge(gtmMunisIGN@data, dt.munisGT[, .(Poblacion, COD_MUNI__)], by.x = "COD_MUNI__", by.y="COD_MUNI__", all.x=TRUE, sort=FALSE)
 gtmMunisIGN.map.df = fortify(gtmMunisIGN)
 gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
 
 
 # Plotting TB cases per municipality
-plot = ggplot(data=gtmMunisIGN@data, aes(fill=TBCases)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + scale_fill_gradientn(colours = c("#444444", "#ddcc22", "#DD5522", "#AA1111"), values=c(0,0.005,0.7,1), trans="log10") + labs(fill= "Number of cases", title="TB cases by municipality")
+plot = ggplot(data=gtmMunisIGN@data, aes(fill=1000*TBCases/Poblacion)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + scale_fill_gradientn(colours = c("#777777", "#ddcc22", "#DD5522", "#AA1111"), values=c(0,0.005,0.7,1), trans="log10") + labs(fill= "Rate", title="TB incidence rate per 1,000 people per 2 years")
 # Overlay the departments
 plot + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#00000066", size=1)
 
@@ -144,7 +146,7 @@ if (saveGraphs)
 
 # Relation between indigenous population proportion and TB prevalence
 deptoData = merge(TBNotifAll[, .(TB=.N) ,by=COD_DEPTO], deptoIndgnProp[, .(DEPTO,INDGN)], by.x="COD_DEPTO", by.y="DEPTO")
-deptoData = merge(deptoData, munisPob[,.(Pob = sum(Poblacion, na.rm=TRUE)), by=COD_DEPT__], by.x="COD_DEPTO", by.y="COD_DEPT__")
+deptoData = merge(deptoData, munisGT[,.(Pob = sum(Poblacion, na.rm=TRUE)), by=COD_DEPT__], by.x="COD_DEPTO", by.y="COD_DEPT__")
 ggplot(data = deptoData, aes(y=log(TB/Pob), x=log(INDGN/(1-INDGN)))) + geom_point() + geom_smooth(method=lm)  + labs(title="Indigenous population proportion vrs TB Cases per department", y="[Log] TB incidence, cases per 1,000 persons per 2 years", x="[Logit] Indigenous population proportion")
 if (saveGraphs) 
     ggsave("PCE/Graficas/TB_Gt_Notifications_2014-2015-IndgnPop vs Incidence by Depto.png", height=8, width=8)
@@ -194,7 +196,7 @@ summary(fit_TBIndg)
 
 # ----TB relation with poverty-----------------------------
 
-pobrData = merge( merge(TBNotifAll[, .(TBCases=.N),by=COD_MUNI], pobrezaGT11[is.na(IsDepto)], by.x = "COD_MUNI", by.y = "Codigo"), munisPob, by.x ="COD_MUNI", by.y="COD_MUNI__" ) 
+pobrData = merge( merge(TBNotifAll[, .(TBCases=.N),by=COD_MUNI], pobrezaGT11[is.na(IsDepto)], by.x = "COD_MUNI", by.y = "Codigo"), munisGT, by.x ="COD_MUNI", by.y="COD_MUNI__" ) 
 
 hist(log(pobrezaGT11$IncidPobrezaExt))
 
@@ -216,23 +218,23 @@ if (saveGraphs)
 # defsData is loaded in ../Guatemala_load_outcomes_data.R
 tbDeaths = NULL
 for (year in seq(2009, 2015, 1)) {
-  temp = defsData[[year]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) | 
-                            (Caudef %in% c("A301", "A302", "J65X", "K230", "K673", "M011",
-                                           "N330", "M490", "M900", "N741", "O980", "K930",
-                                           "P370", "Z030", "Z111", "Z201", "Z232")), 
-                          .(conteo = .N), 
-                          by = .(date = paste0(year, "-", Mesocu, "-01")) ]
-  if (is.null(tbDeaths)) {
-    tbDeaths = temp
-  }
-  else { 
-    tbDeaths = rbind(tbDeaths, temp)
-  }
+    temp = defsData[[year]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) | 
+                                (Caudef %in% c("A301", "A302", "J65X", "K230", "K673", "M011",
+                                               "N330", "M490", "M900", "N741", "O980", "K930",
+                                               "P370", "Z030", "Z111", "Z201", "Z232")), 
+                            .(conteo = .N), 
+                            by = .(date = paste0(year, "-", Mesocu, "-01")) ]
+    if (is.null(tbDeaths)) {
+        tbDeaths = temp
+    }
+    else { 
+        tbDeaths = rbind(tbDeaths, temp)
+    }
 }  
 
 ggplot(data = tbDeaths, aes(x= as.Date(date), y = conteo)) + geom_line() + labs(title="TB deaths in Gt from 2009 to 2016", y="Cases per month", x="Time")
 if (saveGraphs) 
-  ggsave(paste0(dataPath, "Graficas/GT_TB_Deaths_TS 2009-2015.png"), height=8, width=8)
+    ggsave(paste0(dataPath, "Graficas/GT_TB_Deaths_TS 2009-2015.png"), height=8, width=8)
 
 
 tbPrivHospI = NULL
