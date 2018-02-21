@@ -39,6 +39,11 @@ dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
   #data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))
   facilities = data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))      
 
+  #facilitity ids are stored as character strings; convert to integers 
+  is.numeric(facilities$id)
+  facility_id <- as.numeric(facilities$id)
+  is.numeric(facility_id)
+  cbind(facilities, facility_id)
             
   # save raw output
   saveRDS(facilities, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/dist_facilities.rds")
