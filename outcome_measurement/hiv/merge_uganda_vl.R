@@ -101,3 +101,8 @@ readRDS("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facility_
 data = merge(full_data, facility_names, by.x='facility_id', by.y='facility_id', all.x=TRUE)
 
 # ----------------------------------------------
+
+#save the final data as an RDS
+saveRDS(data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/uganda_vl.rds")
+
+# ----------------------------------------------
