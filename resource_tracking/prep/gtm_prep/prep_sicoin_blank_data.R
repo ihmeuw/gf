@@ -33,7 +33,7 @@ prep_blank_sicoin = function(loc_name, loc_id, start_date, disease, period, sour
   
   budget_dataset$loc_name<- as.character(budget_dataset$loc_name)
   budget_dataset$loc_name <- loc_name
-  budget_dataset$loc_name <- loc_id
+  budget_dataset$loc_id <- loc_id
   ## Create other variables 
   budget_dataset$source <- source
   budget_dataset$start_date <- start_date

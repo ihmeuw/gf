@@ -35,7 +35,7 @@ library(lubridate)
 # (only the ones that contain actual budget/expenditure data and are in c_coin format). 
 ## 
 
-loc_id <- 94
+loc_id <- 0100
 country <- "gtm"
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
 
@@ -118,7 +118,7 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
 
 ##remove rows where loc_ids are in the SDA column: 
 cleaned_database <- resource_database[!resource_database$loc_name%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
-
+cleaned_database <-cleaned_database[!cleaned_database$loc_id%in%"TOTAL"]
 ##output the data to the correct folder 
 
 
@@ -127,7 +127,7 @@ write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/gtm/prep
 
 
 
-
+which(is.na(cleaned_database$loc_id))
 
 
 
