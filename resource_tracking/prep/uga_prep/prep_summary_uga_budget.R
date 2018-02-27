@@ -9,6 +9,7 @@
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
 ##download necessary packages: 
+rm(list=ls())
 library(lubridate)
 library(data.table)
 library(readxl)
