@@ -68,42 +68,6 @@ hivData[, cumulative_budget:=cumsum(budget), by=c('source', 'loc_name', 'year')]
 hivData[, cumulative_disbursement:=cumsum(disbursement),by=c('source', 'loc_name', 'year')]
 hivData[, absorption:=cumulative_disbursement/cumulative_budget]
 
-# ----------------------------------------------
-
-## split by source (GF vs GHE)
-gheData <- hivData[source=="ghe"]
-gfData <- hivData[source=="gf"]
-
-
-# ----------------------------------------------
-## do a histogram of GHE budget values: 
-hist(gheData$budget/1000000)
-boxplot(gheData$budget)
-
-
-hist(gheData$budget/1000000, breaks=10, main="Breaks=10")
-
-## get quantiles of the budget/disb data:
-quantile(gheData$absorption, na.rm=TRUE)
-
-
-##let's make buckets of the budget variable: 
-library(Hmisc)
-
-# ----------------------------------------------
-## Malaria data: 
-
-malData <- sicoin_data[disease=="malaria"]
-
-malData <- malData[source=="gf"]
-
-
-
-
-
-
-
-
   # ----------------------------------------------
 ## get the important info from the shape data files - lat/long coordinates, muni codes, etc.
 
@@ -129,13 +93,10 @@ admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow
 
 # ----------------------------------------------
 ##get shape data ready to do yearly graphs: 
-gheData <- gheData[with(gheData, order(year)), ]
-
+gheData <- hivData[source=="ghe"]
+gfData <- hivData[source=="gf"]
 # draw the polygons using ggplot2
-
-## I put the merge function inside the graphing function/loop - longer time to process, but it frees up memory in R: 
-colors <- c('#b2e2e2', '#66c2a4', '#238b45', '#006d2c')
-names(colors) <- levels(gheData$binned_budget)
+gheData <- gheData[with(gheData, order(year, loc_name)), ]
 
 gtm_plots <- list()
 i = 1
@@ -145,21 +106,23 @@ for (k in unique(gheData$year)){
   shapedata$year <- k
   # merge on the data (all.x=TRUE so the shapefile data doesn't disappear)
   graphdata <- merge(shapedata, subdata,by=c('year','id'), all.x=TRUE, allow.cartesian=TRUE)
-  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=binned_budget)) + 
+  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=budget/1000000)) + 
      coord_equal() +
-    geom_path() +
-      geom_map(map=admin_dataset, data=admin_dataset, 
-               aes(map_id=id,group=group), color="#FF0000", alpha=0.8) + 
+     geom_path() +
+     # geom_map(map=admin_dataset, data=admin_dataset, 
+             #  aes(map_id=id,group=group), color="#FF0000", alpha=0.8) + 
     # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
-  	theme_void() +
-  	 scale_fill_manual(na.value = "grey50", 
-  	                    values = colors) + 
-    labs(title=paste(k, "GHE HIV Resources"), fill='Budget ($$ USD)'))
+      scale_fill_gradient2(low='#13b9f4', mid='#ff69b4', high='#25e545',
+                           na.value = "grey50",space = "Lab", midpoint=0.8, ## play around with this to get the gradient 
+                           # that you want, depending on data values 
+                           breaks=c(0, 0.2,0.5, 1, 1.5, 2), limits=c(0,2)) +
+      theme_void() +  
+      labs(title=paste(k, "GHE HIV Budget"), fill='$ USD (in Millions)'))
   gtm_plots[[i]] <- plot
   i=i+1
 }
 
-pdf("H:/rt_data/gtm_ghe_hiv_by_muni.pdf", height=6, width=9)
+pdf("H:/rt_data/gtm_ghe_hiv_budgets.pdf", height=6, width=9)
 invisible(lapply(gtm_plots, print))
 dev.off()
 
