@@ -22,7 +22,7 @@ library(stringr) # to help extract meta data from file names
 # data directory
 
 # output file
-dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
+#dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
 # ----------------------------------------------
 
 
@@ -30,21 +30,21 @@ dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
 # Load/prep the list of facility names and id#s to merge with viral load data
 
 # store url
-url = 'https://vldash.cphluganda.org/other_data'
+#url = 'https://vldash.cphluganda.org/other_data'
 
 # load
-data = fromJSON(url)
+#data = fromJSON(url)
 
 #data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))
-facilities = data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))      
+#facilities = data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))      
 
 #facilitity ids are stored as character strings; convert to integers 
-facility_id <- as.numeric(facilities$id)
-is.numeric(facility_id)
-facility_names <- data.table(cbind(facilities, facility_id))
+#facility_id <- as.numeric(facilities$id)
+#is.numeric(facility_id)
+#facility_names <- data.table(cbind(facilities, facility_id))
 
 # save raw output
-saveRDS(facility_names, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facility_names.rds")
+#saveRDS(facility_names, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facility_names.rds")
 
 # ----------------------------------------------
 
@@ -64,7 +64,7 @@ files <- list.files('./', recursive=TRUE)
 
 # loop over existing files
 i = 1
-for(f in files) {
+for(f in files[1:20]) {
 
   #Load the RDs file
   jsonData = readRDS(f)
@@ -74,7 +74,7 @@ for(f in files) {
   
   # skip to next if there was no data for this combination
   if (length(current_data)==0) next
-  
+
   # extract meta data from file name
   meta_data = strsplit(f, '_')[[1]]
   current_data[, year:=as.numeric(substr(meta_data[3],3,6))]
@@ -95,14 +95,14 @@ for(f in files) {
 # merge on district/facility names
 
 #load the list of facility names and id#s for the merge
-readRDS("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facility_names.rds")
+#readRDS("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facility_names.rds")
 
 #merge the two files to create a single data set
-data = merge(full_data, facility_names, by.x='facility_id', by.y='facility_id', all.x=TRUE)
+#data = merge(full_data, facility_names, by.x='facility_id', by.y='facility_id', all.x=TRUE)
 
 # ----------------------------------------------
 
 #save the final data as an RDS
-saveRDS(data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/uganda_vl.rds")
+saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/uganda_vl.rds")
 
 # ----------------------------------------------
