@@ -22,13 +22,13 @@ fghData <- melt(fghData, id=c("year", "source", "channel", "country"), variable.
 
 
 get_disease <- function(sda_orig){
-  x <- "hss"
-  if(grepl("hiv", sda_orig)){
-    x <- "hiv"
+  x <- "tb"
+  if(grepl("hss", sda_orig)){
+    x <- "hss"
   } else if(grepl("mal", sda_orig)){
     x <- "malaria"
-  } else if (grepl("tb", sda_orig)){
-    x <- "tb"
+  } else if (grepl("hiv", sda_orig)){
+    x <- "hiv"
   } else {
     x <- x
   }
@@ -41,6 +41,13 @@ get_disease <- function(sda_orig){
 fghData$disease <- mapply(get_disease, fghData$sda_orig)
 
 ## add in 
+
+
+fghData[country=='COD', country:='Congo (Democratic Republic)'] 
+fghData[country=='GTM', country:='Guatemala'] 
+fghData[country=='UGA', country:='Uganda'] 
+
+fghData$data_source <- "fgh"
 
 
 
