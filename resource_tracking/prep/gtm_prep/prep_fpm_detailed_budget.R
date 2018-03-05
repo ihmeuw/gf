@@ -64,61 +64,73 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   gf_data <- gf_data[,-c(1:2)]
   
   
-  ##new budgets formatted slightly differently: 
-  if(year(start_date)==2018){
-    gf_data <- gf_data[-c(1:2),]
-    colnames(gf_data) <- as.character(gf_data[1,])
+  if(grant=="GUA-M-MSPAS"){
     gf_data <- gf_data[-1,]
-  }
-  
-  ##only get the columns that we want
-  gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
-  
-  ##only keep data that has a value in the "category" column 
-  gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
-  
-  colnames(gf_data)[1] <- "module"
-  colnames(gf_data)[2] <- "activity_description"
-
-  if(!(recipient %in% colnames(gf_data))){
-   gf_data$recipient <- grant_number
-  } else{
-    colnames(gf_data)[3] <- "recipient" 
+    colnames(gf_data) <- as.character(gf_data[1,])
+    gf_data <- gf_data[-c(1:2),]
+    budget_dataset <- gf_data[, c("Activity" ,"Total Presupuesto Year 1"), with=FALSE]
+    names(budget_dataset) <- c("sda_orig","budget")
+    budget_dataset <- na.omit(budget_dataset, cols=c("sda_orig"))
+    budget_dataset <- unique(budget_dataset, by=c("sda_orig","budget"))
+    
+  }else{
+    ##new budgets formatted slightly differently: 
+    if(year(start_date)==2018){
+      gf_data <- gf_data[-c(1:2),]
+      colnames(gf_data) <- as.character(gf_data[1,])
+      gf_data <- gf_data[-1,]
     }
-  if(!(loc_id %in% colnames(gf_data))){
-    gf_data$loc_id <- "gtm"
-  } else{
-    colnames(gf_data)[4] <- "loc_id" 
-  }
+    
+    ##only get the columns that we want
+    gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
+    
+    ##only keep data that has a value in the "category" column 
+    gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
+    
+    colnames(gf_data)[1] <- "module"
+    colnames(gf_data)[2] <- "activity_description"
   
-  
-  ## invert the dataset so that budget expenses and quarters are grouped by category
-  ##library(reshape)
-  setDT(gf_data)
-  gf_data1<- melt(gf_data,id=c("module", "activity_description", "recipient", "loc_id"), 
-                    variable.name = "qtr", value.name="budget")
-
-  
-  dates <- rep(start_date, qtr_num) # 
-  for (i in 1:length(dates)){
-    if (i==1){
-      dates[i] <- start_date
-    } else {
-      dates[i] <- dates[i-1]%m+% months(3)
+    if(!(recipient %in% colnames(gf_data))){
+     gf_data$recipient <- grant_number
+    } else{
+      colnames(gf_data)[3] <- "recipient" 
+      }
+    if(!(loc_id %in% colnames(gf_data))){
+      gf_data$loc_id <- "gtm"
+    } else{
+      colnames(gf_data)[4] <- "loc_id" 
     }
+    
+    
+    ## invert the dataset so that budget expenses and quarters are grouped by category
+    ##library(reshape)
+    setDT(gf_data)
+    gf_data1<- melt(gf_data,id=c("module", "activity_description", "recipient", "loc_id"), 
+                      variable.name = "qtr", value.name="budget")
+  
+    
+    dates <- rep(start_date, qtr_num) # 
+    for (i in 1:length(dates)){
+      if (i==1){
+        dates[i] <- start_date
+      } else {
+        dates[i] <- dates[i-1]%m+% months(3)
+      }
+    }
+    
+    if(length(dates) != length(unique(gf_data1$qtr))){
+      stop('quarters were dropped!')
+    }
+    ##turn the list of dates into a dictionary (but only for quarters!) : 
+    dates <- setNames(dates,unique(gf_data1$qtr))
+    
+    
+    ## now match quarters with start dates 
+    kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
+    budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date ]
+    budget_dataset$qtr <- NULL
   }
   
-  if(length(dates) != length(unique(gf_data1$qtr))){
-    stop('quarters were dropped!')
-  }
-  ##turn the list of dates into a dictionary (but only for quarters!) : 
-  dates <- setNames(dates,unique(gf_data1$qtr))
-  
-  
-  ## now match quarters with start dates 
-  kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
-  budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date ]
-  budget_dataset$qtr <- NULL
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
   budget_dataset$disease <- disease
