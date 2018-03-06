@@ -57,10 +57,15 @@ for(a in ages) {
 	for(s in sexes) { # make sure "U" is the correct value
 
 		# store rds file location
-		outFile = paste0(dir, '/20', y, '/facilities_suppression_', m,'20', y,'_',a,'_', s, '_tb', t, '.rds')
+		outFile = paste0(dir, '/20', y, '/', m, 
+			'facilities_suppression_', m,'20', y, 
+			'_',a,'_', s, '_tb', t, '.rds')
 			  
 		# store url
-		url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B', a, '%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22', s, '%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', t, '%22%5D&to_date=20',y, m)
+		url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B', 
+				a, '%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', 
+				y, m,'&genders=%5B%22', s,				'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', 
+				t, '%22%5D&to_date=20',y, m)
 
 		# load
 		print(paste('Loading json from:', url))
