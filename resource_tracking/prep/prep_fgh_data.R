@@ -50,6 +50,7 @@ fghData[country=='UGA', country:='Uganda']
 fghData$data_source <- "fgh"
 
 
+write.csv(fghData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_data_prepped.csv", row.names=FALSE)
 
 
 

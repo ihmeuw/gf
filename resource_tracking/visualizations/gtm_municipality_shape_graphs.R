@@ -7,8 +7,6 @@
 ### This code is to make the actual maps of Guatemala's municipalities using shape files and SICOIN data: 
 
 # ----------------------------------------------
-
-
 # raster package is most of what you need
 rm(list=ls())
 library(rgeos)
@@ -95,9 +93,26 @@ admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow
 ##get shape data ready to do yearly graphs: 
 gheData <- hivData[source=="ghe"]
 gfData <- hivData[source=="gf"]
-# draw the polygons using ggplot2
+
 gheData <- gheData[with(gheData, order(year, loc_name)), ]
 
+##budget and disbursement: 
+
+colScale <-  scale_fill_gradient2(low='#ffe1e6', mid='#ef8307', high='#12ed8e',
+                                  na.value = "grey70",space = "Lab", midpoint = 1, ## play around with this to get the gradient 
+                                  # that you want, depending on data values 
+                                  breaks=c(0, 0.5 ,1, 1.5, 2), limits=c(0,2))
+
+
+##absorption: 
+
+colScale <-  scale_fill_gradient2(low='#ffe1e6', mid='#00FFff', high='#0606aa',
+                                  na.value = "grey70",space = "Lab", midpoint = 0.5, ## play around with this to get the gradient 
+                                  # that you want, depending on data values 
+                                  breaks=c(0, 0.2, 0.4,0.6, 0.8), limits=c(0,1))
+
+
+# draw the polygons using ggplot2
 gtm_plots <- list()
 i = 1
 for (k in unique(gheData$year)){
@@ -112,10 +127,7 @@ for (k in unique(gheData$year)){
      # geom_map(map=admin_dataset, data=admin_dataset, 
              #  aes(map_id=id,group=group), color="#FF0000", alpha=0.8) + 
     # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
-      scale_fill_gradient2(low='#13b9f4', mid='#ff69b4', high='#25e545',
-                           na.value = "grey50",space = "Lab", midpoint=0.8, ## play around with this to get the gradient 
-                           # that you want, depending on data values 
-                           breaks=c(0, 0.2,0.5, 1, 1.5, 2), limits=c(0,2)) +
+      colScale +
       theme_void() +  
       labs(title=paste(k, "GHE HIV Budget"), fill='$ USD (in Millions)'))
   gtm_plots[[i]] <- plot
