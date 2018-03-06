@@ -38,9 +38,9 @@ sexes = c('m','f','x')
 # for testing purposes
 # y='16'
 # m='01'
-ages = '0,1'
-tbs = 'n'
-sexes = 'f'
+# ages = '0,1'
+# tbs = 'n'
+# sexes = 'f'
 # ----------------------------------------------
 
 
