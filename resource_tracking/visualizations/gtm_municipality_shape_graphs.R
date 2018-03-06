@@ -33,7 +33,7 @@ shapeData = shapefile('GTM_munis_only.shp')
 
 ## load the admin1 shape file: 
 
-adminData = shapefile('archive/GTM_adm1.shp')
+adminData = shapefile('gtm_region.shp')
 
 
 ## load the sicoin data:
@@ -64,7 +64,7 @@ hivData  = hivData [, list(budget=sum(budget), disbursement=sum(disbursement), e
 hivData <- hivData[with(hivData, order(source, loc_name, year)), ]
 hivData[, cumulative_budget:=cumsum(budget), by=c('source', 'loc_name', 'year', 'id')]
 hivData[, cumulative_disbursement:=cumsum(disbursement),by=c('source', 'loc_name', 'year', 'id')]
-hivData[, absorption:=cumulative_disbursement/cumulative_budget]
+hivData[, absorption:=disbursement/budget]
 
   # ----------------------------------------------
 ## get the important info from the shape data files - lat/long coordinates, muni codes, etc.
@@ -83,7 +83,6 @@ shapeData2 = gSimplify(shapeData, tol=0.01, topologyPreserve=TRUE)
 coordinates = data.table(fortify(shapeData, region='Codigo'))
 admin_coords <- data.table(fortify(adminData, region='ID_1'))
 coordinates$id <- as.numeric(coordinates$id)
-admin_coords$id <- as.numeric(admin_coords$id)
 
 # merge on municipality names
 names = data.table(shapeData@data)
@@ -95,16 +94,16 @@ admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow
 # ----------------------------------------------
 ##get shape data ready to do yearly graphs: 
 gheData <- hivData[source=="ghe"]
+gheData <-gheData[with(gheData, order(year, loc_name)), ]
 gfData <- hivData[source=="gf"]
-
-gheData <- gheData[with(gheData, order(year, loc_name)), ]
+gfData<- gfData[with(gfData, order(year, loc_name)), ]
 
 ##budget and disbursement: 
 
 colScale <-  scale_fill_gradient2(low='#ffe1e6', mid='#ef8307', high='#12ed8e',
-                                  na.value = "grey70",space = "Lab", midpoint = 1, ## play around with this to get the gradient 
+                                  na.value = "grey70",space = "Lab", midpoint = 1.25, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
-                                  breaks=c(0, 0.5 ,1, 1.5, 2), limits=c(0,2))
+                                  breaks=c(0, 0.5 ,1, 1.5, 2, 2.5), limits=c(0,2.5))
 
 
 ##absorption: 
@@ -113,15 +112,11 @@ colScale <-  scale_fill_gradient2(low='#ffe1e6', mid='#00FFff', high='#0606aa',
                                   # that you want, depending on data values 
                                   breaks=c(0, 0.2, 0.4,0.6, 0.8), limits=c(0,1))
 
-
-# Get names and id numbers corresponding to administrative areas to plot as labels: 
-gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1], 
-                                         lat = coordinates(adminData)[, 2])
-
-gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1']
-gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
-
-# 
+# ----------------------------------------------
+### if you want:  Get names and id numbers corresponding to administrative areas to plot as labels: 
+# gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1], 
+# gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1']
+# gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
 # gtm_region_centroids$NAME_1[18] <- "Totonicapán"
 # gtm_region_centroids$NAME_1[22] <- "Sololá"
 # gtm_region_centroids$NAME_1[21] <- "Suchitepéquez"
@@ -129,7 +124,12 @@ gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
 # gtm_region_centroids$NAME_1[1] <- "Quiché"
 # gtm_region_centroids$NAME_1[7] <- "Petén"
 
+
+# ----------------------------------------------
+
 # draw the polygons using ggplot2
+
+
 gtm_plots <- list()
 i = 1
 for (k in unique(gheData$year)){
@@ -138,24 +138,25 @@ for (k in unique(gheData$year)){
   shapedata$year <- k
   # merge on the data (all.x=TRUE so the shapefile data doesn't disappear)
   graphdata  <- merge(shapedata, subdata,by=c('year','id'), all.x=TRUE, allow.cartesian=TRUE)
-  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=absorption)) + 
-     coord_equal() +
-     geom_path() +
-     geom_map(map=admin_dataset, data=admin_dataset,
-              aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
-       # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
-      colScale +
-      theme_void() +  
-      geom_label_repel(data = gtm_region_centroids, aes(label = NAME_1, x = long, y = lat, group = NAME_1), 
-                       size = 3, fontface = 'bold', color = 'black',
-                       box.padding = 0.35, point.padding = 0.3,
-                       segment.color = 'grey50', nudge_x = 0.7, nudge_y = 4.5) + 
-      labs(title=paste(k, "GF Malaria Absorption"), fill='Absorption (Disb./Budget)'))
+  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=disbursement/1000000)) + 
+             coord_equal() +
+             geom_path() +
+             geom_map(map=admin_dataset, data=admin_dataset,
+                      aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
+             # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
+             colScale +
+             theme_void() +  
+             # geom_label_repel(data = gtm_region_centroids, aes(label = NAME_1, x = long, y = lat, group = NAME_1), 
+             #                  size = 3, fontface = 'bold', color = 'black',
+             #                  box.padding = 0.35, point.padding = 0.3,
+             #                  segment.color = 'grey50', nudge_x = 0.7, nudge_y = 4.5) + 
+             labs(title=paste(k, "GHE HIV DISBURSEMENT"), fill='USD (millions)'))
   gtm_plots[[i]] <- plot
   i=i+1
 }
 
-pdf("H:/rt_data/gtm_ghe_hiv_absorption_with_regions.pdf", height=6, width=9)
+
+pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/municipality_viz/ghe_hiv_disbursements.pdf", height=6, width=9)
 invisible(lapply(gtm_plots, print))
 dev.off()
 

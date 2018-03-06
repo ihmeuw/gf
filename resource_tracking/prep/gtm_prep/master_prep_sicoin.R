@@ -53,6 +53,8 @@ summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), n
 summary_file$data_source<- as.character(summary_file$data_source)
 summary_file$loc_id <- as.character(summary_file$loc_id)
 summary_file$loc_id <- country
+summary_file$year <- as.character(summary_file$year)
+summary_file$year <- "none"
 
 ##source the functions that we will use to prep the files: 
 source('./prep_sicoin.r')
@@ -125,9 +127,6 @@ cleaned_database <-cleaned_database[!cleaned_database$loc_id%in%"TOTAL"]
 write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
           ,row.names=FALSE, fileEncoding="latin1")
 
-
-
-which(is.na(cleaned_database$loc_id))
 
 
 
