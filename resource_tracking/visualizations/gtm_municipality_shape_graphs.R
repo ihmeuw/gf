@@ -114,6 +114,21 @@ colScale <-  scale_fill_gradient2(low='#ffe1e6', mid='#00FFff', high='#0606aa',
                                   breaks=c(0, 0.2, 0.4,0.6, 0.8), limits=c(0,1))
 
 
+# Get names and id numbers corresponding to administrative areas to plot as labels: 
+gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1], 
+                                         lat = coordinates(adminData)[, 2])
+
+gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1']
+gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
+
+# 
+# gtm_region_centroids$NAME_1[18] <- "Totonicapán"
+# gtm_region_centroids$NAME_1[22] <- "Sololá"
+# gtm_region_centroids$NAME_1[21] <- "Suchitepéquez"
+# gtm_region_centroids$NAME_1[3] <- "Sacatepéquez"
+# gtm_region_centroids$NAME_1[1] <- "Quiché"
+# gtm_region_centroids$NAME_1[7] <- "Petén"
+
 # draw the polygons using ggplot2
 gtm_plots <- list()
 i = 1
@@ -127,16 +142,20 @@ for (k in unique(gheData$year)){
      coord_equal() +
      geom_path() +
      geom_map(map=admin_dataset, data=admin_dataset,
-              aes(map_id=id,group=group), size=1, color="#bf7ad8", alpha=0) + 
+              aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
        # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
       colScale +
       theme_void() +  
+      geom_label_repel(data = gtm_region_centroids, aes(label = NAME_1, x = long, y = lat, group = NAME_1), 
+                       size = 3, fontface = 'bold', color = 'black',
+                       box.padding = 0.35, point.padding = 0.3,
+                       segment.color = 'grey50', nudge_x = 0.7, nudge_y = 4.5) + 
       labs(title=paste(k, "GF Malaria Absorption"), fill='Absorption (Disb./Budget)'))
   gtm_plots[[i]] <- plot
   i=i+1
 }
 
-pdf("H:/rt_data/gtm_ghe_hiv_absorption.pdf", height=6, width=9)
+pdf("H:/rt_data/gtm_ghe_hiv_absorption_with_regions.pdf", height=6, width=9)
 invisible(lapply(gtm_plots, print))
 dev.off()
 
