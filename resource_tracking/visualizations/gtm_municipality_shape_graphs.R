@@ -55,15 +55,15 @@ sicoin_data$id <- as.numeric(lapply(sicoin_data$loc_id, function(y) sub('^0+(?=[
 hivData <- sicoin_data[disease=="hiv"]
 
 ## something that might be cool is to get the absorption ratio of disb/budget by year, source, disease, etc. 
-byVars = names(hivData)[names(hivData)%in%c('source', 'loc_id', 'loc_name', 'year')]
+byVars = names(hivData)[names(hivData)%in%c('source', 'loc_id', 'loc_name', 'year', 'id')]
 hivData  = hivData [, list(budget=sum(budget), disbursement=sum(disbursement), expenditure=sum(expenditure)), 
                           by=byVars]
 
 ##do a sum of sicoin data to get data by muni, year, disease, and source
 
 hivData <- hivData[with(hivData, order(source, loc_name, year)), ]
-hivData[, cumulative_budget:=cumsum(budget), by=c('source', 'loc_name', 'year')]
-hivData[, cumulative_disbursement:=cumsum(disbursement),by=c('source', 'loc_name', 'year')]
+hivData[, cumulative_budget:=cumsum(budget), by=c('source', 'loc_name', 'year', 'id')]
+hivData[, cumulative_disbursement:=cumsum(disbursement),by=c('source', 'loc_name', 'year', 'id')]
 hivData[, absorption:=cumulative_disbursement/cumulative_budget]
 
   # ----------------------------------------------
@@ -81,10 +81,13 @@ shapeData2 = gSimplify(shapeData, tol=0.01, topologyPreserve=TRUE)
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 # use IDs instead of names
 coordinates = data.table(fortify(shapeData, region='Codigo'))
+admin_coords <- data.table(fortify(adminData, region='ID_1'))
 coordinates$id <- as.numeric(coordinates$id)
+admin_coords$id <- as.numeric(admin_coords$id)
 
 # merge on municipality names
 names = data.table(shapeData@data)
+admin_names <- data.table(adminData@data)
 coord_and_names = merge(coordinates, names, by.x='id', by.y='Codigo', allow.cartesian=TRUE)
 admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow.cartesian=TRUE)
 
@@ -105,7 +108,6 @@ colScale <-  scale_fill_gradient2(low='#ffe1e6', mid='#ef8307', high='#12ed8e',
 
 
 ##absorption: 
-
 colScale <-  scale_fill_gradient2(low='#ffe1e6', mid='#00FFff', high='#0606aa',
                                   na.value = "grey70",space = "Lab", midpoint = 0.5, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
@@ -120,21 +122,21 @@ for (k in unique(gheData$year)){
   subdata <- gheData[year==k]
   shapedata$year <- k
   # merge on the data (all.x=TRUE so the shapefile data doesn't disappear)
-  graphdata <- merge(shapedata, subdata,by=c('year','id'), all.x=TRUE, allow.cartesian=TRUE)
-  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=budget/1000000)) + 
+  graphdata  <- merge(shapedata, subdata,by=c('year','id'), all.x=TRUE, allow.cartesian=TRUE)
+  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=absorption)) + 
      coord_equal() +
      geom_path() +
-     # geom_map(map=admin_dataset, data=admin_dataset, 
-             #  aes(map_id=id,group=group), color="#FF0000", alpha=0.8) + 
-    # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
+     geom_map(map=admin_dataset, data=admin_dataset,
+              aes(map_id=id,group=group), size=1, color="#bf7ad8", alpha=0) + 
+       # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
       colScale +
       theme_void() +  
-      labs(title=paste(k, "GHE HIV Budget"), fill='$ USD (in Millions)'))
+      labs(title=paste(k, "GF Malaria Absorption"), fill='Absorption (Disb./Budget)'))
   gtm_plots[[i]] <- plot
   i=i+1
 }
 
-pdf("H:/rt_data/gtm_ghe_hiv_budgets.pdf", height=6, width=9)
+pdf("H:/rt_data/gtm_ghe_hiv_absorption.pdf", height=6, width=9)
 invisible(lapply(gtm_plots, print))
 dev.off()
 
