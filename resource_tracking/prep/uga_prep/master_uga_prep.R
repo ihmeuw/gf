@@ -12,7 +12,8 @@ library(stringr)
 library(rlang)
 library(zoo)
 # ----------------------------------------------
-
+## STEP 1: Download the prep_budget_data folder from UGA Basecamp and save somewhere on your local drive: 
+##this has all of the files we will be using: 
 ## Notes: running this will throw a warning: 
 #Warning messages:
 #In read_fun(path = path, sheet = sheet, limits = limits, shim = shim,  :
@@ -27,7 +28,7 @@ loc_id <- 'uga'
 source <- "gf"
 
 ## set up the directory and grab the file list: 
-dir <- 'H:/uga_data/' ##where the files are stored locally
+dir <- 'your local drive here' ##where the files are stored locally
 file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 
