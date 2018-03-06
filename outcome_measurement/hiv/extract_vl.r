@@ -35,6 +35,9 @@ ages = c('0,1', '1,2,3,4', '5,6,7,8,9,10', '11, 12, 13, 14, 15',
 tbs = c('y','n','x')
 sexes = c('m','f','x')
 
+# whether or not to re-download everything (or just new data)
+reload_everything = FALSE
+
 # for testing purposes
 # y='16'
 # m='01'
@@ -58,22 +61,28 @@ for(a in ages) {
 
 		# store rds file location
 		outFile = paste0(dir, '/20', y, '/', m, 
-			'facilities_suppression_', m,'20', y, 
+			'/facilities_suppression_', m,'20', y, 
 			'_',a,'_', s, '_tb', t, '.rds')
 			  
-		# store url
-		url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B', 
-				a, '%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', 
-				y, m,'&genders=%5B%22', s,				'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', 
-				t, '%22%5D&to_date=20',y, m)
 
-		# load
-		print(paste('Loading json from:', url))
-		data = fromJSON(url)
+		# only download if it doesn't already exist
+		check = file.exists(outFile)
+		if (check==FALSE | reload_everything==TRUE) {
 
-		# save raw output
-		print(paste('Saving data to:', outFile))
-		saveRDS(data, file=outFile)
+			# store url
+			url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B', 
+					a, '%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', 
+					y, m,'&genders=%5B%22', s,				'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', 
+					t, '%22%5D&to_date=20',y, m)
+
+			# load
+			print(paste('Loading json from:', url))
+			data = fromJSON(url)
+
+			# save raw output
+			print(paste('Saving data to:', outFile))
+			saveRDS(data, file=outFile)
+		}
 	}
   }
 }
