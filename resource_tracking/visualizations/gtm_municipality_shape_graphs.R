@@ -138,7 +138,7 @@ for (k in unique(gheData$year)){
   shapedata$year <- k
   # merge on the data (all.x=TRUE so the shapefile data doesn't disappear)
   graphdata  <- merge(shapedata, subdata,by=c('year','id'), all.x=TRUE, allow.cartesian=TRUE)
-  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=disbursement/1000000)) + 
+  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=absorption)) + 
              coord_equal() +
              geom_path() +
              geom_map(map=admin_dataset, data=admin_dataset,
@@ -150,13 +150,13 @@ for (k in unique(gheData$year)){
              #                  size = 3, fontface = 'bold', color = 'black',
              #                  box.padding = 0.35, point.padding = 0.3,
              #                  segment.color = 'grey50', nudge_x = 0.7, nudge_y = 4.5) + 
-             labs(title=paste(k, "GHE HIV DISBURSEMENT"), fill='USD (millions)'))
+             labs(title=paste(k, "GHE HIV Absorption"), fill='Absorption (Disb./Budget)'))
   gtm_plots[[i]] <- plot
   i=i+1
 }
 
 
-pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/municipality_viz/ghe_hiv_disbursements.pdf", height=6, width=9)
+pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/municipality_viz/ghe_hiv_absorption.pdf", height=6, width=9)
 invisible(lapply(gtm_plots, print))
 dev.off()
 
