@@ -39,12 +39,6 @@
   # COD_PNLP_Data_2016 - prepped data.table object, one per year (?)
   # cod_malaria_dataset_master - appended version
 # ----------------------------------------------
-
-  
-# ----------------------------------------------  
-# Make this all into a function to replicate it for each sheet within
-  
-# ----------------------------------------------
   
   
 # ----------------------------------------------
@@ -56,7 +50,15 @@
   
       #should I combine first and then clean? or clean data and then combine into one dataset?
 # ----------------------------------------------
-
+  
+  
+# ----------------------------------------------  
+# Make this all into a function to replicate it for each sheet
+  
+  prep_data <- function()
+    
+# ----------------------------------------------
+  
   
 # ----------------------------------------------
 # Set names of columns
