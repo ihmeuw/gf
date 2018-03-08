@@ -41,13 +41,13 @@ prep_summary_sicoin = function(inFile, start_date, disease, period, source) {
   ## remove empty columns 
   if (source=="gf") {
     if(year(start_date)%in%c(2012, 2013)&disease=="malaria"){
-      gf_data <- na.omit(gf_data, cols=c("X__19", "X__25"))
-      budget_dataset<- gf_data[, c("X__3","X__10", "X__19", "X__25"), with=FALSE]
+      gf_data <- na.omit(gf_data, cols=c("X__23", "X__25"))
+      budget_dataset<- gf_data[, c("X__3","X__10", "X__23", "X__25"), with=FALSE]
       names(budget_dataset) <- c("loc_id","loc_name", "budget", "disbursement")
       budget_dataset$sda_orig <- "REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"
       
     } else {
-      budget_dataset <- gf_data[, c("loc_id", "X__10", "X__11","X__19", "X__25"), with=FALSE]
+      budget_dataset <- gf_data[, c("loc_id", "X__10", "X__11","X__23", "X__25"), with=FALSE]
       names(budget_dataset) <- c("loc_id","sda_orig", "loc_name", "budget","disbursement")
     }
     # remove rows where cost_categories are missing values

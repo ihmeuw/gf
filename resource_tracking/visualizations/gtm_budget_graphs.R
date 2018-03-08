@@ -34,7 +34,7 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 
 sicoin_data$budget <- as.numeric(sicoin_data$budget)
 sicoin_data$disbursement<- as.numeric(sicoin_data$disbursement)
-
+sicoin_data$year <- year(sicoin_data$start_date)
 ##first look at data on a national level 
 byVars = names(sicoin_data)[names(sicoin_data)%in%c('source', 'start_date', 'period', 'disease')]
 nat_level = sicoin_data[, list(budget=sum(budget), disbursement=sum(disbursement), expenditure=sum(expenditure)), by=byVars]
@@ -49,27 +49,43 @@ nat_level$end_date = NULL
 nat_level= rbind(nat_level, tmp)
 
 
-graphData= melt(nat_level, id.vars=c( "source", "period", "start_date", "disease"))
-graphData$value[graphData$value==0] <- NA
+
+nat_level[source=='gf', source:='Global Fund']
+nat_level[source=='ghe', source:='Government Health Expenditure']
+nat_level[source=='donacions', source:='Donacions']
+
+barData <- copy(nat_level)
+
+barData$budget[barData$budget<0]= 0 
+barData$disbursement[barData$disbursement<0]= 0
 
 
-graphData[disease=='hiv', disease:='HIV/AIDS']
-graphData[disease=='malaria', disease:='Malaria']
-graphData[disease=='tb', disease:='Tuberculosis']
-graphData[disease=='hss', disease:='HSS']
+barData <- disease_names_for_plots(barData)
+
+resource_plots <- list()
+for (k in unique(barData$disease)){
+  subdata <- barData[disease==k]
+  colScale <- scale_fill_manual(name="Source", values =primColors) 
+  plot <- (ggplot(data=subdata, aes(x = year(start_date), y= budget, fill=source)) + 
+             geom_bar(position = "fill",
+               stat="identity") + 
+             colScale +
+             theme_bw(base_size=14) +
+             theme(strip.text.x = element_text(size = 8, colour = "black")) +
+             scale_y_continuous(labels = percent_format()) +
+             scale_x_continuous(name ="Year") +
+             labs(title=paste(k, "Data at National Level"), y = "% of Total Budgeted Resources",
+                  caption="Data Source: SICOIN" ))
+  resource_plots[[k]] <- plot
+}
+
+pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/budget_disbursement_graphs/gf_perc_of_total_resources.pdf", height=6, width=9)
+invisible(lapply(resource_plots, print))
+dev.off()
 
 
 ##Government Health Expenditures and GF data on same graph (linegraph over time)
 # ----------------------------------------------
-
-graphData <- graphData[disease != "Malaria"]
-graphData[source=='gf', source:='Global Fund']
-graphData[source=='ghe', source:='Government Health Expenditure']
-graphData[source=='donacions', source:='Donacions']
-graphData <- graphData[!variable=="expenditure"]
-graphData[variable=='budget', variable:='Budget']
-graphData[variable=='disbursement', variable:='Disbursement']
-
 
 primColors <- c('#dc143c', ##red
                 '#3DCC3D', ##green
@@ -77,6 +93,12 @@ primColors <- c('#dc143c', ##red
 
 names(primColors) <- c("Donacions", "Global Fund", "Government Health Expenditure")
 colScale <- scale_color_manual(name="Source", values =primColors) 
+
+# ----------------------------------------------
+
+timeData = melt(nat_level, id.vars=c( "source", "period", "start_date", "disease"))
+timeData$value[timeData$value==0] <- NA
+
 nat_plots <- list()
 for (k in unique(graphData$disease)){
   subdata <-graphData[disease==k]
@@ -85,7 +107,7 @@ for (k in unique(graphData$disease)){
     facet_wrap(~disease,scales='free') +
     colScale + 
     ggtitle(paste(k, "Data at National Level")) +
-    labs(x = "Start Date", y = "$$ in mil") +
+    labs(x = "Start Date", y = "USD (millions)") +
     theme_bw()
   nat_plots[[k]] <- plot
 }
@@ -94,36 +116,51 @@ pdf("gtm_by_source_and_resource.pdf", height=6, width=9)
 invisible(lapply(nat_plots, print))
 dev.off()
 # ----------------------------------------------
+##GF VS GHE VS DONACIONS: 
+  
+
+
+
+
 ## do some malaria manipulations: 
 
-malaria_data <- nat_level[disease=="malaria"]
+malaria_data <- nat_level[disease== "tb"]
 malaria_data$year <- year(malaria_data$start_date)
 malaria_data$expenditure <- NULL
 
-malaria_data<- malaria_data[with(malaria_data, order(start_date)), ]
-malaria_data[, cumsum_disb:= cumsum(disbursement),by="year"]
+malaria_data<- malaria_data[with(malaria_data, order(start_date, disease, source)), ]
+malaria_data[, cumsum_budget:= cumsum(budget),by=c("year", "disease", "source")]
+malaria_data[, cumsum_disb:= cumsum(disbursement),by=c("year", "disease", "source")]
 malaria_data<-malaria_data[with(malaria_data, order(source, year, start_date)),]
 
-malData <- melt(malaria_data, id.vars=c( "source", "year", "disease", 'start_date', 'period'))
-malData[variable=='cumsum_disb', variable:='Cum. Disbursement']
+byVars = names(malaria_data)[names(malaria_data)%in%c('source', 'start_date', 'period', 'disease')]
+malaria_data = malaria_data[, list(budget=sum(budget),disbursement = sum(disbursement)), by=byVars]
+
+
+
+malData <- melt(malaria_data, id.vars=c( "source", "disease", 'start_date', 'period'))
 
 malData[source=='gf', source:='Global Fund']
 malData[source=='ghe', source:='Government Health Expenditure']
-malData <- malData[!variable=="disbursement"]
+malData[source=='donacions', source:='Donacions']
 malData[variable=='budget', variable:='Budget']
+malData[variable=='disbursement', variable:='Disbursement']
 
-malData$variable <- factor(malData$variable, levels = c("Budget", "Cum. Disbursement"))
+malData <- malData[!source=="donacions"]
 
 malaria_plots <- list()
-malaria_plots[[1]] <- ggplot(malData, aes(x = start_date, y= value/1000000)) + 
+for(k in unique(malData$disease)){
+  malaria_plots[[k]] <- (ggplot(malData[disease==k], aes(x = start_date, y= value/1000000)) + 
   geom_line(aes(color=source , linetype=variable
   ), size=0.75) +
   colScale + 
-  ggtitle("Malaria Data at National Level") +
-  scale_linetype_manual(values=c("solid", "twodash"))+ 
+  ggtitle("Malaria Data at National Level") + 
+    facet_wrap(~source, scales="free")+
+  # scale_linetype_manual(values=c("solid", "twodash"))+ 
   #ylim(0, 9) + 
-  labs(x = "Start Date", y = "USD ($ in mil)") +
-  theme_bw()
+  labs(x = "Start Date", y = "USD (millions)") +
+  theme_bw())
+}
 
 malaria_plots[[2]] <- nat_plots[[1]]
 malaria_plots[[3]] <- nat_plots[[2]]

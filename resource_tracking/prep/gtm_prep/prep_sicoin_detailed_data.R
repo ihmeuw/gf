@@ -63,7 +63,12 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
       # ----------------------------------------------
       ## Code to aggregate into a dataset 
       ## now get region + budgeted expenses 
-      budget_dataset <- gf_data[, c("X__4","X__14","X__15", "X__22", "X__29"), with=FALSE]
+      if(period==365){
+        budget_dataset <- gf_data[, c("X__4","X__14","X__15", "X__22", "X__29"), with=FALSE]
+      } else {
+        budget_dataset <- gf_data[, c("X__4","X__14","X__15", "X__27", "X__29"), with=FALSE]
+      }
+      
       names(budget_dataset) <- c("loc_id", "loc_name", "sda_orig", "budget", "disbursement")
      
       ##enforce variable classes 
@@ -74,7 +79,7 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
       
       budget_dataset <- budget_dataset[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))),
                                      by=c("loc_id", "loc_name", "sda_orig")]
-  } else if (source=="gf") {
+  } else if (source=="gf"&period==365) {
     colnames(gf_data)[3] <- "loc_id"
     gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)
     gf_data$loc_id <- na.locf(gf_data$loc_id, na.rm=FALSE)

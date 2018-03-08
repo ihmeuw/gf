@@ -15,6 +15,9 @@
 # Set up R
 y <- commandArgs()[4]
 m <- commandArgs()[5]
+allAges <- commandArgs()[6]
+allTbs <- commandArgs()[7]
+bothSexes <- commandArgs()[8]
 library(jsonlite)
 # --------------------
 
@@ -34,6 +37,11 @@ ages = c('0,1', '1,2,3,4', '5,6,7,8,9,10', '11, 12, 13, 14, 15',
 		'81,82,83,84,85', '86,87,88,89,90', '91,92,93,94,95', '96,97,98,99')
 tbs = c('y','n','x')
 sexes = c('m','f','x')
+
+# whether to aggregate
+if (allAges==TRUE) ages = ''
+if (allTbs==TRUE) tbs = ''
+if (bothSexes==TRUE) sexes = ''
 
 # whether or not to re-download everything (or just new data)
 reload_everything = FALSE
