@@ -99,7 +99,7 @@ colnames(cod_mdata_OR16)[40] <- "ArtLum_receieved" #or is this requested?
 colnames(cod_mdata_OR16)[41] <- "ArtLum_used"
 # translation for goutte epaisse? colnames(cod_mdata_OR16)[42] <- "_completed_Under5""
 # colnames(cod_mdata_OR16)[43] <- "_completed_5andOlder"
-#colnames(cod_mdata_OR16)[44] <- "_positive_Under5"
+# colnames(cod_mdata_OR16)[44] <- "_positive_Under5"
 # colnames(cod_mdata_OR16)[45] <- "_positive_5andOlder""
 colnames(cod_mdata_OR16)[46] <- "RDT_completed_Under5"
 colnames(cod_mdata_OR16)[47] <- "RDT_completed_5andOlder"
@@ -110,16 +110,40 @@ colnames(cod_mdata_OR16)[51] <- "Num_Repots_Expected"  # needed - they are the s
 colnames(cod_mdata_OR16)[52] <- "Num_Sanitary_Structures"
 colnames(cod_mdata_OR16)[53] <- "Sanitary_Structures_NumTransmitted" # translation?
 colnames(cod_mdata_OR16)[54] <- "Sanitary_Structures_NumTransmittedWithinDeadline" # translation?
+      # different names for these? "transmitted"? is that correct?
+
 # ----------------------------------------------
 
 
 # ----------------------------------------------
-# Get rid of rows you don't need (and columns) "subset"
+# Get rid of rows you don't need- "subset"
+    # first and second row under column heading
+ 
+cod_mdata_OR16 <- cod_mdata_OR16[-c(1, 2), ]
+
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+# Try exporting the data 
+
+# ----------------------------------------------
+
+
+# ----------------------------------------------
 # Clean values any missing, or format numbers such as 1,000 as 1000 
     # (make it a number not a string)
+
+
+# ----------------------------------------------
+
+
+# ----------------------------------------------
 # Reshape data
+
 # Make this all into a function to replicate it for each sheet within
     # excel doc
+
 # Append provinces within years, and then all years together
 
 # ----------------------------------------------
