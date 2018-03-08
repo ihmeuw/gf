@@ -56,6 +56,35 @@ cod_mdata_OR16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1
 # ----------------------------------------------
 # Set names of columns
 
+colnames(cod_mdata_OR16)[1] <- "Province"
+colnames(cod_mdata_OR16)[2] <- "DPS"
+colnames(cod_mdata_OR16)[3] <- "Health_Zone"
+colnames(cod_mdata_OR16)[4] <- "Donor"
+colnames(cod_mdata_OR16)[5] <- "Operational_Support_Partner"
+colnames(cod_mdata_OR16)[6] <- "Population"
+colnames(cod_mdata_OR16)[7] <- "Trimester"  #should this be quarter?
+colnames(cod_mdata_OR16)[8] <- "Month"
+colnames(cod_mdata_OR16)[9] <- "New_cases_malaria_Under5"
+colnames(cod_mdata_OR16)[10] <- "New_cases_malaria_5andOlder"
+# not sure what this one is colnames(cod_mdata_OR16)[11] <- " "
+colnames(cod_mdata_OR16)[12] <- "Hospitalized_cases_Under5"
+colnames(cod_mdata_OR16)[13] <- "Hospitalized_cases_5andOlder"
+# not sure what this one is colnames(cod_mdata_OR16)[14] <- " "
+colnames(cod_mdata_OR16)[15] <- "Simple_Malaria_TreatedAccordingToNationalPolicy_Under5"
+colnames(cod_mdata_OR16)[16] <- "Simple_Malaria_TreatedAccordingToNationalPolicy_5andOlder"
+# not sure what this one is colnames(cod_mdata_OR16)[17] <- " "
+colnames(cod_mdata_OR16)[18] <- "Serious_Malaria_TreatedAccordingToNationalPolicy_Under5"
+colnames(cod_mdata_OR16)[19] <- "Serious_Malaria_TreatedAccordingToNationalPolicy_5andOlder"
+# not sure what this one is colnames(cod_mdata_OR16)[20] <- " "
+colnames(cod_mdata_OR16)[21] <- "Malaria_Deaths_Under5"
+colnames(cod_mdata_OR16)[22] <- "Malaria_Deaths_5andOlder"
+# not sure what this one is colnames(cod_mdata_OR16)[23] <- " "
+colnames(cod_mdata_OR16)[24] <- "ANC_1st"
+colnames(cod_mdata_OR16)[25] <- "ANC_2nd"
+colnames(cod_mdata_OR16)[26] <- "ANC_3rd"
+colnames(cod_mdata_OR16)[27] <- "ANC_4th"
+colnames(cod_mdata_OR16)[28] <- ""
+
 
 # ----------------------------------------------
 
