@@ -83,9 +83,33 @@ colnames(cod_mdata_OR16)[24] <- "ANC_1st"
 colnames(cod_mdata_OR16)[25] <- "ANC_2nd"
 colnames(cod_mdata_OR16)[26] <- "ANC_3rd"
 colnames(cod_mdata_OR16)[27] <- "ANC_4th"
-colnames(cod_mdata_OR16)[28] <- ""
-
-
+colnames(cod_mdata_OR16)[28] <- "SP_1st"  #why was SP within ANC (CPN)orginally? Should it relate to that in some way?
+colnames(cod_mdata_OR16)[29] <- "SP_2nd"
+colnames(cod_mdata_OR16)[30] <- "SP_3rd"
+colnames(cod_mdata_OR16)[31] <- "ITN_received"
+colnames(cod_mdata_OR16)[32] <- "ITN_distAtANC"
+colnames(cod_mdata_OR16)[33] <- "ITN_distAtPreschool"
+# Not sure about this one colnames(cod_mdata_OR16)[34] <- "VAR"
+colnames(cod_mdata_OR16)[35] <- "ACT_2to11mos"
+colnames(cod_mdata_OR16)[36] <- "ACT_1to5yrs"
+colnames(cod_mdata_OR16)[37] <- "ACT_6to13yrs"
+colnames(cod_mdata_OR16)[38] <- "ACT_14yrsAndOlder"
+colnames(cod_mdata_OR16)[39] <- "ACT_total"
+colnames(cod_mdata_OR16)[40] <- "ArtLum_receieved" #or is this requested?
+colnames(cod_mdata_OR16)[41] <- "ArtLum_used"
+# translation for goutte epaisse? colnames(cod_mdata_OR16)[42] <- "_completed_Under5""
+# colnames(cod_mdata_OR16)[43] <- "_completed_5andOlder"
+#colnames(cod_mdata_OR16)[44] <- "_positive_Under5"
+# colnames(cod_mdata_OR16)[45] <- "_positive_5andOlder""
+colnames(cod_mdata_OR16)[46] <- "RDT_completed_Under5"
+colnames(cod_mdata_OR16)[47] <- "RDT_completed_5andOlder"
+colnames(cod_mdata_OR16)[48] <- "RDT_positive_Under5"
+colnames(cod_mdata_OR16)[49] <- "RDT_positive_5andOlder"
+colnames(cod_mdata_OR16)[50] <- "Num_Reports_Received" # are these columns
+colnames(cod_mdata_OR16)[51] <- "Num_Repots_Expected"  # needed - they are the same
+colnames(cod_mdata_OR16)[52] <- "Num_Sanitary_Structures"
+colnames(cod_mdata_OR16)[53] <- "Sanitary_Structures_NumTransmitted" # translation?
+colnames(cod_mdata_OR16)[54] <- "Sanitary_Structures_NumTransmittedWithinDeadline" # translation?
 # ----------------------------------------------
 
 
