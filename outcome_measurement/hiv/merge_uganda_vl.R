@@ -103,6 +103,6 @@ for(f in files[1:20]) {
 # ----------------------------------------------
 
 #save the final data as an RDS
-saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/uganda_vl.rds")
+saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/uganda_test.rds")
 
 # ----------------------------------------------
