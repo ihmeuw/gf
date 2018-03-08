@@ -126,8 +126,10 @@
 
 
 # ----------------------------------------------
-# Try exporting the data 
+# Export the data - to test
 
+  write.csv(cod_mdata_OR16, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/cod_mdata_OR16.csv")
+      #to test, wrote to my own drive: write.csv(cod_mdata_OR16, "C:/Users/abatzel/Documents/PCE/cod_mdata_OR16.csv")
 # ----------------------------------------------
 
 
