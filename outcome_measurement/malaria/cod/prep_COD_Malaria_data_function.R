@@ -19,6 +19,8 @@
   library(stats)
   library(rlang)
   library(zoo)
+  library(tidyr)
+  library(dplyr)
 # --------------------
 
 
@@ -45,7 +47,7 @@
 # ----------------------------------------------
 # Load data
   
-  cod_mdata_OR16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "KIN"))
+  cod_mdata_KIN16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "KIN"))
   cod_mdata_BDD16 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[1], '.xls'), sheet= "BDD"))
   cod_mdata_OR16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "OR"))
   
@@ -54,41 +56,39 @@
   
   
 # ----------------------------------------------  
-# Make this all into a function to replicate it for each sheet
-  
   # START OF FUNCTION:  
   prep_data <- function(year, sheetname){
     
-    # load data sheet
+  # Load data sheet
     dataSheet <- data.table(read_excel(paste0(dir,"/Données_", year, "_PNLP.xls"), sheet= sheetname))
 # ----------------------------------------------   
 # ----------------------------------------------
-# Set names of columns
+  # Set names of columns
     # faster way to do this : setnames(dataSheet, c('', '', '', ''))
     # since some of them have less columns, make a vector of names and then have "if ___, then drop these ___"
-  colnames(dataSheet)[1] <- "Province"
-  colnames(dataSheet)[2] <- "DPS"
-  colnames(dataSheet)[3] <- "Health_Zone"
-  colnames(dataSheet)[4] <- "Donor"
-  colnames(dataSheet)[5] <- "Operational_Support_Partner"
-  colnames(dataSheet)[6] <- "Population"
-  colnames(dataSheet)[7] <- "Trimester"  #should this be quarter?
-  colnames(dataSheet)[8] <- "Month"
-  colnames(dataSheet)[9] <- "New_cases_malaria_Under5"
-  colnames(dataSheet)[10] <- "New_cases_malaria_5andOlder"
-  # not sure what this one is colnames(dataSheet)[11] <- " "
-  colnames(dataSheet)[12] <- "Hospitalized_cases_Under5"
-  colnames(dataSheet)[13] <- "Hospitalized_cases_5andOlder"
-  # not sure what this one is colnames(dataSheet)[14] <- " "
-  colnames(dataSheet)[15] <- "Simple_Malaria_TreatedAccordingToNationalPolicy_Under5"
-  colnames(dataSheet)[16] <- "Simple_Malaria_TreatedAccordingToNationalPolicy_5andOlder"
-  # not sure what this one is colnames(dataSheet)[17] <- " "
-  colnames(dataSheet)[18] <- "Serious_Malaria_TreatedAccordingToNationalPolicy_Under5"
-  colnames(dataSheet)[19] <- "Serious_Malaria_TreatedAccordingToNationalPolicy_5andOlder"
-  # not sure what this one is colnames(dataSheet)[20] <- " "
-  colnames(dataSheet)[21] <- "Malaria_Deaths_Under5"
-  colnames(dataSheet)[22] <- "Malaria_Deaths_5andOlder"
-  # not sure what this one is colnames(dataSheet)[23] <- " "
+  colnames(dataSheet)[1] <- "province"
+  colnames(dataSheet)[2] <- "dps"
+  colnames(dataSheet)[3] <- "health_zone"
+  colnames(dataSheet)[4] <- "donor"
+  colnames(dataSheet)[5] <- "operational_support_partner"
+  colnames(dataSheet)[6] <- "population"
+  colnames(dataSheet)[7] <- "trimester"  #should this be quarter?
+  colnames(dataSheet)[8] <- "month"
+  colnames(dataSheet)[9] <- "new_cases_malaria_under5"
+  colnames(dataSheet)[10] <- "new_cases_malaria_5andOlder"
+  colnames(dataSheet)[11] <- "new_cases_malaria_pregnantWomen"
+  colnames(dataSheet)[12] <- "hospitalized_cases_under5"
+  colnames(dataSheet)[13] <- "hospitalized_cases_5andOlder"
+  colnames(dataSheet)[14] <- "hospitalized_cases_pregnantWomen"
+  colnames(dataSheet)[15] <- "simple_malaria_treatedAccordingToNationalPolicy_under5"
+  colnames(dataSheet)[16] <- "simple_malaria_treatedAccordingToNationalPolicy_5andOlder"
+  colnames(dataSheet)[17] <- "simple_malaria_treatedAccordingToNationalPolicy_pregnantWomen"
+  colnames(dataSheet)[18] <- "serious_malaria_treatedAccordingToNationalPolicy_under5"
+  colnames(dataSheet)[19] <- "serious_malaria_treatedAccordingToNationalPolicy_5andOlder"
+  colnames(dataSheet)[20] <- "serious_malaria_treatedAccordingToNationalPolicy_pregnantWomen"
+  colnames(dataSheet)[21] <- "malaria_deaths_under5"
+  colnames(dataSheet)[22] <- "malaria_deaths_5andOlder"
+  colnames(dataSheet)[23] <- "malaria_deaths_pregnantWomen"
   colnames(dataSheet)[24] <- "ANC_1st"
   colnames(dataSheet)[25] <- "ANC_2nd"
   colnames(dataSheet)[26] <- "ANC_3rd"
@@ -111,37 +111,31 @@
   # colnames(dataSheet)[43] <- "_completed_5andOlder"
   # colnames(dataSheet)[44] <- "_positive_Under5"
   # colnames(dataSheet)[45] <- "_positive_5andOlder""
-  colnames(dataSheet)[46] <- "RDT_completed_Under5"
+  colnames(dataSheet)[46] <- "RDT_completed_under5"
   colnames(dataSheet)[47] <- "RDT_completed_5andOlder"
-  colnames(dataSheet)[48] <- "RDT_positive_Under5"
+  colnames(dataSheet)[48] <- "RDT_positive_under5"
   colnames(dataSheet)[49] <- "RDT_positive_5andOlder"
-  colnames(dataSheet)[50] <- "Num_Reports_Received" # are these columns
-  colnames(dataSheet)[51] <- "Num_Repots_Expected"  # needed - they are the same
-  colnames(dataSheet)[52] <- "Num_Sanitary_Structures"
-  colnames(dataSheet)[53] <- "Sanitary_Structures_NumTransmitted" # translation?
-  colnames(dataSheet)[54] <- "Sanitary_Structures_NumTransmittedWithinDeadline" # translation?
+  colnames(dataSheet)[50] <- "num_reports_received" # are these columns
+  colnames(dataSheet)[51] <- "num_repots_expected"  # needed - they are the same
+  colnames(dataSheet)[52] <- "num_sanitary_structures"
+  colnames(dataSheet)[53] <- "sanitary_structures_numTransmitted" # translation?
+  colnames(dataSheet)[54] <- "sanitary_structures_numTransmittedWithinDeadline" # translation?
         # different names for these? "transmitted"? is that correct?
 # ----------------------------------------------
 # ----------------------------------------------
-# Get rid of rows you don't need- "subset"
+  # Get rid of rows you don't need- "subset"
   
   # delete first row if it's first value is "NA" or "PROVINCE" as a way to
-    # only delete those unnecessary rows, and not any others.
+    # only delete those unnecessary rows, and not any others accidentally.
   
-  if ((is.na(dataSheet[1,"Province"])) && (dataSheet[2,"Province"] == "PROVINCE")){
-    dataSheet <- dataSheet[-c(1, 2),]
-  }
-  # should I also remove the last row of totals?
+   if ((is.na(dataSheet[1,"Province"])) && (dataSheet[2,"Province"] == "PROVINCE")){
+    dataSheet <- dataSheet[-c(1, 2),] }
+ 
+   # **********should I also remove the last row of totals?************
 # ----------------------------------------------
 # ----------------------------------------------
-# Export the data - to test
-  
-  # return current data sheet
-  return(dataSheet)
-  
-  #COD_PNLP_Data_2016 <- dataSheet
-  # write.csv(dataSheet, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_", year, "_", sheetname, ".csv"))
-      #to test, wrote to my own drive: write.csv(dataSheet, "C:/Users/abatzel/Documents/PCE/dataSheet.csv")
+  # Return current data sheet
+    return(dataSheet)
 # ----------------------------------------------
 }  #END OF FUNCTION
 # ----------------------------------------------
@@ -149,41 +143,48 @@
   
 # ----------------------------------------------
 # Use a loop to run prep_data() on each of the three data sheets for the three years.
+  # variables needed:
   years <- seq(2014, 2016)
   sheetnames <- c('KIN', 'BDD', 'OR')
   i <- 1
 
-# currently a problem in the earlier years matching the number of columns - will fix this
-# with setting column names and then append them all together.
-# have add a column for "year"
+# currently there is a problem in the earlier years matching the number of columns 
+# - will fix this with setting column names and then append them all together.
+# add a column for "year"
   
  # for(y in years) {
     for(s in sheetnames) {
       #to show where it is breaking if there is an error
-      print(y)
+      #print(y)
       print(s)
 
       currentSheet <- prep_data(2016, s)
 
-      # need if statement to distinguish between first sheet, and then
-      # adding to the first sheet with subsequent ones
+      # need if statement to distinguish first sheet, and then
+      # add to the first sheet with subsequent ones with rbind()
       if (i==1) fullData <- currentSheet
       if (i>1) fullData <- rbind(fullData, currentSheet)
       i <- i+1
     }
   #}
-
-
-
 # ----------------------------------------------  
   
   
 # ----------------------------------------------
-# Clean values any missing, or format numbers such as 1,000 as 1000 
+  # Export the cleaned data
+  # COD_PNLP_Data_2016 <- dataSheet
+  # write.csv(dataSheet, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_", year, "_", sheetname, ".csv"))
+# ----------------------------------------------  
+  
+  
+# ----------------------------------------------
+# TO DO:
+  # Add to function:
+    # Problem with less variables for 
+    # Clean values any missing, or format numbers such as 1,000 as 1000
     # (make it a number not a string)
 
-# Reshape data
+    # Reshape data
 
-# Append provinces within years, and then all years together
-
+    # Append provinces within years, and then all years together - add column for year
 # ----------------------------------------------
