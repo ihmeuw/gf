@@ -45,11 +45,11 @@
   
   
 # ----------------------------------------------
-# Load data
+# Load data - to visualize before cleaning
   
-  cod_mdata_KIN16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "KIN"))
-  cod_mdata_BDD16 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[1], '.xls'), sheet= "BDD"))
-  cod_mdata_OR16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "OR"))
+  cod_mdata_KIN15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "KIN"))
+  cod_mdata_BDD15 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[2], '.xls'), sheet= "BDD"))
+  cod_mdata_OR15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "OR"))
   
       #should I combine first and then clean? or clean data and then combine into one dataset?
 # ----------------------------------------------
@@ -99,7 +99,7 @@
   colnames(dataSheet)[31] <- "ITN_received"
   colnames(dataSheet)[32] <- "ITN_distAtANC"
   colnames(dataSheet)[33] <- "ITN_distAtPreschool"
-  # Not sure about this one colnames(dataSheet)[34] <- "VAR"
+  colnames(dataSheet)[34] <- "VAR"   #translation?
   colnames(dataSheet)[35] <- "ACT_2to11mos"
   colnames(dataSheet)[36] <- "ACT_1to5yrs"
   colnames(dataSheet)[37] <- "ACT_6to13yrs"
@@ -107,10 +107,10 @@
   colnames(dataSheet)[39] <- "ACT_total"
   colnames(dataSheet)[40] <- "ArtLum_receieved" #or is this requested?
   colnames(dataSheet)[41] <- "ArtLum_used"
-  # translation for goutte epaisse? colnames(dataSheet)[42] <- "_completed_Under5""
-  # colnames(dataSheet)[43] <- "_completed_5andOlder"
-  # colnames(dataSheet)[44] <- "_positive_Under5"
-  # colnames(dataSheet)[45] <- "_positive_5andOlder""
+  colnames(dataSheet)[42] <- "goutte_epaisse_completed_Under5"  #translation?
+  colnames(dataSheet)[43] <- "goutte_epaisse_completed_5andOlder"   #translation?
+  colnames(dataSheet)[44] <- "goutte_epaisse_positive_Under5"  #translation?
+  colnames(dataSheet)[45] <- "goutte_epaisse_positive_5andOlder"  #translation?
   colnames(dataSheet)[46] <- "RDT_completed_under5"
   colnames(dataSheet)[47] <- "RDT_completed_5andOlder"
   colnames(dataSheet)[48] <- "RDT_positive_under5"
@@ -128,7 +128,7 @@
   # delete first row if it's first value is "NA" or "PROVINCE" as a way to
     # only delete those unnecessary rows, and not any others accidentally.
   
-   if ((is.na(dataSheet[1,"Province"])) && (dataSheet[2,"Province"] == "PROVINCE")){
+   if ((is.na(dataSheet[1,"province"])) && (dataSheet[2,"province"] == "PROVINCE")){
     dataSheet <- dataSheet[-c(1, 2),] }
  
    # **********should I also remove the last row of totals?************
@@ -144,7 +144,7 @@
 # ----------------------------------------------
 # Use a loop to run prep_data() on each of the three data sheets for the three years.
   # variables needed:
-  years <- seq(2014, 2016)
+  years <- c(2015)
   sheetnames <- c('KIN', 'BDD', 'OR')
   i <- 1
 
@@ -152,21 +152,21 @@
 # - will fix this with setting column names and then append them all together.
 # add a column for "year"
   
- # for(y in years) {
+ for(y in years) {
     for(s in sheetnames) {
       #to show where it is breaking if there is an error
-      #print(y)
+      print(y)
       print(s)
 
-      currentSheet <- prep_data(2016, s)
+      currentSheet <- prep_data(y, s)
 
       # need if statement to distinguish first sheet, and then
       # add to the first sheet with subsequent ones with rbind()
       if (i==1) fullData <- currentSheet
-      if (i>1) fullData <- rbind(fullData, currentSheet)
+      if (i>1) fullData <- rbind(fullData, currentSheet, fill=TRUE)
       i <- i+1
     }
-  #}
+  }
 # ----------------------------------------------  
   
   
