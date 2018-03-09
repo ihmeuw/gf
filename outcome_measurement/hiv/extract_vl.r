@@ -26,7 +26,7 @@ library(jsonlite)
 # Files and directories
 
 # output file
-dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscraped_data_repeat/'
+dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_data_nofilters/'
 
 # parameters
 ages = c('0,1', '1,2,3,4', '5,6,7,8,9,10', '11, 12, 13, 14, 15', 
@@ -65,12 +65,12 @@ for(a in ages) {
   for(t in tbs) { 
 	
 	# loop over sexes - includes "unknown" option
-	for(s in sexes) { # make sure "U" is the correct value
+	for(s in sexes) { 
 
 		# store rds file location
 		outFile = paste0(dir, '/20', y, '/', m, 
-			'/facilities_suppression_', m,'20', y, 
-			'_',a,'_', s, '_tb', t, '.rds')
+		 '/facilities_suppression_', m,'_', '20', y, 
+			'_',a,'_', s, '_tb','_', t, '.rds')
 			  
 
 		# only download if it doesn't already exist
@@ -78,11 +78,12 @@ for(a in ages) {
 		if (check==FALSE | reload_everything==TRUE) {
 
 			# store url
-			url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B', 
-					a, '%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', 
-					y, m,'&genders=%5B%22', s,				'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', 
+			url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B',
+			    a, '%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', 
+					y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', 
 					t, '%22%5D&to_date=20',y, m)
-
+			
+			
 			# load
 			print(paste('Loading json from:', url))
 			data = fromJSON(url)

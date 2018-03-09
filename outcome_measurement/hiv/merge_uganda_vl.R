@@ -77,7 +77,7 @@ for(f in files[1:20]) {
 
   # extract meta data from file name
   meta_data = strsplit(f, '_')[[1]]
-  current_data[, year:=as.numeric(substr(meta_data[3],3,6))]
+  current_data[, year:=as.numeric(substr(meta_data[4],3,4))]
   current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
   current_data[, ages:=meta_data[4]]
   current_data[, sex:=meta_data[5]]
