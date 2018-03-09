@@ -72,7 +72,7 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   budget_dataset$expenditure <- 0 ## since we don't have expenditure data yet 
   budget_dataset$grant_number <- grant
   budget_dataset$recipient <- recipient
-  budget_dataset$source <- source
+  budget_dataset$data_source <- source
   budget_dataset$year <- year(budget_dataset$start_date)
   return(budget_dataset)
   

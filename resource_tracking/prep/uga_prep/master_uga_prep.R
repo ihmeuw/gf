@@ -34,7 +34,7 @@ file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","
 
 ##create a summary file to track the data that we have (and that we still need)
 summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
-                         c("data_source", "year","start_date", "end_date", "sda_detail", 
+                         c("data_source", "start_date", "end_date", "sda_detail", 
                            "geographic_detail", "period",	"grant", "disease", "loc_id"))
 
 summary_file$loc_id <- as.character(summary_file$loc_id)
@@ -47,25 +47,22 @@ for(i in 1:length(file_list$file_name)){
   summary_file$grant[i] <- file_list$grant[i]
   summary_file$period[i] <- file_list$period[i] 
   summary_file$geographic_detail[i] <- "National"
-  summary_file$year[i] <- file_list$grant_time[i]
+  summary_file$data_source[i] <- file_list$data_source[1]
   
   if(file_list$type[i]=="detailed"){##most detailed level of budgets 
     tmpData <- prep_detailed_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], cashText, file_list$grant[i], 
-                                        file_list$disease[i], file_list$period[i],file_list$source[i])
-    tmpData$data_source <- "fpm"
+                                        file_list$disease[i], file_list$period[i],file_list$data_source[i])
   } else if (file_list$type[i]=="summary"){ ##not much detail, only high level SDAs: 
     tmpData <- prep_summary_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], cashText, file_list$grant[i], 
-                                       file_list$disease[i], file_list$period[i], file_list$recipient[i], file_list$source[i])
-    tmpData$data_source <- "fpm"
+                                       file_list$disease[i], file_list$period[i], file_list$recipient[i], file_list$data_source[i])
     tmpData$disbursement <- 0 
   ##LFA data cleaning: 
   } else if (file_list$type[i]=="pudr"){ ##has expenditure data 
     tmpData <- prep_pudr_uga(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                              ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], 
-                             file_list$grant[i], file_list$recipient[i],file_list$source[i])
-    tmpData$data_source <- "pudr"
+                             file_list$grant[i], file_list$recipient[i],file_list$data_source[i])
   }
   if(i==1){
     resource_database = tmpData
@@ -85,7 +82,7 @@ for(i in 1:length(file_list$file_name)){
   }
   summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
   summary_file$start_date[i] <- min(tmpData$start_date)
-  summary_file$data_source[i] <- tmpData$data_source[1]
+  
   print(i)
 }
 
@@ -106,6 +103,8 @@ resource_database$expenditure <- as.numeric(resource_database$expenditure)
 resource_database$disbursement <- as.numeric(resource_database$disbursement)
 ## since we only have budget/exp data, include disbursed as 0:  
 resource_database$loc_id <- loc_id
+resource_database$source <- source
+
 
 ## optional: do a check on data to make sure values aren't dropped: 
 # data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])

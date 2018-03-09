@@ -74,7 +74,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   budget_dataset <- budget_dataset[-1, ,drop = FALSE]
   
   budget_dataset$start_date <- start_date
-  budget_dataset$source <- source
+  budget_dataset$data_source <- source
   budget_dataset$period <- period
   budget_dataset$disease <- disease
   budget_dataset$grant_number <- grant
