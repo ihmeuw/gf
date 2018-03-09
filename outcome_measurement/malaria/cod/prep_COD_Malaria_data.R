@@ -2,7 +2,7 @@
 # Audrey Batzel
 #
 # 3/6/18
-# Prepping DRC PNLP data for analaysis.
+# Prepping DRC PNLP 2014-2016 data for analaysis
 # ----------------------------------------------
 
 
@@ -33,14 +33,20 @@
   dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/Malaria_Data_2014_to_2016"
   
   PNLP_files <- read.csv(paste0(dir,"/","PNLP_file_names.csv"), fileEncoding = "latin1")
-  
+  # input files are from 2014, 2015, and 2016 and each contain three sheets for three different provinces
 # output files 
   #(note: output to prepped_data folder within cod folder)
-  # cod_malaria_dataset_(year) - prepped data.table object, one per year (?)
+  # COD_PNLP_Data_2016 - prepped data.table object, one per year (?)
   # cod_malaria_dataset_master - appended version
 # ----------------------------------------------
 
-
+  
+# ----------------------------------------------  
+# Make this all into a function to replicate it for each sheet within
+  
+# ----------------------------------------------
+  
+  
 # ----------------------------------------------
 # Load data
   
@@ -51,7 +57,7 @@
       #should I combine first and then clean? or clean data and then combine into one dataset?
 # ----------------------------------------------
 
-
+  
 # ----------------------------------------------
 # Set names of columns
 
@@ -122,13 +128,14 @@
   if ((is.na(cod_mdata_OR16[1,"Province"])) && (cod_mdata_OR16[2,"Province"] == "PROVINCE")){
     cod_mdata_OR16 <- cod_mdata_OR16[-c(1, 2),]
   }
+  # should I also remove the last row of totals?
 # ----------------------------------------------
 
 
 # ----------------------------------------------
 # Export the data - to test
-
-  write.csv(cod_mdata_OR16, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/cod_mdata_OR16.csv")
+  COD_PNLP_Data_2016 <- cod_mdata_OR16
+  write.csv(COD_PNLP_Data_2016, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_2016.csv")
       #to test, wrote to my own drive: write.csv(cod_mdata_OR16, "C:/Users/abatzel/Documents/PCE/cod_mdata_OR16.csv")
 # ----------------------------------------------
 
@@ -143,9 +150,6 @@
 
 # ----------------------------------------------
 # Reshape data
-
-# Make this all into a function to replicate it for each sheet within
-    # excel doc
 
 # Append provinces within years, and then all years together
 
