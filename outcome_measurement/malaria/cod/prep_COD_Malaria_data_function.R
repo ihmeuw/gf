@@ -65,7 +65,7 @@
 # ----------------------------------------------
 # Set names of columns
     # faster way to do this : setnames(dataSheet, c('', '', '', ''))
-    
+    # since some of them have less columns, make a vector of names and then have "if ___, then drop these ___"
   colnames(dataSheet)[1] <- "Province"
   colnames(dataSheet)[2] <- "DPS"
   colnames(dataSheet)[3] <- "Health_Zone"
@@ -148,22 +148,33 @@
   
   
 # ----------------------------------------------
-# Use a loop to run prep_data() on each of the three sheets for PNLP 2016 data
+# Use a loop to run prep_data() on each of the three data sheets for the three years.
   years <- seq(2014, 2016)
   sheetnames <- c('KIN', 'BDD', 'OR')
   i <- 1
-  for(y in years) { 
-    for(s in sheetnames) { 
-        currentSheet <- prep_data(y, s)
-        
-        if (i==1) fullData <- currentSheet
-        if (i>1) fullData <- rbind(fullData, currentSheet)
-        i <- i+1
-      }  
-  }
+
+# currently a problem in the earlier years matching the number of columns - will fix this
+# with setting column names and then append them all together.
+# have add a column for "year"
   
-  prep_data(2016, 'KIN')
-  prep_data(cod_mdata_BDD16)
+ # for(y in years) {
+    for(s in sheetnames) {
+      #to show where it is breaking if there is an error
+      print(y)
+      print(s)
+
+      currentSheet <- prep_data(2016, s)
+
+      # need if statement to distinguish between first sheet, and then
+      # adding to the first sheet with subsequent ones
+      if (i==1) fullData <- currentSheet
+      if (i>1) fullData <- rbind(fullData, currentSheet)
+      i <- i+1
+    }
+  #}
+
+
+
 # ----------------------------------------------  
   
   
