@@ -23,16 +23,17 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
 fghData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_data_prepped.csv',
                                  fileEncoding = "latin1"))
 
+##sum up budget and expenditures by country, year, etc. and DATA SOURCE: 
 
-gosData <- totalData[data_source=="gos"]
-byVars = names(gosData)[names(gosData)%in%c('country', 'year', 'disease', 'data_source')]
-gosData = gosData[, list(variable=sum(na.omit(budget))), by=byVars]
+
+byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source', 'source')]
+totalData = totalData[, list(variable=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 fghData <- fghData[, list(variable=sum(na.omit(disbursement))),by=byVars]
+fghData$expenditure <- 0 
 
 
-
-graphData <- rbind(gosData, fghData)
+graphData <- rbind(totalData, fghData)
 
 
 # ----------------------------------------------
@@ -61,11 +62,23 @@ get_gos_amount <- function(indicator, amount){
 }
 
 
+get_fpm_amount <- function(indicator, amount){
+  x <- 0 
+  if(indicator=="fpm"){
+    x <- amount
+  } else {
+    x <- x
+  }
+  return(x)
+}
+
+
+graphData$fpm_ind <- mapply(get_fpm_amount, graphData$data_source, graphData$variable)
 graphData$fgh_ind <- mapply(get_fgh_amount, graphData$data_source, graphData$variable)
 graphData$gos_ind <- mapply(get_gos_amount, graphData$data_source, graphData$variable)
 
 byVars = names(graphData)[names(graphData)%in%c('year', 'country', 'disease')]
-graphData = graphData[, list(fgh_ind=sum(na.omit(fgh_ind)), gos_ind=sum(na.omit(gos_ind))), by=byVars]
+graphData = graphData[, list(fpm_ind = sum(na.omit(fpm_ind)), fgh_ind=sum(na.omit(fgh_ind)), gos_ind=sum(na.omit(gos_ind))), by=byVars]
 
 
 
