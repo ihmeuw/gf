@@ -20,7 +20,7 @@ library(scales)
 
 ## load the fgh data
 
-fgh_data <- data.table(read.csv("H:/rt_data/ihme_dah_cod_uga_gtm_1990_2016.csv",fileEncoding="latin1"))
+fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/ihme_dah_cod_uga_gtm_1990_2016.csv",fileEncoding="latin1"))
 
 setnames(fgh_data, c("source", "iso3_rc"), c("dah_origin","country"))
 
