@@ -47,11 +47,15 @@
 # ----------------------------------------------
 # Load data - to visualize before cleaning
   
+  cod_mdata_KIN16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "KIN"))
+  cod_mdata_BDD16 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[1], '.xls'), sheet= "BDD"))
+  cod_mdata_OR16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "OR"))
   cod_mdata_KIN15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "KIN"))
   cod_mdata_BDD15 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[2], '.xls'), sheet= "BDD"))
   cod_mdata_OR15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "OR"))
-  
-      #should I combine first and then clean? or clean data and then combine into one dataset?
+  cod_mdata_KIN14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "KIN"))
+  cod_mdata_BDD14 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[3], '.xls'), sheet= "BDD"))
+  cod_mdata_OR14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "OR"))
 # ----------------------------------------------
   
   
@@ -107,20 +111,21 @@
   colnames(dataSheet)[39] <- "ACT_total"
   colnames(dataSheet)[40] <- "ArtLum_receieved" #or is this requested?
   colnames(dataSheet)[41] <- "ArtLum_used"
-  colnames(dataSheet)[42] <- "goutte_epaisse_completed_Under5"  #translation?
+  colnames(dataSheet)[42] <- "goutte_epaisse_completed_under5"  #translation?
   colnames(dataSheet)[43] <- "goutte_epaisse_completed_5andOlder"   #translation?
-  colnames(dataSheet)[44] <- "goutte_epaisse_positive_Under5"  #translation?
+  colnames(dataSheet)[44] <- "goutte_epaisse_positive_under5"  #translation?
   colnames(dataSheet)[45] <- "goutte_epaisse_positive_5andOlder"  #translation?
   colnames(dataSheet)[46] <- "RDT_completed_under5"
   colnames(dataSheet)[47] <- "RDT_completed_5andOlder"
   colnames(dataSheet)[48] <- "RDT_positive_under5"
   colnames(dataSheet)[49] <- "RDT_positive_5andOlder"
-  colnames(dataSheet)[50] <- "num_reports_received" # are these columns
-  colnames(dataSheet)[51] <- "num_repots_expected"  # needed - they are the same
+  colnames(dataSheet)[50] <- "num_reports_received" 
+  colnames(dataSheet)[51] <- "num_repots_expected" 
   colnames(dataSheet)[52] <- "num_sanitary_structures"
   colnames(dataSheet)[53] <- "sanitary_structures_numTransmitted" # translation?
   colnames(dataSheet)[54] <- "sanitary_structures_numTransmittedWithinDeadline" # translation?
-        # different names for these? "transmitted"? is that correct?
+  # add a column for the "year" to keep track of this variable as we add dataSheets to this one
+  dataSheet$year <- year
 # ----------------------------------------------
 # ----------------------------------------------
   # Get rid of rows you don't need- "subset"
@@ -130,8 +135,18 @@
   
    if ((is.na(dataSheet[1,"province"])) && (dataSheet[2,"province"] == "PROVINCE")){
     dataSheet <- dataSheet[-c(1, 2),] }
- 
-   # **********should I also remove the last row of totals?************
+  
+  # using this to delete rows tacked on to the end of the DF with all NA values
+    # by checking to see if 2nd column is NA
+    remove_NA <- dataSheet[complete.cases(dataSheet[ , 2]),]
+  
+  # using this to delete "totals" rows which are present in all data sheets
+    # except for 2016_BDD
+    if (year !=2016 && sheetname !="BDD"){
+      # remove last row 
+      numRows <- dim(dataSheet)[1]
+      dataSheet <- dataSheet[(numRows-1),]
+    }
 # ----------------------------------------------
 # ----------------------------------------------
   # Return current data sheet
@@ -144,7 +159,7 @@
 # ----------------------------------------------
 # Use a loop to run prep_data() on each of the three data sheets for the three years.
   # variables needed:
-  years <- c(2015)
+  years <- c(2015, 2016)
   sheetnames <- c('KIN', 'BDD', 'OR')
   i <- 1
 
