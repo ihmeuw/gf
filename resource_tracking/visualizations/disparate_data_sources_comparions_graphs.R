@@ -28,7 +28,7 @@ fghData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi
 ## prep data 
 
 ## functions to be able to plot FGH and GOS data:
-graphData <- rbind(totalData, fghData)
+
 
 
 get_fgh_amount <- function(indicator, amount){
@@ -64,61 +64,21 @@ get_fpm_amount <- function(indicator, amount){
   return(x)
 }
 
-# ----------------------------------------------
-##sum up budget and expenditures by country, year, etc. and DATA SOURCE: 
-
-byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source', 'grant_number','source')]
-graphData = totalData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
-
-## GOS VS FPM for now: 
-graphData$fpm_ind <- mapply(get_fpm_amount, graphData$data_source, graphData$budget)
-graphData$gos_ind <- mapply(get_gos_amount, graphData$data_source, graphData$budget)
-
-
-byVars = names(graphData)[names(graphData)%in%c('country', 'disease','grant_number')]
-graphData = graphData[, list(budget=sum(budget), fpm_ind = sum(na.omit(fpm_ind)),
-                             gos_ind=sum(na.omit(gos_ind))), by=byVars]
-
-graphData$fpm_ind[graphData$fpm_ind==0] <- NA
-## only plot grants where we have both GOS and FPM data (or else will just be on an axis)
-
-gos_nat_plots <- list()
-for (k in unique(na.omit(graphData$country))){
-  subdata <- graphData[country==k]
-  range_max <- max(na.omit(subdata$gos_ind/1000000), na.omit(subdata$fpm_ind/1000000))
-  range = c(0, range_max)
-  plot <- (ggplot(na.omit(subdata), aes(x=gos_ind/1000000, y=fpm_ind/1000000)) + 
-             geom_point(aes(color=disease), size=3) +
-             geom_abline(intercept=0, slope=1) + 
-             xlim(range) + 
-             ylim(range)+
-            geom_text_repel(aes(gos_ind/1000000, fpm_ind/1000000, label=grant_number)) +
-             #ylim(0, 9) + 
-             labs(x = "GOS Budget (USD millions)", y = "FPM Disbursements (USD millions)", 
-                  caption="Source: GOS, FGH",
-                  title=paste(k, "FGH vs GOS")) +
-             theme_bw(base_size=12) +
-             theme(plot.title=element_text(hjust=.5)))
-  gos_nat_plots[[k]] <- plot
-}
-
-pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/fpm_vs_gos_graphs.pdf", height=6, width=9)
-invisible(lapply(gos_nat_plots, print))
-dev.off()
-
 ### ----------------------------------------------
 ##time series plots: 
 
-##FGH vs GOS: 
-
-byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source','source')]
-graphData = totalData[, list(variable=sum(na.omit(budget))), by=byVars]
+##FGH vs All others 
 
 
-fghData <- fghData[, list(variable=sum(na.omit(disbursement))),by=byVars]
+byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source')]
+graphData = totalData[, list(budget=sum(na.omit(budget))), by=byVars]
 
 
-graphData <- rbind(graphData, fghData)
+fghData <- fghData[, list(fgh_budget=sum(na.omit(disbursement))),by=byVars]
+fghData$data_source <- NULL
+
+##get the FGH "variable" column to repeat over for all of the other data sources: 
+graphData <- merge(graphData, fghData, by=c("year", "country", "disease"), all.x = TRUE)
 
 graphData$fpm_ind <- mapply(get_fpm_amount, graphData$data_source, graphData$variable)
 graphData$fgh_ind <- mapply(get_fgh_amount, graphData$data_source, graphData$variable)
@@ -180,5 +140,49 @@ for (k in unique(na.omit(graphData$country))){
 
 
 pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/fgh_vs_gos_graphs.pdf", height=6, width=9)
+invisible(lapply(gos_nat_plots, print))
+dev.off()
+
+
+
+# ----------------------------------------------
+##sum up budget and expenditures by country, year, etc. and DATA SOURCE: 
+
+byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source', 'grant_number','source')]
+graphData = totalData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
+
+## GOS VS FPM for now: 
+graphData$fpm_ind <- mapply(get_fpm_amount, graphData$data_source, graphData$budget)
+graphData$gos_ind <- mapply(get_gos_amount, graphData$data_source, graphData$budget)
+
+
+byVars = names(graphData)[names(graphData)%in%c('country', 'disease','grant_number')]
+graphData = graphData[, list(budget=sum(budget), fpm_ind = sum(na.omit(fpm_ind)),
+                             gos_ind=sum(na.omit(gos_ind))), by=byVars]
+
+graphData$fpm_ind[graphData$fpm_ind==0] <- NA
+## only plot grants where we have both GOS and FPM data (or else will just be on an axis)
+
+gos_nat_plots <- list()
+for (k in unique(na.omit(graphData$country))){
+  subdata <- graphData[country==k]
+  range_max <- max(na.omit(subdata$gos_ind/1000000), na.omit(subdata$fpm_ind/1000000))
+  range = c(0, range_max)
+  plot <- (ggplot(na.omit(subdata), aes(x=gos_ind/1000000, y=fpm_ind/1000000)) + 
+             geom_point(aes(color=disease), size=3) +
+             geom_abline(intercept=0, slope=1) + 
+             xlim(range) + 
+             ylim(range)+
+             geom_text_repel(aes(gos_ind/1000000, fpm_ind/1000000, label=grant_number)) +
+             #ylim(0, 9) + 
+             labs(x = "GOS Budget (USD millions)", y = "FPM Disbursements (USD millions)", 
+                  caption="Source: GOS, FGH",
+                  title=paste(k, "FGH vs GOS")) +
+             theme_bw(base_size=12) +
+             theme(plot.title=element_text(hjust=.5)))
+  gos_nat_plots[[k]] <- plot
+}
+
+pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/fpm_vs_gos_graphs.pdf", height=6, width=9)
 invisible(lapply(gos_nat_plots, print))
 dev.off()
