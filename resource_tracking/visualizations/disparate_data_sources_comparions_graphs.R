@@ -80,6 +80,9 @@ fghData$data_source <- NULL
 ##get the FGH "variable" column to repeat over for all of the other data sources: 
 graphData <- merge(graphData, fghData, by=c("year", "country", "disease"), all.x = TRUE)
 
+
+
+
 graphData$fpm_ind <- mapply(get_fpm_amount, graphData$data_source, graphData$variable)
 graphData$fgh_ind <- mapply(get_fgh_amount, graphData$data_source, graphData$variable)
 graphData$gos_ind <- mapply(get_gos_amount, graphData$data_source, graphData$variable)
@@ -87,6 +90,27 @@ graphData$gos_ind <- mapply(get_gos_amount, graphData$data_source, graphData$var
 byVars = names(graphData)[names(graphData)%in%c('year', 'country', 'disease')]
 graphData = graphData[, list(fpm_ind = sum(na.omit(fpm_ind)), fgh_ind=sum(na.omit(fgh_ind)), gos_ind=sum(na.omit(gos_ind))), by=byVars]
 
+##PLOTS:
+gos_nat_plots <- list()
+for (k in unique(na.omit(graphData$disease))){
+  subdata <- graphData[disease==k]
+  max_range <- max(subdata$budget, subdata$fgh_budget)
+  range = c(0, max_range)
+  plot <- (ggplot(na.omit(subdata), aes(x=fgh_budget/1000000, y=budget/1000000)) + 
+             geom_point(aes(color=data_source), size=3) +
+             geom_abline(intercept=0, slope=1) + 
+             xlim(range) + 
+             ylim(range)+
+             #ylim(0, 9) + 
+             labs(y = "Other Sources (USD millions)", x = "FGH Disbursements (USD millions)", 
+                  caption="Source: GOS, FGH, FPM",
+                  title=paste(k, "FGH vs GOS"),
+                  subtitle = (paste0("reg. slope: ", round(coefficients(fit)[2], digits=3))),
+                  colour="Data Source") +
+             theme_bw(base_size=12) +
+             theme(plot.title=element_text(hjust=.5)))
+  gos_nat_plots[[k]] <- plot
+}
 
 
 graphData <- disease_names_for_plots(graphData)
