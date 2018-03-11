@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# To comine the aggregate data sets (no filters) to check the monthly values, 2015
+# Combine the downloaded Uganda VL data w filters month, year, sex
 # ----------------------------------------------
 
 # --------------------
@@ -24,13 +24,21 @@ setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_a
 files <- list.files('./', recursive=TRUE)
 files
 
+# --------------------
+# check that there are the same number of files in each category
+
+
+
+
+
+
 # ----------------------------------------------
 # add identifying variables to the existing data tables using file names
-# add year, month, age group, sex, tb status
+# add year, month, sex
 
 # loop over existing files
 i = 1
-for(f in files[1:6]) {
+for(f in files[1:180]) {
   
   #Load the RDs file
   jsonData = readRDS(f)
@@ -41,9 +49,9 @@ for(f in files[1:6]) {
   # skip to next if there was no data for this combination
   if (length(current_data)==0) next
 
-  #to check the position of variables
-  # m = 3, y = 4
+  #to check the position of variables: 
   #outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_',s,'_','.rds')
+  # positions: year = 4; month = 3; sex=5
   
   # extract meta data from file name
   meta_data = strsplit(f, '_')[[1]]
@@ -60,7 +68,7 @@ for(f in files[1:6]) {
 # ----------------------------------------------
 
 #save the final data as an RDS
-saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_age/sex_age.rds")
+saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex/full_data.rds")
 
 # view it 
 str(full_data)
@@ -68,20 +76,21 @@ class(full_data)
 View(full_data)
 # ----------------------------------------------
 
-# run some stats to check it 
-full_data[month==1, sum(samples_received)]
-full_data[month==1 & sex=='x', .(total_samples=sum(samples_received))]
+# run some stats to check that the data downloaded correctly
+full_data[, sum(samples_received), by=year]
+full_data[month==1, sum(samples_received), by=year] # should be no samples in jan 2014
 
+# check that no data downloaded for jan - july 2014 or after march 2018
+full_data[year==2014 & month!=8 & month!=9 & month!=10 & month!=11 & month!=12, sum(samples_received)]
+full_data[year==2014 & month!=1 & month!=2 & month!=3, sum(samples_received)]
 
+# check for substantial variability in the number of samples
+full_data[, .(total_samples=sum(samples_received)), by=.(sex, year)]
 
+# check for missing data in the unknown sex category
+full_data[sex=='x', .(total_sup=sum(samples_received)), by=.(month, year)]
+full_data[sex=='x', .(total_sup=sum(suppressed)), by=.(month, year)]
 
-
-
-full_data[ , .(total_samples=sum(samples_received)), by=month]
-
-full_data[ , .(total_sup=sum(suppressed)), by=month]
-
-
-
+# ----------------------------------------------
 
 
