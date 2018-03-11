@@ -25,12 +25,6 @@ files <- list.files('./', recursive=TRUE)
 files
 
 # --------------------
-# check that there are the same number of files in each category
-
-
-
-
-
 
 # ----------------------------------------------
 # add identifying variables to the existing data tables using file names
@@ -38,7 +32,7 @@ files
 
 # loop over existing files
 i = 1
-for(f in files[1:180]) {
+for(f in files) {
   
   #Load the RDs file
   jsonData = readRDS(f)
@@ -55,7 +49,7 @@ for(f in files[1:180]) {
   
   # extract meta data from file name
   meta_data = strsplit(f, '_')[[1]]
-  current_data[, year:=as.numeric(substr(meta_data[4],3,4))]
+  current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
   current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
   current_data[, sex:=(meta_data[5])]
 
@@ -68,11 +62,13 @@ for(f in files[1:180]) {
 # ----------------------------------------------
 
 #save the final data as an RDS
-saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex/full_data.rds")
+saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_data.rds")
 
 # view it 
 str(full_data)
 class(full_data)
+
+
 View(full_data)
 # ----------------------------------------------
 
@@ -82,7 +78,8 @@ full_data[month==1, sum(samples_received), by=year] # should be no samples in ja
 
 # check that no data downloaded for jan - july 2014 or after march 2018
 full_data[year==2014 & month!=8 & month!=9 & month!=10 & month!=11 & month!=12, sum(samples_received)]
-full_data[year==2014 & month!=1 & month!=2 & month!=3, sum(samples_received)]
+full_data[year==2014, sum(samples_received), by=.(month, sex)]
+full_data[year==2014, sum(samples_received), by=month]
 
 # check for substantial variability in the number of samples
 full_data[, .(total_samples=sum(samples_received)), by=.(sex, year)]
@@ -90,6 +87,9 @@ full_data[, .(total_samples=sum(samples_received)), by=.(sex, year)]
 # check for missing data in the unknown sex category
 full_data[sex=='x', .(total_sup=sum(samples_received)), by=.(month, year)]
 full_data[sex=='x', .(total_sup=sum(suppressed)), by=.(month, year)]
+
+#save the final data as an RDS
+saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_data.rds")
 
 # ----------------------------------------------
 
