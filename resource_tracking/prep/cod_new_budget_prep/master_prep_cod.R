@@ -72,7 +72,7 @@ for(i in 1:length(file_list$file_name)){
     summary_file$sda_detail[i] <- "Detailed"
   } else if (file_list$type[i]=="summary"){
     summary_file$sda_detail[i] <- "Summary"
-  } else if(!(tmpData$cost_category[1]=="All")){
+  } else if(!(tmpData$sda_activity[1]=="All")){
     summary_file$sda_detail[i] <- "Detailed"
   } else {
     summary_file$sda_detail[i] <- "None"
@@ -110,38 +110,6 @@ resource_database <- resource_database[!(sda_orig%in%c("8", "9"))]
 ## optional: do a check on data to make sure values aren't dropped: 
 # data_check2<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
-
-# ----------------------------------------------
-## map program level data: 
-mapping_for_R <- read.csv(paste0(dir, "multi_country/mapping/mapping_for_R.csv"),
-                          fileEncoding="latin1")
-mapping_for_graphs <- read.csv(paste0(dir, "mapping_for_graphs.csv"))
-
-
-
-# test for missing SDAs from map
-sdas_in_map = unique(mapping_for_R$sda_orig)
-sdas_in_data = unique(resource_database$sda_orig)
-if (any(!sdas_in_data %in% sdas_in_map)) { 
-  stop('Map doesn\'t include cost categories that are in this data file!')
-}
-#unmapped_values <- resource_database[sda_orig%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
-#unmapped_values = unmapped_values[!duplicated(unmapped_values, by=c("module", "sda_orig"))]
-#View(unique(unmapped_values$sda_orig))
-
-
-# test to make sure map doesn't contain duplicates
-d1 = nrow(mapping_for_R)
-d2 = nrow(unique(mapping_for_R))
-if (d1!=d2) stop('Map contains duplicates!') 
-
-
-program_level_mapped <- merge(resource_database, mapping_for_R, by=c("disease","sda_orig"), allow.cartesian=TRUE)
-mappedCod <- merge(program_level_mapped, mapping_for_graphs, by="code", allow.cartesian=TRUE) ##some categories will be split
-
-mappedCod$budget <- mappedCod$budget*mappedCod$coeff
-mappedCod$expenditure <- mappedCod$expenditure*mappedCod$coeff
-mappedCod$year <- year(mappedCod$start_date)
 
 ## do a check on data to make sure values aren't dropped: 
 data_check2<- as.data.frame(mappedCod[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
