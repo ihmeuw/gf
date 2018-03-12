@@ -134,19 +134,19 @@
     # only delete those unnecessary rows, and not any others accidentally.
   
    if ((is.na(dataSheet[1,"province"])) && (dataSheet[2,"province"] == "PROVINCE")){
-    dataSheet <- dataSheet[-c(1, 2),] }
+   dataSheet <-dataSheet[-c(1, 2),] }
   
   # using this to delete rows tacked on to the end of the DF with all NA values
     # by checking to see if 2nd column is NA
-    remove_NA <- dataSheet[complete.cases(dataSheet[ , 2]),]
+    dataSheet <- dataSheet[complete.cases(dataSheet[ , 2]),]
   
   # using this to delete "totals" rows which are present in all data sheets
     # except for 2016_BDD
-    if (year !=2016 && sheetname !="BDD"){
-      # remove last row 
-      numRows <- dim(dataSheet)[1]
-      dataSheet <- dataSheet[(numRows-1),]
-    }
+    # if (year !=2016 && sheetname !="BDD"){
+    #   # remove last row
+    #   numRows <- ((dim(dataSheet))[1])
+    #   dataSheet <- dataSheet[(numRows-1),]
+    # }
 # ----------------------------------------------
 # ----------------------------------------------
   # Return current data sheet
