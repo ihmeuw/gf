@@ -27,9 +27,57 @@ fghData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi
 # ----------------------------------------------
 ## prep data 
 
+### ----------------------------------------------
+##time series plots: 
+
+##FGH vs All others 
+
+byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source')]
+graphData = totalData[, list(budget=sum(na.omit(budget))), by=byVars]
+
+
+
+fghData <- fghData[, list(fgh_disb=sum(na.omit(disbursement))),by=byVars]
+fghData$data_source <- NULL
+
+##get the FGH "variable" column to repeat over for all of the other data sources: 
+graphData <- merge(graphData, fghData, by=c("year", "country", "disease"), all.x = TRUE)
+
+graphData <- disease_names_for_plots(graphData)
+
+byVars = names(graphData)[names(graphData)%in%c('country', 'disease', 'data_source')]
+graphData = graphData[, list(fgh_disb=sum(na.omit(fgh_disb)), budget=sum(na.omit(budget))), by=byVars]
+
+
+##PLOTS:
+gos_nat_plots <- list()
+for (k in unique(na.omit(graphData$disease))){
+  subdata <- graphData[disease==k]
+  range = c(0, max(na.omit(subdata$fgh_disb/10000000)))
+  plot <- (ggplot(na.omit(subdata), aes(x=fgh_disb/10000000, y=budget/10000000)) + 
+             geom_point(aes(color=data_source), size=3) +
+             geom_abline(intercept=0, slope=1) + 
+             xlim(range)+
+             ylim(range) +
+             labs(y = "Other Sources - Budget (USD 10 mil.)", x = "FGH Disbursements (USD 10 mil.)", 
+                  caption="Source: GOS, FGH, FPM",
+                  title=paste(k, "FGH vs. Other Sources Comparisons"),
+                  colour="Data Source") +
+             theme_bw(base_size=12) +
+             theme(plot.title=element_text(hjust=.5)))
+  gos_nat_plots[[k]] <- plot
+}
+
+
+
+pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/fgh_vs_all_by_disease.pdf", height=6, width=9)
+invisible(lapply(gos_nat_plots, print))
+dev.off()
+
+
+
+### ----------------------------------------------
 ## functions to be able to plot FGH and GOS data:
-
-
 
 get_fgh_amount <- function(indicator, amount){
   x <- 0 
@@ -64,25 +112,6 @@ get_fpm_amount <- function(indicator, amount){
   return(x)
 }
 
-### ----------------------------------------------
-##time series plots: 
-
-##FGH vs All others 
-
-
-byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source')]
-graphData = totalData[, list(budget=sum(na.omit(budget))), by=byVars]
-
-
-fghData <- fghData[, list(fgh_budget=sum(na.omit(disbursement))),by=byVars]
-fghData$data_source <- NULL
-
-##get the FGH "variable" column to repeat over for all of the other data sources: 
-graphData <- merge(graphData, fghData, by=c("year", "country", "disease"), all.x = TRUE)
-
-
-
-
 graphData$fpm_ind <- mapply(get_fpm_amount, graphData$data_source, graphData$variable)
 graphData$fgh_ind <- mapply(get_fgh_amount, graphData$data_source, graphData$variable)
 graphData$gos_ind <- mapply(get_gos_amount, graphData$data_source, graphData$variable)
@@ -90,51 +119,6 @@ graphData$gos_ind <- mapply(get_gos_amount, graphData$data_source, graphData$var
 byVars = names(graphData)[names(graphData)%in%c('year', 'country', 'disease')]
 graphData = graphData[, list(fpm_ind = sum(na.omit(fpm_ind)), fgh_ind=sum(na.omit(fgh_ind)), gos_ind=sum(na.omit(gos_ind))), by=byVars]
 
-##PLOTS:
-gos_nat_plots <- list()
-for (k in unique(na.omit(graphData$disease))){
-  subdata <- graphData[disease==k]
-  max_range <- max(subdata$budget, subdata$fgh_budget)
-  range = c(0, max_range)
-  plot <- (ggplot(na.omit(subdata), aes(x=fgh_budget/1000000, y=budget/1000000)) + 
-             geom_point(aes(color=data_source), size=3) +
-             geom_abline(intercept=0, slope=1) + 
-             xlim(range) + 
-             ylim(range)+
-             #ylim(0, 9) + 
-             labs(y = "Other Sources (USD millions)", x = "FGH Disbursements (USD millions)", 
-                  caption="Source: GOS, FGH, FPM",
-                  title=paste(k, "FGH vs GOS"),
-                  subtitle = (paste0("reg. slope: ", round(coefficients(fit)[2], digits=3))),
-                  colour="Data Source") +
-             theme_bw(base_size=12) +
-             theme(plot.title=element_text(hjust=.5)))
-  gos_nat_plots[[k]] <- plot
-}
-
-
-graphData <- disease_names_for_plots(graphData)
-
-##create color gradient for years: 
-graphCols <- c('#F18500',
-               '#EFC901',
-               '#CDEC02',
-               '#88E903',
-               '#45E704',
-               '#05E406',
-               '#06E147',
-               '#08DE85',
-               '#09DCC2',
-               '#045a8d',
-               '#0AB6D9',
-               '#0570b0',
-               '#0B79D6',
-               '#0B3ED4'
-)
-
-names(graphCols) <- unique(graphData$year)
-
-colScale <- scale_fill_manual(name="Year", values =graphCols) 
 ## graph budgets vs. expenditures: 
 
 gos_nat_plots <- list()
