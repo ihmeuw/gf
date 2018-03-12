@@ -36,13 +36,13 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   
   if(grant%in%c("UGD-708-G08-M") & sheet_name=="EFR Malaria Financial Data_3B"){
     gf_data <- gf_data[, -c(1:3)]
-    colnames(gf_data)[1] <- "cost_category"
+    colnames(gf_data)[1] <- "module"
     colnames(gf_data)[2] <- "budget"
     colnames(gf_data)[3] <- "expenditure"
-    gf_data <- gf_data[c(grep("service de", tolower(gf_data$cost_category)):grep("type of", tolower(gf_data$cost_category))),]
+    gf_data <- gf_data[c(grep("service de", tolower(gf_data$module)):grep("type of", tolower(gf_data$module))),]
     gf_data <- gf_data[-nrow(gf_data) ,drop = FALSE]
-    budget_dataset <- gf_data[, c("cost_category", "budget", "expenditure"),with=FALSE]
-    budget_dataset<- budget_dataset[!is.na(budget_dataset$cost_category),]
+    budget_dataset <- gf_data[, c("module", "budget", "expenditure"),with=FALSE]
+    budget_dataset<- budget_dataset[!is.na(budget_dataset$module),]
     budget_dataset$recipient <- recipient
     budget_dataset$disbursement <- 0 
   
@@ -55,7 +55,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       gf_data <- gf_data[-nrow(gf_data) ,drop = FALSE]
       budget_dataset <- gf_data[, c("recipient", "budget", "disbursement"),with=FALSE]
       budget_dataset<- budget_dataset[!is.na(budget_dataset$recipient),]
-      budget_dataset$cost_category <- "All"
+      budget_dataset$module <- "All"
       budget_dataset$expenditure <- 0 
       
     } else {
@@ -64,7 +64,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
     colnames(gf_data)[2] <- "module"
     colnames(gf_data)[3] <- "budget"
     colnames(gf_data)[5] <- "expenditure"
-    gf_data <- gf_data[c(grep("module", tolower(gf_data$description)):grep(0, tolower(gf_data$cost_category))),]
+    gf_data <- gf_data[c(grep("module", tolower(gf_data$description)):grep(0, tolower(gf_data$module))),]
     budget_dataset <- gf_data[, c("module", "budget", "expenditure"),with=FALSE]
     budget_dataset<- budget_dataset[!is.na(budget_dataset$module),]
     budget_dataset$recipient <- recipient

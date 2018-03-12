@@ -34,21 +34,11 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     return(qtr_names)
   }
   
-  get_categories <- function(cost_category, program_activity){
-    x <- cost_category
-    if(is.na(x)){
-      x <- as.character(program_activity)
-    }else if(grepl("nets", tolower(program_activity))){
-      x <- as.character(program_activity)
-    }
-    return(x)
-  }
-  
   ##create list of column names: 
   if(start_date=="2018-01-01"){
-    qtr_names <- c("Intervention", "Activity Description", "Implementer", rep(1, qtr_num))
+    qtr_names <- c("Module", "Activity Description", "Implementer", rep(1, qtr_num))
   } else {
-    qtr_names <- c("Intervention", "Activity Description", "Recipient", rep(1, qtr_num))
+    qtr_names <- c("Module", "Activity Description", "Recipient", rep(1, qtr_num))
   }
   qtr_names <- create_qtr_names(qtr_names, cashText)
   
@@ -75,9 +65,6 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ##only keep data that has a value in the "category" column 
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
-  
-  gf_data$cost_category <- mapply(get_categories, gf_data$module, gf_data$cost_category)
-  gf_data$module <- NULL
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   setDT(gf_data)
