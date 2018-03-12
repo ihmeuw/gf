@@ -31,6 +31,7 @@ source <- "gf"
 dir <- 'your local drive here' ##where the files are stored locally
 file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
+file_list$start_date <- ymd(file_list$start_date)
 
 ##create a summary file to track the data that we have (and that we still need)
 summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
@@ -39,6 +40,7 @@ summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), n
 
 summary_file$loc_id <- as.character(summary_file$loc_id)
 summary_file$loc_id <- loc_id
+
 
 
 for(i in 1:length(file_list$file_name)){ 
@@ -51,17 +53,17 @@ for(i in 1:length(file_list$file_name)){
   
   if(file_list$type[i]=="detailed"){##most detailed level of budgets 
     tmpData <- prep_detailed_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
-                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], cashText, file_list$grant[i], 
+                                       file_list$start_date[i], file_list$qtr_number[i], cashText, file_list$grant[i], 
                                         file_list$disease[i], file_list$period[i],file_list$data_source[i])
   } else if (file_list$type[i]=="summary"){ ##not much detail, only high level SDAs: 
     tmpData <- prep_summary_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
-                                       ymd(file_list$start_date[i]), file_list$qtr_number[i], cashText, file_list$grant[i], 
+                                       file_list$start_date[i], file_list$qtr_number[i], cashText, file_list$grant[i], 
                                        file_list$disease[i], file_list$period[i], file_list$recipient[i], file_list$data_source[i])
     tmpData$disbursement <- 0 
   ##LFA data cleaning: 
   } else if (file_list$type[i]=="pudr"){ ##has expenditure data 
     tmpData <- prep_pudr_uga(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
-                             ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], 
+                             file_list$start_date[i], file_list$disease[i], file_list$period[i], 
                              file_list$grant[i], file_list$recipient[i],file_list$data_source[i])
   }
   if(i==1){
@@ -75,7 +77,7 @@ for(i in 1:length(file_list$file_name)){
     summary_file$sda_detail[i] <- "Detailed"
   } else if (file_list$type[i]=="summary"){
     summary_file$sda_detail[i] <- "Summary"
-  } else if(!(tmpData$cost_category[1]=="All")){
+  } else if(!(tmpData$sda_activity[1]=="All")){
     summary_file$sda_detail[i] <- "Detailed"
   } else {
     summary_file$sda_detail[i] <- "None"
@@ -88,6 +90,8 @@ for(i in 1:length(file_list$file_name)){
 
 summary_file$end_date <- as.Date(summary_file$end_date)
 summary_file$start_date <- as.Date(summary_file$start_date)
+resource_database$start_date <- as.Date(resource_database$start_date)
+
 
 setnames(summary_file, c("Data Source",	"Year",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 

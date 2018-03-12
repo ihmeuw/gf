@@ -28,23 +28,67 @@ fghData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi
 ## prep data 
 
 ### ----------------------------------------------
-##time series plots: 
+##FGH vs All others - time series 
 
-##FGH vs All others 
+##sum up budget (as "variable") by year, disease, and data source 
+byVars = names(totalData)[names(totalData)%in%c('year', 'disease', 'data_source')]
+graphData = totalData[, list(variable=sum(na.omit(budget))), by=byVars]
+
+##we don't care about initial/rejected/upcoming budgets - they are all fpm for the purposes of this: 
+graphData[data_source%in%c('init_fpm', 'rej_fpm', 'init2_fpm'), data_source:='fpm']
+
+
+##rename FGH disburesment to "variable"
+fghData <- fghData[, list(variable=sum(na.omit(disbursement))),by=byVars]
+
+##rbind the two datasets together and clean up the disease names: 
+graphData <- rbind(graphData, fghData)
+graphData <- disease_names_for_plots(graphData)
+
+sourceColors <- c("#000080",
+                  "#ff7f00",
+                  "#006400",
+                  "#6a3d9a",
+                  "#33a02c",
+                  "#fb9a99",
+                  "#1f78b4")
+
+names(sourceColors) <- levels(graphData$data_source)
+
+##PLOTS:
+gos_nat_plots <- list()
+for (k in unique(na.omit(graphData$disease))){
+  subdata <- graphData[disease==k]
+  plot <- (ggplot(na.omit(subdata), aes(x=year, y=variable/1000000, group=data_source, color=data_source)) + 
+             geom_line(size=1) +
+             scale_color_manual(values =sourceColors) +
+             labs(y = "USD (mil.)", x = "Year", 
+                  caption="Source: GOS, FGH, FPM",
+                  title=paste(k, "FGH vs. Other Sources Comparisons"),
+                  subtitle=("FGH disbursement, all others budget")) +
+             theme_bw(base_size=12) +
+             theme(plot.title=element_text(hjust=.5)))
+  gos_nat_plots[[k]] <- plot
+}
+
+pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/data_sources_over_time_by_disease.pdf", height=6, width=9)
+invisible(lapply(gos_nat_plots, print))
+dev.off()
+
+
+
+### ----------------------------------------------
+##FGH vs All others - scatterplot: 
 
 byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source')]
 graphData = totalData[, list(budget=sum(na.omit(budget))), by=byVars]
 
-
-
+##create a "FGH" specific variable for disbursement: 
 fghData <- fghData[, list(fgh_disb=sum(na.omit(disbursement))),by=byVars]
 fghData$data_source <- NULL
 
-##get the FGH "variable" column to repeat over for all of the other data sources: 
-graphData <- merge(graphData, fghData, by=c("year", "country", "disease"), all.x = TRUE)
 
-graphData <- disease_names_for_plots(graphData)
-
+##delete year since we're doing a scatterplot: 
 byVars = names(graphData)[names(graphData)%in%c('country', 'disease', 'data_source')]
 graphData = graphData[, list(fgh_disb=sum(na.omit(fgh_disb)), budget=sum(na.omit(budget))), by=byVars]
 

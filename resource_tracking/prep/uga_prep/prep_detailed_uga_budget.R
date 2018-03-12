@@ -23,11 +23,11 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   # ----------------------------------------------
   ##prep functions that will be used in cleaning the code: 
   create_qtr_names = function(qtr_names, cashText){
-    for(i in 1:qtr_num+3){
-      if(i <4) {
+    for(i in 1:qtr_num+4){
+      if(i <5) {
         i=i+1
       } else { 
-        qtr_names[i] <- paste("Q", i-3,  cashText, sep="")
+        qtr_names[i] <- paste("Q", i-4,  cashText, sep="")
       }
       i=i+1
     }
@@ -36,9 +36,9 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ##create list of column names: 
   if(start_date=="2018-01-01"){
-    qtr_names <- c("Module", "Activity Description", "Implementer", rep(1, qtr_num))
+    qtr_names <- c("Module","Intervention", "Activity Description", "Implementer", rep(1, qtr_num))
   } else {
-    qtr_names <- c("Module", "Activity Description", "Recipient", rep(1, qtr_num))
+    qtr_names <- c("Module","Intervention", "Activity Description", "Recipient", rep(1, qtr_num))
   }
   qtr_names <- create_qtr_names(qtr_names, cashText)
   
@@ -60,15 +60,16 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ##rename the columns: 
   colnames(gf_data)[1] <- "module"
-  colnames(gf_data)[2] <- "cost_category"
-  colnames(gf_data)[3] <- "recipient"
+  colnames(gf_data)[2] <- "intervention"
+  colnames(gf_data)[3] <- "sda_activity"
+  colnames(gf_data)[4] <- "recipient"
   
   ##only keep data that has a value in the "category" column 
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   setDT(gf_data)
-  gf_data1<- melt(gf_data,id=c("module","cost_category", "recipient"), variable.name = "qtr", value.name="budget")
+  gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity", "recipient"), variable.name = "qtr", value.name="budget")
   
   ##create vector that maps quarters to their start dates: 
   dates <- rep(start_date, qtr_num) # 
@@ -91,6 +92,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
   budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date]
   budget_dataset$qtr <- NULL
+  budget_dataset$start_date <- as.Date(budget_dataset$start_date)
   budget_dataset$period <- period
   budget_dataset$expenditure <- 0 
   budget_dataset$data_source <- source

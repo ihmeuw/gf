@@ -68,11 +68,13 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   ##add categories
   budget_dataset$disease <- disease 
   budget_dataset$period <- period
-  budget_dataset$cost_category <- "All"
+  budget_dataset$intervention <- "All"
+  budget_dataset$sda_activity <- "All"
   budget_dataset$expenditure <- 0 ## since we don't have expenditure data yet 
   budget_dataset$grant_number <- grant
   budget_dataset$recipient <- recipient
   budget_dataset$data_source <- source
+  budget_dataset$start_date <- as.Date(budget_dataset$start_date)
   budget_dataset$year <- year(budget_dataset$start_date)
   return(budget_dataset)
   
