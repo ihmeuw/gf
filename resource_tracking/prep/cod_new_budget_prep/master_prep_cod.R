@@ -30,6 +30,7 @@ implementer <- "CAGF"
 
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/cod_budget_prep_grants/' ##where the files are stored locally
 file_list <- read.csv(paste0(dir, "cod_budget_prep.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
+file_list$start_date <- ymd(file_list$start_date)
 
 ##create a summary file to track the data that we have (and that we still need)
 summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
@@ -54,12 +55,11 @@ for(i in 1:length(file_list$file_name)){
   
   if(file_list$type[i]=="summary"){
     tmpData <- prep_cat_summary_budget(dir, as.character(file_list$file_name[i]),
-                                  file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i], 
+                                  file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
                                   file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], implementer)
   } else if (file_list$type[i]=="detailed"){
-    tmpData <- prep_cod_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_id)
-  } else if (file_list$type[i]=="cat"){
-    tmpData <- prep_cod_recip_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$lang[i], file_list$grant[i])
+    tmpData <- prep_cod_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
+                                        file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_id)
   }
   tmpData$data_source <- "fpm"
   if(i==1){
@@ -101,11 +101,6 @@ resource_database$data_source <- "fpm"
 
 
 data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
-
-resource_database$sda_orig<-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), collapse="|"), "", resource_database$activity_description)
-resource_database$sda_orig <-tolower(resource_database$sda_orig)
-resource_database$sda_orig <- gsub("[[:punct:]]", "", resource_database$sda_orig)
-resource_database <- resource_database[!(sda_orig%in%c("8", "9"))]
 
 ## optional: do a check on data to make sure values aren't dropped: 
 # data_check2<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
