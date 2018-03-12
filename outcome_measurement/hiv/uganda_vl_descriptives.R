@@ -30,7 +30,7 @@ class(uganda_vl) # check that it is a data table
 str(uganda_vl)
 names(uganda_vl)
 
-# check that 2014 and 2018 data only includes appropriate months
+# check that 2014 and 2018 data only includes appropriate months (8/14 - 12/14, 1/18 - present)
 uganda_vl[year==2014, sum(samples_received), by=month]
 uganda_vl[year==2018, sum(samples_received), by=month]
 
@@ -39,13 +39,17 @@ uganda_vl[year==2018, sum(samples_received), by=month]
 
 # destring sex
 uganda_vl[ , .(class(sex)) ]
+View(uganda_vl)
+# rename sex, sex1 so you can use sex as a variable later
+names(uganda_vl)[names(uganda_vl)=="sex"] <- "sex1"
 
-uganda_vl[sex == "m", female := 0]
-uganda_vl[sex == "f", female := 1]
-uganda_vl[sex == "x", female := NA]
+# destring sex
+uganda_vl[sex1 == "m", female := 0]
+uganda_vl[sex1 == "f", female := 1]
+uganda_vl[sex1 == "x", female := NA]
 
-uganda_vl[, .(sum(female, na.rm=T)), by=year] # tells you the # of entries, not females
-uganda_vl [, .(sum(samples_received)), by=.(year, female)] # samples from females by year
+uganda_vl[, .(sum(female, na.rm=T)), by=year] # tells you the # of entries with female filter, not females
+uganda_vl [, .(sum(patients_received)), by=.(year, female)] # patients by sex by year
 
 
 # ----------------------------------------------
@@ -56,13 +60,42 @@ table_1 <- uganda_vl[ ,
                       .(total_patients = sum(patients_received), samples = sum(samples_received), 
                         test_results = sum(valid_results), total_suppressed = sum(suppressed),
                         suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
-                      by=year]
+                        by=.(month,year)]
+table_1 <- table_1[order(year, month)]
 
-# ggplot of suppression ratio oer time
-ggplot(table_1, aes(x = year, y = suppression_ratio )) +
-  geom_point() + theme_bw()
+# total suppressed persons by month, year
+ggplot(table_1, aes(x=month, y=total_suppressed, col = factor(year), group=year)) + 
+  geom_point() + geom_line() + theme_bw() 
 
-table_1 # to compare values with the scatter plot
+# suppression ratio by month, year
+ggplot(table_1, aes(x=month, y=suppression_ratio, col = factor(year), group=year)) + 
+  geom_point() + geom_line() + theme_bw() + xlim(1,12) + ylim(0, 100)
+
+
+
+
+# females only
+
+table_1_f <- uganda_vl[female==1 ,
+                     .(total_patients = sum(patients_received), samples = sum(samples_received), 
+                       test_results = sum(valid_results), total_suppressed = sum(suppressed),
+                       suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
+                       by=year]
+
+# by sex
+ggplot(plot_1[female==1], aes(x=month, y=suppression_ratio, col = year, group=year)) + 
+  geom_point() + geom_line() + theme_bw() + xlim(1,12) + ylim(0, 100)
+
+
+
+# --------------------
+
+
+plot_1 <- uganda_vl[ ,
+                     .(total_patients = sum(patients_received), samples = sum(samples_received), 
+                       test_results = sum(valid_results), total_suppressed = sum(suppressed),
+                       suppression_ratio=100*(sum(suppressed)/sum(valid_results)), female),
+                     by=.(month, year)]
 
 
 # --------------------
@@ -79,6 +112,22 @@ table_1_2014 <- uganda_vl[ year==2014,
 ggplot(table_1_2014, aes(x = month, y = suppression_ratio )) +
   geom_point() + theme_bw()
 
+
+# geom_point(shape = 21, size = 4, alpha=0.6) + theme_bw()
+
+# change merge file to import entire year for ease of interpretation
+# drop march of 2018?
+
+ggplot(plot_1, aes(x=total_patients, fill=factor(female))) + geom_bar(position="dodge")
+
+ggplot(plot_1, aes(x=month, y=total_patients, fill=factor(female))) + geom_bar(stat="identity", position="fill")
+
+ggplot(mtcars, aes(x = factor(cyl), fill = factor(am))) + geom_bar()
+
+# used stacked bar for tb status
+
+
+
 # --------------------
 
 table_1_2015 <- uganda_vl[ year==2015,
@@ -91,6 +140,20 @@ table_1_2015 <- uganda_vl[ year==2015,
 ggplot(table_1_2015, aes(x = month, y = suppression_ratio )) +
   geom_point() + theme_bw()
 
+
+
+table_2015 <- uganda_vl[year==2015 ,
+                        .(total_patients = sum(patients_received), samples = sum(samples_received), 
+                          test_results = sum(valid_results), total_suppressed = sum(suppressed),
+                          suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
+                        by=.(month,year)]
+table_2015 <- table_2015[order(month)]
+
+ggplot(table_2015, aes(x=month, y=total_suppressed, col = factor(year), group=year)) + 
+  geom_point() + geom_line() + theme_bw() 
+
+ggplot(table_2015, aes(x=month, y=test_results)) + 
+  geom_point() + geom_line() + theme_bw() 
 
 # --------------------
 
