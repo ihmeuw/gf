@@ -16,9 +16,12 @@ library(stringr)
 library(rlang)
 library(zoo)
 # ----------------------------------------------
+##Function to prepare the detailed budgets: 
 
+# ----------------------------------------------
 prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
-  ## we need to grab the budget numbers by quarter - first determine if french or english
+  
+  ##first determine if budget is in french or english
   if(lang=="eng"){
     cashText <- " Cash \r\nOutflow"
     loc_id <- "Geography/Location"
@@ -34,13 +37,14 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     recipient <- "Receptor"
   }
   
+  ##names of the columns we want to ultimately go into our database: 
   if(lang=="eng"){
-    qtr_names <- c("Intervention", "Recipient", loc_id, rep(1, qtr_num))
+    qtr_names <- c("Module","Intervention", "Recipient", loc_id, rep(1, qtr_num))
   } else{ 
-    qtr_names <- c("Módulo", "Descripción de la actividad",	recipient, loc_id, rep(1, qtr_num))
+    qtr_names <- c("Módulo", "Intervención","Descripción de la actividad",	recipient, loc_id, rep(1, qtr_num))
   }
   
-  
+  ##add in the quarter names to the list: 
   create_qtr_names = function(qtr_names, cashText, lang){
     for(i in 1:qtr_num+4){
       if(i <5) {
@@ -54,6 +58,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   }
   qtr_names <- create_qtr_names(qtr_names, cashText, lang)
   
+  ##load the FPM data: 
   if(!is.na(sheet_name)){
     gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
   } else {
@@ -63,15 +68,15 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ## drop the first  two columns (they are unnecessary)
   gf_data <- gf_data[,-c(1:2)]
   
-  
+  ##GUA-M-MSPAS formatted differently: 
   if(grant=="GUA-M-MSPAS"){
     gf_data <- gf_data[-1,]
     colnames(gf_data) <- as.character(gf_data[1,])
     gf_data <- gf_data[-c(1:2),]
     budget_dataset <- gf_data[, c("Activity" ,"Total Presupuesto Year 1"), with=FALSE]
-    names(budget_dataset) <- c("sda_orig","budget")
-    budget_dataset <- na.omit(budget_dataset, cols=c("sda_orig"))
-    budget_dataset <- unique(budget_dataset, by=c("sda_orig","budget"))
+    names(budget_dataset) <- c("sda_activity","budget")
+    budget_dataset <- na.omit(budget_dataset, cols=c("sda_activity"))
+    budget_dataset <- unique(budget_dataset, by=c("sda_activity","budget"))
     
   }else{
     ##new budgets formatted slightly differently: 
@@ -88,8 +93,10 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
     
     colnames(gf_data)[1] <- "module"
-    colnames(gf_data)[2] <- "activity_description"
-  
+    colnames(gf_data)[2] <- "intervention"
+    colnames(gf_data)[3] <- "sda_activity"
+    
+    
     if(!(recipient %in% colnames(gf_data))){
      gf_data$recipient <- grant_number
     } else{
@@ -105,7 +112,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     ## invert the dataset so that budget expenses and quarters are grouped by category
     ##library(reshape)
     setDT(gf_data)
-    gf_data1<- melt(gf_data,id=c("module", "activity_description", "recipient", "loc_id"), 
+    gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity", "recipient", "loc_id"), 
                       variable.name = "qtr", value.name="budget")
   
     

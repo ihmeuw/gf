@@ -77,7 +77,8 @@ prep_fpm_summary_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
   budget_dataset$recipient <- recipient
-  budget_dataset$activity_description <- budget_dataset$module
+  budget_dataset$sda_activity <- "All"
+  budget_dataset$intervention <- "All"
   return(budget_dataset)
   
 }
