@@ -46,11 +46,11 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ##add in the quarter names to the list: 
   create_qtr_names = function(qtr_names, cashText, lang){
-    for(i in 1:qtr_num+4){
-      if(i <5) {
+    for(i in 1:qtr_num+5){
+      if(i <6) {
         i=i+1
       } else { 
-        qtr_names[i] <- paste("Q", i-4, " ",  cashText, sep="")
+        qtr_names[i] <- paste("Q", i-5, " ",  cashText, sep="")
         i=i+1
       }
     }
@@ -100,12 +100,12 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     if(!(recipient %in% colnames(gf_data))){
      gf_data$recipient <- grant_number
     } else{
-      colnames(gf_data)[3] <- "recipient" 
+      colnames(gf_data)[4] <- "recipient" 
       }
     if(!(loc_id %in% colnames(gf_data))){
       gf_data$loc_id <- "gtm"
     } else{
-      colnames(gf_data)[4] <- "loc_id" 
+      colnames(gf_data)[5] <- "loc_id" 
     }
     
     
