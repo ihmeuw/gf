@@ -34,7 +34,7 @@ file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","
 
 ##create a summary file to track the data that we have (and that we still need)
 summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
-                         c("data_source", "start_date", "end_date", "sda_detail", 
+                         c("data_source","year", "start_date",  "end_date", "sda_detail",
                            "geographic_detail", "period",	"grant", "disease", "loc_id"))
 
 summary_file$loc_id <- as.character(summary_file$loc_id)

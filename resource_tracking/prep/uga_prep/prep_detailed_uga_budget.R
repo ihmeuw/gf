@@ -81,7 +81,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   setDT(gf_data)
-  gf_data1<- melt(gf_data,id=c("cost_category", "recipient"), variable.name = "qtr", value.name="budget")
+  gf_data1<- melt(gf_data,id=c("module","cost_category", "recipient"), variable.name = "qtr", value.name="budget")
   
   ##create vector that maps quarters to their start dates: 
   dates <- rep(start_date, qtr_num) # 

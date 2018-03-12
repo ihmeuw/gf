@@ -9,7 +9,6 @@
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
 ##download necessary packages: 
-rm(list=ls())
 library(lubridate)
 library(data.table)
 library(readxl)
@@ -61,14 +60,15 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   gf_data <- gf_data[, 1:col_num]
   gf_data <- gf_data[-1,]
   
-  setnames(gf_data, c("cost_category", as.character(dates)))
+  setnames(gf_data, c("module", as.character(dates)))
 
   setDT(gf_data)
-  budget_dataset<- melt(gf_data,id="cost_category", variable.name = "start_date", value.name="budget")
+  budget_dataset<- melt(gf_data,id="module", variable.name = "start_date", value.name="budget")
 
   ##add categories
   budget_dataset$disease <- disease 
   budget_dataset$period <- period
+  budget_dataset$cost_category <- "All"
   budget_dataset$expenditure <- 0 ## since we don't have expenditure data yet 
   budget_dataset$grant_number <- grant
   budget_dataset$recipient <- recipient
