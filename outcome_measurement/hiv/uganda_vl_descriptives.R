@@ -64,8 +64,10 @@ table_1 <- uganda_vl[ ,
 table_1 <- table_1[order(year, month)]
 
 # total suppressed persons by month, year
-ggplot(table_1, aes(x=month, y=total_suppressed, col = factor(year), group=year)) + 
-  geom_point() + geom_line() + theme_bw() 
+ggplot(table_1, aes(x=factor(month), y=total_suppressed, col = factor(year), group=year)) + 
+  geom_point(size=2.5) + geom_line() + theme_bw() +
+  xlab("Month") + ylab("Total suppressed patients") + 
+  labs(title = "Virologically suppressed patients by month, year", caption="Source: Uganda VL Dashboard", colour="Year")
 
 # suppression ratio by month, year
 ggplot(table_1, aes(x=month, y=suppression_ratio, col = factor(year), group=year)) + 
