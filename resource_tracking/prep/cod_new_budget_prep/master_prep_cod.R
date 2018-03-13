@@ -96,7 +96,8 @@ setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Data Inventory Star
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$expenditure <- 0 
 resource_database$disbursement <- 0 
-resource_database$data_source <- "fpm"
+resource_database$source <- "gf"
+
 # ----------------------------------------------
 
 
@@ -107,11 +108,11 @@ data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c
 
 
 ## do a check on data to make sure values aren't dropped: 
-data_check2<- as.data.frame(mappedCod[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
+data_check2<- as.data.frame(resource_database[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
 
 
 ## write as csv 
-write.csv(mappedCod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/fpm_cod_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
+write.csv(resource_database, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/prepped_fpm_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
 
 
 
