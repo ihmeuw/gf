@@ -135,24 +135,13 @@ if(d1 !=d2){
 ## data check to verify data hasn't been dropped: 
 # data_check3 <- as.data.frame(cleaned_database[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
 
-# ---------------------------------------------
-## map program level data: 
-mapping_for_R <- read.csv(paste0(dir, "mapping_for_R.csv"),
-                          fileEncoding="latin1")
-mapping_for_graphs <- read.csv(paste0(dir, "mapping_for_graphs.csv"))
-
-## get rid of spaces, special characters, unnecessary punctuation....
-resource_database$cost_category <-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]"), collapse="|"), "", resource_database$cost_category)
-resource_database$cost_category <-tolower(resource_database$cost_category)
-resource_database$cost_category <- gsub("[[:punct:]]", "", resource_database$cost_category)
-
 
 ## split hiv/tb into hiv or tb: 
 
-get_hivtb_split <- function(disease, cost_category){
+get_hivtb_split <- function(disease,module){
   x <- disease
  if(disease=="hiv/tb"){
-   if(grepl(paste(c("tb", "tuber"), collapse="|"), cost_category)){
+   if(grepl(paste(c("tb", "tuber"), collapse="|"), module)){
     x <- "tb"
   } else {
     x <- "hiv"
@@ -161,43 +150,12 @@ get_hivtb_split <- function(disease, cost_category){
 return(x)
 }
 
-resource_database$disease <- mapply(get_hivtb_split, resource_database$disease, resource_database$cost_category)
-resource_database$disease <- as.factor(resource_database$disease)
-
-
-# test for missing SDAs from map
-sdas_in_map = unique(mapping_for_R$cost_category)
-sdas_in_data = unique(resource_database$cost_category)
-if (any(!sdas_in_data %in% sdas_in_map)) { 
-  stop('Map doesn\'t include cost categories that are in this data file!')
-}
-
-# uncomment if there are unmapped cost categories - figure out which ones: 
-# unmapped_values <- resource_database[cost_category%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
-# unique(unmapped_values$cost_category)
-
-## if necessary: resource_database <- resource_database[!cost_category=="pleaseselect."]
-
-# test to make sure map doesn't contain duplicates
-d1 = nrow(mapping_for_R)
-d2 = nrow(unique(mapping_for_R))
-if (d1!=d2) stop('Map contains duplicates!') 
-
-# ---------------------------------------------
-##map program activities from GOS data to our standard categories:
-
-program_level_mapped <- merge(resource_database, mapping_for_R, by=c("disease","cost_category"), allow.cartesian=TRUE)
-mappedUga <- merge(program_level_mapped, mapping_for_graphs, by="code", allow.cartesian=TRUE) ##some categories will be split
-
-mappedUga$budget <- mappedUga$budget*mappedUga$coeff
-mappedUga$expenditure <- mappedUga$expenditure*mappedUga$coeff
-
-## do a check on data to make sure values aren't dropped: 
-data_check3 <- as.data.frame(mappedUga[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
+cleaned_database$disease <- mapply(get_hivtb_split, cleaned_database$disease, cleaned_database$module)
+cleaned_database$disease <- as.factor(cleaned_database$disease)
 
 ##write csv to correct folder: 
 
-write.csv(mappedUga, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/fpm_prepped_budgets.csv", row.names = FALSE,
+write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/fpm_prepped_budgets.csv", row.names = FALSE,
           fileEncoding = "latin1")
 
 
