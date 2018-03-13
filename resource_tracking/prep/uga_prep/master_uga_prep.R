@@ -117,6 +117,43 @@ resource_database$source <- source
 toMatch <- c("0", "Please sel", "PA")
 cleaned_database <- resource_database[!grepl(paste(toMatch, collapse="|"), resource_database$module),]
 
+
+## split hiv/tb into hiv or tb: 
+
+get_hivtb_split <- function(disease,module){
+  x <- disease
+ if(disease=="hiv/tb"){
+   if(grepl(paste(c("tb", "tuber"), collapse="|"), module)){
+    x <- "tb"
+  } else {
+    x <- "hiv"
+  }
+ }
+return(x)
+}
+
+cleaned_database$disease <- mapply(get_hivtb_split, cleaned_database$disease, cleaned_database$module)
+
+##list of punctions to remove: 
+sda_remove_chars <- c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
+                  , "[[:punct:]]", "\"", ",")
+
+module_remove_chars <-  c("[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
+                          , ",",  "\"")
+##get rid of punctuation and accents in the SDA activities: 
+cleaned_database$sda_activity <-gsub(paste(sda_remove_chars, collapse="|"), "",cleaned_database$sda_activity)
+cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
+##replace commas with semicolons in the "Module" and "Intervention" (or else this screws up the CSV) 
+
+cleaned_database$module <- gsub(paste(module_remove_chars, collapse="|"), "", cleaned_database$module)
+cleaned_database$intervention <- gsub(paste(module_remove_chars, collapse="|"), "", cleaned_database$intervention)
+
+
+##write csv to correct folder: 
+
+write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/fpm_prepped_budgets.csv", row.names = FALSE,
+          fileEncoding = "latin1")
+
 # ---------------------------------------------
 ###DUPLICATE CHECK: 
 
@@ -134,30 +171,6 @@ if(d1 !=d2){
 
 ## data check to verify data hasn't been dropped: 
 # data_check3 <- as.data.frame(cleaned_database[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
-
-
-## split hiv/tb into hiv or tb: 
-
-get_hivtb_split <- function(disease,module){
-  x <- disease
- if(disease=="hiv/tb"){
-   if(grepl(paste(c("tb", "tuber"), collapse="|"), module)){
-    x <- "tb"
-  } else {
-    x <- "hiv"
-  }
- }
-return(x)
-}
-
-cleaned_database$disease <- mapply(get_hivtb_split, cleaned_database$disease, cleaned_database$module)
-cleaned_database$disease <- as.factor(cleaned_database$disease)
-
-##write csv to correct folder: 
-
-write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/fpm_prepped_budgets.csv", row.names = FALSE,
-          fileEncoding = "latin1")
-
 
 
 
