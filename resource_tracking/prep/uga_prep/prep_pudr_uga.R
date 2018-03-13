@@ -59,7 +59,6 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset$expenditure <- 0 
       
     } else {
-    ##clean the data depending on if in spanish or english
     colnames(gf_data)[1] <- "description"
     colnames(gf_data)[2] <- "module"
     colnames(gf_data)[3] <- "budget"
