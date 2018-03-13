@@ -24,6 +24,8 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
                                  fileEncoding = "latin1"))
 fghData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_data_prepped.csv',
                                fileEncoding = "latin1"))
+
+fgh_gf <- fghData[source=="gf"]
 # ----------------------------------------------
 ## prep data 
 
@@ -41,8 +43,10 @@ graphData[data_source%in%c('init_fpm', 'rej_fpm', 'init2_fpm'), data_source:='fp
 ##rename FGH disburesment to "variable"
 fghData <- fghData[, list(variable=sum(na.omit(disbursement))),by=byVars]
 
-##rbind the two datasets together and clean up the disease names: 
+##rbind the two datasets together 
 graphData <- rbind(graphData, fghData)
+
+#clean up the disease names and set colors for each data source: 
 graphData <- disease_names_for_plots(graphData)
 
 sourceColors <- c("#000080",
@@ -51,7 +55,8 @@ sourceColors <- c("#000080",
                   "#6a3d9a",
                   "#33a02c",
                   "#fb9a99",
-                  "#1f78b4")
+                  "#1f78b4",
+                  "#b20059")
 
 names(sourceColors) <- levels(graphData$data_source)
 
@@ -91,6 +96,9 @@ fghData$data_source <- NULL
 ##delete year since we're doing a scatterplot: 
 byVars = names(graphData)[names(graphData)%in%c('country', 'disease', 'data_source')]
 graphData = graphData[, list(fgh_disb=sum(na.omit(fgh_disb)), budget=sum(na.omit(budget))), by=byVars]
+
+##get the FGH "variable" column to repeat over for all of the other data sources: 
+graphData <- merge(graphData, fghData, by=c("year", "country", "disease"), all.x = TRUE)
 
 
 ##PLOTS:
