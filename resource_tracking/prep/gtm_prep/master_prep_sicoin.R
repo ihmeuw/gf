@@ -123,6 +123,7 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
 ##remove rows where loc_ids are in the SDA column: 
 cleaned_database <- resource_database[!resource_database$loc_name%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
 cleaned_database <-cleaned_database[!cleaned_database$loc_id%in%"TOTAL"]
+setnames(cleaned_database, "sda_orig", "module")
 ##output the data to the correct folder 
 
 
