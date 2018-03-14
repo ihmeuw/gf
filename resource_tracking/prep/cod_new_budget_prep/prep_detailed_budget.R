@@ -19,7 +19,8 @@ library(rlang)
 library(zoo)
 # ----------------------------------------------
 
-prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, loc_id){
+prep_detailed_budget = function(dir, inFile, sheet_name, start_date, 
+                                qtr_num, disease, period, lang, grant, loc_id, source){
   ## we need to grab the budget numbers by quarter - first determine if french or english
   if(lang=="eng"){
     cashText <- " Cash \r\nOutflow"
@@ -120,6 +121,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
+  budget_dataset$data_source <- source
   
   ##separate tb/hiv into either one or the other in order to map programs properly - later we might want to go back and fix this
   sep_hiv_tb <- function(module, loc_id){

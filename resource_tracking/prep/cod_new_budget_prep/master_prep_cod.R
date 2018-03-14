@@ -54,14 +54,14 @@ for(i in 1:length(file_list$file_name)){
   summary_file$year[i] <- file_list$grant_time[i]
   
   if(file_list$type[i]=="summary"){
-    tmpData <- prep_cat_summary_budget(dir, as.character(file_list$file_name[i]),
+    tmpData <- prep_summary_budget(dir, as.character(file_list$file_name[i]),
                                   file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
-                                  file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], implementer)
+                                  file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], implementer, file_list$source[i])
   } else if (file_list$type[i]=="detailed"){
-    tmpData <- prep_cod_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
-                                        file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_id)
+    tmpData <- prep_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
+                                        file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_id, file_list$source[i])
   }
-  tmpData$data_source <- "fpm"
+  tmpData$source <- "gf"
   if(i==1){
     resource_database = tmpData
   } 
@@ -96,7 +96,6 @@ setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Data Inventory Star
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$expenditure <- 0 
 resource_database$disbursement <- 0 
-resource_database$source <- "gf"
 
 # ----------------------------------------------
 
