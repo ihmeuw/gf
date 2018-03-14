@@ -104,26 +104,27 @@
   colnames(dataSheet)[32] <- "ITN_distAtANC"
   colnames(dataSheet)[33] <- "ITN_distAtPreschool"
   colnames(dataSheet)[34] <- "VAR"   #translation?
-  colnames(dataSheet)[35] <- "ACT_2to11mos"
-  colnames(dataSheet)[36] <- "ACT_1to5yrs"
-  colnames(dataSheet)[37] <- "ACT_6to13yrs"
-  colnames(dataSheet)[38] <- "ACT_14yrsAndOlder"
-  colnames(dataSheet)[39] <- "ACT_total"
-  colnames(dataSheet)[40] <- "ArtLum_receieved" #or is this requested?
+  colnames(dataSheet)[35] <- "ASAQ_2to11mos"
+  colnames(dataSheet)[36] <- "ASAQ_1to5yrs"
+  colnames(dataSheet)[37] <- "ASAQ_6to13yrs"
+  colnames(dataSheet)[38] <- "ASAQ_14yrsAndOlder"
+  colnames(dataSheet)[39] <- "ASAQ_total"
+  colnames(dataSheet)[40] <- "ArtLum_receieved" 
   colnames(dataSheet)[41] <- "ArtLum_used"
-  colnames(dataSheet)[42] <- "goutte_epaisse_completed_under5"  #translation?
-  colnames(dataSheet)[43] <- "goutte_epaisse_completed_5andOlder"   #translation?
-  colnames(dataSheet)[44] <- "goutte_epaisse_positive_under5"  #translation?
-  colnames(dataSheet)[45] <- "goutte_epaisse_positive_5andOlder"  #translation?
+  colnames(dataSheet)[42] <- "smear_test_completed_under5" 
+  colnames(dataSheet)[43] <- "smear_test_completed_5andOlder" 
+  colnames(dataSheet)[44] <- "smear_test_positive_under5"  
+  colnames(dataSheet)[45] <- "smear_test_positive_5andOlder"  
   colnames(dataSheet)[46] <- "RDT_completed_under5"
   colnames(dataSheet)[47] <- "RDT_completed_5andOlder"
   colnames(dataSheet)[48] <- "RDT_positive_under5"
   colnames(dataSheet)[49] <- "RDT_positive_5andOlder"
   colnames(dataSheet)[50] <- "num_reports_received" 
   colnames(dataSheet)[51] <- "num_repots_expected" 
-  colnames(dataSheet)[52] <- "num_sanitary_structures"
-  colnames(dataSheet)[53] <- "sanitary_structures_numTransmitted" # translation?
-  colnames(dataSheet)[54] <- "sanitary_structures_numTransmittedWithinDeadline" # translation?
+  colnames(dataSheet)[52] <- "num_health_facilities"
+  colnames(dataSheet)[53] <- "health_facilities_numTransmitted" # translation?
+  colnames(dataSheet)[54] <- "health_facilities_numTransmittedDuringDelay" # translation?
+  
   # add a column for the "year" to keep track of this variable as we add dataSheets to this one
   dataSheet$year <- year
 # ----------------------------------------------
@@ -140,7 +141,7 @@
     # by checking to see if 2nd column is NA
     dataSheet <- dataSheet[complete.cases(dataSheet[ , 2]),]
   
-  # using this to delete "totals" rows which are present in all data sheets
+  # using this to delete "totals" rows which are present in all data sheets - doesn't work right now
     # except for 2016_BDD
     # if (year !=2016 && sheetname !="BDD"){
     #   # remove last row
