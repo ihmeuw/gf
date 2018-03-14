@@ -20,12 +20,15 @@ library(ggrepel)
 # ----------------------------------------------
 ##load the data: 
 
-totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_mapped_data.csv',
+totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv',
                                  fileEncoding = "latin1"))
 fghData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_data_prepped.csv',
                                fileEncoding = "latin1"))
 
+totalData$budget <- as.numeric(totalData$budget)
+
 fgh_gf <- fghData[source=="gf"]
+totalData <- totalData[source=="gf"]
 # ----------------------------------------------
 ## prep data 
 
@@ -33,21 +36,24 @@ fgh_gf <- fghData[source=="gf"]
 ##FGH vs All others - time series 
 
 ##sum up budget (as "variable") by year, disease, and data source 
-byVars = names(totalData)[names(totalData)%in%c('year', 'disease', 'data_source')]
+byVars = names(totalData)[names(totalData)%in%c('year', 'disease', 'country','data_source')]
 graphData = totalData[, list(variable=sum(na.omit(budget))), by=byVars]
 
-##we don't care about initial/rejected/upcoming budgets - they are all fpm for the purposes of this: 
-graphData[data_source%in%c('init_fpm', 'rej_fpm', 'init2_fpm'), data_source:='fpm']
+##edit Sicoin Data: 
+graphData[data_source=="sicoin", country:="Guatemala"]
+graphData$country <- factor(graphData$country, levels=c("Congo (Democratic Republic)","Guatemala","Uganda"))
 
 
 ##rename FGH disburesment to "variable"
-fghData <- fghData[, list(variable=sum(na.omit(disbursement))),by=byVars]
+fgh_gf <- fgh_gf[, list(variable=sum(na.omit(disbursement))),by=byVars]
 
 ##rbind the two datasets together 
-graphData <- rbind(graphData, fghData)
+graphData <- rbind(graphData,fgh_gf)
 
 #clean up the disease names and set colors for each data source: 
 graphData <- disease_names_for_plots(graphData)
+graphData = graphData[, list(variable=sum(na.omit(variable))), by=byVars]
+
 
 sourceColors <- c("#000080",
                   "#ff7f00",
@@ -60,15 +66,18 @@ sourceColors <- c("#000080",
 
 names(sourceColors) <- levels(graphData$data_source)
 
+countryData =graphData[, list(variable=sum(na.omit(variable))), by=c("country", "year","data_source")]
+diseaseData = graphData[, list(variable=sum(na.omit(variable))), by=c("disease", "year","data_source")]
 ##PLOTS:
 gos_nat_plots <- list()
-for (k in unique(na.omit(graphData$disease))){
-  subdata <- graphData[disease==k]
+for (k in unique(graphData$country)){
+  subdata <- graphData[country==k]
   plot <- (ggplot(na.omit(subdata), aes(x=year, y=variable/1000000, group=data_source, color=data_source)) + 
              geom_line(size=1) +
-             scale_color_manual(values =sourceColors) +
+             geom_point()+ 
+             scale_color_manual(name="Data Source", values =sourceColors) +
              labs(y = "USD (mil.)", x = "Year", 
-                  caption="Source: GOS, FGH, FPM",
+                  caption="Source: GOS, FGH, FPM, SICOIN",
                   title=paste(k, "FGH vs. Other Sources Comparisons"),
                   subtitle=("FGH disbursement, all others budget")) +
              theme_bw(base_size=12) +
@@ -76,7 +85,7 @@ for (k in unique(na.omit(graphData$disease))){
   gos_nat_plots[[k]] <- plot
 }
 
-pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/data_sources_over_time_by_disease.pdf", height=6, width=9)
+pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/time_series/data_sources_over_time_by_disease.pdf", height=6, width=9)
 invisible(lapply(gos_nat_plots, print))
 dev.off()
 
