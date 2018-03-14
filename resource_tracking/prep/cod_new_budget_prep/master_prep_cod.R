@@ -28,8 +28,8 @@ implementer <- "CAGF"
 
 ####DOWNLOAD THE FOLDER "FPM - grant budgets" from BASECAMP ONTO YOUR LOCAL DRIVE: 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/cod_budget_prep_grants/' ##where the files are stored locally
-file_list <- read.csv(paste0(dir, "cod_budget_prep.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
+dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/fpm_budgets/' ##where the files are stored locally
+file_list <- read.csv(paste0(dir, "cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)
 
 ##create a summary file to track the data that we have (and that we still need)
@@ -40,7 +40,7 @@ summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), n
 summary_file$loc_id <- as.character(summary_file$loc_id)
 summary_file$loc_id <- loc_id
 
-
+##run the for loop to clean all of the COD data: 
 for(i in 1:length(file_list$file_name)){
   ##fill in the summary tracking file with what we know already: 
   summary_file$disease[i] <- file_list$disease[i]
@@ -60,6 +60,10 @@ for(i in 1:length(file_list$file_name)){
   } else if (file_list$type[i]=="detailed"){
     tmpData <- prep_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
                                         file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_id, file_list$source[i])
+  } else if(file_list$type[i]=="module"){
+    tmpData <- prep_old_module_budget(dir, as.character(file_list$file_name[i]),
+                                   file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
+                                   file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], implementer, file_list$source[i])
   }
   tmpData$source <- "gf"
   if(i==1){
