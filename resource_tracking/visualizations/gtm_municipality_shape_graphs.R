@@ -75,6 +75,8 @@ hivData[, absorption:=disbursement/budget]
 # shapeData is a spatialpolygonsdataframe
 class(shapeData)
 
+
+
 # these have plot methods
 plot(shapeData)
 
