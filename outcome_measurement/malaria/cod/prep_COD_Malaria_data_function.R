@@ -38,9 +38,12 @@
   # input files are from 2014, 2015, and 2016 and each contain three sheets for three different provinces
 
 # output files 
-  #(note: output to prepped_data folder within cod folder)
-  # COD_PNLP_Data_2016 - prepped data.table object, one per year (?)
-  # cod_malaria_dataset_master - appended version
+  # (output to prepped_data folder within cod folder)
+  # file path: J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/", fileName , ".csv"))
+  # file names: 
+    # COD_PNLP_Data_Indicators - prepped data.table object, appended data from 2014-2016
+    # COD_PNLP_Data_Interventions_long - prepped data.table object, appended data from 2014-2016
+    # # COD_PNLP_Data_Interventions_wide
 # ----------------------------------------------
   
   
@@ -68,8 +71,17 @@
 # ----------------------------------------------   
 # ----------------------------------------------
   # Set names of columns
-    # faster way to do this : setnames(dataSheet, c('', '', '', ''))
     # since some of them have less columns, make a vector of names and then have "if ___, then drop these ___"
+ 
+  # setNames(dataSheet[1:54], nm = c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+  #       "quarter", "month", "newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen",
+  #       "simpleMalariaTreatedAccordingToNationalPolicy_under5", "simpleMalariaTreatedAccordingToNationalPolicy_5andOlder", "simpleMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
+  #       "seriousMalariaTreatedAccordingToNationalPolicy_under5", "seriousMalariaTreatedAccordingToNationalPolicy_5andOlder", "seriousMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
+  #       "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
+  #       "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_receieved", "ArtLum_used", "smear_test_completed_under5",
+  #       "smear_test_completed_5andOlder", "smear_test_positive_under5", "smear_test_positive_5andOlder", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+  #       "num_reports_received", "num_repots_expected", "num_health_facilities", "health_facilities_numReported", "health_facilities_numReportedWithinDeadline" ))
+
   colnames(dataSheet)[1] <- "province"
   colnames(dataSheet)[2] <- "dps"
   colnames(dataSheet)[3] <- "health_zone"
@@ -109,22 +121,22 @@
   colnames(dataSheet)[37] <- "ASAQ_6to13yrs"
   colnames(dataSheet)[38] <- "ASAQ_14yrsAndOlder"
   colnames(dataSheet)[39] <- "ASAQ_total"
-  colnames(dataSheet)[40] <- "ArtLum_receieved" 
+  colnames(dataSheet)[40] <- "ArtLum_receieved"
   colnames(dataSheet)[41] <- "ArtLum_used"
-  colnames(dataSheet)[42] <- "smear_test_completed_under5" 
-  colnames(dataSheet)[43] <- "smear_test_completed_5andOlder" 
-  colnames(dataSheet)[44] <- "smear_test_positive_under5"  
-  colnames(dataSheet)[45] <- "smear_test_positive_5andOlder"  
+  colnames(dataSheet)[42] <- "smear_test_completed_under5"
+  colnames(dataSheet)[43] <- "smear_test_completed_5andOlder"
+  colnames(dataSheet)[44] <- "smear_test_positive_under5"
+  colnames(dataSheet)[45] <- "smear_test_positive_5andOlder"
   colnames(dataSheet)[46] <- "RDT_completed_under5"
   colnames(dataSheet)[47] <- "RDT_completed_5andOlder"
   colnames(dataSheet)[48] <- "RDT_positive_under5"
   colnames(dataSheet)[49] <- "RDT_positive_5andOlder"
-  colnames(dataSheet)[50] <- "num_reports_received" 
-  colnames(dataSheet)[51] <- "num_repots_expected" 
+  colnames(dataSheet)[50] <- "num_reports_received"
+  colnames(dataSheet)[51] <- "num_repots_expected"
   colnames(dataSheet)[52] <- "num_health_facilities"
-  colnames(dataSheet)[53] <- "health_facilities_numReported" 
-  colnames(dataSheet)[54] <- "health_facilities_numReportedWithinDeadline" 
-  
+  colnames(dataSheet)[53] <- "health_facilities_numReported"
+  colnames(dataSheet)[54] <- "health_facilities_numReportedWithinDeadline"
+
   # add a column for the "year" to keep track of this variable as we add dataSheets to this one
   dataSheet$year <- year
 # ----------------------------------------------
@@ -150,13 +162,11 @@
     # by checking to see if 2nd column is NA
   dataSheet <- dataSheet[complete.cases(dataSheet[ , 2]),]
   
-  # using this to delete "totals" rows which are present in all data sheets - doesn't work right now
-    # except for 2016_BDD
-    # if (year !=2016 && sheetname !="BDD"){
-    #   # remove last row
-    #   numRows <- ((dim(dataSheet))[1])
-    #   dataSheet <- dataSheet[(numRows-1),]
-    # }
+  # using this to delete "totals" rows
+    # BDD 2016 sheet has total row in the middle of the data, the other sheets have it
+    # in the last row of the sheet - sometimes appears as "Total" and sometimes "TOTAL"
+     dataSheet <- dataSheet[!grepl(("Total" || "TOTAL"), (dataSheet$province || dataSheet$dps)),]
+
 # ----------------------------------------------
 # ----------------------------------------------
   # Return current data sheet
@@ -172,7 +182,7 @@
   
   # variables needed:
   years <- c(2015, 2016)
-  sheetnames <- c('BDD')
+  sheetnames <- c('BDD', 'KIN', 'OR')
   i <- 1
 
  for(y in years) {
@@ -196,43 +206,56 @@
 # ----------------------------------------------     
 # Split appended data into Indicators and Interventions Data
   COD_PNLP_Indicators <- fullData[, c(55, 1:23) ]
-  COD_PNLP_Intervention <- fullData[, c(55, 1:8, 24:54) ]
+  COD_PNLP_Interventions <- fullData[, c(55, 1:8, 24:54) ]
 # ----------------------------------------------    
     
 
 # ----------------------------------------------    
 # Reshape appended and split data
   # Indicators data
-  COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-      "trimester", "month", "year"), measured=c("newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen", 
+  COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("year", "province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+      "trimester", "month"), measured=c("newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen", 
       "simpleMalariaTreatedAccordingToNationalPolicy_under5", "simpleMalariaTreatedAccordingToNationalPolicy_5andOlder", "simpleMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
       "seriousMalariaTreatedAccordingToNationalPolicy_under5", "seriousMalariaTreatedAccordingToNationalPolicy_5andOlder", "seriousMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
       "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" ), variable.name = "indicator", value.name="value")
   
-  # Interventions data
-  COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-      "trimester", "month", "year"), measured=c(), variable.name = "intervention", value.name="value")
+  # Split Indicators data by subgroup
+    COD_PNLP_Indicators_melt[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
+      # reorder columns:
+        COD_PNLP_Indicators_melt <- COD_PNLP_Indicators_melt[, c(1:9, 12, 10, 11)]
 
-#Split Indicators data by subgroup
-  COD_PNLP_Indicators_melt[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
-    
+  # dcast() so that indicators are columns
+    COD_PNLP_Indicators_cast <- dcast(COD_PNLP_Indicators_melt, year + province + dps + health_zone + donor + operational_support_partner + population +
+         trimester + month + subpopulation ~ indicator)
+      # reorder columns:
+        COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:10, 13, 11, 15, 14, 12)]
   
+  # Interventions data
+    COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+      "trimester", "month", "year"), measured=c(), variable.name = "intervention", value.name="value")
+  # add column for "indicator codes" - to be added later
+    COD_PNLP_Interventions_melt$indicator_code <- NA
 # ----------------------------------------------
   
   
 # ----------------------------------------------
   # Export the prepped data
-  # COD_PNLP_Data_2016 <- dataSheet
-  # write.csv(dataSheet, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_", year, "_", sheetname, ".csv"))
-# ----------------------------------------------  
+  COD_PNLP_Data_Indicators <- COD_PNLP_Indicators_cast
+  COD_PNLP_Data_Interventions_long <- COD_PNLP_Interventions_melt 
+  COD_PNLP_Data_Interventions_wide <- COD_PNLP_Interventions
   
+  # hard-coded version:
+  # write.csv(COD_PNLP_Data_Indicators, ("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators.csv")) 
+  # write.csv(COD_PNLP_Data_Interventions, ("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Interventions.csv"))
   
-# ----------------------------------------------
-# TO DO:
-  # Add to function:
-    # Clean values any missing, or format numbers such as 1,000 as 1000
-    # (make it a number not a string)
+  # function to export data:
+  export_data <- function(dfName){
+    write.csv(get(dfName), paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/", dfName , ".csv"))
+  }
 
-  # currently there is a problem in the earlier years matching the number of columns 
-  # - will fix this with setting column names and then append them all together.
-# ----------------------------------------------
+  dfsToExport <- c("COD_PNLP_Data_Indicators", "COD_PNLP_Data_Interventions_long", "COD_PNLP_Data_Interventions_wide")
+
+  for (df in dfsToExport){
+    export_data(df)
+  }
+# ----------------------------------------------  
