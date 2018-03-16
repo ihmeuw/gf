@@ -163,7 +163,7 @@
   # only delete those unnecessary rows, and not any others accidentally - these
   # were the column headers in the original datasheet in excel.
   
-  if ((is.na(dataSheet[1,"province"])) && (dataSheet[2,"province"] == "PROVINCE")){
+  if (dataSheet[2,"province"] == "PROVINCE"){
     dataSheet <- dataSheet[-c(1, 2),] 
     }
 
@@ -201,7 +201,7 @@
   # for which we have the data.
   
   # variables needed:
-  years <- c(2015:2016)
+  years <- c(2014:2016)
   sheetnames <- c('BDD', 'KIN', 'OR')
   i <- 1
 
@@ -221,20 +221,37 @@
     }
   }
 # ----------------------------------------------  
+
+  
+# ----------------------------------------------
+# Test that the output has the right number of rows
+if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
+# ----------------------------------------------     
+
+ 
+# ----------------------------------------------    
+  geoTimeVars <- c("year", "province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+                    "quarter", "month")
+  indicatorVars <- c("newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen", 
+                          "simpleMalariaTreatedAccordingToNationalPolicy_under5", "simpleMalariaTreatedAccordingToNationalPolicy_5andOlder", "simpleMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
+                          "seriousMalariaTreatedAccordingToNationalPolicy_under5", "seriousMalariaTreatedAccordingToNationalPolicy_5andOlder", "seriousMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
+                          "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" )  
+# ----------------------------------------------    
   
 
 # ----------------------------------------------     
 # Split appended data into Indicators and Interventions Data
-  COD_PNLP_Indicators <- fullData[, c(55, 1:23) ]
-  COD_PNLP_Interventions <- fullData[, c(55, 1:8, 24:54) ]
+  COD_PNLP_Indicators <- fullData[, c(44, 1:23) ]
+  COD_PNLP_Interventions <- fullData[, c(44, 1:8, 24:43, 45:59)]
+  
 # ----------------------------------------------    
-    
+
 
 # ----------------------------------------------    
 # Reshape appended and split data
   # Indicators data
   COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("year", "province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-      "trimester", "month"), measured=c("newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen", 
+      "quarter", "month"), measured=c("newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen", 
       "simpleMalariaTreatedAccordingToNationalPolicy_under5", "simpleMalariaTreatedAccordingToNationalPolicy_5andOlder", "simpleMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
       "seriousMalariaTreatedAccordingToNationalPolicy_under5", "seriousMalariaTreatedAccordingToNationalPolicy_5andOlder", "seriousMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
       "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" ), variable.name = "indicator", value.name="value")
@@ -246,13 +263,13 @@
 
   # dcast() so that indicators are columns
     COD_PNLP_Indicators_cast <- dcast(COD_PNLP_Indicators_melt, year + province + dps + health_zone + donor + operational_support_partner + population +
-         trimester + month + subpopulation ~ indicator)
+         quarter + month + subpopulation ~ indicator)
       # reorder columns:
         COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:10, 13, 11, 15, 14, 12)]
   
   # Interventions data
     COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-      "trimester", "month", "year"), measured=c(), variable.name = "intervention", value.name="value")
+      "quarter", "month", "year"), measured=c(), variable.name = "intervention", value.name="value")
   # add column for "indicator codes" - to be added later
     COD_PNLP_Interventions_melt$indicator_code <- NA
 # ----------------------------------------------
