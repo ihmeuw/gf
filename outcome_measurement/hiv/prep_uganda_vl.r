@@ -45,9 +45,9 @@ for(y in c('14', '15', '16', '17', '18')) {
       for(t in c('y','n','x')) { 
         
         # loop over sexes - includes "unknown" option
-        for(s in c('m','f','x')) { # make sure "U" is the correct value
+        for(s in c('m','f','x')) { 
           
-          # checck if file exists first
+          # check if file exists first
           outFile = paste0(dir, '/facilities_suppression_', m,'20', y,'_',a,'_', s, '_tb', t, '.rds')
           check = file.exists(outFile)
           

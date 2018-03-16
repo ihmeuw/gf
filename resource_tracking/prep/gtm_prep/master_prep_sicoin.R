@@ -53,6 +53,8 @@ summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), n
 summary_file$data_source<- as.character(summary_file$data_source)
 summary_file$loc_id <- as.character(summary_file$loc_id)
 summary_file$loc_id <- country
+summary_file$year <- as.character(summary_file$year)
+summary_file$year <- "none"
 
 ##source the functions that we will use to prep the files: 
 source('./prep_sicoin.r')
@@ -75,7 +77,9 @@ for(i in 1:length(file_list$file_name)){
   } else if (file_list$format[i]=="blank"){
     tmpData <- prep_blank_sicoin(country, loc_id, ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   } else if(file_list$format[i]=="donacions"){
-    tmpData <- prep_donacions_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+    tmpData <- prep_donacions_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])),
+                                     ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i],
+                                     country, loc_id)
   }
   if(i==1){
   resource_database = tmpData
@@ -119,15 +123,13 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
 ##remove rows where loc_ids are in the SDA column: 
 cleaned_database <- resource_database[!resource_database$loc_name%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
 cleaned_database <-cleaned_database[!cleaned_database$loc_id%in%"TOTAL"]
+setnames(cleaned_database, "sda_orig", "module")
 ##output the data to the correct folder 
 
 
 write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
           ,row.names=FALSE, fileEncoding="latin1")
 
-
-
-which(is.na(cleaned_database$loc_id))
 
 
 

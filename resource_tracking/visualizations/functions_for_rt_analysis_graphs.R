@@ -43,7 +43,8 @@ disease_names_for_plots <- function(gos_data){
   graphData[disease=='hiv', disease:='HIV/AIDS']
   graphData[disease=='malaria', disease:='Malaria']
   graphData[disease=='tb', disease:='Tuberculosis']
-  graphData[disease=='hss', disease:='HSS']
+  graphData[disease=='hss', disease:='RSSH']
+  graphData$disease <- factor(graphData$disease, levels=c("HIV/AIDS", "Malaria", "Tuberculosis", "RSSH"))
   return(graphData)
 }
 
