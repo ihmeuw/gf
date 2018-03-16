@@ -127,7 +127,7 @@ gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
 # Plotting TB cases per municipality
 plot = ggplot(data=gtmMunisIGN@data, aes(fill=1000*TBCases/Poblacion)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + scale_fill_gradientn(colours = c("#777777", "#ddcc22", "#DD5522", "#AA1111"), values=c(0,0.005,0.7,1), trans="log10") + labs(fill= "Rate", title="TB incidence rate per 1,000 people per 2 years")
 # Overlay the departments
-plot + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#00000066", size=1)
+plot + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#00000066", size=1)  + theme_void()
 
 if (saveGraphs) 
     ggsave("PCE/Graficas/TB_Gt_Notifications_2014-2015-Map-Muncipalities.png", height=8, width=8)
