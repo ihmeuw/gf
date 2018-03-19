@@ -67,7 +67,7 @@ for(i in 1:length(file_list$file_name)){
   summary_file$grant[i] <- file_list$grant[i]
   summary_file$source[i] <- file_list$source[i]
   summary_file$period[i] <- file_list$period[i] 
-  summary_file$year[i] <- "N/A"
+  summary_file$year[i] <- "none"
   summary_file$start_date[i] <- ymd(file_list$start_date[i])
   summary_file$end_date[i] <- ymd(file_list$start_date[i])+file_list$period[i]
   if(file_list$format[i]=="detailed"){
