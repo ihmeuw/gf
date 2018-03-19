@@ -242,8 +242,8 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 # ----------------------------------------------     
 # Split appended data into Indicators and Interventions Data
   COD_PNLP_Indicators <- fullData[, c(44, 1:23) ]
+  #COD_PNLP_Indicators <- fullData[, c(geoTimeVars)]
   COD_PNLP_Interventions <- fullData[, c(44, 1:8, 24:43, 45:59)]
-  
 # ----------------------------------------------    
 
 
@@ -278,8 +278,8 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 # ----------------------------------------------
   # Export the prepped data
   COD_PNLP_Data_Indicators <- COD_PNLP_Indicators_cast
-  COD_PNLP_Data_Interventions_long <- COD_PNLP_Interventions_melt 
-  COD_PNLP_Data_Interventions_wide <- COD_PNLP_Interventions
+  COD_PNLP_Data_Interventions_Long <- COD_PNLP_Interventions_melt 
+  COD_PNLP_Data_Interventions_Wide <- COD_PNLP_Interventions
   
   # hard-coded version:
   # write.csv(COD_PNLP_Data_Indicators, ("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators.csv")) 
@@ -290,7 +290,11 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
     write.csv(get(dfName), paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/", dfName , ".csv"))
   }
 
-  dfsToExport <- c("COD_PNLP_Data_Indicators", "COD_PNLP_Data_Interventions_long", "COD_PNLP_Data_Interventions_wide")
+#   export_data("COD_PNLP_Data_Indicators")
+#   export_data("COD_PNLP_Data_Interventions_Long")
+#   export_data("COD_PNLP_Data_Interventions_Wide")
+  
+  dfsToExport <- c("COD_PNLP_Data_Indicators", "COD_PNLP_Data_Interventions_Long", "COD_PNLP_Data_Interventions_Wide")
 
   for (df in dfsToExport){
     export_data(df)
