@@ -32,8 +32,7 @@ library(lubridate)
 
 ## download files from basecamp into a folder on your desktop. 
 ## You will want to download the files in the multi_source and ghe_s folders, even though we will not be using all of these files 
-# (only the ones that contain actual budget/expenditure data and are in c_coin format). 
-## 
+# (only the ones that contain actual budget/expenditure data and are in sicoin format). 
 
 loc_id <- 0100
 country <- "gtm"
@@ -80,6 +79,8 @@ for(i in 1:length(file_list$file_name)){
     tmpData <- prep_donacions_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])),
                                      ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i],
                                      country, loc_id)
+  } else if (file_list$format[i]=="report"){
+    tmpData <- prep_report_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   }
   if(i==1){
   resource_database = tmpData

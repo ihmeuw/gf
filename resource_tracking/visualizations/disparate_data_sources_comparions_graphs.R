@@ -29,6 +29,9 @@ totalData$budget <- as.numeric(totalData$budget)
 
 fgh_gf <- fghData[source=="gf"]
 totalData <- totalData[source=="gf"]
+
+##sum all of the municipalities to national for now: 
+totalData[data_source=="sicoin", country:="Guatemala"]
 # ----------------------------------------------
 ## prep data 
 
@@ -92,31 +95,37 @@ dev.off()
 
 
 ### ----------------------------------------------
-##FGH vs All others - scatterplot: 
+##FGH vs All others - scatterplot of disease: 
 
-byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source')]
-graphData = totalData[, list(budget=sum(na.omit(budget))), by=byVars]
+
+byVars = names(totalData)[names(totalData)%in%c('disease', 'data_source')]
+scatterData = totalData[, list(budget=sum(na.omit(budget))), by=byVars]
 
 ##create a "FGH" specific variable for disbursement: 
-fghData <- fghData[, list(fgh_disb=sum(na.omit(disbursement))),by=byVars]
-fghData$data_source <- NULL
-
-
-##delete year since we're doing a scatterplot: 
-byVars = names(graphData)[names(graphData)%in%c('country', 'disease', 'data_source')]
-graphData = graphData[, list(fgh_disb=sum(na.omit(fgh_disb)), budget=sum(na.omit(budget))), by=byVars]
+fgh_disease<- fgh_gf[, list(fgh_disb=sum(na.omit(disbursement))),by="disease"]
+fgh_disease$data_source <- NULL
+##DISEASES: 
 
 ##get the FGH "variable" column to repeat over for all of the other data sources: 
-graphData <- merge(graphData, fghData, by=c("year", "country", "disease"), all.x = TRUE)
+graphData <- merge(scatterData, fgh_disease, by="disease", all.x = TRUE)
+
+### ----------------------------------------------
+##PLOTS
 
 
-##PLOTS:
+
+graphData <- disease_names_for_plots(graphData)
+
+
 gos_nat_plots <- list()
 for (k in unique(na.omit(graphData$disease))){
   subdata <- graphData[disease==k]
-  range = c(0, max(na.omit(subdata$fgh_disb/10000000)))
+  max_fgh = max(subdata$fgh_disb)
+  max_others <- max(subdata$budget)
+  range = c(0, max(max_fgh, max_others)/10000000)
   plot <- (ggplot(na.omit(subdata), aes(x=fgh_disb/10000000, y=budget/10000000)) + 
              geom_point(aes(color=data_source), size=3) +
+             scale_color_manual(name="Data Source", values =sourceColors) +
              geom_abline(intercept=0, slope=1) + 
              xlim(range)+
              ylim(range) +
@@ -131,11 +140,52 @@ for (k in unique(na.omit(graphData$disease))){
 
 
 
-pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/fgh_vs_all_by_disease.pdf", height=6, width=9)
+pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/scatterplots/fgh_vs_all_by_disease.pdf", height=6, width=9)
 invisible(lapply(gos_nat_plots, print))
 dev.off()
 
 
+
+##COUNTRY: 
+byVars = names(totalData)[names(totalData)%in%c('country', 'data_source')]
+scatterData = totalData[, list(budget=sum(na.omit(budget))), by=byVars]
+
+##create a "FGH" specific variable for disbursement: 
+fgh_id<- fgh_gf[, list(fgh_disb=sum(na.omit(disbursement))),by="country"]
+fgh_id$data_source <- NULL
+##DISEASES: 
+
+##get the FGH "variable" column to repeat over for all of the other data sources: 
+graphData <- merge(scatterData, fgh_id, by="country", all.x = TRUE)
+
+graphData = graphData[, list(fgh_disb=sum(na.omit(fgh_disb)), budget=sum(na.omit(budget))), by=c("country", "data_source")]
+
+gos_nat_plots <- list()
+for (k in unique(na.omit(graphData$country))){
+  subdata <-graphData[country==k]
+  max_fgh = max(subdata$fgh_disb)
+  max_others <- max(subdata$budget)
+  range = c(0, max(max_fgh, max_others)/10000000)
+  plot <- (ggplot(na.omit(subdata), aes(x=fgh_disb/10000000, y=budget/10000000)) + 
+             geom_point(aes(color=data_source), size=3) +
+             scale_color_manual(name="Data Source", values =sourceColors) +
+             geom_abline(intercept=0, slope=1) + 
+             xlim(range)+
+             ylim(range) +
+             labs(y = "Other Sources - Budget (USD 10 mil.)", x = "FGH Disbursements (USD 10 mil.)", 
+                  caption="Source: GOS, FGH, FPM",
+                  title=paste(k, "FGH vs. Other Sources Comparisons"),
+                  colour="Data Source") +
+             theme_bw(base_size=12) +
+             theme(plot.title=element_text(hjust=.5)))
+  gos_nat_plots[[k]] <- plot
+}
+
+
+
+pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/scatterplots/fgh_vs_all_by_country.pdf", height=6, width=9)
+invisible(lapply(gos_nat_plots, print))
+dev.off()
 
 ### ----------------------------------------------
 ## functions to be able to plot FGH and GOS data:

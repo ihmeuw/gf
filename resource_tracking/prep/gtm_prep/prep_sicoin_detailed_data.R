@@ -2,7 +2,7 @@
 # Irena Chen
 #
 # 11/2/2017
-# Template for prepping SICOIN cost category data 
+# Template for prepping SICOIN detailed data (most of the GHE data is formatted like this)
 # Inputs:
 # inFile - name of the file to be prepped
 # year - which year the dataset corresponds to
