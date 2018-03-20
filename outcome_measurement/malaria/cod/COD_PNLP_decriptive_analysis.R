@@ -41,35 +41,6 @@
 # ----------------------------------------------
 
     
-# ----------------------------------------------       
-#******ADD TO PREP CODE:
-  # translate french to numeric version of month Janvier=1
-        # dt[month=='Janvier', month:="01"]
-        # grepl() to make sure that any that may have trailing white space are also changed
-        dt[grepl("Janvier", month), month:="01"]
-        dt[grepl("Février", month), month:="02"]
-        dt[grepl("Mars", month), month:="03"]
-        dt[grepl("Avril", month), month:="04"]
-        dt[grepl("Mai", month), month:="05"]
-        dt[grepl("Juin", month), month:="06"]
-        dt[grepl("Juillet", month), month:="07"]
-        dt[grepl("Août", month), month:="08"]
-        dt[grepl("Septembre", month), month:="09"]
-        dt[grepl("Octobre", month), month:="10"]
-        dt[grepl("Novembre", month), month:="11"]
-        dt[grepl("Décembre", month), month:="12"]
-      
-    # make sure it worked for all instances of month
-    
-    # make string version of the date
-    dt[, stringdate:=paste('01', month, year, sep='/')]
-    
-    # combine year and month into one variable
-    dt[, date:=as.Date(stringdate, "%d/%m/%Y")]
-
-# ----------------------------------------------   
-    
-    
 # ----------------------------------------------        
   # function that takes health zone and indicator as arguments
   # to map each indicator for each health zone over time
