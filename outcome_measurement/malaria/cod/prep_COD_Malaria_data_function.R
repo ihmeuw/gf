@@ -75,8 +75,8 @@
  
   columnNamesComplete <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
         "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
-        "mildMalariaTreatedAccordingToNationalPolicy_under5", "mildMalariaTreatedAccordingToNationalPolicy_5andOlder", "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
-        "severeMalariaTreatedAccordingToNationalPolicy_under5", "severeMalariaTreatedAccordingToNationalPolicy_5andOlder", "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
+        "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+        "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
         "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_receieved", "ArtLum_used", "smear_test_completed_under5",
         "smear_test_completed_5andOlder", "smear_test_positive_under5", "smear_test_positive_5andOlder", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
@@ -84,8 +84,8 @@
   
   columnNames2014 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
         "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
-        "mildMalariaTreatedAccordingToNationalPolicy_under5", "mildMalariaTreatedAccordingToNationalPolicy_5andOlder", "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
-        "severeMalariaTreatedAccordingToNationalPolicy_under5", "severeMalariaTreatedAccordingToNationalPolicy_5andOlder", "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
+        "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+        "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
         "ITN_distAtPreschool", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "smear_test_completed", "smear_test_positive", "RDT_completed", 
         "RDT_positive", "num_reports_received", "num_repots_expected", "num_health_facilities", "health_facilities_numReported")
@@ -112,12 +112,12 @@
   # colnames(dataSheet)[12] <- "newCasesMalariaSevere_under5"
   # colnames(dataSheet)[13] <- "newCasesMalariaSevere_5andOlder"
   # colnames(dataSheet)[14] <- "newCasesMalariaSevere_pregnantWomen"
-  # colnames(dataSheet)[15] <- "mildMalariaTreatedAccordingToNationalPolicy_under5"
-  # colnames(dataSheet)[16] <- "mildMalariaTreatedAccordingToNationalPolicy_5andOlder"
-  # colnames(dataSheet)[17] <- "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen"
-  # colnames(dataSheet)[18] <- "severeMalariaTreatedAccordingToNationalPolicy_under5"
-  # colnames(dataSheet)[19] <- "severeMalariaTreatedAccordingToNationalPolicy_5andOlder"
-  # colnames(dataSheet)[20] <- "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen"
+  # colnames(dataSheet)[15] <- "mildMalariaTreated_under5"
+  # colnames(dataSheet)[16] <- "mildMalariaTreated_5andOlder"
+  # colnames(dataSheet)[17] <- "mildMalariaTreated_pregnantWomen"
+  # colnames(dataSheet)[18] <- "severeMalariaTreated_under5"
+  # colnames(dataSheet)[19] <- "severeMalariaTreated_5andOlder"
+  # colnames(dataSheet)[20] <- "severeMalariaTreated_pregnantWomen"
   # colnames(dataSheet)[21] <- "malariaDeaths_under5"
   # colnames(dataSheet)[22] <- "malariaDeaths_5andOlder"
   # colnames(dataSheet)[23] <- "malariaDeaths_pregnantWomen"
@@ -255,8 +255,8 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
         # geoTimeVars <- c("year", "province", "dps", "health_zone", "donor", "operational_support_partner", "population",
         #                   "quarter", "month")
         # indicatorVars <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
-        #                         "mildMalariaTreatedAccordingToNationalPolicy_under5", "mildMalariaTreatedAccordingToNationalPolicy_5andOlder", "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
-        #                         "severeMalariaTreatedAccordingToNationalPolicy_under5", "severeMalariaTreatedAccordingToNationalPolicy_5andOlder", "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
+        #                         "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen", 
+        #                         "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen", 
         #                         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" )  
       # ----------------------------------------------    
         
@@ -275,8 +275,8 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
   # Reshape Indicators data
   COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
       "quarter", "month", "year", "date"), measured=c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
-      "mildMalariaTreatedAccordingToNationalPolicy_under5", "mildMalariaTreatedAccordingToNationalPolicy_5andOlder", "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
-      "severeMalariaTreatedAccordingToNationalPolicy_under5", "severeMalariaTreatedAccordingToNationalPolicy_5andOlder", "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
+      "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen", 
+      "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen", 
       "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" ), variable.name = "indicator", value.name="value")
       
       # Split Indicators data by subgroup
