@@ -74,18 +74,18 @@
     # since some of them have less columns, make a vector of names and then have "if ___, then drop these ___"
  
   columnNamesComplete <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-        "quarter", "month", "newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen",
-        "simpleMalariaTreatedAccordingToNationalPolicy_under5", "simpleMalariaTreatedAccordingToNationalPolicy_5andOlder", "simpleMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
-        "seriousMalariaTreatedAccordingToNationalPolicy_under5", "seriousMalariaTreatedAccordingToNationalPolicy_5andOlder", "seriousMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
+        "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+        "mildMalariaTreatedAccordingToNationalPolicy_under5", "mildMalariaTreatedAccordingToNationalPolicy_5andOlder", "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
+        "severeMalariaTreatedAccordingToNationalPolicy_under5", "severeMalariaTreatedAccordingToNationalPolicy_5andOlder", "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
         "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_receieved", "ArtLum_used", "smear_test_completed_under5",
         "smear_test_completed_5andOlder", "smear_test_positive_under5", "smear_test_positive_5andOlder", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
         "num_reports_received", "num_repots_expected", "num_health_facilities", "health_facilities_numReported", "health_facilities_numReportedWithinDeadline" )
   
   columnNames2014 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-        "quarter", "month", "newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen",
-        "simpleMalariaTreatedAccordingToNationalPolicy_under5", "simpleMalariaTreatedAccordingToNationalPolicy_5andOlder", "simpleMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
-        "seriousMalariaTreatedAccordingToNationalPolicy_under5", "seriousMalariaTreatedAccordingToNationalPolicy_5andOlder", "seriousMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
+        "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+        "mildMalariaTreatedAccordingToNationalPolicy_under5", "mildMalariaTreatedAccordingToNationalPolicy_5andOlder", "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
+        "severeMalariaTreatedAccordingToNationalPolicy_under5", "severeMalariaTreatedAccordingToNationalPolicy_5andOlder", "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen",
         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
         "ITN_distAtPreschool", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "smear_test_completed", "smear_test_positive", "RDT_completed", 
         "RDT_positive", "num_reports_received", "num_repots_expected", "num_health_facilities", "health_facilities_numReported")
@@ -106,18 +106,18 @@
   # colnames(dataSheet)[6] <- "population"
   # colnames(dataSheet)[7] <- "trimester"  #should this be quarter?
   # colnames(dataSheet)[8] <- "month"
-  # colnames(dataSheet)[9] <- "newCasesMalaria_under5"
-  # colnames(dataSheet)[10] <- "newCasesMalaria_5andOlder"
-  # colnames(dataSheet)[11] <- "newCasesMalaria_pregnantWomen"
-  # colnames(dataSheet)[12] <- "hospitalizedCases_under5"
-  # colnames(dataSheet)[13] <- "hospitalizedCases_5andOlder"
-  # colnames(dataSheet)[14] <- "hospitalizedCases_pregnantWomen"
-  # colnames(dataSheet)[15] <- "simpleMalariaTreatedAccordingToNationalPolicy_under5"
-  # colnames(dataSheet)[16] <- "simpleMalariaTreatedAccordingToNationalPolicy_5andOlder"
-  # colnames(dataSheet)[17] <- "simpleMalariaTreatedAccordingToNationalPolicy_pregnantWomen"
-  # colnames(dataSheet)[18] <- "seriousMalariaTreatedAccordingToNationalPolicy_under5"
-  # colnames(dataSheet)[19] <- "seriousMalariaTreatedAccordingToNationalPolicy_5andOlder"
-  # colnames(dataSheet)[20] <- "seriousMalariaTreatedAccordingToNationalPolicy_pregnantWomen"
+  # colnames(dataSheet)[9] <- "newCasesMalariaMild_under5"
+  # colnames(dataSheet)[10] <- "newCasesMalariaMild_5andOlder"
+  # colnames(dataSheet)[11] <- "newCasesMalariaMild_pregnantWomen"
+  # colnames(dataSheet)[12] <- "newCasesMalariaSevere_under5"
+  # colnames(dataSheet)[13] <- "newCasesMalariaSevere_5andOlder"
+  # colnames(dataSheet)[14] <- "newCasesMalariaSevere_pregnantWomen"
+  # colnames(dataSheet)[15] <- "mildMalariaTreatedAccordingToNationalPolicy_under5"
+  # colnames(dataSheet)[16] <- "mildMalariaTreatedAccordingToNationalPolicy_5andOlder"
+  # colnames(dataSheet)[17] <- "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen"
+  # colnames(dataSheet)[18] <- "severeMalariaTreatedAccordingToNationalPolicy_under5"
+  # colnames(dataSheet)[19] <- "severeMalariaTreatedAccordingToNationalPolicy_5andOlder"
+  # colnames(dataSheet)[20] <- "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen"
   # colnames(dataSheet)[21] <- "malariaDeaths_under5"
   # colnames(dataSheet)[22] <- "malariaDeaths_5andOlder"
   # colnames(dataSheet)[23] <- "malariaDeaths_pregnantWomen"
@@ -187,6 +187,28 @@
      dataSheet <- dataSheet[!grepl(("TOTAL"), (dataSheet$dps)),]
      dataSheet <- dataSheet[!grepl(("Total"), (dataSheet$dps)),]
 
+  # translate french to numeric version of month Janvier=1
+     # dataSheet[month=='Janvier', month:="01"]
+     # grepl() to make sure that any that may have trailing white space are also changed
+     dataSheet[grepl("Janvier", month), month:="01"]
+     dataSheet[grepl("Février", month), month:="02"]
+     dataSheet[grepl("Mars", month), month:="03"]
+     dataSheet[grepl("Avril", month), month:="04"]
+     dataSheet[grepl("Mai", month), month:="05"]
+     dataSheet[grepl("Juin", month), month:="06"]
+     dataSheet[grepl("Juillet", month), month:="07"]
+     dataSheet[grepl("Août", month), month:="08"]
+     dataSheet[grepl("Septembre", month), month:="09"]
+     dataSheet[grepl("Octobre", month), month:="10"]
+     dataSheet[grepl("Novembre", month), month:="11"]
+     dataSheet[grepl("Décembre", month), month:="12"]     
+     
+    # make string version of the date
+     dataSheet[, stringdate:=paste('01', month, year, sep='/')]
+     
+    # combine year and month into one variable
+     dataSheet[, date:=as.Date(stringdate, "%d/%m/%Y")]
+     
 # ----------------------------------------------
 # ----------------------------------------------
   # Return current data sheet
@@ -229,55 +251,70 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 # ----------------------------------------------     
 
  
-# ----------------------------------------------    
-  geoTimeVars <- c("year", "province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-                    "quarter", "month")
-  indicatorVars <- c("newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen", 
-                          "simpleMalariaTreatedAccordingToNationalPolicy_under5", "simpleMalariaTreatedAccordingToNationalPolicy_5andOlder", "simpleMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
-                          "seriousMalariaTreatedAccordingToNationalPolicy_under5", "seriousMalariaTreatedAccordingToNationalPolicy_5andOlder", "seriousMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
-                          "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" )  
-# ----------------------------------------------    
-  
+      # ----------------------------------------------    
+        # geoTimeVars <- c("year", "province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+        #                   "quarter", "month")
+        # indicatorVars <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
+        #                         "mildMalariaTreatedAccordingToNationalPolicy_under5", "mildMalariaTreatedAccordingToNationalPolicy_5andOlder", "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
+        #                         "severeMalariaTreatedAccordingToNationalPolicy_under5", "severeMalariaTreatedAccordingToNationalPolicy_5andOlder", "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
+        #                         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" )  
+      # ----------------------------------------------    
+        
 
 # ----------------------------------------------     
 # Split appended data into Indicators and Interventions Data
-  COD_PNLP_Indicators <- fullData[, c(44, 1:23) ]
+  COD_PNLP_Indicators <- fullData[, c(1:8, 44, 46, 9:23) ]
   #COD_PNLP_Indicators <- fullData[, c(geoTimeVars)]
-  COD_PNLP_Interventions <- fullData[, c(44, 1:8, 24:43, 45:59)]
+  COD_PNLP_Interventions <- fullData[, c(1:8, 44, 46, 24:43, 47:61)]
 # ----------------------------------------------    
 
 
-# ----------------------------------------------    
-# Reshape appended and split data
-  # Indicators data
-  COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("year", "province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-      "quarter", "month"), measured=c("newCasesMalaria_under5", "newCasesMalaria_5andOlder", "newCasesMalaria_pregnantWomen", "hospitalizedCases_under5", "hospitalizedCases_5andOlder", "hospitalizedCases_pregnantWomen", 
-      "simpleMalariaTreatedAccordingToNationalPolicy_under5", "simpleMalariaTreatedAccordingToNationalPolicy_5andOlder", "simpleMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
-      "seriousMalariaTreatedAccordingToNationalPolicy_under5", "seriousMalariaTreatedAccordingToNationalPolicy_5andOlder", "seriousMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
+# ----------------------------------------------   
+# Further prep on appended datatable
+  
+  # Reshape Indicators data
+  COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+      "quarter", "month", "year", "date"), measured=c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
+      "mildMalariaTreatedAccordingToNationalPolicy_under5", "mildMalariaTreatedAccordingToNationalPolicy_5andOlder", "mildMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
+      "severeMalariaTreatedAccordingToNationalPolicy_under5", "severeMalariaTreatedAccordingToNationalPolicy_5andOlder", "severeMalariaTreatedAccordingToNationalPolicy_pregnantWomen", 
       "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" ), variable.name = "indicator", value.name="value")
-  
-  # Split Indicators data by subgroup
-    COD_PNLP_Indicators_melt[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
-      # reorder columns:
-        COD_PNLP_Indicators_melt <- COD_PNLP_Indicators_melt[, c(1:9, 12, 10, 11)]
-
-  # dcast() so that indicators are columns
-    COD_PNLP_Indicators_cast <- dcast(COD_PNLP_Indicators_melt, year + province + dps + health_zone + donor + operational_support_partner + population +
-         quarter + month + subpopulation ~ indicator)
-      # reorder columns:
-        COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:10, 13, 11, 15, 14, 12)]
-  
-  # Interventions data
+      
+      # Split Indicators data by subgroup
+        COD_PNLP_Indicators_melt[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
+          # reorder columns:
+            COD_PNLP_Indicators_melt <- COD_PNLP_Indicators_melt[, c(1:10, 11, 13, 12)]
+      
+      # make the value for each indicator numeric
+          COD_PNLP_Indicators_melt[, value := as.numeric(value)]  
+      
+      # add column for formula_used (to later populate with Y/N values indicating
+            # whether or not a formula was used to develop/model the data)
+            # Right now, fill with "No" which will be the default
+          COD_PNLP_Indicators_melt$formula_used <- "No"
+            
+      # dcast() so that indicators are their own columns
+        COD_PNLP_Indicators_cast <- dcast(COD_PNLP_Indicators_melt, province + dps + health_zone + donor + operational_support_partner + population +
+             quarter + month + year + date + subpopulation + formula_used ~ indicator)
+          # reorder columns:
+            COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:12, 15, 16, 14, 17, 13)]
+      
+  # Reshape Interventions data
     COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-      "quarter", "month", "year"), measured=c(), variable.name = "intervention", value.name="value")
-  # add column for "indicator codes" - to be added later
-    COD_PNLP_Interventions_melt$indicator_code <- NA
+      "quarter", "month", "year", "date"), measured=c(), variable.name = "intervention", value.name="value")
+      
+      # add column for "indicator codes" - to be added later
+        COD_PNLP_Interventions_melt$indicator_code <- NA
+      
+      # Make the value for each indicator numeric
+        # warning message appears...In eval(jsub, SDenv, parent.frame()) : NAs introduced by coercion
+        # COD_PNLP_Interventions_melt[, value := as.numeric(value)]  
 # ----------------------------------------------
   
   
 # ----------------------------------------------
   # Export the prepped data
-  COD_PNLP_Data_Indicators <- COD_PNLP_Indicators_cast
+  COD_PNLP_Data_Indicators_Long <- COD_PNLP_Indicators_melt
+  COD_PNLP_Data_Indicators_Wide <- COD_PNLP_Indicators_cast
   COD_PNLP_Data_Interventions_Long <- COD_PNLP_Interventions_melt 
   COD_PNLP_Data_Interventions_Wide <- COD_PNLP_Interventions
   
@@ -294,7 +331,7 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 #   export_data("COD_PNLP_Data_Interventions_Long")
 #   export_data("COD_PNLP_Data_Interventions_Wide")
   
-  dfsToExport <- c("COD_PNLP_Data_Indicators", "COD_PNLP_Data_Interventions_Long", "COD_PNLP_Data_Interventions_Wide")
+  dfsToExport <- c("COD_PNLP_Data_Indicators_Long", "COD_PNLP_Data_Indicators_Wide", "COD_PNLP_Data_Interventions_Long", "COD_PNLP_Data_Interventions_Wide")
 
   for (df in dfsToExport){
     export_data(df)
