@@ -42,18 +42,23 @@
 
     
 # ----------------------------------------------        
-  # function that takes health zone and indicator as arguments
-  # to map each indicator for each health zone over time
+  # Function to map each indicator for each health zone over time
     
-    # add indicators as facets
- 
+  # convert date column to Date class so x-axis be uniform & chronological
+    dt[, date := as.Date(date)]
+  
+  # example for one health zone
+    # g <- ggplot(dt[health_zone=="BAGATA" & subpopulation != "pregnantWomen"], aes(date, value, color = subpopulation, shape=formula_used, ymin=0))
+    # 
+    # g + geom_point() + geom_line() + theme_bw() + ggtitle("BAGATA") + scale_shape_manual(values=c(16, 1)) + facet_wrap("indicator", scales="free_y")
+    
   makeGraph <- function(hz){
-    g <- ggplot(dt[health_zone==hz & subpopulation != "pregnantWomen"], aes(date, newCasesMalariaMild, color = subpopulation, shape=formula_used, ymin=0))
-    
-    g + geom_point() + geom_line() + theme_bw() + ggtitle(hz) + scale_shape_manual(values=c(1,16))
+    g <- ggplot(dt[health_zone==hz & subpopulation != "pregnantWomen"], aes(date, value, color = subpopulation, shape=formula_used, ymin=0))
+  
+    g + geom_point() + geom_line() + theme_bw() + ggtitle(hz) + scale_shape_manual(values=c(16,1)) + facet_wrap("indicator", scales="free_y")
   }
 # ----------------------------------------------  
-    
+  
     
 # ----------------------------------------------      
   # make a vector of all health zones to loop through 
@@ -63,7 +68,7 @@
     hz_vector <- unique(hz_vector)
   
   # loop through vector of health zones to make a graph for each
-  pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs.pdf", height=6, width=9)
+  pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs all indicators.pdf", height=6, width=9)
   for (h in hz_vector) { 
     print(makeGraph(h))
   }
