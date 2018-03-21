@@ -93,8 +93,8 @@ totalData <- rbind(totalData, gos_data)
 
 # --------------------------------------------
 #DUPLICATE CHECK: 
-d1 <- nrow(all_data)
-d2 <- unique(length(all_data))
+d1 <- nrow(totalData )
+d2 <- unique(length(totalData))
 
 if(d1 !=d2){
   stop("Your dataset has duplicates!")
