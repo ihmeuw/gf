@@ -23,51 +23,18 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num
   
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
+  colnames(gf_data)[2] <- "module"
+  colnames(gf_data)[3] <- "sda_activity"
+  colnames(gf_data)[4] <- "intervention"
+  colnames(gf_data)[5] <- "budget"
+  colnames(gf_data)[7] <- "expenditure"
+  gf_data <- gf_data[c(grep("objetivos", tolower(gf_data$sda_activity)):(grep("seleccio", tolower(gf_data$module)))),]
+  gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
+  budget_dataset <- gf_data[-1, ,drop = FALSE]
+  budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
+  budget_dataset$start_date <- year
+  budget_dataset$disbursement <- 0
   
-  ##clean the data depending on if in spanish or english
-  if(format=="pudr_mspas"){
-    colnames(gf_data)[1] <- "programs"
-    colnames(gf_data)[4] <- "cost_category"
-    colnames(gf_data)[5] <- "budget"
-    colnames(gf_data)[7] <- "expenditure"
-    gf_data <- gf_data[c(grep("de prestación de servicios", tolower(gf_data$cost_category)):grep("total", tolower(gf_data$programs))),]
-
-    ## drop 1st row: 
-    gf_subset <- data.table(gf_data[-1, ,drop = FALSE])
-    budget_dataset <- gf_subset[, c("cost_category", "budget", "expenditure"),with=FALSE]
-    toMatch <- c("mundial", "multire", "seleccion")
-    budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$cost_category)),]
-    budget_dataset<- budget_dataset[!is.na(budget_dataset$cost_category),]
-    budget_dataset$start_date <- year
-    budget_dataset$disbursement <- 0
-    
-    
-    } else if (format=="pudr_categories") {
-    colnames(gf_data)[1] <- "groups"
-    colnames(gf_data)[2] <- "cost_category"
-    colnames(gf_data)[3] <- "budget"
-    colnames(gf_data)[4] <- "expenditure"
-    
-    gf_data <- gf_data[c(grep("modular approach", tolower(gf_data$groups)):(grep("implementing entity", tolower(gf_data$groups)))),]
-    gf_data$groups <- NULL 
-    budget_dataset <- gf_data[, c("cost_category", "budget", "expenditure"),with=FALSE]
-    budget_dataset<- budget_dataset[!is.na(budget_dataset$cost_category),]
-    budget_dataset <- budget_dataset[-c(1:2),]
-    budget_dataset$start_date <- year
-    budget_dataset$disbursement <- 0
-    
-    } else if (format=="pudr_bud_exp"){
-      colnames(gf_data)[1] <- "groups"
-      colnames(gf_data)[4] <- "cost_category"
-      colnames(gf_data)[5] <- "budget"
-      colnames(gf_data)[6] <- "expenditure"
-      gf_data <- gf_data[c(grep("service delivery", tolower(gf_data$cost_category)):(grep("total", tolower(gf_data$groups)))),]
-      gf_data <- gf_data[, c("cost_category", "budget", "expenditure"),with=FALSE]
-      gf_subset <- gf_data[-1, ,drop = FALSE]
-      budget_dataset<- gf_subset[!is.na(gf_subset$cost_category),]
-      budget_dataset$start_date <- year
-      budget_dataset$disbursement <- 0
-      
       
     }else if (format=="pudr_disbursement"){
       colnames(gf_data)[3] <- "cost_category"
