@@ -35,6 +35,7 @@ appr_rej_indicators <- function(year, data_source){
   return(x)
 }
 
+
 # ---------------------------------------------
 ##make disease names look nicer on graphs: 
 disease_names_for_plots <- function(gos_data){
