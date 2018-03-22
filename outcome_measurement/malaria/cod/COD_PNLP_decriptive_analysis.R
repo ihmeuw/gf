@@ -34,6 +34,7 @@
   # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators_Long
     # csv files were produced by prep_COD_Malaria_data_function.R
     dt <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Long",".csv")) 
+    dt2 <- fread(paste0(dir,"/", "COD_PNLP_Data_Interventions_Long",".csv"))
     
   # output files:
     # exports all graphs to to a pdf document here:
@@ -62,7 +63,6 @@
     }
 # ----------------------------------------------  
   
-  
     
 # ----------------------------------------------      
   # make a vector of all health zones to loop through 
@@ -78,3 +78,31 @@
   }
   dev.off()
 # ---------------------------------------------- 
+  
+  
+  
+# ----------------------------------------------        
+  # Function to map each intervention for each health zone over time
+  
+  # convert date column to Date class so x-axis be uniform & chronological
+  dt2[, date := as.Date(date)]
+  dt2[, value := as.numeric(value)]
+  
+  # all interventions
+  makeGraph2 <- function(hz){
+    g2 <- ggplot(dt2[health_zone==hz], aes(date, value, ymin=0))
+    
+    g2 + geom_point() + theme_bw() + ggtitle(hz) + facet_wrap("intervention", scales="free_y")
+  }
+  
+  # antenatal care visits by health zone
+  makeGraphANC <- function(hz){
+    gANC <- ggplot(data= subset(dt2[health_zone==hz & (intervention==("ANC_1st")| intervention==("ANC_2nd") | intervention==("ANC_3rd") | intervention==("ANC_4th")) ]), aes(date, value, color= intervention, ymin=0))
+    
+    gANC + geom_point() + geom_line() + theme_bw() + ggtitle(hz)
+  }
+# ----------------------------------------------
+
+  
+  # goal : to facet_wrap() interventions by type... add a type column? split certain columns on "_"?
+  
