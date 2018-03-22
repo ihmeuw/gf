@@ -39,9 +39,12 @@
 
 # output files 
   # (output to prepped_data folder within cod folder)
+  
   # file path: J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/", fileName , ".csv"))
+  
   # file names: 
-    # COD_PNLP_Data_Indicators - prepped data.table object, appended data from 2014-2016
+    # COD_PNLP_Data_Indicators_long - prepped data.table object, appended data from 2014-2016
+    # COD_PNLP_Data_Indicators_wide
     # COD_PNLP_Data_Interventions_long - prepped data.table object, appended data from 2014-2016
     # # COD_PNLP_Data_Interventions_wide
 # ----------------------------------------------
@@ -291,7 +294,12 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
             # whether or not a formula was used to develop/model the data)
             # Right now, fill with "No" which will be the default
           COD_PNLP_Indicators_melt$formula_used <- "No"
-            
+
+         # if modulus operator returns 0 then it should stay no, if it returns anything other than 0, change
+          # formula_used to yes
+          COD_PNLP_Indicators_melt[value%%1==0, formula_used:='No']
+          COD_PNLP_Indicators_melt[value%%1!=0, formula_used:='Yes']
+          
       # dcast() so that indicators are their own columns
         COD_PNLP_Indicators_cast <- dcast(COD_PNLP_Indicators_melt, province + dps + health_zone + donor + operational_support_partner + population +
              quarter + month + year + date + subpopulation + formula_used ~ indicator)

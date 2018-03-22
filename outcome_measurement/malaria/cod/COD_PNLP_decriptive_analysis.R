@@ -47,17 +47,21 @@
   # convert date column to Date class so x-axis be uniform & chronological
     dt[, date := as.Date(date)]
   
-  # example for one health zone
-    # g <- ggplot(dt[health_zone=="BAGATA" & subpopulation != "pregnantWomen"], aes(date, value, color = subpopulation, shape=formula_used, ymin=0))
-    # 
-    # g + geom_point() + geom_line() + theme_bw() + ggtitle("BAGATA") + scale_shape_manual(values=c(16, 1)) + facet_wrap("indicator", scales="free_y")
+    indicator_names <- c(
+      `newCasesMalariaMild` = "Incidence of Mild Malaria",
+      `newCasesMalariaSevere` = "Incidence of Severe Malaria",
+      `mildMalariaTreated` = "Number of Mild Malaria Cases Treated",
+      `severeMalariaTreated` = "Number of Severe Malaria Cases Treated",
+      `malariaDeaths` = "Number of Deaths from Malaria"
+    )
     
-  makeGraph <- function(hz){
-    g <- ggplot(dt[health_zone==hz & subpopulation != "pregnantWomen"], aes(date, value, color = subpopulation, shape=formula_used, ymin=0))
-  
-    g + geom_point() + geom_line() + theme_bw() + ggtitle(hz) + scale_shape_manual(values=c(16,1)) + facet_wrap("indicator", scales="free_y")
-  }
+    makeGraph <- function(hz){
+      g <- ggplot(dt[health_zone==hz & subpopulation != "pregnantWomen"], aes(date, value, color = subpopulation, ymin=0))
+    
+      g + geom_point(aes(shape=formula_used)) + geom_line() + theme_bw() + ggtitle(hz) + scale_shape_manual(values=c(16,1)) + facet_wrap("indicator", scales="free_y", labeller = as_labeller(indicator_names))
+    }
 # ----------------------------------------------  
+  
   
     
 # ----------------------------------------------      
