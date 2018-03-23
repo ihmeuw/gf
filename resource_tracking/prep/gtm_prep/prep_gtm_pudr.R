@@ -12,121 +12,43 @@
 # ----------------------------------------------
 
 # start function
-prep_gtm_pudr = function(dir, inFile, sheet_name, format, year, disease, qtr_num, period, grant) {
-  
-  # --------------------
-  # Test the inputs
-  if (class(inFile)!='character') stop('Error: inFile argument must be a string!')
-  if (class(year)=='character') stop('Error: year argument must be a number!')
-  # ----------------------------------------------
-  # Files and directories
+prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period, grant, source) {
   
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
-  colnames(gf_data)[2] <- "module"
-  colnames(gf_data)[3] <- "sda_activity"
-  colnames(gf_data)[4] <- "intervention"
-  colnames(gf_data)[5] <- "budget"
-  colnames(gf_data)[7] <- "expenditure"
-  gf_data <- gf_data[c(grep("objetivos", tolower(gf_data$sda_activity)):(grep("seleccio", tolower(gf_data$module)))),]
-  gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
-  budget_dataset <- gf_data[-1, ,drop = FALSE]
-  budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
-  budget_dataset$start_date <- year
-  budget_dataset$disbursement <- 0
   
-      
-    }else if (format=="pudr_disbursement"){
-      colnames(gf_data)[3] <- "cost_category"
-      gf_data <- gf_data[c(grep("interven", tolower(gf_data$cost_category)):grep("total", tolower(gf_data$cost_category))),]
-      
-      ##we want the disbursement columns: 
-      budget_dataset <- gf_data[, c(3,  grep("desembolso", colnames(gf_data)):ncol(gf_data)),with=FALSE]
-      colnames(budget_dataset) <- as.character(budget_dataset[1,])
-      drop.cols <- grep(paste("desembolso", collapse="|"), colnames(budget_dataset))
-      budget_dataset <- budget_dataset[, (drop.cols) := NULL]
-      budget_dataset <- budget_dataset[-1, ,drop = FALSE]
-      budget_dataset <- budget_dataset[, c(0:qtr_num+1),with=FALSE]
-      budget_dataset <- budget_dataset[-nrow(budget_dataset),] 
-      colnames(budget_dataset)[1] <- "cost_category"
-      
-      setDT(budget_dataset)
-      melted<- melt(budget_dataset,id="cost_category", variable.name = "qtr", value.name="disbursement")
-      
-      dates <- rep(year, qtr_num) # 
-      for (i in 1:length(dates)){
-        if (i==1){
-          dates[i] <- dates[i]
-        } else {
-          dates[i] <- dates[i-1]%m+% months(3)
-        }
-      }
-        
-        ##turn the list of dates into a dictionary (but only for quarters!) : 
-        dates <- setNames(dates,unique(melted$qtr))
-        
-        ## now match quarters with start dates 
-        kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
-        budget_dataset <-melted[kDT, on=.(qtr), start_date := i.start_date ]
-        budget_dataset$budget <- 0
-        budget_dataset$expenditure <- 0
-        budget_dataset$qtr <- NULL
-        
-      } else if (format=="pudr_mod"){
-        gf_data <- gf_data[-c(1:2),-1]
-        colnames(gf_data)[2] <- "cost_category"
-        colnames(gf_data)[1] <- "first_column"
-        gf_data <- gf_data[c(grep("ModId", gf_data$first_column):(grep("Total", gf_data$cost_category))),]
-        gf_data <- gf_data[-1,-1]
-        gf_data <- gf_data[-nrow(gf_data),1:(1+qtr_num)]
-        col_names <- rep(0, qtr_num+1)
-        for(i in 1:length(col_names)){
-          if (i == 1){
-            col_names[i] <- "cost_category"
-            } else {
-          col_names[i] <- paste("Q",i-1, sep="")
-          }
-        }
-          
-        
-        colnames(gf_data) <- col_names
-        setDT(gf_data)
-        melted<- melt(gf_data,id="cost_category", variable.name = "qtr", value.name="budget")
-        
-        
-        dates <- rep(year, qtr_num) # 
-        for (i in 1:length(dates)){
-          if (i==1){
-            dates[i] <- dates[i]
-          } else {
-            dates[i] <- dates[i-1]%m+% months(3)
-          }
-        }
-        
-        ##turn the list of dates into a dictionary (but only for quarters!) : 
-        dates <- setNames(dates,unique(melted$qtr))
-        
-        ## now match quarters with start dates 
-        kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
-        budget_dataset <-melted[kDT, on=.(qtr), start_date := i.start_date ]
-        budget_dataset$expenditure <- 0
-        budget_dataset$disbursement <- 0
-        budget_dataset$qtr <- NULL
-        
-      
+  if(grant%in%"GTM-T-MSPAS"){
+    colnames(gf_data)[1] <- "module"
+    colnames(gf_data)[2] <- "intervention"
+    colnames(gf_data)[3] <- "budget"
+    colnames(gf_data)[4] <- "expenditure"
+    gf_data$sda_activity <- "All"
+    gf_data <- gf_data[c(grep("modul", tolower(gf_data$module)):(grep("implem", tolower(gf_data$module)))),]
+    gf_data <- gf_data[-1, ,drop = FALSE]
+  } else {
+    colnames(gf_data)[2] <- "module"
+    colnames(gf_data)[3] <- "sda_activity"
+    colnames(gf_data)[4] <- "intervention"
+    colnames(gf_data)[5] <- "budget"
+    colnames(gf_data)[7] <- "expenditure"
+    gf_data <- gf_data[c(grep("objetivos", tolower(gf_data$sda_activity)):(grep("seleccio", tolower(gf_data$module)))),]
   }
-  # ----------------------------------------------
-  ## Code to aggregate into a dataset
   
-  ## Create other variables 
+  gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
+  budget_dataset <- gf_data[-1, drop = FALSE]
+  budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
   
-  budget_dataset$source <- source
+  budget_dataset <- na.omit(budget_dataset , cols=1, invert=FALSE)
+  budget_dataset <- budget_dataset[!grepl("total", tolower(budget_dataset$module)),]
+
+  
+  budget_dataset$start_date <- year
   budget_dataset$period <- period
   budget_dataset$disease <- disease
-  budget_dataset$grant <- grant
-  
-  # ----------------------------------------------
-  
+  budget_dataset$grant_number <- grant
+  # 
+  # # ----------------------------------------------
+  # 
   # return prepped data
   return(budget_dataset)
 }
