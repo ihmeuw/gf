@@ -61,8 +61,9 @@ data_source_names_for_plots <- function(gos_data){
   graphData[data_source=='gos_budget',data_source:='GOS Budgets']
   graphData[data_source=='fgh',data_source:='Financing Global Health']
   graphData[data_source=='pudr',data_source:='Progress Update Disb. Request']
-  graphData$data_source<- factor(graphData$data_source, levels=c("SICOIN", "Final FPM Budgets", "Progress Update Disb. Request",
-                                                          "Financing Global Health","Initial FPM Budgets","GOS Budgets", "GOS Expenditures"))
+  graphData$data_source<- factor(graphData$data_source, levels=c("SICOIN", "Progress Update Disb. Request",
+                                                          "Financing Global Health","Initial FPM Budgets","2nd Iter. FPM Budgets",
+                                                          "Final FPM Budgets", "GOS Budgets", "GOS Expenditures"))
   return(graphData)
 }
 
