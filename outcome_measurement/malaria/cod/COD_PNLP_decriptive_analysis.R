@@ -51,8 +51,8 @@
     indicator_names <- c(
       `newCasesMalariaMild` = "Incidence of Mild Malaria",
       `newCasesMalariaSevere` = "Incidence of Severe Malaria",
-      `mildMalariaTreated` = "Number of Mild Malaria Cases Treated",
-      `severeMalariaTreated` = "Number of Severe Malaria Cases Treated",
+      `mildMalariaTreated` = "Cases of Mild Malaria Treated",
+      `severeMalariaTreated` = "Cases of Severe Malaria Treated",
       `malariaDeaths` = "Number of Deaths from Malaria"
     )
 # ----------------------------------------------
@@ -90,21 +90,62 @@
   # convert date column to Date class so x-axis be uniform & chronological
   dt2[, date := as.Date(date)]
   dt2[, value := as.numeric(value)]
+  
+  intervention_names <- c(
+    `ArtLum` = "Artéméther - Lumefatrine",
+    `SP` = "SP administered during ANC",
+    `ASAQ` = "Artesunate Amodiaquine (ACT)",
+    `ITN` = "ITNs",
+    `ANC` = "Antenatal Care Visits",
+    `RDT` = "Rapid Diagnostic Tests",
+    `smearTest` = "Smear Tests",
+    `VAR` = "Measles Vaccine",
+    `healthFacilities` = "Health Facilities Reporting",
+    `reports` = "Number of Reports"
+  )
+  
+  treatments <- c("ArtLum", "SP", "ASAQ", "ITN")
+  tests <- c("ANC", "RDT", "smearTest", "VAR")
+  completenessMeasures <- c("healthFacilities", "reports")
+  
 # ----------------------------------------------
 # ----------------------------------------------  
   # all interventions
   makeGraph2 <- function(hz){
-    g2 <- ggplot(dt2[health_zone==hz], aes(date, value, ymin=0))
+    g2 <- ggplot(dt2[health_zone==hz], aes(date, value, color = intervention_spec, ymin=0))
     
-    g2 + geom_point() + theme_bw() + ggtitle(hz) + facet_wrap("intervention", scales="free_y")
+    g2 + geom_point() + geom_line() + theme_bw() + ggtitle(hz) + facet_wrap("intervention", scales="free_y", labeller = as_labeller(intervention_names))
   }
-       
-  # antenatal care visits by health zone
-  makeGraphANC <- function(hz){
-    gANC <- ggplot(data= subset(dt2[health_zone==hz & (intervention==("ANC_1st")| intervention==("ANC_2nd") | intervention==("ANC_3rd") | intervention==("ANC_4th")) ]), aes(date, value, color= intervention, ymin=0))
+
+  # "ArtLum", "SP", "ASAQ", "ITN"
+  makeGraphTreatments <- function(hz){
+    gTreatments <- ggplot(data= subset(dt2[health_zone==hz & (intervention==treatments)]), aes(date, value, color = intervention_spec, ymin=0))
     
-    gANC + geom_point() + geom_line() + theme_bw() + ggtitle(hz)
+    gTreatments + geom_point() + geom_line() + theme_bw() + ggtitle(hz) + facet_wrap("intervention", scales="free_y", labeller = as_labeller(intervention_names))
   }
+  
+  # "ANC", "RDT", "smearTest", "VAR"
+  makeGraphTests <- function(hz){
+    gTests <- ggplot(data= subset(dt2[health_zone==hz & (intervention==tests)]), aes(date, value, color = intervention_spec, ymin=0))
+    
+    gTests + geom_point() + geom_line() + theme_bw() + ggtitle(hz) + facet_wrap("intervention", scales="free_y", labeller = as_labeller(intervention_names))
+  }
+  
+  # "healthFacilities", "reports"
+  makeGraphCompleteness <- function(hz){
+    gCompleteness <- ggplot(data= subset(dt2[health_zone==hz & (intervention==completenessMeasures)]), aes(date, value, color = intervention_spec, ymin=0))
+    
+    gCompleteness + geom_point() + geom_line() + theme_bw() + ggtitle(hz) + facet_wrap("intervention", scales="free_y", labeller = as_labeller(intervention_names))
+  }
+# ----------------------------------------------
+# ----------------------------------------------         
+  # # antenatal care visits by health zone
+  # makeGraphANC <- function(hz){
+  #   gANC <- ggplot(data= subset(dt2[health_zone==hz & (intervention==("ANC_1st")| intervention==("ANC_2nd") | intervention==("ANC_3rd") | intervention==("ANC_4th")) ]), aes(date, value, color= intervention, ymin=0))
+  #   
+  #   gANC + geom_point() + geom_line() + theme_bw() + ggtitle(hz)
+  # }
+  # 
 # ----------------------------------------------
 # ----------------------------------------------
   # make a vector of all health zones in dt to loop through 
@@ -117,7 +158,7 @@
 # ----------------------------------------------  
   # loop through vector of health zones to make a set of graphs for each and export to 
   # a pdf file
-    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs all indicators.pdf", height=6, width=9)
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs Interventions.pdf", height=6, width=9)
     for (h in hz_vector2) { 
       print(makeGraph2(h))
     }
