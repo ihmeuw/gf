@@ -292,34 +292,33 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 
     # dcast() so that indicators are their own columns
         COD_PNLP_Indicators_cast <- dcast(COD_PNLP_Indicators_melt, province + dps + health_zone + donor + operational_support_partner + population +
-                                              quarter + month + year + date + subpopulation + formula_used ~ indicator)
+                                              quarter + month + year + date + subpopulation ~ indicator)
       
         # reorder columns:
-          COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:12, 15, 16, 14, 17, 13)]
+          COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:11, 14, 15, 13, 16, 12)]
           
       # add column for formula_used (to later populate with Y/N values indicating
-            # whether or not a formula was used to develop/model the data)
-            # Right now, fill with "No" which will be the default
+          # whether or not a formula was used to develop/model the data)
+          # Right now, fill with "No" which will be the default
           COD_PNLP_Indicators_melt$formula_used <- "No"
 
          # if modulus operator returns 0 then it should stay no, if it returns anything other than 0, change
-          # formula_used to yes
-          COD_PNLP_Indicators_melt[value%%1==0, formula_used:='No']
-          COD_PNLP_Indicators_melt[value%%1!=0, formula_used:='Yes']
+            # formula_used to yes
+            COD_PNLP_Indicators_melt[value%%1==0, formula_used:='No']
+            COD_PNLP_Indicators_melt[value%%1!=0, formula_used:='Yes']
           
   # Reshape Interventions data
     COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
       "quarter", "month", "year", "date"), measured=c(), variable.name = "intervention", value.name="value")
       
       # Split Interventions data by subgroup
-      COD_PNLP_Interventions_melt[, c("intervention", "intervention_spec") := tstrsplit(indicator, "_", fixed=TRUE)]
+        COD_PNLP_Interventions_melt[, c("intervention", "intervention_spec", "age_dist") := tstrsplit(intervention, "_", fixed=TRUE)]
       
       # add column for "indicator codes" - to be added later
         COD_PNLP_Interventions_melt$indicator_code <- NA
       
-      # Make the value for each indicator numeric
-        # warning message appears...In eval(jsub, SDenv, parent.frame()) : NAs introduced by coercion
-        # COD_PNLP_Interventions_melt[, value := as.numeric(value)]  
+      # reorder columns
+        COD_PNLP_Interventions_melt <- COD_PNLP_Interventions_melt[, c(1:11, 13, 14, 12)]
 # ----------------------------------------------
   
   
