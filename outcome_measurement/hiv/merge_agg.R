@@ -18,7 +18,7 @@ library(stringr) # to help extract meta data from file names
 # set files and directories for the viral load data
 
 # change directory
-setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex")
+setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_tb")
 
 # list existing files
 files <- list.files('./', recursive=TRUE)
@@ -44,14 +44,15 @@ for(f in files) {
   if (length(current_data)==0) next
 
   #to check the position of variables: 
-  #outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_',s,'_','.rds')
-  # positions: year = 4; month = 3; sex=5
+  #outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_',s,'_',t,'_','.rds')
+  # positions: year = 4; month = 3; sex=5, tb_status=6
   
   # extract meta data from file name
   meta_data = strsplit(f, '_')[[1]]
   current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
   current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
   current_data[, sex:=(meta_data[5])]
+  current_data[, tb:=(meta_data[6])]
 
   # append to the full data 
   if(i==1) full_data = current_data
@@ -62,24 +63,29 @@ for(f in files) {
 # ----------------------------------------------
 
 #save the final data as an RDS
-saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_data.rds")
+saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_tb.rds")
 
 # view it 
 str(full_data)
 class(full_data)
 
-
 View(full_data)
 # ----------------------------------------------
+
+#  stats to check if the sex, tb data disaggregated data downloaded correctly 
 
 # run some stats to check that the data downloaded correctly
 full_data[, sum(samples_received), by=year]
 full_data[month==1, sum(samples_received), by=year] # should be no samples in jan 2014
 
 # check that no data downloaded for jan - july 2014 or after march 2018
+# both should be 0
 full_data[year==2014 & month!=8 & month!=9 & month!=10 & month!=11 & month!=12, sum(samples_received)]
+full_data[year==2018 & month!=1 & month!=2 & month!=3, sum(samples_received)]
+
 full_data[year==2014, sum(samples_received), by=.(month, sex)]
 full_data[year==2014, sum(samples_received), by=month]
+full_data[year==2018, sum(samples_received), by=.(month, sex)]
 
 # check for substantial variability in the number of samples
 full_data[, .(total_samples=sum(samples_received)), by=.(sex, year)]
@@ -88,9 +94,4 @@ full_data[, .(total_samples=sum(samples_received)), by=.(sex, year)]
 full_data[sex=='x', .(total_sup=sum(samples_received)), by=.(month, year)]
 full_data[sex=='x', .(total_sup=sum(suppressed)), by=.(month, year)]
 
-#save the final data as an RDS
-saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_data.rds")
-
 # ----------------------------------------------
-
-

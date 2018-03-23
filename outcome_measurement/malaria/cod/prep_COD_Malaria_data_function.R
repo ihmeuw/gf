@@ -39,9 +39,12 @@
 
 # output files 
   # (output to prepped_data folder within cod folder)
+  
   # file path: J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/", fileName , ".csv"))
+  
   # file names: 
-    # COD_PNLP_Data_Indicators - prepped data.table object, appended data from 2014-2016
+    # COD_PNLP_Data_Indicators_long - prepped data.table object, appended data from 2014-2016
+    # COD_PNLP_Data_Indicators_wide
     # COD_PNLP_Data_Interventions_long - prepped data.table object, appended data from 2014-2016
     # # COD_PNLP_Data_Interventions_wide
 # ----------------------------------------------
@@ -78,17 +81,17 @@
         "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
         "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
-        "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_receieved", "ArtLum_used", "smear_test_completed_under5",
-        "smear_test_completed_5andOlder", "smear_test_positive_under5", "smear_test_positive_5andOlder", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
-        "num_reports_received", "num_repots_expected", "num_health_facilities", "health_facilities_numReported", "health_facilities_numReportedWithinDeadline" )
+        "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_receieved", "ArtLum_used", "smearTest_completed_under5",
+        "smearTest_completed_5andOlder", "smearTest_positive_under5", "smearTest_positive_5andOlder", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+        "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline" )
   
   columnNames2014 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
         "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
         "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
         "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
-        "ITN_distAtPreschool", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "smear_test_completed", "smear_test_positive", "RDT_completed", 
-        "RDT_positive", "num_reports_received", "num_repots_expected", "num_health_facilities", "health_facilities_numReported")
+        "ITN_distAtPreschool", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "smearTest_completed", "smearTest_positive", "RDT_completed", 
+        "RDT_positive", "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported")
   
     if ( year == 2014 ) {
       columnNames <- columnNames2014 
@@ -139,19 +142,19 @@
   # colnames(dataSheet)[39] <- "ASAQ_total"
   # colnames(dataSheet)[40] <- "ArtLum_receieved"
   # colnames(dataSheet)[41] <- "ArtLum_used"
-  # colnames(dataSheet)[42] <- "smear_test_completed_under5"
-  # colnames(dataSheet)[43] <- "smear_test_completed_5andOlder"
-  # colnames(dataSheet)[44] <- "smear_test_positive_under5"
-  # colnames(dataSheet)[45] <- "smear_test_positive_5andOlder"
+  # colnames(dataSheet)[42] <- "smearTest_completed_under5"
+  # colnames(dataSheet)[43] <- "smearTest_completed_5andOlder"
+  # colnames(dataSheet)[44] <- "smearTest_positive_under5"
+  # colnames(dataSheet)[45] <- "smearTest_positive_5andOlder"
   # colnames(dataSheet)[46] <- "RDT_completed_under5"
   # colnames(dataSheet)[47] <- "RDT_completed_5andOlder"
   # colnames(dataSheet)[48] <- "RDT_positive_under5"
   # colnames(dataSheet)[49] <- "RDT_positive_5andOlder"
-  # colnames(dataSheet)[50] <- "num_reports_received"
-  # colnames(dataSheet)[51] <- "num_repots_expected"
-  # colnames(dataSheet)[52] <- "num_health_facilities"
-  # colnames(dataSheet)[53] <- "health_facilities_numReported"
-  # colnames(dataSheet)[54] <- "health_facilities_numReportedWithinDeadline"
+  # colnames(dataSheet)[50] <- "reports_received"
+  # colnames(dataSheet)[51] <- "reports_expected"
+  # colnames(dataSheet)[52] <- "healthFacilities_total"
+  # colnames(dataSheet)[53] <- "healthFacilities_numReported"
+  # colnames(dataSheet)[54] <- "healthFacilities_numReportedWithinDeadline"
 
   # add a column for the "year" to keep track of this variable as we add dataSheets to this one
   dataSheet$year <- year
@@ -270,7 +273,7 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 
 
 # ----------------------------------------------   
-# Further prep on appended datatable
+# Further prep on appended the datatables for indicators and interventions
   
   # Reshape Indicators data
   COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
@@ -286,28 +289,36 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
       
       # make the value for each indicator numeric
           COD_PNLP_Indicators_melt[, value := as.numeric(value)]  
-      
-      # add column for formula_used (to later populate with Y/N values indicating
-            # whether or not a formula was used to develop/model the data)
-            # Right now, fill with "No" which will be the default
-          COD_PNLP_Indicators_melt$formula_used <- "No"
-            
-      # dcast() so that indicators are their own columns
+
+    # dcast() so that indicators are their own columns
         COD_PNLP_Indicators_cast <- dcast(COD_PNLP_Indicators_melt, province + dps + health_zone + donor + operational_support_partner + population +
-             quarter + month + year + date + subpopulation + formula_used ~ indicator)
-          # reorder columns:
-            COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:12, 15, 16, 14, 17, 13)]
+                                              quarter + month + year + date + subpopulation ~ indicator)
       
+        # reorder columns:
+          COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:11, 14, 15, 13, 16, 12)]
+          
+      # add column for formula_used (to later populate with Y/N values indicating
+          # whether or not a formula was used to develop/model the data)
+          # Right now, fill with "No" which will be the default
+          COD_PNLP_Indicators_melt$formula_used <- "No"
+
+         # if modulus operator returns 0 then it should stay no, if it returns anything other than 0, change
+            # formula_used to yes
+            COD_PNLP_Indicators_melt[value%%1==0, formula_used:='No']
+            COD_PNLP_Indicators_melt[value%%1!=0, formula_used:='Yes']
+          
   # Reshape Interventions data
     COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
       "quarter", "month", "year", "date"), measured=c(), variable.name = "intervention", value.name="value")
       
+      # Split Interventions data by subgroup
+        COD_PNLP_Interventions_melt[, c("intervention", "intervention_spec", "age_dist") := tstrsplit(intervention, "_", fixed=TRUE)]
+      
       # add column for "indicator codes" - to be added later
         COD_PNLP_Interventions_melt$indicator_code <- NA
       
-      # Make the value for each indicator numeric
-        # warning message appears...In eval(jsub, SDenv, parent.frame()) : NAs introduced by coercion
-        # COD_PNLP_Interventions_melt[, value := as.numeric(value)]  
+      # reorder columns
+        COD_PNLP_Interventions_melt <- COD_PNLP_Interventions_melt[, c(1:11, 13, 14, 12)]
 # ----------------------------------------------
   
   
