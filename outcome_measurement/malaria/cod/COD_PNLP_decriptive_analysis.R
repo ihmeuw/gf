@@ -1,13 +1,13 @@
 # ----------------------------------------------
-  # Audrey Batzel
-  #
-  # 3/16/18
-  # COD PNLP data for 2014-2016; descriptive analysis
+# Audrey Batzel
+#
+# 3/16/18
+# COD PNLP data for 2014-2016; descriptive analysis
 # ----------------------------------------------
   
   
 # --------------------
-  # Set up R / install packages
+# Set up R / install packages
   rm(list=ls())
   library(data.table)
   library(reshape2)
@@ -25,7 +25,7 @@
   
   
 # ----------------------------------------------
-  # Overview - Files and Directories
+# Overview - Files and Directories
   
   # data directory
     dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data"
@@ -43,7 +43,7 @@
 
     
 # ----------------------------------------------        
-  # Function to map each indicator for each health zone over time
+# Graph each INDICATOR for each health zone over time
     
   # convert date column to Date class so x-axis be uniform & chronological
     dt[, date := as.Date(date)]
@@ -55,46 +55,50 @@
       `severeMalariaTreated` = "Number of Severe Malaria Cases Treated",
       `malariaDeaths` = "Number of Deaths from Malaria"
     )
-    
+# ----------------------------------------------
+# ----------------------------------------------
+  # function to develop graphs for each health zone  
     makeGraph <- function(hz){
       g <- ggplot(dt[health_zone==hz & subpopulation != "pregnantWomen"], aes(date, value, color = subpopulation, ymin=0))
     
       g + geom_point(aes(shape=formula_used)) + geom_line() + theme_bw() + ggtitle(hz) + scale_shape_manual(values=c(16,1)) + facet_wrap("indicator", scales="free_y", labeller = as_labeller(indicator_names))
     }
-# ----------------------------------------------  
-  
-    
-# ----------------------------------------------      
-  # make a vector of all health zones to loop through 
-  hz_vector <- dt[["health_zone"]]
+# ----------------------------------------------
+# ---------------------------------------------- 
+  # make a vector of all health zones in dt to loop through 
+    hz_vector <- dt[["health_zone"]]
 
     # remove duplicates:
-    hz_vector <- unique(hz_vector)
-  
-  # loop through vector of health zones to make a graph for each
-  pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs all indicators.pdf", height=6, width=9)
-  for (h in hz_vector) { 
-    print(makeGraph(h))
-  }
-  dev.off()
+      hz_vector <- unique(hz_vector)
+      
+# ----------------------------------------------
+# ----------------------------------------------  
+  # loop through vector of health zones to make a set of graphs for each and export to 
+  # a pdf file
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs all indicators.pdf", height=6, width=9)
+    for (h in hz_vector) { 
+      print(makeGraph(h))
+    }
+    dev.off()
 # ---------------------------------------------- 
   
   
   
 # ----------------------------------------------        
-  # Function to map each intervention for each health zone over time
+# Graph each INTERVENTION for each health zone over time
   
   # convert date column to Date class so x-axis be uniform & chronological
   dt2[, date := as.Date(date)]
   dt2[, value := as.numeric(value)]
-  
+# ----------------------------------------------
+# ----------------------------------------------  
   # all interventions
   makeGraph2 <- function(hz){
     g2 <- ggplot(dt2[health_zone==hz], aes(date, value, ymin=0))
     
     g2 + geom_point() + theme_bw() + ggtitle(hz) + facet_wrap("intervention", scales="free_y")
   }
-  
+       
   # antenatal care visits by health zone
   makeGraphANC <- function(hz){
     gANC <- ggplot(data= subset(dt2[health_zone==hz & (intervention==("ANC_1st")| intervention==("ANC_2nd") | intervention==("ANC_3rd") | intervention==("ANC_4th")) ]), aes(date, value, color= intervention, ymin=0))
@@ -102,7 +106,21 @@
     gANC + geom_point() + geom_line() + theme_bw() + ggtitle(hz)
   }
 # ----------------------------------------------
-
+# ----------------------------------------------
+  # make a vector of all health zones in dt to loop through 
+  hz_vector2 <- dt2[["health_zone"]]
   
-  # goal : to facet_wrap() interventions by type... add a type column? split certain columns on "_"?
+  # remove duplicates:
+  hz_vector2 <- unique(hz_vector2)
+  
+# ----------------------------------------------
+# ----------------------------------------------  
+  # loop through vector of health zones to make a set of graphs for each and export to 
+  # a pdf file
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs all indicators.pdf", height=6, width=9)
+    for (h in hz_vector2) { 
+      print(makeGraph2(h))
+    }
+    dev.off()
+  
   
