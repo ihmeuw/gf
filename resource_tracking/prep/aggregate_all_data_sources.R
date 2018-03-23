@@ -21,18 +21,17 @@ library(readxl)
 
 
 ###DRC: 
-totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/all_fpm_cod_budgets.csv",
+totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/all_fpm_budgets.csv",
                                 fileEncoding="latin1"))
 
 #create some variables: 
 totalCod$country <- "Congo (Democratic Republic)"
-totalCod$source <- "gf"
 totalCod$start_date <- as.Date(totalCod$start_date,"%Y-%m-%d")
 
 # --------------------------------------------
 ##load UGA: 
 
-totalUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/all_fpm_mapped_budgets.csv",
+totalUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/fpm_prepped_budgets.csv",
                                 fileEncoding = "latin1"))
 
 #create some variables: 
@@ -42,14 +41,27 @@ totalUga$year <- year(totalUga$start_date)
 
 # --------------------------------------------
 ##load GTM 
-totalGtm <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/fpm_mapped_budgets_1818.csv", 
+gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_budgets.csv", 
                                 fileEncoding = "latin1"))
 
+sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
+                                      ,fileEncoding="latin1"))
 
-# and also create a "year" variable: 
-totalGtm$start_date <- as.Date(totalGtm$start_date,"%Y-%m-%d")
+##change the start dates from factors to dates: 
+sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
+gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
+gtmBudgets$country <- "Guatemala"
+###: technically not the country, but we're keeping the loc ids attached to the sicoin data
+##so it will map to a municipality anyway 
+setnames(sicoin_data, "loc_name", "country")
+sicoin_data$intervention <- "All"
+sicoin_data$sda_activity <- "All"
+sicoin_data$grant_number <- "none"
+sicoin_data$recipient <- sicoin_data$country
+##rbind the sicoin and FPM data:
+totalGtm <- rbind(sicoin_data, gtmBudgets)
 totalGtm$year <- year(totalGtm$start_date)
-totalGtm$country <- "Guatemala"
+
 
 
 # --------------------------------------------
@@ -59,10 +71,11 @@ totalGtm$country <- "Guatemala"
 totalData <- rbind(totalGtm, totalUga, totalCod)
 ##change the start_date column to be of type "Date"
 totalData$start_date <- as.Date(totalData$start_date,"%Y-%m-%d")
+totalData$period <- as.numeric(totalData$period)
 totalData[, end_date:=start_date + period-1]
 # --------------------------------------------
 ##read the already mapped gos data: 
-gos_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/mapped_gos_data.csv", 
+gos_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv", 
                                 fileEncoding = "latin1"))
 
 ##change the dates into date format: 
@@ -72,27 +85,26 @@ gos_data[, period:=end_date - start_date]
 gos_data$period <- as.integer(gos_data$period)
 
 ##since we don't have subnational data for GOS, just make it a copy of the country variable: 
-gos_data$loc_id <- gos_data$country
 gos_data$disbursement <- 0
-gos_data$recipient <- gos_data$grant_number
-gos_data$data_source <- "gos"
-gos_data$source <- "gf"
-
 
 ##aggregate with gos data: 
 
 totalData <- rbind(totalData, gos_data)
 
-d1 <- nrow(totalData)
+# --------------------------------------------
+#DUPLICATE CHECK: 
+d1 <- nrow(totalData )
 d2 <- unique(length(totalData))
 
 if(d1 !=d2){
   stop("Your dataset has duplicates!")
 }
 
+
+# --------------------------------------------
 ##export to correct folder: 
 
-write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_mapped_data.csv", row.names = FALSE)
+write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv", row.names = FALSE)
 
 
 # --------------------------------------------

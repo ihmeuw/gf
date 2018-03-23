@@ -2,7 +2,7 @@
 # Irena Chen
 #
 # 11/2/2017
-# Template for prepping SICOIN cost category data 
+# Template for prepping SICOIN detailed data (most of the GHE data is formatted like this)
 # Inputs:
 # inFile - name of the file to be prepped
 # year - which year the dataset corresponds to
@@ -48,7 +48,11 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
 
   } else if(source=="ghe"){
       if(length(grep("DONACIONES", gf_data$X__12))==0){
-        gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):.N),]
+        if(year(start_date)==2005 & month(start_date)==11){
+          gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__13):.N),]
+        } else {
+          gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):.N),]
+        }
       } else if(length(grep("INGRESOS CORRIENTES", gf_data$X__12) !=0)){
         gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
       } else {

@@ -48,13 +48,13 @@ prep_other_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_n
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
   
   colnames(gf_data)[1] <- "module"
-  colnames(gf_data)[2] <- "activity_description"
+  colnames(gf_data)[2] <- "sda_activity"
   colnames(gf_data)[3] <- "recipient" 
 
   ## invert the dataset so that budget expenses and quarters are grouped by category
   ##library(reshape)
   setDT(gf_data)
-  gf_data1<- melt(gf_data,id=c("module", "activity_description", "recipient"), 
+  gf_data1<- melt(gf_data,id=c("module", "sda_activity", "recipient"), 
                   variable.name = "qtr", value.name="budget")
   
   
@@ -81,5 +81,6 @@ prep_other_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_n
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
   budget_dataset$disease <- disease
+  budget_dataset$intervention <- budget_dataset$sda_activity
   return(budget_dataset)  
 }

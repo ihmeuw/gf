@@ -39,27 +39,25 @@ prep_summary_sicoin = function(inFile, start_date, disease, period, source) {
   gf_data$X__10 <- na.locf(gf_data$X__10, na.rm=FALSE)
   # ----------------------------------------------
   ## remove empty columns 
-  if (source=="gf") {
-    if(year(start_date)%in%c(2012, 2013)&disease=="malaria"){
+  if(year(start_date)%in%c(2012, 2013)&disease=="malaria"){
       gf_data <- na.omit(gf_data, cols=c("X__23", "X__25"))
       budget_dataset<- gf_data[, c("X__3","X__10", "X__23", "X__25"), with=FALSE]
       names(budget_dataset) <- c("loc_id","loc_name", "budget", "disbursement")
       budget_dataset$sda_orig <- "REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"
       
-    } else {
+  } else {
       budget_dataset <- gf_data[, c("loc_id", "X__10", "X__11","X__23", "X__25"), with=FALSE]
       names(budget_dataset) <- c("loc_id","sda_orig", "loc_name", "budget","disbursement")
-    }
-    # remove rows where cost_categories are missing values
-    budget_dataset <- na.omit(budget_dataset, cols=c("loc_name", "budget"))
-    budget_dataset <- unique(budget_dataset, by=c("loc_id","loc_name", "sda_orig"))
-    ##get rid of extra rows where there are NAs or 0s: 
-    budget_dataset  <- budget_dataset[, list(budget=sum(na.omit(budget)),
-                                             disbursement=sum(na.omit(disbursement))),by=c("loc_id","sda_orig", "loc_name")]
   }
+  # remove rows where cost_categories are missing values
+  budget_dataset <- na.omit(budget_dataset, cols=c("loc_name", "budget"))
+  budget_dataset <- unique(budget_dataset, by=c("loc_id","loc_name", "sda_orig", "budget"))
+  ##get rid of extra rows where there are NAs or 0s: 
+  budget_dataset  <- budget_dataset[, list(budget=sum(na.omit(budget)),
+                                           disbursement=sum(na.omit(disbursement))),by=c("loc_id","sda_orig", "loc_name")]
   toMatch <- c("government", "recursos", "resources", "multire", "multimu")
   budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_name)),]
-  
+
   # ----------------------------------------------
   
   ## Create other variables 

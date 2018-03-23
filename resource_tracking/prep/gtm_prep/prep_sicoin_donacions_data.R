@@ -45,7 +45,11 @@ prep_donacions_sicoin = function(inFile, start_date, disease, period, source, lo
       gf_data$X__14 <- na.locf(gf_data$X__14, na.rm=FALSE)
       gf_data$X__4 <- na.locf(gf_data$X__4, na.rm=FALSE)
       # remove rows where cost_categories are missing values
-      gf_data <- gf_data[c(grep("Gobierno de", gf_data$X__12):.N),]
+      if(year(start_date)== 2011 & period==30){ 
+        gf_data <- gf_data[c(grep("Banco", gf_data$X__12):grep("FONDO", gf_data$X__12)),]
+      } else {
+        gf_data <- gf_data[c(grep("Gobierno de", gf_data$X__12):.N),]
+      }
       gf_data <- na.omit(gf_data, cols="X__15")
       budget_dataset <- gf_data[, c("X__4","X__14","X__15", "X__22", "X__29"), with=FALSE]
       names(budget_dataset) <- c("loc_id", "loc_name","sda_orig", "budget", "disbursement")

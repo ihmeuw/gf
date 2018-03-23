@@ -32,8 +32,7 @@ library(lubridate)
 
 ## download files from basecamp into a folder on your desktop. 
 ## You will want to download the files in the multi_source and ghe_s folders, even though we will not be using all of these files 
-# (only the ones that contain actual budget/expenditure data and are in c_coin format). 
-## 
+# (only the ones that contain actual budget/expenditure data and are in sicoin format). 
 
 loc_id <- 0100
 country <- "gtm"
@@ -67,7 +66,7 @@ for(i in 1:length(file_list$file_name)){
   summary_file$grant[i] <- file_list$grant[i]
   summary_file$source[i] <- file_list$source[i]
   summary_file$period[i] <- file_list$period[i] 
-  summary_file$year[i] <- "N/A"
+  summary_file$year[i] <- "none"
   summary_file$start_date[i] <- ymd(file_list$start_date[i])
   summary_file$end_date[i] <- ymd(file_list$start_date[i])+file_list$period[i]
   if(file_list$format[i]=="detailed"){
@@ -80,6 +79,8 @@ for(i in 1:length(file_list$file_name)){
     tmpData <- prep_donacions_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])),
                                      ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i],
                                      country, loc_id)
+  } else if (file_list$format[i]=="report"){
+    tmpData <- prep_report_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   }
   if(i==1){
   resource_database = tmpData
@@ -123,6 +124,7 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
 ##remove rows where loc_ids are in the SDA column: 
 cleaned_database <- resource_database[!resource_database$loc_name%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
 cleaned_database <-cleaned_database[!cleaned_database$loc_id%in%"TOTAL"]
+setnames(cleaned_database, "sda_orig", "module")
 ##output the data to the correct folder 
 
 

@@ -35,8 +35,17 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 sicoin_data$budget <- as.numeric(sicoin_data$budget)
 sicoin_data$disbursement<- as.numeric(sicoin_data$disbursement)
 sicoin_data$year <- year(sicoin_data$start_date)
+
+sicoin_data[source=='gf', source:='Global Fund']
+sicoin_data[source=='ghe', source:='Government Health Expenditure']
+sicoin_data[source=='donacions', source:='Donacions']
+sicoin_data$source <- factor(sicoin_data$source, c("Government Health Expenditure","Global Fund", "Donacions"))
+
+
+sicoin_data<- disease_names_for_plots(sicoin_data)
+
 ##first look at data on a national level 
-byVars = names(sicoin_data)[names(sicoin_data)%in%c('source', 'start_date', 'period', 'disease')]
+byVars = names(sicoin_data)[names(sicoin_data)%in%c('source', 'start_date', 'year', 'period', 'disease')]
 nat_level = sicoin_data[, list(budget=sum(budget), disbursement=sum(disbursement), expenditure=sum(expenditure)), by=byVars]
 
 nat_level[, end_date:=start_date + period-1]
@@ -46,25 +55,22 @@ tmp = copy(nat_level)
 tmp$start_date = NULL
 setnames(tmp, 'end_date', 'start_date')
 nat_level$end_date = NULL
-nat_level= rbind(nat_level, tmp)
+national_data = rbind(nat_level, tmp)
 
 
+primColors <- c('#dc143c', ##red
+                '#3DCC3D', ##green
+                '#0000b8') ## blue
 
-nat_level[source=='gf', source:='Global Fund']
-nat_level[source=='ghe', source:='Government Health Expenditure']
-nat_level[source=='donacions', source:='Donacions']
+names(primColors) <- c("Donacions", "Global Fund", "Government Health Expenditure")
+colScale <- scale_color_manual(name="Source", values =primColors, drop=TRUE) 
 
-barData <- copy(nat_level)
-
-barData$budget[barData$budget<0]= 0 
-barData$disbursement[barData$disbursement<0]= 0
-
-
-barData <- disease_names_for_plots(barData)
-
+# ----------------------------------------------
+##make barcharts: 
+graphData <- copy(national_data)
 resource_plots <- list()
-for (k in unique(barData$disease)){
-  subdata <- barData[disease==k]
+for (k in unique(graphData$disease)){
+  subdata <- graphData[disease==k]
   colScale <- scale_fill_manual(name="Source", values =primColors) 
   plot <- (ggplot(data=subdata, aes(x = year(start_date), y= budget, fill=source)) + 
              geom_bar(position = "fill",
@@ -84,27 +90,38 @@ invisible(lapply(resource_plots, print))
 dev.off()
 
 
+# ----------------------------------------------
 ##Government Health Expenditures and GF data on same graph (linegraph over time)
-# ----------------------------------------------
 
-primColors <- c('#dc143c', ##red
-                '#3DCC3D', ##green
-                '#0000b8') ## blue
+graphData <- copy(nat_level)
 
-names(primColors) <- c("Donacions", "Global Fund", "Government Health Expenditure")
-colScale <- scale_color_manual(name="Source", values =primColors) 
+##since we have monthly data, get the cumulative sum of it by year: 
+graphData <-graphData[with(graphData, order(start_date, disease, source)), ]
+graphData[, cumsum_budget:= cumsum(budget),by=c("year", "disease", "source")]
+graphData[, cumsum_disb:= cumsum(disbursement),by=c("year", "disease", "source")]
 
-# ----------------------------------------------
+# "melt" long
+graphData[, end_date:=start_date + period-1]
+tmp = copy(graphData)
+tmp$start_date = NULL
+setnames(tmp, 'end_date', 'start_date')
+graphData$end_date = NULL
+graphData = rbind(graphData, tmp)
 
-timeData = melt(nat_level, id.vars=c( "source", "period", "start_date", "disease"))
-timeData$value[timeData$value==0] <- NA
+graphData = melt(graphData, id.vars=c( "source", "year","period", "start_date", "disease"))
+graphData$value[graphData$value<=0] <- NA
+
+
+graphData[variable=='cumsum_budget', variable:='Cumulative Budget']
+graphData[variable=='cumsum_disb', variable:='Cumulative Disb.']
 
 nat_plots <- list()
 for (k in unique(graphData$disease)){
-  subdata <-graphData[disease==k]
+  subdata <-graphData[disease==k&variable%in%c("Cumulative Budget", "Cumulative Disb.")]
+  colScale <- scale_color_manual(name="Source", values =primColors, drop=TRUE) 
   plot <-  ggplot(subdata, aes(x = start_date, y= value/1000000)) + 
     geom_line(aes(color=source, linetype=variable), size=0.75) +
-    facet_wrap(~disease,scales='free') +
+    facet_grid(~source) +
     colScale + 
     ggtitle(paste(k, "Data at National Level")) +
     labs(x = "Start Date", y = "USD (millions)") +
@@ -112,7 +129,7 @@ for (k in unique(graphData$disease)){
   nat_plots[[k]] <- plot
 }
 
-pdf("gtm_by_source_and_resource.pdf", height=6, width=9)
+pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/sicoin_national_visualizations/gtm_by_source_and_resource.pdf", height=6, width=9)
 invisible(lapply(nat_plots, print))
 dev.off()
 # ----------------------------------------------

@@ -38,24 +38,30 @@
   # input files are from 2014, 2015, and 2016 and each contain three sheets for three different provinces
 
 # output files 
-  #(note: output to prepped_data folder within cod folder)
-  # COD_PNLP_Data_2016 - prepped data.table object, one per year (?)
-  # cod_malaria_dataset_master - appended version
+  # (output to prepped_data folder within cod folder)
+  
+  # file path: J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/", fileName , ".csv"))
+  
+  # file names: 
+    # COD_PNLP_Data_Indicators_long - prepped data.table object, appended data from 2014-2016
+    # COD_PNLP_Data_Indicators_wide
+    # COD_PNLP_Data_Interventions_long - prepped data.table object, appended data from 2014-2016
+    # # COD_PNLP_Data_Interventions_wide
 # ----------------------------------------------
   
   
 # ----------------------------------------------
 # Load data - to visualize before cleaning
   
-  cod_mdata_KIN16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "KIN"))
-  cod_mdata_BDD16 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[1], '.xls'), sheet= "BDD"))
-  cod_mdata_OR16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "OR"))
-  cod_mdata_KIN15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "KIN"))
-  cod_mdata_BDD15 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[2], '.xls'), sheet= "BDD"))
-  cod_mdata_OR15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "OR"))
-  cod_mdata_KIN14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "KIN"))
-  cod_mdata_BDD14 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[3], '.xls'), sheet= "BDD"))
-  cod_mdata_OR14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "OR"))
+  # cod_mdata_KIN16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "KIN"))
+  # cod_mdata_BDD16 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[1], '.xls'), sheet= "BDD"))
+  # cod_mdata_OR16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "OR"))
+  # cod_mdata_KIN15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "KIN"))
+  # cod_mdata_BDD15 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[2], '.xls'), sheet= "BDD"))
+  # cod_mdata_OR15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "OR"))
+  # cod_mdata_KIN14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "KIN"))
+  # cod_mdata_BDD14 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[3], '.xls'), sheet= "BDD"))
+  # cod_mdata_OR14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "OR"))
 # ----------------------------------------------
   
   
@@ -68,85 +74,144 @@
 # ----------------------------------------------   
 # ----------------------------------------------
   # Set names of columns
-    # faster way to do this : setnames(dataSheet, c('', '', '', ''))
     # since some of them have less columns, make a vector of names and then have "if ___, then drop these ___"
-  colnames(dataSheet)[1] <- "province"
-  colnames(dataSheet)[2] <- "dps"
-  colnames(dataSheet)[3] <- "health_zone"
-  colnames(dataSheet)[4] <- "donor"
-  colnames(dataSheet)[5] <- "operational_support_partner"
-  colnames(dataSheet)[6] <- "population"
-  colnames(dataSheet)[7] <- "trimester"  #should this be quarter?
-  colnames(dataSheet)[8] <- "month"
-  colnames(dataSheet)[9] <- "new_cases_malaria_under5"
-  colnames(dataSheet)[10] <- "new_cases_malaria_5andOlder"
-  colnames(dataSheet)[11] <- "new_cases_malaria_pregnantWomen"
-  colnames(dataSheet)[12] <- "hospitalized_cases_under5"
-  colnames(dataSheet)[13] <- "hospitalized_cases_5andOlder"
-  colnames(dataSheet)[14] <- "hospitalized_cases_pregnantWomen"
-  colnames(dataSheet)[15] <- "simple_malaria_treatedAccordingToNationalPolicy_under5"
-  colnames(dataSheet)[16] <- "simple_malaria_treatedAccordingToNationalPolicy_5andOlder"
-  colnames(dataSheet)[17] <- "simple_malaria_treatedAccordingToNationalPolicy_pregnantWomen"
-  colnames(dataSheet)[18] <- "serious_malaria_treatedAccordingToNationalPolicy_under5"
-  colnames(dataSheet)[19] <- "serious_malaria_treatedAccordingToNationalPolicy_5andOlder"
-  colnames(dataSheet)[20] <- "serious_malaria_treatedAccordingToNationalPolicy_pregnantWomen"
-  colnames(dataSheet)[21] <- "malaria_deaths_under5"
-  colnames(dataSheet)[22] <- "malaria_deaths_5andOlder"
-  colnames(dataSheet)[23] <- "malaria_deaths_pregnantWomen"
-  colnames(dataSheet)[24] <- "ANC_1st"
-  colnames(dataSheet)[25] <- "ANC_2nd"
-  colnames(dataSheet)[26] <- "ANC_3rd"
-  colnames(dataSheet)[27] <- "ANC_4th"
-  colnames(dataSheet)[28] <- "SP_1st"  #why was SP within ANC (CPN)orginally? Should it relate to that in some way?
-  colnames(dataSheet)[29] <- "SP_2nd"
-  colnames(dataSheet)[30] <- "SP_3rd"
-  colnames(dataSheet)[31] <- "ITN_received"
-  colnames(dataSheet)[32] <- "ITN_distAtANC"
-  colnames(dataSheet)[33] <- "ITN_distAtPreschool"
-  colnames(dataSheet)[34] <- "VAR"   #translation?
-  colnames(dataSheet)[35] <- "ACT_2to11mos"
-  colnames(dataSheet)[36] <- "ACT_1to5yrs"
-  colnames(dataSheet)[37] <- "ACT_6to13yrs"
-  colnames(dataSheet)[38] <- "ACT_14yrsAndOlder"
-  colnames(dataSheet)[39] <- "ACT_total"
-  colnames(dataSheet)[40] <- "ArtLum_receieved" #or is this requested?
-  colnames(dataSheet)[41] <- "ArtLum_used"
-  colnames(dataSheet)[42] <- "goutte_epaisse_completed_under5"  #translation?
-  colnames(dataSheet)[43] <- "goutte_epaisse_completed_5andOlder"   #translation?
-  colnames(dataSheet)[44] <- "goutte_epaisse_positive_under5"  #translation?
-  colnames(dataSheet)[45] <- "goutte_epaisse_positive_5andOlder"  #translation?
-  colnames(dataSheet)[46] <- "RDT_completed_under5"
-  colnames(dataSheet)[47] <- "RDT_completed_5andOlder"
-  colnames(dataSheet)[48] <- "RDT_positive_under5"
-  colnames(dataSheet)[49] <- "RDT_positive_5andOlder"
-  colnames(dataSheet)[50] <- "num_reports_received" 
-  colnames(dataSheet)[51] <- "num_repots_expected" 
-  colnames(dataSheet)[52] <- "num_sanitary_structures"
-  colnames(dataSheet)[53] <- "sanitary_structures_numTransmitted" # translation?
-  colnames(dataSheet)[54] <- "sanitary_structures_numTransmittedWithinDeadline" # translation?
+ 
+  columnNamesComplete <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+        "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+        "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+        "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
+        "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
+        "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_receieved", "ArtLum_used", "smearTest_completed_under5",
+        "smearTest_completed_5andOlder", "smearTest_positive_under5", "smearTest_positive_5andOlder", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+        "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline" )
+  
+  columnNames2014 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+        "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+        "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+        "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
+        "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
+        "ITN_distAtPreschool", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "smearTest_completed", "smearTest_positive", "RDT_completed", 
+        "RDT_positive", "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported")
+  
+    if ( year == 2014 ) {
+      columnNames <- columnNames2014 
+    } else {
+      columnNames <- columnNamesComplete
+    }
+
+  names(dataSheet) <- columnNames
+  
+  # colnames(dataSheet)[1] <- "province"
+  # colnames(dataSheet)[2] <- "dps"
+  # colnames(dataSheet)[3] <- "health_zone"
+  # colnames(dataSheet)[4] <- "donor"
+  # colnames(dataSheet)[5] <- "operational_support_partner"
+  # colnames(dataSheet)[6] <- "population"
+  # colnames(dataSheet)[7] <- "trimester"  #should this be quarter?
+  # colnames(dataSheet)[8] <- "month"
+  # colnames(dataSheet)[9] <- "newCasesMalariaMild_under5"
+  # colnames(dataSheet)[10] <- "newCasesMalariaMild_5andOlder"
+  # colnames(dataSheet)[11] <- "newCasesMalariaMild_pregnantWomen"
+  # colnames(dataSheet)[12] <- "newCasesMalariaSevere_under5"
+  # colnames(dataSheet)[13] <- "newCasesMalariaSevere_5andOlder"
+  # colnames(dataSheet)[14] <- "newCasesMalariaSevere_pregnantWomen"
+  # colnames(dataSheet)[15] <- "mildMalariaTreated_under5"
+  # colnames(dataSheet)[16] <- "mildMalariaTreated_5andOlder"
+  # colnames(dataSheet)[17] <- "mildMalariaTreated_pregnantWomen"
+  # colnames(dataSheet)[18] <- "severeMalariaTreated_under5"
+  # colnames(dataSheet)[19] <- "severeMalariaTreated_5andOlder"
+  # colnames(dataSheet)[20] <- "severeMalariaTreated_pregnantWomen"
+  # colnames(dataSheet)[21] <- "malariaDeaths_under5"
+  # colnames(dataSheet)[22] <- "malariaDeaths_5andOlder"
+  # colnames(dataSheet)[23] <- "malariaDeaths_pregnantWomen"
+  # colnames(dataSheet)[24] <- "ANC_1st"
+  # colnames(dataSheet)[25] <- "ANC_2nd"
+  # colnames(dataSheet)[26] <- "ANC_3rd"
+  # colnames(dataSheet)[27] <- "ANC_4th"
+  # colnames(dataSheet)[28] <- "SP_1st"  #why was SP within ANC (CPN)orginally? Should it relate to that in some way?
+  # colnames(dataSheet)[29] <- "SP_2nd"
+  # colnames(dataSheet)[30] <- "SP_3rd"
+  # colnames(dataSheet)[31] <- "ITN_received"
+  # colnames(dataSheet)[32] <- "ITN_distAtANC"
+  # colnames(dataSheet)[33] <- "ITN_distAtPreschool"
+  # colnames(dataSheet)[34] <- "VAR"   #translation?
+  # colnames(dataSheet)[35] <- "ASAQ_2to11mos"
+  # colnames(dataSheet)[36] <- "ASAQ_1to5yrs"
+  # colnames(dataSheet)[37] <- "ASAQ_6to13yrs"
+  # colnames(dataSheet)[38] <- "ASAQ_14yrsAndOlder"
+  # colnames(dataSheet)[39] <- "ASAQ_total"
+  # colnames(dataSheet)[40] <- "ArtLum_receieved"
+  # colnames(dataSheet)[41] <- "ArtLum_used"
+  # colnames(dataSheet)[42] <- "smearTest_completed_under5"
+  # colnames(dataSheet)[43] <- "smearTest_completed_5andOlder"
+  # colnames(dataSheet)[44] <- "smearTest_positive_under5"
+  # colnames(dataSheet)[45] <- "smearTest_positive_5andOlder"
+  # colnames(dataSheet)[46] <- "RDT_completed_under5"
+  # colnames(dataSheet)[47] <- "RDT_completed_5andOlder"
+  # colnames(dataSheet)[48] <- "RDT_positive_under5"
+  # colnames(dataSheet)[49] <- "RDT_positive_5andOlder"
+  # colnames(dataSheet)[50] <- "reports_received"
+  # colnames(dataSheet)[51] <- "reports_expected"
+  # colnames(dataSheet)[52] <- "healthFacilities_total"
+  # colnames(dataSheet)[53] <- "healthFacilities_numReported"
+  # colnames(dataSheet)[54] <- "healthFacilities_numReportedWithinDeadline"
+
   # add a column for the "year" to keep track of this variable as we add dataSheets to this one
   dataSheet$year <- year
 # ----------------------------------------------
 # ----------------------------------------------
   # Get rid of rows you don't need- "subset"
   
-  # delete first row if it's first value is "NA" or "PROVINCE" as a way to
-    # only delete those unnecessary rows, and not any others accidentally.
+  # FIRST - delete first row if it's first value is "NA" or "PROVINCE" as a way to
+  # only delete those unnecessary rows, and not any others accidentally - these
+  # were the column headers in the original datasheet in excel.
   
-   if ((is.na(dataSheet[1,"province"])) && (dataSheet[2,"province"] == "PROVINCE")){
-   dataSheet <-dataSheet[-c(1, 2),] }
+  if (dataSheet[2,"province"] == "PROVINCE"){
+    dataSheet <- dataSheet[-c(1, 2),] 
+    }
+
+  # clean "Province" column in BDD datasheet for 2016 and 2015 because
+  # it has some missing/"0" values that should be "BDD" - doesn't work
   
+  if (sheetname == "BDD"){
+    dataSheet$province <- "BDD"
+  }
+    
   # using this to delete rows tacked on to the end of the DF with all NA values
     # by checking to see if 2nd column is NA
-    dataSheet <- dataSheet[complete.cases(dataSheet[ , 2]),]
+  dataSheet <- dataSheet[complete.cases(dataSheet[ , 2]),]
   
-  # using this to delete "totals" rows which are present in all data sheets
-    # except for 2016_BDD
-    # if (year !=2016 && sheetname !="BDD"){
-    #   # remove last row
-    #   numRows <- ((dim(dataSheet))[1])
-    #   dataSheet <- dataSheet[(numRows-1),]
-    # }
+  # using this to delete "totals" rows
+    # BDD 2016 sheet has total row in the middle of the data, the other sheets have it
+    # in the last row of the sheet, sometimes in the first column, sometimes in the second;
+    # sometimes as "Total" and sometimes "TOTAL"
+     dataSheet <- dataSheet[!grepl(("TOTAL"), (dataSheet$province)),]
+     dataSheet <- dataSheet[!grepl(("Total"), (dataSheet$province)),]
+     dataSheet <- dataSheet[!grepl(("TOTAL"), (dataSheet$dps)),]
+     dataSheet <- dataSheet[!grepl(("Total"), (dataSheet$dps)),]
+
+  # translate french to numeric version of month Janvier=1
+     # dataSheet[month=='Janvier', month:="01"]
+     # grepl() to make sure that any that may have trailing white space are also changed
+     dataSheet[grepl("Janvier", month), month:="01"]
+     dataSheet[grepl("Février", month), month:="02"]
+     dataSheet[grepl("Mars", month), month:="03"]
+     dataSheet[grepl("Avril", month), month:="04"]
+     dataSheet[grepl("Mai", month), month:="05"]
+     dataSheet[grepl("Juin", month), month:="06"]
+     dataSheet[grepl("Juillet", month), month:="07"]
+     dataSheet[grepl("Août", month), month:="08"]
+     dataSheet[grepl("Septembre", month), month:="09"]
+     dataSheet[grepl("Octobre", month), month:="10"]
+     dataSheet[grepl("Novembre", month), month:="11"]
+     dataSheet[grepl("Décembre", month), month:="12"]     
+     
+    # make string version of the date
+     dataSheet[, stringdate:=paste('01', month, year, sep='/')]
+     
+    # combine year and month into one variable
+     dataSheet[, date:=as.Date(stringdate, "%d/%m/%Y")]
+     
 # ----------------------------------------------
 # ----------------------------------------------
   # Return current data sheet
@@ -157,16 +222,14 @@
   
   
 # ----------------------------------------------
-# Use a loop to run prep_data() on each of the three data sheets for the three years.
+# Use a loop to run prep_data() on each of the three data sheets for the three years
+  # for which we have the data.
+  
   # variables needed:
-  years <- c(2015, 2016)
-  sheetnames <- c('KIN', 'BDD', 'OR')
+  years <- c(2014:2016)
+  sheetnames <- c('BDD', 'KIN', 'OR')
   i <- 1
 
-# currently there is a problem in the earlier years matching the number of columns 
-# - will fix this with setting column names and then append them all together.
-# add a column for "year"
-  
  for(y in years) {
     for(s in sheetnames) {
       #to show where it is breaking if there is an error
@@ -183,23 +246,105 @@
     }
   }
 # ----------------------------------------------  
+
+  
+# ----------------------------------------------
+# Test that the output has the right number of rows
+if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
+# ----------------------------------------------     
+
+ 
+      # ----------------------------------------------    
+        # geoTimeVars <- c("year", "province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+        #                   "quarter", "month")
+        # indicatorVars <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
+        #                         "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen", 
+        #                         "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen", 
+        #                         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" )  
+      # ----------------------------------------------    
+        
+
+# ----------------------------------------------     
+# Split appended data into Indicators and Interventions Data
+  COD_PNLP_Indicators <- fullData[, c(1:8, 44, 46, 9:23) ]
+  #COD_PNLP_Indicators <- fullData[, c(geoTimeVars)]
+  COD_PNLP_Interventions <- fullData[, c(1:8, 44, 46, 24:43, 47:61)]
+# ----------------------------------------------    
+
+
+# ----------------------------------------------   
+# Further prep on appended the datatables for indicators and interventions
+  
+  # Reshape Indicators data
+  COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+      "quarter", "month", "year", "date"), measured=c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
+      "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen", 
+      "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen", 
+      "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" ), variable.name = "indicator", value.name="value")
+      
+      # Split Indicators data by subgroup
+        COD_PNLP_Indicators_melt[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
+          # reorder columns:
+            COD_PNLP_Indicators_melt <- COD_PNLP_Indicators_melt[, c(1:10, 11, 13, 12)]
+      
+      # make the value for each indicator numeric
+          COD_PNLP_Indicators_melt[, value := as.numeric(value)]  
+
+    # dcast() so that indicators are their own columns
+        COD_PNLP_Indicators_cast <- dcast(COD_PNLP_Indicators_melt, province + dps + health_zone + donor + operational_support_partner + population +
+                                              quarter + month + year + date + subpopulation ~ indicator)
+      
+        # reorder columns:
+          COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:11, 14, 15, 13, 16, 12)]
+          
+      # add column for formula_used (to later populate with Y/N values indicating
+          # whether or not a formula was used to develop/model the data)
+          # Right now, fill with "No" which will be the default
+          COD_PNLP_Indicators_melt$formula_used <- "No"
+
+         # if modulus operator returns 0 then it should stay no, if it returns anything other than 0, change
+            # formula_used to yes
+            COD_PNLP_Indicators_melt[value%%1==0, formula_used:='No']
+            COD_PNLP_Indicators_melt[value%%1!=0, formula_used:='Yes']
+          
+  # Reshape Interventions data
+    COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+      "quarter", "month", "year", "date"), measured=c(), variable.name = "intervention", value.name="value")
+      
+      # Split Interventions data by subgroup
+        COD_PNLP_Interventions_melt[, c("intervention", "intervention_spec", "age_dist") := tstrsplit(intervention, "_", fixed=TRUE)]
+      
+      # add column for "indicator codes" - to be added later
+        COD_PNLP_Interventions_melt$indicator_code <- NA
+      
+      # reorder columns
+        COD_PNLP_Interventions_melt <- COD_PNLP_Interventions_melt[, c(1:11, 13, 14, 12)]
+# ----------------------------------------------
   
   
 # ----------------------------------------------
-  # Export the cleaned data
-  # COD_PNLP_Data_2016 <- dataSheet
-  # write.csv(dataSheet, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_", year, "_", sheetname, ".csv"))
+  # Export the prepped data
+  COD_PNLP_Data_Indicators_Long <- COD_PNLP_Indicators_melt
+  COD_PNLP_Data_Indicators_Wide <- COD_PNLP_Indicators_cast
+  COD_PNLP_Data_Interventions_Long <- COD_PNLP_Interventions_melt 
+  COD_PNLP_Data_Interventions_Wide <- COD_PNLP_Interventions
+  
+  # hard-coded version:
+  # write.csv(COD_PNLP_Data_Indicators, ("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators.csv")) 
+  # write.csv(COD_PNLP_Data_Interventions, ("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Interventions.csv"))
+  
+  # function to export data:
+  export_data <- function(dfName){
+    write.csv(get(dfName), paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/", dfName , ".csv"))
+  }
+
+#   export_data("COD_PNLP_Data_Indicators")
+#   export_data("COD_PNLP_Data_Interventions_Long")
+#   export_data("COD_PNLP_Data_Interventions_Wide")
+  
+  dfsToExport <- c("COD_PNLP_Data_Indicators_Long", "COD_PNLP_Data_Indicators_Wide", "COD_PNLP_Data_Interventions_Long", "COD_PNLP_Data_Interventions_Wide")
+
+  for (df in dfsToExport){
+    export_data(df)
+  }
 # ----------------------------------------------  
-  
-  
-# ----------------------------------------------
-# TO DO:
-  # Add to function:
-    # Problem with less variables for 
-    # Clean values any missing, or format numbers such as 1,000 as 1000
-    # (make it a number not a string)
-
-    # Reshape data
-
-    # Append provinces within years, and then all years together - add column for year
-# ----------------------------------------------

@@ -19,7 +19,8 @@ library(rlang)
 library(zoo)
 # ----------------------------------------------
 
-prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, loc_id){
+prep_detailed_budget = function(dir, inFile, sheet_name, start_date, 
+                                qtr_num, disease, period, lang, grant, loc_id, source){
   ## we need to grab the budget numbers by quarter - first determine if french or english
   if(lang=="eng"){
     cashText <- " Cash \r\nOutflow"
@@ -34,23 +35,23 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   }
   
   if(lang=="eng"){
-    qtr_names <- c("Module","Activity Description", "Recipient", "Geography/Location", rep(1, qtr_num))
+    qtr_names <- c("Module","Intervention","Activity Description", "Recipient", "Geography/Location", rep(1, qtr_num))
   } else { 
-    qtr_names <- c("Module","Description de l'activité", recipient, "Geography/Location", rep(1, qtr_num))
+    qtr_names <- c("Module","Intervention","Description de l'activité", recipient, "Geography/Location", rep(1, qtr_num))
   }
   
   
   create_qtr_names = function(qtr_names, cashText, lang){
-    for(i in 1:qtr_num+4){
-      if(i <5) {
+    for(i in 1:qtr_num+5){
+      if(i <6) {
         i=i+1
       } else { 
         if(lang=="eng"){
-          qtr_names[i] <- paste("Q", i-4,  cashText, sep="")
+          qtr_names[i] <- paste("Q", i-5,  cashText, sep="")
         } else if(lang=="fr" & qtr_num < 12){
           qtr_names[i] <- paste(cashText, " T", i-(12-qtr_num), sep="")
         } else{
-          qtr_names[i] <- paste(cashText, " T", i-4, sep="")
+          qtr_names[i] <- paste(cashText, " T", i-5, sep="")
         }
         i=i+1
       }
@@ -76,10 +77,11 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
 
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
   colnames(gf_data)[1] <- "module"
-  colnames(gf_data)[2] <- "activity_description"
-  colnames(gf_data)[3] <- "recipient"
+  colnames(gf_data)[2] <- "intervention"
+  colnames(gf_data)[3] <- "sda_activity"
+  colnames(gf_data)[4] <- "recipient"
   if(year(start_date)==2018){
-    colnames(gf_data)[4] <- "loc_id"
+    colnames(gf_data)[5] <- "loc_id"
   }
 
   
@@ -87,10 +89,10 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ##library(reshape)
   setDT(gf_data)
   if(year(start_date)==2018){
-    gf_data1<- melt(gf_data,id=c("module","activity_description", "recipient", "loc_id"), variable.name = "qtr", value.name="budget")
+    gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity", "recipient", "loc_id"), variable.name = "qtr", value.name="budget")
     gf_data1$loc_id <- as.character(gf_data$loc_id)
   } else {
-    gf_data1<- melt(gf_data,id=c("module","activity_description", "recipient"), variable.name = "qtr", value.name="budget")
+    gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity", "recipient"), variable.name = "qtr", value.name="budget")
     gf_data1$loc_id <- "cod"
   }
   
@@ -119,6 +121,7 @@ prep_cod_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
+  budget_dataset$data_source <- source
   
   ##separate tb/hiv into either one or the other in order to map programs properly - later we might want to go back and fix this
   sep_hiv_tb <- function(module, loc_id){

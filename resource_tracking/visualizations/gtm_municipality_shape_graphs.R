@@ -39,6 +39,7 @@ adminData = shapefile('gtm_region.shp')
 
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
                                    ,fileEncoding="latin1"))
+sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 sicoin_data$year <- year(sicoin_data$start_date)
 
 
@@ -73,6 +74,8 @@ hivData[, absorption:=disbursement/budget]
 
 # shapeData is a spatialpolygonsdataframe
 class(shapeData)
+
+
 
 # these have plot methods
 plot(shapeData)

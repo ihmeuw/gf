@@ -28,8 +28,9 @@ implementer <- "CAGF"
 
 ####DOWNLOAD THE FOLDER "FPM - grant budgets" from BASECAMP ONTO YOUR LOCAL DRIVE: 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/cod_budget_prep_grants/' ##where the files are stored locally
-file_list <- read.csv(paste0(dir, "cod_budget_prep.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
+dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/fpm_budgets/' ##where the files are stored locally
+file_list <- read.csv(paste0(dir, "cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
+file_list$start_date <- ymd(file_list$start_date)
 
 ##create a summary file to track the data that we have (and that we still need)
 summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
@@ -39,7 +40,7 @@ summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), n
 summary_file$loc_id <- as.character(summary_file$loc_id)
 summary_file$loc_id <- loc_id
 
-
+##run the for loop to clean all of the COD data: 
 for(i in 1:length(file_list$file_name)){
   ##fill in the summary tracking file with what we know already: 
   summary_file$disease[i] <- file_list$disease[i]
@@ -53,15 +54,18 @@ for(i in 1:length(file_list$file_name)){
   summary_file$year[i] <- file_list$grant_time[i]
   
   if(file_list$type[i]=="summary"){
-    tmpData <- prep_cat_summary_budget(dir, as.character(file_list$file_name[i]),
-                                  file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i], 
-                                  file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], implementer)
+    tmpData <- prep_summary_budget(dir, as.character(file_list$file_name[i]),
+                                  file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
+                                  file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], implementer, file_list$source[i])
   } else if (file_list$type[i]=="detailed"){
-    tmpData <- prep_cod_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_id)
-  } else if (file_list$type[i]=="cat"){
-    tmpData <- prep_cod_recip_budget(dir, file_list$file_name[i], file_list$sheet[i], ymd(file_list$start_date[i]), file_list$qtr_number[i],file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$lang[i], file_list$grant[i])
+    tmpData <- prep_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
+                                        file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_id, file_list$source[i])
+  } else if(file_list$type[i]=="module"){
+    tmpData <- prep_old_module_budget(dir, as.character(file_list$file_name[i]),
+                                   file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
+                                   file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], implementer, file_list$source[i])
   }
-  tmpData$data_source <- "fpm"
+  tmpData$source <- "gf"
   if(i==1){
     resource_database = tmpData
   } 
@@ -72,7 +76,7 @@ for(i in 1:length(file_list$file_name)){
     summary_file$sda_detail[i] <- "Detailed"
   } else if (file_list$type[i]=="summary"){
     summary_file$sda_detail[i] <- "Summary"
-  } else if(!(tmpData$cost_category[1]=="All")){
+  } else if(!(tmpData$sda_activity[1]=="All")){
     summary_file$sda_detail[i] <- "Detailed"
   } else {
     summary_file$sda_detail[i] <- "None"
@@ -96,59 +100,22 @@ setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Data Inventory Star
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$expenditure <- 0 
 resource_database$disbursement <- 0 
-resource_database$data_source <- "fpm"
+
 # ----------------------------------------------
 
 
 data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
-resource_database$sda_orig<-gsub(paste(c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]", "\\\\", "[\r\n]"), collapse="|"), "", resource_database$activity_description)
-resource_database$sda_orig <-tolower(resource_database$sda_orig)
-resource_database$sda_orig <- gsub("[[:punct:]]", "", resource_database$sda_orig)
-resource_database <- resource_database[!(sda_orig%in%c("8", "9"))]
-
 ## optional: do a check on data to make sure values aren't dropped: 
 # data_check2<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
 
-# ----------------------------------------------
-## map program level data: 
-mapping_for_R <- read.csv(paste0(dir, "multi_country/mapping/mapping_for_R.csv"),
-                          fileEncoding="latin1")
-mapping_for_graphs <- read.csv(paste0(dir, "mapping_for_graphs.csv"))
-
-
-
-# test for missing SDAs from map
-sdas_in_map = unique(mapping_for_R$sda_orig)
-sdas_in_data = unique(resource_database$sda_orig)
-if (any(!sdas_in_data %in% sdas_in_map)) { 
-  stop('Map doesn\'t include cost categories that are in this data file!')
-}
-#unmapped_values <- resource_database[sda_orig%in%sdas_in_data[!sdas_in_data %in% sdas_in_map]]
-#unmapped_values = unmapped_values[!duplicated(unmapped_values, by=c("module", "sda_orig"))]
-#View(unique(unmapped_values$sda_orig))
-
-
-# test to make sure map doesn't contain duplicates
-d1 = nrow(mapping_for_R)
-d2 = nrow(unique(mapping_for_R))
-if (d1!=d2) stop('Map contains duplicates!') 
-
-
-program_level_mapped <- merge(resource_database, mapping_for_R, by=c("disease","sda_orig"), allow.cartesian=TRUE)
-mappedCod <- merge(program_level_mapped, mapping_for_graphs, by="code", allow.cartesian=TRUE) ##some categories will be split
-
-mappedCod$budget <- mappedCod$budget*mappedCod$coeff
-mappedCod$expenditure <- mappedCod$expenditure*mappedCod$coeff
-mappedCod$year <- year(mappedCod$start_date)
-
 ## do a check on data to make sure values aren't dropped: 
-data_check2<- as.data.frame(mappedCod[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
+data_check2<- as.data.frame(resource_database[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
 
 
 ## write as csv 
-write.csv(mappedCod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/fpm_cod_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
+write.csv(resource_database, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/prepped_fpm_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
 
 
 

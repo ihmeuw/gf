@@ -35,6 +35,7 @@ appr_rej_indicators <- function(year, data_source){
   return(x)
 }
 
+
 # ---------------------------------------------
 ##make disease names look nicer on graphs: 
 disease_names_for_plots <- function(gos_data){
@@ -44,6 +45,7 @@ disease_names_for_plots <- function(gos_data){
   graphData[disease=='malaria', disease:='Malaria']
   graphData[disease=='tb', disease:='Tuberculosis']
   graphData[disease=='hss', disease:='RSSH']
+  graphData$disease <- factor(graphData$disease, levels=c("HIV/AIDS", "Malaria", "Tuberculosis", "RSSH"))
   return(graphData)
 }
 
