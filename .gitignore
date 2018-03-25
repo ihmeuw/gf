@@ -5,3 +5,7 @@
 *.Rhistory
 *.rds
 *.RDS
+*.aux
+*.fdb_latexmk
+*.fls
+*.gz
