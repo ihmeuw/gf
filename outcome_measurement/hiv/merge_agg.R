@@ -108,12 +108,29 @@ uvl_sex [is.na(facility_name), name:=paste0('Facility #',facility_id)]
 
 # ---------------
 
+#reset hub, district ids to y values; set x values as process districts and hubs
+uvl_sex <- uvl_sex[ ,
+             .(facility_id, process_id=district_id.x, process_hub=hub_id.x, samples_received,
+               patients_received, suppressed,  valid_results, rejected_samples,  dbs_samples,
+               total_results, year, month, sex, district_id=district_id.y, facility_name,     
+               hub_id=hub_id.y, district_name)]
+
+# rename sex
+uvl_sex[ , .(class(sex)) ]
+uvl_sex[sex=='m', sex:='Male']
+uvl_sex[sex=='f', sex:='Female']
+uvl_sex[sex=='x', sex:='Unknown']
+
+
 #save the final data as an RDS
 saveRDS(full_data, file= paste0(dir, "sex_data.rds") )
 
+# ----------------------------------------------
+
+
 
 # ----------------------------------------------
-# additional to code to identify merge mismatches in the merge and downloading errors
+# additional to code to identify merge mismatches and downloading errors
 
 # check for mismatch in district IDs
 uvl_sex[district_id.x!=district_id.y, .(district_id.x, district_id.y, district_name), by=district_name]
