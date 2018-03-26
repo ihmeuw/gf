@@ -1,8 +1,9 @@
 # ----------------------------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
-# 12/16/2018
+# 3/26/2018
 # To extract a list of districts and facilities from Uganda Viral Load Dashboard: https://vldash.cphluganda.org/
+# Merge with Uganda VL data on facility ID in order to get names of districts, facilities
 # ----------------------------------------------
 
 
@@ -37,17 +38,18 @@ dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
   data = fromJSON(url)
   
   #data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))
-  facilities = data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))      
-
-  #facilitity ids are stored as character strings; convert to integers 
-  is.numeric(facilities$id)
-  facility_id <- as.numeric(facilities$id)
-  is.numeric(facility_id)
-  cbind(facilities, facility_id)
-            
+  facilities_full = data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))      
+          
+  facilities <- facilities_full[, .(facility_id=as.numeric(id), facility_name=name, hub_id, district_id) ]
+  
+    
   # save raw output
-  saveRDS(facilities, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/dist_facilities.rds")
+  saveRDS(facilities, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facility_merge/facilities.rds")
    
 
 # ----------------------------------------------
+  
+  
+  
+  
   

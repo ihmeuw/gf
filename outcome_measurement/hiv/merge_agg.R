@@ -18,7 +18,7 @@ library(stringr) # to help extract meta data from file names
 # set files and directories for the viral load data
 
 # change directory
-setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_tb")
+setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex")
 
 # list existing files
 files <- list.files('./', recursive=TRUE)
@@ -52,7 +52,6 @@ for(f in files) {
   current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
   current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
   current_data[, sex:=(meta_data[5])]
-  current_data[, tb:=(meta_data[6])]
 
   # append to the full data 
   if(i==1) full_data = current_data
@@ -63,7 +62,7 @@ for(f in files) {
 # ----------------------------------------------
 
 #save the final data as an RDS
-saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_tb.rds")
+saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/sex_data.rds")
 
 # view it 
 str(full_data)
@@ -95,3 +94,57 @@ full_data[sex=='x', .(total_sup=sum(samples_received)), by=.(month, year)]
 full_data[sex=='x', .(total_sup=sum(suppressed)), by=.(month, year)]
 
 # ----------------------------------------------
+
+
+# set directory
+dir = "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard"
+
+
+# ---------------------
+# upload both the webscrape data and the facility names as data tables
+
+# upload the facilities names
+facilities <- readRDS(paste0(dir, "/facilities.rds"))
+
+# upload the uganda_vl data with month, year, sex filters
+uganda_vl <- readRDS(paste0(dir, "/sex_data.rds"))
+
+
+# ----------------------------------------------
+
+# create an id variable in uganda_vl to merge on using facility_id
+names(uganda_vl)
+names(facilities)
+
+uganda_vl[ , id:=facility_id]
+
+
+# list unique facility ids
+uganda_vl [,id, by=id] # 2042 values
+facilities[, id, by=id] # 2012 values
+
+# identify mismatches
+uganda_vl$id[!uganda_vl$id %in% facilities$id]
+facilities$id[!facilities$id %in% uganda_vl$id]
+
+# format id as numeric
+facilities[, id:=as.numeric(id)]
+
+# add table 1 to uganda_vl 
+# these values will repeat to match the number of values in the data table
+uganda_vl <- merge(uganda_vl, facilities[,c('id','name')], by='id', all.x=TRUE)
+
+# handle missing names
+uganda_vl[is.na(name), name:=paste0('Facility #',id)]
+
+
+# upload the district names
+districts <- readRDS(paste0(dir, "/districts.rds"))
+
+uganda_vl <- merge(uganda_vl, districts, by='district_id', all.x=TRUE)
+
+# ----------------------------------------------
+
+saveRDS(uganda_vl, paste0(dir,"/sex_data.rds"))
+
+
