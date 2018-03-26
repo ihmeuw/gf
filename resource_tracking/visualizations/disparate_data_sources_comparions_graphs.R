@@ -28,6 +28,11 @@ fghData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi
 totalData$budget <- as.numeric(totalData$budget)
 
 gfFgh <- fghData[source=="gf"]
+##rename FGH disburesment to "variable"
+gfFgh$grant_number<- "unknown"
+gfFgh <- gfFgh[, list(variable=sum(na.omit(disbursement))),by=byVars]
+
+
 gfData <- totalData[source=="gf"]
 
 ##sum all of the municipalities to national for now: 
@@ -61,15 +66,36 @@ graphData <- rbind(graphData, gos_reshape)
 ##turn the country variable into a factor:
 graphData$country <- factor(graphData$country, levels=c("Congo (Democratic Republic)","Guatemala","Uganda"))
 
-##rename FGH disburesment to "variable"
-gfFgh$grant_number<- "unknown"
-gfFgh <- gfFgh[, list(variable=sum(na.omit(disbursement))),by=byVars]
+
 
 ##rbind the two datasets together 
 graphData <- rbind(graphData,gfFgh)
 
-#clean up the disease names and set colors for each data source: 
+#clean up the disease names and set colors for each data source:
+count_grants <- gos_reshape %>%
+  group_by(year, country, disease)  %>%
+  summarise(gos_grants = sum(length(unique(grant_number))))
+  
+graphData <- merge(graphData, count_grants,by = c("year","disease", "country"), all.x=TRUE)
+
+source_grants <- graphData %>%
+  group_by(year, country, disease,data_source)  %>%
+  summarise(source_grants = sum(length(unique(grant_number))))
+
+
+graphData <- merge(graphData, source_grants,by = c("year", "country", "disease","data_source"), all.x=TRUE)
+
+##not necessary if only graphing FPM and PUDR
+# graphData$gos_grants <- mapply(extend_gos, graphData$year,graphData$source_grants, graphData$gos_grants)
+# graphData$source_grants <- mapply(fgh_and_sicoin,graphData$data_source, graphData$source_grants, graphData$gos_grants)
+
+
+graphData=graphData[, list(variable=sum(na.omit(variable)),gos_grants=sum(na.omit(gos_grants)), source_grants=mean(na.omit(source_grants))),
+                    by=c("country", "year","data_source", "disease")]
+graphData$grant_perc <-graphData$source_grants/graphData$gos_grants
+
 graphData <- disease_names_for_plots(graphData)
+graphData <- data_source_names_for_plots(graphData)
 graphData$data_source <- factor(graphData$data_source, levels=unique(graphData$data_source))
 sourceColors <- c("#000080",
                   "#ff7f00",
@@ -82,33 +108,10 @@ sourceColors <- c("#000080",
                   "#b20059")
 
 names(sourceColors) <- levels(graphData$data_source)
-
-count_grants <- gos_reshape %>%
-  group_by(year, country)  %>%
-  summarise(gos_grants = sum(length(unique(grant_number))))
-  
-graphData <- merge(graphData, count_grants,by = c("year", "country"), all.x=TRUE)
+countryData =graphData[, list(variable=min(na.omit(variable))), by=c("country", "year","data_source")]
+diseaseData = graphData[, list(variable=min(na.omit(variable))), by=c("disease", "year","data_source")]
 
 
-
-source_grants <- grant_perc  %>%
-  group_by(year, country, data_source)  %>%
-  summarise(source_grants = sum(length(unique(grant_number))))
-
-
-graphData <- merge(graphData, source_grants,by = c("year", "country", "data_source"), all.x=TRUE)
-
-graphData$gos_grants <- mapply(extend_gos, graphData$year,graphData$source_grants, graphData$gos_grants)
-graphData$source_grants <- mapply(fgh_and_sicoin,graphData$data_source, graphData$source_grants, graphData$gos_grants)
-
-
-graphData=graphData[, list(variable=sum(na.omit(variable)),gos_grants=sum(na.omit(gos_grants)), source_grants=sum(na.omit(source_grants))),
-                    by=c("country", "year","data_source", "disease")]
-graphData$grant_perc <-graphData$source_grants/graphData$gos_grants
-
-
-countryData =graphData[, list(variable=sum(na.omit(variable))), by=c("country", "year","data_source")]
-diseaseData = graphData[, list(variable=sum(na.omit(variable))), by=c("disease", "year","data_source")]
 ##PLOTS:
 gos_nat_plots <- list()
 for (k in unique(graphData$country)){
@@ -138,6 +141,8 @@ codData <- graphData[country=="Congo (Democratic Republic)"]
 gtmData <- graphData[country=="Guatemala"]
 ugaData <- graphData[country=="Uganda"]
 
+
+
 gos_nat_plots <- list()
 for (k in unique(codData$disease)){
   subdata <- codData[disease==k]
@@ -162,11 +167,14 @@ dev.off()
 #plot the # of grants for each data source over the total # of grants that year
 
 perc_data <- rbind(codData, ugaData, gtmData)
-perc_data <- perc_data[data_source%in%c("fpm", "pudr")]
+perc_data <- perc_data[data_source%in%c("Final FPM Budgets", "Progress Update Disb. Request")]
+
+perc_data[grant_perc >= 1, grant_perc :=1]
+
+
 codData <- perc_data[country=="Congo (Democratic Republic)"]
 gtmData <-perc_data[country=="Guatemala"]
 ugaData <- perc_data[country=="Uganda"]
-
 
 gos_nat_plots <- list()
 for (k in unique(ugaData$disease)){
@@ -185,7 +193,9 @@ for (k in unique(ugaData$disease)){
 }
 
 
-
+pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/time_series/aggregated_grant_year_sources.pdf", height=6, width=9)
+invisible(lapply(gos_nat_plots, print))
+dev.off()
 
 
 ### ----------------------------------------------
