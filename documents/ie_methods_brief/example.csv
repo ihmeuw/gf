@@ -1,0 +1,49 @@
+"Intervention","Area","Year","Indicator","Incidence","Expenditure_nongf","Expenditure_gf","Output"
+"Differentiated HIV testing services",1,2012,"HIV test conducted",384,95,33,1143
+"Differentiated HIV testing services",1,2013,"HIV test conducted",355,131,27,1111
+"Differentiated HIV testing services",1,2014,"HIV test conducted",279,107,-20,1027
+"Differentiated HIV testing services",1,2015,"HIV test conducted",290,99,52,1051
+"Differentiated HIV testing services",2,2012,"HIV test conducted",508,168,46,1267
+"Differentiated HIV testing services",2,2013,"HIV test conducted",429,142,79,1197
+"Differentiated HIV testing services",2,2014,"HIV test conducted",412,106,59,1171
+"Differentiated HIV testing services",2,2015,"HIV test conducted",368,2,77,1100
+"Differentiated HIV testing services",3,2012,"HIV test conducted",539,163,66,1297
+"Differentiated HIV testing services",3,2013,"HIV test conducted",467,114,41,1225
+"Differentiated HIV testing services",3,2014,"HIV test conducted",463,109,36,1207
+"Differentiated HIV testing services",3,2015,"HIV test conducted",385,30,87,1126
+"Differentiated HIV testing services",4,2012,"HIV test conducted",564,119,72,1311
+"Differentiated HIV testing services",4,2013,"HIV test conducted",475,138,50,1237
+"Differentiated HIV testing services",4,2014,"HIV test conducted",508,188,34,1272
+"Differentiated HIV testing services",4,2015,"HIV test conducted",429,103,44,1178
+"Differentiated antiretroviral therapy service delivery",1,2012,"ARV doses administered",384,113,28,1131
+"Differentiated antiretroviral therapy service delivery",1,2013,"ARV doses administered",355,86,43,1104
+"Differentiated antiretroviral therapy service delivery",1,2014,"ARV doses administered",279,8,89,1026
+"Differentiated antiretroviral therapy service delivery",1,2015,"ARV doses administered",290,54,15,1027
+"Differentiated antiretroviral therapy service delivery",2,2012,"ARV doses administered",508,109,84,1265
+"Differentiated antiretroviral therapy service delivery",2,2013,"ARV doses administered",429,105,62,1171
+"Differentiated antiretroviral therapy service delivery",2,2014,"ARV doses administered",412,153,48,1181
+"Differentiated antiretroviral therapy service delivery",2,2015,"ARV doses administered",368,126,23,1113
+"Differentiated antiretroviral therapy service delivery",3,2012,"ARV doses administered",539,127,78,1291
+"Differentiated antiretroviral therapy service delivery",3,2013,"ARV doses administered",467,105,69,1215
+"Differentiated antiretroviral therapy service delivery",3,2014,"ARV doses administered",463,147,31,1214
+"Differentiated antiretroviral therapy service delivery",3,2015,"ARV doses administered",385,121,60,1147
+"Differentiated antiretroviral therapy service delivery",4,2012,"ARV doses administered",564,110,109,1304
+"Differentiated antiretroviral therapy service delivery",4,2013,"ARV doses administered",475,87,89,1235
+"Differentiated antiretroviral therapy service delivery",4,2014,"ARV doses administered",508,143,87,1259
+"Differentiated antiretroviral therapy service delivery",4,2015,"ARV doses administered",429,142,48,1187
+"Male circumcision",1,2012,"Male circumcisions administered",384,91,25,1121
+"Male circumcision",1,2013,"Male circumcisions administered",355,128,13,1106
+"Male circumcision",1,2014,"Male circumcisions administered",279,88,1,1043
+"Male circumcision",1,2015,"Male circumcisions administered",290,45,41,1035
+"Male circumcision",2,2012,"Male circumcisions administered",508,142,43,1251
+"Male circumcision",2,2013,"Male circumcisions administered",429,56,80,1161
+"Male circumcision",2,2014,"Male circumcisions administered",412,167,1,1175
+"Male circumcision",2,2015,"Male circumcisions administered",368,181,5,1137
+"Male circumcision",3,2012,"Male circumcisions administered",539,118,63,1284
+"Male circumcision",3,2013,"Male circumcisions administered",467,70,117,1214
+"Male circumcision",3,2014,"Male circumcisions administered",463,141,59,1213
+"Male circumcision",3,2015,"Male circumcisions administered",385,90,69,1133
+"Male circumcision",4,2012,"Male circumcisions administered",564,249,24,1346
+"Male circumcision",4,2013,"Male circumcisions administered",475,117,94,1231
+"Male circumcision",4,2014,"Male circumcisions administered",508,158,35,1253
+"Male circumcision",4,2015,"Male circumcisions administered",429,109,44,1194

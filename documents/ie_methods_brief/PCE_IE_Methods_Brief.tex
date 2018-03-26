@@ -58,6 +58,8 @@
 \usepackage{graphicx}
 \usepackage{lipsum}
 \usepackage{amsmath}
+\usepackage{csvsimple}
+\usepackage{pdfpages}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                             %%
@@ -216,7 +218,7 @@ The purpose of this document is twofold:
 
 \begin{enumerate}
   \item To explain, in advance, the analytical approach which we have selected for impact evaluation, with the goals of methods improvement through feedback, transparency, and formal demonstration of the robustness (both strengths and limitations) of the methods. There are many aspects of this approach which I believe are as robust as possible, although the overall study design is weak.
-  \item To lay out a "road map" of how we can accomplish a task as daunting as an impact evaluation of the Global Fund in 2 years. To detail, more precisely, how this can be done.
+  \item To lay out a "road map" of how we can accomplish a task as daunting as an impact evaluation of the Global Fund in 2 years. To detail (more) precisely how this can be done.
 \end{enumerate}
 
 
@@ -230,7 +232,9 @@ The basic approach to this impact evaluation is simply to measure many separate 
 The majority of the complexity and effort required to accomplish this task is to ensure that the data we use actually produce a valid measure of the quantity of interest. Techniques such as data triangulation (see Section \ref{triangulation}), model-based geostatistics (see Section \ref{mbg}), outlier detection and multiple imputation (see Section \ref{data_processing}), will be applied selectively to enhance that measurement validity. \\
 
 % controls are critical for the impact analysis. some are hard to come by like non-GF expenditure, some will have stronger correlation with GF expenditure than the output itself because endogeneity
-The controls are especially critical for the impact analysis (see Section \ref{hypothesis}). Some other variables are expected to have a stronger correlation with both expenditure and outputs than the correlation between expenditure and outputs itself, and without careful attention to them, this analysis will fail to measure what it intends to measure.
+The controls are especially critical for the impact analysis (see Section \ref{hypothesis}). Some other variables are expected to have a stronger correlation with both expenditure and outputs than the correlation between expenditure and outputs itself, and without careful attention to them, this analysis will fail to measure what it intends to measure. \\
+
+Finally, it is essential that the indicators are measured independently. That is to say that the measurement approach for a specific indicator does not use any of its preceding indicators (in the results chain) in the process. This helps ensure that the correlations measured between indicators are reflective of the theorized causal pathways, not endogeneity in measurement.
 
 % ------------------------------------------------------------------------------
 % Background
@@ -295,11 +299,6 @@ In evaluating the contribution of catalytic and system-wide Global Fund investme
 % note about using budget as an ITT
 \textit{Technical Note: Although expenditure from the Global Fund is the intervention of interest, the above model will also be explored using the planned budget as a proxy for expenditure. The rationale for doing so is to avoid potential bias from differential absorption. Similar to the "intent to treat" principle from a randomized control trial, the drivers of actual execution of funds are more diverse and poorly-understood than the drivers of planned budgeting, and thus more challenging to control. To measure the correlation between actual expenditure and outputs would also be to measure the contribution of those absorption-driving factors, and would weaken the interpretability of the coefficient of interest. While both budget and expenditure will be explord, budget will be considered the primary explanatory variable. \\}
 
-% ------------------------------------------------------------------------------
-% Worked Example
-\section{Worked Example}
-This section provides an example of the model above, using simulated data.
-
 
 % ------------------------------------------------------------------------------
 % Further Details on Model-Based Geostatistics
@@ -315,12 +314,29 @@ The definition of the coefficient $\beta_1$ in formula \ref{basic_model} is the 
 Additional interpretation of the impact evaluation model is the key to using it for VfM assessment. As allocation efficiency is among the critical topics for evaluation, estimates from the core model can be produced among counterfactual scenarios, comparing alternate mixes of interventions and their expected relationship with output.\\
 
 
+% ------------------------------------------------------------------------------
+% Worked Example
+\section{Worked Example}
+This section provides an example of the model above, using simulated (i.e. completely fabricated) data.\\
+
+[walkthrough of table 1, especially focusing on indexing] \\
+
+[figure showing correlations] \\
+
+[table showing regression output] \\
+
+\clearpage
+
+\includepdf{example_table.pdf}
+% \csvautotabular{example.csv}
+% \input{example_table.tex}
+% \newpage
 
 % ------------------------------------------------------------------------------
 % Further Details on Resource Tracking
 \section{Further Details on Resource Tracking} \label{resource_tracking}
 
-\subsection{Purely systematic Model}
+\subsection{Purely Systematic Model}
 
 \begin{equation} \label{rt_model1}
 \widehat{E_{jti}}=E_{jtm}*\frac{E_{ti}}{E_{tm}}
@@ -456,4 +472,5 @@ As in the previous section, $E_{jtm}$ is a quantity that can be measured from co
 
 
 \end{backmatter}
+
 \end{document}
