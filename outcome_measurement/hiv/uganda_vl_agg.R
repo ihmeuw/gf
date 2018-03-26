@@ -1,8 +1,10 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 3/12/2018
+# 3/26/2018
 # Test downloads from the Uganda VL Dashboard w/o filters to see where the connection breaks
+# Use uganda_vl_prep to download all filters
+# this version download with sex and tb status filters only
 # ----------------------------------------------
 
 # --------------------
@@ -44,8 +46,8 @@ for(y in c('14', '15', '16', '17', '18')) {
       
       # do not loop over age groups
     
-      # loop over tb groups 
-      for (t in c('y', 'n', 'x'))  {
+      # loop over tb groups - includes "unknown" option
+      for(t in c('y','n','x')) { 
         
         # loop over sexes 
        for(s in c('m', 'f', 'x')) {
@@ -67,8 +69,8 @@ for(y in c('14', '15', '16', '17', '18')) {
             saveRDS(data, file=outFile)
           }
         }
-      }
-      }}
+    
+      }}}
       
 # ----------------------------------------------
 

@@ -21,7 +21,7 @@ library(ggplot2)
 dir <- 'J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
 
 # upload the data with month, year, sex
-uganda_vl <- readRDS(paste0(dir, "/webscrape_agg/sex_data.rds"))
+uganda_vl <- readRDS(paste0(dir, "/sex_data.rds"))
 
 # ----------------------------------------------
 
@@ -49,13 +49,10 @@ uganda_vl[sex=='m', sex:='Male']
 uganda_vl[sex=='f', sex:='Female']
 uganda_vl[sex=='x', sex:='Unknown']
 
-uganda_vl[, .(sum(sex, na.rm=T)), by=year] # tells you the # of entries with female filter, not females
-uganda_vl [, .(sum(patients_received)), by=.(year, sex)] # patients received by sex by year
-
 # -----------
 
 # Reshape indicators long
-idVars <- c("_id", "facility_id", "district_id", "hub_id", "year", "month", "sex")
+idVars <- c("_id", "facility_id", "district_id", "hub_id", "year", "month", "sex", 'name', 'district_name', 'id')
 uganda_vl_long <- melt(uganda_vl, id.vars=idVars)
 
 # make date variable
@@ -170,14 +167,16 @@ ggplot(uvl_long[facility_id==2], aes(y=value, x=date, color=sex)) +
 # --------------------
 # create plots by district by looping over all districts, export as a PDF
 
+# store identifiers
+idVars <- c("district_id", "district_name", "sex", "month", "year")
+
 # create a long data set with totals by district
 uvl_dist <- uganda_vl[!(month==3 & year==2018),
                      .(total_samples = sum(samples_received), total_dbs=sum(dbs_samples), total_patients = sum(patients_received),  
                        total_results=sum(total_results), valid_results = sum(valid_results), total_suppressed = sum(suppressed)),
-                       by=.(district_id, sex, month, year)]
+                       by=idVars]
 
 # reshape indicators long for district data
-idVars <- c("district_id", "sex", "month", "year" )
 uvl_dist <- melt(uvl_dist, id.vars=idVars)
 
 # add date variable
@@ -189,11 +188,13 @@ uvl_dist$variable <- factor(uvl_dist$variable,
                                  labels=c("Samples Received","DBS Samples", "Patients","Total Results", "Valid Results", "Suppressed"))
 
 # single test graphs
-ggplot(uvl_dist[district_id==11], aes(y=value, x=date, color=sex)) + 
+f=11
+name <- unique(uvl_dist[district_id==f]$district_name)
+ggplot(uvl_dist[district_id==f], aes(y=value, x=date, color=sex)) + 
   geom_point() + 
   geom_line(alpha=0.5) + 
   facet_wrap(~variable, scales='free_y') +
-  xlab("Date") + ylab("Count") + theme_bw()
+  xlab("Date") + ylab("Count") + theme_bw() + labs(title=name)
 
 
 # -----------
@@ -209,19 +210,21 @@ dev.off()
 list_of_plots = NULL
 i=1
 for(f in unique(uvl_dist$district_id)) {
+  # look up district name
+ name <-  unique(uvl_dist[district_id==f]$district_name)
+  
   # make your graph
   
   list_of_plots[[i]] <- ggplot(uvl_dist[district_id==f], aes(y=value, x=date, color=sex)) + 
     geom_point() + 
     geom_line(alpha=0.5) + 
-    facet_wrap(~variable, scales='free_y') + xlab("Date") + ylab("Count") + theme_bw()
+    facet_wrap(~variable, scales='free_y') + labs(title=name, x="Date", y="Count") + theme_bw()
   
   i=i+1
   
 }
 
 # --------------------
-
 
 
 # --------------------
