@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
-# 12/21/2018
+# 3/23/2018
 # To acombine the data sets from the Uganda Viral Load Dashboard into a single data set
 # ----------------------------------------------
 
@@ -21,35 +21,10 @@ library(stringr) # to help extract meta data from file names
 
 # data directory
 
-# output file
-#dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
+# set directory
+  dir = "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard"
 # ----------------------------------------------
 
-
-# ----------------------------------------------
-# Load/prep the list of facility names and id#s to merge with viral load data
-
-# store url
-#url = 'https://vldash.cphluganda.org/other_data'
-
-# load
-#data = fromJSON(url)
-
-#data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))
-#facilities = data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))      
-
-#facilitity ids are stored as character strings; convert to integers 
-#facility_id <- as.numeric(facilities$id)
-#is.numeric(facility_id)
-#facility_names <- data.table(cbind(facilities, facility_id))
-
-# save raw output
-#saveRDS(facility_names, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facility_names.rds")
-
-# ----------------------------------------------
-
-
-# ----------------------------------------------
 # set files and directories for the viral load data
 
 # change directory
@@ -94,15 +69,10 @@ for(f in files[1:20]) {
 # ----------------------------------------------
 # merge on district/facility names
 
-#load the list of facility names and id#s for the merge
-#readRDS("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facility_names.rds")
-
-#merge the two files to create a single data set
-#data = merge(full_data, facility_names, by.x='facility_id', by.y='facility_id', all.x=TRUE)
 
 # ----------------------------------------------
 
 #save the final data as an RDS
-saveRDS(full_data, file="J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/uganda_test.rds")
+
 
 # ----------------------------------------------
