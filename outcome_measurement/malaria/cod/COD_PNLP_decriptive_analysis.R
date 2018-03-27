@@ -21,6 +21,7 @@
   library(zoo)
   library(tidyr)
   library(dplyr)
+  library(gridExtra)
 # --------------------
   
   
@@ -65,14 +66,14 @@
     }
 # ----------------------------------------------
 # ---------------------------------------------- 
+# Export Graphs to a PDF
+    
   # make a vector of all health zones in dt to loop through 
     hz_vector <- dt[["health_zone"]]
 
     # remove duplicates:
       hz_vector <- unique(hz_vector)
-      
-# ----------------------------------------------
-# ----------------------------------------------  
+  
   # loop through vector of health zones to make a set of graphs for each and export to 
   # a pdf file
     pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs all indicators.pdf", height=6, width=9)
@@ -81,7 +82,19 @@
     }
     dev.off()
 # ---------------------------------------------- 
+    
+
+# ---------------------------------------------- 
   
+# Graph the aggregate data for each indicator and subpopulation by province for each month, each year
+
+  dt <- dt[, province_sum:=sum(value), by=list(province, date, indicator, subpopulation)]
+    
+    sumProvince <- ggplot(dt, aes(date, province_sum, color = province, ymin=0))
+    
+    sumProvince + geom_point() + geom_line() + theme_bw() + ggtitle("Aggregate Data") + scale_shape_manual(values=c(16,1)) + facet_wrap("indicator", scales="free_y", labeller = as_labeller(indicator_names))
+    
+# ----------------------------------------------     
   
   
 # ----------------------------------------------        
@@ -105,7 +118,7 @@
   )
   
   treatments <- c("ArtLum", "SP", "ASAQ", "ITN")
-  tests <- c("ANC", "RDT", "smearTest", "VAR")
+  tests <- c("VAR", "ANC", "RDT", "smearTest")
   completenessMeasures <- c("healthFacilities", "reports")
   
 # ----------------------------------------------
@@ -148,14 +161,31 @@
   # 
 # ----------------------------------------------
 # ----------------------------------------------
+  hz <- "Djuma"
+  
+  
+    makeFacet <- function(i) {
+      m <- ggplot(data= subset(dt2[health_zone==hz & (intervention==tests[i])]), aes(date, value, color = intervention_spec, ymin=0)) + 
+            geom_point() + geom_line() + theme_bw() + ggtitle(tests[i])
+      return(m)
+    }
+    plots <- lapply(1:3, function(i) makeFacet(i))
+    
+  do.call(grid.arrange, plots)
+
+  
+  
+  
+  
+  
+# Export Graphs to a PDF
+  
   # make a vector of all health zones in dt to loop through 
   hz_vector2 <- dt2[["health_zone"]]
   
   # remove duplicates:
   hz_vector2 <- unique(hz_vector2)
-  
-# ----------------------------------------------
-# ----------------------------------------------  
+
   # loop through vector of health zones to make a set of graphs for each and export to 
   # a pdf file
     pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs Interventions.pdf", height=6, width=9)
