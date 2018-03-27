@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6350 64-bit) (preloaded format=pdflatex 2017.6.28)  25 MAR 2018 22:32
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6350 64-bit) (preloaded format=pdflatex 2017.6.28)  26 MAR 2018 22:23
 entering extended mode
 **./PCE_IE_Methods_Brief.tex
 (PCE_IE_Methods_Brief.tex
@@ -565,18 +565,18 @@ File: pppdftex.def 2017/10/31 v0.5l Pdfpages driver for pdfTeX (AM)
 (PCE_IE_Methods_Brief.aux)
 \openout1 = `PCE_IE_Methods_Brief.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 91.
-LaTeX Font Info:    ... okay on input line 91.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 91.
-LaTeX Font Info:    ... okay on input line 91.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 91.
-LaTeX Font Info:    ... okay on input line 91.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 91.
-LaTeX Font Info:    ... okay on input line 91.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 91.
-LaTeX Font Info:    ... okay on input line 91.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 91.
-LaTeX Font Info:    ... okay on input line 91.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 92.
+LaTeX Font Info:    ... okay on input line 92.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 92.
+LaTeX Font Info:    ... okay on input line 92.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 92.
+LaTeX Font Info:    ... okay on input line 92.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 92.
+LaTeX Font Info:    ... okay on input line 92.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 92.
+LaTeX Font Info:    ... okay on input line 92.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 92.
+LaTeX Font Info:    ... okay on input line 92.
 
 ("C:\Program Files\MiKTeX 2.9\tex\context\base\supp-pdf.mkii"
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -635,7 +635,7 @@ G,.JBIG2,.JB2,.eps]
 )
 Package lastpage Info: Please have a look at the pageslts package at
 (lastpage)             https://www.ctan.org/pkg/pageslts
-(lastpage)             ! on input line 91.
+(lastpage)             ! on input line 92.
 \AtBeginShipoutBox=\box36
 
 ("C:\Program Files\MiKTeX 2.9\tex\latex\oberdiek\pdflscape.sty"
@@ -651,143 +651,192 @@ Package: ifxetex 2010/09/12 v0.6 Provides ifxetex conditional
 ))
 
 LaTeX Font Warning: Font shape `OT1/cmss/bx/n' in size <13> not available
-(Font)              size <12> substituted on input line 97.
+(Font)              size <12> substituted on input line 98.
 
 
 LaTeX Font Warning: Font shape `OT1/cmss/m/n' in size <24> not available
-(Font)              size <24.88> substituted on input line 105.
+(Font)              size <24.88> substituted on input line 106.
 
 \address@aff1=\toks32
 
-Underfull \hbox (badness 10000) in paragraph at lines 229--230
+Underfull \hbox (badness 10000) in paragraph at lines 230--231
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 232--233
+Underfull \hbox (badness 10000) in paragraph at lines 233--234
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 235--236
+Underfull \hbox (badness 10000) in paragraph at lines 236--237
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 258--259
+Underfull \hbox (badness 10000) in paragraph at lines 259--260
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 261--262
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 270--271
+Underfull \hbox (badness 10000) in paragraph at lines 271--272
 
  []
 
 
 LaTeX Font Warning: Font shape `OT1/cmss/m/it' in size <8> not available
-(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 271.
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 272.
 
 
 [1{C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map}
 
 
 ]
-Overfull \hbox (9.16315pt too wide) in paragraph at lines 281--282
+Overfull \hbox (9.16315pt too wide) in paragraph at lines 282--283
 []\OT1/cmr/m/n/10 In this for-mula, $\OML/cmm/m/it/10 j$ \OT1/cmr/m/n/10 in-dex
 es sub-na-tional ar-eas (provinces/
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 281--282
+Underfull \hbox (badness 10000) in paragraph at lines 282--283
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 284--285
+Underfull \hbox (badness 10000) in paragraph at lines 307--312
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 300--301
+Underfull \hbox (badness 10000) in paragraph at lines 313--314
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 306--311
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 312--313
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 314--315
+Underfull \hbox (badness 10000) in paragraph at lines 321--322
 
  []
 
 [2]
-Underfull \hbox (badness 10000) in paragraph at lines 320--321
+Underfull \hbox (badness 10000) in paragraph at lines 323--324
 
  []
 
-[3
 
-] <example_table.pdf, id=22, 614.295pt x 794.97pt>
+Underfull \hbox (badness 10000) in paragraph at lines 325--326
+
+ []
+
+<graph1.pdf, id=20, 650.43pt x 433.62pt>
+File: graph1.pdf Graphic file (type pdf)
+ <use graph1.pdf>
+Package pdftex.def Info: graph1.pdf used on input line 328.
+(pdftex.def)             Requested size: 260.16739pt x 173.44492pt.
+
+Overfull \hbox (13.70839pt too wide) in paragraph at lines 327--329
+[]|  [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 327--329
+
+ []
+
+<graph2.pdf, id=21, 650.43pt x 433.62pt>
+File: graph2.pdf Graphic file (type pdf)
+ <use graph2.pdf>
+Package pdftex.def Info: graph2.pdf used on input line 333.
+(pdftex.def)             Requested size: 260.16739pt x 173.44492pt.
+
+Overfull \hbox (13.70839pt too wide) in paragraph at lines 332--334
+[]|  [] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 332--334
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 335--336
+
+ []
+
+
+Overfull \hbox (11.32098pt too wide) in paragraph at lines 341--351
+ [][] 
+ []
+
+[3 <./graph1.pdf> <./graph2.pdf>]
+<example_table.pdf, id=45, 614.295pt x 794.97pt>
 File: example_table.pdf Graphic file (type pdf)
  <use example_table.pdf>
-Package pdftex.def Info: example_table.pdf used on input line 324.
+Package pdftex.def Info: example_table.pdf used on input line 357.
 (pdftex.def)             Requested size: 614.29349pt x 794.96806pt.
 File: example_table.pdf Graphic file (type pdf)
 
 <use example_table.pdf>
-Package pdftex.def Info: example_table.pdf used on input line 324.
+Package pdftex.def Info: example_table.pdf used on input line 357.
 (pdftex.def)             Requested size: 614.29349pt x 794.96806pt.
 
-<example_table.pdf, id=25, page=1, 614.295pt x 794.97pt>
+<example_table.pdf, id=48, page=1, 614.295pt x 794.97pt>
 File: example_table.pdf Graphic file (type pdf)
 
 <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 324.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 357.
 (pdftex.def)             Requested size: 614.29349pt x 794.96806pt.
 File: example_table.pdf Graphic file (type pdf)
  <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 324.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 357.
 (pdftex.def)             Requested size: 614.58406pt x 795.3441pt.
 File: example_table.pdf Graphic file (type pdf)
 
 <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 324.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 357.
 (pdftex.def)             Requested size: 614.58406pt x 795.3441pt.
 File: example_table.pdf Graphic file (type pdf)
  <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 324.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 357.
 (pdftex.def)             Requested size: 614.58406pt x 795.3441pt.
 File: example_table.pdf Graphic file (type pdf)
 
 <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 324.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 357.
 (pdftex.def)             Requested size: 614.58406pt x 795.3441pt.
  [4
 
  <./example_table.pdf>]
-Underfull \hbox (badness 10000) in paragraph at lines 339--340
+Underfull \hbox (badness 10000) in paragraph at lines 376--377
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 352--353
+Underfull \hbox (badness 10000) in paragraph at lines 391--392
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 354--355
+Underfull \hbox (badness 10000) in paragraph at lines 393--394
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 399--400
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 409--410
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 415--416
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 424--425
 
  []
 
@@ -800,31 +849,33 @@ LaTeX Font Warning: Size substitutions with differences
 
  ) 
 Here is how much of TeX's memory you used:
- 6037 strings out of 493323
- 91161 string characters out of 3139060
- 274179 words of memory out of 3000000
- 9478 multiletter control sequences out of 15000+200000
- 6908 words of font info for 25 fonts, out of 3000000 for 9000
+ 6065 strings out of 493323
+ 91486 string characters out of 3139060
+ 275179 words of memory out of 3000000
+ 9497 multiletter control sequences out of 15000+200000
+ 9181 words of font info for 33 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 40i,18n,46p,1193b,426s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 40i,18n,46p,1193b,424s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Pr
 ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Program Fi
 les/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Files/MiKT
 eX 2.9/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Program Files/MiKTeX 2.9/fo
 nts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1
-/public/amsfonts/cm/cmr10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/a
-msfonts/cm/cmr5.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm
-/cmr7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss10.pf
-b><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss17.pfb><C:/Pr
-ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss8.pfb><C:/Program Fil
-es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><C:/Program Files/MiK
-TeX 2.9/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2.9/
-fonts/type1/public/amsfonts/cm/cmsy5.pfb><C:/Program Files/MiKTeX 2.9/fonts/typ
-e1/public/amsfonts/cm/cmsy7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public
-/amsfonts/cm/cmti10.pfb>
-Output written on PCE_IE_Methods_Brief.pdf (5 pages, 201663 bytes).
+/public/amsfonts/cm/cmmi8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/a
+msfonts/cm/cmr10.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/c
+m/cmr5.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmr7.pfb
+><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss10.pfb><C:/Pro
+gram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss17.pfb><C:/Program Fil
+es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss8.pfb><C:/Program Files/MiKTeX
+ 2.9/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><C:/Program Files/MiKTeX 2.9/f
+onts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/typ
+e1/public/amsfonts/cm/cmsy5.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public
+/amsfonts/cm/cmsy7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts
+/cm/cmsy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti1
+0.pfb>
+Output written on PCE_IE_Methods_Brief.pdf (5 pages, 244054 bytes).
 PDF statistics:
- 93 PDF objects out of 1000 (max. 8388607)
+ 121 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 21 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 31 words of extra memory for PDF output out of 10000 (max. 10000000)
 
