@@ -6,3 +6,4 @@
 *.rds
 *.RDS
 outcome_measurement/malaria/cod/COD_PNLP_interventions.R
+outcome_measurement/malaria/cod/notes_for_COD_PNLP_interventions_analysis.R
