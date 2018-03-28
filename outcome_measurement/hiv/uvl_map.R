@@ -80,35 +80,65 @@ shape_names <- data.table(dist_name=shapeData@data$dist112_na, dist_id=shapeData
 str(shape_names)
 
 # total and annual counts and suppression ratios by district
-ratio_table <- uganda_vl[ , .(valid_results=sum(valid_results), suppressed=sum(suppressed),
+ratio_table <- uganda_vl[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
+                              dbs_samples=sum(dbs_samples), valid_results=sum(valid_results), suppressed=sum(suppressed),
                              suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
                          by=.(dist_name)]
               ratio_table <- ratio_table[order(dist_name)]
 
 
-ratio_year <- uganda_vl[ , .(valid_results=sum(valid_results), suppressed=sum(suppressed),
+ratio_year <- uganda_vl[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
+                          dbs_samples=sum(dbs_samples), valid_results=sum(valid_results), suppressed=sum(suppressed),
                           suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
                           by=.(dist_name, year)]
               ratio_year <- ratio_year[order(year, dist_name)]
+              
+              
+        # ------------------------
+        # facilities reporting
+              
+        # create a table of the number of facilities reporting by district         
+        facilities_table <- uganda_vl[, .(facilities_report=length(unique(facility_id))), by=.(dist_name, year)]
+        facilities_table <- facilities_table[order(year, dist_name)]
+              
+        # create a table of the total number of facilities reporting in each district, all years
+        total_fac <- uganda_vl[, .(total_facilities=length(unique(facility_id))), by=.(dist_name)]
+        total_fac[,.(dist_name, total_facilities)]
+              
+        # merge on district name
+        facilities_table <- merge(facilities_table, total_fac, by='dist_name', all.x=TRUE)
 
-
+         # divide facilities reporting in each year by total facilities ever reported for ratio
+         facilities_table[, facility_ratio:=((facilities_report/total_facilities)*100), by=.(dist_name, year)]
+              
+              # check 
+              facilities_table[year==2014, .(dist_name, facility_ratio)] 
+              facilities_table[year==2015, .(dist_name, facility_ratio)] 
+              facilities_table <- facilities_table[order(year, dist_name)]
+              
+              # merge count and ratio of facilities reporting into ratio_year
+              ratio_year <- merge(ratio_year, facilities_table, by=c('dist_name', 'year'), all.x=TRUE)
+          
+            # ------------------------
+              
 # check for unmatched values
 ratio <- ratio_table[,unique(dist_name)]
 shape <- shape_names[, unique(dist_name)]
 ratio <- sort(ratio)
 shape <- sort(shape)
-
+              
 shape[!shape %in% ratio] # shape file contains all districts in uganda vl
 ratio[!ratio %in% shape] 
 length(ratio[!ratio %in% shape]) # 10 districts are in the uvl data but not the shape file
-
+              
 #merge shape and uvl data on district names; rename the district ids 'id'
 ratio_table <- merge(shape_names, ratio_table, by="dist_name")
 ratio_year <- merge(shape_names, ratio_year, by="dist_name")
-
+              
 # rename both district ids "id" for ease of reference
 setnames(ratio_table, "dist_id", "id")
 setnames(ratio_year, "dist_id", "id")
+
 
 # -----------------
 
@@ -124,44 +154,131 @@ coordinates_year[, year:=rep(2014:2018, each=nrow(coordinates))]
 coordinates <- merge(coordinates, ratio_table, by="id", all.x=TRUE)
 coordinates_year <- merge(coordinates_year, ratio_year, by=c('id', 'year'), all.x=TRUE)
 
-# store colors
-ratiocolors <- brewer.pal(8, 'Spectral')
 
 
 # ----------------------------------------------
-
 # create plots and export as a PDF
 
-#pdf('C:/Users/ccarelli/plots.pdf', height=6, width=9)
+# store colors
+ratio_colors <- brewer.pal(8, 'Spectral')
+results_colors <- brewer.pal(6, 'Blues')
+sup_colors <- brewer.pal(6, 'Reds')
+
+# -------------------
+# maps to export
+
+"J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs"
+
+pdf('C:/Users/ccarelli/plots.pdf', height=6, width=9)
 
 # suppression ratio for all years 
 ggplot(coordinates, aes(x=long, y=lat, group=group, fill=as.numeric(suppression_ratio))) + 
   geom_polygon() + 
   geom_path() + 
-  scale_fill_gradientn(colors=ratiocolors) + 
+  scale_fill_gradientn(colors=ratio_colors) + 
   theme_void() + 
   labs(title="Viral suppression ratios by district, Uganda", subtitle=" August 2014 - February 2018",
        caption="Source: Uganda Viral Load Dashboard", fill="Percent virally suppressed") +
         theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4), 
               plot.caption=element_text(vjust=6))
 
+
 # annual suppression ratios
 ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(suppression_ratio))) + 
   geom_polygon() + 
   geom_path() + 
   facet_wrap(~year) +
-  scale_fill_gradientn(colors=ratiocolors) + 
+  scale_fill_gradientn(colors=ratio_colors) + 
   theme_void() +
   labs(title="Viral suppression ratios by district, Uganda", caption="Source: Uganda Viral Load Dashboard", 
        fill="Percent virally suppressed") +
-      theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4), 
-      plot.caption=element_text(vjust=6))
+      theme(plot.title=element_text(vjust=-2), plot.caption=element_text(vjust=6))
 
+# -------------------
 
+# annual percentage of facilities reporting results
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(facility_ratio))) + 
+  geom_polygon() + 
+  geom_path() + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() +
+  labs(title="Percentage of total facilities reporting on viral suppression, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       fill="Percentage of facilities reporting") +
+  theme(plot.title=element_text(vjust=-2), plot.caption=element_text(vjust=6))
 
+# annual count of facilities reporting results
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(total_facilities))) + 
+  geom_polygon() + 
+  geom_path() + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=results_colors) + 
+  theme_void() +
+  labs(title="Number of facilities reporting, Uganda", subtitle=" n=2,040",
+       caption="Source: Uganda Viral Load Dashboard", 
+       fill="Facilities reporting") +
+  theme(plot.title=element_text(vjust=-2), plot.subtitle=element_text(vjust=-2),
+        plot.caption=element_text(vjust=6))
 
+# -------------------
 
-#dev.off()
+# annual patients received
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(patients_received))) + 
+  geom_polygon() + 
+  geom_path() + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=resultscolors) + 
+  theme_void() +
+  labs(title="Number of patients received, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       subtitle=" n=1,974,938", fill="Patients received") +
+  theme(plot.title=element_text(vjust=-3), plot.subtitle=element_text(vjust=-3), plot.caption=element_text(vjust=6))
+
+# annual samples received
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(samples_received))) + 
+  geom_polygon() + 
+  geom_path() + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=resultscolors) + 
+  theme_void() +
+  labs(title="Number of samples received, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       subtitle=" n=1,980,551", fill="Samples received") +
+  theme(plot.title=element_text(vjust=-3), plot.subtitle=element_text(vjust=-3), plot.caption=element_text(vjust=6))
+
+# dbs samples received
+# samples received
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(dbs_samples))) + 
+  geom_polygon() + 
+  geom_path() + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=resultscolors) + 
+  theme_void() +
+  labs(title="Number of DBS samples received, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       subtitle=" n=1,345,501", fill="DBS samples received") +
+  theme(plot.title=element_text(vjust=-3), plot.subtitle=element_text(vjust=-3), plot.caption=element_text(vjust=6))
+
+# annual number of valid test results
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(valid_results))) + 
+  geom_polygon() + 
+  geom_path() + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=resultscolors) + 
+  theme_void() +
+  labs(title="Number of valid viral load test results, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       subtitle="  n=1,896,731", fill="Valid test results") +
+  theme(plot.title=element_text(vjust=-3), plot.subtitle=element_text(vjust=-3), plot.caption=element_text(vjust=6))
+
+# annual number of virally suppressed persons
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(suppressed))) + 
+  geom_polygon() + 
+  geom_path() + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=supcolors) + 
+  theme_void() +
+  labs(title="Number of virally suppressed persons, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       subtitle=" n= 1,673,598 ", fill="Suppressed") +
+  theme(plot.title=element_text(vjust=-3), plot.subtitle=element_text(vjust=-3), plot.caption=element_text(vjust=6))
+
+dev.off()
 
 # -----------------
 

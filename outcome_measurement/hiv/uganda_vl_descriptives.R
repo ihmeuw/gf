@@ -77,7 +77,7 @@ uganda_vl[,
 # excludes March 2018 - change to present month if after March 2018
 table_1 <- uganda_vl[!(month==3 & year==2018),
                       .(total_patients = sum(patients_received), total_samples = sum(samples_received), 
-                        results = sum(valid_results), total_suppressed = sum(suppressed),
+                        valid_results = sum(valid_results), total_suppressed = sum(suppressed),
                         suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
                         by=.(month,year)]
 table_1 <- table_1[order(year, month)]
@@ -91,6 +91,11 @@ uganda_vl <- merge(uganda_vl, table_1, by=c('month','year'))
 # -----------
 # graphs of counts 
 
+# create plots and export as a PDF
+pdf('C:/Users/ccarelli/country_level.pdf', height=6, width=9)
+
+table_1
+
 # total patients received by month, year
 ggplot(table_1, aes(x=factor(month), y=total_patients, col=factor(year), group=year)) + 
   geom_point(size=2.5, alpha=0.8) + geom_line(alpha=0.4) + theme_bw() +
@@ -98,7 +103,7 @@ ggplot(table_1, aes(x=factor(month), y=total_patients, col=factor(year), group=y
   labs(title = "Patients received by month, year", caption="Source: Uganda VL Dashboard", colour="Year")
 
 # total valid viral load test results by month, year
-ggplot(table_1, aes(x=factor(month), y=results, col=factor(year), group=year)) + 
+ggplot(table_1, aes(x=factor(month), y=valid_results, col=factor(year), group=year)) + 
   geom_point(size=2.5, alpha=0.8) + geom_line(alpha=0.4) + theme_bw() +
   xlab("Month") + ylab("Viral load test results") + 
   labs(title = "Viral load test results by month, year", caption="Source: Uganda VL Dashboard", colour="Year")
@@ -114,7 +119,7 @@ ggplot(table_1, aes(x=factor(month), y=total_suppressed, col=factor(year), group
 colors <- c('Not Suppressed'='#de2d26', 'Suppressed'='#fc9272')
 
 # stacked bar showing suppressed/not suppressed of valid test results by year 
-ggplot(table_1, aes(x=factor(year), y=results, fill='Not Suppressed')) + 
+ggplot(table_1, aes(x=factor(year), y=valid_results, fill='Not Suppressed')) + 
     geom_bar(stat="identity") + 
     geom_bar(aes(y=total_suppressed, fill='Suppressed'), stat='identity') + 
     scale_fill_manual(name='', values=colors) + theme_bw() +
@@ -136,6 +141,9 @@ ggplot(table_1, aes(x=factor(month), y=suppression_ratio, col = factor(year), gr
   geom_point(size=2.5) + geom_line(alpha=0.4) + theme_bw() + 
   xlab("Month") + ylab("Percent suppressed of valid test results (%)") + 
   labs(title = "Percent of patients that are virally suppressed by month, year", caption="Source: Uganda VL Dashboard", colour="Year")
+
+
+dev.off()
 
 
 # ----------------------------------------------
