@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 3/23/2018
+# 3/28/2018
 # Run descriptive statistics from the Uganda VL Dashboard data, disaggregated only by sex (no tb or age)
 # ----------------------------------------------
 
@@ -40,6 +40,9 @@ uganda_vl[, facility_id, by=facility_id] # 2042 unique values
 uganda_vl[year==2014, sum(samples_received), by=month]
 uganda_vl[year==2018, sum(samples_received), by=month]
 
+
+uganda_vl <- uganda_vl[!(month==3 & year==2018)]
+
 # ----------------------------------------------
 # add useful variables and prep the data 
 
@@ -52,7 +55,7 @@ uganda_vl[sex=='x', sex:='Unknown']
 # -----------
 
 # Reshape indicators long
-idVars <- c("_id", "facility_id", "district_id", "hub_id", "year", "month", "sex", 'name', 'district_name', 'id')
+idVars <- c("facility_id", "facility_name", "district_id", "district_name", "hub_id", "year", "month", "sex")
 uganda_vl_long <- melt(uganda_vl, id.vars=idVars)
 
 # make date variable
@@ -67,29 +70,26 @@ uganda_vl[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 # summary tables and graphs of patients, samples, valid results, suppressed, and % suppressed over time
 # all months and years
 
-uganda_vl[,
-          .(total_patients = sum(patients_received), samples = sum(samples_received), 
-            results = sum(valid_results), total_suppressed = sum(suppressed),
-            suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
-          by=.(month,year)]
 
 # table 1: patients, samples, valid results, suppressed, %suppressed over time
 # excludes March 2018 - change to present month if after March 2018
-table_1 <- uganda_vl[!(month==3 & year==2018),
-                      .(total_patients = sum(patients_received), total_samples = sum(samples_received), 
-                        results = sum(valid_results), total_suppressed = sum(suppressed),
+table_1 <- uganda_vl[,
+                      .(patients_received = sum(patients_received), samples_received = sum(samples_received), 
+                        dbs_samples=sum(dbs_samples),
+                        valid_results = sum(valid_results), suppressed = sum(suppressed),
                         suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
                         by=.(month,year)]
 table_1 <- table_1[order(year, month)]
-table_1
 
-# add table 1 to uganda_vl 
-# these values will repeat to match the number of values in the data table
-uganda_vl <- merge(uganda_vl, table_1, by=c('month','year'))
 
 
 # -----------
 # graphs of counts 
+
+# create plots and export as a PDF
+pdf('C:/Users/ccarelli/country_level.pdf', height=6, width=9)
+
+table_1
 
 # total patients received by month, year
 ggplot(table_1, aes(x=factor(month), y=total_patients, col=factor(year), group=year)) + 
@@ -98,7 +98,7 @@ ggplot(table_1, aes(x=factor(month), y=total_patients, col=factor(year), group=y
   labs(title = "Patients received by month, year", caption="Source: Uganda VL Dashboard", colour="Year")
 
 # total valid viral load test results by month, year
-ggplot(table_1, aes(x=factor(month), y=results, col=factor(year), group=year)) + 
+ggplot(table_1, aes(x=factor(month), y=valid_results, col=factor(year), group=year)) + 
   geom_point(size=2.5, alpha=0.8) + geom_line(alpha=0.4) + theme_bw() +
   xlab("Month") + ylab("Viral load test results") + 
   labs(title = "Viral load test results by month, year", caption="Source: Uganda VL Dashboard", colour="Year")
@@ -114,7 +114,7 @@ ggplot(table_1, aes(x=factor(month), y=total_suppressed, col=factor(year), group
 colors <- c('Not Suppressed'='#de2d26', 'Suppressed'='#fc9272')
 
 # stacked bar showing suppressed/not suppressed of valid test results by year 
-ggplot(table_1, aes(x=factor(year), y=results, fill='Not Suppressed')) + 
+ggplot(table_1, aes(x=factor(year), y=valid_results, fill='Not Suppressed')) + 
     geom_bar(stat="identity") + 
     geom_bar(aes(y=total_suppressed, fill='Suppressed'), stat='identity') + 
     scale_fill_manual(name='', values=colors) + theme_bw() +
@@ -136,6 +136,9 @@ ggplot(table_1, aes(x=factor(month), y=suppression_ratio, col = factor(year), gr
   geom_point(size=2.5) + geom_line(alpha=0.4) + theme_bw() + 
   xlab("Month") + ylab("Percent suppressed of valid test results (%)") + 
   labs(title = "Percent of patients that are virally suppressed by month, year", caption="Source: Uganda VL Dashboard", colour="Year")
+
+
+dev.off()
 
 
 # ----------------------------------------------

@@ -9,13 +9,13 @@
 %% The original distribution is located at:
 %% http://support.e-publications.org/bmc
 %%
-%% This class file loads standart "article.cls" with appropriate 
+%% This class file loads standart "article.cls" with appropriate
 %% settings and then redefines layout according to BMC style
-%% A lot of efforts are done for the possibility of extraction of 
+%% A lot of efforts are done for the possibility of extraction of
 %% information from the LaTeX file
 %%
-%% You are free to use this style class as you see fit, provided 
-%% that you do not make changes to the file. 
+%% You are free to use this style class as you see fit, provided
+%% that you do not make changes to the file.
 %% If you DO make changes, you are required to rename this file.
 %%
 %% It may be distributed under the terms of the LaTeX Project Public
@@ -168,7 +168,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% Page dimensions
 
-%% dimensions: text 
+%% dimensions: text
 
   \setlength\parindent    {8\p@}
   \def\true@parindent     {8\p@}
@@ -204,10 +204,10 @@
 
   \setlength\topmargin       {27\p@} % 12mm
   \if@twocolumn
-    \setlength\oddsidemargin   {57\p@}% 20mm gutter margin 
-    \setlength\evensidemargin  {57\p@}% 20mm outer  margin    
+    \setlength\oddsidemargin   {57\p@}% 20mm gutter margin
+    \setlength\evensidemargin  {57\p@}% 20mm outer  margin
   \else
-    \setlength\oddsidemargin   {118\p@}% 41.5mm gutter margin 
+    \setlength\oddsidemargin   {118\p@}% 41.5mm gutter margin
     \setlength\evensidemargin  {118\p@}% 41.5mm outer  margin
   \fi
 
@@ -216,7 +216,7 @@
   \advance\topmargin      by-1in
 
   \def\set@fp@margins{%
-    \setlength\oddsidemargin   {179\p@}% 63mm first page gutter margin 
+    \setlength\oddsidemargin   {179\p@}% 63mm first page gutter margin
     \setlength\evensidemargin  {57\p@}% 20mm outer first page margin
     \advance\oddsidemargin  by-1in
     \advance\evensidemargin by-1in
@@ -375,7 +375,7 @@
 % Suformuojame ir isvedame zyme
 \def\thanksmark{\@ifnextchar[{\@tempswatrue\@thanksmark}{\@tempswafalse\@thanksmark[]}}
 
-\def\@thanksmark[#1]#2{%  
+\def\@thanksmark[#1]#2{%
    \@thankslabel[#1]{#2}%
    \safelabel{#2thanks}%
    \thanksmark@fmt{\expandafter\saferef{#2thanks}\thanks@hypertarget{#2}}}
@@ -386,7 +386,7 @@
 \def\@thankslabel[#1]#2{%
   \if@tempswa% []
      \protected@edef\@currentlabel{#1}%
-   \else% 
+   \else%
       \refstepcounter{\current@thankscounter}%
    \fi%
    \safelabel{#2thanks}}%
@@ -440,7 +440,7 @@
 \def\@@printead[#1]#2{%
    \if@tempswa% []
      {\ead@size #1}%
-   \else% 
+   \else%
      \def\ead@type{email}%
      \def\ead@prefix{mailto:}%
      \let\ead@text\email@text%
@@ -449,7 +449,7 @@
          \@ead@sep\let\@ead@sep\ead@sep%
          \@ifundefined{r@\ead@ref @url}{}{\let\ead@text\url@text\def\ead@type{url}\def\ead@prefix{http://}}%
          \ifnot@ead@star\ead@text\fi{\ead@size\def\null{}\ims@href{\ead@prefix\saferef{\ead@ref @\ead@type}}{\saferef{\ead@ref @\ead@type}}}%
-         \let\ead@text\relax}%                        
+         \let\ead@text\relax}%
    \fi%
 }
 
@@ -574,7 +574,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% RUNNING HEADS
 
-\def\runtitle#1{\gdef\@runtitle{#1}}                      
+\def\runtitle#1{\gdef\@runtitle{#1}}
 \def\runauthor#1{\gdef\@runauthor{#1}\global\let\copauthor\@runauthor}
 \def\@runauthor{}
 \def\@lastpage{0}
@@ -703,59 +703,59 @@
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% FIGURE - in box
-
-\newbox\bmcfloat@box
-\newif\if@figurestar
-
-\setattribute{figure}{sep}{6.25\p@}
-
-\def\figure{\@figurestarfalse\@ifnextchar[{\@figure}{\@figure[t]}}
-
-\def\@figure[#1]{\def\figure@pars{#1}%
-               \def\@captype{figure}%
-               \def\csentence##1{{\mathversion{bold}\bfseries ##1}}%
-%               \csname @figure@hook\endcsname% 
-%               \let\@makecaption\@makefigurecaption%
-%               \let\@floatboxreset\figure@boxreset%
-               \setbox\bmcfloat@box=\vbox\bgroup\figure@settings}
-
-\def\endfigure{%
-  \par%
-  \egroup%
-  \edef\reserved@a{\noexpand\@xfloat{figure}[\figure@pars]}
-  \reserved@a\makefigure@float\end@float
-}
-
-
-\DeclareRobustCommand\fig@textbf[1]{{\floatcaptionname@size #1}}%
-
-\def\figure@settings{%
-  \let\textbf\fig@textbf%
-  \setattribute{floatcaption}{size}{\footnotesize\sffamily\raggedright}
-  \if@figurestar\hsize=\textwidth\fi%
-  \@tempdima\hsize%
-  \advance\@tempdima by-\figure@sep%
-  \advance\@tempdima by-\figure@sep%
-  \hsize\@tempdima%
-  \parindent\z@%
-  \centering%
-  \setlength\abovecaptionskip{6\p@}%
-  \setlength\belowcaptionskip{0\p@}%
-}
-
-\def\makefigure@float{
-  \setlength{\fboxsep}{\figure@sep}%
-  \setlength{\fboxrule}{0.25\p@}%
-  \fcolorbox{bmcblue}{white}{\box\bmcfloat@box}}
-
-\@namedef{figure*}{\@figurestartrue\@ifnextchar[{\@figure}{\@figure[t]}}
-
-\@namedef{endfigure*}{%
-  \egroup%
-  \edef\reserved@a{\noexpand\@xdblfloat{figure}[\figure@pars]}
-  \reserved@a\makefigure@float\end@dblfloat
-}
-
+%
+% \newbox\bmcfloat@box
+% \newif\if@figurestar
+%
+% \setattribute{figure}{sep}{6.25\p@}
+%
+% \def\figure{\@figurestarfalse\@ifnextchar[{\@figure}{\@figure[t]}}
+%
+% \def\@figure[#1]{\def\figure@pars{#1}%
+%                \def\@captype{figure}%
+%                \def\csentence##1{{\mathversion{bold}\bfseries ##1}}%
+% %               \csname @figure@hook\endcsname%
+% %               \let\@makecaption\@makefigurecaption%
+% %               \let\@floatboxreset\figure@boxreset%
+%                \setbox\bmcfloat@box=\vbox\bgroup\figure@settings}
+%
+% \def\endfigure{%
+%   \par%
+%   \egroup%
+%   \edef\reserved@a{\noexpand\@xfloat{figure}[\figure@pars]}
+%   \reserved@a\makefigure@float\end@float
+% }
+%
+%
+% \DeclareRobustCommand\fig@textbf[1]{{\floatcaptionname@size #1}}%
+%
+% \def\figure@settings{%
+%   \let\textbf\fig@textbf%
+%   \setattribute{floatcaption}{size}{\footnotesize\sffamily\raggedright}
+%   \if@figurestar\hsize=\textwidth\fi%
+%   \@tempdima\hsize%
+%   \advance\@tempdima by-\figure@sep%
+%   \advance\@tempdima by-\figure@sep%
+%   \hsize\@tempdima%
+%   \parindent\z@%
+%   \centering%
+%   \setlength\abovecaptionskip{6\p@}%
+%   \setlength\belowcaptionskip{0\p@}%
+% }
+%
+% \def\makefigure@float{
+%   \setlength{\fboxsep}{\figure@sep}%
+%   \setlength{\fboxrule}{0.25\p@}%
+%   \fcolorbox{bmcblue}{white}{\box\bmcfloat@box}}
+%
+% \@namedef{figure*}{\@figurestartrue\@ifnextchar[{\@figure}{\@figure[t]}}
+%
+% \@namedef{endfigure*}{%
+%   \egroup%
+%   \edef\reserved@a{\noexpand\@xdblfloat{figure}[\figure@pars]}
+%   \reserved@a\makefigure@float\end@dblfloat
+% }
+%
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% FOOTNOTE
@@ -818,7 +818,7 @@
 
 \setattribute{copyrightlogo}{cmd}{}
 
-% FRONT MATTER FONTS 
+% FRONT MATTER FONTS
 \setattribute{dochead}     {size} {\sffamily\fontsize{13pt}{13pt}\bfseries\selectfont\color{white}}
 \setattribute{title}       {size} {\sffamily\fontsize{24pt}{26pt}\selectfont\raggedright}
 \setattribute{subtitle}    {size} {\sffamily\fontsize{20pt}{22pt}\selectfont\raggedright}
@@ -845,7 +845,7 @@
 \setattribute{presentaddress}   {text} {\textit{Present address: }}
 \setattribute{copyright}        {text} {\@runauthor\ \textit{\journal@name}}
 \setattribute{runninghead}      {text} {\@runauthor\ \textit{\journal@name} \hfill \thepage@fmt{\thepage}}
-\setattribute{footline}         {text} {\textcopyright\ \@copyrt\ \copyrightowner@text} 
+\setattribute{footline}         {text} {\textcopyright\ \@copyrt\ \copyrightowner@text}
 \setattribute{pdfsubject}       {text} {\journal@name}
 
 % URL
@@ -894,7 +894,7 @@
 \setattribute{leftcol}     {width} {108\p@} %38mm             1 puslapio isnasu dezutes plotis
 \setattribute{colsep}      {width} {14\p@}  %5mm
 \if@twocolumn
-\setattribute{footnoterule}{width} {\columnwidth}% 
+\setattribute{footnoterule}{width} {\columnwidth}%
 \else
 \setattribute{footnoterule}{width} {\textwidth}%
 \fi
@@ -916,7 +916,7 @@
   \thispagestyle{copyright}%
 %
   \csname frontmatter@hook \endcsname%
-  \sv@mathsurround\mathsurround% 
+  \sv@mathsurround\mathsurround%
   \m@th
   \set@frontmatter@cmd
   \set@frontmatter@keys
@@ -940,11 +940,11 @@
   \hy@endfrontmatter
 %
   \immediate\write\@mainaux{\string\global\string\@namedef{num@address}{\the\c@address}}%
-  \immediate\write\@mainaux{\string\global\string\@namedef{num@author}{\the\c@author}}%  
+  \immediate\write\@mainaux{\string\global\string\@namedef{num@author}{\the\c@author}}%
   \set@authorcorref@notset%
 %
   \global\mathsurround\sv@mathsurround
-  \global\let\@thanks\@empty  
+  \global\let\@thanks\@empty
 %
   \set@runauthor
 %
@@ -983,7 +983,7 @@
 }
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% FMBOX 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% FMBOX
 
 \newif\if@fmbox \@fmboxfalse
 \newbox\fm@box
@@ -1023,7 +1023,7 @@
   \fcolorbox{bmcblue}{bmcblue}{\hbox to\@tempdima{\dochead@size\MakeUppercase{#2}\hfill\fontshape{n}\selectfont\smash{\dochead@hook}}}
 \egroup}
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% TITLE
 
 \let\PREHOOK@title@fmt\@gobble
 
@@ -1068,7 +1068,7 @@
    \@ifundefined{num@address}{}{\@tempcnta=\num@address\relax}%
    \ifnum\@tempcnta=1\relax%
 %      \define@key{author}{addressref}{}%
-%      \define@key{author}{presentaddressref}{}%       
+%      \define@key{author}{presentaddressref}{}%
       \define@key{author}{corref}{}%
       \global\let\address@thanksref\@gobble
       \global\let\printaddresses\relax
@@ -1078,7 +1078,7 @@
    \ifnum\@tempcnta=1\relax%
       \global\@namedef{num@address}{1}
 %      \define@key{author}{addressref}{}%
-%      \define@key{author}{presentaddressref}{\expandafter\gdef\csname presentaddressref@##1\endcsname{}}%       
+%      \define@key{author}{presentaddressref}{\expandafter\gdef\csname presentaddressref@##1\endcsname{}}%
 %      \gdef\printauthor##1{\unskip}%
       \global\let\address@thanksref\@gobble
       \global\let\printaddresses\relax
@@ -1202,9 +1202,9 @@
      \@ifundefined{num@author}{\@tempcnta=10\relax}{\@tempcnta=\num@author\relax}%
      \def\a@sep{, }%
      \ifnum\@tempcnta>1\relax%
-       \ifnum\c@author=\@tempcnta% 
+       \ifnum\c@author=\@tempcnta%
           \let\a@sep\authorand@sep%
-        \else% 
+        \else%
           \let\a@sep\author@sep%
         \fi%
      \fi%
@@ -1241,9 +1241,9 @@
     \no@harm%
     \expandafter\xdef\csname runauthor@\the\c@author @snm\endcsname{#2}%
   \egroup%
-  \bgroup% 
+  \bgroup%
      \author@size%
-     \def\inits##1{}\def\fnm##1{##1}\def\snm##1{##1}\def\particle##1{##1}\def\suffix##1{##1}%     
+     \def\inits##1{}\def\fnm##1{##1}\def\snm##1{##1}\def\particle##1{##1}\def\suffix##1{##1}%
      \set@author@lists%
      \a@sep\authorname@fmt{#2}\print@author@lists%
   \egroup}%
@@ -1325,8 +1325,8 @@
    \usethankscounter{addressref}\thanksmark{#2}\restorethankscounter%
    \addr@prefix%
    \@ifundefined{presentaddressref@#2}{}{\presentaddress@text}%
-   \expandafter\the\@nameuse{address@#2}\unskip\address@sep%   
-\egroup} 
+   \expandafter\the\@nameuse{address@#2}\unskip\address@sep%
+\egroup}
 
 
 \def\thanksbox@printaddress@fmt[#1]#2{%
@@ -1338,8 +1338,8 @@
    \set@address@mark%
    \thanksref{#2}%
    \addr@prefix%
-   \expandafter\the\@nameuse{address@#2}\par%   
-\egroup} 
+   \expandafter\the\@nameuse{address@#2}\par%
+\egroup}
 
 
 \def\set@address@mark{%
@@ -1354,7 +1354,7 @@
   \heading*{\address@text}
   \bgroup
     \backmatter@style\backmatter@size
-    \@ifundefined{address@id@list}{}{\@for\address@id:=\address@id@list\do{\printaddress{\address@id}}}%  
+    \@ifundefined{address@id@list}{}{\@for\address@id:=\address@id@list\do{\printaddress{\address@id}}}%
     \csname contributing@text\endcsname%
     \par
   \egroup
@@ -1379,7 +1379,7 @@
 
 \define@key{bmcartnote}{id}{%
    \def\bmcartnote@id{#1}%
-   \@ifundefined{bmcartnote@id@list}{\xdef\bmcartnote@id@list{#1}}{\xdef\bmcartnote@id@list{\bmcartnote@id@list,#1}}}                      
+   \@ifundefined{bmcartnote@id@list}{\xdef\bmcartnote@id@list{#1}}{\xdef\bmcartnote@id@list{\bmcartnote@id@list,#1}}}
 
 \define@key{bmcartnote}{symbol}{\def\bmcartnote@symbol{#1}}
 
@@ -1400,7 +1400,7 @@
 \egroup}
 
 \def\printartnotes{%
-   \@ifundefined{bmcartnote@id@list}{}{\@for\bmcnote@id:=\bmcartnote@id@list\do{\printartnote{\bmcnote@id}}}%  
+   \@ifundefined{bmcartnote@id@list}{}{\@for\bmcnote@id:=\bmcartnote@id@list\do{\printartnote{\bmcnote@id}}}%
    \global\let\printartnotes\relax%
 }
 
@@ -1467,7 +1467,7 @@
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% ABSTRACTBOX
 
-\setattribute{absboxsep}   {width} {10.25\p@}  
+\setattribute{absboxsep}   {width} {10.25\p@}
 
 \newbox\abstract@box
 
@@ -1526,7 +1526,7 @@
 \setattribute[default]{keyword}{language}{english}
 
 %  \keyword@class-> KWD
-%  \keyword@KWD  -> AMS 2000... 
+%  \keyword@KWD  -> AMS 2000...
 
 %\setattribute{keyword}{language}{french}
 
@@ -1560,8 +1560,8 @@
   \DeclareRobustCommand*\kwd{\@ifnextchar[\@kwd{\@kwd[\kwd@sep]}}%
 
   \def\@kwd[#1]#2{%
-  \ifx.#2.\else\expandafter\gdef\csname @\keyword@class\endcsname{}\fi%  
-  \unskip#1{#2}\if@firstkeywordinlist\addto@keywords@list{#2}\@firstkeywordinlistfalse\else\addto@keywords@list{, #2}\fi\let\kwd@sep\sep}%  
+  \ifx.#2.\else\expandafter\gdef\csname @\keyword@class\endcsname{}\fi%
+  \unskip#1{#2}\if@firstkeywordinlist\addto@keywords@list{#2}\@firstkeywordinlistfalse\else\addto@keywords@list{, #2}\fi\let\kwd@sep\sep}%
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% BACKMATTER
 
@@ -1694,7 +1694,7 @@
 }
 
   \def\@appsectionnostar#1{%
-     \ifx.#1.% 
+     \ifx.#1.%
        \def\section@numbersep{}\old@section[\appendixname\ \thesection]{}%
      \else%
        \def\section@numbersep{:}\old@section{#1}%
@@ -1777,8 +1777,8 @@
      \addtolength\numberlines@box@skip{5\p@}
    %
      \setbox\numberlines@box\vtop to\textheight{%
-       \parindent\z@    
-       \vskip\z@   
+       \parindent\z@
+       \vskip\z@
        \@tempcnta=0
        \@tempdima=\z@
        \loop

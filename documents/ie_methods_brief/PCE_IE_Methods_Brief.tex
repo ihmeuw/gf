@@ -219,7 +219,7 @@ The purpose of this document is twofold:
 
 \begin{enumerate}
   \item To explain, in advance, the analytical approach which we have selected for impact evaluation, with the goals of methods improvement through feedback, transparency, and formal demonstration of the robustness (both strengths and limitations) of the methods. There are many aspects of this approach which I believe are as robust as possible, although the overall study design is weak.
-  \item To lay out a "road map" of how we can accomplish a task as daunting as an impact evaluation of the Global Fund in 2 years. To detail (more) precisely how this can be done.
+  \item To lay out a ``road map'' of how we can accomplish a task as daunting as an impact evaluation of the Global Fund in 2 years. To detail (more) precisely how this can be done.
 \end{enumerate}
 
 
@@ -227,15 +227,15 @@ The purpose of this document is twofold:
 % Overview
 \section{Overview}
 % it's mosty just measuring lots of indicators
-The basic approach to this impact evaluation is simply to measure many separate indicators, then measure their correlation. Through impact evaluation frameworks (i.e. "results chains") and thematic frameworks, those indicators (and more) are outlined in specific detail. The remainder of the impact evaluation is to identify the appropriate indicators measure correlation between, and do so while controlling for confounding (see \textit{Worked Example} section below). \\
+The basic approach to this impact evaluation is simply to measure many separate indicators, then measure their correlation. Through impact evaluation frameworks (i.e. ``results chains'') and thematic frameworks, those indicators (and more) are outlined in specific detail. The remainder of the impact evaluation is to identify the appropriate indicators measure correlation between, and do so while controlling for confounding (see \textit{Worked Example} section below). \\
 
 % majority of effort is to ensure that our data produce a valid measure of the quantity of interest
-The majority of the complexity and effort required to accomplish this task is to ensure that the data we use actually produce a valid measure of the quantity of interest. Techniques such as data triangulation (see Section \ref{triangulation}), model-based geostatistics (see Section \ref{mbg}), outlier detection and multiple imputation (see Section \ref{data_processing}), will be applied selectively to enhance that measurement validity (see \textit{Further Details on Data Processing}, \textit{Further Details on Data Triangulation} and \textit{Further Details on Model-Based Geostatistics}). Special attention is given to resource tracking to validly measure inputs (see \textit{Further Details on Resource Tracking}).  \\
+The majority of the complexity and effort required to accomplish this task is to ensure that the data we use actually produce a valid measure of the quantity of interest (e.g. that case notifications reflect population incidence). Techniques include data triangulation (see Section \ref{triangulation}), model-based geostatistics (see Section \ref{mbg}), outlier detection, and multiple imputation (see Section \ref{data_processing}), will be applied selectively to enhance the measurement validity. Special attention is given to resource tracking to accurately measure inputs (see \textit{Further Details on Resource Tracking}).  \\
 
 % controls are critical for the impact analysis. some are hard to come by like non-GF expenditure, some will have stronger correlation with GF expenditure than the output itself because endogeneity
-The controls are especially critical for the impact analysis (see Section \ref{hypothesis}). Some other variables are expected to have a stronger correlation with both expenditure and outputs than the correlation between expenditure and outputs itself, and without careful attention to them, this analysis will fail to measure what it intends to measure. The basic approach of "measuring many indicators" also includes covariates and controls. \\
+The controls are especially critical for the impact analysis (see Section \ref{hypothesis}). The basic approach of ``measuring many indicators'' also includes measuring covariates and controls that are not necessarily the indicators of interest, but are essential the measuring the correlation between expenditure and outputs. \\
 
-Finally, it is essential that the indicators are measured independently. That is to say that the measurement approach for a specific indicator does not use any of its preceding indicators (in the results chain) in the process. This helps ensure that the correlations measured between indicators are reflective of the theorized causal pathways, not endogeneity in measurement.
+Finally, it is essential that the indicators are measured independently. That is to say that the measurement approach for a specific indicator does not use any of its preceding indicators (in the results chain) in the process. This will help ensure that the correlations measured between indicators are reflective of the theorized causal pathways, not endogeneity in measurement.
 
 % ------------------------------------------------------------------------------
 % Background
@@ -268,10 +268,10 @@ We assume that, conditional on need, Global Fund investments are exogenous to he
 \section{Basic Outputs Model}
 
 % the form of the model
-The central model for measuring the contribution of Global Fund inputs to health systems outputs is a linear model. The precise functional form of the model will be selected to be fit for purpose given the distribution of the output data. In theory, the characteristics of typical output data are that they are integer (whole numbers), over-disbursed (requiring both a mean and variance parameter to describe their distribution), heteroskedastic (different variance at different levels of a given explanatory variable), and temporally-autocorrelated (similar to itself in previous time points). For these reasons, the model is (arguably) most appropriately fit as a generalized linear mixed model (GLMM) in the negative binomial family. For simplicity, I will avoid model notation that explicitly represents a negative binomial GLMM, in order to focus attention on the variables and the level at which they're measured (indexed). \\
+The central model for measuring the contribution of Global Fund inputs to health systems outputs is a linear model. The precise functional form of the model will be selected to be fit-for-purpose given the distribution of the output data. In theory, the characteristics of typical output data are that they are integer (whole numbers), over-disbursed (requiring both a mean and variance parameter to describe their distribution), heteroskedastic (different variance at different levels of a given explanatory variable), and temporally-autocorrelated (similar to itself in previous time points). For these reasons, the model is (arguably) most appropriately fit as a generalized linear mixed model (GLMM) in the negative binomial family. For simplicity, I will avoid model notation that explicitly represents a negative binomial GLMM, in order to focus attention on the variables and the level at which they're measured (i.e. indexed). \\
 
 % principle of the model
-Measurement of the Global Fund contribution to outputs will rely on the co-variance of outputs and expenditure along three dimensions: space, time and activity. In other words, investments by the Global Fund focus on different interventions in different places, and change from year to year, and so do outputs. If the hypothesis being tested is correct, we would expect to observe changes in health systems outputs that coincide with changes in investments along those three dimensions. As noted already, that coincidence alone is not expected to reflect the Global Fund's contribution, but rather the coincidence that happened apart from the correlation that other resources and burden of disease have with outputs. That implies the following regression:
+Measurement of the Global Fund contribution to outputs will rely on the co-variance of outputs and expenditure along three dimensions: space, time and activity. In other words, investments by the Global Fund focus on different interventions in different places, and change from year to year, and so do outputs. If the hypothesis being tested is correct, we would expect to observe changes in health systems outputs that coincide with changes in investments along those three dimensions (space, time and activity). As noted already, the coincidence between changes in outputs and changes in investments alone is not expected to reflect the Global Fund's contribution, but rather the coincidence that happened apart from the correlation that other resources and burden of disease have with outputs. That implies the following regression:
 
 % the model
 \begin{equation} \label{basic_model}
@@ -279,14 +279,14 @@ O_{jti} = \beta_1 E^{gf}_{jti} + \beta_2 E^{\neg gf}_{jti} + \beta_3 I_{jt}
 \end{equation}
 
 % explanation of notation
-In this formula, $j$ indexes subnational areas (provinces/ departments, districts/municipalities or otherwise), $t$ indexes time (years, quarters, or months) and $i$ indexes intervention categories, defined by the Modular Framework. $O$ represents counts of health systems outputs, $E$ represents expenditure either by the Global Fund ($^{gf}$) or other sources ($^{\neg gf}$), and $I$ represents incidence of the disease for which interventions were designed. The $\beta$ terms are coefficients (correlations) to be estimated from the data using maximum likelihood estimation (or similar). This model will primarily be fit separately by disease.\\
+In this formula, $j$ indexes subnational areas (provinces/ departments, districts/municipalities or otherwise), $t$ indexes time (years, quarters, or months) and $i$ indexes intervention categories, as defined by the Global Fund's Modular Framework. $O$ represents counts of health systems outputs, $E$ represents expenditure either by the Global Fund ($^{gf}$) or other sources ($^{\neg gf}$), and $I$ represents incidence of the disease for which interventions were designed. The $\beta$ terms are coefficients (correlations) to be estimated from the data using maximum likelihood estimation (or similar). This model will primarily be fit separately by disease.\\
 
 % interpretation
-The coefficient $\beta_1$ therefore measures the correlation between Global Fund investment and outputs, controlling for other investments and disease burden. Under the assumptions of the Theory of Change and Impact Frameworks (detailed elsewhere), this correlation represents the contribution of the Global Fund to those outputs.
+The coefficient $\beta_1$ therefore measures the correlation between Global Fund investment and outputs, controlling for other investments and disease burden. Under the assumptions of the PCE Theory of Change and Impact Frameworks (detailed elsewhere), this correlation represents the contribution of the Global Fund to those outputs.
 
 % extension to RSSH
 \subsection{Extension to RSSH}
-In evaluating the contribution of catalytic and system-wide Global Fund investments (such as investments to strengthen resilient and sustainable systems for health, abbreviated RSSH), an additional layer of controls may be necessary. This is because such investments are intended to operate in addition to, or synergistically with, other program areas, not to result in outputs on their own.[CITE] % CITATION NEEDED
+In evaluating the contribution of catalytic and system-wide Global Fund investments (such as investments to strengthen resilient and sustainable systems for health (RSSH)), an additional layer of controls may be necessary. This is because such investments are intended to operate in addition to, or synergistically with, other program areas, not to result in outputs on their own.[CITE] % CITATION NEEDED
  Essentially, this amounts to controlling for Global Fund spending from programs other than just RSSH as well:
 
 % RSSH model
@@ -298,7 +298,7 @@ In evaluating the contribution of catalytic and system-wide Global Fund investme
 % \end{equation}
 
 % note about using budget as an ITT
-\textit{Technical Note: Although expenditure from the Global Fund is the intervention of interest, the above model will also be explored using the planned budget as a proxy for expenditure. The rationale for doing so is to avoid potential bias from differential absorption. Similar to the "intent to treat" principle from a randomized control trial, the drivers of actual execution of funds are more diverse and poorly-understood than the drivers of planned budgeting, and thus more challenging to control. To measure the correlation between actual expenditure and outputs would also be to measure the contribution of those absorption-driving factors, and would weaken the interpretability of the coefficient of interest. While both budget and expenditure will be explored, budget will be considered the primary explanatory variable.}
+\textit{Technical Note: Although expenditure from the Global Fund is the intervention of interest, the above model will also be explored using the approved budget as a proxy for expenditure. The rationale for doing so is to avoid potential bias from differential absorption. Similar to the ``intent to treat'' principle from a randomized control trial, the drivers of actual execution of funds are more diverse and poorly-understood than the drivers of planned budgeting, and thus more challenging to control. To measure the correlation between actual expenditure and outputs would also be to measure the contribution of those absorption-driving factors, and would weaken the interpretability of the coefficient of interest. While both budget and expenditure will be explored, budget will be considered the primary explanatory variable.}
 
 
 % ------------------------------------------------------------------------------
@@ -312,31 +312,48 @@ The basic outputs model has a natural relationship with value for money (VfM) as
 
 The definition of the coefficient $\beta_1$ in formula \ref{basic_model} is the average observed increase in outputs per unit increase in expenditure. $\beta_1$ is also simply stated as the inverse of cost per output (i.e. $cost\, per\, output = \frac{1}{\beta_1}$). In this way, the core model for impact evaluation is the same as the core model for VfM assessment. \\
 
-The key to using the impact evaluation model for VfM assessment is additional interpretation it. As allocation efficiency is among the critical topics for evaluation, estimates from the core model can be produced among counterfactual scenarios, comparing alternate mixes of interventions and their expected relationship with output.
+The key to using the impact evaluation model for VfM assessment is additional interpretation of it. As allocation efficiency is among the critical topics for the PCE, estimates from the core model can be produced among counterfactual scenarios, comparing alternate mixes of interventions and their expected relationship with output.
 
 
 % ------------------------------------------------------------------------------
 % Worked Example
+\includepdf{example_table.pdf}
+
+\clearpage
+
+
 \section{Worked Example}
+
+
 This section provides an example of the model above, using simulated (i.e. completely fabricated) data. It is intended to provide a tangible demonstration of the analysis, not (necessarily) to reflect real numbers perfectly. \\
 
-Table 1 displays some example data. This simulated dataset contains information on three interventions: Differentiated HIV testing services, Differentiated ART service delivery and Male circumcision. These are HIV interventions selected from the Modular Framework. The table depicts these interventions implemented in four hypothetical geographic areas (numbered 1-4), which can be thought of as districts, municipalities etc. Each of these intervention-areas has annual measurements from 2012 to 2015. Finally each intervention is labeled with  an associated output indicator: HIV tests conducted, ARV dosese administered and Circumcisions administered. An "estimate" of HIV incidence is displayed in the fifth column. Note that incidence does not vary between interventions, only area-years. The final three columns in Table 1 display simulated expenditure from non-Global Fund sources, expenditure from the Global Fund, and Output (units of the corresponding indicator consumed). \\
+Table 1 displays some example data. This simulated dataset contains information on three interventions: Differentiated HIV testing services, Differentiated ART service delivery and Male circumcision. These are HIV interventions selected from the Modular Framework. The table depicts these interventions implemented in four hypothetical subnational areas (numbered 1-4), which can be thought of as districts, municipalities, etc. Each of these intervention-areas has annual measurements from 2012 to 2015. Finally, each intervention is labeled with  an associated output indicator: HIV tests conducted, ARV doses administered and Circumcisions administered. An ``estimate'' of HIV incidence is displayed in the fifth column. Note that incidence does not vary between interventions, only area-years. The final three columns in Table 1 display simulated expenditure from non-Global Fund sources, expenditure from the Global Fund, and Output (units of the corresponding indicator consumed). \\
 
-These data have been constructed in such a way that Global Fund expenditure is positively correlated with outputs from each intervention, according to the theorized data generating process. The figure below demonstates the correlation. \\
+These data have been constructed in such a way that Global Fund expenditure is positively correlated with outputs from each intervention, according to the theorized data generating process. Figure \ref{fig1} demonstates the correlation. \\
 
-\hspace*{-.3in}
-\includegraphics[scale=.4]{graph1.pdf} \\
+\begin{figure}[h]
+  \advance\leftskip-.25in
+  \caption{\textmd{Example Correlation between Output and Expenditure}}
+  \includegraphics[scale=.4]{graph1.pdf} \\
+  \label{fig1}
+\end{figure}
 
-Non-Global Fund expenditure, and even moreso incidence also have positive correlations with outputs. Importantly, strong correlations are also expected to exist between the two sources of expenditure, and between expenditure and incidence, since Global Fund investments are intended to be coordinated with other spending, and both are intended to target areas of greatest need. The consequence of this is that, controlling for incidence (or expenditure) yields a less-confounded correlation between expenditure and output, as shown in Figure 2:
+Non-Global Fund expenditure, and even more so incidence also have positive correlations with outputs. Importantly, strong correlations are also expected to exist between the two sources of expenditure, and between expenditure and incidence, since Global Fund investments are intended to be coordinated with other spending, and both are intended to target areas of greatest need. The consequence of this is that, controlling for incidence (or expenditure) yields a less-confounded correlation between expenditure and output, as shown in Figure \ref{fig2}.
 
-\hspace*{-.3in}
-\includegraphics[scale=.4]{graph2.pdf} \\
+\begin{figure}[h]
+  \advance\leftskip-.1in
+  \caption{\textmd{Correlation Stratified by Incidence Quantile}}
+  \includegraphics[scale=.4]{graph2.pdf} \\
+  \label{fig2}
+\end{figure}
 
 Here, the correlation between expenditure and output has been binned by quantiles of incidence. From this figure, the strong correlation between incidence and output is clear, as the higher quantiles have generally higher output. The other result of displaying the correlation in this way however is a tighter relationship between expenditure and output within each quantile. While it's entirely possible that the opposite effect could be true with real data (i.e. a weaker correlation after controlling for incidence), the relationship between incidence and expenditure is likely to be important for the primary correlation of interest. \\
 
-As a result of these characteristics of the data and theory, a regression that controls for each of the aforementioned correlates of output is necessary, as displayed in equation \ref{basic_model} above. Fitting an ordinary negative binomial regression (in this case not GLMM, although it was mentioned above) yeilds the following estimates of correlations:
+As a result of these characteristics of the data and theory, a regression that controls for each of the aforementioned correlates of output is necessary, as displayed in equation \ref{basic_model} above. Fitting an ordinary negative binomial regression (in this case not GLMM, although it was mentioned above) yeilds the estimates of correlations shown in Table \ref{regtable}.
 
 \begin{table}[ht]
+  \caption{Regression Results}
+  \label{regtable}
 \centering
 \begin{tabular}{rrrrr}
   \hline
@@ -350,11 +367,7 @@ As a result of these characteristics of the data and theory, a regression that c
 \end{tabular}
 \end{table}
 
-In other words, per dollar increase in Global Fund expenditure (as an average across areas, years and interventions), outputs increase on average $e^{0.0015}$, or 1.002 units, once other expenditure and incidence are taken into account. In this hypothetical data, this is a stronger correlation than other expenditure, but weaker than incidence.
-
-\clearpage
-
-\includepdf{example_table.pdf}
+In other words, per dollar increase in Global Fund expenditure, outputs increase on average $e^{0.0015}$, or 1.002 units as an average across areas, years and interventions (once other expenditure and incidence are taken into account). In this hypothetical data, this is a stronger correlation than other expenditure, but weaker than incidence.
 % \csvautotabular{example.csv}
 % \input{example_table.tex}
 % \newpage
@@ -373,24 +386,25 @@ This approach deterministically multiplies the intervention fractions from one d
 \widehat{E_{jti}}=E_{jtm}*\frac{E_{ti}}{E_{tm}}
 \end{equation}
 
-Where $E$ represents investment from any source ($\hat{E}$ being an estimate of $E$) and $m$ indexes modules (from the Modular Framework), within which interventions are nested (in a collectively-exhaustive way). The fraction $\frac{E_{ti}}{E_{tm}}$ is computed \textit{by module}, such that the sum of this fraction across the interventions of a single module is \%100 ($\sum \frac{E_{ti_{m\in M}}}{E_{tm=M}}=1$). The purpose of this approach is to utilize data sources with different strengths in combination. The PCE Inception Phase uncovered that certain country-level data sources often contain a high level of detail about subnational areas ($j$), but little detail about interventions, typically only the corresponding modules ($m$). global-level data sources however often offer a high level of detail about interventions ($i$), but little, if any, detail about subnational areas. Hence, the fraction in equation \ref{rt_model1} can be accurately measured using global-level data, while $E_{jtm}$ can be accurately measured using country-level data. By combining the two, we estimate the details of interventions within subnational areas.\\
+Where $E$ represents investment from any source ($\hat{E}$ being an estimate of $E$) and $m$ indexes modules (from the Modular Framework), within which interventions are nested (in a collectively-exhaustive way). The fraction $\frac{E_{ti}}{E_{tm}}$ is computed \textit{by module}, such that the sum of this fraction across the interventions of a single module is \%100 ($\sum \frac{E_{ti_{m\in M}}}{E_{tm=M}}=1$). The purpose of this approach is to utilize data sources with different strengths in combination. The PCE Inception Phase uncovered that certain country-level data sources often contain a high level of detail about subnational areas ($j$), but little detail about interventions, typically only the corresponding modules ($m$). Global-level data sources however often offer a high level of detail about interventions ($i$), but little, if any, detail about subnational areas. Hence, the fraction in equation \ref{rt_model1} can be accurately measured using global-level data, while $E_{jtm}$ can be accurately measured using country-level data. By combining the two, we estimate the details of interventions within subnational areas.\\
 
-This approach relies on the assumption that investment is allocated with the same proportions within each module at every subnational area. This is likely untrue. One approach toward relaxing this assumption is to attempt to break down the fraction $\frac{E_{ti}}{E_{tm}}$ (i.e. the global-level data) into subnational areas as well, defined by the geographic regions covered by sub-recipients. In this way, the fraction in equation \ref{rt_model1} can be computed specific to broad geographic areas at the least, allowing a more geographically-precise apportioning of interventions within modules.
+This approach relies on the assumption that investment is allocated with the same proportions within each module at every subnational area. This is likely untrue. One approach toward relaxing this assumption is to attempt to break down the fraction $\frac{E_{ti}}{E_{tm}}$ (i.e. the global-level data) into subnational areas as well, defined by the geographic regions where interventions are operated by sub-recipients. In this way, the fraction in equation \ref{rt_model1} can be computed specific to broad geographic areas at the least, allowing a more geographically-precise apportioning of interventions within modules. Another limitation of this approach is data availability. It is unlikely that national-level data will cover the entire time period spanned by global-level data, leaving gaps in the ultimate estimates of $E_{jti}$.
 
 \subsection{Stochastic, Cost-Based Model}
 
 This approach uses a statistical model to predict expenditure using supply-chain data and costing estimates, treating resource tracking data as predictor variables:
 
-\begin{align}
+\begin{equation}
+  \label{costmodel}
   D_{jti} * \widehat{C_i} = \beta_1 E_{jtm} + \beta_2 E_{ti} + \epsilon
   % or should it be this?
   % D_{jti} = \beta_1 E_{jtm} + \beta_2 E_{ti} + \epsilon \\
   % \widehat{E_{jti}} = \widehat{D_{jti}} * \widehat{C_i}
-\end{align}
+\end{equation}
 
 As in the previous section, $E_{jtm}$ is a quantity that can be measured from country-level data sources, and $E_{ti}$ can be measured from global-level data sources. The two of these can be thought of as strong predictors of the distribution of commodities $D_{jti}$, which is measurable through other data sources and can also be indexed by intervention $i$. By multiplying the estimated unit cost of a commodity ($\widehat{C_i}$) by the distribution of that commodity, the fitted values from regression formula are an estimator of the quantity of interest, $\widehat{E_{jti}}$. \\
 
-This approach has limitations as well. For one, we only have $D$ for a subset of all interventions (and probably always will). To work around this, we would fit the model and then use out-of-sample prediction to estimate $\hat{E}$ for all intervention categories. \\
+This approach has limitations as well. For one, we only have $D$ for a subset of all interventions (and probably always will). To work around this, we would fit the model and then use out-of-sample prediction to estimate $\hat{E}$ for all intervention categories. Doing so would rely on the assumption that the relationship between expenditure and distribution for observable interventions is reflective of the relationship for unobserved interventions, which may not be true. However, the addition of more covariates in equation \ref{costmodel} could relax this assumption.
 
 % ------------------------------------------------------------------------------
 % Further Details on Triangulation
