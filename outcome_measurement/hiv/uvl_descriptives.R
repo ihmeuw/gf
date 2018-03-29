@@ -180,6 +180,26 @@ coordinates <- merge(coordinates, ratio_table, by="id", all.x=TRUE)
 coordinates_year <- merge(coordinates_year, ratio_year, by=c('id', 'year'), all.x=TRUE)
 
 # ----------------------------------------------
+# create annual graphs on the same page 
+
+# create a data set shape long and add dates to both
+uvl_1 <- uganda_vl[, .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
+                       total_results=sum(total_results),
+                       dbs_samples=sum(dbs_samples), valid_results=sum(valid_results), suppressed=sum(suppressed)), 
+                       by=.(sex, month, year)]
+
+# reshape long
+idVars <- c("month", "year", "sex")
+uvl_1 <- melt(uvl_1, id.vars=idVars)
+View(uvl_1)
+
+# label the variables for graph titles and put the graphs in an intuitive order
+uvl_1$variable <- factor(uvl_1$variable, 
+                            levels=c("patients_received", "samples_received", "dbs_samples",  "total_results", "valid_results", "suppressed"), 
+                            labels=c("Patients", "Samples Received","DBS Samples", "Total Results", "Valid Results", "Suppressed"))
+
+
+# ----------------------------------------------
 # table for country-level graphs to add to PDF
 
 table_1 <- uganda_vl[,
@@ -221,6 +241,38 @@ ggplot(table_2, aes(x=factor(month), y=facilities_report, col=factor(year), grou
   labs(title = "Total facilities reporting viral load test results by month, year", 
        caption="Source: Uganda VL Dashboard", colour="Year") +
       scale_color_manual(values=graph_colors)
+
+# ---------------
+# annual variable comparisons
+
+ggplot(uvl_1[year==2014], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+  geom_point() + 
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable) +
+  labs(x="Month", y="Count", title="2014") + theme_bw()
+
+ggplot(uvl_1[year==2015], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+  geom_point() + 
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable) +
+  labs(x="Month", y="Count", title="2015") + theme_bw()
+
+ggplot(uvl_1[year==2016], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+  geom_point() + 
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable) +
+  labs(x="Month", y="Count", title="2016") + theme_bw()
+
+
+ggplot(uvl_1[year==2017], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+  geom_point() + 
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable) +
+  labs(x="Month", y="Count", title="2017") + theme_bw()
+
+ggplot(uvl_1[year==2018], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+
+# ---------------
 
 # patients received by month, year
 ggplot(table_1, aes(x=factor(month), y=patients_received, col=factor(year), group=year)) + 
@@ -270,7 +322,7 @@ ggplot(table_1, aes(x=factor(month), y=valid_samples_ratio, col = factor(year), 
 # total suppressed persons by month, year
 ggplot(table_1, aes(x=factor(month), y=suppressed, col=factor(year), group=year)) + 
   geom_point(size=2.5) + geom_line(alpha=0.8) + theme_bw() +
-  xlab("Month") + ylab("Total suppressed patients") + 
+  xlab("Month") + ylab("Virally suppressed patients") + 
   labs(title = "Total virally suppressed patients by month, year", 
        caption="Source: Uganda VL Dashboard", colour="Year") +
   scale_color_manual(values=graph_colors)
@@ -303,8 +355,9 @@ ggplot(table_1, aes(x=factor(year), y=valid_results, fill='Not Suppressed')) +
   labs(title = "Virally suppressed patients", caption="Source: Uganda VL Dashboard")
 
 
-# -------------------
-# maps to export
+#----------------------
+# maps
+
 
 # suppression ratio for all years 
 ggplot(coordinates, aes(x=long, y=lat, group=group, fill=as.numeric(suppression_ratio))) + 
@@ -354,7 +407,7 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(facilit
   theme_void() +
   labs(title="Percentage of total facilities reporting on viral suppression, Uganda", caption="Source: Uganda Viral Load Dashboard", 
        fill="Percentage of facilities reporting") +
-  theme(plot.title=element_text(vjust=-1.5), plot.caption=element_text(vjust=6)) 
+  theme(plot.title=element_text(vjust=-0.5), plot.caption=element_text(vjust=6)) 
 
 
 # -------------------
@@ -437,6 +490,77 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(suppres
 dev.off()
 
 # -----------------
+
+
+# ----------------------------------------------
+# check for missing data by district and facility
+# create plots by district by looping over all districts, export as a PDF
+
+#----------------------
+# district
+
+# store identifiers
+idVars <- c("district_id", "district_name", "sex", "month", "year")
+
+# create a long data set with totals by district
+uvl_dist <- uganda_vl[,
+                      .(total_samples = sum(samples_received), total_dbs=sum(dbs_samples), total_patients = sum(patients_received),  
+                        total_results=sum(total_results), valid_results = sum(valid_results), total_suppressed = sum(suppressed)),
+                      by=idVars]
+
+# reshape indicators long for district data
+uvl_dist <- melt(uvl_dist, id.vars=idVars)
+
+# add date variable
+uvl_dist[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+
+# label the variables for graph titles and put the graphs in an intuitive order
+uvl_dist$variable <- factor(uvl_dist$variable, 
+                            levels=c("total_samples", "total_dbs", "total_patients", "total_results", "valid_results", "total_suppressed"), 
+                            labels=c("Samples Received","DBS Samples", "Patients","Total Results", "Valid Results", "Suppressed"))
+
+# single test graphs
+f=11
+name <- unique(uvl_dist[district_id==f]$district_name)
+ggplot(uvl_dist[district_id==f], aes(y=value, x=date, color=sex)) + 
+  geom_point() + 
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable, scales='free_y') +
+  xlab("Date") + ylab("Count") + theme_bw() + labs(title=name)
+
+
+# -----------
+# loop over all districts and export as a PDF
+# prints samples received, dbs samples, patients, results, valid results, and suppressed by sex, date for each district
+
+pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/uvl_descriptives.pdf', height=6, width=9)
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+}
+
+dev.off()
+
+list_of_plots = NULL
+i=1
+for(f in unique(uvl_dist$district_id)) {
+  # look up district name
+  name <-  unique(uvl_dist[district_id==f]$district_name)
+  
+  # make your graph
+  
+  list_of_plots[[i]] <- ggplot(uvl_dist[district_id==f], aes(y=value, x=date, color=sex)) + 
+    geom_point() + 
+    geom_line(alpha=0.5) + 
+    facet_wrap(~variable, scales='free_y') + labs(title=name, x="Date", y="Count") + theme_bw()
+  
+  i=i+1
+  
+}
+
+# --------------------
+
+
+
 
 
 
