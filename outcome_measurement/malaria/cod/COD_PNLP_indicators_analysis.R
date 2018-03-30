@@ -36,22 +36,22 @@
     # csv files were produced by prep_COD_Malaria_data_function.R
     dt <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Long",".csv")) 
     dt_wide <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Wide",".csv")) 
-    dt2 <- fread(paste0(dir,"/", "COD_PNLP_Data_Interventions_Long",".csv"))
-    
+
   # output files:
-    # exports all graphs to to a pdf document here:
-    # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs.pdf
+    # exports all exports all health zone graphs to to a pdf document here:
+    # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs all Indicators.pdf
+    
+    # exports aggregate graphs to a pdf document here: 
+    # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs Aggregate Indicators Data.pdf
 # ----------------------------------------------
 
-    
-# ----------------------------------------------        
-# Graph each INDICATOR for each health zone over time
-    
+
+# ----------------------------------------------    
+# Set up:
   # convert date column to Date class so x-axis be uniform & chronological
     dt[, date := as.Date(date)]
     dt_wide[, date := as.Date(date)]
     dt[, value := as.numeric(value)]
-    dt_wide[, value := as.numeric(value)]
   
     indicator_names <- c(
       `newCasesMalariaMild` = "Incidence of Mild Malaria",
@@ -61,14 +61,18 @@
       `malariaDeaths` = "Number of Deaths from Malaria"
     )
 # ----------------------------------------------
-# ----------------------------------------------
+    
+    
+# ----------------------------------------------    
+# ----------------------------------------------        
+# Graph each INDICATOR for each health zone over time
+# ----------------------------------------------    
   # function to develop graphs for each health zone  
     makeGraph <- function(hz){
       g <- ggplot(dt[health_zone==hz & subpopulation != "pregnantWomen"], aes(date, value, color = subpopulation, ymin=0))
     
       g + geom_point(aes(shape=formula_used)) + geom_line() + theme_bw() + ggtitle(hz) + scale_shape_manual(values=c(16,1)) + facet_wrap("indicator", scales="free_y", labeller = as_labeller(indicator_names))
     }
-# ----------------------------------------------
 # ---------------------------------------------- 
 # Export Graphs to a PDF
     
@@ -86,40 +90,41 @@
     }
     dev.off()
 # ---------------------------------------------- 
+# ---------------------------------------------- 
     
 
+# ----------------------------------------------     
 # ---------------------------------------------- 
-  
-    
-    # vector of all indicators:
-    indicatorInput <- dt[["indicator"]]
-    indicatorInput <- unique(indicatorInput)
-    
-    
 # Graph the aggregate data for each indicator and subpopulation by province for each month
-    test_table <- dt_wide[, .(tot_mal_deaths=sum(malariaDeaths, na.rm=TRUE), tot_mal_deaths=sum(malariaDeaths, na.rm=TRUE)), by =.(date, province)]
+# ---------------------------------------------- 
+    # vector of all ndicators:
+      indicatorInput <- dt[["indicator"]]
+      indicatorInput <- unique(indicatorInput)
+    
+    # need SD cols in wide format
+    # test_table <- dt_wide[, .(tot_mal_deaths=sum(malariaDeaths, na.rm=TRUE), tot_mal_deaths=sum(malariaDeaths, na.rm=TRUE)), by =.(date, dps)]
     
     # sum everything at the province level
-    test_table2 <- dt[, lapply(.SD, sum), by=c('date', 'province', 'subpopulation', 'indicator'), .SDcols='value']
-    
-    for(i in indicatorInput) {
-      aggGraph <- ggplot(test_table, aes_string(x='date', y=i, color = 'province')) + geom_point() + geom_line() 
-      aggGraph <- aggGraph + theme_bw() + ggtitle("Aggregate Data by Province") + labs(x= "Date", y="Deaths from Malaria", color= "Provinces")
-    }
-    
-    aggTable <- dt[, .(value = sum(value, na.rm=TRUE)), by =.(date, province, indicator, subpopulation)] 
-    
-    
-    aggGraph <- function(indicatorName){
+      #test_table <- dt[, lapply(.SD, sum), by=c('date', 'dps', 'indicator', 'subpopulation'), .SDcols='value']
+      test_table2 <- dt[, .(aggValue = sum(value, na.rm=TRUE)), by=c('date', 'dps', 'indicator', 'subpopulation')]
       
-      
-        
-      aggGraph <- ggplot(test_table, aes(x=date, y=yValue, color = province)) + geom_point() + geom_line() 
-      aggGraph <- aggGraph + theme_bw() + ggtitle("Aggregate Data by Province") + labs(x= "Date", y="", color= "Provinces") 
-            #aggGraph <- aggGraph + facet_wrap("indicator", scales="free_y", labeller = as_labeller(indicator_names))
-    }
+    # 
+    # for(i in indicatorInput) {
+    #   aggGraph <- ggplot(test_table2, aes_string(x='date', y= aggValue, color = 'dps')) + geom_point() + geom_line() 
+    #   aggGraph <- aggGraph + theme_bw() + ggtitle("Aggregate Data by DPS") + labs(x= "Date", y="", color= "DPS")
+    # }
+    # 
+    # aggTable <- dt[, .(value = sum(value, na.rm=TRUE)), by =.(date, province, indicator, subpopulation)] 
+    # 
     
-    for ( i in indicatorInput) { 
-      print(aggGraph(i))
-    }
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Aggregate Indicators Data.pdf", height=6, width=9)
+    for ( i in indicatorInput) {   
+      aggGraphTitle <- indicator_names[i]
+      aggGraph <- ggplot(test_table2[indicator == i], aes(x=date, y=aggValue, color = subpopulation)) + geom_point() + geom_line() 
+      aggGraph <- aggGraph + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + labs(x= "Date", y="Value", color= "Subpopulation") + facet_wrap(~ dps, scales="free_y") 
+      aggGraph <- aggGraph + scale_color_manual(labels = c("Ages 5 and Older", "Pregnant Women", "Ages 4 and Under"), values = c("steelblue4", "palegreen4", "steelblue1"))
+      print(aggGraph)
+      }
+    dev.off()
 # ----------------------------------------------     
+# ---------------------------------------------- 
