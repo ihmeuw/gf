@@ -219,9 +219,10 @@ The purpose of this document is twofold:
 
 \begin{enumerate}
   \item To explain, in advance, the analytical approach which we have selected for impact evaluation, with the goals of methods improvement through feedback, transparency, and formal demonstration of the robustness (both strengths and limitations) of the methods. There are many aspects of this approach which I believe are as robust as possible, although the overall study design is weak.
-  \item To lay out a ``road map'' of how we can accomplish a task as daunting as an impact evaluation of the Global Fund in 2 years. To detail (more) precisely how this can be done.
+  \item To lay out a ``road map'' of how we can accomplish a task as daunting as an impact evaluation of the Global Fund in 2 years. To detail (more) precisely how this can be done.\\
 \end{enumerate}
 
+The intended audience for this document is first the PCE consortium of IHME, PATH, CIESAR, IDRC and PATH DRC. However, (perhaps with some editing) it could be shared across consortia to enhance synthesis, and also with the TERG and TERG secretariat.
 
 % ------------------------------------------------------------------------------
 % Overview
@@ -230,7 +231,7 @@ The purpose of this document is twofold:
 The basic approach to this impact evaluation is simply to measure many separate indicators, then measure their correlation. Through impact evaluation frameworks (i.e. ``results chains'') and thematic frameworks, those indicators (and more) are outlined in specific detail. The remainder of the impact evaluation is to identify the appropriate indicators measure correlation between, and do so while controlling for confounding (see \textit{Worked Example} section below). \\
 
 % majority of effort is to ensure that our data produce a valid measure of the quantity of interest
-The majority of the complexity and effort required to accomplish this task is to ensure that the data we use actually produce a valid measure of the quantity of interest (e.g. that case notifications reflect population incidence). Techniques include data triangulation (see Section \ref{triangulation}), model-based geostatistics (see Section \ref{mbg}), outlier detection, and multiple imputation (see Section \ref{data_processing}), will be applied selectively to enhance the measurement validity. Special attention is given to resource tracking to accurately measure inputs (see \textit{Further Details on Resource Tracking}).  \\
+The majority of the complexity and effort required to accomplish this task is to ensure that the data we use actually produce a valid measure of the quantity of interest (e.g. that case notifications reflect population incidence). Techniques include data triangulation (see Section \ref{triangulation}), model-based geostatistics,[CITE] outlier detection, and multiple imputation (see Section \ref{data_processing}), and will be applied selectively to enhance the measurement validity. Special attention is given to resource tracking to accurately measure inputs (see \textit{Further Details on Resource Tracking}).  \\
 
 % controls are critical for the impact analysis. some are hard to come by like non-GF expenditure, some will have stronger correlation with GF expenditure than the output itself because endogeneity
 The controls are especially critical for the impact analysis (see Section \ref{hypothesis}). The basic approach of ``measuring many indicators'' also includes measuring covariates and controls that are not necessarily the indicators of interest, but are essential the measuring the correlation between expenditure and outputs. \\
@@ -317,6 +318,8 @@ The key to using the impact evaluation model for VfM assessment is additional in
 
 % ------------------------------------------------------------------------------
 % Worked Example
+\clearpage
+
 \includepdf{example_table.pdf}
 
 \clearpage
@@ -380,15 +383,15 @@ The objective of resource tracking is to produce the most valid possible estimat
 
 \subsection{Purely Systematic Model}
 
-This approach deterministically multiplies the intervention fractions from one data source by the area-module counts from another:
+This approach deterministically multiplies the area-module fractions from one data source by the intervention counts from another:
 
 \begin{equation} \label{rt_model1}
-\widehat{E_{jti}}=E_{jtm}*\frac{E_{ti}}{E_{tm}}
+\widehat{E_{jti}}=E_{ti}*\frac{E_{jtm}}{E_{tm}}
 \end{equation}
 
-Where $E$ represents investment from any source ($\hat{E}$ being an estimate of $E$) and $m$ indexes modules (from the Modular Framework), within which interventions are nested (in a collectively-exhaustive way). The fraction $\frac{E_{ti}}{E_{tm}}$ is computed \textit{by module}, such that the sum of this fraction across the interventions of a single module is \%100 ($\sum \frac{E_{ti_{m\in M}}}{E_{tm=M}}=1$). The purpose of this approach is to utilize data sources with different strengths in combination. The PCE Inception Phase uncovered that certain country-level data sources often contain a high level of detail about subnational areas ($j$), but little detail about interventions, typically only the corresponding modules ($m$). Global-level data sources however often offer a high level of detail about interventions ($i$), but little, if any, detail about subnational areas. Hence, the fraction in equation \ref{rt_model1} can be accurately measured using global-level data, while $E_{jtm}$ can be accurately measured using country-level data. By combining the two, we estimate the details of interventions within subnational areas.\\
+Where $E$ represents investment from any source ($\hat{E}$ being an estimate of $E$) and $m$ indexes modules (from the Modular Framework), within which interventions are nested (in a collectively-exhaustive way). The fraction $\frac{E_{jtm}}{E_{tm}}$ is computed \textit{by module}, such that the sum of this fraction across the subnational areas of a single module is \%100 ($\sum \frac{E_{jtm}}{E_{tm}}=1$). The purpose of this approach is to utilize data sources with different strengths in combination. The PCE Inception Phase uncovered that certain country-level data sources often contain a high level of detail about subnational areas ($j$), but little detail about interventions, typically only the corresponding modules ($m$). Global-level data sources however often offer a high level of detail about interventions ($i$), but little, if any, detail about subnational areas. Hence, the fraction in equation \ref{rt_model1} can be accurately measured using country-level data, while $E_{ti}$ can be accurately measured using global-level data. By combining the two, we estimate the details of interventions within subnational areas.\\
 
-This approach relies on the assumption that investment is allocated with the same proportions within each module at every subnational area. This is likely untrue. One approach toward relaxing this assumption is to attempt to break down the fraction $\frac{E_{ti}}{E_{tm}}$ (i.e. the global-level data) into subnational areas as well, defined by the geographic regions where interventions are operated by sub-recipients. In this way, the fraction in equation \ref{rt_model1} can be computed specific to broad geographic areas at the least, allowing a more geographically-precise apportioning of interventions within modules. Another limitation of this approach is data availability. It is unlikely that national-level data will cover the entire time period spanned by global-level data, leaving gaps in the ultimate estimates of $E_{jti}$.
+This approach relies on the assumption that investment is allocated with the same geographic distribution  within every module. This is likely untrue. One approach toward relaxing this assumption is to attempt to break down the number $E_{ti}$ (i.e. the global-level data) into subnational areas as well, defined by the geographic regions where interventions are operated by sub-recipients. In this way, the fraction in equation \ref{rt_model1} can be computed specific to broad geographic areas at the least, allowing a more geographically-precise apportioning of interventions within geographic areas. Another limitation of this approach is data availability. It is unlikely that national-level data will cover the entire time period spanned by global-level data, leaving gaps in the ultimate estimates of $E_{jti}$.
 
 \subsection{Stochastic, Cost-Based Model}
 
@@ -410,23 +413,33 @@ This approach has limitations as well. For one, we only have $D$ for a subset of
 % Further Details on Triangulation
 \section{Further Details on Data Processing} \label{data_processing}
 
-[Outliers] [Imputation] \\
+Two basic data processing steps will be carried out to ensure that we are using valid data to form estimates. The first is systematic outlier screening, the second is multiple imputation. \\
 
-% outliers
+An outlier in this context is an observation (count of outputs, dollar amount budgeted etc.) whose value is anomalously high or low relative to other data and our qualitative understanding of the process that generated the data. Outliers are likely the result of human error or instrument error. While there is no way to confirm an outlier simply by looking at the data, careful examination through a variety of data visualizations and carefully-selected statistical techniques can help identify potential outliers. We will thoroughly vet every data source in this way during descriptive analysis to increase the chance that outliers, if they are at all detectable, can be identified and replaced with missing values. We will only conservatively mark outilers under clear and obvious circumstances. Often, outlier screening will result in no clear outilers. \\
 
-% missing data
-
+Missing data is expected to be present in most data sources however. Through the scale-up of a system, reporting lapses or other system errors, most datasets will have at least some missing values where there realistically should be observed numbers. To rectify this, we will use a statistical technique called multiple impoutation to predict what the missing values may have been. Not only does this approach ``fill in'' missing values with expected values, but it estimates multiple potential values in order to capture our uncertainty about our own predictions. Based on the variability of the actual data, the multiple imputations will vary in a way that is reflective of actual data. Unless circumstances dictate the need for more, we will perform 50 imputations of every missing value. For this purpose we will use standard software which applies an algorithm called bootstrapped expectation-maximization.[CITE AMELIA2]
 
 % ------------------------------------------------------------------------------
 % Further Details on Triangulation
 \section{Further Details on Data Triangulation} \label{triangulation}
-[basic explanation of how to use two or more data sources in combination to produce a stronger estimate of a quantity that they each measure]\\
+Although outlier screening and multiple imputation assist in reducing bias in data, they cannot correct more complex forms of bias such as systematic misclassification and selection bias (also referred to as non-sampling error). In cases where there is expected to be such bias, we will use a technique known as data triangulation or ``cross-walking''.[CITE Ng 2014] Put simply, this technique uses one data source to correct another. \\
 
+Data triangulation is most appropriate in the circumstances where there are two or more data sources that measure a similar quantity, we have some reason to prefer one of the data sources as more accurate, but can identify advantages to making use of all data in order to formulate a better estimate. \\
+
+Data triangulation is done using regression techniques, typically a GLM or GLMM with a family that is selected to be appropriate for the data. The regression is fit using the more accurate data source $O_{preferred}$ as an outcome variable, predicted by the alternative data source(s) $O_{biased}$ in a typical regression equation:
+
+\begin{equation}
+  O_{preferred}=\beta_0 + \beta_1 O_{biased}
+\end{equation}
+
+To correct $O_{biased}$ so that it reflects the unbiased estimate $O_{preferred}$, fitted values $\widehat{O_{preferred}}$ are estimated from the model. \\
+
+The primary challenge in data triangulation is accurately reflecting uncertainty, and more importantly incorporating that uncertainty into the impact evaluation regressions detailed in section \ref{basic_model}. A common approach to this is known as Monte Carlo simulation, whereby many random variants of $\widehat{O_{preferred}}$ are drawn from a multivariate distribution centered around the coefficient vector $\beta$ and distributed according to the variance-covariance matrix estimated by the model. These variants then represent many different estimates of $\widehat{O_{preferred}}$, rather than one mid-point. Subsequent analysis are then performed on each variant separately, with their results summarized using further Monte Carlo simulation. \\
 
 % ------------------------------------------------------------------------------
 % Further Details on Model-Based Geostatistics
-\section{Further Details on Model-Based Geostatistics} \label{mbg}
-[basic explanation of spatial autocorrelation] \\
+% \section{Further Details on Model-Based Geostatistics} \label{mbg}
+% [basic explanation of spatial autocorrelation] \\
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%                                          %%

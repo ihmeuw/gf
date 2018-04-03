@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6350 64-bit) (preloaded format=pdflatex 2017.6.28)  28 MAR 2018 16:24
+This is pdfTeX, Version 3.14159265-2.6-1.40.18 (MiKTeX 2.9.6350 64-bit) (preloaded format=pdflatex 2017.6.28)  2 APR 2018 22:34
 entering extended mode
 **./PCE_IE_Methods_Brief.tex
 (PCE_IE_Methods_Brief.tex
@@ -658,190 +658,216 @@ LaTeX Font Warning: Font shape `OT1/cmss/m/n' in size <24> not available
 
 \address@aff1=\toks32
 
-Underfull \hbox (badness 10000) in paragraph at lines 230--231
+Underfull \hbox (badness 10000) in paragraph at lines 222--223
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 233--234
+Underfull \hbox (badness 10000) in paragraph at lines 231--232
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 236--237
+Underfull \hbox (badness 10000) in paragraph at lines 234--235
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 259--260
+Underfull \hbox (badness 10000) in paragraph at lines 237--238
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 271--272
+Underfull \hbox (badness 10000) in paragraph at lines 260--261
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 272--273
 
  []
 
 
 LaTeX Font Warning: Font shape `OT1/cmss/m/it' in size <8> not available
-(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 272.
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 273.
 
 
 [1{C:/ProgramData/MiKTeX/2.9/pdftex/config/pdftex.map}
 
 
 ]
-Overfull \hbox (9.16315pt too wide) in paragraph at lines 282--283
+Overfull \hbox (9.16315pt too wide) in paragraph at lines 283--284
 []\OT1/cmr/m/n/10 In this for-mula, $\OML/cmm/m/it/10 j$ \OT1/cmr/m/n/10 in-dex
 es sub-na-tional ar-eas (provinces/
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 282--283
+Underfull \hbox (badness 10000) in paragraph at lines 283--284
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 307--312
+Underfull \hbox (badness 10000) in paragraph at lines 308--313
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 313--314
+Underfull \hbox (badness 10000) in paragraph at lines 314--315
 
  []
 
-<example_table.pdf, id=11, 614.295pt x 794.97pt>
-File: example_table.pdf Graphic file (type pdf)
- <use example_table.pdf>
-Package pdftex.def Info: example_table.pdf used on input line 320.
-(pdftex.def)             Requested size: 614.29349pt x 794.96806pt.
+[2] [3
+
+] <example_table.pdf, id=23, 614.295pt x 794.97pt>
 File: example_table.pdf Graphic file (type pdf)
 
 <use example_table.pdf>
-Package pdftex.def Info: example_table.pdf used on input line 320.
+Package pdftex.def Info: example_table.pdf used on input line 323.
+(pdftex.def)             Requested size: 614.29349pt x 794.96806pt.
+File: example_table.pdf Graphic file (type pdf)
+ <use example_table.pdf>
+Package pdftex.def Info: example_table.pdf used on input line 323.
 (pdftex.def)             Requested size: 614.29349pt x 794.96806pt.
 
-<example_table.pdf, id=14, page=1, 614.295pt x 794.97pt>
+<example_table.pdf, id=26, page=1, 614.295pt x 794.97pt>
 File: example_table.pdf Graphic file (type pdf)
 
 <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 320.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 323.
 (pdftex.def)             Requested size: 614.29349pt x 794.96806pt.
 File: example_table.pdf Graphic file (type pdf)
  <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 320.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 323.
 (pdftex.def)             Requested size: 614.58406pt x 795.3441pt.
- [2]
 File: example_table.pdf Graphic file (type pdf)
 
 <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 320.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 323.
 (pdftex.def)             Requested size: 614.58406pt x 795.3441pt.
 File: example_table.pdf Graphic file (type pdf)
  <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 320.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 323.
 (pdftex.def)             Requested size: 614.58406pt x 795.3441pt.
 File: example_table.pdf Graphic file (type pdf)
 
 <use example_table.pdf, page 1>
-Package pdftex.def Info: example_table.pdf, page1 used on input line 320.
+Package pdftex.def Info: example_table.pdf, page1 used on input line 323.
 (pdftex.def)             Requested size: 614.58406pt x 795.3441pt.
- [3 <./example_table.pdf>]
-Underfull \hbox (badness 10000) in paragraph at lines 328--329
+ [4
+
+ <./example_table.pdf>]
+Underfull \hbox (badness 10000) in paragraph at lines 331--332
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 330--331
+Underfull \hbox (badness 10000) in paragraph at lines 333--334
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 332--333
+Underfull \hbox (badness 10000) in paragraph at lines 335--336
 
  []
 
-<graph1.pdf, id=38, 650.43pt x 433.62pt>
+<graph1.pdf, id=41, 650.43pt x 433.62pt>
 File: graph1.pdf Graphic file (type pdf)
  <use graph1.pdf>
-Package pdftex.def Info: graph1.pdf used on input line 337.
+Package pdftex.def Info: graph1.pdf used on input line 340.
 (pdftex.def)             Requested size: 260.16739pt x 173.44492pt.
 
-Overfull \hbox (7.0999pt too wide) in paragraph at lines 337--337
+Overfull \hbox (7.0999pt too wide) in paragraph at lines 340--340
  [][] 
  []
 
-<graph2.pdf, id=39, 650.43pt x 433.62pt>
+<graph2.pdf, id=42, 650.43pt x 433.62pt>
 File: graph2.pdf Graphic file (type pdf)
  <use graph2.pdf>
-Package pdftex.def Info: graph2.pdf used on input line 346.
+Package pdftex.def Info: graph2.pdf used on input line 349.
 (pdftex.def)             Requested size: 260.16739pt x 173.44492pt.
 
-Overfull \hbox (17.93996pt too wide) in paragraph at lines 346--346
+Overfull \hbox (17.93996pt too wide) in paragraph at lines 349--349
  [][] 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 350--351
+Underfull \hbox (badness 10000) in paragraph at lines 353--354
 
  []
 
 
-Overfull \hbox (11.32098pt too wide) in paragraph at lines 358--368
+Overfull \hbox (11.32098pt too wide) in paragraph at lines 361--371
  [][] 
  []
 
-[4
+[5
 
  <./graph1.pdf> <./graph2.pdf>]
-Underfull \hbox (badness 10000) in paragraph at lines 389--390
+Underfull \hbox (badness 10000) in paragraph at lines 392--393
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 405--406
+Underfull \hbox (badness 808) in paragraph at lines 394--395
+\OT1/cmr/m/n/10 tri-bu-tion within ev-ery mod-ule. This is likely un-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 408--409
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 413--414
+Underfull \hbox (badness 10000) in paragraph at lines 416--417
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 423--424
+Underfull \hbox (badness 10000) in paragraph at lines 418--419
+
+ []
+
+[6]
+Underfull \hbox (badness 10000) in paragraph at lines 425--426
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 429--430
+Underfull \hbox (badness 10000) in paragraph at lines 427--428
 
  []
 
-[5]
-Underfull \hbox (badness 10000) in paragraph at lines 438--439
+
+Underfull \hbox (badness 10000) in paragraph at lines 435--436
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 437--438
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 451--452
 
  []
 
 
 AED: lastpage setting LastPage
-[6
-
-] (PCE_IE_Methods_Brief.aux)
+[7] (PCE_IE_Methods_Brief.aux)
 
 LaTeX Font Warning: Size substitutions with differences
 (Font)              up to 1.0pt have occurred.
 
  ) 
 Here is how much of TeX's memory you used:
- 6061 strings out of 493323
- 91414 string characters out of 3139060
- 273980 words of memory out of 3000000
- 9493 multiletter control sequences out of 15000+200000
+ 6060 strings out of 493323
+ 91409 string characters out of 3139060
+ 274971 words of memory out of 3000000
+ 9492 multiletter control sequences out of 15000+200000
  9475 words of font info for 34 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 40i,18n,46p,1193b,424s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 40i,18n,46p,1187b,424s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmbx10.pfb><C:/Pr
 ogram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmex10.pfb><C:/Program Fi
 les/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Program Files/MiKT
@@ -855,13 +881,12 @@ gram Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss17.pfb><C:/Program Fil
 es/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmss8.pfb><C:/Program Files/MiKTeX
  2.9/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><C:/Program Files/MiKTeX 2.9/f
 onts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Program Files/MiKTeX 2.9/fonts/typ
-e1/public/amsfonts/cm/cmsy5.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public
-/amsfonts/cm/cmsy7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts
-/cm/cmsy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmti1
-0.pfb>
-Output written on PCE_IE_Methods_Brief.pdf (6 pages, 245471 bytes).
+e1/public/amsfonts/cm/cmsy7.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public
+/amsfonts/cm/cmsy8.pfb><C:/Program Files/MiKTeX 2.9/fonts/type1/public/amsfonts
+/cm/cmti10.pfb>
+Output written on PCE_IE_Methods_Brief.pdf (7 pages, 243418 bytes).
 PDF statistics:
- 124 PDF objects out of 1000 (max. 8388607)
+ 125 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  31 words of extra memory for PDF output out of 10000 (max. 10000000)
 
