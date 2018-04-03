@@ -81,8 +81,8 @@
         "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
         "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
-        "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_receieved", "ArtLum_used", "smearTest_completed_under5",
-        "smearTest_completed_5andOlder", "smearTest_positive_under5", "smearTest_positive_5andOlder", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+        "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_receieved", "ArtLum_used", "smearTest_completedUnder5",
+        "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder", "RDT_completedUnder5", "RDT_completed5andOlder", "RDT_positiveUnder5", "RDT_positive5andOlder",
         "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline" )
   
   columnNames2014 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
@@ -101,63 +101,12 @@
 
   names(dataSheet) <- columnNames
   
-  # colnames(dataSheet)[1] <- "province"
-  # colnames(dataSheet)[2] <- "dps"
-  # colnames(dataSheet)[3] <- "health_zone"
-  # colnames(dataSheet)[4] <- "donor"
-  # colnames(dataSheet)[5] <- "operational_support_partner"
-  # colnames(dataSheet)[6] <- "population"
-  # colnames(dataSheet)[7] <- "trimester"  #should this be quarter?
-  # colnames(dataSheet)[8] <- "month"
-  # colnames(dataSheet)[9] <- "newCasesMalariaMild_under5"
-  # colnames(dataSheet)[10] <- "newCasesMalariaMild_5andOlder"
-  # colnames(dataSheet)[11] <- "newCasesMalariaMild_pregnantWomen"
-  # colnames(dataSheet)[12] <- "newCasesMalariaSevere_under5"
-  # colnames(dataSheet)[13] <- "newCasesMalariaSevere_5andOlder"
-  # colnames(dataSheet)[14] <- "newCasesMalariaSevere_pregnantWomen"
-  # colnames(dataSheet)[15] <- "mildMalariaTreated_under5"
-  # colnames(dataSheet)[16] <- "mildMalariaTreated_5andOlder"
-  # colnames(dataSheet)[17] <- "mildMalariaTreated_pregnantWomen"
-  # colnames(dataSheet)[18] <- "severeMalariaTreated_under5"
-  # colnames(dataSheet)[19] <- "severeMalariaTreated_5andOlder"
-  # colnames(dataSheet)[20] <- "severeMalariaTreated_pregnantWomen"
-  # colnames(dataSheet)[21] <- "malariaDeaths_under5"
-  # colnames(dataSheet)[22] <- "malariaDeaths_5andOlder"
-  # colnames(dataSheet)[23] <- "malariaDeaths_pregnantWomen"
-  # colnames(dataSheet)[24] <- "ANC_1st"
-  # colnames(dataSheet)[25] <- "ANC_2nd"
-  # colnames(dataSheet)[26] <- "ANC_3rd"
-  # colnames(dataSheet)[27] <- "ANC_4th"
-  # colnames(dataSheet)[28] <- "SP_1st"  #why was SP within ANC (CPN)orginally? Should it relate to that in some way?
-  # colnames(dataSheet)[29] <- "SP_2nd"
-  # colnames(dataSheet)[30] <- "SP_3rd"
-  # colnames(dataSheet)[31] <- "ITN_received"
-  # colnames(dataSheet)[32] <- "ITN_distAtANC"
-  # colnames(dataSheet)[33] <- "ITN_distAtPreschool"
-  # colnames(dataSheet)[34] <- "VAR"   #translation?
-  # colnames(dataSheet)[35] <- "ASAQ_2to11mos"
-  # colnames(dataSheet)[36] <- "ASAQ_1to5yrs"
-  # colnames(dataSheet)[37] <- "ASAQ_6to13yrs"
-  # colnames(dataSheet)[38] <- "ASAQ_14yrsAndOlder"
-  # colnames(dataSheet)[39] <- "ASAQ_total"
-  # colnames(dataSheet)[40] <- "ArtLum_receieved"
-  # colnames(dataSheet)[41] <- "ArtLum_used"
-  # colnames(dataSheet)[42] <- "smearTest_completed_under5"
-  # colnames(dataSheet)[43] <- "smearTest_completed_5andOlder"
-  # colnames(dataSheet)[44] <- "smearTest_positive_under5"
-  # colnames(dataSheet)[45] <- "smearTest_positive_5andOlder"
-  # colnames(dataSheet)[46] <- "RDT_completed_under5"
-  # colnames(dataSheet)[47] <- "RDT_completed_5andOlder"
-  # colnames(dataSheet)[48] <- "RDT_positive_under5"
-  # colnames(dataSheet)[49] <- "RDT_positive_5andOlder"
-  # colnames(dataSheet)[50] <- "reports_received"
-  # colnames(dataSheet)[51] <- "reports_expected"
-  # colnames(dataSheet)[52] <- "healthFacilities_total"
-  # colnames(dataSheet)[53] <- "healthFacilities_numReported"
-  # colnames(dataSheet)[54] <- "healthFacilities_numReportedWithinDeadline"
-
   # add a column for the "year" to keep track of this variable as we add dataSheets to this one
   dataSheet$year <- year
+  
+  # # add a column for indicator codes for SDA mapping/modular framework:
+  # dataSheet$indicator_code <- NA
+  # 
 # ----------------------------------------------
 # ----------------------------------------------
   # Get rid of rows you don't need- "subset"
@@ -273,8 +222,9 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 
 
 # ----------------------------------------------   
-# Further prep on appended the datatables for indicators and interventions
+# Further prep on appended datatables for indicators and interventions:
   
+#---INDICATORS--------------------------------------- 
   # Reshape Indicators data
   COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
       "quarter", "month", "year", "date"), measured=c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
@@ -282,6 +232,9 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
       "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen", 
       "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" ), variable.name = "indicator", value.name="value")
       
+  # add column for "indicator codes" - to be added later
+  COD_PNLP_Indicators_melt$indicator_code <- NA
+  
       # Split Indicators data by subgroup
         COD_PNLP_Indicators_melt[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
           # reorder columns:
@@ -306,13 +259,14 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
             # formula_used to yes
             COD_PNLP_Indicators_melt[value%%1==0, formula_used:='No']
             COD_PNLP_Indicators_melt[value%%1!=0, formula_used:='Yes']
-          
+
+#---INTERVENTIONS---------------------------------------                        
   # Reshape Interventions data
     COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
       "quarter", "month", "year", "date"), measured=c(), variable.name = "intervention", value.name="value")
       
       # Split Interventions data by subgroup
-        COD_PNLP_Interventions_melt[, c("intervention", "intervention_spec", "age_dist") := tstrsplit(intervention, "_", fixed=TRUE)]
+        COD_PNLP_Interventions_melt[, c("intervention", "intervention_spec") := tstrsplit(intervention, "_", fixed=TRUE)]
       
       # add column for "indicator codes" - to be added later
         COD_PNLP_Interventions_melt$indicator_code <- NA
@@ -328,11 +282,7 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
   COD_PNLP_Data_Indicators_Wide <- COD_PNLP_Indicators_cast
   COD_PNLP_Data_Interventions_Long <- COD_PNLP_Interventions_melt 
   COD_PNLP_Data_Interventions_Wide <- COD_PNLP_Interventions
-  
-  # hard-coded version:
-  # write.csv(COD_PNLP_Data_Indicators, ("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators.csv")) 
-  # write.csv(COD_PNLP_Data_Interventions, ("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Interventions.csv"))
-  
+
   # function to export data:
   export_data <- function(dfName){
     write.csv(get(dfName), paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/", dfName , ".csv"))
