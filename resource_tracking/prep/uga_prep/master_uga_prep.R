@@ -114,7 +114,7 @@ resource_database$source <- source
 # data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
 ## we have some junk "modules"
-toMatch <- c("0", "Please sel", "PA")
+toMatch <- c("0", "Please sel", "PA", "6", "4")
 cleaned_database <- resource_database[!grepl(paste(toMatch, collapse="|"), resource_database$module),]
 
 
@@ -151,7 +151,7 @@ cleaned_database$intervention <- gsub(paste(module_remove_chars, collapse="|"), 
 
 ##write csv to correct folder: 
 
-write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/fpm_prepped_budgets.csv", row.names = FALSE,
+write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_uga_data.csv", row.names = FALSE,
           fileEncoding = "latin1")
 
 # ---------------------------------------------
