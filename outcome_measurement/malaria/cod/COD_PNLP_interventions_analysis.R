@@ -42,13 +42,9 @@
         # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series for Interventions.pdf
     
     # exports aggregate graphs to a pdf document here: 
-        # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Aggregate Time Series for Interventions.pdf
+        # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Aggregate Interventions Data.pdf
 # ----------------------------------------------
 
-
-# ----------------------------------------------     
-# ----------------------------------------------        
-# Graph each INTERVENTION for each health zone over time
 
 # ----------------------------------------------      
 # Set up:
@@ -56,10 +52,10 @@
     dt[, date := as.Date(date)]
     dt[, value := as.numeric(value)]
     
-  # go back to the prep code to make all "value"s numeric and this code will show you where those are 
-    # dt[, numValue := as.numeric(value)]
-    # dt[is.na(numValue) & value!='NA']
-    
+  # # go back to the prep code to make all "value"s numeric and this code will show you where those are 
+  #   dt[, numValue := as.numeric(value)]
+  #   dt[is.na(numValue) & value!='NA']
+
   # make a vector of all health zones in dt to loop through 
     hz_vector <- dt[["health_zone"]]
     
@@ -86,7 +82,13 @@
     names = c("Antenatal Care Visits", "SP Adminstered at ANC", "Insecticide-Treated Nets", "ASAQ", "Smear Test (Goutte Epaisse)",
               "Rapid Diagnostic Test", "Reports", "Health Facilities Reporting", "Measles Vaccine (VAR)", "Artemether Lumefantrine")
 
-# ----------------------------------------------    
+# ---------------------------------------------- 
+    
+    
+# ----------------------------------------------     
+# ----------------------------------------------        
+# Graph each intervention for each health zone over time
+# ----------------------------------------------
 # Make a function that creates a ggplot for each indicator for each health zone:  
     
   makeGraph <- function(i, hz) {
@@ -100,11 +102,9 @@
     }
     return(m)
   }
-    
 # ----------------------------------------------      
 # Export Graphs to a PDF  
   pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series for Interventions.pdf", height=6, width=9) 
-  
   # Loop through each health zone and use makeGraph to create the graph within a set of plots
   for (h in hz_vector) { 
     plots1 <- lapply(c(1, 2, 4, 10), function(i, hz) makeGraph(i, h))
@@ -117,10 +117,52 @@
     do.call(grid.arrange, (plots3))
   }  
   dev.off()
+# ---------------------------------------------- 
+# ----------------------------------------------  
+  
   
 # ---------------------------------------------- 
 # ---------------------------------------------- 
-
+# Graph the aggregate data for each intervention by DPS over time
+# ---------------------------------------------- 
+  # vector of all indicators:
+  interventionInput <- dt[["intervention"]]
+  interventionInput <- unique(interventionInput)
   
+  interventionInput <- setdiff(interventionInput, "VAR")
+ 
+  # sum everything at the dps level
+      #test_table <- dt[, lapply(.SD, sum), by=c('date', 'dps', 'intervention', 'intervention_spec'), .SDcols='value']
+  test_table2 <- dt[, .(aggValue = sum(value, na.rm=TRUE)), by=c('date', 'dps', 'intervention', 'intervention_spec')]
+  
+  makeGraph <- function(i){
+    aggGraphTitle <- intervention_names[i]
+    aggGraph <- ggplot(test_table2[intervention == i], aes(x=date, y=aggValue, color = intervention_spec)) + geom_point() + geom_line() 
+    aggGraph <- aggGraph + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + labs(x= "Date", y="Value", color= "") + facet_wrap(~ dps, scales="free_y") 
+    return(aggGraph)
+  }
 
+  # makeGraph <- function(i){
+  #   if (!all(is.na(dt[intervention==interventions[i]]$intervention_spec))) {
+  #     aggGraphTitle <- intervention_names[i]
+  #     aggGraph <- ggplot(test_table2[intervention == i], aes(x=date, y=aggValue, color = intervention_spec)) + geom_point() + geom_line() 
+  #     aggGraph <- aggGraph + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + labs(x= "Date", y="Value", color= "") + facet_wrap(~ dps, scales="free_y") 
+  #     return(aggGraph)
+  #   }
+  #   if (all(is.na(dt[intervention==interventions[i]]$intervention_spec))) {
+  #     aggGraphTitle <- intervention_names[i]
+  #     aggGraph <- ggplot(test_table2[intervention == i], aes(x=date, y=aggValue)) + geom_point() + geom_line() 
+  #     aggGraph <- aggGraph + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + labs(x= "Date", y="Value", color= "") + facet_wrap(~ dps, scales="free_y") 
+  #     return(aggGraph)
+  #   }
+  # }
+  
+  pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Aggregate Interventions Data.pdf", height=6, width=9)
+  for ( i in interventionInput) {   
+    print(i)
+    print(makeGraph(i))
+  }
+  dev.off()
+# ----------------------------------------------     
+# ----------------------------------------------    
   

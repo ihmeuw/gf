@@ -1,0 +1,535 @@
+%% BioMed_Central_Tex_Template_v1.06
+%%                                      %
+%  bmc_article.tex            ver: 1.06 %
+%                                       %
+
+%%IMPORTANT: do not delete the first line of this template
+%%It must be present to enable the BMC Submission system to
+%%recognise this template!!
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                     %%
+%%  LaTeX template for BioMed Central  %%
+%%     journal article submissions     %%
+%%                                     %%
+%%          <8 June 2012>              %%
+%%                                     %%
+%%                                     %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                                                 %%
+%% For instructions on how to fill out this Tex template           %%
+%% document please refer to Readme.html and the instructions for   %%
+%% authors page on the biomed central website                      %%
+%% http://www.biomedcentral.com/info/authors/                      %%
+%%                                                                 %%
+%% Please do not use \input{...} to include other tex files.       %%
+%% Submit your LaTeX manuscript as one .tex document.              %%
+%%                                                                 %%
+%% All additional figures and files should be attached             %%
+%% separately and not embedded in the \TeX\ document itself.       %%
+%%                                                                 %%
+%% BioMed Central currently use the MikTex distribution of         %%
+%% TeX for Windows) of TeX and LaTeX.  This is available from      %%
+%% http://www.miktex.org                                           %%
+%%                                                                 %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%% additional documentclass options:
+%  [doublespacing]
+%  [linenumbers]   - put the line numbers on margins
+
+%%% loading packages, author definitions
+
+\documentclass[twocolumn]{bmcart}% uncomment this for twocolumn layout and comment line below
+% \documentclass{bmcart}
+
+%%% Load packages
+%\usepackage{amsthm,amsmath}
+\RequirePackage{natbib}
+%\RequirePackage{hyperref}
+\usepackage[utf8]{inputenc} %unicode support
+%\usepackage[applemac]{inputenc} %applemac support if unicode package fails
+%\usepackage[latin1]{inputenc} %UNIX support if unicode package fails
+\renewcommand{\thefootnote}{\roman{footnote}}
+\usepackage{wrapfig}
+\usepackage{graphicx}
+\usepackage{lipsum}
+\usepackage{amsmath}
+\usepackage{csvsimple}
+\usepackage{pdfpages}
+\usepackage{graphicx}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                             %%
+%%  If you wish to display your graphics for   %%
+%%  your own use using includegraphic or       %%
+%%  includegraphics, then comment out the      %%
+%%  following two lines of code.               %%
+%%  NB: These line *must* be included when     %%
+%%  submitting to BMC.                         %%
+%%  All figure files must be submitted as      %%
+%%  separate graphics through the BMC          %%
+%%  submission process, not included in the    %%
+%%  submitted article.                         %%
+%%                                             %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% \def\includegraphic{}
+% \def\includegraphics{}
+
+
+
+%%% Put your definitions there:
+\startlocaldefs
+\endlocaldefs
+
+
+%%% Begin ...
+\begin{document}
+
+%%% Start of article front matter
+\begin{frontmatter}
+
+\begin{fmbox}
+\dochead{Methods Brief}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the title of your article here     %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{PCE Impact Evaluation Methodological Summary}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the authors here                   %%
+%%                                          %%
+%% Specify information, if available,       %%
+%% in the form:                             %%
+%%   <key>={<id1>,<id2>}                    %%
+%%   <key>=                                 %%
+%% Comment or delete the keys which are     %%
+%% not used. Repeat \author command as much %%
+%% as required.                             %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\author[
+   addressref={aff1},                   % id's of addresses, e.g. {aff1,aff2}
+   corref={aff1},                       % id of corresponding address, if any
+   % noteref={n1},                        % id's of article notes, if any
+   email={davidp6@uw.edu}   % email address
+]{\inits{DEP}\fnm{David E} \snm{Phillips} \suffix{PhD}}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter the authors' addresses here        %%
+%%                                          %%
+%% Repeat \address commands as much as      %%
+%% required.                                %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\address[id=aff1]{%                           % unique id
+  \orgname{Institute for Health Metrics and Evaluation}, % university, etc
+  \street{University of Washington},                     %
+  %\postcode{}                                % post or zip code
+  \city{Seattle},                              % city
+  \cny{USA}                                    % country
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Enter short notes here                   %%
+%%                                          %%
+%% Short notes will be after addresses      %%
+%% on first page.                           %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{artnotes}
+%\note{Sample of title note}     % note to the article
+% \note[id=n1]{Equal contributor} % note, connected to author
+\end{artnotes}
+
+\end{fmbox}% comment this for two column layout
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% The Abstract begins here                 %%
+%%                                          %%
+%% Please refer to the Instructions for     %%
+%% authors on http://www.biomedcentral.com  %%
+%% and include the section headings         %%
+%% accordingly for your article type.       %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{abstractbox}
+
+This is a draft and not intended for distribution. \\
+\today
+
+\end{abstractbox}
+%
+%\end{fmbox}% uncomment this for twcolumn layout
+
+\end{frontmatter}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% The Main Body begins here                %%
+%%                                          %%
+%% Please refer to the instructions for     %%
+%% authors on:                              %%
+%% http://www.biomedcentral.com/info/authors%%
+%% and include the section headings         %%
+%% accordingly for your article type.       %%
+%%                                          %%
+%% See the Results and Discussion section   %%
+%% for details on how to create sub-sections%%
+%%                                          %%
+%% use \cite{...} to cite references        %%
+%%  \cite{koon} and                         %%
+%%  \cite{oreg,khar,zvai,xjon,schn,pond}    %%
+%%  \nocite{smith,marg,hunn,advi,koha,mouse}%%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%% start of article main body
+% <put your article body there>
+
+%%%%%%%%%%%%%%%%
+%% Content    %%
+%%
+%
+
+% To Do
+% Add citations
+
+% ------------------------------------------------------------------------------
+% Overview
+\section{Purpose of this Document}
+The purpose of this document is twofold:
+
+\begin{enumerate}
+  \item To explain, in advance, the analytical approach which we have selected for impact evaluation, with the goals of methods improvement through feedback, transparency, and formal demonstration of the robustness (both strengths and limitations) of the methods. There are many aspects of this approach which I believe are as robust as possible, although the overall study design is weak.
+  \item To lay out a ``road map'' of how we can accomplish a task as daunting as an impact evaluation of the Global Fund in 2 years. To detail (more) precisely how this can be done.\\
+\end{enumerate}
+
+The intended audience for this document is first the PCE consortium of IHME, PATH, CIESAR, IDRC and PATH DRC. However, (perhaps with some editing) it could be shared across consortia to enhance synthesis, and also with the TERG and TERG secretariat.
+
+% ------------------------------------------------------------------------------
+% Overview
+\section{Overview}
+% it's mosty just measuring lots of indicators
+The basic approach to this impact evaluation is simply to measure many separate indicators, then measure their correlation. Through impact evaluation frameworks (i.e. ``results chains'') and thematic frameworks, those indicators (and more) are outlined in specific detail. The remainder of the impact evaluation is to identify the appropriate indicators measure correlation between, and do so while controlling for confounding (see \textit{Worked Example} section below). \\
+
+% majority of effort is to ensure that our data produce a valid measure of the quantity of interest
+The majority of the complexity and effort required to accomplish this task is to ensure that the data we use actually produce a valid measure of the quantity of interest (e.g. that case notifications reflect population incidence). Techniques include data triangulation (see Section \ref{triangulation}), model-based geostatistics,[CITE] outlier detection, and multiple imputation (see Section \ref{data_processing}), and will be applied selectively to enhance the measurement validity. Special attention is given to resource tracking to accurately measure inputs (see \textit{Further Details on Resource Tracking}).  \\
+
+% controls are critical for the impact analysis. some are hard to come by like non-GF expenditure, some will have stronger correlation with GF expenditure than the output itself because endogeneity
+The controls are especially critical for the impact analysis (see Section \ref{hypothesis}). The basic approach of ``measuring many indicators'' also includes measuring covariates and controls that are not necessarily the indicators of interest, but are essential the measuring the correlation between expenditure and outputs. \\
+
+Finally, it is essential that the indicators are measured independently. That is to say that the measurement approach for a specific indicator does not use any of its preceding indicators (in the results chain) in the process. This will help ensure that the correlations measured between indicators are reflective of the theorized causal pathways, not endogeneity in measurement.
+
+% ------------------------------------------------------------------------------
+% Background
+% \section{Background}
+
+% comment on study design
+
+
+
+% ------------------------------------------------------------------------------
+% Data Sources Overview
+% \section{Data Sources Overview}
+
+
+
+% ------------------------------------------------------------------------------
+% Hypothesis Being Tested
+\section{Hypothesis Being Tested} \label{hypothesis}
+
+% that changes in global fund investments result in observable changes in outputs, and that those changes in outputs result in observable changes in coverage and, subsequently burden of disease
+The core hypothesis of this impact evaluation is that changes in Global Fund investments result in observable changes in health systems outputs. Additionally, the hypothesis is that those changes in outputs result in observable changes in intervention coverage, which subsequently results in improvements in burden of disease. \\
+
+% that conditional on need, Global Fund investments are exogenous
+We assume that, conditional on need, Global Fund investments are exogenous to health systems outputs. In other words, we assume that investments are targeted towards interventions and areas with unmet need, and that apart from decision-making about where there is need for investment, health systems outputs are only affected by Global Fund investment and do not affect it. Need, in this context is defined as burden of disease without proportionate spending by other financing sources.
+
+% how confounding is expected to work
+
+% ------------------------------------------------------------------------------
+% Basic Outputs Model
+\section{Basic Outputs Model}
+
+% the form of the model
+The central model for measuring the contribution of Global Fund inputs to health systems outputs is a linear model. The precise functional form of the model will be selected to be fit-for-purpose given the distribution of the output data. In theory, the characteristics of typical output data are that they are integer (whole numbers), over-disbursed (requiring both a mean and variance parameter to describe their distribution), heteroskedastic (different variance at different levels of a given explanatory variable), and temporally-autocorrelated (similar to itself in previous time points). For these reasons, the model is (arguably) most appropriately fit as a generalized linear mixed model (GLMM) in the negative binomial family. For simplicity, I will avoid model notation that explicitly represents a negative binomial GLMM, in order to focus attention on the variables and the level at which they're measured (i.e. indexed). \\
+
+% principle of the model
+Measurement of the Global Fund contribution to outputs will rely on the co-variance of outputs and expenditure along three dimensions: space, time and activity. In other words, investments by the Global Fund focus on different interventions in different places, and change from year to year, and so do outputs. If the hypothesis being tested is correct, we would expect to observe changes in health systems outputs that coincide with changes in investments along those three dimensions (space, time and activity). As noted already, the coincidence between changes in outputs and changes in investments alone is not expected to reflect the Global Fund's contribution, but rather the coincidence that happened apart from the correlation that other resources and burden of disease have with outputs. That implies the following regression:
+
+% the model
+\begin{equation} \label{basic_model}
+O_{jti} = \beta_1 E^{gf}_{jti} + \beta_2 E^{\neg gf}_{jti} + \beta_3 I_{jt}
+\end{equation}
+
+% explanation of notation
+In this formula, $j$ indexes subnational areas (provinces/ departments, districts/municipalities or otherwise), $t$ indexes time (years, quarters, or months) and $i$ indexes intervention categories, as defined by the Global Fund's Modular Framework. $O$ represents counts of health systems outputs, $E$ represents expenditure either by the Global Fund ($^{gf}$) or other sources ($^{\neg gf}$), and $I$ represents incidence of the disease for which interventions were designed. The $\beta$ terms are coefficients (correlations) to be estimated from the data using maximum likelihood estimation (or similar). This model will primarily be fit separately by disease.\\
+
+% interpretation
+The coefficient $\beta_1$ therefore measures the correlation between Global Fund investment and outputs, controlling for other investments and disease burden. Under the assumptions of the PCE Theory of Change and Impact Frameworks (detailed elsewhere), this correlation represents the contribution of the Global Fund to those outputs.
+
+% extension to RSSH
+\subsection{Extension to RSSH}
+In evaluating the contribution of catalytic and system-wide Global Fund investments (such as investments to strengthen resilient and sustainable systems for health (RSSH)), an additional layer of controls may be necessary. This is because such investments are intended to operate in addition to, or synergistically with, other program areas, not to result in outputs on their own.[CITE] % CITATION NEEDED
+ Essentially, this amounts to controlling for Global Fund spending from programs other than just RSSH as well:
+
+% RSSH model
+% \begin{equation}
+  \begin{align}
+    O_{jti} = \beta_1 E^{^{RSSH}}_{jti} + \beta_1 E^{^{HIV/TB/Malaria}}_{jti} \\
+    + \beta_2 E^{\neg gf}_{jti} + \beta_3 I_{jt}
+  \end{align}
+% \end{equation}
+
+% note about using budget as an ITT
+\textit{Technical Note: Although expenditure from the Global Fund is the intervention of interest, the above model will also be explored using the approved budget as a proxy for expenditure. The rationale for doing so is to avoid potential bias from differential absorption. Similar to the ``intent to treat'' principle from a randomized control trial, the drivers of actual execution of funds are more diverse and poorly-understood than the drivers of planned budgeting, and thus more challenging to control. To measure the correlation between actual expenditure and outputs would also be to measure the contribution of those absorption-driving factors, and would weaken the interpretability of the coefficient of interest. While both budget and expenditure will be explored, budget will be considered the primary explanatory variable.}
+
+
+% ------------------------------------------------------------------------------
+% Further Details on Model-Based Geostatistics
+\section{Relationship with Value for Money} \label{vfm}
+The basic outputs model has a natural relationship with value for money (VfM) assessment. As defined by the Global Fund Monitoring and Evaluation team, the key metric of VfM is cost per output, or cost per case averted. [CITE] \\
+% CITATION: Briefing
+% Strategic Information Department Briefing
+% 2017-2022 Strategic KPI Framework Performance targets for KPIs 1, 2 & 8
+% March 2018. The Global Fund
+
+The definition of the coefficient $\beta_1$ in formula \ref{basic_model} is the average observed increase in outputs per unit increase in expenditure. $\beta_1$ is also simply stated as the inverse of cost per output (i.e. $cost\, per\, output = \frac{1}{\beta_1}$). In this way, the core model for impact evaluation is the same as the core model for VfM assessment. \\
+
+The key to using the impact evaluation model for VfM assessment is additional interpretation of it. As allocation efficiency is among the critical topics for the PCE, estimates from the core model can be produced among counterfactual scenarios, comparing alternate mixes of interventions and their expected relationship with output.
+
+
+% ------------------------------------------------------------------------------
+% Worked Example
+\clearpage
+
+\includepdf{example_table.pdf}
+
+\clearpage
+
+
+\section{Worked Example}
+
+
+This section provides an example of the model above, using simulated (i.e. completely fabricated) data. It is intended to provide a tangible demonstration of the analysis, not (necessarily) to reflect real numbers perfectly. \\
+
+Table 1 displays some example data. This simulated dataset contains information on three interventions: Differentiated HIV testing services, Differentiated ART service delivery and Male circumcision. These are HIV interventions selected from the Modular Framework. The table depicts these interventions implemented in four hypothetical subnational areas (numbered 1-4), which can be thought of as districts, municipalities, etc. Each of these intervention-areas has annual measurements from 2012 to 2015. Finally, each intervention is labeled with  an associated output indicator: HIV tests conducted, ARV doses administered and Circumcisions administered. An ``estimate'' of HIV incidence is displayed in the fifth column. Note that incidence does not vary between interventions, only area-years. The final three columns in Table 1 display simulated expenditure from non-Global Fund sources, expenditure from the Global Fund, and Output (units of the corresponding indicator consumed). \\
+
+These data have been constructed in such a way that Global Fund expenditure is positively correlated with outputs from each intervention, according to the theorized data generating process. Figure \ref{fig1} demonstates the correlation. \\
+
+\begin{figure}[h]
+  \advance\leftskip-.25in
+  \caption{\textmd{Example Correlation between Output and Expenditure}}
+  \includegraphics[scale=.4]{graph1.pdf} \\
+  \label{fig1}
+\end{figure}
+
+Non-Global Fund expenditure, and even more so incidence also have positive correlations with outputs. Importantly, strong correlations are also expected to exist between the two sources of expenditure, and between expenditure and incidence, since Global Fund investments are intended to be coordinated with other spending, and both are intended to target areas of greatest need. The consequence of this is that, controlling for incidence (or expenditure) yields a less-confounded correlation between expenditure and output, as shown in Figure \ref{fig2}.
+
+\begin{figure}[h]
+  \advance\leftskip-.1in
+  \caption{\textmd{Correlation Stratified by Incidence Quantile}}
+  \includegraphics[scale=.4]{graph2.pdf} \\
+  \label{fig2}
+\end{figure}
+
+Here, the correlation between expenditure and output has been binned by quantiles of incidence. From this figure, the strong correlation between incidence and output is clear, as the higher quantiles have generally higher output. The other result of displaying the correlation in this way however is a tighter relationship between expenditure and output within each quantile. While it's entirely possible that the opposite effect could be true with real data (i.e. a weaker correlation after controlling for incidence), the relationship between incidence and expenditure is likely to be important for the primary correlation of interest. \\
+
+As a result of these characteristics of the data and theory, a regression that controls for each of the aforementioned correlates of output is necessary, as displayed in equation \ref{basic_model} above. Fitting an ordinary negative binomial regression (in this case not GLMM, although it was mentioned above) yeilds the estimates of correlations shown in Table \ref{regtable}.
+
+\begin{table}[ht]
+  \caption{Regression Results}
+  \label{regtable}
+\centering
+\begin{tabular}{rrrrr}
+  \hline
+ & Estimate & Std. Error & z value & Pr($>$$|$z$|$) \\
+  \hline
+(Intercept) & 6.5838 & 0.0186 & 353.19 & 0.0000 \\
+  Expenditure\_gf & 0.0015 & 0.0002 & 7.82 & 0.0000 \\
+  Expenditure\_nongf & 0.0005 & 0.0001 & 3.74 & 0.0002 \\
+  Incidence & 0.0021 & 0.0001 & 28.80 & 0.0000 \\
+   \hline
+\end{tabular}
+\end{table}
+
+In other words, per dollar increase in Global Fund expenditure, outputs increase on average $e^{0.0015}$, or 1.002 units as an average across areas, years and interventions (once other expenditure and incidence are taken into account). In this hypothetical data, this is a stronger correlation than other expenditure, but weaker than incidence.
+% \csvautotabular{example.csv}
+% \input{example_table.tex}
+% \newpage
+
+% ------------------------------------------------------------------------------
+% Further Details on Resource Tracking
+\section{Further Details on Resource Tracking} \label{resource_tracking}
+
+The objective of resource tracking is to produce the most valid possible estimate of expenditure (both Global Fund and otherwise) by area, time and intervention. The basic problem is that while there are data sources that track resources, they typically only offer high detail on one or two of those three dimensions, requiring other data for further detail. Two approaches are being considered to combine these data sources. Each has benefits and drawbacks.
+
+\subsection{Purely Systematic Model}
+
+This approach deterministically multiplies the area-module fractions from one data source by the intervention counts from another:
+
+\begin{equation} \label{rt_model1}
+\widehat{E_{jti}}=E_{ti}*\frac{E_{jtm}}{E_{tm}}
+\end{equation}
+
+Where $E$ represents investment from any source ($\hat{E}$ being an estimate of $E$) and $m$ indexes modules (from the Modular Framework), within which interventions are nested (in a collectively-exhaustive way). The fraction $\frac{E_{jtm}}{E_{tm}}$ is computed \textit{by module}, such that the sum of this fraction across the subnational areas of a single module is \%100 ($\sum \frac{E_{jtm}}{E_{tm}}=1$). The purpose of this approach is to utilize data sources with different strengths in combination. The PCE Inception Phase uncovered that certain country-level data sources often contain a high level of detail about subnational areas ($j$), but little detail about interventions, typically only the corresponding modules ($m$). Global-level data sources however often offer a high level of detail about interventions ($i$), but little, if any, detail about subnational areas. Hence, the fraction in equation \ref{rt_model1} can be accurately measured using country-level data, while $E_{ti}$ can be accurately measured using global-level data. By combining the two, we estimate the details of interventions within subnational areas.\\
+
+This approach relies on the assumption that investment is allocated with the same geographic distribution  within every module. This is likely untrue. One approach toward relaxing this assumption is to attempt to break down the number $E_{ti}$ (i.e. the global-level data) into subnational areas as well, defined by the geographic regions where interventions are operated by sub-recipients. In this way, the fraction in equation \ref{rt_model1} can be computed specific to broad geographic areas at the least, allowing a more geographically-precise apportioning of interventions within geographic areas. Another limitation of this approach is data availability. It is unlikely that national-level data will cover the entire time period spanned by global-level data, leaving gaps in the ultimate estimates of $E_{jti}$.
+
+\subsection{Stochastic, Cost-Based Model}
+
+This approach uses a statistical model to predict expenditure using supply-chain data and costing estimates, treating resource tracking data as predictor variables:
+
+\begin{equation}
+  \label{costmodel}
+  D_{jti} * \widehat{C_i} = \beta_1 E_{jtm} + \beta_2 E_{ti} + \epsilon
+  % or should it be this?
+  % D_{jti} = \beta_1 E_{jtm} + \beta_2 E_{ti} + \epsilon \\
+  % \widehat{E_{jti}} = \widehat{D_{jti}} * \widehat{C_i}
+\end{equation}
+
+As in the previous section, $E_{jtm}$ is a quantity that can be measured from country-level data sources, and $E_{ti}$ can be measured from global-level data sources. The two of these can be thought of as strong predictors of the distribution of commodities $D_{jti}$, which is measurable through other data sources and can also be indexed by intervention $i$. By multiplying the estimated unit cost of a commodity ($\widehat{C_i}$) by the distribution of that commodity, the fitted values from regression formula are an estimator of the quantity of interest, $\widehat{E_{jti}}$. \\
+
+This approach has limitations as well. For one, we only have $D$ for a subset of all interventions (and probably always will). To work around this, we would fit the model and then use out-of-sample prediction to estimate $\hat{E}$ for all intervention categories. Doing so would rely on the assumption that the relationship between expenditure and distribution for observable interventions is reflective of the relationship for unobserved interventions, which may not be true. However, the addition of more covariates in equation \ref{costmodel} could relax this assumption.
+
+% ------------------------------------------------------------------------------
+% Further Details on Triangulation
+\section{Further Details on Data Processing} \label{data_processing}
+
+Two basic data processing steps will be carried out to ensure that we are using valid data to form estimates. The first is systematic outlier screening, the second is multiple imputation. \\
+
+An outlier in this context is an observation (count of outputs, dollar amount budgeted etc.) whose value is anomalously high or low relative to other data and our qualitative understanding of the process that generated the data. Outliers are likely the result of human error or instrument error. While there is no way to confirm an outlier simply by looking at the data, careful examination through a variety of data visualizations and carefully-selected statistical techniques can help identify potential outliers. We will thoroughly vet every data source in this way during descriptive analysis to increase the chance that outliers, if they are at all detectable, can be identified and replaced with missing values. We will only conservatively mark outilers under clear and obvious circumstances. Often, outlier screening will result in no clear outilers. \\
+
+Missing data is expected to be present in most data sources however. Through the scale-up of a system, reporting lapses or other system errors, most datasets will have at least some missing values where there realistically should be observed numbers. To rectify this, we will use a statistical technique called multiple impoutation to predict what the missing values may have been. Not only does this approach ``fill in'' missing values with expected values, but it estimates multiple potential values in order to capture our uncertainty about our own predictions. Based on the variability of the actual data, the multiple imputations will vary in a way that is reflective of actual data. Unless circumstances dictate the need for more, we will perform 50 imputations of every missing value. For this purpose we will use standard software which applies an algorithm called bootstrapped expectation-maximization.[CITE AMELIA2]
+
+% ------------------------------------------------------------------------------
+% Further Details on Triangulation
+\section{Further Details on Data Triangulation} \label{triangulation}
+Although outlier screening and multiple imputation assist in reducing bias in data, they cannot correct more complex forms of bias such as systematic misclassification and selection bias (also referred to as non-sampling error). In cases where there is expected to be such bias, we will use a technique known as data triangulation or ``cross-walking''.[CITE Ng 2014] Put simply, this technique uses one data source to correct another. \\
+
+Data triangulation is most appropriate in the circumstances where there are two or more data sources that measure a similar quantity, we have some reason to prefer one of the data sources as more accurate, but can identify advantages to making use of all data in order to formulate a better estimate. \\
+
+Data triangulation is done using regression techniques, typically a GLM or GLMM with a family that is selected to be appropriate for the data. The regression is fit using the more accurate data source $O_{preferred}$ as an outcome variable, predicted by the alternative data source(s) $O_{biased}$ in a typical regression equation:
+
+\begin{equation}
+  O_{preferred}=\beta_0 + \beta_1 O_{biased}
+\end{equation}
+
+To correct $O_{biased}$ so that it reflects the unbiased estimate $O_{preferred}$, fitted values $\widehat{O_{preferred}}$ are estimated from the model. \\
+
+The primary challenge in data triangulation is accurately reflecting uncertainty, and more importantly incorporating that uncertainty into the impact evaluation regressions detailed in section \ref{basic_model}. A common approach to this is known as Monte Carlo simulation, whereby many random variants of $\widehat{O_{preferred}}$ are drawn from a multivariate distribution centered around the coefficient vector $\beta$ and distributed according to the variance-covariance matrix estimated by the model. These variants then represent many different estimates of $\widehat{O_{preferred}}$, rather than one mid-point. Subsequent analysis are then performed on each variant separately, with their results summarized using further Monte Carlo simulation. \\
+
+% ------------------------------------------------------------------------------
+% Further Details on Model-Based Geostatistics
+% \section{Further Details on Model-Based Geostatistics} \label{mbg}
+% [basic explanation of spatial autocorrelation] \\
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                                          %%
+%% Backmatter begins here                   %%
+%%                                          %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{References}
+[to fill in] \\
+
+\begin{backmatter}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                  The Bibliography                       %%
+%%                                                         %%
+%%  Bmc_mathpys.bst  will be used to                       %%
+%%  create a .BBL file for submission.                     %%
+%%  After submission of the .TEX file,                     %%
+%%  you will be prompted to submit your .BBL file.         %%
+%%                                                         %%
+%%                                                         %%
+%%  Note that the displayed Bibliography will not          %%
+%%  necessarily be rendered by Latex exactly as specified  %%
+%%  in the online Instructions for Authors.                %%
+%%                                                         %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% if your bibliography is in bibtex format, use those commands:
+% \bibliographystyle{bmc-mathphys} % Style BST file
+% \bibliographystyle{unsrt} % Style BST file
+% \bibliography{VSPI_Work_Plan}      % Bibliography file (usually '*.bib' )
+
+% or include bibliography directly:
+% \begin{thebibliography}
+% \bibitem{b1}
+% \end{thebibliography}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               %%
+%% Figures                       %%
+%%                               %%
+%% NB: this is for captions and  %%
+%% Titles. All graphics must be  %%
+%% submitted separately and NOT  %%
+%% included in the Tex document  %%
+%%                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%
+%% Do not use \listoffigures as most will included as separate files
+
+% \section*{Figures}
+  % \begin{figure}[h!]
+  % \caption{\csentence{Sample figure title.}
+      % A short description of the figure content
+      % should go here.}
+      % \end{figure}
+
+% \begin{figure}[h!]
+  % \caption{\csentence{Sample figure title.}
+      % Figure legend text.}
+      % \end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               %%
+%% Tables                        %%
+%%                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Use of \listoftables is discouraged.
+
+% \section*{Tables}
+% \begin{table}[h!]
+% \caption{Sample table title. This is where the description of the table should go.}
+      % \begin{tabular}{cccc}
+        % \hline
+           % & B1  &B2   & B3\\ \hline
+        % A1 & 0.1 & 0.2 & 0.3\\
+        % A2 & ... & ..  & .\\
+        % A3 & ..  & .   & .\\ \hline
+      % \end{tabular}
+% \end{table}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                               %%
+%% Additional Files              %%
+%%                               %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\end{backmatter}
+
+\end{document}
