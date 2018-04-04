@@ -81,7 +81,7 @@ class(shapeData)
 plot(shapeData)
 
 # simplify the shape data (could create little gaps, maybe don't do this)
-gSimplify(shapeData, tol=0.01, topologyPreserve=TRUE)
+gSimplify(shapeData, tol=0.5, topologyPreserve=TRUE)
 plot(shapeData)
 
 # ----------------------------------------------
@@ -172,6 +172,20 @@ setnames(ratio_year, "dist_id", "id")
 
 
 # -----------------
+# create a table for annual maps stratified by sex
+
+ratio_sex <- uganda_vl[ ,.(patients_received=sum(patients_received), samples_received=sum(samples_received), 
+                             dbs_samples=sum(dbs_samples), valid_results=sum(valid_results),
+                             suppressed=sum(suppressed),
+                             dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
+                             suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
+                         by=.(dist_name, sex, year)]
+
+ratio_sex <- ratio_sex[order(year, dist_name, sex)]
+ratio_sex <- merge(shape_names, ratio_sex, by="dist_name")
+setnames(ratio_sex, "dist_id", "id")
+
+# -----------------
 
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 coordinates <- data.table(fortify(shapeData, region='dist112')) 
@@ -183,7 +197,9 @@ coordinates_year[, year:=rep(2014:2018, each=nrow(coordinates))]
 
 # merge on district id
 coordinates <- merge(coordinates, ratio_table, by="id", all.x=TRUE)
+coordinates_sex <- merge(coordinates_year, ratio_sex, by=c('id','year'), all.x=TRUE)
 coordinates_year <- merge(coordinates_year, ratio_year, by=c('id', 'year'), all.x=TRUE)
+
 
 # ----------------------------------------------
 # create annual graphs with variables on the same page 
@@ -293,6 +309,48 @@ ggplot(table_2, aes(x=factor(month), y=facilities_report, col=factor(year), grou
   labs(title = "Total facilities reporting viral load test results by month, year", 
        caption="Source: Uganda VL Dashboard", colour="Year") +
       scale_color_manual(values=graph_colors)
+
+# determine when scale up of reporting occurred
+ggplot(table_2, aes(x=factor(month), y=facilities_report, group=year, color=factor(year))) + 
+  geom_point(size=2.5) + 
+  geom_line(alpha=0.8) + 
+  facet_wrap(~year) +
+  theme_bw() +
+  xlab("Month") + ylab("Facilities reporting") + 
+  labs(title = "Total facilities reporting viral load test results by month, year", 
+       caption="Source: Uganda VL Dashboard", colour="Year") +
+  scale_color_manual(values=graph_colors)
+
+# ---------------
+# suppression ratio maps
+
+# suppression ratio for all years 
+ggplot(coordinates, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() + 
+  labs(title="Viral suppression ratios by district, Uganda", subtitle=" August 2014 - February 2018",
+       caption="Source: Uganda Viral Load Dashboard", fill="% virally suppressed") +
+  theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4), 
+        plot.caption=element_text(vjust=6)) + coord_fixed()
+
+# annual suppression ratios
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() +
+  labs(title="Viral suppression ratios by district, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       fill="% virally suppressed") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+
+# ---------------
+# suppression ratio by sex
+
+
 
 # ---------------
 # annual variable comparisons
@@ -406,28 +464,7 @@ ggplot(table_1, aes(x=factor(year), y=valid_results, fill='Not Suppressed')) +
 # ----------------------------------------------
 # MAPS
 
-# suppression ratio for all years 
-ggplot(coordinates, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
-  geom_polygon() + 
-  geom_path(size=0.01, color="#636363") + 
-  scale_fill_gradientn(colors=ratio_colors) + 
-  theme_void() + 
-  labs(title="Viral suppression ratios by district, Uganda", subtitle=" August 2014 - February 2018",
-       caption="Source: Uganda Viral Load Dashboard", fill="% virally suppressed") +
-        theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4), 
-              plot.caption=element_text(vjust=6)) + coord_fixed()
 
-# annual suppression ratios
-ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
-  coord_fixed() +
-  geom_polygon() + 
-  geom_path(size=0.01) + 
-  facet_wrap(~year) +
-  scale_fill_gradientn(colors=ratio_colors) + 
-  theme_void() +
-  labs(title="Viral suppression ratios by district, Uganda", caption="Source: Uganda Viral Load Dashboard", 
-       fill="% virally suppressed") +
-      theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # -------------------
 # facilities reporting results
