@@ -251,15 +251,16 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
           COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:11, 14, 15, 13, 16, 12)]
           
       # add column for formula_used (to later populate with Y/N values indicating
-          # whether or not a formula was used to develop/model the data)
-          # Right now, fill with "No" which will be the default
+        # whether or not a formula was used to develop/model the data)
+        # Right now, fill with "No" which will be the default
           COD_PNLP_Indicators_melt$formula_used <- "No"
 
          # if modulus operator returns 0 then it should stay no, if it returns anything other than 0, change
             # formula_used to yes
             COD_PNLP_Indicators_melt[value%%1==0, formula_used:='No']
             COD_PNLP_Indicators_melt[value%%1!=0, formula_used:='Yes']
-
+            
+          
 #---INTERVENTIONS---------------------------------------                        
   # Reshape Interventions data
     COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
@@ -280,6 +281,7 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
   # Export the prepped data
   COD_PNLP_Data_Indicators_Long <- COD_PNLP_Indicators_melt
   COD_PNLP_Data_Indicators_Wide <- COD_PNLP_Indicators_cast
+  COD_PNLP_Data_Indicators <- COD_PNLP_Indicators
   COD_PNLP_Data_Interventions_Long <- COD_PNLP_Interventions_melt 
   COD_PNLP_Data_Interventions_Wide <- COD_PNLP_Interventions
 
@@ -292,8 +294,7 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 #   export_data("COD_PNLP_Data_Interventions_Long")
 #   export_data("COD_PNLP_Data_Interventions_Wide")
   
-  dfsToExport <- c("COD_PNLP_Data_Indicators_Long", "COD_PNLP_Data_Indicators_Wide", "COD_PNLP_Data_Interventions_Long", "COD_PNLP_Data_Interventions_Wide")
-
+  dfsToExport <- c("COD_PNLP_Data_Indicators_Long", "COD_PNLP_Data_Indicators_Wide", "COD_PNLP_Data_Interventions_Long", "COD_PNLP_Data_Interventions_Wide", "COD_PNLP_Data_Indicators")
   for (df in dfsToExport){
     export_data(df)
   }
