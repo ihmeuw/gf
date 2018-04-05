@@ -48,7 +48,7 @@
     dt[, population := as.numeric(population)]
     
     # subset the variables we want to include in the amelia() mulitple imputation
-      dt <- dt[, c("province", "dps", "health_zone", "population", "date", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
+      dt <- dt[, c("province", "dps", "health_zone", "date", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
              "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen", 
              "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen", 
              "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" )]
@@ -70,9 +70,28 @@
         for (i in indicators){
           dt[, (i) := as.numeric(get(i))]
         }
+      
+# two different ways to try to get rid of negative values in amelia output:
+  # 1:
+    # bounds matrix to pass as a parameter
+      # sets a lower bound for column 5
+        bds <- matrix(c(5, 0, Inf ), nrow = 1, ncol = 3)
+      # better way to do this?  to set a lower bound for every column that needs it...
+        bound <- rbind(c(5, 0, Inf), c(6, 0, Inf ), c(7, 0, Inf ), c(8, 0, Inf ),
+                     c(9, 0, Inf ), c(10, 0, Inf ), c(11, 0, Inf ), c(12, 0, Inf ), c(13, 0, Inf ),
+                     c(14, 0, Inf ), c(15, 0, Inf ), c(16, 0, Inf ), c(17, 0, Inf ), c(18, 0, Inf ), c(19, 0, Inf ))
+      
     # run amelia() to impute missing values- will change this to m=50 after learning how to work with it
-      amelia.results <- amelia(dt, m=5, ts="date", cs= "health_zone", idvars= c( "province", "dps"))
-    
+      amelia.results <- amelia(dt, m=5, ts="date", cs= "health_zone", idvars= c( "province", "dps"), bounds = bound) 
+      
+  # 2: 
+    # log transform the data to run 
+      cols <- c(5:19) 
+      dt[, names(dt)[5:19] := lapply(.SD, function(x) log(x)), .SDcols=5:19]
+      
+      amelia.resultsLog <- amelia(dt, m=5, ts="date", cs= "health_zone", idvars= c( "province", "dps")) 
+
+      
     # bind amelia results into one data.table, include a column with the imputation number in order to 
       # keep track of this information
       
@@ -81,5 +100,6 @@
         if (i==1)  amelia_data <- data.table(amelia.results$imputations[[i]])
         if (i>1) amelia_data <- rbind(amelia_data, amelia.results$imputations[[i]])
       }
-    # why are some values negative?
     
+      
+      
