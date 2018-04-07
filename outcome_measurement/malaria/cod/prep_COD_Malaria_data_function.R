@@ -211,8 +211,46 @@ if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
         #                         "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen", 
         #                         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" )  
       # ----------------------------------------------    
-        
-
+   
+       
+# ----------------------------------------------     
+# Save a copy of the full data set, in wide form for use in multiple imputation
+  # take a subset of fullData that will be used in MI
+    ameliaDT <- fullData[, -c("donor", "operational_support_partner", "population", "quarter", "month", 
+                                "stringdate", "healthFacilities_numReportedWithinDeadline","reports_expected", "reports_received", "ASAQ_total")]
+  
+  # new column to factor in the product of number of health facilities reporting and total number of health facilties
+    ameliaDT[, healthFacilities_numReported := as.numeric(healthFacilities_numReported)]
+    ameliaDT[, healthFacilities_total := as.numeric(healthFacilities_total)]
+    ameliaDT[, RDT_completedUnder5 := as.numeric(RDT_completedUnder5)]
+    ameliaDT[, RDT_completed5andOlder := as.numeric(RDT_completed5andOlder)]
+    ameliaDT[, RDT_positiveUnder5 := as.numeric(RDT_positiveUnder5)]
+    ameliaDT[, RDT_positive5andOlder := as.numeric(RDT_positive5andOlder)]
+    ameliaDT[, smearTest_completedUnder5 := as.numeric(smearTest_completedUnder5)]
+    ameliaDT[, smearTest_completed5andOlder := as.numeric(smearTest_completed5andOlder)]
+    ameliaDT[, smearTest_positiveUnder5 := as.numeric(smearTest_positiveUnder5)]
+    ameliaDT[, smearTest_positive5andOlder := as.numeric(smearTest_positive5andOlder)]
+    
+    ameliaDT$healthFacilitiesProduct <- ameliaDT[, .(healthFacilities_total * healthFacilities_numReported)]
+    
+    ameliaDT[, RDT_completed := ifelse( year == 2014, RDT_completed, (RDT_completedUnder5 + RDT_completed5andOlder))]
+    ameliaDT[, RDT_positive := ifelse( year == 2014, RDT_positive, (RDT_positiveUnder5 + RDT_positive5andOlder))]
+    ameliaDT[, smearTest_completed := ifelse( year == 2014, smearTest_completed,(smearTest_completedUnder5 + smearTest_completed5andOlder))]
+    ameliaDT[, smearTest_positive := ifelse( year == 2014, smearTest_positive, (smearTest_positiveUnder5 + smearTest_positive5andOlder))]
+    
+    ameliaDT <- ameliaDT[, -c("year", "smearTest_completedUnder5", "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder",
+                              "RDT_positive5andOlder", "RDT_positiveUnder5", "RDT_completedUnder5", "RDT_completed5andOlder")]
+    
+    # reorder columns
+      ameliaDT <- ameliaDT[, c(36, 1:35, 43, 37:42)]
+    
+  # export data  
+    write.csv(ameliaDT, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Full Data for MI.csv"))
+  
+  
+# ----------------------------------------------      
+  
+  
 # ----------------------------------------------     
 # Split appended data into Indicators and Interventions Data
   COD_PNLP_Indicators <- fullData[, c(1:8, 44, 46, 9:23) ]
