@@ -80,6 +80,7 @@ setnames(indicator_mapping, c("code","module", "intervention", "disease"))
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
 final_mapping <- copy(indicator_mapping)
+final_mapping$disease <- NULL
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 
 ##this will make it easier to map everything by removing spaces, punctuation, etc. 
@@ -111,6 +112,7 @@ mapping_for_gf$intervention <-gsub(paste(remove_chars, collapse="|"), "",mapping
 ##remove any duplicates: 
 mapping_for_gf <- unique(mapping_for_gf)
 
+# ----------------------------------------------
 # USE THIS TO CHECK FOR ANY MODULE/INTERVENTION COMBOS IN THE DATA THAT AREN'T IN THE MAPPING
 # mapping_for_gf$concat <- paste0(mapping_for_gf$module, mapping_for_gf$intervention)
 # gfData$concat <- paste0(gfData$module, gfData$intervention)
@@ -119,24 +121,37 @@ mapping_for_gf <- unique(mapping_for_gf)
 ##if this works correctly, we should be able to drop the unmapped_mods from our dataset since they are junk categories:
 # gfData<- gfData[!module%in%unmapped_mods$module]
 
-##if categories get dropped or miscalculated during the mapping, we can figure out which ones they were: 
-data_check1 <- as.data.frame(gfData[, sum(budget, na.rm = TRUE),by = c("country", "disease")])
-data_check2 <- as.data.frame(gfData[, sum(budget, na.rm = TRUE),by = c("country","grant_number", "disease")])
 
+# #if categories get dropped or miscalculated during the mapping, we can figure out which ones they were: 
+# data_check1 <- as.data.frame(gfData[, sum(budget, na.rm = TRUE),by = c("country", "disease")])
+# data_check2 <- as.data.frame(gfData[, sum(budget, na.rm = TRUE),by = c("country","grant_number", "disease")])
+
+# ----------------------------------------------
 mapped_gf <- merge(gfData, mapping_for_gf, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
 
 ##use this to check if any modules/interventions were dropped:
-# dropped_gf <- mapped_gf[is.na(mapped_gf$code)]
+# dropped_gf <- mapped_gf[is.na(mapped_gf$code)] '
 
 gf_data_mapped <- merge(mapped_gf, final_mapping, by="code")
 gf_data_mapped$budget <- gf_data_mapped$budget*gf_data_mapped$coefficient
 gf_data_mapped$expenditure <- gf_data_mapped$expenditure*gf_data_mapped$coefficient
 gf_data_mapped$disbursement <- gf_data_mapped$disbursement*gf_data_mapped$coefficient
 
+
+
+# ----------------------------------------------
+
 ##sum to make sure that budget numbers aren't dropped:
-# hiv_data_check1 <- hivData[, sum(budget, na.rm = TRUE),by = c("country", "module","intervention","disease")]
-# hiv_data_check2 <- hivMapped[, sum(budget, na.rm = TRUE),by = c("country","module", "intervention","disease")]
-# hiv_data_check1[!module%in%hiv_data_check2$module]
+# data_check1 <- gfData[, sum(budget, na.rm = TRUE),by = c("country", "module","intervention","disease")]
+# data_check2 <- gf_data_mapped[, sum(budget, na.rm = TRUE),by = c("country","module", "intervention","disease")]
+# data_check1[!module%in%data_check2$module]
+# data_check1$ind <- "pre"
+# data_check2$ind <- "post"
+# data_check <- rbind(data_check1, data_check2)
+# write.csv(data_check, "data_check.csv", row.names = FALSE)
+
+# ----------------------------------------------
+
 
 
 write.csv(mappedData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/rt_data_mapped.csv"

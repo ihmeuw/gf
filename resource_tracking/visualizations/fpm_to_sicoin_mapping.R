@@ -19,18 +19,41 @@ library(dplyr)
 # ----------------------------------------------
 
 ##load the data: 
+gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
+                                  fileEncoding = "latin1"))
 
-totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv',
-                                 fileEncoding = "latin1"))
+sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
+                                   ,fileEncoding="latin1"))
 
-gtmData <- totalData[(!country%in%c("Uganda", "Congo (Democratic Republic)"))&(data_source%in%c("sicoin", "fpm"))]
-gtmData <- gtmData[source=="gf"]
+
+##change the start dates from factors to dates: 
+sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
+gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
 
 
 ##sum up budget (as "variable") by year, disease, and data source 
-byVars = names(gtmData)[names(gtmData)%in%c('year', 'disease', 'data_source','module')]
-gtmData = gtmData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))
+byVars = names(gtmBudgets)[names(gtmBudgets)%in%c('start_date','period','code', 'disease', 'data_source','gf_module', 'gf_intervention')]
+gtmBudgets = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))
                           , disbursement=sum(na.omit(disbursement))), by=byVars]
+
+data_check1 <- gtmBudgets[, sum(budget, na.rm = TRUE),by = c("module","intervention","disease", "concat")]
+data_check2 <-  gf_data_mapped[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease", "concat")]
+View(data_check1[!concat%in%data_check2$concat])
+gfData <- copy(gtmBudgets)
+
+
+gtmBudgets <- copy(gfData)
+
+
+
+
+
+
+
+
+
+
+
 
 
 gtmData  <- disease_names_for_plots(gtmData)
