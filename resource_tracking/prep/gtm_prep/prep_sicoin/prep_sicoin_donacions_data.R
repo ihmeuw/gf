@@ -39,9 +39,12 @@ prep_donacions_sicoin = function(inFile, start_date, disease, period, source, lo
       ## grab loc_id: 
       gf_data$X__14 <- na.locf(gf_data$X__14, na.rm=FALSE)
       gf_data$X__4 <- na.locf(gf_data$X__4, na.rm=FALSE)
+      gf_data$X__3 <- na.locf(gf_data$X__3, na.rm=FALSE)
       # remove rows where cost_categories are missing values
       if(disease=="hiv"&year(start_date)== 2011 & period==30){ 
         gf_data <- gf_data[c(grep("Banco", gf_data$X__12):grep("FONDO", gf_data$X__12)),]
+      } else if(disease=="tb"){
+        gf_data <- gf_data[c(grep("Donant", gf_data$X__12):.N),]
       } else {
         gf_data <- gf_data[c(grep("Gobierno de", gf_data$X__12):.N),]
       }
@@ -49,7 +52,7 @@ prep_donacions_sicoin = function(inFile, start_date, disease, period, source, lo
       budget_dataset <- gf_data[, c("X__3","X__4","X__14","X__15", "X__27", "X__29"), with=FALSE]
       names(budget_dataset) <- c("adm1", "adm2", "loc_name","sda_orig", "budget", "disbursement")
       } else {  ## if there are no other external sources other than GF 
-        budget_dataset <- setnames(data.table(matrix(nrow = 1, ncol = 10)), 
+        budget_dataset <- setnames(data.table(matrix(nrow = 1, ncol = 11)), 
                                    c("sda_orig","adm2","adm1","loc_name","budget", "disbursement", 
                                      "source", "period",	"start_date", "disease", "expenditure"))
         budget_dataset$loc_name<- as.character(budget_dataset$loc_name)
@@ -68,7 +71,7 @@ prep_donacions_sicoin = function(inFile, start_date, disease, period, source, lo
   ## in the off chance that there are duplicates by loc_id & sda_orig (NAs in the budget for instance)
   ## this gets rid of them:
   budget_dataset <- budget_dataset[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))),
-                                   by=c("loc_id","loc_name", "sda_orig")]
+                                   by=c("adm1","adm2","loc_name", "sda_orig")]
 
   # --------------------------------------------------------------
   
