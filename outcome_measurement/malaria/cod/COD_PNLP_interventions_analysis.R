@@ -38,11 +38,14 @@
     dt <- fread(paste0(dir,"/", "COD_PNLP_Data_Interventions_Long",".csv"))
   
   # output files:
-    # exports all health zone graphs to to a pdf document here:
+    # exports all health zone graphs to to a pdf here:
         # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series for Interventions.pdf
     
-    # exports aggregate graphs to a pdf document here: 
+    # exports aggregate dps-level graphs to a pdf here: 
         # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Aggregate Interventions Data.pdf
+    
+    # exports aggregate national-level graphs to a pdf here:
+        # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/National-Level Interventions.pdf
 # ----------------------------------------------
 
 
@@ -133,11 +136,11 @@
  
   # sum everything at the dps level
       #test_table <- dt[, lapply(.SD, sum), by=c('date', 'dps', 'intervention', 'intervention_spec'), .SDcols='value']
-  test_table2 <- dt[, .(aggValue = sum(value, na.rm=TRUE)), by=c('date', 'dps', 'intervention', 'intervention_spec')]
+  dpsLevel <- dt[, .(aggValue = sum(value, na.rm=TRUE)), by=c('date', 'dps', 'intervention', 'intervention_spec')]
   
   makeGraph <- function(i){
     aggGraphTitle <- intervention_names[i]
-    aggGraph <- ggplot(test_table2[intervention == i], aes(x=date, y=aggValue, color = intervention_spec)) + geom_point() + geom_line() 
+    aggGraph <- ggplot(dpsLevel[intervention == i], aes(x=date, y=aggValue, color = intervention_spec)) + geom_point() + geom_line() 
     aggGraph <- aggGraph + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + labs(x= "Date", y="Value", color= "") + facet_wrap(~ dps, scales="free_y") 
     return(aggGraph)
   }
@@ -145,24 +148,59 @@
   # makeGraph <- function(i){
   #   if (!all(is.na(dt[intervention==interventions[i]]$intervention_spec))) {
   #     aggGraphTitle <- intervention_names[i]
-  #     aggGraph <- ggplot(test_table2[intervention == i], aes(x=date, y=aggValue, color = intervention_spec)) + geom_point() + geom_line() 
-  #     aggGraph <- aggGraph + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + labs(x= "Date", y="Value", color= "") + facet_wrap(~ dps, scales="free_y") 
+  #     aggGraph <- ggplot(dpsLevel[intervention == interventions[i]], aes(x=date, y=aggValue, color = intervention_spec)) + geom_point() + geom_line()
+  #     aggGraph <- aggGraph + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + labs(x= "Date", y="Value", color= "")+ facet_wrap(~ dps, scales="free_y")
   #     return(aggGraph)
   #   }
   #   if (all(is.na(dt[intervention==interventions[i]]$intervention_spec))) {
   #     aggGraphTitle <- intervention_names[i]
-  #     aggGraph <- ggplot(test_table2[intervention == i], aes(x=date, y=aggValue)) + geom_point() + geom_line() 
-  #     aggGraph <- aggGraph + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + labs(x= "Date", y="Value", color= "") + facet_wrap(~ dps, scales="free_y") 
+  #     aggGraph <- ggplot(dpsLevel[intervention == interventions[i]], aes(x=date, y=aggValue)) + geom_point() + geom_line()
+  #     aggGraph <- aggGraph + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + labs(x= "Date", y="Value", color= "")+ facet_wrap(~ dps, scales="free_y")
   #     return(aggGraph)
   #   }
   # }
   
   pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Aggregate Interventions Data.pdf", height=6, width=9)
   for ( i in interventionInput) {   
-    print(i)
     print(makeGraph(i))
   }
   dev.off()
 # ----------------------------------------------     
 # ----------------------------------------------    
   
+  
+# ---------------------------------------------- 
+# ---------------------------------------------- 
+# Graph the aggregate data for each intervention at national level over time
+# ---------------------------------------------- 
+  # sum everything at the national level 
+  nationalSum <- dt[, .(aggValue = sum(value, na.rm=TRUE)), by=c('date', 'intervention', 'intervention_spec')]
+
+# ----------------------------------------------  
+  makeGraph <- function(i) {
+    #aggGraphTitle <- intervention_names[i]
+    if (!all(is.na(dt[intervention==interventions[i]]$intervention_spec))) {
+      m <- ggplot(data= nationalSum[intervention==interventions[i]], aes(date, aggValue, color = intervention_spec, ymin=0)) + 
+        geom_point() + geom_line() + theme_bw() + ggtitle(paste0("DRC: ", intervention_names[i] ))
+    }
+    if (all(is.na(dt[intervention==interventions[i]]$intervention_spec))) { 
+      m <- ggplot(data= nationalSum[intervention==interventions[i]], aes(date, aggValue, ymin=0)) + 
+        geom_point() + geom_line() + theme_bw() + ggtitle(paste0("DRC: ", intervention_names[i] ))
+    }
+    return(m)
+  }
+# ----------------------------------------------      
+  # Export Graphs to a PDF  
+  pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/National-Level Interventions.pdf", height=6, width=9) 
+  # Loop through each health zone and use makeGraph to create the graph within a set of plots
+    plots1 <- lapply(c(1, 2, 4, 10), function(i) makeGraph(i))
+    plots2 <- lapply(c(3, 5, 6, 9), function(i) makeGraph(i))
+    plots3 <- lapply(c(7, 8), function(i) makeGraph(i))
+    
+    # use do.call() to arrange the set of plots on the same page, like facets, but with their own legends
+    do.call(grid.arrange, (plots1))
+    do.call(grid.arrange, (plots2))
+    do.call(grid.arrange, (plots3))
+  dev.off()
+# ---------------------------------------------- 
+# ---------------------------------------------- 

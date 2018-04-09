@@ -95,7 +95,7 @@
 
 # ----------------------------------------------     
 # ---------------------------------------------- 
-# Graph the aggregate data for each indicator and subpopulation by province for each month
+# Graph the aggregate data for each intervention by DPS over time
 # ---------------------------------------------- 
     # vector of all ndicators:
       indicatorInput <- dt[["indicator"]]
@@ -127,4 +127,41 @@
       }
     dev.off()
 # ----------------------------------------------     
+# ---------------------------------------------- 
+    
+
+# ---------------------------------------------- 
+# ---------------------------------------------- 
+# Graph the aggregate data for each intervention at national level over time
+# ---------------------------------------------- 
+# sum everything at the national level 
+  nationalSum <- dt[, .(aggValue = sum(value, na.rm=TRUE)), by=c('date', 'intervention', 'intervention_spec')]
+  
+  # ----------------------------------------------  
+  makeGraph <- function(i) {
+    #aggGraphTitle <- intervention_names[i]
+    if (!all(is.na(dt[intervention==interventions[i]]$intervention_spec))) {
+      m <- ggplot(data= nationalSum[intervention==interventions[i]], aes(date, aggValue, color = intervention_spec, ymin=0)) + 
+        geom_point() + geom_line() + theme_bw() + ggtitle(paste0("DRC: ", intervention_names[i] ))
+    }
+    if (all(is.na(dt[intervention==interventions[i]]$intervention_spec))) { 
+      m <- ggplot(data= nationalSum[intervention==interventions[i]], aes(date, aggValue, ymin=0)) + 
+        geom_point() + geom_line() + theme_bw() + ggtitle(paste0("DRC: ", intervention_names[i] ))
+    }
+    return(m)
+  }
+  # ----------------------------------------------      
+  # Export Graphs to a PDF  
+  pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/National-Level Indicators.pdf", height=6, width=9) 
+  # Loop through each health zone and use makeGraph to create the graph within a set of plots
+  plots1 <- lapply(c(1, 2, 4, 10), function(i) makeGraph(i))
+  plots2 <- lapply(c(3, 5, 6, 9), function(i) makeGraph(i))
+  plots3 <- lapply(c(7, 8), function(i) makeGraph(i))
+  
+  # use do.call() to arrange the set of plots on the same page, like facets, but with their own legends
+  do.call(grid.arrange, (plots1))
+  do.call(grid.arrange, (plots2))
+  do.call(grid.arrange, (plots3))
+  dev.off()
+# ---------------------------------------------- 
 # ---------------------------------------------- 
