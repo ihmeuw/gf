@@ -26,7 +26,7 @@ library(jsonlite)
 # Files and directories
 
 # output file
-dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_data_nofilters/'
+dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/no_filters/'
 
 # parameters
 ages = c('0,1', '1,2,3,4', '5,6,7,8,9,10', '11, 12, 13, 14, 15', 
