@@ -71,7 +71,7 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
     #we don't care, so sum by just the municipality and SDA: 
     
     budget_dataset <- budget_dataset[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))),
-                                   by=c("loc_id", "loc_name", "sda_orig")]
+                                   by=c("adm1","adm2", "loc_name", "sda_orig")]
   } else if (source=="gf"&period==365) {
     colnames(gf_data)[3] <- "loc_id"
     gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)

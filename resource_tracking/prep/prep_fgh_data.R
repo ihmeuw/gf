@@ -17,8 +17,8 @@ library(readxl)
 library(reshape)
 library(scales)
 
-
-## load the fgh data
+# ----------------------------------------------
+## load the fgh DAH data
 
 fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/ihme_dah_cod_uga_gtm_1990_2016.csv",fileEncoding="latin1"))
 
@@ -37,7 +37,6 @@ get_source_channel <- function(channel){
 }
 
 fgh_data$source <- mapply(get_source_channel, fgh_data$channel)
-
 # now get the columns we want: 
 
 toMatch <- c("hiv", "mal", "tb", "hss", "year", "source", "country")
@@ -65,24 +64,54 @@ get_disease <- function(sda_orig){
 }
 
 ##get the disease column: 
-
-
 fghData$disease <- mapply(get_disease, fghData$sda_orig)
 
 ## add in 
-
-
 fghData[country=='COD', country:='Congo (Democratic Republic)'] 
 fghData[country=='GTM', country:='Guatemala'] 
 fghData[country=='UGA', country:='Uganda'] 
 
-
-
-## something that might be cool is to get the absorption ratio of disb/budget by year, source, disease, etc. 
+##sum the disbursement by the other variables just to remove any duplicates: 
 byVars = names(fghData)[names(fghData)%in%c('source', 'year', 'disease', 'sda_orig', 'country')]
 fghData = fghData[, list(disbursement=sum(na.omit(disbursement))), 
                   by=byVars]
-
 fghData$data_source <- "fgh"
-
 write.csv(fghData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_data_prepped.csv", row.names=FALSE)
+
+# ----------------------------------------------
+#load the GHE data: 
+
+ghe_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/gpr_corrected_final_gbd4.csv",fileEncoding="latin1"))
+
+##country codes for GTM, UGA, and DRC
+country_codes <- c(128, 190,171)
+
+ghe_data <- ghe_data[grepl(paste0(country_codes, collapse="|"), ghe_data$location_id),]
+
+value_codes <- unique(ghe_data$value_code)
+
+ghe_data$model <- NULL
+ghe_wide <- reshape(ghe_data,direction='wide',
+                    idvar=c("location_id", "year_id","hiv_pop"),
+                   timevar="value_code")
+
+ghe_wide <-  ghe_wide[with(ghe_wide, order(sort(names(ghe_wide)))), ]
+## (THE - OOP+PPP+GHE = DAH (in theory))
+
+oop_vars <- names(ghe_wide)[grepl(c("oop"), names(ghe_wide))]
+ppp_vars <- names(ghe_wide)[grepl(c("ppp"), names(ghe_wide))]
+ghe_vars <- names(ghe_wide)[grepl(c("public"), names(ghe_wide))]
+
+ghe_wide$mean_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[1]])+(ghe_wide[ppp_vars[1]])+(ghe_wide[ghe_vars[1]])
+ghe_wide$lower_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[2]])+(ghe_wide[ppp_vars[2]])+(ghe_wide[ghe_vars[2]])
+ghe_wide$upper_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[3]])+(ghe_wide[ppp_vars[3]])+(ghe_wide[ghe_vars[3]])
+
+ghe_wide$mean_dah <- (ghe_wide$ensemble_mean.the_hiv - ghe_wide$mean_oop_ppp_ghe_agg)
+ghe_wide$lower_dah <- (ghe_wide$ensemble_lower.func_hiv_prev - ghe_wide$lower_oop_ppp_ghe_agg)
+ghe_wide$upper_dah <- (ghe_wide$ensemble_upper.the_hiv - ghe_wide$upper_oop_ppp_ghe_agg)
+
+
+
+
+
+
