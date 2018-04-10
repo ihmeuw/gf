@@ -20,15 +20,13 @@ library(scales)
 
 # ---------------------------------------------
 ##function to create indicator between current, upcoming, and rejected budgets: 
-appr_rej_indicators <- function(year, data_source){
+uga_data_sources <- function(year, data_source){
   if(year < 2018){
     x <- "Past/Active"
   } else if (data_source=="rej_fpm"){
     x <- "In Iteration"
-  } else if (data_source=="init_fpm"){
+  } else if (grepl("init_fpm", data_source)){
     x <- "Initial"
-  }else if (data_source == "init2_fpm"){
-    x <- "Iteration 2"
   }else {
     x <- "Upcoming"
   }
@@ -71,31 +69,37 @@ data_source_names_for_plots <- function(gos_data){
 # ---------------------------------------------
 ##colors to map for non HSS disease categories (Malaria, TB, HIV): 
 primColors <- c('#b20000', '#660000', ##reds
-                '#f6ae8f', '#EE5D1F', ##oranges
-                '#3DCC3D', '#008000',##greens
+                '#4169e1', '#00007f',##royal and midnight blue
                 '#004c4c', '#00D9D9',##blues
                 "#35978f", "#80cdc1", ##teals
                 '#3786b0', '#0097f1',##ocean 
+               '#f6ae8f', '#EE5D1F', 
+               '#00bf97', '#bf9700',
                 '#ffd700', '#d3a308',#yellows
-                '#3d017a','#b200b2', ##magenta
+                '#3d017a','#e8946d', ##magenta
+                '#9900cc','#00b8bf',
                 '#660066', '#bf7fbf',#purples
-                '#ff748c', "#e00222", #pinks 
-                '#4169e1', '#00007f',##royal and midnight blues
-                '#c0c0c0', '#ffc0cb') ##grey and millennial pink 
+                '#3DCC3D', '#008000',##greens 
+                '#05ff40','#54489e',
+                '#58fff8', '#005060',
+               '#ff748c', "#a9e89b", #pinks 
+                '#bf3700') ##grey and millennial pink 
 
 
-names(primColors) <- c('HIV/AIDS care, support and outreach', 'Community care and outreach', ##reds
-                       'Case detection and diagnosis', 'Case Diagnosis',##oranges
-                       'Treatment','HIV/AIDS counseling and testing',##greens
-                       'RSSH: health workforce', 'RSSH: information system',##blues
-                       'RSSH: service delivery', 'RSSH: other', ##teals
-                       'Key and vulnerable populations', 'Community care and outreach',##ocean
-                       'Prevention', 'Malaria other control and prevention', ##yellows
-                       'MDR-TB case detection and diagnosis', 'MDR-TB prevention',   ##magenta
-                       'HIV/TB collaborative interventions', 'MDR-TB treatment', ##purples
-                       'Monitoring and evaluation', 'Malaria bed nets', #pinks
-                       'Performance Based Financing', 'Malaria indoor residual spraying' ##royal and midnight blues
-                       ,'Other/Unidentified', 'HIV/AIDS PMTCT') ##grey and millennial pink 
+names(primColors) <- c('Treatment, care and support', 'HIV Testing Services', ##reds
+                       'Comprehensive prevention programs for men who have sex with men', 'Prevention programs for general population',##oranges
+                       'Comprehensive prevention programs for sex workers and their clients','Comprehensive prevention programs for people who inject drugs and their partners',##greens
+                       'Comprehensive prevention programs for transgender people', 'Prevention programs for adolescents and youth, in and out of school',##blues
+                       'Programs to reduce human rights-related barriers to HIV services', 'Prevention programs for other vulnerable populations', ##teals
+                       "Comprehensive programs for people in prisons and other closed settings",'Case management', ##ocean
+                       'Vector control', 'Specific prevention interventions', ##yellows  ##magenta
+                       'TB/HIV','TB care and prevention', 'Multidrug-resistant TB' ,
+                       'Prevention of mother-to-child transmission',##grey and millennial pink
+                       'Procurement and supply chain management systems', 'Health management information system and M&E',
+                       'Human resources for health, including community health workers', 'Integrated service delivery and quality improvement'
+                       ,'Financial management systems', 'National health strategies',
+                       'Community responses and systems', 'Program management', 'TB/HIV',
+                       'Performance Based Financing', 'Unidentified', 'Other RSSH/Unidentified')
 
 # ---------------------------------------------
 ######create hss indicator: 

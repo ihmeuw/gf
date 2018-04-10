@@ -64,7 +64,7 @@ for(i in 1:length(file_list$file_name)){
 
 
 resource_database$adm1 <- 128
-resource_database$adm2 <- adm1
+resource_database$adm2 <- resource_database$adm1
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure<- as.numeric(resource_database$expenditure)
 ## since we only have budget data, include exp and disbursed as 0:  

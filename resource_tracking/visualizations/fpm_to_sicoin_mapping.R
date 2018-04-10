@@ -39,20 +39,10 @@ gtmBudgets = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.o
 data_check1 <- gtmBudgets[, sum(budget, na.rm = TRUE),by = c("module","intervention","disease", "concat")]
 data_check2 <-  gf_data_mapped[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease", "concat")]
 View(data_check1[!concat%in%data_check2$concat])
-gfData <- copy(gtmBudgets)
+
 
 
 gtmBudgets <- copy(gfData)
-
-
-
-
-
-
-
-
-
-
 
 
 
