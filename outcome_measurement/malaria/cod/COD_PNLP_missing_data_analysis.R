@@ -48,22 +48,14 @@
 
 
 # ----------------------------------------------
-# Use linear regression to identify outliers
-idVars = names(fullData)[1:5]
-regVars = names(fullData)[!names(fullData) %in% idVars]
-
-i = 1
-outcome = regVars[i]
-otherVars = regVars[-i]
-formula = paste(c(outcome, '~', paste(otherVars, collapse='+')), collapse='')
-formula = as.formula(formula)
-lmFit = lm()
-
-# ----------------------------------------------
-      
-
-# ----------------------------------------------
   # Outlier Analysis - Indicators
+
+  # use ggpairs to identify good pairs of variables to scatter
+	idVars = names(fullData)[1:5]
+	ggpairs(fullData[,names(fullData)[!names(fullData) %in% idVars], with=FALSE])
+
+
+
   # indicators to loop through and make a histogram for
     indicators <- unique(dt$indicator)
     
