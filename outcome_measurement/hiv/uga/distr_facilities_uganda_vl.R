@@ -1,9 +1,8 @@
 # ----------------------------------------------
-# David Phillips, Caitlin O'Brien-Carelli
+# David, Phillips, Caitlin O'Brien-Carelli
 #
 # 3/26/2018
 # To extract a list of districts and facilities from Uganda Viral Load Dashboard: https://vldash.cphluganda.org/
-# Merge with Uganda VL data on facility ID in order to get names of districts, facilities
 # ----------------------------------------------
 
 
@@ -13,6 +12,8 @@ rm(list=ls())
 library(data.table)
 library(jsonlite)
 library(httr)
+library(tibble)
+library(dplyr)
 
 # --------------------
 
@@ -23,7 +24,7 @@ library(httr)
 # data directory
 
 # output file
-dir = "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/"
+dir = "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facilities"
 # ----------------------------------------------
 
 
@@ -37,9 +38,38 @@ dir = "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/"
   # load
   data = fromJSON(url)
   
-  #data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))
-  facilities_full = data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]])))      
-        
+  
+  # original function to extract the facility ids from the list
+  #facilities_full <- data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]]))) 
+ 
+ # create a data frame with only the facilities data 
+ facilities_1 <- data$facilities
+ 
+ # create a function that selects the facility names and ids
+  select_names <- function(i) {
+   y <- unlist(facilities_1[i])
+   y <- y[c(2,3,4,5,7)]
+   names(y) <- c("facility_id", "facility_name", "dhis2_name", "hub_id", "district_id")
+   return(y)
+  }
+  
+  # use lapply to run the select_names function and bind into a data table
+  facilities <- lapply(1:length(data$facilities), function(x) select_names(x))
+  facilities <- do.call('rbind', facilities)
+  facilities <- data.table(facilities)
+  
+# --------------------
+# add districts
+
+  
+  
+  
+  
+  
+  
+  
+  
+  
   # save full facilities data in case needed later
   saveRDS(facilities, file=paste0(dir,"facility_merge/facilities_full.rds"))
   
