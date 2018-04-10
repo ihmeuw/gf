@@ -35,24 +35,20 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
 
 ## sum budget and exp. by the variables of interest 
 #here, I'm doing SDA, grant, disease, and data source (gos, fpm etc.) by year 
-byVars = names(graphData)[names(graphData)%in%c('program_activity', 'year', 'grant_number', 'disease', 'data_source')]
+byVars = names(graphData)[names(graphData)%in%c('gf_module', 'gf_intervention', 'year', 'grant_number', 'disease', 'data_source')]
 graphData = graphData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 graphData$budget[graphData$budget<=0] <- NA
 graphData$expenditure[graphData$expenditure<=0] <- NA
 
+##apply the grant facet:
+# graphData$facet <- as.factor(mapply(data_sources_facet, graphData$year, graphData$data_source))
+# graphData$facet <- factor(graphData$facet, levels=c("Past/Active", "Initial",  "Upcoming"))
 
-##apply the grant facet (Past/Upcoming/Rejected)
-graphData$facet <- as.factor(mapply(appr_rej_indicators, graphData$year, graphData$data_source))
-graphData$facet <- factor(graphData$facet ,levels=c("Past/Active", "In Iteration", "Initial", "Upcoming", "Iteration 2"))
-
+graphData[gf_module=="Health management information system and monitoring and evaluation"
+          , gf_module:="Health management information system and M&E"]
 ##make the disease text nicer for the graphs: 
 graphData <- disease_names_for_plots(graphData)
-
-
-graphData[program_activity=="HIV/AIDS care and support", program_activity:="HIV/AIDS care, support and outreach"]
-graphData[program_activity=="PBF", program_activity:="Performance Based Financing"]
-
 
 # ---------------------------------------------
 # stacked bar charts over time 
@@ -61,7 +57,7 @@ prog_plots <- list()
 for (k in unique(graphData$disease)){
   subdata <- graphData[disease==k]
   colScale <- scale_fill_manual(name="SDA", values =primColors) 
-  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=program_activity)) + 
+  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=gf_module)) + 
     geom_bar(## if you want 100% stacked graphs, uncomment: position = "fill",
       stat="identity") + 
     colScale +
