@@ -1,11 +1,10 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 3/29/2018
-# First map of Uganda by suppression ratio by district
+#4/10/2018
+# Descriptive statistics and maps for the Uganda Viral Load Dashboard
 # ----------------------------------------------
 # Set up R
-# raster package is most of what you need
 
 rm(list=ls())
 library(data.table)
@@ -37,7 +36,30 @@ uganda_vl[, dist_name:=gsub('District','', district_name)]
 uganda_vl[, dist_name:=gsub(' ','', dist_name)]
 uganda_vl[, dist_name]
 
-# Change Luwero=Luweero and Sembabule=Ssembabule
+# 123 districts; merge 10 with pre-2016 districts
+length(unique(uganda_vl$dist_name))
+
+#create a function that merges new districts into previous districts to match shape file
+merge_new_dists <- function(x) {
+  x[dist_name=="Bunyangabu", dist_name:="Kabarole"]
+  x[dist_name=="Butebo", dist_name:="Pallisa"]
+  x[dist_name=="Kagadi", dist_name:="Kibaale"]
+  x[dist_name=="Kakumiro", dist_name:="Kibaale"]
+  x[dist_name=="Kyotera", dist_name:="Rakai"]
+  x[dist_name=="Namisindwa", dist_name:="Manafwa" ]
+  x[dist_name=="Omoro", dist_name:="Gulu"]
+  x[dist_name=="Pakwach", dist_name:="Nebbi"]
+  x[dist_name=="Rubanda", dist_name:= "Kabale"]
+  x[dist_name=="Rukiga", dist_name:="Kabale"]
+ 
+}
+
+merge_new_dists(uganda_vl)
+
+# should be 113 districts to match shape file
+length(unique(uganda_vl$dist_name))
+
+# Change spelling of Luwero=Luweero and Sembabule=Ssembabule
 uganda_vl[dist_name=="Luwero", dist_name:="Luweero"]
 uganda_vl[dist_name=="Sembabule", dist_name:="Ssembabule"]
 
@@ -94,6 +116,17 @@ plot(shapeData)
 shapeData@data %>% as_tibble()
 unique(shapeData@data$dist112_na)
 length(unique(shapeData@data$dist112_na)) # 112 districts
+
+# check for unmatched values
+uvl_check <- uganda_vl[,unique(dist_name)]
+shape_check <- unique(shapeData@data$dist112_na)
+
+shape_check[!shape_check %in% uvl_check] # shape file contains all districts in uganda vl
+uvl_check[!uvl_check %in% shape_check] 
+
+
+
+
 
 # dist112 is district id #s, dist112_na is names; match on names, merge on ids
 shapeData@data$dist112_na %>% as_tibble()
@@ -161,6 +194,7 @@ shape <- sort(shape)
 shape[!shape %in% ratio] # shape file contains all districts in uganda vl
 ratio[!ratio %in% shape] 
 length(ratio[!ratio %in% shape]) # 10 districts are in the uvl data but not the shape file
+
               
 #merge shape and uvl data on district names; rename the district ids 'id'
 ratio_table <- merge(shape_names, ratio_table, by="dist_name")
