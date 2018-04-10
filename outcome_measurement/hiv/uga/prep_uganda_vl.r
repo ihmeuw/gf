@@ -1,8 +1,10 @@
 # ----------------------------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
-# 12/15/2018
+# 4/10/2018
 # To extract data from Uganda Viral Load Dashboard: https://vldash.cphluganda.org/
+# apply all filters for maximum number of variables
+# use webscrape_vl_parallel to run parallel jobs on the cluster (more up to date)
 # ----------------------------------------------
 
 
@@ -25,7 +27,8 @@ reload_everything = FALSE
 # data directory
 
 # output file
-dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
+# consider changing output to month, year folders
+dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape'
 # ----------------------------------------------
 
 
@@ -48,7 +51,7 @@ for(y in c('14', '15', '16', '17', '18')) {
         for(s in c('m','f','x')) { 
           
           # check if file exists first
-          outFile = paste0(dir, '/facilities_suppression_', m,'20', y,'_',a,'_', s, '_tb', t, '.rds')
+          outFile = paste0(dir, '/facilities_suppression_', m,'20', y,'_',a,'_', s, '_tb', t, '_', '.rds')
           check = file.exists(outFile)
           
           # only download if it doesn't already exist

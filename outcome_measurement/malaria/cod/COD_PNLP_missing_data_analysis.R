@@ -34,16 +34,84 @@
     # input file:
     # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators_Long
     # csv files were produced by prep_COD_Malaria_data_function.R
-      dt <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Long",".csv")) 
-      dt_wide <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Wide",".csv")) 
-    
+      dt <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Long.csv")) 
+      dt_wide <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Wide.csv")) 
+      dt2 <- fread(paste0(dir, "/", "COD_PNLP_Data_Interventions_Long.csv"))
+        
     # output files:
 
     # Set up:
       dt[, date := as.Date(date)]
+      dt2[, date := as.Date(date)]
+      dt2[, value := as.numeric(value)]
 # ----------------------------------------------
 
 
+# ----------------------------------------------
+  # Outlier Analysis - Indicators
+  # indicators to loop through and make a histogram for
+    indicators <- unique(dt$indicator)
+    
+    indicator_names <- c(
+      `newCasesMalariaMild` = "Incidence of Mild Malaria",
+      `newCasesMalariaSevere` = "Incidence of Severe Malaria",
+      `mildMalariaTreated` = "Cases of Mild Malaria Treated",
+      `severeMalariaTreated` = "Cases of Severe Malaria Treated",
+      `malariaDeaths` = "Number of Deaths from Malaria"
+    )
+
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Outlier Analysis Indicators.pdf", height=6, width=9)   
+    for (i in indicators){
+    # Subset of data
+        dt_byIndicator <- dt[indicator == i,
+                             indicator,
+                             by= c('date', 'dps', 'health_zone', 'subpopulation', 'value')]
+        
+    # Make a histogram for each variable
+        # qplot(dt_byIndicator$value, geom="histogram")
+        
+        g <- ggplot(data=dt_byIndicator, aes(dt_byIndicator$value)) + geom_histogram(bins = 50, fill="cornflowerblue") 
+        g <- g + ggtitle(indicator_names[i]) + xlab("Value") + ylab("Count") + facet_grid(subpopulation ~ dps, scales="free")
+        print(g)
+    }
+    dev.off()  
+# ----------------------------------------------
+    
+    
+# ----------------------------------------------
+  # Outlier Analysis - Interventions
+  # indicators to loop through and make a histogram for
+    interventions <- unique(dt2$intervention)
+    
+    intervention_names <- c(
+      `ArtLum` = "Artéméther - Lumefatrine",
+      `SP` = "SP administered during ANC",
+      `ASAQ` = "Artesunate Amodiaquine (ACT)",
+      `ITN` = "ITNs",
+      `ANC` = "Antenatal Care Visits",
+      `RDT` = "Rapid Diagnostic Tests",
+      `smearTest` = "Smear Tests",
+      `VAR` = "Measles Vaccine",
+      `healthFacilities` = "Health Facilities Reporting",
+      `reports` = "Number of Reports"
+    )
+    
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Outlier Analysis Interventions.pdf", height=6, width=9)   
+    for (i in interventions){
+      # Subset of data
+          dt_byIntervention <- dt2[intervention == i,
+                               intervention,
+                               by= c('date', 'dps', 'health_zone', 'intervention_spec', 'value')]
+          
+      # Make a histogram for each variable
+          g <- ggplot(data=dt_byIntervention, aes(dt_byIntervention$value)) + geom_histogram(bins = 50) 
+          g <- g + ggtitle(intervention_names[i]) + xlab("Value") + ylab("Count") + facet_grid(intervention_spec ~ dps, scales="free")
+          print(g)
+    }
+    dev.off()  
+# ---------------------------------------------- 
+    
+      
 # ----------------------------------------------
   # Subset of health zone and data and indicators
     
@@ -98,11 +166,7 @@
     print(g)
 # ----------------------------------------------
   # Make a histogram for counts of missing data by health zone by indicator  
-    
-    
-    
-    
-    
+
     dt2 <- dt_missing[indicator == "newCasesMalariaSevere",
                                     .(percent_missing = (mean(missing_value)*100)), 
                                     by=c('date')]
@@ -110,3 +174,7 @@
     g <- ggplot(data=dt2, aes(x = date, y = percent_missing)) + geom_bar(stat="identity")
     g <- g + ggtitle("Missing Data for New Cases of Severe Malaria") + ylim(0, 100) + labs(x= "Date", y= "Percent Missing Data") 
     print(g)
+    
+    
+    
+    
