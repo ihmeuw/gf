@@ -36,9 +36,6 @@ uganda_vl[, dist_name:=gsub('District','', district_name)]
 uganda_vl[, dist_name:=gsub(' ','', dist_name)]
 uganda_vl[, dist_name]
 
-# 123 districts; merge 10 with pre-2016 districts
-length(unique(uganda_vl$dist_name))
-
 #create a function that merges new districts into previous districts to match shape file
 merge_new_dists <- function(x) {
   x[dist_name=="Bunyangabu", dist_name:="Kabarole"]
@@ -56,7 +53,7 @@ merge_new_dists <- function(x) {
 
 merge_new_dists(uganda_vl)
 
-# should be 113 districts to match shape file
+# should be 112 districts to match shape file
 length(unique(uganda_vl$dist_name))
 
 # Change spelling of Luwero=Luweero and Sembabule=Ssembabule
@@ -124,7 +121,7 @@ shape_check <- unique(shapeData@data$dist112_na)
 shape_check[!shape_check %in% uvl_check] # shape file contains all districts in uganda vl
 uvl_check[!uvl_check %in% shape_check] 
 
-
+unique(uganda_vl$dist_name)[!(unique(uganda_vl$dist_name)) %in% unique(shapeData@data$dist112_na)]
 
 
 
