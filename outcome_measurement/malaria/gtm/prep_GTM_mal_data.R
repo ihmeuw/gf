@@ -118,8 +118,14 @@
         # print the sheet that processed - for us to see where it's working/goes wrong for now
           print(s)
       }
-        
 # ----------------------------------------------
 
         
-        
+# ----------------------------------------------
+  # Test that the output has the right number of rows
+    if (nrow(dt)!=228) stop('Output data has wrong number of rows!')
+# ----------------------------------------------            
+    
+    
+    
+    
