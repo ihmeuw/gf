@@ -14,6 +14,7 @@
     library(stringr)
     library(RColorBrewer)
     library(ggplot2)
+    library(GGally)
     library(lubridate)
     library(readxl)
     library(stats)
@@ -43,19 +44,133 @@
     # Set up:
       dt[, date := as.Date(date)]
       dt2[, date := as.Date(date)]
+      dt_wide[, date := as.Date(date)]
+      fullData[, date := as.Date(date)]
+      dt[, value := as.numeric(value)]
       dt2[, value := as.numeric(value)]
 # ----------------------------------------------
 
-
+      
 # ----------------------------------------------
-  # Outlier Analysis - Indicators
+# use a correlation matrix to identify good pairs of variables to scatterplot
+  # create a vector of each set of column headings, one for id variables, one for the numeric variables
+  	idVars = names(fullData)[1:5]
+    numVars = names(fullData)[6:44]
+    
+  # make sure each of the numeric variables is actually numeric
+  	for (i in numVars){
+  	  fullData[, (i) := as.numeric(get(i))]
+  	}
+  
+  # loop through each pair of variables, calculate the correlation
+    i=1
+    for(v1 in numVars) { 
+      for(v2 in numVars ) {
+        # skip cases where v1 and v2 are the same variable
+        if (v1==v2) next 
+            # to track progess:
+            # print(v1)
+            # print(v2)
+        
+        # store the correlation information in a data.table, extracting the second value from the correlation matrix, which is 
+        # the correlation between the two variables
+        tmpData <- data.table(variable1=v1, 
+                              variable2=v2,
+                              correlation=(cor(fullData[!is.na(get(v1)) & !is.na(get(v2)), c(v1, v2), with=FALSE]))[2])
+        
+        # rbind() each iteration to the previous to create one data.table called fullCorrMatrix
+        if (i==1) fullCorrMatrix = tmpData
+        if (i>1) fullCorrMatrix = rbind(fullCorrMatrix, tmpData)
+        
+        i=i+1
+      }
+    }
+  # find the maximum correlation for each variable and store that information in a data.table called maxCorr
+    maxCorr <- fullCorrmatrix[,
+                            maxCorr := .(max(correlation)),
+                            by = c("variable1")]
+    
+   # make it so maxCorr contains only the pairs of variables with the maximum correlation for each variable 
+     maxCorr <- maxCorr[maxCorr == correlation]
+  
+  # scatterplot the pairs of variables identified by correlation matrix analysis
+  # loop through pairs of variables in maxCorr for graphing 
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)   
+    
+    i = 1
+    for (v in maxCorr$variable1){
+      
+      v2 = maxCorr$variable2
 
-  # use ggpairs to identify good pairs of variables to scatter
-	idVars = names(fullData)[1:5]
-	ggpairs(fullData[,names(fullData)[!names(fullData) %in% idVars], with=FALSE])
+      g <- ggplot(fullData, aes(fullData[get(v)], fullData[get(v2[i])])) + geom_point() # + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+      
+      print(g)
+      
+      i = i + 1
 
+    }
+    dev.off()
+    
+    
+     
+  # identify and color code suspected outliers
+  
+  
+# ---------------------------------------------- 
+  j <- 1
+  
+  pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)   
+  for ( i in (2:39) ) {
+    for (j in (1:(i - 1)) ){
+      g <- getPlot(ggpairs, i, j) 
+      g <- g + geom_smooth()
+      print(g)
+    }
+    i <- i + 1
+  }
+  dev.off()
+  
+  ggpairs <- ggpairs(fullData[,names(fullData)[!names(fullData) %in% idVars], with=FALSE])
+  pairsIndicators <- ggpairs(fullData, columns= 6:20)
+  
+  # Indicators data 
+  ggplot(fullData, aes(x=newCasesMalariaMild_under5, y=mildMalariaTreated_under5))+ geom_point() + geom_smooth() + coord_fixed()
+  ggplot(fullData, aes(x=newCasesMalariaMild_5andOlder, y=mildMalariaTreated_5andOlder)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=newCasesMalariaMild_pregnantWomen, y=mildMalariaTreated_pregnantWomen)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=newCasesMalariaSevere_under5, y=severeMalariaTreated_under5)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=newCasesMalariaSevere_5andOlder, y=severeMalariaTreated_5andOlder)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=newCasesMalariaSevere_pregnantWomen, y=severeMalariaTreated_pregnantWomen)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
 
+  # ITN data
+  ggplot(fullData, aes(x=ITN_received, y=ITN_distAtANC)) + geom_point() + geom_smooth() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=ITN_received, y=ITN_distAtPreschool)) + geom_point() + geom_smooth() + geom_abline(intercept = 0)
+  
+  dataITN <- fullData[,
+                      .(ITN_dist = sum(ITN_distAtANC, ITN_distAtPreschool)),
+                      by = c('date', 'health_zone', 'ITN_received')]
+  
+  ggplot(dataITN, aes(x=ITN_received, y=ITN_dist)) + geom_point() + geom_smooth() + geom_abline(intercept = 0)
+  
+  # smearTest data
+  ggplot(fullData, aes(x=smearTest_completed, y=smearTest_positive)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  
+  # RDT data
+  ggplot(fullData, aes(x=RDT_completed, y=RDT_positive)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  
+  # ArtLum data
+  ggplot(fullData, aes(x=ArtLum_receieved, y=ArtLum_used)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  
+  # ANC data
+  ggplot(fullData, aes(x=ANC_1st, y= ANC_2nd)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=ANC_2nd, y=ANC_3rd)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=ANC_3rd, y=ANC_4th)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=ANC_1st, y=SP_1st)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=ANC_2nd, y=SP_2nd)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=ANC_3rd, y=SP_3rd)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+# ---------------------------------------------- 
 
+  
+# ----------------------------------------------
   # indicators to loop through and make a histogram for
     indicators <- unique(dt$indicator)
     
