@@ -52,8 +52,7 @@
 
       
 # ----------------------------------------------
-# use a correlation matrix to identify good pairs of variables to scatterplot
-  # create a vector of each set of column headings, one for id variables, one for the numeric variables
+# create a vector of each set of column headings, one for id variables, one for the numeric variables
   	idVars = names(fullData)[1:5]
     numVars = names(fullData)[6:44]
     
@@ -61,7 +60,8 @@
   	for (i in numVars){
   	  fullData[, (i) := as.numeric(get(i))]
   	}
-  
+    
+# use a correlation matrix to identify good pairs of variables to scatterplot 
   # loop through each pair of variables, calculate the correlation
     i=1
     for(v1 in numVars) { 
@@ -86,35 +86,93 @@
       }
     }
   # find the maximum correlation for each variable and store that information in a data.table called maxCorr
-    maxCorr <- fullCorrmatrix[,
+    maxCorr <- fullCorrMatrix[,
                             maxCorr := .(max(correlation)),
                             by = c("variable1")]
     
    # make it so maxCorr contains only the pairs of variables with the maximum correlation for each variable 
      maxCorr <- maxCorr[maxCorr == correlation]
-  
-  # scatterplot the pairs of variables identified by correlation matrix analysis
+
+# remove duplicates of pairs of variables
+     i = 1
+
+     for(i in (1:nrow(maxCorr))) { 
+       v1 = maxCorr[i]$variable1
+       v2 = maxCorr[i]$variable2
+       if (nrow(maxCorr[variable1==v2 & variable2==v1])>0) maxCorr <- maxCorr[-i]
+       i <- i + 1
+     }
+     
+# scatterplot the pairs of variables identified by correlation matrix analysis
+
+     # variable names for labelling axes 
+     # ----------------------------------------------   
+     variable_names <- c(
+       `ArtLum` = "Artéméther - Lumefatrine",
+       `SP_1st` = "SP administered during 1st ANC Visit",
+       `SP_2nd` = "SP administered during 2nd ANC Visit",
+       `SP_3rd` = "SP administered during 3rd ANC Visit",
+       `ASAQ_2to11mos` = "Artesunate Amodiaquine (ACT): 2 to 11 mos",
+       `ASAQ_1to5yrs` = "Artesunate Amodiaquine (ACT): 1 to 5 yrs",
+       `ASAQ_6to13yrs` = "Artesunate Amodiaquine (ACT): 6 to 13 yrs",
+       `ASAQ_14yrsAndOlder` = "Artesunate Amodiaquine (ACT): 14 yrs and Older",
+       `ASAQ_total` = "Artesunate Amodiaquine (ACT)",
+       `ITN_received` = "ITNs recieved",
+       `ITN_distAtANC` = "ITNs distributed at ANC Visit",
+       `ITN_distAtPreschool` = "ITNs distributed at Preschool",
+       `ANC_1st` = "1st Antenatal Care Visit",
+       `ANC_2nd` = "2nd Antenatal Care Visit",
+       `ANC_3rd` = "3rd Antenatal Care Visit",
+       `ANC_4th` = "4th Antenatal Care Visit",
+       `RDT_completed` = "Rapid Diagnostic Tests: Completed",
+       `RDT_positive` = "Rapid Diagnostic Tests: Positive",
+       `smearTest_completed` = "Smear Tests: Completed",
+       `smearTest_positive` = "Smear Tests: Positive",
+       `VAR` = "Measles Vaccine",
+       `newCasesMalariaMild_under5` = "Incidence of Mild Malaria: Under 5",
+       `newCasesMalariaMild_5andOlder` = "Incidence of Mild Malaria: 5 and Older",
+       `newCasesMalariaMild_pregnantWomen`= "Incidence of Mild Malaria: Pregnant Women",
+       `newCasesMalariaSevere_under5` = "Incidence of Severe Malaria: Under 5",
+       `newCasesMalariaSevere_5andOlder` = "Incidence of Severe Malaria: 5 and Older",
+       `newCasesMalariaSevere_pregnantWomen` = "Incidence of Severe Malaria: Pregnant Women",
+       `mildMalariaTreated_under5` = "Cases of Mild Malaria Treated: Under 5",
+       `mildMalariaTreated_5andOlder` = "Cases of Mild Malaria Treated: 5 and Older",
+       `mildMalariaTreated_pregnantWomen` = "Cases of Mild Malaria Treated: Pregnant Women",
+       `severeMalariaTreated_under5` = "Cases of Severe Malaria Treated: Under 5",
+       `severeMalariaTreated_5andOlder` = "Cases of Severe Malaria Treated: 5 and Older",
+       `severeMalariaTreated_pregnantWomen` = "Cases of Severe Malaria Treated: Pregnant Women",
+       `malariaDeaths_under5` = "Number of Deaths from Malaria: Under 5",
+       `malariaDeaths_5andOlder` = "Number of Deaths from Malaria: 5 and Older",
+       `malariaDeaths_pregnantWomen` = "Number of Deaths from Malaria: Pregnant Women"
+     )
+     # ---------------------------------------------- 
+
+     
   # loop through pairs of variables in maxCorr for graphing 
     pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)   
     
     i = 1
     for (v in maxCorr$variable1){
       
-      v2 = maxCorr$variable2
+      v2 = maxCorr$variable2[i]
+      
+      #minmax <- range(c(maxCorr$variable1, maxCorr$variable2))
+      
+      maxAxis <- max(c(fullData[[v]], fullData[[v2]]), na.rm=T)
+      # if (max(fullData[,get(v)])> max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v)])
+      # if (max(fullData[,get(v)])< max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v2[i])])
 
-      g <- ggplot(fullData, aes(fullData[,get(v)], fullData[,get(v2[i])])) 
-      g <- g + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0) + xlab(v) + ylab(v2[i])
+      g <- ggplot(fullData, aes_string(v, v2)) 
+      g <- g + geom_point() + geom_smooth(method='lm')
+      g <- g + xlab(variable_names[v]) + ylab(variable_names[v2]) + xlim(0, maxAxis) + ylim(0, maxAxis)
       
       print(g)
       
       i = i + 1
-
     }
     dev.off()
     
-    
-     
-  # identify and color code suspected outliers
+# identify and color code suspected outliers
   
   
 # ---------------------------------------------- 
