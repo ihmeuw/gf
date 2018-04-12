@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 3/26/2018
+# 4/11/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -67,7 +67,7 @@ str(full_data)
 
 # ----------------------------------------------
 
-#  stats to check if the sex, tb data disaggregated data downloaded correctly 
+#  stats to check if the sex disaggregated data downloaded correctly 
 
 # run some stats to check that the data downloaded correctly
 full_data[, sum(samples_received), by=year]
@@ -98,25 +98,24 @@ full_data[sex=='x', .(total_sup=sum(suppressed)), by=.(month, year)]
 setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard")
 dir <- "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard"
 
-facilities <- readRDS(paste0(dir,"/facilities.rds"))
+facilities <- readRDS(paste0(dir,"/facilities/facilities.rds"))
 str(facilities)
 
 # list unique facility ids
 full_data [,facility_id, by=facility_id] # 2042 values
-facilities[, facility_id, by=facility_id] # 2012 values
+facilities[, facility_id, by=facility_id] # 2069 values
 
 # identify mismatches
-full_data$facility_id[!full_data$facility_id %in% facilities$facility_id] 
 check <- full_data$facility_id[!full_data$facility_id %in% facilities$facility_id] 
-unique(check) # 91 facility ids are in the full data but not the facility names list
+length(unique(check)) # 34 facility ids are in the full data but not the facility names list
 
-facilities$facility_id[!facilities$facility_id %in% full_data$facility_id] # 61 names are on the list but not in the data
+check2 <- facilities$facility_id[!facilities$facility_id %in% full_data$facility_id] 
+length(unique(check2))# 61 names are on the list but not in the data
 
 # ---------------
 # check for missing districts 
-# 0 missing district ids
-full_data$district_id[!full_data$district_id %in% facilities$district_id] 
-facilities$district_id[!facilities$district_id %in% full_data$district_id]
+full_data$district_id[!full_data$district_id %in% facilities$district_id] # district 121 is missing a name
+facilities$district_id[!facilities$district_id %in% full_data$district_id] #missing data in district ids on list
 
 # ---------------
 
