@@ -102,7 +102,8 @@
       
       v2 = maxCorr$variable2
 
-      g <- ggplot(fullData, aes(fullData[get(v)], fullData[get(v2[i])])) + geom_point() # + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+      g <- ggplot(fullData, aes(fullData[,get(v)], fullData[,get(v2[i])])) 
+      g <- g + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0) + xlab(v) + ylab(v2[i])
       
       print(g)
       
