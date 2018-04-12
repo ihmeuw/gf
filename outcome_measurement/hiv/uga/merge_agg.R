@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 4/11/2018
+# 4/12/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -107,10 +107,10 @@ facilities[, facility_id, by=facility_id] # 2069 values
 
 # identify mismatches
 check <- full_data$facility_id[!full_data$facility_id %in% facilities$facility_id] 
-length(unique(check)) # 34 facility ids are in the full data but not the facility names list
+length(unique(check)) # 34 facility ids are in the UVL data but not the facility names list
 
 check2 <- facilities$facility_id[!facilities$facility_id %in% full_data$facility_id] 
-length(unique(check2))# 61 names are on the list but not in the data
+length(unique(check2))# 61 names are on the facility names list but not in the data
 
 # ---------------
 # check for missing districts 
@@ -126,7 +126,7 @@ uvl_sex <- merge(full_data,
                  facilities,
                  by='facility_id', all.x=TRUE)
 
-# handle missing names
+# create a placeholder for missing facility names
 uvl_sex [is.na(facility_name), name:=paste0('Facility #',facility_id)]
 
 # ----------------------------------------------
@@ -136,9 +136,9 @@ uvl_sex [is.na(facility_name), name:=paste0('Facility #',facility_id)]
 uvl_sex[district_id.x!=district_id.y, .(district_id.x, district_id.y, district_name), by=district_name]
 
 # Gomba is under both 75 and 89; Rakai 134 snd 80
-
 uvl_sex[district_id.x!=district_id.y, .(district_id.x, district_id.y, district_name)]
 
+# the following facilities are listed in two districts
 # Kabira HC III GOVT, Kalisizo Hospital, Nabigasa HC III, Mutukula HC III, Kasensero HC II, Kirumba  HC III
 uvl_sex[district_id.x==134, .(unique(facility_name)),by=.(district_name, district_id.x, district_id.y)]  
 uvl_sex[district_id.y==80, .(unique(facility_name)),by=.(district_name, district_id.x, district_id.y)]
@@ -163,6 +163,36 @@ uvl_sex[ , .(class(sex)) ]
 uvl_sex[sex=='m', sex:='Male']
 uvl_sex[sex=='f', sex:='Female']
 uvl_sex[sex=='x', sex:='Unknown']
+
+
+# change district names from new 2016/17 districts to previous districts
+# allows for map making (shape files not yet updated)
+
+#create a function that merges new districts into previous districts to match shape file
+merge_new_dists <- function(x) {
+  x[district_name=="Bunyangabu", district_name:="Kabarole"]
+  x[district_name=="Butebo", district_name:="Pallisa"]
+  x[district_name=="Kagadi", district_name:="Kibaale"]
+  x[district_name=="Kakumiro", district_name:="Kibaale"]
+  x[district_name=="Kyotera", district_name:="Rakai"]
+  x[district_name=="Namisindwa", district_name:="Manafwa" ]
+  x[district_name=="Omoro", district_name:="Gulu"]
+  x[district_name=="Pakwach", district_name:="Nebbi"]
+  x[district_name=="Rubanda", district_name:= "Kabale"]
+  x[district_name=="Rukiga", district_name:="Kabale"]
+  
+}
+
+# run the function on your data set
+# there should be 113 districts - 112 plus one missing
+merge_new_dists(uvl_sex)
+length(unique(uvl_sex$district_name))
+
+# Change spelling of Luwero=Luweero and Sembabule=Ssembabule
+uvl_sex[district_name=="Luwero", district_name:="Luweero"]
+uvl_sex[district_name=="Sembabule", district_name:="Ssembabule"]
+
+
 
 
 #save the final data as an RDS
