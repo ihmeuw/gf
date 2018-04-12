@@ -24,10 +24,10 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ##first determine if budget is in french or english
   if(lang=="eng"){
     cashText <- " Cash \r\nOutflow"
-    loc_id <- "Geography/Location"
+    loc_name <- "Geography/Location"
   } else{
     cashText <- "Salida de efectivo"
-    loc_id <-  "Localización"
+    loc_name <-  "Localización"
   }
   
   ## newer budgets use the label "Implementador" and the old ones use "Receptor" 
@@ -39,9 +39,9 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ##names of the columns we want to ultimately go into our database: 
   if(lang=="eng"){
-    qtr_names <- c("Module","Intervention", "Recipient", loc_id, rep(1, qtr_num))
+    qtr_names <- c("Module","Intervention", "Recipient", loc_name, rep(1, qtr_num))
   } else{ 
-    qtr_names <- c("Módulo", "Intervención","Descripción de la actividad",	recipient, loc_id, rep(1, qtr_num))
+    qtr_names <- c("Módulo", "Intervención","Descripción de la actividad",	recipient, loc_name, rep(1, qtr_num))
   }
   
   ##add in the quarter names to the list: 
@@ -102,17 +102,17 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     } else{
       colnames(gf_data)[4] <- "recipient" 
       }
-    if(!(loc_id %in% colnames(gf_data))){
-      gf_data$loc_id <- "gtm"
+    if(!(loc_name %in% colnames(gf_data))){
+      gf_data$loc_name <- "gtm"
     } else{
-      colnames(gf_data)[5] <- "loc_id" 
+      colnames(gf_data)[5] <- "loc_name" 
     }
     
     
     ## invert the dataset so that budget expenses and quarters are grouped by category
     ##library(reshape)
     setDT(gf_data)
-    gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity", "recipient", "loc_id"), 
+    gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity", "recipient", "loc_name"), 
                       variable.name = "qtr", value.name="budget")
   
     
