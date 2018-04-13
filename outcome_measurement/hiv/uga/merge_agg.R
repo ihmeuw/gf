@@ -103,19 +103,32 @@ str(facilities)
 
 # list unique facility ids
 full_data [,facility_id, by=facility_id] # 2042 values
+full_data[ ,district_id, by=district_id] # 123 districts
+full_data[is.na(facility_id)]
+full_data[is.na(district_id)]
+
 facilities[, facility_id, by=facility_id] # 2069 values
+facilities[is.na(facility_id)]
 
-# identify mismatches
-check <- full_data$facility_id[!full_data$facility_id %in% facilities$facility_id] 
-length(unique(check)) # 34 facility ids are in the UVL data but not the facility names list
+# print a list of the facility ids in full_data that are not on the names list
+# 692 patients in those facilities
+full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(facility_id)), 
+                                                                sum(patients_received))]
 
-check2 <- facilities$facility_id[!facilities$facility_id %in% full_data$facility_id] 
-length(unique(check2))# 61 names are on the facility names list but not in the data
+# 61 names are on the facility names list but not in the data
+facilities[!facilities$facility_id %in% full_data$facility_id, length(unique(facility_id))] 
+
 
 # ---------------
 # check for missing districts 
-full_data$district_id[!full_data$district_id %in% facilities$district_id] # district 121 is missing a name
-facilities$district_id[!facilities$district_id %in% full_data$district_id] #missing data in district ids on list
+full_data[!full_data$district_id %in% facilities$district_id] # district 121 is missing a name
+
+# 147 facilities on the list do not have an associated district id
+facilities[!facilities$district_id %in% full_data$district_id, length((unique(facility_id)))] 
+
+
+
+
 
 # ---------------
 
@@ -128,6 +141,12 @@ uvl_sex <- merge(full_data,
 
 # create a placeholder for missing facility names
 uvl_sex [is.na(facility_name), name:=paste0('Facility #',facility_id)]
+
+
+
+# new list of districts
+
+
 
 # ----------------------------------------------
 # additional to code to identify merge mismatches and downloading errors
@@ -192,7 +211,7 @@ length(unique(uvl_sex$district_name))
 uvl_sex[district_name=="Luwero", district_name:="Luweero"]
 uvl_sex[district_name=="Sembabule", district_name:="Ssembabule"]
 
-
+uvl_sex[district_id==121, .(patients_received), by=facility_name]
 
 
 #save the final data as an RDS

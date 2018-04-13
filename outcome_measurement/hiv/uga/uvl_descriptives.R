@@ -36,29 +36,12 @@ uganda_vl[, dist_name:=gsub('District','', district_name)]
 uganda_vl[, dist_name:=gsub(' ','', dist_name)]
 uganda_vl[, dist_name]
 
-#create a function that merges new districts into previous districts to match shape file
-merge_new_dists <- function(x) {
-  x[dist_name=="Bunyangabu", dist_name:="Kabarole"]
-  x[dist_name=="Butebo", dist_name:="Pallisa"]
-  x[dist_name=="Kagadi", dist_name:="Kibaale"]
-  x[dist_name=="Kakumiro", dist_name:="Kibaale"]
-  x[dist_name=="Kyotera", dist_name:="Rakai"]
-  x[dist_name=="Namisindwa", dist_name:="Manafwa" ]
-  x[dist_name=="Omoro", dist_name:="Gulu"]
-  x[dist_name=="Pakwach", dist_name:="Nebbi"]
-  x[dist_name=="Rubanda", dist_name:= "Kabale"]
-  x[dist_name=="Rukiga", dist_name:="Kabale"]
- 
-}
 
-merge_new_dists(uganda_vl)
 
 # should be 112 districts to match shape file
 length(unique(uganda_vl$dist_name))
 
-# Change spelling of Luwero=Luweero and Sembabule=Ssembabule
-uganda_vl[dist_name=="Luwero", dist_name:="Luweero"]
-uganda_vl[dist_name=="Sembabule", dist_name:="Ssembabule"]
+
 
 # check that 2014 and 2018 data only includes appropriate months (8/14 - 12/14, 1/18 - present)
 uganda_vl[year==2014, sum(samples_received), by=month]
