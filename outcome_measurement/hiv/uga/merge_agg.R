@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 3/26/2018
+# 4/12/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -67,7 +67,7 @@ str(full_data)
 
 # ----------------------------------------------
 
-#  stats to check if the sex, tb data disaggregated data downloaded correctly 
+#  stats to check if the sex disaggregated data downloaded correctly 
 
 # run some stats to check that the data downloaded correctly
 full_data[, sum(samples_received), by=year]
@@ -98,25 +98,37 @@ full_data[sex=='x', .(total_sup=sum(suppressed)), by=.(month, year)]
 setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard")
 dir <- "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard"
 
-facilities <- readRDS(paste0(dir,"/facilities.rds"))
+facilities <- readRDS(paste0(dir,"/facilities/facilities.rds"))
 str(facilities)
 
 # list unique facility ids
 full_data [,facility_id, by=facility_id] # 2042 values
-facilities[, facility_id, by=facility_id] # 2012 values
+full_data[ ,district_id, by=district_id] # 123 districts
+full_data[is.na(facility_id)]
+full_data[is.na(district_id)]
 
-# identify mismatches
-full_data$facility_id[!full_data$facility_id %in% facilities$facility_id] 
-check <- full_data$facility_id[!full_data$facility_id %in% facilities$facility_id] 
-unique(check) # 91 facility ids are in the full data but not the facility names list
+facilities[, facility_id, by=facility_id] # 2069 values
+facilities[is.na(facility_id)]
 
-facilities$facility_id[!facilities$facility_id %in% full_data$facility_id] # 61 names are on the list but not in the data
+# print a list of the facility ids in full_data that are not on the names list
+# 692 patients in those facilities
+full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(facility_id)), 
+                                                                sum(patients_received))]
+
+# 61 names are on the facility names list but not in the data
+facilities[!facilities$facility_id %in% full_data$facility_id, length(unique(facility_id))] 
+
 
 # ---------------
 # check for missing districts 
-# 0 missing district ids
-full_data$district_id[!full_data$district_id %in% facilities$district_id] 
-facilities$district_id[!facilities$district_id %in% full_data$district_id]
+full_data[!full_data$district_id %in% facilities$district_id] # district 121 is missing a name
+
+# 147 facilities on the list do not have an associated district id
+facilities[!facilities$district_id %in% full_data$district_id, length((unique(facility_id)))] 
+
+
+
+
 
 # ---------------
 
@@ -127,8 +139,14 @@ uvl_sex <- merge(full_data,
                  facilities,
                  by='facility_id', all.x=TRUE)
 
-# handle missing names
+# create a placeholder for missing facility names
 uvl_sex [is.na(facility_name), name:=paste0('Facility #',facility_id)]
+
+
+
+# new list of districts
+
+
 
 # ----------------------------------------------
 # additional to code to identify merge mismatches and downloading errors
@@ -137,9 +155,9 @@ uvl_sex [is.na(facility_name), name:=paste0('Facility #',facility_id)]
 uvl_sex[district_id.x!=district_id.y, .(district_id.x, district_id.y, district_name), by=district_name]
 
 # Gomba is under both 75 and 89; Rakai 134 snd 80
-
 uvl_sex[district_id.x!=district_id.y, .(district_id.x, district_id.y, district_name)]
 
+# the following facilities are listed in two districts
 # Kabira HC III GOVT, Kalisizo Hospital, Nabigasa HC III, Mutukula HC III, Kasensero HC II, Kirumba  HC III
 uvl_sex[district_id.x==134, .(unique(facility_name)),by=.(district_name, district_id.x, district_id.y)]  
 uvl_sex[district_id.y==80, .(unique(facility_name)),by=.(district_name, district_id.x, district_id.y)]
@@ -164,6 +182,36 @@ uvl_sex[ , .(class(sex)) ]
 uvl_sex[sex=='m', sex:='Male']
 uvl_sex[sex=='f', sex:='Female']
 uvl_sex[sex=='x', sex:='Unknown']
+
+
+# change district names from new 2016/17 districts to previous districts
+# allows for map making (shape files not yet updated)
+
+#create a function that merges new districts into previous districts to match shape file
+merge_new_dists <- function(x) {
+  x[district_name=="Bunyangabu", district_name:="Kabarole"]
+  x[district_name=="Butebo", district_name:="Pallisa"]
+  x[district_name=="Kagadi", district_name:="Kibaale"]
+  x[district_name=="Kakumiro", district_name:="Kibaale"]
+  x[district_name=="Kyotera", district_name:="Rakai"]
+  x[district_name=="Namisindwa", district_name:="Manafwa" ]
+  x[district_name=="Omoro", district_name:="Gulu"]
+  x[district_name=="Pakwach", district_name:="Nebbi"]
+  x[district_name=="Rubanda", district_name:= "Kabale"]
+  x[district_name=="Rukiga", district_name:="Kabale"]
+  
+}
+
+# run the function on your data set
+# there should be 113 districts - 112 plus one missing
+merge_new_dists(uvl_sex)
+length(unique(uvl_sex$district_name))
+
+# Change spelling of Luwero=Luweero and Sembabule=Ssembabule
+uvl_sex[district_name=="Luwero", district_name:="Luweero"]
+uvl_sex[district_name=="Sembabule", district_name:="Ssembabule"]
+
+uvl_sex[district_id==121, .(patients_received), by=facility_name]
 
 
 #save the final data as an RDS

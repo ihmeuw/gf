@@ -283,7 +283,12 @@ O_{jti} = \beta_1 E^{gf}_{jti} + \beta_2 E^{\neg gf}_{jti} + \beta_3 I_{jt}
 In this formula, $j$ indexes subnational areas (provinces/ departments, districts/municipalities or otherwise), $t$ indexes time (years, quarters, or months) and $i$ indexes intervention categories, as defined by the Global Fund's Modular Framework. $O$ represents counts of health systems outputs, $E$ represents expenditure either by the Global Fund ($^{gf}$) or other sources ($^{\neg gf}$), and $I$ represents incidence of the disease for which interventions were designed. The $\beta$ terms are coefficients (correlations) to be estimated from the data using maximum likelihood estimation (or similar). This model will primarily be fit separately by disease.\\
 
 % interpretation
-The coefficient $\beta_1$ therefore measures the correlation between Global Fund investment and outputs, controlling for other investments and disease burden. Under the assumptions of the PCE Theory of Change and Impact Frameworks (detailed elsewhere), this correlation represents the contribution of the Global Fund to those outputs.
+The coefficient $\beta_1$ therefore measures the correlation between Global Fund investment and outputs, controlling for other investments and disease burden. Under the assumptions of the PCE Theory of Change and Impact Frameworks (detailed elsewhere), this correlation represents the contribution of the Global Fund to those outputs. \\
+
+% additional considerations
+The model as listed in equation \ref{basic_model} estimates only one coefficient relating Global Fund inputs to outputs. In reality, some investments produce more outputs per dollar than others. Features can (and probably will) be added to this model to allow $\beta_1$ to vary by intervention, for example by including a random effect on intervention as an additional parameter in the model. Country-level random effects can also easily be added to allow different estimates of $\beta_1$ between countries, which is likely to also reflect reality more realistically. \\
+
+Note that there are many drivers of $O$ besides $E$ and $I$ that are not included in model \ref{basic_model}, for example cultural context and its relationship with uptake of certain interventions. I argue that the absence such other factors does not bias the estimate of $\beta_1$ because they fall along the causal pathway leading from $E$ to $O$. In other words, the many omitted drivers of $O$ do not influence $E$; they merely dictate why $\beta_1$ is high or low, and therefore are acceptable to exclude from the model. To put this another way, only variables (such as $I$) that are theorized to directly influence both $E$ and $O$ need to be included in the model \ref{basic_model}.
 
 % extension to RSSH
 \subsection{Extension to RSSH}
@@ -313,8 +318,9 @@ The basic outputs model has a natural relationship with value for money (VfM) as
 
 The definition of the coefficient $\beta_1$ in formula \ref{basic_model} is the average observed increase in outputs per unit increase in expenditure. $\beta_1$ is also simply stated as the inverse of cost per output (i.e. $cost\, per\, output = \frac{1}{\beta_1}$). In this way, the core model for impact evaluation is the same as the core model for VfM assessment. \\
 
-The key to using the impact evaluation model for VfM assessment is additional interpretation of it. As allocation efficiency is among the critical topics for the PCE, estimates from the core model can be produced among counterfactual scenarios, comparing alternate mixes of interventions and their expected relationship with output.
+The key to using the impact evaluation model for VfM assessment is additional interpretation of it. As allocation efficiency is among the critical topics for the PCE, estimates from the core model can be produced among counterfactual scenarios, comparing alternate mixes of interventions and their expected relationship with output. \\
 
+\textit{All sections after this point are intended merely to provide deeper explanation into the topics already presented.}
 
 % ------------------------------------------------------------------------------
 % Worked Example
@@ -332,7 +338,7 @@ This section provides an example of the model above, using simulated (i.e. compl
 
 Table 1 displays some example data. This simulated dataset contains information on three interventions: Differentiated HIV testing services, Differentiated ART service delivery and Male circumcision. These are HIV interventions selected from the Modular Framework. The table depicts these interventions implemented in four hypothetical subnational areas (numbered 1-4), which can be thought of as districts, municipalities, etc. Each of these intervention-areas has annual measurements from 2012 to 2015. Finally, each intervention is labeled with  an associated output indicator: HIV tests conducted, ARV doses administered and Circumcisions administered. An ``estimate'' of HIV incidence is displayed in the fifth column. Note that incidence does not vary between interventions, only area-years. The final three columns in Table 1 display simulated expenditure from non-Global Fund sources, expenditure from the Global Fund, and Output (units of the corresponding indicator consumed). \\
 
-These data have been constructed in such a way that Global Fund expenditure is positively correlated with outputs from each intervention, according to the theorized data generating process. Figure \ref{fig1} demonstates the correlation. \\
+These data have been constructed in such a way that Global Fund expenditure is positively correlated with outputs from each intervention, according to the theorized data generating process. Figure \ref{fig1} demonstrates the correlation. \\
 
 \begin{figure}[h]
   \advance\leftskip-.25in
@@ -352,7 +358,7 @@ Non-Global Fund expenditure, and even more so incidence also have positive corre
 
 Here, the correlation between expenditure and output has been binned by quantiles of incidence. From this figure, the strong correlation between incidence and output is clear, as the higher quantiles have generally higher output. The other result of displaying the correlation in this way however is a tighter relationship between expenditure and output within each quantile. While it's entirely possible that the opposite effect could be true with real data (i.e. a weaker correlation after controlling for incidence), the relationship between incidence and expenditure is likely to be important for the primary correlation of interest. \\
 
-As a result of these characteristics of the data and theory, a regression that controls for each of the aforementioned correlates of output is necessary, as displayed in equation \ref{basic_model} above. Fitting an ordinary negative binomial regression (in this case not GLMM, although it was mentioned above) yeilds the estimates of correlations shown in Table \ref{regtable}.
+As a result of these characteristics of the data and theory, a regression that controls for each of the aforementioned correlates of output is necessary, as displayed in equation \ref{basic_model} above. Fitting an ordinary negative binomial regression (in this case not GLMM, although it was mentioned above) yields the estimates of correlations shown in Table \ref{regtable}.
 
 \begin{table}[ht]
   \caption{Regression Results}
@@ -415,7 +421,7 @@ This approach has limitations as well. For one, we only have $D$ for a subset of
 
 Two basic data processing steps will be carried out to ensure that we are using valid data to form estimates. The first is systematic outlier screening, the second is multiple imputation. \\
 
-An outlier in this context is an observation (count of outputs, dollar amount budgeted etc.) whose value is anomalously high or low relative to other data and our qualitative understanding of the process that generated the data. Outliers are likely the result of human error or instrument error. While there is no way to confirm an outlier simply by looking at the data, careful examination through a variety of data visualizations and carefully-selected statistical techniques can help identify potential outliers. We will thoroughly vet every data source in this way during descriptive analysis to increase the chance that outliers, if they are at all detectable, can be identified and replaced with missing values. We will only conservatively mark outilers under clear and obvious circumstances. Often, outlier screening will result in no clear outilers. \\
+An outlier in this context is an observation (count of outputs, dollar amount budgeted etc.) whose value is anomalously high or low relative to other data and our qualitative understanding of the process that generated the data. Outliers are likely the result of human error or instrument error. While there is no way to confirm an outlier simply by looking at the data, careful examination through a variety of data visualizations and carefully-selected statistical techniques can help identify potential outliers. We will thoroughly vet every data source in this way during descriptive analysis to increase the chance that outliers, if they are at all detectable, can be identified and replaced with missing values. We will only conservatively mark outliers under clear and obvious circumstances. Often, outlier screening will result in no clear outliers. \\
 
 Missing data is expected to be present in most data sources however. Through the scale-up of a system, reporting lapses or other system errors, most datasets will have at least some missing values where there realistically should be observed numbers. To rectify this, we will use a statistical technique called multiple impoutation to predict what the missing values may have been. Not only does this approach ``fill in'' missing values with expected values, but it estimates multiple potential values in order to capture our uncertainty about our own predictions. Based on the variability of the actual data, the multiple imputations will vary in a way that is reflective of actual data. Unless circumstances dictate the need for more, we will perform 50 imputations of every missing value. For this purpose we will use standard software which applies an algorithm called bootstrapped expectation-maximization.[CITE AMELIA2]
 
