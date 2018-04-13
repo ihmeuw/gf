@@ -14,17 +14,6 @@ library(tools)
 library(data.table)
 library(lubridate)
 library(readxl)
-# ----------------------------------------------
-##load the data: 
-
-totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv',
-                                 fileEncoding = "latin1"))
-
-##we only care about GF data for now - the other donations and GHE are from sicoin
-gfData <- totalData[source=="gf"]
-##ignore sicoin for now; we will work on mapping later: 
-gfData <- gfData[data_source!="sicoin"]
-
 
 # ----------------------------------------------
 ##### Function to clean up the mods/interventions in the RT data #####
@@ -122,11 +111,7 @@ total_mapping_list <- function(file_name, indicator_mapping, unwanted_array, rem
   return(mapping_for_gf)
 }
 
-# ----------------------------------------------
-# USE THIS TO CHECK FOR ANY MODULE/INTERVENTION COMBOS IN THE DATA THAT AREN'T IN THE MAPPING
-# mapping_for_gf$concat <- paste0(mapping_for_gf$module, mapping_for_gf$intervention)
-# gfData$concat <- paste0(gfData$module, gfData$intervention)
-# unmapped_mods <- gfData[!concat%in%mapping_for_gf$concat]
+
 
 ##if this works correctly, we should be able to drop the unmapped_mods from our dataset since they are junk categories:
 # gfData<- gfData[!module%in%unmapped_mods$module]
@@ -161,8 +146,6 @@ gf_data_mapped$disbursement <- gf_data_mapped$disbursement*gf_data_mapped$coeffi
 # write.csv(data_check, "data_check.csv", row.names = FALSE)
 
 # ----------------------------------------------
-
-
 
 write.csv(mappedData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/rt_data_mapped.csv"
           , fileEncoding="latin1", row.names=FALSE)

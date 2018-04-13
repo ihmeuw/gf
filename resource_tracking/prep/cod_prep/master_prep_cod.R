@@ -149,8 +149,14 @@ mappedCod$budget <- mappedCod$budget*mappedCod$coefficient
 mappedCod$expenditure <- mappedCod$expenditure*mappedCod$coefficient
 mappedCod$disbursement <- mappedCod$disbursement*mappedCod$coefficient
 
+##change this when we get geo locations for DRC: 
+mappedCod$adm1 <- "cod"
+mappedCod$adm2 <- "cod"
+mappedCod$country <- "Congo (Democratic Republic)"
 
+mappedCod[,end_date:=start_date+period-1]
 ##sum to make sure that budget numbers aren't dropped:
+#mappedCod$concat <- NULL
 # data_check1 <- codData[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
 # data_check2 <-mappedCod[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
 # data_check1[!module%in%data_check2$module]
@@ -162,7 +168,7 @@ mappedCod$disbursement <- mappedCod$disbursement*mappedCod$coefficient
 
 # ----------------------------------------------
 ## write as csv 
-write.csv(resource_database, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/prepped_fpm_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
+write.csv(mappedCod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/prepped_fpm_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
 
 
 

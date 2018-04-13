@@ -21,7 +21,7 @@ library(readxl)
 
 
 ###DRC: 
-totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/all_fpm_budgets.csv",
+totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/prepped_fpm_budgets.csv",
                                 fileEncoding="latin1"))
 
 #create some variables: 
@@ -51,28 +51,32 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
 gtmBudgets$country <- "Guatemala"
+gtmBudgets$year <- year(gtmBudgets$start_date)
 ###: technically not the country, but we're keeping the loc ids attached to the sicoin data
 ##so it will map to a municipality anyway 
 setnames(sicoin_data, "loc_name", "country")
-sicoin_data$intervention <- "All"
+sicoin_data$gf_module <- "All"
+sicoin_data$gf_intervention <- "All"
 sicoin_data$sda_activity <- "All"
 sicoin_data$grant_number <- "none"
 sicoin_data$recipient <- sicoin_data$country
+
 ##rbind the sicoin and FPM data:
-totalGtm <- rbind(sicoin_data, gtmBudgets)
-totalGtm$year <- year(totalGtm$start_date)
+# totalGtm <- rbind(sicoin_data, gtmBudgets)
+# totalGtm$year <- year(totalGtm$start_date)
+
 
 
 
 # --------------------------------------------
 
-##rbind with UGA data: 
+##aggregate all country data into one dataset:  
 
-totalData <- rbind(totalGtm, totalUga, totalCod)
+fpmData <- rbind(totalGtm, totalUga, totalCod)
 ##change the start_date column to be of type "Date"
-totalData$start_date <- as.Date(totalData$start_date,"%Y-%m-%d")
-totalData$period <- as.numeric(totalData$period)
-totalData[, end_date:=start_date + period-1]
+fpmData$start_date <- as.Date(fpmData$start_date,"%Y-%m-%d")
+fpmData$period <- as.numeric(fpmData$period)
+fpmData[, end_date:=start_date + period-1]
 # --------------------------------------------
 ##read the already mapped gos data: 
 gos_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv", 
@@ -86,10 +90,11 @@ gos_data$period <- as.integer(gos_data$period)
 
 ##since we don't have subnational data for GOS, just make it a copy of the country variable: 
 gos_data$disbursement <- 0
-
+gos_data$adm1 <- gos_data$loc_name
+gos_data$adm2 <- gos_data$loc_name
 ##aggregate with gos data: 
 
-totalData <- rbind(totalData, gos_data)
+totalData <- rbind(fpmData, gos_data)
 
 # --------------------------------------------
 #DUPLICATE CHECK: 
@@ -110,18 +115,29 @@ write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/m
 # --------------------------------------------
 ###DROP FPM DATA IF IT OVERLAPS WITH GOS DATA: 
 
-## some of the GOS data is missing so we'll fill it in w/ the FPM data (and drop the FPM data that overlaps): 
+## some of the FPM data is missing so we'll fill it in w/ the FPM data (and drop the FPM data that overlaps): 
 
-fpmCod<- totalCod[!((year < 2016 &disease=="malaria") | (year < 2015 & disease=="hiv") | (year < 2017 & disease=="tb"))]
-fpmUga <- totalUga[!((year < 2016 &disease%in%c("hss", "tb", "hiv"))
-                     | (year < 2017 & disease%in%c("malaria")))]
-fpmGtm <- totalGtm[!((year < 2016 &disease=="tb") | (year < 2017 & disease%in%c("malaria", "hiv")))]
+##pudrs overlap with the FPM budgets - drop this so we don't double count 
+fpmGtm <- totalGtm[!(data_source=="pudr"&year>2015)]
+fpmUga <- totalUga[]
+fpmCod <- totalCod[]
+
+gos_cod<- gos_data[country=="Congo (Democratic Republic)"]
+gos_uga <- gos_data[country=="Uganda"]
+gos_gtm <- gos_data[country=="Guatemala"]
+
+gos_cod <- gos_cod[(disease=="hss")|(disease=="hiv"&year<2012|year%in%c(2013, 2014))|(disease=="malaria"&(year<=2014))|(disease=="tb"&grant_number!="COD-T-MOH")]
+gos_uga <- gos_uga[(disease=="hiv"&(year<2011|year==2014))|(disease=="malaria"&(year%in%c(2013,2014)|year<2012))|(disease=="tb"&(year<2012|year%in%c(2013,2014)))]
+gos_gtm <- gos_gtm[(disease=="hiv"&year<2011)|(disease=="malaria"&year<2011)|(disease=="tb"&(year<2011|year==2015))]
 
 
-totalFpm <- rbind(fpmCod, fpmUga, fpmGtm)
-totalFpm $start_date <- as.Date(totalFpm $start_date,"%Y-%m-%d")
-totalFpm[, end_date:=start_date + period-1]
-cleaned_aggregate_data <- rbind(totalFpm, gos_data)
+
+
+totalGos <- rbind(gos_uga, gos_cod, gos_gtm)
+
+cleaned_aggregate_data <- rbind(fpmData, totalGos)
+
+
 
 byVars = names(cleaned_aggregate_data)[names(cleaned_aggregate_data)%in%c('program_activity', 'year', 'start_date', 'period', 'country', 
                                                                           'grant_number', 'disease', 'data_source', 'source', 'recipient', 'loc_id')]

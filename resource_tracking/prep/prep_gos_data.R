@@ -25,7 +25,7 @@ library(readxl)
 ## prep data 
 
 
-gos_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/Expenditures from GMS and GOS for PCE IHME countries.xlsx',
+gos_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/Expenditures from GMS and GOS for PCE IHME countries.xlsx',
                                    sheet=as.character('GOS Mod-Interv - Extract')))
 
 oldNames <-  c("Country","Grant Number", "Year", "Financial Reporting Period Start Date",
@@ -40,7 +40,7 @@ gos_clean <- gos_data[, newNames, with=FALSE]
 
 gos_intervention <- copy(gos_data)
 
-gms_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/Expenditures from GMS and GOS for PCE IHME countries.xlsx',
+gms_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/Expenditures from GMS and GOS for PCE IHME countries.xlsx',
                                    sheet=as.character('GMS SDAs - extract')))
 
 gmsOld <- c(oldNames[1:5], "Service Delivery Area", "Total Budget Amount (USD equ)", "Total Expenditure Amount (USD equ)", "Component")
@@ -63,9 +63,28 @@ totalGos$sda_activity <- "All"
 totalGos$recipient <- totalGos$grant_number
 totalGos$data_source <- "gos"
 totalGos$source <- "gf"
-totalGos$loc_id <- totalGos$country
+totalGos$loc_name <- totalGos$country
+totalGos$disbursement <- 0
 
-write.csv(totalGos, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv",
+
+totalGos <- strip_chars(totalGos, unwanted_array, remove_chars)
+
+# ----------------------------------------------
+gos_init_mapping <- merge(totalGos, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
+
+##use this to check if any modules/interventions were dropped:
+# dropped_gf <- cod_init_mapping[is.na(cod_init_mapping$code)]
+
+mappedGos <- merge(gos_init_mapping, final_mapping, by="code")
+mappedGos$budget <-mappedGos$budget*mappedGos$coefficient
+mappedGos$expenditure <-mappedGos$expenditure*mappedGos$coefficient
+mappedGos$disbursement <-mappedGos$disbursement*mappedGos$coefficient
+
+
+# data_check1 <- totalGos[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
+# data_check2 <-mappedGos[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
+
+write.csv(mappedGos, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv",
           row.names = FALSE, fileEncoding = "latin1")
 
 

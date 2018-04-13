@@ -24,7 +24,7 @@ library(zoo)
 # ---------------------------------------------
 ##global variables: 
 cashText <- " Cash Outflow"
-loc_id <- 'uga'
+loc_name <- 'uga'
 source <- "gf"
 
 ## set up the directory and grab the file list: 
@@ -106,7 +106,7 @@ resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
 resource_database$disbursement <- as.numeric(resource_database$disbursement)
 ## since we only have budget/exp data, include disbursed as 0:  
-resource_database$loc_id <- loc_id
+resource_database$loc_name <- loc_name
 resource_database$source <- source
 
 
@@ -138,39 +138,66 @@ cleaned_database$disease <- mapply(get_hivtb_split, cleaned_database$disease, cl
 sda_remove_chars <- c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
                   , "[[:punct:]]", "\"", ",")
 
-module_remove_chars <-  c("[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
-                          , ",",  "\"")
 ##get rid of punctuation and accents in the SDA activities: 
 cleaned_database$sda_activity <-gsub(paste(sda_remove_chars, collapse="|"), "",cleaned_database$sda_activity)
 cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
-##replace commas with semicolons in the "Module" and "Intervention" (or else this screws up the CSV) 
-
-cleaned_database$module <- gsub(paste(module_remove_chars, collapse="|"), "", cleaned_database$module)
-cleaned_database$intervention <- gsub(paste(module_remove_chars, collapse="|"), "", cleaned_database$intervention)
 
 
+
+# ----------------------------------------------
+##### Map to the GF Modules and Interventions #####
+##run the map_modules_and_interventions.R script first
+
+
+ugaData <- strip_chars(cleaned_database, unwanted_array, remove_chars)
+
+mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+
+## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
+final_mapping <- copy(mapping_list)
+final_mapping$disease <- NULL
+setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
+mapping_list$coefficient <- 1
+
+gf_mapping_list <- total_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx",
+                                      mapping_list, unwanted_array, remove_chars)
+
+
+# ----------------------------------------------
+# USE THIS TO CHECK FOR ANY MODULE/INTERVENTION COMBOS IN THE DATA THAT AREN'T IN THE MAPPING
+# gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
+# uga_concat <- paste0(ugaData$module, ugaData$intervention)
+# unmapped_mods <- uga_concat[!uga_concat%in%gf_concat]
+
+
+
+uga_init_mapping <- merge(ugaData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
+
+##use this to check if any modules/interventions were dropped:
+# dropped_gf <- uga_init_mapping[is.na(uga_init_mapping$code)]
+
+mappedUga <- merge(uga_init_mapping, final_mapping, by="code")
+mappedUga$budget <- mappedUga$budget*mappedUga$coefficient
+mappedUga$expenditure <- mappedUga$expenditure*mappedUga$coefficient
+mappedUga$disbursement <- mappedUga$disbursement*mappedUga$coefficient
+
+##change this when we get geo locations for UGA: 
+mappedUga$adm1 <- "uga"
+mappedUga$adm2 <- "uga"
+mappedUga$country <- "Uganda"
+# ----------------------------------------------
+###Check that nothing got dropped: 
+
+# data_check1 <- ugaData[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
+# data_check2 <-mappedUga[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
+# data_check1[!module%in%data_check2$module]
+# data_check1$ind <- "pre"
+# data_check2$ind <- "post"
+# data_check <- rbind(data_check1, data_check2)
+# write.csv(data_check, "data_check.csv", row.names = FALSE)
+
+# ----------------------------------------------
 ##write csv to correct folder: 
 
-write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_uga_data.csv", row.names = FALSE,
+write.csv(mappedUga, "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_uga_data.csv", row.names = FALSE,
           fileEncoding = "latin1")
-
-# ---------------------------------------------
-###DUPLICATE CHECK: 
-
-d1 <- nrow(cleaned_database)
-d2 <- nrow(unique(cleaned_database))
-if(d1 !=d2){
-  stop("Dataset has duplicates!")
-}
-
-## one reason we might have duplicates is because of the activity description: same "umbrella" module, but maybe the activities aren't:
-##commented code below sums duplicates up:
-# byVars = names(cleaned_database)[!names(cleaned_database)%in%c('budget', 'disbursement', 'expenditure')]
-# cleaned_database <- cleaned_database[, list(budget=sum(na.omit(budget)),
-#                                             expenditure=sum(na.omit(expenditure)), disbursement=sum(na.omit(disbursement))), by=byVars]
-
-## data check to verify data hasn't been dropped: 
-# data_check3 <- as.data.frame(cleaned_database[, list(budget = sum(budget, na.rm = TRUE)),by = c("grant_number", "disease")])
-
-
-
