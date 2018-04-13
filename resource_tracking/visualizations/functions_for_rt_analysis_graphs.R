@@ -20,7 +20,7 @@ library(scales)
 
 # ---------------------------------------------
 ##function to create indicator between current, upcoming, and rejected budgets: 
-uga_data_sources <- function(year, data_source){
+data_sources_facet <- function(year, data_source){
   if(year < 2018){
     x <- "Past/Active"
   } else if (data_source=="rej_fpm"){
@@ -67,54 +67,78 @@ data_source_names_for_plots <- function(gos_data){
 
 
 # ---------------------------------------------
-##colors to map for non HSS disease categories (Malaria, TB, HIV): 
-primColors <- c('#b20000', '#660000', ##reds
-                '#4169e1', '#00007f',##royal and midnight blue
-                '#004c4c', '#00D9D9',##blues
-                "#35978f", "#80cdc1", ##teals
-                '#3786b0', '#0097f1',##ocean 
-               '#f6ae8f', '#EE5D1F', 
-               '#00bf97', '#bf9700',
-                '#ffd700', '#d3a308',#yellows
-                '#3d017a','#e8946d', ##magenta
-                '#9900cc','#00b8bf',
-                '#660066', '#bf7fbf',#purples
-                '#3DCC3D', '#008000',##greens 
-                '#05ff40','#54489e',
-                '#58fff8', '#005060',
-               '#ff748c', "#a9e89b", #pinks 
-                '#bf3700') ##grey and millennial pink 
+##colors to map the GF Modules: 
+primColors <- c('#254CCB',
+                '#3E6BD1', '#588BD8',
+                '#71aade', '#8BCAe5', ##blues
+               '#e3c8f4','#a23be5'
+               , '#2d0254', '#8700ff', 
+               '#450184', ##purples
+               '#bf9700', #goldenrod
+                '#00cdcd',
+                '#0f5b5b',#teals
+               '#e8946d', '#af3607', ##terracotta
+                '#db0645','#e787a3',
+                '#f4c7d4', ##blush/milennial pink
+                '#17bb5d', '#008000',
+                '#73ed02','#76b503',##greens 
+                '#88efde', '#9acebd',
+               '#294f3f', "#660000", #pinks 
+                '#b20000',
+               '#7a786e', '#d1d0ca') ##red 
 
-
-names(primColors) <- c('Treatment, care and support', 'HIV Testing Services', ##reds
-                       'Comprehensive prevention programs for men who have sex with men', 'Prevention programs for general population',##oranges
-                       'Comprehensive prevention programs for sex workers and their clients','Comprehensive prevention programs for people who inject drugs and their partners',##greens
-                       'Comprehensive prevention programs for transgender people', 'Prevention programs for adolescents and youth, in and out of school',##blues
-                       'Programs to reduce human rights-related barriers to HIV services', 'Prevention programs for other vulnerable populations', ##teals
-                       "Comprehensive programs for people in prisons and other closed settings",'Case management', ##ocean
-                       'Vector control', 'Specific prevention interventions', ##yellows  ##magenta
-                       'TB/HIV','TB care and prevention', 'Multidrug-resistant TB' ,
-                       'Prevention of mother-to-child transmission',##grey and millennial pink
-                       'Procurement and supply chain management systems', 'Health management information system and M&E',
-                       'Human resources for health, including community health workers', 'Integrated service delivery and quality improvement'
-                       ,'Financial management systems', 'National health strategies',
-                       'Community responses and systems', 'Program management', 'TB/HIV',
-                       'Performance Based Financing', 'Unidentified', 'Other RSSH/Unidentified')
+names(primColors) <- c('Comprehensive prevention programs for men who have sex with men'
+                       , 'Comprehensive prevention programs for sex workers and their clients'
+                       ,'Comprehensive prevention programs for people who inject drugs and their partners',##blues
+                       'Comprehensive prevention programs for transgender people'
+                       ,"Comprehensive programs for people in prisons and other closed settings",
+                       'Prevention programs for general population'
+                       ,'Prevention programs for other vulnerable populations',
+                       'Prevention programs for adolescents and youth, in and out of school', 
+                       'Prevention of mother-to-child transmission',
+                       'Specific prevention interventions',
+                       'Programs to reduce human rights-related barriers to HIV services',  ##teals
+                       'Case management', 
+                       'Vector control', 
+                        'Treatment, care and support', 'HIV Testing Services'
+                       ,'TB/HIV',
+                       'TB care and prevention'
+                       , 'Multidrug-resistant TB'
+                       ,'Procurement and supply chain management systems'
+                       ,'Health management information system and M&E',
+                       'Human resources for health, including community health workers'
+                       , 'Integrated service delivery and quality improvement'
+                       ,'Financial management systems'
+                       , 'National health strategies',
+                       'Community responses and systems'
+                       , 'Program management'
+                       ,'Performance Based Financing', 'Unidentified', 'Other RSSH/Unidentified'
+                       ) 
 
 # ---------------------------------------------
-######create hss indicator: 
-get_hss_ind <- function(dataset, program_activity){
-  dataset$hss_ind <-factor(sapply(dataset$program_activity, function(x){
-    if(grepl("RSSH", x)){
-      x <- as.character(x)
-    } else{
-      x <- "Non RSSH"
-    }
-  }), levels=c('Non RSSH', 'RSSH: information system', 'RSSH: health workforce',
-               'RSSH: service delivery','RSSH: other')
-  )
-  return(dataset)
+##set the colors for interventions 
+indColors <- c('#a6cee3',
+               '#1f78b4',
+               '#b2df8a',
+               '#33a02c',
+               '#fb9a99',
+               '#c0c0c0',
+               '#fdbf6f',
+               '#ff7f00',
+               '#cab2d6',
+               '#6a3d9a'
+               )
+# ---------------------------------------------
+
+get_summary_level <- function(gf_module, gf_intervention){
+  x <- gf_intervention
+  if(gf_module==gf_intervention){
+    x <- "Summary Level Only"
+  }
+  return(x)
 }
+
+
 # ---------------------------------------------
 ### create a key populations indicator: 
 get_keypop_ind <- function(dataset, program_activity){
