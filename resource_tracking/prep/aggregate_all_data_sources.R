@@ -27,7 +27,7 @@ totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/
 #create some variables: 
 totalCod$country <- "Congo (Democratic Republic)"
 totalCod$start_date <- as.Date(totalCod$start_date,"%Y-%m-%d")
-
+totalCod$end_date <- as.Date(totalCod$end_date, "%Y-%m-%d")
 # --------------------------------------------
 ##load UGA: 
 
@@ -52,6 +52,7 @@ sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
 gtmBudgets$country <- "Guatemala"
 gtmBudgets$year <- year(gtmBudgets$start_date)
+gtmBudgets$end_date <- as.Date(gtmBudgets$end_date, "%Y-%m-%d")
 ###: technically not the country, but we're keeping the loc ids attached to the sicoin data
 ##so it will map to a municipality anyway 
 setnames(sicoin_data, "loc_name", "country")
@@ -72,7 +73,7 @@ sicoin_data$recipient <- sicoin_data$country
 
 ##aggregate all country data into one dataset:  
 
-fpmData <- rbind(totalGtm, totalUga, totalCod)
+fpmData <- rbind(gtmBudgets, totalUga, totalCod)
 ##change the start_date column to be of type "Date"
 fpmData$start_date <- as.Date(fpmData$start_date,"%Y-%m-%d")
 fpmData$period <- as.numeric(fpmData$period)
@@ -118,9 +119,12 @@ write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/m
 ## some of the FPM data is missing so we'll fill it in w/ the FPM data (and drop the FPM data that overlaps): 
 
 ##pudrs overlap with the FPM budgets - drop this so we don't double count 
-fpmGtm <- totalGtm[!(data_source=="pudr"&year>2015)]
-fpmUga <- totalUga[]
-fpmCod <- totalCod[]
+fpmGtm <- gtmBudgets[!(data_source=="pudr"&year>2015)]
+fpmUga <- totalUga[!(data_source=="pudr"&disease=="tb")]
+fpmCod <-  copy(totalCod)
+fpmCod$end_date <- NULL
+
+cleanData <- rbind(fpmGtm, fpmUga, fpmCod)
 
 gos_cod<- gos_data[country=="Congo (Democratic Republic)"]
 gos_uga <- gos_data[country=="Uganda"]
@@ -131,19 +135,10 @@ gos_uga <- gos_uga[(disease=="hiv"&(year<2011|year==2014))|(disease=="malaria"&(
 gos_gtm <- gos_gtm[(disease=="hiv"&year<2011)|(disease=="malaria"&year<2011)|(disease=="tb"&(year<2011|year==2015))]
 
 
-
-
 totalGos <- rbind(gos_uga, gos_cod, gos_gtm)
 
-cleaned_aggregate_data <- rbind(fpmData, totalGos)
+cleanData <- rbind(cleanData, totalGos)
 
 
-
-byVars = names(cleaned_aggregate_data)[names(cleaned_aggregate_data)%in%c('program_activity', 'year', 'start_date', 'period', 'country', 
-                                                                          'grant_number', 'disease', 'data_source', 'source', 'recipient', 'loc_id')]
-
-cleaned_aggregate_data <- cleaned_aggregate_data[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure)), disbursement=sum(na.omit(disbursement))), by=byVars]
-
-
-write.csv(cleaned_aggregate_data, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv", row.names = FALSE)
+write.csv(cleanData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv", row.names = FALSE)
 
