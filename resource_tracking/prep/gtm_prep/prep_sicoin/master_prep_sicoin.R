@@ -127,8 +127,41 @@ cleaned_database <-cleaned_database[!(cleaned_database$adm1%in%"TOTAL"|cleaned_d
 setnames(cleaned_database, "sda_orig", "module")
 ##output the data to the correct folder 
 
+cleaned_database[is.na(module), module:="all"]
+cleaned_database$intervention <- "all"
 
-write.csv(cleaned_database, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
+
+
+sicoin_data <- strip_chars(cleaned_database, unwanted_array, remove_chars)
+
+mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+
+## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
+final_mapping <- copy(mapping_list)
+final_mapping$disease <- NULL
+setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
+mapping_list$coefficient <- 1
+
+gf_mapping_list <- total_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx",
+                                      mapping_list, unwanted_array, remove_chars)
+
+
+sicoin_init_mapping <- merge(sicoin_data, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
+
+##use this to check if any modules/interventions were dropped:
+# dropped_sicoin<- sicoin_init_mapping[is.na(sicoin_init_mapping$code)]
+
+mapped_sicoin <- merge(sicoin_init_mapping, final_mapping, by="code")
+mapped_sicoin$budget <- mapped_sicoin$budget*mapped_sicoin$coefficient
+mapped_sicoin$expenditure <- mapped_sicoin$expenditure*mapped_sicoin$coefficient
+mapped_sicoin$disbursement <- mapped_sicoin$disbursement*mapped_sicoin$coefficient
+
+
+
+# data_check1 <- sicoin_data[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
+# data_check2 <-mapped_sicoin[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
+
+write.csv(mapped_sicoin, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
           ,row.names=FALSE, fileEncoding="latin1")
 
 
