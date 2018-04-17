@@ -108,7 +108,8 @@
      # variable names for labelling axes 
      # ----------------------------------------------   
      variable_names <- c(
-       `ArtLum` = "Artéméther - Lumefatrine",
+       `ArtLum_received` = "Artéméther - Lumefatrine Recieved",
+       `ArtLum_used` = "Artéméther - Lumefatrine Used",
        `SP_1st` = "SP administered during 1st ANC Visit",
        `SP_2nd` = "SP administered during 2nd ANC Visit",
        `SP_3rd` = "SP administered during 3rd ANC Visit",
@@ -171,10 +172,41 @@
       i = i + 1
     }
     dev.off()
+      
+  # identify and color code suspected outliers
+      # upload excel doc of outliers as a data table
+        outliers <- as.data.table(read_excel(paste0(dir, "/Outliers.xlsx")))
+        outliers[, date := as.Date(date)]
+        
+        # melt data in order to merge
+          fullDataMelt <- melt(fullData, id.vars= c("V1", "date", "province", "dps", "health_zone"),
+                                         measure.vars = c(),
+                                         variable.name = "indicator", 
+                                         value.name="value")
+        
+          dtOutliers <- merge(fullDataMelt, outliers, by= c("health_zone", "date", "indicator"), all=T)
+          
+          dtOutliersWide1 <- dcast.data.table(dtOutliers, V1+date+province+dps+health_zone ~ indicator, value.var='value')
+          dtOutliersWide2 <- dcast.data.table(dtOutliers, V1+date+province+dps+health_zone ~ indicator, value.var='outlier')
+          oldNames = names(dtOutliersWide2)[!names(dtOutliersWide2) %in% c("V1", "date", "province", "dps", "health_zone")]
+          newNames = paste0(oldNames, '_outlier')
+          setnames(dtOutliersWide2, oldNames, newNames)
+          dtOutliersWide <- merge(dtOutliersWide1, dtOutliersWide2, by=c("V1", "date", "province", "dps", "health_zone"))
+          
+  # remake scatterplots with outliers color-coded
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots with Outliers.pdf", height=6, width=9)   
     
-# identify and color code suspected outliers
-  
-  
+    x = "SPC_1st"
+    y = "ANC_1st"
+    
+    dtOutliersWide[get(paste0(x,"_outlier"))==1, tmp:='outlier x']
+    dtOutliersWide[get(paste0(y,"_outlier"))==1, tmp:='outlier y']
+    g <- ggplot(dtOutliersWide, aes_string(x=x, y=y, color=tmp)) + 
+         geom_point()
+    
+    print(g)
+    
+    dev.off()
 # ---------------------------------------------- 
   j <- 1
   
@@ -217,7 +249,7 @@
   ggplot(fullData, aes(x=RDT_completed, y=RDT_positive)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
   
   # ArtLum data
-  ggplot(fullData, aes(x=ArtLum_receieved, y=ArtLum_used)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(fullData, aes(x=ArtLum_received, y=ArtLum_used)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
   
   # ANC data
   ggplot(fullData, aes(x=ANC_1st, y= ANC_2nd)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
