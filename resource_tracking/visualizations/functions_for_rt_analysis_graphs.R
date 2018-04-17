@@ -132,25 +132,17 @@ indColors <- c('#a6cee3',
 
 get_summary_level <- function(gf_module, gf_intervention){
   x <- gf_intervention
-  if(gf_module==gf_intervention){
+  if(is.na(gf_module)){
+    x <- "No Data"
+  } else if(is.na(gf_intervention)){
+    x <- x
+  }
+  else if(gf_module==gf_intervention){
     x <- "Summary Level Only"
+  } else {
+    x <- x
   }
   return(x)
 }
 
-
-# ---------------------------------------------
-### create a key populations indicator: 
-get_keypop_ind <- function(dataset, program_activity){
-  dataset$key_pop <- factor(sapply(dataset$program_activity, function(x){
-    if(x=="Key and vulnerable populations"){
-      x <- "Key and vulnerable populations"
-    } else if(x=="HIV/TB collaborative interventions") {
-      x <- "HIV/TB collaborative interventions"
-    } else{
-      x <- "Other categories"
-    }
-  }), levels=c("Other categories","Key and vulnerable populations", "HIV/TB collaborative interventions"))
-  return(dataset)
-}
 
