@@ -55,18 +55,14 @@ gtmBudgets$year <- year(gtmBudgets$start_date)
 gtmBudgets$end_date <- as.Date(gtmBudgets$end_date, "%Y-%m-%d")
 ###: technically not the country, but we're keeping the loc ids attached to the sicoin data
 ##so it will map to a municipality anyway 
-setnames(sicoin_data, "loc_name", "country")
-sicoin_data$gf_module <- "All"
-sicoin_data$gf_intervention <- "All"
-sicoin_data$sda_activity <- "All"
+sicoin_data$sda_activity <- "all"
 sicoin_data$grant_number <- "none"
+sicoin_data$country <- "Guatemela"
 sicoin_data$recipient <- sicoin_data$country
 
 ##rbind the sicoin and FPM data:
 # totalGtm <- rbind(sicoin_data, gtmBudgets)
 # totalGtm$year <- year(totalGtm$start_date)
-
-
 
 
 # --------------------------------------------
