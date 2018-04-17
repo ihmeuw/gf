@@ -27,44 +27,71 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 
 
 ##change the start dates from factors to dates: 
+
+sicoin_data <- sicoin_data[source=="gf"]
+
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
+sicoin_data$year <- year(sicoin_data$start_date)
 
+gtmBudgets <- gtmBudgets[!(data_source=="pudr"&year>2015)]
 
 ##sum up budget (as "variable") by year, disease, and data source 
-byVars = names(gtmBudgets)[names(gtmBudgets)%in%c('start_date','period','code', 'disease', 'data_source','gf_module', 'gf_intervention')]
+byVars = names(gtmBudgets)[names(gtmBudgets)%in%c('year', 'disease', 'code','gf_module', 'gf_intervention')]
 gtmBudgets = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))
                           , disbursement=sum(na.omit(disbursement))), by=byVars]
 
-data_check1 <- gtmBudgets[, sum(budget, na.rm = TRUE),by = c("module","intervention","disease", "concat")]
-data_check2 <-  gf_data_mapped[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease", "concat")]
-View(data_check1[!concat%in%data_check2$concat])
+
+##this is the interventions data set: 
+gtmBudgets<- gtmBudgets[with(gtmBudgets, order(disease,year,code, gf_module, gf_intervention, budget)), ]
+gtmBudgets[, int_fraction := budget/sum(budget), by=c("disease","year", "gf_module")]
+
+
+##just do for 2013 SICOIN: 
+gtm_subset <- gtmBudgets[year==2013&disease=="malaria"]
+
+
+sicoin_subset <- sicoin_data[year==2013&disease=="malaria"]
+sicoin_subset$code <- NULL
+sicoin_subset$gf_intervention <- NULL
+
+##sum up budget (as "variable") by year, disease, and data source 
+byVars = names(sicoin_subset)[names(sicoin_subset)%in%c('year', 'disease','gf_module', 'adm1', 'adm2', 'loc_name')]
+sicoin_subset = sicoin_subset[, list(budget=sum(na.omit(budget)), 
+                                     disbursement=sum(na.omit(disbursement))), by=byVars]
+
+
+##this is the interventions data set: 
+sicoin_subset <- sicoin_subset [with(sicoin_subset, order(disease,year,gf_module, adm1, adm2, loc_name)), ]
+sicoin_subset [, muni_fraction := budget/sum(budget), by=c("disease","year")]
+
+setwd('J:/Project/Evaluation/GF/mapping/gtm/')
 
 
 
-gtmBudgets <- copy(gfData)
+# ----------------------------------------------
+# load the shapefile
+shapeData = shapefile('J:/Project/Evaluation/GF/mapping/gtm/GTM_munis_only.shp')
+
+## load the admin1 shape with the projection: 
+adminData = shapefile('J:/Project/Evaluation/GF/mapping/gtm/gtm_region.shp')
+
+# use the fortify function to convert from spatialpolygonsdataframe to data.frame
+# use IDs instead of names
+coordinates = data.table(fortify(shapeData, region='Codigo'))
+admin_coords <- data.table(fortify(adminData, region='ID_1'))
+coordinates$id <- as.numeric(coordinates$id)
+
+# merge on municipality names
+names = data.table(shapeData@data)
+admin_names <- data.table(adminData@data)
+coord_and_names = merge(coordinates, names, by.x='id', by.y='Codigo', allow.cartesian=TRUE)
+admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow.cartesian=TRUE)
 
 
 
-gtmData  <- disease_names_for_plots(gtmData)
-gtmData  <- data_source_names_for_plots(gtmData)
 
-##PLOTS:
-gos_nat_plots <- list()
-for (k in unique(gtmData$disease)){
-  subdata <- gtmData[disease==k]
-  subdata$module <- factor(subdata$module, levels=unique(subdata$module))
-  plot <- (ggplot(na.omit(subdata), aes(x=year, y=budget/1000000,color=module)) + 
-             geom_line(aes(linetype=data_source), size=1)+
-             geom_point()+ 
-            # scale_color_manual(name="Data Source", values =sourceColors) +
-             labs(y = "USD (mil.)", x = "Year", 
-                  caption="Source: FPM, SICOIN",
-                  title=paste(k, "module comparisons"))+
-             theme_bw(base_size=10.5) +
-             theme(plot.title=element_text(hjust=.5)))
-  gos_nat_plots[[k]] <- plot
-}
+
 
 
 
