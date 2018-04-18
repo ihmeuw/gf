@@ -196,15 +196,26 @@
   # remake scatterplots with outliers color-coded
     pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots with Outliers.pdf", height=6, width=9)   
     
-    x = "SPC_1st"
-    y = "ANC_1st"
-    
-    dtOutliersWide[get(paste0(x,"_outlier"))==1, tmp:='outlier x']
-    dtOutliersWide[get(paste0(y,"_outlier"))==1, tmp:='outlier y']
-    g <- ggplot(dtOutliersWide, aes_string(x=x, y=y, color=tmp)) + 
-         geom_point()
-    
-    print(g)
+    i = 1
+    for (x in maxCorr$variable1){
+      
+      y = maxCorr$variable2[i]
+
+      maxAxis <- max(c(dtOutliersWide[[x]], dtOutliersWide[[y]]), na.rm=T)
+      
+      x = "SPC_1st"
+      y = "ANC_1st"
+      
+      dtOutliersWide[get(paste0(x,"_outlier"))==1, tmp:='outlier x']
+      dtOutliersWide[get(paste0(y,"_outlier"))==1, tmp:='outlier y']
+      g <- ggplot(dtOutliersWide, aes_string(x=x, y=y, color=tmp)) + 
+           geom_point() + geom_smooth(method = 'lm') + 
+           xlab(variable_names[v]) + ylab(variable_names[v2]) + xlim(0, maxAxis) + ylim(0, maxAxis)
+      
+      print(g)
+      
+      i = i + 1
+    }
     
     dev.off()
 # ---------------------------------------------- 
