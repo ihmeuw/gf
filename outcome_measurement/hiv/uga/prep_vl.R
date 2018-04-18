@@ -5,6 +5,7 @@
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
+# Prep the data for analysis
 # ----------------------------------------------
 
 # --------------------
@@ -122,7 +123,7 @@ uvl_sex[is.na(facility_name), length(unique(facility_id))]
 uvl_sex[is.na(facility_name), .(sum(patients_received))]
 
 # create a placeholder for missing facility names for 34 facilities
-uvl_sex [is.na(facility_name), name:=paste0('Facility #',facility_id)]
+uvl_sex [is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
 
 #------------------------
 # merge in the districts
@@ -133,8 +134,6 @@ uvl_sex <- merge(uvl_sex, districts, by='district_id', all.x=TRUE)
 
 # ----------------------------------------------
 # additional to code to identify merge mismatches and downloading errors
-
-
 
 # the following facilities are listed in two districts, Kyotera and Rakai
 # Based on labelling, they should be in Rakai (80)
@@ -191,7 +190,13 @@ uvl_sex[sex=='m', sex:='Male']
 uvl_sex[sex=='f', sex:='Female']
 uvl_sex[sex=='x', sex:='Unknown']
 
-
+# ---------------
+uvl_sex <- uvl_sex[ ,.(facility_name=facility_name, facility_id=facility_id, dist_name=district_name, 
+               district_id=district_id, dhis2name=dhis2name, hub_id=hub_id,
+               patients_received=patients_received, samples_received=samples_received, 
+               dbs_samples=dbs_samples, total_results=total_results, rejected_samples=rejected_samples,
+               valid_results=valid_results, sex=sex, month=month, year=year) ]
+               
 
 #save the final data as an RDS
 saveRDS(uvl_sex, file= paste0(dir, "/sex_data.rds") )
