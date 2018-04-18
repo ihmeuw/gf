@@ -203,14 +203,11 @@
 
       maxAxis <- max(c(dtOutliersWide[[x]], dtOutliersWide[[y]]), na.rm=T)
       
-      x = "SPC_1st"
-      y = "ANC_1st"
-      
       dtOutliersWide[get(paste0(x,"_outlier"))==1, tmp:='outlier x']
       dtOutliersWide[get(paste0(y,"_outlier"))==1, tmp:='outlier y']
-      g <- ggplot(dtOutliersWide, aes_string(x=x, y=y, color=tmp)) + 
-           geom_point() + geom_smooth(method = 'lm') + 
-           xlab(variable_names[v]) + ylab(variable_names[v2]) + xlim(0, maxAxis) + ylim(0, maxAxis)
+      g <- ggplot(dtOutliersWide, aes_string(x=x, y=y, color="tmp")) + 
+           geom_point() + 
+           xlab(variable_names[x]) + ylab(variable_names[y]) + xlim(0, maxAxis) + ylim(0, maxAxis)
       
       print(g)
       
