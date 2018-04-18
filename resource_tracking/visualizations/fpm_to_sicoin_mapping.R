@@ -6,7 +6,10 @@
 # ----------------------------------------------
 # Set up R
 rm(list=ls())
+library(rgeos)
+library(raster)
 library(ggplot2)
+library(maptools)
 library(tools)
 library(data.table)
 library(lubridate)
@@ -26,13 +29,18 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
                                    ,fileEncoding="latin1"))
 
 
-##change the start dates from factors to dates: 
 
+# ----------------------------------------------
+##MAP FPM BUDGETS TO SICOIN MUNICIPALITIES: 
+
+##just work with GF data for now: 
 sicoin_data <- sicoin_data[source=="gf"]
-
+##change the start dates from factors to dates: 
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
 sicoin_data$year <- year(sicoin_data$start_date)
+
+
 
 gtmBudgets <- gtmBudgets[!(data_source=="pudr"&year>2015)]
 
@@ -42,39 +50,52 @@ gtmBudgets = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.o
                           , disbursement=sum(na.omit(disbursement))), by=byVars]
 
 
-##this is the interventions data set: 
+##order the data to get the % of interventions per module: 
 gtmBudgets<- gtmBudgets[with(gtmBudgets, order(disease,year,code, gf_module, gf_intervention, budget)), ]
+gtmBudgets[, module_fraction := budget/sum(budget), by=c("disease","year")]
 gtmBudgets[, int_fraction := budget/sum(budget), by=c("disease","year", "gf_module")]
 
 
-##just do for 2013 SICOIN: 
-gtm_subset <- gtmBudgets[year==2013&disease=="malaria"]
+fpm_malaria <- gtmBudgets[(disease=="malaria"&year==2012)]
 
 
-sicoin_subset <- sicoin_data[year==2013&disease=="malaria"]
-sicoin_subset$code <- NULL
-sicoin_subset$gf_intervention <- NULL
+sicoin_data$id <- as.numeric(lapply(sicoin_data$adm2, function(y) sub('^0+(?=[1-9])', '', y, perl=TRUE)))
+
+
+##Malaria in this example, but the other diseases work fine: 
+sicoin_subset <- sicoin_data[year==2012&disease=="malaria"]
 
 ##sum up budget (as "variable") by year, disease, and data source 
-byVars = names(sicoin_subset)[names(sicoin_subset)%in%c('year', 'disease','gf_module', 'adm1', 'adm2', 'loc_name')]
+byVars = names(sicoin_subset)[names(sicoin_subset)%in%c('loc_name','module','year', 'id')]
 sicoin_subset = sicoin_subset[, list(budget=sum(na.omit(budget)), 
                                      disbursement=sum(na.omit(disbursement))), by=byVars]
 
-
-##this is the interventions data set: 
-sicoin_subset <- sicoin_subset [with(sicoin_subset, order(disease,year,gf_module, adm1, adm2, loc_name)), ]
-sicoin_subset [, muni_fraction := budget/sum(budget), by=c("disease","year")]
-
-setwd('J:/Project/Evaluation/GF/mapping/gtm/')
+sicoin_subset[, muni_fraction:=budget/sum(budget), by=c("year", "module")]
 
 
+
+##just work with 2013 data for now:  
+setnames(sicoin_subset, c("budget", "disbursement"), c("sicoin_budget", "sicoin_disb"))
+
+graphData <- merge(sicoin_subset, fpm_malaria, by="year", allow.cartesian=TRUE)
+
+##how many modules are in this year: 
+##municipality budget divided by the number of modules this year: 
+graphData[,muni_budget:=budget*muni_fraction]
+##municipality budget now multiplied by # of interventions per module: 
+# graphData[,final_budget:=muni_budget*int_fraction]
+# graphData[,muni_disb:=disbursement*muufraction]
+# graphData[,final_disb:=muni_disb*int_fraction]
 
 # ----------------------------------------------
+
+dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
+
 # load the shapefile
-shapeData = shapefile('J:/Project/Evaluation/GF/mapping/gtm/GTM_munis_only.shp')
+shapeData = shapefile(paste0(dir, 'GTM_munis_only.shp'))
 
 ## load the admin1 shape with the projection: 
-adminData = shapefile('J:/Project/Evaluation/GF/mapping/gtm/gtm_region.shp')
+adminData = shapefile(paste0(dir, 'gtm_region.shp'))
 
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 # use IDs instead of names
@@ -89,14 +110,54 @@ coord_and_names = merge(coordinates, names, by.x='id', by.y='Codigo', allow.cart
 admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow.cartesian=TRUE)
 
 
+##absorption: 
+colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#ffa3b2',
+                                  na.value = "grey70",space = "Lab", midpoint = 0.5, ## play around with this to get the gradient 
+                                  # that you want, depending on data values 
+                                  breaks=c(0,0.25, 0.5,0.75, 1), limits=c(0,1))
 
 
+# ----------------------------------------------
+### if you want:  Get names and id numbers corresponding to administrative areas to plot as labels: 
+# gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1],lat = coordinates(adminData)[, 2])
+gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1'] 
+gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
+gtm_region_centroids$NAME_1[18] <- "Totonicapán"
+gtm_region_centroids$NAME_1[22] <- "Sololá"
+gtm_region_centroids$NAME_1[21] <- "Suchitepéquez"
+gtm_region_centroids$NAME_1[3] <- "Sacatepéquez"
+gtm_region_centroids$NAME_1[1] <- "Quiché"
+gtm_region_centroids$NAME_1[7] <- "Petén"
 
-
+# ----------------------------------------------
+gtm_plots <- list()
+i = 1
+for (k in unique(graphData$gf_module)){
+  shapedata <- copy(coord_and_names)
+  subdata <- graphData[gf_module==k]
+  shapedata$gf_module <- k ## add "gf_module" to shapefile in order to merge datasets 
+  # merge on the data (all.x=TRUE so the shapefile data doesn't disappear)
+  graphdata  <- merge(shapedata, subdata,by=c('gf_module','id'), all.x=TRUE, allow.cartesian=TRUE)
+  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=muni_budget/100000)) + 
+             coord_equal() + ##so the two shapefiles have the same proportions 
+             geom_path() +
+             geom_map(map=admin_dataset, data=admin_dataset,
+                      aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
+             # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
+             theme_void() +  colScale +  
+             ## uncomment if you want the department names: 
+             geom_label_repel(data = gtm_region_centroids, aes(label = NAME_1, x = long, y = lat, group = NAME_1), 
+                              size = 3, fontface = 'bold', color = 'black',
+                              box.padding = 0.35, point.padding = 0.3,
+                              segment.color = 'grey50', nudge_x = 0.7, nudge_y = 4.5) + 
+             labs(title=paste("GF budgets:", k), fill='USD (thousands)'))
+  gtm_plots[[i]] <- plot
+  i=i+1
+}
 
 
 pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/sicoin_fpm_graphs.pdf", height=9, width=12)
-invisible(lapply(gos_nat_plots, print))
+invisible(lapply(gtm_plots, print))
 dev.off()
 
 
