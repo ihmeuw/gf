@@ -64,9 +64,13 @@ dir = "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facilities"
   facilities[,hub_id:=as.numeric(hub_id)]
   facilities[,district_id:=as.numeric(district_id)]
   
+  # 147 facilities are missing a district id
+  facilities[is.na(district_id), length(unique(facility_id))]
+  
+  
 # --------------------
 
-# add district names and ids
+# create a list of districts
 districts_1 <- data$districts
   
   
@@ -89,57 +93,29 @@ districts_1 <- data$districts
   districts[, district_name:=gsub(' ','', district_name)]
   districts[, district_name]
   
-# -------------------------------------
-  # merge districts and facilities
+  districts <- districts[order(district_id)]
   
-  dist_facilities <- merge (facilities, districts, "district_id", all.x=TRUE)
-
-
-# # -------------------------------------
-# # 147 facilities are not associated with a district id
-# # find the districts in the 2012 Uganda Health Facility Inventory
-#   
-# # determine the district ids for 147 facilities using the 2012 facility inventory  
-#   facil_1 <- dist_facilities[is.na(district_id), .(unit=facility_name, facility_id=facility_id)]
-#   facil_1[, unit:=tolower(unit)]
-#   facil_1$unit <- sapply(strsplit(facil_1$unit, " "), '[', 1 )
-#   facil_1 <- facil_1[!(is.na(facil_1$unit))]
-# 
-# 
-# 
-#   # import the inventory of health facilities
-#   inventory <- read.csv("C:/Users/ccarelli/Desktop/inventory_correct.csv")
-#   inventory <- data.table(district=inventory$district, unit=inventory$health_unit, level=inventory$level)
-# 
-#   inventory[ ,district:=as.character(district)]
-#   inventory[ ,unit:=as.character(unit)]
-#   inventory[ ,level:=as.character(level)]
-#   
-#   inventory[ ,district:=tolower(district)]
-#   inventory[ ,unit:=tolower(unit)]
-#   inventory[ ,level:=tolower(level)]
-#   
-#   
-#    facil_1[(facil_1$unit %in% inventory$unit), unit]
-#    
-#    
-#    #Remove facilities with missing names
-#    missing_facilities <- join(facil_1, inventory, 
-#                               by = "unit", type="left", match = "first")
-#    
-#   
+  # eliminate duplicate district ids (error ids for 3 distrits)
+  # no facilities listed under error ids
+  districts <- districts[!(district_id==127| district_id==128 | district_id==129)]
+  districts[duplicated(district_name), .(district_name, district_id)]
   
- 
- #------------------------------------------------------------
- 
+  #one district is named 'district left blank'... find a way to rename
+  districts[district_name=="LeftBlank", district_id]
   
-  # save full facilities and district data to merge into downloads from Uganda VL
-  saveRDS(dist_facilities, file=paste0(dir,"/facilities.rds"))
+  
+# ----------------------------------------------
+  # save both files to merge in separately
+  
+  facilities <- facilities[ , .(facility_id=facility_id, facility_name=facility_name, dhis2name=dhis2_name)]
 
+  # save full facilities and data to merge into downloads from Uganda VL
+  saveRDS(facilities, file=paste0(dir,"/facilities.rds"))
+  
+
+  # save full facilities and data to merge into downloads from Uganda VL
+  saveRDS(districts, file=paste0(dir,"/districts.rds"))
+  
    
 # ----------------------------------------------
-  
-  
-  
-  
   

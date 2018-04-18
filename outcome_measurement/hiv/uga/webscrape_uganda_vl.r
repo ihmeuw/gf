@@ -7,6 +7,7 @@
 # use webscrape_vl_parallel to run parallel jobs on the cluster (more up to date)
 # ----------------------------------------------
 
+# some changes 
 
 # --------------------
 # Set up R
