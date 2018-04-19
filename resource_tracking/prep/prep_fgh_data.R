@@ -95,7 +95,6 @@ ghe_wide <- reshape(ghe_data,direction='wide',
                     idvar=c("location_id", "year_id","hiv_pop"),
                    timevar="value_code")
 
-ghe_wide <-  ghe_wide[with(ghe_wide, order(sort(names(ghe_wide)))), ]
 ## (THE - OOP+PPP+GHE = DAH (in theory))
 
 oop_vars <- names(ghe_wide)[grepl(c("oop"), names(ghe_wide))]
@@ -110,8 +109,8 @@ ghe_wide$mean_dah <- (ghe_wide$ensemble_mean.the_hiv - ghe_wide$mean_oop_ppp_ghe
 ghe_wide$lower_dah <- (ghe_wide$ensemble_lower.func_hiv_prev - ghe_wide$lower_oop_ppp_ghe_agg)
 ghe_wide$upper_dah <- (ghe_wide$ensemble_upper.the_hiv - ghe_wide$upper_oop_ppp_ghe_agg)
 
-
-
-
+ghe_wide[location_id==128, country:="Guatemala"]
+ghe_wide[location_id==190, country:="Uganda"]
+ghe_wide[location_id==171, country:="Congo (Democratic Republic)"]
 
 

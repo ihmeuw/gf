@@ -1,3 +1,4 @@
+
 # ----------------------------------------------
 # Irena Chen
 #
@@ -25,7 +26,7 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
                                  fileEncoding = "latin1"))
 
 
-gf_mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
 
 
 # ---------------------------------------------
@@ -63,17 +64,17 @@ for (k in unique(graphData$disease)){
   subdata <- graphData[disease==k]
   colScale <- scale_fill_manual(name="GF Module", values =primColors) 
   plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=gf_module)) + 
-             geom_bar(## if you want 100% stacked graphs, uncomment: position = "fill",
-               stat="identity") + 
-             colScale +
-             theme_bw(base_size=14) +
-             theme(legend.title = element_text(size=10),legend.text=element_text(size=8),
-                   strip.text.x = element_text(size = 7, colour = "black")) +
-             facet_grid(~facet,scales = "free_x", space="free_x") + 
-             ## if you want 100% stacked graphs, uncomment:scale_y_continuous(labels = percent_format()) +
-             scale_x_continuous(name ="Year", breaks = seq(2005, 2020,3)) +
-             labs(title=paste(k, "Data at National Level"), 
-                  x = "", y = "$ USD (Millions)", caption="Data Source: GOS, FPM"))
+    geom_bar(## if you want 100% stacked graphs, uncomment: position = "fill",
+      stat="identity") + 
+    colScale +
+    theme_bw(base_size=14) +
+      theme(legend.title = element_text(size=10),legend.text=element_text(size=8),
+          strip.text.x = element_text(size = 7, colour = "black")) +
+    facet_grid(~facet,scales = "free_x", space="free_x") + 
+    ## if you want 100% stacked graphs, uncomment:scale_y_continuous(labels = percent_format()) +
+    scale_x_continuous(name ="Year", breaks = seq(2005, 2020,3)) +
+    labs(title=paste(k, "Data at National Level"), 
+         x = "", y = "$ USD (Millions)", caption="Data Source: GOS, FPM"))
   prog_plots[[k]] <- plot
 }
 
@@ -89,19 +90,22 @@ dev.off()
 
 ##Fill in year gaps where modules and years might be missing:
 
-gf_mods <- data.table(graphData$year, graphData$disease)
+year_range <- seq(2005, 2020, 1)
+gf_mods <- data.table(graphData$disease)
 
-create_na_mods <- unique(gf_mods)
+create_na_mods <- merge(year_range, gf_mods)
+
+create_na_mods <- unique(create_na_mods)
 
 setnames(create_na_mods,c("year","disease"))
 
 ##years that we have no data: 
-mapping_list <- disease_names_for_plots(gf_mapping_list)
+mapping_list <- disease_names_for_plots(mapping_list)
 mapping_list$code <- NULL
 mapping_list$intervention <- NULL
 setnames(mapping_list, "module", "gf_module")
 
-create_na_mods <- merge(create_na_mods, mapping_list, by="disease", allow.cartesian = TRUE)
+create_na_mods <- merge(create_na_mods, mapping_list, by="disease")
 create_na_mods <- unique(create_na_mods)
 
 modData <- merge(graphData, create_na_mods,all.y=TRUE, by=c("year","disease", "gf_module"), allow.cartesian = TRUE)
@@ -117,53 +121,37 @@ modData$str_wrap <- str_wrap(modData$str_wrap, 45)
 byVars = names(modData)[names(modData)%in%c('gf_module', 'str_wrap','year', 'disease')]
 modData = modData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
-##-----------------------------------------------------------
-# uncomment the disease you want to plot: 
-# plotData <- modData[disease=="HIV/AIDS"]
-# plotData <- modData[disease=="Malaria"]
-# plotData <- modData[disease=="Tuberculosis"]
-# plotData <- modData[disease=="RSSH"]
+
+
+hivData <- modData[disease=="HIV/AIDS"]
+malData <- modData[disease=="Malaria"]
+tbData <- modData[disease=="Tuberculosis"]
+hssData <- modData[disease=="RSSH"]
 ##-----------------------------------------------------------
 # Intervention charts: 
 
-colors <- c('#09b1f9', ##bright cerulean
-            '#e5de10', ##spongebob
-            '#34e3ed', ##aqua
-            '#fdbf6f', ##light orange-sicle
-            '#db0645', # cherry candy
-            '#f5d1c5', ##peach blossom 
-            '#42090a', ##cherry coke 
-            '#219592', ##teal
-            '#d9f6e7', ##cool mint
-            '#BC472F', #rosy brown
-            '#e5c4f1', ##lilac 
-            '#b784a7', #opera mauve
-            '#58b200', ##granny smith
-            '#7e935b', ##drab olive
-            '#a977f4', ##radiant lilac
-            '#b2df8a', ##granny smith apple blossom
-            '#4affd4', ##zealous aqua
-            '#fb9a99', ##deep blush
-            '#4b277c', ##grape soda
-            '#3062e8', ## just blue
-            '#afcfed', ##periwinkle
-            '#d18d79', ## faded terracotta
-            '#93b500', ##deep chatreuse
-            '#7f003f', ##magenta
-            '#8a5117', ##umber 
-            '#1f78b4', ##cerulean
-            '#f4c7d4', ##milennial pink 
-            '#ff7f00', ##bright orange
-            '#e007ef', ##80s purple
-            '#01a004', ##kelly green
-            '#0c5768', #deep ocean 
-            '#d2a531', ##goldenrod
-            '#6a3d9a', ## UW Purple
-            '#3a875a', ## moss green 
-            '#ffff99', ##cherry yellow
-            '#b15928'  ##burnt ochre
-)
-interventions <- unique(na.omit(plotData$str_wrap))
+colors <- c('#a6cee3',
+  '#1f78b4',
+  '#b2df8a',
+  '#4affd4',
+  '#fb9a99',
+  '#9e82ba',
+  '#fdbf6f',
+  '#ff7f00',
+  '#cab2d6',
+  '#93b500',
+  '#db0645',
+  '#42090a',
+  '#f4c7d4',
+  '#a977f4',
+  '#01a004', 
+  '#0c5768',
+  '#6a3d9a',
+  '#33a02c',
+  '#ffff99',
+  '#b15928'
+  )
+interventions <- unique(na.omit(modData$str_wrap))
 
 cols <- rep(colors, length.out=length(interventions))
 names(cols) <- interventions
@@ -175,8 +163,8 @@ cols[names(cols)=="Module Not Included"]="#FFFFFF"
 
 #### bar charts over time 
 int_plots <- list()
-for (k in unique(plotData$gf_module)){
-  subdata <- plotData[gf_module==k]
+for (k in unique(hivData$gf_module)){
+  subdata <- hivData[gf_module==k]
   plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=str_wrap)) + 
              geom_bar(colour="black", position = "fill",
                       stat="identity") + 
@@ -194,3 +182,5 @@ for (k in unique(plotData$gf_module)){
 pdf("interventions_overtime_perc.pdf", height=6, width=9)
 invisible(lapply(int_plots, print))
 dev.off()
+
+
