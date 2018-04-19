@@ -32,14 +32,20 @@
       dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data"
     
     # input file:
-    # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators_Long
-    # csv files were produced by prep_COD_Malaria_data_function.R
+      # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators_Long
+      # csv files were produced by prep_COD_Malaria_data_function.R
       dt <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Long.csv")) 
       dt_wide <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Wide.csv")) 
       dt2 <- fread(paste0(dir, "/", "COD_PNLP_Data_Interventions_Long.csv"))
       fullData <- fread(paste0(dir, "/", "Full Data for MI.csv"))
+      # upload excel doc of outliers as a data table to merge with full data set
+        outliers <- as.data.table(read_excel(paste0(dir, "/Outliers.xlsx")))
+        outliers[, date := as.Date(date)]
         
     # output files:
+      # outputs to J:\Project\Evaluation\GF\outcome_measurement\cod\visualizations\PNLP_Data
+      # Scatterplots for Variable comparisons
+      # Scatterplots with Outliers 
 
     # Set up:
       dt[, date := as.Date(date)]
@@ -130,9 +136,9 @@
        `smearTest_completed` = "Smear Tests: Completed",
        `smearTest_positive` = "Smear Tests: Positive",
        `VAR` = "Measles Vaccine",
-       `newCasesMalariaMild_under5` = "Incidence of Mild Malaria: Under 5",
-       `newCasesMalariaMild_5andOlder` = "Incidence of Mild Malaria: 5 and Older",
-       `newCasesMalariaMild_pregnantWomen`= "Incidence of Mild Malaria: Pregnant Women",
+       `newCasesMalariaMild_under5` = "Confirmed Cases of Mild Malaria: Under 5",
+       `newCasesMalariaMild_5andOlder` = "Confirmed Cases of Mild Malaria: 5 and Older",
+       `newCasesMalariaMild_pregnantWomen`= "Confirmed Cases of Mild Malaria: Pregnant Women",
        `newCasesMalariaSevere_under5` = "Incidence of Severe Malaria: Under 5",
        `newCasesMalariaSevere_5andOlder` = "Incidence of Severe Malaria: 5 and Older",
        `newCasesMalariaSevere_pregnantWomen` = "Incidence of Severe Malaria: Pregnant Women",
@@ -148,7 +154,7 @@
      )
      # ---------------------------------------------- 
 
-     
+# ----------------------------------------------      
   # loop through pairs of variables in maxCorr for graphing 
     pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)   
     
@@ -172,12 +178,11 @@
       i = i + 1
     }
     dev.off()
-      
+# ----------------------------------------------   
+    
+    
+# ---------------------------------------------- 
   # identify and color code suspected outliers
-      # upload excel doc of outliers as a data table
-        outliers <- as.data.table(read_excel(paste0(dir, "/Outliers.xlsx")))
-        outliers[, date := as.Date(date)]
-        
         # melt data in order to merge
           fullDataMelt <- melt(fullData, id.vars= c("V1", "date", "province", "dps", "health_zone"),
                                          measure.vars = c(),
@@ -198,19 +203,25 @@
     
     i = 1
     for (x in maxCorr$variable1){
-      
+      x = maxCorr$variable1[i]
       y = maxCorr$variable2[i]
-
-      maxAxis <- max(c(dtOutliersWide[[x]], dtOutliersWide[[y]]), na.rm=T)
       
-      dtOutliersWide[get(paste0(x,"_outlier"))==1, tmp:='outlier x']
-      dtOutliersWide[get(paste0(y,"_outlier"))==1, tmp:='outlier y']
+      maxAxis <- max(na.omit(cbind(dtOutliersWide[[x]], dtOutliersWide[[y]])))
+      
+      #maxAxis <- max(c(dtOutliersWide[[x]], dtOutliersWide[[y]]), na.rm=T)
+      
+      dtOutliersWide[get(paste0(x,"_outlier"))==1, tmp:='Outlier x']
+      dtOutliersWide[get(paste0(y,"_outlier"))==1, tmp:='Outlier y']
+      dtOutliersWide[get(paste0(y,"_outlier"))==1 & get(paste0(x,"_outlier"))==1, tmp:='Outlier x and y']
+      dtOutliersWide[is.na(get(paste0(y,"_outlier"))) & is.na(get(paste0(x,"_outlier"))), tmp:='Not suspected outlier']
+      
       g <- ggplot(dtOutliersWide, aes_string(x=x, y=y, color="tmp")) + 
-           geom_point() + 
-           xlab(variable_names[x]) + ylab(variable_names[y]) + xlim(0, maxAxis) + ylim(0, maxAxis)
+           geom_point(size=3) + geom_abline(alpha=1/4) + theme_bw() +
+           scale_color_manual(values=c("Outlier x"="yellow","Outlier y"="red", "Outlier x and y"="orange", "Not suspected outlier"="gray")) +
+           labs(color = NULL) + xlab(variable_names[x]) + ylab(variable_names[y]) + xlim(0, maxAxis) + ylim(0, maxAxis)
       
       print(g)
-      
+      dtOutliersWide$tmp <- NULL
       i = i + 1
     }
     
