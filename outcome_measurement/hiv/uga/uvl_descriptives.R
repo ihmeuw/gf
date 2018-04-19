@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-#4/10/2018
+#4/18/2018
 # Descriptive statistics and maps for the Uganda Viral Load Dashboard
 # ----------------------------------------------
 # Set up R
@@ -31,34 +31,22 @@ uganda_vl <- uganda_vl[!(month==3 & year==2018)]
 class(uganda_vl) # check that it is a data table
 str(uganda_vl)
 
-# drop 'District' from the district names
-uganda_vl[, dist_name:=gsub('District','', district_name)]
-uganda_vl[, dist_name:=gsub(' ','', dist_name)]
-uganda_vl[, dist_name]
 
-
-
-# should be 112 districts to match shape file
+# there should be 112 districts to match the shape file
 length(unique(uganda_vl$dist_name))
-
 
 
 # check that 2014 and 2018 data only includes appropriate months (8/14 - 12/14, 1/18 - present)
 uganda_vl[year==2014, sum(samples_received), by=month]
 uganda_vl[year==2018, sum(samples_received), by=month]
 
-# rename sex values
-uganda_vl[ , .(class(sex)) ]
-uganda_vl[sex=='m', sex:='Male']
-uganda_vl[sex=='f', sex:='Female']
-uganda_vl[sex=='x', sex:='Unknown']
-
 # ----------------------------------------------
 # create a data set shape long and add dates to both
 
 # Reshape indicators long
-idVars <- c("facility_id", "process_id", "process_hub", "year", "month" ,"sex",
-            "district_id", "facility_name", "hub_id", "district_name", "dist_name")       
+idVars <- c("facility_name", "facility_id", "dist_name", "district_id",
+            "dhis2name","hub_id", "sex", "month", "year")
+  
 uganda_vl_long <- melt(uganda_vl, id.vars=idVars)
 
 # make date variable
@@ -90,7 +78,7 @@ plot(shapeData)
 
 
 # ----------------------------------------------
-# merge the files
+# merge the data with the shape file
 
 # identify the variable that contains district names and codes
 shapeData@data %>% as_tibble()
@@ -104,8 +92,8 @@ shape_check <- unique(shapeData@data$dist112_na)
 shape_check[!shape_check %in% uvl_check] # shape file contains all districts in uganda vl
 uvl_check[!uvl_check %in% shape_check] 
 
+# more efficient check
 unique(uganda_vl$dist_name)[!(unique(uganda_vl$dist_name)) %in% unique(shapeData@data$dist112_na)]
-
 
 
 # dist112 is district id #s, dist112_na is names; match on names, merge on ids
@@ -117,13 +105,15 @@ shape_names <- data.table(dist_name=shapeData@data$dist112_na, dist_id=shapeData
 str(shape_names)
 
 # total and annual counts and suppression ratios by district
+# total for all time
 ratio_table <- uganda_vl[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
-                              dbs_samples=sum(dbs_samples), valid_results=sum(valid_results), suppressed=sum(suppressed),
+                              dbs_samples=sum(dbs_samples), valid_results=sum(valid_results),
+                              suppressed=sum(suppressed),
                              suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
                          by=.(dist_name)]
-              ratio_table <- ratio_table[order(dist_name)]
+                       ratio_table <- ratio_table[order(dist_name)]
 
-
+# annual counts and ratios
 ratio_year <- uganda_vl[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
                           dbs_samples=sum(dbs_samples), valid_results=sum(valid_results), suppressed=sum(suppressed),
                           dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
@@ -155,11 +145,6 @@ ratio_year <- uganda_vl[ , .(patients_received=sum(patients_received), samples_r
          # divide facilities reporting in each year by total facilities ever reported for ratio
          facilities_table[, facility_ratio:=((facilities_report/total_facilities)*100), by=.(dist_name, year)]
               
-              # check 
-              facilities_table[year==2014, .(dist_name, facility_ratio)] 
-              facilities_table[year==2015, .(dist_name, facility_ratio)] 
-              facilities_table <- facilities_table[order(year, dist_name)]
-              
               # merge count and ratio of facilities reporting into ratio_year
               ratio_year <- merge(ratio_year, facilities_table, by=c('dist_name', 'year'), all.x=TRUE)
           
@@ -188,16 +173,30 @@ setnames(ratio_year, "dist_id", "id")
 # -----------------
 # create a table for annual maps stratified by sex
 
-ratio_sex <- uganda_vl[ ,.(patients_received=sum(patients_received), samples_received=sum(samples_received), 
+# females, annual
+ratio_female <- uganda_vl[ sex=='Female', 
+                           .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
                              dbs_samples=sum(dbs_samples), valid_results=sum(valid_results),
-                             suppressed=sum(suppressed),
-                             dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
+                             suppressed=sum(suppressed), dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
                              suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
-                         by=.(dist_name, sex, year)]
+                         by=.(dist_name, year)]
 
-ratio_sex <- ratio_sex[order(year, dist_name, sex)]
-ratio_sex <- merge(shape_names, ratio_sex, by="dist_name")
-setnames(ratio_sex, "dist_id", "id")
+ratio_female <- ratio_female[order(year, dist_name)]
+ratio_female <- merge(shape_names, ratio_female, by="dist_name")
+setnames(ratio_female, "dist_id", "id")
+
+# males, annual
+ratio_male <- uganda_vl[sex=='Male', 
+                           .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
+                             dbs_samples=sum(dbs_samples), valid_results=sum(valid_results),
+                             suppressed=sum(suppressed), dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
+                             suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
+                           by=.(dist_name, year)]
+
+ratio_male <- ratio_male[order(year, dist_name)]
+ratio_male <- merge(shape_names, ratio_male, by="dist_name")
+setnames(ratio_male, "dist_id", "id")
+
 
 # -----------------
 
@@ -206,17 +205,20 @@ coordinates <- data.table(fortify(shapeData, region='dist112'))
 coordinates[, id:=as.numeric(id)]
 
 # coordinates by year for faceting
-coordinates_year <- rbind(coordinates, coordinates, coordinates, coordinates, coordinates)
-coordinates_year[, year:=rep(2014:2018, each=nrow(coordinates))]
+coordinates_ann <- rbind(coordinates, coordinates, coordinates, coordinates, coordinates)
+coordinates_ann[, year:=rep(2014:2018, each=nrow(coordinates))]
+
 
 # merge on district id
 coordinates <- merge(coordinates, ratio_table, by="id", all.x=TRUE)
-coordinates_sex <- merge(coordinates_year, ratio_sex, by=c('id','year'), all.x=TRUE)
-coordinates_year <- merge(coordinates_year, ratio_year, by=c('id', 'year'), all.x=TRUE)
+coordinates_year <- merge(coordinates_ann, ratio_year, by=c('id', 'year'), all.x=TRUE)
+
+coordinates_female <- merge(coordinates_ann, ratio_female, by=c('id','year'), all.x=TRUE)
+coordinates_male <- merge(coordinates_ann, ratio_male, by=c('id','year'), all.x=TRUE)
 
 
 # ----------------------------------------------
-# create annual graphs with variables on the same page 
+# GRAPHS: create annual graphs with variables on the same page 
 
 # create a data set shape long and add dates to both
 uvl_1 <- uganda_vl[, .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
@@ -237,17 +239,17 @@ uvl_1$variable <- factor(uvl_1$variable,
 # ----------------------
 # annual facet-wrapped graphs with total facilities
 # create a data set shape long and add dates to both
-uvl_year <- uganda_vl[year!=2018, .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
+uvl_year <- uganda_vl[, .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
                          dbs_samples=sum(dbs_samples), valid_results=sum(valid_results), suppressed=sum(suppressed)), 
-                          by=.(sex, year)]
+                          by=.(sex, date)]
 
         # create a table of the total number of facilities reporting in each district, all years
-        total_fac_year <- uganda_vl[, .(total_facilities=length(unique(facility_id))), by=year]
+        total_fac_year <- uganda_vl[, .(total_facilities=length(unique(facility_id))), by=.(date)]
 
-        uvl_year <- merge(uvl_year, total_fac_year, by="year", all.x=TRUE)
+        uvl_year <- merge(uvl_year, total_fac_year, by="date", all.x=TRUE)
 
         # reshape long
-        uvl_year <- melt(uvl_year, id.vars=c("sex","year"))
+        uvl_year <- melt(uvl_year, id.vars=c("sex","date"))
         
         # keep single values for facilities (females only)
         uvl_year <- uvl_year[!(variable=="total_facilities" & (sex=="Male"| sex=="Unknown")) ]
@@ -308,12 +310,12 @@ breaks <- c(1, 20, 400, 8100)
 pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/uvl_descriptives.pdf', height=6, width=9)
 
 # annual data reported for major variables
-ggplot(uvl_year, aes(x=year, y=value, color=sex)) + 
+ggplot(uvl_year, aes(x=date, y=value, color=sex)) + 
   facet_wrap(~variable, scales='free_y') +
   geom_point() +
   geom_line(alpha=0.7) +
   theme_minimal() +
-  labs(x="Year", y="Count", title="Annual data reported, Uganda Viral Load Dashboard", color="Sex") +
+  labs(x="Year", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
   scale_color_manual(values=sex_colors)
 
 # facilities reporting by month, year
@@ -364,7 +366,33 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=suppression_ratio)
 # ---------------
 # suppression ratio by sex
 
+ladies <- brewer.pal(6, 'YlOrBr')
+gents <- brewer.pal(6, 'PuBuGn')
+  
+  
+# suppression ratios among females
+ggplot(coordinates_female, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=ladies) + 
+  theme_void() +
+  labs(title="Viral suppression ratios among females by district, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       fill="% virally suppressed") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
+# suppression ratios among males
+ggplot(coordinates_male, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=gents) + 
+  theme_void() +
+  labs(title="Viral suppression ratios among females by district, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       fill="% virally suppressed") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # ---------------
 # annual variable comparisons
