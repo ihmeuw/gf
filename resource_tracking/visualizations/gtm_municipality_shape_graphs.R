@@ -22,21 +22,24 @@ library(RColorBrewer)
 library(readxl)
 library(reshape)
 library(scales)
+library(ggrepel)
 
 
 # ----------------------------------------------
 # change directory
-setwd('J:/Project/Evaluation/GF/mapping/gtm/')
+dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
 
 # load the shapefile
-shapeData = shapefile('GTM_munis_only.shp')
+shapeData = shapefile(paste0(dir,'GTM_munis_only.shp'))
 
 ## load the admin1 shape with the projection: 
-adminData = shapefile('gtm_region.shp')
+adminData = shapefile(paste0(dir,'gtm_region.shp'))
 
 
 ## load the sicoin data:
-
+##load GTM 
+gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
+                                  fileEncoding = "latin1"))
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
                                    ,fileEncoding="latin1"))
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
@@ -46,20 +49,19 @@ sicoin_data$year <- year(sicoin_data$start_date)
 # the sicoin loc_id has leading zeroes, which the shape files don't have
 ## this gets rid of it: 
 
-sicoin_data$id <- as.numeric(lapply(sicoin_data$loc_id, function(y) sub('^0+(?=[1-9])', '', y, perl=TRUE)))
+sicoin_data$id <- as.numeric(lapply(sicoin_data$adm2, function(y) sub('^0+(?=[1-9])', '', y, perl=TRUE)))
 
 
+##Malaria in this example, but the other diseases work fine: 
 
-##I'm doing HIV in this example, but this works for Malaria and TB as well: 
-
-hivData <- sicoin_data[disease=="hiv"]
+malData <- sicoin_data[disease=="malaria"&source=="gf"]
 
 ## something that might be cool is to get the absorption ratio of disb/budget by year, source, disease, etc. 
-byVars = names(hivData)[names(hivData)%in%c('source', 'loc_id', 'loc_name', 'year', 'id')]
-hivData  = hivData [, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))), 
+byVars = names(malData)[names(malData)%in%c('loc_name','module','year', 'id')]
+malData  = malData[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))), 
                           by=byVars]
 ##get absorption: 
-hivData[, absorption:=disbursement/budget]
+malData[, absorption:=disbursement/budget]
 
 # ----------------------------------------------
 ## if you want the cumulative budgets and disbursements, uncomment: 
@@ -98,36 +100,36 @@ admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow
 
 # ----------------------------------------------
 ##get shape data ready to do yearly graphs: 
-gheData <- hivData[source=="ghe"]
+gheData <- malData[source=="ghe"]
 gheData <-gheData[with(gheData, order(year, loc_name)), ]
-gfData <- hivData[source=="gf"]
+gfData <- malData[source=="gf"]
 gfData<- gfData[with(gfData, order(year, loc_name)), ]
 
 ##budget and disbursement: 
 
-colScale <-  scale_fill_gradient2(low='#ffe1e6', mid='#ef8307', high='#12ed8e',
+colScale <-  scale_fill_gradient2(low='#66047c', mid='#edc393', high='#68e86a',
                                   na.value = "grey70",space = "Lab", midpoint = 1.6, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
                                   breaks=c(0, 0.5 ,1, 1.5, 2, 2.5), limits=c(0,3))
 
 
 ##absorption: 
-colScale <-  scale_fill_gradient2(low='#ffe1e6', mid='#00FFff', high='#0606aa',
+colScale <-  scale_fill_gradient2(low='#0606aa', mid='#00FFff', high='#ffa3b2',
                                   na.value = "grey70",space = "Lab", midpoint = 0.5, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
                                   breaks=c(0, 0.2, 0.4,0.6, 0.8), limits=c(0,1))
 
 # ----------------------------------------------
 ### if you want:  Get names and id numbers corresponding to administrative areas to plot as labels: 
-# gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1], 
-# gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1']
-# gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
-# gtm_region_centroids$NAME_1[18] <- "Totonicapán"
-# gtm_region_centroids$NAME_1[22] <- "Sololá"
-# gtm_region_centroids$NAME_1[21] <- "Suchitepéquez"
-# gtm_region_centroids$NAME_1[3] <- "Sacatepéquez"
-# gtm_region_centroids$NAME_1[1] <- "Quiché"
-# gtm_region_centroids$NAME_1[7] <- "Petén"
+# gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1],lat = coordinates(adminData)[, 2])
+gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1'] 
+gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
+gtm_region_centroids$NAME_1[18] <- "Totonicapán"
+gtm_region_centroids$NAME_1[22] <- "Sololá"
+gtm_region_centroids$NAME_1[21] <- "Suchitepéquez"
+gtm_region_centroids$NAME_1[3] <- "Sacatepéquez"
+gtm_region_centroids$NAME_1[1] <- "Quiché"
+gtm_region_centroids$NAME_1[7] <- "Petén"
 
 
 # ----------------------------------------------
