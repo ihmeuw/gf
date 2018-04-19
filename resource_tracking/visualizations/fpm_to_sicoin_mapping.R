@@ -19,6 +19,7 @@ library(reshape)
 library(scales)
 library(ggrepel)
 library(dplyr)
+library(zoo)
 # ----------------------------------------------
 
 ##load the data: 
@@ -32,6 +33,24 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 
 # ----------------------------------------------
 ##MAP FPM BUDGETS TO SICOIN MUNICIPALITIES: 
+gtmBudgets <- gtmBudgets[!(data_source=="pudr"&year>2015)]
+
+gtmBudgets$quarter <- as.yearqtr(gtmBudgets$start_date)
+
+##sum up budget (as "variable") by year, disease, and data source 
+byVars = names(gtmBudgets)[names(gtmBudgets)%in%c('quarter', 'disease','year','gf_module', 'gf_intervention')]
+gtm_subset = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))
+                          , disbursement=sum(na.omit(disbursement))), by=byVars]
+
+
+# ##order the data to get the % of interventions per module: 
+# gtm_subset<- gtm_subset[with(gtm_subset, order(disease,year,quarter, gf_module, gf_intervention, budget)), ]
+# gtm_subset[, module_fraction := budget/sum(budget), by=c("disease","quarter")]
+# gtm_subset[, int_fraction := budget/sum(budget), by=c("disease","quarter", "gf_module")]
+
+
+fpm_malaria <- gtm_subset[(disease=="malaria"&year==2012)]
+# ----------------------------------------------
 
 ##just work with GF data for now: 
 sicoin_data <- sicoin_data[source=="gf"]
@@ -40,52 +59,51 @@ sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
 sicoin_data$year <- year(sicoin_data$start_date)
 
-
-
-gtmBudgets <- gtmBudgets[!(data_source=="pudr"&year>2015)]
-
-##sum up budget (as "variable") by year, disease, and data source 
-byVars = names(gtmBudgets)[names(gtmBudgets)%in%c('year', 'disease', 'code','gf_module', 'gf_intervention')]
-gtmBudgets = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))
-                          , disbursement=sum(na.omit(disbursement))), by=byVars]
-
-
-##order the data to get the % of interventions per module: 
-gtmBudgets<- gtmBudgets[with(gtmBudgets, order(disease,year,code, gf_module, gf_intervention, budget)), ]
-gtmBudgets[, module_fraction := budget/sum(budget), by=c("disease","year")]
-gtmBudgets[, int_fraction := budget/sum(budget), by=c("disease","year", "gf_module")]
-
-
-fpm_malaria <- gtmBudgets[(disease=="malaria"&year==2012)]
-
-
+##clean the ID numbers from sicoin: 
 sicoin_data$id <- as.numeric(lapply(sicoin_data$adm2, function(y) sub('^0+(?=[1-9])', '', y, perl=TRUE)))
+
 
 
 ##Malaria in this example, but the other diseases work fine: 
 sicoin_subset <- sicoin_data[year==2012&disease=="malaria"]
 
+sicoin_subset$quarter <- as.yearqtr(sicoin_subset$start_date)
+
 ##sum up budget (as "variable") by year, disease, and data source 
-byVars = names(sicoin_subset)[names(sicoin_subset)%in%c('loc_name','module','year', 'id')]
+byVars = names(sicoin_subset)[names(sicoin_subset)%in%c('loc_name','module','quarter','year','id')]
 sicoin_subset = sicoin_subset[, list(budget=sum(na.omit(budget)), 
                                      disbursement=sum(na.omit(disbursement))), by=byVars]
 
-sicoin_subset[, muni_fraction:=budget/sum(budget), by=c("year", "module")]
+##you can do this by quarter or year: 
+##QTR
+sicoin_subset[, qtr_fraction:=budget/sum(budget), by=c("quarter", "module")]
 
+
+##YEAR:
+sicoin_subset[, year_total:=sum(budget), by="year"]
+sicoin_subset[, muni_total:=sum(budget), by=c("year", "loc_name")]
+sicoin_subset[, year_fraction:=budget/sum(budget), by=c("year", "module")]
 
 
 ##just work with 2013 data for now:  
 setnames(sicoin_subset, c("budget", "disbursement"), c("sicoin_budget", "sicoin_disb"))
 
-graphData <- merge(sicoin_subset, fpm_malaria, by="year", allow.cartesian=TRUE)
+graphData <- merge(sicoin_subset, fpm_malaria, by=c("year", "quarter"), allow.cartesian=TRUE)
 
 ##how many modules are in this year: 
 ##municipality budget divided by the number of modules this year: 
-graphData[,muni_budget:=budget*muni_fraction]
+graphData[,muni_budget:=sum(budget), by=c("year", "loc_name")]
+
+
+graphData[,muni_budget_qtr:=budget*qtr_fraction]
+graphData[,muni_budget_year:=muni_budget*year_fraction]
 ##municipality budget now multiplied by # of interventions per module: 
 # graphData[,final_budget:=muni_budget*int_fraction]
 # graphData[,muni_disb:=disbursement*muufraction]
 # graphData[,final_disb:=muni_disb*int_fraction]
+
+graphData[, mod_year:=paste(year, ":",gf_module)]
+graphData[, int_year:=paste(year, gf_module,":",gf_intervention)]
 
 # ----------------------------------------------
 
@@ -110,12 +128,35 @@ coord_and_names = merge(coordinates, names, by.x='id', by.y='Codigo', allow.cart
 admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow.cartesian=TRUE)
 
 
-##absorption: 
+##modules:  
 colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#ffa3b2',
-                                  na.value = "grey70",space = "Lab", midpoint = 0.5, ## play around with this to get the gradient 
+                                  na.value = "grey70",space = "Lab", midpoint = 2.5, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
-                                  breaks=c(0,0.25, 0.5,0.75, 1), limits=c(0,1))
+                                  breaks=c(0,1, 2,3, 4), limits=c(0,5))
 
+##interventions: 
+colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#ffa3b2',
+                                  na.value = "grey70",space = "Lab"  ## play around with this to get the gradient 
+                                  # that you want, depending on data values 
+                                  #midpoint = 0.5, breaks=c(0,0.25, 0.5, 0.75), limits=c(0,1)
+)
+
+graphData$muni_budget <- cut(graphData$muni_budget_year/100000, 
+                             breaks= c(0,0.1, seq(0.2, 1, by = .2), 2:5, Inf),right = FALSE)
+
+colors <- c('#37E1E6',
+            '#32BFDF',
+            '#2D9ED9',
+            '#287CD3',
+            '#235BCD',
+            '#1F3AC7',
+            '#fdbf6f',
+            '#ff7f00',
+            '#cab2d6',
+            '#93b500',
+            '#db0645')
+
+names(colors) <- levels(graphData$muni_budget)
 
 # ----------------------------------------------
 ### if you want:  Get names and id numbers corresponding to administrative areas to plot as labels: 
@@ -132,25 +173,25 @@ gtm_region_centroids$NAME_1[7] <- "Petén"
 # ----------------------------------------------
 gtm_plots <- list()
 i = 1
-for (k in unique(graphData$gf_module)){
+for(k in unique(graphData$mod_year)){
   shapedata <- copy(coord_and_names)
-  subdata <- graphData[gf_module==k]
-  shapedata$gf_module <- k ## add "gf_module" to shapefile in order to merge datasets 
+  subdata <- graphData[mod_year==k]
+  shapedata$mod_year <- k ## merge coordinate dataset to budget dataset on a common variable
   # merge on the data (all.x=TRUE so the shapefile data doesn't disappear)
-  graphdata  <- merge(shapedata, subdata,by=c('gf_module','id'), all.x=TRUE, allow.cartesian=TRUE)
-  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=muni_budget/100000)) + 
+  graphdata  <- merge(shapedata, subdata,by=c('mod_year','id'), all.x=TRUE, allow.cartesian=TRUE)
+  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=muni_budget_year/100000)) + 
              coord_equal() + ##so the two shapefiles have the same proportions 
              geom_path() +
              geom_map(map=admin_dataset, data=admin_dataset,
                       aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
              # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
-             theme_void() +  colScale +  
+             theme_void() +  colScale + 
              ## uncomment if you want the department names: 
              geom_label_repel(data = gtm_region_centroids, aes(label = NAME_1, x = long, y = lat, group = NAME_1), 
                               size = 3, fontface = 'bold', color = 'black',
                               box.padding = 0.35, point.padding = 0.3,
                               segment.color = 'grey50', nudge_x = 0.7, nudge_y = 4.5) + 
-             labs(title=paste("GF budgets:", k), fill='USD (thousands)'))
+             labs(title=k, fill='USD (hundred thousands)'))
   gtm_plots[[i]] <- plot
   i=i+1
 }
