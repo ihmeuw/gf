@@ -125,6 +125,9 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
 cleaned_database <- resource_database[!resource_database$loc_name%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
 cleaned_database <-cleaned_database[!(cleaned_database$adm1%in%"TOTAL"|cleaned_database$adm2%in%"TOTAL")]
 setnames(cleaned_database, "sda_orig", "module")
+
+##adding a column to track original language: 
+cleaned_database$lang <- "esp"
 ##output the data to the correct folder 
 
 cleaned_database[is.na(module), module:="all"]
