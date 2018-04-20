@@ -179,13 +179,14 @@ for(k in unique(graphData$mod_year)){
   shapedata$mod_year <- k ## merge coordinate dataset to budget dataset on a common variable
   # merge on the data (all.x=TRUE so the shapefile data doesn't disappear)
   graphdata  <- merge(shapedata, subdata,by=c('mod_year','id'), all.x=TRUE, allow.cartesian=TRUE)
-  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=muni_budget_year/100000)) + 
+  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=muni_budget)) + 
              coord_equal() + ##so the two shapefiles have the same proportions 
              geom_path() +
              geom_map(map=admin_dataset, data=admin_dataset,
                       aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
              # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
-             theme_void() +  colScale + 
+             theme_void() +  
+             scale_fill_manual(name="Budget (USD, 100k)", values=colors,na.value="grey50" ) + 
              ## uncomment if you want the department names: 
              geom_label_repel(data = gtm_region_centroids, aes(label = NAME_1, x = long, y = lat, group = NAME_1), 
                               size = 3, fontface = 'bold', color = 'black',
