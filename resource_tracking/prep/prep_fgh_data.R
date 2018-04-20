@@ -114,3 +114,4 @@ ghe_wide[location_id==190, country:="Uganda"]
 ghe_wide[location_id==171, country:="Congo (Democratic Republic)"]
 
 
+write.csv(ghe_wide, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/ghe_fgh_prepped.csv", row.names=FALSE)
