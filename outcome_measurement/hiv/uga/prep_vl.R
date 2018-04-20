@@ -195,7 +195,7 @@ uvl_sex <- uvl_sex[ ,.(facility_name=facility_name, facility_id=facility_id, dis
                district_id=district_id, dhis2name=dhis2name, hub_id=hub_id,
                patients_received=patients_received, samples_received=samples_received, 
                dbs_samples=dbs_samples, total_results=total_results, rejected_samples=rejected_samples,
-               valid_results=valid_results, sex=sex, month=month, year=year) ]
+               valid_results=valid_results, suppressed=suppressed, sex=sex, month=month, year=year) ]
                
 
 #save the final data as an RDS
