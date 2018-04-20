@@ -159,7 +159,11 @@ mapped_sicoin$budget <- mapped_sicoin$budget*mapped_sicoin$coefficient
 mapped_sicoin$expenditure <- mapped_sicoin$expenditure*mapped_sicoin$coefficient
 mapped_sicoin$disbursement <- mapped_sicoin$disbursement*mapped_sicoin$coefficient
 
-
+mapped_sicoin$sda_activity <- "all"
+mapped_sicoin$grant_number <- "none"
+mapped_sicoin$country <- "Guatemela"
+mapped_sicoin$recipient <- mapped_sicoin$country
+mapped_sicoin$data_source <- "sicoin"
 
 # data_check1 <- sicoin_data[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
 # data_check2 <-mapped_sicoin[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]

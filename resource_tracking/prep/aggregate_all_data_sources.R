@@ -51,14 +51,9 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
 gtmBudgets$country <- "Guatemala"
-gtmBudgets$year <- year(gtmBudgets$start_date)
-gtmBudgets$end_date <- as.Date(gtmBudgets$end_date, "%Y-%m-%d")
 ###: technically not the country, but we're keeping the loc ids attached to the sicoin data
 ##so it will map to a municipality anyway 
-sicoin_data$sda_activity <- "all"
-sicoin_data$grant_number <- "none"
-sicoin_data$country <- "Guatemela"
-sicoin_data$recipient <- sicoin_data$country
+
 
 ##rbind the sicoin and FPM data:
 # totalGtm <- rbind(sicoin_data, gtmBudgets)
@@ -89,6 +84,7 @@ gos_data$period <- as.integer(gos_data$period)
 gos_data$disbursement <- 0
 gos_data$adm1 <- gos_data$loc_name
 gos_data$adm2 <- gos_data$loc_name
+gos_data$lang <- "eng"
 ##aggregate with gos data: 
 
 totalData <- rbind(fpmData, gos_data)

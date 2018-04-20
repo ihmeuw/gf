@@ -19,7 +19,7 @@ library(zoo)
 # ----------------------------------------------
 
 prep_summary_budget = function(dir, inFile, sheet_name, start_date, 
-                                   qtr_num, disease, loc_id, period, grant, recipient, source){
+                                   qtr_num, disease, loc_id, period, grant, recipient, source, lang){
   
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
@@ -84,6 +84,7 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset$recipient <- recipient
   budget_dataset$qtr <- NULL
   budget_dataset$data_source <- source
+  budget_dataset$lang <- lang
   return(budget_dataset)
   
 }
