@@ -56,7 +56,8 @@ for(i in 1:length(file_list$file_name)){
   if(file_list$type[i]=="summary"){
     tmpData <- prep_summary_budget(dir, as.character(file_list$file_name[i]),
                                   file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
-                                  file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], implementer, file_list$source[i])
+                                  file_list$disease[i], file_list$loc_id[i], file_list$period[i]
+                                  , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
     tmpData$year <- year(tmpData$start_date)
    } else if (file_list$type[i]=="detailed"){
     tmpData <- prep_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
@@ -65,7 +66,8 @@ for(i in 1:length(file_list$file_name)){
   } else if(file_list$type[i]=="module"){
     tmpData <- prep_old_module_budget(dir, as.character(file_list$file_name[i]),
                                    file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
-                                   file_list$disease[i], file_list$loc_id[i], file_list$period[i], file_list$grant[i], implementer, file_list$source[i])
+                                   file_list$disease[i], file_list$loc_id[i], file_list$period[i]
+                                   , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
     tmpData$year <- year(tmpData$start_date)
   } else if(file_list$type[i]=="rejected"){
     tmpData <- prep_cod_rejected(paste0(dir, file_list$file_name[i]))
@@ -149,12 +151,7 @@ mappedCod$budget <- mappedCod$budget*mappedCod$coefficient
 mappedCod$expenditure <- mappedCod$expenditure*mappedCod$coefficient
 mappedCod$disbursement <- mappedCod$disbursement*mappedCod$coefficient
 
-##change this when we get geo locations for DRC: 
-mappedCod$adm1 <- "cod"
-mappedCod$adm2 <- "cod"
-mappedCod$country <- "Congo (Democratic Republic)"
 
-mappedCod[,end_date:=start_date+period-1]
 ##sum to make sure that budget numbers aren't dropped:
 #mappedCod$concat <- NULL
 # data_check1 <- codData[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
@@ -164,6 +161,15 @@ mappedCod[,end_date:=start_date+period-1]
 # data_check2$ind <- "post"
 # data_check <- rbind(data_check1, data_check2)
 # write.csv(data_check, "data_check.csv", row.names = FALSE)
+
+
+
+##change this when we get geo locations for DRC: 
+mappedCod$adm1 <- "cod"
+mappedCod$adm2 <- "cod"
+mappedCod$country <- "Congo (Democratic Republic)"
+
+mappedCod[,end_date:=start_date+period-1]
 
 
 # ----------------------------------------------

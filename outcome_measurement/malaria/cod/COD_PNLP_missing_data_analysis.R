@@ -2,7 +2,10 @@
   # Audrey Batzel
   #
   # 3/16/18
-  # COD PNLP data for 2014-2016; descriptive analysis of missing data
+  # COD PNLP data for 2014-2016; data quality analysis
+    # outlier analysis
+    # internal consistency checks
+    # descriptive analysis of missing data
 # ----------------------------------------------
 
 
@@ -32,14 +35,20 @@
       dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data"
     
     # input file:
-    # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators_Long
-    # csv files were produced by prep_COD_Malaria_data_function.R
+      # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators_Long
+      # csv files were produced by prep_COD_Malaria_data_function.R
       dt <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Long.csv")) 
       dt_wide <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Wide.csv")) 
       dt2 <- fread(paste0(dir, "/", "COD_PNLP_Data_Interventions_Long.csv"))
       fullData <- fread(paste0(dir, "/", "Full Data for MI.csv"))
+      # upload excel doc of outliers as a data table to merge with full data set
+        outliers <- as.data.table(read_excel(paste0(dir, "/Outliers.xlsx")))
+        outliers[, date := as.Date(date)]
         
     # output files:
+      # outputs to J:\Project\Evaluation\GF\outcome_measurement\cod\visualizations\PNLP_Data
+      # Scatterplots for Variable comparisons
+      # Scatterplots with Outliers 
 
     # Set up:
       dt[, date := as.Date(date)]
@@ -103,9 +112,12 @@
        i <- i + 1
      }
      
-# scatterplot the pairs of variables identified by correlation matrix analysis
+     # remove rows with reports against product
+       maxCorr <- maxCorr[-21,]
+       maxCorr <- maxCorr[-20,]
+       maxCorr <- maxCorr[-7,]
 
-     # variable names for labelling axes 
+ # variable names for labelling axes 
      # ----------------------------------------------   
      variable_names <- c(
        `ArtLum_received` = "Artéméther - Lumefatrine Recieved",
@@ -113,11 +125,11 @@
        `SP_1st` = "SP administered during 1st ANC Visit",
        `SP_2nd` = "SP administered during 2nd ANC Visit",
        `SP_3rd` = "SP administered during 3rd ANC Visit",
-       `ASAQ_2to11mos` = "Artesunate Amodiaquine (ACT): 2 to 11 mos",
-       `ASAQ_1to5yrs` = "Artesunate Amodiaquine (ACT): 1 to 5 yrs",
-       `ASAQ_6to13yrs` = "Artesunate Amodiaquine (ACT): 6 to 13 yrs",
-       `ASAQ_14yrsAndOlder` = "Artesunate Amodiaquine (ACT): 14 yrs and Older",
-       `ASAQ_total` = "Artesunate Amodiaquine (ACT)",
+       `ASAQ_2to11mos` = "Artesunate Amodiaquine: 2 to 11 mos",
+       `ASAQ_1to5yrs` = "Artesunate Amodiaquine: 1 to 5 yrs",
+       `ASAQ_6to13yrs` = "Artesunate Amodiaquine: 6 to 13 yrs",
+       `ASAQ_14yrsAndOlder` = "Artesunate Amodiaquine: 14 yrs and Older",
+       `ASAQ_total` = "Artesunate Amodiaquine",
        `ITN_received` = "ITNs recieved",
        `ITN_distAtANC` = "ITNs distributed at ANC Visit",
        `ITN_distAtPreschool` = "ITNs distributed at Preschool",
@@ -130,9 +142,9 @@
        `smearTest_completed` = "Smear Tests: Completed",
        `smearTest_positive` = "Smear Tests: Positive",
        `VAR` = "Measles Vaccine",
-       `newCasesMalariaMild_under5` = "Incidence of Mild Malaria: Under 5",
-       `newCasesMalariaMild_5andOlder` = "Incidence of Mild Malaria: 5 and Older",
-       `newCasesMalariaMild_pregnantWomen`= "Incidence of Mild Malaria: Pregnant Women",
+       `newCasesMalariaMild_under5` = "Confirmed Cases of Mild Malaria: Under 5",
+       `newCasesMalariaMild_5andOlder` = "Confirmed Cases of Mild Malaria: 5 and Older",
+       `newCasesMalariaMild_pregnantWomen`= "Confirmed Cases of Mild Malaria: Pregnant Women",
        `newCasesMalariaSevere_under5` = "Incidence of Severe Malaria: Under 5",
        `newCasesMalariaSevere_5andOlder` = "Incidence of Severe Malaria: 5 and Older",
        `newCasesMalariaSevere_pregnantWomen` = "Incidence of Severe Malaria: Pregnant Women",
@@ -143,41 +155,43 @@
        `severeMalariaTreated_5andOlder` = "Cases of Severe Malaria Treated: 5 and Older",
        `severeMalariaTreated_pregnantWomen` = "Cases of Severe Malaria Treated: Pregnant Women",
        `malariaDeaths_under5` = "Number of Deaths from Malaria: Under 5",
-       `malariaDeaths_5andOlder` = "Number of Deaths from Malaria: 5 and Older",
-       `malariaDeaths_pregnantWomen` = "Number of Deaths from Malaria: Pregnant Women"
-     )
+       `malariaDeaths_5andOlder` =     "Number of Deaths from Malaria: 5 and Older",
+       `malariaDeaths_pregnantWomen` = "Number of Deaths from Malaria: Pregnant Women",
+       `healthFacilities_total` = "Total Health Facilities",
+       `healthFacilities_numReported` = "Number of Health Facilities Reporting"
+       )
      # ---------------------------------------------- 
 
-     
-  # loop through pairs of variables in maxCorr for graphing 
-    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)   
+# ----------------------------------------------      
+  # # loop through pairs of variables in maxCorr for graphing 
+  #   pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)   
+  #   
+  #   i = 1
+  #   for (v in maxCorr$variable1){
+  #     
+  #     v2 = maxCorr$variable2[i]
+  #     
+  #     #minmax <- range(c(maxCorr$variable1, maxCorr$variable2))
+  #     maxAxis <- max(na.omit(cbind(fullData[[v]], fullData[[v2]])))
+  #     # maxAxis <- max(c(fullData[[v]], fullData[[v2]]), na.rm=T)
+  #     # if (max(fullData[,get(v)])> max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v)])
+  #     # if (max(fullData[,get(v)])< max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v2[i])])
+  # 
+  #     g <- ggplot(fullData, aes_string(v, v2, color="dps")) 
+  #     g <- g + geom_point() #+ geom_smooth(method='lm')
+  #     g <- g + xlab(variable_names[v]) + ylab(variable_names[v2]) + xlim(0, maxAxis) + ylim(0, maxAxis)
+  #     
+  #     print(g)
+  #     
+  #     i = i + 1
+  #   }
+  #   
+  #   dev.off()
+# ----------------------------------------------   
     
-    i = 1
-    for (v in maxCorr$variable1){
-      
-      v2 = maxCorr$variable2[i]
-      
-      #minmax <- range(c(maxCorr$variable1, maxCorr$variable2))
-      
-      maxAxis <- max(c(fullData[[v]], fullData[[v2]]), na.rm=T)
-      # if (max(fullData[,get(v)])> max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v)])
-      # if (max(fullData[,get(v)])< max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v2[i])])
-
-      g <- ggplot(fullData, aes_string(v, v2)) 
-      g <- g + geom_point() + geom_smooth(method='lm')
-      g <- g + xlab(variable_names[v]) + ylab(variable_names[v2]) + xlim(0, maxAxis) + ylim(0, maxAxis)
-      
-      print(g)
-      
-      i = i + 1
-    }
-    dev.off()
-      
+    
+# ---------------------------------------------- 
   # identify and color code suspected outliers
-      # upload excel doc of outliers as a data table
-        outliers <- as.data.table(read_excel(paste0(dir, "/Outliers.xlsx")))
-        outliers[, date := as.Date(date)]
-        
         # melt data in order to merge
           fullDataMelt <- melt(fullData, id.vars= c("V1", "date", "province", "dps", "health_zone"),
                                          measure.vars = c(),
@@ -198,24 +212,62 @@
     
     i = 1
     for (x in maxCorr$variable1){
-      
+      x = maxCorr$variable1[i]
       y = maxCorr$variable2[i]
-
-      maxAxis <- max(c(dtOutliersWide[[x]], dtOutliersWide[[y]]), na.rm=T)
       
-      dtOutliersWide[get(paste0(x,"_outlier"))==1, tmp:='outlier x']
-      dtOutliersWide[get(paste0(y,"_outlier"))==1, tmp:='outlier y']
+      maxAxis <- max(na.omit(cbind(dtOutliersWide[[x]], dtOutliersWide[[y]])))
+      
+      #maxAxis <- max(c(dtOutliersWide[[x]], dtOutliersWide[[y]]), na.rm=T)
+      
+      dtOutliersWide[get(paste0(x,"_outlier"))==1, tmp:='Outlier x']
+      dtOutliersWide[get(paste0(y,"_outlier"))==1, tmp:='Outlier y']
+      dtOutliersWide[get(paste0(y,"_outlier"))==1 & get(paste0(x,"_outlier"))==1, tmp:='Outlier x and y']
+      dtOutliersWide[is.na(get(paste0(y,"_outlier"))) & is.na(get(paste0(x,"_outlier"))), tmp:='Not suspected outlier']
+      
       g <- ggplot(dtOutliersWide, aes_string(x=x, y=y, color="tmp")) + 
-           geom_point() + 
-           xlab(variable_names[x]) + ylab(variable_names[y]) + xlim(0, maxAxis) + ylim(0, maxAxis)
+           geom_point(size=3) + geom_abline(alpha=1/4) + theme_bw() +
+           scale_color_manual(values=c("Outlier x"="yellow","Outlier y"="red", "Outlier x and y"="orange", "Not suspected outlier"="gray")) +
+           labs(color = NULL) + xlab(variable_names[x]) + ylab(variable_names[y]) + xlim(0, maxAxis) + ylim(0, maxAxis)
       
       print(g)
-      
+      dtOutliersWide$tmp <- NULL
       i = i + 1
     }
     
     dev.off()
 # ---------------------------------------------- 
+    
+    
+# ----------------------------------------------
+    # internal consistency check - sum treatments vs sum cases treated
+    dtTreated <- fullData[,
+                          .(casesTreated = sum(mildMalariaTreated_under5, mildMalariaTreated_5andOlder, mildMalariaTreated_pregnantWomen, 
+                                                severeMalariaTreated_under5, severeMalariaTreated_5andOlder, severeMalariaTreated_pregnantWomen, na.rm=T)),
+                          by = c('date', 'dps', 'health_zone')]
+    dtTreatments <- fullData[,
+                            .(treatment = sum(ArtLum_used, SP_1st, ASAQ_2to11mos, ASAQ_1to5yrs, 
+                                                 ASAQ_6to13yrs, ASAQ_14yrsAndOlder, na.rm=T)),
+                            by = c('date', 'dps', 'health_zone')]
+    
+    dtTreatments2 <- fullData[,
+                             .(treatmentSPall = sum(ArtLum_used, SP_1st, SP_2nd, SP_3rd, ASAQ_2to11mos, ASAQ_1to5yrs, 
+                                                  ASAQ_6to13yrs, ASAQ_14yrsAndOlder, na.rm=T)),
+                             by = c('date', 'dps', 'health_zone')] 
+    
+    
+    dtTreated <- merge(dtTreated, dtTreatments, by= c('date', 'dps', 'health_zone'), all=T)
+    dtTreated <- merge(dtTreated, dtTreatments2, by= c('date', 'dps', 'health_zone'), all=T)
+
+    maxAxis <- max(na.omit(cbind(dtTreated$casesTreated, dtTreated$treatmentSP1)))
+    
+    g <- ggplot(dtTreated, aes(x=casesTreated, y=treatmentSPall)) + 
+      geom_point(size=3) + geom_abline(alpha=1/4) + theme_bw() + xlim(0, 30000) + ylim(0, 30000)
+    print(g)
+    
+# ----------------------------------------------  
+    
+    
+# ----------------------------------------------  
   j <- 1
   
   pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)   

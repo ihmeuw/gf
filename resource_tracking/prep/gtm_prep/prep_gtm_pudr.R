@@ -12,7 +12,7 @@
 # ----------------------------------------------
 
 # start function
-prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period, grant, source, loc_name) {
+prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period, grant, source, loc_name, lang) {
   
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
@@ -59,6 +59,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
   budget_dataset$period <- period
   budget_dataset$disease <- disease
   budget_dataset$grant_number <- grant
+  budget_dataset$lang <- lang
   # 
   # # ----------------------------------------------
   # 

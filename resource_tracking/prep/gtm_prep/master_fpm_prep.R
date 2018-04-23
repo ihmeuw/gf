@@ -39,7 +39,7 @@ for(i in 1:length(file_list$file_name)){
   } else if (file_list$format[i]=="summary"){ ## only summary level data - no municipalities 
     tmpData <- prep_fpm_summary_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
-                                       file_list$grant_number[i], file_list$recipient[i])
+                                       file_list$grant_number[i], file_list$recipient[i], file_list$lang[i])
     tmpData$loc_name <- "gtm"
     tmpData$disbursement<- 0 
   } else if (file_list$format[i]=="other"){ ## there's an older version of detailed fpm budgets
@@ -50,7 +50,7 @@ for(i in 1:length(file_list$file_name)){
   } else if (file_list$format[i]=="pudr"){ 
     tmpData <- prep_gtm_pudr(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                           ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
-                                          file_list$grant_number[i], file_list$data_source[i], loc_name)
+                                          file_list$grant_number[i], file_list$data_source[i], loc_name, file_list$lang[i])
    
   }
   tmpData$loc_name <- loc_name
@@ -102,7 +102,6 @@ gf_mapping_list <- total_mapping_list("J:/Project/Evaluation/GF/mapping/multi_co
 # gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 # gtm_concat <- paste0(gtmData$module, gtmData$intervention)
 # unmapped_mods <- gtm_concat[!gtm_concat%in%gf_concat]
-
 
 
 gtm_init_mapping <- merge(gtmData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)

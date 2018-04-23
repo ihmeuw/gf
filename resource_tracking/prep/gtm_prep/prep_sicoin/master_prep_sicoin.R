@@ -125,6 +125,9 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
 cleaned_database <- resource_database[!resource_database$loc_name%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
 cleaned_database <-cleaned_database[!(cleaned_database$adm1%in%"TOTAL"|cleaned_database$adm2%in%"TOTAL")]
 setnames(cleaned_database, "sda_orig", "module")
+
+##adding a column to track original language: 
+cleaned_database$lang <- "esp"
 ##output the data to the correct folder 
 
 cleaned_database[is.na(module), module:="all"]
@@ -156,7 +159,11 @@ mapped_sicoin$budget <- mapped_sicoin$budget*mapped_sicoin$coefficient
 mapped_sicoin$expenditure <- mapped_sicoin$expenditure*mapped_sicoin$coefficient
 mapped_sicoin$disbursement <- mapped_sicoin$disbursement*mapped_sicoin$coefficient
 
-
+mapped_sicoin$sda_activity <- "all"
+mapped_sicoin$grant_number <- "none"
+mapped_sicoin$country <- "Guatemela"
+mapped_sicoin$recipient <- mapped_sicoin$country
+mapped_sicoin$data_source <- "sicoin"
 
 # data_check1 <- sicoin_data[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
 # data_check2 <-mapped_sicoin[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]

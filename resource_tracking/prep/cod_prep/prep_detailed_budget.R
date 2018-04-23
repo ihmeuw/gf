@@ -121,6 +121,7 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
+  budget_dataset$lang <- lang
   budget_dataset$data_source <- source
   
   ##separate tb/hiv into either one or the other in order to map programs properly - later we might want to go back and fix this
