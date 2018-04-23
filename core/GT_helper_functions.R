@@ -3,20 +3,15 @@
 #
 # 2017-11-14
 # Helper functions for Guatemala data analysis
-dataPath = "PCE/"
-extDataPath = "DATOS/"
-codePath = "PCE/gf/"
-
+# This requires sourcing first GT_load_data.R 
+#
+#   source("gf/core/GT_load_data.R")
+#
 # ----Dependencies------------------------------
 library(stringdist)
 library(stringr)
 library(data.table)
 
-# ----Read some data----------------------------
-if (!exists("munisGT")) {
-  munisGT = read.csv(paste0(dataPath, "Covariates and Other Data/Demographics/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv"), encoding = "UTF-8")
-  dt.munisGT = data.table(munisGT)
-}
 # ----getMuniCodeByName-------------------------
 # This function converts a string to a number. It tries to find a municipality 
 # by name and returns its numerical code.
@@ -105,5 +100,27 @@ GTMuniPopulation <- function (code, year) {
            parameters$P_10_12 * exp(parameters$k_10_12 * year))
 }
 # Example usage:
-GTMuniPopulation(c(101, 201, 301, 401, 402), c(2013, 2013, 2013, 2013, 2013))
+# GTMuniPopulation(c(101, 201, 301, 401, 402), c(2013, 2013, 2013, 2013, 2013))
 # [1] 1016192.75   23072.88   47429.26  124803.77   24614.68
+
+ApplyQuintiles <- function(x) {
+    cut(x, breaks=c(quantile(x, probs = seq(0, 1, by = 0.20))), 
+        labels=c("0-20","20-40","40-60","60-80","80-100"))
+}
+
+# ---------Gt municipality map visualizations--------------
+# Function to generate a Guatemala municipalities map visualization. 
+# Data should be indexed by a "municode" column containing municipalities codes.
+# The variable to plot should be named "values"
+gtmap_muni <- function(data) {
+    gtmMunisDataCopy = cbind(gtmMunisIGN@data)
+    gtmMunisIGN@data$id = rownames(gtmMunisIGN@data)
+    gtmMunisIGN@data = merge(gtmMunisIGN@data, data, by.x = "COD_MUNI__", by.y="municode", all.x=TRUE, sort=FALSE)
+    gtmMunisIGN.map.df = fortify(gtmMunisIGN)
+    gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
+    
+    plot = ggplot(data=gtmMunisIGN@data, aes(fill=values)) + geom_map(aes(map_id=id), colour = "#44554444", map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#FFFFFF66", size=1)
+    
+    gtmMunisIGN@data = gtmMunisDataCopy
+    plot
+}
