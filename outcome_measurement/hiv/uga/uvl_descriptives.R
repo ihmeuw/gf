@@ -55,6 +55,10 @@ uganda_vl_long[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 # add date to uganda_vl
 uganda_vl[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
+# facility _levels
+
+
+
 # ----------------------------------------------
 #upload the shape file
 
@@ -312,7 +316,28 @@ sex_colors <- c('#bd0026', '#3182bd', '#74c476', '#8856a7')
 
 # breaks for log transformation legends
 breaks <- c(1, 20, 400, 8100)
-  
+
+
+#----
+
+table_1 <- uganda_vl[,
+                     .(patients_received = sum(patients_received), samples_received = sum(samples_received), 
+                       dbs_samples=sum(dbs_samples), valid_results = sum(valid_results), suppressed = sum(suppressed),
+                       dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
+                       valid_samples_ratio=100*(sum(valid_results)/sum(samples_received)),
+                       suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
+                     by=.(district_id, month, year)]
+
+#table_1 <- subset(table_1, patients_received > 100)
+ggplot(table_1, aes(y=suppression_ratio, x=log(patients_received))) + geom_point()
+
+qq <- quantile(table_1$patients_received,probs=seq(0,1,.05))
+
+table_1[, q := cut(patients_received,breaks=qq)]
+table_1 <- table_1[,.(sr=mean(suppression_ratio),lp=mean(patients_received)),by=q]
+ggplot(table_1, aes(y=sr, x=log(lp))) + geom_point()
+
+
 # ---------------
 
 # export as a pdf

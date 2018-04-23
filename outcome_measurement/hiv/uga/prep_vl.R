@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 4/18/2018
+# 4/23/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -191,12 +191,17 @@ uvl_sex[sex=='f', sex:='Female']
 uvl_sex[sex=='x', sex:='Unknown']
 
 # ---------------
-uvl_sex <- uvl_sex[ ,.(facility_name=facility_name, facility_id=facility_id, dist_name=district_name, 
-               district_id=district_id, dhis2name=dhis2name, hub_id=hub_id,
-               patients_received=patients_received, samples_received=samples_received, 
-               dbs_samples=dbs_samples, total_results=total_results, rejected_samples=rejected_samples,
-               valid_results=valid_results, suppressed=suppressed, sex=sex, month=month, year=year) ]
+uvl_sex <- uvl_sex[ ,.(facility_name, facility_id, dist_name=district_name, 
+               district_id, dhis2name, hub_id,
+               patients_received, samples_received, 
+               dbs_samples, total_results, rejected_samples,
+               valid_results, suppressed, sex, month, year) ]
+
+# ---------------
+# add date 
+uvl_sex[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
                
+# ---------------
 
 #save the final data as an RDS
 saveRDS(uvl_sex, file= paste0(dir, "/sex_data.rds") )
