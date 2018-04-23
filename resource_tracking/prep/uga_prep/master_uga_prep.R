@@ -36,13 +36,12 @@ file_list$start_date <- ymd(file_list$start_date)
 ##create a summary file to track the data that we have (and that we still need)
 summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
                          c("data_source","year", "start_date",  "end_date", "sda_detail",
-                           "geographic_detail", "period",	"grant", "disease", "loc_id"))
+                           "geographic_detail", "period",	"grant", "disease", "loc_name"))
 
-summary_file$loc_id <- as.character(summary_file$loc_id)
-summary_file$loc_id <- loc_id
+summary_file$loc_name <- as.character(summary_file$loc_name)
+summary_file$loc_name <- loc_name
 
-
-
+##loop that calls all of the prep functions: 
 for(i in 1:length(file_list$file_name)){ 
   ##fill in the summary tracking file with what we know already: 
   summary_file$disease[i] <- file_list$disease[i]
@@ -185,6 +184,7 @@ mappedUga$disbursement <- mappedUga$disbursement*mappedUga$coefficient
 mappedUga$adm1 <- "uga"
 mappedUga$adm2 <- "uga"
 mappedUga$country <- "Uganda"
+mappedUga$lang <- "eng"
 # ----------------------------------------------
 ###Check that nothing got dropped: 
 

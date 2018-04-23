@@ -78,6 +78,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   budget_dataset$intervention <- "All"
   budget_dataset$sda_activity <- "All"
   budget_dataset$disease <- disease
+  budget_dataset$cost_category <- "all"
   budget_dataset$grant_number <- grant
   budget_dataset$year <- year(budget_dataset$start_date)
 

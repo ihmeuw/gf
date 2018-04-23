@@ -60,6 +60,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
   budget_dataset$disease <- disease
   budget_dataset$grant_number <- grant
   budget_dataset$lang <- lang
+  budget_dataset$cost_category <- "all"
   # 
   # # ----------------------------------------------
   # 

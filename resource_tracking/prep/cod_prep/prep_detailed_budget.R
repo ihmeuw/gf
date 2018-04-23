@@ -35,23 +35,23 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   }
   
   if(lang=="eng"){
-    qtr_names <- c("Module","Intervention","Activity Description", "Recipient", "Geography/Location", rep(1, qtr_num))
+    qtr_names <- c("Module","Intervention","Activity Description","Cost Input", "Recipient", "Geography/Location", rep(1, qtr_num))
   } else { 
-    qtr_names <- c("Module","Intervention","Description de l'activité", recipient, "Geography/Location", rep(1, qtr_num))
+    qtr_names <- c("Module","Intervention","Description de l'activité","Élément de coût", recipient, "Geography/Location", rep(1, qtr_num))
   }
   
   
   create_qtr_names = function(qtr_names, cashText, lang){
-    for(i in 1:qtr_num+5){
-      if(i <6) {
+    for(i in 1:qtr_num+6){
+      if(i <7) {
         i=i+1
       } else { 
         if(lang=="eng"){
-          qtr_names[i] <- paste("Q", i-5,  cashText, sep="")
+          qtr_names[i] <- paste("Q", i-6,  cashText, sep="")
         } else if(lang=="fr" & qtr_num < 12){
           qtr_names[i] <- paste(cashText, " T", i-(12-qtr_num), sep="")
         } else{
-          qtr_names[i] <- paste(cashText, " T", i-5, sep="")
+          qtr_names[i] <- paste(cashText, " T", i-6, sep="")
         }
         i=i+1
       }
@@ -79,9 +79,10 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   colnames(gf_data)[1] <- "module"
   colnames(gf_data)[2] <- "intervention"
   colnames(gf_data)[3] <- "sda_activity"
-  colnames(gf_data)[4] <- "recipient"
+  colnames(gf_data)[4] <- "cost_category"
+  colnames(gf_data)[5] <- "recipient"
   if(year(start_date)==2018){
-    colnames(gf_data)[5] <- "loc_name"
+    colnames(gf_data)[6] <- "loc_name"
   }
 
   
@@ -89,10 +90,10 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   ##library(reshape)
   setDT(gf_data)
   if(year(start_date)==2018){
-    gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity", "recipient", "loc_name"), variable.name = "qtr", value.name="budget")
+    gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity","cost_category", "recipient", "loc_name"), variable.name = "qtr", value.name="budget")
     gf_data1$loc_name <- as.character(gf_data$loc_name)
   } else {
-    gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity", "recipient"), variable.name = "qtr", value.name="budget")
+    gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity","cost_category", "recipient"), variable.name = "qtr", value.name="budget")
     gf_data1$loc_name <- "cod"
   }
   
