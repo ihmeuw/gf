@@ -53,5 +53,5 @@ gtmDeptosIGN = readOGR(paste0(dataPath, "Covariates and Other Data/GIS/GT-IGN-ca
 gtmDeptosIGN@data$CODIGO = floor(as.numeric(as.character(gtmDeptosIGN@data$CODIGO))/100)
 
 # Municipalities data with population estimates for 2015.
-munisGT = read.csv(paste0(dataPath, "Covariates and Other Data/Demographics/Guatemala_Municipios_IGN2017_worldpop2015.csv"), encoding = "UTF-8")
+munisGT = read.csv(paste0(dataPath, "PCE/Covariates and Other Data/Demographics/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv"), encoding = "UTF-8")
 dt.munisGT = data.table(munisGT)
