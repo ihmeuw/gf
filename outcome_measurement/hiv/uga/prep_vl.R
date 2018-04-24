@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 4/23/2018
+# 4/24/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -119,6 +119,7 @@ full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(fa
 # merge in the facilities
 uvl_sex <- merge(full_data, facilities, by='facility_id', all.x=TRUE)
 
+# 34 facilities are missing a name, containing 692 patients
 uvl_sex[is.na(facility_name), length(unique(facility_id))]
 uvl_sex[is.na(facility_name), .(sum(patients_received))]
 
@@ -128,25 +129,53 @@ uvl_sex [is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
 #------------------------
 # merge in the districts
 districts <- readRDS(paste0(dir,"/facilities/districts.rds"))
-
 uvl_sex <- merge(uvl_sex, districts, by='district_id', all.x=TRUE)
+
+# facility ids that are associated with multiple district ids
+# 29 facilities are associated with two district ids (always two)
+dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
+dups <- dups[dup>1, .(facility_id, facility_name)]
 
 
 # ----------------------------------------------
 # additional to code to identify merge mismatches and downloading errors
 
-# the following facilities are listed in two districts, Kyotera and Rakai
-# Based on labelling, they should be in Rakai (80)
-# Kabira HC III GOVT, Kalisizo Hospital, Nabigasa HC III, Mutukula HC III, Kasensero HC II, Kirumba  HC III
-uvl_sex[district_id==134, .(unique(facility_name)),by=.(district_name)]  
-uvl_sex[district_id==134, district_id:=80]
-uvl_sex[district_id==80, district_name:="Rakai"]
+# 2 facilities contain Rakai in the name
+uvl_sex[facility_id==228 | facility_id==175, district_id:=80]
 
-# Kitwe HC II - checked health facility inventory, in Gomba
-uvl_sex[district_id==75, .(unique(facility_name), unique(facility_id)), by=.(district_name)]
-uvl_sex[district_id==89, .(unique(facility_name), unique(facility_id)),by=.(district_name)]
-
+# looked up in the health facility inventory; majority are Kyotera (134) and Rakai(80)
+uvl_sex[facility_id==255, district_id:=80]
+uvl_sex[facility_id==502, district_id:=80]
+uvl_sex[facility_id==1351, district_id:=80]
+uvl_sex[facility_id==1526, district_id:=80]
+uvl_sex[facility_id==1575 , district_id:=80]
 uvl_sex[facility_id==2058, district_id:=89]
+
+uvl_sex[facility_id== 8335, district_id:=7]
+uvl_sex[facility_id==8350, district_id:=5]
+uvl_sex[facility_id== 8359, district_id:=7]
+uvl_sex[facility_id== 8352, district_id:=15]
+uvl_sex[facility_id== 8341, district_id:=20]
+uvl_sex[facility_id== 8348, district_id:=31]
+
+uvl_sex[facility_id==8347 , district_id:=29]
+uvl_sex[facility_id==8355 , district_id:=30]
+uvl_sex[facility_id==8338, district_id:=31]
+uvl_sex[facility_id==8358, district_id:=39]
+uvl_sex[facility_id==8340, district_id:=101]
+uvl_sex[facility_id==8357, district_id:=35] # not listed, chose Kampala
+uvl_sex[facility_id==8351, district_id:=85]
+uvl_sex[facility_id==8345, district_id:=97]
+
+
+uvl_sex[facility_id==8353, district_id:=64]
+uvl_sex[facility_id==8354, district_id:=86]
+uvl_sex[facility_id==8344, district_id:=97]
+uvl_sex[facility_id==8336, district_id:=]
+uvl_sex[facility_id==8356, district_id:=]
+uvl_sex[facility_id==8346, district_id:=]
+uvl_sex[facility_id==8339, district_id:=]
+uvl_sex[facility_id==8337, district_id:=]
 
 
 # ---------------

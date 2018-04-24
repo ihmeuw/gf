@@ -28,7 +28,6 @@ uganda_vl <- uganda_vl[!(month==3 & year==2018)]
 # ----------------------------------------------
 # check for missing data by district and facility
 
-
 # There are no facilities with 0 patients received
 uganda_vl[patients_received==0, facility_id]
 
@@ -37,7 +36,6 @@ uganda_vl[samples_received==0, facility_id]
 
 # --------------------
 
-# create plots by district and facilities  by looping over all districts, facilities export as a PDF
 
 #--------------------------------
 # FACILITIES
@@ -113,6 +111,74 @@ error_msg <- cbind(error = t, facility_id = unique(uvl_fac$facility_id))
 error_msg <- data.table(error_msg)
 error_msg <- error_msg[!is.na(error_msg)]
 
+
+
+#--------------------------------
+# FACILITIES BY SEX
+# Check for missing data within facilities, facet wrapping by sex
+
+# store identifiers
+idVars4 <- c("facility_id", "facility_name", "sex", "month", "year")
+
+
+# create a long data set with totals by district
+fac_sex <- uganda_vl[,
+                     .(patients_received=sum(patients_received), samples_received = sum(samples_received)),
+                     by=idVars4]
+
+# reshape indicators long for district data
+fac_sex <- melt(fac_sex, id.vars=idVars4)
+
+fac_sex[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+
+# label the variables for graph titles and put the graphs in an intuitive order
+fac_sex$variable <- factor(fac_sex$variable, 
+                           levels=c("patients_received", "samples_received"), 
+                           labels=c("Patients Received", "Samples Received"))
+
+# single test graph
+f=27
+name2 <- unique(fac_sex[facility_id==f]$facility_name)
+
+ggplot(fac_sex[facility_id==f], aes(y=value, x=date, color=sex, group=sex)) + 
+  geom_point() +
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable, scales='free_y') +
+  labs(title=name2, x="Date", y="Count", color="Sex") +
+  theme_bw()
+
+
+
+# ---------------------------------
+# loop over all facilities printing patients and samples received
+
+list_of_plots = NULL
+i=1
+
+for(f in unique(fac_sex$facility_id)) {
+  
+  # set the title to the facility name
+  name2 <- unique(fac_sex[facility_id==f]$facility_name)
+  
+  # create a graph of the monthly data stratified by sex
+  list_of_plots[[i]] <- ggplot(fac_sex[facility_id==f], aes(y=value, x=date, color=sex)) + 
+    geom_point() +
+    geom_line(alpha=0.5) + 
+    facet_wrap(~variable, scales='free_y') +
+    labs(title=name2, x="Date", y="Count", color="Sex") +
+    theme_bw()
+  
+  i=i+1
+  
+}
+
+pdf(paste0(dir,'/webscrape_agg/outputs/uvl_facilities_sex.pdf'), height=6, width=9)
+
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+} 
+
+dev.off()
 
 
 #--------------------------------
@@ -228,22 +294,5 @@ for(f in unique(uvl_dist$district_id)) {
   i=i+1
   
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
