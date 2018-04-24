@@ -130,26 +130,30 @@ hssData <- modData[disease=="RSSH"]
 ##-----------------------------------------------------------
 # Intervention charts: 
 
-colors <- c('#a6cee3',
-  '#1f78b4',
-  '#b2df8a',
-  '#4affd4',
-  '#fb9a99',
-  '#9e82ba',
-  '#fdbf6f',
-  '#ff7f00',
-  '#cab2d6',
-  '#93b500',
-  '#db0645',
-  '#42090a',
-  '#f4c7d4',
-  '#a977f4',
-  '#01a004', 
-  '#0c5768',
-  '#6a3d9a',
-  '#33a02c',
-  '#ffff99',
-  '#b15928'
+colors <- c('#a6cee3', ##periwinkle
+  '#1f78b4', ##summer lake
+  '#b2df8a', ##muted lime 
+  '#B9006E',##magenta
+  '#4affd4', # bright mint
+  '#fb9a99', ##peach blossom 
+  '#9e82ba', #dark lilac
+  '#fdbf6f', ##goldenrod
+  '#ff7f00', ##pumpkin spice
+  '#cab2d6', ##lilac
+  '#00CCD6', ##caribbean beach
+  '#93b500', ##neutralized chartreuse 
+  '#db0645', ##cherry flavoring
+  '#42090a', ##cherry coke
+  '#f4c7d4', ##blush pink
+  '#e2725b',##terracotta
+  '#a977f4', ##80s purple
+  '#01a004', ## kelly green
+  '#0c5768', ##dark teal 
+  '#6a3d9a', ## UW purple
+  '#487a06', ## jungle olive
+  '#f2f22e', ##daffodil
+  '#94FFFC', ##icy blue
+  '#b15928' ##umber 
   )
 interventions <- unique(na.omit(modData$str_wrap))
 

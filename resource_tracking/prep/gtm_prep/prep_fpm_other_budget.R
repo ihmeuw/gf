@@ -84,5 +84,6 @@ prep_other_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_n
   budget_dataset$intervention <- budget_dataset$sda_activity
   budget_dataset$expenditure <- 0 
   budget_dataset$lang <- lang
+  budget_dataset$cost_category <- "all"
   return(budget_dataset)  
 }

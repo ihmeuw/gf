@@ -58,6 +58,7 @@ prep_old_module_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset$qtr <- NULL
   budget_dataset$data_source <- source
   budget_dataset$lang <- lang
+  budget_dataset$cost_category <- "all"
   budget_dataset$start_date <- as.Date(budget_dataset$start_date,"%Y-%m-%d")
   return(budget_dataset)
   

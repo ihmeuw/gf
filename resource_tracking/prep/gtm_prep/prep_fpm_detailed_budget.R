@@ -41,16 +41,16 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   if(lang=="eng"){
     qtr_names <- c("Module","Intervention", "Recipient", loc_name, rep(1, qtr_num))
   } else{ 
-    qtr_names <- c("Módulo", "Intervención","Descripción de la actividad",	recipient, loc_name, rep(1, qtr_num))
+    qtr_names <- c("Módulo", "Intervención","Descripción de la actividad","Categoría de Gastos"	,recipient, loc_name, rep(1, qtr_num))
   }
   
   ##add in the quarter names to the list: 
   create_qtr_names = function(qtr_names, cashText, lang){
-    for(i in 1:qtr_num+5){
-      if(i <6) {
+    for(i in 1:qtr_num+6){
+      if(i <7) {
         i=i+1
       } else { 
-        qtr_names[i] <- paste("Q", i-5, " ",  cashText, sep="")
+        qtr_names[i] <- paste("Q", i-6, " ",  cashText, sep="")
         i=i+1
       }
     }
@@ -95,24 +95,24 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     colnames(gf_data)[1] <- "module"
     colnames(gf_data)[2] <- "intervention"
     colnames(gf_data)[3] <- "sda_activity"
-    
+    colnames(gf_data)[4] <- "cost_category"
     
     if(!(recipient %in% colnames(gf_data))){
      gf_data$recipient <- grant_number
     } else{
-      colnames(gf_data)[4] <- "recipient" 
+      colnames(gf_data)[5] <- "recipient" 
       }
     if(!(loc_name %in% colnames(gf_data))){
       gf_data$loc_name <- "gtm"
     } else{
-      colnames(gf_data)[5] <- "loc_name" 
+      colnames(gf_data)[6] <- "loc_name" 
     }
     
     
     ## invert the dataset so that budget expenses and quarters are grouped by category
     ##library(reshape)
     setDT(gf_data)
-    gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity", "recipient", "loc_name"), 
+    gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity","cost_category", "recipient", "loc_name"), 
                       variable.name = "qtr", value.name="budget")
   
     

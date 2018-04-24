@@ -169,8 +169,6 @@ mappedCod$adm1 <- "cod"
 mappedCod$adm2 <- "cod"
 mappedCod$country <- "Congo (Democratic Republic)"
 
-mappedCod[,end_date:=start_date+period-1]
-
 
 # ----------------------------------------------
 ## write as csv 

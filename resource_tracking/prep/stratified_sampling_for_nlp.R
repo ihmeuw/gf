@@ -13,6 +13,7 @@ library(data.table)
 library(lubridate)
 library(readxl)
 library(dplyr)
+library(caret)
 
 
 
@@ -21,46 +22,31 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
                                  fileEncoding = "latin1"))
 
 
-fpmBudgets <- totalData[data_source=="fpm"]
+fpmData <- totalData[data_source=="fpm"]
 
-sda_data <- fpmBudgets[sda_activity!="All"]
+sda_data <-fpmData[sda_activity!="all"]
 sda_data <- sda_data[!(is.na(sda_activity))]
 
-# ----------------------------------------------
-##keep HSS for now (technically it's a disease): 
-
+##drop HSS for now since it creates imbalance (no HSS grant with GTM)
+sda_data <- sda_data[disease!="hss"]
+##concatenate the disease and language variables to create a multi-level stratification
 sda_data$disease_lang_concat <- paste0(sda_data$disease, sda_data$lang)
 
+sda_data <- sda_data [, c("gf_module", "gf_intervention", "module", "intervention",
+                          "cost_category","sda_activity", "budget", "disease_lang_concat"), with=FALSE]
 
-set.seed(1)
-sda_sample <- lapply(split(sda_data,sda_data$disease_lang_concat),
-                     function(subdf) subdf[sample(1:nrow(subdf),30),]
-)
+##only have 9 values for this, so drop: 
+sda_data <- sda_data[!disease_lang_concat=="malariaesp"]
 
+set.seed(2)
+train.index  <- createDataPartition(sda_data$disease_lang_concat, p = 0.003, list = FALSE)
+training_sample <-sda_data[ train.index,]
+test_sample  <- sda_data[-train.index,]
 
-total_sample <- do.call('rbind', sda_sample)
-
-write.csv(total_sample, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/nlp_sample_with_hss.csv",
+write.csv(training_sample, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/nlp_training_sample.csv",
           row.names=FALSE)
 
-# ----------------------------------------------
-##drop HSS for now since it creates imbalance (no HSS grant with GTM)
-set.seed(2)
-sda_data <- sda_data[!(is.na(sda_activity))]
-sda_no_hss <- sda_data[disease!="hss"]
-
-sda_no_hss$disease_lang_concat <- paste0(sda_no_hss$disease, sda_no_hss$lang)
-
-sda_no_hss_sample <- lapply(split(sda_no_hss,sda_no_hss$disease_lang_concat),
-                     function(subdf) subdf[sample(1:nrow(subdf),30),]
-)
-
-
-total_no_hss_sample <- do.call('rbind', sda_no_hss_sample)
-
-
-
-write.csv(total_no_hss_sample, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/nlp_sample.csv",
+write.csv(test_sample, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/nlp_test_sample.csv",
           row.names=FALSE)
 
 
