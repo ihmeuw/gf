@@ -35,15 +35,20 @@
     dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data"
   
   # input file:
-    # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators_Long
-    # csv files were produced by prep_COD_Malaria_data_function.R
+    # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Full data for MI
       fullData <- fread(paste0(dir, "/", "Full Data for MI.csv"))
     # upload excel doc of outliers as a data table to merge with full data set
       outliers <- as.data.table(read_excel(paste0(dir, "/Outliers.xlsx")))
       outliers[, date := as.Date(date)]
+  
+  # output file: 
+    # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/fullData_forMI_outliers_removed
       
   # Set up:
     fullData[, date := as.Date(date)]
+# ----------------------------------------------
+    
+    
 # ----------------------------------------------
   # remove outliers from the data set:
     
@@ -56,4 +61,13 @@
     
     
     fullData <- fullData[ is.na(outlier), ]
+    
+# ----------------------------------------------
+    
+    
+# ----------------------------------------------
+  # export data with outliers removed to be used for multiple imputation
+    
+    write.csv(fullData, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/fullData_forMI_outliers_removed.csv"))
+    
     
