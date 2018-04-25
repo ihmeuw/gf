@@ -56,6 +56,9 @@ graphData[gf_module=="Health management information system and monitoring and ev
 ##make the disease text nicer for the graphs: 
 graphData <- disease_names_for_plots(graphData)
 graphData$gf_module <- factor(graphData$gf_module, levels=names(primColors))
+
+##if you want to do disease + grant facet:
+graphData$grant_disease <- paste(graphData$disease, ":", graphData$grant_number)
 # ---------------------------------------------
 # stacked bar charts over time 
 
@@ -90,7 +93,7 @@ dev.off()
 
 ##Fill in year gaps where modules and years might be missing:
 
-year_range <- seq(2005, 2020, 1)
+year_range <- unique(graphData$year)
 gf_mods <- data.table(graphData$disease)
 
 create_na_mods <- merge(year_range, gf_mods)
@@ -118,7 +121,7 @@ modData$str_wrap <- mapply(get_summary_level,as.character(modData$gf_module), as
 modData$str_wrap <- str_wrap(modData$str_wrap, 45)
 
 #here, I'm doing SDA, grant, disease, and data source (gos, fpm etc.) by year 
-byVars = names(modData)[names(modData)%in%c('gf_module', 'str_wrap','year', 'disease')]
+byVars = names(modData)[names(modData)%in%c('gf_module', 'str_wrap','year', 'disease', 'grant_number')]
 modData = modData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 
