@@ -41,7 +41,7 @@ uganda_vl <- uganda_vl[year==2016 | year==2017 | year==2018]
 # store list of unique faciltiies, sexes and dates
 f_ids <- unique(uganda_vl$facility_id)
 length(f_ids)
-sexes <- c('Female', 'Male')
+sexes <- unique(uganda_vl$sex)
 dates <- seq(from=min(uganda_vl$date), to=max(uganda_vl$date), by='month')
 
 # make a "fully rectangularized" dataset with all months for each facility-sex
@@ -50,16 +50,25 @@ setnames(expanded_data, c('facility_id', 'date','sex'))
 # --------------------
 
 # merge in the blank rows for facility_id (by date, sex)
-uganda_vl <- merge(uganda_vl, expanded_data, by=c('facility_id', 'date','sex'), all.y=TRUE)
+uganda_vl <- merge(uganda_vl, expanded_data, by=c('facility_id', 'date','sex'), all=TRUE)
 
 #----------------------------------
+# descriptive statistics when females are missing and males are in the data
+uganda_vl[, combine2:= paste0(facility_id, '_', date)]
 
-missing_fems <- uganda_vl[(sex=='Female' & is.na(patients_received)), .(facility_id, date) ]
+missing_fems <- uganda_vl[(sex=='Female' & is.na(combine)), .(combine2) ]
 
-males_test<- uganda_vl[(sex == "Male" & facility_id %in% missing_fems$facility_id & date %in% missing_fems$date ),
-                       .(facility_id, date, patients_received)]
+uvl_males <- uganda_vl[sex=="Male"]
+uvl_males <- merge(missing_fems, uvl_males, by='combine2')
+uvl_males <- uvl_males[!is.na(patients_received)]
 
-males_test[ facility_id==2, .(sum(patients_received, na.rm=T))]
+#----------------------------------
+missing_lads <- uganda_vl[(sex=='Male' & is.na(combine)), .(combine2) ]
+
+uvl_females <- uganda_vl[sex=="Female"]
+uvl_females <- merge(missing_lads, uvl_females, by='combine2')
+uvl_females <- uvl_females[!is.na(patients_received)]
+
 
 
 #----------------------------------

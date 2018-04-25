@@ -131,11 +131,6 @@ uvl_sex [is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
 districts <- readRDS(paste0(dir,"/facilities/districts.rds"))
 uvl_sex <- merge(uvl_sex, districts, by='district_id', all.x=TRUE)
 
-# facility ids that are associated with multiple district ids
-# 29 facilities are associated with two district ids (always two)
-dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
-dups <- dups[dup>1, .(facility_id, facility_name)]
-
 
 # ----------------------------------------------
 # additional to code to identify merge mismatches and downloading errors
@@ -171,11 +166,19 @@ uvl_sex[facility_id==8345, district_id:=97]
 uvl_sex[facility_id==8353, district_id:=64]
 uvl_sex[facility_id==8354, district_id:=86]
 uvl_sex[facility_id==8344, district_id:=97]
-uvl_sex[facility_id==8336, district_id:=]
-uvl_sex[facility_id==8356, district_id:=]
-uvl_sex[facility_id==8346, district_id:=]
-uvl_sex[facility_id==8339, district_id:=]
-uvl_sex[facility_id==8337, district_id:=]
+uvl_sex[facility_id==8336, district_id:=68]
+uvl_sex[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
+uvl_sex[facility_id==8346, district_id:=86]
+uvl_sex[facility_id==8339, district_id:=84]
+uvl_sex[facility_id==8337, district_id:=97]
+
+
+
+# facility ids that are associated with multiple district ids
+# 29 facilities are associated with two district ids (always two)
+# check for duplicates after the change
+dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
+dups <- dups[dup>1, .(facility_id, facility_name)]
 
 
 # ---------------
@@ -220,15 +223,30 @@ uvl_sex[sex=='f', sex:='Female']
 uvl_sex[sex=='x', sex:='Unknown']
 
 # ---------------
+# add date 
+uvl_sex[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+
+# ---------------
+uvl_sex[sex=="Female", sex1:=1 ]
+uvl_sex[sex=="Male", sex1:=2]
+uvl_sex[sex=="Unknown", sex1:=3]
+
+uvl_sex[ ,combine:= paste0(facility_id, '_', date, '_', sex1)]
+uvl_sex[,length(unique(combine))] # 16 duplicates
+
+uvl_sex[duplicated(combine), facility_id]
+
+
+
+
+
 uvl_sex <- uvl_sex[ ,.(facility_name, facility_id, dist_name=district_name, 
                district_id, dhis2name, hub_id,
                patients_received, samples_received, 
                dbs_samples, total_results, rejected_samples,
                valid_results, suppressed, sex, month, year) ]
 
-# ---------------
-# add date 
-uvl_sex[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+
                
 # ---------------
 
