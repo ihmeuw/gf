@@ -234,17 +234,11 @@ uvl_sex[sex=="Unknown", sex1:=3]
 uvl_sex[ ,combine:= paste0(facility_id, '_', date, '_', sex1)]
 uvl_sex[,length(unique(combine))] # 16 duplicates
 
-uvl_sex[duplicated(combine), facility_id]
+# ---------------
+# print a list of the duplicates and combine them into single entries
 
+uvl_sex[duplicated(combine), .(combine, facility_id)]
 
-
-
-
-uvl_sex <- uvl_sex[ ,.(facility_name, facility_id, dist_name=district_name, 
-               district_id, dhis2name, hub_id,
-               patients_received, samples_received, 
-               dbs_samples, total_results, rejected_samples,
-               valid_results, suppressed, sex, month, year) ]
 
 
                
