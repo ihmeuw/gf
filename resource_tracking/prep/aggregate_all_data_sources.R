@@ -27,7 +27,6 @@ totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/
 #create some variables: 
 totalCod$country <- "Congo (Democratic Republic)"
 totalCod$start_date <- as.Date(totalCod$start_date,"%Y-%m-%d")
-totalCod$end_date <- as.Date(totalCod$end_date, "%Y-%m-%d")
 # --------------------------------------------
 ##load UGA: 
 
@@ -56,8 +55,8 @@ gtmBudgets$country <- "Guatemala"
 
 
 ##rbind the sicoin and FPM data:
-# totalGtm <- rbind(sicoin_data, gtmBudgets)
-# totalGtm$year <- year(totalGtm$start_date)
+# gtmBudgets <- rbind(sicoin_data, gtmBudgets)
+#
 
 
 # --------------------------------------------
