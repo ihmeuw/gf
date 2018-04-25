@@ -23,9 +23,9 @@ library(zoo)
 
 # ---------------------------------------------
 ##global variables: 
-cashText <- " Cash Outflow"
-loc_name <- 'uga'
-source <- "gf"
+cashText <- " Cash Outflow" ##
+loc_name <- 'uga' ##change this when we can get subnational data 
+source <- "gf" ## denotes the type of data (e.g. government expenditures, Global fund, etc.)
 
 ## set up the directory and grab the file list: 
 dir <- 'your local drive here' ##where the files are stored locally
@@ -47,8 +47,8 @@ for(i in 1:length(file_list$file_name)){
   summary_file$disease[i] <- file_list$disease[i]
   summary_file$grant[i] <- file_list$grant[i]
   summary_file$period[i] <- file_list$period[i] 
-  summary_file$geographic_detail[i] <- "National"
-  summary_file$data_source[i] <- file_list$data_source[1]
+  summary_file$geographic_detail[i] <- file_list$geography_detail[i]
+  summary_file$data_source[i] <- file_list$data_source[i]
   
   if(file_list$type[i]=="detailed"){##most detailed level of budgets 
     tmpData <- prep_detailed_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
@@ -82,7 +82,7 @@ for(i in 1:length(file_list$file_name)){
     summary_file$sda_detail[i] <- "None"
   }
   summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
-  summary_file$start_date[i] <- min(tmpData$start_date)
+  summary_file$start_date[i] <- min(tmpData$start_date) ##since there are multiple values in this, get the earliest start date 
   
   print(i)
 }
@@ -100,11 +100,12 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
             append = TRUE, row.names=FALSE, sep=",")
 
 
-##make sure to change the budget variable type to be "numeric" 
+##make sure to change the financial data variables to be "numeric" 
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
 resource_database$disbursement <- as.numeric(resource_database$disbursement)
-## since we only have budget/exp data, include disbursed as 0:  
+
+##assign loc_name and source: 
 resource_database$loc_name <- loc_name
 resource_database$source <- source
 
@@ -112,13 +113,12 @@ resource_database$source <- source
 ## optional: do a check on data to make sure values aren't dropped: 
 # data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
 
-## we have some junk "modules"
+## we have some junk "modules" that should be dropped:
 toMatch <- c("0", "Please sel", "PA", "6", "4")
 cleaned_database <- resource_database[!grepl(paste(toMatch, collapse="|"), resource_database$module),]
 
 
 ## split hiv/tb into hiv or tb: 
-
 get_hivtb_split <- function(disease,module){
   x <- disease
  if(disease=="hiv/tb"){
@@ -140,8 +140,6 @@ sda_remove_chars <- c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u20
 ##get rid of punctuation and accents in the SDA activities: 
 cleaned_database$sda_activity <-gsub(paste(sda_remove_chars, collapse="|"), "",cleaned_database$sda_activity)
 cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
-
-
 
 # ----------------------------------------------
 ##### Map to the GF Modules and Interventions #####
