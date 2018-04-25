@@ -141,20 +141,24 @@ colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#ffa3b2',
                                   #midpoint = 0.5, breaks=c(0,0.25, 0.5, 0.75), limits=c(0,1)
 )
 
-graphData$muni_budget <- cut(graphData$muni_budget_year/100000, 
-                             breaks= c(0,0.1, seq(0.2, 1, by = .2), 2:5, Inf),right = FALSE)
+graphData$muni_budget <- cut(graphData$muni_budget_year/10000, 
+                             breaks= c(0,0.1, seq(0.2, 1, by = .1), 2:5, Inf),right = FALSE)
 
-colors <- c('#37E1E6',
-            '#32BFDF',
-            '#2D9ED9',
-            '#287CD3',
-            '#235BCD',
-            '#1F3AC7',
+colors <- c( '#1F3AC7',
+             '#235BCD',
+             '#287CD3',
+             '#2D9ED9',
+             '#32BFDF',
+             '#37E1E6',
             '#fdbf6f',
             '#ff7f00',
             '#cab2d6',
-            '#93b500',
-            '#db0645')
+            '#9e82ba', #dark lilac
+            '#93b500',##cherry flavoring
+            '#d1cd06', ##neutralized chartreuse 
+            '#af445b', 
+            '#ff447c' 
+            )
 
 names(colors) <- levels(graphData$muni_budget)
 
@@ -198,10 +202,10 @@ for(k in unique(graphData$mod_year)){
 }
 
 
-pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/sicoin_fpm_graphs.pdf", height=9, width=12)
+
+pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/NAME HERE.pdf", height=9, width=12)
 invisible(lapply(gtm_plots, print))
 dev.off()
-
 
 
 
