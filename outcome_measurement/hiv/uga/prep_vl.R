@@ -126,10 +126,6 @@ uvl_sex[is.na(facility_name), .(sum(patients_received))]
 # create a placeholder for missing facility names for 34 facilities
 uvl_sex [is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
 
-#------------------------
-# merge in the districts
-districts <- readRDS(paste0(dir,"/facilities/districts.rds"))
-uvl_sex <- merge(uvl_sex, districts, by='district_id', all.x=TRUE)
 
 
 # ----------------------------------------------
@@ -158,10 +154,9 @@ uvl_sex[facility_id==8355 , district_id:=30]
 uvl_sex[facility_id==8338, district_id:=31]
 uvl_sex[facility_id==8358, district_id:=39]
 uvl_sex[facility_id==8340, district_id:=101]
-uvl_sex[facility_id==8357, district_id:=35] # not listed, chose Kampala
+uvl_sex[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
 uvl_sex[facility_id==8351, district_id:=85]
 uvl_sex[facility_id==8345, district_id:=97]
-
 
 uvl_sex[facility_id==8353, district_id:=64]
 uvl_sex[facility_id==8354, district_id:=86]
@@ -173,13 +168,18 @@ uvl_sex[facility_id==8339, district_id:=84]
 uvl_sex[facility_id==8337, district_id:=97]
 
 
-
 # facility ids that are associated with multiple district ids
 # 29 facilities are associated with two district ids (always two)
 # check for duplicates after the change
 dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
 dups <- dups[dup>1, .(facility_id, facility_name)]
+dups # should be an empty data table
 
+
+#------------------------
+# merge in the districts
+districts <- readRDS(paste0(dir,"/facilities/districts.rds"))
+uvl_sex <- merge(uvl_sex, districts, by='district_id', all.x=TRUE)
 
 # ---------------
 
@@ -227,6 +227,7 @@ uvl_sex[sex=='x', sex:='Unknown']
 uvl_sex[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
 # ---------------
+# create a unique identifier (char) of facilityid_date_sex
 uvl_sex[sex=="Female", sex1:=1 ]
 uvl_sex[sex=="Male", sex1:=2]
 uvl_sex[sex=="Unknown", sex1:=3]
@@ -236,12 +237,54 @@ uvl_sex[,length(unique(combine))] # 16 duplicates
 
 # ---------------
 # print a list of the duplicates and combine them into single entries
+uvl_sex[duplicated(combine), .(combine, year, month, facility_id)]
 
-uvl_sex[duplicated(combine), .(combine, facility_id)]
+# create a data table that is only the duplicate entries
+
+doubles <- uvl_sex[duplicated(combine)]
+doubles <- doubles$combine
+doubles <- data.table(doubles)
+setnames(doubles, "doubles", "combine")
+
+doubles <- merge(doubles, uvl_sex, by="combine")
+
+# full data table of all duplicate entries as single entries
+doubles <- doubles[ , .(samples_received=sum(samples_received), patients_received=sum(patients_received),  
+            suppressed=sum(suppressed), valid_results=sum(valid_results),
+            rejected_samples=sum(rejected_samples), dbs_samples=sum(dbs_samples),
+            total_results=sum(total_results)),
+            by=.(combine, facility_id, facility_name, district_id, district_name,
+                 sex, month, year)]
+
+uvl_sex1 <- uvl_sex[!duplicated(combine)]
+
+uvl_sex1 <- merge(uvl_sex1, doubles, by="combine", all=T)
 
 
 
-               
+doubles$combine %in% uvl_sex$combine
+
+uvl_sex <- uvl_sex[!doubles$combine %in% combine] 
+
+uvl_sex[combine!=doubles$combine]
+
+
+
+
+if (uvl_sex$combine!=doubles$combine) {
+  
+
+}
+
+
+
+# ---------------
+# re-check for duplicates
+uvl_sex[duplicated(combine)]
+
+uvl_sex[ ,combine2:= paste0(facility_id, '_', date, '_', sex1)]
+uvl_sex[duplicated(combine2)]
+
 # ---------------
 
 #save the final data as an RDS
