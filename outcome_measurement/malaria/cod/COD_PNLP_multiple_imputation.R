@@ -49,83 +49,72 @@
   # remove V1 column
     dt <- dt[, -c("V1", "outlier" )]
     
+  # fix the messed up values 
+    dt <- dt[(health_zone=="Isangi" & date=="2016-11-01" & indicator=="ANC_1st"), value := 339]
+
+    dt <- dt[(health_zone=="Maluku1" & date=="2016-06-01" & indicator=="SP_1st"), value := 529]
+
+    dt <- dt[(health_zone=="Masimanimba" & date=="2015-10-01" & indicator=="ArtLum_used"), value := 0]
+    
+    #---> add this to prepped data, or save a new updated version of the full data. 
+    
   # make values numeric
     dt[, value := as.numeric(value)]
   
   # dcast so it is wide for imputation
     dt <- dcast.data.table(dt, date+province+dps+health_zone ~ indicator, value.var='value')
-# ----------------------------------------------   
     
-  # # vector of id variables and indicator variables
-id_vars <- c("province", "dps", "health_zone", "population", "date")
-  # 
+  # vector of id variables and indicator variables
+    id_vars <- c("province", "dps", "health_zone", "population", "date")
+  
     indicators <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
       "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
       "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
       "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
       "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ArtLum_received", "ArtLum_used",
       "smearTest_completed", "smearTest_positive", "RDT_completed", "RDT_positive", "healthFacilities_total", "healthFacilities_numReported", "healthFacilitiesProduct")
-  #   
-  # 
-  # # convert column types to proper types (figure out why they're changing in the first place?)
-  #   # either of the following ways works:
-  #     # lapply( indicators, function(x) {
-  #     #   dt[, (x) := as.numeric(get(x))]
-  #     # } )
-  #     
-  #     for (i in indicators){
-  #       dt[, (i) := as.numeric(get(i))]
-  #     }
+ 
+    indicators <- indicators[!indicators %in% c("healthFacilities_numReported")]
+                             
+  # remove healthFacilities_numReported from the data.table
+    dt <- dt[,-c("healthFacilities_numReported")]  
+    
+  # add an id column
+    dt[, id:= .I]
+    
 # ----------------------------------------------   
       
       
 # ---------------------------------------------- 
-# two different ways to try to get rid of negative values in amelia output:
-  # # 1:
-  #   # bounds matrix to pass as a parameter
-  #     # sets a lower bound for column 5
-  #       bds <- matrix(c(5, 0, Inf ), nrow = 1, ncol = 3)
-  #     # better way to do this?  to set a lower bound for every column that needs it...
-  #       bound <- rbind(c(5, 0, Inf), c(6, 0, Inf ), c(7, 0, Inf ), c(8, 0, Inf ),
-  #                    c(9, 0, Inf ), c(10, 0, Inf ), c(11, 0, Inf ), c(12, 0, Inf ), c(13, 0, Inf ),
-  #                    c(14, 0, Inf ), c(15, 0, Inf ), c(16, 0, Inf ), c(17, 0, Inf ), c(18, 0, Inf ), c(19, 0, Inf ))
-  #     
-  #   # run amelia() to impute missing values- will change this to m=50 after learning how to work with it
-  #     amelia.results <- amelia(dt, m=5, ts="date", cs= "health_zone", idvars= c( "province", "dps"), bounds = bound) 
-  # 
-
-      
-      
-# ---------------------------------------------- 
-# 2: 
   # log transform the data to run amelia on it
+    # save original data
+      dtOrig <- copy(dt)
     
-    # store which observations had zero so we can switch them back to zero at the end
-    zeroes <- dt[, indicators[!indicators %in% c("healthFacilitiesProduct", "healthFacilities_numReported", "healthFacilities_total")], with=FALSE]
-    zeroes[, lapply(.SD, function(x) {x==0})] # double check this@!
+    # store which observations had zero so we can switch them back to zero at the end, after imputation
+      zeroes <- dt[, lapply(.SD, function(x) {x==0}), .SDcols=indicators, by= c("province", "dps", "health_zone", "date", "id")] 
     
-    # replace all 0s with really low values so log works
-      for(var in indicators[!indicators %in% c("healthFacilitiesProduct", "healthFacilities_numReported", "healthFacilities_total")]) {
+    # replace all 0s with really low values so log works 
+      for(var in indicators) {
+        # taking the 5th percentile for each column to replace the 0s with 
         pctle <- quantile(dt[get(var)!=0][[var]], .05, na.rm=TRUE)  
+        # change/store these back in dt so that we can use that to run amelia() on
         dt[get(var)==0, (var):=pctle]
       }
-      
-      dt <- dt[,-c("healthFacilitiesProduct", "healthFacilities_numReported", "healthFacilities_total")]
     
     # log transform
-      cols <- c(5:43) 
-      dt2 <- dt[, names(dt)[5:40] := lapply(.SD, function(x) log(x)), .SDcols=5:40]
+      dtLog <- dt[, lapply(.SD, function(x) log(x)), .SDcols=indicators, by= c("province", "dps", "health_zone", "date", "id")]
 
-     
+     # make a constant to convince amelia to extrapolate
+      dtLog[, random:=runif(nrow(dtLog))]
+      
     # amelia:
       # ts variable: the date
       # cs variable: health zone - try with and without this and see what results are like
       # MI will ignore ID vars and include them as is in the output
-      # lags/leads:
+      # lags/leads: indicators
       # intercs = FALSE by default, try with = TRUE
-        amelia.results <- amelia(dt2, m=5, ts="date", cs= "health_zone", idvars= c( "province", "dps"))
-  
-        
+        amelia.results <- amelia(dtLog, m=25, cs= "health_zone", ts="date", lags= indicators, idvars= c("id", "province", "dps"))
+   
 # ---------------------------------------------- 
           
           
@@ -143,10 +132,12 @@ id_vars <- c("province", "dps", "health_zone", "population", "date")
         
 # ----------------------------------------------  
    # exponentiate the data set
-        dtExp <- amelia_data[, names(dt)[5:40] := lapply(.SD, function(x) exp(x)), .SDcols=5:40]
+        dtExp <- amelia_data[, lapply(.SD, function(x) exp(x)), .SDcols=indicators, by= c("province", "dps", "health_zone", "date", "id")]
 
-   # convert 0.01 back to 0
-        dt[dt==0.01] <- 0
+   # convert values back to 0s that were originally 0s
+        for (var in indicators){
+          dtExp <- dtExp[zeroes[get(var)== TRUE, id], (var):= 0]
+        }
 # ----------------------------------------------  
         
         
@@ -154,25 +145,29 @@ id_vars <- c("province", "dps", "health_zone", "population", "date")
   # re-run graphs with imputed data, using the different imputations to create a spread? variance? for each imputed point         
         
         # subset original data to current hz
-        tmporigdata <- dt[health_zone=='BAGATA']
+          tmporigdata <- dtOrig[health_zone=='Mukedi']
         
         # subset imputed data to current hz
-        imputeddata <- amelia_data[health_zone=='BAGATA']
+          imputeddata <- dtExp[health_zone=='Mukedi']
           
         # subset imputed data to only observations that actually got imputed
-          tmpmissmatrix <- amelia.results$missMatrix[dt$health_zone=='BAGATA',]
-          imputeddata <- imputeddata[rep(tmpmissmatrix[,'severeMalariaTreated_pregnantWomen'],5)] # 5=number of imputations
+          tmpmissmatrix <- amelia.results$missMatrix[dtLog$health_zone=='Mukedi',]
+          imputeddata <- imputeddata[rep(tmpmissmatrix[,'severeMalariaTreated_under5'],each=5)] # 5=number of imputations
         
         # compute upper middle and lower for the error bars
-          imputeddata[, .(mean=mean(severeMalariaTreated_pregnantWomen), 
-                          lower=quantile(severeMalariaTreated_pregnantWomen, .05), 
-                          upper=quantile(severeMalariaTreated_pregnantWomen, .95)), by='date']
+          errorData<- imputeddata[, .(mean=mean(severeMalariaTreated_under5), 
+                          lower=quantile(severeMalariaTreated_under5, .05), 
+                          upper=quantile(severeMalariaTreated_under5, .95)), by='date']
           
         # plot the points that didn't need imputation
-        p <- ggplot(tmporigdata, aes(y=severeMalariaTreated_pregnantWomen, x=date)) + 
+        p <- ggplot(tmporigdata, aes(y=severeMalariaTreated_under5, x=date)) + 
             geom_point() 
         
         
         # plots the imputations if any
-        if (nrow(imputeddata)>0) p = p + geom_point(data=imputeddata, aes(y=mean)) + geom_errorbar(aes(ymin=lower, ymax=upper))
+        if (nrow(imputeddata)>0) p = p + geom_point(data=errorData, aes(y=mean)) + geom_errorbar(data=errorData, aes(ymin=lower, ymax=upper, y=NULL))
+        
+        print(p)
+        
+        
         
