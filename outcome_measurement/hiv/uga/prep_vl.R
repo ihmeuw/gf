@@ -279,68 +279,117 @@ uganda_vl[sex=='Female', unk_pts:=0]
 # ----------------
 # monthly patients received by sex 
 # check to make sure values are correct
-
-test1 <- uganda_vl[ ,.(male_pts=sum(male_pts), female_pts=sum(female_pts),
-                       unk_pts=sum(unk_pts)),by=date]
-
-test1 <- melt(test1, id.vars='date')
-test1$variable <- factor(test1$variable, levels=c("male_pts", "female_pts", "unk_pts"),
-                         labels=c("Male", "Female", "Unknown"))
-
-ggplot(test1, aes(x=date, y=value, color=variable)) +  
-  geom_point() + geom_line() + theme_bw() + 
-  labs(title="Monthly patients submitting samples by sex", x="Date", y="Count", color="Sex")
-
-uganda_vl[male_pts!=0, unique(female_pts)]
-uganda_vl[female_pts!=0, unique(male_pts)]
-uganda_vl[male_pts!=0 & female_pts!=0, unique(unk_pts)]
+# 
+# test1 <- uganda_vl[ ,.(male_pts=sum(male_pts), female_pts=sum(female_pts),
+#                        unk_pts=sum(unk_pts)), by=date]
+# 
+# test1 <- melt(test1, id.vars='date')
+# test1$variable <- factor(test1$variable, levels=c("male_pts", "female_pts", "unk_pts"),
+#                          labels=c("Male", "Female", "Unknown"))
+# 
+# ggplot(test1, aes(x=date, y=value, color=variable)) +  
+#   geom_point() + geom_line() + theme_bw() + 
+#   labs(title="Monthly patients submitting samples by sex", x="Date", y="Count", color="Sex")
+# 
+# uganda_vl[male_pts!=0, unique(female_pts)]
+# uganda_vl[female_pts!=0, unique(male_pts)]
+# uganda_vl[male_pts!=0 & female_pts!=0, unique(unk_pts)]
 
 
 # ----------------
 # calculate the sex ratio for each facility in each month
 
 # calculate the ratop of female patients to patients with known sex
+# fems and known_pts will repeat for every unique facility, month, year combo
+# calculate the male ratio as 1 - female ratio
 known <- uganda_vl[,.(known_pts=sum(male_pts+female_pts)), by=ids]
 uganda_vl <- merge(uganda_vl, known, by=ids, all.x=TRUE)
 
 fems <- uganda_vl[ , .(fems=sum(female_pts)), by=ids]
 uganda_vl <- merge(uganda_vl, fems, by=ids, all.x=TRUE)
 
-# apply the females ratio to the unknowns
-uganda_vl[sex=='Unknown', new_fems:=(unk_pts*(fems/known_pts)) ]
-uganda_vl[is.na(new_fems), new_fems:=0]
+uganda_vl[, fem_ratio:=(fems/known_pts) ]
+uganda_vl[is.na(fem_ratio), fem_ratio:=0]
 
-# males are the remainder
-uganda_vl[sex=='Unknown', new_gents:=(unk_pts-new_fems) ]
-uganda_vl[is.na(new_gents), new_gents:=0]
+uganda_vl[, male_ratio:=(1-fem_ratio)]
 
-# check that the unknown patients make sense
-test2 <- uganda_vl[sex=="Unknown", .(all_unk=sum(patients_received),
-                                    new_fems=sum(new_fems), new_gents=sum(new_gents)),               
-                                    by=.(month, year)]
+# test
+uganda_vl[facility_id==2 & month==1 & year==2017, .(sex, fems, known_pts, fem_ratio, male_ratio)]
 
-test2 <- melt(test2, id.vars=c('month', 'year'))
+# --------------
+# create new males and females and merge them into the data set 
 
-test2$variable <- factor(test2$variable, levels=c("all_unk", "new_fems", "new_gents"),
-                         labels=c("Unknown Sex - All", "New Females", "New Males"))
+Vars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", 
+         "total_results",  "valid_results", "suppressed", "fem_ratio", "male_ratio")
 
+uganda_vl <- uganda_vl[,lapply(.SD, as.double), by=c('facility_id', 'facility_name', 'sex',
+                                               'district_id', 'district_name', 'month',
+                                               'year', 'date'), .SDcols=Vars]
 
-# why are there a bunch of missing values
-ggplot(test2, aes(x=factor(month), y=value, color=variable, group=variable)) +  
-  geom_point() + geom_line() + theme_bw() + 
-  facet_wrap(~year) +
-  labs(title="Monthly patients submitting samples by sex", x="Date", y="Count", color="Sex")
+# --------------
+# create new females from unknowns
+uvl_f <- uganda_vl[sex=='Unknown']
+uvl_f[ , patients_received:=patients_received*fem_ratio]
+uvl_f[ , samples_received:=samples_received*fem_ratio]
+uvl_f[ , rejected_samples:=rejected_samples*fem_ratio]
+uvl_f[ , dbs_samples:=dbs_samples*fem_ratio]
+uvl_f[ , total_results:=total_results*fem_ratio]
+uvl_f[ , valid_results:=valid_results*fem_ratio]
+uvl_f[ , suppressed:=suppressed*fem_ratio]
 
+uvl_f[, sex:='Female']
+uvl_f[ ,id1:=1]
+
+# # check the female values with a graph
+# test3 <- uvl_f[,lapply(.SD, sum), by='date', .SDcols=Vars]
+# test3[ , c("fem_ratio", "male_ratio"):=NULL]
+# test3 <- melt(test3, id.vars='date')
+# ggplot(test3, aes(x=date, y=value, color=factor(variable), group=variable)) + 
+#   geom_point() + geom_line()
+
+# --------------
+# create new males from unknowns
+uvl_m <- uganda_vl[sex=='Unknown']
+uvl_m[ , patients_received:=patients_received*male_ratio]
+uvl_m[ , samples_received:=samples_received*male_ratio]
+uvl_m[ , rejected_samples:=rejected_samples*male_ratio]
+uvl_m[ , dbs_samples:=dbs_samples*male_ratio]
+uvl_m[ , total_results:=total_results*male_ratio]
+uvl_m[ , valid_results:=valid_results*male_ratio]
+uvl_m[ , suppressed:=suppressed*male_ratio]
+
+uvl_m[, sex:='Male']
+uvl_m[ ,id1:=1]
+
+# # check the male values with a graph
+# test4 <- uvl_m[,lapply(.SD, sum), by='date', .SDcols=Vars]
+# test4[ , c("fem_ratio", "male_ratio"):=NULL]
+# test4 <- melt(test4, id.vars='date')
+# ggplot(test3, aes(x=date, y=value, color=factor(variable), group=variable)) + 
+#   geom_point() + geom_line()
+
+# --------------
+# merge in the new males and females
+uganda_vl <- uganda_vl[sex=='Male' | sex=='Female']
+uganda_vl[,id1:=2]
+
+m_ids <- c("facility_id", "sex", "month", "year", "date", 
+           "patients_received", "samples_received", "rejected_samples",
+           "dbs_samples", "total_results", "valid_results", "suppressed", "id1",
+           "fem_ratio", "male_ratio", "district_id", "district_name", "facility_name")          
+
+uganda_vl <- merge(uganda_vl, uvl_f, by=m_ids, all=TRUE)
+uganda_vl <- merge(uganda_vl, uvl_m, by=m_ids, all=TRUE)
 
 #---------------
-# add the unknown sex projected females/males into unknowns
-
+# collapse on facility_id, month, year, sex
+uganda_vl[ ,id1:=NULL]
 
 
 #---------------
 
 #save the final data as an RDS
-saveRDS(uvl_sex, file= paste0(dir, "/sex_data.rds") )
+saveRDS(uganda_vl, file= paste0(dir, "/sex_data.rds") )
 
 # ----------------------------------------------
 
