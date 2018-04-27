@@ -26,7 +26,7 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
                                  fileEncoding = "latin1"))
 
 
-mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+gf_mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
 
 
 # ---------------------------------------------
@@ -56,9 +56,7 @@ graphData[gf_module=="Health management information system and monitoring and ev
 ##make the disease text nicer for the graphs: 
 graphData <- disease_names_for_plots(graphData)
 graphData$gf_module <- factor(graphData$gf_module, levels=names(primColors))
-
-##if you want to do disease + grant facet:
-graphData$grant_disease <- paste(graphData$disease, ":", graphData$grant_number)
+                 
 # ---------------------------------------------
 # stacked bar charts over time 
 
@@ -81,7 +79,7 @@ for (k in unique(graphData$disease)){
   prog_plots[[k]] <- plot
 }
 
-pdf("sdas_overtime.pdf", height=6, width=9)
+pdf("modules_overtime.pdf", height=6, width=9)
 invisible(lapply(prog_plots, print))
 dev.off()
 
@@ -93,39 +91,45 @@ dev.off()
 
 ##Fill in year gaps where modules and years might be missing:
 
-year_range <- unique(graphData$year)
-gf_mods <- data.table(graphData$disease)
 
-create_na_mods <- merge(year_range, gf_mods)
+gf_mods <- data.table(graphData$disease, graphData$grant_number, graphData$year) ##the diseases that are present in the data
 
-create_na_mods <- unique(create_na_mods)
-
-setnames(create_na_mods,c("year","disease"))
-
-##years that we have no data: 
-mapping_list <- disease_names_for_plots(mapping_list)
+setnames(gf_mods,c("disease", "grant_number", "year"))
+create_na_mods <- unique(gf_mods)
+##bring in the module list from the GF framework
+mapping_list <- disease_names_for_plots(gf_mapping_list)
 mapping_list$code <- NULL
 mapping_list$intervention <- NULL
 setnames(mapping_list, "module", "gf_module")
 
-create_na_mods <- merge(create_na_mods, mapping_list, by="disease")
+##make a list of all possible modules for each year and disease that we have: 
+create_na_mods <- merge(create_na_mods, mapping_list, by="disease", allow.cartesian = TRUE)
 create_na_mods <- unique(create_na_mods)
 
-modData <- merge(graphData, create_na_mods,all.y=TRUE, by=c("year","disease", "gf_module"), allow.cartesian = TRUE)
+modData <- merge(graphData, create_na_mods,all.y=TRUE, by=c("year","disease", "grant_number","gf_module"), allow.cartesian = TRUE)
 
+##sometimes modules won't be present in the data
 modData[is.na(gf_intervention), gf_intervention:="Module Not Included"]
-modData[gf_intervention=="Module Not Included", budget:=100]
 
-modData$str_wrap <- mapply(get_summary_level,as.character(modData$gf_module), as.character(modData$gf_intervention))
+## figure out which values only have summary level data: 
+modData$str_wrap <- mapply(get_summary_level,as.character(modData$gf_module), 
+                           as.character(modData$gf_intervention))
 
+##wrap the characters so they print out nicer on the graphs: 
 modData$str_wrap <- str_wrap(modData$str_wrap, 45)
 
 #here, I'm doing SDA, grant, disease, and data source (gos, fpm etc.) by year 
 byVars = names(modData)[names(modData)%in%c('gf_module', 'str_wrap','year', 'disease', 'grant_number')]
 modData = modData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
+modData[,sum_budget:=sum(na.omit(budget)), by=c("grant_number", "year", "disease")]
 
-
+##FOR THE $$ BARS: 
+modData[budget<=0]$budget <- NA
+##FOR THE 100% BARS: 
+modData[budget==0, str_wrap:="Module Not Included"]
+modData[str_wrap=="Module Not Included", budget:=100]
+##subset by disease: 
 hivData <- modData[disease=="HIV/AIDS"]
 malData <- modData[disease=="Malaria"]
 tbData <- modData[disease=="Tuberculosis"]
@@ -133,6 +137,7 @@ hssData <- modData[disease=="RSSH"]
 ##-----------------------------------------------------------
 # Intervention charts: 
 
+##list of colors to apply to the interventions: 
 colors <- c('#a6cee3', ##periwinkle
   '#1f78b4', ##summer lake
   '#b2df8a', ##muted lime 
@@ -158,11 +163,14 @@ colors <- c('#a6cee3', ##periwinkle
   '#94FFFC', ##icy blue
   '#b15928' ##umber 
   )
-interventions <- unique(na.omit(modData$str_wrap))
 
+##sometimes there are more interventions that colors, so this just repeats the colors 
+##until all of the interventions are assigned a color
+interventions <- unique(na.omit(hivData$str_wrap)) ##change datasets when necessary
 cols <- rep(colors, length.out=length(interventions))
 names(cols) <- interventions
 
+##manually assign "No Data", "Summary Level Only", etc. their own colors: 
 cols[names(cols)=="Summary Level Only"]="grey50"
 cols[names(cols)=="No Data"]="#FFFFFF"
 cols[names(cols)=="Module Not Included"]="#FFFFFF"
