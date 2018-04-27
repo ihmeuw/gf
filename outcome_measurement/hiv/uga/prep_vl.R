@@ -249,6 +249,94 @@ uvl_sex[,length(unique(combine))]
 uvl_sex[duplicated(combine)] # should be an empty data table (no duplicate entries)
 
 
+# ---------------
+# rename uvl_sex uganda_vl
+
+uganda_vl <- uvl_sex
+
+# ----------------------------------------------
+# split the patients of unknown sex by sex ratio
+
+# create variables indicating the number of patients by sex
+ids <- c('facility_id', 'month', 'year')
+
+males <- uganda_vl[sex=='Male', .(male_pts=sum(patients_received)), by=ids]
+uganda_vl <- merge(uganda_vl, males, by=ids, all.x=TRUE)
+uganda_vl[sex=='Female', male_pts:=0]
+uganda_vl[sex=='Unknown', male_pts:=0]
+
+females <- uganda_vl[sex=='Female', .(female_pts=sum(patients_received)), by=ids]
+uganda_vl <- merge(uganda_vl, females, by=ids, all.x=TRUE)
+uganda_vl[sex=='Male', female_pts:=0]
+uganda_vl[sex=='Unknown', female_pts:=0]
+
+unks <- uganda_vl[sex=='Unknown', .(unk_pts=sum(patients_received)), by=ids]
+uganda_vl <- merge(uganda_vl, unks, by=ids, all.x=TRUE)
+uganda_vl[sex=='Male', unk_pts:=0]
+uganda_vl[sex=='Female', unk_pts:=0]
+
+
+# ----------------
+# monthly patients received by sex 
+# check to make sure values are correct
+
+test1 <- uganda_vl[ ,.(male_pts=sum(male_pts), female_pts=sum(female_pts),
+                       unk_pts=sum(unk_pts)),by=date]
+
+test1 <- melt(test1, id.vars='date')
+test1$variable <- factor(test1$variable, levels=c("male_pts", "female_pts", "unk_pts"),
+                         labels=c("Male", "Female", "Unknown"))
+
+ggplot(test1, aes(x=date, y=value, color=variable)) +  
+  geom_point() + geom_line() + theme_bw() + 
+  labs(title="Monthly patients submitting samples by sex", x="Date", y="Count", color="Sex")
+
+uganda_vl[male_pts!=0, unique(female_pts)]
+uganda_vl[female_pts!=0, unique(male_pts)]
+uganda_vl[male_pts!=0 & female_pts!=0, unique(unk_pts)]
+
+
+# ----------------
+# calculate the sex ratio for each facility in each month
+
+# calculate the ratop of female patients to patients with known sex
+known <- uganda_vl[,.(known_pts=sum(male_pts+female_pts)), by=ids]
+uganda_vl <- merge(uganda_vl, known, by=ids, all.x=TRUE)
+
+fems <- uganda_vl[ , .(fems=sum(female_pts)), by=ids]
+uganda_vl <- merge(uganda_vl, fems, by=ids, all.x=TRUE)
+
+# apply the females ratio to the unknowns
+uganda_vl[sex=='Unknown', new_fems:=(unk_pts*(fems/known_pts)) ]
+uganda_vl[is.na(new_fems), new_fems:=0]
+
+# males are the remainder
+uganda_vl[sex=='Unknown', new_gents:=(unk_pts-new_fems) ]
+uganda_vl[is.na(new_gents), new_gents:=0]
+
+# check that the unknown patients make sense
+test2 <- uganda_vl[sex=="Unknown", .(all_unk=sum(patients_received),
+                                    new_fems=sum(new_fems), new_gents=sum(new_gents)),               
+                                    by=.(month, year)]
+
+test2 <- melt(test2, id.vars=c('month', 'year'))
+
+test2$variable <- factor(test2$variable, levels=c("all_unk", "new_fems", "new_gents"),
+                         labels=c("Unknown Sex - All", "New Females", "New Males"))
+
+
+# why are there a bunch of missing values
+ggplot(test2, aes(x=factor(month), y=value, color=variable, group=variable)) +  
+  geom_point() + geom_line() + theme_bw() + 
+  facet_wrap(~year) +
+  labs(title="Monthly patients submitting samples by sex", x="Date", y="Count", color="Sex")
+
+
+#---------------
+# add the unknown sex projected females/males into unknowns
+
+
+
 #---------------
 
 #save the final data as an RDS
