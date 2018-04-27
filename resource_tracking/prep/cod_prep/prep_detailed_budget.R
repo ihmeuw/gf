@@ -122,6 +122,9 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
+  if(grant=="COD-M-PSI"&lang=="eng"){
+    lang <- "fr"
+  }
   budget_dataset$lang <- lang
   budget_dataset$data_source <- source
   
