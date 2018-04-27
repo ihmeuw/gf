@@ -49,8 +49,7 @@ gtm_subset = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.o
 # gtm_subset[, module_fraction := budget/sum(budget), by=c("disease","quarter")]
 # gtm_subset[, int_fraction := budget/sum(budget), by=c("disease","quarter", "gf_module")]
 
-
-fpm_malaria <- gtm_subset[(disease=="malaria"&year==2012)]
+fpm_malaria <- gtm_subset[(disease=="malaria"&year==2016)]
 # ----------------------------------------------
 
 ##just work with GF data for now: 
@@ -140,7 +139,7 @@ colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#ffa3b2',
 )
 
 graphData$muni_budget <- cut(graphData$muni_budget_year/10000, 
-                             breaks= c(0,0.1, seq(0.2, 1, by = .1), 2:5, Inf),right = FALSE)
+                             breaks= c(seq(0, 3, by=0.5),4:10, Inf),right = FALSE)
 
 colors <- c( '#1F3AC7',
              '#235BCD',
