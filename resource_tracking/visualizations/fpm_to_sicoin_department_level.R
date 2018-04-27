@@ -1,15 +1,48 @@
 # ----------------------------------------------
-##Roll up to department level: 
+# Irena Chen
+#
+# 3/1/2018
+# ### Map FPM SDAs to Sicoin $$ by municipality
+# ----------------------------------------------
+# Set up R
+rm(list=ls())
+library(rgeos)
+library(raster)
+library(ggplot2)
+library(maptools)
+library(tools)
+library(data.table)
+library(lubridate)
+library(grDevices)
+library(RColorBrewer)
+library(reshape)
+library(scales)
+library(ggrepel)
+library(dplyr)
+library(zoo)
+# ----------------------------------------------
 
+##load the data: 
+gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
+                                  fileEncoding = "latin1"))
+
+sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
+                                   ,fileEncoding="latin1"))
 malData <- sicoin_data[disease=="malaria"]
 
-admin_names$NAME_1[18] <- "Totonicapán"
-admin_names$NAME_1[22] <- "Sololá"
-admin_names$NAME_1[21] <- "Suchitepéquez"
-admin_names$NAME_1[3] <- "Sacatepéquez"
-admin_names$NAME_1[1] <- "Quiché"
-admin_names$NAME_1[7] <- "Petén"
+# ----------------------------------------------
+dept_muni_list <- data.table(read_excel("J:/Project/Evaluation/GF/mapping/gtm/Codigos censales Guatemala  actualizado.xls", 
+                                        sheet = "Poblacion_INE_94"))
 
+dept_muni_list <- dept_muni_list[, c("DEPARTAMENTO", "MUNICIPIO"), with=FALSE]
+dept_muni_list <- unique(dept_muni_list)
+setnames(dept_muni_list,  c("DEPARTAMENTO", "MUNICIPIO"), c("department", "municipality"))
+dept_muni_list$department <- tolower(dept_muni_list$department)
+
+firstup <- function(x) {
+  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
+  x
+}
 
 ##create vector of unwanted characters:
 unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
@@ -56,6 +89,19 @@ setnames(department_data, c("budget", "disbursement"), c("sicoin_budget", "sicoi
 graphData <- merge(fpm_malaria, department_data, by="year", allow.cartesian=TRUE)
 
 graphData[,department_budget:=budget*department_fraction]
+
+
+# ----------------------------------------------
+##Roll up to department level: 
+admin_names$NAME_1[18] <- "Totonicapán"
+admin_names$NAME_1[22] <- "Sololá"
+admin_names$NAME_1[21] <- "Suchitepéquez"
+admin_names$NAME_1[3] <- "Sacatepéquez"
+admin_names$NAME_1[1] <- "Quiché"
+admin_names$NAME_1[7] <- "Petén"
+
+
+
 
 dep_names_and_coords <- admin_dataset[, c("id", "NAME_1"), with=FALSE]
 dep_names_and_coords <- unique(dep_names_and_coords)
