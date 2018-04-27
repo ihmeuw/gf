@@ -1,10 +1,11 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 4/24/2018
+# 4/26/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
+# Collapse districts to match most recent shape files
 # Prep the data for analysis
 # ----------------------------------------------
 
@@ -105,7 +106,6 @@ str(facilities)
 full_data [,facility_id, by=facility_id] # 2042 values
 full_data[is.na(facility_id)] # no missing facility ids
 
-
 # print a list of the facility ids in full_data that are not on the names list
 # 34 facilities, 692 patients in those facilities
 full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(facility_id)), 
@@ -125,16 +125,6 @@ uvl_sex[is.na(facility_name), .(sum(patients_received))]
 
 # create a placeholder for missing facility names for 34 facilities
 uvl_sex [is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
-
-#------------------------
-# merge in the districts
-districts <- readRDS(paste0(dir,"/facilities/districts.rds"))
-uvl_sex <- merge(uvl_sex, districts, by='district_id', all.x=TRUE)
-
-# facility ids that are associated with multiple district ids
-# 29 facilities are associated with two district ids (always two)
-dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
-dups <- dups[dup>1, .(facility_id, facility_name)]
 
 
 # ----------------------------------------------
@@ -163,20 +153,32 @@ uvl_sex[facility_id==8355 , district_id:=30]
 uvl_sex[facility_id==8338, district_id:=31]
 uvl_sex[facility_id==8358, district_id:=39]
 uvl_sex[facility_id==8340, district_id:=101]
-uvl_sex[facility_id==8357, district_id:=35] # not listed, chose Kampala
+uvl_sex[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
 uvl_sex[facility_id==8351, district_id:=85]
 uvl_sex[facility_id==8345, district_id:=97]
-
 
 uvl_sex[facility_id==8353, district_id:=64]
 uvl_sex[facility_id==8354, district_id:=86]
 uvl_sex[facility_id==8344, district_id:=97]
-uvl_sex[facility_id==8336, district_id:=]
-uvl_sex[facility_id==8356, district_id:=]
-uvl_sex[facility_id==8346, district_id:=]
-uvl_sex[facility_id==8339, district_id:=]
-uvl_sex[facility_id==8337, district_id:=]
+uvl_sex[facility_id==8336, district_id:=68]
+uvl_sex[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
+uvl_sex[facility_id==8346, district_id:=86]
+uvl_sex[facility_id==8339, district_id:=84]
+uvl_sex[facility_id==8337, district_id:=97]
 
+
+# facility ids that are associated with multiple district ids
+# 29 facilities are associated with two district ids (always two)
+# check for duplicates after the change
+dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
+dups <- dups[dup>1, .(facility_id, facility_name)]
+dups # should be an empty data table
+
+
+#------------------------
+# merge in the districts
+districts <- readRDS(paste0(dir,"/facilities/districts.rds"))
+uvl_sex <- merge(uvl_sex, districts, by='district_id', all.x=TRUE)
 
 # ---------------
 
@@ -220,17 +222,122 @@ uvl_sex[sex=='f', sex:='Female']
 uvl_sex[sex=='x', sex:='Unknown']
 
 # ---------------
-uvl_sex <- uvl_sex[ ,.(facility_name, facility_id, dist_name=district_name, 
-               district_id, dhis2name, hub_id,
-               patients_received, samples_received, 
-               dbs_samples, total_results, rejected_samples,
-               valid_results, suppressed, sex, month, year) ]
-
-# ---------------
 # add date 
 uvl_sex[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
-               
+
 # ---------------
+# combine the duplicates into single entries
+
+# full data table of all duplicate entries as single entries
+uvl_sex <- uvl_sex[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received),  
+                        rejected_samples=sum(rejected_samples), dbs_samples=sum(dbs_samples),
+                        total_results=sum(total_results),
+                        suppressed=sum(suppressed), valid_results=sum(valid_results)),
+                        by=.(facility_id, facility_name, district_id, district_name, dhis2name,
+                        sex, date, month, year)]
+
+# ---------------
+# check for duplicates
+# create a unique identifier (char) of facilityid_date_sex for single rows in the data table
+uvl_sex[sex=="Female", sex1:=1 ]
+uvl_sex[sex=="Male", sex1:=2]
+uvl_sex[sex=="Unknown", sex1:=3]
+
+uvl_sex[ ,combine:= paste0(facility_id, '_', date, '_', sex1)]
+uvl_sex[,length(unique(combine))] 
+
+uvl_sex[duplicated(combine)] # should be an empty data table (no duplicate entries)
+
+
+# ---------------
+# rename uvl_sex uganda_vl
+
+uganda_vl <- uvl_sex
+
+# ----------------------------------------------
+# split the patients of unknown sex by sex ratio
+
+# create variables indicating the number of patients by sex
+ids <- c('facility_id', 'month', 'year')
+
+males <- uganda_vl[sex=='Male', .(male_pts=sum(patients_received)), by=ids]
+uganda_vl <- merge(uganda_vl, males, by=ids, all.x=TRUE)
+uganda_vl[sex=='Female', male_pts:=0]
+uganda_vl[sex=='Unknown', male_pts:=0]
+
+females <- uganda_vl[sex=='Female', .(female_pts=sum(patients_received)), by=ids]
+uganda_vl <- merge(uganda_vl, females, by=ids, all.x=TRUE)
+uganda_vl[sex=='Male', female_pts:=0]
+uganda_vl[sex=='Unknown', female_pts:=0]
+
+unks <- uganda_vl[sex=='Unknown', .(unk_pts=sum(patients_received)), by=ids]
+uganda_vl <- merge(uganda_vl, unks, by=ids, all.x=TRUE)
+uganda_vl[sex=='Male', unk_pts:=0]
+uganda_vl[sex=='Female', unk_pts:=0]
+
+
+# ----------------
+# monthly patients received by sex 
+# check to make sure values are correct
+
+test1 <- uganda_vl[ ,.(male_pts=sum(male_pts), female_pts=sum(female_pts),
+                       unk_pts=sum(unk_pts)),by=date]
+
+test1 <- melt(test1, id.vars='date')
+test1$variable <- factor(test1$variable, levels=c("male_pts", "female_pts", "unk_pts"),
+                         labels=c("Male", "Female", "Unknown"))
+
+ggplot(test1, aes(x=date, y=value, color=variable)) +  
+  geom_point() + geom_line() + theme_bw() + 
+  labs(title="Monthly patients submitting samples by sex", x="Date", y="Count", color="Sex")
+
+uganda_vl[male_pts!=0, unique(female_pts)]
+uganda_vl[female_pts!=0, unique(male_pts)]
+uganda_vl[male_pts!=0 & female_pts!=0, unique(unk_pts)]
+
+
+# ----------------
+# calculate the sex ratio for each facility in each month
+
+# calculate the ratop of female patients to patients with known sex
+known <- uganda_vl[,.(known_pts=sum(male_pts+female_pts)), by=ids]
+uganda_vl <- merge(uganda_vl, known, by=ids, all.x=TRUE)
+
+fems <- uganda_vl[ , .(fems=sum(female_pts)), by=ids]
+uganda_vl <- merge(uganda_vl, fems, by=ids, all.x=TRUE)
+
+# apply the females ratio to the unknowns
+uganda_vl[sex=='Unknown', new_fems:=(unk_pts*(fems/known_pts)) ]
+uganda_vl[is.na(new_fems), new_fems:=0]
+
+# males are the remainder
+uganda_vl[sex=='Unknown', new_gents:=(unk_pts-new_fems) ]
+uganda_vl[is.na(new_gents), new_gents:=0]
+
+# check that the unknown patients make sense
+test2 <- uganda_vl[sex=="Unknown", .(all_unk=sum(patients_received),
+                                    new_fems=sum(new_fems), new_gents=sum(new_gents)),               
+                                    by=.(month, year)]
+
+test2 <- melt(test2, id.vars=c('month', 'year'))
+
+test2$variable <- factor(test2$variable, levels=c("all_unk", "new_fems", "new_gents"),
+                         labels=c("Unknown Sex - All", "New Females", "New Males"))
+
+
+# why are there a bunch of missing values
+ggplot(test2, aes(x=factor(month), y=value, color=variable, group=variable)) +  
+  geom_point() + geom_line() + theme_bw() + 
+  facet_wrap(~year) +
+  labs(title="Monthly patients submitting samples by sex", x="Date", y="Count", color="Sex")
+
+
+#---------------
+# add the unknown sex projected females/males into unknowns
+
+
+
+#---------------
 
 #save the final data as an RDS
 saveRDS(uvl_sex, file= paste0(dir, "/sex_data.rds") )

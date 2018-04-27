@@ -34,14 +34,13 @@ uganda_vl <- uganda_vl[year==2016 | year==2017 | year==2018]
 # ----------------------------------------------
 # prep the data for imputation 
 
-
 # --------------
 # create a list of the facility ids - change to include names
 
 # store list of unique faciltiies, sexes and dates
 f_ids <- unique(uganda_vl$facility_id)
 length(f_ids)
-sexes <- c('Female', 'Male')
+sexes <- unique(uganda_vl$sex)
 dates <- seq(from=min(uganda_vl$date), to=max(uganda_vl$date), by='month')
 
 # make a "fully rectangularized" dataset with all months for each facility-sex
@@ -50,35 +49,62 @@ setnames(expanded_data, c('facility_id', 'date','sex'))
 # --------------------
 
 # merge in the blank rows for facility_id (by date, sex)
-uganda_vl <- merge(uganda_vl, expanded_data, by=c('facility_id', 'date','sex'), all.y=TRUE)
+uganda_vl <- merge(uganda_vl, expanded_data, by=c('facility_id', 'date','sex'), all=TRUE)
 
 #----------------------------------
+# descriptive statistics when females are missing and males are in the data
+uganda_vl[, combine2:= paste0(facility_id, '_', date)]
 
-missing_fems <- uganda_vl[(sex=='Female' & is.na(patients_received)), .(facility_id, date) ]
+missing_fems <- uganda_vl[(sex=='Female' & is.na(combine)), .(combine2) ]
 
-males_test<- uganda_vl[(sex == "Male" & facility_id %in% missing_fems$facility_id & date %in% missing_fems$date ),
-                       .(facility_id, date, patients_received)]
+uvl_males <- uganda_vl[sex=="Male"]
+uvl_males <- merge(missing_fems, uvl_males, by='combine2')
+uvl_males <- uvl_males[!is.na(patients_received)]
 
-males_test[ facility_id==2, .(sum(patients_received, na.rm=T))]
+#----------------------------------
+missing_lads <- uganda_vl[(sex=='Male' & is.na(combine)), .(combine2) ]
+
+uvl_females <- uganda_vl[sex=="Female"]
+uvl_females <- merge(missing_lads, uvl_females, by='combine2')
+uvl_females <- uvl_females[!is.na(patients_received)]
 
 
 #----------------------------------
 
 # collapse to facility-sex-date level to ensure unique identifiers
 sumVars = c("patients_received", "samples_received", "dbs_samples", "total_results", "rejected_samples", "valid_results", "suppressed")
-uganda_vl <- uganda_vl[, lapply(.SD, sum, na.rm=TRUE), by=c('facility_id','sex','date'), .SDcols=sumVars]
+
+#uganda_vl <- uganda_vl[, lapply(.SD, sum, na.rm=TRUE), by=c('facility_id','sex','date'), .SDcols=sumVars]
 
 #  test unique identifiers
-test = nrow(uganda_vl[duplicated(uganda_vl[,c('facility_id','sex','date'),with=F])])
+#test = nrow(uganda_vl[duplicated(uganda_vl[,c('facility_id','sex','date'),with=F])])
 if (test>0) stop('Facility-sex-hub-date does not uniquely identify rows! This is necessary for Amelia to do cs/ts operations!') 
+
+#---------------------
+
+# check for duplicates
+# create a unique identifier (char) of facilityid_date_sex
+uganda_vl[sex=="Female", sex1:=1 ]
+uganda_vl[sex=="Male", sex1:=2]
+uganda_vl[sex=="Unknown", sex1:=3]
+
+uganda_vl[ ,combine1:= paste0(facility_id, '_', date, '_', sex1)]
+uganda_vl[,length(unique(combine1))] 
+
+uganda_vl[duplicated(combine1)] # no duplicates
+# ---------------
+
+
 
 
 # ----------------------------------------------
 # amelia  test
            
-uvl <- uganda_vl[ ,.(facility_id, sex, date,
+uvl <- uganda_vl[ ,.(facility_id, sex, date, 
                     patients_received, samples_received,  dbs_samples, total_results,
-                    rejected_samples, valid_results, ratio=(suppressed/valid_results))]             
+                    rejected_samples, valid_results, ratio=(suppressed/valid_results))] 
+
+uvl[, random:=runif(nrow(uvl))]
 
 # make cs variable
 uvl[, cs_variable:=paste0(facility_id, sex)]
@@ -87,6 +113,8 @@ uvl$sex <- NULL
 
 # run imputation
 imputed_data <- amelia(uvl, m=2, cs='cs_variable', ts='date', lags='ratio')
+
+
 # View(imputed_data$imp1)
 
 # graph one test case to see how it looks
@@ -136,4 +164,20 @@ ggplot(merged[cs_variable==cstmp], aes(y=ratio.y, x=date)) +
 # uganda_vl[is.na(facility_name.y), facility_id] # all ids matched with facility names
 # 
 # setnames(uganda_vl, "facility_name.y", "facility_name")
+
+sumVars = c("patients_received", "samples_received", "rejected_samples","dbs_samples", 
+            "total_results",  "valid_results", "suppressed")
+
+uganda_vl[, lapply(.SD, sum, na.rm=TRUE), by=c('facility_id','sex','date'), .SDcols=sumVars]
+
+
+
+
+uganda_vl[ ,.(patients_received=sum(patients_received), 
+              samples_received=sum(samples_received),
+              rejected_samples=sum(rejected_samples),
+              dbs_samples=sum(dbs_samples), 
+              total_results=sum(total_results),
+              valid_results=sum(valid_results),
+              suppressed=sum(suppressed))]
 
