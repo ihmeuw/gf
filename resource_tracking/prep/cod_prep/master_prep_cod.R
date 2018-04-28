@@ -38,7 +38,7 @@ summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), n
                            "geographic_detail", "period",	"grant", "disease", "loc_id"))
 
 summary_file$loc_id <- as.character(summary_file$loc_id)
-summary_file$loc_id <- loc_id
+summary_file$loc_id <- loc_name
 
 ##run the for loop to clean all of the COD data: 
 for(i in 1:length(file_list$file_name)){

@@ -49,8 +49,7 @@ gtm_subset = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.o
 # gtm_subset[, module_fraction := budget/sum(budget), by=c("disease","quarter")]
 # gtm_subset[, int_fraction := budget/sum(budget), by=c("disease","quarter", "gf_module")]
 
-
-fpm_malaria <- gtm_subset[(disease=="malaria"&year==2012)]
+fpm_malaria <- gtm_subset[(disease=="malaria"&year==2016)]
 # ----------------------------------------------
 
 ##just work with GF data for now: 
@@ -140,7 +139,7 @@ colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#ffa3b2',
 )
 
 graphData$muni_budget <- cut(graphData$muni_budget_year/10000, 
-                             breaks= c(0,0.1, seq(0.2, 1, by = .1), 2:5, Inf),right = FALSE)
+                             breaks= c(seq(0, 3, by=0.5),4:10, Inf),right = FALSE)
 
 colors <- c( '#1F3AC7',
              '#235BCD',
@@ -204,62 +203,6 @@ for(k in unique(graphData$mod_year)){
 pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/NAME HERE.pdf", height=9, width=12)
 invisible(lapply(gtm_plots, print))
 dev.off()
-
-# ----------------------------------------------
-##Roll up to department level: 
-
-malData <- sicoin_data[disease=="malaria"]
-
-admin_names$NAME_1[18] <- "Totonicapán"
-admin_names$NAME_1[22] <- "Sololá"
-admin_names$NAME_1[21] <- "Suchitepéquez"
-admin_names$NAME_1[3] <- "Sacatepéquez"
-admin_names$NAME_1[1] <- "Quiché"
-admin_names$NAME_1[7] <- "Petén"
-
-
-##create vector of unwanted characters:
-unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
-                          'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
-                          'Ú'='U', 'Û'='U', 'Ü'='U', 'İ'='Y', 'Ş'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
-                          'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ğ'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
-                          'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ı'='y', 'ı'='y', 'ş'='b', 'ÿ'='y' )
-
-remove_chars <- c(" ","rssh","hss", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
-                  , "[[:punct:]]", "[^[:alnum:]]","\"", ",")
-
-dept_muni_list$municipality<- chartr(paste(names(unwanted_array), collapse=''),
-                        paste(unwanted_array, collapse=''),
-                        dept_muni_list$municipality)
-
-dept_muni_list$municipality <-gsub(paste(remove_chars, collapse="|"), "",dept_muni_list$municipality)
-dept_muni_list$municipality <- tolower(dept_muni_list$municipality)
-
-
-malData$municipality <- tolower(malData$loc_name)
-malData$municipality <-gsub(paste(remove_chars, collapse="|"), "",malData$municipality)
-malData$municipality <- chartr(paste(names(unwanted_array), collapse=''),
-                                     paste(unwanted_array, collapse=''),
-                              malData$municipality)
-
-
-department_data <- merge(malData, dept_muni_list, all.x=TRUE, by="municipality", allow.cartesian=TRUE)
-
-##Check for any munis that didn't get mapped: 
-
-dropped_munis <- department_data[is.na(department)]
-
-##sum by department now: 
-
-##sum up budget (as "variable") by year, disease, and data source 
-byVars = names(department_data)[names(department_data)%in%c('department','module','year')]
-department_data  = department_data[, list(budget=sum(na.omit(budget)), 
-                                     disbursement=sum(na.omit(disbursement))), by=byVars]
-
-
-
-department_data[, department_fraction:=budget/sum(budget), by=c("year", "module")]
-
 
 
 
