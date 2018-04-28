@@ -226,12 +226,17 @@ uvl_sex[sex=='x', sex:='Unknown']
 uvl_sex[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
 # ---------------
+# add a variable for plasma samples
+uvl_sex[ , plasma_samples:=(samples_received - dbs_samples)]
+
+
+# ---------------
 # combine the duplicates into single entries
 
 # full data table of all duplicate entries as single entries
 uvl_sex <- uvl_sex[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received),  
-                        rejected_samples=sum(rejected_samples), dbs_samples=sum(dbs_samples),
-                        total_results=sum(total_results),
+                        rejected_samples=sum(rejected_samples), plasma_samples=sum(plasma_samples),
+                        dbs_samples=sum(dbs_samples), total_results=sum(total_results),
                         suppressed=sum(suppressed), valid_results=sum(valid_results)),
                         by=.(facility_id, facility_name, district_id, district_name, dhis2name,
                         sex, date, month, year)]
@@ -313,13 +318,10 @@ uganda_vl[is.na(fem_ratio), fem_ratio:=0]
 
 uganda_vl[, male_ratio:=(1-fem_ratio)]
 
-# test
-uganda_vl[facility_id==2 & month==1 & year==2017, .(sex, fems, known_pts, fem_ratio, male_ratio)]
-
 # --------------
 # create new males and females and merge them into the data set 
 
-Vars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", 
+Vars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", "plasma_samples",
          "total_results",  "valid_results", "suppressed", "fem_ratio", "male_ratio")
 
 uganda_vl <- uganda_vl[,lapply(.SD, as.double), by=c('facility_id', 'facility_name', 'sex',
@@ -332,6 +334,7 @@ uvl_f <- uganda_vl[sex=='Unknown']
 uvl_f[ , patients_received:=patients_received*fem_ratio]
 uvl_f[ , samples_received:=samples_received*fem_ratio]
 uvl_f[ , rejected_samples:=rejected_samples*fem_ratio]
+uvl_f[ , plasma_samples:=plasma_samples*fem_ratio]
 uvl_f[ , dbs_samples:=dbs_samples*fem_ratio]
 uvl_f[ , total_results:=total_results*fem_ratio]
 uvl_f[ , valid_results:=valid_results*fem_ratio]
@@ -354,6 +357,7 @@ uvl_m[ , patients_received:=patients_received*male_ratio]
 uvl_m[ , samples_received:=samples_received*male_ratio]
 uvl_m[ , rejected_samples:=rejected_samples*male_ratio]
 uvl_m[ , dbs_samples:=dbs_samples*male_ratio]
+uvl_m[ , plasma_samples:=plasma_samples*male_ratio]
 uvl_m[ , total_results:=total_results*male_ratio]
 uvl_m[ , valid_results:=valid_results*male_ratio]
 uvl_m[ , suppressed:=suppressed*male_ratio]
@@ -374,7 +378,7 @@ uganda_vl <- uganda_vl[sex=='Male' | sex=='Female']
 uganda_vl[,id1:=2]
 
 m_ids <- c("facility_id", "sex", "month", "year", "date", 
-           "patients_received", "samples_received", "rejected_samples",
+           "patients_received", "samples_received", "rejected_samples", "plasma_samples",
            "dbs_samples", "total_results", "valid_results", "suppressed", "id1",
            "fem_ratio", "male_ratio", "district_id", "district_name", "facility_name")          
 
@@ -383,8 +387,21 @@ uganda_vl <- merge(uganda_vl, uvl_m, by=m_ids, all=TRUE)
 
 #---------------
 # collapse on facility_id, month, year, sex
-uganda_vl[ ,id1:=NULL]
+uganda_vl[ ,c('id1', 'fem_ratio', 'male_ratio'):=NULL]
 
+sumVars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", 
+             "plasma_samples", "total_results",  "valid_results", "suppressed")
+
+uganda_vl <- uganda_vl[,lapply(.SD, sum), by=c('facility_id', 'facility_name', 
+                                  'district_id', 'district_name', 'sex',
+                                  'month', 'year', 'date'), .SDcols=sumVars]
+# 
+# #---------------
+# # final duplicates check
+# uganda_vl[sex=='Female', sex1:=1]
+# uganda_vl[sex=='Male', sex1:=2]
+# uganda_vl[, combine:= paste0(facility_id, '_', date, '_',sex1)]
+# uganda_vl[duplicated(combine)]
 
 #---------------
 

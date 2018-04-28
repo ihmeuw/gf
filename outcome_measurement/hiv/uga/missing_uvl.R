@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-#4/20/2018
+#4/27/2018
 # Descriptive statistics and maps for the Uganda Viral Load Dashboard
 # ----------------------------------------------
 # Set up R
@@ -295,4 +295,77 @@ for(f in unique(uvl_dist$district_id)) {
   
 }
 
+
+
+#--------------------------------
+# DBS VERSUS PLASMA
+# create a data table for patients received and samples received
+
+# store identifiers
+idVars <- c("facility_id", "facility_name", "month", "year")
+
+# create a long data set with totals by district
+uvl_fac <- uganda_vl[,
+                     .(samples_received = sum(samples_received),
+                     dbs_samples=sum(dbs_samples), plasma_samples=sum(plasma_samples)),
+                     by=idVars]
+
+# reshape indicators long for district data
+uvl_fac <- melt(uvl_fac, id.vars=idVars)
+
+
+# label the variables for graph titles and put the graphs in an intuitive order
+uvl_fac$variable <- factor(uvl_fac$variable, 
+                           levels=c("samples_received", "dbs_samples", "plasma_samples"), 
+                           labels=c("Samples Received", "DBS Samples", "Plasma"))
+
+# add a date variable
+uvl_fac[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+
+# single test graph
+f=27
+name <- unique(uvl_fac[facility_id==f]$facility_name)
+
+ggplot(uvl_fac[facility_id==f], aes(y=value, x=date)) + 
+  geom_point() +
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable, scales='free_y') +
+  xlab("Date") + ylab("Count") + theme_bw() + labs(title=name)
+
+
+
+# ---------------------------------
+# loop over all facilities printing patients and samples received
+
+list_of_plots = NULL
+i=1
+
+t <- c()
+
+for(f in unique(uvl_fac$facility_id)) {
+  # look up district name
+  name <- unique(uvl_fac[facility_id==f]$facility_name)
+  
+  # make your graph
+  
+  list_of_plots[[i]] <-  ggplot(uvl_fac[facility_id==f], aes(x=date, y=value)) + 
+    geom_point() + 
+    geom_line(alpha=0.5) + 
+    facet_wrap(~variable, scales='free_y') +
+    labs(title=name, x="Date", y="Count") + theme_bw()
+  
+  
+  i=i+1
+  
+  t <- c(t, warnings())
+  
+}
+
+pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/dbs_plasma.pdf', height=6, width=9)
+
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+} 
+
+dev.off()
 
