@@ -33,11 +33,8 @@
       dt <- fread(paste0(dir,"/","fullData_forMI_outliers_removed",".csv")) 
   
   # output files:
-    # exports all exports all health zone graphs to to a pdf document here:
-    # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs all Indicators.pdf
-    
-    # exports aggregate graphs to a pdf document here: 
-    # J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Time Series Graphs Aggregate Indicators Data.pdf
+      output_dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/"
+      MI_results_indicators <- "Imputed Time Series for Indicators by Health Zone.pdf"
 # ----------------------------------------------
     
     
@@ -65,7 +62,7 @@
     dt <- dcast.data.table(dt, date+province+dps+health_zone ~ indicator, value.var='value')
     
   # vector of id variables and indicator variables
-    id_vars <- c("province", "dps", "health_zone", "population", "date")
+    id_vars <- c("province", "dps", "health_zone", "id", "date")
   
     indicators <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
       "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
@@ -113,7 +110,7 @@
       # MI will ignore ID vars and include them as is in the output
       # lags/leads: indicators
       # intercs = FALSE by default, try with = TRUE
-        amelia.results <- amelia(dtLog, m=25, cs= "health_zone", ts="date", lags= indicators, idvars= c("id", "province", "dps"))
+        amelia.results <- amelia(dtLog, m=5, cs= "health_zone", ts="date", lags= indicators, idvars= c("id", "province", "dps"))
    
 # ---------------------------------------------- 
           
@@ -132,7 +129,7 @@
         
 # ----------------------------------------------  
    # exponentiate the data set
-        dtExp <- amelia_data[, lapply(.SD, function(x) exp(x)), .SDcols=indicators, by= c("province", "dps", "health_zone", "date", "id")]
+        dtExp <- amelia_data[, lapply(.SD, function(x) exp(x)), .SDcols=indicators, by= c("province", "dps", "health_zone", "date", "id", "imputation_number")]
 
    # convert values back to 0s that were originally 0s
         for (var in indicators){
@@ -142,32 +139,100 @@
         
         
 # ----------------------------------------------
-  # re-run graphs with imputed data, using the different imputations to create a spread? variance? for each imputed point         
-        
-        # subset original data to current hz
-          tmporigdata <- dtOrig[health_zone=='Mukedi']
-        
-        # subset imputed data to current hz
-          imputeddata <- dtExp[health_zone=='Mukedi']
+  # Set up for graphing:
+    # vectors of indicator names and intervention names to subset
+      indicators <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+                      "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+                      "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
+                      "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen")
           
-        # subset imputed data to only observations that actually got imputed
-          tmpmissmatrix <- amelia.results$missMatrix[dtLog$health_zone=='Mukedi',]
-          imputeddata <- imputeddata[rep(tmpmissmatrix[,'severeMalariaTreated_under5'],each=5)] # 5=number of imputations
-        
-        # compute upper middle and lower for the error bars
-          errorData<- imputeddata[, .(mean=mean(severeMalariaTreated_under5), 
-                          lower=quantile(severeMalariaTreated_under5, .05), 
-                          upper=quantile(severeMalariaTreated_under5, .95)), by='date']
+      indicator_names <- c(
+        `newCasesMalariaMild` = "Incidence of Mild Malaria",
+        `newCasesMalariaSevere` = "Incidence of Severe Malaria",
+        `mildMalariaTreated` = "Cases of Mild Malaria Treated",
+        `severeMalariaTreated` = "Cases of Severe Malaria Treated",
+        `malariaDeaths` = "Number of Deaths from Malaria"
+      )
           
-        # plot the points that didn't need imputation
-        p <- ggplot(tmporigdata, aes(y=severeMalariaTreated_under5, x=date)) + 
-            geom_point() 
-        
-        
-        # plots the imputations if any
-        if (nrow(imputeddata)>0) p = p + geom_point(data=errorData, aes(y=mean)) + geom_errorbar(data=errorData, aes(ymin=lower, ymax=upper, y=NULL))
-        
-        print(p)
-        
-        
+      interventions <- c("ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
+                      "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ArtLum_received", "ArtLum_used",
+                      "smearTest_completed", "smearTest_positive", "RDT_completed", "RDT_positive", "healthFacilities_total", "healthFacilitiesProduct")
+  
+      # make a vector of all health zones in dt to loop through 
+        hz_vector <- dt[["health_zone"]]
+        # remove duplicates to have just unique values:
+          hz_vector <- unique(hz_vector)
+  
+  # Set up a data table for graphing:
+      # reshape imputed data long
+        imputedDataLong <- melt(dtExp, id.vars=c(id_vars, "imputation_number"))
+      # split subpopulations out from indicators
+        imputedDataLong <- imputedDataLong[, c("indicator", "subpopulation") := tstrsplit(variable, "_", fixed=TRUE)]
+      
+      # compute upper middle and lower for the imputed points for the error bars in the graphs
+        graphData <- imputedDataLong[, .(mean=mean(value), 
+                                    lower=quantile(value, .05), 
+                                    upper=quantile(value, .95)), by=c(id_vars,"variable", 'indicator','subpopulation')]
+
+      
+      missMatrixMelt <- melt(dtOrig, id.vars=id_vars)
+      missMatrixMelt[, isMissing:=is.na(value)]
+      
+      graphDataComplete <- merge(graphData, missMatrixMelt, by= c(id_vars, "variable"))
+      graphDataComplete <- graphDataComplete[isMissing==F, lower:= NA ]
+      graphDataComplete <- graphDataComplete[isMissing==F, upper:= NA ]
+
+          
+    pdf((paste0(output_dir, MI_results_indicators)), height=6, width=10)   
+      graphData <- graphDataComplete[ variable %in% indicators ]    
+      for (hz in hz_vector){
+      
+        g <- ggplot(graphData[health_zone==hz], aes(x=date, y=mean, color = subpopulation)) +
+            
+             geom_point() + geom_errorbar(aes(ymin=lower, ymax=upper, y=NULL)) + geom_line() + theme_bw() + ggtitle(hz) + 
+              
+             facet_wrap(~indicator, scales="free_y", labeller = as_labeller(indicator_names))
+      
+        print (g)
+    }
+    dev.off()    
+# ----------------------------------------------  
+
+
+# ----------------------------------------------    
+    # Aggregate Indicators Data
+
+      aggData  <- imputedDataLong[, .(aggValue = sum(value)), by=c( "date", "dps", "indicator", "subpopulation", "imputation_number" )]
+
+      aggGraphData <- aggData[, .(mean=mean(aggValue), 
+                                     lower=quantile(aggValue, .05), 
+                                     upper=quantile(aggValue, .95)), by=c("date", "dps", "indicator", "subpopulation")]
+    
+      aggGraphData <- aggGraphData[mean==lower, lower := NA]
+      aggGraphData <- aggGraphData[mean==upper, upper := NA]
+      
+      indicatorInput <- aggGraphData[["indicator"]]
+      indicatorInput <- unique(indicatorInput)
+    
+      pdf(paste0(output_dir, "Imputed Time Series for Indicators by DPS.pdf"), height=6, width=9)   
+
+        for (i in indicatorInput){
+          aggGraphTitle <- indicator_names[i]
+          
+          g <- ggplot(aggGraphData[indicator==i], aes(x=date, y=mean, color = subpopulation)) +
+            
+            geom_point() + geom_errorbar(aes(ymin=lower, ymax=upper, y=NULL)) + geom_line() + theme_bw() + ggtitle(paste0("Aggregate Data by Provincial Health Division (DPS): ", aggGraphTitle)) + 
+            
+            labs(x= "Date", y="Value", color= "Subpopulation") + facet_wrap(~ dps, scales="free_y") + scale_color_manual(labels = c("Ages 5 and Older", "Pregnant Women", "Ages 4 and Under"), values = c("steelblue4", "palegreen4", "steelblue1"))
+          
+          print(g)
+        }
+      
+      dev.off()
+    
+    # interventions data
+      pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Imputed Time Series for Interventions by Health Zone.pdf", height=6, width=9)   
+
+      
+      
         
