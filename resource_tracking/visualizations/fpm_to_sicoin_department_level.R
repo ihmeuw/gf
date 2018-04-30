@@ -20,6 +20,7 @@ library(scales)
 library(ggrepel)
 library(dplyr)
 library(zoo)
+library(stringr)
 # ----------------------------------------------
 
 ##load the data: 
@@ -39,10 +40,8 @@ dept_muni_list <- unique(dept_muni_list)
 setnames(dept_muni_list,  c("DEPARTAMENTO", "MUNICIPIO"), c("department", "municipality"))
 dept_muni_list$department <- tolower(dept_muni_list$department)
 
-firstup <- function(x) {
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x
-}
+##from stringr package:
+dept_muni_list$department <- str_to_title(dept_muni_list$department)
 
 ##create vector of unwanted characters:
 unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',

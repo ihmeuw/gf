@@ -84,6 +84,7 @@ gos_data$disbursement <- 0
 gos_data$adm1 <- gos_data$loc_name
 gos_data$adm2 <- gos_data$loc_name
 gos_data$lang <- "eng"
+gos_data$cost_category <- "all"
 ##aggregate with gos data: 
 
 totalData <- rbind(fpmData, gos_data)
