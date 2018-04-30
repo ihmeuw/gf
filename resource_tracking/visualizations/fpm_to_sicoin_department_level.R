@@ -6,6 +6,7 @@
 # ----------------------------------------------
 # Set up R
 rm(list=ls())
+library(readxl)
 library(rgeos)
 library(raster)
 library(ggplot2)
@@ -22,22 +23,42 @@ library(dplyr)
 library(zoo)
 library(stringr)
 # ----------------------------------------------
+##########Set the directory to be the mapping folder in the J Drive ########
+# ----------------------------------------------
 
-##load the data: 
+dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
+
+# ----------------------------------------------
+######## Load the FPM and SICOIN datasets ########
+# ----------------------------------------------
 gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
                                   fileEncoding = "latin1"))
 
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
                                    ,fileEncoding="latin1"))
-malData <- sicoin_data[disease=="malaria"]
+sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
+sicoin_data$year <- year(sicoin_data$start_date)
+sicoin_malaria <- sicoin_data[disease=="malaria"] ##decide if you want to do GF or GHE data at this point
 
+fpm_malaria <- gtmBudgets[disease=="malaria"]
+fpm_malaria$start_date <- as.Date(fpm_malaria$start_date,"%Y-%m-%d")
+fpm_malaria$year <- year(fpm_malaria$start_date)
+
+##sum the fpm data by year, module, and intervention
+byVars = names(fpm_malaria)[names(fpm_malaria)%in%c('year', 'gf_module', 'gf_intervention', 'disease')]
+fpm_malaria = fpm_malaria[, list(budget=sum(na.omit(budget))), by=byVars]
+
+# ----------------------------------------------
+######## This part is where we can merge the FPM and SICOIN data ########
 # ----------------------------------------------
 dept_muni_list <- data.table(read_excel("J:/Project/Evaluation/GF/mapping/gtm/Codigos censales Guatemala  actualizado.xls", 
                                         sheet = "Poblacion_INE_94"))
 
-dept_muni_list <- dept_muni_list[, c("DEPARTAMENTO", "MUNICIPIO"), with=FALSE]
+dept_codes <- data.table(read_excel("J:/Project/Evaluation/GF/mapping/gtm/Codigos censales Guatemala  actualizado.xls", 
+                                        sheet = "department_codes"))
+
+dept_muni_list <- dept_muni_list[,c("department", "municipality"), with=FALSE]
 dept_muni_list <- unique(dept_muni_list)
-setnames(dept_muni_list,  c("DEPARTAMENTO", "MUNICIPIO"), c("department", "municipality"))
 dept_muni_list$department <- tolower(dept_muni_list$department)
 
 ##from stringr package:
@@ -52,7 +73,6 @@ unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 
 
 remove_chars <- c(" ","rssh","hss", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
                   , "[[:punct:]]", "[^[:alnum:]]","\"", ",")
-
 dept_muni_list$municipality<- chartr(paste(names(unwanted_array), collapse=''),
                                      paste(unwanted_array, collapse=''),
                                      dept_muni_list$municipality)
@@ -61,59 +81,47 @@ dept_muni_list$municipality <-gsub(paste(remove_chars, collapse="|"), "",dept_mu
 dept_muni_list$municipality <- tolower(dept_muni_list$municipality)
 
 
-malData$municipality <- tolower(malData$loc_name)
-malData$municipality <-gsub(paste(remove_chars, collapse="|"), "",malData$municipality)
-malData$municipality <- chartr(paste(names(unwanted_array), collapse=''),
+sicoin_malaria $municipality <- tolower(sicoin_malaria$loc_name)
+sicoin_malaria$municipality <-gsub(paste(remove_chars, collapse="|"), "",sicoin_malaria$municipality)
+sicoin_malaria$municipality <- chartr(paste(names(unwanted_array), collapse=''),
                                paste(unwanted_array, collapse=''),
-                               malData$municipality)
+                               sicoin_malaria$municipality)
 
 
-department_data <- merge(malData, dept_muni_list, all.x=TRUE, by="municipality", allow.cartesian=TRUE)
+department_data <- merge(sicoin_malaria, dept_muni_list, all.x=TRUE, by="municipality", allow.cartesian=TRUE)
 
 ##Check for any munis that didn't get mapped: 
-
-dropped_munis <- department_data[is.na(department)]
+# dropped_munis <- department_data[is.na(department)]
 
 ##sum by department now: 
-
 ##sum up budget (as "variable") by year, disease, and data source 
 byVars = names(department_data)[names(department_data)%in%c('department','module','year')]
 department_data  = department_data[, list(budget=sum(na.omit(budget)), 
                                           disbursement=sum(na.omit(disbursement))), by=byVars]
 
-department_data[, department_fraction:=budget/sum(budget), by=c("year", "module")]
 
+##attach the codes to the department
+department_data <- merge(department_data, dept_codes, by="department", all.x=TRUE, allow.cartesian=TRUE)
+dropped_depts <- department_data[is.na(dept_code)]
+
+##get the % of sicoin money for each department by module and year: 
+
+department_data[, department_fraction:=budget/sum(budget), by=c("year", "module")]
+##change the variable names so we can merge the FPM and sicoin
 setnames(department_data, c("budget", "disbursement"), c("sicoin_budget", "sicoin_disb"))
 
+# ----------------------------------------------
+######## This part is where we can merge the FPM and SICOIN data ########
+# ----------------------------------------------
 graphData <- merge(fpm_malaria, department_data, by="year", allow.cartesian=TRUE)
 
+##multiply the % of sicoin money for each department with the $$ for each FPM intervention
 graphData[,department_budget:=budget*department_fraction]
 
-
-# ----------------------------------------------
-##Roll up to department level: 
-admin_names$NAME_1[18] <- "Totonicapán"
-admin_names$NAME_1[22] <- "Sololá"
-admin_names$NAME_1[21] <- "Suchitepéquez"
-admin_names$NAME_1[3] <- "Sacatepéquez"
-admin_names$NAME_1[1] <- "Quiché"
-admin_names$NAME_1[7] <- "Petén"
-
-
-
-
-dep_names_and_coords <- admin_dataset[, c("id", "NAME_1"), with=FALSE]
-dep_names_and_coords <- unique(dep_names_and_coords)
-setnames(dep_names_and_coords, "NAME_1", "department")
-
-graphData$department <- as.character(graphData$department)
-
-graphData <- merge(graphData, dep_names_and_coords, by="department", allow.cartesian=TRUE)
-
+##create a concatenation of years and modules/interventions for the graph titles: 
 graphData[, mod_year:=paste(year, ":",gf_module)]
 graphData[, int_year:=paste(year, gf_module,":",gf_intervention)]
-
-
+setnames(graphData, "dept_code", "id")
 
 graphData$dept_budget <- cut(graphData$department_budget/100000, 
                              breaks= c(seq(0, 3, by=0.5),4:10, Inf),right = FALSE)
@@ -133,14 +141,35 @@ colors <- c( '#1F3AC7',
              '#ff447c'
              
 )
-
 names(colors) <- levels(graphData$dept_budget)
 
+# ----------------------------------------------
+######## Load the department level shapefile ########
+# ----------------------------------------------
+adminData = shapefile(paste0(dir,'gtm_region.shp'))
+coords <- data.table(fortify(adminData, region='ID_1'))
+names <- data.table(adminData@data)
+coord_and_names = merge(coords, names, by.x = 'id', by.y='ID_1', allow.cartesian=TRUE)
+coord_and_names$id <- as.numeric(coord_and_names$id)
+##Roll up to department level: 
+### optional: Get names and id numbers corresponding to administrative areas to plot as labels: 
+gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1],lat = coordinates(adminData)[, 2])
+gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1'] 
+gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
+gtm_region_centroids$NAME_1[18] <- "Totonicapán"
+gtm_region_centroids$NAME_1[22] <- "Sololá"
+gtm_region_centroids$NAME_1[21] <- "Suchitepéquez"
+gtm_region_centroids$NAME_1[3] <- "Sacatepéquez"
+gtm_region_centroids$NAME_1[1] <- "Quiché"
+gtm_region_centroids$NAME_1[7] <- "Petén"
 
+# ----------------------------------------------
+######## Use ggplot to make the visualizations ########
+# ----------------------------------------------
 gtm_plots <- list()
 i = 1
 for(k in unique(graphData$mod_year)){
-  shapedata <- copy(admin_dataset)
+  shapedata <- copy(coord_and_names)
   subdata <- graphData[mod_year==k]
   shapedata$mod_year <- k ## merge coordinate dataset to budget dataset on a common variable
   # merge on the data (all.x=TRUE so the shapefile data doesn't disappear)
@@ -163,6 +192,7 @@ for(k in unique(graphData$mod_year)){
   i=i+1
 }
 
+##export as pdf 
 pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/municipality_viz/fpm_sicoin/malaria_gf_modules.pdf", height=9, width=12)
 invisible(lapply(gtm_plots, print))
 dev.off()
