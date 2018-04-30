@@ -100,7 +100,6 @@ for(i in 1:length(file_list$file_name)){
 
 summary_file$end_date <- as.Date(summary_file$end_date)
 summary_file$start_date <- as.Date(summary_file$start_date)
-resource_database$start_date <- as.Date(resource_database$start_date)
 
 
 setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
@@ -112,11 +111,14 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
 
 resource_database$adm1 <- 128
 resource_database$adm2 <- resource_database$adm1
+resource_database$start_date <- as.Date(resource_database$start_date)
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure<- as.numeric(resource_database$expenditure)
 resource_database$disbursement<- as.numeric(resource_database$disbursement)
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$source <- "gf"
+
+resource_database <- resource_database[!grepl("Fondos pendientes de asignar a SR",resource_database$recipient)]
 
 # ----------------------------------------------
 ##check for any dropped data/clean up the sda activities: 
