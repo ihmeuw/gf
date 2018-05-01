@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 4/26/2018
+#5/1/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -257,151 +257,165 @@ uvl_sex[duplicated(combine)] # should be an empty data table (no duplicate entri
 # ---------------
 # rename uvl_sex uganda_vl
 
+# ---------------
 uganda_vl <- uvl_sex
 
-# ----------------------------------------------
-# split the patients of unknown sex by sex ratio
+# ---------------
 
-# create variables indicating the number of patients by sex
-ids <- c('facility_id', 'month', 'year')
+# ------------------------------------
+# reassign the unknown sex values to an annual sex ratio per facility
 
-males <- uganda_vl[sex=='Male', .(male_pts=sum(patients_received)), by=ids]
-uganda_vl <- merge(uganda_vl, males, by=ids, all.x=TRUE)
-uganda_vl[sex=='Female', male_pts:=0]
-uganda_vl[sex=='Unknown', male_pts:=0]
+# subset out unknowns into their own data set
+unknowns <- uganda_vl[sex=='Unknown']
+uganda_vl <- uganda_vl[sex!='Unknown']
 
-females <- uganda_vl[sex=='Female', .(female_pts=sum(patients_received)), by=ids]
-uganda_vl <- merge(uganda_vl, females, by=ids, all.x=TRUE)
-uganda_vl[sex=='Male', female_pts:=0]
-uganda_vl[sex=='Unknown', female_pts:=0]
+# merge in totals for all variables
+Vars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", "plasma_samples",
+          "total_results",  "valid_results", "suppressed")
 
-unks <- uganda_vl[sex=='Unknown', .(unk_pts=sum(patients_received)), by=ids]
-uganda_vl <- merge(uganda_vl, unks, by=ids, all.x=TRUE)
-uganda_vl[sex=='Male', unk_pts:=0]
-uganda_vl[sex=='Female', unk_pts:=0]
+uvl <- uganda_vl[,lapply(.SD, sum), by=c('facility_id', 'facility_name', 'dhis2name', 'district_id', 'district_name',
+                                         'month','year'), .SDcols=Vars]
+
+Vars1 <- c("patients_received1", "samples_received1", "rejected_samples1","dbs_samples1", "plasma_samples1",
+          "total_results1",  "valid_results1", "suppressed1")
+setnames(uvl, Vars, Vars1)
+
+# merge in the totals for all variables by facility, month
+uganda_vl <- merge(uganda_vl, uvl, by=c('facility_id', 'facility_name', 'dhis2name', 'district_id', 'district_name',
+                                        'month', 'year'))
+
+# calculate a ratio for every variable
+ratios <- uganda_vl[ ,.(pt_ratio=(patients_received/patients_received1), sam_ratio=(samples_received/samples_received1),
+                        rej_ratio=(rejected_samples/rejected_samples1), dbs_ratio=(dbs_samples/dbs_samples1), 
+                        plasma_ratio=(plasma_samples/plasma_samples1), total_ratio=(total_results/total_results1),
+                        valid_ratio=(valid_results/valid_results1), sup_ratio=(suppressed/suppressed1)),
+                        by=.(facility_id, facility_name, dhis2name, district_id, district_name, sex, month, year)]
+
+uganda_vl <- merge(uganda_vl, ratios, by=c('facility_id', 'facility_name', 'dhis2name', 'district_id', 'district_name',
+                                           'sex', 'month', 'year'))      
+
+# replacing NaN ratios (0/0) with 0
+uganda_vl[is.na(pt_ratio), pt_ratio:=0]
+uganda_vl[is.na(sam_ratio), sam_ratio:=0]
+uganda_vl[is.na(rej_ratio), rej_ratio:=0]
+uganda_vl[is.na(dbs_ratio), dbs_ratio:=0]
+uganda_vl[is.na(plasma_ratio), plasma_ratio:=0]
+uganda_vl[is.na(total_ratio), total_ratio:=0]
+uganda_vl[is.na(valid_ratio), valid_ratio:=0]
+uganda_vl[is.na(sup_ratio), sup_ratio:=0]
+          
+          
+# ---------------
+# calculate the mean annual ratios by facility and sex
+
+Vars2 <- c("pt_ratio", "sam_ratio", "rej_ratio","dbs_ratio", "plasma_ratio",
+          "total_ratio",  "valid_ratio", "sup_ratio")
+
+# create new ratio data sets to apply to unknown values
+mean_annual_ratio <- uganda_vl[,lapply(.SD, mean), by=c('facility_id', 'sex', 'year'), .SDcols=Vars2]
+fems_ratio <- mean_annual_ratio[sex=='Female']
+fems_ratio[ , sex:=NULL]
+male_ratio <- mean_annual_ratio[sex=='Male']
+male_ratio[ , sex:=NULL]
+unknowns[,sex:=NULL]
+
+# create the new females to add into uganda_vl
+new_fems <- merge(unknowns, fems_ratio, by=c('facility_id', 'year')) 
+
+new_fems <- new_fems[   ,.(sex='Female',
+  patients_received=(patients_received*pt_ratio), samples_received=(samples_received*sam_ratio),
+  rejected_samples=(rejected_samples*rej_ratio), plasma_samples=(plasma_samples*plasma_ratio),
+  dbs_samples=(dbs_samples*dbs_ratio), total_results=(total_results*total_ratio), 
+  suppressed=(suppressed*sup_ratio), valid_results=(valid_results*valid_ratio)),
+   by=.(facility_id, facility_name, dhis2name, district_id, district_name,
+        month, year)]
+
+# create the new males to add into uganda_vl
+new_males <- merge(unknowns, male_ratio, by=c('facility_id', 'year'))
+
+new_males <- new_males[   ,.(sex='Male',
+  patients_received=(patients_received*pt_ratio), samples_received=(samples_received*sam_ratio),
+  rejected_samples=(rejected_samples*rej_ratio), plasma_samples=(plasma_samples*plasma_ratio),
+  dbs_samples=(dbs_samples*dbs_ratio), total_results=(total_results*total_ratio), 
+  suppressed=(suppressed*sup_ratio), valid_results=(valid_results*valid_ratio)),
+  by=.(facility_id, facility_name, dhis2name, district_id, district_name,
+       month, year)]
+
+# merge the two data sets into a new set of persons
+new_peeps <- merge(new_fems, new_males, by=c('facility_id', 'facility_name', 'dhis2name', 'district_id', 'district_name',
+                                             'month', 'year', 'sex', 'patients_received', 'samples_received', 
+                                             'rejected_samples', 'plasma_samples', 'dbs_samples', 'total_results',
+                                             'suppressed', 'valid_results'), all=TRUE)
+
+# ---------------
+# merge the newly created people into the data set
+uganda_vl[, tag:=0]
+new_peeps[, tag:=1]
+uganda_vl <- merge(uganda_vl, new_peeps, by=c('facility_id', 'facility_name', 'dhis2name', 'district_id', 'district_name',
+                                              'month', 'year', 'sex', 'tag', 'patients_received', 'samples_received', 
+                                      'rejected_samples', 'plasma_samples', 'dbs_samples', 'total_results',
+                                      'suppressed', 'valid_results'), all=TRUE)
 
 
-# ----------------
-# monthly patients received by sex 
-# check to make sure values are correct
-# 
-# test1 <- uganda_vl[ ,.(male_pts=sum(male_pts), female_pts=sum(female_pts),
-#                        unk_pts=sum(unk_pts)), by=date]
-# 
-# test1 <- melt(test1, id.vars='date')
-# test1$variable <- factor(test1$variable, levels=c("male_pts", "female_pts", "unk_pts"),
-#                          labels=c("Male", "Female", "Unknown"))
-# 
-# ggplot(test1, aes(x=date, y=value, color=variable)) +  
-#   geom_point() + geom_line() + theme_bw() + 
-#   labs(title="Monthly patients submitting samples by sex", x="Date", y="Count", color="Sex")
-# 
-# uganda_vl[male_pts!=0, unique(female_pts)]
-# uganda_vl[female_pts!=0, unique(male_pts)]
-# uganda_vl[male_pts!=0 & female_pts!=0, unique(unk_pts)]
+# ---------------
+# clean uganda_vl and add new males and females into the m/f totals
 
+#only the variables needed for analysis
+uganda_vl <- uganda_vl[ ,.( facility_id, facility_name, dhis2name, district_id, district_name, 
+                            month, year, sex, patients_received, samples_received, rejected_samples,
+                            plasma_samples, dbs_samples, total_results, suppressed, valid_results)]
 
-# ----------------
-# calculate the sex ratio for each facility in each month
-
-# calculate the ratop of female patients to patients with known sex
-# fems and known_pts will repeat for every unique facility, month, year combo
-# calculate the male ratio as 1 - female ratio
-known <- uganda_vl[,.(known_pts=sum(male_pts+female_pts)), by=ids]
-uganda_vl <- merge(uganda_vl, known, by=ids, all.x=TRUE)
-
-fems <- uganda_vl[ , .(fems=sum(female_pts)), by=ids]
-uganda_vl <- merge(uganda_vl, fems, by=ids, all.x=TRUE)
-
-uganda_vl[, fem_ratio:=(fems/known_pts) ]
-uganda_vl[is.na(fem_ratio), fem_ratio:=0]
-
-uganda_vl[, male_ratio:=(1-fem_ratio)]
-
-# --------------
-# create new males and females and merge them into the data set 
 
 Vars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", "plasma_samples",
-         "total_results",  "valid_results", "suppressed", "fem_ratio", "male_ratio")
+          "total_results",  "valid_results", "suppressed")
 
-uganda_vl <- uganda_vl[,lapply(.SD, as.double), by=c('facility_id', 'facility_name', 'sex',
-                                               'district_id', 'district_name', 'month',
-                                               'year', 'date'), .SDcols=Vars]
+uganda_vl <- uganda_vl[,lapply(.SD, sum), by=c('facility_id', 'facility_name', 'dhis2name', 
+                                       'district_id', 'district_name', 'sex', 'month','year'), .SDcols=Vars]
 
-# --------------
-# create new females from unknowns
-uvl_f <- uganda_vl[sex=='Unknown']
-uvl_f[ , patients_received:=patients_received*fem_ratio]
-uvl_f[ , samples_received:=samples_received*fem_ratio]
-uvl_f[ , rejected_samples:=rejected_samples*fem_ratio]
-uvl_f[ , plasma_samples:=plasma_samples*fem_ratio]
-uvl_f[ , dbs_samples:=dbs_samples*fem_ratio]
-uvl_f[ , total_results:=total_results*fem_ratio]
-uvl_f[ , valid_results:=valid_results*fem_ratio]
-uvl_f[ , suppressed:=suppressed*fem_ratio]
-
-uvl_f[, sex:='Female']
-uvl_f[ ,id1:=1]
-
-# # check the female values with a graph
-# test3 <- uvl_f[,lapply(.SD, sum), by='date', .SDcols=Vars]
-# test3[ , c("fem_ratio", "male_ratio"):=NULL]
-# test3 <- melt(test3, id.vars='date')
-# ggplot(test3, aes(x=date, y=value, color=factor(variable), group=variable)) + 
-#   geom_point() + geom_line()
-
-# --------------
-# create new males from unknowns
-uvl_m <- uganda_vl[sex=='Unknown']
-uvl_m[ , patients_received:=patients_received*male_ratio]
-uvl_m[ , samples_received:=samples_received*male_ratio]
-uvl_m[ , rejected_samples:=rejected_samples*male_ratio]
-uvl_m[ , dbs_samples:=dbs_samples*male_ratio]
-uvl_m[ , plasma_samples:=plasma_samples*male_ratio]
-uvl_m[ , total_results:=total_results*male_ratio]
-uvl_m[ , valid_results:=valid_results*male_ratio]
-uvl_m[ , suppressed:=suppressed*male_ratio]
-
-uvl_m[, sex:='Male']
-uvl_m[ ,id1:=1]
-
-# # check the male values with a graph
-# test4 <- uvl_m[,lapply(.SD, sum), by='date', .SDcols=Vars]
-# test4[ , c("fem_ratio", "male_ratio"):=NULL]
-# test4 <- melt(test4, id.vars='date')
-# ggplot(test3, aes(x=date, y=value, color=factor(variable), group=variable)) + 
-#   geom_point() + geom_line()
-
-# --------------
-# merge in the new males and females
-uganda_vl <- uganda_vl[sex=='Male' | sex=='Female']
-uganda_vl[,id1:=2]
-
-m_ids <- c("facility_id", "sex", "month", "year", "date", 
-           "patients_received", "samples_received", "rejected_samples", "plasma_samples",
-           "dbs_samples", "total_results", "valid_results", "suppressed", "id1",
-           "fem_ratio", "male_ratio", "district_id", "district_name", "facility_name")          
-
-uganda_vl <- merge(uganda_vl, uvl_f, by=m_ids, all=TRUE)
-uganda_vl <- merge(uganda_vl, uvl_m, by=m_ids, all=TRUE)
 
 #---------------
-# collapse on facility_id, month, year, sex
-uganda_vl[ ,c('id1', 'fem_ratio', 'male_ratio'):=NULL]
+# add date back in
+uganda_vl[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
-sumVars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", 
-             "plasma_samples", "total_results",  "valid_results", "suppressed")
+#---------------
+# final duplicates check
+ uganda_vl[sex=='Female', sex1:=1]
+ uganda_vl[sex=='Male', sex1:=2]
+ uganda_vl[, combine:= paste0(facility_id, '_', date, '_',sex1)]
+ uganda_vl[duplicated(combine)]
 
-uganda_vl <- uganda_vl[,lapply(.SD, sum), by=c('facility_id', 'facility_name', 
-                                  'district_id', 'district_name', 'sex',
-                                  'month', 'year', 'date'), .SDcols=sumVars]
-# 
-# #---------------
-# # final duplicates check
-# uganda_vl[sex=='Female', sex1:=1]
-# uganda_vl[sex=='Male', sex1:=2]
-# uganda_vl[, combine:= paste0(facility_id, '_', date, '_',sex1)]
-# uganda_vl[duplicated(combine)]
+
+#---------------
+# separate out the number from facility name to get facility level
+uganda_vl[, facility_name1:=paste(facility_name, '_')]
+
+level2 <- grep(pattern="\\sII\\s", x=uganda_vl$facility_name1) 
+uganda_vl[level2, unique(facility_name)]
+
+level3 <- grep(pattern="III", x=uganda_vl$facility_name1)
+uganda_vl[level3, unique(facility_name)]
+
+level4 <- grep(pattern="IV", x=uganda_vl$facility_name1)
+uganda_vl[level4, unique(facility_name)]
+
+levelh <-  grep(pattern="Hospital", x=uganda_vl$facility_name1)
+uganda_vl[levelh, unique(facility_name)]
+
+uganda_vl[level2, level:=2]
+uganda_vl[facility_id==2335, level:=2] #contains Level II in the name but no space after (typo)
+uganda_vl[level3, level:=3]
+uganda_vl[level4, level:=4]
+uganda_vl[levelh, level:=5]
+
+uganda_vl[is.na(level), unique(facility_name)]
+uganda_vl[is.na(level), length(unique(facility_name))] #205 facilities do not contain level in the name
+
+
+#---------------
+# final version with only necessary variables in useful order
+uganda_vl <- uganda_vl[ ,.( facility_id, facility_name, level, dhis2name, district_id, district_name, sex,
+                            month, year, date, patients_received, samples_received, rejected_samples,
+                            plasma_samples, dbs_samples, total_results, suppressed, valid_results)]
 
 #---------------
 
