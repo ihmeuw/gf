@@ -34,8 +34,8 @@ dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
 gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
                                   fileEncoding = "latin1"))
 
-sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
-                                   ,fileEncoding="latin1"))
+sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv",
+                                   fileEncoding="latin1"))
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 sicoin_data$year <- year(sicoin_data$start_date)
 sicoin_malaria <- sicoin_data[disease=="malaria"] ##decide if you want to do GF or GHE data at this point
