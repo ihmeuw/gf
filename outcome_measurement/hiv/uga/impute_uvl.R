@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
-#
-# 4/23/2018
+
+# 5/1/2018
 # Multiple imputation for the Uganda Viral Load Dashboard
 # ----------------------------------------------
 # Set up R
@@ -35,7 +35,7 @@ uganda_vl <- uganda_vl[year==2016 | year==2017 | year==2018]
 # prep the data for imputation 
 
 # --------------
-# create a list of the facility ids - change to include names
+# create a list of the facility ids
 
 # store list of unique faciltiies, sexes and dates
 f_ids <- unique(uganda_vl$facility_id)
@@ -45,41 +45,33 @@ dates <- seq(from=min(uganda_vl$date), to=max(uganda_vl$date), by='month')
 
 # make a "fully rectangularized" dataset with all months for each facility-sex
 expanded_data <- data.table(expand.grid(f_ids, dates, sexes))
-setnames(expanded_data, c('facility_id', 'date','sex'))
+setnames(expanded_data, c('facility_id', 'date', 'sex'))
 # --------------------
 
 # merge in the blank rows for facility_id (by date, sex)
-uganda_vl <- merge(uganda_vl, expanded_data, by=c('facility_id', 'date','sex'), all=TRUE)
+uganda_vl <- merge(uganda_vl, expanded_data, by=c('facility_id', 'date', 'sex'), all=TRUE)
 
 #----------------------------------
-# descriptive statistics when females are missing and males are in the data
-uganda_vl[, combine2:= paste0(facility_id, '_', date)]
+# create a for loop that fills in missing values
 
-missing_fems <- uganda_vl[(sex=='Female' & is.na(combine)), .(combine2) ]
+ids <- uganda_vl[!is.na(facility_name), .(facility_id=unique(facility_id)),  
+          by=.(facility_name, level, dhis2name, district_id, district_name)]
 
-uvl_males <- uganda_vl[sex=="Male"]
-uvl_males <- merge(missing_fems, uvl_males, by='combine2')
-uvl_males <- uvl_males[!is.na(patients_received)]
+for (f in ids$facility_id) {
 
-#----------------------------------
-missing_lads <- uganda_vl[(sex=='Male' & is.na(combine)), .(combine2) ]
+uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, level:=ids[facility_id==f]$level]  
+uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, dhis2name:=ids[facility_id==f]$dhis2name]   
+uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, district_id:=ids[facility_id==f]$district_id]   
+uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, district_name:=ids[facility_id==f]$district_name] 
+uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, facility_name:=ids[facility_id==f]$facility_name]
 
-uvl_females <- uganda_vl[sex=="Female"]
-uvl_females <- merge(missing_lads, uvl_females, by='combine2')
-uvl_females <- uvl_females[!is.na(patients_received)]
+print(f)
+}
 
+View(uganda_vl)
+uganda_vl[is.na(facility_name)]
 
-#----------------------------------
-
-# collapse to facility-sex-date level to ensure unique identifiers
-sumVars = c("patients_received", "samples_received", "dbs_samples", "total_results", "rejected_samples", "valid_results", "suppressed")
-
-#uganda_vl <- uganda_vl[, lapply(.SD, sum, na.rm=TRUE), by=c('facility_id','sex','date'), .SDcols=sumVars]
-
-#  test unique identifiers
-#test = nrow(uganda_vl[duplicated(uganda_vl[,c('facility_id','sex','date'),with=F])])
-if (test>0) stop('Facility-sex-hub-date does not uniquely identify rows! This is necessary for Amelia to do cs/ts operations!') 
-
+ 
 #---------------------
 
 # check for duplicates
@@ -92,19 +84,61 @@ uganda_vl[ ,combine1:= paste0(facility_id, '_', date, '_', sex1)]
 uganda_vl[,length(unique(combine1))] 
 
 uganda_vl[duplicated(combine1)] # no duplicates
-# ---------------
-
-
-
+uganda_vl[,combine1:=NULL] # then delete the identifier
 
 # ----------------------------------------------
-# amelia  test
-           
-uvl <- uganda_vl[ ,.(facility_id, sex, date, 
-                    patients_received, samples_received,  dbs_samples, total_results,
-                    rejected_samples, valid_results, ratio=(suppressed/valid_results))] 
+# prep the data for the imputation
 
-uvl[, random:=runif(nrow(uvl))]
+#------------------------
+# change integers to doubles
+Vars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", "plasma_samples",
+          "total_results",  "valid_results", "suppressed")
+
+
+uganda_vl <- uganda_vl[,lapply(.SD, as.double), by=c('facility_id', 'facility_name', 'dhis2name', 
+                                               'district_id', 'district_name', 'sex', 'month', 
+                                               'year', 'date'), .SDcols=Vars]
+
+# keep track of zeroes
+uganda_vl[, valid_results_zero:=valid_results==0]
+
+# transform the 0s to the 1st percentile
+uganda_vl[patients_received==0, patients_received:=1]
+uganda_vl[samples_received==0, samples_received:=1]
+uganda_vl[rejected_samples==0, rejected_samples:=1]
+uganda_vl[dbs_samples==0, dbs_samples:=1]
+uganda_vl[plasma_samples==0, plasma_samples:=1]
+uganda_vl[total_results==0, total_results:=1]
+uganda_vl[valid_results==0, valid_results:=1]
+
+# create the suppression ratio
+uganda_vl[ , ratio:=(suppressed/valid_results)]
+
+# compute district average ratio among nonzeroes
+uganda_vl[valid_results_zero==FALSE, district_ratio:=mean(ratio, na.rm=TRUE), by='district_id']
+uganda_vl[, district_ratio:=mean(ratio, na.rm=TRUE), by='district_id']
+
+# replace ratio to district average when the number of samples was zero
+uganda_vl[valid_results_zero==TRUE, ratio:=district_ratio]
+
+# log all the variables to impute
+uganda_vl <- uganda_vl[,lapply(.SD, log), by=c('ratio', 'facility_id', 'facility_name', 'dhis2name', 
+                                               'district_id', 'district_name', 'sex', 'month', 
+                                               'year', 'date'), .SDcols=Vars]
+
+
+# ---------------
+# create a data set to use for imputation
+# merge in facility names, etc. after imputation
+# leave out numerator (suppressed); include only ratio and denominator
+
+uvl <- uganda_vl[  ,.( patients_received, samples_received, rejected_samples, dbs_samples, plasma_samples,
+                      total_results, valid_results, ratio), 
+                      by=.(facility_id, sex, date)]
+
+
+# ---------------
+# amelia  test
 
 # make cs variable
 uvl[, cs_variable:=paste0(facility_id, sex)]
@@ -115,7 +149,7 @@ uvl$sex <- NULL
 imputed_data <- amelia(uvl, m=2, cs='cs_variable', ts='date', lags='ratio')
 
 
-# View(imputed_data$imp1)
+
 
 # graph one test case to see how it looks
 cstmp = sample(unique(uvl$cs_variable),1)
@@ -181,3 +215,14 @@ uganda_vl[ ,.(patients_received=sum(patients_received),
               valid_results=sum(valid_results),
               suppressed=sum(suppressed))]
 
+
+#----------------------------------
+
+# collapse to facility-sex-date level to ensure unique identifiers
+# sumVars = c("patients_received", "samples_received", "dbs_samples", "total_results", "rejected_samples", "valid_results", "suppressed")
+# 
+# #uganda_vl <- uganda_vl[, lapply(.SD, sum, na.rm=TRUE), by=c('facility_id','sex','date'), .SDcols=sumVars]
+# 
+# #  test unique identifiers
+# #test = nrow(uganda_vl[duplicated(uganda_vl[,c('facility_id','sex','date'),with=F])])
+# if (test>0) stop('Facility-sex-hub-date does not uniquely identify rows! This is necessary for Amelia to do cs/ts operations!')
