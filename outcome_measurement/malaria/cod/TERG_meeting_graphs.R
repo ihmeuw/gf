@@ -47,22 +47,29 @@
 
 # ----------------------------------------------
   # subset to just Tshopo and Kinshasa
-    dt <- dt[dps=="TSHOPO"|dps=="KINSHASA"|dps=="KWILU",]
+    dt <- dt[dps=="TSHOPO"|dps=="KINSHASA",]
   # aggregate indicators to dps level
     dt <- dt[, .(dpsTotal= sum(mean)), by= c("province", "dps", "date", "indicator", "subpopulation")]
 
 
-    dt2 <- dt[indicator=="ASAQ" | indicator=="newCasesMalariaMild", .(value= sum(dpsTotal)), by= c("province", "dps", "date", "indicator")]
+    dt2 <- dt[indicator=="ASAQ", .(value= sum(dpsTotal)), by= c("province", "dps", "date", "indicator")]
     
-    dt3 <- dt[indicator=="RDT" & subpopulation=="completed", .(value= dpsTotal), by = c("province", "dps", "date", "indicator")]
+    dt3 <- dt[indicator=="RDT" & subpopulation=="completed", .(value= sum(dpsTotal)), by = c("province", "dps", "date", "indicator")]
 
-    dt4 <- dt[indicator=="ITN" & subpopulation=="received", .(value= dpsTotal), by = c("province", "dps", "date", "indicator")]
+    dt4 <- dt[indicator=="ITN" & (subpopulation=="distAtANC"|subpopulation=="distAtPreschool"), .(value= sum(dpsTotal)), by = c("province", "dps", "date", "indicator")]
+    
+    dt5 <- dt[indicator=="SP", .(value= sum(dpsTotal)), by = c("province", "dps", "date", "indicator")]
+    
+    dt6 <- dt[indicator=="smearTest" & subpopulation=="completed", .(value= sum(dpsTotal)), by = c("province", "dps", "date", "indicator")]
+    
     
     dataToGraph <- rbind(dt2, dt3)
-    dataToGraph[, date := as.Date(date)] 
+
+    dataToGraph <- rbind(dataToGraph, dt4)
+    dataToGraph <- rbind(dataToGraph, dt5)
+    dataToGraph <- rbind(dataToGraph, dt6)
     
-    anotherGraph <- rbind(dataToGraph, dt4)
-    anotherGraph[, date := as.Date(date)] 
+    dataToGraph[, date := as.Date(date)] 
     
     
     pdf(paste0(output_dir,terg_graphs), height=6, width=9)
@@ -75,48 +82,67 @@
         
         labs(y="Count", color= "Indicator") + expand_limits(y=0) +
       
-        scale_color_manual(labels = c("ASAQ", "Confirmed Cases of Uncomplicated Malaria", "RDTs completed"), values = c("steelblue4", "orangered2", "limegreen"))
-      
-      print(g)
-      
-      g <- ggplot(dataToGraph[dps=="KWILU",], aes(x=date, y=value, color = indicator)) +
-        
-        geom_point() + geom_line() + theme_bw() + facet_wrap(~ dps, scales="free_y") + theme(axis.title.x=element_blank(), legend.position="bottom", legend.direction="vertical") +
-        
-        ggtitle("Selected Indicators by Provincial Health Division (DPS)") +
-        
-        labs(y="Count", color= "Indicator") + expand_limits(y=0) +
-        
-        scale_color_manual(labels = c("ASAQ", "Confirmed Cases of Uncomplicated Malaria", "RDTs completed"), values = c("steelblue4", "orangered2", "limegreen"))
-      
-      print(g)
-      
-      g <- ggplot(dataToGraph, aes(x=date, y=value, color = indicator)) +
-        
-        geom_point() + geom_line() + theme_bw() + facet_wrap(~ dps, scales="free_y") + theme(axis.title.x=element_blank(), legend.position="bottom", legend.direction="vertical") +
-        
-        ggtitle("Selected Indicators by Provincial Health Division (DPS)") +
-        
-        labs(y="Count", color= "Indicator") + expand_limits(y=0) +
-        
-        scale_color_manual(labels = c("ASAQ", "Confirmed Cases of Uncomplicated Malaria", "RDTs completed"), values = c("steelblue4", "orangered2", "limegreen"))
+        scale_color_manual(labels = c("ASAQ (Artesunate Amodiaquine)", "ITNs Distributed", "RDTs Completed", "Smear Tests Completed","SP Distributed at Antenatal Care Visits"), values = c("steelblue4", "orangered2", "palegreen2", "darkolivegreen", "skyblue" ))
       
       print(g)
       
     dev.off()
-    
-    
-  # graphs with ITN data
-    g <- ggplot(anotherGraph, aes(x=date, y=value, color = indicator)) +
       
-      geom_point() + geom_line() + theme_bw() + facet_wrap(~ dps, scales="free_y") + theme(axis.title.x=element_blank(), legend.position="bottom", legend.direction="vertical") +
+    #   g <- ggplot(dataToGraph[dps=="KWILU",], aes(x=date, y=value, color = indicator)) +
+    #     
+    #     geom_point() + geom_line() + theme_bw() + facet_wrap(~ dps, scales="free_y") + theme(axis.title.x=element_blank(), legend.position="bottom", legend.direction="vertical") +
+    #     
+    #     ggtitle("Selected Indicators by Provincial Health Division (DPS)") +
+    #     
+    #     labs(y="Count", color= "Indicator") + expand_limits(y=0) +
+    #     
+    #     scale_color_manual(labels = c("ASAQ", "Confirmed Cases of Uncomplicated Malaria", "RDTs completed"), values = c("steelblue4", "orangered2", "limegreen"))
+    #   
+    #   print(g)
+    #   
+    #   g <- ggplot(dataToGraph, aes(x=date, y=value, color = indicator)) +
+    #     
+    #     geom_point() + geom_line() + theme_bw() + facet_wrap(~ dps, scales="free_y") + theme(axis.title.x=element_blank(), legend.position="bottom", legend.direction="vertical") +
+    #     
+    #     ggtitle("Selected Indicators by Provincial Health Division (DPS)") +
+    #     
+    #     labs(y="Count", color= "Indicator") + expand_limits(y=0) +
+    #     
+    #     scale_color_manual(labels = c("ASAQ", "Confirmed Cases of Uncomplicated Malaria", "RDTs completed"), values = c("steelblue4", "orangered2", "limegreen"))
+    #   
+    #   print(g)
+    #   
+    # dev.off()
+    
+    
+  # # graphs with ITN data
+  #   g <- ggplot(anotherGraph, aes(x=date, y=value, color = indicator)) +
+  #     
+  #     geom_point() + geom_line() + theme_bw() + facet_wrap(~ dps, scales="free_y") + theme(axis.title.x=element_blank(), legend.position="bottom", legend.direction="vertical") +
+  #     
+  #     ggtitle("Selected Indicators by Provincial Health Division (DPS)") +
+  #     
+  #     labs(y="Count", color= "Indicator") + expand_limits(y=0) +
+  #     
+  #     scale_color_manual(labels = c("ASAQ", "ITNs received", "Confirmed Cases of Uncomplicated Malaria", "RDTs completed"), values = c("steelblue4", "lightblue", "orangered2", "limegreen"))
+  #   
+  #   print(g)
+      
+    
+  # specific health zone graphs  
+    dtHZ <- dtHZ[health_zone=="Kalamu 1",]
+    dtHZ <- dtHZ[indicator=="newCasesMalariaMild" | indicator=="newCasesMalariaSevere" | indicator=="ASAQ" | indicator=="smearTest"| indicator=="RDT",]
+    dtHZ <- dtHZ[isMissing==F,]   
+    dtHZ[, date := as.Date(date)] 
+    
+    g <- ggplot(dtHZ[year>=2015], aes(x=date, y=value, color = variable)) +
+      
+      geom_point() + geom_line() + theme_bw() +
       
       ggtitle("Selected Indicators by Provincial Health Division (DPS)") +
       
-      labs(y="Count", color= "Indicator") + expand_limits(y=0) +
+      labs(y="Count", color= "Indicator") + expand_limits(y=0) #+
       
-      scale_color_manual(labels = c("ASAQ", "ITNs received", "Confirmed Cases of Uncomplicated Malaria", "RDTs completed"), values = c("steelblue4", "lightblue", "orangered2", "limegreen"))
+      #scale_color_manual(labels = c("ASAQ", "ITNs received", "Confirmed Cases of Uncomplicated Malaria", "RDTs completed"), values = c("steelblue4", "lightblue", "orangered2", "limegreen"))
     
     print(g)
-        
-    
