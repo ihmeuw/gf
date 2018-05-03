@@ -129,7 +129,7 @@
       # MI will ignore ID vars and include them as is in the output
       # lags/leads: indicators
       # intercs = FALSE by default, try with = TRUE
-        amelia.results <- amelia(dtLog, m=5, cs= "health_zone", ts="date", lags= indicators, idvars= c("province", "dps"))
+        amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", lags= indicators, idvars= c("province", "dps"))
    
 # ---------------------------------------------- 
           
@@ -138,7 +138,7 @@
   # bind amelia results into one data.table, include a column with the imputation number in order to 
     # keep track of this information
     
-    for( i in 1:5 ) {
+    for( i in 1:50 ) {
       amelia.results$imputations[[i]]$imputation_number <- i
       if (i==1)  amelia_data <- data.table(amelia.results$imputations[[i]])
       if (i>1) amelia_data <- rbind(amelia_data, amelia.results$imputations[[i]])
@@ -156,6 +156,9 @@
     for (var in indicators){
       dtExp <- dtExp[zeroes[get(var)== TRUE, id], (var):= 0]
     }
+    
+    # export imputed data
+    write.csv(dtExp, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Full Imputed Data.csv")
 # ----------------------------------------------  
         
         
