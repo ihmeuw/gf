@@ -17,7 +17,7 @@ library(dplyr)
 library(RColorBrewer)
 library(Amelia)
 library(MASS)
-
+library(gtools)
 
 # set input/output directory
 # ----------------------------------------------
@@ -51,6 +51,33 @@ setnames(expanded_data, c('facility_id', 'date', 'sex'))
 # merge in the blank rows for facility_id (by date, sex)
 uganda_vl <- merge(uganda_vl, expanded_data, by=c('facility_id', 'date', 'sex'), all=TRUE)
 
+#--------------------
+# add zeroes for places where one sex is present but the other missing
+uganda_vl[ ,combine:= paste0(facility_id, '_', date)]
+
+# male data but missing females
+x <- uganda_vl[sex=='Female' & is.na(patients_received), .(combine=combine)]
+
+males <- uganda_vl[sex=='Male']
+males <- males[!is.na(patients_received), .(combine)]
+males <- merge(males, x, by='combine')
+
+males[ , missing_females:=1]
+uganda_vl <- merge(uganda_vl, males, by='combine', all.x=TRUE)
+uganda_vl[is.na(missing_females), missing_females:=0]
+
+# female data but missing males
+y <- uganda_vl[sex=='Male' & is.na(patients_received), .(combine=combine)]
+
+females <- uganda_vl[sex=='Female']
+females <- females[!is.na(patients_received), .(combine)]
+females <- merge(females, y, by='combine')
+
+females[ , missing_males:=1]
+uganda_vl <- merge(uganda_vl, females, by='combine', all.x=TRUE)
+uganda_vl[is.na(missing_males), missing_males:=0]
+
+
 #----------------------------------
 # create a for loop that fills in missing values
 
@@ -68,12 +95,7 @@ uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, facility_name:=ids
 print(f)
 }
 
-View(uganda_vl)
-uganda_vl[is.na(facility_name)]
-
- 
 #---------------------
-
 # check for duplicates
 # create a unique identifier (char) of facilityid_date_sex
 uganda_vl[sex=="Female", sex1:=1 ]
@@ -85,22 +107,33 @@ uganda_vl[,length(unique(combine1))]
 
 uganda_vl[duplicated(combine1)] # no duplicates
 uganda_vl[,combine1:=NULL] # then delete the identifier
+uganda_vl[,combine:=NULL]
 
 # ----------------------------------------------
 # prep the data for the imputation
 
 #------------------------
 # change integers to doubles
+# drop out month, year and leave date 
+
 Vars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", "plasma_samples",
           "total_results",  "valid_results", "suppressed")
 
 
 uganda_vl <- uganda_vl[,lapply(.SD, as.double), by=c('facility_id', 'facility_name', 'dhis2name', 
-                                               'district_id', 'district_name', 'sex', 'month', 
-                                               'year', 'date'), .SDcols=Vars]
+                                               'district_id', 'district_name', 'sex', 'date'), .SDcols=Vars]
 
+#---------------------------
 # keep track of zeroes
-uganda_vl[, valid_results_zero:=valid_results==0]
+# uganda_vl[patients_received==0, patients_received_zero:=0]
+# uganda_vl[samples_received==0, samples_received_zero:=0]
+# uganda_vl[rejected_samples==0, rejected_samples_zero:=0]
+# uganda_vl[dbs_samples==0, dbs_samples_zero:=0]
+# uganda_vl[plasma_samples==0, plasma_samples_zero:=0]
+# uganda_vl[total_results==0, total_results_zero:=0]
+uganda_vl[valid_results==0, valid_results_zero:=0]
+
+# how do I keep track of the zeroes I've transformed without including the value in the regression?
 
 # transform the 0s to the 1st percentile
 uganda_vl[patients_received==0, patients_received:=1]
@@ -111,6 +144,7 @@ uganda_vl[plasma_samples==0, plasma_samples:=1]
 uganda_vl[total_results==0, total_results:=1]
 uganda_vl[valid_results==0, valid_results:=1]
 
+#-------------------
 # create the suppression ratio
 uganda_vl[ , ratio:=(suppressed/valid_results)]
 
@@ -122,9 +156,23 @@ uganda_vl[, district_ratio:=mean(ratio, na.rm=TRUE), by='district_id']
 uganda_vl[valid_results_zero==TRUE, ratio:=district_ratio]
 
 # log all the variables to impute
-uganda_vl <- uganda_vl[,lapply(.SD, log), by=c('ratio', 'facility_id', 'facility_name', 'dhis2name', 
-                                               'district_id', 'district_name', 'sex', 'month', 
-                                               'year', 'date'), .SDcols=Vars]
+logVars <- c('patients_received', 'samples_received', 'rejected_samples',
+             "dbs_samples", "plasma_samples", "total_results", "valid_results")          
+   
+uganda_vl <- uganda_vl[!is.na(patients_received) & !is.na(samples_received) & !is.na(rejected_samples) &
+                         !is.na (dbs_samples) & !is.na(plasma_samples) & !is.na(total_results) & 
+                          !is.na(valid_results),
+                          lapply(.SD, log), by=c('ratio', 'facility_id', 'facility_name', 'dhis2name', 
+                                               'district_id', 'district_name', 
+                                               'sex', 'date'), .SDcols=logVars]
+
+# ---------------
+x <- data.table(uganda_vl$ratio)
+x[V1==1, V1:=0.99]
+
+# what do I do with the 100% values in the denominator of the logit?
+logit(x$V1, min=0, max=1, na.rm=T)
+
 
 
 # ---------------

@@ -55,10 +55,6 @@ uganda_vl_long[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 # add date to uganda_vl
 uganda_vl[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
-# facility _levels
-
-
-
 # ----------------------------------------------
 #upload the shape file
 
@@ -318,24 +314,66 @@ sex_colors <- c('#bd0026', '#3182bd', '#74c476', '#8856a7')
 breaks <- c(1, 20, 400, 8100)
 
 
-#----
 
-table_1 <- uganda_vl[,
-                     .(patients_received = sum(patients_received), samples_received = sum(samples_received), 
-                       dbs_samples=sum(dbs_samples), valid_results = sum(valid_results), suppressed = sum(suppressed),
-                       dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
-                       valid_samples_ratio=100*(sum(valid_results)/sum(samples_received)),
-                       suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
-                     by=.(district_id, month, year)]
+#--------------------
+# TERG SLIDES
 
-#table_1 <- subset(table_1, patients_received > 100)
-ggplot(table_1, aes(y=suppression_ratio, x=log(patients_received))) + geom_point()
+terg <- uganda_vl[, .(patients_received=sum(patients_received)),
+                      by=.(sex, date)]
 
-qq <- quantile(table_1$patients_received,probs=seq(0,1,.05))
+# create a table of the total number of facilities reporting in each district, all years
+total_fac_year <- uganda_vl[, .(total_facilities=length(unique(facility_id))), by=.(date)]
 
-table_1[, q := cut(patients_received,breaks=qq)]
-table_1 <- table_1[,.(sr=mean(suppression_ratio),lp=mean(patients_received)),by=q]
-ggplot(table_1, aes(y=sr, x=log(lp))) + geom_point()
+terg <- merge(terg, total_fac_year, by="date", all.x=TRUE)
+terg <- terg[sex!="Unknown"]
+
+# reshape long
+terg <- melt(terg, id.vars=c("sex","date"))
+
+# keep single values for facilities (females only)
+terg <- terg[!(variable=="total_facilities" & (sex=="Male"| sex=="Unknown")) ]
+terg <- terg[variable=="total_facilities", sex:="Facility"]
+
+
+# label the variables for graph titles and put the graphs in an intuitive order
+terg$variable <- factor(terg$variable, 
+                            levels=c("patients_received", "total_facilities"), 
+                            labels=c("Patients submitting samples for VL testing", "Facilities reporting VL tests performed"))
+
+terg$sex <- factor(terg$sex, levels=c("Female", "Male", "Facility"),
+                       labels=c("Females", "Males", "Facilities"))
+
+
+pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/uvl_terg.pdf', height=6, width=9)
+
+# graph of facilities reporting and patients submitting samples for Vl testing
+
+# annual data reported for major variables
+ggplot(terg, aes(x=date, y=value, color=sex)) + 
+  facet_wrap(~variable, scales='free_y') +
+  geom_point(size=1, alpha=0.8) +
+  geom_line(alpha=0.5) +
+  theme_minimal() +
+  labs(x="Date", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
+  scale_color_manual(values=sex_colors)
+
+
+# annual suppression ratios
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() +
+  labs(title="Viral suppression ratios by district, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       fill="% virally suppressed") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+
+
+
+dev.off()
+
 
 
 # ---------------
@@ -726,5 +764,8 @@ ggplot(table_2, aes(x=factor(month), y=facilities_report, col=factor(year), grou
 
 dev.off()
 
+
+#-----------------------------
+# TERG SLIDES
 
 
