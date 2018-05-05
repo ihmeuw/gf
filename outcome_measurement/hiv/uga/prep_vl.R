@@ -300,7 +300,6 @@ uvl_sex <- uvl_sex[ , .(samples_received=sum(samples_received),  patients_receiv
 
 uganda_vl <- uvl_sex
 
-# ---------------
 
 # ------------------------------------
 # reassign the unknown sex values to an annual sex ratio per facility
@@ -312,106 +311,33 @@ uganda_vl <- uganda_vl[sex!='Unknown']
 # ---------------
 # total patients (annual)
 
-# create annual total patients, samples etc. per facility
-Vars <- c("samples_received", "patients_received", "rejected_samples","dbs_samples", "plasma_samples",
-          "samples_tested",  "valid_results", "suppressed")
-
-uvl <- uganda_vl[,lapply(.SD, sum), by=c('facility_id', 'year'), .SDcols=Vars]
-
-# rename the variables to indicate annual totals
-Vars1 <- c("samples_received1", "patients_received1", "rejected_samples1","dbs_samples1", "plasma_samples1",
-          "samples_tested1",  "valid_results1", "suppressed1")
-setnames(uvl, Vars, Vars1)
-
-# ---------------
-# total female patients (annual)
-
-# create annual total patients, samples etc. per facility
-Vars <- c("patients_received", "samples_received", "rejected_samples","dbs_samples", "plasma_samples",
-          "samples_tested",  "valid_results", "suppressed")
-
-uvl_f <- uganda_vl[sex=='Female']
-uvl_f <- uvl_f[,lapply(.SD, sum), by=c('facility_id','year'), .SDcols=Vars]
-
-# rename the variables to indicate annual totals
-VarsF <- c("patients_received_f", "samples_received_f", "rejected_samples_f","dbs_samples_f", "plasma_samples_f",
-           "samples_tested_f",  "valid_results_f", "suppressed_f")
-
-setnames(uvl_f, Vars, VarsF)
-
-#------------------------
-# facilities with males and no females 
+uvl <- uganda_vl[ ,.(total_pts=sum(patients_received)), by=.(facility_id, year)]
+uvl_females <- uganda_vl[sex=='Female', .(female_pts=sum(patients_received)), by=.(facility_id, year)]
 
 males_only <- NULL
 for (f in unique(uvl$facility_id)) {
-  if (!f %in% unique(uvl_f$facility_id)) {
+  if (!f %in% unique(uvl_females$facility_id)) {
     a <- uganda_vl[facility_id==f, .(facility_id, year)]
     males_only <- rbind(males_only, a)
   }}
 
-males_only$facility_id %in% uvl$facility_id
-males_only$facility_id %in% uvl_f$facility_id # only males
+males_only[ , female_pts:=0]
+
+males_only[ , combine:=(paste0(facility_id, year))]
+males_only[duplicated(combine)]
+males_only <- males_only[ ,.(female_pts=sum(female_pts)), by=.(facility_id, year, combine)]
+males_only[ , combine:=NULL]
 
 # create annual rows for males only, with female values set to 0
-uvl_f <- merge(uvl_f, males_only, by=c('facility_id', 'year'), all=TRUE)
+uvl_f <- merge(uvl_females, males_only, by=c('facility_id', 'year', 'female_pts'), all=TRUE)
 
-# for the male entries, set all the values to 0 (0 females)
-uvl_f[is.na(samples_received_f), samples_received_f:=0]
-uvl_f[is.na(patients_received_f), patients_received_f:=0]
-uvl_f[is.na(rejected_samples_f), rejected_samples_f:=0]
-uvl_f[is.na(plasma_samples_f), plasma_samples_f:=0]
-uvl_f[is.na(dbs_samples_f), dbs_samples_f:=0]
-uvl_f[is.na(samples_tested_f),samples_tested_f:=0]
-uvl_f[is.na(valid_results_f), valid_results_f:=0]
-uvl_f[is.na(suppressed_f), suppressed_f:=0]
+#------------------------------
+uvl <- merge(uvl, uvl_f, by=c("facility_id", "year"))
 
+uvl[, fem_ratio:=(female_pts/total_pts)]
+uvl[is.na(fem_ratio), fem_ratio:=0]
 
-# merge female ratios into main data set of totals
-uvl_f <- merge(uvl, uvl_f, by=c('facility_id', 'year'))
-
-# no missing values
-uvl_f[is.na(patients_received_f)]
-uvl_f[is.na(samples_received_f)]
-uvl_f[is.na(plasma_samples_f)]
-uvl_f[is.na(dbs_samples_f)]
-uvl_f[is.na(samples_tested_f)]
-uvl_f[is.na(valid_results_f)]
-uvl_f[is.na(suppressed_f)]
-
-uvl_f[is.na(patients_received1)]
-uvl_f[is.na(samples_received1)]
-uvl_f[is.na(plasma_samples1)]
-uvl_f[is.na(dbs_samples1)]
-uvl_f[is.na(samples_tested1)]
-uvl_f[is.na(valid_results1)]
-uvl_f[is.na(suppressed1)]
-
-
-# ---------------
-# calculate the % female for every annual total
- uvl_f <- uvl_f[,.(pt_ratio=(patients_received_f/patients_received1), sam_ratio=(samples_received_f/samples_received1),
-  rej_ratio=(rejected_samples_f/rejected_samples1), dbs_ratio=(dbs_samples_f/dbs_samples1),
-  plasma_ratio=(plasma_samples_f/plasma_samples1), tested_ratio=(samples_tested_f/samples_tested1),
-  valid_ratio=(valid_results_f/valid_results1), sup_ratio=(suppressed_f/suppressed1)),
-  by=.(facility_id, year)]
-
-
-# 0/0 is infinity 
-# replacing NaN ratios (0/0) with 0
-uvl_f[is.na(rej_ratio), rej_ratio:=0]
-uvl_f[is.na(dbs_ratio), dbs_ratio:=0]
-uvl_f[is.na(plasma_ratio), plasma_ratio:=0]
-uvl_f[is.na(tested_ratio), tested_ratio:=0]
-uvl_f[is.na(valid_ratio), valid_ratio:=0]
-uvl_f[is.na(sup_ratio), sup_ratio:=0]
-
-# check for missing values
-uvl_f[is.na(rej_ratio)]
-uvl_f[is.na(dbs_ratio)]
-uvl_f[is.na(plasma_ratio)]
-uvl_f[is.na(tested_ratio)]
-uvl_f[is.na(valid_ratio)]
-uvl_f[is.na(sup_ratio)]
+#------------------------------
 
 # check that there are ratios for all unknown sex facilities
 x <- unique(unknowns$facility_id)
@@ -421,79 +347,57 @@ uvl_f[ ,.(unique(x %in% uvl_f$facility_id))]
 # one facility, 2846, has only unknown sex values
 for (f in x) {
   if (!f %in% unique(uvl_f$facility_id)) {
-  print(f)
+    print(f)
   }}
 
 # eliminate this facility
 unknowns <- unknowns[facility_id!=2846]
 
-# check to make sure all of the ratio years are in unknown 
-uvl_f[,combine:=(paste0(facility_id, '_', year))]
-unknowns[,combine:=(paste0(facility_id, '_', year))]
+#---------------------
+#merge fem ratio in with unknowns and create new females
+uvl <- uvl[,.(facility_id, year, fem_ratio)]
+new_females <- merge(unknowns, uvl, by=c("facility_id", "year"))
 
-x <- unknowns$combine
-
-for (f in uvl_f$combine) {
-if (!f %in% x) {
-  uvl_f[combine==f, drop:=1]
-} else { uvl_f[combine==f, drop:=0] }}
-
-uvl_f <- uvl_f[drop==0]
-
-# one facility/year combine is duplicated six time (males only, repeated during additions)
-uvl_f[duplicated(combine)]
-uvl_f <- uvl_f[ ,.(pt_ratio=sum(pt_ratio), sam_ratio=sum(sam_ratio),
-                  rej_ratio=sum(rej_ratio), dbs_ratio=sum(dbs_ratio), plasma_ratio=sum(plasma_ratio),
-                  tested_ratio=sum(tested_ratio), valid_ratio=sum(valid_ratio), sup_ratio=sum(sup_ratio)), 
-                  by=.(facility_id, year)]
-
-unknowns[,combine:=NULL]
-
-# ---------------
-# create a new set of female patients by applying the annual sex ratio to each month in each facility
-new_females <- merge(unknowns, uvl_f, by=c('facility_id', 'year'), all.x=TRUE)
- 
-new_females <- new_females[ ,.(sex='Female', tag=1, patients_received=(patients_received*pt_ratio), 
-                samples_received=(samples_received*sam_ratio),
-                rejected_samples=(rejected_samples*rej_ratio), plasma_samples=(plasma_samples*plasma_ratio),
-                dbs_samples=(dbs_samples*dbs_ratio), samples_tested=(samples_tested*tested_ratio),
-                suppressed=(suppressed*sup_ratio), valid_results=(valid_results*valid_ratio)),
-                by=.(facility_id, facility_name, district_id, district_name,
-                dhis2name, date, month, year)]
-
+new_females <- new_females[ ,.(sex='Female', tag=1, patients_received=(patients_received*fem_ratio), 
+                               samples_received=(samples_received*fem_ratio),
+                               rejected_samples=(rejected_samples*fem_ratio), plasma_samples=(plasma_samples*fem_ratio),
+                               dbs_samples=(dbs_samples*fem_ratio), samples_tested=(samples_tested*fem_ratio),
+                               suppressed=(suppressed*fem_ratio), valid_results=(valid_results*fem_ratio)),
+                            by=.(facility_id, facility_name, district_id, district_name,
+                                 dhis2name, date, month, year)]
 
 # ---------------
 # merge the new females into uganda_vl 
 # new females are now in the data set! 
 uganda_vl[ ,tag:=0]
 uganda_vl <- merge(uganda_vl, new_females, by=c('facility_id', 'facility_name', 'district_id', 'district_name',
-                                   'dhis2name', 'sex', 'date', 'month', 'year',
-                                   'patients_received', 'samples_received', 'rejected_samples',
-                                   'plasma_samples', 'dbs_samples', 'samples_tested', 
-                                   'valid_results', 'suppressed', 'tag'), all=TRUE)
+                                                'dhis2name', 'sex', 'date', 'month', 'year',
+                                                'patients_received', 'samples_received', 'rejected_samples',
+                                                'plasma_samples', 'dbs_samples', 'samples_tested', 
+                                                'valid_results', 'suppressed', 'tag'), all=TRUE)
 
 # ---------------
 # create a new set of male patients by subtracting the females from the totals
 new_males <- new_females[ ,.(patients_received1=patients_received, samples_received1=samples_received,
-                               rejected_samples1=rejected_samples, plasma_samples1=plasma_samples,
-                               dbs_samples1=dbs_samples, samples_tested1=samples_tested,
-                               suppressed1=suppressed, valid_results1=valid_results),
-                            by=.(facility_id, facility_name, district_id, district_name,
-                                 dhis2name, date, month, year)]
+                             rejected_samples1=rejected_samples, plasma_samples1=plasma_samples,
+                             dbs_samples1=dbs_samples, samples_tested1=samples_tested,
+                             suppressed1=suppressed, valid_results1=valid_results),
+                          by=.(facility_id, facility_name, district_id, district_name,
+                               dhis2name, date, month, year)]
 
 new_males <- merge(unknowns, new_males, by=c('facility_id', 'facility_name', 'district_id', 'district_name',
-                                        'dhis2name', 'date', 'month', 'year'))
+                                             'dhis2name', 'date', 'month', 'year'))
 
 # subtract the number of males from the number of unknown patients
 new_males <- new_males[, .(sex='Male', tag=2, patients_received=(patients_received - patients_received1),
-              samples_received=(samples_received - samples_received1),
-              rejected_samples=(rejected_samples - rejected_samples1),
-              plasma_samples=(plasma_samples - plasma_samples1),
-              dbs_samples=(dbs_samples - dbs_samples1),
-              samples_tested=(samples_tested - samples_tested1),
-              valid_results=(valid_results - valid_results1),
-              suppressed=(suppressed - suppressed1)), by=.(facility_id, facility_name, district_id, district_name,
-                                             dhis2name, date, month, year)]
+                           samples_received=(samples_received - samples_received1),
+                           rejected_samples=(rejected_samples - rejected_samples1),
+                           plasma_samples=(plasma_samples - plasma_samples1),
+                           dbs_samples=(dbs_samples - dbs_samples1),
+                           samples_tested=(samples_tested - samples_tested1),
+                           valid_results=(valid_results - valid_results1),
+                           suppressed=(suppressed - suppressed1)), by=.(facility_id, facility_name, district_id, district_name,
+                                                                        dhis2name, date, month, year)]
 
 #confirm no values are negative
 new_males[patients_received < 0]
@@ -507,17 +411,14 @@ new_males[suppressed < 0]
 
 # merge in the new males
 uganda_vl <- merge(uganda_vl, new_males, by=c('facility_id', 'facility_name', 'district_id', 'district_name',
-                                                'dhis2name', 'sex', 'date', 'month', 'year',
-                                                'patients_received', 'samples_received', 'rejected_samples',
-                                                'plasma_samples', 'dbs_samples', 'samples_tested', 
-                                                'valid_results', 'suppressed', 'tag'), all=TRUE)
+                                              'dhis2name', 'sex', 'date', 'month', 'year',
+                                              'patients_received', 'samples_received', 'rejected_samples',
+                                              'plasma_samples', 'dbs_samples', 'samples_tested', 
+                                              'valid_results', 'suppressed', 'tag'), all=TRUE)
 
 # new males and females are now in the full data set!!!!! 
 # ---------------
-
-# ---------------
 # check for equality constraints
-# decimal places lead to minor instances of equality constraints being broken
 uganda_vl[patients_received > samples_received]
 uganda_vl[rejected_samples > samples_received]
 uganda_vl[dbs_samples > samples_received]
@@ -525,30 +426,7 @@ uganda_vl[plasma_samples > samples_received]
 uganda_vl[valid_results > samples_received]
 uganda_vl[suppressed > valid_results]
 
-
-# artificially introduce equality constraints
-uganda_vl[patients_received > samples_received, patients_received:=samples_received]
-uganda_vl[rejected_samples > samples_received, rejected_samples:=samples_received]
-uganda_vl[dbs_samples > samples_received, dbs_samples:=samples_received]
-uganda_vl[plasma_samples > samples_received, plasma_samples:=samples_received]
-uganda_vl[valid_results > samples_received, valid_results:=samples_received]
-uganda_vl[suppressed > valid_results, suppressed:=valid_results]
-
-uganda_vl[, tag:=NULL]
-# ---------------
-# collapse on sex to add the new females and males into monthly facility totals
-
-#only the variables needed for analysis
-uganda_vl <- uganda_vl[ ,.( facility_id, facility_name, dhis2name, district_id, district_name,
-                            month, year, sex, samples_received, patients_received, rejected_samples,
-                            plasma_samples, dbs_samples, samples_tested, suppressed, valid_results)]
-
-Vars <- c("samples_received", "patients_received", "rejected_samples","dbs_samples", "plasma_samples",
-          "samples_tested",  "valid_results", "suppressed")
-
-uganda_vl <- uganda_vl[,lapply(.SD, sum), by=c('facility_id', 'facility_name', 'dhis2name',
-                                       'district_id', 'district_name', 'sex', 'month','year'), .SDcols=Vars]
-
+#---------------
 
 #---------------
 # add date back in
@@ -581,25 +459,25 @@ uganda_vl[is.na(level), length(unique(facility_name))] #205 facilities do not co
 
 
 #---------------
-# check equality constraints
-# should I alter to reflect equality constraints?
-uganda_vl[patients_received > samples_received]
-uganda_vl[rejected_samples > samples_received]
-uganda_vl[dbs_samples > samples_received]
-uganda_vl[plasma_samples > samples_received]
-uganda_vl[valid_results > samples_received]
-uganda_vl[suppressed > valid_results]
+# run a missing data check
+uganda_vl[is.na(patients_received)]
+uganda_vl[is.na(samples_received)]
+uganda_vl[is.na(rejected_samples)]
+uganda_vl[is.na(plasma_samples)]
+uganda_vl[is.na(dbs_samples)]
+uganda_vl[is.na(samples_tested)]
+uganda_vl[is.na(suppressed)]
+uganda_vl[is.na(valid_results)]
+#--------------- 
 
-uganda_vl[plasma_samples<0] 
-
-#---------------
+#--------------------------------------------
 
 # final version with only necessary variables in useful order
-uganda_vl <- uganda_vl[ ,.( facility_id, facility_name, level, dhis2name, district_id, district_name, sex,
+# rename district_name dist_name for shape file merge 
+uganda_vl <- uganda_vl[ ,.( facility_id, facility_name, level, dhis2name, district_id, dist_name=district_name, sex,
                             month, year, date, patients_received, samples_received, rejected_samples,
                             plasma_samples, dbs_samples, samples_tested, suppressed, valid_results)]
 
-#---------------
 
 #save the final data as an RDS
 saveRDS(uganda_vl, file= paste0(dir, "/sex_data.rds"))

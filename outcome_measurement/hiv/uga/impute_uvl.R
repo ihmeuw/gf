@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 
-# 5/1/2018
+# 5/4/2018
 # Multiple imputation for the Uganda Viral Load Dashboard
 # ----------------------------------------------
 # Set up R
@@ -24,9 +24,10 @@ library(gtools)
 dir <- 'J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
 
 # upload the data with month, year, sex
-uganda_vl <- readRDS(paste0(dir, "/sex_data.rds"))
+uvl <- readRDS(paste0(dir, "/sex_data.rds"))
+uganda_vl <- uvl
 
-# start from scale up and continue to febrary 2018
+# start from scale up and continue through febrary 2018
 uganda_vl <- uganda_vl[!(month==3 & year==2018)]
 uganda_vl <- uganda_vl[year==2016 | year==2017 | year==2018]
 
@@ -52,6 +53,44 @@ setnames(expanded_data, c('facility_id', 'date', 'sex'))
 uganda_vl <- merge(uganda_vl, expanded_data, by=c('facility_id', 'date', 'sex'), all=TRUE)
 
 #--------------------
+# check for duplicats
+uganda_vl[sex=='Female', sex1:=1]
+uganda_vl[sex=='Male', sex1:=2]
+uganda_vl[ ,combine:= paste0(facility_id, '_', date, '_', sex1)]
+uganda_vl[duplicated(combine)]
+uganda_vl[, combine:=NULL]
+uganda_vl[ , sex1:=NULL]
+
+#-------------------
+# collapse to only single values
+sumVars <- c("patients_received", "samples_received", "rejected_samples", "plasma_samples",
+             "dbs_samples", "samples_tested", "valid_results", "suppressed")
+
+x <- uganda_vl[, lapply(.SD, sum, na.rm=TRUE), by=c('facility_id', 'facility_name', 'dhis2name', 
+                                                    'sex', 'date', 'district_id', 'dist_name'),
+                                                    .SDcols=sumVars]
+#-------------------
+
+#-------------------
+# create a for loop that fills in missing values
+
+ids <- uganda_vl[!is.na(facility_name), .(facility_id=unique(facility_id)),  
+                 by=.(facility_name, level, dhis2name, district_id, dist_name)]
+
+
+for (f in ids$facility_id) {
+  uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, level:=ids[facility_id==f]$level]  
+  uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, dhis2name:=ids[facility_id==f]$dhis2name]   
+  uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, district_id:=ids[facility_id==f]$district_id]   
+  uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, dist_name:=ids[facility_id==f]$dist_name] 
+  uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, facility_name:=ids[facility_id==f]$facility_name]
+  
+  print(f)
+}
+
+#-------------------
+# male data but missing females
+
 # add zeroes for places where one sex is present but the other missing
 uganda_vl[ ,combine:= paste0(facility_id, '_', date)]
 
@@ -76,24 +115,6 @@ females <- merge(females, y, by='combine')
 females[ , missing_males:=1]
 uganda_vl <- merge(uganda_vl, females, by='combine', all.x=TRUE)
 uganda_vl[is.na(missing_males), missing_males:=0]
-
-
-#----------------------------------
-# create a for loop that fills in missing values
-
-ids <- uganda_vl[!is.na(facility_name), .(facility_id=unique(facility_id)),  
-          by=.(facility_name, level, dhis2name, district_id, district_name)]
-
-for (f in ids$facility_id) {
-
-uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, level:=ids[facility_id==f]$level]  
-uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, dhis2name:=ids[facility_id==f]$dhis2name]   
-uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, district_id:=ids[facility_id==f]$district_id]   
-uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, district_name:=ids[facility_id==f]$district_name] 
-uganda_vl <- uganda_vl[is.na(facility_name) & facility_id==f, facility_name:=ids[facility_id==f]$facility_name]
-
-print(f)
-}
 
 #---------------------
 # check for duplicates
