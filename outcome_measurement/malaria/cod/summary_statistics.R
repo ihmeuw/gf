@@ -1,8 +1,8 @@
 # ----------------------------------------------
   # Audrey Batzel
   #
-  # 3/16/18
-  # COD PNLP data for 2014-2016; descriptive analysis
+  # 4/30/18
+  # COD PNLP data for 2014-2016; descriptive statistics, percent change from year to year by health zone
 # ----------------------------------------------
 
 
@@ -33,6 +33,7 @@
 
   # output files:
     output_dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/"
+    output_data <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
 # ----------------------------------------------
     
     
@@ -79,7 +80,8 @@
 
 
 # ----------------------------------------------
-  # another way to calculate percent change
+  # another way to calculate percent change from year to year
+  # by health zone
   id_vars <- colnames(aggByYear)[!colnames(aggByYear) %in% c("year", "yearValue")]
   
   # data table sort, with the last variable the one you want to measure rate of change across
@@ -102,6 +104,10 @@
     rateOfChange <- rateOfChange[, c(id_vars, "year_start", "year_end", "yearValue", "percentChange"), with=F]
     rateOfChange <- rateOfChange[year_start>year_end, year_start:=NA]  
     setnames(rateOfChange, "yearValue", "year_endValue")
+    
+    
+  # export as csv
+    write.csv(rateOfChange, paste0(output_data, "Percent Change for each Indicator by Health Zone.csv"))
     
 # ----------------------------------------------
 
@@ -134,7 +140,7 @@
       
       
 # ----------------------------------------------
-  # calculate percent change for each DPS       
+  # calculate percent change for country level
      # first aggByYear -> agg
       agg <- aggByYear[, .(yearValue = sum(yearValue)), by= c("year", "indicator", "subpopulation")]
       
@@ -158,8 +164,10 @@
   
       
      rateOfChange <- rateOfChange[!is.na(rateOfChange$year_start)]
-      
-      
+# ----------------------------------------------
+     
+     
+# ---------------------------------------------- 
     # make histograms of percent change values
     
     pdf((paste0(output_dir,"Histograms for Percent Change by HZ.pdf")), height=6, width=10)  
@@ -174,8 +182,5 @@
     }
     dev.off()
       
-      
-      
-    # note - with comparing percent change on a national or dps level to change at the health zone level,
-    # wouldn't we want it to be a per capita percent change?
+
     
