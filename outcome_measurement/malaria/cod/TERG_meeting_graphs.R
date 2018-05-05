@@ -58,7 +58,7 @@
 
     dt4 <- dt[indicator=="ITN" & (subpopulation=="distAtANC"|subpopulation=="distAtPreschool"), .(value= sum(dpsTotal)), by = c("province", "dps", "date", "indicator")]
     
-    dt5 <- dt[indicator=="SP", .(value= sum(dpsTotal)), by = c("province", "dps", "date", "indicator")]
+    dt5 <- dt[indicator=="SP" & subpopulation=="1st", .(value= sum(dpsTotal)), by = c("province", "dps", "date", "indicator")]
     
     dt6 <- dt[indicator=="smearTest" & subpopulation=="completed", .(value= sum(dpsTotal)), by = c("province", "dps", "date", "indicator")]
     
@@ -82,7 +82,7 @@
         
         labs(y="Count", color= "Indicator") + expand_limits(y=0) +
       
-        scale_color_manual(labels = c("ASAQ (Artesunate Amodiaquine)", "ITNs Distributed", "RDTs Completed", "Smear Tests Completed","SP Distributed at Antenatal Care Visits"), values = c("steelblue4", "orangered2", "palegreen2", "darkolivegreen", "skyblue" ))
+        scale_color_manual(labels = c("ASAQ (Artesunate Amodiaquine)", "ITNs Distributed", "RDTs Completed", "Smear Tests Completed","SP Distributed at 1st Antenatal Care Visit"), values = c("steelblue4", "orangered2", "palegreen2", "darkolivegreen", "skyblue" ))
       
       print(g)
       
@@ -129,20 +129,87 @@
   #   print(g)
       
     
-  # specific health zone graphs  
-    dtHZ <- dtHZ[health_zone=="Kalamu 1",]
+  # specific health zone graphs - Kalamu 1 
+    dtHZ <- dt[health_zone=="Kalamu 1",]
     dtHZ <- dtHZ[indicator=="newCasesMalariaMild" | indicator=="newCasesMalariaSevere" | indicator=="ASAQ" | indicator=="smearTest"| indicator=="RDT",]
     dtHZ <- dtHZ[isMissing==F,]   
     dtHZ[, date := as.Date(date)] 
     
-    g <- ggplot(dtHZ[year>=2015], aes(x=date, y=value, color = variable)) +
+    dtHZ$year <- year(dtHZ$date)
+    
+    dt1 <- dtHZ[indicator=="ASAQ", .(value= sum(value)), by= c("health_zone", "province", "dps", "date", "year", "indicator")]
+    
+    dt2 <- dtHZ[indicator=="newCasesMalariaMild" & (subpopulation== "under5" | subpopulation== "5andOlder"), .(value= sum(value)), by= c("health_zone", "province", "dps", "date", "year", "indicator")]
+    
+    dt3 <- dtHZ[indicator=="newCasesMalariaSevere" & (subpopulation== "under5" | subpopulation== "5andOlder"), .(value= sum(value)), by= c("health_zone", "province", "dps", "date", "year", "indicator")]
+    
+    dt4 <- dtHZ[indicator=="smearTest" & subpopulation== "completed", .(value= sum(value)), by= c("health_zone", "province", "dps", "date", "year", "indicator")]
+    
+    dt5 <- dtHZ[indicator=="RDT" & subpopulation== "completed", .(value= sum(value)), by= c("health_zone", "province", "dps", "date", "year", "indicator")]
+    
+    
+    dataToGraphHZ <- rbind(dt1, dt2)
+    
+    dataToGraphHZ <- rbind(dataToGraphHZ, dt3)
+    dataToGraphHZ <- rbind(dataToGraphHZ, dt4)
+    dataToGraphHZ <- rbind(dataToGraphHZ, dt5)
+    
+    dataToGraphHZ[, date := as.Date(date)] 
+    
+    
+    pdf(paste0(output_dir,"healthZone_terg_graphs.pdf"), height=6, width=9)
+    g <- ggplot(dataToGraphHZ, aes(x=date, y=value, color = indicator)) +
       
       geom_point() + geom_line() + theme_bw() +
       
-      ggtitle("Selected Indicators by Provincial Health Division (DPS)") +
+      ggtitle("Selected Indicators for Kalamu 1") +
       
-      labs(y="Count", color= "Indicator") + expand_limits(y=0) #+
+      labs(y="Count", color= "Indicator") + expand_limits(y=0) +
       
-      #scale_color_manual(labels = c("ASAQ", "ITNs received", "Confirmed Cases of Uncomplicated Malaria", "RDTs completed"), values = c("steelblue4", "lightblue", "orangered2", "limegreen"))
+      scale_color_manual(labels = c("ASAQ all ages", "Confirmed Cases of Uncomplicated Malaria", "Cases of Severe Malaria", "RDTs completed", "Smear Tests completed"), values = c("palegreen2", "orangered1", "orangered4", "steelblue4", "steelblue1"))
     
     print(g)
+    
+    dev.off()
+    
+    
+    # specific health zone graphs - Yahuma
+    dtHZ <- dt[health_zone=="Yahuma",]
+    #dtHZ <- dtHZ[indicator=="newCasesMalariaMild" | indicator=="newCasesMalariaSevere" | indicator=="ASAQ" | indicator=="smearTest"| indicator=="RDT",]
+    dtHZ <- dtHZ[isMissing==F,]   
+    dtHZ[, date := as.Date(date)] 
+    dtHZ$year <- year(dtHZ$date)
+    
+    #dt1 <- dtHZ[indicator=="ASAQ", .(variable="totalASAQ", value= sum(value)), by= c("health_zone", "province", "dps", "date", "year", "indicator")]
+    
+    dt2 <- dtHZ[indicator=="malariaDeaths" & (subpopulation== "under5" | subpopulation== "5andOlder"), .(variable="totalMalariaDeaths", value= sum(value)), by= c("health_zone", "province", "dps", "date", "year", "indicator")]
+    
+    dt3 <- dtHZ[indicator=="ITN" & (subpopulation== "distAtANC" | subpopulation== "distAtPreschool"), .(variable="ITN_distributed", value= sum(value)), by= c("health_zone", "province", "dps", "date", "year", "indicator")]
+    
+    dt4 <- dtHZ[indicator=="ITN" & (subpopulation== "received"), .(variable="ITN_recieved", value= sum(value)), by= c("health_zone", "province", "dps", "date", "year", "indicator")]
+    
+    
+    dataToGraphHZ <- rbind(dt2, dt3)
+    
+    #dataToGraphHZ <- rbind(dataToGraphHZ, dt3)
+    dataToGraphHZ <- rbind(dataToGraphHZ, dt4)
+
+    
+    dataToGraphHZ[, date := as.Date(date)] 
+    
+    
+    pdf(paste0(output_dir,"Yahuma.pdf"), height=6, width=9)
+    g <- ggplot(dataToGraphHZ[year>2014], aes(x=date, y=value, color = variable)) +
+      
+      geom_point() + geom_line() + theme_bw() +
+      
+      ggtitle("Selected Indicators for Yahuma") +
+      
+      labs(y="Count", color= "Indicator") + expand_limits(y=0) +
+      
+      scale_color_manual(labels = c("ITNs distributed", "ITNs received", "Deaths due to Malaria"), values = c("steelblue4", "steelblue1", "orangered1"))
+    
+    print(g)
+    
+    dev.off()
+    
