@@ -66,6 +66,30 @@ prep_malaria_data <- function(dir, inFile, sheet_name,start_date, period){
   }
    
    colnames(sc_data) <- col_names
+   sc_data$Cloroquina250_sumDelivered <- as.numeric(sc_data$Cloroquina250_notDeliveredToUser)
+   +as.numeric(sc_data$Cloroquina250_deliveredToUser)
+   sc_data$Primaquina15_sumDelivered <- as.numeric(sc_data$Primaquina15_notDeliveredToUser)
+                                                   +as.numeric(sc_data$Primaquina15_deliveredToUser)
+   sc_data$Primaquina5_sumDelivered <- as.numeric(sc_data$Primaquina5_notDeliveredToUser)
+                                                  +as.numeric(sc_data$Primaquina5_deliveredToUser)
+   if(!is.null(sc_data$Antimoniato10_realDemand)){
+     sc_data$Antimoniato10_sumDelivered <- as.numeric(sc_data$Antimoniato10_notDeliveredToUser)
+     +as.numeric(sc_data$Antimoniato10_deliveredToUser)
+   }
+   sc_data$Cloroquina250_sumExistence <- as.numeric(sc_data$Cloroquina250_previousBalance)
+   +as.numeric(sc_data$Cloroquina250_deliveredToUser)
+   sc_data$Primaquina15_sumExistence <- as.numeric(sc_data$Primaquina15_previousBalance)
+   +as.numeric(sc_data$Primaquina15_deliveredToUser)
+   sc_data$Primaquina5_sumExistence <- as.numeric(sc_data$Primaquina5_previousBalance)
+   +as.numeric(sc_data$Primaquina5_deliveredToUser)
+   if(!is.null(sc_data$Antimoniato10_realDemand)){
+     sc_data$Antimoniato10_sumExistence <- as.numeric(sc_data$Antimoniato10_previousBalance)
+     +as.numeric(sc_data$Antimoniato10_deliveredToUser)
+   }
+   
+   
+   
+   
    sc_data <- sc_data[-c(1:3),] ##the first three rows have no use to us 
    sc_data<- melt(sc_data, id.vars = c("dept_code", "department"), variable.name = "antimalarial_input", value.name = "amount")
    

@@ -70,6 +70,8 @@ antimal_database$drug_type <- mapply(get_antimalarial_types, antimal_database$an
 antimal_database$department <- gsub("\\*", "",antimal_database$department) 
 antimal_database$department <- trimws(antimal_database$department, "r")
 antimal_database[department=="Guate Nor Occidente"]$department <- "Guatemala Nor Occidente"
+antimal_database[department=="Peten Sur occidental"]$department <- "Guatemala Nor Occidente"
+
 write.csv(antimal_database, paste0(local_dir, "prepped_data/", "antimalarial_prepped_data.csv"))
 
   
