@@ -13,11 +13,11 @@ library(ggplot2)
 library(gridExtra)
 library(stringdist)
 library(rgdal)
+library(lme4)
 
 codePath = "PCE/gf/"
 
 source(paste0(codePath, "core/GT_load_data.R"), encoding = "UTF-8")
-
 source(paste0(codePath, "core/GT_helper_functions.R"), encoding = "UTF-8")
 
 # ----Configuration------------------------------------------
@@ -67,6 +67,46 @@ if (saveGraphs)
 # -----------EPIVIGILA-------------------
 
 malariaepi = data.table(read.csv("DATOS/MSPAS/EPIVIGILA - Semana 52 2017 csv/MalariaMunisGt 2001-2017.csv"))
+head(malariaepi)
+# District trends:
+# We group by weeks for time, but we divide them by 52 in order to get a yearly trend estimation 
+deptodata = malariaepi[Year > 2014, .(c = sum(TotalCases)), by= .(depto = floor(Muni/100), week = floor( ((Year-2000)*52+Week) )/52  )]
+
+trends_lmm = glmer(c ~ (1|depto) + week:factor(depto), data = deptodata, family= poisson())
+summary(trends_lmm)
+ss = getME(trends_lmm, c("theta", "fixef"))
+trends_lmm2 <- update(trends_lmm,start=ss,control=glmerControl(optCtrl=list(maxfun=2e4)))
+summary(trends_lmm2)
+ranef(trends_lmm2)
+
+deptotrends = data.table(depto = unique(deptodata$depto), 
+                         relative_trend = exp(fixef(trends_lmm2)[2:22]))
+deptotrends$trend_cat = cut(deptotrends$relative_trend, c(0, 0.75, 0.90, 0.95, 1, 10), 
+                                  labels=c("0 - 0.75", "0.75 - 0.90", "0.90 - 0.95", "0.95 - 1.0", " > 1.0 (Increasing)"), include.lowest=T)
+
+ggplot(data = deptodata[depto %in% c(1,2,3,4,5,6,10)], aes(x=week, y=log(c), color=factor(depto)))+ geom_line(size=1)
+
+# Map deptos trends 
+gtmDeptosDataCopy = cbind(gtmDeptosIGN@data)
+gtmDeptosIGN@data$id = rownames(gtmDeptosIGN@data)
+gtmDeptosIGN@data = merge(gtmDeptosIGN@data, deptotrends, 
+                          by.x = "CODIGO", by.y="depto",all.x=TRUE, sort=FALSE)
+gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
+plot = ggplot(data=gtmDeptosIGN@data, aes(fill=trend_cat)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmDeptosIGN.map.df) + expand_limits(x = gtmDeptosIGN.map.df$long, y = gtmDeptosIGN.map.df$lat) + scale_fill_brewer(palette = "OrRd",na.value="gray") + coord_quickmap() + labs(fill= "Trend", title="Trend of Malaria Cases Notified by District\nFrom 2015 to 2017", subtitle="(Poisson regression coefficients) ")
+plot + theme_void()
+ggsave("PCE/Graficas/Malaria_Gt_Trends_2015-2017_by_depto.png", height=4, width=9)
+gtmDeptosIGN@data = gtmDeptosDataCopy
+
+# Map deptos counts 2015 - 2017
+gtmDeptosDataCopy = cbind(gtmDeptosIGN@data)
+gtmDeptosIGN@data$id = rownames(gtmDeptosIGN@data)
+gtmDeptosIGN@data = merge(gtmDeptosIGN@data, malariaepi[Year > 2014, .(c = sum(TotalCases)), by= .(depto = floor(Muni/100))], 
+                          by.x = "CODIGO", by.y="depto",all.x=TRUE, sort=FALSE)
+gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
+plot = ggplot(data=gtmDeptosIGN@data, aes(fill=c)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmDeptosIGN.map.df) + expand_limits(x = gtmDeptosIGN.map.df$long, y = gtmDeptosIGN.map.df$lat) + scale_fill_gradientn(colours = c("#ddcc22", "#DD5522", "#AA1111"), values=c(0.1,0.8,1), trans="log10") + coord_quickmap() + labs(fill= "Cases counts", title="Malaria Cases Notified by District\nFrom 2015 to 2017", subtitle="")
+plot + theme_void()
+ggsave("PCE/Graficas/Malaria_Gt_Cases_2015-2017_by_depto.png", height=4, width=9)
+gtmDeptosIGN@data = gtmDeptosDataCopy
 
 # Map
 gtmMunisDataCopy = cbind(gtmMunisIGN@data)
