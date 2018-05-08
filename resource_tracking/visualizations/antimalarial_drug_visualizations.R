@@ -74,7 +74,7 @@ graphData <- merge(malData, create_quarter_range, all.y=TRUE, by=c("antimalarial
 
 facet_drug_metrics <- function(antimalaria_drug){
   x <- "Other"
-  if(grepl("touser", tolower(antimalaria_drug))){
+  if(grepl("deliver", tolower(antimalaria_drug))){
     x <- "Drug Delivery"
   } else if (grepl("demand",tolower(antimalaria_drug))){
     x <- "Demand"
