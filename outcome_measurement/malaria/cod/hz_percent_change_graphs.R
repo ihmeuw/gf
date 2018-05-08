@@ -52,29 +52,28 @@
   
   
 # ----------------------------------------------
-  # # sort data
-  #   dt <- dt[
-  #     with( dt, order( indicator, subpopulation, percentChange )),
-  #     ]
-  #   
-  # calculate the top 5th percentile for each indicator
+# Set up for graphing 
+  # use percent change by year and health zone data
+  # calculate the top 5th percentile health zones for each year to year change for each indicator
 
+  # for each indicator and year-year calculate the 95th percentile value to compare back to the data table with all values
     dt2 <- dt[, lapply(.SD, function(x) quantile(x, .95, na.rm=T)), .SDcols= "percentChange", by= c("indicator", "year_end")] 
     
   # merge quantile table with dt
-    
     dt <- merge(dt, dt2, by= c("indicator" , "year_end"))
     
+    # percent change column from x (dt) represents the percent change for that health zone/indicator/year
+    # percent change column from y (dt2) represents the percent change value that represents the 95th percentile value for that indicator/year
     setnames(dt, "percentChange.x", "percentChange")
     setnames(dt, "percentChange.y", "p95")
     
-  # keep track of where percent change > the 95th percentile (we are going to graph these instances
+  # indicate where percent change > the 95th percentile (we are going to graph these instances
     # but also want to graph other data from that health zone)
+    # binary column "isHigher" is 1 if the value for that health zone/indicator/year is higher than the 95th percentile value
     dt$isHigher <- 0
-    
     dt[percentChange>p95, isHigher:=1]
     
-  # get the indicator without the subpop for graphing later
+  # split indicator and subpop so we can aggregate by indicator for graphing later (even though subpop is already a column)
     dt[, c("indicator", "subpop") := tstrsplit(indicator, "_", fixed=TRUE)]
 # ----------------------------------------------
 
@@ -89,8 +88,8 @@
     hz <- dt[isHigher==1 & indicator %in% outputs, c("health_zone", "indicator", "subpopulation")]
     hz <- hz[!(subpopulation=="2nd" | subpopulation=="3rd" | subpopulation=="4th"| subpopulation=="positive" | subpopulation=="used")]
     
-    #unique_hz <- unique(hz["health_zone"])
-    #hz_vector <- as.character(unique_hz[["health_zone"]])
+    unique_hz <- hz[["health_zone"]]
+    unique_hz <- as.character(unique(unique_hz))
 
   # function to produce graphs
     makeGraph <- function(h){
@@ -117,19 +116,26 @@
       dataToGraphHZ <- rbind(dataToGraphHZ, dt6)
       dataToGraphHZ[, date := as.Date(date)] 
       
+      # change hz data table to have subpopulations included in ITN indicator to match the dataToGraphHZ data table
+      hz <- hz[indicator=="ITN" & subpopulation== "received", indicator:= "ITN_received"]
+      hz <- hz[indicator=="ITN" & subpopulation== "distAtANC", indicator:= "ITN_distributed"]
+      hz <- hz[indicator=="ITN" & subpopulation== "distAtPreschool", indicator:= "ITN_distributed"]
       
-      g <- ggplot(dataToGraphHZ, aes(x=date, y=value, color = indicator)) +
-        geom_point() + geom_line() + theme_bw() +
+      indicators_of_relevance <- hz[health_zone==h]$indicator
+      dataToGraphHZ[, relevant:=indicator %in% indicators_of_relevance]
+      
+      g <- ggplot(dataToGraphHZ, aes(x=date, y=value, color = indicator, alpha=relevant)) +
+        geom_point() + geom_line() + theme_bw() + scale_alpha_discrete(range=c(0.2, 1)) +
         ggtitle(paste0("Selected Indicators for ", h)) +
         labs(y="Count", color= "Indicator") + expand_limits(y=0) +
-        scale_color_manual(labels = c("1st ANC Visit", "Artemether/Lumefantrine received", "ASAQ (Artesunate Amodiaquine) all ages", "RDTs Completed", "Smear Tests Completed", "SP Distributed at 1st ANC Visit", "ITNs Received", "ITNs Distributed"), values = c("steelblue4", "sienna1", "orangered", "palegreen1", "palegreen4", "steelblue1", "goldenrod4", "goldenrod1"))
+        scale_color_manual(labels = c("1st ANC Visit", "Artemether/Lumefantrine received", "ASAQ (Artesunate Amodiaquine) all ages", "RDTs Completed", "Smear Tests Completed", "SP Distributed at 1st ANC Visit", "ITNs Received", "ITNs Distributed"), values = c("steelblue4", "darkorange", "orangered3", "green3", "darkgreen", "steelblue1", "goldenrod4", "goldenrod1"))
       
       return(g)
     }
 
   # loop through HZs with a high %change for at least one of the output indicators      
    pdf(paste0(output_graph, hzGraphs), height=6, width=9)
-     for (h in hz_vector){
+     for (h in unique_hz){
         print(makeGraph(h))
      }
    dev.off()
