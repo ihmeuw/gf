@@ -14,7 +14,8 @@ library(haven)
 library(sp)
 
 # Requirements:
-source("./PCE/gf/core/GT_helper_functions.R")
+source(paste0(codePath, "core/GT_load_data.R"), encoding = "UTF-8")
+source(paste0(codePath, "core/GT_helper_functions.R"), encoding = "UTF-8")
 
 # Load data
 ensmi_children.dt = data.table(read_stata("PCE/Outcome Measurement Data/MULTI/ENSMI/GTM_DHS6_2014_2015_CH_Y2017M03D01.DTA"))
@@ -70,3 +71,5 @@ todo = merge(todo, clustermunis, by.x = "v001", by.y = "cluster")
 todo = todo[,.( cough_ch = sum(cough_ch), seektx_ch = sum(seektx_ch), 
          cough_wm = sum(cough_wm), seektx_wm = sum(seektx_wm)  ), by=municode]
 write.csv(todo, paste0(dataPath, "Outcome Measurement Data/MULTI/ENSMI/GT - cough and fever tx seeking.csv"))
+
+write.csv(clustermunis, paste0(dataPath, "Outcome Measurement Data/MULTI/ENSMI/ENSMI - cluster to muni.csv"))

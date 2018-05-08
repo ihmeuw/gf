@@ -103,11 +103,6 @@ GTMuniPopulation <- function (code, year) {
 # GTMuniPopulation(c(101, 201, 301, 401, 402), c(2013, 2013, 2013, 2013, 2013))
 # [1] 1016192.75   23072.88   47429.26  124803.77   24614.68
 
-ApplyQuintiles <- function(x) {
-    cut(x, breaks=c(quantile(x, probs = seq(0, 1, by = 0.20))), 
-        labels=c("0-20","20-40","40-60","60-80","80-100"))
-}
-
 # ---------Gt municipality map visualizations--------------
 # Function to generate a Guatemala municipalities map visualization. 
 # Data should be indexed by a "municode" column containing municipalities codes.
