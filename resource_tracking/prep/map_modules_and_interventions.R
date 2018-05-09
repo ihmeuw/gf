@@ -113,27 +113,6 @@ total_mapping_list <- function(file_name, indicator_mapping, unwanted_array, rem
 
 
 
-##if this works correctly, we should be able to drop the unmapped_mods from our dataset since they are junk categories:
-# gfData<- gfData[!module%in%unmapped_mods$module]
-
-
-# #if categories get dropped or miscalculated during the mapping, we can figure out which ones they were: 
-# data_check1 <- as.data.frame(gfData[, sum(budget, na.rm = TRUE),by = c("country", "disease")])
-# data_check2 <- as.data.frame(gfData[, sum(budget, na.rm = TRUE),by = c("country","grant_number", "disease")])
-
-# ----------------------------------------------
-mapped_gf <- merge(gfData, mapping_for_gf, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
-
-##use this to check if any modules/interventions were dropped:
-# dropped_gf <- mapped_gf[is.na(mapped_gf$code)] '
-
-gf_data_mapped <- merge(mapped_gf, final_mapping, by="code")
-gf_data_mapped$budget <- gf_data_mapped$budget*gf_data_mapped$coefficient
-gf_data_mapped$expenditure <- gf_data_mapped$expenditure*gf_data_mapped$coefficient
-gf_data_mapped$disbursement <- gf_data_mapped$disbursement*gf_data_mapped$coefficient
-
-
-
 # ----------------------------------------------
 
 ##sum to make sure that budget numbers aren't dropped:
