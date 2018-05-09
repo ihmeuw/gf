@@ -18,14 +18,17 @@ prep_other_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disea
   } else {
     gf_data <- data.table(read_excel(paste0(dir, inFile)))
   }
-  
-  
   gf_data <- Filter(function(x)!all(is.na(x)), gf_data)
+  if(sheet_name=="Detailed Budget - Year 2"){
+    gf_data1 <- gf_data[,c("X__3", "X__4", "GASTOS\r\nQuarter 1","GASTOS \r\nQuarter 2", "GASTOS\r\nQuarter 3",  "GASTOS \r\nQuarter 4"), with=FALSE]
+  } else if (sheet_name=="Detailed Budget - Year 1"){
+    gf_data1 <- gf_data[,c("X__3", "X__4", "Gastos Q1","Gastos Q2", "GASTOS\r\nQuarter 3",  "GASTOS \r\nQuarter 4"), with=FALSE]
+  } else {
+    gf_data1 <- gf_data[,c("X__3", "X__4", "X__24", "X__26", "X__28", "X__30"), with=FALSE]
+  }
   if(sheet_name!="Detailed Budget - Year 3"){
-    gf_data1 <- gf_data[,c("X__3", "X__4", "X__17", "X__18", "X__19", "X__20"), with=FALSE]
     gf_data1 <- gf_data1[-c(1:3),]
   } else {
-    gf_data1 <- gf_data[,c("X__3", "X__4", "X__23","X__26", "X__28", "X__30"), with=FALSE]
     gf_data1 <- gf_data1[-c(1:2),]
   }
     
@@ -57,6 +60,9 @@ prep_other_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disea
   budget_dataset$disease <- disease
   budget_dataset$expenditure <- 0 
   budget_dataset$lang <- lang
+  budget_dataset$intervention <- budget_dataset$sda_activity
+  budget_dataset$cost_category <- "all"
+  budget_dataset$recipient <- "MoH"
   
   return(budget_dataset)  
 }
