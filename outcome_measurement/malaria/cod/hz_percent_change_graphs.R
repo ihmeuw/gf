@@ -38,6 +38,7 @@
   output_graph <- "J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/"
   output_data <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
   hzGraphs <- "Selected Indicators by Health Zone over time.pdf"
+  hzGraphs2 <- "Health zone-level graphs for TERG slides.pdf"
   
   # variable names
   interventions <- c("ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
@@ -128,7 +129,8 @@
         geom_point() + geom_line() + theme_bw() + scale_alpha_discrete(range=c(0.2, 1)) +
         ggtitle(paste0("Selected Indicators for ", h)) +
         labs(y="Count", color= "Indicator") + expand_limits(y=0) +
-        scale_color_manual(labels = c("1st ANC Visit", "Artemether/Lumefantrine received", "ASAQ (Artesunate Amodiaquine) all ages", "RDTs Completed", "Smear Tests Completed", "SP Distributed at 1st ANC Visit", "ITNs Received", "ITNs Distributed"), values = c("steelblue4", "darkorange", "orangered3", "green3", "darkgreen", "steelblue1", "goldenrod4", "goldenrod1"))
+        scale_color_manual(labels = c("1st ANC Visit", "Artemether/Lumefantrine received", "ASAQ (Artesunate Amodiaquine) all ages", "RDTs Completed", "Smear Tests Completed", "SP Distributed at 1st ANC Visit", "ITNs Received", "ITNs Distributed"), values = c("steelblue4", "darkorange", "orangered3", "green3", "darkgreen", "steelblue1", "goldenrod4", "goldenrod1")) +
+        guides(alpha=F)
       
       return(g)
     }
@@ -141,5 +143,52 @@
    dev.off()
 
   
-  
+   
+   
+   
+  # Make graphs for TERG Slides
+     dtHZ <- fullData[(health_zone=="Bengamisa" | health_zone=="Ubundu") & indicator %in% outputs, ]
+     
+     dt1 <- dtHZ[indicator=="ASAQ", .(value= sum(mean)), by= c(graph_vars, "health_zone")] #aggregate ASAQ all ages
+     
+     dt2 <- dtHZ[(indicator=="smearTest" | indicator=="RDT") & subpopulation== "completed", .(value= sum(mean)), by= c(graph_vars, "health_zone")] #only RDTs and Smear Tests completed
+     
+     #dt3 <- dtHZ[indicator=="ArtLum" & subpopulation== "received", .(value= sum(mean)), by= c(graph_vars, "health_zone")] #only ArtLum received
+     
+     #dt4 <- dtHZ[indicator=="ITN" & subpopulation== "received", .(indicator="ITN_recieved", value= sum(mean)), by= c(graph_vars, "health_zone")] # only ITNs recieved
+     #dt4 <- dt4[,-c(2)]
+     
+     dt5 <- dtHZ[indicator=="ITN" & (subpopulation== "distAtANC" | subpopulation== "distAtPreschool"), .(indicator="ITN_distributed", value= sum(mean)), by= c(graph_vars, "health_zone")] #aggregate ITNs dist.
+     dt5 <- dt5[,-c(2)] 
+     
+     dt6 <- dtHZ[(indicator== "SP") & (subpopulation== "1st"), .(value= sum(mean)), by= c(graph_vars, "health_zone")] #only 1st ANC visit and SP from 1st ANC
+     
+     dataToGraphHZ <- rbind(dt1, dt2)
+     #dataToGraphHZ <- rbind(dataToGraphHZ, dt3)
+     #dataToGraphHZ <- rbind(dataToGraphHZ, dt4)
+     dataToGraphHZ <- rbind(dataToGraphHZ, dt5)
+     dataToGraphHZ <- rbind(dataToGraphHZ, dt6)
+     dataToGraphHZ[, date := as.Date(date)] 
+     
+     # change hz data table to have subpopulations included in ITN indicator to match the dataToGraphHZ data table
+     hz <- hz[indicator=="ITN" & subpopulation== "received", indicator:= "ITN_received"]
+     hz <- hz[indicator=="ITN" & subpopulation== "distAtANC", indicator:= "ITN_distributed"]
+     hz <- hz[indicator=="ITN" & subpopulation== "distAtPreschool", indicator:= "ITN_distributed"]
+     
+     # relevant indicators for TERG presentation : RDTs and ASAQ
+     graph_indicators <- c("RDT", "ASAQ")
+     dataToGraphHZ[, relevant:=indicator %in% graph_indicators]
+   
+     
+  pdf(paste0(output_graph, hzGraphs2), height=6, width=9) 
+     g <- ggplot(dataToGraphHZ, aes(x=date, y=value, color = indicator, alpha=relevant)) +
+       geom_point() + geom_line() + theme_bw() + scale_alpha_discrete(range=c(0.23, 1)) +
+       ggtitle(paste0("Examples of Health Zone-Level Results")) +
+       labs(y="Number of Outputs", color= "Indicator") + expand_limits(y=0) +
+       guides(alpha=F) + facet_wrap("health_zone", scales="free_y") +
+       theme(axis.title.x=element_blank(), legend.position="bottom", legend.direction="vertical") +
+       scale_color_manual(labels = c("ASAQ (Artesunate Amodiaquine)", "RDTs Completed", "Smear Tests Completed", "SP Distributed at 1st ANC Visit", "ITNs Distributed"), values = c("steelblue4", "palegreen2", "darkolivegreen", "skyblue", "orangered2")) 
+     
+     print(g)
+  dev.off()
   
