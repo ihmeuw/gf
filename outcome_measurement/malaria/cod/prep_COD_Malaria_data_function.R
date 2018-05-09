@@ -3,6 +3,8 @@
 #
 # 3/6/18
 # Prepping DRC PNLP 2014-2016 data for analaysis
+# 5/1/18 
+# Adding in new data from DRC PNLP that spans 2010-2017 and all provinces
 # ----------------------------------------------
 
 
@@ -28,14 +30,11 @@
 # Overview - Files and Directories
 
 # data directory
-# J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/Malaria_Data_2014_to_2016
-
-# input file
   # file path where the files are stored
-  dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/Malaria_Data_2014_to_2016"
+  dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/"
   
+  # csv of file names for importing
   PNLP_files <- read.csv(paste0(dir,"/","PNLP_file_names.csv"), fileEncoding = "latin1")
-  # input files are from 2014, 2015, and 2016 and each contain three sheets for three different provinces
 
 # output files 
   # (output to prepped_data folder within cod folder)
@@ -46,22 +45,17 @@
     # COD_PNLP_Data_Indicators_long - prepped data.table object, appended data from 2014-2016
     # COD_PNLP_Data_Indicators_wide
     # COD_PNLP_Data_Interventions_long - prepped data.table object, appended data from 2014-2016
-    # # COD_PNLP_Data_Interventions_wide
+    # COD_PNLP_Data_Interventions_wide
 # ----------------------------------------------
   
   
 # ----------------------------------------------
-# Load data - to visualize before cleaning
-  
+# Load data - to visualize and work through cleaning to make sure function will work
+  # example
   # cod_mdata_KIN16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "KIN"))
-  # cod_mdata_BDD16 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[1], '.xls'), sheet= "BDD"))
-  # cod_mdata_OR16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "OR"))
-  # cod_mdata_KIN15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "KIN"))
-  # cod_mdata_BDD15 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[2], '.xls'), sheet= "BDD"))
-  # cod_mdata_OR15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "OR"))
-  # cod_mdata_KIN14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "KIN"))
-  # cod_mdata_BDD14 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[3], '.xls'), sheet= "BDD"))
-  # cod_mdata_OR14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "OR"))
+
+  # new data example:
+    dataSheet <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names[9], ".xls"), sheet= 'KIN'))
 # ----------------------------------------------
   
   
@@ -71,19 +65,47 @@
     
   # Load data sheet
     dataSheet <- data.table(read_excel(paste0(dir,"/Données_", year, "_PNLP.xls"), sheet= sheetname))
-# ----------------------------------------------   
 # ----------------------------------------------
-  # Set names of columns
+  # Change column names, so that each column has 
     # since some of them have less columns, make a vector of names and then have "if ___, then drop these ___"
  
-  columnNamesComplete <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-        "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
-        "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
-        "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
-        "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
-        "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_received", "ArtLum_used", "smearTest_completedUnder5",
-        "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder", "RDT_completedUnder5", "RDT_completed5andOlder", "RDT_positiveUnder5", "RDT_positive5andOlder",
-        "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline" )
+  columnNames <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
+                           "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+                           "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+                           "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
+                           "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
+                           "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_received", "ArtLum_used", "smearTest_completedUnder5",
+                           "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder", "RDT_completedUnder5", "RDT_completed5andOlder", "RDT_positiveUnder5", "RDT_positive5andOlder",
+                           "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline" )
+    
+  columnNamesComplete <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month", 
+                           "totalCasesAllDiseases_under5", "totalCasesAllDiseases_5andOlder", "totalCasesAllDiseases_pregnantWomen", 
+                           "suspectedMalaria_under5", "suspectedMalaria_5andOlder", "suspectedMalaria_pregnantWomen",
+                           "presumedMalaria_under5", "presumedMalaria_5andOlder", "presumedMalaria_pregnantWomen",
+                           "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", 
+                           "totalHospAllDiseases_under5", "totalHospAllDiseases_5andOlder", "totalHospAllDiseases_pregnantWomen",
+                           "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+                           "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+                           "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
+                           "totalDeathsAllDiseases_under5", "totalDeathsAllDiseases_5andOlder", "totalDeathsAllDiseases_pregnantWomen",
+                           "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen",  
+                           "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", 
+                           "ITN_received", "ITN_distAtANC", "ITN_distAtPreschool", "VAR_0to11mos", 
+                           "ASAQ_received_2to11mos", "ASAQ_received_1to5yrs", "ASAQ_received_6to13yrs", "ASAQ_received_14yrsAndOlder",
+                           "ASAQ_used_2to11mos", "ASAQ_used_1to5yrs", "ASAQ_used_6to13yrs", "ASAQ_used_14yrsAndOlder", "ASAQ_used_total",
+                           "ArtLum_received", "ArtLum_used",
+                           "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
+                           "stockOut_qui_pill", "stockOut_qui_inj", "stockOut_ASAQ_inj", "stockOut_RDT", "stockOut_artLum",
+                           "smearTest_completed_under5", "smearTest_completed_5andOlder", "smearTest_positive_under5", "smearTest_positive_5andOlder", 
+                           "RDT_received", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+                           "peopleTested_under5", "peopleTested_5andOlder",
+                           "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
+                           "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline",
+                           "hzTeam_supervisors_numPlanned", "hzTeam_supervisors_numActual", "hzTeam_employees_numPlanned", "hzTeam_employees_numActual",
+                           "awarenessTrainings_numPlanned", "awarenessTrainings_numActual",
+                           "SSC_fevers_under5", "SSC_fevers_5andOlder", "SSC_RDT_completed_under5", "SSC_RDT_completed_5andOlder", "SSC_RDT_positive_under5", "SSC_RDT_positive_5andOlder",
+                           "SSC_ACT_under5", "SSC_ACT_5andOlder", "SSC_casesReferred_under5", "SSC_casesReferred_5andOlder",
+                           "SSC_casesCrossReferred_under5", "SSC_casesCrossReferred_5andOlder")
   
   columnNames2014 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
         "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
@@ -93,7 +115,8 @@
         "ITN_distAtPreschool", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "smearTest_completed", "smearTest_positive", "RDT_completed", 
         "RDT_positive", "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported")
   
-    if ( year == 2014 ) {
+  #for the new data this doesn't work based on the name of the file.  Assign a new variable for year?
+    if ( PNLP_files$year[9] == 2014 ) {
       columnNames <- columnNames2014 
     } else {
       columnNames <- columnNamesComplete
@@ -102,12 +125,8 @@
   names(dataSheet) <- columnNames
   
   # add a column for the "year" to keep track of this variable as we add dataSheets to this one
-  dataSheet$year <- year
+  dataSheet$year <- PNLP_files$year[9]
   
-  # # add a column for indicator codes for SDA mapping/modular framework:
-  # dataSheet$indicator_code <- NA
-  # 
-# ----------------------------------------------
 # ----------------------------------------------
   # Get rid of rows you don't need- "subset"
   
@@ -176,7 +195,7 @@
   
   # variables needed:
   years <- c(2014:2016)
-  sheetnames <- c('BDD', 'KIN', 'OR')
+  sheetnames <- c('BDD', 'KIN', 'OR', 'KC', 'KOR', 'KOC', 'MN', 'NK', 'SK', 'EQ', 'KAT')
   i <- 1
 
  for(y in years) {
