@@ -112,7 +112,7 @@
     # replace all 0s with really low values so log works 
       for(var in indicators) {
         # taking the 5th percentile for each column to replace the 0s with 
-        pctle <- quantile(dt[get(var)!=0][[var]], .05, na.rm=TRUE)  
+        pctle <- quantile(dt[get(var)!=0][[var]], .01, na.rm=TRUE)  
         # change/store these back in dt so that we can use that to run amelia() on
         dt[get(var)==0, (var):=pctle]
       }
