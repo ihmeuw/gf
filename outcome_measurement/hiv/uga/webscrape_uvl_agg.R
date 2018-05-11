@@ -1,9 +1,9 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 4/10/2018
+# 5/11/2018
 # Loop to download aggregate data 
-# Current version runs with sex and tb filters on
+# Current version runs with only the sex filter
 # Use pre_uganda_vl or webscrape_vl_parallel to download data with all filters (watch for errors)
 # ----------------------------------------------
 
@@ -26,10 +26,10 @@ reload_everything = FALSE
 
 # output file
 # when running on home computer
-#dir = 'J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_tb'
+#dir = 'J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sexb'
 
 # to run on the cluster
-dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_tb'
+dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex'
 
 # ----------------------------------------------
 
@@ -56,14 +56,14 @@ for(y in c('14', '15', '16', '17', '18')) {
        for(s in c('m', 'f', 'x')) {
    
           # check if file exists first
-          outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_', t, '_', '.rds')
+          outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_','.rds')
           check = file.exists(outFile)
       
           # only download if it doesn't already exist
           if (check==FALSE | reload_everything==TRUE) {
             
             # store url
-            url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22',t,'%22%5D&to_date=20',y,m)
+            url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%5D&to_date=20',y,m)
             
             # load
             data = fromJSON(url)
