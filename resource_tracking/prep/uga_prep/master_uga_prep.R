@@ -96,7 +96,7 @@ setnames(summary_file, c("Data Source",	"Year",	"Start Date", "End Date", "SDA D
 
 ##export the summary table to J Drive
 ##(you might get a warning message about appending column names to the files; this should not affect the final output)
-write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/resource_tracking_data_summary.csv",
+write.table(summary_file, paste0("file_path_here","resource_tracking_data_summary.csv"),
             append = TRUE, row.names=FALSE, sep=",")
 
 
@@ -118,7 +118,7 @@ toMatch <- c("0", "Please sel", "PA", "6", "4")
 cleaned_database <- resource_database[!grepl(paste(toMatch, collapse="|"), resource_database$module),]
 
 
-## split hiv/tb into hiv or tb: 
+## split hiv/tb into hiv or tb (for module/intervention mapping purposes): 
 get_hivtb_split <- function(disease,module){
   x <- disease
  if(disease=="hiv/tb"){
@@ -147,6 +147,11 @@ cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
 
 
 ugaData <- strip_chars(cleaned_database, unwanted_array, remove_chars)
+
+## we have some junk "modules" that should be dropped:
+toMatch <- "pleaseselect"
+ugaData <- ugaData[!grepl(toMatch, ugaData$module),]
+
 
 mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
 

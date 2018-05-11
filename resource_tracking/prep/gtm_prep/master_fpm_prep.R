@@ -60,7 +60,7 @@ for(i in 1:length(file_list$file_name)){
                                        file_list$grant_number[i], file_list$recipient[i], file_list$lang[i])
     tmpData$loc_name <- "gtm"
     tmpData$disbursement<- 0 
-  } else if (file_list$format[i]=="other"){ ## there's an older version of detailed fpm budgets
+  } else if (file_list$format[i]=="detailed_other"){ ## there's an older version of detailed fpm budgets
     tmpData <- prep_other_detailed_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                         file_list$lang[i], file_list$grant_number[i])
@@ -70,8 +70,8 @@ for(i in 1:length(file_list$file_name)){
                                           ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                           file_list$grant_number[i], file_list$data_source[i], loc_name, file_list$lang[i])
    
-  } else if (file_list$format[i]=="detailed_other"){
-    tmpData <- prep_other_detailed_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
+  } else if (file_list$format[i]=="other"){
+    tmpData <- prep_other_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                           ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                           file_list$lang[i], file_list$grant_number[i])
     tmpData$disbursement<- 0 

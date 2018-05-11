@@ -52,7 +52,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset$expenditure <- 0 
       budget_dataset$intervention <- "All" ## change if we ever get more detailed PUDR info
       
-    } else if (sheet_name%in%c("LFA Expenditure_7B", "PR Expenditure_7A")){
+    } else if (sheet_name%in%c("LFA Expenditure_7B", "PR Expenditure_7A")){ ## for the PUDRs w/out SR info
       colnames(gf_data)[1] <- "module"
       colnames(gf_data)[2] <- "intervention"
       colnames(gf_data)[3] <- "budget"
@@ -81,7 +81,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   budget_dataset$start_date <- start_date
   budget_dataset$data_source <- source
   budget_dataset$period <- period
-  budget_dataset$sda_activity <- "All"## change if we ever get more detailed PUDR info
+  budget_dataset$sda_activity <- "all"## change if we ever get more detailed PUDR info
   budget_dataset$disease <- disease
   budget_dataset$cost_category <- "all" ## change if we ever get more detailed PUDR info
   budget_dataset$grant_number <- grant
