@@ -3,7 +3,7 @@
 #
 # 3/27/2018
 
-### This code is to map RT data to the GF framework modules and interventions 
+### This code contains functions that map RT data to the GF Modular Framework 
 
 # ----------------------------------------------
 # Set up R
@@ -17,7 +17,7 @@ library(readxl)
 
 # ----------------------------------------------
 ##### Function to clean up the mods/interventions in the RT data #####
-
+# ----------------------------------------------
 ##create vector of unwanted characters:
 unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
                           'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
@@ -51,9 +51,9 @@ strip_chars <- function(gfData, unwanted_array, remove_chars){
 return(gfData)
 }
 
-
 # ----------------------------------------------
-##load the mapping data: 
+##### Function to load the mapping data #####
+# ----------------------------------------------
 load_mapping_list <- function(mapping_file){
   tab_names <- c("HIV Interventions", "TB Interventions", "Malaria Interventions", "RSSH Interventions")
   
@@ -74,14 +74,25 @@ load_mapping_list <- function(mapping_file){
       indicator_mapping <- rbind(indicator_mapping, tmpData)
     }
   }
+  
+  ##rssh categories are found in all three diseases: 
+  rsshData <- data.table(read_excel(mapping_file, sheet = "RSSH Interventions", trim_ws = TRUE))
+  diseases <- c("hiv", "malaria", "tb")
+  for(i in 1:length(diseases)){
+   tmp <- copy(rsshData)
+    tmp$disease <- diseases[i]
+    indicator_mapping <- rbind(indicator_mapping, tmp)
+  }
   ##change the dataset names
   setnames(indicator_mapping, c("code","module", "intervention", "disease"))
+  indicator_mapping <- unique(indicator_mapping)
   ##this will make it easier to map everything by removing spaces, punctuation, etc. 
   return(indicator_mapping)
 }
   
 # ----------------------------------------------
-
+##### Function that cleans the special chars/white space from the mapping tab #####
+# ----------------------------------------------
 total_mapping_list <- function(file_name, indicator_mapping, unwanted_array, remove_chars){
   
   old_modules <- data.table(read_excel(file_name, sheet = "module_mapping", trim_ws = TRUE))
@@ -110,26 +121,6 @@ total_mapping_list <- function(file_name, indicator_mapping, unwanted_array, rem
   mapping_for_gf <- unique(mapping_for_gf)
   return(mapping_for_gf)
 }
-
-
-
-# ----------------------------------------------
-
-##sum to make sure that budget numbers aren't dropped:
-# data_check1 <- gfData[, sum(budget, na.rm = TRUE),by = c("country", "module","intervention","disease")]
-# data_check2 <- gf_data_mapped[, sum(budget, na.rm = TRUE),by = c("country","module", "intervention","disease")]
-# data_check1[!module%in%data_check2$module]
-# data_check1$ind <- "pre"
-# data_check2$ind <- "post"
-# data_check <- rbind(data_check1, data_check2)
-# write.csv(data_check, "data_check.csv", row.names = FALSE)
-
-# ----------------------------------------------
-
-write.csv(mappedData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/rt_data_mapped.csv"
-          , fileEncoding="latin1", row.names=FALSE)
-
-
 
 
 
