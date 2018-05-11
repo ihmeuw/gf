@@ -25,13 +25,16 @@
 # Overview - Files and Directories
 
   # data directory
-    dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data"
+    dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
   
   # input file:
     # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/fullData_forMI_outliers_removed.csv
     # csv files were produced by prep_COD_Malaria_data_function.R
       dt <- fread(paste0(dir,"/","fullData_forMI_outliers_removed",".csv")) 
   
+  # import full imputed data:
+   # fullData <- read.csv( paste0(dir, "Full Imputed Data.csv") )
+      
   # output files:
       output_dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/"
       MI_results_indicators <- "Imputed Time Series for Indicators by Health Zone.pdf"
@@ -40,6 +43,7 @@
       MI_agg_interventions <- "Imputed Time Series for Interventions by DPS.pdf"
       # full imputed data to do summary stats on 
       # "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Imputed Data.csv
+      
 # ----------------------------------------------
     
     
@@ -68,6 +72,8 @@
     
   # vector of id variables and indicator variables
     id_vars <- c("province", "dps", "health_zone", "date", "id")
+    
+    imputed_id_vars <- c(id_vars, "imputation_number")
   
     indicators <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
       "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
@@ -129,7 +135,7 @@
       # MI will ignore ID vars and include them as is in the output
       # lags/leads: indicators
       # intercs = FALSE by default, try with = TRUE
-        amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", lags= indicators, idvars= c("province", "dps"))
+        amelia.results <- amelia(dtLog, m=5, cs= "health_zone", ts="date", lags= indicators, idvars= c("province", "dps"))
    
 # ---------------------------------------------- 
           
@@ -138,7 +144,7 @@
   # bind amelia results into one data.table, include a column with the imputation number in order to 
     # keep track of this information
     
-    for( i in 1:50 ) {
+    for( i in 1:5 ) {
       amelia.results$imputations[[i]]$imputation_number <- i
       if (i==1)  amelia_data <- data.table(amelia.results$imputations[[i]])
       if (i>1) amelia_data <- rbind(amelia_data, amelia.results$imputations[[i]])
@@ -147,8 +153,7 @@
         
         
 # ----------------------------------------------  
-  imputed_id_vars <- c(id_vars, "imputation_number")
-        
+ 
   # exponentiate the data set
     dtExp <- amelia_data[, lapply(.SD, function(x) exp(x)), .SDcols=indicators, by= c(imputed_id_vars)]
 
@@ -158,10 +163,11 @@
     }
     
     # export imputed data
+    write.csv(dtExp, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Imputed Data with Five Imputations.csv")
     write.csv(dtExp, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Full Imputed Data.csv")
 # ----------------------------------------------  
         
-        
+   
 # ----------------------------------------------
   # Set up for graphing:
     # vectors of indicator names and intervention names to subset
@@ -171,13 +177,28 @@
                       "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen")
           
       indicator_names <- c(
-        `newCasesMalariaMild` = "Confirmed Cases of Mild Malaria",
+        `newCasesMalariaMild` = "Confirmed Cases of Uncomplicated Malaria",
         `newCasesMalariaSevere` = "Confirmed Cases of Severe Malaria",
-        `mildMalariaTreated` = "Cases of Mild Malaria Treated",
+        `mildMalariaTreated` = "Cases of Uncomplicated Malaria Treated",
         `severeMalariaTreated` = "Cases of Severe Malaria Treated",
         `malariaDeaths` = "Number of Deaths from Malaria"
       )
           
+      intervention_names <- c(
+        `ArtLum` = "Artéméther - Lumefatrine",
+        `SP` = "SP administered during ANC",
+        `ASAQ` = "Artesunate Amodiaquine (ASAQ)",
+        `ITN` = "ITNs",
+        `ANC` = "Antenatal Care Visits",
+        `RDT` = "Rapid Diagnostic Tests",
+        `smearTest` = "Smear Tests",
+        `VAR` = "Measles Vaccine",
+        `healthFacilities` = "Health Facilities Reporting",
+        `reports` = "Number of Reports"
+      )    
+      
+      variable_names <- c(indicator_names, intervention_names)
+      
       interventions <- c("ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
                       "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ArtLum_received", "ArtLum_used",
                       "smearTest_completed", "smearTest_positive", "RDT_completed", "RDT_positive", "healthFacilities_total", "healthFacilitiesProduct")
@@ -209,7 +230,8 @@
         graphDataComplete <- graphDataComplete[isMissing==F, upper:= NA ]
           # export graphDataComplete
             write.csv(graphDataComplete, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Imputed Data.csv")
-        
+          # import graphDataComplete
+            graphDataComplete <- read.csv(paste0(dir, "Imputed Data.csv"))
         
       # separate indicators and interventions data for graphing
         graphDataIndicators <- graphDataComplete[ variable %in% indicators ] 
@@ -218,6 +240,47 @@
 
 
 # ----------------------------------------------   
+  # Examples of one-facet health zone MI graphs:
+    
+    graphDataComplete <- as.data.table(graphDataComplete) 
+    graphDataComplete[, date := as.Date(date)]
+        
+    # tmp = graphDataComplete[health_zone==hz & indicator == i & subpopulation == "pregnantWomen"]
+    # for()
+
+      makeGraph <- function(hz, i, subpop){ 
+        g <- ggplot(graphDataComplete[health_zone==hz & indicator == i & subpopulation == subpop,], aes(x=date, y=mean, color=isMissing)) + theme_bw()+
+          
+          geom_point(aes(shape=isMissing), size=3) + scale_shape_manual(values=c(19, 1)) + geom_errorbar(aes(ymin=lower, ymax=upper, y=NULL, width=75), alpha=0.5) + #geom_line(alpha=0.9, size=0.60) +
+          
+          ggtitle(paste0("Multiple Imputation for ", variable_names[i], " Completed in ", hz)) + 
+          
+          labs(color="Imputed Value") + ylab("Count") + theme(axis.title.x=element_blank()) +
+          
+          guides(shape=FALSE) + scale_color_manual(values=c("steelblue1", "tomato1"))
+        
+        return (g)
+      }  
+      
+    pdf((paste0(output_dir, "Example of MI Results - Confirmed Cases.pdf")), height=6, width=10) 
+      
+      print(makeGraph( "Mosango", "newCasesMalariaMild", "under5" ))
+      print(makeGraph( "Bandal", "newCasesMalariaMild", "under5" ))
+      
+    dev.off()
+    
+    
+    pdf((paste0(output_dir, "Example of MI Results - RDTs.pdf")), height=6, width=10) 
+    
+    for (healthzone in c("Pay kongila", "Vanga", "Selembao", "lemba")){
+      print(makeGraph( healthzone, "RDT", "completed" ))
+    }
+        
+    dev.off()   
+        
+        
+# ----------------------------------------------          
+        
   # Graph indicators data by health zone         
     pdf((paste0(output_dir, MI_results_indicators)), height=6, width=10)   
         
