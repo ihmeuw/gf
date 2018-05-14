@@ -2,20 +2,11 @@
 # Irena Chen
 #
 # 11/8/2017
-# Template for prepping GF COD Category budget data
+# Template for prepping GF summary page only budget data
 # Inputs:
 # inFile - name of the file to be prepped
 # Outputs:
 # budget_dataset - prepped data.table object
-# ----------------------------------------------
-
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
 # ----------------------------------------------
 
 prep_summary_budget = function(dir, inFile, sheet_name, start_date, 
