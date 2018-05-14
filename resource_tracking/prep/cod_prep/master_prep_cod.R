@@ -1,8 +1,10 @@
 # ----------------------------------------------
 
 # Irena Chen
-# Master code file for UGA data prep
-### this code will output a prepped and mapped file of the upcoming COD budgets: 
+# Master code file for DRC data prep
+# ----------------------------------------------
+###### Set up R / install packages  ###### 
+# ----------------------------------------------
 rm(list=ls())
 library(lubridate)
 library(data.table)
@@ -23,12 +25,21 @@ library(zoo)
 
 # ----------------------------------------------
 ##set up some variables: 
-loc_name <- 'cod'
+loc_name <- 'cod' ##use the ISO3 country code for DRC
 implementer <- "CAGF"
+# ----------------------------------------------
+## STEP 1: Download the 
+##this has all of the files we will be using: 
+## Notes: running this will throw a warning: 
+#Warning messages:
+#In read_fun(path = path, sheet = sheet, limits = limits, shim = shim,  :
+#              NA inserted for impossible 1900-02-29 datetime
 
-####DOWNLOAD THE FOLDER "FPM - grant budgets" from BASECAMP ONTO YOUR LOCAL DRIVE: 
+#But this shouldn't affect the final output. 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/fpm_budgets/' ##where the files are stored locally
+
+
+dir <- 'filepath here' ##where the files are stored locally
 file_list <- read.csv(paste0(dir, "cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)
 
@@ -46,12 +57,12 @@ for(i in 1:length(file_list$file_name)){
   summary_file$disease[i] <- file_list$disease[i]
   summary_file$grant[i] <- file_list$grant[i]
   summary_file$period[i] <- file_list$period[i] 
+  summary_file$year[i] <- file_list$grant_period[i]
   if(file_list$sr[i]=="unknown"){
     summary_file$geographic_detail[i] <- "National"
   } else {
     summary_file$geographic_detail[i] <- file_list$sr[i]
   }
-  summary_file$year[i] <- file_list$grant_time[i]
   
   if(file_list$type[i]=="summary"){
     tmpData <- prep_summary_budget(dir, as.character(file_list$file_name[i]),
@@ -110,18 +121,18 @@ resource_database$disbursement <- 0
 resource_database <- resource_database[!(module%in%c("6", "4"))]
 
 # ----------------------------------------------
-
-## optional: do a check on data to make sure values aren't dropped: 
+######## Optional: do a data check for dropped values ########
+# ----------------------------------------------
 # data_check<- resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number","year", "disease")]
 
 # ----------------------------------------------
 ##### Map to the GF Modules and Interventions #####
 ##run the map_modules_and_interventions.R script first
-
+# ----------------------------------------------
 
 codData <- strip_chars(resource_database, unwanted_array, remove_chars)
-
-mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+mapping_list <- load_mapping_list(dir, "intervention_and_indicator_list.xlsx",
+                                  include_rssh_by_disease = FALSE)
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
 final_mapping <- copy(mapping_list)
@@ -135,10 +146,9 @@ gf_mapping_list <- total_mapping_list("J:/Project/Evaluation/GF/mapping/multi_co
 
 # ----------------------------------------------
 # USE THIS TO CHECK FOR ANY MODULE/INTERVENTION COMBOS IN THE DATA THAT AREN'T IN THE MAPPING
-# gf_mapping_list$concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
-# codData$concat <- paste0(codData$module, codData$intervention)
-# unmapped_mods <- codData[!concat%in%gf_mapping_list$concat]
-
+# gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
+# cod_concat <- paste0(codData$module, codData$intervention)
+# unmapped_mods <- cod_concat[!cod_concat%in%gf_concat]
 
 # ----------------------------------------------
 cod_init_mapping <- merge(codData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
@@ -172,7 +182,7 @@ mappedCod$country <- "Congo (Democratic Republic)"
 
 # ----------------------------------------------
 ## write as csv 
-write.csv(mappedCod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/prepped_fpm_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
+write.csv(mappedCod, "prepped_fpm_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
 
 
 
