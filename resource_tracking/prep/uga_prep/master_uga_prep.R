@@ -137,12 +137,16 @@ resource_database$source <- source
 toMatch <- c("0", "Please sel", "PA", "6", "4")
 cleaned_database <- resource_database[!grepl(paste(toMatch, collapse="|"), resource_database$module),]
 
-
+# ---------------------------------------------
+########## We'll split the TB/HIV grants as follows: ########
+########## If the module explicitly says TB, then assign as TB ########
+########## Otherwise, default it to HIV ########
+# ---------------------------------------------
 ## split hiv/tb into hiv or tb (for module/intervention mapping purposes): 
 get_hivtb_split <- function(disease,module){
   x <- disease
  if(disease=="hiv/tb"){
-   if(grepl(paste(c("tb", "tuber"), collapse="|"), module)){ ## if explicitly says TB, assign as TB
+   if(grepl(paste(c("tb", "tuber"), collapse="|"), module)){ 
     x <- "tb"
   } else { ##otherwise, map it to HIV
     x <- "hiv"
@@ -153,6 +157,9 @@ return(x)
 
 cleaned_database$disease <- mapply(get_hivtb_split, cleaned_database$disease, cleaned_database$module)
 
+# ---------------------------------------------
+########## Strip special characters from the SDA descriptions ########
+# ---------------------------------------------
 ##list of punctions to remove: 
 sda_remove_chars <- c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
                   , "[[:punct:]]", "\"", ",")
@@ -166,13 +173,8 @@ cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
 ##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 
-ugaData <- strip_chars(cleaned_database, unwanted_array, remove_chars)
-
-## we have some junk "modules" that should be dropped:
-toMatch <- "pleaseselect"
-ugaData <- ugaData[!grepl(toMatch, ugaData$module),]
-
-mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"))
+mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx")
+                                  , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
 final_mapping <- copy(mapping_list)
@@ -181,9 +183,15 @@ final_mapping <- unique(final_mapping) ##remove any duplicate values
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
 
+##this loads the list of modules/interventions with their assigned codes
 gf_mapping_list <- total_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"),
                                       mapping_list, unwanted_array, remove_chars)
 
+##strip all of the special characters, white space, etc. from the RT database
+ugaData <- strip_chars(cleaned_database, unwanted_array, remove_chars)
+## we have some junk "modules" that should be dropped:
+toMatch <- "pleaseselect"
+ugaData  <- ugaData[!grepl(toMatch, cleaned_database$module),]
 
 # ----------------------------------------------
 ########### USE THIS TO CHECK FOR ANY UNMAPPED MODULE/INTERVENTIONS ###########
