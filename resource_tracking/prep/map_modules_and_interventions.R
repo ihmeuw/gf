@@ -5,15 +5,7 @@
 
 ### This code contains functions that map RT data to the GF Modular Framework 
 
-# ----------------------------------------------
-# Set up R
-rm(list=ls())
-library(ggplot2)
-library(dplyr)
-library(tools)
-library(data.table)
-library(lubridate)
-library(readxl)
+
 
 # ----------------------------------------------
 ##### Function to clean up the mods/interventions in the RT data #####
