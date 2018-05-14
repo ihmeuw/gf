@@ -18,7 +18,7 @@ library(readxl)
 knitr::opts_chunk$set(echo = TRUE)
 mappedUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_uga_data.csv"))
 mappedUga <- mappedUga[!is.na(budget)]
-uga_codebook <- data.table(read_excel("H:/other_gf_projects/RT_Codebook.xlsx"))
+uga_codebook <- data.table(read_excel("J:/Project/Evaluation/GF/resource_tracking/RT_Codebook.xlsx"))
 ```
 
 ## Original Data Sources
@@ -29,13 +29,13 @@ The FPM budgets typically have a format like the image below:
 
 
 ```{r pressure, echo=FALSE, fig.cap="An example of a FPM summary budget.", out.width = '100%'}
-knitr::include_graphics("H:/other_gf_projects/fpmimage.png")
+knitr::include_graphics("https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/fpmimage.png")
 ```
 
 Some FPM budgets will also have tabs with even more detailed information. While the FPM budgets have very useful information about module and intervention activities per grant, SR information is not usually included in these budgets. To obtain SR information, we have found that PUDR documents can be very helpful for this. 
 
 ```{r echo=FALSE, fig.cap="An example of a PUDR with SR information.", out.width = '50%'}
-knitr::include_graphics("H:/other_gf_projects/pudrimage.png")
+knitr::include_graphics("https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/pudrimage.png")
 ```
 
 So far, these are the two data sources from Uganda that we have for resource tracking data. We are actively seeking other sources of data to strengthen our analysis and understand how resources are disbursed. 
@@ -66,7 +66,7 @@ https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/uga_prep
 These are the scripts that you will need to prep the RT data and clean it into the same format as the RT database from the previous section. 
 
 ```{r echo=FALSE, fig.cap="These are the scripts that you will find in the uga_prep folder", out.width = '50%'}
-knitr::include_graphics("H:/other_gf_projects/githubimage.png")
+knitr::include_graphics("https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/githubimage.png")
 ```
 At this point, you should have cloned the github repository to your local drive, but if you haven't yet, this is a good guide for how to do so: 
 
@@ -78,7 +78,7 @@ In Basecamp, the RT data files are located here:
 
 
 ```{r echo=FALSE, fig.cap="RT data files on Basecamp", out.width = '50%'}
-knitr::include_graphics("H:/other_gf_projects/ugabasecampimage.png")
+knitr::include_graphics("ugabasecampimage.png")
 ```
 
 You only need to download the "fpm" and "pudrs" folders onto your local drive - but make sure to save them in the same place (perhaps under the same folder name). If they are stored in different places on your local drive, you will need to modify the R code to accomodate this, since the R code assumes that both folders share a filepath. 

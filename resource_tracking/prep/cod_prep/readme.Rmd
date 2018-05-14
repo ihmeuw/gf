@@ -29,13 +29,13 @@ The FPM budgets typically have a format like the image below:
 
 
 ```{r pressure, echo=FALSE, fig.cap="An example of a FPM summary budget.", out.width = '100%'}
-knitr::include_graphics("fpmimage.png")
+knitr::include_graphics("https://raw.githubusercontent.com/ihmeuw/gf/develop/resource_tracking/prep/fpmimage.PNG")
 ```
 
 Some FPM budgets will also have tabs with even more detailed information. While the FPM budgets have very useful information about module and intervention activities per grant, SR information is not usually included in these budgets. To obtain SR information, we have found that PUDR documents can be very helpful for this. 
 
 ```{r echo=FALSE, fig.cap="An example of a PUDR with SR information.", out.width = '50%'}
-knitr::include_graphics("pudrimage.png")
+knitr::include_graphics("https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/pudrimage.PNG")
 ```
 
 So far, these are the two data sources from Uganda that we have for resource tracking data. We are actively seeking other sources of data to strengthen our analysis and understand how resources are disbursed. 
@@ -66,7 +66,7 @@ https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/uga_prep
 These are the scripts that you will need to prep the RT data and clean it into the same format as the RT database from the previous section. 
 
 ```{r echo=FALSE, fig.cap="These are the scripts that you will find in the uga_prep folder", out.width = '50%'}
-knitr::include_graphics("githubimage.png")
+knitr::include_graphics("https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/githubimage.png")
 ```
 At this point, you should have cloned the github repository to your local drive, but if you haven't yet, this is a good guide for how to do so: 
 
@@ -81,7 +81,7 @@ In Basecamp, the RT data files are located here:
 knitr::include_graphics("drcbasecampimage.png")
 ```
 
-You only need to download the "fpm" and "pudrs" folders onto your local drive - but make sure to save them in the same place (perhaps under the same folder name). If they are stored in different places on your local drive, you will need to modify the R code to accomodate this, since the R code assumes that both folders share a filepath. 
+You only need to download the "fpm" folder and the "intervention_and_indicator_list.xlsx" file in the Resource Tracking Data folder. Make sure that all of these files are stored in the same place/folder on your local drive. If they are stored in different places, you will need to modify the R code to accomodate this, since the R code assumes that both folders share a filepath. 
 
 The "intervention_and_indicator_list" Excel workbook is a file that contains all of the current GF modular framework interventions and indicators, as well as a tab that maps the old modules/interventions in past grants to the current framework. The "module_mapping" tab gets updated accordingly whenever we get new data that needs to be mapped to the framework. The main purpose of this is to standardize grant resources across country so that comparisons across grants can be as accurate as possible. 
 
@@ -89,7 +89,7 @@ The "intervention_and_indicator_list" Excel workbook is a file that contains all
 
 ## Running the Scripts 
 
-First, run the three individual prep scripts (detailed, summary, and pudr) before running the master prep file. In addition, you will need to run the map_modules_and_interventions.R script in the resource_tracking/prep/ repository folder. 
+First, run the individual prep scripts (detailed, summary, rejected, and old_module) before running the master prep file. In addition, you will need to run the map_modules_and_interventions.R script in the resource_tracking/prep/ repository folder. 
 In the master prep file, there are a few parameters that need to be set. On line 31:
 
 ```{r}
