@@ -126,7 +126,7 @@ admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow
 
 
 ##modules:  
-colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#ffa3b2',
+colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#05cffc',
                                   na.value = "grey70",space = "Lab", midpoint = 2.5, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
                                   breaks=c(0,1, 2,3, 4), limits=c(0,5))
