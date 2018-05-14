@@ -59,6 +59,7 @@ summary_file$loc_name <- loc_name
 for(i in 1:length(file_list$file_name)){ 
   ##fill in the summary tracking file with what we know already: 
   summary_file$disease[i] <- file_list$disease[i]
+  summary_file$year[i] <- file_list$grant_period[i]
   summary_file$grant[i] <- file_list$grant[i]
   summary_file$period[i] <- file_list$period[i] 
   summary_file$geographic_detail[i] <- file_list$geography_detail[i]
@@ -111,9 +112,9 @@ resource_database$start_date <- as.Date(resource_database$start_date)
 ##change the column names of the summary file variables so that they make sense: 
 setnames(summary_file, c("Data Source",	"Year",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 
-##export the summary table to J Drive
+##export the summary table
 ##(you might get a warning message about appending column names to the files; this should not affect the final output)
-write.table(summary_file, paste0("resource_tracking_data_summary.csv"),
+write.table(summary_file, paste0("file path where you want the summary file","resource_tracking_data_summary.csv"),
             append = TRUE, row.names=FALSE, sep=",")
 
 
@@ -131,7 +132,7 @@ resource_database$loc_name <- loc_name
 resource_database$source <- source
 
 ## optional: do a check on data to make sure values aren't dropped: 
-# data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
+# data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "data_source","disease")])
 
 ## we have some junk "modules" that should be dropped:
 toMatch <- c("0", "Please sel", "PA", "6", "4")
@@ -179,7 +180,6 @@ mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.x
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
 final_mapping <- copy(mapping_list)
 final_mapping$disease <- NULL ## we will be joining on code 
-final_mapping <- unique(final_mapping) ##remove any duplicate values 
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
 
@@ -188,14 +188,20 @@ gf_mapping_list <- total_mapping_list(paste0(dir, "intervention_and_indicator_li
                                       mapping_list, unwanted_array, remove_chars)
 
 ##strip all of the special characters, white space, etc. from the RT database
-ugaData <- strip_chars(cleaned_database, unwanted_array, remove_chars)
+cleaned_database <- strip_chars(cleaned_database, unwanted_array, remove_chars)
 ## we have some junk "modules" that should be dropped:
-toMatch <- "pleaseselect"
-ugaData  <- ugaData[!grepl(toMatch, cleaned_database$module),]
+ugaData  <- cleaned_database[!grepl("pleasesel", cleaned_database$module),]
+
+#optional: check again for any dropped data: 
+# data_check2<- as.data.frame(ugaData[, sum(budget, na.rm = TRUE),by = c("grant_number", "data_source","disease")])
+
+
 
 # ----------------------------------------------
 ########### USE THIS TO CHECK FOR ANY UNMAPPED MODULE/INTERVENTIONS ###########
 # ----------------------------------------------
+
+
 # gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 # uga_concat <- paste0(ugaData$module, ugaData$intervention)
 # unmapped_mods <- uga_concat[!uga_concat%in%gf_concat]
