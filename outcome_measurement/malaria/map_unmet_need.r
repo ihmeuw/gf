@@ -157,15 +157,40 @@ p1uga = ggplot(data[iso3=='UGA'], aes(y=y, x=x, fill=unmet_itn*100)) +
 	theme(plot.title=element_text(hjust=.5)) 
 p1 = arrangeGrob(p1cod, p1uga, ncol=2)
 
+# map of pixel-level unmet need of antimalarials
+p2cod = ggplot(data[iso3=='COD'], aes(y=y, x=x, fill=unmet_antmal*100)) + 
+	geom_tile() + 
+	geom_path(data=shapeData[iso3=='COD'], aes(x=long, y=lat, group=group)
+		, color=border, size=.05, inherit.aes=FALSE) + 
+	scale_fill_gradientn('', colors=cols1, na.value='white') + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	labs(title='DRC') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5), legend.position='none') 
+p2uga = ggplot(data[iso3=='UGA'], aes(y=y, x=x, fill=unmet_antmal*100)) + 
+	geom_tile() + 
+	geom_path(data=shapeData[iso3=='UGA'], aes(x=long, y=lat, group=group)
+		, color=border, size=.05, inherit.aes=FALSE) + 
+	scale_fill_gradientn('Unmet\nAntimalarial\nNeed\n(% of\ncases)', colors=cols1, na.value='white') + 
+	coord_fixed(ratio=1) + 
+	scale_x_continuous('', breaks = NULL) + 
+	scale_y_continuous('', breaks = NULL) + 
+	labs(title='Uganda') + 
+	theme_minimal(base_size=16) + 
+	theme(plot.title=element_text(hjust=.5)) 
+p2 = arrangeGrob(p2cod, p2uga, ncol=2)
+
 # national level
-p2 = ggplot(graphData[calc=='Pixel-Level' & year==max(year)], aes(x=variable, y=value, fill=calc)) + 
+p3 = ggplot(graphData[calc=='Pixel-Level' & year==max(year)], aes(x=variable, y=value, fill=calc)) + 
 	geom_bar(stat='identity', position='dodge', fill=cols2[2]) + 
 	labs(title='Unmet Need', y='Unmet Need (% of cases)', x='') + 
 	theme_bw() + 
 	theme(plot.title=element_text(hjust=.5), plot.subtitle=element_text(hjust=.5))
 
 # national level comparing to ecological
-p3 = ggplot(graphData[year==max(year)], aes(x=variable, y=value, fill=calc)) + 
+p4 = ggplot(graphData[year==max(year)], aes(x=variable, y=value, fill=calc)) + 
 	geom_bar(stat='identity', position='dodge') + 
 	scale_fill_manual('', values=cols2) + 
 	labs(title='Unmet Need', y='Unmet Need (% of cases)', x='') + 
@@ -173,7 +198,7 @@ p3 = ggplot(graphData[year==max(year)], aes(x=variable, y=value, fill=calc)) +
 	theme(plot.title=element_text(hjust=.5), plot.subtitle=element_text(hjust=.5))
 
 # health zone level to show the ecological fallacy
-p4 = ggplot(hzData, aes(y=unmet_itn_rate, x=unmet_itn_rate_fal)) + 
+p5 = ggplot(hzData, aes(y=unmet_itn_rate, x=unmet_itn_rate_fal)) + 
 	geom_point(size=2, alpha=.5) + 
 	geom_abline(slope=1, intercept=0) + 
 	scale_x_continuous(limits=lims) +
@@ -183,7 +208,7 @@ p4 = ggplot(hzData, aes(y=unmet_itn_rate, x=unmet_itn_rate_fal)) +
 	theme(plot.title=element_text(hjust=.5), plot.subtitle=element_text(hjust=.5))
 
 # time series of unmet need
-p5 = ggplot(graphData[calc=='Pixel-Level' & year>2004], aes(y=value, x=year, color=variable)) + 
+p6 = ggplot(graphData[calc=='Pixel-Level' & year>2004], aes(y=value, x=year, color=variable)) + 
 	geom_line(size=2) + 
 	labs(title='Unmet Need Over Time', y='Unmet Need (% of cases)', x='') + 
 	scale_x_continuous(breaks=seq(2005,2014, by=2)) + 
@@ -198,9 +223,11 @@ p5 = ggplot(graphData[calc=='Pixel-Level' & year>2004], aes(y=value, x=year, col
 pdf(graphFile, height=6, width=9)
 grid.newpage()
 grid.draw(p1)
-p2
+grid.newpage()
+grid.draw(p2)
 p3
 p4
 p5
+p6
 dev.off()
 # --------------------------------

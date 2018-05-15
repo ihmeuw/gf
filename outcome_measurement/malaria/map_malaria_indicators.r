@@ -144,8 +144,8 @@ ugaantmal = ggplot(data[iso3=='UGA'], aes(y=y, x=x, fill=antmal*100)) +
 	geom_tile() + 
 	geom_path(data=shapeData[iso3=='UGA'], aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
-	scale_fill_gradientn('Antimalarial\nCoverage %', colors=cols2, 
-		na.value='white', limits=limsantmal) + 
+	scale_fill_gradientn('ACT %', colors=cols2, 
+		na.value='white') + 
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
@@ -157,14 +157,14 @@ codantmal = ggplot(data[iso3=='COD'], aes(y=y, x=x, fill=antmal*100)) +
 	geom_tile() + 
 	geom_path(data=shapeData[iso3=='COD'], aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
-	scale_fill_gradientn('Antimalarial\nCoverage %', colors=cols2, 
-		na.value='white', limits=limsantmal) + 
+	scale_fill_gradientn('ACT %', colors=cols2, 
+		na.value='white') + 
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
 	labs(title='DRC') + 
 	theme_minimal(base_size=16) + 
-	theme(plot.title=element_text(hjust=.5), legend.position='none') 
+	theme(plot.title=element_text(hjust=.5), plot.margin=unit(rep(-1,4), 'cm')) 
 	
 # put maps together
 p1 = arrangeGrob(codprev, ugaprev, ncol=2)
