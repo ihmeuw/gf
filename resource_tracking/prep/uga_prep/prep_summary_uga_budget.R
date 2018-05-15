@@ -7,15 +7,7 @@
 # inFile - name of the file to be prepped
 # Outputs:
 # budget_dataset - prepped data.table object
-# ----------------------------------------------
-##download necessary packages: 
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
+
 # ----------------------------------------------
 ##function to clean the data: 
 

@@ -82,7 +82,7 @@ dept_muni_list$municipality <-gsub(paste(remove_chars, collapse="|"), "",dept_mu
 dept_muni_list$municipality <- tolower(dept_muni_list$municipality)
 
 
-sicoin_malaria $municipality <- tolower(sicoin_malaria$loc_name)
+sicoin_malaria$municipality <- tolower(sicoin_malaria$loc_name)
 sicoin_malaria$municipality <-gsub(paste(remove_chars, collapse="|"), "",sicoin_malaria$municipality)
 sicoin_malaria$municipality <- chartr(paste(names(unwanted_array), collapse=''),
                                paste(unwanted_array, collapse=''),
@@ -95,7 +95,7 @@ department_data <- merge(sicoin_malaria, dept_muni_list, all.x=TRUE, by="municip
 # dropped_munis <- department_data[is.na(department)]
 
 ##sum by department now: 
-##sum up budget (as "variable") by year, disease, and data source 
+##sum up budget and disb. by year, disease, and data source 
 byVars = names(department_data)[names(department_data)%in%c('department','module','year')]
 department_data  = department_data[, list(budget=sum(na.omit(budget)), 
                                           disbursement=sum(na.omit(disbursement))), by=byVars]
@@ -164,6 +164,8 @@ gtm_region_centroids$NAME_1[3] <- "Sacatepéquez"
 gtm_region_centroids$NAME_1[1] <- "Quiché"
 gtm_region_centroids$NAME_1[7] <- "Petén"
 
+
+
 # ----------------------------------------------
 ######## Use ggplot to make the visualizations ########
 # ----------------------------------------------
@@ -178,7 +180,7 @@ for(k in unique(graphData$mod_year)){
   plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=dept_budget)) + 
              coord_equal() + ##so the two shapefiles have the same proportions 
              geom_path() +
-             geom_map(map=admin_dataset, data=admin_dataset,
+             geom_map(map=coord_and_names, data=coord_and_names,
                       aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
              # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="red", alpha=0) + 
              theme_void() +  

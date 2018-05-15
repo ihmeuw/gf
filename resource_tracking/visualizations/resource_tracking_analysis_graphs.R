@@ -27,7 +27,7 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
                                  fileEncoding = "latin1"))
 
 
-gf_mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+gf_mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx", include_rssh_by_disease = TRUE)
 
 
 # ---------------------------------------------
