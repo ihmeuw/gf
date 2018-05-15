@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-#4/20/2018
+#4/27/2018
 # Descriptive statistics and maps for the Uganda Viral Load Dashboard
 # ----------------------------------------------
 # Set up R
@@ -294,5 +294,217 @@ for(f in unique(uvl_dist$district_id)) {
   i=i+1
   
 }
+
+
+
+#--------------------------------
+# DBS VERSUS PLASMA
+# create a data table for patients received and samples received
+
+# store identifiers
+idVars <- c("facility_id", "facility_name", "month", "year")
+
+# create a long data set with totals by district
+uvl_fac <- uganda_vl[,
+                     .(samples_received = sum(samples_received),
+                     dbs_samples=sum(dbs_samples), plasma_samples=sum(plasma_samples)),
+                     by=idVars]
+
+# reshape indicators long for district data
+uvl_fac <- melt(uvl_fac, id.vars=idVars)
+
+
+# label the variables for graph titles and put the graphs in an intuitive order
+uvl_fac$variable <- factor(uvl_fac$variable, 
+                           levels=c("samples_received", "dbs_samples", "plasma_samples"), 
+                           labels=c("Samples Received", "DBS Samples", "Plasma"))
+
+# add a date variable
+uvl_fac[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+
+# single test graph
+f=27
+name <- unique(uvl_fac[facility_id==f]$facility_name)
+
+ggplot(uvl_fac[facility_id==f], aes(y=value, x=date)) + 
+  geom_point() +
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable, scales='free_y') +
+  xlab("Date") + ylab("Count") + theme_bw() + labs(title=name)
+
+
+
+# ---------------------------------
+# loop over all facilities printing patients and samples received
+
+list_of_plots = NULL
+i=1
+
+t <- c()
+
+for(f in unique(uvl_fac$facility_id)) {
+  # look up district name
+  name <- unique(uvl_fac[facility_id==f]$facility_name)
+  
+  # make your graph
+  
+  list_of_plots[[i]] <-  ggplot(uvl_fac[facility_id==f], aes(x=date, y=value)) + 
+    geom_point() + 
+    geom_line(alpha=0.5) + 
+    facet_wrap(~variable, scales='free_y') +
+    labs(title=name, x="Date", y="Count") + theme_bw()
+  
+  
+  i=i+1
+  
+  t <- c(t, warnings())
+  
+}
+
+pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/dbs_plasma.pdf', height=6, width=9)
+
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+} 
+
+dev.off()
+
+
+#--------------------------------------------------
+# Valid results and suppression ratio
+# create a data table for valid results and suppression ratio
+
+# store identifiers
+idVars <- c("facility_id", "facility_name", "date", "sex")
+
+# create a long data set with totals by facility
+idrc <- uganda_vl[sex!='Unknown', .(valid_results = as.numeric(sum(valid_results)), ratio=100*(sum(suppressed)/sum(valid_results))),
+                        by=idVars]
+
+# reshape indicators long 
+idrc <- melt(idrc, id.vars=idVars)
+
+
+# label the variables for graph titles and put the graphs in an intuitive order
+idrc$variable <- factor(idrc$variable, 
+                           levels=c("valid_results", "ratio"), 
+                           labels=c("Valid test results", "Percent virally suppressed"))
+
+
+# single test graph
+f=27
+name <- unique(idrc[facility_id==f]$facility_name)
+
+ggplot(idrc[facility_id==f], aes(x=date, y=value, color=sex, group=sex)) + 
+  geom_point() +
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable, scales='free_y') +
+ theme_bw() + labs(title=name, x='Date', color='Sex')
+
+
+
+# ---------------------------------
+# loop over all facilities printing patients and samples received
+
+list_of_plots = NULL
+i=1
+
+
+for(f in unique(idrc$facility_id)) {
+  # look up district name
+  name <- unique(idrc[facility_id==f]$facility_name)
+  
+  # make your graph
+  
+  list_of_plots[[i]] <-  ggplot(idrc[facility_id==f], aes(x=date, y=value, color=sex, group=sex)) + 
+    geom_point() + 
+    geom_line(alpha=0.5) + 
+    facet_wrap(~variable, scales='free_y') +
+    theme_bw() + labs(title=name, x='Date', color='Sex')
+  
+  
+  i=i+1
+
+  
+}
+
+pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/valid_results_ratio.pdf', height=6, width=9)
+
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+} 
+
+dev.off()
+
+
+#------------------------------
+
+
+#--------------------------------------------------
+# Valid results and suppressed
+# create a data table for valid results and suppressed
+
+# store identifiers
+idVars <- c("facility_id", "facility_name", "date", "sex")
+
+# create a long data set with totals by facility
+idrc <- uganda_vl[sex!='Unknown', .(valid_results = sum(valid_results), suppressed=sum(suppressed)),
+                  by=idVars1]
+
+# reshape indicators long 
+idrc <- melt(idrc, id.vars=idVars)
+
+
+# label the variables for graph titles and put the graphs in an intuitive order
+idrc$variable <- factor(idrc$variable, 
+                        levels=c("valid_results", "suppressed"), 
+                        labels=c("Valid test results", "Virally suppressed test results"))
+
+
+# single test graph
+f=27
+name <- unique(idrc[facility_id==f]$facility_name)
+
+ggplot(idrc[facility_id==f], aes(x=date, y=value, color=sex, group=sex)) + 
+  geom_point() +
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable, scales='free_y') +
+  theme_bw() + labs(title=name, x='Date', y='Count', color='Sex')
+
+
+
+# ---------------------------------
+# loop over all facilities printing patients and samples received
+
+list_of_plots = NULL
+i=1
+
+
+for(f in unique(idrc$facility_id)) {
+  # look up district name
+  name <- unique(idrc[facility_id==f]$facility_name)
+  
+  # make your graph
+  
+  list_of_plots[[i]] <-  ggplot(idrc[facility_id==f], aes(x=date, y=value, color=sex, group=sex)) + 
+    geom_point() + 
+    geom_line(alpha=0.5) + 
+    facet_wrap(~variable, scales='free_y') +
+    theme_bw() + labs(title=name, x='Date', y='Count', color='Sex')
+  
+  
+  i=i+1
+  
+  
+}
+
+pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/vresults_suppressed.pdf', height=6, width=9)
+
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+} 
+
+dev.off()
+
 
 

@@ -54,7 +54,7 @@ gtmBudgets$country <- "Guatemala"
 ##so it will map to a municipality anyway 
 
 
-##rbind the sicoin and FPM data:
+## if you want to aggregate the sicoin and FPM data:
 # gtmBudgets <- rbind(sicoin_data, gtmBudgets)
 #
 
@@ -84,18 +84,24 @@ gos_data$disbursement <- 0
 gos_data$adm1 <- gos_data$loc_name
 gos_data$adm2 <- gos_data$loc_name
 gos_data$lang <- "eng"
+gos_data$cost_category <- "all"
 ##aggregate with gos data: 
 
 totalData <- rbind(fpmData, gos_data)
 
 # --------------------------------------------
 #DUPLICATE CHECK: 
-d1 <- nrow(totalData )
+d1 <- nrow(totalData)
 d2 <- unique(length(totalData))
 
 if(d1 !=d2){
   stop("Your dataset has duplicates!")
 }
+
+byVars = names(totalData)[!names(totalData)%in%c('budget', 'disbursement', 'expenditure')]
+totalData= totalData[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement)),expenditure=sum(na.omit(expenditure))), by=byVars]
+
+
 
 
 # --------------------------------------------
@@ -110,12 +116,12 @@ write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/m
 ## some of the FPM data is missing so we'll fill it in w/ the FPM data (and drop the FPM data that overlaps): 
 
 ##pudrs overlap with the FPM budgets - drop this so we don't double count 
-fpmGtm <- gtmBudgets[!(data_source=="pudr"&year>2015)]
-fpmUga <- totalUga[!(data_source=="pudr"&disease=="tb")]
-fpmCod <-  copy(totalCod)
-fpmCod$end_date <- NULL
+fpmGtm <- gtmBudgets[!(data_source=="pudr")] ##all of the PUDRs we have correspond to available FPM 
+fpmUga <- totalUga[!(data_source=="pudr"&year>2015)] ##we have a lot of recent PUDRs that overlap with FPM 
+fpmCod <-  copy(totalCod) ##no PUDRs from DRC yet 
 
 cleanData <- rbind(fpmGtm, fpmUga, fpmCod)
+cleanData[,end_date:=start_date+period-1]
 
 gos_cod<- gos_data[country=="Congo (Democratic Republic)"]
 gos_uga <- gos_data[country=="Uganda"]

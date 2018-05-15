@@ -3,35 +3,28 @@
 #
 # 3/27/2018
 
-### This code is to map RT data to the GF framework modules and interventions 
+### This code contains functions that map RT data to the GF Modular Framework 
 
-# ----------------------------------------------
-# Set up R
-rm(list=ls())
-library(ggplot2)
-library(dplyr)
-library(tools)
-library(data.table)
-library(lubridate)
-library(readxl)
+
 
 # ----------------------------------------------
 ##### Function to clean up the mods/interventions in the RT data #####
-
-##create vector of unwanted characters:
+# ----------------------------------------------
+## vector dictionary of special characters to regular characters
 unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
                           'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
                           'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
                           'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
                           'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 'þ'='b', 'ÿ'='y' )
 
+
+# vector of characters or phrases to remove
 remove_chars <- c(" ","rssh","hss", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
                   , "[[:punct:]]", "[^[:alnum:]]","\"", ",")
 
 
-##remove accents
+##function that takes three parameters: the dataset you want cleaned, and the two vectors we created above: 
 strip_chars <- function(gfData, unwanted_array, remove_chars){
-    
   ##remove special characters and blank spaces
   gfData$module <-tolower(gfData$module)
   gfData$module <-gsub(paste(remove_chars, collapse="|"), "",gfData$module)
@@ -51,10 +44,14 @@ strip_chars <- function(gfData, unwanted_array, remove_chars){
 return(gfData)
 }
 
-
 # ----------------------------------------------
-##load the mapping data: 
-load_mapping_list <- function(mapping_file){
+##### Function to load the mapping data #####
+# parameters are the mapping_file name 
+# and boolean that indicates if you want to repeat each RSSH module/intervention for each disease
+# set the boolean to false when mapping data to GF modular framework
+# but set to true when you want to graph RSSH modules in each disease 
+# ----------------------------------------------
+load_mapping_list <- function(mapping_file, include_rssh_by_disease){
   tab_names <- c("HIV Interventions", "TB Interventions", "Malaria Interventions", "RSSH Interventions")
   
   for(i in 1:length(tab_names)){
@@ -74,14 +71,27 @@ load_mapping_list <- function(mapping_file){
       indicator_mapping <- rbind(indicator_mapping, tmpData)
     }
   }
+  
+  ##we don't need this for mapping, but we need this for plotting interventions by modules per disease
+ if(include_rssh_by_disease){
+  rsshData <- data.table(read_excel(mapping_file, sheet = "RSSH Interventions", trim_ws = TRUE))
+  diseases <- c("hiv", "malaria", "tb")
+  for(i in 1:length(diseases)){
+    tmp <- copy(rsshData)
+    tmp$disease <- diseases[i]
+    indicator_mapping <- rbind(indicator_mapping, tmp)
+  }
+ }
   ##change the dataset names
   setnames(indicator_mapping, c("code","module", "intervention", "disease"))
+  indicator_mapping <- unique(indicator_mapping)
   ##this will make it easier to map everything by removing spaces, punctuation, etc. 
   return(indicator_mapping)
 }
   
 # ----------------------------------------------
-
+##### Function that cleans the special chars/white space from the mapping tab #####
+# ----------------------------------------------
 total_mapping_list <- function(file_name, indicator_mapping, unwanted_array, remove_chars){
   
   old_modules <- data.table(read_excel(file_name, sheet = "module_mapping", trim_ws = TRUE))
@@ -110,47 +120,6 @@ total_mapping_list <- function(file_name, indicator_mapping, unwanted_array, rem
   mapping_for_gf <- unique(mapping_for_gf)
   return(mapping_for_gf)
 }
-
-
-
-##if this works correctly, we should be able to drop the unmapped_mods from our dataset since they are junk categories:
-# gfData<- gfData[!module%in%unmapped_mods$module]
-
-
-# #if categories get dropped or miscalculated during the mapping, we can figure out which ones they were: 
-# data_check1 <- as.data.frame(gfData[, sum(budget, na.rm = TRUE),by = c("country", "disease")])
-# data_check2 <- as.data.frame(gfData[, sum(budget, na.rm = TRUE),by = c("country","grant_number", "disease")])
-
-# ----------------------------------------------
-mapped_gf <- merge(gfData, mapping_for_gf, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
-
-##use this to check if any modules/interventions were dropped:
-# dropped_gf <- mapped_gf[is.na(mapped_gf$code)] '
-
-gf_data_mapped <- merge(mapped_gf, final_mapping, by="code")
-gf_data_mapped$budget <- gf_data_mapped$budget*gf_data_mapped$coefficient
-gf_data_mapped$expenditure <- gf_data_mapped$expenditure*gf_data_mapped$coefficient
-gf_data_mapped$disbursement <- gf_data_mapped$disbursement*gf_data_mapped$coefficient
-
-
-
-# ----------------------------------------------
-
-##sum to make sure that budget numbers aren't dropped:
-# data_check1 <- gfData[, sum(budget, na.rm = TRUE),by = c("country", "module","intervention","disease")]
-# data_check2 <- gf_data_mapped[, sum(budget, na.rm = TRUE),by = c("country","module", "intervention","disease")]
-# data_check1[!module%in%data_check2$module]
-# data_check1$ind <- "pre"
-# data_check2$ind <- "post"
-# data_check <- rbind(data_check1, data_check2)
-# write.csv(data_check, "data_check.csv", row.names = FALSE)
-
-# ----------------------------------------------
-
-write.csv(mappedData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/rt_data_mapped.csv"
-          , fileEncoding="latin1", row.names=FALSE)
-
-
 
 
 

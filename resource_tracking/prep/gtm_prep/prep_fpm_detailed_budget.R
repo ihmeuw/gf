@@ -45,7 +45,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   }
   
   ##add in the quarter names to the list: 
-  create_qtr_names = function(qtr_names, cashText, lang){
+  create_qtr_names = function(qtr_names, cashText){
     for(i in 1:qtr_num+6){
       if(i <7) {
         i=i+1
@@ -56,7 +56,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     }
     return(qtr_names)
   }
-  qtr_names <- create_qtr_names(qtr_names, cashText, lang)
+  qtr_names <- create_qtr_names(qtr_names, cashText)
   
   ##load the FPM data: 
   if(!is.na(sheet_name)){
@@ -64,10 +64,8 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   } else {
     gf_data <- data.table(read_excel(paste0(dir, inFile)))
   }
-  
-  ## drop the first  two columns (they are unnecessary)
+
   gf_data <- gf_data[,-c(1:2)]
-  
   ##GUA-M-MSPAS formatted differently: 
   if(grant=="GUA-M-MSPAS"){
     gf_data <- gf_data[-1,]

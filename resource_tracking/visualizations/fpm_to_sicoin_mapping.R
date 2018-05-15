@@ -29,7 +29,8 @@ gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gt
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
                                    ,fileEncoding="latin1"))
 
-
+dept_muni_list <- data.table(read.csv("J:/Project/Evaluation/GF/mapping/gtm/department_municipality_list.csv"
+                                   ,fileEncoding="latin1"))
 
 # ----------------------------------------------
 ##MAP FPM BUDGETS TO SICOIN MUNICIPALITIES: 
@@ -48,8 +49,7 @@ gtm_subset = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.o
 # gtm_subset[, module_fraction := budget/sum(budget), by=c("disease","quarter")]
 # gtm_subset[, int_fraction := budget/sum(budget), by=c("disease","quarter", "gf_module")]
 
-
-fpm_malaria <- gtm_subset[(disease=="malaria"&year==2012)]
+fpm_malaria <- gtm_subset[(disease=="malaria"&year==2016)]
 # ----------------------------------------------
 
 ##just work with GF data for now: 
@@ -97,10 +97,7 @@ graphData[,muni_budget:=sum(budget), by=c("year", "loc_name")]
 
 graphData[,muni_budget_qtr:=budget*qtr_fraction]
 graphData[,muni_budget_year:=muni_budget*year_fraction]
-##municipality budget now multiplied by # of interventions per module: 
-# graphData[,final_budget:=muni_budget*int_fraction]
-# graphData[,muni_disb:=disbursement*muufraction]
-# graphData[,final_disb:=muni_disb*int_fraction]
+
 
 graphData[, mod_year:=paste(year, ":",gf_module)]
 graphData[, int_year:=paste(year, gf_module,":",gf_intervention)]
@@ -129,7 +126,7 @@ admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow
 
 
 ##modules:  
-colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#ffa3b2',
+colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#05cffc',
                                   na.value = "grey70",space = "Lab", midpoint = 2.5, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
                                   breaks=c(0,1, 2,3, 4), limits=c(0,5))
@@ -142,7 +139,7 @@ colScale <-  scale_fill_gradient2(low='#0606aa', mid='#87eda5', high='#ffa3b2',
 )
 
 graphData$muni_budget <- cut(graphData$muni_budget_year/10000, 
-                             breaks= c(0,0.1, seq(0.2, 1, by = .1), 2:5, Inf),right = FALSE)
+                             breaks= c(seq(0, 3, by=0.5),4:10, Inf),right = FALSE)
 
 colors <- c( '#1F3AC7',
              '#235BCD',
@@ -206,6 +203,8 @@ for(k in unique(graphData$mod_year)){
 pdf("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/NAME HERE.pdf", height=9, width=12)
 invisible(lapply(gtm_plots, print))
 dev.off()
+
+
 
 
 

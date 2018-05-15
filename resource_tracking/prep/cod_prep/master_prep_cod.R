@@ -1,8 +1,10 @@
 # ----------------------------------------------
 
 # Irena Chen
-# Master code file for UGA data prep
-### this code will output a prepped and mapped file of the upcoming COD budgets: 
+# Master code file for DRC data prep
+# ----------------------------------------------
+###### Set up R / install packages  ###### 
+# ----------------------------------------------
 rm(list=ls())
 library(lubridate)
 library(data.table)
@@ -23,13 +25,22 @@ library(zoo)
 
 # ----------------------------------------------
 ##set up some variables: 
-loc_name <- 'cod'
+loc_name <- 'cod' ##use the ISO3 country code for DRC
 implementer <- "CAGF"
+# ----------------------------------------------
+## STEP 1: Download the 
+##this has all of the files we will be using: 
+## Notes: running this will throw a warning: 
+#Warning messages:
+#In read_fun(path = path, sheet = sheet, limits = limits, shim = shim,  :
+#              NA inserted for impossible 1900-02-29 datetime
 
-####DOWNLOAD THE FOLDER "FPM - grant budgets" from BASECAMP ONTO YOUR LOCAL DRIVE: 
+#But this shouldn't affect the final output. 
 
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/fpm_budgets/' ##where the files are stored locally
-file_list <- read.csv(paste0(dir, "cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
+
+
+dir <- 'filepath here' ##where the files are stored locally
+file_list <- read.csv(paste0(dir, "fpm/cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)
 
 ##create a summary file to track the data that we have (and that we still need)
@@ -38,7 +49,7 @@ summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), n
                            "geographic_detail", "period",	"grant", "disease", "loc_id"))
 
 summary_file$loc_id <- as.character(summary_file$loc_id)
-summary_file$loc_id <- loc_id
+summary_file$loc_id <- loc_name
 
 ##run the for loop to clean all of the COD data: 
 for(i in 1:length(file_list$file_name)){
@@ -46,12 +57,12 @@ for(i in 1:length(file_list$file_name)){
   summary_file$disease[i] <- file_list$disease[i]
   summary_file$grant[i] <- file_list$grant[i]
   summary_file$period[i] <- file_list$period[i] 
+  summary_file$year[i] <- file_list$grant_period[i]
   if(file_list$sr[i]=="unknown"){
     summary_file$geographic_detail[i] <- "National"
   } else {
     summary_file$geographic_detail[i] <- file_list$sr[i]
   }
-  summary_file$year[i] <- file_list$grant_time[i]
   
   if(file_list$type[i]=="summary"){
     tmpData <- prep_summary_budget(dir, as.character(file_list$file_name[i]),
@@ -59,18 +70,28 @@ for(i in 1:length(file_list$file_name)){
                                   file_list$disease[i], file_list$loc_id[i], file_list$period[i]
                                   , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
     tmpData$year <- year(tmpData$start_date)
+    tmpData$data_source <- "fpm"
    } else if (file_list$type[i]=="detailed"){
     tmpData <- prep_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
                                         file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_name, file_list$source[i])
     tmpData$year <- year(tmpData$start_date)
+    tmpData$data_source <- "fpm"
   } else if(file_list$type[i]=="module"){
     tmpData <- prep_old_module_budget(dir, as.character(file_list$file_name[i]),
                                    file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
                                    file_list$disease[i], file_list$loc_id[i], file_list$period[i]
                                    , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
     tmpData$year <- year(tmpData$start_date)
+    tmpData$data_source <- "fpm"
   } else if(file_list$type[i]=="rejected"){
     tmpData <- prep_cod_rejected(paste0(dir, file_list$file_name[i]))
+    tmpData$data_source <- "fpm"
+    
+  }  else if (file_list$type[i]=="pudr"){ ##has expenditure data 
+    tmpData <- prep_pudr_cod(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
+                             file_list$start_date[i], file_list$disease[i], file_list$period[i], 
+                             file_list$grant[i], file_list$sr[i],file_list$data_source[i], file_list$lang[i], loc_name)
+  tmpData$data_source <- "pudr"
   }
   tmpData$source <- "gf"
   if(i==1){
@@ -102,26 +123,37 @@ setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Data Inventory Star
                          "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 
 
-## since we only have budget data, include exp and disbursed as 0:  
+
+##export the summary table
+##(you might get a warning message about appending column names to the files; this should not affect the final output)
+write.table(summary_file, paste0("file path where you want the summary file","resource_tracking_data_summary.csv"),
+            append = TRUE, row.names=FALSE, sep=",")
+
+# ---------------------------------------------
+########## Modify the prepped data variables as necessary ########
+# ---------------------------------------------
+
+
+## since we only have budget and exp, set disbursed as 0:  
 resource_database$budget <- as.numeric(resource_database$budget)
-resource_database$expenditure <- 0 
+resource_database$expenditure <- as.numeric(resource_database$expenditure)
 resource_database$disbursement <- 0 
 
 resource_database <- resource_database[!(module%in%c("6", "4"))]
 
 # ----------------------------------------------
-
-## optional: do a check on data to make sure values aren't dropped: 
+######## Optional: do a data check for dropped values ########
+# ----------------------------------------------
 # data_check<- resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number","year", "disease")]
 
 # ----------------------------------------------
-##### Map to the GF Modules and Interventions #####
+##### Load the mapping files  #####
 ##run the map_modules_and_interventions.R script first
-
+# ----------------------------------------------
 
 codData <- strip_chars(resource_database, unwanted_array, remove_chars)
-
-mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"),
+                                  include_rssh_by_disease = FALSE)
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
 final_mapping <- copy(mapping_list)
@@ -129,17 +161,19 @@ final_mapping$disease <- NULL
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
 
-gf_mapping_list <- total_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx",
+gf_mapping_list <- total_mapping_list(paste0(dir,"intervention_and_indicator_list.xlsx"),
                                       mapping_list, unwanted_array, remove_chars)
 
 
 # ----------------------------------------------
-# USE THIS TO CHECK FOR ANY MODULE/INTERVENTION COMBOS IN THE DATA THAT AREN'T IN THE MAPPING
-# gf_mapping_list$concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
-# codData$concat <- paste0(codData$module, codData$intervention)
-# unmapped_mods <- codData[!concat%in%gf_mapping_list$concat]
+########### USE THIS TO CHECK FOR UNMAPPES MODULE/INTERVENTIONS ##########
+# ----------------------------------------------
+# gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
+# cod_concat <- paste0(codData$module, codData$intervention)
+# unmapped_mods <- cod_concat[!cod_concat%in%gf_concat]
 
-
+# ----------------------------------------------
+########### map the RT data to the GF modular framework ##########
 # ----------------------------------------------
 cod_init_mapping <- merge(codData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
 
@@ -152,7 +186,9 @@ mappedCod$expenditure <- mappedCod$expenditure*mappedCod$coefficient
 mappedCod$disbursement <- mappedCod$disbursement*mappedCod$coefficient
 
 
-##sum to make sure that budget numbers aren't dropped:
+# ----------------------------------------------
+######## Optional: sum to make sure that budget numbers aren't dropped ######## 
+# ----------------------------------------------
 #mappedCod$concat <- NULL
 # data_check1 <- codData[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
 # data_check2 <-mappedCod[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
@@ -172,7 +208,7 @@ mappedCod$country <- "Congo (Democratic Republic)"
 
 # ----------------------------------------------
 ## write as csv 
-write.csv(mappedCod, "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/prepped_fpm_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
+write.csv(mappedCod, "prepped_fpm_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
 
 
 

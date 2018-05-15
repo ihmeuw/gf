@@ -3,6 +3,10 @@
 #
 # 3/6/18
 # Prepping DRC PNLP 2014-2016 data for analaysis
+# 5/1/18 
+# Adding in new data from DRC PNLP that spans 2010-2017 and all provinces
+# The current working directory should be set to the root of the repository
+  setwd('C:/local/gf/')
 # ----------------------------------------------
 
 
@@ -28,14 +32,15 @@
 # Overview - Files and Directories
 
 # data directory
-# J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/Malaria_Data_2014_to_2016
-
-# input file
   # file path where the files are stored
-  dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/Malaria_Data_2014_to_2016"
+  dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/"
   
-  PNLP_files <- read.csv(paste0(dir,"/","PNLP_file_names.csv"), fileEncoding = "latin1")
-  # input files are from 2014, 2015, and 2016 and each contain three sheets for three different provinces
+  # csv of file names for importing
+  PNLP_files <- read.csv(paste0(dir, "PNLP_file_names.csv"), fileEncoding = "latin1")
+  
+  # prep_data() function
+  prep_data <-"./outcome_measurement/malaria/cod/prep_data.R"
+  source(prep_data)
 
 # output files 
   # (output to prepped_data folder within cod folder)
@@ -46,153 +51,70 @@
     # COD_PNLP_Data_Indicators_long - prepped data.table object, appended data from 2014-2016
     # COD_PNLP_Data_Indicators_wide
     # COD_PNLP_Data_Interventions_long - prepped data.table object, appended data from 2014-2016
-    # # COD_PNLP_Data_Interventions_wide
+    # COD_PNLP_Data_Interventions_wide
 # ----------------------------------------------
   
   
 # ----------------------------------------------
-# Load data - to visualize before cleaning
-  
+# Load data - to visualize and work through cleaning to make sure function will work
+  # example
   # cod_mdata_KIN16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "KIN"))
-  # cod_mdata_BDD16 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[1], '.xls'), sheet= "BDD"))
-  # cod_mdata_OR16 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[1], '.xls'), sheet= "OR"))
-  # cod_mdata_KIN15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "KIN"))
-  # cod_mdata_BDD15 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[2], '.xls'), sheet= "BDD"))
-  # cod_mdata_OR15 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[2], '.xls'), sheet= "OR"))
-  # cod_mdata_KIN14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "KIN"))
-  # cod_mdata_BDD14 <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names.[3], '.xls'), sheet= "BDD"))
-  # cod_mdata_OR14 <- data.table(read_excel(paste0(dir,"/", PNLP_files$File.Names.[3], '.xls'), sheet= "OR"))
-# ----------------------------------------------
-  
-  
-# ----------------------------------------------  
-  # START OF FUNCTION:  
-  prep_data <- function(year, sheetname){
-    
-  # Load data sheet
-    dataSheet <- data.table(read_excel(paste0(dir,"/Données_", year, "_PNLP.xls"), sheet= sheetname))
-# ----------------------------------------------   
-# ----------------------------------------------
-  # Set names of columns
-    # since some of them have less columns, make a vector of names and then have "if ___, then drop these ___"
- 
-  columnNamesComplete <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-        "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
-        "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
-        "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
-        "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
-        "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_received", "ArtLum_used", "smearTest_completedUnder5",
-        "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder", "RDT_completedUnder5", "RDT_completed5andOlder", "RDT_positiveUnder5", "RDT_positive5andOlder",
-        "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline" )
-  
-  columnNames2014 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-        "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
-        "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
-        "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
-        "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
-        "ITN_distAtPreschool", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "smearTest_completed", "smearTest_positive", "RDT_completed", 
-        "RDT_positive", "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported")
-  
-    if ( year == 2014 ) {
-      columnNames <- columnNames2014 
-    } else {
-      columnNames <- columnNamesComplete
-    }
 
-  names(dataSheet) <- columnNames
-  
-  # add a column for the "year" to keep track of this variable as we add dataSheets to this one
-  dataSheet$year <- year
-  
-  # # add a column for indicator codes for SDA mapping/modular framework:
-  # dataSheet$indicator_code <- NA
-  # 
+  # new data example:
+    #dt <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names[9], ".xls"), sheet= 'KIN'))
 # ----------------------------------------------
-# ----------------------------------------------
-  # Get rid of rows you don't need- "subset"
-  
-  # FIRST - delete first row if it's first value is "NA" or "PROVINCE" as a way to
-  # only delete those unnecessary rows, and not any others accidentally - these
-  # were the column headers in the original datasheet in excel.
-  
-  if (dataSheet[2,"province"] == "PROVINCE"){
-    dataSheet <- dataSheet[-c(1, 2),] 
-    }
 
-  # clean "Province" column in BDD datasheet for 2016 and 2015 because
-  # it has some missing/"0" values that should be "BDD" - doesn't work
-  
-  if (sheetname == "BDD"){
-    dataSheet$province <- "BDD"
-  }
-    
-  # using this to delete rows tacked on to the end of the DF with all NA values
-    # by checking to see if 2nd column is NA
-  dataSheet <- dataSheet[complete.cases(dataSheet[ , 2]),]
-  
-  # using this to delete "totals" rows
-    # BDD 2016 sheet has total row in the middle of the data, the other sheets have it
-    # in the last row of the sheet, sometimes in the first column, sometimes in the second;
-    # sometimes as "Total" and sometimes "TOTAL"
-     dataSheet <- dataSheet[!grepl(("TOTAL"), (dataSheet$province)),]
-     dataSheet <- dataSheet[!grepl(("Total"), (dataSheet$province)),]
-     dataSheet <- dataSheet[!grepl(("TOTAL"), (dataSheet$dps)),]
-     dataSheet <- dataSheet[!grepl(("Total"), (dataSheet$dps)),]
-
-  # translate french to numeric version of month Janvier=1
-     # dataSheet[month=='Janvier', month:="01"]
-     # grepl() to make sure that any that may have trailing white space are also changed
-     dataSheet[grepl("Janvier", month), month:="01"]
-     dataSheet[grepl("Février", month), month:="02"]
-     dataSheet[grepl("Mars", month), month:="03"]
-     dataSheet[grepl("Avril", month), month:="04"]
-     dataSheet[grepl("Mai", month), month:="05"]
-     dataSheet[grepl("Juin", month), month:="06"]
-     dataSheet[grepl("Juillet", month), month:="07"]
-     dataSheet[grepl("Août", month), month:="08"]
-     dataSheet[grepl("Septembre", month), month:="09"]
-     dataSheet[grepl("Octobre", month), month:="10"]
-     dataSheet[grepl("Novembre", month), month:="11"]
-     dataSheet[grepl("Décembre", month), month:="12"]     
-     
-    # make string version of the date
-     dataSheet[, stringdate:=paste('01', month, year, sep='/')]
-     
-    # combine year and month into one variable
-     dataSheet[, date:=as.Date(stringdate, "%d/%m/%Y")]
-     
-# ----------------------------------------------
-# ----------------------------------------------
-  # Return current data sheet
-    return(dataSheet)
-# ----------------------------------------------
-}  #END OF FUNCTION
-# ----------------------------------------------
-  
   
 # ----------------------------------------------
 # Use a loop to run prep_data() on each of the three data sheets for the three years
   # for which we have the data.
   
   # variables needed:
-  years <- c(2014:2016)
-  sheetnames <- c('BDD', 'KIN', 'OR')
+  years <- c(2010:2017)
+
   i <- 1
-
- for(y in years) {
+  index <- 4
+  
+ for(index in 4:11) {
+   sheetnames <- excel_sheets(paste0(dir, "/", PNLP_files$File.Names[index], ".xls"))
+   sheetnames = sheetnames[!sheetnames %in% 'INPUTRDC']
+   
     for(s in sheetnames) {
-      #to show where it is breaking if there is an error
-      print(y)
-      print(s)
 
-      currentSheet <- prep_data(y, s)
+      if (index==11){
+          dt <- data.table(read_excel(paste0(dir, PNLP_files$File.Names[index], ".xlsx"), sheet= s))
+      } else{
+          dt <- data.table(read_excel(paste0(dir, PNLP_files$File.Names[index], ".xls"), sheet= s))
+      }
+      
+        currentSheet <- prep_data(dt, s, index)
+     
+      # to show where it is breaking if there is an error
+        print(s)
+        print(nrow(currentSheet))
+        
+      # to figure out which rows are missing from the prepped data that shouldn't be
+        healthzone<-dt[["X__1"]]
+        healthzone = unique(healthzone)
+        healthzoneprep <- currentSheet[["health_zone"]]
+        healthzoneprep <- unique(healthzoneprep)
+        missing_hz <- healthzone[!healthzone %in% healthzoneprep]
+        print(missing_hz)
 
+        for (h in healthzoneprep){
+          if ( nrow(currentSheet[health_zone==h, ]) != 12){
+            print( h )
+            print( nrow(currentSheet[health_zone==h,]) )
+          }
+        }
+        
       # need if statement to distinguish first sheet, and then
       # add to the first sheet with subsequent ones with rbind()
       if (i==1) fullData <- currentSheet
       if (i>1) fullData <- rbind(fullData, currentSheet, fill=TRUE)
       i <- i+1
     }
+   
   }
 # ----------------------------------------------  
 
@@ -201,18 +123,8 @@
 # Test that the output has the right number of rows
 if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 # ----------------------------------------------     
-
- 
-      # ----------------------------------------------    
-        # geoTimeVars <- c("year", "province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-        #                   "quarter", "month")
-        # indicatorVars <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
-        #                         "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen", 
-        #                         "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen", 
-        #                         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" )  
-      # ----------------------------------------------    
    
-       
+  
 # ----------------------------------------------     
 # Save a copy of the full data set, in wide form for use in multiple imputation
   # take a subset of fullData that will be used in MI

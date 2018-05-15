@@ -30,7 +30,25 @@ loc_name <- "gtm"
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
 file_list <- read.csv(paste0(dir, "fpm/fpm_budget_filelist.csv"))
 
+
+##create a summary file to track the data that we have (and that we still need)
+summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
+                         c("data_source","year", "start_date",  "end_date", "sda_detail",
+                           "geographic_detail", "period",	"grant", "disease", "loc_name"))
+
+summary_file$loc_name <- as.character(summary_file$loc_name)
+summary_file$loc_name <- loc_name
+
+
 for(i in 1:length(file_list$file_name)){
+  ##fill in the summary tracking file with what we know already: 
+  summary_file$disease[i] <- as.character(file_list$disease[i])
+  summary_file$grant[i] <- as.character(file_list$grant[i])
+  summary_file$period[i] <- file_list$period[i] 
+  summary_file$geographic_detail[i] <- as.character(file_list$geography_detail[i])
+  summary_file$data_source[i] <- as.character(file_list$data_source[i])
+  
+  
   if(file_list$format[i]=="detailed"){ ## fpm detailed budgets 
     tmpData <- prep_fpm_detailed_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
@@ -42,7 +60,7 @@ for(i in 1:length(file_list$file_name)){
                                        file_list$grant_number[i], file_list$recipient[i], file_list$lang[i])
     tmpData$loc_name <- "gtm"
     tmpData$disbursement<- 0 
-  } else if (file_list$format[i]=="other"){ ## there's an older version of detailed fpm budgets
+  } else if (file_list$format[i]=="detailed_other"){ ## there's an older version of detailed fpm budgets
     tmpData <- prep_other_detailed_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                         file_list$lang[i], file_list$grant_number[i])
@@ -52,6 +70,11 @@ for(i in 1:length(file_list$file_name)){
                                           ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                           file_list$grant_number[i], file_list$data_source[i], loc_name, file_list$lang[i])
    
+  } else if (file_list$format[i]=="other"){
+    tmpData <- prep_other_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
+                                          ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
+                                          file_list$lang[i], file_list$grant_number[i])
+    tmpData$disbursement<- 0 
   }
   tmpData$loc_name <- loc_name
   tmpData$data_source <- file_list$data_source[i]
@@ -62,17 +85,45 @@ for(i in 1:length(file_list$file_name)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
+  
+  if(file_list$format[i]=="detailed"){
+    summary_file$sda_detail[i] <- "Detailed"
+  } else if (file_list$format[i]=="summary"){
+    summary_file$sda_detail[i] <- "Summary"
+  } else if(!(tmpData$sda_activity[1]=="All")){
+    summary_file$sda_detail[i] <- "Detailed"
+  } else {
+    summary_file$sda_detail[i] <- "None"
+  }
+  summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
+  summary_file$start_date[i] <- min(tmpData$start_date) ##since there are multiple values in this, get the earliest start date 
+  
+  
   print(i)
 }
 
 
+summary_file$end_date <- as.Date(summary_file$end_date)
+summary_file$start_date <- as.Date(summary_file$start_date)
+
+
+setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
+
+##export the summary table to J Drive
+##(you might get a warning message about appending column names to the files; this should not affect the final output)
+write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/resource_tracking_data_summary.csv",
+            append = TRUE, row.names=FALSE, sep=",")
+
 resource_database$adm1 <- 128
 resource_database$adm2 <- resource_database$adm1
+resource_database$start_date <- as.Date(resource_database$start_date)
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure<- as.numeric(resource_database$expenditure)
 resource_database$disbursement<- as.numeric(resource_database$disbursement)
 ## since we only have budget data, include exp and disbursed as 0:  
 resource_database$source <- "gf"
+
+resource_database <- resource_database[!grepl("Fondos pendientes de asignar a SR",resource_database$recipient)]
 
 # ----------------------------------------------
 ##check for any dropped data/clean up the sda activities: 

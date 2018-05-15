@@ -3,20 +3,11 @@
 # Irena Chen
 #
 # 12/18/2017
-# Template for prepping GF COD new budget data  
+# Template for prepping GF detailed budget data  
 # Inputs:
 # inFile - name of the file to be prepped
 # Outputs:
 # budget_dataset - prepped data.table object
-# ----------------------------------------------
-
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
 # ----------------------------------------------
 
 prep_detailed_budget = function(dir, inFile, sheet_name, start_date, 
@@ -121,7 +112,11 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset <- na.omit(budget_dataset, cols=1, invert=FALSE)
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
+  budget_dataset$expenditure <- 0 
   budget_dataset$grant_number <- grant
+  if(grant=="COD-M-PSI"&lang=="eng"){
+    lang <- "fr"
+  }
   budget_dataset$lang <- lang
   budget_dataset$data_source <- source
   

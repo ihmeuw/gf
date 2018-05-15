@@ -3,20 +3,11 @@
 # Irena Chen
 #
 # 11/8/2017
-# Template for prepping GF COD Category budget data
+# There is one old summary budget that is formatted differently, so this file cleans that budget
 # Inputs:
 # inFile - name of the file to be prepped
 # Outputs:
 # budget_dataset - prepped data.table object
-# ----------------------------------------------
-
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
 # ----------------------------------------------
 
 prep_old_module_budget = function(dir, inFile, sheet_name, start_date, 
@@ -48,12 +39,13 @@ prep_old_module_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset <- na.omit(budget_dataset, cols=2, invert=FALSE)
   
 
-  ##rename the category column 
+  ##add in all of the other RT variables 
   budget_dataset$disease <- disease
   budget_dataset$loc_name <- loc_name
   budget_dataset$period <- period
   budget_dataset$grant_number <- grant
   budget_dataset$start_date <- start_date
+  budget_dataset$expenditure <- 0 
   budget_dataset$recipient <- recipient
   budget_dataset$qtr <- NULL
   budget_dataset$data_source <- source

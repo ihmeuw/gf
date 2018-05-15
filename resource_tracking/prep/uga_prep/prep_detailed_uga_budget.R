@@ -7,18 +7,10 @@
 # inFile - name of the file to be prepped
 # Outputs:
 # budget_dataset - prepped data.table object
-# ---------------------------------------------
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
 # ----------------------------------------------
 
 
-prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num, cashText, grant, disease, period, source) {
+prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num, cashText, grant, disease, period, data_source) {
   
   # ----------------------------------------------
   ##prep functions that will be used in cleaning the code: 
@@ -82,6 +74,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     }
   }
   
+  ##if for some reason, we don't have the same number of start dates as quarters, this will stop the function:
   if(length(dates) != length(unique(gf_data1$qtr))){
     stop('quarters were dropped!')
   }
@@ -92,14 +85,16 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ## now match quarters with start dates 
   kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
   budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date]
+  
+  ##add more variables to the data (such as disease and data source)
   budget_dataset$qtr <- NULL
   budget_dataset$start_date <- as.Date(budget_dataset$start_date)
   budget_dataset$period <- period
-  budget_dataset$expenditure <- 0 
-  budget_dataset$data_source <- source
+  budget_dataset$expenditure <- 0 ##change if we get expenditure info 
+  budget_dataset$data_source <- data_source
   budget_dataset$grant_number <- grant
   budget_dataset$disease <- disease
-  budget_dataset$disbursement <- 0 
+  budget_dataset$disbursement <- 0##change if we get disbursement info
   budget_dataset$year <- year(budget_dataset$start_date)
   return(budget_dataset)
 }
