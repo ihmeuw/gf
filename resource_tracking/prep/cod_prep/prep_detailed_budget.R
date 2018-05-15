@@ -112,6 +112,7 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset <- na.omit(budget_dataset, cols=1, invert=FALSE)
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
+  budget_dataset$expenditure <- 0 
   budget_dataset$grant_number <- grant
   if(grant=="COD-M-PSI"&lang=="eng"){
     lang <- "fr"
