@@ -24,7 +24,7 @@ library(gtools)
 # set input/output directory
 #-----------------------
 #import the imputed data set (+1 offset)
-dir <- 'J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
+dir <- 'J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/imputed'
 avl <- readRDS(paste0(dir,"/imputed_offset.rds"))
 
 
@@ -44,8 +44,8 @@ expVars <- c("patients_received", "samples_received", "rejected_samples",
              "dbs_samples", "samples_tested", "valid_results")
 
 avl <- avl[, lapply(.SD, exp), by=c('facility_id', 'facility_name', 'dhis2name', 'sex', 'date', 'district_id', 'dist_name', 'level', 'imputed', 'ratio',
-                                    'missing_males', 'missing_females', 'ratio1', 'patients_received0', 'samples_received0', 'rejected_samples0', 
-                                    'dbs_samples0', 'samples_tested0', 'valid_results0', 'suppressed0'), .SDcols=expVars]
+                                    'missing_males', 'missing_females', 'ratio', 'ratio1', 'patients_received0', 'samples_received0', 'rejected_samples0', 
+                                    'dbs_samples0', 'samples_tested0', 'valid_results0', 'suppressed0', 'imputation_number'), .SDcols=expVars]
 
 #--------------------
 # transform the identified 0s back to 0; all 0 values should be 1 before transformation
@@ -60,12 +60,14 @@ avl[samples_tested0==T, samples_tested:=0]
 avl[valid_results0==T, valid_results:=0]
 avl[suppressed0==T, suppressed:=0]
 
-
 #-------------------------------------
-# transform the viral suppression ratio 
-
-# inverse logit the viral suppression ratio
+# transform the viral suppression ratio (revert back to before the lemon squeeze)
 avl[ ,ratio:=inv.logit(ratio)]
+n <- avl[imputation_number==1 & imputed==0,.N]
+
+avl[ , ratio:=(ratio*n)]
+avl[ ,ratio:=(ratio-0.5)]
+avl[ ,ratio:=(ratio/(n - 1))]
 
 # if a ratio was originally 1, change it back to 1
 avl[ratio1==1, unique(ratio)]
@@ -101,9 +103,15 @@ ggplot(table_1, aes(x=date, y=pts, color=factor(imputed))) + geom_point() + geom
 # calculate the number suppressed using the ratio and the number of valid results
 
 avl[ , suppressed:=(valid_results*ratio)]
+avl[ suppressed < 0, suppressed:=0]
 
 # make the ratio out of 100 to make it intuitive on graphs
-avl[ ,ratio:=(ratio*100)]
+avl[ , ratio:=(ratio*100)]
+
+#------------------
+# change the directory for output 
+
+dir <- 'J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
 
 #--------------------------------
 # calculate the 2.5/5th percentile and the mean for every variable by facility, month
@@ -173,7 +181,7 @@ ratio_loop$variable <- factor(ratio_loop$variable,
 
 
 # single test graph
-f=8392
+f=2
 name2 <- unique(ratio_loop[facility_id==f]$facility_name)
 
 ggplot(ratio_loop[facility_id==f], aes(y=mean, ymin=lower, ymax=upper, x=date)) + 
@@ -209,7 +217,7 @@ for(f in unique(ratio_loop$facility_id)) {
   
 }
 
-pdf(paste0(dir,'/webscrape_agg/outputs/imputed/offset_facility.pdf'), height=6, width=9)
+pdf(paste0(dir,'/webscrape_agg/outputs/imputed/offset_ls_facility.pdf'), height=6, width=9)
 
 for(i in seq(length(list_of_plots))) { 
   print(list_of_plots[[i]])
@@ -254,8 +262,6 @@ avl_mean_sex <- avl[, .(patients_received=mean(patients_received),
                 by=byVars2]
 
 #--------------------------------
-# Loop over samples received, valid results, and suppression ratio by facility, month (no sex)
-
 # store identifiers
 idVars2 <- c("facility_id", "facility_name", "date", "sex", "imputed")
 
@@ -268,11 +274,11 @@ ratio_loop2 <- avl_mean_sex[  , .(samples_received, samples_received_upper, samp
 # reshape indicators long
 setnames(ratio_loop2, c("samples_received", "valid_results", "ratio"), 
          c("samples_received_mean", "valid_results_mean", "ratio_mean"))
-ratio_loop2 <- melt(ratio_loop2, id.vars=idVars)
+ratio_loop2 <- melt(ratio_loop2, id.vars=idVars2)
 ratio_loop2[, valvar := gsub("samples_received_|valid_results_|ratio_", "", variable)]
 ratio_loop2[, variable := gsub("_mean|_lower|_upper", "", variable)]
 ratio_loop2 <- dcast(ratio_loop2,
-                    facility_id + facility_name + date + imputed + variable ~ valvar)
+                    facility_id + facility_name + date + sex + imputed + variable ~ valvar)
 
 # drop out the lower and upper bound for the original values (same as the mean)
 ratio_loop2[imputed==0, lower:=NA]
@@ -285,7 +291,7 @@ ratio_loop2$variable <- factor(ratio_loop2$variable,
 
 
 # single test graph
-f=8392
+f=2
 name2 <- unique(ratio_loop2[facility_id==f]$facility_name)
 
 ggplot(ratio_loop2[facility_id==f], aes(y=mean, ymin=lower, ymax=upper, x=date, color=sex, group=sex)) + 
@@ -320,7 +326,7 @@ for(f in unique(ratio_loop2$facility_id)) {
   
 }
 
-pdf(paste0(dir,'/webscrape_agg/outputs/imputed/offset_facility_sex.pdf'), height=6, width=9)
+pdf(paste0(dir,'/webscrape_agg/outputs/imputed/offset_ls_facility_sex.pdf'), height=6, width=9)
 
 for(i in seq(length(list_of_plots))) { 
   print(list_of_plots[[i]])

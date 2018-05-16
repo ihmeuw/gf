@@ -22,7 +22,6 @@ library(gtools)
 # set input/output directory
 # ----------------------------------------------
 dir <- 'J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
-#dir <- '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
 
 # upload the data with month, year, sex
 uvl1 <- readRDS(paste0(dir, "/sex_data.rds"))
@@ -220,8 +219,8 @@ uganda_vl[suppressed!=0 & imputed==0, suppressed0:=F]
 
 #---------------------------------
 # export the data set to use in distinct methods of transformation for imputation
+dir <- 'J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/imputed'
 saveRDS(uganda_vl, file= paste0(dir, "/impute_ready.rds"))
-
 
 #--------------------------
 # OFFSET TRANSFORM
@@ -272,27 +271,28 @@ uganda_vl[ratio==1, ratio1:=T]
 uganda_vl[ratio<1 & !is.na(ratio), ratio1:=F] 
 
 #---------------
-# transform the 1s
+# transform the ratio using a lemon squeeze
+n <- uganda_vl[ !is.na(patients_received),.N]
+uganda_vl[ , ratio:=logit(((ratio*(n - 1))+0.5)/n)]
 
-# replace suppression ratio = 1 with the maximum possible value < 1
-uganda_vl[, max_ratio:= uganda_vl[ratio<1, max(ratio, na.rm=T)]] #max. ratio 0s 0.9991682
-uganda_vl[ratio1==T, ratio:=max_ratio]
-
+# code for using min./max. values instead of the lemon squeeze formula
+# # replace suppression ratio = 1 with the maximum possible value < 1
+# uganda_vl[, max_ratio:= uganda_vl[ratio<1, max(ratio, na.rm=T)]] #max. ratio 0s 0.9991682
+# uganda_vl[ratio1==T, ratio:=max_ratio]
 # check all 0s and 1s have been removed
-uganda_vl[ ,.(max(ratio, na.rm=T))]
-uganda_vl[ ,.(min(ratio, na.rm=T))]
-
-#---------------
-# logit transform the ratio
-uganda_vl[ , ratio:=logit(ratio)]
-hist(uganda_vl$ratio)
+# uganda_vl[ ,.(max(ratio, na.rm=T))]
+# uganda_vl[ ,.(min(ratio, na.rm=T))]
+# 
+# #---------------
+# # logit transform the ratio
+# uganda_vl[ , ratio:=logit(ratio)]
+# hist(uganda_vl$ratio)
 
 #---------------------------
 # log the counts
 
 # remove the numerator from the data set
 uganda_vl[ , suppressed:=NULL]
-uganda_vl[ , max_ratio:=NULL]
 
 
 #------------------------------------
@@ -317,58 +317,9 @@ uvl <- uganda_vl[ , .(facility_id, facility_name, dhis2name, level, district_id,
                               dbs_samples0, samples_tested0, valid_results0, suppressed0)]
 
 
+saveRDS(uvl, file= paste0(dir, "/impute_ready_offset.rds"))  
+
+
 # data prep for imputation complete!!! :)
 #-----------------------------------
-
-
-#------------------------------------
-# run imputation using amelia
-# offset model
-
-#---------------
-# make cs variable
-uvl[, cs_variable:=paste0(facility_id, sex)]
-
-# set idvars
-idVars <- c("facility_id", "sex", "facility_name", "dhis2name", "dist_name", "imputed", 
-            'missing_males', 'missing_females', 'ratio1',
-            'patients_received0', 'samples_received0', 'rejected_samples0', 'dbs_samples0', 'samples_tested0', 'valid_results0', 'suppressed0')
-
-# list the variables to lag
-lagVars <- c( "patients_received", "samples_received", "rejected_samples", "dbs_samples", "samples_tested", "valid_results", "ratio")
-
-# run imputation
-imputed_data <- amelia(uvl, m=50, cs='cs_variable', ts='date', lags=lagVars, idvars=idVars, noms='district_id', ords='level')
-
-#---------------------------
-# graph one test case to see how it looks
-cstmp = sample(unique(uvl$cs_variable),1)
-merged = merge(uvl, imputed_data[[1]]$imp1, by=c('cs_variable','date'), all=T)
-ggplot(merged[cs_variable==cstmp], aes(y=ratio.y, x=date)) +
-	geom_point(color='red') +
-	geom_point(aes(y=ratio.x), color='black') +
-	labs(title=paste('Facility-sex:', cstmp))
-
-#--------------------------------------------------------------
-# bind the imputations together to create a single data set called amelia_data
-
-for( i in 1:50 ) {
-  imputed_data$imputations[[i]]$imputation_number <- i
-  if (i==1)  amelia_data <- data.table(imputed_data$imputations[[i]])
-  if (i>1) amelia_data <- rbind(amelia_data, imputed_data$imputations[[i]])
-}
-
-# save the imputed data as an RDS
-saveRDS(amelia_data, file= paste0(dir, "/imputed_offset.rds"))  
-#-------------------------------
-
-#------------------
-# polytime versions 
-imputed_time2 <- amelia(uvl, m=2, cs='cs_variable', ts='date', lags=lagVars, idvars=idVars, noms='district_id', ords='level', polytime==2, parallel='snow')
-saveRDS(imputed_time2, file= paste0(dir, "/imputed_offset_time2.rds"))  
-
-imputed_time3 <- amelia(uvl, m=2, cs='cs_variable', ts='date', lags=lagVars, idvars=idVars, noms='district_id', ords='level', polytime==3, parallel='snow')
-saveRDS(imputed_time2, file= paste0(dir, "/imputed_offset_time2.rds"))  
-
-# ------------------
 
