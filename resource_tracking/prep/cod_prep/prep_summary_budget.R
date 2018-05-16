@@ -66,6 +66,8 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   
   ##rename the category column 
   colnames(budget_dataset)[1] <- "module"
+  
+  ##add all of the other RT variables 
   budget_dataset$intervention <- "All"
   budget_dataset$disease <- disease
   budget_dataset$sda_activity <- "All"
@@ -74,6 +76,7 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset$grant_number <- grant
   budget_dataset$recipient <- recipient
   budget_dataset$qtr <- NULL
+  budget_dataset$expenditure <- 0 
   budget_dataset$cost_category <- "all"
   budget_dataset$data_source <- source
   budget_dataset$lang <- lang

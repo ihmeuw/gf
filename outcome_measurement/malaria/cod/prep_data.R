@@ -1,7 +1,7 @@
 
 
 # function to prep the DRC PNLP data
-  prep_data <- function(dataSheet, sheetname){
+  prep_data <- function(dataSheet, sheetname, index){
     
     # Load data sheet
     #dataSheet <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names[j], ".xls"), sheet= s))
@@ -17,6 +17,60 @@
     #                          "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "ArtLum_received", "ArtLum_used", "smearTest_completedUnder5",
     #                          "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder", "RDT_completedUnder5", "RDT_completed5andOlder", "RDT_positiveUnder5", "RDT_positive5andOlder",
     #                          "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline" )
+
+# column names
+# ----------------------------------------------
+    columnNames2016 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month", 
+                             "totalCasesAllDiseases_under5", "totalCasesAllDiseases_5andOlder", "totalCasesAllDiseases_pregnantWomen", 
+                             "suspectedMalaria_under5", "suspectedMalaria_5andOlder", "suspectedMalaria_pregnantWomen",
+                             "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", 
+                             "totalHospAllDiseases_under5", "totalHospAllDiseases_5andOlder", "totalHospAllDiseases_pregnantWomen",
+                             "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+                             "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+                             "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
+                             "totalDeathsAllDiseases_under5", "totalDeathsAllDiseases_5andOlder", "totalDeathsAllDiseases_pregnantWomen",
+                             "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen",  
+                             "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", 
+                             "ITN_received", "ITN_distAtANC", "ITN_distAtPreschool", "VAR_0to11mos", 
+                             "ASAQ_received_2to11mos", "ASAQ_received_1to5yrs", "ASAQ_received_6to13yrs", "ASAQ_received_14yrsAndOlder",
+                             "ASAQ_used_2to11mos", "ASAQ_used_1to5yrs", "ASAQ_used_6to13yrs", "ASAQ_used_14yrsAndOlder", "ASAQ_used_total",
+                             "ArtLum_received", "ArtLum_used",
+                             "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
+                             "stockOut_qui_pill", "stockOut_qui_inj", "stockOut_ASAQ_inj", "stockOut_RDT", "stockOut_artLum",
+                             "smearTest_completed_under5", "smearTest_completed_5andOlder", "smearTest_positive_under5", "smearTest_positive_5andOlder", 
+                             "RDT_received", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+                             "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
+                             "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline",
+                             "hzTeam_supervisors_numPlanned", "hzTeam_supervisors_numActual", "hzTeam_employees_numPlanned", "hzTeam_employees_numActual",
+                             "awarenessTrainings_numPlanned", "awarenessTrainings_numActual",
+                             "SSC_fevers", "SSC_RDT_completed", "SSC_RDT_positive", 
+                             "SSC_ACT", "SSC_casesReferred", "SSC_casesCrossReferred")
+    
+    columnNames2015 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month", 
+                         "totalCasesAllDiseases_under5", "totalCasesAllDiseases_5andOlder", "totalCasesAllDiseases_pregnantWomen", 
+                         "suspectedMalaria_under5", "suspectedMalaria_5andOlder", "suspectedMalaria_pregnantWomen",
+                         "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", 
+                         "totalHospAllDiseases_under5", "totalHospAllDiseases_5andOlder", "totalHospAllDiseases_pregnantWomen",
+                         "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+                         "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+                         "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
+                         "totalDeathsAllDiseases_under5", "totalDeathsAllDiseases_5andOlder", "totalDeathsAllDiseases_pregnantWomen",
+                         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen",  
+                         "ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", 
+                         "ITN_received", "ITN_distAtANC", "ITN_distAtPreschool", "VAR_0to11mos", 
+                         "ASAQ_received_2to11mos", "ASAQ_received_1to5yrs", "ASAQ_received_6to13yrs", "ASAQ_received_14yrsAndOlder",
+                         "ASAQ_used_2to11mos", "ASAQ_used_1to5yrs", "ASAQ_used_6to13yrs", "ASAQ_used_14yrsAndOlder", "ASAQ_used_total",
+                         "ArtLum_received", "ArtLum_used",
+                         "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
+                         "stockOut_qui_pill", "stockOut_qui_inj", "stockOut_ASAQ_inj", "stockOut_RDT", "stockOut_artLum",
+                         "smearTest_completed_under5", "smearTest_completed_5andOlder", "smearTest_positive_under5", "smearTest_positive_5andOlder", 
+                         "RDT_received", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+                         "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
+                         "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline",
+                         "hzTeam_supervisors_numPlanned", "hzTeam_supervisors_numActual", 
+                         "awarenessTrainings_numPlanned", "awarenessTrainings_numActual",
+                         "SSC_fevers", "SSC_RDT_completed", "SSC_RDT_positive", 
+                         "SSC_ACT", "SSC_casesReferred", "SSC_casesCrossReferred")
     
     columnNamesComplete <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month", 
                              "totalCasesAllDiseases_under5", "totalCasesAllDiseases_5andOlder", "totalCasesAllDiseases_pregnantWomen", 
@@ -47,25 +101,100 @@
                              "SSC_ACT_under5", "SSC_ACT_5andOlder", "SSC_casesReferred_under5", "SSC_casesReferred_5andOlder",
                              "SSC_casesCrossReferred_under5", "SSC_casesCrossReferred_5andOlder")
     
-    # columnNames2014 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-    #       "quarter", "month", "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
-    #       "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
-    #       "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
-    #       "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen", "ANC_1st", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
-    #       "ITN_distAtPreschool", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ASAQ_total", "smearTest_completed", "smearTest_positive", "RDT_completed", 
-    #       "RDT_positive", "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported")
+    columnNames2014 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month", 
+                         "totalCasesAllDiseases_under5", "totalCasesAllDiseases_5andOlder", "totalCasesAllDiseases_pregnantWomen", 
+                         "suspectedMalaria_under5", "suspectedMalaria_5andOlder", "suspectedMalaria_pregnantWomen",
+                         "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", 
+                         "totalHospAllDiseases_under5", "totalHospAllDiseases_5andOlder", "totalHospAllDiseases_pregnantWomen",
+                         "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+                         "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
+                         "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
+                         "totalDeathsAllDiseases_under5", "totalDeathsAllDiseases_5andOlder", "totalDeathsAllDiseases_pregnantWomen",
+                         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen",  
+                         "ANC_1st", "SP_1st", "SP_2nd","SP_3rd", 
+                         "ITN_received", "ITN_distAtANC", "ITN_distAtPreschool",  
+                         "ASAQ_received_2to11mos", "ASAQ_received_1to5yrs", "ASAQ_received_6to13yrs", "ASAQ_received_14yrsAndOlder",
+                         "ASAQ_used_2to11mos", "ASAQ_used_1to5yrs", "ASAQ_used_6to13yrs", "ASAQ_used_14yrsAndOlder", "ASAQ_used_total",
+                         "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
+                         "stockOut_qui_pill", "stockOut_qui_inj", "stockOut_ASAQ_inj",
+                         "smearTest_completed", "smearTest_positive", "thinSmearTest", 
+                         "RDT_received", "RDT_completed", "RDT_positive",
+                         "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
+                         "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported",
+                         "hzTeam_supervisors_numPlanned", "hzTeam_supervisors_numActual",
+                         "awarenessTrainings_numPlanned", "awarenessTrainings_numActual"
+                        )
     
-    # #for the new data this doesn't work based on the name of the file.  Assign a new variable for year?
-    #   if ( PNLP_files$year[9] == 2014 ) {
-    #     columnNames <- columnNames2014 
-    #   } else {
-    #     columnNames <- columnNamesComplete
-    #   }
+    columnNames2011to2013 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month", 
+                         "totalCasesAllDiseases_under5", "totalCasesAllDiseases_5andOlder", "totalCasesAllDiseases_pregnantWomen", 
+                         "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", 
+                         "totalHospAllDiseases_under5", "totalHospAllDiseases_5andOlder", "totalHospAllDiseases_pregnantWomen",
+                         "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+                         "totalDeathsAllDiseases_under5", "totalDeathsAllDiseases_5andOlder", "totalDeathsAllDiseases_pregnantWomen",
+                         "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen",  
+                         "ANC_1st", "SP_1st", "SP_2nd",
+                         "ITN_received", "ITN_distAtANC", "ITN_distAtPreschool",
+                         "ASAQ_received_2to11mos", "ASAQ_received_1to5yrs", "ASAQ_received_6to13yrs", "ASAQ_received_14yrsAndOlder",
+                         "ASAQ_used_2to11mos", "ASAQ_used_1to5yrs", "ASAQ_used_6to13yrs", "ASAQ_used_14yrsAndOlder", "ASAQ_used_total",
+                         "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
+                         "stockOut_qui_pill", "stockOut_qui_inj", 
+                         "smearTest_completed", "smearTest_positive", 
+                         "RDT_received", "RDT_completed", "RDT_positive",
+                         "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
+                         "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported"
+                        )
     
-    names(dataSheet) <- columnNamesComplete
+    columnNames2010 <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month", 
+                                 "totalCasesAllDiseases_under5", "totalCasesAllDiseases_5andOlder", "totalCasesAllDiseases_pregnantWomen", 
+                                 "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", 
+                                 "totalHospAllDiseases_under5", "totalHospAllDiseases_5andOlder", "totalHospAllDiseases_pregnantWomen",
+                                 "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+                                 "totalDeathsAllDiseases_under5", "totalDeathsAllDiseases_5andOlder", "totalDeathsAllDiseases_pregnantWomen",
+                                 "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen",  
+                                 "ANC_1st", "SP_1st", "SP_2nd",
+                                 "ITN_received", "ITN_distAtANC", "ITN_distAtPreschool",
+                                 "ASAQ_received_2to11mos", "ASAQ_received_1to5yrs", "ASAQ_received_6to13yrs", "ASAQ_received_14yrsAndOlder",
+                                 "ASAQ_used_2to11mos", "ASAQ_used_1to5yrs", "ASAQ_used_6to13yrs", "ASAQ_used_14yrsAndOlder", "ASAQ_used_total",
+                                 "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
+                                 "stockOut_qui_pill", "stockOut_qui_inj", 
+                                 "smearTest_completed", "smearTest_positive", 
+                                 "RDT_received", "RDT_completed", "RDT_positive",
+                                 "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
+                                 "reports_received", "reports_expected")
+    
+    
+# ----------------------------------------------
+    
+    if ( PNLP_files$year[index] == 2011 | PNLP_files$year[index] == 2010 ) {
+      dataSheet <- dataSheet[ , -c("X__14") ]
+    }
+    
+    if ( PNLP_files$year[index] == 2016 & sheetname == "KIN") {
+      dataSheet <- dataSheet[ , -c("X__72", "X__73", "X__74") ]
+    }
+    
+    if ( PNLP_files$year[index] == 2014 & sheetname == "BC") {
+      dataSheet <- dataSheet[ , -c("X__74") ]
+    }
+    
+    if ( PNLP_files$year[index] == 2014 ) {
+      columnNames <- columnNames2014
+    } else if (PNLP_files$year[index] < 2014 & PNLP_files$year[index] != 2010) {
+      columnNames <- columnNames2011to2013
+    } else if (PNLP_files$year[index] == 2010) {
+      columnNames <- columnNames2010
+    } else if (PNLP_files$year[index] == 2016) {
+      columnNames <- columnNames2016
+    } else if (PNLP_files$year[index] == 2015) {
+      columnNames <- columnNames2015
+    } else {
+      columnNames <- columnNamesComplete
+    }
+    
+    names(dataSheet) <- columnNames
     
     # add a column for the "year" to keep track of this variable as we add dataSheets to this one
-    dataSheet$year <- PNLP_files$year[9]
+    dataSheet$year <- PNLP_files$year[index]
     
     # ----------------------------------------------
     # Get rid of rows you don't need- "subset"
@@ -90,12 +219,6 @@
     # only delete those unnecessary rows, and not any others accidentally - these
     # were the column headers in the original datasheet in excel.
     dataSheet <- dataSheet[!province %in% c('PROVINCE', 'Province')]
-    
-    # using this to delete rows tacked on to the end of the DF with all NA values
-    # by checking to see if 2nd column is NA
-    # maybe redundant after the above command; not sure if this way would be more fail safe to avoid
-    # accidentally deleting any data
-    dataSheet <- dataSheet[!is.na(dps),]
     
     # No longer needed??
     # using this to delete "totals" rows

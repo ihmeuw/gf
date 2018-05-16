@@ -36,7 +36,7 @@
   dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/"
   
   # csv of file names for importing
-  PNLP_files <- read.csv(paste0(dir,"/","PNLP_file_names.csv"), fileEncoding = "latin1")
+  PNLP_files <- read.csv(paste0(dir, "PNLP_file_names.csv"), fileEncoding = "latin1")
   
   # prep_data() function
   prep_data <-"./outcome_measurement/malaria/cod/prep_data.R"
@@ -69,34 +69,53 @@
 # Use a loop to run prep_data() on each of the three data sheets for the three years
   # for which we have the data.
   
-  source(prep_data)
-  
   # variables needed:
   years <- c(2010:2017)
-  sheetnames <- excel_sheets(paste0(dir, "/", PNLP_files$File.Names[9], ".xls"))
-  sheetnames = sheetnames[!sheetnames %in% 'INPUTRDC']
+
   i <- 1
-  j <- 9
+  index <- 4
   
-  
- #for(j in 4:11) {
+ for(index in 4:11) {
+   sheetnames <- excel_sheets(paste0(dir, "/", PNLP_files$File.Names[index], ".xls"))
+   sheetnames = sheetnames[!sheetnames %in% 'INPUTRDC']
+   
     for(s in sheetnames) {
 
-      dt <- data.table(read_excel(paste0(dir, "/", PNLP_files$File.Names[9], ".xls"), sheet= s))
+      if (index==11){
+          dt <- data.table(read_excel(paste0(dir, PNLP_files$File.Names[index], ".xlsx"), sheet= s))
+      } else{
+          dt <- data.table(read_excel(paste0(dir, PNLP_files$File.Names[index], ".xls"), sheet= s))
+      }
       
-      #to show where it is breaking if there is an error
-      print(j)
-      print(s)
-      
-      currentSheet <- prep_data(dt, s)
+        currentSheet <- prep_data(dt, s, index)
+     
+      # to show where it is breaking if there is an error
+        print(s)
+        print(nrow(currentSheet))
+        
+      # to figure out which rows are missing from the prepped data that shouldn't be
+        healthzone<-dt[["X__1"]]
+        healthzone = unique(healthzone)
+        healthzoneprep <- currentSheet[["health_zone"]]
+        healthzoneprep <- unique(healthzoneprep)
+        missing_hz <- healthzone[!healthzone %in% healthzoneprep]
+        print(missing_hz)
 
+        for (h in healthzoneprep){
+          if ( nrow(currentSheet[health_zone==h, ]) != 12){
+            print( h )
+            print( nrow(currentSheet[health_zone==h,]) )
+          }
+        }
+        
       # need if statement to distinguish first sheet, and then
       # add to the first sheet with subsequent ones with rbind()
       if (i==1) fullData <- currentSheet
       if (i>1) fullData <- rbind(fullData, currentSheet, fill=TRUE)
       i <- i+1
     }
-  #}
+   
+  }
 # ----------------------------------------------  
 
   
@@ -105,11 +124,6 @@
 if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
 # ----------------------------------------------     
    
-       
-  
-  
-  
-  
   
 # ----------------------------------------------     
 # Save a copy of the full data set, in wide form for use in multiple imputation
