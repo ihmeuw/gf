@@ -8,6 +8,7 @@
 # Set up R
 
 p = commandArgs()[4]
+print(commandArgs()[4])
 
 library(data.table)
 library(rgeos)
@@ -59,8 +60,6 @@ imputed_data <- amelia(uvl, m=50, cs='cs_variable', ts='date',
 #--------------------------------------------------------------
 # bind the imputations together to create a single data set called amelia_data
 
-print('Number of imputations completed:')
-print(length(imputed_data$imputations))
 for( i in 1:length(imputed_data$imputations) ) {
   print(i)
   imputed_data$imputations[[i]]$imputation_number <- i
