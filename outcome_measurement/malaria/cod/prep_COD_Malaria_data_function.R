@@ -94,7 +94,12 @@
         print(nrow(currentSheet))
         
       # to figure out which rows are missing from the prepped data that shouldn't be
-        healthzone<-dt[["X__1"]]
+        if (s=="NK"|s=="MN"){
+          healthzone<-dt[["X__1"]]
+        } else {
+          healthzone<-dt[["X__2"]]
+        }
+        
         healthzone = unique(healthzone)
         healthzoneprep <- currentSheet[["health_zone"]]
         healthzoneprep <- unique(healthzoneprep)
@@ -114,7 +119,8 @@
       if (i>1) fullData <- rbind(fullData, currentSheet, fill=TRUE)
       i <- i+1
     }
-   
+   print("Checking to see if date is NA anywhere...")
+   print(fullData[is.na(date), c(1:8)])
   }
 # ----------------------------------------------  
 
