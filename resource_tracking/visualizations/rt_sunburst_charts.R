@@ -58,14 +58,14 @@ modData<-graphData[with(graphData, order(disease, grant_number, gf_module,gf_int
 
 intData <- copy(modData)
 
-byVars = names(modData)[names(modData)%in%c('gf_module','grant_number', 'disease')]
+byVars = names(modData)[names(modData)%in%c('gf_module','grant_number')]
 modData=modData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
-modData[,budget_sum:=sum(na.omit(budget)), by=c("disease", "grant_number")]
-modData[,fraction:=budget/budget_sum, by=c("disease", "grant_number")]
-modData[, ymax := cumsum(fraction),by=c("disease", "grant_number")]
-modData[, ymin := c(0, head(ymax, n=-1)),by=c("disease", "grant_number")]
-modData[, pos := cumsum(fraction)-fraction/2,by=c("disease", "grant_number")]
+modData[,budget_sum:=sum(na.omit(budget)), by="grant_number"]
+modData[,fraction:=budget/budget_sum, by="grant_number"]
+modData[, ymax := cumsum(fraction),by="grant_number"]
+modData[, ymin := c(0, head(ymax, n=-1)),by="grant_number"]
+modData[, pos := cumsum(fraction)-fraction/2,by="grant_number"]
 
 # --------------------------------------------
 ######### Make the pie charts of  ############
@@ -96,19 +96,15 @@ invisible(lapply(prog_plots, print))
 dev.off()
 
 
-
-
-
-
 # ---------------------------------------------
 ######### Create the "intervention" dataset ############
 # ---------------------------------------------
 
-intData[,budget_sum:=sum(na.omit(budget)), by=c("disease", "grant_number")]
-intData[,fraction:=budget/budget_sum, by=c("disease", "grant_number")]
-intData[, ymax := cumsum(fraction),by=c("disease", "grant_number")]
-intData[, ymin := c(0, head(ymax, n=-1)),by=c("disease", "grant_number")]
-intData[, pos := cumsum(fraction)-fraction/2,by=c("disease", "grant_number")]
+intData[,budget_sum:=sum(na.omit(budget)), by="grant_number"]
+intData[,fraction:=budget/budget_sum, by="grant_number"]
+intData[, ymax := cumsum(fraction),by="grant_number"]
+intData[, ymin := c(0, head(ymax, n=-1)),by="grant_number"]
+intData[, pos := cumsum(fraction)-fraction/2,by="grant_number"]
 
 graphData <- graphData[order(-graphData$budget), ]
 d <- data.table(graphData, key=c("grant_number"))
@@ -116,6 +112,7 @@ int_subset <- d[, head(.SD, 4), by=grant_number]
 
 interventions <- c(as.character(unique(intData$gf_intervention))
                    ,as.character(unique(intData$gf_module)))##change datasets when necessary
+
 cols <- rep(primColors, length.out=length(interventions))
 names(cols) <- interventions
 
