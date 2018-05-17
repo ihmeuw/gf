@@ -7,8 +7,9 @@
 # ----------------------------------------------
 # Set up R
 
-p = commandArgs()[4]
-print(commandArgs()[4])
+p = as.numeric(commandArgs()[4])
+print('Polytime is:')
+print(p)
 
 library(data.table)
 library(rgeos)
