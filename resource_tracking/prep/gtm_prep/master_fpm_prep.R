@@ -25,7 +25,6 @@ library(zoo)
 ### assign some variables #####
 # ---------------------------------------------
 loc_name <- "gtm"
-
 # ----------------------------------------------
 ###### Load the list of the RT files we want to process   ###### 
 # ----------------------------------------------
@@ -49,7 +48,7 @@ for(i in 1:length(file_list$file_name)){
   summary_file$period[i] <- file_list$period[i] 
   summary_file$geographic_detail[i] <- as.character(file_list$geography_detail[i])
   summary_file$data_source[i] <- as.character(file_list$data_source[i])
-  summary_file$year[i] <- file_list$grant_period[i]
+  summary_file$year[i] <- as.character(file_list$grant_period[i])
   
   if(file_list$format[i]=="detailed"){ ## fpm detailed budgets 
     tmpData <- prep_fpm_detailed_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
@@ -98,24 +97,28 @@ for(i in 1:length(file_list$file_name)){
     summary_file$sda_detail[i] <- "None"
   }
   summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
-  summary_file$start_date[i] <- min(tmpData$start_date) ##since there are multiple values in this, get the earliest start date 
-  
-  
+  summary_file$start_date[i] <- min(tmpData$start_date)
   print(i)
 }
 
 
-summary_file$end_date <- as.Date(summary_file$end_date)
-summary_file$start_date <- as.Date(summary_file$start_date)
+summary_file$end_date <- as.Date(summary_file$end_date,"%Y%m%d")
+summary_file$start_date <- as.Date(summary_file$start_date,"%Y%m%d")
 
 
 setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 
+# ----------------------------------------------
 ##export the summary table to J Drive
+# ----------------------------------------------
 ##(you might get a warning message about appending column names to the files; this should not affect the final output)
 write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/resource_tracking_data_summary.csv",
             append = TRUE, row.names=FALSE, sep=",")
 
+
+# ----------------------------------------------
+##Add more RT variables and clean up any rows with "junk" data
+# ----------------------------------------------
 resource_database$adm1 <- 128
 resource_database$adm2 <- resource_database$adm1
 resource_database$start_date <- as.Date(resource_database$start_date)
@@ -128,12 +131,16 @@ resource_database$source <- "gf"
 resource_database <- resource_database[!grepl("Fondos pendientes de asignar a SR",resource_database$recipient)]
 
 # ----------------------------------------------
-##check for any dropped data/clean up the sda activities: 
+##optional: check for any dropped data 
+# ----------------------------------------------
 data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
+
 
 # ----------------------------------------------
 ##### Map to the GF Modules and Interventions #####
 ##run the map_modules_and_interventions.R script first
+# ----------------------------------------------
+
 
 gtmData <- strip_chars(resource_database, unwanted_array, remove_chars)
 gtmData[is.na(module), module:=intervention]

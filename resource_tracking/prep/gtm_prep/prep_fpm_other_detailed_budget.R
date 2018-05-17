@@ -15,8 +15,10 @@ library(stats)
 library(stringr)
 library(rlang)
 library(zoo)
-# ----------------------------------------------
 
+# ----------------------------------------------
+##Function to prepare the budgets: 
+# ----------------------------------------------
 prep_other_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
   
   qtr_names <- c("Área de prestación de servicios","Actividad", "Receptor Principal", seq(21, 29, by=1))
