@@ -1,33 +1,35 @@
 # ----------------------------------------------
 # Irena Chen
-#
-# 11/7/2017
-# Template for prepping GF budget data
-# Inputs:
-# inFile - name of the file to be prepped
-# Outputs:
-# budget_dataset - prepped data.table object
+# May 16th, 2018
+# Master code file for GTM FPM/PUDR data cleaning 
+# ----------------------------------------------
+###### Set up R / install packages  ###### 
 # ----------------------------------------------
 rm(list=ls())
 library(lubridate)
 library(data.table)
 library(readxl)
 library(stats)
-library(stringr) 
+library(stringr)
 library(rlang)
 library(zoo)
-# ----------------------------------------------
 
+# ----------------------------------------------
 ## Notes: running this will throw a warning: 
 #Warning messages:
   #1: In `[.data.table`(ghe_data, , `:=`((drop.cols), NULL)) :
   # length(LHS)==0; no columns to delete or assign RHS to.
 
 #But this shouldn't affect the final output. 
-# ----------------------------------------------
-
+# ---------------------------------------------
+### assign some variables #####
+# ---------------------------------------------
 loc_name <- "gtm"
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
+
+# ----------------------------------------------
+###### Load the list of the RT files we want to process   ###### 
+# ----------------------------------------------
+dir <- 'local drive here'
 file_list <- read.csv(paste0(dir, "fpm/fpm_budget_filelist.csv"))
 
 
@@ -43,11 +45,11 @@ summary_file$loc_name <- loc_name
 for(i in 1:length(file_list$file_name)){
   ##fill in the summary tracking file with what we know already: 
   summary_file$disease[i] <- as.character(file_list$disease[i])
-  summary_file$grant[i] <- as.character(file_list$grant[i])
+  summary_file$grant[i] <- as.character(file_list$grant_number[i])
   summary_file$period[i] <- file_list$period[i] 
   summary_file$geographic_detail[i] <- as.character(file_list$geography_detail[i])
   summary_file$data_source[i] <- as.character(file_list$data_source[i])
-  
+  summary_file$year[i] <- file_list$grant_period[i]
   
   if(file_list$format[i]=="detailed"){ ## fpm detailed budgets 
     tmpData <- prep_fpm_detailed_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
