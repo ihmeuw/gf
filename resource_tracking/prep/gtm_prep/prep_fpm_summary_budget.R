@@ -8,17 +8,8 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
-##download necessary packages: 
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
-# ----------------------------------------------
 ##function to clean the data: 
-
+# ----------------------------------------------
 prep_fpm_summary_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, grant, recipient, lang){
   
   if(!is.na(sheet_name)){

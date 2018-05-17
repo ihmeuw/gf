@@ -1,15 +1,18 @@
-# ----------------------------------------------
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
-# ----------------------------------------------
-##Function to prepare the detailed budgets: 
+#----------------------------------------------
+# Irena Chen
+#
+# 5/16/2018
+##This cleans the GUA-M-MSPAS 2014-2016 budget
+# Inputs:
+# inFile - name of the file to be prepped
+# Outputs:
+# budget_dataset - prepped data.table object
+
 
 # ----------------------------------------------
+##Function to prepare the budgets: 
+# ----------------------------------------------
+
 prep_other_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
   
   ##load the FPM data: 

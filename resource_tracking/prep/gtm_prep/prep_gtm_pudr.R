@@ -9,9 +9,11 @@
 #
 # Outputs:
 # budget_dataset - prepped data.table object
-# ----------------------------------------------
 
-# start function
+
+# ----------------------------------------------
+# function to prep the data
+# ----------------------------------------------
 prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period, grant, source, loc_name, lang) {
   
   # Load/prep data
