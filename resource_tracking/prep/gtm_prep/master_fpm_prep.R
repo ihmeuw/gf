@@ -124,10 +124,10 @@ setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date", "End D
 write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/resource_tracking_data_summary.csv",
             append = TRUE, row.names=FALSE, sep=",")
 
-
 # ----------------------------------------------
 ##Add more RT variables and clean up any rows with "junk" data
 # ----------------------------------------------
+
 resource_database$adm1 <- 128
 resource_database$adm2 <- resource_database$adm1
 resource_database$start_date <- as.Date(resource_database$start_date)

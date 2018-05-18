@@ -68,11 +68,8 @@ modData[, ymin := c(0, head(ymax, n=-1)),by="grant_number"]
 modData[, pos := cumsum(fraction)-fraction/2,by="grant_number"]
 
 # --------------------------------------------
-######### Make the pie charts of  ############
+######### Make the GF module pie charts  ############
 # ---------------------------------------------
-
-
-
 
 prog_plots <- list()
 for (k in unique(modData$grant_number)){
@@ -97,7 +94,7 @@ dev.off()
 
 
 # ---------------------------------------------
-######### Create the "intervention" dataset ############
+######### Create the "intervention" dataset for sunburst charts ############
 # ---------------------------------------------
 
 intData[,budget_sum:=sum(na.omit(budget)), by="grant_number"]
