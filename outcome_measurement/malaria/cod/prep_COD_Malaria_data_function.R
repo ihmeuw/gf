@@ -76,9 +76,15 @@
   index <- 4
   
  for(index in 4:11) {
-   sheetnames <- excel_sheets(paste0(dir, "/", PNLP_files$File.Names[index], ".xls"))
-   sheetnames = sheetnames[!sheetnames %in% 'INPUTRDC']
    
+   if (index==11){
+     sheetnames <- excel_sheets(paste0(dir, "/", PNLP_files$File.Names[index], ".xlsx"))
+     sheetnames = sheetnames[!sheetnames %in% 'INPUTRDC']
+   } else{
+     sheetnames <- excel_sheets(paste0(dir, "/", PNLP_files$File.Names[index], ".xls"))
+     sheetnames = sheetnames[!sheetnames %in% 'INPUTRDC']
+   }
+
     for(s in sheetnames) {
 
       if (index==11){
@@ -113,6 +119,12 @@
           }
         }
         
+        # to compare missing health zones between two years
+        # hz_missing_2011 <- hzNK2014[!hzNK2014 %in% hzNK2011]
+        # print(hz_missing_2011)
+        # hz_missing_2014 <- hzNK2011[!hzNK2011 %in% hzNK2014]
+        # print(hz_missing_2014)
+        
       # need if statement to distinguish first sheet, and then
       # add to the first sheet with subsequent ones with rbind()
       if (i==1) fullData <- currentSheet
@@ -122,8 +134,21 @@
    print("Checking to see if date is NA anywhere...")
    print(fullData[is.na(date), c(1:8)])
   }
-# ----------------------------------------------  
-
+# ----------------------------------------------
+  # make sure all values are numeric that should be numeric
+    # new_dat <- NULL 
+    # varnames <- colnames(currentSheet)
+    #  for (i in varnames){
+    #   rows <- which(grepl("[^0-9]+", currentSheet[, i, with=F])==TRUE & !is.na(currentSheet[, i, with=F]))
+    #   if (length(rows)>0){
+    #     rows_paste <- paste(rows, collapse=", ")
+    #     sub_dat <- cbind(i, rows_paste)
+    #     new_dat <- rbind(new_dat, sub_dat)
+    #   }
+    #  }
+    # 
+    # rows <- which(grepl("[^0-9]+", currentSheet$newCasesMalariaMild_under5)==TRUE & !is.na(currentSheet$newCasesMalariaMild_under5))
+  
   
 # ----------------------------------------------
 # Test that the output has the right number of rows

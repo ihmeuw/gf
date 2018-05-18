@@ -150,17 +150,38 @@
       
   # ----------------------------------------------
     # fix various issues in spelling/typos or extra columns in the data sheet:
-      if ( PNLP_files$year[index] == 2011 | PNLP_files$year[index] == 2010 ) {
+      
+      if ( PNLP_files$year[index] == 2015 & sheetname == "NK" ) {
+        dataSheet <- dataSheet[ , -c("X__71", "X__72", "X__73") ]
+      }
+      
+      if ( PNLP_files$year[index] == 2010 & sheetname == "BC" ) {
+        dataSheet <- dataSheet[ , -c("X__14", "X__62") ]
+      }
+      
+      if ( PNLP_files$year[index] == 2011 & sheetname != "OR" ) {
         dataSheet <- dataSheet[ , -c("X__14") ]
       }
       
-      if ((PNLP_files$year[index] == 2014 | PNLP_files$year[index] == 2013| PNLP_files$year[index] == 2012 )& sheetname == "BC") {
+      if ( PNLP_files$year[index] == 2011 & sheetname == "OR" ) {
+        dataSheet <- dataSheet[ , -c("X__11", "X__15", "X__25", "X__39") ]
+      }
+      
+      if ((PNLP_files$year[index] == 2014 | PNLP_files$year[index] == 2013 | PNLP_files$year[index] == 2012 | PNLP_files$year[index] == 2011)
+          & sheetname == "BC") {
         #dataSheet <- dataSheet[,names(dataSheet)[-length(names(dataSheet))], with=F]
         dataSheet <- dataSheet[, -ncol(dataSheet), with=F ]
       }
       
       if ( PNLP_files$year[index] == 2016 & sheetname == "KIN") {
         dataSheet <- dataSheet[ , -c("X__72", "X__73", "X__74") ]
+      }
+      
+      if (PNLP_files$year[index] == 2011 & sheetname == "BDD") {
+        #dataSheet <- dataSheet[,names(dataSheet)[-length(names(dataSheet))], with=F]
+        dataSheet <- dataSheet[ , !apply( dt , 2 , function(x) all(is.na(x))), with=F ]
+        dataSheet <- dataSheet[, -ncol(dataSheet), with=F ]
+        dataSheet <- dataSheet[, -ncol(dataSheet), with=F ]
       }
       
   
@@ -184,20 +205,20 @@
     if (PNLP_files$year[index] == 2012 & sheetname == "EQ"){
       dataSheet <- dataSheet[(totalCasesAllDiseases_under5=="971" & totalCasesAllDiseases_5andOlder=="586" & totalCasesAllDiseases_pregnantWomen=="99"), 
                     province:="Equateur"]
-    }
-      if (PNLP_files$year[index] == 2012 & sheetname == "EQ"){
-        dataSheet <- dataSheet[(totalCasesAllDiseases_under5=="971" & totalCasesAllDiseases_5andOlder=="586" & totalCasesAllDiseases_pregnantWomen=="99"), 
-                               dps:="Sud Uban"]
+      dataSheet <- dataSheet[(totalCasesAllDiseases_under5=="971" & totalCasesAllDiseases_5andOlder=="586" & totalCasesAllDiseases_pregnantWomen=="99"), 
+                             dps:="Sud Uban"]
+      dataSheet <- dataSheet[(totalCasesAllDiseases_under5=="971" & totalCasesAllDiseases_5andOlder=="586" & totalCasesAllDiseases_pregnantWomen=="99"), 
+                             health_zone:="Libenge"]
+      dataSheet <- dataSheet[(totalCasesAllDiseases_under5=="971" & totalCasesAllDiseases_5andOlder=="586" & totalCasesAllDiseases_pregnantWomen=="99"), 
+                             month:= "Janvier"]
+      dataSheet <- dataSheet[(totalCasesAllDiseases_under5=="977" & totalCasesAllDiseases_5andOlder=="816" & totalCasesAllDiseases_pregnantWomen=="242"), 
+                             month:= "Janvier"]
+      dataSheet <- dataSheet[(totalCasesAllDiseases_under5=="977" & totalCasesAllDiseases_5andOlder=="816" & totalCasesAllDiseases_pregnantWomen=="242"), 
+                             health_zone:="Mawuya"]
+      dataSheet <- dataSheet[(health_zone=="Mawuya" & !is.na(population)), health_zone:=NA]
+      dataSheet <- dataSheet[!is.na(health_zone)]
       }
-      if (PNLP_files$year[index] == 2012 & sheetname == "EQ"){
-        dataSheet <- dataSheet[(totalCasesAllDiseases_under5=="971" & totalCasesAllDiseases_5andOlder=="586" & totalCasesAllDiseases_pregnantWomen=="99"), 
-                               health_zone:="Libenge"]
-      }
-      if (PNLP_files$year[index] == 2012 & sheetname == "EQ"){
-        dataSheet <- dataSheet[(totalCasesAllDiseases_under5=="971" & totalCasesAllDiseases_5andOlder=="586" & totalCasesAllDiseases_pregnantWomen=="99"), 
-                               month:= "Janvier"]
-      }
-
+      
     # add a column for the "year" to keep track of this variable as we add dataSheets to this one
       dataSheet$year <- PNLP_files$year[index]
       
@@ -286,17 +307,35 @@
       dataSheet[, date:=as.Date(stringdate, "%d/%m/%Y")]
       
       # make names of health zones consistent (change abbreviatons to full name in select cases)
+      if (PNLP_files$year[index] == 2017 & sheetname == "KOR"){
+        dataSheet <- dataSheet[(health_zone=="5" & month=="03" & totalCasesAllDiseases_under5=="3297"), health_zone:= "Kole"]
+      }
+      
+      if (PNLP_files$year[index] == 2015 & sheetname == "EQ"){
+        dataSheet <- dataSheet[(health_zone=="Libenge" & month=="01" & totalCasesAllDiseases_under5=="1375"), health_zone:= "Mawuya"]
+      }
+      
+      if (PNLP_files$year[index] == 2017 & sheetname == "EQ"){
+        dataSheet <- dataSheet[(health_zone=="Libenge" & month=="01" & totalCasesAllDiseases_under5=="1838"), health_zone:= "Mawuya"]
+      }
+      
+      if (PNLP_files$year[index] == 2016 & sheetname == "EQ"){
+        dataSheet <- dataSheet[(health_zone=="Libenge" & month=="01" & totalCasesAllDiseases_under5=="2213"), health_zone:= "Mawuya"]
+      }
+      
       if (PNLP_files$year[index] == 2014 & sheetname == "EQ"){
         dataSheet <- dataSheet[(health_zone=="Libenge" & month=="01" & totalCasesAllDiseases_under5=="754"), health_zone:= "Mawuya"]
       }
+      
       if (PNLP_files$year[index] == 2013 & sheetname == "EQ"){
         dataSheet <- dataSheet[(health_zone=="Libenge" & month=="01" & totalCasesAllDiseases_under5=="1628"), health_zone:= "Mawuya"]
       }
       
-      if (PNLP_files$year[index] == 2014 & sheetname == "KAT"){
+      if ((PNLP_files$year[index] == 2014 | PNLP_files$year[index] == 2015 | PNLP_files$year[index] == 2016 | PNLP_files$year[index] == 2017) & sheetname == "KAT"){
         dataSheet <- dataSheet[health_zone=="Mutshat", health_zone:= "Mutshatsha"]
         dataSheet <- dataSheet[health_zone=="Malem Nk", health_zone:= "Malemba Nkulu"]
       }
+      
       if (PNLP_files$year[index] == 2013 & sheetname == "BDD"){
         dataSheet <- dataSheet[health_zone=="Koshiba", health_zone:= "Koshibanda"]
       }
@@ -305,6 +344,25 @@
         dataSheet <- dataSheet[health_zone=="Mbuji May", health_zone:= "Bimpemba"]
       }
       
+      if ((PNLP_files$year[index] == 2011)& sheetname == "BDD"){
+        dataSheet <- dataSheet[health_zone=="KIKWITS", health_zone:= "Kikwit S"]
+      }
+      
+      if ((PNLP_files$year[index] == 2011)& sheetname == "KAT"){
+        dataSheet <- dataSheet[health_zone=="Kabond D", health_zone:= "Kabond Dianda"]
+        dataSheet <- dataSheet[health_zone=="Malem Nk", health_zone:= "Malemba Nkulu"]
+        dataSheet <- dataSheet[health_zone=="Mutshat", health_zone:= "Mutshatsha"]
+        dataSheet <- dataSheet[health_zone=="Kilela B", health_zone:= "Kilela Balanda"]
+        dataSheet <- dataSheet[health_zone=="Mufunga", health_zone:= "Mufunga sampwe"]
+        dataSheet <- dataSheet[health_zone=="Kafakumb", health_zone:= "Kafakumba"]
+        dataSheet <- dataSheet[health_zone=="Kamalond", health_zone:= "Kamalondo"]
+        dataSheet <- dataSheet[health_zone=="Kampem", health_zone:= "Kampemba"]
+        dataSheet <- dataSheet[health_zone=="Tshamile", health_zone:= "Tshamilemba"]
+        dataSheet <- dataSheet[health_zone=="Lshi", health_zone:= "Lubumbashi"]
+        dataSheet <- dataSheet[health_zone=="Mumbund", health_zone:= "Mumbunda"]
+        dataSheet <- dataSheet[health_zone=="Fungurum", health_zone:= "Fungurume"]
+      }
+
       # there are still some added rows that happen to have something in the month column but are missing data everywhere else
       dataSheet <- dataSheet[!is.na(province)]
       
