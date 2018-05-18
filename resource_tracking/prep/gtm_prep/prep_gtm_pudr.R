@@ -19,7 +19,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   
-  if(grant%in%"GTM-T-MSPAS"){
+  if(grant%in%"GTM-T-MSPAS"&sheet_name!="INTEGRACION"){
     colnames(gf_data)[1] <- "module"
     colnames(gf_data)[2] <- "intervention"
     colnames(gf_data)[3] <- "budget"
@@ -39,6 +39,24 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
       gf_data$module <- "all"
       gf_data$intervention <- "all"
       gf_data$expenditure <- 0
+  } else if (sheet_name=="INTEGRACION"){
+      colnames(gf_data)[2] <- "code"
+      colnames(gf_data)[3] <- "module"
+      colnames(gf_data)[4] <- "budget"
+      colnames(gf_data)[5] <- "expenditure"
+      gf_data <- gf_data[c(grep("intid", tolower(gf_data$code)):(grep("costinput", tolower(gf_data$code)))),]
+      gf_data <- gf_data[, c("module", "budget", "expenditure"),with=FALSE]
+      gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
+      toMatch <- c("total", "cost input")
+      gf_data <- gf_data[!grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$module)),]
+      setDT(gf_data)[, paste0("module", 1:2) := tstrsplit(module, "-")]
+      gf_data$module <- NULL
+      setnames(gf_data, c("module1", "module2"), c("module", "intervention"))
+      gf_data$recipient <- loc_name
+      gf_data$disbursement <- 0 
+      gf_data$sda_activity <- "all"
+      gf_data$intervention <- "all"
+    
   } else {
       colnames(gf_data)[2] <- "module"
       colnames(gf_data)[3] <- "sda_activity"
