@@ -38,6 +38,10 @@ implementer <- "CAGF"
 
 #But this shouldn't affect the final output. 
 
+# ----------------------------------------------
+##STEP 1: Download the "Resource Tracking Data" folder from Basecamp and save it on your local drive 
+
+
 
 # ----------------------------------------------
 ###### Load the list of the RT files we want to process   ###### 
