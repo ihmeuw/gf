@@ -10,6 +10,9 @@
 p = as.numeric(commandArgs()[4])
 print('Polytime is:')
 print(p)
+inFile = commandArgs()[5]
+print('File name is:')
+print(inFile)
 
 library(data.table)
 library(rgeos)
@@ -29,7 +32,7 @@ j <- ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <- paste0(j,'/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/imputed')
 
 # upload the data with month, year, sex
-uvl <- readRDS(paste0(dir, "/impute_ready_offset.rds"))
+uvl <- readRDS(paste0(dir, "/impute_", inFile, ".rds"))
 
 #------------------------------------
 
@@ -69,6 +72,6 @@ for( i in 1:length(imputed_data$imputations) ) {
 }
 
 # save the imputed data as an RDS
-saveRDS(amelia_data, file= paste0(dir, "/imputed_offset_time", p, ".rds"))  
+saveRDS(amelia_data, file= paste0(dir, "/imputed_", inFile, p, ".rds"))  
 #-------------------------------
 
