@@ -21,13 +21,18 @@ library(zoo)
   # length(LHS)==0; no columns to delete or assign RHS to.
 
 #But this shouldn't affect the final output. 
+
+##STEP 1: Download the "gf" folder from Basecamp (in the Resource Tracking Data folder) 
+##and save it on your local drive 
+
+
 # ---------------------------------------------
-### assign some variables #####
+### assign some variables
 # ---------------------------------------------
 loc_name <- "gtm"
 
 # ----------------------------------------------
-###### Load the list of the RT files we want to process   ###### 
+###### Load the list of RT files we want to process
 # ----------------------------------------------
 dir <- 'local drive here'
 file_list <- read.csv(paste0(dir, "fpm/fpm_budget_filelist.csv"))
@@ -41,6 +46,9 @@ summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), n
 summary_file$loc_name <- as.character(summary_file$loc_name)
 summary_file$loc_name <- loc_name
 
+# ----------------------------------------------
+###### For loop that preps data and aggregates it
+# ----------------------------------------------
 
 for(i in 1:length(file_list$file_name)){
   ##fill in the summary tracking file with what we know already: 
@@ -49,7 +57,7 @@ for(i in 1:length(file_list$file_name)){
   summary_file$period[i] <- file_list$period[i] 
   summary_file$geographic_detail[i] <- as.character(file_list$geography_detail[i])
   summary_file$data_source[i] <- as.character(file_list$data_source[i])
-  summary_file$year[i] <- file_list$grant_period[i]
+  summary_file$year[i] <- as.character(file_list$grant_period[i])
   
   if(file_list$format[i]=="detailed"){ ## fpm detailed budgets 
     tmpData <- prep_fpm_detailed_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
@@ -98,24 +106,28 @@ for(i in 1:length(file_list$file_name)){
     summary_file$sda_detail[i] <- "None"
   }
   summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
-  summary_file$start_date[i] <- min(tmpData$start_date) ##since there are multiple values in this, get the earliest start date 
-  
-  
+  summary_file$start_date[i] <- min(tmpData$start_date)
   print(i)
 }
 
 
-summary_file$end_date <- as.Date(summary_file$end_date)
-summary_file$start_date <- as.Date(summary_file$start_date)
+summary_file$end_date <- as.Date(summary_file$end_date,"%Y%m%d")
+summary_file$start_date <- as.Date(summary_file$start_date,"%Y%m%d")
 
 
 setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 
+# ----------------------------------------------
 ##export the summary table to J Drive
+# ----------------------------------------------
 ##(you might get a warning message about appending column names to the files; this should not affect the final output)
 write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/resource_tracking_data_summary.csv",
             append = TRUE, row.names=FALSE, sep=",")
 
+
+# ----------------------------------------------
+##Add more RT variables and clean up any rows with "junk" data
+# ----------------------------------------------
 resource_database$adm1 <- 128
 resource_database$adm2 <- resource_database$adm1
 resource_database$start_date <- as.Date(resource_database$start_date)
@@ -128,18 +140,23 @@ resource_database$source <- "gf"
 resource_database <- resource_database[!grepl("Fondos pendientes de asignar a SR",resource_database$recipient)]
 
 # ----------------------------------------------
-##check for any dropped data/clean up the sda activities: 
+##optional: check for any dropped data 
+# ----------------------------------------------
 data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
+
 
 # ----------------------------------------------
 ##### Map to the GF Modules and Interventions #####
 ##run the map_modules_and_interventions.R script first
+# ----------------------------------------------
+
 
 gtmData <- strip_chars(resource_database, unwanted_array, remove_chars)
 gtmData[is.na(module), module:=intervention]
 
 
-mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"),
+                                  include_rssh_by_disease = FALSE)
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
 final_mapping <- copy(mapping_list)
@@ -147,16 +164,19 @@ final_mapping$disease <- NULL
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
 
-
-gf_mapping_list <- total_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx",
+gf_mapping_list <- total_mapping_list(paste0(dir,"intervention_and_indicator_list.xlsx"),
                                       mapping_list, unwanted_array, remove_chars)
+
 # ----------------------------------------------
-# USE THIS TO CHECK FOR ANY MODULE/INTERVENTION COMBOS IN THE DATA THAT AREN'T IN THE MAPPING
+# Use this to check for any unmapped modules/interventions
+# ----------------------------------------------
 # gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 # gtm_concat <- paste0(gtmData$module, gtmData$intervention)
-# unmapped_mods <- gtm_concat[!gtm_concat%in%gf_concat]
+# unmapped_mods <- unique(gtm_concat[!gtm_concat%in%gf_concat])
 
-
+# ----------------------------------------------
+# Merge the datasets on the GF codes to map to framework 
+# ----------------------------------------------
 gtm_init_mapping <- merge(gtmData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
 
 ##use this to check if any modules/interventions were dropped:
@@ -167,17 +187,17 @@ mappedGtm$budget <- mappedGtm$budget*mappedGtm$coefficient
 mappedGtm$expenditure <- mappedGtm$expenditure*mappedGtm$coefficient
 mappedGtm$disbursement <- mappedGtm$disbursement*mappedGtm$coefficient
 
-##sum to make sure that budget numbers aren't dropped:
-
+# ----------------------------------------------
+##Optional: sum to make sure that budget numbers aren't dropped:
+# ----------------------------------------------
 # data_check1 <- gtmData[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
 # data_check2 <-mappedGtm[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
 
 mappedGtm$year <- year(mappedGtm$start_date)
 
 # ----------------------------------------------
-
 ##output dataset to the correct folder as a csv: 
-
+# ----------------------------------------------
 
 write.csv(mappedGtm, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", row.names = FALSE,
           fileEncoding = "latin1")

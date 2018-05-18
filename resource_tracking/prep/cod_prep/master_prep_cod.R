@@ -23,14 +23,14 @@ library(zoo)
 
 #But this shouldn't affect the final output. 
 
-
 # ----------------------------------------------
 ##set up some variables: 
+# ----------------------------------------------
 loc_name <- 'cod' ##use the ISO3 country code for DRC
 implementer <- "CAGF"
+
+
 # ----------------------------------------------
-## STEP 1: Download the 
-##this has all of the files we will be using: 
 ## Notes: running this will throw a warning: 
 #Warning messages:
 #In read_fun(path = path, sheet = sheet, limits = limits, shim = shim,  :
@@ -38,7 +38,14 @@ implementer <- "CAGF"
 
 #But this shouldn't affect the final output. 
 
+# ----------------------------------------------
+##STEP 1: Download the "Resource Tracking Data" folder from Basecamp and save it on your local drive 
 
+
+
+# ----------------------------------------------
+###### Load the list of the RT files we want to process   ###### 
+# ----------------------------------------------
 
 dir <- 'filepath here' ##where the files are stored locally
 file_list <- read.csv(paste0(dir, "fpm/cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
@@ -52,7 +59,9 @@ summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), n
 summary_file$loc_id <- as.character(summary_file$loc_id)
 summary_file$loc_id <- loc_name
 
-##run the for loop to clean all of the COD data: 
+# ----------------------------------------------
+###### For loop that preps data and aggregates it
+# ----------------------------------------------
 for(i in 1:length(file_list$file_name)){
   ##fill in the summary tracking file with what we know already: 
   summary_file$disease[i] <- file_list$disease[i]
@@ -124,9 +133,9 @@ setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Data Inventory Star
                          "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 
 
-
+# ---------------------------------------------
 ##export the summary table
-##(you might get a warning message about appending column names to the files; this should not affect the final output)
+# ---------------------------------------------
 write.table(summary_file, paste0("file path where you want the summary file","resource_tracking_data_summary.csv"),
             append = TRUE, row.names=FALSE, sep=",")
 
@@ -209,7 +218,8 @@ mappedCod$country <- "Congo (Democratic Republic)"
 
 # ----------------------------------------------
 ## write as csv 
-write.csv(mappedCod, "prepped_fpm_budgets.csv", fileEncoding = "latin1", row.names = FALSE)
+# ----------------------------------------------
+write.csv(mappedCod, paste0(dir, "prepped_fpm_budgets.csv"), fileEncoding = "latin1", row.names = FALSE)
 
 
 
