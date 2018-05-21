@@ -164,6 +164,10 @@ mapped_sicoin$grant_number <- "none"
 mapped_sicoin$country <- "Guatemela"
 mapped_sicoin$recipient <- mapped_sicoin$country
 mapped_sicoin$data_source <- "sicoin"
+mapped_sicoin$lang <- "esp"
+mapped_sicoin$year <- year(sicoin_data$start_date)
+mapped_sicoin$grant_number <- "none"
+
 
 # data_check1 <- sicoin_data[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
 # data_check2 <-mapped_sicoin[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
