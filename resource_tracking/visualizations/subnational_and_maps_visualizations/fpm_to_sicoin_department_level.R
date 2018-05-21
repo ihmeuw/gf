@@ -32,25 +32,31 @@ dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
 # ----------------------------------------------
 ######## Load the FPM and SICOIN datasets ########
 # ----------------------------------------------
-gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
+fpm_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
                                   fileEncoding = "latin1"))
 
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv",
                                    fileEncoding="latin1"))
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 sicoin_data$year <- year(sicoin_data$start_date)
-sicoin_malaria <- sicoin_data[disease=="malaria"] ##decide if you want to do GF or GHE data at this point
 
-fpm_malaria <- gtmBudgets[disease=="malaria"]
-fpm_malaria$start_date <- as.Date(fpm_malaria$start_date,"%Y-%m-%d")
-fpm_malaria$year <- year(fpm_malaria$start_date)
+fpm_data$start_date <- as.Date(fpm_malaria$start_date,"%Y-%m-%d")
+fpm_data$year <- year(fpm_malaria$start_date)
+
+# ----------------------------------------------
+####### Subset the data by disease of choice ########
+# ----------------------------------------------
+
+# Using malaria, but can also do TB or HIV if you want
+sicoin_malaria <- sicoin_data[disease=="malaria"&municipality!="gtm"] ##drop where we only have national data
+fpm_malaria <- fpm_data[disease=="malaria"]
 
 ##sum the fpm data by year, module, and intervention
 byVars = names(fpm_malaria)[names(fpm_malaria)%in%c('year', 'gf_module', 'gf_intervention', 'disease')]
 fpm_malaria = fpm_malaria[, list(budget=sum(na.omit(budget))), by=byVars]
 
 # ----------------------------------------------
-######## This part is where we can merge the FPM and SICOIN data ########
+######## Roll up the SICOIN data to department level ########
 # ----------------------------------------------
 dept_muni_list <- data.table(read_excel("J:/Project/Evaluation/GF/mapping/gtm/Codigos censales Guatemala  actualizado.xls", 
                                         sheet = "Poblacion_INE_94"))
@@ -62,10 +68,12 @@ dept_muni_list <- dept_muni_list[,c("department", "municipality"), with=FALSE]
 dept_muni_list <- unique(dept_muni_list)
 dept_muni_list$department <- tolower(dept_muni_list$department)
 
-##from stringr package:
+##Capitlize every separate word (e.g. San Jose)
 dept_muni_list$department <- str_to_title(dept_muni_list$department)
 
-##create vector of unwanted characters:
+# ----------------------------------------------
+##to make the matching easier, get rid of accents/special characters:
+# ----------------------------------------------
 unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
                           'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
                           'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
@@ -88,6 +96,9 @@ sicoin_malaria$municipality <- chartr(paste(names(unwanted_array), collapse=''),
                                paste(unwanted_array, collapse=''),
                                sicoin_malaria$municipality)
 
+# ----------------------------------------------
+### Attach the department to the SICOIN dataset
+# ----------------------------------------------
 
 department_data <- merge(sicoin_malaria, dept_muni_list, all.x=TRUE, by="municipality", allow.cartesian=TRUE)
 
@@ -100,20 +111,24 @@ byVars = names(department_data)[names(department_data)%in%c('department','module
 department_data  = department_data[, list(budget=sum(na.omit(budget)), 
                                           disbursement=sum(na.omit(disbursement))), by=byVars]
 
-
-##attach the codes to the department
+##attach the codes to the department - need codes later for shapefiles
 department_data <- merge(department_data, dept_codes, by="department", all.x=TRUE, allow.cartesian=TRUE)
-dropped_depts <- department_data[is.na(dept_code)]
+
+##Check for any dropped departments
+#dropped_depts <- department_data[is.na(dept_code)]
+
 
 ##get the % of sicoin money for each department by module and year: 
-
 department_data[, department_fraction:=budget/sum(budget), by=c("year", "module")]
 ##change the variable names so we can merge the FPM and sicoin
 setnames(department_data, c("budget", "disbursement"), c("sicoin_budget", "sicoin_disb"))
 
+
 # ----------------------------------------------
 ######## This part is where we can merge the FPM and SICOIN data ########
 # ----------------------------------------------
+
+##you can join on quarter, but I'm doing year here: 
 graphData <- merge(fpm_malaria, department_data, by="year", allow.cartesian=TRUE)
 
 ##multiply the % of sicoin money for each department with the $$ for each FPM intervention
@@ -152,8 +167,10 @@ coords <- data.table(fortify(adminData, region='ID_1'))
 names <- data.table(adminData@data)
 coord_and_names = merge(coords, names, by.x = 'id', by.y='ID_1', allow.cartesian=TRUE)
 coord_and_names$id <- as.numeric(coord_and_names$id)
-##Roll up to department level: 
-### optional: Get names and id numbers corresponding to administrative areas to plot as labels: 
+
+# ----------------------------------------------
+### optional: Plot the names of the departments on the map: 
+# ----------------------------------------------
 gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1],lat = coordinates(adminData)[, 2])
 gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1'] 
 gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
@@ -163,8 +180,6 @@ gtm_region_centroids$NAME_1[21] <- "Suchitepéquez"
 gtm_region_centroids$NAME_1[3] <- "Sacatepéquez"
 gtm_region_centroids$NAME_1[1] <- "Quiché"
 gtm_region_centroids$NAME_1[7] <- "Petén"
-
-
 
 # ----------------------------------------------
 ######## Use ggplot to make the visualizations ########

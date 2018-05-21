@@ -1,7 +1,7 @@
 ---
 title: "readme"
 author: "Irena Chen"
-date: "May 11, 2018"
+date: "May 21, 2018"
 output:
   html_document: default
   pdf_document: default
@@ -16,11 +16,11 @@ p.caption {
 library(data.table)
 library(readxl)
 knitr::opts_chunk$set(echo = TRUE)
-mappedUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_uga_data.csv"))
-mappedUga <- mappedUga[!is.na(budget)]
+mappedGtm <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv"))
+mappedGtm <- mappedGtm[!is.na(budget)]
 uga_codebook <- data.table(read_excel("J:/Project/Evaluation/GF/resource_tracking/RT_Codebook.xlsx"))
-# setwd("where the FPM budgets are stored")
-
+##set this variable to your local repository drive: 
+repo_dir <- "C:/Users/irenac2/repos/gf/resource_tracking/prep/gtm_prep/"
 ```
 
 ## Original Data Sources
@@ -31,13 +31,13 @@ The FPM budgets typically have a format like the image below:
 
 
 ```{r pressure, echo=FALSE, fig.cap="An example of a FPM summary budget.", out.width = '100%'}
-knitr::include_graphics("J:/Project/Evaluation/GF/resource_tracking/uga/gf/fpm/fpmimage.png")
+knitr::include_graphics(paste0(repo_dir, "fpmimage.png"))
 ```
 
 Some FPM budgets will also have tabs with even more detailed information. While the FPM budgets have very useful information about module and intervention activities per grant, SR information is not usually included in these budgets. To obtain SR information, we have found that PUDR documents can be very helpful for this. 
 
 ```{r echo=FALSE, fig.cap="An example of a PUDR with SR information.", out.width = '50%'}
-knitr::include_graphics("J:/Project/Evaluation/GF/resource_tracking/uga/gf/fpm/pudrimage.png")
+knitr::include_graphics(paste0(repo_dir, "pudrimage.png"))
 ```
 
 So far, these are the two data sources from Uganda that we have for resource tracking data. We are actively seeking other sources of data to strengthen our analysis and understand how resources are disbursed. 
@@ -46,7 +46,7 @@ So far, these are the two data sources from Uganda that we have for resource tra
 
 The entire RT database has thousands of rows, making it impractical to view entirely. This is a subset of what the data looks like. 
 ```{r table, echo=FALSE}
-knitr::kable(mappedUga[1:5,], caption = "Subset of the Uganda RT Database")
+knitr::kable(mappedGtm[1:5,], caption = "Subset of the Guatemala RT Database")
 ```
 
 The codebook for the database is also located in Basecamp, in the Resource Tracking folder. Here is what the current codebook looks like: 
@@ -68,7 +68,7 @@ https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/uga_prep
 These are the scripts that you will need to prep the RT data and clean it into the same format as the RT database from the previous section. 
 
 ```{r echo=FALSE, fig.cap="These are the scripts that you will find in the uga_prep folder", out.width = '50%'}
-knitr::include_graphics("J:/Project/Evaluation/GF/resource_tracking/uga/gf/fpm/githubimage.png")
+knitr::include_graphics(paste0(repo_dir, "githubimage.png"))
 ```
 At this point, you should have cloned the github repository to your local drive, but if you haven't yet, this is a good guide for how to do so: 
 
@@ -80,12 +80,16 @@ In Basecamp, the RT data files are located here:
 
 
 ```{r echo=FALSE, fig.cap="RT data files on Basecamp", out.width = '50%'}
-knitr::include_graphics("J:/Project/Evaluation/GF/resource_tracking/uga/gf/fpm/ugabasecampimage.png")
+knitr::include_graphics(paste0(repo_dir, "gtmbasecampimage.png"))
 ```
 
-You only need to download the "fpm" and "pudrs" folders onto your local drive - but make sure to save them in the same place (perhaps under the same folder name). If they are stored in different places on your local drive, you will need to modify the R code to accomodate this, since the R code assumes that both folders share a filepath. 
+Download the entire "gf" folder and save it to your local drive. 
+
+The "fpm" and "pudrs" folders contain the original budget and PUDR documents. 
 
 The "intervention_and_indicator_list" Excel workbook is a file that contains all of the current GF modular framework interventions and indicators, as well as a tab that maps the old modules/interventions in past grants to the current framework. The "module_mapping" tab gets updated accordingly whenever we get new data that needs to be mapped to the framework. The main purpose of this is to standardize grant resources across country so that comparisons across grants can be as accurate as possible. 
+
+The RT_Codebook is also included in this folder as an optional reference. 
 
 
 
@@ -111,13 +115,17 @@ Make sure to run all three functions inside this script or else the rest of the 
 
 ## Summary of Prep Scripts 
 
-The "prep_detailed_budget" file cleans the FPM budgets that have multiple levels of budget descriptors (i.e. service delivery area activities, sub-recipients, sub-national locations). 
+The "prep_fpm_detailed_budget" file cleans the FPM budgets that have multiple levels of budget descriptors (i.e. service delivery area activities, sub-recipients, sub-national locations). 
 
-The "prep_summary_budget" file cleans the FPM budgets that only have module (and sometimes intervention) activities. When we can, we prefer to have detailed budgets over summary budgets in order toget the most granular level data. 
+The "prep_fpm_other_detailed_budget" cleans the GUA-610-G04-T 2012-2014 budget. This budget's "detailed" page is in a different format than the other standardized FPM detailed budgets. 
 
-The "prep_pudr_uga" file cleans the PUDR files we receive from the LFA. This script should flexible enough to handle PUDRs that are not all formatted the same, but may need to augmented if we receive a PUDR that has a different format. 
+The "prep_fpm_summary_budget" file cleans the FPM budgets that only have module (and sometimes intervention) activities. When we can, we prefer to have detailed budgets over summary budgets in order toget the most granular level data. 
 
-The "map_modules_and_interventions" file maps the old modules and interventions to the current GF modular framework. It also accounts for differences in language (e.g. it maps the French version of a module to its GF English counterpart). 
+The "prep_fpm_other_budget" file cleans the GUA-M-MSPAS 2014-2016 budget - this one is formatted differently than all of the other FPM budgets (there are separate tabs for each year). It contains module and SDA information, but no intervention detail. 
+
+The "prep_gtm_pudr" file cleans the PUDR files we receive from the LFA. This script should flexible enough to handle PUDRs that are not all formatted the same, but may need to augmented if we receive a PUDR that has a different format. 
+
+The "map_modules_and_interventions" file maps the old modules and interventions to the current GF modular framework. It also accounts for differences in language (e.g. it maps the Spanish version of a module to its GF English counterpart). 
 
 
 

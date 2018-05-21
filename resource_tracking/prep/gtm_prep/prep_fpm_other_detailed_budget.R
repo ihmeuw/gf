@@ -2,19 +2,13 @@
 # Irena Chen
 #
 # 11/7/2017
-# Template for prepping GF budget data that is grouped by "category"
+# Template for prepping the GUA-610-G04-T grant 
 # Inputs:
 # inFile - name of the file to be prepped
 # Outputs:
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
+
 
 # ----------------------------------------------
 ##Function to prepare the budgets: 
