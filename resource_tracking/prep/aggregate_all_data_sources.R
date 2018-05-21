@@ -49,14 +49,10 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 ##change the start dates from factors to dates: 
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
-gtmBudgets$country <- "Guatemala"
-###: technically not the country, but we're keeping the loc ids attached to the sicoin data
-##so it will map to a municipality anyway 
-
 
 ## if you want to aggregate the sicoin and FPM data:
 # gtmBudgets <- rbind(sicoin_data, gtmBudgets)
-#
+#gtmBudgets$country <- "Guatemala"
 
 
 # --------------------------------------------
@@ -118,7 +114,7 @@ write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/m
 ##pudrs overlap with the FPM budgets - drop this so we don't double count 
 fpmGtm <- gtmBudgets[!(data_source=="pudr")] ##all of the PUDRs we have correspond to available FPM 
 fpmUga <- totalUga[!(data_source=="pudr"&year>2015)] ##we have a lot of recent PUDRs that overlap with FPM 
-fpmCod <-  copy(totalCod) ##no PUDRs from DRC yet 
+fpmCod <-  totalCod[!(data_source=="pudr")] #all of the PUDRs we have correspond to available FPM 
 
 cleanData <- rbind(fpmGtm, fpmUga, fpmCod)
 cleanData[,end_date:=start_date+period-1]
