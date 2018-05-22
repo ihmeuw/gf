@@ -80,13 +80,39 @@ get_antimalarial_types <- function(antimal){
   return(x)
 }
 
-antimal_database$drug_type <- mapply(get_antimalarial_types, antimal_database$antimalarial_input)
+
+## vector dictionary of special characters to regular characters
+unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
+                          'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
+                          'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
+                          'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
+                          'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 'þ'='b', 'ÿ'='y' )
 
 ##get rid of special characters in the dataset (necessary if we want to map these to the shapefiles)
 antimal_database$department <- gsub("\\*", "",antimal_database$department) 
 antimal_database$department <- trimws(antimal_database$department, "r")
-antimal_database[department=="Guate Nor Occidente"]$department <- "Guatemala Nor Occidente"
-antimal_database[department=="Peten Sur occidental"]$department <- "Guatemala Nor Occidente"
+
+##function to get rid of the special characters and standardize the departments to the shapefiles that we have 
+standardize_depts <- function(department){
+  x <- department
+  if(grepl("Guat", x)){
+    x <- "Guatemala"
+  } else if (grepl("Peten", x)){
+    x <- "Peten"
+  } else {
+    x <- x
+  }
+  return(x)
+}
+
+
+antimal_database$drug_type <- mapply(get_antimalarial_types, antimal_database$antimalarial_input)
+
+antimal_database$department <- chartr(paste(names(unwanted_array), collapse=''),
+                             paste(unwanted_array, collapse=''),
+                             antimal_database$department)
+antimal_database$dept <- mapply(standardize_depts, antimal_database$department)
+
 
 
 # ----------------------------------------------
@@ -97,11 +123,15 @@ dept_muni_names <- data.table(read_csv(paste0(antimalarials, "department_and_mun
 setnames(dept_muni_names, c("CodReg", "CodDepto", "CodMuni", "Municipio", "Departamento"), 
          c("regional_code", "adm1", "adm2", "municipality","department"))
 
+##check for any municipalities in the BD data that aren't in the CSV file: 
+bn_database[!adm2%in%dept_muni_names$adm2]
+
+##merge the two datasets on the codes: 
 totalBNData <- merge(bn_database, dept_muni_names, all.x=TRUE, by=c("regional_code", "adm1", "adm2"))
 
 # ----------------------------------------------
 ##export as CSV 
 # ----------------------------------------------
 write.csv(antimal_database, paste0(local_dir, "prepped_data/", "antimalarial_prepped_data.csv"))
-
+write.csv(totalBNData, paste0(local_dir, "prepped_data/", "antimalarial_prepped_data.csv"))
   

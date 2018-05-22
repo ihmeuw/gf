@@ -121,7 +121,7 @@ setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date", "End D
 ##export the summary table to J Drive
 # ----------------------------------------------
 ##(you might get a warning message about appending column names to the files; this should not affect the final output)
-write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/resource_tracking_data_summary.csv",
+write.table(summary_file, paste0(dir, "resource_tracking_data_summary.csv"),
             append = TRUE, row.names=FALSE, sep=",")
 
 # ----------------------------------------------

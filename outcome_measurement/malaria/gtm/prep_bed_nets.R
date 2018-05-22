@@ -16,15 +16,14 @@ prep_gtm_bed_nets <- function(inFile, start_date, period){
   colnames(bn_data) <- as.character(bn_data[1,])
   bn_data <- bn_data[-1,]
   
-  col_names <- c("CodReg", "CodDepto", "CodMuni","Personas", "MEmbarazada", "Menores5a", "Camas",	"Pabellones")
+  col_names <- c("CodReg", "CodDepto", "CodMuni","Personas","Casa", "CodEnt", "MEmbarazada", "Menores5a", "Camas",	"Pabellones")
   
   bn_data <- bn_data[,col_names, with=FALSE]
   
-  setnames(bn_data, c("regional_code","adm1", "adm2", "num_persons", "num_pregnant", "num_minors"
+  setnames(bn_data, c("regional_code","adm1", "adm2", "num_persons", "casa", "codent","num_pregnant", "num_minors"
                       , "household_beds", "bed_nets"))
   bn_data[,1:3] <- lapply(bn_data [,1:3], as.integer)
-  bn_data[,4:8] <- lapply(bn_data [,4:8], as.numeric)
-  
+  bn_data[,4:10] <- lapply(bn_data [,4:10], as.numeric)
   
   ##sum by municipality: 
   

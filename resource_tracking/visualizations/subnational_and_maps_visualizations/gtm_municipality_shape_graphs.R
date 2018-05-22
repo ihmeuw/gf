@@ -71,22 +71,14 @@ malData[, absorption:=disbursement/budget]
 # hivData[, cumulative_disbursement:=cumsum(disbursement),by=c('source', 'loc_name', 'year', 'id')]
 
 
-  # ----------------------------------------------
+# ----------------------------------------------
 ## get the important info from the shape data files - lat/long coordinates, muni codes, etc.
-
-# shapeData is a spatialpolygonsdataframe
-class(shapeData)
-
-
-
-# these have plot methods
-plot(shapeData)
-
-# simplify the shape data (could create little gaps, maybe don't do this)
-shapeData2 = gSimplify(shapeData, tol=0.01, topologyPreserve=TRUE)
+# ----------------------------------------------
 
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 # use IDs instead of names
+
+
 coordinates = data.table(fortify(shapeData, region='Codigo'))
 admin_coords <- data.table(fortify(adminData, region='ID_1'))
 coordinates$id <- as.numeric(coordinates$id)
