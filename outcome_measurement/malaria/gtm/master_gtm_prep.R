@@ -52,8 +52,8 @@ for(i in 1:length(file_list$file_name)){
     }
   }
    # if(any(bnData$regional_code==0)){
-   #    stop("Stop! No Region!")
-   # }
+   #     stop("Stop! No Region!")
+   #  }
   print(i)
 }
 
@@ -111,7 +111,7 @@ antimal_database$drug_type <- mapply(get_antimalarial_types, antimal_database$an
 antimal_database$department <- chartr(paste(names(unwanted_array), collapse=''),
                              paste(unwanted_array, collapse=''),
                              antimal_database$department)
-antimal_database$dept <- mapply(standardize_depts, antimal_database$department)
+antimal_database$standardized_dept <- mapply(standardize_depts, antimal_database$department)
 
 
 
@@ -133,5 +133,5 @@ totalBNData <- merge(bn_database, dept_muni_names, all.x=TRUE, by=c("regional_co
 ##export as CSV 
 # ----------------------------------------------
 write.csv(antimal_database, paste0(local_dir, "prepped_data/", "antimalarial_prepped_data.csv"))
-write.csv(totalBNData, paste0(local_dir, "prepped_data/", "antimalarial_prepped_data.csv"))
+write.csv(totalBNData, paste0(local_dir, "prepped_data/", "bednet_prepped_data.csv"))
   
