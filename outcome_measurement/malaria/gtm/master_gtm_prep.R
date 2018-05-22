@@ -92,11 +92,12 @@ antimal_database[department=="Peten Sur occidental"]$department <- "Guatemala No
 # ----------------------------------------------
 ## attach department names to the bed net data
 # ----------------------------------------------
-dept_codes_and_names <- data.table(read_csv(paste0(antimalarials, "Departamento.csv")))
+dept_muni_names <- data.table(read_csv(paste0(antimalarials, "department_and_municipality_names.csv")))
 
-setnames(dept_codes_and_names, c("CodReg", "CodDepto"), c("regional_code", "adm1"))
+setnames(dept_muni_names, c("CodReg", "CodDepto", "CodMuni", "Municipio", "Departamento"), 
+         c("regional_code", "adm1", "adm2", "municipality","department"))
 
-totalBNData <- merge(bn_database, dept_codes_and_names, all.x=TRUE, by=c("regional_code", "adm1"))
+totalBNData <- merge(bn_database, dept_muni_names, all.x=TRUE, by=c("regional_code", "adm1", "adm2"))
 
 # ----------------------------------------------
 ##export as CSV 
