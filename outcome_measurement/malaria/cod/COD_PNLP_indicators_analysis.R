@@ -54,11 +54,16 @@
     dt[, value := as.numeric(value)]
   
     indicator_names <- c(
-      `newCasesMalariaMild` = "Incidence of Mild Malaria",
-      `newCasesMalariaSevere` = "Incidence of Severe Malaria",
-      `mildMalariaTreated` = "Cases of Mild Malaria Treated",
+      `newCasesMalariaMild` = "Confirmed Cases of Uncomplicated Malaria",
+      `newCasesMalariaSevere` = "Cases of Severe Malaria",
+      `mildMalariaTreated` = "Cases of Uncomplicated Malaria Treated",
       `severeMalariaTreated` = "Cases of Severe Malaria Treated",
-      `malariaDeaths` = "Number of Deaths from Malaria"
+      `malariaDeaths` = "Number of Deaths from Malaria",
+      `totalCasesAllDiseases` = "New Cases of All Diseases",
+      `suspectedMalaria` = "Suspected Cases of Malaria",
+      `totalHospAllDiseases` = "Hospitalized Cases All Diseases", 
+      `totalDeathsAllDiseases` = "Number of Deaths from All Diseases",
+      `presumedMalaria` = "Presumed Cases of Malaria"
     )
 # ----------------------------------------------
     
@@ -71,8 +76,10 @@
     makeGraph <- function(hz){
       g <- ggplot(dt[health_zone==hz & subpopulation != "pregnantWomen"], aes(date, value, color = subpopulation, ymin=0))
     
-      g + geom_point(aes(shape=formula_used)) + geom_line() + theme_bw() + ggtitle(hz) + scale_shape_manual(values=c(16,1)) + facet_wrap("indicator", scales="free_y", labeller = as_labeller(indicator_names))
-    }
+      #g + geom_point(aes(shape=formula_used)) + geom_line() + theme_bw() + ggtitle(hz) + scale_shape_manual(values=c(16,1)) + facet_wrap("indicator", scales="free_y", labeller = as_labeller(indicator_names))
+      g + geom_line() + theme_bw() + ggtitle(hz) + scale_shape_manual(values=c(16,1)) + facet_wrap("indicator", scales="free_y", labeller = as_labeller(indicator_names))
+      
+      }
 # ---------------------------------------------- 
 # Export Graphs to a PDF
     
