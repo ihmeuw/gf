@@ -416,10 +416,10 @@
     
     dt_missing <- dt[, 
                      .(missing_value = ifelse(is.na(value), 1, 0)), 
-                      by=c('date', 'dps', 'health_zone', 'indicator', 'subpopulation', 'value')]
+                      by=c('date', 'province', 'dps', 'health_zone', 'indicator', 'subpopulation', 'value')]
     
 # ----------------------------------------------
-      + facet_wrap(~ dps, scales="free_y")
+
 
 # ----------------------------------------------
   # Make a histogram for counts of missing data by each month (total)
