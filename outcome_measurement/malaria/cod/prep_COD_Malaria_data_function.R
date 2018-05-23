@@ -34,7 +34,8 @@
 # data directory
   # file path where the files are stored
   dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/"
-  
+  dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
+    
   # csv of file names for importing
   PNLP_files <- read.csv(paste0(dir, "PNLP_file_names.csv"), fileEncoding = "latin1")
   
@@ -70,18 +71,16 @@
   # for which we have the data.
   
   # variables needed:
-  years <- c(2010:2017)
-
   i <- 1
   index <- 4
   
  for(index in 4:11) {
    
    if (index==11){
-     sheetnames <- excel_sheets(paste0(dir, "/", PNLP_files$File.Names[index], ".xlsx"))
+     sheetnames <- excel_sheets(paste0(dir, PNLP_files$File.Names[index], ".xlsx"))
      sheetnames = sheetnames[!sheetnames %in% 'INPUTRDC']
    } else{
-     sheetnames <- excel_sheets(paste0(dir, "/", PNLP_files$File.Names[index], ".xls"))
+     sheetnames <- excel_sheets(paste0(dir, PNLP_files$File.Names[index], ".xls"))
      sheetnames = sheetnames[!sheetnames %in% 'INPUTRDC']
    }
 
@@ -135,148 +134,118 @@
    print(fullData[is.na(date), c(1:8)])
   }
 # ----------------------------------------------
-  # make sure all values are numeric that should be numeric
-    # new_dat <- NULL 
-    # varnames <- colnames(currentSheet)
-    #  for (i in varnames){
-    #   rows <- which(grepl("[^0-9]+", currentSheet[, i, with=F])==TRUE & !is.na(currentSheet[, i, with=F]))
-    #   if (length(rows)>0){
-    #     rows_paste <- paste(rows, collapse=", ")
-    #     sub_dat <- cbind(i, rows_paste)
-    #     new_dat <- rbind(new_dat, sub_dat)
-    #   }
-    #  }
-    # 
-    # rows <- which(grepl("[^0-9]+", currentSheet$newCasesMalariaMild_under5)==TRUE & !is.na(currentSheet$newCasesMalariaMild_under5))
   
   
 # ----------------------------------------------
 # Test that the output has the right number of rows
-if (nrow(fullData)!=3201) stop('Output data has wrong number of rows!')
-# ----------------------------------------------     
-   
-  
-# ----------------------------------------------     
-# Save a copy of the full data set, in wide form for use in multiple imputation
-  # take a subset of fullData that will be used in MI
-    ameliaDT <- fullData[, -c("donor", "operational_support_partner", "population", "quarter", "month", 
-                                "stringdate", "healthFacilities_numReportedWithinDeadline","reports_expected", "reports_received", "ASAQ_total")]
-  
-  # new column to factor in the product of number of health facilities reporting and total number of health facilties
-    ameliaDT[, healthFacilities_numReported := as.numeric(healthFacilities_numReported)]
-    ameliaDT[, healthFacilities_total := as.numeric(healthFacilities_total)]
-    ameliaDT[, RDT_completedUnder5 := as.numeric(RDT_completedUnder5)]
-    ameliaDT[, RDT_completed5andOlder := as.numeric(RDT_completed5andOlder)]
-    ameliaDT[, RDT_positiveUnder5 := as.numeric(RDT_positiveUnder5)]
-    ameliaDT[, RDT_positive5andOlder := as.numeric(RDT_positive5andOlder)]
-    ameliaDT[, smearTest_completedUnder5 := as.numeric(smearTest_completedUnder5)]
-    ameliaDT[, smearTest_completed5andOlder := as.numeric(smearTest_completed5andOlder)]
-    ameliaDT[, smearTest_positiveUnder5 := as.numeric(smearTest_positiveUnder5)]
-    ameliaDT[, smearTest_positive5andOlder := as.numeric(smearTest_positive5andOlder)]
-    
-    ameliaDT$healthFacilitiesProduct <- ameliaDT[, .(healthFacilities_total * healthFacilities_numReported)]
-    
-    ameliaDT[, RDT_completed := ifelse( year == 2014, RDT_completed, (RDT_completedUnder5 + RDT_completed5andOlder))]
-    ameliaDT[, RDT_positive := ifelse( year == 2014, RDT_positive, (RDT_positiveUnder5 + RDT_positive5andOlder))]
-    ameliaDT[, smearTest_completed := ifelse( year == 2014, smearTest_completed,(smearTest_completedUnder5 + smearTest_completed5andOlder))]
-    ameliaDT[, smearTest_positive := ifelse( year == 2014, smearTest_positive, (smearTest_positiveUnder5 + smearTest_positive5andOlder))]
-    
-    ameliaDT <- ameliaDT[, -c("year", "smearTest_completedUnder5", "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder",
-                              "RDT_positive5andOlder", "RDT_positiveUnder5", "RDT_completedUnder5", "RDT_completed5andOlder")]
-    
-    # reorder columns
-      ameliaDT <- ameliaDT[, c(36, 1:35, 43, 37:42)]
-    
-  # export data  
-    write.csv(ameliaDT, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Full Data for MI.csv"))
-  
-  
-# ----------------------------------------------      
-  
-  
-# ----------------------------------------------     
-# Split appended data into Indicators and Interventions Data
-  COD_PNLP_Indicators <- fullData[, c(1:8, 44, 46, 9:23) ]
-  #COD_PNLP_Indicators <- fullData[, c(geoTimeVars)]
-  COD_PNLP_Interventions <- fullData[, c(1:8, 44, 46, 24:43, 47:61)]
-# ----------------------------------------------    
-
-
-# ----------------------------------------------   
-# Further prep on appended datatables for indicators and interventions:
-  
-#---INDICATORS--------------------------------------- 
-  # Reshape Indicators data
-  COD_PNLP_Indicators_melt <- melt(COD_PNLP_Indicators, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-      "quarter", "month", "year", "date"), measured=c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen", 
-      "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen", 
-      "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen", 
-      "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen" ), variable.name = "indicator", value.name="value")
-      
-  # add column for "indicator codes" - to be added later
-  COD_PNLP_Indicators_melt$indicator_code <- NA
-  
-      # Split Indicators data by subgroup
-        COD_PNLP_Indicators_melt[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
-          # reorder columns:
-            COD_PNLP_Indicators_melt <- COD_PNLP_Indicators_melt[, c(1:10, 11, 13, 12)]
-      
-      # make the value for each indicator numeric
-          COD_PNLP_Indicators_melt[, value := as.numeric(value)]  
-
-    # dcast() so that indicators are their own columns
-        COD_PNLP_Indicators_cast <- dcast(COD_PNLP_Indicators_melt, province + dps + health_zone + donor + operational_support_partner + population +
-                                              quarter + month + year + date + subpopulation ~ indicator)
-      
-        # reorder columns:
-          COD_PNLP_Indicators_cast <- COD_PNLP_Indicators_cast[, c(1:11, 14, 15, 13, 16, 12)]
-          
-      # add column for formula_used (to later populate with Y/N values indicating
-        # whether or not a formula was used to develop/model the data)
-        # Right now, fill with "No" which will be the default
-          COD_PNLP_Indicators_melt$formula_used <- "No"
-
-         # if modulus operator returns 0 then it should stay no, if it returns anything other than 0, change
-            # formula_used to yes
-            COD_PNLP_Indicators_melt[value%%1==0, formula_used:='No']
-            COD_PNLP_Indicators_melt[value%%1!=0, formula_used:='Yes']
-            
-          
-#---INTERVENTIONS---------------------------------------                        
-  # Reshape Interventions data
-    COD_PNLP_Interventions_melt <- melt(COD_PNLP_Interventions, id=c("province", "dps", "health_zone", "donor", "operational_support_partner", "population",
-      "quarter", "month", "year", "date"), measured=c(), variable.name = "intervention", value.name="value")
-      
-      # Split Interventions data by subgroup
-        COD_PNLP_Interventions_melt[, c("intervention", "intervention_spec") := tstrsplit(intervention, "_", fixed=TRUE)]
-      
-      # add column for "indicator codes" - to be added later
-        COD_PNLP_Interventions_melt$indicator_code <- NA
-      
-      # reorder columns
-        COD_PNLP_Interventions_melt <- COD_PNLP_Interventions_melt[, c(1:11, 13, 14, 12)]
+  if (nrow(fullData)!=49320) stop('Output data has wrong number of rows!')
 # ----------------------------------------------
-  
+
   
 # ----------------------------------------------
-  # Export the prepped data
-  COD_PNLP_Data_Indicators_Long <- COD_PNLP_Indicators_melt
-  COD_PNLP_Data_Indicators_Wide <- COD_PNLP_Indicators_cast
-  COD_PNLP_Data_Indicators <- COD_PNLP_Indicators
-  COD_PNLP_Data_Interventions_Long <- COD_PNLP_Interventions_melt 
-  COD_PNLP_Data_Interventions_Wide <- COD_PNLP_Interventions
-
-  # function to export data:
-  export_data <- function(dfName){
-    write.csv(get(dfName), paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/", dfName , ".csv"))
-  }
-
-#   export_data("COD_PNLP_Data_Indicators")
-#   export_data("COD_PNLP_Data_Interventions_Long")
-#   export_data("COD_PNLP_Data_Interventions_Wide")
+# compare health zones and dps between years to make sure names are consistent
+# ---------------------------------------------- 
+  hz2010 <- unique(fullData[year==2010, health_zone])
+  hz2011 <- unique(fullData[year==2011, health_zone])
+  hz2012 <- unique(fullData[year==2012, health_zone])
+  hz2013 <- unique(fullData[year==2013, health_zone])
+  hz2014 <- unique(fullData[year==2014, health_zone])
+  hz2015 <- unique(fullData[year==2015, health_zone])
+  hz2016 <- unique(fullData[year==2016, health_zone])
+  hz2017 <- unique(fullData[year==2017, health_zone])
   
-  dfsToExport <- c("COD_PNLP_Data_Indicators_Long", "COD_PNLP_Data_Indicators_Wide", "COD_PNLP_Data_Interventions_Long", "COD_PNLP_Data_Interventions_Wide", "COD_PNLP_Data_Indicators")
-  for (df in dfsToExport){
-    export_data(df)
-  }
+  hz_missing <- hz2017[!hz2017 %in% hz2016]
+  print(hz_missing)
+  hz_missing_2017 <- hz2016[!hz2016 %in% hz2017]
+  print(hz_missing_2017)
+  
+  fullData[health_zone=="Omendjadi", health_zone := "Omondjadi"]
+  fullData[health_zone=="Kiroshe", health_zone := "Kirotshe"]
+  fullData[health_zone=="Boma Man", health_zone := "Boma Mangbetu"]
+  fullData$health_zone <- tolower(fullData$health_zone)
+  
+  fullData[health_zone=="mutshat", health_zone := "mutshatsha"]
+  fullData[health_zone=="mumbund", health_zone := "mumbunda"]
+  fullData[health_zone=="fungurum", health_zone := "fungurume"]
+  fullData[health_zone=="yasa", health_zone := "yasa-bonga"]
+  fullData[health_zone=="malem nk", health_zone := "malemba nkulu"]
+  fullData[health_zone=="kampem", health_zone := "kampemba"]
+  fullData[health_zone=="kamalond", health_zone := "kamalondo"]
+  fullData[health_zone=="pay", health_zone := "pay kongila"]
+  fullData[health_zone=="kafakumb", health_zone := "kafakumba"]
+  fullData[health_zone=="tshamile", health_zone := "tshamilemba"]
+  fullData[health_zone=="ntandem", health_zone := "ntandembele"]
+  fullData[health_zone=="masi", health_zone := "masimanimba"]
+  fullData[health_zone=="koshiba", health_zone := "koshibanda"]
+  fullData[health_zone=="djalo djek", health_zone := "djalo djeka"]
+  fullData[health_zone=="ludimbi l", health_zone := "ludimbi lukula"]
+  fullData[health_zone=="mwela l", health_zone := "mwela lembwa"]
+  fullData[health_zone=="bena le", health_zone := "bena leka"]
+  fullData[health_zone=="vanga ket", health_zone := "vanga kete"]
+  fullData[health_zone=="bomineng", health_zone := "bominenge"]
+  fullData[health_zone=="bogosenu", health_zone := "bogosenusebea"]
+  fullData[health_zone=="bwamand", health_zone := "bwamanda"]
+  fullData[health_zone=="banga lu", health_zone := "banga lubaka"]
+  fullData[health_zone=="bosomanz", health_zone := "bosomanzi"]
+  fullData[health_zone=="bosomond", health_zone := "bosomondanda"]
+  fullData[health_zone=="bonganda", health_zone := "bongandanganda"]
+  fullData[health_zone=="lilanga b", health_zone := "lilanga bobanga"]
+  fullData[health_zone=="mondomb", health_zone := "mondombe"]
+  fullData[health_zone=="tshitshim", health_zone := "tshitshimbi"]
+  fullData[health_zone=="basankus", health_zone := "basankusu"]
+  fullData[health_zone=="mobayi m", health_zone := "mobayi mbongo"]
+  fullData[health_zone=="kabond d", health_zone := "kabond dianda"]
+  fullData[health_zone=="kilela b", health_zone := "kilela balanda"]
+  fullData[health_zone=="ndjoko m", health_zone := "ndjoko mpunda"]
+  fullData[health_zone=="benatshia", health_zone := "benatshiadi"]
+  fullData[health_zone=="tshudi lo", health_zone := "tshudi loto"]
+  fullData[health_zone=="pania mut", health_zone := "pania mutombo"]
+  fullData[health_zone=="ndjoko mp", health_zone := "ndjoko mpunda"]
+  fullData[health_zone=="kalonda e", health_zone := "kalonda est"]
+  fullData[health_zone=="kata k", health_zone := "kata kokombe"]
+  fullData[health_zone=="lshi", health_zone := "lubumbashi"]
+  fullData[health_zone=="bdd", health_zone := "bandundu"]
+  fullData[health_zone=="kikwit n", health_zone := "kikwit nord"]
+  fullData[health_zone=="kikwit s", health_zone := "kikwit sud"]
+  fullData[health_zone=="kasongo l", health_zone := "kasongo lunda"]
+  fullData[health_zone=="popoka", health_zone := "popokabaka"]
+  fullData[health_zone=="kanda k", health_zone := "kanda kanda"]
+  fullData[health_zone=="muene d", health_zone := "muene ditu"]
+  fullData[health_zone=="wembo n", health_zone := "wembo nyama"]
+  fullData[health_zone=="bena dib", health_zone := "bena dibele"]
+  fullData[health_zone=="wamba l", health_zone := "wamba luadi"]
+  
+  fullData[health_zone=="kabeya", health_zone := "kabeya kamwanga"]
+  fullData[health_zone=="mampoko", health_zone := "lolanga mampoko"]
+  fullData[health_zone=="mufunga", health_zone := "mufunga sampwe"]
+  
+  fullData[health_zone=="wembo nyana", health_zone := "wembo nyama"]
+  fullData[health_zone=="kamonya", health_zone := "kamonia"]
+  fullData[health_zone=="kitangwa", health_zone := "kitangua"]
 # ----------------------------------------------  
+# ----------------------------------------------  
+  fullData$dps <- tolower(fullData$dps)
+  
+  dps2010 <- unique(fullData[year==2010, dps])
+  dps2011 <- unique(fullData[year==2011, dps])
+  dps2012 <- unique(fullData[year==2012, dps])
+  dps2013 <- unique(fullData[year==2013, dps])
+  dps2014 <- unique(fullData[year==2014, dps])
+  dps2015 <- unique(fullData[year==2015, dps])
+  dps2016 <- unique(fullData[year==2016, dps])
+  dps2017 <- unique(fullData[year==2017, dps])
+  
+  dps_missing <- dps2017[!dps2017 %in% dps2010]
+  print(dps_missing)
+  dps_missing_2017 <- dps2010[!dps2010 %in% dps2017]
+  print(dps_missing_2017)
+  
+# ----------------------------------------------   
+  
+  
+  
+  #unique(fullData[health_zone=="Kirotshe", year])
+# ---------------------------------------------- 
+  # export fullData
+  write.csv(fullData, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP_2010to2017_prepped.csv"))
+# ----------------------------------------------     
