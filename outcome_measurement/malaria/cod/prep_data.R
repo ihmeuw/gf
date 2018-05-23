@@ -22,8 +22,8 @@
                                "ArtLum_received", "ArtLum_used",
                                "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
                                "stockOut_qui_pill", "stockOut_qui_inj", "stockOut_ASAQ_inj", "stockOut_RDT", "stockOut_artLum",
-                               "smearTest_completed_under5", "smearTest_completed_5andOlder", "smearTest_positive_under5", "smearTest_positive_5andOlder", 
-                               "RDT_received", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+                               "smearTest_completedUnder5", "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder", 
+                               "RDT_received", "RDT_completedUnder5", "RDT_completed5andOlder", "RDT_positiveUnder5", "RDT_positive5andOlder",
                                "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
                                "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline",
                                "hzTeam_supervisors_numPlanned", "hzTeam_supervisors_numActual", "hzTeam_employees_numPlanned", "hzTeam_employees_numActual",
@@ -48,8 +48,8 @@
                            "ArtLum_received", "ArtLum_used",
                            "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
                            "stockOut_qui_pill", "stockOut_qui_inj", "stockOut_ASAQ_inj", "stockOut_RDT", "stockOut_artLum",
-                           "smearTest_completed_under5", "smearTest_completed_5andOlder", "smearTest_positive_under5", "smearTest_positive_5andOlder", 
-                           "RDT_received", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+                           "smearTest_completedUnder5", "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder", 
+                           "RDT_received", "RDT_completedUnder5", "RDT_completed5andOlder", "RDT_positiveUnder5", "RDT_positive5andOlder",
                            "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
                            "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline",
                            "hzTeam_supervisors_numPlanned", "hzTeam_supervisors_numActual", 
@@ -75,14 +75,14 @@
                                "ArtLum_received", "ArtLum_used",
                                "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
                                "stockOut_qui_pill", "stockOut_qui_inj", "stockOut_ASAQ_inj", "stockOut_RDT", "stockOut_artLum",
-                               "smearTest_completed_under5", "smearTest_completed_5andOlder", "smearTest_positive_under5", "smearTest_positive_5andOlder", 
-                               "RDT_received", "RDT_completed_under5", "RDT_completed_5andOlder", "RDT_positive_under5", "RDT_positive_5andOlder",
+                               "smearTest_completedUnder5", "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder", 
+                               "RDT_received", "RDT_completedUnder5", "RDT_completed5andOlder", "RDT_positiveUnder5", "RDT_positive5andOlder",
                                "peopleTested_under5", "peopleTested_5andOlder",
                                "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
                                "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported", "healthFacilities_numReportedWithinDeadline",
                                "hzTeam_supervisors_numPlanned", "hzTeam_supervisors_numActual", "hzTeam_employees_numPlanned", "hzTeam_employees_numActual",
                                "awarenessTrainings_numPlanned", "awarenessTrainings_numActual",
-                               "SSC_fevers_under5", "SSC_fevers_5andOlder", "SSC_RDT_completed_under5", "SSC_RDT_completed_5andOlder", "SSC_RDT_positive_under5", "SSC_RDT_positive_5andOlder",
+                               "SSC_fevers_under5", "SSC_fevers_5andOlder", "SSC_RDT_completedUnder5", "SSC_RDT_completed5andOlder", "SSC_RDT_positiveUnder5", "SSC_RDT_positive5andOlder",
                                "SSC_ACT_under5", "SSC_ACT_5andOlder", "SSC_casesReferred_under5", "SSC_casesReferred_5andOlder",
                                "SSC_casesCrossReferred_under5", "SSC_casesCrossReferred_5andOlder")
       
@@ -145,7 +145,25 @@
                                    "smearTest_completed", "smearTest_positive", 
                                    "RDT_received", "RDT_completed", "RDT_positive",
                                    "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
-                                   "reports_received", "reports_expected")
+                                   "reports_received", "reports_expected", "healthFacilities_total", "healthFacilities_numReported")
+     
+       columnNames2010KINKOR <- c("province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month", 
+                           "totalCasesAllDiseases_under5", "totalCasesAllDiseases_5andOlder", "totalCasesAllDiseases_pregnantWomen", 
+                           "newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", 
+                           "totalHospAllDiseases_under5", "totalHospAllDiseases_5andOlder", "totalHospAllDiseases_pregnantWomen",
+                           "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+                           "totalDeathsAllDiseases_under5", "totalDeathsAllDiseases_5andOlder", "totalDeathsAllDiseases_pregnantWomen",
+                           "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen",  
+                           "ANC_1st", "SP_1st", "SP_2nd",
+                           "ITN_received", "ITN_distAtANC", "ITN_distAtPreschool",
+                           "ASAQ_received_2to11mos", "ASAQ_received_1to5yrs", "ASAQ_received_6to13yrs", "ASAQ_received_14yrsAndOlder",
+                           "ASAQ_used_2to11mos", "ASAQ_used_1to5yrs", "ASAQ_used_6to13yrs", "ASAQ_used_14yrsAndOlder", "ASAQ_used_total",
+                           "stockOut_SP", "stockOut_ASAQ_2to11mos", "stockOut_ASAQ_1to5yrs", "stockOut_ASAQ_6to13yrs", "stockOut_ASAQ_14yrsAndOlder", 
+                           "stockOut_qui_pill", "stockOut_qui_inj", 
+                           "smearTest_completed", "smearTest_positive", 
+                           "RDT_received", "RDT_completed", "RDT_positive",
+                           "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete",
+                           "reports_received", "reports_expected")
       
       
   # ----------------------------------------------
@@ -156,7 +174,11 @@
       }
       
       if ( PNLP_files$year[index] == 2010 & sheetname == "BC" ) {
-        dataSheet <- dataSheet[ , -c("X__14", "X__62") ]
+        dataSheet <- dataSheet[ , -c("X__62") ]
+      }
+      
+      if ( PNLP_files$year[index] == 2010 ) {
+        dataSheet <- dataSheet[ , -c("X__14") ]
       }
       
       if ( PNLP_files$year[index] == 2011 & sheetname != "OR" ) {
@@ -177,25 +199,32 @@
         dataSheet <- dataSheet[ , -c("X__72", "X__73", "X__74") ]
       }
       
-      if (PNLP_files$year[index] == 2011 & sheetname == "BDD") {
+      if (PNLP_files$year[index] == 2010 & sheetname == "BDD") {
+        #dataSheet <- dataSheet[,names(dataSheet)[-length(names(dataSheet))], with=F]
+        dataSheet <- dataSheet[ , !apply( dt , 2 , function(x) all(is.na(x))), with=F ]
+        dataSheet <- dataSheet[, -ncol(dataSheet), with=F ]
+      }
+      
+      if ((PNLP_files$year[index] == 2011) & sheetname == "BDD") {
         #dataSheet <- dataSheet[,names(dataSheet)[-length(names(dataSheet))], with=F]
         dataSheet <- dataSheet[ , !apply( dt , 2 , function(x) all(is.na(x))), with=F ]
         dataSheet <- dataSheet[, -ncol(dataSheet), with=F ]
         dataSheet <- dataSheet[, -ncol(dataSheet), with=F ]
       }
-      
   
     # set column names, depending on differences in years and/or sheets
       if ( PNLP_files$year[index] == 2014 ) {
         columnNames <- columnNames2014
       } else if (PNLP_files$year[index] < 2014 & PNLP_files$year[index] != 2010) {
         columnNames <- columnNames2011to2013
-      } else if (PNLP_files$year[index] == 2010) {
+      } else if (PNLP_files$year[index] == 2010 & sheetname != "KIN" & sheetname != "KOR" ) {
         columnNames <- columnNames2010
       } else if (PNLP_files$year[index] == 2016) {
         columnNames <- columnNames2016
       } else if (PNLP_files$year[index] == 2015) {
         columnNames <- columnNames2015
+      } else if (PNLP_files$year[index] == 2010 & ( sheetname == "KIN" | sheetname == "KOR")) {
+        columnNames <- columnNames2010KINKOR
       } else {
         columnNames <- columnNamesComplete
       }
@@ -344,7 +373,7 @@
         dataSheet <- dataSheet[health_zone=="Mbuji May", health_zone:= "Bimpemba"]
       }
       
-      if ((PNLP_files$year[index] == 2011)& sheetname == "BDD"){
+      if ((PNLP_files$year[index] == 2011 | PNLP_files$year[index] == 2010)& sheetname == "BDD"){
         dataSheet <- dataSheet[health_zone=="KIKWITS", health_zone:= "Kikwit S"]
       }
       
@@ -363,6 +392,10 @@
         dataSheet <- dataSheet[health_zone=="Fungurum", health_zone:= "Fungurume"]
       }
 
+      if ((PNLP_files$year[index] == 2010)& sheetname == "SK"){
+        dataSheet <- dataSheet[!is.na(health_zone)]
+      }
+      
       # there are still some added rows that happen to have something in the month column but are missing data everywhere else
       dataSheet <- dataSheet[!is.na(province)]
       
