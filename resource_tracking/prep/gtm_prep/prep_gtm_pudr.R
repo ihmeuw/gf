@@ -24,7 +24,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
     colnames(gf_data)[2] <- "intervention"
     colnames(gf_data)[3] <- "budget"
     colnames(gf_data)[4] <- "expenditure"
-    gf_data$sda_activity <- "All"
+    gf_data$sda_activity <- "all"
     gf_data$disbursement <- 0 
     gf_data$recipient <- loc_name ##change this when we get SR info
     
@@ -54,6 +54,15 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
       gf_data$disbursement <- 0 
       gf_data$sda_activity <- "all"
     
+  } else if (sheet_name="PR EFR_7A"){
+    colnames(gf_data)[2] <- "module"
+    colnames(gf_data)[3] <- "sda_activity"
+    colnames(gf_data)[4] <- "intervention"
+    colnames(gf_data)[5] <- "budget"
+    colnames(gf_data)[6] <- "expenditure"
+    gf_data$disbursement <- 0 
+    gf_data$recipient <- loc_name
+    gf_data <- gf_data[c(grep("object", tolower(gf_data$sda_activity)):(grep("name", tolower(gf_data$sda_activity)))),]
   } else {
       colnames(gf_data)[2] <- "module"
       colnames(gf_data)[3] <- "sda_activity"
@@ -65,7 +74,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
       gf_data <- gf_data[c(grep("objetivos", tolower(gf_data$sda_activity)):(grep("seleccio", tolower(gf_data$module)))),]
   }
   
-  gf_data <- gf_data[, c("recipient","module","sda_activity", "intervention", "budget", "expenditure", "disbursement"),with=FALSE]
+  gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure", "disbursement","recipient"),with=FALSE]
   budget_dataset <- gf_data[-1, drop = FALSE]
   budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
   
