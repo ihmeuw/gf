@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 5/14/2018
+# 5/23/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -16,22 +16,30 @@ library(data.table)
 library(jsonlite)
 library(httr)
 library(ggplot2)
-library(stringr) # to help extract meta ata from file names
+library(stringr) # to extract meta data from file names
 
 # --------------------
 
+# --------------------
+# detect if operating on windows or on the cluster 
+
+if (Sys.info()[1] == 'Windows') {
+  username <- "ccarelli"
+  root <- "J:/"
+} else {
+  username <- Sys.getenv("USER")
+  root <- "/home/j/"
+}
+
 # ----------------------------------------------
-# set files and directories for the viral load data
+# set files and directories for the uganda viral load data
 
-# change directory to files where data w sex filter is kept
-#setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex")
-
-# archived data, downloaded 3/10/2018
-setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/archive/sex_3_10_18")
+# set the working directory to loop over the downloaded files
+setwd(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex'))
 
 # list existing files
 files <- list.files('./', recursive=TRUE)
-files
+length(files)
 
 # --------------------
 
@@ -53,14 +61,18 @@ for(f in files) {
   if (length(current_data)==0) next
 
   #to check the position of variables: 
-  #outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_',s,'_','.rds')
-  # positions: year = 4; month = 3; sex=5
+  # outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_',s,'_', t,'_','.rds')
+  # positions: year = 4; month = 3; sex=5, tb_status=6
   
   # extract meta data from file name
   meta_data = strsplit(f, '_')[[1]]
   current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
   current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
   current_data[, sex:=(meta_data[5])]
+  
+  # add if tb status is included 
+  #current_data[, tb:=gsub('tb', '', meta_data[6])]
+  #current_data[, tb:=gsub('.rds', '', tb)]
 
   # append to the full data 
   if(i==1) full_data = current_data
@@ -90,22 +102,18 @@ full_data[year==2018, sum(samples_received), by=.(month, sex)]
 full_data[, .(total_samples=sum(samples_received)), by=.(sex, year)]
 
 # ----------------------------------------------
-# drop out the current month
+# drop out the current month - change to reflect current month
 full_data <- full_data[!(year==2018 & month==5)]
 
 # ----------------------------------------------
 # upload the facilities names, ids and check for disparate values
 
 # reset working directory to main folder
-setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard")
-dir <- "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard"
+setwd(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'))
+dir <- paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
 
 facilities <- readRDS(paste0(dir,"/facilities/facilities.rds"))
 str(facilities)
-
-# list unique facility ids in the full data
-full_data [,facility_id, by=facility_id] # 2042 values
-full_data[is.na(facility_id)] # no missing facility ids
 
 # print a list of the facility ids in full_data that are not on the names list
 # 34 facilities, 692 patients in those facilities
@@ -114,22 +122,27 @@ full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(fa
 
 # ----------------------------------------------
 # merge the facility and district names into the full data set
-# additional to code to identify merge mismatches and downloading errors
+# identify merge mismatches and downloading errors
 
 #------------------------
 # merge in the facilities
 uvl_sex <- merge(full_data, facilities, by='facility_id', all.x=TRUE)
 
-# 34 facilities are missing a name, containing 692 patients
+# most recent download only lacks a name for 2 facilities
 uvl_sex[is.na(facility_name), length(unique(facility_id))]
 uvl_sex[is.na(facility_name), .(sum(patients_received))]
 
 # create a placeholder for missing facility names for 34 facilities
 uvl_sex [is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
 
-
 # ----------------------------------------------
 # additional to code to identify merge mismatches and downloading errors
+
+# identify acility ids that are associated with multiple district ids
+# 29 facilities are associated with two district ids (always two)
+# check for duplicates after the change
+dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
+dups <- dups[dup>1, .(facility_id, facility_name)]
 
 # 2 facilities contain Rakai in the name
 uvl_sex[facility_id==228 | facility_id==175, district_id:=80]
@@ -167,14 +180,9 @@ uvl_sex[facility_id==8346, district_id:=86]
 uvl_sex[facility_id==8339, district_id:=84]
 uvl_sex[facility_id==8337, district_id:=97]
 
-
-# facility ids that are associated with multiple district ids
-# 29 facilities are associated with two district ids (always two)
-# check for duplicates after the change
+# re-run to check that there are no duplicate entries
 dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
 dups <- dups[dup>1, .(facility_id, facility_name)]
-dups # should be an empty data table
-
 
 #------------------------
 # merge in the districts
@@ -238,7 +246,7 @@ uvl_sex <- uvl_sex[ , .(patients_received=sum(patients_received), samples_receiv
                         by=.(facility_id, facility_name, district_id, district_name, dhis2name,
                         sex, date, month, year)]
 
-# simple check for duplicates
+# simple check for duplicates - should read FALSE only
 unique(duplicated(uvl_sex))
 
 # ---------------
@@ -258,30 +266,21 @@ uvl_sex[duplicated(combine)] # should be an empty data table (no duplicate entri
 # check equality constraints are met 
 # commented out checks for equality constraints
 
-# samples received is always >= patients_received
-#uvl_sex[samples_received < patients_received, .(samples_received, patients_received), by=.(facility_id, sex, month, year)]
+# check for equality constraints
+uvl_sex[patients_received > samples_received] # should be 0
 
-#in one case rejected and dbs samples are both 4, while samples_received is 3; samples received must be >= both
-# both samples tested and valid results are 0, so sample size is not very important
-#uvl_sex[rejected_samples > samples_received, .(samples_received, patients_received, 
-     #  rejected_samples, dbs_samples, total_results, valid_results, suppressed), 
-      # by=.(facility_id, sex, month, year)]
-
+# one case where there appears to be an error - samples received shoudl be 4
+uvl_sex[rejected_samples > samples_received]
 uvl_sex[facility_id==3238 & sex=='Male' & month==8 & year==2015, samples_received:=4]
 
 # if samples received is < dbs_samples, change to match dbs_samples (samples received must be greater than or equal to dbs)
-# there are 133 instances in which samples_received is < dbs_samples
-# if you substract from dbs_samples to match samples_received, valid results is sometimes > samples received
-# error is in samples received
-#uvl_sex[samples_received < dbs_samples, .(patients_received, samples_received, dbs_samples, valid_results ), by=.(facility_id, sex, month, year)]
-#uvl_sex[valid_results > samples_received]
+uvl_sex[dbs_samples > samples_received]
 uvl_sex[samples_received < dbs_samples, samples_received:=dbs_samples]
 
 # once samples_received is always >= dbs_samples, valid_results is always =< samples_received
-
-# rejected samples is a subset of samples received
-# total results refers to "samples tested" - must be < samples received 
-# rejected samples are sometimes tested, sometimes not tested (no clear relationship)
+uvl_sex[total_results > samples_received] # should be 0
+uvl_sex[valid_results > samples_received] # sjhould be 0
+uvl_sex[suppressed > valid_results] # should be 0
 
 # ---------------
 # add a variable for plasma samples and organize the data set intuitively
@@ -302,18 +301,13 @@ uvl_sex <- uvl_sex[ , .(samples_received=sum(samples_received),  patients_receiv
 uganda_vl <- uvl_sex
 
 # ---------------
-# check for equality constraints
+# check equality constraints
 uganda_vl[patients_received > samples_received]
 uganda_vl[rejected_samples > samples_received]
 uganda_vl[dbs_samples > samples_received]
 uganda_vl[plasma_samples > samples_received]
 uganda_vl[valid_results > samples_received]
 uganda_vl[suppressed > valid_results]
-
-
-#---------------
-# add date back in
-#uganda_vl[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
 #---------------
 # separate out the number from facility name to get facility level
@@ -520,24 +514,24 @@ uganda_vl[is.na(valid_results)]
 # plasma samples violates equality constraints because of rounding - re-calculate
 uganda_vl[ , plasma_samples:=NULL]  
   uganda_vl[ , plasma_samples:=(samples_received - dbs_samples)]  
-  
-  
 
+# change level to be called platform 
+names(uganda_vl)[names(uganda_vl) == "level"] <- "platform"
+  
+  
 #--------------- 
 
 #--------------------------------------------
 
 # final version with only necessary variables in useful order
 # rename district_name dist_name for shape file merge 
-uganda_vl <- uganda_vl[ ,.(facility_id, facility_name, dhis2name, level, prison, district_id, dist_name=district_name, sex,
+uganda_vl <- uganda_vl[ ,.(facility_id, facility_name, dhis2name, platform, prison, district_id, dist_name=district_name, sex,
                             month, year, date, patients_received, samples_received, rejected_samples,
                             dbs_samples, plasma_samples, samples_tested, valid_results, suppressed)]
 
 
 #save the final data as an RDS
 saveRDS(uganda_vl, file= paste0(dir, "/sex_data.rds"))
-
-#saveRDS(uganda_vl, file= paste0(dir, "/new_data.rds"))
 
 # ----------------------------------------------
 

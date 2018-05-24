@@ -1,8 +1,9 @@
 # ----------------------------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
-# 3/23/2018
+# 5/23/2018
 # To acombine the data sets from the Uganda Viral Load Dashboard into a single data set
+# this code is now included in prep_uvl
 # ----------------------------------------------
 
 # --------------------
@@ -14,7 +15,15 @@ library(httr)
 library(stringr) # to help extract meta data from file names
 
 # --------------------
+# detect if on windows or on the cluster 
 
+if (Sys.info()[1] == 'Windows') {
+  username <- "ccarelli"
+  root <- "J:/"
+} else {
+  username <- Sys.getenv("USER")
+  root <- "/home/j/"
+}
 
 # ----------------------------------------------
 # Files and directories
@@ -22,14 +31,13 @@ library(stringr) # to help extract meta data from file names
 # data directory
 
 # set directory
-  dir = "J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard"
+  dir <- paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
 # ----------------------------------------------
-
 # set files and directories for the viral load data
 
-# change directory
-setwd("J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscraped_data")
-
+# change working directory
+setwd(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex'))
+  
 # list existing files
 files <- list.files('./', recursive=TRUE)
 
@@ -56,8 +64,10 @@ for(f in files[1:20]) {
   current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
   current_data[, ages:=meta_data[4]]
   current_data[, sex:=meta_data[5]]
-  current_data[, tb:=gsub('tb', '', meta_data[6])]
-  current_data[, tb:=gsub('.rds', '', tb)]
+  
+  # add if tb status is included 
+  #current_data[, tb:=gsub('tb', '', meta_data[6])]
+  #current_data[, tb:=gsub('.rds', '', tb)]
   
   # append to the full data 
   if(i==1) full_data = current_data
