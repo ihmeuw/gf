@@ -54,7 +54,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
       gf_data$disbursement <- 0 
       gf_data$sda_activity <- "all"
     
-  } else if (sheet_name="PR EFR_7A"){
+  } else if (sheet_name=="PR EFR_7A"){
     colnames(gf_data)[2] <- "module"
     colnames(gf_data)[3] <- "sda_activity"
     colnames(gf_data)[4] <- "intervention"
