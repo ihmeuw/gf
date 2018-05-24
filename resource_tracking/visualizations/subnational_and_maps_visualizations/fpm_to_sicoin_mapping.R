@@ -36,7 +36,8 @@ dept_muni_list <- data.table(read.csv("J:/Project/Evaluation/GF/mapping/gtm/depa
 ##MAP FPM BUDGETS TO SICOIN MUNICIPALITIES: 
 gtmBudgets <- gtmBudgets[!(data_source=="pudr"&year>2015)]
 
-gtmBudgets$quarter <- as.yearqtr(gtmBudgets$start_date)
+##if you want quarters:
+# gtmBudgets$quarter <- as.yearqtr(gtmBudgets$start_date)
 
 ##sum up budget (as "variable") by year, disease, and data source 
 byVars = names(gtmBudgets)[names(gtmBudgets)%in%c('quarter', 'disease','year','gf_module', 'gf_intervention')]
@@ -49,7 +50,7 @@ gtm_subset = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.o
 # gtm_subset[, module_fraction := budget/sum(budget), by=c("disease","quarter")]
 # gtm_subset[, int_fraction := budget/sum(budget), by=c("disease","quarter", "gf_module")]
 
-fpm_malaria <- gtm_subset[(disease=="malaria"&year==2016)]
+fpm_malaria <- gtm_subset[(disease=="malaria"&year%in%c(2012, 2013))]
 # ----------------------------------------------
 
 ##just work with GF data for now: 
@@ -65,9 +66,10 @@ sicoin_data$id <- as.numeric(lapply(sicoin_data$adm2, function(y) sub('^0+(?=[1-
 
 
 ##Malaria in this example, but the other diseases work fine: 
-sicoin_subset <- sicoin_data[year==2012&disease=="malaria"]
+sicoin_subset <- sicoin_data[year%in%c(2012,2013)&disease=="malaria"]
 
-sicoin_subset$quarter <- as.yearqtr(sicoin_subset$start_date)
+##if you want quarters:
+#sicoin_subset$quarter <- as.yearqtr(sicoin_subset$start_date)
 
 ##sum up budget (as "variable") by year, disease, and data source 
 byVars = names(sicoin_subset)[names(sicoin_subset)%in%c('loc_name','module','quarter','year','id')]
@@ -80,9 +82,8 @@ sicoin_subset[, qtr_fraction:=budget/sum(budget), by=c("quarter", "module")]
 
 
 ##YEAR:
-sicoin_subset[, year_total:=sum(budget), by="year"]
-sicoin_subset[, muni_total:=sum(budget), by=c("year", "loc_name")]
-sicoin_subset[, year_fraction:=budget/sum(budget), by=c("year", "module")]
+sicoin_subset[, annual_budget_total:=sum(budget), by=c("year", "loc_name")]
+sicoin_subset[, annual_muni_fraction:=budget/sum(budget), by=c("year", "module")]
 
 
 ##just work with 2013 data for now:  
@@ -90,13 +91,12 @@ setnames(sicoin_subset, c("budget", "disbursement"), c("sicoin_budget", "sicoin_
 
 graphData <- merge(sicoin_subset, fpm_malaria, by=c("year", "quarter"), allow.cartesian=TRUE)
 
+
 ##how many modules are in this year: 
 ##municipality budget divided by the number of modules this year: 
-graphData[,muni_budget:=sum(budget), by=c("year", "loc_name")]
 
 
-graphData[,muni_budget_qtr:=budget*qtr_fraction]
-graphData[,muni_budget_year:=muni_budget*year_fraction]
+graphData[,muni_budget_year:=budget*annual_muni_fraction]
 
 
 graphData[, mod_year:=paste(year, ":",gf_module)]
