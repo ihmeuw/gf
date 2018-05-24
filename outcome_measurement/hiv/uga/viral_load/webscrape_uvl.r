@@ -1,23 +1,23 @@
 # ----------------------------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
-# 4/10/2018
+# 5/23/2018
 # To extract data from Uganda Viral Load Dashboard: https://vldash.cphluganda.org/
-# apply all filters for maximum number of variables
+# apply all filters for maximum number of variables (check for errors against Dashboard or verified data)
 # use webscrape_vl_parallel to run parallel jobs on the cluster (more up to date)
 # ----------------------------------------------
 
-# some changes 
 
 # --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(jsonlite)
-library(httr)
+# detect if on windows or on the cluster 
 
-# --------------------
-
+if (Sys.info()[1] == 'Windows') {
+  username <- "ccarelli"
+  root <- "J:/"
+} else {
+  username <- Sys.getenv("USER")
+  root <- "/home/j/"
+}
 
 # ----------------------------------------------
 # Files and directories
@@ -25,13 +25,9 @@ library(httr)
 # whether or not to re-download everything (or just new data)
 reload_everything = FALSE
 
-# data directory
 
-# output file
-# consider changing output to month, year folders
-dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape'
-# ----------------------------------------------
-
+# output directory
+dir = paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/')
 
 # ----------------------------------------------
 # Load/prep data
