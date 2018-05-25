@@ -51,7 +51,8 @@
 # grab all of the variable names to work with
   # setnames(fullData, c("V1"), c("id"))
   fullData <- fullData[, "V1" := NULL ]
-  
+    fullData <- fullData[, "V1" := NULL ]
+    
   all_vars <- c(colnames(fullData))
   
   id_vars <- c("id", "province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month",
@@ -89,12 +90,6 @@
   # drop numValue and oldValue
     dt_long[, c("numValue","old_value"):=NULL]  
   
-# cast wide to have a copy the cleaned, full data in a better format for some analyses/processing 
-  fullData <- dcast(dt_long, id + province + dps + health_zone + donor + operational_support_partner + population + quarter + month + year + stringdate + date ~ indicator)
-  fullData <- as.data.table(fullData)
-  # export this dt before further alterations
-    write.csv(fullData, paste0(dir_prepped, output_fullData))
-  
   # clean up indicator names for tstrsplit to work
     dt_long$indicator <- gsub("SSC_", "SSC", dt_long$indicator)
     dt_long$indicator <- gsub("stockOut_", "stockOut", dt_long$indicator)
@@ -102,6 +97,13 @@
     dt_long$indicator <- gsub("ASAQ_u", "ASAQu", dt_long$indicator)
     dt_long$indicator <- gsub("ASAQ_r", "ASAQr", dt_long$indicator)
       
+    # cast wide to have a copy the cleaned, full data in a better format for some analyses/processing 
+    fullData <- dcast(dt_long, id + province + dps + health_zone + donor + operational_support_partner + population + quarter + month + year + stringdate + date ~ indicator)
+    fullData <- as.data.table(fullData)
+    # export this dt before further alterations
+    write.csv(fullData, paste0(dir_prepped, output_fullData))
+    
+    
   # split indicator column into indicator and subpopulation
     dt_long <- dt_long[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
     # set a placeholder value for where there is no subpopulation, so that graphing doesn't mess up there
@@ -109,7 +111,7 @@
     # export this dt as a version with both indicators and subpopulations long
       write.csv(dt_long, paste0(dir_prepped, output_dt_long))
     
-# cast indicators wide and keep subpopulations wide - format to save to basecamp for CEPs
+# cast indicators wide and keep subpopulations long - format to save to basecamp for CEPs
   dt_wide <- dcast(dt_long, province + dps + health_zone + donor + operational_support_partner + population +
                                       quarter + month + year + stringdate + date + subpopulation ~ indicator) 
   # export this dt as a version with indicators wide and subpopulations long
@@ -122,7 +124,7 @@
 # Prepare data table for multiple imputation
   # take a subset of fullData that will be used in MI
   ameliaDT <- fullData[,-c("donor", "operational_support_partner", "population", "quarter", "month", 
-                        "stringdate", "healthFacilities_numReportedWithinDeadline","reports_expected", "reports_received", "ASAQ_used_total",
+                        "stringdate", "healthFacilities_numReportedWithinDeadline","reports_expected", "reports_received", "ASAQused_total",
                         "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI","PMA_ITN","PMA_complete")]
   
   # new column to factor in the product of number of health facilities reporting and total number of health facilties
@@ -137,7 +139,7 @@
                           "RDT_positive5andOlder", "RDT_positiveUnder5", "RDT_completedUnder5", "RDT_completed5andOlder")]
   
   
-# this doesn't work because there are repeats of health zones?
+# this doesn't work because there are repeats of health zones and different dps?  --> pick up here to set up for amelia
   # rectangularize the data so there is an observation for every health zone and date
   hzs <- unique(ameliaDT$health_zone)
   months <- unique(ameliaDT$date)
@@ -150,14 +152,10 @@
   dt <- merge(dt, rect, by=c("date", "health_zone", "dps", "province"), all=TRUE)
   
   # add an id column
-  dt[, id:= .I]
-  
-  # reorder columns
-  ameliaDT <- ameliaDT[, c(36, 1:35, 43, 37:42)]
+  ameliaDT[, id:= .I]
   
   # export data  
   write.csv(ameliaDT, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Full Data for MI.csv"))
-  
 
 # ---------------------------------------------- 
 
@@ -171,6 +169,10 @@
   stockouts <- measured_vars[c(44:51, 76:77)]
 
 # ----------------------------------------------       
+  
+  
+  
+  
   
   
   
