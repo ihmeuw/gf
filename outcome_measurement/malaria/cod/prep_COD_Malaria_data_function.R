@@ -106,6 +106,7 @@
         }
         
         healthzone = unique(healthzone)
+        healthzone = tolower(healthzone)
         healthzoneprep <- currentSheet[["health_zone"]]
         healthzoneprep <- unique(healthzoneprep)
         missing_hz <- healthzone[!healthzone %in% healthzoneprep]
@@ -159,69 +160,7 @@
   hz_missing_2017 <- hz2016[!hz2016 %in% hz2017]
   print(hz_missing_2017)
   
-  fullData[health_zone=="Omendjadi", health_zone := "Omondjadi"]
-  fullData[health_zone=="Kiroshe", health_zone := "Kirotshe"]
-  fullData[health_zone=="Boma Man", health_zone := "Boma Mangbetu"]
-  fullData$health_zone <- tolower(fullData$health_zone)
-  
-  fullData[health_zone=="mutshat", health_zone := "mutshatsha"]
-  fullData[health_zone=="mumbund", health_zone := "mumbunda"]
-  fullData[health_zone=="fungurum", health_zone := "fungurume"]
-  fullData[health_zone=="yasa", health_zone := "yasa-bonga"]
-  fullData[health_zone=="malem nk", health_zone := "malemba nkulu"]
-  fullData[health_zone=="kampem", health_zone := "kampemba"]
-  fullData[health_zone=="kamalond", health_zone := "kamalondo"]
-  fullData[health_zone=="pay", health_zone := "pay kongila"]
-  fullData[health_zone=="kafakumb", health_zone := "kafakumba"]
-  fullData[health_zone=="tshamile", health_zone := "tshamilemba"]
-  fullData[health_zone=="ntandem", health_zone := "ntandembele"]
-  fullData[health_zone=="masi", health_zone := "masimanimba"]
-  fullData[health_zone=="koshiba", health_zone := "koshibanda"]
-  fullData[health_zone=="djalo djek", health_zone := "djalo djeka"]
-  fullData[health_zone=="ludimbi l", health_zone := "ludimbi lukula"]
-  fullData[health_zone=="mwela l", health_zone := "mwela lembwa"]
-  fullData[health_zone=="bena le", health_zone := "bena leka"]
-  fullData[health_zone=="vanga ket", health_zone := "vanga kete"]
-  fullData[health_zone=="bomineng", health_zone := "bominenge"]
-  fullData[health_zone=="bogosenu", health_zone := "bogosenusebea"]
-  fullData[health_zone=="bwamand", health_zone := "bwamanda"]
-  fullData[health_zone=="banga lu", health_zone := "banga lubaka"]
-  fullData[health_zone=="bosomanz", health_zone := "bosomanzi"]
-  fullData[health_zone=="bosomond", health_zone := "bosomondanda"]
-  fullData[health_zone=="bonganda", health_zone := "bongandanganda"]
-  fullData[health_zone=="lilanga b", health_zone := "lilanga bobanga"]
-  fullData[health_zone=="mondomb", health_zone := "mondombe"]
-  fullData[health_zone=="tshitshim", health_zone := "tshitshimbi"]
-  fullData[health_zone=="basankus", health_zone := "basankusu"]
-  fullData[health_zone=="mobayi m", health_zone := "mobayi mbongo"]
-  fullData[health_zone=="kabond d", health_zone := "kabond dianda"]
-  fullData[health_zone=="kilela b", health_zone := "kilela balanda"]
-  fullData[health_zone=="ndjoko m", health_zone := "ndjoko mpunda"]
-  fullData[health_zone=="benatshia", health_zone := "benatshiadi"]
-  fullData[health_zone=="tshudi lo", health_zone := "tshudi loto"]
-  fullData[health_zone=="pania mut", health_zone := "pania mutombo"]
-  fullData[health_zone=="ndjoko mp", health_zone := "ndjoko mpunda"]
-  fullData[health_zone=="kalonda e", health_zone := "kalonda est"]
-  fullData[health_zone=="kata k", health_zone := "kata kokombe"]
-  fullData[health_zone=="lshi", health_zone := "lubumbashi"]
-  fullData[health_zone=="bdd", health_zone := "bandundu"]
-  fullData[health_zone=="kikwit n", health_zone := "kikwit nord"]
-  fullData[health_zone=="kikwit s", health_zone := "kikwit sud"]
-  fullData[health_zone=="kasongo l", health_zone := "kasongo lunda"]
-  fullData[health_zone=="popoka", health_zone := "popokabaka"]
-  fullData[health_zone=="kanda k", health_zone := "kanda kanda"]
-  fullData[health_zone=="muene d", health_zone := "muene ditu"]
-  fullData[health_zone=="wembo n", health_zone := "wembo nyama"]
-  fullData[health_zone=="bena dib", health_zone := "bena dibele"]
-  fullData[health_zone=="wamba l", health_zone := "wamba luadi"]
-  
-  fullData[health_zone=="kabeya", health_zone := "kabeya kamwanga"]
-  fullData[health_zone=="mampoko", health_zone := "lolanga mampoko"]
-  fullData[health_zone=="mufunga", health_zone := "mufunga sampwe"]
-  
-  fullData[health_zone=="wembo nyana", health_zone := "wembo nyama"]
-  fullData[health_zone=="kamonya", health_zone := "kamonia"]
-  fullData[health_zone=="kitangwa", health_zone := "kitangua"]
+
 # ----------------------------------------------  
 # ----------------------------------------------  
   fullData$dps <- tolower(fullData$dps)
