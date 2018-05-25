@@ -377,27 +377,92 @@
         dataSheet <- dataSheet[health_zone=="KIKWITS", health_zone:= "Kikwit S"]
       }
       
-      if ((PNLP_files$year[index] == 2011)& sheetname == "KAT"){
-        dataSheet <- dataSheet[health_zone=="Kabond D", health_zone:= "Kabond Dianda"]
-        dataSheet <- dataSheet[health_zone=="Malem Nk", health_zone:= "Malemba Nkulu"]
-        dataSheet <- dataSheet[health_zone=="Mutshat", health_zone:= "Mutshatsha"]
-        dataSheet <- dataSheet[health_zone=="Kilela B", health_zone:= "Kilela Balanda"]
-        dataSheet <- dataSheet[health_zone=="Mufunga", health_zone:= "Mufunga sampwe"]
-        dataSheet <- dataSheet[health_zone=="Kafakumb", health_zone:= "Kafakumba"]
-        dataSheet <- dataSheet[health_zone=="Kamalond", health_zone:= "Kamalondo"]
-        dataSheet <- dataSheet[health_zone=="Kampem", health_zone:= "Kampemba"]
-        dataSheet <- dataSheet[health_zone=="Tshamile", health_zone:= "Tshamilemba"]
-        dataSheet <- dataSheet[health_zone=="Lshi", health_zone:= "Lubumbashi"]
-        dataSheet <- dataSheet[health_zone=="Mumbund", health_zone:= "Mumbunda"]
-        dataSheet <- dataSheet[health_zone=="Fungurum", health_zone:= "Fungurume"]
-      }
-
       if ((PNLP_files$year[index] == 2010)& sheetname == "SK"){
         dataSheet <- dataSheet[!is.na(health_zone)]
       }
       
       # there are still some added rows that happen to have something in the month column but are missing data everywhere else
       dataSheet <- dataSheet[!is.na(province)]
+      
+      dataSheet <- dataSheet[health_zone=="Kabond D", health_zone:= "Kabond Dianda"]
+      dataSheet <- dataSheet[health_zone=="Malem Nk", health_zone:= "Malemba Nkulu"]
+      dataSheet <- dataSheet[health_zone=="Mutshat", health_zone:= "Mutshatsha"]
+      dataSheet <- dataSheet[health_zone=="Kilela B", health_zone:= "Kilela Balanda"]
+      dataSheet <- dataSheet[health_zone=="Mufunga", health_zone:= "Mufunga sampwe"]
+      dataSheet <- dataSheet[health_zone=="Kafakumb", health_zone:= "Kafakumba"]
+      dataSheet <- dataSheet[health_zone=="Kamalond", health_zone:= "Kamalondo"]
+      dataSheet <- dataSheet[health_zone=="Kampem", health_zone:= "Kampemba"]
+      dataSheet <- dataSheet[health_zone=="Tshamile", health_zone:= "Tshamilemba"]
+      dataSheet <- dataSheet[health_zone=="Lshi", health_zone:= "Lubumbashi"]
+      dataSheet <- dataSheet[health_zone=="Mumbund", health_zone:= "Mumbunda"]
+      dataSheet <- dataSheet[health_zone=="Fungurum", health_zone:= "Fungurume"]
+      
+      dataSheet$health_zone <- tolower(dataSheet$health_zone)
+      
+      dataSheet[health_zone=="omendjadi", health_zone := "omondjadi"]
+      dataSheet[health_zone=="kiroshe", health_zone := "kirotshe"]
+      dataSheet[health_zone=="boma man", health_zone := "boma mangbetu"]
+      
+      
+      dataSheet[health_zone=="mutshat", health_zone := "mutshatsha"]
+      dataSheet[health_zone=="mumbund", health_zone := "mumbunda"]
+      dataSheet[health_zone=="fungurum", health_zone := "fungurume"]
+      dataSheet[health_zone=="yasa", health_zone := "yasa-bonga"]
+      dataSheet[health_zone=="malem nk", health_zone := "malemba nkulu"]
+      dataSheet[health_zone=="kampem", health_zone := "kampemba"]
+      dataSheet[health_zone=="kamalond", health_zone := "kamalondo"]
+      dataSheet[health_zone=="pay", health_zone := "pay kongila"]
+      dataSheet[health_zone=="kafakumb", health_zone := "kafakumba"]
+      dataSheet[health_zone=="tshamile", health_zone := "tshamilemba"]
+      dataSheet[health_zone=="ntandem", health_zone := "ntandembele"]
+      dataSheet[health_zone=="masi", health_zone := "masimanimba"]
+      dataSheet[health_zone=="koshiba", health_zone := "koshibanda"]
+      dataSheet[health_zone=="djalo djek", health_zone := "djalo djeka"]
+      dataSheet[health_zone=="ludimbi l", health_zone := "ludimbi lukula"]
+      dataSheet[health_zone=="mwela l", health_zone := "mwela lembwa"]
+      dataSheet[health_zone=="bena le", health_zone := "bena leka"]
+      dataSheet[health_zone=="vanga ket", health_zone := "vanga kete"]
+      dataSheet[health_zone=="bomineng", health_zone := "bominenge"]
+      dataSheet[health_zone=="bogosenu", health_zone := "bogosenusebea"]
+      dataSheet[health_zone=="bwamand", health_zone := "bwamanda"]
+      dataSheet[health_zone=="banga lu", health_zone := "banga lubaka"]
+      dataSheet[health_zone=="bosomanz", health_zone := "bosomanzi"]
+      dataSheet[health_zone=="bosomond", health_zone := "bosomondanda"]
+      dataSheet[health_zone=="bonganda", health_zone := "bongandanganda"]
+      dataSheet[health_zone=="lilanga b", health_zone := "lilanga bobanga"]
+      dataSheet[health_zone=="mondomb", health_zone := "mondombe"]
+      dataSheet[health_zone=="tshitshim", health_zone := "tshitshimbi"]
+      dataSheet[health_zone=="basankus", health_zone := "basankusu"]
+      dataSheet[health_zone=="mobayi m", health_zone := "mobayi mbongo"]
+      dataSheet[health_zone=="kabond d", health_zone := "kabond dianda"]
+      dataSheet[health_zone=="kilela b", health_zone := "kilela balanda"]
+      dataSheet[health_zone=="ndjoko m", health_zone := "ndjoko mpunda"]
+      dataSheet[health_zone=="benatshia", health_zone := "benatshiadi"]
+      dataSheet[health_zone=="tshudi lo", health_zone := "tshudi loto"]
+      dataSheet[health_zone=="pania mut", health_zone := "pania mutombo"]
+      dataSheet[health_zone=="ndjoko mp", health_zone := "ndjoko mpunda"]
+      dataSheet[health_zone=="kalonda e", health_zone := "kalonda est"]
+      dataSheet[health_zone=="kata k", health_zone := "kata kokombe"]
+      dataSheet[health_zone=="lshi", health_zone := "lubumbashi"]
+      dataSheet[health_zone=="bdd", health_zone := "bandundu"]
+      dataSheet[health_zone=="kikwit n", health_zone := "kikwit nord"]
+      dataSheet[health_zone=="kikwit s", health_zone := "kikwit sud"]
+      dataSheet[health_zone=="kasongo l", health_zone := "kasongo lunda"]
+      dataSheet[health_zone=="popoka", health_zone := "popokabaka"]
+      dataSheet[health_zone=="kanda k", health_zone := "kanda kanda"]
+      dataSheet[health_zone=="muene d", health_zone := "muene ditu"]
+      dataSheet[health_zone=="wembo n", health_zone := "wembo nyama"]
+      dataSheet[health_zone=="bena dib", health_zone := "bena dibele"]
+      dataSheet[health_zone=="wamba l", health_zone := "wamba luadi"]
+      
+      dataSheet[health_zone=="kabeya", health_zone := "kabeya kamwanga"]
+      dataSheet[health_zone=="mampoko", health_zone := "lolanga mampoko"]
+      dataSheet[health_zone=="mufunga", health_zone := "mufunga sampwe"]
+      
+      dataSheet[health_zone=="wembo nyana", health_zone := "wembo nyama"]
+      dataSheet[health_zone=="kamonya", health_zone := "kamonia"]
+      dataSheet[health_zone=="kitangwa", health_zone := "kitangua"]
+
       
       # ----------------------------------------------
       # Return current data sheet
