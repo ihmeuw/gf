@@ -37,9 +37,6 @@ dir <- paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
 # upload the data with month, year, sex
 uganda_vl <- readRDS(paste0(dir, "/sex_data.rds"))
 
-# drop out the current month
-uganda_vl <- uganda_vl[!(month==5 & year==2018)]
-
 # view the data set and variable names
 class(uganda_vl) # check that it is a data table
 str(uganda_vl)
