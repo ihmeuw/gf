@@ -32,15 +32,17 @@
   # Overview - Files and Directories
   
     # data directory
-      dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data"
-    
+      dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
+      dt_long <- "PNLP_2010to2017_long.csv"
+      fullData <- "PNLP_2010to2017_fullPrepped.csv"
+      
     # input file:
       # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators_Long
       # csv files were produced by prep_COD_Malaria_data_function.R
-      dt <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Long.csv")) 
-      dt_wide <- fread(paste0(dir,"/","COD_PNLP_Data_Indicators_Wide.csv")) 
-      dt2 <- fread(paste0(dir, "/", "COD_PNLP_Data_Interventions_Long.csv"))
+      dt <- fread(paste0(dir, dt_long))
+      dt_wide <- fread(paste0(dir, fullData))
       fullData <- fread(paste0(dir, "/", "Full Data for MI.csv"))
+      
       # upload excel doc of outliers as a data table to merge with full data set
         outliers <- as.data.table(read_excel(paste0(dir, "/Outliers.xlsx")))
         outliers[, date := as.Date(date)]
@@ -52,11 +54,9 @@
 
     # Set up:
       dt[, date := as.Date(date)]
-      dt2[, date := as.Date(date)]
       dt_wide[, date := as.Date(date)]
       fullData[, date := as.Date(date)]
       dt[, value := as.numeric(value)]
-      dt2[, value := as.numeric(value)]
 # ----------------------------------------------
 
       
@@ -436,15 +436,15 @@
     g_reorder <- g_reorder + ggtitle("Missing Data by Date") + xlab("Date (Month and Year)") + ylab("Count of Missing Values")
     print(g_reorder)
     
-  # Make a histogram for counts of missing data by health zone (total)
+  # Make a histogram for counts of missing data by health zone (total) for each date
     
-    dt_missing_byHZ <- dt_missing[,
-                                 .(sumMissing = sum(missing_value)),
-                                 by=c('health_zone')]
+    dt_missing_byHZ <- dt_missing[health_zone=="lubunga",
+                                 .(percentMissing = (mean(missing_value)*100)),
+                                 by=c('date', 'health_zone')]
     
     
-    g <- ggplot(data=dt_missing_byHZ, aes(x = health_zone, y = sumMissing)) + geom_bar(stat="identity")
-    g <- g + ggtitle("Missing Data by Health Zone") + xlab("Health Zone)") + ylab("Count of Missing Values")
+    g <- ggplot(data=dt_missing_byHZ, aes(x = date, y = percentMissing)) + geom_bar(stat="identity")
+    g <- g + ggtitle("Missing Data for Health Zone Lubunga") + xlab("Health Zone") + ylab("Count of Missing Values")
     print(g)
     
     g_reorder <- ggplot(dt_missing_byHZ, aes(x = reorder(health_zone, sumMissing), y = sumMissing)) + geom_bar(stat="identity")
@@ -466,12 +466,12 @@
 # ----------------------------------------------
   # Make a histogram for counts of missing data by health zone by indicator  
 
-    dt2 <- dt_missing[indicator == "newCasesMalariaSevere",
+    dt2 <- dt_missing[indicator == "ANC" & subpopulation == "1st",
                                     .(percent_missing = (mean(missing_value)*100)), 
                                     by=c('date')]
     
     g <- ggplot(data=dt2, aes(x = date, y = percent_missing)) + geom_bar(stat="identity")
-    g <- g + ggtitle("Missing Data for New Cases of Severe Malaria") + ylim(0, 100) + labs(x= "Date", y= "Percent Missing Data") 
+    g <- g + ggtitle("Missing Data for 1st ANC visit") + ylim(0, 100) + labs(x= "Date (Month and Year)", y= "Percent Missing Data") 
     print(g)
     
     

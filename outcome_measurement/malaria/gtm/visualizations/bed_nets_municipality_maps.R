@@ -26,7 +26,7 @@ library(stringr)
 ###### Set global variables  ###### 
 # ----------------------------------------------
 mapping_dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
-
+local_dir <- "J:/Project/Evaluation/GF/outcome_measurement/gtm/"
 # ----------------------------------------------
 ######## Load the municipality level shapefile ########
 # ----------------------------------------------
@@ -60,6 +60,10 @@ gtm_region_centroids$NAME_1[7] <- "Petén"
 ######## Load the bed net data ########
 # ----------------------------------------------
 
+bnData <- data.table(read.csv(paste0(local_dir, "prepped_data/", "bednet_prepped_data.csv")))
+
+bnData[,list(sum_persons=sum(num_persons)),by=c("department","year")]
+
 ## something that might be cool is to get the absorption ratio of disb/budget by year, source, disease, etc. 
 bnData$year <- year(bnData$start_date)
 byVars = names(bnData)[names(bnData)%in%c('adm1','adm2','year')]
@@ -71,12 +75,35 @@ bnData  =  bnData[, list(num_persons=sum(na.omit(num_persons)), household_beds=s
 ##luckily, the "adm2" code matches the "id" in the municipality shape file, so we can join on that 
 setnames(bnData, "adm2", "id")
 
-##absorption: 
+##add some variables of interest: 
+bnData[, bn_over_beds:=bed_nets/household_beds]
+bnData[, bn_over_people:=bed_nets/num_persons]
+
+# ----------------------------------------------
+######## Load the antimalarial drug data  ########
+# ----------------------------------------------
+
+amData <- data.table(read.csv(paste0(local_dir, "prepped_data/", "antimalarial_prepped_data.csv")))
+
+am_delivered <- amData[grepl("_deliveredToUser", amData$antimalarial_input)]
+# ----------------------------------------------
+######## Graph the data ########
+# ----------------------------------------------
+
+##color scale for the mapping values 
 colScale <-  scale_fill_gradient2(low='#0606aa', mid='#00FFff', high='#ffa3b2',
                                   na.value = "grey70",space = "Lab", midpoint = 60, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
                                   breaks=c(0, 20, 40, 60, 80), limits=c(0,100))
 
+## color scale for %s (between 0 and 1) - same thing as above basically
+colScale <-  scale_fill_gradient2(low='#0606aa', mid='#00FFff', high='#ffa3b2',
+                                  na.value = "grey70",space = "Lab", midpoint = 0.5, ## play around with this to get the gradient 
+                                  # that you want, depending on data values 
+                                  breaks=c(0, 0.2, 0.4,0.6, 0.8), limits=c(0,1))
+
+
+##loop that saves each plot in a list: 
 gtm_plots <- list()
 i = 1
 for (k in unique(bnData$year)){
@@ -104,7 +131,10 @@ for (k in unique(bnData$year)){
 
 
 
-
+##export graphs as PDF 
+pdf(paste0(local_dir, "visualizations/", "FILE NAME.pdf"), height=6, width=9)
+invisible(lapply(gtm_plots, print))
+dev.off()
 
 
 

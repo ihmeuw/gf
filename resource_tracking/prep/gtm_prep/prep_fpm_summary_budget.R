@@ -2,7 +2,7 @@
 # Irena Chen
 #
 # 11/8/2017
-# Template for prepping GF UGA budgets where the data is in "summary" form 
+# Template for prepping GF GTM budgets where the data is in "summary" form 
 # Inputs:
 # inFile - name of the file to be prepped
 # Outputs:
