@@ -84,6 +84,14 @@ for(f in files) {
 str(full_data)
 
 # ----------------------------------------------
+# reset working directory to main folder
+setwd(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'))
+dir <- paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
+
+facilities <- readRDS(paste0(dir,"/facilities/facilities.rds"))
+str(facilities)
+
+# ----------------------------------------------
 #  stats to check if the sex disaggregated data downloaded correctly 
 
 # run some stats to check that the data downloaded correctly
@@ -107,13 +115,6 @@ full_data <- full_data[!(year==2018 & month==5)]
 
 # ----------------------------------------------
 # upload the facilities names, ids and check for disparate values
-
-# reset working directory to main folder
-setwd(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'))
-dir <- paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
-
-facilities <- readRDS(paste0(dir,"/facilities/facilities.rds"))
-str(facilities)
 
 # print a list of the facility ids in full_data that are not on the names list
 # 34 facilities, 692 patients in those facilities
@@ -269,7 +270,7 @@ uvl_sex[duplicated(combine)] # should be an empty data table (no duplicate entri
 # check for equality constraints
 uvl_sex[patients_received > samples_received] # should be 0
 
-# one case where there appears to be an error - samples received shoudl be 4
+# one case where there appears to be an error - samples received should be 4
 uvl_sex[rejected_samples > samples_received]
 uvl_sex[facility_id==3238 & sex=='Male' & month==8 & year==2015, samples_received:=4]
 
@@ -370,9 +371,9 @@ uganda_vl[ , level_d:=NULL]
 prison <- grep(pattern="Prison", x=uganda_vl$facility_name) 
 prison1 <- grep(pattern="Prison", x=uganda_vl$dhis2name) 
 
-uganda_vl[prison, prison:=1]
-uganda_vl[prison1, prison:=1]
-uganda_vl[is.na(prison), prison:=0]
+uganda_vl[prison, prison:=T]
+uganda_vl[prison1, prison:=T]
+uganda_vl[is.na(prison), prison:=F]
 
 uganda_vl[ , c("facility_name1", "dhis2name1"):=NULL]
 
@@ -534,5 +535,14 @@ uganda_vl <- uganda_vl[ ,.(facility_id, facility_name, dhis2name, platform, pris
 saveRDS(uganda_vl, file= paste0(dir, "/sex_data.rds"))
 
 # ----------------------------------------------
+
+# optional - export a CSV of the prepped data set
+
+write.csv(uganda_vl, paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/uvl_data.csv'))
+
+
+# ----------------------------------------------
+
+
 
 
