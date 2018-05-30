@@ -97,6 +97,7 @@ pobrezaGT11 = data.table(read.csv(paste0(dataPath, "Covariates and Other Data/De
 # ----------------------------------------------
 # Prepare the data
 TBNotifAll = rbindlist(list(TBNotif2012, TBNotif2013, TBNotif2014, TBNotif2015, TBNotif2016), fill = TRUE)
+TBNotifAll$YEAR = as.integer(TBNotifAll$YEAR)
 TBNotifAll[TBNotifAll$YEAR > 2012, NotificationDate:= as.Date(as.numeric(TBNotifAll$FECHANOTIFICACION[TBNotifAll$YEAR > 2012])-2, origin="1900-01-01")]
 TBNotifAll[TBNotifAll$YEAR > 2012, YearMonth := as.integer(format(TBNotifAll$NotificationDate[TBNotifAll$YEAR > 2012], format = "%Y%m"))];
 TBNotifAll = TBNotifAll[YearMonth>=201201 & YearMonth<=201612]
@@ -176,13 +177,13 @@ if (saveGraphs)
 gtmMunisDataCopy = cbind(gtmMunisIGN@data)
 gtmMunisIGN@data$id = rownames(gtmMunisIGN@data)
 gtmMunisIGN@data = merge(gtmMunisIGN@data, TBNotifAll[toupper(CONDICIONINGRESO)=="NUEVO" & YEAR < 2016 & YEAR > 2011, .(TBCases=.N),by=COD_MUNI], by.x = "COD_MUNI__", by.y="COD_MUNI", all.x=TRUE, sort=FALSE)
-gtmMunisIGN@data = merge(gtmMunisIGN@data, dt.munisGT[, .(Poblacion, COD_MUNI__)], by.x = "COD_MUNI__", by.y="COD_MUNI__", all.x=TRUE, sort=FALSE)
+gtmMunisIGN@data = merge(gtmMunisIGN@data, dt.munisGT[, .(Poblacion2015, COD_MUNI__)], by.x = "COD_MUNI__", by.y="COD_MUNI__", all.x=TRUE, sort=FALSE)
 gtmMunisIGN.map.df = fortify(gtmMunisIGN)
 gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
 
 
 # Plotting TB cases per municipality
-plot = ggplot(data=gtmMunisIGN@data, aes(fill=1000*TBCases/Poblacion/4)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + scale_fill_gradientn(colours = c("#777777", "#ddcc22", "#DD5522", "#AA1111"), values=c(0,0.005,0.7,1), trans="log10") + labs(fill= "Rate", title="TB incidence rate per 1,000 people per year (Data from 2012 to 2015)")
+plot = ggplot(data=gtmMunisIGN@data, aes(fill=100000*TBCases/Poblacion2015/4)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + scale_fill_gradientn(colours = c("#777777", "#ddcc22", "#DD5522", "#AA1111"), values=c(0,0.005,0.7,1), trans="log10") + labs(fill= "Rate", title="TB incidence rate per 100,000 people per year (Data from 2012 to 2015)")
 # Overlay the departments
 plot + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#00000066", size=1)  + theme_void()
 

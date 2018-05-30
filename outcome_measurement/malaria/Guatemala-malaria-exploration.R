@@ -91,10 +91,10 @@ gtmDeptosDataCopy = cbind(gtmDeptosIGN@data)
 gtmDeptosIGN@data$id = rownames(gtmDeptosIGN@data)
 gtmDeptosIGN@data = merge(gtmDeptosIGN@data, deptotrends, 
                           by.x = "CODIGO", by.y="depto",all.x=TRUE, sort=FALSE)
-gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
-plot = ggplot(data=gtmDeptosIGN@data, aes(fill=trend_cat)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmDeptosIGN.map.df) + expand_limits(x = gtmDeptosIGN.map.df$long, y = gtmDeptosIGN.map.df$lat) + scale_fill_brewer(palette = "OrRd",na.value="gray") + coord_quickmap() + labs(fill= "Trend", title="Trend of Malaria Cases Notified by District\nFrom 2015 to 2017", subtitle="(Poisson regression coefficients) ")
+gtmDeptosIGN.map.df = fortify(gtmDeptosIGN[gtmDeptosIGN$CODIGO!=23,])
+plot = ggplot(data=gtmDeptosIGN[gtmDeptosIGN$CODIGO!=23,]@data, aes(fill=trend_cat)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmDeptosIGN.map.df) + expand_limits(x = gtmDeptosIGN.map.df$long, y = gtmDeptosIGN.map.df$lat) + scale_fill_brewer(palette = "OrRd",na.value="gray") + coord_quickmap() + labs(fill= "Trend", title="Trend of Malaria Cases Notified by District\nFrom 2015 to 2017", subtitle="(Poisson GLMM coefficients, relative change in 1 year) ")
 plot + theme_void()
-ggsave("PCE/Graficas/Malaria_Gt_Trends_2015-2017_by_depto.png", height=4, width=9)
+ggsave("PCE/Graficas/Malaria_Gt_Trends_2015-2017_by_depto.png", height=4, width=4)
 gtmDeptosIGN@data = gtmDeptosDataCopy
 
 # Map deptos counts 2015 - 2017
@@ -103,24 +103,7 @@ gtmDeptosIGN@data$id = rownames(gtmDeptosIGN@data)
 gtmDeptosIGN@data = merge(gtmDeptosIGN@data, malariaepi[Year > 2014, .(c = sum(TotalCases)), by= .(depto = floor(Muni/100))], 
                           by.x = "CODIGO", by.y="depto",all.x=TRUE, sort=FALSE)
 gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
-plot = ggplot(data=gtmDeptosIGN@data, aes(fill=c)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmDeptosIGN.map.df) + expand_limits(x = gtmDeptosIGN.map.df$long, y = gtmDeptosIGN.map.df$lat) + scale_fill_gradientn(colours = c("#ddcc22", "#DD5522", "#AA1111"), values=c(0.1,0.8,1), trans="log10") + coord_quickmap() + labs(fill= "Cases counts", title="Malaria Cases Notified by District\nFrom 2015 to 2017", subtitle="")
+plot = ggplot(data=gtmDeptosIGN[gtmDeptosIGN$CODIGO!=23,]@data, aes(fill=c)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmDeptosIGN.map.df) + expand_limits(x = gtmDeptosIGN.map.df$long, y = gtmDeptosIGN.map.df$lat) + scale_fill_gradientn(colours = c("#ddcc22", "#DD5522", "#AA1111"), values=c(0.1,0.8,1), trans="log10") + coord_quickmap() + labs(fill= "Cases counts", title="Malaria Cases Notified by District\nFrom 2015 to 2017", subtitle="")
 plot + theme_void()
-ggsave("PCE/Graficas/Malaria_Gt_Cases_2015-2017_by_depto.png", height=4, width=9)
+ggsave("PCE/Graficas/Malaria_Gt_Cases_2015-2017_by_depto.png", height=4, width=4)
 gtmDeptosIGN@data = gtmDeptosDataCopy
-
-# Map
-gtmMunisDataCopy = cbind(gtmMunisIGN@data)
-gtmMunisIGN@data$id = rownames(gtmMunisIGN@data)
-gtmMunisIGN@data = merge(gtmMunisIGN@data, malariaepi[Year == 2017, .(Cases=sum(TotalCases)),by=Muni], by.x = "COD_MUNI__", by.y="Muni", all.x=TRUE, sort=FALSE)
-gtmMunisIGN.map.df = fortify(gtmMunisIGN)
-gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
-
-# Plotting malaria cases per municipality for year 2017
-plot = ggplot(data=gtmMunisIGN@data, aes(fill=Cases)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + scale_fill_gradientn(colours = c("#ddcc22", "#DD5522", "#AA1111"), values=c(0.1,0.5,1), trans="log10") + labs(fill= "Rate", title="Casos de Malaria en Guatemala durante el 2017")
-# Overlay the departments
-plot + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#00000066", size=1)  + theme_void()
-
-if (saveGraphs) 
-    ggsave("PCE/Graficas/Malaria_Gt_Notifications_2017-Map-Muncipalities.png", height=8, width=8)
-
-gtmMunisIGN@data = gtmMunisDataCopy
