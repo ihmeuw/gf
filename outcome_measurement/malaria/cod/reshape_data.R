@@ -49,9 +49,7 @@
     
 # ----------------------------------------------   
 # grab all of the variable names to work with
-  # setnames(fullData, c("V1"), c("id"))
-  fullData <- fullData[, "V1" := NULL ]
-    fullData <- fullData[, "V1" := NULL ]
+  setnames(fullData, c("V1"), c("id"))
     
   all_vars <- c(colnames(fullData))
   
@@ -76,17 +74,24 @@
 # fix cases where NAs are intoduced and we can interpret the value
   # there will be some NAs introduced even after this but you can run the above line of code again to
   # see what they are- most should just be NA because they are not interpretable as actual values.
+
+    punctuation <- c("\\*")
+    for (p in punctuation) dt_long[, value:=gsub(p, "", value)]
+    
+    dt_long$value <- gsub("\`", "", dt_long$value)
+    
+    dt_long$value <- gsub("¨", "", dt_long$value)
+    dt_long$value <- gsub("s", "", dt_long$value)
     dt_long$value <- gsub("O", "0", dt_long$value)
     dt_long$value <- gsub("\\s", "", dt_long$value)
     dt_long$value <- gsub(",", "", dt_long$value)
     dt_long$value <- gsub("²", "", dt_long$value)
     dt_long$value <- gsub("36/8", "", dt_long$value)
     dt_long$value <- gsub("23/19", "", dt_long$value)
-    dt_long$value <- gsub("[[:punct:]]", "", dt_long$value)
-    dt_long$value <- gsub("\\D", "", dt_long$value)
 
 # convert value in dt_melt to numeric now that we have fixed cases that were converted to NA and should not have been
-  dt_long <- dt_long[, value := as.numeric(value)]
+    dt_long[, value := as.numeric(value)]
+
   # drop numValue and oldValue
     dt_long[, c("numValue","old_value"):=NULL]  
   
@@ -98,8 +103,9 @@
     dt_long$indicator <- gsub("ASAQ_r", "ASAQr", dt_long$indicator)
       
     # cast wide to have a copy the cleaned, full data in a better format for some analyses/processing 
-    fullData <- dcast(dt_long, id + province + dps + health_zone + donor + operational_support_partner + population + quarter + month + year + stringdate + date ~ indicator)
-    fullData <- as.data.table(fullData)
+    fullData <- dcast.data.table(dt_long, id + province + dps + health_zone + donor + operational_support_partner + population + quarter + month + year + stringdate + date ~ indicator, value.var="value")
+
+    fullData[, date:=as.Date(date)]
     # export this dt before further alterations
     write.csv(fullData, paste0(dir_prepped, output_fullData))
     
@@ -108,12 +114,12 @@
     dt_long <- dt_long[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
     # set a placeholder value for where there is no subpopulation, so that graphing doesn't mess up there
       dt_long <- dt_long[is.na(subpopulation), subpopulation:= "none"]
+      dt_long[, date:=as.Date(date)]
     # export this dt as a version with both indicators and subpopulations long
       write.csv(dt_long, paste0(dir_prepped, output_dt_long))
     
 # cast indicators wide and keep subpopulations long - format to save to basecamp for CEPs
-  dt_wide <- dcast(dt_long, province + dps + health_zone + donor + operational_support_partner + population +
-                                      quarter + month + year + stringdate + date + subpopulation ~ indicator) 
+  dt_wide <- dcast.data.table(dt_long, id + province + dps + health_zone + donor + operational_support_partner + population + quarter + month + year + stringdate + date + subpopulation ~ indicator) 
   # export this dt as a version with indicators wide and subpopulations long
     write.csv(dt_wide, paste0(dir_prepped, output_dt))
   
