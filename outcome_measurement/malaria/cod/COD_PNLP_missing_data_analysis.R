@@ -2,10 +2,14 @@
   # Audrey Batzel
   #
   # 3/16/18
-  # COD PNLP data for 2014-2016; data quality analysis
+    # COD PNLP data for 2014-2016; data quality analysis
     # outlier analysis
     # internal consistency checks
     # descriptive analysis of missing data
+  # 5/22/18 and on -
+    # PNLP data for 2010-2017 all provinces
+    # build on analysis for earlier set of data/rerun for new data
+  setwd('C:/local/gf/')
 # ----------------------------------------------
 
 
@@ -32,19 +36,22 @@
   # Overview - Files and Directories
   
     # data directory
-      dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
+      dir_prepped <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
       dt_long <- "PNLP_2010to2017_long.csv"
       fullData <- "PNLP_2010to2017_fullPrepped.csv"
+      outliersRemoved <- "fullData_outliers_removed.csv"
       
     # input file:
       # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/COD_PNLP_Data_Indicators_Long
       # csv files were produced by prep_COD_Malaria_data_function.R
-      dt <- fread(paste0(dir, dt_long))
-      dt_wide <- fread(paste0(dir, fullData))
-      fullData <- fread(paste0(dir, "/", "Full Data for MI.csv"))
+      dt <- fread(paste0(dir_prepped, dt_long))
+      
+      dt_wide <- fread(paste0(dir_prepped, outliersRemoved))
+      
+      dtMI <- fread(paste0(dir, "/", "Full Data for MI.csv"))
       
       # upload excel doc of outliers as a data table to merge with full data set
-        outliers <- as.data.table(read_excel(paste0(dir, "/Outliers.xlsx")))
+        outliers <- as.data.table(read_excel(paste0(dir_prepped, "outliers to graph (temp).xlsx")))
         outliers[, date := as.Date(date)]
         
     # output files:
@@ -54,21 +61,24 @@
 
     # Set up:
       dt[, date := as.Date(date)]
-      dt_wide[, date := as.Date(date)]
-      fullData[, date := as.Date(date)]
       dt[, value := as.numeric(value)]
+      
+      dt_wide[, date := as.Date(date)]
+
 # ----------------------------------------------
 
       
 # ----------------------------------------------
 # create a vector of each set of column headings, one for id variables, one for the numeric variables
-  	idVars = names(fullData)[1:5]
-    numVars = names(fullData)[6:44]
+    dt_wide <- dt_wide[,-c("V1")]
+      
+    all_vars <- c(colnames(dt_wide))
     
-  # make sure each of the numeric variables is actually numeric
-  	for (i in numVars){
-  	  fullData[, (i) := as.numeric(get(i))]
-  	}
+    id_vars <- c("id", "province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month",
+                 "year", "stringdate", "date") 
+    
+    
+    numVars <- all_vars[!all_vars %in% id_vars]
     
 # use a correlation matrix to identify good pairs of variables to scatterplot 
   # loop through each pair of variables, calculate the correlation
@@ -85,7 +95,7 @@
         # the correlation between the two variables
         tmpData <- data.table(variable1=v1, 
                               variable2=v2,
-                              correlation=(cor(fullData[!is.na(get(v1)) & !is.na(get(v2)), c(v1, v2), with=FALSE]))[2])
+                              correlation=(cor(dt_wide[!is.na(get(v1)) & !is.na(get(v2)), c(v1, v2), with=FALSE]))[2])
         
         # rbind() each iteration to the previous to create one data.table called fullCorrMatrix
         if (i==1) fullCorrMatrix = tmpData
@@ -96,8 +106,8 @@
     }
   # find the maximum correlation for each variable and store that information in a data.table called maxCorr
     maxCorr <- fullCorrMatrix[,
-                            maxCorr := .(max(correlation)),
-                            by = c("variable1")]
+                            .(variable2, correlation, maxCorr = (max(correlation, na.rm=T))),
+                            by = variable1 ]
     
    # make it so maxCorr contains only the pairs of variables with the maximum correlation for each variable 
      maxCorr <- maxCorr[maxCorr == correlation]
@@ -111,11 +121,9 @@
        if (nrow(maxCorr[variable1==v2 & variable2==v1])>0) maxCorr <- maxCorr[-i]
        i <- i + 1
      }
-     
-     # remove rows with reports against product
-       maxCorr <- maxCorr[-21,]
-       maxCorr <- maxCorr[-20,]
-       maxCorr <- maxCorr[-7,]
+
+  #add a column to see see if maxCorr > 0.75
+  maxCorr[maxCorr>0.55, isHigher :=T]
 
  # variable names for labelling axes 
      # ----------------------------------------------   
@@ -163,54 +171,68 @@
      # ---------------------------------------------- 
 
 # ----------------------------------------------      
-  # # loop through pairs of variables in maxCorr for graphing 
-  #   pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)   
-  #   
-  #   i = 1
-  #   for (v in maxCorr$variable1){
-  #     
-  #     v2 = maxCorr$variable2[i]
-  #     
-  #     #minmax <- range(c(maxCorr$variable1, maxCorr$variable2))
-  #     maxAxis <- max(na.omit(cbind(fullData[[v]], fullData[[v2]])))
-  #     # maxAxis <- max(c(fullData[[v]], fullData[[v2]]), na.rm=T)
-  #     # if (max(fullData[,get(v)])> max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v)])
-  #     # if (max(fullData[,get(v)])< max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v2[i])])
-  # 
-  #     g <- ggplot(fullData, aes_string(v, v2, color="dps")) 
-  #     g <- g + geom_point() #+ geom_smooth(method='lm')
-  #     g <- g + xlab(variable_names[v]) + ylab(variable_names[v2]) + xlim(0, maxAxis) + ylim(0, maxAxis)
-  #     
-  #     print(g)
-  #     
-  #     i = i + 1
-  #   }
-  #   
-  #   dev.off()
+  # loop through pairs of variables in maxCorr for graphing
+    #first round of graphs:
+    #pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)
+    
+  
+    maxCorr <- maxCorr[isHigher==T,]
+    #second round of graphs with some outliers removed, only graph where correlation is 0.55 or better:
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons - some outliers removed.pdf", height=6, width=9)
+    i = 1
+    for (v in maxCorr$variable1){
+
+      v2 = maxCorr$variable2[i]
+
+      #minmax <- range(c(maxCorr$variable1, maxCorr$variable2))
+      maxAxis <- (max(cbind(dt_wide[[v]], dt_wide[[v2]]), na.rm=T))
+      # maxAxis <- max(c(fullData[[v]], fullData[[v2]]), na.rm=T)
+      # if (max(fullData[,get(v)])> max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v)])
+      # if (max(fullData[,get(v)])< max(fullData[,get(v2[i])])) maxAxis <- max(fullData[,get(v2[i])])
+
+      g <- ggplot(dt_wide, aes_string(v, v2)) + geom_point() + xlim(0, maxAxis) + ylim(0, maxAxis)
+      #g <- g + xlab(variable_names[v]) + ylab(variable_names[v2]) 
+
+      print(g)
+
+      i = i + 1
+    }
+
+    dev.off()
 # ----------------------------------------------   
     
     
 # ---------------------------------------------- 
   # identify and color code suspected outliers
         # melt data in order to merge
-          fullDataMelt <- melt(fullData, id.vars= c("V1", "date", "province", "dps", "health_zone"),
-                                         measure.vars = c(),
+          fullDataMelt <- melt(fullData, id.vars= id_vars,
+                                         measure.vars = numVars,
                                          variable.name = "indicator", 
                                          value.name="value")
         
-          dtOutliers <- merge(fullDataMelt, outliers, by= c("health_zone", "date", "indicator"), all=T)
+          dtOutliers <- merge(fullDataMelt, outliers, by= c("health_zone", "date", "indicator", "value"), all=T)
           
-          dtOutliersWide1 <- dcast.data.table(dtOutliers, V1+date+province+dps+health_zone ~ indicator, value.var='value')
-          dtOutliersWide2 <- dcast.data.table(dtOutliers, V1+date+province+dps+health_zone ~ indicator, value.var='outlier')
-          oldNames = names(dtOutliersWide2)[!names(dtOutliersWide2) %in% c("V1", "date", "province", "dps", "health_zone")]
+          # subset dtOutliers to necessary columns
+          dtOutliers <- dtOutliers[, c("id", "health_zone", "date", "indicator", "value", "outlier", "province.x")]
+          setnames(dtOutliers, "province.x", "province")
+          
+          dtOutliersWide1 <- dcast.data.table(dtOutliers, id+date+province+health_zone ~ indicator, value.var='value')
+          dtOutliersWide2 <- dcast.data.table(dtOutliers, id+date+province+health_zone ~ indicator, value.var='outlier')
+          oldNames = names(dtOutliersWide2)[!names(dtOutliersWide2) %in% c("id", "date", "province", "dps", "health_zone")]
           newNames = paste0(oldNames, '_outlier')
           setnames(dtOutliersWide2, oldNames, newNames)
-          dtOutliersWide <- merge(dtOutliersWide1, dtOutliersWide2, by=c("V1", "date", "province", "dps", "health_zone"))
+          dtOutliersWide <- merge(dtOutliersWide1, dtOutliersWide2, by=c("id", "date", "province", "health_zone"))
           
   # remake scatterplots with outliers color-coded
     pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots with Outliers.pdf", height=6, width=9)   
     
+    
+    # ASAQreceived_6to13yrs
+    # severeMalariaTreated_under5
+    # newCasesMalariaSevere_5andOlder
+    
     i = 1
+    
     for (x in maxCorr$variable1){
       x = maxCorr$variable1[i]
       y = maxCorr$variable2[i]
@@ -226,8 +248,8 @@
       
       g <- ggplot(dtOutliersWide, aes_string(x=x, y=y, color="tmp")) + 
            geom_point(size=3) + geom_abline(alpha=1/4) + theme_bw() +
-           scale_color_manual(values=c("Outlier x"="yellow","Outlier y"="red", "Outlier x and y"="orange", "Not suspected outlier"="gray")) +
-           labs(color = NULL) + xlab(variable_names[x]) + ylab(variable_names[y]) + xlim(0, maxAxis) + ylim(0, maxAxis)
+           scale_color_manual(values=c("Outlier x"="blue","Outlier y"="red", "Outlier x and y"="purple", "Not suspected outlier"="gray")) +
+           labs(color = NULL)  + xlim(0, maxAxis) + ylim(0, maxAxis) #+ xlab(variable_names[x]) + ylab(variable_names[y])
       
       print(g)
       dtOutliersWide$tmp <- NULL
@@ -237,91 +259,98 @@
     dev.off()
 # ---------------------------------------------- 
     
-    
+
+# internal consistency check - sum treatments vs sum cases treated   
 # ----------------------------------------------
-    # internal consistency check - sum treatments vs sum cases treated
-    dtTreated <- fullData[,
-                          .(casesTreated = sum(mildMalariaTreated_under5, mildMalariaTreated_5andOlder, mildMalariaTreated_pregnantWomen, 
-                                                severeMalariaTreated_under5, severeMalariaTreated_5andOlder, severeMalariaTreated_pregnantWomen, na.rm=T)),
-                          by = c('date', 'dps', 'health_zone')]
-    dtTreatments <- fullData[,
-                            .(treatment = sum(ArtLum_used, SP_1st, ASAQ_2to11mos, ASAQ_1to5yrs, 
-                                                 ASAQ_6to13yrs, ASAQ_14yrsAndOlder, na.rm=T)),
-                            by = c('date', 'dps', 'health_zone')]
-    
-    dtTreatments2 <- fullData[,
-                             .(treatmentSPall = sum(ArtLum_used, SP_1st, SP_2nd, SP_3rd, ASAQ_2to11mos, ASAQ_1to5yrs, 
-                                                  ASAQ_6to13yrs, ASAQ_14yrsAndOlder, na.rm=T)),
-                             by = c('date', 'dps', 'health_zone')] 
-    
-    
-    dtTreated <- merge(dtTreated, dtTreatments, by= c('date', 'dps', 'health_zone'), all=T)
-    dtTreated <- merge(dtTreated, dtTreatments2, by= c('date', 'dps', 'health_zone'), all=T)
 
-    maxAxis <- max(na.omit(cbind(dtTreated$casesTreated, dtTreated$treatmentSP1)))
-    
-    g <- ggplot(dtTreated, aes(x=casesTreated, y=treatmentSPall)) + 
-      geom_point(size=3) + geom_abline(alpha=1/4) + theme_bw() + xlim(0, 30000) + ylim(0, 30000)
-    print(g)
+    # dtTreated <- fullData[,
+    #                       .(casesTreated = sum(mildMalariaTreated_under5, mildMalariaTreated_5andOlder, mildMalariaTreated_pregnantWomen, 
+    #                                             severeMalariaTreated_under5, severeMalariaTreated_5andOlder, severeMalariaTreated_pregnantWomen, na.rm=T)),
+    #                       by = c('date', 'dps', 'health_zone')]
+    # dtTreatments <- fullData[,
+    #                         .(treatment = sum(ArtLum_used, SP_1st, ASAQ_2to11mos, ASAQ_1to5yrs, 
+    #                                              ASAQ_6to13yrs, ASAQ_14yrsAndOlder, na.rm=T)),
+    #                         by = c('date', 'dps', 'health_zone')]
+    # 
+    # dtTreatments2 <- fullData[,
+    #                          .(treatmentSPall = sum(ArtLum_used, SP_1st, SP_2nd, SP_3rd, ASAQ_2to11mos, ASAQ_1to5yrs, 
+    #                                               ASAQ_6to13yrs, ASAQ_14yrsAndOlder, na.rm=T)),
+    #                          by = c('date', 'dps', 'health_zone')] 
+    # 
+    # 
+    # dtTreated <- merge(dtTreated, dtTreatments, by= c('date', 'dps', 'health_zone'), all=T)
+    # dtTreated <- merge(dtTreated, dtTreatments2, by= c('date', 'dps', 'health_zone'), all=T)
+    # 
+    # maxAxis <- max(na.omit(cbind(dtTreated$casesTreated, dtTreated$treatmentSP1)))
+    # 
+    # g <- ggplot(dtTreated, aes(x=casesTreated, y=treatmentSPall)) + 
+    #   geom_point(size=3) + geom_abline(alpha=1/4) + theme_bw() + xlim(0, 30000) + ylim(0, 30000)
+    # print(g)
     
 # ----------------------------------------------  
     
     
 # ----------------------------------------------  
-  j <- 1
-  
-  pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Scatterplots for Variable Comparisons.pdf", height=6, width=9)   
-  for ( i in (2:39) ) {
-    for (j in (1:(i - 1)) ){
-      g <- getPlot(ggpairs, i, j) 
-      g <- g + geom_smooth()
-      print(g)
-    }
-    i <- i + 1
-  }
-  dev.off()
-  
-  ggpairs <- ggpairs(fullData[,names(fullData)[!names(fullData) %in% idVars], with=FALSE])
-  pairsIndicators <- ggpairs(fullData, columns= 6:20)
-  
+# internal consistency checks
+    pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/Internal Consistency Checks.pdf", height=6, width=9)   
+    
   # Indicators data 
-  ggplot(fullData, aes(x=newCasesMalariaMild_under5, y=mildMalariaTreated_under5))+ geom_point() + geom_smooth() + coord_fixed()
-  ggplot(fullData, aes(x=newCasesMalariaMild_5andOlder, y=mildMalariaTreated_5andOlder)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=newCasesMalariaMild_pregnantWomen, y=mildMalariaTreated_pregnantWomen)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=newCasesMalariaSevere_under5, y=severeMalariaTreated_under5)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=newCasesMalariaSevere_5andOlder, y=severeMalariaTreated_5andOlder)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=newCasesMalariaSevere_pregnantWomen, y=severeMalariaTreated_pregnantWomen)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=newCasesMalariaMild_under5, y=mildMalariaTreated_under5))+ geom_point()  + geom_abline(intercept = 0) + coord_fixed()
+  ggplot(dt_wide, aes(x=newCasesMalariaMild_5andOlder, y=mildMalariaTreated_5andOlder)) + geom_point() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(y=newCasesMalariaMild_pregnantWomen, x=mildMalariaTreated_pregnantWomen)) + geom_point() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=newCasesMalariaSevere_under5, y=severeMalariaTreated_under5)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=newCasesMalariaSevere_5andOlder, y=severeMalariaTreated_5andOlder)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(y=newCasesMalariaSevere_pregnantWomen, x=severeMalariaTreated_pregnantWomen)) + geom_point() + geom_abline(intercept = 0)
 
-  # ITN data
-  ggplot(fullData, aes(x=ITN_received, y=ITN_distAtANC)) + geom_point() + geom_smooth() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=ITN_received, y=ITN_distAtPreschool)) + geom_point() + geom_smooth() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=newCasesMalariaMild_under5, y=totalCasesAllDiseases_under5))+ geom_point()  + geom_abline(intercept = 0) + coord_fixed()
+  ggplot(dt_wide, aes(x=newCasesMalariaMild_5andOlder, y=totalCasesAllDiseases_5andOlder))+ geom_point()  + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=newCasesMalariaMild_pregnantWomen, y=totalCasesAllDiseases_pregnantWomen))+ geom_point()  + geom_abline(intercept = 0)
   
-  dataITN <- fullData[,
+  ggplot(dt_wide, aes(x=newCasesMalariaSevere_under5, y=totalHospAllDiseases_under5))+ geom_point()  + geom_abline(intercept = 0) 
+  ggplot(dt_wide, aes(x=newCasesMalariaSevere_5andOlder, y=totalHospAllDiseases_5andOlder))+ geom_point()  + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=newCasesMalariaSevere_pregnantWomen, y=totalHospAllDiseases_pregnantWomen))+ geom_point()  + geom_abline(intercept = 0) 
+  
+  ggplot(dt_wide, aes(x=malariaDeaths_under5, y=totalDeathsAllDiseases_under5))+ geom_point()  + geom_abline(intercept = 0) + coord_fixed()
+  ggplot(dt_wide, aes(x=malariaDeaths_5andOlder, y=totalDeathsAllDiseases_5andOlder))+ geom_point()  + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=malariaDeaths_pregnantWomen, y=totalDeathsAllDiseases_pregnantWomen))+ geom_point()  + geom_abline(intercept = 0)
+  
+  # ITN data
+  ggplot(dt_wide, aes(x=ITN_distAtANC, y=ITN_received)) + geom_point()  + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=ITN_distAtPreschool, y=ITN_received)) + geom_point()  + geom_abline(intercept = 0)
+  
+  dataITN <- dt_wide[,
                       .(ITN_dist = sum(ITN_distAtANC, ITN_distAtPreschool)),
                       by = c('date', 'health_zone', 'ITN_received')]
   
-  ggplot(dataITN, aes(x=ITN_received, y=ITN_dist)) + geom_point() + geom_smooth() + geom_abline(intercept = 0)
+  ggplot(dataITN, aes(x=ITN_received, y=ITN_dist)) + geom_point()  + geom_abline(intercept = 0)
   
   # smearTest data
-  ggplot(fullData, aes(x=smearTest_completed, y=smearTest_positive)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=smearTest_positive, y=smearTest_completed)) + geom_point()  +  geom_abline(intercept = 0)
   
   # RDT data
-  ggplot(fullData, aes(x=RDT_completed, y=RDT_positive)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=RDT_positive, y=RDT_completed)) + geom_point()  +  geom_abline(intercept = 0)
   
   # ArtLum data
-  ggplot(fullData, aes(x=ArtLum_received, y=ArtLum_used)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=ArtLum_received, y=ArtLum_used)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
   
   # ANC data
-  ggplot(fullData, aes(x=ANC_1st, y= ANC_2nd)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=ANC_2nd, y=ANC_3rd)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=ANC_3rd, y=ANC_4th)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=ANC_1st, y=SP_1st)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=ANC_2nd, y=SP_2nd)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
-  ggplot(fullData, aes(x=ANC_3rd, y=SP_3rd)) + geom_point() + geom_smooth() + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=ANC_1st, y= ANC_2nd)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=ANC_2nd, y=ANC_3rd)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=ANC_3rd, y=ANC_4th)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=ANC_1st, y=SP_1st)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=ANC_2nd, y=SP_2nd)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
+  ggplot(dt_wide, aes(x=ANC_3rd, y=SP_3rd)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
+  
+  # health facilities data
+  ggplot(dt_wide, aes(x=healthFacilities_numReported, y=healthFacilities_total)) + geom_point()  + coord_fixed() + geom_abline(intercept = 0)
+  
+  
+  dev.off()
 # ---------------------------------------------- 
 
   
 # ----------------------------------------------
+# histograms to detect outliers
   # indicators to loop through and make a histogram for
     indicators <- unique(dt$indicator)
     
