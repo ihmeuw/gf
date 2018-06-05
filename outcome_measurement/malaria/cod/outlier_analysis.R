@@ -193,19 +193,24 @@
   # loop through pairs of variables in maxCorr for graphing
     # graphs by DPS:
 
-  pdf(paste0(dir_vis, scatterplots_output), height=6, width=9)   
-  i = 1
-  for (v in maxCorr$variable1){
-    
-    v2 = maxCorr$variable2[i]
-    
-    maxAxis <- (max(cbind(dt[[v]], dt[[v2]]), na.rm=T))
 
-    g <- ggplot(dt, aes_string(v, v2)) + geom_point() + xlim(0, maxAxis) + ylim(0, maxAxis)
-    
-    print(g)
-    
-    i = i + 1
-  }
+  pdf(paste0(dir_vis, scatterplots_output), height=6, width=9) 
+  for (j in dps_names){
+    dtDPS <- dt[dps==j, ]
   
+    i = 1
+    for (v in maxCorr$variable1){
+      
+      v2 = maxCorr$variable2[i]
+      
+      maxAxis <- (max(cbind(dtDPS[[v]], dtDPS[[v2]]), na.rm=T))
+  
+      g <- ggplot(dtDPS, aes_string(v, v2)) + geom_point() + xlim(0, maxAxis) + ylim(0, maxAxis)
+      g <- g + ggtitle(paste0("Variable Comparisons for ", dtDPS$dps))
+      
+      print(g)
+      
+      i = i + 1
+    }
+  }
   dev.off()
