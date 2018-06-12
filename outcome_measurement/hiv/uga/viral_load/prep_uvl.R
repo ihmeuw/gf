@@ -35,7 +35,7 @@ if (Sys.info()[1] == 'Windows') {
 # set files and directories for the uganda viral load data
 
 # set the working directory to loop over the downloaded files
-setwd(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex'))
+setwd(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_tb'))
 
 # list existing files
 files <- list.files('./', recursive=TRUE)
@@ -71,8 +71,8 @@ for(f in files) {
   current_data[, sex:=(meta_data[5])]
   
   # add if tb status is included 
-  #current_data[, tb:=gsub('tb', '', meta_data[6])]
-  #current_data[, tb:=gsub('.rds', '', tb)]
+  current_data[, tb:=gsub('tb', '', meta_data[6])]
+  current_data[, tb:=gsub('.rds', '', tb)]
 
   # append to the full data 
   if(i==1) full_data = current_data
@@ -128,6 +128,10 @@ full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(fa
 #------------------------
 # merge in the facilities
 uvl_sex <- merge(full_data, facilities, by='facility_id', all.x=TRUE)
+
+# when exporting tb cases
+# tb <- uvl_sex[tb=='y']
+# saveRDS(tb, file= paste0(dir, "/tb_cases.rds"))
 
 # most recent download only lacks a name for 2 facilities
 uvl_sex[is.na(facility_name), length(unique(facility_id))]
