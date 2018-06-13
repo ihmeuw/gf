@@ -40,7 +40,7 @@ totalUga$year <- year(totalUga$start_date)
 
 # --------------------------------------------
 ##load GTM 
-gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
+totalGtm <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
                                 fileEncoding = "latin1"))
 
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
@@ -48,11 +48,12 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 
 ##change the start dates from factors to dates: 
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
-gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
+totalGtm$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
 
 ## if you want to aggregate the sicoin and FPM data:
-# gtmBudgets <- rbind(sicoin_data, gtmBudgets)
-#gtmBudgets$country <- "Guatemala"
+# totalGtm$country <- "Guatemala"
+# gtmBudgets <- rbind(sicoin_data, totalGtm)
+
 
 
 # --------------------------------------------
@@ -88,7 +89,7 @@ totalData <- rbind(fpmData, gos_data)
 # --------------------------------------------
 #DUPLICATE CHECK: 
 d1 <- nrow(totalData)
-d2 <- unique(length(totalData))
+d2 <- unique(nrow(totalData))
 
 if(d1 !=d2){
   stop("Your dataset has duplicates!")
@@ -112,7 +113,7 @@ write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/m
 ## some of the FPM data is missing so we'll fill it in w/ the FPM data (and drop the FPM data that overlaps): 
 
 ##pudrs overlap with the FPM budgets - drop this so we don't double count 
-fpmGtm <- gtmBudgets[!(data_source=="pudr")] ##all of the PUDRs we have correspond to available FPM 
+fpmGtm <- totalGtm[!(data_source=="pudr")] ##all of the PUDRs we have correspond to available FPM 
 fpmUga <- totalUga[!(data_source=="pudr"&year>2015)] ##we have a lot of recent PUDRs that overlap with FPM 
 fpmCod <-  totalCod[!(data_source=="pudr")] #all of the PUDRs we have correspond to available FPM 
 
