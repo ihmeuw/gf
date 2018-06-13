@@ -15,6 +15,7 @@ library(rgdal)
 library(tibble)
 library(dplyr)
 library(RColorBrewer)
+library(maptools)
 
 
 # --------------------
@@ -77,7 +78,6 @@ gSimplify(shapeData, tol=0.5, topologyPreserve=TRUE)
 plot(shapeData)
 
 # ----------------------------------------------
-
 
 # ----------------------------------------------
 # merge the data with the shape file
@@ -357,7 +357,7 @@ ggplot(table_2, aes(x=factor(month), y=facilities_report, group=year, color=fact
 # suppression ratio maps
 
 # suppression ratio for all years 
-ggplot(coordinates, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+ggplot(coordinates[year==2018], aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
   geom_polygon() + 
   geom_path(size=0.01, color="#636363") + 
   scale_fill_gradientn(colors=ratio_colors) + 
@@ -856,5 +856,22 @@ level1$variable <- factor(terg1$variable,
 terg1$sex <- factor(terg1$sex, levels=c("Female", "Male"),
                     labels=c("Females", "Males"))
 total_fac_year[, sex:='Purple']
+
+# slide for the board of directors meeting
+pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/board_vl.pdf', height=6, width=9)
+
+# suppression ratio for all years 
+ggplot(coordinates_year[year==2018], aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() + 
+  labs(title="Viral suppression ratios by district, Uganda", subtitle="January - April 2018",
+       caption="Source: Uganda Viral Load Dashboard", fill="% virally suppressed") +
+  theme(plot.title=element_text(vjust=-4, size=24), plot.subtitle=element_text(vjust=-4, size=16), 
+        plot.caption=element_text(vjust=6, size=15), legend.title=element_text(size=16, hjust=0.5)) + coord_fixed()
+
+dev.off()
+
 
 
