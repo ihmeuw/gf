@@ -68,65 +68,64 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     names(budget_dataset) <- c("sda_activity","budget")
     budget_dataset <- na.omit(budget_dataset, cols=c("sda_activity"))
     budget_dataset <- unique(budget_dataset, by=c("sda_activity","budget"))
-    
-  }else{
+  } else {
     ##new budgets formatted slightly differently: 
     if(year(start_date)==2018){
       gf_data <- gf_data[-c(1:2),]
       colnames(gf_data) <- as.character(gf_data[1,])
       gf_data <- gf_data[-1,]
-    }
-    
-    ##only get the columns that we want
-    gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
-    
-    ##only keep data that has a value in the "category" column 
-    gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
-    
-    colnames(gf_data)[1] <- "module"
-    colnames(gf_data)[2] <- "intervention"
-    colnames(gf_data)[3] <- "sda_activity"
-    colnames(gf_data)[4] <- "cost_category"
-    
-    if(!(recipient %in% colnames(gf_data))){
-     gf_data$recipient <- grant_number
-    } else{
-      colnames(gf_data)[5] <- "recipient" 
       }
-    if(!(loc_name %in% colnames(gf_data))){
-      gf_data$loc_name <- "gtm"
-    } else{
-      colnames(gf_data)[6] <- "loc_name" 
-    }
     
-    
-    ## invert the dataset so that budget expenses and quarters are grouped by category
-    ##library(reshape)
-    setDT(gf_data)
-    gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity","cost_category", "recipient", "loc_name"), 
-                      variable.name = "qtr", value.name="budget")
+  ##only get the columns that we want
+  gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
   
-    
-    dates <- rep(start_date, qtr_num) # 
-    for (i in 1:length(dates)){
-      if (i==1){
-        dates[i] <- start_date
-      } else {
-        dates[i] <- dates[i-1]%m+% months(3)
-      }
+  ##only keep data that has a value in the "category" column 
+  gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
+  
+  colnames(gf_data)[1] <- "module"
+  colnames(gf_data)[2] <- "intervention"
+  colnames(gf_data)[3] <- "sda_activity"
+  colnames(gf_data)[4] <- "cost_category"
+  
+  if(!(recipient %in% colnames(gf_data))){
+   gf_data$recipient <- grant_number
+  } else{
+    colnames(gf_data)[5] <- "recipient" 
     }
-    
-    if(length(dates) != length(unique(gf_data1$qtr))){
-      stop('quarters were dropped!')
+  if(!(loc_name %in% colnames(gf_data))){
+    gf_data$loc_name <- "gtm"
+  } else{
+    colnames(gf_data)[6] <- "loc_name" 
+  }
+  
+  
+  ## invert the dataset so that budget expenses and quarters are grouped by category
+  ##library(reshape)
+  setDT(gf_data)
+  gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity","cost_category", "recipient", "loc_name"), 
+                    variable.name = "qtr", value.name="budget")
+
+  
+  dates <- rep(start_date, qtr_num) # 
+  for (i in 1:length(dates)){
+    if (i==1){
+      dates[i] <- start_date
+    } else {
+      dates[i] <- dates[i-1]%m+% months(3)
     }
-    ##turn the list of dates into a dictionary (but only for quarters!) : 
-    dates <- setNames(dates,unique(gf_data1$qtr))
-    
-    
-    ## now match quarters with start dates 
-    kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
-    budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date ]
-    budget_dataset$qtr <- NULL
+  }
+
+  if(length(dates) != length(unique(gf_data1$qtr))){
+    stop('quarters were dropped!')
+  }
+  ##turn the list of dates into a dictionary (but only for quarters!) : 
+  dates <- setNames(dates,unique(gf_data1$qtr))
+  
+  
+  ## now match quarters with start dates 
+  kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
+  budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date ]
+  budget_dataset$qtr <- NULL
   }
   
   budget_dataset$period <- period

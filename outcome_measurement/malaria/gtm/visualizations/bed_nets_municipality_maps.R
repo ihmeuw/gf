@@ -45,7 +45,7 @@ admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow
 # ----------------------------------------------
 ### if you want:  Get names and id numbers corresponding to administrative areas to plot as labels: 
 # ----------------------------------------------
-# gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1],lat = coordinates(adminData)[, 2])
+gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1],lat = coordinates(adminData)[, 2])
 gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1'] 
 gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
 gtm_region_centroids$NAME_1[18] <- "Totonicapán"
@@ -61,8 +61,8 @@ gtm_region_centroids$NAME_1[7] <- "Petén"
 # ----------------------------------------------
 
 bnData <- data.table(read.csv(paste0(local_dir, "prepped_data/", "bednet_prepped_data.csv")))
+bnData$start_date <- as.Date(bnData$start_date,"%Y-%m-%d")
 
-bnData[,list(sum_persons=sum(num_persons)),by=c("department","year")]
 
 ## something that might be cool is to get the absorption ratio of disb/budget by year, source, disease, etc. 
 bnData$year <- year(bnData$start_date)
@@ -80,6 +80,36 @@ bnData[, bn_over_beds:=bed_nets/household_beds]
 bnData[, bn_over_people:=bed_nets/num_persons]
 
 # ----------------------------------------------
+######## Load the FPM data ########
+# ----------------------------------------------
+
+sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
+                                   ,fileEncoding="latin1"))
+
+
+
+gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
+                                  fileEncoding = "latin1"))
+gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
+gtmBudgets <- gtmBudgets[!(data_source=="pudr"&year>2015)]
+
+fpm_malaria <- gtmBudgets[(disease=="malaria"&year%in%c(2014, 2015, 2016, 2017))]
+fpm_malaria <- fpm_malaria[gf_module=="Vector control"]
+
+
+# ----------------------------------------------
+# For time series - create an "end_date" to plot nicely without gaps 
+# ----------------------------------------------
+total_dataset[, end_date:=start_date+period-1]
+
+tmp = copy(total_dataset)
+tmp$start_date = NULL
+setnames(tmp, 'end_date', 'start_date')
+total_dataset$end_date = NULL
+total_dataset = rbind(total_dataset, tmp)
+
+
+# ----------------------------------------------
 ######## Load the antimalarial drug data  ########
 # ----------------------------------------------
 
@@ -87,7 +117,7 @@ amData <- data.table(read.csv(paste0(local_dir, "prepped_data/", "antimalarial_p
 
 am_delivered <- amData[grepl("_deliveredToUser", amData$antimalarial_input)]
 # ----------------------------------------------
-######## Graph the data ########
+######## Geo-maps of the data ########
 # ----------------------------------------------
 
 ##color scale for the mapping values 
@@ -124,7 +154,7 @@ for (k in unique(bnData$year)){
                              size = 3, fontface = 'bold', color = 'black',
                              box.padding = 0.35, point.padding = 0.3,
                            segment.color = 'grey50', nudge_x = 0.7, nudge_y = 4.5) + 
-             labs(title=paste(k, "Distributed Bed Nets"), fill='# of Bed Nets'))
+             labs(title=paste(k, "Distributed Bed Nets"), fill='# of Bed Nets (in thousands)'))
   gtm_plots[[i]] <- plot
   i=i+1
 }
@@ -137,5 +167,12 @@ invisible(lapply(gtm_plots, print))
 dev.off()
 
 
-
+# ----------------------------------------------
+######## Line graphs of the bed net data ########
+# ----------------------------------------------
+ ggplot(total_dataset, aes(x = start_date, y= value/100000)) + 
+    geom_line(aes(color=variable), size=0.75) +
+    ggtitle("Guatemala GF Budget and Bed Net Distribution") +
+    labs(x = "Start Date", y = "USD (100k)") +
+    theme_bw()
 

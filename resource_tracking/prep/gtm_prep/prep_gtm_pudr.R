@@ -79,7 +79,9 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
   budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
   
   budget_dataset <- na.omit(budget_dataset , cols=1, invert=FALSE)
-  budget_dataset <- budget_dataset[!grepl("total", tolower(budget_dataset$module)),]
+  
+  toMatch <- c("total", "module")
+  budget_dataset <- budget_dataset[!grepl(paste0(toMatch, collapse="|"), tolower(budget_dataset$module)),]
 
   budget_dataset$start_date <- year
   budget_dataset$period <- period

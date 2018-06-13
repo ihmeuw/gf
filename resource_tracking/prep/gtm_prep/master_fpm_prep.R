@@ -161,6 +161,7 @@ mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.x
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
 final_mapping <- copy(mapping_list)
 final_mapping$disease <- NULL
+final_mapping$coefficient <- NULL
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
 
