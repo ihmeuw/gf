@@ -34,7 +34,7 @@
 # data directory
   # file path where the files are stored
   dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/"
-  dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
+  dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP"
     
   # csv of file names for importing
   PNLP_files <- read.csv(paste0(dir, "PNLP_file_names.csv"), fileEncoding = "latin1")
