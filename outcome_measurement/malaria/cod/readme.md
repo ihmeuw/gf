@@ -1,8 +1,8 @@
 # Global Fund Prospective Country Evaluation
-Prepped data for DRC National Malaria Program (PNLP) Data
+## Prepped data for DRC National Malaria Program (PNLP) Data
 ======
-  Prepped March to June 2018 by Audrey Batzel abatzel@uw.edu
-  *Note: Imputation still in progress.*
+Prepped March to June 2018 by Audrey Batzel abatzel@uw.edu
+*Note: Imputation still in progress.*
   
 This data comes from the DRC National Malaria Program data shared with the PCE by the DRC team.  The data covers the entire country for the years 2010-2017 at the health-zone level, for each month.
 
