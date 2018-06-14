@@ -1,8 +1,8 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 5/31/2018
-# Descriptive statistics and maps for the Uganda Viral Load Dashboard
+# 6/11/2018
+# Descriptive statistics and maps for incarcerated persons
 # ----------------------------------------------
 # Set up R
 
@@ -38,26 +38,31 @@ dir <- paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'
 uganda_vl <- readRDS(paste0(dir, "/sex_data.rds"))
 
 prisons <- uganda_vl[prison==1]
-
 prisons <- prisons[!(facility_id==3293 & sex=='Female')]
 
 # ----------------------------------------------
+# Print a list of facilities and patients
+prisons[, (patients_received=sum(patients_received)), by=.(facility_name, sex)]
 
-prisons[, unique(facility_name)]
+# ----------------------------------------------
+# create tables for graphs 
 
+# totals among incarcerated persons - patients, results, suppressed, ratio
 prison_total <- prisons[ ,  .(patients_received=sum(patients_received),
                               valid_results=sum(valid_results),
                               suppressed=sum(suppressed), 
                               ratio=100*(sum(suppressed)/sum(valid_results))),
-                         , by=.(sex, date)]
+                             , by=.(sex, date)]
 
 prison_total_long <- melt(prison_total, id.vars=c('sex', 'date'))
 
 prison_total_long$variable <- factor(prison_total_long$variable, levels=c("patients_received",
                                 "valid_results", "suppressed", "ratio"), 
-                               labels=c("Patients submitting samples","Valid test results", "Suppressed", 
+                               labels=c("Patients submitting samples","Valid test results", "Number of suppressed persons", 
                                      "Percent virally suppressed"))
 
+# ---------------------
+# total by facility - patients, results, suppressed, ratio
 prison_graph <- prisons[ ,  .(valid_results=sum(valid_results),
                               suppressed=sum(suppressed), 
                               patients_received=sum(patients_received),
@@ -68,16 +73,18 @@ prison_graph_long <- melt(prison_graph, id.vars=c('facility_id', 'facility_name'
 
 prison_graph_long$variable <- factor(prison_graph_long$variable, levels=c("patients_received",
                                       "valid_results", "suppressed", "ratio"), 
-                                     labels=c("Patients submitting samples","Valid test results", "Suppressed", 
+                                     labels=c("Patients submitting samples","Valid test results", "Number of suppressed persons", 
                                               "Percent virally suppressed"))
-
+# ---------------------
+# bar graphs of suppressed/not suppressed
 prison_bar <- prisons[ ,.(suppressed=sum(suppressed),
                           valid_results=sum(valid_results)), by=date]
 
 prison_bar_sex <- prisons[ ,.(suppressed=sum(suppressed),
                           valid_results=sum(valid_results)), by=.(sex, date)]
 
-
+# ---------------------
+# compare incarcerated persons to non-incarcerated
 prison_bar_all <- uganda_vl[year >= 2015,.(suppressed=sum(suppressed),
                             valid_results=sum(valid_results)), by=.(date, prison)]
 
@@ -86,7 +93,13 @@ prison_bar_all$prison <- factor(prison_bar_all$prison, levels=c('TRUE', 'FALSE')
 
 prison_bar_all[ , not_suppressed:=(valid_results - suppressed)]
 
+# ---------------------
+# viral suppression ratio graphs by incarcerated status
+prison_ratio <- prison_bar_all
+prison_ratio[ , ratio:=100*(suppressed/valid_results)]
+
 # ----------------------------------------------
+# plots of patients, results, suppressed, ratio by facility 
 
 list_of_plots = NULL
 i=1
@@ -101,27 +114,57 @@ for (f in unique(prison_graph_long$facility_id)) {
   geom_line() +
   facet_wrap(~variable, scales='free_y') +
   labs(title=name,
-       x='Date', caption="Source: Uganda Viral Load Dashboard", color='Sex') +
+       x='Date', y='Percent virally suppressed', caption="Source: Uganda Viral Load Dashboard", color='Sex') +
   theme_bw() +
   theme(axis.title.y=element_blank()) 
   
   i=i+1
 }
 
+
+# ----------------------------------------------
+# plots of ratio by facility with point size as patients_received
+
+list_of_plots2 = NULL
+i=1
+
+for (f in unique(prison_graph_long$facility_id)) {
+  
+  name <- unique(prison_graph_long[facility_id==f]$facility_name)
+  
+  list_of_plots2[[i]] <- ggplot(prison_graph[facility_id==f], 
+                               aes(x=date, y=ratio, color=factor(sex), group=sex)) +
+                              geom_point(aes(size=patients_received)) +
+                              geom_line() +
+                              labs(title=name,
+                              x='Date', y='Percent virally suppressed', caption="Source: Uganda Viral Load Dashboard", color='Sex') +
+                              theme_bw() +
+                              theme(axis.title.y=element_blank()) 
+  
+  i=i+1
+}
+
+# ------------------------
+
 bar_colors <- c('Not Suppressed'='#de2d26', 'Suppressed'='#fc9272')
 
-pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/prisons.pdf', height=6, width=9)
+pdf(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/prisons.pdf'), height=6, width=9)
 
+# ------------------------
+# Summary graphs 
+
+# Patients, test results, suppressed, ratio, by sex in prisons
 ggplot(prison_total_long,
        aes(x=date, y=value, color=factor(sex), group=sex)) +
   geom_point() +
   geom_line() +
   facet_wrap(~variable, scales='free_y') +
-  labs(title='Viral load testing in prison-based health facilities',
+  labs(title='Viral load testing in prison-based health facilities by sex',
        x='Date', caption="Source: Uganda Viral Load Dashboard", col='Sex') +
   theme_bw() +
   theme(axis.title.y=element_blank()) 
 
+# bar graph suppressed/not suppressed in prisons
 ggplot(prison_bar, aes(x=date, y=valid_results, fill='Not Suppressed')) + 
   geom_bar(stat="identity") + 
   geom_bar(aes(y=suppressed, fill='Suppressed'), stat='identity') + 
@@ -129,6 +172,7 @@ ggplot(prison_bar, aes(x=date, y=valid_results, fill='Not Suppressed')) +
   labs(title = "Viral suppression among incarcerated PLHIV", x='Date', y="Total valid test results", 
        caption="Source: Uganda VL Dashboard")
 
+# bar graph suppressed/not suppressed in prisons by sex
 ggplot(prison_bar_sex, aes(x=date, y=valid_results, fill='Not Suppressed')) + 
   geom_bar(stat="identity") + 
   geom_bar(aes(y=suppressed, fill='Suppressed'), stat='identity') + 
@@ -137,7 +181,7 @@ ggplot(prison_bar_sex, aes(x=date, y=valid_results, fill='Not Suppressed')) +
   labs(title = "Viral suppression among incarcerated PLHIV by sex", x='Date', y="Total valid test results", 
        caption="Source: Uganda VL Dashboard")
 
-
+# bar graph suppressed/not suppressed by incarcerated or not
 ggplot(prison_bar_all, aes(x=date, y=valid_results, fill='Not Suppressed')) + 
   geom_bar(stat="identity") + 
   geom_bar(aes(y=suppressed, fill='Suppressed'), stat='identity') + 
@@ -146,20 +190,26 @@ ggplot(prison_bar_all, aes(x=date, y=valid_results, fill='Not Suppressed')) +
   labs(title = "Viral suppression among PLHIV by incarcerated status", x='Date', y="Total valid test results", 
        caption="Source: Uganda Viral Load Dashboard")
 
+# viral suppression ratio by incarcerated status
+ggplot(prison_ratio, aes(x=date, y=ratio)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~prison) +
+  theme_bw()
 
-
-prison_bar_fill <- prison_bar_all[ , .(suppressed=sum(suppressed), not_suppressed=sum(not_suppressed)), by=.(date, prison)]
-prison_bar_long <- melt(prison_bar_fill, id.vars=c('prison', 'date'))
-  
-  ggplot(prison_bar_long, aes(x = date, fill = value)) +
-    geom_bar(position = "fill") +
-    facet_wrap(~prison) +
-    scale_fill_manual(values=bar_colors)
-
-
+# viral suppression ratio among incarcerated persons with sample size represented
+ggplot(prison_ratio[prison=='Incarcerated'], aes(x=date, y=ratio)) +
+  geom_point(aes(size=valid_results)) +
+  geom_line() +
+  facet_wrap(~prison) +
+  theme_bw()
 
 for(i in seq(length(list_of_plots))) { 
   print(list_of_plots[[i]])
+} 
+
+for(i in seq(length(list_of_plots2))) { 
+  print(list_of_plots2[[i]])
 } 
 
 dev.off()

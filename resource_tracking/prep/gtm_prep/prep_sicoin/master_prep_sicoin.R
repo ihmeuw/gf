@@ -137,7 +137,8 @@ cleaned_database$intervention <- "all"
 
 sicoin_data <- strip_chars(cleaned_database, unwanted_array, remove_chars)
 
-mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx",
+                                  include_rssh_by_disease = FALSE)
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
 final_mapping <- copy(mapping_list)
@@ -158,14 +159,14 @@ mapped_sicoin <- merge(sicoin_init_mapping, final_mapping, by="code")
 mapped_sicoin$budget <- mapped_sicoin$budget*mapped_sicoin$coefficient
 mapped_sicoin$expenditure <- mapped_sicoin$expenditure*mapped_sicoin$coefficient
 mapped_sicoin$disbursement <- mapped_sicoin$disbursement*mapped_sicoin$coefficient
-
+mapped_sicoin$cost_category <- "all"
 mapped_sicoin$sda_activity <- "all"
 mapped_sicoin$grant_number <- "none"
-mapped_sicoin$country <- "Guatemela"
+mapped_sicoin$country <- "Guatemala"
 mapped_sicoin$recipient <- mapped_sicoin$country
 mapped_sicoin$data_source <- "sicoin"
 mapped_sicoin$lang <- "esp"
-mapped_sicoin$year <- year(sicoin_data$start_date)
+mapped_sicoin$year <- year(mapped_sicoin$start_date)
 mapped_sicoin$grant_number <- "none"
 
 

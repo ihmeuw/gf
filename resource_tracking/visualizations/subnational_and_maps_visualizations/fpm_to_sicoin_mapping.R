@@ -104,13 +104,13 @@ graphData[, int_year:=paste(year, gf_module,":",gf_intervention)]
 
 # ----------------------------------------------
 
-dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
+mapping_dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
 
 # load the shapefile
-shapeData = shapefile(paste0(dir, 'GTM_munis_only.shp'))
+shapeData = shapefile(paste0(mapping_dir, 'GTM_munis_only.shp'))
 
 ## load the admin1 shape with the projection: 
-adminData = shapefile(paste0(dir, 'gtm_region.shp'))
+adminData = shapefile(paste0(mapping_dir, 'gtm_region.shp'))
 
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 # use IDs instead of names

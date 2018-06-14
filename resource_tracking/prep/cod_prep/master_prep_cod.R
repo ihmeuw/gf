@@ -40,15 +40,14 @@ implementer <- "CAGF"
 
 # ----------------------------------------------
 ##STEP 1: Download the "Resource Tracking Data" folder from Basecamp and save it on your local drive 
-
-
+# ----------------------------------------------
+dir <- 'filepath here' ##where the files are stored locally
 
 # ----------------------------------------------
 ###### Load the list of the RT files we want to process   ###### 
 # ----------------------------------------------
 
-dir <- 'filepath here' ##where the files are stored locally
-file_list <- read.csv(paste0(dir, "fpm/cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
+file_list <- read.csv(paste0(dir, "cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)
 
 ##create a summary file to track the data that we have (and that we still need)
@@ -102,6 +101,12 @@ for(i in 1:length(file_list$file_name)){
                              file_list$start_date[i], file_list$disease[i], file_list$period[i], 
                              file_list$grant[i], file_list$sr[i],file_list$data_source[i], file_list$lang[i], loc_name)
   tmpData$data_source <- "pudr"
+  } else if (file_list$type[i]=="old_detailed"){
+    tmpData <- prep_old_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
+                                    file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_name, file_list$source[i],
+                                    file_list$pr[i])
+    tmpData$year <- year(tmpData$start_date)
+    tmpData$data_source <- "fpm"
   }
   tmpData$source <- "gf"
   if(i==1){
@@ -154,7 +159,7 @@ resource_database <- resource_database[!(module%in%c("6", "4"))]
 # ----------------------------------------------
 ######## Optional: do a data check for dropped values ########
 # ----------------------------------------------
-# data_check<- resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number","year", "disease")]
+# data_check<- resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number","data_source","year", "disease")]
 
 # ----------------------------------------------
 ##### Load the mapping files  #####
@@ -211,8 +216,8 @@ mappedCod$disbursement <- mappedCod$disbursement*mappedCod$coefficient
 
 
 ##change this when we get geo locations for DRC: 
-mappedCod$adm1 <- "cod"
-mappedCod$adm2 <- "cod"
+mappedCod$adm1 <- 171
+mappedCod$adm2 <- 171
 mappedCod$country <- "Congo (Democratic Republic)"
 
 

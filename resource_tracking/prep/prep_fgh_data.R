@@ -76,6 +76,33 @@ byVars = names(fghData)[names(fghData)%in%c('source', 'year', 'disease', 'sda_or
 fghData = fghData[, list(disbursement=sum(na.omit(disbursement))), 
                   by=byVars]
 fghData$data_source <- "fgh"
+fghData$period <- 365
+fghData$start_date <- paste0(fghData$year, "-01-01")
+fghData$start_date  <- as.Date(fghData$start_date,"%Y-%m-%d")
+fghData$budget <- 0 
+fghData$expenditure <- 0 
+fghData$gf_module <- fghData$sda_orig
+fghData$module <- fghData$sda_orig
+fghData$gf_intervention <- fghData$gf_module
+fghData$intervention <- fghData$gf_intervention
+
+
+
+get_loc_id <- function(country){
+  x <- "cod"
+  if(grepl("Guatemala", country)){
+    x <- "gtm"
+  } else if(grepl("Uganda", country)){
+  x <- "uga"
+  } else {
+    x <- x
+  }
+  return(x)
+}
+fghData$loc_name <- mapply(get_loc_id, fghData$country)
+
+
+
 write.csv(fghData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_data_prepped.csv", row.names=FALSE)
 
 # ----------------------------------------------
@@ -101,7 +128,8 @@ oop_vars <- names(ghe_wide)[grepl(c("oop"), names(ghe_wide))]
 ppp_vars <- names(ghe_wide)[grepl(c("ppp"), names(ghe_wide))]
 ghe_vars <- names(ghe_wide)[grepl(c("public"), names(ghe_wide))]
 
-ghe_wide$mean_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[1]])+(ghe_wide[ppp_vars[1]])+(ghe_wide[ghe_vars[1]])
+ghe_wide$mean_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[1]])+(ghe_wide[ppp_
+                                                                  vars[1]])+(ghe_wide[ghe_vars[1]])
 ghe_wide$lower_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[2]])+(ghe_wide[ppp_vars[2]])+(ghe_wide[ghe_vars[2]])
 ghe_wide$upper_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[3]])+(ghe_wide[ppp_vars[3]])+(ghe_wide[ghe_vars[3]])
 
@@ -115,3 +143,4 @@ ghe_wide[location_id==171, country:="Congo (Democratic Republic)"]
 
 
 write.csv(ghe_wide, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/ghe_fgh_prepped.csv", row.names=FALSE)
+
