@@ -36,6 +36,10 @@ end_month <- '05'
 # change the update year to before the data begins
 update_year <- '2015'
 
+#identify the data set(s) you want to download 
+
+
+
 # define main directory
 dir <- paste0(root, 'Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
@@ -62,16 +66,8 @@ org_units <- readRDS(paste0(dir, "meta_data/org_units_list.rds"))
 
 #-----------------------------------------------
 
-#------------------------------
-# if org_units is a list and not a a data frame, convert to a data frame
-# it should be saved as a data frame - sometimes it malfunctions
 
-# org_units <- data.frame(org_unit_ID = org_units[[1]][1],
-#                  org_unit_name = org_units[[1]][2],
-#                  org_units_url = org_units[[1]][3])
-
-
-#----
+#------------------------
 # to export a list of regularly reported data sets
 data_sets_ids <- c("ktBWTI6yjTB", "iriO2vCt72x", "OeWrFwkFMvf", "s6yd0w2KXWa", 
               "cKVdn82G240", "Fo5ux0Ja21i", "maDtHIFrSHx", "pePpSnKtAh3",
@@ -86,10 +82,6 @@ write.csv(reported_elements, paste0(dir, 'elements_catalogue.csv'))
 
 #------------------------------
 # import the meta data for the merge (after the download)
-
-# import the necessary meta data for the download
-data_sets<- readRDS(paste0(dir, 'meta_data/data_sets.rds')) 
-org_units <- readRDS(paste0(dir, 'meta_data/org_units_list.rds')) 
 
 # org_units is already uploaded - change into a data table
 org_units <- data.table(org_units)
@@ -115,6 +107,13 @@ org_units_description <- org_units_description[ ,.(org_unit_ID = id, coordinates
 
 # Data set inventory:
 # 1
+
+
+
+
+# add the names of variables for data sets to data sets
+
+
 
 
 
@@ -191,6 +190,22 @@ pnlp_hgr_extraction <<- extract_all_data(base_url = base_url,
 write.csv(pnlp_hgr_extraction, paste0(out_dir, '/pnlp_hgr_extraction_', country, 
                                       '_', start_year, '_', end_year, '.csv'))
 
+#---------------------------------------------
+sigl <- extract_all_data(base_url = base_url, 
+                                  data_sets = data_sets[3:4, ],
+                                  org_units = org_units, 
+                                  deb_period = paste0(start_year, '-', start_month, '-01'),
+                                  end_period = paste0(end_year, '-', end_month, '-01'),
+                                  userID = userID, 
+                                  password = password,
+                                  pace = 10,
+                                  update_date = paste0(update_year, '-01-01'))
+
+saveRDS(base_extraction, paste0(out_dir, '/sigl_', country, 
+                                '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
+
+
+#----------------------------------------------------
 
 
 # to export a list of regularly reported data sets
