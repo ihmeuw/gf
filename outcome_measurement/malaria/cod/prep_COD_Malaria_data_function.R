@@ -43,7 +43,8 @@
   source(prep_data)
 
 # output files 
-  dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP"
+  dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/"
+  # outputs the data as a file called: "PNLP_2010to2017_prepped.csv"
 # ----------------------------------------------
   
   
@@ -127,7 +128,7 @@
         # ----------------------------------------------
         
       # need if statement to distinguish first sheet, and then
-      # add to the first sheet with subsequent ones with rbind()
+      # add subsequent sheets to the first sheet with rbind()
       if (i==1) fullData <- currentSheet
       if (i>1) fullData <- rbind(fullData, currentSheet, fill=TRUE)
       i <- i+1
@@ -142,48 +143,7 @@
 # ----------------------------------------------
 
   
-# ----------------------------------------------
-# compare health zones and dps between years to make sure names are consistent
-# ---------------------------------------------- 
-  hz2010 <- unique(fullData[year==2010, health_zone])
-  hz2011 <- unique(fullData[year==2011, health_zone])
-  hz2012 <- unique(fullData[year==2012, health_zone])
-  hz2013 <- unique(fullData[year==2013, health_zone])
-  hz2014 <- unique(fullData[year==2014, health_zone])
-  hz2015 <- unique(fullData[year==2015, health_zone])
-  hz2016 <- unique(fullData[year==2016, health_zone])
-  hz2017 <- unique(fullData[year==2017, health_zone])
-  
-  hz_missing <- hz2017[!hz2017 %in% hz2016]
-  print(hz_missing)
-  hz_missing_2017 <- hz2016[!hz2016 %in% hz2017]
-  print(hz_missing_2017)
-  
-
-# ----------------------------------------------  
-# ----------------------------------------------  
-  fullData$dps <- tolower(fullData$dps)
-  
-  dps2010 <- unique(fullData[year==2010, dps])
-  dps2011 <- unique(fullData[year==2011, dps])
-  dps2012 <- unique(fullData[year==2012, dps])
-  dps2013 <- unique(fullData[year==2013, dps])
-  dps2014 <- unique(fullData[year==2014, dps])
-  dps2015 <- unique(fullData[year==2015, dps])
-  dps2016 <- unique(fullData[year==2016, dps])
-  dps2017 <- unique(fullData[year==2017, dps])
-  
-  dps_missing <- dps2017[!dps2017 %in% dps2010]
-  print(dps_missing)
-  dps_missing_2017 <- dps2010[!dps2010 %in% dps2017]
-  print(dps_missing_2017)
-  
-# ----------------------------------------------   
-  
-  
-  
-  #unique(fullData[health_zone=="Kirotshe", year])
 # ---------------------------------------------- 
   # export fullData
-  write.csv(fullData, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP_2010to2017_prepped.csv"))
+  write.csv(fullData, paste0(dir_prepped, "PNLP_2010to2017_prepped.csv"))
 # ----------------------------------------------     
