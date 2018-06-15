@@ -9,12 +9,17 @@ Prepped March to June 2018 by Audrey Batzel abatzel@uw.edu
 
 #### **Unique identifiers**
 The unique identifiers for the observations in this data are health zone, date (month and year), indicator, and subpopulation.
+To view the other variables included in the dataset, please see the codebook on Basecamp, [here]()
 
 #### **Where to find the code and data**
-The code can be found on github, [here](https://github.com/ihmeuw/gf/tree/develop/outcome_measurement/malaria/cod), and the data can be found on Basecamp in DRC PCE / Docs & Files / Outcome Measurement data / National Malaria Program / Prepped Data, [here](https://3.basecamp.com/3769859/buckets/4025874/vaults/1131529751).
+The code can be found on github, [here](https://github.com/ihmeuw/gf/tree/develop/outcome_measurement/malaria/cod).
+The prepped data can be found on Basecamp in DRC PCE / Docs & Files / Outcome Measurement data / National Malaria Program / Prepped Data, [here](https://3.basecamp.com/3769859/buckets/4025874/vaults/1131529751).
 
-#### **Basic steps to run the code**
-  
+#### **What the code files do and how to run them** 
 
-#### **What the code files do** 
-  
+prep_COD_Malaria_data_function.R is the "master script" that runs the files to prep the data.
+PNLP_files is a csv file of the names of the excel files that contain the data to be read into RStudio.
+prep_data.R is the function that cleans that data.  It has a lot of specifics to correct errors in the data.
+reshape_data.R
+standardize_dps.R
+remove_outliers.R
