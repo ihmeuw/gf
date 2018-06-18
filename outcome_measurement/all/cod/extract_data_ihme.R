@@ -151,7 +151,7 @@ pnls <- extract_all_data(base_url = base_url,
                                   pace = 10,
                                   update_date = paste0(update_year, '-01-01'))
 
-saveRDS(pnls, paste0(out_dir, '/pnls_', country, 
+saveRDS(pnls, paste0(dir, '/pnls_', country, 
                      '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
 # write.csv(pnls_extraction, paste0(out_dir, '/pnls_extraction_', country, 
@@ -201,7 +201,7 @@ sigl <- extract_all_data(base_url = base_url,
                                   pace = 10,
                                   update_date = paste0(update_year, '-01-01'))
 
-saveRDS(base_extraction, paste0(out_dir, '/sigl_', country, 
+saveRDS(base_extraction, paste0(dir, '/sigl_', country, 
                                 '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
 
