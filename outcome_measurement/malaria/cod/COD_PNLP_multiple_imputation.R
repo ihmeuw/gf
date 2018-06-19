@@ -2,7 +2,11 @@
   # Audrey Batzel
   #
   # 3/16/18
-  # COD PNLP data for 2014-2016; descriptive analysis
+  # COD PNLP data for 2014-2016
+  # 6/15/18
+  # Modified for COD PNLP data 2010-2017
+
+  setwd('C:/local/gf/')
 # ----------------------------------------------
 
 
@@ -25,7 +29,9 @@
 # Overview - Files and Directories
 
   # data directory
-    dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
+    # when run on Unix, data directory needs to be set to /home/j (to run on the cluster), so set this here:
+    j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+    dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/')
   
   # input file:
     # J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/fullData_forMI_outliers_removed.csv
