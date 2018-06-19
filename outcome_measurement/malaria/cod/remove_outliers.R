@@ -42,7 +42,8 @@
       outliers[, date := as.Date(date)]
   
   # output file: 
-
+    # "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/fullData_outliers_removed.csv"
+      
   # set up:
     fullData[, date := as.Date(date)]
     fullData[, id:=NULL]
