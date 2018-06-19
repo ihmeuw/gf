@@ -290,6 +290,12 @@ base[health_area, level:="Health Area"]
 health_area <- grep(pattern="aire de sante", x=base$org_unit1)
 base[health_area, level:="Health Area"]
 
+# Health zones
+health_zone <- grep(pattern="zone de sante", x=base$org_unit1)
+base[health_zone, level:="Health Zone"]
+health_zone1 <- grep(pattern="zone de santé", x=base$org_unit1)
+base[health_zone1, level:="Health Zone"]
+
 #--------------------------------------------
 
 # --------------------

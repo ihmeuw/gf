@@ -200,84 +200,109 @@ sigl[ ,dist:=NULL]
 
 #-----------------------------------------------
 # add a variable to demarcate the provincial approach provinces
-base[province=='Maniema' | province=='Tshopo' | province=="Kinshasa", mtk:=1]
-base[is.na(mtk), mtk:=0]
+sigl[province=='Maniema' | province=='Tshopo' | province=="Kinshasa", mtk:=1]
+sigl[is.na(mtk), mtk:=0]
 
 #-----------------------------------------------
-# type of facility
+# Level of reporting or type of facility (levels of organizational units)
 
 # create organisational unit name in lower case
-base[ ,org_unit1:=tolower(org_unit)]
+sigl[ ,org_unit1:=tolower(org_unit)]
 
 # Clinics - add spaces to eliminate polyclinics
 # This code should be first, since many facility have both clinic and another classification
-clinic <- grep(pattern="\\sclinique", x=base$org_unit1)
-base[clinic, level:='Clinic']
+clinic <- grep(pattern="\\sclinique", x=sigl$org_unit1)
+sigl[clinic, level:='Clinic']
 
 # health centers
-health_center <- grep(pattern="centre de santé", x=base$org_unit1)
-base[health_center, level:='Health Center']
-health_center <- grep(pattern="centre de sante", x=base$org_unit1)
-base[health_center, level:='Health Center']
+health_center <- grep(pattern="centre de santé", x=sigl$org_unit1)
+sigl[health_center, level:='Health Center']
+health_center <- grep(pattern="centre de sante", x=sigl$org_unit1)
+sigl[health_center, level:='Health Center']
 
 # reference health center
-ref_hc <- grep(pattern="centre de santé de référence", x=base$org_unit1)
-base[ref_hc, level:='Reference Health Center']
+ref_hc <- grep(pattern="centre de santé de référence", x=sigl$org_unit1)
+sigl[ref_hc, level:='Reference Health Center']
 
 # Health posts
-health_post <- grep(pattern="poste de santé", x=base$org_unit1)
-base[health_post, level:='Health Post']
-health_post1 <- grep(pattern="poste de sante", x=base$org_unit1)
-base[health_post1, level:='Health Post']
+health_post <- grep(pattern="poste de santé", x=sigl$org_unit1)
+sigl[health_post, level:='Health Post']
+health_post1 <- grep(pattern="poste de sante", x=sigl$org_unit1)
+sigl[health_post1, level:='Health Post']
 
 #  Medical centers
-medical_center <-  grep(pattern="centre médical", x=base$org_unit1)
-base[medical_center, level:='Medical Center']
-medical_center <-  grep(pattern="centre medical", x=base$org_unit1)
-base[medical_center, level:='Medical Center']
-medical_center <-  grep(pattern="centre de médical", x=base$org_unit1)
-base[medical_center, level:='Medical Center']
-medical_center <-  grep(pattern="centre de medical", x=base$org_unit1)
-base[medical_center, level:='Medical Center']
+medical_center <-  grep(pattern="centre médical", x=sigl$org_unit1)
+sigl[medical_center, level:='Medical Center']
+medical_center <-  grep(pattern="centre medical", x=sigl$org_unit1)
+sigl[medical_center, level:='Medical Center']
+medical_center <-  grep(pattern="centre de médical", x=sigl$org_unit1)
+sigl[medical_center, level:='Medical Center']
+medical_center <-  grep(pattern="centre de medical", x=sigl$org_unit1)
+sigl[medical_center, level:='Medical Center']
 
 #  Hospitals
-hospital <- grep(pattern="\\shôpital\\s", x=base$org_unit1)
-base[hospital, level:='Hospital']
-hospital <- grep(pattern="\\shopital\\s", x=base$org_unit1)
-base[hospital, level:='Hospital']
+hospital <- grep(pattern="\\shôpital", x=sigl$org_unit1)
+sigl[hospital, level:='Hospital']
+hospital <- grep(pattern="\\shopital", x=sigl$org_unit1)
+sigl[hospital, level:='Hospital']
 
 # Reference hospitals
-hospital <- grep(pattern="hopital général de référence", x=base$org_unit1)
-base[hospital, level:='General Reference Hospital']
-hgr <- grep(pattern="hgr", x=base$org_unit1)
-base[hgr, level:="General Reference Hospital"]
+hospital <- grep(pattern="hopital général de référence", x=sigl$org_unit1)
+sigl[hospital, level:='General Reference Hospital']
+hgr <- grep(pattern="hgr", x=sigl$org_unit1)
+sigl[hgr, level:="General Reference Hospital"]
 
 # Hospital center
-hospital_c <- grep(pattern="centre hôspitalier", x=base$org_unit1)
-base[hospital_c, level:='Hospital Center']
-hospital_c1 <- grep(pattern="centre hospitalier", x=base$org_unit1)
-base[hospital_c1, level:='Hospital Center']
+hospital_c <- grep(pattern="centre hôspitalier", x=sigl$org_unit1)
+sigl[hospital_c, level:='Hospital Center']
+hospital_c1 <- grep(pattern="centre hospitalier", x=sigl$org_unit1)
+sigl[hospital_c1, level:='Hospital Center']
 
 # Dispensaries
-dispensary <- grep(pattern="dispensaire", x=base$org_unit1)
-base[dispensary, level:='Dispensary']
+dispensary <- grep(pattern="dispensaire", x=sigl$org_unit1)
+sigl[dispensary, level:='Dispensary']
 
 # Polyclinics
-polyclinic <- grep(pattern="polyclinique", x=base$org_unit1)
-base[polyclinic, level:='Polyclinic']
+polyclinic <- grep(pattern="polyclinique", x=sigl$org_unit1)
+sigl[polyclinic, level:='Polyclinic']
 
 # Medical-surgical centers
-m_c  <- grep(pattern="centre médico-chirurgical", x=base$org_unit1)
-base[m_c, level:='Medical-Surgical Center']
+m_c  <- grep(pattern="centre médico-chirurgical", x=sigl$org_unit1)
+sigl[m_c, level:='Medical-Surgical Center']
 
 # Health areas
-health_area<- grep(pattern="aire de santé", x=base$org_unit1)
-base[health_area, level:="Health Area"]
-health_area <- grep(pattern="aire de sante", x=base$org_unit1)
-base[health_area, level:="Health Area"]
+health_area<- grep(pattern="aire de santé", x=sigl$org_unit1)
+sigl[health_area, level:="Health Area"]
+health_area <- grep(pattern="aire de sante", x=sigl$org_unit1)
+sigl[health_area, level:="Health Area"]
 
+# Health zones
+zone <- grep(pattern="zone de sante", x=sigl$org_unit1)
+sigl[zone, level:="Health Zone"]
+zone1 <- grep(pattern="zone de santé", x=sigl$org_unit1)
+sigl[zone1, level:="Health Zone"]
+
+#fix the 58 facilities with typos
+
+sigl[ ,.(length(unique(org_unit))), by=level]
 #--------------------------------------------
 
+sigl[level=="Health Zone", health_zone:=org_unit]
+sigl[level=="Health Zone", health_zone:=(substr(health_zone, 4, 20))]
+
+sigl$health_zone <- word(sigl$health_zone, 1)
+
+sigl[  , hz:=(word(sigl$health_zone, 1))]
+sigl[  , hz2:=(word(sigl$health_zone, 2))]
+
+if (sigl$hz2!='Zone')
 
 
+gsub(pattern="Zone de Sante", replacement="\\s", x=sigl$health_zone)
+
+x <- strsplit(sigl$health_zone, split=" ")
+x1 <- unlist(lapply(x, `[[`, 1))
+
+sigl[level=="Health Zone", gsub(pattern="zone de sante", replacement="", sigl$hz)]
+gsub(pattern="zone de santé", replacement="", sigl$hz)
 
