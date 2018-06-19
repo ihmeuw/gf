@@ -28,13 +28,13 @@ if (Sys.info()[1] == 'Windows') {
 # CHANGE THESE - set the start year, end year, and output directory
 
 # select the start year and end year for the download
-start_year <- '2015'
+start_year <- '2017'
 end_year <- '2018'
 start_month <- '01'
 end_month <- '05'
 
 # change the update year to before the data begins
-update_year <- '2015'
+update_year <- '2017'
 
 #identify the data set(s) you want to download 
 
