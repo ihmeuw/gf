@@ -30,11 +30,15 @@
   # data directory
   # file path where the files are stored
     dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_Malaria_Program/"
-    dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/"
+    dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/"
   # output files
-    output_dt_long <- "PNLP_2010to2017_long.csv"
     output_fullData <- "PNLP_2010to2017_fullPrepped.csv"
         # fullData with updated, further cleaned full data set
+    
+    
+  # THESE ARE NOT THE UPDATED VERSIONS OF CLEANED DATA BELOW.... update this script (remove from here, and save different versions in separate scripts with most up to date data
+    # since the data is further cleaned after this script with outliers removed and dps standardized.... save in these different forms in a new script so you dont have to refer back to this)
+    output_dt_long <- "PNLP_2010to2017_long.csv"
     output_dt <- "PNLP_2010to2017_indicatorsWide_subpopulationsLong.csv"
       # dt_wide has subpopulations long
     output_dt_forMI <- "PNLP_2010to2017_forMI.csv"
@@ -125,65 +129,14 @@
   
 # ----------------------------------------------  
 
-
-# ----------------------------------------------     
-# Prepare data table for multiple imputation
-  # take a subset of fullData that will be used in MI
-  ameliaDT <- fullData[,-c("donor", "operational_support_partner", "population", "quarter", "month", 
-                        "stringdate", "healthFacilities_numReportedWithinDeadline","reports_expected", "reports_received", "ASAQused_total",
-                        "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI","PMA_ITN","PMA_complete")]
-  
-  # new column to factor in the product of number of health facilities reporting and total number of health facilties
-  ameliaDT$healthFacilitiesProduct <- ameliaDT[, .(healthFacilities_total * healthFacilities_numReported)]
-  
-  ameliaDT[, RDT_completed := ifelse( year <= 2014, RDT_completed, (RDT_completedUnder5 + RDT_completed5andOlder))]
-  ameliaDT[, RDT_positive := ifelse( year <= 2014, RDT_positive, (RDT_positiveUnder5 + RDT_positive5andOlder))]
-  ameliaDT[, smearTest_completed := ifelse( year <= 2014, smearTest_completed,(smearTest_completedUnder5 + smearTest_completed5andOlder))]
-  ameliaDT[, smearTest_positive := ifelse( year <= 2014, smearTest_positive, (smearTest_positiveUnder5 + smearTest_positive5andOlder))]
-  
-  ameliaDT <- ameliaDT[, -c("year", "smearTest_completedUnder5", "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder",
-                          "RDT_positive5andOlder", "RDT_positiveUnder5", "RDT_completedUnder5", "RDT_completed5andOlder")]
-  
-  
-# this doesn't work because there are repeats of health zones and different dps?  --> pick up here to set up for amelia
-  # rectangularize the data so there is an observation for every health zone and date
-  hzs <- unique(ameliaDT$health_zone)
-  months <- unique(ameliaDT$date)
-  rect <- as.data.table(expand.grid(hzs, months))
-  setnames(rect, c("health_zone", "date"))
-  hzProvinceDPS <- ameliaDT[, .(health_zone, province, dps)]
-  hzProvinceDPS <- unique(hzProvinceDPS)
-  rect <- merge(rect, hzProvinceDPS, by=c("health_zone"), all=TRUE)
-  
-  dt <- merge(dt, rect, by=c("date", "health_zone", "dps", "province"), all=TRUE)
-  
-  # add an id column
-  ameliaDT[, id:= .I]
-  
-  # export data  
-  write.csv(ameliaDT, paste0("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/Full Data for MI.csv"))
-
-# ---------------------------------------------- 
-
-
-# ---------------------------------------------- 
-# different categories of variables for graphing/descriptive analysis
-  indicators <- measured_vars[c(1:27, 95:97)]
-  outputs <- measured_vars[c(28:43, 52:57, 70:75, 78:85)]
-  SSC <- measured_vars[c(89:94, 100:111)]
-  health_system <- measured_vars[c(62:69, 86:88)]
-  stockouts <- measured_vars[c(44:51, 76:77)]
-
-# ----------------------------------------------       
   
   
   
   
   
   
-  
-# ----------------------------------------------     
-# OLD CODE : not sure if we still need any of this, but keeping it now for reference
+# ------------------------------------------------------------------------------------------------------------------------------------------         
+# OLD CODE for first set of PNLP data we received (2014-2016 for 3-5 dps): not sure if we still need any of this, but keeping it now for reference
 # ----------------------------------------------     
 # Split appended data into Indicators and Interventions Data
 COD_PNLP_Indicators <- fullData[, c(1:8, 44, 46, 9:23) ]
