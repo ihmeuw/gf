@@ -83,7 +83,7 @@ load_mapping_list <- function(mapping_file, include_rssh_by_disease){
   }
  }
   ##change the dataset names
-  setnames(indicator_mapping, c("code","module", "intervention", "disease"))
+  setnames(indicator_mapping, c("code","module", "intervention", "abbrev_module", "abbrev_intervention","disease"))
   indicator_mapping <- unique(indicator_mapping)
   ##this will make it easier to map everything by removing spaces, punctuation, etc. 
   return(indicator_mapping)

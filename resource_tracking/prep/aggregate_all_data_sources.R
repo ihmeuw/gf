@@ -48,11 +48,11 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 
 ##change the start dates from factors to dates: 
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
-totalGtm$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
+totalGtm$start_date <- as.Date(totalGtm$start_date,"%Y-%m-%d")
 
 ## if you want to aggregate the sicoin and FPM data:
 # totalGtm$country <- "Guatemala"
-# gtmBudgets <- rbind(sicoin_data, totalGtm)
+# totalGtm <- rbind(sicoin_data, totalGtm)
 
 
 
@@ -60,7 +60,7 @@ totalGtm$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
 
 ##aggregate all country data into one dataset:  
 
-fpmData <- rbind(gtmBudgets, totalUga, totalCod)
+fpmData <- rbind(totalGtm, totalUga, totalCod)
 ##change the start_date column to be of type "Date"
 fpmData$start_date <- as.Date(fpmData$start_date,"%Y-%m-%d")
 fpmData$period <- as.numeric(fpmData$period)

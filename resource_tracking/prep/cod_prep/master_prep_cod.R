@@ -79,22 +79,22 @@ for(i in 1:length(file_list$file_name)){
                                   file_list$disease[i], file_list$loc_id[i], file_list$period[i]
                                   , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
     tmpData$year <- year(tmpData$start_date)
-    tmpData$data_source <- "fpm"
+    tmpData$data_source <- file_list$source[i]
    } else if (file_list$type[i]=="detailed"){
     tmpData <- prep_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
                                         file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_name, file_list$source[i])
     tmpData$year <- year(tmpData$start_date)
-    tmpData$data_source <- "fpm"
+    tmpData$data_source <- file_list$source[i]
   } else if(file_list$type[i]=="module"){
     tmpData <- prep_old_module_budget(dir, as.character(file_list$file_name[i]),
                                    file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
                                    file_list$disease[i], file_list$loc_id[i], file_list$period[i]
                                    , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
     tmpData$year <- year(tmpData$start_date)
-    tmpData$data_source <- "fpm"
+    tmpData$data_source <- file_list$source[i]
   } else if(file_list$type[i]=="rejected"){
     tmpData <- prep_cod_rejected(paste0(dir, file_list$file_name[i]))
-    tmpData$data_source <- "fpm"
+    tmpData$data_source <- "iterated_fpm"
     
   }  else if (file_list$type[i]=="pudr"){ ##has expenditure data 
     tmpData <- prep_pudr_cod(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
@@ -106,7 +106,7 @@ for(i in 1:length(file_list$file_name)){
                                     file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_name, file_list$source[i],
                                     file_list$pr[i])
     tmpData$year <- year(tmpData$start_date)
-    tmpData$data_source <- "fpm"
+    tmpData$data_source <- file_list$source[i]
   }
   tmpData$source <- "gf"
   if(i==1){
