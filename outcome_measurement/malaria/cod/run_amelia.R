@@ -8,7 +8,7 @@
   
     setwd('C:/local/gf/')
 
-  # THE FOLLOWING R SCRIPT WAS RUN ON THE CLUSTER
+  # THE FOLLOWING R SCRIPT WAS RUN ON THE CLUSTER AT IHME
 # ----------------------------------------------
 
 
@@ -57,6 +57,9 @@
     # remove V1 column
     dt <- dt[, V1:=NULL]
     
+    # change name of province column
+    setnames(dt, "province11_name", "province")
+    
     # vector of id variables and indicator variables
     all_vars <- c(colnames(dt))
     id_vars <- c("province", "dps", "health_zone", "date", "id")
@@ -64,7 +67,27 @@
     indicators <- indicators[!indicators %in% c("healthFacilities_numReported")]
     
     # remove healthFacilities_numReported from the data.table
-    dt <- dt[,c(id_vars, indicators), with=F]  
+    dt <- dt[,c(id_vars, indicators), with=F] 
+    
+    # when a health zone is entirely na for an indicator over the entire time series,
+    # set those NAs to 0 to avoid overimputing
+    dtMelt <- melt(dt, id.vars= id_vars)
+    dtMelt[, value := as.numeric(value)]
+    
+    dtMeltNAs <- dtMelt[, .(totNAObs = sum(is.na(value))), by= c("dps", "health_zone", "variable" )]
+    dtMeltNAs <- dtMeltNAs[totNAObs==96, noData:= T]
+    
+    dtMerge <- merge(dtMelt, dtMeltNAs, by= c("dps", "health_zone", "variable"))
+    
+    dtMerge <- dtMerge[noData==T, value:=0]
+    
+    dtMerge <- dtMerge[, totNAObs:= NULL]
+    dtMerge <- dtMerge[, noData:= NULL]
+    
+    dtMerge[ value < 0, value:= NA]
+    
+    dt <- dcast(dtMerge, province + dps + health_zone + date + id ~ variable, value.var = "value")
+    dt <- as.data.table(dt)
 # ---------------------------------------------- 
     
 
@@ -102,12 +125,16 @@
     # ts variable: the date
     # cs variable: health zone - try with and without this and see what results are like
     # MI will ignore ID vars and include them as is in the output
-    # lags/leads: indicators
+    # lags/leads: indicators no la
     # intercs = FALSE by default, try with = TRUE
     
     id_vars_for_amelia <- id_vars[!id_vars %in% c("health_zone", "date")]
     
-    amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", lags= indicators, leads= indicators, idvars= id_vars_for_amelia, parallel= parallelMethod, ncpus= floor(ncores/2))
+    measured_vars <- all_vars[!all_vars %in% id_vars]
+    measured_vars <- measured_vars[!measured_vars %in% c("healthFacilities_numReported")]
+    
+    amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", idvars= id_vars_for_amelia, tolerance= 0.001, lags = measured_vars,
+                             leads = measured_vars, parallel= parallelMethod, ncpus= 40)
 
 # ---------------------------------------------- 
   
@@ -149,8 +176,8 @@
   #-------IF STARTING HERE
     # run up to dtLog (don't need to run this or imputation again)
     # read in rds file of imputations
-    dtExp <- readRDS(paste0(dir, "imputedData.rds"))
-    imputed_id_vars <- c(id_vars, "imputation_number")
+    # dtExp <- readRDS(paste0(dir, "imputedData.rds"))
+    # imputed_id_vars <- c(id_vars, "imputation_number")
   #---------------------
     
   # reshape imputed data long
