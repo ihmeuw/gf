@@ -16,24 +16,84 @@ library(ggmap)
 library(ggplot2)
 library(haven)
 library(data.table)
-
-# ----------------------------------------------
-# Load worldpop population estimations for guatemala in 2015
+library(stringr)
+library(ggplot2)
+library(lme4)
 
 AccessGT <- raster("PCE/Covariates and Other Data/Geospatial Covariates/Access/access2_mean_synoptic.tif")
 AirQGT_2015 <- raster("PCE/Covariates and Other Data/Geospatial Covariates/Air Quality/ihmepm25_mean_1y_2015_00_00.tif")
 WorldPopGT2015 <- raster("./DATOS/WorldPop/GTM_ppp_v2b_2015/GTM_ppp_v2b_2015.tif")
 
-# The municipalities shape file obtained from SEGEPLAN website is most probably outdated. I've used a shapefile in geojson format obtained from IGN (national geographic institute of Guatemala) which seems to be more up to date. This file was retrieve in mid 2017 and has been uploaded to the internet archive so it is accesible.
-# This file can be found in the archive: https://archive.org/download/IGNCartografiaBasicaDivisionPoliticaAdministrativaMunicipios/IGN-cartografia_basica-Division%20politica%20Administrativa%20%28Municipios%29.geojson
 gtmMunisIGN = readOGR("./PCE/Outcome Measurement Data/GIS/GT-IGN-cartografia_basica-Division politica Administrativa (Municipios).geojson", encoding="utf-8")
 
-AirQGT_2015_Muni = extract(AirQGT_2015, gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0),], fun = mean, na.rm = TRUE )
 
-RoadAccess_Muni = extract(AccessGT, gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0),], fun = mean, na.rm = TRUE )
-
+# The following instructions have been run to generate the csv files with the indicators aggregated by municipality.
+# Calculate the mean value per municipality from the raster files:
+#
+#       gtmMunisData = copy(gtmMunisIGN@data[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0), c("COD_MUNI__")])
+#
+#       AirQGT_2015_Muni = extract(AirQGT_2015, gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0),], fun = mean, na.rm = TRUE )
+#       RoadAccess_Muni = extract(AccessGT, gtmMunisIGN[!(gtmMunisIGN$COD_DEPT__ %in% c(NA)) & !(gtmMunisIGN$COD_MUNI__ == 0),], fun = mean, na.rm = TRUE )
+#
 # Exploring the raster data files: 
-# plot(AirQGT_2015, xlim = c(-92.7,-88), ylim= c(13.5,18), col=rainbow(255, start = 0.1, end=1))
-# lAccessGT = log10(AccessGT)
-# plot(AccessGT, xlim = c(-92.7,-88), ylim= c(13.5,18), col=rainbow(255, start = 0.10, end=0.75))
-# plot(gtmMunisIGN, add = TRUE)
+#       plot(AirQGT_2015, xlim = c(-92.7,-88), ylim= c(13.5,18), col=rainbow(255, start = 0.15, end=1))
+#       lAccessGT = log10(AccessGT)
+#       plot(AccessGT, xlim = c(-92.7,-88), ylim= c(13.5,18), col=rainbow(255, start = 0.10, end=0.75))
+#       plot(gtmMunisIGN, add = TRUE)
+
+# Attach data to municipalities dataset:
+#       gtmMunisData$PM25Mean = AirQGT_2015_Muni
+#       write.csv(gtmMunisData[, c("COD_MUNI__", "PM25Mean")], "./PCE/Covariates and Other Data/Geospatial Covariates/Air Quality/GTM_Municipality_PM25.csv")
+#       gtmMunisData$Access = RoadAccess_Muni
+#       write.csv(gtmMunisData[, c("COD_MUNI__", "Access")], "./PCE/Covariates and Other Data/Geospatial Covariates/Access/GTM_AccessMean.csv")
+
+gtmMuniAccess   = data.table(read.csv("./PCE/Covariates and Other Data/Geospatial Covariates/Access/GTM_AccessMean.csv"))
+gtmMuniPM25     = data.table(read.csv("./PCE/Covariates and Other Data/Geospatial Covariates/Air Quality/GTM_Municipality_PM25.csv"))
+gtmTxSeeking    = read.csv("./PCE/Outcome Measurement Data/MULTI/ENSMI/GT - cough and fever tx seeking.csv")
+gtmTBMuniMonthC = read.csv("./PCE/Outcome Measurement Data/TUBERCULOSIS/MunicipalityMonth.csv")
+
+gtmMunisIGN = merge(gtmMunisIGN, gtmTxSeeking[, c("municode", "cough_wm", "seektx_wm")], by.x = "COD_MUNI__", by.y = "municode")
+
+# Exploring the relations between treatment seeking and cases notifications.
+# Group by department
+
+TBCasesDept = aggregate(NInitiating ~ str_sub(COD_MUNI, 0, -3), gtmTBMuniMonthC[floor(gtmTBMuniMonthC$YearMonth/100) == 2015,], sum )
+names(TBCasesDept) = c("dept", "ncases")
+TxsDept = aggregate(gtmTxSeeking[,c("seektx_wm","cough_wm")], by = list(floor(gtmTxSeeking$municode/100)), sum)
+TxsDept$txseek = TxsDept$seektx_wm/TxsDept$cough_wm
+names(TxsDept) = c("dept", "seektx_wm", "cough_wm", "txseek")
+
+plotDataDept = merge(TBCasesDept, TxsDept, by="dept")
+ggplot(plotDataDept, aes(x = log(ncases), y = log(txseek/(1-txseek)) )) + geom_point()
+
+# Now group by muni
+
+TBCasesMuni = aggregate(NInitiating ~ COD_MUNI, gtmTBMuniMonthC[floor(gtmTBMuniMonthC$YearMonth/100) == 2015,], sum)
+names(TBCasesMuni) = c("muni", "ncases")
+TxSMuni = aggregate(gtmTxSeeking$seektx_wm / gtmTxSeeking$cough_wm, by = list(gtmTxSeeking$municode), mean, na.rm = TRUE)
+names(TxSMuni) = c("muni", "txseek")
+
+plotDataMuni = merge(TBCasesMuni, TxSMuni, by="muni")
+ggplot(plotDataMuni, aes(x = log(ncases), y = log(txseek/(1-txseek)) )) + geom_point()
+
+# The adjustment model by municipality
+
+modelDataMuni = merge(plotDataMuni, gtmMuniPM25[,c("COD_MUNI__", "PM25Mean")], by.x = "muni", by.y = "COD_MUNI__")
+modelDataMuni = merge(modelDataMuni, gtmMuniAccess[,c("COD_MUNI__", "Access")], by.x = "muni", by.y = "COD_MUNI__")
+modelDataMuni$PM25Mean = (modelDataMuni$PM25Mean-mean(modelDataMuni$PM25Mean)) / sd(modelDataMuni$PM25Mean)
+modelDataMuni$Access = (modelDataMuni$Access-mean(modelDataMuni$Access)) / sd(modelDataMuni$Access)
+modelDataMuni$dept = floor(modelDataMuni$muni/100)
+modelMuni = glmer(ncases ~ 1 + (1|muni) + (1+txseek|dept) + txseek + PM25Mean + Access, data = modelDataMuni, family = poisson(link="log"))
+summary(modelMuni)
+
+# The adjustment model by department
+gtmDeptPM25 = aggregate(gtmMuniPM25[,c("COD_MUNI__", "PM25Mean")], by = list(floor()), FUN = )
+modelDataDept = merge(plotDataDept, gtmMuniPM25[, .(PM25Mean = mean(PM25Mean)), by = .(dept = floor(COD_MUNI__/100) )], 
+                      by.x = "dept", by.y = "dept")
+modelDataDept = merge(modelDataDept, gtmMuniAccess[,.(Access = mean(Access)), by = .(dept = floor(COD_MUNI__/100) )], 
+                      by.x = "dept", by.y = "dept")
+modelDataDept = data.table(modelDataDept)
+modelDataDept[, PM25Mean := (PM25Mean-mean(PM25Mean)) / sd(PM25Mean)]
+modelDataDept[, Access := (Access-mean(Access)) / sd(Access)]
+modelDept = glmer(ncases ~ 1 + (1|dept) + txseek + PM25Mean + Access, data = modelDataDept, family = poisson(link="log"))
+summary(modelDept)
