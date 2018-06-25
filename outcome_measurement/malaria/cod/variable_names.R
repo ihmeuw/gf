@@ -1,22 +1,58 @@
 
 
-# variable names (to source into different R scripts)
+# variables and variable names (to source into different R scripts)
 
+# ----------------------------------------------       
+
+
+# ----------------------------------------------  
 # vectors of indicator names and intervention names to subset
-  indicators <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
+  indicators <- c("newCasesMalariaMild_under5", "newCasesMalariaMild_5andOlder", "newCasesMalariaMild_pregnantWomen", 
+                  "newCasesMalariaSevere_under5", "newCasesMalariaSevere_5andOlder", "newCasesMalariaSevere_pregnantWomen",
                   "mildMalariaTreated_under5", "mildMalariaTreated_5andOlder", "mildMalariaTreated_pregnantWomen",
                   "severeMalariaTreated_under5", "severeMalariaTreated_5andOlder", "severeMalariaTreated_pregnantWomen",
-                  "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen")
+                  "malariaDeaths_under5", "malariaDeaths_5andOlder", "malariaDeaths_pregnantWomen",
+                  "suspectedMalaria_under5", "suspectedMalaria_5andOlder", "suspectedMalaria_pregnantWomen",
+                  "presumedMalaria_under5", "presumedMalaria_5andOlder", "presumedMalaria_pregnantWomen")
   
+  other_indicators <- c("totalCasesAllDiseases_under5", "totalCasesAllDiseases_5andOlder", "totalCasesAllDiseases_pregnantWomen",
+                        "totalHospAllDiseases_under5", "totalHospAllDiseases_5andOlder", "totalHospAllDiseases_pregnantWomen",
+                        "totalDeathsAllDiseases_under5", "totalDeathsAllDiseases_5andOlder", "totalDeathsAllDiseases_pregnantWomen")
+  
+  outputs <- c("ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC", "ITN_distAtPreschool", 
+               "VAR_0to11mos", "ASAQreceived_2to11mos", "ASAQreceived_1to5yrs", "ASAQreceived_6to13yrs", "ASAQreceived_14yrsAndOlder", 
+               "ASAQused_2to11mos", "ASAQused_1to5yrs", "ASAQused_6to13yrs", "ASAQused_14yrsAndOlder", "ArtLum_received", "ArtLum_used", 
+               "smearTest_completed", "smearTest_positive", "thinSmearTest", "RDT_completed", "RDT_positive", "RDT_received")
+  
+  SSC <- c("SSCACT", "SSCACT_5andOlder", "SSCACT_under5", "SSCRDT_completed", "SSCRDT_completed5andOlder", "SSCRDT_completedUnder5",                      
+            "SSCRDT_positive", "SSCRDT_positive5andOlder", "SSCRDT_positiveUnder5", "SSCcasesCrossReferred", "SSCcasesCrossReferred_5andOlder",           
+            "SSCcasesCrossReferred_under5", "SSCcasesReferred", "SSCcasesReferred_5andOlder", "SSCcasesReferred_under5", "SSCfevers",                                 
+            "SSCfevers_5andOlder", "SSCfevers_under5")
+  
+  stockouts <- c("stockOutSP", "stockOutASAQ_2to11mos", "stockOutASAQ_1to5yrs", "stockOutASAQ_6to13yrs", "stockOutASAQ_14yrsAndOlder", 
+                 "stockOutqui_pill", "stockOutqui_inj", "stockOutASAQ_inj", "stockOutRDT", "stockOutartLum")
+  
+  health_system <- c( "healthFacilities_total", "healthFacilities_numReportedWithinDeadline", "healthFacilities_Product", 
+                      "supervisors_numPlanned", "supervisors_numActual", "employees_numPlanned", "employees_numActual", "awarenessTrainings_numPlanned", 
+                      "awarenessTrainings_numActual")
+  
+  all_vars <- c(indicators, other_indicators, outputs, SSC, stockouts, health_system)
+  
+# ----------------------------------------------  
+  
+  
+# ----------------------------------------------      
   indicator_names <- c(
     `newCasesMalariaMild` = "Confirmed Cases of Uncomplicated Malaria",
-    `newCasesMalariaSevere` = "Confirmed Cases of Severe Malaria",
+    `newCasesMalariaSevere` = "Cases of Hospitalized (Severe) Malaria",
     `mildMalariaTreated` = "Cases of Uncomplicated Malaria Treated",
     `severeMalariaTreated` = "Cases of Severe Malaria Treated",
-    `malariaDeaths` = "Number of Deaths from Malaria"
+    `malariaDeaths` = "Number of Deaths from Malaria",
+    `presumedMalaria` = "Cases of Presumed Malaria",
+    `suspectedMalaria` = "Cases of Suspected Malaria"
   )
   
-  intervention_names <- c(
+  output_names <- c(
     `ArtLum` = "Artéméther - Lumefatrine",
     `SP` = "SP administered during ANC",
     `ASAQ` = "Artesunate Amodiaquine (ASAQ)",
@@ -25,107 +61,34 @@
     `RDT` = "Rapid Diagnostic Tests",
     `smearTest` = "Smear Tests",
     `VAR` = "Measles Vaccine",
-    `healthFacilities` = "Health Facilities Reporting",
-    `reports` = "Number of Reports"
+    `thinSmearTest` = "Thin Smear Test", 
+    `ASAQreceived` = "Artesunate Amodiaquine (ASAQ) Received", 
+    `ASAQused` = "Artesunate Amodiaquine (ASAQ) Used"
   )    
   
-  variable_names <- c(indicator_names, intervention_names)
+  stockout_names <- c(
+    `stockOutSP`= "Stock Out of SP",
+    `stockOutASAQ`= "Stock Out of Artesunate Amodiaquine (ASAQ)",
+    `stockOutqui`= "Stock Out of Quinine",
+    `stockOutRDT`= "Stock Out of RDTs",
+    `stockOutartLum`= "Stock Out of Artéméther - Lumefatrine"
+  )
   
-  interventions <- c("ANC_1st", "ANC_2nd", "ANC_3rd", "ANC_4th", "SP_1st", "SP_2nd","SP_3rd", "ITN_received", "ITN_distAtANC",
-                     "ITN_distAtPreschool", "VAR", "ASAQ_2to11mos", "ASAQ_1to5yrs", "ASAQ_6to13yrs", "ASAQ_14yrsAndOlder", "ArtLum_received", "ArtLum_used",
-                     "smearTest_completed", "smearTest_positive", "RDT_completed", "RDT_positive", "healthFacilities_total", "healthFacilitiesProduct")
+  SSC_names <- c(
+    
+  )
+  
+  health_system_names <- c(
+    
+    
+  )
+  
+  # `healthFacilities` = "Health Facilities Reporting",
+  # `reports` = "Number of Reports"
+  
+  variable_names <- c(indicator_names, output_names, stockout_names, SSC_names, health_system_names)
 
-  # totalCasesAllDiseases	under5
-  # totalCasesAllDiseases	5andOlder
-  # totalCasesAllDiseases	pregnantWomen
-  # suspectedMalaria	under5
-  # suspectedMalaria	5andOlder
-  # suspectedMalaria	pregnantWomen
-  # presumedMalaria	under5
-  # presumedMalaria	5andOlder
-  # presumedMalaria	pregnantWomen
-  # newCasesMalariaMild	under5
-  # newCasesMalariaMild	5andOlder
-  # newCasesMalariaMild	pregnantWomen
-  # totalHospAllDiseases	under5
-  # totalHospAllDiseases	5andOlder
-  # totalHospAllDiseases	pregnantWomen
-  # newCasesMalariaSevere	under5
-  # newCasesMalariaSevere	5andOlder
-  # newCasesMalariaSevere	pregnantWomen
-  # mildMalariaTreated	under5
-  # mildMalariaTreated	5andOlder
-  # mildMalariaTreated	pregnantWomen
-  # severeMalariaTreated	under5
-  # severeMalariaTreated	5andOlder
-  # severeMalariaTreated	pregnantWomen
-  # totalDeathsAllDiseases	under5
-  # totalDeathsAllDiseases	5andOlder
-  # totalDeathsAllDiseases	pregnantWomen
-  # malariaDeaths	under5
-  # malariaDeaths	5andOlder
-  # malariaDeaths	pregnantWomen
-  # ANC	1st
-  # ANC	2nd
-  # ANC	3rd
-  # ANC	4th
-  # SP	1st
-  # SP	2nd
-  # SP	3rd
-  # ITN	received
-  # ITN	distAtANC
-  # ITN	distAtPreschool
-  # VAR	0to11mos
-  # VAR	none
-  # ASAQreceived	2to11mos
-  # ASAQreceived	1to5yrs
-  # ASAQreceived	6to13yrs
-  # ASAQreceived	14yrsAndOlder
-  # ASAQused	2to11mos
-  # ASAQused	1to5yrs
-  # ASAQused	6to13yrs
-  # ASAQused	14yrsAndOlder
-  # ASAQused	total
-  # ArtLum	received
-  # ArtLum	used
-  # stockOutSP	none
-  # stockOutASAQ	2to11mos
-  # stockOutASAQ	1to5yrs
-  # stockOutASAQ	6to13yrs
-  # stockOutASAQ	14yrsAndOlder
-  # stockOutqui	pill
-  # stockOutqui	inj
-  # stockOutASAQ	inj
-  # stockOutRDT	none
-  # stockOutartLum	none
-  # smearTest	completedUnder5
-  # smearTest	completed5andOlder
-  # smearTest	positiveUnder5
-  # smearTest	positive5andOlder
-  # smearTest	completed
-  # smearTest	positive
-  # RDT	received
-  # RDT	completedUnder5
-  # RDT	completed5andOlder
-  # RDT	positiveUnder5
-  # RDT	positive5andOlder
-  # RDT	completed
-  # RDT	positive
-  # peopleTested	under5
-  # peopleTested	5andOlder
-  # PMA	ASAQ
-  # PMA	TPI
-  # PMA	ITN
-  # PMA	complete
-  # reports	received
-  # reports	expected
-  # healthFacilities	total
-  # healthFacilities	numReported
-  # healthFacilities	numReportedWithinDeadline
-  # supervisors	numPlanned
-  # supervisors	numActual
-  # employees	numPlanned
-  # employees	numActual
-  # awarenessTrainings	numPlanned
-  # awarenessTrainings	numActual
-  # 
+
+
+  
+    

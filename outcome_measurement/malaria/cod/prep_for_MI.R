@@ -83,7 +83,7 @@
                  "dps_name_2013", "dps_name_2012", "dps_name_2010to2011")
     
     measured_vars <- all_vars[!all_vars %in% id_vars]
-    id_vars <- c("province", "dps", "health_zone", "date", "year")
+    id_vars <- c("province11_name", "dps", "health_zone", "date", "year")
     vars_to_keep <- c(id_vars, measured_vars)
     
     ameliaDT <- fullData[, c(vars_to_keep), with=F]
@@ -108,13 +108,13 @@
     
 # ----------------------------------------------   
   # rectangularize the data so there is an observation for every health zone and date
-    hzDPS <- unique(ameliaDT[,c('dps','health_zone'),with=FALSE])
+    hzDPS <- unique(ameliaDT[,c('province11_name', 'dps','health_zone'),with=FALSE])
     dates <- unique(ameliaDT$date)
     
     rect <- hzDPS[rep(1:nrow(hzDPS), length(unique(dates)))]
     rect[, date:=rep(dates, each=nrow(hzDPS))]
     
-    dt <- merge(ameliaDT, rect, by=c("date", "health_zone", "dps"), all=TRUE)
+    dt <- merge(ameliaDT, rect, by=c("date", "province11_name", "health_zone", "dps"), all=TRUE)
     
   # add an id column
     dt[, id:= .I]
