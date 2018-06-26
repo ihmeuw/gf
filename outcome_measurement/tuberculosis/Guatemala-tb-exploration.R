@@ -277,6 +277,7 @@ if (saveGraphs)
 
 # ----Monthly counts of deaths--------------------------------------------
 # defsData is loaded in ../Guatemala_load_outcomes_data.R
+defsData = loadDeathsData()
 tbDeaths = NULL
 for (year in seq(2009, 2015, 1)) {
     temp = defsData[[year]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) | 
