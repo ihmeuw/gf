@@ -36,7 +36,7 @@ get_source_channel <- function(channel){
   return(x)
 }
 
-fgh_data$source <- mapply(get_source_channel, fgh_data$channel)
+fgh_data$financing_source <- mapply(get_source_channel, fgh_data$channel)
 # now get the columns we want: 
 
 toMatch <- c("hiv", "mal", "tb", "hss", "year", "source", "country")
@@ -128,8 +128,7 @@ oop_vars <- names(ghe_wide)[grepl(c("oop"), names(ghe_wide))]
 ppp_vars <- names(ghe_wide)[grepl(c("ppp"), names(ghe_wide))]
 ghe_vars <- names(ghe_wide)[grepl(c("public"), names(ghe_wide))]
 
-ghe_wide$mean_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[1]])+(ghe_wide[ppp_
-                                                                  vars[1]])+(ghe_wide[ghe_vars[1]])
+ghe_wide[,mean_oop_ppp_ghe_agg:=((ghe_wide[oop_vars[1]])+(ghe_wide[ppp_vars[1]])+(ghe_wide[ghe_vars[1]]))]
 ghe_wide$lower_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[2]])+(ghe_wide[ppp_vars[2]])+(ghe_wide[ghe_vars[2]])
 ghe_wide$upper_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[3]])+(ghe_wide[ppp_vars[3]])+(ghe_wide[ghe_vars[3]])
 
