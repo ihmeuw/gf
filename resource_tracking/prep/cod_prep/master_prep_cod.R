@@ -108,7 +108,7 @@ for(i in 1:length(file_list$file_name)){
     tmpData$year <- year(tmpData$start_date)
     tmpData$data_source <- file_list$source[i]
   }
-  tmpData$source <- "gf"
+  tmpData$financing_source <- "gf"
   if(i==1){
     resource_database = tmpData
   } 

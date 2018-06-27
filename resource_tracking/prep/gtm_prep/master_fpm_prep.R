@@ -135,7 +135,7 @@ resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure<- as.numeric(resource_database$expenditure)
 resource_database$disbursement<- as.numeric(resource_database$disbursement)
 ## since we only have budget data, include exp and disbursed as 0:  
-resource_database$source <- "gf"
+resource_database$financing_source <- "gf"
 
 resource_database <- resource_database[!grepl("Fondos pendientes de asignar a SR",resource_database$recipient)]
 
@@ -154,16 +154,17 @@ data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c
 gtmData <- strip_chars(resource_database, unwanted_array, remove_chars)
 gtmData[is.na(module), module:=intervention]
 
-
+## the directory on the J Drive for the intervention list is: J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/
 mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"),
                                   include_rssh_by_disease = FALSE)
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
 final_mapping <- copy(mapping_list)
 final_mapping$disease <- NULL
-final_mapping$coefficient <- NULL
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
+mapping_list$abbrev_intervention <- NULL
+mapping_list$abbrev_module <- NULL
 
 gf_mapping_list <- total_mapping_list(paste0(dir,"intervention_and_indicator_list.xlsx"),
                                       mapping_list, unwanted_array, remove_chars)
