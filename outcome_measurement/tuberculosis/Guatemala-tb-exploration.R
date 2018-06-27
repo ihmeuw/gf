@@ -23,9 +23,16 @@ source("./PCE/gf/core/GT_helper_functions.R", encoding = "UTF-8")
 saveGraphs = T
 # ----------------------------------------------
 # Read the data:
+TBNotif2013 = read_excel("./PCE/Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2013.xlsx", sheet =1, col_names = F)
+# Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
+TBNotif2013 = data.table(TBNotif2013)[3:.N,][!is.na(X__3),]
+names(TBNotif2013) = c( "NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", "SEXO", "EDAD", 
+                        "RANGOEDAD", "PESOLBS", "PESOKG", "CONDICIONINGRESO", "FECHANOTIFICACION", "FECHAINICIOTX",
+                        "CLASIFICACION", "VIH", "ESQUEMA", "CONTACTOS", "OTRASPATOLOGIAS")
+
 TBNotif2014 = read_excel("./PCE/Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2014 GENERAL anterior.xlsx", sheet = 2, col_names = F)
 # Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
-TBNotif2014 = data.table(TBNotif2014)[3:.N,][!is.na(X3),]
+TBNotif2014 = data.table(TBNotif2014[,1:25])[3:.N,][!is.na(X__3),]
 names(TBNotif2014) = c( "NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", "SEXO", "EDAD", 
                         "RANGOEDAD", "PESOLBS", "PESOKG", "CONDICIONINGRESO", "FECHANOTIFICACION", "FECHAINICIOTX",
                         "CLASIFICACION", "TIPODETBPEDIATRICOS", "VIH", "FECHAPRUEBAVIH", "ESQUEMA", "CONTACTOS", 
@@ -33,7 +40,7 @@ names(TBNotif2014) = c( "NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SE
                         "PACIENTEPRIVADOLIBERTAD", "DEPORTADO")
 
 TBNotif2015 = read_excel("PCE/Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2015.xlsx", sheet = 2, col_names = F)
-TBNotif2015 = data.table(TBNotif2015)[3:.N,][!is.na(X3),]
+TBNotif2015 = data.table(TBNotif2015[,1:31])[3:.N,][!is.na(X__3),]
 names(TBNotif2015) = c("NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", "SEXO", "EDAD",
                        "RANGOEDAD", "PESOLBS", "PESOKG", "CONDICIONINGRESO", "FECHANOTIFICACION", "FECHAINICIOTX", 
                        "CLASIFICACION", "LOCALIZACIONTB", "METODODX", "VIH", "FECHAPRUEBAVIH", "ESQUEMA", "CONTACTOS",
@@ -125,12 +132,12 @@ gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
 
 
 # Plotting TB cases per municipality
-plot = ggplot(data=gtmMunisIGN@data, aes(fill=1000*TBCases/Poblacion)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + scale_fill_gradientn(colours = c("#777777", "#ddcc22", "#DD5522", "#AA1111"), values=c(0,0.005,0.7,1), trans="log10") + labs(fill= "Rate", title="TB incidence rate per 1,000 people per 2 years")
+plot = ggplot(data=gtmMunisIGN@data, aes(fill=(1000*TBCases/Poblacion)/3)) + geom_map(aes(map_id=id), colour = rgb(1,1,1,0.5), map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + scale_fill_gradientn(colours = c("#777777", "#ddcc22", "#DD5522", "#AA1111"), values=c(0,0.005,0.7,1), trans="log10") + labs(fill= "Rate", title="TB incidence rate per 1,000 people per year from 2013 to 2015")
 # Overlay the departments
 plot + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#00000066", size=1)  + theme_void()
 
 if (saveGraphs) 
-    ggsave("PCE/Graficas/TB_Gt_Notifications_2014-2015-Map-Muncipalities.png", height=8, width=8)
+    ggsave("PCE/Graficas/TB_Gt_Notifications_2013-2015-Map-Muncipalities.png", height=8, width=8)
 
 # ----TB Relation with indigenous pop----------------------
 # Indigenous population proportion by department
