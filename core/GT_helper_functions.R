@@ -3,18 +3,15 @@
 #
 # 2017-11-14
 # Helper functions for Guatemala data analysis
-
-dataFilePrefix = "./PCE/"
-
+# This requires sourcing first GT_load_data.R 
+#
+#   source("gf/core/GT_load_data.R")
+#
 # ----Dependencies------------------------------
 library(stringdist)
 library(stringr)
+library(data.table)
 
-# ----Read some data----------------------------
-if (!exists("munisGT")) {
-  munisGT = read.csv(paste0(dataFilePrefix, "Covariates and Other Data/Demographics/Guatemala_Municipios_IGN2017_worldpop2015.csv"), encoding = "UTF-8")
-  dt.munisGT = data.table(munisGT)
-}
 # ----getMuniCodeByName-------------------------
 # This function converts a string to a number. It tries to find a municipality 
 # by name and returns its numerical code.
@@ -27,10 +24,11 @@ deptoNameToCodeCache  = data.frame(original_name = character(), clean_name = cha
 muniNameToCodeCache  = data.frame(original_name = character(), clean_name = character(), depto_orig_name = character(), depto_code = integer(), code  = integer(), stringsAsFactors = FALSE)
 
 
+
 getMuniCodeByName <- function (nombreMuni_, nombreDepto_, field = "COD_MUNI__") {
     if (is.na(nombreMuni_)) {
         warning(paste("Found an NA in municipality input nombreDepto was:", nombreDepto_))
-        muni = NA
+        muni = 0
     }
     else {
         nombreMuni  = str_replace_all(str_to_lower(nombreMuni_), vocalesTildes)
@@ -64,7 +62,7 @@ getMuniCodeByName <- function (nombreMuni_, nombreDepto_, field = "COD_MUNI__") 
 getDeptoCodeByName <- function (nombreDepto_) {
     if (is.na(nombreDepto_)) {
         warning(paste("Found an NA in department input"))
-        depto = NA
+        depto = 0
     }
     else {
         nombreDepto = str_replace_all( str_to_lower(nombreDepto_), vocalesTildes)
@@ -81,4 +79,43 @@ getDeptoCodeByName <- function (nombreDepto_) {
         }
     }
     depto
+}
+
+# ----------Population-------------------
+# After doing some math with the exponential growth equation, I have got these:
+# P_0 = (A-B)/(d*A) ^ ( Y_A / (Y_A-1) )
+# k = log((A - B) / P_0) / d
+# Where P_0 and k are the population at Year 0 and the coefficient of exponential growth, respectively.
+# A is the population at year Y_A and B is the population at year Y_B. We assume that Y_A > Y_B
+
+dt.munisGT[, P_10_12 := (Poblacion2010^(1/2010) / Poblacion2012^(1/2012))^(2010*2012/(2012-2010))] 
+dt.munisGT[, P_12_15 := (Poblacion2012^(1/2012) / Poblacion2015^(1/2015))^(2015*2012/(2015-2012))]
+dt.munisGT[, k_10_12 := log(Poblacion2012/P_10_12)/2012] 
+dt.munisGT[, k_12_15 := log(Poblacion2015/P_12_15)/2015]
+setkey(dt.munisGT, COD_MUNI__)
+GTMuniPopulation <- function (code, year) {
+    parameters = dt.munisGT[J(code), .(P_10_12, P_12_15, k_10_12, k_12_15)]
+    ifelse(year>2012, 
+           parameters$P_12_15 * exp(parameters$k_12_15 * year),
+           parameters$P_10_12 * exp(parameters$k_10_12 * year))
+}
+# Example usage:
+# GTMuniPopulation(c(101, 201, 301, 401, 402), c(2013, 2013, 2013, 2013, 2013))
+# [1] 1016192.75   23072.88   47429.26  124803.77   24614.68
+
+# ---------Gt municipality map visualizations--------------
+# Function to generate a Guatemala municipalities map visualization. 
+# Data should be indexed by a "municode" column containing municipalities codes.
+# The variable to plot should be named "values"
+gtmap_muni <- function(data) {
+    gtmMunisDataCopy = cbind(gtmMunisIGN@data)
+    gtmMunisIGN@data$id = rownames(gtmMunisIGN@data)
+    gtmMunisIGN@data = merge(gtmMunisIGN@data, data, by.x = "COD_MUNI__", by.y="municode", all.x=TRUE, sort=FALSE)
+    gtmMunisIGN.map.df = fortify(gtmMunisIGN)
+    gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
+    
+    plot = ggplot(data=gtmMunisIGN@data, aes(fill=values)) + geom_map(aes(map_id=id), colour = "#44554444", map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#FFFFFF66", size=1)
+    
+    gtmMunisIGN@data = gtmMunisDataCopy
+    plot
 }
