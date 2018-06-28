@@ -19,7 +19,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   
-  if(grant%in%"GTM-T-MSPAS"&sheet_name!="INTEGRACION"){
+  if((grant%in%"GTM-T-MSPAS"&sheet_name!="INTEGRACION"|sheet_name=="LFA Expenditure_7B")){
     colnames(gf_data)[1] <- "module"
     colnames(gf_data)[2] <- "intervention"
     colnames(gf_data)[3] <- "budget"
