@@ -72,7 +72,7 @@ dt[, year:= year(date)]
 dt$dps <- gsub("bas congo", "kongo central", dt$dps)
 
 subpop <- NA
-indicators <- c("stockOutASAQ")
+indicators <- c("stockOutASAQ", "stockOutartLum")
 subpop <- c("14yrsAndOlder", "6to13yrs", "1to5yrs", "2to11mos") #, "used", "1st", "2nd", "3rd")
 y=2017
 makeMap(indicators, subpop, 2017)
@@ -86,25 +86,32 @@ makeMap <- function(indicators, subpop, y) {
   } else {
     dtSubset <- dt[year==y & indicator %in% indicators & subpopulation %in% subpop,]
   }
+  dtSubset <- dtSubset[is.na(subpopulation) | subpopulation %in%  c("14yrsAndOlder", "6to13yrs", "1to5yrs", "2to11mos"),]
+  dtMap <- dtSubset[, .(totalStockouts = sum(mean, na.rm=T)), by=c("dps", "year")]
   
-  dtMap <- dtSubset[, .(total = sum(mean, na.rm=T)), 
-                       by=c("dps", "year", "indicator")]
+  dtSubsetFac <- dt[year==y & indicator== "healthFacilities" & subpopulation== "total",]
+  dtMapFac <- dtSubsetFac[, .(avgFac = mean(mean)), by=.(dps, year, health_zone)]
+  dtMapFac <- dtMapFac[, .(totFac = sum(avgFac)), by=.(dps, year)]
+  
+  dtMap <- merge(dtMap, dtMapFac, all=T, by=c("dps","year"))
+  dtMap <- dtMap[, total := totalStockouts/totFac]
   
   # dtMapWide <- dcast(dtMap, dps + year ~ indicator, value.var="total")
   # dtMapWide[, percentUsed := ((ASAQused/ASAQreceived)*100)]
   
   graphData <- merge(coordinates, dtMap, by.x='id', by.y='dps', all=TRUE, allow.cartesian=TRUE)
   
-  if (median(dtMap$total)>1000000){
-    graphData <- graphData[, totalTransformed := total/1000000]
-    units = 1000000
-  } else if (median(dtMap$total)>100000){
+  # if (mean(dtMap$total)>1000000){
+  #   graphData <- graphData[, totalTransformed := total/1000000]
+  #   units = 1000000
+  # } else 
+    if (mean(dtMap$total)>100000){
     graphData <- graphData[, totalTransformed := total/100000]
     units = 100000
-  } else if (median(dtMap$total)>10000){
+  } else if (mean(dtMap$total)>10000){
     graphData <- graphData[, totalTransformed := total/10000]
     units = 10000
-  } else if (median(dtMap$total)>1000) {
+  } else if (mean(dtMap$total)>1000) {
     graphData <- graphData[, totalTransformed := total/1000]
     units = 1000
   } else {
@@ -113,22 +120,24 @@ makeMap <- function(indicators, subpop, y) {
   }
   
   max = max(graphData$totalTransformed)
+  min = min(graphData[id != "0", totalTransformed])
   mid = (max/2)
   
   plot <- (ggplot() + geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=totalTransformed)) + 
              coord_equal() + ##so the two shapefiles have the same proportions 
-             geom_path() +
+             geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
              # geom_map(map=admin_dataset, data=admin_dataset,
              #          aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
              # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="#4e0589", alpha=0) + 
-             scale_fill_gradient2(low='#9aeaea', mid='#216fff', high='#0606aa',
+             scale_fill_gradient2(low='#fee0d2', mid='#fb6a4a', high='#99000d',             # blues - (low='#9aeaea', mid='#216fff', high='#0606aa',
                                   na.value = "grey70",space = "Lab", midpoint = mid, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
                                   breaks=round(seq(0, (max*0.90), by=((max*0.90)/4))), limits=c(0,max)) + 
             #theme_void()) +  labs(title= paste0("DRC: ", indicators, " ", subpop, " by Province, ", y), fill=paste0('Doses (in ', as.integer(units),"s)"))
             theme_void()+
-            theme(plot.title = element_text(size = 16), legend.title=element_text(size=16), legend.text=element_text(size=10))) +  
-            labs(title= paste0("Stock-outs of ASAQ by Province ", y), fill=paste0('Days (in ', as.integer(units),'s)'))
+            theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +  
+            labs(title= paste0("Stock-outs of ACTs at Health Facilities ", y), fill=paste0('Days per facility')) +
+            labs(caption="Source: Programme National de Lutte contre le Paludisme (PNLP)")
   
   print(plot)
 
