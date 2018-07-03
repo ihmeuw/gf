@@ -1,5 +1,6 @@
 # ----------------------------------------------
   # Audrey Batzel
+
   #
   # 6/18/18
   # Working with the imputed data and creating visualizations
@@ -81,77 +82,8 @@
         labs(shape="Imputed Value", color="Subpopulation") + ylab("value (count)")
     }
 # ----------------------------------------------  
-    dtASAQStockouts <- dt2[indicator=="stockOutASAQ" & subpopulation != "inj" & dps !=0, ]
-    dtASAQStockouts[, totStockouts := sum(mean), by=c("dps", "date")]
-    dtASAQStockouts[, totStockoutsbyType := sum(mean), by=c("dps", "date", "subpopulation")]
-    
-    dtASAQRecieved <- dt2[indicator=="ASAQreceived" & dps !=0, ]
-    dtASAQRecieved[, totASAQRecieved := sum(mean), by=c("dps", "date")]
-    dtASAQRecieved[, totASAQRecievedbyType := sum(mean), by=c("dps", "date", "subpopulation")]
-    
-    dtASAQUsed <- dt2[indicator=="ASAQused" & dps !=0, ]
-    dtASAQUsed[, totASAQUsed := sum(mean), by=c("dps", "date")]
-    dtASAQUsed[, totASAQUsedbyType := sum(mean), by=c("dps", "date", "subpopulation")]
-    
-    
-  pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/GraphsForTERG.pdf", height=6, width=9)
-      g <- ggplot(dtASAQStockouts[dps %in% c("maniema", "tshopo", "kinshasa"), ], aes(x=date, y=totStockouts, color = dps)) + theme_bw()+
-        geom_point() + geom_line() +
-        ggtitle(paste0("Time Series for Stock-outs")) +
-        labs(color="DPS") + ylab("Days of Stock-outs") + xlab("Date") +
-        theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=13))
-      print(g)
-      
-      g <- ggplot(dtASAQRecieved[dps %in% c("maniema", "tshopo", "kinshasa"), ], aes(x=date, y=totASAQRecieved, color = dps)) + theme_bw()+
-        geom_point() + geom_line() +
-        ggtitle(paste0("Time Series for ASAQ Received by Health Zones")) +
-        labs(color="DPS") + ylab("Doses of ASAQ") + xlab("Date") + scale_y_continuous(labels = scales::comma) +
-        theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=13))
-      print(g)
 
-      g <- ggplot(dtASAQUsed[dps %in% c("maniema", "tshopo", "kinshasa"), ], aes(x=date, y=totASAQUsed, color = dps)) + theme_bw()+
-        geom_point() + geom_line() +
-        ggtitle(paste0("Time Series for ASAQ Distributed to Patients")) +
-        labs(color="DPS") + ylab("Doses of ASAQ") + xlab("Date") + scale_y_continuous(labels = scales::comma) +
-        theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=13))
-      print(g)
-  #----------------- 
-    graphDPS <- function(d){
-      g <- ggplot(dtASAQStockouts[dps==d,], aes(x=date, y=totStockoutsbyType, color = subpopulation)) + theme_bw()+
-        geom_point() + geom_line() +
-        ggtitle(paste0("Time Series for Stock-outs (", simpleCap(d), ")")) +
-        labs(color="Age Group") + ylab("Days of Stock-outs") + xlab("Date") +
-        scale_color_discrete(name="Age Group",
-                            breaks=c("14yrsAndOlder", "6to13yrs", "1to5yrs", "2to11mos" ),
-                            labels=c("14 yrs+", "6 to 13 yrs", "1 to 5 yrs", "2 to 11 mos")) +
-        theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=13))
-
-      print(g)
-
-      g <- ggplot(dtASAQRecieved[dps==d,], aes(x=date, y=totASAQRecievedbyType, color = subpopulation)) + theme_bw()+
-        geom_point() + geom_line() +
-        ggtitle(paste0("Time Series for ASAQ Received by Health Zones (", simpleCap(d), ")")) +
-        labs(color="Age Group") + ylab("Doses of ASAQ") + xlab("Date") + scale_y_continuous(labels = scales::comma) +
-        scale_color_discrete(name="Age Group",
-                             breaks=c("14yrsAndOlder", "6to13yrs", "1to5yrs", "2to11mos" ),
-                             labels=c("14 yrs+", "6 to 13 yrs", "1 to 5 yrs", "2 to 11 mos")) +
-        theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=13))
-      print(g)
-      
-      g <- ggplot(dtASAQUsed[dps==d, ], aes(x=date, y=totASAQUsedbyType, color = subpopulation)) + theme_bw()+
-        geom_point() + geom_line() +
-        ggtitle(paste0("Time Series for ASAQ Distributed to Patients (", simpleCap(d), ")")) +
-        labs(color="Age Group") + ylab("Doses of ASAQ") + xlab("Date") + scale_y_continuous(labels = scales::comma) +
-        scale_color_discrete(name="Age Group",
-                             breaks=c("14yrsAndOlder", "6to13yrs", "1to5yrs", "2to11mos" ),
-                             labels=c("14 yrs+", "6 to 13 yrs", "1 to 5 yrs", "2 to 11 mos")) +
-        theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=13))
-      print(g)
-    }
-  #-----------------
-  for (i in c("maniema", "tshopo", "kinshasa")){ graphDPS(i) }
-      
-  dev.off()
+    
 # ----------------------------------------------  
 # set dt and tol... choose 1 or 2
   # dt <- copy(dt1)
