@@ -47,6 +47,56 @@ prisons[, (patients_received=sum(patients_received)), by=.(facility_name, sex)]
 # ----------------------------------------------
 # create tables for graphs 
 
+pr <- uganda_vl[ ,.(patients_received=sum(patients_received),
+                    ratio=100*(sum(suppressed)/sum(valid_results))),
+                    by=.(date, prison)]
+
+prlong <- melt(pr, id.vars=c('date', 'prison'))
+
+prlong$prison <- factor(prlong$prison, levels=c("TRUE", "FALSE"), labels=c("Incarcerated", 
+                                                    "Not Incarcerated"))
+
+
+prlong$variable <- factor(prlong$variable, levels=c("patients_received", "ratio"), 
+                          labels=c("Patients submitting for viral load testing", 
+                                    "Percent virally suppressed"))
+
+ggplot(prlong, aes(x=date, y=value, color=prison, group=prison)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~variable, scales='free_y') +
+  theme_bw()
+
+
+#------------------------------------------
+
+pr1 <- uganda_vl[ ,.(valid_results=sum(valid_results),
+
+                 by=.(date, prison)]
+
+pr1long <- melt(pr1, id.vars=c('date', 'prison'))
+
+pr1long$prison <- factor(pr1long$prison, levels=c("TRUE", "FALSE"), labels=c("Incarcerated", 
+                                                                           "Not Incarcerated"))
+
+pr1long$variable <- factor(pr1long$variable, levels=c("valid_results", "suppressed"), 
+                          labels=c("Valid viral load test results", 
+                                   "Virally suppressed"))
+
+ggplot(pr1long[prison=='Incarcerated'], aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() +
+  geom_line() +
+  theme_bw()
+
+
+
+
+
+
+
+#-----------------------------------------------
+
+
 # totals among incarcerated persons - patients, results, suppressed, ratio
 prison_total <- prisons[ ,  .(patients_received=sum(patients_received),
                               valid_results=sum(valid_results),
@@ -92,6 +142,36 @@ prison_bar_all$prison <- factor(prison_bar_all$prison, levels=c('TRUE', 'FALSE')
                                 labels=c("Incarcerated", "Not incarcerated"))
 
 prison_bar_all[ , not_suppressed:=(valid_results - suppressed)]
+
+#----------------
+pr <- uganda_vl[ ,.(ratio=100*(sum(suppressed)/sum(valid_results))), 
+                     by=.(date, prison, sex)]
+
+pr$prison <- factor(pr$prison, levels=c('TRUE', 'FALSE'),
+                                labels=c("Incarcerated", "Not incarcerated"))
+
+
+ggplot(pr, aes(x=date, y=ratio, color=sex, group=sex)) +
+  geom_point()+
+  geom_line() +
+  facet_wrap(~prison) +
+  theme_bw()
+
+# shape long facet wrap by incarcerated status
+pr1 <- uganda_vl[ ,.(ratio=100*(sum(suppressed)/sum(valid_results)), 
+                       valid_results=sum(valid_results)), 
+                    by=.(date, prison)]
+
+pr1$prison <- factor(pr1$prison, levels=c('TRUE', 'FALSE'),
+                    labels=c("Incarcerated", "Not incarcerated"))
+
+ggplot(pr, aes(x=date, y=ratio, color=prison, group=prison)) +
+  geom_point()+
+  geom_line() +
+  facet_wrap(~prison) +
+  theme_bw()
+
+
 
 # ---------------------
 # viral suppression ratio graphs by incarcerated status

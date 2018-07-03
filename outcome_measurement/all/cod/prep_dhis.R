@@ -159,7 +159,7 @@ base[is.na(sex), sex:='Unknown']
 #--------------------------------------
 # create an svs variable in order to subset to svs data
 base[type=='svs', svs:=1]
-base[svs!=1, svs:=0]
+base[type!='svs', svs:=0]
 
 #--------------------------------------
 # add a district variable 
@@ -175,11 +175,12 @@ base[dist=='it' ,province:='Ituri']
 
 base[dist=='kn' ,province:='Kinshasa']
 
-base[dist=='ks' ,province:='Kasai'] # checked
-base[dist=='kc' ,province:='Kasai Central'] # on the list
+base[dist=='kc' ,province:='Kongo Central'] 
 
+base[dist=='ks' ,province:='Kasai'] # checked
 base[dist=='ke' ,province:='Kasai Oriental'] # on the list - checked - definitely east
-base[dist=='kr' ,province:='Kasai Occidental'] # checked - definitely west
+base[dist=='kr' ,province:='Kasai Central'] 
+
 base[dist=='ki' ,province:='Haut-Lomami'] # mistake - only one facility
 base[dist=='kg' ,province:='Kwango'] 
 base[dist=='kl' ,province:='Kwilu'] 
@@ -221,7 +222,7 @@ base[is.na(mtk), mtk:=0]
 # type of facility
 
 # create organisational unit name in lower case
-base[ ,org_unit1:=tolower(org_unit)]
+base[ , org_unit1:=tolower(org_unit)]
 
 # Clinics - add spaces to eliminate polyclinics
 # This code should be first, since many facility have both clinic and another classification
@@ -255,9 +256,9 @@ medical_center <-  grep(pattern="centre de medical", x=base$org_unit1)
 base[medical_center, level:='Medical Center']
 
 #  Hospitals
-hospital <- grep(pattern="\\shôpital\\s", x=base$org_unit1)
+hospital <- grep(pattern="\\shôpital", x=base$org_unit1)
 base[hospital, level:='Hospital']
-hospital <- grep(pattern="\\shopital\\s", x=base$org_unit1)
+hospital <- grep(pattern="\\shopital", x=base$org_unit1)
 base[hospital, level:='Hospital']
 
 # Reference hospitals
@@ -290,12 +291,14 @@ base[health_area, level:="Health Area"]
 health_area <- grep(pattern="aire de sante", x=base$org_unit1)
 base[health_area, level:="Health Area"]
 
-# Health zones
+# Health zones - there should be no health zones in base services
 health_zone <- grep(pattern="zone de sante", x=base$org_unit1)
 base[health_zone, level:="Health Zone"]
 health_zone1 <- grep(pattern="zone de santé", x=base$org_unit1)
 base[health_zone1, level:="Health Zone"]
 
+# until the other facilities are fixed - other category
+base[is.na(level), level:='Other']
 #--------------------------------------------
 
 # --------------------
@@ -309,30 +312,3 @@ base <- base[ ,.(data_set, element, date, category, age, sex, type, value, org_u
 saveRDS(base, paste0(dir, 'base.rds'))
 
 #------------------------
-
-#------------------------
-# Tableau indicators
-# RDTs performed, positive RDTS, confirmed malaria, confirmed malaria txed
-
-tab <- base[element_id=='CIzQAR8IWH1' | element_id=='SpmQSLRPMl4' | element_id=='jocZb4TE1U2' | element_id=='wleambjupW9' | element_id=='AxJhIi7tUam' | element_id=='CGZbvJchfjk']
-
-# fix the english
-tab[element_id=='CIzQAR8IWH1', element_eng:='A 1.4 RDT completed']
-tab[element_id=='SpmQSLRPMl4', element_eng:='A 1.4 Positive RDT']
-tab[element_id=='jocZb4TE1U2', element_eng:='A 1.5 Simple confirmed malaria FE']
-tab[element_id=='wleambjupW9', element_eng:='A 1.5 Simple confirmed malaria treated according to PN-FE']
-tab[element_id=='AxJhIi7tUam', element_eng:='A 1.4 Severe malaria']
-tab[element_id=='CGZbvJchfjk', element_eng:='A 1.4 Severe malaria treated']
-
-tab[ , element:=NULL]
-
-tab <- tab[ , .(count=sum(value)), by=.(data_set, element_fr, 
-                element_eng, date, month, year, age, sex, province, mtk)]
-            
-tab[ ,element:=element_fr]
-tab[ , element_fr:=NULL]
-            
-tab <- tab[ ,.(data_set, element, element_eng, date, month, year, age, sex, province, mtk, count)]
-
-write.csv(tab, paste0(dir, 'drc_malaria.csv'))
-
