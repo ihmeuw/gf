@@ -115,9 +115,13 @@
     # merge test back to ameliaDT
       ameliaDT <- merge(ameliaDT, test, all.x=T, by=c("health_zone", "year"))
       
-      ameliaDT <- ameliaDT[ healthFacilities_max < healthFacilities_numReported, healthFacilities_max:= healthFacilities_numReported ]
+      forTERG <- ameliaDT[, c(1:5, 56:58, 108:109)]
+      
+      
+      #ameliaDT <- ameliaDT[ healthFacilities_max < healthFacilities_numReported, healthFacilities_max:= healthFacilities_numReported ]
       ameliaDT <- ameliaDT[, healthFacilities_max := max(healthFacilities_max), by=c("health_zone", "year")]
-     
+      ameliaDT <- ameliaDT[ healthFacilities_max < healthFacilities_numReported, healthFacilities_max:= healthFacilities_numReported ]
+      
       ameliaDT$healthFacilitiesProportion <- ameliaDT[, .(healthFacilities_numReported / healthFacilities_max)]
 # ----------------------------------------------   
 
