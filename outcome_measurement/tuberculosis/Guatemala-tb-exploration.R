@@ -85,6 +85,23 @@ names(TBNotif2016) = c( "CORRELATIVO", "NOMBRES", "CODIGOPACIENTE", "DIRECCION",
                         "CAUSADEMUERTE")
 TBNotif2016[,YEAR := 2016]
 
+# 2017 data
+TBNotif2017 = read_excel(paste0(dataPath, "Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES TB 2017.xlsx"), 
+                         sheet = 1, col_names = F)
+# Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
+TBNotif2017 = data.table(TBNotif2017)[3:.N,][!is.na(X3),]
+names(TBNotif2017) = c( "CORRELATIVO", "NOMBRES", "CODIGOPACIENTE", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", 
+                        "DAS", "SEXO", "FECHANACIMIENTO", "FECHAACTUAL", "EDAD", "RANGOEDAD", "EDUCACION", "PUEBLO", "OCUPACION",
+                        "PESOLBS", "PESOKG", "CONDICIONINGRESO", "NUEVACONDICIONINGRESO", "CLASIFICACION", "LOCALIZACIONTB",
+                        "FECHANOTIFICACION", "FECHAINICIOTX", "ESQUEMA", "FECHADX", "METODODX", "NUEVOMETODODX", "VIH", "FECHAPRUEBAVIH",
+                        "OTRASPATOLOGIAS", "PDS", "PACIENTEPRIVADOLIBERTAD", "DEPORTADO", "UNIDADDX", "EMPLEADOMSPAS", "CONTACTOS",
+                        "CONTACTO_000-0004", "CONTACTO_MAYORA_005", "QUIMIO_VIH", "CASOINDICE", "FALLECIDOS", "FECHAMUERTE", 
+                        "CAUSADEMUERTE")
+"DAS",	"DISTRITO",	"SERVICIODESALUD",	"FECHANACIMIENTO", 	"EDAD",	"SEXO",	"PESOLBS",	"EDUCACION",	"PUEBLO",	"OCUPACION",	"MIGRACION",	"CONDICIONPX", 	"CAUSAMUERTE",	"CONDICIONINGRESO",	"NUEVACONDICIONINGRESO",	"TipoTB",	"CLASIFICACION",	Localización TB	Fecha Notificación	Mes Nofiti.	Fecha Dx.	Método Dx.	Fecha Inicio Tx.	Condiciones Asociadas	Condiciones Asociadas II	Condiciones Asociadas III	VIH	Fecha VIH	TPC	TARV	Lugar TARV	Inicio TARV	Esquema	Refiere	Bx. Positivas	PDS	Resultado	Fecha	Resultado	Fecha	Resultado	Fecha	Resultado	Fecha	Resultado	Fecha	Cond. Egreso	Fecha	Observación
+
+TBNotif2017[,YEAR := 2017]
+
+
 deptoIndgnProp = read.csv(paste0(dataPath, "Outcome Measurement Data/Covariates/Demographics/Guatemala_indigenousPobProp.csv"))
 deptoIndgnProp = data.table(deptoIndgnProp)
 
