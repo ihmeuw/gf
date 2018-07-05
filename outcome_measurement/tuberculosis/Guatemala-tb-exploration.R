@@ -55,7 +55,7 @@ TBNotif2013[,YEAR := 2013]
 
 TBNotif2014 = read_excel(paste0(dataPath, "Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES 2014 GENERAL anterior.xlsx"), sheet = 2, col_names = F)
 # Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
-TBNotif2014 = data.table(TBNotif2014)[3:.N,][!is.na(X3),]
+TBNotif2014 = data.table(TBNotif2014[,1:25])[3:.N,][!is.na(X__3),]
 names(TBNotif2014) = c( "NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", "SEXO", "EDAD", 
                         "RANGOEDAD", "PESOLBS", "PESOKG", "CONDICIONINGRESO", "FECHANOTIFICACION", "FECHAINICIOTX",
                         "CLASIFICACION", "TIPODETBPEDIATRICOS", "VIH", "FECHAPRUEBAVIH", "ESQUEMA", "CONTACTOS", 
@@ -205,6 +205,7 @@ plot = ggplot(data=gtmMunisIGN@data, aes(fill=100000*TBCases/Poblacion2015/4)) +
 plot + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#00000066", size=1)  + theme_void()
 
 if (saveGraphs) 
+
     ggsave("PCE/Graficas/TB_Gt_Notifications_2012-2015-Map-Muncipalities.png", height=8, width=8)
 
 # Restore data
