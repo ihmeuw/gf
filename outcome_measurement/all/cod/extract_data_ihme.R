@@ -23,13 +23,13 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # CHANGE THESE - set the start year, end year, and output directory
 
 # select the start year and end year for the download
-start_year <- '2018'
-end_year <- '2018'
+start_year <- '2017'
+end_year <- '2017'
 start_month <- '01'
-end_month <- '02'
+end_month <- '12'
 
 # change the update year to before the data begins
-update_year <- '2018'
+update_year <- '2017'
 
 #identify the data set(s) you want to download 
 
@@ -155,6 +155,28 @@ saveRDS(pnls, paste0(dir, 'pnls_', country,
 #                                   '_', start_year, '_', end_year, '.csv'))
 #------------------------
 
+pnlt <- extract_all_data(base_url = base_url, 
+                         data_sets = data_sets[18, ],
+                         org_units = org_units, 
+                         deb_period = paste0(start_year, '-', start_month, '-01'),
+                         end_period = paste0(end_year, '-', end_month, '-01'),
+                         userID = userID, 
+                         password = password,
+                         pace = 10,
+                         update_date = paste0(update_year, '-01-01'))
+
+
+saveRDS(pnlt, paste0(dir, 'pnlt_', country, 
+                     '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
+
+
+
+
+
+
+
+
+
 
 #------------------------
 # extract PNLP sentinel sites (2 data sets) and export as a CSV
@@ -166,26 +188,26 @@ pnlp_extraction <<- extract_all_data(base_url = base_url,
                                      userID = userID, 
                                      password = password,
                                      pace = 10,
-                                     update_date = '2016-01-01')
+                                     update_date = '2018-01-01')
 
-write.csv(pnlp_cs_extraction, paste0(out_dir, '/pnlp_cs_extraction_', country, 
-                                     '_', start_year, '_', end_year, '.csv'))
+saveRDS(pnlp_extraction, paste0(dir, '/pnlp_extraction_', country, 
+                                     '_', start_year, '_', end_year, '.rds'))
 
 
 
 #-------------------------
-pnlp_hgr_extraction <<- extract_all_data(base_url = base_url, 
-                                         data_sets = data_sets[16,],
+pnlt_extraction <- extract_all_data(base_url = base_url, 
+                                         data_sets = data_sets[18,],
                                          org_units = org_units, 
                                          deb_period = paste0(start_year, '-01-01'),
                                          end_period = paste0(end_year, '-04-01'),
                                          userID = userID, 
                                          password = password,
                                          pace = 10,
-                                         update_date = '2016-01-01')
+                                         update_date = '2017-01-01')
 
-write.csv(pnlp_hgr_extraction, paste0(out_dir, '/pnlp_hgr_extraction_', country, 
-                                      '_', start_year, '_', end_year, '.csv'))
+saveRDS(pnlt_extraction, paste0(out_dir, '/pnlt_extraction_', country, 
+                                      '_', start_year, '_', end_year, '.rds'))
 
 #---------------------------------------------
 sigl <- extract_all_data(base_url = base_url, 

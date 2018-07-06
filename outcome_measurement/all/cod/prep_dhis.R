@@ -37,24 +37,6 @@ base <- readRDS(paste0(dir, 'pre_merge/base_services_drc_01_2015_04_2018.rds'))
 base <- data.table(base)
 #-----------------------------------------
 
-#------------------------------
-# subset to only the relevant elements
-# subset before further cleaning if working on a home machine
-# data set is too large for data table manipulation (crashes RStudio)
-
-# import the id #s of the relevant elements and create a vector
-elements <- fread(paste0(dir, 'elements_catalogue.csv'))
-
-# subset to only base services
-elements_base <- elements[datasets_ID=='pMbC0FJPkcm']   
-elements_base <- elements_base[keep==1]
-
-# subset to only the relevant ids
-element_ids <- as.character(elements_base$data_element_ID)
-
-# subset base services to only the relevant elements
-base[ , data_element_ID:=as.character(data_element_ID)]
-base <- base[data_element_ID %in% element_ids]
 
 #-------------------
 
@@ -79,20 +61,20 @@ org_units_description <- org_units_description[ ,.(org_unit_ID = id, coordinates
 # merge in the names of the objects in the data set
 
 # merge on org_unit_ID to get names and descriptions of organisational units
-base <- merge(base, org_units, by='org_unit_ID', all.x=TRUE)
-base <- merge(base, org_units_description, by='org_unit_ID', all.x=TRUE)
-base[ ,length(unique(org_unit_ID))] # print the number of organisational units
+pnls <- merge(pnls, org_units, by='org_unit_ID', all.x=TRUE)
+pnls <- merge(pnls, org_units_description, by='org_unit_ID', all.x=TRUE)
+pnls[ ,length(unique(org_unit_ID))] # print the number of organisational units
 
 # merge on data element ID to get data sets and data sets name
-base <- merge(base, data_elements, by='data_element_ID', all.x=TRUE)
+pnls <- merge(pnls, data_elements, by='data_element_ID', all.x=TRUE)
 
 # merge on category id to get age and sex categories for the data elements
-base <- merge(base, data_elements_categories, by='category', all.x=TRUE)
-setnames(base, c('category', 'category_name'), c('category_id', 'category'))
+pnls <- merge(pnls, data_elements_categories, by='category', all.x=TRUE)
+setnames(pnls, c('category', 'category_name'), c('category_id', 'category'))
 
 # drop unnecessary urls
-base[ , org_unit_url:=NULL]
-base[ , url_list:=NULL]
+pnls[ , org_unit_url:=NULL]
+pnls[ , url_list:=NULL]
 #------------------------
 
 #------------------------
