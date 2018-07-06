@@ -4,6 +4,7 @@
 # 6/20/2018
 # Start visualizations of the VR data 
 ## RUN THIS ON THE CLUSTER SINCE SOME FILES ARE VERY BIG 
+## Also: the raster code is included, but I didn't use that data for creating visualizations so it is commented out 
 # ----------------------------------------------
 ###### Set up R / install packages  ###### 
 # ----------------------------------------------
@@ -14,6 +15,7 @@ library(rgeos)
 library(data.table)
 library(ggplot2)
 library(maptools)
+
 # ----------------------------------------------
 ##set up J Drive 
 # ----------------------------------------------
@@ -27,8 +29,8 @@ if (Sys.info()[1] == 'Windows') {
 # ----------------------------------------------
 ##set set up the directories to read/export files: 
 # ----------------------------------------------
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-raster_dir = paste0(j, '/Project/Evaluation/GF/covariates/gtm/')
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') # have to declare the J Drive differently on the cluster 
+# raster_dir = paste0(j, '/Project/Evaluation/GF/covariates/gtm/')
 shape_dir <- paste0(j, '/WORK/11_geospatial/05_survey shapefile library/Shapefile directory/')
 vr_dir <-  paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
 export_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/visualizations/')
@@ -37,7 +39,7 @@ merge_dir <- paste0(j, "/WORK/11_geospatial/11_vr/vr_data_inputs/muni_merges/GTM
 ## ----------------------------------------------
 ## read files 
 # ----------------------------------------------
-popData = raster(paste0(raster_dir, "/worldpop/Guatemala 100m Population/GTM_pph_v2b_2015.tif"))
+# popData = raster(paste0(raster_dir, "/worldpop/Guatemala 100m Population/GTM_pph_v2b_2015.tif"))
 vrData <- data.table(fread(paste0(vr_dir, "vr_2009_2016.csv")))
 vectorData = shapefile(paste0(shape_dir, "vr_gaul_gtm.shp"))
 mergeData <- data.table(fread(paste0(merge_dir, "GTM_muni_merges_2009_2016.csv")))
@@ -49,11 +51,11 @@ coordinates = data.table(fortify(vectorData, region='GAUL_CODE'))
 names = data.table(vectorData@data)
 coord_and_names = merge(coordinates, names, by.x='id', by.y='GAUL_CODE', allow.cartesian=TRUE)
 
-
-
 # ----------------------------------------------
 ## subset TB deaths from the overall VR data 
 # ----------------------------------------------
+
+# get the codes from the "cause_ids" csv 
 tb_death_codes <- c(297,
                     954,
                     934,
@@ -64,12 +66,15 @@ vrTb <- vrData[cause_id%in%tb_death_codes]
 
 
 setnames(vrTb, "deaths", "tb_deaths")
-##most recent year is 2015 for raster, so subset the VR data to 2015 as well: 
-tb_map_dataset <- vrTb[year_id==2015]
+
+
+# ----------------------------------------------
+## GUATEMALA MAPPING 
+# ----------------------------------------------
 
 # right now, we don't care about the other variables (just year and location )
 byVars = names(vrTb)[names(vrTb)%in%c('year_id', 'location_id')]
-tb_map_dataset= vrTb[, list(tb_deaths=sum(na.omit(tb_deaths))), by=byVars]
+tb_map_dataset= vrTb[, list(tb_deaths=sum(na.omit(deaths))), by=byVars]
 
 ## total deaths 
 byVars = names(vrData)[names(vrData)%in%c('year_id', 'location_id')]
@@ -80,6 +85,20 @@ tb_map_dataset <- merge(tb_map_dataset, annualVr, by=c("location_id", "year_id")
 
 ##calculate TB mortality over total mortality
 tb_map_dataset[,tb_rate:=tb_deaths/deaths]
+
+# ----------------------------------------------
+## line graph over time 
+# ----------------------------------------------
+lineGraph <- tb_map_dataset[with(tb_map_dataset,order(year_id)),]
+
+ggplot(lineGraph, aes(x = year_id, y= tb_deaths)) + 
+  geom_line(size=0.75) +
+  scale_color_manual(values="#551A8B") +
+  scale_y_continuous(limits=c(100, 500)) +
+  ggtitle("TB Mortality over Time (National Level)") +
+  labs(x = "Year", y = "Number of Deaths (Estimate)") +
+  theme_bw()
+
 
 
 # ----------------------------------------------
@@ -100,7 +119,7 @@ setnames(merge_coords, "adm2_gbd_id", "location_id")
 
 
 # ----------------------------------------------
-## municipality graphs by year 
+## municipality level graphs by year 
 # ----------------------------------------------
 gtm_plots <- list()
 i=1
