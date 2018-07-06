@@ -34,7 +34,7 @@ library(lubridate)
 ## You will want to download the files in the multi_source and ghe_s folders, even though we will not be using all of these files 
 # (only the ones that contain actual budget/expenditure data and are in sicoin format). 
 
-loc_id <- 0100
+adm1 <- 0100
 country <- "gtm"
 dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
 
@@ -56,9 +56,11 @@ summary_file$year <- as.character(summary_file$year)
 summary_file$year <- "none"
 
 ##source the functions that we will use to prep the files: 
-source('./prep_sicoin.r')
-source('./prep_sicoin_yearly_data.r')
-source('./prep_sicoin_monthly_data.r')
+source('./prep_sicoin_donacions_data.r')
+source('./prep_sicoin_detailed_data.r')
+source('./prep_sicoin_summary_data.r')
+source('./prep_sicoin_report_data.r')
+source('./prep_sicoin_blank_data.r')
 
 ## loop over all of the files 
 for(i in 1:length(file_list$file_name)){
@@ -74,11 +76,11 @@ for(i in 1:length(file_list$file_name)){
   } else if (file_list$format[i]=="summary"){
     tmpData <- prep_summary_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   } else if (file_list$format[i]=="blank"){
-    tmpData <- prep_blank_sicoin(country, loc_id, ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
+    tmpData <- prep_blank_sicoin(country, adm1, ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   } else if(file_list$format[i]=="donacions"){
     tmpData <- prep_donacions_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])),
                                      ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i],
-                                     country, loc_id)
+                                     country,  adm1)
   } else if (file_list$format[i]=="report"){
     tmpData <- prep_report_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   }
@@ -121,6 +123,11 @@ write.table(summary_file, "J:/Project/Evaluation/GF/resource_tracking/multi_coun
             col.names=FALSE, append = TRUE, row.names=FALSE, sep=",")
 
 
+# ---------------------------------------------
+##########  Clean up the data/duplicate check ########
+# ---------------------------------------------
+
+
 ##remove rows where loc_ids are in the SDA column: 
 cleaned_database <- resource_database[!resource_database$loc_name%in%"REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA"]
 cleaned_database <-cleaned_database[!(cleaned_database$adm1%in%"TOTAL"|cleaned_database$adm2%in%"TOTAL")]
@@ -133,7 +140,16 @@ cleaned_database$lang <- "esp"
 cleaned_database[is.na(module), module:="all"]
 cleaned_database$intervention <- "all"
 
+##check for duplicates:
 
+dups<-cleaned_database[duplicated(cleaned_database) | duplicated(cleaned_database, fromLast=TRUE)]
+
+
+
+# ----------------------------------------------
+##### Load the mapping files  #####
+##run the map_modules_and_interventions.R script first
+# ----------------------------------------------
 
 sicoin_data <- strip_chars(cleaned_database, unwanted_array, remove_chars)
 
@@ -145,6 +161,8 @@ final_mapping <- copy(mapping_list)
 final_mapping$disease <- NULL
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
+mapping_list$abbrev_intervention <- NULL
+mapping_list$abbrev_module<- NULL
 
 gf_mapping_list <- total_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx",
                                       mapping_list, unwanted_array, remove_chars)

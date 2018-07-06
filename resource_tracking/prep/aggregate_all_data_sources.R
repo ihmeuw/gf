@@ -66,6 +66,18 @@ fpmData$start_date <- as.Date(fpmData$start_date,"%Y-%m-%d")
 fpmData$period <- as.numeric(fpmData$period)
 fpmData[, end_date:=start_date + period-1]
 # --------------------------------------------
+##check for duplicates:
+
+dups<-fpmData[duplicated(fpmData) | duplicated(fpmData, fromLast=TRUE)]
+
+byVars = names(fpmData)[!names(fpmData)%in%c('budget', 'disbursement', 'expenditure')]
+fpmData= fpmData[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement)),expenditure=sum(na.omit(expenditure))), by=byVars]
+
+
+
+# --------------------------------------------
+
+
 ##read the already mapped gos data: 
 gos_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv", 
                                 fileEncoding = "latin1"))
@@ -88,18 +100,14 @@ totalData <- rbind(fpmData, gos_data)
 
 # --------------------------------------------
 #DUPLICATE CHECK: 
-d1 <- nrow(totalData)
-d2 <- unique(nrow(totalData))
-
-if(d1 !=d2){
-  stop("Your dataset has duplicates!")
-}
+dups<-totalData[duplicated(totalData) | duplicated(totalData, fromLast=TRUE)]
 
 byVars = names(totalData)[!names(totalData)%in%c('budget', 'disbursement', 'expenditure')]
 totalData= totalData[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement)),expenditure=sum(na.omit(expenditure))), by=byVars]
 
 
-
+## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
+totalData$fin_data_type <- "actuals"
 
 # --------------------------------------------
 ##export to correct folder: 
@@ -132,6 +140,8 @@ gos_gtm <- gos_gtm[(disease=="hiv"&year<2011)|(disease=="malaria"&year<2011)|(di
 totalGos <- rbind(gos_uga, gos_cod, gos_gtm)
 
 cleanData <- rbind(cleanData, totalGos)
+## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
+cleanData$fin_data_type <- "actuals"
 
 
 write.csv(cleanData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv", row.names = FALSE)

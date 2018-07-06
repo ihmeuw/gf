@@ -35,7 +35,9 @@ source <- "gf" ## denotes the type of data (e.g. government expenditures, Global
 
 
 ## set up the directory and grab the file list: 
-dir <- 'your local drive here' ##where the files are stored locally
+dir <- 'your local drive here' ##where the files are stored locally - on the J drive, the filepath is:  "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
+
+
 file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)
@@ -129,14 +131,25 @@ resource_database$disbursement <- as.numeric(resource_database$disbursement)
 
 ##assign loc_name and source: 
 resource_database$loc_name <- loc_name
-resource_database$source <- source
+resource_database$financing_source <- source
 
 ## optional: do a check on data to make sure values aren't dropped: 
 # data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "data_source","disease")])
 
 ## we have some junk "modules" that should be dropped:
-toMatch <- c("0", "Please sel", "PA", "6", "4")
+toMatch <- c("0", "Please sel", "6", "4")
 cleaned_database <- resource_database[!grepl(paste(toMatch, collapse="|"), resource_database$module),]
+
+dups<-cleaned_database[duplicated(cleaned_database) | duplicated(cleaned_database, fromLast=TRUE)]
+
+##most of the time, these duplicates are either budget values with NA or 0
+##UGA-T-MoFPED has duplicated rows for a treatment category, but these were present in the original budget, so we'll aggregate them together
+
+
+##sum up to remove duplicates: 
+byVars = names(cleaned_database)[!names(cleaned_database)%in%c('budget', 'disbursement', 'expenditure')]
+cleaned_database <- cleaned_database [, list(budget=sum(na.omit(budget)), 
+                                            disbursement=sum(na.omit(disbursement)),expenditure=sum(na.omit(expenditure))), by=byVars]
 
 # ---------------------------------------------
 ########## We'll split the TB/HIV grants as follows: ########
@@ -174,6 +187,9 @@ cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
 ##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 
+## the directory on the J Drive for the intervention list is: J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/
+
+
 mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx")
                                   , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
 
@@ -182,6 +198,9 @@ final_mapping <- copy(mapping_list)
 final_mapping$disease <- NULL ## we will be joining on code 
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
+mapping_list$abbrev_intervention <- NULL
+mapping_list$abbrev_module <- NULL
+
 
 ##this loads the list of modules/interventions with their assigned codes
 gf_mapping_list <- total_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"),
@@ -227,8 +246,8 @@ mappedUga$expenditure <- mappedUga$expenditure*mappedUga$coefficient
 mappedUga$disbursement <- mappedUga$disbursement*mappedUga$coefficient
 
 ##change this when we get geo locations for UGA: 
-mappedUga$adm1 <- "uga"
-mappedUga$adm2 <- "uga"
+mappedUga$adm1 <- 190
+mappedUga$adm2 <- 190
 mappedUga$country <- "Uganda"
 mappedUga$lang <- "eng"
 

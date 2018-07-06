@@ -69,7 +69,7 @@ totalGos[disease=='hiv/tb', disease:='hiv']
 totalGos$sda_activity <- "All"
 totalGos$recipient <- totalGos$grant_number
 totalGos$data_source <- "gos"
-totalGos$source <- "gf"
+totalGos$financing_source <- "gf"
 totalGos$loc_name <- totalGos$country
 totalGos$disbursement <- 0
 
