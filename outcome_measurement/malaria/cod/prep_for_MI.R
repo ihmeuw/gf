@@ -91,10 +91,43 @@
     # remove repetitive or not useful variables 
     vars_to_remove <- c("reports_expected", "reports_received", "ASAQused_total", "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete")
     ameliaDT <- ameliaDT[, -c(vars_to_remove), with=F]
+# ----------------------------------------------   
+
+
+# ---------------------------------------------- 
+# Deterministically Impute Total Health Facilities
     
-  # new column to factor in the product of number of health facilities reporting and total number of health facilties - check with David, is this needed?
-    ameliaDT$healthFacilitiesProduct <- ameliaDT[, .(healthFacilities_total * healthFacilities_numReported)]
-  
+  # new column to take the proportion of health facilities reporting out of total health facilities
+    ameliaDT[, year:= year(date)]
+    # when health facilities reporting is greater than total health facilities, change health facilities total to = health facilities reporting
+       # keep track of what the value for total was before: 
+        ameliaDT[, healthFacilities_totalOrig := healthFacilities_total]
+      ameliaDT[healthFacilities_numReported > healthFacilities_total, healthFacilities_total:=healthFacilities_numReported]
+    # when all health facilities are missing for a given year set it to be the same as the following year (since it is earlier years missing)
+      test <- ameliaDT[, .(healthFacilities_max = max(healthFacilities_total, na.rm=T)), by=c("health_zone", "year")]
+      test <- test[healthFacilities_max == "-Inf", healthFacilities_max:=NA]
+      test <- test[order(health_zone, -year),]
+      # warning - na.locf won't work if all health facilities total data is missing in most recent year
+      # manually set mabalako 2017 so that it works
+      test[health_zone=="mabalako" & year==2017, healthFacilities_max:=28]
+      test[, healthFacilities_max:= na.locf(healthFacilities_max), by=health_zone]
+      
+    # merge test back to ameliaDT
+      ameliaDT <- merge(ameliaDT, test, all.x=T, by=c("health_zone", "year"))
+      
+      forTERG <- ameliaDT[, c(1:5, 56:58, 108:109)]
+      
+      
+      #ameliaDT <- ameliaDT[ healthFacilities_max < healthFacilities_numReported, healthFacilities_max:= healthFacilities_numReported ]
+      ameliaDT <- ameliaDT[, healthFacilities_max := max(healthFacilities_max), by=c("health_zone", "year")]
+      ameliaDT <- ameliaDT[ healthFacilities_max < healthFacilities_numReported, healthFacilities_max:= healthFacilities_numReported ]
+      
+      ameliaDT$healthFacilitiesProportion <- ameliaDT[, .(healthFacilities_numReported / healthFacilities_max)]
+# ----------------------------------------------   
+
+
+# ---------------------------------------------- 
+# Standardize Test Results
   # combine age groups for tests to account for where these are separated out in different years of data- check with David, is this okay? best way to do this?
     ameliaDT[, RDT_completed := ifelse( year <= 2014, RDT_completed, (RDT_completedUnder5 + RDT_completed5andOlder))]
     ameliaDT[, RDT_positive := ifelse( year <= 2014, RDT_positive, (RDT_positiveUnder5 + RDT_positive5andOlder))]

@@ -12,42 +12,39 @@
 # Copy shell script into a qlogin session to open an IDE
 # request at least 10 slots for extractions 
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 15 -P dhis_download
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 20 -P pnls_download
 
 #----------------------------------
 # Set the directory to download the data
-if (Sys.info()[1] == 'Windows') {
-  username <- "ccarelli"
-  root <- "J:/"
-} else {
-  username <- Sys.getenv("USER")
-  root <- "/home/j/"
-}
+# detect if operating on windows or on the cluster 
+root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 #------------------------------------
 # CHANGE THESE - set the start year, end year, and output directory
 
 # select the start year and end year for the download
-start_year <- '2017'
+start_year <- '2018'
 end_year <- '2018'
 start_month <- '01'
-end_month <- '05'
+end_month <- '02'
 
 # change the update year to before the data begins
-update_year <- '2017'
+update_year <- '2018'
 
 #identify the data set(s) you want to download 
 
 
-
 # define main directory
-dir <- paste0(root, 'Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 #------------------------------------------------
 
 #----------------------------------
 # source the necessary functions to download the data 
 source(paste0(dir, 'dhis_extracting_functions1.R')) # change to locate code 
+
+# make sure it worked
+?extract_all_data
 
 #----------------------------------
 # set the country, base_url, username, and password 
@@ -129,7 +126,7 @@ base_services <- extract_all_data(base_url = base_url,
                                      end_period = paste0(end_year, '-', end_month, '-01'),
                                      userID = userID, 
                                      password = password,
-                                     pace = 10,
+                                     pace = 20,
                                      update_date = paste0(update_year, '-01-01'))
 
 saveRDS(base_extraction, paste0(out_dir, '/base_services_', country, 
@@ -151,7 +148,7 @@ pnls <- extract_all_data(base_url = base_url,
                                   pace = 10,
                                   update_date = paste0(update_year, '-01-01'))
 
-saveRDS(pnls, paste0(dir, '/pnls_', country, 
+saveRDS(pnls, paste0(dir, 'pnls_', country, 
                      '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
 # write.csv(pnls_extraction, paste0(out_dir, '/pnls_extraction_', country, 

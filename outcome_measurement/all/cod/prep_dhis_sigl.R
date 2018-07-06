@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 6/19/2018
+# 6/27/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -161,11 +161,13 @@ sigl[dist=='it' ,province:='Ituri']
 
 sigl[dist=='kn' ,province:='Kinshasa']
 
-sigl[dist=='ks' ,province:='Kasai'] # checked
-sigl[dist=='kc' ,province:='Kasai Central'] # on the list
+sigl[dist=='kc' ,province:='Kongo Central'] # checked against facility inventory
 
+# Kasai, Kasai Central, Kasai Oriental, and Kongo Central
+sigl[dist=='ks' ,province:='Kasai'] # checked
 sigl[dist=='ke' ,province:='Kasai Oriental'] # on the list - checked - definitely east
-sigl[dist=='kr' ,province:='Kasai Occidental'] # checked - definitely west
+sigl[dist=='kr' ,province:='Kasai Central'] # checked 
+
 sigl[dist=='ki' ,province:='Haut-Lomami'] # mistake - only one facility
 sigl[dist=='kg' ,province:='Kwango'] 
 sigl[dist=='kl' ,province:='Kwilu'] 
@@ -283,26 +285,40 @@ zone1 <- grep(pattern="zone de santé", x=sigl$org_unit1)
 sigl[zone1, level:="Health Zone"]
 
 #fix the 58 facilities with typos
-
 sigl[ ,.(length(unique(org_unit))), by=level]
 #--------------------------------------------
+# 
+# sigl[level=="Health Zone", health_zone:=org_unit]
+# sigl[level=="Health Zone", health_zone:=(substr(health_zone, 4, 20))]
+# 
+# sigl$health_zone <- word(sigl$health_zone, 1)
+# 
+# sigl[  , hz:=(word(sigl$health_zone, 1))]
+# sigl[  , hz2:=(word(sigl$health_zone, 2))]
+# 
+# if (sigl$hz2!='Zone')
+# 
+# 
+# gsub(pattern="Zone de Sante", replacement="\\s", x=sigl$health_zone)
+# 
+# x <- strsplit(sigl$health_zone, split=" ")
+# x1 <- unlist(lapply(x, `[[`, 1))
+# 
+# sigl[level=="Health Zone", gsub(pattern="zone de sante", replacement="", sigl$hz)]
+# gsub(pattern="zone de santé", replacement="", sigl$hz)
+# 
 
-sigl[level=="Health Zone", health_zone:=org_unit]
-sigl[level=="Health Zone", health_zone:=(substr(health_zone, 4, 20))]
+#----------------------------------------------
+# put the variables in an intuitive order 
 
-sigl$health_zone <- word(sigl$health_zone, 1)
+sigl <- sigl[ ,.(data_set, element, date, type, value, org_unit, level, province,
+                      mtk, opening_date, last_update, drug, element_fr, element_id, 
+                      org_unit_id, group, data_set_id, month, year)]
 
-sigl[  , hz:=(word(sigl$health_zone, 1))]
-sigl[  , hz2:=(word(sigl$health_zone, 2))]
+#----------------------------------------------
+# save the data sets
 
-if (sigl$hz2!='Zone')
+saveRDS(sigl, paste0(dir, 'sigl.rds'))
 
-
-gsub(pattern="Zone de Sante", replacement="\\s", x=sigl$health_zone)
-
-x <- strsplit(sigl$health_zone, split=" ")
-x1 <- unlist(lapply(x, `[[`, 1))
-
-sigl[level=="Health Zone", gsub(pattern="zone de sante", replacement="", sigl$hz)]
-gsub(pattern="zone de santé", replacement="", sigl$hz)
+#----------------------------------------------
 

@@ -239,6 +239,9 @@ uvl_1$variable <- factor(uvl_1$variable,
                             labels=c("Patients", "Samples Received","DBS Samples", "Samples Tested", "Valid Results", "Suppressed"))
 
 # ----------------------
+
+
+
 # annual facet-wrapped graphs with total facilities
 # create a data set shape long and add dates to both
 uvl_year <- uganda_vl[, .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
@@ -333,6 +336,29 @@ ggplot(uvl_year, aes(x=date, y=value, color=sex)) +
   labs(x="Year", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
   scale_color_manual(values=sex_colors)
 
+
+graph <- uganda_vl[ ,.(ratio=100*(sum(suppressed)/sum(valid_results))), by=.(date, sex)]
+
+y_tho <-c('#756bb1', '#66c2a4' )
+
+pdf(paste0(dir, '/ratio.pdf'), height=6, width=9)
+
+ggplot(graph, aes(x=date, y=ratio, color=sex)) +
+  geom_point() +
+  geom_line() +
+  labs(x="Date", y="Percent virally supperessed (%)", color="Sex",
+       caption='Source: Uganda Viral Load Dashboard') +
+  scale_color_manual(values=y_tho) +
+  theme_minimal() +
+  theme(legend.title = element_text(size=16), 
+        plot.caption=element_text(vjust=6, size=14),
+        axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=14), 
+        axis.text.x = element_text(size=12),
+        axis.text.y = element_text(size=12),
+        legend.text = element_text(size=14)) 
+
+dev.off()
 
 # facilities reporting by month, year
 ggplot(facilities_1, aes(x=date, y=facilities_report)) + 
@@ -798,26 +824,39 @@ ggplot(total_fac_year, aes(x=date, y=total_facilities, color=sex)) +
 
 
 # annual suppression ratios
-ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+ggplot(coordinates_year[year==2018], aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
-  facet_wrap(~year) +
   scale_fill_gradientn(colors=ratio_colors) + 
   theme_void() +
   labs(title="Viral suppression ratios by district, Uganda", fill="Percent virally suppressed") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
+
+gents <- brewer.pal(6, 'Blues')
+
+# breaks for log transformation legends
+breaks <- c(1, 20, 400, 8100)
+
+
+breaks <- c(1, 20000, 30000, 50000)
+
+pdf(paste0(dir, 'mapss.pdf'), height=6, width=19)
+
 # annual patients received
-ggplot(coordinates_year[year==2017], aes(x=long, y=lat, group=group, fill=patients_received)) + 
+ggplot(coordinates_year[year==2018], aes(x=long, y=lat, group=group, fill=patients_received)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
-  facet_wrap(~year) +
-  scale_fill_gradientn(colors=results_colors, breaks=breaks, name="Patients received") + 
+  scale_fill_gradientn(colors=gents, name="Patients", breaks=breaks ) + 
   theme_void() +
-  labs(title="Number of patients submitting samples, Uganda", caption="Source: Uganda Viral Load Dashboard") +
-  theme(plot.title=element_text(vjust=-2), plot.subtitle=element_text(vjust=-2), plot.caption=element_text(vjust=6))  
+  labs(title="Patients submitting samples for viral load testing", caption="Source: Uganda Viral Load Dashboard") +
+ theme(plot.title=element_text(vjust=-4, size=22), 
+      plot.caption=element_text(vjust=6, size=14),
+      legend.title = element_text(size=16), 
+      legend.text = element_text(size=14)) 
+  
 
 
 dev.off()
