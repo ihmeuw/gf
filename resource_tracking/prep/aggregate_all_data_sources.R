@@ -51,8 +51,8 @@ sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 totalGtm$start_date <- as.Date(totalGtm$start_date,"%Y-%m-%d")
 
 ## if you want to aggregate the sicoin and FPM data:
-# totalGtm$country <- "Guatemala"
-# totalGtm <- rbind(sicoin_data, totalGtm)
+totalGtm$country <- "Guatemala"
+totalGtm <- rbind(sicoin_data, totalGtm)
 
 
 
@@ -98,16 +98,27 @@ gos_data$cost_category <- "all"
 
 totalData <- rbind(fpmData, gos_data)
 
+## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
+totalData$fin_data_type <- "actuals"
+
+# -------------------------------------------
+##read the FGH data: 
+fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_forecasting_prepped.csv", 
+                                fileEncoding = "latin1"))
+
+##change the dates into date format: 
+fgh_data$start_date <- as.Date(fgh_data$start_date, "%Y-%m-%d")
+fgh_data$end_date <- as.Date(fgh_data$end_date, "%Y-%m-%d")
+
+
+totalData <- rbind(totalData, fgh_data)
+                             
 # --------------------------------------------
 #DUPLICATE CHECK: 
 dups<-totalData[duplicated(totalData) | duplicated(totalData, fromLast=TRUE)]
 
 byVars = names(totalData)[!names(totalData)%in%c('budget', 'disbursement', 'expenditure')]
 totalData= totalData[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement)),expenditure=sum(na.omit(expenditure))), by=byVars]
-
-
-## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
-totalData$fin_data_type <- "actuals"
 
 # --------------------------------------------
 ##export to correct folder: 
@@ -140,9 +151,12 @@ gos_gtm <- gos_gtm[(disease=="hiv"&year<2011)|(disease=="malaria"&year<2011)|(di
 totalGos <- rbind(gos_uga, gos_cod, gos_gtm)
 
 cleanData <- rbind(cleanData, totalGos)
+
 ## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
 cleanData$fin_data_type <- "actuals"
 
+# --------------------------------------------
+##export to correct folder: 
 
 write.csv(cleanData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv", row.names = FALSE)
 
