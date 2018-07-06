@@ -48,12 +48,8 @@ fpm_data$year <- year(fpm_malaria$start_date)
 # ----------------------------------------------
 
 # Using malaria, but can also do TB or HIV if you want
-sicoin_malaria <- sicoin_data[disease=="malaria"&municipality!="gtm"] ##drop where we only have national data
+sicoin_malaria <- sicoin_data[disease=="malaria"&loc_name!="gtm"] ##drop where we only have national data
 fpm_malaria <- fpm_data[disease=="malaria"]
-
-##sum the fpm data by year, module, and intervention
-byVars = names(fpm_malaria)[names(fpm_malaria)%in%c('year', 'gf_module', 'gf_intervention', 'disease')]
-fpm_malaria = fpm_malaria[, list(budget=sum(na.omit(budget))), by=byVars]
 
 # ----------------------------------------------
 ######## Roll up the SICOIN data to department level ########
@@ -82,6 +78,8 @@ unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 
 
 remove_chars <- c(" ","rssh","hss", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
                   , "[[:punct:]]", "[^[:alnum:]]","\"", ",")
+
+##remove white space, unwanted characters, and provide proper punctuation to the municipality names 
 dept_muni_list$municipality<- chartr(paste(names(unwanted_array), collapse=''),
                                      paste(unwanted_array, collapse=''),
                                      dept_muni_list$municipality)
@@ -105,7 +103,7 @@ department_data <- merge(sicoin_malaria, dept_muni_list, all.x=TRUE, by="municip
 ##Check for any munis that didn't get mapped: 
 # dropped_munis <- department_data[is.na(department)]
 
-##sum by department now: 
+##sum by department now (dropping the municipalities)
 ##sum up budget and disb. by year, disease, and data source 
 byVars = names(department_data)[names(department_data)%in%c('department','module','year')]
 department_data  = department_data[, list(budget=sum(na.omit(budget)), 
@@ -127,6 +125,11 @@ setnames(department_data, c("budget", "disbursement"), c("sicoin_budget", "sicoi
 # ----------------------------------------------
 ######## This part is where we can merge the FPM and SICOIN data ########
 # ----------------------------------------------
+
+##sum the fpm data by year, module, and intervention
+byVars = names(fpm_malaria)[names(fpm_malaria)%in%c('year', 'gf_module', 'gf_intervention', 'disease')]
+fpm_malaria = fpm_malaria[, list(budget=sum(na.omit(budget))), by=byVars]
+
 
 ##you can join on quarter, but I'm doing year here: 
 graphData <- merge(fpm_malaria, department_data, by="year", allow.cartesian=TRUE)
@@ -150,9 +153,9 @@ colors <- c( '#1F3AC7',
              '#fdbf6f',
              '#ff7f00',
              '#cab2d6',
-             '#9e82ba', #dark lilac
-             '#93b500',##cherry flavoring
-             '#d1cd06', ##neutralized chartreuse 
+             '#9e82ba', 
+             '#93b500',
+             '#d1cd06',
              '#af445b', 
              '#ff447c'
              
