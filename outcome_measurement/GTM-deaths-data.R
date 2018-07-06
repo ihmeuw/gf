@@ -58,3 +58,17 @@ INECountsMlr[,.(t = sum(conteo))] # 6
 IHMEDefsData[(year_id == 2016) & (cause_id %in% c(345, 856, 857, 858)), .(t = sum(deaths))] # 8.1
 
 INECountsHIV[, sum(conteo), by = agegroup]
+
+
+# Mujeres en edad reproductiva
+defsData[[2009]][ ((CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90"
+                                     )) | 
+                     (Caudef %in% c("A301", "A302", "J65X", "K230", "K673", "M011",
+                                    "N330", "M490", "M900", "N740", "N741", "O980", "K930",
+                                    "P370", "Z030", "Z111", "Z201", "Z232", "U843"
+                                    )))
+                  & Sexo == 2 & Edadif >10 & Edadif < 54, 
+                 .(conteo = .N) ] # 60
+ihme_temp = IHMEDefsData[ sex_id == 2 & age_group_id >= 7 & age_group_id <= 54  
+              & (cause_id %in% c(297, 954, 934, 946, 947)), .(sum(deaths)), by=year_id] # 
+ihme_temp[order(year_id)]
