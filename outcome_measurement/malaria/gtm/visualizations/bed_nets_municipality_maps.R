@@ -28,7 +28,7 @@ library(stringr)
 mapping_dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
 local_dir <- "J:/Project/Evaluation/GF/outcome_measurement/gtm/"
 # ----------------------------------------------
-######## Load the municipality level shapefile ########
+######## Load the municipality level shapefile ######## 
 # ----------------------------------------------
 # load the shapefile
 shapeData = shapefile(paste0(mapping_dir,'GTM_munis_only.shp'))
@@ -79,6 +79,8 @@ setnames(bnData, "adm2", "id")
 bnData[, bn_over_beds:=bed_nets/household_beds]
 bnData[, bn_over_people:=bed_nets/num_persons]
 
+bnData <- bnData[order(bnData$year), ]
+
 # ----------------------------------------------
 ######## Load the FPM data ########
 # ----------------------------------------------
@@ -121,7 +123,7 @@ am_delivered <- amData[grepl("_deliveredToUser", amData$antimalarial_input)]
 # ----------------------------------------------
 
 ##color scale for the mapping values 
-colScale <-  scale_fill_gradient2(low='#0606aa', mid='#00FFff', high='#ffa3b2',
+colScale <-  scale_fill_gradient2(low='#a5f7f7', mid='#91b5f7', high='#0606aa',
                                   na.value = "grey70",space = "Lab", midpoint = 60, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
                                   breaks=c(0, 20, 40, 60, 80), limits=c(0,100))
