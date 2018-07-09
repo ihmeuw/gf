@@ -158,7 +158,14 @@ cleanData$fin_data_type <- "actuals"
 
 cleanData <- rbind(cleanData, fgh_data)
 
+# --------------------------------------------
+#DUPLICATE CHECK: 
+dups<-cleanData[duplicated(cleanData) | duplicated(cleanData , fromLast=TRUE)]
 
+byVars = names(cleanData )[!names(cleanData )%in%c('budget', 'disbursement', 'expenditure')]
+cleanData = cleanData[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement)),expenditure=sum(na.omit(expenditure))), by=byVars]
+
+# --------------------------------------------
 # --------------------------------------------
 ##export to correct folder: 
 

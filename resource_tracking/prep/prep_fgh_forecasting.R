@@ -6,7 +6,7 @@
 ## code to integrate the FGH forecasted DAH, THE and GHE data 
 ##  NOTE: this is not disease specific - only by country and year 
 
-###  RUN THIS ON THE CLUSTER 
+### Caution: RUN THIS ON THE CLUSTER - the files are very big 
 
 # ----------------------------------------------
 
@@ -24,11 +24,11 @@ if (Sys.info()[1] == 'Windows') {
   root <- "/home/j/"
 }
 
-
-##set the directory for where to write the prepped files 
+# ----------------------------------------------
+##set the directory for where to write the prepped files
+# ---------------------------------------------- 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/')
-
 input_dir <- "Project/IRH/Forecasting/data/feather_storage_draws_2018/scenarios_he_raked/"
 
 
@@ -37,7 +37,10 @@ ghe_file <- "GHES"
 the_file <- "THE"
 dah_file <- "DAH"
 
-## function that takes the raw CSV and outputs a cleaned dataset with the mean, 2%, and 97.5% uncertainty percentiles 
+
+# ----------------------------------------------
+## function that outputs a cleaned dataset with the mean, 2%, and 97.5% uncertainty percentiles 
+# ----------------------------------------------
 get_prepped_forecast <- function(root,input_dir, fin_type){
   ghe_forecast <- data.table(read_feather(paste0(root, input_dir, fin_type,"_totes_compile.feather")))
   pce_forecast <- ghe_forecast[iso3%in%c("GTM", "UGA", "COD")&scenario=="reference"]
@@ -68,6 +71,9 @@ get_prepped_forecast <- function(root,input_dir, fin_type){
 }
 
 
+# ----------------------------------------------
+## get the forecasted datasets using the above function: 
+# ----------------------------------------------
 ghe_prepped <- get_prepped_forecast(root, input_dir,ghe_file)
 ghe_prepped$financing_source <- "ghe_forecasted"
 the_prepped <- get_prepped_forecast(root, input_dir,the_file)
@@ -80,8 +86,9 @@ pce_forecast <- rbind(ghe_prepped, the_prepped, dah_prepped)
 pce_forecast <- melt(pce_forecast, id.vars = c("year", "iso3", "financing_source", "coefficient"), variable.name = "fin_data_type", value.name = "disbursement")
 pce_forecast$data_source <- "fgh"
 
-
-
+# ----------------------------------------------
+##add in RT variables so we can join this data to the RT database
+# ----------------------------------------------
 
 setnames(pce_forecast, "iso3", "adm1")
 pce_forecast$adm2 <- pce_forecast$adm1
@@ -105,6 +112,9 @@ pce_forecast$recipient <- pce_forecast$adm2
 pce_forecast$grant_number <- pce_forecast$adm2
 
 
+# ----------------------------------------------
+##export to the J Drive: 
+# ----------------------------------------------
 write.csv(pce_forecast, paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_forecasting_prepped.csv'), row.names=FALSE)
 
 
