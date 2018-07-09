@@ -155,6 +155,10 @@ cleanData <- rbind(cleanData, totalGos)
 ## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
 cleanData$fin_data_type <- "actuals"
 
+
+cleanData <- rbind(cleanData, fgh_data)
+
+
 # --------------------------------------------
 ##export to correct folder: 
 
