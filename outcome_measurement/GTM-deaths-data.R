@@ -40,6 +40,60 @@ INECounts = defsData[[2016]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19"
 INECounts[,.(t = sum(conteo))] # 313
 IHMEDefsData[(year_id == 2016) & (cause_id %in% c(297, 954, 934, 946, 947)), .(t = sum(deaths))] # 448.3
 # IHME Corrected data suggests a very large amount of TB deaths.
+# Deaths by cause:
+IHMEDefsData[(year_id == 2016) & (cause_id %in% c(297, 954, 934, 946, 947)), .(t = round(sum(deaths), 1)), 
+             by = cause_id]
+# Results: 
+# cause_id  t
+# 297       1.258910e-01 / 
+# 934       4.481442e+02 / Drug-susceptible tuberculosis
+# 946       1.152385e-03 / Multidrug-resistant tuberculosis without extensive drug resistance
+# Lets checkout HIV related TB: 
+IHMEDefsData[(year_id == 2016) & (cause_id %in% c(948,
+                                                  949,
+                                                  950)), .(t = round(sum(deaths), 1)), 
+             by = cause_id]
+# Only caus with deaths is 948 with 54 deaths / HIV-AIDS - Drug-susceptible Tuberculosis
+
+# Lets see how TB death is distr among causes
+defsData[[2016]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) | 
+                   (Caudef %in% c("A301", "A302", "J65X", "K230", "K673", "M011",
+                                  "N330", "M490", "M900", "N740", "N741", "O980", "K930",
+                                  "P370", "Z030", "Z111", "Z201", "Z232", "U843")), 
+                 .(conteo = .N), 
+                 by = .(Caudef) ]
+# Top 3 are: 
+# A162    209 / Tuberculosis de pulmón, sin mención de confirmación bacteriológica o histológica
+# A169     64 / Tuberculosis respiratoria no especificada, sin mención de confirmación bacteriológica o histológica
+# A199     16 / Tuberculosis miliar, sin otra especificación
+
+IHMEDefsData[(year_id == 2016) &
+               (cause_id %in% c(948,949,950, 297, 954, 934, 946, 947)), 
+             .(values_ = sum(deaths)), 
+             by = .(sex_id, age_group_id)]
+ggplot(data = merge(INECounts[, .(c = .N), by = .(agegroup= factor(agegroup), Sexo = factor(Sexo)) ],
+                  IHMEAgeGroups, by.x="agegroup", by.y= "age_group_id"), 
+       aes(age_group_name, c, group=Sexo)) + geom_col(aes(fill=Sexo)) + scale_fill_manual(values = c("blue", "red")) + 
+      labs(title="Distribution of TB deaths by age group", caption="Sexo 1 means Males and 2 Females", 
+           y="Count") + theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+# Now the geographical differences:
+mapData = merge(IHMELocations[, .("municode" = factor(adm2_country_code), adm2_gbd_id)], 
+                IHMEDefsData[(year_id == 2016) &
+                          (cause_id %in% c(948,949,950, 297, 954, 934, 946, 947)), 
+                        .(values_ = sum(deaths)), 
+                        by = .(location_id)],
+                 by.x = "adm2_gbd_id", by.y="location_id")
+mapData$values = cut(mapData$values_, c(0, 1, 10, 20, 30, 40, 50, 100), right = F)
+plot = gtmap_muni(mapData, extra =   scale_fill_manual(values=c("#444444","#CCCCFF", "#7777DD", "#3344EE"),  na.value="black") )
+plot + labs(title="TB Deaths \naccording to GBD corrected causes of death")
+mapData = INECounts[,.(values_ = sum(conteo)), by = .(municode = Mupocu)]
+mapData$values = cut(mapData$values_, c(0, 1, 10, 20, 30, 40, 50, 100), right = F)
+mapData$municode = str_replace(mapData$municode, "^0(\\d)", "\\1")
+plot = gtmap_muni(mapData, extra =   scale_fill_manual(values=c("#444444","#CCCCFF", "#7777DD", "#3344EE"),  na.value="black") )
+plot + labs(title="TB Deaths \naccording to national vital statistics")
+
 
 # Now with HIV:
 INECountsHIV = defsData[[2016]][(CaudefPRE %in% c("B20", "B21", "B22", "B23", "B24")) | 
