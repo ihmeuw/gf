@@ -28,7 +28,19 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
 
 
 gf_mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx", include_rssh_by_disease = TRUE)
+# ---------------------------------------------
+######### Run the function to paste "RSSH:" in front of the modules #######
+# ----------------------------------------------
 
+define_rssh_modules <- function(code, disease, module){
+  x <- module
+  if(grepl(tolower(code), "r")&disease!="hss"){
+    x <- paste0("RSSH: ", module)
+  } else {
+    x <- x
+  }
+  return(x)
+}
 
 # ---------------------------------------------
 ######### subset the country you want from the aggregate data  #######

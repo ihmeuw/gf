@@ -13,12 +13,6 @@
 # --------------------------------------------------------------
 # Set up R
 
-library(data.table)
-library(reshape2)
-library(stringr)
-library(readxl)
-library(rlang)
-library(zoo)
 # --------------------------------------------------------------
 
 # start function
@@ -76,7 +70,7 @@ prep_donacions_sicoin = function(inFile, start_date, disease, period, source, lo
   # --------------------------------------------------------------
   
   ## Create other variables 
-  budget_dataset$source <- source
+  budget_dataset$financing_source <- source
   budget_dataset$start_date <- start_date
   budget_dataset$period <- period
   budget_dataset$expenditure <- 0 ## change this once we figure out where exp data is

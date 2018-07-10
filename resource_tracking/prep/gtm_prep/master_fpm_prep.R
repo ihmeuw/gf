@@ -34,7 +34,7 @@ loc_name <- "gtm"
 # ----------------------------------------------
 ###### Load the list of RT files we want to process
 # ----------------------------------------------
-dir <- 'local drive here'
+dir <- 'local drive here' ##where the files are stored locally - on the J Drive: dir <-  "J:/Project/Evaluation/GF/resource_tracking/gtm/gf/"
 file_list <- read.csv(paste0(dir, "fpm/fpm_budget_filelist.csv"))
 
 
@@ -139,19 +139,27 @@ resource_database$financing_source <- "gf"
 
 resource_database <- resource_database[!grepl("Fondos pendientes de asignar a SR",resource_database$recipient)]
 
+
+
+dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
+
+##sum up to remove duplicates: 
+byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'disbursement', 'expenditure')]
+cleaned_database= resource_database[, list(budget=sum(na.omit(budget)), 
+                                            disbursement=sum(na.omit(disbursement)),expenditure=sum(na.omit(expenditure))), by=byVars]
 # ----------------------------------------------
 ##optional: check for any dropped data 
 # ----------------------------------------------
-data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "disease")])
+data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number","data_source", "disease")])
 
-
+data_check2<- as.data.frame(cleaned_database[, sum(budget, na.rm = TRUE),by = c("grant_number","data_source", "disease")])
 # ----------------------------------------------
 ##### Map to the GF Modules and Interventions #####
 ##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 
 
-gtmData <- strip_chars(resource_database, unwanted_array, remove_chars)
+gtmData <- strip_chars(cleaned_database, unwanted_array, remove_chars)
 gtmData[is.na(module), module:=intervention]
 
 ## the directory on the J Drive for the intervention list is: J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/

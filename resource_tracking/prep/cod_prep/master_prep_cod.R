@@ -41,7 +41,7 @@ implementer <- "CAGF"
 # ----------------------------------------------
 ##STEP 1: Download the "Resource Tracking Data" folder from Basecamp and save it on your local drive 
 # ----------------------------------------------
-dir <- 'filepath here' ##where the files are stored locally
+dir <- 'filepath here' ##where the files are stored locally - on the J Drive: dir J:/Project/Evaluation/GF/resource_tracking/cod/gf/
 
 # ----------------------------------------------
 ###### Load the list of the RT files we want to process   ###### 
@@ -148,13 +148,29 @@ write.table(summary_file, paste0("file path where you want the summary file","re
 ########## Modify the prepped data variables as necessary ########
 # ---------------------------------------------
 
-
 ## since we only have budget and exp, set disbursed as 0:  
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
 resource_database$disbursement <- 0 
 
 resource_database <- resource_database[!(module%in%c("6", "4"))]
+
+##check for duplicates:
+
+dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
+
+##most of the time, these duplicates are either budget values with NA or 0
+##COD-M-PSI has duplicated rows for program management, but these were present in the original budget, so we'll aggregate them together
+
+
+##sum up to remove duplicates: 
+byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'disbursement', 'expenditure')]
+resource_database= resource_database[, list(budget=sum(na.omit(budget)), 
+                                            disbursement=sum(na.omit(disbursement)),expenditure=sum(na.omit(expenditure))), by=byVars]
+
+
+
+
 
 # ----------------------------------------------
 ######## Optional: do a data check for dropped values ########
@@ -165,8 +181,10 @@ resource_database <- resource_database[!(module%in%c("6", "4"))]
 ##### Load the mapping files  #####
 ##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
-
 codData <- strip_chars(resource_database, unwanted_array, remove_chars)
+
+## the directory on the J Drive for the intervention list is: J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/
+
 mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"),
                                   include_rssh_by_disease = FALSE)
 
@@ -175,7 +193,8 @@ final_mapping <- copy(mapping_list)
 final_mapping$disease <- NULL
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
-
+mapping_list$abbrev_intervention <- NULL
+mapping_list$abbrev_module<- NULL
 gf_mapping_list <- total_mapping_list(paste0(dir,"intervention_and_indicator_list.xlsx"),
                                       mapping_list, unwanted_array, remove_chars)
 

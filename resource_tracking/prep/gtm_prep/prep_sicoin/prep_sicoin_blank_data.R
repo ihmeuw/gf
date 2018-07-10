@@ -12,23 +12,13 @@
 # budget_dataset - prepped data.table object
 
 # ----------------------------------------------
-# Set up R
-
-library(data.table)
-library(reshape2)
-library(stringr)
-library(readxl)
-library(rlang)
-library(zoo)
-# --------------------
-
-
+# ----------------------------------------------
 # start function
 prep_blank_sicoin = function(loc_name, adm1, start_date, disease, period, source) {
 
   budget_dataset <- setnames(data.table(matrix(nrow = 1, ncol = 11)), 
                                           c("sda_orig","adm1", "adm2","loc_name","budget", "disbursement", 
-                                            "source", "period",	"start_date", "disease", "expenditure"))
+                                            "financing_source", "period",	"start_date", "disease", "expenditure"))
 
   
   budget_dataset$loc_name<- as.character(budget_dataset$loc_name)
@@ -36,7 +26,7 @@ prep_blank_sicoin = function(loc_name, adm1, start_date, disease, period, source
   budget_dataset$adm1 <- adm1
   budget_dataset$adm2 <- adm1
   ## Create other variables 
-  budget_dataset$source <- source
+  budget_dataset$financing_source <- source
   budget_dataset$start_date <- start_date
   budget_dataset$period <- period 
   budget_dataset$disease <- disease
