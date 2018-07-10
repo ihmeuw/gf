@@ -107,15 +107,19 @@ GTMuniPopulation <- function (code, year) {
 # Function to generate a Guatemala municipalities map visualization. 
 # Data should be indexed by a "municode" column containing municipalities codes.
 # The variable to plot should be named "values"
-gtmap_muni <- function(data) {
+gtmap_muni <- function(data, extra = NULL) {
     gtmMunisDataCopy = cbind(gtmMunisIGN@data)
     gtmMunisIGN@data$id = rownames(gtmMunisIGN@data)
-    gtmMunisIGN@data = merge(gtmMunisIGN@data, data, by.x = "COD_MUNI__", by.y="municode", all.x=TRUE, sort=FALSE)
+    gtmMunisIGN@data = merge(gtmMunisIGN@data, data, by.x = "COD_MUNI__", by.y="municode", all.x=T, sort=FALSE)
     gtmMunisIGN.map.df = fortify(gtmMunisIGN)
     gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
     
-    plot = ggplot(data=gtmMunisIGN@data, aes(fill=values)) + geom_map(aes(map_id=id), colour = "#44554444", map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#FFFFFF66", size=1)
-    
+    plot = ggplot(data=gtmMunisIGN@data, aes(fill=values)) + 
+      geom_map(aes(map_id=id), colour = "#44554444", map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#FFFFFF66", size=1) + theme_void()
+    if (!is.null(extra)) {
+      plot = plot + extra
+      print( "added extra options")
+    }
     gtmMunisIGN@data = gtmMunisDataCopy
     plot
 }
