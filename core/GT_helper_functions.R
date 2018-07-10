@@ -94,11 +94,26 @@ dt.munisGT[, k_10_12 := log(Poblacion2012/P_10_12)/2012]
 dt.munisGT[, k_12_15 := log(Poblacion2015/P_12_15)/2015]
 setkey(dt.munisGT, COD_MUNI__)
 GTMuniPopulation <- function (code, year) {
-    parameters = dt.munisGT[J(code), .(P_10_12, P_12_15, k_10_12, k_12_15)]
-    ifelse(year>2012, 
-           parameters$P_12_15 * exp(parameters$k_12_15 * year),
-           parameters$P_10_12 * exp(parameters$k_10_12 * year))
+    parameters = dt.munisGT[J(code), .(ifelse(year>2012, 
+                                              P_12_15 * exp(k_12_15 * year),
+                                              P_10_12 * exp(k_10_12 * year)))]
+    parameters
 }
+
+GTDeptoPopulation_ <- function (code, year) {
+    parameters = dt.munisGT[COD_DEPT__ == code, .(P_10_12, P_12_15, k_10_12, k_12_15)]
+    if (year>2012)
+        pobmunis = parameters$P_12_15 * exp(parameters$k_12_15 * year)
+    else
+        pobmunis = parameters$P_10_12 * exp(parameters$k_10_12 * year)
+    
+    sum(pobmunis, na.rm=T)
+}
+
+GTDeptoPopulation <- function (codes, years) {
+    apply(cbind(codes,years), 1, function(x) GTDeptoPopulation_(x[1], x[2]) )
+}
+
 # Example usage:
 # GTMuniPopulation(c(101, 201, 301, 401, 402), c(2013, 2013, 2013, 2013, 2013))
 # [1] 1016192.75   23072.88   47429.26  124803.77   24614.68
@@ -107,7 +122,7 @@ GTMuniPopulation <- function (code, year) {
 # Function to generate a Guatemala municipalities map visualization. 
 # Data should be indexed by a "municode" column containing municipalities codes.
 # The variable to plot should be named "values"
-gtmap_muni <- function(data, extra = NULL) {
+gtmap_muni <- function(data, extra = NULL, depto_color = "#AAAAAA77") {
     gtmMunisDataCopy = cbind(gtmMunisIGN@data)
     gtmMunisIGN@data$id = rownames(gtmMunisIGN@data)
     gtmMunisIGN@data = merge(gtmMunisIGN@data, data, by.x = "COD_MUNI__", by.y="municode", all.x=T, sort=FALSE)
@@ -115,11 +130,30 @@ gtmap_muni <- function(data, extra = NULL) {
     gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
     
     plot = ggplot(data=gtmMunisIGN@data, aes(fill=values)) + 
-      geom_map(aes(map_id=id), colour = "#44554444", map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color="#FFFFFF66", size=1) + theme_void()
+      geom_map(aes(map_id=id), colour = "#44554444", map = gtmMunisIGN.map.df) + expand_limits(x = gtmMunisIGN.map.df$long, y = gtmMunisIGN.map.df$lat) + coord_quickmap() + geom_polygon(data = gtmDeptosIGN.map.df, aes(long, lat, group=group), fill="#00000000", color=depto_color, size=1) + theme_void()
     if (!is.null(extra)) {
       plot = plot + extra
       print( "added extra options")
     }
     gtmMunisIGN@data = gtmMunisDataCopy
+    plot
+}
+# ---------Gt municipality map visualizations--------------
+# Function to generate a Guatemala municipalities map visualization. 
+# Data should be indexed by a "municode" column containing municipalities codes.
+# The variable to plot should be named "values"
+gtmap_depto <- function(data, extra = NULL) {
+    gtmDeptosDataCopy = cbind(gtmDeptosIGN@data)
+    gtmDeptosIGN@data$id = rownames(gtmDeptosIGN@data) 
+    gtmDeptosIGN@data = merge(gtmDeptosIGN@data, data, by.x = "CODIGO", by.y="deptocode", all.x=T, sort=FALSE)
+    gtmDeptosIGN.map.df = fortify(gtmDeptosIGN)
+    
+    plot = ggplot(data=gtmDeptosIGN@data, aes(fill=values)) + 
+        geom_map(aes(map_id=id), colour = "#44554444", map = gtmDeptosIGN.map.df) + expand_limits(x = gtmDeptosIGN.map.df$long, y = gtmDeptosIGN.map.df$lat) + coord_quickmap() + theme_void()
+    if (!is.null(extra)) {
+        plot = plot + extra
+        print( "added extra options")
+    }
+    gtmDeptosIGN@data = gtmDeptosDataCopy
     plot
 }
