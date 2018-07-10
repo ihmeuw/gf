@@ -85,14 +85,29 @@ mapData = merge(IHMELocations[, .("municode" = factor(adm2_country_code), adm2_g
                         .(values_ = sum(deaths)), 
                         by = .(location_id)],
                  by.x = "adm2_gbd_id", by.y="location_id")
-mapData$values = cut(mapData$values_, c(0, 1, 10, 20, 30, 40, 50, 100), right = F)
-plot = gtmap_muni(mapData, extra =   scale_fill_manual(values=c("#444444","#CCCCFF", "#7777DD", "#3344EE"),  na.value="black") )
+mapData$values = cut(mapData$values_, c(0, 1, 2, 10, 20, 30, 40, 50, 100), right = F)
+mapData$year = 2016
+mapData$pop = GTMuniPopulation(as.integer(as.character(mapData$municode)), mapData$year)
+plot = gtmap_muni(mapData)
 plot + labs(title="TB Deaths \naccording to GBD corrected causes of death")
-mapData = INECounts[,.(values_ = sum(conteo)), by = .(municode = Mupocu)]
-mapData$values = cut(mapData$values_, c(0, 1, 10, 20, 30, 40, 50, 100), right = F)
+mapData$values = 1000* mapData$values_ / mapData$pop
+plot = gtmap_muni(mapData, depto_color = "#22222277")
+plot + scale_fill_distiller(name="Percent", palette = "Blues", direction = -1, na.value = "#444444") +
+    labs(title="TB Mortality Rate per 1,000 habitants\naccording to GBD corrected causes of death")
+
+ineMapData = INECounts[,.(values_ = sum(conteo)), by = .(municode = Mupocu)]
+mapData = ineMapData
+mapData$values = cut(mapData$values_, c(0, 1, 2, 10, 20, 30, 40, 50, 100), right = F)
 mapData$municode = str_replace(mapData$municode, "^0(\\d)", "\\1")
-plot = gtmap_muni(mapData, extra =   scale_fill_manual(values=c("#444444","#CCCCFF", "#7777DD", "#3344EE"),  na.value="black") )
+plot = gtmap_muni(mapData, extra =   scale_fill_manual(values=c("#444444","#114466","#2266AA", "#3377DD", "#55AAFF"),  na.value="black") )
 plot + labs(title="TB Deaths \naccording to national vital statistics")
+mapData$year = 2016
+mapData$pop = GTMuniPopulation(as.integer(as.character(mapData$municode)), mapData$year)
+mapData$values = 1000* mapData$values_ / mapData$pop
+plot = gtmap_muni(mapData, depto_color = "#22222277")
+plot + scale_fill_distiller(name="Percent", palette = "Blues", direction = -1, na.value = "#444444") +
+    labs(title="TB Mortality Rate per 1,000 habitants\naccording to National vital statistics.")
+
 
 
 # Now with HIV:
