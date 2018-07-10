@@ -55,4 +55,8 @@ gtmDeptosIGN@data$CODIGO = floor(as.numeric(as.character(gtmDeptosIGN@data$CODIG
 gtmDeptosIGN = gtmDeptosIGN[gtmDeptosIGN$CODIGO != 23,]
 # Municipalities data with population estimates for 2015.
 munisGT = read.csv(paste0(dataPath, "Covariates and Other Data/Demographics/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv"), encoding = "UTF-8")
-dt.munisGT = data.table(munisGT)
+dt.munisGT = data.table(munisGT)[, 
+                                 .(NOMBRE__ = first(NOMBRE__), COD_MUNI__, first(COD_DEPT__),
+                                 AREA_KM__ = sum(AREA_KM__), Poblacion2010 = sum(Poblacion2010), 
+                                 Poblacion2012 = sum(Poblacion2012), Poblacion2015 = sum(Poblacion2015)) ,
+                                 by=COD_MUNI__]
