@@ -171,6 +171,22 @@ saveRDS(pnlt, paste0(dir, 'pnlt_', country,
 
 
 
+pnlp <- extract_all_data(base_url = base_url, 
+                         data_sets = data_sets[15, ],
+                         org_units = org_units, 
+                         deb_period = paste0(start_year, '-', start_month, '-01'),
+                         end_period = paste0(end_year, '-', end_month, '-01'),
+                         userID = userID, 
+                         password = password,
+                         pace = 10,
+                         update_date = paste0(update_year, '-01-01'))
+
+
+saveRDS(pnlp, paste0(dir, 'pnlp_', country, 
+                     '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
+
+
+
 
 
 
