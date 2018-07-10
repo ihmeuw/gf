@@ -68,6 +68,7 @@ data_source_names_for_plots <- function(gos_data){
 
 # ---------------------------------------------
 ##colors to map the GF Modules: 
+# ---------------------------------------------
 primColors <- c('#254CCB',
                 '#3E6BD1', '#588BD8',
                 '#71aade', '#8BCAe5', ##blues
@@ -87,32 +88,32 @@ primColors <- c('#254CCB',
                 '#b20000',
                '#7a786e', '#d1d0ca') ##red 
 
-names(primColors) <- c('Comprehensive prevention programs for men who have sex with men'
-                       , 'Comprehensive prevention programs for sex workers and their clients'
-                       ,'Comprehensive prevention programs for people who inject drugs and their partners',##blues
-                       'Comprehensive prevention programs for transgender people'
-                       ,"Comprehensive programs for people in prisons and other closed settings",
-                       'Prevention programs for general population'
-                       ,'Prevention programs for other vulnerable populations',
-                       'Prevention programs for adolescents and youth, in and out of school', 
-                       'Prevention of mother-to-child transmission',
-                       'Specific prevention interventions',
-                       'Programs to reduce human rights-related barriers to HIV services',  ##teals
+names(primColors) <- c('Prevention programs for MSM'
+                       , 'Prevention programs for CSW & clients'
+                       ,'Prevention programs for IJU',##blues
+                       'Prevention programs for transgender',
+                       "Prevention programs for prisoners",
+                       'Prevention programs for general pop.'
+                       ,'Prevention programs for other KVP',
+                       'Prevention programs for youth/adol.', 
+                       'PMTCT',
+                       'Specific prev. interventions',
+                       'Human rights barriers',  ##teals
                        'Case management', 
                        'Vector control', 
-                        'Treatment, care and support', 'HIV Testing Services'
+                        'Treatment, care & support', 'HIV Testing Services'
                        ,'TB/HIV',
                        'TB care and prevention'
                        , 'Multidrug-resistant TB'
-                       ,'Procurement and supply chain management systems'
-                       ,'Health management information system and M&E',
-                       'Human resources for health, including community health workers'
-                       , 'Integrated service delivery and quality improvement'
-                       ,'Financial management systems'
-                       , 'National health strategies',
-                       'Community responses and systems'
-                       , 'Program management'
-                       ,'Performance Based Financing', 'Unidentified', 'Other RSSH/Unidentified'
+                       ,'PSM'
+                       ,'Info systems & M&E',
+                       'HR & health workers'
+                       , 'Service delivery'
+                       ,'Financial systems'
+                       , 'Nat. health strategies',
+                       'Community systems'
+                       , "Program mgmt"
+                       ,'Performance Based Financing', 'Unidentified'
                        ) 
 
 # ---------------------------------------------
