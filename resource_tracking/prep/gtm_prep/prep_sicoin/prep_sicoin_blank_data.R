@@ -11,9 +11,10 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 
-# ----------------------------------------------
+
 # ----------------------------------------------
 # start function
+# ----------------------------------------------
 prep_blank_sicoin = function(loc_name, adm1, start_date, disease, period, source) {
 
   budget_dataset <- setnames(data.table(matrix(nrow = 1, ncol = 11)), 

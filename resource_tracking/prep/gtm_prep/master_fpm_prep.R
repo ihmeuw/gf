@@ -115,7 +115,8 @@ summary_file$end_date <- as.Date(summary_file$end_date,"%Y%m%d")
 summary_file$start_date <- as.Date(summary_file$start_date,"%Y%m%d")
 
 
-setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
+setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date",
+                         "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 
 # ----------------------------------------------
 ##export the summary table to J Drive
@@ -139,8 +140,8 @@ resource_database$financing_source <- "gf"
 
 resource_database <- resource_database[!grepl("Fondos pendientes de asignar a SR",resource_database$recipient)]
 
-
-
+##most of the time, these duplicates are either budget values with NA or 0
+##GTM-T-MSPAS and GUA-M-MSPAS has duplicated rows, but these were present in the original budget, so we'll aggregate them together
 dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
 
 ##sum up to remove duplicates: 

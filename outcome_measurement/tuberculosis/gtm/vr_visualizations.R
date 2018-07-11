@@ -41,14 +41,14 @@ merge_dir <- paste0(j, "/WORK/11_geospatial/11_vr/vr_data_inputs/muni_merges/GTM
 # ----------------------------------------------
 # popData = raster(paste0(raster_dir, "/worldpop/Guatemala 100m Population/GTM_pph_v2b_2015.tif"))
 vrData <- data.table(fread(paste0(vr_dir, "vr_2009_2016.csv")))
-vectorData = shapefile(paste0(shape_dir, "vr_gaul_gtm.shp"))
+shapeData = shapefile(paste0(shape_dir, "vr_gaul_gtm.shp"))
 mergeData <- data.table(fread(paste0(merge_dir, "GTM_muni_merges_2009_2016.csv")))
 
 # ----------------------------------------------
 ## set up shape data 
 # ----------------------------------------------
-coordinates = data.table(fortify(vectorData, region='GAUL_CODE'))
-names = data.table(vectorData@data)
+coordinates = data.table(fortify(shapeData, region='GAUL_CODE'))
+names = data.table(shapeData@data)
 coord_and_names = merge(coordinates, names, by.x='id', by.y='GAUL_CODE', allow.cartesian=TRUE)
 
 # ----------------------------------------------

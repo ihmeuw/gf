@@ -12,10 +12,8 @@
 # budget_dataset - prepped data.table object
 
 # --------------------------------------------------------------
-# Set up R
-
-
 # start function
+# --------------------------------------------------------------
 prep_report_sicoin = function(inFile, start_date, disease, period, source) {
   # --------------------
   # Test the inputs

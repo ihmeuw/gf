@@ -11,11 +11,8 @@
 # budget_dataset - prepped data.table object
 
 # --------------------------------------------------------------
-# Set up R
-
-# --------------------------------------------------------------
-
 # start function
+# --------------------------------------------------------------
 prep_donacions_sicoin = function(inFile, start_date, disease, period, source, loc_name, loc_id) {
   
   # Test the inputs
