@@ -17,16 +17,6 @@ library(ggplot2)
 library(maptools)
 
 # ----------------------------------------------
-##set up J Drive 
-# ----------------------------------------------
-if (Sys.info()[1] == 'Windows') {
-  username <- "irenac2"
-  root <- "J:/"
-} else {
-  username <- Sys.getenv("USER")
-  root <- "/home/j/"
-}
-# ----------------------------------------------
 ##set set up the directories to read/export files: 
 # ----------------------------------------------
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') # have to declare the J Drive differently on the cluster 

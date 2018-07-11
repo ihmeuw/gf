@@ -36,23 +36,23 @@ shapeData = shapefile(paste0(mapping_dir,'GTM_munis_only.shp'))
 adminData = shapefile(paste0(mapping_dir,'gtm_region.shp'))
 
 
+# ----------------------------------------------
 ## load the sicoin data:
-##load GTM 
-gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
-                                  fileEncoding = "latin1"))
+# ----------------------------------------------
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
                                    ,fileEncoding="latin1"))
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 sicoin_data$year <- year(sicoin_data$start_date)
 
-
 # the sicoin loc_id has leading zeroes, which the shape files don't have
 ## this gets rid of it: 
 
+
 sicoin_data$id <- as.numeric(lapply(sicoin_data$adm2, function(y) sub('^0+(?=[1-9])', '', y, perl=TRUE)))
 
-
-##Malaria in this example, but the other diseases work fine: 
+# ----------------------------------------------
+##Malaria in this example, but the other diseases work fine
+# ----------------------------------------------
 
 malData <- sicoin_data[disease=="malaria"&source=="gf"]
 
@@ -113,7 +113,7 @@ colScale <-  scale_fill_gradient2(low='#0606aa', mid='#00FFff', high='#ffa3b2',
 
 # ----------------------------------------------
 ### if you want:  Get names and id numbers corresponding to administrative areas to plot as labels: 
-# gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1],lat = coordinates(adminData)[, 2])
+gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1],lat = coordinates(adminData)[, 2])
 gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1'] 
 gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
 gtm_region_centroids$NAME_1[18] <- "Totonicapán"
