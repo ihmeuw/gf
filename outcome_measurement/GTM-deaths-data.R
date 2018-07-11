@@ -67,10 +67,13 @@ defsData[[2016]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) |
 # A169     64 / Tuberculosis respiratoria no especificada, sin mención de confirmación bacteriológica o histológica
 # A199     16 / Tuberculosis miliar, sin otra especificación
 
-IHMEDefsData[(year_id == 2016) &
+merge(IHMEDefsData[(year_id == 2016) &
                (cause_id %in% c(948,949,950, 297, 954, 934, 946, 947)), 
              .(values_ = sum(deaths)), 
-             by = .(sex_id, age_group_id)]
+             by = .(age_group_id)], IHMEAgeGroups, by.x="age_group_id", by.y = "age_group_id")[,
+       .(age_group_name, values_)]
+
+# Plot the age distribution
 ggplot(data = merge(INECounts[, .(c = .N), by = .(agegroup= factor(agegroup), Sexo = factor(Sexo)) ],
                   IHMEAgeGroups, by.x="agegroup", by.y= "age_group_id"), 
        aes(age_group_name, c, group=Sexo)) + geom_col(aes(fill=Sexo)) + scale_fill_manual(values = c("blue", "red")) + 
