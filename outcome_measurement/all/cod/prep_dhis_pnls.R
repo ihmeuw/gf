@@ -33,34 +33,39 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 #--------------------
 # Initial merge after download
 # Import PNLS downloads and convert the merged data sets to a data table
-#
-#  read in the pnls data sets and merge them
-#  pnls <- readRDS(paste0(dir, 'pre_merge/pnls_drc_02_2018_04_2018.rds'))
-#  pnls <- data.table(pnls)
 # 
-#  pnls2 <- readRDS(paste0(dir, 'pre_merge/pnls_drc_01_2018_02_2018.rds'))
-#  pnls2 <- data.table(pnls2)
+# #  read in the pnls data sets and merge them - jan. through april 2018
+# pnls1 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_02_2018_04_2018.rds'))
+# pnls2 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2018_02_2018.rds'))
 # 
-#  pnls <- merge(pnls, pnls2, by=c('group', 'data_element_ID', 'period',
-#                                  'org_unit_ID', 'value', 'category', 'last_update'),
-#                                 all=TRUE)
+# pnls1 <- data.table(pnls1)
+# pnls2 <- data.table(pnls2)
 # 
-# pnls3 <- readRDS(paste0(dir, 'pre_merge/pnls_drc_01_2017_12_2017.rds'))
-# pnls <- merge(pnls, pnls3, by=c('group', 'data_element_ID', 'period',
-#                            'org_unit_ID', 'value', 'category', 'last_update'),
-# #                                 all=TRUE)
+# # merge them to create a 2018 dataset
+# pnls3 <- merge(pnls1, pnls2, by=c('group', 'data_element_ID', 'period',
+#                                   'org_unit_ID', 'value', 'category', 'last_update'),
+#                                    all=TRUE)
+# 
+# # merge in the 2017 data
+# pnls4 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2017_12_2017.rds'))
+# pnls4 <- data.table(pnls4)
+# 
+# pnls <- merge(pnls3, pnls4, by=c('group', 'data_element_ID', 'period',
+#                        'org_unit_ID', 'value', 'category', 'last_update'),
+#                              all=TRUE)
 # 
 # #------------------------
 # # save the preppred file
-# saveRDS(pnls, paste0(dir, 'pnls.rds'))
-# 
+# saveRDS(pnls, paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
+
 # #------------------------
 
 #--------------------
 # Initial cleaning after download
-# Import base services data set and convert to a data table
+# Import pnls data set and convert to a data table - 2017 - 4/2018
+# for future downloads, merge with this data set
 
-pnls <- readRDS(paste0(dir, 'pnls.rds'))
+pnls <- readRDS(paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
 pnls <- data.table(pnls)
 #-----------------------------------------
 
