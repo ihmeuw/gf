@@ -22,29 +22,31 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 #------------------------------------
 # CHANGE THESE - set the start year, end year, and output directory
 
-# select the start year and end year for the download
-start_year <- '2017'
-end_year <- '2017'
-start_month <- '01'
-end_month <- '12'
-
-# change the update year to before the data begins
-update_year <- '2017'
-
-#identify the data set(s) you want to download 
-
 
 # define main directory
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
-#------------------------------------------------
-
 #----------------------------------
 # source the necessary functions to download the data 
-source(paste0(dir, 'dhis_extracting_functions1.R')) # change to locate code 
+source(paste0(dir, 'dhis_extracting_functions.R')) # change to locate code 
 
 # make sure it worked
 ?extract_all_data
+
+# select the start year and end year for the download
+start_year <- '2018'
+end_year <- '2018'
+start_month <- '01'
+end_month <- '08'
+
+# change the update year to before the data begins
+update_year <- '2018'
+
+#identify the data set(s) you want to download 
+
+
+#------------------------------------------------
+
 
 #----------------------------------
 # set the country, base_url, username, and password 
@@ -56,6 +58,9 @@ password <- 'Snisrdcongo1'
 #------------------------------------------------
 # import the necessary meta data for the download
 # you will need organizational units and data sets 
+
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+
 
 data_sets <- readRDS(paste0(dir, "meta_data/data_sets.rds")) 
 data_sets <- data.table(data_sets)
