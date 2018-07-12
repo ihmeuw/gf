@@ -63,12 +63,14 @@ admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow
 gtm_region_centroids <- data.frame(long = coordinates(adminData)[, 1],lat = coordinates(adminData)[, 2])
 gtm_region_centroids[, 'ID_1'] <- adminData@data[,'ID_1'] 
 gtm_region_centroids[, 'NAME_1'] <-adminData@data[,'NAME_1']
-gtm_region_centroids$NAME_1[18] <- "TotonicapÃ¡n"
-gtm_region_centroids$NAME_1[22] <- "SololÃ¡"
-gtm_region_centroids$NAME_1[21] <- "SuchitepÃ©quez"
-gtm_region_centroids$NAME_1[3] <- "SacatepÃ©quez"
-gtm_region_centroids$NAME_1[1] <- "QuichÃ©"
-gtm_region_centroids$NAME_1[7] <- "PetÃ©n"
+gtm_region_centroids$NAME_1[18] <- "Totonicapán"
+gtm_region_centroids$NAME_1[22] <- "Sololá"
+gtm_region_centroids$NAME_1[21] <- "Suchitepéquez"
+gtm_region_centroids$NAME_1[3] <- "Sacatepéquez"
+gtm_region_centroids$NAME_1[1] <- "Quiché"
+gtm_region_centroids$NAME_1[7] <- "Petén"
+
+
 
 
 # ----------------------------------------------
