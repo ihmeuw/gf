@@ -101,6 +101,8 @@ tb_map_dataset <- merge(tb_map_dataset, annualVr, by=c("location_id", "year_id")
 
 ##calculate TB mortality over total mortality
 tb_map_dataset[,tb_rate:=tb_deaths/deaths]
+##order by year and location so that the yearly graphs print in order 
+tb_map_dataset <-tb_map_dataset[with(tb_map_dataset, order(year_id, location_id)), ]
 
 # ----------------------------------------------
 ## line graph over time 
@@ -147,23 +149,22 @@ for(k in unique(tb_map_dataset$year_id)){
   shapedata$year_id <- k
   graphdata <- merge(graphData, shapedata, by=c("year_id", "location_id"),
                      all.y=TRUE, allow.cartesian=TRUE) ##all.y so that shape data doesn't get dropped
-  graphdata[,tb_rate:=deaths/V1]
   plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=tb_rate)) + 
              coord_equal() + ##so the two shapefiles have the same proportions 
              geom_path() +
              geom_map(map=dept_dataset, data=dept_dataset,
-                      aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) +  
+                      aes(map_id=id,group=group), size=1, color="#ece5f9", alpha=0) +  
              geom_polygon(data=dept_dataset, aes(x=long, y=lat, group=group), color="#4e0589", alpha=0) + #colors in the outline of each department
              scale_fill_gradient2(low='#9aeaea', mid='#216fff', high='#0606aa',
-                                  na.value = "grey70",space = "Lab", midpoint = 10, ## play around with this to get the gradient 
+                                  na.value = "grey70",space = "Lab", midpoint = 0.03, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
-                                  breaks=c(0, 10, 20, 30, 40, 50), limits=c(0,50)) + 
+                                  breaks=c(0, 0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07), limits=c(0, 0.07)) + 
              theme_void() +  
              geom_label_repel(data = gtm_region_centroids, aes(label = NAME_1, x = long, y = lat, group = NAME_1), 
                               size = 3, fontface = 'bold', color = 'black',
                               box.padding = 0.35, point.padding = 0.3,
-                              segment.color = 'grey50', nudge_x = 0.7, nudge_y = 4.5) + 
-             labs(title=paste0(k, " Guatemala TB Mortality by Municipality"), fill='TB Deaths/Total Deaths'))
+                              segment.color = 'grey50', nudge_x = 0.2, nudge_y = 0.3) + 
+             labs(title=paste0(k, " Guatemala TB Mortality by Municipality"), fill='TB Deaths/Total Deaths \n'))
   gtm_plots[[i]] <- plot
   i=i+1
 }
@@ -172,6 +173,10 @@ for(k in unique(tb_map_dataset$year_id)){
 pdf(paste0(export_dir, "tb_mortality_by_muni.pdf"), height=6, width=9)
 invisible(lapply(gtm_plots, print))
 dev.off()
+
+
+
+
 
 
 
