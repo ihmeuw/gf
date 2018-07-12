@@ -98,6 +98,28 @@ malaria_dataset$id <- as.numeric(lapply(malaria_dataset$loc_id, function(y) sub(
 # order by year so that when we plot, it plots every year in order 
 malaria_dataset <- malaria_dataset[with(malaria_dataset, order(year)), ]
 
+
+malaria_dataset$case_binned <- cut(malaria_dataset$cases/1000,
+                             breaks= c(seq(0,1, by=0.1),2:4, Inf),right = FALSE)
+colors <- c('#066d28' ,
+             '#028924',
+             '#03a315',
+             '#3bb564',
+             '#1de59f',
+             '#37E1E6',
+             '#85e636',
+             '#ff7f00',
+             '#cab2d6',
+             '#9e82ba', 
+             '#f9a7be',
+             '#f78080',
+             '#af445b', 
+             '#ff447c'
+             
+)
+names(colors) <- levels(malaria_dataset$case_binned )
+
+
 colScale <-  scale_fill_gradient2(low='#028924', mid='#f9f98b', high='#66047c',
                                   na.value = "grey70",space = "Lab", midpoint = 300, ## play around with this to get the gradient 
                                   # that you want, depending on data values 
@@ -116,14 +138,14 @@ for (k in unique(malaria_dataset$year)){
   shapedata$year <- k ## add "year" to shapefile in order to merge datasets 
   # merge on the data (all.x=TRUE so the shapefile data doesn't disappear)
   graphdata  <- merge(shapedata, subdata,by=c('year','id'), all.x=TRUE, allow.cartesian=TRUE)
-  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=cases)) + 
+  plot <- (ggplot() + geom_polygon(data=graphdata, aes(x=long, y=lat, group=group, fill=case_binned)) + 
              coord_equal() + ##so the two shapefiles have the same proportions 
              geom_path() +
              geom_map(map=admin_dataset, data=admin_dataset,
                       aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
              geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="#0d069e", alpha=0) + 
              theme_void() +  
-             colScale + 
+             scale_fill_manual(name="Cases (in thousands)", values=colors,na.value="grey50", drop=F) + 
              ## uncomment if you want the department names: 
              geom_label_repel(data = gtm_region_centroids, aes(label = NAME_1, x = long, y = lat, group = NAME_1), 
                           size = 3, fontface = 'bold', color = 'black',
