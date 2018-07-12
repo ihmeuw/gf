@@ -23,8 +23,30 @@ source(paste0(codePath, "core/GT_load_data.R"), encoding = "UTF-8")
 source(paste0(codePath, "core/GT_helper_functions.R"), encoding = "UTF-8")
 
 # ------- Load TB notifications aggregated database ----------------
-tbnots = read.csv("./PCE/Outcome Measurement Data/TUBERCULOSIS/GTM - TB notifications 2012-2017.csv")
+tbnots = read.csv("PCE/Outcome Measurement Data/TUBERCULOSIS/GTM - TB notifications 2012-2017.csv")
 
 tbnots = data.table(tbnots)
-ggplot(data = tbnots[toupper(CONDICIONINGRESO)=="NUEVO",.(Count = .N),by=.(YearMonth)][,.(Count, YearMonth =factor(YearMonth))]) + 
-    geom_col(aes(YearMonth, Count))  + theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+ggplot(data = tbnots[,.(Count = .N),
+                        by=.(YearMonth = floor(YearMonth/100)*100 + floor(( YearMonth%% 100 - 1)/3)*3 + 1 , CONDICIONINGRESO)][,
+                     .(Count, CONDICIONINGRESO, YearMonth =factor(YearMonth))]) + 
+    geom_col(aes(YearMonth, Count, fill = CONDICIONINGRESO))  + theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8)) + 
+    labs(x="Quarter", title="TB Notifications time series\nGrouped by condition of entrance (including exits)")
+
+# Confirming our quarter generator works well:
+# tbnots[,.N,by = .(YearMonth = floor(YearMonth/100)*100 + floor(( YearMonth%% 100 - 1)/3)*3 + 1, YearMonth) ]
+
+ggplot(data = tbnots[is.na(CONDICIONINGRESO), .(Count = .N), by=.(AgeGroup = ceiling(EDAD/5)*5)][order(AgeGroup), 
+                   .(AgeGroup = factor(AgeGroup), Count)]) +
+    geom_col(aes(AgeGroup, Count))
+
+# NAs are kids, and most probably they are new cases.
+
+yearly = tbnots[CONDICIONINGRESO %in% c(NA, "nuevo"),.(Count = .N),
+       by=.(Year = floor(YearMonth/100))]
+
+yearly$Pop = sapply(2012:2017, function (i)     sum(GTMuniPopulation(dt.munisGT$COD_MUNI__, 
+                                    rep(i, nrow(dt.munisGT))), na.rm = T))
+
+yearly[,Incidence := 100000*Count/Pop]
+ggplot(data=yearly) + geom_line(aes(Year, Incidence)) + ylim(0,50) + labs(title = "Guatemala TB incidence rate per 100,000 inhabitants\nby year")
+
