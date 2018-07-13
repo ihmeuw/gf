@@ -101,7 +101,7 @@ GTMuniPopulation <- function (code, year) {
 }
 
 GTDeptoPopulation_ <- function (code, year) {
-    parameters = dt.munisGT[COD_DEPT__ == code, .(P_10_12, P_12_15, k_10_12, k_12_15)]
+    parameters = dt.munisGT[floor(COD_MUNI__/100) == code, .(P_10_12, P_12_15, k_10_12, k_12_15)]
     if (year>2012)
         pobmunis = parameters$P_12_15 * exp(parameters$k_12_15 * year)
     else
@@ -140,7 +140,7 @@ gtmap_muni <- function(data, extra = NULL, depto_color = "#AAAAAA77") {
 }
 # ---------Gt municipality map visualizations--------------
 # Function to generate a Guatemala municipalities map visualization. 
-# Data should be indexed by a "municode" column containing municipalities codes.
+# Data should be indexed by a "deptocode" column containing municipalities codes.
 # The variable to plot should be named "values"
 gtmap_depto <- function(data, extra = NULL) {
     gtmDeptosDataCopy = cbind(gtmDeptosIGN@data)
