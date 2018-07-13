@@ -4,17 +4,13 @@
 # 11/1/2017
 # Master prep code that runs all other functions
 # The current working directory should be the same as this code
-
-
 ##NOTE: after running lines 42-59, a warning message usually appears: 
 ##Warning message:
   ## In grep("GUATEM", gf_data$X__13):.N :
   ## numerical expression has 4 elements: only the first used
 
-## This is alright because of the way thesicoin files are set up, but in the future
+## This is alright because of the way the sicoin files are set up, but in the future
 ## this should be revisited to ensure that the data is being handled correctly 
-
-
 # ----------------------------------------------
 # Set up R
 rm(list=ls())
@@ -26,21 +22,28 @@ library(rlang)
 library(zoo)
 library(lubridate)
 
-
 # ----------------------------------------------
 #define variables: 
-
-## download files from basecamp into a folder on your desktop. 
-## You will want to download the files in the multi_source and ghe_s folders, even though we will not be using all of these files 
-# (only the ones that contain actual budget/expenditure data and are in sicoin format). 
-
+# ----------------------------------------------
 adm1 <- 0100
 country <- "gtm"
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
 
 # ----------------------------------------------
+###### source the functions that we need 
+# ----------------------------------------------
+prep_dir <- "local repo where the prep files are"
+source(paste0(prep_dir, "/prep_sicoin_detailed_data.R"))
+source(paste0(prep_dir, "prep_sicoin_summary_data.R"))
+source(paste0(prep_dir, "prep_sicoin_blank_data.R"))
+source(paste0(prep_dir, "prep_sicoin_donacions_data.R"))
+source(paste0(prep_dir, "prep_sicoin_report_data.R"))
 
-# load csv from github repository (file_format_list.csv)
+
+# ----------------------------------------------
+###### source the functions that we need 
+# ----------------------------------------------
+# load the list of sicoin files 
+dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/'
 file_list <- read.csv(paste0(dir, "sicoin_file_list.csv")
                       , stringsAsFactors = FALSE)
 
@@ -54,13 +57,6 @@ summary_file$loc_id <- as.character(summary_file$loc_id)
 summary_file$loc_id <- country
 summary_file$year <- as.character(summary_file$year)
 summary_file$year <- "none"
-
-##source the functions that we will use to prep the files: 
-source('./prep_sicoin_donacions_data.r')
-source('./prep_sicoin_detailed_data.r')
-source('./prep_sicoin_summary_data.r')
-source('./prep_sicoin_report_data.r')
-source('./prep_sicoin_blank_data.r')
 
 ## loop over all of the files 
 for(i in 1:length(file_list$file_name)){
