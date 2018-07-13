@@ -34,11 +34,21 @@ tbnots[, sum(is.na(as.double(PESOLBS)))/.N, by=floor(YearMonth/100) ]
 # PESOLBS has less NAs. 
 # People weighting more than 25KG are considered adults.
 
+# Lets look at classification 
+table(str_to_lower(trimws(tbnots$CLASIFICACION)))
+table(str_to_lower(trimws(tbnots$ESQUEMA)))
+table(str_to_lower(trimws(tbnots$CONDICIONEGRESO)), tbnots$YEAR)
+table(str_to_lower(trimws(tbnots$NUEVACONDICIONINGRESO)), tbnots$YEAR)
+table(str_to_lower(trimws(tbnots$CONDICIONINGRESO)), tbnots$YEAR)
+table(str_to_lower(trimws(tbnots$CONDICIONPX)), tbnots$YEAR)
+
+
+
 # Adult new cases:
-nadults = tbnots[ ( #(as.double(PESOLBS) > 25*2.2) | 
+nadults = tbnots[ ( #(as.double(PESOLBS) > 55*2.2) | 
                      (EDAD >= 18)) & str_to_lower(trimws(CLASIFICACION)) != "bk negativo" &
           (CONDICIONINGRESO == "nuevo" | is.na(CONDICIONINGRESO)), .N, by= .(COD_DEPT, YearMonth)]
-nkids = tbnots[ ( # (as.double(PESOLBS) <= 25*2.2) | 
+nkids = tbnots[ ( # (as.double(PESOLBS) <= 55*2.2) | 
                   (EDAD > 4) & (EDAD < 18)) & str_to_lower(trimws(CLASIFICACION)) != "bk negativo" &
                     (CONDICIONINGRESO == "nuevo" | is.na(CONDICIONINGRESO)), .N, by= .(COD_DEPT, YearMonth)]
 
@@ -80,6 +90,11 @@ ggplot(data=melt(nkids_Rsupply[, .(Demand, Distributed, Year)], id.vars = "Year"
   scale_fill_manual(name="", labels = c("Children Rifampizine doses demand\naccording to notifications", 
                                         "Children Rifampizine doses distributed\nby PNT"), values = c("blue", "red"))
 
-tbnots[ ( #(as.double(PESOLBS) > 25*2.2) | 
-  (EDAD >= 18)) & 
-    (CONDICIONINGRESO == "nuevo" | is.na(CONDICIONINGRESO)), .N, by= .(str_to_lower(trimws(CLASIFICACION)))]
+
+# Exploring schemes column. This appear to be treatment schemes.
+esquemas = dcast.data.table(tbnots[, .(Count = .N), by= .(year = floor(YearMonth/100), esquema = str_replace(str_to_upper(trimws(ESQUEMA)), "Á", "A") )],
+   year ~ esquema, value.var = "Count" )
+
+esquemas[, .(year, PEDIATRICO*16)]
+
+table(tbnots$CONTACTOS, tbnots$YEAR)
