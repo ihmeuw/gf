@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 6/15/2018
+# 7/12/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -33,12 +33,10 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # Initial cleaning after download
 # Import base services data set and convert to a data table
 
-base <- readRDS(paste0(dir, 'pre_merge/base_services_drc_01_2015_04_2018.rds'))
+base <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_01_2015_04_2018.rds'))
 base <- data.table(base)
 #-----------------------------------------
 
-
-#-------------------
 
 #------------------------------
 # merge the base services data with the meta data
@@ -61,20 +59,20 @@ org_units_description <- org_units_description[ ,.(org_unit_ID = id, coordinates
 # merge in the names of the objects in the data set
 
 # merge on org_unit_ID to get names and descriptions of organisational units
-pnls <- merge(pnls, org_units, by='org_unit_ID', all.x=TRUE)
-pnls <- merge(pnls, org_units_description, by='org_unit_ID', all.x=TRUE)
-pnls[ ,length(unique(org_unit_ID))] # print the number of organisational units
+base <- merge(base, org_units, by='org_unit_ID', all.x=TRUE)
+base <- merge(base, org_units_description, by='org_unit_ID', all.x=TRUE)
+base[ ,length(unique(org_unit_ID))] # print the number of organisational units
 
 # merge on data element ID to get data sets and data sets name
-pnls <- merge(pnls, data_elements, by='data_element_ID', all.x=TRUE)
+base <- merge(base, data_elements, by='data_element_ID', all.x=TRUE)
 
 # merge on category id to get age and sex categories for the data elements
-pnls <- merge(pnls, data_elements_categories, by='category', all.x=TRUE)
-setnames(pnls, c('category', 'category_name'), c('category_id', 'category'))
+base <- merge(base, data_elements_categories, by='category', all.x=TRUE)
+setnames(base, c('category', 'category_name'), c('category_id', 'category'))
 
 # drop unnecessary urls
-pnls[ , org_unit_url:=NULL]
-pnls[ , url_list:=NULL]
+base[ , org_unit_url:=NULL]
+base[ , url_list:=NULL]
 #------------------------
 
 #------------------------
@@ -82,7 +80,7 @@ pnls[ , url_list:=NULL]
 
 # put the data set in a more intuitive order and change variable types
 base <- base[ , .(data_set=as.character(datasets_name), element=as.character(element_name), category=as.character(category),
-                    period=period,value=as.numeric(value),
+                    period=period,value=as.numeric(as.character(value)),
                     org_unit=as.character(org_unit_name), group=group,
                     coordinates=coordinates, opening_date=opening_date, last_update=last_update,
                     data_set_id=as.character(datasets_ID), element_id=as.character(data_element_ID),
