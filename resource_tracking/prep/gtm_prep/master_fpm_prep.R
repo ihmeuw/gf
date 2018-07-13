@@ -30,12 +30,20 @@ library(zoo)
 ### assign some variables
 # ---------------------------------------------
 loc_name <- "gtm"
-
+# ----------------------------------------------
+###### source the functions that we need 
+# ----------------------------------------------
+prep_dir <- "local repo where the prep files are"
+source(paste0(prep_dir, "/prep_fpm_detailed_budget.R"))
+source(paste0(prep_dir, "prep_fpm_summary_budget.R"))
+source(paste0(prep_dir, "prep_fpm_other_budget.R"))
+source(paste0(prep_dir, "prep_fpm_other_detailed_budget.R"))
+source(paste0(prep_dir, "prep_gtm_pudr.R"))
 # ----------------------------------------------
 ###### Load the list of RT files we want to process
 # ----------------------------------------------
-dir <- 'local drive here' ##where the files are stored locally - on the J Drive: dir <-  "J:/Project/Evaluation/GF/resource_tracking/gtm/gf/"
-file_list <- read.csv(paste0(dir, "fpm/fpm_budget_filelist.csv"))
+file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
+file_list <- read.csv(paste0(file_dir, "fpm/fpm_budget_filelist.csv"))
 
 
 ##create a summary file to track the data that we have (and that we still need)
@@ -60,28 +68,28 @@ for(i in 1:length(file_list$file_name)){
   summary_file$year[i] <- as.character(file_list$grant_period[i])
   
   if(file_list$format[i]=="detailed"){ ## fpm detailed budgets 
-    tmpData <- prep_fpm_detailed_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
+    tmpData <- prep_fpm_detailed_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                         file_list$lang[i], file_list$grant_number[i])
     tmpData$disbursement<- 0 
   } else if (file_list$format[i]=="summary"){ ## only summary level data - no municipalities 
-    tmpData <- prep_fpm_summary_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
+    tmpData <- prep_fpm_summary_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                        file_list$grant_number[i], file_list$recipient[i], file_list$lang[i])
     tmpData$loc_name <- "gtm"
     tmpData$disbursement<- 0 
   } else if (file_list$format[i]=="detailed_other"){ ## there's an older version of detailed fpm budgets
-    tmpData <- prep_other_detailed_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
+    tmpData <- prep_other_detailed_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                         file_list$lang[i], file_list$grant_number[i])
     tmpData$disbursement<- 0 
   } else if (file_list$format[i]=="pudr"){ 
-    tmpData <- prep_gtm_pudr(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
+    tmpData <- prep_gtm_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                           ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                           file_list$grant_number[i], file_list$data_source[i], loc_name, file_list$lang[i])
    
   } else if (file_list$format[i]=="other"){
-    tmpData <- prep_other_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]),
+    tmpData <- prep_other_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                           ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                           file_list$lang[i], file_list$grant_number[i])
     tmpData$disbursement<- 0 
@@ -129,8 +137,8 @@ write.table(summary_file, paste0(dir, "resource_tracking_data_summary.csv"),
 ##Add more RT variables and clean up any rows with "junk" data
 # ----------------------------------------------
 
-resource_database$adm1 <- 128
-resource_database$adm2 <- resource_database$adm1
+resource_database$adm1 <- 128 ## change if we get department data in the budgets 
+resource_database$adm2 <- resource_database$adm1 ## change if we get municipality data in the budgets 
 resource_database$start_date <- as.Date(resource_database$start_date)
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure<- as.numeric(resource_database$expenditure)
