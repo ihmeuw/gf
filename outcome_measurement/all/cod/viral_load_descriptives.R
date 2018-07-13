@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/6/2018
+# 7/12/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # Prep the data sets for analysis and the Tableau Dashboard
@@ -31,25 +31,24 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 #------------------------------
-# rogue viral load analysis
+# viral load analysis
 # export a data set for viral load data; on the cluster
-
-# import the pnls data and subset it to the elements that concern viral load
-pnls <- readRDS(paste0(dir, 'prepped_data/pnls.rds'))
-pnls <- data.table(pnls)
-
-viral_load_elements <- c( 'cNCibxShDa6', 'QKTxjkpD2My', 'W90ci1ldX1C', 'hNWooK76isO',
- 'iHUxYVgu1qj', 'iPgvI70DJSZ', 'doq0Fivo5ew', 'Kutdws0o2vL', 'oC2u60ANRUL','tHZ6KxIksXA',
- 'uKEhVPh720x', 'jowAqQ7YpEC', 'd2RyaUn9ZHm', 'yjZFUr1GlQM', 'Puph0kCuE1g', 'Mg2cOozNDHa',
- 'zJBuEb9hpNq', 'gNNyKuf2joZ', 'BvZVoaCgTQD', 'tYuKqogS7vD', 'JKWTF9Bgsm4', 'B5tuUwTHAlj')
-
-# create a viral load data set
-vl <- pnls[element_id %in% viral_load_elements]
-vl <- data.table(vl)
-vl[, unique(element_id)]
-
-# save the viral load data set to prepped data
-saveRDS(vl, paste0(dir, 'prepped_data/viral_load_pnls.rds'))
+# 
+# # import the pnls data and subset it to the elements that concern viral load
+# pnls <- readRDS(paste0(dir, 'prepped_data/pnls.rds'))
+# pnls <- data.table(pnls)
+# 
+# viral_load_elements <- c( 'cNCibxShDa6', 'QKTxjkpD2My', 'W90ci1ldX1C', 'hNWooK76isO',
+#  'iHUxYVgu1qj', 'iPgvI70DJSZ', 'doq0Fivo5ew', 'Kutdws0o2vL', 'oC2u60ANRUL','tHZ6KxIksXA',
+#  'uKEhVPh720x', 'jowAqQ7YpEC', 'd2RyaUn9ZHm', 'yjZFUr1GlQM', 'Puph0kCuE1g', 'Mg2cOozNDHa',
+#  'zJBuEb9hpNq', 'gNNyKuf2joZ', 'BvZVoaCgTQD', 'tYuKqogS7vD', 'JKWTF9Bgsm4', 'B5tuUwTHAlj')
+# 
+# # create a viral load data set
+# vl <- pnls[element_id %in% viral_load_elements]
+# vl <- data.table(vl)
+# 
+# # save the viral load data set to prepped data
+# saveRDS(vl, paste0(dir, 'prepped_data/viral_load_pnls.rds'))
 
 #------------------------------
 
@@ -58,13 +57,10 @@ saveRDS(vl, paste0(dir, 'prepped_data/viral_load_pnls.rds'))
 # import the viral load data set and 
 
 # import the data and convert it to a data table
-vl <- readRDS(paste0(dir, 'viral_load.rds'))
+vl <- readRDS(paste0(dir, 'prepped_data/viral_load_pnls.rds'))
 vl <- data.table(vl)
 
-# import the data and arrange it in an intuitive order
-vl <- vl[ ,.(org_unit, level, dps=province, mtk, element=element_eng,
-             category, date, value, element_fr=element, element_id, org_unit_id, coordinates)]
-
+#------------------------
 # subset the data to only the elements that don't include 'support'
 sub <- c('cNCibxShDa6', 'QKTxjkpD2My', 'W90ci1ldX1C', 'hNWooK76isO',
 'iHUxYVgu1qj', 'uKEhVPh720x', 'jowAqQ7YpEC', 'd2RyaUn9ZHm',
@@ -73,8 +69,12 @@ sub <- c('cNCibxShDa6', 'QKTxjkpD2My', 'W90ci1ldX1C', 'hNWooK76isO',
 # subset the viral load data to elements that do not include 'support'
 vl <- vl[element_id %in% sub]
 
-# 
-vl[ ,.(unique(element), unique(element_id))]
+# view the unique elements in the subset of vl data 
+vl[ ,.(unique(element_eng), unique(element_id))]
+
+# rearrange the variables in an intuitive over
+vl <- vl[ ,.(element=element_eng, org_unit, date, value, category, 
+       level, dps, mtk, element_fr=element, element_id, org_unit_id)]
 
 #------------------------
 # create a variable for people who 'benefitted' from viral load testing
@@ -82,16 +82,9 @@ vl[ ,.(unique(element), unique(element_id))]
 # viral load testing
 test <- c('cNCibxShDa6', 'QKTxjkpD2My', 'W90ci1ldX1C', 'hNWooK76isO', 'iHUxYVgu1qj')
 
-# create a variable called 'tested' that identified viral load tests performed
-vl[element_id %in% test,tested:='Yes']
-vl[!element_id %in% test,tested:='No']
-
-# undetectable viral load
-undetect <- c('uKEhVPh720x', 'jowAqQ7YpEC', 'd2RyaUn9ZHm', 'yjZFUr1GlQM', 'Puph0kCuE1g', 'Mg2cOozNDHa')
-
-# create an undetectable viral load variable
-vl[element_id %in% undetect,undetect:='Yes']
-vl[!element_id %in% undetect, undetect:='No']
+# create a variable called 'tested' that identifies viral load tests performed
+vl[element_id %in% test, tested:='Yes']
+vl[!element_id %in% test, tested:='No']
 
 # create a categorical variable for the sub-populations 
 vl[element_id=='Mg2cOozNDHa' , strat:='Male partners']
@@ -101,7 +94,6 @@ vl[element_id=='iHUxYVgu1qj' | element_id=='Puph0kCuE1g' , strat:='Initial']
 vl[element_id=='cNCibxShDa6' | element_id=='uKEhVPh720x' , strat:='After six months']
 vl[element_id=='jowAqQ7YpEC' | element_id=='QKTxjkpD2My' , strat:='Other']
 
-vl[ ,element:=as.character(element)]
 
 vl[ ,unique(category)]
 vl[category=='Féminin, NC', category:='Féminin, Nouveau Cas']
@@ -109,8 +101,21 @@ vl[category=='Féminin, AC', category:='Féminin, Ancien Cas']
 vl[category=='Masculin, NC', category:='Masculin, Nouveau Cas']
 vl[category=='Masculin, AC', category:='Masculin, Ancien Cas']
 
+#------------------------
 
 #------------------------
+# eliminate values where detected is greater than tested
+
+# dvl <- vl[ ,.(value=sum(value)), by=.(element, element_id, date, category, org_unit, dps, mtk, tested)]
+# errors[tested=='Yes', test:=value]
+# errors[tested=='No', det:=value]
+# 
+# errors <- errors[ ,.(test=sum(test, na.rm=T), det=sum(det, na.rm=T)), by=.(date, org_unit)]
+# 
+# errors[det > test, unique(org_unit)]
+# 
+# errors
+#-----------------------
 # viral load testing after six months on ARVs
 
 # only include people on ARVs for 6 mos.
@@ -124,13 +129,20 @@ six[element_id=='uKEhVPh720x', element:='PLHIV on ARVs with undetectable VL afte
 #------------------------
 # prep the data for visualization 
 
-six_graph <- six[ ,.(value=sum(value)), by=.(element, element_id, date, category)]
+six <- six[ ,.(value=sum(value)), by=.(element, element_id, date, category, org_unit, dps)]
+
 # create a ratio:
-six_graph[element_id=='cNCibxShDa6', test:=value]
-six_graph[element_id=='uKEhVPh720x', det:=value]
+six[element_id=='cNCibxShDa6', test:=value]
+six[element_id=='uKEhVPh720x', det:=value]
+
+six_drop <- six[ ,.(test=sum(test, na.rm=T), det=sum(det, na.rm=T)), by=.(date, category, org_unit)]
+six <- six_drop[det <= test] # drop out rows where undetectable is greater than tested
 
 # percent suppressed
-six_ratio <- six_graph[ ,.(test=sum(test, na.rm=T), det=sum(det, na.rm=T)), by=.(date, category)]
+six_ratio <- six[ ,.(test=sum(test, na.rm=T), det=sum(det, na.rm=T)), by=.(date, category)]
+
+
+
 six_ratio[ , ratio:=100*(det/test)]
 
 six_ratio2 <- six_graph[ ,.(test=sum(test, na.rm=T), det=sum(det, na.rm=T)), by=.(date)]

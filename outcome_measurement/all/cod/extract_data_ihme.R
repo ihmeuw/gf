@@ -34,10 +34,10 @@ source(paste0(dir, 'dhis_extracting_functions.R')) # change to locate code
 ?extract_all_data
 
 # select the start year and end year for the download
-start_year <- '2018'
+start_year <- '2078'
 end_year <- '2018'
 start_month <- '01'
-end_month <- '08'
+end_month <- '12'
 
 # change the update year to before the data begins
 update_year <- '2018'

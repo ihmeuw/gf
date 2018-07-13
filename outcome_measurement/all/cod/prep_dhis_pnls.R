@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/6/2018
+# 7/12/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # Prep the data sets for analysis and the Tableau Dashboard
@@ -33,30 +33,30 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 #--------------------
 # Initial merge after download
 # Import PNLS downloads and convert the merged data sets to a data table
-# 
-# #  read in the pnls data sets and merge them - jan. through april 2018
-# pnls1 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_02_2018_04_2018.rds'))
-# pnls2 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2018_02_2018.rds'))
-# 
-# pnls1 <- data.table(pnls1)
-# pnls2 <- data.table(pnls2)
-# 
-# # merge them to create a 2018 dataset
-# pnls3 <- merge(pnls1, pnls2, by=c('group', 'data_element_ID', 'period',
-#                                   'org_unit_ID', 'value', 'category', 'last_update'),
-#                                    all=TRUE)
-# 
-# # merge in the 2017 data
-# pnls4 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2017_12_2017.rds'))
-# pnls4 <- data.table(pnls4)
-# 
-# pnls <- merge(pnls3, pnls4, by=c('group', 'data_element_ID', 'period',
-#                        'org_unit_ID', 'value', 'category', 'last_update'),
-#                              all=TRUE)
-# 
-# #------------------------
-# # save the preppred file
-# saveRDS(pnls, paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
+
+#  read in the pnls data sets and merge them - jan. through april 2018
+pnls1 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_02_2018_04_2018.rds'))
+pnls2 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2018_02_2018.rds'))
+
+pnls1 <- data.table(pnls1)
+pnls2 <- data.table(pnls2)
+
+# merge them to create a 2018 dataset
+pnls3 <- merge(pnls1, pnls2, by=c('group', 'data_element_ID', 'period',
+                                  'org_unit_ID', 'value', 'category', 'last_update'),
+                                   all=TRUE)
+
+# merge in the 2017 data
+pnls4 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2017_12_2017.rds'))
+pnls4 <- data.table(pnls4)
+
+pnls <- merge(pnls3, pnls4, by=c('group', 'data_element_ID', 'period',
+                       'org_unit_ID', 'value', 'category', 'last_update'),
+                             all=TRUE)
+
+#------------------------
+# save the preppred file
+saveRDS(pnls, paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
 
 # #------------------------
 
@@ -111,7 +111,7 @@ pnls[ , url_list:=NULL]
 
 # put the data set in a more intuitive order and change variable types
 pnls <- pnls[ , .(data_set=as.character(datasets_name), element=as.character(element_name), category=as.character(category),
-                  period=period,value=as.numeric(value),
+                  period=period,value=as.numeric(as.character(value)),
                   org_unit=as.character(org_unit_name), group=group,
                   coordinates=coordinates, opening_date=opening_date, last_update=last_update,
                   data_set_id=as.character(datasets_ID), element_id=as.character(data_element_ID),
@@ -126,21 +126,13 @@ pnls[ , per:=NULL]
 pnls[ , period:=NULL]
 
 pnls[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
-
 #-----------------------------------------------
-# merge english translations for data elements into the data
+# change last_update and opening_date to date variables
+pnls[ , last_update:=as.character(last_update)]
+pnls[ ,opening_date:=as.character(opening_date)]
 
-# export a list of unique elements to translate using google translate
-# elements <- pnls[ ,.(unique(element), unique(element_id))]
-# write.xlsx(elements, paste0(dir, 'pnls_elements.xlsx'))
-
-elements_eng <- read.csv(paste0(dir, 'pnls_elements.fr.en.csv'))
-setnames(elements_eng, c("X", "V1", "V2"), c("x", "element_eng", "element_id"))
-elements_eng <- data.table(elements_eng)
-elements_eng[ , x:=NULL]
-
-pnls <- merge(pnls, elements_eng, by='element_id')
-#-----------------------------------------------
+pnls$last_update <- unlist(lapply(strsplit(pnls$last_update, "T"), "[", 1))
+pnls$opening_date <- unlist(lapply(strsplit(pnls$opening_date, "T"), "[", 1))
 
 #--------------------------------------
 # add a district variable 
@@ -194,7 +186,7 @@ setnames(pnls, 'province', 'dps')
 
 #-----------------------------------------------
 # add a variable to demarcate the provincial approach provinces
-pnls[province=='Maniema' | province=='Tshopo' | province=="Kinshasa", mtk:='Yes']
+pnls[dps=='Maniema' | dps=='Tshopo' | dps=="Kinshasa", mtk:='Yes']
 pnls[is.na(mtk), mtk:='No']
 
 #---------------------------------------------------
@@ -286,25 +278,28 @@ pnls[health_zone1, level:="Health Zone"]
 pnls[is.na(level), level:='Other']
 #--------------------------------------------
 
-# temporary save so you don't have to re-run
-saveRDS(pnls, paste0(dir, 'pnls2.rds'))
- 
-pnls <- readRDS(paste0(dir, 'pnls2.rds'))
-
-# 
-# #-------------------------------------
-
-
-
-
 #-----------------------------------------------
-# change last_update and opening_date to date variables
-pnls[ , last_update:=as.character(last_update)]
-pnls[ ,opening_date:=as.character(opening_date)]
+# merge english translations for data elements into the data
 
-pnls$last_update <- unlist(lapply(strsplit(pnls$last_update, "T"), "[", 1))
-pnls$opening_date <- unlist(lapply(strsplit(pnls$opening_date, "T"), "[", 1))
+elements_eng <- read.csv(paste0(dir, 'translations/pnls_elements_eng_fr.csv'))
+elements_eng <- data.table(elements_eng)
+
+# convert elements to character strings in order to merge
+elements_eng[ , element_eng:=as.character(element_eng)]
+elements_eng[ , element_id:=as.character(element_id)]
+
+pnls <- merge(pnls, elements_eng, by='element_id', all.x=T)
+#-----------------------------------------------
+# put the data set in an intuitive order
+
+pnls <- pnls[ ,.(data_set, element, element_eng, category, value, org_unit, level, date, dps, mtk, 
+          coordinates, opening_date, last_update,
+         data_set_id, element_id, org_unit_id)]
 
 
-
+#---------------------------------
+# save the prepped data as an RDS
+saveRDS(pnls, paste0(dir, 'prepped_data/pnls.rds'))
+ 
+#-------------------------------------
 
