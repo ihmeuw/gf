@@ -48,5 +48,14 @@ yearly$Pop = sapply(2012:2017, function (i)     sum(GTMuniPopulation(dt.munisGT$
                                     rep(i, nrow(dt.munisGT))), na.rm = T))
 
 yearly[,Incidence := 100000*Count/Pop]
-ggplot(data=yearly) + geom_line(aes(Year, Incidence)) + ylim(0,50) + labs(title = "Guatemala TB incidence rate per 100,000 inhabitants\nby year")
+ggplot(data=yearly) + geom_line(aes(Year, Incidence)) + ylim(0,50) + labs(title = "Guatemala TB incidence rate per 100,000 people\nby year")
+
+# Map of tb incidence by DAS for 2017.
+mapdata = tbnots[CONDICIONINGRESO %in% c(NA, "nuevo") & floor(YearMonth/100) == 2017,.(counts = .N),
+                by=.(deptocode = COD_DEPT )]
+mapdata$pop = GTDeptoPopulation(mapdata$deptocode, rep(2017, nrow(mapdata) ) )
+mapdata[, values := 100000*counts/pop]
+gtmap_depto(mapdata) + scale_fill_distiller(name="Incidence rate", palette = "Blues", direction = 1, na.value = "#444444") + 
+    labs(title="2017 TB incidence rate per 100,000 people\nby department")
+
 
