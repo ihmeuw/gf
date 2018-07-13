@@ -35,9 +35,11 @@ tbnots[, sum(is.na(as.double(PESOLBS)))/.N, by=floor(YearMonth/100) ]
 # People weighting more than 25KG are considered adults.
 
 # Adult new cases:
-nadults = tbnots[ ((as.double(PESOLBS) > 25*2.2) | (EDAD >= 18)) & 
+nadults = tbnots[ ( #(as.double(PESOLBS) > 25*2.2) | 
+                     (EDAD >= 18)) & str_to_lower(trimws(CLASIFICACION)) != "bk negativo" &
           (CONDICIONINGRESO == "nuevo" | is.na(CONDICIONINGRESO)), .N, by= .(COD_DEPT, YearMonth)]
-nkids = tbnots[ ((as.double(PESOLBS) <= 25*2.2) | (EDAD < 18)) & 
+nkids = tbnots[ ( # (as.double(PESOLBS) <= 25*2.2) | 
+                  (EDAD > 4) & (EDAD < 18)) & str_to_lower(trimws(CLASIFICACION)) != "bk negativo" &
                     (CONDICIONINGRESO == "nuevo" | is.na(CONDICIONINGRESO)), .N, by= .(COD_DEPT, YearMonth)]
 
 # First line treatments:
@@ -57,17 +59,27 @@ merge(nadults, tbdistr[Product == "RIFAMPICINA, TABLETA DE 300 MG.", .(Rf = sum(
                        by = .(code_dept, YearMonth = ifelse(Month>1, (Year*100+Month-1), (Year-1)*100 + 12 ) ) ],
       by.x=c("COD_DEPT", "YearMonth"), by.y= c("code_dept", "YearMonth"))
 
-nadults_Rsupply = merge(nadults[YearMonth <= 201710, .(NAR_Demand = 310 * sum(N), NewAdultsCases = sum(N)), by=.(Year = floor(YearMonth/100))], 
-      tbdistr[Product == "RIFAMPICINA, TABLETA DE 300 MG.", .(R_Distributed = sum(Amount, na.rm=T)), 
+nadults_Rsupply = merge(nadults[YearMonth <= 201710, .(Demand = 310 * sum(N), NewAdultsCases = sum(N)), by=.(Year = floor(YearMonth/100))], 
+      tbdistr[Product == "RIFAMPICINA, TABLETA DE 300 MG.", .(Distributed = sum(Amount, na.rm=T)), 
              by = .(Year) ],
       by="Year")
 
-nkids_Rsupply = merge(nkids[YearMonth <= 201710, .(Ch_Demand = 16 * sum(N), NewChCases = sum(N)), by=.(Year = floor(YearMonth/100))], 
-                        tbdistr[Product == "RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.", .(RCh_Distributed = sum(Amount, na.rm=T)), 
+nkids_Rsupply = merge(nkids[YearMonth <= 201710, .(Demand = 16 * sum(N), NewChCases = sum(N)), by=.(Year = floor(YearMonth/100))], 
+                        tbdistr[Product == "RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.", .(Distributed = sum(Amount, na.rm=T)), 
                                 by = .(Year) ],
                         by="Year")
-ggplot(data=melt(nadults_Rsupply[, .(NAR_Demand, R_Distributed, Year)], id.vars = "Year")) + 
+ggplot(data=melt(nadults_Rsupply[, .(Demand, Distributed, Year)], id.vars = "Year")) + 
     geom_col(aes(x = Year, y = value, fill=variable), position = "dodge") + 
-    scale_fill_manual(, labels = c("Adult Rifampizine doses demand\naccording to notifications", 
+    labs(y="Rifampizine doses", title="TB medicine distribution versus demand for adults.", subtitle="RIFAMPICINA, TABLETA DE 300 MG.") +
+    scale_fill_manual(name="", labels = c("Adult Rifampizine doses demand\naccording to notifications", 
                                  "Adult Rifampizine doses distributed\nby PNT"), values = c("blue", "red"))
   
+ggplot(data=melt(nkids_Rsupply[, .(Demand, Distributed, Year)], id.vars = "Year")) + 
+  geom_col(aes(x = Year, y = value, fill=variable), position = "dodge") + 
+  labs(y="Rifampizine doses", title="TB medicine distribution versus demand for children.", subtitle="RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.") +
+  scale_fill_manual(name="", labels = c("Children Rifampizine doses demand\naccording to notifications", 
+                                        "Children Rifampizine doses distributed\nby PNT"), values = c("blue", "red"))
+
+tbnots[ ( #(as.double(PESOLBS) > 25*2.2) | 
+  (EDAD >= 18)) & 
+    (CONDICIONINGRESO == "nuevo" | is.na(CONDICIONINGRESO)), .N, by= .(str_to_lower(trimws(CLASIFICACION)))]
