@@ -51,12 +51,12 @@ file_list <- read.csv(paste0(dir, "cod_budget_filelist.csv"), na.strings=c("","N
 file_list$start_date <- ymd(file_list$start_date)
 
 ##create a summary file to track the data that we have (and that we still need)
-summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
-                         c("data_source", "year","start_date", "end_date", "sda_detail", 
-                           "geographic_detail", "period",	"grant", "disease", "loc_id"))
-
-summary_file$loc_id <- as.character(summary_file$loc_id)
-summary_file$loc_id <- loc_name
+# summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
+#                          c("data_source", "year","start_date", "end_date", "sda_detail", 
+#                            "geographic_detail", "period",	"grant", "disease", "loc_id"))
+# 
+# summary_file$loc_id <- as.character(summary_file$loc_id)
+# summary_file$loc_id <- loc_name
 
 # ----------------------------------------------
 ###### For loop that preps data and aggregates it
@@ -79,19 +79,19 @@ for(i in 1:length(file_list$file_name)){
                                   file_list$disease[i], file_list$loc_id[i], file_list$period[i]
                                   , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
     tmpData$year <- year(tmpData$start_date)
-    tmpData$data_source <- file_list$source[i]
+    tmpData$data_source <- file_list$data_source[i]
    } else if (file_list$type[i]=="detailed"){
     tmpData <- prep_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
                                         file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_name, file_list$source[i])
     tmpData$year <- year(tmpData$start_date)
-    tmpData$data_source <- file_list$source[i]
+    tmpData$data_source <- file_list$data_source[i]
   } else if(file_list$type[i]=="module"){
     tmpData <- prep_old_module_budget(dir, as.character(file_list$file_name[i]),
                                    file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
                                    file_list$disease[i], file_list$loc_id[i], file_list$period[i]
                                    , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
     tmpData$year <- year(tmpData$start_date)
-    tmpData$data_source <- file_list$source[i]
+    tmpData$data_source <- file_list$data_source[i]
   } else if(file_list$type[i]=="rejected"){
     tmpData <- prep_cod_rejected(paste0(dir, file_list$file_name[i]))
     tmpData$data_source <- "iterated_fpm"
@@ -106,7 +106,7 @@ for(i in 1:length(file_list$file_name)){
                                     file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_name, file_list$source[i],
                                     file_list$pr[i])
     tmpData$year <- year(tmpData$start_date)
-    tmpData$data_source <- file_list$source[i]
+    tmpData$data_source <- file_list$data_source[i]
   }
   tmpData$financing_source <- "gf"
   if(i==1){
@@ -126,17 +126,17 @@ for(i in 1:length(file_list$file_name)){
   }
   summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
   summary_file$start_date[i] <- min(tmpData$start_date)
-  summary_file$data_source[i] <- tmpData$data_source[1]
+  summary_file$data_source[i] <- file_list$data_source[i]
   
   print(i) ## if the code breaks, you know which file it broke on
 }
 
-summary_file$start_date <- as.Date(summary_file$start_date)
-summary_file$end_date <- as.Date(summary_file$end_date)
-
-setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Data Inventory Start Date", "Data Inventory End Date", 
-                         "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
-
+# summary_file$start_date <- as.Date(summary_file$start_date)
+# summary_file$end_date <- as.Date(summary_file$end_date)
+# 
+# setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Data Inventory Start Date", "Data Inventory End Date", 
+#                          "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
+# 
 
 # ---------------------------------------------
 ##export the summary table
@@ -185,7 +185,7 @@ codData <- strip_chars(resource_database, unwanted_array, remove_chars)
 
 ## the directory on the J Drive for the intervention list is: J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/
 
-mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"),
+mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx"),
                                   include_rssh_by_disease = FALSE)
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
@@ -195,12 +195,12 @@ setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_interven
 mapping_list$coefficient <- 1
 mapping_list$abbrev_intervention <- NULL
 mapping_list$abbrev_module<- NULL
-gf_mapping_list <- total_mapping_list(paste0(dir,"intervention_and_indicator_list.xlsx"),
+gf_mapping_list <- total_mapping_list(paste0(map_dir,"intervention_and_indicator_list.xlsx"),
                                       mapping_list, unwanted_array, remove_chars)
 
 
 # ----------------------------------------------
-########### USE THIS TO CHECK FOR UNMAPPES MODULE/INTERVENTIONS ##########
+########### USE THIS TO CHECK FOR UNMAPPED MODULE/INTERVENTIONS ##########
 # ----------------------------------------------
 # gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 # cod_concat <- paste0(codData$module, codData$intervention)
