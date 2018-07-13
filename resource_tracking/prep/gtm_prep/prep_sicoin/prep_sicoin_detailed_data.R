@@ -66,7 +66,7 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
                                    by=c("adm1","adm2", "loc_name", "sda_orig")]
   } else if (source=="gf"&period==365) {
     colnames(gf_data)[3] <- "loc_id"
-    gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE)
+    gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE) ##fill in NAs with the previous row value 
     gf_data$loc_id <- na.locf(gf_data$loc_id, na.rm=FALSE)
     gf_data <- na.omit(gf_data, cols="X__10")
     budget_dataset <- gf_data[, c("loc_id", "X__10", "X__11", "X__19", "X__26"), with=FALSE]

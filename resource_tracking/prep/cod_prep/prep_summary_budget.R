@@ -11,6 +11,10 @@
 
 prep_summary_budget = function(dir, inFile, sheet_name, start_date, 
                                    qtr_num, disease, loc_id, period, grant, recipient, source, lang){
+  # ----------------------------------------------
+  ##set up functions to handle french and english budgets differently
+  # ----------------------------------------------
+  ## create a vector of start_dates that correspond to each quarter in the budget 
   
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
@@ -20,6 +24,10 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
       dates[i] <- dates[i-1]%m+% months(3)
     }
   }
+  
+  # ----------------------------------------------
+  ##read the data: 
+  # ----------------------------------------------
   
   if(!is.na(sheet_name)){
     gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))
@@ -53,6 +61,7 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   setDT(gf_data)
   gf_data1<- melt(gf_data,id="By Module", variable.name = "qtr", value.name="budget")
   
+  ## make sure that you have a date for each quarter - will tell you if you're missing any 
   if(length(dates) != length(unique(gf_data1$qtr))){
     stop('Error: quarters were dropped!')
   }

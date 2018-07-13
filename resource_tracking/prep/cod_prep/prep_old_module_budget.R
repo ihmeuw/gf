@@ -28,11 +28,11 @@ prep_old_module_budget = function(dir, inFile, sheet_name, start_date,
   ## grab the SDA data
   gf_data <- gf_data[c((grep("macro",tolower(gf_data$module))):(grep("implementing", tolower(gf_data$sda_activity)))),]
   
-  ##drop the last row (we don't need them)
+  ##drop first two rows (we don't need them)
   gf_data <- gf_data[-c(1:2),]
   gf_data <- head(gf_data,-1)
 
-  
+  # only get the columns that we want 
   budget_dataset <-  gf_data[, c("module", "intervention", "sda_activity", "budget"), with=FALSE]
   
   
