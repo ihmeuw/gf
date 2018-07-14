@@ -30,11 +30,22 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
+
+#------------------------------
+# load the hiv indicator from PNLS
+# first line regimen of ART
+
+# save an RDS file that is just ART first line regimen
+# pnls <- readRDS(paste0(dir, 'prepped_data/pnls.rds'))
+# art <- pnls[element_id=='Ua57G6vbmMq' | element_id=='prnCi6GwYzL']
+# saveRDS(art, paste0(dir, 'tableau/art.rds'))
+
+
 #--------------------
 # Initial cleaning after download
 # Import base services data set and convert to a data table
 
-base <- readRDS(paste0(dir, 'base.rds'))
+base <- readRDS(paste0(dir, 'prepped/base.rds'))
 base <- data.table(base)
 
 #--------------------
@@ -52,9 +63,6 @@ mal <- base[type=='malaria']
 mal <- mal[year=='2017' | year=='2018']
 mal[ ,.(unique(element), unique(element_id))]
 mal[ ,.(unique(element), unique(element_fr))]
-# create an HIV only data set
-
-# Create a SVS subset
 
 #---------------------------
 # fix the english translations for the malaria indicators

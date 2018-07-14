@@ -111,39 +111,23 @@ base$opening_date <- unlist(lapply(strsplit(base$opening_date, "T"), "[", 1))
 #-----------------------------------------------
 # merge in the english names for the data elements and element type
 
-elements_base <- read.csv(paste0(dir, 'elements_catalogue.csv'))
+elements_base <- read.csv(paste0(dir, 'catalogues/data_elements_cod.csv'))
 elements_base <- data.table(elements_base)
-elements_base <- elements_base[datasets_ID=='pMbC0FJPkcm']
+elements_base <- elements_base[data_set_id=='pMbC0FJPkcm']
 
-elements_base <- elements_base[ ,.(element_id=data_element_ID, element_eng=displayName, type=type, drug=drug)]
-base <- merge(base, elements_base, by='element_id', all.x=TRUE )
+setnames(elements_base, 'element', 'element_eng')
+elements_base[ ,data_set_id:=NULL]
+elements_base[ ,data_set_fr:=NULL]
+elements_base[ ,element_fr:=NULL]
+elements_base[ ,data_set:=NULL]
+
+# merge the english element names into base services
+base <- merge(base, elements_base, by='element_id', all=TRUE )
 
 # change the default name of elements to english
 setnames(base, c('element', 'element_eng'), c('element_fr', 'element'))
 
 #-----------------------------------------------
-
-#------------------------
-#create age and sex variables
-# the majority of categories say only "default"
-
-# over 5 years of age
-base[category==">5 ans" , age:='5 +']
-base[category=="F?minin, 5 ans et plus", age:='5 +']
-base[category=="Masculin, 5 ans et plus" , age:='5 +']
-
-# under 5 years of age
-base[category=="<5 ans" , age:='Under 5']
-base[category=="F?minin, Moins de 5 ans", age:='Under 5']
-base[category=="Masculin, Moins de 5 ans", age:='Under 5']
-
-# create a sex variable
-base[category=="F?minin, 5 ans et plus" | category=="F?minin, Moins de 5 ans", sex:='Female']
-base[category=="Masculin, 5 ans et plus" | category=="Masculin, Moins de 5 ans", sex:='Male']
-
-#set missing age values to 'Unknown'
-base[is.na(age), age:='Unknown']
-base[is.na(sex), sex:='Unknown']
 
 #--------------------------------------
 # create an svs variable in order to subset to svs data
@@ -191,10 +175,6 @@ base[dist=='sk' ,province:='Sud-Kivu']
 base[dist=='tn' ,province:='Tanganyika']
 base[dist=='tp' ,province:='Tshopo'] #checked
 base[dist=='tu' ,province:='Tshuapa'] #checked
-
-# mistaken names - checked
-base[org_unit=="Im Kabinda H?pital G?n?ral de R?f?rence", dist:='lm']
-base[org_unit=="Im Kabinda H?pital G?n?ral de R?f?rence", province:='Lomami']
 
 # fix these districts
 base[dist=='im' , province:='Unknown'] # possibly real - has 25?
@@ -292,12 +272,12 @@ base[is.na(level), level:='Other']
 
 # --------------------
 # organize the data table 
-base <- base[ ,.(data_set, element, date, category, age, sex, value, org_unit, level, province,
+base <- base[ ,.(data_set, element=as.character(element), date, category, age, sex, value, org_unit, level, province,
                  mtk, coordinates, opening_date, last_update, element_fr, element_id, 
                  org_unit_id, group, data_set_id, month, year)]
 
 #------------------------
 # save the preppred file
-saveRDS(base, paste0(dir, 'base.rds'))
+saveRDS(base, paste0(dir, 'prepped/base.rds'))
 
 #------------------------
