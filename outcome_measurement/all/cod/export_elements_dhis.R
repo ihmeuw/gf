@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/10/2018
+# 7/13/2018
 # This code file lists all data elements in DHIS fpor DRC (data points)
 # It matches them with their relevant data sets (reports) and exports them
 # ----------------------------------------------
@@ -47,13 +47,25 @@ setnames(elements, c("data_element_ID", "datasets_ID", "datasets_name", "display
 elements[ , url:=NULL]
 
 #---------------------------------
-# to create a list of unique data sets
-# export as XLSX to capture the special characters
-sets <- elements[ ,.(data_set=unique(data_set), data_set_id=unique(data_set_id))]
-write.xlsx(sets, paste0(dir, 'catalogues/data_sets_cod.xlsx') )
+# create a variable specifying whether the element is relevant to the PCE using old sheet
 
-# export a list of unique data elements combined with their data sets
-elem <- elements[ ,.(element=unique(element), element_id=unique(element_id)), by=data_set]
-write.xlsx(elem, paste0(dir, 'catalogues/data_elements_cod.xlsx'))
+# merge in the elements to keep
+keep <- read.csv(paste0(dir, 'catalogues/archive/elements_to_keep.csv'))
+setnames(keep, 'data_element_ID', 'element_id')
+elements <- merge(elements, keep, by='element_id', all=T)
+
+elements[is.na(keep), keep:=0]
+elements[is.na(tableau), tableau:=0]
+
+#---------------------------------
+# export unique lists of data sets and elements with associated ids 
+# export as XLSX to capture the special characters
+
+# export a list of data sets separate from the elements
+# sets <- elements[ ,.(data_set=unique(data_set), data_set_id=unique(data_set_id))]
+# write.xlsx(sets, paste0(dir, 'catalogues/data_sets_cod.xlsx') )
+
+
+write.xlsx(elements, paste0(dir, 'catalogues/data_elements_cod.xlsx'))
 
 #-------------------------------------
