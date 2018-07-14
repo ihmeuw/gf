@@ -11,7 +11,8 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 
-
+## This is a function that literally preps BLANK files and attaches relavant information
+## Basically, we want to document disease years that we don't have data for as well 
 # ----------------------------------------------
 # start function
 # ----------------------------------------------
