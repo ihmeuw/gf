@@ -35,10 +35,10 @@ source <- "gf" ## denotes the type of data (e.g. government expenditures, Global
 
 
 ## set up the directory and grab the file list: 
-dir <- 'your local drive here' ##where the files are stored locally - on the J drive, the filepath is:  "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
+file_dir <- 'your local drive here' ##where the files are stored locally - on the J drive, the filepath is:  "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
 
 
-file_list <- read.csv(paste0(dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
+file_list <- read.csv(paste0(file_dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)
 
@@ -68,12 +68,12 @@ for(i in 1:length(file_list$file_name)){
   summary_file$data_source[i] <- file_list$data_source[i]
   
   if(file_list$type[i]=="detailed"){##most detailed level of budgets 
-    tmpData <- prep_detailed_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
+    tmpData <- prep_detailed_uga_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                        file_list$start_date[i], file_list$qtr_number[i],
                                        cashText, file_list$grant[i], 
                                         file_list$disease[i], file_list$period[i],file_list$data_source[i])
   } else if (file_list$type[i]=="summary"){ ##not much detail, only high level SDAs: 
-    tmpData <- prep_summary_uga_budget(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
+    tmpData <- prep_summary_uga_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                        file_list$start_date[i], file_list$qtr_number[i], 
                                        cashText, file_list$grant[i], 
                                        file_list$disease[i], file_list$period[i], file_list$recipient[i], 
@@ -81,7 +81,7 @@ for(i in 1:length(file_list$file_name)){
     tmpData$disbursement <- 0 
   ##LFA data cleaning: 
   } else if (file_list$type[i]=="pudr"){ ##has expenditure data 
-    tmpData <- prep_pudr_uga(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
+    tmpData <- prep_pudr_uga(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                              file_list$start_date[i], file_list$disease[i], file_list$period[i], 
                              file_list$grant[i], file_list$recipient[i],file_list$data_source[i])
   }
@@ -187,10 +187,9 @@ cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
 ##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 
-## the directory on the J Drive for the intervention list is: J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/
-
-
-mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx")
+## on the J Drive: map_dir <- J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/
+map_dir <- "where the intervention_and_indicator_list.xlsx file lives"
+mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx")
                                   , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 

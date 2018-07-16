@@ -168,10 +168,6 @@ byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'disb
 resource_database= resource_database[, list(budget=sum(na.omit(budget)), 
                                             disbursement=sum(na.omit(disbursement)),expenditure=sum(na.omit(expenditure))), by=byVars]
 
-
-
-
-
 # ----------------------------------------------
 ######## Optional: do a data check for dropped values ########
 # ----------------------------------------------
