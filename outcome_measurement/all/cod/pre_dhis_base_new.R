@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/13/2018
+# 7/16/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -17,6 +17,7 @@ library(jsonlite)
 library(httr)
 library(ggplot2)
 library(dplyr)
+library(xlsx)
 library(stringr) # to extract meta data from file names
 # --------------------
 

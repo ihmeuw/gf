@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/12/2018
+# 7/16/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -40,6 +40,7 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # art <- pnls[element_id=='Ua57G6vbmMq' | element_id=='prnCi6GwYzL']
 # saveRDS(art, paste0(dir, 'tableau/art.rds'))
 
+readRDS
 
 #--------------------
 # Initial cleaning after download

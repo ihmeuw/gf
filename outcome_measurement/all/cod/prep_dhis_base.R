@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/12/2018
+# 7/16/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -104,9 +104,15 @@ base[ ,opening_date:=as.character(opening_date)]
 base$last_update <- unlist(lapply(strsplit(base$last_update, "T"), "[", 1))
 base$opening_date <- unlist(lapply(strsplit(base$opening_date, "T"), "[", 1))
 
-#-----------------------------------------------
+#----------------------------------------------
+# import the english translations of the data elements
+
+elements_base <- read.csv(paste0(dir, 'catalogues/data_elements_cod.csv'), stringsAsFactors=F)
+elements_base <- data.table(elements_base)
+elements_base <- elements_base[data_set_id=='pMbC0FJPkcm']
+
 # merge in the english names for the data elements and element type
-elements_base <- elements_base[ ,.(element_id=data_element_ID, element_eng=displayName, type=type, drug=drug)]
+elements_base <- elements_base[ ,.(element_id, element_eng=element, keep, type, drug, tableau)]
 base <- merge(base, elements_base, by='element_id', all.x=TRUE )
 
 # change the default name of elements to english

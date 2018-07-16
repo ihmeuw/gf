@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/12/2018
+# 7/16/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # Prep the data sets for analysis and the Tableau Dashboard
@@ -34,35 +34,44 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # Initial merge after download
 # Import PNLS downloads and convert the merged data sets to a data table
 
-#  read in the pnls data sets and merge them - jan. through april 2018
-pnls1 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_02_2018_04_2018.rds'))
-pnls2 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2018_02_2018.rds'))
-
-pnls1 <- data.table(pnls1)
-pnls2 <- data.table(pnls2)
-
-# merge them to create a 2018 dataset
-pnls3 <- merge(pnls1, pnls2, by=c('group', 'data_element_ID', 'period',
-                                  'org_unit_ID', 'value', 'category', 'last_update'),
-                                   all=TRUE)
-
-# merge in the 2017 data
-pnls4 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2017_12_2017.rds'))
-pnls4 <- data.table(pnls4)
-
-pnls <- merge(pnls3, pnls4, by=c('group', 'data_element_ID', 'period',
-                       'org_unit_ID', 'value', 'category', 'last_update'),
-                             all=TRUE)
-
-#------------------------
-# save the preppred file
-saveRDS(pnls, paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
+# #  read in the pnls data sets and merge them - jan. through april 2018
+# pnls1 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_02_2018_04_2018.rds'))
+# pnls2 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2018_02_2018.rds'))
+# pnls1 <- data.table(pnls1)
+# pnls2 <- data.table(pnls2)
+# 
+# # merge them to create a 2018 dataset
+# pnls3 <- merge(pnls1, pnls2, by=c('group', 'data_element_ID', 'period',
+#                                   'org_unit_ID', 'value', 'category', 'last_update'),
+#                                    all=TRUE)
+# 
+# # merge in the 2017 data
+# pnls4 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2017_12_2017.rds'))
+# pnls4 <- data.table(pnls4)
+# 
+# pnls <- merge(pnls3, pnls4, by=c('group', 'data_element_ID', 'period',
+#                        'org_unit_ID', 'value', 'category', 'last_update'),
+#                              all=TRUE)
+# 
+# #------------------------
+# # convert value to a numeric 
+# 
+# setnames(pnls, 'value', 'value_old')
+# 
+# pnls[ ,value:=as.character(value_old)]
+# pnls[ ,value:=as.numeric(value)]
+# pnls[ , value_old:=NULL]
+# 
+# 
+# #------------------------
+# # save the preppred file
+# saveRDS(pnls, paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
 
 # #------------------------
 
 #--------------------
 # Initial cleaning after download
-# Import pnls data set and convert to a data table - 2017 - 4/2018
+# Import pnls data set and convert to a data table - 2017 - April 2018
 # for future downloads, merge with this data set
 
 pnls <- readRDS(paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
