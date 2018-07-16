@@ -34,7 +34,7 @@ pce_forecast <- melt(pce_forecast, id.vars = c("location_id", "year_id", "variab
 
 
 pce_wide <- reshape(pce_forecast,direction='wide',
-             idvar=c("location_id", "year_id", "sda"),
+             idvar=c("location_id", "yeavarir_id", "sda"),
              timevar="variable")
 
 groupCols <- names(pce_wide)[!names(pce_wide)%in%c("location_id", "year_id", "sda")]
