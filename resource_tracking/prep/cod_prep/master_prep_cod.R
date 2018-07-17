@@ -27,7 +27,7 @@ library(zoo)
 # ----------------------------------------------
 loc_name <- 'cod' ##use the ISO3 country code for DRC
 implementer <- "CAGF"
-
+export_dir <- "where you want the final dataset to live"
 # ----------------------------------------------
 ###### source the functions that we need 
 # ----------------------------------------------
@@ -42,13 +42,13 @@ source(paste0(prep_dir, "prep_old_detailed_budget.R"))
 # ----------------------------------------------
 ## Download the "Resource Tracking Data" folder from Basecamp and save it on your local drive 
 # ----------------------------------------------
-dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
+file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
 
 # ----------------------------------------------
 ###### Load the list of the RT files we want to process   ###### 
 # ----------------------------------------------
 
-file_list <- read.csv(paste0(dir, "cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
+file_list <- read.csv(paste0(file_dir, "cod_budget_filelist.csv"), na.strings=c("","NA"), stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)
 
 ##create a summary file to track the data that we have (and that we still need)
@@ -75,19 +75,19 @@ for(i in 1:length(file_list$file_name)){
   # }
   
   if(file_list$type[i]=="summary"){
-    tmpData <- prep_summary_budget(dir, as.character(file_list$file_name[i]),
+    tmpData <- prep_summary_budget(file_dir, as.character(file_list$file_name[i]),
                                   file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
                                   file_list$disease[i], file_list$loc_id[i], file_list$period[i]
                                   , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
     tmpData$year <- year(tmpData$start_date)
     tmpData$data_source <- file_list$data_source[i]
    } else if (file_list$type[i]=="detailed"){
-    tmpData <- prep_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
+    tmpData <- prep_detailed_budget(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
                                         file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_name, file_list$source[i])
     tmpData$year <- year(tmpData$start_date)
     tmpData$data_source <- file_list$data_source[i]
   } else if(file_list$type[i]=="module"){
-    tmpData <- prep_old_module_budget(dir, as.character(file_list$file_name[i]),
+    tmpData <- prep_old_module_budget(file_dir, as.character(file_list$file_name[i]),
                                    file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
                                    file_list$disease[i], file_list$loc_id[i], file_list$period[i]
                                    , file_list$grant[i], implementer, file_list$source[i], file_list$lang[i])
@@ -98,12 +98,12 @@ for(i in 1:length(file_list$file_name)){
     tmpData$data_source <- "iterated_fpm"
     
   }  else if (file_list$type[i]=="pudr"){ ##has expenditure data 
-    tmpData <- prep_pudr_cod(dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
+    tmpData <- prep_pudr_cod(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                              file_list$start_date[i], file_list$disease[i], file_list$period[i], 
                              file_list$grant[i], file_list$sr[i],file_list$data_source[i], file_list$lang[i], loc_name)
   tmpData$data_source <- "pudr"
   } else if (file_list$type[i]=="old_detailed"){
-    tmpData <- prep_old_detailed_budget(dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
+    tmpData <- prep_old_detailed_budget(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i],
                                     file_list$disease[i], file_list$period[i],  file_list$lang[i], file_list$grant[i], loc_name, file_list$source[i],
                                     file_list$pr[i])
     tmpData$year <- year(tmpData$start_date)
@@ -240,7 +240,7 @@ mappedCod$country <- "Congo (Democratic Republic)"
 # ----------------------------------------------
 ## write as csv 
 # ----------------------------------------------
-write.csv(mappedCod, paste0(dir, "prepped_fpm_budgets.csv"), fileEncoding = "latin1", row.names = FALSE)
+write.csv(mappedCod, paste0(export_dir, "prepped_fpm_budgets.csv"), fileEncoding = "latin1", row.names = FALSE)
 
 
 
