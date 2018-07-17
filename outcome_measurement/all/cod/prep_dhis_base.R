@@ -1,4 +1,4 @@
-# Prep the COD DHIS2 data 
+# Services de Base - Prep the COD DHIS2 data from Basic Services
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
@@ -17,7 +17,8 @@ library(jsonlite)
 library(httr)
 library(ggplot2)
 library(dplyr)
-library(stringr) # to extract meta data from file names
+library(xlsx)
+library(stringr) 
 # --------------------
 
 # --------------------
@@ -36,7 +37,6 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 base <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_01_2015_04_2018.rds'))
 base <- data.table(base)
 #-----------------------------------------
-
 
 #------------------------------
 # merge the base services data with the meta data
@@ -79,12 +79,17 @@ base[ , url_list:=NULL]
 # rename the variables to be more intuitive
 
 # put the data set in a more intuitive order and change variable types
+# convert all factor variables to character string; then convert value to numeric 
+
+# this code will produce a warning from changing the values to characters - this is OK
 base <- base[ , .(data_set=as.character(datasets_name), element=as.character(element_name), category=as.character(category),
-                    period=period,value=as.numeric(as.character(value)),
-                    org_unit=as.character(org_unit_name), group=group,
-                    coordinates=coordinates, opening_date=opening_date, last_update=last_update,
-                    data_set_id=as.character(datasets_ID), element_id=as.character(data_element_ID),
-                    org_unit_id=as.character(org_unit_ID))]
+                  period=period, value=as.numeric(as.character(value)),
+                  org_unit=as.character(org_unit_name),
+                  coordinates=coordinates, opening_date=opening_date, last_update=last_update,
+                  data_set_id=as.character(datasets_ID), element_id=as.character(data_element_ID),
+                  org_unit_id=as.character(org_unit_ID))]
+
+#----------------------------------------
 
 #-----------------------------------------------
 # create a date variable from period
@@ -104,25 +109,27 @@ base[ ,opening_date:=as.character(opening_date)]
 base$last_update <- unlist(lapply(strsplit(base$last_update, "T"), "[", 1))
 base$opening_date <- unlist(lapply(strsplit(base$opening_date, "T"), "[", 1))
 
-#----------------------------------------------
-# import the english translations of the data elements
+#-----------------------------------------------
+# merge in the english names for the data elements and element type
 
 elements_base <- read.csv(paste0(dir, 'catalogues/data_elements_cod.csv'), stringsAsFactors=F)
 elements_base <- data.table(elements_base)
 elements_base <- elements_base[data_set_id=='pMbC0FJPkcm']
 
+setnames(elements_base, 'element', 'element_eng')
+elements_base[ ,data_set_id:=NULL]
+elements_base[ ,data_set_fr:=NULL]
+elements_base[ ,element_fr:=NULL]
+elements_base[ ,data_set:=NULL]
+
 # merge in the english names for the data elements and element type
 elements_base <- elements_base[ ,.(element_id, element_eng=element, keep, type, drug, tableau)]
 base <- merge(base, elements_base, by='element_id', all.x=TRUE )
 
-# change the default name of elements to english
-setnames(base, c('element', 'element_eng'), c('element_fr', 'element'))
-
 #-----------------------------------------------
-
-#------------------------
 #create age and sex variables
 # the majority of categories say only "default"
+# keep these categories for tableau
 
 # over 5 years of age
 base[category==">5 ans" , age:='5 +']
@@ -137,7 +144,6 @@ base[category=="Masculin, Moins de 5 ans", age:='Under 5']
 # create a sex variable
 base[category=="Féminin, 5 ans et plus" | category=="Féminin, Moins de 5 ans", sex:='Female']
 base[category=="Masculin, 5 ans et plus" | category=="Masculin, Moins de 5 ans", sex:='Male']
-
 
 #--------------------------------------
 # create an svs variable in order to subset to svs data
@@ -185,10 +191,6 @@ base[dist=='sk' ,province:='Sud-Kivu']
 base[dist=='tn' ,province:='Tanganyika']
 base[dist=='tp' ,province:='Tshopo'] #checked
 base[dist=='tu' ,province:='Tshuapa'] #checked
-
-# mistaken names - checked
-base[org_unit=="Im Kabinda Hôpital Général de Référence", dist:='lm']
-base[org_unit=="Im Kabinda Hôpital Général de Référence", province:='Lomami']
 
 # fix these districts
 base[dist=='im' , province:='Unknown'] # possibly real - has 25?
@@ -286,14 +288,14 @@ base[is.na(level), level:='Other']
 
 # --------------------
 # organize the data table 
-base <- base[ ,.(data_set, element, date, category, age, sex, type, value, org_unit, level, province,
-                mtk, coordinates, opening_date, last_update, drug, svs, element_fr, element_id, 
-                org_unit_id, data_set_id, month, year)]
+base <- base[ ,.(data_set, element=as.character(element), date, category, age, sex, value, org_unit, level, province,
+                 mtk, coordinates, opening_date, last_update, element_fr, element_id, 
+                 org_unit_id, group, data_set_id, month, year)]
+
 
 #------------------------
 # save the preppred file
-saveRDS(base, paste0(dir, 'prepped_data/base_02_2015_04_2018.rds'))
-
+saveRDS(base, paste0(dir, 'full/prepped_data/base_02_2015_04_2018.rds'))
 
 #------------------------
 # save only the elements we plan to use for analysis
@@ -304,3 +306,4 @@ base_keep <- base[element_id %in% keep]
 #subset of base including only elements needed for analysis
 saveRDS(base_keep, paste0(dir, 'prepped_data/base.rds'))
 #------------------------
+
