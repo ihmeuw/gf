@@ -415,7 +415,8 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=patients_received)
   theme_void() +
   labs(title="Number of patients submitting samples, Uganda", caption="Source: Uganda Viral Load Dashboard", 
        subtitle=" n=1,974,938") +
-  theme(plot.title=element_text(vjust=-2), plot.subtitle=element_text(vjust=-2), plot.caption=element_text(vjust=6))  
+  theme(plot.title=element_text(vjust=-2), plot.subtitle=element_text(vjust=-2), plot.caption=element_text(vjust=6))   +
+  coord_fixed()
 
 # ---------------
 # suppression ratio by sex

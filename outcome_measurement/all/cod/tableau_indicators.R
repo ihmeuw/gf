@@ -30,23 +30,10 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
-
-#------------------------------
-# load the hiv indicator from PNLS
-# first line regimen of ART
-
-# save an RDS file that is just ART first line regimen
-# pnls <- readRDS(paste0(dir, 'prepped_data/pnls.rds'))
-# art <- pnls[element_id=='Ua57G6vbmMq' | element_id=='prnCi6GwYzL']
-# saveRDS(art, paste0(dir, 'tableau/art.rds'))
-
-readRDS
-
 #--------------------
-# Initial cleaning after download
 # Import base services data set and convert to a data table
 
-base <- readRDS(paste0(dir, 'prepped/base.rds'))
+base <- readRDS(paste0(dir, 'prepped_data/base.rds'))
 base <- data.table(base)
 
 #--------------------
@@ -100,7 +87,7 @@ mal[element_id=='uV53nh3MrYl', element:='A 2.1 LLINs distributed - 1st ANC visit
 
 # subset to only the relevant elements  
 # RDTS performed, confirmed cases, confirmed cases treated
-malaria <- mal[element_id=='CIzQAR8IWH1' | element_id=='rfeqp2kdOGi' | element_id=='nRm30I4w9En' | element_id=='jocZb4TE1U2' | element_id=='wleambjupW9' ]
+malaria <- mal[element_id=='CIzQAR8IWH1' | element_id=='rfeqp2kdOGi' | element_id=='nRm30I4w9En' | element_id=='jocZb4TE1U2' | element_id=='wleambjupW9' | elements_id=='aK0QXqm8Zxn' | element_id=='JXm8J8GRJxI' ]
 
 #---------------------------
 # organize the data in an intuitive way
@@ -207,5 +194,21 @@ write.csv(tableau, paste0(dir, 'tableau_01_2017_04_2018.csv'))
 saveRDS(tableau, paste0(dir, 'tableau/tableau.rds'))
 
 #-------------------------------
+
+#------------------------------
+# load the hiv indicator from PNLS
+# first line regimen of ART
+
+# save an RDS file that is just ART first line regimen
+pnls <- readRDS(paste0(dir, 'prepped_data/pnls.rds'))
+art <- pnls[element_id=='Ua57G6vbmMq' | element_id=='prnCi6GwYzL']
+DXz4Zxd4fKq
+gHBcPOF5y3z
+
+saveRDS(art, paste0(dir, 'tableau/art.rds'))
+
+
+
+
 
 

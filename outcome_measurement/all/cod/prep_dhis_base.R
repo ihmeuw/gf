@@ -138,14 +138,11 @@ base[category=="Masculin, Moins de 5 ans", age:='Under 5']
 base[category=="Féminin, 5 ans et plus" | category=="Féminin, Moins de 5 ans", sex:='Female']
 base[category=="Masculin, 5 ans et plus" | category=="Masculin, Moins de 5 ans", sex:='Male']
 
-#set missing age values to 'Unknown'
-base[is.na(age), age:='Unknown']
-base[is.na(sex), sex:='Unknown']
 
 #--------------------------------------
 # create an svs variable in order to subset to svs data
-base[type=='svs', svs:=1]
-base[type!='svs', svs:=0]
+base[type=='svs', svs:='Yes']
+base[type!='svs', svs:='No']
 
 #--------------------------------------
 # add a district variable 
@@ -201,8 +198,8 @@ base[ ,dist:=NULL]
 
 #-----------------------------------------------
 # add a variable to demarcate the provincial approach provinces
-base[province=='Maniema' | province=='Tshopo' | province=="Kinshasa", mtk:=1]
-base[is.na(mtk), mtk:=0]
+base[province=='Maniema' | province=='Tshopo' | province=="Kinshasa", mtk:='Yes']
+base[is.na(mtk), mtk:='No']
 
 #-----------------------------------------------
 # type of facility
@@ -291,10 +288,19 @@ base[is.na(level), level:='Other']
 # organize the data table 
 base <- base[ ,.(data_set, element, date, category, age, sex, type, value, org_unit, level, province,
                 mtk, coordinates, opening_date, last_update, drug, svs, element_fr, element_id, 
-                org_unit_id, group, data_set_id, month, year)]
+                org_unit_id, data_set_id, month, year)]
 
 #------------------------
 # save the preppred file
-saveRDS(base, paste0(dir, 'base.rds'))
+saveRDS(base, paste0(dir, 'prepped_data/base_02_2015_04_2018.rds'))
 
+
+#------------------------
+# save only the elements we plan to use for analysis
+
+keep <- elements_base[keep==1, unique(element_id)]
+base_keep <- base[element_id %in% keep]
+
+#subset of base including only elements needed for analysis
+saveRDS(base_keep, paste0(dir, 'prepped_data/base.rds'))
 #------------------------

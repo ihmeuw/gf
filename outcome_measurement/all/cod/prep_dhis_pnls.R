@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/16/2018
+# 7/17/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # Prep the data sets for analysis and the Tableau Dashboard
@@ -45,10 +45,11 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 #                                   'org_unit_ID', 'value', 'category', 'last_update'),
 #                                    all=TRUE)
 # 
-# # merge in the 2017 data
+# # upload the 2017 data and create a data table
 # pnls4 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2017_12_2017.rds'))
 # pnls4 <- data.table(pnls4)
 # 
+## merge in the 2017 data
 # pnls <- merge(pnls3, pnls4, by=c('group', 'data_element_ID', 'period',
 #                        'org_unit_ID', 'value', 'category', 'last_update'),
 #                              all=TRUE)

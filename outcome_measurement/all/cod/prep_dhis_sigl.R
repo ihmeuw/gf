@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 6/27/2018
+# 7/16/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -33,7 +33,7 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # Initial cleaning after download
 # Import SIGL data sets and convert to a data table
 
-sigl <- readRDS(paste0(dir, 'pre_merge/sigl_drc_01_2015_05_2018.rds'))
+sigl <- readRDS(paste0(dir, 'pre_merge/sigl/sigl_drc_01_2015_05_2018.rds'))
 sigl <- data.table(sigl)
 #-----------------------------------------
 
@@ -43,23 +43,21 @@ sigl <- data.table(sigl)
 # data set is too large for data table manipulation (crashes RStudio)
 
 # import the id #s of the relevant elements and create a vector
-elements <- fread(paste0(dir, 'elements_catalogue.csv'))
+elements <- fread(paste0(dir, 'catalogues/data_elements_cod.csv'))
 
 # subset to only base services
-elements_sigl <- elements[datasets_ID=='s6yd0w2KXWa' | datasets_ID=='pePpSnKtAh3']   
+elements_sigl <- elements[data_set_id=='s6yd0w2KXWa' | data_set_id=='pePpSnKtAh3']   
 elements_sigl <- elements_sigl[keep==1]
-
-# subset to only the relevant ids
-element_ids <- as.character(elements_sigl$data_element_ID)
+elements_sigl <- unique(elements_sigl$element_id)
 
 # subset sigl1 & sigl2 to only the relevant elements
 sigl[ , data_element_ID:=as.character(data_element_ID)]
-sigl <- sigl[data_element_ID %in% element_ids]
+sigl <- sigl[data_element_ID %in% elements_sigl]
 
 #-------------------
 
 #------------------------------
-# merge the base services data with the meta data
+# merge the SIGL data with the meta data
 
 # import the meta data for the merge
 data_sets<- data.table(readRDS(paste0(dir, 'meta_data/data_sets.rds'))) # not necessary for the merge
@@ -132,23 +130,20 @@ sigl$opening_date <- unlist(lapply(strsplit(sigl$opening_date, "T"), "[", 1))
 
 #-----------------------------------------------
 # merge in the english names for the data elements and element type
-elements_sigl <- elements_sigl[ ,.(element_id=data_element_ID, element_eng=displayName, type=type, drug=drug)]
-sigl <- merge(sigl, elements_sigl, by='element_id', all.x=TRUE )
+
+elements_eng <- read.csv(paste0(dir, 'catalogues/data_elements_cod.csv'), stringsAsFactors=F)
+elements_eng <- data.table(elements_eng)
+elements_eng <- elements_eng[ ,.(element_id, element_eng=element, type, drug, tableau)]
+
+sigl <- merge(sigl, elements_eng, by='element_id', all.x=TRUE)
 
 # change the default name of elements to english
 setnames(sigl, c('element', 'element_eng'), c('element_fr', 'element'))
 
 #-----------------------------------------------
 
-#------------------------
-# all categories are default - drop category
-# for SIGL data, age/sex is included in the element name
-sigl[ ,category:=NULL]
-
-#------------------------
-
 #--------------------------------------
-# add a district variable 
+# add a DPS variable 
 sigl[ , dist:=(substr(sigl$org_unit, 1, 2))]
 sigl[ , dist:=tolower(dist)]
 
@@ -160,7 +155,6 @@ sigl[dist=='hu' ,province:='Haute-Uele']
 sigl[dist=='it' ,province:='Ituri']
 
 sigl[dist=='kn' ,province:='Kinshasa']
-
 sigl[dist=='kc' ,province:='Kongo Central'] # checked against facility inventory
 
 # Kasai, Kasai Central, Kasai Oriental, and Kongo Central
@@ -202,8 +196,8 @@ sigl[ ,dist:=NULL]
 
 #-----------------------------------------------
 # add a variable to demarcate the provincial approach provinces
-sigl[province=='Maniema' | province=='Tshopo' | province=="Kinshasa", mtk:=1]
-sigl[is.na(mtk), mtk:=0]
+sigl[province=='Maniema' | province=='Tshopo' | province=="Kinshasa", mtk:='Yes']
+sigl[is.na(mtk), mtk:='No']
 
 #-----------------------------------------------
 # Level of reporting or type of facility (levels of organizational units)
@@ -284,36 +278,19 @@ sigl[zone, level:="Health Zone"]
 zone1 <- grep(pattern="zone de santé", x=sigl$org_unit1)
 sigl[zone1, level:="Health Zone"]
 
+# if the level is missing, add 'other'
+sigl[is.na(level), level:='Other']
+
 #fix the 58 facilities with typos
 sigl[ ,.(length(unique(org_unit))), by=level]
 #--------------------------------------------
-# 
-# sigl[level=="Health Zone", health_zone:=org_unit]
-# sigl[level=="Health Zone", health_zone:=(substr(health_zone, 4, 20))]
-# 
-# sigl$health_zone <- word(sigl$health_zone, 1)
-# 
-# sigl[  , hz:=(word(sigl$health_zone, 1))]
-# sigl[  , hz2:=(word(sigl$health_zone, 2))]
-# 
-# if (sigl$hz2!='Zone')
-# 
-# 
-# gsub(pattern="Zone de Sante", replacement="\\s", x=sigl$health_zone)
-# 
-# x <- strsplit(sigl$health_zone, split=" ")
-# x1 <- unlist(lapply(x, `[[`, 1))
-# 
-# sigl[level=="Health Zone", gsub(pattern="zone de sante", replacement="", sigl$hz)]
-# gsub(pattern="zone de santé", replacement="", sigl$hz)
-# 
 
 #----------------------------------------------
 # put the variables in an intuitive order 
 
-sigl <- sigl[ ,.(data_set, element, date, type, value, org_unit, level, province,
+sigl <- sigl[ ,.(data_set, element, date, type, value, org_unit, level, dps=province,
                       mtk, opening_date, last_update, drug, element_fr, element_id, 
-                      org_unit_id, group, data_set_id, month, year)]
+                      org_unit_id, data_set_id, month, year)]
 
 #----------------------------------------------
 # save the data sets
