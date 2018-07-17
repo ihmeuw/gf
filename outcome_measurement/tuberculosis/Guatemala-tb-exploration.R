@@ -76,22 +76,35 @@ names(TBNotif2015) = c("NOMBRES", "DIRECCION", "MUNICIPIO", "DEPARTAMENTO", "SER
                        "PACIENTEPRIVADOLIBERTAD")
 TBNotif2015[,YEAR := 2015]
 
+namesTB2016 = c( "CORRELATIVO", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", 
+                 "DAS", "SEXO", "FECHANACIMIENTO", "FECHAACTUAL", "EDAD", "RANGOEDAD", "EDADDECADA", "EDUCACION", "PUEBLO", "OCUPACION",
+                 "PESOLBS", "PESOKG", "CONDICIONINGRESO", "NUEVACONDICIONINGRESO", "CLASIFICACION", "LOCALIZACIONTB",
+                 "FECHANOTIFICACION", "FECHAINICIOTX", "ESQUEMA", "FECHADX", "METODODX", "NUEVOMETODODX", "VIH", "FECHAPRUEBAVIH",
+                 "OTRASPATOLOGIAS", "PDS", "PACIENTEPRIVADOLIBERTAD", "DEPORTADO", "UNIDADDX", "EMPLEADOMSPAS", "CONTACTOS",
+                 "CONTACTO_000-0004", "CONTACTO_MAYORA_005", "QUIMIO_VIH", "CASOINDICE", "FALLECIDOS", "FECHAMUERTE", 
+                 "CAUSADEMUERTE")
 TBNotif2016 = read_excel(paste0(dataPath, "Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES TB 2016.xlsx"), sheet = 2, col_names = F)
 # Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
 TBNotif2016 = data.table(TBNotif2016)[3:.N,][!is.na(X3),]
-names(TBNotif2016) = c( "CORRELATIVO", "MUNICIPIO", "DEPARTAMENTO", "SERVICIODESALUD", 
-                        "DAS", "SEXO", "FECHANACIMIENTO", "FECHAACTUAL", "EDAD", "RANGOEDAD", "EDADDECADA", "EDUCACION", "PUEBLO", "OCUPACION",
-                        "PESOLBS", "PESOKG", "CONDICIONINGRESO", "NUEVACONDICIONINGRESO", "CLASIFICACION", "LOCALIZACIONTB",
-                        "FECHANOTIFICACION", "FECHAINICIOTX", "ESQUEMA", "FECHADX", "METODODX", "NUEVOMETODODX", "VIH", "FECHAPRUEBAVIH",
-                        "OTRASPATOLOGIAS", "PDS", "PACIENTEPRIVADOLIBERTAD", "DEPORTADO", "UNIDADDX", "EMPLEADOMSPAS", "CONTACTOS",
-                        "CONTACTO_000-0004", "CONTACTO_MAYORA_005", "QUIMIO_VIH", "CASOINDICE", "FALLECIDOS", "FECHAMUERTE", 
-                        "CAUSADEMUERTE")
+names(TBNotif2016) = namesTB2016
+TBNotif2016_Quimio = read_excel(paste0(dataPath, "Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES TB 2016.xlsx"), sheet = 4, col_names = F)
+# Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
+TBNotif2016_Quimio = data.table(TBNotif2016_Quimio)[2:.N,0:42][!is.na(X3),]
+names(TBNotif2016_Quimio) = namesTB2016
+
+TBNotif2016_Mb = read_excel(paste0(dataPath, "Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES TB 2016.xlsx"), sheet = 1, col_names = F)
+# Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
+TBNotif2016_Mb = data.table(TBNotif2016_Mb)[2:.N,0:42][!is.na(X3),]
+names(TBNotif2016_Mb) = namesTB2016
+TBNotif2016 = rbind(TBNotif2016, TBNotif2016_Quimio, TBNotif2016_Mb)
 
 TBNotif2016[,YEAR := 2016]
+nrow(TBNotif2016)
+
 
 # 2017 data
 TBNotif2017 = read_excel(paste0(dataPath, "Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES TB 2017.xlsx"), 
-                         sheet = 5, col_names = F)
+                     sheet = 5, col_names = F)
 # Ignore rows without a department. This is to ignore extra rows with no data at all at the end of the spreadsheet.
 TBNotif2017 = data.table(TBNotif2017)[5:.N,][!is.na(X3),]
 names(TBNotif2017) = c("CORRELATIVO", "DAS",	"DISTRITO",	"SERVICIODESALUD",	"FECHANACIMIENTO", 	"EDAD",	"SEXO",
@@ -99,13 +112,27 @@ names(TBNotif2017) = c("CORRELATIVO", "DAS",	"DISTRITO",	"SERVICIODESALUD",	"FEC
                        "CONDICIONPX", 	"CAUSAMUERTE",	"CONDICIONINGRESO",	"NUEVACONDICIONINGRESO",
                        "TipoTB",	"CLASIFICACION",	"LOCALIZACIONTB",	"FECHANOTIFICACION",
                        "MESNOTIFICACION", "FECHADX",	"METODODX",	"FECHAINICIOTX", "OTRASPATOLOGIAS",
-                       "OTRASPATOLOGIAS__2", "OTRASPATOLOGIAS_3",	"VIH",	"FECHAPRUEBAVIH",	"TPC",	
-                       "TARV",	"LUGARTARV",	"INICIOTARV",	"ESQUEMA",	"REFIERE",	"BXPOSITIVAS",	"PDS",	"RESULTADOPDS",	"FECHAPDS",	"CONTROL2_RESULTADO",
-                       "CONTROL2_FECHA", "CONTROL4_RESULTADO", "CONTROL4_FECHA", "CONTROL6_RESULTADO", "CONTROL6_FECHA", "CULTIVO_RESULTADO", 
+                       "OTRASPATOLOGIAS__2", "OTRASPATOLOGIAS_3",
+                       "CONTACTOS", "CONTACTO_000-004", "CONTACTO_MAYORA005", "QUIMIO VIH", "CASOINDICE",
+                       "VIH",	"FECHAPRUEBAVIH",	"TPC",	
+                       "TARV",	"LUGARTARV",	"INICIOTARV",	"ESQUEMA",	"REFIERE",	"BXPOSITIVAS",	"PDS",	
+                       "RESULTADOPDS",	"FECHAPDS",	"CONTROL2_RESULTADO", "CONTROL2_FECHA", 
+                       "CONTROL4_RESULTADO", "CONTROL4_FECHA", "CONTROL6_RESULTADO", "CONTROL6_FECHA", "CULTIVO_RESULTADO", 
                        "CULTIVO_FECHA", "CONDICIONEGRESO", "FECHA", "OBSERVACION")
+TBNotif2017_Qm = read_excel(paste0(dataPath, "Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES TB 2017.xlsx"), 
+                            sheet = 6, col_names = F)
+TBNotif2017_Qm = data.table(TBNotif2017_Qm)[5:.N,2:56][!is.na(X3),]
+names(TBNotif2017_Qm) = names(TBNotif2017)
 
+namesMDR17 = c( "CORRELATIVO",	"DIRECCION",	"MUNICIPIO",	"DAS",	"SERVICIODESALUD",	"SEXO",
+                "EDAD",	"CONDICIONINGRESO",	"FECHANOTIFICACION",	"FECHAINICIOTX",	"CLASIFICACION",
+                "RESISTENCIA",	"FECHAPDS",	"FECHARESULTADOPDS")
+TBNotif2017_mdr = read_excel(paste0(dataPath, "Outcome Measurement Data/TUBERCULOSIS/NOTIFICACIONES TB 2017.xlsx"), 
+                            sheet = 7, col_names = F)
+TBNotif2017_mdr = data.table(TBNotif2017_mdr)[7:.N,1:14][!is.na(X3),]
+names(TBNotif2017_mdr) = namesMDR17
+TBNotif2017 = rbind(TBNotif2017, TBNotif2017_Qm, TBNotif2017_mdr, fill=T)
 TBNotif2017[,YEAR := 2017]
-
 
 # Readxl has serious issues with guessing data types and handling empty cells around the document. 
 # Thus, the easiest way to load a bad excel, such as these, is to load everything without type 
@@ -123,11 +150,15 @@ pobrezaGT11 = data.table(read.csv(paste0(dataPath, "Covariates and Other Data/De
 # Prepare the data
 TBNotifAll = rbindlist(list(TBNotif2012, TBNotif2013, TBNotif2014, TBNotif2015, TBNotif2016, TBNotif2017), fill = TRUE)
 TBNotifAll$YEAR = as.integer(TBNotifAll$YEAR)
-TBNotifAll[TBNotifAll$YEAR > 2012, NotificationDate:= as.Date(as.numeric(TBNotifAll$FECHANOTIFICACION[TBNotifAll$YEAR > 2012])-2, origin="1900-01-01")]
-TBNotifAll[YEAR > 2012, YearMonth := as.integer(format(NotificationDate, format = "%Y%m"))];
+TBNotifAll[YEAR > 2012, NotificationDate:= as.Date(as.numeric(FECHANOTIFICACION)-2, origin="1900-01-01")]
+TBNotifAll[YEAR > 2012, YearMonth_ := format(NotificationDate, format = "%Y%m")];
+TBNotifAll[YEAR > 2012, YearMonth := as.integer(YearMonth_)]
+TBNotifAll[is.na(YearMonth), .N, by = YEAR]
 TBNotifAll = TBNotifAll[YearMonth>=201201 & YearMonth<=201712]
+TBNotifAll[, CONDICIONINGRESO := str_to_lower(trimws(CONDICIONINGRESO))]
+TBNotifAll[, CONTACTOS := str_to_lower(trimws(CONTACTOS))]
 TBNotifAll[, RANGOEDAD := trimws(TBNotifAll$RANGOEDAD)]
-TBNotifAll[, SEXO := str_to_lower(trim(SEXO))]
+TBNotifAll[, SEXO := str_to_lower(trimws(SEXO))]
 TBNotifAll[, VIH := str_to_lower(trimws(TBNotifAll$VIH))]
 TBNotifAll[, VIH := factor(VIH, level=c("nr", "r", "fallecido", "fallecio", "nd", "nhp"), 
                         labels=c("Not Reactive", "Reactive", "Death", "Death_temp", "NA", "NA_temp"))]
@@ -148,29 +179,30 @@ TBNotifAll[, EDAD :=
 TBNotifAll[, EDAD := as.integer(EDAD)]
 TBNotifAll[EDAD < 0, EDAD := floor(-EDAD/12)]
 # Conteos por año por decada de edad
-table(ceiling(TBNotifAll$EDAD/10)*10, TBNotifAll$YEAR)
-# Mujeres en edad reproductiva con TB
-TBNotifAll[SEXO=="f" & EDAD>10 & EDAD<54,.N,by=.(YEAR)]
+table(ceiling(TBNotifAll$EDAD/10)*10, TBNotifAll$YEAR, useNA = "always")
 
-TBNotifAll[, COD_MUNI := as.integer(getMuniCodeByName(ifelse(is.na(MUNICIPIO) || (MUNICIPIO=="ND"), 
-                                                  ifelse(is.na(SERVICIODESALUD) || (SERVICIODESALUD=="ND"), NA, SERVICIODESALUD), 
-                                                  MUNICIPIO), 
-                                           ifelse(is.na(DEPARTAMENTO) || (DEPARTAMENTO=="ND"), NA, DEPARTAMENTO))), 
-           by=1:nrow(TBNotifAll)]
+# Mujeres en edad reproductiva con TB
+TBNotifAll[CONDICIONINGRESO== "nuevo" & SEXO=="f" & EDAD>10 & EDAD<54,.N,by=.(YEAR)]
+
+#TBNotifAll[, COD_MUNI := as.integer(getMuniCodeByName(ifelse(is.na(MUNICIPIO) || (MUNICIPIO=="ND"), 
+#               ifelse(is.na(SERVICIODESALUD) || (SERVICIODESALUD=="ND"), NA, SERVICIODESALUD), 
+#                 MUNICIPIO), 
+#               ifelse(is.na(DEPARTAMENTO) || (DEPARTAMENTO=="ND"), NA, DEPARTAMENTO))), 
+#           by=1:nrow(TBNotifAll)]
 
 TBNotifAll[, DEPTO_CORRECTED := ifelse(is.na(DEPARTAMENTO) || (DEPARTAMENTO=="ND"), 
             str_replace(
                 str_replace(
-                    str_to_lower(trim(DAS)), 
+                    str_to_lower(trimws(DAS)), 
                 "\\s*(sur|norte|nor|central)\\s*(oriente|occidente)?\\s*", ""),
             "(quich(e|é))?\\s*(ixcan|ixcán|ixil)", "quiche"),
         DEPARTAMENTO), by=1:nrow(TBNotifAll)]
 TBNotifAll[, COD_DEPT := getDeptoCodeByName(DEPTO_CORRECTED), by=1:nrow(TBNotifAll)]
 
-TBNotifAll[, CONDICIONINGRESO:= str_to_lower(trim(CONDICIONINGRESO))]
-
-
+# Produce a unified dataset with all years and columns:
 write.csv(TBNotifAll, "./PCE/Outcome Measurement Data/TUBERCULOSIS/GTM - TB notifications 2012-2017.csv")
+
+
 # ----Month by Municipality table:---------------------------------
 
 # write.csv(table(TBNotifAll$YearMonth, TBNotifAll$COD_MUNI), file = paste0(dataPath, "Outcome Measurement Data/TUBERCULOSIS/MunicipalityMonth.csv") )
