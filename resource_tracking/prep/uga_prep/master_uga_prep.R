@@ -24,6 +24,16 @@ library(zoo)
 #              NA inserted for impossible 1900-02-29 datetime
 
 #But this shouldn't affect the final output. 
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+###### source the functions that we need 
+# ----------------------------------------------
+prep_dir <- "local repo where the prep files are"
+source(paste0(prep_dir, "prep_detailed_uga_budget.R"))
+source(paste0(prep_dir, "prep_summary_uga_budget.R"))
+source(paste0(prep_dir, "prep_pudr_uga.R"))
 
 
 # ---------------------------------------------
@@ -34,10 +44,8 @@ loc_name <- 'uga' ##change this when we can get subnational data
 source <- "gf" ## denotes the type of data (e.g. government expenditures, Global fund, etc.)
 
 
-## set up the directory and grab the file list: 
+## set up the directory & file list: 
 file_dir <- 'your local drive here' ##where the files are stored locally - on the J drive, the filepath is:  "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
-
-
 file_list <- read.csv(paste0(file_dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)

@@ -15,7 +15,6 @@ library(stringr)
 library(rlang)
 library(zoo)
 # ----------------------------------------------
-
 ## Notes: running this will throw a warning: 
 #Warning messages:
 #1: In `[.data.table`(ghe_data, , `:=`((drop.cols), NULL)) :
@@ -29,19 +28,21 @@ library(zoo)
 loc_name <- 'cod' ##use the ISO3 country code for DRC
 implementer <- "CAGF"
 
-
 # ----------------------------------------------
-## Notes: running this will throw a warning: 
-#Warning messages:
-#In read_fun(path = path, sheet = sheet, limits = limits, shim = shim,  :
-#              NA inserted for impossible 1900-02-29 datetime
-
-#But this shouldn't affect the final output. 
-
+###### source the functions that we need 
 # ----------------------------------------------
-##STEP 1: Download the "Resource Tracking Data" folder from Basecamp and save it on your local drive 
+prep_dir <- "local repo where the prep files are"
+
+source(paste0(prep_dir, "prep_detailed_budget.R"))
+source(paste0(prep_dir, "prep_summary_budget.R"))
+source(paste0(prep_dir, "prep_cod_pudr.R"))
+source(paste0(prep_dir, "prep_old_module_budget.R"))
+source(paste0(prep_dir, "prep_cod_rejected.R"))
+source(paste0(prep_dir, "prep_old_detailed_budget.R"))
 # ----------------------------------------------
-dir <- 'filepath here' ##where the files are stored locally - on the J Drive: dir J:/Project/Evaluation/GF/resource_tracking/cod/gf/
+## Download the "Resource Tracking Data" folder from Basecamp and save it on your local drive 
+# ----------------------------------------------
+dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
 
 # ----------------------------------------------
 ###### Load the list of the RT files we want to process   ###### 
@@ -63,15 +64,15 @@ file_list$start_date <- ymd(file_list$start_date)
 # ----------------------------------------------
 for(i in 1:length(file_list$file_name)){
   ##fill in the summary tracking file with what we know already: 
-  summary_file$disease[i] <- file_list$disease[i]
-  summary_file$grant[i] <- file_list$grant[i]
-  summary_file$period[i] <- file_list$period[i] 
-  summary_file$year[i] <- file_list$grant_period[i]
-  if(file_list$sr[i]=="unknown"){
-    summary_file$geographic_detail[i] <- "National"
-  } else {
-    summary_file$geographic_detail[i] <- file_list$sr[i]
-  }
+  # summary_file$disease[i] <- file_list$disease[i]
+  # summary_file$grant[i] <- file_list$grant[i]
+  # summary_file$period[i] <- file_list$period[i] 
+  # summary_file$year[i] <- file_list$grant_period[i]
+  # if(file_list$sr[i]=="unknown"){
+  #   summary_file$geographic_detail[i] <- "National"
+  # } else {
+  #   summary_file$geographic_detail[i] <- file_list$sr[i]
+  # }
   
   if(file_list$type[i]=="summary"){
     tmpData <- prep_summary_budget(dir, as.character(file_list$file_name[i]),
@@ -115,18 +116,18 @@ for(i in 1:length(file_list$file_name)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
-  if(file_list$type[i]=="detailed"){
-    summary_file$sda_detail[i] <- "Detailed"
-  } else if (file_list$type[i]=="summary"){
-    summary_file$sda_detail[i] <- "Summary"
-  } else if(!(tmpData$sda_activity[1]=="All")){
-    summary_file$sda_detail[i] <- "Detailed"
-  } else {
-    summary_file$sda_detail[i] <- "None"
-  }
-  summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
-  summary_file$start_date[i] <- min(tmpData$start_date)
-  summary_file$data_source[i] <- file_list$data_source[i]
+  # if(file_list$type[i]=="detailed"){
+  #   summary_file$sda_detail[i] <- "Detailed"
+  # } else if (file_list$type[i]=="summary"){
+  #   summary_file$sda_detail[i] <- "Summary"
+  # } else if(!(tmpData$sda_activity[1]=="All")){
+  #   summary_file$sda_detail[i] <- "Detailed"
+  # } else {
+  #   summary_file$sda_detail[i] <- "None"
+  # }
+  # summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
+  # summary_file$start_date[i] <- min(tmpData$start_date)
+  # summary_file$data_source[i] <- file_list$data_source[i]
   
   print(i) ## if the code breaks, you know which file it broke on
 }
@@ -139,10 +140,10 @@ for(i in 1:length(file_list$file_name)){
 # 
 
 # ---------------------------------------------
-##export the summary table
+# optional: export the summary file table:
 # ---------------------------------------------
-write.table(summary_file, paste0("file path where you want the summary file","resource_tracking_data_summary.csv"),
-            append = TRUE, row.names=FALSE, sep=",")
+# write.table(summary_file, paste0("file path where you want the summary file","resource_tracking_data_summary.csv"),
+#             append = TRUE, row.names=FALSE, sep=",")
 
 # ---------------------------------------------
 ########## Modify the prepped data variables as necessary ########
