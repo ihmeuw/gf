@@ -16,11 +16,12 @@ source(paste0(codePath, "core/GT_load_data.R"), encoding = "UTF-8")
 source(paste0(codePath, "core/GT_helper_functions.R"), encoding = "UTF-8")
 
 # Load data
-tbdistr = read.csv("./PCE/Outcome Measurement Data/TUBERCULOSIS/GTM-TB-distribution-2013-2017.csv")
+tbdistr = read.csv("./PCE/Outcome Measurement Data/TUBERCULOSIS/GTM-TB-distribution-2013-2018.csv")
 tbdistr = data.table(tbdistr)
 tbdistr[, Product:= trimws(Product)]
 # Fix mispellings
 tbdistr[Product == "RIFAMPICINA, CAPSULA DE 300 MG.", Product:="RIFAMPICINA, TABLETA DE 300 MG."]
+tbdistr[Product == "RIFAMPICINA 100MG/5ML SUSPENSION FRASCO 120ML" , Product := "RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML."]
 tbdistr[Product == "ISONIAZIDA, TAB LETA DE 300 MG.", Product:="ISONIAZIDA, TABLETA DE 300 MG."]
 tbdistr[Product == "PIRAZINAMIDA, TABLET DE 500 MG.", Product:="PIRAZINAMIDA, TABLETA DE 500 MG."]
 
@@ -34,16 +35,75 @@ tbnots[, sum(is.na(as.double(PESOLBS)))/.N, by=floor(YearMonth/100) ]
 # PESOLBS has less NAs. 
 # People weighting more than 25KG are considered adults.
 
+# Exploring some variables:
 # Lets look at classification 
 table(str_to_lower(trimws(tbnots$CLASIFICACION)))
 table(str_to_lower(trimws(tbnots$ESQUEMA)))
+table(str_to_lower(trimws(tbnots$CONTACTOS)), tbnots$YEAR)
 table(str_to_lower(trimws(tbnots$CONDICIONEGRESO)), tbnots$YEAR)
 table(str_to_lower(trimws(tbnots$NUEVACONDICIONINGRESO)), tbnots$YEAR)
 table(str_to_lower(trimws(tbnots$CONDICIONINGRESO)), tbnots$YEAR)
 table(str_to_lower(trimws(tbnots$CONDICIONPX)), tbnots$YEAR)
 
 
+# Use "ESQUEMA" column to match medicine demand.
 
+# ESQUEMA A: Treatment for adulst:
+# 310 x RIFAMPICINA, TABLETA DE 300 MG.
+# 155 x ISONIAZIDA, TABLETA DE 300 MG.
+# 150 x PIRAZINAMIDA, TABLETA DE 500 MG.
+# 150 x ETAMBUTOL, TABLETA DE 400 MG.
+
+# ESQUEM PEDIATRICO: Treatment for kids: 
+# 10 x PIRAZINAMIDA, TABLETA DE 500 MG.
+# 16 x RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.
+# 310 x ISONIAZIDA, TABLETA DE 100 MG.
+
+# Quimio profilaxis:  180 x ISONIAZIDA, TABLETA DE 300 MG.   x Contacto
+
+# Exploring schemes column. This appear to be treatment schemes.
+esquemas = dcast.data.table(tbnots[, .(Count = .N), by= .(Year = floor(YearMonth/100), esquema = str_replace(str_to_upper(trimws(ESQUEMA)), "Á", "A") )],
+                            Year ~ esquema, value.var = "Count" )
+ggplot(data = melt(
+    merge(esquemas[, .(Year, Demand = PEDIATRICO*16)], 
+        tbdistr[Product == "RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.", .(Distributed = sum(Amount, na.rm=T)), 
+            by = .(Year) ], by= "Year"
+    )[, .(Year, Demand, Distributed)],
+    id.vars = "Year"
+)) + geom_col(aes(x = Year, y = value, fill=variable), position = "dodge") + 
+    labs(y="Rifampizine doses", title="TB medicine distribution versus demand for children.", subtitle="16 x RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.")  +
+    scale_fill_manual(name="", labels = c("Children Rifampizine doses demand", 
+                                          "Children Rifampizine doses \ndistributedby PNT"), values = c("blue", "red"))
+
+
+ggplot(data = melt(
+    merge(esquemas[, .(Year, Demand = A*310)], 
+          tbdistr[Product == "RIFAMPICINA, TABLETA DE 300 MG.", .(Distributed = sum(Amount, na.rm=T)), 
+                  by = .(Year) ], by= "Year"
+    )[, .(Year, Demand, Distributed)],
+    id.vars = "Year"
+)) + geom_col(aes(x = Year, y = value, fill=variable), position = "dodge") + 
+    labs(y="Rifampizine doses", title="TB medicine distribution versus demand.", subtitle="310 x RIFAMPICINA, TABLETA DE 300 MG.")  +
+    scale_fill_manual(name="", labels = c("Adult Rifampizine doses demand", 
+                                          "Adult Rifampizine doses \ndistributedby PNT"), values = c("blue", "red"))
+
+
+# Isoniazide
+isoData = merge(esquemas[, .(Year, Demand = A*155)], 
+          tbdistr[Product == "ISONIAZIDA, TABLETA DE 300 MG.", .(Distributed = sum(Amount, na.rm=T)), 
+                  by = .(Year) ], by= "Year"
+    )
+isoData = merge(isoData, tbnots[CONTACTOS=="quimio", .(Contacts = .N*180), by= .(Year = floor(YearMonth/100))],
+                by = "Year")
+
+isoData[, Demand_ := Demand + Contacts]
+ggplot(data = melt(isoData[,c("Demand_", "Distributed", "Year")], id.vars = c("Year"), measure.vars = c("Demand_", "Distributed")) ) + geom_col(aes(x = Year, y = value, fill=variable), position = "dodge") + 
+    labs(y="Rifampizine doses", title="TB medicine distribution versus demand.", subtitle="155 x ISONIAZIDA, TABLETA DE 300 MG.")  +
+    scale_fill_manual(name="", labels = c("Adult Isoniazide doses demand", 
+                                          "Adult Isoniazide doses \ndistributedby PNT"), values = c("blue", "red", "green"))
+
+tbdistr[Year ==  2017 & Medicine == "ISONIAZIDA", sum(Amount), by = .(Product, Year
+                                                                      )]
 # Adult new cases:
 nadults = tbnots[ ( #(as.double(PESOLBS) > 55*2.2) | 
                      (EDAD >= 18)) & str_to_lower(trimws(CLASIFICACION)) != "bk negativo" &
@@ -91,9 +151,7 @@ ggplot(data=melt(nkids_Rsupply[, .(Demand, Distributed, Year)], id.vars = "Year"
                                         "Children Rifampizine doses distributed\nby PNT"), values = c("blue", "red"))
 
 
-# Exploring schemes column. This appear to be treatment schemes.
-esquemas = dcast.data.table(tbnots[, .(Count = .N), by= .(year = floor(YearMonth/100), esquema = str_replace(str_to_upper(trimws(ESQUEMA)), "Á", "A") )],
-   year ~ esquema, value.var = "Count" )
+
 
 esquemas[, .(year, PEDIATRICO*16)]
 
