@@ -46,7 +46,7 @@ fghData<- fgh_data[,drop.cols, with=FALSE]
 
 ## "melt" the data: 
 
-fghData <- melt(fghData, id=c("year", "source", "country"), variable.name = "sda_orig", value.name="disbursement")
+fghData <- melt(fghData, id=c("year", "financing_source", "country"), variable.name = "sda_activity", value.name="disbursement")
 
 
 get_disease <- function(sda_orig){
@@ -64,7 +64,7 @@ get_disease <- function(sda_orig){
 }
 
 ##get the disease column: 
-fghData$disease <- mapply(get_disease, fghData$sda_orig)
+fghData$disease <- mapply(get_disease, fghData$sda_activity)
 
 ## add in 
 fghData[country=='COD', country:='Congo (Democratic Republic)'] 
@@ -72,7 +72,7 @@ fghData[country=='GTM', country:='Guatemala']
 fghData[country=='UGA', country:='Uganda'] 
 
 ##sum the disbursement by the other variables just to remove any duplicates: 
-byVars = names(fghData)[names(fghData)%in%c('source', 'year', 'disease', 'sda_orig', 'country')]
+byVars = names(fghData)[names(fghData)%in%c('source', 'year', 'disease', 'sda_activity', 'country')]
 fghData = fghData[, list(disbursement=sum(na.omit(disbursement))), 
                   by=byVars]
 fghData$data_source <- "fgh"
@@ -81,8 +81,8 @@ fghData$start_date <- paste0(fghData$year, "-01-01")
 fghData$start_date  <- as.Date(fghData$start_date,"%Y-%m-%d")
 fghData$budget <- 0 
 fghData$expenditure <- 0 
-fghData$gf_module <- fghData$sda_orig
-fghData$module <- fghData$sda_orig
+fghData$gf_module <- fghData$sda_activity
+fghData$module <- fghData$sda_activity
 fghData$gf_intervention <- fghData$gf_module
 fghData$intervention <- fghData$gf_intervention
 
@@ -128,7 +128,7 @@ oop_vars <- names(ghe_wide)[grepl(c("oop"), names(ghe_wide))]
 ppp_vars <- names(ghe_wide)[grepl(c("ppp"), names(ghe_wide))]
 ghe_vars <- names(ghe_wide)[grepl(c("public"), names(ghe_wide))]
 
-ghe_wide[,mean_oop_ppp_ghe_agg:=((ghe_wide[oop_vars[1]])+(ghe_wide[ppp_vars[1]])+(ghe_wide[ghe_vars[1]]))]
+ghe_wide$mean_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[1]])+(ghe_wide[ppp_vars[1]])+(ghe_wide[ghe_vars[1]])
 ghe_wide$lower_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[2]])+(ghe_wide[ppp_vars[2]])+(ghe_wide[ghe_vars[2]])
 ghe_wide$upper_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[3]])+(ghe_wide[ppp_vars[3]])+(ghe_wide[ghe_vars[3]])
 

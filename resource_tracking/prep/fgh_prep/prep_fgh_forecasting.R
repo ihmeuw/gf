@@ -72,6 +72,22 @@ get_country_codes <- function(loc_name, code){
   return(x)
 }
 
+## get the full name of the country 
+get_country <- function(loc_name){
+  x <- loc_name
+  if(grepl("gtm", loc_name)){
+    x <-  "Guatemala"
+  } else if(grepl("cod", loc_name)){
+    x <- "Congo (Democratic Republic)"
+  } else if(grepl("uga", loc_name)){
+    x <- "Uganda"
+  }else {
+    x <- x
+  }
+  return(x)
+}
+
+
 # ----------------------------------------------
 ## function that takes the aggregated FGH forecasts and
 # outputs a dataset that contains the mean, 2%, and 97.5% uncertainty percentiles of estimates 
@@ -165,6 +181,7 @@ pce_total  <- melt(pce_total , id.vars = c("year", "adm1", "loc_name", "disease"
                                            "financing_source", "code"), variable.name = "fin_data_type", value.name = "disbursement")
 pce_total$data_source <- "fgh"
 
+pce_total$country <- mapply(get_country, tolower(pce_total$loc_name))
 # ----------------------------------------------
 ##add in RT variables so we can join this data to the RT database
 # ----------------------------------------------
@@ -191,7 +208,14 @@ pce_total$recipient <- pce_total$adm2
 pce_total$grant_number <- pce_total$adm2
 
 # ----------------------------------------------
+## import DAH by disease 
+# ----------------------------------------------
+
+dah_disease <- data.table(read.csv(paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_prepped_data.csv'), stringsAsFactors = FALSE))
+
+total_fgh <- rbind(dah_disease, pce_total)
+
+# ----------------------------------------------
 ##export to the J Drive: 
 # ----------------------------------------------
-write.csv(pce_forecast, paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_forecasting_prepped.csv'), row.names=FALSE)
-
+write.csv(total_fgh, paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh.csv'), row.names=FALSE)
