@@ -24,7 +24,7 @@ tbdistr[Product == "RIFAMPICINA, CAPSULA DE 300 MG.", Product:="RIFAMPICINA, TAB
 tbdistr[Product == "RIFAMPICINA 100MG/5ML SUSPENSION FRASCO 120ML" , Product := "RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML."]
 tbdistr[Product == "ISONIAZIDA, TAB LETA DE 300 MG.", Product:="ISONIAZIDA, TABLETA DE 300 MG."]
 tbdistr[Product == "PIRAZINAMIDA, TABLET DE 500 MG.", Product:="PIRAZINAMIDA, TABLETA DE 500 MG."]
-
+tbdistr[Product == "ESTREPTOMICINA, VIAL/FRSCO DE 1 GRAMO", Product:= "ESTREPTOMICINA, VIAL/FRASCO DE 1 GRAMO"]
 unique(tbdistr$Product)
 
 tbnots = read.csv("PCE/Outcome Measurement Data/TUBERCULOSIS/GTM - TB notifications 2012-2017.csv")
@@ -45,6 +45,7 @@ table(str_to_lower(trimws(tbnots$NUEVACONDICIONINGRESO)), tbnots$YEAR)
 table(str_to_lower(trimws(tbnots$CONDICIONINGRESO)), tbnots$YEAR)
 table(str_to_lower(trimws(tbnots$CONDICIONPX)), tbnots$YEAR)
 
+table(str_to_lower(trimws(tbnots$CLASIFICACION)), str_to_lower(trimws(tbnots$ESQUEMA)), useNA = "always")
 
 # Use "ESQUEMA" column to match medicine demand.
 
@@ -62,16 +63,17 @@ table(str_to_lower(trimws(tbnots$CONDICIONPX)), tbnots$YEAR)
 # Quimio profilaxis:  180 x ISONIAZIDA, TABLETA DE 300 MG.   x Contacto
 
 # Exploring schemes column. This appear to be treatment schemes.
-esquemas = dcast.data.table(tbnots[, .(Count = .N), by= .(Year = floor(YearMonth/100), esquema = str_replace(str_to_upper(trimws(ESQUEMA)), "Á", "A") )],
+esquemas = dcast.data.table(tbnots[, 
+              .(Count = .N), by= .(Year = floor(YearMonth/100), esquema = str_replace(str_to_upper(trimws(ESQUEMA)), "Á", "A") )],
                             Year ~ esquema, value.var = "Count" )
 ggplot(data = melt(
     merge(esquemas[, .(Year, Demand = PEDIATRICO*16)], 
         tbdistr[Product == "RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.", .(Distributed = sum(Amount, na.rm=T)), 
-            by = .(Year) ], by= "Year"
+            by = .(Year) ], by= "Year", all=T
     )[, .(Year, Demand, Distributed)],
     id.vars = "Year"
-)) + geom_col(aes(x = Year, y = value, fill=variable), position = "dodge") + 
-    labs(y="Rifampizine doses", title="TB medicine distribution versus demand for children.", subtitle="16 x RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.")  +
+)) + geom_col(aes(x = factor(Year), y = value, fill=variable), position = "dodge") + 
+    labs(y="Rifampizine doses", title="TB medicine distribution versus demand for children.", subtitle="16 x RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.", x = "Year\n\nMedicine distr. from 2013 up to June 2018.\nCases notifications from 2012 to 2017")  +
     scale_fill_manual(name="", labels = c("Children Rifampizine doses demand", 
                                           "Children Rifampizine doses \ndistributedby PNT"), values = c("blue", "red"))
 
@@ -79,11 +81,11 @@ ggplot(data = melt(
 ggplot(data = melt(
     merge(esquemas[, .(Year, Demand = A*310)], 
           tbdistr[Product == "RIFAMPICINA, TABLETA DE 300 MG.", .(Distributed = sum(Amount, na.rm=T)), 
-                  by = .(Year) ], by= "Year"
+                  by = .(Year) ], by= "Year", all = T
     )[, .(Year, Demand, Distributed)],
     id.vars = "Year"
-)) + geom_col(aes(x = Year, y = value, fill=variable), position = "dodge") + 
-    labs(y="Rifampizine doses", title="TB medicine distribution versus demand.", subtitle="310 x RIFAMPICINA, TABLETA DE 300 MG.")  +
+)) + geom_col(aes(x = factor(Year), y = value, fill=variable), position = "dodge") + 
+    labs(y="Rifampizine doses", title="TB medicine distribution versus demand.", subtitle="310 x RIFAMPICINA, TABLETA DE 300 MG.", x = "Year\n\nMedicine distr. from 2013 up to June 2018.\nCases notifications from 2012 to 2017")  +
     scale_fill_manual(name="", labels = c("Adult Rifampizine doses demand", 
                                           "Adult Rifampizine doses \ndistributedby PNT"), values = c("blue", "red"))
 
@@ -91,16 +93,17 @@ ggplot(data = melt(
 # Isoniazide
 isoData = merge(esquemas[, .(Year, Demand = A*155)], 
           tbdistr[Product == "ISONIAZIDA, TABLETA DE 300 MG.", .(Distributed = sum(Amount, na.rm=T)), 
-                  by = .(Year) ], by= "Year"
+                  by = .(Year) ], by= "Year", all = T
     )
 isoData = merge(isoData, tbnots[CONTACTOS=="quimio", .(Contacts = .N*180), by= .(Year = floor(YearMonth/100))],
-                by = "Year")
+                by = "Year", all=T)
 
 isoData[, Demand_ := Demand + Contacts]
+isoData$Year = factor(isoData$Year)
 ggplot(data = melt(isoData[,c("Demand_", "Distributed", "Year")], id.vars = c("Year"), measure.vars = c("Demand_", "Distributed")) ) + geom_col(aes(x = Year, y = value, fill=variable), position = "dodge") + 
-    labs(y="Rifampizine doses", title="TB medicine distribution versus demand.", subtitle="155 x ISONIAZIDA, TABLETA DE 300 MG.")  +
-    scale_fill_manual(name="", labels = c("Adult Isoniazide doses demand", 
-                                          "Adult Isoniazide doses \ndistributedby PNT"), values = c("blue", "red", "green"))
+    labs(y="Isoniazid doses", title="TB medicine distribution versus demand.", subtitle="155 x ISONIAZIDA, TABLETA DE 300 MG.", x="Year\n\nMedicine distr. from 2013 up to June 2018.\nCases notifications from 2012 to 2017")  +
+    scale_fill_manual(name="", labels = c("Adult Isoniazid doses demand", 
+                                          "Adult Isoniazid doses \ndistributedby PNT"), values = c("blue", "red", "green"))
 
 tbdistr[Year ==  2017 & Medicine == "ISONIAZIDA", sum(Amount), by = .(Product, Year
                                                                       )]
@@ -149,9 +152,6 @@ ggplot(data=melt(nkids_Rsupply[, .(Demand, Distributed, Year)], id.vars = "Year"
   labs(y="Rifampizine doses", title="TB medicine distribution versus demand for children.", subtitle="RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.") +
   scale_fill_manual(name="", labels = c("Children Rifampizine doses demand\naccording to notifications", 
                                         "Children Rifampizine doses distributed\nby PNT"), values = c("blue", "red"))
-
-
-
 
 esquemas[, .(year, PEDIATRICO*16)]
 
