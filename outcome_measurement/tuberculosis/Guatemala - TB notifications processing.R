@@ -56,7 +56,7 @@ ggplot(data = tbnots[CONDICIONINGRESO == "nuevo", .(Count=.N), by= .(YEAR) ]) +
     geom_col(aes(factor(YEAR), Count), fill="blue")  + labs(title="New cases by year")
 
 # Incidence time series:
-yearly = tbnots[CONDICIONINGRESO %in% c(NA, "nuevo"),.(Count = .N),
+yearly = tbnots[CONDICIONINGRESO %in% c(NA, "nuevo")  & !(CONTACTOS %in% c("quimio")),.(Count = .N),
        by=.(Year = floor(YearMonth/100))]
 
 yearly$Pop = sapply(2012:2017, function (i)     sum(GTMuniPopulation(dt.munisGT$COD_MUNI__, 
@@ -66,11 +66,26 @@ yearly[,Incidence := 100000*Count/Pop]
 ggplot(data=yearly) + geom_line(aes(Year, Incidence)) + ylim(0,40) + labs(title = "Guatemala TB incidence rate per 100,000 people\nby year")
 
 # Map of tb incidence by DAS for 2017.
-mapdata = tbnots[CONDICIONINGRESO %in% c(NA, "nuevo") & floor(YearMonth/100) == 2017,.(counts = .N),
+mapdata = tbnots[CONDICIONINGRESO %in% c(NA, "nuevo") & floor(YearMonth/100) == 2017 & !(CONTACTOS %in% c("quimio")),.(counts = .N),
                 by=.(deptocode = COD_DEPT )]
 mapdata$pop = GTDeptoPopulation(mapdata$deptocode, rep(2017, nrow(mapdata) ) )
 mapdata[, values := 100000*counts/pop]
 gtmap_depto(mapdata) + scale_fill_distiller(name="Incidence rate", palette = "Blues", direction = 1, na.value = "#444444") + 
     labs(title="2017 TB incidence rate per 100,000 people\nby department")
 
+# Department trends
+mapdataT = tbnots[CONDICIONINGRESO %in% c(NA, "nuevo") & !(CONTACTOS %in% c("quimio")),.(counts = .N),
+                 by=.(deptocode = COD_DEPT, Year = floor(YearMonth/100))]
 
+mapdataT$pop = GTDeptoPopulation(mapdataT$deptocode, mapdataT$Year)
+mapdataT[,Incidence := 100000 * counts/pop]
+dcast(mapdataT, deptocode ~ Year )
+mapLinmod = lm(Incidence ~ factor(deptocode)+ Year:factor(deptocode), data = mapdataT)
+summary(mapLinmod)
+factores = grep("\\d\\d?\\:Year$",names(coef(mapLinmod)))
+trends = data.frame(values_ = coef(mapLinmod)[factores], deptocode = str_match( names(coef(mapLinmod))[factores], "(\\d\\d?)\\:Year$" )[,2])
+trends$values = cut(trends$values_, c(2.4,1.2,0.6,0,-0.6,-1.2,-2.4), 
+                    labels = c("2.4 to 1.2","1.2 to 0.6","0.6 to 0","0 to -0.6","-0.6 to -1.2","-1.2 to -2.4"))
+#trends$values = trends$values_
+gtmap_depto(trends) + scale_fill_manual(values=c("#552211", "#664411","#AA6622", "#3377DD", "#55AAFF", "#88CCFF"), name="Incidence rate trend", na.value = "#444444") + 
+    labs(title="TB incidence annual trend\nby department")
