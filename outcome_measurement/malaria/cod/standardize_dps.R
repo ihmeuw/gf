@@ -35,7 +35,8 @@
   # input files
     dt_input <- "fullData_outliers_removed.csv" 
     dtDPSnames_input <- "drc_geographies_map.xlsx"
-      
+    dt_inputWithoutOutliersRemoved <- "PNLP_2010to2017_fullPrepped.csv"
+    
   # read in data
     dt <- fread(paste0(dir_prepped, dt_input))
     dtDPSnames <- read_excel(paste0(dir_prepped, dtDPSnames_input))
