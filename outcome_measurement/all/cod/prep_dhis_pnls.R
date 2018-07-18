@@ -291,25 +291,38 @@ pnls[is.na(level), level:='Other']
 #-----------------------------------------------
 # merge english translations for data elements into the data
 
-elements_eng <- read.csv(paste0(dir, 'translations/pnls_elements_eng_fr.csv'))
+elements_eng <- read.csv(paste0(dir, 'catalogues/pnls_data_elements_cod.csv'), stringsAsFactors=F)
 elements_eng <- data.table(elements_eng)
 
 # convert elements to character strings in order to merge
 elements_eng[ , element_eng:=as.character(element_eng)]
 elements_eng[ , element_id:=as.character(element_id)]
+elements_eng[ , element_fr:=NULL]
 
+# merge in the english translations and categorical variables
 pnls <- merge(pnls, elements_eng, by='element_id', all.x=T)
 #-----------------------------------------------
+
+#---------------------------
 # put the data set in an intuitive order
-
-pnls <- pnls[ ,.(data_set, element, element_eng, category, value, org_unit, level, date, dps, mtk, 
-          coordinates, opening_date, last_update,
-         data_set_id, element_id, org_unit_id)]
-
+pnls <- pnls[ ,.(data_set, element, element_eng, category, date, 
+              value, org_unit, level, dps, mtk, 
+              type, type2, path_drc, tableau,
+              coordinates, opening_date, last_update,
+              data_set_id, element_id, org_unit_id)]
 
 #---------------------------------
 # save the prepped data as an RDS
 saveRDS(pnls, paste0(dir, 'prepped_data/pnls.rds'))
  
 #-------------------------------------
+# save a subset of pnls with only the tableau indicators
+
+# check that all of the relevant elements are included
+pnls[tableau==1, unique(element)]
+
+# create a tableau indicator data set and save it 
+pnls_tabl <- pnls[tableau==1]
+saveRDS(pnls_tabl, paste0(dir, 'tableau/pnls_tabl.rds'))
+#--------------------------------------
 

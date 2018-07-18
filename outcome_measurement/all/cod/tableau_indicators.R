@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/16/2018
+# 7/17/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -17,7 +17,7 @@ library(jsonlite)
 library(httr)
 library(ggplot2)
 library(dplyr)
-library(stringr) # to extract meta data from file names
+library(stringr)
 library(xlsx)
 # --------------------
 
@@ -28,7 +28,30 @@ library(xlsx)
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/tableau/')
+
+# --------------------
+# import the PNLS data for Tableau and prep
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #--------------------
 # Import base services data set and convert to a data table
@@ -44,50 +67,52 @@ base$category <- factor(base$category, levels=c(">5 ans", "<5 ans", "default", "
                         labels=c("5 and over", "Under 5", "default", "Female, 5 and over", "Male, under 5",
                                  "Female, under 5", "Male, 5 and over"))
 #--------------------
-# create diseases or type-specific data sets
+# subset to only the indicators in Base Services needed for Tableau
 
-# create a malaria only data set
-mal <- base[type=='malaria']
-mal <- mal[year=='2017' | year=='2018']
-mal[ ,.(unique(element), unique(element_id))]
-mal[ ,.(unique(element), unique(element_fr))]
+# subset to 2017/18 malaria indicators
+base <- base[type=='malaria']
+base <- base[year=='2017' | year=='2018']
 
 #---------------------------
 # fix the english translations for the malaria indicators
 
 # RDTs
-mal[element_id=='CIzQAR8IWH1', element:='A 1.4 RDT - completed']
-mal[element_id=='SpmQSLRPMl4', element:='A 1.4 RDT - positive']
+base[element_id=='CIzQAR8IWH1', element:='A 1.4 RDT - completed']
+base[element_id=='SpmQSLRPMl4', element:='A 1.4 RDT - positive']
 
 # Cases
-mal[element_id=='aK0QXqm8Zxn', element:='A 1.4 Presumed malaria']
-mal[element_id=='JXm8J8GRJxI', element:='A 1.4 Presumed malaria, treated']
-mal[element_id=='rfeqp2kdOGi', element:='A 1.4 Confirmed simple malaria']
-mal[element_id=='nRm30I4w9En', element:='A 1.4 Confirmed simple malaria, treated']
-mal[element_id=='AxJhIi7tUam', element:='A 1.4 Severe malaria']
-mal[element_id=='CGZbvJchfjk', element:='A 1.4 Severe malaria treated']
+base[element_id=='aK0QXqm8Zxn', element:='A 1.4 Presumed malaria']
+base[element_id=='JXm8J8GRJxI', element:='A 1.4 Presumed malaria, treated']
+base[element_id=='rfeqp2kdOGi', element:='A 1.4 Confirmed simple malaria']
+base[element_id=='nRm30I4w9En', element:='A 1.4 Confirmed simple malaria, treated']
+base[element_id=='AxJhIi7tUam', element:='A 1.4 Severe malaria']
+base[element_id=='CGZbvJchfjk', element:='A 1.4 Severe malaria treated']
 
 # alternate 1.5 indicators 
-mal[element_id=='jocZb4TE1U2', element:='A 1.5 Confirmed simple malaria - pregnant woman']
-mal[element_id=='wleambjupW9', element:='A 1.5 Confirmed simple malaria treated - pregnant woman']
+base[element_id=='jocZb4TE1U2', element:='A 1.5 Confirmed simple malaria - pregnant woman']
+base[element_id=='wleambjupW9', element:='A 1.5 Confirmed simple malaria treated - pregnant woman']
 
 # SP indicators phrased differently (translation OK)
-mal[element_id=='okUsVMBrhZC', element:='A 2.1 Sulfadox. + Pyrimét 1st dose']   
-mal[element_id=='IhUBOQkWKoo', element:='A 2.1 Sulfadox. + Pyrimét 4th dose']   
+base[element_id=='okUsVMBrhZC', element:='A 2.1 Sulfadox. + Pyrimét 1st dose']   
+base[element_id=='IhUBOQkWKoo', element:='A 2.1 Sulfadox. + Pyrimét 4th dose']   
 
 # LLIN indicators phrased differently
-mal[element_id=='jrtkdRjvNKv', element:='A 2.1 LLINs distributed - ANC 2nd visit+']   
-mal[element_id=='uV53nh3MrYl', element:='A 2.1 LLINs distributed - 1st ANC visit']  
+base[element_id=='jrtkdRjvNKv', element:='A 2.1 LLINs distributed - ANC 2nd visit+']   
+base[element_id=='uV53nh3MrYl', element:='A 2.1 LLINs distributed - 1st ANC visit']  
 
 #----------------------------------------
-# Tableau data sets
-
-#-------------------
-# MALARIA
-
 # subset to only the relevant elements  
-# RDTS performed, confirmed cases, confirmed cases treated
-malaria <- mal[element_id=='CIzQAR8IWH1' | element_id=='rfeqp2kdOGi' | element_id=='nRm30I4w9En' | element_id=='jocZb4TE1U2' | element_id=='wleambjupW9' | elements_id=='aK0QXqm8Zxn' | element_id=='JXm8J8GRJxI' ]
+
+base[ ,.(unique(element), unique(element_id))]
+
+
+CIzQAR8IWH1
+SpmQSLRPMl4
+
+jocZb4TE1U2
+wleambjupW9
+
+nRm30I4w9En
 
 #---------------------------
 # organize the data in an intuitive way
