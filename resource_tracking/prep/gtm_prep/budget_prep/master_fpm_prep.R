@@ -31,7 +31,6 @@ library(zoo)
 # ---------------------------------------------
 loc_name <- "gtm"
 
-
 # ----------------------------------------------
 ###### source the functions that we need 
 ## set "prep_dir" to 
@@ -49,30 +48,30 @@ source(paste0(prep_dir,"map_modules_and_interventions.R"))
 ###### Load the list of RT files we want to process
 # ----------------------------------------------
 file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
-file_list <- read.csv(paste0(file_dir, "fpm/fpm_budget_filelist.csv"))
+file_list <- read.csv(paste0(file_dir, "official_budgets/gtm_budget_filelist.csv"))
 
 
-##create a summary file to track the data that we have (and that we still need)
-summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
-                         c("data_source","year", "start_date",  "end_date", "sda_detail",
-                           "geographic_detail", "period",	"grant", "disease", "loc_name"))
-
-summary_file$loc_name <- as.character(summary_file$loc_name)
-summary_file$loc_name <- loc_name
+# ##create a summary file to track the data that we have (and that we still need)
+# summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
+#                          c("data_source","year", "start_date",  "end_date", "sda_detail",
+#                            "geographic_detail", "period",	"grant", "disease", "loc_name"))
+# 
+# summary_file$loc_name <- as.character(summary_file$loc_name)
+# summary_file$loc_name <- loc_name
 
 # ----------------------------------------------
 ###### For loop that preps data and aggregates it
 # ----------------------------------------------
 
 for(i in 1:length(file_list$file_name)){
-  ##fill in the summary tracking file with what we know already: 
-  summary_file$disease[i] <- as.character(file_list$disease[i])
-  summary_file$grant[i] <- as.character(file_list$grant_number[i])
-  summary_file$period[i] <- file_list$period[i] 
-  summary_file$geographic_detail[i] <- as.character(file_list$geography_detail[i])
-  summary_file$data_source[i] <- as.character(file_list$data_source[i])
-  summary_file$year[i] <- as.character(file_list$grant_period[i])
-  
+  # ##fill in the summary tracking file with what we know already: 
+  # summary_file$disease[i] <- as.character(file_list$disease[i])
+  # summary_file$grant[i] <- as.character(file_list$grant_number[i])
+  # summary_file$period[i] <- file_list$period[i] 
+  # summary_file$geographic_detail[i] <- as.character(file_list$geography_detail[i])
+  # summary_file$data_source[i] <- as.character(file_list$data_source[i])
+  # summary_file$year[i] <- as.character(file_list$grant_period[i])
+  # 
   if(file_list$format[i]=="detailed"){ ## fpm detailed budgets 
     tmpData <- prep_fpm_detailed_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
@@ -110,34 +109,33 @@ for(i in 1:length(file_list$file_name)){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
   
-  if(file_list$format[i]=="detailed"){
-    summary_file$sda_detail[i] <- "Detailed"
-  } else if (file_list$format[i]=="summary"){
-    summary_file$sda_detail[i] <- "Summary"
-  } else if(!(tmpData$sda_activity[1]=="All")){
-    summary_file$sda_detail[i] <- "Detailed"
-  } else {
-    summary_file$sda_detail[i] <- "None"
-  }
-  summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
-  summary_file$start_date[i] <- min(tmpData$start_date)
+  # if(file_list$format[i]=="detailed"){
+  #   summary_file$sda_detail[i] <- "Detailed"
+  # } else if (file_list$format[i]=="summary"){
+  #   summary_file$sda_detail[i] <- "Summary"
+  # } else if(!(tmpData$sda_activity[1]=="All")){
+  #   summary_file$sda_detail[i] <- "Detailed"
+  # } else {
+  #   summary_file$sda_detail[i] <- "None"
+  # }
+  # summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
+  # summary_file$start_date[i] <- min(tmpData$start_date)
+  
   print(i)
 }
 
 
-summary_file$end_date <- as.Date(summary_file$end_date,"%Y%m%d")
-summary_file$start_date <- as.Date(summary_file$start_date,"%Y%m%d")
-
-
-setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date",
-                         "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
+# summary_file$end_date <- as.Date(summary_file$end_date,"%Y%m%d")
+# summary_file$start_date <- as.Date(summary_file$start_date,"%Y%m%d")
+# setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date",
+#                          "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
 
 # ----------------------------------------------
 ##export the summary table to J Drive
 # ----------------------------------------------
 ##(you might get a warning message about appending column names to the files; this should not affect the final output)
-write.table(summary_file, paste0(dir, "resource_tracking_data_summary.csv"),
-            append = TRUE, row.names=FALSE, sep=",")
+# write.table(summary_file, paste0(dir, "resource_tracking_data_summary.csv"),
+#             append = TRUE, row.names=FALSE, sep=",")
 
 # ----------------------------------------------
 ##Add more RT variables and clean up any rows with "junk" data
@@ -166,7 +164,6 @@ cleaned_database= resource_database[, list(budget=sum(na.omit(budget)),
 ##optional: check for any dropped data 
 # ----------------------------------------------
 data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number","data_source", "disease")])
-
 data_check2<- as.data.frame(cleaned_database[, sum(budget, na.rm = TRUE),by = c("grant_number","data_source", "disease")])
 # ----------------------------------------------
 ##### Map to the GF Modules and Interventions #####
@@ -177,8 +174,8 @@ data_check2<- as.data.frame(cleaned_database[, sum(budget, na.rm = TRUE),by = c(
 gtmData <- strip_chars(cleaned_database, unwanted_array, remove_chars)
 gtmData[is.na(module), module:=intervention]
 
-## the directory on the J Drive for the intervention list is: J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/
-mapping_list <- load_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"),
+## map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
+mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx"),
                                   include_rssh_by_disease = FALSE)
 
 ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
@@ -189,7 +186,7 @@ mapping_list$coefficient <- 1
 mapping_list$abbrev_intervention <- NULL
 mapping_list$abbrev_module <- NULL
 
-gf_mapping_list <- total_mapping_list(paste0(dir,"intervention_and_indicator_list.xlsx"),
+gf_mapping_list <- total_mapping_list(paste0(map_dir,"intervention_and_indicator_list.xlsx"),
                                       mapping_list, unwanted_array, remove_chars)
 
 # ----------------------------------------------
@@ -229,7 +226,7 @@ mappedGtm$year <- year(mappedGtm$start_date)
 ##output dataset to the correct folder as a csv: 
 # ----------------------------------------------
 
-write.csv(mappedGtm, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", row.names = FALSE,
+write.csv(mappedGtm, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_budget_data.csv", row.names = FALSE,
           fileEncoding = "latin1")
 
 
