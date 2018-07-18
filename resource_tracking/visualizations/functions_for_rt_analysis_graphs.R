@@ -4,20 +4,6 @@
 # 1/11/2017
 # ### Run these functions for the resource_tracking_analysis_graph.R script:  
 
-# Set up R
-rm(list=ls())
-
-library(ggplot2)
-library(dplyr)
-library(tools)
-library(data.table)
-library(lubridate)
-library(grDevices)
-library(RColorBrewer)
-library(readxl)
-library(reshape)
-library(scales)
-
 # ---------------------------------------------
 ##function to create indicator between current, upcoming, and rejected budgets: 
 data_sources_facet <- function(year, data_source){
@@ -52,9 +38,9 @@ data_source_names_for_plots <- function(gos_data){
   
   graphData <- copy(gos_data)
   graphData[data_source=='sicoin',data_source:='SICOIN']
-  graphData[data_source=='fpm',data_source:='Final FPM Budgets']
-  graphData[data_source=='init_fpm',data_source:='Initial FPM Budgets']
-  graphData[data_source=='init2_fpm',data_source:='2nd Iter. FPM Budgets']
+  graphData[data_source=='fpm',data_source:='Final Official Budgets']
+  graphData[data_source=='init_fpm',data_source:='Initial Official Budgets']
+  graphData[data_source=='init2_fpm',data_source:='2nd Iter. Official Budgets']
   graphData[data_source=='gos_expend',data_source:='GOS Expenditures']
   graphData[data_source=='gos_budget',data_source:='GOS Budgets']
   graphData[data_source=='fgh',data_source:='Financing Global Health']
@@ -103,8 +89,8 @@ names(primColors) <- c('Prevention programs for MSM'
                        'Vector control', 
                         'Treatment, care & support', 'HIV Testing Services'
                        ,'TB/HIV',
-                       'TB care and prevention'
-                       , 'Multidrug-resistant TB'
+                       'Care & prevention'
+                       , 'MDR-TB'
                        ,'PSM'
                        ,'Info systems & M&E',
                        'HR & health workers'
