@@ -39,7 +39,7 @@
   # THESE ARE NOT THE UPDATED VERSIONS OF CLEANED DATA BELOW.... update this script (remove from here, and save different versions in separate scripts with most up to date data
     # since the data is further cleaned after this script with outliers removed and dps standardized.... save in these different forms in a new script so you dont have to refer back to this)
     output_dt_long <- "PNLP_2010to2017_long.csv"
-    output_dt <- "PNLP_2010to2017_indicatorsWide_subpopulationsLong.csv"
+    output_dt <- "PNLP_2010to2017_subpopulationsLong.csv"
       # dt_wide has subpopulations long
     output_dt_forMI <- "PNLP_2010to2017_forMI.csv"
 # ----------------------------------------------   
@@ -48,6 +48,38 @@
 # ----------------------------------------------     
 # read in data
   fullData <- fread( paste0(dir_prepped, "PNLP_2010to2017_prepped.csv")) 
+# ----------------------------------------------     
+    
+    
+# ----------------------------------------------     
+    ####### Read in "full prepped" and make subpops long (7/11 for David)
+    # this also updated the other versions of the cleaned data (from note above)
+    fullData <- fread( paste0(dir_prepped, "PNLP_2010to2017_fullPrepped.csv"))
+    
+    setnames(fullData, c("V1"), c("id"))
+    
+    all_vars <- c(colnames(fullData))
+    
+    id_vars <- c("id", "province", "dps", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month",
+                 "year", "stringdate", "date") 
+    
+    measured_vars <- all_vars[!all_vars %in% id_vars]
+    
+    dtMelt <- melt(fullData, id.vars=id_vars, measure.vars=measured_vars, variable.name="indicator")
+    
+    
+    dtMelt <- dtMelt[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
+    # set a placeholder value for where there is no subpopulation, so that graphing doesn't mess up there
+    dtMelt <- dtMelt[is.na(subpopulation), subpopulation:= "none"]
+    dtMelt[, date:=as.Date(date)]
+    # export this dt as a version with both indicators and subpopulations long
+    write.csv(dtMelt, paste0(dir_prepped, output_dt_long))
+    
+    # cast indicators wide and keep subpopulations long - format to save to basecamp for CEPs
+    dtCast <- dcast.data.table(dtMelt, id + province + dps + health_zone + donor + operational_support_partner + population + quarter + month + year + stringdate + date + subpopulation ~ indicator) 
+    # export this dt as a version with indicators wide and subpopulations long
+    write.csv(dtCast, paste0(dir_prepped, output_dt))
+
 # ----------------------------------------------     
     
     
