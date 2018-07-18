@@ -30,29 +30,6 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/tableau/')
 
-# --------------------
-# import the PNLS data for Tableau and prep
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #--------------------
 # Import base services data set and convert to a data table
 
@@ -105,19 +82,14 @@ base[element_id=='uV53nh3MrYl', element:='A 2.1 LLINs distributed - 1st ANC visi
 
 base[ ,.(unique(element), unique(element_id))]
 
-
-CIzQAR8IWH1
-SpmQSLRPMl4
-
-jocZb4TE1U2
-wleambjupW9
-
-nRm30I4w9En
-
+tabl_base <- base[element_id=='rfeqp2kdOGi' | element_id=='nRm30I4w9En' | element_id=='jocZb4TE1U2'| element_id=='wleambjupW9' | element_id=='CIzQAR8IWH1']
+     
+     
+     
 #---------------------------
 # organize the data in an intuitive way
 
-malaria <- malaria[ ,.(count=sum(value)), by=.(data_set, element_fr, 
+tabl_base <- tabl_base[ ,.(count=sum(value)), by=.(data_set, element_fr, 
                                                element, date, category, type,
                                                level, dps=province, mtk)]
 
@@ -143,7 +115,7 @@ malaria[dps=='Mai-Ndombe', dps:='Maï-Ndombe']
 #--------------------
 # save the RDS file to be merged with the SIGL data
 # only use if you want to save the interim outputs
-# saveRDS(malaria, paste0(dir, 'tableau/tableau_base.rds'))
+saveRDS(tabl_base, paste0(dir, 'tableau/tableau_base.rds'))
 
 #--------------------------------------------------
 # SIGL

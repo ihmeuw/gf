@@ -123,7 +123,6 @@ elements_base[ ,element_fr:=NULL]
 elements_base[ ,data_set:=NULL]
 
 # merge in the english names for the data elements and element type
-elements_base <- elements_base[ ,.(element_id, element_eng=element, keep, type, drug, tableau)]
 base <- merge(base, elements_base, by='element_id', all.x=TRUE )
 
 #-----------------------------------------------
@@ -203,6 +202,8 @@ base[ ,dist:=NULL]
 base[province=='Maniema' | province=='Tshopo' | province=="Kinshasa", mtk:='Yes']
 base[is.na(mtk), mtk:='No']
 
+# rename province dps
+setnames(base, 'province', 'dps')
 #-----------------------------------------------
 # type of facility
 
