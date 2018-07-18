@@ -17,6 +17,11 @@
   tol = as.numeric(gsub('\r', '', tol))
   run_name = gsub('\r', '', run_name)
   print(tol)
+  # do_lags = commandArgs()[6]
+  # do_lags = as.numeric(gsub('\r', '', do_lags))
+  # do_leads = commandArgs()[7]
+  # do_leads = as.numeric(gsub('\r', '', do_leads))
+  # do_priors = as.numeric(gsub('\r', '', do_priors))
   # print(run_name)
   library(data.table)
   library(stringr)
@@ -172,9 +177,18 @@
     measured_vars <- colnames(dtLog)
     measured_vars <- measured_vars[!measured_vars %in% c(id_vars_for_amelia, "health_zone", "dps", "date", "province", with=F)]
     
+    if( do_leads == 1){
     amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", idvars= id_vars_for_amelia, tolerance= 0.001, lags = measured_vars,
                              leads = measured_vars, parallel= parallelMethod, ncpus= 50, priors=priorsMatrix)
-
+    }
+    # if( do_leads == 1){
+    # amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", idvars= id_vars_for_amelia, tolerance= 0.001, lags = measured_vars, 
+    #                          parallel= parallelMethod, ncpus= 50, priors=priorsMatrix)
+    # }
+    # if( just_lags == 1){
+    #   amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", idvars= id_vars_for_amelia, tolerance= 0.001, lags = measured_vars, 
+    #                            parallel= parallelMethod, ncpus= 50, priors=priorsMatrix)
+    # }
 # ---------------------------------------------- 
   
   
@@ -191,7 +205,7 @@
   
   
 # ----------------------------------------------
-  imputed_id_vars <- c(id_vars, "imputation_number")
+  imputed_id_vars <- c("id", "health_zone", "dps", "date", "imputation_number")
       
   # exponentiate the data set
   dtExp <- amelia_data[, lapply(.SD, function(x) exp(x)), .SDcols=indicators, by= c(imputed_id_vars)]
