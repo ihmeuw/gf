@@ -34,13 +34,17 @@ loc_name <- "gtm"
 
 # ----------------------------------------------
 ###### source the functions that we need 
+## set "prep_dir" to 
 # ----------------------------------------------
-prep_dir <- "local repo where the prep files are"
-source(paste0(prep_dir, "/prep_fpm_detailed_budget.R"))
-source(paste0(prep_dir, "prep_fpm_summary_budget.R"))
-source(paste0(prep_dir, "prep_fpm_other_budget.R"))
-source(paste0(prep_dir, "prep_fpm_other_detailed_budget.R"))
-source(paste0(prep_dir, "prep_gtm_pudr.R"))
+prep_dir <- "your local repo folder + gf/resource_tracking/prep/"
+
+
+source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_detailed_budget.R"))
+source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_summary_budget.R"))
+source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_other_budget.R"))
+source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_other_detailed_budget.R"))
+source(paste0(prep_dir, "gtm_prep/budget_prep/prep_gtm_pudr.R"))
+source(paste0(prep_dir,"map_modules_and_interventions.R"))
 # ----------------------------------------------
 ###### Load the list of RT files we want to process
 # ----------------------------------------------
@@ -191,9 +195,14 @@ gf_mapping_list <- total_mapping_list(paste0(dir,"intervention_and_indicator_lis
 # ----------------------------------------------
 # Use this to check for any unmapped modules/interventions
 # ----------------------------------------------
-# gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
-# gtm_concat <- paste0(gtmData$module, gtmData$intervention)
-# unmapped_mods <- unique(gtm_concat[!gtm_concat%in%gf_concat])
+gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
+gtm_concat <- paste0(gtmData$module, gtmData$intervention)
+unmapped_mods <- unique(gtm_concat[!gtm_concat%in%gf_concat])
+
+if(length(unmapped_mods)>0){
+  stop("You have unmapped original modules/interventions!")
+}
+
 
 # ----------------------------------------------
 # Merge the datasets on the GF codes to map to framework 

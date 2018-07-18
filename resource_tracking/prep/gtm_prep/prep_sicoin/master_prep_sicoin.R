@@ -38,7 +38,7 @@ country <- "gtm"
 # ----------------------------------------------
 ###### source the functions that we need 
 # ----------------------------------------------
-prep_dir <- " your drive + gf/resource_tracking/prep/"
+prep_dir <-" your local repo + gf/resource_tracking/prep/"
 source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_detailed_data.R"))
 source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_summary_data.R"))
 source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_blank_data.R"))
@@ -151,7 +151,6 @@ dups<-cleaned_database[duplicated(cleaned_database) | duplicated(cleaned_databas
 
 # ----------------------------------------------
 ##### Load the mapping files  #####
-##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 
 sicoin_data <- strip_chars(cleaned_database, unwanted_array, remove_chars)

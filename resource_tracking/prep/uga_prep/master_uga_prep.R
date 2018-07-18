@@ -30,10 +30,11 @@ library(zoo)
 # ----------------------------------------------
 ###### source the functions that we need 
 # ----------------------------------------------
-prep_dir <- "local repo where the prep files are"
-source(paste0(prep_dir, "prep_detailed_uga_budget.R"))
-source(paste0(prep_dir, "prep_summary_uga_budget.R"))
-source(paste0(prep_dir, "prep_pudr_uga.R"))
+prep_dir <- " your local repo + gf/resource_tracking/prep/"
+source(paste0(prep_dir, "uga_prep/prep_detailed_uga_budget.R"))
+source(paste0(prep_dir, "uga_prep/prep_summary_uga_budget.R"))
+source(paste0(prep_dir, "uga_prep/prep_pudr_uga.R"))
+source(paste0(prep_dir,"map_modules_and_interventions.R"))
 
 
 # ---------------------------------------------
@@ -54,27 +55,27 @@ file_list$start_date <- ymd(file_list$start_date)
 # ---------------------------------------------
 ########## Create a summary file of the data ########
 # ---------------------------------------------
-
-summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
-                         c("data_source","year", "start_date",  "end_date", "sda_detail",
-                           "geographic_detail", "period",	"grant", "disease", "loc_name"))
-
-summary_file$loc_name <- as.character(summary_file$loc_name)
-summary_file$loc_name <- loc_name
+# 
+# summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
+#                          c("data_source","year", "start_date",  "end_date", "sda_detail",
+#                            "geographic_detail", "period",	"grant", "disease", "loc_name"))
+# 
+# summary_file$loc_name <- as.character(summary_file$loc_name)
+# summary_file$loc_name <- loc_name
 
 # ---------------------------------------------
 ########## Run the for loop that preps data ########
 # ---------------------------------------------
 
 for(i in 1:length(file_list$file_name)){ 
-  ##fill in the summary tracking file with what we know already: 
-  summary_file$disease[i] <- file_list$disease[i]
-  summary_file$year[i] <- file_list$grant_period[i]
-  summary_file$grant[i] <- file_list$grant[i]
-  summary_file$period[i] <- file_list$period[i] 
-  summary_file$geographic_detail[i] <- file_list$geography_detail[i]
-  summary_file$data_source[i] <- file_list$data_source[i]
-  
+  # fill in the summary tracking file with what we know already: 
+  # summary_file$disease[i] <- file_list$disease[i]
+  # summary_file$year[i] <- file_list$grant_period[i]
+  # summary_file$grant[i] <- file_list$grant[i]
+  # summary_file$period[i] <- file_list$period[i] 
+  # summary_file$geographic_detail[i] <- file_list$geography_detail[i]
+  # summary_file$data_source[i] <- file_list$data_source[i]
+  # 
   if(file_list$type[i]=="detailed"){##most detailed level of budgets 
     tmpData <- prep_detailed_uga_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                        file_list$start_date[i], file_list$qtr_number[i],
@@ -100,32 +101,33 @@ for(i in 1:length(file_list$file_name)){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
   tmpData$start_date <- as.Date(tmpData$start_date,  "%Y-%m-%d")
-  if(file_list$type[i]=="detailed"){
-    summary_file$sda_detail[i] <- "Detailed"
-  } else if (file_list$type[i]=="summary"){
-    summary_file$sda_detail[i] <- "Summary"
-  } else if(!(tmpData$sda_activity[1]=="All")){
-    summary_file$sda_detail[i] <- "Detailed"
-  } else {
-    summary_file$sda_detail[i] <- "None"
-  }
-  summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
-  summary_file$start_date[i] <- min(tmpData$start_date) ##since there are multiple values in this, get the earliest start date 
-  
+  # if(file_list$type[i]=="detailed"){
+  #   summary_file$sda_detail[i] <- "Detailed"
+  # } else if (file_list$type[i]=="summary"){
+  #   summary_file$sda_detail[i] <- "Summary"
+  # } else if(!(tmpData$sda_activity[1]=="All")){
+  #   summary_file$sda_detail[i] <- "Detailed"
+  # } else {
+  #   summary_file$sda_detail[i] <- "None"
+  # }
+  # summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
+  # summary_file$start_date[i] <- min(tmpData$start_date) ##since there are multiple values in this, get the earliest start date 
+  # 
   print(i)
 }
 
-summary_file$end_date <- as.Date(summary_file$end_date)
-summary_file$start_date <- as.Date(summary_file$start_date)
-resource_database$start_date <- as.Date(resource_database$start_date)
-
-##change the column names of the summary file variables so that they make sense: 
-setnames(summary_file, c("Data Source",	"Year",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
-
-##export the summary table
-##(you might get a warning message about appending column names to the files; this should not affect the final output)
-write.table(summary_file, paste0("file path where you want the summary file","resource_tracking_data_summary.csv"),
-            append = TRUE, row.names=FALSE, sep=",")
+## uncomment if you 
+# summary_file$end_date <- as.Date(summary_file$end_date)
+# summary_file$start_date <- as.Date(summary_file$start_date)
+# resource_database$start_date <- as.Date(resource_database$start_date)
+# 
+# ##change the column names of the summary file variables so that they make sense: 
+# setnames(summary_file, c("Data Source",	"Year",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
+# 
+# ##export the summary table
+# ##(you might get a warning message about appending column names to the files; this should not affect the final output)
+# write.table(summary_file, paste0("file path where you want the summary file","resource_tracking_data_summary.csv"),
+#             append = TRUE, row.names=FALSE, sep=",")
 
 
 # ---------------------------------------------
@@ -142,7 +144,7 @@ resource_database$loc_name <- loc_name
 resource_database$financing_source <- source
 
 ## optional: do a check on data to make sure values aren't dropped: 
-# data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE),by = c("grant_number", "data_source","disease")])
+# data_check1<- as.data.frame(resource_database[, sum(budget, na.rm = TRUE), by = c("grant_number", "data_source","disease")])
 
 ## we have some junk "modules" that should be dropped:
 toMatch <- c("0", "Please sel", "6", "4")
@@ -151,7 +153,8 @@ cleaned_database <- resource_database[!grepl(paste(toMatch, collapse="|"), resou
 dups<-cleaned_database[duplicated(cleaned_database) | duplicated(cleaned_database, fromLast=TRUE)]
 
 ##most of the time, these duplicates are either budget values with NA or 0
-##UGA-T-MoFPED has duplicated rows for a treatment category, but these were present in the original budget, so we'll aggregate them together
+##UGA-T-MoFPED has duplicated rows for a treatment category
+## but these were present in the original budget, so we'll aggregate them together
 
 
 ##sum up to remove duplicates: 
@@ -192,10 +195,9 @@ cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
 
 # ----------------------------------------------
 ##### Map to the GF Modules and Interventions #####
-##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 
-## on the J Drive: map_dir <- J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/
+## on the J Drive: map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
 map_dir <- "where the intervention_and_indicator_list.xlsx file lives"
 mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx")
                                   , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
@@ -210,7 +212,7 @@ mapping_list$abbrev_module <- NULL
 
 
 ##this loads the list of modules/interventions with their assigned codes
-gf_mapping_list <- total_mapping_list(paste0(dir, "intervention_and_indicator_list.xlsx"),
+gf_mapping_list <- total_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx"),
                                       mapping_list, unwanted_array, remove_chars)
 
 ##strip all of the special characters, white space, etc. from the RT database
@@ -221,17 +223,18 @@ ugaData  <- cleaned_database[!grepl("pleasesel", cleaned_database$module),]
 #optional: check again for any dropped data: 
 # data_check2<- as.data.frame(ugaData[, sum(budget, na.rm = TRUE),by = c("grant_number", "data_source","disease")])
 
-
-
 # ----------------------------------------------
 ########### USE THIS TO CHECK FOR ANY UNMAPPED MODULE/INTERVENTIONS ###########
 # ----------------------------------------------
 
 
-# gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
-# uga_concat <- paste0(ugaData$module, ugaData$intervention)
-# unmapped_mods <- uga_concat[!uga_concat%in%gf_concat]
+gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
+uga_concat <- paste0(ugaData$module, ugaData$intervention)
+unmapped_mods <- uga_concat[!uga_concat%in%gf_concat]
 
+if(length(unmapped_mods)>0){
+  stop("You have unmapped original modules/interventions!")
+}
 
 
 # ----------------------------------------------
@@ -242,7 +245,11 @@ uga_init_mapping <- merge(ugaData, gf_mapping_list, by=c("module", "intervention
                           all.x=TRUE,allow.cartesian = TRUE)
 
 ##use this to check if any modules/interventions were dropped:
-# dropped_gf <- uga_init_mapping[is.na(uga_init_mapping$code)]
+dropped_gf <- uga_init_mapping[is.na(uga_init_mapping$code)]
+
+if(nrow(dropped_gf)>0){
+  stop("Modules/interventions were dropped!")
+}
 
 ##finally, merge the RT dataset to the GF framework list by code: 
 mappedUga <- merge(uga_init_mapping, final_mapping, by="code")
@@ -252,7 +259,7 @@ mappedUga$budget <- mappedUga$budget*mappedUga$coefficient
 mappedUga$expenditure <- mappedUga$expenditure*mappedUga$coefficient
 mappedUga$disbursement <- mappedUga$disbursement*mappedUga$coefficient
 
-##change this when we get geo locations for UGA: 
+##change this when we get subnational locations for UGA: 
 mappedUga$adm1 <- 190
 mappedUga$adm2 <- 190
 mappedUga$country <- "Uganda"
@@ -262,16 +269,14 @@ mappedUga$lang <- "eng"
 # ----------------------------------------------
 ###Check that nothing got dropped: ### 
 # ----------------------------------------------
-# data_check1 <- ugaData[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
-# data_check2 <-mappedUga[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
-# data_check1[!module%in%data_check2$module]
-# data_check1$ind <- "pre"
-# data_check2$ind <- "post"
-# data_check <- rbind(data_check1, data_check2)
-# write.csv(data_check, "data_check.csv", row.names = FALSE)
+data_check1 <- ugaData[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
+data_check2 <-mappedUga[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
 
 # ----------------------------------------------
 #####write csv to correct folder ############
 # ----------------------------------------------
-write.csv(mappedUga, "prepped_uga_data.csv", row.names = FALSE,
+export_dir <- "where you want the prepped dataset to live" 
+
+write.csv(mappedUga, paste0(export_dir, "prepped_budget_data.csv"), row.names = FALSE,
           fileEncoding = "latin1")
+
