@@ -14,13 +14,20 @@
 # ----------------------------------------------
 # Set up R
 rm(list=ls())
-library(data.table)
-library(reshape2)
-library(stringr)
-library(readxl)
-library(rlang)
-library(zoo)
-library(lubridate)
+
+#specify the packages of interest
+packages = c("data.table","reshape2","stringr","readxl", "zoo",
+             "rlang", "zoo", "lubridate")
+
+#use this function to check if each package is on the local machine
+#if a package is installed, it will be loaded
+#if any are not, the missing package(s) will be installed and loaded
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE)
+  }
+})
 
 # ----------------------------------------------
 #define variables: 
