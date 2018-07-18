@@ -32,7 +32,7 @@ country <- "gtm"
 ###### source the functions that we need 
 # ----------------------------------------------
 prep_dir <- "local repo where the prep files are"
-source(paste0(prep_dir, "/prep_sicoin_detailed_data.R"))
+source(paste0(prep_dir, "prep_sicoin_detailed_data.R"))
 source(paste0(prep_dir, "prep_sicoin_summary_data.R"))
 source(paste0(prep_dir, "prep_sicoin_blank_data.R"))
 source(paste0(prep_dir, "prep_sicoin_donacions_data.R"))
