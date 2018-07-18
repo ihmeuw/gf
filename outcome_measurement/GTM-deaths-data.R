@@ -13,7 +13,7 @@ source(paste0(codePath, "core/GT_helper_functions.R"), encoding = "UTF-8")
 defsData = loadDeathsData()
 
 # IHME  deaths data
-IHMEDefsData = read.csv("PCE/Outcome Measurement Data/VR/vr_2009_2016.csv")
+IHMEDefsData = read.csv("PCE/Outcome Measurement Data/VR/redistributed_vr.csv")
 IHMEDefsData = data.table(IHMEDefsData)
 IHMELocations = data.table(read.csv("PCE/Covariates and Other Data/GIS/GTM_muni_merges_2009_2016.csv"))
 IHMEAgeGroups = data.table(read.csv("PCE/Outcome Measurement Data/VR/age_group_ids.csv"))
@@ -38,7 +38,7 @@ INECounts = defsData[[2016]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19"
 
 # First of all lets compare TB deaths according to INE and IHME.
 INECounts[,.(t = sum(conteo))] # 313
-IHMEDefsData[(year_id == 2016) & (cause_id %in% c(297, 954, 934, 946, 947)), .(t = sum(deaths))] # 448.3
+IHMEDefsData[(year_id == 2016) & (cause_id %in% c(297, 954, 934, 946, 947)), .(t = sum(deaths))] # 22.7
 # IHME Corrected data suggests a very large amount of TB deaths.
 # Deaths by cause:
 IHMEDefsData[(year_id == 2016) & (cause_id %in% c(297, 954, 934, 946, 947)), .(t = round(sum(deaths), 1)), 
@@ -88,22 +88,23 @@ mapData = merge(IHMELocations[, .("municode" = factor(adm2_country_code), adm2_g
                         .(values_ = sum(deaths)), 
                         by = .(location_id)],
                  by.x = "adm2_gbd_id", by.y="location_id")
-mapData$values = cut(mapData$values_, c(0, 1, 2, 10, 20, 30, 40, 50, 100), right = F)
+#mapData$values = cut(mapData$values_, c(0, 1, 2, 10, 20, 30, 40, 50, 100), right = F)
+mapData$values = cut_number(mapData$values_, 5)
 mapData$year = 2016
 mapData$pop = GTMuniPopulation(as.integer(as.character(mapData$municode)), mapData$year)
 plot = gtmap_muni(mapData)
-plot + labs(title="TB Deaths \naccording to GBD corrected causes of death")
-mapData$values = 1000* mapData$values_ / mapData$pop
+plot + labs(title="TB Deaths \naccording to IHME corrected causes of death.") + scale_fill_manual(values=c("#112255","#114466","#2266AA", "#3377DD", "#55AAFF"),  na.value="#333333")
+mapData$values = 100000* mapData$values_ / mapData$pop
 plot = gtmap_muni(mapData, depto_color = "#22222277")
-plot + scale_fill_distiller(name="Percent", palette = "Blues", direction = -1, na.value = "#444444") +
-    labs(title="TB Mortality Rate per 1,000 habitants\naccording to GBD corrected causes of death")
+plot + scale_fill_distiller(name="Rate", palette = "Blues", direction = -1, na.value = "#888888") +
+    labs(title="TB Mortality Rate per 100,000 population\naccording to GBD corrected causes of death")
 
 ineMapData = INECounts[,.(values_ = sum(conteo)), by = .(municode = Mupocu)]
 mapData = ineMapData
 mapData$values = cut(mapData$values_, c(0, 1, 2, 10, 20, 30, 40, 50, 100), right = F)
 mapData$municode = str_replace(mapData$municode, "^0(\\d)", "\\1")
 plot = gtmap_muni(mapData, extra =   scale_fill_manual(values=c("#444444","#114466","#2266AA", "#3377DD", "#55AAFF"),  na.value="black") )
-plot + labs(title="TB Deaths \naccording to national vital statistics")
+plot + labs(title="TB Mortality rate \naccording to national vital statistics")
 mapData$year = 2016
 mapData$pop = GTMuniPopulation(as.integer(as.character(mapData$municode)), mapData$year)
 mapData$values = 1000* mapData$values_ / mapData$pop
