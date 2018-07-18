@@ -8,18 +8,17 @@
 # Set up R
 rm(list=ls())
 library(ggplot2)
-library(dplyr)
 library(tools)
 library(data.table)
 library(lubridate)
-library(grDevices)
-library(RColorBrewer)
 library(readxl)
 library(reshape)
 library(scales)
 library(stringr)
 
-
+repo <- "your local repository where these files live:"
+source(paste0(repo,"visualizations/functions_for_rt_analysis_graphs.R"))
+source(paste0(repo,"prep/map_modules_and_interventions.R"))
 # ----------------------------------------------
 #########load the dataset:  ########
 # ----------------------------------------------
@@ -58,32 +57,31 @@ define_rssh_modules <- function(code, disease, module){
 # ---------------------------------------------
 
 #here, I'm doing SDA, grant, disease, and data source (gos, fpm etc.) by year 
-byVars = names(graphData)[names(graphData)%in%c('gf_module', 'gf_intervention',"code", 'year', 'grant_number', 'disease', 'data_source')]
+byVars = names(graphData)[names(graphData)%in%c('abbrev_module', 'abbrev_intervention',"code", 'year', 'grant_number', 'disease', 'data_source')]
 graphData = graphData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 graphData$budget[graphData$budget<=0] <- NA
 graphData$expenditure[graphData$expenditure<=0] <- NA
 
+##drop FGH as a data source since no module-level information available 
+graphData <- graphData[data_source!="fgh"]
+
 ##apply the grant facet:
 graphData$facet <- as.factor(mapply(data_sources_facet, graphData$year, graphData$data_source))
 graphData$facet <- factor(graphData$facet, levels=c("Past/Active", "Initial",  "Upcoming"))
 
-graphData[gf_module=="Health management information system and monitoring and evaluation"
-          , gf_module:="Health management information system and M&E"]
 ##make the disease text nicer for the graphs: 
 graphData <- disease_names_for_plots(graphData)
-graphData$gf_module <- factor(graphData$gf_module, levels=names(primColors))
+graphData$abbrev_module <- factor(graphData$abbrev_module, levels=names(primColors))
                  
 # ---------------------------------------------
 # stacked bar charts over time 
 # ---------------------------------------------
-
-
 prog_plots <- list()
 for (k in unique(graphData$disease)){
   subdata <- graphData[disease==k]
   colScale <- scale_fill_manual(name="GF Module", values =primColors) 
-  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=gf_module)) + 
+  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=abbrev_module)) + 
     geom_bar(## if you want 100% stacked graphs, uncomment: position = "fill",
       stat="identity") + 
     colScale +
@@ -116,30 +114,25 @@ create_na_mods <- unique(gf_mods)
 mapping_list <- disease_names_for_plots(gf_mapping_list)
 mapping_list$code <- NULL
 mapping_list$intervention <- NULL
-setnames(mapping_list, "module", "gf_module")
-
-mapping_list[gf_module=="Health management information system and monitoring and evaluation"
-          , gf_module:="Health management information system and M&E"]
-
+mapping_list$module <- NULL
+mapping_list$abbrev_intervention <- NULL
 
 ##make a list of all possible modules for each year and disease that we have: 
 create_na_mods <- merge(create_na_mods, mapping_list, by="disease", allow.cartesian = TRUE)
 create_na_mods <- unique(create_na_mods)
 
-modData <- merge(graphData, create_na_mods,all.y=TRUE, by=c("year","disease", "grant_number","gf_module"), allow.cartesian = TRUE)
+modData <- merge(graphData, create_na_mods,all.y=TRUE, by=c("year","disease", "grant_number","abbrev_module"), allow.cartesian = TRUE)
 
 ##sometimes modules won't be present in the data
-modData[is.na(gf_intervention), gf_intervention:="Module Not Included"]
+modData[is.na(abbrev_intervention), abbrev_intervention:="Module Not Included"]
 
 ## figure out which values only have summary level data: 
-modData$str_wrap <- mapply(get_summary_level,as.character(modData$gf_module), 
-                           as.character(modData$gf_intervention))
+modData$graph_module <- mapply(get_summary_level,as.character(modData$abbrev_module), 
+                           as.character(modData$abbrev_intervention))
 
-##wrap the characters so they print out nicer on the graphs: 
-modData$str_wrap <- str_wrap(modData$str_wrap, 45)
 
 #sum up the budget and expenditure by variables of interest
-byVars = names(modData)[names(modData)%in%c('gf_module', 'str_wrap','year', 'disease', 'grant_number')]
+byVars = names(modData)[names(modData)%in%c('abbrev_module', 'graph_module','year', 'disease', 'grant_number')]
 modData = modData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 modData[,sum_budget:=sum(na.omit(budget)), by=c("grant_number", "year", "disease")]
@@ -148,8 +141,8 @@ modData[,sum_budget:=sum(na.omit(budget)), by=c("grant_number", "year", "disease
 modData[budget<=0]$budget <- NA
 
 ##if you want 100% stacked bar graphs: 
-modData[budget==0, str_wrap:="Module Not Included"]
-modData[str_wrap=="Module Not Included", budget:=100]
+modData[budget==0, graph_module:="Module Not Included"]
+modData[graph_module=="Module Not Included", budget:=100]
 
 
 ##subset by disease: 
@@ -190,7 +183,7 @@ colors <- c('#a6cee3', ##periwinkle
 
 ##sometimes there are more interventions that colors, so this just repeats the colors 
 ##until all of the interventions are assigned a color
-interventions <- unique(na.omit(hivData$str_wrap)) ##change datasets when necessary
+interventions <- unique(na.omit(hivData$abbrev_interventions)) ##change datasets when necessary
 cols <- rep(colors, length.out=length(interventions))
 names(cols) <- interventions
 
@@ -205,9 +198,9 @@ cols[names(cols)=="Module Not Included"]="#FFFFFF"
 
 #### bar charts over time 
 int_plots <- list()
-for (k in unique(hivData$gf_module)){
-  subdata <- hivData[gf_module==k]
-  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=str_wrap)) + 
+for (k in unique(hivData$graph_module)){
+  subdata <- hivData[graph_module==k]
+  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=abbrev_intervention)) + 
              geom_bar(colour="black", #uncomment if you want 100% bars:  position = "fill",
                       stat="identity") + 
              scale_fill_manual(name="Interventions", values =cols) +
