@@ -105,55 +105,56 @@
     parallelMethod = ifelse(as.logical(Sys.info()['sysname']=='Windows'), 'snow', 'multicore')
     ncores = detectCores()
     
-#   # set up priors 
-#     # index column names as numbers
-#       indicators <- c(indicators, "healthFacilitiesProportion")
-#       means = copy(dtLog)
-#       setnames(means, as.character(1:length(names(means))))
-#     # compute means by health zone-indicator
-#       valueVars = as.character(which(names(dtLog) %in% indicators))
-#       
-#       for(v in valueVars) { 
-#           means[, (v):=as.numeric(get(v))]
-#           means[, (v):=mean(get(v),na.rm=TRUE), by=c("1", "2")]
-#       }
-#       
-#     # drop uneeded variables
-#       means = means[, valueVars, with=FALSE]
-#     # index rows
-#       means[, row:=seq_len(.N)]
-#     # melt to get to the right shape for Amelia priors
-#       means = melt(means, id.vars='row', variable.name='column', value.name='mean')
-#   # ---------------------------------------------- 
-#     # index column names as numbers
-#       SDs = copy(dtLog)
-#       setnames(SDs, as.character(1:length(names(SDs))))
-#     # compute means by health zone-indicator
-#       valueVars = as.character(which(names(dtLog) %in% indicators))
-#       
-#       for(v in valueVars) { 
-#         SDs[, (v):=as.numeric(get(v))]
-#         SDs[, (v):=sd(get(v),na.rm=TRUE), by=c("1", "2")]
-#       }
-#       
-#     # drop uneeded variables
-#       SDs = SDs[, valueVars, with=FALSE]
-#     # index rows
-#       SDs[, row:=seq_len(.N)]
-#     # melt to get to the right shape for Amelia priors
-#       SDs = melt(SDs, id.vars='row', variable.name='column', value.name='std_dev')
-#   # ---------------------------------------------- 
-#     # merge SDs and means on rows and columns
-#       priors <- merge(means, SDs, by=c("row", "column"), all=T)
-#       priors$row <- as.double(priors$row)
-#       priors$column <- as.double(priors$column)
-#       priors$mean <- as.double(priors$mean)
-#       priors$std_dev <- as.double(priors$std_dev)
-#       
-#       priors <- priors[!is.na(priors$std_dev)]
-#       
-#       priorsMatrix <- as.matrix(priors)
-# # ---------------------------------------------- 
+  # set up priors 
+    # index column names as numbers
+      indicators <- c(indicators, "healthFacilitiesProportion")
+      means = copy(dtLog)
+      setnames(means, as.character(1:length(names(means))))
+    # compute means by health zone-indicator
+      valueVars = as.character(which(names(dtLog) %in% indicators))
+      
+      for(v in valueVars) { 
+          means[, (v):=as.numeric(get(v))]
+          means[, (v):=mean(get(v),na.rm=TRUE), by=c("1", "2")]
+      }
+      
+    # drop uneeded variables
+      means = means[, valueVars, with=FALSE]
+    # index rows
+      means[, row:=seq_len(.N)]
+    # melt to get to the right shape for Amelia priors
+      means = melt(means, id.vars='row', variable.name='column', value.name='mean', variable.factor=FALSE)
+  # ---------------------------------------------- 
+    # index column names as numbers
+      SDs = copy(dtLog)
+      setnames(SDs, as.character(1:length(names(SDs))))
+    # compute means by health zone-indicator
+      valueVars = as.character(which(names(dtLog) %in% indicators))
+      
+      for(v in valueVars) { 
+        SDs[, (v):=as.numeric(get(v))]
+        SDs[, (v):=sd(get(v),na.rm=TRUE), by=c("1", "2")]
+      }
+      
+    # drop uneeded variables
+      SDs = SDs[, valueVars, with=FALSE]
+    # index rows
+      SDs[, row:=seq_len(.N)]
+    # melt to get to the right shape for Amelia priors
+      SDs = melt(SDs, id.vars='row', variable.name='column', value.name='std_dev', variable.factor=FALSE)
+  # ---------------------------------------------- 
+    # merge SDs and means on rows and columns
+      priors <- merge(means, SDs, by=c("row", "column"), all=T)
+	  priors[is.na(std_dev), std_dev:=mean]
+      priors$row <- as.numeric(priors$row)
+      priors$column <- as.numeric(priors$column)
+      priors$mean <- as.numeric(priors$mean)
+      priors$std_dev <- as.numeric(priors$std_dev)
+      
+      priors <- priors[!is.na(priors$std_dev)]
+      
+      priorsMatrix <- as.matrix(priors)
+# ---------------------------------------------- 
       
       
 # ---------------------------------------------- 
@@ -164,7 +165,7 @@
     # lags/leads: indicators no la
     # intercs = FALSE by default, try with = TRUE
     
-    id_vars_for_amelia <-c("id", "random", "dps", "date")
+    id_vars_for_amelia <-c("id", "dps", "province")
     dtLog$date <- as.Date(dtLog$date)
     #id_vars_for_amelia <- c(id_vars_for_amelia, "healthFacilities_max", "healthFacilities_totalOrig", "healthFacilities_numReported")
     
@@ -172,7 +173,7 @@
     measured_vars <- measured_vars[!measured_vars %in% c(id_vars_for_amelia, "health_zone", "dps", "date", "province", with=F)]
     
     amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", idvars= id_vars_for_amelia, tolerance= 0.001, lags = measured_vars,
-                             leads = measured_vars, parallel= parallelMethod, ncpus= 50)
+                             leads = measured_vars, parallel= parallelMethod, ncpus= 50, priors=priorsMatrix)
 
 # ---------------------------------------------- 
   
