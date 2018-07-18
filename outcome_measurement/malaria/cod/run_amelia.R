@@ -17,6 +17,11 @@
   tol = as.numeric(gsub('\r', '', tol))
   run_name = gsub('\r', '', run_name)
   print(tol)
+  # do_lags = commandArgs()[6]
+  # do_lags = as.numeric(gsub('\r', '', do_lags))
+  # do_leads = commandArgs()[7]
+  # do_leads = as.numeric(gsub('\r', '', do_leads))
+  # do_priors = as.numeric(gsub('\r', '', do_priors))
   # print(run_name)
   library(data.table)
   library(stringr)
@@ -26,6 +31,7 @@
   library(Rcpp)
   library(Amelia)
   library(parallel)
+  library(boot)
 # --------------------  
 
 
@@ -38,7 +44,7 @@
       dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
     
     # input file:
-      input <- "PNLP_2010to2017_preppedForMI.csv"
+      input <- "final_data_for_impuation.csv"
     
     # output files:
       output <- "PNLP_2010to2017_imputedData.csv"
@@ -48,59 +54,38 @@
 # ----------------------------------------------
   # read in data table prepped by prep_for_MI.R
     dt <- fread(paste0(dir, input)) 
+      dt <- dt[, V1:=NULL]
+      all_vars <- c(colnames(dt))
+      id_vars <- c("province", "dps", "health_zone", "date", "id")
+      indicators <- all_vars[!all_vars %in% id_vars] 
+      indicators <- indicators[!indicators %in% c("V1")]
+      
+      for (i in indicators){
+        dt$i <- as.numeric(dt$i)
+      }
 # ----------------------------------------------
            
-      
-# ----------------------------------------------
-  # convert column types to proper types
-    dt[, date := as.Date(date)]
-    
-    # remove V1 column
-    dt <- dt[, V1:=NULL]
-    
-    # change name of province column
-    setnames(dt, "province11_name", "province")
-    
-    # vector of id variables and indicator variables
-    all_vars <- c(colnames(dt))
-    id_vars <- c("province", "dps", "health_zone", "date", "id")
-    indicators <- all_vars[!all_vars %in% id_vars] 
-    indicators <- indicators[!indicators %in% c("healthFacilities_total", "healthFacilities_numReportedWithinDeadline")]
-    
-    # remove healthFacilities_numReported from the data.table
-    dt <- dt[,c(id_vars, indicators), with=F] 
-    
-    # when a health zone is entirely na for an indicator over the entire time series,
-    # set those NAs to 0 to avoid overimputing
-    dtMelt <- melt(dt, id.vars= id_vars)
-    dtMelt[, value := as.numeric(value)]
-    
-    dtMeltNAs <- dtMelt[, .(totNAObs = sum(is.na(value))), by= c("dps", "health_zone", "variable" )]
-    dtMeltNAs <- dtMeltNAs[totNAObs==96, noData:= T]
-    
-    dtMerge <- merge(dtMelt, dtMeltNAs, by= c("dps", "health_zone", "variable"))
-    
-    dtMerge <- dtMerge[noData==T, value:=0]
-    
-    dtMerge <- dtMerge[, totNAObs:= NULL]
-    dtMerge <- dtMerge[, noData:= NULL]
-    
-    dtMerge[ value < 0, value:= NA]
-    
-    dt <- dcast(dtMerge, province + dps + health_zone + date + id ~ variable, value.var = "value")
-    dt <- as.data.table(dt)
-# ---------------------------------------------- 
-    
 
 # ---------------------------------------------- 
-  # log transform the data to run amelia on it
-    # save original data
-      dtOrig <- copy(dt)
-  
+  # save original data
+    dtOrig <- copy(dt)
+      
   # store which observations had zero so we can switch them back to zero at the end, after imputation
-      for (ind in indicators) dt[get(ind)<0, (ind):=NA]
-      zeroes <- dt[, lapply(.SD, function(x) {x==0}), .SDcols=indicators, by= c(id_vars)] 
-  
+    for (ind in indicators) dt[get(ind)<0, (ind):=NA]
+    zeroes <- dt[, lapply(.SD, function(x) {x==0}), .SDcols=indicators, by= c(id_vars)] 
+      
+# log transform the data to run amelia on it
+  # logit transform the healthFacilities proportion data
+    indicators <- indicators[!indicators %in% c("healthFacilitiesProportion")]
+    
+    N <- length( dt$healthFacilitiesProportion[!is.na(dt$healthFacilitiesProportion)])
+    
+    # prop_lsqueeze <- ((dt$healthFacilitiesProportion*(N-1)+0.5)/N)
+    # prop_lsqueeze <- logit(prop_lsqueeze)
+    
+    prop_lsqueeze <- dt[, .(health_zone, dps, date, healthFacilitiesProportion =((healthFacilitiesProportion*(N-1)+0.5)/N))]
+    prop_lsqueeze <- prop_lsqueeze[, healthFacilitiesProportion:= logit(healthFacilitiesProportion)]
+    
   # replace all 0s with really low values so log works 
     for(var in indicators) {
       # taking the 5th percentile for each column to replace the 0s with 
@@ -108,12 +93,15 @@
       # change/store these back in dt so that we can use that to run amelia() on
       dt[get(var)==0, (var):=pctle]
     }
-  
+    
   # log transform
     dtLog <- dt[, lapply(.SD, function(x) log(x)), .SDcols=indicators, by= c(id_vars)]
   
   # make a constant to convince amelia to extrapolate
     dtLog[, random:=runif(nrow(dtLog))]
+    
+  # merge the logit transformation of health facilities prop with dtLog
+    dtLog <- merge(dtLog, prop_lsqueeze, by=c("health_zone", "dps", "date"), all=T)
 # ---------------------------------------------- 
     
     
@@ -123,21 +111,58 @@
     ncores = detectCores()
     
   # set up priors 
-    dtOrig[]
     # index column names as numbers
-    means = copy(dtOrig)
-    setnames(means, as.character(1:length(names(means))))
+      indicators <- c(indicators, "healthFacilitiesProportion")
+      means = copy(dtLog)
+      setnames(means, as.character(1:length(names(means))))
     # compute means by health zone-indicator
-    valueVars = as.character(which(names(dtOrig) %in% indicators))
-    for(v in valueVars) means[, (v):=mean(get(v),na.rm=TRUE), by='3']
-    # drop unneedd variables
-    means = means[, valueVars, with=FALSE]
+      valueVars = as.character(which(names(dtLog) %in% indicators))
+      
+      for(v in valueVars) { 
+          means[, (v):=as.numeric(get(v))]
+          means[, (v):=mean(get(v),na.rm=TRUE), by=c("1", "2")]
+      }
+      
+    # drop uneeded variables
+      means = means[, valueVars, with=FALSE]
     # index rows
-    means[, row_idx:=seq_len(.N)]
+      means[, row:=seq_len(.N)]
     # melt to get to the right shape for Amelia priors
-    means = melt(means, id.vars='row_idx')
-
-  
+      means = melt(means, id.vars='row', variable.name='column', value.name='mean', variable.factor=FALSE)
+  # ---------------------------------------------- 
+    # index column names as numbers
+      SDs = copy(dtLog)
+      setnames(SDs, as.character(1:length(names(SDs))))
+    # compute means by health zone-indicator
+      valueVars = as.character(which(names(dtLog) %in% indicators))
+      
+      for(v in valueVars) { 
+        SDs[, (v):=as.numeric(get(v))]
+        SDs[, (v):=sd(get(v),na.rm=TRUE), by=c("1", "2")]
+      }
+      
+    # drop uneeded variables
+      SDs = SDs[, valueVars, with=FALSE]
+    # index rows
+      SDs[, row:=seq_len(.N)]
+    # melt to get to the right shape for Amelia priors
+      SDs = melt(SDs, id.vars='row', variable.name='column', value.name='std_dev', variable.factor=FALSE)
+  # ---------------------------------------------- 
+    # merge SDs and means on rows and columns
+      priors <- merge(means, SDs, by=c("row", "column"), all=T)
+	  priors[is.na(std_dev), std_dev:=mean]
+      priors$row <- as.numeric(priors$row)
+      priors$column <- as.numeric(priors$column)
+      priors$mean <- as.numeric(priors$mean)
+      priors$std_dev <- as.numeric(priors$std_dev)
+      
+      priors <- priors[!is.na(priors$std_dev)]
+      
+      priorsMatrix <- as.matrix(priors)
+# ---------------------------------------------- 
+      
+      
+# ---------------------------------------------- 
   # run the imputation - no polytime
     # ts variable: the date
     # cs variable: health zone - try with and without this and see what results are like
@@ -145,14 +170,25 @@
     # lags/leads: indicators no la
     # intercs = FALSE by default, try with = TRUE
     
-    id_vars_for_amelia <- id_vars[!id_vars %in% c("health_zone", "date", "dps", "province")]
-    id_vars_for_amelia <- c(id_vars_for_amelia, "healthFacilities_max", "healthFacilities_totalOrig", "healthFacilities_numReported")
+    id_vars_for_amelia <-c("id", "dps", "province")
+    dtLog$date <- as.Date(dtLog$date)
+    #id_vars_for_amelia <- c(id_vars_for_amelia, "healthFacilities_max", "healthFacilities_totalOrig", "healthFacilities_numReported")
     
-    measured_vars <- all_vars[!all_vars %in% id_vars_for_amelia]
+    measured_vars <- colnames(dtLog)
+    measured_vars <- measured_vars[!measured_vars %in% c(id_vars_for_amelia, "health_zone", "dps", "date", "province", with=F)]
     
+    if( do_leads == 1){
     amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", idvars= id_vars_for_amelia, tolerance= 0.001, lags = measured_vars,
-                             leads = measured_vars, noms= c("dps", "province"), parallel= parallelMethod, ncpus= 50)
-
+                             leads = measured_vars, parallel= parallelMethod, ncpus= 50, priors=priorsMatrix)
+    }
+    # if( do_leads == 1){
+    # amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", idvars= id_vars_for_amelia, tolerance= 0.001, lags = measured_vars, 
+    #                          parallel= parallelMethod, ncpus= 50, priors=priorsMatrix)
+    # }
+    # if( just_lags == 1){
+    #   amelia.results <- amelia(dtLog, m=50, cs= "health_zone", ts="date", idvars= id_vars_for_amelia, tolerance= 0.001, lags = measured_vars, 
+    #                            parallel= parallelMethod, ncpus= 50, priors=priorsMatrix)
+    # }
 # ---------------------------------------------- 
   
   
@@ -169,7 +205,7 @@
   
   
 # ----------------------------------------------
-  imputed_id_vars <- c(id_vars, "imputation_number")
+  imputed_id_vars <- c("id", "health_zone", "dps", "date", "imputation_number")
       
   # exponentiate the data set
   dtExp <- amelia_data[, lapply(.SD, function(x) exp(x)), .SDcols=indicators, by= c(imputed_id_vars)]
