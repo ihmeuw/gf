@@ -23,7 +23,7 @@ library(zoo)
 # ----------------------------------------------
 
 ##load the data: 
-gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
+gtmBudgets <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_budget_data.csv", 
                                   fileEncoding = "latin1"))
 
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
@@ -50,15 +50,12 @@ gtm_subset = gtmBudgets[, list(budget=sum(na.omit(budget)), expenditure=sum(na.o
 # gtm_subset[, module_fraction := budget/sum(budget), by=c("disease","quarter")]
 # gtm_subset[, int_fraction := budget/sum(budget), by=c("disease","quarter", "gf_module")]
 
-fpm_malaria <- gtm_subset[(disease=="malaria"&year%in%c(2012, 2013))]
+## the only years so far of subnational GF data are 2012-2013
+malData <- gtm_subset[(disease=="malaria"&year%in%c(2012, 2013))]
 # ----------------------------------------------
 
-##just work with GF data for now: 
-sicoin_data <- sicoin_data[source=="gf"]
-##change the start dates from factors to dates: 
-sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
-gtmBudgets$start_date <- as.Date(gtmBudgets$start_date,"%Y-%m-%d")
-sicoin_data$year <- year(sicoin_data$start_date)
+##just work with SICOIN GF data for now: 
+sicoin_data <- sicoin_data[financing_source=="gf"]
 
 ##clean the ID numbers from sicoin: 
 sicoin_data$id <- as.numeric(lapply(sicoin_data$adm2, function(y) sub('^0+(?=[1-9])', '', y, perl=TRUE)))
@@ -69,38 +66,38 @@ sicoin_data$id <- as.numeric(lapply(sicoin_data$adm2, function(y) sub('^0+(?=[1-
 sicoin_subset <- sicoin_data[year%in%c(2012,2013)&disease=="malaria"]
 
 ##if you want quarters:
-#sicoin_subset$quarter <- as.yearqtr(sicoin_subset$start_date)
+sicoin_subset$quarter <- as.yearqtr(sicoin_subset$start_date)
 
 ##sum up budget (as "variable") by year, disease, and data source 
-byVars = names(sicoin_subset)[names(sicoin_subset)%in%c('loc_name','module','quarter','year','id')]
+byVars = names(sicoin_subset)[names(sicoin_subset)%in%c('loc_name','abbrev_module','quarter','year','id')]
 sicoin_subset = sicoin_subset[, list(budget=sum(na.omit(budget)), 
                                      disbursement=sum(na.omit(disbursement))), by=byVars]
 
 ##you can do this by quarter or year: 
 ##QTR
-sicoin_subset[, qtr_fraction:=budget/sum(budget), by=c("quarter", "module")]
+sicoin_subset[, qtr_fraction:=budget/sum(budget), by=c("quarter", "abbrev_module")]
 
 
 ##YEAR:
 sicoin_subset[, annual_budget_total:=sum(budget), by=c("year", "loc_name")]
-sicoin_subset[, annual_muni_fraction:=budget/sum(budget), by=c("year", "module")]
+sicoin_subset[, annual_muni_fraction:=budget/sum(budget), by=c("year", "abbrev_module")]
 
 
 ##just work with 2013 data for now:  
 setnames(sicoin_subset, c("budget", "disbursement"), c("sicoin_budget", "sicoin_disb"))
 
-graphData <- merge(sicoin_subset, fpm_malaria, by=c("year", "quarter"), allow.cartesian=TRUE)
+graphData <- merge(sicoin_subset, malData, by=c("year", "quarter"), allow.cartesian=TRUE)
 
 
 ##how many modules are in this year: 
 ##municipality budget divided by the number of modules this year: 
 
-
+# multiply the FPM budget amount by the fraction of money each municipality is budgeted over total national budget (by year)
 graphData[,muni_budget_year:=budget*annual_muni_fraction]
 
 
-graphData[, mod_year:=paste(year, ":",gf_module)]
-graphData[, int_year:=paste(year, gf_module,":",gf_intervention)]
+graphData[, mod_year:=paste(year, ":",abbrev_module)]
+graphData[, int_year:=paste(year, abbrev_module,":",abbrev_intervention)]
 
 # ----------------------------------------------
 
@@ -115,13 +112,13 @@ adminData = shapefile(paste0(mapping_dir, 'gtm_region.shp'))
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 # use IDs instead of names
 coordinates = data.table(fortify(shapeData, region='Codigo'))
-admin_coords <- data.table(fortify(adminData, region='ID_1'))
-coordinates$id <- as.numeric(coordinates$id)
-
-# merge on municipality names
 names = data.table(shapeData@data)
-admin_names <- data.table(adminData@data)
+coordinates$id <- as.numeric(coordinates$id)
 coord_and_names = merge(coordinates, names, by.x='id', by.y='Codigo', allow.cartesian=TRUE)
+# merge on municipality names
+
+admin_coords <- data.table(fortify(adminData, region='ID_1'))
+admin_names <- data.table(adminData@data)
 admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow.cartesian=TRUE)
 
 
