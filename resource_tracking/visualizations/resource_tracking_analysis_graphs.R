@@ -16,7 +16,7 @@ library(reshape)
 library(scales)
 library(stringr)
 
-repo <- "your local repository where these files live:"
+repo <- "your drive + gf/resource_tracking/"
 source(paste0(repo,"visualizations/functions_for_rt_analysis_graphs.R"))
 source(paste0(repo,"prep/map_modules_and_interventions.R"))
 # ----------------------------------------------
@@ -45,14 +45,12 @@ define_rssh_modules <- function(code, disease, module){
 ######### subset the country you want from the aggregate data  #######
 # ----------------------------------------------
 
-
 # graphData <- totalData[country=="Uganda"]
 # graphData <- totalData[country=="Guatemala"]
 # graphData <- totalData[country=="Congo (Democratic Republic)"]
 
 
 # ---------------------------------------------
-
 ######### sum budget and exp. by the variables of interest ############
 # ---------------------------------------------
 
@@ -75,7 +73,7 @@ graphData <- disease_names_for_plots(graphData)
 graphData$abbrev_module <- factor(graphData$abbrev_module, levels=names(primColors))
                  
 # ---------------------------------------------
-# stacked bar charts over time 
+# stacked bar charts over time - plotting budget 
 # ---------------------------------------------
 prog_plots <- list()
 for (k in unique(graphData$disease)){
@@ -86,8 +84,8 @@ for (k in unique(graphData$disease)){
       stat="identity") + 
     colScale +
     theme_bw(base_size=14) +
-      theme(legend.title = element_text(size=10),legend.text=element_text(size=8),
-          strip.text.x = element_text(size = 7, colour = "black")) +
+      theme(legend.title = element_text(size=10),legend.text=element_text(size=8.5),
+          strip.text.x = element_text(size = 9, colour = "black")) +
     facet_grid(~facet,scales = "free_x", space="free_x") + 
     ## if you want 100% stacked graphs, uncomment:scale_y_continuous(labels = percent_format()) +
     scale_x_continuous(name ="Year", breaks = seq(2005, 2020,3)) +
@@ -127,22 +125,22 @@ modData <- merge(graphData, create_na_mods,all.y=TRUE, by=c("year","disease", "g
 modData[is.na(abbrev_intervention), abbrev_intervention:="Module Not Included"]
 
 ## figure out which values only have summary level data: 
-modData$graph_module <- mapply(get_summary_level,as.character(modData$abbrev_module), 
+modData$graph_intervention <- mapply(get_summary_level,as.character(modData$abbrev_module), 
                            as.character(modData$abbrev_intervention))
 
 
 #sum up the budget and expenditure by variables of interest
-byVars = names(modData)[names(modData)%in%c('abbrev_module', 'graph_module','year', 'disease', 'grant_number')]
+byVars = names(modData)[names(modData)%in%c('abbrev_module', 'graph_intervention','year', 'disease')]
 modData = modData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
-modData[,sum_budget:=sum(na.omit(budget)), by=c("grant_number", "year", "disease")]
+modData[,sum_budget:=sum(na.omit(budget)), by=c("year", "disease")]
 
 ## if you want bars with dollar amounts: 
 modData[budget<=0]$budget <- NA
 
 ##if you want 100% stacked bar graphs: 
-modData[budget==0, graph_module:="Module Not Included"]
-modData[graph_module=="Module Not Included", budget:=100]
+modData[budget==0, graph_intervention:="Module Not Included"]
+modData[graph_intervention=="Module Not Included", budget:=100]
 
 
 ##subset by disease: 
@@ -157,20 +155,24 @@ hssData <- modData[disease=="RSSH"]
 ##list of colors to apply to the interventions: 
 colors <- c('#a6cee3', ##periwinkle
   '#1f78b4', ##summer lake
+  '#dbfced', #misty mint
+  '#032f4c', #winter lake
   '#b2df8a', ##muted lime 
   '#B9006E',##magenta
   '#4affd4', # bright mint
   '#fb9a99', ##peach blossom 
   '#9e82ba', #dark lilac
-  '#fdbf6f', ##goldenrod
+  '#fdbf6f', ##goldenrod  
   '#ff7f00', ##pumpkin spice
   '#cab2d6', ##lilac
   '#00CCD6', ##caribbean beach
   '#93b500', ##neutralized chartreuse 
   '#db0645', ##cherry flavoring
   '#42090a', ##cherry coke
+  '#966709', #dark caramel 
   '#f4c7d4', ##blush pink
   '#e2725b',##terracotta
+  '#856987', #dusty lavender
   '#a977f4', ##80s purple
   '#01a004', ## kelly green
   '#0c5768', ##dark teal 
@@ -183,7 +185,7 @@ colors <- c('#a6cee3', ##periwinkle
 
 ##sometimes there are more interventions that colors, so this just repeats the colors 
 ##until all of the interventions are assigned a color
-interventions <- unique(na.omit(hivData$abbrev_interventions)) ##change datasets when necessary
+interventions <- unique(na.omit(hivData$graph_intervention)) ##change datasets when necessary
 cols <- rep(colors, length.out=length(interventions))
 names(cols) <- interventions
 
@@ -198,9 +200,9 @@ cols[names(cols)=="Module Not Included"]="#FFFFFF"
 
 #### bar charts over time 
 int_plots <- list()
-for (k in unique(hivData$graph_module)){
-  subdata <- hivData[graph_module==k]
-  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=abbrev_intervention)) + 
+for (k in unique(hivData$abbrev_module)){
+  subdata <- hivData[abbrev_module==k]
+  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=graph_intervention)) + 
              geom_bar(colour="black", #uncomment if you want 100% bars:  position = "fill",
                       stat="identity") + 
              scale_fill_manual(name="Interventions", values =cols) +
