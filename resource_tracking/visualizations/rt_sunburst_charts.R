@@ -42,13 +42,12 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
 
 #sum up the budget/exp by the variables of interest:
 ##if you want to plot this over year, add in the temporal variable 
-byVars = names(graphData)[names(graphData)%in%c('gf_module', 'gf_intervention',"code", 'grant_number', 'disease')]
+byVars = names(graphData)[names(graphData)%in%c('abbrev_module', 'abbrev_intervention',"code", 'grant_number', 'disease')]
 graphData = graphData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 graphData$budget[graphData$budget<=0] <- NA
 graphData$expenditure[graphData$expenditure<=0] <- NA
-graphData[gf_module=="Health management information system and monitoring and evaluation"
-        , gf_module:="Health management information system and M&E"]
+
 
 # ---------------------------------------------
 ######### Create the "module" dataset ############
@@ -56,15 +55,20 @@ graphData[gf_module=="Health management information system and monitoring and ev
 
 modData<-graphData[with(graphData, order(disease, grant_number, gf_module,gf_intervention, budget)), ]
 
+#copy the dataset -> this will be the "intervention" dataset
 intData <- copy(modData)
 
-byVars = names(modData)[names(modData)%in%c('gf_module','grant_number')]
+byVars = names(modData)[names(modData)%in%c('abbrev_module','grant_number')]
 modData=modData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 modData[,budget_sum:=sum(na.omit(budget)), by="grant_number"]
+# how big each slice is 
 modData[,fraction:=budget/budget_sum, by="grant_number"]
-modData[, ymax := cumsum(fraction),by="grant_number"]
+# start coordinate of each slice
 modData[, ymin := c(0, head(ymax, n=-1)),by="grant_number"]
+# end coordinate of each slide 
+modData[, ymax := cumsum(fraction),by="grant_number"]
+# center of each slice 
 modData[, pos := cumsum(fraction)-fraction/2,by="grant_number"]
 
 # --------------------------------------------
@@ -88,6 +92,9 @@ for (k in unique(modData$grant_number)){
   prog_plots[[k]]<- plot
 }
 
+# ---------------------------------------------
+### export the pie plots at PDF
+# ---------------------------------------------
 pdf("J:/Project/Evaluation/GF/resource_tracking/uga/visualizations/piecharts/uga_upcoming_modules_piecharts.pdf", height=6, width=9)
 invisible(lapply(prog_plots, print))
 dev.off()
@@ -115,6 +122,7 @@ names(cols) <- interventions
 
 # ---------------------------------------------
 ######### Make the sunburst charts ############
+## in ggplot, sunbursts are just two pie charts overlaid on each other 
 # ---------------------------------------------
 
 modData[modData$budget<=0]$budget <- NA
@@ -143,6 +151,9 @@ for (k in unique(intData$grant_number)){
   sunburst_plots[[k]]<- plot
 }
 
+# ---------------------------------------------
+### export the sunburst plots at PDF
+# ---------------------------------------------
 
 pdf("J:/Project/Evaluation/GF/resource_tracking/uga/visualizations/pie_charts/uga_upcoming_modules_sunburst.pdf", height=6, width=9)
 invisible(lapply(sunburst_plots, print))
