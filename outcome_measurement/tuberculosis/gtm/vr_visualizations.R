@@ -3,7 +3,7 @@
 # Irena Chen 
 # 6/20/2018
 # Start visualizations of the VR data 
-## RUN THIS ON THE CLUSTER SINCE SOME FILES ARE VERY BIG 
+## RUN THIS ON THE CLUSTER SINCE SOME FILES ARE VERY BIG ####
 ## Also: the raster code is included, but I didn't use that data for creating visualizations so it is commented out 
 # ----------------------------------------------
 ###### Set up R / install packages  ###### 
@@ -32,7 +32,7 @@ merge_dir <- paste0(j, "/WORK/11_geospatial/11_vr/vr_data_inputs/muni_merges/GTM
 ## read files 
 # ----------------------------------------------
 # popData = raster(paste0(raster_dir, "/worldpop/Guatemala 100m Population/GTM_pph_v2b_2015.tif"))
-vrData <- data.table(fread(paste0(vr_dir, "vr_2009_2016.csv")))
+vrData <- data.table(fread(paste0(vr_dir, "redistribution_20180716.csv")))
 shapeData = shapefile(paste0(muni_dir, "vr_gaul_gtm.shp"))
 mergeData <- data.table(fread(paste0(merge_dir, "GTM_muni_merges_2009_2016.csv")))
 deptData <- shapefile(paste0(dept_dir, "GTM_adm1.shp"))
@@ -75,8 +75,11 @@ gtm_region_centroids$NAME_1[7] <- "Petén"
 tb_death_codes <- c(297,
                     954,
                     934,
-                    946,
-                    947
+                    946, ##MDR-TB
+                    947,
+                    948,# HIV/TB
+                    949, #HIV/TB - MDR w/out extensive drug resistance
+                    950 #HIV/TB - extensively drug-resistant TB
 )
 vrTb <- vrData[cause_id%in%tb_death_codes]
 
@@ -108,15 +111,28 @@ tb_map_dataset <-tb_map_dataset[with(tb_map_dataset, order(year_id, location_id)
 ## line graph over time 
 # ----------------------------------------------
 lineGraph <- tb_map_dataset[with(tb_map_dataset,order(year_id)),]
+lineGraph <- lineGraph [, list(tb_deaths=sum(na.omit(tb_deaths))
+                               ,deaths=sum(na.omit(deaths))), by=c("year_id")]
+
+lineGraph[,tb_rate:=tb_deaths/deaths]
+
+
 
 ggplot(lineGraph, aes(x = year_id, y= tb_deaths)) + 
   geom_line(size=0.75) +
   scale_color_manual(values="#551A8B") +
-  scale_y_continuous(limits=c(100, 500)) +
+  scale_y_continuous(limits=c(100, 550)) +
   ggtitle("TB Mortality over Time (National Level)") +
   labs(x = "Year", y = "Number of Deaths (Estimate)") +
   theme_bw()
 
+##plot the TB death rate (TB deaths/total deaths)
+ggplot(lineGraph, aes(x = year_id, y= tb_rate)) + 
+  geom_line(size=0.75) +
+  scale_color_manual(values="#551A8B") +
+  ggtitle("TB Mortality over Time (National Level)") +
+  labs(x = "Year", y = "TB Deaths/Total Deaths") +
+  theme_bw()
 
 
 # ----------------------------------------------
