@@ -7,7 +7,8 @@
 ### This code is to make the actual maps of Guatemala's municipalities using shape files and SICOIN data: 
 
 # ----------------------------------------------
-# raster package is most of what you need
+###### Set up R / install packages  ###### 
+# ----------------------------------------------
 rm(list=ls())
 library(rgeos)
 library(raster)
@@ -26,7 +27,7 @@ library(ggrepel)
 
 
 # ----------------------------------------------
-# set directory of the shape files 
+# Shape files: 
 # ----------------------------------------------
 mapping_dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
 
@@ -42,19 +43,19 @@ adminData = shapefile(paste0(mapping_dir,'gtm_region.shp'))
 # ----------------------------------------------
 
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
+
 # use IDs instead of names
-
 coordinates = data.table(fortify(shapeData, region='Codigo'))
-admin_coords <- data.table(fortify(adminData, region='ID_1'))
 coordinates$id <- as.numeric(coordinates$id)
-
-# merge on municipality names
 names = data.table(shapeData@data)
-admin_names <- data.table(adminData@data)
+# merge on municipality names
 coord_and_names = merge(coordinates, names, by.x='id', by.y='Codigo', allow.cartesian=TRUE)
+
+
+##do the same at the department level
+admin_coords <- data.table(fortify(adminData, region='ID_1'))
+admin_names <- data.table(adminData@data)
 admin_dataset = merge(admin_coords, admin_names, by.x = 'id', by.y='ID_1', allow.cartesian=TRUE)
-
-
 
 # ----------------------------------------------
 ## load the sicoin data:
@@ -139,12 +140,13 @@ for (k in unique(gheData$year)){
   gtm_plots[[i]] <- plot
   i=i+1
 }
-
-
+# ----------------------------------------------
+## export the list of graphs as a PDF
+# ----------------------------------------------
 pdf("malaria_by_year.pdf", height=6, width=9)
 invisible(lapply(gtm_plots, print))
 dev.off()
 
-# ----------------------------------------------
+
 
 
