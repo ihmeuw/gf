@@ -14,13 +14,20 @@
 # ----------------------------------------------
 # Set up R
 rm(list=ls())
-library(data.table)
-library(reshape2)
-library(stringr)
-library(readxl)
-library(rlang)
-library(zoo)
-library(lubridate)
+
+#specify the packages of interest
+packages = c("data.table","reshape2","stringr","readxl", "zoo",
+             "rlang", "zoo", "lubridate")
+
+#use this function to check if each package is on the local machine
+#if a package is installed, it will be loaded
+#if any are not, the missing package(s) will be installed and loaded
+package.check <- lapply(packages, FUN = function(x) {
+  if (!require(x, character.only = TRUE)) {
+    install.packages(x, dependencies = TRUE)
+    library(x, character.only = TRUE)
+  }
+})
 
 # ----------------------------------------------
 #define variables: 
@@ -31,13 +38,13 @@ country <- "gtm"
 # ----------------------------------------------
 ###### source the functions that we need 
 # ----------------------------------------------
-prep_dir <- "local repo where the prep files are"
-source(paste0(prep_dir, "prep_sicoin_detailed_data.R"))
-source(paste0(prep_dir, "prep_sicoin_summary_data.R"))
-source(paste0(prep_dir, "prep_sicoin_blank_data.R"))
-source(paste0(prep_dir, "prep_sicoin_donacions_data.R"))
-source(paste0(prep_dir, "prep_sicoin_report_data.R"))
-
+prep_dir <-" your local repo + gf/resource_tracking/prep/"
+source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_detailed_data.R"))
+source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_summary_data.R"))
+source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_blank_data.R"))
+source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_donacions_data.R"))
+source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_report_data.R"))
+source(paste0(prep_dir, "map_modules_and_interventions.R"))
 
 # ----------------------------------------------
 ###### source the functions that we need 
@@ -144,7 +151,6 @@ dups<-cleaned_database[duplicated(cleaned_database) | duplicated(cleaned_databas
 
 # ----------------------------------------------
 ##### Load the mapping files  #####
-##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 
 sicoin_data <- strip_chars(cleaned_database, unwanted_array, remove_chars)

@@ -128,18 +128,46 @@ oop_vars <- names(ghe_wide)[grepl(c("oop"), names(ghe_wide))]
 ppp_vars <- names(ghe_wide)[grepl(c("ppp"), names(ghe_wide))]
 ghe_vars <- names(ghe_wide)[grepl(c("public"), names(ghe_wide))]
 
-ghe_wide$mean_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[1]])+(ghe_wide[ppp_vars[1]])+(ghe_wide[ghe_vars[1]])
-ghe_wide$lower_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[2]])+(ghe_wide[ppp_vars[2]])+(ghe_wide[ghe_vars[2]])
-ghe_wide$upper_oop_ppp_ghe_agg <- (ghe_wide[oop_vars[3]])+(ghe_wide[ppp_vars[3]])+(ghe_wide[ghe_vars[3]])
+## sum the average values of OOP+PPP+GHE
+ghe_wide$mean_oop_ppp_ghe_agg <- (ghe_wide$ensemble_mean.fs_hiv_domestic_private_oop+
+                                    ghe_wide$ensemble_mean.fs_hiv_domestic_private_ppp + 
+                                    ghe_wide$ensemble_mean.fs_hiv_domestic_public)
+  
+#lower estimates
+ghe_wide$lower_oop_ppp_ghe_agg <- (ghe_wide$ensemble_lower.fs_hiv_domestic_private_oop+
+                                     ghe_wide$ensemble_lower.fs_hiv_domestic_private_ppp + 
+                                     ghe_wide$ensemble_lower.fs_hiv_domestic_public)
 
+##upper estimates
+ghe_wide$upper_oop_ppp_ghe_agg <- (ghe_wide$ensemble_upper.fs_hiv_domestic_private_oop+
+                                     ghe_wide$ensemble_upper.fs_hiv_domestic_private_ppp + 
+                                     ghe_wide$ensemble_upper.fs_hiv_domestic_public)
+
+##subtract OOP+PPP+GHE from THE to get DAH: 
 ghe_wide$mean_dah <- (ghe_wide$ensemble_mean.the_hiv - ghe_wide$mean_oop_ppp_ghe_agg)
 ghe_wide$lower_dah <- (ghe_wide$ensemble_lower.func_hiv_prev - ghe_wide$lower_oop_ppp_ghe_agg)
 ghe_wide$upper_dah <- (ghe_wide$ensemble_upper.the_hiv - ghe_wide$upper_oop_ppp_ghe_agg)
 
-ghe_wide[location_id==128, country:="Guatemala"]
-ghe_wide[location_id==190, country:="Uganda"]
-ghe_wide[location_id==171, country:="Congo (Democratic Republic)"]
 
 
-write.csv(ghe_wide, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/ghe_fgh_prepped.csv", row.names=FALSE)
+
+ghe_cleaned <- melt(ghe_wide, id.vars = c("location_id","year_id", "hiv_pop"),
+                    variable.name = "fin_data_type", value="disbursement")
+
+ghe_cleaned$disease <- "hiv"
+
+##assign country names based on their ISO codes: 
+ghe_cleaned[location_id==128, country:="Guatemala"]
+ghe_cleaned[location_id==190, country:="Uganda"]
+ghe_cleaned[location_id==171, country:="Congo (Democratic Republic)"]
+
+
+## rbind the DAH and the forecasted HIV THE: 
+
+
+
+
+
+
+write.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/ghe_fgh_prepped.csv", row.names=FALSE)
 

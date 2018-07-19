@@ -31,14 +31,15 @@ export_dir <- "where you want the final dataset to live"
 # ----------------------------------------------
 ###### source the functions that we need 
 # ----------------------------------------------
-prep_dir <- "local repo where the prep files are"
+prep_dir <- "your local repo + gf/resource_tracking/prep/"
 
-source(paste0(prep_dir, "prep_detailed_budget.R"))
-source(paste0(prep_dir, "prep_summary_budget.R"))
-source(paste0(prep_dir, "prep_cod_pudr.R"))
-source(paste0(prep_dir, "prep_old_module_budget.R"))
-source(paste0(prep_dir, "prep_cod_rejected.R"))
-source(paste0(prep_dir, "prep_old_detailed_budget.R"))
+source(paste0(prep_dir, "cod_prep/prep_detailed_budget.R"))
+source(paste0(prep_dir, "cod_prep/prep_summary_budget.R"))
+source(paste0(prep_dir, "cod_prep/prep_cod_pudr.R"))
+source(paste0(prep_dir, "cod_prep/prep_old_module_budget.R"))
+source(paste0(prep_dir, "cod_prep/prep_cod_rejected.R"))
+source(paste0(prep_dir, "cod_prep/prep_old_detailed_budget.R"))
+source(paste0(prep_dir, "map_modules_and_interventions.R"))
 # ----------------------------------------------
 ## Download the "Resource Tracking Data" folder from Basecamp and save it on your local drive 
 # ----------------------------------------------
@@ -94,7 +95,7 @@ for(i in 1:length(file_list$file_name)){
     tmpData$year <- year(tmpData$start_date)
     tmpData$data_source <- file_list$data_source[i]
   } else if(file_list$type[i]=="rejected"){
-    tmpData <- prep_cod_rejected(paste0(dir, file_list$file_name[i]))
+    tmpData <- prep_cod_rejected(paste0(file_dir, file_list$file_name[i]))
     tmpData$data_source <- "iterated_fpm"
     
   }  else if (file_list$type[i]=="pudr"){ ##has expenditure data 
@@ -176,12 +177,11 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)),
 
 # ----------------------------------------------
 ##### Load the mapping files  #####
-##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 codData <- strip_chars(resource_database, unwanted_array, remove_chars)
 
-## the directory on the J Drive for the intervention list is: J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/
-
+## the directory on the J Drive for the intervention list is:
+map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
 mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx"),
                                   include_rssh_by_disease = FALSE)
 
@@ -199,9 +199,14 @@ gf_mapping_list <- total_mapping_list(paste0(map_dir,"intervention_and_indicator
 # ----------------------------------------------
 ########### USE THIS TO CHECK FOR UNMAPPED MODULE/INTERVENTIONS ##########
 # ----------------------------------------------
-# gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
-# cod_concat <- paste0(codData$module, codData$intervention)
-# unmapped_mods <- cod_concat[!cod_concat%in%gf_concat]
+gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
+cod_concat <- paste0(codData$module, codData$intervention)
+unmapped_mods <- cod_concat[!cod_concat%in%gf_concat]
+
+if(length(unmapped_mods)>0){
+  stop("You have unmapped original modules/interventions!")
+}
+
 
 # ----------------------------------------------
 ########### map the RT data to the GF modular framework ##########
@@ -209,8 +214,13 @@ gf_mapping_list <- total_mapping_list(paste0(map_dir,"intervention_and_indicator
 cod_init_mapping <- merge(codData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
 
 ##use this to check if any modules/interventions were dropped:
-# dropped_gf <- cod_init_mapping[is.na(cod_init_mapping$code)]
+dropped_gf <- cod_init_mapping[is.na(cod_init_mapping$code)]
 
+if(nrow(dropped_gf)>0){
+  stop("Modules/interventions were dropped!")
+}
+
+## merge the dataset with the codes and coefficients to the Modular Framework
 mappedCod <- merge(cod_init_mapping, final_mapping, by="code")
 mappedCod$budget <- mappedCod$budget*mappedCod$coefficient
 mappedCod$expenditure <- mappedCod$expenditure*mappedCod$coefficient
@@ -240,7 +250,7 @@ mappedCod$country <- "Congo (Democratic Republic)"
 # ----------------------------------------------
 ## write as csv 
 # ----------------------------------------------
-write.csv(mappedCod, paste0(export_dir, "prepped_fpm_budgets.csv"), fileEncoding = "latin1", row.names = FALSE)
+write.csv(mappedCod, paste0(export_dir, "prepped_budget_data.csv"), fileEncoding = "latin1", row.names = FALSE)
 
 
 

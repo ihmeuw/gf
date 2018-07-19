@@ -21,7 +21,7 @@ library(readxl)
 # --------------------------------------------
 ###load the prepped DRC data: 
 # --------------------------------------------
-totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/prepped_fpm_budgets.csv",
+totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/prepped_budget_data.csv",
                                 fileEncoding="latin1"))
 
 #create some variables: 
@@ -31,7 +31,7 @@ totalCod$start_date <- as.Date(totalCod$start_date,"%Y-%m-%d")
 # --------------------------------------------
 ###load the prepped Uganda data: 
 # --------------------------------------------
-totalUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_uga_data.csv",
+totalUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_budget_data.csv",
                                 fileEncoding = "latin1"))
 
 #create some variables: 
@@ -43,7 +43,7 @@ totalUga$year <- year(totalUga$start_date)
 # --------------------------------------------
 ###load the prepped GTM data (sicoin and FPM/PUDR)
 # --------------------------------------------
-totalGtm <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
+totalGtm <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_budget_data.csv", 
                                 fileEncoding = "latin1"))
 
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
@@ -56,8 +56,6 @@ totalGtm$start_date <- as.Date(totalGtm$start_date,"%Y-%m-%d")
 ## aggregate the sicoin and FPM data:
 totalGtm$country <- "Guatemala"
 totalGtm <- rbind(sicoin_data, totalGtm)
-
-
 
 # --------------------------------------------
 ##aggregate all country data into one dataset:  
@@ -107,7 +105,7 @@ totalData$fin_data_type <- "actuals"
 ###load the forecasted FGH data 
 # --------------------------------------------
 
-fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/fgh_forecasting_prepped.csv", 
+fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh.csv", 
                                 fileEncoding = "latin1"))
 
 ##change the dates into date format: 
@@ -129,6 +127,9 @@ totalData= totalData[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omi
 # --------------------------------------------
 ##export to correct folder: 
 # --------------------------------------------
+## date variables can get messed up if we export them, so change them to 'character'
+totalData$start_date <- as.character(totalData$start_date)
+totalData$end_date <- as.character(totalData$end_date)
 write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv", row.names = FALSE)
 
 
@@ -151,6 +152,7 @@ gos_uga <- gos_data[country=="Uganda"]
 gos_gtm <- gos_data[country=="Guatemala"]
 
 ##as we get more FPM data, make sure to check that these years/diseases are still true: 
+## (realistically, we're probably not going to get any historical data - pre 2015) 
 gos_cod <- gos_cod[(disease=="hss")|(disease=="hiv"&year<2012|year%in%c(2013, 2014))|(disease=="malaria"&(year<=2014))|(disease=="tb"&grant_number!="COD-T-MOH")]
 gos_uga <- gos_uga[(disease=="hiv"&(year<2011|year==2014))|(disease=="malaria"&(year%in%c(2013,2014)|year<2012))|(disease=="tb"&(year<2012|year%in%c(2013,2014)))]
 gos_gtm <- gos_gtm[(disease=="hiv"&year<2011)|(disease=="malaria"&year<2011)|(disease=="tb"&(year<2011|year==2015))]
@@ -168,6 +170,11 @@ cleanData$fin_data_type <- "actuals"
 ##since there is no danger of double-counting when summing by disease/grant
 # --------------------------------------------
 cleanData <- rbind(cleanData, fgh_data)
+
+
+## date variables can get messed up if we export them, so change them to 'character'
+cleanData$start_date <- as.character(cleanData$start_date)
+cleanData$end_date <- as.character(cleanData$end_date)
 
 # --------------------------------------------
 # check for duplicates again: 
