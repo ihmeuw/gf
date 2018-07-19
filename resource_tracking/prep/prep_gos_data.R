@@ -78,6 +78,23 @@ totalGos$disbursement <- 0
 # Run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 totalGos <- strip_chars(totalGos, unwanted_array, remove_chars)
+
+mapping_list <- load_mapping_list(paste0("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
+                                  , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
+
+## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
+final_mapping <- copy(mapping_list)
+final_mapping$disease <- NULL ## we will be joining on code 
+setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
+mapping_list$coefficient <- 1
+mapping_list$abbrev_intervention <- NULL
+mapping_list$abbrev_module <- NULL
+
+
+##this loads the list of modules/interventions with their assigned codes
+gf_mapping_list <- total_mapping_list(paste0("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"),
+                                      mapping_list, unwanted_array, remove_chars)
+
 gos_init_mapping <- merge(totalGos, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
 
 ##use this to check if any modules/interventions were dropped:
