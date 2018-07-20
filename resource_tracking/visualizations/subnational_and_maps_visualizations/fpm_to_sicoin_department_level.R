@@ -32,7 +32,7 @@ dir <- 'J:/Project/Evaluation/GF/mapping/gtm/'
 # ----------------------------------------------
 ######## Load the FPM and SICOIN datasets ########
 # ----------------------------------------------
-fpm_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_fpm_pudr.csv", 
+fpm_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_budget_data.csv", 
                                   fileEncoding = "latin1"))
 
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv",
