@@ -21,7 +21,7 @@ library(readr)
 # file path where the files are stored
 local_dir <- "J:/Project/Evaluation/GF/outcome_measurement/gtm/"
 antimalarials <- "J:/Project/Evaluation/GF/outcome_measurement/gtm/MALARIA/"
-bed_nets <- paste0(antimalarials, "stribucion de MTILD/")
+bed_nets <- paste0(antimalarials, "Distribucion de MTILD/")
 
 
 prep_dir <- " your local repo + gf/outcome_measurement/malaria/gtm/"
@@ -31,7 +31,7 @@ source(paste0(prep_dir, "prep_bed_nets.R"))
 # ----------------------------------------------
   ###### Load the prep file  ###### 
 # ----------------------------------------------
-file_list <- data.table(read_excel(paste0(antimalarials, "prep_file_list.xlsx")))
+file_list <- data.table(read.csv(paste0(antimalarials, "prep_file_list.csv"), fileEncoding = "latin1", stringsAsFactors = FALSE))
 file_list$start_date <- ymd(file_list$start_date)
 file_list$file_name <- as.character(file_list$file_name)
 

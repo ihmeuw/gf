@@ -9,19 +9,18 @@
 ###### Function to prep the bed net data ###### 
 # ----------------------------------------------
 
-prep_gtm_bed_nets <- function(inFile, start_date, period){
-  bn_data <- data.table(read_csv(inFile, 
-                                 col_names = FALSE))
+prep_gtm_bed_nets <- function(dir, start_date, period){
+  bednets_detailed <- data.table(read.csv(paste0(dir, "EntregaPIIsDetalle.csv")))
+  bednets <- data.table(read.csv(paste0(dir, "EntregaPIIs.csv")))
   
-  colnames(bn_data) <- as.character(bn_data[1,])
-  bn_data <- bn_data[-1,]
+  totalNets = data.table(merge(bednets_detailed[,c("CodDepto", "CodMuni","Casa","Pabellones", "CodBoleta", "Camas")], 
+                               bednets[,c("CodDepto", "CodMuni","CodBoleta", "FechaEnt")], by="CodBoleta", allow.cartesian=TRUE))
   
-  col_names <- c("CodReg", "CodDepto", "CodMuni","Personas","Casa", "CodEnt", "MEmbarazada", "Menores5a", "Camas",	"Pabellones")
   
-  bn_data <- bn_data[,col_names, with=FALSE]
   
-  setnames(bn_data, c("regional_code","adm1", "adm2", "num_persons", "casa", "codent","num_pregnant", "num_minors"
-                      , "household_beds", "bed_nets"))
+  setnames(bn_data,c("CodDepto", "CodMuni","Casa","Pabellones", "CodBoleta", "Camas"),
+           c("regional_code","adm1", "adm2", "casa", "bed_nets", "code_boleta"
+                      "household_beds"))
   
   bn_data[,1:3] <- lapply(bn_data[,1:3], as.integer)
   bn_data[,4:10] <- lapply(bn_data[,4:10], as.numeric)
@@ -35,7 +34,7 @@ prep_gtm_bed_nets <- function(inFile, start_date, period){
 
   ##sum by municipality: 
   
-  byVars = c('regional_code', 'adm1', 'adm2')
+  byVars = c('adm1', 'adm2')
   bn_data=  bn_data[, list(num_persons=sum(na.omit(num_persons)),num_pregnant = sum(na.omit(num_pregnant)),
                           num_minors=sum(na.omit(num_minors)),household_beds=sum(na.omit(household_beds))
                           , bed_nets = sum(na.omit(bed_nets))), by=byVars]
