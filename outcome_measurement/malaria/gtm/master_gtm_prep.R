@@ -16,13 +16,18 @@ library(rlang)
 library(zoo)
 library(readr)
 # ----------------------------------------------
-###### Call directories and load the prep data  ###### 
+###### Call directories and source the functions  ###### 
 # ----------------------------------------------
 # file path where the files are stored
 local_dir <- "J:/Project/Evaluation/GF/outcome_measurement/gtm/"
 antimalarials <- "J:/Project/Evaluation/GF/outcome_measurement/gtm/MALARIA/"
-bed_nets <- paste0(antimalarials, "/Distribucion de MTILD/")
-  
+bed_nets <- paste0(antimalarials, "stribucion de MTILD/")
+
+
+prep_dir <- " your local repo + gf/outcome_measurement/malaria/gtm/"
+source(paste0(prep_dir, "prep_antimalarial_drugs.R"))
+source(paste0(prep_dir, "prep_bed_nets.R"))
+
 # ----------------------------------------------
   ###### Load the prep file  ###### 
 # ----------------------------------------------
