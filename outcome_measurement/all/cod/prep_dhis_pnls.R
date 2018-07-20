@@ -323,6 +323,6 @@ pnls[tableau==1, unique(element)]
 
 # create a tableau indicator data set and save it 
 pnls_tabl <- pnls[tableau==1]
-saveRDS(pnls_tabl, paste0(dir, 'tableau/pnls_tabl.rds'))
+saveRDS(pnls_tabl, paste0(dir, 'tableau/tabl_pnls.rds'))
 #--------------------------------------
 

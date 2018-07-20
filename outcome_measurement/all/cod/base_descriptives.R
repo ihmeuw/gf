@@ -3,7 +3,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 6/15/2018
+# 7/18/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -34,7 +34,7 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # Initial cleaning after download
 # Import base services data set and convert to a data table
 
-base <- readRDS(paste0(dir, 'base.rds'))
+base <- readRDS(paste0(dir, 'prepped_data/base.rds'))
 base <- data.table(base)
 
 #--------------------
@@ -59,7 +59,7 @@ mal[ ,.(unique(element), unique(element_fr))]
 # fix the english translations for the malaria indicators
 
 # RDTs
-mal[element_id=='CIzQAR8IWH1', element:='A 1.4 RDT - completed']
+mal[element_id=='CIzQAR8IWH1', element:='A 1.4 RDT - performed']
 mal[element_id=='SpmQSLRPMl4', element:='A 1.4 RDT - positive']
 
 # Cases
@@ -154,8 +154,6 @@ ggplot(mal_sev_total, aes(x=date, y=value, color=category, group=category)) +
   facet_wrap(~element) +
   theme_bw() +
   labs(title='Cases of severe malaria, all DPS')
-
-
 
 
 ggplot(mal_compare, aes(x=date, y=value, color=element, group=element)) +

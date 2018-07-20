@@ -289,22 +289,31 @@ base[is.na(level), level:='Other']
 
 # --------------------
 # organize the data table 
-base <- base[ ,.(data_set, element=as.character(element), date, category, age, sex, value, org_unit, level, province,
-                 mtk, coordinates, opening_date, last_update, element_fr, element_id, 
-                 org_unit_id, group, data_set_id, month, year)]
+base <- base[ ,.(data_set, element, date, category, element_eng,
+                 age, sex, value, org_unit, level, dps, mtk,
+                 type, tableau, drug, keep,
+                 coordinates, opening_date, last_update, element_id, 
+                 org_unit_id, month, year)]
 
 
 #------------------------
 # save the preppred file
-saveRDS(base, paste0(dir, 'full/prepped_data/base_02_2015_04_2018.rds'))
+saveRDS(base, paste0(dir, 'prepped_data/full/base_02_2015_04_2018.rds'))
 
 #------------------------
-# save only the elements we plan to use for analysis
-
-keep <- elements_base[keep==1, unique(element_id)]
-base_keep <- base[element_id %in% keep]
+# save only the elements we plan to use for analysis in base
+keep <- base[keep==1]
 
 #subset of base including only elements needed for analysis
-saveRDS(base_keep, paste0(dir, 'prepped_data/base.rds'))
+saveRDS(keep, paste0(dir, 'prepped_data/base.rds'))
+
 #------------------------
+# create a tableau-specific data set and save it
+tabl_base <- base[tableau==1 |  element_id=='SpmQSLRPMl4'] # change csv to add tableau =1 to RDTs positive
+tabl_base <- tabl_base[year==2017 | year==2018]
+
+saveRDS(tabl_base, paste0(dir, 'tableau/tabl_base.rds'))
+#------------------------
+
+
 
