@@ -50,7 +50,7 @@ base[element_id=='SpmQSLRPMl4', element_eng:='A 1.4 RDT - positive']
 
 # Cases
 base[element_id=='rfeqp2kdOGi', element_eng:='A 1.4 Confirmed simple malaria']
-base[element_id=='nRm30I4w9En', element:='A 1.4 Confirmed simple malaria, treated']
+base[element_id=='nRm30I4w9En', element_eng:='A 1.4 Confirmed simple malaria, treated']
 
 # alternate 1.5 indicators 
 base[element_id=='jocZb4TE1U2', element_eng:='A 1.5 Confirmed simple malaria - pregnant woman']
@@ -146,7 +146,6 @@ tableau_base_sigl <- merge(base, sigl, by=idVars, all=TRUE)
 # save an RDS file that is just ART first line regimen
 pnls <- readRDS(paste0(dir, 'tabl_pnls.rds'))
 pnls <- data.table(pnls)
-pnls <- pnls[element_id!='prnCi6GwYzL']
 
 pnls[element_id=='DXz4Zxd4fKq', element_eng:='Pregnant or lactating women tested for HIV']
 pnls[element_id=='gHBcPOF5y3z', element_eng:='Pregnant or lactating women tested HIV+']
@@ -157,16 +156,11 @@ pnls[org_unit=='kr Christ Roi Centre de Santé' & date=='2017-09-01' &
        type=='pmtct' & element_id=='gHBcPOF5y3z' & category=='CPN, Moins de 15 ans',
      value:=0]
 
-pnls[element=='PNLS-DRUG-ABC + 3TC + LPV/r sex' & date=='2017-05-01' &
-       org_unit=="hk Mumbunda II Centre de Santé de Réference", value:=0]
-
-pnls <- pnls[ ,.(count=sum(value, na.rm=T)), by=.(data_set, element, element_eng, 
+pnls <- pnls[ ,.(count=sum(value, na.rm=T)), by=.(data_set, element, element_eng, element_id,
                                                   date, category, type,
                                                   level, dps, mtk)]
-
-
 #------------------------------
-# find the outlier
+# find the outliers
 # 
 # wut <- pnls[date=='2017-09-01' & element_id=='gHBcPOF5y3z' & category=='CPN, Moins de 15 ans', .(value=sum(value)), by=org_unit]
 # wut[value > 5, .(org_unit, value)]
@@ -207,8 +201,21 @@ ggplot(hiv2[type=='drugs'],
   theme_bw() +
   scale_y_continuous(labels = scales::comma)
 
-#--------------------------------
+ggplot(hiv2[type=='drugs'], 
+       aes(x=date, y=count, color=element_eng)) +
+  geom_point() +
+  geom_line(alpha=0.2) +
+  theme_bw() +
+  scale_y_continuous(labels = scales::comma)
 
+#--------------------------------
+# drop out first line ART regimen by sex
+pnls[ ,unique(element_eng), element_id]
+pnls <- pnls[element_id!='wLBRFksBtou']
+pnls[,element_id:=NULL]
+
+#---------------------------------
+# merge the three data sets into one 
 tabl <- merge(tableau_base_sigl, pnls, by=idVars, all=T)
 
 #------------------------------
@@ -224,16 +231,124 @@ tabl[dps=='Mai-Ndombe', dps:='Maï-Ndombe']
 #-------------------------------
 # add age and sex categories and merge in pregnant women 
 
+tabl[ ,unique(category)]
+
+tabl[category=='5 and over', age:='5 +']
+tabl[category=='Under 5', age:='Under 5']
+tabl[category=='Féminin, 1 et 4 ans', age:='1 - 4 years']
+tabl[category=='Féminin, 10 et 14 ans', age:='10 - 14 years']
+tabl[category=='Féminin, 15 et 19 ans', age:='15 - 19 years']
+tabl[category=='Féminin, 20 et 24 ans', age:='20 - 24 years']
+tabl[category=='Féminin, 25 et 49 ans', age:='25 - 49 years']
+tabl[category=='Féminin, 5 et 9 ans', age:='5 - 9 years']
+tabl[category=='Féminin, 50 ans et plus', age:='50 +']
+tabl[category=='Féminin, Moins d\'un an', age:='< 1 year']
+
+tabl[category=='Masculin, 1 et 4 ans', age:='1 - 4 years']
+tabl[category=='Masculin, 10 et 14 ans', age:='10 - 14 years']
+tabl[category=='Masculin, 15 et 19 ans', age:='15 - 19 years']
+tabl[category=='Masculin, 20 et 24 ans', age:='20 - 24 years']
+tabl[category=='Masculin, 25 et 49 ans', age:='25 - 49 years']
+tabl[category=='Masculin, 5 et 9 ans', age:='5 - 9 years']
+
+tabl[category=='Masculin, 50 ans et plus', age:='50 +']
+tabl[category=='Masculin, Moins d\'un an', age:='']
+tabl[category=='CPN, 15 et 19 ans', age:='< 1 year']
+tabl[category=='CPN, 20 et 24 ans', age:='15 - 19 years']
+tabl[category=='CPN, 25 et 49 ans', age:='25 - 49 years']
+tabl[category=='CPN, 50 ans et plus', age:='50 +']
+tabl[category=='CPN, Moins de 15 ans', age:='< 15 years']
+tabl[category=='SA/PP, 15 et 19 ans', age:='15 - 19 years']
+tabl[category=='SA/PP, 20 et 24 ans', age:='20 - 24 years']
+tabl[category=='SA/PP, 25 et 49 ans', age:='25 - 49 years']
+tabl[category=='SA/PP, 50 ans et plus', age:='50+']
+tabl[category=='SA/PP, Moins de 15 ans', age:='< 15 years'] 
+
+#-------------------------------
+# add a sex category
+tabl[ ,unique(category)]
+
+tabl[category=='Féminin, 1 et 4 ans', sex:='Female']
+tabl[category=='Féminin, 10 et 14 ans', sex:='Female']
+tabl[category=='Féminin, 15 et 19 ans', sex:='Female']
+tabl[category=='Féminin, 20 et 24 ans', sex:='Female']
+tabl[category=='Féminin, 25 et 49 ans', sex:='Female']
+tabl[category=='Féminin, 5 et 9 ans', sex:='Female']
+tabl[category=='Féminin, 50 ans et plus', sex:='Female']
+tabl[category=='Féminin, Moins d\'un an', sex:='Female']
+
+tabl[category=='CPN, 15 et 19 ans', sex:='Female']
+tabl[category=='CPN, 20 et 24 ans', sex:='Female']
+tabl[category=='CPN, 25 et 49 ans', sex:='Female']
+tabl[category=='CPN, 50 ans et plus', sex:='Female']
+tabl[category=='CPN, Moins de 15 ans', sex:='Female']
 
 
+tabl[category=='Masculin, 1 et 4 ans', sex:='Male']
+tabl[category=='Masculin, 10 et 14 ans', sex:='Male']
+tabl[category=='Masculin, 15 et 19 ans', sex:='Male']
+tabl[category=='Masculin, 20 et 24 ans', sex:='Male']
+tabl[category=='Masculin, 25 et 49 ans', sex:='Male']
+tabl[category=='Masculin, 5 et 9 ans', sex:='Male']
+tabl[category=='Masculin, 50 ans et plus', sex:='Male']
+tabl[category=='Masculin, Moins d\'un an', sex:='Male']
+
+#--------------------------------------------------------
+
+tabl[, unique(element_eng)]
+
+
+# alternate 1.5 indicators 
+tabl[element_eng=='A 1.5 Confirmed simple malaria - pregnant woman', category:='Pregnant woman']
+tabl[element_eng=='A 1.5 Confirmed simple malaria - pregnant woman', sex:='Female']
+tabl[element_eng=='A 1.5 Confirmed simple malaria - pregnant woman', element:='A 1.4 Paludisme simple confirmé']
+tabl[element_eng=='A 1.5 Confirmed simple malaria - pregnant woman', element_eng:='A 1.4 Confirmed simple malaria']
+
+tabl[element_eng=='A 1.5 Confirmed simple malaria treated - pregnant woman', category:='Pregnant woman']
+tabl[element_eng=='A 1.5 Confirmed simple malaria treated - pregnant woman', sex:='Female']
+tabl[element_eng=='A 1.5 Confirmed simple malaria treated - pregnant woman', element:='A 1.4 Paludisme simple confirmé traité [PN]']
+tabl[element_eng=='A 1.5 Confirmed simple malaria treated - pregnant woman', element_eng:='A 1.4 Confirmed simple malaria, treated']
+
+
+#--------------------------------------------------------
+
+# change type to disease
+tabl[type=="malaria ", disease:='malaria']
+tabl[type=="malaria", disease:='malaria']
+tabl[type=="hiv", disease:='hiv']
+tabl[type=="pmtct", disease:='hiv']
+tabl[type=='drugs', disease:='hiv']
+
+tabl[,type:=NULL]
+
+#----------------------------------------------------
+# test graphs
+
+malaria <- tabl[disease=='malaria', .(value=sum(count)), by=.(category, element_eng, date)]
+
+ggplot(malaria, aes(x=date, y=value, color=category, group=category)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~element_eng) +
+  theme_bw()
+   
+
+hiv <- tabl[disease=='hiv', .(value=sum(count)), by=.(category, element_eng, date)]
+
+ggplot(hiv, aes(x=date, y=value, color=category, group=category)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~element_eng, scale='free_y') +
+  theme_bw()
+
+#---------------------------------------------
 
 # set the names for tableau
-
-setnames(tableau, c("data_set", "element_fr", "element", "date", "type",
-                             "level", "dps", "mtk", "category", "count"), c("Data Set", "Element - French", 
-                        "Element - English", "Date", "Disease",
-                      "Facility type", "DPS", "Maniema, Kinshasa, Tshopo",
-                      "Category", "Count"))
+setnames(tabl, c("data_set", "element", "element_eng", "date", "category", 
+                             "level", "dps", "mtk", "age", "sex", "disease", "count"),
+         c("Data Set", "Element - French", "Element - English", "Date", "Category",  
+                      "Facility type", "DPS", "Maniema, Kinshasa, Tshopo", "Age",
+                     "Sex", "Disease", "Count"))
 
 #-------------------------------
 # Export as an Excel document 
