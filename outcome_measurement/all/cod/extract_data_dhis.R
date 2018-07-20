@@ -34,7 +34,7 @@ source(paste0(dir, 'dhis_extracting_functions.R')) # change to locate code
 ?extract_all_data
 
 # select the start year and end year for the download
-start_year <- '2078'
+start_year <- '2017'
 end_year <- '2018'
 start_month <- '01'
 end_month <- '12'

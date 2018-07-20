@@ -98,12 +98,17 @@ sigl [ , url_list:=NULL]
 # error in coordinates - drop temporarily until glitch fix
 sigl[ ,coordinates:=NULL]
 
+
+#-----------------------------
+# convert value to character
+sigl[ ,value:=as.character(value)]
+
 #------------------------
 # rename the variables and rearrange in an intuitive order 
 
 sigl <- sigl[ , .(data_set=as.character(datasets_name), element=as.character(element_name), category=as.character(category),
-                  period=period,value=as.numeric(value),
-                  org_unit=as.character(org_unit_name), group=group,
+                  period=period,value=as.numeric(as.character(value)),
+                  org_unit=as.character(org_unit_name), 
                   opening_date=opening_date, last_update=last_update,
                   data_set_id=as.character(datasets_ID), element_id=as.character(data_element_ID),
                   org_unit_id=as.character(org_unit_ID))]
@@ -133,12 +138,9 @@ sigl$opening_date <- unlist(lapply(strsplit(sigl$opening_date, "T"), "[", 1))
 
 elements_eng <- read.csv(paste0(dir, 'catalogues/data_elements_cod.csv'), stringsAsFactors=F)
 elements_eng <- data.table(elements_eng)
-elements_eng <- elements_eng[ ,.(element_id, element_eng=element, type, drug, tableau)]
+elements_eng <- elements_eng[ ,.(element_id, element_eng=element, keep, type, drug, tableau)]
 
 sigl <- merge(sigl, elements_eng, by='element_id', all.x=TRUE)
-
-# change the default name of elements to english
-setnames(sigl, c('element', 'element_eng'), c('element_fr', 'element'))
 
 #-----------------------------------------------
 
@@ -199,6 +201,7 @@ sigl[ ,dist:=NULL]
 sigl[province=='Maniema' | province=='Tshopo' | province=="Kinshasa", mtk:='Yes']
 sigl[is.na(mtk), mtk:='No']
 
+setnames(sigl, 'province', 'dps')
 #-----------------------------------------------
 # Level of reporting or type of facility (levels of organizational units)
 
@@ -288,14 +291,29 @@ sigl[ ,.(length(unique(org_unit))), by=level]
 #----------------------------------------------
 # put the variables in an intuitive order 
 
-sigl <- sigl[ ,.(data_set, element, date, type, value, org_unit, level, dps=province,
-                      mtk, opening_date, last_update, drug, element_fr, element_id, 
-                      org_unit_id, data_set_id, month, year)]
+sigl <- sigl[ ,.(data_set, element, date, type, category, value, org_unit, level, dps,
+                      mtk, opening_date, last_update, drug, element_eng, element_id, 
+                      org_unit_id, data_set_id, month, year, keep, type, drug, tableau)]
 
 #----------------------------------------------
 # save the data sets
-
-saveRDS(sigl, paste0(dir, 'sigl.rds'))
+saveRDS(sigl, paste0(dir, 'prepped_data/sigl.rds'))
 
 #----------------------------------------------
+# save a tableau data set
+tabl_sigl <- sigl[tableau==1]
+tabl_sigl[ ,unique(element_eng)]
+
+saveRDS(tabl_sigl, paste0(dir, 'tableau/tabl_sigl.rds'))
+#----------------------------------------------
+
+
+
+
+
+
+
+
+
+
 
