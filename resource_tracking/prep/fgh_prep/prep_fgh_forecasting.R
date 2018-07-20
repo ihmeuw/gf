@@ -213,7 +213,7 @@ pce_total$grant_number <- pce_total$adm2
 
 fgh_current <- data.table(read.csv(paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv'), stringsAsFactors = FALSE))
 
-total_fgh <- rbind(dah_disease, pce_total)
+total_fgh <- rbind(fgh_current, pce_total)
 
 # ----------------------------------------------
 ##export to the J Drive: 
