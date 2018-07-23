@@ -9,24 +9,66 @@ codePath = "PCE/gf/"
 source(paste0(codePath, "core/GT_load_data.R"), encoding = "UTF-8")
 source(paste0(codePath, "core/GT_helper_functions.R"), encoding = "UTF-8")
 
-# Load deaths INE data up to 2016.
-defsData = loadDeathsData()
+collapse_large_dataset = FALSE
+if (collapse_large_dataset) {
+    # IHME  deaths data
+    IHMEDefsData = read.csv("PCE/Outcome Measurement Data/VR/redistribution_20180716.csv")
+    # Update 23-07-2018
+    # Since the new file is huge and takes too much space on memory, 
+    # I have decided to collapse the counts by the diseases of interest:
+    
+    nrow(IHMEDefsData) # 32060574
+    length(unique(IHMEDefsData$site_id)) # 1
+    length(unique(IHMEDefsData$cause_id)) # 318
+    length(unique(IHMEDefsData$location_id)) # 340
+    length(unique(IHMEDefsData$year_id)) # 8
+    length(unique(IHMEDefsData$age_group_id)) # 23
+    
+    collapse_IHME_deaths <- function (causes, disease_name) {
+        collapsed = data.table(IHMEDefsData[(IHMEDefsData$cause_id %in% causes),])[, 
+                               .(deaths = sum(deaths)), 
+                               by=.(year_id, age_group_id, sex_id, location_id)] 
+        print("Sum of deaths by year")
+        print(collapsed[, sum(deaths), by=year_id])
+        collapsed[, disease := disease_name]
+        collapsed
+    }
+    
+    causes_tb = c(297, 954, 934, 946, 947)
+    causes_tb_vih = c(948, 949, 950)
+    causes_vih = c(298, 948, 949, 950, 300)
+    causes_malaria = c(345, 856, 857, 858)
+    
+    IHME_tb_collapsed = collapse_IHME_deaths(causes_tb, "TB")
+    IHME_tb_vih_collapsed = collapse_IHME_deaths(causes_tb_vih, "TB-HIV")
+    IHME_vih_collapsed = collapse_IHME_deaths(causes_vih, "HIV")
+    IHME_malaria_collapsed = collapse_IHME_deaths(causes_malaria, "Malaria")
+    
+    IHME_deaths_collapsed = rbind(IHME_tb_collapsed, 
+                                  IHME_tb_vih_collapsed, 
+                                  IHME_malaria_collapsed, 
+                                  IHME_vih_collapsed)
+    
+    # Lets compare with Irena's dataset
+    irena_coll = read.csv("PCE/Outcome Measurement Data/VR/vr_redistributed_collapsed.csv")
+    irena_coll = data.table(irena_coll)
+    irena_coll[death_id_collapsed == "tb", sum(deaths), by=.(year_id)]
+    IHME_deaths_collapsed[disease %in% c("TB", "TB-HIV"), sum(deaths), by=.(year_id)]
+    # The numbers are the same. 
+    # Now replacing Irena's with this file because it is more complete as it covers the other 3 diseases.
+    write.csv(IHME_deaths_collapsed, 
+              "./PCE/Outcome Measurement Data/VR/vr_redistributed_collapsed.csv")
+}
 
-# IHME  deaths data
-IHMEDefsData = read.csv("PCE/Outcome Measurement Data/VR/redistributed_vr.csv")
-IHMEDefsData = data.table(IHMEDefsData)
+# Load IHME data
+IHME_deaths_collapsed = read.csv("./PCE/Outcome Measurement Data/VR/vr_redistributed_collapsed.csv")
+IHME_deaths_collapsed = data.table(IHME_deaths_collapsed)
 IHMELocations = data.table(read.csv("PCE/Covariates and Other Data/GIS/GTM_muni_merges_2009_2016.csv"))
 IHMEAgeGroups = data.table(read.csv("PCE/Outcome Measurement Data/VR/age_group_ids.csv"))
-# Disease cause_id
-# TB      297
-# HIV     298
-# LRI     322
-# URI     328
-# Malaria 345
-# Nutrition 386
-head(IHMEDefsData)
 
-head(defsData[[2016]])
+
+# Load deaths INE data up to 2016.
+defsData = loadDeathsData()
 
 # Lets explore TB deaths:
 INECounts = defsData[[2016]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) | 
@@ -38,24 +80,25 @@ INECounts = defsData[[2016]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19"
 
 # First of all lets compare TB deaths according to INE and IHME.
 INECounts[,.(t = sum(conteo))] # 313
-IHMEDefsData[(year_id == 2016) & (cause_id %in% c(297, 954, 934, 946, 947)), .(t = sum(deaths))] # 22.7
-# IHME Corrected data suggests a very large amount of TB deaths.
-# Deaths by cause:
-IHMEDefsData[(year_id == 2016) & (cause_id %in% c(297, 954, 934, 946, 947)), .(t = round(sum(deaths), 1)), 
-             by = cause_id]
-# Results: 
-# cause_id  t
-# 297       1.258910e-01 / 
-# 934       4.481442e+02 / Drug-susceptible tuberculosis
-# 946       1.152385e-03 / Multidrug-resistant tuberculosis without extensive drug resistance
-# Lets checkout HIV related TB: 
-IHMEDefsData[(year_id == 2016) & (cause_id %in% c(948,
-                                                  949,
-                                                  950)), .(t = round(sum(deaths), 1)), 
-             by = cause_id]
-# Only caus with deaths is 948 with 54 deaths / HIV-AIDS - Drug-susceptible Tuberculosis
+IHME_deaths_collapsed[(year_id == 2016) & (disease %in% c("TB", "TB-HIV") ), .(t = sum(deaths)), by= disease] 
+# Before correction this was 22.7, after correction it is:
+#    1:      TB 387.2574
+#    2:  TB-HIV  45.9772
 
-# Lets see how TB death is distr among causes
+# Old data:
+#   IHME Corrected data suggests a very large amount of TB deaths.
+#   Deaths by cause:
+#   IHME_deaths_collapsed[(year_id == 2016) & (cause_id %in% c(297, 954, 934, 946, 947,948, 949, 950)), 
+#        .(t = round(sum(deaths), 1)), 
+#              by = cause_id]
+#   Results: 
+#    cause_id  t
+#    297       1.258910e-01 /
+#    934       4.481442e+02 / Drug-susceptible tuberculosis
+#    946       1.152385e-03 / Multidrug-resistant tuberculosis without extensive drug resistance
+#    948       54 / HIV-AIDS - Drug-susceptible Tuberculosis
+
+# Now with INE data: Lets see how TB death is distr among causes
 defsData[[2016]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) | 
                    (Caudef %in% c("A301", "A302", "J65X", "K230", "K673", "M011",
                                   "N330", "M490", "M900", "N740", "N741", "O980", "K930",
@@ -67,9 +110,9 @@ defsData[[2016]][(CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90")) |
 # A169     64 / Tuberculosis respiratoria no especificada, sin mención de confirmación bacteriológica o histológica
 # A199     16 / Tuberculosis miliar, sin otra especificación
 
-merge(IHMEDefsData[(year_id == 2016) &
-               (cause_id %in% c(948,949,950, 297, 954, 934, 946, 947)), 
-             .(values_ = sum(deaths)), 
+merge(IHME_deaths_collapsed[(year_id == 2016) &
+               ( disease %in% c("TB", "TB-HIV") ), 
+             .(values_ = round(sum(deaths),2)), 
              by = .(age_group_id)], IHMEAgeGroups, by.x="age_group_id", by.y = "age_group_id")[,
        .(age_group_name, values_)]
 
