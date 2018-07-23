@@ -320,13 +320,13 @@ saveRDS(pnls, paste0(dir, 'prepped_data/pnls.rds'))
 
 # check that all of the relevant elements are included
 pnls[tableau==1, unique(element)]
-
-# code before rerunning - original mistake in tableau identification
-pnls[tableau==1, unique(element), by=element_id]
-pnls[element_id=='Ua57G6vbmMq', tableau:=0]
-pnls[element_id=='prnCi6GwYzL', tableau:=0]
-pnls[element_id=='IAYSAoUetMU', tableau:=1]
-pnls[element_id=='wLBRFksBtou', tableau:=1]
+# 
+# # code before rerunning - original mistake in tableau identification
+# pnls[tableau==1, unique(element), by=element_id]
+# pnls[element_id=='Ua57G6vbmMq', tableau:=0]
+# pnls[element_id=='prnCi6GwYzL', tableau:=0]
+# pnls[element_id=='IAYSAoUetMU', tableau:=1]
+# pnls[element_id=='wLBRFksBtou', tableau:=1]
 
 # create a tableau indicator data set and save it 
 pnls_tabl <- pnls[tableau==1]

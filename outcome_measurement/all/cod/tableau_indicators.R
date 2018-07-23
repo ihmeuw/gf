@@ -2,10 +2,10 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/19/2018
+# 7/23/2018
 #
-# Upload the RDS data from DHIS2 and merge with the meta data 
-# prep the data sets for analysis and the Tableau Dashboard
+# Upload the RDS data from SNIS-DHIS2 and merge with the meta data 
+# Prep the data sets for the Tableau Dashboard
 
 # ----------------------------------------------
 
@@ -18,7 +18,7 @@ library(httr)
 library(ggplot2)
 library(dplyr)
 library(stringr)
-library(xlsx)
+library(openxlsx)
 # --------------------
 
 # --------------------
@@ -60,8 +60,7 @@ base[element_id=='wleambjupW9', element_eng:='A 1.5 Confirmed simple malaria tre
 # organize the data in an intuitive way and subset to necessary variables
 
 base <- base[ ,.(count=sum(value, na.rm=T)), by=.(data_set, element, element_eng, date, category, type,
-                                               level, dps, mtk)]
-
+                                            level, dps, mtk)]
 base[ , category:=as.character(category)]
 
 #---------------------------
@@ -85,8 +84,9 @@ ggplot(confirm, aes(x=date, y=count, color=category, group=category)) +
 sigl <- readRDS(paste0(dir, 'tabl_sigl.rds'))
 sigl <- data.table(sigl)
 
-# check that first line tb frugs are included
-sigl[element_id=='ncXfF8VViSh', tableau:=1]
+# check that first line tb drugs are included
+sigl[element_id=='ncXfF8VViSh']
+
 #------------------------------
 # subset to the elements needed for Tableau
 
@@ -99,13 +99,11 @@ sigl[,.(unique(element_eng), unique(element_id))]
 
 sigl[element_id=='HfCvAwRmGFf', element_eng:='C2 12.2 HIV Test Kit for PMTCT']
 sigl[element_id=='KEv4JxAgpFK', element_eng:='C2 12.2 Determine HIV 1+2 Test Kit']
-sigl[element_id=='QvVGcIERRFc', element_eng:='Artesunate-amodiaquine C1 12.1 (12-59 months) 50mg + 135mg tablet - amount consumed']
-sigl[element_id=='Wo3vNpLXPPm', element_eng:='Artesunate-amodiaquine C1 12.1 (2-11 months) + 25mg tablet 67.5mg - amount consumed']
-sigl[element_id=='jm3jeYdVkBl', element_eng:='Artesunate-amodiaquine C1 12.1 (14 years, 6 and over) 100mg + 270mg tablet - amount consumed']
-sigl[element_id=='ovziGhkDOKb', element_eng:='Artesunate-amodiaquine C1 12.1 (6-13 years, 3 and over) 100mg + 270mg tablet - amount consumed']
+sigl[element_id=='QvVGcIERRFc', element_eng:='C1 12.1 Artesunate-amodiaquine (12-59 months) 50mg + 135mg tablet - amount consumed']
+sigl[element_id=='Wo3vNpLXPPm', element_eng:='C1 12.1 Artesunate-amodiaquine (2-11 months) 25mg + 67.5mg tablet  - amount consumed']
+sigl[element_id=='jm3jeYdVkBl', element_eng:='C1 12.1 Artesunate-amodiaquine (14 years, 6 and over) 100mg + 270mg tablet - amount consumed']
+sigl[element_id=='ovziGhkDOKb', element_eng:='C1 12.1 Artesunate-amodiaquine (6-13 years, 3 and over) 100mg + 270mg tablet - amount consumed']
 sigl[element_id=='ncXfF8VViSh', element_eng:='C1 12.1 Rifampicin isoniazid + Pyrimetham Ethamb (RHZE) + 75mg 150mg + 400mg + 275mg these - amount consumed']
-
-
 
 #------------------------------
 # subset to only the relevant variables 
@@ -128,6 +126,15 @@ ggplot(drugs, aes(x=date, y=count)) +
   scale_y_continuous(labels = scales::comma)
 
 
+tb <- drugs <- sigl[type=='tb' ,.(count=sum(count)), by=.(element_eng, date, category)]
+
+ggplot(tb, aes(x=date, y=count, color=category)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~element_eng) +
+  theme_bw() +
+  scale_y_continuous(labels = scales::comma)
+
 #-----------------------------
 # merge the two data sets
 
@@ -147,28 +154,28 @@ tableau_base_sigl <- merge(base, sigl, by=idVars, all=TRUE)
 pnls <- readRDS(paste0(dir, 'tabl_pnls.rds'))
 pnls <- data.table(pnls)
 
-pnls[element_id=='DXz4Zxd4fKq', element_eng:='Pregnant or lactating women tested for HIV']
-pnls[element_id=='gHBcPOF5y3z', element_eng:='Pregnant or lactating women tested HIV+']
-pnls[element_id=='zxn95tkbnCv', element_eng:='Pregnant or lactating women HIV+ and informed of their results']
+# drop out the drug element that doesn't make sense
+pnls <- pnls[element_eng!="NACP-DRUG-TDF / 3TC / EFV (300/300/600 mg) - 30 these"]
 
-# remove a single outlier
+# drop out the second test kit indicator
+pnls <- pnls[element_id!="Gv1UQdMw5wL"]
+pnls <- pnls[element_id!="DAbWpraDg43"]
+
+# drop the outliers
+pnls[org_unit=="kn Molende Centre de Santé" & date=='2018-02-01' & element_id=='fdc1v0PSUZe' & category=='Féminin', value:=0]
 pnls[org_unit=='kr Christ Roi Centre de Santé' & date=='2017-09-01' & 
        type=='pmtct' & element_id=='gHBcPOF5y3z' & category=='CPN, Moins de 15 ans',
      value:=0]
 
+# fix the english translations
+pnls[element_id=='DXz4Zxd4fKq', element_eng:='Pregnant or lactating women tested for HIV']
+pnls[element_id=='gHBcPOF5y3z', element_eng:='Pregnant or lactating women tested HIV+']
+pnls[element_id=='zxn95tkbnCv', element_eng:='Pregnant or lactating women HIV+ and informed of their results']
+
+# sum the values at the dps level
 pnls <- pnls[ ,.(count=sum(value, na.rm=T)), by=.(data_set, element, element_eng, element_id,
                                                   date, category, type,
                                                   level, dps, mtk)]
-#------------------------------
-# find the outliers
-# 
-# wut <- pnls[date=='2017-09-01' & element_id=='gHBcPOF5y3z' & category=='CPN, Moins de 15 ans', .(value=sum(value)), by=org_unit]
-# wut[value > 5, .(org_unit, value)]
-# krc <- pnls[ org_unit=='kr Christ Roi Centre de Santé', .(value=sum(value)), by=.(date, element, category)]
-# 
-# pnls[org_unit=='kr Christ Roi Centre de Santé' & date=='2017-09-01' & 
-#        type=='pmtct' & element_id=='gHBcPOF5y3z' & category=='CPN, Moins de 15 ans',
-#         value]
 
 #------------------------------
 # create test graphs 
@@ -183,7 +190,7 @@ ggplot(hiv[type=='pmtct'],
   theme_bw() +
   scale_y_continuous(labels = scales::comma)
 
-ggplot(hiv[type=='drugs'], 
+ggplot(hiv[type=='drugs' | type=='sti'], 
        aes(x=date, y=count, color=category, group=category)) +
   geom_point() +
   geom_line() +
@@ -201,19 +208,6 @@ ggplot(hiv2[type=='drugs'],
   theme_bw() +
   scale_y_continuous(labels = scales::comma)
 
-ggplot(hiv2[type=='drugs'], 
-       aes(x=date, y=count, color=element_eng)) +
-  geom_point() +
-  geom_line(alpha=0.2) +
-  theme_bw() +
-  scale_y_continuous(labels = scales::comma)
-
-#--------------------------------
-# drop out first line ART regimen by sex
-pnls[ ,unique(element_eng), element_id]
-pnls <- pnls[element_id!='wLBRFksBtou']
-pnls[,element_id:=NULL]
-
 #---------------------------------
 # merge the three data sets into one 
 tabl <- merge(tableau_base_sigl, pnls, by=idVars, all=T)
@@ -229,7 +223,7 @@ tabl[dps=='Kasai Oriental', dps:='Kasaï Oriental']
 tabl[dps=='Mai-Ndombe', dps:='Maï-Ndombe']
 
 #-------------------------------
-# add age and sex categories and merge in pregnant women 
+# add age and sex categories  
 
 tabl[ ,unique(category)]
 
@@ -243,6 +237,14 @@ tabl[category=='Féminin, 25 et 49 ans', age:='25 - 49 years']
 tabl[category=='Féminin, 5 et 9 ans', age:='5 - 9 years']
 tabl[category=='Féminin, 50 ans et plus', age:='50 +']
 tabl[category=='Féminin, Moins d\'un an', age:='< 1 year']
+
+tabl[category=="Féminin, Moins de 14 ans", age:='< 14 years']
+tabl[category=="Féminin, 15 et 24 ans", age:='15 - 24 years']
+tabl[category=="Féminin, 25 ans et plus", age:='25+ years']
+
+tabl[category=="Masculin, Moins de 14 ans", age:='< 14 years']
+tabl[category=="Masculin, 15 et 24 ans", age:='15 - 24 years']
+tabl[category=="Masculin, 25 ans et plus", age:='25+ years']
 
 tabl[category=='Masculin, 1 et 4 ans', age:='1 - 4 years']
 tabl[category=='Masculin, 10 et 14 ans', age:='10 - 14 years']
@@ -264,39 +266,26 @@ tabl[category=='SA/PP, 25 et 49 ans', age:='25 - 49 years']
 tabl[category=='SA/PP, 50 ans et plus', age:='50+']
 tabl[category=='SA/PP, Moins de 15 ans', age:='< 15 years'] 
 
+tabl[is.na(age), unique(category)]
+
 #-------------------------------
 # add a sex category
 tabl[ ,unique(category)]
 
-tabl[category=='Féminin, 1 et 4 ans', sex:='Female']
-tabl[category=='Féminin, 10 et 14 ans', sex:='Female']
-tabl[category=='Féminin, 15 et 19 ans', sex:='Female']
-tabl[category=='Féminin, 20 et 24 ans', sex:='Female']
-tabl[category=='Féminin, 25 et 49 ans', sex:='Female']
-tabl[category=='Féminin, 5 et 9 ans', sex:='Female']
-tabl[category=='Féminin, 50 ans et plus', sex:='Female']
-tabl[category=='Féminin, Moins d\'un an', sex:='Female']
+fems <- grep(pattern="Féminin", x=tabl$category)
+tabl[fems, sex:='Female']
 
-tabl[category=='CPN, 15 et 19 ans', sex:='Female']
-tabl[category=='CPN, 20 et 24 ans', sex:='Female']
-tabl[category=='CPN, 25 et 49 ans', sex:='Female']
-tabl[category=='CPN, 50 ans et plus', sex:='Female']
-tabl[category=='CPN, Moins de 15 ans', sex:='Female']
+# code anc visits as female patients
+cpn <- grep(pattern="CPN", x=tabl$category)
+tabl[cpn, sex:='Female']
 
-
-tabl[category=='Masculin, 1 et 4 ans', sex:='Male']
-tabl[category=='Masculin, 10 et 14 ans', sex:='Male']
-tabl[category=='Masculin, 15 et 19 ans', sex:='Male']
-tabl[category=='Masculin, 20 et 24 ans', sex:='Male']
-tabl[category=='Masculin, 25 et 49 ans', sex:='Male']
-tabl[category=='Masculin, 5 et 9 ans', sex:='Male']
-tabl[category=='Masculin, 50 ans et plus', sex:='Male']
-tabl[category=='Masculin, Moins d\'un an', sex:='Male']
+gents <- grep(pattern="Masculin", x=tabl$category)
+tabl[gents, sex:='Male']
 
 #--------------------------------------------------------
+# merge pregnant women into malaria cases 
 
 tabl[, unique(element_eng)]
-
 
 # alternate 1.5 indicators 
 tabl[element_eng=='A 1.5 Confirmed simple malaria - pregnant woman', category:='Pregnant woman']
@@ -318,7 +307,10 @@ tabl[type=="malaria", disease:='malaria']
 tabl[type=="hiv", disease:='hiv']
 tabl[type=="pmtct", disease:='hiv']
 tabl[type=='drugs', disease:='hiv']
+tabl[type=='sti', disease:='hiv']
+tabl[type=='tb', disease:='tb']
 
+tabl[ is.na(disease), type]
 tabl[,type:=NULL]
 
 #----------------------------------------------------
@@ -341,6 +333,15 @@ ggplot(hiv, aes(x=date, y=value, color=category, group=category)) +
   facet_wrap(~element_eng, scale='free_y') +
   theme_bw()
 
+
+tb <- tabl[disease=='tb', .(value=sum(count)), by=.(category, element_eng, date)]
+
+ggplot(hiv, aes(x=date, y=value, color=category, group=category)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~element_eng, scale='free_y') +
+  theme_bw()
+
 #---------------------------------------------
 
 # set the names for tableau
@@ -353,12 +354,17 @@ setnames(tabl, c("data_set", "element", "element_eng", "date", "category",
 #-------------------------------
 # Export as an Excel document 
 
-# save as a CSV to upload to Basecamp
-write.csv(tableau, paste0(dir, 'tableau_01_2017_04_2018.csv'))
+# save as a RDS file 
+saveRDS(tabl, paste0(dir, 'tableau_01_2017_04_2018.rds'))
 
-# save as a RDS file for future manipulation
-saveRDS(tableau, paste0(dir, 'tableau/tableau.rds'))
+# read in the RDS file so you don't have to rerun the code
+#tabl <- readRDS(paste0(dir, 'tableau_01_2017_04_2018.rds'))
+
+#------------------------------
+# split the data sent into multiple xlsx files
+# use xlsx instead of csv because it preserves the french special characters
+# use the openxlsx package (not xlsx!) as the java in xlsx cannot accomodate size
+
+write.xlsx(tabl, paste0(dir, 'tableau_01_2017_04_2018.xlsx'))
 
 #-------------------------------
-
-

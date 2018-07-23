@@ -39,16 +39,15 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # pnls <- data.table(pnls)
 # 
 # viral_load_elements <- c( 'cNCibxShDa6', 'QKTxjkpD2My', 'W90ci1ldX1C', 'hNWooK76isO',
-#  'iHUxYVgu1qj', 'iPgvI70DJSZ', 'doq0Fivo5ew', 'Kutdws0o2vL', 'oC2u60ANRUL','tHZ6KxIksXA',
-#  'uKEhVPh720x', 'jowAqQ7YpEC', 'd2RyaUn9ZHm', 'yjZFUr1GlQM', 'Puph0kCuE1g', 'Mg2cOozNDHa',
+#   'iHUxYVgu1qj', 'iPgvI70DJSZ', 'doq0Fivo5ew', 'Kutdws0o2vL', 'oC2u60ANRUL','tHZ6KxIksXA',  'uKEhVPh720x', 'jowAqQ7YpEC', 'd2RyaUn9ZHm', 'yjZFUr1GlQM', 'Puph0kCuE1g', 'Mg2cOozNDHa',
 #  'zJBuEb9hpNq', 'gNNyKuf2joZ', 'BvZVoaCgTQD', 'tYuKqogS7vD', 'JKWTF9Bgsm4', 'B5tuUwTHAlj')
 # 
-# # create a viral load data set
+#  # create a viral load data set
 # vl <- pnls[element_id %in% viral_load_elements]
 # vl <- data.table(vl)
 # 
 # # save the viral load data set to prepped data
-# saveRDS(vl, paste0(dir, 'prepped_data/viral_load_pnls.rds'))
+#  saveRDS(vl, paste0(dir, 'prepped_data/viral_load_pnls.rds'))
 
 #------------------------------
 
