@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/12/2018
+# 7/23/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # Prep the data sets for analysis and the Tableau Dashboard
@@ -31,16 +31,17 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 #------------------------------
-# viral load analysis
-# export a data set for viral load data; on the cluster
-# 
-# # import the pnls data and subset it to the elements that concern viral load
+# export a data set for viral load data 
+# run on the cluster to accomodate the size of pnls data 
+
+# import the pnls data and subset it to the elements that concern viral load
 # pnls <- readRDS(paste0(dir, 'prepped_data/pnls.rds'))
 # pnls <- data.table(pnls)
 # 
 # viral_load_elements <- c( 'cNCibxShDa6', 'QKTxjkpD2My', 'W90ci1ldX1C', 'hNWooK76isO',
-#   'iHUxYVgu1qj', 'iPgvI70DJSZ', 'doq0Fivo5ew', 'Kutdws0o2vL', 'oC2u60ANRUL','tHZ6KxIksXA',  'uKEhVPh720x', 'jowAqQ7YpEC', 'd2RyaUn9ZHm', 'yjZFUr1GlQM', 'Puph0kCuE1g', 'Mg2cOozNDHa',
-#  'zJBuEb9hpNq', 'gNNyKuf2joZ', 'BvZVoaCgTQD', 'tYuKqogS7vD', 'JKWTF9Bgsm4', 'B5tuUwTHAlj')
+#   'iHUxYVgu1qj', 'iPgvI70DJSZ', 'doq0Fivo5ew', 'Kutdws0o2vL', 'oC2u60ANRUL','tHZ6KxIksXA', 
+#   'uKEhVPh720x', 'jowAqQ7YpEC', 'd2RyaUn9ZHm', 'yjZFUr1GlQM', 'Puph0kCuE1g', 'Mg2cOozNDHa',
+#   'zJBuEb9hpNq', 'gNNyKuf2joZ', 'BvZVoaCgTQD', 'tYuKqogS7vD', 'JKWTF9Bgsm4', 'B5tuUwTHAlj')
 # 
 #  # create a viral load data set
 # vl <- pnls[element_id %in% viral_load_elements]
@@ -51,7 +52,6 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 #------------------------------
 
-
 #----------------------------------
 # import the viral load data set and 
 
@@ -61,11 +61,12 @@ vl <- data.table(vl)
 
 #------------------------
 # subset the data to only the elements that don't include 'support'
+
+# elements that don't include support
 sub <- c('cNCibxShDa6', 'QKTxjkpD2My', 'W90ci1ldX1C', 'hNWooK76isO',
 'iHUxYVgu1qj', 'uKEhVPh720x', 'jowAqQ7YpEC', 'd2RyaUn9ZHm',
 'yjZFUr1GlQM', 'Puph0kCuE1g', 'Mg2cOozNDHa')
 
-# subset the viral load data to elements that do not include 'support'
 vl <- vl[element_id %in% sub]
 
 # view the unique elements in the subset of vl data 
@@ -101,6 +102,12 @@ vl[category=='Masculin, NC', category:='Masculin, Nouveau Cas']
 vl[category=='Masculin, AC', category:='Masculin, Ancien Cas']
 
 #------------------------
+
+
+
+
+
+
 
 #------------------------
 # eliminate values where detected is greater than tested
