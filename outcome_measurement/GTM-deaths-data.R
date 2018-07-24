@@ -59,12 +59,12 @@ if (collapse_large_dataset) {
               "./PCE/Outcome Measurement Data/MULTI/VR/vr_redistributed_collapsed_diseases.csv")
 }
 
-collapse_ine_datasets = TRUE 
+collapse_ine_datasets = FALSE
 if (collapse_ine_datasets) {
     tb_pre = c("A15", "A16", "A17", "A18", "A19","B90")
     tb_other = c("A301", "A302", "J65X", "K230", "K673", "M011",
                    "N330", "M490", "M900", "N740", "N741", "O980", "K930",
-                   "P370", "Z030", "Z111", "Z201", "Z232", "U843") 
+                   "P370", "Z030", "Z111", "Z201", "Z232", "U843", "B200") 
     hiv_pre = c("B20", "B21", "B22", "B23", "B24")
     hiv_other = c("R75X", "Z114", "Z206", "Z21X", "Z717")
     malaria_pre = c("B50", "B51", "B52", "B53", "B54")
@@ -98,17 +98,56 @@ if (collapse_ine_datasets) {
 }
 
 # Load IHME data
-IHME_deaths_collapsed = read.csv("./PCE/Outcome Measurement Data/MULTI/VR/vr_redistributed_collapsed_diseases.csv")
+IHME_deaths_collapsed = read.csv("./PCE/Outcome Measurement Data/MULTI/VR/vr_redistributed_collapsed_diseases.csv",
+                                 row.names = 1)
 IHME_deaths_collapsed = data.table(IHME_deaths_collapsed)
+IHME_deaths_collapsed = rbind(IHME_deaths_collapsed, 
+                              IHME_deaths_collapsed[disease %in% c("TB", "TB-HIV"), 
+                                                    .(disease = "TB_all" , deaths = sum(deaths)), 
+                                                    by=.(year_id, age_group_id, sex_id, location_id)])
 IHMELocations = data.table(read.csv("PCE/Covariates and Other Data/GIS/GTM_muni_merges_2009_2016.csv"))
 IHMEAgeGroups = data.table(read.csv("PCE/Outcome Measurement Data/MULTI/VR/age_group_ids.csv"))
 
 INE_data = read.csv("PCE/Outcome Measurement Data/MULTI/VR/ine_collapsed_data.csv")
 INE_data = data.table(INE_data)
+INE_data[year == 9,year:=2009]
 # Count of deaths by year of each disease according to INE data.
 dcast(INE_data[,.(t = sum(deaths)), by = . (year, disease)], formula = year ~ disease) 
 # According to INE data, the count of deaths caused by TB in 2016 was is 313
-dcast(IHME_deaths_collapsed[, .(t = sum(deaths)), by= .(year_id, disease)], formula = year_id ~disease) 
+dcast(IHME_deaths_collapsed[, .(t = round(sum(deaths),1) ), by= .(year_id, disease)], formula = year_id ~disease) 
+
+# Mujeres en edad reproductiva
+dcast(IHME_deaths_collapsed[ sex_id == 2 & age_group_id >= 7 & age_group_id <= 15, 
+                             .(round(sum(deaths),1)), by=.(disease, year_id)],
+      disease~ year_id)
+
+dcast(INE_data[sex == 2 & agegroup >= 7 & agegroup <= 15, 
+                .(round(sum(deaths),1)), by=.(disease, year)],
+      disease~ year)
+
+# Population of women in reproductive age estimations from INE:
+repr_pop = data.table(year = 2009:2016, repr_pop = c(
+                                          4514410,
+                                          4643678,
+                                          4777842,
+                                          4914230,
+                                          5053437,
+                                          5194887,
+                                          5337050,
+                                          5481150))
+# Rates
+#   INE
+round(data.table(merge(dcast(INE_data[ sex == 2 & agegroup >= 7 & agegroup <= 15, 
+                .(round(sum(deaths),1)), by=.(disease, year)],
+      year ~ disease), repr_pop, by="year"))[, .( HIV_rate = 100000*HIV/repr_pop,
+                                                 TB_rate = 100000*TB/repr_pop,
+                                                 Mlr_rate = 100000*Malaria/repr_pop)], 1)
+#   IHME
+round(data.table(merge(dcast(IHME_deaths_collapsed[ sex_id == 2 & age_group_id >= 7 & age_group_id <= 15, 
+                                       .(round(sum(deaths),1)), by=.(disease, year = year_id)],
+                             year ~ disease), repr_pop, by="year"))[, .( HIV_rate = 100000*HIV/repr_pop,
+                                                                         TB_rate = 100000*TB_all/repr_pop,
+                                                                         Mlr_rate = 100000*Malaria/repr_pop)], 1)
 # According to IHME data, before correction this was 22.7, after correction it is:
 #    1:      TB 387.2574
 #    2:  TB-HIV  45.9772
@@ -139,92 +178,71 @@ dcast(IHME_deaths_collapsed[, .(t = sum(deaths)), by= .(year_id, disease)], form
 #   A169     64 / Tuberculosis respiratoria no especificada, sin mención de confirmación bacteriológica o histológica
 #   A199     16 / Tuberculosis miliar, sin otra especificación
 
-plot(merge(IHME_deaths_collapsed[(year_id == 2016) &
-               ( disease %in% c("TB", "TB-HIV") ), 
-             .(values_ = round(sum(deaths),2)), 
-             by = .(age_group_id)], IHMEAgeGroups, by.x="age_group_id", by.y = "age_group_id")[,
-       .(age_group_name, values_)], main="2016 TB deaths age distribution \n- IHME, o INE")
-
-points(merge(INE_data[(year == 2016) &
-        ( disease %in% c("TB", "TB-HIV") ), 
-    .(values_ = round(sum(deaths),2)), 
-    by = .(agegroup)], IHMEAgeGroups, by.x="agegroup", by.y = "age_group_id")[,
-    .(age_group_name, values_)])
-
 
 # Now the geographical differences:
 mapData = merge(IHMELocations[, .("municode" = factor(adm2_country_code), adm2_gbd_id)], 
                 IHME_deaths_collapsed[(year_id == 2016) &
-                          (disease %in% c("TB", "TB-HIV")), 
+                          (disease %in% c("TB_all")), 
                         .(values_ = sum(deaths)), 
                         by = .(location_id)],
                  by.x = "adm2_gbd_id", by.y="location_id")
-mapData$values = cut(mapData$values_, c(0, 1, 2, 10, 20, 30, 40, 50, 100), right = F)
+mapData$values = cut(mapData$values_, c(0, 1, 5, 10, 25, 50, 100), right = F)
 #mapData$values = cut_number(mapData$values_, 5)
 mapData$year = 2016
 mapData$pop = GTMuniPopulation(as.integer(as.character(mapData$municode)), mapData$year)
-plot = gtmap_muni(mapData)
-plot + labs(title="TB Deaths \naccording to IHME corrected causes of death.") + 
-    scale_fill_manual(values=c("#112255","#114466","#2266AA", "#3377DD", "#55AAFF"),  
-                      na.value="#333333")
+plot = gtmap_muni(mapData, depto_color = "#00000055", muni_color = "#AAAAAAAA")
+plot + labs(title="TB deaths counts by municipality \naccording to IHME corrected causes of death.") + 
+    scale_fill_manual(values=c("#111129","#112255","#114466","#1256BA", "#6387CD", "#95DCEF"),  
+                      na.value="#EFEFEF") 
 mapData$values = 100000 * mapData$values_ / mapData$pop
 mapData$values = cut(mapData$values, c(0,1, 5, 10, 25, 50, 100), right = F)
-plot = gtmap_muni(mapData, depto_color = "#FFFFFF22")
+plot = gtmap_muni(mapData, depto_color = "#00000055", muni_color = "#AAAAAAAA")
 plot + 
 #    scale_fill_gradient2(na.value = "#444444", midpoint = 15,
 #             low = "black", mid="#314278", high="#99BAFF", name="Rate") + 
-    scale_fill_manual(values=c("#111111","#112255","#114466","#1256BA", "#6387CD", "#95DCEF"),  
-                      na.value="#222222") +
-    labs(title="TB Mortality Rate per 100,000 population\naccording to GBD corrected causes of death")
+    scale_fill_manual(values=c("#111129","#112255","#114466","#1256BA", "#6387CD", "#95DCEF"),  
+                      na.value="#EFEFEF") + 
+    labs(title="TB Mortality Rate per 100,000 population\naccording to IHME corrected causes of death")
 
 ineMapData = INE_data[disease %in% c("TB") & (year == 2016),.(values_ = sum(deaths)), by = .(municode)]
 mapData = ineMapData
-mapData$values = cut(mapData$values_, c(0, 1, 10, 20, 40, 75, 100), right = F)
+mapData$values = cut(mapData$values_, c(0, 1, 5, 10, 25, 50, 100), right = F)
 mapData$municode = str_replace(mapData$municode, "^0(\\d)", "\\1")
-plot = gtmap_muni(mapData)
-plot + labs(title="TB deaths counts \naccording to national vital statistics") + 
-    scale_fill_manual(values=c("#112255","#114466","#2266AA", "#3377DD", "#55AAFF"),  
-                        na.value="#333333")
+plot = gtmap_muni(mapData, depto_color = "#00000055", muni_color = "#AAAAAAAA")
+plot + labs(title="TB deaths counts by municipality\naccording to national vital statistics") + 
+    scale_fill_manual(values=c("#111129","#112255","#114466","#1256BA", "#6387CD", "#95DCEF"),  
+                      na.value="#EFEFEF")
 mapData$year = 2016
 mapData$pop = GTMuniPopulation(as.integer(as.character(mapData$municode)), mapData$year)
 mapData$values = 100000* mapData$values_ / mapData$pop
 mapData$values = cut(mapData$values, c(0,1, 5, 10, 25, 50, 100), right = F)
-plot = gtmap_muni(mapData, depto_color = "#FFFFFF22", )
+plot = gtmap_muni(mapData, depto_color = "#00000055", muni_color = "#AAAAAAAA")
 plot + 
 #    scale_fill_gradient2(na.value = "#444444", midpoint = 150,
 #                         low = "black", mid="#314278", high="#99BAFF", name="Rate") +
-    scale_fill_manual(values=c("#111111","#112255","#114466","#1256BA", "#6387CD", "#95DCEF"),  
-                      na.value="#222222") +
+    scale_fill_manual(values=c("#111129","#112255","#114466","#1256BA", "#6387CD", "#95DCEF"),  
+                      na.value="#EFEFEF") +
     labs(title="TB Mortality Rate per 100,000 habitants\naccording to National vital statistics.")
 
-# Now with HIV:
-INECountsHIV = defsData[[2016]][(CaudefPRE %in% c("B20", "B21", "B22", "B23", "B24")) | 
-                                 (Caudef %in% c("R75X", "Z114", "Z206", "Z21X", "Z717")),
-                             .(conteo = .N), 
-                             by = .(agegroup = (4 + ceiling((Edadif+1)/5)), Sexo, Mupocu)]
-INECountsHIV[,.(t = sum(conteo))] # 358
-IHMEDefsData[(year_id == 2016) & (cause_id %in% c(298, 948, 949, 950, 300)), .(t = sum(deaths))] # 703.7
+# Age distr. for HIV, TB and Malaria:
+ggplot(data = 
+           rbind(merge(IHME_deaths_collapsed[(year_id == 2016) &
+                                     ( disease %in% c("HIV", "Malaria", "TB") ), 
+                                 .(values_ = round(sum(deaths),2)), 
+                                 by = .(age_group_id, disease)], 
+                       IHMEAgeGroups, 
+                       by.x="age_group_id", 
+                       by.y = "age_group_id")[,.(age_group_name, values_,disease, source="IHME")],
+                 merge(INE_data[(year == 2016) &
+                                    ( disease %in% c("HIV", "Malaria", "TB") ), 
+                                .(values_ = round(sum(deaths),2)), 
+                                by = .(agegroup, disease)], 
+                       IHMEAgeGroups, 
+                       by.x="agegroup", 
+                       by.y = "age_group_id")[,.(age_group_name, values_,disease, source="INE")]
+             )) +
+    geom_col(aes(age_group_name,values_, fill=source, group = source), position="dodge") +
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+    labs(title="2016 deaths age distribution comparison", y = "count") +
+    facet_grid(disease ~ ., scales = "free_y")
 
-# Malaria: 
-INECountsMlr = defsData[[2016]][(CaudefPRE %in% c("B50", "B51", "B52", "B53", "B54")) |
-                                (Caudef %in% c("P373", "P374")),
-                                .(conteo = .N), 
-                                by = .(agegroup = (4 + ceiling((Edadif+1)/5)), Sexo, Mupocu)]
-INECountsMlr[,.(t = sum(conteo))] # 6
-IHMEDefsData[(year_id == 2016) & (cause_id %in% c(345, 856, 857, 858)), .(t = sum(deaths))] # 8.1
-
-INECountsHIV[, sum(conteo), by = agegroup]
-
-
-# Mujeres en edad reproductiva
-defsData[[2009]][ ((CaudefPRE %in% c("A15", "A16", "A17", "A18", "A19","B90"
-                                     )) | 
-                     (Caudef %in% c("A301", "A302", "J65X", "K230", "K673", "M011",
-                                    "N330", "M490", "M900", "N740", "N741", "O980", "K930",
-                                    "P370", "Z030", "Z111", "Z201", "Z232", "U843"
-                                    )))
-                  & Sexo == 2 & Edadif >10 & Edadif < 54, 
-                 .(conteo = .N) ] # 60
-ihme_temp = IHMEDefsData[ sex_id == 2 & age_group_id >= 7 & age_group_id <= 54  
-              & (cause_id %in% c(297, 954, 934, 946, 947)), .(sum(deaths)), by=year_id] # 
-ihme_temp[order(year_id)]
