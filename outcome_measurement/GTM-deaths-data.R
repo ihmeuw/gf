@@ -246,3 +246,36 @@ ggplot(data =
     labs(title="2016 deaths age distribution comparison", y = "count") +
     facet_grid(disease ~ ., scales = "free_y")
 
+# Time series
+tb_ts = rbind(INE_data[disease=="TB", 
+               .(count = sum(deaths), source = "INE"), 
+               by = . (year)],
+      IHME_deaths_collapsed[disease=="TB_all", 
+                            .(count = sum(deaths), source="IHME"), 
+                            by = . (year = year_id)])
+tb_ts[, pop := mapply(function (i)     sum(GTMuniPopulation(dt.munisGT$COD_MUNI__, rep(i, nrow(dt.munisGT))), na.rm = T), year) ]
+tb_ts[, goal := 0]
+tb_ts[, rate := count / pop]
+new_pop = sum(GTMuniPopulation(dt.munisGT$COD_MUNI__, rep(max(tb_ts$year), nrow(dt.munisGT))), na.rm = T)
+tb_ts = rbind(tb_ts, data.table( year = c(2016, 2016, 2017, 2017), 
+                                 count = c(0,0,0,0),
+                                 source = c("INE", "IHME", "INE", "IHME"),
+                                 rate = c(tb_ts[source=="INE" & year == max(year), rate],
+                                          tb_ts[source=="IHME" & year == max(year), rate],
+                                          0.8*tb_ts[source=="INE" & year == max(year), count/new_pop],
+                                          0.8*tb_ts[source=="IHME" & year == max(year), count]/new_pop),
+                                 pop = c(0,0,0,0),
+                                 goal = c(1,1,1,1)
+                                 ))
+ggplot(data = tb_ts) +
+    geom_line(aes(year,100000 * rate,  colour = source, linetype= factor(goal)) ) +
+    scale_color_discrete(name = "", 
+             labels = c("TB deaths before correction", 
+                        "TB deaths after correction")) + 
+    scale_linetype_discrete(labels=c("Observed rate", "Target rate"), name="" ) +
+    theme(axis.text.x = element_text(angle = 90, vjust=0.5 )) +
+    scale_x_continuous(breaks = unique(tb_ts$year)) +
+    labs(title = "TB mortality rate (per 100,000 people) - National level", y="Rate", x= "Year")
+    
+# According to INE data, the count of deaths caused by TB in 2016 was is 313
+dcast(IHME_deaths_collapsed[, .(t = round(sum(deaths),1) ), by= .(year_id, disease)], formula = year_id ~disease) 
