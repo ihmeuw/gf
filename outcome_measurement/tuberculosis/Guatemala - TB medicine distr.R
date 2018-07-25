@@ -45,7 +45,8 @@ table(str_to_lower(trimws(tbnots$NUEVACONDICIONINGRESO)), tbnots$YEAR)
 table(str_to_lower(trimws(tbnots$CONDICIONINGRESO)), tbnots$YEAR)
 table(str_to_lower(trimws(tbnots$CONDICIONPX)), tbnots$YEAR)
 
-table(str_to_lower(trimws(tbnots$CLASIFICACION)), str_to_lower(trimws(tbnots$ESQUEMA)), useNA = "always")
+table(str_to_lower(trimws(tbnots$CLASIFICACION)), str_to_lower(trimws(tbnots$YEAR)), useNA = "always")
+table(str_to_lower(trimws(tbnots$RESISTENCIA)), tbnots$YEAR)
 
 # Use "ESQUEMA" column to match medicine demand.
 
@@ -66,28 +67,42 @@ table(str_to_lower(trimws(tbnots$CLASIFICACION)), str_to_lower(trimws(tbnots$ESQ
 esquemas = dcast.data.table(tbnots[, 
               .(Count = .N), by= .(Year = floor(YearMonth/100), esquema = str_replace(str_to_upper(trimws(ESQUEMA)), "Á", "A") )],
                             Year ~ esquema, value.var = "Count" )
+
+plot_data = merge(esquemas[, .(Year, Demand = PEDIATRICO*16)], 
+      tbdistr[Product == "RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.", .(Distributed = sum(Amount, na.rm=T)), 
+              by = .(Year) ], by= "Year", all=T,
+)[, .(Year, Demand, Distributed)]
+plot_data[is.na(plot_data)] = 0
 ggplot(data = melt(
-    merge(esquemas[, .(Year, Demand = PEDIATRICO*16)], 
-        tbdistr[Product == "RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.", .(Distributed = sum(Amount, na.rm=T)), 
-            by = .(Year) ], by= "Year", all=T
-    )[, .(Year, Demand, Distributed)],
+    plot_data,
     id.vars = "Year"
 )) + geom_col(aes(x = factor(Year), y = value, fill=variable), position = "dodge") + 
-    labs(y="Rifampizine doses", title="TB medicine distribution versus demand for children.", subtitle="16 x RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.", x = "Year\n\nMedicine distr. from 2013 up to June 2018.\nCases notifications from 2012 to 2017")  +
+    labs(y="Rifampizine doses", title="TB medicine distribution versus demand.\nChildren fist-line drug.", subtitle="16 x RIFAMPICINA SUSPENSION 100MG/5ML., FRASCO DE 120 ML.", x = "Year\n\nMedicine distr. from 2013 up to June 2018.\nCases notifications from 2012 to 2017")  +
     scale_fill_manual(name="", labels = c("Children Rifampizine doses demand", 
-                                          "Children Rifampizine doses \ndistributedby PNT"), values = c("blue", "red"))
+          "Children Rifampizine doses \ndistributedby PNT"), values = c("#4466DD", "#77AA33")) +
+    geom_line(aes(x = factor(Year), y = cumsum( Demand-Distributed), group = 1, color="#AA6600"), 
+              data = plot_data[2:6], size = 1.5) + 
+    scale_color_manual(values = "#AA6600", labels= "Cumulative gap", name="") +
+    theme(text = element_text(size=12))
 
 
+plot_data = merge(esquemas[, .(Year, Demand = A*310)], 
+                  tbdistr[Product == "RIFAMPICINA, TABLETA DE 300 MG.", .(Distributed = sum(Amount, na.rm=T)), 
+                          by = .(Year) ], by= "Year", all = T
+)[, .(Year, Demand, Distributed)]
+plot_data[is.na(plot_data)] = 0
 ggplot(data = melt(
-    merge(esquemas[, .(Year, Demand = A*310)], 
-          tbdistr[Product == "RIFAMPICINA, TABLETA DE 300 MG.", .(Distributed = sum(Amount, na.rm=T)), 
-                  by = .(Year) ], by= "Year", all = T
-    )[, .(Year, Demand, Distributed)],
+    plot_data,
     id.vars = "Year"
 )) + geom_col(aes(x = factor(Year), y = value, fill=variable), position = "dodge") + 
-    labs(y="Rifampizine doses", title="TB medicine distribution versus demand.", subtitle="310 x RIFAMPICINA, TABLETA DE 300 MG.", x = "Year\n\nMedicine distr. from 2013 up to June 2018.\nCases notifications from 2012 to 2017")  +
+    labs(y="Rifampizine doses", title="TB medicine distribution versus demand.\nAdult first-line drug", subtitle="310 x RIFAMPICINA, TABLETA DE 300 MG.", x = "Year\n\nMedicine distr. from 2013 up to June 2018.\nCases notifications from 2012 to 2017")  +
     scale_fill_manual(name="", labels = c("Adult Rifampizine doses demand", 
-                                          "Adult Rifampizine doses \ndistributedby PNT"), values = c("blue", "red"))
+                                          "Adult Rifampizine doses \ndistributedby PNT"), 
+                      values = c("#4466DD", "#77AA33")) +
+    geom_line(aes(x = factor(Year), y = cumsum( Demand-Distributed), group = 1, color="#AA6600"), 
+              data = plot_data[2:6], size=1.5) + 
+    scale_color_manual(values = "#AA6600", labels= "Cumulative gap", name="")+
+    theme(text = element_text(size=12))
 
 
 # Isoniazide
@@ -103,7 +118,12 @@ isoData$Year = factor(isoData$Year)
 ggplot(data = melt(isoData[,c("Demand_", "Distributed", "Year")], id.vars = c("Year"), measure.vars = c("Demand_", "Distributed")) ) + geom_col(aes(x = Year, y = value, fill=variable), position = "dodge") + 
     labs(y="Isoniazid doses", title="TB medicine distribution versus demand.", subtitle="155 x ISONIAZIDA, TABLETA DE 300 MG.", x="Year\n\nMedicine distr. from 2013 up to June 2018.\nCases notifications from 2012 to 2017")  +
     scale_fill_manual(name="", labels = c("Adult Isoniazid doses demand", 
-                                          "Adult Isoniazid doses \ndistributedby PNT"), values = c("blue", "red", "green"))
+                                          "Adult Isoniazid doses \ndistributedby PNT"), 
+                      values = c("#4466DD", "#77AA33")) +
+    geom_line(aes(x = factor(Year), y = cumsum( Demand_-Distributed), group = 1, color="#AA6600"), 
+              data = isoData[2:6], size=1.5) + 
+    scale_color_manual(values = "#AA6600", labels= "Cumulative gap", name="")+
+    theme(text = element_text(size=12))
 
 tbdistr[Year ==  2017 & Medicine == "ISONIAZIDA", sum(Amount), by = .(Product, Year
                                                                       )]
