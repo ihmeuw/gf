@@ -27,17 +27,17 @@ if (Sys.info()[1] == 'Windows') {
 ##set set up the directories to read/export files: 
 # ----------------------------------------------
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j/')
-shape_dir <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/gadm36_COD_shp/")
-shape_dir2 <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/")
-shape_dir3 <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/shapefiles/")
+shape_dir <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/gadm36_COD_shp/")
+#shape_dir2 <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/")
+#shape_dir3 <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/shapefiles/")
 export_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/')
 dir_data <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/")
 
 drcShape <- shapefile(paste0(shape_dir, "gadm36_COD_1.shp"))
-drcShape2 <- shapefile(paste0(shape_dir, "gadm36_COD_2.shp"))
-drcShape0 <- shapefile(paste0(shape_dir, "gadm36_COD_0.shp"))
+#drcShape2 <- shapefile(paste0(shape_dir, "gadm36_COD_2.shp"))
+#drcShape0 <- shapefile(paste0(shape_dir, "gadm36_COD_0.shp"))
 
-drcShape_test <- shapefile(paste0(shape_dir3, "healthsites.shp"))
+#drcShape_test <- shapefile(paste0(shape_dir3, "healthsites.shp"))
 
 # these don't save properly so you may have to re-copy and paste the name in the shapefile
 coordinates = as.data.table(fortify(drcShape, region='NAME_1'))
