@@ -62,7 +62,11 @@ end_month <- '07'
 update_year <- '2018'
 
 #identify the data set(s) you want to download by number (list below)
-set <- 1
+set <- 17
+
+# change set_name to the name of the data set you are downloading 
+# set_name will change the file names for saving the data
+set_name <- 'pnls'
 
 # available data sets by number: 
 
@@ -129,11 +133,7 @@ org_units <- data.table(org_units)
 # extract the data set and export as a RDS/CSV
 # click 'plots' tab to watch download progress
 
-# to download a different  change every time it says 'base_services' - 3 changes
-
-# change 'set_name' and the name of the assigned data table to the data set name (e.g. pnls)
-set_name <- 'base_services'
-base_services <- extract_all_data(base_url = base_url, 
+extracted_data <- extract_all_data(base_url = base_url, 
                                      data_sets = data_sets[set, ],
                                      org_units = org_units, 
                                      deb_period = paste0(start_year, '-', start_month, '-01'),
@@ -144,10 +144,10 @@ base_services <- extract_all_data(base_url = base_url,
                                      update_date = paste0(update_year, '-01-01'))
 
 # change the data table to save to the one you downloaded (e.g. pnls):
-saveRDS(base_services, paste0(dir, 'pre_merge/', set_name, '_', country, 
+saveRDS(extracted_data, paste0(dir, 'pre_merge/', set_name, '_', country, 
                                  '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
-# to save a csv, change the name of the data table to the one you downloaded:
-# write.csv(base_services, paste0(out_dir, '/base_services_', country,  '_', start_year, '_', end_year, '.csv'))
+# save as a csv
+# write.csv(extracted_data, paste0(dir, 'pre_merge/', set_name, '_', country, '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.csv'))
 
 #-------------------------

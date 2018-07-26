@@ -77,6 +77,11 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 pnls <- readRDS(paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
 pnls <- data.table(pnls)
+
+
+
+
+
 #-----------------------------------------
 
 #------------------------------

@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/16/2018
+# 7/25/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -34,8 +34,14 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # Initial cleaning after download
 # Import base services data set and convert to a data table
 
-base <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_01_2015_04_2018.rds'))
-base <- data.table(base)
+# original download - 2015 to 2017
+# this data set is already prepped - use base to merge in new sets
+ base <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_01_2015_04_2018.rds'))
+
+# load the newest set of data 
+# base <- readRDS(paste0(dir, 'pre_merge/base_services_drc_05_2018_07_2018.rds'))
+ base <- data.table(base)
+
 #-----------------------------------------
 
 #------------------------------
@@ -247,10 +253,21 @@ base[hospital, level:='Hospital']
 hospital <- grep(pattern="\\shopital", x=base$org_unit1)
 base[hospital, level:='Hospital']
 
+# Secondary hospitals
+hospital2 <- grep(pattern="\\shôpital secondaire", x=sigl$org_unit1)
+base[hospital2, level:='Secondary Hospital']
+hospital2 <- grep(pattern="\\shopital secondaire", x=sigl$org_unit1)
+base[hospital2, level:='Secondary Hospital']
+
 # Reference hospitals
-hospital <- grep(pattern="hopital général de référence", x=base$org_unit1)
-base[hospital, level:='General Reference Hospital']
-hgr <- grep(pattern="hgr", x=base$org_unit1)
+hgr <- grep(pattern="hopital général de référence", x=sigl$org_unit1)
+base[hgr, level:='General Reference Hospital']
+hgr <- grep(pattern="hôpital général de référence", x=sigl$org_unit1)
+base[hgr, level:="General Reference Hospital"]
+
+hgr <- grep(pattern="hôpital général de réference", x=sigl$org_unit1)
+base[hgr, level:="General Reference Hospital"]
+hgr <- grep(pattern="hopital général de reference", x=sigl$org_unit1)
 base[hgr, level:="General Reference Hospital"]
 
 # Hospital center
@@ -295,25 +312,55 @@ base <- base[ ,.(data_set, element, date, category, element_eng,
                  coordinates, opening_date, last_update, element_id, 
                  org_unit_id, month, year)]
 
+saveRDS(base, paste0(dir, 'prepped_data/base.rds'))
+
 
 #------------------------
-# save the preppred file
-saveRDS(base, paste0(dir, 'prepped_data/full/base_02_2015_04_2018.rds'))
+# save the preppred file - original data set
+# for future data sets, save only the variables you want to keep
+#saveRDS(base, paste0(dir, 'prepped_data/full/base_02_2015_04_2018.rds'))
 
 #------------------------
 # save only the elements we plan to use for analysis in base
-keep <- base[keep==1]
+base <- base[keep==1]
 
-#subset of base including only elements needed for analysis
-saveRDS(keep, paste0(dir, 'prepped_data/base.rds'))
+# upload the most recent full data set to merge into
+base_og <- readRDS(paste0(dir, 'prepped_data/base.rds'))
+
+# check the date range
+base_og[, range(date)]
+base[, range(date)]
+
+# bind the data tables together to create the most recent data set
+base <- rbind(base_og, base)
+
+#-------------------------
+# save the final data set
+
+saveRDS(base, paste0(dir, 'prepped_data/base.rds'))
 
 #------------------------
 # create a tableau-specific data set and save it
-tabl_base <- base[tableau==1 |  element_id=='SpmQSLRPMl4'] # change csv to add tableau =1 to RDTs positive
+
+# check that base has all the correct tableau elements
+base[tableau==1, unique(element_eng)]
+
+# create a data table just for the tableau elements and save it
+tabl_base <- base[tableau==1]
 tabl_base <- tabl_base[year==2017 | year==2018]
 
 saveRDS(tabl_base, paste0(dir, 'tableau/tabl_base.rds'))
+
 #------------------------
+# test graph of tableau elements to confirm it worked 
+# try <- tabl_base[ ,.(count=sum(value)), by=.(element_eng, date)]
+# 
+# ggplot(try, aes(x=date, y=count)) +
+#   geom_point() +
+#   geom_line() +
+#   facet_wrap(~element_eng) +
+#   theme_bw() +
+#   scale_y_continuous(labels = scales::comma)
 
-
+#----------------------
 

@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 5/23/2018
+# 7/25/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -16,26 +16,20 @@ library(data.table)
 library(jsonlite)
 library(httr)
 library(ggplot2)
-library(stringr) # to extract meta data from file names
+library(stringr) 
 
 # --------------------
 
 # --------------------
 # detect if operating on windows or on the cluster 
 
-if (Sys.info()[1] == 'Windows') {
-  username <- "ccarelli"
-  root <- "J:/"
-} else {
-  username <- Sys.getenv("USER")
-  root <- "/home/j/"
-}
+root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # ----------------------------------------------
 # set files and directories for the uganda viral load data
 
 # set the working directory to loop over the downloaded files
-setwd(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/sex_tb'))
+setwd(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/sex/'))
 
 # list existing files
 files <- list.files('./', recursive=TRUE)
@@ -71,8 +65,8 @@ for(f in files) {
   current_data[, sex:=(meta_data[5])]
   
   # add if tb status is included 
-  current_data[, tb:=gsub('tb', '', meta_data[6])]
-  current_data[, tb:=gsub('.rds', '', tb)]
+  # current_data[, tb:=gsub('tb', '', meta_data[6])]
+  # current_data[, tb:=gsub('.rds', '', tb)]
 
   # append to the full data 
   if(i==1) full_data = current_data
@@ -85,8 +79,8 @@ str(full_data)
 
 # ----------------------------------------------
 # reset working directory to main folder
-setwd(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'))
-dir <- paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
+setwd(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'))
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
 
 facilities <- readRDS(paste0(dir,"/facilities/facilities.rds"))
 str(facilities)
