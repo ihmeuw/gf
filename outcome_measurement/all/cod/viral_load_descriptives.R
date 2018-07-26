@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/23/2018
+# 7/25/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # Prep the data sets for analysis and the Tableau Dashboard
@@ -18,8 +18,14 @@ library(httr)
 library(ggplot2)
 library(dplyr)
 library(xlsx)
-library(stringr) # to extract meta data from file names
+library(stringr) 
+library(quantreg)
 # --------------------
+
+# to run on the cluster, load quantreg
+library(quantreg, lib = "/home/j/temp/caitlinobc/quantreg_test/")
+library(SparseM, lib = "/home/j/temp/caitlinobc/quantreg_test/")
+
 
 # --------------------
 # set working directories
@@ -29,6 +35,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+
 
 #------------------------------
 # export a data set for viral load data 
@@ -86,6 +93,15 @@ test <- c('cNCibxShDa6', 'QKTxjkpD2My', 'W90ci1ldX1C', 'hNWooK76isO', 'iHUxYVgu1
 vl[element_id %in% test, tested:='Yes']
 vl[!element_id %in% test, tested:='No']
 
+vl[ ,unique(category)]
+vl[category=='Féminin, NC', category:='Féminin, Nouveau Cas']
+vl[category=='Féminin, AC', category:='Féminin, Ancien Cas']
+vl[category=='Masculin, NC', category:='Masculin, Nouveau Cas']
+vl[category=='Masculin, AC', category:='Masculin, Ancien Cas']
+
+#-----------------------
+# restructure the data to have single data points with stratifications
+
 # create a categorical variable for the sub-populations 
 vl[element_id=='Mg2cOozNDHa' , strat:='Male partners']
 vl[element_id=='d2RyaUn9ZHm' | element_id=='W90ci1ldX1C' , strat:='Lactating women']
@@ -94,20 +110,100 @@ vl[element_id=='iHUxYVgu1qj' | element_id=='Puph0kCuE1g' , strat:='Initial']
 vl[element_id=='cNCibxShDa6' | element_id=='uKEhVPh720x' , strat:='After six months']
 vl[element_id=='jowAqQ7YpEC' | element_id=='QKTxjkpD2My' , strat:='Other']
 
+vl[is.na(strat)]
 
-vl[ ,unique(category)]
-vl[category=='Féminin, NC', category:='Féminin, Nouveau Cas']
-vl[category=='Féminin, AC', category:='Féminin, Ancien Cas']
-vl[category=='Masculin, NC', category:='Masculin, Nouveau Cas']
-vl[category=='Masculin, AC', category:='Masculin, Ancien Cas']
+# create a single element
+vl[tested=='Yes', element:='PLHIV who received a VL test' ]
+vl[tested=='No', element:='PLHIV with undetectable VL' ]
+
+# create a sex category
+fems <- grep(pattern="Féminin", x=vl$category)
+vl[fems, sex:='Female']
+
+gents <- grep(pattern="Masculin", x=vl$category)
+vl[gents, sex:='Male']
+
+# create a new/old case category
+nu <- grep(pattern="Nouveau", x=vl$category)
+vl[nu, case:='New']
+
+anc <- grep(pattern="Ancien", x=vl$category)
+vl[anc, case:='Old']
+
+# collapse on element
+vl <- vl[ ,.(value=sum(value, na.rm=T)), by=.(element, org_unit, date, level, dps, mtk, 
+                               element_id, tested, strat, sex, case)]
 
 #------------------------
+# screen for outliers
+tested <- vl[tested=='Yes', .(value=sum(value)), by=.(date, element, strat, sex)]
+
+ggplot(tested, aes(x=date, y=value, color=strat, group=strat)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~sex) +
+  theme_bw()
+
+und <- vl[tested=='No', .(value=sum(value)), by=.(date, element, strat, sex)]
+
+ggplot(und, aes(x=date, y=value, color=strat, group=strat)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~sex) +
+  theme_bw() 
+
+#----------------------------------
+# run a quantile regression to check for outliers 
+
+test <- vl[  ,.(value=sum(value)), by=.(date, org_unit, element, level, dps, strat, sex)]
+
+quantFit2 <- rq(value~date+factor(org_unit)+factor(element)+date*factor(strat), data=test, tau=0.5)
+
+r2 <- resid(quantFit2)
+hist(r2)
+
+test[ ,resid:=r]
+
+test[resid >200]
+
+test[r>(median(r)+(3*sd(r)))]
+
+#-----------------------------------------------------
+
+quantFit2 <- rq(value~date+factor(org_unit)+factor(element)+date*factor(strat), data=test, tau=0.5)
 
 
+#-------------------------------------------
+# run on a sample pmtct data set
+pw <- vl[element_id=='hNWooK76isO',.(value=sum(value)), by=.(date, org_unit, element, level, dps)]
+
+quantFit2 <- rq(value~date+factor(org_unit), data=pw2, tau=0.5)
+
+r2 <- resid(quantFit)
+hist(r)
+
+pw[ ,resid:=r2]
+pw[resid >200]
+
+pw[r2>(median(r)+(3*sd(r)))]
+
+# graph two examples of the residuals 
+ggplot(pw[org_unit=="kn Roi Baundouin 1Er Centre Hospitalier"], 
+       aes(x=date, y=value)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  scale_y_continuous(labels = scales::comma)
 
 
+ggplot(pw2[org_unit=="hk Kyubo Centre de Santé de Référence"], 
+       aes(x=date, y=value)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  scale_y_continuous(labels = scales::comma)
 
-
+#---------------
 
 #------------------------
 # eliminate values where detected is greater than tested

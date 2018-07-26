@@ -1,0 +1,23 @@
+extract_all_data        Extracting multiple sets of data value
+extract_categories      Extract the categories for data elements
+extract_data            Extracting a data
+extract_data_elements   Extract the list of data elements in a DHIS
+                        data set
+extract_dhis_content    Extract content information from DHIS
+extract_dhis_datasets   Extracting the list of datasets in DHIS
+extract_faulty_list     Extract elements of a faulty list
+extract_geolocalisation
+                        Make shapefiles for organization units
+extract_info            Generic function to extract relevant nodes in
+                        DHIS element 'extract_info' goes to a specific
+                        DHIS2 element url, and extracts attributes name
+                        , id and href. It can extract elements that
+                        span on multiple pages
+extract_org_unit        Extract information about an Orgunit
+extract_orgunits_list   Extract the list of Organisation Units in the
+                        DHIS setting
+format_GPS              Extracting GPS coordinates
+make_dhis_urls          Make relevant urls in DHIS web api
+make_extract_call       Creating the data call adress
+make_shapefiles         Make shapefiles for organization units
+parse_page              Generic xml page parsing function

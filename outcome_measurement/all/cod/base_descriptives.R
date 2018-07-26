@@ -37,6 +37,12 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 base <- readRDS(paste0(dir, 'prepped_data/base.rds'))
 base <- data.table(base)
 
+# check the date range for the data set
+base[ ,range(date)]
+
+# subset to only 2017/2018
+base <- base[year==2017 | year==2018]
+
 #--------------------
 # label "category" for the graphs
 base$category <- factor(base$category, levels=c(">5 ans", "<5 ans", "default", "Féminin, 5 ans et plus",   "Masculin, Moins de 5 ans",
@@ -48,7 +54,6 @@ base$category <- factor(base$category, levels=c(">5 ans", "<5 ans", "default", "
 
 # create a malaria only data set
 mal <- base[type=='malaria']
-mal <- mal[year=='2017' | year=='2018']
 mal[ ,.(unique(element), unique(element_id))]
 mal[ ,.(unique(element), unique(element_fr))]
 # create an HIV only data set

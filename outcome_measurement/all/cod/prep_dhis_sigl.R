@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/16/2018
+# 7/25/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -33,7 +33,10 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # Initial cleaning after download
 # Import SIGL data sets and convert to a data table
 
-sigl <- readRDS(paste0(dir, 'pre_merge/sigl/sigl_drc_01_2015_05_2018.rds'))
+# sigl <- readRDS(paste0(dir, 'pre_merge/sigl/sigl_drc_01_2015_05_2018.rds'))
+
+# import the newest data set 
+sigl <- readRDS(paste0(dir, 'pre_merge/sigl/sigl_drc_05_2018_07_2018.rds'))
 sigl <- data.table(sigl)
 #-----------------------------------------
 
@@ -245,10 +248,16 @@ sigl[hospital, level:='Hospital']
 hospital <- grep(pattern="\\shopital", x=sigl$org_unit1)
 sigl[hospital, level:='Hospital']
 
+# Secondary hospitals
+hospital2 <- grep(pattern="\\shôpital secondaire", x=sigl$org_unit1)
+sigl[hospital2, level:='Seondary Hospital']
+hospital2 <- grep(pattern="\\shopital secondaire", x=sigl$org_unit1)
+sigl[hospital2, level:='Seondary Hospital']
+
 # Reference hospitals
-hospital <- grep(pattern="hopital général de référence", x=sigl$org_unit1)
-sigl[hospital, level:='General Reference Hospital']
-hgr <- grep(pattern="hgr", x=sigl$org_unit1)
+hgr <- grep(pattern="hopital général de référence", x=sigl$org_unit1)
+sigl[hgr, level:='General Reference Hospital']
+hgr <- grep(pattern="hôpital général de référence", x=sigl$org_unit1)
 sigl[hgr, level:="General Reference Hospital"]
 
 # Hospital center
@@ -296,6 +305,19 @@ sigl <- sigl[ ,.(data_set, element, date, type, category, value, org_unit, level
                       org_unit_id, data_set_id, month, year, keep, type, drug, tableau)]
 
 #----------------------------------------------
+# save only the elements we plan to use for analysis in base
+sigl <- sigl[keep==1]
+
+#upload the most recent merged and prepped data set
+sigl_og <- readRDS(paste0(dir, 'prepped_data/sigl.rds'))
+
+# check the date range 
+sigl_og[ ,range(date)]
+sigl[ ,range(date)]
+
+# bind them together to create a single, contemporary data set
+sigl <- rbind(sigl_og, sigl)
+
 # save the data sets
 saveRDS(sigl, paste0(dir, 'prepped_data/sigl.rds'))
 
@@ -306,7 +328,15 @@ tabl_sigl[ ,unique(element_eng)]
 
 saveRDS(tabl_sigl, paste0(dir, 'tableau/tabl_sigl.rds'))
 #----------------------------------------------
-
+# test graph 
+try <- tabl_base[ ,.(count=sum(value)), by=.(element_eng, date)]
+ 
+ ggplot(try, aes(x=date, y=count)) +
+ geom_point() +
+  geom_line() +
+  facet_wrap(~element_eng) +
+  theme_bw() +
+  scale_y_continuous(labels = scales::comma)
 
 
 
