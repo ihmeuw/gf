@@ -32,16 +32,20 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/
 # ----------------------------------------------
 # Load/prep data
 
-# loop for month and year filters ONLY
 
 #loop over years - can be altered to run years separately
-#for(y in c('14', '15', '16', '17', '18')) {
+ for(y in c('15', '16', '17', '18')) {
  
 # 2018 only
-  for(y in c('18')) {
+  #for(y in c('18')) {
   
   # loop over months
   for(m in c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12')) {
+    
+    # 2014 only - loop breaks on months with no data (before August 2014)
+    #for(y in c('14')) {
+     # for(m in c('08', '09', '10', '11', '12')) {
+        
       
       # loop over age groups
       # add this filter to the link/outFile if you want to run with the age filter
