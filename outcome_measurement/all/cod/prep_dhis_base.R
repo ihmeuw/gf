@@ -36,12 +36,12 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 # original download - 2015 to 2017
 # this data set is already prepped - use base to merge in new sets
- base <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_01_2015_04_2018.rds'))
+#base <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_01_2015_04_2018.rds'))
 
 # load the newest set of data 
-# base <- readRDS(paste0(dir, 'pre_merge/base_services_drc_05_2018_07_2018.rds'))
+ base <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_05_2018_07_2018.rds'))
  base <- data.table(base)
-
+ 
 #-----------------------------------------
 
 #------------------------------
@@ -108,14 +108,6 @@ base[ , period:=NULL]
 base[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
 #-----------------------------------------------
-# change last_update and opening_date to date variables
-base[ , last_update:=as.character(last_update)]
-base[ ,opening_date:=as.character(opening_date)]
-
-base$last_update <- unlist(lapply(strsplit(base$last_update, "T"), "[", 1))
-base$opening_date <- unlist(lapply(strsplit(base$opening_date, "T"), "[", 1))
-
-#-----------------------------------------------
 # merge in the english names for the data elements and element type
 
 elements_base <- read.csv(paste0(dir, 'catalogues/data_elements_cod.csv'), stringsAsFactors=F)
@@ -130,6 +122,19 @@ elements_base[ ,data_set:=NULL]
 
 # merge in the english names for the data elements and element type
 base <- merge(base, elements_base, by='element_id', all.x=TRUE )
+
+#-----------------------------------------------
+# subset to only the variables you want to keep
+base <- base[keep==1]
+
+#-----------------------------------------------
+# change last_update and opening_date to date variables
+base[ , last_update:=as.character(last_update)]
+base[ ,opening_date:=as.character(opening_date)]
+
+base$last_update <- unlist(lapply(strsplit(base$last_update, "T"), "[", 1))
+base$opening_date <- unlist(lapply(strsplit(base$opening_date, "T"), "[", 1))
+
 
 #-----------------------------------------------
 #create age and sex variables
@@ -254,20 +259,19 @@ hospital <- grep(pattern="\\shopital", x=base$org_unit1)
 base[hospital, level:='Hospital']
 
 # Secondary hospitals
-hospital2 <- grep(pattern="\\shôpital secondaire", x=sigl$org_unit1)
+hospital2 <- grep(pattern="\\shôpital secondaire", x=base$org_unit1)
 base[hospital2, level:='Secondary Hospital']
-hospital2 <- grep(pattern="\\shopital secondaire", x=sigl$org_unit1)
+hospital2 <- grep(pattern="\\shopital secondaire", x=base$org_unit1)
 base[hospital2, level:='Secondary Hospital']
 
 # Reference hospitals
-hgr <- grep(pattern="hopital général de référence", x=sigl$org_unit1)
+hgr <- grep(pattern="hopital général de référence", x=base$org_unit1)
 base[hgr, level:='General Reference Hospital']
-hgr <- grep(pattern="hôpital général de référence", x=sigl$org_unit1)
+hgr <- grep(pattern="hôpital général de référence", x=base$org_unit1)
 base[hgr, level:="General Reference Hospital"]
-
-hgr <- grep(pattern="hôpital général de réference", x=sigl$org_unit1)
+hgr <- grep(pattern="hôpital général de réference", x=base$org_unit1)
 base[hgr, level:="General Reference Hospital"]
-hgr <- grep(pattern="hopital général de reference", x=sigl$org_unit1)
+hgr <- grep(pattern="hopital général de reference", x=base$org_unit1)
 base[hgr, level:="General Reference Hospital"]
 
 # Hospital center
@@ -312,9 +316,6 @@ base <- base[ ,.(data_set, element, date, category, element_eng,
                  coordinates, opening_date, last_update, element_id, 
                  org_unit_id, month, year)]
 
-saveRDS(base, paste0(dir, 'prepped_data/base.rds'))
-
-
 #------------------------
 # save the preppred file - original data set
 # for future data sets, save only the variables you want to keep
@@ -330,6 +331,8 @@ base_og <- readRDS(paste0(dir, 'prepped_data/base.rds'))
 # check the date range
 base_og[, range(date)]
 base[, range(date)]
+
+base_og <- base_og[year==2017 | year==2018]
 
 # bind the data tables together to create the most recent data set
 base <- rbind(base_og, base)
@@ -353,14 +356,14 @@ saveRDS(tabl_base, paste0(dir, 'tableau/tabl_base.rds'))
 
 #------------------------
 # test graph of tableau elements to confirm it worked 
-# try <- tabl_base[ ,.(count=sum(value)), by=.(element_eng, date)]
-# 
-# ggplot(try, aes(x=date, y=count)) +
-#   geom_point() +
-#   geom_line() +
-#   facet_wrap(~element_eng) +
-#   theme_bw() +
-#   scale_y_continuous(labels = scales::comma)
+try <- tabl_base[ ,.(count=sum(value)), by=.(element_eng, date)]
+
+ggplot(try, aes(x=date, y=count)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~element_eng) +
+  theme_bw() +
+  scale_y_continuous(labels = scales::comma)
 
 #----------------------
 

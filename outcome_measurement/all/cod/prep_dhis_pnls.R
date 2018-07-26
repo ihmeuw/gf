@@ -79,9 +79,6 @@ pnls <- readRDS(paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
 pnls <- data.table(pnls)
 
 
-
-
-
 #-----------------------------------------
 
 #------------------------------
@@ -253,10 +250,20 @@ pnls[hospital, level:='Hospital']
 hospital <- grep(pattern="\\shopital", x=pnls$org_unit1)
 pnls[hospital, level:='Hospital']
 
+# Secondary hospitals
+hospital2 <- grep(pattern="\\shôpital secondaire", x=sigl$org_unit1)
+pnls[hospital2, level:='Secondary Hospital']
+hospital2 <- grep(pattern="\\shopital secondaire", x=sigl$org_unit1)
+pnls[hospital2, level:='Secondary Hospital']
+
 # Reference hospitals
-hospital <- grep(pattern="hopital général de référence", x=pnls$org_unit1)
-pnls[hospital, level:='General Reference Hospital']
-hgr <- grep(pattern="hgr", x=pnls$org_unit1)
+hgr <- grep(pattern="hopital général de référence", x=sigl$org_unit1)
+pnls[hgr, level:='General Reference Hospital']
+hgr <- grep(pattern="hôpital général de référence", x=sigl$org_unit1)
+pnls[hgr, level:="General Reference Hospital"]
+hgr <- grep(pattern="hôpital général de réference", x=sigl$org_unit1)
+pnls[hgr, level:="General Reference Hospital"]
+hgr <- grep(pattern="hopital général de reference", x=sigl$org_unit1)
 pnls[hgr, level:="General Reference Hospital"]
 
 # Hospital center
