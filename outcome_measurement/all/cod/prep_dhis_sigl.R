@@ -33,10 +33,13 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # Initial cleaning after download
 # Import SIGL data sets and convert to a data table
 
-# sigl <- readRDS(paste0(dir, 'pre_merge/sigl/sigl_drc_01_2015_05_2018.rds'))
+# change to the most recent download
+#sigl <- readRDS(paste0(dir, 'pre_merge/sigl/sigl_drc_01_2015_05_2018.rds'))
 
-# import the newest data set 
+# import the most recent download
 sigl <- readRDS(paste0(dir, 'pre_merge/sigl/sigl_drc_05_2018_07_2018.rds'))
+
+# convert to a data table
 sigl <- data.table(sigl)
 #-----------------------------------------
 
@@ -250,14 +253,19 @@ sigl[hospital, level:='Hospital']
 
 # Secondary hospitals
 hospital2 <- grep(pattern="\\shôpital secondaire", x=sigl$org_unit1)
-sigl[hospital2, level:='Seondary Hospital']
+sigl[hospital2, level:='Secondary Hospital']
 hospital2 <- grep(pattern="\\shopital secondaire", x=sigl$org_unit1)
-sigl[hospital2, level:='Seondary Hospital']
+sigl[hospital2, level:='Secondary Hospital']
 
 # Reference hospitals
 hgr <- grep(pattern="hopital général de référence", x=sigl$org_unit1)
 sigl[hgr, level:='General Reference Hospital']
 hgr <- grep(pattern="hôpital général de référence", x=sigl$org_unit1)
+sigl[hgr, level:="General Reference Hospital"]
+
+hgr <- grep(pattern="hôpital général de réference", x=sigl$org_unit1)
+sigl[hgr, level:="General Reference Hospital"]
+hgr <- grep(pattern="hopital général de reference", x=sigl$org_unit1)
 sigl[hgr, level:="General Reference Hospital"]
 
 # Hospital center
@@ -301,15 +309,17 @@ sigl[ ,.(length(unique(org_unit))), by=level]
 # put the variables in an intuitive order 
 
 sigl <- sigl[ ,.(data_set, element, date, type, category, value, org_unit, level, dps,
-                      mtk, opening_date, last_update, drug, element_eng, element_id, 
-                      org_unit_id, data_set_id, month, year, keep, type, drug, tableau)]
+                 mtk, opening_date, last_update, drug, element_eng, element_id, 
+                 org_unit_id, data_set_id, month, year, keep, type, drug, tableau)]
+
 
 #----------------------------------------------
-# save only the elements we plan to use for analysis in base
+# save only the elements we plan to use for analysis 
 sigl <- sigl[keep==1]
 
 #upload the most recent merged and prepped data set
 sigl_og <- readRDS(paste0(dir, 'prepped_data/sigl.rds'))
+sigl_og <- sigl_og[year==2017 | year==2018]
 
 # check the date range 
 sigl_og[ ,range(date)]
@@ -329,21 +339,13 @@ tabl_sigl[ ,unique(element_eng)]
 saveRDS(tabl_sigl, paste0(dir, 'tableau/tabl_sigl.rds'))
 #----------------------------------------------
 # test graph 
-try <- tabl_base[ ,.(count=sum(value)), by=.(element_eng, date)]
- 
- ggplot(try, aes(x=date, y=count)) +
- geom_point() +
-  geom_line() +
-  facet_wrap(~element_eng) +
-  theme_bw() +
-  scale_y_continuous(labels = scales::comma)
+# try <- tabl_sigl[ ,.(count=sum(value)), by=.(element_eng, date)]
+# 
+# ggplot(try, aes(x=date, y=count)) +
+#   geom_point() +
+#   geom_line() +
+#   facet_wrap(~element_eng) +
+#   theme_bw() +
+#   scale_y_continuous(labels = scales::comma)
 
-
-
-
-
-
-
-
-
-
+#----------------------------------------------

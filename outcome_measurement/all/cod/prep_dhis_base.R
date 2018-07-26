@@ -40,7 +40,7 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 # load the newest set of data 
 # base <- readRDS(paste0(dir, 'pre_merge/base_services_drc_05_2018_07_2018.rds'))
-# base <- data.table(base)
+ base <- data.table(base)
 
 #-----------------------------------------
 
@@ -311,6 +311,8 @@ base <- base[ ,.(data_set, element, date, category, element_eng,
                  type, tableau, drug, keep,
                  coordinates, opening_date, last_update, element_id, 
                  org_unit_id, month, year)]
+
+saveRDS(base, paste0(dir, 'prepped_data/base.rds'))
 
 
 #------------------------

@@ -25,7 +25,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 reload_everything = FALSE
 
 # output directory
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/sex')
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/sex_tb')
 
 # ----------------------------------------------
 
@@ -56,8 +56,8 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/
       #   '91,92,93,94,95', '96,97,98,99')) { 
       
     
-      # # loop over tb groups - includes "unknown" option
-       #for(t in c('y','n','x')) { 
+     # loop over tb groups - includes "unknown" option
+       for(t in c('y','n','x')) { 
       
         # loop over sexes - includes 'unknown' option
        for(s in c('m', 'f', 'x')) {
@@ -68,7 +68,7 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/
          outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_', s,'.rds')
          
          # tb status file
-         # outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_',t, '_','.rds')
+          outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_',t, '_','.rds')
           
           check = file.exists(outFile)
       
@@ -76,10 +76,13 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/
           if (check==FALSE | reload_everything==TRUE) {
             
             # sex filter url
-            url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%5D&to_date=20', y, m)
+            #url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%5D&to_date=20', y, m)
                          
             # tb status url
-            #url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', t, '%22%5D&to_date=20',y,m)
+            url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', t, '%22%5D&to_date=20',y,m)
+            
+            # to determine where errors occur
+            print(url)
             
             # load
             data = fromJSON(url)
@@ -89,6 +92,6 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/
           }
         }
     
-      }}
+      }}}
       
 # ----------------------------------------------
