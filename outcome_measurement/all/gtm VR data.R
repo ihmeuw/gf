@@ -276,6 +276,6 @@ ggplot(data = tb_ts) +
     theme(axis.text.x = element_text(angle = 90, vjust=0.5 )) +
     scale_x_continuous(breaks = unique(tb_ts$year)) +
     labs(title = "TB mortality rate (per 100,000 people) - National level", y="Rate", x= "Year")
-    
-# According to INE data, the count of deaths caused by TB in 2016 was is 313
-dcast(IHME_deaths_collapsed[, .(t = round(sum(deaths),1) ), by= .(year_id, disease)], formula = year_id ~disease) 
+
+# ------Trends----------
+(IHME_deaths_collapsed, 
