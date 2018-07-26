@@ -1,0 +1,4 @@
+cd /homes/abatzel/local/gf/
+
+qsub -pe multi_slot 50 -N amelia_run_1 -e . -o . -cwd './core/r_shell.sh' './outcome_measurement/malaria/cod/run_amelia.R' .01 _test_run1
+ 

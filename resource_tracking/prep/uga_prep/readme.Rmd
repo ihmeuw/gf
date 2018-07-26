@@ -1,0 +1,127 @@
+---
+title: "readme"
+author: "Irena Chen"
+date: "May 11, 2018"
+output:
+  html_document: default
+  pdf_document: default
+---
+<style>
+p.caption {
+  font-size: 0.6em;
+}
+</style>
+
+```{r setup, include=FALSE}
+library(data.table)
+library(readxl)
+knitr::opts_chunk$set(echo = TRUE)
+mappedUga <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_uga_data.csv"))
+mappedUga <- mappedUga[!is.na(budget)]
+uga_codebook <- data.table(read_excel("J:/Project/Evaluation/GF/resource_tracking/RT_Codebook.xlsx"))
+# setwd("where the FPM budgets are stored")
+
+```
+
+## Original Data Sources
+
+We have a variety of data sources that our resource tracking data comes from. One of the primary sources that we have relied heavily on for data analysis is the FPM budgets. 
+
+The FPM budgets typically have a format like the image below: 
+
+
+```{r pressure, echo=FALSE, fig.cap="An example of a FPM summary budget.", out.width = '100%'}
+knitr::include_graphics("J:/Project/Evaluation/GF/resource_tracking/uga/gf/fpm/fpmimage.png")
+```
+
+Some FPM budgets will also have tabs with even more detailed information. While the FPM budgets have very useful information about module and intervention activities per grant, SR information is not usually included in these budgets. To obtain SR information, we have found that PUDR documents can be very helpful for this. 
+
+```{r echo=FALSE, fig.cap="An example of a PUDR with SR information.", out.width = '50%'}
+knitr::include_graphics("J:/Project/Evaluation/GF/resource_tracking/uga/gf/fpm/pudrimage.png")
+```
+
+So far, these are the two data sources from Uganda that we have for resource tracking data. We are actively seeking other sources of data to strengthen our analysis and understand how resources are disbursed. 
+
+## Resource Tracking Variables 
+
+The entire RT database has thousands of rows, making it impractical to view entirely. This is a subset of what the data looks like. 
+```{r table, echo=FALSE}
+knitr::kable(mappedUga[1:5,], caption = "Subset of the Uganda RT Database")
+```
+
+The codebook for the database is also located in Basecamp, in the Resource Tracking folder. Here is what the current codebook looks like: 
+
+
+```{r, echo=FALSE}
+knitr::kable(uga_codebook, caption="Contents of the codebook")
+```
+
+
+It is possible that more variables will be added to the database as we continue to collect data. The codebook will be kept updated accordingly if this happens. 
+
+
+## R Scripts for Data Prepping
+
+The R scripts to prep the RT excel books are located in the github repository here: 
+https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/uga_prep
+
+These are the scripts that you will need to prep the RT data and clean it into the same format as the RT database from the previous section. 
+
+```{r echo=FALSE, fig.cap="These are the scripts that you will find in the uga_prep folder", out.width = '50%'}
+knitr::include_graphics("J:/Project/Evaluation/GF/resource_tracking/uga/gf/fpm/githubimage.png")
+```
+At this point, you should have cloned the github repository to your local drive, but if you haven't yet, this is a good guide for how to do so: 
+
+https://www.atlassian.com/git/tutorials/setting-up-a-repository
+
+## Basecamp 
+
+In Basecamp, the RT data files are located here: 
+
+
+```{r echo=FALSE, fig.cap="RT data files on Basecamp", out.width = '50%'}
+knitr::include_graphics("J:/Project/Evaluation/GF/resource_tracking/uga/gf/fpm/ugabasecampimage.png")
+```
+
+You only need to download the "fpm" and "pudrs" folders onto your local drive - but make sure to save them in the same place (perhaps under the same folder name). If they are stored in different places on your local drive, you will need to modify the R code to accomodate this, since the R code assumes that both folders share a filepath. 
+
+The "intervention_and_indicator_list" Excel workbook is a file that contains all of the current GF modular framework interventions and indicators, as well as a tab that maps the old modules/interventions in past grants to the current framework. The "module_mapping" tab gets updated accordingly whenever we get new data that needs to be mapped to the framework. The main purpose of this is to standardize grant resources across country so that comparisons across grants can be as accurate as possible. 
+
+
+
+## Running the Scripts 
+
+First, run the three individual prep scripts (detailed, summary, and pudr) before running the master prep file. In addition, you will need to run the map_modules_and_interventions.R script in the resource_tracking/prep/ repository folder. 
+In the master prep file, there are a few parameters that need to be set. On line 31:
+
+```{r}
+
+dir <- 'your local drive here' ##where the files are stored locally
+
+```
+You will need to enter the filepath of the RT documents. 
+
+You then should be able to run lines 32-100 without making any edits. Lines 99-100 are optional if you don't want to also output a summary file of the RT data. 
+
+At lines 164+ onwards, you will need to have run the map_modules_and_interventions.R prep script before continuing. This file can be found in: 
+https://github.com/ihmeuw/gf/tree/develop/resource_tracking/prep/
+
+Make sure to run all three functions inside this script or else the rest of the master_uga_prep script will not work. 
+
+
+## Summary of Prep Scripts 
+
+The "prep_detailed_budget" file cleans the FPM budgets that have multiple levels of budget descriptors (i.e. service delivery area activities, sub-recipients, sub-national locations). 
+
+The "prep_summary_budget" file cleans the FPM budgets that only have module (and sometimes intervention) activities. When we can, we prefer to have detailed budgets over summary budgets in order toget the most granular level data. 
+
+The "prep_pudr_uga" file cleans the PUDR files we receive from the LFA. This script should flexible enough to handle PUDRs that are not all formatted the same, but may need to augmented if we receive a PUDR that has a different format. 
+
+The "map_modules_and_interventions" file maps the old modules and interventions to the current GF modular framework. It also accounts for differences in language (e.g. it maps the French version of a module to its GF English counterpart). 
+
+
+
+
+
+
+

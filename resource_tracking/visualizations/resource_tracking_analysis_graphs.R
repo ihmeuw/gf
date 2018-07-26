@@ -6,25 +6,44 @@
 # ### General Visualizations for Bar Graphs over time:  
 # ----------------------------------------------
 # Set up R
+rm(list=ls())
 library(ggplot2)
-library(dplyr)
 library(tools)
 library(data.table)
 library(lubridate)
-library(grDevices)
-library(RColorBrewer)
 library(readxl)
 library(reshape)
 library(scales)
+library(stringr)
 
-# ---------------------------------------------
-##load the dataset: 
-
+repo <- "your drive + gf/resource_tracking/"
+source(paste0(repo,"visualizations/functions_for_rt_analysis_graphs.R"))
+source(paste0(repo,"prep/map_modules_and_interventions.R"))
+# ----------------------------------------------
+#########load the dataset:  ########
+# ----------------------------------------------
 totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/cleaned_total_data.csv',
                                  fileEncoding = "latin1"))
 
+
+gf_mapping_list <- load_mapping_list("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx", include_rssh_by_disease = TRUE)
 # ---------------------------------------------
-##subset the country you want from the aggregate data: 
+######### Run the function to paste "RSSH:" in front of the modules #######
+# ----------------------------------------------
+
+define_rssh_modules <- function(code, disease, module){
+  x <- module
+  if(grepl(tolower(code), "r")&disease!="hss"){
+    x <- paste0("RSSH: ", module)
+  } else {
+    x <- x
+  }
+  return(x)
+}
+
+# ---------------------------------------------
+######### subset the country you want from the aggregate data  #######
+# ----------------------------------------------
 
 # graphData <- totalData[country=="Uganda"]
 # graphData <- totalData[country=="Guatemala"]
@@ -32,131 +51,176 @@ totalData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/mul
 
 
 # ---------------------------------------------
+######### sum budget and exp. by the variables of interest ############
+# ---------------------------------------------
 
-## sum budget and exp. by the variables of interest 
 #here, I'm doing SDA, grant, disease, and data source (gos, fpm etc.) by year 
-byVars = names(graphData)[names(graphData)%in%c('program_activity', 'year', 'grant_number', 'disease', 'data_source')]
+byVars = names(graphData)[names(graphData)%in%c('abbrev_module', 'abbrev_intervention',"code", 'year', 'grant_number', 'disease', 'data_source')]
 graphData = graphData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
 graphData$budget[graphData$budget<=0] <- NA
 graphData$expenditure[graphData$expenditure<=0] <- NA
 
+##drop FGH as a data source since no module-level information available 
+graphData <- graphData[data_source!="fgh"]
 
-##apply the grant facet (Past/Upcoming/Rejected)
-graphData$facet <- as.factor(mapply(appr_rej_indicators, graphData$year, graphData$data_source))
-graphData$facet <- factor(graphData$facet ,levels=c("Past/Active", "In Iteration", "Initial", "Upcoming", "Iteration 2"))
+##apply the grant facet:
+graphData$facet <- as.factor(mapply(data_sources_facet, graphData$year, graphData$data_source))
+graphData$facet <- factor(graphData$facet, levels=c("Past/Active", "Initial",  "Upcoming"))
 
 ##make the disease text nicer for the graphs: 
 graphData <- disease_names_for_plots(graphData)
-
-
-graphData[program_activity=="HIV/AIDS care and support", program_activity:="HIV/AIDS care, support and outreach"]
-graphData[program_activity=="PBF", program_activity:="Performance Based Financing"]
-
-
+graphData$abbrev_module <- factor(graphData$abbrev_module, levels=names(primColors))
+                 
 # ---------------------------------------------
-# stacked bar charts over time 
-
+# stacked bar charts over time - plotting budget 
+# ---------------------------------------------
 prog_plots <- list()
 for (k in unique(graphData$disease)){
   subdata <- graphData[disease==k]
-  colScale <- scale_fill_manual(name="SDA", values =primColors) 
-  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=program_activity)) + 
+  colScale <- scale_fill_manual(name="GF Module", values =primColors) 
+  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=abbrev_module)) + 
     geom_bar(## if you want 100% stacked graphs, uncomment: position = "fill",
       stat="identity") + 
     colScale +
     theme_bw(base_size=14) +
-    theme(strip.text.x = element_text(size = 8, colour = "black")) +
+      theme(legend.title = element_text(size=10),legend.text=element_text(size=8.5),
+          strip.text.x = element_text(size = 9, colour = "black")) +
     facet_grid(~facet,scales = "free_x", space="free_x") + 
     ## if you want 100% stacked graphs, uncomment:scale_y_continuous(labels = percent_format()) +
-    scale_x_continuous(name ="Year", breaks = seq(2005, 2020,5)) +
+    scale_x_continuous(name ="Year", breaks = seq(2005, 2020,3)) +
     labs(title=paste(k, "Data at National Level"), 
          x = "", y = "$ USD (Millions)", caption="Data Source: GOS, FPM"))
   prog_plots[[k]] <- plot
 }
 
-pdf("sdas_overtime.pdf", height=6, width=9)
+pdf("modules_overtime.pdf", height=6, width=9)
 invisible(lapply(prog_plots, print))
 dev.off()
 
 
 # ---------------------------------------------
-## bar charts over time for HSS/key pop: 
+######### Create graphs of interventions per module over time ############
+# ---------------------------------------------
 
-hssData <- get_hss_ind(graphData)
-keyData <- get_keypop_ind(graphData)
+##Fill in year gaps where modules and years might be missing:
+gf_mods <- data.table(graphData$disease, graphData$grant_number, graphData$year) ##the diseases that are present in the data
 
-##-----------------------------------------------------------
-# HSS CHARTS: 
+setnames(gf_mods,c("disease", "grant_number", "year"))
+create_na_mods <- unique(gf_mods)
+##bring in the module list from the GF framework
+mapping_list <- disease_names_for_plots(gf_mapping_list)
+mapping_list$code <- NULL
+mapping_list$intervention <- NULL
+mapping_list$module <- NULL
+mapping_list$abbrev_intervention <- NULL
 
-##set the colors - if HSS: 
-indColors <- c('#c0c0c0','#0000ff','#008000',
-               '#ffef00', '#4ca6a6') 
-names(indColors) <- c('Non RSSH', 'RSSH: information system',
-                      'RSSH: health workforce', 'RSSH: service delivery', 'RSSH: other')
+##make a list of all possible modules for each year and disease that we have: 
+create_na_mods <- merge(create_na_mods, mapping_list, by="disease", allow.cartesian = TRUE)
+create_na_mods <- unique(create_na_mods)
 
-##aggregate the data by the variables of interest (disease, year, HSS type)
-byVars = names(hssData)[names(hssData)%in%c('hss_ind', 'disease', "facet", "year")]
-hssData = hssData[, list(budget=sum(na.omit(budget))), by=byVars]
+modData <- merge(graphData, create_na_mods,all.y=TRUE, by=c("year","disease", "grant_number","abbrev_module"), allow.cartesian = TRUE)
 
-##HSS bar charts over time 
-hss_plots <- list()
-for (k in unique(hssData$disease)){
-  subdata <- hssData[disease==k]
-  colScale <- scale_fill_manual(name="RSSH Activities", values =indColors) 
-  plot <- ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=hss_ind)) + 
-    geom_bar(position = "fill",
-             stat="identity") + 
-    colScale +
-    # facet_grid(~facet,scales = "free_x", space="free_x") + 
-    theme_bw(base_size=10.5) +
-    scale_y_continuous(labels = percent_format()) +
-    scale_x_continuous(name ="Year", breaks = seq(2005, 2020,5)) +
-    labs(title=paste(k, "RSSH Activity over Time"), fill='HSS Ind.',
-         x = "", y = "% of Budget", caption="Data Source: GOS, FPM")
-  hss_plots[[k]] <- plot
-}
+##sometimes modules won't be present in the data
+modData[is.na(abbrev_intervention), abbrev_intervention:="Module Not Included"]
+
+## figure out which values only have summary level data: 
+modData$graph_intervention <- mapply(get_summary_level,as.character(modData$abbrev_module), 
+                           as.character(modData$abbrev_intervention))
 
 
-pdf("hss_overtime_perc.pdf", height=6, width=9)
-invisible(lapply(hss_plots, print))
-dev.off()
+#sum up the budget and expenditure by variables of interest
+byVars = names(modData)[names(modData)%in%c('abbrev_module', 'graph_intervention','year', 'disease')]
+modData = modData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
 
-##-----------------------------------------------------------
-##KEY POPULATIONS CHARTS: 
+modData[,sum_budget:=sum(na.omit(budget)), by=c("year", "disease")]
 
-##set the key population colors: 
-indColors <- c('#c0c0c0', '#4292c6', '#ff748c') 
-names(indColors) <- unique(keyData$key_pop) 
+## if you want bars with dollar amounts: 
+modData[budget<=0]$budget <- NA
+
+##if you want 100% stacked bar graphs: 
+modData[budget==0, graph_intervention:="Module Not Included"]
+modData[graph_intervention=="Module Not Included", budget:=100]
+
+
+##subset by disease: 
+hivData <- modData[disease=="HIV/AIDS"]
+malData <- modData[disease=="Malaria"]
+tbData <- modData[disease=="Tuberculosis"]
+hssData <- modData[disease=="RSSH"]
+# ---------------------------------------------
+######### set up color schemes for graphs ############
+# ---------------------------------------------
+
+##list of colors to apply to the interventions: 
+colors <- c('#a6cee3', ##periwinkle
+  '#1f78b4', ##summer lake
+  '#dbfced', #misty mint
+  '#032f4c', #winter lake
+  '#b2df8a', ##muted lime 
+  '#B9006E',##magenta
+  '#4affd4', # bright mint
+  '#fb9a99', ##peach blossom 
+  '#9e82ba', #dark lilac
+  '#fdbf6f', ##goldenrod  
+  '#ff7f00', ##pumpkin spice
+  '#cab2d6', ##lilac
+  '#00CCD6', ##caribbean beach
+  '#93b500', ##neutralized chartreuse 
+  '#db0645', ##cherry flavoring
+  '#42090a', ##cherry coke
+  '#966709', #dark caramel 
+  '#f4c7d4', ##blush pink
+  '#e2725b',##terracotta
+  '#856987', #dusty lavender
+  '#a977f4', ##80s purple
+  '#01a004', ## kelly green
+  '#0c5768', ##dark teal 
+  '#6a3d9a', ## UW purple
+  '#487a06', ## jungle olive
+  '#f2f22e', ##daffodil
+  '#94FFFC', ##icy blue
+  '#b15928' ##umber 
+  )
+
+##sometimes there are more interventions that colors, so this just repeats the colors 
+##until all of the interventions are assigned a color
+interventions <- unique(na.omit(hivData$graph_intervention)) ##change datasets when necessary
+cols <- rep(colors, length.out=length(interventions))
+names(cols) <- interventions
+
+##manually assign "No Data", "Summary Level Only", etc. their own colors: 
+cols[names(cols)=="Summary Level Only"]="grey50"
+cols[names(cols)=="No Data"]="#FFFFFF"
+cols[names(cols)=="Module Not Included"]="#FFFFFF"
 
 # ---------------------------------------------
-## sum budget and exp. by country, grant #, key categories, and disease
-
-byVars = names(keyData)[names(keyData)%in%c('key_pop', 'disease', "facet", "year")]
-keyData = keyData[, list(budget=sum(na.omit(budget))), by=byVars]
-
+######### Produce the graphs and export as PDF ############
 # ---------------------------------------------
-##key Populations charts
-key_plots <- list()
-for (k in unique(keyData$disease)){
-  colScale <- scale_fill_manual(name="Key Pop. Activities", values =indColors) 
-  subdata <- keyData[disease==k]
-  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=key_pop)) + 
-             geom_bar(position = "fill",
+
+#### bar charts over time 
+int_plots <- list()
+for (k in unique(hivData$abbrev_module)){
+  subdata <- hivData[abbrev_module==k]
+  plot <- (ggplot(data=subdata, aes(x = year, y= budget/1000000, fill=graph_intervention)) + 
+             geom_bar(colour="black", #uncomment if you want 100% bars:  position = "fill",
                       stat="identity") + 
-             colScale +
-             theme_bw(base_size=14) +
-             theme(strip.text.x = element_text(size = 8, colour = "black")) +
-             facet_grid(~facet,scales = "free_x", space="free_x") + 
-             scale_y_continuous(labels = percent_format()) +
-             scale_x_continuous(name ="Year", breaks = seq(2005, 2020,5)) +
-             labs(title=paste(k, "Data at National Level"), 
-                  x = "", y = "% of Budget", caption="Data Source: GOS, FPM"))
-  #+scale_fill_manual('Program Activity', values=set3, levels(subdata$program_activity))
-  key_plots[[k]] <- plot
+             scale_fill_manual(name="Interventions", values =cols) +
+             # facet_grid(~facet,scales = "free_x", space="free_x") + 
+             theme_bw(base_size=10.5) +
+            ##uncomment if you want 100% bars:  scale_y_continuous(labels = percent_format()) +
+             scale_x_continuous(name ="Year", breaks = seq(2005, 2020,3), limits=c(2005, 2020)) +
+             labs(title=paste("GF Module:", k),
+                  x = "", y = "USD (millions)", caption="Data Source: GOS, FPM"))
+  int_plots[[k]] <- plot
 }
 
-pdf("keypop_perc.pdf", height=6, width=9)
-invisible(lapply(key_plots, print))
+
+##export the list of graphs as a PDF: 
+pdf("interventions_overtime_perc.pdf", height=6, width=9)
+invisible(lapply(int_plots, print))
 dev.off()
+
+
+
 

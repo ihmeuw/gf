@@ -16,7 +16,7 @@ library(RColorBrewer)
 library(reshape)
 library(scales)
 library(ggrepel)
-
+library(dplyr)
 # ----------------------------------------------
 ##load the data: 
 
@@ -27,37 +27,80 @@ fghData <- data.table(read.csv('J:/Project/Evaluation/GF/resource_tracking/multi
 
 totalData$budget <- as.numeric(totalData$budget)
 
-fgh_gf <- fghData[source=="gf"]
-totalData <- totalData[source=="gf"]
+gfFgh <- fghData[source=="gf"]
+##rename FGH disburesment to "variable"
+gfFgh$grant_number<- "unknown"
+gfFgh <- gfFgh[, list(variable=sum(na.omit(disbursement))),by=byVars]
+
+
+gfData <- totalData[source=="gf"]
+
+##sum all of the municipalities to national for now: 
+gfData[data_source=="sicoin", country:="Guatemala"]
 # ----------------------------------------------
-## prep data 
+##Add in GOS Expenditures: 
 
 ### ----------------------------------------------
 ##FGH vs All others - time series 
 
 ##sum up budget (as "variable") by year, disease, and data source 
-byVars = names(totalData)[names(totalData)%in%c('year', 'disease', 'country','data_source')]
-graphData = totalData[, list(variable=sum(na.omit(budget))), by=byVars]
+byVars = names(gfData)[names(gfData)%in%c('year', 'disease', 'country','data_source', 'grant_number')]
+##separate out GOS data to do some manipulations:
+gosData <- gfData[data_source=="gos"]
 
-##edit Sicoin Data: 
-graphData[data_source=="sicoin", country:="Guatemala"]
+
+##create "graphData" so that we can rbind it with GOS data after manipulating GOS data
+graphData = gfData[, list(variable=sum(na.omit(budget))), by=byVars]
+##get rid of GOS data from the remaining data: 
+graphData <- graphData[data_source!="gos"]
+
+byVars <- names(gosData)[names(gosData)%in%c('year', 'disease', 'country','data_source', 'grant_number')]
+gosData = gosData[, list(budget=sum(na.omit(budget)), expenditure=sum(na.omit(expenditure))), by=byVars]
+gos_reshape <- melt(gosData, id.vars = byVars, variable.name = "resource_type", value.name = "variable")
+gos_reshape[resource_type=="budget", data_source:="gos_budget"]
+gos_reshape[resource_type=="expenditure", data_source:="gos_expend"]
+gos_reshape$resource_type <- NULL
+
+graphData <- rbind(graphData, gos_reshape)
+
+##turn the country variable into a factor:
 graphData$country <- factor(graphData$country, levels=c("Congo (Democratic Republic)","Guatemala","Uganda"))
 
 
-##rename FGH disburesment to "variable"
-fgh_gf <- fgh_gf[, list(variable=sum(na.omit(disbursement))),by=byVars]
 
 ##rbind the two datasets together 
-graphData <- rbind(graphData,fgh_gf)
+graphData <- rbind(graphData,gfFgh)
 
-#clean up the disease names and set colors for each data source: 
+#clean up the disease names and set colors for each data source:
+count_grants <- gos_reshape %>%
+  group_by(year, country, disease)  %>%
+  summarise(gos_grants = sum(length(unique(grant_number))))
+  
+graphData <- merge(graphData, count_grants,by = c("year","disease", "country"), all.x=TRUE)
+
+source_grants <- graphData %>%
+  group_by(year, country, disease,data_source)  %>%
+  summarise(source_grants = sum(length(unique(grant_number))))
+
+
+graphData <- merge(graphData, source_grants,by = c("year", "country", "disease","data_source"), all.x=TRUE)
+
+##not necessary if only graphing FPM and PUDR
+# graphData$gos_grants <- mapply(extend_gos, graphData$year,graphData$source_grants, graphData$gos_grants)
+# graphData$source_grants <- mapply(fgh_and_sicoin,graphData$data_source, graphData$source_grants, graphData$gos_grants)
+
+
+graphData=graphData[, list(variable=sum(na.omit(variable)),gos_grants=sum(na.omit(gos_grants)), source_grants=mean(na.omit(source_grants))),
+                    by=c("country", "year","data_source", "disease")]
+graphData$grant_perc <-graphData$source_grants/graphData$gos_grants
+
 graphData <- disease_names_for_plots(graphData)
-graphData = graphData[, list(variable=sum(na.omit(variable))), by=byVars]
-
-
+graphData <- data_source_names_for_plots(graphData)
+graphData$data_source <- factor(graphData$data_source, levels=unique(graphData$data_source))
 sourceColors <- c("#000080",
                   "#ff7f00",
                   "#006400",
+                  "#007f88",
                   "#6a3d9a",
                   "#33a02c",
                   "#fb9a99",
@@ -65,9 +108,10 @@ sourceColors <- c("#000080",
                   "#b20059")
 
 names(sourceColors) <- levels(graphData$data_source)
+countryData =graphData[, list(variable=min(na.omit(variable))), by=c("country", "year","data_source")]
+diseaseData = graphData[, list(variable=min(na.omit(variable))), by=c("disease", "year","data_source")]
 
-countryData =graphData[, list(variable=sum(na.omit(variable))), by=c("country", "year","data_source")]
-diseaseData = graphData[, list(variable=sum(na.omit(variable))), by=c("disease", "year","data_source")]
+
 ##PLOTS:
 gos_nat_plots <- list()
 for (k in unique(graphData$country)){
@@ -90,51 +134,68 @@ invisible(lapply(gos_nat_plots, print))
 dev.off()
 
 
-
 ### ----------------------------------------------
-##FGH vs All others - scatterplot: 
+## Each country and disease plots: 
 
-byVars = names(totalData)[names(totalData)%in%c('country', 'year', 'disease', 'data_source')]
-graphData = totalData[, list(budget=sum(na.omit(budget))), by=byVars]
-
-##create a "FGH" specific variable for disbursement: 
-fghData <- fghData[, list(fgh_disb=sum(na.omit(disbursement))),by=byVars]
-fghData$data_source <- NULL
+codData <- graphData[country=="Congo (Democratic Republic)"]
+gtmData <- graphData[country=="Guatemala"]
+ugaData <- graphData[country=="Uganda"]
 
 
-##delete year since we're doing a scatterplot: 
-byVars = names(graphData)[names(graphData)%in%c('country', 'disease', 'data_source')]
-graphData = graphData[, list(fgh_disb=sum(na.omit(fgh_disb)), budget=sum(na.omit(budget))), by=byVars]
 
-##get the FGH "variable" column to repeat over for all of the other data sources: 
-graphData <- merge(graphData, fghData, by=c("year", "country", "disease"), all.x = TRUE)
-
-
-##PLOTS:
 gos_nat_plots <- list()
-for (k in unique(na.omit(graphData$disease))){
-  subdata <- graphData[disease==k]
-  range = c(0, max(na.omit(subdata$fgh_disb/10000000)))
-  plot <- (ggplot(na.omit(subdata), aes(x=fgh_disb/10000000, y=budget/10000000)) + 
-             geom_point(aes(color=data_source), size=3) +
-             geom_abline(intercept=0, slope=1) + 
-             xlim(range)+
-             ylim(range) +
-             labs(y = "Other Sources - Budget (USD 10 mil.)", x = "FGH Disbursements (USD 10 mil.)", 
-                  caption="Source: GOS, FGH, FPM",
-                  title=paste(k, "FGH vs. Other Sources Comparisons"),
-                  colour="Data Source") +
+for (k in unique(codData$disease)){
+  subdata <- codData[disease==k]
+  plot <- (ggplot(na.omit(subdata), aes(x=year, y=variable/1000000, group=data_source, color=data_source)) + 
+             geom_line(size=1) +
+             geom_point()+ 
+             scale_color_manual(name="Data Source", values =sourceColors) +
+             scale_x_continuous(name ="Year", breaks = seq(2005, 2020,5)) +
+             labs(y = "USD (mil.)", x = "Year", 
+                  caption="Source: GOS, FGH, FPM, SICOIN",
+                  title=paste("DRC", k, "FGH vs. Other Sources Comparisons"),
+                  subtitle=("FGH disbursement, all others budget")) +
+             theme_bw(base_size=12) +
+             theme(plot.title=element_text(hjust=.5)))
+  gos_nat_plots[[k]] <- plot
+}
+
+pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/time_series/data_sources_over_time_by_disease.pdf", height=6, width=9)
+invisible(lapply(gos_nat_plots, print))
+dev.off()
+### ----------------------------------------------
+#plot the # of grants for each data source over the total # of grants that year
+
+perc_data <- rbind(codData, ugaData, gtmData)
+perc_data <- perc_data[data_source%in%c("Final FPM Budgets", "Progress Update Disb. Request")]
+
+perc_data[grant_perc >= 1, grant_perc :=1]
+
+
+codData <- perc_data[country=="Congo (Democratic Republic)"]
+gtmData <-perc_data[country=="Guatemala"]
+ugaData <- perc_data[country=="Uganda"]
+
+gos_nat_plots <- list()
+for (k in unique(ugaData$disease)){
+  subdata <- ugaData[disease==k]
+  plot <- (ggplot(na.omit(subdata), aes(x=year, y=grant_perc, fill=data_source)) + 
+             geom_bar(position="dodge", stat="identity") +
+             scale_fill_manual(name="Data Source", values =sourceColors) +
+             scale_x_continuous(name ="Year", breaks = seq(2004, 2020,2)) +
+             labs(y = "% of Total Grants", x = "Year", 
+                  caption="Source: GOS, FGH, FPM, SICOIN",
+                  title=paste("UGA",k, "Sources Comparisons"),
+                  subtitle=("% of Grants/Year")) + scale_y_continuous(labels = percent_format()) +
              theme_bw(base_size=12) +
              theme(plot.title=element_text(hjust=.5)))
   gos_nat_plots[[k]] <- plot
 }
 
 
-
-pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/fgh_vs_all_by_disease.pdf", height=6, width=9)
+pdf("J:/Project/Evaluation/GF/resource_tracking/multi_country/visualizations/time_series/aggregated_grant_year_sources.pdf", height=6, width=9)
 invisible(lapply(gos_nat_plots, print))
 dev.off()
-
 
 
 ### ----------------------------------------------
