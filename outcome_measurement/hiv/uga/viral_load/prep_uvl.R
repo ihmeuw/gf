@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/25/2018
+# 7/26/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -51,8 +51,28 @@ for(f in files) {
   # pull out relevant table
   current_data = data.table(jsonData$f_numbers)
   
+  # grab the facility and district ids
+  setnames(current_data, '_id', 'id')
+  
+  district_id <- unlist(current_data$id[[1]])
+  district_id <- data.table(district_id)
+
+  hub_id <- unlist(current_data$id[[2]])
+  hub_id <- data.table(hub_id)
+  
+  facility_id <- unlist(current_data$id[[3]])
+  facility_id <- data.table(facility_id)
+  
+  current_data[ ,id:=NULL]
+  
+  current_data <- cbind(current_data, district_id)
+  current_data <- cbind(current_data, hub_id)
+  current_data <- cbind(current_data, facility_id)
+  
+  
   # skip to next if there was no data for this combination
   if (length(current_data)==0) next
+  
 
   #to check the position of variables: 
   # outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_',s,'_', t,'_','.rds')
@@ -63,6 +83,7 @@ for(f in files) {
   current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
   current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
   current_data[, sex:=(meta_data[5])]
+  current_data[ , sex:=(substr(current_data$sex, 1, 1))] # to remove .rds
   
   # add if tb status is included 
   # current_data[, tb:=gsub('tb', '', meta_data[6])]
@@ -73,6 +94,7 @@ for(f in files) {
   if(i>1) full_data = rbind(full_data, current_data)
   i = i+1
 }
+
 
 # view the final product of full_data
 str(full_data)

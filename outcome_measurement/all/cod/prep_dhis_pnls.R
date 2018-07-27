@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/17/2018
+# 7/26/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # Prep the data sets for analysis and the Tableau Dashboard
@@ -18,7 +18,7 @@ library(httr)
 library(ggplot2)
 library(dplyr)
 library(xlsx)
-library(stringr) # to extract meta data from file names
+library(stringr) 
 # --------------------
 
 # --------------------
@@ -31,53 +31,15 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 #--------------------
-# Initial merge after download
-# Import PNLS downloads and convert the merged data sets to a data table
-
-# #  read in the pnls data sets and merge them - jan. through april 2018
-# pnls1 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_02_2018_04_2018.rds'))
-# pnls2 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2018_02_2018.rds'))
-# pnls1 <- data.table(pnls1)
-# pnls2 <- data.table(pnls2)
-# 
-# # merge them to create a 2018 dataset
-# pnls3 <- merge(pnls1, pnls2, by=c('group', 'data_element_ID', 'period',
-#                                   'org_unit_ID', 'value', 'category', 'last_update'),
-#                                    all=TRUE)
-# 
-# # upload the 2017 data and create a data table
-# pnls4 <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_01_2017_12_2017.rds'))
-# pnls4 <- data.table(pnls4)
-# 
-## merge in the 2017 data
-# pnls <- merge(pnls3, pnls4, by=c('group', 'data_element_ID', 'period',
-#                        'org_unit_ID', 'value', 'category', 'last_update'),
-#                              all=TRUE)
-# 
-# #------------------------
-# # convert value to a numeric 
-# 
-# setnames(pnls, 'value', 'value_old')
-# 
-# pnls[ ,value:=as.character(value_old)]
-# pnls[ ,value:=as.numeric(value)]
-# pnls[ , value_old:=NULL]
-# 
-# 
-# #------------------------
-# # save the preppred file
-# saveRDS(pnls, paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
-
-# #------------------------
-
-#--------------------
 # Initial cleaning after download
+
 # Import pnls data set and convert to a data table - 2017 - April 2018
 # for future downloads, merge with this data set
+#pnls <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_01_2017_04_2018.rds'))
 
-pnls <- readRDS(paste0(dir, 'pre_merge/pnls_merged_01_2017_04_2018.rds'))
+# import the newest data set for cleaning and meta data merge
+pnls <- readRDS(paste0(dir, 'pre_merge/pnls/pnls_drc_05_2018_07_2018.rds'))
 pnls <- data.table(pnls)
-
 
 #-----------------------------------------
 
@@ -85,7 +47,6 @@ pnls <- data.table(pnls)
 # merge the pnls data with the meta data
 
 # import the meta data for the merge
-data_sets<- data.table(readRDS(paste0(dir, 'meta_data/data_sets.rds'))) # not necessary for the merge
 org_units <- data.table(readRDS(paste0(dir, 'meta_data/org_units_list.rds')))
 data_elements <- data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
 data_elements_categories <- data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
@@ -121,23 +82,34 @@ pnls[ , url_list:=NULL]
 #------------------------
 # rename the variables to be more intuitive
 
-# put the data set in a more intuitive order and change variable types
-pnls <- pnls[ , .(data_set=as.character(datasets_name), element=as.character(element_name), category=as.character(category),
-                  period=period,value=as.numeric(as.character(value)),
-                  org_unit=as.character(org_unit_name), group=group,
-                  coordinates=coordinates, opening_date=opening_date, last_update=last_update,
-                  data_set_id=as.character(datasets_ID), element_id=as.character(data_element_ID),
+pnls[ ,period:=as.character(period)]
+
+# # put the data set in a more intuitive order and change variable types
+pnls <- pnls[ , .(data_set=as.character(datasets_name),
+                  element=as.character(element_name),
+                  category=as.character(category),
+                  period=as.character(period),
+                  value=as.numeric(as.character(value)),
+                  org_unit=as.character(org_unit_name),
+                  coordinates, opening_date, last_update,
+                  data_set_id=as.character(datasets_ID),
+                  element_id=as.character(data_element_ID),
                   org_unit_id=as.character(org_unit_ID))]
 
 #-----------------------------------------------
 # create a date variable from period
-pnls[ , per:= as.character(period)]
-pnls[ , year:=substr(per, 1, 4)]
-pnls[ , month:=substr(per, 5, 6)]
-pnls[ , per:=NULL]
-pnls[ , period:=NULL]
 
+pnls[ , year:=substr(period, 1, 4)]
+pnls[ , month:=substr(period, 5, 6)]
+pnls[ , period:=NULL]
 pnls[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+
+#--------------------------------------------
+# temporary - drop data elements with no associated values
+# the meta data is being regularly updated for pnls - sometimes out of date
+
+pnls <- pnls[!is.na(value)]
+
 #-----------------------------------------------
 # change last_update and opening_date to date variables
 pnls[ , last_update:=as.character(last_update)]
@@ -251,19 +223,19 @@ hospital <- grep(pattern="\\shopital", x=pnls$org_unit1)
 pnls[hospital, level:='Hospital']
 
 # Secondary hospitals
-hospital2 <- grep(pattern="\\shôpital secondaire", x=sigl$org_unit1)
+hospital2 <- grep(pattern="\\shôpital secondaire", x=pnls$org_unit1)
 pnls[hospital2, level:='Secondary Hospital']
-hospital2 <- grep(pattern="\\shopital secondaire", x=sigl$org_unit1)
+hospital2 <- grep(pattern="\\shopital secondaire", x=pnls$org_unit1)
 pnls[hospital2, level:='Secondary Hospital']
 
 # Reference hospitals
-hgr <- grep(pattern="hopital général de référence", x=sigl$org_unit1)
+hgr <- grep(pattern="hopital général de référence", x=pnls$org_unit1)
 pnls[hgr, level:='General Reference Hospital']
-hgr <- grep(pattern="hôpital général de référence", x=sigl$org_unit1)
+hgr <- grep(pattern="hôpital général de référence", x=pnls$org_unit1)
 pnls[hgr, level:="General Reference Hospital"]
-hgr <- grep(pattern="hôpital général de réference", x=sigl$org_unit1)
+hgr <- grep(pattern="hôpital général de réference", x=pnls$org_unit1)
 pnls[hgr, level:="General Reference Hospital"]
-hgr <- grep(pattern="hopital général de reference", x=sigl$org_unit1)
+hgr <- grep(pattern="hopital général de reference", x=pnls$org_unit1)
 pnls[hgr, level:="General Reference Hospital"]
 
 # Hospital center
@@ -322,6 +294,22 @@ pnls <- pnls[ ,.(data_set, element, element_eng, category, date,
               type, type2, path_drc, tableau,
               coordinates, opening_date, last_update,
               data_set_id, element_id, org_unit_id)]
+
+
+#-------------------------
+# import the original data set to merge with the new data
+
+# this is the most recent data before the new download
+pnls_og <- readRDS(paste0(dir, 'prepped_data/pnls.rds'))
+
+# check the date range
+pnls_og[, range(date)]
+pnls[, range(date)]
+
+pnls_og <- pnls_og[year==2017 | year==2018]
+
+# bind the data tables together to create the most recent data set
+pnls <- rbind(pnls_og, pnls)
 
 #---------------------------------
 # save the prepped data as an RDS
