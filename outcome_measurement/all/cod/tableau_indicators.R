@@ -38,9 +38,12 @@ base <- data.table(base)
 
 #--------------------
 # label "category" for the graphs
+base[, unique(category)]
+
 base$category <- factor(base$category, levels=c(">5 ans", "<5 ans", "default"),
                         labels=c("5 and over", "Under 5", "default"))
 
+base[ , category:=as.character(category)]
 #---------------------------
 # fix the english translations for the malaria indicators
 
@@ -59,9 +62,10 @@ base[element_id=='wleambjupW9', element_eng:='A 1.5 Confirmed simple malaria tre
 #---------------------------
 # organize the data in an intuitive way and subset to necessary variables
 
-base <- base[ ,.(count=sum(value, na.rm=T)), by=.(data_set, element, element_eng, date, category, type,
-                                            level, dps, mtk)]
-base[ , category:=as.character(category)]
+base <- base[ ,.(count=sum(value, na.rm=T)), by=.(data_set, element, 
+                                        element_eng, date, category, type,
+                                        level, dps, mtk)]
+
 
 #---------------------------
 # organize the data for Tableau
@@ -88,22 +92,21 @@ sigl <- data.table(sigl)
 sigl[element_id=='ncXfF8VViSh']
 
 #------------------------------
-# subset to the elements needed for Tableau
-
-sigl <- sigl[tableau==1 & (year==2017 | year==2018)]
-
-#------------------------------
 # fix the english on the tableau indicators 
 
 sigl[,.(unique(element_eng), unique(element_id))]
 
-sigl[element_id=='HfCvAwRmGFf', element_eng:='C2 12.2 HIV Test Kit for PMTCT']
-sigl[element_id=='KEv4JxAgpFK', element_eng:='C2 12.2 Determine HIV 1+2 Test Kit']
+sigl[element_id=='HfCvAwRmGFf', element_eng:='C2 12.2 HIV Test Kit for PMTCT site']
+sigl[element_id=='KEv4JxAgpFK', element_eng:='C2 12.2 Determine HIV 1+2 Test Kit Pce']
 sigl[element_id=='QvVGcIERRFc', element_eng:='C1 12.1 Artesunate-amodiaquine (12-59 months) 50mg + 135mg tablet - amount consumed']
 sigl[element_id=='Wo3vNpLXPPm', element_eng:='C1 12.1 Artesunate-amodiaquine (2-11 months) 25mg + 67.5mg tablet  - amount consumed']
 sigl[element_id=='jm3jeYdVkBl', element_eng:='C1 12.1 Artesunate-amodiaquine (14 years, 6 and over) 100mg + 270mg tablet - amount consumed']
 sigl[element_id=='ovziGhkDOKb', element_eng:='C1 12.1 Artesunate-amodiaquine (6-13 years, 3 and over) 100mg + 270mg tablet - amount consumed']
-sigl[element_id=='ncXfF8VViSh', element_eng:='C1 12.1 Rifampicin isoniazid + Pyrimetham Ethamb (RHZE) + 75mg 150mg + 400mg + 275mg these - amount consumed']
+sigl[element_id=='ncXfF8VViSh', element_eng:='C1 12.1 Rifampicin isoniazid + Pyrimetham Ethamb (RHZE) 150mg + 75mg + 400mg + 275mg these - amount consumed']
+
+sigl[element_id=='WjEIQZvEFqa', element_eng:='C1 12.1 Lumefantrine+ Artemether 80mg + 480mg - amount consumed' ]
+sigl[element_id=='aeTpblK0SVC', element_eng:='C1 12.1 Lumefantrine+ Artemether 40mg + 240mg - amount consumed' ]
+
 
 #------------------------------
 # subset to only the relevant variables 
@@ -121,7 +124,7 @@ drugs <- sigl[ ,.(count=sum(count)), by=.(element_eng, date, category)]
 ggplot(drugs, aes(x=date, y=count)) +
   geom_point() +
   geom_line() +
-  facet_wrap(~element_eng) +
+  facet_wrap(~element_eng, scale='free_y') +
   theme_bw() +
   scale_y_continuous(labels = scales::comma)
 
@@ -136,10 +139,9 @@ ggplot(tb, aes(x=date, y=count, color=category)) +
   scale_y_continuous(labels = scales::comma)
 
 #-----------------------------
-# merge the two data sets
+# bind the two data sets together
 
-idVars <- c('data_set', 'element', 'element_eng', 'date', 'category', 'type', 'level', 'dps', 'mtk', 'count')
-tableau_base_sigl <- merge(base, sigl, by=idVars, all=TRUE)
+tableau_base_sigl <- rbind (base, sigl)
 
 #------------------------------
 # save an interim RDS file 
@@ -154,18 +156,19 @@ tableau_base_sigl <- merge(base, sigl, by=idVars, all=TRUE)
 pnls <- readRDS(paste0(dir, 'tabl_pnls.rds'))
 pnls <- data.table(pnls)
 
-# drop out the drug element that doesn't make sense
-pnls <- pnls[element_eng!="NACP-DRUG-TDF / 3TC / EFV (300/300/600 mg) - 30 these"]
-
-# drop out the second test kit indicator
-pnls <- pnls[element_id!="Gv1UQdMw5wL"]
+# drop out the drug element where the totals don't make sense and STI test indicator
+pnls <- pnls[element_id!="jJuipTLZK4o"]
 pnls <- pnls[element_id!="DAbWpraDg43"]
+pnls <- pnls[element_id!="ZqM4AyJW42Q"]
+pnls <- pnls[element_id!="Gv1UQdMw5wL"]
 
-# drop the outliers
-pnls[org_unit=="kn Molende Centre de Santé" & date=='2018-02-01' & element_id=='fdc1v0PSUZe' & category=='Féminin', value:=0]
+# drop two large outliers
+pnls[org_unit=="kn Molende Centre de Santé" & date=='2018-02-01' & element_id=='fdc1v0PSUZe' & category=='Féminin', value:=NA]
 pnls[org_unit=='kr Christ Roi Centre de Santé' & date=='2017-09-01' & 
        type=='pmtct' & element_id=='gHBcPOF5y3z' & category=='CPN, Moins de 15 ans',
-     value:=0]
+     value:=NA]
+
+pnls <- pnls[!is.na(value)]
 
 # fix the english translations
 pnls[element_id=='DXz4Zxd4fKq', element_eng:='Pregnant or lactating women tested for HIV']
@@ -173,7 +176,7 @@ pnls[element_id=='gHBcPOF5y3z', element_eng:='Pregnant or lactating women tested
 pnls[element_id=='zxn95tkbnCv', element_eng:='Pregnant or lactating women HIV+ and informed of their results']
 
 # sum the values at the dps level
-pnls <- pnls[ ,.(count=sum(value, na.rm=T)), by=.(data_set, element, element_eng, element_id,
+pnls <- pnls[ ,.(count=sum(value, na.rm=T)), by=.(data_set, element, element_eng, 
                                                   date, category, type,
                                                   level, dps, mtk)]
 
@@ -208,9 +211,12 @@ ggplot(hiv2[type=='drugs'],
   theme_bw() +
   scale_y_continuous(labels = scales::comma)
 
+
+
 #---------------------------------
-# merge the three data sets into one 
-tabl <- merge(tableau_base_sigl, pnls, by=idVars, all=T)
+# rbind the three data sets into one 
+
+tabl <- rbind(tableau_base_sigl, pnls)
 
 #------------------------------
 
@@ -267,7 +273,6 @@ tabl[category=='SA/PP, 50 ans et plus', age:='50+']
 tabl[category=='SA/PP, Moins de 15 ans', age:='< 15 years'] 
 
 tabl[is.na(age), unique(category)]
-
 #-------------------------------
 # add a sex category
 tabl[ ,unique(category)]
@@ -282,6 +287,7 @@ tabl[cpn, sex:='Female']
 gents <- grep(pattern="Masculin", x=tabl$category)
 tabl[gents, sex:='Male']
 
+tabl[is.na(sex), unique(category)]
 #--------------------------------------------------------
 # merge pregnant women into malaria cases 
 
@@ -355,13 +361,12 @@ setnames(tabl, c("data_set", "element", "element_eng", "date", "category",
 # Export as an Excel document 
 
 # save as a RDS file 
-saveRDS(tabl, paste0(dir, 'tableau_01_2017_04_2018.rds'))
+saveRDS(tabl, paste0(dir, 'tableau_01_2017_07_2018.rds'))
 
 # read in the RDS file so you don't have to rerun the code
 #tabl <- readRDS(paste0(dir, 'tableau_01_2017_04_2018.rds'))
 
 #------------------------------
-# split the data sent into multiple xlsx files
 # use xlsx instead of csv because it preserves the french special characters
 # use the openxlsx package (not xlsx!) as the java in xlsx cannot accomodate size
 

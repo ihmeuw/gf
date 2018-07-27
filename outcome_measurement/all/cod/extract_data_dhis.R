@@ -55,11 +55,11 @@ source(paste0(dir, 'dhis_extracting_functions.R'))
 # select the start year and end year for the download
 start_year <- '2018'
 end_year <- '2018'
-start_month <- '05'
+start_month <- '01'
 end_month <- '07'
 
 # change the update year to before the data begins
-update_year <- '2018'
+update_year <- '2017'
 
 #identify the data set(s) you want to download by number (list below)
 set <- 17

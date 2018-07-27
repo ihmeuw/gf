@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/12/2018
+# 7/26/2018
 #
 # Create a subset of the PNLS data for analysis by PATH DRC
 
@@ -31,11 +31,12 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 #-------------------------------------------
 #  subset the pnls data set to only the relevant elements for analysis
+#  create a tb-hiv specific data set
+#  this creates an interim tb_hiv data set because pnls is so large
 
-# import the pnls data 
-
+# # import the pnls data
 # pnls <- readRDS(paste0(dir, 'prepped_data/pnls.rds'))
-#  
+# 
 # # create a list of only the relevant tb_hiv elements
 # 
 # tb_hiv_points <- c('Hq0aVz1Ki7a', 'C7g1YuoEdic', 't59kPKkqfh3', 'DAHLzUAHbWz',
@@ -44,14 +45,15 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 #       'VIOWIkL7otc', 'GfWijj9JBMz', 'YEDYWpuL8Os', 'xClRm6CHUSK',
 #       'HXYmoLhhXML', 'MUwdwEuzt9L', 'Gv1UQdMw5wL')
 # 
-# # # create a data table that is a subset of the pnls data 
+# # create a data table that is a subset of the pnls data 
 # tb_hiv <- pnls[element_id %in% tb_hiv_points]
 # 
 # # save the subset of pnls as a RDS file
-# saveRDS(tb_hiv, paste0(dir, 'tb_hiv.rds'))
-
+# saveRDS(tb_hiv, paste0(dir, 'path_drc/tb_hiv_not_prepped.rds'))
+ 
+#----------------------------------------------------
 # import the raw data for cleaning
-tb_hiv <- readRDS(paste0(dir, 'tb_hiv.rds'))
+tb_hiv <- readRDS(paste0(dir, 'path_drc/tb_hiv_not_prepped.rds'))
 
 # drop unnecessary columns
 tb_hiv[ ,data_set_id:=NULL]
@@ -119,8 +121,5 @@ tb_hiv[indicator=='test_kit', .(unique(element_eng), unique(element))]
 # save the data set as a RDS
 saveRDS(tb_hiv, paste0(dir, 'path_drc/tb_hiv.rds'))
 
-# save the data set as a CSV
-# the CSV is typically too long to download accurately
-# write.csv(tb_hiv, paste0(dir, 'tb_hiv.csv'))
 
 #-----------------------------------------
