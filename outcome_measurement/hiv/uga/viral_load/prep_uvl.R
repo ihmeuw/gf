@@ -17,7 +17,7 @@ library(jsonlite)
 library(httr)
 library(ggplot2)
 library(stringr) 
-
+library(plyr)
 # --------------------
 
 # --------------------
@@ -133,7 +133,7 @@ full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(fa
 # identify merge mismatches and downloading errors
 
 #------------------------
-# merge in the facilities
+# merge in the facility names
 
 # eliminate hub id and use hub id in meta data 
 full_data[ ,hub_id:=NULL]
@@ -144,22 +144,34 @@ uvl <- merge(full_data, facilities, by='facility_id', all.x=TRUE)
 # 66 facilities are still missing
 uvl[is.na(facility_name), length(unique(facility_id))]
 
+#-------------------------
+# if the facility information is missing, districts do not merge
+# full data also contains district ids 
+# replace missing district info using full data (to supplement info in meta data)
 
-uvl[is.na(district_id), length(unique(facility_id))]
+# create a vector of districts only
+districts <- facilities[ ,.(district_name1=unique(district_name)), by=district_id]
+districts <- districts[!is.na(district_id)]
 
+# rename the variable to join on 
+setnames(uvl, 'district_id.x', 'district_id')
 
-# eliminate district id and hub_id from full__data 
-# use district classification in meta data
-full_data[ ,district_id:=NULL]
+# merge the data sets
+uvl <- join(uvl, districts, by='district_id', type='left')
 
+# replace missing district names
+uvl[is.na(district_name), district_name:=district_name1]
 
+uvl[ ,district_name1:=NULL]
+uvl[ ,district_id.y:=NULL]
 
-
-
-uvl[is.na(facility_name), .(sum(patients_received))]
 
 # create a placeholder for missing facility names for 34 facilities
-uvl_sex [is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
+uvl[is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
+
+# drop out the 'facility left blank' facility with no district information
+# contains only 55 patients
+uvl <- uvl[district_id!=121]
 
 # ----------------------------------------------
 # additional to code to identify merge mismatches and downloading errors
@@ -167,53 +179,53 @@ uvl_sex [is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
 # identify acility ids that are associated with multiple district ids
 # 29 facilities are associated with two district ids (always two)
 # check for duplicates after the change
-dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
+dups <- uvl[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
 dups <- dups[dup>1, .(facility_id, facility_name)]
 
 # 2 facilities contain Rakai in the name
-uvl_sex[facility_id==228 | facility_id==175, district_id:=80]
+uvl[facility_id==228 | facility_id==175, district_id:=80]
 
 # looked up in the health facility inventory; majority are Kyotera (134) and Rakai(80)
-uvl_sex[facility_id==255, district_id:=80]
-uvl_sex[facility_id==502, district_id:=80]
-uvl_sex[facility_id==1351, district_id:=80]
-uvl_sex[facility_id==1526, district_id:=80]
-uvl_sex[facility_id==1575 , district_id:=80]
-uvl_sex[facility_id==2058, district_id:=89]
+uvl[facility_id==255, district_id:=80]
+uvl[facility_id==502, district_id:=80]
+uvl[facility_id==1351, district_id:=80]
+uvl[facility_id==1526, district_id:=80]
+uvl[facility_id==1575 , district_id:=80]
+uvl[facility_id==2058, district_id:=89]
 
-uvl_sex[facility_id== 8335, district_id:=7]
-uvl_sex[facility_id==8350, district_id:=5]
-uvl_sex[facility_id== 8359, district_id:=7]
-uvl_sex[facility_id== 8352, district_id:=15]
-uvl_sex[facility_id== 8341, district_id:=20]
-uvl_sex[facility_id== 8348, district_id:=31]
+uvl[facility_id== 8335, district_id:=7]
+uvl[facility_id==8350, district_id:=5]
+uvl[facility_id== 8359, district_id:=7]
+uvl[facility_id== 8352, district_id:=15]
+uvl[facility_id== 8341, district_id:=20]
+uvl[facility_id== 8348, district_id:=31]
 
-uvl_sex[facility_id==8347 , district_id:=29]
-uvl_sex[facility_id==8355 , district_id:=30]
-uvl_sex[facility_id==8338, district_id:=31]
-uvl_sex[facility_id==8358, district_id:=39]
-uvl_sex[facility_id==8340, district_id:=101]
-uvl_sex[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
-uvl_sex[facility_id==8351, district_id:=85]
-uvl_sex[facility_id==8345, district_id:=97]
+uvl[facility_id==8347 , district_id:=29]
+uvl[facility_id==8355 , district_id:=30]
+uvl[facility_id==8338, district_id:=31]
+uvl[facility_id==8358, district_id:=39]
+uvl[facility_id==8340, district_id:=101]
+uvl[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
+uvl[facility_id==8351, district_id:=85]
+uvl[facility_id==8345, district_id:=97]
 
-uvl_sex[facility_id==8353, district_id:=64]
-uvl_sex[facility_id==8354, district_id:=86]
-uvl_sex[facility_id==8344, district_id:=97]
-uvl_sex[facility_id==8336, district_id:=68]
-uvl_sex[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
-uvl_sex[facility_id==8346, district_id:=86]
-uvl_sex[facility_id==8339, district_id:=84]
-uvl_sex[facility_id==8337, district_id:=97]
+uvl[facility_id==8353, district_id:=64]
+uvl[facility_id==8354, district_id:=86]
+uvl[facility_id==8344, district_id:=97]
+uvl[facility_id==8336, district_id:=68]
+uvl[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
+uvl[facility_id==8346, district_id:=86]
+uvl[facility_id==8339, district_id:=84]
+uvl[facility_id==8337, district_id:=97]
 
 # re-run to check that there are no duplicate entries
-dups <- uvl_sex[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
+dups <- uvl[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
 dups <- dups[dup>1, .(facility_id, facility_name)]
 
 #------------------------
 # merge in the districts
 districts <- readRDS(paste0(dir,"/facilities/districts.rds"))
-uvl_sex <- merge(uvl_sex, districts, by='district_id', all.x=TRUE)
+uvl <- merge(uvl, districts, by='district_id', all.x=TRUE)
 
 # ---------------
 
@@ -237,35 +249,35 @@ merge_new_dists <- function(x) {
 
 # run the function on your data set
 # there should be 113 districts - 112 plus one missing
-merge_new_dists(uvl_sex)
-length(unique(uvl_sex$district_name))
+merge_new_dists(uvl)
+length(unique(uvl$district_name))
 
 # Change spelling of Luwero=Luweero and Sembabule=Ssembabule
-uvl_sex[district_name=="Luwero", district_name:="Luweero"]
-uvl_sex[district_name=="Sembabule", district_name:="Ssembabule"]
+uvl[district_name=="Luwero", district_name:="Luweero"]
+uvl[district_name=="Sembabule", district_name:="Ssembabule"]
 
 # 55 patients in district 121, or "district left blank"
 # exclude the 55 patients in district left blank
-uvl_sex[district_id==121, .(sum(patients_received), sum(suppressed), month, year), by=.(facility_name, district_name)]
-uvl_sex <- uvl_sex[district_id!=121]
+uvl[district_id==121, .(sum(patients_received), sum(suppressed), month, year), by=.(facility_name, district_name)]
+uvl <- uvl[district_id!=121]
 
 # ---------------
 # rename sex
-uvl_sex[ , .(class(sex)) ]
-uvl_sex[sex=='m', sex:='Male']
-uvl_sex[sex=='f', sex:='Female']
-uvl_sex[sex=='x', sex:='Unknown']
+uvl[ , .(class(sex)) ]
+uvl[sex=='m', sex:='Male']
+uvl[sex=='f', sex:='Female']
+uvl[sex=='x', sex:='Unknown']
 
 # ---------------
 # add date 
-uvl_sex[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+uvl[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
 
 # ---------------
 # combine the duplicates into single entries
 
 # full data table of all duplicate entries as single entries
-uvl_sex <- uvl_sex[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received),  
+uvl <- uvl[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received),  
                         rejected_samples=sum(rejected_samples), 
                         dbs_samples=sum(dbs_samples), total_results=sum(total_results),
                         suppressed=sum(suppressed), valid_results=sum(valid_results)),
@@ -273,19 +285,19 @@ uvl_sex <- uvl_sex[ , .(patients_received=sum(patients_received), samples_receiv
                         sex, date, month, year)]
 
 # simple check for duplicates - should read FALSE only
-unique(duplicated(uvl_sex))
+unique(duplicated(uvl))
 
 # ---------------
 # extensive check for duplicate entries
 # create a unique identifier (char) of facilityid_date_sex for single rows in the data table
-uvl_sex[sex=="Female", sex1:=1 ]
-uvl_sex[sex=="Male", sex1:=2]
-uvl_sex[sex=="Unknown", sex1:=3]
+uvl[sex=="Female", sex1:=1 ]
+uvl[sex=="Male", sex1:=2]
+uvl[sex=="Unknown", sex1:=3]
 
-uvl_sex[ ,combine:= paste0(facility_id, '_', date, '_', sex1)]
-uvl_sex[,length(unique(combine))] 
+uvl[ ,combine:= paste0(facility_id, '_', date, '_', sex1)]
+uvl[,length(unique(combine))] 
 
-uvl_sex[duplicated(combine)] # should be an empty data table (no duplicate entries)
+uvl[duplicated(combine)] # should be an empty data table (no duplicate entries)
 
 
 # ---------------
@@ -293,28 +305,28 @@ uvl_sex[duplicated(combine)] # should be an empty data table (no duplicate entri
 # commented out checks for equality constraints
 
 # check for equality constraints
-uvl_sex[patients_received > samples_received] # should be 0
+uvl[patients_received > samples_received] # should be 0
 
 # one case where there appears to be an error - samples received should be 4
-uvl_sex[rejected_samples > samples_received]
-uvl_sex[facility_id==3238 & sex=='Male' & month==8 & year==2015, samples_received:=4]
+uvl[rejected_samples > samples_received]
+uvl[facility_id==3238 & sex=='Male' & month==8 & year==2015, samples_received:=4]
 
 # if samples received is < dbs_samples, change to match dbs_samples (samples received must be greater than or equal to dbs)
-uvl_sex[dbs_samples > samples_received]
-uvl_sex[samples_received < dbs_samples, samples_received:=dbs_samples]
+uvl[dbs_samples > samples_received]
+uvl[samples_received < dbs_samples, samples_received:=dbs_samples]
 
 # once samples_received is always >= dbs_samples, valid_results is always =< samples_received
-uvl_sex[total_results > samples_received] # should be 0
-uvl_sex[valid_results > samples_received] # sjhould be 0
-uvl_sex[suppressed > valid_results] # should be 0
+uvl[total_results > samples_received] # should be 0
+uvl[valid_results > samples_received] # sjhould be 0
+uvl[suppressed > valid_results] # should be 0
 
 # ---------------
 # add a variable for plasma samples and organize the data set intuitively
-uvl_sex[ , plasma_samples:=(samples_received - dbs_samples)]
-uvl_sex[plasma_samples < 0, plasma_samples:=0]
+uvl[ , plasma_samples:=(samples_received - dbs_samples)]
+uvl[plasma_samples < 0, plasma_samples:=0]
 
 # change the name of total_results to samples_tested
-uvl_sex <- uvl_sex[ , .(samples_received=sum(samples_received),  patients_received=sum(patients_received),
+uvl <- uvl[ , .(samples_received=sum(samples_received),  patients_received=sum(patients_received),
                         rejected_samples=sum(rejected_samples), plasma_samples=sum(plasma_samples),
                         dbs_samples=sum(dbs_samples), samples_tested=sum(total_results),
                         valid_results=sum(valid_results), suppressed=sum(suppressed)),
@@ -322,9 +334,9 @@ uvl_sex <- uvl_sex[ , .(samples_received=sum(samples_received),  patients_receiv
                          sex, date, month, year)]
 
 # ---------------
-# rename uvl_sex uganda_vl
+# rename uvl uganda_vl
 
-uganda_vl <- uvl_sex
+uganda_vl <- uvl
 
 # ---------------
 # check equality constraints
