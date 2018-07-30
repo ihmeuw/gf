@@ -336,9 +336,9 @@ uvl[is.na(level), length(unique(facility_name))]
 # create a variable to identify prisons
 uvl[grep(pattern="prison", facility_name1), prison:='Yes']
 uvl[grep(pattern="prison", dhis2_name1), prison:='Yes'] # using dhis2name captures a remand center
-uvl[prison!='Yes', prison:='No']
+uvl[is.na(prison), prison:='No']
 
-uvl[ , c("facility_name1", "dhis2_name1"):=NULL]
+uvl[ , c("facility_name1", "dhis2_name1", 'level2'):=NULL]
 
 #---------------
 # run a missing data check
@@ -351,6 +351,13 @@ uvl[is.na(samples_tested)]
 uvl[is.na(suppressed)]
 uvl[is.na(valid_results)]
 #--------------- 
+# save the final data as an RDS
+
+saveRDS(uvl, file= paste0(dir, "/prepped_data/sex_data.rds"))
+
+#------------------------------------------------------------
+# replace unknown sex values
+
 
 #--------------- 
 # replace the unknown sex values with the facility sex ratio of patients received
@@ -495,7 +502,7 @@ uvl <- uvl[ ,.(facility_id, facility_name, dhis2name, platform, prison, district
 
 
 #save the final data as an RDS
-saveRDS(uvl, file= paste0(dir, "/sex_data.rds"))
+saveRDS(uvl, file= paste0(dir, "/sex_data_unknowns_altered.rds"))
 
 # ----------------------------------------------
 
