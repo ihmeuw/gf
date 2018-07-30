@@ -1,11 +1,10 @@
 # ----------------------------------------------
 # David, Phillips, Caitlin O'Brien-Carelli
 #
-# 4/11/2018
+# 7/30/2018
 # To extract a list of districts and facilities from Uganda Viral Load Dashboard: https://vldash.cphluganda.org/
 # ----------------------------------------------
 
-install.packages('')
 
 # --------------------
 # Set up R
@@ -20,36 +19,33 @@ library(tm)
 # --------------------
 # Files and directories
 
-if (Sys.info()[1] == 'Windows') {
-  username <- "ccarelli"
-  root <- "J:/"
-} else {
-  username <- Sys.getenv("USER")
-  root <- "/home/j/"
-}
+root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # output file
-dir = paste0(root, "Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facilities")
+dir = paste0(root, "/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facilities")
 # ----------------------------------------------
-
 
 # ----------------------------------------------
 # Load/prep data
 # facilities and districts are stored in separate urls
             
-  # store url
-  url = 'https://vldash.cphluganda.org/other_data'
+# store url
+url = 'https://vldash.cphluganda.org/other_data'
               
-  # load
-  data = fromJSON(url)
+# load
+data = fromJSON(url)
   
-  
-  # original function to extract the facility ids from the list
-  #facilities_full <- data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]]))) 
+
+# original function to extract the facility ids from the list
+#facilities_full <- data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]]))) 
  
- # create a data frame with only the facilities data 
- facilities_1 <- data$facilities
- 
+#-----------------------------
+# extract the facilities and their associated meta data 
+
+# create a data table that contains only facilities information
+facilities_1 <- data$facilities
+
+
  # create a function that selects the facility names and ids
   select_names <- function(i) {
    y <- unlist(facilities_1[i])
@@ -71,13 +67,13 @@ dir = paste0(root, "Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/f
   # 147 facilities are missing a district id
   facilities[is.na(district_id), length(unique(facility_id))]
   
-  
-# --------------------
+#-----------------------------
+ # extract the districts and their associated meta data 
 
-# create a list of districts
+# create a data table that contains only district information
 districts_1 <- data$districts
-  
-  
+
+# create a function that selects the district names and ids
   select_dist <- function(i) {
     y <- unlist(districts_1[i])
     y <- y[c(2:3)]
@@ -100,27 +96,24 @@ districts_1 <- data$districts
   districts <- districts[order(district_id)]
   
   # eliminate duplicate district ids (error ids for 3 distrits)
-  # no facilities listed under error ids
-  districts <- districts[!(district_id==127| district_id==128 | district_id==129)]
+  # no facilities listed under mistaken ids
   districts[duplicated(district_name), .(district_name, district_id)]
-  
-  #one district is named 'district left blank'... find a way to rename
+  facilities[district_id==127| district_id==128 | district_id==129]
+  # eliminate mistaken ids/duplicates
+  districts <- districts[!(district_id==127| district_id==128 | district_id==129)]
+ 
+  #one district is named 'district left blank'
   districts[district_name=="LeftBlank", district_id]
-  
+  districts[district_id==121, district_name:=NA]
   
 # ----------------------------------------------
-  # save both files to merge in separately
+# create a single meta data file to merge with a data set
   
-  facilities <- facilities[ , .(facility_id=facility_id, facility_name=facility_name, dhis2name=dhis2_name)]
-
+# merge the district names into the facilities meta data 
+facilities <- merge(facilities, districts, all.x=T)
   
-  # save full facilities and data to merge into downloads from Uganda VL
-  saveRDS(facilities, file=paste0(dir,"/facilities.rds"))
+# save full facilities and data to merge into downloads from Uganda VL
+saveRDS(facilities, file=paste0(dir,"/facilities.rds"))
   
-
-  # save full facilities and data to merge into downloads from Uganda VL
-  saveRDS(districts, file=paste0(dir,"/districts.rds"))
-  
-   
 # ----------------------------------------------
   

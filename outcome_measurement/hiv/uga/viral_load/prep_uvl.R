@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/26/2018
+# 7/30/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -95,7 +95,6 @@ for(f in files) {
   i = i+1
 }
 
-
 # view the final product of full_data
 str(full_data)
 
@@ -114,26 +113,18 @@ str(facilities)
 full_data[, sum(samples_received), by=year]
 full_data[month==1, sum(samples_received), by=year] # should be no samples in jan 2014
 
-# check that no data downloaded for jan - july 2014 or after may 2018
-# both should be 0
-full_data[year==2014 & month!=8 & month!=9 & month!=10 & month!=11 & month!=12, sum(samples_received)]
-full_data[year==2018 & month!=1 & month!=2 & month!=3 & month!=4 & month!=5, sum(samples_received)]
-
-full_data[year==2014, sum(samples_received), by=month]
-full_data[year==2018, sum(samples_received), by=.(month, sex)]
-
-# check for substantial variability in the number of samples
-full_data[, .(total_samples=sum(samples_received)), by=.(sex, year)]
-
 # ----------------------------------------------
-# drop out the current month - change to reflect current month
-full_data <- full_data[!(year==2018 & month==5)]
+# drop out the current month - change to reflect current month to accomodate data lags
+
+full_data[year==2018, range(month)]
+full_data <- full_data[!(year==2018 & month==7)]
 
 # ----------------------------------------------
 # upload the facilities names, ids and check for disparate values
 
-# print a list of the facility ids in full_data that are not on the names list
-# 34 facilities, 692 patients in those facilities
+# print a list of the facility ids in full_data that are not on the list of facility names
+# 66 facilities, 1234 patients in those facilities
+
 full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(facility_id)), 
                                                                 sum(patients_received))]
 
@@ -143,15 +134,29 @@ full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(fa
 
 #------------------------
 # merge in the facilities
-uvl_sex <- merge(full_data, facilities, by='facility_id', all.x=TRUE)
 
-# when exporting tb cases
-# tb <- uvl_sex[tb=='y']
-# saveRDS(tb, file= paste0(dir, "/tb_cases.rds"))
+# eliminate hub id and use hub id in meta data 
+full_data[ ,hub_id:=NULL]
 
-# most recent download only lacks a name for 2 facilities
-uvl_sex[is.na(facility_name), length(unique(facility_id))]
-uvl_sex[is.na(facility_name), .(sum(patients_received))]
+# merge on facility id
+uvl <- merge(full_data, facilities, by='facility_id', all.x=TRUE)
+
+# 66 facilities are still missing
+uvl[is.na(facility_name), length(unique(facility_id))]
+
+
+uvl[is.na(district_id), length(unique(facility_id))]
+
+
+# eliminate district id and hub_id from full__data 
+# use district classification in meta data
+full_data[ ,district_id:=NULL]
+
+
+
+
+
+uvl[is.na(facility_name), .(sum(patients_received))]
 
 # create a placeholder for missing facility names for 34 facilities
 uvl_sex [is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
