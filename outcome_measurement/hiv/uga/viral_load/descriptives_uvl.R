@@ -214,11 +214,19 @@ table_1 <- uvl[  ,.(patients_received = sum(patients_received), samples_received
                     plasma_ratio=100*(sum(plasma_samples)/sum(samples_received)),
                     valid_samples_ratio=100*(sum(valid_results)/sum(samples_received)),
                     suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
-                        by=.(sex, date)] [order(date, sex)]
+                        by=.(sex, date, month, year)] [order(date, sex)]
 
 # --------------------
 # count of facilities reporting by month
 table_2 <- uvl[, .(facilities_report=length(unique(facility_id))), by=.(date, month, year)][order(date)]
+
+#---------------------
+# percentage of patients with unknown sex by month
+sex_tot <- uvl[ ,.(sex_total=sum(patients_received)), by=.(date, sex)]
+tot <- uvl[ ,.(total=sum(patients_received)), by=.(date)]
+sex_tot <- merge(sex_tot, tot, by='date', all=T)
+sex_tot <- sex_tot[sex=='Unknown']
+sex_tot[ ,percent:=(sex_total/total)*100]
 
 # ----------------------------------------------
 # create maps and plots and export as a PDF
@@ -305,7 +313,13 @@ ggplot(uvl_year[variable=='Facilities Reporting' | variable=='Patients Submittin
 # 
 # # dev.off()
 
-
+# percentage of missing sex data
+ggplot(sex_tot, aes(x=date, y=percent)) + 
+  geom_point(size=1, alpha=0.8) +
+  geom_line(alpha=0.5) +
+  theme_minimal() +
+  labs(x="% of patients whose sex is unknown", y="Date", title="Reporting completeness: percentage of patients whose sex is unknown") 
+  
 # ---------------
 # suppression ratio maps
 
@@ -409,6 +423,11 @@ ggplot(uvl_1[year==2017], aes(y=value, x=factor(month), color=sex, group=sex)) +
   facet_wrap(~variable) +
   labs(x="Month", y="Count", title="2017 Uganda Viral Load Dashboard data by sex", color="Sex") + theme_bw()
 
+ggplot(uvl_1[year==2018], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+  geom_point() + 
+  geom_line(alpha=0.5) + 
+  facet_wrap(~variable) +
+  labs(x="Month", y="Count", title="2017 Uganda Viral Load Dashboard data by sex", color="Sex") + theme_bw()
 
 # ---------------
 
