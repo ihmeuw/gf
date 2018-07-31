@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/30/2018
+# 7/31/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -340,17 +340,46 @@ uvl[is.na(prison), prison:='No']
 
 uvl[ , c("facility_name1", "dhis2_name1", 'level2'):=NULL]
 
-#---------------
+#------------------------------------------
 # run a missing data check
-uvl[is.na(patients_received)]
-uvl[is.na(samples_received)]
-uvl[is.na(rejected_samples)]
-uvl[is.na(plasma_samples)]
-uvl[is.na(dbs_samples)]
-uvl[is.na(samples_tested)]
-uvl[is.na(suppressed)]
-uvl[is.na(valid_results)]
+uvl[ ,lapply(.SD, is.na), .SDcols=10:17]
+unique(dt) # should be only false values
+
+#--------------------------
+# convert integers to numerics 
+vars <- c('facility_id', 'facility_name', 'district_id', 'district_name', 
+          'dhis2_name', 'sex', 'date', 'month', 'year', 'level', 'prison')
+
+uvl <- uvl[ ,lapply(.SD, as.numeric), .SDcols=10:17, by=vars]
+
 #--------------- 
+# where one sex is present and the other is missing, assign a 0 value to the missing sex
+uvl[sex!='Unknown', rows:=.N, by=.(facility_name, date)]
+opp_sex <- uvl[rows==1]
+
+# create a data table of the opposite sex values for values in the data set
+opp_sex[sex=='Female', sex1:='Male']
+opp_sex[sex=='Male', sex1:='Female']
+opp_sex[ , sex:=sex1][ ,'sex1':=NULL]
+
+opp_sex[ , patients_received:=0]
+opp_sex[ , samples_received:=0]
+opp_sex[ , rejected_samples:=0]
+opp_sex[ , plasma_samples:=0]
+opp_sex[ , dbs_samples:=0]
+opp_sex[ , samples_tested:=0]
+opp_sex[ , suppressed:=0]
+opp_sex[ , valid_results:=0]
+
+# rbind in the 0 values for the opposite sex
+uvl <- rbind(uvl, opp_sex)
+
+# check that the merge worked correctly
+uvl[sex!='Unknown', rows:=.N, by=.(facility_name, date)]
+uvl[sex!='Unknown', unique(rows)] # there should be two values for each facility
+uvl[sex!='Unknown', .(y=length(unique(sex))), by=.(facility_name, date)][y!=2] # should be empty - two sexes per facility month
+
+#---------------------------------------
 # save the final data as an RDS
 
 saveRDS(uvl, file= paste0(dir, "/prepped_data/sex_data.rds"))
@@ -460,6 +489,9 @@ uvl <- uvl[ ,lapply(.SD, sum), by=c('facility_id', 'facility_name', 'dhis2name',
 
 #---------------
 # run a final check for missing data and violations of equality constraints
+
+
+
 
 # check for missing data
 uvl[is.na(patients_received)]

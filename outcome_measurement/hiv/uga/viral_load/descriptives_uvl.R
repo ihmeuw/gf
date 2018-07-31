@@ -69,7 +69,7 @@ length(unique(shapeData@data$dist112_na)) # 112 districts
 unique(uvl$district_name)[!(unique(uvl$district_name)) %in% unique(shapeData@data$dist112_na)]
 
 # create a data table that contains only district names and ids from the shape file
-shape_names <- data.table(district_name=shapeData@data$dist112_na, district_id=shapeData@data$dist112)
+shape_names <- data.table(district_name=shapeData@data$dist112_na, id=shapeData@data$dist112)
 str(shape_names)
 
 #----------------------------------------
@@ -106,7 +106,7 @@ facilities_table <- uvl[, .(facilities_report=length(unique(facility_id))), by=.
         facilities_table[order(district_name, year)]
 
          # divide facilities reporting in each year by total facilities ever reported for ratio
-         facilities_table[ , facility_ratio:=(facilities_report/total_facilities)*100, by=.(district_name, year)]
+         facilities_table[ ,facility_ratio:=(as.numeric(facilities_report)/as.numeric(total_facilities))*100]
               
               # merge count and ratio of facilities reporting into ratio_year
               ratio_year <- merge(ratio_year, facilities_table, by=c('district_name', 'year'), all.x=TRUE)
@@ -120,36 +120,28 @@ facilities_table <- uvl[, .(facilities_report=length(unique(facility_id))), by=.
 ratio_table <- merge(shape_names, ratio_table, by="district_name")
 ratio_year <- merge(shape_names, ratio_year, by="district_name")
               
-# rename both district ids "id" for ease of reference
-setnames(ratio_table, "district_id", "id")
-setnames(ratio_year, "district_id", "id")
-
 # -----------------
 # create data tables for annual maps stratified by sex
 
-# females, annual
+# females, annual map
 ratio_female <- uvl[ sex=='Female', 
-                           .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
-                             dbs_samples=sum(dbs_samples), valid_results=sum(valid_results),
-                             suppressed=sum(suppressed), dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
-                             suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
-                         by=.(district_name, year)]
+                         .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
+                            dbs_samples=sum(dbs_samples), valid_results=sum(valid_results),
+                            suppressed=sum(suppressed), dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
+                            suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
+                            by=.(district_name, year)] [order(year, district_name)]
 
-ratio_female <- ratio_female[order(year, district_name)]
 ratio_female <- merge(shape_names, ratio_female, by="district_name")
-setnames(ratio_female, "dist_id", "id")
 
-# males, annual
+# males, annual map
 ratio_male <- uvl[sex=='Male', 
                            .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
                              dbs_samples=sum(dbs_samples), valid_results=sum(valid_results),
                              suppressed=sum(suppressed), dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
                              suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
-                           by=.(district_name, year)]
+                            by=.(district_name, year)] [order(year, district_name)]
 
-ratio_male <- ratio_male[order(year, district_name)]
 ratio_male <- merge(shape_names, ratio_male, by="district_name")
-setnames(ratio_male, "dist_id", "id")
 
 # -----------------
 
@@ -157,30 +149,26 @@ setnames(ratio_male, "dist_id", "id")
 coordinates <- data.table(fortify(shapeData, region='dist112')) 
 coordinates[, id:=as.numeric(id)]
 
-# coordinates by year for faceting
+# coordinates by year for faceting (repeat 5 times for 5 years of data)
 coordinates_ann <- rbind(coordinates, coordinates, coordinates, coordinates, coordinates)
 coordinates_ann[, year:=rep(2014:2018, each=nrow(coordinates))]
 
-# merge on district id
+# merge on district id - all time total, annual totals, sex stratified totals
 coordinates <- merge(coordinates, ratio_table, by="id", all.x=TRUE)
 coordinates_year <- merge(coordinates_ann, ratio_year, by=c('id', 'year'), all.x=TRUE)
-
 coordinates_female <- merge(coordinates_ann, ratio_female, by=c('id','year'), all.x=TRUE)
 coordinates_male <- merge(coordinates_ann, ratio_male, by=c('id','year'), all.x=TRUE)
 
 # ----------------------------------------------
-# GRAPHS: create annual graphs with variables on the same page 
+# GRAPHS: create data tables for annual graphs with multiple outcome variables displayed
 
 # create a data set shape long and add dates to both
 uvl_1 <- uvl[, .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
-                       samples_tested=sum(samples_tested), dbs_samples=sum(dbs_samples), 
-                       valid_results=sum(valid_results), suppressed=sum(suppressed)), 
-                       by=.(sex, month, year)]
-
+                  samples_tested=sum(samples_tested), dbs_samples=sum(dbs_samples),
+                  valid_results=sum(valid_results), suppressed=sum(suppressed)), 
+                  by=.(sex, date)]
 # reshape long
-idVars <- c("month", "year", "sex")
-uvl_1 <- melt(uvl_1, id.vars=idVars)
-
+uvl_1 <- melt(uvl_1, id.vars=c("date", "sex"))
 
 # label the variables for graph titles and put the graphs in an intuitive order
 uvl_1$variable <- factor(uvl_1$variable, 
