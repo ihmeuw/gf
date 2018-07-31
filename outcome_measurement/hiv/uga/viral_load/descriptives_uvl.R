@@ -166,24 +166,21 @@ coordinates_male <- merge(coordinates_ann, ratio_male, by=c('id','year'), all.x=
 uvl_1 <- uvl[, .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
                   samples_tested=sum(samples_tested), dbs_samples=sum(dbs_samples),
                   valid_results=sum(valid_results), suppressed=sum(suppressed)), 
-                  by=.(sex, date)]
+                  by=.(sex, date, month, year)]
 # reshape long
-uvl_1 <- melt(uvl_1, id.vars=c("date", "sex"))
+uvl_1 <- melt(uvl_1, id.vars=c("date", "sex", "month", "year"))
 
 # label the variables for graph titles and put the graphs in an intuitive order
 uvl_1$variable <- factor(uvl_1$variable, 
-                            levels=c("patients_received", "samples_received", "dbs_samples",  "samples_tested", "valid_results", "suppressed"), 
-                            labels=c("Patients", "Samples Received","DBS Samples", "Samples Tested", "Valid Results", "Suppressed"))
+                  levels=c("patients_received", "samples_received", "dbs_samples",  "samples_tested", "valid_results", "suppressed"), 
+                  labels=c("Patients", "Samples Received","DBS Samples", "Samples Tested", "Valid Results", "Suppressed"))
 
 # ----------------------
-
-
-
 # annual facet-wrapped graphs with total facilities
-# create a data set shape long and add dates to both
+# create a data set shaped long 
 uvl_year <- uvl[, .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
                          dbs_samples=sum(dbs_samples), valid_results=sum(valid_results), suppressed=sum(suppressed)), 
-                          by=.(sex, date)]
+                         by=.(sex, date)]
 
         # create a table of the total number of facilities reporting in each district, all years
         total_fac_year <- uvl[, .(total_facilities=as.numeric(length(unique(facility_id)))), by=.(date)]
@@ -193,59 +190,46 @@ uvl_year <- uvl[, .(patients_received=sum(patients_received), samples_received=s
         # reshape long
         uvl_year <- melt(uvl_year, id.vars=c("sex","date"))
         
-        # keep single values for facilities (females only)
+        # keep single values for facilities (females only for ease) - only after reshaped long
         uvl_year <- uvl_year[!(variable=="total_facilities" & (sex=="Male"| sex=="Unknown")) ]
         uvl_year <- uvl_year[variable=="total_facilities", sex:="Facility"]
         
-
-  # label the variables for graph titles and put the graphs in an intuitive order
-  uvl_year$variable <- factor(uvl_year$variable, 
+# label the variables for graph titles and put the graphs in an intuitive order
+uvl_year$variable <- factor(uvl_year$variable, 
                          levels=c("total_facilities", "patients_received", "samples_received", "dbs_samples",
                                   "valid_results", "suppressed"), 
                          labels=c("Facilities Reporting", "Patients Submitting Samples", 
                                   "Samples Received","DBS Samples Received", "Valid Test Results", "Suppressed"))
 
-  uvl_year$sex <- factor(uvl_year$sex, levels=c("Female", "Male", "Unknown", "Facility"),
-                         labels=c("Females", "Males", "Unknown", "Facilities"))
-  
+uvl_year$sex <- factor(uvl_year$sex, levels=c("Female", "Male", "Unknown", "Facility"),
+                         labels=c("Female", "Male", "Unknown", "Health Facility"))
+
 # ----------------------------------------------
 # table for country-level graphs to add to PDF
 
-table_1 <- uvl[,
-                     .(patients_received = sum(patients_received), samples_received = sum(samples_received), 
-                       dbs_samples=sum(dbs_samples), plasma_samples=sum(plasma_samples),
-                       valid_results = sum(valid_results), suppressed = sum(suppressed),
-                       dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
-                       plasma_ratio=100*(sum(plasma_samples)/sum(samples_received)),
-                       valid_samples_ratio=100*(sum(valid_results)/sum(samples_received)),
-                       suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
-                     by=.(sex, month,year)]
-table_1 <- table_1[order(year, month, sex)]
-table_1[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+table_1 <- uvl[  ,.(patients_received = sum(patients_received), samples_received = sum(samples_received), 
+                    dbs_samples=sum(dbs_samples), plasma_samples=sum(plasma_samples),
+                    valid_results = sum(valid_results), suppressed = sum(suppressed),
+                    dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
+                    plasma_ratio=100*(sum(plasma_samples)/sum(samples_received)),
+                    valid_samples_ratio=100*(sum(valid_results)/sum(samples_received)),
+                    suppression_ratio=100*(sum(suppressed)/sum(valid_results))),
+                        by=.(sex, date)] [order(date, sex)]
 
-# count of facilities reporting
-# create a table of the number of facilities reporting by district         
-table_2 <- uvl[, .(facilities_report=length(unique(facility_id))), by=.(month, year)]
-table_2 <- table_2[order(month, year)]
-
-
-# total facilities reporting all time
-facilities_1 <- uvl[ ,.(facilities_report=length(unique(facility_id))), by=.(month, year) ]
-facilities_1[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
-
+# --------------------
+# count of facilities reporting by month
+table_2 <- uvl[, .(facilities_report=length(unique(facility_id))), by=.(date, month, year)][order(date)]
 
 # ----------------------------------------------
 # create maps and plots and export as a PDF
 
 # ---------------
 # store colors
-
 ratio_colors <- brewer.pal(8, 'Spectral')
 results_colors <- brewer.pal(6, 'Blues')
 sup_colors <- brewer.pal(6, 'Reds')
-
-ladies <- brewer.pal(6, 'PuBuGn')
-gents <- brewer.pal(6, 'Purples')
+ladies <- brewer.pal(11, 'RdYlBu')
+gents <- brewer.pal(9, 'Purples')
 
 # red colors for bar graph
 bar_colors <- c('Not Suppressed'='#de2d26', 'Suppressed'='#fc9272')
@@ -253,16 +237,17 @@ bar_colors <- c('Not Suppressed'='#de2d26', 'Suppressed'='#fc9272')
 graph_colors <- c('#bd0026', '#fecc5c', '#74c476','#3182bd', '#8856a7')
 tri_sex <- c('#bd0026', '#74c476', '#3182bd')
 wrap_colors <- c('#3182bd', '#fecc5c', '#bd0026', '#74c476', '#8856a7', '#f768a1')
-sex_colors <- c('#bd0026', '#3182bd', '#74c476', '#8856a7')
+sex_colors <- c('#bd0026', '#3182bd', '#74c476', '#8856a7') # colors by sex plus one for facilities
+single_red <- '#bd0026'
 
 # breaks for log transformation legends
 breaks <- c(1, 20, 400, 8100)
 
+# ------------------------------------------------------------------
+# Primary descriptive analysis PDF - August 2014 - June 2018
 
-# ---------------
-
-# export as a pdf
-pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/uvl_descriptives.pdf', height=6, width=9)
+# export all summary descriptive figures as a pdf
+pdf(paste0(dir, '/outputs/uvl_descriptives.pdf'), height=6, width=9)
 
 # annual data reported for major variables
 ggplot(uvl_year, aes(x=date, y=value, color=sex)) + 
@@ -273,37 +258,14 @@ ggplot(uvl_year, aes(x=date, y=value, color=sex)) +
   labs(x="Year", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
   scale_color_manual(values=sex_colors)
 
-
-graph <- uvl[ ,.(ratio=100*(sum(suppressed)/sum(valid_results))), by=.(date, sex)]
-
-y_tho <-c('#756bb1', '#66c2a4' )
-
-pdf(paste0(dir, '/ratio.pdf'), height=6, width=9)
-
-ggplot(graph, aes(x=date, y=ratio, color=sex)) +
-  geom_point() +
-  geom_line() +
-  labs(x="Date", y="Percent virally supperessed (%)", color="Sex",
-       caption='Source: Uganda Viral Load Dashboard') +
-  scale_color_manual(values=y_tho) +
-  theme_minimal() +
-  theme(legend.title = element_text(size=16), 
-        plot.caption=element_text(vjust=6, size=14),
-        axis.title.x = element_text(size=14),
-        axis.title.y = element_text(size=14), 
-        axis.text.x = element_text(size=12),
-        axis.text.y = element_text(size=12),
-        legend.text = element_text(size=14)) 
-
-dev.off()
-
 # facilities reporting by month, year
-ggplot(facilities_1, aes(x=date, y=facilities_report)) + 
+ggplot(table_2, aes(x=date, y=facilities_report, color='red')) + 
   geom_point() +
   geom_line(alpha=0.6) +
   theme_bw() +
-  labs(title="Number of facilities reporting", x="Date", y="Facilities reporting", caption="Source: Uganda Viral Load Dashboard")
-
+  labs(title="Number of facilities reporting", x="Date", y="Facilities reporting", caption="Source: Uganda Viral Load Dashboard") +
+  scale_color_manual(values=single_red) +
+  theme(legend.position='none')
 
 # determine when scale up of reporting occurred
 ggplot(table_2, aes(x=factor(month), y=facilities_report, group=year, color=factor(year))) + 
@@ -312,20 +274,48 @@ ggplot(table_2, aes(x=factor(month), y=facilities_report, group=year, color=fact
   facet_wrap(~year) +
   theme_bw() +
   xlab("Month") + ylab("Facilities reporting") + 
-  labs(title = "Total facilities reporting viral load test results by month, year", 
+  labs(title = "Total facilities reporting viral load test results by date (scale up)", 
        caption="Source: Uganda VL Dashboard", colour="Year") +
   scale_color_manual(values=graph_colors)
+
+ggplot(uvl_year[variable=='Facilities Reporting' | variable=='Patients Submitting Samples'], aes(x=date, y=value, color=sex)) + 
+  facet_wrap(~variable, scales='free_y') +
+  geom_point(size=1, alpha=0.8) +
+  geom_line(alpha=0.5) +
+  theme_minimal() +
+  labs(x="Year", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
+  scale_color_manual(values=sex_colors)
+
+
+# scale up in terms of three variables - used for presentation slides
+# pdf(paste0(dir, '/outputs/scale_up_figure.pdf'), height=6, width=12)
+# ggplot(uvl_year[variable=='Facilities Reporting' | variable=='Patients Submitting Samples' | variable=="Valid Test Results"], aes(x=date, y=value, color=sex)) + 
+#   facet_wrap(~variable, scales='free_y') +
+#   geom_point(size=1, alpha=0.8) +
+#   geom_line(alpha=0.5) +
+#   theme_minimal() +
+#   labs(x="Year", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
+#   scale_color_manual(values=sex_colors) +
+#   theme(plot.title=element_text(size=18), 
+#         plot.subtitle=element_text(vjust=-4, size=18), 
+#         plot.caption=element_text(vjust=6, size=14),
+#         legend.title = element_text(size=16), 
+#         legend.text = element_text(size=14),
+#         strip.text.x=element_text(size=14)) 
+# 
+# # dev.off()
+
 
 # ---------------
 # suppression ratio maps
 
 # suppression ratio for all years 
-ggplot(coordinates[year==2018], aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+ggplot(coordinates, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
   geom_polygon() + 
   geom_path(size=0.01, color="#636363") + 
   scale_fill_gradientn(colors=ratio_colors) + 
   theme_void() + 
-  labs(title="Viral suppression ratios by district, Uganda", subtitle=" August 2014 - February 2018",
+  labs(title="Percent virally suppressed by district, Uganda", subtitle=" August 2014 - February 2018",
        caption="Source: Uganda Viral Load Dashboard", fill="% virally suppressed") +
   theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4), 
         plot.caption=element_text(vjust=6)) + coord_fixed()
@@ -338,22 +328,24 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=suppression_ratio)
   facet_wrap(~year) +
   scale_fill_gradientn(colors=ratio_colors) + 
   theme_void() +
-  labs(title="Viral suppression ratios by district, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+  labs(title="Annual percent virally suppressed by district, Uganda", caption="Source: Uganda Viral Load Dashboard", 
        fill="% virally suppressed") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # annual patients received
+n <- ratio_year[ ,sum(patients_received, na.rm=T)]
+
 ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=patients_received)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
   facet_wrap(~year) +
-  scale_fill_gradientn(colors=results_colors, trans="log", breaks=breaks, name="Patients received") + 
+  scale_fill_gradientn(colors=results_colors, trans='log', breaks=breaks, name="Patients received") + 
   theme_void() +
   labs(title="Number of patients submitting samples, Uganda", caption="Source: Uganda Viral Load Dashboard", 
-       subtitle=" n=1,974,938") +
+       subtitle=paste('n=', n)) +
   theme(plot.title=element_text(vjust=-2), plot.subtitle=element_text(vjust=-2), plot.caption=element_text(vjust=6))   +
-  coord_fixed()
+  coord_fixed() 
 
 # ---------------
 # suppression ratio by sex
@@ -850,5 +842,27 @@ ggplot(coordinates_year[year==2018], aes(x=long, y=lat, group=group, fill=suppre
 
 dev.off()
 
+graph <- uvl[ ,.(ratio=100*(sum(suppressed)/sum(valid_results))), by=.(date, sex, month, year)]
+
+y_tho <-c('#756bb1', '#66c2a4', '#bd0026' )
+
+pdf(paste0(dir, '/ratio.pdf'), height=6, width=9)
+
+ggplot(graph, aes(x=date, y=ratio, color=sex)) +
+  geom_point() +
+  geom_line() +
+  labs(x="Date", y="Percent virally supperessed (%)", color="Sex",
+       caption='Source: Uganda Viral Load Dashboard') +
+  scale_color_manual(values=y_tho) +
+  theme_minimal() +
+  theme(legend.title = element_text(size=16), 
+        plot.caption=element_text(vjust=6, size=14),
+        axis.title.x = element_text(size=14),
+        axis.title.y = element_text(size=14), 
+        axis.text.x = element_text(size=12),
+        axis.text.y = element_text(size=12),
+        legend.text = element_text(size=14)) 
+
+dev.off()
 
 

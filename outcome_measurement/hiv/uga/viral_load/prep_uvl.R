@@ -378,13 +378,18 @@ uvl <- rbind(uvl, opp_sex)
 uvl[sex!='Unknown', rows:=.N, by=.(facility_name, date)]
 uvl[sex!='Unknown', unique(rows)] # there should be two values for each facility
 uvl[sex!='Unknown', .(y=length(unique(sex))), by=.(facility_name, date)][y!=2] # should be empty - two sexes per facility month
-
+uvl[ , rows:=NULL]
 #---------------------------------------
 # save the final data as an RDS
 
 saveRDS(uvl, file= paste0(dir, "/prepped_data/sex_data.rds"))
 
 #------------------------------------------------------------
+
+
+
+
+#-------------------------------------------
 # replace unknown sex values
 
 
