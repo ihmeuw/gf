@@ -72,80 +72,60 @@ unique(uvl$district_name)[!(unique(uvl$district_name)) %in% unique(shapeData@dat
 shape_names <- data.table(district_name=shapeData@data$dist112_na, district_id=shapeData@data$dist112)
 str(shape_names)
 
-
 #----------------------------------------
-
 # total and annual counts and suppression ratios by district
-# total for all time
-ratio_table <- uvl[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
-                              dbs_samples=sum(dbs_samples), valid_results=sum(valid_results),
-                              suppressed=sum(suppressed), suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
-                              by=.(district_name)]
-                            ratio_table <- ratio_table[order(district_name)]
 
-# annual counts and ratios
+# total for all time - sum over all years 
+ratio_table <- uvl[ , .(patients_received=sum(patients_received), 
+                        samples_received=sum(samples_received), 
+                        dbs_samples=sum(dbs_samples), 
+                        valid_results=sum(valid_results),
+                        suppressed=sum(suppressed), 
+                        suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
+                   by=.(district_name)] [order(district_name)]
+
+
+# annual counts and ratios - sum by year 
 ratio_year <- uvl[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
                           dbs_samples=sum(dbs_samples), valid_results=sum(valid_results), suppressed=sum(suppressed),
                           dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
                           suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
-                          by=.(district_name, year)]
-                          ratio_year <- ratio_year[order(year, district_name)]
+                          by=.(district_name, year)] [order(year, district_name)]
               
-      # ------------------------
-      # add logged variables to ratio year     
-      logs_year <- ratio_year[ ,.(log_patients_received=log(patients_received), log_samples_received=log(samples_received), 
-                     log_dbs_samples=log(dbs_samples), log_valid_results=log(valid_results), 
-                     log_suppressed=log(suppressed)),  by=.(district_name, year)]
-      logs_year[is.infinite(log_dbs_samples), log_dbs_samples:=NA]                    
-      logs_year[is.infinite(log_valid_results), log_valid_results:=NA]       
-      logs_year[is.infinite(log_suppressed), log_suppressed:=NA]
-      
-       ratio_year <- merge(ratio_year, logs_year, by=c('district_name', 'year'), all.x=TRUE)
+# ------------------------
+# facilities reporting
               
-        # ------------------------
-        # facilities reporting
-              
-        # create a table of the number of facilities reporting by district         
-        facilities_table <- uvl[, .(facilities_report=length(unique(facility_id))), by=.(district_name, year)]
-        facilities_table <- facilities_table[order(year, district_name)]
+# create a table of the number of facilities reporting annualy by district         
+facilities_table <- uvl[, .(facilities_report=length(unique(facility_id))), by=.(district_name, year)] [order(year, district_name)]
               
         # create a table of the total number of facilities reporting in each district, all years
         total_fac <- uvl[, .(total_facilities=length(unique(facility_id))), by=.(district_name)]
-        total_fac[,.(district_name, total_facilities)]
               
         # merge on district name
-        facilities_table <- merge(facilities_table, total_fac, by='district_name', all.x=TRUE)
+        facilities_table <- join(facilities_table, total_fac, by='district_name', type='left') 
+        facilities_table[order(district_name, year)]
 
          # divide facilities reporting in each year by total facilities ever reported for ratio
-         facilities_table[, facility_ratio:=((facilities_report/total_facilities)*100), by=.(district_name, year)]
+         facilities_table[ , facility_ratio:=(facilities_report/total_facilities)*100, by=.(district_name, year)]
               
               # merge count and ratio of facilities reporting into ratio_year
               ratio_year <- merge(ratio_year, facilities_table, by=c('district_name', 'year'), all.x=TRUE)
           
-            # ------------------------
+#-------------------------------------------------------------------
 
 # ------------------------
-# check for unmatched values
-# all values should be matched because of prep file
-ratio <- ratio_table[,unique(district_name)]
-shape <- shape_names[, unique(district_name)]
-ratio <- sort(ratio)
-shape <- sort(shape)
+# merge the data tables with shapenames to get the district id #s
               
-shape[!shape %in% ratio] # shape file contains all districts in uganda vl
-ratio[!ratio %in% shape] 
-length(ratio[!ratio %in% shape]) 
-
-#merge shape and uvl data on district names; rename the district ids 'id'
+# merge shape and uvl data on district names
 ratio_table <- merge(shape_names, ratio_table, by="district_name")
 ratio_year <- merge(shape_names, ratio_year, by="district_name")
               
 # rename both district ids "id" for ease of reference
-setnames(ratio_table, "dist_id", "id")
-setnames(ratio_year, "dist_id", "id")
+setnames(ratio_table, "district_id", "id")
+setnames(ratio_year, "district_id", "id")
 
 # -----------------
-# create a table for annual maps stratified by sex
+# create data tables for annual maps stratified by sex
 
 # females, annual
 ratio_female <- uvl[ sex=='Female', 
