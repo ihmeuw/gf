@@ -40,17 +40,14 @@ shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lake
 
 # specify band to get a specific year of data
 # band 1=2000, band 17=2016.... so for 2015 band=16 and for 2010 band=11
-band= 17
-if (band==1){
-  year=2000
-} else if (band==11){
-  year=2010
-} else if (band==16){
-  year=2015
-}
+b= 17
+
+band_to_year <- data.table(band= c(1:17), year= c(2000:2016))
+
+year <- band_to_year[band==b, year]
 
 # output file
-graphFile = paste0(outDir, 'HIV_Prevalence_', model_output_version, '_', year, '.pdf')
+graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', year, '.pdf')
 # ----------------------------------------------------------------------------------------
 
 
@@ -139,7 +136,7 @@ codprev = ggplot(dataCOD, aes(y=y, x=x, fill=prev*100)) +
 	theme(plot.title=element_text(hjust=.5), plot.margin=unit(rep(-1,4), 'cm')) 
 
 # put maps together
-p1 = arrangeGrob(codprev, ugaprev, ncol=2)	
+p1 = arrangeGrob(codprev, ugaprev, ncol=2, top = toString(year))	
 # -------------------------------------------------------------------------------
 
 
