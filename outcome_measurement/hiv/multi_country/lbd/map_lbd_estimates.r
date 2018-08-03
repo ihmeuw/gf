@@ -38,7 +38,7 @@ shapeFileCOD = paste0(outDir, '../../../mapping/cod/COD_adm3.shp')
 shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lakes/glwd_1.shp')
 
 # output file
-graphFile = paste0(outDir, 'HIV_Prevalence_2018_05_07_10_11_14.pdf')
+graphFile = paste0(outDir, 'HIV_Prevalence_', model_output_version, '.pdf')
 # ----------------------------------------------------------------------------------------
 
 
