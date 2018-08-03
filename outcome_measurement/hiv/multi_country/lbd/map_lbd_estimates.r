@@ -26,7 +26,8 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/lbd/')
 
 # input files
-inDir = '/share/geospatial/mbg/hiv/hiv_test/output/2018_05_07_10_11_14/'
+model_output_version = '2018_07_14_19_57_56' #change this to use a different run of the lbd hiv model
+inDir = paste0('/share/geospatial/mbg/hiv/hiv_test/output/', model_output_version,'/')
 inFile = paste0(inDir, 'hiv_test_mean_raked_raster.tif')
 
 # shapefiles
