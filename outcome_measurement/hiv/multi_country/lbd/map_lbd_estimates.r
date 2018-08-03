@@ -15,6 +15,7 @@ library(RColorBrewer)
 library(ggplot2)
 library(grid)
 library(gridExtra)
+library(rgdal)
 # --------------------
 
 
@@ -37,8 +38,19 @@ shapeFileCOD = paste0(outDir, '../../../mapping/cod/COD_adm3.shp')
 # shapefile of lakes
 shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lakes/glwd_1.shp')
 
+# specify band to get a specific year of data
+# band 1=2000, band 17=2016.... so for 2015 band=16 and for 2010 band=11
+band= 17
+if (band==1){
+  year=2000
+} else if (band==11){
+  year=2010
+} else if (band==16){
+  year=2015
+}
+
 # output file
-graphFile = paste0(outDir, 'HIV_Prevalence_', model_output_version, '.pdf')
+graphFile = paste0(outDir, 'HIV_Prevalence_', model_output_version, '_', year, '.pdf')
 # ----------------------------------------------------------------------------------------
 
 
@@ -50,7 +62,7 @@ mapUGA = shapefile(shapeFileUGA)
 mapCOD = shapefile(shapeFileCOD)
 
 # load raster data
-rasterData = raster(inFile)
+rasterData = raster(inFile, band=band)
 
 # load the ground cover data
 lakes = shapefile(shapeFileLakes)
