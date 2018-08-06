@@ -27,7 +27,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/lbd/')
 
 # input files
-timestamp = '2018_07_14_19_57_56' #change this to use a different run of the lbd hiv model
+timestamp = '2018_07_14_19_55_43' #change this to use a different run of the lbd hiv model; this is the timestamp Laura Dwyer-Lindgren said to use
 inDir = paste0('/share/geospatial/mbg/hiv/hiv_test/output/', timestamp,'/')
 inFile = paste0(inDir, 'hiv_test_mean_raked_raster.tif')
 
@@ -40,14 +40,13 @@ shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lake
 
 # specify band to get a specific year of data
 # band 1=2000, band 17=2016.... so for 2015 band=16 and for 2010 band=11
-b= 17
+y= 2016
 
 band_to_year <- data.table(band= c(1:17), year= c(2000:2016))
-
-year <- band_to_year[band==b, year]
+band <- band_to_year[year==y, band]
 
 # output file
-graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', year, '.pdf')
+graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', y, '.pdf')
 # ----------------------------------------------------------------------------------------
 
 
@@ -60,6 +59,12 @@ mapCOD = shapefile(shapeFileCOD)
 
 # load raster data
 rasterData = raster(inFile, band=band)
+
+# use this in order to get a rate of change between the two years; comment out if not using
+# graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', "percent_change_2010to2015", '.pdf')
+# rasterData15 = raster(inFile, band= 16)
+# rasterData10 = raster(inFile, band= 11)
+# rasterData = ((rasterData15 - rasterData10)/abs(rasterData10))
 
 # load the ground cover data
 lakes = shapefile(shapeFileLakes)
@@ -136,7 +141,10 @@ codprev = ggplot(dataCOD, aes(y=y, x=x, fill=prev*100)) +
 	theme(plot.title=element_text(hjust=.5), plot.margin=unit(rep(-1,4), 'cm')) 
 
 # put maps together
-p1 = arrangeGrob(codprev, ugaprev, ncol=2, top = toString(year))	
+p1 = arrangeGrob(codprev, ugaprev, ncol=2, top = toString(y))	
+
+# for percent change graph:
+# p1 = arrangeGrob(codprev, ugaprev, ncol=2, top = "Rate of Change 2010 to 2015")	
 # -------------------------------------------------------------------------------
 
 
