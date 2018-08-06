@@ -3,6 +3,12 @@
 #
 # 5/15/2017
 # Make simple maps of HIV prevalence for PCE countries
+# 8/3/2018 
+# Modified by Audrey Batzel; Use different bands of the raster data to make maps of HIV prevalence in different years
+
+# To do:
+  # check percent change code (scale is really large?)
+  # maybe make this code into a function where the year or years is/are supplied as parameters so it is easier to run? 
 # -----------------------------------------------------
 
 
@@ -60,11 +66,11 @@ mapCOD = shapefile(shapeFileCOD)
 # load raster data
 rasterData = raster(inFile, band=band)
 
-# use this in order to get a rate of change between the two years; comment out if not using
-# graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', "percent_change_2010to2015", '.pdf')
-# rasterData15 = raster(inFile, band= 16)
-# rasterData10 = raster(inFile, band= 11)
-# rasterData = ((rasterData15 - rasterData10)/abs(rasterData10))
+#--------------# use this in order to get a rate of change between the two years; comment out if not using #------------------
+graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', "percent_change_2010to2015", '.pdf')
+rasterData15 = raster(inFile, band= 16)
+rasterData10 = raster(inFile, band= 11)
+rasterData = (((rasterData15 - rasterData10)/(rasterData10))*100)
 
 # load the ground cover data
 lakes = shapefile(shapeFileLakes)
@@ -143,8 +149,8 @@ codprev = ggplot(dataCOD, aes(y=y, x=x, fill=prev*100)) +
 # put maps together
 p1 = arrangeGrob(codprev, ugaprev, ncol=2, top = toString(y))	
 
-# for percent change graph:
-# p1 = arrangeGrob(codprev, ugaprev, ncol=2, top = "Rate of Change 2010 to 2015")	
+#----------------# for percent change graph:#------------------------------------------
+# p1 = arrangeGrob(codprev, ugaprev, ncol=2, top = "Percent Change 2010 to 2015")	
 # -------------------------------------------------------------------------------
 
 
