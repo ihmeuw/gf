@@ -132,7 +132,7 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 				rasterData = mask(rasterData, maps[[iso3]])		
 				
 				# mask lakes
-				rasterData = mask(rasterData, shapefile(lakes), inverse=TRUE)
+				rasterData = mask(rasterData, shapefile(lakesFile), inverse=TRUE)
 				
 				# store base raster
 				if (j==1 & y==1) baseRasters[[iso3]] = rasterData
