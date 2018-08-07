@@ -56,9 +56,9 @@
 
 # ----------------------------------------------
   # read in data table prepped by prep_for_MI.R
-    dt1 <- readRDS(paste0(dir, imputedData1)) #tolerance = 0.01
+    dt1 <- readRDS(paste0(dir, imputedData1))
     dt1[is.na(subpopulation), subpopulation:="none"]
-    dt2 <- readRDS(paste0(dir, imputedData2)) #tolerance = 0.001  
+    dt2 <- readRDS(paste0(dir, imputedData2))
     dt2[is.na(subpopulation), subpopulation:="none"]
 # ----------------------------------------------
 

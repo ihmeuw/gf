@@ -54,8 +54,7 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 	popFiles = paste0(popDir, list.files(popDir)[!grepl('ovr', list.files(popDir))])
 	popFiles = popFiles[!grepl('xml', popFiles)]
 	prevFiles = paste0(prevDir, list.files(prevDir)[grepl('tif', list.files(prevDir))])
-	lakesFile = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lakes/glwd_1.shp')
-	
+
 	# shapefiles
 	shapeFileUGA = paste0(dir, '../../../mapping/uga/uga_dist112_map.shp')
 	shapeFileCOD = paste0(dir, '../../../mapping/cod/COD_adm3.shp')
@@ -130,9 +129,6 @@ loadMapData = function(iso3s, years, inds, crop=FALSE) {
 				rasterData = get(paste0('rasterData',inds[j]))
 				rasterData = crop(rasterData, extent(maps[[iso3]]))
 				rasterData = mask(rasterData, maps[[iso3]])		
-				
-				# mask lakes
-				rasterData = mask(rasterData, shapefile(lakesFile), inverse=TRUE)
 				
 				# store base raster
 				if (j==1 & y==1) baseRasters[[iso3]] = rasterData
