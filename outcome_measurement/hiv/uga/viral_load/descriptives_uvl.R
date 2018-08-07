@@ -89,7 +89,8 @@ ratio_table <- uvl[ , .(patients_received=sum(patients_received),
 ratio_year <- uvl[ , .(patients_received=sum(patients_received), samples_received=sum(samples_received), 
                           dbs_samples=sum(dbs_samples), valid_results=sum(valid_results), suppressed=sum(suppressed),
                           dbs_ratio=100*(sum(dbs_samples)/sum(samples_received)),
-                          suppression_ratio=100*(sum(suppressed)/sum(valid_results))), 
+                          suppression_ratio=100*(sum(suppressed)/sum(valid_results)),
+                          ratio_valid=100*sum(valid_results)/sum(samples_received)), 
                           by=.(district_name, year)] [order(year, district_name)]
               
 # ------------------------
@@ -233,7 +234,7 @@ sex_tot[ ,percent:=(sex_total/total)*100]
 
 # ---------------
 # store colors
-ratio_colors <- brewer.pal(8, 'Spectral')
+ratio_colors <- brewer.pal(9, 'Spectral')
 results_colors <- brewer.pal(6, 'Blues')
 sup_colors <- brewer.pal(6, 'Reds')
 ladies <- brewer.pal(11, 'RdYlBu')
@@ -430,7 +431,6 @@ ggplot(uvl_1[year==2018], aes(y=value, x=factor(month), color=sex, group=sex)) +
   labs(x="Month", y="Count", title="2017 Uganda Viral Load Dashboard data by sex", color="Sex") + theme_bw()
 
 # ---------------
-
 # patients received by month, year
 ggplot(table_1, aes(x=factor(month), y=patients_received, col=factor(sex), group=sex)) + 
   geom_point(size=1.5) + geom_line(alpha=0.8) + 
@@ -466,7 +466,7 @@ ggplot(table_1, aes(x=factor(month), y=dbs_ratio, col=factor(sex), group=sex)) +
       caption="Source: Uganda VL Dashboard", colour="Sex") +
     scale_color_manual(values=tri_sex)
 
-# total Plasma samples received by month, year
+# total plasma samples received by month, year
 ggplot(table_1, aes(x=factor(month), y=plasma_samples, col=factor(sex), group=sex)) + 
   geom_point(size=1.5) + geom_line(alpha=0.8) + theme_bw() +
   facet_wrap(~year) +
@@ -533,6 +533,7 @@ ggplot(table_1, aes(x=factor(month), y=suppression_ratio, col=factor(sex), group
 
 # -------------------
 # facilities reporting results
+n2 <- uvl[ ,length(unique(facility_name))]
 
 # annual count of facilities reporting results
 ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=total_facilities)) + 
@@ -542,7 +543,7 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=total_facilities))
   facet_wrap(~year) +
   scale_fill_gradientn(colors=results_colors) + 
   theme_void() +
-  labs(title="Number of facilities reporting on viral suppression, Uganda", subtitle=" n=2,040",
+  labs(title="Number of facilities reporting on viral suppression, Uganda", subtitle=paste0('n=', n2),
        caption="Source: Uganda Viral Load Dashboard", 
        fill="Facilities reporting") +
   theme(plot.title=element_text(vjust=-1.5), plot.subtitle=element_text(vjust=-1.5),
@@ -556,15 +557,17 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=facility_ratio)) +
   facet_wrap(~year) +
   scale_fill_gradientn(colors=ratio_colors) + 
   theme_void() +
-  labs(title="Percentage of all facilities that have ever reported viral load results, Uganda", caption="Source: Uganda Viral Load Dashboard", 
+  labs(title="Percentage of all facilities that have ever submitted samples reporting in a given year, Uganda", caption="Source: Uganda Viral Load Dashboard", 
        fill="% of facilities reporting") +
   theme(plot.title=element_text(vjust=-0.5), plot.caption=element_text(vjust=6)) 
 
 
 # -------------------
 # log-transformed counts
-
+  
 # annual samples received
+n_samp <- uvl[ ,sum(samples_received)]
+
 ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=samples_received)) + 
   coord_fixed() +
   geom_polygon() + 
@@ -572,22 +575,23 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=samples_received))
   facet_wrap(~year) +
   scale_fill_gradientn(colors=results_colors, trans="log", breaks=breaks, name="Samples received") + 
   theme_void() +
-  labs(title="Number of samples received, Uganda", caption="Source: Uganda Viral Load Dashboard", 
-       subtitle=" n=1,980,551") +
-  theme(plot.title=element_text(vjust=-2), plot.subtitle=element_text(vjust=-2), plot.caption=element_text(vjust=6)) 
-
+  labs(title="Number of samples received (log scale), Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       subtitle=paste0('n=', n_samp)) +
+  theme(plot.subtitle=element_text(vjust=-4), plot.caption=element_text(vjust=6)) 
+  
 # dbs samples received
+n_dbs <- uvl[ ,sum(dbs_samples)]
+
 ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=dbs_samples)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
   facet_wrap(~year) +
-  scale_fill_gradientn(colors=results_colors, trans="log", breaks=breaks, name="DBS samples received") + 
+  scale_fill_gradientn(colors=gents, trans="log", breaks=breaks, name="DBS samples received") + 
   theme_void() +
-  labs(title="Number of DBS samples received, Uganda", caption="Source: Uganda Viral Load Dashboard", 
-       subtitle=" n=1,345,501") +
-  theme(plot.title=element_text(vjust=-2), plot.subtitle=element_text(vjust=-2), plot.caption=element_text(vjust=6)) 
-
+  labs(title="Number of DBS samples received (log scale), Uganda", caption="Source: Uganda Viral Load Dashboard", 
+       subtitle=paste0(" n=", n_dbs)) +
+  theme(plot.subtitle=element_text(vjust=-2), plot.caption=element_text(vjust=6)) 
 
 # annual ratio of all samples that are dbs samples
 ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=dbs_ratio)) + 
@@ -595,13 +599,15 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=dbs_ratio)) +
   geom_polygon() + 
   geom_path(size=0.01) + 
   facet_wrap(~year) +
-  scale_fill_gradientn(colors=ratio_colors) + 
+  scale_fill_gradientn(colors=ladies) + 
   theme_void() +
   labs(title="Percentage of samples received that are DBS samples, Uganda", caption="Source: Uganda Viral Load Dashboard", 
        fill="% DBS") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # annual number of valid test results
+n_val <- uvl[ ,sum(valid_results)]
+
 ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=valid_results)) + 
   coord_fixed() +
   geom_polygon() + 
@@ -610,10 +616,12 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=valid_results)) +
   scale_fill_gradientn(colors=results_colors, trans="log", breaks=breaks, name="Test results") + 
   theme_void() +
   labs(title="Number of valid viral load test results, Uganda", caption="Source: Uganda Viral Load Dashboard", 
-       subtitle="  n=1,896,731", fill="Valid test results") +
-  theme(plot.title=element_text(vjust=-2), plot.subtitle=element_text(vjust=-2), plot.caption=element_text(vjust=6))
+       subtitle=paste0("n=", n_val), fill="Valid test results") +
+  theme(plot.subtitle=element_text(vjust=-4), plot.caption=element_text(vjust=6))
 
 # annual number of virally suppressed persons
+n_sup <- uvl[ ,sum(suppressed)]
+
 ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(suppressed))) + 
   coord_fixed() +
   geom_polygon() + 
@@ -622,8 +630,8 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=as.numeric(suppres
   scale_fill_gradientn(colors=sup_colors, trans="log", breaks=breaks, name="Suppressed") + 
   theme_void() +
   labs(title="Number of virally suppressed persons, Uganda", caption="Source: Uganda Viral Load Dashboard", 
-        fill="Suppressed") +
-  theme(plot.title=element_text(vjust=-2), plot.subtitle=element_text(vjust=-2), plot.caption=element_text(vjust=6)) 
+        fill="Suppressed", subtitle=paste0("n=", n_sup)) +
+  theme(plot.subtitle=element_text(vjust=-4), plot.caption=element_text(vjust=6)) 
 
 
 dev.off()
@@ -631,16 +639,13 @@ dev.off()
 # -----------------
 
 
-
 # -----------------
-
 # scale up PDF - use to determine when scale up occurred
 
 # export as a pdf
-pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/outputs/scale_up.pdf', height=6, width=9)
+pdf(paste0(dir, '/outputs/scale_up.pdf'), height=6, width=9)
 
-# facilities reporting
-
+# facilities reporting data tables
 facilities_1 <- uvl[ ,.(facilities_report=length(unique(facility_id))), by=.(month, year) ]
 uvl[ , .(length(unique(facility_id)))]
 facilities_1[ , percent_report:=((facilities_report/2039)*100)]
@@ -653,12 +658,12 @@ ggplot(facilities_1, aes(x=date, y=facilities_report)) +
   theme_bw() +
   labs(title="Number of facilities reporting", x="Date", y="Facilities reporting", caption="Source: Uganda Viral Load Dashboard")
 
-# facilities reporting by month, year
+# percentage of facilities reporting by month, year
 ggplot(facilities_1, aes(x=date, y=percent_report)) + 
   geom_point() +
   geom_line(alpha=0.6) +
   theme_bw() +
-  labs(title="Percentage of facilities reporting", x="Date", y="Percentage of facilities reporting", caption="Source: Uganda Viral Load Dashboard")
+  labs(title="Percentage of facilities reporting", x="Date", y="Percentage of facilities reporting (%)", caption="Source: Uganda Viral Load Dashboard")
 
 # years on separate graphs
 ggplot(table_2, aes(x=factor(month), y=facilities_report, group=year, color=factor(year))) + 
@@ -671,7 +676,6 @@ ggplot(table_2, aes(x=factor(month), y=facilities_report, group=year, color=fact
        caption="Source: Uganda VL Dashboard", colour="Year") +
   scale_color_manual(values=graph_colors)
 
-
 # detail of all data by month, year
 ggplot(uvl_year, aes(x=date, y=value, color=sex)) + 
   facet_wrap(~variable, scales='free_y') +
@@ -681,7 +685,6 @@ ggplot(uvl_year, aes(x=date, y=value, color=sex)) +
   labs(x="Year", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
   scale_color_manual(values=sex_colors)
 
-
 # facilities reporting by month, year
 ggplot(table_2, aes(x=factor(month), y=facilities_report, col=factor(year), group=year)) + 
   geom_point(size=2.5) + geom_line(alpha=0.8) + theme_bw() +
@@ -690,14 +693,12 @@ ggplot(table_2, aes(x=factor(month), y=facilities_report, col=factor(year), grou
        caption="Source: Uganda VL Dashboard", colour="Year") +
   scale_color_manual(values=graph_colors)
 
-
 dev.off()
-
 
 #-----------------------------
 
 #--------------------
-# TERG SLIDES
+# TERG SLIDES - Outputs for the May TERG Presentation
 
 terg1 <- uvl[, .(patients_received=sum(patients_received)),
                    by=.(sex, date)]

@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/25/2018
+# 7/31/2018
 # Loop to download data from the Uganda Viral Load Dashboard
 # ----------------------------------------------
 
