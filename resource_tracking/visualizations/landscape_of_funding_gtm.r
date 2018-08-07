@@ -20,7 +20,6 @@ library(ggplot2)
 
 # input directory
 dir = 'J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/'
-dir = 'C:/Users/davidp6/Downloads/' # temporary replacement while J: is down
 
 # input file
 inFile = paste0(dir, 'total_resource_tracking_data.csv')
