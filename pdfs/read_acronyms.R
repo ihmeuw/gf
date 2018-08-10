@@ -27,6 +27,7 @@ library(googleLanguageR)
 # ----------------------------------------------
 # Overview - Files and Directories
 
+
 # data directory
 # when run on Unix, data directory needs to be set to /home/j (to run on the cluster), so set this here:
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
