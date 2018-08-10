@@ -46,7 +46,7 @@ shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lake
 
 # specify band to get a specific year of data
 # band 1=2000, band 17=2016.... so for 2015 band=16 and for 2010 band=11
-y= 2016
+y= 2010
 
 band_to_year <- data.table(band= c(1:17), year= c(2000:2016))
 band <- band_to_year[year==y, band]
