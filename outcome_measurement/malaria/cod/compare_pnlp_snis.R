@@ -51,6 +51,13 @@ dhis_sigl <- readRDS(paste0(dir_dhis, input_dhis_sigl))
 
 
 # ----------------------------------------------
+# Standardize health zones in dhis data
+# ----------------------------------------------
+
+# ----------------------------------------------
+
+
+# ----------------------------------------------
 # Standardize pnlp with snis data (agg to dps level and keep variables we want/rename to match) to merge them together
 # ----------------------------------------------
 # make var for year in pnlp
