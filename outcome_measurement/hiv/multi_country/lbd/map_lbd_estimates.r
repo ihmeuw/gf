@@ -3,6 +3,12 @@
 #
 # 5/15/2017
 # Make simple maps of HIV prevalence for PCE countries
+# 8/3/2018 
+# Modified by Audrey Batzel; Use different bands of the raster data to make maps of HIV prevalence in different years
+
+# To do:
+  # check percent change code (scale is really large?)
+  # maybe make this code into a function where the year or years is/are supplied as parameters so it is easier to run? 
 # -----------------------------------------------------
 
 
@@ -15,6 +21,7 @@ library(RColorBrewer)
 library(ggplot2)
 library(grid)
 library(gridExtra)
+library(rgdal)
 # --------------------
 
 
@@ -26,7 +33,8 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/lbd/')
 
 # input files
-inDir = '/share/geospatial/mbg/hiv/hiv_test/output/2018_05_07_10_11_14/'
+timestamp = '2018_07_14_19_55_43' #change this to use a different run of the lbd hiv model; this is the timestamp Laura Dwyer-Lindgren said to use
+inDir = paste0('/share/geospatial/mbg/hiv/hiv_test/output/', timestamp,'/')
 inFile = paste0(inDir, 'hiv_test_mean_raked_raster.tif')
 
 # shapefiles
@@ -36,8 +44,15 @@ shapeFileCOD = paste0(outDir, '../../../mapping/cod/COD_adm3.shp')
 # shapefile of lakes
 shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lakes/glwd_1.shp')
 
+# specify band to get a specific year of data
+# band 1=2000, band 17=2016.... so for 2015 band=16 and for 2010 band=11
+y= 2010
+
+band_to_year <- data.table(band= c(1:17), year= c(2000:2016))
+band <- band_to_year[year==y, band]
+
 # output file
-graphFile = paste0(outDir, 'HIV_Prevalence_2018_05_07_10_11_14.pdf')
+graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', y, '.pdf')
 # ----------------------------------------------------------------------------------------
 
 
@@ -49,7 +64,13 @@ mapUGA = shapefile(shapeFileUGA)
 mapCOD = shapefile(shapeFileCOD)
 
 # load raster data
-rasterData = raster(inFile)
+rasterData = raster(inFile, band=band)
+
+#--------------# use this in order to get a rate of change between the two years; comment out if not using #------------------
+graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', "percent_change_2010to2015", '.pdf')
+rasterData15 = raster(inFile, band= 16)
+rasterData10 = raster(inFile, band= 11)
+rasterData = (((rasterData15 - rasterData10)/(rasterData10))*100)
 
 # load the ground cover data
 lakes = shapefile(shapeFileLakes)
@@ -126,7 +147,10 @@ codprev = ggplot(dataCOD, aes(y=y, x=x, fill=prev*100)) +
 	theme(plot.title=element_text(hjust=.5), plot.margin=unit(rep(-1,4), 'cm')) 
 
 # put maps together
-p1 = arrangeGrob(codprev, ugaprev, ncol=2)	
+p1 = arrangeGrob(codprev, ugaprev, ncol=2, top = toString(y))	
+
+#----------------# for percent change graph:#------------------------------------------
+# p1 = arrangeGrob(codprev, ugaprev, ncol=2, top = "Percent Change 2010 to 2015")	
 # -------------------------------------------------------------------------------
 
 

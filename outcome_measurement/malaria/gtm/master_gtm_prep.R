@@ -1,5 +1,5 @@
 # ----------------------------------------------
-# Audrey Batzel
+# Irena Chen
 # 4/5/18
 # Master prep file for GTM Malaria supply chain data 
 # ----------------------------------------------
@@ -15,7 +15,6 @@ library(stats)
 library(rlang)
 library(zoo)
 library(readr)
-
 # ----------------------------------------------
 ###### Call directories and source the functions  ###### 
 # ----------------------------------------------
@@ -25,8 +24,7 @@ antimalarials <- "J:/Project/Evaluation/GF/outcome_measurement/gtm/MALARIA/"
 bed_nets <- paste0(antimalarials, "Distribucion de MTILD/")
 
 
-#prep_dir <- " your local repo + gf/outcome_measurement/malaria/gtm/"
-prep_dir <- "H:/gf/outcome_measurement/malaria/gtm/"
+prep_dir <- " your local repo + gf/outcome_measurement/malaria/gtm/"
 source(paste0(prep_dir, "prep_antimalarial_drugs.R"))
 source(paste0(prep_dir, "prep_bed_nets.R"))
 
@@ -44,24 +42,19 @@ for(i in 1:length(file_list$file_name)){
   if(file_list$type[i]=="antimal_drug"){
     antimalData <- prep_antimal_data(paste0(antimalarials, file_list$file_name[i]), file_list$sheet[i]
                                , ymd(file_list$start_date[i]), file_list$period[i])
-      if(i==1){
-        antimal_database <- antimalData
-      } else {
-        antimal_database <- rbind(antimalData, antimal_database)
-      }
+  if(i==1){
+    antimal_database <- antimalData
   } else {
-    #if(ymd(file_list$start_date[i]) == ymd("2015-01-01")){ this was just used for testing
+    antimal_database <- rbind(antimalData, antimal_database)
+    }
+  } else {
     bnData <- prep_gtm_bed_nets(paste0(bed_nets, file_list$file_name[i]),
-                                file_list$start_date[i], file_list$period[i])
-    bnData$DB_Year = file_list$start_date[i]
-    #if(!(exists('bn_database')&& is.data.frame(get('bn_database')))){
-      #bn_database <- copy(bnData)
-      if(file_list$type[i]=="bed_nets" && file_list$type[i-1] == "antimal_drug"){ #ymd(file_list$start_date[i-1]) == ymd("2016-01-01")
-        bn_database <- bnData
-      } else {
-        bn_database <- rbind(bnData, bn_database)
-      }
-    #}
+                                ymd(file_list$start_date[i]), file_list$period[i])
+    if(!(exists('bn_database')&& is.data.frame(get('bn_database')))){
+      bn_database <- copy(bnData)
+    } else {
+      bn_database <- rbind(bnData, bn_database)
+    }
   }
    # if(any(bnData$regional_code==0)){
    #     stop("Stop! No Region!")
@@ -69,8 +62,7 @@ for(i in 1:length(file_list$file_name)){
   print(i)
 }
 
-#write.csv(bn_database, "J:/temp/ninip/bn_database_tri.csv")
-bn_database = unique(bn_database)
+
 
 antimal_database$amount <- as.numeric(antimal_database$amount)
 
@@ -131,7 +123,7 @@ antimal_database$standardized_dept <- mapply(standardize_depts, antimal_database
 # ----------------------------------------------
 ## attach department names to the bed net data
 # ----------------------------------------------
-dept_muni_names <- data.table(read.csv(paste0(antimalarials, "department_and_municipality_names.csv")))
+dept_muni_names <- data.table(read_csv(paste0(antimalarials, "department_and_municipality_names.csv")))
 
 setnames(dept_muni_names, c("CodReg", "CodDepto", "CodMuni", "Municipio", "Departamento"), 
          c("regional_code", "adm1", "adm2", "municipality","department"))
