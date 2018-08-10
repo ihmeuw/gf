@@ -24,7 +24,7 @@ dir = 'J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/'
 mapDir = 'J:/Project/Evaluation/GF/mapping/gtm/'
 
 # input file
-inFile = paste0(dir, 'total_resource_tracking_data.csv')
+inFile = paste0(dir, 'total_resource_tracking_data_tb.csv')
 
 # list of priority municipalities for TB
 priorityFile = paste0(mapDir, 'high_priority_muni.csv')
