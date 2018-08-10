@@ -33,6 +33,8 @@ imputed_data_low_tol <- 'imputedData_forGraphing_run2.rds' # hz level calculatio
 
 output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_analysis/')
 maniema_act_stockouts_graphs <- 'maniema_act_stockouts_by_hz.pdf'
+mtk_acts_received_graphs <- "mtk_acts_received_by_hz.pdf"
+mtk_acts_received_graphs_byAge <- "mtk_acts_received_by_age_by_hz.pdf"
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -52,15 +54,16 @@ dtOrig <- copy(dt)
 #----------------------------------------------------------------------------------------------------
 # subset to MTK
 MTK <- c("maniema", "tshopo", "kinshasa")
-dt_MTK <- dt[dps %in% MTK,]
-dt_maniema <- dt[dps=="maniema",]
-dt_tshopo <- dt[dps=="tshopo",]
-dt_kinshasa <- dt[dps=="kinshasa",]
+dt_MTK <- dtOrig[dps %in% MTK,]
+dt_maniema <- dtOrig[dps=="maniema",]
+dt_tshopo <- dtOrig[dps=="tshopo",]
+dt_kinshasa <- dtOrig[dps=="kinshasa",]
 
 # will loop through health zones so get health zones names
 hz_vector_m <- unique(dt_maniema$health_zone)
 hz_vector_t <- unique(dt_tshopo$health_zone)
 hz_vector_k <- unique(dt_kinshasa$health_zone)
+hz_vector_mtk <- unique(dt_MTK$health_zone)
 #----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
 # variable names for labeling
@@ -69,6 +72,11 @@ stockout_names <- c(
   `ASAQstockoutDays`= "Stockouts of ASAQ pills",
   `artLumStockoutDays`= "Stockouts of AL",
   `ASAQinjStockoutDays`= "Stockouts of ASAQ injectables")
+
+act_names <- c(
+  `totASAQ` = 'ASAQ',
+  `ArtLum_received` = 'AL'
+)
 
 # function to capitalize names
 simpleCap <- function(x) {
@@ -136,5 +144,47 @@ imputed[,total_mos:=NULL]
 # print(g)
 #----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
+dt_MTK_acts <- dt_MTK[variable %in% c("ArtLum_received", "ASAQreceived_2to11mos", "ASAQreceived_6to13yrs", "ASAQreceived_1to5yrs", "ASAQreceived_14yrsAndOlder"), ]
+
+dt <- dt_MTK_acts[, c('dps', 'health_zone', 'date', 'year', 'mean', 'variable')]
+
+dt_wide <- dcast(dt, dps + health_zone + date + year ~ variable, value.var= "mean")
+dt_wide <- as.data.table(dt_wide)
+
+dt_wide <- dt_wide[, totASAQ := ASAQreceived_2to11mos + ASAQreceived_6to13yrs + ASAQreceived_1to5yrs + ASAQreceived_14yrsAndOlder]
+
+dt_graph <- melt(dt_wide, id.vars= c('dps', 'health_zone', 'date', 'year'))
+dt_graph <- dt_graph[variable %in% c("ArtLum_received", "totASAQ")]
+#----------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
+
+
+pdf( paste0(output_dir, mtk_acts_received_graphs), height=6, width=12)
+for(h in hz_vector_mtk){
+  g <- ggplot(dt_graph[health_zone==h, ], aes(x=date, y=value, color = variable)) + theme_bw()+
+    geom_point() + geom_line() +
+    facet_wrap( ~ variable, scales="free_y", labeller=as_labeller(act_names)) +
+    ggtitle(paste0("ACT doses distributed to health facilities ", simpleCap(h), " (", simpleCap(dt_graph[health_zone==h, dps]), ")")) + guides(color=FALSE) +
+    ylab("Doses") + xlab("Date") 
+  print(g)
+}
+dev.off()
+
+setnames(dt_MTK_acts, "isMissing", "was_imputed")
+
+pdf( paste0(output_dir, mtk_acts_received_graphs_byAge), height=6, width=12)
+for(h in hz_vector_mtk){
+  g <- ggplot(dt_MTK_acts[health_zone==h, ], aes(x=date, y=mean, color = variable)) + theme_bw()+
+    geom_point(aes(shape=was_imputed), size=2) + scale_shape_manual(values=c(19, 1)) + geom_errorbar(aes(ymin=lower, ymax=upper, y=NULL, width=75), alpha=0.4) + geom_line(alpha=0.9, size=0.60) +
+    ggtitle(paste0("ACT doses distributed to health facilities in ", simpleCap(h), " (", simpleCap(dt_graph[health_zone==h, dps]), ")")) +
+    ylab("Doses") + xlab("Date") + facet_wrap( ~ indicator, scales="free_y", labeller = as_labeller(act_names))
+  
+  print(g)
+}
+dev.off()
+
+
+
+
 
 
