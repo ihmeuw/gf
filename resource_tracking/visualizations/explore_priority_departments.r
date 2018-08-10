@@ -116,7 +116,7 @@ priorityAgg[high_priority==1, priority_label:='High Priority Municipalities']
 priorityAgg[high_priority==0, priority_label:='Other Municipalities']
 
 # label sources
-priorityAgg[financing_source=='donacions', financing_source:='All External Donors']
+priorityAgg[financing_source=='donacions', financing_source:='Other External Donors']
 priorityAgg[financing_source=='gf', financing_source:='Global Fund']
 priorityAgg[financing_source=='ghe', financing_source:='Government']
 mapData[financing_source=='donacions', financing_source:='All External Donors']
