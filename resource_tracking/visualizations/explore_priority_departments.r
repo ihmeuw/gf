@@ -95,7 +95,7 @@ shapeData = shapefile(shapeFile)
 mapData = data.table(fortify(shapeData, region='Codigo'))
 
 # merge
-wide = dcast(data, adm2+high_priority~financing_source+year, value.var=valueVars)
+wide = dcast.data.table(data, adm2+high_priority~financing_source+year, value.var=valueVars)
 mapData = merge(mapData, wide, by.x='id', by.y='adm2', all.x=TRUE)
 
 # reshape mapData long for easier graphing
