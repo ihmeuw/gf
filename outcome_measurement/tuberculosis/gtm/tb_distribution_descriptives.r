@@ -131,7 +131,7 @@ commonDrugs = c('ETAMBUTOL (400mg)', 'ETHIONAMIDA (250mg)', 'ISONIAZIDA (100mg)'
 # drugs by product over time among high/low priority departments
 p1 = ggplot(prAgg[regimen %in% commonDrugs], aes(x=date, y=Amount, color=priority)) + 
 		geom_line(alpha=.75) + 
-		geom_point(alpha=.75, size=.7) + 
+		geom_point(alpha=.75, size=.5) + 
 		facet_wrap(~regimen, scales='free_y') + 
 		labs(title='TB Drugs Distributed', y='Units Distributed', color='', x='Month') + 
 		theme_bw() + 
@@ -141,7 +141,7 @@ p1 = ggplot(prAgg[regimen %in% commonDrugs], aes(x=date, y=Amount, color=priorit
 # drugs by product over time excluding two huge points
 p2 = ggplot(prAgg[regimen %in% commonDrugs & Amount<150000], aes(x=date, y=Amount, color=priority)) + 
 		geom_line(alpha=.75) + 
-		geom_point(alpha=.75) + 
+		geom_point(alpha=.75, size=.5) + 
 		facet_wrap(~regimen, scales='free_y') + 
 		labs(title='TB Drugs Distributed', y='Units Distributed', color='', x='Month', caption='Two shipments >150,000 not shown') + 
 		theme_bw() + 
