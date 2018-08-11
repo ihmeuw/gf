@@ -56,7 +56,7 @@ source(paste0(dir, 'dhis_extracting_functions.R'))
 start_year <- '2018'
 end_year <- '2018'
 start_month <- '01'
-end_month <- '07'
+end_month <- '08'
 
 # change the update year to before the data begins
 update_year <- '2017'
