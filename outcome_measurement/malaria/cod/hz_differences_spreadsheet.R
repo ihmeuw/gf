@@ -35,7 +35,7 @@ library(maptools)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir_pnlp = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
 dir_snis <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/dhis/all_units/")
-dir_shape <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/health2/")
+dir_shape <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/health2/")
 
 # input file
 snis_data <- "master_facilities.rds"
@@ -278,18 +278,12 @@ pnlp_snis[health_zone=="kapolowe", health_zone:="kapolobwe"]
 pnlp_snis[health_zone=="katoyi", health_zone:="kitoyi"]
 pnlp_snis[health_zone=="kalonda-ouest", health_zone:="kalonda"]
 pnlp_snis[health_zone=="kalomba", health_zone:="kalomda"]
-pnlp_snis[health_zone=="adia", health_zone:="adja"]
-
-pnlp_snis[health_zone=="adia", health_zone:="adja"]
-pnlp_snis[health_zone=="adia", health_zone:="adja"]
-pnlp_snis[health_zone=="adia", health_zone:="adja"]
-pnlp_snis[health_zone=="adia", health_zone:="adja"]
-pnlp_snis[health_zone=="adia", health_zone:="adja"]
-pnlp_snis[health_zone=="adia", health_zone:="adja"]
 
 shp_pnlp_snis <- merge(shp1, pnlp_snis, by= c("health_zone"), all=TRUE)
 not_matching2 <-shp_pnlp_snis[!complete.cases(hz_shp1, dps_snis, hz_snis, hz_pnlp, dps_pnlp), ]
 
+write.csv(not_matching2, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/mismatched_hzs.csv")
+write.csv(shp_pnlp_snis, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/standardized_hzs.csv")
 
 
 
