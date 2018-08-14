@@ -46,60 +46,74 @@ pnlp <- as.data.table(pnlp)
 
 dhis_base <- readRDS(paste0(dir_dhis, input_dhis_base))
 
-dhis_sigl <- readRDS(paste0(dir_dhis, input_dhis_sigl))
+# dhis_sigl <- readRDS(paste0(dir_dhis, input_dhis_sigl))
 # ----------------------------------------------
 
 
 # ----------------------------------------------
-# Standardize health zones in dhis data
-# ----------------------------------------------
-
-# ----------------------------------------------
-
-
-# ----------------------------------------------
-# Standardize pnlp with snis data (agg to dps level and keep variables we want/rename to match) to merge them together
+# Standardize pnlp with snis data to merge them together &
+# standardize health zones
 # ----------------------------------------------
 # make var for year in pnlp
 pnlp$year <- year(pnlp$date)
 
 # subset to just 2017
-pnlp_2017 <- pnlp[year==2017,]
+pnlp <- pnlp[year==2017,]
 # and to type = malaria for dhis
-dhis_base_2017 <- dhis_base[year==2017 & type=="malaria" & keep==1,]
-dhis_sigl_2017 <- dhis_sigl[year==2017 & type=="malaria" & keep==1,]
+dhis_base <- dhis_base[year==2017 & type=="malaria" & keep==1,]
+# dhis_sigl_2017 <- dhis_sigl[year==2017 & type=="malaria" & keep==1,]
 
-# aggregate by dps
-# PNLP
-  # get id vars/sd cols
-  all_vars_pnlp <- colnames(pnlp)
-  id_vars_pnlp <- colnames(pnlp)[1:6]
-  id_vars_pnlp <- c(id_vars_pnlp, "year")
-  sdcols_pnlp <- all_vars_pnlp[!all_vars_pnlp %in% id_vars_pnlp]
-  # sum to dps level
-  pnlp_2017_dps <- pnlp_2017[, lapply(.SD, sum), .SDcols=sdcols_pnlp, by=c("year", "date", "province", "dps")]
-# DHIS BASE
-  dhis_base_2017_dps <- dhis_base_2017[, .(dpsValue = sum(value)), by=c("date", "year", "month", "dps", "element_eng")]
-# DHIS SIGL
-  dhis_sigl_2017_dps <- dhis_sigl_2017[, .(dpsValue = sum(value)), by=c("date", "year", "month", "dps", "element_eng")]
+# clean dhis dps and hz strings
+dhis_base$dps <- sapply(str_split(dhis_base$dps, " ", 2), '[', 2)
+dhis_base$dps <- gsub(" Province", "", dhis_base$dps)
+dhis_base$dps <- tolower(dhis_base$dps)
+dhis_base$dps <- gsub(" ", "-", dhis_base$dps)
+
+dhis_base$health_zone <- sapply(str_split(dhis_base$health_zone, " ", 2),'[', 2)
+dhis_base$health_zone <- gsub(" Zone de Santé", "", dhis_base$health_zone)
+dhis_base$health_zone <- tolower(dhis_base$health_zone)
+dhis_base$health_zone <- gsub(" ", "-", dhis_base$health_zone)
+
+dhis_base$health_area <- sapply(str_split(dhis_base$health_area, " ", 2),'[', 2)
+dhis_base$health_area <- gsub(" Aire de Santé", "", dhis_base$health_area)
+dhis_base$health_area <- tolower(dhis_base$health_area)
+dhis_base$health_area <- gsub(" ", "-", dhis_base$health_area)
+
+# subset to the columns we want to use in dhis
+dhis_base_subset <- dhis_base[, .(dps, health_zone, health_area, date, month, year, element, element_eng, category, value)]
+
+# # aggregate by dps
+# # PNLP
+#   # get id vars/sd cols
+#   all_vars_pnlp <- colnames(pnlp)
+#   id_vars_pnlp <- colnames(pnlp)[1:6]
+#   id_vars_pnlp <- c(id_vars_pnlp, "year")
+#   sdcols_pnlp <- all_vars_pnlp[!all_vars_pnlp %in% id_vars_pnlp]
+#   # sum to dps level
+#   pnlp_2017_dps <- pnlp_2017[, lapply(.SD, sum), .SDcols=sdcols_pnlp, by=c("year", "date", "province", "dps")]
+# # DHIS BASE
+#   dhis_base_2017_dps <- dhis_base_2017[, .(dpsValue = sum(value)), by=c("date", "year", "month", "dps", "element_eng")]
+# # DHIS SIGL
+#   # dhis_sigl_2017_dps <- dhis_sigl_2017[, .(dpsValue = sum(value)), by=c("date", "year", "month", "dps", "element_eng")]
 
 # change relevant var names in dhis data
-  dhis_base_2017_dps[element_eng== "A 2.1 LLINs distributed has ANC2 +", element_eng := "ITN_distAtANC2"]
-  dhis_base_2017_dps[element_eng== "A 2.1 LLINs distributed to the CPN1", element_eng := "ITN_distAtANC1"]
-  dhis_base_2017_dps[element_eng== "A 1.4 RDT positive", element_eng := "RDT_positive"]
-  dhis_base_2017_dps[element_eng== "A 1.4 RDT performed", element_eng := "RDT_completed"]
-  dhis_base_2017_dps[element_eng== "A 1.4 presumed Malaria", element_eng := "presumed_mal"]
-  dhis_base_2017_dps[element_eng== "A 1.4 Suspected case", element_eng := "suspected_mal"]
-  dhis_base_2017_dps[element_eng== "A 2.1 Sulfadox. + Pyrimét first dose", element_eng := "SP_1st"]
-  dhis_base_2017_dps[element_eng== "A 2.1 Sulfadox. + Pyrimét 2nd dose", element_eng := "SP_2nd"]
-  dhis_base_2017_dps[element_eng== "A 2.1 Sulfadox. + Pyrimét 3rd dose", element_eng := "SP_3rd"]
-  dhis_base_2017_dps[element_eng== "A 1.5 Severe malaria FE", element_eng := "newCasesMalariaSevere_pregnantWomen"]
-  dhis_base_2017_dps[element_eng== "A 1.5 Severe malaria FE treated", element_eng := "severeMalariaTreated_pregnantWomen"]
-  dhis_base_2017_dps[element_eng== "A 1.5 Confirmed simple malaria - pregnant woman", element_eng := "newCasesMalariaMild_pregnantWomen"]
-  dhis_base_2017_dps[element_eng== "A 1.5 Confirmed simple malaria treated - pregnant woman", element_eng := "mildMalariaTreated_pregnantWomen"]
-  dhis_base_2017_dps[element_eng== "A 1.4 Severe malaria", element_eng := "severe_mal"]
-  dhis_base_2017_dps[element_eng== "A 1.4 Severe malaria treated", element_eng := "severe_mal_treated"]
-  dhis_base_2017_dps[element_eng== "A 1.5 Confirmed simple malaria treated", element_eng := "simple_mal_treated"]
+# NOTE: just realized that dhis data has malaria cases split by <5 and >5 too.. not sure if the split is the same for where age 5 is included
+  dhis_base_subset[element_eng== "A 2.1 LLINs distributed has ANC2 +", element_eng := "ITN_distAtANC2"]
+  dhis_base_subset[element_eng== "A 2.1 LLINs distributed to the CPN1", element_eng := "ITN_distAtANC1"]
+  dhis_base_subset[element_eng== "A 1.4 RDT positive", element_eng := "RDT_positive"]
+  dhis_base_subset[element_eng== "A 1.4 RDT performed", element_eng := "RDT_completed"]
+  dhis_base_subset[element_eng== "A 1.4 presumed Malaria", element_eng := "presumed_mal"]
+  dhis_base_subset[element_eng== "A 1.4 Suspected case", element_eng := "suspected_mal"]
+  dhis_base_subset[element_eng== "A 2.1 Sulfadox. + Pyrimét first dose", element_eng := "SP_1st"]
+  dhis_base_subset[element_eng== "A 2.1 Sulfadox. + Pyrimét 2nd dose", element_eng := "SP_2nd"]
+  dhis_base_subset[element_eng== "A 2.1 Sulfadox. + Pyrimét 3rd dose", element_eng := "SP_3rd"]
+  dhis_base_subset[element_eng== "A 1.5 Severe malaria FE", element_eng := "newCasesMalariaSevere_pregnantWomen"]
+  dhis_base_subset[element_eng== "A 1.5 Severe malaria FE treated", element_eng := "severeMalariaTreated_pregnantWomen"]
+  dhis_base_subset[element_eng== "A 1.5 Confirmed simple malaria - pregnant woman", element_eng := "newCasesMalariaMild_pregnantWomen"]
+  dhis_base_subset[element_eng== "A 1.5 Confirmed simple malaria treated - pregnant woman", element_eng := "mildMalariaTreated_pregnantWomen"]
+  dhis_base_subset[element_eng== "A 1.4 Severe malaria", element_eng := "severe_mal"]
+  dhis_base_subset[element_eng== "A 1.4 Severe malaria treated", element_eng := "severe_mal_treated"]
+  dhis_base_subset[element_eng== "A 1.5 Confirmed simple malaria treated", element_eng := "simple_mal_treated"]
   
 # sum variables in pnlp for comparison
   pnlp_2017_dps[, presumed_mal := rowSums(.SD, na.rm=TRUE), .SDcols = c("presumedMalaria_5andOlder" , "presumedMalaria_pregnantWomen" , "presumedMalaria_under5")]
