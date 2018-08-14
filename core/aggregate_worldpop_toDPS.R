@@ -56,7 +56,7 @@ popExtract10 = extract(popRaster10, shapeData)
 
 # sum over provinces
 pop15 = data.table(province=shapeData@data$NAME_1, pop=sapply(popExtract15, sum, na.rm=T))
-pop10 = data.table(province=shapeData@data$NAME_1, pop=sapply(popExtract10, sum))
+pop10 = data.table(province=shapeData@data$NAME_1, pop=sapply(popExtract10, sum, na.rm=T))
 # ---------------------------------------------------------------------------
 
 
@@ -76,7 +76,7 @@ popExtract15_agg = extract(popRaster15_agg, shapeData)
 popExtract10_agg = extract(popRaster10_agg, shapeData)
 
 pop15 = data.table(province=shapeData@data$NAME_1, pop=sapply(popExtract15_agg, sum, na.rm=T))
-pop10 = data.table(province=shapeData@data$NAME_1, pop=sapply(popExtract10_agg, sum))
+pop10 = data.table(province=shapeData@data$NAME_1, pop=sapply(popExtract10_agg, sum, na.rm=T))
 
 write.csv(pop15, paste0(dir, "worldpop_data/2015_pop_estimates_by_dps(aggregated raster).csv"))
 write.csv(pop10, paste0(dir, "worldpop_data/2010_pop_estimates_by_dps(aggregated raster).csv"))
