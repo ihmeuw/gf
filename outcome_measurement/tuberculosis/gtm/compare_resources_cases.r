@@ -13,6 +13,7 @@ library(data.table)
 library(ggplot2)
 # ---------------------------------------------------
 
+
 # ---------------------------------------------------
 # Directories
 
@@ -95,6 +96,7 @@ cohortAgg = cohortData[row_name_ %in% c('CURADOS','TRATAMIENTOS COMPLETOS'),
 cohortAgg = merge(cohortAgg, cohortData[, .(total=sum(value, na.rm=TRUE)), by='year'], by='year')
 # ---------------------------------------------------
 
+
 # ---------------------------------------------------
 # Ratios
 
@@ -107,8 +109,8 @@ data[, budget_cured:=budget/cured]
 data[, disbursement_cured:=disbursement/cured]
 
 # dollars per percentage of cases cured over time
-data[, budget_cured_pct:=budget/(cured/total*100)]
-data[, disbursement_cured_pct:=disbursement/(cured/total*100)]
+data[, budget_cases:=budget/total]
+data[, disbursement_cases:=disbursement/total]
 
 # drugs distributed per case cured over time
 data[, distr_cured:=rifampicin/cured]
@@ -120,6 +122,8 @@ data[, distr_cured:=rifampicin/cured]
 graphData = melt(data, id='year')
 graphData[variable=='budget_cured', label:='Budget/Cured']
 graphData[variable=='disbursement_cured', label:='Disbursement/Cured']
+graphData[variable=='budget_cases', label:='Budget/Cases']
+graphData[variable=='disbursement_cases', label:='Disbursement/Cases']
 p1 = ggplot(graphData[variable %in% c('budget_cured','disbursement_cured')], 
 	aes(y=value, x=year, color=label)) + 
 	geom_line(size=1.5) +
@@ -129,7 +133,16 @@ p1 = ggplot(graphData[variable %in% c('budget_cured','disbursement_cured')],
 		caption='Resources from Government and Global Fund Combined') + 
 	theme_bw()
 
-p2 = ggplot(data, aes(y=distr_cured, x=year, label=rifampicin)) + 
+p2 = ggplot(graphData[variable %in% c('budget_cases','disbursement_cases')], 
+	aes(y=value, x=year, color=label)) + 
+	geom_line(size=1.5) +
+	geom_point(size=3.5, color='grey45') + 
+	labs(title='Dollars Budgeted and Disbursed Compared to Cases Started Treatment', 
+		y='USD per Case Started Treatment', x='Year',color='',
+		caption='Resources from Government and Global Fund Combined') + 
+	theme_bw()
+
+p3 = ggplot(data, aes(y=distr_cured, x=year, label=rifampicin)) + 
 	geom_line(size=1.5) +
 	geom_point(size=3.5, color='grey45') + 
 	geom_text(hjust=1, vjust=0) + 
@@ -145,5 +158,6 @@ p2 = ggplot(data, aes(y=distr_cured, x=year, label=rifampicin)) +
 pdf(outFile, height=5.5, width=7)
 p1
 p2
+p3
 dev.off()
 # ---------------------------------------------------
