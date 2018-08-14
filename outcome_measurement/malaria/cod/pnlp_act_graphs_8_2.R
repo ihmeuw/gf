@@ -32,9 +32,11 @@ imputed_data_low_tol <- 'imputedData_forGraphing_run2.rds' # hz level calculatio
 
 
 output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_analysis/')
-maniema_act_stockouts_graphs <- 'maniema_act_stockouts_by_hz.pdf'
-mtk_acts_received_graphs <- "mtk_acts_received_by_hz.pdf"
-mtk_acts_received_graphs_byAge <- "mtk_acts_received_by_age_by_hz.pdf"
+maniema_act_stockouts_graphs <- 'maniema_act_stockouts_by_hz_2015to2017.pdf'
+mtk_acts_received_graphs <- "mtk_acts_received_by_hz_2015to2017.pdf"
+mtk_acts_received_graphs_byAge <- "mtk_acts_received_by_age_by_hz_2015to2017.pdf"
+mtk_acts_received_by_dps <- "mtk_acts_received_by_dps_2015to2017.pdf"
+mtk_acts_used_by_dps <- "mtk_acts_used_by_dps_2015to2017.pdf"
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -48,6 +50,8 @@ dt[value==0, mean:=0]
 dt<- dt[dps != "0"]
 
 dt$year <- year(dt$date)
+
+dt <- dt[year>=2015, ]
 
 dtOrig <- copy(dt)
 #----------------------------------------------------------------------------------------------------
@@ -121,15 +125,15 @@ dev.off()
 #----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
 # calculate number of imputed values of stockouts of asaq inj
-test <- dtACTStockouts_maniema[variable=="stockOutASAQ_inj",]
-imputedTot <- test[isMissing==TRUE, .(.N), by=c("health_zone", "year")]
-setnames(imputedTot, "N", "total_imputed")
-total_mos <- setkey(test,health_zone,year)[CJ(unique(health_zone), unique(year)), .N, by=.EACHI]
-setnames(total_mos, "N", "total_mos")
-imputed <- merge(imputedTot, total_mos, all=T, by=c("health_zone", "year"))
-imputed <- imputed[is.na(total_imputed), total_imputed:=0]
-imputed <- imputed[, percent_imputed := ((total_imputed/12) * 100)]
-imputed[,total_mos:=NULL]
+# test <- dtACTStockouts_maniema[variable=="stockOutASAQ_inj",]
+# imputedTot <- test[isMissing==TRUE, .(.N), by=c("health_zone", "year")]
+# setnames(imputedTot, "N", "total_imputed")
+# total_mos <- setkey(test,health_zone,year)[CJ(unique(health_zone), unique(year)), .N, by=.EACHI]
+# setnames(total_mos, "N", "total_mos")
+# imputed <- merge(imputedTot, total_mos, all=T, by=c("health_zone", "year"))
+# imputed <- imputed[is.na(total_imputed), total_imputed:=0]
+# imputed <- imputed[, percent_imputed := ((total_imputed/12) * 100)]
+# imputed[,total_mos:=NULL]
 #----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
 # g <- ggplot(dt_graph[year >= 2015, ], aes(x=date, y=value, color = health_zone)) + theme_bw()+
@@ -157,8 +161,6 @@ dt_graph <- melt(dt_wide, id.vars= c('dps', 'health_zone', 'date', 'year'))
 dt_graph <- dt_graph[variable %in% c("ArtLum_received", "totASAQ")]
 #----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
-
-
 pdf( paste0(output_dir, mtk_acts_received_graphs), height=6, width=12)
 for(h in hz_vector_mtk){
   g <- ggplot(dt_graph[health_zone==h, ], aes(x=date, y=value, color = variable)) + theme_bw()+
@@ -170,18 +172,78 @@ for(h in hz_vector_mtk){
 }
 dev.off()
 
-setnames(dt_MTK_acts, "isMissing", "was_imputed")
+# setnames(dt_MTK_acts, "isMissing", "was_imputed")
+# 
+# pdf( paste0(output_dir, mtk_acts_received_graphs_byAge), height=6, width=12)
+# for(h in hz_vector_mtk){
+#   g <- ggplot(dt_MTK_acts[health_zone==h, ], aes(x=date, y=mean, color = variable)) + theme_bw()+
+#     geom_point(aes(shape=was_imputed), size=2) + scale_shape_manual(values=c(19, 1)) + geom_errorbar(aes(ymin=lower, ymax=upper, y=NULL, width=75), alpha=0.4) + geom_line(alpha=0.9, size=0.60) +
+#     ggtitle(paste0("ACT doses distributed to health facilities in ", simpleCap(h), " (", simpleCap(dt_graph[health_zone==h, dps]), ")")) +
+#     ylab("Doses") + xlab("Date") + facet_wrap( ~ indicator, scales="free_y", labeller = as_labeller(act_names))
+#   
+#   print(g)
+# }
+# dev.off()
 
-pdf( paste0(output_dir, mtk_acts_received_graphs_byAge), height=6, width=12)
-for(h in hz_vector_mtk){
-  g <- ggplot(dt_MTK_acts[health_zone==h, ], aes(x=date, y=mean, color = variable)) + theme_bw()+
-    geom_point(aes(shape=was_imputed), size=2) + scale_shape_manual(values=c(19, 1)) + geom_errorbar(aes(ymin=lower, ymax=upper, y=NULL, width=75), alpha=0.4) + geom_line(alpha=0.9, size=0.60) +
-    ggtitle(paste0("ACT doses distributed to health facilities in ", simpleCap(h), " (", simpleCap(dt_graph[health_zone==h, dps]), ")")) +
-    ylab("Doses") + xlab("Date") + facet_wrap( ~ indicator, scales="free_y", labeller = as_labeller(act_names))
-  
-  print(g)
-}
+#----------------------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------------------
+# facet grid
+dt_dps <- readRDS(paste0(dir, "imputedData_run2_condensed_dps.rds"))
+
+dt_dps$year <- year(dt_dps$date)
+
+dt_dps_MTK <- dt_dps[dps %in% MTK & year >= 2015,]
+
+MTK_acts_rec <- dt_dps_MTK[indicator %in% c("ArtLum", "ASAQreceived") & subpopulation!="used", ]
+
+MTK_acts_rec_sum <- MTK_acts_rec[, drugTotal := sum(mean), by=c("indicator", "date", "dps")]
+
+MTK_acts_rec_sum <- MTK_acts_rec_sum[, actTotal := sum(mean), by=c("date", "dps")]
+
+pdf( paste0(output_dir, mtk_acts_received_by_dps), height=6, width=12)
+
+g <- ggplot(MTK_acts_rec_sum, aes(x=date, y=drugTotal, color = indicator)) + theme_bw()+
+  geom_point() + geom_line() +
+  facet_grid(indicator ~ dps, scales="free_y") +
+  ggtitle(paste0("ACT doses distributed to health facilities")) + guides(color=FALSE) +
+  ylab("Doses") + xlab("Date")  + scale_y_continuous(labels = comma)
+print(g)
+
+g <- ggplot(MTK_acts_rec_sum, aes(x=date, y=actTotal, color = dps)) + theme_bw()+
+  geom_point() + geom_line() +
+  ggtitle(paste0("ACT doses distributed to health facilities")) +
+  ylab("Doses of ACTs") + xlab("Date")  + scale_y_continuous(labels = comma)
+print(g)
+
 dev.off()
+
+#----------------------------------------------------------------------------------------------------
+
+MTK_acts_used <- dt_dps_MTK[indicator %in% c("ArtLum", "ASAQused") & subpopulation!="received", ]
+
+MTK_acts_used_sum <- MTK_acts_used[, drugTotal := sum(mean), by=c("indicator", "date", "dps")]
+
+MTK_acts_used_sum <- MTK_acts_used_sum[, actTotal := sum(mean), by=c("date", "dps")]
+
+
+pdf( paste0(output_dir, mtk_acts_used_by_dps), height=6, width=12)
+
+g <- ggplot(MTK_acts_used_sum, aes(x=date, y=drugTotal, color = indicator)) + theme_bw()+
+  geom_point() + geom_line() +
+  facet_grid(indicator ~ dps, scales="free_y") +
+  ggtitle(paste0("ACT doses distributed to patients")) + guides(color=FALSE) +
+  ylab("Doses") + xlab("Date")  + scale_y_continuous(labels = comma)
+print(g)
+
+g <- ggplot(MTK_acts_used_sum, aes(x=date, y=actTotal, color = dps)) + theme_bw()+
+  geom_point() + geom_line() +
+  ggtitle(paste0("ACT doses distributed to patients")) +
+  ylab("Doses of ACTs") + xlab("Date")  + scale_y_continuous(labels = comma)
+print(g)
+
+dev.off()
+
+
 
 
 
