@@ -1,4 +1,4 @@
-# ----------------------------------------------
+# ----------------------------------------------TESTING
 # Irena Chen
 #
 # 11/1/2017
@@ -147,7 +147,17 @@ cleaned_database$intervention <- "all"
 
 dups<-cleaned_database[duplicated(cleaned_database) | duplicated(cleaned_database, fromLast=TRUE)]
 
+# Convert from Quitzal to USD
+conversion_table = data.table("year" = c("2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018"), 
+                              "conversion" = c(7.74022,	7.5532,	7.3301,	7.45875,	7.42153,	8.01039,	7.92282,	7.64965,	7.68406,	7.71407,	7.59794,	7.49704,	7.43533,	7.18309,	7.31697))
 
+cleaned_database$year = substring(cleaned_database$start_date, 1, 4)
+cleaned_database = merge(cleaned_database, conversion_table, by = "year", allow.cartesian = TRUE)
+cleaned_database$budget = cleaned_database$budget / cleaned_database$conversion
+cleaned_database$disbursement = cleaned_database$disbursement / cleaned_database$conversion
+
+cleaned_database$year = NULL
+cleaned_database$conversion = NULL
 
 # ----------------------------------------------
 ##### Load the mapping files  #####
