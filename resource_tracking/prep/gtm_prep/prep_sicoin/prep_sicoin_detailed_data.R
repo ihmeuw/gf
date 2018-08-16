@@ -33,7 +33,7 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
       } else {
         gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):.N),]
       }
-    } else if(length(grep("INGRESOS CORRIENTES", gf_data$X__12) !=0)){
+    } else if(length(grep("INGRESOS CORRIENTES", gf_data$X__12)) !=0){
       gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
     } else {
       gf_data <- gf_data[c(grep("RECURSOS DEL TESORO", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]

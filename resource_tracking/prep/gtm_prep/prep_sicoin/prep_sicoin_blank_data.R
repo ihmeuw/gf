@@ -39,6 +39,10 @@ prep_blank_sicoin = function(loc_name, adm1, start_date, disease, period, source
   if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
   if (!is.numeric(budget_dataset$expenditure)) budget_dataset[,expenditure:=as.numeric(expenditure)]
   
+  budget_dataset$budget = ifelse(is.na(budget_dataset$budget), 0, budget_dataset$budget)
+  budget_dataset$disbursement = ifelse(is.na(budget_dataset$disbursement), 0, budget_dataset$disbursement)
+  budget_dataset$expenditure = 0
+  
   # ----------------------------------------------
   
   # return prepped data
