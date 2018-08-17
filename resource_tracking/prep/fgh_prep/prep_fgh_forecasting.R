@@ -31,9 +31,9 @@ if (Sys.info()[1] == 'Windows') {
 }
 
 
-output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/')
-input_dir <- "Project/IRH/Forecasting/data/feather_storage_draws_2018/scenarios_he_raked/"
-hiv_dir <- "Project/IRH/HIV/03_model_outputs/forecast/for_gbd_hiv/"
+output_dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/')
+input_dir <- paste0("Project/IRH/Forecasting/data/feather_storage_draws_2018/scenarios_he_raked/")
+hiv_dir <- paste0("Project/IRH/HIV/03_model_outputs/forecast/for_gbd_hiv/")
 
 ##names of the files to be cleaned 
 ghe_file <- "GHES"
@@ -132,9 +132,13 @@ get_hiv_forecast <- function(root, hiv_dir, hiv_file, pce_codes){
   pce_data <- hiv_data[location_id%in%pce_codes]
   
   pce_data$V1 <- NULL #I think someone forgot to remove this variable - it appears to just be a row index
+  pce_data$ghe = pce_data$public
+  
+  pce_data_new = subset(pce_data, select = c("location_id", "year_id", "variable", "ghe", "ppp", "oop"))
+
   
   ##create "financing_source" and "funding_forecast" as variables: 
-  hiv_forecast <- melt(pce_data, id.vars = c("location_id", "year_id", "variable"), 
+  hiv_forecast <- melt(pce_data_new, id.vars = c("location_id", "year_id", "variable"), 
                        variable.name = "financing_source",value.name="funding_forecast")
   hiv_forecast$funding_forecast <- as.numeric(hiv_forecast$funding_forecast)
   
@@ -164,11 +168,11 @@ get_hiv_forecast <- function(root, hiv_dir, hiv_file, pce_codes){
 # ----------------------------------------------
 ghe_prepped <- get_prepped_forecast(root, input_dir,ghe_file)
 ghe_prepped$financing_source <- "ghe_forecasted"
-the_prepped <- get_prepped_forecast(root, input_dir,the_file)
-the_prepped$financing_source <- "the_forecasted"
+#the_prepped <- get_prepped_forecast(root, input_dir,the_file)
+#the_prepped$financing_source <- "the_forecasted"
 dah_prepped <- get_prepped_forecast(root, input_dir, dah_file)
 dah_prepped$financing_source <- "dah_forecasted"
-pce_forecast <- rbind(ghe_prepped, the_prepped, dah_prepped)
+pce_forecast <- rbind(ghe_prepped, dah_prepped) #, the_prepped
 setnames(pce_forecast, "iso3", "loc_name")
 pce_forecast$adm1 <- mapply(get_country_codes, tolower(pce_forecast$loc_name), "all")
 
@@ -179,6 +183,15 @@ pce_total <- rbind(hiv_prepped, pce_forecast)
 
 pce_total  <- melt(pce_total , id.vars = c("year", "adm1", "loc_name", "disease",
                                            "financing_source", "code"), variable.name = "fin_data_type", value.name = "disbursement")
+
+pce_total$fin_data_type = ifelse(pce_total$financing_source == "ghe_forecasted", "forecasted", as.character(pce_total$fin_data_type))
+pce_total$fin_data_type = ifelse(pce_total$financing_source == "dah_forecasted", "forecasted", as.character(pce_total$fin_data_type))
+pce_total$financing_source = ifelse(pce_total$financing_source == "ghe_forecasted", "ghe", as.character(pce_total$financing_source))
+pce_total$financing_source = ifelse(pce_total$financing_source == "dah_forecasted", "dah", as.character(pce_total$financing_source))
+pce_total$fin_data_type = ifelse(pce_total$fin_data_type == "mean", "model_estimates", as.character(pce_total$fin_data_type))
+pce_total$fin_data_type = ifelse(pce_total$fin_data_type == "lower_perc", "model_estimates_lower_ci", as.character(pce_total$fin_data_type))
+pce_total$fin_data_type = ifelse(pce_total$fin_data_type == "upper_perc", "model_estimates_upper_ci", as.character(pce_total$fin_data_type))
+
 pce_total$data_source <- "fgh"
 
 pce_total$country <- mapply(get_country, tolower(pce_total$loc_name))
@@ -218,4 +231,4 @@ total_fgh <- rbind(fgh_current, pce_total)
 # ----------------------------------------------
 ##export to the J Drive: 
 # ----------------------------------------------
-write.csv(total_fgh, paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh.csv'), row.names=FALSE)
+write.csv(total_fgh, paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh_total.csv'), row.names=FALSE)

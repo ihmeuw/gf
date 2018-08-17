@@ -8,7 +8,7 @@
 # ----------------------------------------------
 # Set up R
 rm(list=ls())
-library(dplyr)
+library(dplyr) 
 library(tools)
 library(data.table)
 library(lubridate)
@@ -88,7 +88,6 @@ gos_data[, period:=end_date - start_date]
 gos_data$period <- as.integer(gos_data$period)
 
 ##since we don't have subnational data for GOS, just make it a copy of the country variable: 
-gos_data$disbursement <- 0
 gos_data$adm1 <- gos_data$loc_name
 gos_data$adm2 <- gos_data$loc_name
 gos_data$lang <- "eng"
@@ -99,13 +98,13 @@ gos_data$cost_category <- "all"
 totalData <- rbind(fpmData, gos_data)
 
 ## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
-totalData$fin_data_type <- "actuals"
+totalData$fin_data_type <- "actual"
 
 # --------------------------------------------
 ###load the forecasted FGH data 
 # --------------------------------------------
 
-fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh.csv", 
+fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh_total.csv", 
                                 fileEncoding = "latin1"))
 
 ##change the dates into date format: 
@@ -131,7 +130,6 @@ totalData= totalData[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omi
 totalData$start_date <- as.character(totalData$start_date)
 totalData$end_date <- as.character(totalData$end_date)
 write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv", row.names = FALSE)
-
 
 # --------------------------------------------
 ### This produces a dataset that prioritizes FPM data (drops GOS/PUDR is it overlap)
