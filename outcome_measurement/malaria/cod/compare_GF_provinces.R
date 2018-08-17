@@ -33,12 +33,15 @@ dir_pop = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/worldpop_dat
 # input files
 dps_data <- "imputedData_run2_condensed_dps.rds"
 pop_data <- '2015_pop_estimates_by_dps(aggregated raster).csv'
+pop_data10 <- '2010_pop_estimates_by_dps(aggregated raster).csv'
 
 # output files
+merged_pops <- "2015_and_2010_pop_estimates.csv"
 output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_analysis/')
 compare_acts <- "compare_gf_provinces_acts.pdf"
 compare_acts_stockouts <- "compare_gf_provinces_stockouts.pdf"
 compare_itns <- "compare_gf_provinces_itns.pdf"
+compare_acts_by_age <- "compare_gf_provinces_acts_by_age.pdf"
 # ----------------------------------------------
 
 
@@ -54,19 +57,43 @@ dt <- dt[year>=2015 & dps != "0",]
 pop <- read.csv(paste0(dir_pop, pop_data))
 pop <- as.data.table(pop)
 pop$X <- NULL
+
+pop10 <- read.csv(paste0(dir_pop, pop_data10))
+pop10 <- as.data.table(pop10)
+pop10$X <- NULL
+setnames(pop10, "pop", "pop10")
 # -----------------------------
 
 
 # ----------------------------------------------
-# Clean dps names in pop data
-setnames(pop, "province", "dps")
-pop[dps=="�???quateur", dps:= "equateur"]
-pop[dps=="Bas-Uélé", dps:= "bas-uele"]
-pop[dps=="Haut-Uélé", dps:= "haut-uele"]
-pop[dps=="Maï-Ndombe", dps:= "mai-ndombe"]
-pop$dps <- gsub("Kasaï", "kasai", pop$dps)
-pop$dps <- gsub("�???", "e", pop$dps)
-pop$dps <- tolower(pop$dps)
+# # Clean dps names in pop data
+# setnames(pop, "province", "dps")
+# pop[dps=="�???quateur", dps:= "equateur"]
+# pop[dps=="Bas-Uélé", dps:= "bas-uele"]
+# pop[dps=="Haut-Uélé", dps:= "haut-uele"]
+# pop[dps=="Maï-Ndombe", dps:= "mai-ndombe"]
+# pop$dps <- gsub("Kasaï", "kasai", pop$dps)
+# pop$dps <- gsub("�???", "e", pop$dps)
+# pop$dps <- tolower(pop$dps)
+
+# setnames(pop10, "province", "dps")
+# pop10[dps=="�???quateur", dps:= "equateur"]
+# pop10[dps=="Bas-Uélé", dps:= "bas-uele"]
+# pop10[dps=="Haut-Uélé", dps:= "haut-uele"]
+# pop10[dps=="Maï-Ndombe", dps:= "mai-ndombe"]
+# pop10$dps <- gsub("Kasaï", "kasai", pop10$dps)
+# pop10$dps <- gsub("�???", "e", pop10$dps)
+# pop10$dps <- tolower(pop10$dps)
+
+# # resave pop so that it has these names preserved, then the above steps aren't necessary
+# write.csv(pop, paste0(dir_pop, pop_data))
+
+# Merge pop with pop10
+pop_15_10 <- merge(pop10, pop, by="dps")
+setnames( pop_15_10, "pop", "pop15")
+
+# # Save pops merged together
+# write.csv( pop_15_10, paste0(dir_pop, merged_pops))
 
 dt$dps <- gsub(" ", "-", dt$dps)
 dt[dps=="bas-congo", dps:= "kongo-central"]
@@ -145,6 +172,33 @@ g <- ggplot(acts_use_compare[ ], aes(x=date, y=avgGFvsNotGF, color = gf)) + them
 print(g)
 
 pdf( paste0(output_dir, compare_acts), height=9, width=11 )
+dev.off()
+
+# ACTs received by age group
+acts_rec_by_age <- dt[indicator %in% c("ASAQreceived"), ]
+acts_rec_by_age <- acts_rec_by_age[, valuePer100k := valuePerCapita * 100000]
+acts_rec_by_age <- acts_rec_by_age[, .(avgGFvsNotGF = mean(valuePer100k)), by= c("year", "date", "gf", "indicator", "subpopulation")]
+
+g <- ggplot(acts_rec_by_age[ ], aes(x=date, y=avgGFvsNotGF, color = gf)) + theme_bw()+
+  geom_point() + geom_line() +
+  ggtitle(paste0("ASAQ doses per capita distributed to health facilities")) +
+  facet_wrap( ~subpopulation ) +
+  ylab("Doses per 100,000 people") + xlab("Date")  + scale_y_continuous()
+print(g)
+
+# ACTs used by age group
+acts_use_by_age <- dt[indicator %in% c("ASAQused"), ]
+acts_use_by_age <- acts_use_by_age[, valuePer100k := valuePerCapita * 100000]
+acts_use_by_age <- acts_use_by_age[, .(avgGFvsNotGF = mean(valuePer100k)), by= c("year", "date", "gf", "indicator", "subpopulation")]
+
+g <- ggplot(acts_use_by_age[ ], aes(x=date, y=avgGFvsNotGF, color = gf)) + theme_bw()+
+  geom_point() + geom_line() +
+  ggtitle(paste0("ASAQ doses per capita distributed to patients")) +
+  facet_wrap( ~subpopulation ) +
+  ylab("Doses per 100,000 people") + xlab("Date")  + scale_y_continuous()
+print(g)
+
+pdf( paste0(output_dir, compare_acts_by_age), height=9, width=11)
 dev.off()
 # ----------------------------------------------
 
