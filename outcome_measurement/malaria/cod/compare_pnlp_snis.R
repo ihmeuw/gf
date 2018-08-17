@@ -226,6 +226,22 @@ for (v in var_to_graph) {
 }
 dev.off()
 
+dt$standardized_hz <- as.character(dt$standardized_hz)
+health_zones <- unique(dt$standardized_hz)
+
+pdf(paste0(output_dir, "snis_pnlp_comparison_hz.pdf"), height = 9, width = 11)
+for (v in var_to_graph){
+  for( h in health_zones[1:20]) {
+    
+    g <- ggplot(dt[ standardized_hz == h & variable == v, ], aes(x=date, y=value, color=data_source)) + 
+      theme_bw()+ geom_point() + geom_line() +
+      ggtitle(paste0("Snis and PNLP comparison in ", h , " for ", v)) +
+      ylab("Value") + xlab("Date") + ylim(0, NA)
+    print(g)
+    
+  }
+  }
+dev.off()
 # ----------------------------------------------
 
 
