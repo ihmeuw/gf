@@ -1,3 +1,7 @@
+# Audrey Batzel 
+# 8-16-18
+#
+# Compare DHIS2 SNIS data with PNLP data
 setwd('C:/local/gf/')
 # ----------------------------------------------
 
@@ -22,12 +26,13 @@ library(Amelia)
 # Overview - Files and Directories
 # ----------------------------------------------
 # source in variable names
-variable_names <-"./outcome_measurement/malaria/cod/variable_names.R"
-source(variable_names)
+# variable_names <-"./outcome_measurement/malaria/cod/variable_names.R"
+# source(variable_names)
 
 # data directory
 # when run on Unix, data directory needs to be set to /home/j (to run on the cluster), so set this here:
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/')
 dir_pnlp = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
 dir_dhis = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/prepped_data/')
 
@@ -35,33 +40,53 @@ dir_dhis = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/preppe
 input_pnlp <- "final_data_for_imputation.csv"
 input_dhis_base <- "base.rds"
 input_dhis_sigl <- "sigl.rds"
+
+standardized_hzs <- "standardized_hzs.csv"
 # ----------------------------------------------
 
 
 # ----------------------------------------------
-# read in pnlp and dhis2 data
+# Load data and hz file
 # ----------------------------------------------
 pnlp <- read.csv(paste0(dir_pnlp, input_pnlp))
 pnlp <- as.data.table(pnlp)
 
 dhis_base <- readRDS(paste0(dir_dhis, input_dhis_base))
-
 # dhis_sigl <- readRDS(paste0(dir_dhis, input_dhis_sigl))
+
+hzs <- read.csv(paste0(dir, standardized_hzs))
+hzs <- as.data.table(hzs)
 # ----------------------------------------------
 
 
 # ----------------------------------------------
-# Standardize pnlp with snis data to merge them together &
-# standardize health zones
+# Standardize pnlp with snis data to merge them together and subset to just 2017
 # ----------------------------------------------
 # make var for year in pnlp
 pnlp$year <- year(pnlp$date)
 
 # subset to just 2017
-pnlp <- pnlp[year==2017,]
-# and to type = malaria for dhis
+pnlp <- pnlp[year==2017 & dps != "0",]
+pnlp$dps <- gsub(" ", "-", pnlp$dps)
+pnlp[ dps== "bas-congo", dps := "kongo-central" ]
+
+# subset to 2017 and to type = malaria for dhis
 dhis_base <- dhis_base[year==2017 & type=="malaria" & keep==1,]
-# dhis_sigl_2017 <- dhis_sigl[year==2017 & type=="malaria" & keep==1,]
+  # setnames(dhis_base, "dps", "dps_snis")
+  # setnames(dhis_base, "health_zone", "hz_snis")
+
+# aggregate dhis data to health zone level
+dhis_base_hz <- dhis_base[, .(value = sum(value)), by=c("dps", "health_zone", "date", "month", "year", "element", "element_eng", "category", "age")]
+
+# subset to the columns we want to use in dhis
+dhis_base_subset <- dhis_base[, .(dps, health_zone, health_area, date, month, year, element, element_eng, category, age, value)]
+
+hzs_snis <- hzs[!is.na(hz_snis), ]
+  
+# merge hzs with dhis_base data
+dhis <- merge(dhis_base_subset, hzs, by.x=c("dps", "health_zone"), by.y=c("dps_snis", "hz_snis"), all=TRUE, allow.cartesian = TRUE) # not sure about this??
+
+
 
 # clean dhis dps and hz strings
 dhis_base$dps <- sapply(str_split(dhis_base$dps, " ", 2), '[', 2)
@@ -79,8 +104,6 @@ dhis_base$health_area <- gsub(" Aire de Santé", "", dhis_base$health_area)
 dhis_base$health_area <- tolower(dhis_base$health_area)
 dhis_base$health_area <- gsub(" ", "-", dhis_base$health_area)
 
-# subset to the columns we want to use in dhis
-dhis_base_subset <- dhis_base[, .(dps, health_zone, health_area, date, month, year, element, element_eng, category, value)]
 
 # # aggregate by dps
 # # PNLP
