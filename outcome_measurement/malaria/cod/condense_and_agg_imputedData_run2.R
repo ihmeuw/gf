@@ -85,10 +85,17 @@ dt <- readRDS(paste0(dir, imputed_data_long_corrected))
 
 # # ----------------------------------------------
 # Calculate by health_zone
+
+# for some reason there are NAs in these variables (i was just an index var?), but there shouldn't be NAs
+# in imputed data, and there can't be to calculate quantile unless na.rm=T; but to make sure there aren't
+# NAs present in the other data that we don't, I'll just remove these two variables and not use na.rm=T
+dt2 <- dt[variable != "healthFacilitiesProportion"]
+dt3 <- dt2[variable != "i"]
+
 # compute upper middle and lower for the imputed points for the error bars in the graphs
-graphData <- imputedDataLong[, .(mean=mean(value),
-                                 lower=quantile(value, .05),
-                                 upper=quantile(value, .95)), by=c(id_vars, "variable", "indicator", "subpopulation")]
+graphData <- dt3[, .(mean=mean(imp_value),
+                    lower=quantile(imp_value, .05),
+                    upper=quantile(imp_value, .95)), by=c(id_vars, "variable", "indicator", "subpopulation")]
 
 # get rid of lower and upper values for values that were NOT missing, so these don't show up on the graph
 graphDataComplete <- graphDataComplete[isMissing==F, lower:= NA ]
@@ -102,9 +109,6 @@ saveRDS(graphDataComplete, paste0(output_dir, condensed_imputed_data_hz))
 
 # ----------------------------------------------
 # Aggregate first and then calculate mean and variance by DPS
-
-dt2 <- dt[variable != "healthFacilitiesProportion"]
-dt3 <- dt2[variable != "i"]
 
 # aggregate all indicator/intervention data by dps, within each imputation
 aggData  <- dt3[, .(aggValue = sum(imp_value)), by=c( "date", "province", "dps", "indicator", "subpopulation", "imputation_number" )]
