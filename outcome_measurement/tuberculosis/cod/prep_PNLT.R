@@ -1,5 +1,7 @@
 # ----------------------------------------------
 # Audrey Batzel
+# 8/1/18
+# Prep PNLT data
 #
 setwd('C:/local/gf/')
 # ----------------------------------------------
@@ -40,6 +42,8 @@ pnlt_transl <- "PNLT_translations.xlsx"
 
 # output file
 pnlt_main <- "PNLT_prepped_data.csv"
+# ----------------------------------------------
+
 
 ## ----------------------------------------------
 ## load data from excel to visualize initial data
@@ -47,45 +51,107 @@ pnlt_main <- "PNLT_prepped_data.csv"
 dt2018 <- data.table(read_excel(paste0(dir, file2018), sheet= 'DEPISTAGE T1 018'))
 dt2017 <- data.table(read_excel(paste0(dir, file2017), sheet= 'DEP T1 017'))
 
-sheets2018 <- getSheetNames(paste0(dir, file2018))
-sheets2017 <- getSheetNames(paste0(dir, file2017))
 
 dt_transl <- data.table(read_excel(paste0(dir, pnlt_transl)))
+# ----------------------------------------------
+
 
 # ----------------------------------------------
 # get all files in a given year folder
-
+# ----------------------------------------------
 getFiles <- function(year){
   files = list.files(paste0(dir, year))
   return(files)
 }
 
-for (year in 2014:2016){
-  files <- getFiles(year)
-  assign(paste0("files", year, sep=""), files)
+files <- getFiles(year)
+
+dps <- sub("COD_", "", files)
+dps <- sub("NTCP", ":", dps)
+dps <- substring(dps, 0, regexpr("_:", dps) - 1)
+dps <- unique(dps)
+
+
+
+# for (year in 2014:2016){
+#   files <- getFiles(year)
+#   assign(paste0("files", year, sep=""), files)
+# }
+
+# # NOT SURE IF THE FOLLOWING WILL BE HELPFUL; it may be better to do it one sheet at a time?
+# # get sheets in each file
+# for(i in list_of_all_files){
+#   for(j in i){
+#     if ( !exists("sheets") ) sheets <- getSheetNames(paste0(dir, year, "/", j))
+#     currentFile <- getSheetNames(paste0(dir, year, "/", j))
+#     sheets <- append(currentFile, sheets)
+#   }
+# }
+# possible_sheet_names <- unique(sheets)
+# # ----------------------------------------------
+
+
+# ----------------------------------------------
+## clean "DEPISTAGE" or "DEP" quarterly sheets
+## ----------------------------------------------
+
+dt <- data.table()
+
+combine_dep_sheets <- function(dt, file, year){
+  
+sheets <- getSheetNames(paste0(dir, file))
+  
+# get relevant sheet names 
+dep_sheets <- sheets[grepl("DEP", sheets)]
+
+# exclude sheet names that are synthesized or annual measures
+dep_sheets <- dep_sheets[!grepl("SYNTHESE", dep_sheets)]
+dep_sheets <- dep_sheets[!grepl("ANNUELLE", dep_sheets)]
+
+# loop through sheet names, reading in each and R binding it to a dt for that year
+i = 1
+
+for (s in dep_sheets){
+  currentSheet <- data.table(read_excel(paste0(dir, file), sheet= s))
+  currentSheet$quarter <- i
+  # if it's the first sheet, initialize the new dt
+  if (i == 1){
+    dt <- currentSheet
+  # for subsequent sheets, rbind to that dt
+  } else {
+    dt <- rbind(dt, currentSheet)
+  }
+  i = i + 1
 }
 
-# NOT SURE IF THE FOLLOWING WILL BE HELPFUL; it may be better to do it one sheet at a time?
-# get sheets in each file
-for(i in list_of_all_files){
-  for(j in i){
-    if ( !exists("sheets") ) sheets <- getSheetNames(paste0(dir, year, "/", j))
-    currentFile <- getSheetNames(paste0(dir, year, "/", j))
-    sheets <- append(currentFile, sheets)
-  }
+return(dt)
 }
-possible_sheet_names <- unique(sheets)
+
+dt$year <- year
+
 # ----------------------------------------------
-## clean "DEPISTAGE T1" sheet
-## ----------------------------------------------
+## set column names using excel doc matched with year
+# ----------------------------------------------
+
+if(year==2018){
+  ## use dt_transl to set column names
+  ## ignore translations that don't have unique columns in each dt
+  dt_transl<- dt_transl[is.na(ignore_in_col_naming)]
+  ## set column names using "variable_in_code" column
+  col_names <- dt_transl$variable_in_code
+} else if (year== 2017){
+  col_names <-c('dps', 'pop_tot', 'pop_covered', 'tb_pres', 'micro_comp', 'micro_pos', 'xpert_comp', 'xpert_pos', 'ziehl_comp', 'ziehl_pos', 
+                'cq_partic', 'tbp_confBac_new', 'tbp_confBac_relapse', 'tbp_confBac_outOfRelapse', 'tbp_confBac_children', 'tbp_confClinc_new', 
+                'tbp_confClinc_relapse', 'tbp_confClinc_outOfRelapse', 'tbp_confClinc_children', 'tep_new', 'tep_relapse', 'tep_outOfRelapse', 
+                'tep_children', 'treated_uncertain', 'tot_incCase', 'tot_case', 'tbPatient_hivTest', 'tbPatient_hivPos', 'tbPatient_hivPos_cotri', 
+                'tbPatient_hivPos_art', 'plhiv_tbTest', 'plhiv_tbNotTest', 'plhiv_INH', 'child_livingWithTBCase', 'child_test', 'child_pos', 'child_INH', 
+                'prisoners_cases', 'prisoners_treated', 'miners_cases', 'miners_treated', 'contact_cases', 'contact_treated', 'reco_oac_referred', 
+                'reco_oac_supported', 'initial_1st_intention_children', 'initial_1st_intention_adults', 'retreat_1st_intention_children', 
+                'retreat_1st_intention_adults', 'csdt_1', 'csdt_2', 'ignore_1', 'ignore_2', 'ignore_3', 'ignore_4', 'membership')
+}
+
 ## set first column to null 
 dt2018[, X__1:=NULL]
-
-## use dt_transl to set column names
-## ignore translations that don't have unique columns in each dt
-dt_transl<- dt_transl[is.na(ignore_in_col_naming)]
-## set column names using "variable_in_code" column
-colnames(dt2018) <- dt_transl$variable_in_code
 
 ## create a column for year and quarter
 #  (automate this) use year from reading in
@@ -121,6 +187,7 @@ dps_list <- c("kwango", "kwilu", "mai-ndombe", "kongo-central-est", "kongo-centr
 dt2018 <- dt2018[dps %in% dps_list]
 
 ## combine all years/quarters together
+# use rbindlist(mylist, use.names = TRUE, fill= TRUE)
 
 ## export data (eventually -- all different kinds of sheets)
 write.csv(dt2018, paste0(dir_prepped, pnlt_main))
