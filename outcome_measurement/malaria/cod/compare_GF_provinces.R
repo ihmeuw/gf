@@ -32,10 +32,8 @@ dir_pop = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/worldpop_dat
 
 # input files
 dps_data <- "imputedData_run2_condensed_dps.rds"
-hz_data <- "imputedData_run2_long_corrected.rds"
 pop_data <- '2015_pop_estimates_by_dps(aggregated raster).csv'
 pop_data10 <- '2010_pop_estimates_by_dps(aggregated raster).csv'
-funders <- "fullData_dps_standardized.csv"
 
 # output files
 merged_pops <- "2015_and_2010_pop_estimates.csv"
@@ -50,13 +48,10 @@ compare_acts_by_age <- "compare_gf_provinces_acts_by_age.pdf"
 # -----------------------------
 # Load data
 
-# # load the imputed data at DPS level
-# dt <- readRDS(paste0(dir_data, dps_data))
-# dt$year <- year(dt$date)
-# dt <- dt[year>=2015 & dps != "0",]
-
-# load the imputed data at the hz level
-dt <- readRDS(paste0(dir_data, hz_data))
+# load the imputed data at DPS level
+dt <- readRDS(paste0(dir_data, dps_data))
+dt$year <- year(dt$date)
+dt <- dt[year>=2015 & dps != "0",]
 
 # load the world pop estimates
 pop <- read.csv(paste0(dir_pop, pop_data))
@@ -68,19 +63,6 @@ pop10 <- as.data.table(pop10)
 pop10$X <- NULL
 setnames(pop10, "pop", "pop10")
 # -----------------------------
-
-
-# ----------------------------------------------
-# We want to identify which hzs were funded by which partner/funder
-
-# load in full data where dps/hz was standardized (might have to play around with this to find it?)
-funder_data <- read.csv(paste0(dir_data, funders))
-funder_data <- as.data.table(funder_data)
-# subset to just the relevant vars
-funder_data <- funder_data[, .(dps, health_zone, donor, year, month, date)]
-
-
-# ----------------------------------------------
 
 
 # ----------------------------------------------
