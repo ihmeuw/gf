@@ -80,10 +80,10 @@ distrAgg = distrData[Medicine=='RIFAMPICINA',
 # Load/prep cohort data
 
 # load
-cohortData = fread(cohortFile)
+cohortDataAll = fread(cohortFile)
 
 # subset to totals
-cohortData = cohortData[col_name_=='TOTAL' & deptocode==0]
+cohortData = cohortDataAll[col_name=='TOTAL' & deptocode==0]
 
 # subset to avoid overlapping types
 cohortData = cohortData[table %in% c('Nuevos Pulmonares BK+', 
@@ -91,9 +91,25 @@ cohortData = cohortData[table %in% c('Nuevos Pulmonares BK+',
     'Nuevos Extrapulmonares', 'Nuevos TB/VIH', 'Retratamiento')]
 
 # aggregate
-cohortAgg = cohortData[row_name_ %in% c('CURADOS','TRATAMIENTOS COMPLETOS'), 
+cohortAgg = cohortData[row_name %in% c('CURADOS','TRATAMIENTOS COMPLETOS'), 
 						.(cured=sum(value, na.rm=TRUE)), by='year']
 cohortAgg = merge(cohortAgg, cohortData[, .(total=sum(value, na.rm=TRUE)), by='year'], by='year')
+
+# aggregate including MDR
+cohortAgg = cohortData[row_name %in% c('CURADOS','TRATAMIENTOS COMPLETOS'), 
+						.(cured=sum(value, na.rm=TRUE)), by='year']
+cohortAgg = merge(cohortAgg, cohortData[, .(total=sum(value, na.rm=TRUE)), by='year'], by='year')
+
+# aggregate MDR started treatment only
+cohortAggMDR = cohortDataAll[deptocode==0 & grepl('2nd line treatment begun', table), 
+							.(second_line_begun=sum(value,na.rm=TRUE)), by='year']
+							
+# aggregate excluding MDR
+cohortAggNoMDR = merge(cohortAgg, cohortAggMDR, by='year')
+cohortAggNoMDR[, cured:=cured-second_line_begun]
+cohortAggNoMDR[, total:=total-second_line_begun]
+cohortAggNoMDR$second_line_begun = NULL
+setnames(cohortAggNoMDR, c('cured','total'), c('cured_first_line','total_first_line'))
 # ---------------------------------------------------
 
 
@@ -103,27 +119,38 @@ cohortAgg = merge(cohortAgg, cohortData[, .(total=sum(value, na.rm=TRUE)), by='y
 # merge data
 data = merge(rtAgg, cohortAgg, by='year')
 data = merge(data, distrAgg, by.x='year', by.y='Year', all.x=TRUE)
+data = merge(data, cohortAggMDR, by='year', all.x=TRUE)
+data = merge(data, cohortAggNoMDR, by='year', all.x=TRUE)
 
 # dollars per case cured over time
 data[, budget_cured:=budget/cured]
 data[, disbursement_cured:=disbursement/cured]
 
-# dollars per percentage of cases cured over time
-data[, budget_cases:=budget/total]
-data[, disbursement_cases:=disbursement/total]
+# dollars per case treated with 2nd line over time
+data[, budget_second_line:=budget/second_line_begun]
+data[, disbursement_second_line:=disbursement/second_line_begun]
+
+# dollars per case treated with 1st line over time
+data[, budget_cured_first:=budget/cured_first_line]
+data[, disbursement_cured_first:=disbursement/cured_first_line]
 
 # drugs distributed per case cured over time
 data[, distr_cured:=rifampicin/cured]
+
+# set up to graph
+graphData = melt(data, id='year')
+graphData[variable=='budget_cured', label:='Budget/Cured']
+graphData[variable=='disbursement_cured', label:='Disbursement/Cured']
+graphData[variable=='budget_second_line', label:='Budget/Second-Line']
+graphData[variable=='disbursement_second_line', label:='Disbursement/Second-Line']
+graphData[variable=='budget_cured_first', label:='Budget/Cured']
+graphData[variable=='disbursement_cured_first', label:='Disbursement/Cured']
+graphData[!is.finite(value), value:=NA]
 # ---------------------------------------------------
 
 
 # ---------------------------------------------------
 # Graph
-graphData = melt(data, id='year')
-graphData[variable=='budget_cured', label:='Budget/Cured']
-graphData[variable=='disbursement_cured', label:='Disbursement/Cured']
-graphData[variable=='budget_cases', label:='Budget/Cases']
-graphData[variable=='disbursement_cases', label:='Disbursement/Cases']
 p1 = ggplot(graphData[variable %in% c('budget_cured','disbursement_cured')], 
 	aes(y=value, x=year, color=label)) + 
 	geom_line(size=1.5) +
@@ -133,16 +160,25 @@ p1 = ggplot(graphData[variable %in% c('budget_cured','disbursement_cured')],
 		caption='Resources from Government and Global Fund Combined') + 
 	theme_bw()
 
-p2 = ggplot(graphData[variable %in% c('budget_cases','disbursement_cases')], 
+p2 = ggplot(graphData[variable %in% c('budget_second_line','disbursement_second_line')], 
 	aes(y=value, x=year, color=label)) + 
 	geom_line(size=1.5) +
 	geom_point(size=3.5, color='grey45') + 
-	labs(title='Dollars Budgeted and Disbursed Compared to Cases Started Treatment', 
-		y='USD per Case Started Treatment', x='Year',color='',
+	labs(title='Dollars Budgeted and Disbursed Compared to Cases Started Second-Line Treatment', 
+		y='USD per Case Started Second-Line Treatment', x='Year',color='',
 		caption='Resources from Government and Global Fund Combined') + 
 	theme_bw()
 
-p3 = ggplot(data, aes(y=distr_cured, x=year, label=rifampicin)) + 
+p3 = ggplot(graphData[variable %in% c('budget_cured_first','disbursement_cured_first')], 
+	aes(y=value, x=year, color=label)) + 
+	geom_line(size=1.5) +
+	geom_point(size=3.5, color='grey45') + 
+	labs(title='Dollars Budgeted and Disbursed Compared to Cases Cured (Excluding MDR)', 
+		y='USD per Case Cured (Excluding MDR)', x='Year',color='',
+		caption='Resources from Government and Global Fund Combined') + 
+	theme_bw()
+
+p4 = ggplot(data, aes(y=distr_cured, x=year, label=rifampicin)) + 
 	geom_line(size=1.5) +
 	geom_point(size=3.5, color='grey45') + 
 	geom_text(hjust=1, vjust=0) + 
@@ -159,5 +195,6 @@ pdf(outFile, height=5.5, width=7)
 p1
 p2
 p3
+p4
 dev.off()
 # ---------------------------------------------------
