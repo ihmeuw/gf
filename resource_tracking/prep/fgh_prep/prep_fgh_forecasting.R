@@ -205,16 +205,16 @@ pce_total <- rbind(hiv_prepped, pce_forecast)
 
 pce_total  <- melt(pce_total , id.vars = c("year", "adm1", "loc_name", "disease",
                                            "financing_source", "code"), variable.name = "fin_data_type", value.name = "disbursement")
-
-pce_total$fin_data_type = ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "mean", "forecasted_mean",
-                                 ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "lower_perc", "forcasted_lower_ci",
-                                        ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "upper_perc", "forcasted_upper_ci",
-                                               as.character(pce_total$fin_data_type))))
-
-pce_total$fin_data_type = ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "mean", "forecasted_mean",
-                                 ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "lower_perc", "forcasted_lower_ci",
-                                        ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "upper_perc", "forcasted_upper_ci",
-                                               as.character(pce_total$fin_data_type))))
+# 
+# pce_total$fin_data_type = ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "mean", "model_estimates",
+#                                  ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "lower_perc", "forcasted_lower_ci",
+#                                         ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "upper_perc", "forcasted_upper_ci",
+#                                                as.character(pce_total$fin_data_type))))
+# 
+# pce_total$fin_data_type = ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "mean", "forecasted_mean",
+#                                  ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "lower_perc", "forcasted_lower_ci",
+#                                         ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "upper_perc", "forcasted_upper_ci",
+#                                                as.character(pce_total$fin_data_type))))
 
 
 pce_total$financing_source = ifelse(pce_total$financing_source == "ghe_forecasted", "ghe", as.character(pce_total$financing_source))

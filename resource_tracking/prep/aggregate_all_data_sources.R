@@ -161,7 +161,7 @@ totalGos <- rbind(gos_uga, gos_cod, gos_gtm)
 cleanData <- rbind(cleanData, totalGos)
 
 ## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
-cleanData$fin_data_type <- "actuals"
+cleanData$fin_data_type <- "actual"
 
 # --------------------------------------------
 #  Since FGH data is not at grant level (or disease level), we might as well include it in this data

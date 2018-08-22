@@ -1,7 +1,6 @@
 # ----------------------------------------------
-
 # Naomi Provost
-# Code for adding 
+# Code for adding unit_cost to prepped data for distrubtion
 # ----------------------------------------------
 ###### Set up R / install packages  ###### 
 # ----------------------------------------------
@@ -26,28 +25,6 @@ library(dplyr)
 
 #But this shouldn't affect the final output. 
 # ----------------------------------------------
-#2013
-# inFile = "Distribucion de medicamentos 2013.xlsx"
-# sheet_name = "repmenconpre"
-
-#2014
-# inFile = "Distribucion de medicamentos 2014.xlsx"
-# sheet_name = "repmenconpre 2014"
-
-#2015
-# inFile = "Distribucion de medicamentos 2015.xlsx"
-# sheet_name = "repmenconpre 2015"
-
-#2016
-# inFile = "Distribucion de medicamentos 2016.xls"
-# sheet_name = "Saldo Bodega"
-
-#2016
-# inFile = "Distribucion de medicamentos ene- oct 2017.xls"
-# sheet_name = "Saldo Bodeg Informe"
-
-#2018
-#inFile = 'Egreso de medicamentos hasta junio 2018.xls'
 
 ### FUNCTION TO CLEAN THE UNIT COST DATA ###
 prep_unit_cost = function(dir, inFile, sheet_name, start_year){
@@ -153,7 +130,7 @@ dist_dir = "J:/Project/Evaluation/GF/outcome_measurement/gtm/"
 cost_dir = paste0(dist_dir, "distribution/")
 file_list <- read.csv(paste0(dist_dir, "tb_unitcost_distrub.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
-tbdistr = cleanDST(fread(paste0(dist_dir,"prepped_data/GTM-TB-distribution-2013-2018.csv")))
+tbdistr = unique(cleanDST(fread(paste0(dist_dir,"prepped_data/GTM-TB-distribution-2013-2018.csv"))))
 
 for(i in 1:length(file_list$file_name)){ 
   if(file_list$disease[i]=="tb"){
@@ -177,15 +154,29 @@ cost_database = merge(cost_database, conversion_table, by = "Year", allow.cartes
 cost_database$weighted_unit_cost = cost_database$weighted_unit_cost / cost_database$conversion
 cost_database$conversion = NULL
 
-# test1 = unique(tbdistr[,c('Product','Year')])
-# test2 = unique(cost_database[,c('Product','Year')])
-# test1$source = "db cost"
-# test2$source = "cost_unit"
-# test = rbind(test1, test2)
-# 
-# write.csv(test, "J:/temp/ninip/yearNAmes.csv")
-
 # Merge tbdistr data with unit cost by year and product
 total_db = merge(tbdistr, cost_database, by = c("Product", "Year"), all.x = TRUE, all.y = FALSE)
 total_db$weighted_unit_cost[is.na(total_db$weighted_unit_cost)]<-0 
-#total_db$weighted_unit_cost = ifelse(total_db$Amount > 0 & total_db$weighted_unit_cost == 0, )
+
+# Dealing with using value from previous year if amount > 0 and weighted cost is 0
+error_handling_dt = filter(total_db, total_db$Amount > 0 & total_db$weighted_unit_cost == 0)
+vals = error_handling_dt[, c("Year", "Product")]
+vals = unique(vals)
+fixing_error = merge(vals, cost_database, by = c("Product", "Year"), all.x = TRUE, all.y = TRUE)
+fixing_error$weighted_unit_cost = na.locf(fixing_error$weighted_unit_cost)
+fixing_error = unique(fixing_error)
+fix_db = merge(vals, fixing_error, by = c("Product", "Year"))
+complete_fix = merge(error_handling_dt, fix_db, by = c("Product", "Year"))
+complete_fix$weighted_unit_cost = complete_fix$weighted_unit_cost.y
+complete_fix$weighted_unit_cost.x = NULL
+complete_fix$weighted_unit_cost.y = NULL
+
+filter_db = total_db[!(Amount > 0 & weighted_unit_cost == 0) | is.na(Amount) | is.na(weighted_unit_cost)]
+
+#merging together to get fixed data
+total_unit_cost_distrub = rbind(filter_db, complete_fix)
+setnames(total_unit_cost_distrub, old = "weighted_unit_cost", new = "Unit Cost (USD)")
+
+
+
+write.csv(total_unit_cost_distrub, paste0(dist_dir,"prepped_data/GTM-TB-distribution-2013-2018_with_Unit_Cost.csv"))
