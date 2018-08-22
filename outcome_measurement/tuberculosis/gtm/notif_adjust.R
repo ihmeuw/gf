@@ -43,6 +43,8 @@ p1
 
 #-----------------------------------------------------------------------------------------------------
 #Experimental adjuster function
+#This is the first attempt July 2018. It finds a good solution to the problem, but the answer doesn't make
+#sense because some munis end up with far fewer assigned cases than they started with, which doesn't make sense for TB.
 
 data = data.table(muni=c('a','b','c','d'), cases=c(200,240,160,210), tx_seeking=c(.99,.8,.6,.5))
 total=1000
@@ -55,3 +57,25 @@ adjuster = function(beta, data, total) {
 est = optim(.1, adjuster, gr=NULL, data, total)
 
 adjustedCases =  data$cases/(data$tx_seeking*est$par*(1-data$tx_seeking))
+
+#-----------------------------------------------------------------------------------------------------
+#Experimental PCA adjuster - This is the second attempt August 2018. 
+#PCA - reduce a large number of variables to a few interpretable linear combinations of the data 
+
+library(data.table)
+data = data.table(muni=c('a','b','c','d'), cases=c(200,240,160,210), tx_seeking=c(.99,.8,.6,.5), access=c(20, 30, 34, 47))
+total=1000
+
+# method 2 - approximate true treatment seeking using pca and "redistribute" the difference
+library(boot)
+library(stats)
+
+#prcomp performs a PCA and returns the results as object of class prcomp which is list of standard deviations of principal components and rotation
+#need to scale?
+#Then predict takes the first column and makdes a linear model prediction. Why first column? What is predict actually doing?
+p = predict(prcomp(~tx_seeking+access, data))[,1]
+d = total-sum(data$cases)
+
+data_m2 = copy(data)
+data_m2[, adjustedCases:=cases+(d*(1-inv.logit(p)))]
+data_m2

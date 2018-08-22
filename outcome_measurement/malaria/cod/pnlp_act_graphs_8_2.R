@@ -37,6 +37,7 @@ mtk_acts_received_graphs <- "mtk_acts_received_by_hz_2015to2017.pdf"
 mtk_acts_received_graphs_byAge <- "mtk_acts_received_by_age_by_hz_2015to2017.pdf"
 mtk_acts_received_by_dps <- "mtk_acts_received_by_dps_2015to2017.pdf"
 mtk_acts_used_by_dps <- "mtk_acts_used_by_dps_2015to2017.pdf"
+mtk_stockouts <- "mtk_act_stockouts_2015to2017.pdf"
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -71,11 +72,15 @@ hz_vector_mtk <- unique(dt_MTK$health_zone)
 #----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
 # variable names for labeling
-stockout_names <- c(
+stockout_names_and_dps <- c(
   `ASAQstockoutDaysIncInj`= "Stockouts of ASAQ including injectables",
   `ASAQstockoutDays`= "Stockouts of ASAQ pills",
   `artLumStockoutDays`= "Stockouts of AL",
-  `ASAQinjStockoutDays`= "Stockouts of ASAQ injectables")
+  `ASAQinjStockoutDays`= "Stockouts of ASAQ injectables",
+  `kinshasa` = "Kinshasa",
+  `tshopo` = "Tshopo",
+  `maniema` = "Maniema",
+  `totASAQstockoutDays`= "Stockouts of ASAQ pills" )
 
 act_names <- c(
   `totASAQ` = 'ASAQ',
@@ -187,12 +192,66 @@ dev.off()
 
 #----------------------------------------------------------------------------------------------------
 #----------------------------------------------------------------------------------------------------
-# facet grid
+# 8-14-18 and 8-15-18
+# facet grid graphs and remake graphs from TERG slides with just 2015-2017 years and all drugs combined
 dt_dps <- readRDS(paste0(dir, "imputedData_run2_condensed_dps.rds"))
 
 dt_dps$year <- year(dt_dps$date)
 
 dt_dps_MTK <- dt_dps[dps %in% MTK & year >= 2015,]
+
+#----------------------------------------------------------------------------------------------------
+MTK_stockouts <- dt_dps_MTK[indicator %in% c("stockOutartLum", "stockOutASAQ", "healthFacilities"), ]
+
+MTK_stockouts$lower <- NULL
+MTK_stockouts$upper <- NULL
+MTK_stockouts$province <- NULL
+
+MTK_stockouts[indicator=="stockOutartLum", subpopulation:="none"]
+
+MTK_stockouts$variable <- paste(MTK_stockouts$indicator, MTK_stockouts$subpopulation, sep = "_")
+MTK_stockouts$indicator <- NULL
+MTK_stockouts$subpopulation <- NULL
+
+dt_wide <- dcast(MTK_stockouts, dps + year + date ~ variable, value.var= "mean")
+dt_wide <- as.data.table(dt_wide)
+
+dt_wide <- dt_wide[, totASAQstockouts:= stockOutASAQ_14yrsAndOlder + stockOutASAQ_1to5yrs + stockOutASAQ_2to11mos + stockOutASAQ_6to13yrs]
+dt_wide <- dt_wide[, totASAQstockoutDays := totASAQstockouts/healthFacilities_total]
+
+dt_wide <- dt_wide[, artLumStockoutDays := stockOutartLum_none/healthFacilities_total]
+
+dt_wide <- dt_wide[, ASAQinjStockoutDays := stockOutASAQ_inj/healthFacilities_total]
+
+dt_wide <- dt_wide[, totASAQstockoutsIncInj:= stockOutASAQ_14yrsAndOlder + stockOutASAQ_1to5yrs + stockOutASAQ_2to11mos + stockOutASAQ_6to13yrs + stockOutASAQ_inj]
+dt_wide <- dt_wide[, ASAQstockoutDaysIncInj := totASAQstockoutsIncInj/healthFacilities_total]
+
+dt_wide <- dt_wide[, totACTstockouts := stockOutASAQ_14yrsAndOlder + stockOutASAQ_1to5yrs + stockOutASAQ_2to11mos + stockOutASAQ_6to13yrs + stockOutartLum_none]
+dt_wide <- dt_wide[, totACTstockoutDays := totACTstockouts/healthFacilities_total]
+
+MTK_stockout_days <- dt_wide[, c('dps', 'year', 'date', 'ASAQstockoutDaysIncInj', 'totASAQstockoutDays', 'artLumStockoutDays', 'ASAQinjStockoutDays', 'totACTstockoutDays')]
+MTK_stockout_days <- melt(MTK_stockout_days, id.vars= c('dps', 'year', 'date'))
+
+
+pdf( paste0(output_dir, mtk_stockouts), height=9, width=12)
+
+g <- ggplot(MTK_stockout_days[variable != "ASAQstockoutDaysIncInj" & variable != "totACTstockoutDays", ], aes(x=date, y=value, color = variable)) + theme_bw() +
+  geom_point() + geom_line() +
+  facet_grid(variable ~ dps, scales="free_y", labeller=as_labeller(stockout_names_and_dps)) +
+  ggtitle("Stock-outs of ACTs by DPS and ACT type") + guides(color=FALSE) +
+  ylab("Days of stock-outs per facility") + xlab("Date") 
+print(g)
+
+g <- ggplot(dt_wide, aes(x=date, y=totACTstockoutDays, color = dps)) + theme_bw()+
+  geom_point() + geom_line() +
+  ggtitle(paste0("Stock-outs of ACTs (AL and ASAQ, not including ASAQ injectables)")) +
+  ylab("Days of stock-outs per facility") + xlab("Date") 
+print(g)
+
+
+dev.off()
+
+#----------------------------------------------------------------------------------------------------
 
 MTK_acts_rec <- dt_dps_MTK[indicator %in% c("ArtLum", "ASAQreceived") & subpopulation!="used", ]
 

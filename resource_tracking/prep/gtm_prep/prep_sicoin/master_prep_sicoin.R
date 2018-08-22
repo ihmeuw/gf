@@ -1,4 +1,4 @@
-# ----------------------------------------------
+# ----------------------------------------------TESTING
 # Irena Chen
 #
 # 11/1/2017
@@ -39,6 +39,7 @@ country <- "gtm"
 ###### source the functions that we need 
 # ----------------------------------------------
 prep_dir <-" your local repo + gf/resource_tracking/prep/"
+prep_dir = "H:/gf/resource_tracking/prep/"
 source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_detailed_data.R"))
 source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_summary_data.R"))
 source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_blank_data.R"))
@@ -147,7 +148,17 @@ cleaned_database$intervention <- "all"
 
 dups<-cleaned_database[duplicated(cleaned_database) | duplicated(cleaned_database, fromLast=TRUE)]
 
+# Convert from Quitzal to USD
+conversion_table = data.table("year" = c("2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018"), 
+                              "conversion" = c(7.74022,	7.5532,	7.3301,	7.45875,	7.42153,	8.01039,	7.92282,	7.64965,	7.68406,	7.71407,	7.59794,	7.49704,	7.43533,	7.18309,	7.31697))
 
+cleaned_database$year = substring(cleaned_database$start_date, 1, 4)
+cleaned_database = merge(cleaned_database, conversion_table, by = "year", allow.cartesian = TRUE)
+cleaned_database$budget = cleaned_database$budget / cleaned_database$conversion
+cleaned_database$disbursement = cleaned_database$disbursement / cleaned_database$conversion
+
+cleaned_database$year = NULL
+cleaned_database$conversion = NULL
 
 # ----------------------------------------------
 ##### Load the mapping files  #####
@@ -189,7 +200,7 @@ mapped_sicoin$lang <- "esp"
 mapped_sicoin$year <- year(mapped_sicoin$start_date)
 mapped_sicoin$grant_number <- "none"
 
-
+mapped_sicoin$financing_source = ifelse(mapped_sicoin$financing_source == "donacions", "other_dah", as.character(mapped_sicoin$financing_source))
 # data_check1 <- sicoin_data[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
 # data_check2 <-mapped_sicoin[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
 

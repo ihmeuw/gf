@@ -12,7 +12,7 @@
 # ----------------------------------------------
 ##Function to prepare the detailed budgets: 
 # ----------------------------------------------
-prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
+prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, recipient_name){
   
   ##first determine if budget is in french or english
   if(lang=="eng"){
@@ -91,6 +91,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
    gf_data$recipient <- grant_number
   } else{
     colnames(gf_data)[5] <- "recipient" 
+    gf_data$recipient = recipient_name
     }
   if(!(loc_name %in% colnames(gf_data))){
     gf_data$loc_name <- "gtm"
@@ -106,7 +107,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
                     variable.name = "qtr", value.name="budget")
 
   
-  dates <- rep(start_date, qtr_num) # 
+  dates <- rep(ymd(start_date), qtr_num) # 
   for (i in 1:length(dates)){
     if (i==1){
       dates[i] <- start_date
@@ -133,6 +134,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$disease <- disease
   budget_dataset$expenditure <- 0 
   budget_dataset$lang <- lang
-  
+  #budget_dataset$start_date <- start_date
+
   return(budget_dataset)  
 }
