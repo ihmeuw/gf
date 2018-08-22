@@ -31,6 +31,28 @@ if (Sys.info()[1] == 'Windows') {
 }
 
 
+# ----------------------------------------------
+## import DAH by disease 
+# ----------------------------------------------
+
+fgh_current <- data.table(read.csv(paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv'), stringsAsFactors = FALSE))
+percent_disbursed = fgh_current[,.(year, country, disease, financing_source, disbursement)]
+percent_disbursed = percent_disbursed[financing_source %in% c("bil_usa", "other_dah", "gf")]
+percent_disbursed$financing_source = NULL
+percent_disbursed = unique(percent_disbursed)
+
+percent_disbursed = percent_disbursed[, numerator := sum(disbursement), by = c('year', 'country', 'disease')]
+percent_disbursed = percent_disbursed[, denominator:= sum(disbursement), by = c('year', 'country')]
+percent_disbursed$disbursement = NULL
+percent_disbursed = unique(percent_disbursed)
+percent_disbursed =  percent_disbursed[, disbursed_weight := numerator/denominator, by = c('year', 'country', 'disease')]
+percent_disbursed$numerator = NULL
+percent_disbursed$denominator = NULL
+percent_disbursed$financing_source = "dah"
+dah_weight = percent_disbursed[year == 2016] 
+dah_weight$year = NULL
+
+# continue
 output_dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/')
 input_dir <- paste0("Project/IRH/Forecasting/data/feather_storage_draws_2018/scenarios_he_raked/")
 hiv_dir <- paste0("Project/IRH/HIV/03_model_outputs/forecast/for_gbd_hiv/")
@@ -169,7 +191,7 @@ get_hiv_forecast <- function(root, hiv_dir, hiv_file, pce_codes){
 ghe_prepped <- get_prepped_forecast(root, input_dir,ghe_file)
 ghe_prepped$financing_source <- "ghe_forecasted"
 #the_prepped <- get_prepped_forecast(root, input_dir,the_file)
-#the_prepped$financing_source <- "the_forecasted"
+# the_prepped$financing_source <- "the_forecasted"
 dah_prepped <- get_prepped_forecast(root, input_dir, dah_file)
 dah_prepped$financing_source <- "dah_forecasted"
 pce_forecast <- rbind(ghe_prepped, dah_prepped) #, the_prepped
@@ -184,17 +206,49 @@ pce_total <- rbind(hiv_prepped, pce_forecast)
 pce_total  <- melt(pce_total , id.vars = c("year", "adm1", "loc_name", "disease",
                                            "financing_source", "code"), variable.name = "fin_data_type", value.name = "disbursement")
 
-pce_total$fin_data_type = ifelse(pce_total$financing_source == "ghe_forecasted", "forecasted", as.character(pce_total$fin_data_type))
-pce_total$fin_data_type = ifelse(pce_total$financing_source == "dah_forecasted", "forecasted", as.character(pce_total$fin_data_type))
+pce_total$fin_data_type = ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "mean", "forecasted_mean",
+                                 ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "lower_perc", "forcasted_lower_ci",
+                                        ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "upper_perc", "forcasted_upper_ci",
+                                               as.character(pce_total$fin_data_type))))
+
+pce_total$fin_data_type = ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "mean", "forecasted_mean",
+                                 ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "lower_perc", "forcasted_lower_ci",
+                                        ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "upper_perc", "forcasted_upper_ci",
+                                               as.character(pce_total$fin_data_type))))
+
+
 pce_total$financing_source = ifelse(pce_total$financing_source == "ghe_forecasted", "ghe", as.character(pce_total$financing_source))
 pce_total$financing_source = ifelse(pce_total$financing_source == "dah_forecasted", "dah", as.character(pce_total$financing_source))
+#pce_total$fin_data_type = ifelse(pce_total$financing_source == "the_forecasted", "forecasted", as.character(pce_total$fin_data_type))
+#pce_total$financing_source = ifelse(pce_total$financing_source == "the_forecasted", "the", as.character(pce_total$financing_source))
 pce_total$fin_data_type = ifelse(pce_total$fin_data_type == "mean", "model_estimates", as.character(pce_total$fin_data_type))
 pce_total$fin_data_type = ifelse(pce_total$fin_data_type == "lower_perc", "model_estimates_lower_ci", as.character(pce_total$fin_data_type))
 pce_total$fin_data_type = ifelse(pce_total$fin_data_type == "upper_perc", "model_estimates_upper_ci", as.character(pce_total$fin_data_type))
 
+pce_total$country <- mapply(get_country, tolower(pce_total$loc_name))
+
+dah_financ_source = pce_total[financing_source == "dah"]
+
+merge_weighted_average = function(dt_dah, dt_weighted, disease){
+  dt_dah$disease = disease
+  dt_merged = merge(dt_dah, dt_weighted, by = c("country", "financing_source", "disease"), all.x = TRUE, all.y = FALSE)
+  dt_merged$disbursement = dt_merged$disbursed_weight * dt_merged$disbursement
+  dt_merged$disbursed_weight = NULL
+  return(dt_merged)
+}
+
+dah_malaria = merge_weighted_average(dah_financ_source, dah_weight, "malaria")
+dah_tb = merge_weighted_average(dah_financ_source, dah_weight, "tb")
+dah_hiv = merge_weighted_average(dah_financ_source, dah_weight, "hiv")
+dah_hss = merge_weighted_average(dah_financ_source, dah_weight, "hss")
+
+dah_dt = rbind(dah_malaria, dah_tb, dah_hiv, dah_hss)
+pce_total = pce_total[financing_source != "dah"]
+pce_total = rbind(pce_total, dah_dt)
+
 pce_total$data_source <- "fgh"
 
-pce_total$country <- mapply(get_country, tolower(pce_total$loc_name))
+
 # ----------------------------------------------
 ##add in RT variables so we can join this data to the RT database
 # ----------------------------------------------
@@ -211,7 +265,7 @@ pce_total$gf_module <- "all"
 pce_total$gf_intervention <- "all"
 pce_total$abbrev_module <- "all"
 pce_total$abbrev_intervention <- "all"
-pce_total$disease <- "all"
+#pce_total$disease <- "all"
 pce_total$budget <- 0
 pce_total$expenditure <- 0 
 pce_total$lang <- "eng"
@@ -220,11 +274,6 @@ pce_total$sda_activity <- "all"
 pce_total$recipient <- pce_total$adm2
 pce_total$grant_number <- pce_total$adm2
 
-# ----------------------------------------------
-## import DAH by disease 
-# ----------------------------------------------
-
-fgh_current <- data.table(read.csv(paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv'), stringsAsFactors = FALSE))
 
 total_fgh <- rbind(fgh_current, pce_total)
 

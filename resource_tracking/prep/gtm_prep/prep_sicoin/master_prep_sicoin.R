@@ -39,6 +39,7 @@ country <- "gtm"
 ###### source the functions that we need 
 # ----------------------------------------------
 prep_dir <-" your local repo + gf/resource_tracking/prep/"
+prep_dir = "H:/gf/resource_tracking/prep/"
 source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_detailed_data.R"))
 source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_summary_data.R"))
 source(paste0(prep_dir, "gtm_prep/prep_sicoin/prep_sicoin_blank_data.R"))
@@ -199,7 +200,7 @@ mapped_sicoin$lang <- "esp"
 mapped_sicoin$year <- year(mapped_sicoin$start_date)
 mapped_sicoin$grant_number <- "none"
 
-
+mapped_sicoin$financing_source = ifelse(mapped_sicoin$financing_source == "donacions", "other_dah", as.character(mapped_sicoin$financing_source))
 # data_check1 <- sicoin_data[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
 # data_check2 <-mapped_sicoin[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
 
