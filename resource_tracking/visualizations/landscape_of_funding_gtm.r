@@ -22,7 +22,7 @@ library(ggplot2)
 dir = 'J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/'
 
 # input file
-inFile = paste0(dir, 'total_resource_tracking_data_tb.csv')
+inFile = paste0(dir, 'total_resource_tracking_data.csv')
 
 # output file
 outFile = paste0(dir, '../../gtm/visualizations/landscape_of_funding.pdf')
@@ -68,9 +68,11 @@ graphData = graphData[!(data_source=='sicoin' & financing_source=='gf')]
 graphData = graphData[!data_source %in% c('gos','pudr')]
 
 # clean up labels
-graphData[financing_source=='donacions', financing_source:='Other External Donors']
+graphData[financing_source=='other_dah', data_source:='OECD DAC/CRS Databases']
+graphData[financing_source=='other_dah', financing_source:='Other External Donors']
 graphData[financing_source=='gf', financing_source:='Global Fund']
 graphData[financing_source=='ghe', financing_source:='Government']
+graphData[data_source=='fpm', data_source:='Global Fund Detailed Budgets']
 graphData[data_source=='fpm', data_source:='Global Fund Detailed Budgets']
 graphData[data_source=='sicoin', data_source:='National Accounting System (SICOIN)']
 
