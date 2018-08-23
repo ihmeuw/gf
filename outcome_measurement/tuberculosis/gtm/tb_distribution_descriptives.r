@@ -10,6 +10,7 @@
 # ------------------
 # Clear memory
 rm(list=ls())
+library(RColorBrewer)
 # ------------------
 
 
@@ -59,7 +60,7 @@ tbdistr[, Supplier:=gsub(', S.A.', '', Supplier)]
 
 # load list of high priority municipalities
 highpr = fread(paste0(dataPathDistr, '../../../mapping/gtm/high_priority_muni.csv'))
-highpr = highpr[high_priority==1]
+highpr = highpr[high_priority_2016==1]
 
 # format names to help find department codes
 dptList = data.table(munisGT)[, c('NOMBRE__','COD_DEPT__')]
@@ -77,12 +78,12 @@ if ((length(highpr[!adm2_name %in% dptList$NOMBRE__]$adm2_name))>0) {
 
 # find the department code for each high-priority municipality
 highpr = merge(highpr, dptList, by.x='adm2_name', by.y='NOMBRE__')
-highprDpt = unique(highpr[, c('high_priority','COD_DEPT__')])
+highprDpt = unique(highpr[, c('high_priority_2016','COD_DEPT__')])
 tbdistr = merge(tbdistr, highprDpt, by.x='code_dept', by.y='COD_DEPT__', all.x=TRUE)
 
 # finally make the priority variable
-tbdistr[is.na(high_priority), high_priority:=0]
-tbdistr[, priority:=ifelse(high_priority==1, 'High Priority Departments', 'Other Departments')]
+tbdistr[is.na(high_priority_2016), high_priority_2016:=0]
+tbdistr[, priority:=ifelse(high_priority_2016==1, 'High Priority Departments', 'Other Departments')]
 
 # make a date variable
 tbdistr[, date:=as.Date(paste('01',Month,Year,sep='-'), '%d-%m-%Y')]
@@ -92,6 +93,13 @@ tbdistr[, regimen:=paste0(Medicine, ' (', MG, 'mg)')]
 
 # make an indicator for guatemala city
 tbdistr[, guatemala:=Department=='GUAT. CENTRAL']
+				
+# list of first-line or prophylaxis drugs
+firstLine = c('ISONIAZIDA', 'RIFAMPICINA', 'PIRAZINAMIDA', 'ETAMBUTOL')
+
+# make an indicator for first vs second line
+tbdistr[Medicine %in% firstLine, line:='First-Line']
+tbdistr[!Medicine %in% firstLine, line:='Second-Line']
 # ---------------------------------------------------------------------------
 
 
@@ -114,9 +122,14 @@ prAggWide[!is.finite(ratio_high_gtm_other), ratio_high_gtm_other:=NA]
 prAggWide[, mean:=mean(ratio_high_other, na.rm=TRUE), by='regimen']
 prAggWide[, mean_incl_gtm:=mean(ratio_high_gtm_other, na.rm=TRUE), by='regimen']
 
-# aggregate by provider
+# aggregate by provider-month and regimen
 byVars = c('date','regimen','Supplier')
-supAgg = tbdistr[, .('Amount'=sum(Amount)), by=byVars]
+supAgg = tbdistr[, .('Amount'=sum(Amount, na.rm=TRUE)), by=byVars]
+
+# aggregate by provider and line only
+byVars = c('year','line','Supplier')
+tbdistr[, year:=year(date)]
+supAgg2 = tbdistr[, .('Amount'=sum(Amount, na.rm=TRUE)), by=byVars]
 
 # list of most common drug regimens
 commonDrugs = c('ETAMBUTOL (400mg)', 'ETHIONAMIDA (250mg)', 'ISONIAZIDA (100mg)', 
@@ -192,6 +205,14 @@ p5 = ggplot(supAgg[regimen %in% commonDrugs], aes(x=date, y=Amount, color=Suppli
 		theme_bw() + 
 		theme(legend.position=c(0.85, 0.2), legend.text=element_text(size=10),
 			legend.background=element_rect(fill='white', colour=NA))
+
+# basic graph
+p6 = ggplot(supAgg2, aes(x=year, y=Amount/1000000, fill=Supplier)) + 
+		geom_bar(stat='identity') + 
+		facet_wrap(~line, scales='free_y') + 
+		scale_fill_manual(values=brewer.pal(5, 'Paired')) + 
+		labs(title='TB Drugs Distributed by Supplier', y='Units Distributed (in millions)', x='Year') + 
+		theme_bw(base_size=16)
 # ---------------------------------------------------------------------------
 
 
@@ -203,5 +224,6 @@ p2
 p3
 p4
 p5
+p6
 dev.off()
 # ---------------------------------
