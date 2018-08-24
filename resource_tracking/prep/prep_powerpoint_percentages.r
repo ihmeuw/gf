@@ -121,81 +121,139 @@ malaria_invest = function(fpm, time_frame){
 
 malaria_distrub = rbind(malaria_invest(current, "2015-2017"), malaria_invest(future, "2018-2020"))
 
-fpm_disease = fpm_disease[,c("year", "financing_source", "budget", "abbrev_intervention")]
+
+fpm_disease = fpm_data[disease == "malaria"]
+fpm_disease = fpm_disease[,c("year", "financing_source", "budget", "gf_module")]
+fpm_disease$gf_module = ifelse(fpm_disease$gf_module != "Vector control" &
+                                 fpm_disease$gf_module != "Program management" &
+                                 fpm_disease$gf_module != "Case management" &
+                                 fpm_disease$gf_module != "Specific prevention interventions", 
+                               "RSSH", fpm_disease$gf_module)
 denominator = fpm_disease[, total_disbursed:= sum(budget), by = c('financing_source', 'year')]
-denominator$abbrev_intervention = NULL
+#denominator$module = NULL
 denominator$budget = NULL
 denominator$financing_source = NULL
 denominator = unique(denominator)
-malaria_treatment = subset(fpm_disease, abbrev_intervention == "Facility-based treatment" | abbrev_intervention == "iCCM" |
-                               abbrev_intervention =="Severe malaria"  | abbrev_intervention == "Private sector case management")
-  
-malaria_treatment_t2 = subset(fpm_disease, abbrev_intervention == "Facility-based treatment" | abbrev_intervention == "iCCM" |
-                                  abbrev_intervention =="Severe malaria"  | abbrev_intervention == "Private sector case management" | 
-                                  abbrev_intervention == "Procurement strategy" | abbrev_intervention == "Nat. product selection")
 
-numerator = malaria_treatment[, numerator:= sum(budget), by = c('financing_source', 'year')]
-numerator$budget = NULL
+numerator = fpm_disease[, numerator_val:= sum(budget), by = c('financing_source', 'year', "gf_module")]
 numerator$financing_source = NULL
-numerator$abbrev_intervention = NULL
+numerator$budget = NULL
 numerator$total_disbursed = NULL
 numerator = unique(numerator)
 
-total_mal = merge(numerator, denominator, by = "year")
-total_mal$divided = total_mal$numerator / total_mal$total_disbursed
-total_mal= total_mal[year > 2014 & year < 2021] 
-total$V1 = NULL
-total$denom = NULL
-write.csv(total, "J:/temp/ninip/yearlyExp.csv")
+malaria_graph = merge(denominator, numerator, by = c("year", "gf_module"))
 
-merge()
-
-numerator_2 = sum(malaria_treatment_t2$budget)
-#return(data.table(source = "treament allocation focused disbursement", years = time_frame, value = numerator_1/denominator, value_natProd = numerator_2/denominator))
+malaria_graph$Percentage = malaria_graph$numerator / malaria_graph$total_disbursed
+malaria_graph$numerator_val = NULL
+malaria_graph$total_disbursed = NULL
 
 
 
+# malaria_treatment = subset(fpm_disease, abbrev_intervention == "Facility-based treatment" | abbrev_intervention == "iCCM" |
+#                                abbrev_intervention =="Severe malaria"  | abbrev_intervention == "Private sector case management")
+#   
+# malaria_treatment_t2 = subset(fpm_disease, abbrev_intervention == "Facility-based treatment" | abbrev_intervention == "iCCM" |
+#                                   abbrev_intervention =="Severe malaria"  | abbrev_intervention == "Private sector case management" | 
+#                                   abbrev_intervention == "Procurement strategy" | abbrev_intervention == "Nat. product selection")
+# 
+# numerator = malaria_treatment[, numerator_val:= sum(budget), by = c('financing_source', 'year')]
+# numerator$budget = NULL
+# numerator$financing_source = NULL
+# numerator$abbrev_intervention = NULL
+# numerator$total_disbursed = NULL
+# numerator = unique(numerator)
+# 
+# 
+# total_mal = merge(numerator, denominator, by = "year")
+# total_mal$divided = total_mal$numerator / total_mal$total_disbursed
+# total_mal= total_mal[year > 2014 & year < 2021] 
+# total$V1 = NULL
+# total$denom = NULL
+# write.csv(total, "J:/temp/ninip/yearlyExp.csv")
+# 
+# merge()
+# 
+# numerator_2 = sum(malaria_treatment_t2$budget)
+# #return(data.table(source = "treament allocation focused disbursement", years = time_frame, value = numerator_1/denominator, value_natProd = numerator_2/denominator))
+# 
+# 
+# 
 
 
 # 
 # # # # # subset
-# data = data[country=="Uganda"]
-# fgh_data = data[data_source=='fgh' & disease%in%c('all','malaria')]
-# 
-# # compute disease-percentages from actuals
-# all_dah = fgh_data[fin_data_type=='forecasted_mean' & financing_source=='dah', c('disbursement','year')]
-# disease_dah = fgh_data[fin_data_type=='actual' & grepl('total', module), .(total=sum(disbursement)), by=c('year','disease')]
-# disease_dah = dcast.data.table(disease_dah, year~disease, value.var='total')
-# all_dah = merge(all_dah, disease_dah, by='year', all.x=TRUE)
-# all_dah[, pct_malaria:=malaria/disbursement]
-# 
-# # extend the last percentage forward
-# last_value = all_dah[!is.na(pct_malaria)][year==max(year)]$pct_malaria
-# all_dah[is.na(malaria), malaria:=last_value*disbursement]
-# all_dah[is.na(pct_malaria), pct_malaria:=last_value]
-# 
-# # compute number that's from the global fund
-# fpm_data = data[data_source=='fpm' & disease=='malaria']
-# fpm_data = fpm_data[, .(gf=sum(budget)), by='year']
-# all_dah = merge(all_dah, fpm_data, by='year')
-# 
-# # aggregate by window
-# all_dah[year>=2015 & year<=2017, window:='2015-2017']
-# all_dah[year>=2018, window:='2018-2020']
-# 
-# agg = all_dah[, .(malaria=sum(malaria), gf=sum(gf)), by='year']
-# agg[, pct_gf:=gf/malaria]
-# agg
+data = data[country=="Uganda"]
+fgh_data = data[data_source=='fgh' & disease%in%c('all','malaria')]
+
+# compute disease-percentages from actuals
+all_dah = fgh_data[fin_data_type=="model_estimates" & financing_source=='dah', c('disbursement','year')]
+disease_dah = fgh_data[fin_data_type=='actual' & grepl('total', module), .(total=sum(disbursement)), by=c('year','disease')]
+disease_dah = dcast.data.table(disease_dah, year~disease, value.var='total')
+all_dah = merge(all_dah, disease_dah, by='year', all.x=TRUE)
+all_dah[, pct_malaria:=malaria/disbursement]
+
+# extend the last percentage forward
+last_value = all_dah[!is.na(pct_malaria)][year==max(year)]$pct_malaria
+all_dah[is.na(malaria), malaria:=last_value*disbursement]
+all_dah[is.na(pct_malaria), pct_malaria:=last_value]
+
+# compute number that's from the global fund
+fpm_data = data[data_source=='fpm' & disease=='malaria']
+fpm_data = fpm_data[, .(gf=sum(budget)), by='year']
+all_dah = merge(all_dah, fpm_data, by='year')
+
+# aggregate by window
+all_dah[year>=2015 & year<=2017, window:='2015-2017']
+all_dah[year>=2018, window:='2018-2020']
+
+agg = all_dah[, .(malaria=sum(malaria), gf=sum(gf)), by='year']
+agg[, pct_gf:=gf/malaria]
+agg
 
 # # 
 
 
-dt = fread("J:/temp/ninip/PowerPoint_ToGRaph.csv")
-pdf("J:/temp/ninip/graphs.pdf", height=5.5, width=8)
-ggplot(dt, aes(x = year, y = Percent * 100, color = Value)) + 
-  geom_line() +
-  geom_point() +
+
+pdf("J:/temp/ninip/UGA_GF_malaria_byModule.pdf", height=5.5, width=8)
+ggplot(malaria_graph, aes(x = year, y = Percentage * 100, color = gf_module)) + 
+  geom_line(size = 1) +
+  geom_point(size = 1.7) +
   labs(title = "" , y = "Percent", x = "", color = "") +
   theme_bw(base_size=16) + 
-  theme(legend.position = "bottom", legend.direction = "vertical")
+  theme(legend.position = "bottom", legend.direction = "horizontal") +
+  guides(col = guide_legend(nrow = 2))
+ggsave("J:/temp/ninip/UGA_GF_malaria_byModule.png")
 dev.off()
+
+
+
+# # # # # subset
+data = data[country=="Uganda"]
+fgh_data = data[data_source=='fgh' & disease%in%c('all','malaria')]
+
+# compute disease-percentages from actuals
+all_dah = fgh_data[fin_data_type=="model_estimates", c('disbursement','year')]
+disease_dah = fgh_data[fin_data_type=='actual' & grepl('total', module), .(total=sum(disbursement)), by=c('year','disease')]
+disease_dah = dcast.data.table(disease_dah, year~disease, value.var='total')
+all_dah = merge(all_dah, disease_dah, by='year', all.x=TRUE)
+all_dah[, pct_malaria:=malaria/disbursement]
+
+# extend the last percentage forward
+last_value = all_dah[!is.na(pct_malaria)][year==max(year)]$pct_malaria
+all_dah[is.na(malaria), malaria:=last_value*disbursement]
+all_dah[is.na(pct_malaria), pct_malaria:=last_value]
+
+# compute number that's from the global fund
+fpm_data = data[data_source=='fpm' & disease=='malaria']
+fpm_data = fpm_data[, .(gf=sum(budget)), by='year']
+all_dah = merge(all_dah, fpm_data, by='year')
+
+# aggregate by window
+all_dah[year>=2015 & year<=2017, window:='2015-2017']
+all_dah[year>=2018, window:='2018-2020']
+
+agg = all_dah[, .(malaria=sum(malaria), gf=sum(gf)), by=window]
+agg[, pct_gf:=gf/malaria]
+agg
+
+# # 
