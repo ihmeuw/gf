@@ -42,6 +42,24 @@ output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualiza
 # ----------------------------------------------
 
 
+# -----------------------------
+# Load data
+
+# load the imputed data at the hz level
+dt <- readRDS(paste0(dir_data, hz_data))
+dt$date <- as.Date(dt$date)
+#dt <- dt[dps!="0",]
+# -----------------------------
+
+
+# ----------------------------------------------
+# # Clean dps names 
+dt$dps <- gsub(" ", "-", dt$dps)
+dt[dps=="bas-congo", dps:= "kongo-central"]
+dt <- dt[dps!="0",]
+# ----------------------------------------------
+
+
 # ----------------------------------------------
 # Analysis of PBF
 # Graph ACTs used by whether or not dps in is pbf program
@@ -97,19 +115,28 @@ casesTreated_MTK <- casesTreated_MTK[, .(totCasesTreated = sum(mean)), by=c("dat
 
 casesTreated_vs_cases <- merge(cases_MTK, casesTreated_MTK, by=c("date", "dps"))
 casesTreated_vs_cases <- casesTreated_vs_cases[, casesProp := totCasesTreated/totCases, by= c("date", "dps")]
+casesTreated_vs_cases$year <- year(casesTreated_vs_cases$date)
 
-g <- ggplot(casesTreated_vs_cases, aes(x=date, y=casesProp, color = dps)) + theme_bw()+
+pdf(paste0(output_dir, 'coverage_MTK_(casesTreatedvsCases)_2015on.pdf'), height=9, width=11)
+g <- ggplot(casesTreated_vs_cases[year>=2015,], aes(x=date, y=casesProp, color = dps)) + theme_bw()+
   geom_point() + geom_line() + guides(color=guide_legend(title="DPS")) +
-  ggtitle(paste0("The proportion of cases treated out of total cases in Maniema, Tshopo, and Kinshasa over time")) +
-  ylab("Proportion of Cases Treated") + xlab("Date")  + scale_y_continuous()
-print(g)
-
-g <- ggplot(casesTreated_vs_cases, aes(x=date, y=casesProp, color = dps)) + theme_bw()+
-  geom_point() + geom_line() + guides(color=guide_legend(title="DPS")) + guides(color=FALSE) +
-  ggtitle(paste0("The proportion of cases treated out of total cases in Kinshasa, Maniema, and Tshopo over time")) +
+  ggtitle(paste0("The proportion of cases treated out of total cases in Maniema, Tshopo, and Kinshasa")) +
   ylab("Proportion of Cases Treated") + xlab("Date")  + scale_y_continuous() +
-  facet_wrap( ~dps)
+  theme(axis.text=element_text(size=14),axis.title=element_text(size=15), legend.title=element_text(size=16), 
+        legend.text =element_text(size=14), plot.title = element_text(size=18))
 print(g)
+dev.off()
+
+pdf(paste0(output_dir, 'coverage_MTK_(casesTreatedvsCases)_faceted_2015on.pdf'), height=9, width=11)
+g <- ggplot(casesTreated_vs_cases[year>=2015,], aes(x=date, y=casesProp, color = dps)) + theme_bw()+
+  geom_point() + geom_line() + guides(color=guide_legend(title="DPS")) + guides(color=FALSE) +
+  ggtitle(paste0("The proportion of cases treated out of total cases in Kinshasa, Maniema, and Tshopo")) +
+  ylab("Proportion of Cases Treated") + xlab("Date")  + scale_y_continuous() +
+  facet_wrap( ~dps) + theme(axis.text.x=element_text(angle=60, hjust=1)) +
+  theme(axis.text=element_text(size=13), axis.title=element_text(size=15), strip.text = element_text(size = 15), plot.title = element_text(size=18))
+print(g)
+dev.off()
+
 
 # total outputs ACTs used - whole country
 acts_used <- dt[indicator %in% c("ArtLum", "ASAQused") & subpopulation!="received", ]
@@ -121,7 +148,8 @@ g <- ggplot(acts_used_COD, aes(x=date, y=totActs)) + theme_bw()+
   ylab("Doses of ACTs") + xlab("Date")  + scale_y_continuous()
 print(g)
 
-cases <- dt[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere"),]
+# coverage cases treated - whole country
+cases <- dt[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere", "suspectedMalaria"),]
 cases_COD <- cases[, .(totCases = sum(mean)), by=c("date")] 
 
 casesTreated <- dt[indicator %in% c("mildMalariaTreated", "severeMalariaTreated"),]
@@ -130,9 +158,13 @@ casesTreated_COD <- casesTreated[, .(totCasesTreated = sum(mean)), by=c("date")]
 casesTreated_vs_cases <- merge(cases_COD, casesTreated_COD, by=c("date"))
 casesTreated_vs_cases <- casesTreated_vs_cases[, casesProp := totCasesTreated/totCases, by= c("date")]
 
-g <- ggplot(casesTreated_vs_cases, aes(x=date, y=casesProp)) + theme_bw()+
+casesTreated_vs_cases$year <- year(casesTreated_vs_cases$date)
+
+pdf(paste0(output_dir, 'coverage_COD_casesTreatedvsCases(incSuspected)_TS.pdf'), height=9, width=11)
+g <- ggplot(casesTreated_vs_cases[], aes(x=date, y=casesProp)) + theme_bw()+
   geom_point(color='darkblue') + geom_line(color='darkblue') + 
-  ggtitle(paste0("The proportion of cases treated out of total cases in all of DRC over time")) +
-  ylab("Proportion of Cases Treated") + xlab("Date")  + scale_y_continuous()
+  ggtitle(paste0("The proportion of cases treated out of total cases (including suspected cases) in all of DRC over time")) +
+  ylab("Proportion of Cases Treated") + xlab("Date") + ylim(0, 0.60)
 print(g)
+dev.off()
 # ----------------------------------------------
