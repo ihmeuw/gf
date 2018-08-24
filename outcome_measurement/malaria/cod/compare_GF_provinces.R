@@ -29,11 +29,13 @@ library(Rcpp)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir_data = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
 dir_pop = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/worldpop_data/')
+dir_impact = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
 
 # input files
 dps_data <- "imputedData_run2_condensed_dps.rds"
 pop_data <- '2015_pop_estimates_by_dps(aggregated raster).csv'
 pop_data10 <- '2010_pop_estimates_by_dps(aggregated raster).csv'
+hz_data <- "imputedData_run2_condensed_hz.rds"
 
 # output files
 merged_pops <- "2015_and_2010_pop_estimates.csv"
@@ -48,20 +50,25 @@ compare_acts_by_age <- "compare_gf_provinces_acts_by_age.pdf"
 # -----------------------------
 # Load data
 
-# load the imputed data at DPS level
-dt <- readRDS(paste0(dir_data, dps_data))
-dt$year <- year(dt$date)
-dt <- dt[year>=2015 & dps != "0",]
+# # load the imputed data at DPS level
+# dt <- readRDS(paste0(dir_data, dps_data))
+# dt$year <- year(dt$date)
+# dt <- dt[year>=2015 & dps != "0",]
+
+# load the imputed data at the hz level
+dt <- readRDS(paste0(dir_data, hz_data))
+dt$date <- as.Date(dt$date)
+dt <- dt[dps!="0",]
 
 # load the world pop estimates
 pop <- read.csv(paste0(dir_pop, pop_data))
 pop <- as.data.table(pop)
 pop$X <- NULL
 
-pop10 <- read.csv(paste0(dir_pop, pop_data10))
-pop10 <- as.data.table(pop10)
-pop10$X <- NULL
-setnames(pop10, "pop", "pop10")
+# pop10 <- read.csv(paste0(dir_pop, pop_data10))
+# pop10 <- as.data.table(pop10)
+# pop10$X <- NULL
+# setnames(pop10, "pop", "pop10")
 # -----------------------------
 
 
@@ -88,9 +95,9 @@ setnames(pop10, "pop", "pop10")
 # # resave pop so that it has these names preserved, then the above steps aren't necessary
 # write.csv(pop, paste0(dir_pop, pop_data))
 
-# Merge pop with pop10
-pop_15_10 <- merge(pop10, pop, by="dps")
-setnames( pop_15_10, "pop", "pop15")
+# # Merge pop with pop10
+# pop_15_10 <- merge(pop10, pop, by="dps")
+# setnames( pop_15_10, "pop", "pop15")
 
 # # Save pops merged together
 # write.csv( pop_15_10, paste0(dir_pop, merged_pops))
@@ -107,19 +114,65 @@ dt <- merge(dt, pop, by="dps", all=TRUE)
 
 
 # ----------------------------------------------
-# Divide by Worldpop population estimates
+# If working with hz-level data, first agg to dps level:
+dt <- dt[, .(mean= sum(mean)), by=c("dps", "date", "variable", "indicator", "subpopulation", "pop")]
+  
+# Divide by Worldpop population estimates - does this need to move?
 dt[, valuePerCapita := mean/pop]
 # ----------------------------------------------
 
 
 # ----------------------------------------------
-# Mark GF provinces vs non-GF provinces
-all_dps <- unique(dt$dps)
-non_gf_dps <- c("sankuru", "sud-kivu", "tanganyika", "kasai", "kasai-central", "kasai-oriental", "lomami", "haut-lomami", "lualaba", "haut-katanga")
-gf_dps <- all_dps[!all_dps %in% non_gf_dps]
+# # Mark GF provinces vs non-GF provinces
+# all_dps <- unique(dt$dps)
+# non_gf_dps <- c("sankuru", "sud-kivu", "tanganyika", "kasai", "kasai-central", "kasai-oriental", "lomami", "haut-lomami", "lualaba", "haut-katanga")
+# gf_dps <- all_dps[!all_dps %in% non_gf_dps]
+# 
+# dt[dps %in% gf_dps, gf := "yes"]
+# dt[dps %in% non_gf_dps, gf := "no"]
 
-dt[dps %in% gf_dps, gf := "yes"]
-dt[dps %in% non_gf_dps, gf := "no"]
+# Look at DPS "in funder transition" compared to those that aren't
+# hypothesis being that the transition between funders made them more efficient
+# (within a document David found)
+dt <- dt[dps!="0",]
+dt$dps <- as.character(dt$dps)
+all_dps <- unique(dt$dps)
+dps_trans <- c("kinshasa", "haut-katanga", "lualaba", "tanganyika", "ituri", "haut-lomami", "tshopo")
+dps_not_trans <- all_dps[!all_dps %in% dps_trans]
+
+dt[dps %in% dps_trans, trans := "yes"]
+dt[dps %in% dps_not_trans, trans := "no"]
+
+# ACTs used by whether or not dps transitioned funders
+acts_use <- dt[indicator %in% c("ArtLum", "ASAQused") & subpopulation!="received", ]
+acts_use <- acts_use[, .(totActsUsed = sum(mean)), by=c("dps", "date", "trans", "pop")]
+cases <- dt[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere"),]
+cases <- cases[, .(cases = sum(mean)), by=c("dps", "date", "trans", "pop")]
+
+acts_used_cases <- merge(acts_use, cases, by=c("dps", "date", "trans", "pop"))
+
+# total sum of ACTs by trans or not trans
+compare_dps <- acts_use[, .(totACTs = sum(totActsUsed)), by= c("trans", "date")]
+compare_dps <- compare_dps[, .(actsByCases = totACTs/totCases), by= c("trans", "date")]
+
+compare_dps$year <- year(compare_dps$date)
+
+g <- ggplot(compare_dps[year>="2013",], aes(x=date, y=totACTs, color = trans)) + theme_bw()+
+  geom_point() + geom_line() + guides(color=guide_legend(title="Changed funder")) +
+  ggtitle(paste0("ACT doses distributed to patients by number of cases of Malaria \naggregated by whether or not the funder changed (dps-level)")) +
+  ylab("Doses") + xlab("Date")  + scale_y_continuous()
+print(g)
+
+# ACTs by pop trans or not trans
+compare_dps <- acts_use[, .(tot = sum(totActsUsed), pop=sum(pop)), by= c("trans", "date")]
+compare_dps <- compare_dps[, totPerCapita := tot/pop]
+compare_dps <- compare_dps[, totPer100k := totPerCapita*100000]
+
+g <- ggplot(compare_dps, aes(x=date, y=totPer100k, color = trans)) + theme_bw()+
+  geom_point() + geom_line() + guides(color=guide_legend(title="Transitioned Funders")) +
+  ggtitle(paste0("ACT doses per 100,000 people distributed to patients by whether or not \nfunders were transitioned (DPS-level)")) +
+  ylab("Doses per 100,000") + xlab("Date")  + scale_y_continuous()
+print(g)
 # ----------------------------------------------
 
 
@@ -173,6 +226,7 @@ print(g)
 
 pdf( paste0(output_dir, compare_acts), height=9, width=11 )
 dev.off()
+
 
 # ACTs received by age group
 acts_rec_by_age <- dt[indicator %in% c("ASAQreceived"), ]
