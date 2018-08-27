@@ -340,6 +340,24 @@ uvl[is.na(prison), prison:='No']
 
 uvl[ , c("facility_name1", "dhis2_name1", 'level2'):=NULL]
 
+
+#--------------------------------
+
+rdt[grep(pattern="15", date), year:='2015']
+rdt[grep(pattern="16", date), year:='2016']
+rdt[grep(pattern="17", date), year:='2017']
+rdt[grep(pattern="18", date), year:='2018']
+
+
+
+
+
+uvl[grep(pattern="prison", dhis2_name1), prison:='Yes'] # using dhis2name captures a remand center
+uvl[is.na(prison), prison:='No']
+
+
+
+
 #------------------------------------------
 # run a missing data check
 uvl[ ,lapply(.SD, is.na), .SDcols=10:17]

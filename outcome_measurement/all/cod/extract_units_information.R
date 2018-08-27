@@ -21,16 +21,7 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # install and load the dhisextractr package 
 
 # cluster only: install dhisextractr 
-# this package is not automatically installed on the cluster
-install.packages("dhisextractr", lib=dir)
 
-# load dhisextractr
-library(dhisextractr, lib.loc=dir)
-
-#------------------------------
-# check if the dhis_extractr package uploaded correctly
-# if the help files work, the package loaded 
-? extract_all_data 
 #------------------------------
 # import a list of organisational units 
 
@@ -55,7 +46,7 @@ extract_dhis_content <- function(base_url, userID, password) {
   #-----------------------
   #extract information about organisational units: coordinates, data sets, etc.
   print('Extracting units information')
-  extracted_org_units <- dlply(org_units_list[1:10, ], .(org_unit_ID),
+  extracted_org_units <- dlply(org_units_list, .(org_unit_ID),
                                function(org_units_list) {
                                  try(extract_org_unit(as.character(org_units_list$org_unit_url) ,
                                                       userID, password))},
