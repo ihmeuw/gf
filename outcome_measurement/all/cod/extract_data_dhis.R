@@ -16,7 +16,7 @@
 # Copy shell script into a qlogin session to open an IDE
 # request at least 10 slots for extractions 
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 20 -P snis_download
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_download
 
 # --------------------
 # Set up R
@@ -55,18 +55,18 @@ source(paste0(dir, 'dhis_extracting_functions.R'))
 # select the start year and end year for the download
 start_year <- '2018'
 end_year <- '2018'
-start_month <- '01'
-end_month <- '08'
+start_month <- '05'
+end_month <- '09'
 
 # change the update year to before the data begins
-update_year <- '2017'
+update_year <- start_year
 
 #identify the data set(s) you want to download by number (list below)
-set <- 17
+set <- 1
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name <- 'pnls'
+set_name <- 'base'
 
 # available data sets by number: 
 
@@ -147,7 +147,7 @@ extracted_data <- extract_all_data(base_url = base_url,
 saveRDS(extracted_data, paste0(dir, 'pre_merge/', set_name, '_', country, 
                                  '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
-# save as a csv
+# save as a csv - the data sets are very large so use onyl as needed
 # write.csv(extracted_data, paste0(dir, 'pre_merge/', set_name, '_', country, '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.csv'))
 
 #-------------------------
