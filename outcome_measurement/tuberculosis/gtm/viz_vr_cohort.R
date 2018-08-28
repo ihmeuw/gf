@@ -1,7 +1,7 @@
 ###################################################################
 # GTM TB mortality comparison between raw VR, redistributed VR, and cohort data
 # Run on the cluster to access shared drive for VR files, or change dirs to a local copy
-#
+# Author - J Ross (with pieces from Irena's code)
 
 
 rm(list=ls())

@@ -11,7 +11,7 @@ table(notif$CONTACTOS)
 table(notif$CLASIFICACION, useNA = "always")
 table(notif$METODODX, useNA = "always")
 table(notif[,c('METODODX','CLASIFICACION')], useNA = "always")
-table(notif[,"PACIENTEPRIVADOLIBERTAD"])
+table(notif[,c('PACIENTEPRIVADOLIBERTAD', 'YEAR')], useNA = "always")
 
 
 notif<-notif[,c("MUNICIPIO","DEPARTAMENTO", "SEXO", "EDAD", "CONDICIONINGRESO", "CLASIFICACION", "YEAR", "VIH")]
