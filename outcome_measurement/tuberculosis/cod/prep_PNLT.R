@@ -8,8 +8,8 @@ setwd('C:/local/gf/')
 
 
 # --------------------
-# Set up R / install packages
-## -------------------
+## Set up R / install packages
+# -------------------
 rm(list=ls())
 library(data.table)
 library(reshape2)
@@ -24,12 +24,13 @@ library(zoo)
 library(tidyr)
 library(dplyr)
 library(openxlsx)
+library(stringi)
 # --------------------
 
 
 # ----------------------------------------------
-# Overview - Files and Directories
-## ----------------------------------------------
+## Overview - Files and Directories
+# ----------------------------------------------
 # data directory
 # file path where the files are stored
 dir <- "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program/"
@@ -45,68 +46,161 @@ pnlt_main <- "PNLT_prepped_data.csv"
 # ----------------------------------------------
 
 
-## ----------------------------------------------
+# ----------------------------------------------
 ## load data from excel to visualize initial data
-## ----------------------------------------------
-dt2018 <- data.table(read_excel(paste0(dir, file2018), sheet= 'DEPISTAGE T1 018'))
-dt2017 <- data.table(read_excel(paste0(dir, file2017), sheet= 'DEP T1 017'))
-
+# ----------------------------------------------
+# dt2018 <- data.table(read_excel(paste0(dir, file2018), sheet= 'DEPISTAGE T1 018'))
+# dt2017 <- data.table(read_excel(paste0(dir, file2017), sheet= 'DEP T1 017'))
 
 dt_transl <- data.table(read_excel(paste0(dir, pnlt_transl)))
 # ----------------------------------------------
 
 
 # ----------------------------------------------
-# get all files in a given year folder
+## get all files in a given year folder
 # ----------------------------------------------
 getFiles <- function(year){
   files = list.files(paste0(dir, year))
   return(files)
 }
 
+year="2016"
+
+# get file names for a given year:
 files <- getFiles(year)
 
-dps <- sub("COD_", "", files)
-dps <- sub("NTCP", ":", dps)
-dps <- substring(dps, 0, regexpr("_:", dps) - 1)
-dps <- unique(dps)
-
-
-
-# for (year in 2014:2016){
-#   files <- getFiles(year)
-#   assign(paste0("files", year, sep=""), files)
-# }
-
-# # NOT SURE IF THE FOLLOWING WILL BE HELPFUL; it may be better to do it one sheet at a time?
-# # get sheets in each file
-# for(i in list_of_all_files){
-#   for(j in i){
-#     if ( !exists("sheets") ) sheets <- getSheetNames(paste0(dir, year, "/", j))
-#     currentFile <- getSheetNames(paste0(dir, year, "/", j))
-#     sheets <- append(currentFile, sheets)
-#   }
-# }
-# possible_sheet_names <- unique(sheets)
-# # ----------------------------------------------
+# clean file names to remove ones without data for cleaning:
+files_xlsx <- files[!grepl(".DOC", files)]
+files_xlsx <- files_xlsx[!grepl("NATIONAL", files_xlsx)]
+files_xlsx <- files_xlsx[!grepl("SUBMISSION_DATES", files_xlsx)]
+files_xlsx <- files_xlsx[!grepl("HEALTH_ZONES", files_xlsx)]
+files_xlsx <- files_xlsx[!grepl("INDICATORS_COLLECTED", files_xlsx)]
+#-----------------------------------------------
 
 
 # ----------------------------------------------
-## clean "DEPISTAGE" or "DEP" quarterly sheets
-## ----------------------------------------------
+## get all sheets in a given file
+# ----------------------------------------------
+file = files_xlsx[2]
 
-dt <- data.table()
+sheets <- getSheetNames(paste0(dir, year, "/", file))
 
-combine_dep_sheets <- function(dt, file, year){
+# determine what quarter the file is from:
+if (grepl("T1", file)){
+  quarter= "T1"
+}else if (grepl("T2", file)){
+  quarter= "T2"
+}else if (grepl("T3", file)){
+  quarter= "T3"
+}else if (grepl("T4", file)){
+  quarter= "T4"
+}
+
+## NOTE: three types of sheets to clean:  DEP, AGE, and EVAL
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+## clean "EVAL"sheets
+# ----------------------------------------------
+# get just the EVAL sheets from sheets
+sheets_eval <- sheets[grepl("EVAL", sheets)]
+# grab just the EVAL sheets for the file quarter:
+sheets_eval <- sheets_eval[grepl(quarter, sheets_eval)]
+
+dt_sheets <- as.data.table(sheets_eval)
+setnames(dt_sheets, "sheets_eval", "sheet_name")
+dt_sheets[, c("sheet_type", "TB_type"):= transpose(stri_split_fixed(sheet_name, " ", 2))]
+dt_sheets[, year:= lapply(strsplit(TB_type, " "), tail, 1)]
+dt_sheets[, TB_type := gsub(paste0(" ", year), "", TB_type), by="sheet_name"]
+dt_sheets[, quarter:= lapply(strsplit(TB_type, " "), tail, 1)]
+dt_sheets[, TB_type := gsub(paste0(" ", quarter), "", TB_type), by="sheet_name"]
+
+dps <- sub("COD_", "", file)
+dps <- substring(dps, 0, regexpr("_NTCP", dps) - 1)
+
+i<-1
+
+for( s in sheets_eval ){
   
-sheets <- getSheetNames(paste0(dir, file))
-  
-# get relevant sheet names 
-dep_sheets <- sheets[grepl("DEP", sheets)]
+dt <- data.table(read_excel(paste0(dir, year, "/", file), sheet= s))
+# data starts below heading where it says "CSDT/ZS" -> get this row number
+setnames(dt, colnames(dt)[1], "col1")
+row <- dt[col1=="CSDT/ZS", which=TRUE]
+rows_to_remove <- seq(1:(row-1))
+dt <- dt[-c(rows_to_remove)]
 
+# set column names
+cols <- !is.na( dt[1, ] )
+cols <- colnames(dt)[cols]
+dt <- dt[, cols, with=FALSE]
+
+
+colnames(dt) <- as.character(dt[1,])
+
+# remove header rows and total rows
+dt <- dt[-c(1, 2)]
+setnames(dt, colnames(dt)[1], "col1")
+dt <- dt[!grepl("TOTAL", col1)]
+
+# add columns for dps, quarter, year, and TB type
+dt[, dps:= dps]
+dt[, quarter:= quarter]
+dt[, TB_type := dt_sheets[sheet_name==s, TB_type]]
+dt[, data_year := dt_sheets[sheet_name==s, year]]
+dt[, file_year := year]
+
+if (i == 1){
+  # if it's the first sheet, initialize the new dt
+  case_outcomes <- dt
+  # for subsequent sheets, rbind to that dt
+} else {
+  case_outcomes <- rbindlist(list(case_outcomes, dt), use.names=TRUE, fill= TRUE)
+}
+i = i + 1
+}
+
+setnames(case_outcomes, "col1", 'csdt_hz')
+setnames(case_outcomes, "TOTAL CAS  ENREGISTRES", 'tot_cas_reg')
+setnames(case_outcomes, "GUERIS", 'healed')
+setnames(case_outcomes, "TRAITEMENTS ACHEVES", 'trt_complete')
+setnames(case_outcomes, "DECEDES", 'died')
+setnames(case_outcomes, "ECHECS", 'trt_failed')
+setnames(case_outcomes, "INTERRUPTIONS", 'trt_interrupted')
+setnames(case_outcomes, "TOTAL CAS EVALUES", 'tot_cas_eval')
+setnames(case_outcomes, "TRANSFERES", 'transferred')
+setnames(case_outcomes, "TOTAL  CAS NON EVALUES", 'cas_not_eval')
+
+#colnames(dt) <- c('csdt_hz', 'tot_cas_reg', 'healed', 'trt_complete', 'died', 'trt_failed', 'trt_interrupted', 'tot_cas_eval', 'transferred', 'cas_not_eval' )
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+## clean "DEPISTAGE" or "DEP" sheet
+# ----------------------------------------------
+# get just the DEP sheets from sheets
+sheet_dep <- sheets[grepl("DEP", sheets)]
 # exclude sheet names that are synthesized or annual measures
-dep_sheets <- dep_sheets[!grepl("SYNTHESE", dep_sheets)]
-dep_sheets <- dep_sheets[!grepl("ANNUELLE", dep_sheets)]
+sheet_dep <-  sheet_dep[grepl(quarter, sheet_dep)]
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+## clean "AGE"sheets
+# ----------------------------------------------
+# get just the EVAL sheets from sheets
+sheets_age <- sheets[grepl("AGE", sheets)]
+# grab just the EVAL sheets for the file quarter:
+sheets_age <- sheets_age[grepl(quarter, sheets_age)]
+# ----------------------------------------------
+
+
+
+
+
+
+
+
 
 # loop through sheet names, reading in each and R binding it to a dt for that year
 i = 1
@@ -191,3 +285,36 @@ dt2018 <- dt2018[dps %in% dps_list]
 
 ## export data (eventually -- all different kinds of sheets)
 write.csv(dt2018, paste0(dir_prepped, pnlt_main))
+
+
+
+
+##============NO LONGER NEEDED CODE==================
+
+# # Make a data table with the file name info:
+# dt_files <- as.data.table(files_xlsx)
+# setnames(dt_files, "files_xlsx", "file_name")
+# dt_files[, file_name2:= file_name]
+# 
+# dps <- sub("COD_", "", files_xlsx)
+# dps <- sub("NTCP", ":", dps)
+# dps <- substring(dps, 0, regexpr("_:", dps) - 1)
+
+# for (year in 2014:2016){
+#   files <- getFiles(year)
+#   assign(paste0("files", year, sep=""), files)
+# }
+
+# # NOT SURE IF THE FOLLOWING WILL BE HELPFUL; it may be better to do it one sheet at a time?
+# # get sheets in each file
+# for(i in list_of_all_files){
+#   for(j in i){
+#     if ( !exists("sheets") ) sheets <- getSheetNames(paste0(dir, year, "/", j))
+#     currentFile <- getSheetNames(paste0(dir, year, "/", j))
+#     sheets <- append(currentFile, sheets)
+#   }
+# }
+# possible_sheet_names <- unique(sheets)
+
+
+
