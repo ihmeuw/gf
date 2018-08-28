@@ -38,12 +38,14 @@ mtk_acts_received_graphs_byAge <- "mtk_acts_received_by_age_by_hz_2015to2017.pdf
 mtk_acts_received_by_dps <- "mtk_acts_received_by_dps_2015to2017.pdf"
 mtk_acts_used_by_dps <- "mtk_acts_used_by_dps_2015to2017.pdf"
 mtk_stockouts <- "mtk_act_stockouts_2015to2017.pdf"
+mtk_stockouts2 <- "mtk_act_stockouts_2015to2017_changeYAxis.pdf"
+
 # ----------------------------------------------
 
 # ----------------------------------------------
 # read in imputed data (tol 0.001) that has been condensed down to mean and variance across the 50 imputations (at hz level)
 dt <- readRDS(paste0(dir, imputed_data_low_tol))
-
+dt <- readRDS(paste0(dir, "imputedData_run2_condensed_hz.rds"))
 # there are some (all?) cases where the original value was 0, and it was set to a low percentile value instead of 0 for log transformation but not
 # changed back to 0, so set all of those cases to be 0.
 dt[value==0, mean:=0]
@@ -245,7 +247,7 @@ print(g)
 g <- ggplot(dt_wide, aes(x=date, y=totACTstockoutDays, color = dps)) + theme_bw()+
   geom_point() + geom_line() +
   ggtitle(paste0("Stock-outs of ACTs (AL and ASAQ, not including ASAQ injectables)")) +
-  ylab("Days of stock-outs per facility") + xlab("Date") 
+  ylab("Days of stock-outs per facility") + xlab("Date") + ylim(0,30)  
 print(g)
 
 
