@@ -40,14 +40,10 @@ base1 <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_01_2015_04_2018.r
 base1 <- data.table(base)
 
 # load the newest set of data 
- base <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_05_2018_07_2018.rds'))
- base <- data.table(base)
- 
- 
- 
+base <- readRDS(paste0(dir, 'pre_merge/base/base_services_drc_05_2018_07_2018.rds'))
+base <- data.table(base)
 
- 
- 
+
 #-----------------------------------------
 
 #------------------------------
