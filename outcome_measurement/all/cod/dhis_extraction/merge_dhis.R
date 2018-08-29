@@ -110,7 +110,7 @@ sigl2 <- data.table(readRDS(paste0(dir, 'pre_prep/sigl/sigl_drc_05_2018_07_2018.
 sigl <- rbind(sigl1, sigl2)
 
 # merge in the meta data 
-merge_meta_data(sigl)
+sigl <- merge_meta_data(sigl)
 
 # save the merged data
 # alter the file name to include all included dates
