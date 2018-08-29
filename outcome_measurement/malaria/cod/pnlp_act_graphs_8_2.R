@@ -44,7 +44,7 @@ mtk_stockouts2 <- "mtk_act_stockouts_2015to2017_changeYAxis.pdf"
 
 # ----------------------------------------------
 # read in imputed data (tol 0.001) that has been condensed down to mean and variance across the 50 imputations (at hz level)
-dt <- readRDS(paste0(dir, imputed_data_low_tol))
+# dt <- readRDS(paste0(dir, imputed_data_low_tol))
 dt <- readRDS(paste0(dir, "imputedData_run2_condensed_hz.rds"))
 # there are some (all?) cases where the original value was 0, and it was set to a low percentile value instead of 0 for log transformation but not
 # changed back to 0, so set all of those cases to be 0.
@@ -201,6 +201,13 @@ dt_dps <- readRDS(paste0(dir, "imputedData_run2_condensed_dps.rds"))
 dt_dps$year <- year(dt_dps$date)
 
 dt_dps_MTK <- dt_dps[dps %in% MTK & year >= 2015,]
+
+# 8-28-18 caluclate avg monthly ACT doses prescribed in 2015 vs 2017
+dt_kin <- dt_dps[dps=="kinshasa" & indicator %in% c("ASAQused", "ArtLum") & subpopulation != "received"]
+dt_kin_acts_used <- dt_kin[, .(acts_used = sum(mean)), by="date"]
+dt_kin_acts_used$year <- year(dt_kin_acts_used$date)
+
+dt_kin_avg_acts_used_by_year <- dt_kin_acts_used[, .(avg_monthly_acts_used = (sum(acts_used)/12)), by="year"]
 
 #----------------------------------------------------------------------------------------------------
 MTK_stockouts <- dt_dps_MTK[indicator %in% c("stockOutartLum", "stockOutASAQ", "healthFacilities"), ]
