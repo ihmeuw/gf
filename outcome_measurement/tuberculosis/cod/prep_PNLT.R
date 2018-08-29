@@ -81,7 +81,7 @@ files_xlsx <- files_xlsx[!grepl("INDICATORS_COLLECTED", files_xlsx)]
 # ----------------------------------------------
 ## get all sheets in a given file
 # ----------------------------------------------
-file = files_xlsx[2]
+file = files_xlsx[55]
 
 sheets <- getSheetNames(paste0(dir, year, "/", file))
 
@@ -124,17 +124,19 @@ i<-1
 for( s in sheets_eval ){
   
 dt <- data.table(read_excel(paste0(dir, year, "/", file), sheet= s))
-# data starts below heading where it says "CSDT/ZS" -> get this row number
-setnames(dt, colnames(dt)[1], "col1")
-row <- dt[col1=="CSDT/ZS", which=TRUE]
-rows_to_remove <- seq(1:(row-1))
-dt <- dt[-c(rows_to_remove)]
+      # # This isn't always the case... seems to always start on the 6th row though?
+      # # data starts below heading where it says "CSDT/ZS" -> get this row number
+      # setnames(dt, colnames(dt)[1], "col1")
+      # row <- dt[col1=="CSDT/ZS", which=TRUE]
+      # rows_to_remove <- seq(1:(row-1))
+      # dt <- dt[-c(rows_to_remove)]
+
+dt <- dt[-c(1:5)]
 
 # set column names
 cols <- !is.na( dt[1, ] )
 cols <- colnames(dt)[cols]
 dt <- dt[, cols, with=FALSE]
-
 
 colnames(dt) <- as.character(dt[1,])
 
@@ -142,6 +144,11 @@ colnames(dt) <- as.character(dt[1,])
 dt <- dt[-c(1, 2)]
 setnames(dt, colnames(dt)[1], "col1")
 dt <- dt[!grepl("TOTAL", col1)]
+
+# remove rows where col1 is na
+dt <- dt[!is.na(col1)]
+
+
 
 # add columns for dps, quarter, year, and TB type
 dt[, dps:= dps]
