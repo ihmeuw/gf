@@ -1,9 +1,7 @@
-# Merge the Base Services and SIGL data downloaded from DHIS
-
-# ----------------------------------------------
+# Merge the Base Services, SIGL, and PNLS data downloaded from DHIS DRC (SNIS)
 # Caitlin O'Brien-Carelli
 #
-# 8/27/2018
+# 8/28/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -30,53 +28,116 @@ library(stringr)
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/pre_prep/')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+
+#--------------------------------------------------------
+# create a function that uploads the meta data and merges it into the data table
+
+merge_meta_data <- function(x) { 
+
+# import the meta data for the merge
+facilities <- data.table(readRDS(paste0(dir, 'meta_data/master_facilities.rds')))
+facilities[ ,c('country_id', 'dps_id', 'health_zone_id', 'health_area_id'):=NULL]
+
+data_elements <- data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
+data_elements[ ,url_list:=NULL]
+
+data_elements_categories <- data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
+data_elements_categories[ ,url_list:=NULL]
+
+org_units_description <- data.table(readRDS(paste0(dir, 'meta_data/org_units_description.rds')))
+org_units_description[ ,c('.id', 'active', 'parent_id'):=NULL]
+
+#-------------------
+# change the names of the ID variables in element categories and descriptions to match for the merge
+setnames(data_elements, 'displayName', 'element')
+setnames(data_elements_categories, c('ID', 'displayName'), c('category', 'category_name'))
+
+#-------------------
+# merge in the meta data 
+
+  # change the organisational unit id to be called 'id'
+  setnames(x, 'org_unit_ID', 'id')
+  x[ ,group:=NULL]
+  
+  # create a date variable
+  x[ , period:= as.character(period)]
+  x[ , year:=substr(period, 1, 4)]
+  x[ , month:=substr(period, 5, 6)]
+  x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+  x[ ,period:=NULL]
+  
+  # merge in the meta data 
+  y <- merge(x, facilities, by='id')
+  y <- merge(y, data_elements, by='data_element_ID')
+  y <- merge(y, data_elements_categories, by='category')
+  y <- merge(y, org_units_description, by='id')
+  
+  return(y)
+  
+  }
+
 
 #--------------------
-# Merge the base servives data sets you have downloaded
-# Import base services data set and convert to a data table
+# Merge the base services data sets you have downloaded
 
-# original download - 2015 to april 2017 - leave commented out
-# base1 <- readRDS(paste0(dir, 'base/base_services_drc_01_2015_04_2018.rds'))
-# base1 <- data.table(base1)
-
-# input the file name of the most recently merged data set
-# base1 <- readRDS(most_recent_download.rds)
-# base1 <- data.table(base1)
+# input the file name of the most recently merged data set (change file path to 'merged' folder)
+base1 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_services_drc_01_2015_04_2018.rds')))
 
 # load the newest set of data 
-base2 <- readRDS(paste0(dir, 'base/base_services_drc_05_2018_07_2018.rds'))
-base2 <- data.table(base2)
+base2 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_services_drc_05_2018_07_2018.rds')))
 
 # merge the previously downloaded set with the new download
 base <- rbind(base1, base2)
 
+# merge in the meta data 
+base <- merge_meta_data(base)
+
 # save the merged data 
 # alter the file name to include all included dates
-saveRDS(base, paste0(dir, 'merged/base_services_drc_01_2015_07_2018.rds'))
+saveRDS(base, paste0(dir, 'pre_prep/merged/base_services_drc_01_2015_07_2018.rds'))
 
 #----------------------------------------------
-# merge the SIGL data 
+# Merge the SIGL data 
 
-# input the name of the most recently merged data set
-sigl1 <- readRDS(paste0(dir, 'sigl/sigl_drc_01_2015_05_2018.rds'))
-sigl1 <- data.table(sigl1)
+# input the name of the most recently merged data set (change file path to 'merged' folder)
+sigl1 <- data.table(readRDS(paste0(dir, 'pre_prep/sigl/sigl_drc_01_2015_05_2018.rds')))
 
 # load the newest data set
-sigl2 <- readRDS(paste0(dir, 'sigl/sigl_drc_05_2018_07_2018.rds'))
-sigl2 <- data.table(sigl2)
+sigl2 <- data.table(readRDS(paste0(dir, 'pre_prep/sigl/sigl_drc_05_2018_07_2018.rds')))
 
 # merge the previously downloaded data set with the new download
 sigl <- rbind(sigl1, sigl2)
 
+# merge in the meta data 
+merge_meta_data(sigl)
+
 # save the merged data
 # alter the file name to include all included dates
-saveRDS(base, paste0(dir, 'merged/base_services_drc_01_2015_07_2018.rds'))
+saveRDS(sigl, paste0(dir, 'pre_prep/merged/sigl_drc_01_2015_07_2018.rds'))
 
+#------------------------------------------------ 
+# Merge the PNLS data 
 
+# input the name of the most recently merged data set (change file path to 'merged' folder)
+pnls1 <- readRDS(paste0(dir, 'pnls/pnls_drc_01_2017_04_2018.rds'))
+pnls1 <- data.table(pnls1)
 
+# load the newest data set
+pnls2 <- readRDS(paste0(dir, 'pnls/pnls_drc_05_2018_07_2018.rds'))
+pnls2 <- data.table(pnls2)
 
+# merge the previously downloaded data set with the new download
+pnls <- rbind(pnls1, pnls2)
 
+# merge in the meta data 
+merge_meta_data(pnls)
+
+# save the merged data
+# alter the file name to include all included dates
+saveRDS(pnls, paste0(dir, 'merged/pnls_drc_01_2015_07_2018.rds'))
+
+#------------------------------------------------ 
 
 
 

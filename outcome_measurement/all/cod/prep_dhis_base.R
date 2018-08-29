@@ -50,23 +50,6 @@ base1 <- data.table(base)
  
 #-----------------------------------------
 
-#------------------------------
-# merge the base services data with the meta data
-
-# import the meta data for the merge
-data_sets<- data.table(readRDS(paste0(dir, 'meta_data/data_sets.rds'))) # not necessary for the merge
-org_units <- data.table(readRDS(paste0(dir, 'meta_data/org_units_list.rds')))
-data_elements <- data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
-data_elements_categories <- data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
-org_units_description <- data.table(readRDS(paste0(dir, 'meta_data/org_units_description.rds')))
-
-# change the names of the ID variables in element categories and descriptions to match for the merge
-data_elements[ , element_name:=displayName]
-data_elements[ , displayName:=NULL]
-
-data_elements_categories <- data_elements_categories[ ,.(category=ID, category_name=displayName)]
-org_units_description <- org_units_description[ ,.(org_unit_ID = id, coordinates, opening_date, parent_id)]
-
 #------------------------
 # merge in the names of the objects in the data set
 
