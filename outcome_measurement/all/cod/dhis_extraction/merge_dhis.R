@@ -65,7 +65,7 @@ setnames(data_elements_categories, c('ID', 'displayName'), c('category', 'catego
   x[ , year:=substr(period, 1, 4)]
   x[ , month:=substr(period, 5, 6)]
   x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
-  x[ ,period:=NULL]
+  x[ , period:=NULL]
   
   # merge in the meta data 
   y <- merge(x, facilities, by='id')
@@ -97,6 +97,9 @@ base <- merge_meta_data(base)
 # alter the file name to include all included dates
 saveRDS(base, paste0(dir, 'pre_prep/merged/base_services_drc_01_2015_07_2018.rds'))
 
+# create a data set of only 2017 - present data 
+base_new <- base[year=='2017' | year=='2018']
+saveRDS(base_new, paste0(dir, 'pre_prep/merged/base_services_drc_01_2017_07_2018.rds'))
 #----------------------------------------------
 # Merge the SIGL data 
 
@@ -116,26 +119,30 @@ sigl <- merge_meta_data(sigl)
 # alter the file name to include all included dates
 saveRDS(sigl, paste0(dir, 'pre_prep/merged/sigl_drc_01_2015_07_2018.rds'))
 
+# create a data set of only 2017 - present data 
+sigl_new <- sigl[year=='2017' | year=='2018']
+saveRDS(sigl_new, paste0(dir, 'pre_prep/merged/sigl_drc_01_2017_07_2018.rds'))
+
 #------------------------------------------------ 
 # Merge the PNLS data 
 
 # input the name of the most recently merged data set (change file path to 'merged' folder)
-pnls1 <- readRDS(paste0(dir, 'pnls/pnls_drc_01_2017_04_2018.rds'))
-pnls1 <- data.table(pnls1)
+pnls1 <- data.table(readRDS(paste0(dir, 'pre_prep/pnls/pnls_drc_01_2017_04_2018.rds')))
 
 # load the newest data set
-pnls2 <- readRDS(paste0(dir, 'pnls/pnls_drc_05_2018_07_2018.rds'))
-pnls2 <- data.table(pnls2)
+pnls2 <- data.table(readRDS(paste0(dir, 'pre_prep/pnls/pnls_drc_05_2018_07_2018.rds')))
 
 # merge the previously downloaded data set with the new download
 pnls <- rbind(pnls1, pnls2)
 
 # merge in the meta data 
-merge_meta_data(pnls)
+pnls <- merge_meta_data(pnls)
 
 # save the merged data
-# alter the file name to include all included dates
-saveRDS(pnls, paste0(dir, 'merged/pnls_drc_01_2015_07_2018.rds'))
+# alter the file name to include all included dates - pnls is only 2017 on currently
+saveRDS(pnls, paste0(dir, 'pre_prep/merged/pnls_drc_01_2017_07_2018.rds'))
+
+# once pnls has earlier data downloaded (2015/16) add code to save a 2017/18 subset
 
 #------------------------------------------------ 
 

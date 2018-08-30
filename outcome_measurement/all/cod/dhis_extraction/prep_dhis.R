@@ -2,10 +2,10 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 8/28/2018
+# 8/30/2018
 #
-# Upload the RDS data from DHIS2 and merge with the meta data 
-# prep the data sets for analysis and the Tableau Dashboard
+# Upload the merged RDS data sets from DHIS2 
+# prep the data sets for analysis 
 
 # ----------------------------------------------
 
@@ -22,7 +22,7 @@ library(stringr)
 # --------------------
 
 # --------------------
-# set working directories
+# set working directories 
 
 # detect if operating on windows or on the cluster 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
@@ -30,87 +30,88 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
+# set the folder for 
+folder <- 'pre_prep/merged/'
+
 #--------------------
 # upload the data set and convert it to a data table
 
-# change the file pathway to match your data table 
-dt <- paste0(dir, 'merged/base_services_drc_01_2015_07_2018.rds')
+# change this!
+# base, sigl, or pnls file to upload, clean, and prep
+file <- 'base_services_drc_01_2017_07_2018'
 
+# import the data set for cleaning and prep 
+dt <- readRDS(paste0(dir, folder, file, '.rds'))
 
 #-----------------------------------------
-
-#------------------------------
-# merge the base services data with the meta data
-
-# import the meta data for the merge
-data_sets<- data.table(readRDS(paste0(dir, 'meta_data/data_sets.rds'))) # not necessary for the merge
-org_units <- data.table(readRDS(paste0(dir, 'meta_data/org_units_list.rds')))
-data_elements <- data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
-data_elements_categories <- data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
-org_units_description <- data.table(readRDS(paste0(dir, 'meta_data/org_units_description.rds')))
-
-# change the names of the ID variables in element categories and descriptions to match for the merge
-data_elements[ , element_name:=displayName]
-data_elements[ , displayName:=NULL]
-
-data_elements_categories <- data_elements_categories[ ,.(category=ID, category_name=displayName)]
-org_units_description <- org_units_description[ ,.(org_unit_ID = id, coordinates, opening_date, parent_id)]
-
-#------------------------
-# merge in the names of the objects in the data set
-
-# merge on org_unit_ID to get names and descriptions of organisational units
-dt <- merge(dt, org_units, by='org_unit_ID', all.x=TRUE)
-dt <- merge(dt, org_units_description, by='org_unit_ID', all.x=TRUE)
-dt[ ,length(unique(org_unit_ID))] # print the number of organisational units
-
-# merge on data element ID to get data sets and data sets name
-dt <- merge(dt, data_elements, by='data_element_ID', all.x=TRUE)
-
-# merge on category id to get age and sex categories for the data elements
-dt <- merge(dt, data_elements_categories, by='category', all.x=TRUE)
-setnames(dt, c('category', 'category_name'), c('category_id', 'category'))
-
-# drop unnecessary urls
-dt[ , org_unit_url:=NULL]
-dt[ , url_list:=NULL]
-#------------------------
-
-#------------------------
-# rename the variables to be more intuitive
-
-# put the data set in a more intuitive order and change variable types
-# convert all factor variables to character string; then convert value to numeric 
-
-# this code will produce a warning from changing the values to characters - this is OK
-dt <- dt[ , .(data_set=as.character(datasets_name), element=as.character(element_name), category=as.character(category),
-                  period=period, value=as.numeric(as.character(value)),
-                  org_unit=as.character(org_unit_name),
-                  coordinates=coordinates, opening_date=opening_date, last_update=last_update,
-                  data_set_id=as.character(datasets_ID), element_id=as.character(data_element_ID),
-                  org_unit_id=as.character(org_unit_ID))]
-
-#----------------------------------------
-
-#-----------------------------------------------
-# create a date variable from period
-dt[ , period:= as.character(period)]
-dt[ , year:=substr(period, 1, 4)]
-dt[ , month:=substr(period, 5, 6)]
-dt[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+# 
+# #------------------------------
+# # merge the base services data with the meta data
+# 
+# # import the meta data for the merge
+# data_sets<- data.table(readRDS(paste0(dir, 'meta_data/data_sets.rds'))) # not necessary for the merge
+# org_units <- data.table(readRDS(paste0(dir, 'meta_data/org_units_list.rds')))
+# data_elements <- data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
+# data_elements_categories <- data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
+# org_units_description <- data.table(readRDS(paste0(dir, 'meta_data/org_units_description.rds')))
+# 
+# # change the names of the ID variables in element categories and descriptions to match for the merge
+# data_elements[ , element_name:=displayName]
+# data_elements[ , displayName:=NULL]
+# 
+# data_elements_categories <- data_elements_categories[ ,.(category=ID, category_name=displayName)]
+# org_units_description <- org_units_description[ ,.(org_unit_ID = id, coordinates, opening_date, parent_id)]
+# 
+# #------------------------
+# # merge in the names of the objects in the data set
+# 
+# # merge on org_unit_ID to get names and descriptions of organisational units
+# dt <- merge(dt, org_units, by='org_unit_ID', all.x=TRUE)
+# dt <- merge(dt, org_units_description, by='org_unit_ID', all.x=TRUE)
+# dt[ ,length(unique(org_unit_ID))] # print the number of organisational units
+# 
+# # merge on data element ID to get data sets and data sets name
+# dt <- merge(dt, data_elements, by='data_element_ID', all.x=TRUE)
+# 
+# # merge on category id to get age and sex categories for the data elements
+# dt <- merge(dt, data_elements_categories, by='category', all.x=TRUE)
+# setnames(dt, c('category', 'category_name'), c('category_id', 'category'))
+# 
+# # drop unnecessary urls
+# dt[ , org_unit_url:=NULL]
+# dt[ , url_list:=NULL]
+# #------------------------
+# 
+# #------------------------
+# # rename the variables to be more intuitive
+# 
+# # put the data set in a more intuitive order and change variable types
+# # convert all factor variables to character string; then convert value to numeric 
+# 
+# # this code will produce a warning from changing the values to characters - this is OK
+# dt <- dt[ , .(data_set=as.character(datasets_name), element=as.character(element_name), category=as.character(category),
+#                   period=period, value=as.numeric(as.character(value)),
+#                   org_unit=as.character(org_unit_name),
+#                   coordinates=coordinates, opening_date=opening_date, last_update=last_update,
+#                   data_set_id=as.character(datasets_ID), element_id=as.character(data_element_ID),
+#                   org_unit_id=as.character(org_unit_ID))]
+# 
+# #----------------------------------------
+# 
+# #-----------------------------------------------
+# # create a date variable from period
+# dt[ , period:= as.character(period)]
+# dt[ , year:=substr(period, 1, 4)]
+# dt[ , month:=substr(period, 5, 6)]
+# dt[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
 #-----------------------------------------------
 # merge in the english names for the data elements and element type
 
-elements_dt <- read.csv(paste0(dir, 'catalogues/data_elements_cod.csv'), stringsAsFactors=F)
-elements_dt <- data.table(elements_dt)
-elements_dt <- elements_dt[data_set_id=='pMbC0FJPkcm']
+elements_dt <- data.table(read.csv(paste0(dir, 'catalogues/data_elements_cod.csv'), stringsAsFactors=F))
 
 setnames(elements_dt, 'element', 'element_eng')
-elements_dt[ ,data_set_id:=NULL]
-elements_dt[ ,data_set_fr:=NULL]
-elements_dt[ ,element_fr:=NULL]
-elements_dt[ ,data_set:=NULL]
+elements_dt[ ,c(data_set_id   data_set_fr element_fr data_set :=NULL]
 
 # merge in the english names for the data elements and element type
 dt <- merge(dt, elements_dt, by='element_id', all.x=TRUE )

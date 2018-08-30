@@ -12,6 +12,7 @@ library(ggplot2)
 library(dplyr)
 library(stringr) 
 library(reshape)
+library(epibasix)
 # --------------------
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
@@ -114,6 +115,7 @@ saveRDS(hz, paste0(dir,'all_units/health_zone_facilities.rds' ))
 
 # health zone and the count of each facility type - shaped long
 hz2 <- facilities[type=='facility', .(value=length(unique(org_unit))), by=.(health_zone, dps, variable=level)]
+
 saveRDS(hz2, paste0(dir,'all_units/health_zone_counts_long.rds' ))
 
 # health zone and the count of each facility type - shaped wide
@@ -125,8 +127,79 @@ replace_na = function(x) {
 }
 
 replace_na(hz3)
+
+hz3 <- data.table(hz3)
 saveRDS(hz3, paste0(dir,'all_units/health_zone_counts_wide.rds' ))
 
 #------------------------------------------
+
+
+new <- melt(hz3, id.vars=c('health_zone', 'dps'))
+
+
+
+for (f in unique(new$variable)) {
+  print(f)
+  print(summary(new[variable==f]$value))
+}
+
+new[ ,unique(variable)]
+new[variable=='general_reference_hospital' , variable:='grh']
+new[variable=='medical_surgical_center' , variable:='med_surg']
+new[variable=='reference_health_center' , variable:='ref_hc']
+new[variable=='secondary_hospital' , variable:='sec_hosp']
+new[variable=='hospital_center' , variable:='hosp_center']
+
+new <- new[order(variable),]
+
+list_of_plots = NULL
+i=1
+
+for(f in unique(new$health_zone)) {
+  
+  # look up district name
+  name <- unique(new[health_zone==f]$health_zone)
+  
+  # graph for each facility
+  list_of_plots[[i]] <- ggplot(new[health_zone==f], aes(x=variable, y=value)) + 
+    geom_bar(stat='identity') + theme_bw() + labs(title=name)
+  
+  i=i+1
+  
+}
+
+pdf('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis/facilities_composition.pdf', height=6, width=12)
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+}
+
+dev.off()
+
+
+
+
+list_of_plots = NULL
+i=1
+
+for(f in unique(hz$health_zone)) {
+  
+  # look up district name
+  name <- unique(hz[health_zone==f]$health_zone)
+  
+  # graph for each facility
+  list_of_plots[[i]] <- ggplot(hz[health_zone==f], aes(x=variable, y=value)) + 
+    geom_bar(stat='identity') + theme_bw() + labs(title=name)
+  
+  i=i+1
+  
+}
+
+pdf('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis/facilities_composition.pdf', height=6, width=12)
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+}
+
+dev.off()
+
 
 
