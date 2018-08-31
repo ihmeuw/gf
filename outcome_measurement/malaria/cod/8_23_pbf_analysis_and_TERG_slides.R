@@ -36,6 +36,8 @@ dir_pbf = paste0(dir_cod, 'PBF/')
 
 # input files
 hz_data <- "imputedData_run2_condensed_hz.rds"
+cod_data <- "imputedData_run2_condensed_country.rds"
+cod_data_cases_byYear <- "imputedData_run2_condensed_country_byYear.rds"
 funders <- "fullData_dps_standardized.csv"
 funder_change <- "funders_data.xlsx"
 hzs_pbf <- "Cartographie FBP RDC23012017.xlsx"
@@ -53,6 +55,10 @@ output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualiza
 dt <- readRDS(paste0(dir_data, hz_data))
 dt$date <- as.Date(dt$date)
 
+# imputed data at the country level
+dt_cod <- readRDS(paste0(dir_data, cod_data))
+
+# data before imputation 
 dt_before_MI <- read.csv(paste0(dir_data, data_before_MI))
 # -----------------------------
 
@@ -105,6 +111,20 @@ g <- ggplot(melt_dt_MI, aes(x=date, y=value, color = variable)) + theme_bw()+
         legend.text =element_text(size=14), plot.title = element_text(size=18))
 print(g)
 dev.off()
+
+melt_dt_MI$year <- year(melt_dt_MI$date)
+dt_MI_stats <- melt_dt_MI[, .(yearTotal = sum(value)), by=.(year, variable)]
+dt_MI_stats <- dcast(dt_MI_stats, year ~ variable, value.var = "yearTotal")
+dt_MI_stats <- as.data.table(dt_MI_stats)
+dt_MI_stats <- dt_MI_stats[, yearDiff := (totCasesAfterMI - totCasesBeforeMI)]
+dt_MI_stats <- dt_MI_stats[, percentChange := ((totCasesAfterMI - totCasesBeforeMI)/totCasesBeforeMI)*100]
+
+write.csv(dt_MI_stats, paste0(dir_data, "stats_before_and_after_MI.csv"))
+
+# calculate uncertainty interval - on cluster so I can aggregate first....
+# then read in data to visualize results
+dt_cod_cases_byYear <- readRDS(paste0(dir_data, cod_data_cases_byYear))
+
 # ----------------------------------------------
 
 
