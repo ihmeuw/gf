@@ -9,7 +9,7 @@ inFile = paste0(dir, 'total_resource_tracking_data.csv')
 # load
 data = fread(inFile)
 
-data = data[country == "Congo (Democratic Republic)"]
+data = data[country == "Uganda"]
 
 # Find disbursment data
 fgh_data = data[data_source == "fgh"]
@@ -206,8 +206,10 @@ all_dah = merge(all_dah, fpm_data, by='year')
 # aggregate by window
 all_dah[year>=2015 & year<=2017, window:='2015-2017']
 all_dah[year>=2018, window:='2018-2020']
+all_dah[year == 2017, window:= '2017']
+all_dah[year == 2016, window:= '2016']
 
-agg = all_dah[, .(malaria=sum(malaria), gf=sum(gf)), by='year']
+agg = all_dah[, .(malaria=sum(malaria), gf=sum(gf)), by='window']
 agg[, pct_gf:=gf/malaria]
 agg
 
@@ -316,7 +318,7 @@ malaria_graph$total_disbursed = NULL
 
 pdf("J:/temp/ninip/UGA_GF_malaria_byModule.pdf", height=5.5, width=8)
 ggplot(malaria_graph, aes(x = year, y = numerator_val, fill = gf_module)) + 
-  geom_bar(stat="identity", ) +
+  geom_bar(stat="identity") +
   xlab("") +
   ylab("Amount Budgeted (USD)") +
   labs(fill='Module') +

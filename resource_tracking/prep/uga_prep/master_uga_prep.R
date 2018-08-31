@@ -31,6 +31,7 @@ library(zoo)
 ###### source the functions that we need 
 # ----------------------------------------------
 prep_dir <- " your local repo + gf/resource_tracking/prep/"
+prep_dir <- "H:/gf/resource_tracking/prep/"
 source(paste0(prep_dir, "uga_prep/prep_detailed_uga_budget.R"))
 source(paste0(prep_dir, "uga_prep/prep_summary_uga_budget.R"))
 source(paste0(prep_dir, "uga_prep/prep_pudr_uga.R"))
@@ -47,6 +48,7 @@ source <- "gf" ## denotes the type of data (e.g. government expenditures, Global
 
 ## set up the directory & file list: 
 file_dir <- 'your local drive here' ##where the files are stored locally - on the J drive, the filepath is:  "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
+file_dir <- "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
 file_list <- read.csv(paste0(file_dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)
@@ -199,6 +201,7 @@ cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
 
 ## on the J Drive: map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
 map_dir <- "where the intervention_and_indicator_list.xlsx file lives"
+map_dir = "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
 mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx")
                                   , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
 
@@ -276,6 +279,7 @@ data_check2 <-mappedUga[, sum(budget, na.rm = TRUE),by = c("module", "interventi
 #####write csv to correct folder ############
 # ----------------------------------------------
 export_dir <- "where you want the prepped dataset to live" 
+export_dir <- "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/"
 
 write.csv(mappedUga, paste0(export_dir, "prepped_budget_data.csv"), row.names = FALSE,
           fileEncoding = "latin1")
