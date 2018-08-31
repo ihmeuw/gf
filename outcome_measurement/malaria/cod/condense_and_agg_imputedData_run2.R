@@ -31,6 +31,7 @@ imputed_data_long <- "imputedData_run2_long.rds"
 imputed_data_long_corrected <- "imputedData_run2_long_corrected.rds"
 condensed_imputed_data_dps <- "imputedData_run2_condensed_dps.rds"
 condensed_imputed_data_country <- "imputedData_run2_condensed_country.rds"
+condensed_imputed_data_country2 <- "imputedData_run2_condensed_country_byYear.rds"
 condensed_imputed_data_hz <- "imputedData_run2_condensed_hz.rds"
 # ----------------------------------------------
   
@@ -145,6 +146,9 @@ saveRDS(aggData, paste0(dir, condensed_imputed_data_dps))
 # # 8/29/18 update: changed country level confidence interval
 # # ----------------------------------------------
 # aggregate all indicator/intervention data by dps, within each imputation
+# get rid of dps that is under category 0...
+dt3 <- dt3[ dps != "0", ]
+
 fullCountryData  <- dt3[, .(aggValue = sum(imp_value)), by=c( "date", "indicator", "subpopulation", "imputation_number" )]
 
 # then compute the mean, upper and lower across all imputations for each unique dps/date
@@ -158,4 +162,22 @@ fullCountryData <- fullCountryData[mean==upper, upper := NA]
 
 # export data
 saveRDS(fullCountryData, paste0(dir, condensed_imputed_data_country))
+
+# # ----------------------------------------------
+## get aggregate yearly values at the country level:
+dt3 <- dt3[ dps != "0", ]
+dt3$year <- year(dt3$date)
+fullCountryData  <- dt3[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere"), .(aggValue = sum(imp_value)), by=c( "year", "imputation_number" )]
+
+# then compute the mean, upper and lower across all imputations for each unique dps/date
+fullCountryData <- fullCountryData[, .(mean=mean(aggValue), 
+                                       lower=quantile(aggValue, .025), 
+                                       upper=quantile(aggValue, .975)), by=c("year")]
+
+# set upper and lower values to NA where the value was not imputed (where mean==lower and mean==upper)
+fullCountryData <- fullCountryData[mean==lower, lower := NA]
+fullCountryData <- fullCountryData[mean==upper, upper := NA]
+
+# export data
+saveRDS(fullCountryData, paste0(dir, condensed_imputed_data_country2))
 # ----------------------------------------------          
