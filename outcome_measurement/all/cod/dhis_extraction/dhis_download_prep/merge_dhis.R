@@ -19,7 +19,7 @@ library(stringr)
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_download  
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1427 -s 10 -P snis_download  
 
 # --------------------
 # set working directories
@@ -73,7 +73,12 @@ setnames(data_elements_categories, c('ID', 'displayName'), c('category', 'catego
   y <- merge(y, data_elements_categories, by='category')
   y <- merge(y, org_units_description, by='id')
   y <- data.table(y)
-  y[ , name:=NULL] # drop repeat of org_unit
+ 
+  # fix names for the prep
+  y [ , c('category', 'name', 'datasets_ID'):=NULL] 
+  setnames(y, 'category_name', 'category')
+  setnames(y, 'datasets_name', 'data_set')
+  setnames(y, 'data_element_ID', 'element_id')
   
   return(y)
   

@@ -40,6 +40,7 @@ folder <- 'pre_prep/merged/'
 # change the file to the file you want to upload!
 # base, sigl, or pnls file to upload, clean, and prep
 file <- 'sigl_drc_01_2015_07_2018'
+set_name <- 'sigl'  # change the name to the correct data set for the saved file
 
 # import the data set for cleaning and prep 
 dt <- readRDS(paste0(dir, folder, file, '.rds'))
@@ -52,8 +53,7 @@ elements <- data.table(read.csv(paste0(dir, 'catalogues/data_elements_cod.csv'),
 
 # reset the names for the merge
 setnames(elements, 'element', 'element_eng')
-elements[ ,c('data_set_id', 'data_set_fr', 'element_fr', 'data_set'):=NULL]
-setnames(dt, 'data_element_ID', 'element_id')
+elements[ , c('data_set_id', 'data_set_fr', 'element_fr', 'data_set'):=NULL]
 
 # merge in the english names for the data elements and element type
 dt <- merge(dt, elements, by='element_id', all.x=TRUE )
@@ -72,21 +72,21 @@ dt$last_update <- unlist(lapply(strsplit(dt$last_update, "T"), "[", 1))
 dt$opening_date <- unlist(lapply(strsplit(dt$opening_date, "T"), "[", 1))
 
 #--------------------------------------
-# create province and health zone names without the province code or word 'province'
-dt$dps1 <- unlist(lapply(strsplit(dt$dps, " "), "[", 2:3))
+# replace the dps/hz with just the name, excluding the code and word 'province'
 
+# replace dps
+dt$dps1 <- unlist(lapply(strsplit(dt$dps, " "), "[", 2))
+dt$dps2 <- unlist(lapply(strsplit(dt$dps, " "), "[", 3))
+dt[dps2!='Province', dps:=paste(dps1, dps2)]
+dt[dps2=='Province', dps:=dps1]
+dt[ , c('dps1', 'dps2'):=NULL]
 
-
-
-
-
-
-
-
-dt$ health_zone <- unlist(lapply(strsplit(dt$health_zone, " "), "[", 2))
-
-# add code to fix health zone also#
-dt[ , health_zone:=(substr(dt$dps, 1, 2))]
+# replace health zone
+dt$health_zone1 <- unlist(lapply(strsplit(dt$health_zone, " "), "[", 2))
+dt$health_zone2 <- unlist(lapply(strsplit(dt$health_zone, " "), "[", 3))
+dt[health_zone2!='Zone', health_zone:=paste(health_zone1, health_zone2) ]
+dt[health_zone2=='Zone', health_zone:=health_zone1]
+dt[ , c('health_zone1', 'health_zone2'):=NULL]
 
 #-----------------------------------------------
 # add a variable to demarcate the provincial approach provinces
@@ -96,10 +96,14 @@ dt[is.na(mtk), mtk:='No']
 #-----------------------------------------------
 # organize the data table in an intuitive order 
 
+
+
+
+
 #-------------------------
 # save the final data set
 
-saveRDS(dt, paste0(dir, 'prepped_data/dt.rds'))
+saveRDS(dt, paste0(dir, 'prepped_data/', set_name, '.rds'))
 
 #-------------------------------------------------------------------------
 # TABLEAU
@@ -110,10 +114,11 @@ dt[tableau==1, unique(element_eng)]
 
 # subset to the relevant variables for tableau
 tabl <- dt[tableau==1]
+tabl <- tabl[year=='2017' | year=='2018']
 
 #----------------------------
 # create age and sex variables 
-tabl[ ,unique(category)]
+tabl[ ,unique(category)] # check that no new categories have been added
 
 # over 5 years of age
 tabl[category==">5 ans" , age:='5 +']
@@ -129,17 +134,11 @@ tabl[category=="Masculin, Moins de 5 ans", age:='Under 5']
 tabl[category=="Féminin, 5 ans et plus" | category=="Féminin, Moins de 5 ans", sex:='Female']
 tabl[category=="Masculin, 5 ans et plus" | category=="Masculin, Moins de 5 ans", sex:='Male']
 
-# create a data table just for the tableau elements and save it
-tabl_dt <- dt[tableau==1]
-tabl_dt <- tabl_dt[year==2017 | year==2018]
-
-saveRDS(tabl_dt, paste0(dir, 'tableau/tabl_dt.rds'))
-
 #------------------------
 # test graph of tableau elements to confirm it worked 
-try <- tabl_dt[ ,.(count=sum(value)), by=.(element_eng, date)]
+test_tabl <- tabl[ ,.(count=sum(value)), by=.(element_eng, date)]
 
-ggplot(try, aes(x=date, y=count)) +
+ggplot(test_tabl, aes(x=date, y=count)) +
   geom_point() +
   geom_line() +
   facet_wrap(~element_eng) +
@@ -147,4 +146,8 @@ ggplot(try, aes(x=date, y=count)) +
   scale_y_continuous(labels = scales::comma)
 
 #----------------------
+# save the tableau data set
+# this data set will be merged with other tableau data 
+saveRDS(tabl, paste0(dir, 'tableau/', set_name, '_tabl.rds'))
 
+#----------------------
