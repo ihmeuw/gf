@@ -39,7 +39,7 @@ folder <- 'pre_prep/merged/'
 
 # change the file to the file you want to upload!
 # base, sigl, or pnls file to upload, clean, and prep
-file <- 'base_services_drc_01_2015_07_2018'
+file <- 'sigl_drc_01_2015_07_2018'
 
 # import the data set for cleaning and prep 
 dt <- readRDS(paste0(dir, folder, file, '.rds'))

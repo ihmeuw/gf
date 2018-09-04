@@ -72,12 +72,12 @@ setnames(data_elements_categories, c('ID', 'displayName'), c('category', 'catego
   y <- merge(y, data_elements, by='data_element_ID')
   y <- merge(y, data_elements_categories, by='category')
   y <- merge(y, org_units_description, by='id')
+  y <- data.table(y)
   y[ , name:=NULL] # drop repeat of org_unit
   
   return(y)
   
   }
-
 
 #--------------------
 # Merge the base services data sets you have downloaded
@@ -116,7 +116,6 @@ sigl <- merge_meta_data(sigl)
 # save the merged data
 # alter the file name to include all included dates
 saveRDS(sigl, paste0(dir, 'pre_prep/merged/sigl_drc_01_2015_07_2018.rds'))
-
 
 #------------------------------------------------ 
 # Merge the PNLS data 
