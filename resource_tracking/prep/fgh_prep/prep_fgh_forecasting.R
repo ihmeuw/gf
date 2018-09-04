@@ -10,6 +10,7 @@
 
 # ----------------------------------------------
 
+
 # Set up R
 rm(list=ls())
 library(data.table)
@@ -36,11 +37,14 @@ if (Sys.info()[1] == 'Windows') {
 # ----------------------------------------------
 
 fgh_current <- data.table(read.csv(paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv'), stringsAsFactors = FALSE))
+
+
 percent_disbursed = fgh_current[,.(year, country, disease, financing_source, disbursement)]
 percent_disbursed = percent_disbursed[financing_source %in% c("bil_usa", "other_dah", "gf")]
+
 percent_disbursed$financing_source = NULL
 percent_disbursed = unique(percent_disbursed)
-
+  
 percent_disbursed = percent_disbursed[, numerator := sum(disbursement), by = c('year', 'country', 'disease')]
 percent_disbursed = percent_disbursed[, denominator:= sum(disbursement), by = c('year', 'country')]
 percent_disbursed$disbursement = NULL
@@ -52,6 +56,7 @@ percent_disbursed$financing_source = "dah"
 dah_weight = percent_disbursed[year == 2016] 
 dah_weight$year = NULL
 
+
 # continue
 output_dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/')
 input_dir <- paste0("Project/IRH/Forecasting/data/feather_storage_draws_2018/scenarios_he_raked/")
@@ -62,6 +67,10 @@ ghe_file <- "GHES"
 the_file <- "THE"
 dah_file <- "DAH"
 hiv_file <- "base_case.csv"
+oop_file <- "OOP"
+ppp_file <- "PPP"
+
+
 # ----------------------------------------------
 ## function that assigns country codes to names 
 # ----------------------------------------------
@@ -115,6 +124,7 @@ get_country <- function(loc_name){
 # outputs a dataset that contains the mean, 2%, and 97.5% uncertainty percentiles of estimates 
 # ----------------------------------------------
 get_prepped_forecast <- function(root,input_dir, fin_type){
+  fin_type = "DAH"
   ghe_forecast <- data.table(read_feather(paste0(root, input_dir, fin_type,"_totes_compile.feather")))
   pce_forecast <- ghe_forecast[iso3%in%c("GTM", "UGA", "COD")&scenario=="reference"]
   pce_forecast$scenario <- NULL
@@ -194,31 +204,33 @@ ghe_prepped$financing_source <- "ghe_forecasted"
 # the_prepped$financing_source <- "the_forecasted"
 dah_prepped <- get_prepped_forecast(root, input_dir, dah_file)
 dah_prepped$financing_source <- "dah_forecasted"
-pce_forecast <- rbind(ghe_prepped, dah_prepped) #, the_prepped
+# oop_prepped <- get_prepped_forecast(root, input_dir, oop_file)
+# oop_prepped$financing_source <- "oop_forecasted"
+# ppp_prepped <- get_prepped_forecast(root, input_dir, ppp_file)
+# ppp_prepped$financing_source <- "ppp_forecasted"
+
+#pce_forecast <- rbind(ghe_prepped, dah_prepped, oop_prepped, ppp_prepped) #, the_prepped
+pce_forecast <- rbind(ghe_prepped, dah_prepped)
 setnames(pce_forecast, "iso3", "loc_name")
 pce_forecast$adm1 <- mapply(get_country_codes, tolower(pce_forecast$loc_name), "all")
 
 hiv_prepped <- get_hiv_forecast(root, hiv_dir, hiv_file, pce_codes)
 hiv_prepped$loc_name <- mapply(get_country_names, hiv_prepped$adm1,"all")
 
+
 pce_total <- rbind(hiv_prepped, pce_forecast)
+
 
 pce_total  <- melt(pce_total , id.vars = c("year", "adm1", "loc_name", "disease",
                                            "financing_source", "code"), variable.name = "fin_data_type", value.name = "disbursement")
-# 
-# pce_total$fin_data_type = ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "mean", "model_estimates",
-#                                  ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "lower_perc", "forcasted_lower_ci",
-#                                         ifelse(pce_total$financing_source == "ghe_forecasted" & pce_total$fin_data_type == "upper_perc", "forcasted_upper_ci",
-#                                                as.character(pce_total$fin_data_type))))
-# 
-# pce_total$fin_data_type = ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "mean", "forecasted_mean",
-#                                  ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "lower_perc", "forcasted_lower_ci",
-#                                         ifelse(pce_total$financing_source == "dah_forecasted" & pce_total$fin_data_type == "upper_perc", "forcasted_upper_ci",
-#                                                as.character(pce_total$fin_data_type))))
+ 
 
 
 pce_total$financing_source = ifelse(pce_total$financing_source == "ghe_forecasted", "ghe", as.character(pce_total$financing_source))
 pce_total$financing_source = ifelse(pce_total$financing_source == "dah_forecasted", "dah", as.character(pce_total$financing_source))
+# pce_total$financing_source = ifelse(pce_total$financing_source == "oop_forecasted", "oop", as.character(pce_total$financing_source))
+# pce_total$financing_source = ifelse(pce_total$financing_source == "ppp_forecasted", "ppp", as.character(pce_total$financing_source))
+
 #pce_total$fin_data_type = ifelse(pce_total$financing_source == "the_forecasted", "forecasted", as.character(pce_total$fin_data_type))
 #pce_total$financing_source = ifelse(pce_total$financing_source == "the_forecasted", "the", as.character(pce_total$financing_source))
 pce_total$fin_data_type = ifelse(pce_total$fin_data_type == "mean", "model_estimates", as.character(pce_total$fin_data_type))
@@ -227,8 +239,8 @@ pce_total$fin_data_type = ifelse(pce_total$fin_data_type == "upper_perc", "model
 
 pce_total$country <- mapply(get_country, tolower(pce_total$loc_name))
 
+# split up DAH by disease based on weight from year 2017
 dah_financ_source = pce_total[financing_source == "dah"]
-
 merge_weighted_average = function(dt_dah, dt_weighted, disease){
   dt_dah$disease = disease
   dt_merged = merge(dt_dah, dt_weighted, by = c("country", "financing_source", "disease"), all.x = TRUE, all.y = FALSE)
@@ -241,10 +253,12 @@ dah_malaria = merge_weighted_average(dah_financ_source, dah_weight, "malaria")
 dah_tb = merge_weighted_average(dah_financ_source, dah_weight, "tb")
 dah_hiv = merge_weighted_average(dah_financ_source, dah_weight, "hiv")
 dah_hss = merge_weighted_average(dah_financ_source, dah_weight, "hss")
+dah_other = merge_weighted_average(dah_financ_source, dah_weight, "other")
 
-dah_dt = rbind(dah_malaria, dah_tb, dah_hiv, dah_hss)
-pce_total = pce_total[financing_source != "dah"]
+
+pce_not_dah = pce_total[financing_source != "dah"]
 pce_total = rbind(pce_total, dah_dt)
+
 
 pce_total$data_source <- "fgh"
 
@@ -281,3 +295,4 @@ total_fgh <- rbind(fgh_current, pce_total)
 ##export to the J Drive: 
 # ----------------------------------------------
 write.csv(total_fgh, paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh_total.csv'), row.names=FALSE)
+

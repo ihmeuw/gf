@@ -52,13 +52,15 @@ get_the_source_channel <- function(channel){
 }
 
 get_disease <- function(sda_orig){
-  x <- "hss"
+  x <- "other"
   if(grepl("hiv", sda_orig)){
     x <- "hiv"
   } else if(grepl("mal", sda_orig)){
     x <- "malaria"
   } else if (grepl("tb", sda_orig)){
     x <- "tb"
+  } else if (grepl("hss", sda_orig)){
+    x <- "hss"
   } else {
     x <- x
   }
@@ -112,12 +114,12 @@ fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/mult
 
 setnames(fgh_data, c("source", "iso3_rc"), c("dah_origin","loc_name"))
 
-
+fgh_data$oid_zika_dah_17 = as.numeric(fgh_data$oid_zika_dah_17)
 fgh_data$financing_source <- mapply(get_dah_source_channel, fgh_data$channel)
-# now get the columns we want: 
-
-toMatch <- c("hiv", "mal", "tb", "hss", "year", "source", "loc_name")
-
+# now get the columns we want:
+toMatch <- c("hiv", "mal", "tb", "hss", "other", "year", "source", "loc_name", "oid", "mh", "ch", "ncd", "swap", "unalloc")
+#toMatch <- c("hiv", "mal", "tb", "other", "year", "source", "loc_name")
+fgh_data$channel = NULL
 drop.cols <- (grep(paste(toMatch, collapse="|"), colnames(fgh_data)))
 fghData<- fgh_data[,drop.cols, with=FALSE]
 
