@@ -19,7 +19,7 @@ library(stringr)
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1427 -s 10 -P snis_download  
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_download  
 
 # --------------------
 # set working directories
@@ -36,8 +36,8 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 merge_meta_data <- function(x) { 
 
 # import the meta data for the merge
-facilities <- data.table(readRDS(paste0(dir, 'all_units/master_facilities.rds')))
-facilities[ ,c('health_zone_id', 'org_unit1'):=NULL]
+facilities <- data.table(readRDS(paste0(dir, 'meta_data/master_facilities.rds')))
+facilities[ ,c('country_id', 'dps_id', 'health_zone_id', 'health_area_id'):=NULL]
 
 data_elements <- data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
 data_elements[ ,url_list:=NULL]
@@ -72,17 +72,11 @@ setnames(data_elements_categories, c('ID', 'displayName'), c('category', 'catego
   y <- merge(y, data_elements, by='data_element_ID')
   y <- merge(y, data_elements_categories, by='category')
   y <- merge(y, org_units_description, by='id')
-  y <- data.table(y)
- 
-  # fix names for the prep
-  y [ , c('category', 'name', 'datasets_ID'):=NULL] 
-  setnames(y, 'category_name', 'category')
-  setnames(y, 'datasets_name', 'data_set')
-  setnames(y, 'data_element_ID', 'element_id')
   
   return(y)
   
   }
+
 
 #--------------------
 # Merge the base services data sets you have downloaded
@@ -103,6 +97,9 @@ base <- merge_meta_data(base)
 # alter the file name to include all included dates
 saveRDS(base, paste0(dir, 'pre_prep/merged/base_services_drc_01_2015_07_2018.rds'))
 
+# create a data set of only 2017 - present data 
+base_new <- base[year=='2017' | year=='2018']
+saveRDS(base_new, paste0(dir, 'pre_prep/merged/base_services_drc_01_2017_07_2018.rds'))
 #----------------------------------------------
 # Merge the SIGL data 
 
@@ -121,6 +118,10 @@ sigl <- merge_meta_data(sigl)
 # save the merged data
 # alter the file name to include all included dates
 saveRDS(sigl, paste0(dir, 'pre_prep/merged/sigl_drc_01_2015_07_2018.rds'))
+
+# create a data set of only 2017 - present data 
+sigl_new <- sigl[year=='2017' | year=='2018']
+saveRDS(sigl_new, paste0(dir, 'pre_prep/merged/sigl_drc_01_2017_07_2018.rds'))
 
 #------------------------------------------------ 
 # Merge the PNLS data 
@@ -141,6 +142,7 @@ pnls <- merge_meta_data(pnls)
 # alter the file name to include all included dates - pnls is only 2017 on currently
 saveRDS(pnls, paste0(dir, 'pre_prep/merged/pnls_drc_01_2017_07_2018.rds'))
 
+# once pnls has earlier data downloaded (2015/16) add code to save a 2017/18 subset
 
 #------------------------------------------------ 
 
