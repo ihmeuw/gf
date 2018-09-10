@@ -166,7 +166,7 @@ p10 = ggplot(unique(mapping_data), aes(y=test_by_risk_positive / test_by_risk * 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
-  labs(title='Percentage of PostivePositive HIV test by Risk Group', 
+  labs(title='Percentage of Positive HIV test by Risk Group', 
        y='Percent (%) of positive HIV test', x='') + 
   theme_bw()
 
@@ -205,3 +205,4 @@ p10
 p6
 p11
 dev.off()
+
