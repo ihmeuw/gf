@@ -4,37 +4,9 @@
 #
 #########################################################
 
-rm(list=ls())
-library(data.table)
+#cohort data prep code now included in viz_vr_cohort
+#The code below is old and probably not useful anymore
 
-#Read the prepped cohort data. This is broken up since it is part of a script that runs on the cluster.
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') 
-cohort_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
-cohort <- data.table(fread(paste0(cohort_dir, "GTM - Tx cohort data 2012-2016.csv")))
-cohort <- cohort[order(year, deptocode, table)]
-
-
-#Subset to avoid overlapping types - See full listing below of all of the values of 'table'
-tb_denom <- cohort[table %in% c('Nuevos Pulmonares BK+', 
-                                     'Nuevos Pulmonares BK-', 'Nuevos Pediatricos', 
-                                     'Nuevos Extrapulmonares', 'Nuevos TB/VIH', 'Retratamiento')]
-
-#Include only the annual totals and drop the trimester subtotals
-tb_denom <- tb_denom[col_name=='TOTAL',]
-
-# Initial result - Total of new and retreatment cases in the cohorts per year----------------------------------------------------------------------------
-byVars = names(tb_denom)[names(tb_denom)%in%c('year')]
-annual= tb_denom[, list(value=sum(na.omit(value))), by=byVars]
-#This results in annual counts >6000, which is nearly double the expected values. 
-
-#4 categories of row_name_B "COMPLETED TREATMENT", "DEATHS", LOST TO FOLLOW-UP", "REFERRED"
-#Is it correct the FRACASO_TERAPEUTICO (treatment failure) is under completed treatment?
-
-#subset deaths
-deaths <- tb_denom[row_name_B=="DEATHS"]
-## total deaths 
-byVars = names(deaths)[names(deaths)%in%c('year')]
-annual_d= deaths[, list(value=sum(na.omit(value))), by=byVars]
 
 #Number of reporting categories varies by year
 deaths[, .N, by = year]

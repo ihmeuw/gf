@@ -112,8 +112,7 @@ org_units <- data.table(org_units)
 #-----------------------------------------------
 
 #------------------------
-# to export a list of elements within regularly reported data sets
-# this exports the data sets we use regularly along with a catalogue of elements
+# to export a list of regularly reported data sets
 
 # select the data sets that are used regularly 
 # data_sets_ids <- c("ktBWTI6yjTB", "iriO2vCt72x", "OeWrFwkFMvf", "s6yd0w2KXWa", 

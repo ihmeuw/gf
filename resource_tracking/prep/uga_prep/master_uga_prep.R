@@ -115,7 +115,7 @@ for(i in 1:length(file_list$file_name)){
   # summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
   # summary_file$start_date[i] <- min(tmpData$start_date) ##since there are multiple values in this, get the earliest start date 
   # 
-  print(i)
+  print(paste(file_list$file_name[i], length(tmpData)))
 }
 
 ## uncomment if you 

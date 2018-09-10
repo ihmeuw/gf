@@ -3,6 +3,7 @@
 # Run on the cluster to access shared drive for VR files, or change dirs to a local copy
 # Author - J Ross (with pieces from Irena's code)
 
+#Latest progress 8-28 stopped at line 178 ready to plot pre-redistribution versus post-redistribution TB and TB-HIV mortality rates
 
 rm(list=ls())
 library(data.table)
@@ -137,64 +138,81 @@ tb_hiv_death_causes <- c(
   950 #HIV/TB - extensively drug-resistant TB
 )
 
+#vrTb and vrTb_HIV refer to the raw VR data pre-redistribution. VrTb_causes and vrTb_HIV_causes refer to post-redistribution
 vrTb <- vrData[code_id %in% tb_death_ids]
 vrTb_HIV <-vrData[code_id %in% tb_hiv_death_id]
 vrTb_causes <-redistVR[cause_id%in%tb_death_causes]
 vrTb_HIV_causes <-redistVR[cause_id %in% tb_hiv_death_causes]
 
-
-byVars = names(vrTb)[names(vrTb)%in%c('year_id')]
-byVars_HIV = names(vrTb)[names(vrTb)%in%c('year_id')]
-byVars_causes = names(redistVR)[names(redistVR)%in%c('year_id')]
-byVars_HIV_causes = names(redistVR)[names(redistVR)%in%c('year_id')]
+#Figure out how to the summing step without repeating everyting four times. Could just specify that the by variable is 
+#'year_id' in each case, but this leaves it open to sum by other categories as well.
+#byVars = c('year') Simplify the lines below to follow this pattern
+byVars = c('year_id')
+byVars_HIV = c('year_id')
+byVars_causes = c('year_id')
+byVars_HIV_causes = c('year_id')
 
 tb_pre= vrTb[, list(deaths=sum(na.omit(deaths))), by=byVars]
-tb_post= vrTb_causes[, list(deaths_post=sum(na.omit(deaths))), by=byVars]
+tb_post= vrTb_causes[, list(deaths_post=sum(na.omit(deaths))), by=byVars_causes]
 
-tb_hiv_pre= vrTb_HIV, list(deaths=sum(na.omit(deaths))), by=byVars]
-tb_hiv_post= vrTb_causes[, list(deaths_post=sum(na.omit(deaths))), by=byVars]
+tb_hiv_pre= vrTb_HIV[, list(deaths=sum(na.omit(deaths))), by=byVars_HIV]
+tb_hiv_post= vrTb_HIV_causes[, list(deaths_post=sum(na.omit(deaths))), by=byVars_HIV_causes]
 
 full_tb<-merge(tb_pre, tb_post, by=c("year_id"))
+full_tb_hiv <-merge(tb_hiv_pre, tb_hiv_post, by=c("year_id"))
+full_tb_hiv <- full_tb_hiv[, .(year_id = year_id, tb_hiv_deaths = deaths, tb_hiv_deaths_post = deaths_post)] #rename for merging
+full <- merge(full_tb, full_tb_hiv, by=c("year_id"))
 
 pops <- data.table(fread(paste0(j, "/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/pops_bothsex.csv")))
 
 years<-c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016)
 pop_years <- pops[year_id%in%years]
 
+full <- merge(full, pop_years, by=c("year_id"))
+
+#Compute mortality rates per 100,000 population
+#Convert to data table 
+full$tb_rate_pre <- full$deaths/full$population*100000
+full$tb_rate_post <- full$deaths_post/full$population*100000
+full$tb_hiv_rate_pre <- full$tb_hiv_deaths/full$population*100000
+full$tb_hiv_deaths_post <- full$tb_hiv_deaths_post/full$population*100000
+
+#NOW SWITCH TO COHORT DATA-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
 #Read the prepped cohort data. This is broken up since I had it as part of a script to run on the cluster.
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') 
 cohort_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
 cohort <- data.table(fread(paste0(cohort_dir, "GTM - Tx cohort data 2012-2016.csv")))
 
-#subset to annual totals (drop trimester reports) and deaths (drop other outcomes)
-cohort1 <- cohort[col_name=="TOTAL" & row_name_B=="DEATHS"]
-cohort1 <- cohort1[order(year, deptocode, table)]
 
-#Number of reporting categories varies by year
-cohort1[, .N, by = year]
+#Subset to avoid overlapping types - See full listing below of all of the values of 'table'
+tb_denom <- cohort[table %in% c('Nuevos Pulmonares BK+', 
+                                'Nuevos Pulmonares BK-', 'Nuevos Pediatricos', 
+                                'Nuevos Extrapulmonares', 'Nuevos TB/VIH', 'Retratamiento')]
 
-#See that Departments 1, 14 and 17 consistently have more reporting categories than other departments
-#I haven't figured out how to code the two-way frequency table in data table
-table(cohort1$year, cohort1$deptocode)
+#Include only the annual totals and drop the trimester subtotals
+#Note that deptocode==0 is the whole country data. Can exclude 0 to look by department.
+tb_denom <- tb_denom[col_name=='TOTAL' & deptocode==0]
+tb_solo <- tb_denom[table!='Nuevos TB/VIH']
+tb_hiv <- tb_denom[table=='Nuevos TB/VIH']
 
+#Handy check that totals are in the ballpark
+tb_denom[year==2016, sum(value,na.rm=T)]
 
-cohort2012 <-cohort1[year==2012] #676 obs
-cohort2013 <-cohort1[year==2013] #676 obs
-cohort2014 <-cohort1[year==2014] #789 obs
-cohort2015 <-cohort1[year==2015] #586 obs
-cohort2016 <-cohort1[year==2016] #708 obs
+# Initial result - Total of new and retreatment cases in the cohorts per year----------------------------------------------------------------------------
+annual_all_forms <- tb_denom[, list(value=sum(value,na.rm=TRUE)), by='year']
+annual_tb_solo <- tb_solo[, list(value=sum(value,na.rm=TRUE)), by='year']
+annual_tb_hiv <- tb_hiv[, list(value=sum(value,na.rm=TRUE)), by='year']
 
-table(cohort2012$deptocode)
-#Most depts with 23 values per year, but dept 1 with 86 and dept 14 and 17 with 65
+#4 categories of row_name_B "COMPLETED TREATMENT", "DEATHS", LOST TO FOLLOW-UP", "REFERRED"
+#Is it correct the FRACASO_TERAPEUTICO (treatment failure) is under completed treatment?
 
-table(cohort2013$deptocode)
-#Identical pattern to 2012
+#subset deaths
+deaths <- tb_denom[row_name_B=="DEATHS"]
+deaths_tb_solo <- tb_solo[row_name_B=='DEATHS']
+deaths_tb_hiv <- tb_hiv[row_name_B=='DEATHS']
 
-table(cohort2014$deptocode)
-#Most depts with 27 values per year, dept 1 with 99 and dept 14 and 17 with 75
-
-table(cohort2015$deptocode)
-#Most depts with 20 values per year, but dept 1 with 74 and depts 14 and 17 with 56
-
-table(cohort2016$deptocode)
-#Most depts with 25 values per year, but dept 1 with 82 and depts 14 and 17 with 63
+## total annual deaths 
+deaths_a_all_forms = deaths[, list(value=sum(value,na.rm=TRUE)), by='year']
+deaths_a_tb_solo = deaths_tb_solo[, list(values=sum(value,na.rm=TRUE)), by='year']
+deaths_a_tb_hiv = deaths_tb_hiv[, list(values=sum(value,na.rm=TRUE)), by='year']

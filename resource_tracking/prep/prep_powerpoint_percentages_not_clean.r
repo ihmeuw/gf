@@ -9,8 +9,8 @@ inFile = paste0(dir, 'total_resource_tracking_data.csv')
 # load
 data = fread(inFile)
 
-country_name = "Congo (Democratic Republic)" #"Congo (Democratic Republic)" "Uganda" "Guatemala" 
-disease_name = "malaria"  #"hiv"     "malaria" "tb"      "hss"     "all" 
+country_name = "Guatemala" #"Congo (Democratic Republic)" "Uganda" "Guatemala" 
+disease_name = "tb"  #"hiv"     "malaria" "tb"      "hss"     "all" 
 
 #will fix these laters
 if(country_name == "Uganda"){
@@ -41,8 +41,14 @@ prep_disease_focused_disburse = function(fpm, fgh, disease_name, time_frame){
   # fpm_budget(gf) / fgh_disbursemnet(bil_usa + other_dah + gf)
   
   fpm_vals = fpm[disease == disease_name]
-  numerator = sum(fpm_vals$budget)
-
+  
+  if(country_name == "Guatemala"){
+    fgh_actual = fgh[financing_source == "gf" & disease == disease_name]
+    numerator = sum(fgh_actual$disbursement)
+    
+  }else{
+    numerator = sum(fpm_vals$budget)
+  }
   fgh_vals = fgh[financing_source %in% c("bil_usa", "other_dah", "gf", 'dah') & disease == disease_name]
  
   denominator = sum(fgh_vals$disbursement)
@@ -60,14 +66,19 @@ disease_invest = function(fpm, disease_name,time_frame){
   if(disease_name == "malaria"){
     #treatment = subset(fpm, module == "casemanagement")
     treatment = subset(fpm, gf_module == "Case management")
+    name = unique(fpm$gf_module)
   }
+  
   if(disease_name == "tb"){
-    treatment = subset(fpm, gf_module == "TB care and prevention")
+    treatment = subset(fpm, gf_intervention %in% c('Case detection and diagnosis', "Treatment","Community TB care delivery",
+                                                   "Case detection and diagnosis: MDR-TB",
+                                                   "Treatment: MDR-TB",   "Community MDR-TB care delivery" ))
+    name = "TB Treatment and Care"
   }
   
   numerator = sum(treatment$budget)
   
-  return(data.table(source = paste(disease_name, "investments allocated for", unique(treatment$gf_module)), gf = numerator, dah_fgh = denominator, years = time_frame, value = numerator/denominator, disease = disease_name))
+  return(data.table(source = paste(disease_name, "investments allocated for", name), gf = numerator, dah_fgh = denominator, years = time_frame, value = numerator/denominator, disease = disease_name))
 }
 
 
@@ -128,12 +139,12 @@ gtm_fpm = fpm_budget[year > 2015 & year < 2019]
 
 if(country_name == 'Guatemala'){
   total_exp = prep_dah_of_TotalExpend(gtm_fgh, "2016-2018")
-  disease_exp = prep_disease_focused_disburse(fpm_data[year > 2015 & year < 2019], fgh_data[year > 2015 & year < 2019], disease_name, "2016-2018")
+  test = prep_disease_focused_disburse(fpm_data[year == 2016], total_fgh_data[year == 2016], disease_name, "2016-2018")
+  disease_exp = prep_disease_focused_disburse(fpm_data[year > 2015 & year < 2019], total_fgh_data[year > 2015 & year < 2019], disease_name, "2016-2018")
   disease_alloc = disease_invest(gtm_disease, disease_name, "2016-2018")
   
 }else{
   total_exp = rbind(prep_dah_of_TotalExpend(current_fgh, "2015-2017"), prep_dah_of_TotalExpend(future_fgh, "2018-2020"))
-  test = prep_disease_focused_disburse(fpm_data[year == 2017], total_fgh_data[year == 2017], disease_name, "2017")
   disease_exp = rbind(prep_disease_focused_disburse(fpm_data[year > 2014 & year < 2018], total_fgh_data[year > 2014 & year < 2018], disease_name, "2015-2017"), 
                       prep_disease_focused_disburse(fpm_data[year > 2017 & year < 2021], total_fgh_data[year > 2017 & year < 2021], disease_name, "2018-2020"))
   disease_alloc = rbind(disease_invest(current, disease_name, "2015-2017"), disease_invest(future,disease_name, "2018-2020"))
@@ -141,6 +152,7 @@ if(country_name == 'Guatemala'){
 
 total_for_slides = rbind(total_exp, disease_exp, disease_alloc)
 
+total_for_slides
 #Row 3
 
 
@@ -148,45 +160,45 @@ total_for_slides = rbind(total_exp, disease_exp, disease_alloc)
 
 #malaria_distrub = rbind(disease_invest(current, disease_name, "2015-2017"), disease_invest(future,disease_name, "2018-2020"))
 
-# let's make a pie chart
-# Find fpm data
-malaria_data = country_data[data_source == "fpm" & disease == disease_name]
-fpm_pie = malaria_data[gf_module == "Case management"]
-fpm_intvent = fpm_pie[,total_budget := sum(budget),by=c('year', "gf_intervention")][order(gf_intervention, year)]
-fpm_intvent = unique(fpm_intvent[,c("year", "gf_intervention", "total_budget")])
-current_fpm = fpm_pie[year > 2014 & year < 2018]
-future_fpm = fpm_pie[year > 2017 & year < 2021] 
-fpm_intvent = future_fpm[,total_budget := sum(budget),by=c("gf_intervention")][order(gf_intervention)]
-fpm_intvent = unique(future_fpm[,c("gf_intervention", "total_budget")])
-
-
-
-current_fpm$year = NULL
-future_fpm$year = NULL
-
-current_fpm = current_fpm[,sum(total_budget),by=c("gf_intervention")][order(gf_intervention)]
-future_fpm = future_fpm[,sum(total_budget),by=c("gf_intervention")][order(gf_intervention)]
-
-write.csv(current_fpm, "J:/temp/ninip/current_malaria_fpm.csv")
-write.csv(future_fpm, "J:/temp/ninip/future_malaria_fpm.csv")
-
-bp<- ggplot(current_fpm, aes(x="", y=V1, fill=gf_intervention))+
-  geom_bar(width = 1, stat = "identity") +
-  coord_polar("y", start=0)
-
-bp_future<- ggplot(future_fpm, aes(x="", y=V1, fill=gf_intervention))+
-  geom_bar(width = 1, stat = "identity") +
-  geom_text(aes(y = V1,label = floor(V1)), size = 5) +
-  coord_polar("y") +
-  xlab("") +
-  ylab("Amount Budgeted (USD)") +
-  theme(axis.text.y = element_text(angle=-20)) +
-  #labs(fill='Module') +
-  scale_y_continuous(labels = scales::comma) +
-  theme_bw()
-
-
-fpm_intvent = fpm_data[,total_budget := sum(budget),by=c('year', "gf_module")][order(gf_module, year)]
-fpm_intvent = unique(fpm_intvent[,c("year", "gf_module", "total_budget")])
-fpm_intvent_year = fpm_intvent[,total_budget_all := sum(total_budget),by=c('year')]
-fpm_intvent_year = unique(fpm_intvent_year[,c("year", 'total_budget_all')])
+# # let's make a pie chart
+# # Find fpm data
+# malaria_data = country_data[data_source == "fpm" & disease == disease_name]
+# fpm_pie = malaria_data[gf_module == "Case management"]
+# fpm_intvent = fpm_pie[,total_budget := sum(budget),by=c('year', "gf_intervention")][order(gf_intervention, year)]
+# fpm_intvent = unique(fpm_intvent[,c("year", "gf_intervention", "total_budget")])
+# current_fpm = fpm_pie[year > 2014 & year < 2018]
+# future_fpm = fpm_pie[year > 2017 & year < 2021] 
+# fpm_intvent = future_fpm[,total_budget := sum(budget),by=c("gf_intervention")][order(gf_intervention)]
+# fpm_intvent = unique(future_fpm[,c("gf_intervention", "total_budget")])
+# 
+# 
+# 
+# current_fpm$year = NULL
+# future_fpm$year = NULL
+# 
+# current_fpm = current_fpm[,sum(total_budget),by=c("gf_intervention")][order(gf_intervention)]
+# future_fpm = future_fpm[,sum(total_budget),by=c("gf_intervention")][order(gf_intervention)]
+# 
+# write.csv(current_fpm, "J:/temp/ninip/current_malaria_fpm.csv")
+# write.csv(future_fpm, "J:/temp/ninip/future_malaria_fpm.csv")
+# 
+# bp<- ggplot(current_fpm, aes(x="", y=V1, fill=gf_intervention))+
+#   geom_bar(width = 1, stat = "identity") +
+#   coord_polar("y", start=0)
+# 
+# bp_future<- ggplot(future_fpm, aes(x="", y=V1, fill=gf_intervention))+
+#   geom_bar(width = 1, stat = "identity") +
+#   geom_text(aes(y = V1,label = floor(V1)), size = 5) +
+#   coord_polar("y") +
+#   xlab("") +
+#   ylab("Amount Budgeted (USD)") +
+#   theme(axis.text.y = element_text(angle=-20)) +
+#   #labs(fill='Module') +
+#   scale_y_continuous(labels = scales::comma) +
+#   theme_bw()
+# 
+# 
+# fpm_intvent = fpm_data[,total_budget := sum(budget),by=c('year', "gf_module")][order(gf_module, year)]
+# fpm_intvent = unique(fpm_intvent[,c("year", "gf_module", "total_budget")])
+# fpm_intvent_year = fpm_intvent[,total_budget_all := sum(total_budget),by=c('year')]
+# fpm_intvent_year = unique(fpm_intvent_year[,c("year", 'total_budget_all')])

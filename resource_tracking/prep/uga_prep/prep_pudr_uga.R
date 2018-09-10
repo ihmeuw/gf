@@ -51,6 +51,8 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset$module <- "All"
       budget_dataset$expenditure <- 0 
       budget_dataset$intervention <- "All" ## change if we ever get more detailed PUDR info
+      ## drop 1st row since it doesn't contain any useful inforamtion:  
+      budget_dataset <- budget_dataset[-1, ,drop = FALSE]
       
     } else if (sheet_name%in%c("LFA Expenditure_7B", "PR Expenditure_7A")){ ## for the PUDRs w/out SR info
       colnames(gf_data)[1] <- "module"
@@ -64,6 +66,20 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset <- budget_dataset[-1,]
       budget_dataset$recipient <- recipient
       budget_dataset$disbursement <- 0 
+      ## drop 1st row since it doesn't contain any useful inforamtion:  
+      budget_dataset <- budget_dataset[-1, ,drop = FALSE]
+    } else if (sheet_name%in%c('LFA_Total PR Cash Outflow_3A','LFA_Total PR Cash Outflow_3 ')){ ## for the PUDRs w/out module/intervention detail
+      colnames(gf_data)[1] <- "description"
+      colnames(gf_data)[3] <- "budget"
+      colnames(gf_data)[4] <- "expenditure"
+      budget_dataset <- gf_data[, c("description", "budget", "expenditure"),with=FALSE]
+      budget_dataset$recipient = ifelse(grepl("PR's total expenditures", budget_dataset$description), "MoFPED", 
+                                        ifelse(grepl("sub-recipients", budget_dataset$description), "SR", NA))
+      budget_dataset<-na.omit(budget_dataset)
+      budget_dataset$module <- "All"
+      budget_dataset$intervention <- "All" 
+      budget_dataset$disbursement <- 0 
+      budget_dataset$description = NULL
     } else {  ##change this if we get a new PUDR that doesn't fit any of these three 
     colnames(gf_data)[1] <- "description"
     colnames(gf_data)[2] <- "module"
@@ -75,9 +91,9 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
     budget_dataset$recipient <- recipient
     budget_dataset$disbursement <- 0 
     budget_dataset$intervention <- "All" ## change if we ever get more detailed PUDR info
+    ## drop 1st row since it doesn't contain any useful inforamtion:  
+    budget_dataset <- budget_dataset[-1, ,drop = FALSE]
   }
-  ## drop 1st row since it doesn't contain any useful inforamtion:  
-  budget_dataset <- budget_dataset[-1, ,drop = FALSE]
   budget_dataset$start_date <- start_date
   budget_dataset$data_source <- source
   budget_dataset$period <- period
