@@ -1,11 +1,12 @@
-# Prep the COD DHIS2 data for Tableau
+# Use prepped SNIS data to create a Tableau data set
+
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 7/23/2018
+# 9/4/2018
 #
-# Upload the RDS data from SNIS-DHIS2 and merge with the meta data 
-# Prep the data sets for the Tableau Dashboard
+# Upload the merged RDS data sets from DHIS2 
+# prep the data sets for analysis 
 
 # ----------------------------------------------
 
@@ -13,25 +14,85 @@
 # Set up R
 rm(list=ls())
 library(data.table)
-library(jsonlite)
-library(httr)
 library(ggplot2)
 library(dplyr)
-library(stringr)
-library(openxlsx)
+library(xlsx) # does not work on the cluster
+library(stringr) 
 # --------------------
 
 # --------------------
-# set working directories
+# set working directories 
 
 # detect if operating on windows or on the cluster 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/tableau/')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
-#--------------------
-# Import base services data set and convert to a data table
+# set the folder for 
+folder <- 'prepped/'
+
+# import the tableau data sets and rbind them together 
+base <- readRDS(paste0(dir, folder, file, 'tabl_base.rds'))
+sigl <- readRDS(paste0(dir, folder, file, 'tabl_sigl.rds'))
+pnls <- readRDS(paste0(dir, folder, file, 'tabl_pnls.rds'))
+
+dt1 <- rbind(base, sigl)
+dt <- rbind(dt1, pnls)
+
+#-------------------------------------------------------------------------
+# TABLEAU
+# create a tableau-specific data set and save it
+
+# check that dt has all the correct tableau elements
+dt[tableau==1, unique(element_eng)]
+
+# subset to the relevant variables for tableau
+tabl <- dt[tableau==1]
+tabl <- tabl[year=='2017' | year=='2018']
+
+#----------------------------
+# create age and sex variables 
+tabl[ ,unique(category)] # check that no new categories have been added
+
+# over 5 years of age
+tabl[category==">5 ans" , age:='5 +']
+tabl[category=="Féminin, 5 ans et plus", age:='5 +']
+tabl[category=="Masculin, 5 ans et plus" , age:='5 +']
+
+# under 5 years of age
+tabl[category=="<5 ans" , age:='Under 5']
+tabl[category=="Féminin, Moins de 5 ans", age:='Under 5']
+tabl[category=="Masculin, Moins de 5 ans", age:='Under 5']
+
+# create a sex variable
+tabl[category=="Féminin, 5 ans et plus" | category=="Féminin, Moins de 5 ans", sex:='Female']
+tabl[category=="Masculin, 5 ans et plus" | category=="Masculin, Moins de 5 ans", sex:='Male']
+
+#------------------------
+# test graph of tableau elements to confirm it worked 
+test_tabl <- tabl[ ,.(count=sum(value)), by=.(element_eng, date)]
+
+ggplot(test_tabl, aes(x=date, y=count)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~element_eng) +
+  theme_bw() +
+  scale_y_continuous(labels = scales::comma)
+
+#----------------------
+# save the tableau data set
+# this data set will be merged with other tableau data 
+saveRDS(tabl, paste0(dir, 'tableau/', file, '_tabl.rds'))
+
+#----------------------
+
+
+
+
+
+
+
 
 base <- readRDS(paste0(dir, 'tabl_base.rds'))
 base <- data.table(base)

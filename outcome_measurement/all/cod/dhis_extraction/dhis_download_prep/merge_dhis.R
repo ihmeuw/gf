@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS DRC (SNIS)
 # Caitlin O'Brien-Carelli
 #
-# 8/28/2018
+# 9/4/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -19,7 +19,7 @@ library(stringr)
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1427 -s 10 -P snis_download  
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1527 -s 1 -P snis_merge
 
 # --------------------
 # set working directories
@@ -79,19 +79,44 @@ setnames(data_elements_categories, c('ID', 'displayName'), c('category', 'catego
   setnames(y, 'category_name', 'category')
   setnames(y, 'datasets_name', 'data_set')
   setnames(y, 'data_element_ID', 'element_id')
+  setnames(y, 'type', 'org_unit_type')
   
   return(y)
   
-  }
+}
+
+#----------------------------------
+# create a function to remove overlapping dates - keep all dates before dt
+# where x is the data table and dt is the first date you want to remove
+
+overlap <- function(x, dt) { 
+
+# function to delete overlapping dates 
+x[ , period1:= as.character(period)]
+x[ , year:=substr(period, 1, 4)]
+x[ , month:=substr(period, 5, 6)]
+x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+
+x <- x[date < dt]
+print(unique(x$date))
+x[ , c('period1', 'year', 'month', 'date'):=NULL]
+
+return(x) }
 
 #--------------------
 # Merge the base services data sets you have downloaded
 
 # input the file name of the most recently merged data set (change file path to 'merged' folder)
-base1 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_services_drc_01_2015_04_2018.rds')))
+base1 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_services_drc_01_2015_02_2018.rds')))
 
 # load the newest set of data 
-base2 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_services_drc_05_2018_07_2018.rds')))
+base2 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_drc_02_2018_09_2018.rds')))
+
+#---------------------------------
+# remove the overlapping dates
+dt <- as.Date('2018-02-01', '%Y-%m-%d') # dt represents the first month of overlap
+base1 <- overlap(base1, dt)
+#------------------------------------
 
 # merge the previously downloaded set with the new download
 base <- rbind(base1, base2)
@@ -101,7 +126,7 @@ base <- merge_meta_data(base)
 
 # save the merged data 
 # alter the file name to include all included dates
-saveRDS(base, paste0(dir, 'pre_prep/merged/base_services_drc_01_2015_07_2018.rds'))
+saveRDS(base, paste0(dir, 'pre_prep/merged/base_services_drc_01_2015_09_2018.rds'))
 
 #----------------------------------------------
 # Merge the SIGL data 
@@ -110,7 +135,13 @@ saveRDS(base, paste0(dir, 'pre_prep/merged/base_services_drc_01_2015_07_2018.rds
 sigl1 <- data.table(readRDS(paste0(dir, 'pre_prep/sigl/sigl_drc_01_2015_05_2018.rds')))
 
 # load the newest data set
-sigl2 <- data.table(readRDS(paste0(dir, 'pre_prep/sigl/sigl_drc_05_2018_07_2018.rds')))
+sigl2 <- data.table(readRDS(paste0(dir, 'pre_prep/sigl/sigl_drc_01_2018_07_2018.rds')))
+
+#------------------------
+# remove overlap - only if data sets overlap, use most recent data 
+dt <- as.Date('2018-01-01', '%Y-%m-%d') # all dates before dt
+sigl1 <- overlap(sigl1, dt)
+#-------------------------
 
 # merge the previously downloaded data set with the new download
 sigl <- rbind(sigl1, sigl2)
@@ -129,7 +160,13 @@ saveRDS(sigl, paste0(dir, 'pre_prep/merged/sigl_drc_01_2015_07_2018.rds'))
 pnls1 <- data.table(readRDS(paste0(dir, 'pre_prep/pnls/pnls_drc_01_2017_04_2018.rds')))
 
 # load the newest data set
-pnls2 <- data.table(readRDS(paste0(dir, 'pre_prep/pnls/pnls_drc_05_2018_07_2018.rds')))
+pnls2 <- data.table(readRDS(paste0(dir, 'pre_prep/pnls/pnls_drc_01_2018_07_2018.rds')))
+
+#---------------------------------
+# remove the overlapping dates
+dt <- as.Date('2018-01-01', '%Y-%m-%d') # dt represents the first month of overlap
+pnls1 <- overlap(pnls1, dt)
+#------------------------------------
 
 # merge the previously downloaded data set with the new download
 pnls <- rbind(pnls1, pnls2)

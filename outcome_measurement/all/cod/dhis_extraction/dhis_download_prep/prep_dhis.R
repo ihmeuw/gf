@@ -1,21 +1,22 @@
 # Prep the data from SNIS DHIS2 
+# Includes outlier screening using quantile regression
 
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 9/4/2018
+# 9/8/2018
 #
 # Upload the merged RDS data sets from DHIS2 
 # prep the data sets for analysis 
 
 # ----------------------------------------------
+# shell script to 
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1527 -s 20 -P snis_prep
 
 # --------------------
 # Set up R
 rm(list=ls())
 library(data.table)
-library(jsonlite)
-library(httr)
 library(ggplot2)
 library(dplyr)
 library(xlsx) # does not work on the cluster
@@ -39,13 +40,16 @@ folder <- 'pre_prep/merged/'
 
 # change the file to the file you want to upload!
 # base, sigl, or pnls file to upload, clean, and prep
-file <- 'sigl_drc_01_2015_07_2018'
-set_name <- 'sigl'  # change the name to the correct data set for the saved file
+file <- 'pnls_drc_01_2017_07_2018'
 
 # import the data set for cleaning and prep 
 dt <- readRDS(paste0(dir, folder, file, '.rds'))
 
 #-----------------------------------------
+# convert value to a numeric 
+dt[ ,value:=as.numeric(as.character(value))]
+#------------------------------------------
+
 # merge in the english names for the data elements and element type
 
 # read in the csv with english translations 
@@ -61,7 +65,7 @@ dt <- merge(dt, elements, by='element_id', all.x=TRUE )
 #-----------------------------------------------
 # subset to only the variables you want to keep
 dt <- dt[keep==1]
-setnames(dt, 'type', 'org_unit_type')
+dt[ , keep:=NULL]
 
 #-----------------------------------------------
 # convert last_update and opening_date to date variables
@@ -95,59 +99,41 @@ dt[is.na(mtk), mtk:='No']
 
 #-----------------------------------------------
 # organize the data table in an intuitive order 
+dt <- dt[ ,.(element, element_eng, org_unit, date, category, value, 
+             dps, health_zone, health_area, level, org_unit_type, 
+              type, mtk, drug, tableau, coordinates, opening_date, last_update, 
+               data_set, org_unit_id=id, element_id, month, year)]
+
+
+#--------------------------------
+# save the prepped data up to outlier detection 
+saveRDS(dt, paste0(dir, 'prepped/', file, '_prepped.rds'))
+
+#-----------------------------------------------
+# save a prepped tableau data set, 2017 - present
+tabl <- dt[tableau==1 & (year=='2017' | year=='2018')]
+tabl <- tabl [date < '2018-07-01' ]
+
+# get the name for the file
+name <- strsplit(file, '_')[[1]][1]
+
+# save the file
+saveRDS(tabl, paste0(dir, 'prepped/tabl_', name, '.rds'))
+
+#--------------------------------------------------
+
+# temporary pnls vector:
+
+# pnls <- c('Gv1UQdMw5wL', 'ZqM4AyJW42Q', 'DAbWpraDg43','DXz4Zxd4fKq',
+#       'gHBcPOF5y3z', 'zxn95tkbnCv', 'jJuipTLZK4o', 'fdc1v0PSUZe')
+# 
+# tabl <- dt[element_id %in% pnls]
 
 
 
 
 
-#-------------------------
-# save the final data set
 
-saveRDS(dt, paste0(dir, 'prepped_data/', set_name, '.rds'))
 
-#-------------------------------------------------------------------------
-# TABLEAU
-# create a tableau-specific data set and save it
 
-# check that dt has all the correct tableau elements
-dt[tableau==1, unique(element_eng)]
 
-# subset to the relevant variables for tableau
-tabl <- dt[tableau==1]
-tabl <- tabl[year=='2017' | year=='2018']
-
-#----------------------------
-# create age and sex variables 
-tabl[ ,unique(category)] # check that no new categories have been added
-
-# over 5 years of age
-tabl[category==">5 ans" , age:='5 +']
-tabl[category=="Féminin, 5 ans et plus", age:='5 +']
-tabl[category=="Masculin, 5 ans et plus" , age:='5 +']
-
-# under 5 years of age
-tabl[category=="<5 ans" , age:='Under 5']
-tabl[category=="Féminin, Moins de 5 ans", age:='Under 5']
-tabl[category=="Masculin, Moins de 5 ans", age:='Under 5']
-
-# create a sex variable
-tabl[category=="Féminin, 5 ans et plus" | category=="Féminin, Moins de 5 ans", sex:='Female']
-tabl[category=="Masculin, 5 ans et plus" | category=="Masculin, Moins de 5 ans", sex:='Male']
-
-#------------------------
-# test graph of tableau elements to confirm it worked 
-test_tabl <- tabl[ ,.(count=sum(value)), by=.(element_eng, date)]
-
-ggplot(test_tabl, aes(x=date, y=count)) +
-  geom_point() +
-  geom_line() +
-  facet_wrap(~element_eng) +
-  theme_bw() +
-  scale_y_continuous(labels = scales::comma)
-
-#----------------------
-# save the tableau data set
-# this data set will be merged with other tableau data 
-saveRDS(tabl, paste0(dir, 'tableau/', set_name, '_tabl.rds'))
-
-#----------------------

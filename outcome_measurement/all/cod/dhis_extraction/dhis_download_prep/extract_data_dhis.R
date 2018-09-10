@@ -55,18 +55,18 @@ source(paste0(dir, 'dhis_extracting_functions.R'))
 # select the start year and end year for the download
 start_year <- '2018'
 end_year <- '2018'
-start_month <- '05'
-end_month <- '09'
+start_month <- '01'
+end_month <- '07'
 
 # change the update year to before the data begins
 update_year <- start_year
 
 #identify the data set(s) you want to download by number (list below)
-set <- 1
+set <- 17
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name <- 'base'
+set_name <- 'pnls'
 
 # available data sets by number: 
 
@@ -144,8 +144,8 @@ extracted_data <- extract_all_data(base_url = base_url,
                                      pace = 20,
                                      update_date = paste0(update_year, '-01-01'))
 
-# change the data table to save to the one you downloaded (e.g. pnls):
-saveRDS(extracted_data, paste0(dir, 'pre_merge/', set_name, '_', country, 
+# save the data table in its individual folder in 'pre_prep' for merge and prep:
+saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', country, 
                                  '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
 # save as a csv - the data sets are very large so use onyl as needed
