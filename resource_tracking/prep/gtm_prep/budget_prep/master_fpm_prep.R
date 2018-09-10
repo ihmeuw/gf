@@ -36,6 +36,7 @@ loc_name <- "gtm"
 ## set "prep_dir" to 
 # ----------------------------------------------
 prep_dir <- "your local repo folder + gf/resource_tracking/prep/"
+prep_dir <- "H:/gf/resource_tracking/prep/"
 
 source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_detailed_budget.R"))
 source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_summary_budget.R"))

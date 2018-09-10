@@ -13,6 +13,10 @@ library(stats)
 library(stringr)
 library(rlang)
 library(zoo)
+library(raster)
+library(rgeos)
+library(ggplot2)
+library(maptools)
 
 # ----------------------------------------------
 #----------------------------------
@@ -20,11 +24,13 @@ library(zoo)
 # detect if operating on windows or on the cluster 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-#------------------------------------
+#------------ Prep Data------------------------
+#### Prep Data
 # define main directory
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/SIGSA/')
 prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
 outFile = paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/visualizations/SIGSA_hiv_test.pdf')
+mapping_dir = paste0(root, '/Project/Evaluation/GF/mapping/gtm/')
 
 # translation file
 translate_data = fread(paste0(dir, "translation_of_HIV_variables.csv"), encoding = 'Latin-1')
@@ -76,9 +82,17 @@ total_data$completed_hiv_screening_test = gsub("-", "No", total_data$completed_h
 # Write csv to folderpath
 write.csv(total_data, paste0(prep_dir, "hiv_sigsa_data_prepped.csv"), row.names = FALSE)
 
-############### Let's Graph These ###
+#### Let's Graph These ####
 #Dropping 2014 for analysis becuase data does not seem accurate
 mapping_data = total_data[year != "2014"]
+
+#for the maps
+shapeData = shapefile(paste0(mapping_dir,'GTM_adm1.shp'))
+coordinates = as.data.table(fortify(shapeData, region='NAME_1'))
+coordinates$id <- toupper(coordinates$id)
+
+mapping_data$hospital_department = sub("GUATEMALA", "GUATEMALA", mapping_data$hospital_department)
+
 
 mapping_data$completed_hiv_screening_test = ifelse(mapping_data$completed_hiv_screening_test == "Yes", 1, 0)
 mapping_data$hiv_screening_result = ifelse(mapping_data$hiv_screening_result == "Reactivo", 1, 0)
@@ -96,7 +110,11 @@ mapping_data[, test_by_risk_positive := sum(hiv_screening_result), by = c("date"
 mapping_data[, test_by_reason := sum(completed_hiv_screening_test), by = c( "date", "reason_for_visit_eng")]
 mapping_data[, test_by_reason_positive := sum(hiv_screening_result), by = c( "date", "reason_for_visit_eng")]
 
-p0 = ggplot(unique(mapping_data), aes(y=test_by_date, x=date)) + 
+mapping_data_sub = unique(mapping_data[,c("date", "reason_for_visit_eng", "sexual_orientation", "risk_condition_eng",  "test_by_date", "test_by_date_postive", "test_by_orientation", "test_by_orientation_positive",
+                                      "test_by_risk", "test_by_risk_positive", "test_by_reason", "test_by_reason_positive")])
+
+#### Make graphs of data ####
+p0 = ggplot(unique(mapping_data_sub), aes(y=test_by_date, x=date)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -104,7 +122,7 @@ p0 = ggplot(unique(mapping_data), aes(y=test_by_date, x=date)) +
        y='Number of Completed HIV test', x='') + 
   theme_bw()
 
-p1 = ggplot(unique(mapping_data), aes(y=test_by_date_postive, x=date)) + 
+p1 = ggplot(unique(mapping_data_sub), aes(y=test_by_date_postive, x=date)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -112,7 +130,7 @@ p1 = ggplot(unique(mapping_data), aes(y=test_by_date_postive, x=date)) +
        y='Amount of positive HIV test', x='') + 
   theme_bw()
 
-p8 = ggplot(unique(mapping_data), aes(y=test_by_date_postive / test_by_date * 100, x=date)) + 
+p8 = ggplot(unique(mapping_data_sub), aes(y=test_by_date_postive / test_by_date * 100, x=date)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -120,7 +138,7 @@ p8 = ggplot(unique(mapping_data), aes(y=test_by_date_postive / test_by_date * 10
        y='Percent (%) positive HIV test', x='') + 
   theme_bw()
   
-p2 = ggplot(unique(mapping_data[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation, x=date, colour=sexual_orientation)) + 
+p2 = ggplot(unique(mapping_data_sub[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation, x=date, colour=sexual_orientation)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -128,7 +146,7 @@ p2 = ggplot(unique(mapping_data[sexual_orientation != "Heterosexual" & sexual_or
        y='Amount of completed HIV test', x='') + 
   theme_bw()
 
-p3 = ggplot(unique(mapping_data[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation_positive, x=date, colour=sexual_orientation)) + 
+p3 = ggplot(unique(mapping_data_sub[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation_positive, x=date, colour=sexual_orientation)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -136,7 +154,7 @@ p3 = ggplot(unique(mapping_data[sexual_orientation != "Heterosexual" & sexual_or
        y='Amount of positive HIV test', x='') + 
   theme_bw()
 
-p9 = ggplot(unique(mapping_data[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation_positive / test_by_orientation * 100, x=date, colour=sexual_orientation)) + 
+p9 = ggplot(unique(mapping_data_sub[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation_positive / test_by_orientation * 100, x=date, colour=sexual_orientation)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -146,7 +164,7 @@ p9 = ggplot(unique(mapping_data[sexual_orientation != "Heterosexual" & sexual_or
 
 
 
-p4 = ggplot(unique(mapping_data), aes(y=test_by_risk, x=date, colour=risk_condition_eng)) + 
+p4 = ggplot(unique(mapping_data_sub), aes(y=test_by_risk, x=date, colour=risk_condition_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -154,7 +172,7 @@ p4 = ggplot(unique(mapping_data), aes(y=test_by_risk, x=date, colour=risk_condit
        y='Amount of completed HIV test', x='') + 
   theme_bw()
 
-p5 = ggplot(unique(mapping_data), aes(y=test_by_risk_positive, x=date, colour=risk_condition_eng)) + 
+p5 = ggplot(unique(mapping_data_sub), aes(y=test_by_risk_positive, x=date, colour=risk_condition_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -162,7 +180,7 @@ p5 = ggplot(unique(mapping_data), aes(y=test_by_risk_positive, x=date, colour=ri
        y='Amount of positive HIV test', x='') + 
   theme_bw()
 
-p10 = ggplot(unique(mapping_data), aes(y=test_by_risk_positive / test_by_risk * 100, x=date, colour=risk_condition_eng)) + 
+p10 = ggplot(unique(mapping_data_sub), aes(y=test_by_risk_positive / test_by_risk * 100, x=date, colour=risk_condition_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -171,7 +189,7 @@ p10 = ggplot(unique(mapping_data), aes(y=test_by_risk_positive / test_by_risk * 
   theme_bw()
 
 
-p6 = ggplot(unique(mapping_data), aes(y=test_by_reason, x=date, colour=reason_for_visit_eng)) + 
+p6 = ggplot(unique(mapping_data_sub[reason_for_visit_eng != "Own Initiative" & reason_for_visit_eng != "Other"]), aes(y=test_by_reason, x=date, colour=reason_for_visit_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -179,7 +197,7 @@ p6 = ggplot(unique(mapping_data), aes(y=test_by_reason, x=date, colour=reason_fo
        y='Amount of completed HIV test', x='') + 
   theme_bw()
 
-p7 = ggplot(unique(mapping_data[reason_for_visit_eng != "Own Initiative" & reason_for_visit_eng != "Other"]), aes(y=test_by_reason_positive, x=date, colour=reason_for_visit_eng)) + 
+p7 = ggplot(unique(mapping_data_sub[reason_for_visit_eng != "Own Initiative" & reason_for_visit_eng != "Other"]), aes(y=test_by_reason_positive, x=date, colour=reason_for_visit_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -187,7 +205,7 @@ p7 = ggplot(unique(mapping_data[reason_for_visit_eng != "Own Initiative" & reaso
        y='Amount of positive HIV test', x='') + 
   theme_bw()
 
-p11 = ggplot(unique(mapping_data[reason_for_visit_eng != "Own Initiative" & reason_for_visit_eng != "Other" & reason_for_visit_eng != "Blood donor"]), aes(y=test_by_reason_positive / test_by_reason * 100, x=date, colour=reason_for_visit_eng)) + 
+p11 = ggplot(unique(mapping_data_sub[reason_for_visit_eng != "Own Initiative" & reason_for_visit_eng != "Other" & reason_for_visit_eng != "Blood donor"]), aes(y=test_by_reason_positive / test_by_reason * 100, x=date, colour=reason_for_visit_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
@@ -195,6 +213,7 @@ p11 = ggplot(unique(mapping_data[reason_for_visit_eng != "Own Initiative" & reas
        y='Percent (%) of positive HIV test', x='') + 
   theme_bw()
 
+outFile = "/homes/ninip/SIGSA_results.pdf"
 pdf(outFile, height=5.5, width=7)
 p0
 p8
