@@ -2,12 +2,7 @@
 
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
-#
-# 9/4/2018
-#
-# Upload the merged RDS data sets from DHIS2 
-# prep the data sets for analysis 
-
+# 9/10/2018
 # ----------------------------------------------
 
 # --------------------
@@ -33,23 +28,71 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 folder <- 'prepped/'
 
 # import the tableau data sets and rbind them together 
-base <- readRDS(paste0(dir, folder, file, 'tabl_base.rds'))
-sigl <- readRDS(paste0(dir, folder, file, 'tabl_sigl.rds'))
-pnls <- readRDS(paste0(dir, folder, file, 'tabl_pnls.rds'))
+base <- readRDS(paste0(dir, folder, 'tabl_base.rds'))
+sigl <- readRDS(paste0(dir, folder, 'tabl_sigl.rds'))
+pnls <- readRDS(paste0(dir, folder, 'tabl_pnls.rds'))
+
+base[ ,set:='base']
+sigl[ ,set:='sigl']
+pnls[ ,set:='pnls']
+
+#-------------------------
+
+
+base <- base[ ,.(value=sum(value)), by=.(date, health_zone, dps, element_eng)]
+
+list_of_plots = NULL
+i=1
+
+for (f in (unique(base$element_eng))) {
+  
+  name <- unique(base[element_eng==f]$element_eng)
+  
+  list_of_plots[[i]] <- ggplot(base[element_eng==f], aes(x=date, y=value, color=health_zone)) + 
+    geom_point() +
+    geom_line(alpha=0.5) + 
+    labs(title=name, x="Date", y="Count") +
+    theme_bw() +
+    guides(color=FALSE)
+    scale_y_continuous(labels = scales::comma)
+  
+  i=i+1
+}
+
+pdf(paste0(dir,'/outliers/zones_outliers_2017_2018.pdf'), height=6, width=9)
+
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+} 
+
+dev.off()
+
+#-------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 
 dt1 <- rbind(base, sigl)
 dt <- rbind(dt1, pnls)
 
 #-------------------------------------------------------------------------
-# TABLEAU
-# create a tableau-specific data set and save it
 
-# check that dt has all the correct tableau elements
-dt[tableau==1, unique(element_eng)]
 
-# subset to the relevant variables for tableau
-tabl <- dt[tableau==1]
-tabl <- tabl[year=='2017' | year=='2018']
+
+
+
+
+
+
 
 #----------------------------
 # create age and sex variables 

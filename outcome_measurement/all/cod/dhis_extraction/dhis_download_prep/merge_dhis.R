@@ -19,11 +19,7 @@ library(stringr)
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
 
-<<<<<<< HEAD:outcome_measurement/all/cod/dhis_extraction/dhis_download_prep/merge_dhis.R
 # sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1527 -s 1 -P snis_merge
-=======
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_download  
->>>>>>> d1dd65c3b8ae42b5f1c2e6b596311368086e1762:outcome_measurement/all/cod/dhis_extraction/merge_dhis.R
 
 # --------------------
 # set working directories
@@ -76,7 +72,6 @@ setnames(data_elements_categories, c('ID', 'displayName'), c('category', 'catego
   y <- merge(y, data_elements, by='data_element_ID')
   y <- merge(y, data_elements_categories, by='category')
   y <- merge(y, org_units_description, by='id')
-<<<<<<< HEAD:outcome_measurement/all/cod/dhis_extraction/dhis_download_prep/merge_dhis.R
   y <- data.table(y)
  
   # fix names for the prep
@@ -85,8 +80,6 @@ setnames(data_elements_categories, c('ID', 'displayName'), c('category', 'catego
   setnames(y, 'datasets_name', 'data_set')
   setnames(y, 'data_element_ID', 'element_id')
   setnames(y, 'type', 'org_unit_type')
-=======
->>>>>>> d1dd65c3b8ae42b5f1c2e6b596311368086e1762:outcome_measurement/all/cod/dhis_extraction/merge_dhis.R
   
   return(y)
   
