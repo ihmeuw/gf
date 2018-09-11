@@ -19,7 +19,6 @@ rm(list=ls())
 library(data.table)
 library(ggplot2)
 library(dplyr)
-library(xlsx) # does not work on the cluster
 library(stringr) 
 # --------------------
 
@@ -40,7 +39,8 @@ folder <- 'pre_prep/merged/'
 
 # change the file to the file you want to upload!
 # base, sigl, or pnls file to upload, clean, and prep
-file <- 'pnls_drc_01_2017_07_2018'
+file <- 'base_services_drc_01_2017_09_2018'
+date_end = '2018-08-01'
 
 # import the data set for cleaning and prep 
 dt <- readRDS(paste0(dir, folder, file, '.rds'))
@@ -112,7 +112,7 @@ saveRDS(dt, paste0(dir, 'prepped/', file, '_prepped.rds'))
 #-----------------------------------------------
 # save a prepped tableau data set, 2017 - present
 tabl <- dt[tableau==1 & (year=='2017' | year=='2018')]
-tabl <- tabl [date < '2018-07-01' ]
+tabl <- tabl [date < date_end]
 
 # get the name for the file
 name <- strsplit(file, '_')[[1]][1]
