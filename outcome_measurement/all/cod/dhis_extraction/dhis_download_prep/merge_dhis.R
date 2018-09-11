@@ -36,7 +36,7 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 merge_meta_data <- function(x) { 
 
 # import the meta data for the merge
-facilities <- data.table(readRDS(paste0(dir, 'meta_data/master_facilities.rds')))
+facilities <- data.table(readRDS(paste0(dir, 'all_units/master_facilities.rds')))
 facilities[ ,c('country_id', 'dps_id', 'health_zone_id', 'health_area_id'):=NULL]
 
 data_elements <- data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
@@ -108,14 +108,14 @@ return(x) }
 # Merge the base services data sets you have downloaded
 
 # input the file name of the most recently merged data set (change file path to 'merged' folder)
-base1 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_services_drc_01_2015_02_2018.rds')))
+base1 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_services_drc_01_2015_04_2018.rds')))
 
 # load the newest set of data 
-base2 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_drc_02_2018_09_2018.rds')))
+base2  <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_drc_02_2018_09_2018.rds')))
 
 #---------------------------------
 # remove the overlapping dates
-dt <- as.Date('2018-02-01', '%Y-%m-%d') # dt represents the first month of overlap
+dt <- as.Date('2018-01-01', '%Y-%m-%d') # dt represents the first month of overlap
 base1 <- overlap(base1, dt)
 #------------------------------------
 
@@ -123,15 +123,15 @@ base1 <- overlap(base1, dt)
 base <- rbind(base1, base2)
 
 # merge in the meta data 
-base <- merge_meta_data(base)
+merge_base <- merge_meta_data(base)
 
 # save the merged data 
 # alter the file name to include all included dates
-saveRDS(base, paste0(dir, 'pre_prep/merged/base_services_drc_01_2015_09_2018.rds'))
+saveRDS(merge_base, paste0(dir, 'pre_prep/merged/base_services_drc_01_2015_09_2018.rds'))
 
 # create a data set of only 2017 - present data 
-base_new <- base[year=='2017' | year=='2018']
-saveRDS(base_new, paste0(dir, 'pre_prep/merged/base_services_drc_01_2017_07_2018.rds'))
+base_new <- merge_base[year=='2017' | year=='2018']
+saveRDS(base_new, paste0(dir, 'pre_prep/merged/base_services_drc_01_2017_09_2018.rds'))
 #----------------------------------------------
 # Merge the SIGL data 
 
