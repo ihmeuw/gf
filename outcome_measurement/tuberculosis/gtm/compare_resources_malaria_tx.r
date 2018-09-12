@@ -122,7 +122,7 @@ p1 = ggplot(data, aes(y=dah_case, x=date, color=fin_type)) +
 	geom_point(aes(size=num_cases/1000000), color='#08519c') + 
 	scale_color_manual('', values=c('grey45','grey15')) + 
 	scale_size_continuous('N Cases Reported\n(millions)', range=c(1,3)) + 
-	labs(title='Development Assesstance for Malaria Treatment\nCompared to Confirmed Cases Treated', 
+	labs(title='Development Assistance for Malaria Treatment\nCompared to Confirmed Cases Treated', 
 		subtitle='Budgeted or Disbursed', y='USD from Donors per Case Treated', x='Year', color='',
 		caption='Annually-Reported Resources Amortized Over 12 Months') + 
 	theme_bw(base_size=16)
