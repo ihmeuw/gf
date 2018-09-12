@@ -86,7 +86,7 @@ write.csv(total_data, paste0(prep_dir, "hiv_sigsa_data_prepped.csv"), row.names 
 
 #### Let's Graph These ####
 #Dropping 2014 for analysis becuase data does not seem accurate
-
+### Mapping Data ####
 ratio_colors <- brewer.pal(8, 'Spectral')
 results_colors <- brewer.pal(6, 'Blues')
 sup_colors <- brewer.pal(6, 'Reds')
@@ -106,6 +106,7 @@ single_red <- '#bd0026'
 # breaks for log transformation legends (this is to set more intuitive breaks if you log the colors):
 breaks <- c (1, 20, 400, 8100)
 
+#### Graph Data ####
 mapping_data = total_data[year != "2014"]
 
 # Prep data for map
@@ -119,125 +120,191 @@ mapping_data[grepl("PETÉN", hospital_department), hospital_department := "PETÉ
 mapping_data[grepl("IXCÁN", hospital_department), hospital_department := "QUICHÉ"]
 mapping_data[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
 
+mapping_data$attended_clinic = 1
 mapping_data$completed_hiv_screening_test = ifelse(mapping_data$completed_hiv_screening_test == "Yes", 1, 0)
 mapping_data$hiv_screening_result = ifelse(mapping_data$hiv_screening_result == "Reactivo", 1, 0)
 
-
+mapping_data[, attendance_by_department := sum(attended_clinic), by = c("year", "hospital_department")]
 mapping_data[, test_by_department := sum(completed_hiv_screening_test), by = c("year", "hospital_department")]
 mapping_data[, test_by_department_positive := sum(hiv_screening_result), by = c("year", "hospital_department")]
 
 data_to_map = unique(mapping_data[,c("hospital_department", 
+                                     "attendance_by_department",
                                      "test_by_department",
                                      "test_by_department_positive",
                                      "year")])
 graphData <- merge(coordinates, data_to_map, by.x='id', by.y='hospital_department', all=TRUE, allow.cartesian=TRUE)
 graphData$group = as.character(graphData$group)
 
-ratio_colors <- brewer.pal(8, 'Spectral')
-           
+graphData = na.omit(graphData)
 # Graph desired things
+mapping_data[, attendance_by_date := sum(attended_clinic), by = "date"]
 mapping_data[, test_by_date := sum(completed_hiv_screening_test), by = "date"]
 mapping_data[, test_by_date_postive := sum(hiv_screening_result), by = "date"]
 
+mapping_data[, attendance_by_orientation := sum(attended_clinic), by = c("date", "sexual_orientation")]
 mapping_data[, test_by_orientation := sum(completed_hiv_screening_test), by = c("date", "sexual_orientation")]
 mapping_data[, test_by_orientation_positive := sum(hiv_screening_result), by = c("date", "sexual_orientation")]
 
+mapping_data[, attendance_by_risk := sum(attended_clinic), by = c("date", "risk_condition_eng")]
 mapping_data[, test_by_risk := sum(completed_hiv_screening_test), by = c("date", "risk_condition_eng")]
 mapping_data[, test_by_risk_positive := sum(hiv_screening_result), by = c("date", "risk_condition_eng")]
 
+mapping_data[, attendance_by_reason := sum(attended_clinic), by = c( "date", "reason_for_visit_eng")]
 mapping_data[, test_by_reason := sum(completed_hiv_screening_test), by = c( "date", "reason_for_visit_eng")]
 mapping_data[, test_by_reason_positive := sum(hiv_screening_result), by = c( "date", "reason_for_visit_eng")]
 
-mapping_data_sub = unique(mapping_data[,c("date", "reason_for_visit_eng", "sexual_orientation", "risk_condition_eng",  "test_by_date", "test_by_date_postive", "test_by_orientation", "test_by_orientation_positive",
+mapping_data_sub = unique(mapping_data[,c("date", "attended_clinic","attendance_by_risk",  "attendance_by_reason", "attendance_by_date", "attendance_by_orientation",
+                                           "reason_for_visit_eng", "sexual_orientation", "risk_condition_eng",  "test_by_date", "test_by_date_postive", "test_by_orientation", "test_by_orientation_positive",
                                           "test_by_risk", "test_by_risk_positive", "test_by_reason", "test_by_reason_positive")])
 
 #### Make graphs of data ####
+#total by date
+pA = ggplot(unique(mapping_data_sub), aes(y=attendance_by_date, x=date)) + 
+  geom_line(size=1) +
+  geom_point(size=1, color='grey45') + 
+  labs(title='Amount of Patients over Time', 
+       y='# of Patients', x='') + 
+  theme_bw()  
+  
 p0 = ggplot(unique(mapping_data_sub), aes(y=test_by_date, x=date)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  #geom_text(hjust=1, vjust=0) + 
-  labs(title='Completed HIV Tests over Time', 
-       y='Number of Completed HIV test', x='') + 
+  labs(title='Amount of Patients who Completed HIV Tests', 
+       y='# of Completed HIV test', x='') + 
   theme_bw()
 
 p1 = ggplot(unique(mapping_data_sub), aes(y=test_by_date_postive, x=date)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  #geom_text(hjust=1, vjust=0) + 
-  labs(title='Positive HIV Tests over Time', 
-       y='Amount of positive HIV test', x='') + 
+  labs(title='Amount of Patients who Tested Positive(+) for HIV', 
+       y='# of HIV+ Patients', x='') + 
   theme_bw()
+
+pA1 = ggplot(unique(mapping_data_sub), aes(y= test_by_date/ attendance_by_date * 100, x=date)) + 
+  geom_line(size=1) +
+  geom_point(size=1, color='grey45') + 
+  labs(title='Percent(%) of Patients who Completed HIV Tests', 
+       y='Percent (%)', x='') + 
+  theme_bw()  
 
 p2 = ggplot(unique(mapping_data_sub), aes(y=test_by_date_postive / test_by_date * 100, x=date)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   #geom_text(hjust=1, vjust=0) + 
-  labs(title='Percenatage (%) of HIV Tests over Time', 
-       y='Percent (%) positive HIV test', x='') + 
+  labs(title='Percent (%) of Patients who tested Positive(+) for HIV', 
+       y='Percent (%) of HIV+', x='') + 
   theme_bw()
 
+#LGBT Status
+pB = ggplot(unique(mapping_data_sub[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=attendance_by_orientation, x=date, colour=sexual_orientation)) + 
+  geom_line(size=1) +
+  geom_point(size=1, color='grey45') + 
+  #geom_text(hjust=1, vjust=0) + 
+  labs(title='Amount of Patients by LGBT Status', color = "LGBT Status",
+       y='# of Patients', x='') + 
+  theme_bw() 
+ 
 p3 = ggplot(unique(mapping_data_sub[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation, x=date, colour=sexual_orientation)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  labs(title='Completed HIV test by at-risk Sexual Orientation over Time', 
-       y='Amount of completed HIV test', x='') + 
+  labs(title='Completed HIV test by LGBT Status', color = "LGBT Status",  
+       y='# of Completed HIV test', x='') + 
   theme_bw()
 
 p4 = ggplot(unique(mapping_data_sub[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation_positive, x=date, colour=sexual_orientation)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  labs(title='Positive HIV test by at-risk Sexual Orientation over Time', 
-       y='Amount of positive HIV test', x='') + 
+  labs(title='Amount of Patients who Tested Positive(+) by LGBT Status', color = "LGBT Status", 
+       y='# of HIV+ Patients', x='') + 
   theme_bw()
+
+pB1 = ggplot(unique(mapping_data_sub[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation/ attendance_by_orientation* 100, x=date, colour=sexual_orientation)) + 
+  geom_line(size=1) +
+  geom_point(size=1, color='grey45') + 
+  #geom_text(hjust=1, vjust=0) + 
+  labs(title='Percent(%) of Patients who Completed HIV Tests by LGBT Status', color = "LGBT Status",
+       y='Percent (%)', x='') + 
+  theme_bw()  
 
 p5 = ggplot(unique(mapping_data_sub[sexual_orientation != "Heterosexual" & sexual_orientation != "-" ]), aes(y=test_by_orientation_positive / test_by_orientation * 100, x=date, colour=sexual_orientation)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  labs(title='Percentage of Postive HIV test by at-risk Sexual Orientation over Time', 
-       y='Percent (%) positive HIV test', x='') + 
+  labs(title='Percent (%) of Patients who Tested Positive(+) for HIV by LGBT Status', color = "LGBT Status",  
+       y='Percent (%) of HIV+', x='') + 
   theme_bw()
+
+#Risk Group
+pC = ggplot(unique(mapping_data_sub), aes(y=attendance_by_risk, x=date, colour=risk_condition_eng)) + 
+  geom_line(size=1) +
+  geom_point(size=1, color='grey45') + 
+  #geom_text(hjust=1, vjust=0) + 
+  labs(title='Amount of Patients by Risk Group', 
+       y='# of Patients', x='') + 
+  theme_bw() 
 
 p6 = ggplot(unique(mapping_data_sub), aes(y=test_by_risk, x=date, colour=risk_condition_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  labs(title='Completed HIV test by Risk Group', 
-       y='Amount of completed HIV test', x='') + 
+  labs(title='Amount of Patients who Completed HIV Tests by Risk Group', 
+       y='# of completed HIV test', x='') + 
   theme_bw()
 
 p7 = ggplot(unique(mapping_data_sub), aes(y=test_by_risk_positive, x=date, colour=risk_condition_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
   labs(title='Positive HIV test by Risk Group', 
-       y='Amount of positive HIV test', x='') + 
+       y='# of positive HIV test', x='') + 
   theme_bw()
+
+pC1 = ggplot(unique(mapping_data_sub), aes(y= test_by_risk/ attendance_by_risk * 100, x=date, colour=risk_condition_eng)) + 
+  geom_line(size=1) +
+  geom_point(size=1, color='grey45') + 
+  labs(title='Percent(%) of Patients who Completed HIV Tests by Risk Group', 
+       y='Percent (%)', x='') + 
+  theme_bw()  
 
 p8 = ggplot(unique(mapping_data_sub), aes(y=test_by_risk_positive / test_by_risk * 100, x=date, colour=risk_condition_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  labs(title='Percentage of Positive HIV test by Risk Group', 
+  labs(title='Percent (%) of Patients who Tested Positive(+) for HIV by Risk Group', 
        y='Percent (%) of positive HIV test', x='') + 
   theme_bw()
 
-
-p9 = ggplot(unique(mapping_data_sub[reason_for_visit_eng != "Own Initiative" & reason_for_visit_eng != "Other"]), aes(y=test_by_reason, x=date, colour=reason_for_visit_eng)) + 
+# Reason to visit
+pD = ggplot(unique(mapping_data_sub), aes(y=attendance_by_reason, x=date, colour=reason_for_visit_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  labs(title='Completed HIV test by Visit Reason', 
-       y='Amount of completed HIV test', x='') + 
+  labs(title='Amount of Patients by Visit Reason', 
+       y='# of Patients', x='') + 
   theme_bw()
 
-p10 = ggplot(unique(mapping_data_sub[reason_for_visit_eng != "Own Initiative" & reason_for_visit_eng != "Other"]), aes(y=test_by_reason_positive, x=date, colour=reason_for_visit_eng)) + 
+p9 = ggplot(unique(mapping_data_sub), aes(y=test_by_reason, x=date, colour=reason_for_visit_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  labs(title='Positive HIV test by Visit Reason', 
-       y='Amount of positive HIV test', x='') + 
+  labs(title='Amount of Patients who Completed HIV Tests by Visit Reason', 
+       y= '# of Completed HIV test', x='') + 
+  theme_bw()
+
+p10 = ggplot(unique(mapping_data_sub), aes(y=test_by_reason_positive, x=date, colour=reason_for_visit_eng)) + 
+  geom_line(size=1) +
+  geom_point(size=1, color='grey45') + 
+  labs(title='Amount of Patients who Tested Positive(+) for HIV', 
+       y='# of HIV+ Patients', x='') + 
+  theme_bw()
+
+pD1 = ggplot(unique(mapping_data_sub), aes(y= test_by_reason/ attendance_by_reason * 100, x=date, colour=reason_for_visit_eng)) + 
+  geom_line(size=1) +
+  geom_point(size=1, color='grey45') + 
+  labs(title='Percent (%) of Patients who tested Positive(+) for HIV by Visit Reason', 
+       y='Percent (%) of HIV+', x='') + 
   theme_bw()
 
 p11 = ggplot(unique(mapping_data_sub[reason_for_visit_eng != "Own Initiative" & reason_for_visit_eng != "Other" & reason_for_visit_eng != "Blood donor"]), aes(y=test_by_reason_positive / test_by_reason * 100, x=date, colour=reason_for_visit_eng)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  labs(title='Percentage of Postive HIV test by Visit Reason', 
-       y='Percent (%) of positive HIV test', x='') + 
+  labs(title='Percent (%) of Patients who tested Positive(+) for HIV by Visit Reason', 
+       y='ercent (%) of HIV+', x='') + 
   theme_bw()
 
 #2015 Maps
@@ -268,11 +335,11 @@ p14 = (ggplot() + geom_polygon(data=graphData[year == 2015], aes(x=long, y=lat, 
 
 # 2016 Maps
 p15 = (ggplot() + geom_polygon(data=graphData[year == 2016], aes(x=long, y=lat, group=group, fill=as.numeric(test_by_department))) + 
-           coord_equal() + ##so the two shapefiles have the same proportions 
-           geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
+         coord_equal() + ##so the two shapefiles have the same proportions 
+         geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
          scale_fill_gradientn(colors=results_colors) +
          theme_void()+
-           theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +
+         theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +
   labs(title= "2016 Completed HIV test by Department", fill=paste0('Amount of tests done'))
 
 p16 = (ggplot() + geom_polygon(data=graphData[year == 2016], aes(x=long, y=lat, group=group, fill=as.numeric(test_by_department_positive))) + 
@@ -284,11 +351,11 @@ p16 = (ggplot() + geom_polygon(data=graphData[year == 2016], aes(x=long, y=lat, 
   labs(title= "2016 Positive HIV test by Department", fill=paste0('Amount of HIV+'))
 
 p17 = (ggplot() + geom_polygon(data=graphData[year == 2016], aes(x=long, y=lat, group=group, fill=test_by_department_positive/ test_by_department * 100)) + 
-          coord_equal() + ##so the two shapefiles have the same proportions 
-          geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
+         coord_equal() + ##so the two shapefiles have the same proportions 
+         geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
          scale_fill_gradientn(colors=results_colors) +
          theme_void()+
-          theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +
+         theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +
   labs(title= "2016 Percent(%) Positive HIV Test", fill=paste0('Percent (%) HIV+')) 
 
 #2017 Maps
@@ -314,7 +381,7 @@ p20 <- (ggplot() + geom_polygon(data=graphData[year == 2017], aes(x=long, y=lat,
           scale_fill_gradientn(colors=results_colors) +
           theme_void()+
           theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +
-         labs(title= "2017 Percent(%) Positive HIV Test", fill=paste0('Percent (%) HIV+')) 
+  labs(title= "2017 Percent(%) Positive HIV Test", fill=paste0('Percent (%) HIV+')) 
 
 #ALL YEAR MAPS Maps
 p21 <- (ggplot() + geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=test_by_department)) + 
@@ -344,20 +411,51 @@ p23 <- (ggplot() + geom_polygon(data=graphData, aes(x=long, y=lat, group=group, 
           theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +
   labs(title= "Annual Percent(%) Positive HIV Test", fill=paste0('Percent (%) HIV+')) 
 
+pE <- (ggplot() + geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=attendance_by_department)) + 
+         coord_equal() + 
+         geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
+         facet_wrap(~year) +
+         scale_fill_gradientn(colors=results_colors) +
+         theme_void()+
+         theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +
+  labs(title= "Amount of Patients by Department", fill=paste0('# of Patients')) 
+
+pE1 <- (ggplot() + geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=test_by_department/ attendance_by_department * 100)) + 
+          coord_equal() + 
+          geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
+          facet_wrap(~year) +
+          scale_fill_gradientn(colors=results_colors) +
+          theme_void()+
+          theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +
+  labs(title= "Percent(%) of Patients who Completed HIV Test", fill=paste0('Percent (%)')) 
 
 #outFile = "/homes/ninip/SIGSA_results.pdf"
 pdf(outFile, height=5.5, width=7)
+# By Date
+pA
 p0
 p1
+pA1
 p2
+
+
+# By LGBT+ Status
+pB
 p3
 p4
+pB1
 p5
+
+pC
 p6
 p7
+pC1
 p8
+
+pD
 p9
 p10
+pD1
 p11
 # p12
 # p13
@@ -368,8 +466,11 @@ p11
 # p18
 # p19
 # p20
+pE
 p21
 p22
+pE1
 p23
+
 dev.off()
 
