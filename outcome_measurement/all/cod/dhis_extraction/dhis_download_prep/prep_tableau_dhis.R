@@ -28,58 +28,16 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 folder <- 'prepped/'
 
 # import the tableau data sets and rbind them together 
-base <- readRDS(paste0(dir, folder, 'tabl_base.rds'))
-sigl <- readRDS(paste0(dir, folder, 'tabl_sigl.rds'))
-pnls <- readRDS(paste0(dir, folder, 'tabl_pnls.rds'))
+base <- readRDS(paste0(dir, folder, 'tabl_base_no_outliers.rds'))
+sigl <- readRDS(paste0(dir, folder, 'tabl_sigl_no_outliers.rds'))
+pnls <- readRDS(paste0(dir, folder, 'tabl_pnls_no_outliers.rds'))
 
 base[ ,set:='base']
 sigl[ ,set:='sigl']
 pnls[ ,set:='pnls']
 
 #-------------------------
-
-
-base <- base[ ,.(value=sum(value)), by=.(date, health_zone, dps, element_eng)]
-
-list_of_plots = NULL
-i=1
-
-for (f in (unique(base$element_eng))) {
-  
-  name <- unique(base[element_eng==f]$element_eng)
-  
-  list_of_plots[[i]] <- ggplot(base[element_eng==f], aes(x=date, y=value, color=health_zone)) + 
-    geom_point() +
-    geom_line(alpha=0.5) + 
-    labs(title=name, x="Date", y="Count") +
-    theme_bw() +
-    guides(color=FALSE)
-    scale_y_continuous(labels = scales::comma)
-  
-  i=i+1
-}
-
-pdf(paste0(dir,'/outliers/zones_outliers_2017_2018.pdf'), height=6, width=9)
-
-for(i in seq(length(list_of_plots))) { 
-  print(list_of_plots[[i]])
-} 
-
-dev.off()
-
-#-------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
-
+# rbind the data sets together
 
 dt1 <- rbind(base, sigl)
 dt <- rbind(dt1, pnls)
@@ -136,9 +94,9 @@ saveRDS(tabl, paste0(dir, 'tableau/', file, '_tabl.rds'))
 
 
 
-
-base <- readRDS(paste0(dir, 'tabl_base.rds'))
-base <- data.table(base)
+# 
+# base <- readRDS(paste0(dir, 'tabl_base.rds'))
+# base <- data.table(base)
 
 #--------------------
 # label "category" for the graphs
@@ -168,7 +126,7 @@ base[element_id=='wleambjupW9', element_eng:='A 1.5 Confirmed simple malaria tre
 
 base <- base[ ,.(count=sum(value, na.rm=T)), by=.(data_set, element, 
                                         element_eng, date, category, type,
-                                        level, dps, mtk)]
+                                        org_unit_type, dps, health_zone mtk)]
 
 
 #---------------------------
@@ -200,7 +158,6 @@ sigl[element_id=='ncXfF8VViSh']
 
 sigl[,.(unique(element_eng), unique(element_id))]
 
-sigl[element_id=='HfCvAwRmGFf', element_eng:='C2 12.2 HIV Test Kit for PMTCT site']
 sigl[element_id=='KEv4JxAgpFK', element_eng:='C2 12.2 Determine HIV 1+2 Test Kit Pce']
 sigl[element_id=='QvVGcIERRFc', element_eng:='C1 12.1 Artesunate-amodiaquine (12-59 months) 50mg + 135mg tablet - amount consumed']
 sigl[element_id=='Wo3vNpLXPPm', element_eng:='C1 12.1 Artesunate-amodiaquine (2-11 months) 25mg + 67.5mg tablet  - amount consumed']

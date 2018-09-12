@@ -1,9 +1,13 @@
-###################################################################
-# GTM TB mortality comparison between raw VR, redistributed VR, and cohort data
-# Run on the cluster to access shared drive for VR files, or change dirs to a local copy
-# Author - J Ross (with pieces from Irena's code)
+############################################################################################
+# GTM TB mortality comparison between raw VR, redistributed VR, and cohort data            #
+# Author - J Ross (with pieces from Irena's code)                                          #
+# Sept 10, 2018                                                                            #
+#                                                                                          #
+# Run on the cluster to access shared drive for VR files, or change dirs to a local copy   #
+#
+#############################################################################################
 
-#Latest progress 8-28 stopped at line 178 ready to plot pre-redistribution versus post-redistribution TB and TB-HIV mortality rates
+#Still to work on cleaning up the final variable names for ease of interpretation
 
 rm(list=ls())
 library(data.table)
@@ -11,13 +15,9 @@ library(ggplot2)
 
 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') # have to declare the J Drive differently on the cluster 
-# raster_dir = paste0(j, '/Project/Evaluation/GF/covariates/gtm/')
-#muni_dir <- paste0(j, '/WORK/11_geospatial/05_survey shapefile library/Shapefile directory/')
-#dept_dir <- paste0(j, '/Project/Evaluation/GF/mapping/gtm/outputs/gtm_collaborators/')
 vr_dir <-  ('/ihme/geospatial/vr_prep/cod/outputs/gtm_collaborators/')
 cohort_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
-#export_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/visualizations/')
-#merge_dir <- paste0(j, "/WORK/11_geospatial/11_vr/vr_data_inputs/muni_merges/GTM/")
+out_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
 
 vrData <- data.table(fread(paste0(vr_dir, "formatted_20180716.csv")))
 redistVR <- data.table(fread(paste0(vr_dir, "redistribution_20180716.csv")))
@@ -144,48 +144,45 @@ vrTb_HIV <-vrData[code_id %in% tb_hiv_death_id]
 vrTb_causes <-redistVR[cause_id%in%tb_death_causes]
 vrTb_HIV_causes <-redistVR[cause_id %in% tb_hiv_death_causes]
 
-#Figure out how to the summing step without repeating everyting four times. Could just specify that the by variable is 
-#'year_id' in each case, but this leaves it open to sum by other categories as well.
-#byVars = c('year') Simplify the lines below to follow this pattern
-byVars = c('year_id')
-byVars_HIV = c('year_id')
-byVars_causes = c('year_id')
-byVars_HIV_causes = c('year_id')
+#Make annual totals and assign cause and datasource variables
+tb_pre= vrTb[, list(deaths=sum(na.omit(deaths))), by='year_id']
+tb_pre[,cause:='TB']
+tb_pre[,source:='Raw VR']
 
-tb_pre= vrTb[, list(deaths=sum(na.omit(deaths))), by=byVars]
-tb_post= vrTb_causes[, list(deaths_post=sum(na.omit(deaths))), by=byVars_causes]
+tb_post= vrTb_causes[, list(deaths=sum(na.omit(deaths))), by='year_id']
+tb_post[,cause:='TB']
+tb_post[,source:="Redistributed VR"]
 
-tb_hiv_pre= vrTb_HIV[, list(deaths=sum(na.omit(deaths))), by=byVars_HIV]
-tb_hiv_post= vrTb_HIV_causes[, list(deaths_post=sum(na.omit(deaths))), by=byVars_HIV_causes]
+tb_hiv_pre= vrTb_HIV[, list(deaths=sum(na.omit(deaths))), by='year_id']
+tb_hiv_pre[,cause:='TB/HIV']
+tb_hiv_pre[,source:="Raw VR"]
 
-full_tb<-merge(tb_pre, tb_post, by=c("year_id"))
-full_tb_hiv <-merge(tb_hiv_pre, tb_hiv_post, by=c("year_id"))
-full_tb_hiv <- full_tb_hiv[, .(year_id = year_id, tb_hiv_deaths = deaths, tb_hiv_deaths_post = deaths_post)] #rename for merging
-full <- merge(full_tb, full_tb_hiv, by=c("year_id"))
+tb_hiv_post= vrTb_HIV_causes[, list(deaths=sum(na.omit(deaths))), by='year_id']
+tb_hiv_post[,cause:='TB/HIV']
+tb_hiv_post[,source:='Redistributed VR']
 
-pops <- data.table(fread(paste0(j, "/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/pops_bothsex.csv")))
+deaths <- rbind(tb_pre, tb_post, tb_hiv_pre, tb_hiv_post)
 
-years<-c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016)
-pop_years <- pops[year_id%in%years]
+#Calculate all forms (TB+ TB/HIV) deaths by merging TB and TB/HIV
+full_pre<-merge(tb_pre, tb_hiv_pre, by=c("year_id"))
+full_pre[,deaths:=deaths.x+deaths.y]
+full_pre[,cause:='All Forms']
+full_pre <- full_pre[, .(year_id = year_id, cause=cause, deaths=deaths, source=source.x)]
 
-full <- merge(full, pop_years, by=c("year_id"))
 
-#Compute mortality rates per 100,000 population
-#Convert to data table 
-full$tb_rate_pre <- full$deaths/full$population*100000
-full$tb_rate_post <- full$deaths_post/full$population*100000
-full$tb_hiv_rate_pre <- full$tb_hiv_deaths/full$population*100000
-full$tb_hiv_deaths_post <- full$tb_hiv_deaths_post/full$population*100000
+full_post <-merge(tb_post, tb_hiv_post, by=c("year_id"))
+full_post[,deaths:=deaths.x+deaths.y]
+full_post[,cause:='All Forms']
+full_post <- full_post[, .(year_id = year_id, cause=cause, deaths=deaths, source=source.x)]
+
+#Append all forms estimates to cause-specific
+deaths <- rbind(deaths, full_pre, full_post)
+#deaths dataset is now long-form for annual death counts by cause (TB, TB/HIV, or All Forms) and data source
 
 #NOW SWITCH TO COHORT DATA-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#Cohort data get read-in at the top with the rest of the data
 
-#Read the prepped cohort data. This is broken up since I had it as part of a script to run on the cluster.
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') 
-cohort_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
-cohort <- data.table(fread(paste0(cohort_dir, "GTM - Tx cohort data 2012-2016.csv")))
-
-
-#Subset to avoid overlapping types - See full listing below of all of the values of 'table'
+#Subset to avoid overlapping types 
 tb_denom <- cohort[table %in% c('Nuevos Pulmonares BK+', 
                                 'Nuevos Pulmonares BK-', 'Nuevos Pediatricos', 
                                 'Nuevos Extrapulmonares', 'Nuevos TB/VIH', 'Retratamiento')]
@@ -196,10 +193,12 @@ tb_denom <- tb_denom[col_name=='TOTAL' & deptocode==0]
 tb_solo <- tb_denom[table!='Nuevos TB/VIH']
 tb_hiv <- tb_denom[table=='Nuevos TB/VIH']
 
-#Handy check that totals are in the ballpark
+#Check that totals are in the ballpark
 tb_denom[year==2016, sum(value,na.rm=T)]
 
 # Initial result - Total of new and retreatment cases in the cohorts per year----------------------------------------------------------------------------
+# This isn't strictly necessary for the mortality analysis, but it seems that it will come in handy 
+# at some point for notifications
 annual_all_forms <- tb_denom[, list(value=sum(value,na.rm=TRUE)), by='year']
 annual_tb_solo <- tb_solo[, list(value=sum(value,na.rm=TRUE)), by='year']
 annual_tb_hiv <- tb_hiv[, list(value=sum(value,na.rm=TRUE)), by='year']
@@ -208,11 +207,56 @@ annual_tb_hiv <- tb_hiv[, list(value=sum(value,na.rm=TRUE)), by='year']
 #Is it correct the FRACASO_TERAPEUTICO (treatment failure) is under completed treatment?
 
 #subset deaths
-deaths <- tb_denom[row_name_B=="DEATHS"]
+deaths_all_forms <- tb_denom[row_name_B=="DEATHS"]
 deaths_tb_solo <- tb_solo[row_name_B=='DEATHS']
 deaths_tb_hiv <- tb_hiv[row_name_B=='DEATHS']
 
-## total annual deaths 
-deaths_a_all_forms = deaths[, list(value=sum(value,na.rm=TRUE)), by='year']
-deaths_a_tb_solo = deaths_tb_solo[, list(values=sum(value,na.rm=TRUE)), by='year']
-deaths_a_tb_hiv = deaths_tb_hiv[, list(values=sum(value,na.rm=TRUE)), by='year']
+##Sum annual deaths and add cause and data source
+deaths_a_tb_solo = deaths_tb_solo[, list(deaths=sum(value,na.rm=TRUE)), by='year']
+deaths_a_tb_solo[,cause:='TB']
+deaths_a_tb_solo[,source:='Cohort']
+
+deaths_a_tb_hiv = deaths_tb_hiv[, list(deaths=sum(value,na.rm=TRUE)), by='year']
+deaths_a_tb_hiv[,cause:='TB/HIV']
+deaths_a_tb_hiv[,source:='Cohort']
+
+deaths_a_all_forms = deaths_all_forms[, list(deaths=sum(value,na.rm=TRUE)), by='year']
+deaths_a_all_forms[,cause:='All Forms']
+deaths_a_all_forms[,source:='Cohort']
+
+#Need to add NAs for 2009 - 2011 since the cohort dataset does not cover these years?
+deaths_cohort <- rbind(deaths_a_tb_solo, deaths_a_tb_hiv, deaths_a_all_forms)
+deaths_cohort <- deaths_cohort[, .(year_id=year, cause=cause, deaths=deaths, source=source)]
+
+#Append the cohort deaths with VR
+deaths <- rbind(deaths, deaths_cohort)
+
+write.csv(deaths, file=paste0(out_dir,'deaths_vr_cohort.csv'))
+
+#Merge with population data to calculate mortality rates
+pops <- data.table(fread(paste0(j, "/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/pops_bothsex.csv")))
+years<-c(2009, 2010, 2011, 2012, 2013, 2014, 2015, 2016)
+pop_years <- pops[year_id%in%years]
+
+full <- merge(deaths, pops, by = 'year_id')
+full[,mort_rate:=deaths/population*100000]
+
+mort <- full[, .(year_id, cause, mort_rate, source)]
+write.csv(mort, file=paste0(out_dir,'mort_vr_cohort.csv'))
+
+
+##Plotting------------------------------------------------------------------------------------------------------
+
+#Remove all forms to simplify the plot
+mort_simple <- mort[cause!='All Forms',]
+deaths_simple <-deaths[cause!='All Forms',]
+
+p1 <- ggplot (data=mort_simple, aes(x=year_id, y=mort_rate, colour=cause, linetype=source))+
+  geom_line()+
+  labs(x="Year", y="Mortality rate", title="TB and TB/HIV mortality rates per 100,000 population in Guatemala")
+p1
+
+p2 <- ggplot (data=deaths_simple, aes(x=year_id, y=deaths, colour=cause, linetype=source))+
+  geom_line()+
+  labs(x="Year", y="Deaths", title="TB and TB/HIV deaths by data source in Guatemala")
+p2

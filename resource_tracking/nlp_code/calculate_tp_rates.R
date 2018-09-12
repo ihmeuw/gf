@@ -14,7 +14,7 @@ library(stats)
 library(stringr)
 library(rlang)
 library(zoo)
-
+library(gmodels)
 
 # ----------------------------------------------
 #### functions to calculate T/F P/N
@@ -83,9 +83,9 @@ iterMatrix[,true_positive_rate:=true_positive/needed_correction]
 iterMatrix[,true_negative_rate:=true_negative/no_correction]
 ## the complements of these two rates are the false positive and false negative respectively: 
 
+frequ = bestIteration[,c("corrected_module", "predicted_module_translated")]
 
+#break down by desease
+cf = capture.output(CrossTable(frequ$corrected_module, frequ$predicted_module_translated))
 
-
-
-
-
+write.csv(cf,"H:/test2.csv", row.names = FALSE)
