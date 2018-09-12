@@ -40,7 +40,12 @@ folder <- 'pre_prep/merged/'
 # change the file to the file you want to upload!
 # base, sigl, or pnls file to upload, clean, and prep
 <<<<<<< HEAD
+<<<<<<< HEAD
 file <- 'base_services_drc_01_2015_09_2018'
+=======
+file <- 'base_services_drc_01_2017_09_2018'
+date_end = '2018-08-01'
+>>>>>>> 8cda713ce6dcd18043ed6ddf11edc18e16272b6f
 =======
 file <- 'base_services_drc_01_2017_09_2018'
 date_end = '2018-08-01'
