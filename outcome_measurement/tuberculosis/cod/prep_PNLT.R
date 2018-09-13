@@ -43,6 +43,22 @@ pnlt_transl <- "PNLT_translations.xlsx"
 
 # output file
 pnlt_main <- "PNLT_prepped_data.csv"
+pnlt_outcomes_17 <- "PNLT_case_outcomes_2017.csv"
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+## variables to use
+# ----------------------------------------------
+unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
+                          'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
+                          'Ú'='U', 'Û'='U', 'Ü'='U', 'İ'='Y', 'Ş'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
+                          'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ğ'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
+                          'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ı'='y', 'ı'='y', 'ş'='b', 'ÿ'='y' )
+
+dps_names <- c('kwango', 'kwilu', 'mai-ndombe', 'kongo-central-est', 'kongo-central-ouest', 'equateur', 'mongala', 'nord-ubangi', 'sud-ubangi', 'tshuapa', 'kasai', 'kasai-central', 
+              'kasai-oriental', 'lomami', 'sankuru', 'haut-katanga', 'haut-lomami', 'lualaba', 'tanganyika', 'kinshasa', 'maniema', 'nord-kivu', 'sud-kivu', 'ituri', 'tshopo', 
+              'bas-uele', 'haut-uele')
 # ----------------------------------------------
 
 
@@ -64,41 +80,222 @@ getFiles <- function(year){
   return(files)
 }
 
-year="2016"
-
-# get file names for a given year:
-files <- getFiles(year)
-
-# clean file names to remove ones without data for cleaning:
-files_xlsx <- files[!grepl(".DOC", files)]
-files_xlsx <- files_xlsx[!grepl("NATIONAL", files_xlsx)]
-files_xlsx <- files_xlsx[!grepl("SUBMISSION_DATES", files_xlsx)]
-files_xlsx <- files_xlsx[!grepl("HEALTH_ZONES", files_xlsx)]
-files_xlsx <- files_xlsx[!grepl("INDICATORS_COLLECTED", files_xlsx)]
+# # get file names for a given year:
+# files <- getFiles(year)
+# 
+# # clean file names to remove ones without data for cleaning:
+# files_xlsx <- files[!grepl(".DOC", files)]
+# files_xlsx <- files_xlsx[!grepl("NATIONAL", files_xlsx)]
+# files_xlsx <- files_xlsx[!grepl("SUBMISSION_DATES", files_xlsx)]
+# files_xlsx <- files_xlsx[!grepl("HEALTH_ZONES", files_xlsx)]
+# files_xlsx <- files_xlsx[!grepl("INDICATORS_COLLECTED", files_xlsx)]
 #-----------------------------------------------
 
 
 # ----------------------------------------------
 ## get all sheets in a given file
 # ----------------------------------------------
-file = files_xlsx[55]
-
-sheets <- getSheetNames(paste0(dir, year, "/", file))
-
-# determine what quarter the file is from:
-if (grepl("T1", file)){
-  quarter= "T1"
-}else if (grepl("T2", file)){
-  quarter= "T2"
-}else if (grepl("T3", file)){
-  quarter= "T3"
-}else if (grepl("T4", file)){
-  quarter= "T4"
+getSheets <- function(file, year){
+  sheets <- getSheetNames(paste0(dir, year, "/", file))
+  
+  # # determine what quarter the file is from:  --- NOT RELEVANT FOR 2017/2018
+  # if (grepl("T1", file)){
+  #   quarter= "T1"
+  # }else if (grepl("T2", file)){
+  #   quarter= "T2"
+  # }else if (grepl("T3", file)){
+  #   quarter= "T3"
+  # }else if (grepl("T4", file)){
+  #   quarter= "T4"
+  # }
+  # return(sheets)
 }
-
 ## NOTE: three types of sheets to clean:  DEP, AGE, and EVAL
 # ----------------------------------------------
 
+
+#-----------------------------------------------
+## Prep 2017 and 2018 data -- first focus
+#-----------------------------------------------
+files18 <- getFiles(2018)
+files18 <- files18[!grepl("~", files18)]
+files17 <- getFiles(2017)
+files17 <- files17[!grepl("~", files17)]
+
+# there is just one file in each year folder for 2018/2017
+sheets18 <- getSheets(files18[1], 2018)
+sheets17 <- getSheets(files17[1], 2017)
+
+# 2017:
+# SET UP:
+  sheets <- sheets17
+  # EVAL SHEETS:
+    # get just eval sheets for each quarter
+    sheets_eval <- sheets[grepl("EVAL", sheets)]
+    sheets_eval <- sheets_eval[!grepl("SYN", sheets_eval)]
+    
+    # make a data table of sheet properties
+    dt_sheets_eval <- as.data.table(sheets_eval)
+    setnames(dt_sheets_eval, "sheets_eval", "sheet_name")
+    dt_sheets_eval[, c("sheet_type", "TB_type"):= transpose(stri_split_fixed(sheet_name, " ", 2))]
+    dt_sheets_eval[, year:= lapply(strsplit(TB_type, " "), tail, 1)]
+    dt_sheets_eval[, TB_type := gsub(paste0(" ", year), "", TB_type), by="sheet_name"]
+    dt_sheets_eval[, quarter:= lapply(strsplit(TB_type, " "), tail, 1)]
+    dt_sheets_eval[, TB_type := gsub(paste0(" ", quarter), "", TB_type), by="sheet_name"]
+    
+  # DEP SHEETS
+    # get just the DEP sheets from sheets
+    sheets_dep <- sheets[grepl("DEP", sheets)]
+    sheets_dep <- sheets_dep[!grepl("SYNTH", sheets_dep)]
+    
+  # AGE SHEETS
+    # get just the EVAL sheets from sheets
+    sheets_age <- sheets[grepl("AGE", sheets)]
+    sheets_age <- sheets_age[!grepl("SYN", sheets_age)]
+    sheets_age <- sheets_age[!grepl("STNTH", sheets_age)]
+    
+    # make a data table of sheet properties
+    dt_sheets_age <- as.data.table(sheets_age)
+    setnames(dt_sheets_age, "sheets_age", "sheet_name")
+    dt_sheets_age[, c("sheet_type", "TB_type"):= transpose(stri_split_fixed(sheet_name, " ", 2))]
+    dt_sheets_age[, year:= lapply(strsplit(TB_type, " "), tail, 1)]
+    dt_sheets_age[, TB_type := gsub(paste0(" ", year), "", TB_type), by="sheet_name"]
+    dt_sheets_age[, quarter:= lapply(strsplit(TB_type, " "), tail, 1)]
+    dt_sheets_age[, TB_type := gsub(paste0(" ", quarter), "", TB_type), by="sheet_name"]
+#---------------------------------------------
+    
+    
+#---------------------------------------------   
+# CLEAN:
+    # EVAL SHEETS:
+    year=2017
+    file=file2017[1]
+    i = 1
+    
+    for (s in sheets_eval[1:length(sheets_eval)]){
+      
+      dt <- data.table(read_excel(paste0(dir, year, "/", file), sheet= s))
+      
+      # remove rows at the top up until the header row
+      setnames(dt, colnames(dt)[1], "col1")
+      index <- grep("CPLT", dt$col1 )
+      
+      dt <- dt[-c(1:(index-1))]
+      
+      # remove columns of percentages
+      cols <- !is.na( dt[1,] )
+      cols <- colnames(dt)[cols]
+      
+      dt <- dt[, cols, with=FALSE]
+      
+      # remove rows that are entirely NA
+      rows_to_remove <- apply(dt, 1, function(x) all(is.na(x)))
+      dt <- dt[!rows_to_remove, ]
+      # remove rows where col1 is na
+      dt <- dt[!is.na(col1)]
+      
+      # remove total rows (sometime has "RDC")
+      dt <- dt[!grepl("TOTAL", col1)]
+      dt <- dt[!grepl("RDC", col1)]
+      
+      # set column names to be header row:
+      colnames(dt) <- as.character(dt[1,])
+      
+      # remove header row in row 1
+      dt <- dt[-1, ]
+      
+      ##----------------------------------
+      # clean column names:
+      colnames(dt) <- tolower(colnames(dt))
+    
+      # Setnames <- function(x, old, new, allow.absent.cols=F) {
+      #   if (!allow.absent.cols) {
+      #     setnames(x, old, new)
+      #   } else {
+      #     old.intersect <- intersect(old, names(x))
+      #     common.indices <- old %in% old.intersect
+      #     new.intersect <- new[common.indices]
+      #     setnames(x, old.intersect, new.intersect)
+      #   }
+      # }
+      setnames(dt, grep('cplt', colnames(dt)), 'dps')
+      setnames(dt, grep('enreg', colnames(dt)), 'tot_cas_reg')
+      
+      for(n in c('guer')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'healed')
+      if(!'healed' %in% names(dt)) print(paste0('In sheet, ', s, ', healed is not a column'))
+      
+      setnames(dt, grep('traitement termine', colnames(dt)), 'trt_complete')
+
+      for(n in c('dece','dcd')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'died')
+      if(!'died' %in% names(dt)) stop(paste0('In sheet, ', s, ', died is not a column'))
+      
+      for(n in c('echecs')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'trt_failed')
+      if(!'trt_failed' %in% names(dt)) print(paste0('In sheet, ', s, ', trt_failed is not a column'))
+      
+      for(n in c('perdu','abandon', 'interruptions')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'lost_to_followup')
+      if(!'lost_to_followup' %in% names(dt)) stop(paste0('In sheet, ', s, ', lost_to_followup is not a column'))
+      
+      setnames(dt, grep('transfer', colnames(dt)), 'transferred')
+      
+      for(n in c('total  evalue','total evalue', 'total cas evalues')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'cas_eval')
+      if(!'cas_eval' %in% names(dt)) stop(paste0('In sheet, ', s, ', cas_eval is not a column'))
+      
+      for(n in c('non evalue')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'cas_not_eval')
+      if(!'cas_not_eval' %in% names(dt)) stop(paste0('In sheet, ', s, ', cas_not_eval is not a column'))
+
+      # clean DPS names
+      dt$dps <- gsub(" ", "-", dt$dps)
+      dt$dps <- gsub("--", "-", dt$dps)
+
+      dt$dps <- chartr(paste(names(unwanted_array), collapse=''),
+                           paste(unwanted_array, collapse=''),
+                           dt$dps)
+      
+      # one case where this is different:
+      
+      dt <- dt[dps !="EQUATEUR"]
+      dt <- dt[dps !="KASAI-ORIENTAL"]
+      
+      dt$dps <- tolower(dt$dps)
+      
+      dt[ dps == 'kasai-centre', dps:= 'kasai-central']
+      
+      dt <- dt[dps %in% dps_names]
+
+      # add columns for quarter, year, and TB type
+      dt[, sheet:= s]
+      dt[, quarter:= dt_sheets_eval[sheet_name==s, quarter]]
+      dt[, TB_type := dt_sheets_eval[sheet_name==s, TB_type]]
+      dt[, data_year := dt_sheets_eval[sheet_name==s, year]]
+      dt[, file_year := year]
+      
+      if (i==1){
+        # if it's the first sheet, initialize the new dt
+        outcomes <- dt
+        # for subsequent sheets, rbind to that dt
+      } else {
+        outcomes <- rbindlist(list(outcomes, dt), use.names=TRUE, fill= TRUE)
+      }
+      print(s)
+      i <- i + 1
+    }
+    
+    write.csv(outcomes, file= paste0(dir_prepped, pnlt_outcomes_17))
+    
+# ----------------------------------------------
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 
 # ----------------------------------------------
 ## clean "EVAL"sheets
