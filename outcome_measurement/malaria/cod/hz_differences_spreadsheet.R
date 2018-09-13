@@ -35,12 +35,13 @@ library(maptools)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir_pnlp = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
 dir_snis <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/dhis/all_units/")
-dir_shape <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/health2/")
+dir_shape <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/")
 
 # input file
 snis_data <- "master_facilities.rds"
 input_pnlp <- "final_data_for_imputation.csv"
-shapefile <- "health2.shp"
+shapefile <- "health2/health2.shp"
+shp_hdx <- "hdx/Zone_Sté_Puc.shp"
 
 # output file
 
@@ -51,10 +52,16 @@ shapefile <- "health2.shp"
 # read in the data
 
 snis <- readRDS(paste0(dir_snis, snis_data))
+
 pnlp <- read.csv(paste0(dir_pnlp, input_pnlp))
 pnlp <- as.data.table(pnlp)
+
 shp <- shapefile(paste0(dir_shape, shapefile))
 shp <- as.data.table(shp@data)
+
+shp2 <- shapefile(paste0(dir_shape, shp_hdx))
+shp2 <- as.data.table(shp2@data)
+
 # ----------------------------------------------
 
 
@@ -67,7 +74,7 @@ shp <- as.data.table(shp@data)
 shp1 <- shp[, .(PROVNAME, Name_API, Name, zs_id)]
 # save a version of the names as they appear in the data
 shp1$hz_shp1 <- shp1$Name
-shp1$hz_shp2 <- shp1$Name_API
+shp1$hz_shp1_alt <- shp1$Name_API
 # use Name for health zone names bc it seems to be more complete;
 # keep Name_API for alternative spellings
 # standardize original names to be merged together
@@ -77,6 +84,21 @@ shp1$Name <- gsub(" ", "-", shp1$Name)
 setnames(shp1, "Name", "health_zone")
 setnames(shp1, "PROVNAME", "province_shp")
 shp1$health_zone <- gsub("_", "-", shp1$health_zone)
+
+# SECOND SHAPEFILE
+
+# get just the variables to use
+shp2 <- shp2[, .(PROVINCE, NOM_ZS)]
+# save a version of the names as they appear in the data
+shp2$hz_shp2 <- shp2$NOM_ZS
+# use Name for health zone names bc it seems to be more complete;
+# keep Name_API for alternative spellings
+# standardize original names to be merged together
+shp2$NOM_ZS <- tolower(shp2$NOM_ZS)
+shp2$NOM_ZS <- gsub(" ", "-", shp2$NOM_ZS)
+setnames(shp2, "NOM_ZS", "health_zone")
+setnames(shp2, "PROVINCE", "province_shp2")
+shp2$health_zone <- gsub("_", "-", shp2$health_zone)
 # ----------------------------------------------
 # PNLP
 
@@ -190,8 +212,13 @@ pnlp[health_zone=="lolanga-mampoko", health_zone:= "mampoko"]
 pnlp[health_zone=="bandjow", health_zone:= "banzow-moke"] 
 
 # re-merge to get best matched result:
+not_matching <-pnlp_snis[!complete.cases(dps_snis, hz_snis, hz_pnlp, dps_pnlp), ]
+
 pnlp_snis <- merge(snis, pnlp, by= c("health_zone", "dps"), all=TRUE)
 
+
+# --------------------------------------
+#SHAPEFILE 1
 # merge pnlp_snis merged file with the shapefile
 shp_pnlp_snis <- merge(shp1, pnlp_snis, by= c("health_zone"), all=TRUE)
 not_matching2 <-shp_pnlp_snis[!complete.cases(hz_shp1, dps_snis, hz_snis, hz_pnlp, dps_pnlp), ]
@@ -282,8 +309,50 @@ pnlp_snis[health_zone=="kalomba", health_zone:="kalomda"]
 shp_pnlp_snis <- merge(shp1, pnlp_snis, by= c("health_zone"), all=TRUE)
 not_matching2 <-shp_pnlp_snis[!complete.cases(hz_shp1, dps_snis, hz_snis, hz_pnlp, dps_pnlp), ]
 
-write.csv(not_matching2, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/mismatched_hzs.csv")
-write.csv(shp_pnlp_snis, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/standardized_hzs.csv")
+# SHAPEFILE 2
+# merge pnlp_snis merged file with the shapefile
+shp_pnlp_snis <- merge(shp2, pnlp_snis, by= c("health_zone"), all=TRUE)
+not_matching2 <-shp_pnlp_snis[!complete.cases(hz_shp2, dps_snis, hz_snis, hz_pnlp, dps_pnlp), ]
+
+pnlp_snis[health_zone=="banzow-moke", health_zone:="banjow-moke"]
+pnlp_snis[health_zone=="bimpemba", health_zone:="bipemba"]
+pnlp_snis[health_zone=="bogosenubea", health_zone:="bogosenubia"]
+
+pnlp_snis[health_zone=="dikungu", health_zone:="dikungu-tshumbe"]
+pnlp_snis[health_zone=="kabeya-kamwanga", health_zone:="kabeya-kamuanga"]
+pnlp_snis[health_zone=="kalamu-1", health_zone:="kalamu-i"]
+
+pnlp_snis[health_zone=="kalamu-2", health_zone:="kalamu-ii"]
+pnlp_snis[health_zone=="kalonda-ouest", health_zone:="kalonda"]
+pnlp_snis[health_zone=="malemba-nkulu", health_zone:="malemba"]
+
+pnlp_snis[health_zone=="maluku-1", health_zone:="maluku-i"]
+pnlp_snis[health_zone=="maluku-2", health_zone:="maluku-ii"]
+pnlp_snis[health_zone=="masina-1", health_zone:="masina-i"]
+
+pnlp_snis[health_zone=="masina-2", health_zone:="masina-ii"]
+pnlp_snis[health_zone=="mbulula", health_zone:="mbulala"]
+pnlp_snis[health_zone=="mont-ngafula-1", health_zone:="mont-ngafula-i"]
+
+pnlp_snis[health_zone=="mont-ngafula-2", health_zone:="mont-ngafula-ii"]
+pnlp_snis[health_zone=="mweneditu", health_zone:="mwene-ditu"]
+pnlp_snis[health_zone=="omondjadi", health_zone:="omendjadi"]
+
+pnlp_snis[health_zone=="ruashi", health_zone:="rwashi"]
+pnlp_snis[health_zone=="tshitshimbi", health_zone:="tshishimbi"]
+pnlp_snis[health_zone=="yalifafu", health_zone:="yalifafo"]
+
+pnlp_snis[health_zone=="mampoko", health_zone:="lolanga-mampoko"]
+pnlp_snis[health_zone=="muanda", health_zone:="moanda"]
+pnlp_snis[health_zone=="lubondaie", health_zone:="lubondayi"]
+
+pnlp_snis[health_zone=="kinkonja", health_zone:="kinkondja"]
+pnlp_snis[health_zone=="kimbao", health_zone:="kimbau"]
+pnlp_snis[health_zone=="kiambi", health_zone:="kiyambi"]
+
+
+# write.csv(not_matching2, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/mismatched_hzs.csv")
+# write.csv(shp_pnlp_snis, "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/standardized_hzs.csv")
 
 
 
