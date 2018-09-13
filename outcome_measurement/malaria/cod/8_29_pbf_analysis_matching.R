@@ -45,6 +45,7 @@ fac_file <- "J:/Project/Evaluation/GF/outcome_measurement/cod/dhis/all_units/hea
 
 # output files
 output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_analysis/')
+output_dt <- "dt_for_matching_analysis_of_pbf.csv"
 # ----------------------------------------------
 
 
@@ -86,7 +87,7 @@ dt$health_zone <- gsub(" ", "-", dt$health_zone)
 ## Clean dps and hz names in hz_pbf
 # ----------------------------------------------
 hz_pbf <- hz_pbf[-c(1:7), -c(1,7,9)]
-colnames(hz_pbf) <- c("dps", "health_zone", "HGR", "official_AS", "pop_covered", "year_start_PBF")
+colnames(hz_pbf) <- c("dps", "health_zone", "HGR", "official_AS", "pop_covered", "year_start_pbf")
 hz_pbf$dps <- tolower(hz_pbf$dps)
 hz_pbf$health_zone <- tolower(hz_pbf$health_zone)
 hz_pbf$dps <- gsub(" ", "-", hz_pbf$dps)
@@ -157,14 +158,37 @@ dt_pbf$year <- year(dt_pbf$date)
 dt_match_analysis <- dt_pbf[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere", "mildMalariaTreated", "severeMalariaTreated"), ]
 setnames(dt_match_analysis, "mean", "value")
 
-dt_match_analysis <- dt_match_analysis[, .(indicator_value = sum(value)), by=c("dps","health_zone", "year", "pbf", "year_start_pbf", "funder", "GF", "indicator")]
+id_vars <- c("dps","health_zone", "year", "pbf", "year_start_pbf")
 
-dt_wide <- data.table(dcast(dt_match_analysis, dps + health_zone +  year + pbf + year_start_pbf + funder + GF ~ indicator, value.var="indicator_value"))
+dt_match_analysis <- dt_match_analysis[, .(indicator_value = sum(value)), by=c(id_vars, "indicator")]
+
+dt_wide <- data.table(dcast(dt_match_analysis, dps + health_zone +  year + pbf + year_start_pbf ~ indicator, value.var="indicator_value"))
 
 dt_wide <- dt_wide[, conf_cases := newCasesMalariaMild + newCasesMalariaSevere]
 dt_wide <- dt_wide[, cases_treated := mildMalariaTreated + severeMalariaTreated]
 
-dt_wide <- dt_wide[, c("year", "dps", "health_zone", "pbf", "year_start_pbf", "funder", "GF", "conf_cases", "cases_treated")]
+dt_wide <- dt_wide[, c(id_vars, "conf_cases", "cases_treated"), with=FALSE]
+
+# for bijombo, we want to sum conf_cases and cases_treated prior to merge
+# change bijombo to uvira
+# then sum by health zone
+dt_wide <- dt_wide[health_zone=="bijombo", health_zone:="uvira"]
+sd_cols <- c("conf_cases", "cases_treated")
+
+dt_wide <- dt_wide[, lapply(.SD, sum), by=id_vars, .SDcols = sd_cols]  # do before merging on facility names?
+
+# for katoyi and haut-plateau, we want to sum facilities info in fac_counts prior to merge
+fac_counts[health_zone=="sk Haut Plateau Zone de Santé" | health_zone=='sk Uvira Zone de Santé', health_zone:="sk Uvira Zone de Santé"]
+fac_counts[health_zone=="nk Katoyi Zone de Santé" | health_zone=='nk Masisi Zone de Santé', health_zone:="nk Masisi Zone de Santé"]
+
+all_cols <- colnames(fac_counts)
+id_cols <- c("health_zone", "dps")
+sd_cols <- all_cols[!all_cols %in% id_cols]
+
+fac_counts <- fac_counts[, lapply(.SD, sum), by=id_cols, .SDcols = sd_cols]  #not working for some reason?
+
+setnames(fac_counts, "health_zone", "hz_snis")
+setnames(fac_counts, "dps", "dps_snis")
 # ----------------------------------------------
 
 
@@ -181,60 +205,37 @@ std_names$hz_pnlp <- gsub(" ", "-", std_names$hz_pnlp)
 std_names <- std_names[, .(dps_snis, hz_snis, hz_pnlp, dps_pnlp)]
 std_names <- unique(std_names)
 
+std_names <- std_names[hz_pnlp != "bijombo",]
+std_names <- std_names[hz_snis != "nk Katoyi Zone de Santé",]
+std_names <- std_names[hz_snis != "sk Haut Plateau Zone de Santé",]
+
 dt_std <- merge(dt_wide, std_names, all=TRUE, by.x=c("dps", "health_zone"), by.y=c("dps_pnlp", "hz_pnlp"))
-
-# merge health fac info from caitlin on dps_snis and hz_snis
-setnames(fac_counts, "dps", "dps_snis")
-setnames(fac_counts, "health_zone", "hz_snis")
-
-# for bijombo, since it is in PNLP but not SNIS, we want to sum conf_cases and cases_treated (the data in PNLP)
-# and we want to change bijombo to uvira (?)
-# do this BEFORE merge, so it's easier to sum over facilities
-# doing this next part manually because I can't figure it out...
-
-dt_std[health_zone=="bijombo", conf_cases:= sum(conf_cases), by="year"]
-dt_std[health_zone=="bijombo", cases_treated:= sum(cases_treated), by="year"]
-
-dt_subset <- dt_std[health_zone == "bijombo" | health_zone == "uvira",]
-
-dt_subset <- dt_subset[, add_var := rep(1:2)]
-
-# add bijombo values to uvira
-dt_std[health_zone=="uvira", conf_cases:= conf_cases + 6380.559]
-dt_std[health_zone=="uvira", cases_treated:= cases_treated + 6250.308]
-
-
-
-# get rid of bijombo lines so it's just uvira
-dt_std <- dt_std[!health_zone=="bijombo",]
 
 # now, merge with Caitlin's facility counts data:
 dt <- merge(dt_std, fac_counts, all=TRUE, by=c("dps_snis", "hz_snis"))
-
-
-# for katoyi and haut-plateau, we want to sum facilities info since it is in SNIS but not PNLP (so we don't want to sum cases since it is duplicated)
-all_cols <- colnames(dt)
-dt[,dps_snis:=NULL]
-dt[,hz_snis:=NULL]
-id_vars <- c("year", "dps", "health_zone", "pbf", "year_start_pbf", "funder", "GF", "conf_cases", "cases_treated")
-sd_cols <- all_cols[!all_cols %in% id_vars]
-
-dt_test <- dt[, lapply(.SD, sum), by=id_vars, .SDcols = sd_cols]
+dt <- dt[, -c("dps_snis", "hz_snis")]
+dt <- setnames(dt, "conf_cases", "cases")
 # ----------------------------------------------
 
 
 # ----------------------------------------------
 ## merge funder data to dt_pbf
 # ----------------------------------------------
-dt2 <- merge(dt_pbf, funder_data, all=TRUE, by=c("dps", "health_zone", "date", "year"))
+# funder_data <- unique(funder_data[, .(dps, health_zone, donor, year)])
+# dt2 <- merge(dt, funder_data, all=TRUE, by=c("dps", "health_zone", "year"))
+# 
+# # mark where gf was a donor
+# setnames(dt2, "donor", "funder")
+# dt2[!is.na(funder), GF:= ifelse(grepl("FM", funder), "yes", "no") ]
+dps_names <- unique(dt$dps)
+gf_dps <- c("equateur", "kongo-central", "kinshasa", "kwilu", "kwango", "mai-ndombe", "tshuapa", "sud-ubangi", "nord-ubangi", "mongala", "tshopo", "maniema", "bas-uele",
+            "haut-uele", "ituri", "nord-kivu")
 
-# mark where gf was a donor
-setnames(dt2, "donor", "funder")
-dt2 <- dt2[!is.na(funder), GF:= ifelse(grepl("FM", funder), "yes", "no") ]
-setnames(dt2, "year_start_PBF", "year_start_pbf")
-dt_pbf <- dt2[, c("dps", "health_zone", "date", "year", "pbf", "year_start_pbf", "funder", "GF", "variable", "indicator", "subpopulation", "mean")]
+dt[dps %in% gf_dps, funder_2017:="GF"]
+dt[dps=="kasai", funder_2017:="DFID"]
+dt[!dps %in% c(gf_dps, "kasai"), funder_2017:="PMI"]
+
+write.csv(dt, file=paste0(dir_cod_data, output_dt))
 # ----------------------------------------------
-
-
 
 
