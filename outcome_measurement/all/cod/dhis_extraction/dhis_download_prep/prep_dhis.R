@@ -11,7 +11,7 @@
 
 # ----------------------------------------------
 # shell script to 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1327 -s 10 -P snis
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1527 -s 20 -P snis_prep
 
 # --------------------
 # Set up R
@@ -39,8 +39,17 @@ folder <- 'pre_prep/merged/'
 
 # change the file to the file you want to upload!
 # base, sigl, or pnls file to upload, clean, and prep
-file <- 'pnls_drc_01_2017_07_2018'
+<<<<<<< HEAD
+<<<<<<< HEAD
+file <- 'base_services_drc_01_2015_09_2018'
+=======
+file <- 'base_services_drc_01_2017_09_2018'
 date_end = '2018-08-01'
+>>>>>>> 8cda713ce6dcd18043ed6ddf11edc18e16272b6f
+=======
+file <- 'base_services_drc_01_2017_09_2018'
+date_end = '2018-08-01'
+>>>>>>> 8cda713ce6dcd18043ed6ddf11edc18e16272b6f
 
 # import the data set for cleaning and prep 
 dt <- readRDS(paste0(dir, folder, file, '.rds'))
@@ -92,23 +101,6 @@ dt[health_zone2!='Zone', health_zone:=paste(health_zone1, health_zone2) ]
 dt[health_zone2=='Zone', health_zone:=health_zone1]
 dt[ , c('health_zone1', 'health_zone2'):=NULL]
 
-#---------------------
-# replace health zone when the facility is a health zone 
-# when data are reported at the hz level, health zone is missing
-
-dt[level=='health_zone', health_zone1:=org_unit]
-
-# replace health zone
-dt$health_zone2 <- unlist(lapply(strsplit(dt$health_zone1, " "), "[", 2))
-dt$health_zone3 <- unlist(lapply(strsplit(dt$health_zone1, " "), "[", 3))
-dt[health_zone3!='Zone', health_zone1:=paste(health_zone2, health_zone3) ]
-dt[health_zone3=='Zone', health_zone1:=health_zone2]
-
-dt[level=='health_zone' ,health_zone:=health_zone1]
-dt[ , c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
-
-
-
 #-----------------------------------------------
 # add a variable to demarcate the provincial approach provinces
 dt[dps=='Maniema' | dps=='Tshopo' | dps=="Kinshasa", mtk:='Yes']
@@ -134,21 +126,20 @@ tabl <- tabl [date < date_end]
 # get the name for the file
 name <- strsplit(file, '_')[[1]][1]
 
-# eliminate the extraneous categories from pnls elements 
-if (name=='pnls') {
-
-sortie = tabl[element_id=='jJuipTLZK4o' & category=='Sortie']
-tabl = tabl[element_id!='jJuipTLZK4o']
-tabl = rbind(tabl, sortie)
-
-return(table)
-
-}
-
 # save the file
 saveRDS(tabl, paste0(dir, 'prepped/tabl_', name, '.rds'))
 
 #--------------------------------------------------
+
+# temporary pnls vector:
+
+# pnls <- c('Gv1UQdMw5wL', 'ZqM4AyJW42Q', 'DAbWpraDg43','DXz4Zxd4fKq',
+#       'gHBcPOF5y3z', 'zxn95tkbnCv', 'jJuipTLZK4o', 'fdc1v0PSUZe')
+# 
+# tabl <- dt[element_id %in% pnls]
+
+
+
 
 
 
