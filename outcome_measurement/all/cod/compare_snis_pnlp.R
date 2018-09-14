@@ -412,13 +412,13 @@ for(f in unique(hz1$variable)) {
     
     # set the title to the facility name
     name <- unique(hz1[variable==f]$variable)
-    hz_name <- unique(hz1[health_zone==p]$health_zone)
+    hzname <- unique(hz1[health_zone==p]$health_zone)
     
     # create a graph of the monthly data stratified by sex
     list_of_plots[[i]] <- ggplot(hz1[variable==f & health_zone==p], aes(y=value, x=date, color=set, group=set)) + 
       geom_point() +
       geom_line(alpha=0.5) + 
-      labs(title=name, subtitle=hz_name, caption= x="Date", y="Count") +
+      labs(title=name, subtitle=hzname, x="Date", y="Count") +
       theme_bw() +
       scale_y_continuous(labels = scales::comma)
     
@@ -429,7 +429,7 @@ for(f in unique(hz1$variable)) {
 
 outFiles = paste0(dir,'compare_pnlp/all_vars_hz/pnlp_compare_dps_variable', unique(prov1$variable), '.pdf')
 j=1 # start a counter for "chunks" of graphs
-n = length(unique(prov1$dps)) # count the length of a chunk
+n = length(unique(hz1$health_zone)) # count the length of a chunk
 pdf(outFiles[1]) # open the first pdf
 for(i in seq(length(list_of_plots))) {
   if ((i%%(n+1))==0) { # if we're at the first graph of the next chunk...
@@ -506,8 +506,14 @@ for(i in seq(length(list_of_plots))) {
 dev.off()
 
 #---------------------------------------
+# descriptive stats 
+test = dt[ , .(value=sum(value, na.rm=T)), by=.(variable, set)]
+test = test[  , .(mean=(value/12)), by=.(set, variable)]
 
+fwrite(test, paste0(dir, 'means_real.csv' ))
 
+var <- fac_b[ ,mean(value), by=variable]
+fwrite(var, paste0(dir, 'means_var.csv' ))
 
 
 
