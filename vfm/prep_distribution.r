@@ -60,7 +60,10 @@ mapFiles = paste0(mapDir, list.files(mapDir, 'tif'))
 mapFiles = mapFiles[!grepl('.ovr|.aux|.xml', mapFiles)]
 
 # output files
-outFile = paste0(dataDir, '../pnlp_map_hz_year_level.rds')
+outFile = paste0(dataDir, '../pnlp_map_', tolower(analysisLevel), '_year_level.rds')
+
+# functions
+source('./core/standardizeDRCNames.r')
 # --------------------------------------------------------------------------------------------
 
 
@@ -162,8 +165,9 @@ PNLPData[, dps:=standardizeDRCNames(dps, level=tolower(analysisLevel))]
 MAPData[, dps:=standardizeDRCNames(dps, level=tolower(analysisLevel))]
 
 # merge
-if (prepMAP) analysisData = merge(wideData, hzData, by='year')
-if (!prepMAP) analysisData = wideData
+if (prepMAP & analysisLevel=='DPS') analysisData = merge(PNLPData, MAPData, by=c('year','dps')
+if (prepMAP & analysisLevel=='HZ') analysisData = merge(PNLPData, MAPData, by=c('year','health_zone')
+if (!prepMAP) analysisData = PNLPData
 
 # save
 saveRDS(analysisData, outFile)
