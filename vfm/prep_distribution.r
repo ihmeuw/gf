@@ -3,6 +3,7 @@
 #
 # 9/11/2018
 # Compare resource allocation (commodities) to need 
+# The current working directory should be the root of this repo
 # --------------------------------------------------
 
 
@@ -70,9 +71,14 @@ outFile = paste0(dataDir, '../pnlp_map_hz_year_level.rds')
 data = readRDS(inFile)
 
 # subset observations
-data = data[grepl('newCasesMalariaMild', variable) | 
-			grepl('newCasesMalariaSevere', variable) | 
-			grepl('eceived', variable)]
+keepVars = c('ASAQreceived_14yrsAndOlder', 'ASAQreceived_1to5yrs', 
+	'ASAQreceived_2to11mos', 'ASAQreceived_6to13yrs', 
+	'ArtLum_received', 'ITN_received', 
+	'RDT_received', 'newCasesMalariaMild_5andOlder', 
+	'newCasesMalariaMild_pregnantWomen', 'newCasesMalariaMild_under5', 
+	'newCasesMalariaSevere_5andOlder', 'newCasesMalariaSevere_pregnantWomen', 
+	'newCasesMalariaSevere_under5')
+data = data[variable %in% keepVars]
 
 # identify year
 data[, year:=year(date)]
@@ -86,7 +92,7 @@ data = data[, .(mean=mean(imp_value), upper=quantile(imp_value,.975),
 # reshape wide
 valueVars = c('mean','lower','upper')
 formula = as.formula(paste(paste(idVars, collapse='+'),'~indicator'))
-wideData = dcast.data.table(data, formula, value.var=valueVars)
+PNLPData = dcast.data.table(data, formula, value.var=valueVars)
 # --------------------------------------------------------------------------
 
 
@@ -104,6 +110,7 @@ if(prepMAP) {
 
 	# load the ground cover data
 	lakes = shapefile(shapeFileLakes)
+	lakes = crop(lakes, extent(map))
 
 	# loop over years, crop to DRC, mask water and aggregate to HZ-level
 	i=1
@@ -113,7 +120,7 @@ if(prepMAP) {
 		year = gsub('.*1y_', '', f)
 		year = as.numeric(gsub('_.*', '', year))
 		print(year)
-		if (!year %in% year(unique(data$date))) next
+		if (!year %in% unique(wideData$year)) next
 		
 		# load raster data
 		rasterData = stack(f)
@@ -150,10 +157,14 @@ if(prepMAP) {
 # -----------------------------------------------
 # Merge PNLP and MAP data
 
+# standardize admin names
+PNLPData[, dps:=standardizeDRCNames(dps, level=tolower(analysisLevel))]
+MAPData[, dps:=standardizeDRCNames(dps, level=tolower(analysisLevel))]
+
 # merge
 if (prepMAP) analysisData = merge(wideData, hzData, by='year')
 if (!prepMAP) analysisData = wideData
 
-# save for backup
+# save
 saveRDS(analysisData, outFile)
 # -----------------------------------------------
