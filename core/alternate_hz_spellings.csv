@@ -1,0 +1,531 @@
+health_zone,province_shp,zs_id,hz_shp1,hz_shp2,dps,dps_snis,hz_snis,hz_pnlp,dps_pnlp
+aba,Province Oriental,442,Aba,Aba,haut-uele,hu Haut Uele Province,hu Aba Zone de Santé,aba,haut-uele
+abuzi,Equateur,391,Abuzi,Abuzi,nord-ubangi,nu Nord Ubangi Province,nu Abuzi Zone de Santé,abuzi,nord ubangi
+adi,Province Oriental,445,Adi,Adi,ituri,it Ituri Province,it Adi Zone de Santé,adi,ituri
+adia,Province Oriental,221,Adia,Adja,ituri,it Ituri Province,it Adja Zone de Santé,adja,ituri
+aketi,Province Oriental,388,Aketi,Aketi,bas-uele,bu Bas Uele Province,bu Aketi Zone de Santé,aketi,bas-uele
+alimbongo,Nord Kivu,64,Alimbongo,NA,nord-kivu,nk Nord Kivu Province,nk Alimbongo Zone de Santé,alimbongo,nord kivu
+alunguli,Maniema,327,Alunguli,Alunguli,maniema,mn Maniema Province,mn Alunguli Zone de Santé,alunguli,maniema
+ango,Province Oriental,438,Ango,Ango,bas-uele,bu Bas Uele Province,bu Ango Zone de Santé,ango,bas-uele
+angumu,Province Oriental,279,Angumu,Angumu,ituri,it Ituri Province,it Angumu Zone de Santé,angumu,ituri
+ankoro,Katanga,476,Ankoro,Ankoro,tanganyika,tn Tanganyika Province,tn Ankoro Zone de Santé,ankoro,tanganyika
+ariwara,Province Oriental,219,Ariwara,Ariwara,ituri,it Ituri Province,it Ariwara Zone de Santé,ariwara,ituri
+aru,Province Oriental,220,Aru,Aru,ituri,it Ituri Province,it Aru Zone de Santé,aru,ituri
+aungba,Province Oriental,223,Aungba,Aungba,ituri,it Ituri Province,it Aungba Zone de Santé,aungba,ituri
+bafale,Equateur,4,Bafale,Befale,tshuapa,tu Tshuapa Province,tu Befale Zone de Santé,befale,tshuapa
+bafwabogbo,Province Oriental,215,Bafwabogbo,Bafwagbogbo,tshopo,tp Tshopo Province,tp Bafwagbogbo Zone de Santé,bafwagbogbo,tshopo
+bafwasende,Province Oriental,214,Bafwasende,Bafwasende,tshopo,tp Tshopo Province,tp Bafwasende Zone de Santé,bafwasende,tshopo
+bagata,Bandundu,148,Bagata,Bagata,kwilu,kl Kwilu Province,kl Bagata Zone de Santé,bagata,kwilu
+bagira-kasha,Sud Kivu,234,Bagira Kasha,Bagira-Kasha,sud-kivu,sk Sud Kivu Province,sk Bagira Zone de Santé,bagira,sud kivu
+bambo,Nord Kivu,107,Bambo,NA,nord-kivu,nk Nord Kivu Province,nk Bambo Zone de Santé,bambo,nord kivu
+bambu,Province Oriental,182,Bambu,Bambu-Mines,0,NA,NA,bambu,0
+bambu,Province Oriental,182,Bambu,Bambu-Mines,ituri,it Ituri Province,it Bambu Zone de Santé,bambu,ituri
+banalia,Province Oriental,213,Banalia,Banalia,tshopo,tp Tshopo Province,tp Banalia Zone de Santé,banalia,tshopo
+bandalungwa,Kinshasa,261,Bandalungwa,Bandalungwa,kinshasa,kn Kinshasa Province,kn Bandalungwa Zone de Santé,bandal,kinshasa
+bandjau,Bandundu,166,Bandjau,Banjow Moke,mai-ndombe,md Maindombe Province,md Banzow Moke Zone de Santé,bandjow,mai-ndombe
+bandundu,Bandundu,149,Bandundu,Bandundu,kwilu,kl Kwilu Province,kl Bandundu Zone de Santé,bandundu,kwilu
+banga-lubaka,Kasai Occidental,21,Banga Lubaka,Banga Lubaka,kasai,ks Kasai Province,ks Banga Lubaka Zone de Santé,banga lubaka,kasai
+bangabola,Equateur,309,Bangabola,Bangabola,sud-ubangi,su Sud Ubangi Province,su Bangabola Zone de Santé,bangabola,sud ubangi
+barumbu,Kinshasa,253,Barumbu,Barumbu,kinshasa,kn Kinshasa Province,kn Barumbu Zone de Santé,barumbu,kinshasa
+basali,Province Oriental,202,Basali,Basali,tshopo,tp Tshopo Province,tp Basali Zone de Santé,basali,tshopo
+basankusu,Equateur,5,Basankusu,Basankusu,equateur,eq Equateur Province,eq Basankusu Zone de Santé,basankusu,equateur
+basoko,Province Oriental,203,Basoko,Basoko,tshopo,tp Tshopo Province,tp Basoko Zone de Santé,basoko,tshopo
+bena-dibele,Kasai Oriental,457,Bena Dibele,Bena-Dibele,sankuru,sn Sankuru Province,sn Bena Dibele Zone de Santé,bena dibele,sankuru
+bena-leke,Kasai Occidental,28,Bena Leke,Bena-leka,kasai-central,kr Kasai Central Province,kr Bena Leka Zone de Santé,bena leka,kasai central
+bena-tshadi,NA,NA,NA,NA,kasai-central,kr Kasai Central Province,kr Bena Tshadi Zone de Santé,benatshiadi,kasai central
+bengamisa,Province Oriental,204,Bengamisa,Bengamisa,tshopo,tp Tshopo Province,tp Bengamisa Zone de Santé,bengamisa,tshopo
+beni,Nord Kivu,57,Beni,Beni,nord-kivu,nk Nord Kivu Province,nk Beni Zone de Santé,beni,nord kivu
+bibanga,Kasai Oriental,89,Bibanga,Bibanga,kasai-oriental,ke Kasai Oriental Province,ke Bibanga Zone de Santé,bibanga,kasai oriental
+biena,Nord Kivu,46,Biena,Biena,nord-kivu,nk Nord Kivu Province,nk Biena Zone de Santé,biena,nord kivu
+uvira,Sud Kivu,366,Uvira,NA,sud-kivu,sk Sud Kivu Province,sk Uvira Zone de Santé,bijombo,sud kivu
+bikoro,Equateur,422,Bikoro,Bikoro,equateur,eq Equateur Province,eq Bikoro Zone de Santé,bikoro,equateur
+bili,Equateur,431,Bili,Bili,bas-uele,bu Bas Uele Province,bu Bili Zone de Santé,bili,bas-uele
+bili,Equateur,431,Bili,Bili,nord-ubangi,nu Nord Ubangi Province,nu Bili Zone de Santé,bili,nord ubangi
+bili,Province Oriental,437,Bili,Bili,bas-uele,bu Bas Uele Province,bu Bili Zone de Santé,bili,bas-uele
+bili,Province Oriental,437,Bili,Bili,nord-ubangi,nu Nord Ubangi Province,nu Bili Zone de Santé,bili,nord ubangi
+bilonda,Kasai Occidental,17,Bilonda,Bilomba,kasai-central,kr Kasai Central Province,kr Bilomba Zone de Santé,bilomba,kasai central
+bimpemba,Kasai Oriental,74,Bimpemba,Bipemba,kasai-oriental,ke Kasai Oriental Province,ke Bipemba Zone de Santé,bimpemba,kasai oriental
+binga,Equateur,312,Binga,Binga,mongala,mg Mongala Province,mg Binga Zone de Santé,binga,mongala
+binza,Nord Kivu,53,Binza,Binza,nord-kivu,nk Nord Kivu Province,nk Binza Zone de Santé,binza,nord kivu
+binza-metéo,Kinshasa,270,Binza_Metéo,Binza-Météo,kinshasa,kn Kinshasa Province,kn Binza Meteo Zone de Santé,binza m,kinshasa
+binza-ozone,Kinshasa,271,Binza_Ozone,Binza-Ozone,kinshasa,kn Kinshasa Province,kn Binza Ozone Zone de Santé,binza o,kinshasa
+birambizo,Nord Kivu,54,Birambizo,Birambizo,nord-kivu,nk Nord Kivu Province,nk Birambizo Zone de Santé,birambizo,nord kivu
+biringi,Province Oriental,222,Biringi,Biringi,ituri,it Ituri Province,it Biringi Zone de Santé,biringi,ituri
+biyela,Kinshasa,247,Biyela,Biyela,kinshasa,kn Kinshasa Province,kn Biyela Zone de Santé,biyela,kinshasa
+bobozo,Kasai Occidental,330,Bobozo,Bobozo,kasai-central,kr Kasai Central Province,kr Bobozo Zone de Santé,bobozo,kasai central
+boende,Equateur,303,Boende,Boende,tshuapa,tu Tshuapa Province,tu Boende Zone de Santé,boende,tshuapa
+boga,Province Oriental,186,Boga,Boga,ituri,it Ituri Province,it Boga Zone de Santé,boga,ituri
+boko,Bandundu,160,Boko,Boko,kwango,kg Kwango Province,kg Boko Zone de Santé,boko,kwango
+boko-kivulu,Bas-Congo,130,Boko Kivulu,Boko-Kivulu,kongo-central,kc Kongo Central Province,kc Boko Kivulu Zone de Santé,boko kivulu,bas congo
+bokonzi,Equateur,424,Bokonzi,Bokonzi,sud-ubangi,su Sud Ubangi Province,su Bokonzi Zone de Santé,bokonzi,sud ubangi
+bokoro,Bandundu,140,Bokoro,Bokoro,mai-ndombe,md Maindombe Province,md Bokoro Zone de Santé,bokoro,mai-ndombe
+bokungu,Equateur,306,Bokungu,Bokungu,tshuapa,tu Tshuapa Province,tu Bokungu Zone de Santé,bokungu,tshuapa
+bolobo,Bandundu,134,Bolobo,Bolobo,mai-ndombe,md Maindombe Province,md Bolobo Zone de Santé,bolobo,mai-ndombe
+bolomba,Equateur,302,Bolomba,Bolomba,equateur,eq Equateur Province,eq Bolomba Zone de Santé,bolomba,equateur
+bolonge,Equateur,231,Bolonge,Bolenge,equateur,eq Equateur Province,eq Bolenge Zone de Santé,bolenge,equateur
+boma,Bas-Congo,117,Boma,Boma,kongo-central,kc Kongo Central Province,kc Boma Zone de Santé,boma,bas congo
+boma-bungu,Bas-Congo,118,Boma Bungu,Boma Bungu,kongo-central,kc Kongo Central Province,kc Boma Bungu Zone de Santé,boma bungu,bas congo
+boma-mangbetu,NA,NA,NA,NA,haut-uele,hu Haut Uele Province,hu Boma Mangbetu Zone de Santé,boma mangbetu,haut-uele
+bominenge,Equateur,320,Bominenge,Bominenge,sud-ubangi,su Sud Ubangi Province,su Bominenge Zone de Santé,bominenge,sud ubangi
+bomongo,Equateur,425,Bomongo,Bomongo,equateur,eq Equateur Province,eq Bomongo Zone de Santé,bomongo,equateur
+bondo,Province Oriental,436,Bondo,Bondo,bas-uele,bu Bas Uele Province,bu Bondo Zone de Santé,bondo,bas-uele
+bongandanga,Equateur,3,Bongandanga,Bongandanga,mongala,mg Mongala Province,mg Bongandanga Zone de Santé,bongandanganda,mongala
+bongosenubia,Equateur,114,Bongosenubia,Bogose nubea,sud-ubangi,su Sud Ubangi Province,su Bogosenubea Zone de Santé,bogosenusebea,sud ubangi
+bonzola,Kasai Oriental,68,Bonzola,Bonzola,kasai-oriental,ke Kasai Oriental Province,ke Bonzola Zone de Santé,bonzola,kasai oriental
+bosanga,Equateur,305,Bosanga,Busanga,tshuapa,tu Tshuapa Province,tu Busanga Zone de Santé,bosanga,tshuapa
+bosobe,Bandundu,139,Bosobe,Bosobe,mai-ndombe,md Maindombe Province,md Bosobe Zone de Santé,bosobe,mai-ndombe
+bosobolo,Equateur,430,Bosobolo,Bosobolo,nord-ubangi,nu Nord Ubangi Province,nu Bosobolo Zone de Santé,bosobolo,nord ubangi
+bosomanzi,Equateur,316,Bosomanzi,Bosomanzi,mongala,mg Mongala Province,mg Boso Manzi Zone de Santé,bosomanzi,mongala
+bosomondanda,Equateur,310,Bosomondanda,Bosomodanda,mongala,mg Mongala Province,mg Boso Mondanda Zone de Santé,bosomondanda,mongala
+bosondjo,Equateur,394,Bosondjo,Bosondjo,mongala,mg Mongala Province,mg Bosondjo Zone de Santé,bosondjo,mongala
+boto,Equateur,293,Boto,Boto,sud-ubangi,su Sud Ubangi Province,su Boto Zone de Santé,boto,sud ubangi
+budjala,Equateur,311,Budjala,Budjala,sud-ubangi,su Sud Ubangi Province,su Budjala Zone de Santé,budjala,sud ubangi
+bukama,Katanga,470,Bukama,Bukama,haut-lomami,hl Haut Lomami Province,hl Bukama Zone de Santé,bukama,haut-lomami
+bukonde,Kasai Occidental,18,Bukonde,Bukonde,kasai-central,kr Kasai Central Province,kr Bunkonde Zone de Santé,bunkonde,kasai central
+bulape,Kasai Occidental,30,Bulape,Bulape,kasai,ks Kasai Province,ks Bulape Zone de Santé,bulape,kasai
+bulu,Equateur,323,Bulu,Bulu,sud-ubangi,su Sud Ubangi Province,su Bulu Zone de Santé,bulu,sud ubangi
+bulungu,Bandundu,147,Bulungu,Bulungu,kwilu,kl Kwilu Province,kl Bulungu Zone de Santé,bulungu,kwilu
+bumba,Equateur,395,Bumba,Bumba,mongala,mg Mongala Province,mg Bumba Zone de Santé,bumba,mongala
+bumbu,Kinshasa,258,Bumbu,Bumbu,kinshasa,kn Kinshasa Province,kn Bumbu Zone de Santé,bumbu,kinshasa
+bunia,Province Oriental,172,Bunia,Bunia,ituri,it Ituri Province,it Bunia Zone de Santé,bunia,ituri
+bunkeya,Katanga,113,Bunkeya,Bunkeya,lualaba,ll Lualaba Province,ll Bunkeya Zone de Santé,bunkeya,lualaba
+bunyakiri,Sud Kivu,364,Bunyakiri,Bunyakiri,sud-kivu,sk Sud Kivu Province,sk Bunyakiri Zone de Santé,bunyakiri,sud kivu
+businga,Equateur,317,Businga,Businga,nord-ubangi,nu Nord Ubangi Province,nu Businga Zone de Santé,businga,nord ubangi
+buta,Province Oriental,216,Buta,Buta,bas-uele,bu Bas Uele Province,bu Buta Zone de Santé,buta,bas-uele
+butembo,Nord Kivu,60,Butembo,Butembo,nord-kivu,nk Nord Kivu Province,nk Butembo Zone de Santé,butembo,nord kivu
+butumba,Katanga,341,Butumba,Butumba,haut-lomami,hl Haut Lomami Province,hl Butumba Zone de Santé,butumba,haut-lomami
+bwamanda,Equateur,292,Bwamanda,Bwamanda,sud-ubangi,su Sud Ubangi Province,su Bwamanda Zone de Santé,bwamanda,sud ubangi
+damasi,Province Oriental,179,Damasi,Damas,ituri,it Ituri Province,it Damas Zone de Santé,damas,ituri
+dekese,Kasai Occidental,459,Dekese,Dekese,kasai,ks Kasai Province,ks Dekese Zone de Santé,dekese,kasai
+demba,Kasai Occidental,27,Demba,Demba,kasai-central,kr Kasai Central Province,kr Demba Zone de Santé,demba,kasai central
+dibaya,Kasai Occidental,34,Dibaya,Dibaya,kasai-central,kr Kasai Central Province,kr Dibaya Zone de Santé,dibaya,kasai central
+dibindi,Kasai Oriental,70,Dibindi,Dibindi,kasai-oriental,ke Kasai Oriental Province,ke Dibindi Zone de Santé,dibindi,kasai oriental
+dikungu-tshumbe,Kasai Oriental,98,Dikungu Tshumbe,Dikungu,sankuru,sn Sankuru Province,sn Dikungu Zone de Santé,dikungu,sankuru
+dilala,Katanga,467,Dilala,Dilala,lualaba,ll Lualaba Province,ll Dilala Zone de Santé,dilala,lualaba
+dilolo,Katanga,488,Dilolo,Dilolo,lualaba,ll Lualaba Province,ll Dilolo Zone de Santé,dilolo,lualaba
+diulu,Kasai Oriental,75,Diulu,Diulu,kasai-oriental,ke Kasai Oriental Province,ke Diulu Zone de Santé,diulu,kasai oriental
+djalo-djeka,Kasai Oriental,102,Djalo Djeka,Djalo-Ndjeka,sankuru,sn Sankuru Province,sn Djalo Djeka Zone de Santé,djalo djeka,sankuru
+djolu,Equateur,398,Djolu,Djolu,tshuapa,tu Tshuapa Province,tu Djolu Zone de Santé,djolu,tshuapa
+djombo,Equateur,2,Djombo,Djombo,equateur,eq Equateur Province,eq Djombo Zone de Santé,djombo,equateur
+djuma,Bandundu,236,Djuma,Djuma,kwilu,kl Kwilu Province,kl Djuma Zone de Santé,djuma,kwilu
+doruma,Province Oriental,439,Doruma,Doruma,haut-uele,hu Haut Uele Province,hu Doruma Zone de Santé,doruma,haut-uele
+drodro,Province Oriental,175,Drodro,Drodro,ituri,it Ituri Province,it Drodro Zone de Santé,drodro,ituri
+dungu,Province Oriental,440,Dungu,Dungu,haut-uele,hu Haut Uele Province,hu Dungu Zone de Santé,dungu,haut-uele
+faradje,Province Oriental,441,Faradje,Faradje,haut-uele,hu Haut Uele Province,hu Faradje Zone de Santé,faradje,haut-uele
+fataki,Province Oriental,184,Fataki,Fataki,ituri,it Ituri Province,it Fataki Zone de Santé,fataki,ituri
+ferekeni,Maniema,402,Ferekeni,Ferekeni,maniema,mn Maniema Province,mn Ferekeni Zone de Santé,ferekeni,maniema
+feshi,Bandundu,152,Feshi,Feshi,kwango,kg Kwango Province,kg Feshi Zone de Santé,feshi,kwango
+fizi,Sud Kivu,379,Fizi,Fizi,sud-kivu,sk Sud Kivu Province,sk Fizi Zone de Santé,fizi,sud kivu
+fungurume,Katanga,354,Fungurume,Fungurume,lualaba,ll Lualaba Province,ll Fungurume Zone de Santé,fungurume,lualaba
+ganga,Province Oriental,218,Ganga,NA,bas-uele,bu Bas Uele Province,bu Ganga Zone de Santé,ganga,bas-uele
+gbadolite,Equateur,432,Gbadolite,Gbadolite,nord-ubangi,nu Nord Ubangi Province,nu Gbadolite Zone de Santé,gbadolite,nord ubangi
+gemena,Equateur,321,Gemena,Gemena,sud-ubangi,su Sud Ubangi Province,su Gemena Zone de Santé,gemena,sud ubangi
+gethy,Province Oriental,187,Gethy,Ghety,ituri,it Ituri Province,it Gety Zone de Santé,gethy,ituri
+goma,Nord Kivu,504,Goma,Goma,nord-kivu,nk Nord Kivu Province,nk Goma Zone de Santé,goma,nord kivu
+gombari,Province Oriental,224,Gombari,Gombari,haut-uele,hu Haut Uele Province,hu Gombari Zone de Santé,gombari,haut-uele
+gombe,Kinshasa,263,Gombe,Gombe,kinshasa,kn Kinshasa Province,kn Gombe Zone de Santé,gombe,kinshasa
+gombe-matadi,Bas-Congo,417,Gombe Matadi,Gombe-Matadi,kongo-central,kc Kongo Central Province,kc Gombe Matadi Zone de Santé,gombe matadi,bas congo
+gungu,Bandundu,461,Gungu,Gungu,kwilu,kl Kwilu Province,kl Gungu Zone de Santé,gungu,kwilu
+uvira,Sud Kivu,201,Haut Plateau,Hauts Plateaux,sud-kivu,sk Sud Kivu Province,sk Haut Plateau Zone de Santé,uvira,sud kivu
+ibanda,Sud Kivu,232,Ibanda,Ibanda,sud-kivu,sk Sud Kivu Province,sk Ibanda Zone de Santé,ibanda,sud kivu
+iboko,Equateur,297,Iboko,Iboko,equateur,eq Equateur Province,eq Iboko Zone de Santé,iboko,equateur
+idiofa,Bandundu,143,Idiofa,Idiofa,kwilu,kl Kwilu Province,kl Idiofa Zone de Santé,idiofa,kwilu
+idjwi,Sud Kivu,196,Idjwi,Idjwi,sud-kivu,sk Sud Kivu Province,sk Idjwi Zone de Santé,idjwi,sud kivu
+ikela,Equateur,450,Ikela,Ikela,tshuapa,tu Tshuapa Province,tu Ikela Zone de Santé,ikela,tshuapa
+ilebo,Kasai Occidental,37,Ilebo,Ilebo,kasai,ks Kasai Province,ks Ilebo Zone de Santé,ilebo,kasai
+inga,Bas-Congo,120,Inga,Inga,kongo-central,kc Kongo Central Province,kc Inga Zone de Santé,inga,bas congo
+ingende,Equateur,298,Ingende,Ingende,equateur,eq Equateur Province,eq Ingende Zone de Santé,ingende,equateur
+inongo,Bandundu,163,Inongo,Inongo,mai-ndombe,md Maindombe Province,md Inongo Zone de Santé,inongo,mai-ndombe
+ipamu,Bandundu,144,Ipamu,Ipamu,kwilu,kl Kwilu Province,kl Ipamu Zone de Santé,ipamu,kwilu
+irebu,Equateur,421,Irebu,Irebu,equateur,eq Equateur Province,eq Irebu Zone de Santé,irebu,equateur
+isangi,Province Oriental,209,Isangi,Isangi,tshopo,tp Tshopo Province,tp Isangi Zone de Santé,isangi,tshopo
+isiro,Province Oriental,212,Isiro,Isiro,haut-uele,hu Haut Uele Province,hu Isiro Zone de Santé,isiro,haut-uele
+itebero,Nord Kivu,197,Itebero,NA,nord-kivu,nk Nord Kivu Province,nk Itebero Zone de Santé,itebero,nord kivu
+itombwe,Sud Kivu,370,Itombwe,Itombwe,sud-kivu,sk Sud Kivu Province,sk Itombwe Zone de Santé,itombwe,sud kivu
+jiba,Province Oriental,176,Jiba,Jiba,ituri,it Ituri Province,it Jiba Zone de Santé,jiba,ituri
+kabalo,Katanga,466,Kabalo,Kabalo,tanganyika,tn Tanganyika Province,tn Kabalo Zone de Santé,kabalo,tanganyika
+kabambare,Maniema,382,Kabambare,Kabambare,maniema,mn Maniema Province,mn Kabambare Zone de Santé,kabambare,maniema
+kabare,Sud Kivu,198,Kabare,Kabare,sud-kivu,sk Sud Kivu Province,sk Kabare Zone de Santé,kabare,sud kivu
+kabeya-kamuanga,Kasai Oriental,39,Kabeya Kamuanga,Kabeya-Kamuanga,kasai-oriental,ke Kasai Oriental Province,ke Kabeya Kamwanga Zone de Santé,kabeya kamwanga,kasai oriental
+kabinda,Kasai Oriental,93,Kabinda,Kabinda,lomami,lm Lomami Province,lm Kabinda Zone de Santé,kabinda,lomami
+kabondo,Province Oriental,334,Kabondo,Kabondo,tshopo,tp Tshopo Province,tp Kabondo Zone de Santé,kabondo,tshopo
+kabondo-dianda,Katanga,471,Kabondo Dianda,Kabondo-dianda,haut-lomami,hl Haut Lomami Province,hl Kabondo Dianda Zone de Santé,kabond dianda,haut-lomami
+kabongo,Katanga,472,Kabongo,Kabongo,haut-lomami,hl Haut Lomami Province,hl Kabongo Zone de Santé,kabongo,haut-lomami
+kafakumba,Katanga,336,Kafakumba,Kafakumba,lualaba,ll Lualaba Province,ll Kafakumba Zone de Santé,kafakumba,lualaba
+kafubu,Katanga,483,Kafubu,Kafubu,haut-katanga,hk Haut Katanga Province,hk Kafubu Zone de Santé,kafubu,haut-katanga
+kahele,Sud Kivu,365,Kahele,Kalehe,sud-kivu,sk Sud Kivu Province,sk Kalehe Zone de Santé,kalehe,sud kivu
+kahemba,Bandundu,460,Kahemba,Kahemba,kwango,kg Kwango Province,kg Kahemba Zone de Santé,kahemba,kwango
+kailo,Maniema,454,Kailo,Kailo,maniema,mn Maniema Province,mn Kailo Zone de Santé,kailo,maniema
+kajiji,Bandundu,150,Kajiji,Kajiji,kwango,kg Kwango Province,kg Kajiji Zone de Santé,kajiji,kwango
+kakenge,Kasai Occidental,31,Kakenge,Kakenge,kasai,ks Kasai Province,ks Kakenge Zone de Santé,kakenge,kasai
+kakole,Sud Kivu,377,Kakole,Kalole,sud-kivu,sk Sud Kivu Province,sk Kalole Zone de Santé,kalole,sud kivu
+kalambayi-kabanga,Kasai Oriental,90,Kalambayi Kabanga,Kalambayi Kabanga,lomami,lm Lomami Province,lm Kalambayi Kabanga Zone de Santé,kalambayi,lomami
+kalamu-i,Kinshasa,257,Kalamu I,Kalamu I,kinshasa,kn Kinshasa Province,kn Kalamu 1 Zone de Santé,kalamu 1,kinshasa
+kalamu-ii,Kinshasa,256,Kalamu II,Kalamu II,kinshasa,kn Kinshasa Province,kn Kalamu 2 Zone de Santé,kalamu 2,kinshasa
+kalemba,Katanga,491,Kalemba,Kalamba,lualaba,ll Lualaba Province,ll Kalamba Zone de Santé,kalamba,lualaba
+kalemie,Katanga,338,Kalemie,Kalemie,tanganyika,tn Tanganyika Province,tn Kalemie Zone de Santé,kalemi,tanganyika
+kalenda,Kasai Oriental,78,Kalenda,Kalenda,lomami,lm Lomami Province,lm Kalenda Zone de Santé,kalenda,lomami
+kalima,Maniema,384,Kalima,Kalima,maniema,mn Maniema Province,mn Kalima Zone de Santé,kalima,maniema
+kalomda,Kasai Occidental,6,Kalomda,Kalomda,kasai-central,kr Kasai Central Province,kr Kalomba Zone de Santé,kalomba,kasai central
+kalonda,Kasai Occidental,8,Kalonda,Kalonda,kasai,ks Kasai Province,ks Kalonda Ouest Zone de Santé,kalonda ouest,kasai
+kalonda-est,Kasai Oriental,92,Kalonda Est,Kalonda-Est,lomami,lm Lomami Province,lm Kalonda Est Zone de Santé,kalonda est,lomami
+kalonge,Sud Kivu,362,Kalonge,Kalonge,sud-kivu,sk Sud Kivu Province,sk Kalonge Zone de Santé,kalonge,sud kivu
+kalunguta,Nord Kivu,56,Kalunguta,NA,nord-kivu,nk Nord Kivu Province,nk Kalunguta Zone de Santé,kalunguta,nord kivu
+kamalondo,NA,516,ZS Kamalondo,NA,haut-katanga,hk Haut Katanga Province,hk Kamalondo Zone de Santé,kamalondo,haut-katanga
+kamana,Kasai Oriental,40,Kamana,Kamana,lomami,lm Lomami Province,lm Kamana Zone de Santé,kamana,lomami
+kamango,Nord Kivu,51,Kamango,NA,nord-kivu,nk Nord Kivu Province,nk Kamango Zone de Santé,kamango,nord kivu
+kambala,Province Oriental,278,Kambala,Komanda,ituri,it Ituri Province,it Kambala Zone de Santé,kambala,ituri
+kambove,Katanga,112,Kambove,Kambove,haut-katanga,hk Haut Katanga Province,hk Kambove Zone de Santé,kambove,haut-katanga
+kamiji,Kasai Oriental,79,Kamiji,Kamiji,lomami,lm Lomami Province,lm Kamiji Zone de Santé,kamji,lomami
+kamina,Katanga,346,Kamina,Kamina,haut-lomami,hl Haut Lomami Province,hl Kamina Zone de Santé,kamina,haut-lomami
+kamina-base,Katanga,495,Kamina Base,Baka,haut-lomami,hl Haut Lomami Province,hl Baka Zone de Santé,baka,haut-lomami
+kamituga,Sud Kivu,368,Kamituga,Kamituga,sud-kivu,sk Sud Kivu Province,sk Kamituga Zone de Santé,kamituga,sud kivu
+kamonya,Kasai Occidental,9,Kamonya,Kamonia,kasai,ks Kasai Province,ks Kamonia Zone de Santé,kamonia,kasai
+kampemba,Haut Katanga,512,Kampemba,NA,haut-katanga,hk Haut Katanga Province,hk Kampemba Zone de Santé,kampemba,haut-katanga
+kampene,Maniema,376,Kampene,Kampene,maniema,mn Maniema Province,mn Kampene Zone de Santé,kampene,maniema
+kamwesha,Kasai Occidental,22,Kamwesha,Kamuesha,kasai,ks Kasai Province,ks Kamwesha Zone de Santé,kamwesha,kasai
+kananga,Kasai Occidental,288,Kananga,Kananga,kasai-central,kr Kasai Central Province,kr Kananga Zone de Santé,kananga,kasai central
+kandakanda,Kasai Oriental,85,Kandakanda,Kanda Kanda,lomami,lm Lomami Province,lm Kanda Kanda Zone de Santé,kanda kanda,lomami
+kandutu,Sud Kivu,233,Kandutu,Kadutu,sud-kivu,sk Sud Kivu Province,sk Kadutu Zone de Santé,kadutu,sud kivu
+kangu,Bas-Congo,413,Kangu,Kangu,kongo-central,kc Kongo Central Province,kc Kangu Zone de Santé,kangu,bas congo
+kaniama,Katanga,337,Kaniama,Kaniama,haut-lomami,hl Haut Lomami Province,hl Kaniama Zone de Santé,kanyama,haut-lomami
+kaniola,Sud Kivu,361,Kaniola,Kaniola,sud-kivu,sk Sud Kivu Province,sk Kaniola Zone de Santé,kaniola,sud kivu
+kansele,Kasai Oriental,71,Kansele,Kansele,kasai-oriental,ke Kasai Oriental Province,ke Kansele Zone de Santé,kansele,kasai oriental
+kanzala,Kasai Occidental,284,Kanzala,Kanzala,kasai,ks Kasai Province,ks Kanzala Zone de Santé,kanzala,kasai
+kanzenze,Katanga,485,Kanzenze,Kanzenze,lualaba,ll Lualaba Province,ll Kanzenze Zone de Santé,kanzenze,lualaba
+kapanga,Katanga,486,Kapanga,Kapanga,lualaba,ll Lualaba Province,ll Kapanga Zone de Santé,kapanga,lualaba
+kapolobwe,Katanga,351,Kapolobwe,Kapolowe,haut-katanga,hk Haut Katanga Province,hk Kapolowe Zone de Santé,kapolowe,haut-katanga
+karawa,Equateur,319,Karawa,Karawa,nord-ubangi,nu Nord Ubangi Province,nu Karawa Zone de Santé,karawa,nord ubangi
+karisimbi,Nord Kivu,503,Karisimbi,Karisimbi,nord-kivu,nk Nord Kivu Province,nk Karisimbi Zone de Santé,karisimbi,nord kivu
+kasa-vubu,Kinshasa,268,Kasa_Vubu,Kasa-Vubu,kinshasa,kn Kinshasa Province,kn Kasa Vubu Zone de Santé,kasa vub,kinshasa
+kasaji,Katanga,487,Kasaji,Kasaji,lualaba,ll Lualaba Province,ll Kasaji Zone de Santé,kasaji,lualaba
+kasansa,Kasai Oriental,83,Kasansa,Kasansa,kasai-oriental,ke Kasai Oriental Province,ke Kasansa Zone de Santé,kasansa,kasai oriental
+kasenga,Katanga,446,Kasenga,Kasenga,haut-katanga,hk Haut Katanga Province,hk Kasenga Zone de Santé,kasenga,haut-katanga
+kashobwe,NA,NA,NA,NA,haut-katanga,hk Haut Katanga Province,hk Kashobwe Zone de Santé,kashobwe,haut-katanga
+kasimba,Katanga,339,Kasimba,Kansimba,tanganyika,tn Tanganyika Province,tn Kansimba Zone de Santé,kansimba,tanganyika
+kasongo,Maniema,356,Kasongo,Kasongo,maniema,mn Maniema Province,mn Kasongo Zone de Santé,kasongo,maniema
+kasongo-lunda,Bandundu,407,Kasongo Lunda,Kasongolunda,kwango,kg Kwango Province,kg Kasongo Lunda Zone de Santé,kasongo lunda,kwango
+katako-kombe,Kasai Oriental,453,Katako Kombe,Katako-Kombe,sankuru,sn Sankuru Province,sn Katako Kombe Zone de Santé,kata kokombe,sankuru
+katana,Sud Kivu,501,Katana,Katana,sud-kivu,sk Sud Kivu Province,sk Katana Zone de Santé,katana,sud kivu
+katende,Kasai Occidental,32,Katende,Katende,kasai-central,kr Kasai Central Province,kr Katende Zone de Santé,katende,kasai central
+katoka,Kasai Occidental,286,Katoka,Katoka,kasai-central,kr Kasai Central Province,kr Katoka Zone de Santé,katoka,kasai central
+katuba,Haut Katanga,507,Katuba,NA,haut-katanga,hk Haut Katanga Province,hk Katuba Zone de Santé,katuba,haut-katanga
+katwa,Nord Kivu,61,Katwa,Katwa,nord-kivu,nk Nord Kivu Province,nk Katwa Zone de Santé,katwa,nord kivu
+kayamba,Katanga,474,Kayamba,Kayamba,haut-lomami,hl Haut Lomami Province,hl Kayamba Zone de Santé,kayamba,haut-lomami
+kayna,Nord Kivu,63,Kayna,Kayna,nord-kivu,nk Nord Kivu Province,nk Kayna Zone de Santé,kayna,nord kivu
+kaziba,Sud Kivu,193,Kaziba,Kaziba,sud-kivu,sk Sud Kivu Province,sk Kaziba Zone de Santé,kaziba,sud kivu
+kenge,Bandundu,159,Kenge,Kenge,kwango,kg Kwango Province,kg Kenge Zone de Santé,kenge,kwango
+kenya,Haut Katanga,508,Kenya,NA,haut-katanga,hk Haut Katanga Province,hk Kenya Zone de Santé,kenya,haut-katanga
+kiambi,Katanga,348,Kiambi,Kiambi,tanganyika,tn Tanganyika Province,tn Kiambi Zone de Santé,kiyambi,tanganyika
+kibirizi,Nord Kivu,55,Kibirizi,NA,nord-kivu,nk Nord Kivu Province,nk Kibirizi Zone de Santé,kibirizi,nord kivu
+kibombo,Maniema,325,Kibombo,Kibombo,maniema,mn Maniema Province,mn Kibombo Zone de Santé,kibombo,maniema
+kibua,Nord Kivu,104,Kibua,NA,nord-kivu,nk Nord Kivu Province,nk Kibua Zone de Santé,kibua,nord kivu
+kibunzi,Bas-Congo,125,Kibunzi,Kibunzi,kongo-central,kc Kongo Central Province,kc Kibunzi Zone de Santé,kibunzi,bas congo
+kikenda,Bandundu,406,Kikenda,Kitenda,kwango,kg Kwango Province,kg Kitenda Zone de Santé,kitenda,kwango
+kikimi,Kinshasa,248,Kikimi,Kikimi,kinshasa,kn Kinshasa Province,kn Kikimi Zone de Santé,kikimi,kinshasa
+kikongo,Bandundu,273,Kikongo,Kikongo,kwilu,kl Kwilu Province,kl Kikongo Zone de Santé,kikongo,kwilu
+kikula,Katanga,350,Kikula,Kikula,haut-katanga,hk Haut Katanga Province,hk Kikula Zone de Santé,kikula,haut-katanga
+kikwit-nord,NA,NA,NA,NA,kwilu,kl Kwilu Province,kl Kikwit Nord Zone de Santé,kikwit nord,kwilu
+kikwit-sud,Bandundu,497,Kikwit-sud,Kikwit-sud,kwilu,kl Kwilu Province,kl Kikwit Sud Zone de Santé,kikwit sud,kwilu
+kikwit-sud,Bandundu,498,Kikwit-sud,Kikwit-Nord,kwilu,kl Kwilu Province,kl Kikwit Sud Zone de Santé,kikwit sud,kwilu
+kilela-balanda,Katanga,484,Kilela Balanda,Kilela Balanda,haut-katanga,hk Haut Katanga Province,hk Kilela Balanda Zone de Santé,kilela balanda,haut-katanga
+kilo,Province Oriental,229,Kilo,Kilo,ituri,it Ituri Province,it Kilo Zone de Santé,kilo,ituri
+kilwa,Katanga,345,Kilwa,Kilwa,haut-katanga,hk Haut Katanga Province,hk Kilwa Zone de Santé,kilwa,haut-katanga
+kimbanseke,Kinshasa,291,Kimbanseke,Kimbanseke,kinshasa,kn Kinshasa Province,kn Kimbanseke Zone de Santé,kimbanseke,kinshasa
+kimbau,Bandundu,158,Kimbau,Kimbau,kwango,kg Kwango Province,kg Kimbao Zone de Santé,kimbao,kwango
+kimbi-lulenge,Sud Kivu,381,Kimbi Lulenge,Kimbi Lulenge,sud-kivu,sk Sud Kivu Province,sk Kimbi Lulenge Zone de Santé,lulenge,sud kivu
+kimpangu,Bas-Congo,127,Kimpangu,Kimpangu,kongo-central,kc Kongo Central Province,kc Kimpangu Zone de Santé,kimpangu,bas congo
+kimpese,Bas-Congo,411,Kimpese,Kimpese,kongo-central,kc Kongo Central Province,kc Kimpese Zone de Santé,kimpese,bas congo
+kimputu,Bandundu,240,Kimputu,Kimputu,kwilu,kl Kwilu Province,kl Kimputu Zone de Santé,kimputu,kwilu
+kimvula,Bas-Congo,409,Kimvula,Kimvula,kongo-central,kc Kongo Central Province,kc Kimvula Zone de Santé,kimvula,bas congo
+kinda,Katanga,490,Kinda,Kinda,haut-lomami,hl Haut Lomami Province,hl Kinda Zone de Santé,kinda,haut-lomami
+kindu,Maniema,326,Kindu,Kindu,maniema,mn Maniema Province,mn Kindu Zone de Santé,kindu,maniema
+kingabwa,Kinshasa,264,Kingabwa,Kingabwa,kinshasa,kn Kinshasa Province,kn Kingabwa Zone de Santé,kingabwa,kinshasa
+kingandu,Bandundu,146,Kingandu,Kingandu,kwilu,kl Kwilu Province,kl Kingandu Zone de Santé,kingandu,kwilu
+kingasani,Kinshasa,290,Kingasani,Kingasani,kinshasa,kn Kinshasa Province,kn Kingasani Zone de Santé,kingasani,kinshasa
+kinkonja,Katanga,342,Kinkonja,Kinkondja,haut-lomami,hl Haut Lomami Province,hl Kinkondja Zone de Santé,kinkondja,haut-lomami
+kinkonzi,Bas-Congo,415,Kinkonzi,Kinkonzi,kongo-central,kc Kongo Central Province,kc Kinkonzi Zone de Santé,kinkonzi,bas congo
+kinshasa,Kinshasa,254,Kinshasa,Kinshasa,kinshasa,kn Kinshasa Province,kn Kinshasa Zone de Santé,kinshasa,kinshasa
+kintambo,Kinshasa,267,Kintambo,Kintambo,kinshasa,kn Kinshasa Province,kn Kintambo Zone de Santé,kintambo,kinshasa
+kipushi,Katanga,481,Kipushi,Kipushi,haut-katanga,hk Haut Katanga Province,hk Kipushi Zone de Santé,kipushi,haut-katanga
+kiri,Bandundu,161,Kiri,Kiri,mai-ndombe,md Maindombe Province,md Kiri Zone de Santé,kiri,mai-ndombe
+kirotse,Nord Kivu,499,Kirotse,Kirotshe,nord-kivu,nk Nord Kivu Province,nk Kirotshe Zone de Santé,kirotshe,nord kivu
+kisandji,Bandundu,153,Kisandji,Kisanji,kwango,kg Kwango Province,kg Kisanji Zone de Santé,kisandji,kwango
+kisanga,Haut Katanga,514,Kisanga,NA,haut-katanga,hk Haut Katanga Province,hk Kisanga Zone de Santé,kisanga,haut-katanga
+kisantu,Bas-Congo,133,Kisantu,Kisantu,kongo-central,kc Kongo Central Province,kc Kisantu Zone de Santé,kisantu,bas congo
+kisenso,Kinshasa,251,Kisenso,Kisenso,kinshasa,kn Kinshasa Province,kn Kisenso Zone de Santé,kisenso,kinshasa
+kitangwa,Kasai Occidental,462,Kitangwa,Kitangwa,kasai,ks Kasai Province,ks Kitangwa Zone de Santé,kitangua,kasai
+kitenge,Katanga,475,Kitenge,Kitenge,haut-lomami,hl Haut Lomami Province,hl Kitenge Zone de Santé,kitenge,haut-lomami
+kitona,Bas-Congo,116,Kitona,Kitona,kongo-central,kc Kongo Central Province,kc Kitona Zone de Santé,kitona,bas congo
+masisi,Nord Kivu,103,Kitoyi,NA,nord-kivu,nk Nord Kivu Province,nk Katoyi Zone de Santé,masisi,nord kivu
+kitutu,Sud Kivu,367,Kitutu,Kitutu,sud-kivu,sk Sud Kivu Province,sk Kitutu Zone de Santé,kitutu,sud kivu
+kizu,Bas-Congo,124,Kizu,Kizu,kongo-central,kc Kongo Central Province,kc Kizu Zone de Santé,kizu,bas congo
+kokolo,Kinshasa,328,Kokolo,Kokolo,kinshasa,kn Kinshasa Province,kn Kokolo Zone de Santé,kokolo,kinshasa
+kole,Kasai Oriental,65,Kole,Kole,sankuru,sn Sankuru Province,sn Kole Zone de Santé,kole,sankuru
+komanda,Province Oriental,170,Komanda,Kambala,ituri,it Ituri Province,it Komanda Zone de Santé,komanda,ituri
+kongolo,Katanga,464,Kongolo,Kongolo,tanganyika,tn Tanganyika Province,tn Kongolo Zone de Santé,kongolo,tanganyika
+koshibanda,Bandundu,145,Koshibanda,Koshibanda,kwilu,kl Kwilu Province,kl Koshibanda Zone de Santé,koshibanda,kwilu
+kowe,Katanga,494,Kowe,Kowe,haut-katanga,hk Haut Katanga Province,hk Kowe Zone de Santé,kowe,haut-katanga
+kuimba,Bas-Congo,414,Kuimba,Kuimba,kongo-central,kc Kongo Central Province,kc Kuimba Zone de Santé,kwimba,bas congo
+kunda,Maniema,357,Kunda,Kunda,maniema,mn Maniema Province,mn Kunda Zone de Santé,kunda,maniema
+kungu,Equateur,294,Kungu,Kungu,sud-ubangi,su Sud Ubangi Province,su Kungu Zone de Santé,kungu,sud ubangi
+kwamouth,Bandundu,419,Kwamouth,Kwamouth,mai-ndombe,md Maindombe Province,md Kwamouth Zone de Santé,kwamouth,mai-ndombe
+kwilu-ngongo,Bas-Congo,132,Kwilu Ngongo,Kwilu-Ngongo,kongo-central,kc Kongo Central Province,kc Kwilu Ngongo Zone de Santé,kwilu ngongo,bas congo
+kyondo,Nord Kivu,44,Kyondo,Kyondo,nord-kivu,nk Nord Kivu Province,nk Kyondo Zone de Santé,kyondo,nord kivu
+laybo,Province Oriental,444,Laybo,Laybo,ituri,it Ituri Province,it Laybo Zone de Santé,laybo,ituri
+lemba,Kinshasa,249,Lemba,Lemba,kinshasa,kn Kinshasa Province,kn Lemba Zone de Santé,lemba,kinshasa
+lemera,Sud Kivu,374,Lemera,Lemera,sud-kivu,sk Sud Kivu Province,sk Lemera Zone de Santé,lemera,sud kivu
+libenge,Equateur,429,Libenge,Libenge,sud-ubangi,su Sud Ubangi Province,su Libenge Zone de Santé,libenge,sud ubangi
+likasi,Katanga,352,Likasi,Likasi,haut-katanga,hk Haut Katanga Province,hk Likasi Zone de Santé,likasi,haut-katanga
+likati,Province Oriental,387,Likati,Likati,bas-uele,bu Bas Uele Province,bu Likati Zone de Santé,likati,bas-uele
+lilanga-bobangi,Equateur,426,lilanga Bobangi,Lilanga Bobanga,equateur,eq Equateur Province,eq Lilanga Bobangi Zone de Santé,lilanga bobanga,equateur
+limeté,Kinshasa,255,Limeté,Limeté,kinshasa,kn Kinshasa Province,kn Limete Zone de Santé,limete,kinshasa
+linga,Province Oriental,178,Linga,Linga,ituri,it Ituri Province,it Linga Zone de Santé,linga,ituri
+lingomo,Equateur,396,Lingomo,Lingomo,tshuapa,tu Tshuapa Province,tu Lingomo Zone de Santé,lingomo,tshuapa
+lingwala,Kinshasa,252,Lingwala,Lingwala,kinshasa,kn Kinshasa Province,kn Lingwala Zone de Santé,lingwala,kinshasa
+lisala,Equateur,314,Lisala,Lisala,mongala,mg Mongala Province,mg Lisala Zone de Santé,lisala,mongala
+lita,Province Oriental,174,Lita,Lita,ituri,it Ituri Province,it Lita Zone de Santé,lita,ituri
+lodja,Kasai Oriental,100,Lodja,Lodja,sankuru,sn Sankuru Province,sn Lodja Zone de Santé,lodja,sankuru
+logo,Province Oriental,281,Logo,Logo,ituri,it Ituri Province,it Logo Zone de Santé,logo,ituri
+loko,Equateur,308,Loko,Loko,nord-ubangi,nu Nord Ubangi Province,nu Loko Zone de Santé,loko,nord ubangi
+lolo,Equateur,389,Lolo,Lolo,mongala,mg Mongala Province,mg Lolo Zone de Santé,lolo,mongala
+lolwa,Province Oriental,169,Lolwa,Lolwa,ituri,it Ituri Province,it Lolwa Zone de Santé,lolwa,ituri
+lomela,Kasai Oriental,452,Lomela,Lomela,sankuru,sn Sankuru Province,sn Lomela Zone de Santé,lomela,sankuru
+lotumbe,Equateur,301,Lotumbe,Lotumbe,equateur,eq Equateur Province,eq Lotumbe Zone de Santé,lotumbe,equateur
+lowa,Province Oriental,403,Lowa,Lowa,tshopo,tp Tshopo Province,tp Lowa Zone de Santé,lowa,tshopo
+lualaba,Katanga,283,Lualaba,Lualaba,lualaba,ll Lualaba Province,ll Lualaba Zone de Santé,lwalaba,lualaba
+luambo,Kasai Occidental,12,Luambo,Luambo,kasai-central,kr Kasai Central Province,kr Luambo Zone de Santé,luambo,kasai central
+lubao,Kasai Oriental,110,Lubao,Lubao,lomami,lm Lomami Province,lm Lubao Zone de Santé,lubao,lomami
+lubero,Nord Kivu,48,Lubero,Lubero,nord-kivu,nk Nord Kivu Province,nk Lubero Zone de Santé,lubero,nord kivu
+lubilanji,Kasai Oriental,69,Lubilanji,Lubilanji,kasai-oriental,ke Kasai Oriental Province,ke Lubilanji Zone de Santé,lubilanji,kasai oriental
+lubondaie,Kasai Occidental,33,Lubondaie,Lubondayi,kasai-central,kr Kasai Central Province,kr Lubondaie Zone de Santé,lubondaie,kasai central
+lubudi,Katanga,469,Lubudi,Lubudi,lualaba,ll Lualaba Province,ll Lubudi Zone de Santé,lubudi,lualaba
+lubumbashi,Haut Katanga,510,Lubumbashi,NA,haut-katanga,hk Haut Katanga Province,hk Lubumbashi Zone de Santé,lubumbashi,haut-katanga
+lubunga,Kasai Occidental,35,Lubunga,Lubunga,kasai-central,kr Kasai Central Province,kr Lubunga Zone de Santé,lubunga,kasai central
+lubunga,Kasai Occidental,35,Lubunga,Lubunga,tshopo,tp Tshopo Province,tp Lubunga Zone de Santé,lubunga,tshopo
+lubunga,Province Oriental,332,Lubunga,Lubunga,kasai-central,kr Kasai Central Province,kr Lubunga Zone de Santé,lubunga,kasai central
+lubunga,Province Oriental,332,Lubunga,Lubunga,tshopo,tp Tshopo Province,tp Lubunga Zone de Santé,lubunga,tshopo
+lubutu,Maniema,405,Lubutu,Lubutu,maniema,mn Maniema Province,mn Lubutu Zone de Santé,lubutu,maniema
+ludimbi-lukula,NA,NA,NA,NA,lomami,lm Lomami Province,lm Ludimbi Lukula Zone de Santé,ludimbi lukula,lomami
+luebo,Kasai Occidental,24,Luebo,Luebo,kasai,ks Kasai Province,ks Luebo Zone de Santé,luebo,kasai
+luiza,Kasai Occidental,16,Luiza,Luiza,kasai-central,kr Kasai Central Province,kr Luiza Zone de Santé,luiza,kasai central
+lukafu,Katanga,343,Lukafu,Lukafu,haut-katanga,hk Haut Katanga Province,hk Lukafu Zone de Santé,lukafu,haut-katanga
+lukashi-lualu,Kasai Oriental,91,Lukashi lualu,NA,NA,NA,NA,NA,NA
+lukelenge,Kasai Oriental,72,Lukelenge,Lukalenge,kasai-oriental,ke Kasai Oriental Province,ke Lukelenge Zone de Santé,lukelenge,kasai oriental
+lukolela,Equateur,423,Lukolela,Lukolela,equateur,eq Equateur Province,eq Lukolela Zone de Santé,lukolela,equateur
+lukonga,Kasai Occidental,287,Lukonga,Lukonga,kasai-central,kr Kasai Central Province,kr Lukonga Zone de Santé,lukonga,kasai central
+lukula,Bas-Congo,121,Lukula,Lukula,kongo-central,kc Kongo Central Province,kc Lukula Zone de Santé,lukula,bas congo
+lulingu,Sud Kivu,448,Lulingu,Lulingu,sud-kivu,sk Sud Kivu Province,sk Lulingu Zone de Santé,lulingu,sud kivu
+luozi,Bas-Congo,126,Luozi,Luozi,kongo-central,kc Kongo Central Province,kc Luozi Zone de Santé,luozi,bas congo
+luputa,Kasai Oriental,77,Luputa,Luputa,lomami,lm Lomami Province,lm Luputa Zone de Santé,luputa,lomami
+lusambo,Kasai Oriental,97,Lusambo,Lusambo,sankuru,sn Sankuru Province,sn Lusambo Zone de Santé,lusambo,sankuru
+lusanga,Bandundu,496,Lusanga,Lusanga,kwilu,kl Kwilu Province,kl Lusanga Zone de Santé,lusanga,kwilu
+lusangi,Maniema,358,Lusangi,Lusangi,maniema,mn Maniema Province,mn Lusangi Zone de Santé,lusangi,maniema
+lwamba,Katanga,478,Lwamba,Lwamba,haut-lomami,hl Haut Lomami Province,hl Lwamba Zone de Santé,lwamba,haut-lomami
+mabalako,Nord Kivu,45,Mabalako,NA,nord-kivu,nk Nord Kivu Province,nk Mabalako Zone de Santé,mabalako,nord kivu
+mahagi,Province Oriental,177,Mahagi,Mahagi,ituri,it Ituri Province,it Mahagi Zone de Santé,mahagi,ituri
+makala,Kinshasa,259,Makala,Makala,kinshasa,kn Kinshasa Province,kn Makala Zone de Santé,makala,kinshasa
+makiso-kisangani,Province Oriental,331,Makiso Kisangani,Makiso-Kisangani,tshopo,tp Tshopo Province,tp Makiso Kisangani Zone de Santé,makiso k,tshopo
+makoro,Province Oriental,443,Makoro,Makoro,haut-uele,hu Haut Uele Province,hu Makoro Zone de Santé,makoro,haut-uele
+makota,Kasai Oriental,42,Makota,Makota,lomami,lm Lomami Province,lm Makota Zone de Santé,makota,lomami
+malemba-nkulu,Katanga,480,Malemba Nkulu,Malemba-Nkulu,haut-lomami,hl Haut Lomami Province,hl Malemba Nkulu Zone de Santé,malemba nkulu,haut-lomami
+maluku-i,Kinshasa,272,Maluku I,Maluku I,kinshasa,kn Kinshasa Province,kn Maluku 1 Zone de Santé,maluku1,kinshasa
+maluku-ii,Kinshasa,410,Maluku II,Maluku II,kinshasa,kn Kinshasa Province,kn Maluku 2 Zone de Santé,maluku2,kinshasa
+mambasa,Province Oriental,226,Mambasa,Mambasa,ituri,it Ituri Province,it Mambasa Zone de Santé,mambasa,ituri
+mampoko,Equateur,295,Mampoko,Lolanga Mampoko,equateur,eq Equateur Province,eq Mampoko Zone de Santé,lolanga mampoko,equateur
+mandima,Province Oriental,168,Mandima,Mandima,ituri,it Ituri Province,it Mandima Zone de Santé,mandima,ituri
+mangala,Province Oriental,183,Mangala,Mangala,ituri,it Ituri Province,it Mangala Zone de Santé,mangala,ituri
+mangembo,Bas-Congo,416,Mangembo,Mangembo,kongo-central,kc Kongo Central Province,kc Mangembo Zone de Santé,mangembo,bas congo
+mangobo,Province Oriental,333,Mangobo,Mangobo,tshopo,tp Tshopo Province,tp Mangobo Zone de Santé,mangobo,tshopo
+manguredj,NA,NA,NA,NA,0,NA,NA,manguredj,0
+manguredjipa,Nord Kivu,49,Manguredjipa,Manguredjipa,nord-kivu,nk Nord Kivu Province,nk Manguredjipa Zone de Santé,mangupa,nord kivu
+manika,Katanga,492,Manika,Manika,lualaba,ll Lualaba Province,ll Manika Zone de Santé,manika,lualaba
+mankanza,Equateur,313,Mankanza,Makanza,equateur,eq Equateur Province,eq Makanza Zone de Santé,makanza,equateur
+manono,Katanga,349,Manono,Manono,tanganyika,tn Tanganyika Province,tn Manono Zone de Santé,manono,tanganyika
+masereka,Nord Kivu,47,Masereka,Masereka,nord-kivu,nk Nord Kivu Province,nk Masereka Zone de Santé,masereka,nord kivu
+masi-manimba,Bandundu,141,Masi Manimba,Masi-manimba,kwilu,kl Kwilu Province,kl Masi Manimba Zone de Santé,masimanimba,kwilu
+masina-i,Kinshasa,266,Masina I,Masina I,kinshasa,kn Kinshasa Province,kn Masina 1 Zone de Santé,masina1,kinshasa
+masina-ii,Kinshasa,265,Masina II,Masina II,kinshasa,kn Kinshasa Province,kn Masina 2 Zone de Santé,masina2,kinshasa
+masisi,Nord Kivu,105,Masisi,Masisi,nord-kivu,nk Nord Kivu Province,nk Masisi Zone de Santé,masisi,nord kivu
+massa,Bas-Congo,418,Massa,Masa,kongo-central,kc Kongo Central Province,kc Massa Zone de Santé,masa,bas congo
+matadi,Bas-Congo,243,Matadi,Matadi,kongo-central,kc Kongo Central Province,kc Matadi Zone de Santé,matadi,bas congo
+matete,Kinshasa,250,Matete,Matete,kinshasa,kn Kinshasa Province,kn Matete Zone de Santé,matete,kinshasa
+mawuya,Equateur,427,Mawuya,Mawuya,sud-ubangi,su Sud Ubangi Province,su Mawuya Zone de Santé,mawuya,sud ubangi
+mbandaka,Equateur,299,Mbandaka,Mbandaka,equateur,eq Equateur Province,eq Mbandaka Zone de Santé,mbandaka,equateur
+mbanza-ngungu,Bas-Congo,131,Mbanza Ngungu,Mbanza-Ngungu,kongo-central,kc Kongo Central Province,kc Mbanza Ngungu Zone de Santé,mbanza ngungu,bas congo
+mbaya,Equateur,322,Mbaya,Mbaya,sud-ubangi,su Sud Ubangi Province,su Mbaya Zone de Santé,mbaya,sud ubangi
+mbomomange,Province Oriental,225,Mbomomange,NA,NA,NA,NA,NA,NA
+mbulala,Katanga,465,Mbulala,Mbulula,tanganyika,tn Tanganyika Province,tn Mbulula Zone de Santé,mbulula,tanganyika
+miabi,Kasai Oriental,66,Miabi,Miabi,kasai-oriental,ke Kasai Oriental Province,ke Miabi Zone de Santé,miabi,kasai oriental
+mikalayi,Kasai Occidental,25,Mikalayi,Mikalayi,kasai-central,kr Kasai Central Province,kr Mikalayi Zone de Santé,mikalayi,kasai central
+mikope,Kasai Occidental,136,Mikope,Mikope,kasai,ks Kasai Province,ks Mikope Zone de Santé,mikope,kasai
+mimia,Bandundu,138,Mimia,Mimia,mai-ndombe,md Maindombe Province,md Mimia Zone de Santé,mimia,mai-ndombe
+minembwe,Sud Kivu,371,Minembwe,Minembwe,sud-kivu,sk Sud Kivu Province,sk Minembwe Zone de Santé,minembwe,sud kivu
+minga,Kasai Oriental,96,Minga,Minga,sankuru,sn Sankuru Province,sn Minga Zone de Santé,minga,sankuru
+minova,Sud Kivu,500,Minova,Minova,sud-kivu,sk Sud Kivu Province,sk Minova Zone de Santé,minova,sud kivu
+miti-murhesa,Sud Kivu,363,Miti Murhesa,Miti - Murhesa,sud-kivu,sk Sud Kivu Province,sk Miti Murhesa Zone de Santé,miti-murhesa,sud kivu
+mitwaba,Katanga,347,Mitwaba,Mitwaba,haut-katanga,hk Haut Katanga Province,hk Mitwaba Zone de Santé,mitwaba,haut-katanga
+moanda,Bas-Congo,115,Moanda,Muanda,kongo-central,kc Kongo Central Province,kc Muanda Zone de Santé,muanda,bas congo
+moaza,Bandundu,157,Moaza,Moanza,kwilu,kl Kwilu Province,kl Moanza Zone de Santé,moanza,kwilu
+moba,Katanga,111,Moba,Moba,tanganyika,tn Tanganyika Province,tn Moba Zone de Santé,moba,tanganyika
+mobayi-mbongo,Equateur,433,Mobayi Mbongo,Mobayi,nord-ubangi,nu Nord Ubangi Province,nu Mobayi Mbongo Zone de Santé,mobayi mbongo,nord ubangi
+mokala,Bandundu,239,Mokala,Mokala,kwilu,kl Kwilu Province,kl Mokala Zone de Santé,mokala,kwilu
+mompono,Equateur,307,Mompono,Mompono,tshuapa,tu Tshuapa Province,tu Mompono Zone de Santé,mompono,tshuapa
+mondombe,Equateur,397,Mondombe,Mondombe,tshuapa,tu Tshuapa Province,tu Mondombe Zone de Santé,mondombe,tshuapa
+monga,Province Oriental,435,Monga,Monga,bas-uele,bu Bas Uele Province,bu Monga Zone de Santé,monga,bas-uele
+mongbwalu,Province Oriental,228,Mongbwalu,Mongbwalu,ituri,it Ituri Province,it Mongbwalu Zone de Santé,mongbwalu,ituri
+monika,Equateur,300,Monika,Monieka,equateur,eq Equateur Province,eq Monieka Zone de Santé,monieka,equateur
+monkoto,Equateur,458,Monkoto,Monkoto,tshuapa,tu Tshuapa Province,tu Monkoto Zone de Santé,monkoto,tshuapa
+mont-ngafula-i,Kinshasa,246,Mont Ngafula I,Mont-Ngafula I,kinshasa,kn Kinshasa Province,kn Mont Ngafula 1 Zone de Santé,mont nga1,kinshasa
+mont-ngafula-ii,Kinshasa,274,Mont Ngafula II,Mont-Ngafula II,kinshasa,kn Kinshasa Province,kn Mont Ngafula 2 Zone de Santé,mont nga 2,kinshasa
+mosango,Bandundu,241,Mosango,Mosango,kwilu,kl Kwilu Province,kl Mosango Zone de Santé,mosango,kwilu
+mpokolo,Kasai Oriental,76,Mpokolo,Mpokolo,kasai-oriental,ke Kasai Oriental Province,ke Mpokolo Zone de Santé,mpokolo,kasai oriental
+mubumbano,Sud Kivu,199,Mubumbano,Mubumbano,sud-kivu,sk Sud Kivu Province,sk Mubumbano Zone de Santé,mubumbano,sud kivu
+mufunga-sampwe,Katanga,344,Mufunga Sampwe,Mufunga-Sampwe,haut-katanga,hk Haut Katanga Province,hk Mufunga Sampwe Zone de Santé,mufunga sampwe,haut-katanga
+mukanga,Katanga,479,Mukanga,Mukanga,haut-lomami,hl Haut Lomami Province,hl Mukanga Zone de Santé,mukanga,haut-lomami
+mukedi,Bandundu,463,Mukedi,Mukedi,kwilu,kl Kwilu Province,kl Mukedi Zone de Santé,mukedi,kwilu
+mukumbi,Kasai Oriental,88,Mukumbi,Mukumbi,kasai-oriental,ke Kasai Oriental Province,ke Mukumbi Zone de Santé,mukumbi,kasai oriental
+mulongo,Katanga,477,Mulongo,Mulongo,haut-lomami,hl Haut Lomami Province,hl Mulongo Zone de Santé,mulongo,haut-lomami
+mulumba,Kasai Oriental,82,Mulumba,Mulumba,lomami,lm Lomami Province,lm Mulumba Zone de Santé,mulumba,lomami
+mulungu,Sud Kivu,360,Mulungu,Mulungu,sud-kivu,sk Sud Kivu Province,sk Mulungu Zone de Santé,mulungu,sud kivu
+mumbunda,Haut Katanga,509,Mumbunda,NA,haut-katanga,hk Haut Katanga Province,hk Mumbunda Zone de Santé,mumbunda,haut-katanga
+mungindu,Bandundu,238,Mungindu,Mungindu,kwilu,kl Kwilu Province,kl Mungindu Zone de Santé,mungindu,kwilu
+mushenge,Kasai Occidental,38,Mushenge,Mushenge,kasai,ks Kasai Province,ks Mushenge Zone de Santé,mushenge,kasai
+mushie,Bandundu,164,Mushie,Mushie,mai-ndombe,md Maindombe Province,md Mushie Zone de Santé,mushie,mai-ndombe
+musienene,Nord Kivu,59,Musienene,Musienene,nord-kivu,nk Nord Kivu Province,nk Musienene Zone de Santé,musienene,nord kivu
+musuika,Kasai Occidental,10,Musuika,Masuika,kasai-central,kr Kasai Central Province,kr Masuika Zone de Santé,masuika,kasai central
+mutenna,Kasai Occidental,13,Mutenna,Mutena,kasai,ks Kasai Province,ks Mutena Zone de Santé,mutena,kasai
+mutoto,Kasai Occidental,26,Mutoto,Mutoto,kasai-central,kr Kasai Central Province,kr Mutoto Zone de Santé,mutoto,kasai central
+mutshatsha,Katanga,468,Mutshatsha,Mutshatsha,lualaba,ll Lualaba Province,ll Mutshatsha Zone de Santé,mutshatsha,lualaba
+mutwanga,Nord Kivu,50,Mutwanga,Mutwanga,nord-kivu,nk Nord Kivu Province,nk Mutwanga Zone de Santé,mutwanga,nord kivu
+muya,Kasai Oriental,73,Muya,Muya,kasai-oriental,ke Kasai Oriental Province,ke Muya Zone de Santé,muya,kasai oriental
+mwana,Sud Kivu,192,Mwana,Mwana,sud-kivu,sk Sud Kivu Province,sk Mwana Zone de Santé,mwana,sud kivu
+mweka,Kasai Occidental,29,Mweka,Mweka,kasai,ks Kasai Province,ks Mweka Zone de Santé,mweka,kasai
+mwela-lemba,Bandundu,151,Mwela Lemba,Mwela Lembwa,kwango,kg Kwango Province,kg Mwela Lembwa Zone de Santé,mwela lembwa,kwango
+mwene-ditu,Kasai Oriental,43,Mwene Ditu,Mwene-Ditu,lomami,lm Lomami Province,lm Mweneditu Zone de Santé,muene ditu,lomami
+mwenga,Sud Kivu,369,Mwenga,Mwenga,sud-kivu,sk Sud Kivu Province,sk Mwenga Zone de Santé,mwenga,sud kivu
+mweso,Nord Kivu,106,Mweso,Mweso,nord-kivu,nk Nord Kivu Province,nk Mweso Zone de Santé,mweso,nord kivu
+mwetshi,Kasai Occidental,36,Mwetshi,Muetshi,kasai-central,kr Kasai Central Province,kr Muetshi Zone de Santé,mwetshi,kasai central
+ndage,Equateur,318,Ndage,Ndage,sud-ubangi,su Sud Ubangi Province,su Ndage Zone de Santé,ndage,sud ubangi
+ndekesha,Kasai Occidental,14,Ndekesha,Ndekesha,kasai-central,kr Kasai Central Province,kr Ndekesha Zone de Santé,ndekesha,kasai central
+ndesha,Kasai Occidental,20,Ndesha,Ndesha,kasai-central,kr Kasai Central Province,kr Ndesha Zone de Santé,ndesha,kasai central
+ndjili,Kinshasa,245,Ndjili,Ndjili,kinshasa,kn Kinshasa Province,kn Ndjili Zone de Santé,ndjili,kinshasa
+ndjoko-punda,Kasai Occidental,23,Ndjoko Punda,Ndjoku Punda,kasai,ks Kasai Province,ks Ndjoko Mpunda Zone de Santé,ndjoko mpunda,kasai
+ngaba,Kinshasa,260,Ngaba,Ngaba,kinshasa,kn Kinshasa Province,kn Ngaba Zone de Santé,ngaba,kinshasa
+ngandajika,Kasai Oriental,84,Ngandajika,Gandajika,lomami,lm Lomami Province,lm NGandajika Zone de Santé,gandajika,lomami
+ngidinga,Bas-Congo,128,Ngidinga,Ngidinga,kongo-central,kc Kongo Central Province,kc Ngidinga Zone de Santé,ngidinga,bas congo
+ngiri-ngiri,Kinshasa,269,Ngiri_Ngiri,Ngiri-Ngiri,kinshasa,kn Kinshasa Province,kn Ngiri Ngiri Zone de Santé,ngiri ngiri,kinshasa
+niangara,Province Oriental,188,Niangara,Niangara,haut-uele,hu Haut Uele Province,hu Niangara Zone de Santé,niangara,haut-uele
+niania,Province Oriental,211,Niania,Nia-Nia,ituri,it Ituri Province,it Nia Nia Zone de Santé,nia nia,ituri
+nioki,Bandundu,135,Nioki,Nioki,mai-ndombe,md Maindombe Province,md Nioki Zone de Santé,nioki,mai-ndombe
+nizi,Province Oriental,173,Nizi,Nizi,ituri,it Ituri Province,it Nizi Zone de Santé,nizi,ituri
+nsele,Kinshasa,276,Nsele,Nsele,kinshasa,kn Kinshasa Province,kn Nsele Zone de Santé,nsele,kinshasa
+nselo,Bas-Congo,129,Nselo,Nselo,kongo-central,kc Kongo Central Province,kc Nselo Zone de Santé,nselo,bas congo
+ntondo,Equateur,296,Ntondo,Ntondo,equateur,eq Equateur Province,eq Ntondo Zone de Santé,ntondo,equateur
+nundu,Sud Kivu,372,Nundu,Nundu,sud-kivu,sk Sud Kivu Province,sk Nundu Zone de Santé,nundu,sud kivu
+nyakunde,Province Oriental,180,Nyakunde,Nyankunde,ituri,it Ituri Province,it Nyankunde Zone de Santé,nyakunde,ituri
+nyanga,Kasai Occidental,7,Nyanga,Nyanga,kasai,ks Kasai Province,ks Nyanga Zone de Santé,nyanga,kasai
+nyangezi,Sud Kivu,195,Nyangezi,Nyangezi,sud-kivu,sk Sud Kivu Province,sk Nyangezi Zone de Santé,nyangezi,sud kivu
+nyarambe,Province Oriental,280,Nyarambe,Nyarambe,ituri,it Ituri Province,it Nyarambe Zone de Santé,nyarambe,ituri
+nyatende,Sud Kivu,194,Nyatende,Nyantende,sud-kivu,sk Sud Kivu Province,sk Nyantende Zone de Santé,nyantende,sud kivu
+nyemba,Katanga,378,Nyemba,Nyemba,tanganyika,tn Tanganyika Province,tn Nyemba Zone de Santé,nyemba,tanganyika
+nyiragongo,Nord Kivu,502,Nyiragongo,NA,nord-kivu,nk Nord Kivu Province,nk Nyiragongo Zone de Santé,nyiragongo,nord kivu
+nyunzu,Katanga,380,Nyunzu,Nyunzu,tanganyika,tn Tanganyika Province,tn Nyunzu Zone de Santé,nyunzu,tanganyika
+nzaba,Kasai Oriental,67,Nzaba,Nzaba,kasai-oriental,ke Kasai Oriental Province,ke Nzaba Zone de Santé,nzaba,kasai oriental
+nzanza,Bas-Congo,244,Nzanza,Nzanza,kongo-central,kc Kongo Central Province,kc Nzanza Zone de Santé,nzanza,bas congo
+obokote,Maniema,401,Obokote,Obokote,maniema,mn Maniema Province,mn Obokote Zone de Santé,obokote,maniema
+oicha,Nord Kivu,52,Oicha,Oicha,nord-kivu,nk Nord Kivu Province,nk Oicha Zone de Santé,oicha,nord kivu
+omondjadi,Kasai Oriental,101,Omondjadi,Omendjadi,sankuru,sn Sankuru Province,sn Omendjadi Zone de Santé,omondjadi,sankuru
+opala,Province Oriental,451,Opala,Opala,tshopo,tp Tshopo Province,tp Opala Zone de Santé,opala,tshopo
+opienge,Province Oriental,400,Opienge,Opienge,tshopo,tp Tshopo Province,tp Opienge Zone de Santé,opienge,tshopo
+oshwe,Bandundu,137,Oshwe,Oshwe,mai-ndombe,md Maindombe Province,md Oshwe Zone de Santé,oshwe,mai-ndombe
+ototo,NA,NA,NA,NA,sankuru,sn Sankuru Province,sn Ototo Zone de Santé,ototo,sankuru
+panda,Katanga,353,Panda,Panda,haut-katanga,hk Haut Katanga Province,hk Panda Zone de Santé,panda,haut-katanga
+pangi,Maniema,383,Pangi,Pangi,maniema,mn Maniema Province,mn Pangi Zone de Santé,pangi,maniema
+pania-mutombo,Kasai Oriental,95,Pania Mutombo,Pania Mutombo,sankuru,sn Sankuru Province,sn Pania Mutombo Zone de Santé,pania mutombo,sankuru
+panzi,Bandundu,155,Panzi,Panzi,kwango,kg Kwango Province,kg Panzi Zone de Santé,panzi,kwango
+pawa,Province Oriental,167,Pawa,Pawa,haut-uele,hu Haut Uele Province,hu Pawa Zone de Santé,pawa,haut-uele
+pay-kongila,Bandundu,242,Pay Kongila,Pay Kongila,kwilu,kl Kwilu Province,kl Pay Kongila Zone de Santé,pay kongila,kwilu
+penzwa,Bandundu,162,Penzwa,Pendjua,mai-ndombe,md Maindombe Province,md Pendjwa Zone de Santé,pendjwa,mai-ndombe
+pimu,Equateur,1,Pimu,Pimu,mongala,mg Mongala Province,mg Pimu Zone de Santé,pimu,mongala
+pinga,Nord Kivu,108,Pinga,Pinga,nord-kivu,nk Nord Kivu Province,nk Pinga Zone de Santé,pinga,nord kivu
+poko,Province Oriental,191,Poko,Poko,bas-uele,bu Bas Uele Province,bu Poko Zone de Santé,poko,bas-uele
+police,Kinshasa,329,Police,Police,kinshasa,kn Kinshasa Province,kn Police Zone de Santé,police,kinshasa
+popokabaka,Bandundu,408,Popokabaka,Popokabaka,kwango,kg Kwango Province,kg Popokabaka Zone de Santé,popokabaka,kwango
+punia,Maniema,449,Punia,Punia,maniema,mn Maniema Province,mn Punia Zone de Santé,punia,maniema
+pweto,Katanga,340,Pweto,Pweto,haut-katanga,hk Haut Katanga Province,hk Pweto Zone de Santé,pweto,haut-katanga
+rethy,Province Oriental,277,Rethy,Rethy,ituri,it Ituri Province,it Rethy Zone de Santé,rethy,ituri
+rimba,Province Oriental,181,Rimba,Rimba,ituri,it Ituri Province,it Rimba Zone de Santé,rimba,ituri
+ruashi,Haut Katanga,513,Ruashi,NA,haut-katanga,hk Haut Katanga Province,hk Ruashi Zone de Santé,rwashi,haut-katanga
+rungu,Province Oriental,189,Rungu,Rungu,haut-uele,hu Haut Uele Province,hu Rungu Zone de Santé,rungu,haut-uele
+rutshuru,Nord Kivu,506,Rutshuru,Rutshuru,nord-kivu,nk Nord Kivu Province,nk Rutshuru Zone de Santé,rutshuru,nord kivu
+ruzizi,Sud Kivu,373,Ruzizi,Ruzizi,sud-kivu,sk Sud Kivu Province,sk Ruzizi Zone de Santé,ruzizi,sud kivu
+rwampara,Province Oriental,171,Rwampara,Rwampara,ituri,it Ituri Province,it Rwampara Zone de Santé,rwampara,ituri
+rwanguba,Nord Kivu,505,Rwanguba,Rwanguba,nord-kivu,nk Nord Kivu Province,nk Rwanguba Zone de Santé,rwanguba,nord kivu
+sakania,Katanga,482,Sakania,Sakania,haut-katanga,hk Haut Katanga Province,hk Sakania Zone de Santé,sakanya,haut-katanga
+salamabila,Maniema,375,Salamabila,Salamabila,maniema,mn Maniema Province,mn Saramabila Zone de Santé,saramabil,maniema
+samba,Maniema,355,Samba,Samba,maniema,mn Maniema Province,mn Samba Zone de Santé,samba,maniema
+sandoa,Katanga,489,Sandoa,Sandoa,lualaba,ll Lualaba Province,ll Sandoa Zone de Santé,sandoa,lualaba
+seke-banza,Bas-Congo,119,Seke Banza,Sekebanza,kongo-central,kc Kongo Central Province,kc Seke Banza Zone de Santé,seke banza,bas congo
+selembao,Kinshasa,262,Selembao,Selembao,kinshasa,kn Kinshasa Province,kn Selembao Zone de Santé,selembao,kinshasa
+shabunda,Sud Kivu,447,Shabunda,Shabunda Centre,sud-kivu,sk Sud Kivu Province,sk Shabunda Zone de Santé,shabunda,sud kivu
+sia,Bandundu,237,Sia,Sia,kwilu,kl Kwilu Province,kl Sia Zone de Santé,sia,kwilu
+sona-bata,Bas-Congo,275,Sona Bata,Sona-Bata,kongo-central,kc Kongo Central Province,kc Sona Bata Zone de Santé,sona bata,bas congo
+sona-pangu,Bas-Congo,412,Sona Pangu,Nsona-Pangu,kongo-central,kc Kongo Central Province,kc Nsona Mpangu Zone de Santé,nsona mpangu,bas congo
+songa,Katanga,473,Songa,Songa,haut-lomami,hl Haut Lomami Province,hl Songa Zone de Santé,songa,haut-lomami
+tandala,Equateur,324,Tandala,Tandala,sud-ubangi,su Sud Ubangi Province,su Tandala Zone de Santé,tandala,sud ubangi
+tandembele,Bandundu,165,Tandembele,Ntand Embelo,mai-ndombe,md Maindombe Province,md Ntandembelo Zone de Santé,ntandembele,mai-ndombe
+tchomia,Province Oriental,185,Tchomia,Tchomia,ituri,it Ituri Province,it Tchomia Zone de Santé,tshomia,ituri
+tembo,Bandundu,156,Tembo,Tembo,kwango,kg Kwango Province,kg Tembo Zone de Santé,tembo,kwango
+titule,Province Oriental,217,Titule,Titule,bas-uele,bu Bas Uele Province,bu Titule Zone de Santé,titule,bas-uele
+tshamilemba,Haut Katanga,511,Tshamilemba,NA,haut-katanga,hk Haut Katanga Province,hk Tshamilemba Zone de Santé,tshamilemba,haut-katanga
+tshamilemba,Haut Katanga,515,Tshamilemba,NA,haut-katanga,hk Haut Katanga Province,hk Tshamilemba Zone de Santé,tshamilemba,haut-katanga
+tshela,Bas-Congo,122,Tshela,Tshela,kongo-central,kc Kongo Central Province,kc Tshela Zone de Santé,tshela,bas congo
+tshibala,Kasai Occidental,15,Tshibala,Tshibala,kasai-central,kr Kasai Central Province,kr Tshibala Zone de Santé,tshibala,kasai central
+tshikaji,Kasai Occidental,289,Tshikaji,Tshikaji,kasai-central,kr Kasai Central Province,kr Tshikaji Zone de Santé,tshikaji,kasai central
+tshikapa,Kasai Occidental,285,Tshikapa,Tshikapa,kasai,ks Kasai Province,ks Tshikapa Zone de Santé,tshikapa,kasai
+tshikula,Kasai Occidental,19,Tshikula,Tshikula,kasai-central,kr Kasai Central Province,kr Tshikula Zone de Santé,tshikula,kasai central
+tshilenge,Kasai Oriental,86,Tshilenge,Tshilenge,kasai-oriental,ke Kasai Oriental Province,ke Tshilenge Zone de Santé,tshilenge,kasai oriental
+tshilundu,Kasai Oriental,80,Tshilundu,Cilundu,kasai-oriental,ke Kasai Oriental Province,ke Cilundu Zone de Santé,cilundu,kasai oriental
+tshitenge,Kasai Oriental,87,Tshitenge,Citenge,kasai-oriental,ke Kasai Oriental Province,ke Citenge Zone de Santé,tshitenge,kasai oriental
+tshitshimbi,Kasai Oriental,81,Tshitshimbi,Tshishimbi,kasai-oriental,ke Kasai Oriental Province,ke Tshishimbi Zone de Santé,tshitshimbi,kasai oriental
+tshofa,Kasai Oriental,94,Tshofa,Tshofa,lomami,lm Lomami Province,lm Tshofa Zone de Santé,tshofa,lomami
+tshopo,Province Oriental,335,Tshopo,Tshopo,tshopo,tp Tshopo Province,tp Tshopo Zone de Santé,tshopo,tshopo
+tshudi-loto,Kasai Oriental,456,Tshudi Loto,Tshudi-Loto,sankuru,sn Sankuru Province,sn Tshudi Loto Zone de Santé,tshudi loto,sankuru
+tshumbe,NA,NA,NA,NA,sankuru,sn Sankuru Province,sn Tshumbe Zone de Santé,tshumbe,sankuru
+tumba,Maniema,359,Tumba,Tunda,maniema,mn Maniema Province,mn Tunda Zone de Santé,tunda,maniema
+ubundu,Province Oriental,207,Ubundu,Ubundu,tshopo,tp Tshopo Province,tp Ubundu Zone de Santé,ubundu,tshopo
+uvira,Sud Kivu,366,Uvira,Uvira,sud-kivu,sk Sud Kivu Province,sk Uvira Zone de Santé,uvira,sud kivu
+vaku,Bas-Congo,123,Vaku,Vaku,kongo-central,kc Kongo Central Province,kc Vaku Zone de Santé,vaku,bas congo
+vanga,Bandundu,235,Vanga,Vanga,kwilu,kl Kwilu Province,kl Vanga Zone de Santé,vanga,kwilu
+vanga-kete,Kasai Oriental,99,Vanga Kete,Vanga-Kete,sankuru,sn Sankuru Province,sn Vanga Kete Zone de Santé,vanga kete,sankuru
+vangu,Katanga,493,Vangu,Vangu,haut-katanga,hk Haut Katanga Province,hk Vangu Zone de Santé,vangu,haut-katanga
+viandana,Province Oriental,190,Viandana,Viadana,bas-uele,bu Bas Uele Province,bu Viadana Zone de Santé,viadana,bas-uele
+vohovi,Nord Kivu,58,Vohovi,Vuhovi,nord-kivu,nk Nord Kivu Province,nk Vuhovi Zone de Santé,vuhovi,nord kivu
+walikale,Nord Kivu,109,Walikale,Walikale,nord-kivu,nk Nord Kivu Province,nk Walikale Zone de Santé,walikale,nord kivu
+walungu,Sud Kivu,200,Walungu,Walungu,sud-kivu,sk Sud Kivu Province,sk Walungu Zone de Santé,walungu,sud kivu
+wamba,Province Oriental,227,Wamba,Wamba,haut-uele,hu Haut Uele Province,hu Wamba Zone de Santé,wamba,haut-uele
+wamba-lwadi,Bandundu,154,Wamba Lwadi,Wamba luadi,kwango,kg Kwango Province,kg Wamba Lwadi Zone de Santé,wamba luadi,kwango
+wangata,Equateur,230,Wangata,Wangata,equateur,eq Equateur Province,eq Wangata Zone de Santé,wangata,equateur
+wanie-rukula,Province Oriental,404,Wanie Rukula,Wanie-Rukula,tshopo,tp Tshopo Province,tp Wanierukula Zone de Santé,wanierukula,tshopo
+wapinda,Equateur,393,wapinda,Wapinda,nord-ubangi,nu Nord Ubangi Province,nu Wapinda Zone de Santé,wapinda,nord ubangi
+wasolo,Equateur,385,Wasolo,Wasolo,nord-ubangi,nu Nord Ubangi Province,nu Wasolo Zone de Santé,wasolo,nord ubangi
+watsa,Province Oriental,282,Watsa,Watsa,haut-uele,hu Haut Uele Province,hu Watsa Zone de Santé,watsa,haut-uele
+wema,Equateur,304,Wema,Wema,tshuapa,tu Tshuapa Province,tu Wema Zone de Santé,wema,tshuapa
+wembo-nyama,Kasai Oriental,62,Wembo Nyama,Wembo-Nyama,sankuru,sn Sankuru Province,sn Wembo Nyama Zone de Santé,wembo nyama,sankuru
+winkong,Kasai Oriental,41,Winkong,Wikong,lomami,lm Lomami Province,lm Wikong Zone de Santé,wikong,lomami
+yabahondo,Province Oriental,208,Yabahondo,Yabaondo,tshopo,tp Tshopo Province,tp Yabaondo Zone de Santé,yabaondo,tshopo
+yahisule,Province Oriental,206,Yahisule,Yahisuli,tshopo,tp Tshopo Province,tp Yahisuli Zone de Santé,yahisuli,tshopo
+yahuma,Province Oriental,399,Yahuma,Yahuma,tshopo,tp Tshopo Province,tp Yahuma Zone de Santé,yahuma,tshopo
+yakoma,Equateur,434,Yakoma,Yakoma,nord-ubangi,nu Nord Ubangi Province,nu Yakoma Zone de Santé,yakoma,nord ubangi
+yakusu,Province Oriental,205,Yakusu,Yakusu,tshopo,tp Tshopo Province,tp Yakusu Zone de Santé,yakusu,tshopo
+yaleko,Province Oriental,210,Yaleko,Yaleko,tshopo,tp Tshopo Province,tp Yaleko Zone de Santé,yaleko,tshopo
+yalifafo,Equateur,455,Yalifafo,Yalifafu,tshuapa,tu Tshuapa Province,tu Yalifafu Zone de Santé,yalifafu,tshuapa
+yalimbongo,Province Oriental,386,Yalimbongo,Yalimbongo,tshopo,tp Tshopo Province,tp Yalimbongo Zone de Santé,yalimbongo,tshopo
+yamaluka,Equateur,315,Yamaluka,Yamaluka,mongala,mg Mongala Province,mg Yamaluka Zone de Santé,yamaluka,mongala
+yambuku,Equateur,392,Yambuku,Yambuku,mongala,mg Mongala Province,mg Yambuku Zone de Santé,yambuku,mongala
+yamongili,Equateur,390,Yamongili,Yamongili,mongala,mg Mongala Province,mg Yamongili Zone de Santé,yamongili,mongala
+yanga-bosa,Bandundu,142,Yanga bosa,Yasa-Bonga,kwilu,kl Kwilu Province,kl Yasa Bonga Zone de Santé,yasa-bonga,kwilu
+yangala,Kasai Occidental,11,Yangala,Yangala,kasai-central,kr Kasai Central Province,kr Yangala Zone de Santé,yangala,kasai central
+yumbi,Bandundu,420,Yumbi,Yumbi,mai-ndombe,md Maindombe Province,md Yumbi Zone de Santé,yumbi,mai-ndombe
+zongo,Equateur,428,Zongo,Zongo,sud-ubangi,su Sud Ubangi Province,su Zongo Zone de Santé,zongo,sud ubangi
