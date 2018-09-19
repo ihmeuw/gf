@@ -6,6 +6,8 @@
 # 
 # Outputs:
 # cleanVector - a vector of class 'character' containing corresponding standard DPS names to nameVector
+# 
+# The current working directory should be the root of this repo
 # --------------------------------------------------------
 
 standardizeDPSNames = function(nameVector=NULL) {
