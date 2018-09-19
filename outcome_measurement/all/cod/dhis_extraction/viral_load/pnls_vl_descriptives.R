@@ -42,14 +42,12 @@ vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls.rds'))
 #------------------------
 # demarcate 'support' entries compared to regular entries
 
+vl[ ,element_eng:=tolower(element_eng)]
 vl[grep(element_eng, pattern='support'), support:='Yes']
-vl[grep(element_eng, pattern='Support'), support:='Yes']
 vl[is.na(support), support:='No']
 
 #----------------------------------
 # merge in new elements
-
-vl[ ,element_eng:=tolower(element_eng)]
 
 # create stratifications by population
 vl[grep(element_eng, pattern='lactating'), group:='Lactating women']
@@ -64,8 +62,8 @@ vl[grep(element_eng, pattern='male'), group:='MSM']
 #-----------------
 # change category to sex and case status
 vl[ ,category:=tolower(category)]
-vl[grep(category, pattern='NC'), case:='New' ]
-vl[grep(category, pattern='AC'), case:='Old' ]
+vl[grep(category, pattern='nc'), case:='New' ]
+vl[grep(category, pattern='ac'), case:='Old' ]
 
 vl[grep(category, pattern='féminin'), sex:='Female' ]
 vl[grep(category, pattern='masculin'), sex:='Male']
@@ -77,8 +75,12 @@ vl[ ,category:=NULL]
 #-----------------------
 # restructure the data to have single data points with groupifications
 
-vl[grep(element_eng, pattern='received'), variable:='PLHIV who received a VL test']
-vl[grep(element_eng, pattern='undetectable'), variable:='PLHIV with undetectable VL']
+vl[grep(element_eng, pattern='received'), variable:='test']
+vl[grep(element_eng, pattern='undetectable'), variable:='und']
+
+# label the variable
+vl$variable <- factor(vl$variable, c('test', 'und'),
+                      c('PLHIV who received a VL test', 'PLHIV with undetectable VL'))
 
 #------------------------
 # test graph
@@ -104,139 +106,127 @@ ggplot(sup, aes(x=date, y=value, color=support)) +
   facet_wrap(~variable)
 
 #-----------------------
-# drop out stratified elements and create two variables with associated risk groups
+# restrcture the data to have two variables and associated risk groups
 
 vl <- vl[support=='Yes',.(value=sum(value, na.rm=T)), 
     by=.(variable, date, org_unit_id, org_unit,level, health_zone, dps, mtk,
          group, case, sex)]
          
-
-
-
-
-
-
 #------------------------
 # run a quantile regression
 
-quantFit <- rq(value~date+factor(org_unit), data=vl, tau=0.5)
-r <- resid(quantFit)
+for (v in unique(vl$variable)) {
 
+quantFit <- rq(value~date+factor(org_unit), data=vl[variable==v], tau=0.5)
+r <- resid(quantFit) 
+vl[variable==v, resid:=r] 
+  
+}
+
+test <- vl[variable=="PLHIV who received a VL test",.(org_unit, date, group, case, sex, value)]
+  
+quantFit <- rq(value~date+factor(org_unit), data=test, tau=0.5)
+r <- resid(quantFit) 
 hist(r)
-vl[ ,resid:=r]
-
-pmtct2[resid >200]
-
-pmtct2[r>(median(r)+(3*sd(r)))]
+test[ , resid:=r]
+test[resid > (median(r)+(3*sd(r)))]
+test[ resid > 200]
 
 
+und <- vl[variable=="PLHIV with undetectable VL",.(org_unit, date, group, case, sex, value)]
 
-quantFit2 <- rq(value~date+factor(org_unit)+factor(element)+date*factor(strat), data=test, tau=0.5)
+for (g in unique(und$group)) {
+  
+  quantFit <- rq(value~date+factor(org_unit), data=und[group==g], tau=0.5)
+  r <- resid(quantFit) 
+  und[group==g, resid:=r] 
+  
+}
+
 
 
 #-------------------------------------------
-# run on a sample pmtct data set
-pw <- vl[element_id=='hNWooK76isO',.(value=sum(value)), by=.(date, org_unit, element, level, dps)]
+# visuals
 
-quantFit2 <- rq(value~date+factor(org_unit), data=pw2, tau=0.5)
 
-r2 <- resid(quantFit)
-hist(r)
+# facilities reporting
+facilities <- vl[ ,.(facilities=length(unique(org_unit))), by=date]
+facilities[ , fac:='Facilities reporting (total)']
+facilities2 <- vl[value>0, .(facilities=length(unique(org_unit))), by=date]
+facilities2[ , fac:='Facilities reporting at least one VL test']
+facilities <- rbind(facilities, facilities2)
 
-pw[ ,resid:=r2]
-pw[resid >200]
-
-pw[r2>(median(r)+(3*sd(r)))]
-
-# graph two examples of the residuals 
-ggplot(pw[org_unit=="kn Roi Baundouin 1Er Centre Hospitalier"], 
-       aes(x=date, y=value)) +
+ggplot(facilities, aes(x=date, y=facilities, color=fac, group=fac)) +
   geom_point() +
   geom_line() +
-  theme_bw() +
-  scale_y_continuous(labels = scales::comma)
+  labs(title='Facilities reporting, viral load testing', subtitle='Jan. 2017 - June 2018',
+       caption='Source: PNLS Canevas Unique FOSA', y='Facilities', x='Date', color='Facilities') +
+  theme_bw() 
 
+# facilities reporting by level
+fac1 <- vl[ ,.(facilities=length(unique(org_unit))), by=.(date, level)]
+fac1[ , fac:='Facilities reporting (total)']
+fac2 <- vl[value>0, .(facilities=length(unique(org_unit))), by=.(date, level)]
+fac2[ , fac:='Facilities reporting at least one VL test']
+fac3 <- rbind(fac1, fac2)
 
-ggplot(pw2[org_unit=="hk Kyubo Centre de Santé de Référence"], 
-       aes(x=date, y=value)) +
+ggplot(fac3, aes(x=date, y=facilities, color=level, group=level)) +
   geom_point() +
   geom_line() +
-  theme_bw() +
-  scale_y_continuous(labels = scales::comma)
-
-#---------------
-
-#------------------------
-# eliminate values where detected is greater than tested
-
-# dvl <- vl[ ,.(value=sum(value)), by=.(element, element_id, date, category, org_unit, dps, mtk, tested)]
-# errors[tested=='Yes', test:=value]
-# errors[tested=='No', det:=value]
-# 
-# errors <- errors[ ,.(test=sum(test, na.rm=T), det=sum(det, na.rm=T)), by=.(date, org_unit)]
-# 
-# errors[det > test, unique(org_unit)]
-# 
-# errors
-
-#------------------------
-# prep the data for visualization 
-
-six <- six[ ,.(value=sum(value)), by=.(element, element_id, date, category, org_unit, dps)]
-
-# create a ratio:
-six[element_id=='cNCibxShDa6', test:=value]
-six[element_id=='uKEhVPh720x', det:=value]
-
-six_drop <- six[ ,.(test=sum(test, na.rm=T), det=sum(det, na.rm=T)), by=.(date, category, org_unit)]
-six <- six_drop[det <= test] # drop out rows where undetectable is greater than tested
-
-# percent suppressed
-six_ratio <- six[ ,.(test=sum(test, na.rm=T), det=sum(det, na.rm=T)), by=.(date, category)]
+  facet_wrap(~fac) +
+  labs(title='Facilities reporting by facility level, viral load testing', subtitle='Jan. 2017 - June 2018',
+       caption='Source: PNLS Canevas Unique FOSA', y='Facilities', x='Date', color='Health facility level') +
+  theme_bw() 
 
 
+all <- vl[ ,.(value=sum(value)), by=.(date, variable)]
 
-six_ratio[ , ratio:=100*(det/test)]
+ggplot(all, aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() +
+  geom_line() +
+  labs(title='Viral load tests performed & results, DRC', subtitle='Jan. 2017 - June 2018',
+       caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
+  theme_bw() 
 
-six_ratio2 <- six_graph[ ,.(test=sum(test, na.rm=T), det=sum(det, na.rm=T)), by=.(date)]
-six_ratio2[ , ratio:=100*(det/test)]
 
-# viral supression ratio and tests performed, shaped long
-test1 <- six_ratio2[ ,.(date, value=test)]
-test1[ , facet:='test']
-ratio2 <- six_ratio2[ ,.(date, value=ratio)]
-ratio2[ , facet:='ratio']
-six_graph3 <- merge(test1, ratio2, by=c('date', 'value', 'facet'), all=T)
+all_group <- vl[ ,.(value=sum(value)), by=.(date, variable, group)]
 
-six_graph3$facet <- factor(six_graph3$facet, levels=c('ratio', 'test'), 
-                           labels=c('Percent virally suppressed', 'Number of samples submitted for VL testing'))
-# by DPS
-six_pr <- six[ ,.(value=sum(value)), by=.(element, element_id, date, dps)]
-six_pr_cat <- six[ ,.(value=sum(value)), by=.(element, element_id, date, category, dps)]
+ggplot(all_group, aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~group, scales='free_y') +
+  labs(title='VL tests performed and VL test results, DRC', subtitle='Jan. 2017 - June 2018',
+       caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
+  theme_bw() 
 
-#------------------------------
 
-ratio_loop <- vl[element_id=='cNCibxShDa6' | element_id=='uKEhVPh720x']
+# proportions
+prop <- all
+prop[variable=='PLHIV who received a VL test', variable:='test']
+prop[variable=='PLHIV with undetectable VL', variable:='und']
+prop <- data.table(dcast(prop, date ~ variable))
+prop[ , ratio:=(100*(und/test))]
+prop[ , und:=NULL]
+prop <- melt(prop, id.vars='date')
 
-tests <- ratio_loop[element_id=='cNCibxShDa6', .(test=sum(value, na.rm=T)), by=.(date, dps)]
-und <- ratio_loop[element_id=='uKEhVPh720x', .(detect=sum(value, na.rm=T)), by=.(date, dps)]
+ggplot(prop, aes(x=date, y=value)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~variable, scales='free_y') +
+  labs(title='Viral load tests performed & percent virally suppressed, DRC', subtitle='Jan. 2017 - June 2018',
+       caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
+  theme_bw() 
 
-ratio1 <- merge(tests, und, by=c('date', 'dps'), all=T)
-ratio1[ ,ratio:=100*(detect/test)]
 
-idVars <- c('date', 'dps')
-ratio_long <- melt(ratio1, id.vars = idVars)
 
-ratio_long1 <- ratio_long[variable!='detect']
 
-ratio_long$variable <- factor(ratio_long$variable, levels=c('test', 'detect', 'ratio'),
-                              labels=c('Viral load tests performed', 'Virally suppressed persons',
-                                       'Percent virally suppressed (%)'))
 
-ratio_long1$variable <- factor(ratio_long1$variable, levels=c('test', 'ratio'),
-                               labels=c('Viral load tests performed', 
-                                        'Percent virally suppressed (%)'))
-#------------------------------
+
+
+
+
+
+
 
 list_of_plots = NULL
 i=1
