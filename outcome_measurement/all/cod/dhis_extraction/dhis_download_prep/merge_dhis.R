@@ -37,7 +37,6 @@ merge_meta_data <- function(x) {
 
 # import the meta data for the merge
 facilities <- data.table(readRDS(paste0(dir, 'all_units/master_facilities.rds')))
-facilities[ ,c('country_id', 'dps_id', 'health_zone_id', 'health_area_id'):=NULL]
 
 data_elements <- data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
 data_elements[ ,url_list:=NULL]
@@ -189,7 +188,31 @@ saveRDS(pnls, paste0(dir, 'pre_prep/merged/pnls_drc_01_2017_07_2018.rds'))
 # once pnls has earlier data downloaded (2015/16) add code to save a 2017/18 subset
 
 #------------------------------------------------ 
+# Merge the PNLT data 
 
+# input the name of the most recently merged data set (change file path to 'merged' folder)
+pnlt1 <- data.table(readRDS(paste0(dir, 'pre_prep/pnlt/pnlt_drc_01_2017_12_2017.rds')))
 
+# load the newest data set
+pnlt2 <- data.table(readRDS(paste0(dir, 'pre_prep/pnlt/pnlt_drc_01_2018_03_2018.rds')))
 
+# merge the previously downloaded data set with the new download
+pnlt <- rbind(pnlt1, pnlt2)
+
+# merge in the meta data 
+pnlt <- merge_meta_data(pnlt)
+
+# date does not function in pnlt - quarterly 
+pnlt[ ,date:=NULL]
+pnlt[month=='Q1', month:='01']
+pnlt[month=='Q2', month:='04']
+pnlt[month=='Q3', month:='07']
+pnlt[month=='Q4', month:='10']
+pnlt[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+
+# save the merged data
+# alter the file name to include all included dates - pnls is only 2017 on currently
+saveRDS(pnlt, paste0(dir, 'pre_prep/merged/pnlt_drc_01_2017_03_2018.rds'))
+
+#-----------------------------------------
 
