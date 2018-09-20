@@ -11,7 +11,7 @@
 
 # ----------------------------------------------
 # shell script to 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1527 -s 20 -P snis_prep
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1327 -s 20 -P snis_prep
 
 # --------------------
 # Set up R
