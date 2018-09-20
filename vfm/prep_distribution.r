@@ -70,7 +70,7 @@ mapFiles = mapFiles[!grepl('.ovr|.aux|.xml', mapFiles)]
 outFile = paste0(dataDir, '../pnlp_map_', tolower(analysisLevel), '_year_level.rds')
 
 # functions
-source('./core/standardizeDRCNames.r')
+source('./core/standardizeDPSNames.r')
 # --------------------------------------------------------------------------------------------
 
 
@@ -174,8 +174,8 @@ if(prepMAP) {
 # Merge PNLP and MAP data
 
 # standardize admin names
-PNLPData[, dps:=standardizeDRCNames(dps, level=tolower(analysisLevel))]
-MAPData[, dps:=standardizeDRCNames(dps, level=tolower(analysisLevel))]
+PNLPData[, dps:=standardizeDPSNames(dps)]
+MAPData[, dps:=standardizeDPSNames(dps)]
 
 # merge
 if (prepMAP & analysisLevel=='DPS') analysisData = merge(PNLPData, MAPData, by=c('year','dps')
