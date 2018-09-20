@@ -135,7 +135,7 @@ if(prepMAP) {
 		year = gsub('.*1y_', '', f)
 		year = as.numeric(gsub('_.*', '', year))
 		print(year)
-		if (!year %in% unique(wideData$year)) next
+		if (!year %in% unique(PNLPData$year)) next
 		
 		# load raster data
 		rasterData = stack(f)
