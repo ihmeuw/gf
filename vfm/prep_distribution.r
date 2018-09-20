@@ -173,13 +173,21 @@ if(prepMAP) {
 # -----------------------------------------------
 # Merge PNLP and MAP data
 
+# ad-hoc fix for dps=0
+PNLPData[province=='Nord Kivu', dps:='nord-kivu']
+
 # standardize admin names
 PNLPData[, dps:=standardizeDPSNames(dps)]
 MAPData[, dps:=standardizeDPSNames(dps)]
 
+# ensure standardization didn't create duplicate rows (tehcnically wrong way to aggregate)
+PNLPData = PNLPData[, lapply(.SD, mean, na.rm=TRUE), by=idVars, 
+	.SDcols=names(PNLPData)[!names(PNLPData) %in% idVars]]
+MAPData = MAPData[, .(pf_prevalence=mean(pf_prevalence)), by=c('dps','year')]
+
 # merge
-if (prepMAP & analysisLevel=='DPS') analysisData = merge(PNLPData, MAPData, by=c('year','dps')
-if (prepMAP & analysisLevel=='HZ') analysisData = merge(PNLPData, MAPData, by=c('year','health_zone')
+if (prepMAP & analysisLevel=='DPS') analysisData = merge(PNLPData, MAPData, by=c('year','dps'))
+if (prepMAP & analysisLevel=='HZ') analysisData = merge(PNLPData, MAPData, by=c('year','health_zone'))
 if (!prepMAP) analysisData = PNLPData
 
 # save
