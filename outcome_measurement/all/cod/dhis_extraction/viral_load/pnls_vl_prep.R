@@ -17,6 +17,8 @@ library(dplyr)
 library(openxlsx)
 library(stringr) 
 # --------------------
+# shell script to 
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1327 -s 20 -P snis_prep
 
 #------------------------------------
 # set working directories
@@ -76,12 +78,8 @@ vl[ ,category:=NULL]
 #-----------------------
 # restructure the data to have single data points with groupifications
 
-vl[grep(element_eng, pattern='received'), variable:='test']
-vl[grep(element_eng, pattern='undetectable'), variable:='und']
-
-# label the variable
-vl$variable <- factor(vl$variable, c('test', 'und'),
-                      c('PLHIV who received a VL test', 'PLHIV with undetectable VL'))
+vl[grep(element_eng, pattern='received'), variable:='PLHIV who received a VL test']
+vl[grep(element_eng, pattern='undetectable'), variable:='PLHIV with undetectable VL']
 
 #------------------------
 # test graphs
@@ -112,7 +110,9 @@ ggplot(sup, aes(x=date, y=value, color=support)) +
 vl <- vl[support=='Yes',.(value=sum(value, na.rm=T)), 
     by=.(variable, date, org_unit_id, org_unit,level, health_zone, dps, mtk,
          group, case, sex)]
-         
+
+
+saveRDS(vl, 'viral_load_pnls_reshape.rds')
 #------------------------
 # quantile regression to remove outliers
 
@@ -127,9 +127,8 @@ for (g in unique(test$group)) {
   
   quantFit <- rq(value~date+factor(org_unit), data=test[group==g], tau=0.5)
   r <- resid(quantFit) 
-  und[group==g, resid:=r] 
+  test[group==g, resid:=r] 
   print(paste("Completed group:", g))
-  
 }
 
 hist(test$resid)
@@ -147,7 +146,6 @@ for (g in unique(und$group)) {
   r <- resid(quantFit) 
   und[group==g, resid:=r] 
   print(paste("Completed group:", g))
-  
 }
 
 hist(und$resid)
