@@ -49,6 +49,9 @@ dataDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data
 # MAP directory
 mapDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/map_pf_incidence/mean/1y/')
 
+# Worldpop directory
+popDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/worldpop/total/1y/')
+
 # output directory
 outDir = paste0(j, '/Project/Evaluation/GF/vfm/visualizations')
 
@@ -65,6 +68,10 @@ inFile = paste0(dataDir, 'post_imputation/imputedData_run2_long_corrected.rds')
 # map files
 mapFiles = paste0(mapDir, list.files(mapDir, 'tif'))
 mapFiles = mapFiles[!grepl('.ovr|.aux|.xml', mapFiles)]
+
+# population files
+popFiles = paste0(popDir, list.files(popDir, 'tif'))
+popFiles = popFiles[!grepl('.ovr|.aux|.xml', popFiles)]
 
 # output files
 outFile = paste0(dataDir, '../pnlp_map_', tolower(analysisLevel), '_year_level.rds')
@@ -137,15 +144,25 @@ if(prepMAP) {
 		print(year)
 		if (!year %in% unique(PNLPData$year)) next
 		
+		# look up corresponding population file
+		p = popFiles[grepl(year, popFiles)]
+		
 		# load raster data
 		rasterData = stack(f)
-
+		popData = raster(p)
+		
 		# clip to current country
 		rasterData = crop(rasterData, extent(map))
 		rasterData = mask(rasterData, map)		
-
+		popData = crop(popData, extent(map))
+		popData = mask(popData, map)		
+		
 		# mask the bodies of water
 		rasterData = mask(rasterData, lakes, inverse=TRUE)
+		popData = mask(popData, lakes, inverse=TRUE)
+		
+		# multiply to get counts
+		rasterData = rasterData*popData
 		
 		# extract pixels by HZ (in parallel for speed)
 		# extractedData = sapply(extract(rasterData, map), sum)
@@ -157,7 +174,7 @@ if(prepMAP) {
 		
 		# sum over provinces
 		currentMAPData = data.table(dps=map@data$NAME_1, 
-									pf_prevalence=extractedData)
+									pf_incidence=extractedData)
 		if (analysisLevel=='HZ') setnames(currentMAPData, 'dps', 'health_zone') 
 		
 		# add year and append
@@ -183,7 +200,7 @@ MAPData[, dps:=standardizeDPSNames(dps)]
 # ensure standardization didn't create duplicate rows (tehcnically wrong way to aggregate)
 PNLPData = PNLPData[, lapply(.SD, mean, na.rm=TRUE), by=idVars, 
 	.SDcols=names(PNLPData)[!names(PNLPData) %in% idVars]]
-MAPData = MAPData[, .(pf_prevalence=mean(pf_prevalence)), by=c('dps','year')]
+MAPData = MAPData[, .(pf_incidence=mean(pf_incidence)), by=c('dps','year')]
 
 # merge
 if (prepMAP & analysisLevel=='DPS') analysisData = merge(PNLPData, MAPData, by=c('year','dps'))
