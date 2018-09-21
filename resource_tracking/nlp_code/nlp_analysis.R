@@ -58,7 +58,7 @@ makefreq <- function(freqi, disease){
 # ----------------------------------------------
 dir <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/nlp_data/"
 ##change this to whatever the most recent iteration is: 
-bestIteration <- data.table(read_csv(paste0(dir,"model_outputs/iteration3/iteration3.csv")))
+bestIteration <- data.table(read_csv(paste0(dir,"model_outputs/iteration4/iteration4.csv")))
 
 total_Iteration = bestIteration[,c("corrected_module", "predicted_module_translated")]
 tb_Iteration = bestIteration[disease_lang_concat %in% c("tbfr", "tbesp", "tbeng"),c("corrected_module", "predicted_module_translated")]
@@ -70,6 +70,7 @@ tb_matrix = iterMatrix(tb_Iteration)
 hiv_matrix = iterMatrix(hiv_Iteration)
 mal_matrix = iterMatrix(mal_Iteration)
 
-makefreq(tb_Iteration, "hiv_freq")
-makefreq(hiv_Iteration, "mal_freq")
-makefreq(mal_Iteration, "tb_freq")
+makefreq(tb_Iteration, "tb_freq")
+makefreq(hiv_Iteration, "hiv_freq")
+makefreq(mal_Iteration, "mal_freq")
+makefreq(total_Iteration, "total_freq")
