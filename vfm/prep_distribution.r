@@ -85,6 +85,7 @@ source('./core/standardizeDPSNames.r')
 # Load/prep PNLP data
 
 # load
+print('Loading PNLP data...')
 data = readRDS(inFile)
 
 # subset observations
@@ -102,6 +103,7 @@ data[, year:=year(date)]
 
 # collapse to year level 
 # because we aren't sure Amelia is imputing individual months correctly
+print('Collapsing PNLP draws...')
 idVars = c('province','dps','health_zone','subpopulation','year')
 if (analysisLevel=='DPS') idVars = idVars[idVars!='health_zone'] 
 data = data[, .(imp_value=sum(imp_value)), by=c(idVars, 'indicator', 'imputation_number')]
@@ -121,6 +123,7 @@ PNLPData = dcast.data.table(data, formula, value.var=valueVars)
 # Load/prep MAP data
 if(prepMAP) {
 	# load shapefile
+	print('Loading shapefiles...')
 	if (analysisLevel=='DPS') map = shapefile(shapeFileDPS)
 	if (analysisLevel=='HZ') map = shapefile(shapeFileHZ)
 
@@ -138,6 +141,7 @@ if(prepMAP) {
 	lakes = crop(lakes, extent(map))
 
 	# loop over years, crop to DRC, mask water and aggregate to HZ-level
+	print('Prepping MAP data...')
 	i=1
 	for(f in mapFiles) { 
 		
@@ -192,6 +196,7 @@ if(prepMAP) {
 
 # -----------------------------------------------
 # Merge PNLP and MAP data
+print('Merging data...')
 
 # ad-hoc fix for dps=0
 PNLPData[province=='Nord Kivu', dps:='nord-kivu']
@@ -211,5 +216,6 @@ if (prepMAP & analysisLevel=='HZ') analysisData = merge(PNLPData, MAPData, by=c(
 if (!prepMAP) analysisData = PNLPData
 
 # save
+print(paste('Saving', outFile))
 saveRDS(analysisData, outFile)
 # -----------------------------------------------
