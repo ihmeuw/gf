@@ -3,6 +3,7 @@
 #
 # 9/11/2018
 # Compare resource allocation (commodities) to need 
+# This loads data created by ./vfm/prep_distribution.r
 # --------------------------------------------------
 
 
