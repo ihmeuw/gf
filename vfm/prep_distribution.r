@@ -104,8 +104,11 @@ data[, year:=year(date)]
 # because we aren't sure Amelia is imputing individual months correctly
 idVars = c('province','dps','health_zone','subpopulation','year')
 if (analysisLevel=='DPS') idVars = idVars[idVars!='health_zone'] 
-data = data[, .(mean=mean(imp_value), upper=quantile(imp_value,.975), 
-				lower=quantile(imp_value,.025)), by=c(idVars, 'indicator')]
+data = data[, .(imp_value=sum(imp_value)), by=c(idVars, 'indicator', 'imputation_number')]
+
+# find the average/upper/lower of the imputations
+data = data[, .(mean=mean(imp_value), lower=quantile(imp_value, .025), 
+		upper=quantile(imp_value, .975)), by=c(idVars, 'indicator')]
 
 # reshape wide
 valueVars = c('mean','lower','upper')
