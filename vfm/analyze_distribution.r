@@ -6,10 +6,6 @@
 # --------------------------------------------------
 
 
-# TO DO
-# identify age groups in incidence rasters and do an age-specific merge
-# use PNLP-to-shapefile HZ names to connect (for now just using PNLP incidence)
-
 # --------------------
 # Set up R
 rm(list=ls())
