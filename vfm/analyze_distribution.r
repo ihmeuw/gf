@@ -110,7 +110,7 @@ dps[, resid_lower:=quantile(resid,.15), by=c('year','variable')]
 dps[resid>resid_upper | resid<resid_lower, dps_label2:=dps]
 		
 # identify interesting DPS's to label for PNLP vs MAP
-fit = lm(pf_incidence~mean_newCasesMalariaSevere*factor(year)*, dps)
+fit = lm(pf_incidence~mean_newCasesMalariaSevere*factor(year), dps)
 dps[, resid:=value-predict(fit)]
 dps[, resid_upper:=quantile(resid,.8), by=c('year','variable')]
 dps[, resid_lower:=quantile(resid,.2), by=c('year','variable')]
