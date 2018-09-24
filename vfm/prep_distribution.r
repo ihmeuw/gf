@@ -100,7 +100,7 @@ data[, year:=year(date)]
 # collapse to year level 
 # because we aren't sure Amelia is imputing individual months correctly
 print('Collapsing PNLP draws...')
-idVars = c('province','dps','health_zone','subpopulation','year')
+idVars = c('province','dps','health_zone','year')
 if (analysisLevel=='DPS') idVars = idVars[idVars!='health_zone'] 
 data = data[, .(imp_value=sum(imp_value)), by=c(idVars, 'indicator', 'imputation_number')]
 

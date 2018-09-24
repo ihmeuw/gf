@@ -68,14 +68,6 @@ idVars = c('province','dps', 'health_zone', 'year', 'subpopulation',
 if (analysisLevel!='HZ') idVars = idVars[idVars!='health_zone']
 data = melt(data, id.vars=idVars)
 
-# combine ASAQ subpopulations to match incidence age groups
-data[subpopulation %in% c('2to11mos','1to5yrs'), subpopulation:='under5']
-data[subpopulation %in% c('6to13yrs','14yrsAndOlder'), subpopulation:='5andOlder']
-data[subpopulation=='pregnantWomen', subpopulation:='5andOlder']
-byVars = c('province','dps','health_zone','year', 'subpopulation','variable')
-if (analysisLevel!='HZ') byVars = byVars[byVars!='health_zone']
-data = data[, lapply(.SD, sum, na.rm=TRUE), by=byVars, .SDcols=names(data)[!names(data) %in% byVars]]
-
 # facet labels
 data[variable=='mean_ASAQreceived', label:='ASAQ Doses']
 data[variable=='mean_ArtLum', label:='AL Doses']
@@ -176,22 +168,6 @@ p3 = ggplot(dps[variable=='mean_RDT' & year==2017],
 	labs(title='Commodity Distribution Compared to Reported Number of Cases - 2017', 
 		subtitle='Aggregated by DPS', 
 		y='Reported Cases (Mild + Severe in 100,000\'s)', 
-		x='Model-Estimated Incidence (Millions of Cases)', 
-		color='Year') + 
-	theme_bw()
-
-# comparison in 2017 among subpopulations for ASAQ (the only one with subpopulations)
-p4 = ggplot(dps_subpop[label=='ASAQ Doses' & year==2017 & subpopulation!='received'], aes(y=value/1000000, 
-		x=pf_incidence/1000000, label=dps_label)) + 
-	geom_point() + 
-	geom_smooth(method='lm') + 
-	geom_text_repel(color='grey25', box.padding=1.5, 
-		segment.color='grey75', min.segment.length=0) + 
-	facet_wrap(~subpopulation, scales='free') + 
-	scale_color_manual(values=colors) + 
-	labs(title='Commodity Distribution Compared to Estimated Number of Cases - 2017', 
-		subtitle='Aggregated by DPS', 
-		y='Number Distributed (in Millions)', 
 		x='Model-Estimated Incidence (Millions of Cases)', 
 		color='Year') + 
 	theme_bw()
