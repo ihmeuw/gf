@@ -12,6 +12,8 @@ library(data.table)
 library(ggplot2)
 library(maptools)
 # ----------------------------------------------
+
+# ----------------------------------------------
 ##set up J Drive 
 # ----------------------------------------------
 if (Sys.info()[1] == 'Windows') {
@@ -21,6 +23,8 @@ if (Sys.info()[1] == 'Windows') {
   username <- Sys.getenv("USER")
   root <- "/home/j/"
 }
+# ----------------------------------------------
+
 # ----------------------------------------------
 ##set set up the directories to read/export files: 
 # ----------------------------------------------
@@ -32,12 +36,13 @@ export_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualiz
 data_dir <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLT/")
 
 ## input files
-pnlt_data <- "PNLT_prepped_data.csv"
+pnlt_data_dep <- "PNLT_prepped_data.csv"
+pnlt_data_case_outcomes <- "PNLT_case_outcomes_2017.csv"
 dps_shapefile <-  "gadm36_COD_1.shp"
 
 ## load shapefile and data
 drcShape <- shapefile(paste0(shape_dir, dps_shapefile)) # shapefile with all DPS (use a different one for health zones)
-dt <- read.csv(paste0(data_dir, pnlt_data))
+dt <- read.csv(paste0(data_dir, pnlt_data_case_outcomes))
 dt <- as.data.table(dt)
 # ----------------------------------------------
 
@@ -47,7 +52,7 @@ dt <- as.data.table(dt)
 # ********NOTE: these don't save properly because of the weird characters, so you have to re-copy and paste the names
 coordinates = as.data.table(fortify(drcShape, region='NAME_1'))
 coordinates$id <- gsub("Bas-Uélé", "Bas-Uele", coordinates$id)
-coordinates$id <- gsub("�???quateur", "Equateur", coordinates$id) #re-copy and paste this one
+coordinates$id <- gsub("�???equateur", "Equateur", coordinates$id) #re-copy and paste this one
 coordinates$id <- gsub("Haut-Uélé", "Haut-Uele", coordinates$id)
 coordinates$id <- gsub("Kasaï", "Kasai", coordinates$id)
 coordinates$id <- gsub("Kasaï-Central", "Kasai Central", coordinates$id)
@@ -57,27 +62,57 @@ coordinates$id <- gsub("Maï-Ndombe", "Mai-Ndombe", coordinates$id)
 coordinates$id <- tolower(coordinates$id)
 # ----------------------------------------------  
 
-
 # ----------------------------------------------  
 id_vars <- c("dps")
 dt$dps <- as.character(dt$dps)
 
-#combine kongo-central-est and kongo-central-ouest into kongo-central
-dt_kongo <- dt[dps %in% c("kongo-central-est", "kongo-central-ouest"), lapply(.SD,sum, na.rm=T), .SDcols = colnames(dt)[3:50]]
-     # need to edit the above so that if both are NA the answer will be set to 
-dt_kongo$dps <- "kongo-central"
-dt_kongo$year <- 2018
+# add healed and treatment completed to get treatment completed
+dt[is.na(healed), healed:= 0]
+dt[is.na(trt_complete), trt_complete:= 0]
 
-myfxn <- function(vector){
-  return(all(is.na(vector)))
-}
-t <- try[, lapply(.SD, myfxn), .SDcols=colnames(try)]
-sdcols<- colnames(t)
-t <- t[1==FALSE,]
+dt[, trt_complete:= healed + trt_complete]
+dt[, healed:=NULL]
 
-test <- rbindlist(list(dt_kongo, dt), fill=TRUE)
+dt[, trt_comp_ratio:= trt_complete/cas_eval]
+
+# #combine kongo-central-est and kongo-central-ouest into kongo-central
+# dt_kongo <- dt[dps %in% c("kongo-central-est", "kongo-central-ouest"), lapply(.SD,sum, na.rm=T), .SDcols = colnames(dt)[3:50]]
+#      # need to edit the above so that if both are NA the answer will be set to 
+# dt_kongo$dps <- "kongo-central"
+# dt_kongo$year <- 2018
+# 
+# myfxn <- function(vector){
+#   return(all(is.na(vector)))
+# }
+# t <- try[, lapply(.SD, myfxn), .SDcols=colnames(try)]
+# sdcols<- colnames(t)
+# t <- t[1==FALSE,]
+# 
+# test <- rbindlist(list(dt_kongo, dt), fill=TRUE)
 # ----------------------------------------------------------------------
 # Set up to graph
+graphData <- merge(coordinates, dt, by.x='id', by.y='dps', all=TRUE, allow.cartesian=TRUE)
+
+  plot <- ggplot() + geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=trt_comp_ratio)) + 
+             coord_equal() + ##so the two shapefiles have the same proportions 
+             geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
+             # geom_map(map=admin_dataset, data=admin_dataset,
+             #          aes(map_id=id,group=group), size=1, color="#4b2e83", alpha=0) + 
+             # geom_polygon(data=admin_dataset, aes(x=long, y=lat, group=group), color="#4e0589", alpha=0) + 
+             scale_fill_gradient2(low='#fee0d2', mid='#fb6a4a', high='#99000d',             # blues - (low='#9aeaea', mid='#216fff', high='#0606aa',
+                                  na.value = "grey70",space = "Lab", midpoint = 1000, ## play around with this to get the gradient 
+                                  # that you want, depending on data values 
+                                  breaks=6) + 
+             #theme_void()) +  labs(title= paste0("DRC: ", indicators, " ", subpop, " by Province, ", y), fill=paste0('Doses (in ', as.integer(units),"s)"))
+             theme_void()
+    #          theme(plot.title = element_text(size = 18), legend.title=element_text(size=16), legend.text=element_text(size=10), plot.caption=element_text(size=12))) +  
+    # labs(title= paste0("Stock-outs of ACTs at Health Facilities ", y), fill=paste0('Days per facility')) +
+    # labs(caption="Source: Programme National de Lutte contre le Paludisme (PNLP)"
+        
+  
+  print(plot)
+  
+
 
 # colors
 cols1 = rev(brewer.pal(6, 'RdYlBu'))
