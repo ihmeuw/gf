@@ -33,12 +33,12 @@ standardizeDPSNames = function(nameVector=NULL) {
 	# clean up alternate names
 	alternateNames[, alternate_name:=tolower(alternate_name)]
 	alternateNames[, alternate_name:=iconv(alternate_name, to='ASCII//TRANSLIT')]
-	alternateNames[, alternate_name:=gsub('-', ' ', alternate_name)]
+	alternateNames[, alternate_name:=gsub(' ', '-', alternate_name)]
 	
 	# clean up input vector
 	nameVector = tolower(nameVector)
 	nameVector = iconv(nameVector, to='ASCII//TRANSLIT')
-	nameVector = gsub('-', ' ', nameVector)
+	nameVector = gsub(' ', '-', nameVector)
 	
 	# convert input vector to standardized names
 	idx = match(nameVector, alternateNames$alternate_name)
