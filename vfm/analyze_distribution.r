@@ -13,6 +13,7 @@ rm(list=ls())
 library(data.table)
 library(raster)
 library(rgeos)
+library(quantreg)
 library(RColorBrewer)
 library(ggplot2)
 library(ggrepel)
@@ -84,6 +85,8 @@ colors = brewer.pal(length(unique(data$year)), 'YlGnBu')
 
 # aggregate to DPS
 byVars = c('province','dps','year','variable','label')
+data[subpopulation=='received', variable:=paste0(variable, '_received')]
+data[variable=='mean_ASAQreceived_received', variable:='mean_ASAQreceived']
 dps = data[, lapply(.SD, sum, na.rm=TRUE), by=byVars, 
 		.SDcols=names(data)[!names(data) %in% c(byVars,'health_zone','subpopulation')]]
 		
@@ -120,6 +123,10 @@ dps_subpop[, resid:=value-predict(fit)]
 dps_subpop[, resid_upper:=quantile(resid,.85), by=c('year','variable','subpopulation')]
 dps_subpop[, resid_lower:=quantile(resid,.15), by=c('year','variable','subpopulation')]
 dps_subpop[resid>resid_upper | resid<resid_lower, dps_label:=dps]
+
+# fit a quantile regression for p1 instead of OLS
+qrFit = rq(value~pf_incidence*factor(label), data=dps[grepl('mean',variable) & year==2017])
+dps[grepl('mean',variable) & year==2017, qr_fitted:=predict(qrFit)]
 # --------------------------------------------------------------------------------------
 
 
@@ -127,10 +134,10 @@ dps_subpop[resid>resid_upper | resid<resid_lower, dps_label:=dps]
 # Graph
 
 # comparison in 2017
-p1 = ggplot(dps[grepl('mean',variable) & year==2017], aes(y=value/100000, 
+p1 = ggplot(dps[grepl('received',variable) & grepl('mean',variable) & year==2017], aes(y=value/100000, 
 		x=pf_incidence/1000000, label=dps_label1)) + 
 	geom_point() + 
-	geom_smooth(method='lm', se=FALSE) + 
+	geom_line(aes(y=qr_fitted/1000000), color='blue') + 
 	geom_text_repel(color='grey25', box.padding=1.5, 
 		segment.color='grey75', min.segment.length=0) + 
 	facet_wrap(~label, scales='free_y') + 
@@ -143,7 +150,7 @@ p1 = ggplot(dps[grepl('mean',variable) & year==2017], aes(y=value/100000,
 	theme_bw()
 	
 # comparison using reported cases
-p2 = ggplot(dps[grepl('mean',variable) & year==2017], aes(y=value/100000, 
+p2 = ggplot(dps[grepl('received',variable) & grepl('mean',variable) & year==2017], aes(y=value/100000, 
 		x=(mean_newCasesMalariaSevere+mean_newCasesMalariaMild)/100000, label=dps_label2)) + 
 	geom_point() + 
 	geom_smooth(method='lm') + 
@@ -157,7 +164,7 @@ p2 = ggplot(dps[grepl('mean',variable) & year==2017], aes(y=value/100000,
 	theme_bw()
 	
 # comparison of MAP vs PNLP cases (selecting one variable arbitrarily to avoid duplication)
-p3 = ggplot(dps[variable=='mean_RDT' & year==2017], 
+p3 = ggplot(dps[grepl('received',variable) & variable=='mean_RDT' & year==2017], 
 		aes(y=(mean_newCasesMalariaSevere+mean_newCasesMalariaMild)/100000, 
 		x=pf_incidence/1000000, label=dps_label3)) + 
 	geom_point() + 
@@ -173,7 +180,7 @@ p3 = ggplot(dps[variable=='mean_RDT' & year==2017],
 	theme_bw()
 
 # comparison across all years
-p5 = ggplot(dps[grepl('mean',variable)], aes(y=value, 
+p4 = ggplot(dps[grepl('received',variable) & grepl('mean',variable)], aes(y=value, 
 		x=pf_incidence)) + 
 	geom_point() + 
 	geom_smooth(method='lm', se=FALSE) + 
@@ -185,7 +192,7 @@ p5 = ggplot(dps[grepl('mean',variable)], aes(y=value,
 	theme_bw()
 	
 # comparison across all years
-p6 = ggplot(dps[grepl('mean',variable)], aes(y=value, 
+p5 = ggplot(dps[grepl('received',variable) & grepl('mean',variable)], aes(y=value, 
 		x=(mean_newCasesMalariaSevere+mean_newCasesMalariaMild))) + 
 	geom_point() + 
 	geom_smooth(method='lm', se=FALSE) + 
@@ -206,6 +213,5 @@ p2
 p3
 p4
 p5
-p6
 dev.off()
 # --------------------------------
