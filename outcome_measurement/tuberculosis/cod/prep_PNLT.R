@@ -40,10 +40,13 @@ dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNL
 file2018 <- "Synthèse Nationale T1 2018.xlsx"
 file2017 <- 'Synthèse Nationale RDC 2017.xlsx'
 pnlt_transl <- "PNLT_translations.xlsx"
+prep_functions <- "./outcome_measurement/tuberculosis/cod/prep_dpsLevel_sheets.R"
+source(prep_functions)
 
 # output file
 pnlt_main <- "PNLT_prepped_data.csv"
 pnlt_outcomes_17 <- "PNLT_case_outcomes_2017.csv"
+pnlt_case_screening_17 <- "PNLT_case_screening_2017.csv"
 # ----------------------------------------------
 
 
@@ -69,6 +72,8 @@ dps_names <- c('kwango', 'kwilu', 'mai-ndombe', 'kongo-central-est', 'kongo-cent
 # dt2017 <- data.table(read_excel(paste0(dir, file2017), sheet= 'DEP T1 017'))
 
 dt_transl <- data.table(read_excel(paste0(dir, pnlt_transl)))
+dt_transl$keep_2018 <- as.character(dt_transl$keep_2018)
+dt_transl$keep_2017 <- as.character(dt_transl$keep_2017)
 # ----------------------------------------------
 
 
@@ -128,174 +133,113 @@ sheets17 <- getSheets(files17[1], 2017)
 
 # 2017:
 # SET UP:
-  sheets <- sheets17
-  # EVAL SHEETS:
-    # get just eval sheets for each quarter
-    sheets_eval <- sheets[grepl("EVAL", sheets)]
-    sheets_eval <- sheets_eval[!grepl("SYN", sheets_eval)]
-    
-    # make a data table of sheet properties
-    dt_sheets_eval <- as.data.table(sheets_eval)
-    setnames(dt_sheets_eval, "sheets_eval", "sheet_name")
-    dt_sheets_eval[, c("sheet_type", "TB_type"):= transpose(stri_split_fixed(sheet_name, " ", 2))]
-    dt_sheets_eval[, year:= lapply(strsplit(TB_type, " "), tail, 1)]
-    dt_sheets_eval[, TB_type := gsub(paste0(" ", year), "", TB_type), by="sheet_name"]
-    dt_sheets_eval[, quarter:= lapply(strsplit(TB_type, " "), tail, 1)]
-    dt_sheets_eval[, TB_type := gsub(paste0(" ", quarter), "", TB_type), by="sheet_name"]
-    
-  # DEP SHEETS
-    # get just the DEP sheets from sheets
-    sheets_dep <- sheets[grepl("DEP", sheets)]
-    sheets_dep <- sheets_dep[!grepl("SYNTH", sheets_dep)]
-    
-  # AGE SHEETS
-    # get just the EVAL sheets from sheets
-    sheets_age <- sheets[grepl("AGE", sheets)]
-    sheets_age <- sheets_age[!grepl("SYN", sheets_age)]
-    sheets_age <- sheets_age[!grepl("STNTH", sheets_age)]
-    
-    # make a data table of sheet properties
-    dt_sheets_age <- as.data.table(sheets_age)
-    setnames(dt_sheets_age, "sheets_age", "sheet_name")
-    dt_sheets_age[, c("sheet_type", "TB_type"):= transpose(stri_split_fixed(sheet_name, " ", 2))]
-    dt_sheets_age[, year:= lapply(strsplit(TB_type, " "), tail, 1)]
-    dt_sheets_age[, TB_type := gsub(paste0(" ", year), "", TB_type), by="sheet_name"]
-    dt_sheets_age[, quarter:= lapply(strsplit(TB_type, " "), tail, 1)]
-    dt_sheets_age[, TB_type := gsub(paste0(" ", quarter), "", TB_type), by="sheet_name"]
+make_dt_of_sheet_properties <- function(sheets_list, type){
+  dt <- as.data.table(sheets_list)
+  setnames(dt, "sheets_list", "sheet_name")
+  dt$sheet_name <- trimws(dt$sheet_name)
+  if (type== "EVAL" | type== "AGE"){
+    dt[, c("sheet_type", "TB_type"):= transpose(stri_split_fixed(sheet_name, " ", 2))]
+    dt[, year:= lapply(strsplit(TB_type, " "), tail, 1)]
+    dt[, TB_type := gsub(paste0(" ", year), "", TB_type), by="sheet_name"]
+    dt[, quarter:= lapply(strsplit(TB_type, " "), tail, 1)]
+    dt[, TB_type := gsub(paste0(" ", quarter), "", TB_type), by="sheet_name"]
+  } else {
+    dt[, c("sheet_type", "quarter", "year") := tstrsplit(sheet_name, " ")]
+  }
+  return (dt)
+}
+
+sheets <- sheets18
+# EVAL SHEETS:
+  # get just eval sheets for each quarter
+  sheets_eval <- sheets[grepl("EVAL", sheets)]
+  sheets_eval <- sheets_eval[!grepl("SYN", sheets_eval)]
+  
+  # make a data table of sheet properties
+  dt_sheets_eval <- make_dt_of_sheet_properties(sheets_eval, "EVAL")
+
+# DEP SHEETS
+  # get just the DEP sheets from sheets
+  sheets_dep <- sheets[grepl("DEP", sheets)]
+  sheets_dep <- sheets_dep[!grepl("SYNTH", sheets_dep)]
+  sheets_dep <- sheets_dep[!grepl("ANNUEL", sheets_dep)]
+  
+  # make a data table of sheet properties
+  dt_sheets_dep <- make_dt_of_sheet_properties(sheets_dep, "DEP")
+
+# AGE SHEETS
+  # get just the EVAL sheets from sheets
+  sheets_age <- sheets[grepl("AGE", sheets)]
+  sheets_age <- sheets_age[!grepl("SYN", sheets_age)]
+  sheets_age <- sheets_age[!grepl("STNTH", sheets_age)]
+  sheets_age <- sheets_age[!grepl("DEPISTAGE", sheets_age)]
+  
+  # make a data table of sheet properties
+  dt_sheets_age <- make_dt_of_sheet_properties(sheets_age, "AGE")
 #---------------------------------------------
     
     
 #---------------------------------------------   
-# CLEAN:
-    # EVAL SHEETS:
-    year=2017
-    file=file2017[1]
-    i = 1
-    
-    for (s in sheets_eval[1:length(sheets_eval)]){
-      
-      dt <- data.table(read_excel(paste0(dir, year, "/", file), sheet= s))
-      
-      # remove rows at the top up until the header row
-      setnames(dt, colnames(dt)[1], "col1")
-      index <- grep("CPLT", dt$col1 )
-      
-      dt <- dt[-c(1:(index-1))]
-      
-      # remove columns of percentages
-      cols <- !is.na( dt[1,] )
-      cols <- colnames(dt)[cols]
-      
-      dt <- dt[, cols, with=FALSE]
-      
-      # remove rows that are entirely NA
-      rows_to_remove <- apply(dt, 1, function(x) all(is.na(x)))
-      dt <- dt[!rows_to_remove, ]
-      # remove rows where col1 is na
-      dt <- dt[!is.na(col1)]
-      
-      # remove total rows (sometime has "RDC")
-      dt <- dt[!grepl("TOTAL", col1)]
-      dt <- dt[!grepl("RDC", col1)]
-      
-      # set column names to be header row:
-      colnames(dt) <- as.character(dt[1,])
-      
-      # remove header row in row 1
-      dt <- dt[-1, ]
-      
-      ##----------------------------------
-      # clean column names:
-      colnames(dt) <- tolower(colnames(dt))
-    
-      # Setnames <- function(x, old, new, allow.absent.cols=F) {
-      #   if (!allow.absent.cols) {
-      #     setnames(x, old, new)
-      #   } else {
-      #     old.intersect <- intersect(old, names(x))
-      #     common.indices <- old %in% old.intersect
-      #     new.intersect <- new[common.indices]
-      #     setnames(x, old.intersect, new.intersect)
-      #   }
-      # }
-      setnames(dt, grep('cplt', colnames(dt)), 'dps')
-      setnames(dt, grep('enreg', colnames(dt)), 'tot_cas_reg')
-      
-      for(n in c('guer')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'healed')
-      if(!'healed' %in% names(dt)) print(paste0('In sheet, ', s, ', healed is not a column'))
-      
-      setnames(dt, grep('traitement termine', colnames(dt)), 'trt_complete')
-
-      for(n in c('dece','dcd')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'died')
-      if(!'died' %in% names(dt)) stop(paste0('In sheet, ', s, ', died is not a column'))
-      
-      for(n in c('echecs')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'trt_failed')
-      if(!'trt_failed' %in% names(dt)) print(paste0('In sheet, ', s, ', trt_failed is not a column'))
-      
-      for(n in c('perdu','abandon', 'interruptions')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'lost_to_followup')
-      if(!'lost_to_followup' %in% names(dt)) stop(paste0('In sheet, ', s, ', lost_to_followup is not a column'))
-      
-      setnames(dt, grep('transfer', colnames(dt)), 'transferred')
-      
-      for(n in c('total  evalue','total evalue', 'total cas evalues')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'cas_eval')
-      if(!'cas_eval' %in% names(dt)) stop(paste0('In sheet, ', s, ', cas_eval is not a column'))
-      
-      for(n in c('non evalue')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'cas_not_eval')
-      if(!'cas_not_eval' %in% names(dt)) stop(paste0('In sheet, ', s, ', cas_not_eval is not a column'))
-
-      # clean DPS names
-      dt$dps <- gsub(" ", "-", dt$dps)
-      dt$dps <- gsub("--", "-", dt$dps)
-
-      dt$dps <- chartr(paste(names(unwanted_array), collapse=''),
-                           paste(unwanted_array, collapse=''),
-                           dt$dps)
-      
-      # one case where this is different:
-      
-      dt <- dt[dps !="EQUATEUR"]
-      dt <- dt[dps !="KASAI-ORIENTAL"]
-      
-      dt$dps <- tolower(dt$dps)
-      
-      dt[ dps == 'kasai-centre', dps:= 'kasai-central']
-      
-      dt <- dt[dps %in% dps_names]
-
-      # add columns for quarter, year, and TB type
-      dt[, sheet:= s]
-      dt[, quarter:= dt_sheets_eval[sheet_name==s, quarter]]
-      dt[, TB_type := dt_sheets_eval[sheet_name==s, TB_type]]
-      dt[, data_year := dt_sheets_eval[sheet_name==s, year]]
-      dt[, file_year := year]
-      
-      if (i==1){
-        # if it's the first sheet, initialize the new dt
-        outcomes <- dt
-        # for subsequent sheets, rbind to that dt
-      } else {
-        outcomes <- rbindlist(list(outcomes, dt), use.names=TRUE, fill= TRUE)
-      }
-      print(s)
-      i <- i + 1
-    }
-    
-    write.csv(outcomes, file= paste0(dir_prepped, pnlt_outcomes_17))
-    
+# CLEAN EVAL SHEETS:
+  # EDIT ~~~~~~~~~~~~~~~~~~~~~
+#   # run the user-written function sourced in
+#   case_outcomes <- clean_eval_sheets(dir, 2017, files17[1])
+#     
+#   # save the results as a csv
+#   write.csv(case_outcomes, file= paste0(dir_prepped, pnlt_outcomes_17))
+  # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # ----------------------------------------------
 
+# ---------------------------------------------   
+# CLEAN DEP SHEETS:
+file = files18[1]
+year = 2018
+s = sheets_dep[1]
+i = 1
+
+for (s in sheets_dep) {
+    dt <- data.table(read_excel(paste0(dir, year, "/", file), sheet= s))
     
+    # basic tidying
+    dt <- initial_clean(dt)
     
+    # change column names
+    col_names <- dt_transl[get(paste0("keep_", year))==1, variable_in_code]
+    colnames(dt) <- col_names
     
+    # finish cleaning up dps names/rows
+    dt <- clean_dps_names(dt)
     
+    # create columns for year/quarter/etc
+    dt <- add_data_sheet_info(dt, dt_sheets_dep)
     
+    # create a dt to store/rbind each iteration of the loop
+    if (i==1){
+      # if it's the first sheet, initialize the new dt
+      tb_screening_data <- dt
+      # for subsequent sheets, rbind to that dt
+    } else {
+      tb_screening_data <- rbindlist(list(tb_screening_data, dt), use.names=TRUE, fill= TRUE)
+    }
+    print(s)
+    i <- i + 1
+}
+
+write.csv(tb_screening_data, file= paste0(dir_prepped, pnlt_case_screening_17))
     
-    
-    
-    
-    
-    
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # ----------------------------------------------
 ## clean "EVAL"sheets
