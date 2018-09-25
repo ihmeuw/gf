@@ -1,5 +1,5 @@
 # handle incoming arguments
-v = commandArgs()[3]
+e = commandArgs()[3]
 o = commandArgs()[4]
 i = commandArgs()[5]
 
@@ -14,8 +14,11 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # load the data
 vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
 
+# make variable ids
+vl[, element_id:=.GRP, by='variable']
+
 # subset the data
-subset = vl[variable==v & org_unit==o] 
+subset = vl[element_id==e & org_unit_id==o] 
 
 # run quantreg
 quantFit <- rq(value~date, data=subset, tau=0.5)
