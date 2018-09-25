@@ -31,6 +31,12 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
+# whether or not to resubmit jobs that have completed already
+resubmitAll = FALSE
+
+# whether or not to delete all files from parallel runs at the end
+cleanup = TRUE
+
 #-----------------------------------
 # install quant reg and load
 
@@ -48,15 +54,23 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # interim data set
 vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
 
+# make variable ids
+vl[, element_id:=.GRP, by='variable']
 
 # loop over elements and org units, run quantreg once per each
 i=1
-for (v in unique(vl$variable)) {
-  for(o in unique(vl$org_unit)) { 
+for (e in unique(vl$element_id)) {
+  for(o in unique(vl$org_unit_id)) { 
     
-    # run the quantile regression and list the residuals
-    system(paste0('qsub -o. -e. -cwd -N  quantreg_', i, ' ./r_shell.sh ./quantregScript.r ', v, ' ', o, ' ', i))
-    i=i+1
+    # skip if this job has already run and resubmitAll is FALSE
+    if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/ccarelli/quantreg_output', i))) { 
+       i=i+1
+       next
+    } else {
+      # run the quantile regression and list the residuals
+      system(paste0('qsub -o . -e . -cwd -N  quantreg_output_', i, ' ../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i))
+      i=i+1
+    }
   }
 }
 
@@ -64,20 +78,32 @@ for (v in unique(vl$variable)) {
 i = i-1
 numFiles = length(list.files('/ihme/scratch/users/ccarelli/'))
 while(numFiles<i) { 
-  Sys.sleep(5)
-  print(paste0(numFiles, ' of ', i, 'jobs complete, waiting 5 seconds...'))
+  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 5 seconds...'))
   numFiles = length(list.files('/ihme/scratch/users/ccarelli/'))
+  Sys.sleep(5)
 }
 
 
-# collect all output into one dataa table
-j=1
-for (e in unique(subset$element)) {
-  for(p in unique(subset$dps)) { 
-    tmp = readRDS(paste0('/share/temp/quantreg_output/file',e,p,'.rds'))
-    if(j==1) fulLData = tmp
-    if(j>1) fullData = rbind(fullData, tmp)
-    j=j+1
+# collect all output into one data table
+for (j in seq(i)) {
+  tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/quantreg_output', j))
+  if(j==1) fullData = tmp
+  if(j>1) fullData = rbind(fullData, tmp)
+  cat(j)
+}
+
+# save full data
+saveRDS(fullData, '')
+
+# clean up parallel files
+if (cleaup==TRUE) { 
+  for (j in seq(i)) {
+    print(paste0('Deleting file /ihme/scratch/users/ccarelli/quantreg_output', j))
+    file.remove(paste0('/ihme/scratch/users/ccarelli/quantreg_output', j))
+  }
+  outputFiles = list.files(pattern='quantreg_output*')
+  for(f in outputFiles) { 
+    print(paste0('Deleting file /ihme/scratch/users/ccarelli/quantreg_output', j))
+    file.remove(paste0(f))
   }
 }
-
