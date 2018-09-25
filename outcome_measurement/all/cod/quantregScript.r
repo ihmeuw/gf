@@ -27,9 +27,10 @@ head(subset)
 # skip cases that will fail
 n = nrow(subset)
 var = var(subset$value)
+nx = length(unique(subset$date))
 
 # skip if less than 3 data points
-if(n>=3 & var!=0) {  
+if(n>=3 & var!=0 & nx>=2) {  
   
   # run quantreg
   quantFit <- rq(value~date, data=subset, tau=0.5)
