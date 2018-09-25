@@ -1,7 +1,7 @@
 # handle incoming arguments
-e = commandArgs()[2]
-o = commandArgs()[3]
-i = commandArgs()[4]
+e = commandArgs()[4]
+o = commandArgs()[5]
+i = commandArgs()[6]
 print(e)
 print(o)
 print(i)
