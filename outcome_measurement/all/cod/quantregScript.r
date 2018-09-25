@@ -24,8 +24,12 @@ vl[, element_id:=.GRP, by='variable']
 subset = vl[element_id==e & org_unit_id==o] 
 head(subset)
 
+# skip cases that will fail
+n = nrow(subset)
+var = var(subset$value)
+
 # skip if less than 3 data points
-if(nrow(subset)>=3) {  
+if(n>=3 & var!=0) {  
   
   # run quantreg
   quantFit <- rq(value~date, data=subset, tau=0.5)
