@@ -31,6 +31,9 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
+# output file
+outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/viral_load/quantreg_results.rds')
+
 # whether or not to resubmit jobs that have completed already
 resubmitAll = FALSE
 
@@ -93,7 +96,7 @@ for (j in seq(i)) {
 }
 
 # save full data
-saveRDS(fullData, '')
+saveRDS(fullData, outFile)
 
 # clean up parallel files
 if (cleanup==TRUE) { 
