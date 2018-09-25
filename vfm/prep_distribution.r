@@ -7,10 +7,6 @@
 # --------------------------------------------------
 
 
-# TO DO
-# identify age groups in incidence rasters and do an age-specific merge
-# use PNLP-to-shapefile HZ names to connect (for now just using PNLP incidence)
-
 # --------------------
 # Set up R
 rm(list=ls())
@@ -85,6 +81,7 @@ source('./core/standardizeDPSNames.r')
 # Load/prep PNLP data
 
 # load
+print('Loading PNLP data...')
 data = readRDS(inFile)
 
 # subset observations
@@ -102,10 +99,14 @@ data[, year:=year(date)]
 
 # collapse to year level 
 # because we aren't sure Amelia is imputing individual months correctly
-idVars = c('province','dps','health_zone','subpopulation','year')
+print('Collapsing PNLP draws...')
+idVars = c('province','dps','health_zone','year')
 if (analysisLevel=='DPS') idVars = idVars[idVars!='health_zone'] 
-data = data[, .(mean=mean(imp_value), upper=quantile(imp_value,.975), 
-				lower=quantile(imp_value,.025)), by=c(idVars, 'indicator')]
+data = data[, .(imp_value=sum(imp_value)), by=c(idVars, 'indicator', 'imputation_number')]
+
+# find the average/upper/lower of the imputations
+data = data[, .(mean=mean(imp_value), lower=quantile(imp_value, .025), 
+		upper=quantile(imp_value, .975)), by=c(idVars, 'indicator')]
 
 # reshape wide
 valueVars = c('mean','lower','upper')
@@ -118,6 +119,7 @@ PNLPData = dcast.data.table(data, formula, value.var=valueVars)
 # Load/prep MAP data
 if(prepMAP) {
 	# load shapefile
+	print('Loading shapefiles...')
 	if (analysisLevel=='DPS') map = shapefile(shapeFileDPS)
 	if (analysisLevel=='HZ') map = shapefile(shapeFileHZ)
 
@@ -135,6 +137,7 @@ if(prepMAP) {
 	lakes = crop(lakes, extent(map))
 
 	# loop over years, crop to DRC, mask water and aggregate to HZ-level
+	print('Prepping MAP data...')
 	i=1
 	for(f in mapFiles) { 
 		
@@ -189,6 +192,7 @@ if(prepMAP) {
 
 # -----------------------------------------------
 # Merge PNLP and MAP data
+print('Merging data...')
 
 # ad-hoc fix for dps=0
 PNLPData[province=='Nord Kivu', dps:='nord-kivu']
@@ -208,5 +212,6 @@ if (prepMAP & analysisLevel=='HZ') analysisData = merge(PNLPData, MAPData, by=c(
 if (!prepMAP) analysisData = PNLPData
 
 # save
+print(paste('Saving', outFile))
 saveRDS(analysisData, outFile)
 # -----------------------------------------------

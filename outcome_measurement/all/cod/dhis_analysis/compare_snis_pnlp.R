@@ -21,48 +21,54 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
+pnlpFile <- paste0(dir, '../National_Malaria_Program/pre_imputation_PNLP_2017.csv')
+
+snisFile <- paste0(dir, '/prepped/tabl/tabl_base_no_outliers.rds')
+
 #------------------------
 # import pnlp data and subset to malaria case data
 
-pnlp = data.table(read.csv(paste0(dir, 'compare_pnlp/pre_imputation_PNLP_2017.csv'), stringsAsFactors = FALSE))
+pnlp = fread(pnlpFile)
 
 # ----------------------
 # export a list of the number of facilities
 facilities_pnlp <- pnlp[ ,.(value=healthFacilities_total), by=.(health_zone, date)]
 facilities_pnlp[ ,date:=as.Date(date)]
 
-pnlp[ , healthFacilities_total:=NULL]
 
 #-----------------------------------------------------
 # select only the necessary variables
 
-pnlp = pnlp[ ,.(RDT_completed, RDT_positive, ITN_distAtANC, mildMalariaTreated_5andOlder, 
-                mildMalariaTreated_pregnantWomen,  
-                mildMalariaTreated_under5, newCasesMalariaMild_5andOlder,    
-                newCasesMalariaMild_pregnantWomen, newCasesMalariaMild_under5, 
-                 newCasesMalariaSevere_5andOlder, newCasesMalariaSevere_pregnantWomen, 
-                newCasesMalariaSevere_under5, presumedMalaria_5andOlder,    
-                presumedMalaria_pregnantWomen, presumedMalaria_under5,       
-                severeMalariaTreated_5andOlder, severeMalariaTreated_pregnantWomen, 
-                severeMalariaTreated_under5), by=.(health_zone, dps, date)]
+idVars = c('health_zone', 'dps', 'date')
+keepVars = c(idVars, 
+				'RDT_completed', 'RDT_positive', 'ITN_distAtANC', 
+				'mildMalariaTreated_5andOlder', 'mildMalariaTreated_pregnantWomen',
+                'mildMalariaTreated_under5', 'newCasesMalariaMild_5andOlder',
+                'newCasesMalariaMild_pregnantWomen', 'newCasesMalariaMild_under5',
+                'newCasesMalariaSevere_5andOlder', 'newCasesMalariaSevere_pregnantWomen',
+                'newCasesMalariaSevere_under5', 'presumedMalaria_5andOlder',
+                'presumedMalaria_pregnantWomen', 'presumedMalaria_under5',
+                'severeMalariaTreated_5andOlder', 'severeMalariaTreated_pregnantWomen',
+                'severeMalariaTreated_under5', 'SSCRDT_completedUnder5', 'SSCRDT_positiveUnder5', 
+				'SSCRDT_completed5andOlder', 'SSCRDT_positive5andOlder', 
+				'SSCACT_under5', 'SSCACT_5andOlder')
+pnlp = pnlp[ , ..keepVars]
 
 # convert date to a date variable
 pnlp[ ,date:=as.Date(date)]
 
 # reshape pnlp long
-idVars = c('health_zone', 'dps', 'date')
 pnlp = melt(pnlp, id.vars = idVars)
 
 #-----------------------------------------
 # create types so you can visualize pairs of variables together 
 
-pnlp[variable=='RDT_completed' | variable=='RDT_positive' , type:='rdt']
-pnlp[grep(variable, pattern='mild'), type:='simple']
-pnlp[grep(variable, pattern='Mild'), type:='simple']
-pnlp[grep(variable, pattern='severe'), type:='severe']
-pnlp[grep(variable, pattern='Severe'), type:='severe']
-pnlp[grep(variable, pattern='presumed'), type:='presumed']
-pnlp[grep(variable, pattern='ITN'), type:='llin']
+pnlp[variable=='RDT_completed' | variable=='RDT_positive', type:='rdt']
+pnlp[grepl('SSCRDT', variable) , type:='rdt_chw']
+pnlp[grepl('mild', tolower(variable)), type:='simple']
+pnlp[grepl('severe', tolower(variable)), type:='severe']
+pnlp[grepl(variable, pattern='presumed'), type:='presumed']
+pnlp[grepl(variable, pattern='ITN'), type:='llin']
 
 #----------------------------
 # set the categories
@@ -75,15 +81,11 @@ pnlp[is.na(category), category:='default']
 #-------------------         
 # reset variable names to be the same in both data sets 
 
-pnlp[variable=='RDT_completed' | variable=='RDT_positive' | variable=='ITN_distAtANC', var2:=variable]
-pnlp[grep(variable, pattern='newCasesMalariaMild'), var2:='Case of uncomplicated malaria']
-pnlp[grep(variable, pattern='mildMalariaTreated'), var2:='Case of uncomplicated malaria treated']
-pnlp[grep(variable, pattern='newCasesMalariaSevere'), var2:='Case of severe malaria']
-pnlp[grep(variable, pattern='severeMalariaTreated'), var2:='Case of severe malaria treated']
-pnlp[grep(variable, pattern='presumedMalaria'), var2:='Case of presumed malaria']
-
-pnlp[ , variable:=as.character(var2)]
-pnlp[ ,var2:=NULL]
+pnlp[grep(variable, pattern='newCasesMalariaMild'), variable:='Case of uncomplicated malaria']
+pnlp[grep(variable, pattern='mildMalariaTreated'), variable:='Case of uncomplicated malaria treated']
+pnlp[grep(variable, pattern='newCasesMalariaSevere'), variable:='Case of severe malaria']
+pnlp[grep(variable, pattern='severeMalariaTreated'), variable:='Case of severe malaria treated']
+pnlp[grep(variable, pattern='presumedMalaria'), variable:='Case of presumed malaria']
 
 #--------------------------------------
 # identify the data set for the merge
@@ -93,15 +95,15 @@ pnlp[ , set:='pnlp']
 # replace health zone and dps with lower case/no spaces
 
 pnlp[ ,health_zone:=tolower(health_zone)]
-pnlp$health_zone <- gsub( "\\s", "", pnlp$health_zone)
+pnlp$health_zone <- gsub( '\\s', '', pnlp$health_zone)
 pnlp[ , dps:=tolower(dps)]
-pnlp$dps <- gsub( "\\s", "", pnlp$dps)
+pnlp$dps <- gsub( '\\s', '', pnlp$dps)
 
 #------------------------
 # import SNIS data 
 
 # import the snis base services data 
-base <- readRDS(paste0(dir, "/prepped/tabl_base_no_outliers.rds"))
+base <- readRDS(snisFile)
 
 # eliminate unnecessary variables and subset to 2017
 # FIGURE OUT WHY THIS DROPS SOME ROWS OUT
@@ -121,22 +123,19 @@ base[ ,category:=as.character(category)]
 #----------------------------------------
 # change the variable names to match pnlp
 
-base[variable=="A 1.4 RDT positive", var2:="RDT_positive"]
-base[variable=="A 1.4 RDT performed", var2:="RDT_completed"]
+base[variable=='A 1.4 RDT positive', variable:='RDT_positive']
+base[variable=='A 1.4 RDT performed', variable:='RDT_completed']
 
-base[grep(variable, pattern="LLIN"), var2:='ITN_distAtANC']
+base[grep(variable, pattern='LLIN'), variable:='ITN_distAtANC']
 
-base[variable=="A 1.4 Confirmed simple malaria" | variable=="A 1.5 Confirmed simple malaria - pregnant woman", var2:="Case of uncomplicated malaria"]
-base[variable=="A 1.4 Confirmed simple malaria treated" | variable=='A 1.5 Confirmed simple malaria treated - pregnant woman', var2:="Case of uncomplicated malaria treated"]
+base[variable=='A 1.4 Confirmed simple malaria' | variable=='A 1.5 Confirmed simple malaria - pregnant woman', variable:='Case of uncomplicated malaria']
+base[variable=='A 1.4 Confirmed simple malaria treated' | variable=='A 1.5 Confirmed simple malaria treated - pregnant woman', variable:='Case of uncomplicated malaria treated']
 
-base[variable=="A 1.4 Presumed malaria", var2:="Case of presumed malaria"]
+base[variable=='A 1.4 Presumed malaria', variable:='Case of presumed malaria']
 
-base[variable=='A 1.4 Severe malaria' | variable=='A 1.5 Severe malaria - pregnant woman', var2:='Case of severe malaria']
-base[variable=="A 1.4 Severe malaria treated" | variable=='A 1.5 Severe malaria treated - pregnant woman', var2:='Case of severe malaria treated']
+base[variable=='A 1.4 Severe malaria' | variable=='A 1.5 Severe malaria - pregnant woman', variable:='Case of severe malaria']
+base[variable=='A 1.4 Severe malaria treated' | variable=='A 1.5 Severe malaria treated - pregnant woman', variable:='Case of severe malaria treated']
 
-
-base[ , variable:=var2]
-base[ ,var2:=NULL]
 #-----------------------------------------
 # create a variable type
 
@@ -153,10 +152,10 @@ base[ ,set:='base']
 # subset the health zones to only the overlap 
 
 # replace health zone and dps with lower case/no spaces
-base[ ,health_zone:=tolower(health_zone)]
-base$health_zone <- gsub( "\\s", "", base$health_zone)
-base[ , dps:=tolower(dps)]
-base$dps <- gsub( "\\s", "", base$dps)
+base[, health_zone:=tolower(health_zone)]
+base[, health_zone:=gsub( '\\s', '', health_zone)]
+base[, dps:=tolower(dps)]
+base[, dps:=gsub( '\\s', '', dps)]
 
 #-------------------------
 # number of facilities merge in later 
@@ -174,7 +173,8 @@ bhz <- unique(base$health_zone)
 phz <- unique(pnlp$health_zone)
 
 bhz[bhz %in% phz]
-bhz[!(bhz %in% phz)]
+bmiss = bhz[!(bhz %in% phz)]
+pmiss = phz[!(phz %in% bhz)]
 
 # # function that converts health zones
 # convertt_hzs <- function(x) {
@@ -193,12 +193,12 @@ bhz[!(bhz %in% phz)]
 #     
 # }
 
-# "bogosenubea"      "massa"            "montngafula"      "mampoko"          "binzameteo"       "kitangwa"         "kimbilulenge"     "lilangabobangi"  
-# "lualaba"          "mweneditu"        "makisokisangani"  "gety"             "ruashi"           "kaniama"          "kalemie"          "kasavubu"        
-# "sakania"          "muetshi"          "manguredjipa"     "citenge"          "kamiji"           "kuimba"           "tchomia"          "mitimurhesa"     
-#  "wambalwadi"       "benatshadi"       "banzowmoke"       "kabondodianda"    "ngandajika"       "bandalungwa"      "ntandembelo"      "tshishimbi"      
-# "yasabonga"        "bipemba"          "bongandanga"      "kisanji"          "kalambayikabanga" "katoyi"           "binzaozone"       "omendjadi"       
-#  "kiambi"           "busanga"          "saramabila"       "nyankunde"        "hautplateau"     
+# 'bogosenubea'      'massa'            'montngafula'      'mampoko'          'binzameteo'       'kitangwa'         'kimbilulenge'     'lilangabobangi'  
+# 'lualaba'          'mweneditu'        'makisokisangani'  'gety'             'ruashi'           'kaniama'          'kalemie'          'kasavubu'        
+# 'sakania'          'muetshi'          'manguredjipa'     'citenge'          'kamiji'           'kuimba'           'tchomia'          'mitimurhesa'     
+#  'wambalwadi'       'benatshadi'       'banzowmoke'       'kabondodianda'    'ngandajika'       'bandalungwa'      'ntandembelo'      'tshishimbi'      
+# 'yasabonga'        'bipemba'          'bongandanga'      'kisanji'          'kalambayikabanga' 'katoyi'           'binzaozone'       'omendjadi'       
+#  'kiambi'           'busanga'          'saramabila'       'nyankunde'        'hautplateau'     
 
 # 
 # convert_hzs(base)
@@ -215,14 +215,14 @@ dt <- rbind(base, pnlp)
 #------------------------------------------
 # fix dps to be the same
 
-dt$dps <- gsub( "-", "", dt$dps)
-dt[dps=="bascongo", dps:="kongocentral"]
+dt$dps <- gsub( '-', '', dt$dps)
+dt[dps=='bascongo', dps:='kongocentral']
 
 #------------------------------------
 # label the data sets for the graphs 
 dt$set <- factor(dt$set, 
-                 levels=c("base", "pnlp"), 
-                 labels=c("SNIS: Services de Base", "PNLP: program Data"))
+                 levels=c('base', 'pnlp'), 
+                 labels=c('SNIS: Services de Base', 'PNLP: program Data'))
 
 #---------------------------------------
 # GRAPHS 
@@ -242,7 +242,7 @@ for(f in unique(trend2$variable)) {
   list_of_plots[[i]] <- ggplot(trend2[variable==f], aes(y=value, x=date, color=set, group=set)) + 
     geom_point() +
     geom_line(alpha=0.5) + 
-    labs(title=name, x="Date", y="Count") +
+    labs(title=name, x='Date', y='Count') +
     theme_bw() +
     scale_y_continuous(labels = scales::comma) +
     theme_bw()
@@ -276,7 +276,7 @@ for(f in unique(trend$variable)) {
   list_of_plots[[i]] <- ggplot(trend[variable==f], aes(y=value, x=date, color=category, group=category)) + 
     geom_point() +
     geom_line(alpha=0.5) + 
-    labs(title=name, x="Date", y="Count") +
+    labs(title=name, x='Date', y='Count') +
     facet_wrap(~set) +
     theme_bw() +
     scale_y_continuous(labels = scales::comma)
@@ -312,7 +312,7 @@ for(f in unique(prov1$variable)) {
     list_of_plots[[i]] <- ggplot(prov1[variable==f & dps==p], aes(y=value, x=date, color=set, group=set)) + 
       geom_point() +
       geom_line(alpha=0.5) + 
-      labs(title=name, subtitle=dps_name, x="Date", y="Count") +
+      labs(title=name, subtitle=dps_name, x='Date', y='Count') +
       theme_bw() +
       scale_y_continuous(labels = scales::comma)
     
@@ -347,7 +347,7 @@ for(f in unique(prov$variable)) {
   list_of_plots[[i]] <- ggplot(prov[variable==f & dps==p], aes(y=value, x=date, color=category, group=category)) + 
     geom_point() +
     geom_line(alpha=0.5) + 
-    labs(title=name, subtitle=dps_name, x="Date", y="Count") +
+    labs(title=name, subtitle=dps_name, x='Date', y='Count') +
     facet_wrap(~set) +
     theme_bw() +
     scale_y_continuous(labels = scales::comma)
@@ -383,7 +383,7 @@ for (z in unique(hz$health_zone)) {
     list_of_plots[[i]] <- ggplot(hz[variable==f & health_zone==z], aes(y=value, x=date, color=category, group=category)) + 
       geom_point() +
       geom_line(alpha=0.5) + 
-      labs(title=hz_name, subtitle=name, x="Date", y="Count") +
+      labs(title=hz_name, subtitle=name, x='Date', y='Count') +
       facet_wrap(~set) +
       theme_bw() +
       scale_y_continuous(labels = scales::comma)
@@ -418,7 +418,7 @@ for(f in unique(hz1$variable)) {
     list_of_plots[[i]] <- ggplot(hz1[variable==f & health_zone==p], aes(y=value, x=date, color=set, group=set)) + 
       geom_point() +
       geom_line(alpha=0.5) + 
-      labs(title=name, subtitle=hzname, x="Date", y="Count") +
+      labs(title=name, subtitle=hzname, x='Date', y='Count') +
       theme_bw() +
       scale_y_continuous(labels = scales::comma)
     
@@ -428,13 +428,13 @@ for(f in unique(hz1$variable)) {
 
 
 outFiles = paste0(dir,'compare_pnlp/all_vars_hz/pnlp_compare_dps_variable', unique(prov1$variable), '.pdf')
-j=1 # start a counter for "chunks" of graphs
+j=1 # start a counter for 'chunks' of graphs
 n = length(unique(hz1$health_zone)) # count the length of a chunk
 pdf(outFiles[1]) # open the first pdf
 for(i in seq(length(list_of_plots))) {
   if ((i%%(n+1))==0) { # if we're at the first graph of the next chunk...
     dev.off() # close the previous pdf ...
-    j=j+1 # add to the "chunk" counter ...
+    j=j+1 # add to the 'chunk' counter ...
     pdf(outFiles[j]) # and open the next pdf
   }
   print(list_of_plots[[i]]) # print the plot to the current pdf
@@ -470,8 +470,8 @@ natl = rbind(natl, fac)
 
 
 natl$ind <- factor(natl$ind, 
-                 levels=c("Variable", "Facilities Reporting"), 
-                 labels=c("Count of Variable", "Number of Facilities Reporting"))
+                 levels=c('Variable', 'Facilities Reporting'), 
+                 labels=c('Count of Variable', 'Number of Facilities Reporting'))
 
 
 # print the graphs!
@@ -488,7 +488,7 @@ for(f in unique(natl$variable)) {
   list_of_plots[[i]] <- ggplot(natl[variable==f], aes(y=value, x=date, color=set, group=set)) + 
     geom_point() +
     geom_line(alpha=0.5) + 
-    labs(title=name, x="Date", y="Count", color='Date Set' ) +
+    labs(title=name, x='Date', y='Count', color='Date Set' ) +
     facet_wrap(~ind, scales='free_y') +
     theme_bw() +
     scale_y_continuous(labels = scales::comma)

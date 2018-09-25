@@ -1,9 +1,11 @@
-
 # ----------------------------------------------
 # Audrey Batzel
 # 6/26/2018
 # Map visualizations of PNLP outputs data
 #
+# ----------------------------------------------
+
+
 # ----------------------------------------------
 ###### Set up R / install packages  ###### 
 # ----------------------------------------------
@@ -13,8 +15,13 @@ library(rgeos)
 library(data.table)
 library(ggplot2)
 library(maptools)
+setwd('C:/local/gf/')
+source('./core/standardizeDPSnames_function.R')
 # ----------------------------------------------
-##set up J Drive 
+
+
+# ----------------------------------------------
+## set up J Drive 
 # ----------------------------------------------
 if (Sys.info()[1] == 'Windows') {
   username <- "abatzel"
@@ -24,59 +31,49 @@ if (Sys.info()[1] == 'Windows') {
   root <- "/home/j/"
 }
 # ----------------------------------------------
-##set set up the directories to read/export files: 
+
+
+# ----------------------------------------------
+## set set up the directories to read/export files: 
 # ----------------------------------------------
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j/')
 shape_dir <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/gadm36_COD_shp/")
-#shape_dir2 <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/")
-#shape_dir3 <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/shapefiles/")
 export_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/')
 dir_data <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/")
 
-drcShape <- shapefile(paste0(shape_dir, "gadm36_COD_1.shp"))
-#drcShape2 <- shapefile(paste0(shape_dir, "gadm36_COD_2.shp"))
-#drcShape0 <- shapefile(paste0(shape_dir, "gadm36_COD_0.shp"))
-
-#drcShape_test <- shapefile(paste0(shape_dir3, "healthsites.shp"))
-
-# these don't save properly so you may have to re-copy and paste the name in the shapefile
-coordinates = as.data.table(fortify(drcShape, region='NAME_1'))
-coordinates$id <- gsub("Bas-Uélé", "Bas-Uele", coordinates$id)
-coordinates$id <- gsub("�???quateur", "Equateur", coordinates$id)
-coordinates$id <- gsub("Haut-Uélé", "Haut-Uele", coordinates$id)
-coordinates$id <- gsub("Kasaï", "Kasai", coordinates$id)
-coordinates$id <- gsub("Kasaï-Central", "Kasai Central", coordinates$id)
-coordinates$id <- gsub("Kasaï-Oriental", "Kasai Oriental", coordinates$id)
-coordinates$id <- gsub("Maï-Ndombe", "Mai-Ndombe", coordinates$id)
-
-coordinates$id <- tolower(coordinates$id)
-
-coordinates$id <- gsub("nord-kivu", "nord kivu", coordinates$id)
-coordinates$id <- gsub("sud-kivu", "sud kivu", coordinates$id)
-coordinates$id <- gsub("kasai-central", "kasai central", coordinates$id)
-coordinates$id <- gsub("kasai-oriental", "kasai oriental", coordinates$id)
-coordinates$id <- gsub("nord-ubangi", "nord ubangi", coordinates$id)
-coordinates$id <- gsub("sud-ubangi", "sud ubangi", coordinates$id)
-coordinates$id <- gsub("kongo-central", "kongo central", coordinates$id)
-
-# names = data.table(drcShape@data)
-# names$zs_id <- as.character(names$zs_id)
-# coord_and_names = merge(coordinates, names, by.x='id', by.y='zs_id', allow.cartesian=TRUE)
-
-# ----------------------------------------------  
-
 # input files
 fullData <- "imputedData_forGraphing_run2.rds"
+dps_shapefile <- "gadm36_COD_1.shp"
 
 # read in data
 dt <- readRDS( paste0(dir_data, fullData) ) 
+drcShape <- shapefile( paste0(shape_dir, dps_shapefile) )
 
+# output files 
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+# variables set up
 # ----------------------------------------------  
 id_vars <- c("dps", "health_zone", "date", "year")
-
 dt[, year:= year(date)]
-dt$dps <- gsub("bas congo", "kongo central", dt$dps)
+# ----------------------------------------------
 
+
+# ----------------------------------------------
+# fortify the shapefile to get coordinates and convert it to a data table / standardize dps names for merging
+# ----------------------------------------------
+coordinates = as.data.table(fortify(drcShape, region='NAME_1'))
+coordinates$id <- standardizeDPSnames(coordinates$id)
+# this name doesn't save properly so you may have to re-copy and paste the name from the shapefile
+coordinates$id <- gsub("�???equateur", "equateur", coordinates$id)
+
+dt$dps <- standardizeDPSnames(dt$dps)
+# ----------------------------------------------
+
+
+# ----------------------------------------------
 subpop <- NA
 indicators <- c("stockOutASAQ", "stockOutartLum")
 subpop <- c("14yrsAndOlder", "6to13yrs", "1to5yrs", "2to11mos") #, "used", "1st", "2nd", "3rd")
