@@ -4,6 +4,8 @@ o = commandArgs()[4]
 i = commandArgs()[5]
 
 # detect if operating on windows or on the cluster 
+library(data.table)
+library(quantreg)
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
