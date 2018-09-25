@@ -96,7 +96,7 @@ for (j in seq(i)) {
 saveRDS(fullData, '')
 
 # clean up parallel files
-if (cleaup==TRUE) { 
+if (cleanup==TRUE) { 
   for (j in seq(i)) {
     print(paste0('Deleting file /ihme/scratch/users/ccarelli/quantreg_output', j))
     file.remove(paste0('/ihme/scratch/users/ccarelli/quantreg_output', j))
