@@ -23,7 +23,7 @@ standardizeDPSNames = function(nameVector=NULL) {
 	
   # for GADM shapefile: make changes to nameVector that will account for if the input nameVector is from the GADM shapefile
   nameVector <- gsub("Bas-Uélé", "Bas-Uele", nameVector)
-  nameVector <- gsub("�???quateur", "Equateur", nameVector) # This needs to be updated somehow because it won't save the correct characters
+	nameVector[grepl("quateur", nameVector)] <- "Equateur" # This needs to be updated somehow because it won't save the correct characters
   nameVector <- gsub("Haut-Uélé", "Haut-Uele", nameVector)
   nameVector <- gsub("Kasaï", "Kasai", nameVector)
   nameVector <- gsub("Kasaï-Central", "Kasai Central", nameVector)
