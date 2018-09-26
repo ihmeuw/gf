@@ -11,13 +11,7 @@
 # Set up R
 rm(list=ls())
 library(data.table)
-library(jsonlite)
-library(httr)
-library(ggplot2)
-library(dplyr)
-library(openxlsx)
-library(stringr) 
-library(quantreg)
+
 # --------------------
 # shell script to 
 # sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1327 -s 20 -P snis_prep
