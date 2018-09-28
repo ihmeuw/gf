@@ -15,7 +15,7 @@ library(data.table)
 # --------------------
 # shell script to 
 # sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1327 -s 20 -P snis_prep
-
+# /ihme/code/ccarelli/gf/outcome_measurement/all/cod
 #------------------------------------
 # set working directories
 

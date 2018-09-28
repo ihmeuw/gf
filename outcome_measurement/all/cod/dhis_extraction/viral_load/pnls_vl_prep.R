@@ -45,7 +45,7 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 
 # interim data set
-vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
+vl <- readRDS(paste0(dir, 'prepped/quantreg_results.rds'))
 
 #------------------------
 # demarcate 'support' entries compared to regular entries and remove support
@@ -123,9 +123,6 @@ rat[variable=='test', variable:='PLHIV who received a VL test']
 # reassign the new data set to vl
 vl = rat
 
-#-----------------------
-# eliminate the obvious 457 outlier
-vl <- vl[value!=457| value!=353]
 
 #------------------------
 # save the interim output to code off of until outlier removal
@@ -266,6 +263,7 @@ p <- 1
   currentData[ , f := predict(quantFit)]
   currentData[ , r := resid(quantFit)]
   currentData[, s := mad(r)]
+  
   if (is.na(currentData$s)) currentData[, s := 0]
   currentData[, f3u := f + (3*s)]
   currentData[, f3l := f - (3*s)]

@@ -124,7 +124,7 @@ dev.off()
 
 i=1
 for (e in unique(subset$element_eng)) {
-  for(p in unique(subset$dps)) { 
+  for(p in unique(subset$org_unit)) { 
     
     # run the quantile regression and list the residuals
     system(paste0('qsub -0. -e. -cwd -N ', quantreg_e_p, ' ./r_shell.sh ./quantregScript.r ', e, ' ', p))
