@@ -96,5 +96,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$disease <- disease
   budget_dataset$disbursement <- 0##change if we get disbursement info
   budget_dataset$year <- year(budget_dataset$start_date)
+  is.na(budget_dataset$budget) <- 0
+  
   return(budget_dataset)
 }

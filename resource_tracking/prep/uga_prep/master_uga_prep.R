@@ -96,6 +96,7 @@ for(i in 1:length(file_list$file_name)){
                              file_list$start_date[i], file_list$disease[i], file_list$period[i], 
                              file_list$grant[i], file_list$recipient[i],file_list$data_source[i])
   }
+  tmpData$fileName = file_list$file_name[i]
   if(i==1){
     resource_database = tmpData 
   } 
@@ -115,11 +116,12 @@ for(i in 1:length(file_list$file_name)){
   # summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
   # summary_file$start_date[i] <- min(tmpData$start_date) ##since there are multiple values in this, get the earliest start date 
   # 
-  print(paste(file_list$file_name[i], length(tmpData)))
+  print(i)
 }
 
+
 ## uncomment if you 
-# summary_file$end_date <- as.Date(summary_file$end_date)
+# summary_file$end_date <- as.Date.(summary_file$end_date)
 # summary_file$start_date <- as.Date(summary_file$start_date)
 # resource_database$start_date <- as.Date(resource_database$start_date)
 # 
@@ -140,6 +142,8 @@ for(i in 1:length(file_list$file_name)){
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
 resource_database$disbursement <- as.numeric(resource_database$disbursement)
+resource_database[is.na(budget), budget := 0]
+resource_database[is.na(expenditure), expenditure := 0]
 
 ##assign loc_name and source: 
 resource_database$loc_name <- loc_name
@@ -222,6 +226,8 @@ gf_mapping_list <- total_mapping_list(paste0(map_dir, "intervention_and_indicato
 cleaned_database <- strip_chars(cleaned_database, unwanted_array, remove_chars)
 ## we have some junk "modules" that should be dropped:
 ugaData  <- cleaned_database[!grepl("pleasesel", cleaned_database$module),]
+ugaData$module = ifelse(ugaData$module == "tbhivc", "tbhiv", ugaData$module)
+ugaData = ugaData[module != "module" & module != "servicedeliveryarea"]
 
 #optional: check again for any dropped data: 
 # data_check2<- as.data.frame(ugaData[, sum(budget, na.rm = TRUE),by = c("grant_number", "data_source","disease")])
@@ -233,7 +239,7 @@ ugaData  <- cleaned_database[!grepl("pleasesel", cleaned_database$module),]
 
 gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 uga_concat <- paste0(ugaData$module, ugaData$intervention)
-unmapped_mods <- uga_concat[!uga_concat%in%gf_concat]
+unmapped_mods <- ugaData[!uga_concat%in%gf_concat]
 
 if(length(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
@@ -267,7 +273,7 @@ mappedUga$adm1 <- 190
 mappedUga$adm2 <- 190
 mappedUga$country <- "Uganda"
 mappedUga$lang <- "eng"
-
+mappedUga$sda_activity <- ifelse(tolower(mappedUga$sda_activity) == "all" | mappedUga$sda_activity == "0", "Unspecified (Summary budget)", mappedUga$sda_activity)
 
 # ----------------------------------------------
 ###Check that nothing got dropped: ### 

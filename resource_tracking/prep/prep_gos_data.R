@@ -21,6 +21,10 @@ library(grDevices)
 library(RColorBrewer)
 library(readxl)
 
+prep_dir <- " your local repo + gf/resource_tracking/prep/"
+prep_dir <- "H:/gf/resource_tracking/prep/"
+source(paste0(prep_dir, "map_modules_and_interventions.R"))
+
 # ----------------------------------------------
 ###### Load the GOS tab from the Excel book  ###### 
 # ----------------------------------------------
@@ -109,7 +113,7 @@ mappedGos$disbursement <-mappedGos$disbursement*mappedGos$coefficient
 
 # data_check1 <- totalGos[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
 # data_check2 <-mappedGos[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
-
+mappedGos$fileName = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
 # ----------------------------------------------
 ###### export the mapped dataset ###### 
 # ----------------------------------------------

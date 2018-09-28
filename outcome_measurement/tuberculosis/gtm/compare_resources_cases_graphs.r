@@ -31,7 +31,7 @@ rtFile = "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total
 distrFile = paste0(outcome_dir, "prepped_data/GTM-TB-distribution-2013-2018_with_Unit_Cost.csv")
 cohortFile = paste0(outcome_dir, "prepped_data/GTM - Tx cohort data 2012-2016.csv")
 outFile = paste0(outcome_dir, "Resource Comparison.pdf")
-outFile_two = paste0(outcome_dir, "UnitCostOverTime.pdf")
+outFile_two = paste0(outcome_dir, "UnitCostOverTime_sameScale.pdf")
 
 # ---------------------------------------------------
 
@@ -273,20 +273,30 @@ firstLine = unit_cost_per_year[Product ==  "ISONIAZIDA, TABLETA DE 100 MG." |
 
 commonDrugs = unit_cost_per_year[Product == "ETAMBUTOL, TABLETA DE 400 MG." |
                                    Product == "ETHIONAMIDA, COMPRIMIDO DE 250 MG." |
-                                   Product ==  "ISONIAZIDA, TABLETA DE 100 MG." | 
                                    Product ==  "ISONIAZIDA, TABLETA DE 300 MG."|
                                    Product == "RIFAMPICINA, TABLETA DE 300 MG."  |
                                    Product == "PIRAZINAMIDA, TABLETA DE 500 MG." |
                                    Product == "LEVOFLOXACINA, COMPRIMIDO DE 250 MG." |
-                                   Product ==  "CICLOSERINA, CAPSULA DE 250 MG."]
+                                   Product ==  "CICLOSERINA, CAPSULA DE 250 MG." |
+                                   Product ==  "KANAMICINA, VIAL DE 1 GRAMO"]
 
-commonDrugs$first = ifelse(commonDrugs$Product ==  "ISONIAZIDA, TABLETA DE 100 MG." | 
-                             commonDrugs$Product ==  "ISONIAZIDA, TABLETA DE 300 MG."|
+commonDrugs$first = ifelse(commonDrugs$Product ==  "ISONIAZIDA, TABLETA DE 300 MG."|
                              commonDrugs$Product == "RIFAMPICINA, TABLETA DE 300 MG."  |
                              commonDrugs$Product == "PIRAZINAMIDA, TABLETA DE 500 MG." |
-                             commonDrugs$Product == "ETAMBUTOL, TABLETA DE 400 MG." , "First Line Treatment", "Other Common Drugs")
+                             commonDrugs$Product == "ETAMBUTOL, TABLETA DE 400 MG." , "First-Line Treatments", "Second-Line Treatments")
                                    
-  
+
+commonDrugs[grepl("ISONIAZIDA", Product), Product := "Isoniazid"]
+commonDrugs[grepl("ETAMBUTOL", Product), Product := "Ethambutol"]
+commonDrugs[grepl("ETHIONAMIDA", Product), Product := "Ethionamide"]
+commonDrugs[grepl("RIFAMPICINA", Product), Product := "Rifampicin"]
+commonDrugs[grepl("LEVOFLOXACINA", Product), Product := "Levofloxacin"]
+commonDrugs[grepl("PIRAZINAMIDA", Product), Product := "Pyrazinamide"]
+commonDrugs[grepl("CICLOSERINA", Product), Product := "Cycloserine"]
+commonDrugs[grepl("KANAMICINA", Product), Product := "Kanamycin"]
+
+commonDrugs$Product <- factor(commonDrugs$Product, levels=c('Rifampicin', 'Isoniazid', 'Pyrazinamide', 'Ethambutol', 'Cycloserine', 'Ethionamide','Levofloxacin', "Kanamycin"))
+
 p8 = ggplot(firstLine, aes(y=unitCost, x=Year, colour=Product)) + 
   geom_line(size=1) +
   geom_point(size=3, color='grey45') + 
@@ -307,13 +317,12 @@ p9 = ggplot(commonDrugs, aes(y=unitCost, x=Year, colour=Product)) +
   theme(legend.position="bottom") +
   guides(col = guide_legend(ncol = 2))
 
-p10 = ggplot(commonDrugs, aes(y=unitCost, x=Year, colour=Product)) + 
+p10 = ggplot(commonDrugs[unitCost > 0], aes(y=unitCost, x=Year, colour=Product)) + 
   geom_line(size=1) +
-  geom_point(size=3, color='grey45') + 
-  #geom_text(hjust=1, vjust=0) + 
-  facet_wrap(vars(first)) +
-  labs(title='Unit Cost per Common Drugs Treatment over Time', 
-       y='Cost (USD)', x='Year') + 
+  geom_point(size=1, color='grey45') + 
+  facet_wrap(~first) +
+  labs(title='Unit cost per TB drug over time', 
+       y='Cost (USD)', x='Year', colour = "") + 
   theme_bw() +
   theme(legend.position="bottom") +
   guides(col = guide_legend(ncol = 2))
@@ -349,7 +358,3 @@ p10
 p11
 dev.off()
 # ---------------------------------------------------
-
-pdf(outFile_two, height=5.5, width=7)
-p10
-dev.off()
