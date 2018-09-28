@@ -47,6 +47,9 @@ source(prep_functions)
 pnlt_main <- "PNLT_prepped_data.csv"
 pnlt_outcomes_17 <- "PNLT_case_outcomes_2017.csv"
 pnlt_case_screening_17 <- "PNLT_case_screening_2017.csv"
+pnlt_outcomes_18 <- "PNLT_case_outcomes_2018.csv"
+pnlt_outcomes_18_tb_hiv <- "PNLT_case_outcomes_2018_TBHIV.csv"
+pnlt_case_screening_18 <- "PNLT_case_screening_2018.csv"
 # ----------------------------------------------
 
 
@@ -154,18 +157,12 @@ sheets <- sheets18
   # get just eval sheets for each quarter
   sheets_eval <- sheets[grepl("EVAL", sheets)]
   sheets_eval <- sheets_eval[!grepl("SYN", sheets_eval)]
-  
-  # make a data table of sheet properties
-  dt_sheets_eval <- make_dt_of_sheet_properties(sheets_eval, "EVAL")
 
 # DEP SHEETS
   # get just the DEP sheets from sheets
   sheets_dep <- sheets[grepl("DEP", sheets)]
   sheets_dep <- sheets_dep[!grepl("SYNTH", sheets_dep)]
   sheets_dep <- sheets_dep[!grepl("ANNUEL", sheets_dep)]
-  
-  # make a data table of sheet properties
-  dt_sheets_dep <- make_dt_of_sheet_properties(sheets_dep, "DEP")
 
 # AGE SHEETS
   # get just the EVAL sheets from sheets
@@ -174,20 +171,107 @@ sheets <- sheets18
   sheets_age <- sheets_age[!grepl("STNTH", sheets_age)]
   sheets_age <- sheets_age[!grepl("DEPISTAGE", sheets_age)]
   
-  # make a data table of sheet properties
+### FOR 2017:
+# make data tables of sheet properties
+  dt_sheets_dep <- make_dt_of_sheet_properties(sheets_dep, "DEP")
+  dt_sheets_eval <- make_dt_of_sheet_properties(sheets_eval, "EVAL")
   dt_sheets_age <- make_dt_of_sheet_properties(sheets_age, "AGE")
+  
+### FOR 2018:
+  sheets_dep <- sheets_dep[grepl("T1", sheets_dep)]
+  sheets_eval <- sheets_eval[grepl("T1", sheets_eval)]
+  sheets_eval <- sheets_eval[1:2]
 #---------------------------------------------
     
     
 #---------------------------------------------   
 # CLEAN EVAL SHEETS:
   # EDIT ~~~~~~~~~~~~~~~~~~~~~
-#   # run the user-written function sourced in
-#   case_outcomes <- clean_eval_sheets(dir, 2017, files17[1])
-#     
-#   # save the results as a csv
-#   write.csv(case_outcomes, file= paste0(dir_prepped, pnlt_outcomes_17))
+  # run the user-written function sourced in
+  case_outcomes <- clean_eval_sheets(dir, 2018, files18[1])
+  year = 2018
+  file = files18[1]
+  s = sheets_eval[4]
+  i <- 1
+  
+  for (s in sheets_eval[1:length(sheets_eval)]){
+      
+      dt <- data.table(read_excel(paste0(dir, year, "/", file), sheet= s))
+      
+      dt <- initial_clean(dt)
+      
+      # remove columns of percentages
+      cols <- !is.na( dt[1,] )
+      cols <- colnames(dt)[cols]
+      
+      dt <- dt[, cols, with=FALSE]
+      
+      # set column names to be header row:
+      colnames(dt) <- as.character(dt[1,])
+      
+      # remove header row in row 1
+      dt <- dt[-1, ]
+      
+      ##----------------------------------
+      # clean column names:
+      colnames(dt) <- tolower(colnames(dt))
+      colnames(dt) <- chartr(paste(names(unwanted_array), collapse=''),
+                       paste(unwanted_array, collapse=''),
+                       colnames(dt))      
+      
+      setnames(dt, grep('cplt', colnames(dt)), 'dps')
+      setnames(dt, grep('enreg', colnames(dt)), 'tot_cas_reg')
+      
+      for(n in c('guer')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'healed')
+      if(!'healed' %in% names(dt)) print(paste0('In sheet, ', s, ', healed is not a column'))
+      
+      setnames(dt, grep('traitement termine', colnames(dt)), 'trt_complete')
+      
+      for(n in c('dece','dcd')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'died')
+      if(!'died' %in% names(dt)) stop(paste0('In sheet, ', s, ', died is not a column'))
+      
+      for(n in c('echecs')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'trt_failed')
+      if(!'trt_failed' %in% names(dt)) print(paste0('In sheet, ', s, ', trt_failed is not a column'))
+      
+      for(n in c('perdu','abandon', 'interruptions')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'lost_to_followup')
+      if(!'lost_to_followup' %in% names(dt)) stop(paste0('In sheet, ', s, ', lost_to_followup is not a column'))
+
+      for(n in c('transfer'))  if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'transferred')
+      if(!'transferred' %in% names(dt)) print(paste0('In sheet, ', s, ', transferred is not a column'))
+      
+      for(n in c('total  evalue','total evalue', 'total cas evalues', 'total de cas')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'cas_eval')
+      if(!'cas_eval' %in% names(dt)) stop(paste0('In sheet, ', s, ', cas_eval is not a column'))
+      
+      for(n in c('non evalue')) if(any(grepl(n, names(dt)))) setnames(dt, grep(n, names(dt)), 'cas_not_eval')
+      if(!'cas_not_eval' %in% names(dt)) stop(paste0('In sheet, ', s, ', cas_not_eval is not a column'))
+      
+      dt <- clean_dps_names(dt)
+      
+      if(year == 2017) dt <- add_data_sheet_info(dt)
+      if(year == 2018) {
+        s <- trimws(s)
+        dt[, sheet:= s]
+        dt[, quarter:= 1]
+        dt[, data_year:= year]
+        dt[, file_year:= year]
+      }
+        
+      if (i==1){
+        # if it's the first sheet, initialize the new dt
+        outcomes <- dt
+        # for subsequent sheets, rbind to that dt
+      } else {
+        outcomes <- rbindlist(list(outcomes, dt), use.names=TRUE, fill= TRUE)
+      }
+      # print(s)
+      i <- i + 1
+    }
+  
+  # save the results as a csv
+  write.csv(outcomes, file= paste0(dir_prepped, pnlt_outcomes_18_tb_hiv))
   # ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  
+  
 # ----------------------------------------------
 
 # ---------------------------------------------   
@@ -227,11 +311,6 @@ for (s in sheets_dep) {
 
 write.csv(tb_screening_data, file= paste0(dir_prepped, pnlt_case_screening_17))
     
-
-
-
-
-
 
 
 
