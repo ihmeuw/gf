@@ -11,8 +11,6 @@
 # Set up R
 rm(list=ls())
 library(data.table)
-library(raster)
-library(rgeos)
 library(quantreg)
 library(RColorBrewer)
 library(ggplot2)
@@ -61,7 +59,7 @@ outFile = paste0(outDir, 'commodity_distribution_and_need.pdf')
 data = readRDS(inFile)
 
 # melt y-variables
-idVars = c('province','dps', 'health_zone', 'year', 'subpopulation',
+idVars = c('province','dps', 'health_zone', 'year',
 			'mean_newCasesMalariaMild','mean_newCasesMalariaSevere', 
 			'lower_newCasesMalariaMild','lower_newCasesMalariaSevere', 
 			'upper_newCasesMalariaMild','upper_newCasesMalariaSevere', 
@@ -69,11 +67,20 @@ idVars = c('province','dps', 'health_zone', 'year', 'subpopulation',
 if (analysisLevel!='HZ') idVars = idVars[idVars!='health_zone']
 data = melt(data, id.vars=idVars)
 
+# drop imputation uncertainty for now
+data = data[grepl('mean',variable)]
+
 # facet labels
 data[variable=='mean_ASAQreceived', label:='ASAQ Doses']
 data[variable=='mean_ArtLum', label:='AL Doses']
 data[variable=='mean_ITN', label:='ITNs']
 data[variable=='mean_RDT', label:='RDTs']
+
+# make lag of incidence and reporting
+data = data[order(dps, variable, year)]
+cols = c('pf_incidence','mean_newCasesMalariaMild','mean_newCasesMalariaSevere')
+names = paste0('lag_',cols)
+data[, (names):=shift(.SD), by=c('dps','variable'), .SDcols=cols]
 # --------------------------------------------------------------------
 
 
@@ -82,13 +89,15 @@ data[variable=='mean_RDT', label:='RDTs']
 
 # colors
 colors = brewer.pal(length(unique(data$year)), 'YlGnBu')
+paired = brewer.pal(6, 'Paired')
+manColors = c('Distributed Number'=paired[4],'Estimated Incidence'=paired[2], 'Reported Cases'=paired[1])
 
 # aggregate to DPS
 byVars = c('province','dps','year','variable','label')
-data[subpopulation=='received', variable:=paste0(variable, '_received')]
-data[variable=='mean_ASAQreceived_received', variable:='mean_ASAQreceived']
+data[, variable:=paste0(variable, '_received')]
+data[, variable:=gsub('received_received', 'received')]
 dps = data[, lapply(.SD, sum, na.rm=TRUE), by=byVars, 
-		.SDcols=names(data)[!names(data) %in% c(byVars,'health_zone','subpopulation')]]
+		.SDcols=names(data)[!names(data) %in% c(byVars,'health_zone')]]
 		
 # identify interesting DPS's to label for MAP estimates vs distribution
 fit = lm(value~pf_incidence*factor(year)*factor(variable), dps)
@@ -111,31 +120,18 @@ dps[, resid_upper:=quantile(resid,.8), by=c('year','variable')]
 dps[, resid_lower:=quantile(resid,.2), by=c('year','variable')]
 dps[resid>resid_upper | resid<resid_lower, dps_label3:=dps]
 
-# aggregate to DPS-subpopulation for ASAQ (the only one with subpopulations)
-byVars = c('province','dps','year','subpopulation','variable','label')
-dps_subpop = data[variable=='mean_ASAQreceived' & subpopulation!='received', 
-		lapply(.SD, sum, na.rm=TRUE), by=byVars, 
-		.SDcols=names(data)[!names(data) %in% c(byVars,'health_zone')]]
-
-# identify interesting DPS's to label by subpop
-fit = lm(value~mean_newCasesMalariaSevere*factor(year)*factor(subpopulation), dps_subpop)
-dps_subpop[, resid:=value-predict(fit)]
-dps_subpop[, resid_upper:=quantile(resid,.85), by=c('year','variable','subpopulation')]
-dps_subpop[, resid_lower:=quantile(resid,.15), by=c('year','variable','subpopulation')]
-dps_subpop[resid>resid_upper | resid<resid_lower, dps_label:=dps]
-
 # fit a quantile regression for p1 instead of OLS
-qrFit = rq(value~pf_incidence*factor(label), data=dps[grepl('mean',variable) & year==2017])
-dps[grepl('mean',variable) & year==2017, qr_fitted:=predict(qrFit)]
+qrFit = rq(value~lag_pf_incidence*factor(label), data=dps[year==2017])
+dps[year==2017, qr_fitted:=predict(qrFit)]
 # --------------------------------------------------------------------------------------
 
 
 # ----------------------------------------------
 # Graph
 
-# comparison in 2017
-p1 = ggplot(dps[grepl('received',variable) & grepl('mean',variable) & year==2017], aes(y=value/100000, 
-		x=pf_incidence/1000000, label=dps_label1)) + 
+# comparison in 2017 with lag-x
+p1 = ggplot(dps[year==2017], aes(y=value/1000000, 
+		x=lag_pf_incidence/1000000, label=dps_label1)) + 
 	geom_point() + 
 	geom_line(aes(y=qr_fitted/1000000), color='blue') + 
 	geom_text_repel(color='grey25', box.padding=1.5, 
@@ -144,14 +140,14 @@ p1 = ggplot(dps[grepl('received',variable) & grepl('mean',variable) & year==2017
 	scale_color_manual(values=colors) + 
 	labs(title='Commodity Distribution Compared to Estimated Number of Cases - 2017', 
 		subtitle='Aggregated by DPS', 
-		y='Number Distributed (in 100,000\'s)', 
-		x='Model-Estimated Incidence (Millions of Cases)', 
+		y='Number Distributed in 2017 (in Millions)', 
+		x='Model-Estimated Incidence in 2016 (Millions of Cases)', 
 		color='Year') + 
 	theme_bw()
 	
 # comparison using reported cases
-p2 = ggplot(dps[grepl('received',variable) & grepl('mean',variable) & year==2017], aes(y=value/100000, 
-		x=(mean_newCasesMalariaSevere+mean_newCasesMalariaMild)/100000, label=dps_label2)) + 
+p2 = ggplot(dps[year==2017], aes(y=value/1000000, 
+		x=(lag_mean_newCasesMalariaSevere+lag_mean_newCasesMalariaMild)/1000000, label=dps_label2)) + 
 	geom_point() + 
 	geom_smooth(method='lm') + 
 	geom_text_repel(color='grey25', box.padding=1.5, 
@@ -160,12 +156,12 @@ p2 = ggplot(dps[grepl('received',variable) & grepl('mean',variable) & year==2017
 	scale_color_manual(values=colors) + 
 	labs(title='Commodity Distribution Compared to Reported Number of Cases - 2017', 
 		subtitle='Aggregated by DPS', 
-		y='Number Distributed (in 100,000\'s)', x='Reported Cases (Mild + Severe in 100,000\'s)', color='Year') + 
+		y='Number Distributed (in Millions)', x='Reported Cases (Mild + Severe in Millions)', color='Year') + 
 	theme_bw()
 	
 # comparison of MAP vs PNLP cases (selecting one variable arbitrarily to avoid duplication)
-p3 = ggplot(dps[grepl('received',variable) & variable=='mean_RDT' & year==2017], 
-		aes(y=(mean_newCasesMalariaSevere+mean_newCasesMalariaMild)/100000, 
+p3 = ggplot(dps[variable=='mean_RDT_received' & year==2017], 
+		aes(y=(lag_mean_newCasesMalariaSevere+lag_mean_newCasesMalariaMild)/100000, 
 		x=pf_incidence/1000000, label=dps_label3)) + 
 	geom_point() + 
 	geom_smooth(method='lm') + 
@@ -180,8 +176,8 @@ p3 = ggplot(dps[grepl('received',variable) & variable=='mean_RDT' & year==2017],
 	theme_bw()
 
 # comparison across all years
-p4 = ggplot(dps[grepl('received',variable) & grepl('mean',variable)], aes(y=value, 
-		x=pf_incidence)) + 
+p4 = ggplot(dps, aes(y=value, 
+		x=lag_pf_incidence)) + 
 	geom_point() + 
 	geom_smooth(method='lm', se=FALSE) + 
 	facet_grid(year~label, scales='free') + 
@@ -192,8 +188,8 @@ p4 = ggplot(dps[grepl('received',variable) & grepl('mean',variable)], aes(y=valu
 	theme_bw()
 	
 # comparison across all years
-p5 = ggplot(dps[grepl('received',variable) & grepl('mean',variable)], aes(y=value, 
-		x=(mean_newCasesMalariaSevere+mean_newCasesMalariaMild))) + 
+p5 = ggplot(dps, aes(y=value, 
+		x=(lag_mean_newCasesMalariaSevere+lag_mean_newCasesMalariaMild))) + 
 	geom_point() + 
 	geom_smooth(method='lm', se=FALSE) + 
 	facet_grid(year~label, scales='free') + 
@@ -202,6 +198,22 @@ p5 = ggplot(dps[grepl('received',variable) & grepl('mean',variable)], aes(y=valu
 		subtitle='Aggregated by DPS and Year', 
 		y='Number Distributed', x='Under-5 Incidence', color='Year') + 
 	theme_bw()
+	
+# rolling comparison
+p6 = list()
+i=1
+for (d in unique(dps$dps)) { 
+	p6[[i]] = ggplot(dps[dps==d], aes(y=value, x=year)) + 
+		geom_line(aes(color='Distributed Number'), size=1.5) + 
+		geom_line(aes(y=pf_incidence, color='Estimated Incidence'), size=1.5) +
+		geom_line(aes(y=mean_newCasesMalariaSevere+mean_newCasesMalariaMild, color='Reported Cases'), size=1.5) +
+		scale_color_manual(values=manColors) + 
+		facet_wrap(~label) + 
+		labs(title='Time Series of Commodity Distribution vs Incidence (Reported and Estimated)', 
+			subtitle=d, y='Number', x='') + 
+		theme_bw()
+	i=i+1
+}
 # ----------------------------------------------
 
 
@@ -213,5 +225,6 @@ p2
 p3
 p4
 p5
+for(i in seq(length(p6))) print(p6[[i]])
 dev.off()
 # --------------------------------
