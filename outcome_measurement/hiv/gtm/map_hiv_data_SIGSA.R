@@ -33,9 +33,10 @@ prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped
 outFile = paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/visualizations/SIGSA_hiv_test_2ndRound.pdf')
 mapping_dir = paste0(root, '/Project/Evaluation/GF/mapping/gtm/')
 
-
+# Read in file
 dt = readRDS(paste0(prep_dir, "hiv_sigsa_data_prepped.rds"))
 
+# Count how many people attended clinic
 dt$attended_clinic = 1
 
 mapping_data = dt[,.(date, municipality, hospital_department, sex, sexual_orientation, risk_condition_eng, attended_clinic,  completed_hiv_screening_test, hiv_screening_result)]

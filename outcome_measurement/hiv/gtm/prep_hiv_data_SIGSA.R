@@ -51,17 +51,21 @@ new_names = c("year", "month", "hospital_department", "hospital_health_district"
 
 names(total_data) = new_names
 
+# Remove first and last 3 rows 
+total_data = total_data[-(1:3), , drop = FALSE] 
+total_data = total_data[1:(nrow(total_data) - 3),, drop = FALSE]
+
+#create a unique anonymus identifier
+dt_unique = unique(total_data[,"identifier"])
+dt_unique$id = row(dt_unique)
+total_data = merge(total_data, dt_unique, by = "identifier")
+
 # Drop columns of personal identifying information
 total_data$birth_municipality = NULL
 total_data$birth_department = NULL
 total_data$identifier = NULL
 
-# Remove first and last 3 rows 
-total_data = total_data[-(1:3), , drop = FALSE] 
-total_data = total_data[1:(nrow(total_data) - 3),, drop = FALSE]
-
-
-# Translate data that we wil be using
+# Translate data that we wil be using to English
 reason_eng = translate_data[1:14]
 risk_eng = translate_data[16:24]
 setnames(risk_eng, old = c("reason_for_visit", "reason_for_visit_eng"), new = c("risk_condition", "risk_condition_eng"))
@@ -75,8 +79,16 @@ total_data = merge(total_data, preg_eng, by = "pregnancy_stage")
 #Replace "-" with NAs
 total_data = total_data[, lapply(.SD, function(x) replace(x, which(x=='-'), NA))]
 
-# Create date variable
+# Create date variable and calculate age
 total_data$date <- as.Date(with(total_data, paste(year, month, "1",sep="-")), "%Y-%m-%d")
+total_data$birth_date <- as.Date(paste0(total_data$birth_year, "-", total_data$birth_month, "-", total_data$birth_day))
+total_data$age <-  as.integer((total_data$date - total_data$birth_date) / 365)
+
+# Drop age identifying columns
+total_data$birth_day = NULL
+total_data$birth_month = NULL
+total_data$birth_year = NULL
+total_data$birth_date = NULL
 
 # Prep for mapping
 total_data$completed_hiv_screening_test = gsub("Si", "Yes", total_data$completed_hiv_screening_test)
@@ -86,10 +98,14 @@ total_data$reason_for_visit = NULL
 total_data$pregnancy_stage = NULL
 total_data$risk_condition = NULL
 
+# Find facility level for each facility
+total_data$level = ifelse(grepl("Hospital", total_data$service_type), 3,
+                          ifelse(grepl("Centro", total_data$service_type), 2, 
+                                 ifelse(grepl("Maternidad", total_data$service_type), 2, 1)))
 
-# Write csv to folderpath
+
+# Write csv & RDS to folderpath
 write.csv(total_data, paste0(prep_dir, "hiv_sigsa_data_prepped.csv"), row.names = FALSE)
-
 saveRDS(total_data, paste0(prep_dir, "hiv_sigsa_data_prepped.rds"))
 
 #### Let's Graph These ####

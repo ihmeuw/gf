@@ -250,6 +250,7 @@ totalFgh$country = mapply(get_country_name, totalFgh$loc_name)
 totalFgh$fileName = ifelse(totalFgh$disease == "hiv", "gpr_corrected_final_gbd4.csv", "ihme_dah_cod_uga_gtm_1990_2016.csv")
 totalFgh$sda_activity <- "Unspecified (Summary budget)"
 totalFgh$loc_name = tolower(totalFgh$loc_name)
+totalFgh = totalFgh[!grep("total_", gf_module)]
 
 # ----------------------------------------------
 # export the FGH data 
