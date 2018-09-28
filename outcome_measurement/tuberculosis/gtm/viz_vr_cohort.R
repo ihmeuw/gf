@@ -244,7 +244,8 @@ full[,mort_rate:=deaths/population*100000]
 mort <- full[, .(year_id, cause, mort_rate, source)]
 write.csv(mort, file=paste0(out_dir,'mort_vr_cohort.csv'))
 
-
+mort <- read.csv(paste0(out_dir, "mort_vr_cohort.csv"))
+mort <- as.data.table(mort)
 ##Plotting------------------------------------------------------------------------------------------------------
 
 #Remove all forms to simplify the plot
@@ -252,8 +253,13 @@ mort_simple <- mort[cause!='All Forms',]
 deaths_simple <-deaths[cause!='All Forms',]
 
 p1 <- ggplot (data=mort_simple, aes(x=year_id, y=mort_rate, colour=cause, linetype=source))+
-  geom_line()+
-  labs(x="Year", y="Mortality rate", title="TB and TB/HIV mortality rates per 100,000 population in Guatemala")
+  geom_line(size=1.5)+
+  labs(x="Year", y="Mortality rate", title="TB and TB/HIV mortality rates per 100,000 population in Guatemala",
+       color="Cause", linetype="Source") +
+  theme_bw() +
+  theme(axis.text=element_text(size=14),axis.title=element_text(size=15), legend.title=element_text(size=16), 
+        legend.text =element_text(size=14), plot.title = element_text(size=18)) +
+  scale_linetype_manual(values=c("solid", "twodash", "dotted"))
 p1
 
 p2 <- ggplot (data=deaths_simple, aes(x=year_id, y=deaths, colour=cause, linetype=source))+
