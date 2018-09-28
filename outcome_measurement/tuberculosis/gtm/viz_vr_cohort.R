@@ -253,7 +253,7 @@ mort_simple <- mort[cause!='All Forms',]
 deaths_simple <-deaths[cause!='All Forms',]
 
 p1 <- ggplot (data=mort_simple, aes(x=year_id, y=mort_rate, colour=cause, linetype=source))+
-  geom_line(size=1.5)+
+  geom_line(size=1.2)+
   labs(x="Year", y="Mortality rate", title="TB and TB/HIV mortality rates per 100,000 population in Guatemala",
        color="Cause", linetype="Source") +
   theme_bw() +
