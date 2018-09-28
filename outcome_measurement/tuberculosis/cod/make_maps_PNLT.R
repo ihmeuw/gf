@@ -11,6 +11,8 @@ library(rgeos)
 library(data.table)
 library(ggplot2)
 library(maptools)
+setwd('C:/local/gf/')
+source('./core/standardizeDPSnames_function.R')
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -47,24 +49,22 @@ dt <- as.data.table(dt)
 # ----------------------------------------------
 
 # ----------------------------------------------
-## change dps names so that matching on dps name works correctly
+# fortify the shapefile to get coordinates and convert it to a data table / standardize dps names for merging
 # ----------------------------------------------
-# ********NOTE: these don't save properly because of the weird characters, so you have to re-copy and paste the names
 coordinates = as.data.table(fortify(drcShape, region='NAME_1'))
-coordinates$id <- gsub("Bas-Uélé", "Bas-Uele", coordinates$id)
-coordinates$id <- gsub("�???equateur", "Equateur", coordinates$id) #re-copy and paste this one
-coordinates$id <- gsub("Haut-Uélé", "Haut-Uele", coordinates$id)
-coordinates$id <- gsub("Kasaï", "Kasai", coordinates$id)
-coordinates$id <- gsub("Kasaï-Central", "Kasai Central", coordinates$id)
-coordinates$id <- gsub("Kasaï-Oriental", "Kasai Oriental", coordinates$id)
-coordinates$id <- gsub("Maï-Ndombe", "Mai-Ndombe", coordinates$id)
+coordinates$id <- standardizeDPSnames(coordinates$id)
+# this name doesn't save properly so you may have to re-copy and paste the name from the shapefile
+coordinates$id <- gsub("�???equateur", "equateur", coordinates$id)
 
-coordinates$id <- tolower(coordinates$id)
-# ----------------------------------------------  
-
-# ----------------------------------------------  
-id_vars <- c("dps")
 dt$dps <- as.character(dt$dps)
+dt$dps <- standardizeDPSnames(dt$dps)
+#-------> look into why this is an issue ?
+dt$dps <- gsub("eequateur", "equateur", dt$dps)
+# ----------------------------------------------
+
+# ---------------------------------------------- 
+dt$X <- NULL
+id_vars <- c("dps", "quarter", "TB_type", "data_year", "file_year", "sheet")
 
 # add healed and treatment completed to get treatment completed
 dt[is.na(healed), healed:= 0]
@@ -73,7 +73,17 @@ dt[is.na(trt_complete), trt_complete:= 0]
 dt[, trt_complete:= healed + trt_complete]
 dt[, healed:=NULL]
 
-dt[, trt_comp_ratio:= trt_complete/cas_eval]
+dt[, trt_comp_ratio:= trt_complete/cas_eval] # is this right for treatment completion ratio?
+
+# melt dt
+dt_long <- melt.data.table(dt, id.vars= id_vars , variable.name = "case_outcome", variable.factor = FALSE)
+
+# combine kongo-central-est and kongo-central-ouest into kongo-central
+dt_long[dps=="kongo-central-est", dps:="kongo-central"]
+dt_long[dps=="kongo-central-ouest", dps:="kongo-central"]
+
+dt_long[, value:= sum(value, na.rm=T), by=c(id_vars, 'case_outcome')]
+dt_long <- unique(dt_long)
 
 # #combine kongo-central-est and kongo-central-ouest into kongo-central
 # dt_kongo <- dt[dps %in% c("kongo-central-est", "kongo-central-ouest"), lapply(.SD,sum, na.rm=T), .SDcols = colnames(dt)[3:50]]
@@ -91,9 +101,9 @@ dt[, trt_comp_ratio:= trt_complete/cas_eval]
 # test <- rbindlist(list(dt_kongo, dt), fill=TRUE)
 # ----------------------------------------------------------------------
 # Set up to graph
-graphData <- merge(coordinates, dt, by.x='id', by.y='dps', all=TRUE, allow.cartesian=TRUE)
+graphData <- merge(coordinates, dt_long, by.x='id', by.y='dps', all=TRUE, allow.cartesian=TRUE)
 
-  plot <- ggplot() + geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=trt_comp_ratio)) + 
+  plot <- ggplot() + geom_polygon(data=graphData[case_outcome=="trt_comp_ratio",], aes(x=long, y=lat, group=group, fill=case_outcome)) + 
              coord_equal() + ##so the two shapefiles have the same proportions 
              geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
              # geom_map(map=admin_dataset, data=admin_dataset,
