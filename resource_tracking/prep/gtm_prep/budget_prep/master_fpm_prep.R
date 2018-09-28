@@ -103,6 +103,7 @@ for(i in 1:length(file_list$file_name)){
   }
   tmpData$loc_name <- loc_name
   tmpData$data_source <- file_list$data_source[i]
+  tmpData$fileName <- file_list$file_name[i]
   
   message(paste(i, "colNames: ", length(colnames(tmpData))))
   
@@ -218,6 +219,8 @@ mappedGtm <- merge(gtm_init_mapping, final_mapping, by="code")
 mappedGtm$budget <- mappedGtm$budget*mappedGtm$coefficient
 mappedGtm$expenditure <- mappedGtm$expenditure*mappedGtm$coefficient
 mappedGtm$disbursement <- mappedGtm$disbursement*mappedGtm$coefficient
+
+mappedGtm$sda_activity <- ifelse(tolower(mappedGtm$sda_activity) == "all" | mappedGtm$sda_activity == "0", "Unspecified (Summary budget)", mappedGtm$sda_activity)
 
 # ----------------------------------------------
 ##Optional: sum to make sure that budget numbers aren't dropped:

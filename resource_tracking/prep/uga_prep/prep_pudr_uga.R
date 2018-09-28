@@ -80,6 +80,36 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset$intervention <- "All" 
       budget_dataset$disbursement <- 0 
       budget_dataset$description = NULL
+    } else if (inFile == "pudrs/LFA reviewed UGA-T-MOFPED PUDR PE 31Dec2015_final.xlsx"){
+      colnames(gf_data)[1] <- "description"
+      colnames(gf_data)[2] <- "module"
+      colnames(gf_data)[3] <- "budget"
+      colnames(gf_data)[5] <- "expenditure"
+      gf_data <- gf_data[c(grep("module", tolower(gf_data$description)):grep(0, tolower(gf_data$module))),]
+      budget_dataset <- gf_data[, c("module", "budget", "expenditure"),with=FALSE]
+      budget_dataset<- budget_dataset[!is.na(budget_dataset$module),]
+      budget_dataset$recipient <- recipient
+      budget_dataset$disbursement <- 0
+      
+      #This one has Module and intervention combined -- cleaning it up!
+      budget_dataset$module = ifelse(budget_dataset$module == "TB/HIV - Community TB care delivery", "TB/HIV - Community TB/HIV care delivery",  budget_dataset$module)
+      dt_budge = budget_dataset[substring(budget_dataset$module, 1, 2) != "MD" & substring(budget_dataset$module, 1, 2) != "HS" & substring(budget_dataset$module, 1, 2) != "Co"]
+      dt_budge = separate(data = dt_budge, col = module, into = c("module", "intervention"), sep = "-")
+      dt_budge_1 = budget_dataset[substring(budget_dataset$module, 1, 2) == "MD"]
+      dt_budge_1$intervention = substring(dt_budge_1$module, 9, nchar(dt_budge_1$module))
+      dt_budge_1$module = "MDR-TB"
+      dt_budge_2 = budget_dataset[substring(budget_dataset$module, 1, 2) == "HS"]
+      dt_budge_2$intervention = substring(dt_budge_2$module, 44, nchar(dt_budge_2$module))
+      dt_budge_2$module = "HSS - Health information systems and M&E"
+      dt_budge_3 = budget_dataset[substring(budget_dataset$module, 1, 2) == "Co"]
+      dt_budge_3$intervention = ifelse(substring(dt_budge_3$module, 35, 43) == "Community", "Community-based monitoring for accountability", "Social mobilization, building community linkages, collaboration and coordination" )
+      dt_budge_3$module = "Community systems strengthening"
+      budget_dataset = rbind(dt_budge, dt_budge_1, dt_budge_2, dt_budge_3)
+      
+      #budget_dataset$intervention <- "All" ## change if we ever get more detailed PUDR info
+      ## drop 1st row since it doesn't contain any useful inforamtion:  
+      budget_dataset <- budget_dataset[-1, ,drop = FALSE]
+      
     } else {  ##change this if we get a new PUDR that doesn't fit any of these three 
     colnames(gf_data)[1] <- "description"
     colnames(gf_data)[2] <- "module"
@@ -102,6 +132,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   budget_dataset$cost_category <- "all" ## change if we ever get more detailed PUDR info
   budget_dataset$grant_number <- grant
   budget_dataset$year <- year(budget_dataset$start_date)
+  is.na(budget_dataset$budget) <- 0
 
   # return prepped data
   return(budget_dataset)

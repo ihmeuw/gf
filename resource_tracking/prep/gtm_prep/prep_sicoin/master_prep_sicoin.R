@@ -88,6 +88,7 @@ for(i in 1:length(file_list$file_name)){
   } else if (file_list$format[i]=="report"){
     tmpData <- prep_report_sicoin(as.character(paste0(dir,file_list$file_path[i],file_list$file_name[i])), ymd(file_list$start_date[i]), file_list$disease[i], file_list$period[i], file_list$source[i])
   }
+  tmpData$fileName =  file_list$file_name[i]
   if(i==1){
   resource_database = tmpData
   }
@@ -191,7 +192,7 @@ mapped_sicoin$budget <- mapped_sicoin$budget*mapped_sicoin$coefficient
 mapped_sicoin$expenditure <- mapped_sicoin$expenditure*mapped_sicoin$coefficient
 mapped_sicoin$disbursement <- mapped_sicoin$disbursement*mapped_sicoin$coefficient
 mapped_sicoin$cost_category <- "all"
-mapped_sicoin$sda_activity <- "all"
+mapped_sicoin$sda_activity <- "Unspecified (Summary budget)"
 mapped_sicoin$grant_number <- "none"
 mapped_sicoin$country <- "Guatemala"
 mapped_sicoin$recipient <- mapped_sicoin$country
@@ -199,6 +200,7 @@ mapped_sicoin$data_source <- "sicoin"
 mapped_sicoin$lang <- "esp"
 mapped_sicoin$year <- year(mapped_sicoin$start_date)
 mapped_sicoin$grant_number <- "none"
+mapped_sicoin$loc_name = "gtm"
 
 mapped_sicoin$financing_source = ifelse(mapped_sicoin$financing_source == "donacions", "other_dah", as.character(mapped_sicoin$financing_source))
 # data_check1 <- sicoin_data[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]

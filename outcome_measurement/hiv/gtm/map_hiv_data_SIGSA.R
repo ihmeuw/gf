@@ -69,7 +69,7 @@ mapping_data = unique(mapping_data)
 mapping_long = melt(mapping_data, id.vars = c('date', 'municipality', 'hospital_department', 'sex', 'sexual_orientation', 'risk_condition_eng'))
 
 mapping_long$isMSM = ifelse(mapping_long$sex == "Masculino" & (mapping_long$sexual_orientation == 'Homosexual' | mapping_long$sexual_orientation == 'Bisexual'), 1, 0)
-
+mapping_long$isTrans = ifelse(mapping_long$sexual_orientation == "Trans", 1, 0)
 
 #### R Code for making Maps pretty ####
 ratio_colors <- brewer.pal(8, 'Spectral')
@@ -141,6 +141,99 @@ graphData$group = as.character(graphData$group)
 # 
 # ####Let's make some graphs ####
 
+
+list_of_plots = NULL
+i=1
+
+dt_lgbt_status = mapping_long[, sum(value, na.rm = TRUE), by=.(date, variable, sexual_orientation, risk_condition_eng)]
+#pc0 = ggplot(dt_lgbt_status[variable == "attended_clinic" | variable == "completedTest"], aes(y=V1, x=date, color = variable)) + 
+
+for(s in unique(dt_lgbt_status$risk_condition_eng)) {
+  # look up district name
+  name <- unique(mapping_long[risk_condition_eng==s]$risk_condition_eng)
+  
+  # make your graph
+  
+  list_of_plots[[i]] <-  ggplot(dt_lgbt_status[(variable == "attended_clinic" | variable == "completedTest") & risk_condition_eng== s], aes(y=as.integer(V1), x=date, color = variable)) +
+    geom_point() +
+    geom_line(alpha=0.5) +
+    facet_wrap(~sexual_orientation, scales='free_y') +
+    theme_bw() + labs(title=name, x='Date', y='Count', color='Risk_Condition')
+  
+  
+  i=i+1
+  
+}
+
+pdf("/home/j/Project/Evaluation/GF/outcome_measurement/gtm/visualizations/SIGSA_hiv_test_3rdRound.pdf", height=6, width=9)
+
+for(i in seq(length(list_of_plots))) {
+  print(list_of_plots[[i]])
+}
+dev.off()
+
+list_of_plots = NULL
+i=1
+
+dt_sex_status = mapping_long[, sum(value, na.rm = TRUE),by=.(date, variable, sexual_orientation, risk_condition_eng, sex)]
+
+for(s in unique(dt_sex_status$risk_condition_eng)) {
+  # look up district name
+  name <- unique(dt_sex_status[risk_condition_eng==s]$risk_condition_eng)
+  
+  # make your graph
+  
+  list_of_plots[[i]] <-  ggplot(dt_sex_status[variable == "completedTest" & risk_condition_eng == s], aes(y=as.integer(V1), x=date, color = sex)) +
+    geom_point() +
+    geom_line(alpha=0.5) +
+    facet_wrap(~sexual_orientation, scales='free_y') +
+    theme_bw() + labs(title=name, x='Date', y='Count', color='Sex')
+  
+  
+  i=i+1
+  
+}
+
+pdf("/home/j/Project/Evaluation/GF/outcome_measurement/gtm/visualizations/SIGSA_hiv_test_5thRound_bySex.pdf", height=6, width=9)
+
+for(i in seq(length(list_of_plots))) {
+  print(list_of_plots[[i]])
+}
+dev.off()
+
+
+list_of_plots = NULL
+i=1
+
+#dt_lgbt_status = mapping_long[, sum(value, na.rm = TRUE), by=.(date, variable, sexual_orientation, risk_condition_eng)]
+#pc0 = ggplot(dt_lgbt_status[variable == "attended_clinic" | variable == "completedTest"], aes(y=V1, x=date, color = variable)) + 
+
+for(s in unique(dt_lgbt_status$risk_condition_eng)) {
+  # look up district name
+  name <- unique(mapping_long[risk_condition_eng==s]$risk_condition_eng)
+  
+  # make your graph
+  
+  list_of_plots[[i]] <-  ggplot(dt_lgbt_status[(variable == "completedTest" | variable == "isPosTest") & risk_condition_eng== s], aes(y=as.integer(V1), x=date, color = variable)) +
+    geom_point() +
+    geom_line(alpha=0.5) +
+    facet_wrap(~sexual_orientation, scales='free_y') +
+    theme_bw() + labs(title=name, x='Date', y='Count', color='Risk_Condition')
+  
+  
+  i=i+1
+  
+}
+
+pdf("/home/j/Project/Evaluation/GF/outcome_measurement/gtm/visualizations/SIGSA_hiv_test_4thRound.pdf", height=6, width=9)
+
+for(i in seq(length(list_of_plots))) {
+  print(list_of_plots[[i]])
+}
+dev.off()
+
+
+
 # TOTAL POPULATION
 mapping_long = mapping_long[year(date) != "2014"]
 dt_total_pop = mapping_long[, sum(value, na.rm = TRUE), by=.(date, variable)]
@@ -151,9 +244,24 @@ pa0 = ggplot(dt_total_pop[variable == "attended_clinic" | variable == "completed
        y='Count', x='') + 
   theme_bw()  
 
+dt_MSM_pop = mapping_long[isMSM == 1, sum(value, na.rm = TRUE), by=.(date, variable)]
+pMSM = ggplot(dt_MSM_pop[variable == "attended_clinic" | variable == "completedTest"], aes(y=V1, x=date, color = variable)) + 
+  geom_line() +
+  geom_point(size=1, color='grey45') + 
+  labs(title='Number of MSM Patients over Time', 
+       y='Count', x='') + 
+  theme_bw()  
+
+dt_Trans_pop = mapping_long[sexual_orientation == "Trans", sum(value, na.rm = TRUE), by=.(date, variable)]
+pTrans = ggplot(dt_Trans_pop[variable == "attended_clinic" | variable == "completedTest"], aes(y=as.integer(V1), x=date, color = variable)) + 
+  geom_line() +
+  geom_point(size=1, color='grey45') + 
+  labs(title='Number of Transgender Patients over Time', 
+       y='Count', x='') + 
+  theme_bw()  
 
 dt_total_percent = unique(mapping_long[variable == "percentTestdate", .(date, variable, value)])
-pa1 = ggplot(dt_total_percent, aes(y=value, x=date)) + 
+pa1 = ggplot(dt_total_percent, aes(y=value * 100, x=date)) + 
   geom_line() +
   geom_point(size=1, color='grey45') + 
   labs(title='Percent(%) of Patients who Completed HIV Tests', 
@@ -161,16 +269,16 @@ pa1 = ggplot(dt_total_percent, aes(y=value, x=date)) +
   theme_bw()  
 
 dt_total_percent_pos = unique(mapping_long[variable == "percentPosdate", .(date, variable, value)])
-pa2 = ggplot(dt_total_percent_pos, aes(y=value, x=date)) + 
+pa2 = ggplot(dt_total_percent_pos, aes(y=value * 100, x=date)) + 
   geom_line() +
   geom_point(size=1, color='grey45') + 
   labs(title='Percent (%) of Patients who tested Positive(+) for HIV', 
-       y='Count', x='') + 
+       y='Percent (%)', x='') + 
   theme_bw()  
 
 # BY KVP
 dt_risk_group = mapping_long[, sum(value, na.rm = TRUE), by=.(date, variable, risk_condition_eng)]
-pb0 = ggplot(dt_risk_group[variable == "attended_clinic" | variable == "completedTest"], aes(y=V1, x=date, color = variable)) + 
+pb0 = ggplot(dt_risk_group[variable == "attended_clinic" | variable == "completedTest"], aes(y=as.integer(V1), x=date, color = variable)) + 
   geom_line() +
   geom_point(size=1, color='grey45') + 
   facet_wrap(~risk_condition_eng,  scales='free_y')+
@@ -179,7 +287,7 @@ pb0 = ggplot(dt_risk_group[variable == "attended_clinic" | variable == "complete
   theme_bw()  
 
 dt_risk_percent = unique(mapping_long[variable == "percentTestrisk", .(date, variable, value, risk_condition_eng)])
-pb1 = ggplot(dt_risk_percent, aes(y=value, x=date)) + 
+pb1 = ggplot(dt_risk_percent, aes(y=value * 100, x=date)) + 
   geom_line() +
   geom_point(size=1, color='grey45') + 
   facet_wrap(~risk_condition_eng,  scales='free_y')+
@@ -188,7 +296,7 @@ pb1 = ggplot(dt_risk_percent, aes(y=value, x=date)) +
   theme_bw()  
 
 dt_risk_percent_pos = unique(mapping_long[variable == "percentPosrisk", .(date, variable, value, risk_condition_eng)])
-pb2 = ggplot(dt_risk_percent_pos, aes(y=value, x=date)) + 
+pb2 = ggplot(dt_risk_percent_pos, aes(y=value * 100, x=date)) + 
   geom_line() +
   geom_point(size=1, color='grey45') + 
   facet_wrap(~risk_condition_eng,  scales='free_y')+
@@ -200,7 +308,7 @@ pb2 = ggplot(dt_risk_percent_pos, aes(y=value, x=date)) +
 ## BY LGBT STATUS
 
 dt_lgbt_status = mapping_long[, sum(value, na.rm = TRUE), by=.(date, variable, sexual_orientation)]
-pc0 = ggplot(dt_lgbt_status[variable == "attended_clinic" | variable == "completedTest"], aes(y=V1, x=date, color = variable)) + 
+pc0 = ggplot(dt_lgbt_status[variable == "attended_clinic" | variable == "completedTest"], aes(y=as.integer(V1), x=date, color = variable)) + 
   geom_line() +
   geom_point(size=1, color='grey45') + 
   facet_wrap(~sexual_orientation,  scales='free_y')+
@@ -210,7 +318,7 @@ pc0 = ggplot(dt_lgbt_status[variable == "attended_clinic" | variable == "complet
 
 
 dt_lgbt_percent = unique(mapping_long[variable == "percentTestlgbt", .(date, variable, value, sexual_orientation)])
-pc1 = ggplot(dt_lgbt_percent, aes(y=value, x=date)) + 
+pc1 = ggplot(dt_lgbt_percent, aes(y=value * 100, x=date)) + 
   geom_line() +
   geom_point(size=1, color='grey45') + 
   facet_wrap(~sexual_orientation,  scales='free_y')+
@@ -219,7 +327,7 @@ pc1 = ggplot(dt_lgbt_percent, aes(y=value, x=date)) +
   theme_bw()  
 
 dt_lgbt_percent_pos = unique(mapping_long[variable == "percentPoslgbt", .(date, variable, value, sexual_orientation)])
-pc2 = ggplot(dt_lgbt_percent_pos, aes(y=value, x=date)) + 
+pc2 = ggplot(dt_lgbt_percent_pos, aes(y=value * 100, x=date)) + 
   geom_line() +
   geom_point(size=1, color='grey45') + 
   facet_wrap(~sexual_orientation,  scales='free_y')+

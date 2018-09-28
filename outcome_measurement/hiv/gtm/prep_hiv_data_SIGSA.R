@@ -216,9 +216,7 @@ pB = ggplot(unique(mapping_data_sub[sexual_orientation != "Heterosexual" & sexua
   facet_wrap(~sexual_orientation)+
   theme_bw() 
 
-dt <- total_data[ ,.(completed_hiv_screening_test, hiv_screening_result, hiv_confirm_test_result), by=.(date, )]
 
-dt <- dt_sub[ ,.()]
 
 ggplot(dt, aes(y=attendance_by_orientation, x=date, colour=sexual_orientation)) + 
   geom_line()+

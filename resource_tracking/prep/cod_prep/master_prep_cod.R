@@ -28,10 +28,12 @@ library(zoo)
 loc_name <- 'cod' ##use the ISO3 country code for DRC
 implementer <- "CAGF"
 export_dir <- "where you want the final dataset to live"
+export_dir <- "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/"
 # ----------------------------------------------
 ###### source the functions that we need 
 # ----------------------------------------------
 prep_dir <- "your local repo + gf/resource_tracking/prep/"
+prep_dir <- "H:/gf/resource_tracking/prep/"
 
 source(paste0(prep_dir, "cod_prep/prep_detailed_budget.R"))
 source(paste0(prep_dir, "cod_prep/prep_summary_budget.R"))
@@ -111,6 +113,7 @@ for(i in 1:length(file_list$file_name)){
     tmpData$data_source <- file_list$data_source[i]
   }
   tmpData$financing_source <- "gf"
+  tmpData$fileName = file_list$file_name[i]
   if(i==1){
     resource_database = tmpData
   } 
@@ -245,6 +248,9 @@ mappedCod$disbursement <- mappedCod$disbursement*mappedCod$coefficient
 mappedCod$adm1 <- 171
 mappedCod$adm2 <- 171
 mappedCod$country <- "Congo (Democratic Republic)"
+mappedCod$loc_name = 'cod'
+
+mappedCod$sda_activity <- ifelse(tolower(mappedCod$sda_activity) == "all" | mappedCod$sda_activity == "0", "Unspecified (Summary budget)", mappedCod$sda_activity)
 
 
 # ----------------------------------------------
