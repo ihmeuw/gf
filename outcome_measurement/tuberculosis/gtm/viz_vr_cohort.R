@@ -12,16 +12,18 @@
 rm(list=ls())
 library(data.table)
 library(ggplot2)
-
+library(readxl)
 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') # have to declare the J Drive differently on the cluster 
 vr_dir <-  ('/ihme/geospatial/vr_prep/cod/outputs/gtm_collaborators/')
 cohort_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
 out_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
+who_dir <- paste0(j, 'Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/WHO/')
 
 vrData <- data.table(fread(paste0(vr_dir, "formatted_20180716.csv")))
 redistVR <- data.table(fread(paste0(vr_dir, "redistribution_20180716.csv")))
 cohort <- data.table(fread(paste0(cohort_dir, "GTM - Tx cohort data 2012-2016.csv")))
+who_estimates <- data.table(read_excel(paste0(who_dir, 'WHO_gtm_burden_2018.xlsx')))
 
 ## subset TB deaths from the formatted VR data that has not been redistributed
 #The following codes all map to cause_id 934 (drug-susceptible TB) except for 104471, which maps to 946 (MDR-TB), but this 
@@ -252,15 +254,72 @@ mort <- as.data.table(mort)
 mort_simple <- mort[cause!='All Forms',]
 deaths_simple <-deaths[cause!='All Forms',]
 
-p1 <- ggplot (data=mort_simple, aes(x=year_id, y=mort_rate, colour=cause, linetype=source))+
-  geom_line(size=1.2)+
-  labs(x="Year", y="Mortality rate", title="TB and TB/HIV mortality rates per 100,000 population in Guatemala",
-       color="Cause", linetype="Source") +
+#------------  One version of the graph:  ------------#
+#------------    TB and TB/HIV faceted    ------------#
+
+# set up who_estimates for graphing
+who_estimates <- who_estimates[, .(year, e_mort_exc_tbhiv_100k, e_mort_exc_tbhiv_100k_lo, e_mort_exc_tbhiv_100k_hi, e_mort_tbhiv_100k, e_mort_tbhiv_100k_lo, e_mort_tbhiv_100k_hi)]
+setnames(who_estimates, 'e_mort_exc_tbhiv_100k', 'e_mort_exc_tbhiv_100k_est')
+setnames(who_estimates, 'e_mort_tbhiv_100k', 'e_mort_tbhiv_100k_est')
+
+who_estimates <- melt(who_estimates, id.vars= "year")
+who_estimates$variable <- as.character(who_estimates$variable)
+who_estimates$variable <- gsub("exc_tbhiv", "tb", who_estimates$variable)
+who_estimates[, c("cause", "measure") := tstrsplit(variable, "_", keep=c(3, 5))]
+
+who_estimates[cause== 'tb', cause:= "TB"]
+who_estimates[cause== 'tbhiv', cause:= "TB/HIV"]
+
+who_estimates <- dcast.data.table(who_estimates, year + cause ~ measure, value.var = "value")
+who_estimates <- who_estimates[year >= 2009, ]
+colnames(who_estimates) <- c('year', 'cause', 'who_est', 'who_est_high', 'who_est_low')
+
+# merge who_estimates with mort_simple
+dt <- merge(mort_simple, who_estimates, by.x=c('year_id', 'cause'), by.y=c('year', 'cause'))
+
+p1 <- ggplot ()+
+  geom_line(data=dt, aes(x=year_id, y=mort_rate, colour=source), size=1) +  
+  
+  geom_line(data=dt, aes(x=year_id, y=who_est, color="WHO estimates"), size=1) +
+  geom_ribbon(data=dt, aes(x=year_id, ymin=who_est_low, ymax=who_est_high), alpha=0.1) +
+  
+  labs(x="Year", y="Mortality rate", title="TB and TB/HIV mortality rates per 100,000 population in Guatemala", color="Source") +
   theme_bw() +
   theme(axis.text=element_text(size=14),axis.title=element_text(size=15), legend.title=element_text(size=16), 
-        legend.text =element_text(size=14), plot.title = element_text(size=18)) +
-  scale_linetype_manual(values=c("solid", "twodash", "dotted"))
+        legend.text =element_text(size=14), plot.title = element_text(size=20)) +
+  scale_x_continuous(breaks= scales::pretty_breaks()) + 
+  facet_wrap( ~ cause) +
+  scale_color_manual( values=c("tomato", "steelblue1", "purple", "grey"))
 p1
+
+#------------ Another version of the graph: ------------#
+#-- TB and TB/HIV on the same graph, different linetypes --#
+
+mort_simple$variable <- paste(mort_simple$cause, mort_simple$source, sep=", ")
+who_estimates[, variable:= "WHO estimates"]
+
+p1 <- ggplot ()+
+  geom_line(data=mort_simple, aes(x=year_id, y=mort_rate, colour=variable, linetype=variable), size=1.2)+ 
+
+  geom_line(data=who_estimates[year>=2009,], aes(x=year, y=e_mort_exc_tbhiv_100k, color=variable, linetype=variable), size=1, alpha=0.5) +
+  geom_ribbon(data=who_estimates[year>=2009,],aes(x=year, ymin=e_mort_exc_tbhiv_100k_lo,ymax=e_mort_exc_tbhiv_100k_hi),alpha=0.1) +
+
+  geom_line(data=who_estimates[year>=2009,], aes(x=year, y=e_mort_tbhiv_100k, color=variable, linetype=variable), size=1, alpha=0.5) +
+  geom_ribbon(data=who_estimates[year>=2009,],aes(x=year, ymin=e_mort_tbhiv_100k_lo,ymax=e_mort_tbhiv_100k_hi),alpha=0.1) +
+
+  labs(x="Year", y="Mortality rate", title="TB and TB/HIV mortality rates per 100,000 population in Guatemala") +
+       # color="Cause", linetype="Source") +
+  theme_bw() +
+  theme(axis.text=element_text(size=14),axis.title=element_text(size=15), legend.title=element_text(size=16), 
+        legend.text =element_text(size=14), plot.title = element_text(size=20)) +
+  # scale_linetype_manual(values=c("solid", "longdash", "dotdash", "dotted")) +
+  scale_x_continuous(breaks= scales::pretty_breaks()) +
+  
+  scale_color_manual( values=c("tomato", "tomato", "tomato", "steelblue1", "steelblue1", "steelblue1", "black"), guide=guide_legend( nrow=3, byrow=F, title =  "Cause and Source" )) +
+  scale_linetype_manual( values=c("longdash", "dotdash",  "dotted", "longdash", "dotdash",  "dotted", "solid"), guide=guide_legend( nrow=3, byrow= F, title =  "Cause and Source" )) +
+  theme(plot.margin= unit(c(1,5,0.5,1), "cm"), legend.position="bottom", legend.direction= "vertical")
+p1
+#-----------------------------------------------------#
 
 p2 <- ggplot (data=deaths_simple, aes(x=year_id, y=deaths, colour=cause, linetype=source))+
   geom_line()+
