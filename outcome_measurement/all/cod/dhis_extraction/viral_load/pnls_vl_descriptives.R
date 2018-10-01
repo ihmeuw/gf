@@ -2,19 +2,21 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 9/24/2018
+# 10/1/2018
 # ----------------------------------------------
 
 # --------------------
 # Set up R
 rm(list=ls())
 library(data.table)
-library(jsonlite)
-library(httr)
 library(ggplot2)
 library(dplyr)
 library(openxlsx)
 library(stringr) 
+library(rgeos)
+library(raster)
+library(maptools)
+
 # --------------------
 
 #------------------------------------
@@ -30,6 +32,9 @@ vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
 
 #-------------------------------------------
 # VISUALIZATIONS
+
+# print a PDF of all of the visualizations
+pdf(file=paste0(dir, 'viral_load/viral_load.pdf'), width=9, height=6)
 
 #-------------------------
 # facilities reporting
@@ -103,10 +108,9 @@ ggplot(fac3[!is.na(level)], aes(x=date, y=facilities, color=level, group=level))
 
 tests_l = vl[ , .(value=sum(value)), by=.(date, variable, level)]
 
-ggplot(tests_l, aes(x=date, y=value, color=level, group=level)) +
+ggplot(tests_l[variable=='PLHIV who received a VL test' & !is.na(level)], aes(x=date, y=value, color=level, group=level)) +
   geom_point() +
   geom_line() +
-  facet_wrap(~variable) +
   labs(title='VL testing by health facility level', subtitle='Jan. 2017 - June 2018',
        caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
   theme_bw() 
@@ -173,7 +177,10 @@ prop1[variable=='PLHIV with undetectable VL', variable:='und']
 prop1 <- data.table(dcast(prop1, date + case ~ variable))
 prop1[ , ratio:=(100*(und/test))]
 prop1[ , und:=NULL]
-prop1 <- melt(prop, id.vars='date')
+prop1 <- melt(prop1, id.vars=c('date', 'case'))
+
+prop1$case = factor(prop1$case, c('Old', 'New'), c('Previously enrolled', 'Newly diagnosed'))
+
 
 ggplot(prop1, aes(x=date, y=value, color=case, group=case)) +
   geom_point() +
@@ -184,36 +191,106 @@ ggplot(prop1, aes(x=date, y=value, color=case, group=case)) +
   theme_bw() 
 
 #----------------------------------
-# group ratios
+# viral suppression ratios - old cases only 
+old = vl[case=='Old']
+old = old[, .(value=sum(value)), by=.(date, dps, mtk, variable)]
 
-und <- vl[variable=='PLHIV with undetectable VL']
+ggplot(old, aes(x=date, y=value, color=dps, group=dps)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~variable) +
+  theme_bw()
+
+ggplot(old[mtk=='Yes'], aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~dps, scales='free_y') +
+  theme_bw() 
+
+old1 = old[variable=='PLHIV who received a VL test', .(value=sum(value)), by=dps]
+old1[order(value, decreasing=T)]  
+old1 = old[dps=='Haut Katanga' | dps=='Kinshasa' |dps=='Lualaba' ]
+
+ggplot(old1, aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~dps, scales='free_y') +
+  theme_bw() +
+  labs(title='Received a VL test & undetectable results, Top 3 provinces for tests performed', x='Date', y='Count')
+
+
+ggplot(old[mtk=='Yes'], aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~dps, scales='free_y') +
+  theme_bw() 
+
+#-----------------------------------------------
+# viral suppression ratio
+und <- old[variable=='PLHIV with undetectable VL']
 setnames(und, 'value', 'und')
 und[ ,variable:=NULL]
 
-tests <- vl[variable=="PLHIV who received a VL test"]
+tests <- old[variable=="PLHIV who received a VL test"]
 setnames(tests, 'value', 'test')
 tests[ ,variable:=NULL]
 
-rat <- merge(und, tests, all=T)
+rat <- merge(und, tests, by=c('date', 'dps', 'mtk'), all=T)
+rat[ ,prop:=(100*und/test)]
 
-rat[is.na(und) & !is.na(test), length(unique(org_unit))]
+ggplot(rat, aes(x=date, y=prop, color=dps, group=dps)) +
+  geom_point() + 
+  geom_line() +
+  theme_bw() +
+  labs(title='Percent virally suppressed by DPS (missing if no VL tests performed)', x='Date', y='Percent(%)', color='DPS')
+
+rat2 = rat[dps=='Haut Katanga' | dps=='Kinshasa' |dps=='Lualaba' ]
+
+ggplot(rat2, aes(x=date, y=prop, color=dps, group=dps)) +
+  geom_point() + 
+  geom_line() +
+  theme_bw() +
+  labs(title='Percent virally suppressed by DPS', x='Date', y='Percent(%)', color='DPS')
+
+rat3 = rat2
+rat3 = rat3[dps=='Haut Katanga' | dps=='Kinshasa' |dps=='Lualaba']
+rat3[ ,und:=NULL]
+rat3 = melt(rat3, id.vars=c('date', 'dps', 'mtk'))
+
+rat3$variable = factor(rat3$variable, c('test', 'prop'), c('VL tests performed', 'Percent (%) with undetectable VL'))
+
+ggplot(rat3, aes(x=date, y=value, color=dps, group=dps)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~variable, scales='free_y') +
+  labs(x='Date', y='', color='DPS') +
+  theme_bw()
 
 
-prop1[variable=='PLHIV who received a VL test', variable:='test']
-prop1[variable=='PLHIV with undetectable VL', variable:='und']
-
-
-
-
-
-prop1 <- data.table(dcast(prop1, date + case ~ variable))
-prop1[ , ratio:=(100*(und/test))]
-prop1[ , und:=NULL]
-prop1 <- melt(prop, id.vars='date')
-
+dev.off()
 
 #-----------------------------------------
-# Maps
+# MAPS
+
+# import the shape file
+shapeData = shapefile(paste0(root, "Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/gadm36_COD_shp/gadm36_COD_1.shp"))
+class(shapeData)
+
+# plot the shape file in the base package
+plot(shapeData)
+
+# ----------------------------------------------
+# merge the data with the shape file
+
+# identify the variable that contains district names and codes
+shapeData@data %>% as_tibble()
+unique(shapeData@data$NAME_1)
+
+# create a data table that contains only district names and ids from the shape file
+shape_names <- data.table(dps_name=shapeData@data$NAME_1, id=shapeData@data$GID_1)
+str(shape_names)
+
+
 
 
 map <- vl[ ,.(value=sum(value)), by=.(dps, variable)]

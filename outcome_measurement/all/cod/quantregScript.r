@@ -33,7 +33,7 @@ nx = length(unique(subset$date))
 if(n>=3 & var!=0 & nx>=2) {  
   
   # run quantreg
-  quantFit <- rq(value~date, data=subset, tau=0.5)
+  quantFit <- rq(value~date+factor(group), data=subset, tau=0.5)
   summary(quantFit)
   
   # list the residuals and add them to the out file

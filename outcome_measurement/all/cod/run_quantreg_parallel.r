@@ -3,7 +3,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 9/19/2018
+# 10/1/2018
 # The current working directory should be the same as this script
 # ----------------------------------------------
 
@@ -11,11 +11,13 @@
 # Set up R
 rm(list=ls())
 library(data.table)
+library(quantreg)
 
 # --------------------
-# shell script to 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1327 -s 20 -P snis_prep
+# set the working directory in the qlogin
+
 # /ihme/code/ccarelli/gf/outcome_measurement/all/cod
+
 #------------------------------------
 # set working directories
 
@@ -35,20 +37,9 @@ resubmitAll = FALSE
 cleanup = TRUE
 
 #-----------------------------------
-# install quant reg and load
-
-# install.packages("quantreg", lib=paste0(dir, 'quantreg_5.36'))
-# library(SparseM, lib.loc=paste0(dir, '/quantreg_5.36/'))
-# library(quantreg, lib.loc=paste0(dir, '/quantreg_5.36/'))
-# ?rq
-
-#-------------------------------------
 # read in the subset of PNLS data specific to viral load 
 
-#vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls.rds'))
-
-
-# interim data set
+# data set with equality constraints checked and an entry for both tests/undetectable
 vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
 
 # make variable ids
