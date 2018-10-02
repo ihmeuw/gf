@@ -16,7 +16,10 @@ library(quantreg)
 # --------------------
 # set the working directory in the qlogin
 
-# /ihme/code/ccarelli/gf/outcome_measurement/all/cod
+# cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod
+
+# print the contents
+# ls
 
 #------------------------------------
 # set working directories

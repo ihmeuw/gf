@@ -279,9 +279,6 @@ class(shapeData)
 # plot the shape file in the base package
 plot(shapeData)
 
-# ----------------------------------------------
-# merge the data with the shape file
-
 # identify the variable that contains district names and codes
 shapeData@data %>% as_tibble()
 unique(shapeData@data$NAME_1)
@@ -290,10 +287,56 @@ unique(shapeData@data$NAME_1)
 shape_names <- data.table(dps_name=shapeData@data$NAME_1, id=shapeData@data$GID_1)
 str(shape_names)
 
+#---------------------------------------
+# create data sets to map
+
+# remove old cases and create a year variable
+vl = vl[case=='Old']
+vl[date < '2018-01-01', year:='2017']
+vl[date >= '2018-01-01', year:='2018']
+
+# tests by year
+map_yr <- vl[ ,.(value=sum(value)), by=.(dps, variable, year)]
+
+# tests by year by sex
+map_yr_sex <- vl[ ,.(value=sum(value)), by=.(dps, variable, year, sex)]
+
+# tests by year by group
+map_yr_group <- vl[ ,.(value=sum(value)), by=.(dps, variable, year, group)]
+
+# suppression ratio by year
+und = map_yr[variable=='PLHIV with undetectable VL']
+setnames(und, 'value', 'und')
+test = map_yr[variable=='PLHIV who received a VL test']
+setnames(test, 'value', 'test')
+und[,variable:=NULL]
+test[,variable:=NULL]
+
+map_yr_ratio = merge(und, test,all=T)
+map_yr_ratio[ ,ratio:=(100*und/test)]
+
+# suppression ratio by sex by year
+und = map_yr_sex[variable=='PLHIV with undetectable VL']
+setnames(und, 'value', 'und')
+test = map_yr_sex[variable=='PLHIV who received a VL test']
+setnames(test, 'value', 'test')
+und[,variable:=NULL]
+test[,variable:=NULL]
+
+map_yr_ratio_sex = merge(und, test,all=T)
+map_yr_ratio_sex[ ,ratio:=(100*und/test)]
 
 
 
-map <- vl[ ,.(value=sum(value)), by=.(dps, variable)]
+
+
+
+
+# suppression ratio by group by year
+
+
+
+
 
 
 
