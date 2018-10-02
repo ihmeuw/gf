@@ -47,5 +47,5 @@ if(n>=3 & var!=0 & nx>=2) {
 }
 
 # save
-print(paste0('Saving: ', paste0('/ihme/scratch/users/ccarelli/quantreg_output', i)))
-saveRDS(subset, paste0('/ihme/scratch/users/ccarelli/quantreg_output', i))
+print(paste0('Saving: ', paste0('/ihme/scratch/users/ccarelli/qr_results', i)))
+saveRDS(subset, paste0('/ihme/scratch/users/ccarelli/qr_results', i))
