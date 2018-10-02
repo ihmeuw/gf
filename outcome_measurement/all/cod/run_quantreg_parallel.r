@@ -14,7 +14,8 @@ library(data.table)
 library(quantreg)
 
 # --------------------
-# make sure /ihme/scratch/users/ccarelli/qr_results exists
+# make sure qr_results exists
+# cd /ihme/scratch/users/ccarelli/
 
 # set the working directory in the qlogin
 
@@ -62,7 +63,7 @@ for (e in unique(vl$element_id)) {
   for(o in unique(vl$org_unit_id)) { 
     
     # skip if this job has already run and resubmitAll is FALSE
-    if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/ccarelli/qr_results', i))) { 
+    if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i))) { 
        i=i+1
        next
     } else {
@@ -85,7 +86,7 @@ while(numFiles<i) {
 
 # collect all output into one data table
 for (j in seq(i)) {
-  tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results', j))
+  tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j))
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
   cat(j)
@@ -97,12 +98,12 @@ saveRDS(fullData, outFile)
 # clean up parallel files
 if (cleanup==TRUE) { 
   for (j in seq(i)) {
-    print(paste0('Deleting file /ihme/scratch/users/ccarelli/qr_results', j))
-    file.remove(paste0('/ihme/scratch/users/ccarelli/qr_results', j))
+    print(paste0('Deleting file /ihme/scratch/users/ccarelli/qr_results/quantreg_output', j))
+    file.remove(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j))
   }
   outputFiles = list.files(pattern='quantreg_output*')
   for(f in outputFiles) { 
-    print(paste0('Deleting file /ihme/scratch/users/ccarelli/qr_results', j))
+    print(paste0('Deleting file /ihme/scratch/users/ccarelli/qr_results/quantreg_output', j))
     file.remove(paste0(f))
   }
 }
