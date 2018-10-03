@@ -25,6 +25,7 @@ library(quantreg)
 # ls
 
 # once you navigate to the directory, git pull 
+# make sure you have pushed from github desktop
 # then call R
 
 # then source this script (located in your working directory)
@@ -40,7 +41,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 # output file
-outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/viral_load/quantreg_results.rds')
+outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/viral_load/outlier_screen/quantreg_results.rds')
 
 # whether or not to resubmit jobs that have completed already
 resubmitAll = FALSE
@@ -53,6 +54,10 @@ cleanup = TRUE
 
 # data set with equality constraints checked and an entry for both tests/undetectable
 vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
+
+# remove new cases (not of interest for outlier detection)
+vl = vl[case=='Old']
+vl[ , case:=NULL]
 
 # make variable ids
 vl[, element_id:=.GRP, by='variable']
