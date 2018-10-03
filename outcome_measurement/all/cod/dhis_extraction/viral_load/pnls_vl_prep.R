@@ -38,9 +38,9 @@ vl <- vl[support==FALSE]
 # merge subgroups to create distinct elements 
 
 # create stratifications by population
-vl[grep(element_eng, pattern='lactating'), group:='Lactating women']
-vl[grep(element_eng, pattern='pregnant'), group:='Pregnant women']
-vl[grep(element_eng, pattern='fe'), group:='Pregnant women']
+vl[grep(element_eng, pattern='lactating'), group:='Pregnant and lactating women']
+vl[grep(element_eng, pattern='pregnant'), group:='Pregnant and lactating women']
+vl[grep(element_eng, pattern='fe'), group:='Pregnant and lactating women']
 vl[grep(element_eng, pattern='initial'), group:='Initial test']
 vl[grep(element_eng, pattern='initiation'), group:='Initial test']
 vl[grep(element_eng, pattern='6'), group:='After 6 months']
@@ -67,23 +67,18 @@ vl[grep(element_eng, pattern='received'), variable:='PLHIV who received a VL tes
 vl[grep(element_eng, pattern='undetectable'), variable:='PLHIV with undetectable VL']
 
 #-----------------------
-# remove facilities that only reported 0 tests performed
-zeroes = vl[variable=='PLHIV who received a VL test',.(total=sum(value)), by=org_unit]
-zeroes = zeroes[total > 0]
-org_0s = zeroes$org_unit
-
-vl = vl[org_unit %in% org_0s]
-
-#-----------------------
 # restrcture the data to have two variables and associated risk groups
 # do not lose any values (same number of unique rows)
 
 vl = vl[  ,.(value=sum(value)), by=.(variable, 
-              date, org_unit_id, org_unit,level, 
-              health_zone, dps, mtk, group, case, sex)]
+                                     date, org_unit_id, org_unit,level, 
+                                     health_zone, dps, mtk, group, case, sex)]
 
 #-----------------------
 # drop any values that violate equality constraints
+
+# only undetectable results for MSM - drop out MSM
+vl = vl[group!='MSM']
 
 # create a new data set for each variable
 und <- vl[variable=='PLHIV with undetectable VL']
@@ -109,6 +104,14 @@ rat[variable=='test', variable:='PLHIV who received a VL test']
 
 # reassign the new data set to vl
 vl = rat
+
+#-----------------------
+# remove facilities that only reported 0 tests performed
+zeroes = vl[variable=='PLHIV who received a VL test',.(total=sum(value)), by=org_unit]
+zeroes = zeroes[total > 0]
+org_0s = zeroes$org_unit
+
+vl = vl[org_unit %in% org_0s]
 
 #------------------------
 # save the interim output to use for outlier removal

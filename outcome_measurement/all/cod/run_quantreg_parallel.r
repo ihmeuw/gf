@@ -26,6 +26,7 @@ library(quantreg)
 
 # once you navigate to the directory, git pull 
 # make sure you have pushed from github desktop
+
 # then call R
 
 # then source this script (located in your working directory)
