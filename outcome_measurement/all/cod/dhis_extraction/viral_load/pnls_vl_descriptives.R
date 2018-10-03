@@ -371,7 +371,7 @@ str(shape_names)
 udps = vl[ ,unique(dps)]
 udps = sort(udps)
 
-# dps in the data set
+# only 14 dps in the data set
 vl[dps=='Bas Uele', id:='COD.1_1']
 vl[dps=="Haut Katanga", id:='COD.3_1']
 vl[dps=="Haut Lomami", id:='COD.4_1']
@@ -396,14 +396,39 @@ vl = vl[case=='Old']
 vl[date < '2018-01-01', year:='2017']
 vl[date >= '2018-01-01', year:='2018']
 
+
+#-----------------------
+# counts 
+
 # tests by year
-map_yr <- vl[ ,.(value=sum(value)), by=.(dps, variable, year)]
+map_yr <- vl[ ,.(value=sum(value)), by=.(dps, id, variable, year)]
 
 # tests by year by sex
-map_yr_sex <- vl[ ,.(value=sum(value)), by=.(dps, variable, year, sex)]
+map_yr_sex <- vl[ ,.(value=sum(value)), by=.(dps, id, variable, year, sex)]
 
 # tests by year by group
-map_yr_group <- vl[ ,.(value=sum(value)), by=.(dps, variable, year, group)]
+map_yr_group <- vl[ ,.(value=sum(value)), by=.(dps, id, variable, year, group)]
+
+
+
+# use the fortify function to convert from spatialpolygonsdataframe to data.frame
+coordinates <- data.table(fortify(shapeData, region='dist112')) 
+coordinates[, id:=as.numeric(id)]
+
+# coordinates by year for faceting (repeat 5 times for 5 years of data)
+coordinates_ann <- rbind(coordinates, coordinates, coordinates, coordinates, coordinates)
+coordinates_ann[, year:=rep(2014:2018, each=nrow(coordinates))]
+
+# merge on district id - all time total, annual totals, sex stratified totals
+coordinates <- merge(coordinates, ratio_table, by="id", all.x=TRUE)
+coordinates_year <- merge(coordinates_ann, ratio_year, by=c('id', 'year'), all.x=TRUE)
+coordinates_female <- merge(coordinates_ann, ratio_female, by=c('id','year'), all.x=TRUE)
+coordinates_male <- merge(coordinates_ann, ratio_male, by=c('id','year'), all.x=TRUE)
+
+
+
+
+
 
 # suppression ratio by year
 und = map_yr[variable=='PLHIV with undetectable VL']
