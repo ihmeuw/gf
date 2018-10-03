@@ -17,6 +17,10 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # load the data
 vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
 
+# remove new cases (not of interest for outlier detection)
+vl = vl[case=='Old']
+vl[ , case:=NULL]
+
 # make variable ids
 vl[, element_id:=.GRP, by='variable']
 
