@@ -16,6 +16,7 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 # load the data
 vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
+vl = data.table(vl)
 
 # remove new cases (not of interest for outlier detection)
 vl = vl[case=='Old']
@@ -37,17 +38,17 @@ nx = length(unique(subset$date))
 if(n>=3 & var!=0 & nx>=2) {  
   
   # add fixed effect on group if more than one group exists
-  form = 'value~date'
-  if (length(unique(subset$group))>1) form = paste0(form, '+factor(group)')
-  form = as.formula(form)
-
-  # run quantreg
-  quantFit <- rq(form, data=subset, tau=0.5)
-  summary(quantFit)
+  # form = 'value~date'
+  # if (length(unique(subset$group))>1) form = paste0(form, '+factor(group)')
+  # form = as.formula(form)
+  # 
+  # # run quantreg
+  # quantFit <- rq(form, data=subset, tau=0.5)
+  # summary(quantFit)
   
   # run quantreg - no fixed effect on group
-  # quantFit <- rq(value~date, data=subset, tau=0.5)
-  # summary(quantFit)
+  quantFit <- rq(value~date, data=subset, tau=0.5)
+  summary(quantFit)
   
   # list the residuals and add them to the out file
   r <- resid(quantFit)

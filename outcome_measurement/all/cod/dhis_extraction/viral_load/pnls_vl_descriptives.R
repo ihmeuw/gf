@@ -36,6 +36,9 @@ vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
 # print a PDF of all of the visualizations
 pdf(file=paste0(dir, 'viral_load/viral_load.pdf'), width=9, height=6)
 
+# factor the variable so legends are in the correct order
+vl$variable = factor(vl$variable, c('PLHIV who received a VL test', 'PLHIV with undetectable VL'), c('PLHIV who received a VL test', 'PLHIV with undetectable VL'))
+
 #-------------------------
 # facilities reporting
 facilities <- vl[ ,.(facilities=length(unique(org_unit))), by=date]
@@ -108,22 +111,23 @@ ggplot(fac3[!is.na(level)], aes(x=date, y=facilities, color=level, group=level))
 
 tests_l = vl[ , .(value=sum(value)), by=.(date, variable, level)]
 
+# tests performed
 ggplot(tests_l[variable=='PLHIV who received a VL test' & !is.na(level)], aes(x=date, y=value, color=level, group=level)) +
   geom_point() +
   geom_line() +
-  labs(title='VL testing by health facility level', subtitle='Jan. 2017 - June 2018',
+  labs(title='VL tests performed by health facility level', subtitle='Jan. 2017 - June 2018',
        caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
   theme_bw() 
 
+# tests performed and undetectable vl
 ggplot(tests_l, aes(x=date, y=value, color=variable, group=variable)) +
   geom_point() +
   geom_line() +
   facet_wrap(~level, scales='free_y') +
   ylim(0, NA) +
-  labs(title='VL tests performed by facility level', subtitle='Jan. 2017 - June 2018',
+  labs(title='VL tests performed and undetectable VL by facility level', subtitle='Jan. 2017 - June 2018',
        caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
   theme_bw() 
-
 
 #-----------------------
 # facilities reporting and tests performed by DPS
@@ -153,15 +157,14 @@ ggplot(report_dps2, aes(x=date, y=value, color=dps, group=dps)) +
   geom_point() +
   geom_line() +
   facet_wrap(~dps, scales='free_y') +
-  labs(title='Facilities reporting and VL tests performed by DPS', subtitle='Jan. 2017 - June 2018',
+  labs(title='VL tests performed, three highest DPS', subtitle='Jan. 2017 - June 2018',
        caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='DPS') +
   theme_bw() 
-
 
 #------------------------
 # VIRAL SUPPRESSION - outcomes - national trends 
 
-all <- vl[ ,.(value=sum(value)), by=.(date, variable)]
+all <- vl[case=='Old',.(value=sum(value)), by=.(date, variable)]
 
 ggplot(all, aes(x=date, y=value, color=variable, group=variable)) +
   geom_point() +
@@ -171,7 +174,7 @@ ggplot(all, aes(x=date, y=value, color=variable, group=variable)) +
   theme_bw() 
 
 # outcomes by risk group
-all_group <- vl[ ,.(value=sum(value)), by=.(date, variable, group)]
+all_group <- vl[case=='Old',.(value=sum(value)), by=.(date, variable, group)]
 
 ggplot(all_group, aes(x=date, y=value, color=variable, group=variable)) +
   geom_point() +
@@ -184,7 +187,7 @@ ggplot(all_group, aes(x=date, y=value, color=variable, group=variable)) +
 #----------------------
 # viral suppression ratios
 
-# proportions
+# proportions - tests performed and suppression ratio
 prop <- all
 prop[variable=='PLHIV who received a VL test', variable:='test']
 prop[variable=='PLHIV with undetectable VL', variable:='und']
@@ -193,7 +196,7 @@ prop[ , ratio:=(100*(und/test))]
 prop[ , und:=NULL]
 prop <- melt(prop, id.vars='date')
 
-prop$variable <- factor(prop$variable, c('test', 'ratio'), c('VL Tests (denominator)', 'Percent virally suppressed'))
+prop$variable <- factor(prop$variable, c('test', 'ratio'), c('VL tests (denominator)', 'Percent virally suppressed'))
 
 ggplot(prop, aes(x=date, y=value)) +
   geom_point() +
@@ -204,6 +207,8 @@ ggplot(prop, aes(x=date, y=value)) +
   theme_bw() 
 
 #------------------------
+# comparison of newly diagnosed and old cases 
+
 prop1 <- vl[ ,.(value=sum(value)), by=.(date, variable, case)]
 
 prop1[variable=='PLHIV who received a VL test', variable:='test']
@@ -215,17 +220,21 @@ prop1 <- melt(prop1, id.vars=c('date', 'case'))
 
 prop1$case = factor(prop1$case, c('Old', 'New'), c('Previously enrolled', 'Newly diagnosed'))
 
-
 ggplot(prop1, aes(x=date, y=value, color=case, group=case)) +
   geom_point() +
   geom_line() +
   facet_wrap(~variable, scales='free_y') +
-  labs(title='Viral load tests performed & percent virally suppressed, DRC', subtitle='Jan. 2017 - June 2018',
+  labs(title='VL tests performed & percent virally suppressed, newly diagnosed cases', subtitle='Jan. 2017 - June 2018',
        caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
   theme_bw() 
 
 #----------------------------------
 # viral suppression ratios - old cases only 
+
+#------------------------
+# all dps 
+
+# tests and undetectable by dps
 old = vl[case=='Old']
 old = old[, .(value=sum(value)), by=.(date, dps, mtk, variable)]
 
@@ -235,31 +244,6 @@ ggplot(old, aes(x=date, y=value, color=dps, group=dps)) +
   facet_wrap(~variable) +
   theme_bw()
 
-ggplot(old[mtk=='Yes'], aes(x=date, y=value, color=variable, group=variable)) +
-  geom_point() + 
-  geom_line() +
-  facet_wrap(~dps, scales='free_y') +
-  theme_bw() 
-
-old1 = old[variable=='PLHIV who received a VL test', .(value=sum(value)), by=dps]
-old1[order(value, decreasing=T)]  
-old1 = old[dps=='Haut Katanga' | dps=='Kinshasa' |dps=='Lualaba' ]
-
-ggplot(old1, aes(x=date, y=value, color=variable, group=variable)) +
-  geom_point() + 
-  geom_line() +
-  facet_wrap(~dps, scales='free_y') +
-  theme_bw() +
-  labs(title='Received a VL test & undetectable results, Top 3 provinces for tests performed', x='Date', y='Count')
-
-
-ggplot(old[mtk=='Yes'], aes(x=date, y=value, color=variable, group=variable)) +
-  geom_point() + 
-  geom_line() +
-  facet_wrap(~dps, scales='free_y') +
-  theme_bw() 
-
-#-----------------------------------------------
 # viral suppression ratio
 und <- old[variable=='PLHIV with undetectable VL']
 setnames(und, 'value', 'und')
@@ -278,7 +262,19 @@ ggplot(rat, aes(x=date, y=prop, color=dps, group=dps)) +
   theme_bw() +
   labs(title='Percent virally suppressed by DPS (missing if no VL tests performed)', x='Date', y='Percent(%)', color='DPS')
 
-rat2 = rat[dps=='Haut Katanga' | dps=='Kinshasa' |dps=='Lualaba' ]
+
+#------------------------
+# Maniema, Tshopo, Kinshasa 
+
+# tests and undetectable MTK
+ggplot(old[mtk=='Yes'], aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~dps, scales='free_y') +
+  theme_bw() 
+
+# % virally suppressed mtk
+rat2 = rat[mtk=='Yes' ]
 
 ggplot(rat2, aes(x=date, y=prop, color=dps, group=dps)) +
   geom_point() + 
@@ -286,20 +282,70 @@ ggplot(rat2, aes(x=date, y=prop, color=dps, group=dps)) +
   theme_bw() +
   labs(title='Percent virally suppressed by DPS', x='Date', y='Percent(%)', color='DPS')
 
-rat3 = rat2
-rat3 = rat3[dps=='Haut Katanga' | dps=='Kinshasa' |dps=='Lualaba']
-rat3[ ,und:=NULL]
-rat3 = melt(rat3, id.vars=c('date', 'dps', 'mtk'))
 
-rat3$variable = factor(rat3$variable, c('test', 'prop'), c('VL tests performed', 'Percent (%) with undetectable VL'))
+#------------------------
+# top three dps after six months
 
-ggplot(rat3, aes(x=date, y=value, color=dps, group=dps)) +
+# tests and undetectable by dps
+six = vl[case=='Old' & group=='After 6 months']
+six = six[, .(value=sum(value)), by=.(date, dps, mtk, variable)]
+six = six[dps=='Haut Katanga' | dps=='Kinshasa' |dps=='Lualaba']
+
+ggplot(six, aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~dps, scales='free_y') +
+  theme_bw()
+
+# viral suppression ratio
+und <- six[variable=='PLHIV with undetectable VL']
+setnames(und, 'value', 'und')
+und[ ,variable:=NULL]
+
+tests <- six[variable=="PLHIV who received a VL test"]
+setnames(tests, 'value', 'test')
+tests[ ,variable:=NULL]
+
+six2 <- merge(und, tests, by=c('date', 'dps', 'mtk'), all=T)
+six2[ ,prop:=(100*und/test)]
+six2 = melt(six2, id.vars=c('date', 'dps', 'mtk'))
+
+six2$variable = factor(six2$variable, c('test', 'und', 'prop'), c('PLHIV who received a VL test', 'PLHIV with undetectable VL', 'Viral suppression ratio (%)'))
+
+# % virally suppressed top 3
+ggplot(six2[variable=='Viral suppression ratio'], aes(x=date, y=value)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~dps, scales='free_y') +
+  theme_bw() +
+  labs(title='Viral suppression ratio, three highest provinces by # of tests performed', x='Date', y='Percent (%) undetectable')
+
+# tests and ratio haut katanga
+ggplot(six2[dps=='Haut Katanga' & variable!='PLHIV with undetectable VL'], aes(x=date, y=value, color=variable)) +
   geom_point() + 
   geom_line() +
   facet_wrap(~variable, scales='free_y') +
-  labs(x='Date', y='', color='DPS') +
-  theme_bw()
+  theme_bw() +
+  labs(title='Tests performed and suppression ratio, Haut-Katanga', x='Date', y='') +
+  guides(color=FALSE)
 
+# tests and ratio Kinshasa
+ggplot(six2[dps=='Kinshasa' & variable!='PLHIV with undetectable VL'], aes(x=date, y=value, color=variable)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~variable, scales='free_y') +
+  theme_bw() +
+  labs(title='Tests performed and suppression ratio, Kinshasa', x='Date', y='') +
+  guides(color=FALSE)
+
+# tests and ratio lualaba
+ggplot(six2[dps=='Lualaba' & variable!='PLHIV with undetectable VL'], aes(x=date, y=value, color=variable)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~variable, scales='free_y') +
+  theme_bw() +
+  labs(title='Tests performed and suppression ratio, Lualaba', x='Date', y='') +
+  guides(color=FALSE)
 
 dev.off()
 
