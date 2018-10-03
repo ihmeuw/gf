@@ -63,12 +63,12 @@ for (e in unique(vl$element_id)) {
   for(o in unique(vl$org_unit_id)) { 
     
     # skip if this job has already run and resubmitAll is FALSE
-    if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i))) { 
+    if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i, '.rds'))) { 
        i=i+1
        next
     } else {
       # run the quantile regression and list the residuals
-      system(paste0('qsub -o /ihme/scratch/users/ccarelli/qr_results -e /ihme/scratch/users/ccarelli/qr_results -cwd -N  quantreg_output_', i, ' ../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i))
+      system(paste0('qsub -o /ihme/scratch/users/ccarelli/quantreg_output -e /ihme/scratch/users/ccarelli/quantreg_output -cwd -N  quantreg_output_', i, ' ../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i))
       i=i+1
     }
   }
@@ -86,10 +86,11 @@ while(numFiles<i) {
 
 # collect all output into one data table
 for (j in seq(i)) {
-  tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j))
+  tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j, '.rds'))
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
-  cat(j)
+  cat(paste0('\r', j))
+  flush.console() 
 }
 
 # save full data
@@ -97,13 +98,6 @@ saveRDS(fullData, outFile)
 
 # clean up parallel files
 if (cleanup==TRUE) { 
-  for (j in seq(i)) {
-    print(paste0('Deleting file /ihme/scratch/users/ccarelli/qr_results/quantreg_output', j))
-    file.remove(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j))
-  }
-  outputFiles = list.files(pattern='quantreg_output*')
-  for(f in outputFiles) { 
-    print(paste0('Deleting file /ihme/scratch/users/ccarelli/qr_results/quantreg_output', j))
-    file.remove(paste0(f))
-  }
+  system('rm /ihme/scratch/users/ccarelli/qr_results/*')
+  system('rm /ihme/scratch/users/ccarelli/quantreg_output/*')
 }
