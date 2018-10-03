@@ -47,7 +47,7 @@ facilities <- rbind(facilities, facilities2)
 ggplot(facilities, aes(x=date, y=facilities, color=fac, group=fac)) +
   geom_point() +
   geom_line() +
-  labs(title='Facilities reporting, viral load testing', subtitle='Jan. 2017 - June 2018',
+  labs(title='Monthly number of facilities reporting, viral load testing', subtitle='Jan. 2017 - June 2018',
        caption='Source: PNLS Canevas Unique FOSA', y='Facilities', x='Date', color='Facilities') +
   theme_bw() 
 
@@ -123,6 +123,35 @@ ggplot(tests_l, aes(x=date, y=value, color=variable, group=variable)) +
   labs(title='VL tests performed by facility level', subtitle='Jan. 2017 - June 2018',
        caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
   theme_bw() 
+
+
+#-----------------------
+# facilities reporting and tests performed by DPS
+
+fac_dps = vl[ , .(value=length(unique(org_unit))), by=.(date, dps)]
+
+
+fac_dps[ ,indicator:='Facilities reporting']
+setnames(facilities, c('facilities', 'fac'), c('value', 'variable'))
+
+tests = vl[variable=='PLHIV who received a VL test', .(value=sum(value)), by=.(date, variable, dps)]
+tests[ ,indicator:='VL tests performed']
+
+reporting <- rbind(facilities, tests)
+
+ggplot(reporting, aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~indicator, scales='free_y') +
+  labs(title='Facilities reporting and VL tests performed by DPS', subtitle='Jan. 2017 - June 2018',
+       caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
+  theme_bw() 
+
+
+
+
+
+
 
 #------------------------
 # VIRAL SUPPRESSION - outcomes - national trends 
