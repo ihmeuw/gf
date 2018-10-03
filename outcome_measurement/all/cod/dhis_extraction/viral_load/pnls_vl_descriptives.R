@@ -129,28 +129,33 @@ ggplot(tests_l, aes(x=date, y=value, color=variable, group=variable)) +
 # facilities reporting and tests performed by DPS
 
 fac_dps = vl[ , .(value=length(unique(org_unit))), by=.(date, dps)]
-
-
 fac_dps[ ,indicator:='Facilities reporting']
-setnames(facilities, c('facilities', 'fac'), c('value', 'variable'))
+test_dps = vl[variable=='PLHIV who received a VL test', .(value=sum(value)), by=.(date, dps)]
+test_dps[ ,indicator:='VL tests performed']
+report_dps <- rbind(fac_dps, test_dps)
 
-tests = vl[variable=='PLHIV who received a VL test', .(value=sum(value)), by=.(date, variable, dps)]
-tests[ ,indicator:='VL tests performed']
-
-reporting <- rbind(facilities, tests)
-
-ggplot(reporting, aes(x=date, y=value, color=variable, group=variable)) +
+ggplot(report_dps, aes(x=date, y=value, color=dps, group=dps)) +
   geom_point() +
   geom_line() +
   facet_wrap(~indicator, scales='free_y') +
-  labs(title='Facilities reporting and VL tests performed by DPS', subtitle='Jan. 2017 - June 2018',
-       caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='Variable') +
+  labs(title='VL tests performed, three highest DPS', subtitle='Jan. 2017 - June 2018',
+       caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='DPS') +
   theme_bw() 
 
+# top 3 DPS for tests performed
+report_dps[order(value, decreasing=T), unique(dps)] # check which are the top 3 DPS
 
+# subset to the top 3
+top3 = c("Haut Katanga", "Kinshasa", "Lualaba") 
+report_dps2 = report_dps[indicator=='VL tests performed' & (dps %in% top3)]
 
-
-
+ggplot(report_dps2, aes(x=date, y=value, color=dps, group=dps)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~dps, scales='free_y') +
+  labs(title='Facilities reporting and VL tests performed by DPS', subtitle='Jan. 2017 - June 2018',
+       caption='Source: PNLS Canevas Unique FOSA', y='Count', x='Date', color='DPS') +
+  theme_bw() 
 
 
 #------------------------
