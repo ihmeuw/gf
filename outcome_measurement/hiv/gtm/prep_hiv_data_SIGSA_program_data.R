@@ -1,3 +1,4 @@
+
 # ----------------------------------------------
 # Naomi Provost
 # September 6, 2018
@@ -69,9 +70,20 @@ prep_screening <- function(gf_data, start_date){
   dt_melt <- melt(gf_dt, id = c('NA-NA-DAS', 'NA-NA-SERVICIO', 'NA-NA-DISTRITO'))
   
   # rename and seperate the values, update date variable
-  colnames(dt_melt) <- c("DAS", 'SERVICIO', "DISTRITO", 'variable'," value")
+  colnames(dt_melt) <- c("DAS", 'SERVICIO', "DISTRITO", 'variable',"value")
   gf_data_cleaned = separate(dt_melt, variable, c("Date", "Group", "Status"), sep = "-")
   
+  # The UAI table on the bottom of the page is formatted so these values show up-- removing them.
+  gf_data_cleaned = gf_data_cleaned[gf_data_cleaned$DISTRITO!="TOTAL" & !gf_data_cleaned$value %in% c("ACEP","MTS", "PRE", "TRANS", "POST", "HSH", "VIH+", "P.VIH", "CONF."), ]
+  gf_data_cleaned$value = as.numeric(gf_data_cleaned$value)
+  # 
+  # replace health zone
+  # gf_data_cleaned[,DISTRITO := gsub("·", "", DISTRITO)]
+  # gf_data_cleaned[,DISTRITO := gsub("     CS de", "",DISTRITO)]
+  # gf_data_cleaned[,DISTRITO := gsub("     CS", "",DISTRITO)]
+  #gf_data_cleaned$DISTRITO = gsub("CS", "",gf_data_cleaned$DISTRITO)
+
+  # # 
   if(year(start_date) != 2014 & start_date != "2015-01-01"){
     gf_data_cleaned$Date = as.Date(as.numeric(gf_data_cleaned$Date),  origin = "1899-12-30")
   }else{ #FIX THIS for dates 2014 and the beginning of 2015
@@ -84,8 +96,8 @@ prep_screening <- function(gf_data, start_date){
   return(gf_data_cleaned)
 }
 
-
 for(i in 1:length(hiv_file_list$file_name)){
+  #iterate through file list
   prep_data <- data.table(read_excel(paste0(dir,program_sheet, "/", hiv_file_list$file_name[i]), sheet=as.character(hiv_file_list$sheet_name[i]), col_names = FALSE, col_types = "text", skip = 4))
   tmpData = prep_screening(prep_data, ymd(hiv_file_list$start_date[i]))
   if(i==1){
@@ -95,6 +107,11 @@ for(i in 1:length(hiv_file_list$file_name)){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)}
 }
  
+# i = 2
+# gf_data <- data.table(read_excel(paste0(dir,program_sheet, "/", hiv_file_list$file_name[i]), sheet=as.character(hiv_file_list$sheet_name[i]), col_names = FALSE, col_types = "text", skip = 4))
+# start_date = hiv_file_list$start_date[i]
+
+
 # Write csv & RDS to folderpath
-write.csv(resource_database, paste0(prep_dir, "hiv_sigsa_data_prepped_PD_testing.csv"), row.names = FALSE)
+write.csv(resource_database, paste0(prep_dir, "hiv_sigsa_data_prepped_PD_testing.csv"), row.names = FALSE, fileEncoding = "latin1" )
 saveRDS(resource_database, paste0(prep_dir, "hiv_sigsa_data_prepped_PD_testing.rds"))
