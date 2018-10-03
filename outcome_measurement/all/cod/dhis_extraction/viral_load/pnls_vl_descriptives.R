@@ -367,6 +367,27 @@ unique(shapeData@data$NAME_1)
 shape_names <- data.table(dps_name=shapeData@data$NAME_1, id=shapeData@data$GID_1)
 str(shape_names)
 
+# add group IDs to the data to merge with the shape file
+udps = vl[ ,unique(dps)]
+udps = sort(udps)
+
+# dps in the data set
+vl[dps=='Bas Uele', id:='COD.1_1']
+vl[dps=="Haut Katanga", id:='COD.3_1']
+vl[dps=="Haut Lomami", id:='COD.4_1']
+vl[dps=="Haut Uele", id:='COD.5_1']
+vl[dps=="Kasai Central", id:='COD.7_1']
+vl[dps=="Kinshasa", id:='COD.10_1']
+vl[dps=="Kongo Central", id:='COD.11_1']
+vl[dps=="Lomami", id:='COD.14_1']
+vl[dps=="Lualaba", id:='COD.15_1']
+vl[dps=="Maniema", id:='COD.17_1']
+vl[dps=="Sud Kivu", id:='COD.22_1']
+vl[dps=="Sud Ubangi", id:='COD.23_1']
+vl[dps=="Tanganyika", id:='COD.24_1']
+vl[dps=="Tshopo", id:='COD.25_1']
+
+
 #---------------------------------------
 # create data sets to map
 
@@ -405,6 +426,12 @@ test[,variable:=NULL]
 
 map_yr_ratio_sex = merge(und, test,all=T)
 map_yr_ratio_sex[ ,ratio:=(100*und/test)]
+
+#-------------------------------------------------
+
+
+
+
 
 
 

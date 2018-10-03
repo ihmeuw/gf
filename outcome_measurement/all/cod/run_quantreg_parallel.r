@@ -42,7 +42,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 # output file
-outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/viral_load/outlier_screen/quantreg_results_no_group_fe.rds')
+outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/viral_load/outlier_screen/quantreg_results.rds')
 
 # whether or not to resubmit jobs that have completed already
 resubmitAll = TRUE
