@@ -119,4 +119,33 @@ vl = vl[org_unit %in% org_0s]
 saveRDS(vl, paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
 
 #------------------------
+# run outlier removal to identify outliers 
+
+# import the outliers
+out_vl = readRDS(paste0(dir, 'viral_load/outlier_screen/outliers_vl.rds'))
+out_vl[ , case:='Old']
+out_vl = out_vl[ ,.(date, org_unit_id, org_unit, level, health_zone, dps, mtk, group,
+                     case, sex, variable, value)]     
+
+# create identical unique identifiers
+out_vl[ ,combine:=paste0(date, org_unit_id, org_unit, level, health_zone, dps, mtk, group,
+                         case, sex, variable, value)]
+vl[  , combine:=paste0(date, org_unit_id, org_unit, level, health_zone, dps, mtk, group,
+                       case, sex, variable, value)]
+
+# subset to remove the outliers
+vl = vl[!(combine %in% out_vl$combine)]
+vl[ ,combine:=NULL]
+
+# remove associated points (if tests removed, remove undetectable and reverse)
+drop_vl = out_vl[ ,.(date, org_unit_id, group, case, sex)]
+vl[ ,combine:=paste0(date, org_unit_id, group, case, sex)]
+drop_vl[ ,combine:=paste0(date, org_unit_id, group, case, sex)]
+
+vl = vl[!combine %in% drop_vl$combine]
+vl[ ,combine:=NULL]
+
+saveRDS(vl, paste0(dir, 'prepped/viral_load_pnls_outliers_removed.rds'))
+
+
 

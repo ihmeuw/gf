@@ -2,7 +2,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 10/1/2018
+# 10/3/2018
 # ----------------------------------------------
 
 # --------------------
@@ -16,6 +16,7 @@ library(stringr)
 library(rgeos)
 library(raster)
 library(maptools)
+library(RColorBrewer)
 
 # --------------------
 
@@ -28,13 +29,13 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
-vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
+vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_outliers_removed.rds'))
 
 #-------------------------------------------
 # VISUALIZATIONS
 
 # print a PDF of all of the visualizations
-pdf(file=paste0(dir, 'viral_load/viral_load.pdf'), width=9, height=6)
+pdf(file=paste0(dir, 'viral_load/snis_viral_load.pdf'), width=11, height=6)
 
 # factor the variable so legends are in the correct order
 vl$variable = factor(vl$variable, c('PLHIV who received a VL test', 'PLHIV with undetectable VL'), c('PLHIV who received a VL test', 'PLHIV with undetectable VL'))
@@ -347,7 +348,6 @@ ggplot(six2[dps=='Lualaba' & variable!='PLHIV with undetectable VL'], aes(x=date
   labs(title='Tests performed and suppression ratio, Lualaba', x='Date', y='') +
   guides(color=FALSE)
 
-dev.off()
 
 #-----------------------------------------
 # MAPS
@@ -355,9 +355,6 @@ dev.off()
 # import the shape file
 shapeData = shapefile(paste0(root, "Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/gadm36_COD_shp/gadm36_COD_1.shp"))
 class(shapeData)
-
-# plot the shape file in the base package
-plot(shapeData)
 
 # identify the variable that contains district names and codes
 shapeData@data %>% as_tibble()
@@ -393,101 +390,243 @@ vl[dps=="Tshopo", id:='COD.25_1']
 
 # remove old cases and create a year variable
 vl = vl[case=='Old']
-vl[date < '2018-01-01', year:='2017']
-vl[date >= '2018-01-01', year:='2018']
+vl[date < '2018-01-01', year:=2017]
+vl[date >= '2018-01-01', year:=2018]
 
+# ---------------
+# color palettes
+tests = brewer.pal(9, 'OrRd')
+tests_yr = brewer.pal(9, 'RdPu')
+tests_grp = brewer.pal(6, 'YlGn')
+
+ratio_colors <- brewer.pal(8, 'Spectral')
+
+sup_colors <- brewer.pal(6, 'Reds')
+ladies <- brewer.pal(11, 'RdYlBu')
+gents <- brewer.pal(9, 'Purples')
+
+# red colors for bar graph
+bar_colors <- c('Not Suppressed'='#de2d26', 'Suppressed'='#fc9272')
+
+graph_colors <- c('#bd0026', '#fecc5c', '#74c476','#3182bd', '#8856a7')
+tri_sex <- c('#bd0026', '#74c476', '#3182bd')
+wrap_colors <- c('#3182bd', '#fecc5c', '#bd0026', '#74c476', '#8856a7', '#f768a1')
+sex_colors <- c('#bd0026', '#3182bd', '#74c476', '#8856a7') # colors by sex plus one for facilities
+single_red <- '#bd0026'
+
+# breaks for log transformation legends
+breaks <- c(1, 20, 400, 8100)
 
 #-----------------------
 # counts 
 
-# tests by year
-map_yr <- vl[ ,.(value=sum(value)), by=.(dps, id, variable, year)]
+# shape wide
+und = vl[variable=='PLHIV with undetectable VL']
+setnames(und, 'value', 'und')
+und[ ,variable:=NULL]
+test = vl[variable=='PLHIV who received a VL test']
+setnames(test, 'value', 'test')
+test[ ,variable:=NULL]
+vl = merge(und, test)
 
-# tests by year by sex
-map_yr_sex <- vl[ ,.(value=sum(value)), by=.(dps, id, variable, year, sex)]
+# total tests
+map_tot <- vl[ ,.(und=sum(und), test=sum(test)), by=.(dps, id)]
+map_tot[ ,ratio:=(100*(und/test))]
+
+# tests by year
+map_yr <- vl[ ,.(und=sum(und), test=sum(test)), by=.(dps, id, year)]
+map_yr[ ,ratio:=(100*(und/test)), by=.(dps, id, year)]
+
+# tests by sex
+map_sex <- vl[ ,.(und=sum(und), test=sum(test)), by=.(dps, id, sex)]
+map_sex[ ,ratio:=(100*(und/test)), by=.(dps, id, sex)]
 
 # tests by year by group
-map_yr_group <- vl[ ,.(value=sum(value)), by=.(dps, id, variable, year, group)]
-
-
+map_group <- vl[ ,.(und=sum(und), test=sum(test)), by=.(dps, id, strat=group)]
+map_group[ ,ratio:=(100*(und/test)), by=.(dps, id, strat)]
 
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
-coordinates <- data.table(fortify(shapeData, region='dist112')) 
-coordinates[, id:=as.numeric(id)]
+coordinates <- data.table(fortify(shapeData, region='GID_1')) 
+coordinates[, id:=as.character(id)]
 
-# coordinates by year for faceting (repeat 5 times for 5 years of data)
-coordinates_ann <- rbind(coordinates, coordinates, coordinates, coordinates, coordinates)
-coordinates_ann[, year:=rep(2014:2018, each=nrow(coordinates))]
+# merge the data to the coordinates - total tests
+coordinates_tot <- merge(coordinates, map_tot, by="id", all.x=TRUE)
 
-# merge on district id - all time total, annual totals, sex stratified totals
-coordinates <- merge(coordinates, ratio_table, by="id", all.x=TRUE)
-coordinates_year <- merge(coordinates_ann, ratio_year, by=c('id', 'year'), all.x=TRUE)
-coordinates_female <- merge(coordinates_ann, ratio_female, by=c('id','year'), all.x=TRUE)
-coordinates_male <- merge(coordinates_ann, ratio_male, by=c('id','year'), all.x=TRUE)
+# coordinates by year for faceting 
+coordinates_ann <- rbind(coordinates, coordinates)
+coordinates_ann[, year:=rep(2017:2018, each=nrow(coordinates))]
+coordinates_year <- merge(coordinates_ann, map_yr, by=c('id', 'year'), all.x=TRUE)
+
+# total by sex
+coordinates_dbl <- rbind(coordinates, coordinates)
+coordinates_dbl[, sex:=rep(c('Female', "Male"), each=nrow(coordinates))]
+coordinates_sex <- merge(coordinates_dbl, map_sex, by=c("id", "sex"), all.x=TRUE)
+
+# total by group
+coordinates_quad <- rbind(coordinates, coordinates, coordinates, coordinates)
+coordinates_quad[, strat:=rep(c("After 6 months", "Initial test", "Other", "Pregnant and lactating women"), each=nrow(coordinates))]
+coordinates_quad <- merge(coordinates_quad, map_group, by=c("id", "strat"), all.x=TRUE)
+
+#-----------------------------------
+# graphs of counts
+
+# VL tests performed
+ggplot(coordinates_tot, aes(x=long, y=lat, group=group, fill=test)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=tests) + 
+  theme_void() + 
+  labs(title="Total number of viral load tests performed", subtitle=" Jan. 2017 - July 2018",
+       caption="Source: SNIS", fill="VL tests") +
+  theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4)) + coord_fixed()
+
+# VL tests performed - log scale
+ggplot(coordinates_tot, aes(x=long, y=lat, group=group, fill=test)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=tests, trans='log') + 
+  theme_void() + 
+  labs(title="Total number of viral load tests performed (log scale)", subtitle=" Jan. 2017 - July 2018",
+       caption="Source: SNIS", fill="Log of VL tests") +
+  theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4), 
+        plot.caption=element_text(vjust=6)) + coord_fixed()
+
+# VL tests performed - annual 
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=test)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=tests_yr) + 
+  theme_void() + 
+  facet_wrap(~year) +
+  labs(title="Total number of viral load tests performed", 
+       caption="Source: SNIS", fill="VL tests") +
+  theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4)) + coord_fixed()
 
 
+# VL tests performed by sex
+ggplot(coordinates_sex, aes(x=long, y=lat, group=group, fill=test)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=gents) + 
+  theme_void() + 
+  facet_wrap(~sex) +
+  labs(title="VL tests performed by sex", subtitle=" Jan. 2017 - June 2018",
+       caption="Source: SNIS", fill="VL tests") + coord_fixed()
 
-
-
-
-# suppression ratio by year
-und = map_yr[variable=='PLHIV with undetectable VL']
-setnames(und, 'value', 'und')
-test = map_yr[variable=='PLHIV who received a VL test']
-setnames(test, 'value', 'test')
-und[,variable:=NULL]
-test[,variable:=NULL]
-
-map_yr_ratio = merge(und, test,all=T)
-map_yr_ratio[ ,ratio:=(100*und/test)]
-
-# suppression ratio by sex by year
-und = map_yr_sex[variable=='PLHIV with undetectable VL']
-setnames(und, 'value', 'und')
-test = map_yr_sex[variable=='PLHIV who received a VL test']
-setnames(test, 'value', 'test')
-und[,variable:=NULL]
-test[,variable:=NULL]
-
-map_yr_ratio_sex = merge(und, test,all=T)
-map_yr_ratio_sex[ ,ratio:=(100*und/test)]
+# VL tests performed by group
+ggplot(coordinates_quad, aes(x=long, y=lat, group=group, fill=test)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=tests_grp) + 
+  theme_void() + 
+  facet_wrap(~strat) +
+  labs(title="VL tests performed by group", subtitle=" Jan. 2017 - June 2018",
+       caption="Source: SNIS", fill="VL tests") + coord_fixed()
 
 #-------------------------------------------------
+# ratios
+
+# VL ratio
+ggplot(coordinates_tot, aes(x=long, y=lat, group=group, fill=ratio)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() + 
+  labs(title="Viral suppression ratio", subtitle=" Jan. 2017 - July 2018",
+       caption="Source: SNIS", fill="% suppressed") +
+  theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4)) + coord_fixed()
+
+# VL ratio - annual 
+ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=ratio)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() + 
+  facet_wrap(~year) +
+  labs(title="Viral suppression ratio by year", subtitle=" Jan. 2017 - July 2018",
+       caption="Source: SNIS", fill="% suppressed") +
+  theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4)) + coord_fixed()
+
+# VL ratio by sex
+ggplot(coordinates_sex, aes(x=long, y=lat, group=group, fill=ratio)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() + 
+  facet_wrap(~sex) +
+  labs(title="Viral suppression ratio by sex", subtitle=" Jan. 2017 - June 2018",
+       caption="Source: SNIS", fill="% suppressed") + coord_fixed()
+
+# VL ratio by group
+ggplot(coordinates_quad, aes(x=long, y=lat, group=group, fill=ratio)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() + 
+  facet_wrap(~strat) +
+  labs(title="Viral suppression ratio by group", subtitle=" Jan. 2017 - June 2018",
+       caption="Source: SNIS", fill="% suppressed") + coord_fixed()
+
+#----------------------------------------
+# VL ratio - after six months by year
+
+map_group_yr <- vl[group=='After 6 months',.(und=sum(und), test=sum(test)), by=.(dps, id, year)]
+map_group_yr[ ,ratio:=(100*(und/test)), by=.(dps, id, year)]
+
+# coordinates by year for faceting 
+coordinates_gy <- merge(coordinates_ann, map_group_yr, by=c('id', 'year'), all.x=TRUE)
+
+# VL ratio - annual 
+ggplot(coordinates_gy, aes(x=long, y=lat, group=group, fill=ratio)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() + 
+  facet_wrap(~year) +
+  labs(title="Viral suppression ratio after 6 months on ART by year",
+       caption="Source: SNIS", fill="% suppressed") +
+  theme(plot.title=element_text(vjust=-4), plot.subtitle=element_text(vjust=-4)) + coord_fixed()
+
+sixx = vl[group=='After 6 months']
+sixx = sixx[ ,.(und=sum(und), test=sum(test)), by=.(date, sex)]
+sixx[ ,prop:=(100*und/test)]
+sixx = melt(sixx, id.vars=c('date', 'sex'))
+
+sixx$variable = factor(sixx$variable, c('test', 'und', 'prop'), c('VL tests performed', 'Undetectable VL', 'Viral suppression ratio'))
+
+ggplot(sixx[variable!='Viral suppression ratio'], aes(x=date, y=value, color=variable, group=variable)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~sex) +
+  theme_bw() +
+  labs(title='VL testing after 6 months on ART by sex', x='Date', y='Count', color='VL')
+
+ggplot(sixx[variable=='Viral suppression ratio'], aes(x=date, y=value, color=sex, group=sex)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  labs(title='Viral suppression ratio after 6 months on ART by sex', x='Date', y='Percent (%) with undetectable VL',
+       color='% undetectable')
 
 
+final = vl[group=='After 6 months']
+final = final[ ,.(und=sum(und), test=sum(test)), by=.(sex, id)]
+final[ ,prop:=(100*und/test), by=.(sex, id)]
+final[ ,c('und', 'test'):=NULL]
+
+coordinates_6sex <- merge(coordinates_dbl, final, by=c("id", "sex"), all.x=TRUE)
+
+# VL ratio by sex
+ggplot(coordinates_sex, aes(x=long, y=lat, group=group, fill=ratio)) + 
+  geom_polygon() + 
+  geom_path(size=0.01, color="#636363") + 
+  scale_fill_gradientn(colors=ratio_colors) + 
+  theme_void() + 
+  facet_wrap(~sex) +
+  labs(title="Viral suppression ratio after 6 months on ART by sex", subtitle=" Jan. 2017 - June 2018",
+       caption="Source: SNIS", fill="% suppressed") + coord_fixed()
 
 
+dev.off()
 
-
-
-
-
-
-
-# suppression ratio by group by year
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#--------------------------
