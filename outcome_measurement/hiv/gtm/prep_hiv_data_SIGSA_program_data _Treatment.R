@@ -72,7 +72,14 @@ prep_treatment <- function(gf_data, start_date, file_type){
   
   if((file_type == 'UAI_treatment' & year(start_date) == 2015) | (file_type == "eligible_treatment" & year(start_date) == 2016)){
     gf_data_cleaned$Date = paste0(toupper(substr(gf_data_cleaned$Date, 1, 1)), tolower(substr(gf_data_cleaned$Date, 2, nchar(gf_data_cleaned$Date))))
-    gf_data_cleaned$Date = paste0("01 ", gf_data_cleaned$Date, " ", year(start_date))
+    if((file_type == "eligible_treatment" & start_date == "2016-09-01")){
+      gf_data_cleaned$yr = ifelse(gf_data_cleaned$Date == "Octubre" | gf_data_cleaned$Date == "Noviembre" | gf_data_cleaned$Date == "Diciembre", 2016, 2017)
+      gf_data_cleaned$Date = paste0("01 ", gf_data_cleaned$Date, " ", gf_data_cleaned$yr)
+      gf_data_cleaned$yr = NULL
+    }else{
+      gf_data_cleaned$Date = paste0("01 ", gf_data_cleaned$Date, " ", year(start_date))
+    }
+    
     gf_data_cleaned$Date = parse_date(gf_data_cleaned$Date,"%d %B %Y",locale=locale("es"))
     gf_data_cleaned$Date = as.Date(gf_data_cleaned$Date)
     
@@ -95,7 +102,8 @@ prep_treatment <- function(gf_data, start_date, file_type){
     }
   }
   
-  
+
+  gf_data_cleaned = gf_data_cleaned[Facility != "META" & Facility != "%"]
   gf_data_cleaned = gf_data_cleaned[toupper(Treatment) != "TOTAL"]
   gf_data_cleaned$Treatment = ifelse(gf_data_cleaned$Treatment == 'Total de abandonos / inactivos por diveresas causas (No muerte)', 'Total de abandonos/inactivos por diversas causas (no muerte)', 
                                      ifelse(gf_data_cleaned$Treatment == 'Pacientes en TAR Fallecidos en el mes del reporte', 'Pacientes en TAR fallecido en el mes del reporte',
@@ -107,6 +115,7 @@ prep_treatment <- function(gf_data, start_date, file_type){
                                                                                       ifelse(gf_data_cleaned$Treatment == "Total de pacientes que ya no asisten al seguimiento clínico por VIH y que no han iniciado TARV", "Total de pacientes que ya no asisten al seguimiento clinico por VIH y que no han iniciado TARV", gf_data_cleaned$Treatment))))))))
   
   gf_data_cleaned$value = as.numeric(gf_data_cleaned$value)
+  gf_data_cleaned$fileStart_date = start_date
   
   return(gf_data_cleaned)
 }
@@ -122,7 +131,6 @@ for(i in 1:length(hiv_file_list$file_name)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)}
 }
-
 
 
 
