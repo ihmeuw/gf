@@ -16,6 +16,11 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 # load the data
 vl <- readRDS(paste0(dir, 'prepped/viral_load_pnls_interim.rds'))
+vl = data.table(vl)
+
+# remove new cases (not of interest for outlier detection)
+vl = vl[case=='Old']
+vl[ , case:=NULL]
 
 # make variable ids
 vl[, element_id:=.GRP, by='variable']
@@ -32,9 +37,18 @@ nx = length(unique(subset$date))
 # skip if less than 3 data points
 if(n>=3 & var!=0 & nx>=2) {  
   
+  # add fixed effect on group if more than one group exists
+  form = 'value~date'
+  if (length(unique(subset$group))>1) form = paste0(form, '+factor(group)')
+  form = as.formula(form)
+
   # run quantreg
-  quantFit <- rq(value~date, data=subset, tau=0.5)
+  quantFit <- rq(form, data=subset, tau=0.5)
   summary(quantFit)
+  
+  # run quantreg - no fixed effect on group
+  # quantFit <- rq(value~date, data=subset, tau=0.5)
+  # summary(quantFit)
   
   # list the residuals and add them to the out file
   r <- resid(quantFit)
@@ -47,5 +61,5 @@ if(n>=3 & var!=0 & nx>=2) {
 }
 
 # save
-print(paste0('Saving: ', paste0('/ihme/scratch/users/ccarelli/quantreg_output', i)))
-saveRDS(subset, paste0('/ihme/scratch/users/ccarelli/quantreg_output', i))
+print(paste0('Saving: ', paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i, '.rds')))
+saveRDS(subset, paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i, '.rds'))

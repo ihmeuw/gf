@@ -33,9 +33,10 @@ prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped
 outFile = paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/visualizations/SIGSA_hiv_test_2ndRound.pdf')
 mapping_dir = paste0(root, '/Project/Evaluation/GF/mapping/gtm/')
 
-
+# Read in file
 dt = readRDS(paste0(prep_dir, "hiv_sigsa_data_prepped.rds"))
 
+# Count how many people attended clinic
 dt$attended_clinic = 1
 
 mapping_data = dt[,.(date, municipality, hospital_department, sex, sexual_orientation, risk_condition_eng, attended_clinic,  completed_hiv_screening_test, hiv_screening_result)]
@@ -97,23 +98,23 @@ shapeData = shapefile(paste0(mapping_dir,'GTM_adm1.shp'))
 coordinates = as.data.table(fortify(shapeData, region='NAME_1'))
 coordinates$id <- toupper(coordinates$id)
 
-# mapping_data$hospital_department = sub("GUATEMALA", "GUATEMALA", mapping_data$hospital_department)
-# mapping_data[grepl("GUATEMALA", hospital_department), hospital_department := "GUATEMALA"]
-# mapping_data[grepl("PETÉN", hospital_department), hospital_department := "PETÉN"]
-# mapping_data[grepl("IXCÁN", hospital_department), hospital_department := "QUICHÉ"]
-# mapping_data[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
-# 
-# graphData <- merge(coordinates, mapping_data, by.x='id', by.y='hospital_department', all=TRUE, allow.cartesian=TRUE)
-# graphData$group = as.character(graphData$group)
+mapping_data$hospital_department = sub("GUATEMALA", "GUATEMALA", mapping_data$hospital_department)
+mapping_data[grepl("GUATEMALA", hospital_department), hospital_department := "GUATEMALA"]
+mapping_data[grepl("PETÉN", hospital_department), hospital_department := "PETÉN"]
+mapping_data[grepl("IXCÁN", hospital_department), hospital_department := "QUICHÉ"]
+mapping_data[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
 
-mapping_long$hospital_department = sub("GUATEMALA", "GUATEMALA", mapping_long$hospital_department)
-mapping_long[grepl("GUATEMALA", hospital_department), hospital_department := "GUATEMALA"]
-mapping_long[grepl("PETÉN", hospital_department), hospital_department := "PETÉN"]
-mapping_long[grepl("IXCÁN", hospital_department), hospital_department := "QUICHÉ"]
-mapping_long[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
-
-graphData <- merge(coordinates, mapping_long, by.x='id', by.y='hospital_department', all=TRUE, allow.cartesian=TRUE)
+graphData <- merge(coordinates, mapping_data, by.x='id', by.y='hospital_department', all=TRUE, allow.cartesian=TRUE)
 graphData$group = as.character(graphData$group)
+
+# mapping_long$hospital_department = sub("GUATEMALA", "GUATEMALA", mapping_long$hospital_department)
+# mapping_long[grepl("GUATEMALA", hospital_department), hospital_department := "GUATEMALA"]
+# mapping_long[grepl("PETÉN", hospital_department), hospital_department := "PETÉN"]
+# mapping_long[grepl("IXCÁN", hospital_department), hospital_department := "QUICHÉ"]
+# mapping_long[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
+# 
+# graphData <- merge(coordinates, mapping_long, by.x='id', by.y='hospital_department', all=TRUE, allow.cartesian=TRUE)
+# graphData$group = as.character(graphData$group)
 
 # #### Let's make time trends for municipality ####
 # list_of_plots = NULL

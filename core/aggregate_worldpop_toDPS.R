@@ -1,53 +1,122 @@
 # Audrey Batzel
-# 8-14-18
+# 8-14-18 & 9/28/18
 #
-# Code taken from David Phillips (here: ./core/aggregate_populations.r) to aggregate world pop estimates to DPS level populations in DRC
-#
+# Code taken from David Phillips (here: ./core/aggregate_populations.r and ./vfm/prep_distributions.r) 
+# to aggregate world pop estimates to DPS and HZ level population estimates in DRC
+# 
 # -----------------------------------------------------------
 
 
-# ---------------------------
+# --------------------
 # Set up R
-rm(list=ls()) # clear memory
+rm(list=ls())
+library(data.table)
 library(raster)
-library(data.table) # for faster/easier data analysis
-library(ggplot2) # for making any kind of graph
-library(RColorBrewer) # for nicer colors
-# ---------------------------
+library(rgeos)
+library(parallel)
+library(RColorBrewer)
+library(ggplot2)
+
+# change working directory to the root of the repo
+# change to H drive for the Cluster?
+setwd('C:/local/gf/')
+# --------------------
 
 
 # -----------------------------------------------------------
-# Store file and folder names
+# DIRECTORIES
 
-# root directory. CHANGE THIS TO THE LOCATION OF YOUR DATA
+# root directory
+# change depending on cluster/not
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/')
+main_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/')
 
-# change working directory to the root directory
-setwd(dir)
+# Worldpop directory
+pop_dir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/worldpop/total/1y/')
 
-# store file name of DRC population raster
-popFile15 = paste0(dir, 'worldpop_data/COD15adjv5/COD15adjv5.tif')
-popFile10 = paste0(dir, 'worldpop_data/COD10adjv5/COD10adjv5.tif')
-  
-# store file name of "shapefile" which defines the provinces
-shapeFile =  paste0(dir, 'drc_shapefiles/gadm36_COD_shp/gadm36_COD_1.shp')
+# Shapefile directory
+hz_shape_dir = paste0(main_dir, 'drc_shapefiles/health2/')
+dps_shape_dir = paste0(main_dir, 'drc_shapefiles/gadm36_COD_shp/')
+
+# output directory
+out_dir = paste0(main_dir, 'worldpop_data/')
+
+# FILES
+
+# shapefiles
+shapeFileDPS = paste0(dps_shape_dir, 'gadm36_COD_1.shp')
+shapeFileHZ = paste0(hz_shape_dir, 'health2.shp')
+
+# shapefile of lakes
+shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lakes/glwd_1.shp')
+
+# # worldpop DRC population raster
+# popFile15 = paste0(dir, 'worldpop_data/COD15adjv5/COD15adjv5.tif')
+# popFile10 = paste0(dir, 'worldpop_data/COD10adjv5/COD10adjv5.tif')
+
+# population files
+popFiles = paste0(pop_dir, list.files(pop_dir, 'tif'))
+popFiles = popFiles[!grepl('.ovr|.aux|.xml', popFiles)]
+
+# choose which pop file to use
+year = 2017
+popFile = popFiles[grep(year, popFiles)]
+
+# functions
+source('./core/standardizeDPSNames.r')
+
+# output file
+pop_estimates_2017 <- '2017_worldpop_DRC_DPS.csv'
 # -----------------------------------------------------------
 
 
 # -----------------------------
 # Load data
 
-# load the population data
-popRaster15 = raster(popFile15)
-popRaster10 = raster(popFile10)
+# load the population raster data
+popData = raster(popFile)
 
-# load the shapefile
-shapeData = shapefile(shapeFile)
+# load the shapefiles
+map = shapefile(shapeFileDPS)
+lakes = shapefile(shapeFileLakes)
+# crop lakes shapefile to the extent of DRC map
+lakes = crop(lakes, extent(map))
 # -----------------------------
 
 
 # ---------------------------------------------------------------------------
+# prep shapefiles
+# simplify shapefile for speed
+mapDatatmp = map@data
+map = gSimplify(map, tol=0.01, topologyPreserve=TRUE)
+map = as(map, 'SpatialPolygonsDataFrame')
+map@data = mapDatatmp
+
+# clip to current country
+popData = crop(popData, extent(map))
+popData = mask(popData, map)		
+
+# mask the bodies of water
+popData = mask(popData, lakes, inverse=TRUE)
+
+# extract pixels by DPS (in parallel for speed)
+# extractedData = sapply(extract(rasterData, map), sum)
+extractedData = unlist(mclapply(map@data$NAME_1, function(x) { 
+  currentDPS = crop(popData, extent(map[map@data$NAME_1==x,]))
+  currentDPS = mask(currentDPS, map[map@data$NAME_1==x,])	
+  sum(getValues(currentDPS), na.rm=TRUE)
+}, mc.cores=ifelse(Sys.info()[1]=='Windows',1,36)))
+
+# sum over provinces
+currentPOPdata = data.table(dps=map@data$NAME_1, 
+                            population=extractedData)
+
+write.csv(currentPOPdata, paste0(out_dir, pop_estimates_2017))
+# ---------------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------
+# Old version of this code:
 # Compute population by province
 
 # use the shapefile to group together the pixels inside each province 

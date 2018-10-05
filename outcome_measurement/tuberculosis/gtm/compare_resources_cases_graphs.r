@@ -81,6 +81,9 @@ distrAgg_all_drugs_sans = distrData[Medicine != "ISONIAZIDA",
 
 # find unit cost over time
 unit_cost_per_year = unique(distrData[,c("Product", "Year", "unitCost")])
+unit_distr_per_year = distrData[,c("Product", "Year", "Amount")]
+unit_distr_per_year[,distr_amount := sum(Amount, na.rm = TRUE), by = c("Product", "Year")]
+unit_distr_per_year = unique(unit_distr_per_year[,c("Product", "Year", "distr_amount")])
 
 # aggregate all drugs not Inclued Isoniazida
 distrAgg_per_department = distrData[Medicine != "ISONIAZIDA", 
@@ -271,14 +274,24 @@ firstLine = unit_cost_per_year[Product ==  "ISONIAZIDA, TABLETA DE 100 MG." |
                                  Product == "PIRAZINAMIDA, TABLETA DE 500 MG." |
                                  Product == "ETAMBUTOL, TABLETA DE 400 MG."]
 
-commonDrugs = unit_cost_per_year[Product == "ETAMBUTOL, TABLETA DE 400 MG." |
+
+commonDrugs = unit_distr_per_year[Product == "ETAMBUTOL, TABLETA DE 400 MG." |
                                    Product == "ETHIONAMIDA, COMPRIMIDO DE 250 MG." |
                                    Product ==  "ISONIAZIDA, TABLETA DE 300 MG."|
                                    Product == "RIFAMPICINA, TABLETA DE 300 MG."  |
                                    Product == "PIRAZINAMIDA, TABLETA DE 500 MG." |
                                    Product == "LEVOFLOXACINA, COMPRIMIDO DE 250 MG." |
-                                   Product ==  "CICLOSERINA, CAPSULA DE 250 MG." |
-                                   Product ==  "KANAMICINA, VIAL DE 1 GRAMO"]
+                                   Product == "LEVOFLOXACINA, COMPRIMIDO DE 500 MG." |
+                                   Product ==  "CICLOSERINA, CAPSULA DE 250 MG." ]
+
+secondLineDrugs = unit_distr_per_year[Product == "AMOXICILINA/ACIDO CLAVULANICO, COMPRIMIDO DE 875MG/125MG." |
+                                    Product ==  "CAPREOMICINA VIAL 1 G"|
+                                    Product ==  "CICLOSERINA, CAPSULA DE 250 MG." |  
+                                    Product == "ETHIONAMIDA, COMPRIMIDO DE 250 MG." |      
+                                    Product == "IMIPENEM/CILASTATINA 1 GRAMOS" |
+                                    Product == "LEVOFLOXACINA, COMPRIMIDO DE 250 MG." |
+                                    Product == "MOXIFLOXACINA, TABLETA DE 400 MG." |
+                                    Product ==  "LINEZOLID 600 MG TABLETA"]
 
 commonDrugs$first = ifelse(commonDrugs$Product ==  "ISONIAZIDA, TABLETA DE 300 MG."|
                              commonDrugs$Product == "RIFAMPICINA, TABLETA DE 300 MG."  |
@@ -290,12 +303,11 @@ commonDrugs[grepl("ISONIAZIDA", Product), Product := "Isoniazid"]
 commonDrugs[grepl("ETAMBUTOL", Product), Product := "Ethambutol"]
 commonDrugs[grepl("ETHIONAMIDA", Product), Product := "Ethionamide"]
 commonDrugs[grepl("RIFAMPICINA", Product), Product := "Rifampicin"]
-commonDrugs[grepl("LEVOFLOXACINA", Product), Product := "Levofloxacin"]
+#commonDrugs[grepl("LEVOFLOXACINA", Product), Product := "Levofloxacin"]
 commonDrugs[grepl("PIRAZINAMIDA", Product), Product := "Pyrazinamide"]
 commonDrugs[grepl("CICLOSERINA", Product), Product := "Cycloserine"]
-commonDrugs[grepl("KANAMICINA", Product), Product := "Kanamycin"]
 
-commonDrugs$Product <- factor(commonDrugs$Product, levels=c('Rifampicin', 'Isoniazid', 'Pyrazinamide', 'Ethambutol', 'Cycloserine', 'Ethionamide','Levofloxacin', "Kanamycin"))
+commonDrugs$Product <- factor(commonDrugs$Product, levels=c('Rifampicin', 'Isoniazid', 'Pyrazinamide', 'Ethambutol', 'Cycloserine', 'Ethionamide',"LEVOFLOXACINA, COMPRIMIDO DE 250 MG.", "LEVOFLOXACINA, COMPRIMIDO DE 500 MG."))
 
 p8 = ggplot(firstLine, aes(y=unitCost, x=Year, colour=Product)) + 
   geom_line(size=1) +
@@ -317,12 +329,13 @@ p9 = ggplot(commonDrugs, aes(y=unitCost, x=Year, colour=Product)) +
   theme(legend.position="bottom") +
   guides(col = guide_legend(ncol = 2))
 
-p10 = ggplot(commonDrugs[unitCost > 0], aes(y=unitCost, x=Year, colour=Product)) + 
+p10 = ggplot(commonDrugs[Product == "LEVOFLOXACINA, COMPRIMIDO DE 250 MG." | Product == "LEVOFLOXACINA, COMPRIMIDO DE 500 MG." ], aes(y=distr_amount, x=Year, colour=Product)) + 
   geom_line(size=1) +
   geom_point(size=1, color='grey45') + 
-  facet_wrap(~first) +
-  labs(title='Unit cost per TB drug over time', 
-       y='Cost (USD)', x='Year', colour = "") + 
+  labs(title='Distrbution of LEVOFLOXACINA over time', 
+       y='Distrbution', x='Year', colour = "") + 
+  scale_y_continuous(labels = comma) +
+  #facet_wrap(~first) + 
   theme_bw() +
   theme(legend.position="bottom") +
   guides(col = guide_legend(ncol = 2))
@@ -358,3 +371,7 @@ p10
 p11
 dev.off()
 # ---------------------------------------------------
+
+pdf("J:/Project/Evaluation/GF/outcome_measurement/gtm/visualizations/TB Drug Cost/Lexo_Distribution.pdf", height=5.5, width=7)
+p10
+dev.off()
