@@ -27,7 +27,7 @@ dir = 'J:/Project/Evaluation/GF/resource_tracking/multi_country/'
 inFile = paste0(dir, 'mapping/gos_programs_mapped_1211.csv')
 
 # output graphs
-outFile = paste0(dir, '/visualizations/absorption_correlates.pdf')
+outFile = paste0(dir, '../../vfm/visualizations/absorption_correlates.pdf')
 # -----------------------------------------------------------------
 
 
