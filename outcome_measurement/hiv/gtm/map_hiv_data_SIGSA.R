@@ -34,13 +34,25 @@ outFile = paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/visualiza
 mapping_dir = paste0(root, '/Project/Evaluation/GF/mapping/gtm/')
 
 # Read in file
-dt = readRDS(paste0(prep_dir, "hiv_sigsa_data_prepped.rds"))
+dt = readRDS(paste0(prep_dir, "hiv_sigsa_data_prepped_patientlvl_testing.rds"))
 
-# Count how many people attended clinic
+# Count how many visit entries there are
 dt$attended_clinic = 1
 
-mapping_data = dt[,.(date, municipality, hospital_department, sex, sexual_orientation, risk_condition_eng, attended_clinic,  completed_hiv_screening_test, hiv_screening_result)]
+# Create Department variable
+dt$hospital_department = dt$hospital_DAS
+dt$hospital_department = sub("GUATEMALA", "GUATEMALA", dt$hospital_department)
+dt[grepl("GUATEMALA", hospital_department), hospital_department := "GUATEMALA"]
+dt[grepl("PETÉN", hospital_department), hospital_department := "PETÉN"]
+dt[grepl("IXCÁN", hospital_department), hospital_department := "QUICHÉ"]
+dt[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
 
+
+# subset to just the ones we want
+mapping_data = dt[visit_num == 1,.(date, municipality, hospital_department, sex, sexual_orientation, risk_condition_eng, attended_clinic,  completed_hiv_screening_test, hiv_screening_result)]
+
+
+# create numeric variables to make it easier to count
 mapping_data$completedTest = ifelse(mapping_data$completed_hiv_screening_test == "Yes", 1, 0)
 mapping_data$rejectedTest = ifelse(mapping_data$completed_hiv_screening_test == "No", 1, 0)
 mapping_data$isPosTest = ifelse(mapping_data$hiv_screening_result == "Reactivo", 1, 0)
@@ -50,12 +62,14 @@ mapping_data$completedTest = ifelse(mapping_data$isPosTest == 1, 1, mapping_data
 mapping_data$hiv_screening_result = NULL
 mapping_data$completed_hiv_screening_test = NULL
 
+# calculate sum
 mapping_data[, attended_clinic := sum(attended_clinic, na.rm = TRUE), by=c('date', 'municipality', 'hospital_department', 'sex', 'sexual_orientation', 'risk_condition_eng')]
 mapping_data[, completedTest := sum(completedTest, na.rm = TRUE), by=c('date', 'municipality', 'hospital_department', 'sex', 'sexual_orientation', 'risk_condition_eng')]
 mapping_data[, rejectedTest := sum(rejectedTest, na.rm = TRUE), by=c('date', 'municipality', 'hospital_department', 'sex', 'sexual_orientation', 'risk_condition_eng')]
 mapping_data[, isNegTest := sum(isNegTest, na.rm = TRUE), by=c('date', 'municipality', 'hospital_department', 'sex', 'sexual_orientation', 'risk_condition_eng')]
 mapping_data[, isPosTest := sum(isPosTest, na.rm = TRUE), by=c('date', 'municipality', 'hospital_department', 'sex', 'sexual_orientation', 'risk_condition_eng')]
 
+# find percentages
 mapping_data[, percentTestdate:= (sum(completedTest, na.rm = TRUE) / sum(attended_clinic, na.rm = TRUE)), by=c('date')]
 mapping_data[, percentTestrisk:= (sum(completedTest, na.rm = TRUE) / sum(attended_clinic, na.rm = TRUE)), by=c('date', 'risk_condition_eng')]
 mapping_data[, percentTestlgbt:= (sum(completedTest, na.rm = TRUE) / sum(attended_clinic, na.rm = TRUE)), by=c('date', 'sexual_orientation')]
@@ -67,8 +81,10 @@ mapping_data[, percentPoslgbt := (sum(isPosTest, na.rm = TRUE) / sum(completedTe
 
 mapping_data = unique(mapping_data)
 
+# melt to make long
 mapping_long = melt(mapping_data, id.vars = c('date', 'municipality', 'hospital_department', 'sex', 'sexual_orientation', 'risk_condition_eng'))
 
+# add binary variables
 mapping_long$isMSM = ifelse(mapping_long$sex == "Masculino" & (mapping_long$sexual_orientation == 'Homosexual' | mapping_long$sexual_orientation == 'Bisexual'), 1, 0)
 mapping_long$isTrans = ifelse(mapping_long$sexual_orientation == "Trans", 1, 0)
 
@@ -97,12 +113,6 @@ breaks <- c (1, 20, 400, 8100)
 shapeData = shapefile(paste0(mapping_dir,'GTM_adm1.shp'))
 coordinates = as.data.table(fortify(shapeData, region='NAME_1'))
 coordinates$id <- toupper(coordinates$id)
-
-mapping_data$hospital_department = sub("GUATEMALA", "GUATEMALA", mapping_data$hospital_department)
-mapping_data[grepl("GUATEMALA", hospital_department), hospital_department := "GUATEMALA"]
-mapping_data[grepl("PETÉN", hospital_department), hospital_department := "PETÉN"]
-mapping_data[grepl("IXCÁN", hospital_department), hospital_department := "QUICHÉ"]
-mapping_data[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
 
 graphData <- merge(coordinates, mapping_data, by.x='id', by.y='hospital_department', all=TRUE, allow.cartesian=TRUE)
 graphData$group = as.character(graphData$group)
