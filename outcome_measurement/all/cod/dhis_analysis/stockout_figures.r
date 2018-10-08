@@ -71,33 +71,52 @@ data[, never_stock:=(pct_zero<.34 & min==1)]
 neverStock = unique(data[, c('org_unit_id','element_eng','never_stock'), with=FALSE])
 neverStock = neverStock[, .(pct=mean(never_stock)), by=element_eng]
 data = data[never_stock==FALSE] # drop facility-variables that never didn't have a stockout, including some that had a few zeroes mixed in there ("a few"=33%)
-
-# aggregate all other DPS's
-data[mtk=='No', dps:='All Other Provinces'] 
 # --------------------------------------------------
 
 
 # -------------------------------------------------------------------------
 # Aggregate
 
+# aggregate all other DPS's
+agg = copy(data)
+agg[mtk=='No', dps:='All Other Provinces'] 
+
 # compute monthly average value by dps
-agg = data[, .(value=mean(value, na.rm=TRUE)), by=c('dps','date','element_eng')]
+byVars = c('dps','date','element_eng')
+agg = agg[, .(value=mean(value, na.rm=TRUE)), by=byVars]
+
+# compute percentage of HZ's and percentage of facilities with any stockout per DPS
+data[, hf_any_stockout:= value>0]
+data[, hz_max:=max(value,na.rm=TRUE), by=c('element_eng','health_zone','date')]
+data[, hz_any_stockout:= hz_max>0]
+pct = copy(data)
+pct[!dps %in% c('Equateur','Kwilu','Kinshasa','Maniema','Tshopo'), dps:='All Other Provinces']
+pct = pct[, .(hf_pct=mean(hf_any_stockout, na.rm=TRUE), 
+			hz_pct=mean(hz_any_stockout, na.rm=TRUE)), by=byVars]
+			
+# melt the two percentages long
+pct = melt(pct, id.vars=byVars)
+pct[variable=='hf_pct', variable:='facilities']
+pct[variable=='hz_pct', variable:='health zones']
 # -------------------------------------------------------------------------
 
 
 # ---------------------------------------------
 # Set up to graph
-colors = brewer.pal(12, 'Paired')[c(1,4,8,10)]
+c = brewer.pal(12, 'Paired')
+colors = c('All Other Provinces'=c[1], 'Kinshasa'=c[4], 
+		'Maniema'=c[8], 'Tshopo'=c[10], 'Equateur'=c[6], 
+		'Kwilu'=c[2])
 # ---------------------------------------------
 
 
 # ------------------------------------------------------
-# Graph
-plots = list()
+# Graph mean days by element and dps
+meanPlots = list()
 for(i in seq(length(variables))) { 
 	pctO = round(pctOutliers[element_eng==variables[i]]$pct*100,1)
 	pctN = round(neverStock[element_eng==variables[i]]$pct*100,1)
-	plots[[i]] = ggplot(agg[element_eng==variables[i]], aes(y=value, x=date, color=dps)) +
+	meanPlots[[i]] = ggplot(agg[element_eng==variables[i]], aes(y=value, x=date, color=dps)) +
 		geom_line() + 
 		geom_point() + 
 		scale_x_date(labels=date_format("%b-%Y"), 
@@ -112,10 +131,37 @@ for(i in seq(length(variables))) {
 # ------------------------------------------------------
 
 
+# ------------------------------------------------------
+# Graph percent of HZ's and HF's with any stockout by element and dps
+pctPlots = list()
+i=1
+for(j in seq(length(variables))) { 
+	for(v in c('facilities','health zones')) {
+		pctO = round(pctOutliers[element_eng==variables[j]]$pct*100,1)
+		pctN = round(neverStock[element_eng==variables[j]]$pct*100,1)
+		pctPlots[[i]] = ggplot(pct[element_eng==variables[j] & variable==v], 
+				aes(y=value*100, x=date, color=dps)) +
+			geom_line(size=1) + 
+			geom_point(size=2) + 
+			scale_x_date(labels=date_format("%b-%Y"), 
+				date_breaks ="3 month") + 
+				scale_color_manual(values=colors) + 
+			labs(title=variables[j], y=paste('Percentage of', v, 'with any stockouts'), 
+				x='', color='', 
+				caption=paste0('Reported stockouts greater than 31 days excluded (', pctO, '% of facility-months)\n
+				Facilities which seem to never stock this commodity (', pctN, '% of facilities) also excluded')) + 
+			theme_bw()
+		i=i+1
+	}
+}
+# ------------------------------------------------------
+
+
 # --------------------------------------------------
 # Save
 pdf(outFile, height=5.5, width=9)
-for(i in seq(length(variables))) print(plots[[i]])
+for(i in seq(length(meanPlots))) print(meanPlots[[i]])
+for(i in seq(length(pctPlots))) print(pctPlots[[i]])
 dev.off()
 # --------------------------------------------------
 
