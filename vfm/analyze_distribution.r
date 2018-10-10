@@ -163,16 +163,16 @@ p2 = ggplot(dps[year==2017], aes(y=value/1000000,
 	
 # comparison using suspected cases
 p3 = ggplot(dps[year==2017], aes(y=value/1000000, 
-		x=(lag_mean_suspectedCases)/1000000, label=dps_label2)) + 
+		x=(lag_mean_suspectedMalaria)/1000000, label=dps_label2)) + 
 	geom_point() + 
 	geom_smooth(method='lm') + 
 	geom_text_repel(color='grey25', box.padding=1.5, 
 		segment.color='grey75', min.segment.length=0) + 
 	facet_wrap(~label, scales='free_y') + 
 	scale_color_manual(values=colors) + 
-	labs(title='Commodity Distribution Compared to Reported Number of Cases - 2017', 
+	labs(title='Commodity Distribution Compared to Reported Number of Suspected Cases - 2017', 
 		subtitle='Aggregated by DPS', 
-		y='Number Distributed (in Millions)', x='Reported Cases (Mild + Severe in Millions)', color='Year') + 
+		y='Number Distributed (in Millions)', x='Suspected Cases Reported', color='Year') + 
 	theme_bw()
 	
 # comparison of MAP vs PNLP cases (selecting one variable arbitrarily to avoid duplication)
@@ -219,7 +219,7 @@ p6 = ggplot(dps, aes(y=value,
 p7 = list()
 i=1
 for (d in unique(dps$dps)) { 
-	p6[[i]] = ggplot(dps[dps==d], aes(y=value, x=year)) + 
+	p7[[i]] = ggplot(dps[dps==d], aes(y=value, x=year)) + 
 		geom_line(aes(color='Distributed Number'), size=1.5) + 
 		geom_line(aes(y=pf_incidence, color='Estimated Incidence'), size=1.5) +
 		geom_line(aes(y=mean_newCasesMalariaSevere+mean_newCasesMalariaMild, color='Reported Cases'), size=1.5) +
