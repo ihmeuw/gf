@@ -95,7 +95,7 @@ manColors = c('Distributed Number'=paired[4],'Estimated Incidence'=paired[2], 'R
 # aggregate to DPS
 byVars = c('province','dps','year','variable','label')
 data[, variable:=paste0(variable, '_received')]
-data[, variable:=gsub('received_received', 'received')]
+data[, variable:=gsub('received_received', 'received', variable)]
 dps = data[, lapply(.SD, sum, na.rm=TRUE), by=byVars, 
 		.SDcols=names(data)[!names(data) %in% c(byVars,'health_zone')]]
 		
