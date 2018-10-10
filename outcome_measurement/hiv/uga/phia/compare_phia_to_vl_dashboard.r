@@ -40,7 +40,7 @@ source('./outcome_measurement/hiv/uga/phia/prep_phia_vl_dashboard.r')
 source('./outcome_measurement/hiv/uga/phia/graph_phia_vl_dashboard.r')
 
 # data directory
-dir = 'J:/Project/Evaluation/GF/outcome_measurement/uga/'
+dir = 'J:/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/'
 
 # ouptut data
 outFileDistYear = paste0(dir, 'output/district_year_vls.csv')
