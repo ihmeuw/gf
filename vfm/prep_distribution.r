@@ -91,7 +91,8 @@ keepVars = c('ASAQreceived_14yrsAndOlder', 'ASAQreceived_1to5yrs',
 	'RDT_received', 'newCasesMalariaMild_5andOlder', 
 	'newCasesMalariaMild_pregnantWomen', 'newCasesMalariaMild_under5', 
 	'newCasesMalariaSevere_5andOlder', 'newCasesMalariaSevere_pregnantWomen', 
-	'newCasesMalariaSevere_under5','suspectedMalaria')
+	'newCasesMalariaSevere_under5','suspectedMalaria_5andOlder',
+	'suspectedMalaria_pregnantWomen','suspectedMalaria_under5')
 data = data[variable %in% keepVars]
 
 # identify year
