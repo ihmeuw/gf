@@ -72,6 +72,9 @@ unique(uvl$district_name)[!(unique(uvl$district_name)) %in% unique(shapeData@dat
 shape_names <- data.table(district_name=shapeData@data$dist112_na, id=shapeData@data$dist112)
 str(shape_names)
 
+
+
+
 #----------------------------------------
 # total and annual counts and suppression ratios by district
 
@@ -286,6 +289,7 @@ ggplot(table_2, aes(x=factor(month), y=facilities_report, group=year, color=fact
        caption="Source: Uganda VL Dashboard", colour="Year") +
   scale_color_manual(values=graph_colors)
 
+# facilities reporting and patients submitting samples
 ggplot(uvl_year[variable=='Facilities Reporting' | variable=='Patients Submitting Samples'], aes(x=date, y=value, color=sex)) + 
   facet_wrap(~variable, scales='free_y') +
   geom_point(size=1, alpha=0.8) +
@@ -296,22 +300,20 @@ ggplot(uvl_year[variable=='Facilities Reporting' | variable=='Patients Submittin
 
 
 # scale up in terms of three variables - used for presentation slides
-# pdf(paste0(dir, '/outputs/scale_up_figure.pdf'), height=6, width=12)
-# ggplot(uvl_year[variable=='Facilities Reporting' | variable=='Patients Submitting Samples' | variable=="Valid Test Results"], aes(x=date, y=value, color=sex)) + 
-#   facet_wrap(~variable, scales='free_y') +
-#   geom_point(size=1, alpha=0.8) +
-#   geom_line(alpha=0.5) +
-#   theme_minimal() +
-#   labs(x="Year", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
-#   scale_color_manual(values=sex_colors) +
-#   theme(plot.title=element_text(size=18), 
-#         plot.subtitle=element_text(vjust=-4, size=18), 
-#         plot.caption=element_text(vjust=6, size=14),
-#         legend.title = element_text(size=16), 
-#         legend.text = element_text(size=14),
-#         strip.text.x=element_text(size=14)) 
-# 
-# # dev.off()
+ggplot(uvl_year[variable=='Facilities Reporting' | variable=='Patients Submitting Samples' | variable=="Valid Test Results"], aes(x=date, y=value, color=sex)) +
+  facet_wrap(~variable, scales='free_y') +
+  geom_point(size=1, alpha=0.8) +
+  geom_line(alpha=0.5) +
+  theme_minimal() +
+  labs(x="Year", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
+  scale_color_manual(values=sex_colors) +
+  theme(plot.title=element_text(size=18),
+        plot.subtitle=element_text(vjust=-4, size=18),
+        plot.caption=element_text(vjust=6, size=14),
+        legend.title = element_text(size=16),
+        legend.text = element_text(size=14),
+        strip.text.x=element_text(size=14))
+
 
 # percentage of missing sex data
 ggplot(sex_tot, aes(x=date, y=percent)) + 
@@ -387,6 +389,29 @@ ggplot(coordinates_male, aes(x=long, y=lat, group=group, fill=suppression_ratio)
   labs(title="Viral suppression ratios among males by district, Uganda", caption="Source: Uganda Viral Load Dashboard", 
        fill="% virally suppressed") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+
+
+sex_ratio = uvl[ ,.(patients=sum(patients_received), ratio=100*sum(suppressed)/sum(valid_results)), by=.(date, sex)]
+sex_ratio = melt(sex_ratio, id.vars=c('date', 'sex'))
+
+sex_ratio$variable = factor(sex_ratio$variable, c('patients', 'ratio'), c('Patients submitting samples', 'Percent virally suppressed (%)'))
+
+# patients submitting samples by sex
+ggplot(sex_ratio[sex!='Unknown' & variable=='Patients submitting samples'], aes(x=date, y=value, color=sex, group=sex)) +
+  geom_point() +
+  geom_line() + 
+  theme_bw() +
+  labs(title='Patients submitting samples for VL testing by sex', x='Date', y='Count', color='Sex') +
+  theme(plot.title=element_text(size=18))
+  
+# suppression ratio by sex
+ggplot(sex_ratio[sex!='Unknown' & variable=='Percent virally suppressed (%)'], aes(x=date, y=value, color=sex, group=sex)) +
+  geom_point() +
+  geom_line() + 
+  theme_bw() +
+  labs(title='Percent virally suppressed by sex', x='Date', y='%', color='Sex') +
+  theme(plot.title=element_text(size=18))
+
 
 # stacked bar showing suppressed/not suppressed of valid test results by year 
 ggplot(table_1, aes(x=date, y=valid_results, fill='Not Suppressed')) + 
@@ -883,5 +908,13 @@ ggplot(graph, aes(x=date, y=ratio, color=sex)) +
         legend.text = element_text(size=14)) 
 
 dev.off()
+
+#-----------------------------------
+
+# alternate graphs for presentation
+
+
+
+
 
 

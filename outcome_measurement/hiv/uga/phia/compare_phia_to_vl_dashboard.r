@@ -7,6 +7,11 @@
 # The working directory should be the root of this repo
 # ---------------------------------------------------------
 
+# TO DO
+# - test alternate models instead of model 2
+# - add covariates?
+# - test sensitivity to different ART estimates
+
 
 # --------------------
 # Set up R
@@ -29,10 +34,10 @@ library(gridExtra)
 # Files and directories
 
 # prep function
-source('./outcome_measurement/prep_phia_vl_dashboard.r')
+source('./outcome_measurement/hiv/uga/phia/prep_phia_vl_dashboard.r')
 
 # graph function
-source('./outcome_measurement/graph_phia_vl_dashboard.r')
+source('./outcome_measurement/hiv/uga/phia/graph_phia_vl_dashboard.r')
 
 # data directory
 dir = 'J:/Project/Evaluation/GF/outcome_measurement/uga/'
@@ -66,6 +71,7 @@ predData = cbind(predData, preds)
 
 # linear fit on correction factors
 lmFit2 = lmer(vld_suppression_adj/phia_vls~(1|region10_name), distData)
+# lmFit2 = lmer(phia_vls~vld_suppression_adj+(1|region10_name), distData)
 
 # region-specific correction of district-level data
 distData[, ratio:=predict(lmFit2)]
