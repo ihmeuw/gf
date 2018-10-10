@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------------------------
 # David Phillips
 #
-# 10/31/2017
+# 10/10/2018
 # Function that preps data from PHIA and the Uganda National Viral Load Dashboard
 # Intended to be called by compare_phia_to_vl_dashboard.r
 # Inputs:
@@ -32,11 +32,14 @@ prepVL = function(dir=NULL, level='region', annual=FALSE) {
 	# Files and directories
 
 	# input files
-	inFilePHIA = paste0(dir, 'phia_2016/vl_suppression_by_region.csv')
+	inFilePHIA = paste0(dir, 'vl_suppression_by_region.csv')
 	inFileVLD = paste0(dir, 'vl_dashboard/facilities_suppression_201710311708_aug16_mar17.csv')
 	inFileVLD15 = paste0(dir, 'vl_dashboard/facilities_suppression_201711211146_jan15_dec15.csv')
 	inFileVLD16 = paste0(dir, 'vl_dashboard/facilities_suppression_201711211213_jan16_dec16.csv')
 	inFileVLD17 = paste0(dir, 'vl_dashboard/facilities_suppression_201711211214_jan17_nov17.csv')
+	
+	
+	
 	inFileAIS = 'J:/DATA/MACRO_AIS/UGA/2011/UGA_AIS6_2011_IND_Y2012M10D11.DTA'
 	inDirART = 'J:/WORK/04_epi/01_database/02_data/hiv/spectrum/summary/170617_hotsauce_high'
 	inFileART = paste0(inDirART, '/locations/UGA_spectrum_prep.csv')
