@@ -261,7 +261,7 @@ ggplot(rat, aes(x=date, y=prop, color=dps, group=dps)) +
   geom_point() + 
   geom_line() +
   theme_bw() +
-  labs(title='Percent virally suppressed by DPS (missing if no VL tests performed)', x='Date', y='Percent(%)', color='DPS')
+  labs(title='Percent virally suppressed by DPS (missing if 0 VL tests performed)', x='Date', y='Percent(%)', color='DPS')
 
 
 #------------------------
@@ -630,3 +630,7 @@ ggplot(coordinates_sex, aes(x=long, y=lat, group=group, fill=ratio)) +
 dev.off()
 
 #--------------------------
+
+
+
+
