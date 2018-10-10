@@ -63,7 +63,8 @@ idVars = c('province','dps', 'health_zone', 'year',
 			'mean_newCasesMalariaMild','mean_newCasesMalariaSevere', 
 			'lower_newCasesMalariaMild','lower_newCasesMalariaSevere', 
 			'upper_newCasesMalariaMild','upper_newCasesMalariaSevere', 
-			'pf_incidence')
+			'pf_incidence','mean_suspectedMalaria',
+			'lower_suspectedMalaria','upper_suspectedMalaria')
 if (analysisLevel!='HZ') idVars = idVars[idVars!='health_zone']
 data = melt(data, id.vars=idVars)
 
@@ -78,7 +79,8 @@ data[variable=='mean_RDT', label:='RDTs']
 
 # make lag of incidence and reporting
 data = data[order(dps, variable, year)]
-cols = c('pf_incidence','mean_newCasesMalariaMild','mean_newCasesMalariaSevere')
+cols = c('pf_incidence','mean_newCasesMalariaMild',
+		'mean_newCasesMalariaSevere','mean_suspectedMalaria')
 names = paste0('lag_',cols)
 data[, (names):=shift(.SD), by=c('dps','variable'), .SDcols=cols]
 # --------------------------------------------------------------------
@@ -98,21 +100,21 @@ data[, variable:=paste0(variable, '_received')]
 data[, variable:=gsub('received_received', 'received', variable)]
 dps = data[, lapply(.SD, sum, na.rm=TRUE), by=byVars, 
 		.SDcols=names(data)[!names(data) %in% c(byVars,'health_zone')]]
-		
+
 # identify interesting DPS's to label for MAP estimates vs distribution
 fit = lm(value~pf_incidence*factor(year)*factor(variable), dps)
 dps[, resid:=value-predict(fit)]
 dps[, resid_upper:=quantile(resid,.85), by=c('year','variable')]
 dps[, resid_lower:=quantile(resid,.15), by=c('year','variable')]
 dps[resid>resid_upper | resid<resid_lower, dps_label1:=dps]
-		
+
 # identify interesting DPS's to label for PNLP vs distribution
 fit = lm(value~mean_newCasesMalariaSevere*factor(year)*factor(variable), dps)
 dps[, resid:=value-predict(fit)]
 dps[, resid_upper:=quantile(resid,.85), by=c('year','variable')]
 dps[, resid_lower:=quantile(resid,.15), by=c('year','variable')]
 dps[resid>resid_upper | resid<resid_lower, dps_label2:=dps]
-		
+
 # identify interesting DPS's to label for PNLP vs MAP
 fit = lm(pf_incidence~mean_newCasesMalariaSevere*factor(year), dps)
 dps[, resid:=value-predict(fit)]
@@ -159,8 +161,22 @@ p2 = ggplot(dps[year==2017], aes(y=value/1000000,
 		y='Number Distributed (in Millions)', x='Reported Cases (Mild + Severe in Millions)', color='Year') + 
 	theme_bw()
 	
+# comparison using suspected cases
+p3 = ggplot(dps[year==2017], aes(y=value/1000000, 
+		x=(lag_mean_suspectedCases)/1000000, label=dps_label2)) + 
+	geom_point() + 
+	geom_smooth(method='lm') + 
+	geom_text_repel(color='grey25', box.padding=1.5, 
+		segment.color='grey75', min.segment.length=0) + 
+	facet_wrap(~label, scales='free_y') + 
+	scale_color_manual(values=colors) + 
+	labs(title='Commodity Distribution Compared to Reported Number of Cases - 2017', 
+		subtitle='Aggregated by DPS', 
+		y='Number Distributed (in Millions)', x='Reported Cases (Mild + Severe in Millions)', color='Year') + 
+	theme_bw()
+	
 # comparison of MAP vs PNLP cases (selecting one variable arbitrarily to avoid duplication)
-p3 = ggplot(dps[variable=='mean_RDT_received' & year==2017], 
+p4 = ggplot(dps[variable=='mean_RDT_received' & year==2017], 
 		aes(y=(lag_mean_newCasesMalariaSevere+lag_mean_newCasesMalariaMild)/100000, 
 		x=pf_incidence/1000000, label=dps_label3)) + 
 	geom_point() + 
@@ -176,7 +192,7 @@ p3 = ggplot(dps[variable=='mean_RDT_received' & year==2017],
 	theme_bw()
 
 # comparison across all years
-p4 = ggplot(dps, aes(y=value, 
+p5 = ggplot(dps, aes(y=value, 
 		x=lag_pf_incidence)) + 
 	geom_point() + 
 	geom_smooth(method='lm', se=FALSE) + 
@@ -188,7 +204,7 @@ p4 = ggplot(dps, aes(y=value,
 	theme_bw()
 	
 # comparison across all years
-p5 = ggplot(dps, aes(y=value, 
+p6 = ggplot(dps, aes(y=value, 
 		x=(lag_mean_newCasesMalariaSevere+lag_mean_newCasesMalariaMild))) + 
 	geom_point() + 
 	geom_smooth(method='lm', se=FALSE) + 
@@ -200,7 +216,7 @@ p5 = ggplot(dps, aes(y=value,
 	theme_bw()
 	
 # rolling comparison
-p6 = list()
+p7 = list()
 i=1
 for (d in unique(dps$dps)) { 
 	p6[[i]] = ggplot(dps[dps==d], aes(y=value, x=year)) + 
@@ -225,6 +241,7 @@ p2
 p3
 p4
 p5
-for(i in seq(length(p6))) print(p6[[i]])
+p6
+for(i in seq(length(p7))) print(p7[[i]])
 dev.off()
 # --------------------------------
