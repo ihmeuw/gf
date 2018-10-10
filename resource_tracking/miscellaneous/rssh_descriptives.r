@@ -84,5 +84,9 @@ activityTotals[grepl('DRC',window) & rank<4][order(window)]
 activityTotals[grepl('UGA',window) & rank<4][order(window)]
 activityTotals[grepl('GTM',window) & rank<4][order(window)]
 
-
+# largest RSSH activities in latest window
+vars = c('abbrev_module','abbrev_intervention','sda_activity','budget','grants')
+activityTotals[window=='UGA 2017-2020' & rank<9, vars]
+activityTotals[window=='DRC 2017-2020' & rank<9, vars]
+activityTotals[window=='GTM 2018-2020' & rank<9, vars]
 # -------------------------------------------
