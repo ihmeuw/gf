@@ -89,4 +89,12 @@ vars = c('abbrev_module','abbrev_intervention','sda_activity','budget','grants')
 activityTotals[window=='UGA 2017-2020' & rank<9, vars]
 activityTotals[window=='DRC 2017-2020' & rank<9, vars]
 activityTotals[window=='GTM 2018-2020' & rank<9, vars]
+
+# largest RSSH activities by country and window
+byVars = by=c('country','start_date', 'sda_activity')
+activityTotalsY = data[grepl('R', code), .(budget=sum(budget)), byVars]
+activityTotalsY = activityTotalsY[order(-budget)]
+bigActivities = unique(activityTotals[window=='UGA 2017-2020' & rank<10]$sda_activity)
+tmp = activityTotalsY[country=='Uganda' & sda_activity %in% bigActivities]
+dcast(tmp, country+sda_activity~start_date)
 # -------------------------------------------
