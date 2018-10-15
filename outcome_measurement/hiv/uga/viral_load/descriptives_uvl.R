@@ -72,9 +72,6 @@ unique(uvl$district_name)[!(unique(uvl$district_name)) %in% unique(shapeData@dat
 shape_names <- data.table(district_name=shapeData@data$dist112_na, id=shapeData@data$dist112)
 str(shape_names)
 
-
-
-
 #----------------------------------------
 # total and annual counts and suppression ratios by district
 

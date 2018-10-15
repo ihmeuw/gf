@@ -33,17 +33,12 @@ prepVL = function(dir=NULL, level='region', annual=FALSE) {
 
 	# input files
 	inFilePHIA = paste0(dir, 'vl_suppression_by_region.csv')
-	inFileVLD = paste0(dir, 'vl_dashboard/facilities_suppression_201710311708_aug16_mar17.csv')
-	inFileVLD15 = paste0(dir, 'vl_dashboard/facilities_suppression_201711211146_jan15_dec15.csv')
-	inFileVLD16 = paste0(dir, 'vl_dashboard/facilities_suppression_201711211213_jan16_dec16.csv')
-	inFileVLD17 = paste0(dir, 'vl_dashboard/facilities_suppression_201711211214_jan17_nov17.csv')
-	
-	
+	inFileVLD = paste0(dir, 'vl_region_data.rds')
 	
 	inFileAIS = 'J:/DATA/MACRO_AIS/UGA/2011/UGA_AIS6_2011_IND_Y2012M10D11.DTA'
 	inDirART = 'J:/WORK/04_epi/01_database/02_data/hiv/spectrum/summary/170617_hotsauce_high'
 	inFileART = paste0(inDirART, '/locations/UGA_spectrum_prep.csv')
-	
+
 	# district/region maps
 	distMapFile = paste0(dir, '../../mapping/uga/uga_geographies_map.csv')
 	distAltMapFile = paste0(dir, '../../mapping/uga/uga_alternate_dist_names.csv')
@@ -57,11 +52,11 @@ prepVL = function(dir=NULL, level='region', annual=FALSE) {
 	# load
 	phiaData = fread(inFilePHIA)
 
-	# map phia to standard regions
-	regAltMap = fread(regAltMapFile)
-	phiaData = merge(phiaData, regAltMap, by.x='Region', by.y='region10_alt_name', all.x=TRUE)
-	phiaData[is.na(region10_name), region10_name:=Region]
-	phiaData$Region = NULL
+	# # map phia to standard regions
+	# regAltMap = fread(regAltMapFile)
+	# phiaData = merge(phiaData, regAltMap, by.x='Region', by.y='region10_alt_name', all.x=TRUE)
+	# phiaData[is.na(region10_name), region10_name:=Region]
+	# phiaData$Region = NULL
 	# -------------------------------------------------------------------------------------------
 
 
@@ -82,6 +77,9 @@ prepVL = function(dir=NULL, level='region', annual=FALSE) {
 			i=i+1
 		}
 	}
+	
+	
+	ranef lmefit
 	
 	# correct non-standard district names
 	distAltMap = fread(distAltMapFile)

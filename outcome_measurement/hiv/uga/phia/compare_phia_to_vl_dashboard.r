@@ -27,6 +27,8 @@ library(rgeos)
 library(RColorBrewer)
 library(ggplot2)
 library(gridExtra)
+library(ggrepel)
+library(Hmisc)
 # --------------------
 
 
@@ -34,10 +36,10 @@ library(gridExtra)
 # Files and directories
 
 # prep function
-source('./outcome_measurement/hiv/uga/phia/prep_phia_vl_dashboard.r')
-
-# graph function
-source('./outcome_measurement/hiv/uga/phia/graph_phia_vl_dashboard.r')
+# source('./outcome_measurement/hiv/uga/phia/prep_phia_vl_dashboard.r')
+# 
+# # graph function
+# source('./outcome_measurement/hiv/uga/phia/graph_phia_vl_dashboard.r')
 
 # data directory
 dir = 'J:/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/'
