@@ -263,7 +263,7 @@ ratePlots[[i]] = ggplot(aggN, aes(y=mean, x=date, color=cadre)) +
 	geom_point(aes(size=n_facilities)) + 
 	scale_color_manual(values=colors) + 
 	scale_size_continuous(range=sizeRange1) + 
-	labs(title='National-Level Medians', y='Health Care Workers per Facility', 
+	labs(title='National-Level Means', y='Health Care Workers per Facility', 
 		x='', color='Cadre', size='Number of\nFacilities\nReporting') + 
 	theme_bw()
 
@@ -275,7 +275,7 @@ ratePlots[[i]] = ggplot(aggL, aes(y=mean, x=date, color=cadre)) +
 	scale_color_manual(values=colors) + 
 	scale_size_continuous(range=sizeRange2) + 
 	facet_wrap(~level) + 
-	labs(title='Facility Platform Medians', y='Health Care Workers per Facility', 
+	labs(title='Facility Platform Means', y='Health Care Workers per Facility', 
 		x='', color='Cadre', size='Number of\nFacilities\nReporting') + 
 	theme_bw()
 
@@ -291,7 +291,7 @@ ratePlots[[i]] = ggplot(aggD[dps %in% dpss[chunks==c]], aes(y=mean, x=date, colo
 	scale_color_manual(values=colors) + 
 	scale_size_continuous(range=sizeRange2) + 
 	facet_wrap(~dps) + 
-	labs(title=paste0('DPS Medians (DPS\'s ', (c*chunkSize)-chunkSize+1, '-', c*chunkSize, ')'), 
+	labs(title=paste0('DPS Means (DPS\'s ', (c*chunkSize)-chunkSize+1, '-', c*chunkSize, ')'), 
 		y='Health Care Workers per Facility', 
 		x='', color='Cadre', size='Number of\nFacilities\nReporting') + 
 	theme_bw()
