@@ -89,8 +89,10 @@ pnls[grep('tg', element1), subpop:='transgender']
 pnls[grep('routier', element1), subpop:='trucker']
 pnls[grep('minier', element1), subpop:='miner']
 pnls[grep('discordants', element1), subpop:='serodisc']
-pnls[grep('masc', element1) | grep('hsh', element1), subpop:='msm']
-pnls[grep('enceintes', element1) | grep('allaitantes', element1), subpop:='plw']
+pnls[grep('masc', element1), subpop:='msm']
+pnls[grep('hsh', element1), subpop:='msm']
+pnls[grep('enceintes', element1), subpop:='plw']
+pnls[grep('allaitantes', element1), subpop:='plw']
 pnls[grep('svs', element), subpop:='svs']
 pnls[grep('client', element), subpop:='client']
 pnls[grep('enfants de rue', element1), subpop:='street']
@@ -98,8 +100,51 @@ pnls[grep('autres', element1), subpop:='other']
 pnls[grep('deplaces', element1), subpop:='idp']
 pnls[grep('refug', element1), subpop:='refugee']
 pnls[grep('pecheurs', element1), subpop:='fisher']
-     
+pnls[grep('ps', element1), subpop:='csw']
+
 #--------------------------------------
+# prep age and sex categories
+
+# create a searchable category variable
+pnls[ ,category1:=tolower(category)]
+pnls[ ,category1:=fix_diacritics(category1)]
+
+# create a sex category
+pnls[grep('feminin', category1), sex:='Female']
+pnls[grep('masc', category1), sex:='Male']
+pnls[subpop=='plw', sex:='Female']
+pnls[subpop=='msm', sex:='Male']
+
+
+# age category 
+
+
+
+
+
+#--------------------------------------
+# normalize the variables
+
+pnls[type=='vct', unique(element)]
+
+#substring the element
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

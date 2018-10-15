@@ -56,17 +56,17 @@ source(paste0(dir, 'dhis_extracting_functions.R'))
 start_year <- '2018'
 end_year <- '2018'
 start_month <- '01'
-end_month <- '07'
+end_month <- '02'
 
 # change the update year to before the data begins
-update_year <- start_year
+update_year <- '2010'
 
 #identify the data set(s) you want to download by number (list below)
-set <- 17
+set <- 1
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name <- 'pnls'
+set_name <- 'base'
 
 # available data sets by number: 
 
@@ -108,6 +108,10 @@ data_sets <- readRDS(paste0(dir, "meta_data/data_sets.rds"))
 data_sets <- data.table(data_sets)
 org_units <- readRDS(paste0(dir, "meta_data/org_units_list.rds")) 
 org_units <- data.table(org_units)
+
+org_units[ ,org_unit_ID:=as.character(org_unit_ID)]
+org_units[ ,org_unit_name:=as.character(org_unit_name)]
+org_units[ ,org_unit_url:=as.character(org_unit_url)]
 
 #-----------------------------------------------
 

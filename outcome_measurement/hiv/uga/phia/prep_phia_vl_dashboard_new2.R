@@ -31,9 +31,9 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   # Files and directories
   
   # input files phia and vl data 
-  inFilePHIA = paste0(dir, 'vl_suppression_by_region.csv')
-  inFileVLD = paste0(dir, 'vl_region_data.rds')
-  
+  inFilePHIA = paste0(dir, 'prepped/vl_suppression_by_region.csv')
+  inFileVLD = paste0(dir, 'prepped/vl_data.rds')
+
   # input files - ais and 
   inFileAIS = 'J:/DATA/MACRO_AIS/UGA/2011/UGA_AIS6_2011_IND_Y2012M10D11.DTA'
   inDirART = 'J:/WORK/04_epi/01_database/02_data/hiv/spectrum/summary/170617_hotsauce_high'
@@ -53,17 +53,13 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   # load vl dashboard
   vl = readRDS(inFileVLD)
   
-  setnames(vl, 'id', 'region')
-  
   # convert viral load regions 
   regAltMap = fread(regAltMapFile)
   
   # check that the regions are the same
-  if (all(vl$region %in% phia$region)!=TRUE) print("One region is mismatched!")
+  if (all(unique(vl$region) %in% phia$region)!=TRUE) print("One or more regions are mismatched!")
 
 # -------------------------------------------------------------------------------------------
-  
-  # ------------------------------------------------------------------------------------
   # Load/prep AIS dataset and ART estimates
   
   # load the 2011 aids indicator survey
@@ -77,27 +73,32 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   ais[ , v024:=as.character(v024)]
   ais[ , v024:=capitalize(ais$v024)]
   
-  
-  ggplot(ais, aes(x=long, y=lat, group=group, fill=ratio)) + 
-    geom_polygon() + 
-    # geom_path(size=0.01, color="#636363") + 
-    scale_fill_gradientn(colors=ratio_colors, breaks=breaks) + 
-    theme_void() +
-    coord_fixed() +
-    labs(fill='VLS') +
-    geom_label_repel(data = names, aes(label = name, x = long, y = lat, group = name), inherit.aes=FALSE, size=5)
-  
-  
-  
-  
-  
   # normalize around current ART estimates
   art = fread(inFileART)
   art = art[measure=='ART' & metric=='Rate' & year_id==2016 & sex_id==3 & age_group_id==22]
   ais[ , art_coverage_2011:=art_coverage]
   ais[, art_coverage:=art_coverage*(art$mean/national$art_coverage)]
+
   
-  setnames(ais, 'region10_name', 'region')
+  # change the ais districts to match the vl dashboard
+  setnames(ais, 'v024', 'region')
+  ais[grep('^Central', region), region:=(gsub(region, pattern=' ', replacement='_'))]
+  
+  
+  
+  ais[region=='East central', region:='East_Central']
+  ais[region=='Mis western', region:='Mid-West']
+  
+ais[ ,:=(capitalize(unlist(lapply(strsplit(ais$region, "\\s"), "[", 2))))]
+
+  
+  
+  # fix the names to match the phia graphic
+  names$name = gsub(names$name, pattern='_', replacement='-')
+
+  names[grep('^West', name), name:=(gsub(name, pattern='-', replacement=' '))]
+  
+
   # ------------------------------------------------------------------------------------
   
   # -------------------------------------------------------------------------------------------
@@ -115,9 +116,9 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   facLevelData[, phia_vls_upper:=as.numeric(phia_vls_upper)]
   
   # handle level input
-  if (level=='region') byVars = c('region', 'id')
-  if (level=='district') byVars = c('region10_name','dist_name','dist112')
-  if (level=='facility') byVars = c('region10_name','dist_name','dist112','Hub','Facility')
+  if (level=='region') byVars = c('region')
+  if (level=='district') byVars = c('district_name', 'region')
+  if (level=='facility') byVars = c('facility_name', 'district_name', 'region')
   
   # include time if annual is specified
   if (annual) byVars = c(byVars, 'year')

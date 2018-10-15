@@ -60,30 +60,33 @@ gSimplify(shapeData, tol=0.5, topologyPreserve=TRUE)
 plot(shapeData)
 
 # ----------------------------------------------
-# collapse the data into regions
+# assign the relevant regions to the districts and facilities 
 
 # import the ten regions that are included in phia
 regions = fread(paste0(root, "/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv"))
 regions = unique(regions[ ,.(region=region10_alt, district_name=dist112_name)])
 
 # subset to the relevant dates
-vl = uvl[date>= '2016-08-01' & date <='2017-03-01',.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=district_name]
+vl = uvl[date>= '2016-08-01' & date <='2017-03-01']
 
+#------------------------------------------------
+# export a facility level data set 
 
 # merge the names of regions and their associated districts with the vl data 
 vl = merge(vl, regions, by='district_name')
 
-# export at the district level 
-saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/vl_region_data.rds'))
+# export a facility level data set 
+vl = vl[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=.(facility_name, district_name, region)]
 
-# collapse on region
+# export the file to analyze - use the names in the shape file 
+saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
+
+#------------------------------------------
+# aggregate districts into regions
 vl = vl[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=region]
 
 # calculate the suppression ratio
 vl[ , ratio:=round(100*(suppressed/valid_results), 1), by=region]
-
-#------------------------------------------
-# aggregate districts into regions
 
 # put the regions in the same order as the shape file
 regions = regions[match(shapeData@data$dist112_n, regions$district_name)]
@@ -103,18 +106,21 @@ coordinates_new = data.table(coordinates_new)
 # identify centroids and label them
 names = data.table(coordinates(shapeDataNew))
 setnames(names, c('long', 'lat'))
-names[ , name:=unique(coordinates_new$id)]
+name = unique(coordinates_new$id)
+names = cbind(names, name)
 
-# merge in the ratios for complete labels
+# merge in the ratios to create complete labels
 vl_new = vl[ ,.(name=id, ratio)]
 names = merge(vl_new, names, by='name')
-names[ ,name:=paste0(name, ': ', ratio, '%')]
-names[ ,ratio:=NULL]
 
-# replace labels with hyphens to match phia graphics
+# fix the names to match the phia graphic
 names$name = gsub(names$name, pattern='_', replacement='-')
 names[grep('^Central', name), name:=(gsub(name, pattern='-', replacement=' '))]
 names[grep('^West', name), name:=(gsub(name, pattern='-', replacement=' '))]
+
+# create complete labels
+names[ ,name:=paste0(name, ': ', ratio, '%')]
+names[ ,ratio:=NULL]
 
 # ---------------
 # graph the same time period as the phia graph in uganda vl 
@@ -141,17 +147,15 @@ ggplot(coordinates_new, aes(x=long, y=lat, group=group, fill=ratio)) +
 dev.off()
 
 #---------------------------------------------------------------
-# export a data set for the relevant time period
-
-saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/vl_region_data.rds'))
 
 #---------------------------------------------------------------
 # map 2011 or 2016 aids indicator survey estimates 
+# these data are cleaned in the analysis function 
 
 # select the survey or projected estimates and import the data 
-ais = readRDS('J:/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/ais_estimates.rds')
+ais = readRDS('J:/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/ais_estimates.rds')
 
-# alter names to match shape file
+# alter names to match the shape file ans viral load data set
 ais[ , region:=(gsub(region, pattern='-', replacement="_"))]
 ais[ , region:=(gsub(region, pattern='\\s', replacement="_"))]
 setnames(ais, 'region', 'id')
