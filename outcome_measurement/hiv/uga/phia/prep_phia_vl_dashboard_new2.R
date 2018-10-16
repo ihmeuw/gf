@@ -1,7 +1,7 @@
 # ------------------------------------------------------------------------------------------------
-# David Phillips
+# David Phillips, Caitlin O'Brien-Carelli
 #
-# 10/10/2018
+# 10/16/2018
 # Function that preps data from PHIA and the Uganda National Viral Load Dashboard
 # Intended to be called by compare_phia_to_vl_dashboard.r
 # Inputs:
@@ -80,25 +80,23 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   ais[, art_coverage:=art_coverage*(art$mean/national$art_coverage)]
 
   
-  # change the ais districts to match the vl dashboard
+  # change the ais regions to match the vl dashboard
+  # these regions are the same as phia, but the spelling differs
   setnames(ais, 'v024', 'region')
-  ais[grep('^Central', region), region:=(gsub(region, pattern=' ', replacement='_'))]
   
+  ais[ , first:=capitalize((unlist(lapply(strsplit(ais$region, "\\s"), "[", 1))))]
+  ais[ , second:=capitalize((unlist(lapply(strsplit(ais$region, "\\s"), "[", 2))))]
+  ais[region!='Kampala' , region:=paste0(first, '_', second)]
+  ais[ ,c('first', 'second'):=NULL]
+  ais[region=='Mid_Western', region:='Mid_West']
+  ais[region=='Mid_Eastern', region:='Mid_East']
+  ais[region=='South_Western', region:='South_West']
+  ais[region=='Mid_Northern', region:='Mid_North']
+  ais[region=='Kampala', region:='Kampala']
   
-  
-  ais[region=='East central', region:='East_Central']
-  ais[region=='Mis western', region:='Mid-West']
-  
-ais[ ,:=(capitalize(unlist(lapply(strsplit(ais$region, "\\s"), "[", 2))))]
-
-  
-  
-  # fix the names to match the phia graphic
-  names$name = gsub(names$name, pattern='_', replacement='-')
-
-  names[grep('^West', name), name:=(gsub(name, pattern='-', replacement=' '))]
-  
-
+  # export a file to map
+  saveRDS(ais, paste0(dir, 'prepped/ais_data.rds'))
+    
   # ------------------------------------------------------------------------------------
   
   # -------------------------------------------------------------------------------------------

@@ -53,10 +53,11 @@ outFileDistYear = paste0(dir, 'output/district_year_vls.csv')
 # Prep data at different levels
 regData = prepVL(dir, level='region')
 distData = prepVL(dir, level='district')
-regDataAnnual = prepVL(dir, level='region', annual=TRUE)
-distDataAnnual = prepVL(dir, level='district', annual=TRUE)
-# ---------------------------------------------------------
 
+# if annual data is available
+# regDataAnnual = prepVL(dir, level='region', annual=TRUE)
+# distDataAnnual = prepVL(dir, level='district', annual=TRUE)
+# ---------------------------------------------------------
 
 # ---------------------------------------------------------------------------
 # Analysis

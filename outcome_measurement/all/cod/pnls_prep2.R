@@ -93,15 +93,18 @@ pnls[grep('masc', element1), subpop:='msm']
 pnls[grep('hsh', element1), subpop:='msm']
 pnls[grep('enceintes', element1), subpop:='plw']
 pnls[grep('allaitantes', element1), subpop:='plw']
-pnls[grep('svs', element), subpop:='svs']
-pnls[grep('client', element), subpop:='client']
+pnls[grep('svs', element1), subpop:='svs']
+pnls[grep('client', element1), subpop:='client']
 pnls[grep('enfants de rue', element1), subpop:='street']
 pnls[grep('autres', element1), subpop:='other']
 pnls[grep('deplaces', element1), subpop:='idp']
 pnls[grep('refug', element1), subpop:='refugee']
 pnls[grep('pecheurs', element1), subpop:='fisher']
 pnls[grep('ps', element1), subpop:='csw']
-
+pnls[grep('uniforme', element1), subpop:='mu']
+pnls[grep('hu', element1), subpop:='mu']
+pnls[grep('enfants', element1), subpop:='exposted_infant']
+pnls[grep('eev', element1), subpop:='exposted_infant']
 #--------------------------------------
 # prep age and sex categories
 
@@ -115,7 +118,6 @@ pnls[grep('masc', category1), sex:='Male']
 pnls[subpop=='plw', sex:='Female']
 pnls[subpop=='msm', sex:='Male']
 
-
 # age category 
 
 
@@ -126,6 +128,8 @@ pnls[subpop=='msm', sex:='Male']
 # normalize the variables
 
 pnls[type=='vct', unique(element)]
+
+pnls[grep('', element1), variable:=]
 
 #substring the element
 

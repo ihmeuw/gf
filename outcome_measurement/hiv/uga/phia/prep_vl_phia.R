@@ -79,7 +79,7 @@ vl = merge(vl, regions, by='district_name')
 vl = vl[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=.(facility_name, district_name, region)]
 
 # export the file to analyze - use the names in the shape file 
-saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
+#saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
 
 #------------------------------------------
 # aggregate districts into regions
@@ -132,19 +132,18 @@ ratio_colors = brewer.pal(6, 'BuGn')
 breaks = c(80, 83, 86, 89)
 
 # export the comparison map as a pdf
-pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/vl_comparison_map.pdf'), height=6, width=9)
+# pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/vl_comparison_map.pdf'), height=6, width=9)
 
 # map of regions 
 ggplot(coordinates_new, aes(x=long, y=lat, group=group, fill=ratio)) + 
   geom_polygon() + 
-  # geom_path(size=0.01, color="#636363") + 
   scale_fill_gradientn(colors=ratio_colors, breaks=breaks) + 
   theme_void() +
   coord_fixed() +
   labs(fill='VLS') +
   geom_label_repel(data = names, aes(label = name, x = long, y = lat, group = name), inherit.aes=FALSE, size=5)
   
-dev.off()
+# dev.off()
 
 #---------------------------------------------------------------
 
@@ -153,12 +152,12 @@ dev.off()
 # these data are cleaned in the analysis function 
 
 # select the survey or projected estimates and import the data 
-ais = readRDS('J:/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/ais_estimates.rds')
-
-# alter names to match the shape file ans viral load data set
-ais[ , region:=(gsub(region, pattern='-', replacement="_"))]
-ais[ , region:=(gsub(region, pattern='\\s', replacement="_"))]
+ais = readRDS('J:/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/ais_data.rds')
 setnames(ais, 'region', 'id')
+
+# round estimates and format as percentages
+ais[ , art_coverage:=round(100*art_coverage, 1)]
+ais[ , art_coverage_2011:=round(100*art_coverage_2011, 1)]
 
 # create a set of art coverage colors
 art_colors = brewer.pal(8, 'Spectral')
@@ -179,7 +178,7 @@ ais_names$id = gsub(ais_names$id, pattern='_', replacement='-')
 ais_names[grep('^Central', id), id:=(gsub(id, pattern='-', replacement=' '))]
 ais_names[grep('^West', id), id:=(gsub(id, pattern='-', replacement=' '))]
 
-# create labels
+# create labels with region names and art coverage ratios
 ais_names[ ,tag:=paste0(id, ': ', art_coverage, '%' )]
 ais_names[ ,tag_2011:=paste0(id, ': ', art_coverage_2011, '%' )]
 
@@ -201,7 +200,7 @@ coordinates_ais = rbind(art_2011, art_2016)
 
 
 #print out a comparative map of original and projected estimates
-pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/art_coverage_comparison_maps.pdf'), height=6, width=12)
+# pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/art_coverage_comparison_maps.pdf'), height=6, width=12)
 
 # map of regions 
 ggplot(coordinates_ais, aes(x=long, y=lat, group=group, fill=variable)) + 
@@ -214,7 +213,7 @@ ggplot(coordinates_ais, aes(x=long, y=lat, group=group, fill=variable)) +
   geom_label_repel(data = ais_names, aes(label = variable, x = long, y = lat, group = variable), inherit.aes=FALSE)
 
 
-dev.off()
+# dev.off()
 
 #---------------------------------------------------------------
 
