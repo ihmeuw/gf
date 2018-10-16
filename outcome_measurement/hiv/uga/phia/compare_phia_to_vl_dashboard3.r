@@ -4,9 +4,8 @@
 # 10/16/18
 # Compares Population-Based HIV Impact Assessment (PHIA) to VL Dashboard
 # The working directory should be the root of this repo
-# ---------------------------------------------------------
 
-# --------------------
+# ---------------------------------------------------------
 # Set up R
 rm(list=ls())
 library(data.table)
@@ -22,6 +21,7 @@ library(ggplot2)
 library(gridExtra)
 library(ggrepel)
 library(Hmisc)
+
 # --------------------
 
 # -----------------------------------------------------------
@@ -31,10 +31,10 @@ library(Hmisc)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # data directory
-dir = pate0(j,  'Project/Evaluation/GF/outcome_measurement/uga/phia_2016/')
+dir = paste0(j,  'Project/Evaluation/GF/outcome_measurement/uga/phia_2016/')
 
 # prep function - sourced from local repo (change directory on cluster)
-source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/phia/prep_phia_vl_dashboard.r')
+source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/phia/prep_phia_vl_dashboard_new2.r')
  
 # graph function
 # source('./outcome_measurement/hiv/uga/phia/graph_phia_vl_dashboard.r')

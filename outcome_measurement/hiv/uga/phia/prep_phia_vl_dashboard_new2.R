@@ -97,10 +97,8 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   # export a file to map
   saveRDS(ais, paste0(dir, 'prepped/ais_data.rds'))
     
-  # ------------------------------------------------------------------------------------
-  
-  # -------------------------------------------------------------------------------------------
-  # Merge datasets and format for analysis
+# ------------------------------------------------------------------------------------
+# Merge phia, vl, and ais datasets and format for analysis
   
   # merge
   facLevelData = merge(phia, vl, by='region')
@@ -140,9 +138,11 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   # -------------------------------------------------------------------------------------------
   
   
-  # --------------
-  # End function
+# --------------
+# End function
   return(data)
+  print(paste('The data is at the', level, 'level.'))
+  
 }
 # ------------------
 
