@@ -27,14 +27,17 @@ library(Hmisc)
 # -----------------------------------------------------------
 # Files and directories
 
-# prep function
-# source('./outcome_measurement/hiv/uga/phia/prep_phia_vl_dashboard.r')
-# 
-# # graph function
-# source('./outcome_measurement/hiv/uga/phia/graph_phia_vl_dashboard.r')
+# home drive 
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # data directory
-dir = 'J:/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/'
+dir = pate0(j,  'Project/Evaluation/GF/outcome_measurement/uga/phia_2016/')
+
+# prep function - sourced from local repo (change directory on cluster)
+source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/phia/prep_phia_vl_dashboard.r')
+ 
+# graph function
+# source('./outcome_measurement/hiv/uga/phia/graph_phia_vl_dashboard.r')
 
 # ouptut data
 outFileDistYear = paste0(dir, 'output/district_year_vls.csv')
@@ -42,13 +45,15 @@ outFileDistYear = paste0(dir, 'output/district_year_vls.csv')
 
 
 # ---------------------------------------------------------
-# Prep data at different levels
+# Prep data at different levels using the prepVL function
+
 regData = prepVL(dir, level='region')
 distData = prepVL(dir, level='district')
+facData = prepVL(dir, level='facility')
 
 # if annual data is available
-# regDataAnnual = prepVL(dir, level='region', annual=TRUE)
-# distDataAnnual = prepVL(dir, level='district', annual=TRUE)
+regDataAnnual = prepVL(dir, level='region', annual=TRUE)
+distDataAnnual = prepVL(dir, level='district', annual=TRUE)
 # ---------------------------------------------------------
 
 # ---------------------------------------------------------------------------

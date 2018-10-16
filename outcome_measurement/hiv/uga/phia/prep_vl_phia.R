@@ -77,6 +77,7 @@ vl = merge(vl, regions, by='district_name')
 
 # export a facility level data set 
 vl = vl[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=.(facility_name, district_name, region)]
+setnames(vl, c('facility_name', 'district_name'), c('facility', 'district'))
 
 # export the file to analyze - use the names in the shape file 
 # saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
@@ -152,7 +153,7 @@ ggplot(coordinates_new, aes(x=long, y=lat, group=group, fill=ratio)) +
 # these data are cleaned in the analysis function 
 
 # select the survey or projected estimates and import the data 
-ais = readRDS('J:/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/ais_data.rds')
+ais = readRDS(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/ais_data.rds'))
 setnames(ais, 'region', 'id')
 
 # round estimates and format as percentages

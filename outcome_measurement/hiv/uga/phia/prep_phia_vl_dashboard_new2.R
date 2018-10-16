@@ -56,7 +56,7 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   # convert viral load regions 
   regAltMap = fread(regAltMapFile)
   
-  # check that the regions are the same
+  # check that the regions are the same in phia and vl data 
   if (all(unique(vl$region) %in% phia$region)!=TRUE) print("One or more regions are mismatched!")
 
 # -------------------------------------------------------------------------------------------
@@ -73,7 +73,7 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   ais[ , v024:=as.character(v024)]
   ais[ , v024:=capitalize(ais$v024)]
   
-  # normalize around current ART estimates
+  # normalize around current ART estimates using 2016 gbd national estimate
   art = fread(inFileART)
   art = art[measure=='ART' & metric=='Rate' & year_id==2016 & sex_id==3 & age_group_id==22]
   ais[ , art_coverage_2011:=art_coverage]
@@ -115,8 +115,8 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   
   # handle level input
   if (level=='region') byVars = c('region')
-  if (level=='district') byVars = c('district_name', 'region')
-  if (level=='facility') byVars = c('facility_name', 'district_name', 'region')
+  if (level=='district') byVars = c('district', 'region')
+  if (level=='facility') byVars = c('facility', 'district', 'region')
   
   # include time if annual is specified
   if (annual) byVars = c(byVars, 'year')

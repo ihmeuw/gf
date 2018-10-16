@@ -88,26 +88,30 @@ pnls[grep('udi', element1), subpop:='idu']
 pnls[grep('tg', element1), subpop:='transgender']
 pnls[grep('routier', element1), subpop:='trucker']
 pnls[grep('minier', element1), subpop:='miner']
-pnls[grep('discordants', element1), subpop:='serodisc']
+pnls[grep('discordant', element1), subpop:='serodisc']
 pnls[grep('masc', element1), subpop:='msm']
 pnls[grep('hsh', element1), subpop:='msm']
+
 pnls[grep('enceintes', element1), subpop:='plw']
 pnls[grep('allaitantes', element1), subpop:='plw']
+
 pnls[grep('svs', element1), subpop:='svs']
+pnls[grep('ps', element1), subpop:='csw']
 pnls[grep('client', element1), subpop:='client']
 pnls[grep('enfants de rue', element1), subpop:='street']
+
 pnls[grep('autres', element1), subpop:='other']
 pnls[grep('deplaces', element1), subpop:='idp']
 pnls[grep('refug', element1), subpop:='refugee']
 pnls[grep('pecheurs', element1), subpop:='fisher']
-pnls[grep('ps', element1), subpop:='csw']
-pnls[grep('uniforme', element1), subpop:='mu']
-pnls[grep('hu', element1), subpop:='mu']
-pnls[grep('enfants', element1), subpop:='exposted_infant']
-pnls[grep('eev', element1), subpop:='exposted_infant']
+
+pnls[grep('uniforme', element1), subpop:='uniform']
+pnls[grep('hu', element1), subpop:='uniform']
+pnls[grep('enfants', element1), subpop:='exposed_infant']
+pnls[grep('eev', element1), subpop:='exposed_infant']
 pnls[grep('handicap', element1), subpop:='disabled']
 
-
+pnls[is.na(subpop), unique(element)]
 
 #--------------------------------------
 # prep age and sex categories
@@ -119,6 +123,7 @@ pnls[ ,category1:=fix_diacritics(category1)]
 
 # create a sex category
 pnls[grep('feminin', category1), sex:='Female']
+pnls[grep('femme', category1), sex:='Female']
 pnls[grep('masc', category1), sex:='Male']
 pnls[subpop=='plw', sex:='Female']
 pnls[subpop=='msm', sex:='Male']
