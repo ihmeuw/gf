@@ -1,15 +1,15 @@
-# ------------------------------------------------------------------------------------------------
+# ----------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
 # 10/16/2018
 # Function that preps data from PHIA and the Uganda National Viral Load Dashboard
-# Intended to be called by compare_phia_to_vl_dashboard.r
+#------------------------------
 # Inputs:
 # dir - directory where data files exist
 # level - what level should the returned data be? Options: 'region', 'district', 'facility'
 # annual - (logical) whether VLD data should be annual or in the time frame matching PHIA
 # Outputs:
-# data - a data.table with both datasets merged together, collapsed (or not) to the specified level
+# data - a data.table with both datasets merged together, collapsed to the specified level
 # ------------------------------------------------------------------------------------------------
 
 

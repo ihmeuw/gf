@@ -1,17 +1,10 @@
 # ---------------------------------------------------------
 # David Phillips
 #
-# 10/31/2017
-# Various comparisons between aggregate PHIA VL suppression 
-# estimates and numbers from the Uganda VL dashboard
+# 10/16/18
+# Compares Population-Based HIV Impact Assessment (PHIA) to VL Dashboard
 # The working directory should be the root of this repo
 # ---------------------------------------------------------
-
-# TO DO
-# - test alternate models instead of model 2
-# - add covariates?
-# - test sensitivity to different ART estimates
-
 
 # --------------------
 # Set up R
@@ -30,7 +23,6 @@ library(gridExtra)
 library(ggrepel)
 library(Hmisc)
 # --------------------
-
 
 # -----------------------------------------------------------
 # Files and directories

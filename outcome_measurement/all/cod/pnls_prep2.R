@@ -105,8 +105,13 @@ pnls[grep('uniforme', element1), subpop:='mu']
 pnls[grep('hu', element1), subpop:='mu']
 pnls[grep('enfants', element1), subpop:='exposted_infant']
 pnls[grep('eev', element1), subpop:='exposted_infant']
+pnls[grep('handicap', element1), subpop:='disabled']
+
+
+
 #--------------------------------------
 # prep age and sex categories
+pnls[unique(category)]
 
 # create a searchable category variable
 pnls[ ,category1:=tolower(category)]
@@ -125,7 +130,7 @@ pnls[subpop=='msm', sex:='Male']
 
 
 #--------------------------------------
-# normalize the variables
+# normalize the variables 
 
 pnls[type=='vct', unique(element)]
 

@@ -79,7 +79,7 @@ vl = merge(vl, regions, by='district_name')
 vl = vl[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=.(facility_name, district_name, region)]
 
 # export the file to analyze - use the names in the shape file 
-#saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
+# saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
 
 #------------------------------------------
 # aggregate districts into regions
@@ -132,7 +132,7 @@ ratio_colors = brewer.pal(6, 'BuGn')
 breaks = c(80, 83, 86, 89)
 
 # export the comparison map as a pdf
-# pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/vl_comparison_map.pdf'), height=6, width=9)
+# pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/output/vl_comparison_map.pdf'), height=6, width=9)
 
 # map of regions 
 ggplot(coordinates_new, aes(x=long, y=lat, group=group, fill=ratio)) + 
@@ -200,7 +200,7 @@ coordinates_ais = rbind(art_2011, art_2016)
 
 
 #print out a comparative map of original and projected estimates
-# pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/art_coverage_comparison_maps.pdf'), height=6, width=12)
+# pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/output/art_coverage_comparison_maps.pdf'), height=6, width=12)
 
 # map of regions 
 ggplot(coordinates_ais, aes(x=long, y=lat, group=group, fill=variable)) + 
