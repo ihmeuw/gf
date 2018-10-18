@@ -11,6 +11,7 @@
 rm(list=ls())
 library(data.table)
 library(quantreg)
+library(MASS)
 library(stringr)
 library(ggplot2)
 library(scales)
@@ -176,6 +177,27 @@ data[candidate==TRUE, value:=NA]
 # -------------------------------------------------------------------------
 
 
+# # ------------------------------------------------
+# # Run some stats
+
+# # trend by level
+# lmFit1 = glm.nb(value~date*level, data)
+# summary(lmFit1)
+
+# # trend by dps
+# lmFit2 = glm.nb(value~date*dps, data)
+# summary(lmFit2)
+
+# # trend by level and cadre
+# lmFit3 = glm.nb(value~cadre*date*level, data)
+# summary(lmFit3)
+
+# # trend by dps and cadre
+# lmFit4 = glm.nb(value~cadre*date*dps, data)
+# summary(lmFit4)
+# # ------------------------------------------------
+
+
 # -------------------------------------------------------------------------
 # Aggregate
 
@@ -222,7 +244,19 @@ countPlots[[i]] = ggplot(aggN, aes(y=value/1000, x=date, color=cadre)) +
 
 # level counts
 i=i+1
-countPlots[[i]] = ggplot(aggL, aes(y=value, x=date, color=cadre)) + 
+bigFacs = c('Clinic','General Reference Hospital','Hospital',
+		'Hospital Center','Medical Surgical Center','Secondary Hospital')
+countPlots[[i]] = ggplot(aggL[level %in% bigFacs], aes(y=value, x=date, color=cadre)) + 
+	geom_line() + 
+	geom_point(aes(size=n_facilities)) + 
+	scale_color_manual(values=colors) + 
+	scale_size_continuous(range=sizeRange2) + 
+	facet_wrap(~level, scales='free_y') + 
+	labs(title='Facility Platform Counts', y='Number of Health Care Workers', 
+		x='', color='Cadre', size='Number of\nFacilities\nReporting') + 
+	theme_bw()
+i=i+1
+countPlots[[i]] = ggplot(aggL[!level %in% bigFacs], aes(y=value, x=date, color=cadre)) + 
 	geom_line() + 
 	geom_point(aes(size=n_facilities)) + 
 	scale_color_manual(values=colors) + 
@@ -269,7 +303,17 @@ ratePlots[[i]] = ggplot(aggN, aes(y=mean, x=date, color=cadre)) +
 
 # level rates
 i=i+1
-ratePlots[[i]] = ggplot(aggL, aes(y=mean, x=date, color=cadre)) + 
+ratePlots[[i]] = ggplot(aggL[level %in% bigFacs], aes(y=mean, x=date, color=cadre)) + 
+	geom_line() + 
+	geom_point(aes(size=n_facilities)) + 
+	scale_color_manual(values=colors) + 
+	scale_size_continuous(range=sizeRange2) + 
+	facet_wrap(~level) + 
+	labs(title='Facility Platform Means', y='Health Care Workers per Facility', 
+		x='', color='Cadre', size='Number of\nFacilities\nReporting') + 
+	theme_bw()
+i=i+1
+ratePlots[[i]] = ggplot(aggL[!level %in% bigFacs], aes(y=mean, x=date, color=cadre)) + 
 	geom_line() + 
 	geom_point(aes(size=n_facilities)) + 
 	scale_color_manual(values=colors) + 
