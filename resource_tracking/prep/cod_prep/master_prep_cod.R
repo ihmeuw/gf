@@ -14,6 +14,7 @@ library(stats)
 library(stringr)
 library(rlang)
 library(zoo)
+library(tidyr)
 # ----------------------------------------------
 ## Notes: running this will throw a warning: 
 #Warning messages:
@@ -182,6 +183,8 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)),
 ##### Load the mapping files  #####
 # ----------------------------------------------
 codData <- strip_chars(resource_database, unwanted_array, remove_chars)
+codData[module == "systcmesdesanteresiliantsetperennesstrategiesnationalesdesante"  & intervention == "strategiessanitairesnationalesalignementaveclesplansmaladiespecifiquesgouvernancedusecteurdelasanteetfinancement", module := 'ssrsestrategiasnacionalesdesalud']
+codData[module == 'ssrsestrategiasnacionalesdesalud' & intervention == "strategiessanitairesnationalesalignementaveclesplansmaladiespecifiquesgouvernancedusecteurdelasanteetfinancement", intervention := 'estrategiasnacionalesensaludalineamientoconplanesespecificosdeenfermedadesgobernanzayfinanciamientoenelsectorsalud']
 
 ## the directory on the J Drive for the intervention list is:
 map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"

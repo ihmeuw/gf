@@ -14,6 +14,7 @@ library(stats)
 library(stringr)
 library(rlang)
 library(zoo)
+library(tidyr)
 
 # ----------------------------------------------
 ## STEP 1: Download the prep_budget_data folder from UGA Basecamp and save somewhere on your local drive: 
@@ -228,6 +229,12 @@ cleaned_database <- strip_chars(cleaned_database, unwanted_array, remove_chars)
 ugaData  <- cleaned_database[!grepl("pleasesel", cleaned_database$module),]
 ugaData$module = ifelse(ugaData$module == "tbhivc", "tbhiv", ugaData$module)
 ugaData = ugaData[module != "module" & module != "servicedeliveryarea"]
+ugaData$intervention = ifelse(ugaData$intervention == "supportiveenvironmentotherspecifycssmonitoringevaluationevidencebuilding",
+                              "supportiveenvironmentmonitoringdrugresistance", ugaData$intervention)
+ugaData$intervention = ifelse(ugaData$intervention == "informationsystemoperationalresearch" & ugaData$module == 'malhealthsystemsstrengthening',
+                              "informationsystem", ugaData$intervention)
+
+
 
 #optional: check again for any dropped data: 
 # data_check2<- as.data.frame(ugaData[, sum(budget, na.rm = TRUE),by = c("grant_number", "data_source","disease")])
@@ -241,7 +248,7 @@ gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 uga_concat <- paste0(ugaData$module, ugaData$intervention)
 unmapped_mods <- ugaData[!uga_concat%in%gf_concat]
 
-if(length(unmapped_mods)>0){
+if(nrow(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
 }
 

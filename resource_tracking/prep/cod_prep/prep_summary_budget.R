@@ -8,6 +8,14 @@
 # Outputs:
 # budget_dataset - prepped data.table object
 # ----------------------------------------------
+# 
+# dir = file_dir
+# sheet_name = "RESUME BUDGET V2 CONSOLIDE"
+# inFile = "official_budgets/BUDGET SANRUGF CONSOLIDE  ROUTINE CAMPAGNE.xlsx"
+# start_date = "2018-01-01"
+# period = 90
+# qtr_num = 12
+
 
 prep_summary_budget = function(dir, inFile, sheet_name, start_date, 
                                    qtr_num, disease, loc_id, period, grant, recipient, source, lang){
@@ -16,7 +24,7 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   # ----------------------------------------------
   ## create a vector of start_dates that correspond to each quarter in the budget 
   
-  dates <- rep(start_date, qtr_num) # 
+  dates <- rep(as.Date(start_date), qtr_num) # 
   for (i in 1:length(dates)){
     if (i==1){
       dates[i] <- start_date
@@ -38,12 +46,23 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   colnames(gf_data)[1] <- "cost_category"
   ##only keep data that has a value in the "category" column 
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
-
-  ## grab the SDA data
-  gf_data <- gf_data[c((grep("Module",gf_data$cost_category)):(grep("Cost Grouping", gf_data$cost_category))),]
   
-  ##drop the last two rows (we don't need them)
-  gf_data <- head(gf_data,-2)
+  if(sheet_name == "RESUME BUDGET V2 CONSOLIDE"){
+    #grab the sda values
+    gf_data <- gf_data[c((grep("Module",gf_data$cost_category)):nrow(gf_data)),]
+    #drop Total
+    gf_data <- head(gf_data,-1)
+    #dropping this becuase it's duplicate of first colum
+    gf_data$X__2 = NULL
+  
+    
+  }else{
+    ## grab the SDA data
+    gf_data <- gf_data[c((grep("Module",gf_data$cost_category)):(grep("Cost Grouping", gf_data$cost_category))),]
+    ##drop the last two rows (we don't need them)
+    gf_data <- head(gf_data,-2)
+  }
+  
   
   ## rename the columns 
   colnames(gf_data) <- as.character(gf_data[1,])
@@ -52,14 +71,19 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   drop.cols <- grep(paste(toMatch, collapse="|"), ignore.case=TRUE, colnames(gf_data))
   gf_data <- gf_data[, (drop.cols) := NULL]
 
-  
   ## also drop columns containing only NA's
   gf_data<- Filter(function(x) !all(is.na(x)), gf_data)
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   ##library(reshape)
   setDT(gf_data)
+  if(sheet_name == "RESUME BUDGET V2 CONSOLIDE"){
+    #only keep quarters 1 - 12
+  gf_data = gf_data[,c(1:13)]
+  gf_data1<- melt(gf_data,id="By Module - Intervention" , variable.name = "qtr", value.name="budget")
+  }else{
   gf_data1<- melt(gf_data,id="By Module", variable.name = "qtr", value.name="budget")
+  }
   
   ## make sure that you have a date for each quarter - will tell you if you're missing any 
   if(length(dates) != length(unique(gf_data1$qtr))){
@@ -76,8 +100,13 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   ##rename the category column 
   colnames(budget_dataset)[1] <- "module"
   
+  if(sheet_name == "RESUME BUDGET V2 CONSOLIDE"){
+    budget_dataset = separate(budget_dataset, module, into=c("module", "intervention"), sep="-")
+  }else{
+    budget_dataset$intervention <- "All"  
+  }
+  
   ##add all of the other RT variables 
-  budget_dataset$intervention <- "All"
   budget_dataset$disease <- disease
   budget_dataset$sda_activity <- "All"
   budget_dataset$loc_name <- loc_id

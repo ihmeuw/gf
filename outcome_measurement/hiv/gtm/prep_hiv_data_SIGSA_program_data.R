@@ -98,11 +98,11 @@ prep_screening <- function(gf_data, start_date){
   
   gf_data_cleaned$DISTRITO = fix_diacritics(gf_data_cleaned$DISTRITO)
   gf_data_cleaned$DISTRITO = toupper(trimws(gf_data_cleaned$DISTRITO))
-  gf_data_cleaned[,DISTRITO := gsub("CS DE", "",DISTRITO)]
-  gf_data_cleaned[,DISTRITO := gsub("CS", "",DISTRITO)]
-  gf_data_cleaned[,DISTRITO := gsub("CAP", "",DISTRITO)]
-  gf_data_cleaned[,DISTRITO := gsub("UAI DE", "",DISTRITO)]
-  gf_data_cleaned[,DISTRITO := gsub("UAI", "",DISTRITO)]
+  #gf_data_cleaned[,DISTRITO := gsub("CS DE", "",DISTRITO)]
+  #gf_data_cleaned[,DISTRITO := gsub("CS", "",DISTRITO)]
+  #gf_data_cleaned[,DISTRITO := gsub("CAP", "",DISTRITO)]
+  #gf_data_cleaned[,DISTRITO := gsub("UAI DE", "",DISTRITO)]
+  #gf_data_cleaned[,DISTRITO := gsub("UAI", "",DISTRITO)]
   
 
   # # 
@@ -138,3 +138,4 @@ for(i in 1:length(hiv_file_list$file_name)){
 # Write csv & RDS to folderpath
 write.csv(resource_database, paste0(prep_dir, "hiv_sigsa_data_prepped_PD_testing.csv"), row.names = FALSE, fileEncoding = "latin1" )
 saveRDS(resource_database, paste0(prep_dir, "hiv_sigsa_data_prepped_PD_testing.rds"))
+
