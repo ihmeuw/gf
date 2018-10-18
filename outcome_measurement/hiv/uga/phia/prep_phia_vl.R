@@ -65,37 +65,56 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   # load the 2011 aids indicator survey
   ais = data.table(read.dta13(inFileAIS))
   
+  # s535: are you taking arvs?
+  # v005 = women's individual sample weight (six decimals)
+  # v021: primary sampling unit
+  # v022: sample strata for sampling errors (identical to v023: stratification used in sample design)
+  # v024: region
+  
+  # subset to on arvs, sample weights, region
+  ais = ais[ ,.(s535, v005, v021, v022, v024)]
+  
+  # subset to only PLHIV
+  ais = ais[!is.na(s535)]
+
+  # divide the sample weights by one million
+  # v005 = women's individual sample weight (six decimals)
+  ais[ , v005:=(v005/1000000)]
+  
+  # ----------------------------------------------
+  # apply survey weights
+  
+  # create a vector of the sample weights
+  weight = ais$v005
+  
+  des = svydesign(id=ais$v021, strata=ais$v022, weights=weight, data=ais )
+  
+  # add survey weights 
+  result = data.table(svyby(~s535, ~v024, des, svymean))
+  
   # collapse to estimate art coverage at the region level
-  national = ais[, list('art_coverage'=mean(s535=='yes', na.rm=TRUE))]
-  ais = ais[, list('art_coverage'=mean(s535=='yes', na.rm=TRUE)), by='v024']
+  ais = result[ ,.(region=as.character(v024), art_coverage_2011=s535yes)]
   
   # convert the names of the regions to be the same as the vl and phia data
-  ais[ , v024:=as.character(v024)]
-  ais[ , v024:=capitalize(ais$v024)]
+  ais[ , first:=capitalize((unlist(lapply(strsplit(ais$region, "\\s"), "[", 1))))]
+  ais[ , second:=capitalize((unlist(lapply(strsplit(ais$region, "\\s"), "[", 2))))]
+  ais[!is.na(second), region:=paste(first, second)]
+  ais[region=='kampala', region:=capitalize(region)]
+  ais[region=='East Central' | region=='North East' | region=='Central 1' | region=='Central 2' | region=='West Nile', region:=gsub('\\s', '_', region)]  
+  ais[region=='Mid Eastern', region:='Mid_East']
+  ais[region=='Mid Northern', region:='Mid_North']
+  ais[region=='South Western', region:='South_West']
+  ais[region=='Mid Western', region:='Mid_West']
+  ais[ ,c('first', 'second'):=NULL]
   
   # normalize around current ART estimates using 2016 gbd national estimate
   art = fread(inFileART)
   art = art[measure=='ART' & metric=='Rate' & year_id==2016 & sex_id==3 & age_group_id==22]
-  ais[ , art_coverage_2011:=art_coverage]
-  ais[, art_coverage:=art_coverage*(art$mean/national$art_coverage)]
+  national_2011 = mean(ais$art_coverage_2011)
+  ais[, art_coverage:=art_coverage_2011*(art$mean/national_2011)]
 
-  
-  # change the ais regions to match the vl dashboard
-  # these regions are the same as phia, but the spelling differs
-  setnames(ais, 'v024', 'region')
-  
-  ais[ , first:=capitalize((unlist(lapply(strsplit(ais$region, "\\s"), "[", 1))))]
-  ais[ , second:=capitalize((unlist(lapply(strsplit(ais$region, "\\s"), "[", 2))))]
-  ais[region!='Kampala' , region:=paste0(first, '_', second)]
-  ais[ ,c('first', 'second'):=NULL]
-  ais[region=='Mid_Western', region:='Mid_West']
-  ais[region=='Mid_Eastern', region:='Mid_East']
-  ais[region=='South_Western', region:='South_West']
-  ais[region=='Mid_Northern', region:='Mid_North']
-  ais[region=='Kampala', region:='Kampala']
-  
   # export a file to map
-  saveRDS(ais, paste0(dir, 'prepped/ais_data.rds'))
+  # saveRDS(ais, paste0(dir, 'prepped/ais_data.rds'))
     
 # ------------------------------------------------------------------------------------
 # Merge phia, vl, and ais datasets and format for analysis

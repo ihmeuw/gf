@@ -17,43 +17,67 @@
 graphVL = function(dir=NULL) { 
 	# ----------------------------------------
 
-
 	# ----------------------------------------------------------------------
 	# Files and directories
-
+  
+  # set working directory
+  setwd(paste0(j, '/Project/Evaluation/GF/mapping/uga/'))
+  
 	# uganda shapefile
-	shapeFileReg = paste0(dir, '../../mapping/uga/uga_region10_map.rdata')
-	shapeFileDist = paste0(dir, '../../mapping/uga/uga_dist112_map.rdata')
+  DistMap = shapefile('uga_dist112_map.shp')
 
+  #------------------------------
+  # create a regional shape file 
+
+  # import the ten regions that are included in phia
+  regions = fread(paste0(j, "/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv"))
+  regions = unique(regions[ ,.(region=region10_alt, district_name=dist112_name)])
+	
+  # put the regions in the same order as the shape file
+	regions = regions[match(shapeFileDist@data$dist112_n, regions$district_name)]
+	id = regions$region
+	
+	# create coordinates for the old and new plots
+  RegMap  = unionSpatialPolygons(shapeFileDist, id)
+	
+  #------------------------------
 	# output files
-	outFile = paste0(dir, 'visualizations/phia_vl_dashboard.pdf')
+	outFile = paste0(dir, 'output/phia_vl_dashboard.pdf')
+  
 	# ----------------------------------------------------------------------
-
 
 	# -------------------------------------------------------------------------------------------
 	# Set up to graph
 
-	# clean names
-	regData[, region10_name:=gsub('_', ' ', region10_name)]
-
-	# load/fortify shape data
-	load(shapeFileReg)
-	mapDataReg = data.table(fortify(map))
-	load(shapeFileDist)
-	mapSimple = gSimplify(map, tol=0.01, topologyPreserve=TRUE) # simplify for speed
-	# mapDataDist = data.table(fortify(map))
-	mapSimpleFort = data.table(fortify(mapSimple))
+  # fortify the maps 
+  reg_coord = fortify(RegMap)
+  dist_coord = fortify(DistMap)
+  
+ 
+  # round 
+  regData = regData[ , lapply(.SD, round, 1), .SDcols=2:10]
+  distData = distData[ , lapply(.SD, round, 1), .SDcols=3:11]
 
 	# reshape long
-	long = melt(regData, id.vars='region10_name')
+	long = melt(regData, id.vars='region')
 	long[, value:=as.numeric(value)]
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	# wrap text
 	long[, region10_name:=str_wrap(region10_name, 6)]
 
 	# merge to map and melt data
 	regData[, region10:=as.character(region10)]
-	mapDataReg = merge(mapDataReg, regData, by.x='id', by.y='region10', all.x=TRUE)
+	mapDataReg = merge(reg_coord, regData, by.x='id', by.y='region10', all.x=TRUE)
 	mapDataReg = melt(mapDataReg, id.vars=c('long','lat','region10_name','id','group','order','hole','piece'))
 
 	# clean up variable labels
@@ -88,6 +112,15 @@ graphVL = function(dir=NULL) {
 
 	# -------------------------------------------------------------------------------------------
 	# Make graphs
+	
+	
+	
+	
+	
+	
+	
+	
+	
 
 	# map PHIA and VLD side-by-side
 	vars1 = c('Reported Viral Load Suppression\nNational Dashboard*', 'Viral Load Suppression\nPHIA')

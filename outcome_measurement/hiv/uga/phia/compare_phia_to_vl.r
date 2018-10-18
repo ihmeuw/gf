@@ -21,6 +21,7 @@ library(ggplot2)
 library(gridExtra)
 library(ggrepel)
 library(Hmisc)
+library(survey)
 
 # --------------------
 
@@ -31,33 +32,36 @@ library(Hmisc)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # data directory
-dir = paste0(j,  'Project/Evaluation/GF/outcome_measurement/uga/phia_2016/')
+dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/')
 
 # prep function - sourced from local repo (change directory on cluster)
-source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/phia/prep_phia_vl_dashboard_new2.r')
+source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/phia/prep_phia_vl.r')
  
 # graph function
 # source('./outcome_measurement/hiv/uga/phia/graph_phia_vl_dashboard.r')
 
 # ouptut data
-outFileDistYear = paste0(dir, 'output/district_year_vls.csv')
+outFileDist = paste0(dir, 'output/district_vls_full.rds')
 # -----------------------------------------------------------
 
-
-# ---------------------------------------------------------
+# -------------------------
 # Prep data at different levels using the prepVL function
-
 regData = prepVL(dir, level='region')
 distData = prepVL(dir, level='district')
 facData = prepVL(dir, level='facility')
 
-# if annual data is available
-regDataAnnual = prepVL(dir, level='region', annual=TRUE)
-distDataAnnual = prepVL(dir, level='district', annual=TRUE)
-# ---------------------------------------------------------
+# when annual phia data becomes available - prep annual data 
+# regDataAnnual = prepVL(dir, level='region')
+# distDataAnnual = prepVL(dir, level='district')
+
+# save an output for mapping - initial direct comparison of estimates
+# phia_vl_adj = regData[ ,.(region, phia_vls, vld_suppression_adj)]
+# saveRDS(phia_vl_adj, paste0(dir,'prepped/phia_vl_adj.rds'))
+
+# -------------------------
 
 # ---------------------------------------------------------------------------
-# Analysis
+# Analysis - use the merged, prep data to run analyses 
 
 # linear fit
 lmFit = lm(logit(vld_suppression_adj/100)~logit(phia_vls/100), regData)
@@ -69,29 +73,28 @@ predData = data.table(phia_vls=seq(s, e, .1))
 preds = inv.logit(predict(lmFit, interval='confidence', newdata=predData))*100
 predData = cbind(predData, preds)
 
-# linear fit on correction factors
-lmFit2 = lmer(vld_suppression_adj/phia_vls~(1|region10_name), distData)
+# linear fit on correction factors (linear mixed effects)
+lmFit2 = lmer(vld_suppression_adj/phia_vls~(1|region), distData)
 # lmFit2 = lmer(phia_vls~vld_suppression_adj+(1|region10_name), distData)
 
 # region-specific correction of district-level data
 distData[, ratio:=predict(lmFit2)]
 distData[, vld_suppression_hat:=vld_suppression_adj/ratio]
 
-# region-specific correction of region-year-level data
-regDataAnnual[, ratio:=predict(lmFit2, newdata=regDataAnnual)]
-regDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
+# # region-specific correction of region-year-level data
+# regDataAnnual[, ratio:=predict(lmFit2, newdata=regDataAnnual)]
+# regDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
+# 
+#  # region-specific correction of district-year-level data
+# distDataAnnual[, ratio:=predict(lmFit2, newdata=distDataAnnual)]
+# distDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
 
-# region-specific correction of district-year-level data
-distDataAnnual[, ratio:=predict(lmFit2, newdata=distDataAnnual)]
-distDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
 # ---------------------------------------------------------------------------
-
 
 # ---------------------------------------------------------
 # Save estimates
-write.csv(distDataAnnual, outFileDistYear, row.names=FALSE)
+saveRDS(distData, outFileDist)
 # ---------------------------------------------------------
-
 
 # ------------------
 # Run graphing code

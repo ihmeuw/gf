@@ -80,7 +80,7 @@ vl = vl[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=.(
 setnames(vl, c('facility_name', 'district_name'), c('facility', 'district'))
 
 # export the file to analyze - use the names in the shape file 
-# saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
+saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
 
 #------------------------------------------
 # aggregate districts into regions
@@ -153,7 +153,7 @@ ggplot(coordinates_new, aes(x=long, y=lat, group=group, fill=ratio)) +
 # these data are cleaned in the analysis function 
 
 # select the survey or projected estimates and import the data 
-ais = readRDS(paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/ais_data.rds'))
+ais = readRDS(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/ais_data.rds'))
 setnames(ais, 'region', 'id')
 
 # round estimates and format as percentages
@@ -199,11 +199,11 @@ art_2011 = coordinates_ais[ ,.(id, long, lat, order, hole, piece, group, variabl
 art_2011[ , year:=2011]
 coordinates_ais = rbind(art_2011, art_2016)
 
-
-#print out a comparative map of original and projected estimates
+# print out a comparative map of original and projected estimates
 # pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/output/art_coverage_comparison_maps.pdf'), height=6, width=12)
 
 # map of regions 
+
 ggplot(coordinates_ais, aes(x=long, y=lat, group=group, fill=variable)) + 
   geom_polygon() + 
   scale_fill_gradientn(colors=art_colors) + 
@@ -211,14 +211,67 @@ ggplot(coordinates_ais, aes(x=long, y=lat, group=group, fill=variable)) +
   coord_fixed() +
   facet_wrap(~year) +
   labs(fill='ART Coverage(%)') +
-  geom_label_repel(data = ais_names, aes(label = variable, x = long, y = lat, group = variable), inherit.aes=FALSE)
-
+  geom_label_repel(data = ais_names, aes(label = variable, x = long, y = lat, group = variable), inherit.aes=FALSE, size=5)
 
 # dev.off()
 
 #---------------------------------------------------------------
+# phia and vl dashboard before regression
 
+pv = readRDS('J:/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/phia_vl_adj.rds')
+setnames(pv, 'region', 'id')
 
+# round estimates and format as percentages
+pv[ , vld_suppression_adj:=round(vld_suppression_adj, 1)]
 
+# create a set of art coverage colors
+lavender = brewer.pal(8, 'BuPu')
 
-  
+#--------------------------
+# create regional labels 
+
+# identify centroids and label them
+pv_names = data.table(coordinates(shapeDataNew))
+setnames(pv_names, c('long', 'lat'))
+pv_names[ , id:=unique(coordinates_new$id)]
+
+# merge in the ratios for complete labels
+pv_names = merge(pv_names, pv, by='id')
+
+# replace labels with hyphens to match phia graphics
+pv_names$id = gsub(pv_names$id, pattern='_', replacement='-')
+pv_names[grep('^Central', id), id:=(gsub(id, pattern='-', replacement=' '))]
+pv_names[grep('^West', id), id:=(gsub(id, pattern='-', replacement=' '))]
+
+# create labels with region names and art coverage ratios
+pv_names[ , phia:=paste0(id, ': ', phia_vls, '%' )]
+pv_names[ , vl:=paste0(id, ': ', vld_suppression_adj, '%' )]
+
+vl_names = pv_names[ ,.(id, long, lat, variable='vld_suppression_adj', value=vl)]
+phia_names = pv_names[ ,.(id, long, lat, variable='phia_vls', value=phia)]
+labels = rbind(vl_names, phia_names)
+
+#--------------------------------------------
+# merge coordinates and make maps
+pv = melt(pv, id.vars='id')
+
+pv1 = pv[variable=='phia_vls']
+pv2 =  pv[variable=='vld_suppression_adj']
+
+coordinates_new[ ,c('suppressed', 'valid_results', 'ratio'):=NULL]
+map1 = merge(coordinates_new, pv1, by='id')
+map2 = merge(coordinates_new, pv2, by='id')
+
+coord_pv = rbind(map1, map2)
+
+# map of regions 
+ggplot(coord_pv, aes(x=long, y=lat, group=group, fill=value)) + 
+  geom_polygon() + 
+  scale_fill_gradientn(colors=lavender) + 
+  theme_void() +
+  coord_fixed() +
+  facet_wrap(~variable) +
+  labs(fill='VLS (%)') +
+  geom_label_repel(data = labels, aes(label = value, x = long, y = lat, group = value), inherit.aes=FALSE, size=5)
+
+#-------------------------------------------

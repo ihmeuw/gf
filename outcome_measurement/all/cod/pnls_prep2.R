@@ -13,7 +13,6 @@ library(jsonlite)
 library(httr)
 library(ggplot2)
 library(dplyr)
-library(xlsx)
 library(stringr) # to extract meta data from file names
 # --------------------
 
@@ -78,8 +77,6 @@ pnls[grep('ist', element1), type:='sti']
 pnls[grep('ptme', element1), type:='pmtct']
 pnls[grep('com', element1), type:='com']
 
-pnls[is.na(type), unique(element)]
-
 #--------------------------------------
 # create subpopulations
 
@@ -111,11 +108,8 @@ pnls[grep('enfants', element1), subpop:='exposed_infant']
 pnls[grep('eev', element1), subpop:='exposed_infant']
 pnls[grep('handicap', element1), subpop:='disabled']
 
-pnls[is.na(subpop), unique(element)]
-
 #--------------------------------------
 # prep age and sex categories
-pnls[unique(category)]
 
 # create a searchable category variable
 pnls[ ,category1:=tolower(category)]
@@ -128,11 +122,63 @@ pnls[grep('masc', category1), sex:='Male']
 pnls[subpop=='plw', sex:='Female']
 pnls[subpop=='msm', sex:='Male']
 
-# age category 
+#---------------------
+# old and new cases
+pnls[grep('NC', category), case:='new']
+pnls[grep('AC', category), case:='old']
+
+#---------------------
+# create an age category
+
+# create additional age categories
+pnls$age1 = unlist(lapply(strsplit(pnls$category1, " "), "[", 1))
+pnls$age2 = unlist(lapply(strsplit(pnls$category1, " "), "[", 2))
+pnls$age3 = unlist(lapply(strsplit(pnls$category1, " "), "[", 3))
+pnls$age4 = unlist(lapply(strsplit(pnls$category1, " "), "[", 4))
+pnls$age5 = unlist(lapply(strsplit(pnls$category1, " "), "[", 5))
+
+# replace old and new cases and fix spelling of years and plus
+pnls[age5=='nc' | age5=='ac', age5:=NA]
+pnls[age1=='nc' | age1=='ac', age1:=NA]
+
+pnls[age5=='plus,', age5:='plus']
+pnls[age5=='ans,', age5:='ans']
+
+pnls[age1=='moins', age:=paste(age1, age2, age3, age4)]
+pnls[age1=='feminin,' | age1=='masculin,' | age1=="sa/pp" | age1=='cpn,', age:=paste(age2, age3, age4, age5)]
+
+# if the age category begins with a numeric, use the existing category
+pnls[grep('^[0-9]', category1), age:=category1]
+
+# delete NAs from age categories and fix spellings
+pnls$age = unlist(lapply(pnls$age, function(x) gsub("NA", "", x)))
+
+pnls[grep('nc', age), age:=NA]
+pnls[grep('ac', age), age:=NA]
+pnls[grep('un an', age), age:='moins dun an']
+
+# drop the age categories that consist of spaces
+pnls[grep("^\\s", age), age:=NA]
+
+# delete the interim outputs
+pnls[ , c("age1", "age2", "age3", "age4", "age5"):=NULL]
+
+# anc visit binary 
+pnls[grep('sa/pp', category1), maternity:='SA/PP']
+pnls[grep('cpn', category1), maternity:='CPN']
+
+#-----------------------------
+# category for drug stock
+drugs = c('Entrée', 'Stock Initial', 'Nbr de jours RS', 'Sortie', 'Stock disponible utilisable')
+pnls[category %in% drugs, stock_category:=category]
+
+#-------------------------------------
+# categories that are not captured by age, sex, case
+pnls[type=='drug', unique(category)]
 
 
 
-
+#-------------------------------------------------------------
 
 #--------------------------------------
 # normalize the variables 
