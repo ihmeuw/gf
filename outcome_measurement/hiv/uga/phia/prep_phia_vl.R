@@ -65,6 +65,7 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   # load the 2011 aids indicator survey
   ais = data.table(read.dta13(inFileAIS))
   
+  # variables in ais:
   # s535: are you taking arvs?
   # v005 = women's individual sample weight (six decimals)
   # v021: primary sampling unit
@@ -107,14 +108,19 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   ais[region=='Mid Western', region:='Mid_West']
   ais[ ,c('first', 'second'):=NULL]
   
-  # normalize around current ART estimates using 2016 gbd national estimate
-  art = fread(inFileART)
-  art = art[measure=='ART' & metric=='Rate' & year_id==2016 & sex_id==3 & age_group_id==22]
+  # normalize around the phia 2016 estimate of art coverage
+  art = 0.725*0.904
   national_2011 = mean(ais$art_coverage_2011)
-  ais[, art_coverage:=art_coverage_2011*(art$mean/national_2011)]
+  ais[, art_coverage:=art_coverage_2011*(art/national_2011)]
+
+  # normalize around 206 GBD ART national estimates 
+  # art_gbd = fread(inFileART)
+  # art_gbd = art_gbd[measure=='ART' & metric=='Rate' & year_id==2016 & sex_id==3 & age_group_id==22]
+  # ais[, art_coverage_gbd:=art_coverage_2011*(art_gbd$mean/national_2011)]
 
   # export a file to map
   # saveRDS(ais, paste0(dir, 'prepped/ais_data.rds'))
+  
     
 # ------------------------------------------------------------------------------------
 # Merge phia, vl, and ais datasets and format for analysis
@@ -154,6 +160,9 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   
   # compute vld suppression adjusted for coverage
   data[, vld_suppression_adj:=vld_suppression*art_coverage]
+  
+  # if using gbd estimates
+  #data[ , vld_suppression_adj_gbd:=vld_suppression*art_coverage_gbd]
   # -------------------------------------------------------------------------------------------
   
   

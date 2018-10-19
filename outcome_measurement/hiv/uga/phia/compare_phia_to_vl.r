@@ -22,6 +22,15 @@ library(gridExtra)
 library(ggrepel)
 library(Hmisc)
 library(survey)
+library(maptools)
+library(rgeos)
+library(raster)
+library(rgdal)
+library(tibble)
+library(dplyr)
+library(plyr)
+library(ggrepel)
+
 
 # --------------------
 
@@ -50,14 +59,6 @@ regData = prepVL(dir, level='region')
 distData = prepVL(dir, level='district')
 facData = prepVL(dir, level='facility')
 
-# when annual phia data becomes available - prep annual data 
-# regDataAnnual = prepVL(dir, level='region')
-# distDataAnnual = prepVL(dir, level='district')
-
-# save an output for mapping - initial direct comparison of estimates
-# phia_vl_adj = regData[ ,.(region, phia_vls, vld_suppression_adj)]
-# saveRDS(phia_vl_adj, paste0(dir,'prepped/phia_vl_adj.rds'))
-
 # -------------------------
 
 # ---------------------------------------------------------------------------
@@ -75,24 +76,57 @@ predData = cbind(predData, preds)
 
 # linear fit on correction factors (linear mixed effects)
 lmFit2 = lmer(vld_suppression_adj/phia_vls~(1|region), distData)
-# lmFit2 = lmer(phia_vls~vld_suppression_adj+(1|region10_name), distData)
+
+lmFit3 = lmer(phia_vls~vld_suppression+art_coverage+vld_suppression_adj+(1|region), distData)
+predict(lmFit3)
+
+# look at the output and random effects of the models
+summary(lmFit2)
+summary(lmFit3)
+
+x = ranef(lmFit2)
+y = ranef(lmFit3)
+
+x = data.table(x$region)
+setnames(x, '(Intercept)', 'lmFit2')
+
+y = data.table(y$region)
+
+setnames(y, '(Intercept)', 'lmFit3')
+z = cbind(x, y)
+
+phia = distData[ ,.(phia_vls = mean(phia_vls)), by=region]
+
+phia = cbind(z, phia)
+
+
+distData[, ratio2:=predict(lmFit2)]
+distData[, ratio3:=predict(lmFit3)/100]
+
+ggplot(distData, aes(x=ratio2, y=ratio3)) + geom_point()
+
+x = distData[ ,.(ratio2=mean(ratio2), ratio3=mean(ratio3)), by=region]
+
+
+# lmFit4 = lmer(phia_vls~vld_suppression*art_coverage+(1|region), distData)
+
 
 # region-specific correction of district-level data
 distData[, ratio:=predict(lmFit2)]
 distData[, vld_suppression_hat:=vld_suppression_adj/ratio]
 
-# # region-specific correction of region-year-level data
-# regDataAnnual[, ratio:=predict(lmFit2, newdata=regDataAnnual)]
-# regDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
-# 
-#  # region-specific correction of district-year-level data
-# distDataAnnual[, ratio:=predict(lmFit2, newdata=distDataAnnual)]
-# distDataAnnual[, vld_suppression_hat:=vld_suppression_adj/ratio]
+# predict the vl ratio at the region level
+regData[, ratio:=predict(lmFit2, newdata=regData)]
+regData[, vld_suppression_hat:=vld_suppression_adj/ratio]
 
+# predict the vl ratio at the district level
+distData[, ratio:=predict(lmFit2, newdata=distData)]
+distData[, vld_suppression_hat:=vld_suppression_adj/ratio]
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------
 # Save estimates
+
 saveRDS(distData, outFileDist)
 # ---------------------------------------------------------
 

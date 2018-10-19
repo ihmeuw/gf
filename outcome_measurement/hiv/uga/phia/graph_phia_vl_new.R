@@ -54,8 +54,8 @@ graphVL = function(dir=NULL) {
   dist_coord = fortify(DistMap)
   
   # round 
-  regData = regData[ , lapply(.SD, round, 1), .SDcols=2:10, by=region]
-  distData = distData[ , lapply(.SD, round, 1), .SDcols=3:11, by=.(district, region)]
+  regData = regData[ , lapply(.SD, round, 1), .SDcols=2:12, by=region]
+  distData = distData[ , lapply(.SD, round, 1), .SDcols=3:13, by=.(district, region)]
   
   # reshape long
   long = melt(regData, id.vars='region')
@@ -67,24 +67,24 @@ graphVL = function(dir=NULL) {
   
   # clean up variable labels
   long[variable=='phia_vls', variable:='PHIA']
-  long[variable=='vld_suppression_adj', variable:='National Dashboard*']
+  long[variable=='vld_suppression_hat', variable:='National Dashboard*']
   mapDataReg[variable=='phia_vls', variable:='Viral Load Suppression\nPHIA']
-  mapDataReg[variable=='vld_suppression_adj', variable:='Reported Viral Load Suppression\nNational Dashboard*']
+  mapDataReg[variable=='vld_suppression_hat', variable:='Reported Viral Load Suppression\nNational Dashboard*']
   mapDataReg[variable=='phia_vls_lower', variable:='Lower']
   mapDataReg[variable=='phia_vls_upper', variable:='Upper']
   mapDataReg[variable=='samples', variable:='N Samples']
   mapDataReg[variable=='vl_suppressed_samples', variable:='N Samples Suppressed']
   
   # district map
-  mapDataDist = merge(mapSimpleFort, distData, by.x='id', by.y='dist112', all.x=TRUE)
+  mapDataDist = merge(dist_coord, distData, by.x='id', by.y='district', all.x=TRUE)
   
   # district-year map
-  mapDataDist15 = merge(mapSimpleFort, distDataAnnual[year==2015], by.x='id', by.y='dist112', all.x=TRUE)
-  mapDataDist16 = merge(mapSimpleFort, distDataAnnual[year==2016], by.x='id', by.y='dist112', all.x=TRUE)
-  mapDataDist17 = merge(mapSimpleFort, distDataAnnual[year==2017], by.x='id', by.y='dist112', all.x=TRUE)
-  mapDataDistAnnual = rbind(mapDataDist15,mapDataDist16,mapDataDist17)
-  byVars = c('id','long','lat','order','hole','piece','group','region10_name','dist_name')
-  mapDataDistChange = merge(mapDataDist16, mapDataDist17, by=byVars, suffixes=c('_2016','_2017'))
+  # mapDataDist15 = merge(mapSimpleFort, distDataAnnual[year==2015], by.x='id', by.y='dist112', all.x=TRUE)
+  # mapDataDist16 = merge(mapSimpleFort, distDataAnnual[year==2016], by.x='id', by.y='dist112', all.x=TRUE)
+  # mapDataDist17 = merge(mapSimpleFort, distDataAnnual[year==2017], by.x='id', by.y='dist112', all.x=TRUE)
+  # mapDataDistAnnual = rbind(mapDataDist15,mapDataDist16,mapDataDist17)
+  # byVars = c('id','long','lat','order','hole','piece','group','region10_name','dist_name')
+  # mapDataDistChange = merge(mapDataDist16, mapDataDist17, by=byVars, suffixes=c('_2016','_2017'))
   mapDataDistChange[, roc:=log(vld_suppression_hat_2017/vld_suppression_hat_2016)]
   mapDataDistChange = mapDataDistChange[order(order)]
   
@@ -92,10 +92,9 @@ graphVL = function(dir=NULL) {
   colors = c('#CAF270', '#73D487', '#30B097', '#288993', '#41607A', '#453B52')
   mapColors = colorRampPalette(colors)
   mapColors = mapColors(10)
+  
   # -------------------------------------------------------------------------------------------
-  
   # labels 
-  
   
   # identify centroids and label them
   names = data.table(coordinates(RegMap))
@@ -124,18 +123,17 @@ graphVL = function(dir=NULL) {
   # -------------------------------------------------------------------------------------------
   # Make graphs
   
-  
   # map PHIA and VLD side-by-side
   vars1 = c('Reported Viral Load Suppression\nNational Dashboard*', 'Viral Load Suppression\nPHIA')
   p1 = ggplot(mapDataReg[variable %in% vars1], aes(x=long, y=lat, group=group, fill=value)) + 
     geom_polygon() + 
     facet_wrap(~variable) + 
     geom_path(color='grey95', size=.05) + 
-    scale_fill_gradientn('%', colours=mapColors) + 
+    scale_fill_gradientn('%', colours=lavender) + 
     coord_fixed(ratio=1) + 
     scale_x_continuous('', breaks = NULL) + 
     scale_y_continuous('', breaks = NULL) + 
-    labs(caption='*Adjusted for ART coverage') + 
+    labs(caption='*Adjusted for ART coverage using 2011 AIS and PHIA 2016') + 
     theme_minimal(base_size=16) + 
     theme(plot.caption=element_text(size=10)) +
     geom_label_repel(data = labels, aes(label = value, x = long, y = lat, group = value), inherit.aes=FALSE, size=5)

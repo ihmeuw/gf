@@ -158,6 +158,7 @@ setnames(ais, 'region', 'id')
 
 # round estimates and format as percentages
 ais[ , art_coverage:=round(100*art_coverage, 1)]
+ais[ , art_coverage_gbd:=round(100*art_coverage_gbd, 1)]
 ais[ , art_coverage_2011:=round(100*art_coverage_2011, 1)]
 
 # create a set of art coverage colors
@@ -180,40 +181,34 @@ ais_names[grep('^Central', id), id:=(gsub(id, pattern='-', replacement=' '))]
 ais_names[grep('^West', id), id:=(gsub(id, pattern='-', replacement=' '))]
 
 # create labels with region names and art coverage ratios
-ais_names[ ,tag:=paste0(id, ': ', art_coverage, '%' )]
-ais_names[ ,tag_2011:=paste0(id, ': ', art_coverage_2011, '%' )]
+ais_names[ ,art_coverage_2011:=paste0(id, ': ', art_coverage_2011, '%' )]
+ais_names[ ,art_coverage_gbd:=paste0(id, ': ', art_coverage_gbd, '%' )]
+ais_names[ ,art_coverage:=paste0(id, ': ', art_coverage, '%' )]
 
 # shape long
-ais_names_2011 = ais_names[ ,.(id, long, lat, variable=tag_2011, year=2011)]
-ais_names_2016 = ais_names[ ,.(id, long, lat, variable=tag, year=2016)]
-ais_names = rbind(ais_names_2011, ais_names_2016)
+ais_names = melt(ais_names, id.vars=c('id', 'long', 'lat'))
 
 #----------------------------
 # repeat to facet wrap
 coordinates_ais = merge(coordinates_new, ais, by='id')
-
-# separate by years and shape long to facet wrap
-art_2016 = coordinates_ais[ ,.(id, long, lat, order, hole, piece, group, variable=art_coverage)]
-art_2016[ , year:=2016]
-art_2011 = coordinates_ais[ ,.(id, long, lat, order, hole, piece, group, variable=art_coverage_2011)]
-art_2011[ , year:=2011]
-coordinates_ais = rbind(art_2011, art_2016)
+coordinates_ais[ ,c('suppressed', 'valid_results', 'ratio'):=NULL]
+coordinates_ais = melt(coordinates_ais, id.vars=c('id', 'long', 'lat', 'order', 'hole', 'piece', 'group'))
 
 # print out a comparative map of original and projected estimates
-# pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/output/art_coverage_comparison_maps.pdf'), height=6, width=12)
+ pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/output/art_coverage_comparison_maps.pdf'), height=6, width=12)
 
 # map of regions 
 
-ggplot(coordinates_ais, aes(x=long, y=lat, group=group, fill=variable)) + 
+ggplot(coordinates_ais, aes(x=long, y=lat, group=group, fill=value)) + 
   geom_polygon() + 
   scale_fill_gradientn(colors=art_colors) + 
   theme_void() +
   coord_fixed() +
-  facet_wrap(~year) +
+  facet_wrap(~variable) +
   labs(fill='ART Coverage(%)') +
-  geom_label_repel(data = ais_names, aes(label = variable, x = long, y = lat, group = variable), inherit.aes=FALSE, size=5)
+  geom_label_repel(data = ais_names, aes(label = value, x = long, y = lat, group = value), inherit.aes=FALSE, size=4)
 
-# dev.off()
+ dev.off()
 
 #---------------------------------------------------------------
 # phia and vl dashboard before regression
