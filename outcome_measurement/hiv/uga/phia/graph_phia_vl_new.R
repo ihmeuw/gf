@@ -41,7 +41,7 @@ graphVL = function(dir=NULL) {
   RegMap  = unionSpatialPolygons(DistMap, id)
   
   #------------------------------
-  # output files
+  # output file for graphs
   outFile = paste0(dir, 'output/phia_vl_dashboard.pdf')
   
   # ----------------------------------------------------------------------
@@ -51,11 +51,15 @@ graphVL = function(dir=NULL) {
   
   # fortify the maps 
   reg_coord = fortify(RegMap)
-  dist_coord = fortify(DistMap)
+  dist_coord = fortify(DistMap, region='dist112')
+  
+  # get names associated with ids
+  dist_names = cbind(id=DistMap@data$dist112, district=DistMap@data$dist112_na)
   
   # round 
   regData = regData[ , lapply(.SD, round, 1), .SDcols=2:12, by=region]
   distData = distData[ , lapply(.SD, round, 1), .SDcols=3:13, by=.(district, region)]
+  distData = merge(distData, dist_names, by='district')
   
   # reshape long
   long = melt(regData, id.vars='region')
@@ -68,33 +72,29 @@ graphVL = function(dir=NULL) {
   # clean up variable labels
   long[variable=='phia_vls', variable:='PHIA']
   long[variable=='vld_suppression_hat', variable:='National Dashboard*']
+  
   mapDataReg[variable=='phia_vls', variable:='Viral Load Suppression\nPHIA']
-  mapDataReg[variable=='vld_suppression_hat', variable:='Reported Viral Load Suppression\nNational Dashboard*']
   mapDataReg[variable=='phia_vls_lower', variable:='Lower']
   mapDataReg[variable=='phia_vls_upper', variable:='Upper']
   mapDataReg[variable=='samples', variable:='N Samples']
-  mapDataReg[variable=='vl_suppressed_samples', variable:='N Samples Suppressed']
+  mapDataReg[variable=='vl_suppressed', variable:='N Samples Suppressed']
+  mapDataReg[variable=='vld_suppression', variable:='Viral Load Suppression\nUganda VL Dashboard']
   
+  mapDataReg[variable=='art_coverage_2011', variable:='ART Coverage 2011 AIS']
+  mapDataReg[variable=='art_coverage', variable:='ART Coverage']
+
+  mapDataReg[variable=='vld_suppression_adj', variable:='Viral load Suppression\n Adjusted for ART Coverage']  
+  mapDataReg[variable=='ratio', variable:='Ratio of PHIA to VLD']  
+  mapDataReg[variable=='vld_suppression_hat', variable:='Reported Viral Load Suppression\nNational Dashboard*']
+
+  #----------------------------------
   # district map
-  mapDataDist = merge(dist_coord, distData, by.x='id', by.y='district', all.x=TRUE)
+  mapDataDist = merge(dist_coord, distData, by='id', all.x=TRUE)
+
   
-  # district-year map
-  # mapDataDist15 = merge(mapSimpleFort, distDataAnnual[year==2015], by.x='id', by.y='dist112', all.x=TRUE)
-  # mapDataDist16 = merge(mapSimpleFort, distDataAnnual[year==2016], by.x='id', by.y='dist112', all.x=TRUE)
-  # mapDataDist17 = merge(mapSimpleFort, distDataAnnual[year==2017], by.x='id', by.y='dist112', all.x=TRUE)
-  # mapDataDistAnnual = rbind(mapDataDist15,mapDataDist16,mapDataDist17)
-  # byVars = c('id','long','lat','order','hole','piece','group','region10_name','dist_name')
-  # mapDataDistChange = merge(mapDataDist16, mapDataDist17, by=byVars, suffixes=c('_2016','_2017'))
-  mapDataDistChange[, roc:=log(vld_suppression_hat_2017/vld_suppression_hat_2016)]
-  mapDataDistChange = mapDataDistChange[order(order)]
-  
-  # colors
-  colors = c('#CAF270', '#73D487', '#30B097', '#288993', '#41607A', '#453B52')
-  mapColors = colorRampPalette(colors)
-  mapColors = mapColors(10)
   
   # -------------------------------------------------------------------------------------------
-  # labels 
+  # create labels for the regional map 
   
   # identify centroids and label them
   names = data.table(coordinates(RegMap))
@@ -110,18 +110,118 @@ graphVL = function(dir=NULL) {
   names[grep('^Central', id), id:=(gsub(id, pattern='-', replacement=' '))]
   names[grep('^West', id), id:=(gsub(id, pattern='-', replacement=' '))]
   
-  # create labels with region names and art coverage ratios
-  names[ , phia:=paste0(id, ': ', phia_vls, '%' )]
-  names[ , vl_adj:=paste0(id, ': ', vld_suppression_adj, '%' )]
+  #-----------------------
+  # p1 label - no adjustment 
+  p1_labels = names[ ,.(id, long, lat, phia_vls, vld_suppression)]
+  p1_labels[ , phia:=paste0(id, ': ', phia_vls, '%' )]
+  p1_labels[ , vl:=paste0(id, ': ', vld_suppression, '%' )]
+  p1_labels[ ,c('phia_vls', 'vld_suppression'):=NULL]
+  p1_labels = melt(p1_labels, id.vars = c('id', 'long', 'lat'))
   
-  labels = names[ ,.(id, long, lat, phia, vl_adj)]
+  p1_labels[variable=='phia', variable:='Viral Load Suppression\nPHIA']
+  p1_labels[variable=='vl', variable:='Viral Load Suppression\nUganda VL Dashboard']
+  
+  #----------------------
+  # p2 label - ART coverage 
+  
+  ais = readRDS(paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/ais_data.rds'))
+  setnames(ais, 'region', 'id')
+  
+  my_fun = function(x) {
+    x = 100*x
+    x = round(x, 1)
+    return(x)
+  }
+  
+  ais = ais[ , lapply(.SD, my_fun), .SDcols=2:4, by=id]
+  
+  
+  mapDataAIS= merge(reg_coord, ais, by='id')
+  mapDataAIS = melt(mapDataAIS, id.vars=c('long','lat', 'id','group','order','hole','piece'))
+  
+
+  ais$id = gsub(ais$id, pattern='_', replacement='-')
+  ais[grep('^Central', id), id:=(gsub(id, pattern='-', replacement=' '))]
+  ais[grep('^West', id), id:=(gsub(id, pattern='-', replacement=' '))]
+  
+  names_ais = names[ ,.(id, long, lat)]
+  names_ais = merge(names_ais, ais, by='id')
+  names_ais = melt(names_ais, id.vars=c('id', 'long', 'lat'))
+  
+  mapDataAIS$variable = factor( mapDataAIS$variable, c('art_coverage_2011', 'art_coverage', 'art_coverage_gbd'), 
+                                c('2011 ART Coverage\nAIDS Indicator Survey', '2016 ART Coverage\nAIS PHIA Adjusted', '2016 ART Coverage\nAIS GBD Adjusted'))
+  
+
+  names_ais$variable = factor(names_ais$variable, c('art_coverage_2011', 'art_coverage', 'art_coverage_gbd'), 
+                                c('2011 ART Coverage\nAIDS Indicator Survey', '2016 ART Coverage\nAIS PHIA Adjusted', '2016 ART Coverage\nAIS GBD Adjusted'))
+  
+  #----------------------
+  
+  
+  
+  adj =  labels = names[ ,.(id, long, lat, phia, vl_adj)]
   labels = melt(labels, id.vars = c('id', 'long', 'lat'))
   
   labels[variable=='phia', variable:='Viral Load Suppression\nPHIA']
-  labels[variable=='vl_adj', variable:='Reported Viral Load Suppression\nNational Dashboard*']
+  labels[variable=='vl_hat', variable:='Reported Viral Load Suppression\nNational Dashboard*']
+  
+  
+  labels = names[ ,.(id, long, lat, phia, vl_hat)]
+  labels = melt(labels, id.vars = c('id', 'long', 'lat'))
+  
+  labels[variable=='phia', variable:='Viral Load Suppression\nPHIA']
+  labels[variable=='vl_hat', variable:='Reported Viral Load Suppression\nNational Dashboard*']
+  
+  
+  #---------------------------
+  # colors
+  
+  colors = c('#CAF270', '#73D487', '#30B097', '#288993', '#41607A', '#453B52')
+  mapColors = colorRampPalette(colors)
+  mapColors = mapColors(10)
+  ratio_colors = brewer.pal(6, 'BuGn')
+  art_colors = brewer.pal(8, 'Spectral')
+  
   
   # -------------------------------------------------------------------------------------------
   # Make graphs
+  
+  # create graphs of original data 
+
+  # map PHIA and VLD side-by-side before adjustment 
+  vars1 = c('Viral Load Suppression\nPHIA', 'Viral Load Suppression\nUganda VL Dashboard')
+  p1 = ggplot(mapDataReg[variable %in% vars1], aes(x=long, y=lat, group=group, fill=value)) + 
+    geom_polygon() + 
+    facet_wrap(~variable) + 
+    scale_fill_gradientn('VLS %', colours=ratio_colors) + 
+    coord_fixed(ratio=1) + 
+    scale_x_continuous('', breaks = NULL) + 
+    scale_y_continuous('', breaks = NULL) + 
+    labs(title='Comparison of PHIA and Uganda VL Dashboard before adjustment',  subtitle='August 2016 - March 2017') + 
+    theme_minimal(base_size=16) + 
+    theme(plot.caption=element_text(size=10)) +
+    geom_label_repel(data = p1_labels, aes(label = value, x = long, y = lat, group = value), inherit.aes=FALSE, size=5)
+  
+  
+  # ART coverage 
+  p2 = ggplot(mapDataAIS, aes(x=long, y=lat, group=group, fill=value)) + 
+    geom_polygon() + 
+    facet_wrap(~variable) + 
+    scale_fill_gradientn('ART Coverage (%)', colours=art_colors) + 
+    coord_fixed(ratio=1) + 
+    scale_x_continuous('', breaks = NULL) + 
+    scale_y_continuous('', breaks = NULL) + 
+    labs(title='ART Coverage Estimates') + 
+    theme_minimal(base_size=16) + 
+    theme(plot.caption=element_text(size=10)) +
+    geom_label_repel(data = names_ais, aes(label = value, x = long, y = lat, group = value), inherit.aes=FALSE, size=5)
+  
+
+  
+  
+  
+  
+  
   
   # map PHIA and VLD side-by-side
   vars1 = c('Reported Viral Load Suppression\nNational Dashboard*', 'Viral Load Suppression\nPHIA')
@@ -129,15 +229,14 @@ graphVL = function(dir=NULL) {
     geom_polygon() + 
     facet_wrap(~variable) + 
     geom_path(color='grey95', size=.05) + 
-    scale_fill_gradientn('%', colours=lavender) + 
+    scale_fill_gradientn('%', colours=mapColors) + 
     coord_fixed(ratio=1) + 
     scale_x_continuous('', breaks = NULL) + 
     scale_y_continuous('', breaks = NULL) + 
-    labs(caption='*Adjusted for ART coverage using 2011 AIS and PHIA 2016') + 
+    labs(title='August 2016 - March 2017', caption='*Adjusted for ART coverage using 2011 AIS and PHIA 2016') + 
     theme_minimal(base_size=16) + 
     theme(plot.caption=element_text(size=10)) +
     geom_label_repel(data = labels, aes(label = value, x = long, y = lat, group = value), inherit.aes=FALSE, size=5)
-  
   
   # bar graphs
   vars2 = c('National Dashboard*', 'PHIA')
@@ -227,6 +326,10 @@ graphVL = function(dir=NULL) {
   # -----------------------------------------------------------
   # Save
   pdf(outFile, height=6, width=9)
+  
+  
+  
+  
   p1
   p2
   p3
