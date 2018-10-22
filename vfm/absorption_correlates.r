@@ -43,24 +43,31 @@ allData = fread(inFile)
 # identify quarters
 allData[, quarter:=quarter(start_date)]
 
-# collapse to module level
-byVars = c('disease','country','grant_number','year','quarter','abbrev_module','abbrev_intervention')
+# collapse to module-quarter level
+byVars = c('disease','country','grant_number','year','quarter','abbrev_module')
 data = allData[, list('budget'=sum(budget,na.rm=TRUE), 
 			'expenditure'=sum(expenditure,na.rm=TRUE)), by=byVars]
 
-# compute cumulative budget/expenditure by grant-module
-byVars = c('grant_number','abbrev_module')
-data[, cumulative_budget:=cumsum(budget), by=byVars]
-data[, cumulative_expenditure:=cumsum(expenditure), by=byVars]
-
 # compute absorption
-data[, absorption:=cumulative_expenditure/cumulative_budget]
+data[, absorption:=expenditure/budget]
+
+# define lemon squeeze function
+lemonSqueeze = function(x) { 
+	N = length(x[!is.na(x)])
+	return(logit(((x*(N-1))+0.5)/N))
+}
+reverseLemonSqueeze = function(x) { 
+	N = length(x[!is.na(x)])
+	return(((inv.logit(x)*N)-0.5)/(N-1))
+}
 
 # handle 1's and 0's so logit doesn't drop them
 data = data[is.finite(absorption) & absorption>=0]
-data[absorption>=1, absorption:=max(data[absorption<1]$absorption)] 
-data[absorption<=0, absorption:=min(data[absorption>0]$absorption)] 
-data[, absorption:=logit(absorption)]
+data[absorption>1, absorption:=1] 
+data[, absorption:=lemonSqueeze(absorption)]
+# data[absorption>=1, absorption:=max(data[absorption<1]$absorption)] 
+# data[absorption<=0, absorption:=min(data[absorption>0]$absorption)] 
+# data[, absorption:=logit(absorption)]
 # ----------------------------------------------------------------------
 
 
@@ -116,7 +123,8 @@ coefs2[, disease:='hiv']
 coefs2[, country:='Congo (Democratic Republic)']
 coefs2[, cumulative_budget:=median(data$cumulative_budget)]
 coefs2[, num_modules:=median(data$num_modules)]
-coefs2 = cbind(coefs2, inv.logit(predict(lmFit2, newdata=coefs2, interval='confidence')))
+coefs2 = cbind(coefs2, reverseLemonSqueeze(predict(lmFit2, newdata=coefs2, interval='confidence')))
+# coefs2 = cbind(coefs2, inv.logit(predict(lmFit2, newdata=coefs2, interval='confidence')))
 # -------------------------------------------------------------------------------------------------
 
 
@@ -137,7 +145,7 @@ coefs2[, label:=abbrev_module]
 data[, label:=str_wrap(abbrev_module, 22)]
 
 # identify highly-comoditized program areas
-commodities = c('Treatment, care & support', 'Vector control', 'Case management', 'Care & prevention', 'MDR-TB', 'HIV Testing Services')
+commodities = c('Treatment, care & support', 'Vector control', 'Case management', 'Care & prevention', 'MDR-TB', 'HIV Testing Services', 'PSM')
 
 coefs2[, commoditized:=ifelse(abbrev_module %in% commodities, 'Commoditized', 'Programmatic')]
 
