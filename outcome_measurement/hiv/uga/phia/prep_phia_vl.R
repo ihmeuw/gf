@@ -1,7 +1,7 @@
 # ----------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
-# 10/16/2018
+# 10/22/2018
 # Function that preps data from PHIA and the Uganda National Viral Load Dashboard
 #------------------------------
 # Inputs:
@@ -114,13 +114,13 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   ais[, art_coverage:=art_coverage_2011*(art/national_2011)]
 
   # normalize around 206 GBD ART national estimates 
-  # art_gbd = fread(inFileART)
-  # art_gbd = art_gbd[measure=='ART' & metric=='Rate' & year_id==2016 & sex_id==3 & age_group_id==22]
-  # ais[, art_coverage_gbd:=art_coverage_2011*(art_gbd$mean/national_2011)]
+  art_gbd = fread(inFileART)
+  art_gbd = art_gbd[measure=='ART' & metric=='Rate' & year_id==2016 & sex_id==3 & age_group_id==22]
+  ais[, art_coverage_gbd:=art_coverage_2011*(art_gbd$mean/national_2011)]
 
   # export a file to map
-  # saveRDS(ais, paste0(dir, 'prepped/ais_data.rds'))
-  
+  saveRDS(ais, paste0(dir, 'prepped/ais_data.rds'))
+  ais[ , art_coverage_gbd:=NULL]
     
 # ------------------------------------------------------------------------------------
 # Merge phia, vl, and ais datasets and format for analysis

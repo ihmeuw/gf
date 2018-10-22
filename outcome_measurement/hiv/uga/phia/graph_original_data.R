@@ -1,86 +1,15 @@
-# ----------------------------------------------
-# Caitlin O'Brien-Carelli
-#
-# Transform the VL data to match the PHIA data regions
-# creates corresponding maps and exports prepped code
 
-# ----------------------------------------------
-# Set up R
 
-rm(list=ls())
-library(data.table)
-library(rgeos)
-library(raster)
-library(ggplot2)
-library(rgdal)
-library(tibble)
-library(dplyr)
-library(RColorBrewer)
-library(maptools)
-library(plyr)
-library(ggrepel)
 
-# --------------------
-# detect if on windows or on the cluster 
+# import viral load data
+vl = readRDS(paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+# import shape file
+shapeData = shapefile('uga_dist112_map.shp')
 
-# ----------------------------------------------
-# Files and directories
-
-# set input/output directory
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
-
-# upload the data with month, year, sex
-uvl <- readRDS(paste0(dir, "/prepped_data/sex_data.rds"))
-
-# view the data set and variable names
-str(uvl)
-
-# there should be 112 districts to match the shape file
-length(unique(uvl$district_name))
-
-# ----------------------------------------------
-#upload the shape file
-
-# set working directory
-setwd(paste0(root, '/Project/Evaluation/GF/mapping/uga/'))
-
-# load the shapefile
-shapeData <- shapefile('uga_dist112_map.shp')
-
-# check that shapeData is a spatialpolygonsdataframe
-class(shapeData)
-
-# plot the shape file in the base package
-plot(shapeData)
-
-# simplify the shape data (could create little gaps, maybe don't do this)
-gSimplify(shapeData, tol=0.5, topologyPreserve=TRUE)
-plot(shapeData)
-
-# ----------------------------------------------
-# assign the relevant regions to the districts and facilities 
-
-# import the ten regions that are included in phia
-regions = fread(paste0(root, "/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv"))
-regions = unique(regions[ ,.(region=region10_alt, district_name=dist112_name)])
-
-# subset to the relevant dates
-vl = uvl[date>= '2016-08-01' & date <='2017-03-01']
-
-#------------------------------------------------
-# export a facility level data set 
-
-# merge the names of regions and their associated districts with the vl data 
-vl = merge(vl, regions, by='district_name')
-
-# export a facility level data set 
-vl = vl[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=.(facility_name, district_name, region)]
-setnames(vl, c('facility_name', 'district_name'), c('facility', 'district'))
-
-# export the file to analyze - use the names in the shape file 
-saveRDS(vl, paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
+# import phia data 
+inFilePHIA = paste0(dir, 'prepped/vl_suppression_by_region.csv')
+phia = fread(inFilePHIA)
 
 #------------------------------------------
 # aggregate districts into regions
@@ -88,6 +17,8 @@ vl = vl[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=re
 
 # calculate the suppression ratio
 vl[ , ratio:=round(100*(suppressed/valid_results), 1), by=region]
+vl = merge(vl, phia, by='region')
+setnames(vl, "VLS prevalence (%)", "phia_vls")
 
 # put the regions in the same order as the shape file
 regions = regions[match(shapeData@data$dist112_n, regions$district_name)]
@@ -132,19 +63,15 @@ ratio_colors = brewer.pal(6, 'BuGn')
 # set legend breaks
 breaks = c(80, 83, 86, 89)
 
-# export the comparison map as a pdf
-# pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/output/vl_comparison_map.pdf'), height=6, width=9)
-
 # map of regions 
-ggplot(coordinates_new, aes(x=long, y=lat, group=group, fill=ratio)) + 
+plot1 = ggplot(coordinates_new, aes(x=long, y=lat, group=group, fill=ratio)) + 
   geom_polygon() + 
   scale_fill_gradientn(colors=ratio_colors, breaks=breaks) + 
   theme_void() +
   coord_fixed() +
   labs(fill='VLS') +
   geom_label_repel(data = names, aes(label = name, x = long, y = lat, group = name), inherit.aes=FALSE, size=5)
-  
-# dev.off()
+
 
 #---------------------------------------------------------------
 
@@ -195,7 +122,7 @@ coordinates_ais[ ,c('suppressed', 'valid_results', 'ratio'):=NULL]
 coordinates_ais = melt(coordinates_ais, id.vars=c('id', 'long', 'lat', 'order', 'hole', 'piece', 'group'))
 
 # print out a comparative map of original and projected estimates
- pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/output/art_coverage_comparison_maps.pdf'), height=6, width=12)
+pdf(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/output/art_coverage_comparison_maps.pdf'), height=6, width=12)
 
 # map of regions 
 
@@ -208,7 +135,7 @@ ggplot(coordinates_ais, aes(x=long, y=lat, group=group, fill=value)) +
   labs(fill='ART Coverage(%)') +
   geom_label_repel(data = ais_names, aes(label = value, x = long, y = lat, group = value), inherit.aes=FALSE, size=4)
 
- dev.off()
+dev.off()
 
 #---------------------------------------------------------------
 # phia and vl dashboard before regression
