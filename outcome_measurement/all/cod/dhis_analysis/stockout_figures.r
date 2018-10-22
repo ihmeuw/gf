@@ -10,6 +10,7 @@
 # Set up R
 rm(list=ls())
 library(data.table)
+require(Hmisc)
 library(ggplot2)
 library(scales)
 library(RColorBrewer)
@@ -53,11 +54,78 @@ data = readRDS(inFile)
 # subset to the specified variable(s) post 2016
 data = data[element_eng %in% variables & year>=2017]
 
+# subset columns
+data = data[, c('org_unit_id','org_unit','date','element_eng','value'), with=FALSE]
+
+# confirm unique identifiers
+if (nrow(data)!=nrow(unique(data[,c('org_unit_id','date','element_eng'),with=F]))) { 
+	stop('org_unit_id, date and element_eng do not uniquely identify rows!')
+}
+# --------------------------------------------------
+
+
+# --------------------------------------------------
+# Subtract out months that appear to be reported in cumulative stockouts
+
+# ensure order for lagging
+data = data[order(org_unit_id, element_eng, date)]
+
+# rectangularize
+frame = expand.grid(org_unit_id=unique(data$org_unit_id), 
+					date=unique(data$date), 
+					element_eng=unique(data$element_eng))
+data = merge(data, frame, by=c('org_unit_id','date','element_eng'), all=TRUE)
+
+
+
+tmp = data[grepl('C1 12.1 \\(2-11', element_eng)]
+
+# there are many cases where they clearly just forgot how many days there are in the month
+tmp[, days_this_month:=monthDays(date)]
+tmp[value>days_this_month & value %in% c(29,30,31), value:=days_this_month]
+
+
+tmp[, lag:=shift(value), by=c('org_unit_id','element_eng')]
+tmp[, diff:=value-lag]
+
+# tmp[grepl('bu Nambwa Centre',org_unit), cumulative_example:=1]
+# tmp[grepl('Bungba Poste',org_unit), cumulative_example:=0]
+
+# vars = c('cumulative_example','date','value','lag','diff','days_this_month')
+# tmp[cumulative_example==1,vars,with=F]
+# tmp[cumulative_example==0,vars,with=F]
+
+# tmp[cumulative_example%in%c(0,1) & value>days_this_month & diff<=days_this_month,vars,with=F]
+# tmp[cumulative_example%in%c(0,1) & value>days_this_month & diff>days_this_month,vars,with=F]
+
+vars = c('org_unit','date','value','lag','diff','days_this_month','candidate_for_subtraction','any_candidate')
+
+tmp$candidate_for_subtraction = NULL
+tmp[value>days_this_month & diff<=33 & diff>0, candidate_for_subtraction:=1]
+tmp[, any_candidate:=max(candidate_for_subtraction,na.rm=T), by=c('org_unit_id')]
+
+examples = unique(tmp[any_candidate==1 & is.finite(any_candidate)]$org_unit_id)
+
+e=9
+tmp[org_unit_id==examples[e],vars,with=F]
+
+
+
+examples = unique(tmp[value>days_this_month & is.na(candidate_for_subtraction) & diff>0]$org_unit_id)
+
+e=4
+tmp[org_unit_id==examples[e],vars,with=F]
+
+
+
 # drop outliers (since we're only assessing the mean, this is a reasonable thing to do)
 data[, outlier:=value>31]
 pctOutliers = data[, .(pct=mean(outlier)), by=element_eng]
 data[value>31, value:=NA]
+# --------------------------------------------------
 
+
+# --------------------------------------------------
 # exclude facilities that seemingly never have had any drugs 
 data[, fullSO:=0]
 data[month(date)==2 & value==28, fullSO:=1]
