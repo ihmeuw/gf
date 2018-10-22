@@ -31,15 +31,18 @@ library(readxl)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir_data = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
 dir_pop = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/worldpop_data/')
-dir_cod = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/')
+dir_cod = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/')
 
 # input files
-hz_data <- "imputedData_run2_condensed_hz.rds"
+hz_data <- "post_imputation/imputedData_run2_agg_hz.rds"
+dps_data <- "post_imputation/imputedData_run2_agg_dps.rds"
+
 funders <- "fullData_dps_standardized.csv"
 funder_change <- "funders_data.xlsx"
 
 # output files
 output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_analysis/')
+imp_data_with_funder_data <- "post_imputation/imputedData_hz_withFunderData.rds" # save a copy of the data imputed at the hz level with funder data inc
 # ----------------------------------------------
 
 
@@ -48,6 +51,11 @@ output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualiza
 
 # load the imputed data at the hz level
 dt <- readRDS(paste0(dir_data, hz_data))
+dt$date <- as.Date(dt$date)
+#dt <- dt[dps!="0",]
+
+# load the imputed data at the hz level
+dt <- readRDS(paste0(dir_data, dps_data))
 dt$date <- as.Date(dt$date)
 #dt <- dt[dps!="0",]
 
@@ -63,24 +71,43 @@ funder_changes <- as.data.table(funder_changes)
 # 1) # We want to identify which hzs were funded by which partner/funder
 # Using the PNLP data, this turns out to not be very helpful... so see 2)
 
-# # load in full data where dps/hz was standardized (might have to play around with this to find it?)
-  # funder_data <- read.csv(paste0(dir_data, funders))
-  # funder_data <- as.data.table(funder_data)
-# # subset to just the relevant vars
-  # funder_data <- funder_data[, .(dps, health_zone, donor, year, month, date)]
+# load in full data where dps/hz was standardized (might have to play around with this to find it?)
+funder_data <- read.csv(paste0(dir_data, funders), stringsAsFactors = FALSE)
+funder_data <- as.data.table(funder_data)
+# subset to just the relevant vars
+funder_data <- funder_data[, .(dps, health_zone, donor, year, month, date)]
 
-# # merge funder data with full data
-#   funder_data$date <- as.Date(funder_data$date)
-#   funder_data$dps <- as.character(funder_data$dps)
-#   funder_data$health_zone <- as.character(funder_data$health_zone)
+# merge funder data with full data
+  funder_data$date <- as.Date(funder_data$date)
+  funder_data$dps <- as.character(funder_data$dps)
+  funder_data$health_zone <- as.character(funder_data$health_zone)
 
-#   dt_merge <- merge(dt, funder_data, all.x=T, by=c("dps", "health_zone", "date"))
+  funder_data[donor=="Banque Mondiale", donor:="WB"]
+  funder_data[donor=="FONDS MONDIAL", donor:="GF"]
+  funder_data[donor=="Fonds Mondial", donor:="GF"]
+  funder_data[donor=="Fond Mondial", donor:="GF"]
+  funder_data[donor=="Gavi,", donor:="Gavi"]
+  funder_data[donor=="GAVI-RSS", donor:="Gavi"] 
+  funder_data[donor=="ECHO, Pool Fund", donor:="ECHO"] 
+  funder_data$donor <- gsub("FM", "GF", funder_data$donor, fixed=TRUE)
+  funder_data$donor <- gsub("BM", "WB", funder_data$donor, fixed=TRUE)
+  funder_data$donor <- gsub("USAID", "PMI", funder_data$donor, fixed=TRUE)
+  funder_data[donor=="PMI/PMI", donor:="PMI"]
+  funder_data$donor <- gsub("PNUD", "UNPD", funder_data$donor, fixed=TRUE)
+  funder_data[donor=="Union Européenne", donor:="EU"]
+  funder_data[donor=="MSF Espagne", donor:="MSF"]
+  funder_data$donor <- gsub(",", "/", funder_data$donor, fixed=TRUE)
+  funder_data$donor <- gsub(" ", "", funder_data$donor, fixed=TRUE)
+  
+  # mark where gf was a donor
+  funder_data <- funder_data[grepl("GF", donor, fixed=TRUE), GF:= TRUE]
+  setnames(funder_data, "donor", "funder")  
 
-# # mark where gf was a donor
-#   dt_merge <- dt_merge[grepl("FM", donor), GF:= TRUE]
-#   setnames(dt_merge, "donor", "funder")
-
-
+# merge funder data with the full imputed data
+  dt_merge <- merge(dt, funder_data, all.x=T, by=c("dps", "health_zone", "date"))
+  
+saveRDS(dt_merge, paste0(dir_data, imp_data_with_funder_data))
+  
 # 2) # Use document from PNLS of funder changes from Rationalisation process in DRC to track
 # where funder changes and do an analysis of this process
 
