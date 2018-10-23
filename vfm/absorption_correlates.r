@@ -51,9 +51,9 @@ data = allData[, list('budget'=sum(budget,na.rm=TRUE),
 # compute absorption
 data[, absorption:=expenditure/budget]
 
-# define lemon squeeze function
+# define lemon squeeze function (store N to global environment for later use)
 lemonSqueeze = function(x) { 
-	N = length(x[!is.na(x)])
+	N <<- length(x[!is.na(x)])
 	return(logit(((x*(N-1))+0.5)/N))
 }
 reverseLemonSqueeze = function(x) { 
