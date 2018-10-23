@@ -81,6 +81,9 @@ data[, yearid:=as.numeric(as.factor(year)), by='grant_number']
 data[, quarterid:=(((yearid-1)*4))+quarter]
 data[, quarters_from_end:=max(quarterid)-quarterid+1, by='grant_number']
 
+# total budget of the grant
+data[, total_budget:=sum(budget,na.rm=TRUE), by='grant_number']
+
 # number of modules within grant
 data[, num_modules:=length(unique(abbrev_module)), by='grant_number']
 # ----------------------------------------------------------------------
@@ -92,14 +95,14 @@ data[, num_modules:=length(unique(abbrev_module)), by='grant_number']
 # all confounding variables to SDA
 form1 = as.formula('logit(absorption) ~ 
 					years_from_end + disease + country + 
-					log(cumulative_budget) + num_modules')
+					log(total_budget) + num_modules')
 lmFit1 = lm(form1, data=data)
 summary(lmFit1)
 
 # program activity controlling for all confounders
 form2 = as.formula('absorption ~ abbrev_module + 
 					quarters_from_end + disease + country + 
-					log(cumulative_budget) + num_modules')
+					log(total_budget) + num_modules')
 lmFit2 = lm(form2, data=data)
 # ----------------------------------------------------------
 
@@ -121,7 +124,7 @@ coefs2[, years_from_end:=1]
 coefs2[, quarters_from_end:=1]
 coefs2[, disease:='hiv']
 coefs2[, country:='Congo (Democratic Republic)']
-coefs2[, cumulative_budget:=median(data$cumulative_budget)]
+coefs2[, total_budget:=median(data$total_budget)]
 coefs2[, num_modules:=median(data$num_modules)]
 coefs2 = cbind(coefs2, reverseLemonSqueeze(predict(lmFit2, newdata=coefs2, interval='confidence')))
 # coefs2 = cbind(coefs2, inv.logit(predict(lmFit2, newdata=coefs2, interval='confidence')))
@@ -138,7 +141,7 @@ coefs1[variable=='diseasemalaria', label:='Component: Malaria']
 coefs1[variable=='diseasetb', label:='Component: TB']
 coefs1[variable=='countryGuatemala', label:='Country: Guatemala']
 coefs1[variable=='countryUganda', label:='Country: Uganda']
-coefs1[variable=='log(cumulative_budget)', label:='Log-Cumulative Budget']
+coefs1[variable=='log(total_budget)', label:='Log-Total Budget']
 coefs1[variable=='num_modules', label:='Number of Modules']
 # coefs2[, label:=str_wrap(abbrev_module, 32)]
 coefs2[, label:=abbrev_module]
@@ -216,5 +219,5 @@ dev.off()
 
 # -----------------------------
 # Save model output
-save('lmFit2', file=regOutFile)
+save(lmFit2, form2, N, file=regOutFile)
 # -----------------------------
