@@ -32,10 +32,10 @@ dir_pop = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/worldpop_dat
 dir_impact = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
 
 # input files
-dps_data <- "imputedData_run2_condensed_dps.rds"
+dps_data <- "post_imputation/imputedData_run2_agg_dps.rds"
 pop_data <- '2015_pop_estimates_by_dps(aggregated raster).csv'
 pop_data10 <- '2010_pop_estimates_by_dps(aggregated raster).csv'
-hz_data <- "imputedData_run2_condensed_hz.rds"
+hz_data <- "post_imputation/imputedData_run2_agg_hz.rds"
 
 # output files
 merged_pops <- "2015_and_2010_pop_estimates.csv"
@@ -51,9 +51,9 @@ compare_acts_by_age <- "compare_gf_provinces_acts_by_age.pdf"
 # Load data
 
 # # load the imputed data at DPS level
-# dt <- readRDS(paste0(dir_data, dps_data))
-# dt$year <- year(dt$date)
-# dt <- dt[year>=2015 & dps != "0",]
+dt <- readRDS(paste0(dir_data, dps_data))
+dt$year <- year(dt$date)
+dt <- dt[year>=2015 & dps != "0",]
 
 # load the imputed data at the hz level
 dt <- readRDS(paste0(dir_data, hz_data))
