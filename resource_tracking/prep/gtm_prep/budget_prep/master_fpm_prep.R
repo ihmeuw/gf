@@ -104,6 +104,7 @@ for(i in 1:length(file_list$file_name)){
   tmpData$loc_name <- loc_name
   tmpData$data_source <- file_list$data_source[i]
   tmpData$fileName <- file_list$file_name[i]
+  tmpData$grant_period <- file_list$grant_period[i]
   
   message(paste(i, "colNames: ", length(colnames(tmpData))))
   
@@ -215,7 +216,13 @@ gtm_init_mapping <- merge(gtmData, gf_mapping_list, by=c("module", "intervention
 ##use this to check if any modules/interventions were dropped:
 # dropped_gf <- gtm_init_mapping[is.na(gtm_init_mapping$code)]
 
-mappedGtm <- merge(gtm_init_mapping, final_mapping, by="code")
+mappedGtm <- merge(gtm_init_mapping, final_mapping, by="code", all.x=TRUE) 
+
+if(sum(is.na(mappedGtm$gf_module)) > 0){
+  # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+  stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
+}
+
 mappedGtm$budget <- mappedGtm$budget*mappedGtm$coefficient
 mappedGtm$expenditure <- mappedGtm$expenditure*mappedGtm$coefficient
 mappedGtm$disbursement <- mappedGtm$disbursement*mappedGtm$coefficient

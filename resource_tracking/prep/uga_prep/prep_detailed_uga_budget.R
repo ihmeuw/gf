@@ -11,7 +11,14 @@
 
 
 prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num, cashText, grant, disease, period, data_source) {
-  
+  # dir = file_dir
+  # inFile = "official_budgets/UGA-M-TASO_DB_IMPP2_17 Dec_GF Final.xlsx"
+  # sheet_name = "Detailed Budget"
+  # start_date = '2018-01-01'
+  # disease = "malaria"
+  # period = 90
+  # qtr_num = 12
+  #   
   # ----------------------------------------------
   ##prep functions that will be used in cleaning the code: 
   create_qtr_names = function(qtr_names, cashText){

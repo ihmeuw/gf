@@ -52,6 +52,7 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 ##change the start dates from factors to dates: 
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 totalGtm$start_date <- as.Date(totalGtm$start_date,"%Y-%m-%d")
+sicoin_data$grant_period = year(sicoin_data$start_date)
 
 ## aggregate the sicoin and FPM data:
 totalGtm$country <- "Guatemala"
@@ -92,7 +93,7 @@ gos_data$adm1 <- gos_data$loc_name
 gos_data$adm2 <- gos_data$loc_name
 gos_data$lang <- "eng"
 gos_data$cost_category <- "all"
-
+gos_data$grant_period = year(gos_data$start_date)
 ##aggregate with the country-specific data that we loaded previous: 
 
 totalData <- rbind(fpmData, gos_data)
@@ -110,6 +111,10 @@ fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/mult
 ##change the dates into date format: 
 fgh_data$start_date <- as.Date(fgh_data$start_date, "%Y-%m-%d")
 fgh_data$end_date <- as.Date(fgh_data$end_date, "%Y-%m-%d")
+
+#remove "total" value
+fgh_data = fgh_data[!grepl("total", module)]
+fgh_data$grant_period = year(fgh_data$start_date)
 
 
 totalData <- rbind(totalData, fgh_data)
@@ -129,6 +134,9 @@ totalData= totalData[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omi
 ## date variables can get messed up if we export them, so change them to 'character'
 totalData$start_date <- as.character(totalData$start_date)
 totalData$end_date <- as.character(totalData$end_date)
+
+totalData$loc_name = ifelse(totalData$loc_name  == "Uganda", "uga", ifelse(totalData$loc_name == "Guatemala", "gtm", ifelse(totalData$loc_name == 'Congo (Democratic Republic)', "cod", tolower(totalData$loc_name))))
+
 write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv", row.names = FALSE)
 
 # --------------------------------------------

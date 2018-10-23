@@ -55,6 +55,9 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset <- budget_dataset[-1, ,drop = FALSE]
       
     } else if (sheet_name%in%c("LFA Expenditure_7B", "PR Expenditure_7A")){ ## for the PUDRs w/out SR info
+      if(year(start_date) == 2018){
+        gf_data = gf_data[, 3:length(gf_data)]
+      }
       colnames(gf_data)[1] <- "module"
       colnames(gf_data)[2] <- "intervention"
       colnames(gf_data)[3] <- "budget"
