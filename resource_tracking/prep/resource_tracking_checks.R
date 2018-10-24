@@ -15,6 +15,7 @@ library(stats)
 library(stringr)
 library(rlang)
 library(zoo)
+library(dplyr)
 
 check_budget_dates = function(dt_g){
   # ouptut can be used to compare to "Data Seeking Spreadsheets"
@@ -45,7 +46,8 @@ check_SICOIN_dates = function(dt_g){
   dt_national = sicoin_dt[geog == 'National']
   dt_national <- subset(dt_national, !fileName %in% dt_muni$fileName)
   sicoin_dt = rbind(dt_muni, dt_national)
-  
+  sicoin_dt$start_date = as.Date(sicoin_dt$start_date)
+  sicoin_dt$end_date = as.Date(sicoin_dt$end_date)
   return(sicoin_dt)
 }
 
@@ -59,13 +61,25 @@ file_dir <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/"
 fil = "total_resource_tracking_data.csv"
 dt = fread(paste0(file_dir, fil))
 
+
 ######################################## GTM Analysis ###########################################
 dt_gtm = dt[loc_name == "gtm"]
+
+sicoin_dir <- "J:/Project/Evaluation/GF/resource_tracking/gtm/"
+fil_sic = "sicoin_missing_files.csv"
+missing_sic = unique(fread(paste0(sicoin_dir, fil_sic)))
+missing_sic$start_date = as.Date(missing_sic$start_date, "%m/%d/%Y")
+missing_sic$end_date = as.Date(missing_sic$end_date, "%m/%d/%Y")
 
 # to check Data Seeking Spreadsheet
 gtm_budgets = check_budget_dates(dt_gtm)
 gtm_pudrs = check_pudr_dates(dt_gtm)
 gtm_sicoin = check_SICOIN_dates(dt_gtm)
+
+dt3 <- full_join(x = missing_sic, y = gtm_sicoin, by = c("data_source", "grant_period", "start_date", "end_date", "sdaDetail", "geog", "period", "disease"))
+
+test = merge(missing_sic, gtm_sicoin, by = c("data_source", "grant_period", "start_date", "end_date", "sdaDetail", "geog", "period", "disease"))
+test = rbind(missing_sic, gtm_sicoin,fill = TRUE)
 
 # to check total budgeted per grant (should match Grant Anaylsis Worksheet)
 gtm_grant_check = total_budget_by_grantPeriod(dt_gtm)

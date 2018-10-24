@@ -93,7 +93,6 @@ gos_data$adm1 <- gos_data$loc_name
 gos_data$adm2 <- gos_data$loc_name
 gos_data$lang <- "eng"
 gos_data$cost_category <- "all"
-gos_data$grant_period = year(gos_data$start_date)
 ##aggregate with the country-specific data that we loaded previous: 
 
 totalData <- rbind(fpmData, gos_data)

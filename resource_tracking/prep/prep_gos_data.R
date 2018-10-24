@@ -35,14 +35,18 @@ gos_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/m
 ## reset column names
 oldNames <-  c("Country","Grant Number", "Year", "Financial Reporting Period Start Date",
                "Financial Reporting Period End Date","Module", "Intervention", "Total Budget Amount (in budget currency)", 
-               "Total Expenditure Amount (in Budget currency)", "Component")
+               "Total Expenditure Amount (in Budget currency)", "Component", "Current IP  Start Date", "Current IP  End Date")
 newNames <-  c("country","grant_number", "year","start_date","end_date","module","intervention", 
-               "budget", "expenditure", "disease")
+               "budget", "expenditure", "disease", "grant_period_start", "grant_period_end")
 
 setnames(gos_data,oldNames, newNames)
 
 ##subset the columns that we want 
 gos_clean <- gos_data[, newNames, with=FALSE]
+
+gos_clean$grant_period = paste0(year(as.Date(gos_clean$grant_period_start)), "-",year(as.Date(gos_clean$grant_period_end)))
+gos_clean$grant_period_start = NULL
+gos_clean$grant_period_end = NULL
 
 # ----------------------------------------------
 ###### Load the GMS tab from the Excel book  ###### 
@@ -51,11 +55,16 @@ gms_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/m
                                    sheet=as.character('GMS SDAs - extract')))
 
 ##repeat the subsetting that we did above (grabbing only the columns we want)
-gmsOld <- c(oldNames[1:5], "Service Delivery Area", "Total Budget Amount (USD equ)", "Total Expenditure Amount (USD equ)", "Component")
-gmsNew <- c(newNames[1:6], newNames[8:10])
+gmsOld <- c(oldNames[1:5], "Service Delivery Area", "Total Budget Amount (USD equ)", "Total Expenditure Amount (USD equ)", "Component", "Program Start Date", "Program End Date")
+gmsNew <- c(newNames[1:6], newNames[8:10], "grant_period_start", "grant_period_end")
 setnames(gms_data, gmsOld, gmsNew)
 gms_clean <- gms_data[, gmsNew, with=FALSE]
 gms_clean$intervention <- "All"
+
+
+gms_clean$grant_period = paste0(year(as.Date(gms_clean$grant_period_start)), "-",year(as.Date(gms_clean$grant_period_end)))
+gms_clean$grant_period_start = NULL
+gms_clean$grant_period_end = NULL
 
 ##combine both GOS and GMS datasets into one dataset
 totalGos <- rbind(gms_clean, gos_clean)
