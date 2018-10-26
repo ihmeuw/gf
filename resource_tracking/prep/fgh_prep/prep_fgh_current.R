@@ -234,23 +234,22 @@ totalFgh$start_date  <- as.Date(totalFgh$start_date,"%Y-%m-%d")
 totalFgh$end_date <- paste0(totalFgh$year, "-12-31") 
 totalFgh$budget <- 0 
 totalFgh$expenditure <- 0 
-totalFgh$gf_module <-totalFgh$sda_activity
-totalFgh$module <- totalFgh$sda_activity
-totalFgh$gf_intervention <- totalFgh$gf_module
-totalFgh$intervention <- totalFgh$gf_intervention
-totalFgh$abbrev_module <-totalFgh$gf_module
-totalFgh$abbrev_intervention <- totalFgh$gf_intervention
+totalFgh$gf_module <-"all"
+totalFgh$module <- "all"
+totalFgh$gf_intervention <- "all"
+totalFgh$intervention <- "all"
+totalFgh$abbrev_module <-"all"
+totalFgh$abbrev_intervention <- "all"
 totalFgh$adm2 <- totalFgh$adm1
-totalFgh$grant_number <-totalFgh$loc_name
+totalFgh$grant_number <- "none"
 totalFgh$recipient <-totalFgh$grant_number
 totalFgh$lang <- "eng"
 totalFgh$cost_category <- "all"
 totalFgh$coefficient <- 1
 totalFgh$country = mapply(get_country_name, totalFgh$loc_name)
 totalFgh$fileName = ifelse(totalFgh$disease == "hiv", "gpr_corrected_final_gbd4.csv", "ihme_dah_cod_uga_gtm_1990_2016.csv")
-totalFgh$sda_activity <- "Unspecified (Summary budget)"
 totalFgh$loc_name = tolower(totalFgh$loc_name)
-totalFgh = totalFgh[!grep("total_", gf_module)]
+totalFgh = totalFgh[!grep("total_", sda_activity)]
 
 # ----------------------------------------------
 # export the FGH data 

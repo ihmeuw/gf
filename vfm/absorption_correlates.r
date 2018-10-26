@@ -38,25 +38,36 @@ outFile = paste0(dir, '../../vfm/visualizations/absorption_correlates.pdf')
 # Load/prep data
 
 # load
-data = fread(inFile)
+allData = fread(inFile)
 
-# collapse to module level
-byVars = c('disease','country','grant_number','year','gf_module')
-data=data[, list('budget'=sum(budget,na.rm=TRUE), 
+# identify quarters
+allData[, quarter:=quarter(start_date)]
+
+# collapse to module-quarter level
+byVars = c('disease','country','grant_number','year','quarter','abbrev_module')
+data = allData[, list('budget'=sum(budget,na.rm=TRUE), 
 			'expenditure'=sum(expenditure,na.rm=TRUE)), by=byVars]
 
-# compute cumulative budget/expenditure by grant-module
-byVars = c('grant_number','gf_module')
-data[, cumulative_budget:=cumsum(budget), by=byVars]
-data[, cumulative_expenditure:=cumsum(expenditure), by=byVars]
-
 # compute absorption
-data[, absorption:=cumulative_expenditure/cumulative_budget]
+data[, absorption:=expenditure/budget]
+
+# define lemon squeeze function
+lemonSqueeze = function(x) { 
+	N = length(x[!is.na(x)])
+	return(logit(((x*(N-1))+0.5)/N))
+}
+reverseLemonSqueeze = function(x) { 
+	N = length(x[!is.na(x)])
+	return(((inv.logit(x)*N)-0.5)/(N-1))
+}
 
 # handle 1's and 0's so logit doesn't drop them
-# data[absorption>=1 & is.finite(absorption), absorption:=max(data[absorption<1]$absorption)] 
-# data[absorption>=0 & is.finite(absorption), absorption:=min(data[absorption>0]$absorption)] 
-data = data[absorption<1 & absorption>0]
+data = data[is.finite(absorption) & absorption>=0]
+data[absorption>1, absorption:=1] 
+data[, absorption:=lemonSqueeze(absorption)]
+# data[absorption>=1, absorption:=max(data[absorption<1]$absorption)] 
+# data[absorption<=0, absorption:=min(data[absorption>0]$absorption)] 
+# data[, absorption:=logit(absorption)]
 # ----------------------------------------------------------------------
 
 
@@ -66,17 +77,12 @@ data = data[absorption<1 & absorption>0]
 # year within grant and years from end of grant
 data[, grant_year:=as.numeric(as.factor(year)), by='grant_number']
 data[, years_from_end:=max(grant_year)-grant_year+1, by='grant_number']
+data[, yearid:=as.numeric(as.factor(year)), by='grant_number']
+data[, quarterid:=(((yearid-1)*4))+quarter]
+data[, quarters_from_end:=max(quarterid)-quarterid+1, by='grant_number']
 
 # number of modules within grant
-data[, num_modules:=length(unique(gf_module)), by='grant_number']
-
-# grant window 
-# (shouldn't matter; already captured in complexity/size/SDA composition)
-data[year<2008, window:=1]
-data[year>=2008 & year<2011, window:=2]
-data[year>=2011 & year<2014, window:=3]
-data[year>=2014 & year<2017, window:=4]
-data[year>=2017 & year<2020, window:=5]
+data[, num_modules:=length(unique(abbrev_module)), by='grant_number']
 # ----------------------------------------------------------------------
 
 
@@ -91,8 +97,8 @@ lmFit1 = lm(form1, data=data)
 summary(lmFit1)
 
 # program activity controlling for all confounders
-form2 = as.formula('logit(absorption) ~ gf_module + 
-					years_from_end + disease + country + 
+form2 = as.formula('absorption ~ abbrev_module + 
+					quarters_from_end + disease + country + 
 					log(cumulative_budget) + num_modules')
 lmFit2 = lm(form2, data=data)
 # ----------------------------------------------------------
@@ -109,14 +115,16 @@ coefs1 = coefs1[, lapply(.SD, as.numeric), .SDcols=c('est','p','lower','upper'),
 
 # predictions from model 2 (full model) 
 # set to the most central categories for all other variables
-coefs2 = data.table(unique(data$gf_module))
-setnames(coefs2, 'gf_module')
+coefs2 = data.table(unique(data$abbrev_module))
+setnames(coefs2, 'abbrev_module')
 coefs2[, years_from_end:=1]
+coefs2[, quarters_from_end:=1]
 coefs2[, disease:='hiv']
 coefs2[, country:='Congo (Democratic Republic)']
 coefs2[, cumulative_budget:=median(data$cumulative_budget)]
 coefs2[, num_modules:=median(data$num_modules)]
-coefs2 = cbind(coefs2, inv.logit(predict(lmFit2, newdata=coefs2, interval='confidence')))
+coefs2 = cbind(coefs2, reverseLemonSqueeze(predict(lmFit2, newdata=coefs2, interval='confidence')))
+# coefs2 = cbind(coefs2, inv.logit(predict(lmFit2, newdata=coefs2, interval='confidence')))
 # -------------------------------------------------------------------------------------------------
 
 
@@ -128,19 +136,18 @@ coefs1[variable=='(Intercept)', label:='Intercept']
 coefs1[variable=='years_from_end', label:='Years from Grant End']
 coefs1[variable=='diseasemalaria', label:='Component: Malaria']
 coefs1[variable=='diseasetb', label:='Component: TB']
-coefs1[variable=='CountryGuatemala', label:='Country: Guatemala']
-coefs1[variable=='CountryUganda', label:='Country: Uganda']
+coefs1[variable=='countryGuatemala', label:='Country: Guatemala']
+coefs1[variable=='countryUganda', label:='Country: Uganda']
 coefs1[variable=='log(cumulative_budget)', label:='Log-Cumulative Budget']
-coefs1[variable=='num_modules', label:='Number of SDAs']
-# coefs2[, label:=str_wrap(gf_module, 32)]
-coefs2[, label:=gf_module]
-coefs2[label=='HIV/TB collaborative interventions', label:='HIV/TB collaborative\ninterventions']
-data[, label:=str_wrap(gf_module, 22)]
+coefs1[variable=='num_modules', label:='Number of Modules']
+# coefs2[, label:=str_wrap(abbrev_module, 32)]
+coefs2[, label:=abbrev_module]
+data[, label:=str_wrap(abbrev_module, 22)]
 
 # identify highly-comoditized program areas
-commodities = c('Treatment, care and support', 'Vector control', 'Case management', 'TB care and prevention', 'Multidrug-resistant TB', 'HIV Testing Services')
+commodities = c('Treatment, care & support', 'Vector control', 'Case management', 'Care & prevention', 'MDR-TB', 'HIV Testing Services', 'PSM')
 
-coefs2[, commoditized:=ifelse(gf_module %in% commodities, 'Commoditized', 'Programmatic')]
+coefs2[, commoditized:=ifelse(abbrev_module %in% commodities, 'Commoditized', 'Programmatic')]
 
 # store aggregate absorption
 agg = sum(data$expenditure)/sum(data$budget)
@@ -209,5 +216,5 @@ dev.off()
 
 # -----------------------------
 # Save model output
-save(c('form2','lmFit2'), file=regOutFile)
+save('lmFit2', file=regOutFile)
 # -----------------------------

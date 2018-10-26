@@ -40,7 +40,7 @@ dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNL
 file2018 <- "Synthèse Nationale T1 2018.xlsx"
 file2017 <- 'Synthèse Nationale RDC 2017.xlsx'
 pnlt_transl <- "PNLT_translations.xlsx"
-prep_functions <- "./outcome_measurement/tuberculosis/cod/prep_dpsLevel_sheets.R"
+prep_functions <- "./outcome_measurement/tuberculosis/cod/functions_prep_PNLT.R"
 source(prep_functions)
 
 # output file
@@ -54,71 +54,11 @@ pnlt_case_screening_18 <- "PNLT_case_screening_2018.csv"
 
 
 # ----------------------------------------------
-## variables to use
+## load excel sheet with variable translations
 # ----------------------------------------------
-unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
-                          'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
-                          'Ú'='U', 'Û'='U', 'Ü'='U', 'İ'='Y', 'Ş'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
-                          'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ğ'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
-                          'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ı'='y', 'ı'='y', 'ş'='b', 'ÿ'='y' )
-
-dps_names <- c('kwango', 'kwilu', 'mai-ndombe', 'kongo-central-est', 'kongo-central-ouest', 'equateur', 'mongala', 'nord-ubangi', 'sud-ubangi', 'tshuapa', 'kasai', 'kasai-central', 
-              'kasai-oriental', 'lomami', 'sankuru', 'haut-katanga', 'haut-lomami', 'lualaba', 'tanganyika', 'kinshasa', 'maniema', 'nord-kivu', 'sud-kivu', 'ituri', 'tshopo', 
-              'bas-uele', 'haut-uele')
-# ----------------------------------------------
-
-
-# ----------------------------------------------
-## load data from excel to visualize initial data
-# ----------------------------------------------
-# dt2018 <- data.table(read_excel(paste0(dir, file2018), sheet= 'DEPISTAGE T1 018'))
-# dt2017 <- data.table(read_excel(paste0(dir, file2017), sheet= 'DEP T1 017'))
-
 dt_transl <- data.table(read_excel(paste0(dir, pnlt_transl)))
 dt_transl$keep_2018 <- as.character(dt_transl$keep_2018)
 dt_transl$keep_2017 <- as.character(dt_transl$keep_2017)
-# ----------------------------------------------
-
-
-# ----------------------------------------------
-## get all files in a given year folder
-# ----------------------------------------------
-getFiles <- function(year){
-  files = list.files(paste0(dir, year))
-  return(files)
-}
-
-# # get file names for a given year:
-# files <- getFiles(year)
-# 
-# # clean file names to remove ones without data for cleaning:
-# files_xlsx <- files[!grepl(".DOC", files)]
-# files_xlsx <- files_xlsx[!grepl("NATIONAL", files_xlsx)]
-# files_xlsx <- files_xlsx[!grepl("SUBMISSION_DATES", files_xlsx)]
-# files_xlsx <- files_xlsx[!grepl("HEALTH_ZONES", files_xlsx)]
-# files_xlsx <- files_xlsx[!grepl("INDICATORS_COLLECTED", files_xlsx)]
-#-----------------------------------------------
-
-
-# ----------------------------------------------
-## get all sheets in a given file
-# ----------------------------------------------
-getSheets <- function(file, year){
-  sheets <- getSheetNames(paste0(dir, year, "/", file))
-  
-  # # determine what quarter the file is from:  --- NOT RELEVANT FOR 2017/2018
-  # if (grepl("T1", file)){
-  #   quarter= "T1"
-  # }else if (grepl("T2", file)){
-  #   quarter= "T2"
-  # }else if (grepl("T3", file)){
-  #   quarter= "T3"
-  # }else if (grepl("T4", file)){
-  #   quarter= "T4"
-  # }
-  # return(sheets)
-}
-## NOTE: three types of sheets to clean:  DEP, AGE, and EVAL
 # ----------------------------------------------
 
 
@@ -134,9 +74,15 @@ files17 <- files17[!grepl("~", files17)]
 sheets18 <- getSheets(files18[1], 2018)
 sheets17 <- getSheets(files17[1], 2017)
 
-# 2017:
 # SET UP:
-make_dt_of_sheet_properties <- function(sheets_list, type){
+make_dt_of_sheets <- function(sheets_year, type){  # NOTE: this doens't work for the format of 2018 sheets, might have to scrap it
+  sheets_list <- sheets_year[grepl(type, sheets_year)]
+  
+  sheets_list <- sheets_list[!grepl("SYNTH", sheets_list)]
+  sheets_list <- sheets_list[!grepl("ANNUEL", sheets_list)]
+  sheets_list <- sheets_list[!grepl("SYN", sheets_list)]
+  sheets_list <- sheets_list[!grepl("STNTH", sheets_list)]
+  
   dt <- as.data.table(sheets_list)
   setnames(dt, "sheets_list", "sheet_name")
   dt$sheet_name <- trimws(dt$sheet_name)
@@ -152,33 +98,17 @@ make_dt_of_sheet_properties <- function(sheets_list, type){
   return (dt)
 }
 
-sheets <- sheets18
-# EVAL SHEETS:
-  # get just eval sheets for each quarter
-  sheets_eval <- sheets[grepl("EVAL", sheets)]
-  sheets_eval <- sheets_eval[!grepl("SYN", sheets_eval)]
-
-# DEP SHEETS
-  # get just the DEP sheets from sheets
-  sheets_dep <- sheets[grepl("DEP", sheets)]
-  sheets_dep <- sheets_dep[!grepl("SYNTH", sheets_dep)]
-  sheets_dep <- sheets_dep[!grepl("ANNUEL", sheets_dep)]
-
-# AGE SHEETS
-  # get just the EVAL sheets from sheets
-  sheets_age <- sheets[grepl("AGE", sheets)]
-  sheets_age <- sheets_age[!grepl("SYN", sheets_age)]
-  sheets_age <- sheets_age[!grepl("STNTH", sheets_age)]
-  sheets_age <- sheets_age[!grepl("DEPISTAGE", sheets_age)]
-  
 ### FOR 2017:
 # make data tables of sheet properties
-  dt_sheets_dep <- make_dt_of_sheet_properties(sheets_dep, "DEP")
-  dt_sheets_eval <- make_dt_of_sheet_properties(sheets_eval, "EVAL")
-  dt_sheets_age <- make_dt_of_sheet_properties(sheets_age, "AGE")
+  dt_sheets_dep <- make_dt_of_sheets(sheets17, "DEP")
+  dt_sheets_eval <- make_dt_of_sheets(sheets17, "EVAL")
+  dt_sheets_age <- make_dt_of_sheets(sheets17, "AGE")
   
-### FOR 2018:
+### FOR 2018
+  sheets_dep <- sheets18[grepl("DEP", sheets18)]
   sheets_dep <- sheets_dep[grepl("T1", sheets_dep)]
+  
+  sheets_eval <- sheets18[grepl("EVAL", sheets18)]
   sheets_eval <- sheets_eval[grepl("T1", sheets_eval)]
   sheets_eval <- sheets_eval[1:2]
 #---------------------------------------------
@@ -191,7 +121,7 @@ sheets <- sheets18
   case_outcomes <- clean_eval_sheets(dir, 2018, files18[1])
   year = 2018
   file = files18[1]
-  s = sheets_eval[4]
+  s = sheets_eval[1]
   i <- 1
   
   for (s in sheets_eval[1:length(sheets_eval)]){
@@ -276,18 +206,21 @@ sheets <- sheets18
 
 # ---------------------------------------------   
 # CLEAN DEP SHEETS:
-file = files18[1]
-year = 2018
-s = sheets_dep[1]
+file = files17[1]
+year = 2017
+sheets_dep <- sheets17[grepl("DEP", sheets17)]
+sheets_dep <- sheets_dep[!grepl("SYN", sheets_dep)]
 i = 1
 
 for (s in sheets_dep) {
     dt <- data.table(read_excel(paste0(dir, year, "/", file), sheet= s))
     
     # basic tidying
-    dt <- initial_clean(dt)
+    dt <- initial_clean(dt, year)
     
     # change column names
+    if (year==2018) dt$col1 <- NULL
+    
     col_names <- dt_transl[get(paste0("keep_", year))==1, variable_in_code]
     colnames(dt) <- col_names
     
@@ -296,6 +229,22 @@ for (s in sheets_dep) {
     
     # create columns for year/quarter/etc
     dt <- add_data_sheet_info(dt, dt_sheets_dep)
+    
+    if (year==2018) dt$quarter <- 1
+    if (year==2018) dt$data_year <- 2018
+
+    dt$quarter <- gsub("T", "", dt$quarter)
+
+    # create date variable:
+    dt[ file_year=="2017" & quarter=="1", date:= "2017-01-01"]
+    dt[ file_year=="2017" & quarter=="2", date:= "2017-04-01"]
+    dt[ file_year=="2017" & quarter=="3", date:= "2017-07-01"]
+    dt[ file_year=="2017" & quarter=="4", date:= "2017-10-01"]
+    dt[ file_year=="2018" & quarter=="1", date:= "2018-01-01"]    
+    
+    dt$date <- as.Date(dt$date)
+    dt$quarter <- as.numeric(dt$quarter)
+    dt$dps <- as.character(dt$dps)
     
     # create a dt to store/rbind each iteration of the loop
     if (i==1){

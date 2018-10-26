@@ -48,6 +48,9 @@ data[gf_module=='Program management', code:=NA]
 # replace "all" with "unspecified" because it comes from summary budgets
 data[sda_activity=='All', sda_activity:='Unspecified (Summary budget)']
 data[grant_number %in% c('UGD-708-G07-H', 'UGD-011-G10-S'), sda_activity:='Unspecified (Summary budget)']
+
+# subset to RSSH
+data = data[grepl('R', code)]
 # -------------------------------------------
 
 

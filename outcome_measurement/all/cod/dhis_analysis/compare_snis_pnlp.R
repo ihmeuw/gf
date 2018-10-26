@@ -224,6 +224,16 @@ dt$set <- factor(dt$set,
                  levels=c('base', 'pnlp'), 
                  labels=c('SNIS: Services de Base', 'PNLP: program Data'))
 
+#-----------------------------------
+# 10/8/18 - added by Audrey
+# add CHW data for RDTs completed in PNLP to compare to SNIS
+dt_rdt <- dt[ variable %in% c('RDT_completed', 'SSCRDT_completed5andOlder', 'SSCRDT_completedUnder5'), ]
+
+# collapse pnlp rdts completed and rdts completed by CHWs into one var, and sum over age 
+dt_rdt[type=="rdt_chw", type:="rdt"]
+dt_rdt <- dt_rdt[, .(value= sum(value, na.rm=TRUE)), by=c("dps", "health_zone", "date", "type", "set")]
+dt <- copy(dt_rdt)
+setnames(dt, "type", "variable")
 #---------------------------------------
 # GRAPHS 
 # national trend graphs - sum over category (same graph)
