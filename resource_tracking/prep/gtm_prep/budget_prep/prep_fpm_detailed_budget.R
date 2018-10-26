@@ -14,6 +14,25 @@
 # ----------------------------------------------
 prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, recipient_name){
   
+  ######## TROUBLESHOOTING HELP
+  ### fill in variables below: inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, recipient_name 
+  ### with information from line where the code breaks, and then uncomment by "ctrl + shift + c" and run code line-by-line
+  ### look at gf_data and find what is being droped where.
+  ########
+  
+  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
+  # dir = file_dir
+  # inFile = ""
+  # sheet_name = ""
+  # start_date = ""
+  # qtr_num =
+  # period =
+  # disease = ""
+  # lang = ""
+  # grant = ""
+  # recipient_name = ""
+  
+  
   ##first determine if budget is in french or english
   if(lang=="eng"){
     cashText <- " Cash \r\nOutflow"
@@ -24,7 +43,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   }
   
   ## newer budgets use the label "Implementador" and the old ones use "Receptor" 
-  if(year(start_date)==2018){
+  if(year(start_date)>=2018){
     recipient <- "Implementador"
   } else{
     recipient <- "Receptor"
@@ -70,7 +89,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     budget_dataset <- unique(budget_dataset, by=c("sda_activity","budget"))
   } else {
     ##new budgets formatted slightly differently: 
-    if(year(start_date)==2018){
+    if(year(start_date)>=2018){
       gf_data <- gf_data[-c(1:2),]
       colnames(gf_data) <- as.character(gf_data[1,])
       gf_data <- gf_data[-1,]

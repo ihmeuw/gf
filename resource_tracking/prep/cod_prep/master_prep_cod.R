@@ -115,6 +115,7 @@ for(i in 1:length(file_list$file_name)){
   }
   tmpData$financing_source <- "gf"
   tmpData$fileName = file_list$file_name[i]
+  tmpData$grant_period = file_list$grant_period[i]
   if(i==1){
     resource_database = tmpData
   } 
@@ -227,7 +228,13 @@ if(nrow(dropped_gf)>0){
 }
 
 ## merge the dataset with the codes and coefficients to the Modular Framework
-mappedCod <- merge(cod_init_mapping, final_mapping, by="code")
+mappedCod <- merge(cod_init_mapping, final_mapping, by="code", all.x=TRUE) 
+
+if(sum(is.na(mappedCod$gf_module)) > 0){
+  # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+  stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
+}
+
 mappedCod$budget <- mappedCod$budget*mappedCod$coefficient
 mappedCod$expenditure <- mappedCod$expenditure*mappedCod$coefficient
 mappedCod$disbursement <- mappedCod$disbursement*mappedCod$coefficient

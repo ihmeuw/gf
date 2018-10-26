@@ -98,6 +98,8 @@ for(i in 1:length(file_list$file_name)){
                              file_list$grant[i], file_list$recipient[i],file_list$data_source[i])
   }
   tmpData$fileName = file_list$file_name[i]
+  tmpData$grant_period = file_list$grant_period[i]
+  
   if(i==1){
     resource_database = tmpData 
   } 
@@ -189,6 +191,8 @@ return(x)
 
 cleaned_database$disease <- mapply(get_hivtb_split, cleaned_database$disease, cleaned_database$module)
 
+
+
 # ---------------------------------------------
 ########## Strip special characters from the SDA descriptions ########
 # ---------------------------------------------
@@ -199,6 +203,8 @@ sda_remove_chars <- c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u20
 ##get rid of punctuation and accents in the SDA activities: 
 cleaned_database$sda_activity <-gsub(paste(sda_remove_chars, collapse="|"), "",cleaned_database$sda_activity)
 cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
+
+
 
 # ----------------------------------------------
 ##### Map to the GF Modules and Interventions #####
@@ -225,6 +231,8 @@ gf_mapping_list <- total_mapping_list(paste0(map_dir, "intervention_and_indicato
 
 ##strip all of the special characters, white space, etc. from the RT database
 cleaned_database <- strip_chars(cleaned_database, unwanted_array, remove_chars)
+
+
 ## we have some junk "modules" that should be dropped:
 ugaData  <- cleaned_database[!grepl("pleasesel", cleaned_database$module),]
 ugaData$module = ifelse(ugaData$module == "tbhivc", "tbhiv", ugaData$module)
@@ -252,7 +260,6 @@ if(nrow(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
 }
 
-
 # ----------------------------------------------
 ########### Map the RT dataset to the GF Modular Framework ###########
 # ----------------------------------------------
@@ -268,7 +275,14 @@ if(nrow(dropped_gf)>0){
 }
 
 ##finally, merge the RT dataset to the GF framework list by code: 
-mappedUga <- merge(uga_init_mapping, final_mapping, by="code")
+mappedUga <- merge(uga_init_mapping, final_mapping, by="code", all.x=TRUE) 
+
+if(sum(is.na(mappedUga$gf_module)) > 0){
+  # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+  stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
+}
+
+
 
 ##if any of the modules are "split", this performs the $$ split across modules 
 mappedUga$budget <- mappedUga$budget*mappedUga$coefficient

@@ -11,7 +11,27 @@
 
 
 prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num, cashText, grant, disease, period, data_source) {
+
+  ######## TROUBLESHOOTING HELP
+  ### fill in variables below with information from line where the code breaks (use file list to find variables)
+  ### uncomment by "ctrl + shift + c" and run code line-by-line
+  ### look at gf_data and find what is being droped where.
+  ########
   
+  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/uga/gf/'
+  # dir = file_dir
+  # inFile = ""
+  # sheet_name = ""
+  # start_date = ""
+  # qtr_num =
+  # period =
+  # disease = ""
+  # grant = ""
+  # cashText = " Cash Outflow"
+  # data_source = "fpm"
+
+  
+  #   
   # ----------------------------------------------
   ##prep functions that will be used in cleaning the code: 
   create_qtr_names = function(qtr_names, cashText){

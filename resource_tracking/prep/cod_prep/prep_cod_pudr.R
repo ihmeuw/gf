@@ -17,6 +17,25 @@ prep_pudr_cod = function(dir, inFile, sheet_name, start_date, disease,
                          period, grant, recipient, source,lang, loc_name) {
   
   
+  ######## TROUBLESHOOTING HELP
+  ### fill in variables below: inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, recipient_name 
+  ### with information from line where the code breaks, and then uncomment by "ctrl + shift + c" and run code line-by-line
+  ### look at gf_data and find what is being droped where.
+  ########
+  
+  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
+  # dir = file_dir
+  # inFile = ""
+  # sheet_name = ""
+  # start_date = ""
+  # period =
+  # disease = ""
+  # lang = ""
+  # grant = ""
+  # recipient = ""
+  # source = "pudr"
+  # loc_name = "cod"
+  
   ##read the data: 
   gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
   

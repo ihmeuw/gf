@@ -3,12 +3,73 @@
 # function to clean eval sheets in 2017 data
 
 # TO DO : expand this to cover other years as well
+# ----------------------------------------------
+## variables to use
+# ----------------------------------------------
+unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
+                          'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
+                          'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
+                          'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
+                          'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 'þ'='b', 'ÿ'='y' )
 
-initial_clean <- function(dt){
+dps_names <- c('kwango', 'kwilu', 'mai-ndombe', 'kongo-central-est', 'kongo-central-ouest', 'equateur', 'mongala', 'nord-ubangi', 'sud-ubangi', 'tshuapa', 'kasai', 'kasai-central', 
+               'kasai-oriental', 'lomami', 'sankuru', 'haut-katanga', 'haut-lomami', 'lualaba', 'tanganyika', 'kinshasa', 'maniema', 'nord-kivu', 'sud-kivu', 'ituri', 'tshopo', 
+               'bas-uele', 'haut-uele')
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+## functions for set up
+# ----------------------------------------------
+## get all files in a given year folder
+
+getFiles <- function(year){
+  files = list.files(paste0(dir, year))
+  return(files)
+}
+
+# # get file names for a given year:
+# files <- getFiles(year)
+# 
+# # clean file names to remove ones without data for cleaning:
+# files_xlsx <- files[!grepl(".DOC", files)]
+# files_xlsx <- files_xlsx[!grepl("NATIONAL", files_xlsx)]
+# files_xlsx <- files_xlsx[!grepl("SUBMISSION_DATES", files_xlsx)]
+# files_xlsx <- files_xlsx[!grepl("HEALTH_ZONES", files_xlsx)]
+# files_xlsx <- files_xlsx[!grepl("INDICATORS_COLLECTED", files_xlsx)]
+
+## get all sheets in a given file
+
+getSheets <- function(file, year){
+  sheets <- excel_sheets(paste0(dir, year, "/", file))
+  
+  # # determine what quarter the file is from:  --- NOT RELEVANT FOR 2017/2018
+  # if (grepl("T1", file)){
+  #   quarter= "T1"
+  # }else if (grepl("T2", file)){
+  #   quarter= "T2"
+  # }else if (grepl("T3", file)){
+  #   quarter= "T3"
+  # }else if (grepl("T4", file)){
+  #   quarter= "T4"
+  # }
+  # return(sheets)
+}
+## NOTE: three types of sheets to clean:  DEP, AGE, and EVAL
+# ----------------------------------------------
+
+
+# ----------------------------------------------
+## functions for prep
+# ----------------------------------------------
+initial_clean <- function(dt, year){
     # remove rows at the top up until the header row
     setnames(dt, colnames(dt)[1], "col1")
+    setnames(dt, colnames(dt)[2], "col2")
     
     index <- grep("CPLT", dt$col1 )
+    if (year==2018) index <- grep("CSDT", dt$col2)
+  
     index <- index[1]
     
     dt <- dt[-c(1:(index-1))]
@@ -20,6 +81,8 @@ initial_clean <- function(dt){
     # remove totals rows
     dt <- dt[!grepl("TOTAL", col1)]
     dt <- dt[!grepl("RDC", col1)]
+    dt <- dt[!grepl("TOTAL", col2)]
+    dt <- dt[!grepl("RDC", col2)]
     
     return(dt)
 }

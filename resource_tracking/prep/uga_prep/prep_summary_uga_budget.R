@@ -10,20 +10,27 @@
 
 # ----------------------------------------------
 ##function to clean the data: 
-
-# uncomment this for testing
-# dir = file_dir
-# inFile = "official_budgets/UGD-708-G13-H_Summary Budget_Phase 2.xlsx"
-# sheet_name = 'Budget summary GF'
-# start_date = "2011-08-01"
-# qtr_num = 12
-# period = 90
-# disease = "HIV"
-# grant = 'UGD-708-G13'
-# recipient = "taso"
-# source = "gf"
-
 prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num, cashText, grant, disease, period, recipient, source){
+  
+  ######## TROUBLESHOOTING HELP
+  ### fill in variables below with information from line where the code breaks (use file list to find variables)
+  ### uncomment by "ctrl + shift + c" and run code line-by-line
+  ### look at gf_data and find what is being droped where.
+  ########
+  
+  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/uga/gf/'
+  # dir = file_dir
+  # inFile = ""
+  # sheet_name = ""
+  # start_date = ""
+  # qtr_num =
+  # period =
+  # disease = ""
+  # grant = ""
+  # recipient = ""
+  # cashText = " Cash Outflow"
+  # source = "fpm"
+  
 
   if(!is.na(sheet_name)){
     gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))

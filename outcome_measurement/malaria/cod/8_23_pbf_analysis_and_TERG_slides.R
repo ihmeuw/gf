@@ -20,6 +20,8 @@ library(ggplot2)
 library(stats)
 library(Rcpp)
 library(readxl)
+library(grid)
+library(gridExtra)
 # --------------------  
 
 
@@ -35,8 +37,8 @@ dir_cod = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/')
 dir_pbf = paste0(dir_cod, 'PBF/')
 
 # input files
-hz_data <- "imputedData_run2_condensed_hz.rds"
-cod_data <- "imputedData_run2_condensed_country.rds"
+hz_data <- "post_imputation/imputedData_run2_agg_hz.rds"
+cod_data <- "post_imputation/imputedData_run2_agg_country.rds"
 cod_data_cases_byYear <- "imputedData_run2_condensed_country_byYear.rds"
 funders <- "fullData_dps_standardized.csv"
 funder_change <- "funders_data.xlsx"
@@ -45,6 +47,7 @@ data_before_MI <- "fullData_dps_standardized.csv"
 
 # output files
 output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_analysis/')
+graphFile = paste0(output_dir, 'natl_dosesDist_casesTreated.pdf')
 # ----------------------------------------------
 
 
@@ -292,34 +295,87 @@ g <- ggplot(casesTreated_vs_cases[year>=2015,], aes(x=date, y=casesProp, color =
 print(g)
 dev.off()
 
-
-# total outputs ACTs used - whole country
-acts_used <- dt[indicator %in% c("ArtLum", "ASAQused") & subpopulation!="received", ]
-acts_used_COD <- acts_used[, .(totActs = sum(mean)), by=c("date")] 
-
-g <- ggplot(acts_used_COD, aes(x=date, y=totActs)) + theme_bw()+
-  geom_point(color='darkblue') + geom_line(color='darkblue') + 
-  ggtitle(paste0("ACT doses distributed to patients for all of DRC over time")) +
-  ylab("Doses of ACTs") + xlab("Date")  + scale_y_continuous()
-print(g)
-
-# coverage cases treated - whole country
-cases <- dt[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere", "suspectedMalaria"),]
-cases_COD <- cases[, .(totCases = sum(mean)), by=c("date")] 
-
-casesTreated <- dt[indicator %in% c("mildMalariaTreated", "severeMalariaTreated"),]
-casesTreated_COD <- casesTreated[, .(totCasesTreated = sum(mean)), by=c("date")] 
-
-casesTreated_vs_cases <- merge(cases_COD, casesTreated_COD, by=c("date"))
-casesTreated_vs_cases <- casesTreated_vs_cases[, casesProp := totCasesTreated/totCases, by= c("date")]
-
-casesTreated_vs_cases$year <- year(casesTreated_vs_cases$date)
-
-pdf(paste0(output_dir, 'coverage_COD_casesTreatedvsCases(incSuspected)_TS.pdf'), height=9, width=11)
-g <- ggplot(casesTreated_vs_cases[], aes(x=date, y=casesProp)) + theme_bw()+
-  geom_point(color='darkblue') + geom_line(color='darkblue') + 
-  ggtitle(paste0("The proportion of cases treated out of total cases (including suspected cases) in all of DRC over time")) +
-  ylab("Proportion of Cases Treated") + xlab("Date") + ylim(0, 0.60)
-print(g)
-dev.off()
-# ----------------------------------------------
+## BELOW MOVED TO A NEW SCRIPT.  NOT UPDATED HERE SINCE 10/5/18.
+# # total outputs ACTs used - whole country
+# dt$variable <- as.character(dt$variable)
+# 
+# tests_completed <- dt[indicator %in% c("smearTest", "RDT") & subpopulation != "positive", ]
+# tests_completed_COD <- tests_completed[, .(totTests = sum(mean)), by=c("date")] 
+# 
+# acts_used <- dt[indicator %in% c("ArtLum", "ASAQused") & subpopulation != "received", ]
+# acts_used_COD <- acts_used[, .(totActs = sum(mean)), by=c("date")] 
+# 
+# tests_acts_COD <- merge(tests_completed_COD, acts_used_COD, by="date")
+# tests_acts_COD <- melt.data.table(tests_acts_COD, id.vars="date")
+# 
+# g1 <- ggplot(tests_acts_COD, aes(x=date, y=value, color=variable)) + theme_bw()+
+#   geom_point() + geom_line() + 
+#   ggtitle(paste0("First-line antimalarial prescribed to patients and tests completed (national)")) +
+#   ylab("Number of Doses or Tests") + xlab("Date")  + scale_y_continuous() +
+#   theme(axis.text=element_text(size=14),axis.title=element_text(size=16), legend.title=element_blank(), 
+#         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=12, vjust = 0)) +
+#   labs(caption= "Source: Programme National de Lutte contre le Paludisme (PNLP)") + 
+#   scale_color_manual(labels = c("Tests completed", "Doses prescribed"), values = c("#56B4E9", "darkblue"))
+# g1
+# 
+# # coverage cases treated - whole country
+# 
+# # confirmed cases treated over confirmed cases
+# cases <- dt[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere"),]
+# cases_COD <- cases[, .(totCases = sum(mean)), by=c("date")] 
+# 
+# casesTreated <- dt[indicator %in% c("mildMalariaTreated", "severeMalariaTreated"),]
+# casesTreated_COD <- casesTreated[, .(totCasesTreated = sum(mean)), by=c("date")] 
+# 
+# casesTreated_vs_cases <- merge(cases_COD, casesTreated_COD, by=c("date"))
+# casesTreated_vs_cases <- casesTreated_vs_cases[, casesProp := totCasesTreated/totCases, by= c("date")]
+# 
+# # presumed cases + confirmed cases treated over confirmed cases plus
+# cases_inc_pres <- dt[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere", "presumedMalaria"),]
+# cases_inc_pres <- cases_inc_pres[, .(totCasesIncPres = sum(mean)), by=c("date")] 
+# 
+# casesTreated_inc_pres <- dt[indicator %in% c("mildMalariaTreated", "severeMalariaTreated", "presumedMalaria"),]
+# casesTreated_inc_pres <- casesTreated_inc_pres[, .(totCasesTreatedIncPres = sum(mean)), by=c("date")] 
+# 
+# casesTreated_vs_casesIncPres <- merge(cases_inc_pres_COD, casesTreated_inc_pres_COD, by=c("date"))
+# casesTreated_vs_casesIncPres <- casesTreated_vs_casesIncPres[, casesIncPresProp := totCasesIncPres/totCasesTreatedIncPres, by= c("date")]
+# 
+# casesTreated_vs_cases <- merge(casesTreated_vs_cases, casesTreated_vs_casesIncPres, by="date")
+# casesTreated_vs_cases <- casesTreated_vs_cases[, .(date, casesProp, casesIncPresProp)]
+# casesTreated_vs_cases <- melt.data.table(casesTreated_vs_cases, id.vars="date")
+# 
+# g2 <- ggplot(casesTreated_vs_cases, aes(x=date, y=value, color= variable)) + theme_bw()+
+#   geom_point() + geom_line() + 
+#   ggtitle(paste0("Proportion of cases treated (national)")) +
+#   ylab("Proportion of Cases Treated") + xlab("Date") + ylim(0.5, NA) +
+#   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_blank(), 
+#         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=12, vjust = 0)) +
+#   labs(caption= "Source: Programme National de Lutte contre le Paludisme (PNLP)")  + 
+#   scale_color_hue(labels = c("Confirmed cases", "Confirmed + presumed cases"))
+# g2
+# 
+# # ratio of tests completed to suspected cases
+# sus_cases_COD <- dt[indicator=="suspectedMalaria", .(totSusCases = sum(mean)), by=c("date")] 
+# 
+# susCases_vs_tests <- merge(sus_cases_COD, tests_completed_COD, by=c("date"))
+# susCases_vs_tests <- susCases_vs_tests[, ratio := totTests/totSusCases, by= c("date")]
+# 
+# g3 <- ggplot(susCases_vs_tests, aes(x=date, y=ratio)) + theme_bw()+
+#   geom_point() + geom_line() + 
+#   ggtitle(paste0("Ratio of tests completed to suspected cases (national)")) +
+#   ylab("Ratio") + xlab("Date") + ylim(0.5, NA) +
+#   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_blank(), 
+#         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=12, vjust = 0)) +
+#   labs(caption= "Source: Programme National de Lutte contre le Paludisme (PNLP)") 
+# g3
+# 
+# # Put graphs together
+# graphs = arrangeGrob(g1, g2, g3, nrow=2, ncol=2)
+# 
+# # Save graph
+# pdf(graphFile, height=10, width=15)
+# grid.newpage()
+# grid.draw(graphs)
+# dev.off()
+# 
+# # ----------------------------------------------

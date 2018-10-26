@@ -31,7 +31,6 @@ library(dplyr)
 library(plyr)
 library(ggrepel)
 
-
 # --------------------
 
 # -----------------------------------------------------------
@@ -46,8 +45,10 @@ dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/')
 # prep function - sourced from local repo (change directory on cluster)
 source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/phia/prep_phia_vl.r')
  
-# graph function
-# source('./outcome_measurement/hiv/uga/phia/graph_phia_vl_dashboard.r')
+# graph functions
+source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/phia/graph_phia_vl_overlap.r')
+
+#source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/phia/graph_phia_vl_new_data.R')
 
 # ouptut data
 outFileReg = paste0(dir, 'output/region_vls_full.rds')
@@ -56,39 +57,48 @@ outFileDist = paste0(dir, 'output/district_vls_full.rds')
 # -----------------------------------------------------------
 # export a facility level data set for the same time period as phia
 
-# # upload the data with month, year, sex
-# uvl <- readRDS(paste0(j, "/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/prepped_data/sex_data.rds"))
-# 
-# # import the ten regions that are included in phia
-# regions = fread(paste0(j, "/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv"))
-# regions = unique(regions[ ,.(region=region10_alt, district_name=dist112_name)])
-# 
-# # subset to the relevant dates
-# uvl = uvl[date>= '2016-08-01' & date <='2017-03-01']
-# 
-# # merge the names of regions and their associated districts with the vl data 
-# uvl = merge(uvl, regions, by='district_name')
-# 
-# # export a facility level data set 
-# uvl = uvl[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=.(facility=facility_name, district=district_name, region)]
-# 
-# # export the file to analyze - use the names in the shape file 
-# saveRDS(uvl, paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data.rds'))
+# upload the data with month, year, sex
+uvl = readRDS(paste0(j, "/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/prepped_data/sex_data.rds"))
+
+# import the ten regions that are included in phia
+regions = fread(paste0(j, "/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv"))
+regions = unique(regions[ ,.(region=region10_alt, district_name=dist112_name)])
+
+ # merge the names of regions and their associated districts with the vl data
+uvl = merge(uvl, regions, by='district_name')
+
+# subset to the phia overlap and save
+overlap = uvl[date>= '2016-08-01' & date <='2017-03-01']
+
+# export a facility level data set
+overlap = overlap[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=.(facility=facility_name, district=district_name, region)]
+saveRDS(overlap, paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data_overlap.rds'))
+
+# subset to 2017 to present and save
+prosp = uvl[date >= '2017-01-01']
+prosp = prosp[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=.(facility=facility_name, district=district_name, region)]
+saveRDS(prosp, paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data_prospect.rds'))
+
+# annual
+dist_ann= uvl[date >= '2017-01-01']
+dist_ann = dist_ann[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)),
+                     by=.(facility=facility_name, district=district_name, region, year)]
+saveRDS(dist_ann, paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/phia_2016/prepped/vl_data_annual.rds'))
 
 #------------------------------------------------
 
 # -------------------------
 # Prep data at different levels using the prepVL function
+# change overlap to true to prep 
 regData = prepVL(dir, level='region')
 distData = prepVL(dir, level='district')
 facData = prepVL(dir, level='facility')
-
 # -------------------------
 
 # ---------------------------------------------------------------------------
 # Analysis - use the merged, prep data to run analyses 
 
-# linear fit
+# linear fit - initial model 
 lmFit = lm(logit(vld_suppression_adj/100)~logit(phia_vls/100), regData)
 
 # store prediction in appropriate range for graphs
@@ -99,12 +109,8 @@ preds = inv.logit(predict(lmFit, interval='confidence', newdata=predData))*100
 predData = cbind(predData, preds)
 
 # linear fit on correction factors (linear mixed effects)
+# preferred model
 lmFit2 = lmer(vld_suppression_adj/phia_vls~(1|region), distData)
-
-# alternate modelS
-# lmFit3 = lmer(phia_vls~vld_suppression+art_coverage+vld_suppression_adj+(1|region), distData)
-# summary(lm(phia_vls~vld_suppression*art_coverage+factor(region), distData))
-# lmFit4 = lmer(phia_vls~vld_suppression*art_coverage+(1|region), distData) # warning: region perfectly predicts phia
 
 # predict the vl ratio at the district level
 distData[, ratio:=predict(lmFit2)]
@@ -122,7 +128,14 @@ saveRDS(regData, outFileReg)
 saveRDS(distData, outFileDist)
 # ---------------------------------------------------------
 
-# ------------------
-# Run graphing code
-graphVL(dir)
-# ------------------
+# ----------------------
+# Run graphing code on the overlap period for PHIA/Vl or prospective data 
+ 
+graphVL_time1(dir) 
+
+#-----------------------
+
+
+
+
+
