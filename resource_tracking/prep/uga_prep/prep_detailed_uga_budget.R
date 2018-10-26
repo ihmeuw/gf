@@ -11,13 +11,26 @@
 
 
 prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num, cashText, grant, disease, period, data_source) {
+
+  ######## TROUBLESHOOTING HELP
+  ### fill in variables below with information from line where the code breaks (use file list to find variables)
+  ### uncomment by "ctrl + shift + c" and run code line-by-line
+  ### look at gf_data and find what is being droped where.
+  ########
+  
+  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/uga/gf/'
   # dir = file_dir
-  # inFile = "official_budgets/UGA-M-TASO_DB_IMPP2_17 Dec_GF Final.xlsx"
-  # sheet_name = "Detailed Budget"
-  # start_date = '2018-01-01'
-  # disease = "malaria"
-  # period = 90
-  # qtr_num = 12
+  # inFile = ""
+  # sheet_name = ""
+  # start_date = ""
+  # qtr_num =
+  # period =
+  # disease = ""
+  # grant = ""
+  # cashText = " Cash Outflow"
+  # data_source = "fpm"
+
+  
   #   
   # ----------------------------------------------
   ##prep functions that will be used in cleaning the code: 

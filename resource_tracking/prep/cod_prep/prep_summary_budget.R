@@ -19,6 +19,29 @@
 
 prep_summary_budget = function(dir, inFile, sheet_name, start_date, 
                                    qtr_num, disease, loc_id, period, grant, recipient, source, lang){
+  
+  
+  ######## TROUBLESHOOTING HELP
+  ### fill in variables below with information from line where the code breaks (use file list to find variables)
+  ### uncomment by "ctrl + shift + c" and run code line-by-line
+  ### look at gf_data and find what is being droped where.
+  ########
+  
+  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
+  # dir = file_dir
+  # inFile = ""
+  # sheet_name = ""
+  # start_date = ""
+  # qtr_num =
+  # period =
+  # disease = ""
+  # recipient = ""
+  # lang = ""
+  # grant = ""
+  # source = "fpm"
+  # loc_id = "cod"
+  
+  
   # ----------------------------------------------
   ##set up functions to handle french and english budgets differently
   # ----------------------------------------------
