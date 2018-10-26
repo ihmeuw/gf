@@ -1,7 +1,7 @@
 # ----------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
-# 10/22/2018
+# 10/25/2018
 # Function that preps data from PHIA and the Uganda National Viral Load Dashboard
 #------------------------------
 # Inputs:
@@ -15,7 +15,7 @@
 
 # ----------------------------------------------------------
 # Start function
-prepVL = function(dir=dir, level='region', annual=FALSE) { 
+prepVL = function(dir=dir, level='region', annual=FALSE, overlap=TRUE) { 
   # ------------------------------------------------------
   
   
@@ -29,10 +29,15 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   
   # -------------------------------------------------------------------------------------------
   # Files and directories
+
+  # input the vl data - choose overlap with phia survey or prospective
+  if (overlap==TRUE & annual==FALSE)  {inFileVLD = paste0(dir, 'prepped/vl_data_overlap.rds')} 
+  if (overlap==FALSE & annual==FALSE) {inFileVLD = paste0(dir, 'prepped/vl_data_prospect.rds')} 
+  if (overlap==FALSE & annual==TRUE)  {inFileVLD = paste0(dir, 'prepped/vl_data_annual.rds')}
+  print(inFileVLD)
   
-  # input files phia and vl data 
+  # input the phia file
   inFilePHIA = paste0(dir, 'prepped/vl_suppression_by_region.csv')
-  inFileVLD = paste0(dir, 'prepped/vl_data.rds')
 
   # input files - ais and 
   inFileAIS = 'J:/DATA/MACRO_AIS/UGA/2011/UGA_AIS6_2011_IND_Y2012M10D11.DTA'
@@ -149,11 +154,11 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
                              phia_vls_lower=mean(phia_vls_lower), 
                              phia_vls_upper=mean(phia_vls_upper), 
                              samples=sum(valid_results), 
-                             vl_suppressed=sum(suppressed)), 
+                             suppressed=sum(suppressed)), 
                       by=byVars]
   
   # recompute suppression from the dashboard data
-  data[, vld_suppression:=100*(vl_suppressed/samples)]
+  data[, vld_suppression:=100*(suppressed/samples)]
   
   # bring in coverage estimates
   data = merge(data, ais, 'region')
@@ -162,12 +167,13 @@ prepVL = function(dir=dir, level='region', annual=FALSE) {
   data[, vld_suppression_adj:=vld_suppression*art_coverage]
   
   # if using gbd estimates
-  #data[ , vld_suppression_adj_gbd:=vld_suppression*art_coverage_gbd]
-  # -------------------------------------------------------------------------------------------
+  # data[ , vld_suppression_adj_gbd:=vld_suppression*art_coverage_gbd]
   
+  # -------------------------------------------------------------------------------------------
   
 # --------------
 # End function
+
   return(data)
   print(paste('The data is at the', level, 'level.'))
   
