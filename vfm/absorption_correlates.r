@@ -93,8 +93,8 @@ data[, num_modules:=length(unique(abbrev_module)), by='grant_number']
 # Run regressions
 
 # all confounding variables to SDA
-form1 = as.formula('logit(absorption) ~ 
-					years_from_end + disease + country + 
+form1 = as.formula('absorption ~ 
+					quarters_from_end + disease + country + 
 					log(total_budget) + num_modules')
 lmFit1 = lm(form1, data=data)
 summary(lmFit1)
@@ -121,6 +121,7 @@ coefs1 = coefs1[, lapply(.SD, as.numeric), .SDcols=c('est','p','lower','upper'),
 coefs2 = data.table(unique(data$abbrev_module))
 setnames(coefs2, 'abbrev_module')
 coefs2[, years_from_end:=1]
+coefs2[, year:=2018]
 coefs2[, quarters_from_end:=1]
 coefs2[, disease:='hiv']
 coefs2[, country:='Congo (Democratic Republic)']
@@ -136,7 +137,8 @@ coefs2 = cbind(coefs2, reverseLemonSqueeze(predict(lmFit2, newdata=coefs2, inter
 
 # labels
 coefs1[variable=='(Intercept)', label:='Intercept']
-coefs1[variable=='years_from_end', label:='Years from Grant End']
+coefs1[variable=='years_from_end', label:='Years Remaining in Grant']
+coefs1[variable=='quarters_from_end', label:='Number of Quarters Remaining in Grant']
 coefs1[variable=='diseasemalaria', label:='Component: Malaria']
 coefs1[variable=='diseasetb', label:='Component: TB']
 coefs1[variable=='countryGuatemala', label:='Country: Guatemala']
@@ -177,7 +179,7 @@ p1 = ggplot(data, aes(y=absorption*100, x=grant_year, group=grant_number, color=
 	facet_wrap(~label, ncol=7) + 
 	scale_color_gradientn(colors=cols) + 
 	scale_linetype_manual('', values=c('Mean'='solid')) + 
-	labs(title='Absorption by Grant and Service Delivery Area', 
+	labs(title='Absorption by Grant and Module', 
 			y='Absorption %', x='Year within Grant', size='Budget $\n(Millions)') + 
 	theme_bw(base_size=b) + 
 	theme(plot.title=element_text(hjust=.5), strip.text=element_text(size=9))
@@ -200,7 +202,7 @@ p3 = ggplot(coefs2, aes(y=fit, ymin=lwr, ymax=upr, x=reorder(label,fit))) +
 	scale_fill_manual('', values=c('#55967e','#6d819c')) + 
 	annotate('text', x=coefs2[fit==max(fit)]$label, y=agg, 
 			label='Overall Absorption', hjust=.9, vjust=1.2, size=5) + 
-	labs(title='Mean Absorption by Service Delivery Area', 
+	labs(title='Mean Absorption by Module', 
 			caption='Estimates controlling for all variables in model 1', y='Mean Absorption', x='') + 
 	theme_bw(base_size=b) + 
 	theme(plot.title=element_text(hjust=.5), axis.text.x = element_text(angle=45, hjust=1))
@@ -210,9 +212,9 @@ p3 = ggplot(coefs2, aes(y=fit, ymin=lwr, ymax=upr, x=reorder(label,fit))) +
 # -----------------------------
 # Save graphs
 pdf(outFile, height=6, width=10.5)
-p1
-p2
 p3
+p2
+p1
 dev.off()
 # -----------------------------
 
