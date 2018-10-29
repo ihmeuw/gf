@@ -90,16 +90,8 @@ f=file_names$files_t1[i]
 
 for (f in file_names$files_t1[]){
   sheets <- getSheets(f, year)
-
-  sheets <- sheets[grepl("DEP", sheets)]
-  s <- sheets[grepl("T1", sheets)]  # should just be one sheet per loop cycle since just prepping 1 quarter
-  
-  if( f== "COD_HAUT_KATANGA_NTCP_REPORT_2016_T1_Y2017M06D06.XLSX") s= "TB S t1"
-  if( f== "COD_HAUT_LOMAMI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS") s = "DEP Trim 1 016"
-  if( f== "COD_KASAI_CENTRAL_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" | f== "COD_KASAI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS") s = "DEP TRIM 1 2016"
-  if( f== "COD_KONGO_CENTRAL_NTCP_REPORT_2016_T1_WEST_Y2017M06D06.XLSX" ) s= "DEP Q1 016"
-  if( f== "COD_KWANGO_NTCP_REPORT_T1_Y2017M06D06.XLSX") s = "DEP 2016"
-  if( f== "COD_KWILU_NTCP_REPORT_2016_T1_Y2017M06D06.XLSX") s = "DEPISTAGE 2016"
+  s <- sheets[sheets %in% c("DEP T1 016", "DEPIST (M&E) T1", "TB S t1", "DEP Trim 1 016", "DEP TRIM 1 2016", "DEP Trim 1 2016", "DEP Q1 016", 
+                            "DEP 2016", "DEPISTAGE 2016", "DEP Trim 1  2016", "Dép Trim1 2016", "DEP T116", "DEP  T1  016")]
   
   dt <- data.table(read_excel(paste0(dir, year, "/", f), sheet= s)) 
   
@@ -107,14 +99,17 @@ for (f in file_names$files_t1[]){
     dt <- dt[, c(1:3, 25)]}
   
   if( f== "COD_BAS_UELE_NTCP_REPORT_2016_T1_Y2017M06D06.XLSX" | f== "COD_EQUATEUR_NTCP_REPORT_2016_T1_Y2017M06D06.XLSX" |
-      f== "COD_KONGO_CENTRAL_NTCP_REPORT_2016_T1_EAST_Y2017M06D06.XLS"){
+      f== "COD_KONGO_CENTRAL_NTCP_REPORT_2016_T1_EAST_Y2017M06D06.XLS" | f == "COD_LOMAMI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" |
+      f== "COD_NORD_UBANGI_NTCP_2016_REPORT_T1_Y2017M06D06.XLSX" | f== "COD_SANKURU_NTCP_REPORT_2016_T1_Y2017M06D06.XLS"){
     dt <- dt[, c(2:4, 26)]}
   
   if( f== "COD_HAUT_KATANGA_NTCP_REPORT_2016_T1_Y2017M06D06.XLSX"){
     dt <- dt[, c(1:3, 22)]}
   
   if( f== "COD_HAUT_LOMAMI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS"| f== "COD_KASAI_CENTRAL_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" |
-      f== "COD_KASAI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" | f== "COD_KONGO_CENTRAL_NTCP_REPORT_2016_T1_WEST_Y2017M06D06.XLSX"){
+      f== "COD_KASAI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" | f== "COD_KONGO_CENTRAL_NTCP_REPORT_2016_T1_WEST_Y2017M06D06.XLSX" | 
+      f== "COD_MANIEMA_NTCP_REPORT_2016_T1_Y2017M06D06.XLSX" | f== "COD_TANGANYIKA_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" | 
+      f== "COD_TSHUAPA_NTCP REPORT_2016_T1_Y2017M06D06.XLS"){
     dt <- dt[, c(1:3, 26)]}
   
   if( f== "COD_KASAI_ORIENTAL_NTCP_REPORT_2016_T1_Y2017M06D06.XLSX"){
@@ -136,14 +131,42 @@ for (f in file_names$files_t1[]){
     dt <- dt[1:130, ]
     dt <- dt[, c(2:4, 21)]}
   
+  if( f== "COD_LUALABA_NTCP_REPORT_2016_T1_Y2017M06D06.XLS"){
+    dt <- dt[1:98, c(1:3, 18)]}
+  
+  if( f== "COD_MAI_NDOMBE_NTCP_REPORT_2016_T1_Y2017M06D06.XLS"){
+    dt <- dt[1:76, c(1:3, 26)]}
+  
+  if( f== "COD_MONGALA_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" ){
+    dt <- dt[, c(1, 15, 18)]
+    dt$pop_covered <- NA}
+  
+  if( f== "COD_SUD_UBANGI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" ){
+    dt <- dt[, c(1, 16, 17)]
+    dt$pop_covered <- NA}
+  
+  if( f== "COD_TSHOPO_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" ){
+    dt <- dt[, c(1, 16, 18)]
+    dt$pop_covered <- NA}
+  
   colnames(dt) <- c("hz", "pop_tot", "pop_covered", "tot_case")
   
-  # keep only rows of health zones
-  dt$hz <- tolower(dt$hz)
-  rows_to_keep <- grepl("zs", dt$hz)
-  dt <- dt[rows_to_keep, ]
+  if( f== "COD_MONGALA_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" | f== "COD_SUD_UBANGI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" |
+      f== "COD_TSHOPO_NTCP_REPORT_2016_T1_Y2017M06D06.XLS"){
+    colnames(dt) <- c("hz", "tot_case", "pop_tot", "pop_covered")}
   
-  dt[, dps:= file_names[files_t1 == f, province]]
+  # keep only rows of health zones
+  if(f== "COD_TSHOPO_NTCP_REPORT_2016_T1_Y2017M06D06.XLS"){
+    dt$hz <- tolower(dt$hz)
+    dt <- dt[hz %in% c("bafwagbogbo", "bafwasende", "banalia", "basali", "basoko", "bengamisa", "isangi", "kabondo", "lowa", "lubunga", "makiso-kis", "mangobo",
+                       "opala", "opienge", "tshopo", "ubundu", "wanierukula", "yabaondo", "yahisuli", "yahuma", "yakusu", "yaleko", "yalimbongo")]
+  } else {
+    dt$hz <- tolower(dt$hz)
+    rows_to_keep <- grepl("zs", dt$hz)
+    dt <- dt[rows_to_keep, ]
+    
+    dt[, dps:= file_names[files_t1 == f, province]]
+  }
   
   if (i==1){
     # if it's the first sheet, initialize the new dt
@@ -160,7 +183,20 @@ cases$hz <- gsub("  ", " ", cases$hz)
 cases <- cases[!grepl("^total zs$", cases$hz)]
 cases <- cases[!grepl("^csdt/zs$", cases$hz)]
 cases$quarter <- "1"
-cases$year <- "2017"
+cases$year <- "2016"
+
+backup <- copy (cases)
+
+cases$hz <- gsub("total", "", cases$hz)
+cases$hz <- gsub(" zs ", "", cases$hz)
+cases$hz <- gsub("zs ", "", cases$hz)
+cases$hz <- gsub(" zs", "", cases$hz)
+cases$hz <- gsub("de ", "", cases$hz)
+cases$hz <- gsub("[0-9]", "", cases$hz)
+cases$hz <- gsub("\\.", "", cases$hz)
+cases$hz <- trimws(cases$hz)
+
+saveRDS(cases, file=paste0(dir_prepped, "PNLT_totalCases_2016.rds"))
 # ----------------------------------------------
 
 

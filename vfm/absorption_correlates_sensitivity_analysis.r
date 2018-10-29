@@ -93,11 +93,17 @@ reverseLemonSqueeze = function(x) {
 for(dt in aggregates) { 
 	# compute cumulative budget/expenditure by grant-module
 	byVars = c('grant_number','abbrev_module')
+	if ('abbrev_intervention' %in% names(get(dt))) byVars = c(byVars,'abbrev_intervention')
+	assign(dt, get(dt)[order(country, disease, year, grant_number, abbrev_module)])
+	if ('quarter' %in% names(get(dt))) { 
+		assign(dt, get(dt)[order(country, disease, year, quarter, grant_number, abbrev_module)])
+	}
 	get(dt)[, cumulative_budget:=cumsum(budget), by=byVars]
 	get(dt)[, cumulative_expenditure:=cumsum(expenditure), by=byVars]
 
 	# compute absorption
 	get(dt)[, absorption:=cumulative_expenditure/cumulative_budget]
+	get(dt)[, absorption:=expenditure/budget]
 
 	# handle 1's and 0's so logit doesn't drop them
 	assign(dt, get(dt)[is.finite(absorption) & absorption>=0])
@@ -293,9 +299,6 @@ frame[, commoditized:=ifelse(abbrev_module %in% commodities, 'Commoditized', 'Pr
 # store aggregate absorption
 agg = sum(allData$expenditure)/sum(allData$budget)
 
-# store average absorption by sda
-means = data[, list(absorption=mean(absorption)), by=label]
-
 # colors
 cols = c('#008080','#70a494','#b4c8a8','#f6edbd','#edbb8a','#de8a5a','#ca562c')
 
@@ -355,6 +358,7 @@ p1 = ggplot(melt[est=='fit'], aes(y=value, x=model_label, group=label, color=reo
 # -----------------------------
 # Save graphs
 pdf(outFile, height=6, width=10.5)
+p1
 for(p in seq(length(plots))) print(plots[[p]])
 dev.off()
 # -----------------------------
