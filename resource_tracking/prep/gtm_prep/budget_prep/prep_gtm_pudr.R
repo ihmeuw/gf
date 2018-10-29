@@ -16,6 +16,25 @@
 # ----------------------------------------------
 prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period, grant, source, loc_name, lang) {
   
+  ######## TROUBLESHOOTING HELP
+  ### fill in variables below: inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, recipient_name 
+  ### with information from line where the code breaks, and then uncomment by "ctrl + shift + c" and run code line-by-line
+  ### look at gf_data and find what is being droped where.
+  ########
+  
+  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
+  # dir = file_dir
+  # inFile = ""
+  # sheet_name = ""
+  # start_date = year("")
+  # qtr_num =
+  # period =
+  # disease = ""
+  # lang = ""
+  # grant = ""
+  # source = "pudr"
+  # loc_name = "gtm"
+  
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   

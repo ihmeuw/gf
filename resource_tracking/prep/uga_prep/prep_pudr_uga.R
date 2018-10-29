@@ -15,6 +15,23 @@
 # start function
 prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, grant, recipient, source) {
   
+  ######## TROUBLESHOOTING HELP
+  ### fill in variables below with information from line where the code breaks (use file list to find variables)
+  ### uncomment by "ctrl + shift + c" and run code line-by-line
+  ### look at gf_data and find what is being droped where.
+  ########
+  
+  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/uga/gf/'
+  # dir = file_dir
+  # inFile = ""
+  # sheet_name = ""
+  # start_date = ""
+  # period =
+  # disease = ""
+  # grant = ""
+  # recipient = ""
+  # source = "pudr"
+  
   # --------------------
   # Test the inputs to make sure that they are the correct type
   if (class(inFile)!='character') stop('Error: inFile argument must be a string!')

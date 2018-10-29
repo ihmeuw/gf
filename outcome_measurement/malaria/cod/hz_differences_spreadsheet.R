@@ -36,12 +36,14 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir_pnlp = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
 dir_snis <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/dhis/all_units/")
 dir_shape <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/")
+dir_pnlt <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLT/")
 
 # input file
 snis_data <- "master_facilities.rds"
 input_pnlp <- "final_data_for_imputation.csv"
 shapefile <- "health2/health2.shp"
 shp_hdx <- "hdx/Zone_Sté_Puc.shp"
+pnlt_data <- "PNLT_totalCases_2016.rds"
 
 # output file
 
@@ -59,9 +61,7 @@ pnlp <- as.data.table(pnlp)
 shp <- shapefile(paste0(dir_shape, shapefile))
 shp <- as.data.table(shp@data)
 
-shp2 <- shapefile(paste0(dir_shape, shp_hdx))
-shp2 <- as.data.table(shp2@data)
-
+pnlt <- readRDS(paste0(dir_pnlt, pnlt_data))
 # ----------------------------------------------
 
 
@@ -69,65 +69,62 @@ shp2 <- as.data.table(shp2@data)
 # get the necessary variables - dps, health_zone and save original versions of these and a cleaned version to merge on
 # ----------------------------------------------
 # SHAPEFILE <- to standardize against
-
-# get just the variables to use
-shp1 <- shp[, .(PROVNAME, Name_API, Name, zs_id)]
-# save a version of the names as they appear in the data
-shp1$hz_shp1 <- shp1$Name
-shp1$hz_shp1_alt <- shp1$Name_API
-# use Name for health zone names bc it seems to be more complete;
-# keep Name_API for alternative spellings
-# standardize original names to be merged together
-shp1$Name_API <- NULL
-shp1$Name <- tolower(shp1$Name)
-shp1$Name <- gsub(" ", "-", shp1$Name)
-setnames(shp1, "Name", "health_zone")
-setnames(shp1, "PROVNAME", "province_shp")
-shp1$health_zone <- gsub("_", "-", shp1$health_zone)
-
-# SECOND SHAPEFILE
-
-# get just the variables to use
-shp2 <- shp2[, .(PROVINCE, NOM_ZS)]
-# save a version of the names as they appear in the data
-shp2$hz_shp2 <- shp2$NOM_ZS
-# use Name for health zone names bc it seems to be more complete;
-# keep Name_API for alternative spellings
-# standardize original names to be merged together
-shp2$NOM_ZS <- tolower(shp2$NOM_ZS)
-shp2$NOM_ZS <- gsub(" ", "-", shp2$NOM_ZS)
-setnames(shp2, "NOM_ZS", "health_zone")
-setnames(shp2, "PROVINCE", "province_shp2")
-shp2$health_zone <- gsub("_", "-", shp2$health_zone)
+  # get just the variables to use
+  shp <- shp[, .(PROVNAME, Name_API, Name, zs_id)]
+  # save a version of the names as they appear in the data
+  shp$hz_shp <- shp$Name
+  shp$hz_shp_alt <- shp$Name_API
+  # use Name for health zone names bc it seems to be more complete;
+  # keep Name_API for alternative spellings
+  # standardize original names to be merged together
+  shp$Name_API <- NULL
+  shp$Name <- tolower(shp$Name)
+  shp$Name <- gsub(" ", "-", shp$Name)
+  setnames(shp, "Name", "health_zone")
+  setnames(shp, "PROVNAME", "province_shp")
+  shp$health_zone <- gsub("_", "-", shp$health_zone)
+# ----------------------------------------------
+    # # SECOND SHAPEFILE
+    # 
+    # # get just the variables to use
+    # shp2 <- shp2[, .(PROVINCE, NOM_ZS)]
+    # # save a version of the names as they appear in the data
+    # shp2$hz_shp2 <- shp2$NOM_ZS
+    # # use Name for health zone names bc it seems to be more complete;
+    # # keep Name_API for alternative spellings
+    # # standardize original names to be merged together
+    # shp2$NOM_ZS <- tolower(shp2$NOM_ZS)
+    # shp2$NOM_ZS <- gsub(" ", "-", shp2$NOM_ZS)
+    # setnames(shp2, "NOM_ZS", "health_zone")
+    # setnames(shp2, "PROVINCE", "province_shp2")
+    # shp2$health_zone <- gsub("_", "-", shp2$health_zone)
 # ----------------------------------------------
 # PNLP
-
-# get unique combos of health zone and dps names
-pnlp <- unique(pnlp[, .(dps, health_zone)])
-# save a version of the names as they appear in the data
-pnlp$hz_pnlp <- pnlp$health_zone
-pnlp$dps_pnlp <- pnlp$dps
-# standardize original names to be merged together
-pnlp$health_zone <- gsub(" ", "-", pnlp$health_zone)
-pnlp$dps <- gsub(" ", "-", pnlp$dps)
+  # get unique combos of health zone and dps names
+  pnlp <- unique(pnlp[, .(dps, health_zone)])
+  # save a version of the names as they appear in the data
+  pnlp$hz_pnlp <- pnlp$health_zone
+  pnlp$dps_pnlp <- pnlp$dps
+  # standardize original names to be merged together
+  pnlp$health_zone <- gsub(" ", "-", pnlp$health_zone)
+  pnlp$dps <- gsub(" ", "-", pnlp$dps)
 # ----------------------------------------------
 # SNIS (DHIS2)
-
-# save a version of the names as they appear in the data
-snis$hz_snis <- snis$health_zone
-snis$dps_snis <- snis$dps
-# standardize original names to be merged together
-snis$dps <- sapply(str_split(snis$dps, " ", 2), '[', 2)
-snis$dps <- gsub(" Province", "", snis$dps)
-snis$dps <- tolower(snis$dps)
-snis$dps <- gsub(" ", "-", snis$dps)
-
-snis$health_zone <- sapply(str_split(snis$health_zone, " ", 2),'[', 2)
-snis$health_zone <- gsub(" Zone de Santé", "", snis$health_zone)
-snis$health_zone <- tolower(snis$health_zone)
-snis$health_zone <- gsub(" ", "-", snis$health_zone)
-# get unique combos of health zone and dps names
-snis <- unique(snis[!is.na(dps) & !is.na(health_zone), .(dps, health_zone, dps_snis, hz_snis)])
+  # save a version of the names as they appear in the data
+  snis$hz_snis <- snis$health_zone
+  snis$dps_snis <- snis$dps
+  # standardize original names to be merged together
+  snis$dps <- sapply(str_split(snis$dps, " ", 2), '[', 2)
+  snis$dps <- gsub(" Province", "", snis$dps)
+  snis$dps <- tolower(snis$dps)
+  snis$dps <- gsub(" ", "-", snis$dps)
+  
+  snis$health_zone <- sapply(str_split(snis$health_zone, " ", 2),'[', 2)
+  snis$health_zone <- gsub(" Zone de Santé", "", snis$health_zone)
+  snis$health_zone <- tolower(snis$health_zone)
+  snis$health_zone <- gsub(" ", "-", snis$health_zone)
+  # get unique combos of health zone and dps names
+  snis <- unique(snis[!is.na(dps) & !is.na(health_zone), .(dps, health_zone, dps_snis, hz_snis)])
 # ----------------------------------------------
 
 
@@ -220,11 +217,11 @@ pnlp_snis <- merge(snis, pnlp, by= c("health_zone", "dps"), all=TRUE)
 # --------------------------------------
 #SHAPEFILE 1
 # merge pnlp_snis merged file with the shapefile
-shp_pnlp_snis <- merge(shp1, pnlp_snis, by= c("health_zone"), all=TRUE)
-not_matching2 <-shp_pnlp_snis[!complete.cases(hz_shp1, dps_snis, hz_snis, hz_pnlp, dps_pnlp), ]
+shp_pnlp_snis <- merge(shp, pnlp_snis, by= c("health_zone"), all=TRUE)
+not_matching2 <-shp_pnlp_snis[!complete.cases(hz_shp, dps_snis, hz_snis, hz_pnlp, dps_pnlp), ]
 
-# the shapefile actually contains multiple spellings (hz_shp1 and hz_shp2) 
-# using hz_shp1 since it is more complete than hz_shp2:
+# the shapefile actually contains multiple spellings (hz_shp and hz_shp2) 
+# using hz_shp since it is more complete than hz_shp2:
 pnlp_snis[health_zone=="adja", health_zone:="adia"]
 pnlp_snis[health_zone=="bafwagbogbo", health_zone:="bafwabogbo"]
 pnlp_snis[health_zone=="bagira", health_zone:="bagira-kasha"]
@@ -272,7 +269,7 @@ pnlp_snis[health_zone=="tunda", health_zone:="tumba"]
 pnlp_snis[health_zone=="viadana", health_zone:="viandana"]
 pnlp_snis[health_zone=="vuhovi", health_zone:="vohovi"]
 
-shp1[health_zone=="zs-kamalondo", health_zone:="kamalondo"]
+shp[health_zone=="zs-kamalondo", health_zone:="kamalondo"]
 pnlp_snis[health_zone=="nyantende", health_zone:="nyatende"]
 pnlp_snis[health_zone=="yasa-bonga", health_zone:="yanga-bosa"]
 pnlp_snis[health_zone=="wikong", health_zone:="winkong"]
@@ -306,8 +303,8 @@ pnlp_snis[health_zone=="katoyi", health_zone:="kitoyi"]
 pnlp_snis[health_zone=="kalonda-ouest", health_zone:="kalonda"]
 pnlp_snis[health_zone=="kalomba", health_zone:="kalomda"]
 
-shp_pnlp_snis <- merge(shp1, pnlp_snis, by= c("health_zone"), all=TRUE)
-not_matching2 <-shp_pnlp_snis[!complete.cases(hz_shp1, dps_snis, hz_snis, hz_pnlp, dps_pnlp), ]
+shp_pnlp_snis <- merge(shp, pnlp_snis, by= c("health_zone"), all=TRUE)
+not_matching2 <-shp_pnlp_snis[!complete.cases(hz_shp, dps_snis, hz_snis, hz_pnlp, dps_pnlp), ]
 
 # SHAPEFILE 2
 # merge pnlp_snis merged file with the shapefile

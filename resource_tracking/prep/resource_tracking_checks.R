@@ -69,17 +69,24 @@ sicoin_dir <- "J:/Project/Evaluation/GF/resource_tracking/gtm/"
 fil_sic = "sicoin_missing_files.csv"
 missing_sic = unique(fread(paste0(sicoin_dir, fil_sic)))
 missing_sic$start_date = as.Date(missing_sic$start_date, "%m/%d/%Y")
-missing_sic$end_date = as.Date(missing_sic$end_date, "%m/%d/%Y")
+missing_sic$end_date = NULL
 
 # to check Data Seeking Spreadsheet
 gtm_budgets = check_budget_dates(dt_gtm)
 gtm_pudrs = check_pudr_dates(dt_gtm)
 gtm_sicoin = check_SICOIN_dates(dt_gtm)
+gtm_sicoin$grant_number = "unknown"
 
-dt3 <- full_join(x = missing_sic, y = gtm_sicoin, by = c("data_source", "grant_period", "start_date", "end_date", "sdaDetail", "geog", "period", "disease"))
+# THIS IS TO JUST FILL IN THE SICOIN DATA
+col_na = c("data_source", "grant_period", "start_date", "sdaDetail", "geog", "period", "disease", "grant_number")
+sicoin_withFileNames = merge(missing_sic, gtm_sicoin, by = col_na, all.x = TRUE, all.y = TRUE)
+sicoin_withFileNames$end_date = ifelse(is.na(sicoin_withFileNames$end_date), as.Date(sicoin_withFileNames$start_date + sicoin_withFileNames$period, origin = "1899-12-30"), as.Date(sicoin_withFileNames$end_date, origin = "1899-12-30"))
+sicoin_withFileNames$end_date = as.Date(sicoin_withFileNames$end_date, origin = "1969-12-30")
+sicoin_withFileNames$notes = " "
+sicoin_withFileNames$Country = "gtm"
 
-test = merge(missing_sic, gtm_sicoin, by = c("data_source", "grant_period", "start_date", "end_date", "sdaDetail", "geog", "period", "disease"))
-test = rbind(missing_sic, gtm_sicoin,fill = TRUE)
+dt_sicoin = sicoin_withFileNames[,c("data_source", "grant_period", "start_date", "end_date", "sdaDetail", "geog",  "period", "grant_number", "disease", "Country", "notes", "fileName")]
+write.csv(dt_sicoin, paste0(sicoin_dir, fil_sic), row.names = FALSE)
 
 # to check total budgeted per grant (should match Grant Anaylsis Worksheet)
 gtm_grant_check = total_budget_by_grantPeriod(dt_gtm)
