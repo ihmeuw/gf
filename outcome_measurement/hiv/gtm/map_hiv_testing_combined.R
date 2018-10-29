@@ -58,23 +58,7 @@ mapping_dir = paste0(root, '/Project/Evaluation/GF/mapping/gtm/')
 dt = readRDS(paste0(prep_dir, "hiv_patientlvl_combined.rds"))
 
 # remove repeat positive tests for patients, only keep the first postivie test and all negative tests before it
-dt_graphing = dt
-dt_graphing_pos = dt[hiv_screening_result == "REACTIVO"]
-dt_graphing_pos[,keep := min(visit_num), by = id]
-keep_list = unique(dt_graphing_pos[,.(id, keep)])
-
-hiv_pos_patients = dt_graphing_pos$id
-# if you want to calculate by patients instead of tests done, make visit_num == 1 for neg
-dt_neg = dt[!id %in% hiv_pos_patients]
-
-dt_pos = dt[id %in% hiv_pos_patients]
-dt_pos = merge(dt_pos, keep_list)
-# if you want to calculate by patients instead of tests done, make visit_num == keep for pos
-dt_pos = dt_pos[visit_num <= keep]
-dt_pos$keep =NULL
-
-# bind both positive and negative testing together
-total_dt = rbind(dt_neg, dt_pos)
+total_dt = dt
 
 # change name for risk condition to merge SIGSA and SIGPRO
 total_dt$risk_condition_eng = ifelse(total_dt$risk_condition_eng == 'TRANS TRABAJADORAS SEXUALES', "Sex Worker", total_dt$risk_condition_eng)
@@ -226,12 +210,12 @@ ratio_by_MSM_sex = find_pos_ratio(dt_by_MSM_male, c("date", "isMSM", "sex"))
   dev.off()
 
 
-
+# municipality data is saved here: J:\Project\Evaluation\GF\mapping\gtm\GUATEMALA-municip.shp
+  
   # Let's create maps
   shapeData = shapefile(paste0(mapping_dir,'GTM_adm1.shp'))
   coordinates = as.data.table(fortify(shapeData, region='NAME_1'))
   coordinates$id <- toupper(coordinates$id)
-  
   
   
   #ALL YEAR MAPS Maps
