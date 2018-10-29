@@ -61,11 +61,6 @@ data = data[, c('org_unit_id','org_unit','date','element_eng','value'), with=FAL
 if (nrow(data)!=nrow(unique(data[,c('org_unit_id','date','element_eng'),with=F]))) { 
 	stop('org_unit_id, date and element_eng do not uniquely identify rows!')
 }
-# --------------------------------------------------
-
-
-# --------------------------------------------------
-# Subtract out months that appear to be reported in cumulative stockouts
 
 # ensure order for lagging
 data = data[order(org_unit_id, element_eng, date)]
@@ -75,53 +70,63 @@ frame = expand.grid(org_unit_id=unique(data$org_unit_id),
 					date=unique(data$date), 
 					element_eng=unique(data$element_eng))
 data = merge(data, frame, by=c('org_unit_id','date','element_eng'), all=TRUE)
+# --------------------------------------------------
 
 
+# --------------------------------------------------
+# Identify different explanations for invalid numbers
+# 1. Forgot how many days there are in the month
+# 2. Cumulative reporting value - lag(value) <= 32 (32 because they may have committed #1 also)
+# 3. Cumulative reporting but hard to tell because previous N values are missing, but value - (31*N) <= 31
+# 4. Clear typo (value > 31 * N months by a lot)
+# 5. Unexplained (value - lag(value) > 31, but not 1, 2 or 4)
+# 6. (NOT ADDED) Reported available minus consumed instead of stockout days
 
-tmp = data[grepl('C1 12.1 \\(2-11', element_eng)]
+# identify type 1
+data[, oob_type:=as.character(NA)]
+data[, days_this_month:=monthDays(date)]
+data[value>days_this_month & value %in% c(29,30,31), oob_type:='1']
 
-# there are many cases where they clearly just forgot how many days there are in the month
-tmp[, days_this_month:=monthDays(date)]
-tmp[value>days_this_month & value %in% c(29,30,31), value:=days_this_month]
+# identify type 2
+data[, lag:=shift(value), by=c('org_unit_id','element_eng')]
+data[, diff:=value-lag]
+data[value>days_this_month & diff<=32 & is.na(oob_type), oob_type:='2']
 
+# identify type 3
+data[, consecutive_nas:=sequence(rle(is.na(data$value))$lengths)]
+data[!is.na(value), consecutive_nas:=NA]
+data[!is.na(shift(consecutive_nas)) & value>days_this_month & 
+	(value/(31*shift(consecutive_nas))<31) & is.na(oob_type), oob_type:='3']
 
-tmp[, lag:=shift(value), by=c('org_unit_id','element_eng')]
-tmp[, diff:=value-lag]
+# identify type 4
+data[value>31*12*4 & is.na(oob_type), oob_type:='4']
 
-# tmp[grepl('bu Nambwa Centre',org_unit), cumulative_example:=1]
-# tmp[grepl('Bungba Poste',org_unit), cumulative_example:=0]
-
-# vars = c('cumulative_example','date','value','lag','diff','days_this_month')
-# tmp[cumulative_example==1,vars,with=F]
-# tmp[cumulative_example==0,vars,with=F]
-
-# tmp[cumulative_example%in%c(0,1) & value>days_this_month & diff<=days_this_month,vars,with=F]
-# tmp[cumulative_example%in%c(0,1) & value>days_this_month & diff>days_this_month,vars,with=F]
-
-vars = c('org_unit','date','value','lag','diff','days_this_month','candidate_for_subtraction','any_candidate')
-
-tmp$candidate_for_subtraction = NULL
-tmp[value>days_this_month & diff<=33 & diff>0, candidate_for_subtraction:=1]
-tmp[, any_candidate:=max(candidate_for_subtraction,na.rm=T), by=c('org_unit_id')]
-
-examples = unique(tmp[any_candidate==1 & is.finite(any_candidate)]$org_unit_id)
-
-e=9
-tmp[org_unit_id==examples[e],vars,with=F]
-
-
-
-examples = unique(tmp[value>days_this_month & is.na(candidate_for_subtraction) & diff>0]$org_unit_id)
-
-e=4
-tmp[org_unit_id==examples[e],vars,with=F]
+# identify type 5
+data[value>days_this_month & is.na(oob_type), oob_type:='5']
+# --------------------------------------------------
 
 
+# --------------------------------------------------
+# Do something about each type
 
-# drop outliers (since we're only assessing the mean, this is a reasonable thing to do)
-data[, outlier:=value>31]
-pctOutliers = data[, .(pct=mean(outlier)), by=element_eng]
-data[value>31, value:=NA]
+# save original value
+data[, orig_value:=value]
+
+# assume 1 is just an error, replace with length of month
+data[oob_type=='1',  value:=days_this_month]
+
+# assume 2 is cumulative: subtract previous month
+data[oob_type=='2', value:=diff]
+data[oob_type=='2' & value>days_this_month, value:=days_this_month]
+
+# assume 3 is cumulative: subtract out what the previous month must have been to make it cumulative
+data[oob_type=='3', value:=orig_value%%30] 
+
+# assume type 4 is unknown: replace with NA
+data[oob_type=='4',  value:=NA]
+
+# assume type 5 is unknown: replace with NA
+data[oob_type=='5',  value:=NA]
 # --------------------------------------------------
 
 
