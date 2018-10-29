@@ -31,7 +31,7 @@ graphVL_time2 = function(dir=NULL) {
   DistMap = shapefile('uga_dist112_map.shp')
   
   # outfile 
-  outFile = paste0(dir, 'output/phia_vl_dashboard_same_time_period.pdf')
+  outFile = paste0(dir, 'output/phia_vl_dashboard_prospective.pdf')
 
   # -------------------------------------------------------------------------------------------
   # Set up to graph
@@ -88,19 +88,31 @@ graphVL_time2 = function(dir=NULL) {
   # percent change by district
   
   # calculate rates of change
-  change = distDataAnn[  , vld_suppression_hat, by=.(district, year, id)]
+  change = distDataAnn[  , .(vld_suppression, vld_suppression_hat), by=.(district, year, id)]
   change17 = change[year==2017]
   change18 = change[year==2018]
-  setnames(change17, 'vld_suppression_hat', 'a2017')
-  setnames(change18, 'vld_suppression_hat', 'a2018')
+  
+  setnames(change17, 'vld_suppression', 'o2017')
+  setnames(change18, 'vld_suppression', 'o2018')
+  setnames(change17, 'vld_suppression_hat', 'h2017')
+  setnames(change18, 'vld_suppression_hat', 'h2018')
   change17[ ,year:=NULL]
   change18[ ,year:=NULL]
   change = merge(change17, change18, by=c('district', 'id'))
-  change[ ,roc:=(a2018 - a2017)]
   
-  # map rates of change
+  change[ ,og_roc:=(o2018 - o2017)]
+  change[ ,roc:=(h2018 - h2017)]
+  
+  # map the rate of change
   mapChange = merge(dist_coord, change, by='id', all.x=TRUE)
   
+  # map the rate of change in original versus all PLHIV
+  id_vars = c("id", "long", "lat", "order",
+              "hole", "piece", "group", "district")  
+  mapChange2 = data.table(melt(mapChange, id.vars=id_vars))
+  
+  mapChange2[variable=='og_roc', variable:='2017 - 2018 Rate of Change, VL Dashboard']
+  mapChange2[variable=='roc', variable:='2017 - 2018 Rate of Change, VL Dashboard Adjusted for PHIA*']  
   #---------------------------
   # colors
   
@@ -110,6 +122,7 @@ graphVL_time2 = function(dir=NULL) {
   ratio_colors = brewer.pal(6, 'BuGn')
   art_colors = brewer.pal(8, 'Spectral')
   compare_colors = brewer.pal(11, 'RdYlBu')
+  lavender = brewer.pal(9, 'Blues')
   
   # -------------------------------------------------------------------------------------------
   # Make graphs
@@ -181,6 +194,22 @@ graphVL_time2 = function(dir=NULL) {
     theme(plot.title=element_text(hjust=0.5), plot.subtitle=element_text(hjust=0.5))
   
   
+  # rate of change in the dashboard compared to rate of change in projected estimates
+  vars6 = c('2017 - 2018 Rate of Change, VL Dashboard', '2017 - 2018 Rate of Change, VL Dashboard Adjusted for PHIA*')
+  p6 = ggplot(mapChange2[variable %in% vars6], aes(x=long, y=lat, group=group, fill=value)) +
+  geom_polygon() +
+  geom_path(color='grey95', size=.05) +
+  scale_fill_gradientn('VS (%)', colours=lavender) +
+  coord_fixed(ratio=1) +
+  facet_wrap(~variable) +
+  labs(title='Viral suppression among PLHIV, Uganda', caption='*Projected using PHIA 2016') +
+  scale_x_continuous('', breaks = NULL) +
+  scale_y_continuous('', breaks = NULL) +
+  theme_minimal(base_size=16) +
+  theme(plot.title=element_text(hjust=0.5))
+
+  
+  
   # -----------------------------------------------------------
   # Save
   pdf(outFile, height=6, width=12)
@@ -190,6 +219,7 @@ graphVL_time2 = function(dir=NULL) {
   p3
   p4
   p5
+  p6
   
   dev.off()
   # -----------------------------------------------------------
