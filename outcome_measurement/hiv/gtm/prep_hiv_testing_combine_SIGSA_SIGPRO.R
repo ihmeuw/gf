@@ -21,11 +21,11 @@ library(RColorBrewer)
 
 # ----------------------------------------------
 fix_diacritics <- function(x) {
-  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'Ã€'='A', 'Ã'='A', 'Ã‚'='A', 'Ãƒ'='A', 'Ã„'='A', 'Ã…'='A', 'Ã†'='A', 'Ã‡'='C', 'Ãˆ'='E', 'Ã‰'='E',
-                           'ÃŠ'='E', 'Ã‹'='E', 'ÃŒ'='I', 'Ã'='I', 'ÃŽ'='I', 'Ã'='I', 'Ã‘'='N', 'Ã’'='O', 'Ã“'='O', 'Ã”'='O', 'Ã•'='O', 'Ã–'='O', 'Ã˜'='O', 'Ã™'='U',
-                           'Ãš'='U', 'Ã›'='U', 'Ãœ'='U', 'Ã'='Y', 'Ãž'='B', 'ÃŸ'='Ss', 'Ã '='a', 'Ã¡'='a', 'Ã¢'='a', 'Ã£'='a', 'Ã¤'='a', 'Ã¥'='a', 'Ã¦'='a', 'Ã§'='c',
-                           'Ã¨'='e', 'Ã©'='e', 'Ãª'='e', 'Ã«'='e', 'Ã¬'='i', 'Ã­'='i', 'Ã®'='i', 'Ã¯'='i', 'Ã°'='o', 'Ã±'='n', 'Ã²'='o', 'Ã³'='o', 'Ã´'='o', 'Ãµ'='o',
-                           'Ã¶'='o', 'Ã¸'='o', 'Ã¹'='u', 'Ãº'='u', 'Ã»'='u', 'Ã½'='y', 'Ã½'='y', 'Ã¾'='b', 'Ã¿'='y')
+  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
+                           'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
+                           'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
+                           'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
+                           'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 'þ'='b', 'ÿ'='y')
   
   replace_me <- paste(names(replacement_chars), collapse='')
   replace_with <- paste(replacement_chars, collapse = '')
@@ -43,13 +43,13 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 #### Prep Data
 # define main directory
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/SIGSA/')
-prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
+prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/prepped_data/')
 
 # translation file
 translate_data = fread(paste0(dir, "translation_of_HIV_variables.csv"), encoding = 'Latin-1')
 
 #read in file
-dt <-data.table(read_excel(paste0(dir,"Solicitud 0593-2018/Solicitud 0593-2018 SIGSA SIDA 1.2 aÃ±os 2014 al 2017.xlsx")))
+dt <-data.table(read_excel(paste0(dir,"Patient Level Data/Solicitud 0593-2018 SIGSA SIDA 1.2 años 2014 al 2017.xlsx")))
 
 total_data = dt
 
@@ -92,8 +92,8 @@ total_data$age <-  as.integer((total_data$date - total_data$birth_date) / 365)
 total_data$hospital_department = total_data$hospital_DAS
 total_data$hospital_department = sub("GUATEMALA", "GUATEMALA", total_data$hospital_department)
 total_data[grepl("GUATEMALA", hospital_department), hospital_department := "GUATEMALA"]
-total_data[grepl("PETÃ‰N", hospital_department), hospital_department := "PETÃ‰N"]
-total_data[grepl("IXCÃN", hospital_department), hospital_department := "QUICHÃ‰"]
+total_data[grepl("PETÉN", hospital_department), hospital_department := "PETÉN"]
+total_data[grepl("IXCÁN", hospital_department), hospital_department := "QUICHÉ"]
 total_data[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
 
 
@@ -165,6 +165,27 @@ testing_data$isMSM = ifelse(grepl("HSH", testing_data$risk_condition_eng) | test
 
 testing_data = testing_data[date != "2001-01-24"]
 
+
+# remove repeat positive tests for patients, only keep the first postivie test and all negative tests before it
+dt_graphing = testing_data
+dt_graphing_pos = testing_data[hiv_screening_result == "REACTIVO"]
+dt_graphing_pos[,keep := min(visit_num), by = id]
+keep_list = unique(dt_graphing_pos[,.(id, keep)])
+
+hiv_pos_patients = dt_graphing_pos$id
+# if you want to calculate by patients instead of tests done, make visit_num == 1 for neg
+dt_neg = testing_data[!id %in% hiv_pos_patients]
+
+dt_pos = testing_data[id %in% hiv_pos_patients]
+dt_pos = merge(dt_pos, keep_list)
+# if you want to calculate by patients instead of tests done, make visit_num == keep for pos
+dt_pos = dt_pos[visit_num <= keep]
+dt_pos$keep =NULL
+
+# bind both positive and negative testing together
+total_dt = rbind(dt_neg, dt_pos)
+
+
 # Write csv & RDS to folderpath
-write.csv(testing_data, paste0(prep_dir, "hiv_patientlvl_combined.csv"), row.names = FALSE)
-saveRDS(testing_data, paste0(prep_dir, "hiv_patientlvl_combined.rds"))
+write.csv(total_dt, paste0(prep_dir, "hiv_patientlvl_combined.csv"), row.names = FALSE)
+saveRDS(total_dt, paste0(prep_dir, "hiv_patientlvl_combined.rds"))
