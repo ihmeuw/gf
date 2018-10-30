@@ -55,21 +55,30 @@ data = readRDS(inFile)
 data = data[element_eng %in% variables & year>=2017]
 
 # subset columns
-data = data[, c('org_unit_id','org_unit','date','element_eng','value'), with=FALSE]
+vars = c('org_unit_id','org_unit','dps','mtk','health_zone','date','element_eng','value')
+data = data[, vars, with=FALSE]
 
 # confirm unique identifiers
 if (nrow(data)!=nrow(unique(data[,c('org_unit_id','date','element_eng'),with=F]))) { 
 	stop('org_unit_id, date and element_eng do not uniquely identify rows!')
 }
+# --------------------------------------------------
 
-# ensure order for lagging
-data = data[order(org_unit_id, element_eng, date)]
 
-# rectangularize
-frame = expand.grid(org_unit_id=unique(data$org_unit_id), 
-					date=unique(data$date), 
-					element_eng=unique(data$element_eng))
-data = merge(data, frame, by=c('org_unit_id','date','element_eng'), all=TRUE)
+# --------------------------------------------------
+# exclude facilities that seemingly never have had any drugs 
+data[, fullSO:=0]
+data[month(date)==2 & value==28, fullSO:=1]
+data[month(date) %in% c(4, 6, 9, 11) & value==30, fullSO:=1]
+data[month(date) %in% c(1, 3, 5, 7, 8, 10, 12) & value==31, fullSO:=1]
+data[value==0, fullSO:=1] # a few zeroes is ok because that's probably just a data quality issue...
+data[, is_zero:= value==0]
+data[, pct_zero:=mean(is_zero), by=c('element_eng','org_unit_id')]
+data[, min:=min(fullSO), by=c('element_eng','org_unit_id')]
+data[, never_stock:=(pct_zero<.34 & min==1)]
+neverStock = unique(data[, c('org_unit_id','element_eng','never_stock'), with=FALSE])
+neverStock = neverStock[, .(pct=mean(never_stock)), by=element_eng]
+data = data[never_stock==FALSE] # drop facility-variables that never didn't have a stockout, including some that had a few zeroes mixed in there ("a few"=33%)
 # --------------------------------------------------
 
 
@@ -82,6 +91,15 @@ data = merge(data, frame, by=c('org_unit_id','date','element_eng'), all=TRUE)
 # 5. Unexplained (value - lag(value) > 31, but not 1, 2 or 4)
 # 6. (NOT ADDED) Reported available minus consumed instead of stockout days
 
+# rectangularize
+frame = data.table(expand.grid(org_unit_id=unique(data$org_unit_id), 
+					date=unique(data$date), 
+					element_eng=unique(data$element_eng)))
+data = merge(data, frame, by=c('org_unit_id','date','element_eng'), all=TRUE)
+
+# ensure order for lagging
+data = data[order(org_unit_id, element_eng, date)]
+
 # identify type 1
 data[, oob_type:=as.character(NA)]
 data[, days_this_month:=monthDays(date)]
@@ -90,7 +108,7 @@ data[value>days_this_month & value %in% c(29,30,31), oob_type:='1']
 # identify type 2
 data[, lag:=shift(value), by=c('org_unit_id','element_eng')]
 data[, diff:=value-lag]
-data[value>days_this_month & diff<=32 & is.na(oob_type), oob_type:='2']
+data[value>days_this_month & diff<=32 & diff>=0 & is.na(oob_type), oob_type:='2']
 
 # identify type 3
 data[, consecutive_nas:=sequence(rle(is.na(data$value))$lengths)]
@@ -127,23 +145,9 @@ data[oob_type=='4',  value:=NA]
 
 # assume type 5 is unknown: replace with NA
 data[oob_type=='5',  value:=NA]
-# --------------------------------------------------
 
-
-# --------------------------------------------------
-# exclude facilities that seemingly never have had any drugs 
-data[, fullSO:=0]
-data[month(date)==2 & value==28, fullSO:=1]
-data[month(date) %in% c(4, 6, 9, 11) & value==30, fullSO:=1]
-data[month(date) %in% c(1, 3, 5, 7, 8, 10, 12) & value==31, fullSO:=1]
-data[value==0, fullSO:=1] # a few zeroes is ok because that's probably just a data quality issue...
-data[, is_zero:= value==0]
-data[, pct_zero:=mean(is_zero), by=c('element_eng','org_unit_id')]
-data[, min:=min(fullSO), by=c('element_eng','org_unit_id')]
-data[, never_stock:=(pct_zero<.34 & min==1)]
-neverStock = unique(data[, c('org_unit_id','element_eng','never_stock'), with=FALSE])
-neverStock = neverStock[, .(pct=mean(never_stock)), by=element_eng]
-data = data[never_stock==FALSE] # drop facility-variables that never didn't have a stockout, including some that had a few zeroes mixed in there ("a few"=33%)
+# count how many were removed
+pctOutliers = data[, .(pct=mean(oob_type %in% c('4','5'))), by=element_eng]
 # --------------------------------------------------
 
 
@@ -153,6 +157,7 @@ data = data[never_stock==FALSE] # drop facility-variables that never didn't have
 # aggregate all other DPS's
 agg = copy(data)
 agg[mtk=='No', dps:='All Other Provinces'] 
+agg = agg[!is.na(dps)]
 
 # compute monthly average value by dps
 byVars = c('dps','date','element_eng')
@@ -187,7 +192,7 @@ colors = c('All Other Provinces'=c[1], 'Kinshasa'=c[4],
 # Graph mean days by element and dps
 meanPlots = list()
 for(i in seq(length(variables))) { 
-	pctO = round(pctOutliers[element_eng==variables[i]]$pct*100,1)
+	pctO = round(pctOutliers[element_eng==variables[i]]$pct*100,2)
 	pctN = round(neverStock[element_eng==variables[i]]$pct*100,1)
 	meanPlots[[i]] = ggplot(agg[element_eng==variables[i]], aes(y=value, x=date, color=dps)) +
 		geom_line() + 
@@ -197,7 +202,7 @@ for(i in seq(length(variables))) {
 			scale_color_manual(values=colors) + 
 		labs(title=variables[i], y='Average days of stock-out per facility', 
 			x='', color='', 
-			caption=paste0('Reported stockouts greater than 31 days excluded (', pctO, '% of facility-months)\n
+			caption=paste0('Reported stockouts greater than 31 days with no obvious explanation excluded (', pctO, '% of facility-months)\n
 			Facilities which seem to never stock this commodity (', pctN, '% of facilities) also excluded')) + 
 		theme_bw()
 }
@@ -221,7 +226,7 @@ for(j in seq(length(variables))) {
 				scale_color_manual(values=colors) + 
 			labs(title=variables[j], y=paste('Percentage of', v, 'with any stockouts'), 
 				x='', color='', 
-				caption=paste0('Reported stockouts greater than 31 days excluded (', pctO, '% of facility-months)\n
+				caption=paste0('Reported stockouts greater than 31 days with no obvious explanation excluded (', pctO, '% of facility-months)\n
 				Facilities which seem to never stock this commodity (', pctN, '% of facilities) also excluded')) + 
 			theme_bw()
 		i=i+1
