@@ -1,0 +1,93 @@
+# ARV stockouts by facility - data prep
+# Caitlin O'Brien-Carelli
+# 10/29/2018
+
+# ----------------------
+# Set up R
+rm(list=ls())
+library(data.table)
+library(ggplot2)
+
+
+# ----------------------
+# home drive 
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+
+# data directory
+dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockouts/')
+
+#dir = "C:/Users/ccarelli/Downloads/"
+
+setwd(dir)
+# ----------------------
+# read in the files 
+
+i = 1
+files = list.files('./', recursive=TRUE)
+
+for (f in files) {
+  arv_data = read.csv(paste0(dir, f))
+  arv_data = data.table(arv_data)
+  
+  # create useful variable names
+  setnames(arv_data, c( 'Health.facility', 'District', 'IP', 'Stock.outs', 'X'), 
+           c('facility', 'district', 'ip', 'test_kits', 'arvs'))
+  
+  # delete the first row of labels
+  arv_data = arv_data[-1]
+  
+  # create a week variable
+  week = strsplit(f, '\\s')[[1]][2]
+  if (substr(week, 3, 3)!=')') week = substr(week, 2, 3)
+  if (substr(week, 3, 3)==')') week = substr(week, 2, 2)
+  arv_data[ , week:=week]
+  
+  # add a year variable
+  arv_data[ , year:=strsplit(f, '/')[[1]][1]]
+  
+  # add a month variable
+  arv_data[ ,month:=ceiling(as.numeric(week)/4.33)]
+  arv_data[week==52, month:=12]
+  
+  if(i==1) full_data = arv_data
+  if(i>1) full_data = rbind(full_data, arv_data)
+  i = i+1
+  
+}
+
+# rectangularize
+full_data[, date:=as.Date(paste('01',month,year, collapse='-'), '%d-%m-%Y']
+frame = data.table(expand.grid(facility=unique(full_data$facility), date=unique(full_date$date)))
+full_data = merge(full_data, frame, c('facility','date'), all=T)
+
+
+arv = full_data[ ,.(value=length(unique(facility))), by=.(arvs, week, month, year)]
+
+ggplot(arv, aes(x=week, y=value, color=arvs, group=arvs)) +
+  geom_point() +
+  geom_line() +
+  geom_line() +
+  facet_wrap(~year) + 
+  theme_bw()
+  
+
+test = full_data[ ,.(value=length(unique(facility))), by=.(test_kits, week, year)]
+
+ggplot(test, aes(x=week, y=value, color=test_kits, group=test_kits)) +
+  geom_point() +
+  geom_line() +
+  geom_line() +
+  facet_wrap(~year) + 
+  theme_bw()
+
+test2 = full_data[ ,.(value=length(unique(facility))), by=.(test_kits, month, year)]
+
+ggplot(test2, aes(x=month, y=value, color=test_kits, group=test_kits)) +
+  geom_point() +
+  geom_line() +
+  geom_line() +
+  facet_wrap(~year) + 
+  theme_bw()
+
+  
+
