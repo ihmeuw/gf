@@ -12,6 +12,19 @@
 
 prep_old_module_budget = function(dir, inFile, sheet_name, start_date, 
                                qtr_num, disease, loc_name, period, grant, recipient, source, lang){
+  
+  # file_dir = "J:/Project/Evaluation/GF/resource_tracking/cod/gf/"
+  # dir = file_dir
+  # inFile = "official_budgets/22May12_Revised_Budget_Q10 R8_HIV.xls"
+  # sheet_name = "Budget résumé"
+  # start_date = "2012-04-01"
+  # qtr_num = 1
+  # period = 90
+  # disease = "hiv"
+  # lang = "fr"
+  # grant = "ZAR-809-G10-H"
+  # source = "fpm"
+  # loc_id = "cod"
 
   
   if(!is.na(sheet_name)){

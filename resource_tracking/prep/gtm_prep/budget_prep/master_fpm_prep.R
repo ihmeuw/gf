@@ -177,10 +177,10 @@ data_check2<- as.data.frame(cleaned_database[, sum(budget, na.rm = TRUE),by = c(
 ##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 
-
 gtmData <- strip_chars(cleaned_database, unwanted_array, remove_chars)
 gtmData[is.na(module), module:=intervention]
 
+## the directory on the J Drive for the intervention list is:
 map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
 mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx"),
                                   include_rssh_by_disease = FALSE)
@@ -191,35 +191,72 @@ final_mapping$disease <- NULL
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
 mapping_list$coefficient <- 1
 mapping_list$abbrev_intervention <- NULL
-mapping_list$abbrev_module <- NULL
-
+mapping_list$abbrev_module<- NULL
 gf_mapping_list <- total_mapping_list(paste0(map_dir,"intervention_and_indicator_list.xlsx"),
                                       mapping_list, unwanted_array, remove_chars)
+
+# ---------------------------------------------------------------------------------------
+# Correct any unmapped modules, leaving initials, date, and applicable budget filepath. 
+# These should all be written as if they could modify any other file to catch general errors. 
+# ---------------------------------------------------------------------------------------
+
+#EMILY PULL THESE CHANGES OUT INTO DIFFERENT FILES. 
+
+#EKL 10/25/18, official_budgets/03. Presupuesto detallado.xlsx 
+gtmData$intervention = ifelse(gtmData$intervention == "detecciondecasosydiagnosticotbmdr", "detecciondecasosydiagnosticotbmr", 
+                              gtmData$intervention)
+gtmData$intervention = ifelse(gtmData$intervention == "detecciondecasosydiagnostico" & gtmData$module == "paqueteparatbmr", "detecciondecasosydiagnosticotbmr", 
+                              gtmData$intervention)
+gtmData$module = ifelse(gtmData$intervention == "detecciondecasosydiagnosticotbmr", "paqueteparatbmr", gtmData$module)
+gtmData$intervention = ifelse(gtmData$module == "paqueteparatbmr" & gtmData$intervention == "tratamiento", "tratamientotbmr", gtmData$intervention)        
+gtmData$intervention = ifelse(gtmData$module == "paqueteparatbmr" & gtmData$intervention == "prestaciondeatencioncomunitariaparatbmdr", 
+                              "prestaciondeserviciosdeatenciondelatuberculosisenlacomunidad", gtmData$intervention)
+
+#EKL 10/30/18, official_budgets/03. Presupuesto detallado.xlsx
+gtmData$module = ifelse(gtmData$module == "atencionyprevenciondetuberculosis" & gtmData$intervention == "srssrespuestaysistemacomunitrio", 
+                        "ssrsrespuestasysistemascomunitarios", 
+                        gtmData$module)
+gtmData$intervention = ifelse(gtmData$module == "ssrsrespuestasysistemascomunitarios" & gtmData$intervention == "srssrespuestaysistemacomunitrio", 
+                              "otrasintervencionespararespuestasysistemascomunitarios", gtmData$intervention)
+gtmData$intervention = ifelse(gtmData$module =="atencionyprevenciondetuberculosis" & gtmData$intervention == "implicaratodoslosproveedoresdeatencionatencionyprevenciondetb", 
+                              "implicaratodoslosproveedoresdeasistencia", gtmData$intervention)
 
 # ----------------------------------------------
 # Use this to check for any unmapped modules/interventions
 # ----------------------------------------------
 gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 gtm_concat <- paste0(gtmData$module, gtmData$intervention)
-unmapped_mods <- unique(gtm_concat[!gtm_concat%in%gf_concat])
+unmapped_mods <- gtmData[!gtm_concat%in%gf_concat]
 
-if(length(unmapped_mods)>0){
+if(nrow(unmapped_mods)>0){
+  print(unique(unmapped_mods[, c("module", "intervention", "fileName"), with= FALSE]))
   stop("You have unmapped original modules/interventions!")
 }
+
+# --------------------------------------------------------------------------
+# Correct any modules that are dropping here. Comment initials, date, and filename. 
+# --------------------------------------------------------------------------
+
+# test_merge1<-data.frame(a = seq(1,16,by=2), b = LETTERS[1:8], x= month.abb[1:8], y = sample(10:20,8, replace = TRUE), z=letters[1:8])
+# test_merge2<-data.frame(a = rep.int(1, 8), b = rep('A', 8), c = month.abb[1:8])
+# 
+# test_merge3 <- merge(test_merge1, test_merge2, by=c("a", "b"), all.x=TRUE)
+# test_merge4 <- merge(test_merge1, test_merge2, by=c("a", "b"), all.x=TRUE, allow.cartesian = TRUE) #Now I'm really not sure what this is doing. Because this is just appending duplicates into file. 
 
 
 # ----------------------------------------------
 # Merge the datasets on the GF codes to map to framework 
 # ----------------------------------------------
-gtm_init_mapping <- merge(gtmData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
+gtm_init_mapping <- merge(gtmData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE, allow.cartesian = TRUE)
 
 ##use this to check if any modules/interventions were dropped:
-# dropped_gf <- gtm_init_mapping[is.na(gtm_init_mapping$code)]
+dropped_gf <- gtm_init_mapping[is.na(gtm_init_mapping$code)]
 
 mappedGtm <- merge(gtm_init_mapping, final_mapping, by="code", all.x=TRUE) 
 
 if(sum(is.na(mappedGtm$gf_module)) > 0){
   # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+  print(unique(dropped_gf[, c("module", "intervention", "disease"), with= FALSE]))
   stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
 }
 

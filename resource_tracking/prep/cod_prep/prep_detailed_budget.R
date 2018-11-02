@@ -19,20 +19,19 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   ### uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
-  
-  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
+# 
+  # file_dir = "J:/Project/Evaluation/GF/resource_tracking/cod/gf/"
   # dir = file_dir
-  # inFile = ""
-  # sheet_name = ""
-  # start_date = ""
-  # qtr_num =
-  # period =
-  # disease = ""
-  # lang = ""
-  # grant = ""
+  # inFile = "official_budgets/NFMBudget_COD-H-CORDAID_Finance.xlsx"
+  # sheet_name = "DetailedBudget"
+  # start_date = "2015-07-01"
+  # qtr_num = 12
+  # period = 90
+  # disease = "tb/hiv"
+  # lang = "fr"
+  # grant = "COD-H-CORDAID"
   # source = "fpm"
   # loc_id = "cod"
-  
 
   # ----------------------------------------------
   ##set up functions to handle french and english budgets differently
@@ -40,61 +39,60 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   ## we need to grab the budget numbers by quarter - first determine if french or english
   if(lang=="eng"){
     cashText <- " Cash \r\nOutflow"
-  } else{
-    cashText <- "Sorties de trésorerie"
-  }
+  } else if (lang == "fr"){
+    cashText <- "Sorties de tresorerie"
+  }  
   
   ## the recipient column is named differently, depending on if it's an older or newer budget 
   if(year(start_date)==2018){
     recipient <- "Implementer" 
   } else {
-    recipient <- "Récipiendaire"
+    recipient <- "Recipiendaire"
   }
   
   ##create a vector of the column names we want from the budget 
   if(lang=="eng"){
     qtr_names <- c("Module","Intervention","Activity Description","Cost Input", "Recipient", "Geography/Location", rep(1, qtr_num))
-  } else { 
-    qtr_names <- c("Module","Intervention","Description de l'activité","Élément de coût", recipient, "Geography/Location", rep(1, qtr_num))
+  } else if (lang == "fr") {
+    qtr_names <- c("Module","Intervention","Description de l'activite","Element de cout", recipient, "Geography/Location", rep(1, qtr_num))
   }
   
-  ## create a vector that has the name of each quarter's budget
   create_qtr_names = function(qtr_names, cashText, lang){
-    for(i in 1:qtr_num+6){
-      if(i <7) {
-        i=i+1
-      } else { 
+    for (i in 7:(7+qtr_num)){ #number of columns in total qtr_names
+      for(j in 1:qtr_num){ #number of quarters 
         if(lang=="eng"){
-          qtr_names[i] <- paste("Q", i-6,  cashText, sep="")
-        } else if(lang=="fr" & qtr_num < 12){
-          qtr_names[i] <- paste(cashText, " T", i-(12-qtr_num), sep="") ## in french, quarter = "trisemestre" 
-        } else{
-          qtr_names[i] <- paste(cashText, " T", i-6, sep="")
+          qtr_names[i] <- paste("Q", j,  cashText, sep="")
+        } else {
+           qtr_names[i] <- paste(cashText, " T", j, sep="") ## in french, quarter = "trisemestre" 
         }
         i=i+1
       }
     }
     return(qtr_names)
   }
+  
   qtr_names <- create_qtr_names(qtr_names, cashText, lang)
   # ----------------------------------------------
   ##read the data: 
   # ----------------------------------------------
+  
   gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
-    
+ 
   ## drop the first two rows and two columns (they are unnecessary)
   if(year(start_date)==2018){  ## for the newer budgets, the first two rows aren't necessary
     gf_data <- gf_data[-c(1:2),]
     colnames(gf_data) <- as.character(gf_data[1,])
     gf_data  <- gf_data[-1,]
   }
-  gf_data <- gf_data[,-c(1:2)]
+  gf_data <- gf_data[,-c(1:2)] 
   
-  gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
+  setnames(gf_data, fix_diacritics(names(gf_data)))
+  
+  gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE] #This is dropping everything except module and intervention. 
   ##only keep data that has a value in the "category" column 
   gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
   
-  ##rename the columns to RT variables 
+  ##rename the columns to RT variables #Yuck Emily need to rethink this. 
   colnames(gf_data)[1] <- "module"
   colnames(gf_data)[2] <- "intervention"
   colnames(gf_data)[3] <- "sda_activity"
@@ -116,6 +114,7 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
     gf_data1$loc_name <- "cod"
   }
   
+  start_date = as.Date(start_date)
   ## create a vector of start_dates that correspond to each quarter in the budget 
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
@@ -147,7 +146,9 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
     lang <- "fr"
   }
   budget_dataset$lang <- lang
-  budget_dataset$data_source <- source
+  budget_dataset$data_source <- "fpm" #emily make sure this is correct. 
+  budget_dataset$year <- year(start_date)
+  budget_dataset$loc_name <- loc_id 
   # ----------------------------------------------
   ##separate tb/hiv into either one or the other in order to map programs properly - later we might want to go back and change 
   # ----------------------------------------------
@@ -175,9 +176,13 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   } else {
     budget_dataset$disease <- disease
   }
+  
+  col_names <- c("intervention", "budget", "expenditure", "recipient", "module", "start_date", "data_source", 
+                 "period", "sda_activity", "disease", "cost_category", "grant_number", 
+                 "year", "loc_name", "lang")
+  #stopifnot(colnames(budget_dataset) == col_names)
+  stopifnot(length(budget_dataset) == 15)
   return(budget_dataset)  
-  
-  
 }
 
 

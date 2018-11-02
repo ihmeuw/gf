@@ -25,17 +25,17 @@ prep_pudr_cod = function(dir, inFile, sheet_name, start_date, disease,
   
   # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
   # dir = file_dir
-  # inFile = ""
-  # sheet_name = ""
-  # start_date = ""
-  # period =
-  # disease = ""
-  # lang = ""
-  # grant = ""
-  # recipient = ""
+  # inFile = "pudrs/Final LFA_COD-M-MOH_PUDR_S2_201631032017.xlsx"
+  # sheet_name = "RFA ALF_7B"
+  # start_date = "2016-07-01"
+  # period = 180
+  # disease = "malaria"
+  # lang = "fr"
+  # grant = "COD-M-MOH"
+  # recipient = "MOH"
   # source = "pudr"
   # loc_name = "cod"
-  
+
   ##read the data: 
   gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
   

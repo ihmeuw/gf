@@ -34,7 +34,7 @@ export_dir <- "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/"
 ###### source the functions that we need 
 # ----------------------------------------------
 prep_dir <- "your local repo + gf/resource_tracking/prep/"
-prep_dir <- "H:/gf/resource_tracking/prep/"
+prep_dir <- "C:/Users/elineb/Documents/gf/resource_tracking/prep/"
 
 source(paste0(prep_dir, "cod_prep/prep_detailed_budget.R"))
 source(paste0(prep_dir, "cod_prep/prep_summary_budget.R"))
@@ -62,6 +62,19 @@ file_list$start_date <- ymd(file_list$start_date)
 # 
 # summary_file$loc_id <- as.character(summary_file$loc_id)
 # summary_file$loc_id <- loc_name
+
+fix_diacritics <- function(x) {
+  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
+                           'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
+                           'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
+                           'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
+                           'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 'þ'='b', 'ÿ'='y')
+  
+  replace_me <- paste(names(replacement_chars), collapse='')
+  replace_with <- paste(replacement_chars, collapse = '')
+  return(chartr(replace_me, replace_with, x))
+  
+}
 
 # ----------------------------------------------
 ###### For loop that preps data and aggregates it
@@ -204,21 +217,35 @@ gf_mapping_list <- total_mapping_list(paste0(map_dir,"intervention_and_indicator
 
 
 # ----------------------------------------------
+# Correct unmapped modules- initial, date, and filepath 
+# ----------------------------------------------
+
+#Irena Chen, before October 2018 
+codData[module == "systcmesdesanteresiliantsetperennesstrategiesnationalesdesante"  & intervention == "strategiessanitairesnationalesalignementaveclesplansmaladiespecifiquesgouvernancedusecteurdelasanteetfinancement", module := 'ssrsestrategiasnacionalesdesalud']
+codData[module == 'ssrsestrategiasnacionalesdesalud' & intervention == "strategiessanitairesnationalesalignementaveclesplansmaladiespecifiquesgouvernancedusecteurdelasanteetfinancement", intervention := 'estrategiasnacionalesensaludalineamientoconplanesespecificosdeenfermedadesgobernanzayfinanciamientoenelsectorsalud']
+
+#EKL 10/25/18, official_budgets/1c.COD-M-SANRU_Budget_IL1_20.08.2018.xlsx
+codData$intervention = ifelse(codData$module == "lutteantivectorielle" & codData$intervention == "ieccccpriseencharge", "iecccc", codData$intervention)
+
+
+# ----------------------------------------------
 ########### USE THIS TO CHECK FOR UNMAPPED MODULE/INTERVENTIONS ##########
 # ----------------------------------------------
 gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 cod_concat <- paste0(codData$module, codData$intervention)
-unmapped_mods <- cod_concat[!cod_concat%in%gf_concat]
+unmapped_mods <- codData[!cod_concat%in%gf_concat]
 
-if(length(unmapped_mods)>0){
+if(nrow(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
 }
+
 
 
 # ----------------------------------------------
 ########### map the RT data to the GF modular framework ##########
 # ----------------------------------------------
-cod_init_mapping <- merge(codData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
+
+cod_init_mapping <- merge(codData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE, allow.cartesian = TRUE)
 
 ##use this to check if any modules/interventions were dropped:
 dropped_gf <- cod_init_mapping[is.na(cod_init_mapping$code)]
