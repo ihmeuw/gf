@@ -61,7 +61,6 @@ file_dir <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/"
 fil = "total_resource_tracking_data.csv"
 dt = fread(paste0(file_dir, fil))
 
-
 ######################################## GTM Analysis ###########################################
 dt_gtm = dt[loc_name == "gtm"]
 
@@ -91,6 +90,30 @@ write.csv(dt_sicoin, paste0(sicoin_dir, fil_sic), row.names = FALSE)
 # to check total budgeted per grant (should match Grant Anaylsis Worksheet)
 gtm_grant_check = total_budget_by_grantPeriod(dt_gtm)
 
+#################
+#               #
+#   UNIT TESTS  # 
+#               #
+#################
+
+gtm_tests<-read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/gtm_tests.csv")
+gtm_tests$start_date = substring(gtm_tests$start_date, 2, 11)
+gtm_merge <- merge(gtm_tests, gtm_budgets, by=c("fileName", "start_date"), all.x = TRUE) #Should have 16 columns.
+gtm_merge <- merge(gtm_merge, gtm_pudrs, by=c("fileName", "start_date"), all.x = TRUE)   #Should have 16 columns.
+sort(gtm_merge$bug_sum)
+#temporary drop; actually need all of these to work. #EMILY NEED TO START HERE. 
+#gtm_merge <- gtm_merge[, !is.na(gtm_merge$bug_sum)]
+gtm_merge$bug_sum = round(gtm_merge$bug_sum)
+
+for(i in 1:length(gtm_merge$fileName)){
+    stopifnot(gtm_merge$correct_bug_sum[i] != gtm_merge$bug_sum[i])
+    print(paste0(i, " ", gtm_merge$fileName, " ", gtm_merge$start_date))
+}
+
+print("ALL GUATEMALA TESTS PASSED")
+
+
+
 ######################################## UGA Analysis ###########################################
 dt_uga = dt[loc_name == "uga"]
 
@@ -100,6 +123,37 @@ uga_pudrs = check_pudr_dates(dt_uga)
 
 # to check total budgeted per grant (should match Grant Anaylsis Worksheet)
 uga_grant_check = total_budget_by_grantPeriod(dt_uga)
+
+#################
+#               #
+#   UNIT TESTS  # 
+#               #
+#################
+
+#Check if any budget has a total of 0. #CHECK THIS FUNCTION WITH DAVID. Do we need the join of all 3 of these? Is just one missing a problem?  
+empty_budgets = dt_uga[bug_sum == 0 & exp_sum == 0 & disbursement ==0]
+if(nrow(empty_budgets)>0){
+  print(unique(empty_budgets[, c("fileName", "start_date", "end_date", "bug_sum", "exp_sum", "disbursement"), with= FALSE]))
+  stop(paste0("Quarters have a total budget of 0. Review."))
+}
+
+#Check first and last quarter totals for each type of function (fpm, init_fpm_dec, init_fpm_july, pudr)
+  #fpm 
+  stopifnot(round(uga_budgets$bug_sum[which(uga_budgets$start_date == "2018-01-01" & uga_budgets$end_date == "2018-03-31" & uga_budgets$grant_number == "UGA-H-MoFPED")]) == 698102)
+  stopifnot(round(uga_budgets$bug_sum[which(uga_budgets$start_date == "2020-10-01" & uga_budgets$end_date == "2020-12-29" & uga_budgets$grant_number == "UGA-H-MoFPED")]) == 512815)
+  
+  stopifnot(round(uga_budgets$bug_sum[which(uga_budgets$start_date == "2018-01-01" & uga_budgets$end_date == "2018-03-31" & uga_budgets$grant_number == "UGA-H-MoFPED")]) == 698102)
+  
+
+#Check grants with strange quarter numbers
+  #10 quarters
+  stopifnot(round(uga_budgets$bug_sum[which(uga_budgets$start_date == "2015-07-01" & uga_budgets$end_date == "2015-09-28" & uga_budgets$grant_number == "UGA-C-TASO")]) ==  298607)
+  stopifnot(round(uga_budgets$bug_sum[which(uga_budgets$start_date == "2015-07-01" & uga_budgets$end_date == "2015-09-28" & uga_budgets$grant_number == "UGA-C-TASO")]) ==  298607)
+            
+  #3 quarters
+  #6 quarters 
+
+
 
 
 ######################################## DRC Analysis ###########################################
@@ -111,4 +165,12 @@ drc_pudrs = check_pudr_dates(dt_drc)
 
 # to check total budgeted per grant (should match Grant Anaylsis Worksheet)
 drc_grant_check = total_budget_by_grantPeriod(dt_drc)
+
+#################
+#               #
+#   UNIT TESTS  # 
+#               #
+#################
+
+print("ALL TESTS PASSED.")
 

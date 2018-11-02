@@ -7,8 +7,21 @@ cap log close
 set more off 
 clear all 
 
+set linesize 255
+ // confirm file "C:/Program Files (x86)/Adobe/Acrobat 11.0/Acrobat/acrodist.exe"
+ // do "J:/Usable/Tools/ADO/pdfmaker_Acrobat11.do"
+
+//pdfstart using "C:/Users/elineb/Documents/gf/resource_tracking/prep/module_mapping_test_log.pdf", distexe("C:/Program Files (x86)/Adobe/Acrobat 11.0/Acrobat/acrodist.exe")
+
 log using "C:\Users\elineb\Documents\gf\resource_tracking\prep\module_mapping_test_log.smcl", replace 
 import excel using "J:\Project\Evaluation\GF\mapping\multi_country\intervention_categories\intervention_and_indicator_list.xlsx", sheet(module_mapping) firstrow clear 
+
+//Generate some variables that will display more nicely in a PDF
+gen module_short = substr(module, 1, 10) 
+replace module_short = module_short + "..." if (length(module) > 10)
+
+gen intervention_short = substr(intervention, 1, 10)  
+replace intervention_short = intervention_short + "..." if (length(intervention) > 10) 
 
 //Check to make sure we're not growing or shrinking budget amounts due to coefficients. 
 n di in red _newline "Test 1: Check that there are no duplicates in module, disease, and intervention with a coefficient of 1" 
@@ -26,7 +39,7 @@ else {
 
 n di in red _newline "Test 2: Check that if there are coefficients < 1, they they sum to 1 by module, intervention, and disease" 
 preserve 
-collapse (sum) coefficient, by(module intervention disease) 
+collapse (sum) coefficient, by(module intervention disease module_short intervention_short) 
 if `r(N)' != 0 {
 	n di in red _newline "ERROR: `r(N)' Duplicates in key variables with a coefficient that sums to less than 1. This will shrink budget line items in database." 
 	n tab coefficient 
@@ -55,9 +68,38 @@ else {
 } 
 
 //Check that coefficients are generated correctly to sum to 1 across all sub-types of a intervention classification. 
+preserve
+ren code intervention_code 
+duplicates drop intervention_code, force 
+gen group_code = substr(intervention_code, 1, 2) 
+gen count = 1 
+collapse (sum) count, by (group_code) 
+gen correct_coefficient = 1.0/count
 
+tempfile group_codes
+save `group_codes', replace 
+restore 
 
+preserve 
+keep if coefficient < 1 & na_all == 1 
+gen group_code = substr(code, 1, 2) 
+merge m:1 group_code using `group_codes', keep(1 3) //We don't care about mappings that don't exist in our database. 
+count if coefficient != correct_coefficient 
+if `r(N)' != 0 {
+	n di in red _newline "Test 4: ERROR: `r(N)' budget line items labeled 'all' or 'na' with a coefficient not split equally across all categories" 
+	n list module intervention disease coefficient correct_coefficient code group_code if coefficient != correct_coefficient 
+} 
+else { 
+	n di in red _newline "...test passed." 
+}
+
+restore 
+
+di in red _newline "Tests complete." 
+
+translate "C:\Users\elineb\Documents\gf\resource_tracking\prep\module_mapping_test_log.smcl" "C:\Users\elineb\Documents\gf\resource_tracking\prep\module_mapping_test_log.pdf", translator(smcl2pdf)
 
 log close 
+
 }
 } 

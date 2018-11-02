@@ -148,7 +148,7 @@ for(i in 1:length(file_list$file_name)){
   # summary_file$start_date[i] <- min(tmpData$start_date)
   # summary_file$data_source[i] <- file_list$data_source[i]
   
-  print(i) ## if the code breaks, you know which file it broke on
+  print(paste0(i, " ", file_list$type[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
 }
 
 # summary_file$start_date <- as.Date(summary_file$start_date)
@@ -197,8 +197,6 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)),
 ##### Load the mapping files  #####
 # ----------------------------------------------
 codData <- strip_chars(resource_database, unwanted_array, remove_chars)
-codData[module == "systcmesdesanteresiliantsetperennesstrategiesnationalesdesante"  & intervention == "strategiessanitairesnationalesalignementaveclesplansmaladiespecifiquesgouvernancedusecteurdelasanteetfinancement", module := 'ssrsestrategiasnacionalesdesalud']
-codData[module == 'ssrsestrategiasnacionalesdesalud' & intervention == "strategiessanitairesnationalesalignementaveclesplansmaladiespecifiquesgouvernancedusecteurdelasanteetfinancement", intervention := 'estrategiasnacionalesensaludalineamientoconplanesespecificosdeenfermedadesgobernanzayfinanciamientoenelsectorsalud']
 
 ## the directory on the J Drive for the intervention list is:
 map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
@@ -227,6 +225,23 @@ codData[module == 'ssrsestrategiasnacionalesdesalud' & intervention == "strategi
 #EKL 10/25/18, official_budgets/1c.COD-M-SANRU_Budget_IL1_20.08.2018.xlsx
 codData$intervention = ifelse(codData$module == "lutteantivectorielle" & codData$intervention == "ieccccpriseencharge", "iecccc", codData$intervention)
 
+#EKL 11/2/18, pudrs/Copy of LFA_Review_COD-T-MOH_Progress Report_30Jun2018_Sent_02102018-Brk....xlsx
+codData$module = ifelse(codData$module == "humanresourcesforhealthhrhincludingcommunityhealthworkers" & codData$intervention == "retentionandscaleupofhealthworkersincludingforcommunityhealthworkers",
+                        "humanresourcesforhealthincludingcommunityhealthworkers", codData$module)
+
+#EKL 11/2/18, pudrs/Copy of LFA Review_COD-H-MOH_Progress  Report_30Jun2018_07092018 ok_Sent....xlsb.xlsx
+codData$module = ifelse(codData$module == "comprehensivepreventionprogramsfortgs", "comprehensivepreventionprogramsfortransgenderpeople", codData$module)
+codData$intervention = ifelse(codData$module == "comprehensivepreventionprogramsfortransgenderpeople" & codData$intervention == "hivtestingservicesfortgs", 
+                              "hivtestingservicesfortransgenderpeople", codData$intervention)
+codData$intervention = ifelse(codData$module == "comprehensivepreventionprogramsforpeoplewhoinjectdrugspwidandtheirpartners" & codData$intervention == "diagnosisandtreatmentofstisandothersexualhealthservicesforpwid", 
+                              "diagnosisandtreatmentofsexuallytransmittedinfectionsandothersexualhealthservicesforpeoplewhoinjectdrugs", codData$intervention)
+codData$intervention = ifelse(codData$module == "comprehensivepreventionprogramsforpeoplewhoinjectdrugspwidandtheirpartners" & codData$intervention == "behavioralinterventionsforpwid", 
+                              "behavioralinterventionsforpeoplewhoinjectdrugs", codData$intervention)
+codData$intervention = ifelse(codData$module == "comprehensivepreventionprogramsforpeoplewhoinjectdrugspwidandtheirpartners" & codData$intervention == "hivtestingservicesforpwid", 
+                              "hivtestingservicesforpeoplewhoinjectdrugs", codData$intervention)
+codData$module = ifelse(codData$module == "comprehensivepreventionprogramsforpeoplewhoinjectdrugspwidandtheirpartners", "comprehensivepreventionprogramsforpeoplewhoinjectdrugsandtheirpartners", 
+                        codData$module)
+
 
 # ----------------------------------------------
 ########### USE THIS TO CHECK FOR UNMAPPED MODULE/INTERVENTIONS ##########
@@ -236,6 +251,7 @@ cod_concat <- paste0(codData$module, codData$intervention)
 unmapped_mods <- codData[!cod_concat%in%gf_concat]
 
 if(nrow(unmapped_mods)>0){
+  print(unique(unmapped_mods[, c("module", "intervention", "fileName"), with= FALSE]))
   stop("You have unmapped original modules/interventions!")
 }
 
@@ -251,6 +267,7 @@ cod_init_mapping <- merge(codData, gf_mapping_list, by=c("module", "intervention
 dropped_gf <- cod_init_mapping[is.na(cod_init_mapping$code)]
 
 if(nrow(dropped_gf)>0){
+  print(unique(dropped_gf[, c("module", "intervention", "disease", "fileName"), with= FALSE]))
   stop("Modules/interventions were dropped!")
 }
 

@@ -155,7 +155,7 @@ coefficient {c |}      Freq.     Percent        Cum.
 {res}
 {err}ERROR: 263 Modules labeled 'na' or 'all' that are mapped to a specific variable.
 {res}
-{err}This may be okay if coefficient is less than 1 and coefficient is correctly divided among all sub-categories.
+{err}This may be okay if coefficient is less than 1 and coefficient is correctly divided among all sub-categories, but we also may want to reconsider this setup.
 {txt}
       {c TLC}{hline 118}{c -}{hline 10}{c -}{hline 9}{c -}{hline 7}{c -}{hline 11}{c TRC}
       {c |} {res}                                                                                                              module   interv~n   disease    code   coeffic~t {txt}{c |}
@@ -476,5 +476,169 @@ coefficient {c |}      Freq.     Percent        Cum.
 2118. {c |} {res}                                                                                                                  pa        all   malaria    M4_2           1 {txt}{c |}
 2139. {c |} {res}                                                                                   atencionyprevenciondetuberculosis        all        tb     T99           1 {txt}{c |}
       {c BLC}{hline 118}{c -}{hline 10}{c -}{hline 9}{c -}{hline 7}{c -}{hline 11}{c BRC}
+{res}
+{err}Test 4: ERROR: 130 budget line items labeled 'all' or 'na' with a coefficient not split equally across all categories
+{txt}
+     {c TLC}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c TRC}
+     {c |} {res}                                                              module   interv~n   disease   coeffic~t   correc~t    code   group_~e {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+  1. {c |} {res}              VÍCTIMAS/SOBREVIVIENTES ATENDIDAS POR VIOLENCIA SEXUAL        all       hiv          .5         .1    H1_7         H1 {txt}{c |}
+  2. {c |} {res}               prophylaxieettraitementpourlesinfectionsopportunistes        all       hiv          .5         .1    H1_8         H1 {txt}{c |}
+  3. {c |} {res}                          DIAGNÓSTICO Y TRATAMIENTO DE ITS, VIH/SIDA        all       hiv          .5         .1   H10_1         H1 {txt}{c |}
+  4. {c |} {res}                                      preventioncounselingandtesting        all       hiv          .5         .1   H10_1         H1 {txt}{c |}
+  5. {c |} {res}               prophylaxieettraitementpourlesinfectionsopportunistes        all       hiv          .5         .1    H1_4         H1 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+  6. {c |} {res}                 VÍCTIMA/SOBREVIVIENTE ATENDIDA POR VIOLENCIA SEXUAL        all       hiv          .5         .1    H1_7         H1 {txt}{c |}
+  7. {c |} {res}              PERSONA CON DIAGNÓSTICO Y TRATAMIENTO DE ITS, VIH/SIDA        all       hiv          .5         .1   H10_1         H1 {txt}{c |}
+  8. {c |} {res}                                               testingandcounselling        all       hiv          .5         .1   H10_1         H1 {txt}{c |}
+  9. {c |} {res}                                          preventionhsmettransgenres        all       hiv          .5   .0181818   H2_11         H2 {txt}{c |}
+ 10. {c |} {res}                                          preventionhsmettransgenres        all       hiv          .5   .0181818   H2_45         H2 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 11. {c |} {res}                                      preventionprogramsformsmandtgs        all       hiv          .5   .0181818   H2_45         H2 {txt}{c |}
+ 12. {c |} {res}                                      preventionprogramsformsmandtgs        all       hiv          .5   .0181818   H2_11         H2 {txt}{c |}
+ 13. {c |} {res}                                                               pmtct        all       hiv          .2   .1666667    H5_2         H5 {txt}{c |}
+ 14. {c |} {res}                                                               pmtct        all       hiv          .2   .1666667    H5_3         H5 {txt}{c |}
+ 15. {c |} {res}                                                               pmtct        all       hiv          .2   .1666667    H5_4         H5 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 16. {c |} {res}                                                               pmtct        all       hiv          .2   .1666667    H5_1         H5 {txt}{c |}
+ 17. {c |} {res}                                                               pmtct        all       hiv          .2   .1666667    H5_5         H5 {txt}{c |}
+ 18. {c |} {res}                                               testingandcounselling        all       hiv          .5   .1111111    H6_7         H6 {txt}{c |}
+ 19. {c |} {res}                                      preventioncounselingandtesting        all       hiv          .5   .1111111    H6_7         H6 {txt}{c |}
+ 20. {c |} {res}                          DIAGNÓSTICO Y TRATAMIENTO DE ITS, VIH/SIDA        all       hiv          .5   .1111111      H6         H6 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 21. {c |} {res}                                soinsetappuipourlesmaladeschroniques        all       hiv          .5   .1111111    H6_7         H6 {txt}{c |}
+ 22. {c |} {res}              PERSONA CON DIAGNÓSTICO Y TRATAMIENTO DE ITS, VIH/SIDA        all       hiv          .5   .1111111      H6         H6 {txt}{c |}
+ 23. {c |} {res}                                soinsetappuipourlesmaladeschroniques        all       hiv          .5   .1111111    H6_1         H6 {txt}{c |}
+ 24. {c |} {res}                 VÍCTIMA/SOBREVIVIENTE ATENDIDA POR VIOLENCIA SEXUAL        all       hiv          .5   .1111111    H8_7         H8 {txt}{c |}
+ 25. {c |} {res}              VÍCTIMAS/SOBREVIVIENTES ATENDIDAS POR VIOLENCIA SEXUAL        all       hiv          .5   .1111111    H8_7         H8 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 26. {c |} {res}                                preventioninsecticidetreatednetsitns        all   malaria          .5       .125    M1_2         M1 {txt}{c |}
+ 27. {c |} {res}                                          insecticidetreatednetsitns        all   malaria          .5       .125    M1_2         M1 {txt}{c |}
+ 28. {c |} {res}                                          insecticidetreatednetsitns        all   malaria          .5       .125    M1_1         M1 {txt}{c |}
+ 29. {c |} {res}                      PREVENCIÓN, CONTROL Y VIGILANCIA DE LA MALARIA        all   malaria   .33333333       .125      M1         M1 {txt}{c |}
+ 30. {c |} {res}                                preventioninsecticidetreatednetsitns        all   malaria          .5       .125    M1_1         M1 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 31. {c |} {res}                                preventioninsecticitetreatednetsitns        all   malaria          .5       .125    M1_2         M1 {txt}{c |}
+ 32. {c |} {res}                                preventioninsecticitetreatednetsitns        all   malaria          .5       .125    M1_1         M1 {txt}{c |}
+ 33. {c |} {res}                        REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA        all   malaria   .33333333       .125      M1         M1 {txt}{c |}
+ 34. {c |} {res}                                                                 ppm        all   malaria          .5   .0833333    M2_1         M2 {txt}{c |}
+ 35. {c |} {res}                        REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA        all   malaria   .33333333   .0833333      M2         M2 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 36. {c |} {res}                                                                 ppm        all   malaria          .5   .0833333    M2_7         M2 {txt}{c |}
+ 37. {c |} {res}                      PREVENCIÓN, CONTROL Y VIGILANCIA DE LA MALARIA        all   malaria   .33333333   .0833333      M2         M2 {txt}{c |}
+ 38. {c |} {res}                        REGISTRO, CONTROL Y VIGILANCIA DE LA MALARIA        all   malaria   .33333333       .125      M3         M3 {txt}{c |}
+ 39. {c |} {res}                      PREVENCIÓN, CONTROL Y VIGILANCIA DE LA MALARIA        all   malaria   .33333333       .125      M3         M3 {txt}{c |}
+ 40. {c |} {res}                                                               other        all        tb        .125   .1666667      R1         R1 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 41. {c |} {res}                                                            beyondtb        all   malaria        .125   .1666667      R1         R1 {txt}{c |}
+ 42. {c |} {res}                                                        otherspecify        all   malaria        .125   .1666667      R1         R1 {txt}{c |}
+ 43. {c |} {res}                                                        otherspecify        all        tb        .125   .1666667      R1         R1 {txt}{c |}
+ 44. {c |} {res}                                                        otherspecify        all       hiv        .125   .1666667      R1         R1 {txt}{c |}
+ 45. {c |} {res}                                                            beyondtb        all        tb        .125   .1666667      R1         R1 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 46. {c |} {res}                                                            beyondtb        all       hss        .125   .1666667      R1         R1 {txt}{c |}
+ 47. {c |} {res}                                                               other        all       hss        .125   .1666667      R1         R1 {txt}{c |}
+ 48. {c |} {res}                                                               other        all   malaria        .125   .1666667      R1         R1 {txt}{c |}
+ 59. {c |} {res}                                                        otherspecify        all       hiv        .125        .25      R3         R3 {txt}{c |}
+ 60. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all       hss   .33333333        .25    R3_3         R3 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 61. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all       hiv   .33333333        .25    R3_3         R3 {txt}{c |}
+ 62. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all       hss   .33333333        .25    R3_1         R3 {txt}{c |}
+ 63. {c |} {res}                                                               other        all       hss        .125        .25      R3         R3 {txt}{c |}
+ 64. {c |} {res}                                                            beyondtb        all   malaria        .125        .25      R3         R3 {txt}{c |}
+ 65. {c |} {res}                                                        otherspecify        all        tb        .125        .25      R3         R3 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 66. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all        tb   .33333333        .25    R3_3         R3 {txt}{c |}
+ 67. {c |} {res}                                                               other        all       hiv        .125        .25      R3         R3 {txt}{c |}
+ 68. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all       hss   .33333333        .25    R3_2         R3 {txt}{c |}
+ 69. {c |} {res}                                                               other        all   malaria        .125        .25      R3         R3 {txt}{c |}
+ 70. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all       hiv   .33333333        .25    R3_2         R3 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 71. {c |} {res}                                                            beyondtb        all       hss        .125        .25      R3         R3 {txt}{c |}
+ 72. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all        tb   .33333333        .25    R3_1         R3 {txt}{c |}
+ 73. {c |} {res}                                                        otherspecify        all   malaria        .125        .25      R3         R3 {txt}{c |}
+ 74. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all        tb   .33333333        .25    R3_2         R3 {txt}{c |}
+ 75. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all   malaria   .33333333        .25    R3_2         R3 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 76. {c |} {res}                                                            beyondtb        all        tb        .125        .25      R3         R3 {txt}{c |}
+ 77. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all       hiv   .33333333        .25    R3_1         R3 {txt}{c |}
+ 78. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all   malaria   .33333333        .25    R3_1         R3 {txt}{c |}
+ 79. {c |} {res}                                                               other        all        tb        .125        .25      R3         R3 {txt}{c |}
+ 80. {c |} {res}humanresoursetatrainingpsmcostsinfrastructuremonitoringandevaluation        all   malaria   .33333333        .25    R3_3         R3 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 81. {c |} {res}                                                            beyondtb        all       hss        .125   .1428571      R4         R4 {txt}{c |}
+ 82. {c |} {res}                                                        otherspecify        all       hiv        .125   .1428571      R4         R4 {txt}{c |}
+ 83. {c |} {res}                                                               other        all        tb        .125   .1428571      R4         R4 {txt}{c |}
+ 84. {c |} {res}                                                               other        all       hss        .125   .1428571      R4         R4 {txt}{c |}
+ 85. {c |} {res}                                                        otherspecify        all   malaria        .125   .1428571      R4         R4 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 86. {c |} {res}                                                               other        all   malaria        .125   .1428571      R4         R4 {txt}{c |}
+ 87. {c |} {res}                                                        otherspecify        all        tb        .125   .1428571      R4         R4 {txt}{c |}
+ 88. {c |} {res}                                                            beyondtb        all   malaria        .125   .1428571      R4         R4 {txt}{c |}
+ 89. {c |} {res}                                                            beyondtb        all        tb        .125   .1428571      R4         R4 {txt}{c |}
+ 90. {c |} {res}                                                               other        all       hiv        .125   .1428571      R4         R4 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 91. {c |} {res}                                                            beyondtb        all        tb        .125        .25      R5         R5 {txt}{c |}
+ 92. {c |} {res}                                                        otherspecify        all       hiv        .125        .25      R5         R5 {txt}{c |}
+ 93. {c |} {res}                                                               other        all       hiv        .125        .25      R5         R5 {txt}{c |}
+ 94. {c |} {res}                                                        otherspecify        all   malaria        .125        .25      R5         R5 {txt}{c |}
+ 95. {c |} {res}                                                        otherspecify        all        tb        .125        .25      R5         R5 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+ 96. {c |} {res}                                                               other        all   malaria        .125        .25      R5         R5 {txt}{c |}
+ 97. {c |} {res}                                                               other        all        tb        .125        .25      R5         R5 {txt}{c |}
+ 98. {c |} {res}                                                            beyondtb        all   malaria        .125        .25      R5         R5 {txt}{c |}
+ 99. {c |} {res}                                                            beyondtb        all       hss        .125        .25      R5         R5 {txt}{c |}
+100. {c |} {res}                                                               other        all       hss        .125        .25      R5         R5 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+101. {c |} {res}                                                            beyondtb        all   malaria        .125   .3333333      R6         R6 {txt}{c |}
+102. {c |} {res}                                                               other        all        tb        .125   .3333333      R6         R6 {txt}{c |}
+103. {c |} {res}                                                               other        all       hiv        .125   .3333333      R6         R6 {txt}{c |}
+104. {c |} {res}                                                        otherspecify        all       hiv        .125   .3333333      R6         R6 {txt}{c |}
+105. {c |} {res}                                                            beyondtb        all        tb        .125   .3333333      R6         R6 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+106. {c |} {res}                                                        otherspecify        all   malaria        .125   .3333333      R6         R6 {txt}{c |}
+107. {c |} {res}                                                               other        all       hss        .125   .3333333      R6         R6 {txt}{c |}
+108. {c |} {res}                                                        otherspecify        all        tb        .125   .3333333      R6         R6 {txt}{c |}
+109. {c |} {res}                                                            beyondtb        all       hss        .125   .3333333      R6         R6 {txt}{c |}
+110. {c |} {res}                                                               other        all   malaria        .125   .3333333      R6         R6 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+111. {c |} {res}                      acsmadvocacycommunicationandsocialmobilization        all       hiv          .5   .1666667    R7_3         R7 {txt}{c |}
+112. {c |} {res}                                                            beyondtb        all       hss        .125   .1666667      R7         R7 {txt}{c |}
+113. {c |} {res}                                                            beyondtb        all        tb        .125   .1666667      R7         R7 {txt}{c |}
+114. {c |} {res}                      acsmadvocacycommunicationandsocialmobilization        all       hss          .5   .1666667    R7_3         R7 {txt}{c |}
+115. {c |} {res}                      acsmadvocacycommunicationandsocialmobilization        all   malaria          .5   .1666667    R7_2         R7 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+116. {c |} {res}                                                            beyondtb        all   malaria        .125   .1666667      R7         R7 {txt}{c |}
+117. {c |} {res}                                                               other        all       hiv        .125   .1666667      R7         R7 {txt}{c |}
+118. {c |} {res}                                                        otherspecify        all   malaria        .125   .1666667      R7         R7 {txt}{c |}
+119. {c |} {res}                                                               other        all        tb        .125   .1666667      R7         R7 {txt}{c |}
+120. {c |} {res}                                                               other        all   malaria        .125   .1666667      R7         R7 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+121. {c |} {res}                                                        otherspecify        all        tb        .125   .1666667      R7         R7 {txt}{c |}
+122. {c |} {res}                      acsmadvocacycommunicationandsocialmobilization        all   malaria          .5   .1666667    R7_3         R7 {txt}{c |}
+123. {c |} {res}                                                               other        all       hss        .125   .1666667      R7         R7 {txt}{c |}
+124. {c |} {res}                      acsmadvocacycommunicationandsocialmobilization        all       hiv          .5   .1666667    R7_2         R7 {txt}{c |}
+125. {c |} {res}                                                        otherspecify        all       hiv        .125   .1666667      R7         R7 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+126. {c |} {res}                      acsmadvocacycommunicationandsocialmobilization        all       hss          .5   .1666667    R7_2         R7 {txt}{c |}
+127. {c |} {res}                                                               other        all       hss        .125        .25      R8         R8 {txt}{c |}
+128. {c |} {res}                                                            beyondtb        all        tb        .125        .25      R8         R8 {txt}{c |}
+129. {c |} {res}                                                               other        all        tb        .125        .25      R8         R8 {txt}{c |}
+130. {c |} {res}                                                        otherspecify        all        tb        .125        .25      R8         R8 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+131. {c |} {res}                                                            beyondtb        all   malaria        .125        .25      R8         R8 {txt}{c |}
+132. {c |} {res}                                                        otherspecify        all   malaria        .125        .25      R8         R8 {txt}{c |}
+133. {c |} {res}                                                        otherspecify        all       hiv        .125        .25      R8         R8 {txt}{c |}
+134. {c |} {res}                                                               other        all   malaria        .125        .25      R8         R8 {txt}{c |}
+135. {c |} {res}                                                            beyondtb        all       hss        .125        .25      R8         R8 {txt}{c |}
+     {c LT}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c RT}
+136. {c |} {res}                                                               other        all       hiv        .125        .25      R8         R8 {txt}{c |}
+137. {c |} {res}                                                      highriskgroups        all        tb          .5   .0909091    T1_7         T1 {txt}{c |}
+138. {c |} {res}                            priseenchargeetpreventiondelatuberculose        all        tb          .5   .0909091    T1_4         T1 {txt}{c |}
+139. {c |} {res}                            priseenchargeetpreventiondelatuberculose        all        tb          .5   .0909091    T1_3         T1 {txt}{c |}
+140. {c |} {res}                                                      highriskgroups        all        tb          .5   .1111111    T2_5         T2 {txt}{c |}
+     {c BLC}{hline 70}{c -}{hline 10}{c -}{hline 9}{c -}{hline 11}{c -}{hline 10}{c -}{hline 7}{c -}{hline 10}{c BRC}
+
+{err}Tests complete.
 {smcl}
-{txt}{sf}{ul off}
+{err}{sf}{ul off}
