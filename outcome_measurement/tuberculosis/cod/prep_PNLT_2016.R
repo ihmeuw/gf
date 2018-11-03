@@ -75,9 +75,12 @@ dt[grepl("EAST", files_t1), province := paste0(province, "-est")]
 dt[grepl("WEST", files_t1), province := paste0(province, "-ouest")]
 dt[, province := tolower(province)]
 
+dt[province== "north-kivu", province:= "nord-kivu"]
+dt[province== "south-kivu", province:= "sud-kivu"]
 dt <- dt[province %in% dps_names]
 file_names <- copy(dt)
 file_names <- file_names[files_t1 != "COD_KINSHASA_NTCP_REPORT_2016_T1_Y2017M06D06.XLS"]
+file_names <- file_names[!grepl("INDICATORS", file_names$files_t1)]
 # ----------------------------------------------
 
 
@@ -86,9 +89,8 @@ file_names <- file_names[files_t1 != "COD_KINSHASA_NTCP_REPORT_2016_T1_Y2017M06D
 # ----------------------------------------------
 year= '2016'
 i = 1
-f=file_names$files_t1[i]
 
-for (f in file_names$files_t1[]){
+for (f in file_names$files_t1){
   sheets <- getSheets(f, year)
   s <- sheets[sheets %in% c("DEP T1 016", "DEPIST (M&E) T1", "TB S t1", "DEP Trim 1 016", "DEP TRIM 1 2016", "DEP Trim 1 2016", "DEP Q1 016", 
                             "DEP 2016", "DEPISTAGE 2016", "DEP Trim 1  2016", "Dép Trim1 2016", "DEP T116", "DEP  T1  016")]
@@ -109,7 +111,7 @@ for (f in file_names$files_t1[]){
   if( f== "COD_HAUT_LOMAMI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS"| f== "COD_KASAI_CENTRAL_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" |
       f== "COD_KASAI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" | f== "COD_KONGO_CENTRAL_NTCP_REPORT_2016_T1_WEST_Y2017M06D06.XLSX" | 
       f== "COD_MANIEMA_NTCP_REPORT_2016_T1_Y2017M06D06.XLSX" | f== "COD_TANGANYIKA_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" | 
-      f== "COD_TSHUAPA_NTCP REPORT_2016_T1_Y2017M06D06.XLS"){
+      f== "COD_TSHUAPA_NTCP REPORT_2016_T1_Y2017M06D06.XLS" | f== "COD_SOUTH_KIVU_NTCP_2016_REPORT_T1_Y2017M06D06.XLS"){
     dt <- dt[, c(1:3, 26)]}
   
   if( f== "COD_KASAI_ORIENTAL_NTCP_REPORT_2016_T1_Y2017M06D06.XLSX"){
@@ -149,6 +151,9 @@ for (f in file_names$files_t1[]){
     dt <- dt[, c(1, 16, 18)]
     dt$pop_covered <- NA}
   
+  if (f== "COD_NORTH_KIVU_NTCP_2016_REPORT_T1_Y2017M06D06.XLS"){
+    dt <- dt[, c(1:3, 28)]}
+  
   colnames(dt) <- c("hz", "pop_tot", "pop_covered", "tot_case")
   
   if( f== "COD_MONGALA_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" | f== "COD_SUD_UBANGI_NTCP_REPORT_2016_T1_Y2017M06D06.XLS" |
@@ -160,13 +165,35 @@ for (f in file_names$files_t1[]){
     dt$hz <- tolower(dt$hz)
     dt <- dt[hz %in% c("bafwagbogbo", "bafwasende", "banalia", "basali", "basoko", "bengamisa", "isangi", "kabondo", "lowa", "lubunga", "makiso-kis", "mangobo",
                        "opala", "opienge", "tshopo", "ubundu", "wanierukula", "yabaondo", "yahisuli", "yahuma", "yakusu", "yaleko", "yalimbongo")]
+  } else if (f== "COD_NORTH_KIVU_NTCP_2016_REPORT_T1_Y2017M06D06.XLS"){
+    dt$hz <- tolower(dt$hz)
+    dt$hz <- gsub("[0-9]", "", dt$hz)
+    dt$hz <- gsub("\\.", "", dt$hz)
+    dt$hz <- trimws(dt$hz)
+    rows_to_keep <- grepl("zs", dt$hz)
+    hz_names <- dt[rows_to_keep, hz]
+    hz_names <- c(hz_names, "alimbongo", "bambo", "itebero", "kamango", "kibua", "mabalako")
+    dt <- dt[hz %in% hz_names]
+  } else if (f== "COD_SOUTH_KIVU_NTCP_2016_REPORT_T1_Y2017M06D06.XLS"){
+    dt$hz <- tolower(dt$hz)
+    dt$hz <- gsub("[0-9]", "", dt$hz)
+    dt$hz <- gsub("\\.", "", dt$hz)
+    dt$hz <- trimws(dt$hz)
+    rows_to_keep <- grepl("zs", dt$hz)
+    hz_names <- dt[rows_to_keep, hz]
+    hz_names <- c(hz_names, "xvi mwenga", "xxxiv kimbi-lulenge")
+    dt <- dt[hz %in% hz_names]
+    dt[, hz := str_trim(hz)]
+    dt[, hz := str_squish(hz)]
+    dt[, hz := sub('^\\S+\\s+', '', hz)]
+    dt[, hz := gsub("zsr ", "", hz)]
+    dt[, hz := gsub("zsu ", "", hz)]
   } else {
     dt$hz <- tolower(dt$hz)
     rows_to_keep <- grepl("zs", dt$hz)
     dt <- dt[rows_to_keep, ]
-    
-    dt[, dps:= file_names[files_t1 == f, province]]
   }
+  dt[, dps:= file_names[files_t1 == f, province]]
   
   if (i==1){
     # if it's the first sheet, initialize the new dt
@@ -178,12 +205,13 @@ for (f in file_names$files_t1[]){
   print(i)
   i <- i + 1
 }
+if(!all(file_names$province %in% unique(cases$dps))) stop(paste0("Not all DPS were prepped, specifically: ", list(file_names$province[!file_names$province %in% unique(cases$dps)])))
 
-cases$hz <- gsub("  ", " ", cases$hz)
+cases[, hz := str_squish(hz)]
 cases <- cases[!grepl("^total zs$", cases$hz)]
 cases <- cases[!grepl("^csdt/zs$", cases$hz)]
 cases$quarter <- "1"
-cases$year <- "2016"
+cases$year <- year
 
 backup <- copy (cases)
 
