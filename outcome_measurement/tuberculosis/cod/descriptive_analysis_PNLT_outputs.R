@@ -3,7 +3,7 @@
 # 10/03/18
 # Descriptive analysis of PNLT outcomes
 # ----------------------------------------------
-## Set up R / install packages 
+## Set up R / install packages    
 # ----------------------------------------------
 rm(list=ls())
 library(raster)
@@ -33,7 +33,7 @@ pnlt_case_screening_18 <- "PNLT_case_screening_2018.csv"
 dps_shapefile <-  "gadm36_COD_1.shp"
 
 # output files
-
+tests_national <- "outputs/TS - Tests completed - national.pdf"
 # ----------------------------------------------
 
 
@@ -64,10 +64,13 @@ drcShape <- shapefile(paste0(shape_dir, dps_shapefile)) # shapefile with all DPS
 dps_names <- unique(dt$dps)
 
 # Number of diagnostic tests performed
-dt_graph <- dt[, .(dps, ziehl_comp, xpert_comp, date)]
+dt_graph <- dt[, .(dps, ziehl_comp, xpert_comp, date, file_year, quarter)]
 dt_graph[, tests_comp := ziehl_comp + xpert_comp]
 dt_graph[, tests_comp_COD := sum(tests_comp, na.rm=TRUE), by="date"]
+dt_graph_exc_missing <- dt_graph[! dps %in% c("kinshasa", "ituri", "mai-ndombe", "lualaba", "tshopo"),  .(tests_comp_COD_exc_missing = sum(tests_comp, na.rm=TRUE)), by="date" ]
+# ----------------------------------------------
 
+# ----------------------------------------------
 pdf(paste0(output_dir, "outputs/TS - Tests completed - all DPS.pdf"), height=9, width=11)
 g <- ggplot(dt_graph, aes(date, tests_comp, color=dps) ) + theme_bw() + 
   geom_point() + 
@@ -91,19 +94,45 @@ for (d in dps_names){
   print(g)
 }
 dev.off()
+# ----------------------------------------------
 
-pdf(paste0(output_dir, "outputs/TS - Tests completed - national.pdf"), height=9, width=11)
-g <- ggplot(dt_graph, aes(date, tests_comp_COD) ) + theme_bw() + 
+# ----------------------------------------------
+# Graphs for report
+# ----------------------------------------------
+# Make year - quarter an ordered factor for x axis
+dt_graph$quarter <- as.character(dt_graph$quarter)
+dt_graph$quarter <- paste0("Q", dt_graph$quarter)
+dt_graph[ , yr_qtr:= paste(file_year, quarter, sep="-")]
+
+dt_graph$yr_qtr_ordered <- factor(dt_graph$yr_qtr, ordered = TRUE, 
+                                levels = c("2017-Q1", "2017-Q2", "2017-Q3", "2017-Q4", "2018-Q1"))
+
+dt_graph_exc_missing <- dt_graph[! dps %in% c("kinshasa", "ituri", "mai-ndombe", "lualaba", "tshopo"),  .(tests_comp_COD_exc_missing = sum(tests_comp, na.rm=TRUE)), by="yr_qtr_ordered"]
+
+pdf(paste0(output_dir, tests_national), height=9, width=11)
+g <- ggplot(dt_graph[], aes(yr_qtr_ordered, tests_comp_COD, group=1)) + theme_bw() + 
   geom_point() + 
   geom_line() + xlab("Date") + ylab("Count") +
-  ggtitle("Number of tests completed (Xpert and Ziehl/Auramine)") +
+  ggtitle("Number of TB tests completed (Xpert and Ziehl - Neelson/Auramine)") + 
   scale_y_continuous(labels= scales:: comma) +
   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_blank(), 
         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14)) +
   labs(caption= "NOTE:  Kinshasa and Ituri missing data all of 2017; \nMai-Ndombe, Lualaba, and Tshopo missing data 2018")
 g
-dev.off()
 
+g <- ggplot(dt_graph_exc_missing, aes(yr_qtr_ordered, tests_comp_COD_exc_missing, group = 1) ) + theme_bw() + 
+  geom_point() + 
+  geom_line() + xlab("Date") + ylab("Count") +
+  ggtitle("Number of TB tests completed (Xpert and Ziehl - Neelson/Auramine)") + 
+  scale_y_continuous(labels= scales:: comma) +
+  theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_blank(), 
+        legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14)) +
+  labs(caption= "NOTE:  Kinshasa, Ituri, Mai-Ndombe, Lualaba, and Tshopo excluded")
+g
+dev.off()
+# ----------------------------------------------
+
+# ----------------------------------------------
 # Number of notified cases of all forms of TB (i.e. bacteriologically confirmed + clinically diagnosed) Includes new and relapse cases
 dt_graph <- dt[, .(dps, date, tpp_new, tpp_relapse, tpc_new, tpc_relapse, tep_new, tep_relapse, tot_incCase)]
 dt_graph[, cases_new := tpp_new + tpc_new + tep_new]
