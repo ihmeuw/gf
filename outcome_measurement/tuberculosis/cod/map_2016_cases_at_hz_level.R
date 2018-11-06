@@ -94,9 +94,11 @@ m <- ggplot() +
                        na.value = "grey70", space = "Lab", midpoint = med, ## play around with this to get the gradient that you want, depending on data values 
                        breaks=round(seq(0, max, by=((max-min)/4))), 
                        limits=c(0,max)) +
-  labs(title="Total TB cases for the first quarter of 2016", 
+  labs(title="Total TB case notifications for the first quarter of 2016", 
        fill='Number of cases') 
 m
+
+# graphFile = "J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLT_data/map_hz_level_2016_tot_cases_TEST.pdf"
 
 pdf(graphFile, height = 12, width = 12)
 print(m)
@@ -117,7 +119,7 @@ m <- ggplot() +
                        na.value = "grey70", space = "Lab", midpoint = med, ## play around with this to get the gradient that you want, depending on data values 
                        breaks=round(seq(0, max, by=((max-min)/4))), 
                        limits=c(0,max)) +
-  labs(title="TB cases for the first quarter of 2016 per 100,000 people", 
+  labs(title="TB case notifications for the first quarter of 2016 per 100,000 people", 
        fill='Number of cases (per 100,000 people)') 
 m
 
