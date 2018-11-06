@@ -403,8 +403,22 @@ all_dps <- unique(dt$dps)
 gf_dps <-  c("kwango","kwilu","mai-ndombe","kongo-central", "equateur","mongala","nord-ubangi","sud-ubangi","tshuapa",        
             "kinshasa","maniema","nord-kivu","sud-kivu","haut-uele", "bas-uele","ituri", "tshopo") 
 
+# need to re run this code so names match up to gf_dps
+# make labels centered for each DPS 
+names = data.table(coordinates(drcShape))
+setnames(names, c('long', 'lat'))
+names[ , dps:=unique(drcShape@data$NAME_1)]
+names$dps <- standardizeDPSnames(names$dps)
+# this name doesn't save properly so you may have to re copy
+names$dps <- gsub("ã???equateur", "equateur", names$dps)
+
+names$long <- round(names$long, digits=3)
+names$lat <- round(names$lat, digits=3)
+# merge with data to get the values to include in the labels
+names <- merge(names, dt, by="dps")
+
 pdf(paste0(output_dir, map_comp_trt_with_GF_marked), height=10, width=15)
-m1 <- ggplot() + 
+map <- ggplot() + 
   geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=pct_comp_full_trt_course)) + 
   coord_equal() +
   geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
@@ -413,10 +427,10 @@ m1 <- ggplot() +
                        na.value = "grey70", space = "Lab", 
                        breaks=round(seq(min, max, by=((max-min)/4))), 
                        limits=c(min,max)) +
-  labs(title="2017 DRC: Percent of registered incident TB cases that recorded a completed \ncourse of treatment (NOTE: WHO target is 90%)", 
-       fill='Percent') +
-  geom_label_repel(data = names[region %in% gf_dps,], aes(label = "*", x = long, y = lat, group = region), inherit.aes=FALSE, size=3) +
-  theme(plot.title = element_text(size = 20), legend.title = element_text(size=16))
-m1
+  labs(title="2017 DRC: Percent of registered incident TB cases that recorded a completed \ncourse of treatment with GF provinces starred", 
+       fill='Percent', caption = "(NOTE: WHO target is 90%)") +
+  geom_point(data = names[dps %in% gf_dps,], aes(x=long, y=lat), alpha=0.9, shape=8, inherit.aes=FALSE, size=5) +
+  theme(plot.title = element_text(size = 20), legend.title = element_text(size=18), legend.text = element_text(size=14), plot.caption = element_text(size=18))
+map
 dev.off()
 
