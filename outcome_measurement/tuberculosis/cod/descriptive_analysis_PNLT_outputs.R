@@ -13,6 +13,7 @@ library(ggplot2)
 library(maptools)
 library(grid)
 library(gridExtra)
+library(RColorBrewer)
 setwd('C:/local/gf/')
 source('./core/standardizeDPSnames_function.R')
 # ----------------------------------------------
@@ -25,12 +26,13 @@ source('./core/standardizeDPSnames_function.R')
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j/')
 output_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLT_data/')
 data_dir <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLT/")
-shape_dir <- paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/gadm36_COD_shp/")
+shape_dir <- paste0(j, "/Project/Evaluation/GF/outcome_measurement/cod/drc_shapefiles/gadm36_COD_shp/")
 
 # input files
 pnlt_case_screening_17 <- "PNLT_case_screening_2017.csv"
 pnlt_case_screening_18 <- "PNLT_case_screening_2018.csv"
 dps_shapefile <-  "gadm36_COD_1.shp"
+hz_shapefile <- "health2.shp"
 
 # output files
 tests_national <- "outputs/TS - Tests completed - national.pdf"
@@ -54,7 +56,8 @@ setnames(dt18, "ziehl_pos.1", "ziehl_pos")
 dt <- rbindlist(list(dt17, dt18), use.names=TRUE, fill= TRUE)
 dt$date <- as.Date(dt$date)
 
-drcShape <- shapefile(paste0(shape_dir, dps_shapefile)) # shapefile with all DPS (use a different one for health zones)
+file_path <- paste0(shape_dir, dps_shapefile)
+drcShape <- shapefile(file_path) # shapefile with all DPS (use a different one for health zones)
 # ----------------------------------------------
 
 
@@ -258,7 +261,7 @@ coordinates$id <- gsub("ã???equateur", "equateur", coordinates$id)
 # ----------------------------------------------
 # add the variables to make maps of here:
 variables_to_analyze <- c('xpert_comp', 'ziehl_comp')
-variables_to_analyze <- "tot_incCase"
+variables_to_analyze <- c(variables_to_analyze, "tot_incCase")
 # subset to just 2017 and the variables to make maps of
 dt_annual <- dt[file_year == "2017", c("dps", "date", variables_to_analyze), with=FALSE]
 # combine kongo-central-est and kongo-central-ouest into kongo-central
@@ -277,6 +280,47 @@ graphData <- merge(coordinates, dt_annual, by.x='id', by.y='dps', all=TRUE, allo
 max = max(graphData$ziehl_comp, na.rm=TRUE)
 min = min(graphData$ziehl_comp, na.rm=TRUE)
 med = max/2
+# ********************************
+# get center of coordinates
+# make labels centered for each DPS 
+centers = data.table(coordinates(drcShape))
+setnames(centers, c('long', 'lat'))
+centers[ , dps:=unique(drcShape@data$NAME_1)]
+centers$dps <- standardizeDPSnames(centers$dps)
+# this name doesn't save properly so you may have to re copy
+centers$dps <- gsub("ã???equateur", "equateur", centers$dps)
+
+centers$long <- round(centers$long, digits=3)
+centers$lat <- round(centers$lat, digits=3)
+# merge with data to get the values to include in the labels
+centers <- merge(centers, dt_annual, by="dps")
+
+centers[totTests==0, totTests:=NA]
+graphData[totTests==0, totTests:=NA]
+
+max = max(graphData$totTests, na.rm=TRUE)
+min = min(graphData$totTests, na.rm=TRUE)
+med = max/2
+# total tests performed with bubble map of case notifications
+m3 <- ggplot() + 
+  geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=totTests)) + 
+  geom_point(data=centers, aes(x=long, y=lat, size=tot_incCase), alpha=0.9, shape=21, fill="maroon") +
+  coord_equal() +
+  geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
+  theme_void() +  
+  scale_fill_gradient2(low='#9aeaea', mid='#216fff', high='#0606aa', 
+                       na.value = "grey70", space = "Lab", midpoint = (med*1.5), ## play around with this to get the gradient that you want, depending on data values 
+                       breaks=round(seq(0, max, by=((max-min)/4))), 
+                       limits=c(0,max)) +
+  scale_size_continuous(range=c(1,8)) +
+  labs(title="2017 Tests completed (Xpert and Ziehl - Neelson/Auramine) vs incident TB cases notified", 
+       fill='Number of tests completed', size= "Number of cases notified")
+m3
+
+pdf(paste0(output_dir, "outputs/Map - Tests completed with Case Notifications.pdf"), height=9, width=12)
+m3
+dev.off()
+# ********************************
 
 m1 <- ggplot() + 
   geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=ziehl_comp)) + 
@@ -333,7 +377,7 @@ m3
   grid.newpage()
   grid.draw(p1)
   dev.off()
-
+  
 
 # Number of notified cases of all forms of TB (i.e. bacteriologically confirmed + clinically diagnosed) Includes new and relapse cases
 graphData <- merge(coordinates, dt_annual, by.x='id', by.y='dps', all=TRUE, allow.cartesian=TRUE)
@@ -341,6 +385,8 @@ graphData <- merge(coordinates, dt_annual, by.x='id', by.y='dps', all=TRUE, allo
 max = max(graphData$tot_incCase, na.rm=TRUE)
 min = min(graphData$tot_incCase, na.rm=TRUE)
 med = max/2
+
+
 
 pdf(paste0(output_dir, "outcomes/Map - Number of incident cases; all forms TB.pdf"), height=9, width=11)
 m2 <- ggplot() + 
