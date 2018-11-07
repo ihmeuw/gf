@@ -36,7 +36,7 @@ loc_name <- "gtm"
 ## set "prep_dir" to 
 # ----------------------------------------------
 prep_dir <- "your local repo folder + gf/resource_tracking/prep/"
-prep_dir <- "H:/gf/resource_tracking/prep/"
+prep_dir <- "C:/Users/elineb/Documents/gf/resource_tracking/prep/"
 
 source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_detailed_budget.R"))
 source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_summary_budget.R"))
@@ -47,8 +47,8 @@ source(paste0(prep_dir,"map_modules_and_interventions.R"))
 # ----------------------------------------------
 ###### Load the list of RT files we want to process
 # ----------------------------------------------
-file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
-file_list <- read.csv(paste0(file_dir, "official_budgets/gtm_budget_filelist.csv"))
+base_file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/grants/'
+file_list <- read.csv(paste0(base_file_dir, "gtm_budget_filelist1.csv"))
 
 
 # ##create a summary file to track the data that we have (and that we still need)
@@ -61,9 +61,13 @@ file_list <- read.csv(paste0(file_dir, "official_budgets/gtm_budget_filelist.csv
 
 # ----------------------------------------------
 ###### For loop that preps data and aggregates it
-# ----------------------------------------------
+# --------------------------------------------
 
 for(i in 1:length(file_list$file_name)){
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "fpm_final" | file_list$data_source[i] == "fpm_iteration", folder, "pudrs")
+  file_dir = paste0(base_file_dir, file_list$status[i], "/", file_list$grant_number[i], "/", folder, "/")
+  
   # ##fill in the summary tracking file with what we know already: 
   # summary_file$disease[i] <- as.character(file_list$disease[i])
   # summary_file$grant[i] <- as.character(file_list$grant_number[i])
@@ -115,9 +119,9 @@ for(i in 1:length(file_list$file_name)){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
   
-  # if(file_list$format[i]=="detailed"){
+  # if(file_list$function[i]=="detailed"){
   #   summary_file$sda_detail[i] <- "Detailed"
-  # } else if (file_list$format[i]=="summary"){
+  # } else if (file_list$function[i]=="summary"){
   #   summary_file$sda_detail[i] <- "Summary"
   # } else if(!(tmpData$sda_activity[1]=="All")){
   #   summary_file$sda_detail[i] <- "Detailed"
@@ -128,7 +132,7 @@ for(i in 1:length(file_list$file_name)){
   # summary_file$start_date[i] <- min(tmpData$start_date)
 
   
-  print(i)
+  print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant_number[i])) ## if the code breaks, you know which file it broke on
 }
 
 

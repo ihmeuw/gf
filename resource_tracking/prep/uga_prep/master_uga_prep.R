@@ -50,7 +50,7 @@ source <- "gf" ## denotes the type of data (e.g. government expenditures, Global
 ## set up the directory & file list: 
 file_dir <- 'your local drive here' ##where the files are stored locally - on the J drive, the filepath is:  "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
 file_dir <- "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
-file_list <- read.csv(paste0(file_dir, "uga_budget_file_list.csv"), na.strings=c("","NA"),
+file_list <- read.csv(paste0(file_dir, "uga_budget_filelist.csv"), na.strings=c("","NA"),
                       stringsAsFactors = FALSE) 
 file_list$start_date <- ymd(file_list$start_date)
 
