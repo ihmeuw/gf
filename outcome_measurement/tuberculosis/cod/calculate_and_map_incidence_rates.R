@@ -48,6 +48,7 @@ dps_shapefile <-  "gadm36_COD_1.shp"
 
 # output files
 graphFile <- paste0(output_dir, "PNLT TB Incidence Rates 2017.pdf")
+graphFile_justPNLTpop <- paste0(output_dir, "PNLT TB Incidence Rates 2017 - pop estimates from PNLT data.pdf")
 # ----------------------------------------------
 
 
@@ -104,7 +105,7 @@ dt[, inc_pop_worldpop := ((tot_incCase/pop_worldpop)*100000)]
 
 
 # ----------------------------------------------
-## Map incidence rates for 2017
+## Map incidence rates for 2017 using PNLT
 # ----------------------------------------------
 graphData <- merge(coordinates, dt, by.x='id', by.y='dps', all=TRUE, allow.cartesian=TRUE)
 graphData[inc_pop_tot_pnlt=="Inf", inc_pop_tot_pnlt := NA]
@@ -114,6 +115,34 @@ drc_region_centroids <- data.frame(long = coordinates(drcShape)[, 1],lat = coord
 drc_region_centroids[, 'NAME_1'] <-drcShape@data[,'NAME_1']
 drc_region_centroids$NAME_1 <- standardizeDPSNames(drc_region_centroids$NAME_1)
 
+max = max(graphData$inc_pop_tot_pnlt, na.rm=TRUE)
+min = min(graphData$inc_pop_tot_pnlt, na.rm=TRUE)
+med = 180
+
+map <- ggplot() + 
+  geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=inc_pop_tot_pnlt)) + 
+  coord_equal() +
+  geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
+  theme_void() +  
+  scale_fill_gradient2(low='#9aeaea', mid='#216fff', high='#0606aa', 
+                       na.value = "grey70", space = "Lab", midpoint = med, ## play around with this to get the gradient that you want, depending on data values 
+                       breaks=round(seq(0, max, by=((max-min)/4))), 
+                       limits=c(0,max)) +
+  labs(title="TB Case Notification Rate 2017", 
+       fill='Case notifications \nper 100,000 people',
+       caption = "[Note: Ituri missing population data]") + 
+  #geom_label_repel(data = drc_region_centroids, aes(label = NAME_1, x = long, y = lat, group = NAME_1), size = 3) +
+  theme(plot.title = element_text(size = 20), legend.title = element_text(size=16), plot.caption =  element_text(size=16))
+map
+
+pdf(graphFile_justPNLTpop, height=9, width=12)
+print(map)
+dev.off()
+# ----------------------------------------------
+
+# ----------------------------------------------
+## Comparison of denominators for popultaion - map incidence rates for 2017
+# ----------------------------------------------
 # note ------ # use these for standardizing scale
 max = max(graphData$inc_pop_worldpop, na.rm=TRUE)
 min = min(graphData$inc_pop_worldpop, na.rm=TRUE)

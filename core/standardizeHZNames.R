@@ -24,7 +24,7 @@ standardizeHZNames = function(nameVector=NULL) {
 	# load spreadsheet connecting all known names to standardized names
 	require(data.table)
 	altNamesFile = './core/standardized_hzs_final_inc_pnlt.csv'
-	alternateNames = fread(altNamesFile)
+	alternateNames = fread(altNamesFile, header=TRUE)
 	
 	# prep data table
 	alternateNames = unique(alternateNames[, c('health_zone','hz_shp1','hz_shp2', "hz_snis", "hz_pnlp", "hz_snis_cleaned", "hz_pnlt"), with=FALSE])
