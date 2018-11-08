@@ -8,13 +8,13 @@ set more off
 clear all 
 
 set linesize 255
- // confirm file "C:/Program Files (x86)/Adobe/Acrobat 11.0/Acrobat/acrodist.exe"
- // do "J:/Usable/Tools/ADO/pdfmaker_Acrobat11.do"
-
-//pdfstart using "C:/Users/elineb/Documents/gf/resource_tracking/prep/module_mapping_test_log.pdf", distexe("C:/Program Files (x86)/Adobe/Acrobat 11.0/Acrobat/acrodist.exe")
 
 log using "C:\Users\elineb\Documents\gf\resource_tracking\prep\module_mapping_test_log.smcl", replace 
 import excel using "J:\Project\Evaluation\GF\mapping\multi_country\intervention_categories\intervention_and_indicator_list.xlsx", sheet(module_mapping) firstrow clear 
+
+************************************
+*** MODULE MAPPING FRAMEWORK TESTS***
+************************************
 
 //Generate some variables that will display more nicely in a PDF
 gen module_short = substr(module, 1, 10) 
@@ -95,9 +95,41 @@ else {
 
 restore 
 
+************************************
+***   CLEANED TOTAL DATA CHECKS 	***
+************************************
+
+//Check that there are no duplicates in the variable "fpm" or "pudr" within a given grant name and time period in the total cleaned data 
+insheet using "J:\Project\Evaluation\GF\resource_tracking\multi_country\mapping\cleaned_total_data.csv", clear 
+
+duplicates drop filename, force //Don't need such a granular level of detail for these checks. 
+
+preserve 
+duplicates tag grant_number grant_period data_source, gen(dup) 
+count if dup != 0 
+if `r(N)' != 0 {
+	n di in red _newline "ERROR: `r(N)' Cases of multiple final budgets/pudrs within grant and time period."
+	n list grant_number grant_period data_source filename if dup != 1 & (data_source == "fpm" | data_source == "fpm_final" | data_source == "pudr")
+} 
+else { 
+	n di in red _newline "...test passed." 
+} 
+restore 
+
+//Make sure that there are no time periods with less than 2 years. 
+tab grant_period
+count if length(grant_period) < 5 
+if `r(N)' != 0 {
+	n di in red _newline "ERROR: `r(N)' Cases where grant period doesn't match global fund format."
+	n list grant_number grant_period filename if length(grant_period) < 5 
+} 
+else { 
+	n di in red _newline "...test passed." 
+} 
+
 di in red _newline "Tests complete." 
 
-translate "C:\Users\elineb\Documents\gf\resource_tracking\prep\module_mapping_test_log.smcl" "C:\Users\elineb\Documents\gf\resource_tracking\prep\module_mapping_test_log.pdf", translator(smcl2pdf)
+//translate "C:\Users\elineb\Documents\gf\resource_tracking\prep\module_mapping_test_log.smcl" "C:\Users\elineb\Documents\gf\resource_tracking\prep\module_mapping_test_log.pdf", translator(smcl2pdf)
 
 log close 
 
