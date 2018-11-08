@@ -2,62 +2,12 @@
 # Irena Chen
 # May 16th, 2018
 # Master code file for GTM FPM/PUDR data cleaning 
-# ----------------------------------------------
-###### Set up R / install packages  ###### 
-# ----------------------------------------------
-rm(list=ls())
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
 
-# ----------------------------------------------
-## Notes: running this will throw a warning: 
-#Warning messages:
-  #1: In `[.data.table`(ghe_data, , `:=`((drop.cols), NULL)) :
-  # length(LHS)==0; no columns to delete or assign RHS to.
-
-#But this shouldn't affect the final output. 
-
-##STEP 1: Download the "gf" folder from Basecamp (in the Resource Tracking Data folder) 
-##and save it on your local drive 
-
-
-# ---------------------------------------------
-### assign some variables
-# ---------------------------------------------
-loc_name <- "gtm"
-
-# ----------------------------------------------
-###### source the functions that we need 
-## set "prep_dir" to 
-# ----------------------------------------------
-prep_dir <- "your local repo folder + gf/resource_tracking/prep/"
-prep_dir <- "C:/Users/elineb/Documents/gf/resource_tracking/prep/"
-
-source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_detailed_budget.R"))
-source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_summary_budget.R"))
-source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_other_budget.R"))
-source(paste0(prep_dir, "gtm_prep/budget_prep/prep_fpm_other_detailed_budget.R"))
-source(paste0(prep_dir, "gtm_prep/budget_prep/prep_gtm_pudr.R"))
-source(paste0(prep_dir,"map_modules_and_interventions.R"))
-# ----------------------------------------------
-###### Load the list of RT files we want to process
-# ----------------------------------------------
-base_file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/grants/'
-file_list <- read.csv(paste0(base_file_dir, "gtm_budget_filelist1.csv"))
-
-
-# ##create a summary file to track the data that we have (and that we still need)
-# summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
-#                          c("data_source","year", "start_date",  "end_date", "sda_detail",
-#                            "geographic_detail", "period",	"grant", "disease", "loc_name"))
-# 
-# summary_file$loc_name <- as.character(summary_file$loc_name)
-# summary_file$loc_name <- loc_name
+source(paste0(code_dir, "gtm_prep/budget_prep/prep_fpm_detailed_budget.R"))
+source(paste0(code_dir, "gtm_prep/budget_prep/prep_fpm_summary_budget.R"))
+source(paste0(code_dir, "gtm_prep/budget_prep/prep_fpm_other_budget.R"))
+source(paste0(code_dir, "gtm_prep/budget_prep/prep_fpm_other_detailed_budget.R"))
+source(paste0(code_dir, "gtm_prep/budget_prep/prep_gtm_pudr.R"))
 
 # ----------------------------------------------
 ###### For loop that preps data and aggregates it
@@ -65,52 +15,42 @@ file_list <- read.csv(paste0(base_file_dir, "gtm_budget_filelist1.csv"))
 
 for(i in 1:length(file_list$file_name)){
   folder = "budgets"
-  folder = ifelse (file_list$data_source[i] == "fpm_final" | file_list$data_source[i] == "fpm_iteration", folder, "pudrs")
-  file_dir = paste0(base_file_dir, file_list$status[i], "/", file_list$grant_number[i], "/", folder, "/")
+  folder = ifelse (file_list$data_source[i] == "fpm" | file_list$data_source[i] == "fpm_iter", folder, "pudrs")
+  file_dir = paste0(master_file_dir, file_list$status[i], "/", file_list$grant_name[i], "/", folder, "/")
   
-  # ##fill in the summary tracking file with what we know already: 
-  # summary_file$disease[i] <- as.character(file_list$disease[i])
-  # summary_file$grant[i] <- as.character(file_list$grant_number[i])
-  # summary_file$period[i] <- file_list$period[i] 
-  # summary_file$geographic_detail[i] <- as.character(file_list$geography_detail[i])
-  # summary_file$data_source[i] <- as.character(file_list$data_source[i])
-  # summary_file$year[i] <- as.character(file_list$grant_period[i])
-  # 
-  if(file_list$format[i]=="detailed"){ ## fpm detailed budgets 
+  if(file_list$function_type[i]=="detailed"){ ## fpm detailed budgets 
     tmpData <- prep_fpm_detailed_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
-                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
-                                        file_list$lang[i], file_list$grant_number[i], file_list$recipient[i])
+                                        ymd(file_list$start_date[i]), file_list$qtr_num[i], file_list$disease[i], file_list$period[i], 
+                                        file_list$lang[i], file_list$grant_name[i], file_list$primary_recipient[i])
     tmpData$disbursement<- 0 
-  } else if (file_list$format[i]=="summary"){ ## only summary level data - no municipalities 
+  } else if (file_list$function_type[i]=="summary"){ ## only summary level data - no municipalities 
     tmpData <- prep_fpm_summary_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
-                                       ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
-                                       file_list$grant_number[i], file_list$recipient[i], file_list$lang[i])
+                                       ymd(file_list$start_date[i]), file_list$qtr_num[i], file_list$disease[i], file_list$period[i], 
+                                       file_list$grant_name[i], file_list$primary_recipient[i], file_list$lang[i])
     tmpData$loc_name <- "gtm"
     tmpData$disbursement<- 0 
     
-  } else if (file_list$format[i]=="detailed_other"){ ## there's an older version of detailed fpm budgets
+  } else if (file_list$function_type[i]=="detailed_other"){ ## there's an older version of detailed fpm budgets
     tmpData <- prep_other_detailed_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
-                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
-                                        file_list$lang[i], file_list$grant_number[i])
+                                        ymd(file_list$start_date[i]), file_list$qtr_num[i], file_list$disease[i], file_list$period[i], 
+                                        file_list$lang[i], file_list$grant_name[i])
     tmpData$disbursement<- 0 
 
-  } else if (file_list$format[i]=="pudr"){ 
+  } else if (file_list$function_type[i]=="pudr"){ 
     tmpData <- prep_gtm_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
-                                          ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
-                                          file_list$grant_number[i], file_list$data_source[i], loc_name, file_list$lang[i])
+                                          ymd(file_list$start_date[i]), file_list$qtr_num[i], file_list$disease[i], file_list$period[i], 
+                                          file_list$grant_name[i], file_list$data_source[i], file_list$loc_name[i], file_list$lang[i])
 
-  } else if (file_list$format[i]=="other"){
+  } else if (file_list$function_type[i]=="other"){
     tmpData <- prep_other_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
-                                          ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
-                                          file_list$lang[i], file_list$grant_number[i])
+                                          ymd(file_list$start_date[i]), file_list$qtr_num[i], file_list$disease[i], file_list$period[i], 
+                                          file_list$lang[i], file_list$grant_name[i])
     tmpData$disbursement<- 0 
   }
-  tmpData$loc_name <- loc_name
+  tmpData$loc_name <- "gtm"
   tmpData$data_source <- file_list$data_source[i]
   tmpData$fileName <- file_list$file_name[i]
   tmpData$grant_period <- file_list$grant_period[i]
-  
-  message(paste(i, "colNames: ", length(colnames(tmpData))))
   
   if(i==1){
     resource_database = tmpData
@@ -118,35 +58,11 @@ for(i in 1:length(file_list$file_name)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
-  
-  # if(file_list$function[i]=="detailed"){
-  #   summary_file$sda_detail[i] <- "Detailed"
-  # } else if (file_list$function[i]=="summary"){
-  #   summary_file$sda_detail[i] <- "Summary"
-  # } else if(!(tmpData$sda_activity[1]=="All")){
-  #   summary_file$sda_detail[i] <- "Detailed"
-  # } else {
-  #   summary_file$sda_detail[i] <- "None"
-  # }
-  # summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
-  # summary_file$start_date[i] <- min(tmpData$start_date)
 
   
-  print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant_number[i])) ## if the code breaks, you know which file it broke on
+  print(paste0(i, " ", file_list$function_type[i], " ", file_list$grant_name[i])) ## if the code breaks, you know which file it broke on
 }
 
-
-# summary_file$end_date <- as.Date(summary_file$end_date,"%Y%m%d")
-# summary_file$start_date <- as.Date(summary_file$start_date,"%Y%m%d")
-# setnames(summary_file, c("Data Source",	"Grant Time Frame",	"Start Date",
-#                          "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
-
-# ----------------------------------------------
-##export the summary table to J Drive
-# ----------------------------------------------
-##(you might get a warning message about appending column names to the files; this should not affect the final output)
-# write.table(summary_file, paste0(dir, "resource_tracking_data_summary.csv"),
-#             append = TRUE, row.names=FALSE, sep=",")
 
 # ----------------------------------------------
 ##Add more RT variables and clean up any rows with "junk" data
@@ -181,7 +97,7 @@ data_check2<- as.data.frame(cleaned_database[, sum(budget, na.rm = TRUE),by = c(
 ##run the map_modules_and_interventions.R script first
 # ----------------------------------------------
 
-gtmData <- strip_chars(cleaned_database, unwanted_array, remove_chars)
+gtmData <- strip_chars(resource_database, unwanted_array, remove_chars)
 gtmData[is.na(module), module:=intervention]
 
 ## the directory on the J Drive for the intervention list is:
@@ -203,8 +119,6 @@ gf_mapping_list <- total_mapping_list(paste0(map_dir,"intervention_and_indicator
 # Correct any unmapped modules, leaving initials, date, and applicable budget filepath. 
 # These should all be written as if they could modify any other file to catch general errors. 
 # ---------------------------------------------------------------------------------------
-
-#EMILY PULL THESE CHANGES OUT INTO DIFFERENT FILES. 
 
 #EKL 10/25/18, official_budgets/03. Presupuesto detallado.xlsx 
 gtmData$intervention = ifelse(gtmData$intervention == "detecciondecasosydiagnosticotbmdr", "detecciondecasosydiagnosticotbmr", 
@@ -241,12 +155,6 @@ if(nrow(unmapped_mods)>0){
 # Correct any modules that are dropping here. Comment initials, date, and filename. 
 # --------------------------------------------------------------------------
 
-# test_merge1<-data.frame(a = seq(1,16,by=2), b = LETTERS[1:8], x= month.abb[1:8], y = sample(10:20,8, replace = TRUE), z=letters[1:8])
-# test_merge2<-data.frame(a = rep.int(1, 8), b = rep('A', 8), c = month.abb[1:8])
-# 
-# test_merge3 <- merge(test_merge1, test_merge2, by=c("a", "b"), all.x=TRUE)
-# test_merge4 <- merge(test_merge1, test_merge2, by=c("a", "b"), all.x=TRUE, allow.cartesian = TRUE) #Now I'm really not sure what this is doing. Because this is just appending duplicates into file. 
-
 
 # ----------------------------------------------
 # Merge the datasets on the GF codes to map to framework 
@@ -270,19 +178,16 @@ mappedGtm$disbursement <- mappedGtm$disbursement*mappedGtm$coefficient
 
 mappedGtm$sda_activity <- ifelse(tolower(mappedGtm$sda_activity) == "all" | mappedGtm$sda_activity == "0", "Unspecified (Summary budget)", mappedGtm$sda_activity)
 
-# ----------------------------------------------
-##Optional: sum to make sure that budget numbers aren't dropped:
-# ----------------------------------------------
-# data_check1 <- gtmData[, sum(budget, na.rm = TRUE),by = c( "module","intervention","disease")]
-# data_check2 <-mappedGtm[, sum(budget, na.rm = TRUE),by = c("module", "intervention","disease")]
-
 mappedGtm$year <- year(mappedGtm$start_date)
+
 
 # ----------------------------------------------
 ##output dataset to the correct folder as a csv: 
 # ----------------------------------------------
 
-write.csv(mappedGtm, "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_budget_data.csv", row.names = FALSE,
+#stopifnot(sort(colnames(mappedGtm)) == colnames_desired)
+
+write.csv(mappedGtm, paste0("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_budget_data.csv"), row.names = FALSE,
           fileEncoding = "latin1")
 
 

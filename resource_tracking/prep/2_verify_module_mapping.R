@@ -15,19 +15,8 @@ library(doBy)
 file_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
 inFile <- "intervention_and_indicator_list.xlsx"
 inSheet<- "module_mapping"
-outFile <- paste0(file_dir, "module_mapping_clean.csv")
   
 mod_map <- data.table(read_excel(paste0(file_dir, inFile), sheet=as.character(inSheet)))
-
-# -------------------------------
-#
-#   ADD NEW MODULES/INTERVENTIONS
-#
-#--------------------------------
-
-new_modules <- read.csv(paste0(file_dir, "new_modules.csv"))
-new_modules <- new_modules[, c(1:5)] #Remove the columns added_by and added_date, those are just for record keeping. 
-#mod_map <- rbind(mod_map, new_modules, use.names = TRUE) #Commenting out for now because new modules were added to mod map as a temporary fix. EKL 11/1/18
 
 # -------------------------------
 #
@@ -109,11 +98,3 @@ print(sort(unique(mod_map$module)))
 print(sort(unique(mod_map$intervention)))
 #We have some modules in all capital letters showing up here, with spaces. 
 
-# -------------------------------
-#
-#   WRITE FINAL DATASET
-#
-#--------------------------------
-
-#Remove close spellings of words. These should be corrected in adjust_modules files. 
-write.csv(mod_map, outFile, row.names = FALSE, fileEncoding = "latin1")

@@ -15,7 +15,18 @@
 # ----------------------------------------------
 prep_other_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
   
-  qtr_names <- c("Área de prestación de servicios","Actividad", "Receptor Principal", seq(21, 29, by=1))
+  # dir = file_dir
+  # inFile = "GUA-610-G04-T_SB_Year_6_7_ENG.XLS"
+  # sheet_name = "Detailed budget"
+  # start_date = "2012-08-01"
+  # qtr_num = 8
+  # disease = "tb"
+  # period = 90
+  # lang = "esp" 
+  # grant = "GTM-610-G04-T"
+
+  
+  qtr_names <- c("Area de prestacion de servicios","Actividad", "Receptor Principal", seq(21, 29, by=1))
   
   create_qtr_names = function(qtr_names){
     for(i in 1:length(qtr_names)){
@@ -36,7 +47,7 @@ prep_other_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_n
     gf_data <- data.table(read_excel(paste0(dir, inFile)))
   }
   
-  
+  setnames(gf_data, fix_diacritics(names(gf_data)))
   ##only get the columns that we want
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
   
@@ -75,12 +86,13 @@ prep_other_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_n
   budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date ]
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
-  budget_dataset$grant_number <- grant
+  #budget_dataset$grant_name <- grant
   budget_dataset$disease <- disease
   budget_dataset$intervention <- budget_dataset$sda_activity
   budget_dataset$expenditure <- 0 
   budget_dataset$lang <- lang
   budget_dataset$cost_category <- "all"
+  budget_dataset$grant_number <- grant
   return(budget_dataset)  
 }
 

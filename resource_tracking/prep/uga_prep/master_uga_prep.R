@@ -6,37 +6,13 @@
 ###### Set up R / install packages  ###### 
 # ----------------------------------------------
 
-rm(list=ls())
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(rlang)
-library(zoo)
-library(tidyr)
-
-# ----------------------------------------------
-## STEP 1: Download the prep_budget_data folder from UGA Basecamp and save somewhere on your local drive: 
-##this has all of the files we will be using: 
-## Notes: running this will throw a warning: 
-#Warning messages:
-#In read_fun(path = path, sheet = sheet, limits = limits, shim = shim,  :
-#              NA inserted for impossible 1900-02-29 datetime
-
-#But this shouldn't affect the final output. 
-# ----------------------------------------------
-
-
 # ----------------------------------------------
 ###### source the functions that we need 
 # ----------------------------------------------
-prep_dir <- " your local repo + gf/resource_tracking/prep/"
-prep_dir <- "H:/gf/resource_tracking/prep/"
-source(paste0(prep_dir, "uga_prep/prep_detailed_uga_budget.R"))
-source(paste0(prep_dir, "uga_prep/prep_summary_uga_budget.R"))
-source(paste0(prep_dir, "uga_prep/prep_pudr_uga.R"))
-source(paste0(prep_dir,"map_modules_and_interventions.R"))
+source(paste0(code_dir, "uga_prep/prep_detailed_uga_budget.R"))
+source(paste0(code_dir, "uga_prep/prep_summary_uga_budget.R"))
+source(paste0(code_dir, "uga_prep/prep_pudr_uga.R"))
+source(paste0(code_dir,"map_modules_and_interventions.R"))
 
 
 # ---------------------------------------------
@@ -46,39 +22,12 @@ cashText <- " Cash Outflow" ##we'll need this to grab the right columns from the
 loc_name <- 'uga' ##change this when we can get subnational data 
 source <- "gf" ## denotes the type of data (e.g. government expenditures, Global fund, etc.)
 
-
-## set up the directory & file list: 
-file_dir <- 'your local drive here' ##where the files are stored locally - on the J drive, the filepath is:  "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
-file_dir <- "J:/Project/Evaluation/GF/resource_tracking/uga/gf/"
-file_list <- read.csv(paste0(file_dir, "uga_budget_filelist.csv"), na.strings=c("","NA"),
-                      stringsAsFactors = FALSE) 
-file_list$start_date <- ymd(file_list$start_date)
-
-
-# ---------------------------------------------
-########## Create a summary file of the data ########
-# ---------------------------------------------
-# 
-# summary_file <- setnames(data.table(matrix(nrow = length(file_list$file_name), ncol = 10)), 
-#                          c("data_source","year", "start_date",  "end_date", "sda_detail",
-#                            "geographic_detail", "period",	"grant", "disease", "loc_name"))
-# 
-# summary_file$loc_name <- as.character(summary_file$loc_name)
-# summary_file$loc_name <- loc_name
-
 # ---------------------------------------------
 ########## Run the for loop that preps data ########
 # ---------------------------------------------
 
 for(i in 1:length(file_list$file_name)){ 
-  # fill in the summary tracking file with what we know already: 
-  # summary_file$disease[i] <- file_list$disease[i]
-  # summary_file$year[i] <- file_list$grant_period[i]
-  # summary_file$grant[i] <- file_list$grant[i]
-  # summary_file$period[i] <- file_list$period[i] 
-  # summary_file$geographic_detail[i] <- file_list$geography_detail[i]
-  # summary_file$data_source[i] <- file_list$data_source[i]
-  # 
+
   if(file_list$type[i]=="detailed"){##most detailed level of budgets 
     tmpData <- prep_detailed_uga_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                        file_list$start_date[i], file_list$qtr_number[i],
@@ -107,34 +56,9 @@ for(i in 1:length(file_list$file_name)){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
   tmpData$start_date <- as.Date(tmpData$start_date,  "%Y-%m-%d")
-  # if(file_list$type[i]=="detailed"){
-  #   summary_file$sda_detail[i] <- "Detailed"
-  # } else if (file_list$type[i]=="summary"){
-  #   summary_file$sda_detail[i] <- "Summary"
-  # } else if(!(tmpData$sda_activity[1]=="All")){
-  #   summary_file$sda_detail[i] <- "Detailed"
-  # } else {
-  #   summary_file$sda_detail[i] <- "None"
-  # }
-  # summary_file$end_date[i] <- ((max(tmpData$start_date))+file_list$period[i]-1)
-  # summary_file$start_date[i] <- min(tmpData$start_date) ##since there are multiple values in this, get the earliest start date 
-  # 
-  print(i)
+
+  print(paste0(i, " ", file_list$function_type[i], " ", file_list$grant_name[i])) ## if the code breaks, you know which file it broke on
 }
-
-
-## uncomment if you 
-# summary_file$end_date <- as.Date.(summary_file$end_date)
-# summary_file$start_date <- as.Date(summary_file$start_date)
-# resource_database$start_date <- as.Date(resource_database$start_date)
-# 
-# ##change the column names of the summary file variables so that they make sense: 
-# setnames(summary_file, c("Data Source",	"Year",	"Start Date", "End Date", "SDA Detail",	"Geographic Detail", "Temporal Detail",	"Grant", "Disease", "Location"))
-# 
-# ##export the summary table
-# ##(you might get a warning message about appending column names to the files; this should not affect the final output)
-# write.table(summary_file, paste0("file path where you want the summary file","resource_tracking_data_summary.csv"),
-#             append = TRUE, row.names=FALSE, sep=",")
 
 
 # ---------------------------------------------
@@ -257,7 +181,7 @@ uga_concat <- paste0(ugaData$module, ugaData$intervention)
 unmapped_mods <- ugaData[!uga_concat%in%gf_concat]
 
 if(nrow(unmapped_mods)>0){
-  stop("You have unmapped original modules/interventions!")
+  stop(paste0("You have unmapped original modules/interventions in ", country))
 }
 
 # ----------------------------------------------
@@ -271,7 +195,7 @@ uga_init_mapping <- merge(ugaData, gf_mapping_list, by=c("module", "intervention
 dropped_gf <- uga_init_mapping[is.na(uga_init_mapping$code)]
 
 if(nrow(dropped_gf)>0){
-  stop("Modules/interventions were dropped!")
+  stop(paste0("Modules/interventions were dropped in", country))
 }
 
 ##finally, merge the RT dataset to the GF framework list by code: 
@@ -308,6 +232,6 @@ data_check2 <-mappedUga[, sum(budget, na.rm = TRUE),by = c("module", "interventi
 export_dir <- "where you want the prepped dataset to live" 
 export_dir <- "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/"
 
-write.csv(mappedUga, paste0(export_dir, "prepped_budget_data.csv"), row.names = FALSE,
+write.csv(mappedUga, paste0(country_output_dir, "prepped_budget_data.csv"), row.names = FALSE,
           fileEncoding = "latin1")
 

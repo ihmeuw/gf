@@ -12,7 +12,7 @@
 # ----------------------------------------------
 ##Function to prepare the detailed budgets: 
 # ----------------------------------------------
-prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, recipient_name){
+prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant_name, recipient_name){
   
   ######## TROUBLESHOOTING HELP
   ### fill in variables below: inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, recipient_name 
@@ -20,26 +20,26 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ### look at gf_data and find what is being droped where.
   ########
   
-  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
+  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/grants/active/GTM-H-INCAP/budgets/'
   # dir = file_dir
-  # inFile = ""
-  # sheet_name = ""
-  # start_date = ""
-  # qtr_num =
-  # period =
-  # disease = ""
-  # lang = ""
-  # grant = ""
-  # recipient_name = ""
+  # inFile = "06 FR100-GTM-H_DB_INCAP_05feb2018.xlsx"
+  # sheet_name = "Detailed Budget"
+  # start_date = "2018-10-01"
+  # qtr_num = 9
+  # period = 90
+  # disease = "hiv"
+  # lang = "esp"
+  # grant_name = "GTM-H-INCAP"
+  # recipient_name = "INCAP"
+
   
-  
-  ##first determine if budget is in french or english
+  ##first determine if budget is in spanish or english
   if(lang=="eng"){
     cashText <- " Cash \r\nOutflow"
     loc_name <- "Geography/Location"
   } else{
     cashText <- "Salida de efectivo"
-    loc_name <-  "Localización"
+    loc_name <-  "Localizacion"
   }
   
   ## newer budgets use the label "Implementador" and the old ones use "Receptor" 
@@ -53,7 +53,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   if(lang=="eng"){
     qtr_names <- c("Module","Intervention", "Recipient", loc_name, rep(1, qtr_num))
   } else{ 
-    qtr_names <- c("Módulo", "Intervención","Descripción de la actividad","Categoría de Gastos"	,recipient, loc_name, rep(1, qtr_num))
+    qtr_names <- c("Modulo", "Intervencion","Descripcion de la actividad","Categoria de Gastos"	, recipient, loc_name, rep(1, qtr_num))
   }
   
   ##add in the quarter names to the list: 
@@ -76,10 +76,11 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   } else {
     gf_data <- data.table(read_excel(paste0(dir, inFile)))
   }
+  
 
   gf_data <- gf_data[,-c(1:2)]
   ##GUA-M-MSPAS formatted differently: 
-  if(grant=="GUA-M-MSPAS"){
+  if(grant_name=="GUA-M-MSPAS"){
     gf_data <- gf_data[-1,]
     colnames(gf_data) <- as.character(gf_data[1,])
     gf_data <- gf_data[-c(1:2),]
@@ -94,7 +95,8 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
       colnames(gf_data) <- as.character(gf_data[1,])
       gf_data <- gf_data[-1,]
       }
-    
+  
+  setnames(gf_data, fix_diacritics(names(gf_data)))
   ##only get the columns that we want
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
   
@@ -107,7 +109,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   colnames(gf_data)[4] <- "cost_category"
   
   if(!(recipient %in% colnames(gf_data))){
-   gf_data$recipient <- grant_number
+   gf_data$recipient <- grant_name
   } else{
     colnames(gf_data)[5] <- "recipient" 
     gf_data$recipient = recipient_name
@@ -123,7 +125,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ##library(reshape)
   setDT(gf_data)
   gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity","cost_category", "recipient", "loc_name"), 
-                    variable.name = "qtr", value.name="budget")
+                    variable.name = "qtr_num", value.name="budget")
 
   
   dates <- rep(ymd(start_date), qtr_num) # 
@@ -135,25 +137,23 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     }
   }
 
-  if(length(dates) != length(unique(gf_data1$qtr))){
+  if(length(dates) != length(unique(gf_data1$qtr_num))){
     stop('quarters were dropped!')
   }
   ##turn the list of dates into a dictionary (but only for quarters!) : 
-  dates <- setNames(dates,unique(gf_data1$qtr))
+  dates <- setNames(dates,unique(gf_data1$qtr_num))
   
   
   ## now match quarters with start dates 
-  kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
-  budget_dataset <-gf_data1[kDT, on=.(qtr), start_date := i.start_date ]
-  budget_dataset$qtr <- NULL
+  kDT = data.table(qtr_num = names(dates), value = TRUE, start_date = unname(dates))
+  budget_dataset <-gf_data1[kDT, on=.(qtr_num), start_date := i.start_date ]
+  budget_dataset$qtr_num <- NULL
   }
-  
+  budget_dataset$grant_number <- grant_name
   budget_dataset$period <- period
-  budget_dataset$grant_number <- grant
   budget_dataset$disease <- disease
   budget_dataset$expenditure <- 0 
   budget_dataset$lang <- lang
-  #budget_dataset$start_date <- start_date
 
   return(budget_dataset)  
 }

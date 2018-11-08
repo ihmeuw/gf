@@ -59,13 +59,14 @@ prep_other_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disea
   budget_dataset <-budget_dataset[kDT, on=.(qtr), start_date := i.start_date ]
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
-  budget_dataset$grant_number <- grant
+  #budget_dataset$grant_name <- grant
   budget_dataset$disease <- disease
   budget_dataset$expenditure <- 0 
   budget_dataset$lang <- lang
   budget_dataset$intervention <- "all"
   budget_dataset$cost_category <- "all"
   budget_dataset$recipient <- "MoH"
+  budget_dataset$grant_number = grant
   
   return(budget_dataset)  
 }
