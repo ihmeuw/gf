@@ -65,9 +65,6 @@ reverseLemonSqueeze = function(x) {
 data = data[is.finite(absorption) & absorption>=0]
 data[absorption>1, absorption:=1] 
 data[, absorption:=lemonSqueeze(absorption)]
-# data[absorption>=1, absorption:=max(data[absorption<1]$absorption)] 
-# data[absorption<=0, absorption:=min(data[absorption>0]$absorption)] 
-# data[, absorption:=logit(absorption)]
 # ----------------------------------------------------------------------
 
 
