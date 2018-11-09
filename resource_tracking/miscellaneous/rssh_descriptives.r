@@ -11,6 +11,7 @@
 rm(list=ls())
 library(data.table)
 library(readxl)
+library(stringr)
 # ------------------
 
 
@@ -18,10 +19,14 @@ library(readxl)
 # Directories and files
 
 # directory
-dir = 'J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/'
+j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
+dir = paste0(j, '/Project/Evaluation/GF/resource_tracking/multi_country/mapping/')
 
 # files
 inFile = paste0(dir, 'total_resource_tracking_data.csv')
+
+# output files for reference
+codRefFile = paste0(j,'/Project/Evaluation/GF/resource_tracking/cod/rssh_activities.csv')
 # -------------------------------------------------------------------------
 
 
@@ -29,18 +34,11 @@ inFile = paste0(dir, 'total_resource_tracking_data.csv')
 # Load/prep data
 
 # load resource tracking data
-data = fread(inFile)
+allData = fread(inFile)
+data = copy(allData)
 
 # subset to recent budgets only
-data = data[data_source=='fpm' & year>2013]
-
-# identify windows
-data[country=='Guatemala' & year>2017, window:='GTM 2018-2020']
-data[country=='Guatemala' & year<=2017, window:='GTM 2014-2017']
-data[country=='Uganda' & year>2016, window:='UGA 2017-2020']
-data[country=='Uganda' & year<=2016, window:='UGA 2014-2016']
-data[country=='Congo (Democratic Republic)' & year>2016, window:='DRC 2017-2020']
-data[country=='Congo (Democratic Republic)' & year<=2016, window:='DRC 2014-2016']
+data = data[data_source=='fpm' & as.numeric(str_sub(grant_period,1,4))>2013]
 
 # ignore program management
 data[gf_module=='Program management', code:=NA]
@@ -51,53 +49,67 @@ data[grant_number %in% c('UGD-708-G07-H', 'UGD-011-G10-S'), sda_activity:='Unspe
 
 # subset to RSSH
 data = data[grepl('R', code)]
+
+# iso codes
+data[country=='Guatemala', iso3:='GTM']
+data[country=='Uganda', iso3:='UGA']
+data[grepl('Congo', country), iso3:='COD']
 # -------------------------------------------
 
 
 # -------------------------------------------
 # Descriptives
 
-# largest RSSH modules by country and window
-byVars = by=c('window','gf_module')
-modTotals = data[grepl('R', code), .(budget=sum(budget), 
+# largest RSSH modules by country and grant_period
+byVars = by=c('grant_period','abbrev_module','iso3')
+modTotals = data[, .(budget=sum(budget), 
 		grants=paste(unique(grant_number), collapse=', ')), byVars]
 modTotals = modTotals[order(-budget)]
-modTotals[, rank:=seq(.N), by='window']
-modTotals[grepl('DRC',window) & rank<4][order(window)]
-modTotals[grepl('UGA',window) & rank<4][order(window)]
-modTotals[grepl('GTM',window) & rank<4][order(window)]
+modTotals[, rank:=seq(.N), by='grant_period']
+modTotals[iso3=='COD' & rank<4][order(grant_period)]
+modTotals[iso3=='UGA' & rank<4][order(grant_period)]
+modTotals[iso3=='GTM' & rank<4][order(grant_period)]
 
-# largest RSSH interventions by country and window
-byVars = by=c('window','abbrev_module','abbrev_intervention')
-intTotals = data[grepl('R', code), .(budget=sum(budget), 
+# largest RSSH interventions by country and grant_period
+byVars = by=c('grant_period','abbrev_module','abbrev_intervention','iso3')
+intTotals = data[, .(budget=sum(budget), 
 		grants=paste(unique(grant_number), collapse=', ')), byVars]
 intTotals = intTotals[order(-budget)]
-intTotals[, rank:=seq(.N), by='window']
-intTotals[grepl('DRC',window) & rank<4][order(window)]
-intTotals[grepl('UGA',window) & rank<4][order(window)]
-intTotals[grepl('GTM',window) & rank<4][order(window)]
+intTotals[, rank:=seq(.N), by='grant_period']
+intTotals[iso3=='COD' & rank<4][order(grant_period)]
+intTotals[iso3=='UGA' & rank<4][order(grant_period)]
+intTotals[iso3=='GTM' & rank<4][order(grant_period)]
 
-# largest RSSH activities by country and window
-byVars = by=c('window','abbrev_module','abbrev_intervention', 'sda_activity')
-activityTotals = data[grepl('R', code), .(budget=sum(budget), 
+# largest RSSH activities by country and grant_period
+byVars = by=c('grant_period','abbrev_module','abbrev_intervention', 'sda_activity','iso3')
+activityTotals = data[, .(budget=sum(budget), 
 		grants=paste(unique(grant_number), collapse=', ')), byVars]
 activityTotals = activityTotals[order(-budget)]
-activityTotals[, rank:=seq(.N), by='window']
-activityTotals[grepl('DRC',window) & rank<4][order(window)]
-activityTotals[grepl('UGA',window) & rank<4][order(window)]
-activityTotals[grepl('GTM',window) & rank<4][order(window)]
+activityTotals[, rank:=seq(.N), by='grant_period']
+l = 70
+activityTotals[, sda_activity:=str_sub(sda_activity,1,l)]
+activityTotals[iso3=='COD' & rank<4][order(grant_period)]
+activityTotals[iso3=='UGA' & rank<4][order(grant_period)]
+activityTotals[iso3=='GTM' & rank<4][order(grant_period)]
 
-# largest RSSH activities in latest window
-vars = c('abbrev_module','abbrev_intervention','sda_activity','budget','grants')
-activityTotals[window=='UGA 2017-2020' & rank<9, vars]
-activityTotals[window=='DRC 2017-2020' & rank<9, vars]
-activityTotals[window=='GTM 2018-2020' & rank<9, vars]
+# largest RSSH activities in latest grant_period
+vars = c('abbrev_module','abbrev_intervention','sda_activity','budget','grants','iso3')
+activityTotals[iso3=='COD' & grant_period=='2018-2020' & rank<9, vars, with=F]
 
-# largest RSSH activities by country and window
-byVars = by=c('country','start_date', 'sda_activity')
-activityTotalsY = data[grepl('R', code), .(budget=sum(budget)), byVars]
+# largest RSSH activities by country and grant_period
+byVars = by=c('iso3','start_date', 'sda_activity')
+activityTotalsY = data[grant_period=='2018-2020']
+activityTotalsY = activityTotalsY[, .(budget=sum(budget)), byVars]
+activityTotalsY[, sda_activity:=str_sub(sda_activity,1,l)]
 activityTotalsY = activityTotalsY[order(-budget)]
-bigActivities = unique(activityTotals[window=='UGA 2017-2020' & rank<10]$sda_activity)
-tmp = activityTotalsY[country=='Uganda' & sda_activity %in% bigActivities]
-dcast(tmp, country+sda_activity~start_date)
+bigActivities = unique(activityTotals[iso3=='COD' & grant_period=='2018-2020' & rank<10]$sda_activity)
+tmp = activityTotalsY[iso3=='COD' & sda_activity %in% bigActivities]
+tmp = tmp[, .(budget=sum(budget)), by=byVars]
+dcast(tmp, iso3+sda_activity~start_date)
+# -------------------------------------------
+
+
+# -------------------------------------------
+# Save reference files
+write.csv(activityTotals[iso3=='COD'], codRefFile, row.names=F)
 # -------------------------------------------
