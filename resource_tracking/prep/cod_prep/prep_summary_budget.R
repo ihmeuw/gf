@@ -27,17 +27,17 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   ### look at gf_data and find what is being droped where.
   ########
   
-  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/cod/gf/'
+  # file_dir <- 'official_budgets/COD-M-SANRU_SB2.xlsx'
   # dir = file_dir
-  # inFile = ""
-  # sheet_name = ""
-  # start_date = ""
-  # qtr_num =
-  # period =
-  # disease = ""
-  # recipient = ""
-  # lang = ""
-  # grant = ""
+  # inFile = 'official_budgets/COD-M-SANRU_SB2.xlsx'
+  # sheet_name = "Y compris EnquêteMortalité 822k"
+  # start_date = "2015-01-01"
+  # qtr_num = 12
+  # period = 90
+  # disease = "malaria"
+  # recipient = "MoH"
+  # lang = "fr"
+  # grant = "COD-M-SANRU"
   # source = "fpm"
   # loc_id = "cod"
   
@@ -47,7 +47,11 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   # ----------------------------------------------
   ## create a vector of start_dates that correspond to each quarter in the budget 
   
-  dates <- rep(as.Date(start_date), qtr_num) # 
+  str_replace(start_date, "\\\\", "")
+  start_date = substring(start_date, 2, 11) 
+  start_date = as.Date(start_date)
+  
+  dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
     if (i==1){
       dates[i] <- start_date
@@ -65,6 +69,12 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   } else {
     gf_data <- data.table(read_excel(paste0(dir, inFile)))
   }
+  # print(start_date)
+  # str_replace(start_date, "\\\\", "")
+  # print(start_date)
+  # start_date = substring(start_date, 2, 11)
+  # print(start_date)
+  # start_date = as.Date(start_date)
   
   colnames(gf_data)[1] <- "cost_category"
   ##only keep data that has a value in the "category" column 

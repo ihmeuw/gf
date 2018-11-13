@@ -141,7 +141,8 @@ gtmData$intervention = ifelse(gtmData$module =="atencionyprevenciondetuberculosi
 
 # ----------------------------------------------
 # Use this to check for any unmapped modules/interventions
-# ----------------------------------------------
+# ---------------------------------------------
+
 gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 gtm_concat <- paste0(gtmData$module, gtmData$intervention)
 unmapped_mods <- gtmData[!gtm_concat%in%gf_concat]

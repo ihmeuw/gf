@@ -19,6 +19,8 @@ source(paste0(code_dir, "cod_prep/prep_old_module_budget.R"))
 source(paste0(code_dir, "cod_prep/prep_cod_rejected.R"))
 source(paste0(code_dir, "cod_prep/prep_old_detailed_budget.R"))
 
+file_dir = "J:/Project/Evaluation/GF/resource_tracking/cod/gf/"
+
 # ----------------------------------------------
 ###### For loop that preps data and aggregates it
 # ----------------------------------------------
@@ -69,7 +71,7 @@ for(i in 1:length(file_list$file_name)){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
   
-  print(paste0(i, " ", file_list$function_type[i], " ", file_list$grant_name[i])) ## if the code breaks, you know which file it broke on
+  print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
 }
 
 # ---------------------------------------------
@@ -150,6 +152,15 @@ codData$intervention = ifelse(codData$module == "comprehensivepreventionprograms
 codData$module = ifelse(codData$module == "comprehensivepreventionprogramsforpeoplewhoinjectdrugspwidandtheirpartners", "comprehensivepreventionprogramsforpeoplewhoinjectdrugsandtheirpartners", 
                         codData$module)
 
+#---------------------------
+# Correct general acronyms 
+# -------------------------
+
+codData$module <- replace_acronyms(codData$module)
+codData$intervention = replace_acronyms(codData$intervention)
+
+gf_mapping_list$module <- replace_acronyms(gf_mapping_list$module)
+gf_mapping_list$intervention = replace_acronyms(gf_mapping_list$intervention)
 
 # ----------------------------------------------
 ########### USE THIS TO CHECK FOR UNMAPPED MODULE/INTERVENTIONS ##########

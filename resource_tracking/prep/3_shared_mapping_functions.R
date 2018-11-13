@@ -10,7 +10,6 @@
 # ----------------------------------------------
 
 fix_diacritics = function(x){
-  #print(x)
   replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
                            'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
                            'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
@@ -19,12 +18,17 @@ fix_diacritics = function(x){
   #print(names(replacement_chars))
   replace_me <- paste(names(replacement_chars), collapse='')
   replace_with <- paste(replacement_chars, collapse = '')
-  # print(length(replace_me))
-  # print(replace_me)
-  # print(length(replace_with))
-  # print(replace_with)
   return(chartr(replace_me, replace_with, x))
   
+}
+
+#--------------------------
+#Replaces common acronyms 
+#--------------------------
+replace_acronyms = function(x) {
+  x = gsub(x, 'fortgs', 'fortransgenderpeople')
+  x = gsub(x, 'pwid', 'peoplewhoinjectdrugs')
+  return(x)
 }
 
 

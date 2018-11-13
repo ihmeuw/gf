@@ -37,10 +37,10 @@ countries <- c("cod", "gtm", "uga") #Remove countries from this list that you do
 # ----------------------------------------------
 ## STEP 2: Verify country-level file list 
 # ----------------------------------------------
-  country = "gtm" 
+  country = "cod" 
   master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
   country_output_dir = paste0(master_file_dir, "prepped/")
-  file_list <- read.csv(paste0("J:/Project/Evaluation/GF/resource_tracking/gtm/gtm_budget_filelist.csv"), na.strings=c("","NA"),
+  file_list <- read.csv(paste0("J:/Project/Evaluation/GF/resource_tracking/cod/gf/cod_budget_filelist.csv"), na.strings=c("","NA"),
                         stringsAsFactors = FALSE) 
   
   colnames_desired = sort(c("file_name", "sheet", "start_date", "disease", "loc_id", "data_source", "qtr_num", "period", "grant_period", 

@@ -43,6 +43,7 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
     cashText <- "Sorties de tresorerie"
   }  
   
+  start_date = substring(start_date, 2, 11) #Strip quotation marks from string
   ## the recipient column is named differently, depending on if it's an older or newer budget 
   if(year(start_date)==2018){
     recipient <- "Implementer" 

@@ -38,6 +38,9 @@ prep_pudr_cod = function(dir, inFile, sheet_name, start_date, disease,
 
   ##read the data: 
   gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
+  str_replace(start_date, "\\\\", "")
+  start_date = substring(start_date, 2, 11)
+  start_date = as.Date(start_date)
   
   if(sheet_name == "RFA ALF_7B"){
  ## for the PUDRs w/out SR info
