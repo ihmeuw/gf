@@ -24,14 +24,14 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
   
   # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
   # dir = file_dir
-  # inFile = ""
-  # sheet_name = ""
-  # start_date = year("")
-  # qtr_num =
-  # period =
-  # disease = ""
-  # lang = ""
-  # grant = ""
+  # inFile = "GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xls"
+  # sheet_name = "INTEGRACION"
+  # start_date = year(2016)
+  # qtr_num = 1
+  # period = 122
+  # disease = "tb"
+  # lang = "esp"
+  # grant = "GTM-T-MSPAS"
   # source = "pudr"
   # loc_name = "gtm"
   

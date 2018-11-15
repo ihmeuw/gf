@@ -26,8 +26,10 @@ fix_diacritics = function(x){
 #Replaces common acronyms 
 #--------------------------
 replace_acronyms = function(x) {
-  x = gsub(x, 'fortgs', 'fortransgenderpeople')
-  x = gsub(x, 'pwid', 'peoplewhoinjectdrugs')
+  x = gsub('fortgs', 'fortransgenderpeople', x)
+  x = gsub('pwid', 'peoplewhoinjectdrugs', x)
+  x = gsub('msm', 'menwhohavesexwithmen', x)
+  x = gsub('stis', 'sexuallytransmittedinfections', x)
   return(x)
 }
 

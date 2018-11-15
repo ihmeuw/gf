@@ -19,13 +19,24 @@ source(paste0(code_dir, "cod_prep/prep_old_module_budget.R"))
 source(paste0(code_dir, "cod_prep/prep_cod_rejected.R"))
 source(paste0(code_dir, "cod_prep/prep_old_detailed_budget.R"))
 
-file_dir = "J:/Project/Evaluation/GF/resource_tracking/cod/gf/"
+file_list <- read.csv(paste0("J:/Project/Evaluation/GF/resource_tracking/cod/grants/cod_budget_filelist.csv"), na.strings=c("","NA"),
+                      stringsAsFactors = FALSE) 
 
 # ----------------------------------------------
 ###### For loop that preps data and aggregates it
 # ----------------------------------------------
 for(i in 1:length(file_list$file_name)){
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  version = "iterations"
+  version = ifelse(file_list$data_source[i] == "fpm" | file_list$data_source[i]=="pudr", "", version)
+  file_dir = paste0(master_file_dir, file_list$status[i], "/", file_list$grant[i], "/", folder, "/")
+  if (version != ""){
+    file_dir = paste0(file_dir, version, "/")
+  }
   
+  inFile = paste0(file_dir, file_list$file_name[i])
+
   if(file_list$type[i]=="summary"){
     tmpData <- prep_summary_budget(file_dir, as.character(file_list$file_name[i]),
                                   file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
@@ -152,6 +163,60 @@ codData$intervention = ifelse(codData$module == "comprehensivepreventionprograms
 codData$module = ifelse(codData$module == "comprehensivepreventionprogramsforpeoplewhoinjectdrugspwidandtheirpartners", "comprehensivepreventionprogramsforpeoplewhoinjectdrugsandtheirpartners", 
                         codData$module)
 
+#EKL 11/14/18, COD_C_CORDAID_catalytic_budget_27Feb2018.xlsx, LFA_Review_COD-C-CORDAID_PU 30 June 2018_Sent_27092018_OK.xlsx, NFMBudget_COD-H-CORDAID_Finance.xlsx, 
+#   Revised LFA_COD-H-MOH_PUDR_S2 2016 17.04.17 for denominator change.xlsx, COD-H-SANRU_Budget.xlsx, initial_gf_budgets_2018_2020.csv
+codData$module = ifelse(codData$module == "programmesdepreventiondestinesylapopulationgenerale", "programmesdepreventiondestinesslapopulationgenerale", codData$module)
+codData$intervention = ifelse(codData$intervention == 'diagnosticettraitementdesistetautresservicesliesylasantesexuellepourleshsh', "diagnosticettraitementdesistetautresservicesliesslasantesexuellepourleshsh", 
+                          codData$intervention)
+codData$module = ifelse(codData$module == "programmesdepreventioncompletsdestinesauxprofessionnelsdusexeetyleursclients","programmesdepreventioncompletsdestinesauxprofessionnelsdusexeetsleursclients", 
+                        codData$module)
+codData$intervention = ifelse(codData$module == "programmesdepreventiondestinesslapopulationgenerale" & codData$intervention == "changementdecomportementdanslecadredesprogrammesdestinesylapopulationgenerale", 
+                             "changementdecomportementdanslecadredesprogrammesdestinesslapopulationgenerale", codData$intervention)
+codData$module = ifelse(codData$module == "programmesdepreventioncompletsdestinesauxusagersdedroguesinjectablesetyleurspartenaires", "programmesdepreventioncompletsdestinesauxusagersdedroguesinjectablesetsleurspartenaires"
+                        , codData$module)
+codData$intervention = ifelse(codData$intervention == "diagnosticettraitementdesinfectionssexuellementtransmissiblesdanslecadredesprogrammesdestinesauxconsommateursdedroguesinjectablesetyleurspartenaires", 
+                             "diagnosticettraitementdesinfectionssexuellementtransmissiblesdanslecadredesprogrammesdestinesauxconsommateursdedroguesinjectablesetsleurspartenaires", codData$intervention )
+codData$intervention = ifelse(codData$intervention == "interventionsliesauxaiguillesetauxseringuesdestinesauxusagersdedroguesinjectablesetyleurspartenaires",
+                              "interventionsliesauxaiguillesetauxseringuesdestinesauxusagersdedroguesinjectablesetsleurspartenaires", codData$intervention)
+codData$module = ifelse(codData$module == "preventiondelatransmissiondelamcreylenfantptme", "preventiondelatransmissiondelamcreslenfantptme", codData$module )
+codData$module = ifelse(codData$module == "programmesvisantyreduirelesobstaclesliesauxdroitshumainsquientraventlacccsauxservicesvih", 
+                        "programmesvisantsreduirelesobstaclesliesauxdroitshumainsquientraventlacccsauxservicesvih", codData$module )
+codData$intervention = ifelse(codData$intervention == "servicesjuridiquesliesauvihetylacoinfectionvihtuberculose", "servicesjuridiquesliesauvihetslacoinfectionvihtuberculose", codData$intervention)
+codData$intervention = ifelse(codData$intervention == "ameliorationdesloisdesreglementationsetdespolitiquesrelativesauvihetylacoinfectionvihtuberculose", 
+                              "ameliorationdesloisdesreglementationsetdespolitiquesrelativesauvihetslacoinfectionvihtuberculose", codData$intervention)
+codData$intervention = ifelse(codData$intervention == "preservatifsdanslecadredesprogrammesdestinesylapopulationgenerale", "preservatifsdanslecadredesprogrammesdestinesslapopulationgenerale", 
+                              codData$intervention)
+codData$intervention = ifelse(codData$intervention == "formationdesprofessionnelsdesanteenmaticrededroitshumainsetdethiquemedicaleliesylaluttecontrelevihetylalutteconjointecontrelevihlatuberculose", 
+                              "formationdesprofessionnelsdesanteenmaticrededroitshumainsetdethiquemedicaleliesslaluttecontrelevihetslalutteconjointecontrelevihlatuberculose", codData$intervention)
+
+codData$module = ifelse(codData$module == "preventiondelatransmissiondelamcreylenfant", "preventiondelatransmissiondelamcreslenfant", codData$module)
+codData$intervention = ifelse(codData$module == "tbhiv" & codData$intervention == "communitytbcaredelivery" & codData$disease == "tb/hiv", "communitytbhivcaredelivery", codData$intervention)
+codData$intervention = ifelse(codData$intervention == "changementdecomportementdanslecadredesprogrammesdestinesylapopulationgenerale","changementdecomportementdanslecadredesprogrammesdestinesslapopulationgenerale", 
+                              codData$intervention)
+codData$intervention = ifelse(codData$intervention == "changementdecomportementdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients", "changementdecomportementdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetsleursclients", 
+                              codData$intervention)
+codData$intervention = ifelse(codData$intervention == "depistageduvihetconseildanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients","depistageduvihetconseildanslecadredesprogrammesdestinesauxprofessionnelsdusexeetsleursclients", 
+                              codData$intervention)
+codData$intervention = ifelse(codData$intervention == "volet1preventionprimairedelinfectionyvihchezlesfemmesenagedeprocreer", "volet1preventionprimairedelinfectionsvihchezlesfemmesenagedeprocreer", 
+                              codData$intervention)
+codData$intervention = ifelse(codData$intervention == "depistageduvihetconseildanslecadredesprogrammesdestinesylapopulationgenerale", "depistageduvihetconseildanslecadredesprogrammesdestinesslapopulationgenerale", 
+                              codData$intervention)
+codData$intervention = ifelse(codData$intervention == "autresinterventionsrealiseespourprevenirlatransmissiondelamcreylenfantveuillezpreciser","autresinterventionsrealiseespourprevenirlatransmissiondelamcreslenfantveuillezpreciser", 
+                              codData$intervention)
+codData$intervention = ifelse(codData$intervention == "preservatifsdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients", "preservatifsdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetsleursclients", 
+                              codData$intervention)
+codData$intervention = ifelse(codData$intervention == "diagnosticettraitementdesinfectionssexuellementtransmissiblesdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients", 
+                              "diagnosticettraitementdesinfectionssexuellementtransmissiblesdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetsleursclients", codData$intervention)
+codData$module = ifelse(codData$module == "depistageduvihetconseildanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients", "depistageduvihetconseildanslecadredesprogrammesdestinesauxprofessionnelsdusexeetsleursclients", 
+                        codData$module)
+codData$intervention = ifelse(codData$intervention == "diagnosticettraitementdesinfectionssexuellementtransmissiblesdanslecadredesprogrammesdestinesylapopulationgenerale", 
+                              "diagnosticettraitementdesinfectionssexuellementtransmissiblesdanslecadredesprogrammesdestinesslapopulationgenerale", codData$intervention )
+codData$intervention = ifelse(codData$intervention == "reductiondesrisquesdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients", "reductiondesrisquesdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetsleursclients", 
+                              codData$intervention)
+codData$intervention = ifelse(codData$module == "mdrtb" & codData$intervention == "otherservicedeliveryinterventions", "othermdrtbinterventions", codData$intervention)
+codData$module = ifelse(codData$intervention == "otherinterventionsforadolescentandyouth", "preventionprogramsforadolescentsandyouthinandoutofschool", codData$module)
+
+
 #---------------------------
 # Correct general acronyms 
 # -------------------------
@@ -170,7 +235,8 @@ cod_concat <- paste0(codData$module, codData$intervention)
 unmapped_mods <- codData[!cod_concat%in%gf_concat]
 
 if(nrow(unmapped_mods)>0){
-  print(unique(unmapped_mods[, c("module", "intervention", "fileName"), with= FALSE]))
+  print(unique(unmapped_mods[, c("module", "intervention", "sda_activity", "disease"), with= FALSE]))
+  print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
   stop("You have unmapped original modules/interventions!")
 }
 
@@ -178,21 +244,29 @@ if(nrow(unmapped_mods)>0){
 ########### map the RT data to the GF modular framework ##########
 # ----------------------------------------------
 
+#------------------------------------------------------------------------------------------------
+# Correct any modules/interventions/diseases that are being dropped. Add name, date, and filepath. 
+#------------------------------------------------------------------------------------------------
+
+#EKL 11/14/18 LFA_Review_COD-C-CORDAID_PU 30 June 2018_Sent_27092018_OK.xlsx - needed to reclassify combined tb/hiv grants as either one disease or the other. 
+codData$disease = ifelse((codData$module == "tbcareandprevention" | codData$module == "mdrtb") & codData$disease == "tb/hiv", "tb", codData$disease)
+codData$disease = ifelse((codData$module == "comprehensivepreventionprogramsfortransgenderpeople" | codData$module == "comprehensivepreventionprogramsforsexworkersandtheirclients" | codData$module == "comprehensivepreventionprogramsforpeoplewhoinjectdrugsandtheirpartners" 
+                          | codData$module == "comprehensivepreventionprogramsformenwhohavesexwithmen" | codData$module == "preventionprogramsforgeneralpopulation" | codData$module == "programstoreducehumanrightsrelatedbarrierstohivservices" | 
+                            codData$module == "preventionprogramsforadolescentsandyouthinandoutofschool")
+                         & codData$disease == "tb/hiv", "hiv", codData$disease)
+codData$disease = ifelse(codData$module == "treatmentcareandsupport" & codData$disease == "tb/hiv", "hiv", codData$disease)
+codData$disease = ifelse(codData$module == "pmtct" & codData$disease == "tb/hiv", "hiv", codData$disease)
+
+
 cod_init_mapping <- merge(codData, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE, allow.cartesian = TRUE)
-
-##use this to check if any modules/interventions were dropped:
-dropped_gf <- cod_init_mapping[is.na(cod_init_mapping$code)]
-
-if(nrow(dropped_gf)>0){
-  print(unique(dropped_gf[, c("module", "intervention", "disease", "fileName"), with= FALSE]))
-  stop("Modules/interventions were dropped!")
-}
 
 ## merge the dataset with the codes and coefficients to the Modular Framework
 mappedCod <- merge(cod_init_mapping, final_mapping, by="code", all.x=TRUE) 
+dropped_mods <- mappedCod[is.na(mappedCod$gf_module), ]
 
 if(sum(is.na(mappedCod$gf_module)) > 0){
   # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+  print(unique(dropped_mods[, c("module", "intervention", "disease", "code"), with= FALSE]))
   stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
 }
 
@@ -212,7 +286,7 @@ mappedCod$sda_activity <- ifelse(tolower(mappedCod$sda_activity) == "all" | mapp
 # ----------------------------------------------
 ## write as csv 
 # ----------------------------------------------
-write.csv(mappedCod, paste0(country_output_dir, "prepped_budget_data.csv"), fileEncoding = "latin1", row.names = FALSE)
+write.csv(mappedCod, paste0(export_dir, "prepped_budget_data.csv"), fileEncoding = "latin1", row.names = FALSE)
 
 
 

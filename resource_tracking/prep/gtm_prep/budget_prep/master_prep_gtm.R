@@ -9,6 +9,9 @@ source(paste0(code_dir, "gtm_prep/budget_prep/prep_fpm_other_budget.R"))
 source(paste0(code_dir, "gtm_prep/budget_prep/prep_fpm_other_detailed_budget.R"))
 source(paste0(code_dir, "gtm_prep/budget_prep/prep_gtm_pudr.R"))
 
+file_list <- read.csv(paste0("J:/Project/Evaluation/GF/resource_tracking/gtm/gtm_budget_filelist.csv"), na.strings=c("","NA"),
+                      stringsAsFactors = FALSE) 
+
 # ----------------------------------------------
 ###### For loop that preps data and aggregates it
 # --------------------------------------------
@@ -27,7 +30,7 @@ for(i in 1:length(file_list$file_name)){
     tmpData <- prep_fpm_summary_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                        ymd(file_list$start_date[i]), file_list$qtr_num[i], file_list$disease[i], file_list$period[i], 
                                        file_list$grant_name[i], file_list$primary_recipient[i], file_list$lang[i])
-    tmpData$loc_name <- "gtm"
+    tmpData$loc_id <- "gtm"
     tmpData$disbursement<- 0 
     
   } else if (file_list$function_type[i]=="detailed_other"){ ## there's an older version of detailed fpm budgets
@@ -39,7 +42,7 @@ for(i in 1:length(file_list$file_name)){
   } else if (file_list$function_type[i]=="pudr"){ 
     tmpData <- prep_gtm_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                           ymd(file_list$start_date[i]), file_list$qtr_num[i], file_list$disease[i], file_list$period[i], 
-                                          file_list$grant_name[i], file_list$data_source[i], file_list$loc_name[i], file_list$lang[i])
+                                          file_list$grant_name[i], file_list$data_source[i], file_list$loc_id[i], file_list$lang[i])
 
   } else if (file_list$function_type[i]=="other"){
     tmpData <- prep_other_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
@@ -47,7 +50,7 @@ for(i in 1:length(file_list$file_name)){
                                           file_list$lang[i], file_list$grant_name[i])
     tmpData$disbursement<- 0 
   }
-  tmpData$loc_name <- "gtm"
+  tmpData$loc_id <- "gtm"
   tmpData$data_source <- file_list$data_source[i]
   tmpData$fileName <- file_list$file_name[i]
   tmpData$grant_period <- file_list$grant_period[i]

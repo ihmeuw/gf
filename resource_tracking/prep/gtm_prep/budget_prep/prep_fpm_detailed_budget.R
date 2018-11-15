@@ -36,10 +36,10 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ##first determine if budget is in spanish or english
   if(lang=="eng"){
     cashText <- " Cash \r\nOutflow"
-    loc_name <- "Geography/Location"
+    loc_id <- "Geography/Location"
   } else{
     cashText <- "Salida de efectivo"
-    loc_name <-  "Localizacion"
+    loc_id <-  "Localizacion"
   }
   
   ## newer budgets use the label "Implementador" and the old ones use "Receptor" 
@@ -51,9 +51,9 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   ##names of the columns we want to ultimately go into our database: 
   if(lang=="eng"){
-    qtr_names <- c("Module","Intervention", "Recipient", loc_name, rep(1, qtr_num))
+    qtr_names <- c("Module","Intervention", "Recipient", loc_id, rep(1, qtr_num))
   } else{ 
-    qtr_names <- c("Modulo", "Intervencion","Descripcion de la actividad","Categoria de Gastos"	, recipient, loc_name, rep(1, qtr_num))
+    qtr_names <- c("Modulo", "Intervencion","Descripcion de la actividad","Categoria de Gastos"	, recipient, loc_id, rep(1, qtr_num))
   }
   
   ##add in the quarter names to the list: 
@@ -114,17 +114,17 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     colnames(gf_data)[5] <- "recipient" 
     gf_data$recipient = recipient_name
     }
-  if(!(loc_name %in% colnames(gf_data))){
-    gf_data$loc_name <- "gtm"
+  if(!(loc_id %in% colnames(gf_data))){
+    gf_data$loc_id <- "gtm"
   } else{
-    colnames(gf_data)[6] <- "loc_name" 
+    colnames(gf_data)[6] <- "loc_id" 
   }
   
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   ##library(reshape)
   setDT(gf_data)
-  gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity","cost_category", "recipient", "loc_name"), 
+  gf_data1<- melt(gf_data,id=c("module", "intervention","sda_activity","cost_category", "recipient", "loc_id"), 
                     variable.name = "qtr_num", value.name="budget")
 
   
