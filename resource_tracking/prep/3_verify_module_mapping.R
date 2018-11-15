@@ -103,4 +103,12 @@ if(nrow(map_subset)>0){
   stop(paste0(print(nrow(map_subset)), " duplicates in module/intervention have different mapping codes"))
 }
 
+#--------------------------------------------------------------------------------
+# 6. You should only have one phrase in each language mapping to an intervention code.
+#     For budget line items that don't match exactly, we should change them line by line 
+#     in an R-script so they are documented. ***EMILY KEEP WORKING HERE
+#--------------------------------------------------------------------------------
+
+#7- make sure we don't have any codes mapped where their prefix doesn't match their disease. 
+
 

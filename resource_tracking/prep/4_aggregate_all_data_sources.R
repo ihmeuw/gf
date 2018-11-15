@@ -5,17 +5,6 @@
 
 ### This code is to AGGREGATE all data sources from all countries: 
 
-# ----------------------------------------------
-# Set up R
-rm(list=ls())
-library(dplyr) 
-library(tools)
-library(data.table)
-library(lubridate)
-library(readxl)
-
-# ----------------------------------------------
-
 ##function to turn columns into date type variables: 
 
 # --------------------------------------------
@@ -53,6 +42,8 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 totalGtm$start_date <- as.Date(totalGtm$start_date,"%Y-%m-%d")
 sicoin_data$grant_period = year(sicoin_data$start_date)
+totalGtm$loc_name <- totalGtm$loc_id
+totalGtm$loc_id <- NULL 
 
 ## aggregate the sicoin and FPM data:
 totalGtm$country <- "Guatemala"

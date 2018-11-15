@@ -198,5 +198,3 @@ write.csv(mappedGtm, paste0("J:/Project/Evaluation/GF/resource_tracking/gtm/prep
 
 
 
-
-

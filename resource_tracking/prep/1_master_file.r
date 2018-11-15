@@ -13,6 +13,7 @@ library(data.table)
 library(readxl)
 library(stats)
 library(stringr)
+library(tools)
 library(rlang)
 library(zoo)
 library(tidyr)
@@ -25,19 +26,19 @@ user = "elineb" #Change to your username
 code_dir = paste0("C:/Users/", user, "/Documents/gf/resource_tracking/prep/")
 combined_output_dir = "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping"
 countries <- c("cod", "gtm", "uga") #Remove countries from this list that you don't want to update. 
-#source(paste0("C:/Users/", user, "/Documents/gf/resource_tracking/prep/3_shared_mapping_functions.R")) #Emily for some reason this isn't sourcing correctly. Check out what's going on. 
+source(paste0(code_dir, "2_shared_mapping_functions.R")) #Emily for some reason this isn't sourcing correctly. Check out what's going on. 
 
 # ----------------------------------------------
 ## STEP 1: Verify module mapping framework 
 # ----------------------------------------------
 
-#source(paste0(code_dir, "2_verify_module_mapping.r")) #Emily would eventually like to have this running continuously to make sure we don't create new errors in the database. 
+  #source(paste0(code_dir, "3_verify_module_mapping.r")) #Emily would eventually like to have this running continuously to make sure we don't create new errors in the database. 
 
 #for(i in 1:length(countries)){
 # ----------------------------------------------
 ## STEP 2: Verify country-level file list 
 # ----------------------------------------------
-  country = "cod" 
+  country = "gtm" 
   master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
   export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
   
