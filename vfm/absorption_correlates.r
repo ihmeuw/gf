@@ -52,6 +52,7 @@ data = allData[, list('budget'=sum(budget,na.rm=TRUE),
 data[, absorption:=expenditure/budget]
 
 # define lemon squeeze function (store N to global environment for later use)
+# citation: Smithson M, Verkuilen J. A better lemon squeezer? Maximum-likelihood regression with beta-distributed dependent variables. Psychological methods. 2006 Mar;11(1):54.
 lemonSqueeze = function(x) { 
 	N <<- length(x[!is.na(x)])
 	return(logit(((x*(N-1))+0.5)/N))
@@ -65,9 +66,6 @@ reverseLemonSqueeze = function(x) {
 data = data[is.finite(absorption) & absorption>=0]
 data[absorption>1, absorption:=1] 
 data[, absorption:=lemonSqueeze(absorption)]
-# data[absorption>=1, absorption:=max(data[absorption<1]$absorption)] 
-# data[absorption<=0, absorption:=min(data[absorption>0]$absorption)] 
-# data[, absorption:=logit(absorption)]
 # ----------------------------------------------------------------------
 
 
@@ -92,14 +90,14 @@ data[, num_modules:=length(unique(abbrev_module)), by='grant_number']
 # ----------------------------------------------------------
 # Run regressions
 
-# all confounding variables to SDA
+# all confounding variables just to assess their relationships
 form1 = as.formula('absorption ~ 
 					quarters_from_end + disease + country + 
 					log(total_budget) + num_modules')
 lmFit1 = lm(form1, data=data)
 summary(lmFit1)
 
-# program activity controlling for all confounders
+# module plus all confounders (the full model)
 form2 = as.formula('absorption ~ abbrev_module + 
 					quarters_from_end + disease + country + 
 					log(total_budget) + num_modules')
@@ -114,7 +112,6 @@ lmFit2 = lm(form2, data=data)
 coefs1 = data.table(cbind(names(coef(lmFit1)), summary(lmFit1)$coefficients, confint(lmFit1)))
 setnames(coefs1, c('variable','est','se','t','p','lower','upper'))
 coefs1 = coefs1[, lapply(.SD, as.numeric), .SDcols=c('est','p','lower','upper'), by='variable']
-# coefs1 = coefs1[, lapply(.SD, inv.logit), .SDcols=c('est','lower','upper'), by=c('variable','p')]
 
 # predictions from model 2 (full model) 
 # set to the most central categories for all other variables
@@ -128,7 +125,6 @@ coefs2[, country:='Congo (Democratic Republic)']
 coefs2[, total_budget:=median(data$total_budget)]
 coefs2[, num_modules:=median(data$num_modules)]
 coefs2 = cbind(coefs2, reverseLemonSqueeze(predict(lmFit2, newdata=coefs2, interval='confidence')))
-# coefs2 = cbind(coefs2, inv.logit(predict(lmFit2, newdata=coefs2, interval='confidence')))
 # -------------------------------------------------------------------------------------------------
 
 
@@ -209,17 +205,17 @@ p3 = ggplot(coefs2, aes(y=fit, ymin=lwr, ymax=upr, x=reorder(label,fit))) +
 # -------------------------------------------------------------------------------------------------
 
 
-# -----------------------------
+# --------------------------------
 # Save graphs
 pdf(outFile, height=6, width=10.5)
 p3
 p2
 p1
 dev.off()
-# -----------------------------
+# --------------------------------
 
 
-# -----------------------------
+# -------------------------------------
 # Save model output
 save(lmFit2, form2, N, file=regOutFile)
-# -----------------------------
+# -------------------------------------
