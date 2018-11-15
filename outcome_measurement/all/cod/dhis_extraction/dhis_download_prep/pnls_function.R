@@ -1,23 +1,59 @@
+# Prep the COD DHIS2 PNLS data - step 2 (after original prep and merge)
+# Drops out duplicate categories and prepares elements for division
+# Caitlin O'Brien-Carelli
+# 11/14/18
+# when time allows rewrite as a function
 
+# ----------------------------------------------
+# Set up R
 
-pnls_subset = function(x) {
+rm(list=ls())
+library(data.table)
+library(jsonlite)
+library(httr)
+library(ggplot2)
+library(dplyr)
+library(stringr) # to extract meta data from file names
+# --------------------
+
+# shell script
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_download
+
+# --------------------
+# set working directories
+
+# detect if operating on windows or on the cluster 
+root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+
+# set the directory for input and output
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+
+#-------------------------
+# function 
+
+x = readRDS(paste0(dir, 'prepped/pnls_drc_01_2017_07_2018_prepped.rds'))
+
+# reqrite as a function
+# pnls_subset = function(x) {
   
 # subset the pnls data set to only the relevant elements for analysis
 # save a smaller subset with less elements
 
-# load the original prepped data
-pnls = readRDS(paste0(dir, 'prepped/pnls_drc_01_2017_07_2018_prepped.rds'))
-
 # drop unecessary variables
-pnls[ , c('type', 'drug', 'tableau', 'coordinates',
+x[ , c('type', 'drug', 'tableau', 'coordinates',
           'opening_date', 'last_update', 'org_unit_type', 'month'):=NULL]
 
+# create a variable that contains only the last word
+x[ , last:=word(element, -1)]
+
 # drop anything containing soutien as the last word
-pnls[ ,last:=word(element, -1)]
-pnls = pnls[!grep('soutien', last)]
+x = x[!grep('soutien', last)]
 
 # drop out elements that end in 'sex' (remainder include sex and age)
-pnls = pnls[!grep('sex', last) ]
+x = x[!grep('sex', last)]
+
+# drop out elements that end in 'sex' (remainder include sex and age)
+x = x[!grep('age', last)]
 
 #---------------------------------------------
 
@@ -25,7 +61,7 @@ pnls = pnls[!grep('sex', last) ]
 # classify the elements
 
 # create an element easier to grep
-pnls[ , element1:=tolower(element)]
+x[ , element1:=tolower(element)]
 
 # drop diacritical marks
 fix_diacritics <- function(x) {
@@ -42,11 +78,12 @@ fix_diacritics <- function(x) {
 }
 
 # run the function to eliminate diacritical marks
-pnls[ , element1:=fix_diacritics(element1)]
-pnls[ ,last:=NULL]
+x[ , element1:=fix_diacritics(element1)]
+x[ ,last:=NULL]
 #-------------------------------
-# save the smaller file
- return(x)
+
+# return the subset
+# return(x)
   
-  
-}
+# save the cleaned output
+saveRDS(x, paste0(dir, 'prepped/pnls_drc_01_2017_07_2018_prepped_subset.rds'))
