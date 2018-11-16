@@ -92,13 +92,7 @@ average_absorption = average_absorption[, keepVars, with=FALSE]
 average_absorption[, grant:=paste0(country, ' ', grant_number, ' (Q', quarter, ' ', year, ')')]
 average_absorption = dcast.data.table(average_absorption, disease+abbrev_module~grant, fun=sum, value.var=c('budget', 'observed_absorption'))
 
-# order columns
-# names = names(average_absorption)[grepl('budget',names(average_absorption))]
-# grants1 = gsub('budget_','',names)
-# vars = as.vector(average_absorption(c('budget_','observed_absorption_'), grants1, paste0))
-# average_absorption = average_absorption[, c('disease','abbrev_module',vars), with=FALSE]
-
-#Round to 1 decimal place 
+#Round to 2 decimal place 
 cols <- names(average_absorption)[3:length(average_absorption)]
 average_absorption = average_absorption[,(cols) := round(.SD,2), .SDcols=cols]
 
@@ -129,24 +123,24 @@ gtm_t_mspas <- subset_columns(average_absorption, "GTM-T-MSPAS") #We don't have 
 #---------------------------------------------
 
 # subset to GOS and PUDRs
-historical_exp = allData[data_source %in% c('gos')]
+historical_absorption = allData[data_source %in% c('gos')]
 
 # aggregate the PUDRs by grant but GOS overall
-historical_exp[data_source=='gos', grant_number:='all']
-historical_exp[data_source=='gos', grant_period:='all']
+historical_absorption[data_source=='gos', grant_number:='all']
+historical_absorption[data_source=='gos', grant_period:='all']
 
 # identify RSSH modules
-historical_exp[, rssh:=grepl('R',code)]
+historical_absorption[, rssh:=grepl('R',code)]
 
 # compute absorption by module
 byVars = c('country', 'disease', 'grant_period','abbrev_module')
-historical_exp = historical_exp[, .(expenditure=sum(expenditure, na.rm=T), budget=sum(budget,na.rm=T)), by=byVars]
-historical_exp[, absorption:=expenditure/budget]
+historical_absorption = historical_absorption[, .(expenditure=sum(expenditure, na.rm=T), budget=sum(budget,na.rm=T)), by=byVars]
+historical_absorption[, absorption:=expenditure/budget]
 
 #Want to collapse on grant_number and abbrev_module to get average over time. 
-historical_exp = summaryBy(absorption~country+disease+abbrev_module, FUN=c(mean), data = historical_exp)
-historical_exp$absorption.mean <- round(historical_exp$absorption.mean, 2)
+historical_absorption = summaryBy(absorption~country+disease+abbrev_module, FUN=c(mean), data = historical_absorption)
+historical_absorption$absorption.mean <- round(historical_absorption$absorption.mean, 2)
 
-write.csv(historical_exp, "J:/Project/Evaluation/GF/vfm/average_absorptionputs/historical_absorption_by_country_and_disease.csv", row.names = F)
+write.csv(historical_absorption, "J:/Project/Evaluation/GF/vfm/average_absorptionputs/historical_absorption_by_country_and_disease.csv", row.names = F)
 
 

@@ -18,17 +18,17 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ### look at gf_data and find what is being droped where.
   ########
   
-  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/uga/gf/'
+  # file_dir <- "J:/Project/Evaluation/GF/resource_tracking/uga/grants/active/UGA-C-TASO/budgets/"
   # dir = file_dir
-  # inFile = ""
-  # sheet_name = ""
-  # start_date = ""
-  # qtr_num =
-  # period =
-  # disease = ""
-  # grant = ""
+  # inFile = "UGA-C-TASO_DB_ IMPP2_17 Dec_GF Final.xlsx"
+  # sheet_name = "Detailed Budget"
+  # start_date = "2018-01-01"
+  # qtr_num = 12
+  # period = 90
+  # disease = "hiv/tb"
+  # grant = "UGA-C-TASO"
   # cashText = " Cash Outflow"
-  # data_source = "fpm"
+  # data_source = "init_fpm_dec"
 
   
   #   
@@ -46,6 +46,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     return(qtr_names)
   }
   
+  start_date = substring(start_date, 2, 11) #Strip quotation marks from string
   ##create list of column names: 
   if(start_date=="2018-01-01"){
     qtr_names <- c("Module","Intervention", "Activity Description","Cost Input", "Implementer", rep(1, qtr_num))
@@ -58,8 +59,6 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ##read the data from excel: 
   gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=sheet_name))
   
-  
-  
   ##approved budgets are formatted slightly differently - so this code takes care of that: 
   if(start_date=="2018-01-01"){
     gf_data <- gf_data[-c(1:2),]
@@ -67,6 +66,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     gf_data <- gf_data[-1,]
   }
   
+
   #3only grab the columns we want (program activity, recipient, and quarterly data) :
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
   
@@ -85,6 +85,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity", "cost_category","recipient"), variable.name = "qtr", value.name="budget")
   
   ##create vector that maps quarters to their start dates: 
+  start_date = as.Date(start_date)
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
     if (i==1){

@@ -42,6 +42,9 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   
+  str_replace(start_date, "\\\\", "")
+  start_date = substring(start_date, 2, 11)
+  start_date = as.Date(start_date)
   ## the malaria PUDRs are set up differently than the HIV ones
   if(grant%in%c("UGD-708-G08-M") & sheet_name=="EFR Malaria Financial Data_3B"){
     gf_data <- gf_data[, -c(1:3)]

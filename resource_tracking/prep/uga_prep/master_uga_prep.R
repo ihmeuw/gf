@@ -12,8 +12,9 @@
 source(paste0(code_dir, "uga_prep/prep_detailed_uga_budget.R"))
 source(paste0(code_dir, "uga_prep/prep_summary_uga_budget.R"))
 source(paste0(code_dir, "uga_prep/prep_pudr_uga.R"))
-source(paste0(code_dir,"map_modules_and_interventions.R"))
 
+file_list <- read.csv(paste0("J:/Project/Evaluation/GF/resource_tracking/uga/grants/uga_budget_filelist.csv"), na.strings=c("","NA"),
+                      stringsAsFactors = FALSE)
 
 # ---------------------------------------------
 ########## Set up variables and load the prep files ########
@@ -27,6 +28,9 @@ source <- "gf" ## denotes the type of data (e.g. government expenditures, Global
 # ---------------------------------------------
 
 for(i in 1:length(file_list$file_name)){ 
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  file_dir = paste0(master_file_dir, file_list$status[i], "/", file_list$grant[i], "/", folder, "/")
 
   if(file_list$type[i]=="detailed"){##most detailed level of budgets 
     tmpData <- prep_detailed_uga_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
@@ -57,7 +61,7 @@ for(i in 1:length(file_list$file_name)){
   }
   tmpData$start_date <- as.Date(tmpData$start_date,  "%Y-%m-%d")
 
-  print(paste0(i, " ", file_list$function_type[i], " ", file_list$grant_name[i])) ## if the code breaks, you know which file it broke on
+  print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
 }
 
 
@@ -179,8 +183,11 @@ ugaData$intervention = ifelse(ugaData$intervention == "informationsystemoperatio
 gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 uga_concat <- paste0(ugaData$module, ugaData$intervention)
 unmapped_mods <- ugaData[!uga_concat%in%gf_concat]
+unmapped_mods<- unique(unmapped_mods, by = c("module", "intervention", "sda_activity"))
+write.csv(unmapped_mods, "C:/Users/elineb/Desktop/unmapped_mods_uga_11.15.2018.csv", row.names = F)
 
 if(nrow(unmapped_mods)>0){
+  print(unique(unmapped_mods[, c("module", "intervention")]))
   stop(paste0("You have unmapped original modules/interventions in ", country))
 }
 

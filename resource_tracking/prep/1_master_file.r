@@ -38,7 +38,7 @@ source(paste0(code_dir, "2_shared_mapping_functions.R")) #Emily for some reason 
 # ----------------------------------------------
 ## STEP 2: Verify country-level file list 
 # ----------------------------------------------
-  country = "gtm" 
+  country = "uga" 
   master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
   export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
   
