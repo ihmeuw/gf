@@ -14,6 +14,8 @@ library(boot)
 library(data.table)
 library(ggplot2)
 library(doBy)
+library(googlesheets)
+library(reshape2)
 # ------------------
 
 
@@ -125,6 +127,9 @@ gtm_t_mspas <- subset_columns(average_absorption, "GTM-T-MSPAS") #We don't have 
 # subset to GOS and PUDRs
 historical_absorption = allData[data_source %in% c('gos')]
 
+#Only use GOS data from 2012 on 
+historical_absorption = historical_absorption[year >= 2012]
+
 # aggregate the PUDRs by grant but GOS overall
 historical_absorption[data_source=='gos', grant_number:='all']
 historical_absorption[data_source=='gos', grant_period:='all']
@@ -142,5 +147,48 @@ historical_absorption = summaryBy(absorption~country+disease+abbrev_module, FUN=
 historical_absorption$absorption.mean <- round(historical_absorption$absorption.mean, 2)
 
 write.csv(historical_absorption, "J:/Project/Evaluation/GF/vfm/average_absorptionputs/historical_absorption_by_country_and_disease.csv", row.names = F)
+
+#---------------------------------------------
+# PART 3: Generate combined graph using 
+#         consortia's numbers 
+#---------------------------------------------
+
+library(googlesheets)
+gs_gap() %>%
+  gs_copy(to = "MyDrive")
+consortia_data <- gs_title("Absorption Table")
+malaria <- gs_read(consortia_data, ws = "Malaria")
+hiv <- gs_read(consortia_data, ws = "HIV")
+tb <- gs_read(consortia_data, ws = "TB")
+hivtb <- gs_read(consortia_data, ws = "HIV-TB")
+
+#Subset columns by grant so they can be re-combined 
+grant_indices <- seq(2,ncol(malaria),3)
+names(malaria)[2:ncol(malaria)] <- rep(c("budget", "absorption_q1_2018", "historical_absorption"), ncol(malaria)/3)
+
+prep_data = function(df, col_index) {
+  df <- df[c(1,col_index:(col_index+2))]
+  df$grant <- df$budget[1]
+  df = df[3:nrow(df), ]
+  
+}
+
+for (index in grant_indices){
+  df <- prep_data(malaria, index)
+  if (index == 2) {
+    malaria_prepped <- df 
+  } else {
+    malaria_prepped = rbind(malaria_prepped, df)  
+    
+  }
+  print(index)
+}
+
+names(malaria_prepped)[1] <- "gf_module"
+malaria_melt <- melt(malaria_prepped, id = c("gf_module", "grant"))
+malaria_observed<-dcast(malaria_melt, gf_module ~ variable)
+
+
+
 
 

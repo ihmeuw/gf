@@ -184,7 +184,6 @@ gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 uga_concat <- paste0(ugaData$module, ugaData$intervention)
 unmapped_mods <- ugaData[!uga_concat%in%gf_concat]
 unmapped_mods<- unique(unmapped_mods, by = c("module", "intervention", "sda_activity"))
-write.csv(unmapped_mods, "C:/Users/elineb/Desktop/unmapped_mods_uga_11.15.2018.csv", row.names = F)
 
 if(nrow(unmapped_mods)>0){
   print(unique(unmapped_mods[, c("module", "intervention")]))
