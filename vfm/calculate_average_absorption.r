@@ -153,7 +153,6 @@ write.csv(historical_absorption, "J:/Project/Evaluation/GF/vfm/average_absorptio
 #         consortia's numbers 
 #---------------------------------------------
 
-library(googlesheets)
 gs_gap() %>%
   gs_copy(to = "MyDrive")
 consortia_data <- gs_title("Absorption Table")
@@ -162,31 +161,44 @@ hiv <- gs_read(consortia_data, ws = "HIV")
 tb <- gs_read(consortia_data, ws = "TB")
 hivtb <- gs_read(consortia_data, ws = "HIV-TB")
 
-#Subset columns by grant so they can be re-combined 
+#Subset columns by grant so they can be re-combined
 grant_indices <- seq(2,ncol(malaria),3)
 names(malaria)[2:ncol(malaria)] <- rep(c("budget", "absorption_q1_2018", "historical_absorption"), ncol(malaria)/3)
-
+    
 prep_data = function(df, col_index) {
-  df <- df[c(1,col_index:(col_index+2))]
-  df$grant <- df$budget[1]
-  df = df[3:nrow(df), ]
-  
-}
-
+    df <- df[c(1,col_index:(col_index+2))]
+    df$grant <- df$budget[1]
+    df = df[3:nrow(df), ]
+  }
+    
 for (index in grant_indices){
   df <- prep_data(malaria, index)
   if (index == 2) {
     malaria_prepped <- df 
   } else {
     malaria_prepped = rbind(malaria_prepped, df)  
-    
+        
   }
   print(index)
 }
-
+    
 names(malaria_prepped)[1] <- "gf_module"
-malaria_melt <- melt(malaria_prepped, id = c("gf_module", "grant"))
-malaria_observed<-dcast(malaria_melt, gf_module ~ variable)
+#Format as numeric 
+  for (col in 2:4){
+    malaria_prepped[, col] <- gsub("[^0-9\\.]", "", malaria_prepped[[col]])
+    malaria_prepped[, col] <- as.numeric(malaria_prepped[[col]])
+ }
+
+malaria_prepped[is.na(malaria_prepped)] <- 0
+malaria_prepped$country <- substring(malaria_prepped$grant, 1, 3)
+malaria_melt <- melt(malaria_prepped, id = c("gf_module", "country"))
+malaria_observed<-dcast(malaria_melt, gf_module ~ variable, fun = list(min, max, mean))
+
+# Thinking about this more, my guess is that the best way to display the absorption data is 
+# probably a horizontal point-range graph showing the min/mean/max for each module, faceted by disease. 
+# Can you make one that’s super minimal but has kind of large text (check out base_size ggplot) 
+# so we can shrink it down pretty small in the report? Doesn’t have to be today. 
+
 
 
 

@@ -34,53 +34,57 @@ data[grepl('MoFPED', grant_number) & recipient %in% c('MoFPED','Ministry of Fina
                                                       Planning and Economic Development of the Republic of Uganda'), SR:=FALSE]
 data[grepl('TASO', grant_number) & recipient %in% c('TASO','The AIDS Support Organisation (Uganda) Limited'), SR:=FALSE]
 
-#Subset to q1 and q2 of 2015-2017 grants 
-data[grant_period == "2015-2017" & (start_date == "2015-01-01" | start_date == "2015-04-01")]
+#Subset to 2015-2017
+data = data[grant_period == "2015-2017"]
 
 #--------------------------------------------------
 # Split by recipient, and see if there is a difference 
 #   in modules/interventions between the two. 
 #-------------------------------------------------
-data <- data[, c("gf_module", "gf_intervention", "budget", "SR")] 
+data <- data[, c("gf_module", "gf_intervention", "budget", "SR", "start_date")] 
 
 sr <- data[SR == T]
 pr <- data[SR == F]
 
-sr = sr[, 1:3]
-pr = pr[, 1:3]
-
 sr = as.data.table(sr)
 pr = as.data.table(pr)
 
+#Subset to q1 and q2 for comparison 
+sr_q1q2 <- sr[start_date == "2015-01-01" | start_date == "2015-04-01"]
+pr_q1q2 <- pr[start_date == "2015-01-01" | start_date == "2015-04-01"]
+
+sr <- sr[, 1:3] 
+pr <- pr[, 1:3] 
+sr_q1q2 <- sr_q1q2[, 1:3]
+pr_q1q2 <- pr_q1q2[, 1:3]
+
+#Melt and cast data tables to sum absorption by module/intervention 
 sr = melt(sr, id = c("gf_module", "gf_intervention"))
 sr = dcast(sr, gf_module+gf_intervention ~ variable, fun = sum)
 pr = melt(pr, id = c("gf_module", "gf_intervention"))
 pr = dcast(pr, gf_module+gf_intervention ~ variable, fun = sum)
 
-#-------------------------------------------------
-# Generate a coefficient to represent the % of overall 
-# budget that's going to that module/intervention 
-# ------------------------------------------------
-total_budget_pr = sum(pr$budget)
-total_budget_sr = sum(sr$budget)
-
-pr$coefficient = pr$budget/total_budget_pr 
-sr$coefficient = sr$budget/total_budget_sr
-
-pr$coefficient = round(pr$coefficient, 3)
-sr$coefficient = round(sr$coefficient, 3)
-
-# Remove all rows with 0's for coefficients. 
-pr = pr[coefficient!=0]
-sr = sr[coefficient!=0]
+sr_q1q2 = melt(sr_q1q2, id = c("gf_module", "gf_intervention"))
+sr_q1q2 = dcast(sr_q1q2, gf_module+gf_intervention ~ variable, fun = sum)
+pr_q1q2 = melt(pr_q1q2, id = c("gf_module", "gf_intervention"))
+pr_q1q2 = dcast(pr_q1q2, gf_module+gf_intervention ~ variable, fun = sum)
 
 #---------------------------------------------------------
 #Merge back together to compare, and isolate SR activities 
 #---------------------------------------------------------
+# identify module/interventions with large proportion budgeted to SRs
 combined <- merge(pr, sr, by = c("gf_module", "gf_intervention"), suffixes = c(".pr", ".sr"), all = T)
-sr_activities <- combined[is.na(coefficient.pr)]
-sr_activities = sr_activities[, c(-3, -4)]
-rm(pr, sr, combined) #Clean up workspace 
+setDT(combined)
+combined[, sr_fraction:=budget.sr/(budget.sr+budget.pr)]
+sr_activities = combined[sr_fraction>.9] 
+
+# identify module/interventions with large proportion budgeted to SRs, q1 and q2 of grants only 
+combined <- merge(pr_q1q2, sr_q1q2, by = c("gf_module", "gf_intervention"), suffixes = c(".pr", ".sr"), all = T)
+setDT(combined)
+combined[, sr_fraction:=budget.sr/(budget.sr+budget.pr)]
+sr_activities_q1q2 = combined[sr_fraction>.9] 
+
+rm(pr, sr, pr_q1q2, sr_q1q2, combined) #Clean up workspace 
 
 #-----------------------------------------------------------------
 # Calculate average absorption for these activities using GOS data 
@@ -100,24 +104,31 @@ gos <- gos[year >= 2012]
 
 #Merge GOS data with sr_activities found above 
 target_gos_interventions <- merge(gos, sr_activities, all.y = TRUE, by = c('gf_module', 'gf_intervention'))
+target_gos_interventions_q1q2 <- merge(gos, sr_activities_q1q2, all.y = TRUE, by = c('gf_module', 'gf_intervention'))
 
 # compute absorption by module and intervention
 byVars = c('disease', 'abbrev_module', 'abbrev_intervention')
 target_gos_interventions = target_gos_interventions[, .(expenditure=sum(expenditure, na.rm=T), budget=sum(budget,na.rm=T)), by=byVars]
 target_gos_interventions[, absorption:=expenditure/budget]
+target_gos_interventions_q1q2 = target_gos_interventions_q1q2[, .(expenditure=sum(expenditure, na.rm=T), budget=sum(budget,na.rm=T)), by=byVars]
+target_gos_interventions_q1q2[, absorption:=expenditure/budget]
 
 #Want to collapse on grant_number and module/intervention to get average over time. 
 target_gos_interventions = summaryBy(absorption~disease+abbrev_module+abbrev_intervention, FUN=c(mean), data = target_gos_interventions)
 target_gos_interventions$absorption.mean <- round(target_gos_interventions$absorption.mean, 2)
+target_gos_interventions_q1q2 = summaryBy(absorption~disease+abbrev_module+abbrev_intervention, FUN=c(mean), data = target_gos_interventions_q1q2)
+target_gos_interventions_q1q2$absorption.mean <- round(target_gos_interventions_q1q2$absorption.mean, 2)
 
 #Remove one row at end that has "NA" for module/intervention 
 target_gos_interventions = target_gos_interventions[!is.na(abbrev_module)]
+target_gos_interventions_q1q2 = target_gos_interventions_q1q2[!is.na(abbrev_module)]
 
 #Clean up workspace 
-rm(byVars, dir, inFile, total_budget_pr, total_budget_sr)
+rm(byVars, dir, inFile)
 
-#--------------------------------------------------
-# View target_gos_interventions for final result
-#--------------------------------------------------
+#----------------------------------------------------------------
+# View target_gos_interventions and target_gos_interventions_q1q2
+#   for final result. 
+#----------------------------------------------------------------
 
 
