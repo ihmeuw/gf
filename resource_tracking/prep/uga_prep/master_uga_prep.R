@@ -23,6 +23,11 @@ cashText <- " Cash Outflow" ##we'll need this to grab the right columns from the
 loc_name <- 'uga' ##change this when we can get subnational data 
 source <- "gf" ## denotes the type of data (e.g. government expenditures, Global fund, etc.)
 
+setDT(file_list)
+file_list = file_list[iteration == "final"] #Emily, figure out a more elegant way to do this, but for right now just want the final version of each file. 
+duplicates = file_list[duplicated(file_list, by = c("grant", "start_date", "data_source")), ]
+file_list$iteration <- NULL
+
 # ---------------------------------------------
 ########## Run the for loop that preps data ########
 # ---------------------------------------------
@@ -170,16 +175,44 @@ ugaData$intervention = ifelse(ugaData$intervention == "supportiveenvironmentothe
 ugaData$intervention = ifelse(ugaData$intervention == "informationsystemoperationalresearch" & ugaData$module == 'malhealthsystemsstrengthening',
                               "informationsystem", ugaData$intervention)
 
+#-----------------------------------------------------------------------
+# Manually adjust unmapped modules- comment initials, date, and file name
+#-----------------------------------------------------------------------
+# EKL 11/21/18, LFA reviewed UGA-T-MOFPED PUDR PE 31Dec2015_final.xlsx
+ugaData$intervention = ifelse(ugaData$module == "tbhivcommunitytbcaredelivery" & ugaData$intervention == "all", "communitytbhivcaredelivery", ugaData$intervention)
+ugaData$module = ifelse(ugaData$module == "tbhivcommunitytbcaredelivery" & ugaData$intervention == "communitytbhivcaredelivery", "tbhiv", ugaData$module)
+
+ugaData$intervention = ifelse(ugaData$module == "tbcareandpreventiontreatment" & ugaData$intervention == "all", "treatment", ugaData$intervention)
+ugaData$module = ifelse(ugaData$module == "tbcareandpreventiontreatment" & ugaData$intervention == "treatment", "tbcareandprevention", ugaData$module)
+
+ugaData$intervention = ifelse(ugaData$module == "tbhivtbhivcollaborativeinterventions" & ugaData$intervention == "all", "tbhivcollaborativeinterventions", ugaData$intervention)
+ugaData$module = ifelse(ugaData$module == "tbhivtbhivcollaborativeinterventions" & ugaData$intervention == "tbhivcollaborativeinterventions", "tbhiv", ugaData$module)
+
+ugaData$intervention = ifelse(ugaData$module == "tbhivcollaborativeactivitieswithotherprogramsandsectors" & ugaData$intervention == "all", "collaborativeactivitieswithotherprogramsandsectors", ugaData$intervention)
+ugaData$module = ifelse(ugaData$module == "tbhivcollaborativeactivitieswithotherprogramsandsectors" & ugaData$intervention == "collaborativeactivitieswithotherprogramsandsectors", "tbhiv", ugaData$module)
+
+ugaData$intervention = ifelse(ugaData$module == "mdrtbcasedetectionanddiagnosismdrtb" & ugaData$intervention == "all", "casedetectionanddiagnosismdrtb", ugaData$intervention)
+ugaData$intervention = ifelse(ugaData$module == "mdrtbpreventionformdrtb" & ugaData$intervention == "all", "preventionformdrtb", ugaData$intervention)
+ugaData$module = ifelse(ugaData$module == "mdrtbtreatmentmdrtb" & ugaData$intervention == "all", "treatmentmdrtb", ugaData$module)
+ugaData$intervention = ifelse(ugaData$module == "mdrtbcommunitytbcaredelivery" & ugaData$intervention == "all", "communitymdrtbcaredelivery", ugaData$intervention)
+ugaData$intervention = ifelse(ugaData$module == "mdrtbkeyaffectedpopulations" & ugaData$intervention == "all", "keyaffectedpopulations", ugaData$intervention)
+
+ugaData$module = ifelse(ugaData$module %in% c("mdrtbcasedetectionanddiagnosismdrtb", "mdrtbpreventionformdrtb", "mdrtbcommunitytbcaredelivery", "mdrtbkeyaffectedpopulations"), "mdrtb", ugaData$module)
+
+ugaData$intervention = ifelse(ugaData$module == "healthinformationsystemsandmeroutinereporting" & ugaData$intervention == "all", "routinereporting", ugaData$intervention)
+ugaData$intervention = ifelse(ugaData$module == "healthinformationsystemsandmeanalysisreviewandtransparency" & ugaData$intervention == "all", "analysisreviewandtransparency", ugaData$intervention)
+ugaData$intervention = ifelse(ugaData$module == "healthinformationsystemsandmesurveys" & ugaData$intervention == "all", "surveys", ugaData$intervention)
+
+ugaData$module = ifelse(ugaData$module %in% c("healthinformationsystemsandmeroutinereporting", "healthinformationsystemsandmeanalysisreviewandtransparency", "healthinformationsystemsandmesurveys"), "healthinformationsystemsandme", ugaData$module)
 
 
-#optional: check again for any dropped data: 
-# data_check2<- as.data.frame(ugaData[, sum(budget, na.rm = TRUE),by = c("grant_number", "data_source","disease")])
+ugaData$intervention = ifelse(ugaData$module == "communitysystemsstrengtheningcommunitybasedmonitoringforaccountability" & ugaData$intervention == "all", "communitybasedmonitoringforaccountability", ugaData$intervention)
+ugaData$intervention = ifelse(ugaData$module == "communitysystemsstrengtheningsocialmobilizationbuildingcommunitylinkagescollaborationandcoordination" & ugaData$intervention == "all", "socialmobilizationbuildingcommunitylinkagescollaborationandcoordination", ugaData$intervention)
+ugaData$module = ifelse(ugaData$module %in% c("communitysystemsstrengtheningcommunitybasedmonitoringforaccountability", "communitysystemsstrengtheningsocialmobilizationbuildingcommunitylinkagescollaborationandcoordination"), "communitysystemsstrengthening", ugaData$module)
 
 # ----------------------------------------------
 ########### USE THIS TO CHECK FOR ANY UNMAPPED MODULE/INTERVENTIONS ###########
 # ----------------------------------------------
-
-
 gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
 uga_concat <- paste0(ugaData$module, ugaData$intervention)
 unmapped_mods <- ugaData[!uga_concat%in%gf_concat]
@@ -238,6 +271,6 @@ data_check2 <-mappedUga[, sum(budget, na.rm = TRUE),by = c("module", "interventi
 export_dir <- "where you want the prepped dataset to live" 
 export_dir <- "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/"
 
-write.csv(mappedUga, paste0(country_output_dir, "prepped_budget_data.csv"), row.names = FALSE,
+write.csv(mappedUga, paste0(export_dir, "prepped_budget_data.csv"), row.names = FALSE,
           fileEncoding = "latin1")
 
