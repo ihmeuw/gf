@@ -209,7 +209,10 @@ total_out[weeks_out==0 ,.(length(unique(facility)), zeroes=(100*length(unique(fa
 
 total_out[0 < weeks_out & weeks_out <= 3,.(length(unique(facility)), zeroes=(100*length(unique(facility))/1564)), by=year]
 
-total_out[4 <= weeks_out ,.(length(unique(facility)), (100*length(unique(facility))/1564)), by=year]
+total_out[12 <= weeks_out ,.(length(unique(facility)), (100*length(unique(facility))/1564)), by=year]
+
+total_out[year==2018 & 1 <= weeks_out & weeks_out <= 3, length(unique(facility)) ]
+
 
 bad = total_out[4 <= weeks_out & year!=2016 ] 
 
@@ -316,3 +319,57 @@ eig[ ,year:=NULL]
 dist = merge(sev, eig, by='district')
 dist[ ,roc:=ratio17 - ratio18]
 dist[ roc < 0]
+
+#-----------------------------------------------
+# district stock outs 
+
+art = dt[month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01' & art_site==TRUE ]
+art[!is.na(arvs), reported:=TRUE]
+
+out = art[year!=2016 ,.(weeks_out=sum(arvs, na.rm=T), facilities=length(unique(facility)) ), by=.(year, district)]
+
+out[ , mean_weeks:=weeks_out/facilities]
+
+# percentage of facility-weeks stocked out 
+
+
+new = art[year==2018,.(out=sum(arvs, na.rm=TRUE), reported=sum(reported, na.rm=TRUE)), by=district]
+new[ ,ratio:=100*(out/reported)]
+View(new)
+
+
+
+
+
+
+# scatter plots (facility level)
+dt[ level=='HC II', level2:=2]
+dt[ level=='HC III', level2:=3]
+dt[ level=='HC IV', level2:=4]
+dt[ level=='Hospital', level2:=5]
+
+setnames(dt, c('level', 'level2'), c('level_og', 'level'))
+
+scatter = dt[year==2018 ,.(arvs=sum(arvs, na.rm=T), test_kits=sum(test_kits, na.rm=T)), by=.(facility, level, art_site)]
+scatter[art_site==FALSE, arvs:=NA]
+
+scatter = melt(scatter, id.vars=c('facility', 'level', 'art_site')) 
+
+
+scatter$variable = factor(scatter$variable, c('arvs', 'test_kits'), c('ARVs', 'HIV test kits'))
+
+# test kit stockouts by level, year       
+ggplot(scatter, aes(x=level, y=value)) +
+  geom_jitter(width=0.25) + 
+  facet_wrap(~variable) +
+  labs(title='Weeks stocked out by health facility level*', x='Facility level', 
+       y='Weeks stocked out', caption='*Level 5 corresponds to hospitals; all other levels are Health Centers') +
+  theme_bw()
+
+
+arvs = dt[year==2018 & art_site==TRUE,.(stockout_weeks=sum(arvs, na.rm=T)), by=.(facility, level, art_site)]
+
+chi2(arvs$days, arvs$level)
+
+glm(stockout_weeks ~ factor(level), family='poisson', data=arvs)
+

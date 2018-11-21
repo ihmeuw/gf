@@ -217,9 +217,9 @@ pnls[type=='drug' & !is.na(add) , variable:=paste0(variable, add)]
 
 #-----------------------------------
 # delete excess variables
-# leave element and element id and clean the data sets individually to collapse
+# leave element, element id, and category and clean the data sets individually to collapse
 
-pnls[ , c('element1', 'element_eng', 'category', 'category1',  'data_set', 'add'):=NULL]
+pnls[ , c('element1', 'element_eng', 'category1', 'data_set', 'add'):=NULL]
 
 #-------------------------------------
 # save a single data set 
