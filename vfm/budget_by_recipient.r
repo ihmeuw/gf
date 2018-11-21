@@ -29,19 +29,28 @@ data = as.data.table(data)
 # identify SR activities, and subset to the grants we want. 
 #---------------------------------------------------------
 
-data[, SR:=TRUE]
-data[grepl('MoFPED', grant_number) & recipient %in% c('MoFPED','Ministry of Finance, 
-                                                      Planning and Economic Development of the Republic of Uganda'), SR:=FALSE]
-data[grepl('TASO', grant_number) & recipient %in% c('TASO','The AIDS Support Organisation (Uganda) Limited'), SR:=FALSE]
-
 #Subset to 2015-2017
-data = data[grant_period == "2015-2017"]
+data = data[grant_period == "2018-2020"]
 
+summed_budgets_expenditures = data[, .(tot_budget = sum(budget), tot_expenditure = sum(expenditure) ), by=c('recipient', "grant_number", "grant_period")]
+
+data[, SR:=TRUE]
+data$recipient <- trimws(data$recipient)
+data$grant_number <- trimws(data$grant_number)
+data[grepl('MoFPED', grant_number) & recipient %in% c('MoFPED', 'MoPFED', 'Ministry of Finance, Planning and Economic Development of the Republic of Uganda'), SR:=FALSE]
+data[grepl('TASO', grant_number) & recipient %in% c('TASO','taso', 'The AIDS Support Organisation (Uganda) Limited'), SR:=FALSE]
+
+
+check = data[data_source=="pudr",]
+check = check[start_date == "2018-01-01" | start_date == "2018-04-01"]
+stopifnot(length(unique(check$fileName))==5)
+
+data <- copy(check)
 #--------------------------------------------------
 # Split by recipient, and see if there is a difference 
 #   in modules/interventions between the two. 
 #-------------------------------------------------
-data <- data[, c("gf_module", "gf_intervention", "budget", "SR", "start_date")] 
+data <- data[, c("gf_module", "gf_intervention", "budget", "expenditure", "SR", "start_date")] 
 
 sr <- data[SR == T]
 pr <- data[SR == F]
@@ -49,14 +58,24 @@ pr <- data[SR == F]
 sr = as.data.table(sr)
 pr = as.data.table(pr)
 
-#Subset to q1 and q2 for comparison 
-sr_q1q2 <- sr[start_date == "2015-01-01" | start_date == "2015-04-01"]
-pr_q1q2 <- pr[start_date == "2015-01-01" | start_date == "2015-04-01"]
+# calculate absorption for q1q2 (based on subsetted data above)
+sr[, sum(expenditure)/sum(budget)]
+pr[, sum(expenditure)/sum(budget)]
 
-sr <- sr[, 1:3] 
-pr <- pr[, 1:3] 
-sr_q1q2 <- sr_q1q2[, 1:3]
-pr_q1q2 <- pr_q1q2[, 1:3]
+# #Subset to q1 and q2 for comparison 
+# sr_q1q2 <- sr[start_date == "2018-01-01" | start_date == "2018-04-01"]
+# pr_q1q2 <- pr[start_date == "2018-01-01" | start_date == "2018-04-01"]
+
+# sr <- sr[, 1:3] 
+# pr <- pr[, 1:3] 
+# sr_q1q2 <- sr_q1q2[, 1:3]
+# pr_q1q2 <- pr_q1q2[, 1:3]
+
+sr_q1q2 = sr_q1q2[!is.na(absorption)]
+pr_q1q2 = pr_q1q2[!is.na(absorption)]
+
+sr_q1q2 = sr_q1q2[, c(1:2, 7)]
+pr_q1q2 = pr_q1q2[, c(1:2, 7)]
 
 #Melt and cast data tables to sum absorption by module/intervention 
 sr = melt(sr, id = c("gf_module", "gf_intervention"))
@@ -74,7 +93,7 @@ pr_q1q2 = dcast(pr_q1q2, gf_module+gf_intervention ~ variable, fun = sum)
 #---------------------------------------------------------
 # identify module/interventions with large proportion budgeted to SRs
 combined <- merge(pr, sr, by = c("gf_module", "gf_intervention"), suffixes = c(".pr", ".sr"), all = T)
-setDT(combined)
+setDT(combined)g
 combined[, sr_fraction:=budget.sr/(budget.sr+budget.pr)]
 sr_activities = combined[sr_fraction>.9] 
 
