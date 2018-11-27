@@ -15,7 +15,8 @@ library(gridExtra)
 library(rgdal)
 # --------------------
 # determine the most recent version of the raster map
-
+run_date = fread(paste0('/ihme/code/geospatial/jdv6/lbd_hiv/5_publications/africa_hiv_prev/run_dates.txt'))
+run_date = run_date[indicator == 'hiv_test' & group == 'final_results', run_date]
 
 # ----------------------------------------------------------------------------------------
 # Files and directories
@@ -25,7 +26,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/lbd/')
 
 # input files
-timestamp = '2018_11_08_18_37_25' #change this to use a different run of the lbd hiv model; this is the timestamp Laura Dwyer-Lindgren said to use
+timestamp = run_date
 inDir = paste0('/share/geospatial/mbg/hiv/hiv_test/output/', timestamp,'/')
 inFile = paste0(inDir, 'hiv_test_mean_raked_raster.tif')
 
@@ -38,15 +39,14 @@ shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lake
 
 # specify band to get a specific year of data
 # band 1=2000, band 17=2016.... so for 2015 band=16 and for 2010 band=11
-y= 2010
+y = 2014
 
-band_to_year <- data.table(band= c(1:17), year= c(2000:2016))
-band <- band_to_year[year==y, band]
+band_to_year = data.table(band= c(1:18), year= c(2000:2018))
+band = band_to_year[year==y, band]
 
 # output file
-graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', y, '.pdf')
+graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', y, '_new.pdf')
 # ----------------------------------------------------------------------------------------
-
 
 # ---------------------------------------------------------
 # Load/prep data
@@ -60,16 +60,15 @@ rasterData = raster(inFile, band=band)
 
 #--------------# use this in order to get a rate of change between the two years; comment out if not using #------------------
 graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', "percent_change_2010to2015", '.pdf')
-rasterData17 = raster(inFile, band= 18)
 
 # load the ground cover data
 lakes = shapefile(shapeFileLakes)
 
 # mask the bodies of water
-rasterData = mask(rasterData17, lakes, inverse=TRUE)
+rasterData = mask(rasterData, lakes, inverse=TRUE)
 
 # crop to the two countries
-rasterDataUGA = crop(rasterData17, extent(mapUGA))
+rasterDataUGA = crop(rasterData, extent(mapUGA))
 rasterDataUGA = mask(rasterDataUGA, mapUGA)        
 rasterDataCOD = crop(rasterData17, extent(mapCOD))
 rasterDataCOD = mask(rasterDataCOD, mapCOD)        
@@ -85,17 +84,14 @@ setnames(dataUGA, c('x','y','prev'))
 setnames(dataCOD, c('x','y','prev'))
 # ----------------------------------------------------------------
 
-
-
-
-
 # ----------------------------------------------------------
 # Set up to graph
 
 # colors
-cols1 = brewer.pal(6, 'PuOr')
+cols1 = rev(brewer.pal(6, 'RdYlBu'))
 border = 'grey65'
-
+breaks = c(4, 8, 12)
+  
 # legend limits so both countries are on same scale
 lims = range(c(dataUGA$prev, dataCOD$prev), na.rm=TRUE)*100
 # ----------------------------------------------------------
@@ -105,7 +101,7 @@ lims = range(c(dataUGA$prev, dataCOD$prev), na.rm=TRUE)*100
 # Graph
 
 # store maps
-ugaprev = ggplot(dataUGA, aes(y=y, x=x, fill=prev*100)) + 
+ ggplot(dataUGA, aes(y=y, x=x, fill=prev*100)) + 
 	geom_tile() + 
 	geom_path(data=shapeDataUGA, aes(x=long, y=lat, group=group)
 		, color=border, size=.05, inherit.aes=FALSE) + 
