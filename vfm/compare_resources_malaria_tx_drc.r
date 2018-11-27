@@ -25,10 +25,10 @@ dir = paste0(j, '/Project/Evaluation/GF/')
 rtFile = paste0(dir, 'resource_tracking/multi_country/mapping/total_resource_tracking_data.csv')
 
 # treatment data extracted from a graph
-txFile = paste0(dir, 'outcome_measurement/uga/hmis/confirmed_malaria_treated.csv')
+txFile = paste0(dir, 'outcome_measurement/cod/prepped_data/PNLP//imputedData_run2_condensed_hz.rds')
 
 # output file
-outFile = paste0(dir, 'outcome_measurement/uga/visualizations/Resource Comparison.pdf')
+outFile = paste0(dir, 'outcome_measurement/cod/visualizations/Resource Comparison.pdf')
 # ----------------------------------------------------------------------------------------------
 
 
@@ -39,7 +39,7 @@ outFile = paste0(dir, 'outcome_measurement/uga/visualizations/Resource Compariso
 rtData = fread(rtFile)
 
 # subset to UGA malaria
-rtData = rtData[disease=='malaria' & country=='Uganda' & year>2005]
+rtData = rtData[disease=='malaria' & country=='Congo (Democratic Republic)' & year>2005]
 
 # subset to FGH disbursement actuals
 rtDataActuals = rtData[data_source=='fgh' & fin_data_type=='actual']
@@ -74,15 +74,22 @@ forecasts = merge(forecasts, pctTx[,c('year','pct_tx'), with=FALSE], by='year')
 forecasts[, nongf_tx:=disbursement*pct*pct_tx]
 
 # compute the GF treatment total from the budgets
-txInts = c('Facility-based treatment', 'iCCM', 'Severe malaria', 'Private sector case management')
+txInts = c('Case management', 'Facility-based treatment', 'iCCM', 'Severe malaria', 'Private sector case management', 
+			'Other case management intervention(s)', 'Integrated community case management (iCCM)')
 gf = rtData[data_source=='fpm' & abbrev_intervention %in% txInts, .(gf_tx=sum(budget)), by='year']
 
 # merge gf and nongf
 tx_spend = merge(gf, forecasts[, c('year','nongf_tx'), with=FALSE], by='year')
 tx_spend[, tx_spend:=gf_tx+nongf_tx]
 
+# replace pre-2017 with actuals of total dah on malaria treatment
+actualTxSpend = rtDataActuals[, .(total=sum(mal_treat_dah_17)), by='year']
+tx_spend = merge(tx_spend, actualTxSpend, by='year', all=TRUE)
+tx_spend[year<2017, tx_spend:=total]
+tx_spend$total = NULL
+
 # amortize
-frame = expand.grid(year=seq(2015,2020), month=seq(12))
+frame = expand.grid(year=seq(2010,2017), month=seq(12))
 tx_spend = merge(tx_spend, frame, by='year')
 tx_spend[, tx_spend:=tx_spend/12]
 # ---------------------------------------------------
@@ -92,7 +99,17 @@ tx_spend[, tx_spend:=tx_spend/12]
 # Load/prep treatment data
 
 # load
-tx_counts = fread(txFile)
+tx_counts = readRDS(txFile)
+
+# subset to cases treated
+tx_counts = tx_counts[grepl('reated', variable)]
+
+# aggregate by month
+tx_counts = tx_counts[, .(cases_treated=sum(mean)), by='date']
+
+# make year and month for merge
+tx_counts[, year:=year(date)]
+tx_counts[, month:=month(date)]
 # ---------------------------------------------------
 
 
@@ -116,13 +133,12 @@ data[year>2016, fin_type:='Expected Budgets']
 
 # ---------------------------------------------------
 # Graph
-p1 = ggplot(data, aes(y=dah_case, x=date, color=fin_type)) + 
+p1 = ggplot(data[year>2011], aes(y=dah_case, x=date, color=fin_type)) + 
 	geom_smooth(aes(y=dah_case, x=date), inherit.aes=FALSE) + 
 	geom_line(size=1.5) +
-	geom_point(aes(size=num_cases/1000000), color='#08519c') + 
+	geom_point(color='#08519c') + 
 	scale_color_manual('', values=c('grey45','grey15')) + 
-	scale_size_continuous('N Cases Reported\n(millions)', range=c(1,3)) + 
-	labs(title='Development Assistance for Malaria Treatment\nCompared to Confirmed Cases Treated', 
+	labs(title='Donor Investment for Malaria Treatment\nCompared to Confirmed Cases Treated', 
 		subtitle='Budgeted or Disbursed', y='USD from Donors per Case Treated', x='Year', color='',
 		caption='Annually-Reported Resources Amortized Over 12 Months') + 
 	theme_bw(base_size=16)
