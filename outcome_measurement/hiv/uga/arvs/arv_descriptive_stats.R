@@ -373,3 +373,24 @@ chi2(arvs$days, arvs$level)
 
 glm(stockout_weeks ~ factor(level), family='poisson', data=arvs)
 
+#---------------------------------------
+
+
+art = dt[art_site==TRUE]
+
+
+x = art[arvs==TRUE,length(unique(facility)), by=month]
+
+ggplot(x, aes(x=month, y=V1)) +
+  geom_point() + geom_line()
+
+y = art[!is.na(arvs),length(unique(facility)), by=month]
+
+
+art = dt[month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01' &  art_site==TRUE]
+art[ , year:=year(date)]
+
+art[arvs==TRUE, length(unique(facility)), by=year ]
+
+
+
