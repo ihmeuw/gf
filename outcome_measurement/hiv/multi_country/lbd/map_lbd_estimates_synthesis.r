@@ -39,7 +39,7 @@ shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lake
 
 # specify band to get a specific year of data
 # band 1=2000, band 17=2016.... so for 2015 band=16 and for 2010 band=11
-y = 2014
+y = 2001
 
 band_to_year = data.table(band= c(1:18), year= c(2000:2018))
 band = band_to_year[year==y, band]
@@ -70,7 +70,7 @@ rasterData = mask(rasterData, lakes, inverse=TRUE)
 # crop to the two countries
 rasterDataUGA = crop(rasterData, extent(mapUGA))
 rasterDataUGA = mask(rasterDataUGA, mapUGA)        
-rasterDataCOD = crop(rasterData17, extent(mapCOD))
+rasterDataCOD = crop(rasterData, extent(mapCOD))
 rasterDataCOD = mask(rasterDataCOD, mapCOD)        
 
 # convert to data tables
@@ -113,6 +113,32 @@ lims = range(c(dataUGA$prev, dataCOD$prev), na.rm=TRUE)*100
 	labs(title='Uganda') + 
 	theme_minimal(base_size=16) + 
 	theme(plot.title=element_text(hjust=.5)) 
+
+
+#-------------
+# add projection
+tifFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/lbd/projection/uga_hiv_2018.tif')
+uga_tif = raster(tifFile)
+
+uga_tif = crop(uga_tif, mapUGA)   
+uga = data.table(as.data.frame(uga_tif, xy=TRUE))
+
+ggplot(uga, aes(y=y, x=x, fill=uga_hiv_2018*100)) + 
+  geom_tile() + 
+  geom_path(data=shapeDataUGA, aes(x=long, y=lat, group=group)
+            , color=border, size=.05, inherit.aes=FALSE) + 
+  scale_fill_gradientn('PLHIV %', colors=cols1, 
+                       na.value='white') + 
+  coord_fixed(ratio=1) + 
+  scale_x_continuous('', breaks = NULL) + 
+  scale_y_continuous('', breaks = NULL) + 
+  labs(title='Uganda') + 
+  theme_minimal(base_size=16) + 
+  theme(plot.title=element_text(hjust=.5)) 
+
+#-------------
+
+
 	
 codprev = ggplot(dataCOD, aes(y=y, x=x, fill=prev*100)) + 
 	geom_tile() + 
