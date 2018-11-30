@@ -17,14 +17,28 @@
 rm(list=ls())
 library(data.table)
 library(doBy)
+library(utils)
 
 # ------------------------------------------------
 # Read in full prepped dataset from Uganda to 
 #   isolate SR activities for target grant period 
 # ------------------------------------------------
+dir = "J:/Project/Evaluation/GF/resource_tracking/uga/"
 data = read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_budget_data.csv")
 data = as.data.table(data)
 
+#---------------------------------------------------------
+# calculate overall absorption for the malaria modules/interventions
+#---------------------------------------------------------
+data = data[grant_period == "2018-2020"]
+data = data[start_date == "2018-01-01" | start_date == "2018-04-01"]
+data = data[data_source=="pudr",]
+data = data[disease=="malaria",]
+
+malaria_summed = data[, .(tot_budget = sum(budget), tot_expenditure = sum(expenditure) ), by=c('gf_module', "gf_intervention")]
+malaria_summed = malaria_summed[, absorption := tot_expenditure/tot_budget]
+
+write.csv(malaria_summed, file=paste0(dir, "malaria_absorption_by_module_intervention.csv"))
 #---------------------------------------------------------
 # identify SR activities, and subset to the grants we want. 
 #---------------------------------------------------------
