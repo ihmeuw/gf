@@ -54,5 +54,53 @@ graph = ggplot(data = sicoin, aes(x = year, y = budget, color = disease)) + geom
   scale_y_continuous(breaks = seq(0,14000000,1000000), labels = dollar)
 graph
 
+ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_using_sicoin_by_year.pdf", graph)
 ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_using_sicoin_by_year.png", graph)
 
+
+#------------------------------------------------------------------------------------------
+#Can you do another graph as well showing what share of total program spend this represents?
+#------------------------------------------------------------------------------------------
+
+total_gtm <- allData[country == "Guatemala"]
+total_gtm <- total_gtm[, is_ghe:=ifelse(financing_source == "ghe", "Global Health Expenditure", "Other")]
+
+#Option 1, not faceted by diease 
+plot_data <- total_gtm[, .(budget = sum(budget)), by = c("is_ghe", "year")]
+plot_data[, budget_total:=sum(budget), by = c("year")]
+plot_data[is_ghe == "Other", budget:=budget_total] #Replace "other" with the total of other and ghe funding. 
+plot_data[, .(is_ghe, year, budget)]
+plot_data = plot_data[budget_total != 0] #Don't have information for these years.
+
+plot_data = plot_data[year < 2019] #Removing years in the future. 
+plot_data = plot_data[, budget:=budget/1000000] #Scale budget down so we can graph by millions. 
+
+graph = ggplot(data = plot_data, aes(year, budget)) + geom_bar(stat = "identity", aes(fill = is_ghe)) + 
+  labs(x = "Year", y = "Budget, Millions USD") + 
+  theme_bw(base_size = 18) + theme(legend.title = element_blank()) +
+  scale_y_continuous(breaks = seq(0, 100, 10))
+graph
+
+#Option 1, not faceted by diease 
+ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_percentage1.pdf", graph)
+ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_percentage1.png", graph)
+
+#Option 2, faceted by diease. 
+plot_data <- total_gtm[, .(budget = sum(budget)), by = c("is_ghe", "year", "disease")]
+plot_data[, budget_total:=sum(budget), by = c("year", "disease")]
+plot_data[is_ghe == "Other", budget:=budget_total] #Replace "other" with the total of other and ghe funding. 
+plot_data[, .(is_ghe, year, budget, disease)]
+plot_data = plot_data[budget_total != 0] #Don't have information for these years.
+
+plot_data = plot_data[year < 2019] #Removing years in the future. 
+plot_data = plot_data[, budget:=budget/1000000] #Scale budget down so we can graph by millions.
+
+graph = ggplot(data = plot_data, aes(year, budget)) + geom_bar(stat = "identity", aes(fill = is_ghe)) + 
+  labs(x = "Year", y = "Budget, Millions USD") + 
+  theme_bw(base_size = 18) + theme(legend.position = "none") +
+  scale_y_continuous(breaks = seq(0, 50, 10)) + 
+  facet_wrap(vars(disease))
+graph
+
+ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_percentage2.pdf", graph)
+ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_percentage2.png", graph)
