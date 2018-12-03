@@ -9,8 +9,8 @@ rm(list=ls())
 library(data.table)
 
 #Read in PEPFAR data; found at this link: https://data.pepfar.gov/country/funding?country=Uganda&year=2016 
-pepfar_exp <- fread("C:/Users/davidp6/Downloads/Expenditures by Cost Category 2012-2016.csv")
-pepfar_plan <- fread("C:/Users/davidp6/Downloads/Planned Funding 2004-2017.csv")
+pepfar_exp <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/pepfar/Expenditures by Cost Category 2012-2016.csv")
+pepfar_plan <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/pepfar/Planned Funding 2004-2017.csv")
 
 pepfar_plan[country == "Democratic Republic of the Congo", country:="DRC"]
 
