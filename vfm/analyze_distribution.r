@@ -101,6 +101,13 @@ data[, variable:=gsub('received_received', 'received', variable)]
 dps = data[, lapply(.SD, sum, na.rm=TRUE), by=byVars, 
 		.SDcols=names(data)[!names(data) %in% c(byVars,'health_zone')]]
 
+# identify interesting DPS's to label for MAP estimates vs ITNs
+fit = lm(value~pf_incidence*factor(year), dps[label=='RDTs'])
+dps[label=='RDTs', resid:=value-predict(fit)]
+dps[label=='RDTs', resid_upper:=quantile(resid,.85), by=c('year','variable')]
+dps[label=='RDTs', resid_lower:=quantile(resid,.25), by=c('year','variable')]
+dps[label=='RDTs' & (resid>resid_upper | resid<resid_lower), dps_label0:=dps]
+
 # identify interesting DPS's to label for MAP estimates vs distribution
 fit = lm(value~pf_incidence*factor(year)*factor(variable), dps)
 dps[, resid:=value-predict(fit)]
@@ -130,6 +137,19 @@ dps[year==2017, qr_fitted:=predict(qrFit)]
 
 # ----------------------------------------------
 # Graph
+
+# comparison in 2017 with lag-x ITN only
+p0 = ggplot(dps[year==2017 & label=='RDTs'], aes(y=value/1000000, 
+		x=lag_pf_incidence/1000000, label=dps_label0)) + 
+	geom_point() + 
+	geom_line(aes(y=qr_fitted/1000000), color='blue') + 
+	geom_text_repel(color='grey25', box.padding=1.5, 
+		segment.color='grey75', min.segment.length=0) + 
+	scale_color_manual(values=colors) + 
+	labs(y='RDTs Distributed in 2017 (in Millions)', 
+		x='Model-Estimated Incidence in 2016 (Millions of Cases among Children)', 
+		color='Year') + 
+	theme_bw(base_size=18)
 
 # comparison in 2017 with lag-x
 p1 = ggplot(dps[year==2017], aes(y=value/1000000, 
@@ -236,12 +256,13 @@ for (d in unique(dps$dps)) {
 # --------------------------------
 # Save graphs
 pdf(outFile, height=6, width=9)
+p0
 p1
 p2
 p3
 p4
 p5
 p6
-for(i in seq(length(p7))) print(p7[[i]])
+# for(i in seq(length(p7))) print(p7[[i]])
 dev.off()
 # --------------------------------
