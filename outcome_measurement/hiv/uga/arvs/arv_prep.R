@@ -1,7 +1,8 @@
 # ARV stockouts by facility - data prep
-#
+# Preps ARV Stockout data from CDC Option B+ Dashboard: 
+# http://dashboard.mets.or.ug/jasperserver/slevel/KPIs/107_BPlus_Data_Per_Facility
 # Caitlin O'Brien-Carelli
-# 11/8/2018
+# 12/3/2018
 
 # ----------------------
 # Set up R
@@ -118,7 +119,13 @@ for (f in files) {
 
 #---------------------------
 # save the output
-saveRDS(full_data, paste0(OutDir, 'arv_stockouts_2016_2018.rds'))
+
+# get the minimum and maximum year and add to the file name for export
+min_year = full_data[ ,min(year)]
+max_year = full_data[ ,max(year)]
+
+# save as a data table
+saveRDS(full_data, paste0(OutDir, 'arv_stockouts_', min_year, '_', max_year, '.rds'))
 
 #----------------------------
 

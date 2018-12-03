@@ -15,7 +15,7 @@
 
 # ----------------------------------------------------------
 # Start function
-prepVL = function(dir=dir, level='region', annual=FALSE, overlap=TRUE, monthly=FALSE) { 
+prepVL = function(dir=dir, level='region', annual=FALSE, overlap=TRUE) { 
   # ------------------------------------------------------
   
   
@@ -148,7 +148,6 @@ prepVL = function(dir=dir, level='region', annual=FALSE, overlap=TRUE, monthly=F
   
   # include time if annual is specified
   if (annual) byVars = c(byVars, 'year')
-  if (monthly) byvars=c(byvars, 'date')
   
   # collapse to specified level
   data = facLevelData[ , .(phia_vls=mean(phia_vls), 
