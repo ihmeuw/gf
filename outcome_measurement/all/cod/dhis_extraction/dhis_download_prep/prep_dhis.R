@@ -39,8 +39,7 @@ folder <- 'pre_prep/merged/'
 
 # change the file to the file you want to upload!
 # base, sigl, or pnls file to upload, clean, and prep
-file <- 'pnls_drc_01_2017_07_2018'
-
+file <- 'pnlt_drc_01_2017_03_2018'
 
 # import the data set for cleaning and prep 
 dt <- readRDS(paste0(dir, folder, file, '.rds'))
@@ -99,7 +98,7 @@ dt[is.na(mtk), mtk:='No']
 
 #-----------------------------------------------
 # organize the data table in an intuitive order 
-dt <- dt[ ,.(element, element_eng, org_unit, date, category, value, 
+dt = dt[ ,.(element, element_eng, org_unit, date, category, value, 
              dps, health_zone, health_area, level, org_unit_type, 
               type, mtk, drug, tableau, coordinates, opening_date, last_update, 
                data_set, org_unit_id=id, element_id, month, year)]

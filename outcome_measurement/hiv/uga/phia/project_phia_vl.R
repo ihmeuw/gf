@@ -56,6 +56,9 @@ source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/phia/prep_phia_vl
 distDataAll = prepVL(dir, level='district', overlap=FALSE, annual=FALSE)
 distDataAnn = prepVL(dir, level='district', overlap=FALSE, annual=TRUE)
 
+# monthly
+month = prepVL(dir, level='district', overlap=FALSE, annual=FALSE, monthly=TRUE)
+
 # ---------------------------------------------------------------------------
 # import the ratios
 
@@ -73,6 +76,15 @@ graphVL_time2(dir)
 
 # ------------------
 # monthly time trends
-distDataAnn = prepVL(dir, level='district', overlap=FALSE, monthly=TRUE)
+# distDataAnn = prepVL(dir, level='district', overlap=FALSE, monthly=TRUE)
+
+# save 2018
+
+distDataAnn = distDataAnn[year==2018]
+
+saveRDS(distDataAnn, paste0(dir, 'output/phia_data_2018.rds'))
+
+
+
 
 

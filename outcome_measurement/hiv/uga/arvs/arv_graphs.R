@@ -27,7 +27,8 @@ dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockouts/'
 dt = readRDS(paste0(dir, 'arv_stockouts_2017_2018.rds'))
 
 # subset dates to before september 30, 2018
-dt = dt[date < '2018-10-01']
+dt = dt[date < '2018-10-01' & year!=2016] # temporarily drop out 2016 
+
 
 #--------------------------------
 # shape file 
@@ -295,7 +296,7 @@ breaks <- c(1, 20, 400, 8100)
 #------------------------------------------------
 # PDF VISUALS 
 
-pdf(paste0(dir, '/outputs/stockout_descriptives.pdf'), height=6, width=9)
+pdf(paste0(dir, '/outputs/stockout_descriptives.pdf'), height=6, width=12)
 
 #----------------------------------------
 # reporting completeness graphs
@@ -413,7 +414,7 @@ ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
   geom_polygon() + 
   geom_path(size=0.01) + 
   facet_wrap(~year) +
-  scale_fill_gradientn(colors=rev(ratio_colors)) + 
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
   theme_void() +
   labs(title="Percentage of facility-weeks stocked out of ARVs", subtitle="Weeks ART sites were stocked out/Total weeks in which ART sites reported", 
        caption='Source: HMIS', fill="% of weeks stocked out") +
@@ -513,7 +514,7 @@ ggplot(tk_stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
   geom_polygon() + 
   geom_path(size=0.01) + 
   facet_wrap(~year) +
-  scale_fill_gradientn(colors=rev(ratio_colors)) + 
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
   labs(title="Percentage of facility-weeks stocked out", subtitle="Weeks stocked out at ART sites/Total weeks reporting from ART sites", 
        caption='Source: HMIS', fill="% of weeks stocked out") +

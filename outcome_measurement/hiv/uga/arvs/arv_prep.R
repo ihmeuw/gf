@@ -1,6 +1,8 @@
 # ARV stockouts by facility - data prep
+# Preps ARV Stockout data from CDC Option B+ Dashboard: 
+# http://dashboard.mets.or.ug/jasperserver/slevel/KPIs/107_BPlus_Data_Per_Facility
 # Caitlin O'Brien-Carelli
-# 10/30/2018
+# 12/3/2018
 
 # ----------------------
 # Set up R
@@ -43,11 +45,12 @@ for (f in files) {
                                      arv=as.character(arvs))]
   
   # prep facilities
-  arv_data[ , ip:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 2))]
-  arv_data[ , ip:=gsub("\\)", "", ip)]
   arv_data[ , facility:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 1))]
+  arv_data[ , facility:=trimws(facility, which='right')]
   
-  # drop out the duplicates - alter later to include multiple international partners
+  # drop duplicates
+  # duplicates are only because of international partners 
+  # there is always the same number of health facilities and art sites
   arv_data = arv_data[!(duplicated(facility))]
   
   # remove 'district' from district names
@@ -78,11 +81,13 @@ for (f in files) {
   arv_data[is.na(level), level:='Other']
   arv_data[ ,facility1:=NULL]
   
-  # convert Y/Ns to T/F
+  # # convert Y/Ns to T/F
   arv_data[art=='Y', art_site:=TRUE]
   arv_data[art=='N', art_site:=FALSE]
+  
   arv_data[tests=='Y', test_kits:=TRUE]
   arv_data[tests=='N', test_kits:=FALSE]
+  
   arv_data[arv=='Y', arvs:=TRUE]
   arv_data[arv=='N', arvs:=FALSE]
   
@@ -112,10 +117,15 @@ for (f in files) {
   
 }
 
-
 #---------------------------
 # save the output
-saveRDS(full_data, paste0(OutDir, 'arv_stockouts_2017_2018.rds'))
+
+# get the minimum and maximum year and add to the file name for export
+min_year = full_data[ ,min(year)]
+max_year = full_data[ ,max(year)]
+
+# save as a data table
+saveRDS(full_data, paste0(OutDir, 'arv_stockouts_', min_year, '_', max_year, '.rds'))
 
 #----------------------------
 

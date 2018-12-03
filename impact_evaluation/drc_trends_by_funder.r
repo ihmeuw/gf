@@ -207,7 +207,7 @@ p7n = ggplot(aggF, aes(y=(mildMalariaTreated+severeMalariaTreated), x=date, fill
 	scale_fill_manual(values=colors) + 
 	labs(title='Malaria Cases Treated with ACTs', 
 		y='Number of Cases Treated', x='', fill='Funder') + 
-	theme_bw()
+	theme_bw(base_size=18)
 
 # fraction of community cases treated
 p8 = ggplot(aggF, aes(y=SSCACT, x=date, fill=factor(funder, o))) + 

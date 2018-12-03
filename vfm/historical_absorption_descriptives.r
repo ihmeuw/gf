@@ -53,6 +53,9 @@ data[, rssh:=grepl('R',code)]
 byVars = c('country','grant_number','grant_period','abbrev_module','rssh','data_source')
 agg = data[, .(expenditure=sum(expenditure, na.rm=T), budget=sum(budget,na.rm=T)), by=byVars]
 agg[, absorption:=expenditure/budget]
+
+# delete erroneous module from Uganda
+# agg = agg[!(grant_number=='UGA-M-MoFPED' & abbrev_module=='HR & health workers')]
 # ----------------------------------------------------------------------
 
 
@@ -105,7 +108,7 @@ p1 = ggplot(graphData[variable=='absorption_pudr'], aes(y=value*100, x=abbrev_mo
 	scale_color_manual(values=c('Average\nAbsorption*'='grey25')) + 
 	labs(title='Absorption Compared to Historical Data', subtitle='Uganda January 2018 - June 2018', 
 		y='% Absorption', x='', fill='', color='', 
-		caption='*Average based on all previous grants with this module in Uganda') + 
+		caption='*Average based on absorption rate from all previous grants with this module in Uganda') + 
 	theme_bw() + 
 	theme(axis.text.x = element_text(angle=45, hjust=1))
 
@@ -121,7 +124,7 @@ p2 = ggplot(data=NULL, aes(y=value/f, x=abbrev_module, fill=label)) +
 	scale_fill_manual(values=c('#3182bd','#31a354')) + 
 	labs(title='Budget Compared to Expenditure', subtitle='Uganda January 2018 - June 2018', 
 		y='Execution (in Millions)', x='', fill='', color='', 
-		caption='*Average based on all previous grants with this module in Uganda') + 
+		caption='*Average based on absorption rate from all previous grants with this module in Uganda') + 
 	theme_bw() + 
 	theme(axis.text.x = element_text(angle=45, hjust=1))
 
@@ -132,12 +135,12 @@ p3 = ggplot(data=NULL, aes(y=value/f, x=abbrev_module, fill=label)) +
 	geom_segment(data=graphData[variable=='expected_expenditure' & rssh==1], aes(y=value/f, yend=value/f, 
 		x=module_id-.5, xend=module_id+.5, color='Average\nExpenditure*'), 
 		linetype='dashed', size=1.25) + 
-	facet_wrap(~grant_number, scales='free', ncol=5) + 
+	facet_grid(.~grant_number, scales='free', space='free_x') + 
 	scale_color_manual(values=c('Average\nExpenditure*'='grey25')) + 
 	scale_fill_manual(values=c('#3182bd','#31a354')) + 
 	labs(title='Budget Compared to Expenditure - RSSH Modules', subtitle='Uganda January 2018 - June 2018', 
 		y='Execution (in Millions)', x='', fill='', color='', 
-		caption='*Average based on all previous grants with this module in Uganda') + 
+		caption='*Average based on absorption rate from all previous grants with this module in Uganda') + 
 	theme_bw() + 
 	theme(axis.text.x = element_text(angle=45, hjust=1))
 # ----------------------------------------------------------------------
