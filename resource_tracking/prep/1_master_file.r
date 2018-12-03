@@ -32,13 +32,12 @@ source(paste0(code_dir, "2_shared_mapping_functions.R")) #Emily for some reason 
 ## STEP 1: Verify module mapping framework 
 # ----------------------------------------------
 
-  #source(paste0(code_dir, "3_verify_module_mapping.r")) #Emily would eventually like to have this running continuously to make sure we don't create new errors in the database. 
+  source(paste0(code_dir, "3_verify_module_mapping.r")) #Emily would eventually like to have this running continuously to make sure we don't create new errors in the database. 
 
-#for(i in 1:length(countries)){
+for(i in 1:length(countries)){
 # ----------------------------------------------
 ## STEP 2: Verify country-level file list 
 # ----------------------------------------------
-  country = "uga" 
   master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
   export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
   
@@ -54,7 +53,7 @@ source(paste0(code_dir, "2_shared_mapping_functions.R")) #Emily for some reason 
   ifelse(country == "gtm", source(paste0(code_dir, country, "_prep/", "budget_prep/", "master_prep_", country, ".r")),
          source(paste0(code_dir, country, "_prep/", "master_prep_", country, ".r")))
   
-#}
+}
 
 # ----------------------------------------------
 ## STEP 4: Aggregate country-level data 
@@ -66,7 +65,7 @@ source(paste0(code_dir, "2_shared_mapping_functions.R")) #Emily for some reason 
 ## STEP 5: Verify budget numbers
 # ----------------------------------------------
 
-  #source(paste0(code_dir, "5_verify_budget_numbers.r")) #Emily would eventually like to get this file working. 
+  source(paste0(code_dir, "5_verify_budget_numbers.r")) #Emily would eventually like to get this file working. 
  
 # ----------------------------------------------
 ## STEP 6: Upload to Basecamp

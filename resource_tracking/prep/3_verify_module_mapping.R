@@ -39,7 +39,6 @@ if(nrow(duplicates_check)>0){
 }
 #N = 302. For these variables, we just need to make sure the merge and the coefficient is working correctly. 
 
-
 #--------------------------------------------------------------------------------
 #2. Make sure you don't have any coefficients across unique 
 #   observations of module, intervention, and disease that don't sum to 1.
@@ -79,8 +78,6 @@ if(nrow(check_na_all_interventions)>0){
 print(sort(unique(map$module)))
 print(sort(unique(map$intervention)))
 #We have some modules in all capital letters showing up here, with spaces. 
-
-
 
 #--------------------------------------------------------------------------------
 # 5. Make sure that duplicates of module/intervention don't have different mapping codes. ***EMILY KEEP WORKING HERE
