@@ -195,13 +195,13 @@ plots[[i]] = ggplot(ugaSubset[variable %in% c('budget','expenditure')],
 		aes(y=value/f, x=grant_number, fill=label)) + 
 	geom_bar(stat='identity', position='identity') + 
 	geom_hline(data=ugaSubset[variable=='expected_expenditure'], aes(yintercept=value/f, 
-		color='Historical\nExpenditure*'), linetype='dashed', size=1.25) + 
+		color='Projected\nExpenditure*'), linetype='dashed', size=1.25) + 
 	facet_wrap(~grant_number, scales='free', ncol=5) + 
 	scale_fill_manual(values=cols[c(1,6)]) + 
-	scale_color_manual(values=c('Historical\nExpenditure*'='grey25')) + 
+	scale_color_manual(values=c('Projected\nExpenditure*'='grey25')) + 
 	labs(title='Budget Compared to Expenditure', subtitle='Uganda January 2018 - June 2018', 
 		y='Execution (in Millions of USD)', x='', fill='', color='', 
-		caption='*Historical expenditure adjusted for mix of interventions, grant phase and size') + 
+		caption='*Projected expenditure adjusted for mix of interventions, grant phase and size') + 
 	theme_bw(base_size=16) + 
 	theme(strip.background=element_blank(), strip.text.x=element_blank()) + 
 	guides(color = guide_legend(override.aes = list(size=.75)))
@@ -275,43 +275,4 @@ plots[[i]] = ggplot(agg[country=='DRC' & year>=2018], aes(y=expected_absorption,
 pdf(outFile, height=5.5, width=10)
 for(i in seq(length(plots))) print(plots[[i]])
 dev.off()
-# -----------------------------
-
-
-# -----------------------------
-# Save table
-
-# subset to either the most recent PUDR from each grant or Q1 2018
-out = data[(grant_number=='UGA-C-TASO' & year==2018 & quarter==1) | 
-			(grant_number=='UGA-H-MoFPED' & year==2018 & quarter==1) | 
-			(grant_number=='UGA-M-MoFPED' & year==2018 & quarter==1) | 
-			(grant_number=='UGA-M-TASO' & year==2018 & quarter==1) | 
-			(grant_number=='UGA-T-MoFPED' & year==2018 & quarter==1) | 
-			(grant_number=='COD-M-SANRU' & year==2018 & quarter==1) | 
-			(grant_number=='GTM-T-MSPAS' & year==2017 & quarter==3) | 
-			(year==2018 & quarter==1 & grant_number!='GTM-T-MSPAS')] 
-			
-# subset columns
-keepVars = c('disease','country','grant_number','year','quarter',
-		'abbrev_module','budget','observed_absorption','expected_absorption')
-out = out[, keepVars, with=FALSE]
-
-# reshape countries wide
-out[, grant:=paste0(country, ' ', grant_number, ' (Q', quarter, ' ', year, ')')]
-out = dcast.data.table(out, disease+abbrev_module~grant, value.var=c('budget','observed_absorption','expected_absorption'))
-
-# replace NA budget to 0 (only for grants that should have those modules)
-for(v in names(out)[grepl('budget',names(out))]) { 
-	out[, tmp:=max(get(v),na.rm=T), by='disease']
-	out[is.na(get(v)) & is.finite(tmp), (v):=0]
-}
-
-# order columns
-names = names(out)[grepl('budget',names(out))]
-grants = gsub('budget_','',names)
-vars = as.vector(outer(c('budget_','observed_absorption_','expected_absorption_'), grants, paste0))
-out = out[, c('disease','abbrev_module',vars), with=FALSE]
-
-# save output (to be pasted into pre-formatted xlsx
-write.csv(out, tableFile, row.names=FALSE)
 # -----------------------------
