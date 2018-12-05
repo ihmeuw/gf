@@ -49,12 +49,14 @@ unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', '?'='A', '?'='A', 
 
 # vector of characters or phrases to remove
 remove_chars <- c(" ","rssh","hss", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
-                  , "[[:punct:]]", "[^[:alnum:]]","\"", ",")
+                  , "[[:punct:]]", "[^[:alnum:]]","\"", ",") #Why are we removing RSSH and HSS here? EKL 12/3/18
 
 
 ##function that takes three parameters: the dataset you want cleaned, and the two vectors we created above: 
 strip_chars <- function(gfData, unwanted_array, remove_chars){
   ##remove special characters and blank spaces
+  gfData$orig_module <- copy(gfData$module)
+  gfData$orig_intervention <- copy(gfData$intervention)
   gfData$module <-tolower(gfData$module)
   gfData$module <-gsub(paste(remove_chars, collapse="|"), "",gfData$module)
   gfData$intervention  <-tolower(gfData$intervention)
@@ -68,7 +70,7 @@ strip_chars <- function(gfData, unwanted_array, remove_chars){
          paste(unwanted_array, collapse=''),
          gfData$intervention)
   
-  gfData$intervention[is.na(gfData$intervention)] <- "all"
+  gfData$intervention[is.na(gfData$intervention)] <- "all" #Why are we doing this here?? Or at all??? EKL 12/3/18 
 
 return(gfData)
 }
@@ -138,11 +140,11 @@ total_mapping_list <- function(file_name, indicator_mapping, unwanted_array, rem
   mapping_for_gf$intervention <- chartr(paste(names(unwanted_array), collapse=''),
                                 paste(unwanted_array, collapse=''),
                                 mapping_for_gf$intervention)
+  
   mapping_for_gf$intervention  <-tolower(mapping_for_gf$intervention)
   mapping_for_gf$module <-tolower(mapping_for_gf$module)
   
   mapping_for_gf$module <-gsub(paste(remove_chars, collapse="|"), "",mapping_for_gf$module)
-  
   mapping_for_gf$intervention <-gsub(paste(remove_chars, collapse="|"), "",mapping_for_gf$intervention)
   
   ##remove any duplicates: 
@@ -150,5 +152,16 @@ total_mapping_list <- function(file_name, indicator_mapping, unwanted_array, rem
   return(mapping_for_gf)
 }
 
+#Splits modules and interventions into separate text fields based on a substring "keyword". 
+#I.e. preventionotherpreventiondistributionofcondoms with the keyword "prevention" passed will 
+# become module "prevention" and intervention "otherpreventiondistributionofcondoms". 
+#This function will only remove modules that occur at the beginning of the word. 
+split_mods_interventions <- function(dt, mod, keyword){
+  new_intervention = substr(mod, start = nchar(keyword) + 1, stop = nchar(mod))
+  dt = dt[module == mod, intervention:=new_intervention]
+  dt = dt[module == mod, module:=keyword]
+  paste0("Function will return ", keyword, " as a module and ", new_intervention, " as an intervention.")
+  return(dt)
+}
 
 
