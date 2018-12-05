@@ -21,6 +21,21 @@ prep_map <- function(map){
 #--------------------------------
   #These are the variables that are merged onto the raw data, so it's important to check duplicates with these. 
   keyVars = c('module', 'intervention', 'disease')
+  
+#--------------------------------------------------------------------------------
+# CLEANING- Dropping modules/interventions that map to codes that don't make sense. 
+#--------------------------------------------------------------------------------
+map = map[!(module == "treatmentcareandsupport" & intervention == "na" & disease == "hss" & (code == "R1_2" | code == "R1_3"))]
+
+#--------------------------------------------------------------------------------
+# CLEANING- Replacing modules/interventions that are typos or unspecified. 
+#--------------------------------------------------------------------------------
+#Split modules/interventions - see shared mapping functions for function documentation. 
+map = split_mods_interventions(map, "preventionbehavioralchangecommunicationcommunityoutreach", "prevention")
+map = split_mods_interventions(map, "preventionbloodsafetyanduniversalprecautions", "prevention")
+map = split_mods_interventions(map, "preventionbehavioralchangecommunicationmassmedia", "prevention")
+
+#Unclear classifications; could be clarified. 
 
 
 #--------------------------------------------------------------------------------
@@ -28,6 +43,23 @@ prep_map <- function(map){
 # with coefficients of 1, then check. 
 #--------------------------------------------------------------------------------
 
+map = map[(module == "healthsystemsstrengthening" & intervention == "servicedelivery"), code:='R4']
+map = map[(module == "malhealthsystemsstrengthening" & intervention == "informationsystem"), code:= 'R2']
+map = map[(module == "malsupportiveenvironment" & intervention == "leadershipandgovernance"), code:= 'R6_1']
+map = map[!(module == "malsupportiveenvironment" & intervention == "leadershipandgovernance" & coefficient == 0.5)] #This should always map to code R6_1. 
+map = map[(module == "performancebasedfinancing" & intervention == "performancebasedfinancing"), code:= 'R98']
+map = map[(module == "procurementandsupplychainmanagementsystems" & intervention == "nationalproductselectionregistrationandqualitymonitoring"), code:="R1_4"]
+map = map[(module == "programmanagement" & intervention == "programmanagement" & disease == "hiv"), code:="H9"]
+map = map[(module == "programmanagement" & intervention == "programmanagement" & disease == "tb"), code:="T4"]
+map = map[(module == "tbhealthsystemsstrengthening" & intervention == "supportiveenvironmentprogrammanagementandadministration"), code:="R8_1"]
+map = map[(module == "tbhivcollaborativeactivities" & intervention == "tbhiv"), code:="T2_1"]
+map = map[(module == "treatmentcareandsupport" & intervention == "na" & disease == "hiv"), code:="H6"]
+map = map[(module == "treatmentcareandsupport" & intervention == "na" & disease == "malaria"), code:="M2"]
+map = map[(module == "treatmentcareandsupport" & intervention == "na" & disease == "tb"), code:="T1"]
+map = map[(module == "tbtreatment" & intervention == "mdrtb"), code:="T3_2"]
+
+#Remove the duplicates that you created in cleaning through aligning codes. 
+map <- unique(map)
 
 #--------------------------------------------------------------------------------
 #2. Make sure you don't have any coefficients across unique 
