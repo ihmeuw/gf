@@ -47,7 +47,7 @@ totalGtm$loc_id <- NULL
 
 ## aggregate the sicoin and FPM data:
 totalGtm$country <- "Guatemala"
-totalGtm <- rbind(sicoin_data, totalGtm)
+totalGtm <- rbind(sicoin_data, totalGtm, fill = TRUE)
 
 # --------------------------------------------
 ##aggregate all country data into one dataset:  
@@ -86,7 +86,7 @@ gos_data$lang <- "eng"
 gos_data$cost_category <- "all"
 ##aggregate with the country-specific data that we loaded previous: 
 
-totalData <- rbind(fpmData, gos_data)
+totalData <- rbind(fpmData, gos_data, fill = TRUE)
 
 ## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
 totalData$fin_data_type <- "actual"
@@ -107,7 +107,7 @@ fgh_data = fgh_data[!grepl("total", module)]
 fgh_data$grant_period = year(fgh_data$start_date)
 
 
-totalData <- rbind(totalData, fgh_data)
+totalData <- rbind(totalData, fgh_data, fill = TRUE)
                              
 # --------------------------------------------
 #Check for duplicates (the GOS data has one row that is duplicated twice, but it's fine to just aggregate them)
@@ -156,7 +156,7 @@ gos_gtm <- gos_gtm[(disease=="hiv"&year<2011)|(disease=="malaria"&year<2011)|(di
 
 totalGos <- rbind(gos_uga, gos_cod, gos_gtm)
 
-cleanData <- rbind(cleanData, totalGos)
+cleanData <- rbind(cleanData, totalGos, fill = TRUE)
 
 ## add in a field that distinguishes between actual numbers and forecasted numbers (FGH)
 cleanData$fin_data_type <- "actual"
@@ -165,7 +165,7 @@ cleanData$fin_data_type <- "actual"
 #  Since FGH data is not at grant level (or disease level), we might as well include it in this data
 ##since there is no danger of double-counting when summing by disease/grant
 # --------------------------------------------
-cleanData <- rbind(cleanData, fgh_data)
+cleanData <- rbind(cleanData, fgh_data, fill = TRUE)
 
 
 ## date variables can get messed up if we export them, so change them to 'character'
