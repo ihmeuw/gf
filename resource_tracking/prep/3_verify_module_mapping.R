@@ -5,71 +5,62 @@
 #           archived on October 30, 2018. This cleaned version will have no duplicates between 
 #           module, intervention, and disease that could lead to duplicate mappings, and 
 #           close spellings of modules/interventions will be corrected to a single version. 
-# ----------------------------------------------
-###### Set up R / install packages  ###### 
-# ----------------------------------------------
-library(doBy)
-library(readxl)
-library(data.table)
+#
 # ---------------------------------------------
 #Set global variables and read in files. 
+# This function will return a cleaned version of the module 
+# map to be used for mapping modules and interventions. 
 # ---------------------------------------------
-  
-map = read_xlsx('J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx', sheet='module_mapping')
-map = data.table(map)
+
+prep_map <- function(map){
 
 # -------------------------------
 #
 #   VERIFICATION STEPS 
 #
 #--------------------------------
+  #These are the variables that are merged onto the raw data, so it's important to check duplicates with these. 
+  keyVars = c('module', 'intervention', 'disease')
 
 
 #--------------------------------------------------------------------------------
-#1. Remove all duplicates of module, intervention and disease. 
-#     These three variables matter because they're what merges 
-#     with the raw budget data to pull in the intervention code. 
+# CLEANING- Remove duplicates in module, intervention, and disease 
+# with coefficients of 1, then check. 
 #--------------------------------------------------------------------------------
 
-map$duplicates <- duplicated(map, by = c("module", "intervention", "disease"))
-duplicates_check <- map[map$duplicates == TRUE]
-if(nrow(duplicates_check)>0){
-  print(unique(duplicates_check[, by = c("module", "intervention", "disease", "code")]))
-  stop(paste0(print(nrow(duplicates_check)), " duplicates in key variables found in dataset."))
-}
-#N = 302. For these variables, we just need to make sure the merge and the coefficient is working correctly. 
 
 #--------------------------------------------------------------------------------
 #2. Make sure you don't have any coefficients across unique 
-#   observations of module, intervention, and disease that don't sum to 1.
+#   observations of module, intervention, and disease that sum to 1.
 #--------------------------------------------------------------------------------
-
-duplicates_coeff_one <- duplicates_check[ which(duplicates_check$coefficient == 1), ]
+duplicates_check <- map[duplicated(map, by = keyVars) == TRUE, ]
+duplicates_coeff_one <- duplicates_check[coefficient == 1]
+duplicates_coeff_one <- merge(duplicates_coeff_one, map, by = keyVars) #Merge back onto map because some duplicates don't have coefficients of 1. 
 duplicates_coeff_one <- duplicates_coeff_one[order(module, intervention)]
 
-if (nrow(duplicates_coeff_one) != 0){
-  print(unique(duplicates_coeff_one[, c("module", "intervention", "disease", "coefficient")])) #EMILY KEEP WORKING HERE- Right now it's okay to have coefficients of 1 if disease is unique. It looks like some dupes are being dropped 
-  #that don't have the same coefficients. 
+# Check
+if (nrow(duplicates_coeff_one) != 0 & include_stops == TRUE){
+  print(duplicates_coeff_one[, c("module", "intervention", "disease", "code.y", "coefficient.y")]) 
   stop("Module/Intervention/Disease duplicates with coefficients of 1!")
-  
 }
 
+#--------------------------------------------------------------------------------
+#2. Make sure you don't have any coefficients across unique 
+#   observations of module, intervention, and disease that sum to 
+#   greater than or less than 1 (budget shrinking or growing) ***EMILY KEEP WORKING HERE
+#--------------------------------------------------------------------------------
 
 #--------------------------------------------------------------------------------
 #3. Remove all cases where "na" or "all" was mapping to a specific code. ***EMILY KEEP WORKING HERE- CHECK IF CODE IS GOING TO 'UNSPECIFIED'. 
 #--------------------------------------------------------------------------------
 
-check_na_all_modules<-map[ which( map$module == "all" | map$module == "na")]
+unspecified_mods <- c('all', 'na', 'other', 'unspecified', 'otro', 'otherspecify')
+check_unspecified<-map[module %in% unspecified_mods | intervention %in% unspecified_mods]
+check_unspecified <- check_unspecified[nchar(code)>2] #It's okay to have some general codes with unspecified mods; but should also review these. 
 
-if(nrow(check_na_all_modules)>0){
-    print(unique(check_na_all_modules[, c("module", "intervention"), with = FALSE]))
-    stop(paste0(print(nrow(check_na_all_modules)), " modules have na or all as values."))
-}
-
-check_na_all_interventions<- map[ which(map$intervention == "all" | map$intervention == "na")]
-if(nrow(check_na_all_interventions)>0){
-  print(unique(check_na_all_interventions[, c("module", "intervention"), with = FALSE]))
-  stop(paste0(print(nrow(check_na_all_interventions)), " interventions have na or all as values."))
+if(nrow(check_unspecified)>0 & include_stops == TRUE){
+    print(unique(check_unspecified[, c("module", "intervention", "code"), with = FALSE]))
+    stop(paste0(print(nrow(check_unspecified)), " modules have na or all as values."))
 }
 
 #--------------------------------------------------------------------------------
@@ -95,7 +86,7 @@ allowableModules = c('gestiondeprogramas', 'gestiondeprogramme', 'gestiondessubv
                      'tbvih', 'tuberculosevih', 'tuberculosisvih')
 map_subset = map_subset[!module %in% allowableModules]
 
-if(nrow(map_subset)>0){
+if(nrow(map_subset)>0 & include_stops == TRUE){
   print(unique(map_subset[, c("module", "intervention"), with = FALSE]))
   stop(paste0(print(nrow(map_subset)), " duplicates in module/intervention have different mapping codes"))
 }
@@ -106,6 +97,45 @@ if(nrow(map_subset)>0){
 #     in an R-script so they are documented. ***EMILY KEEP WORKING HERE
 #--------------------------------------------------------------------------------
 
-#7- make sure we don't have any codes mapped where their prefix doesn't match their disease. 
+check_multi_mappings <- map[, frequency:=1]
+check_multi_mappings <- check_multi_mappings[, code_count:=sum(frequency), by = code]
+check_multi_mappings <- check_multi_mappings[code_count > 3] #It's okay to have up to 3 languages in the dataset. Should check to verify these are in all 3 languages sometime. 
+check_multi_mappings <- check_multi_mappings[order(-code_count)]
 
+#--------------------------------------------------------------------------------
+# CLEANING- Fix cases where module/intervention is mapping to incorrect code by disease. 
+#--------------------------------------------------------------------------------
 
+#--------------------------------------------------------------------------------
+# 7. Make sure we don't have any codes mapped where their prefix 
+#     doesn't match their disease. ***EMILY KEEP WORKING HERE
+#--------------------------------------------------------------------------------
+
+check_prefix = map[, prefix:=substr(code, 0, 1)]
+check_prefix$error = ifelse((check_prefix$disease == "hiv" & check_prefix$prefix != "H") |
+                              (check_prefix$disease == "tb" & check_prefix$prefix != "T") |
+                              (check_prefix$disease == "malaria" & check_prefix$prefix != 'M') | 
+                              (check_prefix$disease == "hiv/tb" & (check_prefix$prefix != 'H' & check_prefix$prefix != 'T')) |
+                              (check_prefix$disease == "hss" & check_prefix$prefix != "R"), TRUE, FALSE)
+check_prefix = check_prefix[error == TRUE] #Emily should check with David how we want to resolve all of these, including RSSH, but for now exclude 'R' from check. 
+
+check_prefix_ltd <- check_prefix[prefix != 'R']
+
+if(nrow(check_prefix_ltd)>0 & include_stops == TRUE){
+  print(unique(check_prefix_ltd[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
+  stop(paste0(print(nrow(check_prefix_ltd)), " errors in applying code for given disease")) #Check with David here. 
+}
+
+#--------------------------------------------------------------------------------
+# 8. Add a check to verify all RSSH modules/interventions look like they belong there.
+#     ***EMILY KEEP WORKING HERE. 
+#--------------------------------------------------------------------------------
+
+check_rssh <- map[substr(code, 0, 1) == 'R']
+
+if(nrow(check_rssh)>0 & include_stops == TRUE){
+  print(unique(check_rssh[, .(module)]))
+}
+
+  return(map)
+}

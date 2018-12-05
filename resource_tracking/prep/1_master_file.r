@@ -10,31 +10,40 @@
 rm(list=ls())
 library(lubridate)
 library(data.table)
+library(doBy)
+library(Hmisc)
 library(readxl)
 library(stats)
 library(stringr)
+library(tidyr)
 library(tools)
 library(rlang)
 library(zoo)
-library(tidyr)
 
 # ---------------------------------------
-## Set global variables.   ###### 
+# Set global variables and filepaths.  
 # ---------------------------------------
 
+#Filepaths
 user = "elineb" #Change to your username 
 code_dir = paste0("C:/Users/", user, "/Documents/gf/resource_tracking/prep/")
 combined_output_dir = "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping"
 countries <- c("cod", "gtm", "uga") #Remove countries from this list that you don't want to update. 
 source(paste0(code_dir, "2_shared_mapping_functions.R")) #Emily for some reason this isn't sourcing correctly. Check out what's going on. 
 
+#Global variables. 
+include_stops = FALSE #Set to true if you would like to see error messages in module mapping and budget verification steps. 
+
 # ----------------------------------------------
 ## STEP 1: Verify module mapping framework 
 # ----------------------------------------------
-
+  
+  map = read_xlsx('J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx', sheet='module_mapping')
+  map = data.table(map)
   source(paste0(code_dir, "3_verify_module_mapping.r")) #Emily would eventually like to have this running continuously to make sure we don't create new errors in the database. 
-
-for(i in 1:length(countries)){
+  module_map <- prep_map(map)
+  
+for(country in countries){
 # ----------------------------------------------
 ## STEP 2: Verify country-level file list 
 # ----------------------------------------------
@@ -50,8 +59,7 @@ for(i in 1:length(countries)){
 # ----------------------------------------------
 ## STEP 3: Prep country-level data 
 # ----------------------------------------------
-  ifelse(country == "gtm", source(paste0(code_dir, country, "_prep/", "budget_prep/", "master_prep_", country, ".r")),
-         source(paste0(code_dir, country, "_prep/", "master_prep_", country, ".r")))
+   source(paste0(code_dir, country, "_prep/", "master_prep_", country, ".r"))
   
 }
 
