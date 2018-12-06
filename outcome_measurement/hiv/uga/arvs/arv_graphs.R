@@ -1,7 +1,7 @@
-# ARV stockouts by facility - data visualization
+# ARV stockouts by facility - visualize the data 
 
 # Caitlin O'Brien-Carelli
-# 10/30/2018
+# 11/3/2018
 # ----------------------
 # Set up R
 rm(list=ls())
@@ -24,14 +24,13 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockouts/')
 
 # working directory to aggregate
-dt = readRDS(paste0(dir, 'arv_stockouts_2017_2018.rds'))
+dt = readRDS(paste0(dir, 'arv_stockouts_2013_2018.rds'))
 
-# subset dates to before september 30, 2018
-dt = dt[date < '2018-10-01' & year!=2016] # temporarily drop out 2016 
-
+# subset dates to before November 2018
+dt = dt[date < '2018-10-01' & year !=2013] 
 
 #--------------------------------
-# shape file 
+# import the shape file 
 
 # set working directory
 setwd('J:/Project/Evaluation/GF/mapping/uga/')
@@ -49,11 +48,22 @@ dt = merge(dt, shape_names, by='district')
 coord = data.table(fortify(shapeData, region='dist112')) 
 coord[, id:=as.numeric(id)]
 
-# coordinates by year for faceting (repeat 5 times for 5 years of data)
-coord_ann = rbind(coord, coord)
-coord_ann[, year:=rep(2017:2018, each=nrow(coord))]
+# coordinates by year for faceting 
+coord_ann = rbind(coord, coord, coord, coord, coord)
+coord_ann[, year:=rep(2014:2018, each=nrow(coord))]
 
 #-------------------------------------------------------------
+# variable for reported in a given year
+dt[!(is.na(test_kits) & is.na(arvs)), length(unique(facility)), by=year]
+dt[!(is.na(test_kits) & is.na(arvs)), report_annual:=TRUE, by=year]
+dt[is.na(report_annual), report_annual:=FALSE]
+
+#-----------------------------------
+# drop out the 12 facilities that never reported 
+missing = dt[ , .(check=all(is.na(arvs)), check_t=all(is.na(test_kits))), by=facility]
+missing = missing[check==TRUE & check_t==TRUE]
+dt = dt[!facility %in% missing$facility]
+#---------------------------------
 # reporting completeness data prep
 
 # total facilities/art sites and whether they reported
@@ -62,6 +72,7 @@ tk = dt[!is.na(test_kits), .(test_kits=length(unique(facility))), by=date]
 at = dt[!is.na(arvs) & art_site==TRUE, .(arvs=length(unique(facility))), by=date]
 report = merge(report, tk, by='date', all.x=TRUE)
 report = merge(report, at, by='date', all.x=TRUE)
+
 report[is.na(test_kits), test_kits:=0]
 report[is.na(arvs), arvs:=0]
 report[ , arv_ratio:=100*(arvs/art_sites)]
@@ -82,17 +93,10 @@ report[!grep('ratio', variable), ratio:=FALSE]
 # label the variables
 report$variable = factor(report$variable, c('art_sites', 'arvs', 'facilities',  'test_kits',
                                              'test_ratio', 'arv_ratio'), 
-                         c('ART sites', 'Reported about ART stock', 'Total facilities', 'Reported about HIV test kit stock',
+                         c('Total ART sites', 'Reported about ART stock', 'Total facilities', 'Reported about HIV test kit stock',
                            '% of facilities reporting', '% of ART sites reporting'))
 
 
-
-
-#----------------------------
-# drop out the 12 facilities that never reported 
-missing = dt[ , .(check=all(is.na(arvs)), check_t=all(is.na(test_kits))), by=facility]
-missing = missing[check==TRUE & check_t==TRUE]
-dt = dt[!facility %in% missing$facility]
 
 #-----------------------------
 # stock outs of ARVs
@@ -115,14 +119,15 @@ arv$variable = factor(arv$variable, c('art_sites_reporting', 'art_stockout', 'ra
 # Number of weeks of stockout by facility
 arv_weeks = dt[art_site==TRUE, .(weeks=sum(arvs, na.rm=T)), by=.(year, facility)]
 arv_weeks = arv_weeks[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
-arv_weeks$year = factor(arv_weeks$year, c('2017', '2018'), 
-                        c('2017 (n=328)', '2018 (n=235)'))
+
+arv_weeks$year = factor(arv_weeks$year, c(2014, 2015, 2016, 2017, 2018), 
+                        c('2014 v(n=316)', '2015 (n=206)', '2016 (n=337)', '2017 (n=362)', '2018 (n=270'))
 
 # same graph, comparable time periods
-arv_weeks2 = dt[month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01' &  art_site==TRUE, .(weeks=sum(arvs, na.rm=T)), by=.(year, facility)]
+arv_weeks2 = dt[month(date)!='10' & month(date)!='11' & month(date)!='12' & art_site==TRUE, .(weeks=sum(arvs, na.rm=T)), by=.(year, facility)]
 arv_weeks2 = arv_weeks2[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
 arv_weeks2$year = factor(arv_weeks2$year, c('2017', '2018'), 
-                        c('2017 (n=273)', '2018 (n=235)'))
+                        c('2014 v(n=236)', '2015 (n=153)', '2016 (n=259)', '2017 (n=284)', '2018 (n=218)'))
 
 #---------------------------------------
 # ARV stockout maps 
@@ -296,7 +301,7 @@ breaks <- c(1, 20, 400, 8100)
 #------------------------------------------------
 # PDF VISUALS 
 
-pdf(paste0(dir, '/outputs/stockout_descriptives.pdf'), height=6, width=12)
+pdf(paste0(dir, '/outputs/stockout_descriptives_2013_2018.pdf'), height=6, width=12)
 
 #----------------------------------------
 # reporting completeness graphs
@@ -325,7 +330,7 @@ ggplot(report[ratio==TRUE], aes(x=date, y=value, color=variable, group=variable)
 # arv stockout graphs 
 
 # arv stockout counts
-ggplot(arv[variable!='Percentage of ART sites stocked out of ARVs'], aes(x=date, y=value, color=variable, group=variable)) +
+ggplot(arv[variable!='Percentage of ART sites reporting that were stocked out of ARVs'], aes(x=date, y=value, color=variable, group=variable)) +
   geom_point() +
   geom_line() +
   geom_line() +
@@ -348,7 +353,7 @@ ggplot(arv_weeks[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) +
   geom_bar(stat='identity', position='dodge') +
   theme_minimal() +
   labs(title = "Facilities stocked out of ARVs for at least one week by total weeks stocked out", x='Number of weeks out of stock*', 
-       y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", fill='Year',
+       y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", fill='Year (total weeks)',
        subtitle='January 2017 - September 2018')
 
 # stacked bar of weeks stocked out 
@@ -357,7 +362,7 @@ ggplot(arv_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) +
   theme_minimal() +
   labs(title = "Facilities stocked out of ARVs for at least one week by total weeks stocked out", 
        subtitle='Same time period: January - September', x='Number of weeks out of stock*', 
-       y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", fill='Year')
+       y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", fill='Year (total weeks)')
 
 #-----------------------
 # ARV stockout maps 

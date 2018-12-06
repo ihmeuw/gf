@@ -55,7 +55,7 @@ for (f in files) {
   
   # remove 'district' from district names
   arv_data[ , district:=unlist(lapply(strsplit(arv_data$district, '\\s' ), '[', 1))]
-  
+
   # alter district names to match the shape file
   arv_data[district=="Bunyangabu", district:="Kabarole"]
   arv_data[district=="Butebo", district:="Pallisa"]
@@ -67,7 +67,7 @@ for (f in files) {
   arv_data[district=="Pakwach", district:="Nebbi"]
   arv_data[district=="Rubanda", district:= "Kabale"]
   arv_data[district=="Rukiga", district:="Kabale"]
-  arv_data[district=="Luwero", district:="Luwero"]
+  arv_data[district=="Luwero", district:="Luweero"]
   arv_data[district=="Sembabule", district:="Ssembabule"]
   
   # add facility level
