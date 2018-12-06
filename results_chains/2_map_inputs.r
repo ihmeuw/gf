@@ -11,10 +11,23 @@
 # Inputs 
 #----------
 
-#1. Funding landscape- think about a stacked area plot for this. Especially global fund, GHE, other. Split graph by data source and financing source. 
-plot_data = fgh[disbursement != 0, .(disbursement, year, financing_source)] #Do we want to subset to disbursement == 0 here? Do we want to subset year? 
-plot_data$year <- as.Date(as.character(plot_data$year), format = "%Y")
-funding_landscape = ggplot(data = plot_data, aes(x = year, y = disbursement, color = financing_source, fill = financing_source)) + 
-  geom_area(position = "stack")
-funding_landscape
+#1. Funding landscape- think about a stacked area plot for this. Especially global fund, GHE, other. Split graph by data source and financing source.
+
+#Guatemala TB Funding Landscape
+gtm_landscape_13_18 <- funding_landscape("Guatemala", "tb", 2013, 2018)
+gtm_landscape_13_18
+
+ggsave(paste0(gtm_save, "/funding_landscape.png"), width = 25, height = 25, units = "cm", dpi = "retina")
+
+#DRC Malaria Funding Landscape 
+drc_landscape_13_18 <- funding_landscape("Congo (Democratic Republic)", "malaria", 2013, 2018)
+drc_landscape_13_18
+
+ggsave(paste0(cod_save, "/funding_landscape.png"), width = 25, height = 25, units = "cm", dpi = "retina")
+
+#Uganda HIV Funding Landscape 
+uga_landscape_13_18 <- funding_landscape("Uganda", "hiv", 2013, 2018)
+uga_landscape_13_18
+
+ggsave(paste0(uga_save, "/funding_landscape.png"), width = 25, height = 25, units = "cm", dpi = "retina")
 

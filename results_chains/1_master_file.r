@@ -7,7 +7,7 @@
 #-----------------------------------------------------
 
 # ---------------------------------------
-## Install packages and set up R  ###### 
+# Install packages and set up R  
 # ---------------------------------------
 
 rm(list=ls())
@@ -15,6 +15,18 @@ library(data.table)
 library(ggplot2)
 library(googlesheets)
 
+user <- "elineb" #Replace with your username
+repo <- paste0("C:/Users/", user, "/Documents/gf/results_chains/") #Modify to fit your repo location
+
+source(paste0(repo, "mapping_functions.r")) 
+
+# ---------------------------------------
+# Set filepaths 
+# ---------------------------------------
+
+gtm_save <- "I:/RTs_and_Projects/Global Fund PCE/Reports/Annual Country Reports 2018-2019/Guatemala/Results Chains Visualizations"
+cod_save <- "I:/RTs_and_Projects/Global Fund PCE/Reports/Annual Country Reports 2018-2019/DRC/Results Chains Visualizations"
+uga_save <- "I:/RTs_and_Projects/Global Fund PCE/Reports/Annual Country Reports 2018-2019/Uganda/Results Chains Visualizations"
 
 # ---------------------------------------
 # Prep key datasets.   
