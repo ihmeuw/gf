@@ -48,8 +48,8 @@ unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', '?'='A', '?'='A', 
 
 
 # vector of characters or phrases to remove
-remove_chars <- c(" ","rssh","hss", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
-                  , "[[:punct:]]", "[^[:alnum:]]","\"", ",") #Why are we removing RSSH and HSS here? EKL 12/3/18
+remove_chars <- c(" ","hss", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
+                  , "[[:punct:]]", "[^[:alnum:]]","\"", ",") 
 
 
 ##function that takes three parameters: the dataset you want cleaned, and the two vectors we created above: 
@@ -57,8 +57,11 @@ strip_chars <- function(gfData, unwanted_array, remove_chars){
   ##remove special characters and blank spaces
   gfData$orig_module <- copy(gfData$module)
   gfData$orig_intervention <- copy(gfData$intervention)
+  
+  
   gfData$module <-tolower(gfData$module)
   gfData$module <-gsub(paste(remove_chars, collapse="|"), "",gfData$module)
+  
   gfData$intervention  <-tolower(gfData$intervention)
   gfData$intervention <-gsub(paste(remove_chars, collapse="|"), "",gfData$intervention)
   
@@ -82,7 +85,7 @@ return(gfData)
 # set the boolean to false when mapping data to GF modular framework
 # but set to true when you want to graph RSSH modules in each disease 
 # ----------------------------------------------
-load_mapping_list <- function(mapping_file, include_rssh_by_disease){
+load_mapping_list <- function(mapping_file, include_rssh_by_disease){ 
   tab_names <- c("HIV Interventions", "TB Interventions", "Malaria Interventions", "RSSH Interventions")
   
   for(i in 1:length(tab_names)){
