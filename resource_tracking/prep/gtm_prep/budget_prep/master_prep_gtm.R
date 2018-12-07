@@ -105,18 +105,22 @@ gtmData[is.na(module), module:=intervention]
 
 ## the directory on the J Drive for the intervention list is:
 map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
-mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx"),
-                                  include_rssh_by_disease = FALSE)
 
-## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
-final_mapping <- copy(mapping_list)
-final_mapping$disease <- NULL
-setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
-mapping_list$coefficient <- 1
-mapping_list$abbrev_intervention <- NULL
-mapping_list$abbrev_module<- NULL
-gf_mapping_list <- total_mapping_list(paste0(map_dir,"intervention_and_indicator_list.xlsx"),
-                                      mapping_list, unwanted_array, remove_chars)
+#EKL why is this whole section necessary? 
+#----------------------------------
+# mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx"),
+#                                   include_rssh_by_disease = FALSE)
+# 
+# ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
+# final_mapping <- copy(module_map)
+# final_mapping$disease <- NULL
+# setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
+# mapping_list$coefficient <- 1
+# mapping_list$abbrev_intervention <- NULL
+# mapping_list$abbrev_module<- NULL
+#---------------------------------------
+
+gf_mapping_list <- copy(module_map)
 
 # ---------------------------------------------------------------------------------------
 # Correct any unmapped modules, leaving initials, date, and applicable budget filepath. 
@@ -180,8 +184,10 @@ mappedGtm$budget <- mappedGtm$budget*mappedGtm$coefficient
 mappedGtm$expenditure <- mappedGtm$expenditure*mappedGtm$coefficient
 mappedGtm$disbursement <- mappedGtm$disbursement*mappedGtm$coefficient
 
+#AAAHHH this cannot happen here. EKL. 
 mappedGtm$sda_activity <- ifelse(tolower(mappedGtm$sda_activity) == "all" | mappedGtm$sda_activity == "0", "Unspecified (Summary budget)", mappedGtm$sda_activity)
-
+ 
+#Or this. EKL. 
 mappedGtm$year <- year(mappedGtm$start_date)
 
 

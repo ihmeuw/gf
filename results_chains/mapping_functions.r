@@ -47,8 +47,9 @@ funding_landscape = function(country_name, disease_name, start_year, end_year){
   y_max <- round(max_db*10, 0) #Scale y-axis 
   
   #Generate plot 
-  funding_landscape = ggplot(data = plot_data, aes(x = year, y = disbursement, color = financing_source, fill = financing_source)) + 
-    geom_bar(stat = "identity")  + 
+  funding_landscape = ggplot(data = plot_data, aes(x = year, y = disbursement, color = financing_source, fill = financing_source, alpha = 0.5)) + 
+    #geom_bar(stat = "identity")  + #Might also view this as a bar plot
+    geom_ribbon(aes(ymin = 0, ymax = disbursement)) + 
     theme_bw(base_size = 16) + scale_y_continuous(breaks = seq(0, y_max, round(y_max/10, 0))) +
     labs(x = "Year", y = "Disbursement (Millions USD)", title = paste0("Funding landscape in ", country_name, " ", start_year, "-", end_year))
   
