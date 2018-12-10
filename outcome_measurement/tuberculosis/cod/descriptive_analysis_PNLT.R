@@ -73,6 +73,12 @@ dt_incid[, X:=NULL]
 dt_incid <- dt_incid[, lapply(.SD, sum, na.rm=TRUE), by= c("dps", "data_year", "file_year", "quarter"), .SDcols= 2:10 ] 
   # by year and quarter and dps, totals for incident cases (across different sheets)
 
+    # CALCULATIONS FOR COUNTRY REPORTS 11/15
+      dt_trt2 <- dt_incid[, lapply(.SD, sum), by= c("data_year", "file_year", "quarter"), .SDcols= c("tot_cas_reg", "healed", "trt_complete") ]
+      dt_trt[, quarter_trt_comp := (healed+trt_complete)/(tot_cas_reg)]
+      dt_trt[, quarter_trt_comp := round(quarter_trt_comp, digits=4)]
+      dt_trt[, quarter_trt_comp := quarter_trt_comp * 100]
+
 # DRC national level quarterly numbers
 dt_natl <- dt_incid[, lapply(.SD, sum, na.rm=TRUE), by= c("data_year", "file_year", "quarter"), .SDcols= 5:13 ]
   # by year and quarter, across all DPS  

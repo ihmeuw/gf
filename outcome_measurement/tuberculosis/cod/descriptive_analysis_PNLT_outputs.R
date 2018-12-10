@@ -312,12 +312,13 @@ m3 <- ggplot() +
                        na.value = "grey70", space = "Lab", midpoint = (med*1.5), ## play around with this to get the gradient that you want, depending on data values 
                        breaks=round(seq(0, max, by=((max-min)/4))), 
                        limits=c(0,max)) +
-  scale_size_continuous(range=c(1,8)) +
+  scale_size_continuous(breaks= c(1000, 3000, 5000, 7000, 9000), range=c(1,12)) +
   labs(title="2017 Tests completed (Xpert and Ziehl - Neelson/Auramine) vs incident TB cases notified", 
-       fill='Number of tests completed', size= "Number of cases notified")
+       fill='Number of tests completed', size= "Number of cases notified")+
+  theme(legend.title=element_text(size=16), legend.text = element_text(size=14), plot.title = element_text(size=20))
 m3
 
-pdf(paste0(output_dir, "outputs/Map - Tests completed with Case Notifications.pdf"), height=9, width=12)
+pdf(paste0(output_dir, "outputs/Map - Tests completed with Case Notifications.pdf"), height=12, width=15)
 m3
 dev.off()
 # ********************************

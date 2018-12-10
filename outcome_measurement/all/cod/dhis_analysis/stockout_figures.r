@@ -34,6 +34,8 @@ inFile = paste0(dir, 'prepped/sigl_drc_01_2015_07_2018_prepped.rds')
 
 # output file
 outFile = paste0(dir, '../visualizations/snis_stockouts.pdf')
+outFile2 = paste0(dir, '../visualizations/snis_graphs_for_report_11_19_18.pdf')
+outFile3 = paste0(dir, '../visualizations/snis_graphs_for_report_with_natl_trends.pdf')
 # ------------------------------------------------------------------------
 
 
@@ -94,7 +96,7 @@ data = data[never_stock==FALSE] # drop facility-variables that never didn't have
 # rectangularize
 frame = data.table(expand.grid(org_unit_id=unique(data$org_unit_id), 
 					date=unique(data$date), 
-					element_eng=unique(data$element_eng)))
+					element_eng=unique(data$element_eng)))I
 data = merge(data, frame, by=c('org_unit_id','date','element_eng'), all=TRUE)
 
 # ensure order for lagging
@@ -243,3 +245,191 @@ for(i in seq(length(pctPlots))) print(pctPlots[[i]])
 dev.off()
 # --------------------------------------------------
 
+
+
+
+# --------------------------------------------------
+# --------------------------------------------------
+# MAKE A VERSION OF THE GRAPH FOR THE REPORT - Audrey 11/16
+# Aggregate
+
+# aggregate all other DPS's
+agg = copy(data)
+agg[dps!= "Maniema", dps:='All Other Provinces'] 
+agg = agg[!is.na(dps)]
+
+# compute monthly average value by dps
+byVars = c('dps','date','element_eng')
+agg = agg[, .(value=mean(value, na.rm=TRUE)), by=byVars]
+
+c = brewer.pal(12, 'Paired')
+colors = c('All Other Provinces'=c[1], 'Kinshasa'=c[4], 
+           'Maniema'=c[8], 'Bas Uele'=c[10], 'Equateur'=c[6], 
+           'Kwilu'=c[2])
+
+i=8
+
+pctO = round(pctOutliers[element_eng==variables[i]]$pct*100,2)
+pctN = round(neverStock[element_eng==variables[i]]$pct*100,1)
+
+g <- ggplot(agg[element_eng==variables[i] & date >= "2017-10-01"], aes(y=value, x=date, color=dps)) +
+  geom_line() + 
+  geom_point() + 
+  scale_x_date(labels=date_format("%b-%Y"), 
+               date_breaks ="3 month") + 
+  scale_color_manual(values=colors) + 
+  labs(title= paste0(variables[i]), y='Average days of stock-out per facility', 
+       x='', color='', 
+       caption=paste0('Reported stockouts greater than 31 days with no obvious explanation excluded (', pctO, '% of facility-months)\n
+			Facilities which seem to never stock this commodity (', pctN, '% of facilities) also excluded')) + 
+  theme_bw()
+g
+
+# REMAKE Constant's figure with diff provinces
+# need to load the data in again
+# load LMIS data
+data2 = readRDS(inFile)
+
+# set variables to use
+variables =  data2[ grep("2-11 months", element_eng), unique(element_eng)]
+variables =  variables[ !grepl("out of stock", variables) ]
+
+# subset to the specified variable(s) post 2016
+data2 = data2[element_eng %in% variables & year>=2017]
+
+# subset columns
+vars = c('org_unit_id','org_unit','dps','mtk','health_zone','date','element_eng','value')
+data2 = data2[, vars, with=FALSE]
+
+# confirm unique identifiers
+if (nrow(data2)!=nrow(unique(data2[,c('org_unit_id','date','element_eng'),with=F]))) { 
+  stop('org_unit_id, date and element_eng do not uniquely identify rows!')
+}
+
+# aggregate
+agg2 = copy(data2)
+agg2[dps!= "Maniema", dps:='All Other Provinces'] 
+agg2 = agg2[!is.na(dps)]
+
+# compute sum value by dps
+byVars = c('dps','date','element_eng')
+agg2 = agg2[, .(value=sum(value, na.rm=TRUE)), by=byVars]
+
+# rename element eng vars
+agg2[ grepl("amount consumed", element_eng), element_eng := "Quantity consumed"]
+agg2[ grepl("quantity lost", element_eng), element_eng := "Quantity lost"]
+agg2[ grepl("stock available", element_eng), element_eng := "Available stock"]
+
+agg2 <- agg2[element_eng != "Quantity lost"]
+
+c = brewer.pal(12, 'Paired')
+colors2 = c('Quantity consumed'=c[6], 
+           'Available stock'=c[2])
+
+change_labels <- function(label){
+  label = paste0(label/1000, "k")
+}
+
+g2 <- ggplot(agg2[date >= "2017-10-01"], aes(y=value, x=date, color=element_eng)) +
+  geom_line() + 
+  geom_point() + 
+  scale_x_date(labels=date_format("%b-%Y"), 
+               date_breaks ="3 month") + 
+  facet_wrap(~dps, scales = "free_y") + 
+  scale_color_manual(values=colors2) + 
+  labs(title= "Artesunate-amodiaquine C1 12.1 (2-11 months) + 25mg tablet 67,5mg - stock over time", y='Quantity in doses', x='', color='') + 
+  theme_bw() + scale_y_continuous(labels = change_labels)
+g2
+
+pdf(outFile2, height=5.5, width=9)
+print(g)
+print(g2)
+dev.off()
+# --------------------------------------------------
+
+# --------------------------------------------------
+# make graphs with national trends rather than "all other provinces"
+
+# first figure
+# aggregate maniema and national level separately
+maniema = copy(data)
+# subset to just maniema 
+maniema = maniema[dps== "Maniema", ] 
+maniema = maniema[!is.na(dps)]
+
+natl = copy(data)
+natl= natl[, dps:='National average'] 
+natl = natl[!is.na(dps)]
+
+# compute sum value by dps for both dts then rbind them together
+byVars = c('dps','date','element_eng')
+natl = natl[, .(value=mean(value, na.rm=TRUE)), by=byVars]
+maniema = maniema[, .(value=mean(value, na.rm=TRUE)), by=byVars]
+dt <- rbindlist(list(maniema, natl), use.names=TRUE, fill = FALSE)
+
+c = brewer.pal(12, 'Paired')
+colors = c('National average'=c[1], 'Kinshasa'=c[4], 
+           'Maniema'=c[8], 'Bas Uele'=c[10], 'Equateur'=c[6], 
+           'Kwilu'=c[2])
+
+i=8
+
+pctO = round(pctOutliers[element_eng==variables[i]]$pct*100,2)
+pctN = round(neverStock[element_eng==variables[i]]$pct*100,1)
+
+g3 <- ggplot(dt[element_eng==variables[i] & date >= "2017-10-01"], aes(y=value, x=date, color=dps)) +
+  geom_line() + 
+  geom_point() + 
+  scale_x_date(labels=date_format("%b-%Y"), 
+               date_breaks ="3 month") + 
+  scale_color_manual(values=colors) + 
+  labs(title= paste0(variables[i]), y='Average days of stock-out per facility', 
+       x='', color='', 
+       caption=paste0('Reported stockouts greater than 31 days with no obvious explanation excluded (', pctO, '% of facility-months)\n
+                      Facilities which seem to never stock this commodity (', pctN, '% of facilities) also excluded')) + 
+  theme_bw()
+g3
+
+# second figure
+# aggregate maniema and national level separately
+maniema = copy(data2)
+# subset to just maniema 
+maniema = maniema[dps== "Maniema", ] 
+maniema = maniema[!is.na(dps)]
+
+natl = copy(data2)
+natl= natl[, dps:='National total'] 
+natl = natl[!is.na(dps)]
+
+# compute sum value by dps for both dts then rbind them together
+byVars = c('dps','date','element_eng')
+natl = natl[, .(value=sum(value, na.rm=TRUE)), by=byVars]
+maniema = maniema[, .(value=sum(value, na.rm=TRUE)), by=byVars]
+dt <- rbindlist(list(maniema, natl), use.names=TRUE, fill = FALSE)
+
+# rename element eng vars
+dt[ grepl("amount consumed", element_eng), element_eng := "Quantity consumed"]
+dt[ grepl("quantity lost", element_eng), element_eng := "Quantity lost"]
+dt[ grepl("stock available", element_eng), element_eng := "Available stock"]
+
+dt <- dt[element_eng != "Quantity lost"]
+
+c = brewer.pal(12, 'Paired')
+colors2 = c('Quantity consumed'=c[6], 
+            'Available stock'=c[2])
+
+g4 <- ggplot(dt[date >= "2017-10-01"], aes(y=value, x=date, color=element_eng)) +
+  geom_line() + 
+  geom_point() + 
+  scale_x_date(labels=date_format("%b-%Y"), 
+               date_breaks ="3 month") + 
+  facet_wrap(~dps, scales = "free_y") + 
+  scale_color_manual(values=colors2) + 
+  labs(title= "Artesunate-amodiaquine C1 12.1 (2-11 months) + 25mg tablet 67,5mg - stock over time", y='Quantity in doses', x='', color='') + 
+  theme_bw() + scale_y_continuous(labels = change_labels)
+g4
+
+pdf(outFile3, height=5.5, width=9)
+print(g3)
+print(g4)
+dev.off()

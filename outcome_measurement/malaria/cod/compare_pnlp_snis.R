@@ -34,12 +34,12 @@ library(Amelia)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/')
 dir_pnlp = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
-dir_dhis = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/prepped_data/')
+dir_dhis = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/prepped/')
 output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualizations/')
 
 # input file:
 input_pnlp <- "final_data_for_imputation.csv"
-input_dhis_base <- "base.rds"
+input_dhis_base <- "base_services_drc_01_2017_09_2018_prepped.rds"
 input_dhis_sigl <- "sigl.rds"
 
 standardized_hzs <- "standardized_hzs.csv"

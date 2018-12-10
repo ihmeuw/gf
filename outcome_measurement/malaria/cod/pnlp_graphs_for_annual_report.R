@@ -75,6 +75,8 @@ presumed_cases <- dt_before_MI[, .(date, dps, health_zone, presumedMalaria_under
 check <- dt_before_MI[, .(date, dps, health_zone, newCasesMalariaMild_5andOlder, mildMalariaTreated_5andOlder,  newCasesMalariaSevere_5andOlder, severeMalariaTreated_5andOlder,
                           newCasesMalariaMild_under5, mildMalariaTreated_under5,  newCasesMalariaSevere_under5, severeMalariaTreated_under5,
                           newCasesMalariaMild_pregnantWomen, mildMalariaTreated_pregnantWomen,  newCasesMalariaSevere_pregnantWomen, severeMalariaTreated_pregnantWomen)]
+
+check <- dt_before_MI[, .(date, dps, health_zone, ASAQused_total, ArtLum_used)]
 # -----------------------------
 
 
@@ -103,45 +105,55 @@ g1 <- ggplot(tests_acts_COD, aes(x=date, y=value, color=variable)) + theme_bw()+
   scale_color_manual(labels = c("Tests completed", "Doses prescribed"), values = c("#56B4E9", "darkblue"))
 g1
 
-pdf(natl_doses_graph, height= 9, width= 12)
+g1 <- ggplot(acts_used_COD, aes(x=date, y=totActs)) + theme_bw()+
+  geom_point(color="darkblue") + geom_line(color="darkblue") + 
+  ggtitle(paste0("First-line antimalarial medications prescribed to patients (national)")) +
+  ylab("Number of doses") + xlab("Date")  + scale_y_continuous(labels = scales :: comma) +
+  theme(axis.text=element_text(size=14),axis.title=element_text(size=16), legend.title=element_blank(), 
+        legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=12, vjust = 0)) 
+g1
+
+pdf(natl_doses_graph, height= 9, width= 10)
 print(g1)
 dev.off()
 # ----------------------------------------------
-# coverage cases treated - mtk vs others
-dt_copy <- copy(dt_hz)
-dt_copy[dps== "maniema", group:="Maniema"]
-dt_copy[dps== "tshopo", group:="Tshopo"]
-dt_copy[dps== "kinshasa", group:="Kinshasa"]
-dt_copy[!dps %in% c("maniema", "tshopo", "kinshasa"), group:="All other provinces"]
+# coverage national level; 2014 on
+
+# # coverage cases treated - mtk vs others
+# dt_copy <- copy(dt_hz)
+# dt_copy[dps== "maniema", group:="Maniema"]
+# dt_copy[dps== "tshopo", group:="Tshopo"]
+# dt_copy[dps== "kinshasa", group:="Kinshasa"]
+# dt_copy[!dps %in% c("maniema", "tshopo", "kinshasa"), group:="All other provinces"]
 
 # confirmed cases treated over confirmed cases
-cases <- dt_copy[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere"),]
-cases <- cases[, .(confCases = sum(mean)), by=c("date", "group")] 
+cases <- dt[indicator %in% c("newCasesMalariaMild", "newCasesMalariaSevere"),]
+cases <- cases[, .(confCases = sum(mean)), by=c("date")] 
 # cases <- dcast.data.table(cases, date ~ indicator)
 
-casesTreated <- dt_copy[indicator %in% c("mildMalariaTreated", "severeMalariaTreated"),]
-casesTreated <- casesTreated[, .(confCasesTreated = sum(mean)), by=c("date", "group")] 
+casesTreated <- dt[indicator %in% c("mildMalariaTreated", "severeMalariaTreated"),]
+casesTreated <- casesTreated[, .(confCasesTreated = sum(mean)), by=c("date")] 
 # casesTreated <- dcast.data.table(casesTreated, date ~ indicator)
 
-casesTreated_vs_cases <- merge(cases, casesTreated, by=c("date", "group"))
-casesTreated_vs_cases <- casesTreated_vs_cases[, propCasesTreated := confCasesTreated/confCases, by= c("date", "group")]
+casesTreated_vs_cases <- merge(cases, casesTreated, by=c("date"))
+casesTreated_vs_cases <- casesTreated_vs_cases[, propCasesTreated := confCasesTreated/confCases, by= c("date")]
 # casesTreated_vs_cases <- casesTreated_vs_cases[, propSimpleCasesTreated := newCasesMalariaMild/mildMalariaTreated, by= c("date")]
 # casesTreated_vs_cases <- casesTreated_vs_cases[, propSevereCasesTreated := newCasesMalariaSevere/severeMalariaTreated, by= c("date")]
 
-graphData <- casesTreated_vs_cases[, .(date, propCasesTreated, group)]
+graphData <- casesTreated_vs_cases[, .(date, propCasesTreated)]
 # graphData <- casesTreated_vs_cases[, .(date, propSimpleCasesTreated, propSevereCasesTreated)]
 # graphData <- melt.data.table(graphData, id.vars="date")
 
-g2 <- ggplot(graphData[date>= "2014-01-01"], aes(x=date, y=propCasesTreated, color= group)) + theme_bw()+
-  geom_point() + geom_line() + 
+g2 <- ggplot(graphData[date>= "2014-01-01"], aes(x=date, y=propCasesTreated)) + theme_bw()+
+  geom_point(color="darkblue") + geom_line(color="darkblue") + 
   ggtitle(paste0("Proportion of confirmed cases treated according to national policy")) +
-  ylab("Proportion of Cases Treated") + xlab("Date") + ylim(0.5, NA) +
+  ylab("Proportion of Cases Treated") + xlab("Date") + ylim(0.75, 1.0) +
   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_blank(), 
-        legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=12, vjust = 0)) +
+        legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=15, vjust = 0)) +
   labs(caption= "Source: Programme National de Lutte contre le Paludisme (PNLP)") 
 g2
 
-pdf(cases_treated_graph, height= 9, width= 12)
+pdf(cases_treated_graph, height= 9, width= 10)
 print(g2)
 dev.off()
   
