@@ -163,7 +163,7 @@ get_hiv_forecast <- function(root, hiv_dir, hiv_file, pce_codes){
   ##subset to the countrains that we want 
   pce_data <- hiv_data[location_id%in%pce_codes]
   
-  pce_data$V1 <- NULL #I think someone forgot to remove this variable - it appears to just be a row index
+  pce_data$V1 <- NULL #I think someone forgot to remove this variable - it appears to just be a row index #EKL no- this means a melt or reshape somewhere else didn't work correctly. 
   pce_data$ghe = pce_data$public
   
   pce_data_new = subset(pce_data, select = c("location_id", "year_id", "variable", "ghe", "ppp", "oop"))
@@ -272,6 +272,9 @@ pce_total$adm2 <- pce_total$adm1
 pce_total$start_date <- paste0(pce_total$year, "-01-01")
 pce_total$period <- 365
 pce_total$end_date <- paste0(pce_total$year, "-12-31") 
+
+# Why are we doing this??? EKL
+# -----------------------------
 pce_total$module <- "all"
 pce_total$intervention <- "all"
 pce_total$coefficient <- 1
@@ -279,6 +282,8 @@ pce_total$gf_module <- "all"
 pce_total$gf_intervention <- "all"
 pce_total$abbrev_module <- "all"
 pce_total$abbrev_intervention <- "all"
+# -----------------------------
+
 #pce_total$disease <- "all"
 pce_total$budget <- 0
 pce_total$expenditure <- 0 

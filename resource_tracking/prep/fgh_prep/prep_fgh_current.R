@@ -19,7 +19,7 @@ library(reshape)
 library(scales)
 
 # ----------------------------------------------
-##declare functions to help prep the data: 
+##declare functions to help prep the data:  #EKL pull these functions out. Or are all of these necessary??? 
 # ----------------------------------------------
 get_dah_source_channel <- function(channel){
   x <- "other_dah"
@@ -124,7 +124,8 @@ drop.cols <- (grep(paste(toMatch, collapse="|"), colnames(fgh_data)))
 fghData<- fgh_data[,drop.cols, with=FALSE]
 
 ## "melt" the data: 
-fghData <- melt(fghData, id=c("year", "financing_source", "loc_name"), variable.name = "sda_activity", value.name="disbursement")
+fghData <- melt(fghData, id=c("year", "financing_source", "loc_name"), variable.name = "sda_activity", value.name="disbursement") #Do we want these different funding streams to be "activities"?? EKL
+fghData$disbursement <- as.numeric(fghData$disbursement)
 
 ##get the disease column: 
 fghData$disease <- mapply(get_disease, fghData$sda_activity)
@@ -135,12 +136,16 @@ fghData[loc_name=='GTM', adm1:=128]
 fghData[loc_name=='UGA',  adm1:=190] 
 
 ##sum the disbursement by the other variables just to remove any duplicates: 
-byVars = names(fghData)[names(fghData)%in%c('source', 'year', 'disease', 'financing_source','sda_activity', 'loc_name', 'adm1')]
-fghData = fghData[, list(disbursement=sum(na.omit(disbursement))), 
+byVars = c('year', 'disease', 'financing_source','sda_activity', 'loc_name', 'adm1')
+fghData = fghData[, disbursement:=sum(na.omit(disbursement)), 
                   by=byVars]
+fghData = unique(fghData)
 
 fghData$fin_data_type <- "actual"
 fghData$code <- "s98"
+fghData$fileName <- "ihme_dah_cod_uga_gtm_1990_2016.csv"
+
+#THERE IS ALREADY HIV DATA IN THIS DATASET EKL
 
 # ----------------------------------------------
 # prep the HIV THE data from the FGH team  
@@ -151,7 +156,7 @@ ghe_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/mult
 ##country codes for GTM, UGA, and DRC
 country_codes <- c(128, 190,171)
 
-ghe_data <- ghe_data[grepl(paste0(country_codes, collapse="|"), ghe_data$location_id),]
+ghe_data <- ghe_data[location_id %in% country_codes]
 
 ghe_data$model <- NULL
 ghe_data$hiv_pop <- NULL
@@ -215,12 +220,13 @@ ghe_cleaned$sda_activity <- "all"
 ghe_cleaned$code <- "S98"
 ghe_cleaned$financing_source <- mapply(get_the_source_channel, as.character(ghe_cleaned$fin_data_type))
 ghe_cleaned = ghe_cleaned[financing_source != "the"]
+ghe_cleaned$fileName <- "gpr_corrected_final_gbd4.csv"
 
 ghe_cleaned$fin_data_type <- mapply(transform_fin_data_type, as.character(ghe_cleaned$fin_data_type)) #CHECK FOR ESTIMATES VS MODELS
 # ----------------------------------------------
 # ## rbind the DAH and the forecasted HIV THE: 
 # ----------------------------------------------
-totalFgh <- rbind(fghData, ghe_cleaned)
+totalFgh <- rbind(fghData, ghe_cleaned) #Are these not overwriting each other? Where does the data come from? EKL
 
 # ----------------------------------------------
 # add RT variables to the FGH data 
@@ -234,20 +240,30 @@ totalFgh$start_date  <- as.Date(totalFgh$start_date,"%Y-%m-%d")
 totalFgh$end_date <- paste0(totalFgh$year, "-12-31") 
 totalFgh$budget <- 0 
 totalFgh$expenditure <- 0 
+
+
+#--------------------------------
+#AAAAAAAAAAAAAAAAAAAAAAAAHHHHH
+# Why would we do this??? EKL
 totalFgh$gf_module <-"all"
 totalFgh$module <- "all"
 totalFgh$gf_intervention <- "all"
 totalFgh$intervention <- "all"
 totalFgh$abbrev_module <-"all"
 totalFgh$abbrev_intervention <- "all"
+#--------------------------------
+
 totalFgh$adm2 <- totalFgh$adm1
 totalFgh$grant_number <- "none"
-totalFgh$recipient <-totalFgh$grant_number
+totalFgh$recipient <- "none"
 totalFgh$lang <- "eng"
-totalFgh$cost_category <- "all"
+
+#-----------------------------------
+totalFgh$cost_category <- "all" #Why not make this NA? 
+#-----------------------------------
+
 totalFgh$coefficient <- 1
 totalFgh$country = mapply(get_country_name, totalFgh$loc_name)
-totalFgh$fileName = ifelse(totalFgh$disease == "hiv", "gpr_corrected_final_gbd4.csv", "ihme_dah_cod_uga_gtm_1990_2016.csv")
 totalFgh$loc_name = tolower(totalFgh$loc_name)
 totalFgh = totalFgh[!grep("total_", sda_activity)]
 

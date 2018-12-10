@@ -33,7 +33,7 @@ budget_over_time = function(country_name, disease_name, start_year, end_year, y_
 #Accepts a country, a disease, and a time period (start and end year, inclusive)
 #Return a graph of the funding landscape for the disease in the country over the time period using Financing Global Health actuals. 
 funding_landscape = function(country_name, disease_name, start_year, end_year){
-  plot_data = fgh_actual[country == country_name & disease == disease_name] #Use actual numbers. 
+  plot_data = test_fgh[country == country_name & disease == disease_name] #Use actual numbers. 
   
   #Subset to the years we want, and remove cases where disbursement is less than 0 
   plot_data = plot_data[(year >=start_year & year <=end_year) & disbursement > 0, .(disbursement, year, financing_source)]
