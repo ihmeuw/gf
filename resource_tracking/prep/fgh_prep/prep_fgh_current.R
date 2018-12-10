@@ -111,20 +111,21 @@ transform_fin_data_type <- function(fin_data_type){
 # ----------------------------------------------
 
 fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/ihme_dah_cod_uga_gtm_1990_2016.csv",fileEncoding="latin1"))
+fgh_data[year == 2013 & iso3_rc == "COD", sum(dah_17)]
 
 setnames(fgh_data, c("source", "iso3_rc"), c("dah_origin","loc_name"))
 
 fgh_data$oid_zika_dah_17 = as.numeric(fgh_data$oid_zika_dah_17)
 fgh_data$financing_source <- mapply(get_dah_source_channel, fgh_data$channel)
-# now get the columns we want:
-toMatch <- c("hiv", "mal", "tb", "hss", "other", "year", "source", "loc_name", "oid", "mh", "ch", "ncd", "swap", "unalloc")
-#toMatch <- c("hiv", "mal", "tb", "other", "year", "source", "loc_name")
 fgh_data$channel = NULL
-drop.cols <- (grep(paste(toMatch, collapse="|"), colnames(fgh_data)))
-fghData<- fgh_data[,drop.cols, with=FALSE]
+fghData<- fgh_data[, -c("dah_origin", "dah_17"), with=FALSE]
 
 ## "melt" the data: 
 fghData <- melt(fghData, id=c("year", "financing_source", "loc_name"), variable.name = "sda_activity", value.name="disbursement")
+fghData[year == 2013 & loc_name == "COD", sum(disbursement)]
+
+check_raw_data[year == 2013, sum(dah_17)]
+fghData[year == 2013 & loc_name == "COD", sum(disbursement)] #These two numbers aren't even the same. Why? 
 
 ##get the disease column: 
 fghData$disease <- mapply(get_disease, fghData$sda_activity)
@@ -249,7 +250,7 @@ totalFgh$coefficient <- 1
 totalFgh$country = mapply(get_country_name, totalFgh$loc_name)
 totalFgh$fileName = ifelse(totalFgh$disease == "hiv", "gpr_corrected_final_gbd4.csv", "ihme_dah_cod_uga_gtm_1990_2016.csv")
 totalFgh$loc_name = tolower(totalFgh$loc_name)
-totalFgh = totalFgh[!grep("total_", sda_activity)]
+totalFgh = totalFgh[!grep("total_", sda_activity)] #This should not happen here!!! EKL Needs to happen above. 
 
 # ----------------------------------------------
 # export the FGH data 

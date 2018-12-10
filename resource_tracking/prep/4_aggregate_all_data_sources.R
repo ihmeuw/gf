@@ -17,6 +17,11 @@ totalCod <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/cod/
 totalCod$country <- "Congo (Democratic Republic)"
 totalCod$start_date <- as.Date(totalCod$start_date,"%Y-%m-%d")
 
+#EKL WE HAVE NAS IN YEAR HERE, WHICH MEANS THAT WE WILL HAVE NAS IN START DATE
+na_cod_year <- totalCod[is.na(year)]
+#All observations coming from this file from 2010: 22May12_Revised_Budget_Q10 R8_HIV.xls
+
+
 # --------------------------------------------
 ###load the prepped Uganda data: 
 # --------------------------------------------
@@ -28,6 +33,7 @@ totalUga$country <- "Uganda"
 totalUga$start_date <- as.Date(totalUga$start_date,"%Y-%m-%d")
 totalUga$year <- year(totalUga$start_date)
 
+na_uga_year <- totalUga[is.na(year)]
 
 # --------------------------------------------
 ###load the prepped GTM data (sicoin and FPM/PUDR)
@@ -126,6 +132,12 @@ totalData$start_date <- as.character(totalData$start_date)
 totalData$end_date <- as.character(totalData$end_date)
 
 totalData$loc_name = ifelse(totalData$loc_name  == "Uganda", "uga", ifelse(totalData$loc_name == "Guatemala", "gtm", ifelse(totalData$loc_name == 'Congo (Democratic Republic)', "cod", tolower(totalData$loc_name))))
+
+totalData$budget <- as.numeric(totalData$budget)
+totalData$expenditure <- as.numeric(totalData$expenditure)
+totalData$disbursement <- as.numeric(totalData$disbursement)
+
+totalData$year <- as.Date(totalData$year, "%Y") #To check- where are we getting NA in year?? 
 
 write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv", row.names = FALSE)
 
