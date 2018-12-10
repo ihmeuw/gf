@@ -41,25 +41,30 @@ output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualiza
 input_pnlp <- "final_data_for_imputation.csv"
 input_dhis_base <- "base_services_drc_01_2017_09_2018_prepped.rds"
 input_dhis_sigl <- "sigl.rds"
+after_imputation_pnlp <- ""
 
 standardized_hzs <- "standardized_hzs.csv"
 
 # output file:
 comparison <- "snis_pnlp_comparison.pdf"
 comparison_at_dps <- "snis_pnlp_comparison_at_dps_level.pdf"
+
+# functions
+source('./core/standardizeHZNames.R')
+source('./core/standardizeDPSNames.R')
 # ----------------------------------------------
 
 
 # ----------------------------------------------
 # Load data and hz file
 # ----------------------------------------------
-pnlp <- read.csv(paste0(dir_pnlp, input_pnlp))
+pnlp <- read.csv(paste0(dir_pnlp, input_pnlp), stringsAsFactors = FALSE)
 pnlp <- as.data.table(pnlp)
 
 dhis_base <- readRDS(paste0(dir_dhis, input_dhis_base))
 # dhis_sigl <- readRDS(paste0(dir_dhis, input_dhis_sigl))
 
-hzs <- read.csv(paste0(dir, standardized_hzs))
+hzs <- read.csv(paste0(dir, standardized_hzs), stringsAsFactors = FALSE)
 hzs <- as.data.table(hzs)
 # ----------------------------------------------
 
@@ -72,13 +77,13 @@ hzs <- as.data.table(hzs)
 pnlp$year <- year(pnlp$date)
 
 # subset to just 2017
-pnlp <- pnlp[year==2017 & dps != "0",]
+pnlp <- pnlp[year>=2015 & dps != "0",]
 pnlp$dps <- gsub(" ", "-", pnlp$dps)
 pnlp[ dps== "bas-congo", dps := "kongo-central" ]
 
 # SNIS
 # subset to 2017 and to type = malaria
-dhis_base <- dhis_base[year==2017 & type=="malaria" & keep==1,]
+dhis_base <- dhis_base[year>=2017 & type=="malaria",]
 
 # subset to the columns we want to use in snis
 dhis_base_subset <- dhis_base[, .(dps, health_zone, health_area, date, month, year, element, element_eng, category, age, value)]
@@ -86,6 +91,10 @@ dhis_base_subset <- dhis_base[, .(dps, health_zone, health_area, date, month, ye
 # aggregate snis data to health zone and dps level
 dhis_base_hz <- dhis_base_subset[, .(value = sum(value, na.rm=TRUE)), by=c("dps", "health_zone", "date", "month", "year", "element", "element_eng", "category", "age")]
 dhis_base_dps <- dhis_base_subset[, .(value = sum(value, na.rm=TRUE)), by=c("dps", "date", "month", "year", "element", "element_eng", "category", "age")]
+
+# check unique identifiers
+if (nrow(pnlp) != nrow(unique(pnlp[, .(health_zone, dps, date)]))) stop("check unique identifiers in pnlp")
+if (nrow(dhis_base) != nrow(unique(dhis_base[, .(org_unit_id, date, element, category)])))  stop("check unique identifiers in snis")
 # ----------------------------------------------
 
 
