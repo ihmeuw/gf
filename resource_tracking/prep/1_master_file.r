@@ -19,6 +19,7 @@ library(tidyr)
 library(tools)
 library(rlang)
 library(zoo)
+library(dplyr)
 
 # ---------------------------------------
 # Set global variables and filepaths.  
@@ -73,7 +74,7 @@ for(country in countries){
 ## STEP 5: Verify budget numbers
 # ----------------------------------------------
 
-  source(paste0(code_dir, "5_verify_budget_numbers.r")) #Emily would eventually like to get this file working. 
+  source(paste0(code_dir, "5_verify_budget_numbers.r")) 
  
 # ----------------------------------------------
 ## STEP 6: Upload to Basecamp
