@@ -27,7 +27,21 @@ dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockouts/'
 dt = readRDS(paste0(dir, 'arv_stockouts_2013_2018.rds'))
 
 # subset dates to before November 2018
-dt = dt[date < '2018-10-01' & year !=2013] 
+dt = dt[date < '2018-10-01'] 
+
+#--------------------------------
+# Include 2013
+
+
+
+for (f in unique(dt$facility)) {
+  date = dt[facility==f, min(date)] 
+  end = dt[facility==f, max(date)]
+  while(date <= end) {
+  while(arvs==TRUE) {
+  stock_out = dt[ ,sum(arvs)]
+  } date = date + 7 }}
+
 
 #--------------------------------
 # import the shape file 
