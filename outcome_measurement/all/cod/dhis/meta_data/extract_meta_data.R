@@ -30,6 +30,9 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
+# source functions 
+source (paste0(dir, 'dhis_extracting_functions.R'))
+
 #---------------------------------------------
 #'Extract content information from DHIS
 #'
@@ -86,9 +89,9 @@ extract_dhis_content = function(base_url, userID, password) {
   colnames(data_sets) = c('datasets_ID', 'datasets_name', 'datasets_url')
   
   #-----------------------
-  # data elements extraction and merge
+  # extract data elements 
   print('Extracting Data Elements')
-  data_element_list <<- extract_data_elements(urls$data_elements_url, userID, password)
+  data_element_list = extract_data_elements(urls$data_elements_url, userID, password)
   
   data_elements <<- ddply(data_sets, .(datasets_ID , datasets_name),
                           function(data_sets) {
