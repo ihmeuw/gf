@@ -41,7 +41,7 @@ output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/visualiza
 input_pnlp <- "final_data_for_imputation.csv"
 input_dhis_base <- "base_services_drc_01_2017_09_2018_prepped.rds"
 input_dhis_sigl <- "sigl.rds"
-after_imputation_pnlp <- ""
+after_imputation_pnlp <- "post_imputation/imputedData_run2_agg_hz.rds"
 
 standardized_hzs <- "standardized_hzs.csv"
 
@@ -58,8 +58,9 @@ source('./core/standardizeDPSNames.R')
 # ----------------------------------------------
 # Load data and hz file
 # ----------------------------------------------
-pnlp <- read.csv(paste0(dir_pnlp, input_pnlp), stringsAsFactors = FALSE)
-pnlp <- as.data.table(pnlp)
+# pnlp <- read.csv(paste0(dir_pnlp, input_pnlp), stringsAsFactors = FALSE) # when doing the comparison, use this line
+# pnlp <- as.data.table(pnlp)
+pnlp <- readRDS(paste0(dir_pnlp, after_imputation_pnlp)) # updated now to create a combination data set of pnlp/snis for showing results
 
 dhis_base <- readRDS(paste0(dir_dhis, input_dhis_base))
 # dhis_sigl <- readRDS(paste0(dir_dhis, input_dhis_sigl))

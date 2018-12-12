@@ -13,12 +13,15 @@ library(ggplot2)
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <-paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/')
 snis_dir <- paste0(dir, 'dhis/prepped/')
-pnlp_dir <- paste0(dir, 'National_Malaria_Program/')
+pnlp_dir <- paste0(dir, 'prepped_data/PNLP/')
 out_dir <- paste0(dir, "dhis/compare_pnlp/compare_drugs_rec/")
+dir_dhis = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/prepped/')
   
 # input files
 pnlp_file <- 'pre_imputation_PNLP_2017.csv'
 snis_drugs <- "tb_mal_drugs_distributed.rds"
+pnlp_after_MI <- "post_imputation/imputedData_run2_agg_hz.rds"
+dhis_base <- "base_services_drc_01_2017_09_2018_prepped.rds"
 
 # output file
 output <- "comparison of drugs received.pdf"
@@ -31,10 +34,13 @@ source('./core/standardizeDPSNames.R')
 # ---------------------------------------------------
 # Load prepped data
 # ---------------------------------------------------
-snis <- readRDS(paste0(snis_dir, snis_drugs))
-pnlp <- read.csv(paste0(pnlp_dir, pnlp_file), stringsAsFactors = FALSE)
-pnlp <- as.data.table(pnlp)
-snis <- snis[year=="2017",] # ***NOTE: PNLP is already just 2017 data***
+# snis <- readRDS(paste0(snis_dir, snis_drugs))
+# pnlp <- read.csv(paste0(pnlp_dir, pnlp_file), stringsAsFactors = FALSE)
+# pnlp <- as.data.table(pnlp)
+# snis <- snis[year=="2017",] # ***NOTE: PNLP is already just 2017 data***
+
+pnlp <- readRDS(paste0(pnlp_dir, pnlp_after_MI))
+snis <- readRDS(paste0(dir_dhis, dhis_base))
 
 pnlp[, health_zone := standardizeHZNames(health_zone)]
 snis[, health_zone := standardizeHZNames(health_zone)]
