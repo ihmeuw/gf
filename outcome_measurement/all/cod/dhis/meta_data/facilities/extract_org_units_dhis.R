@@ -108,10 +108,10 @@ extract_org_unit = function(url, userID, password) {
   tmp = xmlToList(root)
   ancestors = tmp$ancestors
 
-  # create a data frame of the meta data 
+  # create a data frame of the meta data and return it
   org_unit_metadata = data.table(id, coordinates, opening_date,
                                  name, ancestors) 
-  
+
   return(org_unit_metadata) }
   
 #-------------------------------

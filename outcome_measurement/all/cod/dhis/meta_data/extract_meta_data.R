@@ -109,7 +109,6 @@ extract_dhis_content = function(base_url, userID, password) {
 
   #-----------------------
   # extract categories for the data elements (age, sex, etc.)
-  # extract categories is in the dhisextractr package
   print('Extracting Categories')
   data_elements_categories = extract_categories(as.character(urls$data_elements_categories),
                                                   userID, password)
@@ -117,65 +116,62 @@ extract_dhis_content = function(base_url, userID, password) {
   #-----------------------
   # organisational units extraction
   print('Extracting Organisation Units List')
-  org_units_list <<- extract_orgunits_list(as.character(urls$org_units_url),
+  org_units_list = extract_orgunits_list(as.character(urls$org_units_url),
                                            userID, password)
   
-  colnames(org_units_list) <- c('org_unit_ID', 'org_unit_name', 'org_unit_url')
+  colnames(org_units_list) = c('org_unit_ID', 'org_unit_name', 'org_unit_url')
+  org_units_list = data.table(org_units_list)
+  
+  # convert factors to strings
+  org_units_list[ , org_unit_ID:=as.character(org_unit_ID)]
+  org_units_list[ , org_unit_name:=as.character(org_unit_name)]
+  org_units_list[ , url:=as.character(org_unit_url)]
   
   # check for duplicate facilities
   org_units_list[duplicated(org_units_list$org_unit_ID)]
-  
-  #Remove duplicate facilities
-  n_units <- ddply(org_units_list , .(org_unit_ID) , nrow)
-  simple_units <- subset(n_units, V1 > 1)
-  
-  org_units_list <<- subset(org_units_list, !(org_unit_ID %in% simple_units$org_unit_ID)) 
-  
-  
+  org_units_list[ , org_unit_url:=NULL]
   
   #-----------------------
-  #extract information about organisational units: coordinates, data sets, etc.
+  # extract meta data associated with organizational units
+  # includes data sets, coordinates, opening date, name
   print('Extracting units information')
-  print('This is where it breaks')
-  extracted_orgunits <<- dlply(org_units_list, .(org_unit_ID),
-                               function(org_units_list) {
-                                 try(extract_org_unit(as.character(org_units_list$org_unit_url) ,
-                                                      userID, password)) },
-                               .progress = 'text')  
+  extracted_org_units = dlply(org_units_list, .(org_unit_ID),
+                              function(org_units_list) {
+                              try(extract_org_unit(org_units_list$url, userID, password))},
+                              .progress = 'text')  
   
-  saveRDS(extracted_orgunits, file=paste0(out_dir, '/extracted_orgunits.rds'))
-  
-  # #extracted_orgunits <<- readRDS(paste0(root, "Project/Evaluation/GF/outcome_measurement/cod/dhis_temp/extracted_orgunits.rds")) 
-  # 
-  # # screen for timed out and other faulty org units
-  lengths = sapply(extracted_orgunits, length)
+  # screen for timed out and other faulty org units
+  lengths = sapply(extracted_org_units, length)
   faults = which(lengths<3)
   if (length(faults)>0) warning('Warning: at least one org unit didn\'t extract correctly')
   extracted_orgunits = extracted_orgunits[-faults]
+ 
+  # save org unit meta data 
+  saveRDS(units, file=paste0(dir, 'meta_data/extracted_org_units.rds')) 
   
-  org_units_description <<- ldply(extracted_orgunits, function(list) data.frame(list[[1]]))
-  saveRDS( org_units_description, file=paste0(out_dir, '/ org_units_description.rds'))
-  
-  
-  org_units_group <<- ldply (extracted_orgunits, function(list) data.frame(list[[2]]))
-  saveRDS(org_units_group, file=paste0(out_dir, '/ org_units_group.rds'))
-  
-  org_units_report <<- ldply (extracted_orgunits, function(list) data.frame(list[[3]]))
-  
-  # saveRDS(org_units_report, file=paste0(out_dir, '/ org_units_report.rds'))
-  # 
-  return(list(data_sets, updated_data_elements, data_elements_categories, org_units_list,
-              org_units_description, org_units_group, org_units_report))
+  #-----------------------
+  # return all of the data as a data set
+  return(list(data_sets, updated_data_elements, data_elements_categories, org_units_list))
 }
 
 #-------------------------------------------------------------------
 
 #------------------------
-# run the extraction 
+# run the extraction :)
+
 DRC_extraction = extract_dhis_content(base_url = base_url, userID = userID, password = password)
 
 #-------------------------
+# save the data 
+
 # set new output directory
+out_dir = paste0(dir, '' )
+
+
+
+
+
+
 
 
 # 1 - export data sets
