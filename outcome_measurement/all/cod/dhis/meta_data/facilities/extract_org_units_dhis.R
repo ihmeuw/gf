@@ -1,4 +1,5 @@
-# DHIS Extraction for DRC  - Metadata extraction of organisational units 
+# SHIS Extraction - extract the meta data for org units
+# Provides a list of health facilities and their locations 
 # Caitlin O'Brien-Carelli
 # 8/29/18
 
@@ -10,6 +11,9 @@ library(ggplot2)
 library(dplyr)
 library(stringr) 
 library(reshape)
+library(RCurl)
+library(XML)
+library(plyr)
 
 # --------------------
 # shell script to run on the cluster 
@@ -18,34 +22,38 @@ library(reshape)
 
 #----------------------
 # determine if the code is being run on the cluster or on home computer
-root <- ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set working directory 
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
 #------------------------------
 
 #------------------------------
 # install and load the dhisextractr package 
-source(paste0(dir, 'dhis_extracting_functions.R')) 
+source(paste0(dir, 'dhis_extracting_functions.R'))
 
 # check to make sure the package loaded by viewing a function help file
 ?extract_all_data
 
 #------------------------------
 # read in the organisational units 
+# org_units = fread(paste0(dir, 'meta_data/org_units_list.rds'))
 
-org_units_list <- readRDS(paste0(dir, 'meta_data/org_units_list.rds'))
+org_units = readRDS(paste0(dir, 'meta_data/org_units.rds' ))
+org_units = org_units[[1]]
+org_units = data.table(org_units)
+
 #---------------------------------------------
 
 #--------------------------------------
 # arguments for the function - login information for SNIS 
 
-country <- 'drc'
-base_url <- 'https://www.snisrdc.com'
-userID <- 'Bethany_Huntley'
-password <- 'Snisrdcongo1'
+country = 'drc'
+base_url = 'https://www.snisrdc.com'
+userID = 'Bethany_Huntley'
+password = 'Snisrdcongo1'
 #--------------------------------------------
 # website for bug fixes (use ancestors for higher level units):
 # https://www.snisrdc.com/api/organisationUnits/pCfpKXoGBF8.xml
@@ -54,24 +62,72 @@ password <- 'Snisrdcongo1'
 # create a function that extracts the information about organisational units
 # includes the associated district, health zone, etc. 
 
+# make dhis urls
+
+make_dhis_urls = function(base_url) {
+  data_sets_url = paste(base_url , '/api/dataSets.xml' , sep = '')
+  data_elements_url = paste(base_url , '/api/dataElements.xml' , sep = '')
+  org_units_url = paste(base_url , '/api/organisationUnits.xml' , sep = '')
+  data_elements_categories = paste(base_url , '/api/categoryOptionCombos.xml' , sep = '')
+  data.frame(data_sets_url, data_elements_url , data_elements_categories , org_units_url, stringsAsFactors = FALSE)
+}
+
+#-----------------------------
+
+parse_page = function(url, userID, password) {
+  
+  # generate arguments for getURLContent and xmlParse
+  url = as.character(url)
+  userpwd = paste0(userID, ':', password)
+  
+  # extract_data
+  response = getURLContent(url = url, userpwd = userpwd, httpauth = 1L, header=FALSE, ssl.verifypeer = FALSE)
+  parsed_page = xmlParse(response)
+  root = xmlRoot(parsed_page)
+  return(root)
+}
+
+#-----------------------------
+
+extract_org_unit = function(url, userID, password) {
+  root = parse_page(url = url, userID = userID, password = password)
+  
+  #Extract org unit metadata
+  id = xmlAttrs(root)[['id']]
+  coordinates = xmlValue(root[['coordinates']])
+  opening_date = xmlValue(root[['openingDate']])
+  name = xmlValue(root[['displayName']])
+  
+  # to get the associated health areas, health zones and dps
+  # transform the xml into a nested list of lists and extract the ancestors list
+  tmp = xmlToList(root)
+  ancestors = tmp$ancestors
+
+  # create a data frame of the meta data and return it
+  org_unit_metadata = data.table(id, coordinates, opening_date,
+                                 name, ancestors) 
+
+  return(org_unit_metadata) }
+  
+#-------------------------------
+
 #extract_dhis_content function
-extract_dhis_content <- function(base_url, userID, password) {
+extract_dhis_units = function(base_url, userID, password) {
   print('Making DHIS urls')
-  urls <- make_dhis_urls(base_url)
+  urls = make_dhis_urls(base_url)
   
   #extract information about organisational units: coordinates, data sets, etc.
   print('Extracting units information')
-  extracted_org_units <- dlply(org_units_list, .(org_unit_ID),
-                               function(org_units_list) {
-                                 try(extract_org_unit(as.character(org_units_list$org_unit_url) ,
-                                                      userID, password))},
-                               .progress = 'text')  
-
+  extracted_org_units = dlply(org_units, .(org_unit_ID),
+                              function(org_units) {
+                              try(extract_org_unit(org_units$url, userID, password))},
+                              .progress = 'text')  
 }
 
-#-----------------------
+#-------------------------------
 # run the extraction 
-units <- extract_dhis_content(base_url = base_url, userID = userID, password = password)
+
+units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
 
 #-----------------------
 # save the contents of the extraction (interim output)
