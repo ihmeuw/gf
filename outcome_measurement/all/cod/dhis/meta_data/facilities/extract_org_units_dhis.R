@@ -25,30 +25,25 @@ library(plyr)
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set working directory 
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
 #------------------------------
 
 #------------------------------
 # install and load the dhisextractr package 
-# source(paste0(dir, 'dhis_extracting_functions.R')) 
-# 
-# # check to make sure the package loaded by viewing a function help file
-# ?extract_all_data
+source(paste0(dir, 'dhis_extracting_functions.R'))
+
+# check to make sure the package loaded by viewing a function help file
+?extract_all_data
 
 #------------------------------
 # read in the organisational units 
 # org_units = fread(paste0(dir, 'meta_data/org_units_list.rds'))
 
-org_units = readRDS(paste0(dir, 'meta_data/org_units_list.rds' ))
+org_units = readRDS(paste0(dir, 'meta_data/org_units.rds' ))
+org_units = org_units[[1]]
 org_units = data.table(org_units)
-
-# convert factors to strings
-org_units[ , org_unit_ID:=as.character(org_unit_ID)]
-org_units[ , org_unit_name:=as.character(org_unit_name)]
-org_units[ , url:=as.character(org_unit_url)]
-org_units[ , url:=gsub('www.', '', url)]
 
 #---------------------------------------------
 
@@ -117,7 +112,7 @@ extract_org_unit = function(url, userID, password) {
 #-------------------------------
 
 #extract_dhis_content function
-extract_dhis_content = function(base_url, userID, password) {
+extract_dhis_units = function(base_url, userID, password) {
   print('Making DHIS urls')
   urls = make_dhis_urls(base_url)
   
@@ -132,7 +127,7 @@ extract_dhis_content = function(base_url, userID, password) {
 #-------------------------------
 # run the extraction 
 
-units = extract_dhis_content(base_url = base_url, userID = userID, password = password)
+units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
 
 #-----------------------
 # save the contents of the extraction (interim output)

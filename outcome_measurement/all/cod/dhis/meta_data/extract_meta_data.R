@@ -1,6 +1,6 @@
 # DHIS Extraction for DRC  - Metadata extraction
 # Caitlin O'Brien-Carelli
-# 12/11/18
+# 12/12/18
 
 # Calls the extracting functions (dhis_extracting_functions.R)
 # Extracts all meta data to run the extraction 
@@ -30,7 +30,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
-# source functions 
+# source functions from J Drive - be sure to update from most recent push
 source (paste0(dir, 'dhis_extracting_functions.R'))
 
 #---------------------------------------------
@@ -87,6 +87,7 @@ extract_dhis_content = function(base_url, userID, password) {
   print('Extracting Data Sets')
   data_sets = extract_dhis_datasets(urls$data_sets_url, userID, password)
   colnames(data_sets) = c('datasets_ID', 'datasets_name', 'datasets_url')
+  data_sets = data.table(data_sets)
   
   #-----------------------
   # extract data elements 
@@ -112,6 +113,7 @@ extract_dhis_content = function(base_url, userID, password) {
   print('Extracting Categories')
   data_elements_categories = extract_categories(as.character(urls$data_elements_categories),
                                                   userID, password)
+  data_elements_categories = data.table(data_elements_categories)
   
   #-----------------------
   # organisational units extraction
@@ -134,20 +136,20 @@ extract_dhis_content = function(base_url, userID, password) {
   #-----------------------
   # extract meta data associated with organizational units
   # includes data sets, coordinates, opening date, name
-  print('Extracting units information')
-  extracted_org_units = dlply(org_units_list, .(org_unit_ID),
-                              function(org_units_list) {
-                              try(extract_org_unit(org_units_list$url, userID, password))},
-                              .progress = 'text')  
-  
-  # screen for timed out and other faulty org units
-  lengths = sapply(extracted_org_units, length)
-  faults = which(lengths<3)
-  if (length(faults)>0) warning('Warning: at least one org unit didn\'t extract correctly')
-  extracted_orgunits = extracted_orgunits[-faults]
- 
-  # save org unit meta data 
-  saveRDS(units, file=paste0(dir, 'meta_data/extracted_org_units.rds')) 
+  # print('Extracting units information')
+  # extracted_org_units = dlply(org_units_list, .(org_unit_ID),
+  #                             function(org_units_list) {
+  #                             try(extract_org_unit(org_units_list$url, userID, password))},
+  #                             .progress = 'text')
+  # 
+  # # screen for timed out and other faulty org units
+  # lengths = sapply(extracted_org_units, length)
+  # faults = which(lengths<3)
+  # if (length(faults)>0) warning('Warning: at least one org unit didn\'t extract correctly')
+  # extracted_orgunits = extracted_orgunits[-faults]
+  # 
+  # # save org unit meta data 
+  # saveRDS(units, file=paste0(dir, 'meta_data/extracted_org_units.rds')) 
   
   #-----------------------
   # return all of the data as a data set
@@ -161,35 +163,27 @@ extract_dhis_content = function(base_url, userID, password) {
 
 DRC_extraction = extract_dhis_content(base_url = base_url, userID = userID, password = password)
 
-#-------------------------
+#------------------------------
 # save the data 
 
 # set new output directory
-out_dir = paste0(dir, '' )
+out_dir = paste0(dir, 'meta_data/')
+
+# export RDS files of data
+data_sets = DRC_extraction[1][[1]]
 
 
+data_elements = DRC_extraction[2]
+categories = DRC_extraction[3]
+org_units = DRC_extraction[4]
 
+saveRDS(data_sets, paste0(out_dir, 'data_sets.rds'))
+saveRDS(data_elements, paste0(out_dir, 'updated_data_elements.rds'))
+saveRDS(categories, paste0(out_dir, 'data_elements_categories.rds'))
+saveRDS(org_units, paste0(out_dir, 'org_units.rds'))
 
+#------------------------------
 
-
-
-
-# 1 - export data sets
-data_sets1 <- DRC_extraction[1]
-write.csv(data_sets1, paste0(root, '/data_sets.csv'))
-
-# 2 - export data elements with associated data sets
-# original code returned data_elements, not updated_data_elements
-updated_data_elements1 <- DRC_extraction[2]
-write.csv(updated_data_elements1, paste0(root, 'Project/Evaluation/GF/outcome_measurement/cod/dhis_temp/DRC_data_elements_with_ds.csv'))
-
-# 3 - export categories for data elements
-data_elements_categories1 <- DRC_extraction[3]
-write.csv(data_elements_categories1, paste0(root, 'Project/Evaluation/GF/outcome_measurement/cod/dhis_temp/categories.csv'))
-
-# 4 - export the list of organisational units
-org_units1 <- DRC_extraction[4]
-write.csv(org_units1, paste0(root, 'Project/Evaluation/GF/outcome_measurement/cod/dhis_temp/org_units.csv'))
 
 # 5 - export the descriptions of the organisational units
 org_units_description1 <- DRC_extraction[5]
