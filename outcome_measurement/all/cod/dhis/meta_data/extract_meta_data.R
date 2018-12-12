@@ -93,27 +93,26 @@ extract_dhis_content = function(base_url, userID, password) {
   print('Extracting Data Elements')
   data_element_list = extract_data_elements(urls$data_elements_url, userID, password)
   
-  data_elements <<- ddply(data_sets, .(datasets_ID , datasets_name),
-                          function(data_sets) {
-                            out <- extract_data_elements_ds(as.character(data_sets$datasets_url),
-                                                            userID, password) })
+  data_elements = ddply(data_sets, .(datasets_ID, datasets_name),
+                        function(data_sets) {
+                        out = extract_data_elements_ds(as.character(data_sets$datasets_url),
+                                                            userID, password)})
+  # merge the data elements and data sets
+  data_elements = data.table(data_elements)
+  data_elements[ , datasets_name:=NULL]
+  interim = merge(data_sets, data_elements, by='datasets_ID')
   
-  colnames(data_elements)[3] <- "data_element_ID" # renames data_element_id as data_element_ID
-  colnames(data_element_list) [1] <- "data_element_ID"
-  
-  updated_data_elements <<- merge(data_elements, data_element_list, all.x = T, by = 'data_element_ID')
-  
-  #saveRDS(data_sets, file=paste0(out_dir, '/updated_data_elements.rds'))
-  
+  #change names of data_element_list for the merge
+  setnames(data_element_list, c('data_element_id', 'data_element_name', 'data_element_url' ))
+  updated_data_elements = merge(interim, data_element_list, by='data_element_id', all=TRUE)
+  updated_data_elements = data.table(updated_data_elements)
+
   #-----------------------
-  
-  #  # extract categories for the data elements
+  # extract categories for the data elements (age, sex, etc.)
+  # extract categories is in the dhisextractr package
   print('Extracting Categories')
-  data_elements_categories <<- extract_categories(as.character(urls$data_elements_categories) ,
-                                                  userID ,
-                                                  password)
-  
-  # saveRDS(data_sets, file=paste0(out_dir, '/data_elements_categories.rds'))
+  data_elements_categories = extract_categories(as.character(urls$data_elements_categories),
+                                                  userID, password)
   
   #-----------------------
   # organisational units extraction
@@ -171,23 +170,13 @@ extract_dhis_content = function(base_url, userID, password) {
 
 #-------------------------------------------------------------------
 
-
-#-------------------------------------------------------------------
-# Manually extract the meta data
-# The extraction wrapper will extract all of the meta data automatically
-# these extract the meta data - this is a part of extraction wrapper
-
-
-
-#-----------------------
+#------------------------
 # run the extraction 
-DRC_extraction <- extract_dhis_content(base_url = base_url, userID = userID, password = password)
+DRC_extraction = extract_dhis_content(base_url = base_url, userID = userID, password = password)
 
-
-#-----------------------
+#-------------------------
 # set new output directory
 
-export <- 'Project/Evaluation/GF/outcome_measurement/cod/dhis_temp'
 
 # 1 - export data sets
 data_sets1 <- DRC_extraction[1]
