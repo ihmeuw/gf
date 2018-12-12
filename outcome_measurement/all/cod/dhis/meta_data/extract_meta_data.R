@@ -169,14 +169,13 @@ DRC_extraction = extract_dhis_content(base_url = base_url, userID = userID, pass
 # set new output directory
 out_dir = paste0(dir, 'meta_data/')
 
-# export RDS files of data
+# extract data tables from the large list of meta data 
 data_sets = DRC_extraction[1][[1]]
+data_elements = DRC_extraction[2][[1]]
+categories = DRC_extraction[3][[1]]
+org_units = DRC_extraction[4][[1]]
 
-
-data_elements = DRC_extraction[2]
-categories = DRC_extraction[3]
-org_units = DRC_extraction[4]
-
+# save all the RDS files to the J Drive
 saveRDS(data_sets, paste0(out_dir, 'data_sets.rds'))
 saveRDS(data_elements, paste0(out_dir, 'updated_data_elements.rds'))
 saveRDS(categories, paste0(out_dir, 'data_elements_categories.rds'))
