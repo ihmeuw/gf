@@ -5,19 +5,18 @@
 
 set more off 
 clear all 
-global save_loc = "C:\Users\elineb\Desktop"
-cap mkdir "$save_loc/unit_tests"
+global save_loc = "C:\Users\elineb\Desktop\unit_tests"
 
 foreach iso in "gtm" "uga" "cod" {
 	global iso `iso'
 	di in red _newline "$iso" 
 	
-	global dir = "J:/Project/Evaluation/GF/resource_tracking/${iso}/gf"
+	global dir = "J:/Project/Evaluation/GF/resource_tracking/${iso}/grants"
 	insheet using "${dir}/${iso}_budget_filelist.csv", clear 
 	
 	//First, find total count of tests you need to run. 
 	count 
-	local num_tests = round(`r(N)' * .10) //Test 10% of each country's filelist, plus one of each type. 
+	local num_tests = round(`r(N)' * .25) //Test 25% of each country's filelist, plus one of each type. 
 	
 	//Next, select with certainty one of each function type (pudr, fpm, etc.) 
 	preserve 

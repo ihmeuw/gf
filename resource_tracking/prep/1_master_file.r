@@ -33,7 +33,7 @@ countries <- c("cod", "gtm", "uga") #Remove countries from this list that you do
 source(paste0(code_dir, "2_shared_mapping_functions.R")) #Emily for some reason this isn't sourcing correctly. Check out what's going on. 
 
 #Global variables. 
-include_stops = FALSE #Set to true if you would like to see error messages in module mapping and budget verification steps. 
+include_stops = TRUE #Set to true if you would like to see error messages in module mapping and budget verification steps. 
 
 # ----------------------------------------------
 ## STEP 1: Verify module mapping framework 
@@ -61,7 +61,6 @@ for(country in countries){
 ## STEP 3: Prep country-level data 
 # ----------------------------------------------
    source(paste0(code_dir, country, "_prep/", "master_prep_", country, ".r"))
-  
 }
 
 # ----------------------------------------------

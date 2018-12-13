@@ -175,11 +175,19 @@ check_budgets_pudrs = function(dt){
   keyVars = c("start_date", "end_date", "fileName", "grant_number", "disease", "data_source")
   dt$budget <- as.numeric(dt$budget)
   dt$expenditure <- as.numeric(dt$expenditure)
+  dt$start_date <- as.Date(dt$start_date)
+  dt$end_date <- as.Date(dt$end_date)
+  
+  #For budgets that have NA for budget and expenditure, replace as 0 so they don't mess up calculation. 
+  dt[is.na(budget), budget:=0] 
+  dt[is.na(expenditure), expenditure:=0]
+  
   budgets = dt[ , 
                lapply(.SD, sum), 
                 by = keyVars, 
                .SDcols = c("budget", "expenditure")]
-  return(unique(budgets[, ]))
+  budgets <- unique(budgets)
+  return(budgets)
 }
 
 check_SICOIN_dates = function(dt){

@@ -21,14 +21,18 @@ library(scales)
 # ----------------------------------------------
 ##declare functions to help prep the data:  #EKL pull these functions out. Or are all of these necessary??? 
 # ----------------------------------------------
-get_dah_source_channel <- function(channel){
-  x <- "other_dah"
+get_dah_source_channel <- function(channel){ #EKL do we like these classifications? 
+  x <- "Other bilateral"
   if(channel=="GFATM"){
-    x <- "gf"
+    x <- "Global Fund"
   } else if(channel=="BIL_USA"){
-    x <- "bil_usa"
-  } else {
-    x <- x
+    x <- "Bilateral US"
+  } else if(channel == "NGO" | channel == "INTLNGO" | channel == "US_FOUND" | channel == "BMGF"){
+    x <- "NGOs and Foundations"
+  } else if(channel == "AfDB" | channel == "WB_IDA" | channel == "WB_IBRD" | channel == "AsDB" | channel == "IDB" | channel == "UNITAID"){
+    x <- "UN Agencies, World Bank and Regional Dev. Banks"
+  } else if (channel == "GAVI"){
+    x <- "GAVI"
   }
   return(x)
 }
@@ -111,23 +115,20 @@ transform_fin_data_type <- function(fin_data_type){
 # ----------------------------------------------
 
 fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/ihme_dah_cod_uga_gtm_1990_2016.csv",fileEncoding="latin1"))
-fgh_data[year == 2013 & iso3_rc == "COD", sum(dah_17)]
 
 setnames(fgh_data, c("source", "iso3_rc"), c("dah_origin","loc_name"))
 
 fgh_data$oid_zika_dah_17 = as.numeric(fgh_data$oid_zika_dah_17)
 fgh_data$financing_source <- mapply(get_dah_source_channel, fgh_data$channel)
 fgh_data$channel = NULL
-fghData<- fgh_data[, -c("dah_origin", "dah_17"), with=FALSE]
+fghData<- fgh_data[, -c("dah_origin", "dah_17", "total_mal_17", "total_hiv_17", "total_tb_17"), with=FALSE] #Remove 'total' columns and origin variable - it looks like 
+#this is giving the closest sum to "dah_17" from the raw file, but it's not 100% accurate. Need the codebook to make sure we're including the right columns here. 
 
 ## "melt" the data: 
-fghData <- melt(fghData, id=c("year", "financing_source", "loc_name"), variable.name = "sda_activity", value.name="disbursement") #Do we want these different funding streams to be "activities"?? EKL
+fghData <-  melt(fghData, id=c("year", "financing_source", "loc_name"), variable.name = "sda_activity", value.name="disbursement") #Do we want these different funding streams to be "activities"?? EKL
 fghData$disbursement <- as.numeric(fghData$disbursement)
 
-check_raw_data[year == 2013, sum(dah_17)]
-fghData[year == 2013 & loc_name == "COD", sum(disbursement)] #These two numbers aren't even the same. Why? 
-
-
+#EKL would really like to get a codebook if this data if at all possible- what does dah_17 represent? 
 ##get the disease column: 
 fghData$disease <- mapply(get_disease, fghData$sda_activity)
 
@@ -145,6 +146,7 @@ fghData = unique(fghData)
 fghData$fin_data_type <- "actual"
 fghData$code <- "s98"
 fghData$fileName <- "ihme_dah_cod_uga_gtm_1990_2016.csv"
+
 
 #THERE IS ALREADY HIV DATA IN THIS DATASET EKL
 
@@ -239,7 +241,7 @@ totalFgh$period <- 365
 totalFgh$start_date <- paste0(totalFgh$year, "-01-01")
 totalFgh$start_date  <- as.Date(totalFgh$start_date,"%Y-%m-%d")
 totalFgh$end_date <- paste0(totalFgh$year, "-12-31") 
-totalFgh$budget <- 0 
+totalFgh$budget <- 0 #Why do this? Why not make NA? 0 is different than NA!!
 totalFgh$expenditure <- 0 
 
 
@@ -273,4 +275,5 @@ totalFgh = totalFgh[!grep("total_", sda_activity)] #This should not happen here!
 # ----------------------------------------------
 
 write.csv(totalFgh,"J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv", row.names=FALSE)
+
 
