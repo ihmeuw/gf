@@ -27,21 +27,19 @@ dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockouts/'
 dt = readRDS(paste0(dir, 'arv_stockouts_2013_2018.rds'))
 
 # subset dates to before November 2018
-dt = dt[date < '2018-10-01'] 
+dt = dt[year!=2013] 
 
 #--------------------------------
 # Include 2013
-
-
-
-for (f in unique(dt$facility)) {
-  date = dt[facility==f, min(date)] 
-  end = dt[facility==f, max(date)]
-  while(date <= end) {
-  while(arvs==TRUE) {
-  stock_out = dt[ ,sum(arvs)]
-  } date = date + 7 }}
-
+# 
+# for (f in unique(dt$facility)) {
+#   date = dt[facility==f, min(date)] 
+#   end = dt[facility==f, max(date)]
+#   while(date <= end) {
+#   while(arvs==TRUE) {
+#   stock_out = dt[ ,sum(arvs)]
+#   } date = date + 7 }}
+# 
 
 #--------------------------------
 # import the shape file 
@@ -140,8 +138,9 @@ arv_weeks$year = factor(arv_weeks$year, c(2014, 2015, 2016, 2017, 2018),
 # same graph, comparable time periods
 arv_weeks2 = dt[month(date)!='10' & month(date)!='11' & month(date)!='12' & art_site==TRUE, .(weeks=sum(arvs, na.rm=T)), by=.(year, facility)]
 arv_weeks2 = arv_weeks2[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
-arv_weeks2$year = factor(arv_weeks2$year, c('2017', '2018'), 
-                        c('2014 v(n=236)', '2015 (n=153)', '2016 (n=259)', '2017 (n=284)', '2018 (n=218)'))
+arv_weeks2$year = factor(levels = c(2014, 2015, 2016, 2017, 2018), 
+                        labels = c('2014 v(n=236)', '2015 (n=153)', 
+                                   '2016 (n=259)', '2017 (n=284)', '2018 (n=218)'))
 
 #---------------------------------------
 # ARV stockout maps 
@@ -322,7 +321,7 @@ pdf(paste0(dir, '/outputs/stockout_descriptives_2013_2018.pdf'), height=6, width
 
 # count of facilities and art sites reporting
 ggplot(report[ratio==FALSE], aes(x=date, y=value, color=variable, group=variable)) +
-  geom_point() +
+  geom_point(alpha=0.5, size=0.5) +
   geom_line() +
   geom_line() +
   theme_bw() +
@@ -636,4 +635,5 @@ dev.off()
 
 #------------------------------
 
+scale_fill_gradientn(colors=brewer.pal(6, 'RdYlBu')) 
 

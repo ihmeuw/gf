@@ -27,7 +27,7 @@ dir = paste0(root,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockout
 dt = readRDS(paste0(dir, 'arv_stockouts_2016_2018.rds'))
 
 # subset dates to before september 30, 2018
-dt = dt[date < '2018-10-01']
+dt = dt[year!=2013]
 
 #------------------------------
 # merge in regions
