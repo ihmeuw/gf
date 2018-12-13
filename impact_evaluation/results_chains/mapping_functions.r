@@ -74,11 +74,19 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
   return(budget_over_time)
 }
 
-#Accepts a country, a disease, and a time period (start and end year, inclusive)
+#Accepts a country, a disease, a time period (start and end year, inclusive), and a boolean on whether to include national health expenditure. 
 #Return a graph of the funding landscape for the disease in the country over the time period using Financing Global Health actuals. 
-funding_landscape = function(country_name, disease_name, start_year, end_year){
+funding_landscape = function(country_name, disease_name, start_year, end_year, include_ghe){
   plot_data = fgh_actual[country == country_name & disease == disease_name & (year >=start_year& year <=end_year),
                          .(country, disease, year, financing_source, start_date, end_date, disbursement)] #Use actual numbers. 
+  if (include_ghe == TRUE){ #Need to discuss with David. 
+    if(country_name == "Guatemala"){
+      sicoin <- allRT[data_source == "sicoin"]
+      plot_data <- merge(plot_data, sicoin)
+    } else {
+      plot_data <- merge(plot_data, gf_budgets)
+    }
+  }
   
   plot_data[, disbursement:=sum(disbursement), by = .(financing_source, start_date, end_date)]
   plot_data = plot_data[!duplicated(plot_data)]

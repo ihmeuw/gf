@@ -56,3 +56,15 @@ gf_pudrs = gf[data_source == "pudr" | data_source == "gos"]
 gf_budgets = gf[data_source == "fpm" | data_source == "gos"]
 fgh_actual = fgh[fin_data_type == "actual"]#Split FGH between actual numbers and model estimates. 
 fgh_estimates = fgh[fin_data_type != "actual"] 
+
+test_fgh_actual = allRT[data_source == "fgh" & fin_data_type == "actual"]
+
+print(nrow(fgh_actual))
+print(nrow(test_fgh_actual))
+
+dis_new <- fgh_actual[, sum(disbursement)]
+dis_old <- test_fgh_actual[, sum(disbursement)]
+
+print(dis_new) 
+print(dis_old)
+print(dis_old/dis_new)
