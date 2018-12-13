@@ -1,18 +1,20 @@
 # DHIS2 Extraction for DRC - SNIS
 # Extracts Data from: https://www.snisrdc.com/dhis-web-commons/security/login.action
-# Sources dhis_extracting_functions.R on J Drive for package and extraction functions
+# Sources dhis_extracting_functions.R on J Drive for dhisextractr package and extraction functions
+# website re-reroutes for https://www.snisdrc.com to https://snisdrc.com
 
 #---------------------------
 # Caitlin O'Brien-Carelli
-# 12/10/2018
-# Extract single data set by set number
+# 12/12/2018
+
+#---------------------------
+# Extract single data sets by specifying the data set number
 # Data will be merged with the meta data to create complete data sets
-# You must have the source functions and meta data accessible to run
+# You must have the source functions and meta data accessible to run 
 #---------------------------
 
 #---------------------------
 # To run on the cluster:
-
 # Copy shell script into a qlogin session to open an IDE
 # request at least 10 slots for extractions 
 
@@ -38,11 +40,11 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 #---------------------------
 # define main directory
 
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
-
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+setwd(dir)
 #---------------------------
 # source the necessary functions to download the data 
-# change the location of the sourced file to your home directory 
+# change the location of the sourced file to your home directory or source from J
 
 source(paste0(dir, 'dhis_extracting_functions.R')) 
 
@@ -56,13 +58,13 @@ source(paste0(dir, 'dhis_extracting_functions.R'))
 start_year = '2017'
 end_year = '2018'
 start_month = '01'
-end_month = '04'
+end_month = '12'
 
 # change the update year to before the data begins
 update_year = '2016'
 
 #identify the data set(s) you want to download by number (list below)
-set = 1
+set = 2
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
@@ -71,32 +73,42 @@ set_name = 'base'
 #---------------------------
 # available data sets by number: 
 
-# 1: A- Services de Base
-# 2: B- Services Secondaires
-# 3: C1- SIGL1
-# 4: C2- SIGL2
-# 5: DQI Bureau central de la Zone - Trimestriel
-# 6: DQI Centre de Santé - Trimestriel
-# 7: DQI Hôpital - Trimestriel
-# 8: D- Service Hopital
-# 9: E- Banque de Sang et Transfusion
-# 10: F- Activites BCZ
-# 11: G- Hygiene aux frontieres
-# 12: H- Relevée Epidémiologique Hebdomadaire
-# 13: I-Surveillance EBOLA
-# 14: I-Surveillance Journalière EBOLA
-# 15: PNLP CS Site Sentinelle
-# 16: PNLP HGR Site Sentinelle
-# 17: PNLS- Canevas Unique FOSA
-# 18: PNLT- Rapport Trimestriel Tuberculose
-# 19: Population
+# 1	 00 Temporaire 
+# 2	 A - Services de Base
+# 3	 B - Services Secondaires
+# 4	 C1 - SIGL1
+# 5	 C2 - SIGL2
+# 6	 C. SIGL BCZ_CDR_BCAF
+# 7	 C. SIGL FOSA
+# 8	 DQI Bureau central de la Zone - Trimestriel
+# 9	 DQI Centre de Sante - Trimestriel
+# 10 DQI HÃ´pital - Trimestriel
+# 11 D - Service Hopital
+# 12 E - Banque de Sang et Transfusion
+# 13 F - Activites BCZ
+# 14 G - Hygiene aux frontieres
+# 15 H - Relevee Epidemiologique Hebdomadaire
+# 16 I-Surveillance EBOLA
+# 17 I-Surveillance Journaliare EBOLA
+# 18 MILD_Denombrement
+# 19 MILD_Distribution
+# 20 OSQD Bureau Central de la ZS
+# 21 OSQD Centre de Sante
+# 22 OSQD Hospital
+# 23 OSQD Verification - Audit
+# 24 PATI V - TB Cas enregistre
+# 25 PATI V - TB resultat
+# 26 PepfarConnect
+# 27 PNLP CS Site Sentinelle
+# 28 PNLP HGR Site Sentinelle
+# 29 PNLS- Canevas Unique FOSA
 
 #---------------------------
 
 #----------------------------------
 # set the country, base_url, username, and password 
 country = 'drc'
-base_url = 'https://www.snisrdc.com'
+base_url = 'https://snisrdc.com'
 userID = 'Bethany_Huntley'
 password = 'Snisrdcongo1'
 
@@ -105,13 +117,8 @@ password = 'Snisrdcongo1'
 # only organizational units and data sets are necessary 
 # other meta data is used for the merge 
 
-data_sets = data.table(readRDS(paste0(dir, "meta_data/data_sets.rds")))
-org_units = data.table(readRDS(paste0(dir, "meta_data/org_units_list.rds")))
-
-# convert factors to strings
-org_units[ ,org_unit_ID:=as.character(org_unit_ID)]
-org_units[ ,org_unit_name:=as.character(org_unit_name)]
-org_units[ ,org_unit_url:=as.character(org_unit_url)]
+data_sets = readRDS(paste0(dir, 'meta_data/data_sets.rds'))
+org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
 
 #-----------------------------------------------
 
@@ -121,10 +128,11 @@ org_units[ ,org_unit_url:=as.character(org_unit_url)]
 #------------------------
 # extract the data set and export as a RDS
 # click 'plots' tab to watch download progress
+# extract_all_data is a function in the dhisextractr package
 
 extracted_data <- extract_all_data(base_url = base_url, 
                                      data_sets = data_sets[set, ],
-                                     org_units = org_units[1:100], 
+                                     org_units = org_units, 
                                      deb_period = paste0(start_year, '-', start_month, '-01'),
                                      end_period = paste0(end_year, '-', end_month, '-01'),
                                      userID = userID, 
@@ -133,10 +141,8 @@ extracted_data <- extract_all_data(base_url = base_url,
                                      update_date = paste0(update_year, '-01-01'))
 
 
-
 # save the data table in its individual folder in 'pre_prep' for merge and prep:
 saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', country, 
                                  '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
-
 
 #-------------------------

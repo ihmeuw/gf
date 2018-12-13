@@ -1,7 +1,7 @@
-# SHIS Extraction - extract the meta data for org units
+# DHIS Extraction - extract the meta data for org units
 # Provides a list of health facilities and their locations 
 # Caitlin O'Brien-Carelli
-# 8/29/18
+# 12/12/18
 
 # --------------------
 # Set up R
@@ -29,21 +29,10 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
 #------------------------------
-
-#------------------------------
-# install and load the dhisextractr package 
-source(paste0(dir, 'dhis_extracting_functions.R'))
-
-# check to make sure the package loaded by viewing a function help file
-?extract_all_data
-
-#------------------------------
 # read in the organisational units 
 # org_units = fread(paste0(dir, 'meta_data/org_units_list.rds'))
 
 org_units = readRDS(paste0(dir, 'meta_data/org_units.rds' ))
-org_units = org_units[[1]]
-org_units = data.table(org_units)
 
 #---------------------------------------------
 
@@ -54,6 +43,7 @@ country = 'drc'
 base_url = 'https://www.snisrdc.com'
 userID = 'Bethany_Huntley'
 password = 'Snisrdcongo1'
+
 #--------------------------------------------
 # website for bug fixes (use ancestors for higher level units):
 # https://www.snisrdc.com/api/organisationUnits/pCfpKXoGBF8.xml
@@ -131,7 +121,7 @@ units = extract_dhis_units(base_url = base_url, userID = userID, password = pass
 
 #-----------------------
 # save the contents of the extraction (interim output)
-saveRDS(units, file=paste0(dir, 'meta_data/extracted_org_units.rds')) 
+saveRDS(units, paste0(dir, 'meta_data/extracted_org_units.rds')) 
 
 #-----------------------
 

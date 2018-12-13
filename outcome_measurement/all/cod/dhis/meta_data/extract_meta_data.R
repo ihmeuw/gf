@@ -132,24 +132,7 @@ extract_dhis_content = function(base_url, userID, password) {
   # check for duplicate facilities
   org_units_list[duplicated(org_units_list$org_unit_ID)]
   org_units_list[ , org_unit_url:=NULL]
-  
-  #-----------------------
-  # extract meta data associated with organizational units
-  # includes data sets, coordinates, opening date, name
-  # print('Extracting units information')
-  # extracted_org_units = dlply(org_units_list, .(org_unit_ID),
-  #                             function(org_units_list) {
-  #                             try(extract_org_unit(org_units_list$url, userID, password))},
-  #                             .progress = 'text')
-  # 
-  # # screen for timed out and other faulty org units
-  # lengths = sapply(extracted_org_units, length)
-  # faults = which(lengths<3)
-  # if (length(faults)>0) warning('Warning: at least one org unit didn\'t extract correctly')
-  # extracted_orgunits = extracted_orgunits[-faults]
-  # 
-  # # save org unit meta data 
-  # saveRDS(units, file=paste0(dir, 'meta_data/extracted_org_units.rds')) 
+
   
   #-----------------------
   # return all of the data as a data set
