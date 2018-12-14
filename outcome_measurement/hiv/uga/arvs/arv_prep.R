@@ -118,6 +118,13 @@ for (f in files) {
 }
 
 #---------------------------
+# drop out the 12 facilities that never reported 
+
+missing = full_data[ , .(check=all(is.na(arvs)), check_t=all(is.na(test_kits))), by=facility]
+missing = missing[check==TRUE & check_t==TRUE]
+full_data = full_data[!facility %in% missing$facility]
+
+#---------------------------
 # save the output
 
 # get the minimum and maximum year and add to the file name for export

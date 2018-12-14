@@ -31,7 +31,20 @@ dt = dt[year!=2013]
 
 #------------------------------
 # merge in regions
+#--------------------------------
+# duration of stock outs 
+cols = c('facility', 'date')
+setorderv(dt, cols)
 
+for (f in unique(dt$facility)) {
+  dt[facility==f, count:=seq_len(.N), by=rleid(test_kits)]
+  dt[facility==f, group:=rleid(test_kits)]
+  dt[test_kits!=T, group:=NA] 
+  dt[facility==f & !is.na(group), duration:=max(count), by=group]
+  dt[ ,c('count', 'group'):=NULL]
+}
+
+#------------------------------------
 regions = fread(paste0(root, "/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv"))
 regions = regions[ ,.(region = region10_name, district = dist112_name)]
 regions = regions[!duplicated(district)]

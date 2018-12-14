@@ -82,7 +82,7 @@ set_name = 'base'
 # 7	 C. SIGL FOSA
 # 8	 DQI Bureau central de la Zone - Trimestriel
 # 9	 DQI Centre de Sante - Trimestriel
-# 10 DQI Hôpital - Trimestriel
+# 10 DQI Hospital - Trimestriel
 # 11 D - Service Hopital
 # 12 E - Banque de Sang et Transfusion
 # 13 F - Activites BCZ
