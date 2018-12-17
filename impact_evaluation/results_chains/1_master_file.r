@@ -14,6 +14,7 @@ rm(list=ls())
 library(data.table)
 library(ggplot2)
 library(googlesheets)
+library(RColorBrewer)
 
 user <- "elineb" #Replace with your username
 repo <- paste0("C:/Users/", user, "/Documents/gf/impact_evaluation/results_chains/") #Modify to fit your repo location
@@ -24,7 +25,6 @@ source(paste0(repo, "mapping_functions.r"))
 # Set filepaths 
 # ---------------------------------------
 
-#EMILY CHANGE THIS WRITE LOCATION- NOT ON THE I DRIVE
 gtm_save <- "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations"
 cod_save <- "J:/Project/Evaluation/GF/impact_evaluation/cod/visualizations"
 uga_save <- "J:/Project/Evaluation/GF/impact_evaluation/uga/visualizations"
@@ -58,6 +58,12 @@ fgh_actual = fgh[fin_data_type == "actual"]#Split FGH between actual numbers and
 fgh_estimates = fgh[fin_data_type != "actual"] 
 
 test_fgh_actual = allRT[data_source == "fgh" & fin_data_type == "actual"]
+
+# subset to GHE from SICOIN for TB (SICOIN only exists in GTM)
+sicoin = allRT[data_source=='sicoin' & financing_source=='ghe']
+# drop first/last year of the series because they appear to be incomplete
+sicoin = sicoin[year!=min(year) & year!=max(year)]
+
 
 print(nrow(fgh_actual))
 print(nrow(test_fgh_actual))
