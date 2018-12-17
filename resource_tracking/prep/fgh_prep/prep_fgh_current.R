@@ -24,13 +24,13 @@ library(scales)
 get_dah_source_channel <- function(channel){ #EKL do we like these classifications? 
   x <- "Other bilateral"
   if(channel=="GFATM"){
-    x <- "Global Fund"
+    x <- "The Global Fund"
   } else if(channel=="BIL_USA"){
-    x <- "Bilateral US"
+    x <- "U.S. bilateral"
   } else if(channel == "NGO" | channel == "INTLNGO" | channel == "US_FOUND" | channel == "BMGF"){
-    x <- "NGOs and Foundations"
+    x <- "NGOs and foundations"
   } else if(channel == "AfDB" | channel == "WB_IDA" | channel == "WB_IBRD" | channel == "AsDB" | channel == "IDB" | channel == "UNITAID"){
-    x <- "UN Agencies, World Bank and Regional Dev. Banks"
+    x <- "UN Agencies, The World Bank, and regional development banks"
   } else if (channel == "GAVI"){
     x <- "GAVI"
   }

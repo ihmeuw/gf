@@ -172,11 +172,12 @@ split_mods_interventions <- function(dt, mod, keyword){
 #----------------------------------------------
 #Sums budget by key variables
 check_budgets_pudrs = function(dt){
-  keyVars = c("start_date", "end_date", "fileName", "grant_number", "disease", "data_source")
+  keyVars = c("start_date", "fileName", "grant_number", "data_source")
+  #Deciding not to split by disease here because we just want the total for the whole quarter. 
   dt$budget <- as.numeric(dt$budget)
   dt$expenditure <- as.numeric(dt$expenditure)
-  dt$start_date <- as.Date(dt$start_date)
-  dt$end_date <- as.Date(dt$end_date)
+  #dt$start_date <- as.Date(dt$start_date)
+  #dt$end_date <- as.Date(dt$end_date)
   
   #For budgets that have NA for budget and expenditure, replace as 0 so they don't mess up calculation. 
   dt[is.na(budget), budget:=0] 

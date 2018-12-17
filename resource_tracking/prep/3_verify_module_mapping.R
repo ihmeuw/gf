@@ -33,9 +33,18 @@ map = map[!(module == "treatmentcareandsupport" & intervention == "na" & disease
 #Split modules/interventions - see shared mapping functions for function documentation. 
 map = split_mods_interventions(map, "preventionbehavioralchangecommunicationcommunityoutreach", "prevention")
 map = split_mods_interventions(map, "preventionbloodsafetyanduniversalprecautions", "prevention")
-map = split_mods_interventions(map, "preventionbehavioralchangecommunicationmassmedia", "prevention")
+#map = split_mods_interventions(map, "preventionbehavioralchangecommunicationmassmedia", "prevention")
 
 #Unclear classifications; could be clarified. 
+
+#Correcting RSSH modules after it was decided to leave 'rssh' at beginning of string
+map = map[module == 'healthmanagementinformationsystemsandme', module:='rsshhealthmanagementinformationsystemsandme']
+map = map[module == 'communityresponsesandsystems', module:= 'rsshcommunityresponsesandsystems']
+map = map[module == 'nationalhealthstrategies', module:= 'rsshnationalhealthstrategies']
+map = map[module == 'integratedservicedeliveryandqualityimprovement', module:= 'rsshintegratedservicedeliveryandqualityimprovement']
+map = map[module == 'procurementandsupplychainmanagementsystems', module:= 'rsshprocurementandsupplychainmanagementsystems']
+map = map[module == 'humanresourcesforhealthhrhincludingcommunityhealthworkers', module:= 'rsshhumanresourcesforhealthhrhincludingcommunityhealthworkers']
+map = map[module == 'financialmanagementsystems', module:= 'rsshfinancialmanagementsystems']
 
 
 #--------------------------------------------------------------------------------

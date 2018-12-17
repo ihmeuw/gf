@@ -19,8 +19,9 @@ totalCod$start_date <- as.Date(totalCod$start_date,"%Y-%m-%d")
 
 #EKL WE HAVE NAS IN YEAR HERE, WHICH MEANS THAT WE WILL HAVE NAS IN START DATE
 na_cod_year <- totalCod[is.na(year)]
+na_cod_budget <- totalCod[is.na(budget)]
 #All observations coming from this file from 2010: 22May12_Revised_Budget_Q10 R8_HIV.xls
-
+stopifnot(nrow(na_cod_year)==0 & nrow(na_cod_budget)==0)
 
 # --------------------------------------------
 ###load the prepped Uganda data: 
@@ -34,12 +35,16 @@ totalUga$start_date <- as.Date(totalUga$start_date,"%Y-%m-%d")
 totalUga$year <- year(totalUga$start_date)
 
 na_uga_year <- totalUga[is.na(year)]
-
+na_uga_budget <- totalUga[is.na(budget)]
+stopifnot(nrow(na_uga_year)==0 & nrow(na_uga_budget)==0)
 # --------------------------------------------
 ###load the prepped GTM data (sicoin and FPM/PUDR)
 # --------------------------------------------
 totalGtm <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_budget_data.csv", 
                                 fileEncoding = "latin1"))
+
+na_gtm_budget <- totalGtm[is.na(budget)]
+na_gtm_year <- totalGtm[is.na(year)]
 
 sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
                                       ,fileEncoding="latin1"))

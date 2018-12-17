@@ -29,11 +29,11 @@ library(dplyr)
 user = "elineb" #Change to your username 
 code_dir = paste0("C:/Users/", user, "/Documents/gf/resource_tracking/prep/")
 combined_output_dir = "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping"
-countries <- c("cod", "gtm", "uga") #Remove countries from this list that you don't want to update. 
+countries <- c("uga") #Remove countries from this list that you don't want to update. 
 source(paste0(code_dir, "2_shared_mapping_functions.R")) #Emily for some reason this isn't sourcing correctly. Check out what's going on. 
 
 #Global variables. 
-include_stops = TRUE #Set to true if you would like to see error messages in module mapping and budget verification steps. 
+include_stops = FALSE #Set to true if you would like to see error messages in module mapping and budget verification steps. 
 
 # ----------------------------------------------
 ## STEP 1: Verify module mapping framework 
@@ -50,12 +50,6 @@ for(country in countries){
 # ----------------------------------------------
   master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
   export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
-  
-  # colnames_desired = sort(c("file_name", "sheet", "start_date", "disease", "loc_id", "data_source", "qtr_num", "period", "grant_period", 
-  #                      "function_type", "geography_detail", "grant_name", "lang", "primary_recipient", "secondary_recipient", "status"))
-  # 
-  # colnames_country = sort(colnames(file_list))
-  # stopifnot(colnames_desired == colnames_country)
 
 # ----------------------------------------------
 ## STEP 3: Prep country-level data 
