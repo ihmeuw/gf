@@ -1,7 +1,10 @@
 #------------------------------------------------
 # PDF VISUALS 
 
-pdf(paste0(dir, '/outputs/stockout_descriptives_2013_2018.pdf'), height=6, width=12)
+# pdf(paste0(dir, '/outputs/stockout_descriptives_2013_2018.pdf'), height=6, width=12)
+
+pdf('C:/Users/ccarelli/Documents/arv_stockout_analyses/arv_updated_figures.pdf', height=6, width=12)
+
 
 #----------------------------------------
 # reporting completeness graphs
@@ -15,7 +18,7 @@ ggplot(report[ratio==FALSE], aes(x=date, y=value, color=variable, group=variable
   facet_wrap(~indicator) +
   scale_color_manual(values = brewer.pal(4, 'RdYlBu')) +
   labs(x='Date', y='Number of health facilities', title='Number of health facilities and ART sites reporting stock out information',
-       subtitle='2017 - September 2018', color="")
+       subtitle='2014 - November 2018', color="")
 
 # 2 - ratio of facilities reporting
 ggplot(report[ratio==TRUE], aes(x=date, y=value, color=variable, group=variable)) +
@@ -25,7 +28,7 @@ ggplot(report[ratio==TRUE], aes(x=date, y=value, color=variable, group=variable)
   theme_bw() +
   facet_wrap(~variable) +
   labs(x='Date', y='% of facilities', title='Percentage of health facilities and ART sites reporting stock out information',
-       subtitle='2017 - September 2018', color='% Reporting')
+       subtitle='2014 - November 2018', color='% Reporting')
 
 #-----------------------------------
 # arv stockout graphs 
@@ -50,7 +53,7 @@ ggplot(arv_thresh[variable!='Percentage of ART sites stocked out of ARVs'], aes(
 
 # 5 - percentage of art sites that reported that were stocked out
 ggplot(arv[variable=='Percentage of ART sites stocked out of ARVs'], aes(x=date, y=value)) +
-  geom_point(0.5) +
+  geom_point(size=0.5) +
   geom_line() +
   geom_line() +
   theme_bw() +
@@ -70,7 +73,7 @@ ggplot(arv_weeks[weeks!=0], aes(x=weeks, y=facilities, fill=factor(year))) +
   labs(title = "Facilities stocked out of ARVs for at least one week by total weeks stocked out", x='Number of weeks out of stock*', 
        y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", 
        fill='Year (total weeks)',
-       subtitle='January 2017 - September 2018')
+       subtitle='2014 - November 2018')
 
 # 7 - stacked bar of weeks stocked out 
 ggplot(arv_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) + 
@@ -78,27 +81,27 @@ ggplot(arv_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) +
   theme_minimal() +
   scale_fill_manual(values=bar_color) +
   labs(title = "Facilities stocked out of ARVs for at least one week by total weeks stocked out", 
-       subtitle='Same time period: January - September', x='Number of weeks out of stock*', 
+       subtitle='Same time period: January - November', x='Number of weeks out of stock*', 
        y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", fill='Year (total weeks)')
 
-dev.off()
 
 #-----------------------
-# ARV stockout maps 
+# ARV stockout maps - 8:12
 
-# map of facility-weeks of stock outs 
-ggplot(arv_map, aes(x=long, y=lat, group=group, fill=weeks)) + 
+# map of facility-weeks of stock outs - 8
+ggplot(arv_map, aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
   facet_wrap(~year) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
   theme_void() +
-  labs(title="Total facility-weeks of ARV stockouts by district, Uganda", caption="Source: HMIS", 
-       subtitle='Same time period: January - September',fill="Facility-weeks") +
+  labs(title="Total facility-weeks of ARV stockouts by district, Uganda", 
+       caption="*A facility-week is defined as each week a facility reports", 
+       subtitle='Same time period: January - November',fill="Facility-weeks*") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
-# number of weeks of stockout divided by art sites reporting 
+# mean weeks stocked out per facility - 9
 ggplot(arv_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
   coord_fixed() +
   geom_polygon() + 
@@ -107,32 +110,33 @@ ggplot(arv_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
   labs(title="Mean number of weeks stocked out of ARVs per ART site by district", caption="Source: HMIS", 
-       subtitle='Same time period: January - September',fill="Mean weeks per facility") +
+       subtitle='Same time period: January - November',fill="Mean weeks per facility") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
-# rate of change 
+# rate of change in annual facility-weeks stocked out - 10
 ggplot(roc_map, aes(x=long, y=lat, group=group, fill=change)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
-  scale_fill_gradientn(colors=brewer.pal(9, 'Purples')) + 
+  scale_fill_gradientn(colors=rev(brewer.pal(9, 'RdYlBu'))) + 
   theme_void() +
-  labs(title="Rate of change: facility-weeks of ARV stockouts in 2018 minus 2017", caption="Source: HMIS", 
-       subtitle='Same time period: January - September',fill="Difference in weeks (2018 - 2017)") +
+  labs(title="Rate of change: facility-weeks of ARV stockouts in 2018 minus 2017", 
+       caption="* Positive difference = more weeks stocked out in 2018 than 2017", 
+       subtitle='Same time period: January - November',fill="Difference in weeks (2018 - 2017)*") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
-# facilities with more stockouts
+# facilities with more stockouts - 11
 ggplot(roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
-  scale_fill_gradientn(colors=brewer.pal(9, 'Purples')) + 
+  scale_fill_gradientn(colors=brewer.pal(9, 'Reds')) + 
   theme_void() +
-  labs(title="Facilities with more facility-weeks of ARV stockouts in 2018 than 2017 ", caption="The number of ART sites remained the same from 2017 to 2018", 
-       subtitle='Same time period: January - September', fill="Difference in weeks (2018 - 2017)") +
+  labs(title="Districts with more facility-weeks of ARV stockouts in 2018 than 2017 ", caption="The number of ART sites remained the same from 2017 to 2018", 
+       subtitle='Same time period: January - November', fill="Difference in weeks (2018 - 2017)") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
-# percentage of weeks stocked out
+# percentage of weeks stocked out - 12
 ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) + 
   coord_fixed() +
   geom_polygon() + 
@@ -144,22 +148,35 @@ ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
        caption='Source: HMIS', fill="% of weeks stocked out") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
+# percentage of weeks stocked out, just 2017/18 - 13
+ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=percent_out)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
+  theme_void() +
+  labs(title="Percentage of facility-weeks stocked out of ARVs", subtitle="Weeks ART sites were stocked out/Total weeks in which ART sites reported", 
+       caption='Source: HMIS', fill="% of weeks stocked out") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 #------------------------------
-# test kits
+# TEST KIT GRAPHS
 
-# test kit stockout counts
+# test kits - 14, 15, 16
+
+# test kit stockout counts - 13
 ggplot(test[variable!='Percentage of facilities stocked out of test kits'], aes(x=date, y=value, color=variable, group=variable)) +
-  geom_point() +
+  geom_point(size=0.5, alph=0.5) +
   geom_line() +
   geom_line() +
   theme_bw() +
   labs(title='Number of facilities that were stocked out of HIV test kits in a given week', 
        y='Number of facilities', x='Date', color="")
 
-# percentage of facilities that reported that were stocked out of test kits
+# percentage of facilities that reported that were stocked out of test kits - 14
 ggplot(test[variable=='Percentage of facilities stocked out of test kits'], aes(x=date, y=value)) +
-  geom_point() +
+  geom_point(size = 0.5) +
   geom_line() +
   geom_line() +
   theme_bw() +
@@ -167,27 +184,43 @@ ggplot(test[variable=='Percentage of facilities stocked out of test kits'], aes(
   labs(title='Percentage of facilities that were stocked out of HIV test kits in a given week', 
        x='Number of facilities', y='%')
 
+# comparison of stock outs - arvs and test kits - 15
+ggplot(compare, aes(x=date, y=value, color=variable)) +
+  geom_point(size=0.6) +
+  geom_line() +
+  geom_line() +
+  theme_bw() +
+  scale_color_manual(values=two) +
+  labs(title='Percentage of facilities that were stocked out of HIV test kits in a given week', 
+       x='Date', y='Percent (%)', color="")
+
+#------------------------------
+# stacked bar graphs - 17, 18
+
 # stacked bar of weeks stocked out 
-ggplot(tk_weeks[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) + 
+ggplot(tk_weeks, aes(x=weeks, y=facilities, fill=factor(year))) + 
   geom_bar(stat='identity', position='dodge') +
   theme_minimal() +
+  scale_fill_manual(values=brewer.pal(5, 'Blues')) +
   labs(title = "Facilities stocked out of HIv test kits for at least one week by total weeks stocked out", x='Number of weeks out of stock*', 
        y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", fill='Year',
-       subtitle='January 2017 - September 2018')
+       subtitle='January 2017 - November 2018')
 
 # stacked bar of weeks stocked out 
 ggplot(tk_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) + 
   geom_bar(stat='identity', position='dodge') +
+  scale_fill_manual(values=brewer.pal(5, 'Greens'))+
   theme_minimal() +
   labs(title = "Facilities stocked out of HIV test kits for at least one week by total weeks stocked out", 
-       subtitle='Same time period: January - September', x='Number of weeks out of stock*', 
+       subtitle='Same time period: January - November', x='Number of weeks out of stock*', 
        y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", fill='Year')
 
+
 #------------------------------------
-# test kit maps
+# test kit maps - 19:24
 
 # map of facility-weeks of stock outs 
-ggplot(tk_map, aes(x=long, y=lat, group=group, fill=weeks)) + 
+ggplot(tk_map, aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -195,10 +228,10 @@ ggplot(tk_map, aes(x=long, y=lat, group=group, fill=weeks)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
   theme_void() +
   labs(title="Total facility-weeks of test kit stockouts by district, Uganda", caption="Source: HMIS", 
-       subtitle='Same time period: January - September',fill="Facility-weeks stocked out of tests") +
+       subtitle='Same time period: January - November',fill="Facility-weeks stocked out of tests") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
-# number of weeks of stockout divided by art sites reporting 
+# number of weeks of stockout divided by facilities reporting 
 ggplot(tk_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
   coord_fixed() +
   geom_polygon() + 
@@ -207,8 +240,21 @@ ggplot(tk_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
   labs(title="Mean number of weeks stocked out of HIV test kits per facility by district", caption="Source: HMIS", 
-       subtitle='Same time period: January - September',fill="Mean weeks per facility") +
+       subtitle='Same time period: January - November',fill="Mean weeks per facility") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+
+# number of weeks of stockout divided by facilities reporting, 2017/18 only
+ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
+  theme_void() +
+  labs(title="Mean number of weeks stocked out of HIV test kits per facility by district", caption="Source: HMIS", 
+       subtitle='Same time period: January - November',fill="Mean weeks per facility") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+
 
 # rate of change 
 ggplot(tk_roc_map, aes(x=long, y=lat, group=group, fill=change)) + 
@@ -218,18 +264,19 @@ ggplot(tk_roc_map, aes(x=long, y=lat, group=group, fill=change)) +
   scale_fill_gradientn(colors=brewer.pal(9, 'BuGn')) + 
   theme_void() +
   labs(title="Rate of change: facility-weeks of test kit stockout in 2018 minus 2017", caption="Source: HMIS", 
-       subtitle='Same time period: January - September',fill="Difference in weeks (2018 - 2017)") +
+       subtitle='Same time period: January - November',fill="Difference in weeks (2018 - 2017)") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
-# facilities with more stockouts
+# districts with more facility-weeks of stockouts
 ggplot(tk_roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
   scale_fill_gradientn(colors=brewer.pal(9, 'BuGn')) + 
   theme_void() +
-  labs(title="Facilities with more facility-weeks of test kit stockouts in 2018 than 2017 ", 
-       subtitle='Same time period: January - September', fill="Difference in weeks (2018 - 2017)") +
+  labs(title="Districts with more facility-weeks of test kit stockouts in 2018 than 2017 ", 
+       subtitle='Same time period: January - September',
+       fill="Difference in weeks (2018 - 2017)") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # percentage of weeks stocked out
@@ -240,23 +287,24 @@ ggplot(tk_stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
   facet_wrap(~year) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
-  labs(title="Percentage of facility-weeks stocked out", subtitle="Weeks stocked out at ART sites/Total weeks reporting from ART sites", 
+  labs(title="Percentage of facility-weeks stocked out", 
+       subtitle="Weeks stocked out at ART sites/Total weeks reported on by ART sites", 
        caption='Source: HMIS', fill="% of weeks stocked out") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 
 #--------------------------------
-# facility level 
+# facility level scatter plots - 25:28
 
 # arv stockouts by level
 ggplot(scatter[art_site==TRUE], aes(x=level2, y=arvs)) +
-  geom_jitter(width=0.25) + theme_bw() + 
+  geom_jitter(width=0.25, alpha=0.2) + theme_bw() + 
   labs(title='Weeks stocked out of ARVs by facility level (ART sites)', subtitle='2017 - 2018', x='Facility level',
        y='Weeks stocked out of ARVs')
 
 # arv stockouts by level, year       
 ggplot(scatter2[art_site==TRUE], aes(x=level2, y=arvs)) +
-  geom_jitter(width=0.25) + 
+  geom_jitter(width=0.25, alpha=0.2) + 
   facet_wrap(~year) +
   labs(title='Weeks stocked out of ARVs by facility level (ART sites)', x='Facility level', 
        y='Weeks stocked out of ARVs', subtitle='Same time period: January - September') +
@@ -264,23 +312,21 @@ ggplot(scatter2[art_site==TRUE], aes(x=level2, y=arvs)) +
 
 # test kit stockouts by level, year       
 ggplot(scatter, aes(x=level2, y=test_kits)) +
-  geom_jitter(width=0.25) + 
+  geom_jitter(width=0.25, alpha=0.5) + 
   labs(title='Weeks stocked out of HIV test kits by facility level', x='Facility level', 
        y='Weeks stocked out of HIV test kits') +
   theme_bw()
 
 # test kit stockouts by level, year       
 ggplot(scatter2, aes(x=level2, y=test_kits)) +
-  geom_jitter(width=0.25) + 
+  geom_jitter(width=0.25, alpha=0.5) + 
   facet_wrap(~year) +
   labs(title='Weeks stocked out of HIV test kits by facility level', x='Facility level', 
        y='Weeks stocked out of HIV test kits', subtitle='Same time period: January - September') +
   theme_bw()
 
-
-
 #--------------------------------
-# finale maps
+# finale maps - categorical stock outs - 29:32
 
 # Number of weeks stocked out, categorical
 ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) + 
