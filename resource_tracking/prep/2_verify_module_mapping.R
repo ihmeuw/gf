@@ -43,7 +43,7 @@ map = map[module == 'communityresponsesandsystems', module:= 'rsshcommunityrespo
 map = map[module == 'nationalhealthstrategies', module:= 'rsshnationalhealthstrategies']
 map = map[module == 'integratedservicedeliveryandqualityimprovement', module:= 'rsshintegratedservicedeliveryandqualityimprovement']
 map = map[module == 'procurementandsupplychainmanagementsystems', module:= 'rsshprocurementandsupplychainmanagementsystems']
-map = map[module == 'humanresourcesforhealthhrhincludingcommunityhealthworkers', module:= 'rsshhumanresourcesforhealthhrhincludingcommunityhealthworkers']
+map = map[module == 'humanresourcesforhealthincludingcommunityhealthworkers', module:= 'rsshhumanresourcesforhealthincludingcommunityhealthworkers']
 map = map[module == 'financialmanagementsystems', module:= 'rsshfinancialmanagementsystems']
 
 
