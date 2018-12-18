@@ -127,7 +127,7 @@ cleaned_database$disease <- mapply(get_hivtb_split, cleaned_database$disease, cl
 
 
 # ---------------------------------------------
-########## Strip special characters from the SDA descriptions ########
+########## Strip special characters from the SDA descriptions ######## #EKL why is this here and also in mapping functions?? 
 # ---------------------------------------------
 ##list of punctions to remove: 
 sda_remove_chars <- c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
@@ -144,23 +144,19 @@ cleaned_database$sda_activity <-tolower(cleaned_database$sda_activity)
 # ----------------------------------------------
 
 ## on the J Drive: map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
-map_dir <- "where the intervention_and_indicator_list.xlsx file lives"
-map_dir = "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
-mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx")
-                                  , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
+# map_dir <- "where the intervention_and_indicator_list.xlsx file lives"
+# map_dir = "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
+# mapping_list <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx")
+#                                   , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
+# 
+# ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
+# final_mapping <- copy(mapping_list)
+# final_mapping$disease <- NULL ## we will be joining on code 
+# setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
+# mapping_list$coefficient <- 1
+# mapping_list$abbrev_intervention <- NULL
+# mapping_list$abbrev_module <- NULL
 
-## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
-final_mapping <- copy(mapping_list)
-final_mapping$disease <- NULL ## we will be joining on code 
-setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
-mapping_list$coefficient <- 1
-mapping_list$abbrev_intervention <- NULL
-mapping_list$abbrev_module <- NULL
-
-
-##this loads the list of modules/interventions with their assigned codes
-gf_mapping_list <- total_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx"),
-                                      mapping_list, unwanted_array, remove_chars)
 
 ##strip all of the special characters, white space, etc. from the RT database
 cleaned_database <- strip_chars(cleaned_database, unwanted_array, remove_chars)
@@ -213,13 +209,13 @@ ugaData$module = ifelse(ugaData$module %in% c("communitysystemsstrengtheningcomm
 # ----------------------------------------------
 ########### USE THIS TO CHECK FOR ANY UNMAPPED MODULE/INTERVENTIONS ###########
 # ----------------------------------------------
-gf_concat <- paste0(gf_mapping_list$module, gf_mapping_list$intervention)
+gf_concat <- paste0(module_map$module, module_map$intervention)
 uga_concat <- paste0(ugaData$module, ugaData$intervention)
 unmapped_mods <- ugaData[!uga_concat%in%gf_concat]
 unmapped_mods<- unique(unmapped_mods, by = c("module", "intervention", "sda_activity"))
 
 if(nrow(unmapped_mods)>0){
-  print(unique(unmapped_mods[, c("module", "intervention")]))
+  print(unique(unmapped_mods[, c("module", "intervention", "disease")]))
   stop(paste0("You have unmapped original modules/interventions in ", country))
 }
 
@@ -227,7 +223,7 @@ if(nrow(unmapped_mods)>0){
 ########### Map the RT dataset to the GF Modular Framework ###########
 # ----------------------------------------------
 ##merge the RT dataset and the initial mapping list to assign codes: 
-uga_init_mapping <- merge(ugaData, gf_mapping_list, by=c("module", "intervention", "disease"), 
+uga_init_mapping <- merge(ugaData, module_map, by=c("module", "intervention", "disease"), 
                           all.x=TRUE,allow.cartesian = TRUE)
 
 ##use this to check if any modules/interventions were dropped:
