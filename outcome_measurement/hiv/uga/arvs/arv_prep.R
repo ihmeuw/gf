@@ -121,7 +121,6 @@ full_data = full_data[!facility %in% missing$facility]
 
 #------------------------------------
 # merge in the regions
-
 regions = fread(paste0(j, "/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv"))
 regions = regions[ ,.(region = region10_name, district = dist112_name)]
 regions = regions[!duplicated(district)]
@@ -131,8 +130,6 @@ full_data = merge(full_data, regions, by='district', all.x=T)
 full_data[is.na(region)]
 
 #-------------------------------------
-
-#---------------------------
 # save the output
 
 # get the minimum and maximum year and add to the file name for export

@@ -319,7 +319,7 @@ final$variable = factor(final$variable, c('no_stock_out', 'one_week_2_mos',
 # ------------------------------------------------------
 # color palettes
 
-two = c('#bd0026', '#91bfdb')
+two = c('#91bfdb', '#bd0026')
 ratio_colors = brewer.pal(8, 'Spectral')
 results_colors = brewer.pal(6, 'Blues')
 sup_colors = brewer.pal(6, 'Reds')
@@ -336,7 +336,7 @@ single_red = '#bd0026'
 # SOURCE THE GRAPH FUNCTION
 
 # export a pdf of the graphs
-source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/arvs/arv_graphs.R')
+source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/arvs/arv_visuals_to_source.R')
 
 # ------------------------------------------------------
 

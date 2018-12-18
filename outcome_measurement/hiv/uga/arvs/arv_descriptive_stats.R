@@ -56,13 +56,6 @@ dt = merge(dt, regions, by='district', all.x=T)
 
 
 
-
-
-
-
-
-
-
 x = dt[!is.na(test_kits), .(reporting=length(unique(facility))), by=.(date, month, year)]
 x[ , mean(reporting), by=year]
 y = x[year==2018, mean(reporting), by=date]
