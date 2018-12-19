@@ -27,12 +27,6 @@ prep_map <- function(map){
 #--------------------------------------------------------------------------------
 map = map[!(module == "treatmentcareandsupport" & intervention == "na" & disease == "hss" & (code == "R1_2" | code == "R1_3"))]
 
-
-#--------------------------------------------------------------------------------
-# CLEANING- Removing typos and close string matches from map  
-#--------------------------------------------------------------------------------
-map = map[module == "healthsystemstrengthening", module:='healthsystemsstrengthening']
-
 #--------------------------------------------------------------------------------
 # CLEANING- Replacing modules/interventions that are typos or unspecified. 
 #--------------------------------------------------------------------------------

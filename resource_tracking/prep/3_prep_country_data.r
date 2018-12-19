@@ -34,25 +34,6 @@ print(paste0(nrow(dups), " duplicates found in database; values will be summed")
 byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'expenditure')]
 resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expenditure=sum(na.omit(expenditure))), by=byVars]
 
-#-------------------------------------------------------
-# Split HIV/TB combined grants  #EKL still need to verify this function with David; this is from Uganda. 
-# ------------------------------------------------------
-
-get_hivtb_split <- function(disease,module){
-  x <- disease
- if(disease=="hiv/tb" | disease == "tb/hiv"){
-   if(grepl(paste(c("tb", "tuber"), collapse="|"), module)){
-    x <- "tb"
-  } else { ##otherwise, map it to HIV
-    x <- "hiv"
-  }
- }
-return(x)
-}
-
-resource_database$disease <- mapply(get_hivtb_split, resource_database$disease, resource_database$module)
-
-
 #--------------------------------------------------------
 # Adjust module and intervention manually in the raw data 
 #-------------------------------------------------------
