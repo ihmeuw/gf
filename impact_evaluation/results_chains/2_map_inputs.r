@@ -76,16 +76,16 @@ ggsave(paste0(uga_save, "/funding_landscape_mal.pdf"), plot = uga_mal_landscape_
 # ----------
 
 gtm_hiv_modules_10_18 <- modules_over_time("Guatemala", "hiv", 2010, 2018)
-ggsave(paste0(gtm_save, "/module_categories_hiv.png"), plot = gtm_hiv_modules_10_18, height=6, width=14)
-ggsave(paste0(gtm_save, "/module_categories_hiv.pdf"), plot = gtm_hiv_modules_10_18, height=6, width=14)
+ggsave(paste0(gtm_save, "/module_categories_hiv.png"), plot = gtm_hiv_modules_10_18, height=10, width=14)
+ggsave(paste0(gtm_save, "/module_categories_hiv.pdf"), plot = gtm_hiv_modules_10_18, height=10, width=14)
 
 gtm_tb_modules_10_18 <- modules_over_time("Guatemala", "tb", 2010, 2018)
-ggsave(paste0(gtm_save, "/module_categories_tb.png"), plot = gtm_tb_modules_10_18, height=6, width=14)
-ggsave(paste0(gtm_save, "/module_categories_tb.pdf"), plot = gtm_tb_modules_10_18, height=6, width=14)
+ggsave(paste0(gtm_save, "/module_categories_tb.png"), plot = gtm_tb_modules_10_18, height=10, width=14)
+ggsave(paste0(gtm_save, "/module_categories_tb.pdf"), plot = gtm_tb_modules_10_18, height=10, width=14)
 
 gtm_mal_modules_10_18 <- modules_over_time("Guatemala", "malaria", 2010, 2018)
-ggsave(paste0(gtm_save, "/module_categories_mal.png"), plot = gtm_mal_modules_10_18, height=6, width=14)
-ggsave(paste0(gtm_save, "/module_categories_mal.pdf"), plot = gtm_mal_modules_10_18, height=6, width=14)
+ggsave(paste0(gtm_save, "/module_categories_mal.png"), plot = gtm_mal_modules_10_18, height=10, width=14)
+ggsave(paste0(gtm_save, "/module_categories_mal.pdf"), plot = gtm_mal_modules_10_18, height=10, width=14)
 
 
 #-----------

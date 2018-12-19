@@ -12,7 +12,7 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
   
   check_na_budgets <- plot_data[is.na(budget)] #We have NAs here - where are these coming from??? Back in the prep code???
   #Budget really needs to be stored as numeric and non-applicable modules should never happen!
-  #stopifnot(nrow(check_na_budgets)==0)
+  stopifnot(nrow(check_na_budgets)==0)
   
   #Because not sure where these NAs are coming from, making all of them 0. Need to investigate further. 
   plot_data[is.na(budget), budget:=0]
@@ -23,6 +23,7 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
   
   plot_data =  merge(plot_data, map_mod_groups, all.x = TRUE, by = "gf_module", allow.cartesian = TRUE)
   plot_data[gf_module == "Performance Based Financing", category:="Other"]
+  plot_data[gf_module == "Unidentified", category:= "Other"]
   
   #Check that all categories merged correctly. 
   check_na_cats <- plot_data[is.na(category)]
@@ -62,7 +63,7 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
   }
   plot_scale = ifelse(scale_group == 3 | scale_group == 4, 1000000, 1) #If max disbursement is greater than 25 million divide by 1 million. 
   scale_label = ifelse(scale_group == 1 | scale_group == 2, "Budget (USD)", "Budget (Millions USD)")
-  plot_ticks = as.numeric(100000)
+  plot_ticks = as.numeric(500000)
   if (scale_group == 2){
     plot_ticks = 1000000
   } else if (scale_group == 3){
@@ -82,14 +83,22 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
     disease_label = "Malaria"
   }
   
-  #Generate plot
-  budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, color = category)) + 
-    geom_line(size = 2, alpha = 0.25)  + 
-    geom_point() + 
+  ##Turn on for a stacked bar graph 
+  # budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, color = category, fill = category)) + 
+  #   geom_bar(position = "stack", stat = "identity") + 
+  #   theme_bw(base_size = 16) + theme(legend.title = element_blank()) +
+  #   scale_fill_brewer(palette = "RdYlBu") +
+  #   labs(x = "Year", y = scale_label, title = paste0("Budget by module in ", country_name, ", for ", disease_label, " ", start_year, "-", end_year))
+  # 
+  #Turn on for a line graph 
+  budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, color = category, fill = category)) +
+    geom_line(size = 2, alpha = 0.25)  +
+    geom_point() +
     theme_bw(base_size = 16) + theme(legend.title = element_blank()) +
     scale_y_continuous(breaks = seq(0, y_max, by = plot_ticks), labels = scales::dollar) +
+    scale_fill_brewer(palette = "RdYlBu") +
     labs(x = "Year", y = scale_label, title = paste0("Budget by module in ", country_name, ", for ", disease_label, " ", start_year, "-", end_year))
-  
+
   return(budget_over_time)
 }
 

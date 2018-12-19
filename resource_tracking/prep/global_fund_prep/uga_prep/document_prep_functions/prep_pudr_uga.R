@@ -21,16 +21,15 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   ### look at gf_data and find what is being droped where.
   ########
   
-  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/uga/gf/'
   # dir = file_dir
-  # inFile = ""
-  # sheet_name = ""
-  # start_date = ""
-  # period =
-  # disease = ""
-  # grant = ""
-  # recipient = ""
-  # source = "pudr"
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # grant = file_list$grant[i]
+  # recipient = file_list$primary_recipient
+  # source = file_list$data_source[i]
   
   # --------------------
   # Test the inputs to make sure that they are the correct type
@@ -42,9 +41,6 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   
-  str_replace(start_date, "\\\\", "")
-  start_date = substring(start_date, 2, 11)
-  start_date = as.Date(start_date)
   ## the malaria PUDRs are set up differently than the HIV ones
   if(grant%in%c("UGD-708-G08-M") & sheet_name=="EFR Malaria Financial Data_3B"){
     gf_data <- gf_data[, -c(1:3)]
@@ -82,7 +78,13 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       colnames(gf_data)[2] <- "intervention"
       colnames(gf_data)[3] <- "budget"
       colnames(gf_data)[4] <- "expenditure"
-      gf_data <- gf_data[c(grep("by intervent", tolower(gf_data$module)):grep("implementing enti", tolower(gf_data$module))),]
+      #Select only the section of the excel that's broken up by intervention 
+      start_row <- grep("by intervention", tolower(gf_data$module))
+      end_row <- grep("breakdown by implementing entity", tolower(gf_data$module))
+      gf_data = gf_data[start_row:end_row, ]
+      if (inFile == "LFA reviewed UGA-T-MoFPED PUDR PE 31 December 2017 25 May 18.xlsx"){ #This file has some extra rows. 
+        gf_data = gf_data[5:18, ]
+      }
       budget_dataset <- gf_data[, c("module","intervention", "budget", "expenditure"),with=FALSE]
       budget_dataset<-  budget_dataset[!is.na( gf_data$module),]
       budget_dataset<- budget_dataset[!is.na(budget_dataset$intervention),]
@@ -91,7 +93,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset$disbursement <- 0 
       ## drop 1st row since it doesn't contain any useful inforamtion:  
       budget_dataset <- budget_dataset[-1, ,drop = FALSE]
-    } else if (sheet_name%in%c('LFA_Total PR Cash Outflow_3A','LFA_Total PR Cash Outflow_3 ')){ ## for the PUDRs w/out module/intervention detail
+    } else if (sheet_name%in%c('LFA_Total PR Cash Outflow_3A','LFA_Total PR Cash Outflow_3')){ ## for the PUDRs w/out module/intervention detail
       colnames(gf_data)[1] <- "description"
       colnames(gf_data)[3] <- "budget"
       colnames(gf_data)[4] <- "expenditure"
