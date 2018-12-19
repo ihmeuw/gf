@@ -55,19 +55,14 @@ for (f in files) {
   
   # remove 'district' from district names
   arv_data[ , district:=unlist(lapply(strsplit(arv_data$district, '\\s' ), '[', 1))]
-
-  # alter district names to match the shape file
+  
+  # change the names of districts to match the shape file 
   arv_data[district=="Bunyangabu", district:="Kabarole"]
-  arv_data[district=="Butebo", district:="Pallisa"]
   arv_data[district=="Kagadi", district:="Kibaale"]
   arv_data[district=="Kakumiro", district:="Kibaale"]
-  arv_data[district=="Kyotera", district:="Rakai"]
   arv_data[district=="Namisindwa", district:="Manafwa" ]
   arv_data[district=="Omoro", district:="Gulu"]
   arv_data[district=="Pakwach", district:="Nebbi"]
-  arv_data[district=="Rubanda", district:= "Kabale"]
-  arv_data[district=="Rukiga", district:="Kabale"]
-  arv_data[district=="Luwero", district:="Luweero"]
   arv_data[district=="Sembabule", district:="Ssembabule"]
   
   # add facility level
@@ -124,12 +119,22 @@ missing = full_data[ , .(check=all(is.na(arvs)), check_t=all(is.na(test_kits))),
 missing = missing[check==TRUE & check_t==TRUE]
 full_data = full_data[!facility %in% missing$facility]
 
-#---------------------------
+#------------------------------------
+# merge in the regions
+regions = fread(paste0(j, "/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv"))
+regions = regions[ ,.(region = region10_name, district = dist112_name)]
+regions = regions[!duplicated(district)]
+full_data = merge(full_data, regions, by='district', all.x=T)
+
+# check that every district has a region associated with it
+full_data[is.na(region)]
+
+#-------------------------------------
 # save the output
 
 # get the minimum and maximum year and add to the file name for export
-min_year = full_data[ ,min(year)]
-max_year = full_data[ ,max(year)]
+min_year = full_data[ , min(year)]
+max_year = full_data[ , max(year)]
 
 # save as a data table
 saveRDS(full_data, paste0(OutDir, 'arv_stockouts_', min_year, '_', max_year, '.rds'))

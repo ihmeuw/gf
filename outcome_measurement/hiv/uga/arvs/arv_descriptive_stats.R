@@ -51,7 +51,10 @@ regions = regions[!duplicated(district)]
 dt = merge(dt, regions, by='district', all.x=T)
 
 #-------------------------------------
-# descrtipve statiss
+# descrtipve statistics
+
+
+
 
 x = dt[!is.na(test_kits), .(reporting=length(unique(facility))), by=.(date, month, year)]
 x[ , mean(reporting), by=year]
