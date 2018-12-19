@@ -36,9 +36,10 @@ gos_data$period <- as.integer(gos_data$period)
 ##since we don't have subnational data for GOS, just make it a copy of the country variable: 
 gos_data$adm1 <- gos_data$loc_name
 gos_data$adm2 <- gos_data$loc_name
-gos_data$lang <- "eng"
-gos_data$cost_category <- "all"
 
+#Make variables numeric 
+gos_data$budget <- as.numeric(gos_data$budget)
+gos_data$expenditure <- as.numeric(gos_data$expenditure)
 
 #----------------------------------
 # 1. FINAL GF BUDGETS 
@@ -49,19 +50,20 @@ final_budgets_gtm <- read.csv(paste0(gtm_prepped, "final_budgets.csv"))
 final_budgets_uga <- read.csv(paste0(uga_prepped, "final_budgets.csv"))
 
 final_budgets <- rbind(final_budgets_cod, final_budgets_gtm)
-final_budgets <- rbind(final_budgets, gos_data) 
+gos_budgets <- gos_data[budget != 0 & !is.na(budget)]
+final_budgets <- rbind(final_budgets, gos_budgets, fill = TRUE) 
 setDT(final_budgets)
 
 # Verify data 
 na_year <- final_budgets[is.na(year)]
-na_budget <- final_budgets[is.na(budget) | is.na(expenditure)]
+na_budget <- final_budgets[is.na(budget)]
 stopifnot(nrow(na_year)==0 & nrow(na_budget)==0)
 
 #Generate variables 
-final_budgets[, end_date:=start_date + period-1]
+#final_budgets[, end_date:=start_date + period-1]
 
 # Write data 
-write.csv(final_budgets, paste0(final_write, "final_budgets.csv"))
+write.csv(final_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
 
 #----------------------------------
 # 2. FINAL GF EXPENDITURES

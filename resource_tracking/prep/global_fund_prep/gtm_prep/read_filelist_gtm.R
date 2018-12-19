@@ -1,12 +1,15 @@
 # ----------------------------------------------
 # Emily Linebarger, based on code by Irena Chen
-# Master code file for DRC data prep
+# Master code file for gtm data prep
 # ----------------------------------------------
 
 read_fileList = function(){
   
 document_prep <- paste0(country_code_dir, "document_prep_functions/")
 
+# ----------------------------------------------
+# Source prep functions
+# --------------------------------------------
 source(paste0(document_prep, "prep_fpm_detailed_budget.R"))
 source(paste0(document_prep, "prep_fpm_summary_budget.R"))
 source(paste0(document_prep, "prep_fpm_other_budget.R"))
@@ -14,7 +17,7 @@ source(paste0(document_prep, "prep_fpm_other_detailed_budget.R"))
 source(paste0(document_prep, "prep_gtm_pudr.R"))
 
 # ----------------------------------------------
-###### For loop that preps data and aggregates it
+# For loop that preps data and aggregates it
 # --------------------------------------------
 
 for(i in 1:length(file_list$file_name)){
@@ -55,6 +58,7 @@ for(i in 1:length(file_list$file_name)){
   tmpData$primary_recipient <- file_list$primary_recipient[i]
   tmpData$secondary_recipient <- file_list$secondary_recipient[i]
   tmpData$file_iteration = file_list$file_iteration[i]
+  tmpData$year <- year(tmpData$start_date[i])
   if(i==1){
     resource_database = tmpData
   }
@@ -62,7 +66,6 @@ for(i in 1:length(file_list$file_name)){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
 
-  
   print(paste0(i, " ", file_list$function_type[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
 }
 

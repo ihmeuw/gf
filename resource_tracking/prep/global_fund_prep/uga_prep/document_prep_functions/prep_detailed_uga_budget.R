@@ -18,18 +18,16 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ### look at gf_data and find what is being droped where.
   ########
   
-  # file_dir <- "J:/Project/Evaluation/GF/resource_tracking/uga/grants/active/UGA-C-TASO/budgets/"
   # dir = file_dir
-  # inFile = "UGA-C-TASO_DB_ IMPP2_17 Dec_GF Final.xlsx"
-  # sheet_name = "Detailed Budget"
-  # start_date = "2018-01-01"
-  # qtr_num = 12
-  # period = 90
-  # disease = "hiv/tb"
-  # grant = "UGA-C-TASO"
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # qtr_num = file_list$qtr_number[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # grant = file_list$grant[i]
   # cashText = " Cash Outflow"
-  # data_source = "init_fpm_dec"
-
+  # data_source = file_list$data_source[i]
   
   #   
   # ----------------------------------------------
@@ -45,8 +43,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     }
     return(qtr_names)
   }
-  
-  start_date = substring(start_date, 2, 11) #Strip quotation marks from string
+
   ##create list of column names: 
   if(start_date=="2018-01-01"){
     qtr_names <- c("Module","Intervention", "Activity Description","Cost Input", "Implementer", rep(1, qtr_num))
@@ -85,7 +82,6 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity", "cost_category","recipient"), variable.name = "qtr", value.name="budget")
   
   ##create vector that maps quarters to their start dates: 
-  start_date = as.Date(start_date)
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
     if (i==1){
@@ -117,7 +113,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$disease <- disease
   budget_dataset$disbursement <- 0##change if we get disbursement info
   budget_dataset$year <- year(budget_dataset$start_date)
-  is.na(budget_dataset$budget) <- 0
+  budget_dataset = budget_dataset[!is.na(budget)]
   
   return(budget_dataset)
 }

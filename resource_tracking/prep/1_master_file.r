@@ -30,7 +30,7 @@ library(dplyr)
 user = "elineb" #Change to your username 
 code_dir = paste0("C:/Users/", user, "/Documents/gf/resource_tracking/prep/")
 combined_output_dir = "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping"
-country <- "cod" #Change to the country you want to update. 
+country <- c("uga") #Change to the country you want to update. 
 source(paste0(code_dir, "shared_mapping_functions.R")) 
 
 #Global variables. 
@@ -48,6 +48,8 @@ include_stops = FALSE #Set to true if you would like to see error messages in mo
 # ----------------------------------------------
 # STEP 2: Load country directories and file list
 # ----------------------------------------------
+  
+  for (country in countries){
   master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
   export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
   country_code_dir <- paste0(code_dir, "global_fund_prep/", country, "_prep/")
@@ -56,13 +58,14 @@ include_stops = FALSE #Set to true if you would like to see error messages in mo
   
   desired_cols <- c('file_name', 'sheet', 'function_type', 'start_date', 'disease', 'data_source', 'period', 'qtr_number', 'grant', 'primary_recipient',
                     'secondary_recipient', 'language', 'geography', 'grant_period', 'grant_status', 'file_iteration')
-  stopifnot(colnames(file_list) %in% desired_cols)
+  #stopifnot(colnames(file_list) %in% desired_cols)
   
 # ----------------------------------------------
 # STEP 3: Prep country-level data 
 # ----------------------------------------------
 
   source(paste0(code_dir, "3_prep_country_data.r"))
+  }
 
 # ----------------------------------------------
 # STEP 4: Aggregate country-level data 

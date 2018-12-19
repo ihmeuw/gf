@@ -30,6 +30,7 @@ stopifnot(nrow(check_na_budget)==0)
 
 #check for duplicates, and sum their values if they exist:
 dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
+print(paste0(nrow(dups), " duplicates found in database; values will be summed"))
 byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'expenditure')]
 resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expenditure=sum(na.omit(expenditure))), by=byVars]
 
@@ -37,7 +38,7 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expendi
 # Adjust module and intervention manually in the raw data 
 #-------------------------------------------------------
 
-source(paste0(country_code_dir, "correct_modules_interventions.R"))
+source(paste0(country_code_dir, "correct_modules_interventions.r"))
 resource_database = correct_modules_interventions(resource_database)
 
 #--------------------------------------------------------
@@ -68,11 +69,18 @@ if(nrow(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
 }
 
-# Merge with module map on module, intervention, and disease
-mapped_country_data <- merge(resource_database, module_map, by=c("module", "intervention", "disease"), all.x=TRUE, allow.cartesian = TRUE)
+# Merge with module map on module, intervention, and disease to pull in code
+mapped_country_data <- merge(resource_database, module_map, by=c("module", "intervention", "disease"), all.x=TRUE)
 
-## merge the dataset with the codes and coefficients to the Modular Framework
-#mapped_country_data <- merge(cod_init_mapping, final_mapping, by="code", all.x=TRUE) 
+#Merge with intervention using code merged from previous line to pull in gf_module and gf_intervention. 
+map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
+final_mapping <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx")
+                                  , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
+setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
+final_mapping = final_mapping[, .(code, gf_module, gf_intervention, abbrev_module, abbrev_intervention)]
+
+# Merge the dataset with gf_module/intervention to the raw file data by code. 
+mapped_country_data<- merge(mapped_country_data, final_mapping, by="code", all.x=TRUE) 
 dropped_mods <- mapped_country_data[is.na(mapped_country_data$gf_module), ]
 
 if(nrow(dropped_mods) >0){
@@ -100,8 +108,9 @@ if(country == "cod"){
   mapped_country_data$adm2 <- 128 
   mapped_country_data$country <- "Guatemala" 
 } else if (country == "uga"){
-  
-  
+  mapped_country_data$adm1 <- 190
+  mapped_country_data$adm2 <- 190
+  mapped_country_data$country <- "Uganda"
 }
 
 mapped_country_data$loc_name = country
@@ -113,10 +122,10 @@ mapped_country_data$sda_activity <- ifelse(tolower(mapped_country_data$sda_activ
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------
 
-desired_cols <- c("adm1", "adm2", "budget", "code", "code_count", "coefficient", "cost_category", "country", "data_source", "disbursement", "disease", 
-                  "expenditure", "file_iteration", "fileName", "frequency", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
+desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "code_count", "coefficient", "cost_category", "country", "data_source", "disbursement", "disease", 
+                  "expenditure", "file_iteration", "fileName", "frequency", "gf_intervention", "gf_module", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
                   "orig_intervention", "orig_module", "period", "prefix", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
-stopifnot(sort(colnames(resource_database)) == desired_cols)   
+stopifnot(sort(colnames(mapped_country_data)) == desired_cols)   
 
 # ----------------------------------------------
 # Write the prepped data as .csvs
