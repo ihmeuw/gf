@@ -22,11 +22,11 @@ library(scales)
 ##declare functions to help prep the data:  #EKL pull these functions out. Or are all of these necessary??? 
 # ----------------------------------------------
 get_dah_source_channel <- function(channel){ #EKL do we like these classifications? 
-  x <- "Other bilateral"
+  x <- "Other bilateral assistance"
   if(channel=="GFATM"){
     x <- "The Global Fund"
   } else if(channel=="BIL_USA"){
-    x <- "U.S. bilateral"
+    x <- "U.S. bilateral assistance"
   } else if(channel == "NGO" | channel == "INTLNGO" | channel == "US_FOUND" | channel == "BMGF"){
     x <- "NGOs and foundations"
   } else if(channel == "AfDB" | channel == "WB_IDA" | channel == "WB_IBRD" | channel == "AsDB" | channel == "IDB" | channel == "UNITAID"){

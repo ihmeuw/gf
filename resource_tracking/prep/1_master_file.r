@@ -49,23 +49,37 @@ include_stops = FALSE #Set to true if you would like to see error messages in mo
 # STEP 2: Load country directories and file list
 # ----------------------------------------------
   
-  for (country in countries){
+ # for (country in countries){
   master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
   export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
   country_code_dir <- paste0(code_dir, "global_fund_prep/", country, "_prep/")
   file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE)
   file_list$start_date <- as.Date(file_list$start_date, format = "%m/%d/%Y")
   
+  #Validate file list 
   desired_cols <- c('file_name', 'sheet', 'function_type', 'start_date', 'disease', 'data_source', 'period', 'qtr_number', 'grant', 'primary_recipient',
                     'secondary_recipient', 'language', 'geography', 'grant_period', 'grant_status', 'file_iteration')
-  #stopifnot(colnames(file_list) %in% desired_cols)
+  stopifnot(colnames(file_list) %in% desired_cols)
+  
+  stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
+  stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
+  
+  input_fpm <- file_list[data_source == "fpm" & file_iteration == "final", .(grant, grant_period)]
+  input_pudr <- file_list[data_source == "pudr" & file_iteration == "final", .(grant, grant_period)]
+  
+  #Cannot have duplicate 'final' versions of files within grant_number and grant_period. 
+  check_fpm = input_fpm[duplicated(input_fpm), ]
+  check_pudr = input_pudr[duplicated(input_pudr), ]
+  stopifnot(nrow(check_fpm)==0 & nrow(check_pudr)==0)
+  
+  rm(input_fpm, input_pudr, check_fpm, check_pudr)
   
 # ----------------------------------------------
 # STEP 3: Prep country-level data 
 # ----------------------------------------------
 
   source(paste0(code_dir, "3_prep_country_data.r"))
-  }
+#  }
 
 # ----------------------------------------------
 # STEP 4: Aggregate country-level data 
