@@ -93,7 +93,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
       gf_data <- gf_data[c(grep("objetivos", tolower(gf_data$sda_activity)):(grep("seleccio", tolower(gf_data$module)))),]
   }
   
-  gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure", "disbursement","recipient"),with=FALSE]
+  gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure", "disbursement"),with=FALSE]
   budget_dataset <- gf_data[-1, drop = FALSE]
   budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
   

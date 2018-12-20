@@ -154,6 +154,7 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$disease <- disease
   budget_dataset$expenditure <- 0 
   budget_dataset$lang <- lang
+  budget_dataset$loc_id <- NULL
 
   return(budget_dataset)  
 }

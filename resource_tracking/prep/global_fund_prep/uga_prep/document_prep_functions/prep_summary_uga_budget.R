@@ -57,9 +57,6 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   drop.cols <- grep(paste(toMatch, collapse="|"), ignore.case=TRUE, gf_data)
   gf_data <- gf_data[, (drop.cols) := NULL]
   
-  str_replace(start_date, "\\\\", "")
-  start_date = substring(start_date, 2, 11)
-  start_date = as.Date(start_date)
   # the budgets that start in August have a 2 month quarter, followed by just 3 month quarters
   org = start_date
   if (month(start_date) == 8 | (start_date == "2014-05-01" & grant == 'UGD-011-G10-S')){

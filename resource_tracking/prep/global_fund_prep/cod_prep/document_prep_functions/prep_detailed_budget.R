@@ -14,6 +14,7 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
                                 qtr_num, disease, period, lang, grant, loc_id, source){
   
   
+  
   ######## TROUBLESHOOTING HELP
   ### fill in variables below with information from line where the code breaks (use file list to find variables)
   ### uncomment by "ctrl + shift + c" and run code line-by-line
@@ -22,16 +23,16 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
 # 
   # file_dir = "J:/Project/Evaluation/GF/resource_tracking/cod/gf/"
   # dir = file_dir
-  # inFile = "official_budgets/NFMBudget_COD-H-CORDAID_Finance.xlsx"
-  # sheet_name = "DetailedBudget"
-  # start_date = "2015-07-01"
-  # qtr_num = 12
-  # period = 90
-  # disease = "tb/hiv"
-  # lang = "fr"
-  # grant = "COD-H-CORDAID"
-  # source = "fpm"
-  # loc_id = "cod"
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # qtr_num = file_list$qtr_number[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # lang = file_list$language[i]
+  # grant = file_list$grant[i]
+  # source = file_list$data_source[i]
+  # loc_id = loc_name
 
   # ----------------------------------------------
   ##set up functions to handle french and english budgets differently
@@ -43,7 +44,6 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
     cashText <- "Sorties de tresorerie"
   }  
   
-  start_date = substring(start_date, 2, 11) #Strip quotation marks from string
   ## the recipient column is named differently, depending on if it's an older or newer budget 
   if(year(start_date)==2018){
     recipient <- "Implementer" 
@@ -115,7 +115,6 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
     gf_data1$loc_name <- "cod"
   }
   
-  start_date = as.Date(start_date)
   ## create a vector of start_dates that correspond to each quarter in the budget 
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
