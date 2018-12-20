@@ -46,10 +46,15 @@ gos_data$expenditure <- as.numeric(gos_data$expenditure)
 #----------------------------------
 # Merge all 3 countries 
 final_budgets_cod <- read.csv(paste0(cod_prepped, "final_budgets.csv"))
-final_budgets_gtm <- read.csv(paste0(gtm_prepped, "final_budgets.csv"))
-final_budgets_uga <- read.csv(paste0(uga_prepped, "final_budgets.csv"))
+final_budgets_cod$budget <- as.numeric(final_budgets_cod$budget)
 
-final_budgets <- rbind(final_budgets_cod, final_budgets_gtm)
+final_budgets_gtm <- read.csv(paste0(gtm_prepped, "final_budgets.csv"))
+final_budgets_gtm$budget <- as.numeric(final_budgets_gtm$budget)
+
+final_budgets_uga <- read.csv(paste0(uga_prepped, "final_budgets.csv"))
+final_budgets_uga$budget <- as.numeric(final_budgets_uga$budget)
+
+final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga)
 gos_budgets <- gos_data[budget != 0 & !is.na(budget)]
 final_budgets <- rbind(final_budgets, gos_budgets, fill = TRUE) 
 setDT(final_budgets)
@@ -70,23 +75,29 @@ write.csv(final_budgets, paste0(final_write, "final_budgets.csv"), row.names = F
 #----------------------------------
 # Merge all 3 countries 
 final_expenditures_cod <- read.csv(paste0(cod_prepped, "final_expenditures.csv"))
-final_expenditures_gtm <- read.csv(paste0(gtm_prepped, "final_expenditures.csv"))
-final_expenditures_uga <- read.csv(paste0(uga_prepped, "final_expenditures.csv"))
+final_expenditures_cod$expenditure <- as.numeric(final_expenditures_cod$expenditure)
 
-final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm)
-final_expenditures <- rbind(final_expenditures, gos_data) 
+final_expenditures_gtm <- read.csv(paste0(gtm_prepped, "final_expenditures.csv"))
+final_expenditures_gtm$expenditure <- as.numeric(final_expenditures_gtm$expenditure)
+
+final_expenditures_uga <- read.csv(paste0(uga_prepped, "final_expenditures.csv"))
+final_expenditures_uga$expenditure <- as.numeric(final_expenditures_uga$expenditure)
+
+final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga)
+gos_expenditures <- gos_data[expenditure != 0 & !is.na(expenditure)]
+final_expenditures <- rbind(final_expenditures, gos_expenditures, fill = TRUE) 
 setDT(final_expenditures)
 
 # Verify data 
 na_year <- final_expenditures[is.na(year)]
-na_budget <- final_expenditures[is.na(budget) | is.na(expenditure)]
-stopifnot(nrow(na_year)==0 & nrow(na_budget)==0)
+na_expenditure <- final_expenditures[is.na(expenditure)]
+stopifnot(nrow(na_year)==0 & nrow(na_expenditure)==0)
 
 #Generate variables 
-final_expenditures[, end_date:=start_date + period-1]
+#final_expenditures[, end_date:=start_date + period-1]
 
 # Write data 
-write.csv(final_expenditures, paste0(final_write, "final_expenditures.csv"))
+write.csv(final_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
 
 #----------------------------------
 # 3. GF FILE ITERATIONS

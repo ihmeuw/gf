@@ -14,7 +14,7 @@
 # - how can you verify that all tests are merging correctly? 
 # - It looks like you're just missing a lot of files in Uganda??? 
 # - Are we testing each prep function for each country? 
-# 
+# - Need to separate out budget and expenditure tests. 
 # 
 
 #--------------------------
@@ -22,17 +22,28 @@
 
 # input files
 rm(list = ls())
-source("C:/Users/elineb/Documents/gf/resource_tracking/prep/2_shared_mapping_functions.R")
+source("C:/Users/elineb/Documents/gf/resource_tracking/prep/shared_mapping_functions.R")
 file_dir <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/"
-fil = "total_resource_tracking_data.csv"
-dt = fread(paste0(file_dir, fil))
+gf_budgets <- read.csv(paste0(file_dir, "final_budgets.csv"))
+gf_expenditures <- read.csv(paste0(file_dir, "final_expenditures.csv"))
+
+setDT(gf_budgets)
+setDT(gf_expenditures)
+
+#Aah why are some of the dates starting with 00? 
+gf_budgets$year_start <- substring(gf_budgets$start_date, 1, 2)
+gf_budgets$date <- substring(gf_budgets$start_date, 3, 11)
+
+gf_budgets[year_start == "00", start_date:=paste0("20", date)]
+
+#Format columns before subsetting by country. 
+gf_budgets$start_date = as.Date(gf_budgets$start_date, format = "%Y-%m-%d")
 
 # -----------------------
 # Guatemala file prep 
 # -----------------------
 {
-dt_gtm = dt[loc_name == "gtm"]
-dt_gtm$start_date <- as.Date(dt_gtm$start_date, format = "%Y-%m-%d")
+dt_gtm = gf_budgets[loc_name == "gtm"]
 gtm_budgets = check_budgets_pudrs(dt_gtm)
 
 # -----------------------
@@ -57,9 +68,7 @@ failed_tests_gtm <- gtm_merge[correct_bug_sum != budget, ]
 # Uganda file prep 
 # ------------------
 {
-  
-  #Why do we not have end date in Uganda??? 
-dt_uga = read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/prepped_budget_data.csv")
+dt_uga = gf_budgets[loc_name == "uga"]
 dt_uga = setDT(dt_uga)
 
 dt_uga$start_date <- as.Date(dt_uga$start_date, format = "%Y-%m-%d")
@@ -95,7 +104,7 @@ failed_tests_uga <- uga_merge[correct_bug_sum != budget, ]
 # DRC File prep 
 # ------------------
 {
-dt_drc = dt[loc_name == "cod"]
+dt_drc = gf_budgets[loc_name == "cod"]
 dt_drc$start_date <- as.Date(dt_drc$start_date, format = "%Y-%m-%d")
 
 # to check Data Seeking Spreadsheet
