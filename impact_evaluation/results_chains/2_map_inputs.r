@@ -112,10 +112,10 @@ uga_hiv_modules_10_18 <- modules_over_time("Uganda", "hiv", 2010, 2018)
 ggsave(paste0(uga_save, "/module_categories_hiv.png"), plot = uga_hiv_modules_10_18, height=6, width=14)
 ggsave(paste0(uga_save, "/module_categories_hiv.pdf"), plot = uga_hiv_modules_10_18, height=6, width=14)
 
+uga_tb_modules_10_18 <- modules_over_time("Uganda", "tb", 2010, 2018)
+ggsave(paste0(uga_save, "/module_categories_tb.png"), plot = uga_tb_modules_10_18, height=6, width=14)
+ggsave(paste0(uga_save, "/module_categories_tb.pdf"), plot = uga_tb_modules_10_18, height=6, width=14)
 
-#Why do we only have HIV as a disease in gf_budgets??
-# uga_tb_modules_10_18 <- modules_over_time("Uganda", "tb", 2010, 2018)
-# ggsave(paste0(uga_save, "/module_categories_tb.png"), plot = uga_tb_modules_10_18, width = 35, height = 25, units = "cm", dpi = "retina")
-# 
-# uga_mal_modules_10_18 <- modules_over_time("Uganda", "malaria", 2010, 2018)
-# ggsave(paste0(uga_save, "/module_categories_mal.png"), plot = uga_mal_modules_10_18, width = 35, height = 25, units = "cm", dpi = "retina")
+uga_malaria_modules_10_18 <- modules_over_time("Uganda", "malaria", 2010, 2018)
+ggsave(paste0(uga_save, "/module_categories_malaria.png"), plot = uga_malaria_modules_10_18, height=6, width=14)
+ggsave(paste0(uga_save, "/module_categories_malaria.pdf"), plot = uga_malaria_modules_10_18, height=6, width=14)

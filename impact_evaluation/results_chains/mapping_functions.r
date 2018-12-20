@@ -91,12 +91,11 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
   #   labs(x = "Year", y = scale_label, title = paste0("Budget by module in ", country_name, ", for ", disease_label, " ", start_year, "-", end_year))
   # 
   #Turn on for a line graph 
-  budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, color = category, fill = category)) +
-    geom_line(size = 2, alpha = 0.25)  +
+  budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, group = category, color = category)) +
     geom_point() +
+    geom_line(size = 2, alpha = 0.25) +
     theme_bw(base_size = 16) + theme(legend.title = element_blank()) +
     scale_y_continuous(breaks = seq(0, y_max, by = plot_ticks), labels = scales::dollar) +
-    scale_fill_brewer(palette = "RdYlBu") +
     labs(x = "Year", y = scale_label, title = paste0("Budget by module in ", country_name, ", for ", disease_label, " ", start_year, "-", end_year))
 
   return(budget_over_time)
@@ -112,6 +111,7 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
       sicoin_merge <- sicoin_merge[disease == disease_name]
       sicoin_merge <- sicoin_merge[, .(country, disease, year, financing_source, disbursement)]
       sicoin_merge <- sicoin_merge[, financing_source:="GHE"]
+      sicoin_merge$disbursement <- as.numeric(sicoin_merge$disbursement)
       plot_data <- rbind(plot_data, sicoin_merge)
   }
   
@@ -120,6 +120,11 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
   
   #Format variables 
   plot_data$disbursement <- as.numeric(plot_data$disbursement)
+  
+  #Remove funders with 0 disbursement across time range 
+  plot_data[, sum_funder_db:=sum(disbursement), by = c('financing_source')]
+  plot_data = plot_data[sum_funder_db != 0]
+  plot_data[, sum_funder_db:=NULL]
   
   sum_db <- plot_data[, sum_db:=sum(disbursement), by = c('year')]
   max_db <- (max(sum_db$sum_db)) #Use this to set axes. 
@@ -154,8 +159,6 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
     disease_label = "Malaria"
   }
   
-  #plot_data = plot_data[disbursement != 0] #Don't plot funders with 0 disbursement. 
-  
   #Wrap text for expecially long labels
   plot_data[financing_source == "UN Agencies, The World Bank, and regional development banks", 
             financing_source:= "UN Agencies, The World Bank,\nand regional development banks"]
@@ -172,11 +175,14 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
   funding_landscape = ggplot(data = plot_data, aes(x = year, y = disbursement, fill = financing_source)) + 
     geom_ribbon(aes(ymin = 0, ymax = disbursement), position = "stack") + 
     theme_bw(base_size = 16) + theme(legend.title = element_blank())+
-    scale_y_continuous(breaks = seq(0, y_max, by = plot_ticks), labels = scales::dollar) +
+    scale_y_continuous(expand = c(0,0), breaks = seq(0, y_max, by = plot_ticks), labels = scales::dollar) +
+    scale_x_continuous(expand = c(0,0))+
     scale_fill_brewer(palette = "RdYlBu") +
     labs(x = "Year", y = scale_label, title = paste0("Funding landscape in ", country_name, " for ", disease_label, ", ", start_year, "-", end_year))
-  funding_landscape
   
   return(funding_landscape)
   
 }
+
+#Source shared FGH function to convert currency
+source('J:/Project/IRH/HIV/code/currency_conversion.R')
