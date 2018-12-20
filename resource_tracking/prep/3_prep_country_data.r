@@ -34,32 +34,6 @@ print(paste0(nrow(dups), " duplicates found in database; values will be summed")
 byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'expenditure')]
 resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expenditure=sum(na.omit(expenditure))), by=byVars]
 
-#-------------------------------------------------------
-# Split HIV/TB combined grants  #EKL still need to verify this function with David; this is from Uganda. 
-# ------------------------------------------------------
-
-get_hivtb_split <- function(disease,module){
-  x <- disease
- if(disease=="hiv/tb" | disease == "tb/hiv"){
-   if(grepl(paste(c("tb", "tuber"), collapse="|"), module)){
-    x <- "tb"
-  } else { ##otherwise, map it to HIV
-    x <- "hiv"
-  }
- }
-return(x)
-}
-
-resource_database$disease <- mapply(get_hivtb_split, resource_database$disease, resource_database$module)
-
-
-#--------------------------------------------------------
-# Adjust module and intervention manually in the raw data 
-#-------------------------------------------------------
-
-source(paste0(country_code_dir, "correct_modules_interventions.r"))
-resource_database = correct_modules_interventions(resource_database)
-
 #--------------------------------------------------------
 # Prep data for merge 
 #-------------------------------------------------------
@@ -72,6 +46,15 @@ resource_database$intervention = replace_acronyms(resource_database$intervention
 
 module_map$module <- replace_acronyms(module_map$module)
 module_map$intervention = replace_acronyms(module_map$intervention)
+
+
+#--------------------------------------------------------
+# Adjust module and intervention manually in the raw data 
+#-------------------------------------------------------
+
+source(paste0(country_code_dir, "correct_modules_interventions.r"))
+resource_database = correct_modules_interventions(resource_database)
+
 
 #------------------------------------------------------------
 # Map budgets and PUDRs to module mapping framework 
@@ -107,6 +90,44 @@ if(nrow(dropped_mods) >0){
   print(unique(dropped_mods[, c("module", "intervention", "disease", "code"), with= FALSE]))
   stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
 }
+
+#-------------------------------------------------------
+# Split HIV/TB combined grants  #EKL still need to verify this function with David; this is from Uganda. 
+# ------------------------------------------------------
+
+#Classify which modules go to which disease
+tb_mods <- c('Multidrug-resistant TB', 'TB care and prevention')
+hiv_mods <- c('Comprehensive prevention programs for men who have sex with men', 'Comprehensive prevention programs for sex workers and their clients', 'Comprehensive prevention programs for transgender people',
+              'HIV Testing Services', 'Prevention of mother-to-child transmission', 'Prevention programs for adolescents and youth, in and out of school', 'Prevention programs for general population',
+              'Programs to reduce human rights-related barriers to HIV services')
+rssh_mods <- c('Community responses and systems', 'Integrated service delivery and quality improvement', 'Health management information system and monitoring and evaluation',
+               'Human resources for health, including community health workers', 'Procurement and supply chain management systems')
+
+#Make sure all diseases are spelled the same 
+mapped_country_data[disease == "tb/hiv", disease := "hiv/tb"]
+
+#Reclassify based on gf_module 
+mapped_country_data[gf_module %in% tb_mods & disease == "hiv/tb", disease:="tb"]
+mapped_country_data[gf_module %in% hiv_mods & disease == "hiv/tb", disease:="hiv"]
+mapped_country_data[gf_module %in% rssh_mods & disease == "hiv/tb", disease:="rssh"]
+
+#Check to make sure all modules were caught in the edit above - Should still have Program management; TB/HIV; Treatment, care and support; and Unspecified. 
+stopifnot(nrow(mapped_country_data[disease == "hiv/tb"])==0)
+  
+# get_hivtb_split <- function(disease, gf_module){
+#   x <- disease
+#     if(disease=="hiv/tb" | disease == "tb/hiv"){
+#       if(grepl(paste(c("tb", "tuber"), collapse="|"), gf_module)){
+#         x <- "tb"
+#       } else { ##otherwise, map it to HIV
+#         x <- "hiv"
+#       }
+#     }
+#     return(x)
+#   }
+# 
+# resource_database$disease <- mapply(get_hivtb_split, resource_database$disease, resource_database$gf_module)
+
 
 #-----------------------------------------
 # Apply redistribution coefficients
