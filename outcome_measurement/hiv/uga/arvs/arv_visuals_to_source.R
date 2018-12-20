@@ -1,10 +1,7 @@
 #------------------------------------------------
 # PDF VISUALS 
 
-# pdf(paste0(dir, '/outputs/stockout_descriptives_2013_2018.pdf'), height=6, width=12)
-
-pdf('C:/Users/ccarelli/Documents/arv_stockout_analyses/arv_updated_figures.pdf', height=6, width=12)
-
+pdf(paste0(dir, 'outputs/stockout_descriptives_2013_2018.pdf'), height=6, width=12)
 
 #----------------------------------------
 # reporting completeness graphs
@@ -167,7 +164,7 @@ ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=perc
 
 # test kit stockout counts - 13
 ggplot(test[variable!='Percentage of facilities stocked out of test kits'], aes(x=date, y=value, color=variable, group=variable)) +
-  geom_point(size=0.5, alph=0.5) +
+  geom_point(size=0.5, alpha=0.5) +
   geom_line() +
   geom_line() +
   theme_bw() +
@@ -251,9 +248,9 @@ ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fil
   facet_wrap(~year) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
-  labs(title="Mean number of weeks stocked out of HIV test kits per facility by district", caption="Source: HMIS", 
+  labs(title="Mean number of weeks stocked out of HIV test kits per facility", 
        subtitle='Same time period: January - November',fill="Mean weeks per facility") +
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  theme(plot.title=element_text(vjust=-1, size=22), plot.caption=element_text(vjust=6, size-18)) 
 
 
 # rate of change 
@@ -380,6 +377,16 @@ ggplot(final[year==2018 & variable!='No stock outs reported'], aes(x=long, y=lat
        subtitle="Minimum one week of stockout", 
        caption='Source: HMIS', fill="Number of facilities") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+
+
+#--------------------------------------
+# additional graphs - rates of change 
+
+
+
+
+
+
 
 
 #---------------------------

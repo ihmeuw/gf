@@ -36,15 +36,15 @@ dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 merge_meta_data <- function(x) { 
 
 # import the meta data for the merge
-facilities <- data.table(readRDS(paste0(dir, 'all_units/master_facilities.rds')))
+#facilities <- data.table(readRDS(paste0(dir, 'all_units/master_facilities.rds')))
 
-data_elements <- data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
+data_elements = data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
 data_elements[ ,url_list:=NULL]
 
-data_elements_categories <- data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
+data_elements_categories = data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
 data_elements_categories[ ,url_list:=NULL]
 
-org_units_description <- data.table(readRDS(paste0(dir, 'meta_data/org_units_description.rds')))
+org_units_description = data.table(readRDS(paste0(dir, 'meta_data/org_units_description.rds')))
 org_units_description[ ,c('.id', 'active', 'parent_id'):=NULL]
 
 #-------------------
@@ -106,11 +106,8 @@ return(x) }
 #--------------------
 # Merge the base services data sets you have downloaded
 
-# input the file name of the most recently merged data set (change file path to 'merged' folder)
-base1 <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_services_drc_01_2015_04_2018.rds')))
 
-# load the newest set of data 
-base2  <- data.table(readRDS(paste0(dir, 'pre_prep/base/base_drc_02_2018_09_2018.rds')))
+
 
 #---------------------------------
 # remove the overlapping dates
