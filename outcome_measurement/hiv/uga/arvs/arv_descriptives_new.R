@@ -27,6 +27,7 @@ dt = readRDS("C:/Users/ccarelli/Documents/arv_stockout_analyses/arv_stockouts_20
 
 # subset dates to before November 2018
 dt = dt[year!=2013] 
+dt[ ,month:=month(date)]
 
 #---------------------------------------------
 # ARV stockout table
@@ -137,33 +138,3 @@ fac[year==2018][order(region)]
 tk[!is.na(test_kits),.(100*(sum(test_kits, na.rm=T)/sum(report))), by=year]
 
 #--------------
-
-#------------------------------------------------
-# descriptives in the text
-
-# districts in which stock outs increased
-# measure by weeks and mean weeks stocked out per facility
-
-
-# mean weeks stocked out per site
-
-# subset to 2017/18 and only months Jan - Nov
-wks = dt[art_site==TRUE & month!=12 & (year==2017 | year==2018)]
-
-# calculate total stock out weeks and total facilities reporting
-total_wks = wks[!is.na(arvs),.(arvs=sum(arvs, na.rm=T), facilities=length(unique(facility))), by=year]
-total_wks[ ,ratio:=round(arvs/facilities, 1)]
-total_wks
-
-# calculate stock out weeks by facilities reporting by region
-wks = wks[!is.na(arvs),.(arvs=sum(arvs, na.rm=T), facilities=length(unique(facility))), by=.(region, year)]
-wks[ , ratio:=round(arvs/facilities, 1)]
-wks[year==2017][order(region)]
-wks[year==2018][order(region)]
-
-
-
-
-
-
-

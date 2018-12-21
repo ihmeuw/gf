@@ -69,11 +69,9 @@ for(f in files) {
   current_data <- cbind(current_data, hub_id)
   current_data <- cbind(current_data, facility_id)
   
-  
   # skip to next if there was no data for this combination
   if (length(current_data)==0) next
   
-
   #to check the position of variables: 
   # outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_',s,'_', t,'_','.rds')
   # positions: year = 4; month = 3; sex=5, tb_status=6
@@ -564,60 +562,3 @@ saveRDS(uvl, file= paste0(dir, "/sex_data_unknowns_altered.rds"))
 # optional - export a CSV of the prepped data set
 
 write.csv(uvl, paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/uvl_data.csv'))
-
-
-# ----------------------------------------------
-# archived code
-# this code is used to identify facility ids in the full data assoc. w multiple district ids
-# this code is not nexcessary after using meta data district ids (no repeats)
-
-# # identify facility ids that are associated with multiple district ids
-# 
-# # identify acility ids that are associated with multiple district ids
-# # 29 facilities are associated with two district ids (always two)
-# # check for duplicates after the change
-# dups <- uvl[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
-# dups <- dups[dup>1, .(facility_id, facility_name)]
-# 
-# # 2 facilities contain Rakai in the name
-# uvl[facility_id==228 | facility_id==175, district_id:=80]
-# 
-# # looked up in the health facility inventory; majority are Kyotera (134) and Rakai(80)
-# uvl[facility_id==255, district_id:=80]
-# uvl[facility_id==502, district_id:=80]
-# uvl[facility_id==1351, district_id:=80]
-# uvl[facility_id==1526, district_id:=80]
-# uvl[facility_id==1575 , district_id:=80]
-# uvl[facility_id==2058, district_id:=89]
-# 
-# uvl[facility_id== 8335, district_id:=7]
-# uvl[facility_id==8350, district_id:=5]
-# uvl[facility_id== 8359, district_id:=7]
-# uvl[facility_id== 8352, district_id:=15]
-# uvl[facility_id== 8341, district_id:=20]
-# uvl[facility_id== 8348, district_id:=31]
-# 
-# uvl[facility_id==8347 , district_id:=29]
-# uvl[facility_id==8355 , district_id:=30]
-# uvl[facility_id==8338, district_id:=31]
-# uvl[facility_id==8358, district_id:=39]
-# uvl[facility_id==8340, district_id:=101]
-# uvl[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
-# uvl[facility_id==8351, district_id:=85]
-# uvl[facility_id==8345, district_id:=97]
-# 
-# uvl[facility_id==8353, district_id:=64]
-# uvl[facility_id==8354, district_id:=86]
-# uvl[facility_id==8344, district_id:=97]
-# uvl[facility_id==8336, district_id:=68]
-# uvl[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
-# uvl[facility_id==8346, district_id:=86]
-# uvl[facility_id==8339, district_id:=84]
-# uvl[facility_id==8337, district_id:=97]
-# 
-# # re-run to check that there are no duplicate entries
-# dups <- uvl[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
-# dups <- dups[dup>1, .(facility_id, facility_name, dup)]
-
-#------------------------------------------
-

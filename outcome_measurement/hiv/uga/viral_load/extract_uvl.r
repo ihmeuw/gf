@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
-# 3/5/2018
+# 12/21/2018
 # Function that runs VL extraction for a single month-years
 # Inputs:
 # y - 2-digit year
@@ -26,7 +26,7 @@ library(jsonlite)
 # Files and directories
 
 # output file
-dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg/no_filters/'
+dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/no_filters/'
 
 # parameters
 ages = c('0,1', '1,2,3,4', '5,6,7,8,9,10', '11, 12, 13, 14, 15', 
