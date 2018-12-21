@@ -1,102 +1,8 @@
-# ----------------------------------------------
-# Caitlin O'Brien-Carelli
-#
-# 12/21/2018
-#
-# Combine the downloaded Uganda VL data w filters month, year, sex
-# Merge in the names of the districts and facilities
-# Collapse districts to match most recent shape files
-# Prep the data for analysis
-# ----------------------------------------------
 
-# --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(jsonlite)
-library(httr)
-library(ggplot2)
-library(stringr) 
-library(plyr)
-# --------------------
+#--------------------------------------------------------
 
-# --------------------
-# detect if operating on windows or on the cluster 
 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-# ----------------------------------------------
-# set files and directories for the uganda viral load data
-
-# set the working directory to loop over the downloaded files
-setwd(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/sex_old/'))
-
-# list existing files
-files <- list.files('./', recursive=TRUE)
-length(files)
-
-# --------------------
-
-# ----------------------------------------------
-# add identifying variables to the existing data tables using file names
-# add year, month, sex
-
-# loop over existing files
-i = 1
-for(f in files) {
-  
-  #Load the RDs file
-  jsonData = readRDS(f)
-  
-  # pull out relevant table
-  current_data = data.table(jsonData$f_numbers)
-  
-  # grab the facility and district ids
-  setnames(current_data, '_id', 'id')
-  
-  district_id <- unlist(current_data$id[[1]])
-  district_id <- data.table(district_id)
-
-  hub_id <- unlist(current_data$id[[2]])
-  hub_id <- data.table(hub_id)
-  
-  facility_id <- unlist(current_data$id[[3]])
-  facility_id <- data.table(facility_id)
-  
-  current_data[ ,id:=NULL]
-  
-  current_data <- cbind(current_data, district_id)
-  current_data <- cbind(current_data, hub_id)
-  current_data <- cbind(current_data, facility_id)
-  
-  # skip to next if there was no data for this combination
-  if (length(current_data)==0) next
-  
-  #to check the position of variables: 
-  # outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_',s,'_', t,'_','.rds')
-  # positions: year = 4; month = 3; sex=5, tb_status=6
-  
-  # extract meta data from file name
-  meta_data = strsplit(f, '_')[[1]]
-  current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
-  current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
-  current_data[, sex:=(meta_data[5])]
-  current_data[ , sex:=(substr(current_data$sex, 1, 1))] # to remove .rds
-  
-  # add if tb status is included 
-  # current_data[, tb:=gsub('tb', '', meta_data[6])]
-  # current_data[, tb:=gsub('.rds', '', tb)]
-
-  # append to the full data 
-  if(i==1) full_data = current_data
-  if(i>1) full_data = rbind(full_data, current_data)
-  i = i+1
-}
-
-# view the final product of full_data
-str(full_data)
-
-# ----------------------------------------------
 # reset working directory to main folder
 setwd(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'))
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
@@ -264,8 +170,8 @@ uvl <- uvl[ , .(patients_received=sum(patients_received),
                 rejected_samples=sum(rejected_samples), 
                 dbs_samples=sum(dbs_samples), samples_tested=sum(total_results),
                 suppressed=sum(suppressed), valid_results=sum(valid_results)),
-                by=.(facility_id, facility_name, district_id, district_name, dhis2_name,
-                sex, date, month, year)]
+            by=.(facility_id, facility_name, district_id, district_name, dhis2_name,
+                 sex, date, month, year)]
 
 # ---------------
 # check equality constraints are met 
@@ -429,9 +335,9 @@ pts[ , c('total_pts', 'female_pts', 'fem_only'):=NULL]
 #--------------- 
 # print any facilities that have only unknown sex - there is one, #2846
 for (f in unique(uvl$facility_id)) {
-if (!f %in% pts$facility_id) {
-  print(f)
-}}
+  if (!f %in% pts$facility_id) {
+    print(f)
+  }}
 
 # assign it to the mean sex ratio for the entire data set
 y <- uvl[ ,sum(patients_received)]
@@ -473,8 +379,8 @@ fems[ , sex:='Female']
 
 # create a set of new patients and check if it matches the number of unknown patients
 allVars <- c("facility_id", "facility_name", "dhis2name", "level",  "prison", "district_id", "district_name", "sex",             
-            "month", "year", "date","patients_received", "samples_received", "rejected_samples",  "plasma_samples", 
-            "dbs_samples", "samples_tested", "suppressed", "valid_results")
+             "month", "year", "date","patients_received", "samples_received", "rejected_samples",  "plasma_samples", 
+             "dbs_samples", "samples_tested", "suppressed", "valid_results")
 
 new_pts <- merge(fems, males, by=allVars, all.x=T, all.y=T)
 
@@ -491,8 +397,8 @@ new_pts[ ,.N] + uvl[ ,.N] # total number of rows that should be in the data set 
 uvl[ , check:=0]
 new_pts[ , check:=1]
 allVars1 <- c("facility_id", "facility_name", "dhis2name", "level",  "prison", "district_id", "district_name", "sex",             
-             "month", "year", "date","patients_received", "samples_received", "rejected_samples",  "plasma_samples", 
-             "dbs_samples", "samples_tested", "suppressed", "valid_results", "check")
+              "month", "year", "date","patients_received", "samples_received", "rejected_samples",  "plasma_samples", 
+              "dbs_samples", "samples_tested", "suppressed", "valid_results", "check")
 
 uvl <- merge(uvl, new_pts, by=allVars1, all=T)
 uvl[,.N]
@@ -500,10 +406,10 @@ uvl[ ,check:=NULL]
 
 # sum over the new patients to combine them with other variables
 sumVars <- c('patients_received', 'samples_received', 'rejected_samples',
-    'plasma_samples', 'dbs_samples', 'samples_tested', 'suppressed', 'valid_results')
+             'plasma_samples', 'dbs_samples', 'samples_tested', 'suppressed', 'valid_results')
 
 uvl <- uvl[ ,lapply(.SD, sum), by=c('facility_id', 'facility_name', 'dhis2name', 'level', 'prison', 'district_id', 'district_name',
-        'sex', 'month', 'year', 'date'),.SDcols=sumVars]
+                                    'sex', 'month', 'year', 'date'),.SDcols=sumVars]
 
 
 
@@ -525,24 +431,24 @@ uvl[is.na(suppressed)]
 uvl[is.na(valid_results)]
 
 # check equality constraints 
-  uvl[samples_received < patients_received]
-  uvl[samples_received < dbs_samples]
-  uvl[samples_received < rejected_samples]
-  uvl[samples_received < samples_tested]
-  uvl[samples_received < valid_results]
-  uvl[samples_tested < valid_results]
-  uvl[valid_results < suppressed]
-  
-  
+uvl[samples_received < patients_received]
+uvl[samples_received < dbs_samples]
+uvl[samples_received < rejected_samples]
+uvl[samples_received < samples_tested]
+uvl[samples_received < valid_results]
+uvl[samples_tested < valid_results]
+uvl[valid_results < suppressed]
+
+
 #-----------------
 # plasma samples violates equality constraints because of rounding - re-calculate
 uvl[ , plasma_samples:=NULL]  
-  uvl[ , plasma_samples:=(samples_received - dbs_samples)]  
+uvl[ , plasma_samples:=(samples_received - dbs_samples)]  
 
 # change level to be called platform 
 names(uvl)[names(uvl) == "level"] <- "platform"
-  
-  
+
+
 #--------------- 
 
 #--------------------------------------------
@@ -550,8 +456,8 @@ names(uvl)[names(uvl) == "level"] <- "platform"
 # final version with only necessary variables in useful order
 # rename district_name dist_name for shape file merge 
 uvl <- uvl[ ,.(facility_id, facility_name, dhis2name, platform, prison, district_id, dist_name=district_name, sex,
-                            month, year, date, patients_received, samples_received, rejected_samples,
-                            dbs_samples, plasma_samples, samples_tested, valid_results, suppressed)]
+               month, year, date, patients_received, samples_received, rejected_samples,
+               dbs_samples, plasma_samples, samples_tested, valid_results, suppressed)]
 
 
 #save the final data as an RDS
