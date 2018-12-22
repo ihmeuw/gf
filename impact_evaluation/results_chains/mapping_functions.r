@@ -84,19 +84,20 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
   }
   
   ##Turn on for a stacked bar graph 
-  # budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, color = category, fill = category)) + 
-  #   geom_bar(position = "stack", stat = "identity") + 
-  #   theme_bw(base_size = 16) + theme(legend.title = element_blank()) +
-  #   scale_fill_brewer(palette = "RdYlBu") +
-  #   labs(x = "Year", y = scale_label, title = paste0("Budget by module in ", country_name, ", for ", disease_label, " ", start_year, "-", end_year))
-  # 
-  #Turn on for a line graph 
-  budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, group = category, color = category)) +
-    geom_point() +
-    geom_line(size = 2, alpha = 0.25) +
+  budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, fill = category)) +
+    geom_bar(position = "stack", stat = "identity") +
     theme_bw(base_size = 16) + theme(legend.title = element_blank()) +
-    scale_y_continuous(breaks = seq(0, y_max, by = plot_ticks), labels = scales::dollar) +
+    scale_y_continuous(labels = scales::dollar) + 
+    scale_fill_brewer(palette = "BuGn") +
     labs(x = "Year", y = scale_label, title = paste0("Budget by module in ", country_name, ", for ", disease_label, " ", start_year, "-", end_year))
+
+  #Turn on for a line graph 
+  # budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, group = category, color = category)) +
+  #   geom_point() +
+  #   geom_line(size = 2, alpha = 0.25) +
+  #   theme_bw(base_size = 16) + theme(legend.title = element_blank()) +
+  #   scale_y_continuous(breaks = seq(0, y_max, by = plot_ticks), labels = scales::dollar) +
+  #   labs(x = "Year", y = scale_label, title = paste0("Budget by module in ", country_name, ", for ", disease_label, " ", start_year, "-", end_year))
 
   return(budget_over_time)
 }
@@ -110,7 +111,7 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
       sicoin_merge <- sicoin[year >= start_year & year <=end_year]
       sicoin_merge <- sicoin_merge[disease == disease_name]
       sicoin_merge <- sicoin_merge[, .(country, disease, year, financing_source, disbursement)]
-      sicoin_merge <- sicoin_merge[, financing_source:="GHE"]
+      sicoin_merge <- sicoin_merge[, financing_source:="Government Health Expenditure"]
       sicoin_merge$disbursement <- as.numeric(sicoin_merge$disbursement)
       plot_data <- rbind(plot_data, sicoin_merge)
   }

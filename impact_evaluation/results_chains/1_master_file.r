@@ -32,7 +32,7 @@ uga_save <- "J:/Project/Evaluation/GF/impact_evaluation/uga/visualizations"
 # ---------------------------------------
 # Prep key datasets.   
 # ---------------------------------------
-allRT <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv")
+#allRT <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv")
 
 fgh = fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv")
 fgh_actual = fgh[fin_data_type == "actual"]#Split FGH between actual numbers and model estimates. 
@@ -41,8 +41,9 @@ fgh_estimates = fgh[fin_data_type != "actual"]
 gf_budgets <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_budgets.csv")
 gf_budgets$budget <- as.numeric(gf_budgets$budget)
 
-# subset to GHE from SICOIN for TB (SICOIN only exists in GTM)
-sicoin = allRT[data_source=='sicoin' & financing_source=='ghe']
+#Grab SICOIN for Guatemala funding graph 
+sicoin <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
+                                   ,fileEncoding="latin1"))
 # drop first/last year of the series because they appear to be incomplete
 sicoin = sicoin[year!=min(year) & year!=max(year)]
 

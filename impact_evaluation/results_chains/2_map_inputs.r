@@ -75,47 +75,47 @@ ggsave(paste0(uga_save, "/funding_landscape_mal.pdf"), plot = uga_mal_landscape_
 # Guatemala 
 # ----------
 
-gtm_hiv_modules_10_18 <- modules_over_time("Guatemala", "hiv", 2010, 2018)
-ggsave(paste0(gtm_save, "/module_categories_hiv.png"), plot = gtm_hiv_modules_10_18, height=10, width=14)
-ggsave(paste0(gtm_save, "/module_categories_hiv.pdf"), plot = gtm_hiv_modules_10_18, height=10, width=14)
+gtm_hiv_modules_10_20 <- modules_over_time("Guatemala", "hiv", 2010, 2020)
+ggsave(paste0(gtm_save, "/module_categories_hiv.png"), plot = gtm_hiv_modules_10_20, height=10, width=14)
+ggsave(paste0(gtm_save, "/module_categories_hiv.pdf"), plot = gtm_hiv_modules_10_20, height=10, width=14)
 
-gtm_tb_modules_10_18 <- modules_over_time("Guatemala", "tb", 2010, 2018)
-ggsave(paste0(gtm_save, "/module_categories_tb.png"), plot = gtm_tb_modules_10_18, height=10, width=14)
-ggsave(paste0(gtm_save, "/module_categories_tb.pdf"), plot = gtm_tb_modules_10_18, height=10, width=14)
+gtm_tb_modules_10_20 <- modules_over_time("Guatemala", "tb", 2010, 2020)
+ggsave(paste0(gtm_save, "/module_categories_tb.png"), plot = gtm_tb_modules_10_20, height=10, width=14)
+ggsave(paste0(gtm_save, "/module_categories_tb.pdf"), plot = gtm_tb_modules_10_20, height=10, width=14)
 
-gtm_mal_modules_10_18 <- modules_over_time("Guatemala", "malaria", 2010, 2018)
-ggsave(paste0(gtm_save, "/module_categories_mal.png"), plot = gtm_mal_modules_10_18, height=10, width=14)
-ggsave(paste0(gtm_save, "/module_categories_mal.pdf"), plot = gtm_mal_modules_10_18, height=10, width=14)
+gtm_mal_modules_10_20 <- modules_over_time("Guatemala", "malaria", 2010, 2020)
+ggsave(paste0(gtm_save, "/module_categories_mal.png"), plot = gtm_mal_modules_10_20, height=10, width=14)
+ggsave(paste0(gtm_save, "/module_categories_mal.pdf"), plot = gtm_mal_modules_10_20, height=10, width=14)
 
 
 #-----------
 #   DRC
 # ----------
 
-cod_hiv_modules_10_18 <- modules_over_time("Congo (Democratic Republic)", "hiv", 2010, 2018)
-ggsave(paste0(cod_save, "/module_categories_hiv.png"), plot = cod_hiv_modules_10_18, height=6, width=14)
-ggsave(paste0(cod_save, "/module_categories_hiv.pdf"), plot = cod_hiv_modules_10_18, height=6, width=14)
+cod_hiv_modules_10_20 <- modules_over_time("Congo (Democratic Republic)", "hiv", 2010, 2020)
+ggsave(paste0(cod_save, "/module_categories_hiv.png"), plot = cod_hiv_modules_10_20, height=6, width=14)
+ggsave(paste0(cod_save, "/module_categories_hiv.pdf"), plot = cod_hiv_modules_10_20, height=6, width=14)
 
-cod_tb_modules_10_18 <- modules_over_time("Congo (Democratic Republic)", "tb", 2010, 2018)
-ggsave(paste0(cod_save, "/module_categories_tb.png"), plot = cod_tb_modules_10_18, height=6, width=14)
-ggsave(paste0(cod_save, "/module_categories_tb.pdf"), plot = cod_tb_modules_10_18, height=6, width=14)
+cod_tb_modules_10_20 <- modules_over_time("Congo (Democratic Republic)", "tb", 2010, 2020)
+ggsave(paste0(cod_save, "/module_categories_tb.png"), plot = cod_tb_modules_10_20, height=6, width=14)
+ggsave(paste0(cod_save, "/module_categories_tb.pdf"), plot = cod_tb_modules_10_20, height=6, width=14)
 
-cod_mal_modules_10_18 <- modules_over_time("Congo (Democratic Republic)", "malaria", 2010, 2018)
-ggsave(paste0(cod_save, "/module_categories_mal.png"), plot = cod_mal_modules_10_18, height=6, width=14)
-ggsave(paste0(cod_save, "/module_categories_mal.pdf"), plot = cod_mal_modules_10_18, height=6, width=14)
+cod_mal_modules_10_20 <- modules_over_time("Congo (Democratic Republic)", "malaria", 2010, 2020)
+ggsave(paste0(cod_save, "/module_categories_mal.png"), plot = cod_mal_modules_10_20, height=6, width=14)
+ggsave(paste0(cod_save, "/module_categories_mal.pdf"), plot = cod_mal_modules_10_20, height=6, width=14)
 
 #-----------
 # Uganda
 # ----------
 
-uga_hiv_modules_10_18 <- modules_over_time("Uganda", "hiv", 2010, 2018)
-ggsave(paste0(uga_save, "/module_categories_hiv.png"), plot = uga_hiv_modules_10_18, height=6, width=14)
-ggsave(paste0(uga_save, "/module_categories_hiv.pdf"), plot = uga_hiv_modules_10_18, height=6, width=14)
+uga_hiv_modules_10_20 <- modules_over_time("Uganda", "hiv", 2010, 2020)
+ggsave(paste0(uga_save, "/module_categories_hiv.png"), plot = uga_hiv_modules_10_20, height=6, width=14)
+ggsave(paste0(uga_save, "/module_categories_hiv.pdf"), plot = uga_hiv_modules_10_20, height=6, width=14)
 
-uga_tb_modules_10_18 <- modules_over_time("Uganda", "tb", 2010, 2018)
-ggsave(paste0(uga_save, "/module_categories_tb.png"), plot = uga_tb_modules_10_18, height=6, width=14)
-ggsave(paste0(uga_save, "/module_categories_tb.pdf"), plot = uga_tb_modules_10_18, height=6, width=14)
+uga_tb_modules_10_20 <- modules_over_time("Uganda", "tb", 2010, 2020)
+ggsave(paste0(uga_save, "/module_categories_tb.png"), plot = uga_tb_modules_10_20, height=6, width=14)
+ggsave(paste0(uga_save, "/module_categories_tb.pdf"), plot = uga_tb_modules_10_20, height=6, width=14)
 
-uga_malaria_modules_10_18 <- modules_over_time("Uganda", "malaria", 2010, 2018)
-ggsave(paste0(uga_save, "/module_categories_malaria.png"), plot = uga_malaria_modules_10_18, height=6, width=14)
-ggsave(paste0(uga_save, "/module_categories_malaria.pdf"), plot = uga_malaria_modules_10_18, height=6, width=14)
+uga_malaria_modules_10_20 <- modules_over_time("Uganda", "malaria", 2010, 2020)
+ggsave(paste0(uga_save, "/module_categories_malaria.png"), plot = uga_malaria_modules_10_20, height=6, width=14)
+ggsave(paste0(uga_save, "/module_categories_malaria.pdf"), plot = uga_malaria_modules_10_20, height=6, width=14)
