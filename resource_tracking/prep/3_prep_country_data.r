@@ -71,7 +71,9 @@ if(nrow(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
 }
 
+#----------------------------------------------------------------------------
 # Merge with module map on module, intervention, and disease to pull in code
+#----------------------------------------------------------------------------
 mapped_country_data <- merge(resource_database, module_map, by=c("module", "intervention", "disease"), all.x=TRUE)
 
 #Merge with intervention using code merged from previous line to pull in gf_module and gf_intervention. 
@@ -87,19 +89,18 @@ dropped_mods <- mapped_country_data[is.na(mapped_country_data$gf_module), ]
 
 if(nrow(dropped_mods) >0){
   # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
-  print(unique(dropped_mods[, c("module", "intervention", "disease", "code"), with= FALSE]))
+  print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
   stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
 }
 
 #-------------------------------------------------------
-# Split HIV/TB combined grants  #EKL still need to verify this function with David; this is from Uganda. 
+# Split HIV/TB combined grants  #EKL want to move this function to AFTER the mapping process. 
 # ------------------------------------------------------
 
-#Classify which modules go to which disease
 tb_mods <- c('Multidrug-resistant TB', 'TB care and prevention')
 hiv_mods <- c('Comprehensive prevention programs for men who have sex with men', 'Comprehensive prevention programs for sex workers and their clients', 'Comprehensive prevention programs for transgender people',
               'HIV Testing Services', 'Prevention of mother-to-child transmission', 'Prevention programs for adolescents and youth, in and out of school', 'Prevention programs for general population',
-              'Programs to reduce human rights-related barriers to HIV services')
+              'Programs to reduce human rights-related barriers to HIV services', 'Treatment, care and support', 'Comprehensive prevention programs for people who inject drugs and their partners')
 rssh_mods <- c('Community responses and systems', 'Integrated service delivery and quality improvement', 'Health management information system and monitoring and evaluation',
                'Human resources for health, including community health workers', 'Procurement and supply chain management systems')
 
@@ -111,22 +112,12 @@ mapped_country_data[gf_module %in% tb_mods & disease == "hiv/tb", disease:="tb"]
 mapped_country_data[gf_module %in% hiv_mods & disease == "hiv/tb", disease:="hiv"]
 mapped_country_data[gf_module %in% rssh_mods & disease == "hiv/tb", disease:="rssh"]
 
+unique(mapped_country_data[disease == "hiv/tb", .(gf_module, gf_intervention)])
+#Right now, just reclassifying all other modules that don't fit in these categories to be "hiv". 
+mapped_country_data[disease == "hiv/tb", disease:= 'hiv']
+
 #Check to make sure all modules were caught in the edit above - Should still have Program management; TB/HIV; Treatment, care and support; and Unspecified. 
 stopifnot(nrow(mapped_country_data[disease == "hiv/tb"])==0)
-  
-# get_hivtb_split <- function(disease, gf_module){
-#   x <- disease
-#     if(disease=="hiv/tb" | disease == "tb/hiv"){
-#       if(grepl(paste(c("tb", "tuber"), collapse="|"), gf_module)){
-#         x <- "tb"
-#       } else { ##otherwise, map it to HIV
-#         x <- "hiv"
-#       }
-#     }
-#     return(x)
-#   }
-# 
-# resource_database$disease <- mapply(get_hivtb_split, resource_database$disease, resource_database$gf_module)
 
 
 #-----------------------------------------
