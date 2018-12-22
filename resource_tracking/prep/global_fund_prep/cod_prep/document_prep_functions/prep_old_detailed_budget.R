@@ -88,6 +88,7 @@ prep_old_detailed_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset$grant_number <- grant
   budget_dataset$lang <- lang
   budget_dataset$data_source <- source
+  budget_dataset$year <- year(budget_dataset$start_date)
   return(budget_dataset)
   
 }

@@ -60,13 +60,13 @@ for(i in 1:length(file_list$file_name)){
   }
   tmpData$disbursement <- 0 
   tmpData$data_source <- file_list$data_source[i]
-  tmpData$year <- year(file_list$start_date[i])
   tmpData$grant_period = file_list$grant_period[i]
   tmpData$primary_recipient <- file_list$primary_recipient[i]
   tmpData$secondary_recipient <- file_list$secondary_recipient[i]
   tmpData$recipient <- NULL
   tmpData$file_iteration <- file_list$file_iteration[i]
   tmpData$fileName <- file_list$file_name[i]
+  #tmpData$file_save_date <- file_list$file_save_date[i]
   if(i==1){
     resource_database = tmpData
   } 
@@ -76,6 +76,13 @@ for(i in 1:length(file_list$file_name)){
   
   print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
 }
+
+#Fix year format (This should be done back in prep functions when you get the chance) #EKL
+setDT(resource_database)
+resource_database$year = as.character(resource_database$year)
+resource_database[nchar(year) == 2, year:= paste0("20", year)]
+resource_database$year = as.numeric(resource_database$year)
+
 
 return(resource_database)
 
