@@ -3,6 +3,7 @@
 #
 # 12/24/2018
 # Rbind the UVL data sets together
+# Run dist_facilities_uvl.R to download facility and district names
 # ----------------------------------------------
 
 # --------------------
