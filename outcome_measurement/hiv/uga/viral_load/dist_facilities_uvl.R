@@ -26,12 +26,11 @@ data = fromJSON(url)
 # create a data table that contains only facilities information
 facilities_1 = data$facilities
 
-
  # create a function that selects the facility names and ids from the list
   select_names = function(i) {
    y = unlist(facilities_1[i])
    y = y[c(2,3,4,5,7)]
-   names(y) = c("facility_id", "facilit", "dhis2_name", "hub_id", "district_id")
+   names(y) = c("facility_id", "facility", "dhis2_name", "hub_id", "district_id")
    return(y)
   }
   
@@ -81,12 +80,34 @@ districts_1 = data$districts
  
   # one district is named 'district left blank'
   districts[district_id==121, district:=NA]
+
+# ----------------------------------------------
+# download and merge meta data for hubs
+
+hubs_1 = data$hubs
+  
+# create a function that selects the facility names and ids from the list
+ select_hubs = function(i) {
+    y = unlist(facilities_1[i])
+    y = y[c(2:3)]
+    names(y) = c("hub_id", "hub")
+    return(y)
+  }
+  
+  # use lapply to run the select_names function and bind into a data table
+  hubs = lapply(1:length(data$hubs), function(x) select_hubs(x))
+  hubs = do.call('rbind', hubs)
+  hubs = data.table(hubs)
+  hubs[ , hub_id:=as.numeric(hub_id)]
   
 # ----------------------------------------------
 # create a single meta data file to merge with a data set
   
 # merge the district names into the facilities meta data 
-facilities = merge(facilities, districts, all.x=T)
+facilities = merge(facilities, districts, by='district_id', all.x=T)
+
+# merge the hubs into the meta data
+facilities = merge(facilities, hubs, by='hub_id', all.x=T)
   
 # save full facilities and data to merge into downloads from Uganda VL
 saveRDS(facilities, paste0(root,

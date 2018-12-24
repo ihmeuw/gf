@@ -78,7 +78,7 @@ build_url = function(page_specs) {
       existence = "Successfully saved"
     } 
 
-    results = data.table("page_specs" = paste(y, m, s), # add t if using tb
+    results = data.table("page_specs" = paste(y, m, t, s), # add t if using tb
                           "url" = url,
                          "existence" = existence)
     return(results)
@@ -92,7 +92,9 @@ urls = adply(arguments, 1, build_url)
 # download the meta data on districts and facilities
 
 # downloads meta data and saves automatically
-source("C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/dist_facilities_uvl.R")
+src_dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/dist_facilities_uvl.R')
 
+# download the facilities data 
+source(src_dir)
 #--------------------------------------------------
 

@@ -23,9 +23,9 @@ library(plyr)
 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
+# set working directory
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
 setwd(dir)
-
 #--------------------------------------------------------
 # import the merged data
 dt = readRDS(paste0(dir, '/merged/vl_2014_2018.rds'))

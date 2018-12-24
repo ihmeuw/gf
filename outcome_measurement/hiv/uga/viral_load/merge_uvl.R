@@ -105,13 +105,21 @@ max = full_data[ , max(year)]
 # ---------------------------
 # merge in facility and district names
 
+# reset directory
+new_dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/')
 
+# load facilities
+facilities = readRDS(paste0(new_dir, 'webscrape/facilities.rds'))
+facilities[ ,c('district_id', 'hub_id'):=NULL]
+
+# merge in facility and district names
+full_data = merge(full_data, facilities, by='facility_id', all.x=TRUE)
 
 # ---------------------------
 # save the product
-saveRDS(full_data, 
-        paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/merged/vl_',
-               min, '_', max, '.rds'))
+
+saveRDS(full_data, paste0(new_dir, 'merged/vl_', min, '_', max, '.rds'))
+
 # ----------------------------------------------
 
 
