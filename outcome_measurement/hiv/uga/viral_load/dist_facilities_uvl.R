@@ -2,28 +2,10 @@
 # David, Phillips, Caitlin O'Brien-Carelli
 #
 # 12/24/2018
+# Source from webscrape_uvl.R
 # To extract a list of districts and facilities 
 # Facilities and districts are stored in separate urls
 # From Uganda Viral Load Dashboard: https://vldash.cphluganda.org/
-# ----------------------------------------------
-
-#--------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(jsonlite)
-library(httr)
-library(tibble)
-library(dplyr)
-library(tm)
-
-# --------------------
-# Files and directories
-
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-
-# output file
-dir = paste0(root, "/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/facilities")
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -107,7 +89,8 @@ districts_1 = data$districts
 facilities = merge(facilities, districts, all.x=T)
   
 # save full facilities and data to merge into downloads from Uganda VL
-saveRDS(facilities, file=paste0(dir,"/facilities.rds"))
-  
+saveRDS(facilities, paste0(root,
+              '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/facilities.rds'))
+
 # ----------------------------------------------
   

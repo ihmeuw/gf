@@ -89,8 +89,10 @@ build_url = function(page_specs) {
 urls = adply(arguments, 1, build_url)
 
 #--------------------------------------------------
+# download the meta data on districts and facilities
 
+# downloads meta data and saves automatically
+source("C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/dist_facilities_uvl.R")
 
-
-
+#--------------------------------------------------
 

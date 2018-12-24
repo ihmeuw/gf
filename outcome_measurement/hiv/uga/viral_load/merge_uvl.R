@@ -62,7 +62,7 @@ for(f in files) {
   facility_id = data.table(facility_id)
   
   current_data[ ,id:=NULL]
-  
+
   current_data = cbind(current_data, district_id)
   current_data = cbind(current_data, hub_id)
   current_data = cbind(current_data, facility_id)
@@ -81,8 +81,8 @@ for(f in files) {
   current_data[ , sex:=(substr(current_data$sex, 1, 1))] # to remove .rds
   
   # add if tb status is included 
-  current_data[, tb:=gsub('tb', '', meta_data[6])]
-  current_data[, tb:=gsub('.rds', '', tb)]
+  # current_data[, tb:=gsub('tb', '', meta_data[6])]
+  # current_data[, tb:=gsub('.rds', '', tb)]
 
   # append to the full data 
   if(i==1) full_data = current_data
@@ -98,10 +98,16 @@ str(full_data)
 full_data[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 full_data[ , month:=NULL]
 
-# save the product
+# save the date range for the file name
 min = full_data[ , min(year)]
 max = full_data[ , max(year)]
 
+# ---------------------------
+# merge in facility and district names
+
+
+
+# ---------------------------
 # save the product
 saveRDS(full_data, 
         paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/merged/vl_',
