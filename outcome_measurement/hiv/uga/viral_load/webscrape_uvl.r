@@ -24,7 +24,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 reload_everything = TRUE
 
 # output directory
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/sex')
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/sex_tb')
 
 # ----------------------------------------------
 
@@ -37,16 +37,9 @@ m <- c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12')
 t <- c('y','n','x')
 s <- c('m', 'f', 'x')
 
-# test arguments
-# y = c('17')
-# m = c('01', '02', '03')
-# s = c('m', 'f')
+# input arguments - if not including tb, drop t
+arguments = expand.grid(y=y, m=m, t=t, s=s)
 
-# input arguments
-arguments = expand.grid(y=y, m=m, s=s)
-
-# if tb is included
-# arguments = expand.grid(y=y, m=m, t=t, s=s)
 
 build_url = function(page_specs) {
   
@@ -54,14 +47,14 @@ build_url = function(page_specs) {
   
   y = page_specs$y
   m = page_specs$m
-  # t = page_specs$t
+  t = page_specs$t
   s = page_specs$s
   
   # sex out file
-  outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_.rds')
+  # outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_.rds')
   
   # tb status file
-  # outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_',t, '_.rds')
+   outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_',t, '_.rds')
   
   check = file.exists(outFile)
   
@@ -69,10 +62,10 @@ build_url = function(page_specs) {
   if (check==FALSE | reload_everything==TRUE) {
     
     # sex filter url
-    url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%5D&to_date=20', y, m)
+    # url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%5D&to_date=20', y, m)
     
     # tb status url
-    #url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', t, '%22%5D&to_date=20',y,m)
+    url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', t, '%22%5D&to_date=20',y,m)
     
     # to determine where errors occur
   

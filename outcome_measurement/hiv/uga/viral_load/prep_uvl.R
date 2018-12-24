@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 12/21/2018
+# 12/24/2018
 #
 # Combine the downloaded Uganda VL data w filters month, year, sex
 # Merge in the names of the districts and facilities
@@ -13,8 +13,6 @@
 # Set up R
 rm(list=ls())
 library(data.table)
-library(jsonlite)
-library(httr)
 library(ggplot2)
 library(stringr) 
 library(plyr)
@@ -25,97 +23,22 @@ library(plyr)
 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-# ----------------------------------------------
-# set files and directories for the uganda viral load data
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
+setwd(dir)
 
-# set the working directory to loop over the downloaded files
-setwd(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/sex_old/'))
+#--------------------------------------------------------
+# import the merged data
+dt = readRDS(paste0(dir, '/merged/vl_2014_2018.rds'))
 
-# list existing files
-files <- list.files('./', recursive=TRUE)
-length(files)
+#----------------------------
+# import the facilities and prep for the merge
 
-# --------------------
-
-# ----------------------------------------------
-# add identifying variables to the existing data tables using file names
-# add year, month, sex
-
-# loop over existing files
-i = 1
-for(f in files) {
-  
-  #Load the RDs file
-  jsonData = readRDS(f)
-  
-  # pull out relevant table
-  current_data = data.table(jsonData$f_numbers)
-  
-  # grab the facility and district ids
-  setnames(current_data, '_id', 'id')
-  
-  district_id <- unlist(current_data$id[[1]])
-  district_id <- data.table(district_id)
-
-  hub_id <- unlist(current_data$id[[2]])
-  hub_id <- data.table(hub_id)
-  
-  facility_id <- unlist(current_data$id[[3]])
-  facility_id <- data.table(facility_id)
-  
-  current_data[ ,id:=NULL]
-  
-  current_data <- cbind(current_data, district_id)
-  current_data <- cbind(current_data, hub_id)
-  current_data <- cbind(current_data, facility_id)
-  
-  # skip to next if there was no data for this combination
-  if (length(current_data)==0) next
-  
-  #to check the position of variables: 
-  # outFile = paste0(dir, '/facilities_suppression_', m,'_','20', y,'_',s,'_', t,'_','.rds')
-  # positions: year = 4; month = 3; sex=5, tb_status=6
-  
-  # extract meta data from file name
-  meta_data = strsplit(f, '_')[[1]]
-  current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
-  current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
-  current_data[, sex:=(meta_data[5])]
-  current_data[ , sex:=(substr(current_data$sex, 1, 1))] # to remove .rds
-  
-  # add if tb status is included 
-  # current_data[, tb:=gsub('tb', '', meta_data[6])]
-  # current_data[, tb:=gsub('.rds', '', tb)]
-
-  # append to the full data 
-  if(i==1) full_data = current_data
-  if(i>1) full_data = rbind(full_data, current_data)
-  i = i+1
-}
-
-# view the final product of full_data
-str(full_data)
+facilities = readRDS(paste0(dir,"/facilities/facilities.rds"))
+setnames(facilities, c("district_id", "facility_id", "facility_name",
+                    "dhis2_name", "hub_id", "district_name"),
+                    c("district_id", "facility_id", "facility", "dhis2", "hub_id", "district"))
 
 # ----------------------------------------------
-# reset working directory to main folder
-setwd(paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard'))
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
-
-facilities <- readRDS(paste0(dir,"/facilities/facilities.rds"))
-str(facilities)
-
-# ----------------------------------------------
-#  stats to check if the sex disaggregated data downloaded correctly 
-
-# run some stats to check that the data downloaded correctly
-full_data[, sum(samples_received), by=year]
-full_data[month==1, sum(samples_received), by=year] # should be no samples in jan 2014
-
-# ----------------------------------------------
-# drop out the current month - change to reflect current month to accomodate data lags
-
-full_data[year==2018, range(month)]
-full_data <- full_data[!(year==2018 & month==7)]
 
 # ----------------------------------------------
 # upload the facilities names, ids and check for disparate values
@@ -137,10 +60,10 @@ full_data[!full_data$facility_id %in% facilities$facility_id, .(length(unique(fa
 full_data[ ,hub_id:=NULL]
 
 # merge on facility id
-uvl <- merge(full_data, facilities, by='facility_id', all.x=TRUE)
+udt <- merge(full_data, facilities, by='facility_id', all.x=TRUE)
 
 # 66 facilities are still missing
-uvl[is.na(facility_name), length(unique(facility_id))]
+udt[is.na(facility_name), length(unique(facility_id))]
 
 #-------------------------
 # if the facility information is missing, districts do not merge
@@ -152,64 +75,64 @@ districts <- facilities[ ,.(district_name1=unique(district_name)), by=district_i
 districts <- districts[!is.na(district_id)]
 
 # rename the variable to join on 
-setnames(uvl, 'district_id.x', 'district_id')
+setnames(udt, 'district_id.x', 'district_id')
 
 #-------------------------------------------------------------------------
 # some facilities are associated with multiple district ids
 # using the health facility inventory, choose a single district id
-uvl[facility_id==8335, district_id:=7]
-uvl[facility_id==8336, district_id:=68]
-uvl[facility_id==8337, district_id:=97]
-uvl[facility_id==8338, district_id:=31]
-uvl[facility_id==8339, district_id:=84]
-uvl[facility_id==8340, district_id:=101]
-uvl[facility_id==8341, district_id:=20]
+udt[facility_id==8335, district_id:=7]
+udt[facility_id==8336, district_id:=68]
+udt[facility_id==8337, district_id:=97]
+udt[facility_id==8338, district_id:=31]
+udt[facility_id==8339, district_id:=84]
+udt[facility_id==8340, district_id:=101]
+udt[facility_id==8341, district_id:=20]
 
-uvl[facility_id==8344, district_id:=97]
-uvl[facility_id==8345, district_id:=97]
-uvl[facility_id==8346, district_id:=86]
-uvl[facility_id==8347, district_id:=29]
-uvl[facility_id==8348, district_id:=31]
+udt[facility_id==8344, district_id:=97]
+udt[facility_id==8345, district_id:=97]
+udt[facility_id==8346, district_id:=86]
+udt[facility_id==8347, district_id:=29]
+udt[facility_id==8348, district_id:=31]
 
-uvl[facility_id==8350, district_id:=5]
-uvl[facility_id==8351, district_id:=85]
-uvl[facility_id==8352, district_id:=15]
-uvl[facility_id==8353, district_id:=64]
-uvl[facility_id==8354, district_id:=86]
-uvl[facility_id==8355, district_id:=30]
-uvl[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
-uvl[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
-uvl[facility_id==8358, district_id:=39]
-uvl[facility_id==8359, district_id:=7]
+udt[facility_id==8350, district_id:=5]
+udt[facility_id==8351, district_id:=85]
+udt[facility_id==8352, district_id:=15]
+udt[facility_id==8353, district_id:=64]
+udt[facility_id==8354, district_id:=86]
+udt[facility_id==8355, district_id:=30]
+udt[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
+udt[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
+udt[facility_id==8358, district_id:=39]
+udt[facility_id==8359, district_id:=7]
 
 #----------------------------------------------------------------------
 # merge the data sets
 # use the meta data district ids as primary 
-uvl <- join(uvl, districts, by='district_id', type='left')
+udt <- join(udt, districts, by='district_id', type='left')
 
 # replace missing district names
-uvl[is.na(district_name), district_name:=district_name1]
-uvl[ ,district_name1:=NULL]
+udt[is.na(district_name), district_name:=district_name1]
+udt[ ,district_name1:=NULL]
 
 # eliminate the district id from the full data, use the meta data (district_id.y)
 # when the meta data district id is midding, replace with full data district id
-uvl[is.na(district_id.y), district_id.y:=as.numeric(district_id)]
-uvl[ ,district_id:=NULL]
-setnames(uvl, 'district_id.y', 'district_id')
+udt[is.na(district_id.y), district_id.y:=as.numeric(district_id)]
+udt[ ,district_id:=NULL]
+setnames(udt, 'district_id.y', 'district_id')
 
 # create a placeholder for missing facility names for 34 facilities
-uvl[is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
+udt[is.na(facility_name), facility_name:=paste0('Facility #',facility_id)]
 
 # drop out the 'facility left blank' facility with no district information
 # contains only 55 patients
-uvl <- uvl[district_id!=121]
+udt <- udt[district_id!=121]
 
 #-------------------------------------------
 # check for facility ids associated with multiple district ids after the change
-dups <- uvl[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
+dups <- udt[ , .(dup=length(unique(district_id))), by=.(facility_id, facility_name)]
 dups <- dups[dup>1, .(facility_id, facility_name)]
 
-uvl[facility_id %in% dups$facility_id, .(facility_name, district_id)]
+udt[facility_id %in% dups$facility_id, .(facility_name, district_id)]
 
 #-------------------------------------------
 # change district names from new 2016/17 districts to previous districts
@@ -233,110 +156,110 @@ merge_new_dists <- function(x) {
 
 # run the function on your data set
 # there should be 113 districts - 112 plus one missing
-merge_new_dists(uvl)
-length(unique(uvl$district_name))
+merge_new_dists(udt)
+length(unique(udt$district_name))
 
 # Change spelling of Luwero=Luweero and Sembabule=Ssembabule
-uvl[district_name=="Luwero", district_name:="Luweero"]
-uvl[district_name=="Sembabule", district_name:="Ssembabule"]
+udt[district_name=="Luwero", district_name:="Luweero"]
+udt[district_name=="Sembabule", district_name:="Ssembabule"]
 
 # ---------------
 # rename sex
-uvl[ , .(class(sex)) ]
-uvl[sex=='m', sex:='Male']
-uvl[sex=='f', sex:='Female']
-uvl[sex=='x', sex:='Unknown']
+udt[ , .(class(sex)) ]
+udt[sex=='m', sex:='Male']
+udt[sex=='f', sex:='Female']
+udt[sex=='x', sex:='Unknown']
 
 # ---------------
 # add date 
-uvl[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+udt[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 
 # ---------------
 # combine the duplicates into single entries
 
 # 35 duplicate entries
-uvl[ ,combine:=paste0(year,'_', month, '_', facility_id,'_',sex)]
-uvl[duplicated(combine)]
+udt[ ,combine:=paste0(year,'_', month, '_', facility_id,'_',sex)]
+udt[duplicated(combine)]
 
 # full data table of all duplicate entries as single entries
-uvl <- uvl[ , .(patients_received=sum(patients_received),
+udt <- udt[ , .(patients_received=sum(patients_received),
                 samples_received=sum(samples_received),  
                 rejected_samples=sum(rejected_samples), 
                 dbs_samples=sum(dbs_samples), samples_tested=sum(total_results),
                 suppressed=sum(suppressed), valid_results=sum(valid_results)),
-                by=.(facility_id, facility_name, district_id, district_name, dhis2_name,
-                sex, date, month, year)]
+            by=.(facility_id, facility_name, district_id, district_name, dhis2_name,
+                 sex, date, month, year)]
 
 # ---------------
 # check equality constraints are met 
 # commented out checks for equality constraints
 
 # check for equality constraints
-uvl[patients_received > samples_received] # should be 0
-uvl[rejected_samples > samples_received] # should be 0
-uvl[dbs_samples > samples_received]
+udt[patients_received > samples_received] # should be 0
+udt[rejected_samples > samples_received] # should be 0
+udt[dbs_samples > samples_received]
 
 # if samples received is < dbs_samples, change to match dbs_samples (samples received must be greater than or equal to dbs)
-# uvl[samples_received < dbs_samples, samples_received:=dbs_samples]
+# udt[samples_received < dbs_samples, samples_received:=dbs_samples]
 
 # once samples_received is always >= dbs_samples, valid_results is always =< samples_received
-uvl[samples_tested > samples_received] # should be 0
-uvl[valid_results > samples_received] # should be 0
-uvl[suppressed > valid_results] # should be 0
+udt[samples_tested > samples_received] # should be 0
+udt[valid_results > samples_received] # should be 0
+udt[suppressed > valid_results] # should be 0
 
 # ---------------
 # add a variable for plasma samples and organize the data set intuitively
-uvl[ , plasma_samples:=(samples_received - dbs_samples)]
-uvl[plasma_samples > samples_received] # should be no values in this category
+udt[ , plasma_samples:=(samples_received - dbs_samples)]
+udt[plasma_samples > samples_received] # should be no values in this category
 
 #---------------
 # facility levels 
 
 # separate out the number from facility name to get facility level
 # create spaces after II to avoid being included in III
-uvl[, facility_name1:=paste(facility_name, '_')] # creates a space after the name
-uvl[, facility_name1:=tolower(facility_name1)]
+udt[, facility_name1:=paste(facility_name, '_')] # creates a space after the name
+udt[, facility_name1:=tolower(facility_name1)]
 
-uvl[grepl(pattern="\\sii\\s", facility_name1), level:='HC II'] 
-uvl[grepl(pattern="\\sii", facility_name1) & grepl(pattern="\\siii", facility_name1), level:='2'] 
-uvl[grepl(pattern="iii", facility_name1), level:='HC III']
-uvl[grepl(pattern="\\siv",facility_name1), level:='HC IV']
-uvl[grepl(pattern="hospital", facility_name1) & !grepl(pattern='military hospital', facility_name1), level:='Hospital']
-uvl[grepl(pattern="military hospital", facility_name1), level:='Military Hospital']
+udt[grepl(pattern="\\sii\\s", facility_name1), level:='HC II'] 
+udt[grepl(pattern="\\sii", facility_name1) & grepl(pattern="\\siii", facility_name1), level:='2'] 
+udt[grepl(pattern="iii", facility_name1), level:='HC III']
+udt[grepl(pattern="\\siv",facility_name1), level:='HC IV']
+udt[grepl(pattern="hospital", facility_name1) & !grepl(pattern='military hospital', facility_name1), level:='Hospital']
+udt[grepl(pattern="military hospital", facility_name1), level:='Military Hospital']
 
 # TASO unique health centers
-uvl[grepl(pattern="taso", facility_name1), level:='TASO']
+udt[grepl(pattern="taso", facility_name1), level:='TASO']
 
-uvl[is.na(level), unique(facility_name)]
-uvl[is.na(level), length(unique(facility_name))] #239 facilities do not contain level in the name
+udt[is.na(level), unique(facility_name)]
+udt[is.na(level), length(unique(facility_name))] #239 facilities do not contain level in the name
 
-# use dhis2name to get facility levels not contained in the uvl dashboard name
-uvl[!is.na(dhis2_name), dhis2_name1:=paste(dhis2_name, '_')] # creates a space after the name
-uvl[!is.na(dhis2_name), dhis2_name1:=tolower(dhis2_name1)]
+# use dhis2name to get facility levels not contained in the udt dashboard name
+udt[!is.na(dhis2_name), dhis2_name1:=paste(dhis2_name, '_')] # creates a space after the name
+udt[!is.na(dhis2_name), dhis2_name1:=tolower(dhis2_name1)]
 
-uvl[grepl(pattern="\\sii\\s", dhis2_name1), level2:='HC II'] 
-uvl[grepl(pattern="\\sii", dhis2_name1) & grepl(pattern="\\siii", dhis2_name1), level2:='2'] 
-uvl[grepl(pattern="iii", dhis2_name1), level2:='HC III']
-uvl[grepl(pattern="\\siv",dhis2_name1), level2:='HC IV']
-uvl[grepl(pattern="hospital", dhis2_name1) & !grepl(pattern='military hospital', dhis2_name1), level2:='Hospital']
-uvl[grepl(pattern="military hospital", dhis2_name1), level2:='Military Hospital']
+udt[grepl(pattern="\\sii\\s", dhis2_name1), level2:='HC II'] 
+udt[grepl(pattern="\\sii", dhis2_name1) & grepl(pattern="\\siii", dhis2_name1), level2:='2'] 
+udt[grepl(pattern="iii", dhis2_name1), level2:='HC III']
+udt[grepl(pattern="\\siv",dhis2_name1), level2:='HC IV']
+udt[grepl(pattern="hospital", dhis2_name1) & !grepl(pattern='military hospital', dhis2_name1), level2:='Hospital']
+udt[grepl(pattern="military hospital", dhis2_name1), level2:='Military Hospital']
 
 # replace missing levels from facility names with levels from dhis2names
-uvl[is.na(level), level:=level2]
+udt[is.na(level), level:=level2]
 
 # facility name and dhis2name disagree
-uvl[facility_id==2335, level:='HC II'] #contains Level II in the name but no space after (typo)
+udt[facility_id==2335, level:='HC II'] #contains Level II in the name but no space after (typo)
 
 # print the number of facility without level
-uvl[is.na(level), length(unique(facility_name))]
+udt[is.na(level), length(unique(facility_name))]
 
 #--------------------------------
 # create a variable to identify prisons
-uvl[grep(pattern="prison", facility_name1), prison:='Yes']
-uvl[grep(pattern="prison", dhis2_name1), prison:='Yes'] # using dhis2name captures a remand center
-uvl[is.na(prison), prison:='No']
+udt[grep(pattern="prison", facility_name1), prison:='Yes']
+udt[grep(pattern="prison", dhis2_name1), prison:='Yes'] # using dhis2name captures a remand center
+udt[is.na(prison), prison:='No']
 
-uvl[ , c("facility_name1", "dhis2_name1", 'level2'):=NULL]
+udt[ , c("facility_name1", "dhis2_name1", 'level2'):=NULL]
 
 
 #--------------------------------
@@ -350,15 +273,15 @@ rdt[grep(pattern="18", date), year:='2018']
 
 
 
-uvl[grep(pattern="prison", dhis2_name1), prison:='Yes'] # using dhis2name captures a remand center
-uvl[is.na(prison), prison:='No']
+udt[grep(pattern="prison", dhis2_name1), prison:='Yes'] # using dhis2name captures a remand center
+udt[is.na(prison), prison:='No']
 
 
 
 
 #------------------------------------------
 # run a missing data check
-uvl[ ,lapply(.SD, is.na), .SDcols=10:17]
+udt[ ,lapply(.SD, is.na), .SDcols=10:17]
 unique(dt) # should be only false values
 
 #--------------------------
@@ -366,12 +289,12 @@ unique(dt) # should be only false values
 vars <- c('facility_id', 'facility_name', 'district_id', 'district_name', 
           'dhis2_name', 'sex', 'date', 'month', 'year', 'level', 'prison')
 
-uvl <- uvl[ ,lapply(.SD, as.numeric), .SDcols=10:17, by=vars]
+udt <- udt[ ,lapply(.SD, as.numeric), .SDcols=10:17, by=vars]
 
 #--------------- 
 # where one sex is present and the other is missing, assign a 0 value to the missing sex
-uvl[sex!='Unknown', rows:=.N, by=.(facility_name, date)]
-opp_sex <- uvl[rows==1]
+udt[sex!='Unknown', rows:=.N, by=.(facility_name, date)]
+opp_sex <- udt[rows==1]
 
 # create a data table of the opposite sex values for values in the data set
 opp_sex[sex=='Female', sex1:='Male']
@@ -388,17 +311,17 @@ opp_sex[ , suppressed:=0]
 opp_sex[ , valid_results:=0]
 
 # rbind in the 0 values for the opposite sex
-uvl <- rbind(uvl, opp_sex)
+udt <- rbind(udt, opp_sex)
 
 # check that the merge worked correctly
-uvl[sex!='Unknown', rows:=.N, by=.(facility_name, date)]
-uvl[sex!='Unknown', unique(rows)] # there should be two values for each facility
-uvl[sex!='Unknown', .(y=length(unique(sex))), by=.(facility_name, date)][y!=2] # should be empty - two sexes per facility month
-uvl[ , rows:=NULL]
+udt[sex!='Unknown', rows:=.N, by=.(facility_name, date)]
+udt[sex!='Unknown', unique(rows)] # there should be two values for each facility
+udt[sex!='Unknown', .(y=length(unique(sex))), by=.(facility_name, date)][y!=2] # should be empty - two sexes per facility month
+udt[ , rows:=NULL]
 #---------------------------------------
 # save the final data as an RDS
 
-saveRDS(uvl, file= paste0(dir, "/prepped_data/sex_data.rds"))
+saveRDS(udt, file= paste0(dir, "/prepped_data/sex_data.rds"))
 
 #------------------------------------------------------------
 
@@ -413,8 +336,8 @@ saveRDS(uvl, file= paste0(dir, "/prepped_data/sex_data.rds"))
 # replace the unknown sex values with the facility sex ratio of patients received
 
 # create a total sex ratio for each facility for the entire data set
-pts1 <- uvl[sex=='Male' | sex=='Female', .(total_pts=sum(patients_received)), by=facility_id]
-pts2 <- uvl[sex=='Female', .(female_pts=sum(patients_received)), by=facility_id]
+pts1 <- udt[sex=='Male' | sex=='Female', .(total_pts=sum(patients_received)), by=facility_id]
+pts2 <- udt[sex=='Female', .(female_pts=sum(patients_received)), by=facility_id]
 pts2[ ,fem_only:=1]
 
 # create a mean sex ratio per facility
@@ -428,24 +351,24 @@ pts[ , c('total_pts', 'female_pts', 'fem_only'):=NULL]
 
 #--------------- 
 # print any facilities that have only unknown sex - there is one, #2846
-for (f in unique(uvl$facility_id)) {
-if (!f %in% pts$facility_id) {
-  print(f)
-}}
+for (f in unique(udt$facility_id)) {
+  if (!f %in% pts$facility_id) {
+    print(f)
+  }}
 
 # assign it to the mean sex ratio for the entire data set
-y <- uvl[ ,sum(patients_received)]
-x <- uvl[sex=='Female',sum(patients_received)]
+y <- udt[ ,sum(patients_received)]
+x <- udt[sex=='Female',sum(patients_received)]
 x/y
 n2846 <- data.table(facility_id=2846, fem_ratio=0.654702, male_ratio=(1 - 0.654702))
 pts <- rbind(pts, n2846)
 #---------------  
 
 # merge the male and female mean ratios into the main data set
-uvl <- merge(uvl, pts, by='facility_id', all.x=T)
+udt <- merge(udt, pts, by='facility_id', all.x=T)
 
 # create new female patients
-fems <- uvl[sex=='Unknown']
+fems <- udt[sex=='Unknown']
 fems[ , patients_received:=(patients_received*fem_ratio)]
 fems[ , samples_received:=(samples_received*fem_ratio)]
 fems[ , rejected_samples:=(rejected_samples*fem_ratio)]
@@ -455,7 +378,7 @@ fems[ , samples_tested:=(samples_tested*fem_ratio)]
 fems[ , valid_results:=(valid_results*fem_ratio)]
 fems[ , suppressed:=(suppressed*fem_ratio)]
 
-males <- uvl[sex=='Unknown']
+males <- udt[sex=='Unknown']
 males[ , patients_received:=(patients_received*male_ratio)]
 males[ , samples_received:=(samples_received*male_ratio)]
 males[ , rejected_samples:=(rejected_samples*male_ratio)]
@@ -473,37 +396,37 @@ fems[ , sex:='Female']
 
 # create a set of new patients and check if it matches the number of unknown patients
 allVars <- c("facility_id", "facility_name", "dhis2name", "level",  "prison", "district_id", "district_name", "sex",             
-            "month", "year", "date","patients_received", "samples_received", "rejected_samples",  "plasma_samples", 
-            "dbs_samples", "samples_tested", "suppressed", "valid_results")
+             "month", "year", "date","patients_received", "samples_received", "rejected_samples",  "plasma_samples", 
+             "dbs_samples", "samples_tested", "suppressed", "valid_results")
 
 new_pts <- merge(fems, males, by=allVars, all.x=T, all.y=T)
 
 # these should have the same output - unknown is equal to the new sex values
 new_pts[ , .(sum(patients_received, na.rm=T), sum(samples_received, na.rm=T), sum(suppressed, na.rm=T), sum(valid_results, na.rm=T))]
-uvl[sex=='Unknown', .(sum(patients_received, na.rm=T), sum(samples_received, na.rm=T), sum(suppressed, na.rm=T), sum(valid_results, na.rm=T))]
+udt[sex=='Unknown', .(sum(patients_received, na.rm=T), sum(samples_received, na.rm=T), sum(suppressed, na.rm=T), sum(valid_results, na.rm=T))]
 
 # drop out the unknown values 
-uvl <- uvl[sex!='Unknown']
-uvl[,c("fem_ratio", "male_ratio"):=NULL]
-new_pts[ ,.N] + uvl[ ,.N] # total number of rows that should be in the data set after the merge
+udt <- udt[sex!='Unknown']
+udt[,c("fem_ratio", "male_ratio"):=NULL]
+new_pts[ ,.N] + udt[ ,.N] # total number of rows that should be in the data set after the merge
 
 # create unique identifiers and merge
-uvl[ , check:=0]
+udt[ , check:=0]
 new_pts[ , check:=1]
 allVars1 <- c("facility_id", "facility_name", "dhis2name", "level",  "prison", "district_id", "district_name", "sex",             
-             "month", "year", "date","patients_received", "samples_received", "rejected_samples",  "plasma_samples", 
-             "dbs_samples", "samples_tested", "suppressed", "valid_results", "check")
+              "month", "year", "date","patients_received", "samples_received", "rejected_samples",  "plasma_samples", 
+              "dbs_samples", "samples_tested", "suppressed", "valid_results", "check")
 
-uvl <- merge(uvl, new_pts, by=allVars1, all=T)
-uvl[,.N]
-uvl[ ,check:=NULL]
+udt <- merge(udt, new_pts, by=allVars1, all=T)
+udt[,.N]
+udt[ ,check:=NULL]
 
 # sum over the new patients to combine them with other variables
 sumVars <- c('patients_received', 'samples_received', 'rejected_samples',
-    'plasma_samples', 'dbs_samples', 'samples_tested', 'suppressed', 'valid_results')
+             'plasma_samples', 'dbs_samples', 'samples_tested', 'suppressed', 'valid_results')
 
-uvl <- uvl[ ,lapply(.SD, sum), by=c('facility_id', 'facility_name', 'dhis2name', 'level', 'prison', 'district_id', 'district_name',
-        'sex', 'month', 'year', 'date'),.SDcols=sumVars]
+udt <- udt[ ,lapply(.SD, sum), by=c('facility_id', 'facility_name', 'dhis2name', 'level', 'prison', 'district_id', 'district_name',
+                                    'sex', 'month', 'year', 'date'),.SDcols=sumVars]
 
 
 
@@ -515,50 +438,50 @@ uvl <- uvl[ ,lapply(.SD, sum), by=c('facility_id', 'facility_name', 'dhis2name',
 
 
 # check for missing data
-uvl[is.na(patients_received)]
-uvl[is.na(samples_received)]
-uvl[is.na(rejected_samples)]
-uvl[is.na(plasma_samples)]
-uvl[is.na(dbs_samples)]
-uvl[is.na(samples_tested)]
-uvl[is.na(suppressed)]
-uvl[is.na(valid_results)]
+udt[is.na(patients_received)]
+udt[is.na(samples_received)]
+udt[is.na(rejected_samples)]
+udt[is.na(plasma_samples)]
+udt[is.na(dbs_samples)]
+udt[is.na(samples_tested)]
+udt[is.na(suppressed)]
+udt[is.na(valid_results)]
 
 # check equality constraints 
-  uvl[samples_received < patients_received]
-  uvl[samples_received < dbs_samples]
-  uvl[samples_received < rejected_samples]
-  uvl[samples_received < samples_tested]
-  uvl[samples_received < valid_results]
-  uvl[samples_tested < valid_results]
-  uvl[valid_results < suppressed]
-  
-  
+udt[samples_received < patients_received]
+udt[samples_received < dbs_samples]
+udt[samples_received < rejected_samples]
+udt[samples_received < samples_tested]
+udt[samples_received < valid_results]
+udt[samples_tested < valid_results]
+udt[valid_results < suppressed]
+
+
 #-----------------
 # plasma samples violates equality constraints because of rounding - re-calculate
-uvl[ , plasma_samples:=NULL]  
-  uvl[ , plasma_samples:=(samples_received - dbs_samples)]  
+udt[ , plasma_samples:=NULL]  
+udt[ , plasma_samples:=(samples_received - dbs_samples)]  
 
 # change level to be called platform 
-names(uvl)[names(uvl) == "level"] <- "platform"
-  
-  
+names(udt)[names(udt) == "level"] <- "platform"
+
+
 #--------------- 
 
 #--------------------------------------------
 
 # final version with only necessary variables in useful order
 # rename district_name dist_name for shape file merge 
-uvl <- uvl[ ,.(facility_id, facility_name, dhis2name, platform, prison, district_id, dist_name=district_name, sex,
-                            month, year, date, patients_received, samples_received, rejected_samples,
-                            dbs_samples, plasma_samples, samples_tested, valid_results, suppressed)]
+udt <- udt[ ,.(facility_id, facility_name, dhis2name, platform, prison, district_id, dist_name=district_name, sex,
+               month, year, date, patients_received, samples_received, rejected_samples,
+               dbs_samples, plasma_samples, samples_tested, valid_results, suppressed)]
 
 
 #save the final data as an RDS
-saveRDS(uvl, file= paste0(dir, "/sex_data_unknowns_altered.rds"))
+saveRDS(udt, file= paste0(dir, "/sex_data_unknowns_altered.rds"))
 
 # ----------------------------------------------
 
 # optional - export a CSV of the prepped data set
 
-write.csv(uvl, paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/uvl_data.csv'))
+write.csv(udt, paste0(root, 'Project/Evaluation/GF/outcome_measurement/uga/dt_dashboard/udt_data.csv'))
