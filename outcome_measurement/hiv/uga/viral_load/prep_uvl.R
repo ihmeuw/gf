@@ -212,20 +212,15 @@ total[, plasma_samples:=(plasma_samples/shift(plasma_samples, type='lead'))]
 # create a data set of the female ratio
 females = total[sex=='Female']
 
-# calculate the male ratio (1 - females)
-total[, patients_received:=(1 - shift(patients_received, type='lead'))]
-total[, samples_received:=(1 - shift(samples_received, type='lead'))]
-total[, rejected_samples:=(1 - shift(rejected_samples, type='lead'))]
-total[, dbs_samples:=(1 - shift(dbs_samples, type='lead'))]
+# calculate the male ration
+male_fun <- function(x) {
+  x = (1 - x) 
+}
 
-total[, samples_tested:=(1 - shift(samples_tested, type='lead'))]
-total[, suppressed:=(1 - shift(suppressed, type='lead'))]
-total[, valid_results:=(1 - shift(valid_results, type='lead'))]
-total[, plasma_samples:=(1 - shift(plasma_samples, type='lead'))]
-
-# create a data set of only males
-males = total[sex=='Total']
-males[ , sex:='Male']
+# create a male ratio data set
+total = total[sex=='Female']
+males = total[ ,lapply(.SD, male_fun), .SDcols=3:10, by=.(district, sex)]
+males[ ,sex:='Male']
 
 #-------------------------------
 # rbind them together and apply
@@ -240,16 +235,88 @@ setnames(ratio, c("patients_received", "samples_received",  "rejected_samples", 
                    "samples_tested1", "suppressed1", "valid_results1", "plasma_samples1"))
 
 
-# create a data set of unknowns
+# if a ratio is missing, assign the patients received ratio
+ratio[is.na(samples_received1), samples_received1:=patients_received1]
+ratio[is.na(rejected_samples1), rejected_samples1:=patients_received1]
+ratio[is.na(dbs_samples1), dbs_samples1:=patients_received1]
+ratio[is.na(samples_tested1), samples_tested1:=patients_received1]
+ratio[is.na(suppressed1), suppressed1:=patients_received1]
+ratio[is.na(valid_results1), valid_results1:=patients_received1]
+ratio[is.na(plasma_samples1), plasma_samples1:=patients_received1]
+
+#-------------------------------
+# create a data set of unknowns - double in size to apply ratios
 fems = dt[sex=='Unknown']
 men = dt[sex=='Unknown']
 fems[ , sex:='Female']
 men[ ,sex:='Male']
-unknowns = rbind(fems, men)
+people = rbind(fems, men)
 
+#-------------------------------
+# merge in the ratios
 
+unknowns = merge(people, ratio, by=c('district', 'sex'), all.x=T)
 
+# calculate the new values
+unknowns[!is.na(district), patients_received:=(patients_received*patients_received1)]
+unknowns[!is.na(district), samples_received:=(samples_received*samples_received1)]
+unknowns[!is.na(district), rejected_samples:=(rejected_samples*rejected_samples1)]
+unknowns[!is.na(district), dbs_samples:=(dbs_samples*dbs_samples1)]
+unknowns[!is.na(district), samples_tested:=(samples_tested*samples_tested1)]
+unknowns[!is.na(district), suppressed:=(suppressed*suppressed1)]
+unknowns[!is.na(district), valid_results:=(valid_results*valid_results1)]
+unknowns[!is.na(district), plasma_samples:=(plasma_samples*plasma_samples1)]
 
+# drop out the people with unknown district
+unknowns = unknowns[!is.na(district)]
+
+# drop unnecessary variables
+unknowns[ , c("patients_received1", "samples_received1",  "rejected_samples1",  "dbs_samples1",   
+            "samples_tested1", "suppressed1", "valid_results1", "plasma_samples1"):=NULL]
+
+# round to single digit
+vars = c( 'facility_id', 'district_id', 'facility', 'dhis2_name',  
+          'district', 'sex', 'date','level', 'prison')
+
+unknowns = unknowns[ ,lapply(.SD, round, 1), .SDcols=10:17, by=vars]
+
+#-------------------------------
+# merge in new values
+
+dt = dt[sex!='Unknown']
+dt = rbind(dt, unknowns)
+
+# sum over values to ensure new females and males are incorporated
+dt = dt[ ,lapply(.SD, sum), .SDcols=10:17, by=vars]
+
+#-------------------------------
+# final quality checks 
+
+# check for missing data
+dt[is.na(patients_received)]
+dt[is.na(samples_received)]
+dt[is.na(rejected_samples)]
+dt[is.na(plasma_samples)]
+dt[is.na(dbs_samples)]
+dt[is.na(samples_tested)]
+dt[is.na(suppressed)]
+dt[is.na(valid_results)]
+
+# check equality constraints - these need work
+dt[samples_received < patients_received]
+dt[samples_received < dbs_samples]
+dt[samples_received < rejected_samples]
+dt[samples_received < samples_tested]
+dt[samples_received < valid_results]
+dt[samples_tested < valid_results]
+dt[valid_results < suppressed]
+
+#-------------------------------
+# save the final data as an RDS
+
+saveRDS(dt, file= paste0(dir, "/prepped_data/sex_data.rds"))
+
+#-------------------------------
 
 
 
