@@ -292,7 +292,7 @@ dt = dt[ ,lapply(.SD, sum), .SDcols=10:17, by=vars]
 #-------------------------------
 # final quality checks 
 
-# check for missing data
+# check for missing data - show all be 0 rows
 dt[is.na(patients_received)]
 dt[is.na(samples_received)]
 dt[is.na(rejected_samples)]
@@ -302,10 +302,21 @@ dt[is.na(samples_tested)]
 dt[is.na(suppressed)]
 dt[is.na(valid_results)]
 
-# check equality constraints - these need work
-dt[samples_received < patients_received]
-dt[samples_received < dbs_samples]
+#--------------------------------------------
+# check equality constraints
+# if the variables violate equality constraints, alter them
+
+# samples received can be greater than patients received
+dt[samples_received < rejected_samples, rejected_samples:=samples_received]
+dt[samples_received < dbs_samples, dbs_samples:=samples_received]
+dt[samples_received < samples_tested, samples_tested:=samples_received]
+dt[samples_received < valid_results, valid_results:=samples_received]
+dt[samples_tested < valid_results, valid_results:=samples_tested]
+dt[valid_results < suppressed, suppressed:=valid_results]
+
+# final equality constraints check
 dt[samples_received < rejected_samples]
+dt[samples_received < dbs_samples]
 dt[samples_received < samples_tested]
 dt[samples_received < valid_results]
 dt[samples_tested < valid_results]
