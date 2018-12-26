@@ -111,9 +111,26 @@ new_dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashbo
 # load facilities
 facilities = readRDS(paste0(new_dir, 'webscrape/facilities.rds'))
 facilities[ ,c('district_id', 'hub_id'):=NULL]
-
-# merge in facility and district names
 full_data = merge(full_data, facilities, by='facility_id', all.x=TRUE)
+
+# some districts have multiple ids in the data set
+full_data[district_id==30, district:='Kabale']
+full_data[district_id==134, district:='Rakai']
+full_data[district_id==89, district:='Gomba']
+full_data[district_id==135, district:='Manafwa']
+full_data[district_id==131, district:='Nebbi']
+full_data[district_id==136, district:='Pallisa']
+
+# add districts that failed to merge
+districts = full_data[!is.na(district),.(district_alt=unique(district)), by=district_id]
+districts = districts[!duplicated(district_alt)]
+replace = merge(full_data[is.na(district)], districts, by='district_id', all.x=T)
+replace[ , district:=district_alt]
+replace[ , district_alt:=NULL]
+
+# merge in the replacements
+full_data = full_data[!is.na(district)]
+full_data = rbind(full_data, replace)
 
 # ---------------------------
 # save the product

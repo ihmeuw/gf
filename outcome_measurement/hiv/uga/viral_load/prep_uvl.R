@@ -8,11 +8,10 @@
 # --------------------
 # Set up R
 rm(list=ls())
-library(data.table)
 library(ggplot2)
 library(stringr) 
 library(plyr)
-library(gtools)
+library(data.table)
 # --------------------
 
 # --------------------
@@ -115,9 +114,6 @@ dt = dt[ , .(patients_received=sum(patients_received),
             by=.(facility_id, facility, district_id, district, dhis2_name,
                  sex, date)]
 
-# -------------------------------------------
-# calculate plasma samples
-dt[ , plasma_samples:=(samples_received - dbs_samples)]
 
 # -------------------------------------------
 # determine facility levels from facility name
@@ -171,7 +167,7 @@ dt[ , c("facility_1", "dhis2_name1", 'level2'):=NULL]
 vars = c('facility_id', 'facility', 'district_id', 'district', 
           'dhis2_name', 'sex', 'date', 'level', 'prison')
 
-dt = dt[ ,lapply(.SD, as.numeric), .SDcols=8:15, by=vars]
+dt = dt[ ,lapply(.SD, as.numeric), .SDcols=8:14, by=vars]
 
 #--------------- 
 
@@ -180,10 +176,10 @@ dt = dt[ ,lapply(.SD, as.numeric), .SDcols=8:15, by=vars]
 
 # create a data set to calculate the sex ratio by district
 vars = c('district', 'sex')
-ratio = dt[sex!='Unknown' & !is.na(district), lapply(.SD, sum), .SDcols=10:17, by=vars]
+ratio = dt[sex!='Unknown' & !is.na(district), lapply(.SD, sum), .SDcols=10:16, by=vars]
 
 # create a data table of totals
-total = ratio[ ,lapply(.SD, sum), .SDcols=3:10, by=district]
+total = ratio[ ,lapply(.SD, sum), .SDcols=3:9, by=district]
 total[ , sex:='Total']
 
 # bind them together and drop the males
@@ -200,11 +196,9 @@ total[, patients_received:=(patients_received/shift(patients_received, type='lea
 total[, samples_received:=(samples_received/shift(samples_received, type='lead'))]
 total[, rejected_samples:=(rejected_samples/shift(rejected_samples, type='lead'))]
 total[, dbs_samples:=(dbs_samples/shift(dbs_samples, type='lead'))]
-
 total[, samples_tested:=(samples_tested/shift(samples_tested, type='lead'))]
 total[, suppressed:=(suppressed/shift(suppressed, type='lead'))]
 total[, valid_results:=(valid_results/shift(valid_results, type='lead'))]
-total[, plasma_samples:=(plasma_samples/shift(plasma_samples, type='lead'))]
 
 #-------------------------------
 # replace the total values with the male ratio
@@ -213,13 +207,13 @@ total[, plasma_samples:=(plasma_samples/shift(plasma_samples, type='lead'))]
 females = total[sex=='Female']
 
 # calculate the male ration
-male_fun <- function(x) {
+male_fun = function(x) {
   x = (1 - x) 
 }
 
 # create a male ratio data set
 total = total[sex=='Female']
-males = total[ ,lapply(.SD, male_fun), .SDcols=3:10, by=.(district, sex)]
+males = total[ ,lapply(.SD, male_fun), .SDcols=3:9, by=.(district, sex)]
 males[ ,sex:='Male']
 
 #-------------------------------
@@ -230,9 +224,9 @@ ratio = rbind(females, males)
 
 # reset the names for the merge
 setnames(ratio, c("patients_received", "samples_received",  "rejected_samples",  "dbs_samples",   
-                  "samples_tested", "suppressed", "valid_results", "plasma_samples"),
+                  "samples_tested", "suppressed", "valid_results"),
                   c("patients_received1", "samples_received1",  "rejected_samples1",  "dbs_samples1",   
-                   "samples_tested1", "suppressed1", "valid_results1", "plasma_samples1"))
+                   "samples_tested1", "suppressed1", "valid_results1"))
 
 
 # if a ratio is missing, assign the patients received ratio
@@ -242,7 +236,6 @@ ratio[is.na(dbs_samples1), dbs_samples1:=patients_received1]
 ratio[is.na(samples_tested1), samples_tested1:=patients_received1]
 ratio[is.na(suppressed1), suppressed1:=patients_received1]
 ratio[is.na(valid_results1), valid_results1:=patients_received1]
-ratio[is.na(plasma_samples1), plasma_samples1:=patients_received1]
 
 #-------------------------------
 # create a data set of unknowns - double in size to apply ratios
@@ -265,20 +258,19 @@ unknowns[!is.na(district), dbs_samples:=(dbs_samples*dbs_samples1)]
 unknowns[!is.na(district), samples_tested:=(samples_tested*samples_tested1)]
 unknowns[!is.na(district), suppressed:=(suppressed*suppressed1)]
 unknowns[!is.na(district), valid_results:=(valid_results*valid_results1)]
-unknowns[!is.na(district), plasma_samples:=(plasma_samples*plasma_samples1)]
 
 # drop out the people with unknown district
 unknowns = unknowns[!is.na(district)]
 
 # drop unnecessary variables
 unknowns[ , c("patients_received1", "samples_received1",  "rejected_samples1",  "dbs_samples1",   
-            "samples_tested1", "suppressed1", "valid_results1", "plasma_samples1"):=NULL]
+            "samples_tested1", "suppressed1", "valid_results1"):=NULL]
 
 # round to single digit
 vars = c( 'facility_id', 'district_id', 'facility', 'dhis2_name',  
           'district', 'sex', 'date','level', 'prison')
 
-unknowns = unknowns[ ,lapply(.SD, round, 1), .SDcols=10:17, by=vars]
+unknowns = unknowns[ ,lapply(.SD, round, 1), .SDcols=10:16, by=vars]
 
 #-------------------------------
 # merge in new values
@@ -287,7 +279,7 @@ dt = dt[sex!='Unknown']
 dt = rbind(dt, unknowns)
 
 # sum over values to ensure new females and males are incorporated
-dt = dt[ ,lapply(.SD, sum), .SDcols=10:17, by=vars]
+dt = dt[ ,lapply(.SD, sum), .SDcols=10:16, by=vars]
 
 #-------------------------------
 # final quality checks 
@@ -296,7 +288,6 @@ dt = dt[ ,lapply(.SD, sum), .SDcols=10:17, by=vars]
 dt[is.na(patients_received)]
 dt[is.na(samples_received)]
 dt[is.na(rejected_samples)]
-dt[is.na(plasma_samples)]
 dt[is.na(dbs_samples)]
 dt[is.na(samples_tested)]
 dt[is.na(suppressed)]
@@ -314,9 +305,21 @@ dt[samples_received < valid_results, valid_results:=samples_received]
 dt[samples_tested < valid_results, valid_results:=samples_tested]
 dt[valid_results < suppressed, suppressed:=valid_results]
 
+# -------------------------------------------
+# calculate plasma samples
+dt[ , plasma_samples:=(samples_received - dbs_samples)]
+
+# change to the correct order
+dt = dt[ ,.(patients_received, samples_received, rejected_samples, dbs_samples, 
+            plasma_samples, samples_tested, valid_results, suppressed), 
+            by=.(facility_id, district_id, dhis2_name, level, prison,
+                 facility, district, sex, date)]
+
+#--------------------------------------------
 # final equality constraints check
 dt[samples_received < rejected_samples]
 dt[samples_received < dbs_samples]
+dt[samples_received < plasma_samples ]
 dt[samples_received < samples_tested]
 dt[samples_received < valid_results]
 dt[samples_tested < valid_results]

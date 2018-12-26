@@ -27,10 +27,10 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # Files and directories
 
 # set input/output directory
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
 
 # upload the data with month, year, sex
-uvl <- readRDS(paste0(dir, "/prepped_data/sex_data.rds"))
+uvl = readRDS(paste0(dir, "/prepped_data/sex_data.rds"))
 
 # view the data set and variable names
 str(uvl)
@@ -45,7 +45,7 @@ length(unique(uvl$district_name))
 setwd('J:/Project/Evaluation/GF/mapping/uga/')
 
 # load the shapefile
-shapeData <- shapefile('uga_dist112_map.shp')
+shapeData = shapefile('uga_dist112_map.shp')
 
 # check that shapeData is a spatialpolygonsdataframe
 class(shapeData)
