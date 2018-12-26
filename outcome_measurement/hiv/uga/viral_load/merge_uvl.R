@@ -129,6 +129,7 @@ replace[ , district:=district_alt]
 replace[ , district_alt:=NULL]
 
 # merge in the replacements
+# automatically drops out facility left blanks
 full_data = full_data[!is.na(district)]
 full_data = rbind(full_data, replace)
 
