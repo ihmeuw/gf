@@ -27,10 +27,9 @@ setwd(dir)
 dt = readRDS(paste0(dir, '/merged/vl_2014_2018.rds'))
 
 # ----------------------------------------------
-# import districts for facilities without names
+# drop out 55 patients in 'facility left blank'
 
-# some samples are associated with a district or a hub 
-dt[is.na(facility), sum(samples_received)]
+dt = dt[facility!='Facility Left Blank']
 
 #---------------------------------------------
 # some facilities are associated with multiple district ids
@@ -324,6 +323,10 @@ dt[samples_received < samples_tested]
 dt[samples_received < valid_results]
 dt[samples_tested < valid_results]
 dt[valid_results < suppressed]
+
+#-------------------------------
+# add a year variable
+dt[ , year:=year(date)]
 
 #-------------------------------
 # save the final data as an RDS

@@ -137,4 +137,6 @@ fac[year==2018][order(region)]
 # percent of total facility-weeks stocked out 
 tk[!is.na(test_kits),.(100*(sum(test_kits, na.rm=T)/sum(report))), by=year]
 
-#--------------
+
+
+

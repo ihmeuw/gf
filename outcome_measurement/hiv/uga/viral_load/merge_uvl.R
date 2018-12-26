@@ -124,6 +124,7 @@ full_data[district_id==136, district:='Pallisa']
 # add districts that failed to merge
 districts = full_data[!is.na(district),.(district_alt=unique(district)), by=district_id]
 districts = districts[!duplicated(district_alt)]
+
 replace = merge(full_data[is.na(district)], districts, by='district_id', all.x=T)
 replace[ , district:=district_alt]
 replace[ , district_alt:=NULL]
