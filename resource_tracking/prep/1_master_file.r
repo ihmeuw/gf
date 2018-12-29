@@ -22,15 +22,19 @@ library(rlang)
 library(zoo)
 library(dplyr)
 
+j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
+dir = paste0(j, '/Project/Evaluation/GF/')
+code_loc = ifelse(Sys.info()[1]=='Windows','C:/Users/elineb/Documents/gf/','ihme/code/elineb/')
+
 # ---------------------------------------
 # Set global variables and filepaths.  
 # ---------------------------------------
 
 #Filepaths
 user = "elineb" #Change to your username 
-code_dir = paste0("C:/Users/", user, "/Documents/gf/resource_tracking/prep/")
-combined_output_dir = "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping"
-country <- c("uga") #Change to the country you want to update. 
+code_dir = paste0(code_loc, "resource_tracking/prep/")
+combined_output_dir = paste0(j, "resource_tracking/multi_country/mapping")
+countries <- c("cod", "gtm", "uga") #Change to the country you want to update. 
 source(paste0(code_dir, "shared_mapping_functions.R")) 
 
 #Global variables. 
@@ -49,7 +53,7 @@ include_stops = FALSE #Set to true if you would like to see error messages in mo
 # STEP 2: Load country directories and file list
 # ----------------------------------------------
   
- # for (country in countries){
+ for (country in countries){
   master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
   export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
   country_code_dir <- paste0(code_dir, "global_fund_prep/", country, "_prep/")
@@ -64,8 +68,8 @@ include_stops = FALSE #Set to true if you would like to see error messages in mo
   stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
   stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
   
-  input_fpm <- file_list[data_source == "fpm" & file_iteration == "final", .(grant, grant_period)]
-  input_pudr <- file_list[data_source == "pudr" & file_iteration == "final", .(grant, grant_period)]
+  input_fpm <- file_list[data_source == "fpm" & file_iteration == "final", .(grant, grant_period, file_save_date)]
+  input_pudr <- file_list[data_source == "pudr" & file_iteration == "final", .(grant, grant_period, file_save_date)]
   
   #Cannot have duplicate 'final' versions of files within grant_number and grant_period. 
   check_fpm = input_fpm[duplicated(input_fpm), ]
@@ -79,19 +83,19 @@ include_stops = FALSE #Set to true if you would like to see error messages in mo
 # ----------------------------------------------
 
   source(paste0(code_dir, "3_prep_country_data.r"))
-#  }
+  }
 
 # ----------------------------------------------
 # STEP 4: Aggregate country-level data 
 # ----------------------------------------------
 
-  source(paste0(code_dir, "4_aggregate_all_data_sources.r"))
+  #source(paste0(code_dir, "4_aggregate_all_data_sources.r"))
 
 # ----------------------------------------------
 # STEP 5: Verify budget numbers
 # ----------------------------------------------
 
-  source(paste0(code_dir, "5_verify_budget_numbers.r")) 
+  #source(paste0(code_dir, "5_verify_budget_numbers.r")) 
  
 # ----------------------------------------------
 # STEP 6: Upload to Basecamp
