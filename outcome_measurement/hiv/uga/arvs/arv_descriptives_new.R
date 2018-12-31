@@ -137,6 +137,21 @@ fac[year==2018][order(region)]
 # percent of total facility-weeks stocked out 
 tk[!is.na(test_kits),.(100*(sum(test_kits, na.rm=T)/sum(report))), by=year]
 
+#---------------------
+# reporting
+
+z = dt[year==2017 | year==2018]
+z = z[month!=12 & art_site==TRUE]
+
+x = z[!is.na(arvs) & !is.na(test_kits) ,length(unique(facility)), by=.(month, year)]
+x[ , mean(V1), by=year]
+
+
+
+
+
+
+
 
 
 

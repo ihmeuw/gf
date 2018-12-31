@@ -326,7 +326,7 @@ dt[valid_results < suppressed]
 
 #-------------------------------
 # add a year variable
-dt[ , year:=year(date)]
+dt[ ,year:=year(date)]
 
 #-------------------------------
 # save the final data as an RDS

@@ -1,6 +1,8 @@
 # ------------------------------------------------------------------
-# Primary descriptive analysis PDF - August 2014 - June 2018
+# Primary descriptive analysis PDF - August 2014 - December 2018
+# Sourced by UVL descriptives
 
+#------------------------------------
 # export all summary descriptive figures as a pdf
 pdf(paste0(dir, '/outputs/uvl_descriptives.pdf'), height=6, width=9)
 
@@ -23,7 +25,7 @@ ggplot(table_2, aes(x=date, y=facilities_report, color='red')) +
   theme(legend.position='none')
 
 # determine when scale up of reporting occurred
-ggplot(table_2, aes(x=factor(month), y=facilities_report, group=year, color=factor(year))) + 
+ggplot(table_2, aes(x=factor(month(date)), y=facilities_report, group=year, color=factor(year))) + 
   geom_point(size=2.5) + 
   geom_line(alpha=0.8) + 
   facet_wrap(~year) +
@@ -168,31 +170,31 @@ ggplot(table_1, aes(x=date, y=valid_results, fill='Not Suppressed')) +
 # ---------------
 # annual variable comparisons
 
-ggplot(uvl_1[year==2014], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+ggplot(uvl_1[year==2014], aes(y=value, x=factor(month(date)), color=sex, group=sex)) + 
   geom_point() + 
   geom_line(alpha=0.5) + 
   facet_wrap(~variable) +
   labs(x="Month", y="Count", title="2014 Uganda Viral Load Dashboard data by sex", color="Sex") + theme_bw()
 
-ggplot(uvl_1[year==2015], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+ggplot(uvl_1[year==2015], aes(y=value, x=factor(month(date)), color=sex, group=sex)) + 
   geom_point() + 
   geom_line(alpha=0.5) + 
   facet_wrap(~variable) +
   labs(x="Month", y="Count", title="2015 Uganda Viral Load Dashboard data by sex", color="Sex") + theme_bw()
 
-ggplot(uvl_1[year==2016], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+ggplot(uvl_1[year==2016], aes(y=value, x=factor(month(date)), color=sex, group=sex)) + 
   geom_point() + 
   geom_line(alpha=0.5) + 
   facet_wrap(~variable) +
   labs(x="Month", y="Count", title="2016 Uganda Viral Load Dashboard data by sex", color="Sex") + theme_bw()
 
-ggplot(uvl_1[year==2017], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+ggplot(uvl_1[year==2017], aes(y=value, x=factor(month(date)), color=sex, group=sex)) + 
   geom_point() + 
   geom_line(alpha=0.5) + 
   facet_wrap(~variable) +
   labs(x="Month", y="Count", title="2017 Uganda Viral Load Dashboard data by sex", color="Sex") + theme_bw()
 
-ggplot(uvl_1[year==2018], aes(y=value, x=factor(month), color=sex, group=sex)) + 
+ggplot(uvl_1[year==2018], aes(y=value, x=factor(month(date)), color=sex, group=sex)) + 
   geom_point() + 
   geom_line(alpha=0.5) + 
   facet_wrap(~variable) +
@@ -210,7 +212,7 @@ ggplot(table_1, aes(x=factor(month), y=patients_received, col=factor(sex), group
   scale_color_manual(values=tri_sex)
 
 # samples received by month, year
-ggplot(table_1, aes(x=factor(month), y=samples_received, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=samples_received, col=factor(sex), group=sex)) + 
   geom_point(size=1.5) + geom_line(alpha=0.8) + 
   facet_wrap(~year) +
   theme_bw() +
@@ -219,7 +221,7 @@ ggplot(table_1, aes(x=factor(month), y=samples_received, col=factor(sex), group=
   scale_color_manual(values=tri_sex)
 
 # total DBS samples received by month, year
-ggplot(table_1, aes(x=factor(month), y=dbs_samples, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=dbs_samples, col=factor(sex), group=sex)) + 
   geom_point(size=1.5) + geom_line(alpha=0.8) + theme_bw() +
   facet_wrap(~year) +
   xlab("Month") + ylab("DBS samples received") + 
@@ -227,7 +229,7 @@ ggplot(table_1, aes(x=factor(month), y=dbs_samples, col=factor(sex), group=sex))
   scale_color_manual(values=tri_sex)
 
 # DBS ratio by month, year
-ggplot(table_1, aes(x=factor(month), y=dbs_ratio, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=dbs_ratio, col=factor(sex), group=sex)) + 
   geom_point(size=1.5, alpha=0.6) + geom_line(alpha=0.6) + theme_bw() + ylim(0,100) +
   xlab("Month") + ylab("Percent of total samples (%)") + 
   facet_wrap(~year) +
@@ -236,7 +238,7 @@ ggplot(table_1, aes(x=factor(month), y=dbs_ratio, col=factor(sex), group=sex)) +
   scale_color_manual(values=tri_sex)
 
 # total Plasma samples received by month, year
-ggplot(table_1, aes(x=factor(month), y=plasma_samples, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=plasma_samples, col=factor(sex), group=sex)) + 
   geom_point(size=1.5) + geom_line(alpha=0.8) + theme_bw() +
   facet_wrap(~year) +
   xlab("Month") + ylab("Plasma samples received") + 
@@ -244,7 +246,7 @@ ggplot(table_1, aes(x=factor(month), y=plasma_samples, col=factor(sex), group=se
   scale_color_manual(values=tri_sex)
 
 # Plasma ratio by month, year
-ggplot(table_1, aes(x=factor(month), y=plasma_ratio, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=plasma_ratio, col=factor(sex), group=sex)) + 
   geom_point(size=1.5, alpha=0.6) + geom_line(alpha=0.6) + theme_bw() + ylim(0,100) +
   xlab("Month") + ylab("Percent of total samples (%)") + 
   facet_wrap(~year) +
@@ -253,7 +255,7 @@ ggplot(table_1, aes(x=factor(month), y=plasma_ratio, col=factor(sex), group=sex)
   scale_color_manual(values=tri_sex)
 
 # valid viral load test results by month, year
-ggplot(table_1, aes(x=factor(month), y=valid_results, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=valid_results, col=factor(sex), group=sex)) + 
   geom_point(size=1.5) + geom_line(alpha=0.8) + theme_bw() +
   facet_wrap(~year) +
   xlab("Month") + ylab("Valid test results") + 
@@ -262,7 +264,7 @@ ggplot(table_1, aes(x=factor(month), y=valid_results, col=factor(sex), group=sex
   scale_color_manual(values=tri_sex)
 
 # valid results as a percent of samples received
-ggplot(table_1, aes(x=factor(month), y=valid_samples_ratio, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=valid_samples_ratio, col=factor(sex), group=sex)) + 
   geom_point(size=1.5) + geom_line(alpha=0.8) + theme_bw() + 
   facet_wrap(~year) +
   xlab("Month") + ylab("Percent of total samples (%)") + 
@@ -271,7 +273,7 @@ ggplot(table_1, aes(x=factor(month), y=valid_samples_ratio, col=factor(sex), gro
   scale_color_manual(values=tri_sex)
 
 # total suppressed persons by month, year
-ggplot(table_1, aes(x=factor(month), y=suppressed, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=suppressed, col=factor(sex), group=sex)) + 
   geom_point(size=1.5) + geom_line(alpha=0.8) + theme_bw() +
   facet_wrap(~year) +
   xlab("Month") + ylab("Virally suppressed patients") + 
@@ -280,7 +282,7 @@ ggplot(table_1, aes(x=factor(month), y=suppressed, col=factor(sex), group=sex)) 
   scale_color_manual(values=tri_sex)
 
 # suppression ratio by month, year
-ggplot(table_1, aes(x=factor(month), y=suppression_ratio, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=suppression_ratio, col=factor(sex), group=sex)) + 
   geom_point(size=1.5, alpha=0.5) + geom_line(alpha=0.7) + theme_bw() + ylim(0,100) +
   facet_wrap(~year) +
   xlab("Month") + ylab("Percent suppressed of valid test results (%)") + 
@@ -289,7 +291,7 @@ ggplot(table_1, aes(x=factor(month), y=suppression_ratio, col=factor(sex), group
   scale_color_manual(values=tri_sex)
 
 # zoom in on suppression ratio by month, year (reduce size of y axis)
-ggplot(table_1, aes(x=factor(month), y=suppression_ratio, col=factor(sex), group=sex)) + 
+ggplot(table_1, aes(x=factor(month(date)), y=suppression_ratio, col=factor(sex), group=sex)) + 
   geom_point(size=1.5) + geom_line(alpha=0.8) + theme_bw() + 
   facet_wrap(~year) +
   xlab("Month") + ylab("Percent suppressed of valid test results (%)") + 
@@ -410,7 +412,7 @@ pdf('J:/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape_agg
 
 # facilities reporting
 
-facilities_1 <- uvl[ ,.(facilities_report=length(unique(facility_id))), by=.(month, year) ]
+facilities_1 <- uvl[ ,.(facilities_report=length(unique(facility_id))), by=.(date, year) ]
 uvl[ , .(length(unique(facility_id)))]
 facilities_1[ , percent_report:=((facilities_report/2039)*100)]
 facilities_1[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]

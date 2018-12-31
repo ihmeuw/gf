@@ -114,6 +114,23 @@ x = dt[year==2018, sum(samples_tested)]
 y = dt[year==2017 & month(date)!=12, sum(samples_tested)]
 x - y
 
+range = dt[year==2018, sum(samples_tested), by=district]
+range[order(V1)]
+#------------------------
+# mean tests per month
+
+motests = dt[ ,.(patients_received=sum(patients_received)), by=.(date, year, sex)]
+motests[year==2018, mean(patients_received), by=sex]
+
+motests2 = dt[year==2018 & sex=='Female',.(fpts=sum(patients_received)), by=.(date, district)]
+motests3 = dt[year==2018 ,.(pts=sum(patients_received)), by=.(date, district)]
+total = merge(motests2, motests3, by=c('date', 'district'))
+total[ ,ratio:=(100*fpts/pts)]
+
+total_new = total[ ,mean(ratio), by=district]
+total_new[ ,range(V1)]
+
+
 #---------------------
 # viral suppression
 
