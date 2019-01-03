@@ -33,17 +33,17 @@ ggsave(paste0(gtm_save, "/funding_landscape_hiv.pdf"), plot = gtm_hiv_landscape_
 #   DRC
 # ----------
 #DRC Malaria Funding Landscape 
-drc_mal_landscape_10_16 <- funding_landscape("Congo (Democratic Republic)", "malaria", 2010, 2016, FALSE)
+drc_mal_landscape_10_16 <- funding_landscape("DRC", "malaria", 2010, 2016, FALSE)
 ggsave(paste0(cod_save, "/funding_landscape_mal.png"), plot = drc_mal_landscape_10_16, height=6, width=14)
 ggsave(paste0(cod_save, "/funding_landscape_mal.pdf"), plot = drc_mal_landscape_10_16, height=6, width=14)
 
 #DRC HIV Funding Landscape 
-drc_hiv_landscape_10_16 <- funding_landscape("Congo (Democratic Republic)", "hiv", 2010, 2016, FALSE)
+drc_hiv_landscape_10_16 <- funding_landscape("DRC", "hiv", 2010, 2016, FALSE)
 ggsave(paste0(cod_save, "/funding_landscape_hiv.png"), plot = drc_hiv_landscape_10_16, height=6, width=14)
 ggsave(paste0(cod_save, "/funding_landscape_hiv.pdf"), plot = drc_hiv_landscape_10_16, height=6, width=14)
 
 #DRC TB Funding Landscape 
-drc_tb_landscape_10_16 <- funding_landscape("Congo (Democratic Republic)", "tb", 2010, 2016, FALSE)
+drc_tb_landscape_10_16 <- funding_landscape("DRC", "tb", 2010, 2016, FALSE)
 ggsave(paste0(cod_save, "/funding_landscape_tb.png"), plot = drc_tb_landscape_10_16, height=6, width=14)
 ggsave(paste0(cod_save, "/funding_landscape_tb.pdf"), plot = drc_tb_landscape_10_16, height=6, width=14)
 
@@ -92,15 +92,15 @@ ggsave(paste0(gtm_save, "/module_categories_mal.pdf"), plot = gtm_mal_modules_10
 #   DRC
 # ----------
 
-cod_hiv_modules_10_20 <- modules_over_time("Congo (Democratic Republic)", "hiv", 2010, 2020)
+cod_hiv_modules_10_20 <- modules_over_time("DRC", "hiv", 2010, 2020)
 ggsave(paste0(cod_save, "/module_categories_hiv.png"), plot = cod_hiv_modules_10_20, height=6, width=14)
 ggsave(paste0(cod_save, "/module_categories_hiv.pdf"), plot = cod_hiv_modules_10_20, height=6, width=14)
 
-cod_tb_modules_10_20 <- modules_over_time("Congo (Democratic Republic)", "tb", 2010, 2020)
+cod_tb_modules_10_20 <- modules_over_time("DRC", "tb", 2010, 2020)
 ggsave(paste0(cod_save, "/module_categories_tb.png"), plot = cod_tb_modules_10_20, height=6, width=14)
 ggsave(paste0(cod_save, "/module_categories_tb.pdf"), plot = cod_tb_modules_10_20, height=6, width=14)
 
-cod_mal_modules_10_20 <- modules_over_time("Congo (Democratic Republic)", "malaria", 2010, 2020)
+cod_mal_modules_10_20 <- modules_over_time("DRC", "malaria", 2010, 2020)
 ggsave(paste0(cod_save, "/module_categories_mal.png"), plot = cod_mal_modules_10_20, height=6, width=14)
 ggsave(paste0(cod_save, "/module_categories_mal.pdf"), plot = cod_mal_modules_10_20, height=6, width=14)
 

@@ -10,19 +10,15 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
   plot_data = gf_budgets[country == country_name & disease == disease_name & (year >=start_year & year <=end_year),
                         .(country, disease, year, budget, gf_module)] #Use actual numbers. 
   
-  check_na_budgets <- plot_data[is.na(budget)] #We have NAs here - where are these coming from??? Back in the prep code???
-  #Budget really needs to be stored as numeric and non-applicable modules should never happen!
+  check_na_budgets <- plot_data[is.na(budget)] 
   stopifnot(nrow(check_na_budgets)==0)
-  
-  #Because not sure where these NAs are coming from, making all of them 0. Need to investigate further. 
-  plot_data[is.na(budget), budget:=0]
   
   map_mod_groups <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/category_codebook.csv")
   map_mod_groups = map_mod_groups[, .(gf_module, category)]
   map_mod_groups = map_mod_groups[!duplicated(map_mod_groups)]
   
   plot_data =  merge(plot_data, map_mod_groups, all.x = TRUE, by = "gf_module", allow.cartesian = TRUE)
-  plot_data[gf_module == "Performance Based Financing", category:="Other"]
+  #plot_data[gf_module == "Performance Based Financing", category:="Other"]
   plot_data[gf_module == "Unidentified", category:= "Other"]
   
   #Check that all categories merged correctly. 
@@ -88,7 +84,8 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
     geom_bar(position = "stack", stat = "identity") +
     theme_bw(base_size = 16) + theme(legend.title = element_blank()) +
     scale_y_continuous(labels = scales::dollar) + 
-    scale_fill_brewer(palette = "BuGn") +
+    scale_x_continuous(labels = seq(from = start_year, to = end_year, by = 2), breaks = seq(from = start_year, to = end_year, by = 2)) +
+    scale_fill_brewer(palette = "Accent") +
     labs(x = "Year", y = scale_label, title = paste0("Budget by module in ", country_name, ", for ", disease_label, " ", start_year, "-", end_year))
 
   #Turn on for a line graph 
@@ -161,8 +158,8 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
   }
   
   #Wrap text for expecially long labels
-  plot_data[financing_source == "UN Agencies, The World Bank, and regional development banks", 
-            financing_source:= "UN Agencies, The World Bank,\nand regional development banks"]
+  plot_data[financing_source == "UN agencies, The World Bank and other regional development banks", 
+            financing_source:= "UN agencies, The World Bank \nand other regional development banks"]
   
   #Order plot so global fund is on the bottom. 
   plot_data$financing_source <- as.factor(plot_data$financing_source)
@@ -175,7 +172,7 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
   #Generate plot 
   funding_landscape = ggplot(data = plot_data, aes(x = year, y = disbursement, fill = financing_source)) + 
     geom_ribbon(aes(ymin = 0, ymax = disbursement), position = "stack") + 
-    theme_bw(base_size = 16) + theme(legend.title = element_blank())+
+    theme_bw(base_size = 18) + theme(legend.title = element_blank())+
     scale_y_continuous(expand = c(0,0), breaks = seq(0, y_max, by = plot_ticks), labels = scales::dollar) +
     scale_x_continuous(expand = c(0,0))+
     scale_fill_brewer(palette = "RdYlBu") +

@@ -11,6 +11,7 @@
 # ---------------------------------------
 
 rm(list=ls())
+options(scipen=100)
 library(data.table)
 library(ggplot2)
 library(googlesheets)
@@ -35,11 +36,15 @@ uga_save <- "J:/Project/Evaluation/GF/impact_evaluation/uga/visualizations"
 #allRT <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv")
 
 fgh = fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv")
+#Change country factors so they look better
+fgh$country <- factor(fgh$country, c('Congo (Democratic Republic)', 'Guatemala', 'Uganda'), c('DRC', 'Guatemala', 'Uganda')) 
 fgh_actual = fgh[fin_data_type == "actual"]#Split FGH between actual numbers and model estimates. 
 fgh_estimates = fgh[fin_data_type != "actual"] 
 
 gf_budgets <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_budgets.csv")
 gf_budgets$budget <- as.numeric(gf_budgets$budget)
+#Change country factors so they look better
+gf_budgets$country <- factor(gf_budgets$country, c('Congo (Democratic Republic)', 'Guatemala', 'Uganda'), c('DRC', 'Guatemala', 'Uganda')) 
 
 #Grab SICOIN for Guatemala funding graph 
 sicoin <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
@@ -67,12 +72,12 @@ sicoin[, disbursement:=as.numeric(disbursement)]
 # `base.year` is 2018 in your case
 # `base.unit` is usd in your case
 
-sicoin_prepped <- currency_conversion(data = sicoin,
-                                  col.loc = 'loc_name',
-                                  col.currency.year = 'year',
-                                  currency = 'LCU',
-                                  col.value = c('budget', 'expenditure', 'disbursement'),
-                                  base.year = 2018, 
-                                  base.unit = 'USD', 
-                                  simplify = T,
-                                  converter.version = 3)
+# sicoin_prepped <- currency_conversion(data = sicoin,
+#                                   col.loc = 'loc_name',
+#                                   col.currency.year = 'year',
+#                                   currency = 'LCU',
+#                                   col.value = c('budget', 'expenditure', 'disbursement'),
+#                                   base.year = 2018, 
+#                                   base.unit = 'USD', 
+#                                   simplify = T,
+#                                   converter.version = 3)
