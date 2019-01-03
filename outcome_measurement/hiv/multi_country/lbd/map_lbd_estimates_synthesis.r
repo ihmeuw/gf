@@ -1,7 +1,9 @@
 # -----------------------------------------------------
+# Raster maps for the Uganda Annual Country Report
+# Caitlin O'Brien-Carelli, David Phillips, Audrey Batzel
+# 1/3/2019
 
 # -----------------------------------------------------
-
 
 # --------------------
 # Set up R
@@ -14,6 +16,7 @@ library(grid)
 library(gridExtra)
 library(rgdal)
 # --------------------
+
 # determine the most recent version of the raster map
 run_date = fread(paste0('/ihme/code/geospatial/jdv6/lbd_hiv/5_publications/africa_hiv_prev/run_dates.txt'))
 run_date = run_date[indicator == 'hiv_test' & group == 'final_results', run_date]
@@ -23,7 +26,7 @@ run_date = run_date[indicator == 'hiv_test' & group == 'final_results', run_date
 
 # data directory
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/lbd/')
+outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/lbd_prev')
 
 # input files
 timestamp = run_date
@@ -37,12 +40,17 @@ shapeFileCOD = paste0(outDir, '../../../mapping/cod/COD_adm3.shp')
 # shapefile of lakes
 shapeFileLakes = paste0(j, '/WORK/11_geospatial/06_original shapefiles/GLWD_lakes/glwd_1.shp')
 
+# set the year you want to map
+y = 2010
+y1 = 2014
+y2 = 2017
+  
 # specify band to get a specific year of data
 # band 1=2000, band 17=2016.... so for 2015 band=16 and for 2010 band=11
-y = 2001
-
-band_to_year = data.table(band= c(1:18), year= c(2000:2018))
+band_to_year = data.table(band= c(1:19), year= c(2000:2018))
 band = band_to_year[year==y, band]
+band1 = band_to_year[year==y1, band]
+band2 = band_to_year[year==y2, band]
 
 # output file
 graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', y, '_new.pdf')
@@ -56,32 +64,47 @@ mapUGA = shapefile(shapeFileUGA)
 mapCOD = shapefile(shapeFileCOD)
 
 # load raster data
-rasterData = raster(inFile, band=band)
+rasterData1 = raster(inFile, band=band)
+rasterData2 = raster(inFile, band=band1)
+rasterData3 = raster(inFile, band=band2)
 
-#--------------# use this in order to get a rate of change between the two years; comment out if not using #------------------
-graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', "percent_change_2010to2015", '.pdf')
-
+#-----------------------
 # load the ground cover data
 lakes = shapefile(shapeFileLakes)
 
 # mask the bodies of water
-rasterData = mask(rasterData, lakes, inverse=TRUE)
+rasterData1 = mask(rasterData1, lakes, inverse=TRUE)
+rasterData2 = mask(rasterData2, lakes, inverse=TRUE)
+rasterData3 = mask(rasterData3, lakes, inverse=TRUE)
 
 # crop to the two countries
-rasterDataUGA = crop(rasterData, extent(mapUGA))
-rasterDataUGA = mask(rasterDataUGA, mapUGA)        
-rasterDataCOD = crop(rasterData, extent(mapCOD))
-rasterDataCOD = mask(rasterDataCOD, mapCOD)        
+rasterDataUGA1 = crop(rasterData1, extent(mapUGA))
+rasterDataUGA1 = mask(rasterDataUGA1, mapUGA)    
+
+rasterDataUGA2 = crop(rasterData2, extent(mapUGA))
+rasterDataUGA2 = mask(rasterDataUGA2, mapUGA)    
+
+rasterDataUGA3 = crop(rasterData3, extent(mapUGA))
+rasterDataUGA3 = mask(rasterDataUGA3, mapUGA)    
 
 # convert to data tables
-dataUGA = data.table(as.data.frame(rasterDataUGA, xy=TRUE))
-dataCOD = data.table(as.data.frame(rasterDataCOD, xy=TRUE))
+dataUGA1 = data.table(as.data.frame(rasterDataUGA1, xy=TRUE))
+dataUGA2 = data.table(as.data.frame(rasterDataUGA2, xy=TRUE))
+dataUGA3 = data.table(as.data.frame(rasterDataUGA3, xy=TRUE))
+
+# add years to facet wrap
+dataUGA1[ ,year:=2010]
+dataUGA2[ ,year:=2014]
+dataUGA3[ ,year:=2017]
+
+# rbind the bands together
+dataUGA = rbind(dataUGA1, dataUGA2, dataUGA3)
+
+# import shape file
 shapeDataUGA = data.table(fortify(mapUGA))
-shapeDataCOD = data.table(fortify(mapCOD))
 
 # rename
-setnames(dataUGA, c('x','y','prev'))
-setnames(dataCOD, c('x','y','prev'))
+setnames(dataUGA, c('x','y','prev', 'year'))
 # ----------------------------------------------------------------
 
 # ----------------------------------------------------------
@@ -93,26 +116,44 @@ border = 'grey65'
 breaks = c(4, 8, 12)
   
 # legend limits so both countries are on same scale
-lims = range(c(dataUGA$prev, dataCOD$prev), na.rm=TRUE)*100
+lims = range(dataUGA$prev, na.rm=TRUE)*100
 # ----------------------------------------------------------
-
 
 # -------------------------------------------------------------------------------
 # Graph
 
+pdf(paste0(outDir, '/raster_facet.pdf'), height=7, width=12)
+
 # store maps
  ggplot(dataUGA, aes(y=y, x=x, fill=prev*100)) + 
 	geom_tile() + 
-	geom_path(data=shapeDataUGA, aes(x=long, y=lat, group=group)
-		, color=border, size=.05, inherit.aes=FALSE) + 
-	scale_fill_gradientn('PLHIV %', colors=cols1, 
-		na.value='white') + 
+	geom_path(data=shapeDataUGA, aes(x=long, y=lat, group=group),
+	       color=border, size=.05, inherit.aes=FALSE) + 
+	scale_fill_gradientn('HIV Prevalence (%)', colors=cols1, 
+		na.value='white', breaks=breaks) + 
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
-	labs(title='Uganda') + 
 	theme_minimal(base_size=16) + 
-	theme(plot.title=element_text(hjust=.5)) 
+  facet_wrap(~year) +
+	theme(plot.title=element_text(hjust=.5),
+	      strip.text.x = element_text(size=20)) 
+
+dev.off()
+
+#------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #-------------
