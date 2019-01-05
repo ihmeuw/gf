@@ -32,6 +32,8 @@ prev_file = "map_pf_prevalence_mean_1y_"
 file_ending = "_00_00.tif"
 
 out_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/MAP_natl_data/"
+export_tables_dir = "J:/Project/Evaluation/GF/results_chains/cod/malaria/prepped_data/data_tables_for_figures/"
+
 outFile = "MAP_natl_data_2010to2017.rds"
 # --------------------------------------------------
 
@@ -168,11 +170,56 @@ for (y in 2000:2017){
 
 # save data
 saveRDS(results, paste0(out_dir, outFile))
+results <- readRDS(paste0(out_dir, outFile))
+saveRDS(results, paste0(export_tables_dir, "MAP_results_from_raster_aggregation.rds"))
+# --------------------------------------------------
+
+# --------------------------------------------------
+# use data from country profile csvs instead:
+# --------------------------------------------------
+interventions <- read.csv(paste0(out_dir, "interventions_coverage.csv"))
+interventions <- as.data.table(interventions)
+interventions <- melt.data.table(interventions, id.vars = 'Year', variable.name = "indicator")
+setnames(interventions, "Year", "year")
+interventions[, value := value * 100]
+
+saveRDS(interventions, paste0(export_tables_dir, "MAP_countryProfile_interventionCoverage.rds"))
+interventions <- readRDS(paste0(export_tables_dir, "MAP_countryProfileData_interventionCoverage.rds"))
+facet_names <- c(
+  `ITN.coverage` = "ITN coverage",
+  `IRS.coverage` = "IRS coverage",
+  `ACT.coverage` = "ACT coverage" )
+
+interventions$indicator = factor(interventions$indicator, levels=c('ACT.coverage', 'ITN.coverage'))
+
+g <- ggplot(interventions[value != "0" & indicator != "IRS.coverage"], aes(x=year, y= value, color = indicator)) + 
+  theme_bw() + geom_point(size = 2 ) + geom_line(size = 1) +
+  ggtitle(paste0("Modelled intervention coverage estimates")) +
+  ylab("Percent coverage") + xlab("Year") + labs(caption = "Source: Malaria Atlas Project\nNote on units: ITN coverage shows the percentage of people who slept under an ITN on any given night\nACT coverage shows shows the percentage of cases of fever in under-5 year olds that were treated with ACT.") +
+  theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_blank(), 
+        legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=11)) +
+  facet_wrap( ~indicator, scales = "free",  labeller = as_labeller(facet_names)) +
+  scale_y_continuous( label= scales :: comma, limits= c(0, NA) ) + guides(color=FALSE)+ theme_bw( base_size = 22)
+print(g)
+
+out_dir_offJ = "C:/Users/abatzel/Desktop/malaria_results_chain_copy/added_vis_off_J/" 
+pdf( paste0(out_dir_offJ, "MAP_interventionCoverage_edited.pdf"), height = 9, width = 15)
+print(g)
+dev.off()
+
+incidence <- read.csv(paste0(out_dir, "pf_inc_rate.csv"))
+incidence <- as.data.table(incidence)
+incidence <- incidence[, .(Year, Mean.estimate)]
+names(incidence) <- c("year", "incidence_per1k")
 # --------------------------------------------------
 
 # --------------------------------------------------
 # graph results
 # --------------------------------------------------
+results <- readRDS(paste0(out_dir, outFile))
+
+results <- merge(results, incidence, by= "year", all = TRUE)
+setnames(results, "incidence_per1k", "incidence_per1k_2to10yrsOld")
 
 results_long <- melt.data.table(results, id.vars= "year", variable.name = "indicator")
 
@@ -186,14 +233,23 @@ g <- ggplot(results_long[ indicator %in% c("act_coverage_under5", "itn_coverage"
   scale_y_continuous( label= scales :: comma, limits= c(0, NA) ) + guides(color=FALSE)
 print(g)
 
-g <- ggplot(results_long[ indicator %in% c("incidence_per100k", "prevalence")], aes(x=year,  y= value, color = indicator)) + 
-  theme_bw() + geom_point() + geom_line() +
+facet_names <- c(
+  `incidence_per1k` = "Incidence (per 1,000 people)",
+  `prevalence` = "Prevalence (in millions)")
+
+results_long[ indicator =="incidence_per100k", value := value/100] # note now incidence per 100k is actually incidence per 1k
+results_long[ indicator == "incidence_per100k", indicator:= "incidence_per1k"]
+results_long[ indicator =="prevalence", value := value/1000000]
+
+g <- ggplot(results_long[ indicator %in% c("incidence_per1k", "prevalence")], aes(x=year,  y= value, color = indicator)) + 
+  theme_bw() + geom_point(size =1) + geom_line(size=1) +
   ggtitle(paste0("Incidence and prevalence of Plasmodium falciparum over time in DRC")) +
-  ylab(" ? ") + xlab("Year") + labs(caption = "Source: Malaria Atlas Project") +
+  ylab("") + xlab("Year") + labs(caption = "Source: Malaria Atlas Project") +
   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_blank(), 
-        legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14)) +
-  scale_y_continuous( label= scales :: comma, limits= c(0, NA) ) +
-  facet_wrap( ~indicator, scales = "free_y") + guides(color=FALSE)
+        legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14),
+        strip.text = element_text(size=14)) +
+  scale_y_continuous( label= scales :: comma ) +
+  facet_wrap( ~indicator, scales = "free_y",labeller = as_labeller(facet_names)) + guides(color=FALSE)
 print(g)
 
 # --------------------------------------------------
