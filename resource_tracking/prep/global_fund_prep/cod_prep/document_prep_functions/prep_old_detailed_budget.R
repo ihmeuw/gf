@@ -14,24 +14,20 @@ prep_old_detailed_budget = function(dir, inFile, sheet_name, start_date,
                                 qtr_num, disease, period, lang, grant, loc_id, source, recipient){
   
   # dir = file_dir
-  # inFile = "official_budgets/10Jul12_Final  Budget SSF_ ZAR-H-CORDAID.xlsm"
-  # sheet_name = "Budget détaillé - Année 4"
-  # start_date = "2013-01-01"
-  # qtr_num = 4
-  # disease = "hiv"
-  # period = 90
-  # lang = "fr"
-  # grant = "COD-H-CORDAID"
-  # loc_id = "cod"
-  # source = "old_detailed"
-  
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # qtr_num = file_list$qtr_number[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # lang = file_list$language[i]
+  # grant = file_list$grant[i]
+  # source = file_list$data_source[i]
+  #loc_id = loc_name
   
   ##read the data: 
   gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
   sheet_name = fix_diacritics(sheet_name)
-  str_replace(start_date, "\\\\", "")
-  start_date = substring(start_date, 2, 11)
-  start_date = as.Date(start_date)
   
   gf_data <- gf_data[,-c(1:2)]
   if(sheet_name=="Budget detaille - Annee 3."){
@@ -88,6 +84,7 @@ prep_old_detailed_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset$grant_number <- grant
   budget_dataset$lang <- lang
   budget_dataset$data_source <- source
+  budget_dataset$year <- year(budget_dataset$start_date)
   return(budget_dataset)
   
 }

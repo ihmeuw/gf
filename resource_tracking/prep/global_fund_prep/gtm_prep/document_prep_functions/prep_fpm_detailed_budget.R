@@ -22,15 +22,15 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   
   # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/grants/active/GTM-H-INCAP/budgets/'
   # dir = file_dir
-  # inFile = "06 FR100-GTM-H_DB_INCAP_05feb2018.xlsx"
-  # sheet_name = "Detailed Budget"
-  # start_date = "2018-10-01"
-  # qtr_num = 9
-  # period = 90
-  # disease = "hiv"
-  # lang = "esp"
-  # grant_name = "GTM-H-INCAP"
-  # recipient_name = "INCAP"
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # qtr_num = file_list$qtr_number[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # lang = file_list$language[i]
+  # grant_name = file_list$grant[i]
+  # recipient_name = file_list$primary_recipient[i]
 
   
   ##first determine if budget is in spanish or english
@@ -94,7 +94,8 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
       gf_data <- gf_data[-c(1:2),]
       colnames(gf_data) <- as.character(gf_data[1,])
       gf_data <- gf_data[-1,]
-      }
+    }
+  }
   
   setnames(gf_data, fix_diacritics(names(gf_data)))
   ##only get the columns that we want
@@ -148,13 +149,15 @@ prep_fpm_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   kDT = data.table(qtr_num = names(dates), value = TRUE, start_date = unname(dates))
   budget_dataset <-gf_data1[kDT, on=.(qtr_num), start_date := i.start_date ]
   budget_dataset$qtr_num <- NULL
-  }
   budget_dataset$grant_number <- grant_name
   budget_dataset$period <- period
   budget_dataset$disease <- disease
   budget_dataset$expenditure <- 0 
   budget_dataset$lang <- lang
   budget_dataset$loc_id <- NULL
+  
+  #Remove rows with NA for budget at this point, because they were part of a template. 
+  budget_dataset = budget_dataset[!is.na(budget)]
 
   return(budget_dataset)  
 }

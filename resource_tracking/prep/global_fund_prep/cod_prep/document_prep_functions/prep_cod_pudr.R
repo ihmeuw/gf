@@ -84,9 +84,9 @@ prep_pudr_cod = function(dir, inFile, sheet_name, start_date, disease,
   budget_dataset$disease <- disease
   budget_dataset$cost_category <- "all" ## change if we ever get more detailed PUDR info
   budget_dataset$grant_number <- grant
-  budget_dataset$year <- year(budget_dataset$start_date)
   budget_dataset$loc_name <- loc_name
   budget_dataset$lang <- lang
+  budget_dataset$year <- year(start_date)
   
   # return prepped data
   return(budget_dataset)

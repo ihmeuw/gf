@@ -63,6 +63,12 @@ correct_modules_interventions <- function(resource_database){
   #EKL 12/18/18 "UGD-708-G08-M_PUDR 30Jun14.xls"
   resource_database[module == "pleaseselect", module:= 'all']
   
+  #EKL 12/21/18 UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx
+  resource_database[module == "tbcareandprevention" & disease == "hiv", disease:="tb"]
+  
+  #EKL 12/31/18  "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx"  "UGA-S-TASO_Revised Budget_31 May 2017.xlsx"
+  resource_database[module == 'removinglegalbarrierstoaccess' & intervention == 'policyadvocacyonlegalrights' & disease == 'hss', disease:='hiv']
+  
   
   return(resource_database) 
 }
