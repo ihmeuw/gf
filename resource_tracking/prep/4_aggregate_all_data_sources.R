@@ -13,12 +13,24 @@
 # DATE: Last updated December 2018. 
 # ----------------------------------------------
 
+
+#---------------------------------------
+#To do list for this code: 
+# - David wants to prioritize GOS over FPM where we have it (through 2017). 
+
+
+
+#---------------------------------------
+
 rm(list = ls())
+library(data.table)
 cod_prepped <- "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/"
 gtm_prepped <- "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/"
 uga_prepped <- "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/"
 
 final_write <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/"
+
+
 
 # --------------------------------------------
 # Load the prepped GOS data - to be used for both 
@@ -51,24 +63,78 @@ final_budgets_cod$budget <- as.numeric(final_budgets_cod$budget)
 final_budgets_gtm <- read.csv(paste0(gtm_prepped, "final_budgets.csv"))
 final_budgets_gtm$budget <- as.numeric(final_budgets_gtm$budget)
 
-final_budgets_uga <- read.csv(paste0(uga_prepped, "final_budgets.csv"))
+final_budgets_uga = read.csv(paste0(uga_prepped, "final_budgets.csv"))
 final_budgets_uga$budget <- as.numeric(final_budgets_uga$budget)
 
-final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga)
-gos_budgets <- gos_data[budget != 0 & !is.na(budget)]
-final_budgets <- rbind(final_budgets, gos_budgets, fill = TRUE) 
-setDT(final_budgets)
+#-------------------------------------------
+# Hacky fix for duplicate budget quarters -- 
+# This should be removed and handled in file prep process!! 
+# ------------------------------------------
+
+setDT(final_budgets_cod)
+check_qtr_cod <- final_budgets_cod[, .(start_date, grant_number, fileName)]
+check_qtr_cod <- unique(check_qtr_cod) #Remove duplicate lines in module, intervention, etc. 
+#Make sure there are no duplicates in start date and grant number that are coming from different files. 
+check_qtr_cod <- check_qtr_cod[duplicated(check_qtr_cod, by = c("start_date", "grant_number")), ]
+stopifnot(nrow(check_qtr_cod)==0)
+
+setDT(final_budgets_gtm)
+check_qtr_gtm <- final_budgets_gtm[, .(start_date, grant_number, fileName)]
+check_qtr_gtm <- unique(check_qtr_gtm) #Remove duplicate lines in module, intervention, etc. 
+#Make sure there are no duplicates in start date and grant number that are coming from different files. 
+check_qtr_gtm <- check_qtr_gtm[duplicated(check_qtr_gtm, by = c("start_date", "grant_number")), ]
+stopifnot(nrow(check_qtr_gtm)==0)
+
+setDT(final_budgets_uga)
+check_qtr_uga <- final_budgets_uga[, .(start_date, grant_number, fileName)]
+check_qtr_uga <- unique(check_qtr_uga) #Remove duplicate lines in module, intervention, etc. 
+#Make sure there are no duplicates in start date and grant number that are coming from different files. 
+check_qtr_uga <- check_qtr_uga[duplicated(check_qtr_uga, by = c("start_date", "grant_number")), ]
+stopifnot(nrow(check_qtr_uga)==0)
+
+#Bind budgets together
+final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga) #EMILY BUDGET NUMBERS OK TO HERE 
+gos_budgets <- gos_data[!is.na(budget)]
+final_budgets <- rbind(final_budgets, gos_budgets, fill = TRUE) #EMILY BUDGET NUMBERS OK TO HERE 
+
+#Manually edit grant numbers in GOS to match our labeling - EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE. 
+final_budgets[grant_number == 'GUA-M-MSPAS', grant_number:='GTM-M-MSPAS']
+final_budgets[grant_number == 'GTM-T-UPCOMING', grant_number:='GTM-T-MSPAS']
+final_budgets[grant_number == 'GTM-M-UPCOMING', grant_number:='GTM-M-MSPAS']
+final_budgets[grant_number == 'UGD-708-G13-H', grant_number:='UGA-708-G13-H']
+
+
+#Check that all grant numbers in GF budgets correlate to GOS grant numbers
+fpm_grants = unique(final_budgets[data_source=='fpm', .(grant_number)])[order(grant_number)]
+gos_grants = unique(final_budgets[data_source == 'gos', .(grant_number)])[order(grant_number)]
+for(i in 1:nrow(fpm_grants)){
+  if (!fpm_grants$grant_number[i] %in% gos_grants$grant_number){
+    print("Grant number may not merge correctly: check grant labeling")
+    print(paste0(i, " ", fpm_grants$grant_number[i]))
+  }
+}
+
+#Where we have the same grant information in FPM and GOS, prioritize GOS for complete years. 
+gos_grant_list <- unique(gos_data[, .(grant_number, year)])
+for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant number and year. 
+  if (i == 1){
+    gos_prioritized_budgets = final_budgets[!(data_source == 'fpm' & grant_number == as.vector(gos_grant_list$grant_number[i]) & year == as.vector(gos_grant_list$year[i]))]
+  } else {
+    gos_prioritized_budgets = gos_prioritized_budgets[!(data_source == 'fpm' & grant_number == as.vector(gos_grant_list$grant_number[i]) & year == as.vector(gos_grant_list$year[i]))]
+  }
+}
+
 
 # Verify data 
-na_year <- final_budgets[is.na(year)]
-na_budget <- final_budgets[is.na(budget)]
+na_year <- gos_prioritized_budgets[is.na(year)]
+na_budget <- gos_prioritized_budgets[is.na(budget)]
 stopifnot(nrow(na_year)==0 & nrow(na_budget)==0)
 
 #Generate variables 
 #final_budgets[, end_date:=start_date + period-1]
 
 # Write data 
-write.csv(final_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
+write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
 
 #----------------------------------
 # 2. FINAL GF EXPENDITURES
@@ -83,10 +149,59 @@ final_expenditures_gtm$expenditure <- as.numeric(final_expenditures_gtm$expendit
 final_expenditures_uga <- read.csv(paste0(uga_prepped, "final_expenditures.csv"))
 final_expenditures_uga$expenditure <- as.numeric(final_expenditures_uga$expenditure)
 
-final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga)
-gos_expenditures <- gos_data[expenditure != 0 & !is.na(expenditure)]
+#-------------------------------------------
+# Hacky fix for duplicate budget quarters -- 
+# This should be removed and handled in file prep process!! 
+# ------------------------------------------
+
+setDT(final_expenditures_cod)
+check_qtr_cod <- final_expenditures_cod[, .(start_date, grant_number, fileName)]
+check_qtr_cod <- unique(check_qtr_cod) #Remove duplicate lines in module, intervention, etc. 
+#Make sure there are no duplicates in start date and grant number that are coming from different files. 
+check_qtr_cod <- check_qtr_cod[duplicated(check_qtr_cod, by = c("start_date", "grant_number")), ]
+stopifnot(nrow(check_qtr_cod)==0)
+
+setDT(final_expenditures_gtm)
+check_qtr_gtm <- final_expenditures_gtm[, .(start_date, grant_number, fileName)]
+check_qtr_gtm <- unique(check_qtr_gtm) #Remove duplicate lines in module, intervention, etc. 
+#Make sure there are no duplicates in start date and grant number that are coming from different files. 
+check_qtr_gtm <- check_qtr_gtm[duplicated(check_qtr_gtm, by = c("start_date", "grant_number")), ]
+stopifnot(nrow(check_qtr_gtm)==0)
+
+setDT(final_expenditures_uga)
+check_qtr_uga <- final_expenditures_uga[, .(start_date, grant_number, fileName)]
+check_qtr_uga <- unique(check_qtr_uga) #Remove duplicate lines in module, intervention, etc. 
+#Make sure there are no duplicates in start date and grant number that are coming from different files. 
+check_qtr_uga <- check_qtr_uga[duplicated(check_qtr_uga, by = c("start_date", "grant_number")), ]
+stopifnot(nrow(check_qtr_uga)==0)
+
+#Bind expenditures together
+final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga) 
+gos_expenditures <- gos_data[!is.na(expenditure)]
 final_expenditures <- rbind(final_expenditures, gos_expenditures, fill = TRUE) 
-setDT(final_expenditures)
+
+#Correct grant labels so they merge correctly #EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE 
+final_expenditures[grant_number == 'GUA-M-MSPAS', grant_number:='GTM-M-MSPAS']
+
+#Check that all grant numbers in GF expenditures correlate to GOS grant numbers
+pudr_grants = unique(final_expenditures[data_source=='pudr', .(grant_number)])[order(grant_number)]
+gos_grants = unique(final_expenditures[data_source == 'gos', .(grant_number)])[order(grant_number)]
+for(i in 1:nrow(pudr_grants)){
+  if (!pudr_grants$grant_number[i] %in% gos_grants$grant_number){
+    print("Grant number may not merge correctly: check grant labeling")
+    print(paste0(i, " ", pudr_grants$grant_number[i]))
+  }
+}
+
+#Where we have the same grant information in FPM and GOS, prioritize GOS for complete years. 
+gos_grant_list <- unique(gos_data[, .(grant_number, year)])
+for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant number and year. 
+  if (i == 1){
+    gos_prioritized_expenditures = final_expenditures[!(data_source == 'pudr' & grant_number == as.vector(gos_grant_list$grant_number[i]) & year == as.vector(gos_grant_list$year[i]))]
+  } else {
+    gos_prioritized_expenditures = gos_prioritized_expenditures[!(data_source == 'pudr' & grant_number == as.vector(gos_grant_list$grant_number[i]) & year == as.vector(gos_grant_list$year[i]))]
+  }
+}
 
 # Verify data 
 na_year <- final_expenditures[is.na(year)]

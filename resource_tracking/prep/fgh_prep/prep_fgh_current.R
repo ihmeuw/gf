@@ -30,7 +30,7 @@ get_dah_source_channel <- function(channel){ #EKL do we like these classificatio
   } else if(channel == "NGO" | channel == "INTLNGO" | channel == "US_FOUND" | channel == "BMGF"){
     x <- "NGOs and foundations"
   } else if(channel == "AfDB" | channel == "WB_IDA" | channel == "WB_IBRD" | channel == "AsDB" | channel == "IDB" | channel == "UNITAID"){
-    x <- "UN Agencies, The World Bank, and regional development banks"
+    x <- "UN agencies, The World Bank and other regional development banks"
   } else if (channel == "GAVI"){
     x <- "GAVI"
   }

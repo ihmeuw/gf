@@ -13,9 +13,17 @@ source(paste0(country_code_dir, "read_filelist_", country, ".R"))
 resource_database <- read_fileList()
 original_db <- copy(resource_database)
 
+# Make sure there are no overlapping quarters for the same grant (duplicate files. )
+fpm_overlap <- duplicated(resource_database[data_source == "fpm" & file_iteration == "final", .(grant_number, start_date)])
+pudr_overlap <- duplicated(resource_database[data_source == "pudr" & file_iteration == "final", .(grant_number, start_date)])
+stopifnot(nrow(fpm_overlap)==0 & nrow(pudr_overlap)==0)
+
+rm(fpm_overlap, pudr_overlap)
+
 #Make sure all budget and expenditure variables are numeric. 
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
+resource_database$disbursement <- as.numeric(resource_database$disbursement)
 
 #Drop any rows that have 0 or NA for budget and expenditure
 resource_database = resource_database[!((budget==0| is.na(budget)) & (expenditure == 0 | is.na(expenditure)))]
@@ -34,7 +42,7 @@ print(paste0(nrow(dups), " duplicates found in database; values will be summed")
 byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'expenditure')]
 resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expenditure=sum(na.omit(expenditure))), by=byVars]
 
-#--------------------------------------------------------
+#-------------------------------------------------------
 # Prep data for merge 
 #-------------------------------------------------------
 #Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
@@ -66,7 +74,7 @@ rt_concat <- paste0(resource_database$module, resource_database$intervention)
 unmapped_mods <- resource_database[!rt_concat%in%gf_concat]
 
 if(nrow(unmapped_mods)>0){
-  print(unique(unmapped_mods[, c("module", "intervention"), with= FALSE]))
+  print(unique(unmapped_mods[, c("module", "intervention", "disease"), with= FALSE]))
   print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
   stop("You have unmapped original modules/interventions!")
 }
@@ -93,8 +101,9 @@ if(nrow(dropped_mods) >0){
   stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
 }
 
+#EMILY BUDGET NUMBERS VERIFIED TO HERE 1/2/19 
 #-------------------------------------------------------
-# Split HIV/TB combined grants  #EKL want to move this function to AFTER the mapping process. 
+# Split HIV/TB combined grants  
 # ------------------------------------------------------
 
 tb_mods <- c('Multidrug-resistant TB', 'TB care and prevention')
@@ -158,9 +167,17 @@ desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budge
                   "orig_intervention", "orig_module", "period", "prefix", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
 stopifnot(sort(colnames(mapped_country_data)) == desired_cols)   
 
+#------------------------------------------------------------
+# Remove any special characters so .csv will store correctly 
+#------------------------------------------------------------
+mapped_country_data$sda_activity <- str_replace_all(mapped_country_data$sda_activity, "[^[:alnum:]]", " ")
+mapped_country_data$orig_module <- str_replace_all(mapped_country_data$orig_module, "[^[:alnum:]]", " ")
+mapped_country_data$orig_intervention <- str_replace_all(mapped_country_data$orig_intervention, "[^[:alnum:]]", " ")
+
 # ----------------------------------------------
 # Write the prepped data as .csvs
 # ----------------------------------------------
+
 
 final_budgets <- mapped_country_data[file_iteration == "final" & data_source == "fpm"]
 final_expenditures <- mapped_country_data[file_iteration == "final" & data_source == "pudr"]
@@ -168,3 +185,6 @@ final_expenditures <- mapped_country_data[file_iteration == "final" & data_sourc
 write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), fileEncoding = "latin1", row.names = FALSE)
 write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), fileEncoding = "latin1", row.names = FALSE)
 write.csv(mapped_country_data, paste0(export_dir, "budget_iterations.csv"), fileEncoding = "latin1", row.names = FALSE)
+
+# alternate RDS file
+saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
