@@ -33,6 +33,14 @@ dt[ ,month:=month(date)]
 # ARV descriptives in the text
 art = dt[art_site==TRUE & (year==2017 | year==2018)]
 
+
+x = dt[ ,.(test_kits=sum(test_kits, na.rm=T)), by=.(year, district)]
+x = x[year==2017 | year==2018]
+x = dcast(x, district~year)
+setnames(x, (c('district', 'y2017', 'y2018')))
+
+x[ ,roc:=(y2018 - y2017)]
+
 #---------------------------------------------
 # facilities with 0 weeks out of stock
 
