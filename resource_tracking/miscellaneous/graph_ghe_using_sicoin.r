@@ -27,9 +27,16 @@ inFile = paste0(dir, 'mapping/total_resource_tracking_data.csv')
 # -----------------------------------------------------------------------
 # Load/prep data - subset to government health expenditure in SICOIN data 
 # -----------------------------------------------------------------------
-allData = fread(inFile)
-sicoin = allData[data_source == 'sicoin']
-sicoin = sicoin[financing_source == 'ghe']
+#Grab SICOIN for Guatemala funding graph 
+sicoin <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
+                              ,fileEncoding="latin1"))
+# drop first/last year of the series because they appear to be incomplete
+#sicoin = sicoin[year!=min(year) & year!=max(year)]
+
+#Convert SICOIN financial data into numeric 
+sicoin[, budget:=as.numeric(budget)]
+sicoin[, expenditure:=as.numeric(expenditure)]
+sicoin[, disbursement:=as.numeric(disbursement)]
 
 #Extrapolate 2018 budget numbers from first 6 months 
 sicoin_2018 <- sicoin[year == 2018]
@@ -45,13 +52,18 @@ sicoin = merge(sicoin, sicoin_2018, by=c('disease','year'), all.x=TRUE)
 sicoin[year==2018, budget:=extrapolated_budget]
 
 #-------------------------
+# Format graph in millions 
+# ------------------------
+sicoin[, budget:=budget/1000000]
+
+#-------------------------
 # Make the graph 
 #-------------------------
 
 graph = ggplot(data = sicoin, aes(x = year, y = budget, color = disease)) + geom_line(lwd = 3) + ggtitle("Government Health Expenditure by disease, using SICOIN data") + 
-  labs(x = "Year", y = "Budget", caption = "2018 numbers extrapolated based on first 6 months") + 
+  labs(x = "Year", y = "Budget (Millions USD)", caption = "2018 numbers extrapolated based on first 6 months") + 
   theme_bw(base_size = 18) + theme(legend.title = element_blank()) + scale_colour_discrete(labels = c("HIV", "Malaria", "TB")) + 
-  scale_y_continuous(breaks = seq(0,14000000,1000000), labels = dollar)
+  scale_y_continuous(breaks = seq(0,14,1), labels = scales::dollar)
 graph
 
 ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_using_sicoin_by_year.pdf", graph)
@@ -62,8 +74,15 @@ ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_using_
 #Can you do another graph as well showing what share of total program spend this represents?
 #------------------------------------------------------------------------------------------
 
-total_gtm <- allData[country == "Guatemala"]
-total_gtm <- total_gtm[, is_ghe:=ifelse(financing_source == "ghe", "Global Health Expenditure", "Other")]
+fgh = fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv")
+fgh_actual = fgh[fin_data_type == "actual"]#Split FGH between actual numbers and model estimates. 
+fgh_actual = fgh_actual[, .(year, budget, disease, financing_source)]
+sicoin <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
+                              ,fileEncoding="latin1"))
+sicoin_merge <- sicoin[financing_source == 'ghe', .(financing_source, year, budget, disease)]
+total_gtm <- rbind(sicoin_merge, fgh_actual)
+total_gtm <- total_gtm[, is_ghe:=ifelse(financing_source == "ghe", "Government Health Expenditure", "Other")]
+total_gtm$disease <- factor(total_gtm$disease, c('hiv', 'tb', 'malaria'), c('HIV', 'TB', 'Malaria'))
 
 #Option 1, not faceted by diease 
 plot_data <- total_gtm[, .(budget = sum(budget)), by = c("is_ghe", "year")]
@@ -97,9 +116,8 @@ plot_data = plot_data[, budget:=budget/1000000] #Scale budget down so we can gra
 
 graph = ggplot(data = plot_data, aes(year, budget)) + geom_bar(stat = "identity", aes(fill = is_ghe)) + 
   labs(x = "Year", y = "Budget, Millions USD") + 
-  theme_bw(base_size = 18) + theme(legend.position = "none") +
-  scale_y_continuous(breaks = seq(0, 50, 10)) + 
-  facet_wrap(vars(disease))
+  theme_bw(base_size = 18) + theme(legend.title = element_blank()) +
+  facet_wrap(vars(disease), scales = 'free_y')
 graph
 
 ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_percentage2.pdf", graph)
