@@ -8,16 +8,15 @@
 #
 modules_over_time = function(country_name, disease_name, start_year, end_year){
   plot_data = gf_budgets[country == country_name & disease == disease_name & (year >=start_year & year <=end_year),
-                        .(country, disease, year, budget, gf_module)] #Use actual numbers. 
+                        .(country, disease, year, budget, gf_module, gf_intervention, code)] #Use actual numbers. 
   
   check_na_budgets <- plot_data[is.na(budget)] 
   stopifnot(nrow(check_na_budgets)==0)
   
   map_mod_groups <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/category_codebook.csv")
-  map_mod_groups = map_mod_groups[, .(gf_module, category)]
-  map_mod_groups = map_mod_groups[!duplicated(map_mod_groups)]
+  map_mod_groups = map_mod_groups[, .(category, code)]
   
-  plot_data =  merge(plot_data, map_mod_groups, all.x = TRUE, by = "gf_module", allow.cartesian = TRUE)
+  plot_data =  merge(plot_data, map_mod_groups, all.x = TRUE, by = c("code"))
   #plot_data[gf_module == "Performance Based Financing", category:="Other"]
   plot_data[gf_module == "Unidentified", category:= "Other"]
   
@@ -78,6 +77,9 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
   } else if (disease_name == "malaria"){
     disease_label = "Malaria"
   }
+  
+  #Factor categories so 'Other' is on the bottom 
+  plot_data$category = factor(plot_data$category, c('RSSH', 'Program management', 'Treatment', 'Prevention', 'Other'))
   
   ##Turn on for a stacked bar graph 
   budget_over_time = ggplot(data = plot_data, aes(x = year, y = budget, fill = category)) +
