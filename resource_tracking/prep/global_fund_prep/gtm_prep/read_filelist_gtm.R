@@ -58,7 +58,7 @@ for(i in 1:length(file_list$file_name)){
   tmpData$primary_recipient <- file_list$primary_recipient[i]
   tmpData$secondary_recipient <- file_list$secondary_recipient[i]
   tmpData$file_iteration = file_list$file_iteration[i]
-  tmpData$year <- year(tmpData$start_date[i])
+  tmpData$year <- year(tmpData$start_date)
   if(i==1){
     resource_database = tmpData
   }
