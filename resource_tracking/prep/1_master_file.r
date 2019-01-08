@@ -38,7 +38,7 @@ country <- c("gtm") #Change to the country you want to update.
 source(paste0(code_dir, "shared_mapping_functions.R")) 
 
 #Global variables. 
-include_stops = TRUE #Set to true if you would like to see error messages in module mapping and budget verification steps. 
+include_stops = FALSE #Set to true if you would like to see error messages in module mapping and budget verification steps. 
 
 # ----------------------------------------------
 ## STEP 1: Verify module mapping framework 
@@ -78,13 +78,13 @@ include_stops = TRUE #Set to true if you would like to see error messages in mod
 # STEP 4: Aggregate country-level data 
 # ----------------------------------------------
 
-  #source(paste0(code_dir, "4_aggregate_all_data_sources.r"))
+  source(paste0(code_dir, "4_aggregate_all_data_sources.r"))
 
 # ----------------------------------------------
 # STEP 5: Verify budget numbers
 # ----------------------------------------------
 
-  #source(paste0(code_dir, "5_verify_budget_numbers.r")) 
+  source(paste0(code_dir, "5_verify_budget_numbers.r")) 
  
 # ----------------------------------------------
 # STEP 6: Upload to Basecamp

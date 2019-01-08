@@ -167,9 +167,12 @@ if (nrow(duplicates_coeff_one) != 0 & include_stops == TRUE){
 #--------------------------------------------------------------------------------
 # 2. Make sure you don't have any coefficients across unique 
 #   observations of module, intervention, and disease that sum to 
-#   greater than or less than 1 (budget shrinking or growing) ***EMILY KEEP WORKING HERE
+#   greater than or less than 1 (budget shrinking or growing) 
 #--------------------------------------------------------------------------------
+redistribution_map <- map[coefficient!=1]
+redistribution_map[, coeff_sum:=round(sum(coefficient), 1), by=keyVars]
 
+redistribution_error = redistribution_map[coeff_sum != 1.0]
 #--------------------------------------------------------------------------------
 # 3. Remove all cases where "na" or "all" was mapping to a specific code. ***EMILY KEEP WORKING HERE- CHECK IF CODE IS GOING TO 'UNSPECIFIED'. 
 #--------------------------------------------------------------------------------
@@ -209,8 +212,8 @@ allowableModules = c('gestiondeprogramas', 'gestiondeprogramme', 'gestiondessubv
 map_subset = map_subset[!module %in% allowableModules]
 
 #RSSH modules are allowed to exist in more than one disease 
-# map_subset[, prefix:=substr(code, 0, 1)]
-# map_subset = map_subset[!(prefix=='R')]
+map_subset[, prefix:=substr(code, 0, 1)]
+map_subset = map_subset[!(prefix=='R')]
 
 map_subset = map_subset[order(module, intervention)]
 
@@ -296,6 +299,6 @@ map[, prefix:=NULL]
 #    and code, they should have the same coefficient. 
 #     ***EMILY KEEP WORKING HERE. 
 #--------------------------------------------------------------------------------
-
+  write.csv(map,paste0(code_loc, "resource_tracking/map_raw_modules_interventions.csv"))
   return(map)
 }

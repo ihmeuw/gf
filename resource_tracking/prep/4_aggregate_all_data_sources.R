@@ -93,9 +93,9 @@ check_qtr_uga <- check_qtr_uga[duplicated(check_qtr_uga, by = c("start_date", "g
 stopifnot(nrow(check_qtr_uga)==0)
 
 #Bind budgets together
-final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga) #EMILY BUDGET NUMBERS OK TO HERE 
-gos_budgets <- gos_data[!is.na(budget)]
-final_budgets <- rbind(final_budgets, gos_budgets, fill = TRUE) #EMILY BUDGET NUMBERS OK TO HERE 
+final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga) 
+final_budgets$start_date <- as.Date(final_budgets$start_date, "%Y-%m-%d")
+final_budgets <- rbind(final_budgets, gos_budgets, fill = TRUE) 
 
 #Manually edit grant numbers in GOS to match our labeling - EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE. 
 final_budgets[grant_number == 'GUA-M-MSPAS', grant_number:='GTM-M-MSPAS']
@@ -177,8 +177,8 @@ stopifnot(nrow(check_qtr_uga)==0)
 
 #Bind expenditures together
 final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga) 
-gos_expenditures <- gos_data[!is.na(expenditure)]
-final_expenditures <- rbind(final_expenditures, gos_expenditures, fill = TRUE) 
+final_expenditures$start_date <- as.Date(final_expenditures$start_date, "%Y-%m-%d")
+final_expenditures <- rbind(final_expenditures, gos_data, fill = TRUE) 
 
 #Correct grant labels so they merge correctly #EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE 
 final_expenditures[grant_number == 'GUA-M-MSPAS', grant_number:='GTM-M-MSPAS']
@@ -205,8 +205,7 @@ for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant nu
 
 # Verify data 
 na_year <- final_expenditures[is.na(year)]
-na_expenditure <- final_expenditures[is.na(expenditure)]
-stopifnot(nrow(na_year)==0 & nrow(na_expenditure)==0)
+stopifnot(nrow(na_year)==0)
 
 #Generate variables 
 #final_expenditures[, end_date:=start_date + period-1]
@@ -217,7 +216,13 @@ write.csv(final_expenditures, paste0(final_write, "final_expenditures.csv"), row
 #----------------------------------
 # 3. GF FILE ITERATIONS
 #----------------------------------
+all_gf_cod <- fread("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_iterations.csv")
+all_gf_uga <- read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_iterations.csv") #Emily why are these two files having issues when you read with fread? Check diacritical marks. 
+all_gf_gtm <- read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_iterations.csv")
 
+all_gf_files <- rbind(all_gf_cod, all_gf_uga, all_gf_gtm)
+#Write data 
+write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
 
 #----------------------------------
 # 4. GOVERNMENT HEALTH EXPENDITURE
