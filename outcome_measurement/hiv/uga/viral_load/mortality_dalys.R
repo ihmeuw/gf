@@ -40,19 +40,21 @@ dt$measure = factor(dt$measure, c('Deaths' , 'DALYs (Disability-Adjusted Life Ye
 #-------------------------
 # create plot
 
-pdf(paste0(dir, '/deaths_dalys_graph.pdf'), height=6, width=11)
+pdf(paste0(dir, '/deaths_dalys_graph.pdf'), height=6, width=12)
 
 ggplot(dt[metric=='Number'], aes(x=year, y=val, color=factor(sex))) + 
   geom_point(size=0.9) + 
   geom_line() +
   facet_wrap(~measure, scales='free_y') +
   labs(x='Year', y='Count', color='Sex') +
-  theme(legend.title = element_text(size=18),
-        legend.text = element_text(size=16),
-        axis.text= element_text(size=14)) +
   scale_color_manual(values=tri_sex) +
   theme_bw() +
-  scale_y_continuous(labels = scales::comma)
+  theme(legend.text = element_text(size=16),
+        legend.title = element_text(size=18),
+        axis.title =  element_text(size=14),
+        axis.text = element_text(size=12),
+        strip.text.x = element_text(size=16)) +
+        scale_y_continuous(labels = scales::comma) 
 
 dev.off()
 

@@ -13,7 +13,6 @@ library(tibble)
 library(dplyr)
 library(RColorBrewer)
 library(maptools)
-library(plyr)
 library(data.table)
 
 # ----------------------
@@ -313,8 +312,9 @@ final = melt(final, id.vars=c('year', 'id', 'long', 'lat', 'order', 'hole',
                               'piece', 'group'))
 
 final$variable = factor(final$variable, c('no_stock_out', 'one_week_2_mos',
-                                          'two_4_mos', 'four_months'), c('No stock outs reported',
-                                                                         '1 week - 1 month ', '1+ - 2 months ', '2+ months'))
+                                          'two_4_mos', 'four_months'),
+                                           c('No stock outs reported',
+                                          '1 week - 1 month ', '1+ - 2 months ', '2+ months'))
 
 # ------------------------------------------------------
 # color palettes
@@ -339,40 +339,3 @@ single_red = '#bd0026'
 source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/arvs/arv_visuals_to_source.R')
 
 # ------------------------------------------------------
-
-
-# mean weeks stocked out 
-# number of weeks of stockout divided by art sites reporting 
-art_sites = dt[!is.na(arvs) & art_site==TRUE, .(art_sites=length(unique(facility))), by=.(year, id)]
-art_sites = merge(stockout, art_sites)
-art_sites[ , mean_weeks:=round((value/art_sites), 1)]
-arv_map_norm = merge(art_sites, coord_ann, by=c('id', 'year'), all.y=TRUE)
-
-
-
-art_sites
-
-
-
-
-# rates of change in facility-weeks per year
-stockout[ , year2:=paste0('n', year)]
-roc = dcast(data = stockout, id ~ year2)
-roc[ , change:=(n2018 - n2017)]
-roc_map = merge(coord, roc, by='id')
-
-# only districts with more stockouts in 2018 than 2017
-roc_map_alt = merge(coord, roc, by='id')
-roc_map_alt[change <=0, change:=NA]
-
-# percentage of weeks stocked out
-stock = dt[art_site==TRUE, .(weeks_out=sum(arvs, na.rm=T)), by=.(year, id)]
-dt[art_site==TRUE & !is.na(arvs), reported:=TRUE]
-stock_add = dt[art_site==TRUE , .(total_weeks=sum(reported, na.rm=T)), by=.(year, id)]
-stock = merge(stock, stock_add, by=c('year', 'id'))
-stock[ , percent_out:=round(100*(weeks_out/total_weeks), 1)]
-stock = merge(stock, coord_ann, by=c('id', 'year'))
-
-
-
-
