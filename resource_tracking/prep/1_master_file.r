@@ -34,7 +34,7 @@ code_loc = ifelse(Sys.info()[1]=='Windows','C:/Users/elineb/Documents/gf/','ihme
 user = "elineb" #Change to your username 
 code_dir = paste0(code_loc, "resource_tracking/prep/")
 combined_output_dir = paste0(j, "resource_tracking/multi_country/mapping")
-country <- c("gtm") #Change to the country you want to update. 
+country <- c("uga") #Change to the country you want to update. 
 source(paste0(code_dir, "shared_mapping_functions.R")) 
 
 #Global variables. 
@@ -73,7 +73,6 @@ include_stops = FALSE #Set to true if you would like to see error messages in mo
   
   source(paste0(code_dir, "3_prep_country_data.r"))
   
-
 # ----------------------------------------------
 # STEP 4: Aggregate country-level data 
 # ----------------------------------------------

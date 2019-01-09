@@ -128,7 +128,6 @@ map = map[!(module == 'beyondtb' & intervention == 'all' & prefix=='R')]
 map = map[!(module == 'programmanagement' & prefix=='R')]
 map = map[!(module == 'gestiondelasubvention' & prefix=='R')]
 map = map[!(module == 'gestiondesubvenciones' & prefix=='R')]
-map = map[!(module == 'financialmanagement' & prefix=='R')]
 map = map[!(module == 'gestiondeprogramas' & prefix=='R')]
 map = map[!(module == 'gestiondeprogramme' & prefix=='R')]
 map = map[!(module == 'gestiondeprogrammegestiondesubvention' & intervention == 'gestiondeprogrammegestiondesubvention' & prefix == 'R')]
@@ -255,7 +254,7 @@ if(nrow(check_prefix_ltd)>0 & include_stops == TRUE){
 
 #--------------------------------------------------------------------------------
 # 8. Add a check to verify all RSSH modules/interventions look like they belong there.
-#     ***EMILY KEEP WORKING HERE. 
+#     ***EMILY KEEP WORKING HERE. NEED TO ONLY FLAG PROGRAM MANAGEMENT AND PERFORMANCE-BASED FINANCING.
 #--------------------------------------------------------------------------------
 
 check_rssh <- map[substr(code, 0, 1) == 'R']
@@ -292,7 +291,7 @@ if(nrow(check_rssh)>0 & include_stops == TRUE){
   print(unique(check_rssh[!(module %in% problem_mods), .(module)]))
 }
 
-print(unique(check_rssh[module %in% problem_mods, .(module, intervention, code)])) #Need to check with David on these. 
+#print(unique(check_rssh[module %in% problem_mods, .(module, intervention, code)])) #Need to check with David on these. 
 map[, prefix:=NULL]
 #--------------------------------------------------------------------------------
 # 9. Add a check to verify that if observations have the same module, intervention, 

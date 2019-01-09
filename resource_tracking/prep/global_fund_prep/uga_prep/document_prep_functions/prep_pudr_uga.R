@@ -21,15 +21,15 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   ### look at gf_data and find what is being droped where.
   ########
   
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
-  # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # grant = file_list$grant[i]
-  # recipient = file_list$primary_recipient
-  # source = file_list$data_source[i]
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date[i]
+  period = file_list$period[i]
+  disease = file_list$disease[i]
+  grant = file_list$grant[i]
+  recipient = file_list$primary_recipient
+  source = file_list$data_source[i]
   
   # --------------------
   # Test the inputs to make sure that they are the correct type
@@ -52,7 +52,6 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
     budget_dataset <- gf_data[, c("module", "budget", "expenditure"),with=FALSE]
     budget_dataset<- budget_dataset[!is.na(budget_dataset$module),]
     budget_dataset$recipient <- recipient
-    budget_dataset$disbursement <- 0 
     budget_dataset$intervention <- "All" ## change if we ever get more detailed PUDR info
   
     } else if(grant%in%c("UGD-708-G08-M") & sheet_name=="LFA_Annex-SR Financials"){ ## we have SR info for this grant
@@ -65,7 +64,6 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset <- gf_data[, c("recipient", "budget", "disbursement"),with=FALSE]
       budget_dataset<- budget_dataset[!is.na(budget_dataset$recipient),]
       budget_dataset$module <- "All"
-      budget_dataset$expenditure <- 0 
       budget_dataset$intervention <- "All" ## change if we ever get more detailed PUDR info
       ## drop 1st row since it doesn't contain any useful inforamtion:  
       budget_dataset <- budget_dataset[-1, ,drop = FALSE]
@@ -86,13 +84,12 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
         gf_data = gf_data[5:18, ]
       }
       budget_dataset <- gf_data[, c("module","intervention", "budget", "expenditure"),with=FALSE]
-      budget_dataset<-  budget_dataset[!is.na( gf_data$module),]
-      budget_dataset<- budget_dataset[!is.na(budget_dataset$intervention),]
+      budget_dataset<-  budget_dataset[!is.na(module),]
+      budget_dataset<- budget_dataset[!is.na(intervention),]
       budget_dataset <- budget_dataset[-1,]
       budget_dataset$recipient <- recipient
-      budget_dataset$disbursement <- 0 
       ## drop 1st row since it doesn't contain any useful inforamtion:  
-      budget_dataset <- budget_dataset[-1, ,drop = FALSE]
+      #budget_dataset <- budget_dataset[-1, ,drop = FALSE] #No- this isn't true for all grants. Need to find out what this applies to. 
     } else if (sheet_name%in%c('LFA_Total PR Cash Outflow_3A','LFA_Total PR Cash Outflow_3')){ ## for the PUDRs w/out module/intervention detail
       colnames(gf_data)[1] <- "description"
       colnames(gf_data)[3] <- "budget"
@@ -114,7 +111,6 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset <- gf_data[, c("module", "budget", "expenditure"),with=FALSE]
       budget_dataset<- budget_dataset[!is.na(budget_dataset$module),]
       budget_dataset$recipient <- recipient
-      budget_dataset$disbursement <- 0
       
       #This one has Module and intervention combined -- cleaning it up!
       budget_dataset$module = ifelse(budget_dataset$module == "TB/HIV - Community TB care delivery", "TB/HIV - Community TB/HIV care delivery",  budget_dataset$module)
@@ -136,6 +132,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset <- budget_dataset[-1, ,drop = FALSE]
       
     } else {  ##change this if we get a new PUDR that doesn't fit any of these three 
+      print(paste0("An else-loop was triggered in the UGA PUDR prep function - verify outputs are correct for file ", inFile))
     colnames(gf_data)[1] <- "description"
     colnames(gf_data)[2] <- "module"
     colnames(gf_data)[3] <- "budget"
@@ -144,7 +141,6 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
     budget_dataset <- gf_data[, c("module", "budget", "expenditure"),with=FALSE]
     budget_dataset<- budget_dataset[!is.na(budget_dataset$module),]
     budget_dataset$recipient <- recipient
-    budget_dataset$disbursement <- 0 
     budget_dataset$intervention <- "All" ## change if we ever get more detailed PUDR info
     ## drop 1st row since it doesn't contain any useful inforamtion:  
     budget_dataset <- budget_dataset[-1, ,drop = FALSE]
@@ -157,7 +153,6 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   budget_dataset$cost_category <- "all" ## change if we ever get more detailed PUDR info
   budget_dataset$grant_number <- grant
   budget_dataset$year <- year(budget_dataset$start_date)
-  is.na(budget_dataset$budget) <- 0
 
   # return prepped data
   return(budget_dataset)
