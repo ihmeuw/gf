@@ -157,7 +157,6 @@ ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=perc
        caption='Source: HMIS', fill="% of weeks stocked out") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
-pdf(paste0(dir, 'outputs/stockout_maps.pdf'), height=7, width=12)
 
 # percentage of weeks stocked out, just 2017/18 - 13
 ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=percent_out)) + 
@@ -194,7 +193,6 @@ ggplot(compare, aes(x=date, y=value, color=variable)) +
   labs(x='Date', y='Percent (%)', color="")+
   theme(plot.title = element_text(size=16), strip.text.x = element_text(size=18), legend.text=element_text(size=14)) 
 
-dev.off()
 #------------------------------
 # TEST KIT GRAPHS
 
@@ -415,16 +413,6 @@ ggplot(final[year==2018 & variable!='No stock outs reported'], aes(x=long, y=lat
        subtitle="Minimum one week of stockout", 
        caption='Source: HMIS', fill="Number of facilities") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
-
-
-#--------------------------------------
-# additional graphs - rates of change 
-
-
-
-
-
-
 
 
 #---------------------------
