@@ -2,8 +2,9 @@
 # Preps ARV Stockout data from CDC Option B+ Dashboard: 
 # http://dashboard.mets.or.ug/jasperserver/slevel/KPIs/107_BPlus_Data_Per_Facility
 # Caitlin O'Brien-Carelli
-# 12/3/2018
+# 1/9/2018
 
+# data are up to date through the final week in 2018
 # ----------------------
 # Set up R
 rm(list=ls())
