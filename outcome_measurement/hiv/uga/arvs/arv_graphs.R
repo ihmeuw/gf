@@ -1,5 +1,5 @@
 # ARV stockouts by facility - visualize the data 
-
+# create data tables for distinct graphs
 # Caitlin O'Brien-Carelli
 # 12/14/2018
 # ----------------------
@@ -334,8 +334,51 @@ single_red = '#bd0026'
 
 # ------------------------------------------------------
 # SOURCE THE GRAPH FUNCTION
-
 # export a pdf of the graphs
+
+# read in all of the maps and graphs
 source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/arvs/arv_visuals_to_source.R')
 
-# ------------------------------------------------------
+# export the maps and graphs as a pdf
+pdf(paste0(dir, 'outputs/stockout_descriptives_2013_2018.pdf'), height=6, width=12)
+
+g1
+g2
+g3
+g4
+g5
+g6
+g7
+g8
+g9
+g10
+g11
+g12
+g13
+g14
+g15
+g16
+g17
+g18
+g19
+g20
+g21
+g22
+g23
+g24
+g25
+g26
+g27
+g28
+g29
+g30 
+g31
+g32
+g33
+g34
+g35
+
+dev.off()
+
+
+# ------------------------------------------------------ 
