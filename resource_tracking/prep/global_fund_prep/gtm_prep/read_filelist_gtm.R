@@ -42,7 +42,7 @@ for(i in 1:length(file_list$file_name)){
     tmpData$disbursement <- 0 
   } else if (file_list$function_type[i]=="pudr"){ 
     tmpData <- prep_gtm_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
-                                          ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
+                                          file_list$start_date[i], file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                           file_list$grant[i], file_list$data_source[i], file_list$loc_id[i], file_list$language[i])
 
   } else if (file_list$function_type[i]=="other"){
