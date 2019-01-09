@@ -46,6 +46,8 @@ export_tables_dir = paste0(out_dir, "prepped_data/data_tables_for_figures/")
 # functions
 source('./core/standardizeHZNames.R')
 source('./core/standardizeDPSNames.R')
+
+local_filepath = "C:/Users/abatzel/Desktop/Copy of data for J drive shutdown/"
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -91,6 +93,14 @@ snis[element== "A 2.1 Sulfadox. + Pyrimét 1ère dose reçue", element_eng := "SP_1
 snis[element== "A 2.1 Sulfadox. + Pyrimét 2ème dose reçue", element_eng := "SP_2nd"]
 snis[element== "A 2.1 Sulfadox. + Pyrimét 3ème dose reçue", element_eng := "SP_3rd"]
 snis[element== "A 2.1 Sulfadox. + Pyrimét 4ème dose reçue", element_eng := "SP_4th"]
+
+# get rid of outliers 
+check <- snis[element_eng %in% c("A 1.4 Confirmed simple malaria", "A 1.5 Confirmed simple malaria - pregnant woman", "A 1.4 Confirmed simple malaria treated", "A 1.5 Confirmed simple malaria treated - pregnant woman")]
+remove <- check[value >100000, .(date, org_unit, org_unit_id, element_eng, category)]
+snis[element_eng %in% c("A 1.4 Confirmed simple malaria", "A 1.5 Confirmed simple malaria - pregnant woman", "A 1.4 Confirmed simple malaria treated", "A 1.5 Confirmed simple malaria treated - pregnant woman")
+     & date == "2017-08-01" & org_unit_id == "IPKBcNL59e6" & category == "default", value := NA]
+snis[element_eng %in% c("A 1.4 Confirmed simple malaria", "A 1.5 Confirmed simple malaria - pregnant woman", "A 1.4 Confirmed simple malaria treated", "A 1.5 Confirmed simple malaria treated - pregnant woman")
+     & date == "2017-04-01" & org_unit_id == "R07kYRGTVuV" & category %in% c('>5 ans', '<5 ans'), value := NA]
 
 # aggregate SNIS data to be at the national level
 snis_natl <- snis[, .(natlValue= sum(value, na.rm=TRUE)), by=c("date", "year", "element", "element_eng", "category")]  
@@ -173,7 +183,7 @@ all_data[indicator== "A 1.5 Severe malaria - pregnant woman", c("indicator", "su
 all_data[indicator== "A 1.5 Severe malaria treated - pregnant woman", c("indicator", "subpopulation") := list("severeMalariaTreated", "pregnantWomen") ]
 
 # sum over category variable from the original data set (from snis base there are two rows per )
-all_data[, .(value = sum(value, na.rm=TRUE)), by = .(date, year, indicator, subpopulation, data_source)]
+all_data <- all_data[, .(value = sum(value, na.rm=TRUE)), by = .(date, year, indicator, subpopulation, data_source)]
 saveRDS(all_data, all_data_filepath)
 # ---------------------------------------------------
 
@@ -204,15 +214,15 @@ pnlp_out <-  pnlp_out[ subpopulation != "positive", ]
 facet_names <- c(
   `ArtLum` = "Artemether - Lumefantrine (AL)",
   `ASAQreceived` = "Artesunate - Amodiaquine (ASAQ)",
-  `LLIN` = "Long-lasting insecticide-treated nets (LLINs)",
+  `LLIN` = "Long-lasting insecticide-treated \nnets (LLINs)",
   `RDT` = "Rapid Diagnostic Tests (RDTs)",
-  `ACTs_all` = "Artemisinin-based combination therapy (ACT) doses",
-  `SP` = "Sulfadoxine-Pyrimethamine (SP) used during 1st ANC visit",
+  `ACTs_all` = "Artemisinin-based combination \ntherapy (ACT) doses",
+  `SP` = "Sulfadoxine-Pyrimethamine (SP) used \nduring 1st ANC visit",
   `SSCACT` = "Doses of ACTs used by CHWs",
   `mildMalariaTreated` = "Patients with uncomplicated malaria treated",
   `severeMalariaTreated` = "Patients with severe malaria treated",
-  `prct_treated_mild` = "Percent of new cases of uncomplicated malaria treated",
-  `prct_treated_severe` = "Percent of new cases of severe malaria treated",
+  `prct_treated_mild` = "Percent of new cases of uncomplicated \nmalaria treated",
+  `prct_treated_severe` = "Percent of new cases of severe \nmalaria treated",
   `prct_SP_over_ANC` = "Percent of ANC visits with SP administered",
   `deaths_per_100kcases_all` = "Deaths per 100,000 cases",
   `deaths_per_100kcases_maternal` = "Maternal deaths per 100,000 cases",
@@ -260,8 +270,12 @@ g1 <- ggplot(pnlp_act_combinedACTs[ indicator %in% c("LLIN", "RDT", "ACTs_all")]
   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_blank(), 
         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14)) +
   facet_wrap( ~indicator, scales = "free_y", labeller = as_labeller(facet_names)) +
-  scale_y_continuous( label= scales :: comma ) + guides(color = FALSE) + theme_bw( base_size = 18)
+  scale_y_continuous( label= scales :: comma ) + guides(color = FALSE) + theme_bw( base_size = 26)
 print(g1)
+
+pdf( paste0(out_dir_offJ, "figure1_edited.pdf"), height = 9, width = 20)
+print(g1)
+dev.off()
 
 saveRDS(pnlp_act_combinedACTs, paste0(export_tables_dir, "figure_1_dt.rds"))
 # ---------------------------------------------------
@@ -296,15 +310,19 @@ graph2 <- graph2[ data_source %in% c("SNIS_base", "SNIS_sigl"), data_source:="SN
 graph2 <- graph2[!is.na(sum_by_source)]
 
 g <- ggplot(graph2, aes(x=date, y=sum_by_source, color=data_source)) + 
-  geom_point() + geom_line() +
+  geom_point(size=1.5) + geom_line(size=1.5) +
   ggtitle(paste0("Outputs: commodities distributed and patients treated")) +
   ylab("Count") + xlab("Date") + labs(caption = "") +
   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), 
         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14)) +
   facet_wrap( ~indicator, scales = "free_y", labeller = as_labeller(facet_names) ) +
   scale_y_continuous( label= scales :: comma ) + 
-  guides(color = guide_legend(title= "Data Source:")) + theme_bw( base_size = 18) + theme(legend.position = "bottom") 
+  guides(color = guide_legend(title= "Data Source:")) + theme_bw( base_size = 26) + theme(legend.position = "bottom") 
 print(g)
+
+pdf( paste0(out_dir_offJ, "figure2_edited.pdf"), height = 12, width = 23)
+print(g)
+dev.off()
 
 saveRDS(graph2, paste0(export_tables_dir, "figure_2_dt.rds"))
 # ---------------------------------------------------
@@ -321,10 +339,6 @@ graph3_sum <- graph3[, .(sum_by_source = sum(value, na.rm = TRUE)), by= .(date, 
 
 # cast wide
 graph3_wide <- dcast.data.table(graph3_sum, date + year + data_source ~ indicator, value.var = 'sum_by_source')
-
-# account for outliers in new cases mild (instead of deleting the point and re-running the entire code to get to natl sum, I've just subtracted that point's value from the total here)
-graph3_wide[data_source == "SNIS_base" & date == "2017-04-01", newCasesMalariaMild := newCasesMalariaMild - 170172]
-graph3_wide[data_source == "SNIS_base" & date == "2017-08-01", newCasesMalariaMild := newCasesMalariaMild - 111111]
 
 # variable calculations
 graph3_wide <- graph3_wide[, prct_treated_mild := (mildMalariaTreated / newCasesMalariaMild) *100]
@@ -343,15 +357,19 @@ graph3_long <- graph3_long[data_source== "SNIS_base", data_source := "SNIS"]
 #graph3_long <- graph3_long[data_source == "SNIS" & date == "2017-04-01" & indicator == "prct_treated_mild", value := NA]
 
 g <- ggplot(graph3_long[date <= "2018-06-01"], aes(x=date, y=value, color=data_source)) + 
-  geom_point() + geom_line() +
+  geom_point(size= 1.2) + geom_line(size =1.2) +
   ggtitle(paste0("Outcomes: ")) +
   ylab("Count") + xlab("Date") + labs(caption = "") +
   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), 
         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14)) +
   facet_wrap( ~indicator, scales = "free", labeller = as_labeller(facet_names) ) +
   scale_y_continuous( label= scales :: comma ) + 
-  guides(color = guide_legend(title= "Data Source:")) + theme_bw( base_size = 18) + theme(legend.position = "bottom")  
+  guides(color = guide_legend(title= "Data Source:")) + theme_bw( base_size = 26) + theme(legend.position = "bottom")  
 print(g)
+
+pdf( paste0(out_dir_offJ, "figure3_edited.pdf"), height = 10, width = 20)
+print(g)
+dev.off()
 
 # check problems with num / denom > 100 ? 
 cols_to_include <- colnames(before_MI)[grepl("severe", colnames(before_MI), ignore.case = TRUE)]
@@ -365,7 +383,6 @@ sd.cols <- colnames(check)[grepl("treated", colnames(check), ignore.case = TRUE)
 check <- check[, all_severe_cases_treated := rowSums(.SD, na.rm=TRUE), by=c('date', 'dps', 'health_zone'), .SDcols = sd.cols]
 
 errors <- check[all_severe_cases_treated > all_severe_cases, ]
-
 
 saveRDS(graph3_long, paste0(export_tables_dir, "figure_3_dt.rds"))
 # ---------------------------------------------------
