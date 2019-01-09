@@ -140,43 +140,21 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset <- na.omit(budget_dataset, cols=1, invert=FALSE)
   budget_dataset$qtr <- NULL
   budget_dataset$period <- period
-  budget_dataset$expenditure <- 0 
+  budget_dataset$expenditure = 0
   budget_dataset$grant_number <- grant
   if(grant=="COD-M-PSI"&lang=="eng"){
     lang <- "fr"
   }
   budget_dataset$lang <- lang
   budget_dataset$data_source <- "fpm" #emily make sure this is correct. 
-  budget_dataset$year <- year(start_date)
+  budget_dataset[, year:=year(start_date)]
   budget_dataset$loc_name <- loc_id 
-  # ----------------------------------------------
-  ##separate tb/hiv into either one or the other in order to map programs properly - later we might want to go back and change 
-  # ----------------------------------------------
-  sep_hiv_tb <- function(module, loc_id){
-    x = "unknown"
-    if(loc_id%in%c("VIH", "TB")){
-      if(loc_id=="TB"){
-        x <- "tb"
-      } else{
-        x <- "hiv"
-      }
-    } else{
-      if(grepl("tuber", tolower(module))){
-        x <- "tb"
-      } else {
-        x <- "hiv"
-      }
-    }
-    return(x)
-  }
+  budget_dataset$disease <- disease
   
-  ##clean the hiv/tb grants: 
-  if(disease!="malaria"){
-  budget_dataset$disease <- mapply(sep_hiv_tb, budget_dataset$module, budget_dataset$loc_name)
-  } else {
-    budget_dataset$disease <- disease
-  }
-  
+  #Remove NAs from budget at this point, because they are extraneous rows from the raw data. 
+  budget_dataset = budget_dataset[!is.na(budget)]
+
+ 
   col_names <- c("intervention", "budget", "expenditure", "recipient", "module", "start_date", "data_source", 
                  "period", "sda_activity", "disease", "cost_category", "grant_number", 
                  "year", "loc_name", "lang")

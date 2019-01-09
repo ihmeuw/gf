@@ -101,5 +101,11 @@ resource_database[module == "4", module:= "all"]
 resource_database[intervention == "6", intervention:= "all"]
 resource_database[sda_activity == "9", sda_activity:= "all"]
 
+#EKL 1/2/19 initial_gf_budgets_2018_2020.csv
+resource_database[fileName == 'initial_gf_budgets_2018_2020.csv' & module == 'tuberculosemultiresistante' & intervention == 'all', disease:='tb']
+
+#EKL 12/21/18 - relabeling all "tb/hiv" as "hiv/tb"
+resource_database[disease == "tb/hiv", disease:= "hiv/tb"]
+
 return(resource_database)
 }

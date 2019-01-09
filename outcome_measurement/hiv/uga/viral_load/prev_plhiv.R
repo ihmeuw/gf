@@ -75,5 +75,40 @@ write.csv(x, paste0(dir, '/plhiv.csv'))
 peep[ ,sum(plhiv), by=year]
 
 #------------------------------------------
+# 2017 prevalence by district
+
+prev = dt[year==2016 | year==2017 ,.(pop=sum(pop), plhiv=sum(Mean_PLHIV)), 
+          by=.(region=region10_name, year)]
+
+prev[ , prevalence:=round(100*(plhiv/pop), 1)]
+
+prev[year==2016][order(region)]
+prev[year==2017][order(region)]
+
+# total hiv prevalence
+prev2 = dt[ ,.(pop=sum(pop), plhiv=sum(Mean_PLHIV)),  by=year]
+prev2[ , prevalence:=round(100*(plhiv/pop), 1)]
+prev2[year==2016 | year==2017]
+
+prev2[order(year)]
+
+
+# district level
+pr = dt[year==2017 ,.(pop=sum(pop), plhiv=sum(Mean_PLHIV)), 
+          by=.(district=ADM2_NAME, region=region10_name , year)]
+
+pr[ , prevalence:=round(100*(plhiv/pop), 1)]
+pr[order(prevalence, decreasing=F)]
+
+
+reg = dt[ ,.(pop=sum(pop), plhiv=sum(Mean_PLHIV)),  by=.(year, region=region10_name)]
+reg[ , prevalence:=round(100*(plhiv/pop), 1)]
+reg = reg[year==2000 | year==2017]
+
+# regional rates of change
+reg = dcast(reg, region~year, value.var='prevalence')
+setnames(reg, c('region', 'y2000', 'y2017'))
+reg[ ,roc:=y2000 - y2017]
+reg[order(roc, decreasing=T)]
 
 

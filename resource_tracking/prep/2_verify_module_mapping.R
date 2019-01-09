@@ -26,6 +26,7 @@ prep_map <- function(map){
 # CLEANING- Dropping modules/interventions that map to codes that don't make sense. 
 #--------------------------------------------------------------------------------
 map = map[!(module == "treatmentcareandsupport" & intervention == "na" & disease == "hss" & (code == "R1_2" | code == "R1_3"))]
+map = map[!(module == "tbcareandprevention" & disease == "hiv")] #2 cases of this, for interventions 'all' and 'casedetectionanddiagnosis.' There are also TB entries for these sections. 
 
 
 #--------------------------------------------------------------------------------
@@ -113,8 +114,8 @@ if(nrow(check_unspecified)>0 & include_stops == TRUE){
 #--------------------------------------------------------------------------------
 # 4. Check for close spellings of the same module and intervention  ***EMILY KEEP WORKING HERE 
 #--------------------------------------------------------------------------------
-print(sort(unique(map$module)))
-print(sort(unique(map$intervention)))
+#print(sort(unique(map$module)))
+#print(sort(unique(map$intervention)))
 #We have some modules in all capital letters showing up here, with spaces. 
 
 #--------------------------------------------------------------------------------

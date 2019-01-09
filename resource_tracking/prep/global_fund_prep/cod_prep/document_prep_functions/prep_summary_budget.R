@@ -150,7 +150,9 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   budget_dataset$expenditure <- 0 
   budget_dataset$cost_category <- "all"
   budget_dataset$data_source <- source
+  budget_dataset$year <- year(budget_dataset$start_date)
   budget_dataset$lang <- lang
+  
   return(budget_dataset)
   
 }

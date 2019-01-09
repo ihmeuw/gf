@@ -35,15 +35,51 @@ ggplot(table_2, aes(x=factor(month(date)), y=facilities_report, group=year, colo
        caption="Source: Uganda VL Dashboard", colour="Year") +
   scale_color_manual(values=graph_colors)
 
+pdf(paste0(dir, '/outputs/uvl_chain.pdf'), height=6, width=12)
 # facilities reporting and patients submitting samples
 ggplot(uvl_year[variable=='Facilities Reporting' | variable=='Patients Submitting Samples'], aes(x=date, y=value, color=sex)) + 
   facet_wrap(~variable, scales='free_y') +
   geom_point(size=1, alpha=0.8) +
   geom_line(alpha=0.5) +
   theme_minimal() +
-  labs(x="Year", y="Count", title="Monthly data reported, Uganda Viral Load Dashboard", color="Sex") +
-  scale_color_manual(values=sex_colors)
+  labs(x="Year", y="Count", color=" ") +
+  scale_color_manual(values=sex_colors) + 
+  theme(strip.text.x = element_text(size=18), legend.text=element_text(size=14),
+         axis.title = element_text(size=14),
+        axis.text = element_text(size=12)) 
 
+ggplot(coordinates_year[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=valid_results)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=rev(brewer.pal(9, 'BrBG')), trans='log', name="Test results") + 
+  theme_void() +
+  theme(strip.text.x = element_text(size=18), legend.text=element_text(size=14), legend.title = element_text(size=14))
+
+
+male = coordinates_male[year==2018]
+male[ , sex:='Male']
+
+
+fem = coordinates_female[year==2018]
+fem[ , sex:='Female']
+
+sex = rbind(male, fem)
+
+ggplot(sex, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~sex) +
+  scale_fill_gradientn(colors=ladies) + 
+  theme_void() +
+  labs( fill="% virally suppressed") +
+  theme(legend.title = element_text(size=16), legend.text = element_text(size=14),
+        strip.text.x=element_text(size=18)) 
+
+
+dev.off()
 
 # scale up in terms of three variables - used for presentation slides
 ggplot(uvl_year[variable=='Facilities Reporting' | variable=='Patients Submitting Samples' | variable=="Valid Test Results"], aes(x=date, y=value, color=sex)) +
@@ -373,7 +409,7 @@ ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=dbs_ratio)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # annual number of valid test results
-ggplot(coordinates_year, aes(x=long, y=lat, group=group, fill=valid_results)) + 
+ggplot(coordinates_year[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=valid_results)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 

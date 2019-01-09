@@ -61,7 +61,6 @@ for(i in 1:nrow(file_list)){
   if(i>1){
     resource_database = rbind(resource_database, tmpData, use.names=TRUE)
   }
-  tmpData$start_date <- as.Date(tmpData$start_date,  "%Y-%m-%d")
 
   print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
 }
@@ -70,8 +69,12 @@ return(resource_database)
 
 } 
 
+# resource_database$century <- substring(resource_database$start_date, 1, 2)
+# unique(resource_database$century)
+# resource_database$century <- NULL
+
 #For verifying 
-# budget_check <- copy(resource_database)
+# budget_check <- copy(tmpData)
 # budget_check$budget <- gsub("[0-9.]", "", budget_check$budget)
 # unique(budget_check$budget)
 # 

@@ -157,6 +157,42 @@ ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=perc
        caption='Source: HMIS', fill="% of weeks stocked out") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
+
+# percentage of weeks stocked out, just 2017/18 - 13
+ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=percent_out)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
+  theme_void() +
+  labs(title="Weeks ART sites were stocked out/Total weeks in which ART sites reported", 
+       caption='Source: HMIS', fill="% of weeks stocked out") +
+  theme(plot.title =element_text(size=16), strip.text.x = element_text(size=18), legend.text=element_text(size=14),  
+        legend.title=element_text(size=14)) 
+
+# number of weeks of stockout divided by facilities reporting, 2017/18 only
+ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
+  theme_void() +
+  labs(title='Same time period: January - November',fill="Mean weeks per facility") +
+  theme(plot.title = element_text(size=16), strip.text.x = element_text(size=18), legend.text=element_text(size=14),
+        legend.title=element_text(size=14)) 
+
+# comparison of stock outs - arvs and test kits - 15
+ggplot(compare, aes(x=date, y=value, color=variable)) +
+  geom_point(size=0.6) +
+  geom_line() +
+  geom_line() +
+  theme_bw() +
+  scale_color_manual(values=two) +
+  labs(x='Date', y='Percent (%)', color="")+
+  theme(plot.title = element_text(size=16), strip.text.x = element_text(size=18), legend.text=element_text(size=14)) 
+
 #------------------------------
 # TEST KIT GRAPHS
 
@@ -377,16 +413,6 @@ ggplot(final[year==2018 & variable!='No stock outs reported'], aes(x=long, y=lat
        subtitle="Minimum one week of stockout", 
        caption='Source: HMIS', fill="Number of facilities") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
-
-
-#--------------------------------------
-# additional graphs - rates of change 
-
-
-
-
-
-
 
 
 #---------------------------
