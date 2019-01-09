@@ -22,7 +22,7 @@
 # input files
 source("C:/Users/elineb/Documents/gf/resource_tracking/prep/shared_mapping_functions.R")
 file_dir <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/"
-file_iterations <- read.csv(paste0(file_dir, "budget_pudr_iterations.csv"))
+file_iterations <- readRDS(paste0(file_dir, "budget_pudr_iterations.rds"))
 setDT(file_iterations)
 file_iterations[, start_date:=as.Date(start_date, format = "%Y-%m-%d")]
 
@@ -112,6 +112,7 @@ cod_tests$correct_bug_sum <- as.numeric(cod_tests$correct_bug_sum)
 cod_merge <- merge(cod_tests, cod_budgets, by = c('start_date', 'fileName')) 
 if(nrow(cod_merge) != nrow(cod_tests)){
   print("ERROR: Not all DRC tests merged.")
+  print(cod_tests[!fileName%in%cod_merge$fileName, .(fileName, start_date)])
 }
 
 cod_merge$budget = round(cod_merge$budget)
@@ -128,7 +129,7 @@ failed_tests_cod <- cod_merge[correct_bug_sum != budget, ]
 # ------------------------------------
 {
 
-failed_tests <- rbind(failed_tests_gtm, failed_tests_cod)
+failed_tests <- rbind(failed_tests_gtm, failed_tests_cod, failed_tests_uga)
   
 if (nrow(failed_tests) != 0){
   print("Unit tests failed; review budget calculations.")
@@ -150,25 +151,34 @@ gtm_tests_nodup <- gtm_tests[!duplicated(fileName)]
 cod_tests_nodup <- cod_tests[!duplicated(fileName)]
 uga_tests_nodup <- uga_tests[!duplicated(fileName)]
 
-gtm_tested_grants <- as.vector(unique(gtm_tests[, .(grant_number)]))
-cod_tested_grants <- as.vector(unique(cod_tests[, .(grant)]))
-uga_tested_grants <- as.vector(unique(uga_tests[, .(grant)]))
+gtm_tested_grants <- unique(gtm_tests[, .(grant_number)])
+cod_tested_grants <- unique(cod_tests[, .(grant)])
+uga_tested_grants <- unique(uga_tests[, .(grant)])
 
 print(paste0("Testing ", round(gtm_tests_nodup[format == "pudr", .N]/gtm_filelist[data_source == "pudr", .N]*100, 2), "% of PUDRs and ", 
              round(gtm_tests_nodup[format != "pudr", .N]/gtm_filelist[data_source != "pudr", .N]*100, 2), "% of budgets in Guatemala"))
-print(paste0("Testing", nrow(unique(gtm_filelist[grant_status=='active' & grant %in% gtm_tested_grants, .(grant)]))/nrow(unique(gtm_filelist[grant_status=='active', .(grant)])), "% 
-             of active grants and % of not active grants Guatemala"))
+print(paste0("Testing ", round(nrow(unique(gtm_filelist[grant_status=='active' & grant%in%gtm_tested_grants$grant, .(grant)]))/nrow(unique(gtm_filelist[grant_status=='active', .(grant)]))*100, 2), 
+             "% of active grants and ", round(nrow(unique(gtm_filelist[grant_status=='not_active' & grant%in%gtm_tested_grants$grant, .(grant)]))/nrow(unique(gtm_filelist[grant_status=='not_active', .(grant)]))*100, 2)
+             , "% of not active grants Guatemala"))
 print("...")
 
 print(paste0("Testing ", round(uga_tests_nodup[type == "pudr", .N]/uga_filelist[data_source == "pudr", .N]*100, 2), "% of PUDRs and ", 
              round(uga_tests_nodup[type != "pudr", .N]/uga_filelist[data_source != "pudr", .N]*100, 2), "% of budgets in Uganda"))
-print("Testing % of active grants and % of not active grant Uganda")
+print(paste0("Testing ", round(nrow(unique(uga_filelist[grant_status=='active' & grant%in%uga_tested_grants$grant, .(grant)]))/nrow(unique(uga_filelist[grant_status=='active', .(grant)]))*100, 2), 
+            "% of active grants and ", round(nrow(unique(uga_filelist[grant_status=='not_active' & grant%in%uga_tested_grants$grant, .(grant)]))/nrow(unique(uga_filelist[grant_status=='not_active', .(grant)]))*100, 2)
+             , "% of not active grants Uganda"))
 print("...")
 
 print(paste0("Testing ", round(cod_tests_nodup[type == "pudr", .N]/cod_filelist[data_source == "pudr", .N]*100, 2), "% of PUDRs and ", 
              round(cod_tests_nodup[type != "pudr", .N]/cod_filelist[data_source != "pudr", .N]*100, 2), "% of budgets in DRC"))
-print("Testing % of active grants and % of not active grant DRC")
+print(paste0("Testing ", round(nrow(unique(cod_filelist[grant_status=='active' & grant%in%cod_tested_grants$grant, .(grant)]))/nrow(unique(cod_filelist[grant_status=='active', .(grant)]))*100, 2), 
+"% of active grants and ", round(nrow(unique(cod_filelist[grant_status=='not_active' & grant%in%cod_tested_grants$grant, .(grant)]))/nrow(unique(cod_filelist[grant_status=='not_active', .(grant)]))*100, 2)
+             , "% of not active grants DRC"))
 print("...")
+
+#Remove everything but the failed tests so it's easy to see what to analyze. 
+rm(list= ls()[!(ls() %in% c('failed_tests','failed_tests_cod', 'failed_tests_gtm', 'failed_tests_uga'
+                            , 'gtm_tests', 'gtm_merge', 'cod_tests', 'cod_merge', 'uga_tests', 'uga_merge'))])
 
 
 }

@@ -32,7 +32,7 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   # lang = file_list$language[i]
   # grant = file_list$grant[i]
   # source = file_list$data_source[i]
-  # loc_id = loc_name
+  # loc_id = 'cod'
 
   # ----------------------------------------------
   ##set up functions to handle french and english budgets differently
@@ -78,6 +78,10 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   # ----------------------------------------------
   
   gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
+  
+  if (inFile == "COD-M-PSI_SB2.xlsx" & sheet_name == "1.Detailed Budget"){
+    gf_data = gf_data[1:500, ] #This budget has strange numbers added on below the detailed budget
+  }
  
   ## drop the first two rows and two columns (they are unnecessary)
   if(year(start_date)==2018){  ## for the newer budgets, the first two rows aren't necessary
@@ -91,7 +95,10 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE] #This is dropping everything except module and intervention. 
   ##only keep data that has a value in the "category" column 
-  gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
+  # gf_data <- na.omit(gf_data, cols=1, invert=FALSE) #Emily to review with David or Caitlin- this doesn't seem right. 
+  #Want to only include data that has values for module and intervention (to clean the input sheet). 
+  #But before dropping on these values, make sure you aren't dropping legitimate budget data 
+  gf_data = gf_data[!is.na("Module") & !is.na("Intervention")]
   
   ##rename the columns to RT variables #Yuck Emily need to rethink this. 
   colnames(gf_data)[1] <- "module"
