@@ -119,7 +119,7 @@ load_mapping_list <- function(mapping_file, include_rssh_by_disease){
   }
  }
   ##change the dataset names
-  setnames(indicator_mapping, c("code","module", "intervention", "abbrev_module", "abbrev_intervention","disease"))
+  setnames(indicator_mapping, c("code","module", "intervention", "abbrev_module", "abbrev_intervention", "disease"))
   indicator_mapping <- unique(indicator_mapping)
   ##this will make it easier to map everything by removing spaces, punctuation, etc. 
   return(indicator_mapping)
@@ -176,13 +176,10 @@ split_mods_interventions <- function(dt, mod, keyword){
 check_budgets_pudrs = function(dt){
   keyVars = c("start_date", "fileName", "grant_number", "data_source")
   #Deciding not to split by disease here because we just want the total for the whole quarter. 
-  dt$budget <- as.numeric(dt$budget)
-  dt$expenditure <- as.numeric(dt$expenditure)
-  #dt$start_date <- as.Date(dt$start_date)
-  #dt$end_date <- as.Date(dt$end_date)
   
-  #For budgets that have NA for budget and expenditure, replace as 0 so they don't mess up calculation. 
-  dt[is.na(budget), budget:=0] 
+  #Replace NAs with 0 for this summing function, just to verify totals. 
+  #Data with this function applied will not be saved. 
+  dt[is.na(budget), budget:=0]
   dt[is.na(expenditure), expenditure:=0]
   
   budgets = dt[ , 

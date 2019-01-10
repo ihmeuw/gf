@@ -66,6 +66,7 @@ for(i in 1:nrow(file_list)){
   tmpData$file_iteration <- file_list$file_iteration[i]
   tmpData$fileName <- file_list$file_name[i]
   #tmpData$file_save_date <- file_list$file_save_date[i]
+  tmpData$grant_status <- file_list$grant_status[i]
   if(i==1){
     resource_database = tmpData
   } 
@@ -89,6 +90,7 @@ resource_database[year_prefix == "00", start_date:=paste0("20", year_suffix)]
 resource_database[, start_date:=as.Date(start_date, format="%Y-%m-%d")]
 resource_database$year_prefix <- NULL
 resource_database$year_suffix <- NULL
+
 
 return(resource_database)
 

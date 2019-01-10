@@ -17,12 +17,12 @@
 #---------------------------------------
 #To do list for this code: 
 # - David wants to prioritize GOS over FPM where we have it (through 2017). 
-
+# - Get SICOIN and FGH running 
+# - Remove 'fill = TRUE' from each Rbind- data should have same column names. 
 
 
 #---------------------------------------
 
-rm(list = ls())
 library(data.table)
 cod_prepped <- "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/"
 gtm_prepped <- "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/"
@@ -57,8 +57,7 @@ gos_data$expenditure <- as.numeric(gos_data$expenditure)
 # 1. FINAL GF BUDGETS 
 #----------------------------------
 # Merge all 3 countries 
-final_budgets_cod <- read.csv(paste0(cod_prepped, "final_budgets.csv"))
-final_budgets_cod$budget <- as.numeric(final_budgets_cod$budget)
+final_budgets_cod <- readRDS(paste0(cod_prepped, "final_budgets.rds"))
 
 final_budgets_gtm <- read.csv(paste0(gtm_prepped, "final_budgets.csv"))
 final_budgets_gtm$budget <- as.numeric(final_budgets_gtm$budget)
@@ -93,9 +92,9 @@ check_qtr_uga <- check_qtr_uga[duplicated(check_qtr_uga, by = c("start_date", "g
 stopifnot(nrow(check_qtr_uga)==0)
 
 #Bind budgets together
-final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga) #EMILY BUDGET NUMBERS OK TO HERE 
-gos_budgets <- gos_data[!is.na(budget)]
-final_budgets <- rbind(final_budgets, gos_budgets, fill = TRUE) #EMILY BUDGET NUMBERS OK TO HERE 
+final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga, fill=TRUE) 
+final_budgets$start_date <- as.Date(final_budgets$start_date, "%Y-%m-%d")
+final_budgets <- rbind(final_budgets, gos_data, fill = TRUE) 
 
 #Manually edit grant numbers in GOS to match our labeling - EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE. 
 final_budgets[grant_number == 'GUA-M-MSPAS', grant_number:='GTM-M-MSPAS']
@@ -127,21 +126,21 @@ for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant nu
 
 # Verify data 
 na_year <- gos_prioritized_budgets[is.na(year)]
-na_budget <- gos_prioritized_budgets[is.na(budget)]
-stopifnot(nrow(na_year)==0 & nrow(na_budget)==0)
+stopifnot(nrow(na_year)==0)
 
 #Generate variables 
 #final_budgets[, end_date:=start_date + period-1]
 
 # Write data 
 write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets.rds"))
+
 
 #----------------------------------
 # 2. FINAL GF EXPENDITURES
 #----------------------------------
 # Merge all 3 countries 
-final_expenditures_cod <- read.csv(paste0(cod_prepped, "final_expenditures.csv"))
-final_expenditures_cod$expenditure <- as.numeric(final_expenditures_cod$expenditure)
+final_expenditures_cod <- readRDS(paste0(cod_prepped, "final_expenditures.rds"))
 
 final_expenditures_gtm <- read.csv(paste0(gtm_prepped, "final_expenditures.csv"))
 final_expenditures_gtm$expenditure <- as.numeric(final_expenditures_gtm$expenditure)
@@ -176,9 +175,9 @@ check_qtr_uga <- check_qtr_uga[duplicated(check_qtr_uga, by = c("start_date", "g
 stopifnot(nrow(check_qtr_uga)==0)
 
 #Bind expenditures together
-final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga) 
-gos_expenditures <- gos_data[!is.na(expenditure)]
-final_expenditures <- rbind(final_expenditures, gos_expenditures, fill = TRUE) 
+final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, fill = TRUE) 
+final_expenditures$start_date <- as.Date(final_expenditures$start_date, "%Y-%m-%d")
+final_expenditures <- rbind(final_expenditures, gos_data, fill = TRUE) 
 
 #Correct grant labels so they merge correctly #EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE 
 final_expenditures[grant_number == 'GUA-M-MSPAS', grant_number:='GTM-M-MSPAS']
@@ -205,18 +204,30 @@ for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant nu
 
 # Verify data 
 na_year <- final_expenditures[is.na(year)]
-na_expenditure <- final_expenditures[is.na(expenditure)]
-stopifnot(nrow(na_year)==0 & nrow(na_expenditure)==0)
+stopifnot(nrow(na_year)==0)
 
 #Generate variables 
 #final_expenditures[, end_date:=start_date + period-1]
 
 # Write data 
 write.csv(final_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
+saveRDS(final_expenditures, paste0(final_write, "final_expenditures.rds"))
 
 #----------------------------------
 # 3. GF FILE ITERATIONS
 #----------------------------------
+all_gf_cod <- readRDS("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds")
+all_gf_uga <- read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_iterations.csv") #Emily why are these two files having issues when you read with fread? Check diacritical marks. 
+setDT(all_gf_uga)
+all_gf_uga[, start_date:=as.Date(start_date, format = "%Y-%m-%d")]
+all_gf_gtm <- read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_iterations.csv")
+setDT(all_gf_gtm)
+all_gf_gtm[, start_date:=as.Date(start_date, format = "%Y-%m-%d")]
+
+all_gf_files <- rbind(all_gf_cod, all_gf_uga, all_gf_gtm, fill = TRUE)
+#Write data 
+write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
+saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations.rds"))
 
 
 #----------------------------------
@@ -233,19 +244,17 @@ sicoin_data$grant_period = year(sicoin_data$start_date)
 #----------------------------------
 # 5. FGH ACTUALS 
 #----------------------------------
-fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh_total.csv", 
-                                fileEncoding = "latin1"))
+# fgh_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh_total.csv", 
+#                                 fileEncoding = "latin1"))
+# 
+# ##change the dates into date format: 
+# fgh_data$start_date <- as.Date(fgh_data$start_date, "%Y-%m-%d")
+# fgh_data$end_date <- as.Date(fgh_data$end_date, "%Y-%m-%d")
+# 
+# #remove "total" value
+# fgh_data = fgh_data[!grepl("total", module)]
+# fgh_data$grant_period = year(fgh_data$start_date)
 
-##change the dates into date format: 
-fgh_data$start_date <- as.Date(fgh_data$start_date, "%Y-%m-%d")
-fgh_data$end_date <- as.Date(fgh_data$end_date, "%Y-%m-%d")
-
-#remove "total" value
-fgh_data = fgh_data[!grepl("total", module)]
-fgh_data$grant_period = year(fgh_data$start_date)
-
-
-totalData <- rbind(totalData, fgh_data, fill = TRUE)
 
 
 #----------------------------------

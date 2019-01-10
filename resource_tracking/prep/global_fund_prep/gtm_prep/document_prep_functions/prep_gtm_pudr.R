@@ -14,7 +14,7 @@
 # ----------------------------------------------
 # function to prep the data
 # ----------------------------------------------
-prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period, grant, source, loc_name, lang) {
+prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, grant, source, loc_name, lang) {
   
   ######## TROUBLESHOOTING HELP
   ### fill in variables below: inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, recipient_name 
@@ -22,18 +22,17 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
   ### look at gf_data and find what is being droped where.
   ########
   
-  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/gtm/gf/'
-  # dir = file_dir
-  # inFile = "GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xls"
-  # sheet_name = "INTEGRACION"
-  # start_date = year(2016)
-  # qtr_num = 1
-  # period = 122
-  # disease = "tb"
-  # lang = "esp"
-  # grant = "GTM-T-MSPAS"
-  # source = "pudr"
-  # loc_name = "gtm"
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date[i]
+  qtr_num = file_list$qtr_number[i]
+  period = file_list$period[i]
+  disease = file_list$disease[i]
+  lang = file_list$language[i]
+  grant = file_list$grant[i]
+  source = file_list$data_source[i]
+  loc_name = 'gtm'
   
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
@@ -82,7 +81,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
     gf_data$disbursement <- 0 
     gf_data$recipient <- loc_name
     gf_data <- gf_data[c(grep("object", tolower(gf_data$sda_activity)):(grep("name", tolower(gf_data$sda_activity)))),]
-  } else {
+  } else { 
       colnames(gf_data)[2] <- "module"
       colnames(gf_data)[3] <- "sda_activity"
       colnames(gf_data)[4] <- "intervention"
@@ -102,7 +101,8 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, year, qtr_num, disease, period
   toMatch <- c("total", "module")
   budget_dataset <- budget_dataset[!grepl(paste0(toMatch, collapse="|"), tolower(budget_dataset$module)),]
 
-  budget_dataset$start_date <- year
+  
+  budget_dataset$year <- year(budget_dataset$start_date)
   budget_dataset$period <- period
   budget_dataset$disease <- disease
   budget_dataset$grant_number <- grant

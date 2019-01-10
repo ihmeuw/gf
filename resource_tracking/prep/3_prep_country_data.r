@@ -13,6 +13,10 @@ source(paste0(country_code_dir, "read_filelist_", country, ".R"))
 resource_database <- read_fileList()
 original_db <- copy(resource_database)
 
+#Make sure your quarters are denoted correctly (months 1, 4, 7, and 10)
+check_dates <- resource_database[!month(start_date)%in%c(1,4,7,10)]
+stopifnot(nrow(check_dates)==0)
+
 # Make sure there are no overlapping quarters for the same grant (duplicate files. )
 fpm_overlap <- duplicated(resource_database[data_source == "fpm" & file_iteration == "final", .(grant_number, start_date)])
 pudr_overlap <- duplicated(resource_database[data_source == "pudr" & file_iteration == "final", .(grant_number, start_date)])
@@ -155,8 +159,8 @@ if(country == "cod"){
 
 mapped_country_data$loc_name = country
 
-#Emily still not surewhy we're doing this. 
-mapped_country_data$sda_activity <- ifelse(tolower(mapped_country_data$sda_activity) == "all" | mapped_country_data$sda_activity == "0", "Unspecified (Summary budget)", mapped_country_data$sda_activity)
+#Emily still not surewhy we're doing this. - This needs to happen in the summary budgets. 
+#mapped_country_data$sda_activity <- ifelse(tolower(mapped_country_data$sda_activity) == "all" | mapped_country_data$sda_activity == "0", "Unspecified (Summary budget)", mapped_country_data$sda_activity)
 
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  
@@ -164,8 +168,10 @@ mapped_country_data$sda_activity <- ifelse(tolower(mapped_country_data$sda_activ
 
 desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "code_count", "coefficient", "cost_category", "country", "data_source", "disbursement", "disease", 
                   "expenditure", "file_iteration", "fileName", "frequency", "gf_intervention", "gf_module", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
-                  "orig_intervention", "orig_module", "period", "prefix", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
-stopifnot(sort(colnames(mapped_country_data)) == desired_cols)   
+                  "orig_intervention", "orig_module", "period", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
+stopifnot(sort(colnames(mapped_country_data)) == desired_cols)  
+
+#EMILY WANT TO HAVE GRANT STATUS HERE!! Active or not active. 
 
 #------------------------------------------------------------
 # Remove any special characters so .csv will store correctly 
@@ -182,9 +188,11 @@ mapped_country_data$orig_intervention <- str_replace_all(mapped_country_data$ori
 final_budgets <- mapped_country_data[file_iteration == "final" & data_source == "fpm"]
 final_expenditures <- mapped_country_data[file_iteration == "final" & data_source == "pudr"]
 
-write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), fileEncoding = "latin1", row.names = FALSE)
-write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), fileEncoding = "latin1", row.names = FALSE)
-write.csv(mapped_country_data, paste0(export_dir, "budget_iterations.csv"), fileEncoding = "latin1", row.names = FALSE)
+# write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), fileEncoding = "latin1", row.names = FALSE)
+# write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), fileEncoding = "latin1", row.names = FALSE)
+# write.csv(mapped_country_data, paste0(export_dir, "budget_iterations.csv"), fileEncoding = "latin1", row.names = FALSE)
 
 # alternate RDS file
 saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
+saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
+saveRDS(mapped_country_data, paste0(export_dir, "budget_pudr_iterations.rds"))
