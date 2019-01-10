@@ -34,13 +34,9 @@ library(lattice)
 # ---------------------------------------------------
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/')
-
 dir_pnlp = paste0(dir, 'prepped_data/PNLP/')
 # standardized shapefiles and data
-# dir = "C:/Users/abatzel/Documents/Audrey_PCE/edited data for Constant/" # change this to somewhere on the J drive
-dir ='C:/Users/abatzel/Desktop/malaria_results_chain_copy/prepped_data/'
-dir_pnlp ='C:/Users/abatzel/Desktop/Copy of data for J drive shutdown/'
-
+dir = "C:/Users/abatzel/Documents/Audrey_PCE/edited data for Constant/" # change this to somewhere on the J drive
 out_dir = paste0(root, "/Project/Evaluation/GF/results_chains/cod/malaria/visualizations/maps/")
   
 # input files
@@ -59,7 +55,6 @@ dps_names = read.csv(old_dps_names, stringsAsFactors = FALSE)
 # load data
 # ---------------------------------------------------
 dt = readRDS(paste0(dir, "dt_17_mal_base_data.rds"))
-dt = readRDS(paste0(dir, 'snis_base_data_prepped_for_Constant.rds'))
 
 dt_pnlp = readRDS(paste0(dir_pnlp, pnlp_dps))
 dt_pnlp <- dt_pnlp[dps != "0",]
@@ -67,7 +62,7 @@ dt_pnlp$year <- year(dt_pnlp$date)
 dt_pnlp$dps <- standardizeDPSNames(dt_pnlp$dps)
 dt_pnlp_17 <- dt_pnlp[year == "2017",]
 
-shp_dps = readRDS(paste0(dir, "dps_shapefile_names_standardized.rds"))
+shp_dps = readRDS(paste0(dir, "dps_shapefile.rds"))
 
 dt_pnlp_hz = readRDS(paste0(dir_pnlp, pnlp_hz))
 dt_pnlp_hz <- dt_pnlp_hz[dps != "0",]
@@ -76,7 +71,7 @@ dt_pnlp_hz <- dt_pnlp_hz[year == "2017",]
 dt_pnlp_hz$dps <- standardizeDPSNames(dt_pnlp_hz$dps)
 dt_pnlp_hz$health_zone <- standardizeHZNames(dt_pnlp_hz$health_zone)
 
-shp_hz = readRDS(paste0(dir, "hz_shapefile_names_standardized.rds"))
+shp_hz = readRDS(paste0(dir, "hz_shapefile.rds"))
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -179,16 +174,6 @@ dt_17_mal <- dt_17[ type== "malaria", ]
 dt_17_mal$element <- trimws(dt_17_mal$element)
 dt_17_mal$element_eng <- trimws(dt_17_mal$element_eng)
 
-# get rid of outliers 
-snis <- copy(dt_17_mal)
-check <- snis[element_eng %in% c("A 1.4 Confirmed simple malaria", "A 1.5 Confirmed simple malaria - pregnant woman", "A 1.4 Confirmed simple malaria treated", "A 1.5 Confirmed simple malaria treated - pregnant woman")]
-remove <- check[value >100000, .(date, org_unit, org_unit_id, element_eng, category, value)]
-snis[element_eng %in% c("A 1.4 Confirmed simple malaria", "A 1.5 Confirmed simple malaria - pregnant woman", "A 1.4 Confirmed simple malaria treated", "A 1.5 Confirmed simple malaria treated - pregnant woman")
-     & date == "2017-08-01" & org_unit_id == "IPKBcNL59e6" & category == "default", value := NA]
-snis[element_eng %in% c("A 1.4 Confirmed simple malaria", "A 1.5 Confirmed simple malaria - pregnant woman", "A 1.4 Confirmed simple malaria treated", "A 1.5 Confirmed simple malaria treated - pregnant woman")
-     & date == "2017-04-01" & org_unit_id == "R07kYRGTVuV" & category %in% c('>5 ans', '<5 ans'), value := NA]
-dt_17_mal <- copy(snis)
-
 dt_17_mal[element== "A 2.1 MILD distribués a la CPN2+", element_eng := "LLIN_distAtANC"]
 dt_17_mal[element== "A 2.1 MILD distribués a la CPN1", element_eng := "LLIN_distAtANC"]
 dt_17_mal[element== "A 1.4 TDR positif", element_eng := "RDT_positive"]
@@ -244,104 +229,44 @@ snis_subset <- dcast.data.table(snis_subset, health_zone + dps + former_dps_name
 pnlp_subset <- dcast.data.table(pnlp_subset, health_zone + dps + former_dps_name ~ indicator)
 
 # calculation
-snis_subset <- snis_subset[, .(pct_mild_treated = ((mildMalariaTreated / newCasesMalariaMild)*100), 
-                               pct_severe_treated = ((severeMalariaTreated / newCasesMalariaSevere)*100)), 
+snis_subset <- snis_subset[, .(pct_mild_treated = (mildMalariaTreated / newCasesMalariaMild), 
+                               pct_severe_treated = (severeMalariaTreated / newCasesMalariaSevere)), 
                            by= c("health_zone", "dps", "former_dps_name")]
 pnlp_subset <- pnlp_subset[, .(pct_mild_treated = (mildMalariaTreated / newCasesMalariaMild), 
                                pct_severe_treated = (severeMalariaTreated / newCasesMalariaSevere), 
-                               SP_over_ANC = ((SP / ANC)*100),
+                               SP_over_ANC = (SP / ANC),
                                deaths_per_1kcases_all = (malariaDeaths / (newCasesMalariaMild + newCasesMalariaSevere)) * 1000),
                            by= c("health_zone", "dps", "former_dps_name")]
-# # melt
-# snis_subset <- melt.data.table(snis_subset, id.vars = c("health_zone", "dps", "former_dps_name"), variable.name = "indicator")
-# pnlp_subset <- melt.data.table(pnlp_subset, id.vars = c("health_zone", "dps", "former_dps_name"), variable.name = "indicator")
+# melt
+snis_subset <- melt.data.table(snis_subset, id.vars = c("health_zone", "dps", "former_dps_name"), variable.name = "indicator")
+pnlp_subset <- melt.data.table(pnlp_subset, id.vars = c("health_zone", "dps", "former_dps_name"), variable.name = "indicator")
 
-# # CHANGE THIS LINE TO MAKE EACH SUBSEQUENT SET OF FIGURES
-# dt_subset <- snis_subset[ indicator == "pct_mild_treated", ]
+# CHANGE THIS LINE TO MAKE EACH SUBSEQUENT SET OF FIGURES
+dt_subset <- snis_subset[ indicator == "pct_mild_treated", ]
 
-#change outliers
-snis_subset[pct_mild_treated > 400, pct_mild_treated := NA]
-snis_subset[pct_mild_treated > 100, pct_mild_treated := 100]
-snis_subset[pct_severe_treated > 100, pct_severe_treated := 100]
-snis_subset[pct_mild_treated < 80, pct_mild_treated := 80]
-snis_subset[pct_severe_treated < 50, pct_severe_treated := 50]
-pnlp_subset[SP_over_ANC > 100, SP_over_ANC := 100]
+graphData <- merge(dt_subset, coordinates, by.x=c('health_zone', 'former_dps_name'), by.y=c('Name', 'PROVNAME'), all=TRUE)
 
-graphData <- merge(snis_subset, coordinates, by.x=c('health_zone', 'former_dps_name'), by.y=c('Name', 'PROVNAME'), all=TRUE)
+max = max(graphData$value, na.rm=TRUE)
+min = min(graphData$value, na.rm=TRUE)
+med = max/2
 
-library(RColorBrewer)
-mapColors = brewer.pal(10, 'RdYlBu')
-
-# % uncomplicated cases treated
-max = max(graphData$pct_mild_treated, na.rm=TRUE)
-min = min(graphData$pct_mild_treated, na.rm=TRUE)
-
-m1_snis <- ggplot() + 
-  geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=pct_mild_treated)) + 
+m_snis <- ggplot() + 
+  geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=value)) + 
   coord_equal() +
   geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
   theme_void() +  
-  scale_fill_gradientn(colors=mapColors, 
-                       na.value = "grey70", space = "Lab", 
-                       breaks=c(80, 85, 90, 95, 100), 
-                       limits=c(min,max)) +
-  labs(title="A) Percent of uncomplicated malaria cases treated", 
-       fill='Percent treated', 
-       caption= "    ")+ 
-  theme(  plot.caption = element_text(size = 16), plot.title = element_text(size = 20) )
-m1_snis
+  scale_fill_gradient2(low='#9aeaea', mid='#216fff', high='#0606aa', 
+                       na.value = "grey70", space = "Lab", midpoint = .87, ## play around with this to get the gradient that you want, depending on data values 
+                       breaks=c(.8, .9, .95, 1), 
+                       limits=c(0,max)) +
+  labs(title="Proprtion of uncomplicated malaria cases treated, 2017", 
+       fill='Proportion of uncomplicated cases treated', 
+       caption='Source: SNIS')+ 
+  theme( plot.caption = element_text(size = 12), plot.title = element_text(size = 16))
 
-# % severe cases treated
-max = max(graphData$pct_severe_treated, na.rm=TRUE)
-min = min(graphData$pct_severe_treated, na.rm=TRUE)
+g <- grid.arrange(m_pnlp, m_snis, ncol = 2)
 
-m2_snis <- ggplot() + 
-  geom_polygon(data=graphData, aes(x=long, y=lat, group=group, fill=pct_severe_treated)) + 
-  coord_equal() +
-  geom_path(data=graphData, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
-  theme_void() +  
-  scale_fill_gradientn(colors=mapColors, 
-                       na.value = "grey70", space = "Lab", 
-                       breaks=c(50, 60, 70, 80, 90, 95), 
-                       limits=c(min,max)) +
-  labs(title="B) Percent of severe malaria cases treated", 
-       fill='Percent treated', 
-       caption='Source: SNIS') + 
-  theme(  plot.caption = element_text(size = 16), plot.title = element_text(size = 20) )
-m2_snis
-
-file_name = "map_test"
-pdf( paste0(out_dir, file_name, ".pdf"), height = 9, width = 14 )
-print(m1_snis)
-print(m2_snis)
-dev.off() 
-
-# # % ANC visits with SP administered
-# graphData2 <- merge(pnlp_subset, coordinates, by.x=c('health_zone', 'former_dps_name'), by.y=c('Name', 'PROVNAME'), all=TRUE)
-# 
-# max = max(graphData2$SP_over_ANC, na.rm=TRUE)
-# min = min(graphData2$SP_over_ANC, na.rm=TRUE)
-# 
-# m3_pnlp <- ggplot() + 
-#   geom_polygon(data=graphData2, aes(x=long, y=lat, group=group, fill=SP_over_ANC)) + 
-#   coord_equal() +
-#   geom_path(data=graphData2, aes(x=long, y=lat, group=group), color="black", size=0.2, alpha=0.2) +
-#   theme_void() +  
-#   scale_fill_gradientn(colors=mapColors, 
-#                        na.value = "grey70", space = "Lab", 
-#                        breaks=c(30, 60, 80, 95, 100), 
-#                        limits=c(min,max)) +
-#   labs(title="Percent of ANC visits with \nSP administered, 2017", 
-#        fill='Percent', 
-#        caption= "Source: PNLP")+ 
-#   theme(  plot.caption = element_text(size = 16), plot.title = element_text(size = 20) )
-# m3_pnlp
-
-
-g <- grid.arrange(m1_snis, m2_snis, ncol = 2)
-
-out_dir = 'C:/Users/abatzel/Desktop/malaria_results_chain_copy/added_vis_off_J/'
-file_name = "maps_figure3"
+file_name = "Proportion of uncomplicated malaria cases treated by hz, 2017"
 pdf( paste0(out_dir, file_name, ".pdf"), height = 9, width = 14 )
 grid.draw(g)
 dev.off() 
