@@ -29,17 +29,14 @@ for(i in 1:length(file_list$file_name)){
     tmpData <- prep_fpm_detailed_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                         file_list$language[i], file_list$grant[i], file_list$primary_recipient[i])
-    tmpData$disbursement <- 0 
   } else if (file_list$function_type[i]=="summary"){ ## only summary level data - no municipalities 
     tmpData <- prep_fpm_summary_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                        ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                        file_list$grant[i], file_list$primary_recipient[i], file_list$language[i])
-    tmpData$disbursement <- 0
   } else if (file_list$function_type[i]=="detailed_other"){ ## there's an older version of detailed fpm budgets
     tmpData <- prep_other_detailed_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                         ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                         file_list$language[i], file_list$grant[i])
-    tmpData$disbursement <- 0 
   } else if (file_list$function_type[i]=="pudr"){ 
     tmpData <- prep_gtm_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                           file_list$start_date[i], file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
@@ -49,7 +46,6 @@ for(i in 1:length(file_list$file_name)){
     tmpData <- prep_other_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]),
                                           ymd(file_list$start_date[i]), file_list$qtr_number[i], file_list$disease[i], file_list$period[i], 
                                           file_list$language[i], file_list$grant[i])
-    tmpData$disbursement <- 0 
   }
   tmpData$data_source <- file_list$data_source[i]
   tmpData$fileName <- file_list$file_name[i]
