@@ -5,6 +5,7 @@
 
 read_fileList = function(){
   
+options(scipen=100)
 document_prep <- paste0(country_code_dir, "document_prep_functions/")
   
 # ----------------------------------------------
@@ -60,7 +61,7 @@ for(i in 1:nrow(file_list)){
     resource_database = tmpData 
   } 
   if(i>1){
-    resource_database = rbind(resource_database, tmpData, use.names=TRUE)
+    resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill = TRUE)
   }
 
   print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on

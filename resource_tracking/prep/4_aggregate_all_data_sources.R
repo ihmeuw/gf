@@ -59,15 +59,13 @@ gos_data$expenditure <- as.numeric(gos_data$expenditure)
 # Merge all 3 countries 
 final_budgets_cod <- readRDS(paste0(cod_prepped, "final_budgets.rds"))
 
-final_budgets_gtm <- read.csv(paste0(gtm_prepped, "final_budgets.csv"))
-final_budgets_gtm$budget <- as.numeric(final_budgets_gtm$budget)
+final_budgets_gtm <- readRDS(paste0(gtm_prepped, "final_budgets.rds"))
 
-final_budgets_uga = read.csv(paste0(uga_prepped, "final_budgets.csv"))
-final_budgets_uga$budget <- as.numeric(final_budgets_uga$budget)
+final_budgets_uga = readRDS(paste0(uga_prepped, "final_budgets.rds"))
 
 #-------------------------------------------
-# Hacky fix for duplicate budget quarters -- 
-# This should be removed and handled in file prep process!! 
+# Check for duplicate budget quarters - 
+# this should also happen in prep process. 
 # ------------------------------------------
 
 setDT(final_budgets_cod)
@@ -101,7 +99,6 @@ final_budgets[grant_number == 'GUA-M-MSPAS', grant_number:='GTM-M-MSPAS']
 final_budgets[grant_number == 'GTM-T-UPCOMING', grant_number:='GTM-T-MSPAS']
 final_budgets[grant_number == 'GTM-M-UPCOMING', grant_number:='GTM-M-MSPAS']
 final_budgets[grant_number == 'UGD-708-G13-H', grant_number:='UGA-708-G13-H']
-
 
 #Check that all grant numbers in GF budgets correlate to GOS grant numbers
 fpm_grants = unique(final_budgets[data_source=='fpm', .(grant_number)])[order(grant_number)]
@@ -142,11 +139,9 @@ saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets.rds"))
 # Merge all 3 countries 
 final_expenditures_cod <- readRDS(paste0(cod_prepped, "final_expenditures.rds"))
 
-final_expenditures_gtm <- read.csv(paste0(gtm_prepped, "final_expenditures.csv"))
-final_expenditures_gtm$expenditure <- as.numeric(final_expenditures_gtm$expenditure)
+final_expenditures_gtm <- readRDS(paste0(gtm_prepped, "final_expenditures.rds"))
 
-final_expenditures_uga <- read.csv(paste0(uga_prepped, "final_expenditures.csv"))
-final_expenditures_uga$expenditure <- as.numeric(final_expenditures_uga$expenditure)
+final_expenditures_uga <- readRDS(paste0(uga_prepped, "final_expenditures.rds"))
 
 #-------------------------------------------
 # Hacky fix for duplicate budget quarters -- 
@@ -176,7 +171,6 @@ stopifnot(nrow(check_qtr_uga)==0)
 
 #Bind expenditures together
 final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, fill = TRUE) 
-final_expenditures$start_date <- as.Date(final_expenditures$start_date, "%Y-%m-%d")
 final_expenditures <- rbind(final_expenditures, gos_data, fill = TRUE) 
 
 #Correct grant labels so they merge correctly #EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE 
@@ -217,14 +211,11 @@ saveRDS(final_expenditures, paste0(final_write, "final_expenditures.rds"))
 # 3. GF FILE ITERATIONS
 #----------------------------------
 all_gf_cod <- readRDS("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds")
-all_gf_uga <- read.csv("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_iterations.csv") #Emily why are these two files having issues when you read with fread? Check diacritical marks. 
-setDT(all_gf_uga)
-all_gf_uga[, start_date:=as.Date(start_date, format = "%Y-%m-%d")]
-all_gf_gtm <- read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_iterations.csv")
-setDT(all_gf_gtm)
-all_gf_gtm[, start_date:=as.Date(start_date, format = "%Y-%m-%d")]
+all_gf_uga <- readRDS("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_iterations.rds")  
+all_gf_gtm <- readRDS("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_iterations.rds")
 
 all_gf_files <- rbind(all_gf_cod, all_gf_uga, all_gf_gtm, fill = TRUE)
+
 #Write data 
 write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
 saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations.rds"))

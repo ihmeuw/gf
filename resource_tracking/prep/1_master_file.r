@@ -22,6 +22,8 @@ library(rlang)
 library(zoo)
 library(dplyr)
 
+options(scipen=100)
+
 j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/')
 code_loc = ifelse(Sys.info()[1]=='Windows','C:/Users/elineb/Documents/gf/','ihme/code/elineb/gf/')
@@ -58,6 +60,7 @@ include_stops = FALSE #Set to true if you would like to see error messages in mo
   country_code_dir <- paste0(code_dir, "global_fund_prep/", country, "_prep/")
   file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE)
   file_list$start_date <- as.Date(file_list$start_date, format = "%m/%d/%Y")
+  file_list = file_list[, -c('notes')]
   
   #Validate file list 
   desired_cols <- c('file_name', 'sheet', 'function_type', 'start_date', 'disease', 'data_source', 'period', 'qtr_number', 'grant', 'primary_recipient',
