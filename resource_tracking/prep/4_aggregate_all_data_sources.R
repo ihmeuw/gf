@@ -31,7 +31,6 @@ uga_prepped <- "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/"
 final_write <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/"
 
 
-
 # --------------------------------------------
 # Load the prepped GOS data - to be used for both 
 # final budgets and final expenditures 
@@ -127,6 +126,24 @@ stopifnot(nrow(na_year)==0)
 
 #Generate variables 
 #final_budgets[, end_date:=start_date + period-1]
+
+#Generate a binary variable for current grants. 
+final_budgets$current_grant = FALSE 
+
+for (i in 1:length(current_gtm_grants)){
+  final_budgets[grant_number==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], current_grant:=TRUE]
+}
+
+for (i in 1:length(current_uga_grants)){
+  final_budgets[grant_number==current_uga_grants[i] & grant_period==current_uga_grant_period[i], current_grant:=TRUE]
+}
+
+for (i in 1:length(current_cod_grants)){
+  final_budgets[grant_number==current_cod_grants[i] & grant_period==current_cod_grant_period[i], current_grant:=TRUE]
+}
+
+all_current_grants = unique(final_budgets[current_grant==TRUE, .(grant, grant_period, fileName)])
+stopifnot(nrow(all_current_grants)==14)
 
 # Write data 
 write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)

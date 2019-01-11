@@ -53,6 +53,10 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
       start_row <- 29
       end_row <- 48 
     }
+    if (inFile == "PUDR_P32_HivosGT_030518.xlsx"){
+      start_row <- grep("Modular Approach", gf_data$module)
+      end_row <- 106
+    }
     if (!(length(start_row)==1 & length(end_row) == 1)){
       stop(paste0("Incorrect parameters specified for subset. Verify grep condition for file: ", inFile))
     }
@@ -104,16 +108,33 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   
   #gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure", "disbursement"),with=FALSE] #Remove this check, because want to remove sda_activity, expenditure, and 
   # disbursement where they don't apply.
-  budget_dataset <- gf_data[-1, drop = FALSE]
-  budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
+  
+  #
+  
+  #Emily verify that this isn't dropping budget information! Can we do this another way? 
+  if (inFile != "PUDR_P32_HivosGT_030518.xlsx"){
+    budget_dataset <- gf_data[-1, drop = FALSE]
+    budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
+  } else {
+    budget_dataset = gf_data
+  }
   
   #This command makes me nervous everywhere I see it. EKL 1/9/18. Need to be verifying budget totals before dropping NAs. 
   #budget_dataset <- na.omit(budget_dataset , cols=1, invert=FALSE)
   
+  #Emily what is this prep code doing? 
   toMatch <- c("total", "module")
   budget_dataset <- budget_dataset[!grepl(paste0(toMatch, collapse="|"), tolower(budget_dataset$module)),]
-  if (qtr_num == 1 & nrow(budget_dataset[is.na(start_date)])==nrow(budget_dataset)){
+  
+  #Need to rewrite this to 1.) Make sure only invalid rows are being dropped and 2.) We have checks in place. 
+  #Add numeric budget check here. 
+  
+  
+  if (qtr_num == 1 & !('start_date'%in%colnames(budget_dataset))){
     budget_dataset$start_date <- start_date
+  }
+  if(!'start_date'%in%colnames(budget_dataset)){
+    stop("PUDR with multiple quarters- review GTM prep code.")
   }
   budget_dataset$year <- year(budget_dataset$start_date)
   budget_dataset$period <- period

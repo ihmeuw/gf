@@ -20,7 +20,7 @@ source(paste0(document_prep, "prep_gtm_pudr.R"))
 # For loop that preps data and aggregates it
 # --------------------------------------------
 
-for(i in 1:length(file_list$file_name)){
+for(i in 1:nrow(file_list)){
   folder = "budgets"
   folder = ifelse (file_list$data_source[i] == "fpm" , folder, "pudrs")
   file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
@@ -60,7 +60,7 @@ for(i in 1:length(file_list$file_name)){
     resource_database = tmpData
   }
   if(i>1){
-    resource_database = rbind(resource_database, tmpData, use.names=TRUE)
+    resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill = TRUE)
   }
 
   print(paste0(i, " ", file_list$function_type[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on

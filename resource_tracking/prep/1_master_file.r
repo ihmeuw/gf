@@ -36,7 +36,7 @@ code_loc = ifelse(Sys.info()[1]=='Windows','C:/Users/elineb/Documents/gf/','ihme
 user = "elineb" #Change to your username 
 code_dir = paste0(code_loc, "resource_tracking/prep/")
 combined_output_dir = paste0(j, "resource_tracking/multi_country/mapping")
-country <- c("uga") #Change to the country you want to update. 
+country <- c("gtm") #Change to the country you want to update. 
 source(paste0(code_dir, "shared_mapping_functions.R")) 
 
 #Global variables. 
@@ -79,6 +79,16 @@ include_stops = FALSE #Set to true if you would like to see error messages in mo
 # ----------------------------------------------
 # STEP 4: Aggregate country-level data 
 # ----------------------------------------------
+  
+  #Mark which grants are currently active to save in file - this should be updated every grant period! 
+  current_gtm_grants <- c('GTM-H-HIVOS', 'GTM-H-INCAP', 'GTM-M-MSPAS', 'GTM-T-MSPAS')
+  current_gtm_grant_period <- c('2018', '2019-2020', '2018-2020', '2016-2019')
+  
+  current_cod_grants <- c('COD-C-CORDAID', 'COD-H-MOH', 'COD-T-MOH', 'COD-M-MOH', 'COD-M-SANRU')
+  current_cod_grant_period <- rep("2018-2020", 5)
+  
+  current_uga_grants <- c('UGA-C-TASO', 'UGA-H-MoFPED', 'UGA-M-MoFPED', 'UGA-M-TASO', 'UGA-T-MoFPED')
+  current_uga_grant_period <- rep("2018-2020", 5)
 
   source(paste0(code_dir, "4_aggregate_all_data_sources.r"))
 
