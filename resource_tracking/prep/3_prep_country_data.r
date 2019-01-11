@@ -13,6 +13,12 @@ source(paste0(country_code_dir, "read_filelist_", country, ".R"))
 resource_database <- read_fileList()
 original_db <- copy(resource_database)
 
+#Make sure all budget data pulled is actually numeric- this is an easy check to see if prep functions are working correctly. 
+verify_numeric_budget = resource_database[, budget:=gsub("[[:digit:]]", "", budget)]
+verify_numeric_budget = verify_numeric_budget[, budget:=gsub("[[:punct:]]", "", budget)]
+verify_numeric_budget = verify_numeric_budget[!is.na(budget) & budget != ""]
+stopifnot(nrow(verify_numeric_budget)==0)
+
 #Make sure your quarters are denoted correctly (months 1, 4, 7, and 10)
 check_dates <- resource_database[!month(start_date)%in%c(1,4,7,10)]
 stopifnot(nrow(check_dates)==0)
@@ -24,11 +30,6 @@ stopifnot(nrow(fpm_overlap)==0 & nrow(pudr_overlap)==0)
 
 rm(fpm_overlap, pudr_overlap)
 
-#Make sure all budget and expenditure variables are numeric. 
-resource_database$budget <- as.numeric(resource_database$budget)
-resource_database$expenditure <- as.numeric(resource_database$expenditure)
-resource_database$disbursement <- as.numeric(resource_database$disbursement)
-
 #Drop any rows that have 0 or NA for budget and expenditure
 resource_database = resource_database[!((budget==0| is.na(budget)) & (expenditure == 0 | is.na(expenditure)))]
 print(paste0("Dropped ", nrow(original_db) - nrow(resource_database), " rows with NA or 0 for budget and expenditure"))
@@ -39,6 +40,11 @@ resource_database[!is.na(budget) & is.na(expenditure), expenditure:=0]
 
 check_na_budget <- resource_database[is.na(budget) | is.na(expenditure)]
 stopifnot(nrow(check_na_budget)==0)
+
+#Make sure all budget and expenditure variables are numeric. 
+resource_database$budget <- as.numeric(resource_database$budget)
+resource_database$expenditure <- as.numeric(resource_database$expenditure)
+resource_database$disbursement <- as.numeric(resource_database$disbursement)
 
 #check for duplicates, and sum their values if they exist:
 dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
@@ -83,6 +89,14 @@ if(nrow(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
 }
 
+#------------------------------------------------------------
+# Remap diseases so they apply at the intervention level, 
+#   not the grant-level (assigned in the file list) 
+#------------------------------------------------------------
+
+source(paste0(code_dir, "3a_remap_diseases.r"))
+resource_database = remap_diseases(resource_database)
+
 #----------------------------------------------------------------------------
 # Merge with module map on module, intervention, and disease to pull in code
 #----------------------------------------------------------------------------
@@ -105,7 +119,6 @@ if(nrow(dropped_mods) >0){
   stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
 }
 
-#EMILY BUDGET NUMBERS VERIFIED TO HERE 1/2/19 
 #-------------------------------------------------------
 # Split HIV/TB combined grants  
 # ------------------------------------------------------
