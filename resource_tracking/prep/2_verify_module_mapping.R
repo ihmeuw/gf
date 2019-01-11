@@ -36,9 +36,13 @@ map = map[!(module=='priseenchargeetpreventiondelatuberculose' & intervention ==
 map = map[!(module=='tuberculosemultiresistante' & intervention == 'all' & disease == 'hiv')]
 map = map[!(module=='hivprevention' & code == 'R7_5' & disease %in% c('malaria', 'tb', 'hss'))]
 map = map[!(module=='malprevention' & code == 'R7_3' & disease %in% c('hiv', 'tb', 'hss'))]
-map = map[!(module == 'other' & intervention == 'other' & code == 'H9_3')]
 map = map[!(module == 'supportiveenvironment' & intervention == 'na' & code == 'H6_8')]
 map = map[!(module == 'mdrtb' & substring(code, 0, 1)=='H')]
+map = map[!(module == 'hivhealthsystemsstrengthening' & disease%in%c('tb', 'malaria', 'hss'))]
+map = map[!(module == 'tbhealthsystemsstrengthening' & disease%in%c('hiv', 'malaria', 'hss'))]
+map = map[!(module == 'malhealthsystemsstrengthening' & disease%in%c('tb', 'hiv', 'hss'))]
+
+
 
 #--------------------------------------------------------------------------------
 # CLEANING- Removing typos and close string matches from map  
@@ -125,12 +129,11 @@ map = map[!(module == 'otherspecify' & intervention == 'all' & prefix == 'R')]
 map = map[!(module == 'other' & intervention == 'all' & prefix == 'R')]
 map = map[!(module == 'otherunidentified' & intervention == 'otherunidentified' & prefix == 'R')]
 map = map[!(module == 'beyondtb' & intervention == 'all' & prefix=='R')]
-map = map[!(module == 'programmanagement' & prefix=='R')]
-map = map[!(module == 'gestiondelasubvention' & prefix=='R')]
-map = map[!(module == 'gestiondesubvenciones' & prefix=='R')]
-map = map[!(module == 'financialmanagement' & prefix=='R')]
-map = map[!(module == 'gestiondeprogramas' & prefix=='R')]
-map = map[!(module == 'gestiondeprogramme' & prefix=='R')]
+map = map[!(module == 'programmanagement'  & disease != 'hss' & prefix=='R')]
+map = map[!(module == 'gestiondelasubvention' & disease != 'hss' & prefix=='R')]
+map = map[!(module == 'gestiondesubvenciones' & disease != 'hss' & prefix=='R')]
+map = map[!(module == 'gestiondeprogramas' & disease != 'hss' & prefix=='R')]
+map = map[!(module == 'gestiondeprogramme' & disease != 'hss' & prefix=='R')]
 map = map[!(module == 'gestiondeprogrammegestiondesubvention' & intervention == 'gestiondeprogrammegestiondesubvention' & prefix == 'R')]
 
 #Correcting some RSSH mappings to disease codes
