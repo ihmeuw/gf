@@ -12,6 +12,11 @@
 
 # ----------------------------------------------
 
+#------------------------------------------
+#To do on this script: 
+# Find out a way to get rid of 'grand total' column for every file. 
+#------------------------------------------
+
 # start function
 prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, grant, recipient, source) {
   
@@ -21,15 +26,15 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   ### look at gf_data and find what is being droped where.
   ########
   
-  dir = file_dir
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet[i]
-  start_date = file_list$start_date[i]
-  period = file_list$period[i]
-  disease = file_list$disease[i]
-  grant = file_list$grant[i]
-  recipient = file_list$primary_recipient
-  source = file_list$data_source[i]
+  # dir = file_dir
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # grant = file_list$grant[i]
+  # recipient = file_list$primary_recipient
+  # source = file_list$data_source[i]
   
   # --------------------
   # Test the inputs to make sure that they are the correct type
@@ -69,7 +74,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset <- budget_dataset[-1, ,drop = FALSE]
       
     } else if (sheet_name%in%c("LFA Expenditure_7B", "PR Expenditure_7A")){ ## for the PUDRs w/out SR info
-      if(year(start_date) == 2018){
+      if(year(start_date) == 2018){ #This section is okay. 
         gf_data = gf_data[, 3:length(gf_data)]
       }
       colnames(gf_data)[1] <- "module"
@@ -77,19 +82,32 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       colnames(gf_data)[3] <- "budget"
       colnames(gf_data)[4] <- "expenditure"
       #Select only the section of the excel that's broken up by intervention 
-      start_row <- grep("by intervention", tolower(gf_data$module))
-      end_row <- grep("breakdown by implementing entity", tolower(gf_data$module))
+      start_row <- grep("modular approach", tolower(gf_data$module))
+      end_row <- grep("grand total", tolower(gf_data$module))
+      x = 1
+      while (end_row[x] < start_row){
+        x = x + 1
+      }
+      end_row = end_row[x]
+      #Validate that these are correct 
+      stopifnot(length(start_row)==1 & length(end_row)==1)
       gf_data = gf_data[start_row:end_row, ]
+      if (inFile == "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx" | inFile == "UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx"){
+        gf_data = gf_data[-1, ]
+      }
       if (inFile == "LFA reviewed UGA-T-MoFPED PUDR PE 31 December 2017 25 May 18.xlsx"){ #This file has some extra rows. 
         gf_data = gf_data[5:18, ]
       }
       budget_dataset <- gf_data[, c("module","intervention", "budget", "expenditure"),with=FALSE]
       budget_dataset<-  budget_dataset[!is.na(module),]
       budget_dataset<- budget_dataset[!is.na(intervention),]
-      budget_dataset <- budget_dataset[-1,]
       budget_dataset$recipient <- recipient
-      ## drop 1st row since it doesn't contain any useful inforamtion:  
-      #budget_dataset <- budget_dataset[-1, ,drop = FALSE] #No- this isn't true for all grants. Need to find out what this applies to. 
+      #Remove extra title rows. 
+      extra_module_row <- grep("budget for reporting period", tolower(budget_dataset$budget))  
+      if (length(extra_module_row) > 0){
+        print(budget_dataset$module[extra_module_row])
+        budget_dataset <- budget_dataset[-extra_module_row, ,drop = FALSE]
+      }
     } else if (sheet_name%in%c('LFA_Total PR Cash Outflow_3A','LFA_Total PR Cash Outflow_3')){ ## for the PUDRs w/out module/intervention detail
       colnames(gf_data)[1] <- "description"
       colnames(gf_data)[3] <- "budget"
@@ -100,7 +118,6 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
       budget_dataset<-na.omit(budget_dataset)
       budget_dataset$module <- "All"
       budget_dataset$intervention <- "All" 
-      budget_dataset$disbursement <- 0 
       budget_dataset$description = NULL
     } else if (inFile == "pudrs/LFA reviewed UGA-T-MOFPED PUDR PE 31Dec2015_final.xlsx"){
       colnames(gf_data)[1] <- "description"
@@ -144,7 +161,11 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
     budget_dataset$intervention <- "All" ## change if we ever get more detailed PUDR info
     ## drop 1st row since it doesn't contain any useful inforamtion:  
     budget_dataset <- budget_dataset[-1, ,drop = FALSE]
-  }
+    }
+  
+  #Remove all invalid inputs. 
+  budget_dataset = budget_dataset[!is.na(module) & module != 0]
+  
   budget_dataset$start_date <- start_date
   budget_dataset$data_source <- source
   budget_dataset$period <- period

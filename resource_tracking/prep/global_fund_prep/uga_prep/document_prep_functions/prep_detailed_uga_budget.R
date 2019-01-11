@@ -62,9 +62,8 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     colnames(gf_data) <- as.character(gf_data[1,])
     gf_data <- gf_data[-1,]
   }
-  
 
-  #3only grab the columns we want (program activity, recipient, and quarterly data) :
+  #only grab the columns we want (program activity, recipient, and quarterly data) :
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
   
   ##rename the columns: 
@@ -75,11 +74,20 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   colnames(gf_data)[5] <- "recipient"
   
   ##only keep data that has a value in the "category" column 
-  gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
+  # gf_data1 <- na.omit(gf_data, cols=1, invert=FALSE) #Emily to review with David or Caitlin- this doesn't seem right. 
+  #Want to only include data that has values for module and intervention (to clean the input sheet). 
+  #But before dropping on these values, make sure you aren't dropping legitimate budget data 
+  gf_data = gf_data[!is.na("module") & !is.na("intervention")]
   
   ## invert the dataset so that budget expenses and quarters are grouped by category
   setDT(gf_data)
   gf_data1<- melt(gf_data,id=c("module","intervention","sda_activity", "cost_category","recipient"), variable.name = "qtr", value.name="budget")
+  
+  #Make sure all budget data at this point is actually numeric. 
+  verify_numeric_budget = gf_data1[, budget:=gsub("[[:digit:]]", "", budget)]
+  verify_numeric_budget = verify_numeric_budget[, budget:=gsub("[[:punct:]]", "", budget)]
+  verify_numeric_budget = verify_numeric_budget[!is.na(budget) & budget != ""]
+  stopifnot(nrow(verify_numeric_budget)==0)
   
   ##create vector that maps quarters to their start dates: 
   dates <- rep(start_date, qtr_num) # 
@@ -90,6 +98,11 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
       dates[i] <- dates[i-1]%m+% months(3)
     }
   }
+  
+  #At this point, we know that budgets with NA should be 0. Replace, and check with David/Caitlin.
+  #Make budget numeric at this point. 
+  gf_data1[is.na(budget), budget:='0']
+  gf_data1[, budget:=as.numeric(budget)]
   
   ##if for some reason, we don't have the same number of start dates as quarters, this will stop the function:
   if(length(dates) != length(unique(gf_data1$qtr))){
