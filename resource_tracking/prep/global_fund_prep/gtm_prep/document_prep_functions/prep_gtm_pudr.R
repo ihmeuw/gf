@@ -33,9 +33,12 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   grant = file_list$grant[i]
   source = file_list$data_source[i]
   loc_name = 'gtm'
-  
+  # 
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
+  
+  #Remove diacritical marks from inFile so it can be used for if-else statements below 
+  inFile = fix_diacritics(inFile)
   
   if((grant%in%"GTM-T-MSPAS"&sheet_name!="INTEGRACION"|sheet_name=="LFA Expenditure_7B")){
     colnames(gf_data)[1] <- "module"
@@ -43,10 +46,17 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
     colnames(gf_data)[3] <- "budget"
     colnames(gf_data)[4] <- "expenditure"
     gf_data$sda_activity <- "all"
-    gf_data$disbursement <- 0 
     gf_data$recipient <- loc_name ##change this when we get SR info
-    
-    gf_data <- gf_data[c(grep("modul", tolower(gf_data$module)):(grep("implem", tolower(gf_data$module)))),]
+    start_row <- grep("modul", tolower(gf_data$module))
+    end_row <- grep("implem", tolower(gf_data$module))
+    if (inFile == "GTM-T-MSPAS_Progress Report Disbursement_30Jun2017_EFREnglish_270917.xlsx"){
+      start_row <- 29
+      end_row <- 48 
+    }
+    if (!(length(start_row)==1 & length(end_row) == 1)){
+      stop(paste0("Incorrect parameters specified for subset. Verify grep condition for file: ", inFile))
+    }
+    gf_data <- gf_data[start_row:end_row,]
     gf_data <- gf_data[-1, ,drop = FALSE]
   } else if (sheet_name=="LFA_Annex-SR Financials"){
       colnames(gf_data)[1] <- "recipient"
@@ -56,7 +66,6 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
       gf_data$sda_activity <- "all"
       gf_data$module <- "all"
       gf_data$intervention <- "all"
-      gf_data$expenditure <- 0
   } else if (sheet_name=="INTEGRACION"){
       colnames(gf_data)[2] <- "code"
       colnames(gf_data)[3] <- "module"
@@ -69,7 +78,6 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
       gf_data$module <- NULL
       setnames(gf_data, c("module1", "module2"), c("module", "intervention"))
       gf_data$recipient <- loc_name
-      gf_data$disbursement <- 0 
       gf_data$sda_activity <- "all"
     
   } else if (sheet_name=="PR EFR_7A"){
@@ -78,30 +86,35 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
     colnames(gf_data)[4] <- "intervention"
     colnames(gf_data)[5] <- "budget"
     colnames(gf_data)[6] <- "expenditure"
-    gf_data$disbursement <- 0 
     gf_data$recipient <- loc_name
     gf_data <- gf_data[c(grep("object", tolower(gf_data$sda_activity)):(grep("name", tolower(gf_data$sda_activity)))),]
+  
+  } else if (inFile == "GUA-M-MSPAS EFR FASE II -2016_Ingles_RevALF.xlsm") {
+    colnames(gf_data)[2] <- "module"
+    colnames(gf_data)[4] <- "intervention"
+    colnames(gf_data)[5] <- "budget"
+    colnames(gf_data)[7] <- "expenditure"
+    start_row <- 33
+    end_row <- 43
+    gf_data = gf_data[start_row:end_row, .(module, intervention, budget, expenditure)]
   } else { 
-      colnames(gf_data)[2] <- "module"
-      colnames(gf_data)[3] <- "sda_activity"
-      colnames(gf_data)[4] <- "intervention"
-      colnames(gf_data)[5] <- "budget"
-      colnames(gf_data)[7] <- "expenditure"
-      gf_data$disbursement <- 0 
-      gf_data$recipient <- loc_name
-      gf_data <- gf_data[c(grep("objetivos", tolower(gf_data$sda_activity)):(grep("seleccio", tolower(gf_data$module)))),]
+      print(paste0("An else-statement was entered in GTM PUDR prep function. Review prep code for: ", 
+            inFile))
   }
   
-  gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure", "disbursement"),with=FALSE]
+  #gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure", "disbursement"),with=FALSE] #Remove this check, because want to remove sda_activity, expenditure, and 
+  # disbursement where they don't apply.
   budget_dataset <- gf_data[-1, drop = FALSE]
   budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
   
-  budget_dataset <- na.omit(budget_dataset , cols=1, invert=FALSE)
+  #This command makes me nervous everywhere I see it. EKL 1/9/18. Need to be verifying budget totals before dropping NAs. 
+  #budget_dataset <- na.omit(budget_dataset , cols=1, invert=FALSE)
   
   toMatch <- c("total", "module")
   budget_dataset <- budget_dataset[!grepl(paste0(toMatch, collapse="|"), tolower(budget_dataset$module)),]
-
-  
+  if (qtr_num == 1 & nrow(budget_dataset[is.na(start_date)])==nrow(budget_dataset)){
+    budget_dataset$start_date <- start_date
+  }
   budget_dataset$year <- year(budget_dataset$start_date)
   budget_dataset$period <- period
   budget_dataset$disease <- disease
