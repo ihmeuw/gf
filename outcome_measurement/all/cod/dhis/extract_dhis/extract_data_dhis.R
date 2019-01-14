@@ -55,20 +55,20 @@ source(paste0(dir, 'dhis_extracting_functions.R'))
 # Input the start year, end year, and output directory
 
 # select the start year and end year for the download
-start_year = '2017'
+start_year = '2018'
 end_year = '2018'
 start_month = '01'
-end_month = '12'
+end_month = '02'
 
 # change the update year to before the data begins
-update_year = '2016'
+update_year = '2018'
 
 #identify the data set(s) you want to download by number (list below)
-set = 2
+set = 29
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'base'
+set_name = 'pnls'
 
 #---------------------------
 # available data sets by number: 
@@ -130,7 +130,7 @@ org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
 # click 'plots' tab to watch download progress
 # extract_all_data is a function in the dhisextractr package
 
-extracted_data <- extract_all_data(base_url = base_url, 
+extracted_data = extract_all_data(base_url = base_url, 
                                      data_sets = data_sets[set, ],
                                      org_units = org_units, 
                                      deb_period = paste0(start_year, '-', start_month, '-01'),
