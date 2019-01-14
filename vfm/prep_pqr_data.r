@@ -31,7 +31,9 @@ referenceFileMal = paste0(dir, 'unit_cost_data/PQR Public Anti-malaria medicine.
 referenceFileTests = paste0(dir, 'unit_cost_data/PQR Public Diagnostic test.xlsx')
 
 # output files
-outFile = paste0(dir, 'outputs/pqr_data_prepped.rdata')
+outFile1 = paste0(dir, 'outputs/pqr_transaction_data_prepped.rdata')
+outFile2 = paste0(dir, 'outputs/pqr_data_prepped_with_reference_prices.rdata')
+outFile3 = paste0(dir, 'outputs/pqr_data_prepped_with_reference_prices_all_countries.rdata')
 # ----------------------------------------------
 
 
@@ -96,11 +98,6 @@ varNames = c('country', 'grant_number', 'supplier',
 	'prepaid', 'freight_cost', 'invoice_number', 'purchase_order_number', 
 	'invoice_currency', 'primary_key', 'status')
 setnames(transactions, varNames)
-	
-# subset to PCE countries
-pce = c('Guatemala', 'Congo (Democratic Republic)', 'Uganda', 
-	'Cambodia', 'Myanmar', 'Sudan', 'Senegal', 'Mozambique')
-transactions = transactions[country %in% pce]
 
 # format dates
 # somebody do this for me
@@ -129,15 +126,25 @@ matches = tproducts[tproducts %in% pproducts]
 transactions[, description:=gsub('\\|', '', description)]
 transactions[, description:=gsub('  ', ' ', description)]
 
+# drop products from reference prices that don't match
+prices = prices[product %in% tproducts]
+
 # merge the product names that do match
 test = nrow(prices) == nrow(unique(prices[,c('product','description'),with=F]))
 if (test==FALSE) stop('Something is wrong. Product and Description do not 
 	uniquely identify rows in the reference price dataset')
 data = merge(transactions, prices, by=c('product','description'))
+	
+# subset to PCE countries
+pce = c('Guatemala', 'Congo (Democratic Republic)', 'Uganda', 
+	'Cambodia', 'Myanmar', 'Sudan', 'Senegal', 'Mozambique')
+data_pce = data[country %in% pce]
 # ------------------------------------------------------------------------
 
 
-# ---------------------
+# -----------------------------
 # Save
-saveRDS(data, outFile)
-# ---------------------
+saveRDS(transactions, outFile1)
+saveRDS(data_pce, outFile2)
+saveRDS(data, outFile3)
+# -----------------------------

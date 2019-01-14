@@ -21,6 +21,7 @@ dir = 'C:/Users/davidp6/Google Drive/Work/IHME Work/GF/Workshops/london_nov2018/
 
 # resource tracking file
 inFile = paste0(dir, 'total_resource_tracking_data.csv')
+inFile = "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_budgets.csv"
 
 # codebook for categories
 codebookFile = paste0(dir, 'category_codebook.csv')

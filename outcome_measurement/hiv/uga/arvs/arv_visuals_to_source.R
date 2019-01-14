@@ -1,13 +1,10 @@
 #------------------------------------------------
 # PDF VISUALS 
-
-pdf(paste0(dir, 'outputs/stockout_descriptives_2013_2018.pdf'), height=6, width=12)
-
 #----------------------------------------
 # reporting completeness graphs
 
 # 1 - count of facilities and art sites reporting
-ggplot(report[ratio==FALSE], aes(x=date, y=value, color=variable, group=variable)) +
+g1 = ggplot(report[ratio==FALSE], aes(x=date, y=value, color=variable, group=variable)) +
   geom_point(size=0.8) +
   geom_line() +
   geom_line() +
@@ -18,7 +15,7 @@ ggplot(report[ratio==FALSE], aes(x=date, y=value, color=variable, group=variable
        subtitle='2014 - November 2018', color="")
 
 # 2 - ratio of facilities reporting
-ggplot(report[ratio==TRUE], aes(x=date, y=value, color=variable, group=variable)) +
+g2 = ggplot(report[ratio==TRUE], aes(x=date, y=value, color=variable, group=variable)) +
   geom_point(size=0.8) +
   geom_line() +
   geom_line() +
@@ -31,7 +28,7 @@ ggplot(report[ratio==TRUE], aes(x=date, y=value, color=variable, group=variable)
 # arv stockout graphs 
 
 # 3 - arv stockout counts
-ggplot(arv[variable!='Percentage of ART sites stocked out of ARVs'], aes(x=date, y=value, color=variable, group=variable)) +
+g3 = ggplot(arv[variable!='Percentage of ART sites stocked out of ARVs'], aes(x=date, y=value, color=variable, group=variable)) +
   geom_line() +
   geom_line() +
   theme_bw() +
@@ -39,7 +36,7 @@ ggplot(arv[variable!='Percentage of ART sites stocked out of ARVs'], aes(x=date,
        y='Number of facilities', x='Date', color="")
 
 # 4  - arv stockout counts below a threshold
-ggplot(arv_thresh[variable!='Percentage of ART sites stocked out of ARVs'], aes(x=date, y=value, color=variable, group=variable)) +
+g4 = ggplot(arv_thresh[variable!='Percentage of ART sites stocked out of ARVs'], aes(x=date, y=value, color=variable, group=variable)) +
   geom_point(alpha=0.5, size=0.8) +
   geom_line() +
   geom_line() +
@@ -49,7 +46,7 @@ ggplot(arv_thresh[variable!='Percentage of ART sites stocked out of ARVs'], aes(
        y='Number of facilities', x='Date', color="")
 
 # 5 - percentage of art sites that reported that were stocked out
-ggplot(arv[variable=='Percentage of ART sites stocked out of ARVs'], aes(x=date, y=value)) +
+g5 = ggplot(arv[variable=='Percentage of ART sites stocked out of ARVs'], aes(x=date, y=value)) +
   geom_point(size=0.5) +
   geom_line() +
   geom_line() +
@@ -63,7 +60,7 @@ ggplot(arv[variable=='Percentage of ART sites stocked out of ARVs'], aes(x=date,
 bar_color = brewer.pal(5, 'RdYlBu') 
 
 # 6 - stacked bar of weeks stocked out 
-ggplot(arv_weeks[weeks!=0], aes(x=weeks, y=facilities, fill=factor(year))) + 
+g6 = ggplot(arv_weeks[weeks!=0], aes(x=weeks, y=facilities, fill=factor(year))) + 
   geom_bar(stat='identity', position='dodge') +
   theme_minimal() +
   scale_fill_manual(values=bar_color) +
@@ -73,7 +70,7 @@ ggplot(arv_weeks[weeks!=0], aes(x=weeks, y=facilities, fill=factor(year))) +
        subtitle='2014 - November 2018')
 
 # 7 - stacked bar of weeks stocked out 
-ggplot(arv_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) + 
+g7 = ggplot(arv_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) + 
   geom_bar(stat='identity', position='dodge') +
   theme_minimal() +
   scale_fill_manual(values=bar_color) +
@@ -83,10 +80,10 @@ ggplot(arv_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) +
 
 
 #-----------------------
-# ARV stockout maps - 8:12
+# ARV stockout maps - 8:15
 
 # map of facility-weeks of stock outs - 8
-ggplot(arv_map, aes(x=long, y=lat, group=group, fill=value)) + 
+g8 = ggplot(arv_map, aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -99,7 +96,7 @@ ggplot(arv_map, aes(x=long, y=lat, group=group, fill=value)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # mean weeks stocked out per facility - 9
-ggplot(arv_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
+g9 = ggplot(arv_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -111,7 +108,7 @@ ggplot(arv_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # rate of change in annual facility-weeks stocked out - 10
-ggplot(roc_map, aes(x=long, y=lat, group=group, fill=change)) + 
+g10 = ggplot(roc_map, aes(x=long, y=lat, group=group, fill=change)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -123,7 +120,7 @@ ggplot(roc_map, aes(x=long, y=lat, group=group, fill=change)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # facilities with more stockouts - 11
-ggplot(roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) + 
+g11 = ggplot(roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -134,7 +131,19 @@ ggplot(roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # percentage of weeks stocked out - 12
-ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) + 
+g12 = ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path() + 
+  facet_wrap(~year) +
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
+  theme_void() +
+  labs(title="Percentage of facility-weeks stocked out of ARVs", subtitle="Weeks ART sites were stocked out/Total weeks in which ART sites reported", 
+       caption='Source: HMIS', fill="% of weeks stocked out") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+
+# percentage of weeks stocked out, just 2017/18 - 13
+g13 = ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=percent_out)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -146,20 +155,7 @@ ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # percentage of weeks stocked out, just 2017/18 - 13
-ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=percent_out)) + 
-  coord_fixed() +
-  geom_polygon() + 
-  geom_path(size=0.01) + 
-  facet_wrap(~year) +
-  scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
-  theme_void() +
-  labs(title="Percentage of facility-weeks stocked out of ARVs", subtitle="Weeks ART sites were stocked out/Total weeks in which ART sites reported", 
-       caption='Source: HMIS', fill="% of weeks stocked out") +
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
-
-
-# percentage of weeks stocked out, just 2017/18 - 13
-ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=percent_out)) + 
+g14 = ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=percent_out)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -171,8 +167,8 @@ ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=perc
   theme(plot.title =element_text(size=16), strip.text.x = element_text(size=18), legend.text=element_text(size=14),  
         legend.title=element_text(size=14)) 
 
-# number of weeks of stockout divided by facilities reporting, 2017/18 only
-ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
+# number of weeks of stockout divided by facilities reporting, 2017/18 only - 14
+g15 = ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -184,22 +180,22 @@ ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fil
         legend.title=element_text(size=14)) 
 
 # comparison of stock outs - arvs and test kits - 15
-ggplot(compare, aes(x=date, y=value, color=variable)) +
+g16 = ggplot(compare, aes(x=date, y=value, color=variable)) +
   geom_point(size=0.6) +
   geom_line() +
   geom_line() +
   theme_bw() +
   scale_color_manual(values=two) +
-  labs(x='Date', y='Percent (%)', color="")+
+  labs(x='Date', y='Percent (%)', color="") +
   theme(plot.title = element_text(size=16), strip.text.x = element_text(size=18), legend.text=element_text(size=14)) 
 
 #------------------------------
 # TEST KIT GRAPHS
 
-# test kits - 14, 15, 16
+# test kits - 16:18
 
-# test kit stockout counts - 13
-ggplot(test[variable!='Percentage of facilities stocked out of test kits'], aes(x=date, y=value, color=variable, group=variable)) +
+# test kit stockout counts - 16
+g17 = ggplot(test[variable!='Percentage of facilities stocked out of test kits'], aes(x=date, y=value, color=variable, group=variable)) +
   geom_point(size=0.5, alpha=0.5) +
   geom_line() +
   geom_line() +
@@ -207,8 +203,8 @@ ggplot(test[variable!='Percentage of facilities stocked out of test kits'], aes(
   labs(title='Number of facilities that were stocked out of HIV test kits in a given week', 
        y='Number of facilities', x='Date', color="")
 
-# percentage of facilities that reported that were stocked out of test kits - 14
-ggplot(test[variable=='Percentage of facilities stocked out of test kits'], aes(x=date, y=value)) +
+# percentage of facilities that reported that were stocked out of test kits - 17
+g18 = ggplot(test[variable=='Percentage of facilities stocked out of test kits'], aes(x=date, y=value)) +
   geom_point(size = 0.5) +
   geom_line() +
   geom_line() +
@@ -217,8 +213,8 @@ ggplot(test[variable=='Percentage of facilities stocked out of test kits'], aes(
   labs(title='Percentage of facilities that were stocked out of HIV test kits in a given week', 
        x='Number of facilities', y='%')
 
-# comparison of stock outs - arvs and test kits - 15
-ggplot(compare, aes(x=date, y=value, color=variable)) +
+# comparison of stock outs - arvs and test kits - 18
+g19 = ggplot(compare, aes(x=date, y=value, color=variable)) +
   geom_point(size=0.6) +
   geom_line() +
   geom_line() +
@@ -228,10 +224,10 @@ ggplot(compare, aes(x=date, y=value, color=variable)) +
        x='Date', y='Percent (%)', color="")
 
 #------------------------------
-# stacked bar graphs - 17, 18
+# stacked bar graphs - 19:20 
 
 # stacked bar of weeks stocked out 
-ggplot(tk_weeks, aes(x=weeks, y=facilities, fill=factor(year))) + 
+g20 = ggplot(tk_weeks, aes(x=weeks, y=facilities, fill=factor(year))) + 
   geom_bar(stat='identity', position='dodge') +
   theme_minimal() +
   scale_fill_manual(values=brewer.pal(5, 'Blues')) +
@@ -240,7 +236,7 @@ ggplot(tk_weeks, aes(x=weeks, y=facilities, fill=factor(year))) +
        subtitle='January 2017 - November 2018')
 
 # stacked bar of weeks stocked out 
-ggplot(tk_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) + 
+g21 = ggplot(tk_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) + 
   geom_bar(stat='identity', position='dodge') +
   scale_fill_manual(values=brewer.pal(5, 'Greens'))+
   theme_minimal() +
@@ -250,10 +246,10 @@ ggplot(tk_weeks2[weeks!=0 ], aes(x=weeks, y=facilities, fill=factor(year))) +
 
 
 #------------------------------------
-# test kit maps - 19:24
+# test kit maps - 21:26
 
 # map of facility-weeks of stock outs 
-ggplot(tk_map, aes(x=long, y=lat, group=group, fill=value)) + 
+g22 = ggplot(tk_map, aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -265,7 +261,7 @@ ggplot(tk_map, aes(x=long, y=lat, group=group, fill=value)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # number of weeks of stockout divided by facilities reporting 
-ggplot(tk_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
+g23 = ggplot(tk_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -273,11 +269,10 @@ ggplot(tk_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
   labs(title="Mean number of weeks stocked out of HIV test kits per facility by district", caption="Source: HMIS", 
-       subtitle='Same time period: January - November',fill="Mean weeks per facility") +
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+       subtitle='Same time period: January - November', fill="Mean weeks per facility") 
 
 # number of weeks of stockout divided by facilities reporting, 2017/18 only
-ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
+g24 = ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -286,11 +281,10 @@ ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fil
   theme_void() +
   labs(title="Mean number of weeks stocked out of HIV test kits per facility", 
        subtitle='Same time period: January - November',fill="Mean weeks per facility") +
-  theme(plot.title=element_text(vjust=-1, size=22), plot.caption=element_text(vjust=6, size-18)) 
-
+  theme(plot.title=element_text(size=22), plot.caption=element_text(size=18)) 
 
 # rate of change 
-ggplot(tk_roc_map, aes(x=long, y=lat, group=group, fill=change)) + 
+g25 = ggplot(tk_roc_map, aes(x=long, y=lat, group=group, fill=change)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -301,7 +295,7 @@ ggplot(tk_roc_map, aes(x=long, y=lat, group=group, fill=change)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # districts with more facility-weeks of stockouts
-ggplot(tk_roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) + 
+g26 = ggplot(tk_roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -313,7 +307,7 @@ ggplot(tk_roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # percentage of weeks stocked out
-ggplot(tk_stock, aes(x=long, y=lat, group=group, fill=percent_out)) + 
+g27 = ggplot(tk_stock, aes(x=long, y=lat, group=group, fill=percent_out)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -327,16 +321,16 @@ ggplot(tk_stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
 
 
 #--------------------------------
-# facility level scatter plots - 25:28
+# facility level scatter plots - 27:29
 
 # arv stockouts by level
-ggplot(scatter[art_site==TRUE], aes(x=level2, y=arvs)) +
+g28 = ggplot(scatter[art_site==TRUE], aes(x=level2, y=arvs)) +
   geom_jitter(width=0.25, alpha=0.2) + theme_bw() + 
   labs(title='Weeks stocked out of ARVs by facility level (ART sites)', subtitle='2017 - 2018', x='Facility level',
        y='Weeks stocked out of ARVs')
 
 # arv stockouts by level, year       
-ggplot(scatter2[art_site==TRUE], aes(x=level2, y=arvs)) +
+g29 = ggplot(scatter2[art_site==TRUE], aes(x=level2, y=arvs)) +
   geom_jitter(width=0.25, alpha=0.2) + 
   facet_wrap(~year) +
   labs(title='Weeks stocked out of ARVs by facility level (ART sites)', x='Facility level', 
@@ -344,14 +338,14 @@ ggplot(scatter2[art_site==TRUE], aes(x=level2, y=arvs)) +
   theme_bw()
 
 # test kit stockouts by level, year       
-ggplot(scatter, aes(x=level2, y=test_kits)) +
+g30 = ggplot(scatter, aes(x=level2, y=test_kits)) +
   geom_jitter(width=0.25, alpha=0.5) + 
   labs(title='Weeks stocked out of HIV test kits by facility level', x='Facility level', 
        y='Weeks stocked out of HIV test kits') +
   theme_bw()
 
 # test kit stockouts by level, year       
-ggplot(scatter2, aes(x=level2, y=test_kits)) +
+g31 = ggplot(scatter2, aes(x=level2, y=test_kits)) +
   geom_jitter(width=0.25, alpha=0.5) + 
   facet_wrap(~year) +
   labs(title='Weeks stocked out of HIV test kits by facility level', x='Facility level', 
@@ -359,10 +353,10 @@ ggplot(scatter2, aes(x=level2, y=test_kits)) +
   theme_bw()
 
 #--------------------------------
-# finale maps - categorical stock outs - 29:32
+# finale maps - categorical stock outs - 30:33
 
 # Number of weeks stocked out, categorical
-ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) + 
+g32 = ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -375,7 +369,7 @@ ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # at least one stockout
-ggplot(final[year==2017 & variable!='No stock outs reported'], aes(x=long, y=lat, group=group, fill=value)) + 
+g33 = ggplot(final[year==2017 & variable!='No stock outs reported'], aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -389,7 +383,7 @@ ggplot(final[year==2017 & variable!='No stock outs reported'], aes(x=long, y=lat
 
 
 # Number of weeks stocked out, categorical
-ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) + 
+g34 = ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -402,7 +396,7 @@ ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # at least one stockout
-ggplot(final[year==2018 & variable!='No stock outs reported'], aes(x=long, y=lat, group=group, fill=value)) + 
+g35 = ggplot(final[year==2018 & variable!='No stock outs reported'], aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -413,10 +407,6 @@ ggplot(final[year==2018 & variable!='No stock outs reported'], aes(x=long, y=lat
        subtitle="Minimum one week of stockout", 
        caption='Source: HMIS', fill="Number of facilities") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
-
-
-#---------------------------
-dev.off()
 
 #------------------------------
 

@@ -2,6 +2,7 @@
 
 # Caitlin O'Brien-Carelli
 # 1/8/2019
+# Order of code should be updated to reflect text
 
 # ----------------------
 # Set up R
@@ -143,16 +144,13 @@ tk[!is.na(test_kits),.(100*(sum(test_kits, na.rm=T)/sum(report))), by=year]
 #-----------------------------------------
 # DESCRIPTIVES IN THE TEXT
 
-# ARV descriptives in the text
-art = dt[art_site==TRUE & (year==2017 | year==2018)]
-
-
-x = dt[ ,.(test_kits=sum(test_kits, na.rm=T)), by=.(year, district)]
-x = x[year==2017 | year==2018]
-x = dcast(x, district~year)
-setnames(x, (c('district', 'y2017', 'y2018')))
-
-x[ ,roc:=(y2018 - y2017)]
+#---------------------------------------------
+# calculate rates of change in weeks stocked out by year, district
+new = dt[ ,.(test_kits=sum(test_kits, na.rm=T)), by=.(year, district)]
+new = new[year==2017 | year==2018]
+new = dcast(new, district~year)
+setnames(new, (c('district', 'y2017', 'y2018')))
+new[ ,roc:=(y2018 - y2017)]
 
 #---------------------------------------------
 # facilities with 0 weeks out of stock
@@ -163,8 +161,8 @@ out = out[ ,.(facilities=length(unique(facility))), by=arvs]
 
 # no stock outs
 out[arvs==0, sum(facilities)]
-out[4 <= arvs, sum(facilities)]
-out[ ,sum(facilities)]
+out[4 <= arvs, sum(facilities)] # less than a month stocked out
+out[ , sum(facilities)]
 
 #--------------------------------------
 # percentage of facility-weeks stocked out by facility
@@ -185,13 +183,12 @@ dec = dec[count==2]
 dec[ ,arv_ratio:=arvs/arv_report]
 dec[year==2018, arv_roc:=(arv_ratio - shift(arv_ratio))]
 
-
 # facilities that experienced a stockout
 elim = art[ month!=12,.(test=sum(arvs, na.rm=T)), by=facility]
 elim = elim[test!=0]
 dec = dec[facility %in% elim$facility]
 
-new[year==2018 & 0 < arv_roc ]
+new[0 < roc] # positive rate of change between 
 
 #-------------------------------------
 # percent of facilities out of stock
@@ -207,19 +204,7 @@ tmonth = dt[year==2018 & test_kits==TRUE, .(fac=length(unique(facility))), by=mo
 trep = dt[year==2018 & !is.na(test_kits), .(rep=length(unique(facility))), by=month]
 trep = merge(tmonth, trep, by='month')
 
-
-
-# mean weeks stocked out 
-# number of weeks of stockout divided by art sites reporting 
-art_sites = dt[!is.na(arvs) & art_site==TRUE, .(art_sites=length(unique(facility))), by=.(year, id)]
-art_sites = merge(stockout, art_sites)
-art_sites[ , mean_weeks:=round((value/art_sites), 1)]
-arv_map_norm = merge(art_sites, coord_ann, by=c('id', 'year'), all.y=TRUE)
-
-
 #----------------------------------------------
-
-
 # rates of change in facility-weeks per year
 stockout[ , year2:=paste0('n', year)]
 roc = dcast(data = stockout, id ~ year2)
@@ -263,6 +248,15 @@ out[ , ratio:=arvs/V2]
 setnames(out, c('arvs', 'V2', 'ratio'), c('weeks_stocked_out_of_ARVs', 'art_sites_reporting', 'mean_weeks_stocked_out_per_site'))
 
 
+# mean weeks stocked out 
+# number of weeks of stockout divided by art sites reporting 
+art_sites = dt[!is.na(arvs) & art_site==TRUE, .(art_sites=length(unique(facility))), byyear, id)]
+art_sites = merge(stockout, art_sites)
+art_sites[ , mean_weeks:=round((value/art_sites), 1)]
+arv_map_norm = merge(art_sites, coord_ann, by=c('id', 'year'), all.y=TRUE)
+
+
+
 
 
 # mean weeks stocked out
@@ -286,40 +280,9 @@ out = merge(out, out2, by='district')
 write.csv(out, paste0(dir, 'mean_weeks_stocked_out.csv'))
 
 
-# ARV stockouts by facility - visualize the data 
+#-------------------------------------------
+# STOCK OUT DURATION 
 
-# Caitlin O'Brien-Carelli
-# 12/18/2018
-# ----------------------
-
-
-
-# reporting
-
-z = dt[year==2017 | year==2018]
-z = z[month!=12 & art_site==TRUE]
-
-x = z[!is.na(arvs) & !is.na(test_kits) ,length(unique(facility)), by=.(month, year)]
-x[ , mean(V1), by=year]
-
-
-
-
-# ----------------------
-# home drive 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-
-# data directory
-dir = paste0(root,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockouts/')
-
-# working directory to aggregate
-dt = readRDS(paste0(dir, 'arv_stockouts_2016_2018.rds'))
-
-# subset dates to before september 30, 2018
-dt = dt[year!=2013]
-
-#------------------------------
-# merge in regions
 #--------------------------------
 # duration of stock outs 
 cols = c('facility', 'date')
@@ -342,60 +305,6 @@ dt = merge(dt, regions, by='district', all.x=T)
 #-------------------------------------
 # descrtipve statistics
 
-
-
-
-x = dt[!is.na(test_kits), .(reporting=length(unique(facility))), by=.(date, month, year)]
-x[ , mean(reporting), by=year]
-y = x[year==2018, mean(reporting), by=date]
-y[ ,percent:=V1/1564]
-y[order(V1)]
-
-count = dt[!is.na(test_kits) & month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01', .(reporting=length(unique(facility))), by=.(month, year)]
-count[, percent:=reporting/1564 ]
-count[order(percent)]
-count[ ,mean(reporting), by=year]
-
-art= dt[art_site==T]
-x = art[!is.na(arvs), .(reporting=(length(unique(facility)))), by=.(date, year)]
-x[ ,mean(reporting), by=year]
-
-y = art[!is.na(arvs), .(reporting=(length(unique(facility)))), by=.(month, year)]
-
-art = dt[art_site==T & !is.na(arvs), .(reporting=(length(unique(facility)))), by=.(date, year)]
-
-dt[all(is.na(arvs)), unique(facility)]
-
-z = art[!is.na(arvs) & month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01', .(reporting=(length(unique(facility)))), by=.(month, year)]
-
-#-------------------------------------------
-
-
-art = dt[art_site==T]
-
-x = art[!is.na(arvs) ,.(sites=length(unique(facility))), by=.(month, year, region)]
-y = art[ ,.(total=length(unique(facility))), by=.(month, year, region)]
-x = merge(x, y, by=c('month', 'year', 'region'))
-
-p = x[ ,.(round(100*sum(sites)/sum(total), 1)), by=.(region, year)]
-p[year==2017, mean(V1), by=region]
-
-
-y = x[year==2017, mean(sites), by=region]
-y[ order(region)]
-
-
-stock = art [art_site==T & !is.na(arvs) & month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01', .(weeks=sum(arvs), facilities=length(unique(facility))), by=.(region, year)]
-stock[ ,ratio:=round(weeks/facilities, 1)]
-stock = stock[order(region)]
-
-
-stock[year==2017]
-
-
-art[ ,nrow]
-
-
 # percentage of weeks stocked out
 stock = dt[art_site==TRUE, .(weeks_out=sum(arvs, na.rm=T)), by=.(year, id)]
 dt[art_site==TRUE & !is.na(arvs), reported:=TRUE]
@@ -404,45 +313,16 @@ stock = merge(stock, stock_add, by=c('year', 'id'))
 stock[ , percent_out:=round(100*(weeks_out/total_weeks), 1)]
 stock = merge(stock, coord_ann, by=c('id', 'year'))
 
-
-
 art[!is.na(arvs), reported:=TRUE]
 y = art[ ,.(stockout=sum(arvs, na.rm=T), total=sum(reported, na.rm=T)), by=.(region, year)]
 y = y[order(region)]
 y[ ,ratio:=round(100*stockout/total, 1)]
 y[year==2017]
 
-
-
-
 art[!is.na(arvs), reported:=TRUE]
 z = art[ ,.(stockout=sum(arvs, na.rm=T), total=sum(reported, na.rm=T)), by=.(region, date)]
 z = z[order(region)]
 z[ , ratio:=100*stockout/total]
-
-
-z = melt(z, id.vars=c('region', 'date'))
-
-ggplot(z, aes(x=date, y=ratio, color=region)) +
-  geom_line() + 
-  geom_point()
-
-
-
-
-x = dt[,length(unique(facility)), by=region]
-x = x[order(region)]
-
-z = dt[!is.na(test_kits), .(reported=length(unique(facility))), by=.(month, year, region)]
-r = dt[, .(total=length(unique(facility))), by=.(month, year, region)]
-z = merge(z, r, by=c('month', 'year', 'region'))
-
-z[ ,ratio:=round(100*reported/total, 1)]
-
-z = z[order(region)]
-
-z[year==2017]
-
 
 #-------------------------------
 # test kits table
@@ -464,8 +344,6 @@ rep[year==2018, round(mean(percent_report), 1), by=region]
 
 # all regions 
 rep[ ,mean(percent_report), by=year]
-
-
 #-------------------
 # mean weeks stocked out per facility
 
@@ -485,7 +363,6 @@ out[year==2018]
 # totals - mean weeks stocked out per facility, all regions
 out[ ,.(sum(stockout), sum(facilities),
         round(sum(stockout)/sum(facilities), 1) ), by=year]
-
 #---------------------
 # percentage of facility-weeks stocked out 
 
@@ -509,21 +386,15 @@ fac_weeks[ ,.(sum(stockout), sum(reported), (100*sum(stockout/sum(reported)))), 
 # intro paragraph
 
 total_out = wk[ ,.(weeks_out=sum(test_kits, na.rm=T)), by=.(year, facility, district)]
-
 total_out[weeks_out==0 ,.(length(unique(facility)), zeroes=(100*length(unique(facility))/1564)), by=year]
-
 total_out[0 < weeks_out & weeks_out <= 3,.(length(unique(facility)), zeroes=(100*length(unique(facility))/1564)), by=year]
-
 total_out[12 <= weeks_out ,.(length(unique(facility)), (100*length(unique(facility))/1564)), by=year]
-
 total_out[year==2018 & 1 <= weeks_out & weeks_out <= 3, length(unique(facility)) ]
-
 
 bad = total_out[4 <= weeks_out & year!=2016 ] 
 
 #-----------------------------------
 # highest districts 
-
 
 # mean weeks stocked out per facility
 
@@ -539,7 +410,6 @@ out[ , weeks_per_facility:=round(stockout/facilities, 1)]
 
 eight = out[year==2018]
 
-
 # weeks in which the facility reported
 wk[!is.na(test_kits), reported:=TRUE]
 report = wk[ ,.(reported=sum(reported, na.rm=T)), by=.(district, year)]
@@ -550,8 +420,6 @@ out2 = out[ , .(district, year, stockout)]
 fac_weeks = merge(out2, report, by=c('district', 'year'))
 fac_weeks[ , weeks_out:=round(100*(stockout/reported), 1)]
 
-
-
 #----------------------------------------------------
 # ART
 
@@ -559,8 +427,6 @@ art = dt[month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01' & art_s
 art[!is.na(arvs), reported:=TRUE]
 
 total_out = art[year!=2016 ,.(weeks_out=sum(arvs, na.rm=T)), by=.(year, facility, district)]
-
-
 
 
 total_out[weeks_out==0 ,.(length(unique(facility)), zeroes=(100*length(unique(facility))/1286)), by=year]
@@ -578,53 +444,6 @@ outs[4 <= weeks_out & year==2018, length(unique(facility)) ]
 total_out[0 < weeks_out & weeks_out <= 3,.(length(unique(facility)), zeroes=(100*length(unique(facility))/1564)), by=year]
 
 
-
-bad = total_out[4 <= weeks_out & year!=2016 ] 
-
-
-
-wks = art[year!=2016 ,.(weeks_out=sum(arvs, na.rm=T), reported=sum(reported, na.rm=T)), by=.(year, facility, district)]
-
-wks[ , fac_ratio:=(100*weeks_out/reported)]
-
-sev = wks[year==2017]
-setnames(sev, c('weeks_out', 'reported', 'fac_ratio'), c('weeks_out17', 'reported17', 'fac_ratio17'))
-eig = wks[year==2018]
-setnames(eig, c('weeks_out', 'reported', 'fac_ratio'), c('weeks_out18', 'reported18', 'fac_ratio18'))
-
-sev[ ,year:=NULL]
-eig[ ,year:=NULL]
-
-
-comp = merge(sev, eig, by=c('facility', 'district'), all=TRUE)
-
-comp[ ,roc:=fac_ratio18 - fac_ratio17]
-
-# comp = comp[!(weeks_out17==0 & weeks_out18==0)]
-
-comp[roc < 0 ]
-comp[roc==0]
-comp[0 < roc]
-
-
-
-
-x = art[year!=2016 ,.(weeks_out=sum(arvs, na.rm=T), reported=sum(reported, na.rm=T)), by=.(year, district)]
-
-x[ , ratio:=(100*weeks_out/reported)]
-
-sev = x[year==2017]
-setnames(sev, c('weeks_out', 'reported', 'ratio'), c('weeks_out17', 'reported17', 'ratio17'))
-eig = x[year==2018]
-setnames(eig, c('weeks_out', 'reported', 'ratio'), c('weeks_out18', 'reported18', 'ratio18'))
-
-sev[ ,year:=NULL]
-eig[ ,year:=NULL]
-
-dist = merge(sev, eig, by='district')
-dist[ ,roc:=ratio17 - ratio18]
-dist[ roc < 0]
-
 #-----------------------------------------------
 # district stock outs 
 
@@ -632,74 +451,6 @@ art = dt[month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01' & art_s
 art[!is.na(arvs), reported:=TRUE]
 
 out = art[year!=2016 ,.(weeks_out=sum(arvs, na.rm=T), facilities=length(unique(facility)) ), by=.(year, district)]
-
-out[ , mean_weeks:=weeks_out/facilities]
-
-# percentage of facility-weeks stocked out 
-
-
-new = art[year==2018,.(out=sum(arvs, na.rm=TRUE), reported=sum(reported, na.rm=TRUE)), by=district]
-new[ ,ratio:=100*(out/reported)]
-View(new)
-
-
-
-
-
-
-# scatter plots (facility level)
-dt[ level=='HC II', level2:=2]
-dt[ level=='HC III', level2:=3]
-dt[ level=='HC IV', level2:=4]
-dt[ level=='Hospital', level2:=5]
-
-setnames(dt, c('level', 'level2'), c('level_og', 'level'))
-
-scatter = dt[year==2018 ,.(arvs=sum(arvs, na.rm=T), test_kits=sum(test_kits, na.rm=T)), by=.(facility, level, art_site)]
-scatter[art_site==FALSE, arvs:=NA]
-
-scatter = melt(scatter, id.vars=c('facility', 'level', 'art_site')) 
-
-
-scatter$variable = factor(scatter$variable, c('arvs', 'test_kits'), c('ARVs', 'HIV test kits'))
-
-# test kit stockouts by level, year       
-ggplot(scatter, aes(x=level, y=value)) +
-  geom_jitter(width=0.25) + 
-  facet_wrap(~variable) +
-  labs(title='Weeks stocked out by health facility level*', x='Facility level', 
-       y='Weeks stocked out', caption='*Level 5 corresponds to hospitals; all other levels are Health Centers') +
-  theme_bw()
-
-
-arvs = dt[year==2018 & art_site==TRUE,.(stockout_weeks=sum(arvs, na.rm=T)), by=.(facility, level, art_site)]
-
-chi2(arvs$days, arvs$level)
-
-glm(stockout_weeks ~ factor(level), family='poisson', data=arvs)
-
-#---------------------------------------
-
-
-art = dt[art_site==TRUE]
-
-
-x = art[arvs==TRUE,length(unique(facility)), by=month]
-
-ggplot(x, aes(x=month, y=V1)) +
-  geom_point() + geom_line()
-
-y = art[!is.na(arvs),length(unique(facility)), by=month]
-
-
-art = dt[month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01' &  art_site==TRUE]
-art[ , year:=year(date)]
-
-art[arvs==TRUE, length(unique(facility)), by=year ]
-
-
-
-
 
 #--------------------
 # mean weeks stocked out
@@ -738,9 +489,6 @@ wks[0 < roc & 0 < troc] # 19
 # decrease in stockouts (2018 minus 2017 is negative)
 wks[troc < 0]
 wks[ ,length(unique(district))]
-
-# by region
-
 
 #--------------------
 # facilities experiencing at least one stock out
@@ -788,12 +536,9 @@ new[year==2018 & test_roc < 0]
 #-----------------------------
 # per region
 
-
 new2 = dt[ ,.(arvs=sum(arvs, na.rm=T), test_kits=sum(test_kits, na.rm=T),
               test_report=sum(test_report), arv_report=sum(arv_report)), 
            by=.(region, year)]
-
-
 
 new2[ ,arv_ratio:=arvs/arv_report]
 new2[ ,test_ratio:=test_kits/test_report]
@@ -801,8 +546,6 @@ new2[ ,arv_roc:=(arv_ratio - shift(arv_ratio))]
 new2[ ,test_roc:=(test_ratio - shift(test_ratio))]
 
 new2[year==2018 & test_roc < 0]
-
-
 
 #-------------------------------
 # prolonged or frequent stock outs
@@ -870,25 +613,7 @@ dur= dt[year==2018 & month!=12 & test_kits==T]
 # shows the number of stockouts per facility and the duration of each
 dur = dur[ ,.(length=unique(duration)), by=.(facility, group, district)]
 
-
-dur[ , mean(length)]
-
-#--------------
-# intro paragraph on test kits
-
-
-test = dt[test_kits==TRUE & month!=12 & (year==2017 | year==2018)]
-test[ ,length(unique(facility)), by=year]
-
-
-
-
-
-
-
-
-
-
+#------------------------------------------
 
 
 
