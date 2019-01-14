@@ -2,7 +2,7 @@
 # title: "Synthesis Report"
 # author: "Emily Linebarger"
 # date: "November 26, 2018"
-# output: html_document
+# output: J:/Project/Evaluation/GF/vfm/outputs/synthesis_absorption_table.csv
 #---------------------------------------------
 
 rm(list=ls())
@@ -12,9 +12,10 @@ library(googlesheets)
 library(doBy)
 library(Hmisc)
 
+outFile = 'J:/Project/Evaluation/GF/vfm/outputs/synthesis_absorption_table.csv'
+
 #---------------------------------------------
-# PART 3: Generate combined graph using 
-#         consortia's numbers 
+# Load data from google sheets
 #---------------------------------------------
 
 # gs_gap() %>%
@@ -87,3 +88,6 @@ prepped[is.na(prepped)] <- 0
 prepped$country <- substring(prepped$grant, 1, 3)
 prepped$gf_module = ifelse(prepped$gf_module == "Program Management", "Program management", prepped$gf_module)
 prepped$gf_module = ifelse(prepped$gf_module == "TB/HIV (Labelled as HIV)" | prepped$gf_module == "TB/HIV (Labelled as TB)", "TB/HIV", prepped$gf_module)
+
+# save
+write.csv(prepped, outFile, row.names=TRUE)
