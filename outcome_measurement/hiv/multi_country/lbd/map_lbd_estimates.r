@@ -6,10 +6,13 @@
 # 8/3/2018 
 # Modified by Audrey Batzel; Use different bands of the raster data to make maps of HIV prevalence in different years
 # Modified by Jen Ross Sept 2018; Project forward HIV prevalence rasters using annual differences.
-
+#
+#J Ross comments:
 #Still to do (as of Sept 2018) is to fix the DRC 2020 raster, which has some negative pixel values for HIV prevalence.
-#Also should experiment with windows of different year lengths to inform the projection (currently 2010 - 2017
+#Also should do sensitivity analysis with windows of different year lengths to inform the projection (currently 2008 - 2017)
 
+#**Run on the cluster to access LBD results from share drive!!**
+#check with LBD about which version of their outputs (timestamp) to reference in line 40.
 # ----------------------------------------------------
 
 
@@ -35,10 +38,9 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/lbd/projection/')
 
 # input files
-timestamp = '2018_08_19_11_20_44' #change this to use a different run of the lbd hiv model
+timestamp = '2018_11_08_18_37_25' #change this to use a different run of the lbd hiv model
 inDir = paste0('/share/geospatial/mbg/hiv/hiv_test/output/', timestamp,'/')
 inFile = paste0(inDir, 'hiv_test_mean_raked_raster.tif')
-#Does this timestamp have all of the values until 2017? or is this an earlier model?
 
 # shapefiles
 mapUGA = shapefile(paste0(j, '/Project/Evaluation/GF/mapping/uga/uga_dist112_map.shp'))
@@ -53,18 +55,18 @@ shapeFileLakes = shapefile(paste0(j, '/WORK/11_geospatial/06_original shapefiles
 rasterBrick = brick(inFile) #Looks like this may be a more computationally efficient way of working with the raster files than stack.
 plot(rasterBrick) #Why does this only do 16 bands?
 
-#--------------# use this in order to get a rate of change between the two years; comment out if not using #------------------
-graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', "percent_change_2010to2017", '.pdf')
-rasterEnd = raster(inFile, band= 17)
-rasterStart = raster(inFile, band= 11)
-no_years = 7
+#--------------# Set the start and end years for percent change estimation #------------------
+graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', "percent_change_2008to2017", '.pdf')
+rasterEnd = raster(inFile, band= 18)
+rasterStart = raster(inFile, band= 9)
+num_years = 10
 
 # mask the bodies of water
 rasterEnd = mask(rasterEnd, shapeFileLakes, inverse=TRUE)
 
 #Calculate annual difference by subtracting end prevalence from start prevalence and dividing by # years
-ann_diff = (rasterEnd - rasterStart)/no_years
-plot(ann_diff, main = 'Annualized difference in HIV prevalence, 2010 - 2017')
+ann_diff = (rasterEnd - rasterStart)/num_years
+plot(ann_diff, main = 'Annualized difference in HIV prevalence, 2008 - 2017')
 
 #Project forward by adding the annual difference to the last year
 proj_2018 = rasterEnd+ann_diff
@@ -82,6 +84,8 @@ ann_diffUGA = crop(ann_diff, extent(mapUGA))
 ann_diffUGA = mask(ann_diff, mapUGA)
 ann_diffCOD = crop(ann_diff, extent(mapCOD))
 ann_diffCOD = mask(ann_diff, mapCOD)
+#cellStats(ann_diffUGA, 'range')
+#-0.005178997  0.003042733
 
 #Project forward Uganda rasters
 uga_hiv_2018 = rasterEndUGA + ann_diffUGA
