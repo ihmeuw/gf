@@ -18,18 +18,18 @@ library(scales)
 # Files and directories
 # -----------------------------------------------------------------
 # root directory for input/average_absorptionput
-dir = 'J:/Project/Evaluation/GF/resource_tracking/multi_country/'
+dir = 'J:/Project/Evaluation/GF/resource_tracking/gtm/prepped'
 
 # input data
-inFile = paste0(dir, 'mapping/total_resource_tracking_data.csv')
+inFile = paste0(dir, '/prepped_sicoin_data.csv')
 
 
 # -----------------------------------------------------------------------
 # Load/prep data - subset to government health expenditure in SICOIN data 
 # -----------------------------------------------------------------------
 #Grab SICOIN for Guatemala funding graph 
-sicoin <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
-                              ,fileEncoding="latin1"))
+sicoin <- fread(inFile)
+
 # drop first/last year of the series because they appear to be incomplete
 #sicoin = sicoin[year!=min(year) & year!=max(year)]
 
