@@ -228,8 +228,8 @@ saveRDS(final_expenditures, paste0(final_write, "final_expenditures.rds"))
 # 3. GF FILE ITERATIONS
 #----------------------------------
 all_gf_cod <- readRDS("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds")
-all_gf_uga <- readRDS("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_iterations.rds")  
-all_gf_gtm <- readRDS("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_iterations.rds")
+all_gf_uga <- readRDS("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_pudr_iterations.rds")  
+all_gf_gtm <- readRDS("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_pudr_iterations.rds")
 
 all_gf_files <- rbind(all_gf_cod, all_gf_uga, all_gf_gtm, fill = TRUE)
 
