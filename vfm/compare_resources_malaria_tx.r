@@ -23,6 +23,7 @@ dir = paste0(j, '/Project/Evaluation/GF/')
 
 # resource tracking data
 rtFile = paste0(dir, 'resource_tracking/multi_country/mapping/total_resource_tracking_data.csv')
+fpmFile = paste0(dir, 'resource_tracking/multi_country/mapping/final_budgets.csv')
 
 # treatment data extracted from a graph
 txFile = paste0(dir, 'outcome_measurement/uga/hmis/confirmed_malaria_treated.csv')
@@ -35,17 +36,31 @@ outFile = paste0(dir, 'outcome_measurement/uga/visualizations/Resource Compariso
 # ---------------------------------------------------
 # Load prep RT data
 
+# load FPM data separately because the full file is going out of commission
+fpmData = fread(fpmFile)
+fpmData[, budget:=as.numeric(budget)]
+fpmData[, disbursement:=as.numeric(disbursement)]
+fpmData[, year:=as.numeric(year)]
+
 # load
 rtData = fread(rtFile)
+rtData[, budget:=as.numeric(budget)]
+rtData[, disbursement:=as.numeric(disbursement)]
+
+# drop erroneous duplication of dates
+rtData = rtData[grepl('-',start_date)]
 
 # subset to UGA malaria
 rtData = rtData[disease=='malaria' & country=='Uganda' & year>2005]
 
 # subset to FGH disbursement actuals
 rtDataActuals = rtData[data_source=='fgh' & fin_data_type=='actual']
-rtDataActuals = dcast.data.table(rtDataActuals, year+financing_source~module, value.var='disbursement')
+
+# reshape module wide
+rtDataActuals = dcast.data.table(rtDataActuals, year+financing_source~sda_activity, value.var='disbursement')
 
 # get an estimate of the pct treatment from non-GF
+rtDataActuals[ , total_mal_17:=rowSums(.SD), .SDcols=grep('mal_', names(rtDataActuals))]
 pctTx = rtDataActuals[financing_source!='gf', .(tx=sum(mal_treat_dah_17), total=sum(total_mal_17)), by='year']
 pctTx[, pct_tx:=tx/total]
 fit = lm(pct_tx~year, pctTx)
@@ -75,7 +90,7 @@ forecasts[, nongf_tx:=disbursement*pct*pct_tx]
 
 # compute the GF treatment total from the budgets
 txInts = c('Facility-based treatment', 'iCCM', 'Severe malaria', 'Private sector case management')
-gf = rtData[data_source=='fpm' & abbrev_intervention %in% txInts, .(gf_tx=sum(budget)), by='year']
+gf = fpmData[country=='Uganda' & disease=='malaria' & abbrev_intervention %in% txInts, .(gf_tx=sum(budget)), by='year']
 
 # merge gf and nongf
 tx_spend = merge(gf, forecasts[, c('year','nongf_tx'), with=FALSE], by='year')
