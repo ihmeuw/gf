@@ -19,7 +19,7 @@ library(RColorBrewer)
 # Settings and parameters
 
 # country to graph ("all" will do all eight PCE countries
-c = 'Uganda'
+c = 'all'
 # -----------------------------------------------------
 
 
@@ -87,12 +87,22 @@ coefs = do.call('rbind', lapply(unique(data$product), function(p) {
 }))
 
 # suppliers
-data[, sum(total_product_cost)/1000000, by=c('supplier','type')][order(type,-V1)]
+tmp = data[, sum(total_product_cost)/1000000, by=c('supplier','type')][order(type,-V1)]
+tmp[, total:=sum(V1), by='type']
+tmp[, pct:=V1/total*100]
+tmp
 summary(lm(difference~supplier, data=data))
 summary(lm(difference~supplier+product+year, data=data))
 
 # drugs
+data[year==2018, sum(total_product_cost)/1000000, by=c('type')][order(type,-V1)]
 data[, sum(total_product_cost)/1000000, by=c('product','type')][order(type,-V1)]
+
+# percent of ARVs that are the top 3
+num = sum(data[type=='arv', sum(total_product_cost), by='product'][order(-V1)][1:3,V1])
+den = sum(data[type=='arv', sum(total_product_cost), by='product'][order(-V1)]$V1)
+num/den
+num
 # ------------------------------------------------------------------------
 
 
