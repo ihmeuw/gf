@@ -190,10 +190,14 @@ mapped_country_data$loc_name = country
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------
 
+mapped_country_data = mapped_country_data[, .(abbrev_intervention, abbrev_module, adm1, adm2, budget, code, code_count, coefficient, cost_category, country, data_source, disbursement, disease, 
+                         expenditure, file_iteration, fileName, frequency, gf_intervention, gf_module, grant_number, grant_period, intervention, lang, loc_name, module, 
+                         orig_intervention, orig_module, period, primary_recipient, sda_activity, secondary_recipient, start_date, year)]
+
 desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "code_count", "coefficient", "cost_category", "country", "data_source", "disbursement", "disease", 
                   "expenditure", "file_iteration", "fileName", "frequency", "gf_intervention", "gf_module", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
                   "orig_intervention", "orig_module", "period", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
-stopifnot(sort(colnames(mapped_country_data)) == desired_cols)  
+stopifnot(sort(colnames(mapped_country_data)) == desired_cols)  #Emily we do want to have correct column names here. 
 
 #EMILY WANT TO HAVE GRANT STATUS HERE!! Active or not active. 
 
@@ -212,11 +216,7 @@ mapped_country_data$orig_intervention <- str_replace_all(mapped_country_data$ori
 final_budgets <- mapped_country_data[file_iteration == "final" & data_source == "fpm"]
 final_expenditures <- mapped_country_data[file_iteration == "final" & data_source == "pudr"]
 
-# write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), fileEncoding = "latin1", row.names = FALSE)
-# write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), fileEncoding = "latin1", row.names = FALSE)
-# write.csv(mapped_country_data, paste0(export_dir, "budget_iterations.csv"), fileEncoding = "latin1", row.names = FALSE)
-
-# alternate RDS file
+# Save RDS file
 saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
 saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
 saveRDS(mapped_country_data, paste0(export_dir, "budget_pudr_iterations.rds"))

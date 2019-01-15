@@ -26,15 +26,15 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   ### look at gf_data and find what is being droped where.
   ########
   
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
-  # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # grant = file_list$grant[i]
-  # recipient = file_list$primary_recipient
-  # source = file_list$data_source[i]
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date[i]
+  period = file_list$period[i]
+  disease = file_list$disease[i]
+  grant = file_list$grant[i]
+  recipient = file_list$primary_recipient
+  source = file_list$data_source[i]
   
   # --------------------
   # Test the inputs to make sure that they are the correct type

@@ -18,16 +18,16 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ### look at gf_data and find what is being droped where.
   ########
   
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
-  # qtr_num = file_list$qtr_number[i]
-  # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # grant = file_list$grant[i]
-  # cashText = " Cash Outflow"
-  # data_source = file_list$data_source[i]
+  dir = file_dir
+  inFile = uga_error_files$file_name[i]
+  sheet_name = uga_error_files$sheet[i]
+  start_date = uga_error_files$start_date[i]
+  qtr_num = uga_error_files$qtr_number[i]
+  period = uga_error_files$period[i]
+  disease = uga_error_files$disease[i]
+  grant = uga_error_files$grant[i]
+  cashText = " Cash Outflow"
+  data_source = uga_error_files$data_source[i]
   
   #   
   # ----------------------------------------------
@@ -65,6 +65,8 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
 
   #only grab the columns we want (program activity, recipient, and quarterly data) :
   gf_data <- gf_data[,names(gf_data)%in%qtr_names, with=FALSE]
+  
+  stopifnot(ncol(gf_data)==length(qtr_names))
   
   ##rename the columns: 
   colnames(gf_data)[1] <- "module"
@@ -120,13 +122,12 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$qtr <- NULL
   budget_dataset$start_date <- as.Date(budget_dataset$start_date)
   budget_dataset$period <- period
-  budget_dataset$expenditure <- 0 ##change if we get expenditure info 
   budget_dataset$data_source <- data_source
   budget_dataset$grant_number <- grant
   budget_dataset$disease <- disease
-  budget_dataset$disbursement <- 0##change if we get disbursement info
   budget_dataset$year <- year(budget_dataset$start_date)
-  budget_dataset = budget_dataset[!is.na(budget)]
+  
+  stopifnot(class(budget_dataset$budget)=="numeric")
   
   return(budget_dataset)
 }

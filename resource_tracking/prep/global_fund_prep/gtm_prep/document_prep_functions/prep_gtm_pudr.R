@@ -22,18 +22,18 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   ### look at gf_data and find what is being droped where.
   ########
   
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
-  # qtr_num = file_list$qtr_number[i]
-  # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # lang = file_list$language[i]
-  # grant = file_list$grant[i]
-  # source = file_list$data_source[i]
-  # loc_name = 'gtm'
-  # 
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date[i]
+  qtr_num = file_list$qtr_number[i]
+  period = file_list$period[i]
+  disease = file_list$disease[i]
+  lang = file_list$language[i]
+  grant = file_list$grant[i]
+  source = file_list$data_source[i]
+  loc_name = 'gtm'
+  # # 
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   
@@ -62,7 +62,9 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
     }
     gf_data <- gf_data[start_row:end_row,]
     gf_data <- gf_data[-1, ,drop = FALSE]
-  } else if (sheet_name=="LFA_Annex-SR Financials"){
+    gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
+
+    } else if (sheet_name=="LFA_Annex-SR Financials"){
       colnames(gf_data)[1] <- "recipient"
       colnames(gf_data)[5] <- "budget"
       colnames(gf_data)[6] <- "disbursement"
@@ -70,6 +72,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
       gf_data$sda_activity <- "all"
       gf_data$module <- "all"
       gf_data$intervention <- "all"
+      gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure", "disbursement"),with=FALSE]
   } else if (sheet_name=="INTEGRACION"){
       colnames(gf_data)[2] <- "code"
       colnames(gf_data)[3] <- "module"
@@ -83,7 +86,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
       setnames(gf_data, c("module1", "module2"), c("module", "intervention"))
       gf_data$recipient <- loc_name
       gf_data$sda_activity <- "all"
-    
+      gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
   } else if (sheet_name=="PR EFR_7A"){
     colnames(gf_data)[2] <- "module"
     colnames(gf_data)[3] <- "sda_activity"
@@ -92,7 +95,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
     colnames(gf_data)[6] <- "expenditure"
     gf_data$recipient <- loc_name
     gf_data <- gf_data[c(grep("object", tolower(gf_data$sda_activity)):(grep("name", tolower(gf_data$sda_activity)))),]
-  
+    gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
   } else if (inFile == "GUA-M-MSPAS EFR FASE II -2016_Ingles_RevALF.xlsm") {
     colnames(gf_data)[2] <- "module"
     colnames(gf_data)[4] <- "intervention"
@@ -101,15 +104,12 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
     start_row <- 33
     end_row <- 43
     gf_data = gf_data[start_row:end_row, .(module, intervention, budget, expenditure)]
+    gf_data$sda_activity <- "all"
+    gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
   } else { 
       print(paste0("An else-statement was entered in GTM PUDR prep function. Review prep code for: ", 
             inFile))
   }
-  
-  #gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure", "disbursement"),with=FALSE] #Remove this check, because want to remove sda_activity, expenditure, and 
-  # disbursement where they don't apply.
-  
-  #
   
   #Emily verify that this isn't dropping budget information! Can we do this another way? 
   if (inFile != "PUDR_P32_HivosGT_030518.xlsx"){
@@ -120,7 +120,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   }
   
   #This command makes me nervous everywhere I see it. EKL 1/9/18. Need to be verifying budget totals before dropping NAs. 
-  #budget_dataset <- na.omit(budget_dataset , cols=1, invert=FALSE)
+  budget_dataset <- na.omit(budget_dataset , cols=1, invert=FALSE)
   
   #Emily what is this prep code doing? 
   toMatch <- c("total", "module")
