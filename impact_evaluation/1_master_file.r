@@ -9,10 +9,18 @@
 # ---------------------------------------
 rm(list=ls())
 library(data.table)
+library(readxl)
 
 user <- "elineb" #Change to reflect your own username 
 repo <- paste0("C:/Users/", user, "/Documents/gf/") #Change to your own repository 
 code_dir <- paste0(repo, "impact_evaluation/")
+
+# ---------------------------------------
+# Read in common files 
+# ---------------------------------------
+
+drc_mal_map <- read_excel("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/DRC Indicator map - to code from.xlsx")
+setDT(drc_mal_map)
 
 # ---------------------------------------
 # Prep resource tracking data  

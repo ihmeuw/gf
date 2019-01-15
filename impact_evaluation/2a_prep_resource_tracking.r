@@ -21,3 +21,9 @@ final_budgets <- readRDS("J:/Project/Evaluation/GF/resource_tracking/multi_count
 # }
 
 resource_tracking <- final_budgets #Will want to add expenditures in here eventually. 
+
+#Subset to only the columns we want from resource tracking database and impact evaluation map 
+resource_tracking = resource_tracking[country == "Congo (Democratic Republic)" & disease == "malaria", .(budget, start_date, code, gf_module, gf_intervention, loc_name, disease)]
+drc_mal_map_rt = drc_mal_map[, .(code, indicator_type, indicator)]
+
+resource_tracking <- merge(drc_mal_map_rt, resource_tracking, by = c('code'), all.x = TRUE)
