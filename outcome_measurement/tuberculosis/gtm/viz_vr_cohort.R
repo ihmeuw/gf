@@ -325,3 +325,5 @@ p2 <- ggplot (data=deaths_simple, aes(x=year_id, y=deaths, colour=cause, linetyp
   geom_line()+
   labs(x="Year", y="Deaths", title="TB and TB/HIV deaths by data source in Guatemala")
 p2
+
+
