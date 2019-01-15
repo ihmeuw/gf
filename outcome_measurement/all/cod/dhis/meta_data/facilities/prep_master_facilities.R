@@ -26,9 +26,35 @@ library(epibasix)
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/meta_data')
 
 #-------------------------
+# read in the list of health facilities
+
+org_units = readRDS(paste0(dir, '/org_units.rds' ))
+org_units[ ,url:=NULL]
+
+#-------------------------
+setwd(paste0(dir, '/units/'))
+
+# list existing files
+files = list.files('./', recursive=TRUE)
+length(files)
+
+i = 1
+for(f in files) {
+  #Load the RDs file
+  current_data = readRDS(f)
+  current_data = rbindlist(current_data)
+  
+  
+   }
+  
+  
+
+
+
+
 # import the meta data for the merge
 facilities <- data.table(readRDS(paste0(dir, 'meta_data/master_facilities.rds')))
 

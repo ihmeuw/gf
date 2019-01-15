@@ -1,7 +1,9 @@
 # DHIS Extraction - extract the meta data for org units
 # Provides a list of health facilities and their locations 
+# Includes both source functions and download script
+
 # Caitlin O'Brien-Carelli
-# 12/12/18
+# 1/1/19
 
 # --------------------
 # Set up R
@@ -29,9 +31,7 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
 #------------------------------
-# read in the organisational units 
-# org_units = fread(paste0(dir, 'meta_data/org_units_list.rds'))
-
+# read in the organisational unit urls to extract
 org_units = readRDS(paste0(dir, 'meta_data/org_units.rds' ))
 
 #---------------------------------------------
@@ -52,7 +52,7 @@ password = 'Snisrdcongo1'
 # create a function that extracts the information about organisational units
 # includes the associated district, health zone, etc. 
 
-# make dhis urls
+# make dhis urls for each unit
 
 make_dhis_urls = function(base_url) {
   data_sets_url = paste(base_url , '/api/dataSets.xml' , sep = '')
@@ -63,6 +63,7 @@ make_dhis_urls = function(base_url) {
 }
 
 #-----------------------------
+# parses xml pages
 
 parse_page = function(url, userID, password) {
   
@@ -78,6 +79,7 @@ parse_page = function(url, userID, password) {
 }
 
 #-----------------------------
+# extracvt the meta data associated with each unit
 
 extract_org_unit = function(url, userID, password) {
   root = parse_page(url = url, userID = userID, password = password)
@@ -91,7 +93,7 @@ extract_org_unit = function(url, userID, password) {
   # to get the associated health areas, health zones and dps
   # transform the xml into a nested list of lists and extract the ancestors list
   tmp = xmlToList(root)
-  ancestors = tmp$ancestors
+  ancestors = unlist(tmp$ancestors)
 
   # create a data frame of the meta data and return it
   org_unit_metadata = data.table(id, coordinates, opening_date,
@@ -115,103 +117,61 @@ extract_dhis_units = function(base_url, userID, password) {
 }
 
 #-------------------------------
-# run the extraction - looping through groups of 1000 at a time
+# create a group variable in order to loop by group
+# the website connection breaks if you try to do all 27,000
+# loop through 1,000 at a time and pause for a few minutes after
 
-# subset into 28 separate groups
+# subset into 28 separate groups to loop over (27,000 facilities)
 vec = c(1:28)
-org_units[ , group:=rep(vec, 1000)]
-
-for (g in org_units$group) {
-y = g
-units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
-saveRDS(units, paste0(dir,'meta_data/units/extracted_org_units_', y, '.rds'))
-pause(30)
-
-}
-
-#-----------------------
-
-#-----------------------
-
-#--------------------------------------------------------------
-# check the download for error messages
-# all of the elements in the list should be data frames (T)
-# if some are not data frames, they are error messages
-
-# identify the facilities that generated error messages and delete them from the list 
-errors <- sapply(units, is.data.frame)
-unique(errors) # if F is included, there are errors
-units <- units[errors==T]
-
-# rbind the data frames in the list together to create a data table
-units <- rbindlist(units, fill=true())
-units <- data.table(units)
-
-#------------------------------
-# subset to only the relevant org_unit names and merge
-
-org_units <- org_units_list[ ,.(id=org_unit_ID, org_unit_name)]
-org_units[ , id:=as.character(id)]
-units[ , id:=as.character(id)]
-
-setnames(units, 'name', 'org_unit')
-#------------------------------
-# convert factor variables to characters 
-
-units[ ,c('coordinates', 'opening_date', 'active', 'parent_id'):=NULL]
-units[ ,org_unit:=as.character(org_unit)]
-units[ , organisationUnit:=as.character(organisationUnit)]
-units[ , organisationUnit.1:=as.character(organisationUnit.1)]
-units[ , organisationUnit.2:=as.character(organisationUnit.2)]
-units[ , organisationUnit.3:=as.character(organisationUnit.3)]
-
-#change the names of the hierarchy to merge on
-setnames(units, c('organisationUnit', 'organisationUnit.1', 'organisationUnit.2', 
-                  'organisationUnit.3'),
-         c('country_id', 'dps_id', 'health_zone_id', 'health_area_id'))
+org_units[ , group:=rep(vec, 1000)] # warning is ok
 
 #-------------------------------
-# merge in the names for the hierarchy 
+# run the extraction 
+# loop through each group of 1000 units and download meta data 
+# save into separate files of 1000 units each
 
-# merge in the countries to all units
-units <- merge(units, org_units, by.x='country_id', by.y='id', all.X=TRUE)
-setnames(units, 'org_unit_name', 'country')
+for (g in org_units$group) {
 
-# join the dps to all units
-setnames(org_units, 'id', 'dps_id')
-units <- join(units, org_units, by='dps_id', type='left')
-setnames(units, 'org_unit_name', 'dps')
+# arguments for the file name and print statement
+x = length(unique(org_units$group))
+y = g
 
-# join the health zones to all units
-setnames(org_units, 'dps_id', 'health_zone_id')
-units <- join(units, org_units, by='health_zone_id',type='left')
-setnames(units, 'org_unit_name', 'health_zone')
+# extract the meta data and save as a RDS
+units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
+saveRDS(units, paste0(dir,'meta_data/units/extracted_org_units_', y, '.rds'))
 
-# join the health areas to all units
-setnames(org_units, 'health_zone_id', 'health_area_id')
-units <- join(units, org_units, by='health_area_id', type='left')
-setnames(units, 'org_unit_name', 'health_area')
+# pause and notify that a new group is starting
+pause(600)
+print(paste0("Starting group ", g, " of ", x, "!"))
+}
 
-#---------------------------------
-# convert factors to characters
+#-------------------------------
+# rbind the groups together and save
 
-units[ ,country:=as.character(country)]
-units[ ,dps:=as.character(dps)]
-units[ ,health_zone:=as.character(health_zone)]
-units[ ,health_area:=as.character(health_area)]
+setwd(paste0(dir, 'meta_data/units/'))
 
-#----------------------------------
-# put the variables in an intuitive order
+# list existing files
+files = list.files('./', recursive=TRUE)
+length(files)
 
-units <- units[  ,.(org_unit, id, country, dps, health_zone, health_area, 
-                    country_id, dps_id, health_zone_id, health_area_id)]
+i = 1
+for(f in files) {
+  #load the RDs file
+  current_data = readRDS(f)
+  current_data = rbindlist(current_data)
+  
+  # append to the full data 
+  if(i==1) full_data = current_data
+  if(i>1) full_data = rbind(full_data, current_data)
+  i = i+1
+}
 
-#----------------------------------
-# save the master list of facilities
+# save the output
+saveRDS(full_data, paste0(dir, 'meta_data/master_facilities.rds'))
 
-saveRDS(units, paste0(dir, 'meta_data/master_facilities_pre_prep.rds'))
+#-------------------------------
 
-#---------------------------------
+
 
 
 
