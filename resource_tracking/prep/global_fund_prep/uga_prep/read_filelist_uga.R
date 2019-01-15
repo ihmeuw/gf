@@ -26,12 +26,10 @@ source <- 'gf'
 ########## Run the for loop that preps data ########
 # ---------------------------------------------
 
-for(i in 1:nrow(uga_error_files)){ 
+for(i in 1:nrow(file_list)){ 
   folder = "budgets"
-  #folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  #file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-  folder = ifelse (uga_error_files$data_source[i] == "pudr", "pudrs", folder)
-  file_dir = paste0(master_file_dir, uga_error_files$grant_status[i], "/", uga_error_files$grant[i], "/", folder, "/")
+  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
 
   if(file_list$function_type[i]=="detailed"){##most detailed level of budgets 
     tmpData <- prep_detailed_uga_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 

@@ -8,6 +8,13 @@
 # Install packages and set up R  
 # ---------------------------------------
 
+# ----------------------------------------------------------------------
+# To do list for this code: 
+# - add in an option for 'verbose' debugging
+# - add in an option to only rework one file (make database append-only)
+# - add in variable creation during the append step to flag current grants. 
+# ---------------------------------------------------------------------
+
 rm(list=ls())
 library(lubridate)
 library(data.table)

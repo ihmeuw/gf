@@ -55,7 +55,7 @@ check_0_budgets <- resource_database[, .(budget = sum(budget)), by=.(fileName)]
 check_0_budgets = check_0_budgets[budget == 0]
 check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = sum(expenditure)), by=.(fileName)]
 check_0_expenditure <- check_0_expenditure[expenditure == 0]
-stopifnot(nrow(check_0_budgets)==0 | nrow(check_0_expenditure)==0)
+stopifnot(nrow(check_0_budgets)==0 & nrow(check_0_expenditure)==0)
 
 #check for duplicates, and sum their values if they exist:
 dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]

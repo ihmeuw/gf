@@ -18,19 +18,16 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   ### look at gf_data and find what is being droped where.
   ########
   
-  # file_dir <- 'J:/Project/Evaluation/GF/resource_tracking/uga/gf/'
   # dir = file_dir
-  # inFile = ""
-  # sheet_name = ""
-  # start_date = ""
-  # qtr_num =
-  # period =
-  # disease = ""
-  # grant = ""
-  # recipient = ""
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # qtr_num = file_list$qtr_number[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # grant = file_list$grant[i]
   # cashText = " Cash Outflow"
-  # source = "fpm"
-  
+  # data_source = file_list$data_source[i]
 
   if(!is.na(sheet_name)){
     gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))
@@ -61,14 +58,14 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   org = start_date
   if (month(start_date) == 8 | (start_date == "2014-05-01" & grant == 'UGD-011-G10-S')){
     start_date = seq(as.Date(start_date), length = 2, by = "-1 months")[2]
-  } else if(inFile == 'official_budgets/UGD-011-G11-M_IL1_SumBudget_3Aug12.xls'){
+  } else if(inFile == 'UGD-011-G11-M_IL1_SumBudget_3Aug12.xls'){
     start_date = as.Date("2012-07-01")
   }
   
   ##create a vector that contains the start dates that correspond to the data
   dates <- rep(start_date, qtr_num) 
   dates = as.Date(dates)
-  if(inFile == 'official_budgets/UGD-011-G10-S_IL1_SumBudget_24Aug12.xls'){
+  if(inFile == 'UGD-011-G10-S_IL1_SumBudget_24Aug12.xls'){
     # THIS FILE IS SUPER WEIRD
     for (i in 1:length(dates)){
       if (i==1){
@@ -96,9 +93,11 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
     dates[1]  = org
   }
   
+  
+  #EKL verified to here for file "UGD-011-G12-M_IL4 Summary Budget.xlsx"
   ## grab only the relevant columns of the data (module, intervention, and sda along with the quarters)
-  if(inFile == "official_budgets/UGD-011-G12-M_IL4 Summary Budget.xlsx" |
-     inFile == "official_budgets/UGD-708-G13-H_Summary Budget_Phase 2.xlsx"){
+  if(inFile == "UGD-011-G12-M_IL4 Summary Budget.xlsx" |
+     inFile == "UGD-708-G13-H_Summary Budget_Phase 2.xlsx"){
     col_num = qtr_num+2
   }else{
     col_num = qtr_num+3
@@ -107,8 +106,8 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   gf_data <- gf_data[, 1:col_num]
   gf_data <- gf_data[-1,]
   ##
-  if(inFile == "official_budgets/UGD-011-G12-M_IL4 Summary Budget.xlsx" | 
-     inFile == "official_budgets/UGD-708-G13-H_Summary Budget_Phase 2.xlsx"){
+  if(inFile == "UGD-011-G12-M_IL4 Summary Budget.xlsx" | 
+     inFile == "UGD-708-G13-H_Summary Budget_Phase 2.xlsx"){
     setnames(gf_data, c("module", "intervention", as.character(dates)))
     gf_data$sda_activity = gf_data$intervention
   }else{
@@ -118,7 +117,12 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   setDT(gf_data)
   budget_dataset<- melt(gf_data,id=c("module", "intervention", "sda_activity"), variable.name = "start_date", value.name="budget")
   
-  if(inFile == "official_budgets/UGD-011-G10-S_IL3 Summary Budget_20May14.xlsx" | inFile == 'official_budgets/UGD-011-G09-S_IL1_SumBudget.xls'){
+  #Verify the budget numbers were pulled correctly (make sure they're all numeric) 
+  stopifnot(class(budget_dataset$budget)=="character")
+  budget_dataset[is.na(budget), budget:="0"]
+  budget_dataset[, budget:=as.numeric(budget)]
+  
+  if(inFile == "UGD-011-G10-S_IL3 Summary Budget_20May14.xlsx" | inFile == 'UGD-011-G09-S_IL1_SumBudget.xls'){
     budget_dataset$sda_activity = gsub("HSS:", "", budget_dataset$sda_activity)
     budget_dataset$intervention = budget_dataset$sda_activity
     budget_dataset$sda_activity = "all"
@@ -128,13 +132,12 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   ##add categories
   budget_dataset$disease <- disease 
   budget_dataset$start_date = as.Date(budget_dataset$start_date)
-  if(inFile == 'official_budgets/UGD-011-G10-S_IL1_SumBudget_24Aug12.xls'){
+  if(inFile == 'UGD-011-G10-S_IL1_SumBudget_24Aug12.xls'){
     budget_dataset$period = ifelse(year(budget_dataset$start_date) == 2012, 120, ifelse(
       year(budget_dataset$start_date) == 2013, 90, 60))
   }else{
   budget_dataset$period = ifelse(month(budget_dataset$start_date) == 8 | (budget_dataset$start_date == "2014-05-01" & grant == 'UGD-011-G10-S'), 60, 
                                  ifelse(month(org) == 8 & (budget_dataset$start_date == max(budget_dataset$start_date)), 120, period))} #make up for the 1st period being 2 months and the final being 4 months
-  budget_dataset$expenditure <- 0 ## since we don't have expenditure data yet 
   budget_dataset$grant_number <- grant
   budget_dataset$recipient <- recipient
   budget_dataset$cost_category <- "all"
