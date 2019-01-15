@@ -13,8 +13,8 @@ library(stringr)
 library(reshape)
 library(RCurl)
 library(XML)
+library(profvis)
 library(plyr)
-
 # --------------------
 # shell script to run on the cluster 
 
@@ -108,20 +108,28 @@ extract_dhis_units = function(base_url, userID, password) {
   
   #extract information about organisational units: coordinates, data sets, etc.
   print('Extracting units information')
-  extracted_org_units = dlply(org_units, .(org_unit_ID),
+  extracted_org_units = dlply(org_units[group==g], .(org_unit_ID),
                               function(org_units) {
                               try(extract_org_unit(org_units$url, userID, password))},
                               .progress = 'text')  
 }
 
 #-------------------------------
-# run the extraction 
+# run the extraction - looping through groups of 1000 at a time
 
+# subset into 28 separate groups
+vec = c(1:28)
+org_units[ , group:=rep(vec, 1000)]
+
+for (g in org_units$group) {
+y = g
 units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
+saveRDS(units, paste0(dir,'meta_data/units/extracted_org_units_', y, '.rds'))
+pause(30)
+
+}
 
 #-----------------------
-# save the contents of the extraction (interim output)
-saveRDS(units, paste0(dir, 'meta_data/extracted_org_units.rds')) 
 
 #-----------------------
 
