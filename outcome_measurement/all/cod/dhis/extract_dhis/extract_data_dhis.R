@@ -1,11 +1,11 @@
 # DHIS2 Extraction for DRC - SNIS
 # Extracts Data from: https://www.snisrdc.com/dhis-web-commons/security/login.action
 # Sources dhis_extracting_functions.R on J Drive for dhisextractr package and extraction functions
-# website re-reroutes for https://www.snisdrc.com to https://snisdrc.com
+# Website re-reroutes from https://www.snisdrc.com to https://snisdrc.com
 
 #---------------------------
 # Caitlin O'Brien-Carelli
-# 12/12/2018
+# 1/15/2018
 
 #---------------------------
 # Extract single data sets by specifying the data set number
@@ -58,10 +58,10 @@ source(paste0(dir, 'dhis_extracting_functions.R'))
 start_year = '2018'
 end_year = '2018'
 start_month = '01'
-end_month = '02'
+end_month = '12'
 
 # change the update year to before the data begins
-update_year = '2018'
+update_year = '2017'
 
 #identify the data set(s) you want to download by number (list below)
 set = 29
@@ -142,7 +142,7 @@ extracted_data = extract_all_data(base_url = base_url,
 
 
 # save the data table in its individual folder in 'pre_prep' for merge and prep:
-saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', country, 
-                                 '_', start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
+saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', 
+                               start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
 #-------------------------

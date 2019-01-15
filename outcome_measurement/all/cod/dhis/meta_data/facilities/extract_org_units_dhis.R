@@ -141,7 +141,7 @@ units = extract_dhis_units(base_url = base_url, userID = userID, password = pass
 saveRDS(units, paste0(dir,'meta_data/units/extracted_org_units_', y, '.rds'))
 
 # pause and notify that a new group is starting
-pause(600)
+pause(100)
 print(paste0("Starting group ", g, " of ", x, "!"))
 }
 
@@ -166,12 +166,37 @@ for(f in files) {
   i = i+1
 }
 
+# reset variable names for the merge
+setnames(full_data, 'name', 'org_unit')
+
+#---------------------------------
+# merge in the org_unit names for the ancestors
+# provides geographic information for health facilities 
+
+# drop unecessary variables and reset the names for the merge
+org_units[ ,c('url', 'group'):=NULL]
+setnames(org_units, c('ancestors', 'ancestor_name'))
+
+# merge in the names of the ancestors 
+full_data = merge(full_data, org_units, by='ancestors', all.x=T)
+
+full_data[grep(pattern="du Congo", ancestor_name),type:='country']
+full_data[grep(pattern="Province", ancestor_name), type:='dps']
+full_data[grep(pattern="Zone", ancestor_name), type:='health_zone']
+full_data[grep(pattern="Aire de", ancestor_name), type:='health_area']
+
+# one unit has a typo
+full_data[id=='dSLpXrVH7PB' & ancestors=='QraemzWBj2P', type:='health_area']
+
+# drop ancestor id to shape long
+full_data[ , ancestors:=NULL]
+
+# reshape the meta data wide 
+# creates a data set of single facilities with associated geographic units
+full_data = dcast(full_data, id+opening_date+coordinates+org_unit~type, value.var='ancestor_name')
+
+#---------------------------------
 # save the output
 saveRDS(full_data, paste0(dir, 'meta_data/master_facilities.rds'))
 
 #-------------------------------
-
-
-
-
-
