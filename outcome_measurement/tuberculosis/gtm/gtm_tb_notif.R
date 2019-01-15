@@ -21,7 +21,7 @@ table(notif$CONDICIONINGRESO)
 
 #Subset to new or relapsed cases or missing classification
 #Need data cleaning step to deal with the odd few numeric categories
-new<-notif[notif$CONDICIONINGRESO=="nuevo"|notif$CONDICIONINGRESO=="recaida"|is.na(notif$CONDICIONINGRESO),]
+new<-notif[notif$CONDICIONINGRESO=="nuevo"|notif$CONDICIONINGRESO=="recaida",]
 
 table(new$YEAR)
 
