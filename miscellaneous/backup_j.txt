@@ -16,9 +16,9 @@ robocopy J:\Project\Evaluation\GF\outcome_measurement C:\local\GF_copy\outcome_m
 robocopy J:\Project\Evaluation\GF\resource_tracking C:\local\GF_copy\resource_tracking /mir
 robocopy J:\Project\Evaluation\GF\covariates C:\local\GF_copy\covariates /mir
 
-echo Updated 01092019 > C:\local\GF_copy\copy_date.txt
+echo Updated on the day this file was created > C:\local\GF_copy\copy_date.txt
 
 :: I:/ drive
 robocopy "I:\RTs_and_Projects\Evaluations\Global Fund PCE" "C:\local\Global Fund PCE_copy" /mir
 
-echo Updated 01112019 > C:\local\GF_copy\copy_date.txt
+echo Updated on the day this file was created > C:\local\GF_copy\copy_date.txt
