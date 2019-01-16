@@ -29,61 +29,92 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
-# source the necessary functions 
-
+# source the merge functions 
+source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/prep_dhis/merge_functions.R")
 #---------------------------------
 
+#---------------------------------
+# change the arguments to upload the data sets 
+
+# change the folder to the name of the data set you want to merge
+folder = 'base'
+
+# set the working directory and read in the files
+setwd(paste0(dir, 'pre_prep/', folder, '/'))
+
+# list the files in the working directory
+files = list.files('./', recursive=TRUE)
+
+# read in the files 
+i = 1
+for(f in files) {
+  #load the RDs file
+  vec = f
+  current_data = data.table(readRDS(f))
+  current_data[ ,file:=vec]
+  
+  # append to the full data 
+  if(i==1) dt = current_data
+  if(i>1)  dt = rbind(dt, current_data)
+  i = i+1
+}
+
+#---------------------------------
+# delete overlapping dates 
+
+# create a date variable 
+dt[ , period:= as.character(period)]
+dt[ , year:=substr(period, 1, 4)]
+dt[ , month:=substr(period, 5, 6)]
+dt[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+dt[ , c('period', 'year', 'month'):=NULL]
+
+# drop out entries for which date is missing
+dt = dt[!is.na(date)]
+
+# view dates and determine which dates overlap
+dt[ ,unique(file)]
+
+# eliminate the overlapping dates 
+test = dt[ ,.(date=unique(date)), by=file]
+test = test[duplicated(date)]
+print(paste('The following dates overlap:', test))
+
+# remove overlapping dates - automate 
+
+dt[ , value:=as.character(value)] # remove the factor to avoid errors
 #---------------------------------------------
+# merge in the meta data 
+
+
+
+
+
+
+
+
+
+
+
+# save a merged rds file 
+
+min = dt[ , min(date)]
+min = gsub('-', '_', min)
+max = dt[ , max(date)]
+max = gsub('-', '_', max)
+
+saveRDS(dt, paste0('pre_prep/merged/', folder, '_drc_', min, '_', max, '.rds' ))
+
+
 # base services 
 
 # remove the overlapping dates
 dt = as.Date('2018-01-01', '%Y-%m-%d') # dt represents the first month of overlap
 base1 = overlap(base1, dt)
-#------------------------------------
 
-# merge the previously downloaded set with the new download
-base <- rbind(base1, base2)
 
-# merge in the meta data 
-merge_base <- merge_meta_data(base)
 
-# save the merged data 
-# alter the file name to include all included dates
-saveRDS(merge_base, paste0(dir, 'pre_prep/merged/base_services_drc_01_2015_09_2018.rds'))
 
-# create a data set of only 2017 - present data 
-base_new <- merge_base[year=='2017' | year=='2018']
-saveRDS(base_new, paste0(dir, 'pre_prep/merged/base_services_drc_01_2017_09_2018.rds'))
-#----------------------------------------------
-# Merge the SIGL data 
-
-# input the name of the most recently merged data set (change file path to 'merged' folder)
-sigl1 <- data.table(readRDS(paste0(dir, 'pre_prep/sigl/sigl_drc_01_2015_05_2018.rds')))
-
-# load the newest data set
-sigl2 <- data.table(readRDS(paste0(dir, 'pre_prep/sigl/sigl_drc_01_2018_07_2018.rds')))
-
-#------------------------
-# remove overlap - only if data sets overlap, use most recent data 
-dt <- as.Date('2018-01-01', '%Y-%m-%d') # all dates before dt
-sigl1 <- overlap(sigl1, dt)
-#-------------------------
-
-# merge the previously downloaded data set with the new download
-sigl <- rbind(sigl1, sigl2)
-
-# merge in the meta data 
-sigl <- merge_meta_data(sigl)
-
-# save the merged data
-# alter the file name to include all included dates
-saveRDS(sigl, paste0(dir, 'pre_prep/merged/sigl_drc_01_2015_07_2018.rds'))
-
-# create a data set of only 2017 - present data 
-sigl_new <- sigl[year=='2017' | year=='2018']
-saveRDS(sigl_new, paste0(dir, 'pre_prep/merged/sigl_drc_01_2017_07_2018.rds'))
-
-#------------------------------------------------ 
 # Merge the PNLS data 
 
 # input the name of the most recently merged data set (change file path to 'merged' folder)

@@ -1,34 +1,6 @@
-# facilities composition
-# add to the facilities list so org units are classified by tyoe
-# 8/29/18
-# Caitlin O'Brien-Carelli
-# ----------------------------------------------
 
-# --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(ggplot2)
-library(dplyr)
-library(stringr) 
-library(reshape)
-library(epibasix)
-# --------------------
-# merge on the cluster
-# files take a long time to load - merge in a cluster IDE
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_download  
 
-# --------------------
-# set working directories
-
-# detect if operating on windows or on the cluster 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-
-# set the directory for input and output
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
-
-#-------------------------
 # import the meta data for the merge
 facilities <- data.table(readRDS(paste0(dir, 'meta_data/master_facilities.rds')))
 
