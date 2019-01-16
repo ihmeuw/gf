@@ -19,6 +19,7 @@ library(scales)
 # -----------------------------------------------------------------
 # root directory for input/average_absorptionput
 dir = 'J:/Project/Evaluation/GF/resource_tracking/gtm/prepped'
+dir = 'C:/local/GF_copy/resource_tracking/gtm/prepped'
 
 # input data
 inFile = paste0(dir, '/prepped_sicoin_data.csv')
@@ -32,6 +33,7 @@ sicoin <- fread(inFile)
 
 # drop first/last year of the series because they appear to be incomplete
 #sicoin = sicoin[year!=min(year) & year!=max(year)]
+sicoin = sicoin[financing_source=='ghe']
 
 #Convert SICOIN financial data into numeric 
 sicoin[, budget:=as.numeric(budget)]
