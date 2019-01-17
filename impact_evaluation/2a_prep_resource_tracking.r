@@ -24,7 +24,13 @@ resource_tracking <- final_budgets #Will want to add expenditures in here eventu
 
 #Subset to only the columns we want from resource tracking database and impact evaluation map 
 drc_mal_rt = resource_tracking[country == "Congo (Democratic Republic)" & (disease == "malaria" | disease == "hss"), .(budget, start_date, code, loc_name, disease)]
+drc_mal_rt = drc_mal_rt[, .(budget = sum(budget, na.rm = TRUE)), by = .(start_date, code, loc_name, disease)]
 
-drc_mal_rt = drc_mal_rt[, .(budget = sum(budget)), by = .(start_date, code, loc_name, disease)]
-
+#Map to intervention and indicator using the map for DRC malaria. 
 drc_mal_rt <- merge(drc_mal_rt, drc_mal_map, by = c('code'), allow.cartesian = TRUE)
+
+#Add in quarter variable for merge with outputs and activities, and remove start date. 
+#We don't have data disaggregated to the month-level on the activites and outputs side but that's okay. 
+drc_mal_rt$quarter <- quarter(drc_mal_rt$start_date)
+drc_mal_rt$year <- year(drc_mal_rt$start_date)
+drc_mal_rt$start_date <- NULL 

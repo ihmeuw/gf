@@ -7,6 +7,17 @@
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
 
-outputs_activities = paste0(dir, "outputs_activites_for_pilot.RDS")  # produced by code in 2b_prep_activities_outputs
+#Specify the variables that you want to merge by here. 
+merge_vars = c('quarter', 'year', 'indicator')
 
-dt <- readRDS(outputs_activities)
+#Read in the previously saved file for outputs/activities in 2b
+outputs_activities = paste0(dir, "outputs_activites_for_pilot.RDS") 
+outputs_activities <- readRDS(outputs_activities)
+
+
+#Read in the previously saved files for resource tracking in 2b #EKL need to add this so it's clearer. 
+
+#Merge resource tracking and outputs/activites data 
+merge_file <- merge(outputs_activities, drc_mal_rt, by = merge_vars)
+
+saveRDS(merge_file, paste0(dir, "pilot_data.RDS"))
