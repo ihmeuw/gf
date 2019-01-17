@@ -119,7 +119,6 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   
   #Verify the budget numbers were pulled correctly (make sure they're all numeric) 
   stopifnot(class(budget_dataset$budget)=="character")
-  budget_dataset[is.na(budget), budget:="0"]
   budget_dataset[, budget:=as.numeric(budget)]
   
   if(inFile == "UGD-011-G10-S_IL3 Summary Budget_20May14.xlsx" | inFile == 'UGD-011-G09-S_IL1_SumBudget.xls'){

@@ -187,7 +187,7 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   
   #Check these by summing the total for the file, and making sure it's not 0. 
   check_budgets = budget_dataset[ , 
-                  lapply(.SD, sum), 
+                  lapply(.SD, sum, na.rm = TRUE), 
                   .SDcols = c("budget", "expenditure")]
   
   stopifnot(check_budgets[, 1]>0 & check_budgets[, 2]>0)

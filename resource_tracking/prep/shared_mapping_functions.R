@@ -183,7 +183,7 @@ check_budgets_pudrs = function(dt){
   dt[is.na(expenditure), expenditure:=0]
   
   budgets = dt[ , 
-               lapply(.SD, sum), 
+               lapply(.SD, .(sum, na.rm = TRUE)), 
                 by = keyVars, 
                .SDcols = c("budget", "expenditure")]
   budgets <- unique(budgets)

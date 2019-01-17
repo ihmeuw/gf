@@ -263,7 +263,6 @@ totalFgh$lang <- "eng"
 totalFgh$cost_category <- "all" #Why not make this NA? 
 #-----------------------------------
 
-totalFgh$coefficient <- 1
 totalFgh$country = mapply(get_country_name, totalFgh$loc_name)
 totalFgh$loc_name = tolower(totalFgh$loc_name)
 totalFgh = totalFgh[!grep("total_", sda_activity)] #This should not happen here!!! EKL Needs to happen above. 

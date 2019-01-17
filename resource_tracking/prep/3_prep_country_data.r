@@ -37,23 +37,15 @@ stopifnot(nrow(fpm_overlap)==0 & nrow(pudr_overlap)==0)
 
 rm(fpm_overlap, pudr_overlap)
 
-#Replace NAs as 0s for valid rows of data; we should have legitimate data for all of these file quarters.  
-#This is a short-term fix; and should be checked in the prep functions. 
-resource_database[is.na(budget), budget:='0'] #Expecting budget and expenditure to still be character at this point. 
-resource_database[is.na(expenditure), expenditure:='0']
-
-check_na_budget <- resource_database[is.na(budget) | is.na(expenditure)]
-stopifnot(nrow(check_na_budget)==0)
-
 #Make sure all budget and expenditure variables are numeric. 
 resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
 resource_database$disbursement <- as.numeric(resource_database$disbursement)
 
 #Make sure that no files have a total sum of 0; this would indicate an error in the prep code. 
-check_0_budgets <- resource_database[, .(budget = sum(budget)), by=.(fileName)]
+check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by=.(fileName)]
 check_0_budgets = check_0_budgets[budget == 0]
-check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = sum(expenditure)), by=.(fileName)]
+check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = sum(expenditure, na.rm = TRUE)), by=.(fileName)]
 check_0_expenditure <- check_0_expenditure[expenditure == 0]
 stopifnot(nrow(check_0_budgets)==0 & nrow(check_0_expenditure)==0)
 

@@ -55,19 +55,13 @@ prep_other_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disea
   #Only keep data that has a value in the 'module' column. 
   gf_data1<- gf_data1[!is.na(module)]
   
-  #Replace budgets that are NA at this point with 0. EKL Can you do this with a loop? or lapply? 
-  gf_data1[is.na(gf_data1$Q1), Q1:=0]
-  gf_data1[is.na(gf_data1$Q2), Q2:=0]
-  gf_data1[is.na(gf_data1$Q3), Q3:=0]
-  gf_data1[is.na(gf_data1$Q4), Q4:=0]
-  
   budget_dataset<- melt(gf_data1,id=c("module","sda_activity"), 
                         variable.name = "qtr", value.name="budget")
   
   budget_dataset[, budget:=as.numeric(budget)]
   
   #Make sure the conversions above are working. 
-  if(budget_dataset[, sum(budget)]==0){
+  if(budget_dataset[, sum(budget, na.rm = TRUE)]==0){
     stop(paste0("All budget data converted to NA for file: ", inFile, ". Validate prep_fpm_other_budget function."))
   }
   

@@ -101,9 +101,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
     }
   }
   
-  #At this point, we know that budgets with NA should be 0. Replace, and check with David/Caitlin.
   #Make budget numeric at this point. 
-  gf_data1[is.na(budget), budget:="0"]
   gf_data1[, budget:=as.numeric(budget)]
   
   ##if for some reason, we don't have the same number of start dates as quarters, this will stop the function:
@@ -128,7 +126,7 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   budget_dataset$year <- year(budget_dataset$start_date)
   
   stopifnot(class(budget_dataset$budget)=="numeric")
-  stopifnot(budget_dataset[, sum(budget)]!= 0)
+  stopifnot(budget_dataset[, sum(budget, na.rm = TRUE)]!= 0)
   
   return(budget_dataset)
 }
