@@ -57,6 +57,10 @@ check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = 
 check_0_expenditure <- check_0_expenditure[expenditure == 0]
 stopifnot(nrow(check_0_budgets)==0 & nrow(check_0_expenditure)==0)
 
+#Remove all rows with NA for module and intervention, after verifying that they have a budget of 0. 
+#This is a hacky fix to deal with messy data; this should really be addressed at the file-level in the prep code. 
+resource_database = resource_database[!(is.na(module) & is.na(intervention) & budget == 0)]
+
 #check for duplicates, and sum their values if they exist:
 dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
 print(paste0(nrow(dups), " duplicates found in database; values will be summed"))
@@ -156,7 +160,6 @@ mapped_country_data[disease == "hiv/tb", disease:= 'hiv']
 #Check to make sure all modules were caught in the edit above - Should still have Program management; TB/HIV; Treatment, care and support; and Unspecified. 
 stopifnot(nrow(mapped_country_data[disease == "hiv/tb"])==0)
 
-
 #-----------------------------------------
 # Apply redistribution coefficients
 # ----------------------------------------
@@ -211,10 +214,12 @@ mapped_country_data$orig_intervention <- str_replace_all(mapped_country_data$ori
 # ----------------------------------------------
 # Write the prepped data as .csvs
 # ----------------------------------------------
+#Create a subset of columns for an outside audience. 
+cleaned_columns <- c('country', 'disease', 'gf_module', 'gf_intervention', 'abbrev_module', 'abbrev_intervention', 'sda_activity', 'code', 'adm1', 'adm2', 
+                     'budget', 'expenditure', 'disbursement', 'fileName', 'grant_number', 'grant_period', 'start_date', 'period', 'year', 'data_source', 'financing_source') 
 
-
-final_budgets <- mapped_country_data[file_iteration == "final" & data_source == "fpm"]
-final_expenditures <- mapped_country_data[file_iteration == "final" & data_source == "pudr"]
+final_budgets <- mapped_country_data[file_iteration == "final" & data_source == "fpm", .(cleaned_columns)] #Emily should we remove the expenditure column here? 
+final_expenditures <- mapped_country_data[file_iteration == "final" & data_source == "pudr", .(cleaned_columns)]
 
 # Save RDS file
 saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))

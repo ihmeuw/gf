@@ -179,8 +179,8 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
   stopifnot(class(budget_dataset$budget) == 'character' & class(budget_dataset$expenditure)=='character')
   #At this point, we know that if we have a line in the budget with NA, there was $0 budgeted for that module/intervention
   # in this time period. 
-  budget_dataset[is.na(budget), budget:='0']
-  budget_dataset[is.na(expenditure), expenditure:='0']
+  # budget_dataset[is.na(budget), budget:='0']
+  # budget_dataset[is.na(expenditure), expenditure:='0']
   
   budget_dataset[, budget:=as.numeric(budget)]
   budget_dataset[, expenditure:=as.numeric(expenditure)]

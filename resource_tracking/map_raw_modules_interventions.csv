@@ -42,7 +42,7 @@
 "41","programasparareducirlasbarrerasrelacionadasalosderechoshumanosparaaccederalosserviciosdevih","formaciondelosproveedoresdeserviciosdesaludsobrelosderechoshumanosyeticamedicaenrelacionconelvihylatbvih","H8_3",1,"hiv",1,4
 "42","programasparareducirlasbarrerasrelacionadasalosderechoshumanosparaaccederalosserviciosdevih","mejoradeleyesreglamentosypoliticasrelacionadasconelvihylatbvih","H8_6",1,"hiv",1,10
 "43","atencionyprevenciondetuberculosis","poblacionesclaveafectadas","H7_4",1,"hiv",1,5
-"44","tuberculosisvih","intervencionesconjuntasentuberculosisvih","H7_1",1,"hiv",1,12
+"44","tuberculosisvih","intervencionesconjuntasentuberculosisvih","H7_1",1,"hiv",1,13
 "45","programasdeprevencionintegralparahombresquetienenrelacionessexualesconhombres","programasdepreservativosylubricantesparahombresquetienenrelacionessexualesconhombres","H2_4",1,"hiv",1,11
 "46","programasdeprevencionintegralparahombresquetienenrelacionessexualesconhombres","serviciosdepruebasdevihparahombresquetienenrelacionessexualesconhombres","H2_7",1,"hiv",1,14
 "47","programasdeprevencionintegralparahombresquetienenrelacionessexualesconhombres","diagnosticoytratamientodeitsyotrosserviciosdesaludsexualyreproductivaparahombresquetienenrelacionessexualesconhombres","H2_8",1,"hiv",1,9
@@ -141,13 +141,13 @@
 "140","programmesdepreventioncompletsdestinesauxtransgenres","servicesdedepistageduvihdestinesauxtransgenres","H2_41",1,"hiv",1,12
 "141","preventiondelatransmissiondelamcreslenfantptme","volet1preventionprimairedelinfectionauvihchezlesfemmesenagedeprocreer","H5_1",1,"hiv",1,11
 "142","traitementpriseenchargeetsoutien","all","H6",1,"hiv",1,10
-"143","tuberculosevih","interventionsconjointesdeluttecontrelatuberculoseetlevih","H7_1",1,"hiv",1,12
+"143","tuberculosevih","interventionsconjointesdeluttecontrelatuberculoseetlevih","H7_1",1,"hiv",1,13
 "144","traitementpriseenchargeetsoutien","autres","H6_8",1,"hiv",1,15
 "145","traitementpriseenchargeetsoutien","autresinterventionsrealiseesdanslecadredutraitement","H6_8",1,"hiv",1,15
 "146","traitementpriseenchargeetsoutien","changementdecomportementdanslecadredesprogrammesdestinesauxhommesayantdesrapportssexuelsavecdeshommesetauxtransgenres","H2_3",0.5,"hiv",1,15
 "147","tuberculosevih","populationsclesprisonniersoupersonnessetrouvantdansdautreslieuxfermes","H7_4",1,"hiv",1,5
 "148","programmesdepreventiondestinesslapopulationgenerale","changementdecomportementdanslecadredesprogrammesdestinesslapopulationgenerale","H1_1",1,"hiv",1,18
-"149","tuberculosevih","priseenchargecommunautairedelatuberculose","H7_1",1,"hiv",1,12
+"149","tuberculosevih","priseenchargecommunautairedelatuberculose","H7_1",1,"hiv",1,13
 "150","programmesdepreventiondestinesslapopulationgenerale","programmesdepreventionetdetraitementdelaviolencebaseesurlegenre","H1_7",1,"hiv",1,11
 "151","programmesdepreventioncompletsdestinesauxhommesayantdesrapportssexuelsavecdeshommeshsh","luttecontrelastigmatisationladiscriminationetlaviolencecontreleshsh","H2_2",1,"hiv",1,5
 "152","programmesdepreventioncompletsdestinesauxhommesayantdesrapportssexuelsavecdeshommeshsh","interventionspourlechangementdecomportementciblantleshsh","H2_3",1,"hiv",1,15
@@ -255,7 +255,7 @@
 "254","programmesvisantsreduirelesobstaclesliesauxdroitshumainsquientraventlacccsauxservicesvih","sensibilisationdeslegislateursetdesagentsdelaforcepublique","H8_5",1,"hiv",1,8
 "255","programmesvisantsreduirelesobstaclesliesauxdroitshumainsquientraventlacccsauxservicesvih","formationdesprofessionnelsdesanteenmaticrededroitshumainsetdethiquemedicaleliesslaluttecontrelevihetslalutteconjointecontrelevihlatuberculose","H7_2",1,"hiv",1,4
 "256","programmesvisantsreduirelesobstaclesliesauxdroitshumainsquientraventlacccsauxservicesvih","reductiondelastigmatisationetdeladiscrimination","H8_1",1,"hiv",1,7
-"257","tuberculosevih","populationsclesautres","H7_1",1,"hiv",1,12
+"257","tuberculosevih","populationsclesautres","H7_1",1,"hiv",1,13
 "258","hivprevention","providebyend2013preventionservicestoavoid171796newcasesofinfectionin196healthareaszonesdesante","H1_8",1,"hiv",1,21
 "259","hivtreatment","improveby2013treatmentof67099hivpattientsin196heathareaszonesdesante","H6_8",1,"hiv",1,15
 "260","hivtreatment","improveby2013treatmentof67099aidspatientsinthe196heathareaszonesdesantecoveredbytheprogramme","H6_8",1,"hiv",1,15
@@ -282,13 +282,13 @@
 "281","treatmentantiretroviraltreatmentarvandmonitoring","all","H6_2",1,"hiv",1,22
 "282","treatmentprophylaxisandtreatmentforopportunisticinfections","all","H6_6",1,"hiv",1,10
 "283","careandsupportcareandsupportforthechronicallyill","all","H6",1,"hiv",1,10
-"284","tbhivcollaborativeactivitieshivcareandsupportforhivpositivetbpatients","all","H7_1",1,"hiv",1,12
+"284","tbhivcollaborativeactivitieshivcareandsupportforhivpositivetbpatients","all","H7_1",1,"hiv",1,13
 "285","preventionotherpreventiondistributionofcondoms","all","H1_2",1,"hiv",1,19
 "286","preventionbcccommunityoutreach","all","H1_8",1,"hiv",1,21
 "287","preventionprogramsformsmandtgs","all","H2_11",0.5,"hiv",1,12
 "288","preventionprogramsformsmandtgs","all","H2_45",0.5,"hiv",1,9
 "289","preventionprogramsforsexworkersandtheirclients","all","H2_22",1,"hiv",1,12
-"290","collaborativeactivitiestbhiv","all","H7_1",1,"hiv",1,12
+"290","collaborativeactivitiestbhiv","all","H7_1",1,"hiv",1,13
 "291","preventionprogramsformsmandtgs","hivtestingandcounselingaspartofprogramsformsmandtgs","H2_7",0.5,"hiv",1,14
 "292","preventionprogramsformsmandtgs","hivtestingandcounselingaspartofprogramsformsmandtgs","H2_41",0.5,"hiv",1,12
 "293","preventionprogramsformsmandtgs","diagnosisandtreatmentofstisaspartofprogramsformsmandtgs","H2_42",0.5,"hiv",1,7
@@ -329,7 +329,7 @@
 "328","programstoreducehumanrightsrelatedbarrierstohivservices","sensitisationoflawmakersandlawenforcementagents","H8_5",1,"hiv",1,8
 "329","suivietevaluation","activitesconcerteesavecdautressecteurs","H6_8",1,"hiv",1,15
 "330","suivietevaluation","gestiondesubvention","H9_2",1,"hiv",1,8
-"331","suivietevaluation","interventionsconcerteesdeluttecontrelatuberculoseetlevih","H7_1",1,"hiv",1,12
+"331","suivietevaluation","interventionsconcerteesdeluttecontrelatuberculoseetlevih","H7_1",1,"hiv",1,13
 "332","suivietevaluation","autre","H6_8",1,"hiv",1,15
 "333","suivietevaluation","depistageetdiagnosticdesmaladies","H6_6",1,"hiv",1,10
 "334","suivietevaluation","prevention","H1_8",1,"hiv",1,21
@@ -1716,7 +1716,7 @@
 "1715","ssrssistemasdeinformacionensaludymonitoreoyevaluacion","otrasintervencionesparasistemasdeinformacionensaludymonitoreoyevaluacion","R2_7",1,"hiv",1,64
 "1716","tratamientoatencionyapoyo","adherenciaaltratamiento","H6_5",1,"hiv",1,3
 "1717","tratamientoatencionyapoyo","pretratamientoantirretroviral","H6_2",1,"hiv",1,22
-"1718","tbvih","intervencionescolaborativasdetbvih","H7_1",1,"hiv",1,12
+"1718","tbvih","intervencionescolaborativasdetbvih","H7_1",1,"hiv",1,13
 "1719","programasdeprevencionintegralparatrabajadoresdelsexoysusclientes","otrasintervencionesparatrabajadoressexualesysusclientes","H2_22",1,"hiv",1,12
 "1720","politiqueetgouvernance","developpementetmiseenuvredesstrategiespolitiquesetreglementationssanitaires","R6_1",1,"hiv",1,23
 "1721","preventioninsecticitetreatednetsitns","all","M1_1",0.5,"malaria",1,11
@@ -1824,7 +1824,7 @@
 "1823","tbcareandprevention","poblacionesclaveafectadas","T1_7",1,"tb",1,9
 "1824","tbhiv","tbhiv","H7",1,"hiv",1,3
 "1825","tbhiv","tbhiv","T2",1,"tb",1,4
-"1826","tbhiv","tbhivcollaborativeinterventions","H7_1",1,"hiv",1,12
+"1826","tbhiv","tbhivcollaborativeinterventions","H7_1",1,"hiv",1,13
 "1827","tbhiv","tbhivcollaborativeinterventions","T2_1",1,"tb",1,16
 "1828","mdr","tb","T3",1,"tb",1,7
 "1829","healthinformationsystemsandme","presentaciondeinformesrutinaria","R2_1",1,"tb",1,53
@@ -2111,10 +2111,10 @@
 "2110","tuberculosemultiresistante","depistageetdiagnosticdesmaladies","T3_1",1,"hiv/tb",1,13
 "2111","tuberculosemultiresistante","depistageetdiagnosticdesmaladiestuberculosemultiresistante","T3_1",1,"hiv/tb",1,13
 "2112","tuberculosemultiresistante","all","T3",1,"hiv/tb",1,7
-"2113","tuberculosevih","interventionsconjointesdeluttecontrelatuberculoseetlevih","H7_1",1,"hiv/tb",1,12
+"2113","tuberculosevih","interventionsconjointesdeluttecontrelatuberculoseetlevih","H7_1",1,"hiv/tb",1,13
 "2114","tuberculosevih","populationsclesprisonniersoupersonnessetrouvantdansdautreslieuxfermes","H7_4",1,"hiv/tb",1,5
-"2115","tuberculosevih","priseenchargecommunautairedelatuberculose","H7_1",1,"hiv/tb",1,12
-"2116","tuberculosevih","populationsclesautres","H7_1",1,"hiv/tb",1,12
+"2115","tuberculosevih","priseenchargecommunautairedelatuberculose","H7_1",1,"hiv/tb",1,13
+"2116","tuberculosevih","populationsclesautres","H7_1",1,"hiv/tb",1,13
 "2117","comprehensivepreventionprogramsforsexworkersandtheirclients","diagnosisandtreatmentofstisandothersexualandreproductivehealthservicesforsexworkers","H2_19",1,"hiv/tb",1,8
 "2118","comprehensivepreventionprogramsforsexworkersandtheirclients","communityempowermentforsexworkers","H2_12",1,"hiv/tb",1,3
 "2119","comprehensivepreventionprogramsforsexworkersandtheirclients","addressingstigmadiscriminationandviolenceagainstsexworkers","H2_13",1,"hiv/tb",1,3
@@ -2130,3 +2130,5 @@
 "2129","preventionprogramsformsmandtgs","behavioralchangeaspartofprogramsformsmandtgs","H2_3",0.5,"hiv/tb",1,15
 "2130","preventionprogramsformsmandtgs","behavioralchangeaspartofprogramsformsmandtgs","H2_37",0.5,"hiv/tb",1,13
 "2131","other","all","M99",1,"malaria",1,3
+"2132","all","all","R99",1,"hss",1,1
+"2133","tbhiv","tbhivcollaborativeinterventions","H7_1",1,"hiv/tb",1,13

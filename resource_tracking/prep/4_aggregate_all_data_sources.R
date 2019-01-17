@@ -130,20 +130,21 @@ stopifnot(nrow(na_year)==0)
 #Generate a binary variable for current grants. 
 final_budgets$current_grant = FALSE 
 
-for (i in 1:length(current_gtm_grants)){
+for (i in 1:length(current_gtm_grants)){ #Currently flagging 4
   final_budgets[grant_number==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], current_grant:=TRUE]
 }
 
-for (i in 1:length(current_uga_grants)){
+for (i in 1:length(current_uga_grants)){ #Flagging 0
   final_budgets[grant_number==current_uga_grants[i] & grant_period==current_uga_grant_period[i], current_grant:=TRUE]
 }
 
-for (i in 1:length(current_cod_grants)){
+for (i in 1:length(current_cod_grants)){ #Flagging 5
   final_budgets[grant_number==current_cod_grants[i] & grant_period==current_cod_grant_period[i], current_grant:=TRUE]
 }
 
-all_current_grants = unique(final_budgets[current_grant==TRUE, .(grant, grant_period, fileName)])
-stopifnot(nrow(all_current_grants)==14)
+all_current_grants = unique(final_budgets[current_grant==TRUE, .(grant_number, grant_period, fileName)])
+expected_current_grants <- length(current_gtm_grants) + length(current_uga_grants) + length(current_cod_grants)
+stopifnot(nrow(all_current_grants)==expected_current_grants)
 
 # Write data 
 write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
