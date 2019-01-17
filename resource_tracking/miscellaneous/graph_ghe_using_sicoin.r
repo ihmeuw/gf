@@ -19,7 +19,6 @@ library(scales)
 # -----------------------------------------------------------------
 # root directory for input/average_absorptionput
 dir = 'J:/Project/Evaluation/GF/resource_tracking/gtm/prepped'
-dir = 'C:/local/GF_copy/resource_tracking/gtm/prepped'
 
 # input data
 inFile = paste0(dir, '/prepped_sicoin_data.csv')
@@ -33,7 +32,7 @@ sicoin <- fread(inFile)
 
 # drop first/last year of the series because they appear to be incomplete
 #sicoin = sicoin[year!=min(year) & year!=max(year)]
-sicoin = sicoin[financing_source=='ghe']
+sicoin = sicoin[financing_source=='ghe'] #Make sure you subset to the correct data source too! 
 
 #Convert SICOIN financial data into numeric 
 sicoin[, budget:=as.numeric(budget)]
@@ -43,7 +42,7 @@ sicoin[, disbursement:=as.numeric(disbursement)]
 #Extrapolate 2018 budget numbers from first 6 months 
 sicoin_2018 <- sicoin[year == 2018]
 sicoin_2018 <- sicoin_2018[, .('budget' = sum(budget, na.rm = T)), by = c("start_date", "disease")]
-sicoin_2018 = sicoin_2018[, .(budget=mean(budget)), by='disease']
+sicoin_2018 = sicoin_2018[, .(budget=mean(budget), na.rm = T), by='disease'] #Make sure you use na.rm = T for all algebraic functions. 
 sicoin_2018[, budget:=budget*12]
 sicoin_2018[, year:=2018]
 setnames(sicoin_2018, 'budget', 'extrapolated_budget')
