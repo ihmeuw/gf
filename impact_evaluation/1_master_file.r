@@ -9,12 +9,15 @@
 # ---------------------------------------
 rm(list=ls())
 library(data.table)
+library(lubridate)
 library(readxl)
 
 user <- "elineb" #Change to reflect your own username 
 repo <- paste0("C:/Users/", user, "/Documents/gf/") #Change to your own repository 
 code_dir <- paste0(repo, "impact_evaluation/")
 
+
+repo <- 'C:/local/gf/'
 # ---------------------------------------
 # Read in common files 
 # ---------------------------------------
@@ -32,12 +35,12 @@ source(paste0(code_dir, "2a_prep_resource_tracking.r"))
 # Prep activities and outputs data 
 # ---------------------------------------
 
-source(paste0(code_dir, "2b_prep_activities_outputs.r"))
+# source(paste0(code_dir, "2b_prep_activities_outputs.r"))
 
 # ---------------------------------------
 # Merge datasets together 
 # ---------------------------------------
-
+# file produced by 2b_prep_activities_outputs 
 source(paste0(code_dir, "3_merge_data.r"))
 
 # ---------------------------------------

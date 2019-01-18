@@ -185,8 +185,9 @@ full_data[grep(pattern="Province", ancestor_name), type:='dps']
 full_data[grep(pattern="Zone", ancestor_name), type:='health_zone']
 full_data[grep(pattern="Aire de", ancestor_name), type:='health_area']
 
-# one unit has a typo
+# units with typos in the names
 full_data[id=='dSLpXrVH7PB' & ancestors=='QraemzWBj2P', type:='health_area']
+full_data[id=='RKN8w566BvC' & ancestors=='U333OaNPIrk', type:='health_area']
 
 # drop ancestor id to shape long
 full_data[ , ancestors:=NULL]
@@ -194,6 +195,12 @@ full_data[ , ancestors:=NULL]
 # reshape the meta data wide 
 # creates a data set of single facilities with associated geographic units
 full_data = dcast(full_data, id+opening_date+coordinates+org_unit~type, value.var='ancestor_name')
+
+#---------------------------------
+# run the prep function 
+source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/meta_data/prep_master_facilities_function.R")
+
+full_data = prep_facilities(full_data)
 
 #---------------------------------
 # save the output
