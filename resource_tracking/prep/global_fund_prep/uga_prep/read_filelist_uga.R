@@ -42,7 +42,6 @@ for(i in 1:nrow(file_list)){
                                        cashText, file_list$grant[i], 
                                        file_list$disease[i], file_list$period[i], file_list$primary_recipient[i], 
                                        file_list$data_source[i])
-    tmpData$disbursement <- 0 
   ##LFA data cleaning: 
   } else if (file_list$function_type[i]=="pudr"){ ##has expenditure data 
     tmpData <- prep_pudr_uga(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 

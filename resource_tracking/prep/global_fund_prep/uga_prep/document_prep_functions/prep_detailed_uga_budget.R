@@ -17,17 +17,21 @@ prep_detailed_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num
   ### uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
+  
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
 
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
-  # qtr_num = file_list$qtr_number[i]
-  # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # grant = file_list$grant[i]
-  # cashText = " Cash Outflow"
-  # data_source = file_list$data_source[i]
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date[i]
+  qtr_num = file_list$qtr_number[i]
+  period = file_list$period[i]
+  disease = file_list$disease[i]
+  grant = file_list$grant[i]
+  cashText = " Cash Outflow"
+  data_source = file_list$data_source[i]
   
   #   
   # ----------------------------------------------

@@ -87,9 +87,6 @@ verbose = TRUE #Set to true if you would like warning messages printed (helpful 
   stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
   stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
   
-  #Temporary subset for filelist to only prep and save final budgets: 
-  file_list = file_list[data_source == "fpm"]
-  
 # ----------------------------------------------
 # STEP 3: Prep country-level data 
 # ----------------------------------------------

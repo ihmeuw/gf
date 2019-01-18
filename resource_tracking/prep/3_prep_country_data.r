@@ -20,6 +20,8 @@ source(paste0(country_code_dir, "read_filelist_", country, ".R"))
 resource_database <- read_fileList()
 original_db <- copy(resource_database)
 
+saveRDS(original_db, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+
 #Make sure all budget data pulled is actually numeric- this is an easy check to see if prep functions are working correctly. 
 verify_numeric_budget = resource_database[, budget:=gsub("[[:digit:]]", "", budget)]
 verify_numeric_budget = verify_numeric_budget[, budget:=gsub("[[:punct:]]", "", budget)]
