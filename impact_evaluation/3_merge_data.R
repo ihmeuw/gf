@@ -18,6 +18,6 @@ outputs_activities <- readRDS(outputs_activities)
 #Read in the previously saved files for resource tracking in 2b #EKL need to add this so it's clearer. 
 
 #Merge resource tracking and outputs/activites data 
-merge_file <- merge(outputs_activities, drc_mal_rt, by = merge_vars)
+merge_file <- merge(outputs_activities, drc_mal_rt, by = merge_vars, all = TRUE)
 
 saveRDS(merge_file, paste0(dir, "pilot_data.RDS"))
