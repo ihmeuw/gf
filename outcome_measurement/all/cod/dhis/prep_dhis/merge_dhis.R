@@ -18,7 +18,7 @@ library(stringr)
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1527 -s 1 -P snis_merge
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1527 -s 10 -P snis_merge
 
 # ---------------------------------
 # set working directories
@@ -37,7 +37,7 @@ source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/prep_dhis/me
 # change the arguments to upload the data sets 
 
 # change the folder to the name of the data set you want to merge
-folder = 'pnls'
+folder = 'pnlt'
 
 # set the working directory and read in the files
 setwd(paste0(dir, 'pre_prep/', folder, '/'))
