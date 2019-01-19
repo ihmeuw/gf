@@ -20,7 +20,7 @@ outputs_activities <- readRDS(outputs_activities)
 #Merge resource tracking and outputs/activites data 
 merge_file <- merge(outputs_activities, drc_mal_rt, by = merge_vars, all = TRUE)
 
-merge_file <- setorderv(merge_file, c("year", "quarter"))
+merge_file <- setorderv(merge_file, c("year", "quarter", "code", "indicator", "indicator_type"))
 merge_file <- merge_file[, .(year, quarter, code, module, intervention, indicator, indicator_type, value, completeness, budget, loc_name, disease, data_source)]
 
 saveRDS(merge_file, paste0(dir, "pilot_data.RDS"))
