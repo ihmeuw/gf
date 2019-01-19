@@ -26,6 +26,10 @@ resource_tracking <- final_budgets #Will want to add expenditures in here eventu
 drc_mal_rt = resource_tracking[country == "Congo (Democratic Republic)" & (disease == "malaria" | disease == "hss"), .(budget, start_date, code, loc_name, disease)]
 drc_mal_rt = drc_mal_rt[, .(budget = sum(budget, na.rm = TRUE)), by = .(start_date, code, loc_name, disease)]
 
+
+#Do different global fund modules and interventions map to different codes here? 
+
+
 #Map to intervention and indicator using the map for DRC malaria. 
 drc_mal_rt <- merge(drc_mal_rt, drc_mal_map, by = c('code'), allow.cartesian = TRUE)
 

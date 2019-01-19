@@ -4,6 +4,20 @@
 # DATE: Last updated January 2019. 
 # ----------------------------------------------
 
+#-----------------------------------------
+# TO-DO: 
+# - Make sure resource tracking inputs are uniquely identified by year, quarter, module, intervention, and indicator. 
+# - in q1 2010, for IPTp/SP, there appears to be two different budgets for resource tracking. Look into this. 
+# - sort columns loc_name, disease, year, quarter, code, module, intervention, indicator, indicator_type, data_source, budget, value, completeness
+# - order rows by date. 
+#one more for you emily - could we get an extra column that's `other_dah`? it would be disbursement 
+#from all other donors (`fghData[data_source=='fgh' & fin_data_type=='actual', other_dah=sum(disbursement),
+#by=c('sda_activity', 'year')]`) Divide FGH by 4 to make it quarterly and append as a new column. 
+
+
+
+#-----------------------------------------
+
 # ---------------------------------------
 # Install packages and set up R  
 # ---------------------------------------

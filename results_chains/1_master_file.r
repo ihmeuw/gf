@@ -49,6 +49,7 @@ gf_budgets$country <- factor(gf_budgets$country, c('Congo (Democratic Republic)'
 #Grab SICOIN for Guatemala funding graph 
 sicoin <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/prepped_sicoin_data.csv"
                                    ,fileEncoding="latin1"))
+sicoin = sicoin[financing_source == 'ghe'] #Only want GHE numbers from SICOIN. 
 # drop first/last year of the series because they appear to be incomplete
 sicoin = sicoin[year!=min(year) & year!=max(year)]
 
