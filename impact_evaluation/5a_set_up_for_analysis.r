@@ -59,9 +59,9 @@ ggplot(outputs, aes(y=value, x=year+(quarter/4), color=indicator)) +
 	geom_point()
 
 # look at correlations
-ggplot(data, aes(y=value, x=budget)) + 
+ggplot(data[indicator_type=='activity'], aes(y=value, x=budget)) + 
 	geom_point() + 
-	facet_wrap(indicator_type~intervention, scales='free') + 
+	facet_wrap(~intervention, scales='free') + 
 	geom_smooth(method='lm', se=FALSE)
 
 # look at distributions
