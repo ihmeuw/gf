@@ -67,8 +67,8 @@ graph = ggplot(data = sicoin, aes(x = year, y = budget, color = disease)) + geom
   scale_y_continuous(breaks = seq(0,14,1), labels = scales::dollar)
 graph
 
-ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_using_sicoin_by_year.pdf", graph)
-ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_using_sicoin_by_year.png", graph)
+ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_using_sicoin_by_year_corrected.pdf", graph)
+ggsave("J:/Project/Evaluation/GF/resource_tracking/gtm/visualizations/ghe_using_sicoin_by_year_corrected.png", graph)
 
 
 #------------------------------------------------------------------------------------------

@@ -6,14 +6,6 @@
 
 #-----------------------------------------
 # TO-DO: 
-# - Make sure resource tracking inputs are uniquely identified by year, quarter, module, intervention, and indicator. 
-# - in q1 2010, for IPTp/SP, there appears to be two different budgets for resource tracking. Look into this. 
-# - sort columns loc_name, disease, year, quarter, code, module, intervention, indicator, indicator_type, data_source, budget, value, completeness
-# - order rows by date. 
-#one more for you emily - could we get an extra column that's `other_dah`? it would be disbursement 
-#from all other donors (`fghData[data_source=='fgh' & fin_data_type=='actual', other_dah=sum(disbursement),
-#by=c('sda_activity', 'year')]`) Divide FGH by 4 to make it quarterly and append as a new column. 
-
 
 
 #-----------------------------------------
@@ -32,6 +24,12 @@ code_dir <- paste0(repo, "impact_evaluation/")
 
 
 repo <- 'C:/local/gf/'
+
+# ---------------------------------------
+# Set boolean switches
+# ---------------------------------------
+rerun_inputs <- FALSE 
+
 # ---------------------------------------
 # Read in common files 
 # ---------------------------------------
@@ -39,17 +37,20 @@ repo <- 'C:/local/gf/'
 drc_mal_map <- read_excel("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/DRC Indicator map - to code from.xlsx")
 setDT(drc_mal_map)
 
+
 # ---------------------------------------
 # Prep resource tracking data  
 # ---------------------------------------
-
-source(paste0(code_dir, "2a_prep_resource_tracking.r"))
+if(rerun_inputs == TRUE){
+  source(paste0(code_dir, "2a_prep_resource_tracking.r"))
+}
 
 # ---------------------------------------
 # Prep activities and outputs data 
 # ---------------------------------------
-
-# source(paste0(code_dir, "2b_prep_activities_outputs.r"))
+if(rerun_inputs == TRUE){
+  source(paste0(code_dir, "2b_prep_activities_outputs.r"))
+}
 
 # ---------------------------------------
 # Merge datasets together 
@@ -65,8 +66,8 @@ source(paste0(code_dir, "3_merge_data.r"))
 # Run analysis 
 # ---------------------------------------
 
-source(paste0(code_dir, "4_analysis.r"))
+#source(paste0(code_dir, "4_analysis.r"))
 
 
-print("Master script completed. Outputs saved here: [Emily add file location]")
+print("Master script completed. Outputs saved here: 'J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/pilot_data.RDS'")
 

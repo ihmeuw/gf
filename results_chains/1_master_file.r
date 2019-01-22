@@ -18,7 +18,7 @@ library(googlesheets)
 library(RColorBrewer)
 
 user <- "elineb" #Replace with your username
-repo <- paste0("C:/Users/", user, "/Documents/gf/impact_evaluation/results_chains/") #Modify to fit your repo location
+repo <- paste0("C:/Users/", user, "/Documents/gf/results_chains/") #Modify to fit your repo location
 
 source(paste0(repo, "mapping_functions.r")) 
 
