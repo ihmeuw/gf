@@ -1,5 +1,54 @@
 #--------------------------------------------------------
-# create a function that uploads the meta data and merges it into the data table
+# function to remove overlapping dates - keep all dates before dt
+# where x is the data table and dt is the first date you want to remove
+# delete overlapping dates 
+
+overlap = function(x) {
+  
+  if(folder=='pnlt') {
+    # pnlt data is quarterly - create date from qurter (start month)
+    x[ , period:= as.character(period)]
+    x[ , year:=substr(period, 1, 4)]
+    x[ , quarter:=substr(period, 5, 6)]
+    x[quarter=='Q1', month:='01']
+    x[quarter=='Q2', month:='04']
+    x[quarter=='Q3', month:='07']
+    x[quarter=='Q4', month:='10']
+    x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+    x[ , c('period', 'year', 'month'):=NULL]
+  } else {
+    
+    # create a date variable 
+    x[ , period:= as.character(period)]
+    x[ , year:=substr(period, 1, 4)]
+    x[ , month:=substr(period, 5, 6)]
+    x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+    x[ , c('period', 'year', 'month'):=NULL] }
+  
+  # drop out entries for which date is missing
+  x = x[!is.na(date)]
+  
+  #---------------------
+  # eliminate the overlapping dates 
+  x[ , extraction_date:=max(date), by=file]
+  x[ , max_extraction_date:=max(extraction_date), by=date]
+  
+  # print the overlapping dates 
+  dates_vector = x[extraction_date!=max_extraction_date, unique(date)]
+  if (length(dates_vector)==0) { print("No overlapping dates!")} else {
+    print(paste('The overlapping dates are:', dates_vector)) }
+  
+  x = x[extraction_date==max_extraction_date]
+  x[ ,c('extraction_date', 'max_extraction_date'):=NULL]
+  
+  # return the data set with no overlap
+  return(x) }
+
+#--------------------------------------------------------
+
+#--------------------------------------------------------
+# function that uploads the meta data and merges it into the data table
+# includes english translations
 
 merge_meta_data = function(x, data_set) { 
   
@@ -10,7 +59,6 @@ merge_meta_data = function(x, data_set) {
   facilities = data.table(readRDS(paste0(dir, 'meta_data/master_facilities.rds')))
   data_elements = data.table(readRDS(paste0(dir, 'meta_data/data_elements.rds')))
   categories = data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
-  
   
   # drop unecessary variables
   data_elements[ , c('datasets_url', 'data_element_url'):=NULL]
@@ -54,50 +102,6 @@ merge_meta_data = function(x, data_set) {
   
   return(y) }
 
-#----------------------------------
-# create a function to remove overlapping dates - keep all dates before dt
-# where x is the data table and dt is the first date you want to remove
-# delete overlapping dates 
+#--------------------------------------------------------------
 
-overlap = function(x) {
-  
-  if(folder=='pnlt') {
-    # pnlt data is quarterly - create date from qurter (start month)
-    x[ , period:= as.character(period)]
-    x[ , year:=substr(period, 1, 4)]
-    x[ , quarter:=substr(period, 5, 6)]
-    x[quarter=='Q1', month:='01']
-    x[quarter=='Q2', month:='04']
-    x[quarter=='Q3', month:='07']
-    x[quarter=='Q4', month:='10']
-    x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
-    x[ , c('period', 'year', 'month'):=NULL]
-  } else {
-    
-    # create a date variable 
-    x[ , period:= as.character(period)]
-    x[ , year:=substr(period, 1, 4)]
-    x[ , month:=substr(period, 5, 6)]
-    x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
-    x[ , c('period', 'year', 'month'):=NULL] }
-  
-    # drop out entries for which date is missing
-    x = x[!is.na(date)]
-
-    #---------------------
-    # eliminate the overlapping dates 
-    x[ , extraction_date:=max(date), by=file]
-    x[ , max_extraction_date:=max(extraction_date), by=date]
-  
-    # print the overlapping dates 
-    dates_vector = x[extraction_date!=max_extraction_date, unique(date)]
-    if (length(dates_vector)==0) { print("No overlapping dates!")} else {
-    print(paste('The overlapping dates are:', dates_vector)) }
-
-    x = x[extraction_date==max_extraction_date]
-    x[ ,c('extraction_date', 'max_extraction_date'):=NULL]
-  
-    # return the data set with no overlap
-    return(x) }
-#--------------------
 

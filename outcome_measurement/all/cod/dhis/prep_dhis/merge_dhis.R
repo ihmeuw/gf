@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
 # Caitlin O'Brien-Carelli
 #
-# 1/18/2018
+# 1/22/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -64,6 +64,7 @@ for(f in files) {
 
 #---------------------------------
 # eliminate overlapping dates
+dt = dt[!is.na(date)]
 dt = overlap(dt)
 #---------------------------------
 # remove the factoring of value to avoid errors
