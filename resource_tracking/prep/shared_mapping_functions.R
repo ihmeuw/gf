@@ -177,13 +177,8 @@ check_budgets_pudrs = function(dt){
   keyVars = c("start_date", "fileName", "grant_number", "data_source")
   #Deciding not to split by disease here because we just want the total for the whole quarter. 
   
-  #Replace NAs with 0 for this summing function, just to verify totals. 
-  #Data with this function applied will not be saved. 
-  dt[is.na(budget), budget:=0]
-  dt[is.na(expenditure), expenditure:=0]
-  
   budgets = dt[ , 
-               lapply(.SD, sum), 
+               lapply(.SD, .(sum, na.rm = TRUE)), 
                 by = keyVars, 
                .SDcols = c("budget", "expenditure")]
   budgets <- unique(budgets)

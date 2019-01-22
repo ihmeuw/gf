@@ -8,10 +8,25 @@
 # Prep raw data 
 #-----------------------------------------------
 
+#-------------------------
+#To do: 
+# - add a check to make sure we have all files from file list in final data
+# - add a check to make sure total sum for a file isn't 'na' after we convert to numeric
+
+#--------------------------
+
 # Read in file list 
 source(paste0(country_code_dir, "read_filelist_", country, ".R"))
 resource_database <- read_fileList()
 original_db <- copy(resource_database)
+
+saveRDS(original_db, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+
+#Make sure all budget data pulled is actually numeric- this is an easy check to see if prep functions are working correctly. 
+verify_numeric_budget = resource_database[, budget:=gsub("[[:digit:]]", "", budget)]
+verify_numeric_budget = verify_numeric_budget[, budget:=gsub("[[:punct:]]", "", budget)]
+verify_numeric_budget = verify_numeric_budget[!is.na(budget) & budget != ""]
+stopifnot(nrow(verify_numeric_budget)==0)
 
 #Make sure your quarters are denoted correctly (months 1, 4, 7, and 10)
 check_dates <- resource_database[!month(start_date)%in%c(1,4,7,10)]
@@ -29,16 +44,16 @@ resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
 resource_database$disbursement <- as.numeric(resource_database$disbursement)
 
-#Drop any rows that have 0 or NA for budget and expenditure
-resource_database = resource_database[!((budget==0| is.na(budget)) & (expenditure == 0 | is.na(expenditure)))]
-print(paste0("Dropped ", nrow(original_db) - nrow(resource_database), " rows with NA or 0 for budget and expenditure"))
+#Make sure that no files have a total sum of 0; this would indicate an error in the prep code. 
+check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by=.(fileName)]
+check_0_budgets = check_0_budgets[budget == 0]
+check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = sum(expenditure, na.rm = TRUE)), by=.(fileName)]
+check_0_expenditure <- check_0_expenditure[expenditure == 0]
+stopifnot(nrow(check_0_budgets)==0 & nrow(check_0_expenditure)==0)
 
-#Replace NAs as 0s for valid rows of data (where we only have expenditure data but not budget, or vice versa) 
-resource_database[is.na(budget) & !is.na(expenditure), budget:=0]
-resource_database[!is.na(budget) & is.na(expenditure), expenditure:=0]
-
-check_na_budget <- resource_database[is.na(budget) | is.na(expenditure)]
-stopifnot(nrow(check_na_budget)==0)
+#Remove all rows with NA for module and intervention, after verifying that they have a budget of 0. 
+#This is a hacky fix to deal with messy data; this should really be addressed at the file-level in the prep code. 
+resource_database = resource_database[!(is.na(module) & is.na(intervention) & budget == 0)]
 
 #check for duplicates, and sum their values if they exist:
 dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
@@ -83,6 +98,14 @@ if(nrow(unmapped_mods)>0){
   stop("You have unmapped original modules/interventions!")
 }
 
+#------------------------------------------------------------
+# Remap diseases so they apply at the intervention level, 
+#   not the grant-level (assigned in the file list) 
+#------------------------------------------------------------
+
+source(paste0(code_dir, "3a_remap_diseases.r"))
+resource_database = remap_diseases(resource_database)
+
 #----------------------------------------------------------------------------
 # Merge with module map on module, intervention, and disease to pull in code
 #----------------------------------------------------------------------------
@@ -105,7 +128,6 @@ if(nrow(dropped_mods) >0){
   stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
 }
 
-#EMILY BUDGET NUMBERS VERIFIED TO HERE 1/2/19 
 #-------------------------------------------------------
 # Split HIV/TB combined grants  
 # ------------------------------------------------------
@@ -131,7 +153,6 @@ mapped_country_data[disease == "hiv/tb", disease:= 'hiv']
 
 #Check to make sure all modules were caught in the edit above - Should still have Program management; TB/HIV; Treatment, care and support; and Unspecified. 
 stopifnot(nrow(mapped_country_data[disease == "hiv/tb"])==0)
-
 
 #-----------------------------------------
 # Apply redistribution coefficients
@@ -166,10 +187,14 @@ mapped_country_data$loc_name = country
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------
 
+mapped_country_data = mapped_country_data[, .(abbrev_intervention, abbrev_module, adm1, adm2, budget, code, code_count, coefficient, cost_category, country, data_source, disbursement, disease, 
+                         expenditure, file_iteration, fileName, frequency, gf_intervention, gf_module, grant_number, grant_period, intervention, lang, loc_name, module, 
+                         orig_intervention, orig_module, period, primary_recipient, sda_activity, secondary_recipient, start_date, year)]
+
 desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "code_count", "coefficient", "cost_category", "country", "data_source", "disbursement", "disease", 
                   "expenditure", "file_iteration", "fileName", "frequency", "gf_intervention", "gf_module", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
                   "orig_intervention", "orig_module", "period", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
-stopifnot(sort(colnames(mapped_country_data)) == desired_cols)  
+stopifnot(sort(colnames(mapped_country_data)) == desired_cols)  #Emily we do want to have correct column names here. 
 
 #EMILY WANT TO HAVE GRANT STATUS HERE!! Active or not active. 
 
@@ -183,16 +208,14 @@ mapped_country_data$orig_intervention <- str_replace_all(mapped_country_data$ori
 # ----------------------------------------------
 # Write the prepped data as .csvs
 # ----------------------------------------------
+#Create a subset of columns for an outside audience. 
+cleaned_columns <- c('country', 'disease', 'gf_module', 'gf_intervention', 'abbrev_module', 'abbrev_intervention', 'sda_activity', 'code', 'adm1', 'adm2', 
+                     'budget', 'expenditure', 'disbursement', 'fileName', 'grant_number', 'grant_period', 'start_date', 'period', 'year', 'data_source', 'financing_source') 
 
+final_budgets <- mapped_country_data[file_iteration == "final" & data_source == "fpm", .(cleaned_columns)] #Emily should we remove the expenditure column here? 
+final_expenditures <- mapped_country_data[file_iteration == "final" & data_source == "pudr", .(cleaned_columns)]
 
-final_budgets <- mapped_country_data[file_iteration == "final" & data_source == "fpm"]
-final_expenditures <- mapped_country_data[file_iteration == "final" & data_source == "pudr"]
-
-# write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), fileEncoding = "latin1", row.names = FALSE)
-# write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), fileEncoding = "latin1", row.names = FALSE)
-# write.csv(mapped_country_data, paste0(export_dir, "budget_iterations.csv"), fileEncoding = "latin1", row.names = FALSE)
-
-# alternate RDS file
+# Save RDS file
 saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
 saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
 saveRDS(mapped_country_data, paste0(export_dir, "budget_pudr_iterations.rds"))

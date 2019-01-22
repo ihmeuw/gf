@@ -241,8 +241,6 @@ totalFgh$period <- 365
 totalFgh$start_date <- paste0(totalFgh$year, "-01-01")
 totalFgh$start_date  <- as.Date(totalFgh$start_date,"%Y-%m-%d")
 totalFgh$end_date <- paste0(totalFgh$year, "-12-31") 
-totalFgh$budget <- 0 #Why do this? Why not make NA? 0 is different than NA!!
-totalFgh$expenditure <- 0 
 
 
 #--------------------------------
@@ -265,7 +263,6 @@ totalFgh$lang <- "eng"
 totalFgh$cost_category <- "all" #Why not make this NA? 
 #-----------------------------------
 
-totalFgh$coefficient <- 1
 totalFgh$country = mapply(get_country_name, totalFgh$loc_name)
 totalFgh$loc_name = tolower(totalFgh$loc_name)
 totalFgh = totalFgh[!grep("total_", sda_activity)] #This should not happen here!!! EKL Needs to happen above. 
