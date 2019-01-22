@@ -24,9 +24,8 @@ merge_file <- merge(outputs_activities, resource_tracking, by = merge_vars, all 
 merge_file$loc_name = "cod"
 merge_file$disease = "malaria"
 
-merge_file <- setorderv(merge_file, c("year", "quarter"))
+merge_file <- setorderv(merge_file, c("year", "quarter", "code", "indicator", "indicator_type"))
 #merge_file <- merge_file[, .(year, quarter, code, module, intervention, indicator, indicator_type, value, completeness, budget, loc_name, disease, data_source)] #EKL are we missing some variables?
 merge_file <- merge_file[, .(year, quarter, code, module, intervention, indicator, indicator_type, value, completeness, budget, loc_name, disease, other_dah, data_source)]
-
 
 saveRDS(merge_file, paste0(dir, "pilot_data.RDS"))
