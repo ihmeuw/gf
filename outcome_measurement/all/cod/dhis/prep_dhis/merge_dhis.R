@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
 # Caitlin O'Brien-Carelli
 #
-# 1/14/2018
+# 1/18/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -29,15 +29,18 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
-# source the merge functions 
-source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/prep_dhis/merge_functions.R")
+# source the merge functions
+source(paste0(dir, 'code/merge_functions.R'))
+
 #---------------------------------
 
 #---------------------------------
-# change the arguments to upload the data sets 
+# change the arguments to upload the data sets and merge meta data
 
 # change the folder to the name of the data set you want to merge
-folder = 'pnlt'
+folder = 'pnls'
+
+#---------------------------------
 
 # set the working directory and read in the files
 setwd(paste0(dir, 'pre_prep/', folder, '/'))
@@ -67,7 +70,8 @@ dt = overlap(dt)
 dt[ , value:=as.character(value)] 
 #---------------------------------
 # merge in the meta data 
-dt = merge_meta_data(dt)
+# includes english translations
+dt = merge_meta_data(dt, data_set)
 #---------------------------------
 
 #--------------------------------------

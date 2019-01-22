@@ -31,6 +31,13 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
 #------------------------------
+# source the prep function
+source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/meta_data/prep_master_facilities_function.R")
+
+# to source functions from j on the cluster
+# source(paste0(dir, 'code/extract_master_facilities_function.R'))
+
+#------------------------------
 # read in the organisational unit urls to extract
 org_units = readRDS(paste0(dir, 'meta_data/org_units.rds' ))
 
@@ -123,7 +130,7 @@ extract_dhis_units = function(base_url, userID, password) {
 
 # subset into 28 separate groups to loop over (27,000 facilities)
 vec = c(1:28)
-org_units[ , group:=rep(vec, 1000)] # warning is ok
+org_units[ , group:=rep(vec, 1000)] # warning is ok 
 
 #-------------------------------
 # run the extraction 
@@ -152,10 +159,11 @@ setwd(paste0(dir, 'meta_data/units/'))
 
 # list existing files
 files = list.files('./', recursive=TRUE)
+files = sort(files)
 length(files)
 
 i = 1
-for(f in files) {
+for(f in files[1:9]) {
   #load the RDs file
   current_data = readRDS(f)
   current_data = rbindlist(current_data)
@@ -198,8 +206,6 @@ full_data = dcast(full_data, id+opening_date+coordinates+org_unit~type, value.va
 
 #---------------------------------
 # run the prep function 
-source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/meta_data/prep_master_facilities_function.R")
-
 full_data = prep_facilities(full_data)
 
 #---------------------------------

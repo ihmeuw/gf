@@ -1,19 +1,23 @@
 #--------------------------------------------------------
 # create a function that uploads the meta data and merges it into the data table
 
-merge_meta_data = function(x) { 
+merge_meta_data = function(x, data_set) { 
   
   #------------------
   # import the meta data for the merge
   
   # once the master facilities list if updated, read in master facilities
   facilities = data.table(readRDS(paste0(dir, 'meta_data/master_facilities.rds')))
-  data_elements = data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
+  data_elements = data.table(readRDS(paste0(dir, 'meta_data/data_elements.rds')))
   categories = data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
+  
   
   # drop unecessary variables
   data_elements[ , c('datasets_url', 'data_element_url'):=NULL]
   categories[ , url_list:=NULL]
+  
+  # subset to only the data set you are merging on 
+  data_elements[data_set_id==data_set]
   
   #-------------------
   # change the names of the ID variables in elements and categories to match for the merge
@@ -33,6 +37,7 @@ merge_meta_data = function(x) {
   
   # merge in the meta data 
   y = merge(x, facilities, by='id', all.x=T)
+  
   y = merge(y, data_elements, by='data_element_id', all.x=T)
   y = merge(y, categories, by='category', all.x=T)
   y = data.table(y)

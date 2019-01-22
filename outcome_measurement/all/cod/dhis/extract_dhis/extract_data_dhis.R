@@ -46,7 +46,7 @@ setwd(dir)
 # source the necessary functions to download the data 
 # change the location of the sourced file to your home directory or source from J
 
-source(paste0(dir, 'dhis_extracting_functions.R')) 
+source(paste0(dir, 'code/dhis_extracting_functions.R')) 
 
 # check to make sure the package loaded by viewing a help file
 ?extract_all_data
@@ -55,20 +55,20 @@ source(paste0(dir, 'dhis_extracting_functions.R'))
 # Input the start year, end year, and output directory
 
 # select the start year and end year for the download
-start_year = '2017'
-end_year = '2017'
+start_year = '2016'
+end_year = '2019'
 start_month = '01'
-end_month = '12'
+end_month = '01' # start month is inclusive, end month is exclusive
 
 # change the update year to before the data begins
-update_year = '2016'
+update_year = '2015'
 
 #identify the data set(s) you want to download by number (list below)
-set = 29
+set = 4:5
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'pnls'
+set_name = 'sigl'
 
 #---------------------------
 # available data sets by number: 
@@ -137,7 +137,7 @@ extracted_data = extract_all_data(base_url = base_url,
                                      end_period = paste0(end_year, '-', end_month, '-01'),
                                      userID = userID, 
                                      password = password,
-                                     pace = 20,
+                                     pace = 40,
                                      update_date = paste0(update_year, '-01-01'))
 
 
