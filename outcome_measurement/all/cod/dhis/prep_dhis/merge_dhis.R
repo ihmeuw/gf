@@ -27,7 +27,7 @@ library(stringr)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # source the merge functions
 source(paste0(dir, 'code/merge_functions.R'))
