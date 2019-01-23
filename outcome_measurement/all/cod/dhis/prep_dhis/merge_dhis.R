@@ -30,7 +30,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # source the merge functions
-# source(paste0(dir, 'code/merge_functions.R'))
+source(paste0(dir, 'code/merge_functions.R'))
 
 #---------------------------------
 
@@ -38,7 +38,7 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 # change the arguments to upload the data sets and merge meta data
 
 # change the folder to the name of the data set you want to merge
-folder = 'tb_pati_v_registered'
+folder = 'tb_pati_v_result'
 
 #---------------------------------
 
@@ -72,7 +72,7 @@ dt[ , value:=as.character(value)]
 #---------------------------------
 # merge in the meta data 
 # includes english translations
-dt = merge_meta_data(dt, data_set)
+dt = merge_meta_data(dt)
 #---------------------------------
 
 #--------------------------------------

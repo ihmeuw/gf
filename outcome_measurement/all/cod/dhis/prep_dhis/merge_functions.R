@@ -47,7 +47,7 @@ overlap = function(x) {
 # function that uploads the meta data and merges it into the data table
 # includes english translations
 
-merge_meta_data = function(x, data_set) { 
+merge_meta_data = function(x) { 
   
   #------------------
   # import the meta data for the merge
@@ -58,15 +58,13 @@ merge_meta_data = function(x, data_set) {
   categories = data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
   
   # drop unecessary variables
-  data_elements[ , c('datasets_url', 'data_element_url'):=NULL]
+  data_elements[ , c('data_set_url', 'element_url'):=NULL]
   categories[ , url_list:=NULL]
-  
-  # subset to only the data set you are merging on 
-  data_elements[data_set_id==data_set]
   
   #-------------------
   # change the names of the ID variables in elements and categories to match for the merge
-  setnames(data_elements, c('data_element_id', 'data_set_id', 'data_set', 'element'))
+  setnames(facilities, 'org_unit_id', 'id')
+  setnames(data_elements, 'element_id', 'data_element_id')
   setnames(categories, c('category', 'category_name'))
   
   #-------------------
@@ -91,11 +89,19 @@ merge_meta_data = function(x, data_set) {
   y[ , c('category', 'last_update', 'file', 'opening_date',
           'data_set_id'):=NULL] 
   
+  #-------------------
+  # rename variables and place in an intuitive order 
+  names_vector = names(y)
+  
+  if ("quarter" %in% names_vector) {
+  
   # rename the variables
-  setnames (y, c('element_id', 'org_unit_id', 'value', "quarter",
-                 'date', 'coordinates', 'org_unit', 'country', 'dps',
-                 'health_area', 'health_zone', 'data_set', 'element', 
-                  'category'))
+  y = y[ ,.(org_unit_id=id, element_id = data_element_id, 
+            org_unit, element_eng, quarter, date, category=category_name,
+            value, org_unit_type, level, country, dps, health_zone,
+            health_area, element, data_set=data_sets, coordinates)]
+  } else {print("Add more code")}
+  
   
   return(y) }
 
