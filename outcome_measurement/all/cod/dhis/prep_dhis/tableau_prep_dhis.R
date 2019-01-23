@@ -15,6 +15,38 @@ library(openxlsx) # does not work on the cluster
 library(stringr) 
 # --------------------
 
+
+
+
+
+#-----------------------------------------------
+# save a prepped tableau data set, 2017 - present
+tabl <- dt[tableau==1 & (year=='2017' | year=='2018')]
+tabl <- tabl [date < date_end]
+
+# get the name for the file
+name <- strsplit(file, '_')[[1]][1]
+
+# save the file
+saveRDS(tabl, paste0(dir, 'prepped/tabl_', name, '.rds'))
+
+#--------------------------------------------------
+# export a set of only the viral load data from pnls
+
+# subset to only the viral load data 
+vl_vars <- c('zJBuEb9hpNq','uKEhVPh720x','Mg2cOozNDHa','Puph0kCuE1g',
+             'jowAqQ7YpEC', 'd2RyaUn9ZHm', 'yjZFUr1GlQM','JKWTF9Bgsm4','iPgvI70DJSZ','tHZ6KxIksXA',
+             'Kutdws0o2vL', 'doq0Fivo5ew', 'cNCibxShDa6', 'iHUxYVgu1qj', 'W90ci1ldX1C', 'QKTxjkpD2My',
+             'hNWooK76isO', 'BvZVoaCgTQD', 'B5tuUwTHAlj', 'gNNyKuf2joZ', 'oC2u60ANRUL', 'tYuKqogS7vD')
+
+# create a viral load data set
+vl <- dt[element_id %in% vl_vars]
+
+# save the viral load data set to prepped data
+saveRDS(vl, paste0(dir, 'prepped/viral_load_pnls.rds'))
+
+#---------------------------------------
+
 # --------------------
 # set working directories 
 

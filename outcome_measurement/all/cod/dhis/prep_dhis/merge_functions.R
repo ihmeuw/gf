@@ -106,5 +106,47 @@ merge_meta_data = function(x) {
   return(y) }
 
 #--------------------------------------------------------------
+# prep function
+
+prep_dhis = function(x) {
+  
+  #-----------------------------------------------
+  # convert last_update and opening_date to date variables
+  x[ , last_update:=as.character(last_update)]
+  x[ , opening_date:=as.character(opening_date)]
+  x$last_update = unlist(lapply(strsplit(dt$last_update, "T"), "[", 1))
+  x$opening_date = unlist(lapply(strsplit(dt$opening_date, "T"), "[", 1))
+  
+  #--------------------------------------
+  # replace the dps/hz with just the name, excluding the code and word 'province'
+  # some health zones and provinces have two names before 'province'
+  
+  # replace dps with the name only
+  x$dps1 = unlist(lapply(strsplit(dt$dps, " "), "[", 2))
+  x$dps2 = unlist(lapply(strsplit(dt$dps, " "), "[", 3))
+  x[dps2!='Province', dps:=paste(dps1, dps2)]
+  x[dps2=='Province', dps:=dps1]
+  x[ , c('dps1', 'dps2'):=NULL]
+  
+  # replace health zone with the name only
+  y$health_zone1 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 2))
+  y$health_zone2 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 3))
+  x[health_zone2!='Zone', health_zone:=paste(health_zone1, health_zone2) ]
+  x[health_zone2=='Zone', health_zone:=health_zone1]
+  x[ , c('health_zone1', 'health_zone2'):=NULL]
+  
+  #--------------------------------------
+  # add a variable to demarcate the provincial approach provinces
+  x[dps=='Maniema' | dps=='Tshopo' | dps=="Kinshasa", mtk:='Yes']
+  x[is.na(mtk), mtk:='No']
+  #--------------------------------------
+  
+  return(x)
+}
+
+
+
+
+
 
 

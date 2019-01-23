@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
 # Caitlin O'Brien-Carelli
 #
-# 1/22/2018
+# 1/23/2018
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -18,16 +18,16 @@ library(stringr)
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1527 -s 10 -P snis_merge
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1327 -s 1 -P snis_merge
 
 # ---------------------------------
 # set working directories
 
 # detect if operating on windows or on the cluster 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+dir = paste0, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # source the merge functions
 source(paste0(dir, 'code/merge_functions.R'))
@@ -38,7 +38,7 @@ source(paste0(dir, 'code/merge_functions.R'))
 # change the arguments to upload the data sets and merge meta data
 
 # change the folder to the name of the data set you want to merge
-folder = 'tb_pati_v_result'
+folder = 'tb_pati_v_registered'
 
 #---------------------------------
 
@@ -74,6 +74,8 @@ dt[ , value:=as.character(value)]
 # includes english translations
 dt = merge_meta_data(dt)
 #---------------------------------
+# run the prep function to prepare some variables for use
+dt = prep_dhis(dt)
 
 #--------------------------------------
 # save the merged rds file 
