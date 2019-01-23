@@ -30,8 +30,8 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # source the merge functions
-source(paste0(dir, 'code/merge_functions.R'))
-
+# source(paste0(dir, 'code/merge_functions.R'))
+source('C:/local/gf/outcome_measurement/all/cod/dhis/prep_dhis/merge_functions.R')
 #---------------------------------
 
 #---------------------------------

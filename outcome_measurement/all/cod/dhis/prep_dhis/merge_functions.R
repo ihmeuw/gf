@@ -96,12 +96,12 @@ merge_meta_data = function(x) {
   if ("quarter" %in% names_vector) {
   
   # rename the variables
-  y = y[ ,.(org_unit_id=id, element_id = data_element_id, 
+  y = y[ ,.(org_unit_id=id, element_id = data_element_id,
             org_unit, element_eng, quarter, date, category=category_name,
             value, org_unit_type, level, country, dps, health_zone,
             health_area, element, data_set=data_sets, coordinates)]
   } else {print("Add more code")}
-  
+
   
   return(y) }
 
@@ -109,13 +109,6 @@ merge_meta_data = function(x) {
 # prep function
 
 prep_dhis = function(x) {
-  
-  #-----------------------------------------------
-  # convert last_update and opening_date to date variables
-  x[ , last_update:=as.character(last_update)]
-  x[ , opening_date:=as.character(opening_date)]
-  x$last_update = unlist(lapply(strsplit(dt$last_update, "T"), "[", 1))
-  x$opening_date = unlist(lapply(strsplit(dt$opening_date, "T"), "[", 1))
   
   #--------------------------------------
   # replace the dps/hz with just the name, excluding the code and word 'province'
@@ -129,8 +122,8 @@ prep_dhis = function(x) {
   x[ , c('dps1', 'dps2'):=NULL]
   
   # replace health zone with the name only
-  y$health_zone1 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 2))
-  y$health_zone2 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 3))
+  x$health_zone1 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 2))
+  x$health_zone2 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 3))
   x[health_zone2!='Zone', health_zone:=paste(health_zone1, health_zone2) ]
   x[health_zone2=='Zone', health_zone:=health_zone1]
   x[ , c('health_zone1', 'health_zone2'):=NULL]
