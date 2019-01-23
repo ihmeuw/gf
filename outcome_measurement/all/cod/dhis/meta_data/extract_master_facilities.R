@@ -32,10 +32,10 @@ setwd(dir)
 
 #------------------------------
 # source the prep function
-source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/meta_data/prep_master_facilities_function.R")
+# source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/meta_data/prep_master_facilities_function.R")
 
 # to source functions from j on the cluster
-# source(paste0(dir, 'code/extract_master_facilities_function.R'))
+ source(paste0(dir, 'code/prep_master_facilities_function.R'))
 
 #------------------------------
 # read in the organisational unit urls to extract
@@ -138,20 +138,20 @@ org_units[ , group:=rep(vec, 1000)] # warning is ok
 # loop through each group of 1000 units and download meta data 
 # save into separate files of 1000 units each
 
-for (g in org_units$group) {
-
-# arguments for the file name and print statement
-x = length(unique(org_units$group))
-y = g
-
-# extract the meta data and save as a RDS
-units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
-saveRDS(units, paste0(dir,'meta_data/units/extracted_org_units_', y, '.rds'))
-
-# pause and notify that a new group is starting
-pause(100)
-print(paste0("Starting group ", g, " of ", x, "!"))
-}
+# for (g in org_units$group) {
+# 
+# # arguments for the file name and print statement
+# x = length(unique(org_units$group))
+# y = g
+# 
+# # extract the meta data and save as a RDS
+# units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
+# saveRDS(units, paste0(dir,'meta_data/units/extracted_org_units_', y, '.rds'))
+# 
+# # pause and notify that a new group is starting
+# pause(100)
+# print(paste0("Starting group ", g, " of ", x, "!"))
+# }
 
 #-------------------------------
 # rbind the groups together and save
