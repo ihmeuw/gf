@@ -5,7 +5,7 @@
 
 overlap = function(x) {
   
-  if(folder=='pnlt') {
+  if(folder=='pnlt' | folder=='tb_pati_v_registered' | folder=='tb_pati_v_result') {
     # pnlt data is quarterly - create date from qurter (start month)
     x[ , period:= as.character(period)]
     x[ , year:=substr(period, 1, 4)]
@@ -24,9 +24,6 @@ overlap = function(x) {
     x[ , month:=substr(period, 5, 6)]
     x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
     x[ , c('period', 'year', 'month'):=NULL] }
-  
-  # drop out entries for which date is missing
-  x = x[!is.na(date)]
   
   #---------------------
   # eliminate the overlapping dates 

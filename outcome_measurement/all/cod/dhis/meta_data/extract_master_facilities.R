@@ -10,9 +10,7 @@
 rm(list=ls())
 library(data.table)
 library(ggplot2)
-library(dplyr)
 library(stringr) 
-library(reshape)
 library(RCurl)
 library(XML)
 library(profvis)
@@ -35,7 +33,9 @@ setwd(dir)
 # source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/meta_data/prep_master_facilities_function.R")
 
 # to source functions from j on the cluster
- source(paste0(dir, 'code/prep_master_facilities_function.R'))
+# sourcing from the cluster sometimes creates an error on diacritical marks
+# you may need to just copy in the functions
+# source(paste0(dir, 'code/prep_master_facilities_function.R'))
 
 #------------------------------
 # read in the organisational unit urls to extract
@@ -213,6 +213,13 @@ full_data = dcast(full_data, id+opening_date+coordinates+org_unit~type, value.va
 #---------------------------------
 # run the prep function 
 full_data = prep_facilities(full_data)
+
+#---------------------------------
+# put in an intuitive order 
+
+full_data = full_data[ ,.(org_unit_id = id, opening_date, coordinates, org_unit,
+              country, dps, health_zone, health_area, 
+              org_unit_type = type, level)]
 
 #---------------------------------
 # save the output

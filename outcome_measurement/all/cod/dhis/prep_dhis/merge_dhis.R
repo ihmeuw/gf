@@ -30,7 +30,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # source the merge functions
-source(paste0(dir, 'code/merge_functions.R'))
+# source(paste0(dir, 'code/merge_functions.R'))
 
 #---------------------------------
 
@@ -38,7 +38,7 @@ source(paste0(dir, 'code/merge_functions.R'))
 # change the arguments to upload the data sets and merge meta data
 
 # change the folder to the name of the data set you want to merge
-folder = 'pnls'
+folder = 'tb_pati_v_registered'
 
 #---------------------------------
 
@@ -64,7 +64,7 @@ for(f in files) {
 
 #---------------------------------
 # eliminate overlapping dates
-dt = dt[!is.na(date)]
+dt = dt[!is.na(period)]
 dt = overlap(dt)
 #---------------------------------
 # remove the factoring of value to avoid errors
