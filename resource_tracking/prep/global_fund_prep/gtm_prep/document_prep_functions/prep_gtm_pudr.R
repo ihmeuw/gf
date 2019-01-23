@@ -21,19 +21,23 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   ### with information from line where the code breaks, and then uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
-  
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
-  # qtr_num = file_list$qtr_number[i]
-  # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # lang = file_list$language[i]
-  # grant = file_list$grant[i]
-  # source = file_list$data_source[i]
-  # loc_name = 'gtm'
-  # # 
+# 
+#   folder = "budgets"
+#   folder = ifelse (file_list$data_source[i] == "fpm" , folder, "pudrs")
+#   file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+# 
+#   dir = file_dir
+#   inFile = file_list$file_name[i]
+#   sheet_name = file_list$sheet[i]
+#   start_date = file_list$start_date[i]
+#   qtr_num = file_list$qtr_number[i]
+#   period = file_list$period[i]
+#   disease = file_list$disease[i]
+#   lang = file_list$language[i]
+#   grant = file_list$grant[i]
+#   source = file_list$data_source[i]
+#   loc_name = 'gtm'
+  #
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   
@@ -57,6 +61,10 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
       start_row <- grep("Modular Approach", gf_data$module)
       end_row <- 106
     }
+    if (inFile == "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx"){
+      start_row <- grep("Modular Approach", gf_data$module)
+      end_row <- 50
+    }
     if (!(length(start_row)==1 & length(end_row) == 1)){
       stop(paste0("Incorrect parameters specified for subset. Verify grep condition for file: ", inFile))
     }
@@ -68,6 +76,7 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
       colnames(gf_data)[1] <- "recipient"
       colnames(gf_data)[5] <- "budget"
       colnames(gf_data)[6] <- "disbursement"
+      colnames(gf_data)[11] <- "expenditure"
       gf_data <- gf_data[c(grep("entity", tolower(gf_data$recipient)):(grep("total", tolower(gf_data$recipient)))),]
       gf_data$sda_activity <- "all"
       gf_data$module <- "all"
