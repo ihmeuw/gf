@@ -1,5 +1,3 @@
-library(stringr)
-
 setwd('C:/local/gf/')
 # ----------------------------------------------
 
@@ -9,10 +7,12 @@ setwd('C:/local/gf/')
 rm(list=ls())
 library(data.table)
 library(lubridate)
+library(stringr)
+library(ggplot2)
 # -------------------------
 # Files and directories
 # directories
-data_path <- "J:/Project/Evaluation/GF/outcome_measurement/cod/dhis/prepped/"
+data_path <- "J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/"
 catalogue_path <-"J:/Project/Evaluation/GF/outcome_measurement/cod/dhis/catalogues/"
 
 # input files
@@ -20,7 +20,7 @@ data <-"sigl_drc_01_2015_07_2018_prepped.rds"
 cat <- "data_elements_cod.csv"
 
 # output files 
-prepped_data <- "tb_mal_drugs_consumed_lost_available.rds"
+prepped_data <- "drugs_consumed_lost_available.rds"
 drugs_dist <- "tb_mal_drugs_distributed.rds"
 
 # functions
@@ -83,6 +83,12 @@ dt[, element:= NULL]
 dt[, element_eng:= NULL]
 dt[, element_id:= NULL]
 dt[, tableau:= NULL]
+dt[, category:= NULL]
+dt[, mtk:= NULL]
+dt[, opening_date:= NULL]
+dt[, last_update:= NULL]
+dt[, data_set:= NULL]
+dt[, coordinates:= NULL]
 
 all_vars <- colnames(dt)
 vars_for_cast <- all_vars[!all_vars %in% c("variable", "value")]
@@ -93,17 +99,21 @@ f <- as.formula(paste(paste(vars_for_cast, collapse = " + "), "~ variable"))
 # cast variable wide so we can add/subtract vars
 dt_wide <- dcast.data.table(dt, f, value.var = "value")
 
+# OPTIONAL - sum by DPS here before calculation, then do calculation. Testing what happens when I try this
+sdcols <- c('available', 'consumed', 'lost')
+dt_wide <- dt_wide[, lapply(.SD, sum, na.rm=TRUE), .SDcols= sdcols, by= c('dps','date', 'type', 'drug')]
+
 # identify where previous date (by month) is missing in the data,
 # by unique identifiers
-test <- setorderv(dt_wide, c("org_unit_id","drug", "category", "date"))
+test <- setorderv(dt_wide, c("dps", "drug", "date")) #c("org_unit_id","drug", "category", "date"))
 test <- test[, previous_date := (date - months(1))]
-test <- test[, actual_previous_date := shift(date, 1L, type="lag"), by=c('org_unit_id', 'drug', 'category')]
+test <- test[, actual_previous_date := data.table::shift(date, 1L, type="lag"), by=c('dps', 'drug')] #by=c('org_unit_id', 'drug', 'category')]
 test <- test[, include_in_calculation := ifelse(previous_date == actual_previous_date, TRUE, FALSE), ]
 
 # calculate received, only for dates where the previous month exists
 # use shift to get the value for the previous date of the available variable
 test[is.na(lost), lost:= 0]
-test[include_in_calculation==TRUE, received := (available + consumed + lost - ( shift(available, 1L, type="lag") ))]
+test[include_in_calculation==TRUE, received := (available + consumed + lost - ( data.table::shift(available, 1L, type="lag") ))]
 
 # aggregate to health zone values
 sd_cols = c("available", "consumed", "lost", "received")
