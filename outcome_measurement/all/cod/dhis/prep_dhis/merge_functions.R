@@ -124,9 +124,11 @@ prep_dhis = function(x) {
   # replace health zone with the name only
   x$health_zone1 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 2))
   x$health_zone2 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 3))
-  x[health_zone2!='Zone', health_zone:=paste(health_zone1, health_zone2) ]
+  x$health_zone3 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 4))
+  x[health_zone3 != 'Zone' & health_zone2 != 'Zone', health_zone:=paste(health_zone1, health_zone2, health_zone3) ]
+  x[health_zone3=='Zone', health_zone:=paste(health_zone1, health_zone2)]
   x[health_zone2=='Zone', health_zone:=health_zone1]
-  x[ , c('health_zone1', 'health_zone2'):=NULL]
+  x[ , c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
   
   #--------------------------------------
   # add a variable to demarcate the provincial approach provinces
