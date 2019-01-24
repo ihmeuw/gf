@@ -29,16 +29,18 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
-# source the merge functions
-# source(paste0(dir, 'code/merge_functions.R'))
-source('C:/local/gf/outcome_measurement/all/cod/dhis/prep_dhis/merge_functions.R')
+# source the merge functions from the J Drive
+source(paste0(dir, 'code/merge_functions.R'))
+
+# source the merge functions locally
+# source('C:/local/gf/outcome_measurement/all/cod/dhis/prep_dhis/merge_functions.R')``````````
 #---------------------------------
 
 #---------------------------------
-# change the arguments to upload the data sets and merge meta data
-
 # change the folder to the name of the data set you want to merge
-folder = 'tb_pati_v_registered'
+# this is the only argument to change 
+
+folder = 'pnls'
 
 #---------------------------------
 
@@ -76,7 +78,6 @@ dt = merge_meta_data(dt)
 #---------------------------------
 # run the prep function to prepare some variables for use
 dt = prep_dhis(dt)
-
 #--------------------------------------
 # save the merged rds file 
 

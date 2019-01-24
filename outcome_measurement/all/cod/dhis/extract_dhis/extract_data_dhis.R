@@ -61,7 +61,7 @@ start_month = '01'
 end_month = '01' # start month is inclusive, end month is exclusive
 
 # change the update year to before the data begins
-update_year = '2015'
+update_year = as.character(as.numeric(start_year) - 1)
 
 #identify the data set(s) you want to download by number (list below)
 set = 4:5

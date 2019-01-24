@@ -78,12 +78,21 @@ merge_meta_data = function(x) {
   x[ , category:=as.character(category)]
   x[ , last_update:=as.character(last_update)]
   
-  # merge in the meta data 
+  # merge in the facilities meta data 
   y = merge(x, facilities, by='id', all.x=T)
+
+  # merge in the data elements
+  # some data elements contain duplicate ids - set if statements for these sets
+  if (folder=='pnls') {
+    y[ ,data_set_id:='wIMw0dzITTs']
+    y = merge(y, data_elements, by=c('data_set_id', 'data_element_id'), all.x=T)
+  } else if (folder=='base') { 
+    y[ ,data_set_id:=' pMbC0FJPkcm']
+    y = merge(y, data_elements, by=c('data_set_id', 'data_element_id'), all.x=T)
+  } else { y = merge(y, data_elements, by='data_element_id', all.x=T) }
   
-  y = merge(y, data_elements, by='data_element_id', all.x=T)
-  y = merge(y, categories, by='category', all.x=T)
-  y = data.table(y)
+  # merge in the categories
+  y = data.table(merge(y, categories, by='category', all.x=T))
   
   # drop unecessary variables to simplify
   y[ , c('category', 'last_update', 'file', 'opening_date',
@@ -91,18 +100,24 @@ merge_meta_data = function(x) {
   
   #-------------------
   # rename variables and place in an intuitive order 
-  names_vector = names(y)
+  # check if the data table contains quarterly data 
   
+  names_vector = names(y)
   if ("quarter" %in% names_vector) {
   
-  # rename the variables
-  y = y[ ,.(org_unit_id=id, element_id = data_element_id,
+  # rename the variables - different variables in quarterly data 
+  y = y[ ,.(org_unit_id=id, element_id=data_element_id,
             org_unit, element_eng, quarter, date, category=category_name,
             value, org_unit_type, level, country, dps, health_zone,
             health_area, element, data_set=data_sets, coordinates)]
-  } else {print("Add more code")}
+  } else {
+    y = y[ ,.(org_unit_id=id, element_id=data_element_id,
+              org_unit, element_eng, date, category=category_name,
+              value, org_unit_type, level, country, dps, health_zone,
+              health_area, element, data_set=data_sets, coordinates)]
+  }
 
-  
+  # return the new data set
   return(y) }
 
 #--------------------------------------------------------------
