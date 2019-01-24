@@ -151,7 +151,7 @@ unique(mapped_country_data[disease == "hiv/tb", .(gf_module, gf_intervention)])
 #Right now, just reclassifying all other modules that don't fit in these categories to be "hiv". 
 mapped_country_data[disease == "hiv/tb", disease:= 'hiv']
 
-#Check to make sure all modules were caught in the edit above - Should still have Program management; TB/HIV; Treatment, care and support; and Unspecified. 
+#Check to make sure all modules were caught in the edit above - Should still have Program management; TB/HIV; and Unspecified. 
 stopifnot(nrow(mapped_country_data[disease == "hiv/tb"])==0)
 
 #-----------------------------------------
