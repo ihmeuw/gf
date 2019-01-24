@@ -40,7 +40,7 @@ source(paste0(dir, 'code/merge_functions.R'))
 # change the folder to the name of the data set you want to merge
 # this is the only argument to change 
 
-folder = 'pnlt'
+folder = 'pnls'
 
 #---------------------------------
 
@@ -91,4 +91,18 @@ max = gsub('-', '_', max)
 saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_', min, '_', max, '.rds' ))
 
 #--------------------------------------
+# save a subsetted version of pnls with only relevant variables
+# variables in pnls are repeated based on stratification 
+# drop duplicates and save
+
+if (folder==pnls) {
+  source(paste0(dir, 'code/pnls_function.R'))
+  dt = pnls_subset(dt)
+  saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_subset_', min, '_', max, '.rds' ))
+}
+
+#--------------------------------------
+
+
+
 
