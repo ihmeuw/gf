@@ -10,9 +10,7 @@
 rm(list=ls())
 library(data.table)
 library(ggplot2)
-library(dplyr)
 library(stringr) 
-library(reshape)
 library(RCurl)
 library(XML)
 library(profvis)
@@ -32,10 +30,12 @@ setwd(dir)
 
 #------------------------------
 # source the prep function
-source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/meta_data/prep_master_facilities_function.R")
+# source("C:/Users/ccarelli/local/gf/outcome_measurement/all/cod/dhis/meta_data/prep_master_facilities_function.R")
 
 # to source functions from j on the cluster
-# source(paste0(dir, 'code/extract_master_facilities_function.R'))
+# sourcing from the cluster sometimes creates an error on diacritical marks
+# you may need to just copy in the functions
+# source(paste0(dir, 'code/prep_master_facilities_function.R'))
 
 #------------------------------
 # read in the organisational unit urls to extract
@@ -101,7 +101,8 @@ extract_org_unit = function(url, userID, password) {
   # transform the xml into a nested list of lists and extract the ancestors list
   tmp = xmlToList(root)
   ancestors = unlist(tmp$ancestors)
-
+  if (is.null(ancestors)) { ancestors = 'no_ancestors'}
+  
   # create a data frame of the meta data and return it
   org_unit_metadata = data.table(id, coordinates, opening_date,
                                  name, ancestors) 
@@ -137,20 +138,20 @@ org_units[ , group:=rep(vec, 1000)] # warning is ok
 # loop through each group of 1000 units and download meta data 
 # save into separate files of 1000 units each
 
-for (g in org_units$group) {
-
-# arguments for the file name and print statement
-x = length(unique(org_units$group))
-y = g
-
-# extract the meta data and save as a RDS
-units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
-saveRDS(units, paste0(dir,'meta_data/units/extracted_org_units_', y, '.rds'))
-
-# pause and notify that a new group is starting
-pause(100)
-print(paste0("Starting group ", g, " of ", x, "!"))
-}
+# for (g in org_units$group) {
+# 
+# # arguments for the file name and print statement
+# x = length(unique(org_units$group))
+# y = g
+# 
+# # extract the meta data and save as a RDS
+# units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
+# saveRDS(units, paste0(dir,'meta_data/units/extracted_org_units_', y, '.rds'))
+# 
+# # pause and notify that a new group is starting
+# pause(100)
+# print(paste0("Starting group ", g, " of ", x, "!"))
+# }
 
 #-------------------------------
 # rbind the groups together and save
@@ -159,14 +160,14 @@ setwd(paste0(dir, 'meta_data/units/'))
 
 # list existing files
 files = list.files('./', recursive=TRUE)
-files = sort(files)
 length(files)
 
 i = 1
-for(f in files[1:9]) {
+for(f in files) {
   #load the RDs file
   current_data = readRDS(f)
   current_data = rbindlist(current_data)
+  print(paste('Successfully bound: ', f))
   
   # append to the full data 
   if(i==1) full_data = current_data
@@ -196,6 +197,11 @@ full_data[grep(pattern="Aire de", ancestor_name), type:='health_area']
 # units with typos in the names
 full_data[id=='dSLpXrVH7PB' & ancestors=='QraemzWBj2P', type:='health_area']
 full_data[id=='RKN8w566BvC' & ancestors=='U333OaNPIrk', type:='health_area']
+full_data[id=='MvZV4WrjmVW' & ancestors=='o22J1nmzywE', type:='health_area']
+
+# the org_unit DRC has no ancestors (largest unit)
+full_data[ancestors=='no_ancestors', ancestor_name:=org_unit] 
+full_data[ancestors=='no_ancestors', type:='country'] 
 
 # drop ancestor id to shape long
 full_data[ , ancestors:=NULL]
@@ -207,6 +213,13 @@ full_data = dcast(full_data, id+opening_date+coordinates+org_unit~type, value.va
 #---------------------------------
 # run the prep function 
 full_data = prep_facilities(full_data)
+
+#---------------------------------
+# put in an intuitive order 
+
+full_data = full_data[ ,.(org_unit_id = id, opening_date, coordinates, org_unit,
+              country, dps, health_zone, health_area, 
+              org_unit_type = type, level)]
 
 #---------------------------------
 # save the output

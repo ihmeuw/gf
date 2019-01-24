@@ -2,15 +2,13 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 11/14/2018
+# 1/24/19
 # ----------------------------------------------
 
 # --------------------
 # Set up R
 rm(list=ls())
 library(data.table)
-library(jsonlite)
-library(httr)
 library(ggplot2)
 library(dplyr)
 library(stringr) # to extract meta data from file names
@@ -26,7 +24,13 @@ library(stringr) # to extract meta data from file names
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+setwd(dir)
+
+#---------------------------------------
+# load the file that represents a subset (no sex or )
+
+pnls = readRDS(paste0(dir, 'pre_prep/merged/pnls_2017_01_01_2018_11_01.rds'))
 
 #-------------------------------------------
 # eliminate the unecessary elements from the original prepped data
@@ -43,10 +47,8 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 # # save the cleaned output
 #  saveRDS(x, paste0(dir, 'prepped/pnls_drc_01_2017_07_2018_prepped_subset.rds'))
 
-#---------------------------------------
-# load the file that represents a subset (no sex or )
 
-pnls = readRDS(paste0(dir, 'prepped/pnls_drc_01_2017_07_2018_prepped_subset.rds'))
+
 
 #----------------------
 # function to eliminate diacritical marks

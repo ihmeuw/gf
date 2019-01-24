@@ -23,3 +23,6 @@ prep_data.R is the function that cleans that data.  It has a lot of specifics to
 reshape_data.R
 standardize_dps.R
 remove_outliers.R
+
+For multiple imputation of missing data:
+prep_for_MI

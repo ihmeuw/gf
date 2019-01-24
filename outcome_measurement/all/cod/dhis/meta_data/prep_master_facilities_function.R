@@ -7,18 +7,15 @@ prep_facilities = function(x) {
 #---------------------------
 # create a type of organisational unit variable
 
-x[is.na(dps), type:='dps']
-x[is.na(health_zone) & is.na(type), type:='health_zone']
-x[is.na(health_area) & is.na(type), type:='health_area']
-x[is.na(type), type:='facility']
-
-# check that
-x[type=='dps', unique(org_unit)]
-x[type=='health_zone', unique(org_unit)]
-x[type=='health_area', unique(org_unit)]
+# create for all types except facilities 
+# add facilities after running the facility level code
+x[grep(pattern="du Congo", org_unit),type:='country']
+x[grep(pattern="Province", org_unit), type:='dps']
+x[grep(pattern="Zone", org_unit), type:='health_zone']
+x[grep(pattern="Aire de", org_unit), type:='health_area']
 
 #-----------------------------------------------
-# type of facility
+# facility level
 
 # create alternate org unit name in lower case and replace the diacritical marks
 x[ , org_unit1:=tolower(org_unit)]
@@ -47,28 +44,36 @@ x[ , org_unit1:=fix_diacritics(org_unit1)]
 # health facilities by level of care
 x[grep(pattern="\\sclinique", x=org_unit1), level:='clinic']
 x[grep(pattern="centre de sante", x=org_unit1), level:='health_center']
+x[grep(pattern="centre sante", x=org_unit1), level:='health_center']
 x[grep(pattern="centre de sante de reference", x=org_unit1), level:='reference_health_center']
+
 x[grep(pattern="poste de sante", x=org_unit1), level:='health_post']
+x[grep(pattern="poste", x=org_unit1), level:='health_post']
+
 x[grep(pattern="centre medical", x=org_unit1), level:='medical_center']
+
 x[grep(pattern="\\shopital", x=org_unit1), level:='hospital']
 x[grep(pattern="\\shopital secondaire", x=org_unit1), level:='secondary_hospital']
 x[grep(pattern="hopital general de reference", x=org_unit1), level:='general_reference_hospital']
 x[grep(pattern="hgr", x=org_unit1), level:='general_reference_hospital']
+x[grep(pattern="general de reference", x=org_unit1), level:='general_reference_hospital']
+
 x[grep(pattern="centre hospitalier", x=org_unit1), level:='hospital_center']
 x[grep(pattern="dispensaire", x=org_unit1), level:='dispensary']
 x[grep(pattern="polyclinique", x=org_unit1), level:='polyclinic']
 x[grep(pattern="chirurgical", x=org_unit1), level:='medical_surgical_center']
-
-# typos - 24 additional typos fix later
-x[grep(pattern="centre sante", x=org_unit1), level:='health_center']
-x[grep(pattern="poste sante", x=org_unit1), level:='health_post']
-x[grep(pattern="general de reference", x=org_unit1), level:='general_reference_hospital']
 
 #-----------------------------------
 # drop out the variable used to detect level and type
 x[ , org_unit1:=NULL]
 
 #-----------------------------------
+# add facility to the type
+# 83 facilities have typos in the names
+
+x[is.na(type) & !is.na(level), type:='facility']
+#-----------------------------------
+return(x)
 
 }
 
