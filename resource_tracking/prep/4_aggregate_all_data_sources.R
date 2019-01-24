@@ -110,12 +110,12 @@ for(i in 1:nrow(fpm_grants)){
 }
 
 #Where we have the same grant information in FPM and GOS, prioritize GOS for complete years. 
-gos_grant_list <- unique(gos_data[, .(grant_number, year)])
+gos_grant_list <- unique(gos_data[, .(grant_number, start_date)])
 for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant number and year. 
   if (i == 1){
-    gos_prioritized_budgets = final_budgets[!(data_source == 'fpm' & grant_number == as.vector(gos_grant_list$grant_number[i]) & year == as.vector(gos_grant_list$year[i]))]
+    gos_prioritized_budgets = final_budgets[!(data_source == 'fpm' & grant_number == as.vector(gos_grant_list$grant_number[i]) & start_date == as.vector(gos_grant_list$start_date[i]))]
   } else {
-    gos_prioritized_budgets = gos_prioritized_budgets[!(data_source == 'fpm' & grant_number == as.vector(gos_grant_list$grant_number[i]) & year == as.vector(gos_grant_list$year[i]))]
+    gos_prioritized_budgets = gos_prioritized_budgets[!(data_source == 'fpm' & grant_number == as.vector(gos_grant_list$grant_number[i]) & start_date == as.vector(gos_grant_list$start_date[i]))]
   }
 }
 
@@ -205,12 +205,12 @@ for(i in 1:nrow(pudr_grants)){
 }
 
 #Where we have the same grant information in FPM and GOS, prioritize GOS for complete years. 
-gos_grant_list <- unique(gos_data[, .(grant_number, year)])
+gos_grant_list <- unique(gos_data[, .(grant_number, start_date)])
 for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant number and year. 
   if (i == 1){
-    gos_prioritized_expenditures = final_expenditures[!(data_source == 'pudr' & grant_number == as.vector(gos_grant_list$grant_number[i]) & year == as.vector(gos_grant_list$year[i]))]
+    gos_prioritized_expenditures = final_expenditures[!(data_source == 'pudr' & grant_number == as.vector(gos_grant_list$grant_number[i]) & start_date == as.vector(gos_grant_list$start_date[i]))]
   } else {
-    gos_prioritized_expenditures = gos_prioritized_expenditures[!(data_source == 'pudr' & grant_number == as.vector(gos_grant_list$grant_number[i]) & year == as.vector(gos_grant_list$year[i]))]
+    gos_prioritized_expenditures = gos_prioritized_expenditures[!(data_source == 'pudr' & grant_number == as.vector(gos_grant_list$grant_number[i]) & start_date == as.vector(gos_grant_list$start_date[i]))]
   }
 }
 

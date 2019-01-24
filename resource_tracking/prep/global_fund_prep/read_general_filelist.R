@@ -1,5 +1,6 @@
 # ----------------------------------------------
 # Emily Linebarger, based on code by Irena Chen
+<<<<<<< HEAD
 # Function to read in file list and apply prep functions
 # ----------------------------------------------
 
@@ -7,6 +8,9 @@
 # TO-DO: 
 #   - Write a general prep function for detailed budgets and summary budgets. 
 # - sheet == 'Detailed Budget' and sheet == 'Budget summary GF'. 
+=======
+# Master code file for UGA data prep
+>>>>>>> 17a67aa3c8085258e87f7da50013f41447193baa
 # ----------------------------------------------
 
 read_fileList = function(){
@@ -23,24 +27,36 @@ source(paste0(document_prep, "prep_general_pudr.R"))
 # Subset file list (temporary step)
 # ----------------------------------------------
 file_list <- readRDS("C:/Users/elineb/Desktop/all_limited_files.rds")
+<<<<<<< HEAD
 file_list = file_list[data_source == 'fpm']
 
 file_list = file_list[sheet == 'Detailed Budget' | sheet == 'Detailed budget' | sheet == 'DetailiedBudget']
+=======
+file_list = file_list[data_source == 'pudr']
+
+mod_approach_sheet_names <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
+file_list = file_list[!sheet%in%mod_approach_sheet_names]
+>>>>>>> 17a67aa3c8085258e87f7da50013f41447193baa
 
 file_list$country = substring(file_list$grant, 1, 1)
 file_list[country=='U', country:='uga']
 file_list[country=='G', country:='gtm']
 file_list[country=='C', country:='cod']
 
+<<<<<<< HEAD
 mod_approach_sheet_names <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
 
 for(i in 1:nrow(file_list)){ 
+=======
+for(i in 17:nrow(file_list)){ 
+>>>>>>> 17a67aa3c8085258e87f7da50013f41447193baa
   master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", file_list$country[i], "/grants/")
   
   folder = "budgets"
   folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
   file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
   
+<<<<<<< HEAD
   if(file_list_data_source[i] == 'pudr' & file_list$sheet[i]%in%mod_approach_sheet_names){
     tmpData <- prep_modular_approach_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                        file_list$start_date[i], file_list$disease[i], file_list$period[i], file_list$grant[i],
@@ -55,6 +71,12 @@ for(i in 1:nrow(file_list)){
                                         file_list$primary_recipient[i], file_list$data_source[i])
   } else {
     stop("You don't have a prep function for that file!")
+=======
+  if(file_list$sheet[i]%in%mod_approach_sheet_names){
+    tmpData <- prep_modular_approach_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
+                                       file_list$start_date[i], file_list$disease[i], file_list$period[i], file_list$grant[i],
+                                        file_list$primary_recipient[i], file_list$data_source[i])
+>>>>>>> 17a67aa3c8085258e87f7da50013f41447193baa
   }
   
   tmpData$fileName = file_list$file_name[i]

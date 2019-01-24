@@ -58,6 +58,21 @@ prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disea
   budget_col <- grep("Budget for Reporting Period", gf_data)
   expenditure_col <- grep("Actual Expenditure", gf_data)
 
+<<<<<<< HEAD
+=======
+  #We don't have modules and interventions for this type of file, and column headers are labeled differently.
+  if (sheet_name == "LFA_Total PR Cash Outflow_3A"){
+    module_col = NA
+    intervention_col = NA
+    budget_col <- grep("LFA-Verified Budget for Reporting Period", gf_data)
+    expenditure_col <- grep("LFA-Verified Actual for Reporting Period", gf_data)
+  }
+
+  if(sheet_name == "LFA_Total PR Cash Outflow_3A"){ #For this type of file, keep the first finding from grep.
+    budget_col = budget_col[1]
+    expenditure_col = expenditure_col[1]
+  }
+>>>>>>> 17a67aa3c8085258e87f7da50013f41447193baa
 
   #Remove the 'cumulative expenditure' and 'cumulative budget' columns.
   if (length(expenditure_col)!=1){

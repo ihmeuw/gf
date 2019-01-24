@@ -12,7 +12,6 @@
 #To do: 
 # - add a check to make sure we have all files from file list in final data
 # - add a check to make sure total sum for a file isn't 'na' after we convert to numeric
-
 #--------------------------
 
 # Read in file list 
