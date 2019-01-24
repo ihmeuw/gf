@@ -40,7 +40,7 @@ source(paste0(dir, 'code/merge_functions.R'))
 # change the folder to the name of the data set you want to merge
 # this is the only argument to change 
 
-folder = 'pnls'
+folder = 'pnlt'
 
 #---------------------------------
 

@@ -84,19 +84,22 @@ merge_meta_data = function(x) {
   # merge in the data elements
   # some data elements contain duplicate ids - set if statements for these sets
   if (folder=='pnls') {
-    y[ ,data_set_id:='wIMw0dzITTs']
+    y[ , data_set_id:='wIMw0dzITTs']
     y = merge(y, data_elements, by=c('data_set_id', 'data_element_id'), all.x=T)
   } else if (folder=='base') { 
-    y[ ,data_set_id:=' pMbC0FJPkcm']
+    y[ ,data_set_id:='pMbC0FJPkcm']
     y = merge(y, data_elements, by=c('data_set_id', 'data_element_id'), all.x=T)
   } else { y = merge(y, data_elements, by='data_element_id', all.x=T) }
   
   # merge in the categories
   y = data.table(merge(y, categories, by='category', all.x=T))
   
+  # save last update to analyze lags
+  y[ , last_update:=unlist(lapply(str_split(last_update, 'T'), '[', 1))]
+  y[ , last_upate:=as.Date(last_update)]
+  
   # drop unecessary variables to simplify
-  y[ , c('category', 'last_update', 'file', 'opening_date',
-          'data_set_id'):=NULL] 
+  y[ , c('category', 'file', 'opening_date', 'data_set_id'):=NULL] 
   
   #-------------------
   # rename variables and place in an intuitive order 
