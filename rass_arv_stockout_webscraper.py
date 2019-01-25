@@ -32,7 +32,8 @@ import os
 main_url = "http://rass.mets.or.ug/"
 save_loc = "J:/Project/Evaluation/GF/outcome_measurement/uga/rass_arv_dashboards/raw/"
 admin_level = "District" 
-current_week="2019w3" #Change to match the current week, but it won't break the code either way. 
+current_week="2019w4" #Change to match the current week, but it won't break the code either way. 
+download_link = "C:/Users/elineb/Downloads/MoH Uganda - Realtime ARV Stock Status Monitoring Dashboard.csv" #This is the same for all dashboards. 
 
 #---------------------------------------------------------------
 # Start your chrome driver!
@@ -53,30 +54,38 @@ districts = {
 #        "Masindi District":"xr8EMirOASp"
         }
 
-weeks = [""]
-for year in {2016, 2017}:
+weeks = list()
+for year in {2018}:
     for week in range(1):
         week_string = str(year) + "W" + str(week+1)
         print(week_string)
-        weeks += week_string
+        weeks.append(week_string)
 
+#Temporary edit 
+weeks = "2018W30"
+        
+#Make sure you've removed the key downloads file, so you know you're saving the right data. 
+if os.path.isfile(download_link):
+    os.remove(download_link)
+    
 #---------------------------------------------------------------
 # For the districts and weeks specified above, pull the list of facilities
 #   that have information on ARV stocks. 
-#---------------------------------------------------------------
+#---------------------------------------------------------------        
 for district in districts:
     for week in weeks:
-        print(week)
         
+        #Set up the save directory for this raw data 
         final_dir = save_loc + district + "/"
         file = final_dir + str(week) + ".csv"
-        print(file)
+        
+        write_data = "y" #Make this the default, and then give the user an option to change it. 
         #Check to make sure you haven't downloaded this data before! 
         if os.path.isfile(file):
-            print("This data has already been downloaded. Skipping this district/week: " + str(district) + " " + str(week))
-        else:    
+            write_data = input("This data has already been downloaded. Are you sure you want to continue? (y/n)")
+        if write_data == "y":    
             print("Downloading " + str(district) + " " + str(week))
-            
+        
             #Create a URL to access the given week for the given district (accessing API back end)
             url = main_url + "?o=" + districts[district] + "&w=" + week + "&wn=1" + "&on=" + district + "&ol=" + admin_level + "&cw=" + current_week; 
             driver.get(url); 
@@ -87,13 +96,16 @@ for district in districts:
             time.sleep(3)
             
             # Reimport into Python, and only keep the rows that have working links, and valid facility data (value is not 0). 
-            commodities = pd.read_csv("C:/Users/elineb/Downloads/MoH Uganda - Realtime ARV Stock Status Monitoring Dashboard.csv") 
+            commodities = pd.read_csv(download_link) 
+            #Remove the commodities file from your downloads folder so you can pull in other files! 
+            os.remove(download_link)
             commodities.insert(0, 'row_number', range(1, 1+len(commodities))) #Add a number to match the row number in the embedded table in the website to make an xpath later.
             
             # Reshape the data long, so the number of rows of the data represents the number of clicks you should make to get the facility level data. 
             commodities = pd.melt(commodities, id_vars=['Commodity', 'Category', 'row_number'], value_vars = ['#Under', '#Adequate', '#Over', '#StockOuts'])
             commodities = commodities.dropna(axis=0) #This is the dataset that should guide you for step 5
             commodities = commodities[commodities.value!=0]
+            
             
             #Only attempt to grab data if you have some valid rows. 
             if (len(commodities)!=0):
@@ -121,11 +133,14 @@ for district in districts:
                     time.sleep(3)
                     
                     #Save this file on the J:drive in the raw data folder 
-                    if not os.path.exists(final_dir): #Add a test to make sure you haven't downloaded this data before. Actually add this at the top! 
+                    if not os.path.exists(final_dir): #In case you haven't saved this data before, make sure the path you want to save it at exists!
                         os.makedirs(final_dir)
-                    os.rename("C:/Users/elineb/Downloads/MoH Uganda - Realtime ARV Stock Status Monitoring Dashboard.csv", file)
+                    facilities = pd.read_csv(download_link)
+                    facilities.to_csv(download_link)
+                    os.remove(download_link) #Remove from your downloads folder. 
                     
                     #Navigate back to the URL you were working on so you can keep going!
                     driver.get(url)
+                    time.sleep(3)
         
         
