@@ -18,9 +18,10 @@
 
 
 # input files
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 source("C:/Users/elineb/Documents/gf/resource_tracking/prep/shared_mapping_functions.R")
 file_dir <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/"
-file_iterations <- readRDS(paste0(file_dir, "budget_pudr_iterations.rds"))
+file_iterations <- readRDS(paste0(file_dir, "final_budgets.rds")) #Change to final budgets for right now, but will want to test all files eventually! 
 setDT(file_iterations)
 file_iterations[, start_date:=as.Date(start_date, format = "%Y-%m-%d")]
 
