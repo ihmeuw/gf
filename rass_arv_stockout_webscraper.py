@@ -56,13 +56,12 @@ districts = {
 
 weeks = list()
 for year in {2018}:
-    for week in range(1):
+    for week in range(30,52): #Just do something for now that we know we should have data for. 
         week_string = str(year) + "W" + str(week+1)
-        print(week_string)
         weeks.append(week_string)
 
 #Temporary edit 
-weeks = "2018W30"
+#weeks = "2018W30"
         
 #Make sure you've removed the key downloads file, so you know you're saving the right data. 
 if os.path.isfile(download_link):
@@ -74,7 +73,7 @@ if os.path.isfile(download_link):
 #---------------------------------------------------------------        
 for district in districts:
     for week in weeks:
-        
+    
         #Set up the save directory for this raw data 
         final_dir = save_loc + district + "/"
         file = final_dir + str(week) + ".csv"
@@ -89,14 +88,15 @@ for district in districts:
             #Create a URL to access the given week for the given district (accessing API back end)
             url = main_url + "?o=" + districts[district] + "&w=" + week + "&wn=1" + "&on=" + district + "&ol=" + admin_level + "&cw=" + current_week; 
             driver.get(url); 
-            time.sleep(2); #Give it a second to load. 
+            time.sleep(5); #Give it a second to load. 
         
             # Download the first table, the stock status for HIV communities, to get which rows and columns have valid data (not 0).
             driver.find_element_by_xpath('//*[@id="stock_wrapper"]/div[1]/button[2]/span').click()
-            time.sleep(3)
+            time.sleep(5)
             
             # Reimport into Python, and only keep the rows that have working links, and valid facility data (value is not 0). 
             commodities = pd.read_csv(download_link) 
+            print(len(commodities))
             #Remove the commodities file from your downloads folder so you can pull in other files! 
             os.remove(download_link)
             commodities.insert(0, 'row_number', range(1, 1+len(commodities))) #Add a number to match the row number in the embedded table in the website to make an xpath later.
@@ -106,16 +106,20 @@ for district in districts:
             commodities = commodities.dropna(axis=0) #This is the dataset that should guide you for step 5
             commodities = commodities[commodities.value!=0]
             
+            #Make sure you've got some data at this point. 
+            print(commodities.head())
+            
+            #Use this dictionary to build up an x-path (corresponds to embedded table in website)
+            col_number = {
+                '#Under': '3',
+                '#Adequate': '4',
+                '#Over': '5',
+                '#StockOuts': '6'
+            }
             
             #Only attempt to grab data if you have some valid rows. 
-            if (len(commodities)!=0):
-                #Use this dictionary to build up an x-path (corresponds to embedded table in website)
-                col_number = {
-                    '#Under': '3',
-                    '#Adequate': '4',
-                    '#Over': '5',
-                    'StockOuts': '6'
-                }
+            if (len(commodities)!=0): 
+                print("Commodity data found, pulling facility data...")
                 
                 #Assign a new column to the data frame giving the column number of the embedded table in the website. 
                 #Making this slightly less code using the dictionary above. 
@@ -126,21 +130,51 @@ for district in districts:
                 #Build a string for the xpath of a list of facilities under each of the four types listed in the 'col_number' dictionary above. 
                 commodities["xpath"] = '//*[@id="stock"]/tbody/tr[' + commodities["row_number"].map(str) + ']/td[' + commodities["col_number"].map(str) + ']/a'
                 
+                #Rename some column names and reset the indices so it's formatted nicely. 
+                commodities.columns = ['commodity', 'category', 'row_number', 'status', 'num_facilities', 'col_number', 'xpath']
+                commodities.reset_index(inplace=True)
+                
+                aggregated_week = pd.DataFrame()
                 #Navigate to this xpath, which represents a list of facilities, and click. Download this .csv to the J:drive. 
                 for index, row in commodities.iterrows():
+                    print(index)
                     driver.find_element_by_xpath(row['xpath']).click()
-                    driver.find_element_by_xpath('//*[@id="hf-list_wrapper"]/div[1]/button[2]/span').click()
                     time.sleep(3)
+                    driver.find_element_by_xpath('//*[@id="hf-list_wrapper"]/div[1]/button[2]/span').click()
+                    time.sleep(5)
                     
                     #Save this file on the J:drive in the raw data folder 
                     if not os.path.exists(final_dir): #In case you haven't saved this data before, make sure the path you want to save it at exists!
                         os.makedirs(final_dir)
                     facilities = pd.read_csv(download_link)
-                    facilities.to_csv(download_link)
+                    
+                    #Subset to only the row you want. 
+                    facilities = facilities[['Health Facility', 'Sub County', 'District', 'Region']]
+                    facilities.columns = ['health_facility', 'sub_county', 'district', 'region']
+                    
+                    # Add the drug and status this row was targeting to the facilities file. 
+                    # This should equal the row number and column number from the facilities table. 
+                    facilities['status'] = row['status']
+                    facilities['commodity'] = row['commodity']
+                    facilities['week'] = week
+                    
+                    #Append the files at the drug/status level to create one week-level file
+                    if index == 0:
+                        aggregated_week = facilities
+                    else:
+                        aggregated_week = aggregated_week.append(facilities)
+                        
                     os.remove(download_link) #Remove from your downloads folder. 
+                    time.sleep(2)
                     
                     #Navigate back to the URL you were working on so you can keep going!
                     driver.get(url)
-                    time.sleep(3)
-        
-        
+                    time.sleep(5)
+                    
+                #Write the aggregated week file to the filepath above
+                aggregated_week.to_csv(file) #Right now you're writing one file per drug/status, NOT one file per week. 
+                time.sleep(3)
+           
+            else:
+                print("No facility-level data found for " + str(district) + " " + str(week))
+
