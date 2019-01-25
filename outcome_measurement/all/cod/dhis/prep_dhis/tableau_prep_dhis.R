@@ -14,85 +14,53 @@ library(dplyr)
 library(openxlsx) # does not work on the cluster
 library(stringr) 
 # --------------------
-
-
-
-
-
-#-----------------------------------------------
-# save a prepped tableau data set, 2017 - present
-tabl <- dt[tableau==1 & (year=='2017' | year=='2018')]
-tabl <- tabl [date < date_end]
-
-# get the name for the file
-name <- strsplit(file, '_')[[1]][1]
-
-# save the file
-saveRDS(tabl, paste0(dir, 'prepped/tabl_', name, '.rds'))
-
-#--------------------------------------------------
-# export a set of only the viral load data from pnls
-
-# subset to only the viral load data 
-vl_vars <- c('zJBuEb9hpNq','uKEhVPh720x','Mg2cOozNDHa','Puph0kCuE1g',
-             'jowAqQ7YpEC', 'd2RyaUn9ZHm', 'yjZFUr1GlQM','JKWTF9Bgsm4','iPgvI70DJSZ','tHZ6KxIksXA',
-             'Kutdws0o2vL', 'doq0Fivo5ew', 'cNCibxShDa6', 'iHUxYVgu1qj', 'W90ci1ldX1C', 'QKTxjkpD2My',
-             'hNWooK76isO', 'BvZVoaCgTQD', 'B5tuUwTHAlj', 'gNNyKuf2joZ', 'oC2u60ANRUL', 'tYuKqogS7vD')
-
-# create a viral load data set
-vl <- dt[element_id %in% vl_vars]
-
-# save the viral load data set to prepped data
-saveRDS(vl, paste0(dir, 'prepped/viral_load_pnls.rds'))
-
-#---------------------------------------
-
-# --------------------
 # set working directories 
 
 # detect if operating on windows or on the cluster 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # set the folder for 
-folder <- 'prepped/'
+folder = 'merged/'
 
+# ---------------------------------------------
 # import the tableau data sets and rbind them together 
-base <- readRDS(paste0(dir, folder, 'tabl_base_no_outliers.rds'))
-sigl <- readRDS(paste0(dir, folder, 'tabl_sigl_no_outliers.rds'))
-pnls <- readRDS(paste0(dir, folder, 'tabl_pnls_no_outliers.rds'))
+base = readRDS(paste0(dir, folder, 'tabl_base_no_outliers.rds'))
+sigl = readRDS(paste0(dir, folder, 'tabl_sigl_no_outliers.rds'))
+pnls = readRDS(paste0(dir, folder, 'tabl_pnls_no_outliers.rds'))
 
-# subset pnls - this should now be in the prep code
-pnls <- pnls[element_id!='Gv1UQdMw5wL']
-x <- pnls[element_id=='jJuipTLZK4o' & category=='Sortie']
-pnls <- pnls[element_id!='jJuipTLZK4o']
-pnls <- rbind(pnls, x)
+# subset to 2017/18
+base[year(date)=='2017' | year(date=='2018')]
+pnls[year(date)=='2017' | year(date=='2018')]
+sigl[year(date)=='2017' | year(date=='2018')]
 
+# create a data set identifier
 base[ ,set:='base']
 sigl[ ,set:='sigl']
 pnls[ ,set:='pnls']
 
+# delete unnecessary variables
+
+
+# subset to the relevant elements
+base_elements = c()
+sigl_elements = c()
+pnls_elements = c()
+
+
 #-------------------------
 # rbind the data sets together
 
-dt1 <- rbind(base, sigl)
-dt <- rbind(dt1, pnls)
+dt_1 = rbind(base, sigl)
+dt = rbind(dt_1, pnls)
+#-------------------------
+# sum over the data at the health zone level
 
-#----
-# report health zone level data as well as facility
-# don't run this if it's in the prep code
-# dt[level=='health_zone', health_zone1:=org_unit]
-# 
-# # replace health zone
-# dt$health_zone2 <- unlist(lapply(strsplit(dt$health_zone1, " "), "[", 2))
-# dt$health_zone3 <- unlist(lapply(strsplit(dt$health_zone1, " "), "[", 3))
-# dt[health_zone3!='Zone', health_zone1:=paste(health_zone2, health_zone3) ]
-# dt[health_zone3=='Zone', health_zone1:=health_zone2]
-# 
-# dt[level=='health_zone' ,health_zone:=health_zone1]
-# dt[ , c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
+
+
+
 
 #-------------------------------------------------------------------------
 # check the english translations of the elements

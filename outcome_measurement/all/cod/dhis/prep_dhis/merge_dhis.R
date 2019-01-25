@@ -14,6 +14,7 @@ library(data.table)
 library(ggplot2)
 library(dplyr)
 library(stringr) 
+library(openxlsx)
 # --------------------
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
@@ -33,7 +34,8 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 source(paste0(dir, 'code/merge_functions.R'))
 
 # source the merge functions locally
-# source('C:/local/gf/outcome_measurement/all/cod/dhis/prep_dhis/merge_functions.R')``````````
+# be sure to pull to get the most recent version
+# source('C:/local/gf/outcome_measurement/all/cod/dhis/prep_dhis/merge_functions.R')
 #---------------------------------
 
 #---------------------------------
@@ -95,7 +97,7 @@ saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_', min, '_', max, '.rds' ))
 # variables in pnls are repeated based on stratification 
 # drop duplicates and save
 
-if (folder==pnls) {
+if (folder=='pnls') {
   source(paste0(dir, 'code/pnls_function.R'))
   dt = pnls_subset(dt)
   saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_subset_', min, '_', max, '.rds' ))
