@@ -176,15 +176,14 @@ split_mods_interventions <- function(dt, mod, keyword){
 check_budgets_pudrs = function(dt){
   keyVars = c("start_date", "fileName", "grant_number", "data_source")
   #Deciding not to split by disease here because we just want the total for the whole quarter. 
+  dt[, budget:=as.numeric(budget)]
+  dt[, expenditure:=as.numeric(expenditure)]
+  
   dt[is.na(budget), budget:=0]
   dt[is.na(expenditure), expenditure:=0]
-  
-  dt[, budget:=as.numeric(budget)]
-  dt[, expenditures:=as.numeric(expenditures)]
-  
   #Replacing budget and expenditure as NA 
   budgets = dt[ , 
-               lapply(.SD, .(sum)), 
+               lapply(.SD, sum), 
                 by = keyVars, 
                .SDcols = c("budget", "expenditure")]
   budgets <- unique(budgets)

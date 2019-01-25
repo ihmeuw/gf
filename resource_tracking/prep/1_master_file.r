@@ -50,14 +50,14 @@ current_uga_grant_period <- rep("2018-2020", 5)
 #Filepaths
 j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/')
-code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('ihme/code/', user, '/gf/'))
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes', user, '/gf/'))
 code_dir = paste0(code_loc, "resource_tracking/prep/")
 combined_output_dir = paste0(j, "resource_tracking/multi_country/mapping")
 source(paste0(code_dir, "shared_mapping_functions.R")) 
 
 #Boolean logic switches 
 include_stops = FALSE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
-verbose = TRUE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
+verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
 limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 
 # ----------------------------------------------
