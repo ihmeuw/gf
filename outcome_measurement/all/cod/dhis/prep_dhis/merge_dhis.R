@@ -19,7 +19,7 @@ library(openxlsx)
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1327 -s 1 -P snis_merge
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_merge
 
 # ---------------------------------
 # set working directories

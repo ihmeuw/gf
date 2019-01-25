@@ -30,25 +30,7 @@ setwd(dir)
 #---------------------------------------
 # load the file that represents a subset (no sex or )
 
-pnls = readRDS(paste0(dir, 'pre_prep/merged/pnls_2017_01_01_2018_11_01.rds'))
-
-#-------------------------------------------
-# eliminate the unecessary elements from the original prepped data
-# drop anything ending in sex, age, or
-
-# # source the function that cleans the original prepped data
-#  source(paste0(dir, "pnls_function.r"))
-# 
-# # load the original prepped data
-#  x = readRDS(paste0(dir, 'prepped/pnls_drc_01_2017_07_2018_prepped.rds'))
-#  
-#  pnls_subset(x)
-# 
-# # save the cleaned output
-#  saveRDS(x, paste0(dir, 'prepped/pnls_drc_01_2017_07_2018_prepped_subset.rds'))
-
-
-
+dt = readRDS(paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2018_11_01.rds'))
 
 #----------------------
 # function to eliminate diacritical marks
@@ -73,7 +55,7 @@ fix_diacritics <- function(x) {
 
 #-----------------------------
 # convert the elements to characters from a factor
-pnls[ , element:=as.character(element)]
+dt[ , category:=as.character(category)]
 
 #-----------------------------
 # drop sex element with a typo 
@@ -83,15 +65,8 @@ pnls = pnls[element!='pnls-com-personnes orientees vers fosa-survivants vs-ex']
 #--------------------------------------
 # classify variables by type
 
-# create classes using the second word
-pnls$second = unlist(lapply(strsplit(pnls$element1, "-"), "[", 2))
-pnls[ ,unique(second)]
-setnames(pnls, 'second', 'type')
-
 # translate groupings
-pnls[type=='cdv', type:='vct']
-pnls[type=='ist', type:='sti']
-pnls[type=='ptme', type:='pmtct']
+pnls[type=='CDV', type:='VCT']
 
 #--------------------------------------
 # create subpopulations
