@@ -7,31 +7,11 @@
 # ------------------------------------------------
 
 
-# --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(ggplot2)
-# --------------------
-
-
-# ----------------------------------------------
-# Files and directories
-
-# input file
-dir = 'J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data'
-inFile = paste0(dir, '/pilot_data.RDS')
-
-# output files
-outFile = paste0(dir, 'pilot_data_pre_model.rds')
-# ----------------------------------------------
-
-
 # ----------------------------------------------
 # Load/prep data
 
 # load
-data = readRDS(inFile)
+data = readRDS(outFile3)
 
 # test unique identifiers
 idVars = c('year','quarter','module','intervention','indicator')

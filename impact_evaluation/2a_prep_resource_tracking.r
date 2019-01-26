@@ -13,17 +13,15 @@
 
 #------------------------------------
 
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
 
 #------------------------------------
 #Read in previously prepped datasets 
 #------------------------------------
 
 #Read in final budget and expenditure data from RT database, and bind together. 
-final_budgets <- readRDS("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_budgets.rds")
-#final_expenditures <- readRDS("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_expenditures.rds")
-fgh <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv")
+final_budgets <- readRDS(budgetFile)
+#final_expenditures <- readRDS(expendituresFile)
+fgh <- fread(fghFile)
 
 #------------------------------------
 # Validate data 
@@ -89,4 +87,4 @@ check_unique_codes <- unique(prepped_rt[, .(code, module, intervention)])
 prepped_rt = prepped_rt[, .(budget=sum(budget, na.rm=TRUE), other_dah=sum(other_dah, na.rm=TRUE)), by=.(year, quarter, module, intervention, indicator, indicator_type, code)]
 stopifnot(nrow(unique(prepped_rt[, .(year, quarter, module, intervention, indicator)]))==nrow(prepped_rt))
 
-saveRDS(prepped_rt, paste0(dir, "prepped_resource_tracking.RDS"))
+saveRDS(prepped_rt, outputFile2a)

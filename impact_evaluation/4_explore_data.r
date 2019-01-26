@@ -7,31 +7,11 @@
 # ------------------------------------------------
 
 
-# --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(ggplot2)
-# --------------------
-
-
-# --------------------------------------------------------------------
-# Files and directories
-
-# input file
-dir = 'J:/Project/Evaluation/GF/impact_evaluation/cod/'
-inFile = paste0(dir, 'prepped_data/pilot_data.RDS')
-
-# output files
-graphFile = paste0(dir, 'visualizations/pilot_data_exploratory_graphs.pdf')
-# --------------------------------------------------------------------
-
-
 # ----------------------------------------------------------------------------
 # Load/prep data
 
 # load
-data = readRDS(inFile)
+data = readRDS(outFile3)
 
 # test unique identifiers
 idVars = c('year','quarter','code','module','intervention','indicator','indicator_type')
@@ -131,7 +111,7 @@ p6a4 = ggplot(data[indicator_type=='activity'], aes(y=value, x=budget_lag4)) +
 
 # --------------------------------
 # Save file
-pdf(graphFile, height=5.5, width=9)
+pdf(outFile4, height=5.5, width=9)
 p1
 p2
 p3
