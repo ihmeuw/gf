@@ -35,7 +35,7 @@ options(scipen=100)
 
 #Replace global variables to match what code you want to run. 
 user = "elineb" #Change to your username 
-country <- c("gtm") #Change to the country you want to update. 
+country <- c("uga") #Change to the country you want to update. 
 
 #Mark which grants are currently active to save in file - this should be updated every grant period! 
 current_gtm_grants <- c('GTM-H-HIVOS', 'GTM-H-INCAP', 'GTM-M-MSPAS', 'GTM-T-MSPAS')
@@ -64,10 +64,10 @@ limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be s
 ## STEP 1: Verify module mapping framework 
 # ----------------------------------------------
   
-  # map = read_xlsx('J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx', sheet='module_mapping')
-  # map = data.table(map)
-  # source(paste0(code_dir, "2_verify_module_mapping.r")) 
-  # module_map <- prep_map(map)
+  map = read_xlsx('J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx', sheet='module_mapping')
+  map = data.table(map)
+  source(paste0(code_dir, "2_verify_module_mapping.r"))
+  module_map <- prep_map(map)
   
 # ----------------------------------------------
 # STEP 2: Load country directories and file list

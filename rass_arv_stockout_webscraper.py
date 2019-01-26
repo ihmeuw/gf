@@ -40,8 +40,10 @@ save_loc = j + "/Project/Evaluation/GF/outcome_measurement/uga/rass_arv_dashboar
 admin_level = "District" 
 current_week="2019W4" #Change to match the current week, but it won't break the code either way. 
 download_link = "C:/Users/elineb/Downloads/MoH Uganda - Realtime ARV Stock Status Monitoring Dashboard.csv" #This is the same for all dashboards. 
-overwrite_data = "yes" #Make this 'yes' if you want to write over data you've pulled before. (Make it any other string, but probably 'no', if you don't want to.)
+overwrite_data = "no" #Make this 'yes' if you want to write over data you've pulled before. (Make it any other string, but probably 'no', if you don't want to.)
 
+#Potentially new URL? 
+#http://rass.mets.or.ug/?category=stocks&option=stock_status
 #---------------------------------------------------------------
 # Start your chrome driver!
 #---------------------------------------------------------------
@@ -51,7 +53,8 @@ driver = webdriver.Chrome('C:\chromedriver.exe')
 #Set the names of the districts and weeks you want to pull here. 
 #---------------------------------------------------------------
 districts = {
-        "Buliisa District":"CQTmrrriwOq", 
+        #"Buliisa District":"CQTmrrriwOq", 
+        "Kampala District":    "rzsbhKKYISq" ,
         "Hoima District":"PJFtfCyp6Rb",
         "Kagadi District":"LtyM5HnzFui",
         "Kakumiro District":"HRakdY52JPf",
@@ -79,7 +82,6 @@ districts = {
         "Pallisa District":    "WiVj4bEhX4P" ,
         "Sironko District":    "wJ2a6YKDFZW" ,
         "Tororo District":     "KhT80mlwJ3Y" ,
-        "Kampala District":    "rzsbhKKYISq" ,
         "Wakiso District":     "aIahLLmtvgT" ,
         "Bukomansimbi District":"Ame30QOwuX6",
         "Butambala District":  "a3LMKP8z8Xj" ,
