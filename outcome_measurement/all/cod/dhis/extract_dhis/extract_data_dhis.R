@@ -68,7 +68,7 @@ set = 2
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'sigl'
+set_name = 'base'
 
 #---------------------------
 # available data sets by number: 

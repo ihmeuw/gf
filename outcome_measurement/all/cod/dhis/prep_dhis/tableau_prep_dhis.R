@@ -2,7 +2,7 @@
 
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
-# 9/11/2018
+# 1/25/2019
 # ----------------------------------------------
 
 # --------------------
@@ -23,44 +23,47 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # set the folder for 
-folder = 'merged/'
+import_folder = 'pre_prep/merged/'
 
 # ---------------------------------------------
 # import the tableau data sets and rbind them together 
-base = readRDS(paste0(dir, folder, 'tabl_base_no_outliers.rds'))
-sigl = readRDS(paste0(dir, folder, 'tabl_sigl_no_outliers.rds'))
-pnls = readRDS(paste0(dir, folder, 'tabl_pnls_no_outliers.rds'))
 
-# subset to 2017/18
-base[year(date)=='2017' | year(date=='2018')]
-pnls[year(date)=='2017' | year(date=='2018')]
-sigl[year(date)=='2017' | year(date=='2018')]
+# vector of the variables to subset to
+elements = c("aZwnLALknnj", "AxJhIi7tUam", "CGZbvJchfjk",
+             "aK0QXqm8Zxn", "JXm8J8GRJxI", "rfeqp2kdOGi", "nRm30I4w9En",
+             "SpmQSLRPMl4", "CIzQAR8IWH1", "scjrnpQxZ85", "ukhWLb7dPET",
+             "jocZb4TE1U2", "wleambjupW9", "uV53nh3MrYl", "jrtkdRjvNKv",
+             "jJuipTLZK4o", "DXz4Zxd4fKq", "gHBcPOF5y3z", "jm3jeYdVkBl", 
+             "QvVGcIERRFc", "Wo3vNpLXPPm", "ovziGhkDOKb", "aeTpblK0SVC",
+             "WjEIQZvEFqa", "ncXfF8VViSh", "KEv4JxAgpFK")
+
+
+# import the data sets and subset to the relevant variables
+base = readRDS(paste0(dir, import_folder, 'base_2016_01_01_2018_12_01.rds'))
+base = base[year(date)=='2017' | year(date)=='2018']
+base = base[element_id %in% elements]
+
+pnls = readRDS(paste0(dir, import_folder, 'pnls_2017_01_01_2018_11_01.rds'))
+pnls[year(date)=='2017' | year(date)=='2018']
+pnls = base[element_id %in% elements]
+
+# not yet prepped
+# sigl = readRDS(paste0(dir, import_folder, '.rds'))
+# sigl[year(date)=='2017' | year(date=='2018')]
+# sigl = base[element_id %in% elements]
 
 # create a data set identifier
 base[ ,set:='base']
-sigl[ ,set:='sigl']
 pnls[ ,set:='pnls']
+# sigl[ ,set:='sigl']
 
-# delete unnecessary variables
+# the code works up to here - you will need to edit after this
+dt = rbind(base, sigl, pnls)
+# ---------------------------------------------
+# save the interim data set so you don't need to load all the data every time
 
-
-# subset to the relevant elements
-base_elements = c()
-sigl_elements = c()
-pnls_elements = c()
-
-
-#-------------------------
-# rbind the data sets together
-
-dt_1 = rbind(base, sigl)
-dt = rbind(dt_1, pnls)
-#-------------------------
-# sum over the data at the health zone level
-
-
-
-
+saveRDS(dt, paste0(dir, 'merged/tableau_interim.rds'))
+# ---------------------------------------------
 
 #-------------------------------------------------------------------------
 # check the english translations of the elements
@@ -87,7 +90,7 @@ dt$element_eng <- gsub("amount", "quantity", dt$element_eng)
 #---------------------------------------
 # create a variable for the number of facilities reporting
 
-facilities <- dt[ ,.(facilities_reporting=length(unique(org_unit))), 
+facilities = dt[ ,.(facilities_reporting=length(unique(org_unit))), 
                   by=.(set, element, date, health_zone, dps, category, level)]
 
 #-----------------------------------
