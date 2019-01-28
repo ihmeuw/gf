@@ -18,21 +18,23 @@ idVars = c('year','quarter','code','module','intervention','indicator','indicato
 test = nrow(data)==nrow(unique(data[,idVars, with=F]))
 if (test==FALSE) stop(paste('Something is wrong.', paste(idVars, collapse=' '), 'do not uniquely identify rows.'))
 
-# prep work that shouldn't be necessary once bugs are fixed
-data = data[!is.na(value)]
-data = data[, .(budget=sum(budget,na.rm=T), 
-				value=sum(value,na.rm=T), 
-				completeness=mean(completeness,na.rm=T)), by=idVars]
+# # prep work that shouldn't be necessary once bugs are fixed
+# data = data[!is.na(value)]
+# data = data[, .(budget=sum(budget,na.rm=T), 
+				# value=sum(value,na.rm=T), 
+				# completeness=mean(completeness,na.rm=T)), by=idVars]
 
 # compute lags of budget
 lagVars = c('budget_lag1','budget_lag4')
 data[, (lagVars):=shift(budget, c(1,4), type='lag'), by='code']
+lagVars = c('other_dah_lag1','other_dah_lag4')
+data[, (lagVars):=shift(other_dah, c(1,4), type='lag'), by='code']
 
 # compute cumulative budget
 data[, budget_cumulative:=cumsum(budget), by='code']
 
 # set aside results chain sections
-inputs = unique(data[, c('year','quarter','code','intervention','budget','budget_lag1','budget_lag4','budget_cumulative')])
+inputs = unique(data[, c('year','quarter','code','intervention','budget','budget_lag1','budget_lag4')])
 activities = unique(data[indicator_type=='activity', c('year','quarter','indicator','value', 'completeness')])
 outputs = unique(data[indicator_type=='output', c('year','quarter','indicator','value', 'completeness')])
 
