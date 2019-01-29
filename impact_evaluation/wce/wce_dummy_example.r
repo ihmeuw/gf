@@ -23,18 +23,15 @@ syear = 2010
 eyear = 2017
 
 # generate date
-data = data.table(year = seq(from=2010, to=2017), nets = rnorm(mean=1000, sd=100, n=8))
-
-# extend first value back
-tmp = data[rep(which(data$year==syear),10)]
-tmp[, year:=seq(from=syear-nrow(tmp), to=syear-1)]
-data = rbind(tmp, data)
+data = data.table(year = seq(from=2010, to=2017), nets = rnorm(mean=1000, sd=500, n=8))
 
 # backcast
+tmp = data[rep(which(data$year==syear),10)]
+tmp[, year:=seq(from=syear-nrow(tmp), to=syear-1)]
 lmFit = lm(nets~year, data)
 backcast = predict(lmFit, newdata=tmp)
-data[, nets_backcast:=nets]
-data[year<syear, nets_backcast:=backcast]
+data = rbind(tmp, data)
+data[year<syear, nets:=backcast]
 # -------------------------------------------------------------------------------------
 
 
@@ -71,12 +68,6 @@ for(i in seq(nrow(data))) {
 	data[i, weighted_cumulative3:=tmp3[i]]
 	tmp5 = cumsum(data[1:i]$nets*data[1:i][[wvar5]])
 	data[i, weighted_cumulative5:=tmp5[i]]
-	
-	# create weighted sum using backcast rather than extended values
-	tmp3 = cumsum(data[1:i]$nets_backcast*data[1:i][[wvar3]])
-	data[i, weighted_cumulative3_backcast:=tmp3[i]]
-	tmp5 = cumsum(data[1:i]$nets_backcast*data[1:i][[wvar5]])
-	data[i, weighted_cumulative5_backcast:=tmp5[i]]
 }
 # ----------------------------------------------
 
@@ -101,8 +92,6 @@ ggplot(graphData1[year>=syear], aes(y=value, x=t, linetype=variable)) +
 # set up to graph cumulative sums
 colors=c('Quantity'='black', 'Weighted Cumulative Sum (3-year ITN life)'='red', 
 	'Weighted Cumulative Sum (5-year ITN life)'='purple', 
-	'Weighted Cumulative Sum (3-year ITN life) w/ Backcasting'='orange', 
-	'Weighted Cumulative Sum (5-year ITN life) w/ Backcasting'='blue', 
 	'Simple Cumulative Sum'='green')
 
 # graph cumulative sums
@@ -110,8 +99,6 @@ ggplot(data[year>=syear], aes(y=nets, x=year)) +
 	geom_line(aes(color='Quantity')) + 
 	geom_line(aes(y=weighted_cumulative3, color='Weighted Cumulative Sum (3-year ITN life)')) + 
 	geom_line(aes(y=weighted_cumulative5, color='Weighted Cumulative Sum (5-year ITN life)')) + 
-	geom_line(aes(y=weighted_cumulative3_backcast, color='Weighted Cumulative Sum (3-year ITN life) w/ Backcasting')) + 
-	geom_line(aes(y=weighted_cumulative5_backcast, color='Weighted Cumulative Sum (5-year ITN life) w/ Backcasting')) + 
 	geom_line(aes(y=simple_cumulative, color='Simple Cumulative Sum')) + 
 	scale_color_manual(values=colors) + 
 	theme_bw()
