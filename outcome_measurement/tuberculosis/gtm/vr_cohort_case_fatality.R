@@ -8,14 +8,15 @@
 #############################################################################################
 
 #Still to work on cleaning up the final variable names for ease of interpretation
-#Oct 18 - look at splitting the case notifications by HIV status
+#Next step is to merge all of the datasets together
+#Note that the HIV status is assigned where it is missing in a hard-coded step in line ~110. Check these assumptions.
 
 rm(list=ls())
 library(data.table)
 library(ggplot2)
 
 
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') # have to declare the J Drive differently on the cluster 
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') # have to declare the J drive on the cluster 
 vr_dir <-  ('/ihme/geospatial/vr_prep/cod/outputs/gtm_collaborators/')
 cohort_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
 out_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
@@ -23,14 +24,14 @@ out_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_dat
 
 cohort <- fread(paste0(cohort_dir, "GTM - Tx cohort data 2012-2016.csv"))
 deaths <- fread(paste0(out_dir, "deaths_vr_cohort.csv"))
-notif<-fread("J:/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/GTM - TB notifications 2012-2017 deidentified.csv")
-gbd_tb<-fread("J:/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/tb_no_hiv_bothsex_inc_count.csv")
-gbd_tb_hiv<-fread("J:/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/hiv_tb_incidence_counts.csv")
+notif<-fread(paste0(j, "/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/GTM - TB notifications 2012-2017 deidentified.csv"))
+gbd_tb<-fread(paste0(j, "/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/tb_no_hiv_bothsex_inc_count.csv"))
+gbd_tb_hiv<-fread(paste0(j,"/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/hiv_tb_incidence_counts.csv"))
 
 ##Case fatality plausibility analysis
 
-
-deaths$V1<-NULL
+#Start with the deaths 
+deaths[,V1:=NULL]
 
 #Reshape long to wide to facilitate subtraction
 setkey(deaths, year_id, cause, source)
@@ -105,12 +106,15 @@ notif<-notif[,c("MUNICIPIO","DEPARTAMENTO", "SEXO", "EDAD", "CONDICIONINGRESO", 
 notif<-notif[notif$CONDICIONINGRESO=="nuevo"|notif$CONDICIONINGRESO=="recaida",]
 
 #Challenge in splitting case notifications by HIV status is that HIV status is not known for many persons.
-#This comparison may not be feasible for notifications dataset because of the HIV issue
+#However, as shown in the table below, the proportion of persons with unknown status drops markedly over time.
 table(notif$VIH, notif$YEAR, exclude=NULL)
-#Recode the deaths as unknown HIV status - ask for help in the analagous DT code
+
+#Why are there notifications with an HIV status of 'death'?
+#Recode these notifications with a status of death as unknown HIV status
 notif[VIH=="Death", VIH := NA] 
 annual<-setDT(notif)[, .(count = .N), by = c("VIH", "YEAR")]
 #Simplest assumption is that the persons with unknown HIV status will have the same likelihood of testing positive as any TB patient, which is ~8% by WHO estimates.
+#Alternatively, we could look at the ratio of positive to negative tests. Will hard code the 8% for now
 #Reshape wide to do this re-assigment
 setkey(annual, YEAR, VIH)
 annual[CJ(unique(YEAR), unique(VIH))]
@@ -123,6 +127,11 @@ wide_n[,rev_r:=reactive+0.08*missing]
 #wide_n<-wide_n[,new_total:=rev_nr+rev_r]
 #wide_n<-wide_n[,diff:=orig_total-new_total]
 #table(wide_n$diff)
+
+#Drop the old columns. There must be a way to do this all at once.
+wide_n[,missing:=NULL]
+wide_n[,reactive:=NULL]
+wide_n[,"not reactive":=NULL]
 
 #Merge cohort and notifications for incident cases
 inc<-merge(annual_tb_solo, wide_n, by=c("year"))
