@@ -121,7 +121,7 @@ p6a4 = ggplot(data[indicator_type=='activity'], aes(y=value, x=budget_lag4)) +
 
 # --------------------------------
 # Save file
-pdf(outFile4, height=5.5, width=9)
+pdf(outputFile4, height=5.5, width=9)
 p1a
 p1b
 p2
