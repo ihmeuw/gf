@@ -59,18 +59,29 @@ if(rerun_inputs == TRUE){
 # Merge datasets together 
 # ---------------------------------------
 # file produced by 2b_prep_activities_outputs 
-source(paste0(code_dir, '3_merge_data.r'))
+if (rerun_merge==TRUE) { 
+	source(paste0(code_dir, '3_merge_data.r'))
+}
 
 # ---------------------------------------
 # Validate data (EKL need to add this step)
 # ---------------------------------------
 
+
+# ---------------------------------------
+# Exploratory graphs etc 
+# ---------------------------------------
+if (rerun_explore==TRUE) { 
+	source(paste0(code_dir, '4_explore_data.r'))
+}
+
 # ---------------------------------------
 # Run analysis 
 # ---------------------------------------
+if (rerun_analysis==TRUE) { 
+	source(paste0(code_dir, '5a_set_up_for_analysis.r'))
+	source(paste0(code_dir, '5b_run_analysis.r'))
+}
 
-#source(paste0(code_dir, '4_analysis.r'))
-
-
-print('Master script completed. Outputs saved here: outputFile3')
+print(paste('Master script completed. Outputs saved here:', outputFile3))
 
