@@ -12,7 +12,7 @@
 # Load/prep data
 
 # load
-data = readRDS(outFile3)
+data = readRDS(outputFile3)
 
 # test unique identifiers
 idVars = c('year','quarter','module','intervention','indicator')

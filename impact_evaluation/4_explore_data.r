@@ -12,7 +12,7 @@ source('./impact_evaluation/_common/set_up_r.r')
 # Load/prep data
 
 # load
-data = readRDS(outFile3)
+data = readRDS(outputFile3)
 
 # test unique identifiers
 idVars = c('year','quarter','code','module','intervention','indicator','indicator_type')

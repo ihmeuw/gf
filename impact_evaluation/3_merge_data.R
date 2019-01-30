@@ -10,10 +10,10 @@
 merge_vars = c('year', 'quarter', 'indicator')
 
 #Read in the previously saved files for resource tracking in 2b 
-resource_tracking <- readRDS(outFile2a)
+resource_tracking <- readRDS(outputFile2a)
 
 #Read in the previously saved file for outputs/activities in 2b
-outputs_activities <- readRDS(outFile2b)
+outputs_activities <- readRDS(outputFile2b)
 
 #Merge resource tracking and outputs/activites data 
 merge_file <- merge(outputs_activities, resource_tracking, by = merge_vars, all = TRUE)
