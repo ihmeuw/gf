@@ -33,9 +33,6 @@ options(scipen=100)
 # ---------------------------------------
 include_stops = FALSE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-run_single_country <- TRUE #Set to true if you want to run budgets/pudrs for a single country (specify country below). 
-run_gos <- FALSE #Set to true if you want to run GOS data. 
-run_fgh <- FALSE #Set to true if you want to run FGH data. 
 limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 
 # ---------------------------------------
@@ -68,40 +65,36 @@ source(paste0(code_dir, "shared_mapping_functions.R"))
 # STEP 1: Read in and verify module mapping framework
 # ----------------------------------------------
   
-  if (run_single_country == TRUE | run_gos == TRUE){
-    map = read_xlsx(paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
-    map = data.table(map)
-    source(paste0(code_dir, "2_verify_module_mapping.r"))
-    module_map <- prep_map(map)
-  } else if (run_fgh == TRUE){
-    module_map <- fread(paste0(code_dir, "mapping/multi_country/intervention_categories/fgh_mapping.csv"))
-  }
+  map = read_xlsx(paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
+  map = data.table(map)
+  source(paste0(code_dir, "2_verify_module_mapping.r"))
+  module_map <- prep_map(map)
   
 # ----------------------------------------------
 # STEP 2: Load country directories and file list
 # ----------------------------------------------
   
-  if (run_single_country == TRUE){
-    master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
-    export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
-    country_code_dir <- paste0(code_dir, "global_fund_prep/", country, "_prep/")
-    file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE)
-    file_list$start_date <- as.Date(file_list$start_date, format = "%m/%d/%Y")
-    file_list = file_list[, -c('notes')]
-    
-    #Validate file list 
-    desired_cols <- c('file_name', 'sheet', 'function_type', 'start_date', 'disease', 'data_source', 'period', 'qtr_number', 'grant', 'primary_recipient',
-                      'secondary_recipient', 'language', 'geography', 'grant_period', 'grant_status', 'file_iteration')
-    #stopifnot(colnames(file_list) %in% desired_cols)
-    
-    stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
-    stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
-    
-    #Turn this variable on to run only a limited section of each country's file list; i.e. only the part that will be kept after GOS data is prioritized in step 4 (aggregate data). 
-    if(limit_filelist==TRUE){
-      file_list = prioritize_gos(file_list)
-    }
+  
+  master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
+  export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
+  country_code_dir <- paste0(code_dir, "global_fund_prep/", country, "_prep/")
+  file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE)
+  file_list$start_date <- as.Date(file_list$start_date, format = "%m/%d/%Y")
+  file_list = file_list[, -c('notes')]
+  
+  #Validate file list 
+  desired_cols <- c('file_name', 'sheet', 'function_type', 'start_date', 'disease', 'data_source', 'period', 'qtr_number', 'grant', 'primary_recipient',
+                    'secondary_recipient', 'language', 'geography', 'grant_period', 'grant_status', 'file_iteration')
+  #stopifnot(colnames(file_list) %in% desired_cols)
+  
+  stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
+  stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
+  
+  #Turn this variable on to run only a limited section of each country's file list; i.e. only the part that will be kept after GOS data is prioritized in step 4 (aggregate data). 
+  if(limit_filelist==TRUE){
+    file_list = prioritize_gos(file_list)
   }
+  
   
 # ----------------------------------------------
 # STEP 3: Prep a single source of data

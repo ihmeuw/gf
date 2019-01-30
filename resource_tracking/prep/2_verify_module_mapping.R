@@ -299,8 +299,11 @@ map[, prefix:=NULL]
   write.csv(map, "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/gf_mapping.csv")
 
   #Write a "diff" file to repository to make comparing changes easier. 
-  diff = anti_join(original_map, map)
-  write.csv(diff, paste0(code_loc, "resource_tracking/module_map_diff.csv"))
+  removed_rows = anti_join(original_map, map)
+  write.csv(removed_rows, paste0(code_loc, "resource_tracking/proposed_deletions_mod_map.csv"))
+  
+  added_rows = anti_join(map, original_map)
+  write.csv(added_rows, paste0(code_loc, "resource_tracking/proposed_additions_mod_map.csv"))
   
   return(map)
 }
