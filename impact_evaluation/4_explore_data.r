@@ -2,10 +2,11 @@
 # David Phillips
 # 
 # 1/18/2019
-# Exploratory visualizations to get a good sense 
-# of the impact evaluation data
+# Exploratory visualizations to get a good sense of the impact evaluation data
+# The current working directory should be the root of this repo (set manually by user)
 # ------------------------------------------------
 
+source('./impact_evaluation/_common/set_up_r.r')
 
 # ----------------------------------------------------------------------------
 # Load/prep data
