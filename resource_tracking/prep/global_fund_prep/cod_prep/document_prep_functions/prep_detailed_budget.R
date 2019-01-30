@@ -20,8 +20,15 @@ prep_detailed_budget = function(dir, inFile, sheet_name, start_date,
   ### uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
-# 
-  # file_dir = "J:/Project/Evaluation/GF/resource_tracking/cod/gf/"
+  # 
+  # folder = "budgets"
+  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  # version = ifelse(file_list$file_iteration[i] == "initial", "iterations", "")
+  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+  # if (version != ""){
+  #   file_dir = paste0(file_dir, version, "/")
+  # }
+  # 
   # dir = file_dir
   # inFile = file_list$file_name[i]
   # sheet_name = file_list$sheet[i]

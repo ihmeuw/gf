@@ -6,6 +6,11 @@
 # --------------------------------------------------------------------
 
 correct_modules_interventions = function(resource_database){
+  
+#---------------------------------------------------------  
+#EKL 12/21/18 - relabeling all "tb/hiv" as "hiv/tb"
+resource_database[disease == "tb/hiv", disease:= "hiv/tb"]
+#---------------------------------------------------------  
 
 #Irena Chen, before October 2018 
 resource_database[module == "systcmesdesanteresiliantsetperennesstrategiesnationalesdesante"  & intervention == "strategiessanitairesnationalesalignementaveclesplansmaladiespecifiquesgouvernancedusecteurdelasanteetfinancement", module := 'ssrsestrategiasnacionalesdesalud']
@@ -104,8 +109,24 @@ resource_database[sda_activity == "9", sda_activity:= "all"]
 #EKL 1/2/19 initial_gf_budgets_2018_2020.csv
 resource_database[fileName == 'initial_gf_budgets_2018_2020.csv' & module == 'tuberculosemultiresistante' & intervention == 'all', disease:='tb']
 
-#EKL 12/21/18 - relabeling all "tb/hiv" as "hiv/tb"
-resource_database[disease == "tb/hiv", disease:= "hiv/tb"]
+#EKL 1/28/19 "Revised LFA_COD-H-MOH_PUDR_S2 2016 17.04.17 for denominator change.xlsx" "LFA_CAG TB_S2_2016.xlsx"
+resource_database[intervention == 'analyseexamenettransparence' & module == 'unspecified', module:='suivietevaluation']
+resource_database[intervention == 'enquetes' & module == 'unspecified', module:='suivietevaluation']
+resource_database[intervention == 'financementfondesurlesresultats' & module == 'unspecified', module:='financementfondesurlesresultats']
+resource_database[intervention == 'gestiondelasubvention' & module == 'unspecified', module:='gestiondeprogramme']
+resource_database[intervention == 'performancetransparenceetobligationredditionnelledessystcmesdegestionfinancicrepublicsdanslesecteurdelasante' & module == 'unspecified', module:='gestionfinancicre']
+resource_database[module == 'unspecified' & intervention == 'traitementantiretroviralarvetsuivi', module := 'traitementantiretroviralarvetsuivi']
+resource_database[module == 'unspecified' & intervention == 'priseenchargeetpreventiondelatuberculosedepistageetdiagnosticdesmaladies', module:='priseenchargeetpreventiondelatuberculosedepistageetdiagnosticdesmaladies']
+resource_database[module == 'unspecified' & intervention == 'tuberculosevihinterventionsconcerteesdeluttecontrelatuberculoseetlevih', module:='tuberculosevihinterventionsconcerteesdeluttecontrelatuberculoseetlevih']
+resource_database[module == 'unspecified' & intervention == 'tuberculosevihimplicationdetouslesprestatairesdesoins', module:='tuberculosevihimplicationdetouslesprestatairesdesoins']
+resource_database[module == 'unspecified' & intervention == 'priseenchargeetpreventiondelatuberculoseimplicationdetouslesprestatairesdesoins', module:='priseenchargeetpreventiondelatuberculoseimplicationdetouslesprestatairesdesoins']
+resource_database[module == 'unspecified' & intervention == 'tuberculosemultiresistantedepistageetdiagnosticdesmaladiestuberculosemultiresistante', module:='tuberculosemultiresistantedepistageetdiagnosticdesmaladiestuberculosemultiresistante']
+resource_database[module == 'unspecified' & intervention == 'gestionfinancicreperformancetransparenceetobligationredditionnelledessystcmesdegestionfinancicrepublicsdanslesecteurdelasante', module:='gestionfinancicreperformancetransparenceetobligationredditionnelledessystcmesdegestionfinancicrepublicsdanslesecteurdelasante']
+resource_database[module == 'unspecified' & intervention == 'suivietevaluationcommunicationregulicredelinformation', module:='suivietevaluationcommunicationregulicredelinformation']
+resource_database[module == 'unspecified' & intervention == 'suivietevaluationanalyseexamenettransparence', module:='suivietevaluationanalyseexamenettransparence']
+resource_database[module == 'unspecified' & intervention == 'suivietevaluationenquete', module:='suivietevaluationenquete']
+resource_database[module == 'unspecified' & intervention == 'gestiondeprogrammepolitiqueplanificationcoordinationetgestion', module:='gestiondeprogrammepolitiqueplanificationcoordinationetgestion']
+resource_database[module == 'unspecified' & intervention == 'tuberculosemultiresistantetraitementtuberculosemultiresistante', module:='tuberculosemultiresistantetraitementtuberculosemultiresistante']
 
 return(resource_database)
 }

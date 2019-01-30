@@ -14,6 +14,8 @@
 
 prep_map <- function(map){
 
+  original_map <- copy(map) #Save an original copy for comparison later 
+
 # -------------------------------
 #
 #   CLEAN DATA BEFORE VALIDATING 
@@ -41,7 +43,6 @@ map = map[!(module == 'mdrtb' & substring(code, 0, 1)=='H')]
 map = map[!(module == 'hivhealthsystemsstrengthening' & disease%in%c('tb', 'malaria', 'hss'))]
 map = map[!(module == 'tbhealthsystemsstrengthening' & disease%in%c('hiv', 'malaria', 'hss'))]
 map = map[!(module == 'malhealthsystemsstrengthening' & disease%in%c('tb', 'hiv', 'hss'))]
-
 
 
 #--------------------------------------------------------------------------------
@@ -295,6 +296,11 @@ map[, prefix:=NULL]
 #    and code, they should have the same coefficient. 
 #     ***EMILY KEEP WORKING HERE. 
 #--------------------------------------------------------------------------------
-  write.csv(map,paste0(code_loc, "resource_tracking/map_raw_modules_interventions.csv"))
+  write.csv(map, "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/gf_mapping.csv")
+
+  #Write a "diff" file to repository to make comparing changes easier. 
+  diff = anti_join(original_map, map)
+  write.csv(diff, paste0(code_loc, "resource_tracking/module_map_diff.csv"))
+  
   return(map)
 }
