@@ -2,6 +2,7 @@
 # AUTHOR: Audrey Batzel and Emily Linebarger
 # PURPOSE: Merge resource tracking, activity, and outputs data. 
 # DATE: Last updated January 2019. 
+# INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------------------
 
 

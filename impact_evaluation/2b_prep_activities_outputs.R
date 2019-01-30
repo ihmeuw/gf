@@ -2,6 +2,7 @@
 # 1-9-19
 #
 # Prep PNLP/SNIS for pilot data set for impact evaluation
+# The current working directory should be the root of this repo (set manually by user)
 # -----------------------------------------------------------
 
 

@@ -35,7 +35,7 @@ data[, (lagVars):=shift(other_dah, c(1,4), type='lag'), by='code']
 data[, budget_cumulative:=cumsum(budget), by='code']
 
 # set aside results chain sections
-inputs = unique(data[, c('year','quarter','code','intervention','budget','budget_lag1','budget_lag4')])
+inputs = unique(data[, c('year','quarter','code','intervention','budget','budget_cumulative','budget_lag1','budget_lag4')])
 activities = unique(data[indicator_type=='activity', c('year','quarter','indicator','value', 'completeness')])
 outputs = unique(data[indicator_type=='output', c('year','quarter','indicator','value', 'completeness')])
 
@@ -55,24 +55,31 @@ wideInputs = copy(inputs)
 # Make graphs
 
 # time series of inputs
-p1 = ggplot(inputs, aes(y=budget, x=year+(quarter/4), color=intervention)) + 
+p1a = ggplot(inputs, aes(y=budget, x=year+(quarter/4), color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
 	labs(y='Budget', x='Quarter', color='Intervention') + 
+	theme_bw(base_size=16)
+
+# time series of cumulative inputs
+p1b = ggplot(inputs, aes(y=budget_cumulative, x=year+(quarter/4), color=intervention)) + 
+	geom_line() + 
+	geom_point() + 
+	labs(y='Cumulative Budget', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
 # time series of activities
 p2 = ggplot(activities, aes(y=value, x=year+(quarter/4), color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(y='Budget', x='Quarter', color='Activity') + 
+	labs(y='Quantity', x='Quarter', color='Activity') + 
 	theme_bw(base_size=16)
 
 # time series of outputs
 p3 = ggplot(outputs, aes(y=value, x=year+(quarter/4), color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(y='Budget', x='Quarter', color='Output') + 
+	labs(y='Quantity', x='Quarter', color='Output') + 
 	theme_bw(base_size=16)
 
 # histograms of distributions
@@ -115,7 +122,8 @@ p6a4 = ggplot(data[indicator_type=='activity'], aes(y=value, x=budget_lag4)) +
 # --------------------------------
 # Save file
 pdf(outFile4, height=5.5, width=9)
-p1
+p1a
+p1b
 p2
 p3
 p4

@@ -3,6 +3,7 @@
 # PURPOSE: Prepare resource tracking data for merge 
 #          with activities and outputs.  
 # DATE: Last updated January 2019. 
+# INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------------------
 
 #------------------------------------
