@@ -53,25 +53,25 @@ driver = webdriver.Chrome('C:\chromedriver.exe')
 #Set the names of the districts and weeks you want to pull here. 
 #---------------------------------------------------------------
 districts = {
-        #"Buliisa District":"CQTmrrriwOq", 
-        "Kampala District":    "rzsbhKKYISq" ,
-        "Hoima District":"PJFtfCyp6Rb",
-        "Kagadi District":"LtyM5HnzFui",
-        "Kakumiro District":"HRakdY52JPf",
-        "Kibaale District":"AtnLKczpkvP",
-        "Kikuube District":"fXT6ayIyYeH",
-        "Kiryandongo District":"B0G9cqixld8",
-        "Masindi District":"xr8EMirOASp",
-        "Kiboga District":     "GLHh0BXys9w" ,
-        "Kyankwanzi District": "IVuiLJYABw6" ,
-        "Luweero District":    "tr9XWtYsL5P" ,
-        "Mityana District":    "Q7PaNIbyZII" ,
-        "Mubende District":    "lzWuB6bCQeV" ,
-        "Nakaseke District":   "oSbgVKaeCP0" ,
-        "Nakasongola District":"hUcYGQCK9ub" ,
-        "Budaka District":     "kb7iUQISRlx" ,
-        "Bududa District":     "AhwgeZQYj16" ,
-        "Bukwo District":      "e8m9ZYMRoeR" ,
+       # "Buliisa District":"CQTmrrriwOq", 
+        #"Kampala District":    "rzsbhKKYISq" ,
+        #"Hoima District":"PJFtfCyp6Rb",
+        #"Kagadi District":"LtyM5HnzFui",
+        #"Kakumiro District":"HRakdY52JPf",
+        #"Kibaale District":"AtnLKczpkvP",
+        #"Kikuube District":"fXT6ayIyYeH",
+        #"Kiryandongo District":"B0G9cqixld8",
+#        "Masindi District":"xr8EMirOASp",
+#        "Kiboga District":     "GLHh0BXys9w" ,
+#        "Kyankwanzi District": "IVuiLJYABw6" ,
+#        "Luweero District":    "tr9XWtYsL5P" ,
+#        "Mityana District":    "Q7PaNIbyZII" ,
+#        "Mubende District":    "lzWuB6bCQeV" ,
+#        "Nakaseke District":   "oSbgVKaeCP0" ,
+#        "Nakasongola District":"hUcYGQCK9ub" ,
+#        "Budaka District":     "kb7iUQISRlx" ,
+#        "Bududa District":     "AhwgeZQYj16" ,
+#        "Bukwo District":      "e8m9ZYMRoeR" ,
         "Butaleja District":   "MtpE3CH6vq3" ,
         "Kibuku District":     "Oyxwe3iDqpR" ,
         "Kotido District":     "aPZzL4CyBTg" ,
@@ -199,7 +199,6 @@ for district in districts:
                     else:
                         aggregated_week = aggregated_week.append(commodities)
     
-                    os.remove(download_link) #Remove from your downloads folder. 
                     time.sleep(2)
                         
                     #Navigate back to the URL you were working on so you can keep going!

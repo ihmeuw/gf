@@ -190,12 +190,13 @@ mapped_country_data$loc_name = country
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------
 
-mapped_country_data = mapped_country_data[, .(abbrev_intervention, abbrev_module, adm1, adm2, budget, code, code_count, coefficient, cost_category, country, data_source, disbursement, disease, 
-                         expenditure, file_iteration, fileName, frequency, gf_intervention, gf_module, grant_number, grant_period, intervention, lang, loc_name, module, 
+#Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
+mapped_country_data = mapped_country_data[, .(abbrev_intervention, abbrev_module, adm1, adm2, budget, code, cost_category, data_source, disbursement, disease, 
+                         expenditure, file_iteration, fileName, gf_intervention, gf_module, grant_number, grant_period, lang, loc_name,
                          orig_intervention, orig_module, period, primary_recipient, sda_activity, secondary_recipient, start_date, year)]
 
-desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "code_count", "coefficient", "cost_category", "country", "data_source", "disbursement", "disease", 
-                  "expenditure", "file_iteration", "fileName", "frequency", "gf_intervention", "gf_module", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
+desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "cost_category", "data_source", "disbursement", "disease", 
+                  "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
                   "orig_intervention", "orig_module", "period", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
 stopifnot(sort(colnames(mapped_country_data)) == desired_cols)  #Emily we do want to have correct column names here. 
 

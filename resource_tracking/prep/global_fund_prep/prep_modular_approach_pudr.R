@@ -39,9 +39,9 @@ prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disea
   # Files and directories
   
   #Sanity check: Is this sheet name one you've checked before? 
-  print(sheet_name)
   verified_sheet_names <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
   if (!sheet_name%in%verified_sheet_names){
+    print(sheet_name)
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
   }
   
@@ -57,22 +57,6 @@ prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disea
   intervention_col <- grep("Modular Approach - Interventions", gf_data)
   budget_col <- grep("Budget for Reporting Period", gf_data)
   expenditure_col <- grep("Actual Expenditure", gf_data)
-
-<<<<<<< HEAD
-=======
-  #We don't have modules and interventions for this type of file, and column headers are labeled differently.
-  if (sheet_name == "LFA_Total PR Cash Outflow_3A"){
-    module_col = NA
-    intervention_col = NA
-    budget_col <- grep("LFA-Verified Budget for Reporting Period", gf_data)
-    expenditure_col <- grep("LFA-Verified Actual for Reporting Period", gf_data)
-  }
-
-  if(sheet_name == "LFA_Total PR Cash Outflow_3A"){ #For this type of file, keep the first finding from grep.
-    budget_col = budget_col[1]
-    expenditure_col = expenditure_col[1]
-  }
->>>>>>> 17a67aa3c8085258e87f7da50013f41447193baa
 
   #Remove the 'cumulative expenditure' and 'cumulative budget' columns.
   if (length(expenditure_col)!=1){
@@ -134,11 +118,11 @@ prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disea
   gf_data = gf_data[start_row:end_row, ]
 
   #Rename data, and remove invalid rows
-  check_drop <- gf_data[((is.na(module) | module == '0') & (is.na(intervention) | intervention == '0')),]
+  check_drop <- gf_data[((is.na(module) | module == '0') & (is.na(intervention) | intervention == '0') & (is.na(budget)|budget=='0') & (is.na(expenditure)|expenditure=='0')),]
   if (verbose == TRUE){
     print(paste0("Invalid rows currently being dropped: (only module and intervention columns shown) ", check_drop[, c('module', 'intervention')]))
   }
-  gf_data<-  gf_data[!((is.na(module) | module == '0') & (is.na(intervention) | intervention == '0')),]
+  gf_data<-  gf_data[!((is.na(module) | module == '0') & (is.na(intervention) | intervention == '0')& (is.na(budget)|budget=='0') & (is.na(expenditure)|expenditure=='0')),]
 
   #Some datasets have an extra title row with "[Module]" in the module column.
   #It's easier to find this by grepping the budget column, though.
@@ -160,10 +144,8 @@ prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disea
   }
 
   #Replace any modules or interventions that didn't have a pair with "Unspecified".
-  gf_data[is.na(module) & !is.na(intervention), module:="Unspecified"]
-  gf_data[module == '0' & !is.na(intervention), module:="Unspecified"]
-  gf_data[!is.na(module) & is.na(intervention), intervention:="Unspecified"]
-  gf_data[!is.na(module) & intervention == '0', intervention:="Unspecified"]
+  gf_data[is.na(module) | module == '0' , module:="Unspecified"]
+  gf_data[is.na(intervention) | intervention == '0' , module:="Unspecified"]
 
   #-------------------------------------
   # 3. Generate new variables

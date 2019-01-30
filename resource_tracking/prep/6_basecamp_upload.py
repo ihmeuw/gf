@@ -13,7 +13,7 @@ import time
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.select import Select
+#from selenium.webdriver.support.select import Select
 
 #Get login information
 email_address=input('Enter UW email address ')
@@ -27,7 +27,9 @@ driver = webdriver.Chrome('C:\chromedriver.exe')  # Optional argument, if not sp
 #--------------------------------
 #       Set up filepaths 
 #-------------------------------
-total_resource_tracking = "J:\Project\Evaluation\GF\resource_tracking\multi_country\mapping\total_resource_tracking_data.csv"
+drc_final_expenditures = "https://3.basecamp.com/3769859/buckets/4025874/uploads/1560083744"
+drc_final_budgets = "https://3.basecamp.com/3769859/buckets/4025874/uploads/1560083487"
+
 
 #--------------------------------
 #               DRC 
@@ -47,6 +49,7 @@ passwordfield.send_keys(Keys.RETURN) # Press Enter
 
 #Get past Chrome checking if we're human or not, which we DEFINITELY are... 
 driver.find_element_by_xpath('//*[@id="view_container"]/div/div/div[2]/div/div[2]/div/div[1]/div/content/span').click()
+print("Yay! We're DEFINITELY human. ;)")
 #Press the Login button
 #driver.find_element_by_css_selector("button.btn.btn-primary").click()
 driver.switch_to_window(driver.window_handles[-1]) # Switch commands to operate in the current window.
@@ -62,15 +65,6 @@ driver.switch_to_frame("contentFrame")
 driver.find_element_by_xpath('//*[@id="recording_1117008945"]/div/header/div[2]/a[2]').click()
 driver.find_element_by_xpath('//*[@id="main-content"]/div/section/div[2]/div[2]/div/div/div/button').click()
 driver.send_keys()
-
-#Open "MEXICO"
-NIC = driver.find_element(By.PARTIAL_LINK_TEXT, 'PANAMA_KUNA').click() # CHANGE FOR OTHER COUNTRIES
-driver.switch_to_window(driver.window_handles[-1]) # Switch commands to operate in the current window.
-title = driver.title
-driver.switch_to_frame("contentFrame")
-time.sleep(5)
-
-
 
 
 # Close browser
