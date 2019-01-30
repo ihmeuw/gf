@@ -28,7 +28,7 @@ repo <- 'C:/local/gf/'
 # ---------------------------------------
 # Set boolean switches
 # ---------------------------------------
-rerun_inputs <- FALSE 
+rerun_inputs <- TRUE
 
 # ---------------------------------------
 # Read in common files 

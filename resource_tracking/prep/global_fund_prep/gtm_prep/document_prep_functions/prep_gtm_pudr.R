@@ -22,21 +22,21 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   ### look at gf_data and find what is being droped where.
   ########
 # 
-#   folder = "budgets"
-#   folder = ifelse (file_list$data_source[i] == "fpm" , folder, "pudrs")
-#   file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-# 
-#   dir = file_dir
-#   inFile = file_list$file_name[i]
-#   sheet_name = file_list$sheet[i]
-#   start_date = file_list$start_date[i]
-#   qtr_num = file_list$qtr_number[i]
-#   period = file_list$period[i]
-#   disease = file_list$disease[i]
-#   lang = file_list$language[i]
-#   grant = file_list$grant[i]
-#   source = file_list$data_source[i]
-#   loc_name = 'gtm'
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "fpm" , folder, "pudrs")
+  file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date[i]
+  qtr_num = file_list$qtr_number[i]
+  period = file_list$period[i]
+  disease = file_list$disease[i]
+  lang = file_list$language[i]
+  grant = file_list$grant[i]
+  source = file_list$data_source[i]
+  loc_name = 'gtm'
   #
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))

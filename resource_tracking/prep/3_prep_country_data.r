@@ -22,8 +22,8 @@ original_db <- copy(resource_database)
 saveRDS(original_db, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
 
 #Make sure all budget data pulled is actually numeric- this is an easy check to see if prep functions are working correctly. 
-verify_numeric_budget = resource_database[, budget:=gsub("[[:digit:]]", "", budget)]
-verify_numeric_budget = verify_numeric_budget[, budget:=gsub("[[:punct:]]", "", budget)]
+verify_numeric_budget = resource_database[, .(budget=gsub("[[:digit:]]", "", budget))]
+verify_numeric_budget = verify_numeric_budget[, .(budget=gsub("[[:punct:]]", "", budget))]
 verify_numeric_budget = verify_numeric_budget[!is.na(budget) & budget != ""]
 stopifnot(nrow(verify_numeric_budget)==0)
 
@@ -43,22 +43,26 @@ resource_database$budget <- as.numeric(resource_database$budget)
 resource_database$expenditure <- as.numeric(resource_database$expenditure)
 resource_database$disbursement <- as.numeric(resource_database$disbursement)
 
+#Add files here that had a sum total for 0 in raw file. 
+verified_0_budget <- c('UGD-708-G08-M_PUDR 30Nov2011.xls', 'UGD-708-G08-M_PUDR_30June2012.xls')
+#Add PUDRs here that did not report any expenditure. 
+verified_0_expenditure <- c('GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx')
+
 #Make sure that no files have a total sum of 0; this would indicate an error in the prep code. 
 check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by=.(fileName)]
-check_0_budgets = check_0_budgets[budget == 0]
+check_0_budgets = check_0_budgets[budget == 0 & !fileName%in%verified_0_budget]
 check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = sum(expenditure, na.rm = TRUE)), by=.(fileName)]
-check_0_expenditure <- check_0_expenditure[expenditure == 0]
+check_0_expenditure <- check_0_expenditure[expenditure == 0 & !fileName%in%verified_0_expenditure]
 stopifnot(nrow(check_0_budgets)==0 & nrow(check_0_expenditure)==0)
-
-#Remove all rows with NA for module and intervention, after verifying that they have a budget of 0. 
-#This is a hacky fix to deal with messy data; this should really be addressed at the file-level in the prep code. 
-resource_database = resource_database[!(is.na(module) & is.na(intervention) & budget == 0)]
 
 #check for duplicates, and sum their values if they exist:
 dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
 print(paste0(nrow(dups), " duplicates found in database; values will be summed"))
 byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'expenditure')]
 resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expenditure=sum(na.omit(expenditure))), by=byVars]
+
+#Hacky fix - this should be fixed earlier in the prep functions, but remove anything at this point that has NAs for module, intervention, and budget OR expenditure. 
+resource_database = resource_database[!(is.na(module) & is.na(intervention) & (budget == 0 | expenditure == 0))]
 
 #-------------------------------------------------------
 # Prep data for merge 
@@ -150,7 +154,7 @@ unique(mapped_country_data[disease == "hiv/tb", .(gf_module, gf_intervention)])
 #Right now, just reclassifying all other modules that don't fit in these categories to be "hiv". 
 mapped_country_data[disease == "hiv/tb", disease:= 'hiv']
 
-#Check to make sure all modules were caught in the edit above - Should still have Program management; TB/HIV; Treatment, care and support; and Unspecified. 
+#Check to make sure all modules were caught in the edit above - Should still have Program management; TB/HIV; and Unspecified. 
 stopifnot(nrow(mapped_country_data[disease == "hiv/tb"])==0)
 
 #-----------------------------------------
@@ -186,12 +190,13 @@ mapped_country_data$loc_name = country
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------
 
-mapped_country_data = mapped_country_data[, .(abbrev_intervention, abbrev_module, adm1, adm2, budget, code, code_count, coefficient, cost_category, country, data_source, disbursement, disease, 
-                         expenditure, file_iteration, fileName, frequency, gf_intervention, gf_module, grant_number, grant_period, intervention, lang, loc_name, module, 
+#Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
+mapped_country_data = mapped_country_data[, .(abbrev_intervention, abbrev_module, adm1, adm2, budget, code, cost_category, data_source, disbursement, disease, 
+                         expenditure, file_iteration, fileName, gf_intervention, gf_module, grant_number, grant_period, lang, loc_name,
                          orig_intervention, orig_module, period, primary_recipient, sda_activity, secondary_recipient, start_date, year)]
 
-desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "code_count", "coefficient", "cost_category", "country", "data_source", "disbursement", "disease", 
-                  "expenditure", "file_iteration", "fileName", "frequency", "gf_intervention", "gf_module", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
+desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "cost_category", "data_source", "disbursement", "disease", 
+                  "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
                   "orig_intervention", "orig_module", "period", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
 stopifnot(sort(colnames(mapped_country_data)) == desired_cols)  #Emily we do want to have correct column names here. 
 
@@ -206,13 +211,10 @@ mapped_country_data$orig_intervention <- str_replace_all(mapped_country_data$ori
 
 # ----------------------------------------------
 # Write the prepped data as .csvs
-# ----------------------------------------------
-#Create a subset of columns for an outside audience. 
-cleaned_columns <- c('country', 'disease', 'gf_module', 'gf_intervention', 'abbrev_module', 'abbrev_intervention', 'sda_activity', 'code', 'adm1', 'adm2', 
-                     'budget', 'expenditure', 'disbursement', 'fileName', 'grant_number', 'grant_period', 'start_date', 'period', 'year', 'data_source', 'financing_source') 
+# ---------------------------------------------
 
-final_budgets <- mapped_country_data[file_iteration == "final" & data_source == "fpm", .(cleaned_columns)] #Emily should we remove the expenditure column here? 
-final_expenditures <- mapped_country_data[file_iteration == "final" & data_source == "pudr", .(cleaned_columns)]
+final_budgets <- mapped_country_data[file_iteration == "final" & data_source == "fpm"] #Emily should we remove the expenditure column here? 
+final_expenditures <- mapped_country_data[file_iteration == "final" & data_source == "pudr"]
 
 # Save RDS file
 saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))

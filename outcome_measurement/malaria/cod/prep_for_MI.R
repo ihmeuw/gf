@@ -34,13 +34,22 @@
       fullData <- "fullData_dps_standardized.csv"
       
     # output files
-      output_dt <- "PNLP_2010to2017_preppedForMI.csv"
+      output_dt <- "PNLP_2010to2017_preppedForMI_update_1_22_19.csv"
+      
+    # functions:
+      getmode <- function(v) {
+        uniqv <- unique(v)
+        uniqv[which.max(tabulate(match(v, uniqv)))]
+      }
 # ----------------------------------------------   
 
 
 # ----------------------------------------------     
   # read in data
     fullData <- fread( paste0(dir_prepped, fullData) ) 
+      
+    fullData2 <- fread(paste0(dir_prepped, "final_data_for_imputation.csv"))
+    fullData3 <- fread(paste0(dir_prepped, "PNLP_2010to2017_preppedForMI.csv"))
 # ----------------------------------------------     
       
       
@@ -69,6 +78,17 @@
       fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "539", date:= "2017-07-01" ]
       fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "525", date:= "2017-08-01" ]
       fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "617", date:= "2017-09-01" ]
+      
+  # Where DPS = 0, those health zones (bambu and manguredj) weren't in the most recent year of data (2017) but in retrospect it seems like
+  # they should be other healht zones - change so they match up
+      
+      # bambu-nord kivu is probably the same as bambo-nord kivu 
+      fullData[ dps == "0" & health_zone == "bambu", dps := "nord kivu"]
+      fullData[ dps == "nord kivu" & health_zone == "bambu", health_zone := "bambo"]
+      
+      # manguredj and mangupa both probably the same ('manguredjipa')
+      fullData[ dps == "0" & health_zone == "manguredj", dps := "nord kivu"]
+      fullData[ dps == "nord kivu" & health_zone == "manguredj", health_zone := "mangupa"]
 # ----------------------------------------------   
 
       
@@ -83,7 +103,9 @@
                  "dps_name_2013", "dps_name_2012", "dps_name_2010to2011")
     
     measured_vars <- all_vars[!all_vars %in% id_vars]
+    
     id_vars <- c("province11_name", "dps", "health_zone", "date", "year")
+    
     vars_to_keep <- c(id_vars, measured_vars)
     
     ameliaDT <- fullData[, c(vars_to_keep), with=F]
@@ -99,30 +121,45 @@
     
   # new column to take the proportion of health facilities reporting out of total health facilities
     ameliaDT[, year:= year(date)]
-    # when health facilities reporting is greater than total health facilities, change health facilities total to = health facilities reporting
-       # keep track of what the value for total was before: 
+    # keep track of what the original values are before we change them:
         ameliaDT[, healthFacilities_totalOrig := healthFacilities_total]
-      ameliaDT[healthFacilities_numReported > healthFacilities_total, healthFacilities_total:=healthFacilities_numReported]
-    # when all health facilities are missing for a given year set it to be the same as the following year (since it is earlier years missing)
-      test <- ameliaDT[, .(healthFacilities_max = max(healthFacilities_total, na.rm=T)), by=c("health_zone", "year")]
-      test <- test[healthFacilities_max == "-Inf", healthFacilities_max:=NA]
-      test <- test[order(health_zone, -year),]
+        ameliaDT[, healthFacilities_numReportedOrig := healthFacilities_numReported]
+    # when health facilities reporting is greater than total health facilities, change health facilities total to = health facilities reporting
+      # NOTE: commented out 1/22/19 because I think we would want to handle this problem AFTER taking max of total fac and set the num reported rather than the total 
+      # ameliaDT[healthFacilities_numReported > healthFacilities_total, healthFacilities_total:=healthFacilities_numReported]
+        
+        # when health facilities reporting are greater than total health facilities,set health facilities reporting to NA - set both to be NA?
+        ameliaDT[healthFacilities_numReported > healthFacilities_total, healthFacilities_numReported:= NA]
+        
+    # when healthFacilities_total variable is missing for a given year set it to be the same as the following year (since it is mostly earlier years missing)
+      test <- ameliaDT[, .(healthFacilities_max = max(healthFacilities_total, na.rm=T)), by=c("dps", "health_zone", "year")]
+      test <- test[healthFacilities_max == "-Inf", healthFacilities_max:=NA]  # result was -Inf where all values were missing by group
+      # order by year descending for use of na.locf later 
+      test <- test[order(dps, health_zone, -year),]
+      
       # warning - na.locf won't work if all health facilities total data is missing in most recent year
       # manually set mabalako 2017 so that it works
       test[health_zone=="mabalako" & year==2017, healthFacilities_max:=28]
+      #na.locf replaces an NA with the most recent non NA prior to it
       test[, healthFacilities_max:= na.locf(healthFacilities_max), by=health_zone]
+
+# TO DO - go back and add this in?? Ask David (1/22/19)         
+      # # in some cases the mode facilities occurs 7 of 8 times and there's one random outlier value.  We want to change those
+      # test[ , healthFacilities_mode := getmode(healthFacilities_max), by= c("dps", "health_zone")]
+      # test2 <- test[healthFacilities_max == healthFacilities_mode, .(num_yrs_equal_to_mode = .N), by= c("dps", "health_zone")]
+      # test <- merge(test, test2, by=c("dps", "health_zone"), all=TRUE)
       
     # merge test back to ameliaDT
-      ameliaDT <- merge(ameliaDT, test, all.x=T, by=c("health_zone", "year"))
+      ameliaDT <- merge(ameliaDT, test, all.x=TRUE, by=c("dps", "health_zone", "year"))
       
-      forTERG <- ameliaDT[, c(1:5, 56:58, 108:109)]
-      
-      
-      #ameliaDT <- ameliaDT[ healthFacilities_max < healthFacilities_numReported, healthFacilities_max:= healthFacilities_numReported ]
-      ameliaDT <- ameliaDT[, healthFacilities_max := max(healthFacilities_max), by=c("health_zone", "year")]
-      ameliaDT <- ameliaDT[ healthFacilities_max < healthFacilities_numReported, healthFacilities_max:= healthFacilities_numReported ]
-      
-      ameliaDT$healthFacilitiesProportion <- ameliaDT[, .(healthFacilities_numReported / healthFacilities_max)]
+      # save a subset of ameliaDT with just health facilities data for use in another script (to make presentation figures for TERG meeting)
+      # forTERG <- ameliaDT[, c(1:5, 56:58, 108:109)]
+
+# TO DO - clarify this is what we wanted with David - also what would the direction of bias be here?      
+    # if health facilities total is missing, set it to be health facilities max (the max # of facilites in that year?)
+      ameliaDT[is.na(healthFacilities_total), healthFacilities_total := healthFacilities_max] 
+    # 1/22/19 changed this to divide reporting facilities by total facilities... make sure this is what we should do. 
+      ameliaDT$healthFacilitiesProportion <- ameliaDT[, .(healthFacilities_numReported / healthFacilities_total)]
 # ----------------------------------------------   
 
 
@@ -140,7 +177,9 @@
     
     
 # ----------------------------------------------   
-  # rectangularize the data so there is an observation for every health zone and date
+  # rectangularize the data so there is an observation for every health zone and date - but we don't want to back cast years where the health zone
+    # might not have existed. 
+
     hzDPS <- unique(ameliaDT[,c('province11_name', 'dps','health_zone'),with=FALSE])
     dates <- unique(ameliaDT$date)
     

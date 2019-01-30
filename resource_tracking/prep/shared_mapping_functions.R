@@ -10,7 +10,7 @@
 # ----------------------------------------------
 
 fix_diacritics = function(x){
-  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
+  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
                            'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
                            'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
                            'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
@@ -18,8 +18,9 @@ fix_diacritics = function(x){
   #print(names(replacement_chars))
   replace_me <- paste(names(replacement_chars), collapse='')
   replace_with <- paste(replacement_chars, collapse = '')
+  print(replace_me)
+  print(replace_with)
   return(chartr(replace_me, replace_with, x))
-  
 }
 
 #--------------------------
@@ -169,6 +170,57 @@ split_mods_interventions <- function(dt, mod, keyword){
   return(dt)
 }
 
+#Given a country's file list, only keeps the files that will be kept after GOS data is prioritized in step 4. 
+prioritize_gos = function(file_list){
+  file_list = file_list[file_iteration=='final']
+  gos_data <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv")
+  
+  gos_data$start_date <- as.Date(gos_data$start_date, "%Y-%m-%d")
+  loc <- if(country=='uga'){
+    'Uganda'
+  } else if (country == 'cod'){
+    'Congo (Democratic Republic)'
+  } else if (country == 'gtm'){
+    'Guatemala'
+  }
+  gos_data = gos_data[country==loc, ]
+  
+  #Expand file list by period to see what quarters you're going to get from each file. 
+  file_list[, coefficient:=period/90]
+  file_list[, num_quarters:=round(qtr_number*coefficient)]
+  
+  rect_by_qtr <- file_list[rep(1:nrow(file_list), file_list$num_quarters)] # 
+  rect_by_qtr[, qtr_count:=seq(0, max(num_quarters)), by=.(file_name)]
+  rect_by_qtr[, new_start_date:=start_date + (months(3)*qtr_count)]
+  
+  #Simplify this data.table so it's easier to compare with GOS. 
+  rect_by_qtr = rect_by_qtr[, .(new_start_date, file_name, grant)]
+  rect_by_qtr[, year:=year(new_start_date)]
+  rect_by_qtr[, quarter:=quarter(new_start_date)]
+  
+  #See which files will be dropped when GOS data is prioritized in step 4. 
+  gos_grant_list <- unique(gos_data[, .(grant_number, start_date)])
+  gos_grant_list[, year:=year(start_date)]
+  gos_grant_list[, quarter:=quarter(start_date)]
+  gos_grant_list[, grant:=grant_number]
+  gos_grant_list[, grant_number:=NULL]
+  
+  files_to_keep <- merge(gos_grant_list, rect_by_qtr, by=c('grant', 'quarter', 'year'), all.y = TRUE)
+  
+  #If both merge, ok to drop. 
+  #If they're only in GOS, ok to drop. 
+  #If they're only in budgets, keep these files, these are the files we want to run. 
+  
+  files_to_keep <- unique(files_to_keep[is.na(start_date), .(file_name)]) #These are the files that didn't match with any GOS data; need to keep and prep this data. 
+  
+  file_list = file_list[file_name%in%files_to_keep$file_name] #Run it this way so you don't accidentally remove files with quarters you needed to keep. 
+  
+  #Remove unnecessary variables you created
+  file_list[, coefficient:=NULL]
+  file_list[, num_quarters:=NULL]
+  
+  return(file_list)
+}
 #----------------------------------------------
 #Functions to verify budgets, used in step 5. 
 #----------------------------------------------
@@ -176,9 +228,14 @@ split_mods_interventions <- function(dt, mod, keyword){
 check_budgets_pudrs = function(dt){
   keyVars = c("start_date", "fileName", "grant_number", "data_source")
   #Deciding not to split by disease here because we just want the total for the whole quarter. 
+  dt[, budget:=as.numeric(budget)]
+  dt[, expenditure:=as.numeric(expenditure)]
   
+  dt[is.na(budget), budget:=0]
+  dt[is.na(expenditure), expenditure:=0]
+  #Replacing budget and expenditure as NA 
   budgets = dt[ , 
-               lapply(.SD, .(sum, na.rm = TRUE)), 
+               lapply(.SD, sum), 
                 by = keyVars, 
                .SDcols = c("budget", "expenditure")]
   budgets <- unique(budgets)

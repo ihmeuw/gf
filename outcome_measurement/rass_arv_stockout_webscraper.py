@@ -72,9 +72,15 @@ districts = {
 #        "Budaka District":     "kb7iUQISRlx" ,
 #        "Bududa District":     "AhwgeZQYj16" ,
 #        "Bukwo District":      "e8m9ZYMRoeR" ,
+<<<<<<< HEAD
 #        "Butaleja District":   "MtpE3CH6vq3" ,
 #        "Kibuku District":     "Oyxwe3iDqpR" ,
 #        "Kotido District":     "aPZzL4CyBTg" ,
+=======
+        "Butaleja District":   "MtpE3CH6vq3" ,
+        "Kibuku District":     "Oyxwe3iDqpR" ,
+        "Kotido District":     "aPZzL4CyBTg" ,
+>>>>>>> 9d3a53738acf035c396ba6bfc553125ef938065f
         "Manafwa District":    "JIZDvNlIhXS" ,
         "Mbale District":      "yuo5ielNL7W" ,
         "Moroto District":     "A9kRCvmn6Co" ,

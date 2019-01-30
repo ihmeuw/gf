@@ -1,6 +1,5 @@
 :: Manually back up select parts of the GF folder from J:/
 :: To be pasted directly into window command line
-:: Don't forget to update the date in the `echo`!
 :: 1/9/2019
 
 :: small

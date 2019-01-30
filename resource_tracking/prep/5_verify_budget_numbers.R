@@ -18,9 +18,13 @@
 
 
 # input files
-source("C:/Users/elineb/Documents/gf/resource_tracking/prep/shared_mapping_functions.R")
-file_dir <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/"
-file_iterations <- readRDS(paste0(file_dir, "budget_pudr_iterations.rds"))
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+repo = ifelse(Sys.info()[1]=='Windows', 'C:/Users/elineb/Documents/gf', '/homes/elineb/gf')
+source(paste0(repo, "/resource_tracking/prep/shared_mapping_functions.R"))
+file_dir <- paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/")
+final_budgets <- readRDS(paste0(file_dir, "final_budgets.rds")) #Change to final budgets for right now, but will want to test all files eventually! 
+final_expenditures <- readRDS(paste0(file_dir, "final_expenditures.rds"))
+file_iterations <- rbind(final_budgets, final_expenditures, fill = TRUE)
 setDT(file_iterations)
 file_iterations[, start_date:=as.Date(start_date, format = "%Y-%m-%d")]
 
@@ -35,7 +39,7 @@ gtm_budgets = check_budgets_pudrs(gtm_budgets)
 # Guatemala unit tests 
 # -----------------------
 
-gtm_tests<-fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/gtm_tests.csv")
+gtm_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/gtm_tests.csv"))
 gtm_tests$correct_bug_sum <- gsub("[[:punct:]]", "", gtm_tests$correct_bug_sum)
 gtm_tests$correct_exp_sum <- gsub("[[:punct:]]", "", gtm_tests$correct_exp_sum)
 gtm_tests$correct_bug_sum <- as.numeric(gtm_tests$correct_bug_sum)
@@ -73,7 +77,7 @@ uga_budgets = check_budgets_pudrs(dt_uga)
 # Uganda unit tests
 # ------------------
 
-uga_tests<-fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/uga_tests.csv")
+uga_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/uga_tests.csv"))
 uga_tests$start_date <- as.Date(uga_tests$start_date, format="%m/%d/%Y")
 
 uga_tests$correct_bug_sum <- gsub("[[:punct:]]", "", uga_tests$correct_bug_sum)
@@ -110,7 +114,7 @@ cod_budgets = check_budgets_pudrs(dt_drc)
 # DRC Unit tests 
 # ------------------
 
-cod_tests<-fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/cod_tests.csv")
+cod_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/cod_tests.csv"))
 cod_tests$start_date <- as.Date(cod_tests$start_date, format = "%m/%d/%Y")
 
 cod_tests$correct_bug_sum <- substring(cod_tests$correct_bug_sum, 2)
@@ -122,7 +126,6 @@ cod_tests$correct_exp_sum <- as.numeric(cod_tests$correct_exp_sum)
 cod_merge <- merge(cod_tests, cod_budgets, by = c('start_date', 'fileName')) 
 if(nrow(cod_merge) != nrow(cod_tests)){
   print("ERROR: Not all DRC tests merged.")
-  print(cod_tests[!fileName%in%cod_merge$fileName, .(fileName, start_date)])
   unmerged_cod_tests = cod_tests[!(fileName%in%cod_merge$fileName)][order(fileName, start_date)]
 }
 
@@ -160,9 +163,9 @@ if (nrow(failed_tests) != 0){
   print("...")
 }
 
-uga_filelist <- fread("J:/Project/Evaluation/GF/resource_tracking/uga/grants/uga_budget_filelist.csv")
-cod_filelist <- fread("J:/Project/Evaluation/GF/resource_tracking/cod/grants/cod_budget_filelist.csv")
-gtm_filelist <- fread("J:/Project/Evaluation/GF/resource_tracking/gtm/grants/gtm_budget_filelist.csv")
+uga_filelist <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/uga/grants/uga_budget_filelist.csv"))
+cod_filelist <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/grants/cod_budget_filelist.csv"))
+gtm_filelist <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/gtm/grants/gtm_budget_filelist.csv"))
 
 gtm_tests_nodup <- gtm_tests[!duplicated(fileName)]
 cod_tests_nodup <- cod_tests[!duplicated(fileName)]

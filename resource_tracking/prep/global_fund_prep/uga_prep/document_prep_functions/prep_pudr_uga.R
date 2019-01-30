@@ -350,6 +350,9 @@ prep_pudr_uga = function(dir, inFile, sheet_name, start_date, disease, period, g
 
   #Remove all invalid inputs.
   budget_dataset = budget_dataset[!is.na(module) & module != 0]
+  
+  #Add in disease column. 
+  budget_dataset$disease <- disease
 
 
   # return prepped data

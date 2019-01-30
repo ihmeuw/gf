@@ -45,14 +45,20 @@ for(i in 1:nrow(grant_with_dup_files)){
 #Emily right now all of these are coming from Guatemala. Need to sort out, but we can ignore for DRC malaria. 
 #stopifnot(nrow(duplicate_files)==0)
 
+#Reset loc_name to match iso code. 
+final_budgets[loc_name == 'Congo (Democratic Republic)', loc_name:='cod']
+final_budgets[loc_name == 'Guatemala', loc_name:='gtm']
+final_budgets[loc_name == 'Uganda', loc_name:='uga']
+
 #------------------------------------
 # Subset data and prep for merge
 #------------------------------------
 
 #Subset to only the columns we want from resource tracking database and impact evaluation map 
-budget_subset = final_budgets[country == "Congo (Democratic Republic)" & (disease == "malaria" | disease == "hss"), .(budget, start_date, code, loc_name, disease)]
+budget_subset = final_budgets[country == "Congo (Democratic Republic)" & (disease == "malaria" | disease == "hss"), .(budget, start_date, code, loc_name, disease, gf_module, gf_intervention)]
+setnames(budget_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
 other_dah = fgh[fin_data_type == 'actual' & financing_source != 'The Global Fund' & country == 'Congo (Democratic Republic)' & (disease == 'malaria' | disease == 'hss'), 
-                .(other_dah = sum(disbursement)), by=.(sda_activity, year, loc_name, disease, code)]
+                .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]
 
 #Split other_dah into quarters
 n_years <- (2018-1990)+1 #This is the range we have data for. 
@@ -68,14 +74,15 @@ budget_subset[, year:=year(start_date)]
 budget_subset[, start_date:=NULL]
 
 #Merge budget and fgh data together
-prepped_rt <- merge(budget_subset, other_dah, by=c('year', 'quarter', 'code', 'loc_name', 'disease'), all=TRUE)
+prepped_rt <- merge(budget_subset, other_dah, by=c('year', 'quarter', 'code', 'loc_name', 'disease', 'module', 'intervention'), all=TRUE)
 
 #------------------------------------
 # Merge data with map of indicator codes
 #------------------------------------
 
 #Map to intervention and indicator using the map for DRC malaria. 
-prepped_rt <- merge(prepped_rt, drc_mal_map, by = c('code'), allow.cartesian = TRUE)
+drc_mal_map_codes = drc_mal_map[, .(code, indicator, indicator_type)]
+prepped_rt <- merge(prepped_rt, drc_mal_map_codes, by = c('code'), allow.cartesian = TRUE)
 
 #Do different global fund modules and interventions map to different codes here?
 check_unique_codes <- unique(prepped_rt[, .(code, module, intervention)])
@@ -86,7 +93,8 @@ check_unique_codes <- unique(prepped_rt[, .(code, module, intervention)])
 #-----------------------------------------------------------
 
 #Make sure resource tracking data is uniquely identified by year, quarter, module, intervention, and indicator 
-prepped_rt = prepped_rt[, .(budget=sum(budget, na.rm=TRUE), other_dah=sum(other_dah, na.rm=TRUE)), by=.(year, quarter, module, intervention, indicator, indicator_type, code)]
-stopifnot(nrow(unique(prepped_rt[, .(year, quarter, module, intervention, indicator)]))==nrow(prepped_rt))
+prepped_rt = prepped_rt[, .(budget=sum(budget, na.rm=TRUE), other_dah=sum(other_dah, na.rm=TRUE)), by=.(year, quarter, module, intervention, sda_activity, indicator, indicator_type, code, loc_name, disease)]
+stopifnot(nrow(unique(prepped_rt[, .(year, quarter, module, intervention, sda_activity, indicator, indicator_type, loc_name, disease)]))==nrow(prepped_rt))
+stopifnot(nrow(unique(prepped_rt[, .(year, quarter, code, indicator, indicator_type,loc_name, disease)]))==nrow(prepped_rt))
 
 saveRDS(prepped_rt, paste0(dir, "prepped_resource_tracking.RDS"))
