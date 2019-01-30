@@ -7,16 +7,6 @@
 
 
 # ---------------------------------------------------
-# DIRECTORIES
-# ---------------------------------------------------
-# root directory
-
-# output directory
-out_dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
-
-# FILES
-outFile = paste0(out_dir, "outputs_activites_for_pilot.RDS")
-
 # FUNCTIONS
 convert_date_to_quarter <- function(dt){
   dt$year <- year(dt$date)
@@ -28,6 +18,7 @@ convert_date_to_quarter <- function(dt){
   return(dt)
 }
 # ---------------------------------------------------
+
 
 # ---------------------------------------------------
 # Read in data
