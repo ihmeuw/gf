@@ -2,49 +2,11 @@
 # 1-9-19
 #
 # Prep PNLP/SNIS for pilot data set for impact evaluation
+# The current working directory should be the root of this repo (set manually by user)
 # -----------------------------------------------------------
 
 
-# --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(stringr)
-library(reshape2)
-library(ggplot2)
-library(stats)
-library(Rcpp)
-library(readxl)
-library(grid)
-library(gridExtra)
-library(googlesheets)
-library(ggrepel)
-library(dplyr)
-library(lubridate)
-
-# change working directory to the root of the repo
-setwd('C:/local/gf/')
-# --------------------
-
-
 # ---------------------------------------------------
-# DIRECTORIES
-# ---------------------------------------------------
-# root directory
-# change depending on cluster/not
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir_pnlp = paste0(j, 'Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
-dir_dhis = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
-
-# output directory
-out_dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
-
-# FILES
-pnlp = paste0(dir_pnlp, "imputedData_run2_agg_country.rds") # pnlp
-snis_base <- paste0(dir_dhis,"base_services_drc_01_2017_09_2018_prepped.rds") # snis base services
-snis_sigl <- paste0(dir_dhis,"sigl_drc_01_2015_07_2018_prepped.rds") # snis sigl (supply chain)
-outFile = paste0(out_dir, "outputs_activites_for_pilot.RDS")
-
 # FUNCTIONS
 convert_date_to_quarter <- function(dt){
   dt$year <- year(dt$date)
@@ -57,14 +19,15 @@ convert_date_to_quarter <- function(dt){
 }
 # ---------------------------------------------------
 
+
 # ---------------------------------------------------
 # Read in data
 # ---------------------------------------------------
-pnlp_hz <- readRDS(paste0(dir_pnlp, "post_imputation/imputedData_run2_agg_hz.rds")) # hz level, monthly - get completeness from this
-dt_pnlp <- readRDS(pnlp) # national level, monthly
+pnlp_hz <- readRDS(pnlpHZFile) # hz level, monthly - get completeness from this
+dt_pnlp <- readRDS(pnlpFile) # national level, monthly
 setnames(dt_pnlp, "mean", "value")
-dt_base <- readRDS(snis_base) # facility level, monthly
-dt_sigl <- readRDS(snis_sigl) # facility level, monthly
+dt_base <- readRDS(snisBaseFile) # facility level, monthly
+dt_sigl <- readRDS(snisSiglFile) # facility level, monthly
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -333,8 +296,5 @@ remove_rows <- pilot_dataset[indicator %in% c("SP", "severeMalariaTreated", "RDT
 pilot_dataset <- pilot_dataset[!remove_rows, on= colnames(pilot_dataset)]
 
 # save dataset
-saveRDS(pilot_dataset, outFile)
+saveRDS(pilot_dataset, outputFile2b)
 # ---------------------------------------------------
-
-
-

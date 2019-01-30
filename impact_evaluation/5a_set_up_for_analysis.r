@@ -4,34 +4,15 @@
 # 1/18/2019
 # Final pre-processing for impact evaluation model
 # This is built for the pilot dataset
+# The current working directory should be the root of this repo (set manually by user)
 # ------------------------------------------------
-
-
-# --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(ggplot2)
-# --------------------
-
-
-# ----------------------------------------------
-# Files and directories
-
-# input file
-dir = 'J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data'
-inFile = paste0(dir, '/pilot_data.RDS')
-
-# output files
-outFile = paste0(dir, 'pilot_data_pre_model.rds')
-# ----------------------------------------------
 
 
 # ----------------------------------------------
 # Load/prep data
 
 # load
-data = readRDS(inFile)
+data = readRDS(outputFile3)
 
 # test unique identifiers
 idVars = c('year','quarter','module','intervention','indicator')

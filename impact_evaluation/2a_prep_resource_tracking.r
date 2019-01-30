@@ -3,6 +3,7 @@
 # PURPOSE: Prepare resource tracking data for merge 
 #          with activities and outputs.  
 # DATE: Last updated January 2019. 
+# INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------------------
 
 #------------------------------------
@@ -13,17 +14,15 @@
 
 #------------------------------------
 
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
 
 #------------------------------------
 #Read in previously prepped datasets 
 #------------------------------------
 
 #Read in final budget and expenditure data from RT database, and bind together. 
-final_budgets <- readRDS("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_budgets.rds")
-#final_expenditures <- readRDS("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_expenditures.rds")
-fgh <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv")
+final_budgets <- readRDS(budgetFile)
+#final_expenditures <- readRDS(expendituresFile)
+fgh <- fread(fghFile)
 
 #------------------------------------
 # Validate data 
@@ -97,4 +96,4 @@ prepped_rt = prepped_rt[, .(budget=sum(budget, na.rm=TRUE), other_dah=sum(other_
 stopifnot(nrow(unique(prepped_rt[, .(year, quarter, module, intervention, sda_activity, indicator, indicator_type, loc_name, disease)]))==nrow(prepped_rt))
 stopifnot(nrow(unique(prepped_rt[, .(year, quarter, code, indicator, indicator_type,loc_name, disease)]))==nrow(prepped_rt))
 
-saveRDS(prepped_rt, paste0(dir, "prepped_resource_tracking.RDS"))
+saveRDS(prepped_rt, outputFile2a)
