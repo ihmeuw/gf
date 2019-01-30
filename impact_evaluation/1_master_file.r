@@ -20,7 +20,7 @@
 rm(list=ls())
 
 # run setup code (load file paths and packages)
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/impact_evaluation/_common/set_up_r.r')
 
 
 # ---------------------------------------
@@ -45,14 +45,14 @@ setDT(drc_mal_map)
 # Prep resource tracking data  
 # ---------------------------------------
 if(rerun_inputs == TRUE){
-  source('./2a_prep_resource_tracking.r')
+  source('./impact_evaluation/2a_prep_resource_tracking.r')
 }
 
 # ---------------------------------------
 # Prep activities and outputs data 
 # ---------------------------------------
 if(rerun_inputs == TRUE){
-  source('./2b_prep_activities_outputs.r')
+  source('./impact_evaluation/2b_prep_activities_outputs.r')
 }
 
 # ---------------------------------------
@@ -60,7 +60,7 @@ if(rerun_inputs == TRUE){
 # ---------------------------------------
 # file produced by 2b_prep_activities_outputs 
 if (rerun_merge==TRUE) { 
-	source('./3_merge_data.r')
+	source('./impact_evaluation/3_merge_data.r')
 }
 
 # ---------------------------------------
@@ -72,15 +72,15 @@ if (rerun_merge==TRUE) {
 # Exploratory graphs etc 
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
-	source('./4_explore_data.r')
+	source('./impact_evaluation/4_explore_data.r')
 }
 
 # ---------------------------------------
 # Run analysis 
 # ---------------------------------------
 if (rerun_analysis==TRUE) { 
-	source('./5a_set_up_for_analysis.r')
-	source('./5b_run_analysis.r')
+	source('./impact_evaluation/5a_set_up_for_analysis.r')
+	source('./impact_evaluation/5b_run_analysis.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', outputFile3))
