@@ -1,10 +1,10 @@
-
-
 # ----------------------------------------------
-# Irena Chen
-#
-# 11/27/2017
-# ### GOS DATA graphs 
+# AUTHOR: Emily Linebarger, based on code written by Irena Chen.
+# PURPOSE: Master file for prepping Grant Operating System (GOS) data
+#           from the Global Fund. 
+# DATE: Last updated February 2019. 
+# ----------------------------------------------
+
 
 # TO DO
 # fix time series graph so that there are gaps where appropriate (use `group` aesthetic)
@@ -21,9 +21,10 @@ library(grDevices)
 library(RColorBrewer)
 library(readxl)
 
-prep_dir <- " your local repo + gf/resource_tracking/prep/"
-prep_dir <- "H:/gf/resource_tracking/prep/"
-source(paste0(prep_dir, "map_modules_and_interventions.R"))
+user = "elineb" #Change to your username 
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes', user, '/gf/'))
+code_dir = paste0(code_loc, "resource_tracking/prep/")
+source(paste0(code_dir, "shared_mapping_functions.R"))
 
 # ----------------------------------------------
 ###### Load the GOS tab from the Excel book  ###### 
@@ -59,7 +60,6 @@ gmsOld <- c(oldNames[1:5], "Service Delivery Area", "Total Budget Amount (USD eq
 gmsNew <- c(newNames[1:6], newNames[8:10], "grant_period_start", "grant_period_end")
 setnames(gms_data, gmsOld, gmsNew)
 gms_clean <- gms_data[, gmsNew, with=FALSE]
-gms_clean$intervention <- "All"
 
 
 gms_clean$grant_period = paste0(year(as.Date(gms_clean$grant_period_start)), "-",year(as.Date(gms_clean$grant_period_end)))
@@ -67,7 +67,7 @@ gms_clean$grant_period_start = NULL
 gms_clean$grant_period_end = NULL
 
 ##combine both GOS and GMS datasets into one dataset
-totalGos <- rbind(gms_clean, gos_clean)
+totalGos <- rbind(gms_clean, gos_clean, fill = TRUE)
 
 # ----------------------------------------------
 ###### Load the GMS tab from the Excel book  ###### 
@@ -77,14 +77,9 @@ names(map_disease) <- c("tb", "malaria", "hiv", "hss", "hiv/tb")
   
 kDT = data.table(map_disease = names(map_disease), value = TRUE, disease = unname(map_disease))
 totalGos[kDT, on=.(disease), disease := i.map_disease]
-totalGos[disease=='hiv/tb', disease:='hiv']
 
-totalGos$sda_activity <- "All"
-totalGos$recipient <- totalGos$grant_number
 totalGos$data_source <- "gos"
-totalGos$financing_source <- "gf"
 totalGos$loc_name <- totalGos$country
-totalGos$disbursement <- 0
 
 # ----------------------------------------------
 ###### Map the GOS/GMS modules to the current GF Framework ###### 
@@ -99,10 +94,6 @@ mapping_list <- load_mapping_list(paste0("J:/Project/Evaluation/GF/mapping/multi
 final_mapping <- copy(mapping_list)
 final_mapping$disease <- NULL ## we will be joining on code 
 setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
-mapping_list$coefficient <- 1
-mapping_list$abbrev_intervention <- NULL
-mapping_list$abbrev_module <- NULL
-
 
 ##this loads the list of modules/interventions with their assigned codes
 gf_mapping_list <- total_mapping_list(paste0("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"),
@@ -114,6 +105,8 @@ gos_init_mapping <- merge(totalGos, gf_mapping_list, by=c("module", "interventio
 # dropped_gf <- gos_init_mapping[is.na(gos_init_mapping$code)]
 
 mappedGos <- merge(gos_init_mapping, final_mapping, by="code")
+
+
 mappedGos$budget <-mappedGos$budget*mappedGos$coefficient
 mappedGos$expenditure <-mappedGos$expenditure*mappedGos$coefficient
 mappedGos$disbursement <-mappedGos$disbursement*mappedGos$coefficient
