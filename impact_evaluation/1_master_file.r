@@ -45,14 +45,14 @@ setDT(drc_mal_map)
 # Prep resource tracking data  
 # ---------------------------------------
 if(rerun_inputs == TRUE){
-  source(paste0(code_dir, '2a_prep_resource_tracking.r'))
+  source('./2a_prep_resource_tracking.r')
 }
 
 # ---------------------------------------
 # Prep activities and outputs data 
 # ---------------------------------------
 if(rerun_inputs == TRUE){
-  source(paste0(code_dir, '2b_prep_activities_outputs.r'))
+  source('./2b_prep_activities_outputs.r')
 }
 
 # ---------------------------------------
@@ -60,7 +60,7 @@ if(rerun_inputs == TRUE){
 # ---------------------------------------
 # file produced by 2b_prep_activities_outputs 
 if (rerun_merge==TRUE) { 
-	source(paste0(code_dir, '3_merge_data.r'))
+	source('./3_merge_data.r')
 }
 
 # ---------------------------------------
@@ -72,15 +72,15 @@ if (rerun_merge==TRUE) {
 # Exploratory graphs etc 
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
-	source(paste0(code_dir, '4_explore_data.r'))
+	source('./4_explore_data.r')
 }
 
 # ---------------------------------------
 # Run analysis 
 # ---------------------------------------
 if (rerun_analysis==TRUE) { 
-	source(paste0(code_dir, '5a_set_up_for_analysis.r'))
-	source(paste0(code_dir, '5b_run_analysis.r'))
+	source('./5a_set_up_for_analysis.r')
+	source('./5b_run_analysis.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', outputFile3))
