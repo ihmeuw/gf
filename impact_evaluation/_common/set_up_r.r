@@ -70,7 +70,7 @@ snisSiglFile <- paste0(dhisDir, 'sigl_drc_01_2015_07_2018_prepped.rds') # snis s
 outputFile2a = paste0(ieDir, 'prepped_resource_tracking.RDS')
 
 # output file from 2b_prep_activities_outputs.R
-outputFile2b = paste0(ieDir, 'prepped_resource_tracking.RDS')
+outputFile2b = paste0(ieDir, 'outputs_activites_for_pilot.RDS')
 
 # output file from 3_merge_data.R
 outputFile3 = paste0(ieDir, 'pilot_data.RDS')
