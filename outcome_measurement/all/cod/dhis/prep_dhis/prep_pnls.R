@@ -22,21 +22,24 @@ library(stringr)
 # set working directories
 
 # detect if operating on windows or on the cluster 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
 #---------------------------------------
 # load the file that represents a subset (no sex or )
 
-dt = readRDS(paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2018_11_01.rds'))
+dt = readRDS(paste0(dir, 'pre_prep/merged/pnls_subset_2014_11_01_2018_12_01.rds'))
+
+# subset to 2017 on 
+dt = dt[2017 <=  year(date) ]
 
 #----------------------
 # function to eliminate diacritical marks
 
-fix_diacritics <- function(x) {
+fix_diacritics = function(x) {
   replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A',
                            'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
                            'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N',
@@ -48,27 +51,26 @@ fix_diacritics <- function(x) {
                            'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 
                            'þ'='b', 'ÿ'='y')
   
-  replace_me <- paste(names(replacement_chars), collapse='')
-  replace_with <- paste(replacement_chars, collapse = '')
+  replace_me = paste(names(replacement_chars), collapse='')
+  replace_with = paste(replacement_chars, collapse = '')
   return(chartr(replace_me, replace_with, x))
   
 }
 
 #-----------------------------
-# convert factor variables to characters
+# convert factor variables to characters and value to numeric
+dt[ , value:=as.numeric(as.character(value))]
 dt[ , category:=as.character(category)]
-dt[ , data_set:=as.character(data_set)]
 
 #-----------------------------
 # create an element that is easier to grep
-dt[ , element1:=tolower(element_new)]
-
-# run the function to eliminate diacritical marks
-dt[ , element1:=fix_diacritics(element1)]
+dt[ , element1:=fix_diacritics(tolower(element))]
 
 #--------------------------------------
 # create subpopulations from the elements
 
+# run other first in case more specific populations are included
+dt[grep('autres', element1), subpop:='others']
 dt[grep('prisonniers', element1), subpop:='prisoner']
 dt[grep('udi', element1), subpop:='idu']
 dt[grep('tg', element1), subpop:='trans']
@@ -92,7 +94,7 @@ dt[grep('partum', element1), subpop:='plw']
 
 # survivors of sexual violence 
 dt[grep('svs', element1), subpop:='svs']
-dt[grep('survivants vs', element1), subpop:='svs'] 
+dt[grep('survivants', element1), subpop:='svs'] 
 
 # commercial sex workers and clients
 dt[grep('ps', element1), subpop:='csw']
@@ -106,7 +108,7 @@ dt[grep('refug', element1), subpop:='refugee']
 # men in uniform
 dt[grep('uniforme', element1), subpop:='uniform']
 dt[grep('hu', element1), subpop:='uniform']
-dt[grep('dependants des hu', element1), subpop:='dependants des hu']
+dt[grep('dependants des hu', element1), subpop:='unform_dependents']
 
 # fisherpeople
 dt[grep('pecheurs', element1), subpop:='fisher']
@@ -117,7 +119,6 @@ dt[grep('enfants de rue', element1), subpop:='street_children']
 dt[grep('enfants', element1), subpop:='exposed_infant']
 dt[grep('eev', element1), subpop:='exposed_infant']
 dt[grep('handicap', element1), subpop:='disabled']
-dt[grep('autres', element1), subpop:='other']
 
 #------------------------------------------------------------
 # generate age and sex categories
@@ -206,13 +207,10 @@ dt[!grep('tb', element1), tb:=FALSE]
 #------------------------------------
 #------------------------------------
 # delete excess variables
-dt[ , c('data_set', 'element','element1','category1'):=NULL]
-setnames(dt, 'element_new', 'element')
-#------------------------------------
+dt[ , c('data_set', 'element1','category1'):=NULL]
 
 #------------------------------------
 # collapse on category
-
 dt[ , value:=as.numeric(as.character(value))]
 dt = dt[ ,.(value=sum(value, na.rm=T)), 
          by=c("set", "org_unit_id", "element_id", "org_unit", "date", 
@@ -227,19 +225,20 @@ dt = dt[ ,.(value=sum(value, na.rm=T)),
 dt[    , element:= gsub('co-infectés', 'coinfectes', element)]
 dt[    , element:= gsub('co-infectes', 'coinfectes', element)]
 
-# fix english translations of abbreviations
+# fix english translations of abbreviations for major abbreviations
 dt[ ,element_eng:= gsub('VIH', 'HIV', element_eng)]
 dt[ ,element_eng:= gsub('PLWHA', 'PLHIV', element_eng)]
 dt[ ,element_eng:= gsub('INH', 'IPT', element_eng)]
+
 dt[ ,element_eng:= gsub('co-infectes', 'coinfected', element_eng)]
 
 #-------------------------------------
 # save a single data set 
-saveRDS(dt, paste0(dir, 'prepped/pnls_sets/dt_clean.rds'))
+saveRDS(dt, paste0(dir, 'prepped/pnls_sets/pnls_clean_all_sets.rds'))
 
 #--------------------------------------
 # save each data set as a distinct RDS file
-set = dt[ ,unique(set)]
+sets = dt[ , unique(set)]
 
 # arguments for the save
 min = dt[ , min(date)]
@@ -249,7 +248,9 @@ max = gsub('-', '_', max)
 
 # save the sets 
 for (s in sets) {
-  saveRDS(dt[set==s], paste0(dir, 'prepped/sets/pnls_', s,'_'min, '_', max,'.rds'))
+  y = tolower(s)
+  saveRDS(dt[set==s], paste0(dir, 'prepped/pnls_sets/pnls_',
+                             y,'_', min, '_', max,'.rds'))
 }
 
 #----------------------------------------

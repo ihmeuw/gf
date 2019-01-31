@@ -55,8 +55,8 @@ source(paste0(dir, 'code/dhis_extracting_functions.R'))
 # Input the start year, end year, and output directory
 
 # select the start year and end year for the download
-start_year = '2015'
-end_year = '2016'
+start_year = '2016'
+end_year = '2017'
 start_month = '01'
 end_month = '01' # start month is inclusive, end month is exclusive
 
@@ -64,11 +64,11 @@ end_month = '01' # start month is inclusive, end month is exclusive
 update_year = as.character(as.numeric(start_year) - 1)
 
 #identify the data set(s) you want to download by number (list below)
-set = 2
+set = 29
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'base'
+set_name = 'pnls'
 
 #---------------------------
 # available data sets by number: 
