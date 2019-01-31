@@ -12,7 +12,7 @@ library(quantreg)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # load the data
 dt = readRDS(paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))
