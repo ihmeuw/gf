@@ -16,9 +16,12 @@ library(quantreg)
 # make sure qr_results exists
 # cd /ihme/scratch/users/ccarelli/
 
-# set the working directory in the qlogin
+# to delete files in the directory
+# rm qr_results/*
+# rm quantreg_output/*
 
-# cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod
+# set the working directory in the qlogin by navigating to it
+# cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod/dhis/outlier_removal
 
 # print the contents
 # ls
@@ -29,19 +32,19 @@ library(quantreg)
 # then call R
 
 # then source this script (located in your working directory)
-# source('run_quantreg_parallel.r')
+# source('pnls_arvs_run_qr_parallel.R')
 
 #------------------------------------
-# set working directories
+# set directories
 
 # detect if operating on windows or on the cluster 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
 
 # output file
-outFile = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/pnls_outliers/arv_quantreg_results.rds')
+outFile = paste0(dir, 'pnls_outliers/arv_quantreg_results.rds')
 
 # whether or not to resubmit jobs that have completed already
 resubmitAll = TRUE
