@@ -49,6 +49,8 @@ dt$health_zone = standardizeDPSNames(dt$dps)
 dt = dt[ ,.(value=sum(value)),
          by=.(element, org_unit_id, date, sex, age, subpop)]
 
+dt = dt[element=="PLHIV on IPT"]
+
 # make variable ids
 dt[, element_id:=.GRP, by='element']
 

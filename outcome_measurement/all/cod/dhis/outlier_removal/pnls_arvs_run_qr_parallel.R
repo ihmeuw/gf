@@ -26,7 +26,7 @@ library(quantreg)
 # print the contents
 # ls
 
-# once you navigate to the directory, git pull 
+# once you navigate to the directory, git pull R
 # make sure you have pushed from github desktop
 
 # then call R
