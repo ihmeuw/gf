@@ -26,7 +26,9 @@ dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/')
 inFile = paste0(dir, 'prepped_data/snis_pnlp_malaria_hz_level.rds')
 
 # output file
-outFile = paste0(dir, 'visualizations/snis_pnlp_comparisons.pdf')
+outFile = paste0(dir, 'visualizations/SNIS_PNLP_compare/snis_pnlp_comparisons_natl.pdf')
+outFile2 = paste0(dir, 'visualizations/SNIS_PNLP_compare/snis_pnlp_comparisons_dps.pdf')
+outFile3 = paste0(dir, 'visualizations/SNIS_PNLP_compare/snis_pnlp_comparisons_dps_scatterplot.pdf')
 # -------------------------------------------
 
 
@@ -44,7 +46,7 @@ data[grepl('base',data_set), data_set:='base_services']
 
 # identify indicators that are in both
 datasets = unique(data[,c('indicator','data_set')])
-datasets = dcast(datasets, indicator~data_set)
+datasets = dcast.data.table(datasets, indicator~data_set)
 overlapping_indicators = datasets[!is.na(pnlp) & 
 	(!is.na(sigl1) | !is.na(sigl2) | !is.na(base_services))]
 	
@@ -53,7 +55,7 @@ data = data[indicator %in% overlapping_indicators$indicator]
 
 # collapse subpopulations where necessary to get both to match
 data[data_set=='base_services' & indicator=='LLIN' & 
-	subpopulation %in% c('distAtANC1', 'distAtANC2'), subpopulation:='distAtANC']
+	subpopulation %in% c('distAtANC1', 'distAtANC2'), subpopulation:='distAtANC'] # note this comparison is comparing LLIN distAtANC in both, but in the past we have used the sum of PNLP LLIN vars compared to SIGL LLIN consumed 
 data[data_set=='sigl1' & indicator=='ArtLum' & 
 	subpopulation %in% c('consumed(240+40)', 'consumed(480+80)'), subpopulation:='used']
 idVars = names(data)[names(data)!='value']
@@ -62,7 +64,7 @@ data = data[, .(value=sum(value)), by=idVars]
 # drop subpopulations that don't have an equivalent
 idVars = idVars[idVars!='data_set']
 form = as.formula(paste(paste(idVars, collapse='+'),'~data_set'))
-data = dcast(data, form)
+data = dcast.data.table(data, form)
 data = data[!is.na(pnlp) & (!is.na(sigl1) | !is.na(base_services))]
 
 # combine sigl and base (test first)
@@ -129,5 +131,68 @@ natCs = ggplot(natwide, aes(y=snis, x=pnlp, color=subpopulation)) +
 pdf(outFile, height=5.5, width=10)
 do.call('grid.arrange', natTs)
 natCs
+dev.off()
+# -------------------------------------------
+
+
+# -------------------------------------------
+# Graph at DPS level
+
+# currently a problem with Ituri - drop out for now
+dps = dps[dps!="ituri", ]
+dpswide = dpswide[dps != "ituri", ]
+
+# comparison time series graphs
+list_of_dpsTs = list()
+indicators = unique(data$indicator)
+indicators = indicators[order(indicators)]
+indicators = indicators[!indicators %in% c("ArtLum")]
+
+for (x in seq_along(unique(dps$dps))){
+  dpsTs = list()
+  d = unique(dps$dps)[x]
+  for (p in seq_along(indicators)) { 
+    i = indicators[p]
+    if (p == 1){
+      dpsTs[[p]] = 
+        ggplot(dps[indicator==i & dps == d,], 
+                          aes(y=value, x=date, linetype=data_set, color=subpopulation)) + 
+        geom_point(size=1.25, alpha=.5) + 
+        geom_line(size=.5) + 
+        facet_wrap(~indicator, scales='free_y') + 
+        labs(y=NULL, x=NULL, linetype='Source', color=NULL) + 
+        theme_bw(base_size=9) + 
+        theme(strip.text=element_text(size=11)) +
+        ggtitle( d )   } else {
+      dpsTs[[p]] = ggplot(dps[indicator==i & dps == d,], 
+                        aes(y=value, x=date, linetype=data_set, color=subpopulation)) + 
+      geom_point(size=1.25, alpha=.5) + 
+      geom_line(size=.5) + 
+      facet_wrap(~indicator, scales='free_y') + 
+      labs(y=NULL, x=NULL, linetype='Source', color=NULL) + 
+      theme_bw(base_size=9) + 
+      theme(strip.text=element_text(size=11))
+    }
+  list_of_dpsTs[[x]] = dpsTs
+  }
+}
+
+# comparison scatterplots
+dpsCs = ggplot(dpswide, aes(y=snis, x=pnlp, color=subpopulation)) +
+  geom_abline(slope=1, intercept=0) +
+  geom_point(alpha=.5, size = 0.3) +
+  facet_wrap(~indicator, scales='free') +
+  labs(y='SNIS', x='PNLP', color=NULL) +
+  theme_bw(base_size=14)
+# -------------------------------------------
+
+
+# -------------------------------------------
+# Save
+pdf(outFile2, height=5.5, width=10)
+for (i in seq_along(list_of_dpsTs)) {
+  do.call('grid.arrange', list_of_dpsTs[[i]])
+}
+dpsCs
 dev.off()
 # -------------------------------------------
