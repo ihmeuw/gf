@@ -10,6 +10,8 @@
 
 # ------------------
 # Load packages
+library(lavaanPlot)
+# library(semPlot)
 library(data.table)
 library(lubridate)
 library(readxl)
@@ -21,6 +23,7 @@ library(grid)
 library(gridExtra)
 library(ggrepel)
 library(lubridate)
+library(lavaan)
 # ------------------
 
 
