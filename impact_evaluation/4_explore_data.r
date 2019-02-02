@@ -19,29 +19,42 @@ idVars = c('year','quarter','code','module','intervention','indicator','indicato
 test = nrow(data)==nrow(unique(data[,idVars, with=F]))
 if (test==FALSE) stop(paste('Something is wrong.', paste(idVars, collapse=' '), 'do not uniquely identify rows.'))
 
-# # prep work that shouldn't be necessary once bugs are fixed
-# data = data[!is.na(value)]
-# data = data[, .(budget=sum(budget,na.rm=T), 
-				# value=sum(value,na.rm=T), 
-				# completeness=mean(completeness,na.rm=T)), by=idVars]
+# prep work that shouldn't be necessary once bugs are fixed
+data[, date:=year+((quarter-1)/4)]
+data[, intervention:=gsub('–','-',intervention)]
+data = data[year>2004]
+inputs = na.omit(data[, .(budget=sum(budget,na.rm=T), other_dah=sum(other_dah,na.rm=T)), 
+	by=c('date','code')])
+activities = na.omit(data[indicator_type=='activity', .(value=sum(value,na.rm=T), 
+	completeness=mean(completeness,na.rm=T)), by=c('date','indicator_type','indicator')])
+outputs = na.omit(data[indicator_type=='output', .(value=sum(value,na.rm=T), 
+	completeness=mean(completeness,na.rm=T)), by=c('date','indicator')])
+inputs_wide = dcast(inputs, date~code, value.var=c('budget','other_dah'))
+activities_wide = dcast(activities, date~indicator, value.var=c('value','completeness'))
+outputs_wide = dcast(outputs, date~indicator, value.var=c('value','completeness'))
+frame = data.table(date=seq(from=min(data$year), to=max(data$year)+1, by=.25))
+wide = merge(frame, inputs_wide, by='date', all.x=TRUE)
+for(v in names(wide)) wide[is.na(get(v)), (v):=0]
+wide = merge(wide, activities_wide, by='date', all.x=TRUE)
+wide = merge(wide, outputs_wide, by='date', all.x=TRUE)
+wide$other_dah_M2_6=NULL
+wide$other_dah_M3_1=NULL
+impVars = sapply(wide, function(x) mean(is.na(x)))
+nomissVars = names(impVars[impVars==0])
+impVars = impVars[impVars!=0]
+impVars = names(impVars)
+for(v in impVars) { 
+	form = as.formula(paste0(v, '~', paste0(names(wide)[names(wide)!=v],collapse='*')))
+	form = as.formula(paste0(v, '~', paste0(nomissVars,collapse='*')))
+	lmFit = lm(form, wide)
+	preds = predict(lmFit, newdata=wide[,1:11, with=F])
+	wide[is.na(get(v)), (v):=preds]
+}
 
-# compute lags of budget
-lagVars = c('budget_lag1','budget_lag4')
-data[, (lagVars):=shift(budget, c(1,4), type='lag'), by='code']
-lagVars = c('other_dah_lag1','other_dah_lag4')
-data[, (lagVars):=shift(other_dah, c(1,4), type='lag'), by='code']
-
-# compute cumulative budget
-data[, budget_cumulative:=cumsum(budget), by='code']
-
-# set aside results chain sections
-inputs = unique(data[, c('year','quarter','code','intervention','budget','budget_cumulative','budget_lag1','budget_lag4')])
-activities = unique(data[indicator_type=='activity', c('year','quarter','indicator','value', 'completeness')])
-outputs = unique(data[indicator_type=='output', c('year','quarter','indicator','value', 'completeness')])
-
-# assemble wide-format data
-wideInputs = copy(inputs)
-
+# compute cumulative budgets
+rtVars = names(wide)
+rtVars = rtVars[grepl('budget|other_dah', rtVars)]
+for(v in rtVars) wide[, (paste0(v,'_cumulative')):=cumsum(get(v))]
 # ----------------------------------------------------------------------------
 
 
