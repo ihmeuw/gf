@@ -298,3 +298,12 @@ pilot_dataset <- pilot_dataset[!remove_rows, on= colnames(pilot_dataset)]
 # save dataset
 saveRDS(pilot_dataset, outputFile2b)
 # ---------------------------------------------------
+
+# ---------------------------------------------------
+# switch data to wide format
+# ---------------------------------------------------
+dt <- readRDS(outputFile2b)
+dt[, data_source := NULL]
+dt <- dcast.data.table(dt, year + quarter + completeness ~ indicator, value.var = c("value", "completeness"))
+saveRDS(dt, outputFile2b_wide)
+# ---------------------------------------------------
