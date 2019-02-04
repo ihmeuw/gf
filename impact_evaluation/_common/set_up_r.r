@@ -60,9 +60,9 @@ fghFile = paste0(rtDir, 'prepped_current_fgh.csv')
 
 # activities/outputs files
 pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
-pnlpHZFile = paste0(pnlpDir, 'post_imputation/imputedData_run2_agg_hz.rds')
-snisBaseFile <- paste0(dhisDir, 'base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
-snisSiglFile <- paste0(dhisDir, 'sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
+pnlpHZFile = paste0(pnlpDir, 'imputedData_run2_agg_hz.rds')
+snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
+snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
 # ---------------------------------------------------------------------------------
 
 
@@ -74,6 +74,7 @@ outputFile2a = paste0(ieDir, 'prepped_resource_tracking.RDS')
 
 # output file from 2b_prep_activities_outputs.R
 outputFile2b = paste0(ieDir, 'outputs_activites_for_pilot.RDS')
+outputFile2b_wide = paste0(ieDir, 'outputs_activities_for_pilot_wide.RDS')
 
 # output file from 3_merge_data.R
 outputFile3 = paste0(ieDir, 'pilot_data.RDS')
