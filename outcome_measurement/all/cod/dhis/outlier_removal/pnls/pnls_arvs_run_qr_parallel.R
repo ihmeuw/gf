@@ -21,7 +21,7 @@ library(quantreg)
 # rm quantreg_output/*
 
 # set the working directory in the qlogin by navigating to it
-# cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod/dhis/outlier_removal
+# cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod/dhis/outlier_removal/pnls
 
 # print the contents
 # ls
@@ -69,7 +69,7 @@ for (e in unique(dt$element_id)) {
       next
     } else {
       # run the quantile regression and list the residuals
-      system(paste0('qsub -o /ihme/scratch/users/ccarelli/quantreg_output -e /ihme/scratch/users/ccarelli/quantreg_output -cwd -N quantreg_output_', i, ' ../../../../../core/r_shell.sh ./quantregScript2.r ', e, ' ', o, ' ', i))
+      system(paste0('qsub -o /ihme/scratch/users/ccarelli/quantreg_output -e /ihme/scratch/users/ccarelli/quantreg_output -cwd -N quantreg_output_', i, ' ../../../../../../core/r_shell.sh ./quantregScript_pnls.r ', e, ' ', o, ' ', i))
       i=i+1
     }
   }
