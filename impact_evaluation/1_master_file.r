@@ -20,7 +20,7 @@
 rm(list=ls())
 
 # run setup code (load file paths and packages)
-source('./impact_evaluation/impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/_common/set_up_r.r')
 
 
 # ---------------------------------------
@@ -58,7 +58,6 @@ if(rerun_inputs == TRUE){
 # ---------------------------------------
 # Merge datasets together 
 # ---------------------------------------
-# file produced by 2b_prep_activities_outputs 
 if (rerun_merge==TRUE) { 
 	source('./impact_evaluation/3_merge_data.r')
 }
