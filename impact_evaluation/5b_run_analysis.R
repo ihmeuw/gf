@@ -50,44 +50,25 @@ model = '
 	budget_M2_3_cumulative ~~ other_dah_M2_3_cumulative
 	
 	# fixed covariances
-	# value_ITN_received ~~ 0*value_RDT_received
-	# value_ITN_received ~~ 0*value_ACT_received
-	# value_ITN_received ~~ 0*value_ACTs_CHWs
-	# value_ITN_received ~~ 0*value_RDT_completed
-	# value_ITN_received ~~ 0*value_SP
-	# value_ITN_received ~~ 0*value_severeMalariaTreated
-	# value_ITN_received ~~ 0*value_totalPatientsTreated
+	value_ITN_consumed ~~ 0*value_ACTs_CHWs
+	value_ITN_consumed ~~ 0*value_RDT_completed
+	value_ITN_consumed ~~ 0*value_SP
+	value_ITN_consumed ~~ 0*value_severeMalariaTreated
+	value_ITN_consumed ~~ 0*value_totalPatientsTreated
 	
-	# value_RDT_received ~~ 0*value_ITN_consumed
-	# value_RDT_received ~~ 0*value_ACT_received
-	# value_RDT_received ~~ 0*value_ACTs_CHWs
-	# value_RDT_received ~~ 0*value_SP
-	# value_RDT_received ~~ 0*value_severeMalariaTreated
-	# value_RDT_received ~~ 0*value_totalPatientsTreated
+	value_ACTs_CHWs ~~ 0*value_RDT_completed
+	value_ACTs_CHWs ~~ 0*value_SP
+	value_ACTs_CHWs ~~ 0*value_severeMalariaTreated
+	value_ACTs_CHWs ~~ 0*value_totalPatientsTreated
 	
-	# value_ACT_received ~~ 0*value_ITN_consumed
-	# value_ACT_received ~~ 0*value_RDT_completed
-	# value_ACT_received ~~ 0*value_SP
-
-	# value_ITN_consumed ~~ 0*value_ACTs_CHWs
-	# value_ITN_consumed ~~ 0*value_RDT_completed
-	# value_ITN_consumed ~~ 0*value_SP
-	# value_ITN_consumed ~~ 0*value_severeMalariaTreated
-	# value_ITN_consumed ~~ 0*value_totalPatientsTreated
+	value_RDT_completed ~~ 0*value_SP
+	value_RDT_completed ~~ 0*value_severeMalariaTreated
+	value_RDT_completed ~~ 0*value_totalPatientsTreated
 	
-	# value_ACTs_CHWs ~~ 0*value_RDT_completed
-	# value_ACTs_CHWs ~~ 0*value_SP
-	# value_ACTs_CHWs ~~ 0*value_severeMalariaTreated
-	# value_ACTs_CHWs ~~ 0*value_totalPatientsTreated
+	value_SP ~~ 0*value_severeMalariaTreated
+	value_SP ~~ 0*value_totalPatientsTreated
 	
-	# value_RDT_completed ~~ 0*value_SP
-	# value_RDT_completed ~~ 0*value_severeMalariaTreated
-	# value_RDT_completed ~~ 0*value_totalPatientsTreated
-	
-	# value_SP ~~ 0*value_severeMalariaTreated
-	# value_SP ~~ 0*value_totalPatientsTreated
-	
-	# value_severeMalariaTreated ~~ 0*value_totalPatientsTreated
+	value_severeMalariaTreated ~~ 0*value_totalPatientsTreated
 '
 # ----------------------------------------------
 
@@ -101,6 +82,6 @@ summary(semFit)
 
 # ----------------------------------------------
 # Display results
-semPaths(semFit, 'std', intercepts=FALSE)
+# semPaths(semFit, 'std', intercepts=FALSE)
 # lavaanPlot(model=semFit, coefs=TRUE)
 # ----------------------------------------------
