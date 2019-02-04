@@ -4,29 +4,14 @@
 # DATE: Last updated November 2018. 
 # ----------------------------------------------
 
-# ---------------------------------------
-# Install packages and set up R  
-# ---------------------------------------
-
 # ----------------------------------------------------------------------
 # To do list for this code: 
 # - add in an option to only rework one file (make database append-only)
 # - add in variable creation during the append step to flag current grants. 
 # ---------------------------------------------------------------------
 
-rm(list=ls())
-library(lubridate)
-library(data.table)
-library(readxl)
-library(stats)
-library(stringr)
-library(tidyr)
-library(tools)
-library(rlang)
-library(zoo)
-library(dplyr)
-
-options(scipen=100)
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes', user, '/gf/'))
+source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
 # ---------------------------------------
 #Boolean logic switches 
@@ -41,9 +26,6 @@ limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be s
 # ---------------------------------------
 # Set global variables and filepaths.  
 # ---------------------------------------
-
-#Replace global variables to match what code you want to run. 
-user = "elineb" #Change to your username 
 country <- c("cod") #Change to the country you want to update. 
 
 #Mark which grants are currently active to save in file - this should be updated every grant period! 
@@ -56,21 +38,13 @@ current_cod_grant_period <- rep("2018-2020", 5)
 current_uga_grants <- c('UGA-C-TASO', 'UGA-H-MoFPED', 'UGA-M-MoFPED', 'UGA-M-TASO', 'UGA-T-MoFPED')
 current_uga_grant_period <- rep("2018-2020", 5)
 
-#Filepaths
-j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
-dir = paste0(j, '/Project/Evaluation/GF/')
-code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes', user, '/gf/'))
-code_dir = paste0(code_loc, "resource_tracking/prep/")
-combined_output_dir = paste0(j, "resource_tracking/multi_country/mapping")
-source(paste0(code_dir, "shared_mapping_functions.R")) 
-
 # ----------------------------------------------
 # STEP 1: Read in and verify module mapping framework
 # ----------------------------------------------
   
   map = read_xlsx(paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
   map = data.table(map)
-  source(paste0(code_dir, "2_verify_module_mapping.r"))
+  source(paste0(gf_prep_code, "2_verify_module_mapping.r"))
   module_map <- prep_map(map)
   
 # ----------------------------------------------
@@ -97,24 +71,34 @@ source(paste0(code_dir, "shared_mapping_functions.R"))
     if(limit_filelist==TRUE){
       file_list = prioritize_gos(file_list)
     }
+  
+  source(paste0(gf_prep_code, "file_prep/1_prep_country_data.r"))
   }
   
-  source(paste0(code_dir, "3_prep_country_data.r"))
+  if (prep_gos == TRUE){
+    source(paste0(gf_prep_code, "gos/1_prep_gos_data.r"))
+  }
+  
+# ----------------------------------------------
+# STEP 4: Map prepped data 
+# ----------------------------------------------
+  
+  source(paste0(gf_prep_code, "3_map_raw_data.R"))
+  
+# ----------------------------------------------
+# STEP 5: Aggregate all data sources
+# ----------------------------------------------
+
+  source(paste0(code_dir, "aggregate_all_data_sources.r"))
 
 # ----------------------------------------------
-# STEP 4: Aggregate all data sources
+# STEP 6: Verify budget numbers
 # ----------------------------------------------
 
-  source(paste0(code_dir, "4_aggregate_all_data_sources.r"))
-
-# ----------------------------------------------
-# STEP 5: Verify budget numbers
-# ----------------------------------------------
-
-  source(paste0(code_dir, "5_verify_budget_numbers.r")) 
+  source(paste0(gf_prep_code, "4_verify_budget_numbers.r")) 
  
 # ----------------------------------------------
-# STEP 6: Upload to Basecamp
+# STEP 7: Upload to Basecamp
 # ----------------------------------------------
 
 #Open in Spyder, and run: "C:/Users/user/Documents/gf/resource_tracking/prep/6_basecamp_upload.py"

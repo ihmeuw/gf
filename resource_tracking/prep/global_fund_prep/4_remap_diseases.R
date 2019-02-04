@@ -22,6 +22,10 @@ remap_diseases <- function(resource_database){
   # map = map[!(module == 'programmanagementandadministration' & intervention == 'all' & code == 'R8')]
   
   #Try running a test here grepping on 'hiv', 'malaria', and 'tb' and see if that will work as a blanket change. 
+  
+  #Remap all RSSH codes to the RSSH disease, and make sure there aren't any HSS diseases still hanging around. 
+  resource_database[substring(code, 1, 1)=='R', disease:='rssh']
+  resource_database[disease == 'hss', disease:='rssh']
  
   return(resource_database) 
 }

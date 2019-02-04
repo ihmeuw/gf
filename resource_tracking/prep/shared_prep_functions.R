@@ -70,7 +70,7 @@ split_hiv_tb = function(dt){
 # ----------------------------------------------
 
 ##function that takes three parameters: the dataset you want cleaned, and the two vectors we created above: 
-strip_chars <- function(gfData, unwanted_array, remove_chars){
+strip_chars <- function(dt){
   
   ## vector dictionary of special characters to regular characters
   unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='C', '?'='E', '?'='E',
@@ -83,32 +83,29 @@ strip_chars <- function(gfData, unwanted_array, remove_chars){
   
   
   # vector of characters or phrases to remove
-  remove_chars <- c(" ","hss", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
+  remove_chars <- c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
                     , "[[:punct:]]", "[^[:alnum:]]","\"", ",") 
   
   
+  #Save an original copy of module and intervention
+  dt$orig_module <- copy(dt$module)
+  dt$orig_intervention <- copy(dt$intervention)
+  
   ##remove special characters and blank spaces
-  gfData$orig_module <- copy(gfData$module)
-  gfData$orig_intervention <- copy(gfData$intervention)
+  dt$module <-tolower(dt$module)
+  dt$module <-gsub(paste(remove_chars, collapse="|"), "",dt$module)
   
+  dt$intervention  <-tolower(dt$intervention)
+  dt$intervention <-gsub(paste(remove_chars, collapse="|"), "",dt$intervention)
   
-  gfData$module <-tolower(gfData$module)
-  gfData$module <-gsub(paste(remove_chars, collapse="|"), "",gfData$module)
-  
-  gfData$intervention  <-tolower(gfData$intervention)
-  gfData$intervention <-gsub(paste(remove_chars, collapse="|"), "",gfData$intervention)
-  
-  
-  gfData$module <- chartr(paste(names(unwanted_array), collapse=''),
+  dt$module <- chartr(paste(names(unwanted_array), collapse=''),
                                 paste(unwanted_array, collapse=''),
-                                gfData$module)
-  gfData$intervention <- chartr(paste(names(unwanted_array), collapse=''),
+                                dt$module)
+  dt$intervention <- chartr(paste(names(unwanted_array), collapse=''),
          paste(unwanted_array, collapse=''),
-         gfData$intervention)
-  
-  gfData$intervention[is.na(gfData$intervention)] <- "all" #Why are we doing this here?? Or at all??? EKL 12/3/18 
+         dt$intervention)
 
-return(gfData)
+return(dt)
 }
 
 # ----------------------------------------------

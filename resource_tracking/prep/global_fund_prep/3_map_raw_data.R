@@ -8,11 +8,62 @@
 #----------------------------------------------------------------------------
 # Read in the version of the data you want to map (logic variables set in master file)
 #----------------------------------------------------------------------------
+if (prep_gos == TRUE){
+  raw_data <- copy(totalGos)
+} else if (prep_files == TRUE){
+  raw_data <- copy(resource_database)
+}
+
+#-------------------------------------------------------
+# Prep data for merge 
+#-------------------------------------------------------
+#Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
+raw_data <- strip_chars(raw_data)
+
+#Correct common acronyms in the resource database and the module map. 
+raw_data[, module:=replace_acronyms(module)]
+raw_data[, intervention:=replace_acronyms(intervention)]
+
+module_map[, module:=replace_acronyms(module)]
+module_map[, intervention:=replace_acronyms(intervention)]
+
+#--------------------------------------------------------
+# Adjust module and intervention manually in the raw data 
+#-------------------------------------------------------
+if (prep_files == TRUE){
+  source(paste0(country_code_dir, "correct_modules_interventions.r"))
+} else if (prep_gos == TRUE){
+  source(paste0(gf_prep_code, "gos/correct_modules_interventions.r"))
+}
+
+raw_data = correct_modules_interventions(raw_data)
+#------------------------------------------------------------
+# Map budgets and PUDRs to module mapping framework 
+#------------------------------------------------------------
+
+# Check for unmapped modules/interventions before mapping
+gf_concat <- paste0(module_map$module, module_map$intervention)
+rt_concat <- paste0(raw_data$module, raw_data$intervention)
+unmapped_mods <- raw_data[!rt_concat%in%gf_concat]
+
+if(nrow(unmapped_mods)>0){
+  print(unique(unmapped_mods[, c("module", "intervention"), with= FALSE]))
+  print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
+  stop("You have unmapped original modules/interventions!")
+}
+
+#------------------------------------------------------------
+# Remap diseases so they apply at the intervention level, 
+#   not the grant-level (assigned in the file list) 
+#------------------------------------------------------------
+
+source(paste0(code_dir, "4_remap_diseases.r"))
+raw_data = remap_diseases(raw_data)
 
 #----------------------------------------------------------------------------
 # Merge with module map on module, intervention, and disease to pull in code
 #----------------------------------------------------------------------------
-mapped_data <- merge(resource_database, module_map, by=c("module", "intervention", "disease"), all.x=TRUE)
+mapped_data <- merge(raw_data, module_map, by=c("module", "intervention", "disease"), all.x=TRUE)
 
 #Merge with intervention using code merged from previous line to pull in gf_module and gf_intervention. 
 map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
@@ -104,5 +155,5 @@ if (prep_files == TRUE){
 }
 
 if (prep_gos == TRUE){
-  saveRDS(mapped_data, paste0(export_dir, "prepped_gos_data.csv"))
+  saveRDS(mapped_data, paste0(export_dir, "prepped_gos_data.rds"))
 }
