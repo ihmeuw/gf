@@ -21,7 +21,7 @@ library(quantreg)
 # rm quantreg_output/*
 
 # set the working directory in the qlogin by navigating to it
-# cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod/dhis/outlier_removal
+# cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod/dhis/outlier_removal/pnls
 
 # print the contents
 # ls
