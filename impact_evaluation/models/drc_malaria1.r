@@ -32,10 +32,10 @@ model = '
 	value_totalPatientsTreated ~ 1*value_totalPatientsTreated
 	
 	# covariances
-	# budget_M1_1_cumulative ~~ other_dah_M1_1_cumulative
-	# budget_M1_2_cumulative ~~ other_dah_M1_2_cumulative
+	budget_M1_1_cumulative ~~ other_dah_M1_1_cumulative
+	budget_M1_2_cumulative ~~ other_dah_M1_2_cumulative
 	budget_M2_1_cumulative ~~ other_dah_M2_1_cumulative
-	# budget_M2_3_cumulative ~~ other_dah_M2_3_cumulative
+	budget_M2_3_cumulative ~~ other_dah_M2_3_cumulative
 	
 	# fixed covariances
 	value_ITN_consumed ~~ 0*value_ACTs_CHWs
