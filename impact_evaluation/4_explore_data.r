@@ -20,7 +20,6 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 
 # last-minute prep that shouldn't be necessary after bugs are fixed
 
-
 # compute cumulative budgets
 rtVars = names(data)
 rtVars = rtVars[grepl('budget|other_dah', rtVars)]
