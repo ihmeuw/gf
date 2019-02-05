@@ -1,14 +1,14 @@
 # model: drc_malaria1.r
 # purpose: intended to be the first theoretically-correct, computationally-viable model
 model = '
+
 	# linkage 1 regressions
 	value_ITN_received ~ 1*budget_M1_1_cumulative + budget_M1_2_cumulative + other_dah_M1_1_cumulative + other_dah_M1_2_cumulative
-	# value_RDT_received ~ 1*budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative
-	# value_ACT_received ~ 1*budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative
+	value_RDT_received ~ 1*budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative
+	value_ACT_received ~ 1*budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative
 	
 	# linkage 1 regressions with hotfixes for heywood cases (temporary)
-	value_RDT_received ~ 1*budget_M2_1_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative
-	value_ACT_received ~ 1*budget_M2_1_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative
+	
 	
 	# linkage 2 regressions
 	value_ITN_consumed ~ value_ITN_received
