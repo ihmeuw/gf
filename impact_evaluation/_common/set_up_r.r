@@ -88,4 +88,7 @@ outputFile4 = paste0(ieDir, '../visualizations/pilot_data_exploratory_graphs.pdf
 
 # output file from 5a_set_up_for_analysis.r
 outputFile5a = paste0(ieDir, 'pilot_data_pre_model.rds')
+
+# output file from 5b_run_analysis.R
+outputFile5b = paste0(ieDir, 'pilot_model_results.rdata')
 # -----------------------------------------------------------------------------
