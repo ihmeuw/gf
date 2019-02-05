@@ -205,6 +205,22 @@ for(v in c('budget_M2_1_cumulative','budget_M2_3_cumulative',
 		theme_bw(base_size=16)
 	i=i+1
 }
+
+# scatterplot of output correlations
+p6 = list()
+pairs = data.table(y=c('value_ITN_consumed','value_ACTs_CHWs','value_RDT_completed',
+	'value_SP','value_severeMalariaTreated','value_totalPatientsTreated'), 
+	x=c('value_ITN_received','value_ACT_received','value_RDT_received',
+	'budget_M3_1_cumulative','budget_M2_6_cumulative','value_ACT_received'))
+for(i in seq(nrow(pairs))) { 
+	y=pairs[i]$y
+	x=pairs[i]$x
+	p6[[i]] = ggplot(data[!is.na(get(y)) & !is.na(get(x))], aes_string(y=y, x=x)) + 
+		geom_point() + 
+		geom_smooth(method='lm', se=FALSE) + 
+		labs(y=y, x=x) + 
+		theme_bw(base_size=12)
+}
 # ----------------------------------------------
 
 
@@ -226,5 +242,6 @@ p4d
 do.call('grid.arrange',p5a)
 do.call('grid.arrange',p5b)
 do.call('grid.arrange',p5c)
+do.call('grid.arrange',p6)
 dev.off()
 # --------------------------------
