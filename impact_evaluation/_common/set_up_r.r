@@ -24,6 +24,7 @@ library(gridExtra)
 library(ggrepel)
 library(lubridate)
 library(lavaan)
+library(blavaan)
 # ------------------
 
 
