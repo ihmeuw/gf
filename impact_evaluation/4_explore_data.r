@@ -53,6 +53,9 @@ long[is.na(intervention), activity:=ifelse(grepl('received',indicator), 'Activit
 
 # subset dates
 long = long[date>=2010]
+
+# load "node table" for convenient labels FIX THIS FILE PATH
+nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
 # ----------------------------------------------
 
 
@@ -99,7 +102,7 @@ p2a = ggplot(long[activity=='Activity' & metric=='value'],
 		aes(y=value, x=date, color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(y='Quantity', x='Quarter', color='Activity') + 
+	labs(title='Activities', y='Quantity', x='Quarter', color='Activity') + 
 	theme_bw(base_size=16)
 
 # time series of activities' completeness
@@ -107,7 +110,7 @@ p2b = ggplot(long[activity=='Activity' & metric=='completeness'],
 		aes(y=value, x=date, color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(y='Completeness', x='Quarter', color='Activity') + 
+	labs(title='Completeness (Activities)', y='Completeness', x='Quarter', color='Activity') + 
 	theme_bw(base_size=16)
 
 # time series of outputs
@@ -115,7 +118,7 @@ p3a = ggplot(long[activity=='Output' & metric=='value'],
 		aes(y=value, x=date, color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(y='Quantity', x='Quarter', color='Output') + 
+	labs(title='Outputs', y='Quantity', x='Quarter', color='Output') + 
 	theme_bw(base_size=16)
 
 # time series of outputs' completeness
@@ -123,7 +126,7 @@ p3b = ggplot(long[activity=='Output' & metric=='completeness'],
 		aes(y=value, x=date, color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(y='Completeness', x='Quarter', color='Output') + 
+	labs(title='Completeness (Outputs)', y='Completeness', x='Quarter', color='Output') + 
 	theme_bw(base_size=16)
 # ----------------------------------------------
 
@@ -169,11 +172,12 @@ p5a = list()
 i=1
 for(v in c('budget_M1_1_cumulative', 'budget_M1_2_cumulative', 
 	'other_dah_M1_1_cumulative', 'other_dah_M1_2_cumulative')) { 
+	l = nodeTable[variable==v]$label
 	p5a[[i]] = ggplot(data[!is.na(value_ITN_received) & !is.na(get(v))], 
 			aes_string(y='value_ITN_received', x=v)) + 
 		geom_point() + 
 		geom_smooth(method='lm', se=FALSE) + 
-		labs(y='ITN Received', x=v) + 
+		labs(y='ITN Received', x=l) + 
 		theme_bw(base_size=16)
 	i=i+1
 }
@@ -183,11 +187,12 @@ p5b = list()
 i=1
 for(v in c('budget_M2_1_cumulative', 'budget_M2_3_cumulative', 
 	'other_dah_M2_1_cumulative', 'other_dah_M2_3_cumulative')) { 
+	l = nodeTable[variable==v]$label
 	p5b[[i]] = ggplot(data[!is.na(value_RDT_received) & !is.na(get(v))], 
 			aes_string(y='value_RDT_received', x=v)) + 
 		geom_point() + 
 		geom_smooth(method='lm', se=FALSE) + 
-		labs(y='RDT Received', x=v) + 
+		labs(y='RDT Received', x=l) + 
 		theme_bw(base_size=16)
 	i=i+1
 } 
@@ -197,11 +202,12 @@ p5c = list()
 i=1
 for(v in c('budget_M2_1_cumulative','budget_M2_3_cumulative', 
 	'other_dah_M2_1_cumulative', 'other_dah_M2_3_cumulative')) { 
+	l = nodeTable[variable==v]$label
 	p5c[[i]] = ggplot(data[!is.na(value_RDT_received) & !is.na(get(v))], 
 			aes_string(y='value_ACT_received', x=v)) + 
 		geom_point() + 
 		geom_smooth(method='lm', se=FALSE) + 
-		labs(y='ACT Received', x=v) + 
+		labs(y='ACT Received', x=l) + 
 		theme_bw(base_size=16)
 	i=i+1
 }
@@ -213,12 +219,14 @@ pairs = data.table(y=c('value_ITN_consumed','value_ACTs_CHWs','value_RDT_complet
 	x=c('value_ITN_received','value_ACT_received','value_RDT_received',
 	'budget_M3_1_cumulative','budget_M2_6_cumulative','value_ACT_received'))
 for(i in seq(nrow(pairs))) { 
-	y=pairs[i]$y
-	x=pairs[i]$x
-	p6[[i]] = ggplot(data[!is.na(get(y)) & !is.na(get(x))], aes_string(y=y, x=x)) + 
+	vy=pairs[i]$y
+	vx=pairs[i]$x
+	ly = nodeTable[variable==vy]$label
+	lx = nodeTable[variable==vx]$label
+	p6[[i]] = ggplot(data[!is.na(get(vy)) & !is.na(get(vx))], aes_string(y=vy, x=vx)) + 
 		geom_point() + 
 		geom_smooth(method='lm', se=FALSE) + 
-		labs(y=y, x=x) + 
+		labs(y=ly, x=lx) + 
 		theme_bw(base_size=12)
 }
 # ----------------------------------------------
@@ -239,9 +247,9 @@ p4a
 p4b
 p4c
 p4d
-do.call('grid.arrange',p5a)
-do.call('grid.arrange',p5b)
-do.call('grid.arrange',p5c)
-do.call('grid.arrange',p6)
+do.call('grid.arrange',c(p5a,list(top=textGrob('Correlations: ITN Inputs and Activities', gp=gpar(fontsize=16)))))
+do.call('grid.arrange',c(p5b, list(top=textGrob('Correlations: RDT Inputs and Activities', gp=gpar(fontsize=16)))))
+do.call('grid.arrange',c(p5c, list(top=textGrob('Correlations: ACT Inputs and Activities', gp=gpar(fontsize=16)))))
+do.call('grid.arrange',c(p6, list(top=textGrob('Correlations: All Activities and Outputs', gp=gpar(fontsize=16)))))
 dev.off()
 # --------------------------------
