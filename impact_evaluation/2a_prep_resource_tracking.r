@@ -3,6 +3,7 @@
 # PURPOSE: Prepare resource tracking data for merge 
 #          with activities and outputs.  
 # DATE: Last updated January 2019. 
+# INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------------------
 
 #------------------------------------
@@ -11,19 +12,24 @@
 # - Make this a general function that can be subset to any type of country and disease. 
 #Should I keep data source in here to match 
 
+
+# 1. rectangularize the RT data so that every module/intervention (at least those with any output data)
+# appears for every quarter for the entire range of the data
+# 2. reshape module/interventions wide so that each row is uniquely identified 
+# by quarter and there's a column for every financing source/intervention
+#it's true, we don't care about modules and interventions that don't have a corresponding activity/output variable,
+#so go ahead and drop those from the data prior to merging (edited) 
 #------------------------------------
 
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
 
 #------------------------------------
 #Read in previously prepped datasets 
 #------------------------------------
 
 #Read in final budget and expenditure data from RT database, and bind together. 
-final_budgets <- readRDS("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_budgets.rds")
-#final_expenditures <- readRDS("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_expenditures.rds")
-fgh <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv")
+final_budgets <- readRDS(budgetFile)
+#final_expenditures <- readRDS(expendituresFile)
+fgh <- fread(fghFile)
 
 #------------------------------------
 # Validate data 
@@ -73,8 +79,8 @@ budget_subset[, quarter:=quarter(start_date)]
 budget_subset[, year:=year(start_date)]
 budget_subset[, start_date:=NULL]
 
-#Merge budget and fgh data together
-prepped_rt <- merge(budget_subset, other_dah, by=c('year', 'quarter', 'code', 'loc_name', 'disease', 'module', 'intervention'), all=TRUE)
+#Merge budget and fgh data together, and create date variable
+prepped_rt <- rbind(budget_subset, other_dah, fill = TRUE) #Note - we still have observations with 'na' for code at this point. 
 
 #------------------------------------
 # Merge data with map of indicator codes
@@ -84,17 +90,27 @@ prepped_rt <- merge(budget_subset, other_dah, by=c('year', 'quarter', 'code', 'l
 drc_mal_map_codes = drc_mal_map[, .(code, indicator, indicator_type)]
 prepped_rt <- merge(prepped_rt, drc_mal_map_codes, by = c('code'), allow.cartesian = TRUE)
 
-#Do different global fund modules and interventions map to different codes here?
-check_unique_codes <- unique(prepped_rt[, .(code, module, intervention)])
+#Create date variable 
+prepped_rt[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+prepped_rt[, date:=year+quarter]
 
+#Should have no missing module, intervention, code, or date at this point! 
+stopifnot(nrow(prepped_rt[is.na(module)|is.na(intervention)|is.na(code)])!= 0)
+stopifnot(nrow(prepped_rt[is.na(date)])!= 0)
+
+#Cast data wide 
+rt_wide = dcast(prepped_rt, date~code, value.var=c('budget','other_dah'), fun.aggregate = sum)
+frame = data.table(date=seq(1990, 2020, by=.25))
+rt_wide = merge(frame, rt_wide, by='date', all.x=TRUE)
+for(v in names(rt_wide)) rt_wide[is.na(get(v)), (v):=0]
 
 #-----------------------------------------------------------
 # Make sure data are uniquely identified in the way you want 
 #-----------------------------------------------------------
+# 
+# #Make sure resource tracking data is uniquely identified by year, quarter, module, intervention, and indicator 
+# rt_wide = rt_wide[, .(budget=sum(budget, na.rm=TRUE), other_dah=sum(other_dah, na.rm=TRUE)), by=.(year, quarter, module, intervention, sda_activity, indicator, indicator_type, code, loc_name, disease)]
+# stopifnot(nrow(unique(rt_wide[, .(year, quarter, module, intervention, sda_activity, indicator, indicator_type, loc_name, disease)]))==nrow(rt_wide))
+# stopifnot(nrow(unique(rt_wide[, .(year, quarter, code, indicator, indicator_type,loc_name, disease)]))==nrow(rt_wide))
 
-#Make sure resource tracking data is uniquely identified by year, quarter, module, intervention, and indicator 
-prepped_rt = prepped_rt[, .(budget=sum(budget, na.rm=TRUE), other_dah=sum(other_dah, na.rm=TRUE)), by=.(year, quarter, module, intervention, sda_activity, indicator, indicator_type, code, loc_name, disease)]
-stopifnot(nrow(unique(prepped_rt[, .(year, quarter, module, intervention, sda_activity, indicator, indicator_type, loc_name, disease)]))==nrow(prepped_rt))
-stopifnot(nrow(unique(prepped_rt[, .(year, quarter, code, indicator, indicator_type,loc_name, disease)]))==nrow(prepped_rt))
-
-saveRDS(prepped_rt, paste0(dir, "prepped_resource_tracking.RDS"))
+saveRDS(rt_wide, outputFile2a)

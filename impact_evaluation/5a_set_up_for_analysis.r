@@ -4,74 +4,62 @@
 # 1/18/2019
 # Final pre-processing for impact evaluation model
 # This is built for the pilot dataset
+# The current working directory should be the root of this repo (set manually by user)
 # ------------------------------------------------
 
+source('./impact_evaluation/_common/set_up_r.r')
 
-# --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(ggplot2)
-# --------------------
-
-
-# ----------------------------------------------
-# Files and directories
-
-# input file
-dir = 'J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data'
-inFile = paste0(dir, '/pilot_data.RDS')
-
-# output files
-outFile = paste0(dir, 'pilot_data_pre_model.rds')
-# ----------------------------------------------
-
-
-# ----------------------------------------------
+# -----------------------------------------------------------------
 # Load/prep data
 
 # load
-data = readRDS(inFile)
+data = readRDS(outputFile3)
+
+# compute cumulative budgets
+rtVars = names(data)
+rtVars = rtVars[grepl('budget|other_dah', rtVars)]
+for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v))]
+# -----------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------
+# Hotfixes for Heywood cases
+
+# drop zero-variance variables
+for(v in names(data)) if (sd(data[[v]],na.rm=T)==0) data[[v]] = NULL
+
+# extrapolate where necessary
+data = data[date>=2010 & date<=2018]
+for(v in names(data)) {
+	form = as.formula(paste0(v,'~date'))
+	lmFit = glm(form, data, family='poisson')
+	data[, tmp:=exp(predict(lmFit, newdata=data))]
+	# print(ggplot(data, aes_string(y=v,x='date')) + geom_point() + geom_line(aes(y=tmp)) + labs(title=v))
+	data[is.na(get(v)), (v):=tmp]
+}
+data$tmp = NULL
+
+# drop completeness variables (for now)
+# for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
+
+# transform completeness variables
+for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
+# -----------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------------------
+# Run final tests
+
+# na omit
+data = na.omit(data)
 
 # test unique identifiers
-idVars = c('year','quarter','module','intervention','indicator')
-test = nrow(data)==nrow(unique(data[,idVars, with=F]))
-if (test==FALSE) stop(paste('Something is wrong.', paste(idVars, collapse=' '), 'do not uniquely identify rows.'))
-
-# set aside results chain sections
-inputs = unique(data[, c('year','quarter','intervention','budget')])
-activities = unique(data[indicator_type=='activity', c('year','quarter','indicator','value', 'completeness')])
-outputs = unique(data[indicator_type=='output', c('year','quarter','indicator','value', 'completeness')])
-
-# look at inputs
-ggplot(inputs, aes(y=budget, x=year+(quarter/4), color=intervention)) + 
-	geom_line() + 
-	geom_point()
-
-# look at activities
-ggplot(activities, aes(y=value, x=year+(quarter/4), color=indicator)) + 
-	geom_line() + 
-	geom_point()
-
-# look at outputs
-ggplot(outputs, aes(y=value, x=year+(quarter/4), color=indicator)) + 
-	geom_line() + 
-	geom_point()
-
-# look at correlations
-ggplot(data[indicator_type=='activity'], aes(y=value, x=budget)) + 
-	geom_point() + 
-	facet_wrap(~intervention, scales='free') + 
-	geom_smooth(method='lm', se=FALSE)
-
-# look at distributions
-ggplot(inputs, aes(x=budget)) + 
-	geom_histogram() + 
-	facet_wrap(~intervention, scales='free')
-# ----------------------------------------------
+test = nrow(data)==nrow(unique(data[,'date', with=F]))
+if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify rows.'))
+# ---------------------------------------------------------------------------------------
 
 
-# --------------------------------
+# -------------------------
 # Save file
-
-# --------------------------------
+saveRDS(data, outputFile5a)
+# -------------------------

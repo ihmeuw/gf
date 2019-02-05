@@ -39,6 +39,9 @@ files = files[str_sub(files,-4,nchar(files)) %in% types]
 
 # output file
 outFile = paste0(dir, '../process_evaluation/WPTM_Sheets.csv')
+
+# list of broken files that need specific exceptions
+exceptions = '/GUA-M-MSPAS EFR FASE II -2016_Inglés_RevALF.xlsm'
 # ---------------------------
 
 
@@ -62,23 +65,31 @@ for(file in files) {
 	sheets = excel_sheets(file)
 	
 	# confirm make a blank if sheet doesn't exist
-	if (!'WPTM_1C' %in% sheets) {
+	if ((!'WPTM_1C' %in% sheets & !'MSPT_1C' %in% sheets) | fileName %in% exceptions) {
 		print('File does not have a sheet named WPTM_1C. Adding blank row')
 		currData = data.table(grant=grantName, file_name=fileName)
 	}	
 	
 	# load if sheet exists
-	if ('WPTM_1C' %in% sheets) {
+	if (('WPTM_1C' %in% sheets | 'MSPT_1C' %in% sheets) & !fileName %in% exceptions) {
 		# load wptm sheet assuming normal formatting
-		currData = data.table(read_excel(file, sheet='WPTM_1C', skip=8, col_types='text'))
+		if ('WPTM_1C' %in% sheets) currData = data.table(read_excel(file, sheet='WPTM_1C', skip=8, col_types='text'))
+		if ('MSPT_1C' %in% sheets) currData = data.table(read_excel(file, sheet='MSPT_1C', skip=8, col_types='text'))
 		
 		# keep trying to load data until correct variables found
 		j=1
-		while (!'Module' %in% names(currData) & !'Module Name' %in% names(currData)) { 
-			currData = data.table(read_excel(file, sheet='WPTM_1C', skip=j, col_types='text'))
-			j=j+1
+		if ('WPTM_1C' %in% sheets) { 
+			while (!'Module' %in% names(currData) & !'Module Name' %in% names(currData)) { 
+				currData = data.table(read_excel(file, sheet='WPTM_1C', skip=j, col_types='text'))
+				j=j+1
+			}
 		}
-		
+		if ('MSPT_1C' %in% sheets) { 
+			while (!'Module' %in% names(currData) & !'Module Name' %in% names(currData)) { 
+				currData = data.table(read_excel(file, sheet='MSPT_1C', skip=j, col_types='text'))
+				j=j+1
+			}
+		}
 		# drop unnecessary columns
 		dropVars = c('X__1', 'X__2', 'X__3', 'X__4', 'X__5', 'X__6', 'X__7')
 		for(v in dropVars) currData[[v]] = NULL

@@ -38,7 +38,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/lbd/projection/')
 
 # input files
-timestamp = '2018_11_08_18_37_25' #change this to use a different run of the lbd hiv model
+timestamp = "2018_11_08_18_37_25" #change this to use a different run of the lbd hiv model
 inDir = paste0('/share/geospatial/mbg/hiv/hiv_test/output/', timestamp,'/')
 inFile = paste0(inDir, 'hiv_test_mean_raked_raster.tif')
 

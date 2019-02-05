@@ -14,6 +14,8 @@ library(dplyr)
 library(openxlsx) # does not work on the cluster
 library(stringr) 
 # --------------------
+
+# --------------------
 # set working directories 
 
 # detect if operating on windows or on the cluster 
@@ -25,8 +27,32 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 # set the folder for 
 import_folder = 'pre_prep/merged/'
 
+# input data sets
+base_data <- 'base_2016_01_01_2018_12_01.rds'
+pnls_data <- 'pnls_subset_2014_11_01_2018_12_01.rds'
+sigl_data <- 'sigl_2016_01_01_2018_12_01.rds'
+
 # ---------------------------------------------
 # import the tableau data sets and rbind them together 
+
+# working on this to make this script automatically update the tableau data with the most recent files
+# data.list = list() # list of data tables to rbind together
+# 
+# # list all the files in the import_folder
+# files = list.files(paste0(dir, import_folder))
+# 
+# # create a subset of files with just base, sigl, and pnls data
+# files_subset = c()
+# i = 1
+# for(f in files) {
+#   if( unlist(strsplit(f, "_"))[1] %in% c("base", "sigl", "pnls")  ){
+#     files_subset[i] = f
+#   } else { next }
+#   i = i + 1
+# }  
+# # get second to last element of the file name
+# date = unlist(strsplit(f, "_"))[ length( strsplit(f, "_")[[1]] ) - 1 ]
+
 
 # vector of the variables to subset to
 elements = c("aZwnLALknnj", "AxJhIi7tUam", "CGZbvJchfjk",
@@ -39,33 +65,40 @@ elements = c("aZwnLALknnj", "AxJhIi7tUam", "CGZbvJchfjk",
 
 
 # import the data sets and subset to the relevant variables
-base = readRDS(paste0(dir, import_folder, 'base_2016_01_01_2018_12_01.rds'))
+base = readRDS(paste0(dir, import_folder, base_data))
 base = base[year(date)=='2017' | year(date)=='2018']
 base = base[element_id %in% elements]
 
-pnls = readRDS(paste0(dir, import_folder, 'pnls_2017_01_01_2018_11_01.rds'))
-pnls[year(date)=='2017' | year(date)=='2018']
-pnls = base[element_id %in% elements]
+pnls = readRDS(paste0(dir, import_folder, pnls_data))
+pnls = pnls[year(date)=='2017' | year(date)=='2018']
+pnls = pnls[element_id %in% elements]
 
-# not yet prepped
-# sigl = readRDS(paste0(dir, import_folder, '.rds'))
-# sigl[year(date)=='2017' | year(date=='2018')]
-# sigl = base[element_id %in% elements]
+sigl = readRDS(paste0(dir, import_folder, sigl_data))
+sigl = sigl[year(date)=='2017' | year(date) =='2018']
+sigl = sigl[element_id %in% elements]
 
 # create a data set identifier
 base[ ,set:='base']
 pnls[ ,set:='pnls']
-# sigl[ ,set:='sigl']
+sigl[ ,set:='sigl']
+
+pnls[, country:= "République Démocratique du Congo"]
+drop_cols <- c("coordinates")
+base <- base[ , !(drop_cols), with = FALSE]
+sigl <- sigl[ , !(drop_cols), with = FALSE]
 
 # the code works up to here - you will need to edit after this
-dt = rbind(base, sigl, pnls)
+dt = rbindlist( list(base, sigl, pnls), use.names = TRUE, fill= TRUE )
+if (nrow(base) + nrow(sigl) + nrow(pnls) != nrow(dt)) stop ("rbind did not work correctly")
+# ---------------------------------------------
+
 # ---------------------------------------------
 # save the interim data set so you don't need to load all the data every time
 
-saveRDS(dt, paste0(dir, 'merged/tableau_interim.rds'))
+saveRDS(dt, paste0(dir, 'pre_prep/merged/tableau_interim.rds'))
 # ---------------------------------------------
 
-#-------------------------------------------------------------------------
+# ---------------------------------------------
 # check the english translations of the elements
 # for future downloads, change the english translations in the csv so they are correct after merge
 
@@ -88,20 +121,21 @@ dt[element_id=='gHBcPOF5y3z', element_eng:='Pregnant or lactating women who test
 dt$element_eng <- gsub("amount", "quantity", dt$element_eng)
 
 #---------------------------------------
-# create a variable for the number of facilities reporting
+# create a variable for the number of facilities reporting at the health zone level
 
 facilities = dt[ ,.(facilities_reporting=length(unique(org_unit))), 
                   by=.(set, element, date, health_zone, dps, category, level)]
 
 #-----------------------------------
-# sum over health zone to change data to the health zone level 
-
+# sum over health zone to change data to the health facility type level 
+dt$value <- as.numeric(dt$value) # the NAs introduced here were listed as "NULL" before when the value was character type
 dt <- dt[ ,.(value=sum(value)), by=.(set, data_set, element_id, element, element_eng, date,
-                                     category,  health_zone, dps, level, type)]
+                                     category,  health_zone, dps, level)] 
+# Note: th
 
 # merge in the number of facilities
 dt = merge(dt, facilities, by=c('set', 'element', 'date', 
-                           'health_zone', 'dps', 'category', 'level'))
+                           'health_zone', 'dps', 'category', 'level'), all = TRUE)
 
 #----------------------------
 # create age and sex variables 
@@ -110,35 +144,35 @@ dt[grep(category, pattern='<5'), age:='Under 5 years']
 
 # code anc visits as female patients
 dt[grep(category, pattern='CPN'), sex:='Female']
-
-dt[category=='5 and over', age:='5 +']
-dt[category=='Under 5', age:='Under 5']
-dt[category=='Féminin, 1 et 4 ans', age:='1 - 4 years']
-dt[category=='Féminin, 10 et 14 ans', age:='10 - 14 years']
-dt[category=='Féminin, 15 et 19 ans', age:='15 - 19 years']
-dt[category=='Féminin, 20 et 24 ans', age:='20 - 24 years']
-dt[category=='Féminin, 25 et 49 ans', age:='25 - 49 years']
-dt[category=='Féminin, 5 et 9 ans', age:='5 - 9 years']
-dt[category=='Féminin, 50 ans et plus', age:='50 +']
-dt[category=='Féminin, Moins d\'un an', age:='< 1 year']
-
-dt[category=="Féminin, Moins de 14 ans", age:='< 14 years']
-dt[category=="Féminin, 15 et 24 ans", age:='15 - 24 years']
-dt[category=="Féminin, 25 ans et plus", age:='25+ years']
-
-dt[category=="Masculin, Moins de 14 ans", age:='< 14 years']
-dt[category=="Masculin, 15 et 24 ans", age:='15 - 24 years']
-dt[category=="Masculin, 25 ans et plus", age:='25+ years']
-
-dt[category=='Masculin, 1 et 4 ans', age:='1 - 4 years']
-dt[category=='Masculin, 10 et 14 ans', age:='10 - 14 years']
-dt[category=='Masculin, 15 et 19 ans', age:='15 - 19 years']
-dt[category=='Masculin, 20 et 24 ans', age:='20 - 24 years']
-dt[category=='Masculin, 25 et 49 ans', age:='25 - 49 years']
-dt[category=='Masculin, 5 et 9 ans', age:='5 - 9 years']
-
-dt[category=='Masculin, 50 ans et plus', age:='50 +']
-dt[category=='Masculin, Moins d\'un an', age:='< 1 year']
+dt[grep(category, pattern='SA/PP'), sex:='Female']
+# dt[category=='5 and over', age:='5 +']
+# dt[category=='Under 5', age:='Under 5']
+# dt[category=='Féminin, 1 et 4 ans', age:='1 - 4 years']
+# dt[category=='Féminin, 10 et 14 ans', age:='10 - 14 years']
+# dt[category=='Féminin, 15 et 19 ans', age:='15 - 19 years']
+# dt[category=='Féminin, 20 et 24 ans', age:='20 - 24 years']
+# dt[category=='Féminin, 25 et 49 ans', age:='25 - 49 years']
+# dt[category=='Féminin, 5 et 9 ans', age:='5 - 9 years']
+# dt[category=='Féminin, 50 ans et plus', age:='50 +']
+# dt[category=='Féminin, Moins d\'un an', age:='< 1 year']
+# 
+# dt[category=="Féminin, Moins de 14 ans", age:='< 14 years']
+# dt[category=="Féminin, 15 et 24 ans", age:='15 - 24 years']
+# dt[category=="Féminin, 25 ans et plus", age:='25+ years']
+# 
+# dt[category=="Masculin, Moins de 14 ans", age:='< 14 years']
+# dt[category=="Masculin, 15 et 24 ans", age:='15 - 24 years']
+# dt[category=="Masculin, 25 ans et plus", age:='25+ years']
+# 
+# dt[category=='Masculin, 1 et 4 ans', age:='1 - 4 years']
+# dt[category=='Masculin, 10 et 14 ans', age:='10 - 14 years']
+# dt[category=='Masculin, 15 et 19 ans', age:='15 - 19 years']
+# dt[category=='Masculin, 20 et 24 ans', age:='20 - 24 years']
+# dt[category=='Masculin, 25 et 49 ans', age:='25 - 49 years']
+# dt[category=='Masculin, 5 et 9 ans', age:='5 - 9 years']
+# 
+# dt[category=='Masculin, 50 ans et plus', age:='50 +']
+# dt[category=='Masculin, Moins d\'un an', age:='< 1 year']
 dt[category=='CPN, 15 et 19 ans', age:='15 - 19 years']
 dt[category=='CPN, 20 et 24 ans', age:='20 - 24 years']
 dt[category=='CPN, 25 et 49 ans', age:='25 - 49 years']
@@ -150,59 +184,66 @@ dt[category=='SA/PP, 25 et 49 ans', age:='25 - 49 years']
 dt[category=='SA/PP, 50 ans et plus', age:='50+']
 dt[category=='SA/PP, Moins de 15 ans', age:='< 15 years'] 
 
+dt$element_eng <- gsub("FE", "pregnant women", dt$element_eng)
+dt[grep(element, pattern='FE'), sex:='Female']
+dt[grep(element, pattern='CPN'), sex:='Female']
+
 # only stock data should be missing sex
-dt[is.na(sex), unique(category)]
 dt[is.na(sex), unique(category)]
 
 # fix type
 dt[set=='pnls', type:='hiv']
-dt[type=='malaria ', type:='malaria']
+dt[set=="base", type:='malaria']
+dt[grep(element, pattern='Artesunate'), type:='malaria']
+dt[grep(element, pattern='Lumefantrine'), type:='malaria']
+dt[grep(element, pattern='RHZE'), type:='tb']
+dt[grep(element, pattern='VIH'), type:='hiv']
 #-------------------------------
 # test graphs to confirm it worked
 
-pdf(paste0(dir,'tableau/tableau_indicators.pdf'), height=6, width=12)
-
-base <- dt [set=='base',.(count=sum(value, na.rm=T)), by=.(element_eng, date)]
-
-ggplot(base, aes(x=date, y=count, color=element_eng)) +
-  geom_point() +
-  geom_line() +
-  theme_bw() +
-  scale_y_continuous(labels = scales::comma)
-
-sigl <- dt [set=='sigl',.(count=sum(value, na.rm=T)), by=.(element_eng, date)]
-
-ggplot(sigl, aes(x=date, y=count, color=element_eng)) +
-  geom_point() +
-  geom_line() +
-  theme_bw() +
-  scale_y_continuous(labels = scales::comma)
-
-
-pnls <- dt [set=='pnls',.(count=sum(value, na.rm=T)), by=.(element_eng, element_id, date, category)]
-
-ggplot(pnls[element_id=='jJuipTLZK4o' | element_id=='Gv1UQdMw5wL'], aes(x=date, y=count, color=category)) +
-  geom_point() +
-  geom_line() +
-  theme_bw() +
-  facet_wrap(~element_eng) +
-  scale_y_continuous(labels = scales::comma)
-
-ggplot(pnls[element_id=="DXz4Zxd4fKq"], aes(x=date, y=count, color=category)) +
-  geom_point() +
-  geom_line() +
-  theme_bw() +
-  facet_wrap(~element_eng) +
-  scale_y_continuous(labels = scales::comma)
-
-ggplot(pnls[element_id=="gHBcPOF5y3z"], aes(x=date, y=count, color=category)) +
-  geom_point() +
-  geom_line() +
-  theme_bw() +
-  facet_wrap(~element_eng) +
-  scale_y_continuous(labels = scales::comma)
-
-dev.off()
+# pdf(paste0(dir,'tableau/tableau_indicators.pdf'), height=6, width=12)
+# 
+# base <- dt [set=='base',.(count=sum(value, na.rm=T)), by=.(element_eng, date)]
+# 
+# ggplot(base, aes(x=date, y=count, color=element_eng)) +
+#   geom_point() +
+#   geom_line() +
+#   theme_bw() +
+#   scale_y_continuous(labels = scales::comma)
+# 
+# sigl <- dt [set=='sigl',.(count=sum(value, na.rm=T)), by=.(element_eng, date)]
+# 
+# ggplot(sigl, aes(x=date, y=count, color=element_eng)) +
+#   geom_point() +
+#   geom_line() +
+#   theme_bw() +
+#   scale_y_continuous(labels = scales::comma)
+# 
+# 
+# pnls <- dt [set=='pnls',.(count=sum(value, na.rm=T)), by=.(element_eng, element_id, date, category)]
+# 
+# ggplot(pnls[element_id=='jJuipTLZK4o' | element_id=='Gv1UQdMw5wL'], aes(x=date, y=count, color=category)) +
+#   geom_point() +
+#   geom_line() +
+#   theme_bw() +
+#   facet_wrap(~element_eng) +
+#   scale_y_continuous(labels = scales::comma)
+# 
+# ggplot(pnls[element_id=="DXz4Zxd4fKq"], aes(x=date, y=count, color=category)) +
+#   geom_point() +
+#   geom_line() +
+#   theme_bw() +
+#   facet_wrap(~element_eng) +
+#   scale_y_continuous(labels = scales::comma)
+# 
+# ggplot(pnls[element_id=="gHBcPOF5y3z"], aes(x=date, y=count, color=category)) +
+#   geom_point() +
+#   geom_line() +
+#   theme_bw() +
+#   facet_wrap(~element_eng) +
+#   scale_y_continuous(labels = scales::comma)
+# 
+# dev.off()
 
 #------------------------------
 # add umlauts to merge with tableau
@@ -222,19 +263,21 @@ setnames(dt, 'type', 'disease')
 # Export as an Excel document 
 
 # save as a RDS file 
-saveRDS(dt, paste0(dir, 'tableau/tableau_01_2017_06_2018.rds'))
+saveRDS(dt, paste0(dir, 'tableau/tableau_01_2017_12_2018_updated_01_2019.rds'))
 
 # read in the RDS file so you don't have to rerun the code
-#tabl <- readRDS(paste0(dir, 'tableau_01_2017_04_2018.rds'))
+# tabl <- readRDS(paste0(dir, 'tableau/tableau_01_2017_12_2018_updated_01_2019.rds'))
 
 #------------------------------
 # use xlsx instead of csv because it preserves the french special characters
 # use the openxlsx package (not xlsx!) as the java in xlsx cannot accomodate size
 # openxlsx works on the cluster (no need to install)
 
-# start and end date are both inclusive
-write.xlsx(dt, paste0(dir, 'tableau/tableau_01_2017_06_2018.xlsx'))
+# subset dates to just through September due to lag in update of facilites from the time it was downloaded
+dt_date_subset <- dt[ date <= "2018-09-01", ]
 
+# start and end date are both inclusive
+write.xlsx(dt_date_subset, paste0(dir, 'tableau/tableau_01_2017_09_2018_updated_01_2019.xlsx'))
 #-------------------------------
 
 

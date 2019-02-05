@@ -40,7 +40,7 @@ source(paste0(dir, 'code/pnls_function.R'))
 # change the folder to the name of the data set you want to merge
 # this is the only argument to change 
 
-folder = 'base'
+folder = 'pnls'
 #---------------------------------
 # create a vector of variables to subset the larger data sets 
 
