@@ -20,7 +20,7 @@
 rm(list=ls())
 
 # run setup code (load file paths and packages)
-source('./impact_evaluation/impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/_common/set_up_r.r')
 
 
 # ---------------------------------------
