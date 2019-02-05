@@ -54,7 +54,12 @@ summary(semFit)
 # -------------------------
 
 
-# ------------------------------------------------------
-# Save model output
+# ------------------------------------------------------------------
+# Save model output and clean up
+
+# save
 save(list=c('data','model','semFit'), file=outputFile5b)
-# ------------------------------------------------------
+
+# clean up in case jags saved some output
+if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
+# ------------------------------------------------------------------
