@@ -10,23 +10,26 @@
 # - add in variable creation during the append step to flag current grants. 
 # ---------------------------------------------------------------------
 
+user = "elineb" #Change to your username 
 code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
 # ---------------------------------------
 #Boolean logic switches 
 # ---------------------------------------
-prep_files <- FALSE 
-prep_gos <- TRUE
+prep_files <- TRUE
+prep_gos <- FALSE
 
 include_stops = FALSE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
+rerun_filelist <- FALSE #Set to TRUE if you want to prep all files in the file list again. 
+limit_filelist <- FALSE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 
 # ---------------------------------------
 # Set global variables and filepaths.  
 # ---------------------------------------
-country <- c("cod") #Change to the country you want to update. 
+country <- c("uga") #Change to the country you want to update.
+export_dir <- paste0(dir, "resource_tracking/", country, "/prepped/")
 
 #Mark which grants are currently active to save in file - this should be updated every grant period! 
 current_gtm_grants <- c('GTM-H-HIVOS', 'GTM-H-INCAP', 'GTM-M-MSPAS', 'GTM-T-MSPAS')
@@ -89,13 +92,13 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 5: Aggregate all data sources
 # ----------------------------------------------
 
-  source(paste0(code_dir, "aggregate_all_data_sources.r"))
+  #source(paste0(code_dir, "aggregate_all_data_sources.r"))
 
 # ----------------------------------------------
 # STEP 6: Verify budget numbers
 # ----------------------------------------------
 
-  source(paste0(gf_prep_code, "4_verify_budget_numbers.r")) 
+  #source(paste0(gf_prep_code, "4_verify_budget_numbers.r")) 
  
 # ----------------------------------------------
 # STEP 7: Upload to Basecamp

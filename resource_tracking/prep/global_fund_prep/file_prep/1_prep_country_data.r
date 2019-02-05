@@ -14,13 +14,17 @@
 # - add a check to make sure total sum for a file isn't 'na' after we convert to numeric
 #--------------------------
 
-# Read in file list 
-source(paste0(country_code_dir, "read_filelist_", country, ".R"))
-resource_database <- read_fileList()
+if (rerun_filelist == TRUE){
+  # Read in file list 
+  source(paste0(country_code_dir, "read_filelist_", country, ".R"))
+  resource_database <- read_fileList()
+  
+  saveRDS(original_db, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+} else {
+  resource_database <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+}
+
 original_db <- copy(resource_database)
-
-saveRDS(original_db, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
-
 #Make sure all budget data pulled is actually numeric- this is an easy check to see if prep functions are working correctly. 
 verify_numeric_budget = resource_database[, .(budget=gsub("[[:digit:]]", "", budget))]
 verify_numeric_budget = verify_numeric_budget[, .(budget=gsub("[[:punct:]]", "", budget))]
@@ -29,7 +33,7 @@ stopifnot(nrow(verify_numeric_budget)==0)
 
 #Make sure your quarters are denoted correctly (months 1, 4, 7, and 10)
 check_dates <- resource_database[!month(start_date)%in%c(1,4,7,10)]
-stopifnot(nrow(check_dates)==0)
+#stopifnot(nrow(check_dates)==0)
 
 # Make sure there are no overlapping quarters for the same grant (duplicate files. )
 fpm_overlap <- duplicated(resource_database[data_source == "fpm" & file_iteration == "final", .(grant_number, start_date)])

@@ -5,7 +5,6 @@
 # DATE: Last updated February 2019. 
 # ----------------------------------------------
 
-
 # TO DO
 # fix time series graph so that there are gaps where appropriate (use `group` aesthetic)
 # ----------------------------------------------
@@ -23,6 +22,8 @@ newNames <-  c("country","grant_number", "year","start_date","end_date","module"
                "budget", "expenditure", "disease", "grant_period_start", "grant_period_end")
 
 setnames(gos_data,oldNames, newNames)
+
+#gos_sum <- gos_data[, sum(budget), by=.(year, country, disease)][order(country, disease, year)]
 
 ##subset the columns that we want 
 gos_clean <- gos_data[, newNames, with=FALSE]

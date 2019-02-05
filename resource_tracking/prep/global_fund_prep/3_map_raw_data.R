@@ -31,7 +31,7 @@ module_map[, intervention:=replace_acronyms(intervention)]
 # Adjust module and intervention manually in the raw data 
 #-------------------------------------------------------
 if (prep_files == TRUE){
-  source(paste0(country_code_dir, "correct_modules_interventions.r"))
+  source(paste0(gf_prep_code, "file_prep/", country, "_prep/correct_modules_interventions.r"))
 } else if (prep_gos == TRUE){
   source(paste0(gf_prep_code, "gos/correct_modules_interventions.r"))
 }
@@ -51,14 +51,6 @@ if(nrow(unmapped_mods)>0){
   print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
   stop("You have unmapped original modules/interventions!")
 }
-
-#------------------------------------------------------------
-# Remap diseases so they apply at the intervention level, 
-#   not the grant-level (assigned in the file list) 
-#------------------------------------------------------------
-
-source(paste0(code_dir, "4_remap_diseases.r"))
-raw_data = remap_diseases(raw_data)
 
 #----------------------------------------------------------------------------
 # Merge with module map on module, intervention, and disease to pull in code
@@ -81,6 +73,14 @@ if(nrow(dropped_mods) >0){
   print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
   stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
 }
+
+#------------------------------------------------------------
+# Remap diseases so they apply at the intervention level, 
+#   not the grant-level (assigned in the file list) 
+#------------------------------------------------------------
+
+source(paste0(gf_prep_code, "4_remap_diseases.r"))
+raw_data = remap_diseases(raw_data)
 
 #-------------------------------------------------------
 # Split HIV/TB combined grants  
@@ -127,7 +127,7 @@ mapped_data = mapped_data[, .(abbrev_intervention, abbrev_module, adm1, adm2, bu
                                               orig_intervention, orig_module, period, primary_recipient, sda_activity, secondary_recipient, start_date, year)]
 
 desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "cost_category", "data_source", "disbursement", "disease", 
-                  "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "intervention", "lang", "loc_name", "module", 
+                  "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "lang", "loc_name", 
                   "orig_intervention", "orig_module", "period", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
 stopifnot(sort(colnames(mapped_data)) == desired_cols)  #Emily we do want to have correct column names here. 
 
