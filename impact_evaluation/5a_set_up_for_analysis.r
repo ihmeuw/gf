@@ -7,19 +7,31 @@
 # The current working directory should be the root of this repo (set manually by user)
 # ------------------------------------------------
 
+source('./impact_evaluation/_common/set_up_r.r')
 
-# ----------------------------------------------
+# -----------------------------------------------------------------
 # Load/prep data
 
 # load
-# data = readRDS(outputFile3)
+data = readRDS(outputFile3)
 
-# transform variables
+# compute cumulative budgets
+rtVars = names(data)
+rtVars = rtVars[grepl('budget|other_dah', rtVars)]
+for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v))]
+# -----------------------------------------------------------------
 
-# ----------------------------------------------
+
+# ---------------------------------------------------------------------------------------
+# Run final tests
+
+# test unique identifiers
+test = nrow(data)==nrow(unique(data[,'date', with=F]))
+if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify rows.'))
+# ---------------------------------------------------------------------------------------
 
 
-# --------------------------------
+# --------------------
 # Save file
-
-# --------------------------------
+saveRDS(outputFile5a)
+# --------------------
