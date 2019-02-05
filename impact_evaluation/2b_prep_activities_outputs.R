@@ -304,6 +304,20 @@ saveRDS(pilot_dataset, outputFile2b)
 # ---------------------------------------------------
 dt <- readRDS(outputFile2b)
 dt[, data_source := NULL]
-dt <- dcast.data.table(dt, year + quarter + completeness ~ indicator, value.var = c("value", "completeness"))
+dt <- dcast.data.table(dt, year + quarter ~ indicator, value.var = c("value", "completeness"))
+convert_quarter_to_decimal_in_date <- function(dt){
+  dt$quarter <- as.character(dt$quarter)
+  dt[ quarter == '1', quarter:= '.00']
+  dt[ quarter == '2', quarter:= '.25']
+  dt[ quarter == '3', quarter:= '.50']
+  dt[ quarter == '4', quarter:= '.75']
+  dt$year <- as.character(dt$year)
+  dt[, date := paste0(year, quarter)]
+  dt[, quarter:= NULL]
+  dt[, year := NULL]
+  dt$date <- as.numeric(dt$date)
+  return(dt)
+}
+dt = convert_quarter_to_decimal_in_date(dt)
 saveRDS(dt, outputFile2b_wide)
 # ---------------------------------------------------
