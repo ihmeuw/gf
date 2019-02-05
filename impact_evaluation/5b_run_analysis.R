@@ -16,13 +16,13 @@ data = readRDS(outputFile5a)
 # Define model object
 # DECISIONS
 # Should we include value_ACT_received in the value_severeMalariaTreated linkage 2 regression?
-model = readLines('./impact_evaluation/models/drc_malaria1.r')
+source('./impact_evaluation/models/drc_malaria2.r')
 # ----------------------------------------------
 
 
 # -------------------------
 # Run model
-semFit = sem(model, data)
+semFit = bsem(model, data, adapt=500, burnin=1000, sample=1000)
 summary(semFit)
 # -------------------------
 
