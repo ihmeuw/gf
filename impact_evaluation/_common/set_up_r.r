@@ -37,6 +37,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/')
 ieDir = paste0(dir, 'impact_evaluation/cod/prepped_data/')
 rtDir = paste0(dir, 'resource_tracking/multi_country/mapping/')
+mapDir = paste0(dir, '/mapping/multi_country/intervention_categories')
 pnlpDir = paste0(dir, 'outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
 dhisDir = paste0(dir, 'outcome_measurement/cod/dhis_data/prepped/')
 # ---------------------------------------------------------------------------------
@@ -47,6 +48,9 @@ dhisDir = paste0(dir, 'outcome_measurement/cod/dhis_data/prepped/')
 
 # code-friendly version of indicator map file
 indicatorMapFile = paste0(ieDir, 'DRC Indicator map - to code from.xlsx')
+
+# list of interventions and codes
+mfFile = paste0(mapDir, '/intervention_and_indicator_list.xlsx')
 # ------------------------------------------------------------------------
 
 
