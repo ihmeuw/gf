@@ -5,21 +5,23 @@
 # 	variable (exactly as in model), x, y (where it should appear in graph) and label (optional)
 # edgeLabels, (logical) whether or not to label coefficients
 # labSize1, labSize2, (numeric) large and small text sizes
+# boxHeight, boxWidth, (numeric) height and width of boxes
 # variances, (logical) whether or not to show variances
 # curved, (numeric) 0=straight lines, 1=1 bend, 2=2 bends
 # tapered, (logical) whether to taper edges from start to finish
 # Returns: a graph
 # Rquires: data.table, ggplot2, stringr
 
-rm(list=ls())
-fitObject = readRDS('C:/local/tmpsemfit.rds')
-nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
-labSize1=5
-labSize2=3
-variances = TRUE
-edgeLabels = TRUE
+# rm(list=ls())
+# fitObject = readRDS('C:/local/tmpsemfit.rds')
+# nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
+# labSize1=5
+# labSize2=3
+# variances = TRUE
+# edgeLabels = TRUE
  
-# semGraph = function(fitObject=NULL, infoTable=NULL, edgeLabels=FALSE, labSize1=5, labSize2=3) {
+semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, labSize1=5, labSize2=3, 
+	boxWidth=4, boxHeight=1) {
 
 	# -------------------------------------------------------------------------------
 	# Set up node table
@@ -49,7 +51,7 @@ edgeLabels = TRUE
 	setnames(edgeTable, c('x','y','label.x','label.y'), c('xend','yend','label','labelend'))
 	
 	# identify middle of each path for coefficient labels
-	edgeTable[, xmid:=(xstart+xend)/2]
+	edgeTable[, xmid:=(xstart+boxWidth+xend)/2]
 	edgeTable[, ymid:=(ystart+yend)/2]
 	
 	# identify the length of each path
@@ -79,7 +81,7 @@ edgeLabels = TRUE
 	
 	# add edges
 	p = p + 
-		geom_segment(data=edgeTable[op!='~~'], aes(x=xstart, y=ystart, xend=xend, yend=yend, color=est), 
+		geom_segment(data=edgeTable[op!='~~'], aes(x=xstart+boxWidth, y=ystart, xend=xend, yend=yend, color=est), 
 			arrow=arrow(), size=labSize2)
 			
 	# add covariances with curvature based on edge length
@@ -107,8 +109,10 @@ edgeLabels = TRUE
 	
 	# add nodes
 	p = p + 
-		geom_point(data=nodeTable, aes(y=y, x=x), size=labSize2*5, shape=22, fill='white') + 
-		geom_text(data=nodeTable, aes(y=y, x=x, label=str_wrap(label,7)), size=labSize2) 
+		# geom_point(data=nodeTable, aes(y=y, x=x), size=labSize2*5, shape=22, fill='white') + 
+		geom_rect(data=nodeTable, aes(ymin=y-(boxHeight*.5), ymax=y+(boxHeight*.5), xmin=x, xmax=x+boxWidth), 
+			fill='white', color='black') + 
+		geom_text(data=nodeTable, aes(y=y, x=x+(0.05*boxWidth), label=str_wrap(label,20)), size=labSize2, hjust=0) 
 		
 	# add buffer space to axes
 	ymax = max(nodeTable$y)+(0.25*sd(nodeTable$y))
@@ -122,6 +126,5 @@ edgeLabels = TRUE
 	p = p + theme_void()
 	
 	# -------------------------------------------------------------------------------
-	p
-	# return(p)
-# }
+	return(p)
+}

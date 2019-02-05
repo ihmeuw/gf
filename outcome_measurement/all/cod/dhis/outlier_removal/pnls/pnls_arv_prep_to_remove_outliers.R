@@ -37,19 +37,11 @@ dt = readRDS(paste0(dir, 'prepped/pnls_arv.rds'))
 dt = dt[date < '2018-09-01']
 
 # ---------------------------------------
-# source the standardization functions for the geographic units and apply
-source("./core/standardizeHZNames.R")
-source("./core/standardizeDPSNames.R")
-dt$health_zone = standardizeHZNames(dt$health_zone)
-dt$health_zone = standardizeDPSNames(dt$dps)
 
-# ---------------------------------------
-
-# drop case and additional geographic informatioj
+# drop case and additional geographic information
+# there is no element_id as the elements are aggregated 
 dt = dt[ ,.(value=sum(value)),
          by=.(element, org_unit_id, date, sex, age, subpop)]
-
-dt = dt[element=="PLHIV on IPT"]
 
 # make variable ids
 dt[, element_id:=.GRP, by='element']

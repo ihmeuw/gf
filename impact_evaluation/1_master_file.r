@@ -58,7 +58,6 @@ if(rerun_inputs == TRUE){
 # ---------------------------------------
 # Merge datasets together 
 # ---------------------------------------
-# file produced by 2b_prep_activities_outputs 
 if (rerun_merge==TRUE) { 
 	source('./impact_evaluation/3_merge_data.r')
 }
