@@ -40,7 +40,10 @@ for(v in names(data)) {
 data$tmp = NULL
 
 # drop completeness variables (for now)
-for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
+# for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
+
+# transform completeness variables
+for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
 # -----------------------------------------------------------------------
 
 

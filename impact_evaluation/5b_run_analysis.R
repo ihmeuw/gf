@@ -43,7 +43,7 @@ summary(lmFit9)
 # Define model object
 # DECISIONS
 # Should we include value_ACT_received in the value_severeMalariaTreated linkage 2 regression?
-source('./impact_evaluation/models/drc_malaria2.r')
+source('./impact_evaluation/models/drc_malaria3.r')
 # ----------------------------------------------
 
 
