@@ -15,10 +15,23 @@ source('./impact_evaluation/_common/set_up_r.r')
 # load
 data = readRDS(outputFile3)
 
+# last-minute prep that shouldn't be necessary after bugs are fixed
+	# combine the two ITN budget categories since FGH can't distinguish
+	data[, budget_M1_1:=budget_M1_1+budget_M1_2]
+	data[, other_dah_M1_1:=other_dah_M1_1+other_dah_M1_2]
+	data$budget_M1_2 = NULL
+	data$other_dah_M1_2 = NULL
+	
+	# set other_dah to NA (not 0) after 2016
+	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017, (v):=NA]
+
 # compute cumulative budgets
 rtVars = names(data)
 rtVars = rtVars[grepl('budget|other_dah', rtVars)]
 for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v))]
+
+# subset dates now that cumulative variables are computed
+data = data[date>=2010 & date<2019]
 # -----------------------------------------------------------------
 
 
@@ -28,8 +41,7 @@ for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v))]
 # drop zero-variance variables
 for(v in names(data)) if (sd(data[[v]],na.rm=T)==0) data[[v]] = NULL
 
-# extrapolate where necessary
-data = data[date>=2010 & date<=2018]
+# extrapolate where necessary TEMPORARY
 for(v in names(data)) {
 	form = as.formula(paste0(v,'~date'))
 	lmFit = glm(form, data, family='poisson')
@@ -40,10 +52,10 @@ for(v in names(data)) {
 data$tmp = NULL
 
 # drop completeness variables (for now)
-# for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
+for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
 
 # transform completeness variables
-for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
+# for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
 # -----------------------------------------------------------------------
 
 

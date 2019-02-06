@@ -19,6 +19,14 @@ test = nrow(data)==nrow(unique(data[,'date', with=F]))
 if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify rows.'))
 
 # last-minute prep that shouldn't be necessary after bugs are fixed
+	# combine the two ITN budget categories since FGH can't distinguish
+	data[, budget_M1_1:=budget_M1_1+budget_M1_2]
+	data[, other_dah_M1_1:=other_dah_M1_1+other_dah_M1_2]
+	data$budget_M1_2 = NULL
+	data$other_dah_M1_2 = NULL
+	
+	# set other_dah to NA (not 0) after 2016
+	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017, (v):=NA]
 
 # compute cumulative budgets
 rtVars = names(data)
@@ -47,12 +55,13 @@ codes$Module = NULL
 codes$Intervention = NULL
 setnames(codes, c('Abbreviated Module','Abbreviated Intervention'), c('module','intervention'))
 long = merge(long, codes, by.x='indicator',by.y='Code',all.x=TRUE)
+long[intervention=='LLIN: Mass campaign', intervention:='LLIN: Cont. and Mass Distribution']
 
 # label other indicators nicely
 long[is.na(intervention), activity:=ifelse(grepl('received',indicator), 'Activity', 'Output')]
 
 # subset dates
-long = long[date>=2010]
+long = long[date>=2010 & date<2019]
 
 # load "node table" for convenient labels FIX THIS FILE PATH
 nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
@@ -170,8 +179,8 @@ p4d = ggplot(long[activity=='Output' & metric=='value'], aes(x=value)) +
 # scatterplot of ITN correlations
 p5a = list()
 i=1
-for(v in c('budget_M1_1_cumulative', 'budget_M1_2_cumulative', 
-	'other_dah_M1_1_cumulative', 'other_dah_M1_2_cumulative')) { 
+for(v in c('budget_M1_1_cumulative', 
+	'other_dah_M1_1_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5a[[i]] = ggplot(data[!is.na(value_ITN_received) & !is.na(get(v))], 
 			aes_string(y='value_ITN_received', x=v)) + 
