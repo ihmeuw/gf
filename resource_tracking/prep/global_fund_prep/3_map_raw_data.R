@@ -100,33 +100,48 @@ mapped_data$disbursement <- mapped_data$disbursement*mapped_data$coefficient
 # ----------------------------------------
 if(country == "cod"){
   mapped_data$adm1 <- 171
-  mapped_data$adm2 <- 171
   mapped_data$country <- "Congo (Democratic Republic)"
 } else if (country == "gtm"){
   mapped_data$adm1 <- 128 
-  mapped_data$adm2 <- 128 
   mapped_data$country <- "Guatemala" 
 } else if (country == "uga"){
   mapped_data$adm1 <- 190
-  mapped_data$adm2 <- 190
   mapped_data$country <- "Uganda"
 }
 
 mapped_data$loc_name = country
 
-#Emily still not surewhy we're doing this. - This needs to happen in the summary budgets. 
-#mapped_data$sda_activity <- ifelse(tolower(mapped_data$sda_activity) == "all" | mapped_data$sda_activity == "0", "Unspecified (Summary budget)", mapped_data$sda_activity)
+#-----------------------------------------
+# Add in variable for current grant 
+# ----------------------------------------
+mapped_data$current_grant = FALSE 
+if(country == "cod"){
+  for (i in 1:length(current_cod_grants)){
+    mapped_data[grant_number==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 
+              current_grant:=TRUE]
+  }
+} else if (country == "gtm"){
+  for (i in 1:length(current_gtm_grants)){
+    mapped_data[grant_number==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], 
+              current_grant:=TRUE]
+  }
+} else if (country == "uga"){
+  for (i in 1:length(current_uga_grants)){
+    mapped_data[grant_number==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
+              current_grant:=TRUE]
+  }
+}
 
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------
 
 #Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
-mapped_data = mapped_data[, .(abbrev_intervention, abbrev_module, adm1, adm2, budget, code, cost_category, data_source, disbursement, disease, 
+mapped_data = mapped_data[, .(abbrev_intervention, abbrev_module, adm1, adm2, budget, code, cost_category, current_grant, data_source, disbursement, disease, 
                                               expenditure, file_iteration, fileName, gf_intervention, gf_module, grant_number, grant_period, lang, loc_name,
                                               orig_intervention, orig_module, period, primary_recipient, sda_activity, secondary_recipient, start_date, year)]
 
-desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "cost_category", "data_source", "disbursement", "disease", 
+desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "adm2", "budget", "code", "cost_category", "current_grant", "data_source", "disbursement", "disease", 
                   "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "lang", "loc_name", 
                   "orig_intervention", "orig_module", "period", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
 stopifnot(sort(colnames(mapped_data)) == desired_cols)  #Emily we do want to have correct column names here. 
@@ -152,6 +167,10 @@ if (prep_files == TRUE){
   saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
   saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
   saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
+  
+  write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"))
+  write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"))
+  write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"))
 }
 
 if (prep_gos == TRUE){

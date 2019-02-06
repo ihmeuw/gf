@@ -20,7 +20,7 @@
 # input files
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 repo = ifelse(Sys.info()[1]=='Windows', 'C:/Users/elineb/Documents/gf', '/homes/elineb/gf')
-source(paste0(repo, "/resource_tracking/prep/shared_mapping_functions.R"))
+source(paste0(repo, "/resource_tracking/prep/shared_budget_functions.R"))
 file_dir <- paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/")
 final_budgets <- readRDS(paste0(file_dir, "final_budgets.rds")) #Change to final budgets for right now, but will want to test all files eventually! 
 final_expenditures <- readRDS(paste0(file_dir, "final_expenditures.rds"))
