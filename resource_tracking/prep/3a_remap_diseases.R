@@ -22,6 +22,17 @@ remap_diseases <- function(resource_database){
   # map = map[!(module == 'programmanagementandadministration' & intervention == 'all' & code == 'R8')]
   
   #Try running a test here grepping on 'hiv', 'malaria', and 'tb' and see if that will work as a blanket change. 
+<<<<<<< Updated upstream:resource_tracking/prep/3a_remap_diseases.R
+=======
+  
+  #Remap all RSSH codes to the RSSH disease, and make sure there aren't any HSS diseases still hanging around. 
+  resource_database[, short_code:=substring(resource_database$code, 1, 1)]
+  resource_database[short_code=='R', disease:='rssh']
+  resource_database[disease == 'hss', disease:='rssh']
+  
+  
+  resource_database[, short_code:=NULL]
+>>>>>>> Stashed changes:resource_tracking/prep/global_fund_prep/4_remap_diseases.R
  
   return(resource_database) 
 }

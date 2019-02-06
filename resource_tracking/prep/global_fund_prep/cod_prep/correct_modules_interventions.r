@@ -128,5 +128,11 @@ resource_database[module == 'unspecified' & intervention == 'suivietevaluationen
 resource_database[module == 'unspecified' & intervention == 'gestiondeprogrammepolitiqueplanificationcoordinationetgestion', module:='gestiondeprogrammepolitiqueplanificationcoordinationetgestion']
 resource_database[module == 'unspecified' & intervention == 'tuberculosemultiresistantetraitementtuberculosemultiresistante', module:='tuberculosemultiresistantetraitementtuberculosemultiresistante']
 
+#EKL 2/5/19 Revised LFA_COD-H-MOH_PUDR_S2 2016 17.04.17 for denominator change.xlsx
+resource_database[intervention == "communicationregulicredelinformation" & module == "unspecified" 
+                  & disease == "hiv" & fileName == "Revised LFA_COD-H-MOH_PUDR_S2 2016 17.04.17 for denominator change.xlsx", 
+                  module:='gestiondeprogramme']
+
+
 return(resource_database)
 }

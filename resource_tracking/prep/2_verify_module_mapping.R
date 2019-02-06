@@ -135,6 +135,29 @@ map[module == 'malprevention' & intervention == 'bcccommunityoutreach', code:='M
 #map[module == 'tbtreatment' & 'expandandconsolidatehighqualitydotsservices', code:='T1'] #David 
 map[, prefix:=NULL]
 
+#Correcting some RSSH mappings after 'hss' was added back in to module/intervention 
+map[module == 'leadershipandgovernance' & intervention == 'all' & code == 'R7_4', module:='hssleadershipandgovernance']
+map[module == 'informationsystem' & intervention == 'all' & code == 'R2', module:='hssinformationsystem']
+map[module == 'fortalecimientodelossistemasdesaludfss' & intervention == 'sistemadeinformacioneinvestigacionoperativa'
+    & code == 'R2', intervention:='hsssistemadeinformacioneinvestigacionoperativa']
+map[module == 'hivsupportiveenvironment' & intervention == "monitoringanddocumentationofcommunityandgovernmentinterventions", 
+    intervention:="hssmonitoringanddocumentationofcommunityandgovernmentinterventions"]
+map[module == 'hivsupportiveenvironment' & intervention == "advocacycommunicationandsocialmobilization", 
+    intervention:="hssadvocacycommunicationandsocialmobilization"]
+map[module == 'hivsupportiveenvironment' & intervention == "buildingcommunitylinkagescollaborationandcoordination", 
+    intervention:="hssbuildingcommunitylinkagescollaborationandcoordination"]
+map[module == 'hivsupportiveenvironment' & intervention == "humanresources", 
+    intervention:="hsshumanresources"]
+map[module == 'tbhealthsystemsstrengthening' & intervention == "supportiveenvironmentprogrammanagementandadministration", 
+    module:="tbhealthsystemsstrengtheninghss"]
+map[module == "hsshealthsystemsstrengthening" & disease == "hiv", module:= "healthsystemsstrengtheninghss"]
+
+#Edits coming from Uganda - sectioning off because these might need to be edited the next time you run GTM and COD. EKL 2/5/19 
+map[module == 'healthinformationsystemsandme', module:='hsshealthinformationsystemsandme']
+map[module == 'procurementsupplychainmanagementpscm', module:='hssprocurementsupplychainmanagementpscm']
+map[module == 'servicedelivery', module:='hssservicedelivery']
+
+
 #--------------------------------------------------------------------------------
 # CLEANING - remove duplicates created by running checks above.
 #--------------------------------------------------------------------------------
