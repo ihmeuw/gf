@@ -56,6 +56,9 @@ final_budgets[loc_name == 'Congo (Democratic Republic)', loc_name:='cod']
 final_budgets[loc_name == 'Guatemala', loc_name:='gtm']
 final_budgets[loc_name == 'Uganda', loc_name:='uga']
 
+# quick fixes that shouldn't be necessary once earlier code is fixed
+fgh[sda_activity=='mal_comm_con_dah_17', code:='M2_3']
+
 #------------------------------------
 # Subset data and prep for merge
 #------------------------------------
