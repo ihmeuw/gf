@@ -8,6 +8,7 @@
 
 # ---------------------------
 # Load data
+set.seed(1)
 data = readRDS(outputFile5a)
 # ---------------------------
 
@@ -52,7 +53,8 @@ source('./impact_evaluation/models/drc_malaria2.r')
 
 # --------------------------------------------------------------
 # Run model
-semFit = sem(model, data)
+rm('semFit')
+# semFit = sem(model, data)
 semFit = bsem(model, data, adapt=500, burnin=1000, sample=1000)
 summary(semFit)
 # --------------------------------------------------------------
