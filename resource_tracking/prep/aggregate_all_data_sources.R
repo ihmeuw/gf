@@ -147,7 +147,7 @@ expected_current_grants <- length(current_gtm_grants) + length(current_uga_grant
 stopifnot(nrow(all_current_grants)==expected_current_grants)
 
 # Write data 
-write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
+#write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
 saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets.rds"))
 
 
@@ -222,7 +222,7 @@ stopifnot(nrow(na_year)==0)
 #final_expenditures[, end_date:=start_date + period-1]
 
 # Write data 
-write.csv(final_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
+#write.csv(final_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
 saveRDS(final_expenditures, paste0(final_write, "final_expenditures.rds"))
 
 #----------------------------------
@@ -235,7 +235,7 @@ all_gf_gtm <- readRDS("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/bu
 all_gf_files <- rbind(all_gf_cod, all_gf_uga, all_gf_gtm, fill = TRUE)
 
 #Write data 
-write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
+#write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
 saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations.rds"))
 
 
