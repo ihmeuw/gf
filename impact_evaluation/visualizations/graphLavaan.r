@@ -12,6 +12,9 @@
 # Returns: a graph
 # Rquires: data.table, ggplot2, stringr
 
+# TO DO
+# Add caption listing control variables not displayed
+
 # rm(list=ls())
 # fitObject = readRDS('C:/local/tmpsemfit.rds')
 # nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
@@ -19,8 +22,10 @@
 # labSize2=3
 # variances = TRUE
 # edgeLabels = TRUE
- 
-semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, labSize1=5, labSize2=3, 
+# boxWidth=4
+# boxHeight=1
+
+semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=TRUE, labSize1=5, labSize2=3, 
 	boxWidth=4, boxHeight=1) {
 
 	# -------------------------------------------------------------------------------
@@ -29,6 +34,9 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, labSize1=5,
 	# test any variables not in model
 	
 	# test any variables not in nodeTable
+	modelVars = unique(c(fitObject@ParTable$lhs, fitObject@ParTable$rhs))
+	modelVars = modelVars[modelVars!='']
+	exclVars = modelVars[!modelVars %in% nodeTable$variable]
 	
 	# check all labels available
 	nodeTable[, label:=as.character(label)]
@@ -40,15 +48,18 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, labSize1=5,
 	# Set up edge table
 	
 	# extract edges from lavaan table
-	edgeTable = data.table(sapply(fitObject@ParTable,c))
-	edgeTable[, est:=as.numeric(est)]
-	edgeTable[, se:=as.numeric(se)]
+	# edgeTable = data.table(sapply(fitObject@ParTable,c))
+	# edgeTable[, est:=as.numeric(est)]
+	# edgeTable[, se:=as.numeric(se)]
+	# edgeTable$label = NULL
+	edgeTable = data.table(standardizedSolution(fitObject))
+	setnames(edgeTable, 'est.std', 'est')
 	
 	# identify start and end locations
 	edgeTable = merge(edgeTable, nodeTable, by.x='rhs', by.y='variable')
-	setnames(edgeTable, c('x','y','label.x','label.y'), c('xstart','ystart','label','labelstart'))
+	setnames(edgeTable, c('x','y','label'), c('xstart','ystart','labelstart'))
 	edgeTable = merge(edgeTable, nodeTable, by.x='lhs', by.y='variable')
-	setnames(edgeTable, c('x','y','label.x','label.y'), c('xend','yend','label','labelend'))
+	setnames(edgeTable, c('x','y','label'), c('xend','yend','labelend'))
 	
 	# identify middle of each path for coefficient labels
 	edgeTable[, xmid:=(xstart+boxWidth+xend)/2]
@@ -104,7 +115,7 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, labSize1=5,
 	# add edge labels
 	if (edgeLabels) { 
 		p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=ymid+(min(edgeTable$ystart)*.25), 
-			label=round(est)), size=labSize2*.8, lwd=0)
+			label=round(est,2)), size=labSize2*.8, lwd=0)
 	}
 	
 	# add nodes
@@ -113,7 +124,11 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, labSize1=5,
 		geom_rect(data=nodeTable, aes(ymin=y-(boxHeight*.5), ymax=y+(boxHeight*.5), xmin=x, xmax=x+boxWidth), 
 			fill='white', color='black') + 
 		geom_text(data=nodeTable, aes(y=y, x=x+(0.05*boxWidth), label=str_wrap(label,20)), size=labSize2, hjust=0) 
-		
+	
+	# improve legend
+	p = p + 
+		scale_color_viridis(direction=-1) 
+	
 	# add buffer space to axes
 	ymax = max(nodeTable$y)+(0.25*sd(nodeTable$y))
 	ymin = min(nodeTable$y)-(0.25*sd(nodeTable$y))
@@ -121,6 +136,10 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, labSize1=5,
 	xmin = min(nodeTable$x)-(0.25*sd(nodeTable$x))
 	p = p + 
 		expand_limits(y=c(ymin, ymax), x=c(xmin, xmax)) 
+	
+	# labels
+	p = p + 
+		labs(color='Effect\nSize', caption=paste('Control variables not displayed:', paste(exclVars, collapse =',')))
 	
 	# clean up plot
 	p = p + theme_void()
