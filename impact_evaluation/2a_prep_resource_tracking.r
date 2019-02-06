@@ -79,38 +79,42 @@ budget_subset[, quarter:=quarter(start_date)]
 budget_subset[, year:=year(start_date)]
 budget_subset[, start_date:=NULL]
 
-#Merge budget and fgh data together, and create date variable
-prepped_rt <- rbind(budget_subset, other_dah, fill = TRUE) #Note - we still have observations with 'na' for code at this point. 
-
-#------------------------------------
-# Merge data with map of indicator codes
-#------------------------------------
-
-#Map to intervention and indicator using the map for DRC malaria. 
+#Match budget and FGH data to codes to only keep relevant modules/interventions (all = TRUE)
 drc_mal_map_codes = drc_mal_map[, .(code, indicator, indicator_type)]
-prepped_rt <- merge(prepped_rt, drc_mal_map_codes, by = c('code'), allow.cartesian = TRUE)
+budget_subset = merge(budget_subset, drc_mal_map_codes, by=c('code'), allow.cartesian = TRUE)
+other_dah = merge(other_dah, drc_mal_map_codes, by=c('code'), allow.cartesian = TRUE)
 
-#Create date variable 
-prepped_rt[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-prepped_rt[, date:=year+quarter]
+print(paste0("Codes kept in budget data: ", unique(budget_subset[, .(code)])))
+print(paste0("Codes kept in FGH data: ", unique(other_dah[, .(code)])))
 
-#Should have no missing module, intervention, code, or date at this point! 
-stopifnot(nrow(prepped_rt[is.na(module)|is.na(intervention)|is.na(code)])!= 0)
-stopifnot(nrow(prepped_rt[is.na(date)])!= 0)
+#Create date variable
+budget_subset[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+budget_subset[, date:=year+quarter]
+other_dah[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+other_dah[, date:=year+quarter]
 
 #Cast data wide 
-rt_wide = dcast(prepped_rt, date~code, value.var=c('budget','other_dah'), fun.aggregate = sum)
+budget_wide = dcast(budget_subset, date~code, value.var=c('budget'), fun.aggregate = sum)
 frame = data.table(date=seq(1990, 2020, by=.25))
-rt_wide = merge(frame, rt_wide, by='date', all.x=TRUE)
-for(v in names(rt_wide)) rt_wide[is.na(get(v)), (v):=0]
+budget_wide = merge(frame, budget_wide, by='date', all.x=TRUE)
+for(v in names(budget_wide)) budget_wide[is.na(get(v)), (v):=0]
 
-#-----------------------------------------------------------
-# Make sure data are uniquely identified in the way you want 
-#-----------------------------------------------------------
-# 
-# #Make sure resource tracking data is uniquely identified by year, quarter, module, intervention, and indicator 
-# rt_wide = rt_wide[, .(budget=sum(budget, na.rm=TRUE), other_dah=sum(other_dah, na.rm=TRUE)), by=.(year, quarter, module, intervention, sda_activity, indicator, indicator_type, code, loc_name, disease)]
-# stopifnot(nrow(unique(rt_wide[, .(year, quarter, module, intervention, sda_activity, indicator, indicator_type, loc_name, disease)]))==nrow(rt_wide))
-# stopifnot(nrow(unique(rt_wide[, .(year, quarter, code, indicator, indicator_type,loc_name, disease)]))==nrow(rt_wide))
+other_dah_wide = dcast(other_dah, date~code, value.var=c('other_dah'), fun.aggregate = sum)
+frame = data.table(date=seq(1990, 2020, by=.25))
+other_dah_wide = merge(frame, other_dah_wide, by='date', all.x=TRUE)
+for(v in names(other_dah_wide)) other_dah_wide[is.na(get(v)), (v):=0]
 
+#Set column names for merge 
+names = colnames(budget_wide[, 2:ncol(budget_wide)])
+names <- paste("budget", names, sep = "_")
+colnames(budget_wide) <- c('date', names)
+
+names = colnames(other_dah_wide[, 2:ncol(other_dah_wide)])
+names <- paste("other_dah", names, sep = "_")
+colnames(other_dah_wide) <- c('date', names)
+
+#Merge both files together 
+rt_wide <- merge(other_dah_wide, budget_wide, by=c('date'))
+
+#Save output file
 saveRDS(rt_wide, outputFile2a)
