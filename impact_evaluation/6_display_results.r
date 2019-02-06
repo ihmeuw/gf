@@ -6,7 +6,7 @@
 # -----------------------------------
 
 
-# -------------------------------
+# -----------------------------------------------
 # Load/prep data and functions
 
 # load home-made sem graphing function FIX THIS FILE PATH
@@ -20,7 +20,7 @@ nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable = nodeTable[variable %in% names(data)]
-# -------------------------------
+# -----------------------------------------------
 
 
 # ----------------------------------------------
