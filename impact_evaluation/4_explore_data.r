@@ -20,9 +20,7 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 
 # last-minute prep that shouldn't be necessary after bugs are fixed
 	# combine the two ITN budget categories since FGH can't distinguish
-	data[, budget_M1_1:=budget_M1_1+budget_M1_2]
 	data[, other_dah_M1_1:=other_dah_M1_1+other_dah_M1_2]
-	data$budget_M1_2 = NULL
 	data$other_dah_M1_2 = NULL
 	
 	# set other_dah to NA (not 0) after 2016
@@ -55,7 +53,7 @@ codes$Module = NULL
 codes$Intervention = NULL
 setnames(codes, c('Abbreviated Module','Abbreviated Intervention'), c('module','intervention'))
 long = merge(long, codes, by.x='indicator',by.y='Code',all.x=TRUE)
-long[intervention=='LLIN: Mass campaign', intervention:='LLIN: Cont. and Mass Distribution']
+long[intervention=='LLIN: Mass campaign' & metric=='other_dah', intervention:='LLIN: Cont. and Mass Distribution']
 
 # label other indicators nicely
 long[is.na(intervention), activity:=ifelse(grepl('received',indicator), 'Activity', 'Output')]
@@ -76,7 +74,7 @@ p1a = ggplot(long[!is.na(intervention) & metric=='budget' & cumulative=='Not Cum
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Global Fund', y='Budget', x='Quarter', color='Intervention') + 
+	labs(title='Time Series - Global Fund', y='Budget', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
 # time series of cumulative inputs
@@ -84,7 +82,7 @@ p1b = ggplot(long[!is.na(intervention) & metric=='budget' & cumulative=='Cumulat
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Global Fund', y='Cumulative Budget', x='Quarter', color='Intervention') + 
+	labs(title='Time Series - Global Fund', y='Cumulative Budget', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
 
@@ -93,7 +91,7 @@ p1c = ggplot(long[!is.na(intervention) & metric=='other_dah' & cumulative=='Not 
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Other Development Assistance for Malaria', 
+	labs(title='Time Series - Other Development Assistance for Malaria', 
 		y='Disbursement', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
@@ -102,7 +100,7 @@ p1d = ggplot(long[!is.na(intervention) & metric=='other_dah' & cumulative=='Cumu
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Other Development Assistance for Malaria', 
+	labs(title='Time Series - Other Development Assistance for Malaria', 
 		y='Cumulative Disbursement', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
@@ -111,7 +109,7 @@ p2a = ggplot(long[activity=='Activity' & metric=='value'],
 		aes(y=value, x=date, color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Activities', y='Quantity', x='Quarter', color='Activity') + 
+	labs(title='Time Series - Activities', y='Quantity', x='Quarter', color='Activity') + 
 	theme_bw(base_size=16)
 
 # time series of activities' completeness
@@ -119,7 +117,7 @@ p2b = ggplot(long[activity=='Activity' & metric=='completeness'],
 		aes(y=value, x=date, color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Completeness (Activities)', y='Completeness', x='Quarter', color='Activity') + 
+	labs(title='Time Series - Completeness (Activities)', y='Completeness', x='Quarter', color='Activity') + 
 	theme_bw(base_size=16)
 
 # time series of outputs
@@ -127,7 +125,7 @@ p3a = ggplot(long[activity=='Output' & metric=='value'],
 		aes(y=value, x=date, color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Outputs', y='Quantity', x='Quarter', color='Output') + 
+	labs(title='Time Series - Outputs', y='Quantity', x='Quarter', color='Output') + 
 	theme_bw(base_size=16)
 
 # time series of outputs' completeness
@@ -135,7 +133,7 @@ p3b = ggplot(long[activity=='Output' & metric=='completeness'],
 		aes(y=value, x=date, color=indicator)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Completeness (Outputs)', y='Completeness', x='Quarter', color='Output') + 
+	labs(title='Time Series - Completeness (Outputs)', y='Completeness', x='Quarter', color='Output') + 
 	theme_bw(base_size=16)
 # ----------------------------------------------
 
@@ -147,28 +145,28 @@ p3b = ggplot(long[activity=='Output' & metric=='completeness'],
 p4a = ggplot(long[!is.na(intervention) & cumulative=='Cumulative' & metric=='budget'], aes(x=value)) + 
 	geom_histogram() + 
 	facet_wrap(~intervention, scales='free') + 
-	labs(title='Global Fund', y='Frequency (Quarters)', x='Cumulative Budget') + 
+	labs(title='Histograms - Global Fund', y='Frequency (Quarters)', x='Cumulative Budget') + 
 	theme_bw(base_size=16)
 
 # histograms of distributions for inputs
 p4b = ggplot(long[!is.na(intervention) & cumulative=='Cumulative' & metric=='other_dah'], aes(x=value)) + 
 	geom_histogram() + 
 	facet_wrap(~intervention, scales='free') + 
-	labs(title='Other Development Assistance for Malaria', y='Frequency (Quarters)', x='Cumulative Disbursement') + 
+	labs(title='Histograms - Other Development Assistance for Malaria', y='Frequency (Quarters)', x='Cumulative Disbursement') + 
 	theme_bw(base_size=16)
 	
 # histograms of distributions for activities
 p4c = ggplot(long[activity=='Activity' & metric=='value'], aes(x=value)) + 
 	geom_histogram() + 
 	facet_wrap(~indicator, scales='free') + 
-	labs(title='Activities', y='Frequency (Quarters)', x='Value') + 
+	labs(title='Histograms - Activities', y='Frequency (Quarters)', x='Value') + 
 	theme_bw(base_size=16)
 
 # histograms of distributions for outputs
 p4d = ggplot(long[activity=='Output' & metric=='value'], aes(x=value)) + 
 	geom_histogram() + 
 	facet_wrap(~indicator, scales='free') + 
-	labs(title='Outputs', y='Frequency (Quarters)', x='Value') + 
+	labs(title='Histograms - Outputs', y='Frequency (Quarters)', x='Value') + 
 	theme_bw(base_size=16)
 # ----------------------------------------------
 
@@ -179,8 +177,7 @@ p4d = ggplot(long[activity=='Output' & metric=='value'], aes(x=value)) +
 # scatterplot of ITN correlations
 p5a = list()
 i=1
-for(v in c('budget_M1_1_cumulative', 
-	'other_dah_M1_1_cumulative')) { 
+for(v in c('budget_M1_1_cumulative', 'budget_M1_2_cumulative', 'other_dah_M1_1_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5a[[i]] = ggplot(data[!is.na(value_ITN_received) & !is.na(get(v))], 
 			aes_string(y='value_ITN_received', x=v)) + 
@@ -244,21 +241,21 @@ for(i in seq(nrow(pairs))) {
 # --------------------------------
 # Save file
 pdf(outputFile4, height=5.5, width=9)
-p1a
+# p1a
 p1b
-p1c
+# p1c
 p1d
 p2a
-p2b
+# p2b
 p3a
-p3b
+# p3b
 p4a
 p4b
 p4c
 p4d
-do.call('grid.arrange',c(p5a,list(top=textGrob('Correlations: ITN Inputs and Activities', gp=gpar(fontsize=16)))))
-do.call('grid.arrange',c(p5b, list(top=textGrob('Correlations: RDT Inputs and Activities', gp=gpar(fontsize=16)))))
-do.call('grid.arrange',c(p5c, list(top=textGrob('Correlations: ACT Inputs and Activities', gp=gpar(fontsize=16)))))
-do.call('grid.arrange',c(p6, list(top=textGrob('Correlations: All Activities and Outputs', gp=gpar(fontsize=16)))))
+do.call('grid.arrange',c(p5a,list(ncol=2, top=textGrob('Correlations - ITN Inputs and Activities', gp=gpar(fontsize=16)))))
+do.call('grid.arrange',c(p5b, list(top=textGrob('Correlations - RDT Inputs and Activities', gp=gpar(fontsize=16)))))
+do.call('grid.arrange',c(p5c, list(top=textGrob('Correlations - ACT Inputs and Activities', gp=gpar(fontsize=16)))))
+do.call('grid.arrange',c(p6, list(top=textGrob('Correlations - All Activities and Outputs', gp=gpar(fontsize=16)))))
 dev.off()
 # --------------------------------
