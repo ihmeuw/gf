@@ -146,7 +146,7 @@ ghe_mapped$fin_data_type <- mapply(transform_fin_data_type, as.character(ghe_map
 # ----------------------------------------------
 # ## rbind the DAH and the forecasted HIV THE: 
 # ----------------------------------------------
-totalFgh <- rbind(fgh_mapped, ghe_mapped) #EKL how are we sure these data don't overlap? 
+totalFgh <- rbind(fgh_mapped, ghe_mapped, fill = TRUE) #EKL how are we sure these data don't overlap? 
 
 
 # ----------------------------------------------
