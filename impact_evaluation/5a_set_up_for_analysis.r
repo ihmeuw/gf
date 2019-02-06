@@ -24,6 +24,9 @@ data = readRDS(outputFile3)
 	
 	# set other_dah to NA (not 0) after 2016
 	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017, (v):=NA]
+	
+	# drop M2_3 from other_dah for now because it's identifcal to M2_1
+	# data$other_dah_M2_3 = NULL
 
 # compute cumulative budgets
 rtVars = names(data)
@@ -56,6 +59,20 @@ for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
 
 # transform completeness variables
 # for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
+
+# rescale variables to have similar variance
+for(v in names(data)) { 
+	if (v=='date') next
+	# print(v)
+	# print(var(data[[v]]))
+	while(var(data[[v]])>1000) { 
+		data[, (v):=get(v)/10]
+	}
+	while(var(data[[v]])<100) { 
+		data[, (v):=get(v)*10]
+	}
+	# print(var(data[[v]]))
+}
 # -----------------------------------------------------------------------
 
 
@@ -68,6 +85,11 @@ data = na.omit(data)
 # test unique identifiers
 test = nrow(data)==nrow(unique(data[,'date', with=F]))
 if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify rows.'))
+
+# test for collinearity
+
+# test for variables with an order of magnitude different variance
+
 # ---------------------------------------------------------------------------------------
 
 
