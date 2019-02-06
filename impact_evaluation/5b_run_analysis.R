@@ -15,9 +15,9 @@ data = readRDS(outputFile5a)
 # -------------------------
 # Run series of unrelated linear models
 
-lmFit1 = lm(value_ITN_received ~ budget_M1_1_cumulative + budget_M1_2_cumulative + other_dah_M1_1_cumulative + other_dah_M1_2_cumulative, data)
-lmFit1 = lm(value_RDT_received ~ budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative, data)
-lmFit1 = lm(value_ACT_received ~ budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative, data)
+lmFit1 = lm(value_ITN_received ~ budget_M1_1_cumulative + other_dah_M1_1_cumulative, data)
+lmFit2 = lm(value_RDT_received ~ budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative, data)
+lmFit3 = lm(value_ACT_received ~ budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_1_cumulative + other_dah_M2_3_cumulative, data)
 
 # linkage 2 regressions
 lmFit4 = lm(value_ITN_consumed ~ value_ITN_received, data)
