@@ -7,6 +7,9 @@
 # The current working directory should be the root of this repo (set manually by user)
 # ------------------------------------------------
 
+# TO DO
+# how to implement counterfactual before calculating cumulatives and standardizing variance???
+
 source('./impact_evaluation/_common/set_up_r.r')
 
 # -----------------------------------------------------------------
@@ -17,9 +20,7 @@ data = readRDS(outputFile3)
 
 # last-minute prep that shouldn't be necessary after bugs are fixed
 	# combine the two ITN budget categories since FGH can't distinguish
-	data[, budget_M1_1:=budget_M1_1+budget_M1_2]
 	data[, other_dah_M1_1:=other_dah_M1_1+other_dah_M1_2]
-	data$budget_M1_2 = NULL
 	data$other_dah_M1_2 = NULL
 	
 	# set other_dah to NA (not 0) after 2016
@@ -60,27 +61,27 @@ for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
 # transform completeness variables
 # for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
 
+# na omit
+data = na.omit(data)
+
 # rescale variables to have similar variance
+# see Kline Principles and Practice of SEM (2011) page 67
+scaling_factors = data.table(date=1)
 for(v in names(data)) { 
 	if (v=='date') next
-	# print(v)
-	# print(var(data[[v]]))
-	while(var(data[[v]])>1000) { 
-		data[, (v):=get(v)/10]
-	}
-	while(var(data[[v]])<100) { 
-		data[, (v):=get(v)*10]
-	}
-	# print(var(data[[v]]))
+	s=1
+	while(var(data[[v]]/s)>1000) s=s*10
+	while(var(data[[v]]/s)<100) s=s/10
+	scaling_factors[,(v):=s]
 }
+scaling_factors = scaling_factors[rep(1,nrow(data))]
+data = data/scaling_factors
+# data[, lapply(.SD, var)]
 # -----------------------------------------------------------------------
 
 
 # ---------------------------------------------------------------------------------------
 # Run final tests
-
-# na omit
-data = na.omit(data)
 
 # test unique identifiers
 test = nrow(data)==nrow(unique(data[,'date', with=F]))
@@ -93,7 +94,7 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 # ---------------------------------------------------------------------------------------
 
 
-# -------------------------
+# ---------------------------------------------------------
 # Save file
-saveRDS(data, outputFile5a)
-# -------------------------
+save(list=c('data', 'scaling_factors'), file=outputFile5a)
+# ---------------------------------------------------------

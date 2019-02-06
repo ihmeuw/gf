@@ -62,7 +62,7 @@ summary(semFit)
 # Save model output and clean up
 
 # save
-save(list=c('data','model','semFit'), file=outputFile5b)
+save(list=c('data','model','semFit','scaling_factors'), file=outputFile5b)
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
