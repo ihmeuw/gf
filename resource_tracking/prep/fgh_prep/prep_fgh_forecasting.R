@@ -163,7 +163,7 @@ get_hiv_forecast <- function(root, hiv_dir, hiv_file, pce_codes){
   ##subset to the countrains that we want 
   pce_data <- hiv_data[location_id%in%pce_codes]
   
-  pce_data$V1 <- NULL #I think someone forgot to remove this variable - it appears to just be a row index
+  pce_data$V1 <- NULL #I think someone forgot to remove this variable - it appears to just be a row index #EKL no- this means a melt or reshape somewhere else didn't work correctly. 
   pce_data$ghe = pce_data$public
   
   pce_data_new = subset(pce_data, select = c("location_id", "year_id", "variable", "ghe", "ppp", "oop"))
@@ -255,9 +255,9 @@ dah_hiv = merge_weighted_average(dah_financ_source, dah_weight, "hiv")
 dah_hss = merge_weighted_average(dah_financ_source, dah_weight, "hss")
 dah_other = merge_weighted_average(dah_financ_source, dah_weight, "other")
 
-
+pce_dah = rbind(dah_malaria, dah_tb, dah_hiv, dah_hss, dah_other)
 pce_not_dah = pce_total[financing_source != "dah"]
-pce_total = rbind(pce_total, dah_dt)
+pce_total = rbind(pce_dah, pce_not_dah)
 
 
 pce_total$data_source <- "fgh"
@@ -272,6 +272,9 @@ pce_total$adm2 <- pce_total$adm1
 pce_total$start_date <- paste0(pce_total$year, "-01-01")
 pce_total$period <- 365
 pce_total$end_date <- paste0(pce_total$year, "-12-31") 
+
+# Why are we doing this??? EKL
+# -----------------------------
 pce_total$module <- "all"
 pce_total$intervention <- "all"
 pce_total$coefficient <- 1
@@ -279,17 +282,26 @@ pce_total$gf_module <- "all"
 pce_total$gf_intervention <- "all"
 pce_total$abbrev_module <- "all"
 pce_total$abbrev_intervention <- "all"
+# -----------------------------
+
 #pce_total$disease <- "all"
 pce_total$budget <- 0
 pce_total$expenditure <- 0 
 pce_total$lang <- "eng"
 pce_total$cost_category <- "all"
-pce_total$sda_activity <- "all"
+pce_total$sda_activity <- "Unspecified (Summary budget)"
 pce_total$recipient <- pce_total$adm2
-pce_total$grant_number <- pce_total$adm2
+pce_total$grant_number <- "none"
+
+
+pce_total$fileName = ifelse(pce_total$financing_source == "dah", "DAH.csv", 
+                            ifelse(pce_total$financing_source == "ghe", "GHES.csv", 
+                                   ifelse(pce_total$financing_source == "ppp", "PPP.csv",
+                                          "OOP.csv")))
 
 
 total_fgh <- rbind(fgh_current, pce_total)
+total_fgh$loc_name = tolower(total_fgh$loc_name)
 
 # ----------------------------------------------
 ##export to the J Drive: 

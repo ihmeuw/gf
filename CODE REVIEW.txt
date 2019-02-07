@@ -1,0 +1,26 @@
+CODE REVIEW INSTRUCTIONS: 
+1. Change to branch "code_review" in the repository (ask Emily if you don't know how to do this!) 
+2. To submit code you'd like to be reviewed: 
+	Add a file path to the repo location below, and add an optional comment asking for a specific reviewer/giving details. 
+	To accept changes, simply accept the pull request you're tagged in (see below).
+
+3. To review code:  
+	Pull the current head of 'develop' into the branch 'code_review'. 
+	Make sure your working branch is set to 'code_review'. 
+	Pick one of the open review requests below (or just navigate to a file in the repository) and add comments and edits to the file. 
+	Save your changes, and open a new pull request on the global fund Github: 
+		Commit and push your changes locally on the branch 'code_review'
+		Navigate to 'https://github.com/ihmeuw/gf'
+		Click on 'New pull request'
+		Set the base branch as 'develop' and the compare branch as 'code_review' 
+		Tag the owner of the code as the reviewer. 
+		Submit the pull request with a comment explaining the edits you made. 
+	Make sure to remove the open review request from the list below! 
+
+	
+	
+
+OPEN REVIEW REQUESTS: 
+*Example* Hi David, could you please review the following two files for me? 
+"C:\Users\elineb\Documents\gf\resource_tracking\prep\global_fund_prep\gos\prep_gos_data.R"
+"C:\Users\elineb\Documents\gf\resource_tracking\miscellaneous\graph_ghe_using_sicoin.r"

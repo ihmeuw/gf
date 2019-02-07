@@ -16,7 +16,7 @@ This repository is organized according to major evaluation areas as of June 2017
    
 3. outcome_measurement
 
-   Data processing and analysis health outcomes (coverage, prevalence, mortality etc). Expected to be mostly small area analysis.
+   Data processing and analysis health outcomes (coverage, prevalence, mortality etc).
    
 4. impact_evaluation
 
@@ -24,7 +24,7 @@ This repository is organized according to major evaluation areas as of June 2017
    
 5. vfm 
 
-   Data processing and analysis of Value for Money (if necessary)
+   Data processing and analysis of Value for Money
    
 6. special_assessments 
 

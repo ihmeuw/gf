@@ -27,7 +27,7 @@ library(gridExtra)
 # Parameters and settings
 
 # iso3s
-iso3s = c('COD','UGA')
+iso3s = c('COD')
 
 # year
 years = 2015
@@ -48,7 +48,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/map/')
 
 # output files
-graphFile = paste0(dir, '/visualizations/descriptive_maps.pdf')
+graphFile = paste0(dir, '/visualizations/descriptive_maps_COD.pdf')
 
 # load prep function
 source('./outcome_measurement/malaria/load_map_data.r')
@@ -108,9 +108,12 @@ codprev = ggplot(data[iso3=='COD'], aes(y=y, x=x, fill=prev*100)) +
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
-	labs(title='DRC') + 
 	theme_minimal(base_size=16) + 
+	
+if ('UGA' %in% iso3s) { 
+	coditn = coditn + labs(title='DRC') + 
 	theme(plot.title=element_text(hjust=.5), plot.margin=unit(rep(-1,4), 'cm')) 
+}
 
 # ITN
 ugaitn = ggplot(data[iso3=='UGA'], aes(y=y, x=x, fill=itn*100)) + 
@@ -135,9 +138,12 @@ coditn = ggplot(data[iso3=='COD'], aes(y=y, x=x, fill=itn*100)) +
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
-	labs(title='DRC') + 
-	theme_minimal(base_size=16) + 
+	theme_minimal(base_size=16) 
+	
+if ('UGA' %in% iso3s) { 
+	coditn = coditn + labs(title='DRC') + 
 	theme(plot.title=element_text(hjust=.5), legend.position='none') 
+}
 
 # antimalarials
 ugaantmal = ggplot(data[iso3=='UGA'], aes(y=y, x=x, fill=antmal*100)) + 
@@ -162,25 +168,41 @@ codantmal = ggplot(data[iso3=='COD'], aes(y=y, x=x, fill=antmal*100)) +
 	coord_fixed(ratio=1) + 
 	scale_x_continuous('', breaks = NULL) + 
 	scale_y_continuous('', breaks = NULL) + 
-	labs(title='DRC') + 
 	theme_minimal(base_size=16) + 
+if ('UGA' %in% iso3s) { 
+	codantmal = codantmal + labs(title='DRC') + 
 	theme(plot.title=element_text(hjust=.5), plot.margin=unit(rep(-1,4), 'cm')) 
-	
+}
+
 # put maps together
-p1 = arrangeGrob(codprev, ugaprev, ncol=2)
-p2 = arrangeGrob(coditn, ugaitn, ncol=2)
-p3 = arrangeGrob(codantmal, ugaantmal, ncol=2)
+if ('UGA' %in% iso3s & 'COD' %in% iso3s) { 
+	p1 = arrangeGrob(codprev, ugaprev, ncol=2)
+	p2 = arrangeGrob(coditn, ugaitn, ncol=2)
+	p3 = arrangeGrob(codantmal, ugaantmal, ncol=2)
+}
+if (iso3s =='COD') { 
+	p1 = codprev
+	p2 = coditn
+	p3 = codantmal
+}
 # ----------------------------------------------
 
 
 # --------------------------------
 # Save graphs
 pdf(graphFile, height=6, width=9)
-grid.newpage()
-grid.draw(p1)
-grid.newpage()
-grid.draw(p2)
-grid.newpage()
-grid.draw(p3)
+if ('UGA' %in% iso3s & 'COD' %in% iso3s) { 
+	grid.newpage()
+	grid.draw(p1)
+	grid.newpage()
+	grid.draw(p2)
+	grid.newpage()
+	grid.draw(p3)
+}
+if (iso3s =='COD') { 
+	codprev
+	coditn
+	codantmal
+}
 dev.off()
 # --------------------------------
