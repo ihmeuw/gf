@@ -26,7 +26,7 @@ source('./impact_evaluation/_common/set_up_r.r')
 # ---------------------------------------
 # Set boolean switches
 # ---------------------------------------
-rerun_inputs <- TRUE
+rerun_inputs <- TRUE 
 rerun_outputs <- FALSE
 rerun_merge <- TRUE
 rerun_explore <- FALSE

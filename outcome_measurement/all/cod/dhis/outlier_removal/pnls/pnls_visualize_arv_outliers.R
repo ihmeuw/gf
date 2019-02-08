@@ -1,6 +1,6 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
-# Prep the qr screened data for use
+# Prep the QR outlier screened data for use
 # Examine different thresholds
 # ----------------------------------------------
 

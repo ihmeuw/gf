@@ -47,7 +47,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 outFile = paste0(dir, 'pnls_outliers/arv_quantreg_results.rds')
 
 # whether or not to resubmit jobs that have completed already
-resubmitAll = TRUE
+resubmitAll = FALSE
 
 # whether or not to delete all files from parallel runs at the end
 cleanup = TRUE
