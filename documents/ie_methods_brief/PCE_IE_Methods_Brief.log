@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6730 64-bit) (preloaded format=pdflatex 2018.8.11)  8 FEB 2019 14:01
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6730 64-bit) (preloaded format=pdflatex 2018.8.11)  8 FEB 2019 14:31
 entering extended mode
 **./PCE_IE_Methods_Brief.tex
 (PCE_IE_Methods_Brief.tex
@@ -544,9 +544,34 @@ Underfull \hbox (badness 10000) in paragraph at lines 371--372
 
  []
 
+
+Underfull \hbox (badness 10000) in paragraph at lines 375--376
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 378--379
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 380--381
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 382--383
+
+ []
+
+[4]
+Underfull \hbox (badness 10000) in paragraph at lines 384--385
+
+ []
+
 No file PCE_IE_Methods_Brief.bbl.
 
-PCE_IE_Methods_Brief.tex:376: LaTeX Error: \begin{document} ended by \end{backm
+PCE_IE_Methods_Brief.tex:389: LaTeX Error: \begin{document} ended by \end{backm
 atter}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
@@ -555,12 +580,12 @@ Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
 or  <return>  to continue without it.
 
-PCE_IE_Methods_Brief.tex:376: Extra \endgroup
+PCE_IE_Methods_Brief.tex:389: Extra \endgroup
 Things are pretty mixed up, but I think the worst is over.
 
 
 AED: lastpage setting LastPage
-[4
+[5
 
 ] (PCE_IE_Methods_Brief.aux)
 
@@ -574,11 +599,11 @@ LaTeX Warning: There were multiply-defined labels.
 Here is how much of TeX's memory you used:
  5703 strings out of 492973
  91595 string characters out of 3125806
- 272345 words of memory out of 3000000
+ 273345 words of memory out of 3000000
  9481 multiletter control sequences out of 15000+200000
  7501 words of font info for 27 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 41i,10n,46p,880b,266s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 41i,9n,46p,1071b,266s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfon
 ts/cm/cmr10.pfb><C:/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1
 /public/amsfonts/cm/cmss10.pfb><C:/Users/davidp6/AppData/Local/Programs/MiKTeX 
@@ -588,9 +613,9 @@ ppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><C
 :/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/c
 m/cmsy10.pfb><C:/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/pu
 blic/amsfonts/cm/cmti10.pfb>
-Output written on PCE_IE_Methods_Brief.pdf (4 pages, 369116 bytes).
+Output written on PCE_IE_Methods_Brief.pdf (5 pages, 373612 bytes).
 PDF statistics:
- 67 PDF objects out of 1000 (max. 8388607)
+ 70 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  16 words of extra memory for PDF output out of 10000 (max. 10000000)
 
