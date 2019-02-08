@@ -26,9 +26,9 @@ source('./impact_evaluation/_common/set_up_r.r')
 # ---------------------------------------
 # Set boolean switches
 # ---------------------------------------
-rerun_inputs <- FALSE 
+rerun_inputs <- TRUE
 rerun_outputs <- FALSE
-rerun_merge <- FALSE
+rerun_merge <- TRUE
 rerun_explore <- FALSE
 rerun_analysis <- FALSE
 rerun_post <- FALSE
@@ -51,7 +51,7 @@ if(rerun_inputs == TRUE){
 # ---------------------------------------
 # Prep activities and outputs data 
 # ---------------------------------------
-if(rerun_inputs == TRUE){
+if(rerun_outputs == TRUE){
   source('./impact_evaluation/2b_prep_activities_outputs.r')
 }
 
@@ -80,6 +80,7 @@ if (rerun_explore==TRUE) {
 if (rerun_analysis==TRUE) { 
 	source('./impact_evaluation/5a_set_up_for_analysis.r')
 	source('./impact_evaluation/5b_run_analysis.r')
+	source('./impact_evaluation/6_display_results.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', outputFile3))
