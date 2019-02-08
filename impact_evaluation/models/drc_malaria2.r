@@ -39,13 +39,16 @@ model = '
 	budget_M2_6_cumulative ~~ other_dah_M2_cumulative
 	budget_M2_3_cumulative ~~ other_dah_M2_3_cumulative
 	
+	value_ITN_consumed ~~ value_RDT_completed
+	value_RDT_completed ~~ value_totalPatientsTreated
+	
 	# fixed covariances
 	budget_M2_3_cumulative ~~ 0*budget_M3_1_cumulative
 	budget_M2_3_cumulative ~~ 0*budget_M2_6_cumulative
 	budget_M2_6_cumulative ~~ 0*budget_M3_1_cumulative
 	
 	value_ITN_consumed ~~ 0*value_ACTs_CHWs
-	value_ITN_consumed ~~ 0*value_RDT_completed
+	# value_ITN_consumed ~~ 0*value_RDT_completed
 	value_ITN_consumed ~~ 0*value_SP
 	value_ITN_consumed ~~ 0*value_severeMalariaTreated
 	value_ITN_consumed ~~ 0*value_totalPatientsTreated
@@ -57,7 +60,7 @@ model = '
 	
 	value_RDT_completed ~~ 0*value_SP
 	value_RDT_completed ~~ 0*value_severeMalariaTreated
-	value_RDT_completed ~~ 0*value_totalPatientsTreated
+	# value_RDT_completed ~~ 0*value_totalPatientsTreated
 	
 	value_SP ~~ 0*value_severeMalariaTreated
 	value_SP ~~ 0*value_totalPatientsTreated
