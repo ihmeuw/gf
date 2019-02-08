@@ -1,11 +1,10 @@
 variable,y,x,label
-budget_M1_1_cumulative,1,-10,ITN GF ($)
+budget_M1_1_cumulative,1,-10,ITN Mass GF ($)
 budget_M1_2_cumulative,2.25,-10,ITN Cont. GF ($)
 other_dah_M1_1_cumulative,3.5,-10,ITN Other ($)
-other_dah_M1_2_cumulative,4.75,-10,ITN Cont. Other ($)
 budget_M2_1_cumulative,6,-10,Fac. Tx GF ($)
 budget_M2_3_cumulative,7.25,-10,iCCM GF ($)
-other_dah_M2_1_cumulative,8.5,-10,Fac. Tx Other ($)
+other_dah_M2_cumulative,8.5,-10,Case Mgmt Other ($)
 other_dah_M2_3_cumulative,9.75,-10,iCCM Other ($)
 budget_M2_6_cumulative,11,-10,Sev. Tx GF ($)
 budget_M3_1_cumulative,12.25,-10,IPTp GF ($)

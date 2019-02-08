@@ -23,6 +23,10 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 	data[, other_dah_M1_1:=other_dah_M1_1+other_dah_M1_2]
 	data$other_dah_M1_2 = NULL
 	
+	# combine M2 (all case management) with M2_1 (facility tx) for GF budgets (one summary budget from 2015-2017 has it)
+	data[, budget_M2_1:=budget_M2_1+budget_M2]
+	data$budget_M2 = NULL
+	
 	# set other_dah to NA (not 0) after 2016
 	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017, (v):=NA]
 
@@ -192,7 +196,7 @@ for(v in c('budget_M1_1_cumulative', 'budget_M1_2_cumulative', 'other_dah_M1_1_c
 p5b = list()
 i=1
 for(v in c('budget_M2_1_cumulative', 'budget_M2_3_cumulative', 
-	'other_dah_M2_1_cumulative', 'other_dah_M2_3_cumulative')) { 
+	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5b[[i]] = ggplot(data[!is.na(value_RDT_received) & !is.na(get(v))], 
 			aes_string(y='value_RDT_received', x=v)) + 
@@ -207,7 +211,7 @@ for(v in c('budget_M2_1_cumulative', 'budget_M2_3_cumulative',
 p5c = list()
 i=1
 for(v in c('budget_M2_1_cumulative','budget_M2_3_cumulative', 
-	'other_dah_M2_1_cumulative', 'other_dah_M2_3_cumulative')) { 
+	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5c[[i]] = ggplot(data[!is.na(value_RDT_received) & !is.na(get(v))], 
 			aes_string(y='value_ACT_received', x=v)) + 
