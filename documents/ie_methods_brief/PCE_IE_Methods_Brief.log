@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6730 64-bit) (preloaded format=pdflatex 2018.8.11)  8 FEB 2019 14:31
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6730 64-bit) (preloaded format=pdflatex 2018.8.11)  8 FEB 2019 17:04
 entering extended mode
 **./PCE_IE_Methods_Brief.tex
 (PCE_IE_Methods_Brief.tex
@@ -411,19 +411,18 @@ Underfull \hbox (badness 10000) in paragraph at lines 279--280
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 292--293
-
- []
-
-
 LaTeX Font Warning: Font shape `OT1/cmss/m/it' in size <8> not available
-(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 293.
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 285.
 
 
 [1{C:/Users/davidp6/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}
 
 
 ]
+Underfull \hbox (badness 10000) in paragraph at lines 292--293
+
+ []
+
 <Differentiated_Plans_Image.png, id=11, 500.87125pt x 623.83063pt>
 File: Differentiated_Plans_Image.png Graphic file (type png)
 <use Differentiated_Plans_Image.png>
@@ -451,21 +450,24 @@ File: SEM_Diagram_Malaria.pdf Graphic file (type pdf)
 Package pdftex.def Info: SEM_Diagram_Malaria.pdf  used on input line 323.
 (pdftex.def)             Requested size: 337.26506pt x 189.71158pt.
 
-Overfull \hbox (73.35751pt too wide) in paragraph at lines 323--323
+Overfull \hbox (51.67628pt too wide) in paragraph at lines 323--323
  [][] 
  []
+
+
+LaTeX Warning: `h' float specifier changed to `ht'.
 
 
 Underfull \hbox (badness 10000) in paragraph at lines 328--329
 
  []
 
-[2 <./Differentiated_Plans_Image.png> <./SEM_Diagram_Malaria.pdf>]
+
 Underfull \hbox (badness 10000) in paragraph at lines 330--331
 
  []
 
-
+[2 <./Differentiated_Plans_Image.png>]
 Underfull \hbox (badness 10000) in paragraph at lines 332--333
 
  []
@@ -474,7 +476,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 332--333
 
 pdfTeX warning: pdflatex (file ./Pages_from_pilot_data_exploratory_graphs.pdf):
  PDF inclusion: found PDF version <1.6>, but at most version <1.5> allowed
-<Pages_from_pilot_data_exploratory_graphs.pdf, id=31, 650.43pt x 397.485pt>
+<Pages_from_pilot_data_exploratory_graphs.pdf, id=16, 650.43pt x 397.485pt>
 File: Pages_from_pilot_data_exploratory_graphs.pdf Graphic file (type pdf)
 <use Pages_from_pilot_data_exploratory_graphs.pdf>
 Package pdftex.def Info: Pages_from_pilot_data_exploratory_graphs.pdf  used on 
@@ -486,17 +488,7 @@ Underfull \hbox (badness 10000) in paragraph at lines 341--342
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 343--344
-
- []
-
-
 Underfull \hbox (badness 10000) in paragraph at lines 347--348
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 349--350
 
  []
 
@@ -515,11 +507,11 @@ Underfull \hbox (badness 10000) in paragraph at lines 359--360
 
  []
 
-[3 <./Pages_from_pilot_data_exploratory_graphs.pdf>]
+[3 <./SEM_Diagram_Malaria.pdf> <./Pages_from_pilot_data_exploratory_graphs.pdf>
+]
 LaTeX Font Info:    Try loading font information for OMS+cmr on input line 366.
 
-
-("C:\Users\davidp6\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\omscmr.fd"
+ ("C:\Users\davidp6\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\omscmr.fd"
 File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
 )
 LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
@@ -603,7 +595,7 @@ Here is how much of TeX's memory you used:
  9481 multiletter control sequences out of 15000+200000
  7501 words of font info for 27 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 41i,9n,46p,1071b,266s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 41i,9n,46p,1079b,322s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfon
 ts/cm/cmr10.pfb><C:/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1
 /public/amsfonts/cm/cmss10.pfb><C:/Users/davidp6/AppData/Local/Programs/MiKTeX 
@@ -613,7 +605,7 @@ ppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><C
 :/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/c
 m/cmsy10.pfb><C:/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/pu
 blic/amsfonts/cm/cmti10.pfb>
-Output written on PCE_IE_Methods_Brief.pdf (5 pages, 373612 bytes).
+Output written on PCE_IE_Methods_Brief.pdf (5 pages, 374012 bytes).
 PDF statistics:
  70 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
