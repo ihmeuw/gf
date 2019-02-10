@@ -25,10 +25,17 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 dt = readRDS(paste0(dir, 'pnls_outliers/arv_quantreg_results.rds'))
 
 #------------------------------------
+# merge in the facility names to label the graphs 
+
+facilities = readRDS(paste0(dir, 'meta_data/master_facilities.rds'))
+facilities = facilities[ ,.(org_unit_id, org_unit)]
+dt = merge(dt, facilities, by='org_unit_id', all.x=T)
+
+#------------------------------------
 # identify outliers at various levels/thresholds
-dt[ ,thresh4:=median(resid)+(5*sd(resid)), by=org_unit_id]
-dt[ ,thresh10:=median(resid)+(10*sd(resid)), by=org_unit_id]
-dt[ ,thresh20:=median(resid)+(20*sd(resid)), by=org_unit_id]
+dt[ ,thresh5:=median(resid, na.rm=T)+(5*sd(resid, na.rm=T)), by=org_unit_id]
+dt[ ,thresh10:=median(resid, na.rm=T)+(10*sd(resid, na.rm=T)), by=org_unit_id]
+dt[ ,thresh20:=median(resid, na.rm=T)+(20*sd(resid, na.rm=T)), by=org_unit_id]
 
 # select outliers 
 # the value is 100 or more and greater than 10 times the SD of the residuals 
@@ -36,31 +43,27 @@ dt[thresh10 < value & 100 <=value, outlier:=TRUE]
 dt[value <= thresh10, outlier:=FALSE]
 
 # set lower and upper bounds
-dt[ ,upper:=median(resid)+(10*sd(resid)), by=org_unit_id]
-dt[ ,lower:=(median(resid)-(10*sd(resid))), by=org_unit_id]
+dt[ ,upper:=median(resid, na.rm=T)+(10*sd(resid, na.rm=T)), by=org_unit_id]
+dt[ ,lower:=(median(resid, na.rm=T)-(10*sd(resid, na.rm=T))), by=org_unit_id]
 
 # add a 5 SD bound just to be sure
-dt[ ,upper_mid:=median(resid)+(5*sd(resid)), by=org_unit_id]
-dt[ ,lower_mid:=(median(resid)-(5*sd(resid))), by=org_unit_id]
+dt[ ,upper_mid:=median(resid, na.rm=T)+(5*sd(resid, na.rm=T)), by=org_unit_id]
+dt[ ,lower_mid:=(median(resid, na.rm=T)-(5*sd(resid, na.rm=T))), by=org_unit_id]
 
 # typically no values are below lower, but check
 dt[value < lower, outlier:=TRUE]
 
 #----------------------------
 # create an alternate org_unit name for the graphs
+
 dt[ ,facility:=word(org_unit, 2, -1)]
 
 #------------------------------------
-# subset to the health facilities with outliers and visualize 
+ # subset to only the sexes within facilities and elements that have outliers
 
-# subset to the health facilities with 
-out_orgs = dt[outlier==T, unique(org_unit_id)]
-out = dt[org_unit_id %in% out_orgs]
-
-# subset to only the sexes within facilities that have outliers
-out[ , combine:=paste0(org_unit_id, sex)]
-out_sex = out[outlier==T, unique(combine)]
-out = out[combine %in% out_sex]
+dt[ , combine:=paste0(org_unit_id, sex, element)]
+out_sex = dt[outlier==T, unique(combine)]
+out = dt[combine %in% out_sex]
 out[ , combine:=NULL]
 
 #----------------------------
