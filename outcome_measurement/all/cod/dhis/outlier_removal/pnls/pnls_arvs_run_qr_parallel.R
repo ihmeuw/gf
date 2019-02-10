@@ -79,26 +79,26 @@ for (e in unique(dt$element_id)) {
 i = i-1
 numFiles = length(list.files('/ihme/scratch/users/ccarelli/qr_results'))
 while(numFiles<i) { 
-  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 5 seconds...'))
+  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 2 seconds...'))
   numFiles = length(list.files('/ihme/scratch/users/ccarelli/qr_results'))
-  Sys.sleep(5)
+  Sys.sleep(2)
 }
 
-
-# collect all output into one data table
-for (j in seq(i)) {
-  tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j, '.rds'))
-  if(j==1) fullData = tmp
-  if(j>1) fullData = rbind(fullData, tmp)
-  cat(paste0('\r', j))
-  flush.console() 
-}
-
-# save full data
-saveRDS(fullData, outFile)
-
-# clean up parallel files
-if (cleanup==TRUE) { 
-  system('rm /ihme/scratch/users/ccarelli/qr_results/*')
-  system('rm /ihme/scratch/users/ccarelli/quantreg_output/*')
-}
+# 
+# # collect all output into one data table
+# for (j in seq(i)) {
+#   tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j, '.rds'))
+#   if(j==1) fullData = tmp
+#   if(j>1) fullData = rbind(fullData, tmp)
+#   cat(paste0('\r', j))
+#   flush.console() 
+# }
+# 
+# # save full data
+# saveRDS(fullData, outFile)
+# 
+# # clean up parallel files
+# if (cleanup==TRUE) { 
+#   system('rm /ihme/scratch/users/ccarelli/qr_results/*')
+#   system('rm /ihme/scratch/users/ccarelli/quantreg_output/*')
+# }
