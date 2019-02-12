@@ -70,6 +70,8 @@ correct_modules_interventions <- function(resource_database){
   #EKL 12/31/18  "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx"  "UGA-S-TASO_Revised Budget_31 May 2017.xlsx"
   resource_database[module == 'removinglegalbarrierstoaccess' & intervention == 'policyadvocacyonlegalrights' & disease == 'hss', disease:='hiv']
   
-  
+  #EKL 2/11/19 "UGA-H-MoFPED_Revised Budget after Extn_June 2017.xlsx" "UGD-011-G10-S_IL1_SumBudget_24Aug12.xls"
+  #Have some interventions being captured as "NA". 
+  resource_database[is.na(intervention), intervention:='all']
   return(resource_database) 
 }

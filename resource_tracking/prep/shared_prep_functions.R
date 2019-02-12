@@ -18,8 +18,6 @@ fix_diacritics = function(x){
   #print(names(replacement_chars))
   replace_me <- paste(names(replacement_chars), collapse='')
   replace_with <- paste(replacement_chars, collapse = '')
-  print(replace_me)
-  print(replace_with)
   return(chartr(replace_me, replace_with, x))
 }
 

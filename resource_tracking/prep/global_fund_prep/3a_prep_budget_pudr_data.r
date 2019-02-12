@@ -14,12 +14,12 @@
 # - add a check to make sure total sum for a file isn't 'na' after we convert to numeric
 #--------------------------
 
-if (rerun_filelist == TRUE){
+if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, but only if all are run
   # Read in file list 
   source(paste0(country_code_dir, "read_filelist_", country, ".R"))
   resource_database <- read_fileList()
   
-  saveRDS(original_db, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+  saveRDS(resource_database, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
 } else {
   resource_database <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
 }
@@ -30,10 +30,6 @@ verify_numeric_budget = resource_database[, .(budget=gsub("[[:digit:]]", "", bud
 verify_numeric_budget = verify_numeric_budget[, .(budget=gsub("[[:punct:]]", "", budget))]
 verify_numeric_budget = verify_numeric_budget[!is.na(budget) & budget != ""]
 stopifnot(nrow(verify_numeric_budget)==0)
-
-#Make sure your quarters are denoted correctly (months 1, 4, 7, and 10)
-check_dates <- resource_database[!month(start_date)%in%c(1,4,7,10)]
-#stopifnot(nrow(check_dates)==0)
 
 # Make sure there are no overlapping quarters for the same grant (duplicate files. )
 fpm_overlap <- duplicated(resource_database[data_source == "fpm" & file_iteration == "final", .(grant_number, start_date)])
@@ -68,3 +64,7 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expendi
 #Hacky fix - this should be fixed earlier in the prep functions, but remove anything at this point that has NAs for module, intervention, and budget OR expenditure. 
 resource_database = resource_database[!(is.na(module) & is.na(intervention) & (budget == 0 | expenditure == 0))]
 
+#Make sure you have all the files here that you started with in your filelist. 
+rt_files <- unique(resource_database$fileName)
+stopifnot(length(unique(file_list$file_name)) == length(rt_files))
+stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))

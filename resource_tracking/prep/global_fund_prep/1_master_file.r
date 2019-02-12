@@ -4,13 +4,14 @@
 # DATE: Last updated November 2018. 
 # ----------------------------------------------
 
+rm(list=ls())
 # ----------------------------------------------------------------------
 # To do list for this code: 
 # - add in an option to only rework one file (make database append-only)
-# - add in variable creation during the append step to flag current grants. 
 # ---------------------------------------------------------------------
 
 user = "elineb" #Change to your username 
+country = "cod" #Change to the country you want to update. 
 code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
@@ -20,18 +21,15 @@ source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 prep_files <- TRUE
 prep_gos <- FALSE
 
-include_stops = FALSE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
+include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-rerun_filelist <- FALSE #Set to TRUE if you want to prep all files in the file list again. 
+rerun_filelist <- FALSE  #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist <- FALSE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 
 # ---------------------------------------
-# Set global variables and filepaths.  
+# #Mark which grants are currently active to save in file - this should be updated every grant period! 
 # ---------------------------------------
-country <- c("uga") #Change to the country you want to update.
-export_dir <- paste0(dir, "resource_tracking/", country, "/prepped/")
 
-#Mark which grants are currently active to save in file - this should be updated every grant period! 
 current_gtm_grants <- c('GTM-H-HIVOS', 'GTM-H-INCAP', 'GTM-M-MSPAS', 'GTM-T-MSPAS')
 current_gtm_grant_period <- c('2018', '2019-2020', '2018-2020', '2016-2019')
 
@@ -45,7 +43,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 1: Read in and verify module mapping framework
 # ----------------------------------------------
   
-  map = read_xlsx(paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
+  map = read_xlsx(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
   map = data.table(map)
   source(paste0(gf_prep_code, "2_verify_module_mapping.r"))
   module_map <- prep_map(map)
@@ -55,9 +53,6 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # ----------------------------------------------
   
   if (prep_files == TRUE){
-    master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/grants/")
-    export_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", country, "/prepped/")
-    country_code_dir <- paste0(code_dir, "global_fund_prep/", country, "_prep/")
     file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE)
     file_list$start_date <- as.Date(file_list$start_date, format = "%m/%d/%Y")
     file_list = file_list[, -c('notes')]
@@ -75,30 +70,30 @@ current_uga_grant_period <- rep("2018-2020", 5)
       file_list = prioritize_gos(file_list)
     }
   
-  source(paste0(gf_prep_code, "file_prep/1_prep_country_data.r"))
+  source(paste0(gf_prep_code, "3a_prep_budget_pudr_data.r"))
   }
   
   if (prep_gos == TRUE){
-    source(paste0(gf_prep_code, "gos/1_prep_gos_data.r"))
+    source(paste0(gf_prep_code, "3b_prep_gos_data.r"))
   }
   
 # ----------------------------------------------
 # STEP 4: Map prepped data 
 # ----------------------------------------------
   
-  source(paste0(gf_prep_code, "3_map_raw_data.R"))
+  source(paste0(gf_prep_code, "4_map_data.R"))
   
 # ----------------------------------------------
 # STEP 5: Aggregate all data sources
 # ----------------------------------------------
 
-  source(paste0(code_dir, "aggregate_all_data_sources.r"))
+  #source(paste0(code_dir, "aggregate_all_data_sources.r"))
 
 # ----------------------------------------------
 # STEP 6: Verify budget numbers
 # ----------------------------------------------
 
-  source(paste0(gf_prep_code, "5_verify_budget_numbers.r")) 
+  source(paste0(gf_prep_code, "6_verify_financial_numbers.r")) 
  
 # ----------------------------------------------
 # STEP 7: Upload to Basecamp

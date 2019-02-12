@@ -12,6 +12,9 @@
 # map to be used for mapping modules and interventions. 
 # ---------------------------------------------
 
+#Temporary task - find all of the rows in the map that are mapping to files after 2017. Save these in their own file, and remove all RSSH (?)
+
+
 prep_map <- function(map){
   
 # -------------------------------
@@ -145,6 +148,58 @@ map[module == 'malprevention' & intervention == 'bcccommunityoutreach', code:='M
 #map[module == 'tbtreatment' & 'expandandconsolidatehighqualitydotsservices', code:='T1'] #David 
 map[, prefix:=NULL]
 
+#Correcting some modules back to what they originally were in the budgets, pulling all manual changes into the same file! 
+map[intervention == 'rsssuivietevaluationcommunicationregulicredelinformation' & module == 'rsssuivietevaluationcommunicationregulicredelinformation', 
+    module:='unspecified']
+map[intervention == 'rsssuivietevaluationanalyseexamenettransparence' & module == 'rsssuivietevaluationanalyseexamenettransparence', 
+    module:='unspecified']
+map[intervention == 'rsssuivietevaluationenquete' & module == 'rsssuivietevaluationenquete', 
+    module:='unspecified']
+map[intervention == 'gestiondeprogrammegestiondesubvention' & module == 'gestiondeprogrammegestiondesubvention', 
+    module:='unspecified']
+map[intervention == 'priseenchargepreparationetriposteauxepidemies' & module == 'priseenchargepreparationetriposteauxepidemies', 
+    module:='unspecified']
+map[intervention == 'priseenchargetraitementenmilieuhospitalier' & module == 'priseenchargetraitementenmilieuhospitalier', 
+    module:='unspecified']
+interventions = c('analyseexamenettransparence', 'depistageduvihetconseildanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients', 
+                  'enquetes', 'financementfondesurlesresultats', 'gestiondelasubvention', 'gestiondeprogrammepolitiqueplanificationcoordinationetgestion', 
+                  'gestionfinancicreperformancetransparenceetobligationredditionnelledessystcmesdegestionfinancicrepublicsdanslesecteurdelasante',
+                  'performancetransparenceetobligationredditionnelledessystcmesdegestionfinancicrepublicsdanslesecteurdelasante',
+                  'priseenchargeetpreventiondelatuberculosedepistageetdiagnosticdesmaladies', 'priseenchargeetpreventiondelatuberculoseimplicationdetouslesprestatairesdesoins',
+                  'suivietevaluationanalyseexamenettransparence', 'suivietevaluationcommunicationregulicredelinformation', 'suivietevaluationenquete',
+                  'traitementantiretroviralarvetsuivi', 'tuberculosemultiresistantedepistageetdiagnosticdesmaladiestuberculosemultiresistante', 'tuberculosemultiresistantetraitementtuberculosemultiresistante',
+                  'tuberculosevihimplicationdetouslesprestatairesdesoins', 'tuberculosevihinterventionsconcerteesdeluttecontrelatuberculoseetlevih')
+map[intervention%in%interventions & module == intervention, module:='unspecified'] #This was one specific type of change either Irena or Naomi made, 
+#where if the module didn't exist they assigned it the same information as the intervention, where it's really 'unspecified' in the raw files. 
+#--------------------------------------------------------------------------------
+# CLEANING (Check 10) Make sure that program management, performance based financing, and unspecified
+#     in 'module' are NOT categorized as RSSH, unless they're with an RSSH grant. 
+#   (They should have the disease of the grant they're in)
+#--------------------------------------------------------------------------------
+map[disease=='hiv' & code == 'R8', code:='H9']
+map[disease=='hiv' & code == 'R8_1', code:='H9_1']
+map[disease=='hiv' & code == 'R8_2', code:='H9_2']
+map[disease=='hiv' & code == 'R8_3', code:='H9_3']
+map[disease == 'hiv' & code == 'R98', code:= 'H98']
+map[disease == 'hiv' & code == 'R99', code:= 'H99']
+
+map[disease=='hiv/tb' & code == 'R8_1', code:='H9_1']
+
+map[disease=='tb' & code == 'R8', code:='T4']
+map[disease=='tb' & code == 'R8_1', code:='T4_1']
+map[disease=='tb' & code == 'R8_2', code:='T4_2']
+map[disease=='tb' & code == 'R8_3', code:='T4_3']
+map[disease=='tb' & code == 'R98', code:='T98']
+map[disease=='tb' & code == 'R99', code:='T99']
+
+map[disease=='malaria' & code == 'R8', code:='M4']
+map[disease=='malaria' & code == 'R8_1', code:='M4_1']
+map[disease=='malaria' & code == 'R8_2', code:='M4_2']
+map[disease=='malaria' & code == 'R8_3', code:='M4_3']
+map[disease=='malaria' & code == 'R98', code:='M98']
+map[disease=='malaria' & code == 'R99', code:='M99']
+
+
 #--------------------------------------------------------------------------------
 # CLEANING - remove duplicates created by running checks above.
 #--------------------------------------------------------------------------------
@@ -180,6 +235,11 @@ redistribution_map <- map[coefficient!=1]
 redistribution_map[, coeff_sum:=round(sum(coefficient), 1), by=keyVars]
 
 redistribution_error = redistribution_map[coeff_sum != 1.0]
+if(nrow(redistribution_error)>0 & include_stops == TRUE){
+  print(unique(redistribution_error[, c("module", "intervention", "code"), with = FALSE]))
+  stop(paste0(print(nrow(redistribution_error)), " lines have coefficients that don't sum to 1 by key variables."))
+}
+
 #--------------------------------------------------------------------------------
 # 3. Remove all cases where "na" or "all" was mapping to a specific code. ***EMILY KEEP WORKING HERE- CHECK IF CODE IS GOING TO 'UNSPECIFIED'. 
 #--------------------------------------------------------------------------------
@@ -189,10 +249,11 @@ check_unspecified<-map[module %in% unspecified_mods | intervention %in% unspecif
 check_unspecified <- check_unspecified[nchar(code)>2] #It's okay to have some general codes with unspecified mods; but should also review these. 
 check_unspecified <- unique(check_unspecified)
 
-if(nrow(check_unspecified)>0 & include_stops == TRUE){
-    print(unique(check_unspecified[, c("module", "intervention", "code"), with = FALSE]))
-    stop(paste0(print(nrow(check_unspecified)), " modules have na or all as values."))
-}
+#EKL commenting this out for now -- until we apply NLP it's okay to have all or na as values. 2/7/19
+# if(nrow(check_unspecified)>0 & include_stops == TRUE){
+#     print(unique(check_unspecified[, c("module", "intervention", "code"), with = FALSE]))
+#     stop(paste0(print(nrow(check_unspecified)), " modules have na or all as values."))
+# }
 
 #--------------------------------------------------------------------------------
 # 4. Check for close spellings of the same module and intervention  ***EMILY KEEP WORKING HERE 
@@ -224,10 +285,11 @@ map_subset = map_subset[!(prefix=='R')]
 
 map_subset = map_subset[order(module, intervention)]
 
-if(nrow(map_subset)>0 & include_stops == TRUE){
-  print(unique(map_subset[, c("module", "intervention", "code", "disease"), with = FALSE]))
-  stop(paste0(print(nrow(map_subset)), " duplicates in module/intervention have different mapping codes"))
-}
+#This is okay to ignore. It's okay for the same module, intervention, and code to be included for more than one disease. EKL 2/7/19 
+# if(nrow(map_subset)>0 & include_stops == TRUE){
+#   print(unique(map_subset[, c("module", "intervention", "code", "disease"), with = FALSE]))
+#   stop(paste0(print(nrow(map_subset)), " duplicates in module/intervention have different mapping codes"))
+# }
 
 #--------------------------------------------------------------------------------
 # 6. You should only have one phrase in each language mapping to an intervention code.
@@ -296,6 +358,7 @@ check_rssh = check_rssh[verified == FALSE]
 check_rssh = check_rssh[order(module)]
 
 if(nrow(check_rssh)>0 & include_stops == TRUE){
+  print("Unverified RSSH modules:")
   print(unique(check_rssh[!(module %in% problem_mods), .(module)]))
 }
 
@@ -306,6 +369,28 @@ map[, prefix:=NULL]
 #    and code, they should have the same coefficient. 
 #     ***EMILY KEEP WORKING HERE. 
 #--------------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------------
+# 10. Make sure that program management, performance based financing, and unspecified
+#     in 'module' are NOT categorized as RSSH, unless they're with an RSSH grant. 
+#   (They should have the disease of the grant they're in)
+#--------------------------------------------------------------------------------
+hiv_codes <- c('H9', 'H9_1', 'H9_2', 'H9_3', 'H98', 'H99')
+tb_codes <- c('T4', 'T4_1', 'T4_2', 'T4_3', 'T98', 'T99')
+mal_codes <- c('M4', 'M4_1', 'M4_2', 'M4_3', 'M98', 'M99')
+rssh_codes <- c('R8', 'R8_1', 'R8_2', 'R8_3', 'R98', 'R99')
+
+check_rssh_cats <- map[code%in%rssh_codes & (disease != 'rssh' & disease != 'hss')]
+if(nrow(check_rssh_cats)>0 & include_stops == TRUE){
+  print(unique(check_rssh_cats[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
+  stop(paste0(print(nrow(check_rssh_cats)), " cases where general modules are incorrectly classified as RSSH")) #Check with David here. 
+}
+
+
+#--------------------------------------------------------------------------------
+#Write final mapp and .diff files for comparison
+#--------------------------------------------------------------------------------
+
   write.csv(map, "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/gf_mapping.csv")
 
   #Write a "diff" file to repository to make comparing changes easier. 
