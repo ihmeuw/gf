@@ -21,7 +21,7 @@ source(paste0(document_prep, "prep_old_detailed_budget.R"))
 #General prep functions 
 general_prep <- paste0(code_dir, "global_fund_prep/")
 
-source(paste0(general_prep, "prep_modular_approach_pudr.R"))
+source(paste0(general_prep, "file_prep/prep_modular_approach_pudr.R"))
 
 #-----------------------------------------
 # Read in raw files, and rbind them together
@@ -50,7 +50,7 @@ for(i in 1:nrow(file_list)){
     tmpData <- prep_old_module_budget(file_dir, as.character(file_list$file_name[i]),
                                    file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], 
                                    file_list$disease[i], file_list$loc_id[i], file_list$period[i]
-                                   , file_list$grant[i], implementer, file_list$source[i], file_list$language[i])
+                                   , file_list$grant[i], file_list$primary_recipient[i], file_list$source[i], file_list$language[i])
   } else if(file_list$function_type[i]=="rejected"){
     tmpData <- prep_cod_rejected(paste0(file_dir, file_list$file_name[i]))
     

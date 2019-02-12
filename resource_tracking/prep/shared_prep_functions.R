@@ -6,7 +6,7 @@
 ### This code contains functions that map RT data to the GF Modular Framework 
 
 # ----------------------------------------------
-##### Fixes diacritical marks
+#Fixes diacritical marks
 # ----------------------------------------------
 
 fix_diacritics = function(x){
@@ -18,8 +18,6 @@ fix_diacritics = function(x){
   #print(names(replacement_chars))
   replace_me <- paste(names(replacement_chars), collapse='')
   replace_with <- paste(replacement_chars, collapse = '')
-  print(replace_me)
-  print(replace_with)
   return(chartr(replace_me, replace_with, x))
 }
 
@@ -34,13 +32,43 @@ replace_acronyms = function(x) {
   return(x)
 }
 
+#-------------------------------------------------------
+# Split HIV/TB combined grants  
+# ------------------------------------------------------
+split_hiv_tb = function(dt){
+  tb_mods <- c('Multidrug-resistant TB', 'TB care and prevention')
+  hiv_mods <- c('Comprehensive prevention programs for men who have sex with men', 'Comprehensive prevention programs for sex workers and their clients', 'Comprehensive prevention programs for transgender people',
+                'HIV Testing Services', 'Prevention of mother-to-child transmission', 'Prevention programs for adolescents and youth, in and out of school', 'Prevention programs for general population',
+                'Programs to reduce human rights-related barriers to HIV services', 'Treatment, care and support', 'Comprehensive prevention programs for people who inject drugs and their partners')
+  rssh_mods <- c('Community responses and systems', 'Integrated service delivery and quality improvement', 'Health management information system and monitoring and evaluation',
+                 'Human resources for health, including community health workers', 'Procurement and supply chain management systems')
+  
+  #Make sure all diseases are spelled the same 
+  dt[disease == "tb/hiv", disease := "hiv/tb"]
+  
+  #Reclassify based on gf_module 
+  dt[gf_module %in% tb_mods & disease == "hiv/tb", disease:="tb"]
+  dt[gf_module %in% hiv_mods & disease == "hiv/tb", disease:="hiv"]
+  dt[gf_module %in% rssh_mods & disease == "hiv/tb", disease:="rssh"]
+  
+  if (nrow(dt[disease == 'hiv/tb'])!= 0){
+    print("Alert: The following modules were not split. They will be relabeled as HIV.")
+    print(unique(dt[disease == "hiv/tb", .(gf_module, gf_intervention)]))
+  }
+  #Right now, just reclassifying all other modules that don't fit in these categories to be "hiv". 
+  dt[disease == "hiv/tb", disease:= 'hiv']
+  
+  #Check to make sure all modules were caught in the edit above - Should still have Program management; TB/HIV; and Unspecified. 
+  stopifnot(nrow(dt[disease == "hiv/tb"])==0)
+  return(dt)
+}
 
 # ----------------------------------------------
 ##### Function to clean up the mods/interventions in the RT data #####
 # ----------------------------------------------
 
 ##function that takes three parameters: the dataset you want cleaned, and the two vectors we created above: 
-strip_chars <- function(gfData, unwanted_array, remove_chars){
+strip_chars <- function(dt){
   
   ## vector dictionary of special characters to regular characters
   unwanted_array = list(    'S'='S', 's'='s', 'Z'='Z', 'z'='z', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='C', '?'='E', '?'='E',
@@ -53,32 +81,29 @@ strip_chars <- function(gfData, unwanted_array, remove_chars){
   
   
   # vector of characters or phrases to remove
-  remove_chars <- c(" ","hss", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
+  remove_chars <- c(" ", "[\u2018\u2019\u201A\u201B\u2032\u2035]","[\u201C\u201D\u201E\u201F\u2033\u2036]"
                     , "[[:punct:]]", "[^[:alnum:]]","\"", ",") 
   
   
+  #Save an original copy of module and intervention
+  dt$orig_module <- copy(dt$module)
+  dt$orig_intervention <- copy(dt$intervention)
+  
   ##remove special characters and blank spaces
-  gfData$orig_module <- copy(gfData$module)
-  gfData$orig_intervention <- copy(gfData$intervention)
+  dt$module <-tolower(dt$module)
+  dt$module <-gsub(paste(remove_chars, collapse="|"), "",dt$module)
   
+  dt$intervention  <-tolower(dt$intervention)
+  dt$intervention <-gsub(paste(remove_chars, collapse="|"), "",dt$intervention)
   
-  gfData$module <-tolower(gfData$module)
-  gfData$module <-gsub(paste(remove_chars, collapse="|"), "",gfData$module)
-  
-  gfData$intervention  <-tolower(gfData$intervention)
-  gfData$intervention <-gsub(paste(remove_chars, collapse="|"), "",gfData$intervention)
-  
-  
-  gfData$module <- chartr(paste(names(unwanted_array), collapse=''),
+  dt$module <- chartr(paste(names(unwanted_array), collapse=''),
                                 paste(unwanted_array, collapse=''),
-                                gfData$module)
-  gfData$intervention <- chartr(paste(names(unwanted_array), collapse=''),
+                                dt$module)
+  dt$intervention <- chartr(paste(names(unwanted_array), collapse=''),
          paste(unwanted_array, collapse=''),
-         gfData$intervention)
-  
-  gfData$intervention[is.na(gfData$intervention)] <- "all" #Why are we doing this here?? Or at all??? EKL 12/3/18 
+         dt$intervention)
 
-return(gfData)
+return(dt)
 }
 
 # ----------------------------------------------

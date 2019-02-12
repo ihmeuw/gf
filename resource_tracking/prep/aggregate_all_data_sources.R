@@ -10,7 +10,7 @@
 #   6. Financing global health estimates. 
 #
 # These data can then be used to conduct analysis. 
-# DATE: Last updated December 2018. 
+# DATE: Last updated February 2019.  
 # ----------------------------------------------
 
 
@@ -23,7 +23,6 @@
 
 #---------------------------------------
 
-library(data.table)
 cod_prepped <- "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/"
 gtm_prepped <- "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/"
 uga_prepped <- "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/"
@@ -125,24 +124,10 @@ na_year <- gos_prioritized_budgets[is.na(year)]
 stopifnot(nrow(na_year)==0)
 
 #Generate variables 
-#final_budgets[, end_date:=start_date + period-1]
+#gos_prioritized_budgets[, end_date:=start_date + period-1]
 
-#Generate a binary variable for current grants. 
-final_budgets$current_grant = FALSE 
-
-for (i in 1:length(current_gtm_grants)){ #Currently flagging 4
-  final_budgets[grant_number==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], current_grant:=TRUE]
-}
-
-for (i in 1:length(current_uga_grants)){ #Flagging 0
-  final_budgets[grant_number==current_uga_grants[i] & grant_period==current_uga_grant_period[i], current_grant:=TRUE]
-}
-
-for (i in 1:length(current_cod_grants)){ #Flagging 5
-  final_budgets[grant_number==current_cod_grants[i] & grant_period==current_cod_grant_period[i], current_grant:=TRUE]
-}
-
-all_current_grants = unique(final_budgets[current_grant==TRUE, .(grant_number, grant_period, fileName)])
+#Check that you've got the current grants right. 
+all_current_grants = unique(gos_prioritized_budgets[current_grant==TRUE, .(grant_number, grant_period, fileName)])
 expected_current_grants <- length(current_gtm_grants) + length(current_uga_grants) + length(current_cod_grants)
 stopifnot(nrow(all_current_grants)==expected_current_grants)
 
@@ -215,15 +200,20 @@ for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant nu
 }
 
 # Verify data 
-na_year <- final_expenditures[is.na(year)]
+na_year <- gos_prioritized_expenditures[is.na(year)]
 stopifnot(nrow(na_year)==0)
 
 #Generate variables 
-#final_expenditures[, end_date:=start_date + period-1]
+#gos_prioritized_expenditures[, end_date:=start_date + period-1]
+
+#Check that you've got the current grants right. 
+all_current_grants = unique(gos_prioritized_expenditures[current_grant==TRUE, .(grant_number, grant_period, fileName)])
+expected_current_grants <- length(current_gtm_grants) + length(current_uga_grants) + length(current_cod_grants)
+stopifnot(nrow(all_current_grants)==expected_current_grants)
 
 # Write data 
-write.csv(final_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
-saveRDS(final_expenditures, paste0(final_write, "final_expenditures.rds"))
+write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rds"))
 
 #----------------------------------
 # 3. GF FILE ITERATIONS
@@ -235,7 +225,7 @@ all_gf_gtm <- readRDS("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/bu
 all_gf_files <- rbind(all_gf_cod, all_gf_uga, all_gf_gtm, fill = TRUE)
 
 #Write data 
-write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
+#write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
 saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations.rds"))
 
 
