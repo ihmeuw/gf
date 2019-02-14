@@ -1,5 +1,9 @@
 #Temporary task - find all of the rows in the map that are mapping to files after 2017. Save these in their own file, and remove all RSSH (?)
 
+#To do- split files into english, french, and spanish training data sets. Include activity descriptions. 
+
+#Eventually just need to have post-2017 maps for French, English, and Spanish. 
+
 rm(list=ls())
 library(data.table)
 source("C:/Users/elineb/Documents/gf/resource_tracking/prep/shared_prep_functions.R", encoding = "UTF-8")
