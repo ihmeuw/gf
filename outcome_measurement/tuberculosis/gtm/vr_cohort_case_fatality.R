@@ -8,14 +8,15 @@
 #############################################################################################
 
 #Still to work on cleaning up the final variable names for ease of interpretation
-#Oct 18 - look at splitting the case notifications by HIV status
+#Next step is to merge all of the datasets together
+#Note that the HIV status is assigned where it is missing in a hard-coded step in line ~110. Check these assumptions.
 
 rm(list=ls())
 library(data.table)
 library(ggplot2)
 
 
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') # have to declare the J Drive differently on the cluster 
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j') # have to declare the J drive on the cluster 
 vr_dir <-  ('/ihme/geospatial/vr_prep/cod/outputs/gtm_collaborators/')
 cohort_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
 out_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
@@ -23,14 +24,13 @@ out_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_dat
 
 cohort <- fread(paste0(cohort_dir, "GTM - Tx cohort data 2012-2016.csv"))
 deaths <- fread(paste0(out_dir, "deaths_vr_cohort.csv"))
-notif<-fread("J:/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/GTM - TB notifications 2012-2017 deidentified.csv")
-gbd_tb<-fread("J:/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/tb_no_hiv_bothsex_inc_count.csv")
-gbd_tb_hiv<-fread("J:/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/hiv_tb_incidence_counts.csv")
+notif<-fread(paste0(j, "/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/GTM - TB notifications 2012-2017 deidentified.csv"))
+gbd_tb<-fread(paste0(j, "/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/tb_no_hiv_bothsex_inc_count.csv"))
+gbd_tb_hiv<-fread(paste0(j,"/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/hiv_tb_incidence_counts.csv"))
 
 ##Case fatality plausibility analysis
-
-
-deaths$V1<-NULL
+#Start with the deaths------------------------------------------------------------------------------------------------------------------- 
+deaths[,V1:=NULL]
 
 #Reshape long to wide to facilitate subtraction
 setkey(deaths, year_id, cause, source)
@@ -38,11 +38,13 @@ deaths[CJ(unique(year_id), unique(source), unique(cause))]
 wide<- deaths[CJ(unique(year_id), unique(cause), unique(source))][, as.list(deaths), by = (year_id)]
 setnames(wide, c("year_id", "cohort_all", "raw_vr_all", "redist_vr_all", "cohort_tb", "raw_vr_tb", "redist_vr_tb", "cohort_tbhiv", "raw_vr_tbhiv", "redist_vr_tbhiv"))
 
-#Do subtraction for absolute counts
+#This section generates the numerator for the case fatality analysis by calculating the difference between the TB and TB/HIV deaths
+#in the VR dataset and those in the cohort dataset.
 wide[,tb_raw_vr:=raw_vr_tb - cohort_tb]
 wide[,tb_redist_vr:=redist_vr_tb - cohort_tb]
 wide[,tb_hiv_raw_vr:=raw_vr_tbhiv - cohort_tbhiv]
 wide[,tb_hiv_redist_vr:=redist_vr_tbhiv - cohort_tbhiv]
+#write.csv(wide, file=paste0(out_dir, 'wide_deaths_vr_cohort.csv'))
 
 diff_counts<-wide[,c("year_id","tb_raw_vr", "tb_redist_vr", "tb_hiv_raw_vr", "tb_hiv_redist_vr")]
 diff_counts<-na.omit(diff_counts)
@@ -81,9 +83,9 @@ p2 <- ggplot(long_perc, aes(x = year_id, y= percentage, color=measure)) +
 p2
 
 #Move from deaths to incident cases----------------------------------------------------------------------------------------------------
-#Next comparisons are between estimated incident cases, notified cases, and cohort incident cases
+#Next comparisons are between estimated incident cases (GBD), notified cases, and cohort incident cases
 
-#Now working with cohort data
+#Now working with treatment cohort data
 #Subset to avoid overlapping types 
 tb_denom <- cohort[table %in% c('Nuevos Pulmonares BK+', 
                                 'Nuevos Pulmonares BK-', 'Nuevos Pediatricos', 
@@ -105,12 +107,15 @@ notif<-notif[,c("MUNICIPIO","DEPARTAMENTO", "SEXO", "EDAD", "CONDICIONINGRESO", 
 notif<-notif[notif$CONDICIONINGRESO=="nuevo"|notif$CONDICIONINGRESO=="recaida",]
 
 #Challenge in splitting case notifications by HIV status is that HIV status is not known for many persons.
-#This comparison may not be feasible for notifications dataset because of the HIV issue
+#However, as shown in the table below, the proportion of persons with unknown status drops markedly over time to ~6% in 2017.
 table(notif$VIH, notif$YEAR, exclude=NULL)
-#Recode the deaths as unknown HIV status - ask for help in the analagous DT code
+
+#Why are there notifications with an HIV status of 'death'?
+#Recode these notifications with a status of death as unknown HIV status
 notif[VIH=="Death", VIH := NA] 
 annual<-setDT(notif)[, .(count = .N), by = c("VIH", "YEAR")]
 #Simplest assumption is that the persons with unknown HIV status will have the same likelihood of testing positive as any TB patient, which is ~8% by WHO estimates.
+#Alternatively, we could look at the ratio of positive to negative tests. Will hard code the 8% for now
 #Reshape wide to do this re-assigment
 setkey(annual, YEAR, VIH)
 annual[CJ(unique(YEAR), unique(VIH))]
@@ -124,20 +129,33 @@ wide_n[,rev_r:=reactive+0.08*missing]
 #wide_n<-wide_n[,diff:=orig_total-new_total]
 #table(wide_n$diff)
 
+#Drop the old columns. There must be a way to do this all at once.
+wide_n[,missing:=NULL]
+wide_n[,reactive:=NULL]
+wide_n[,"not reactive":=NULL]
+
 #Merge cohort and notifications for incident cases
 inc<-merge(annual_tb_solo, wide_n, by=c("year"))
 inc<-merge(annual_tb_hiv, inc, by=c("year"))
 
-#Prep the GBD estimates for merging
+#Prep the GBD estimates for merging - Anticipate that this formatting will need tweaking for GBD 2017 downloads, especially for TB/HIV
+#GBD TB
 colnames(gbd_tb)[colnames(gbd_tb)=="Year"] <- "year"
 colnames(gbd_tb)[colnames(gbd_tb)=="Value"]<- "gbd_tb_case"
-cols = c("year", "gbd_tb_case")
-gbd_tb[, .SD, .SDcols = cols] #Not working
-gbd_tb<-gbd_tb[,c(year, gbd_tb_case)]
+gbd_tb<-gbd_tb[year>2008, .(year, gbd_tb_case)]
+#GBD TB/HIV - The input data for this are structured differently than for TB. They include sex-specific data, MDR, XDR and HIV without TB
+#This is largely because the outputs for TB/HIV incidence in GBD 2016 were so fouled up. This will be better in GBD 2017.
 colnames(gbd_tb_hiv)[colnames(gbd_tb_hiv)=="year_id"] <- "year"
+gbd_tb_hiv<-gbd_tb_hiv[year>2008 & sex_id==3 & (cause_id==948|cause_id==949|cause_id==950),] #removes HIV rows and sex-specific rows
+gbd_tb_hiv<-gbd_tb_hiv[,.(year, count)]
+#The next step sums TB/HIV cases by year for drug-susceptible, MDR, and XDR
+gbd_tb_hiv <- gbd_tb_hiv[, list(gbd_tb_hiv_case=sum(count,na.rm=TRUE)), by='year']
 
-
-#Merge 
+#Merge the GBD estimates into the other incidence data sources
+inc<-merge(gbd_tb, inc, by=c("year"))
+inc<-merge(gbd_tb_hiv,inc, by=c("year"))
+#write.csv(inc, file=paste0(out_dir, 'gtm_tb_incidence.csv'))
+#Problem that GBD estimates for TB solo are undershooting the actual notifications, and GBD TB/HIV estimates are nearly twice what is recorded.
 
 #Calculate difference in deaths over difference in cohort - notifications to estimate case fatality for persons not started on treatment.
 
