@@ -24,3 +24,10 @@ OPEN REVIEW REQUESTS:
 *Example* Hi David, could you please review the following two files for me? 
 "C:\Users\elineb\Documents\gf\resource_tracking\prep\global_fund_prep\gos\prep_gos_data.R"
 "C:\Users\elineb\Documents\gf\resource_tracking\miscellaneous\graph_ghe_using_sicoin.r"
+
+Anyone - please review the (messy!) prep code I wrote for the outputs/activities data going into the impact
+model... I'm not sure if some of the messy code can be shortened, or if some of it just is the way it is.  Also,
+one thing I struggle with is constantly aggregating to different geographic/temporal levels. I started working on a 
+combination dataset with SNIS and PNLP at the lowest levels, with all the data to have it be more like the resource 
+tracking data, but that was after I wrote this code.  Anyways, it's here:
+.\gf\impact_evaluation\2b_prep_activities_outputs.r

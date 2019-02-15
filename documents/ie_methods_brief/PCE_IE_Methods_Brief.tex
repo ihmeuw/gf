@@ -225,14 +225,14 @@ This is a working document and may be updated as specific details in each countr
 % ------------------------------------------------------------------------------
 % Overview
 \section{Purpose of this Document}
-The purpose of this document is to explain the analytical approach which we have selected for impact evaluation, with the goals of methods improvement through feedback, transparency, and demonstration of the robustness (both strengths and limitations) of the methods.\\
+The purpose of this document is to explain the analytical approach which we have selected for impact evaluation, with the goals of methods improvement through feedback, transparency, and demonstration of the robustness (both strengths and limitations) of the methods. A complete summary of the final format for PCE reporting, qualitative methods and work plans and timelines may be better suited for a separate document. \\
 
 The intended audience for this document was originally the PCE consortium of IHME, PATH, CIESAR, IDRC and PATH DRC, drafted in April 2018. It has been updated to include all eight PCE countries, with the intended audience being both GEPs, all CEPs, the TERG and TERG Secretariat.
 
 % ------------------------------------------------------------------------------
 % Overview
 \section{Overview}
-The basic approach to this impact evaluation is to take a differentiated approach by disease and country. This can be summarized as three separate approaches, brought together by a common analytical framework (the PCE Theory of Change and Results Chains):
+The basic approach to this impact evaluation is to take a differentiated approach by disease and country. This can be summarized as three separate approaches, brought together by a common analytical framework (the PCE Theory of Change and Results Chains, described elsewhere):
 
 \begin{enumerate}
   \item Dose-response analysis
@@ -274,7 +274,7 @@ Control variables are especially critical for impact analysis. The basic approac
 \section{Subject of the Impact Evaluation} \label{hypothesis}
 
 % that changes in global fund investments result in observable changes in outputs, and that those changes in outputs result in observable changes in coverage and, subsequently burden of disease
-The core hypothesis of this impact evaluation is that changes in Global Fund investments result in observable changes in health systems outputs. Additionally, the hypothesis is that those changes in outputs result in observable changes in intervention coverage, which subsequently results in improvements in burden of disease. \\
+The core hypothesis of this impact evaluation is that changes in Global Fund investments result in observable changes in health systems outputs. Additionally, the hypothesis is that those changes in outputs result in observable changes in intervention coverage, which subsequently result in improvements in burden of disease. The PCE will take an approach of analyzing all available data (historically and along the results chain), with an emphasis on the most recent data and subnational data wherever possible. \\
 
 Changes in Global Fund investments cannot be analyzed without also considering investments from other development partners, as well as government and private/out-of-pocket health expenditure however. Furthermore, individual outputs are often impossible to attribute specifically to one source of funding, given the role of partnerships in investment decisions and the pooled nature of resources that channel through national programs. \\
 
@@ -289,7 +289,7 @@ For these reasons, the subject of the impact evaluation is twofold:
 \section{Differentiated Approaches by Country and Disease} \label{why}
 
 % to be clear, the results chain is the apporach for everything, it's just about what we do with it
-Figure \ref{fig1} displays the anticipated approach that will be taken in each country for each disease. These selections were primarily based on CEP knowledge of country context and data (see Section \ref{why}). To be clear, the approach for every disease is the analyze indicators along the results chains. The differentiation of approaches pertains more to what the PCE will do with the results of those individual indicators. \\
+Figure \ref{fig1} displays the anticipated approach that will be taken in each country for each disease. These selections were primarily based on CEP knowledge of country context and data (see Section \ref{why}). To be clear, the approach for every disease is to analyze indicators along the results chains. The differentiation of approaches pertains more to what the PCE will do with the results of those individual indicators. \\
 
 % table
 \begin{figure}[h]
@@ -304,67 +304,84 @@ Figure \ref{fig1} displays the anticipated approach that will be taken in each c
 % Why
 \section{Motivation for Differentiated Approaches} \label{why}
 
-There are several reasons why the PCE has opted to take a different approach by diease and country. First and foremost is in an effort to provide results that are relevant to the broad array of audiences who the results might reach. While an overall assessment of the steps leading from Global Fund investment to impact may be relevant and useful to stakeholders in the Global Fund Secretariat, a more tailored analysis focused on isolated sections of the results chains may be more useful to national programs. \\
+There are several reasons why the PCE has opted to take a different approach by disease and country. First and foremost is in an effort to provide results that are relevant to the broad array of audiences who the results might reach. While an overall assessment of the steps leading from Global Fund investment to impact may be relevant and useful to stakeholders in the Global Fund Secretariat, a more tailored analysis focused on isolated sections of the results chains may be more useful to national programs. \\
 
 Second is the feasibility of adding value through impact evaluation. Differences in data availability (indicators tracked and level of disaggregation), data quality, and basic differences in epidemiology limit our ability to apply a generic approach to all diseases in all countries. Furthermore, extensive impact evaluation has already been (or is being) conducted by other organizations for certain diseases in certain countries. For these reasons, the PCE seeks to evaluate different diseases in different ways in order identify applications of existing data that are both possible given known limitations and actually useful to stakeholders. \\
 
 % ------------------------------------------------------------------------------
 % Basic Outputs Model
-\section{Dose-response model}
-STOPPED HERE
+\section{Dose-Response Model}
+
+% Summary
+The idea behind the dose-response model is that greater intensity of investment in one intervention is expected to produce more outputs in its associated indicator and vice-versa. What makes this more complex than a simple comparison of time trends is the fact that each intervention may realistically be expected to produce outputs in multiple indicators, and each activity/output indicator is expected to be impacted by investments in multiple interventions. For example, investment in facility-based treatment of malaria is expected to result in increases in RDTs used and ACTs used (not just one or the other), and so is integrated community case management. Without more detailed data that precisely tracks outputs that are the direct response to certain investments, this sort of many-to-many relationship is necessary to reflect in a model. \\
+
 % the form of the model
-The central model for measuring the contribution of Global Fund inputs to health systems outputs is a structural equation model. The precise functional form of the model and variables in it will be selected to be fit-for-purpose given the output data. In theory, the characteristics of typical output data are that they are integer (whole numbers), over-disbursed (requiring both a mean and variance parameter to describe their distribution), heteroskedastic (different variance at different levels of a given explanatory variable), and temporally-autocorrelated (similar to itself in previous time points). For these reasons, the model is (arguably) most appropriately fit as a generalized linear mixed model (GLMM) in the negative binomial family. For simplicity, I will avoid model notation that explicitly represents a negative binomial GLMM, in order to focus attention on the variables and the level at which they're measured (i.e. indexed). \\
-
-% principle of the model
-Measurement of the Global Fund contribution to outputs will rely on the co-variance of outputs and expenditure along three dimensions: space, time and activity. In other words, investments by the Global Fund focus on different interventions in different places, and change from year to year, and so do outputs. If the hypothesis being tested is correct, we would expect to observe changes in health systems outputs that coincide with changes in investments along those three dimensions (space, time and activity). As noted already, the coincidence between changes in outputs and changes in investments alone is not expected to reflect the Global Fund's contribution, but rather the coincidence that happened apart from the correlation that other resources and burden of disease have with outputs. That implies the following regression:
-
-% the model
-\begin{equation} \label{basic_model}
-O_{jti} = \beta_1 E^{gf}_{jti} + \beta_2 E^{\neg gf}_{jti} + \beta_3 I_{jt}
-\end{equation}
-
-% explanation of notation
-In this formula, $j$ indexes subnational areas (provinces/ departments, districts/municipalities or otherwise), $t$ indexes time (years, quarters, or months) and $i$ indexes intervention categories, as defined by the Global Fund's Modular Framework. $O$ represents counts of health systems outputs, $E$ represents expenditure either by the Global Fund ($^{gf}$) or other sources ($^{\neg gf}$), and $I$ represents incidence of the disease for which interventions were designed. The $\beta$ terms are coefficients (correlations) to be estimated from the data using maximum likelihood estimation (or similar). This model will primarily be fit separately by disease.\\
+Therefore, the central model for measuring the contribution of Global Fund inputs to health systems outputs is a structural equation model which represents the complex relationships between inputs, activities and outputs, and subsequently outputs, outcomes and burden of disease. Figure \ref{fig2} displays an example of what such a model is expected to look like, focusing on the first half of the results chain. \\
+\begin{figure}[h]
+  \advance\leftskip-.7in
+  \caption{\textmd{Example dose-response Model}}
+  \includegraphics[scale=.35]{SEM_Diagram_Malaria.pdf} \\
+  \label{fig2}
+\end{figure}
 
 % interpretation
-The coefficient $\beta_1$ therefore measures the correlation between Global Fund investment and outputs, controlling for other investments and disease burden. Under the assumptions of the PCE Theory of Change and Impact Frameworks (detailed elsewhere), this correlation represents the contribution of the Global Fund to those outputs. \\
+In the figure, each box represents an indicator that is being tracked by the PCE, and the arrows between them represent regression coefficients (i.e. correlations) describing how the indicators co-vary in time. Curved arrows represent correlated error terms, i.e. correlations without an explicit direction. \\
 
-% additional considerations
-The model as listed in equation \ref{basic_model} estimates only one coefficient relating Global Fund inputs to outputs. In reality, some investments produce more outputs per dollar than others. Features can (and probably will) be added to this model to allow $\beta_1$ to vary by intervention, for example by including a random effect on intervention as an additional parameter in the model. Country-level random effects can also easily be added to allow different estimates of $\beta_1$ between countries, which is likely to also reflect reality more realistically. \\
+In this way, we can bring together the indicators the PCE is tracking along the results chains and represent their relationships using a structure that accurately reflects their relationships according to our theory of change. For example, this allows us to specify which inputs are intended to impact which outputs, but also which inputs are intended (according to the PCE theory of change) to be allocated in partnership with other donors. A similar model relating indicators between outputs, outcomes and burden of disease will be constructed to represent the second half of the results chain, taking advantage of subnational data as much as possible to find correlations. \\
 
-Note that there are many drivers of $O$ besides $E$ and $I$ that are not included in model \ref{basic_model}, for example cultural context and its relationship with uptake of certain interventions. I argue that the absence such other factors does not bias the estimate of $\beta_1$ because they fall along the causal pathway leading from $E$ to $O$. In other words, the many omitted drivers of $O$ do not influence $E$; they merely dictate why $\beta_1$ is high or low, and therefore are acceptable to exclude from the model. To put this another way, only variables (such as $I$) that are theorized to directly influence both $E$ and $O$ need to be included in the model \ref{basic_model}.
+The PCE is already in the process of measuring these correlations, exemplified in Figure \ref{fig3}. This only displays three of the many interrelated indicators in the full model however, hence the need for a more complex structural equation model. \\
+
+\begin{figure}[h]
+  \advance\leftskip-.25in
+  \caption{\textmd{Example of Pairwise Correlations as Part of Dose-Response Model}}
+  \includegraphics[scale=.375]{Pages_from_pilot_data_exploratory_graphs.pdf} \\
+  \label{fig3}
+\end{figure}
+
+The final product of dose-response model will focus less on the measurement of coefficients however, and more on the implications of the estimates. We will use counterfactual analysis to describe the anticipated changes in outputs that the model predicts will result from an alternative Global Fund investment. In other words, the PCE will construct a realistic alternative grant budget, and use the model to evaluate the changes in outputs, outcomes and burden of disease that would be expected to result from it. \\
+
+This model relies on several conditions to be reliable. First, the breadth of indicators included in it serves as the most critical constraint to its generalizability. Because most available program data tracks countable commodities, many of the non-commodity interventions may be left out of the model and therefore not reflected in the counterfactual analyses. Second, including specific control variables will be essential. Indicators of varying data quality, varying unit costs and confounding socio-demographic indicators will be included when possible in order to control for trends that may otherwise explain the relationships between sections of the results chain.
 
 % extension to RSSH
 \subsection{Extension to RSSH}
-In evaluating the contribution of catalytic and system-wide Global Fund investments (such as investments to strengthen resilient and sustainable systems for health (RSSH)), an additional layer of controls may be necessary. This is because such investments are intended to operate in addition to, or synergistically with, other program areas, not to result in outputs on their own.[CITE] % CITATION NEEDED
- Essentially, this amounts to controlling for Global Fund spending from programs other than just RSSH as well:
+In evaluating the contribution of catalytic and system-wide Global Fund investments (such as investments to strengthen resilient and sustainable systems for health (RSSH)), an additional layer of controls may be necessary. This is because such investments are intended to operate in addition to, or synergistically with, other program areas, not to result in outputs on their own. \\
 
-% RSSH model
-% \begin{equation}
-  \begin{align}
-    O_{jti} = \beta_1 E^{^{RSSH}}_{jti} + \beta_1 E^{^{HIV/TB/Malaria}}_{jti} \\
-    + \beta_2 E^{\neg gf}_{jti} + \beta_3 I_{jt}
-  \end{align}
-% \end{equation}
-
-% note about using budget as an ITT
-\textit{Technical Note: Although expenditure from the Global Fund is the intervention of interest, the above model will also be explored using the approved budget as a proxy for expenditure. The rationale for doing so is to avoid potential bias from differential absorption. Similar to the ``intent to treat'' principle from a randomized control trial, the drivers of actual execution of funds are more diverse and poorly-understood than the drivers of planned budgeting, and thus more challenging to control. To measure the correlation between actual expenditure and outputs would also be to measure the contribution of those absorption-driving factors, and would weaken the interpretability of the coefficient of interest. While both budget and expenditure will be explored, budget will be considered the primary explanatory variable.}
-
+Essentially, this amounts to controlling for spending on RSSH as well. The dose-response model will be tested with and without the inclusion of RSSH investments and the difference will be assessed in terms of expected outputs and outcomes, as well as total variance in the indicators explained by the model.
 
 % ------------------------------------------------------------------------------
 % Further Details on Model-Based Geostatistics
-\section{Relationship with Value for Money} \label{vfm}
-The basic outputs model has a natural relationship with value for money (VfM) assessment. As defined by the Global Fund Monitoring and Evaluation team, the key metric of VfM is cost per output, or cost per case averted. [CITE] \\
-% CITATION: Briefing
-% Strategic Information Department Briefing
-% 2017-2022 Strategic KPI Framework Performance targets for KPIs 1, 2 & 8
-% March 2018. The Global Fund
+\subsection{Relationship with Value for Money} \label{vfm}
+The dose-response model has a natural relationship with value for money (VfM) assessment. Focusing on the first half of the results chain, the regression coefficients in the model can be interpreted as cost per output, or efficiency. Focusing on the second half of the results chain, the coefficients can be interpreted as impact per output, or effectiveness. The model will be explored through the lens of VfM in order to explore the relative efficiency and effectiveness of some investments compared to others. \\
 
-The definition of the coefficient $\beta_1$ in formula \ref{basic_model} is the average observed increase in outputs per unit increase in expenditure. $\beta_1$ is also simply stated as the inverse of cost per output (i.e. $cost\, per\, output = \frac{1}{\beta_1}$). In this way, the core model for impact evaluation is the same as the core model for VfM assessment. \\
+\section{Narrative Descriptive Analysis}
+The second approach to assessing impact is descriptive analysis of indicators in a sequential fashion along the results chain, with accompanying narrative to explain and contextualize the trends. This approach is now familiar to the PCE and its audiences at time of writing, as it has been presented now in each of the 2018/19 annual country reports and their synthesis. \\
 
-The key to using the impact evaluation model for VfM assessment is additional interpretation of it. As allocation efficiency is among the critical topics for the PCE, estimates from the core model can be produced among counterfactual scenarios, comparing alternate mixes of interventions and their expected relationship with output. \\
+The advantages of this approach are its comprehensiveness. While the dose-response model provides substantial detail about the relationships between variables, it is constrained to those variables which (according to theory) have a corresponding indicator before or after it that can also be measured. Approaching the results chains in a more narrative way enables deeper dives into subpopulations and indicators that may be more isolated quantitatively, but are important nonetheless. \\
 
-\textit{All sections after this point are intended merely to provide deeper explanation into the topics already presented.}
+\section{Country-Specific Tailored Analyses Based on Context}
+
+The third approach to impact evaluation constitutes the most varied category. Generally speaking, these analyses will focus on a key section of the results chain, specific subnational areas, specific subpopulations or country characteristics that cannot easily be replicated in other countries. Examples of these approaches are still emerging in each country but may include:
+
+\begin{itemize}
+  \item Mixed methods analysis of findings arising from the subnational resource tracking study in Uganda. In this context, stakeholders identified a need for understanding financial flows at the district level. The PCE selected six districts to explore in depth to understand how resources are allocated, spent and translating into outputs at the local level. These districts may not be generalizable to the entire country however, so catered analyses will be developed to understand the relationship between inputs, outputs and impact these districts alone.
+  \item Malaria elimination analysis in Guatemala. Given the epidemiological status of malaria in the Guatemalan context, prevention and community case management activities are focused on very specific hot spots where parasite prevalence remains higher. Separate modeling approaches are being designed to understand the second half of the results chain in this case specifically.
+  \item Rationalization analysis in DRC. In the DRC context, international donors and the government have undergone a process known as rationalization, whereby donors coordinate which geographic areas their investments will be directed towards, and limit their activities elsewhere. This policy offers an unusual opportunity to evaluate donor investment as a ``natural experiment", and analyses may be structured for this situation specifically.
+\end{itemize}
+
+These examples are indicative of the types of country-tailored impact evaluations that the PCE is exploring, and may not be the final analyses that the evaluators and stakeholders agree upon. \\
+
+\section{Mixed Methods}
+
+Each of the above approaches to quantifying impact will be complemented by qualitative evaluation techniques which take a ``deep dive" approach. While a complete description of those approaches is not provided here, complex, unexpected, or otherwise noteworthy observations from the results chains and impact evaluations will be identified by the PCE, and explored in greater depth in order to understand the ``why" behind the indicators and arrows connecting them. This qualitative follow-up serves the essential function of understanding the reasons behind the trends and correlations seen in the quantitative data. This follow-up process will simultaneously serve to understand the ways in which PCE thematic areas (e.g. gender and human rights, sustainability transition and co-financing etc.) intersect with the Global Fund's investments. This process will take place regardless of the impact evaluation approach used for each country and disease. \\
+
+\section{Limitations of Impact Evaluation}
+Many of the limitations to the impact evaluation approaches have been described above, but are important to highlight. \\
+
+First, the quantitative indicators measured through the results chains often focus on countable commodities and may miss outputs from other types of interventions. More generally however, all of the impact evaluation approaches are limited by the quality and quantity of available data. As the PCE has already learned and discussed in annual country reports, data systems vary between countries and diseases, and offer greater or weaker insight into the ongoing national efforts to fight the three diseases depending on the number of indicators they track (and make available), the level of geographic and demographic detail reported, the quality of the reports and the timeliness with which data are reported. While the PCE will take every effort to correct for data quality, limited data availability and quality in some cases may require the PCE to use either existing model estimates or aggregates instead of direct program reports. In other cases, analysis may necessarily focus on the areas of the results chain with the most reliable data. \\
+
+Another limitation relates to the mixed methods nature of the results. The PCE plans to follow some deep dives in each country, but cannot feasibly perform qualitative follow-up to explain the ``why" behind every noteworthy observation from the results chains and impact evaluation results. A process will be followed to identify deep dive areas that satisfy the needs of country stakeholders, fill information gaps, and explain significant portions of the results chains, but will not comprehensively span all parts of the results chain. \\
+
+Finally, although the dose-response analysis is intended to provide a method that accurately reflects reality, it is necessarily a simplification. Dynamics such as time-lagged feedback between prevention and treatment activities, burden of disease and subsequent spending may be too complex to fully account for in the model, let alone the full range of activities occurring in each country. For that reason, the counterfactual results must be interpreted as instructive information that accounts for as much as possible, but not necessarily as causal effects. In the end, lack of stronger study design may make it unrealistic to confidently make broad statements such as ``per dollar invested by the Global Fund, X lives are saved" using this approach. \\
 
 \bibliographystyle{bmc-mathphys} % Style BST file (bmc-mathphys, vancouver, spbasic).
 \bibliography{bmc_article}      % Bibliography file (usually '*.bib' )
