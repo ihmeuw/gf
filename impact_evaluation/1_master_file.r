@@ -80,6 +80,7 @@ if (rerun_explore==TRUE) {
 if (rerun_analysis==TRUE) { 
 	source('./impact_evaluation/5a_set_up_for_analysis.r')
 	source('./impact_evaluation/5b_run_analysis.r')
+	source('./impact_evaluation/6_display_results.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', outputFile3))

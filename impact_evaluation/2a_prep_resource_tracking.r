@@ -56,12 +56,15 @@ final_budgets[loc_name == 'Congo (Democratic Republic)', loc_name:='cod']
 final_budgets[loc_name == 'Guatemala', loc_name:='gtm']
 final_budgets[loc_name == 'Uganda', loc_name:='uga']
 
+# quick fixes that shouldn't be necessary once earlier code is fixed
+fgh[sda_activity=='mal_comm_con_dah_17', code:='M2_3']
+
 #------------------------------------
 # Subset data and prep for merge
 #------------------------------------
 
 #Subset to only the columns we want from resource tracking database and impact evaluation map 
-budget_subset = final_budgets[country == "Congo (Democratic Republic)" & (disease == "malaria" | disease == "hss"), .(budget, start_date, code, loc_name, disease, gf_module, gf_intervention)]
+budget_subset = final_budgets[loc_name == "cod" & (disease == "malaria" | disease == "hss"), .(budget, start_date, code, loc_name, disease, gf_module, gf_intervention)]
 setnames(budget_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
 other_dah = fgh[fin_data_type == 'actual' & financing_source != 'The Global Fund' & country == 'Congo (Democratic Republic)' & (disease == 'malaria' | disease == 'hss'), 
                 .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]

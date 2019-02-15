@@ -3,9 +3,9 @@
 model = '
 
 	# linkage 1 regressions
-	value_ITN_received ~ 1*budget_M1_1_cumulative + prior("dgamma(1,1)")*other_dah_M1_1_cumulative + date
-	value_RDT_received ~ 1*budget_M2_1_cumulative + prior("dgamma(1,1)")*budget_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_1_cumulative + date
-	value_ACT_received ~ 1*budget_M2_1_cumulative + prior("dgamma(1,1)")*budget_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_1_cumulative + date
+	value_ITN_received ~ 1*budget_M1_1_cumulative + prior("dgamma(1,1)")*budget_M1_2_cumulative + prior("dgamma(1,1)")*other_dah_M1_1_cumulative + date
+	value_RDT_received ~ 1*budget_M2_1_cumulative + prior("dgamma(1,1)")*budget_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date
+	value_ACT_received ~ 1*budget_M2_1_cumulative + prior("dgamma(1,1)")*budget_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date
 	
 	# linkage 1 regressions with hotfixes for heywood cases (temporary)
 
@@ -33,9 +33,11 @@ model = '
 	
 	# covariances
 	budget_M1_1_cumulative ~~ other_dah_M1_1_cumulative
-	# budget_M1_2_cumulative ~~ other_dah_M1_2_cumulative
-	budget_M2_1_cumulative ~~ other_dah_M2_1_cumulative
-	# budget_M2_3_cumulative ~~ other_dah_M2_3_cumulative
+	budget_M1_2_cumulative ~~ other_dah_M1_1_cumulative
+	budget_M2_1_cumulative ~~ other_dah_M2_cumulative
+	budget_M2_1_cumulative ~~ other_dah_M2_cumulative
+	budget_M2_6_cumulative ~~ other_dah_M2_cumulative
+	budget_M2_3_cumulative ~~ other_dah_M2_3_cumulative
 	
 	# fixed covariances
 	budget_M2_3_cumulative ~~ 0*budget_M3_1_cumulative
