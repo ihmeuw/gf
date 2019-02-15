@@ -1,6 +1,6 @@
 # ----------------------------------------------
-# Naomi Provost
-# Oct 12, 2018
+# Naomi Provost, updated by Emily Linebarger 
+# Last updated: February 2019
 # Combine patient level SIGSA and SIGPRO data 
 # ----------------------------------------------
 ###### Set up R / install packages  ###### 
@@ -21,11 +21,11 @@ library(RColorBrewer)
 
 # ----------------------------------------------
 fix_diacritics <- function(x) {
-  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
-                           'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
-                           'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
-                           'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
-                           'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 'þ'='b', 'ÿ'='y')
+  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='C', '?'='E', '?'='E',
+                           '?'='E', '?'='E', '?'='I', '?'='I', '?'='I', '?'='I', '?'='N', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='U',
+                           '?'='U', '?'='U', '?'='U', '?'='Y', '?'='B', '?'='Ss', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='c',
+                           '?'='e', '?'='e', '?'='e', '?'='e', '?'='i', '?'='i', '?'='i', '?'='i', '?'='o', '?'='n', '?'='o', '?'='o', '?'='o', '?'='o',
+                           '?'='o', '?'='o', '?'='u', '?'='u', '?'='u', '?'='y', '?'='y', '?'='b', '?'='y')
   
   replace_me <- paste(names(replacement_chars), collapse='')
   replace_with <- paste(replacement_chars, collapse = '')
@@ -38,18 +38,22 @@ fix_diacritics <- function(x) {
 # Set the directory to download the data
 # detect if operating on windows or on the cluster 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/sigsa_sigpro/')
+sigsa_raw_dir = paste0(dir, "raw_sigsa/")
+sigpro_raw_dir = paste0(dir, "raw_sigpro/")
+output_dir <- paste0(dir, 'prepped_data/')
 
 #------------ Prep Data------------------------
 #### Prep Data
 # define main directory
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/SIGSA/')
-prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/prepped_data/')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/sigsa_sigpro/')
+prep_dir <- paste0(dir, 'prepped_data/')
 
 # translation file
-translate_data = fread(paste0(dir, "translation_of_HIV_variables.csv"), encoding = 'Latin-1')
+translate_data = fread(paste0(dir, "treatment_translation_variables.csv"), encoding = 'Latin-1')
 
 #read in file
-dt <-data.table(read_excel(paste0(dir,"Patient Level Data/Solicitud 0593-2018 SIGSA SIDA 1.2 años 2014 al 2017.xlsx")))
+dt <-data.table(read_excel(paste0(sigsa_raw_dir,"Patient Level Data/Solicitud 0593-2018 SIGSA SIDA 1.2 aÃ±os 2014 al 2017.xlsx")))
 
 total_data = dt
 
@@ -92,8 +96,8 @@ total_data$age <-  as.integer((total_data$date - total_data$birth_date) / 365)
 total_data$hospital_department = total_data$hospital_DAS
 total_data$hospital_department = sub("GUATEMALA", "GUATEMALA", total_data$hospital_department)
 total_data[grepl("GUATEMALA", hospital_department), hospital_department := "GUATEMALA"]
-total_data[grepl("PETÉN", hospital_department), hospital_department := "PETÉN"]
-total_data[grepl("IXCÁN", hospital_department), hospital_department := "QUICHÉ"]
+total_data[grepl("PET?N", hospital_department), hospital_department := "PET?N"]
+total_data[grepl("IXC?N", hospital_department), hospital_department := "QUICH?"]
 total_data[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
 
 
@@ -102,11 +106,12 @@ sigsa_data = total_data[,c("date", "identifier", "pre_orientaiton_test", "comple
 sigsa_data$data_source = "SIGSA"
 
 #SIGPRO
-sigpro_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/SIGPRo/')
+sigpro_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/sigsa_sigpro/raw_sigpro/')
 sigpro_file = 'SIGRPRO_masterlist.csv'
 file_list = fread(paste0(sigpro_dir, sigpro_file))
-test = file_list[type == "HIVTEST"]
-testing_person_sigpro = data.table(read_excel(paste0(sigpro_dir, test$file_name[1]), sheet = test$sheet_name[1]))
+#test = file_list[type == "HIVTEST"]
+test = file_list[sheet_name == "sigpro_f4_JanNov2018 - PB_TVC"] #EKL We're only reading in one file here - how are the others getting brought in? 
+testing_person_sigpro = fread(paste0(sigpro_dir, test$file_name[1])) #EKL We're only reading in one file here - how are the others getting brought in? 
 
 # Fixing input errors in the input files
 testing_person_sigpro$fechareal = ifelse(testing_person_sigpro$tema == "San Benito", as.Date(as.numeric(testing_person_sigpro$departamento),  origin = "1899-12-30"), as.Date(testing_person_sigpro$fechareal))
