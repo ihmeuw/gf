@@ -26,22 +26,22 @@ dt = readRDS(paste0(dir, 'pnls_outliers/arv_quantreg_results.rds'))
 
 #------------------------------------
 # identify outliers at various levels/thresholds
-dt[ ,thresh4:=median(resid)+(5*sd(resid)), by=org_unit_id]
-dt[ ,thresh10:=median(resid)+(10*sd(resid)), by=org_unit_id]
-dt[ ,thresh20:=median(resid)+(20*sd(resid)), by=org_unit_id]
+dt[ ,thresh5:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
+dt[ ,thresh10:=median(resid)+(10*sd(resid)), by=.(org_unit_id, element)]
+dt[ ,thresh20:=median(resid)+(20*sd(resid)), by=.(org_unit_id, element)]
 
 # select outliers 
 # the value is 100 or more and greater than 10 times the SD of the residuals 
 dt[thresh10 < value & 100 <=value, outlier:=TRUE]
-dt[value <= thresh10, outlier:=FALSE]
+dt[(value <= thresh10 | value < 100), outlier:=FALSE]
 
 # set lower and upper bounds
-dt[ ,upper:=median(resid)+(10*sd(resid)), by=org_unit_id]
-dt[ ,lower:=(median(resid)-(10*sd(resid))), by=org_unit_id]
+dt[ ,upper:=median(resid)+(10*sd(resid)), by=.(org_unit_id, element)]
+dt[ ,lower:=(median(resid)-(10*sd(resid))), by=.(org_unit_id, element)]
 
 # add a 5 SD bound just to be sure
-dt[ ,upper_mid:=median(resid)+(5*sd(resid)), by=org_unit_id]
-dt[ ,lower_mid:=(median(resid)-(5*sd(resid))), by=org_unit_id]
+dt[ ,upper_mid:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
+dt[ ,lower_mid:=(median(resid)-(5*sd(resid))), by=.(org_unit_id, element)]
 
 # typically no values are below lower, but check
 dt[value < lower, outlier:=TRUE]
@@ -53,14 +53,10 @@ dt[ ,facility:=word(org_unit, 2, -1)]
 #------------------------------------
 # subset to the health facilities with outliers and visualize 
 
-# subset to the health facilities with 
-out_orgs = dt[outlier==T, unique(org_unit_id)]
-out = dt[org_unit_id %in% out_orgs]
-
-# subset to only the sexes within facilities that have outliers
-out[ , combine:=paste0(org_unit_id, sex)]
-out_sex = out[outlier==T, unique(combine)]
-out = out[combine %in% out_sex]
+# subet to the health facilities, sexes, and variables with outliers
+dt[ , combine:=paste0(org_unit_id, sex, element)]
+out_orgs = dt[outlier==T, unique(combine)]
+out = dt[combine %in% out_orgs]
 out[ , combine:=NULL]
 
 #----------------------------
