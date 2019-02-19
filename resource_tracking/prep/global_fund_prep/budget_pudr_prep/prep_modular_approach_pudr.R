@@ -14,8 +14,8 @@ prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disea
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
-  # 
-  # master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", file_list$country[i], "/grants/")
+  # # 
+  # master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", file_list$loc_id[i], "/grants/")
   # 
   # folder = "budgets"
   # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)

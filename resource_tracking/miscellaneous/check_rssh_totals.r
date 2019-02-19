@@ -1,0 +1,42 @@
+#Check RSSH totals using 2 different methods - using current 'R' codes in the map, and by grepping 'hss' or equivalents. 
+#Compare these to the totals in the raw files and see which has a higher error. 
+
+rm(list=ls())
+library(data.table)
+
+write_dir <- "J:/Project/Evaluation/GF/resource_tracking/rt_database_updates"
+final_budgets <- readRDS("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_budgets.rds")
+final_expenditures <- readRDS("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_expenditures.rds")
+final_files <- rbind(final_budgets, final_expenditures, fill = TRUE)
+
+rssh_tests <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/rssh_tests.csv")
+
+#Separate out final budgets that have a code of 'R', and sum by fileName. 
+rssh_by_rt_code <- final_files[substring(code, 1, 1) == 'R']
+rssh_by_rt_code = rssh_by_rt_code[, .(rt_code_rssh = round(sum(budget, na.rm = TRUE))), by = c('fileName')]
+
+#Separate out final budgets that grep match with 'rssh' or similar, and sum by fileName. 
+rssh_strings <- c('hss', 'rssh', 'srss', 'ssrs', 'systèmes de santé résiliants et pérennes', 'fss')
+rssh_by_grep <- final_files[grep(paste0(rssh_strings, collapse = "|"), tolower(orig_module))]
+rssh_by_grep = rssh_by_grep[, .(grep_rssh = round(sum(budget, na.rm = TRUE))), by = c('fileName')]
+
+check_rssh <- merge(rssh_tests, rssh_by_rt_code, by = c('fileName'), all.x = TRUE)
+check_rssh <- merge(check_rssh, rssh_by_grep, by = c('fileName'), all.x = TRUE)
+
+#Calculate some error variables and print results 
+check_rssh[, code_error:=round((abs(rt_code_rssh - correct_rssh)/correct_rssh)*100, 2)]
+check_rssh[, grep_error:=round((abs(grep_rssh - correct_rssh)/correct_rssh)*100, 2)]
+
+#Why do we have NAs in the files? 
+
+setwd(write_dir)
+sink("check_rssh.txt")
+print(paste0("Average error using grep method: ", check_rssh[, round(mean(grep_error, na.rm = TRUE), 2)]))
+print(paste0("Max error using grep method: ", check_rssh[, round(max(grep_error, na.rm = TRUE), 2)]))
+
+print(paste0("Average error using mapping method: ", check_rssh[, round(mean(code_error, na.rm = TRUE), 2)]))
+print(paste0("Max error using mapping method: ", check_rssh[, round(max(code_error, na.rm = TRUE), 2)]))
+print("*Note - mapping done without most recent changes to never let 'program management', 'PBF', and 'other' be RSSH except if part of an RSSH grant")
+
+print(check_rssh[order(country)])
+sink()

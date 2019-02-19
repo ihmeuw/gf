@@ -7,6 +7,7 @@
 
 correct_modules_interventions = function(resource_database){
   
+  
 #---------------------------------------------------------  
 #EKL 12/21/18 - relabeling all "tb/hiv" as "hiv/tb"
 resource_database[disease == "tb/hiv", disease:= "hiv/tb"]
@@ -38,32 +39,46 @@ resource_database$module = ifelse(resource_database$module == "comprehensiveprev
 
 #EKL 11/14/18, COD_C_CORDAID_catalytic_budget_27Feb2018.xlsx, LFA_Review_COD-C-CORDAID_PU 30 June 2018_Sent_27092018_OK.xlsx, NFMBudget_COD-H-CORDAID_Finance.xlsx, 
 #   Revised LFA_COD-H-MOH_PUDR_S2 2016 17.04.17 for denominator change.xlsx, COD-H-SANRU_Budget.xlsx, initial_gf_budgets_2018_2020.csv
-resource_database$module = ifelse(resource_database$module == "programmesdepreventiondestinesylapopulationgenerale", "programmesdepreventiondestinesslapopulationgenerale", resource_database$module)
-resource_database$intervention = ifelse(resource_database$intervention == 'diagnosticettraitementdesistetautresservicesliesylasantesexuellepourleshsh', "diagnosticettraitementdesistetautresservicesliesslasantesexuellepourleshsh", 
+resource_database$module = ifelse(resource_database$module == "programmesdepreventiondestinesylapopulationgenerale",
+                                  "programmesdepreventiondestinesslapopulationgenerale", resource_database$module)
+resource_database$intervention = ifelse(resource_database$intervention == 'diagnosticettraitementdesistetautresservicesliesylasantesexuellepourleshsh',
+                                        "diagnosticettraitementdesistetautresservicesliesslasantesexuellepourleshsh", 
                               resource_database$intervention)
-resource_database$module = ifelse(resource_database$module == "programmesdepreventioncompletsdestinesauxprofessionnelsdusexeetyleursclients","programmesdepreventioncompletsdestinesauxprofessionnelsdusexeetsleursclients", 
+resource_database$module = ifelse(resource_database$module == "programmesdepreventioncompletsdestinesauxprofessionnelsdusexeetyleursclients",
+                                  "programmesdepreventioncompletsdestinesauxprofessionnelsdusexeetsleursclients", 
                         resource_database$module)
 resource_database$intervention = ifelse(resource_database$module == "programmesdepreventiondestinesslapopulationgenerale" & resource_database$intervention == "changementdecomportementdanslecadredesprogrammesdestinesylapopulationgenerale", 
                               "changementdecomportementdanslecadredesprogrammesdestinesslapopulationgenerale", resource_database$intervention)
 resource_database$module = ifelse(resource_database$module == "programmesdepreventioncompletsdestinesauxusagersdedroguesinjectablesetyleurspartenaires", "programmesdepreventioncompletsdestinesauxusagersdedroguesinjectablesetsleurspartenaires"
                         , resource_database$module)
 resource_database$intervention = ifelse(resource_database$intervention == "diagnosticettraitementdesinfectionssexuellementtransmissiblesdanslecadredesprogrammesdestinesauxconsommateursdedroguesinjectablesetyleurspartenaires", 
-                              "diagnosticettraitementdesinfectionssexuellementtransmissiblesdanslecadredesprogrammesdestinesauxconsommateursdedroguesinjectablesetsleurspartenaires", resource_database$intervention )
+                              "diagnosticettraitementdesinfectionssexuellementtransmissiblesdanslecadredesprogrammesdestinesauxconsommateursdedroguesinjectablesetsleurspartenaires",
+                              resource_database$intervention )
 resource_database$intervention = ifelse(resource_database$intervention == "interventionsliesauxaiguillesetauxseringuesdestinesauxusagersdedroguesinjectablesetyleurspartenaires",
-                              "interventionsliesauxaiguillesetauxseringuesdestinesauxusagersdedroguesinjectablesetsleurspartenaires", resource_database$intervention)
-resource_database$module = ifelse(resource_database$module == "preventiondelatransmissiondelamcreylenfantptme", "preventiondelatransmissiondelamcreslenfantptme", resource_database$module )
+                              "interventionsliesauxaiguillesetauxseringuesdestinesauxusagersdedroguesinjectablesetsleurspartenaires",
+                              resource_database$intervention)
+
+resource_database$module = ifelse(resource_database$module == "preventiondelatransmissiondelamcreylenfantptme", "preventiondelatransmissiondelamcreslenfantptme", 
+                                  resource_database$module )
 resource_database$module = ifelse(resource_database$module == "programmesvisantyreduirelesobstaclesliesauxdroitshumainsquientraventlacccsauxservicesvih", 
-                        "programmesvisantsreduirelesobstaclesliesauxdroitshumainsquientraventlacccsauxservicesvih", resource_database$module )
-resource_database$intervention = ifelse(resource_database$intervention == "servicesjuridiquesliesauvihetylacoinfectionvihtuberculose", "servicesjuridiquesliesauvihetslacoinfectionvihtuberculose", resource_database$intervention)
+                        "programmesvisantsreduirelesobstaclesliesauxdroitshumainsquientraventlacccsauxservicesvih",
+                        resource_database$module )
+resource_database$intervention = ifelse(resource_database$intervention == "servicesjuridiquesliesauvihetylacoinfectionvihtuberculose", 
+                                        "servicesjuridiquesliesauvihetslacoinfectionvihtuberculose", resource_database$intervention)
 resource_database$intervention = ifelse(resource_database$intervention == "ameliorationdesloisdesreglementationsetdespolitiquesrelativesauvihetylacoinfectionvihtuberculose", 
-                              "ameliorationdesloisdesreglementationsetdespolitiquesrelativesauvihetslacoinfectionvihtuberculose", resource_database$intervention)
+                              "ameliorationdesloisdesreglementationsetdespolitiquesrelativesauvihetslacoinfectionvihtuberculose", 
+                              resource_database$intervention)
 resource_database$intervention = ifelse(resource_database$intervention == "preservatifsdanslecadredesprogrammesdestinesylapopulationgenerale", "preservatifsdanslecadredesprogrammesdestinesslapopulationgenerale", 
                               resource_database$intervention)
 resource_database$intervention = ifelse(resource_database$intervention == "formationdesprofessionnelsdesanteenmaticrededroitshumainsetdethiquemedicaleliesylaluttecontrelevihetylalutteconjointecontrelevihlatuberculose", 
-                              "formationdesprofessionnelsdesanteenmaticrededroitshumainsetdethiquemedicaleliesslaluttecontrelevihetslalutteconjointecontrelevihlatuberculose", resource_database$intervention)
+                              "formationdesprofessionnelsdesanteenmaticrededroitshumainsetdethiquemedicaleliesslaluttecontrelevihetslalutteconjointecontrelevihlatuberculose",
+                              resource_database$intervention)
 
-resource_database$module = ifelse(resource_database$module == "preventiondelatransmissiondelamcreylenfant", "preventiondelatransmissiondelamcreslenfant", resource_database$module)
-resource_database$intervention = ifelse(resource_database$module == "tbhiv" & resource_database$intervention == "communitytbcaredelivery" & resource_database$disease == "tb/hiv", "communitytbhivcaredelivery", resource_database$intervention)
+
+resource_database$module = ifelse(resource_database$module == "preventiondelatransmissiondelamcreylenfant", "preventiondelatransmissiondelamcreslenfant",
+                                  resource_database$module)
+resource_database$intervention = ifelse(resource_database$module == "tbhiv" & resource_database$intervention == "communitytbcaredelivery" & 
+                                          resource_database$disease == "tb/hiv", "communitytbhivcaredelivery", resource_database$intervention)
 resource_database$intervention = ifelse(resource_database$intervention == "changementdecomportementdanslecadredesprogrammesdestinesylapopulationgenerale","changementdecomportementdanslecadredesprogrammesdestinesslapopulationgenerale", 
                               resource_database$intervention)
 resource_database$intervention = ifelse(resource_database$intervention == "changementdecomportementdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients", "changementdecomportementdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetsleursclients", 
@@ -87,7 +102,8 @@ resource_database$intervention = ifelse(resource_database$intervention == "diagn
 resource_database$intervention = ifelse(resource_database$intervention == "reductiondesrisquesdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients", "reductiondesrisquesdanslecadredesprogrammesdestinesauxprofessionnelsdusexeetsleursclients", 
                               resource_database$intervention)
 resource_database$intervention = ifelse(resource_database$module == "mdrtb" & resource_database$intervention == "otherservicedeliveryinterventions", "othermdrtbinterventions", resource_database$intervention)
-resource_database$module = ifelse(resource_database$intervention == "otherinterventionsforadolescentandyouth", "preventionprogramsforadolescentsandyouthinandoutofschool", resource_database$module)
+resource_database$module = ifelse(resource_database$intervention == "otherinterventionsforadolescentandyouth", 
+                                  "preventionprogramsforadolescentsandyouthinandoutofschool", resource_database$module)
 
 #EKL 11/14/18 LFA_Review_COD-C-CORDAID_PU 30 June 2018_Sent_27092018_OK.xlsx - needed to reclassify combined tb/hiv grants as either one disease or the other. 
 resource_database$disease = ifelse((resource_database$module == "tbcareandprevention" | resource_database$module == "mdrtb") & resource_database$disease == "tb/hiv", "tb", resource_database$disease)
@@ -127,6 +143,10 @@ resource_database[module == 'unspecified' & intervention == 'suivietevaluationan
 resource_database[module == 'unspecified' & intervention == 'suivietevaluationenquete', module:='suivietevaluationenquete']
 resource_database[module == 'unspecified' & intervention == 'gestiondeprogrammepolitiqueplanificationcoordinationetgestion', module:='gestiondeprogrammepolitiqueplanificationcoordinationetgestion']
 resource_database[module == 'unspecified' & intervention == 'tuberculosemultiresistantetraitementtuberculosemultiresistante', module:='tuberculosemultiresistantetraitementtuberculosemultiresistante']
+
+#EKL 2/11/19 "COD-M-SANRU - PU 30 june 2018 - Révision Oct2018 (final)_IHME.xlsx" "COD-M-SANRU_Progress Report_30Jun2018_v4_15092018.xlsx" 
+resource_database[is.na(module), module:='na'] 
+resource_database[is.na(intervention), intervention:='na']
 
 return(resource_database)
 }
