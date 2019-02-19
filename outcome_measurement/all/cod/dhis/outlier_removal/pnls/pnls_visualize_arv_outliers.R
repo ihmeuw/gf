@@ -22,7 +22,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # read in the file
-dt = readRDS(paste0(dir, 'pnls_outliers/arv_quantreg_results.rds'))
+dt = readRDS(paste0(dir, 'pnls_outliers/qr_results_full.rds'))
 
 #------------------------------------
 # merge in the facility names to label the graphs 
@@ -59,12 +59,49 @@ dt[value < lower, outlier:=TRUE]
 dt[ ,facility:=word(org_unit, 2, -1)]
 
 #------------------------------------
- # subset to only the sexes within facilities and elements that have outliers
-
+# subset to only the sexes within facilities and elements that have outliers
 dt[ , combine:=paste0(org_unit_id, sex, element)]
 out_sex = dt[outlier==T, unique(combine)]
 out = dt[combine %in% out_sex]
 out[ , combine:=NULL]
+
+#----------------------------
+# eliminate outliers that are part of an emerging trend
+
+# create a unique identifier to drop out emerging trends
+out[ , combine2:=paste0(org_unit_id, sex, element, subpop, age)]
+
+# subset to only the age categories, subpops with outliers
+out[ , count:=sum(outlier), by=combine2]
+drop = out[1 < count]
+
+# create a simpler data tabledrop
+drop = drop[ ,.(combine2, org_unit_id, element, sex, age, subpop, date, outlier, value)]
+
+# order by the unique identifier and then by date 
+drop[order(combine2, date)]
+
+# the subsequent or previous data point is within 50 of the past data point
+drop[ , value_lag:=shift(value, type='lag')]
+drop[ , value_lead:=shift(value, type='lead')]
+drop[outlier==T & (abs(value_lead - value) <= 50), dif:=T]
+drop[outlier==T & (abs(value_lag - value) <= 50), dif:=T]
+drop[is.na(dif), dif:=F]
+drop = drop[dif==T]
+
+# convert outliers to FALSE 
+drop[ , combine3:=paste0(as.character(date), combine2)]
+out[ , combine3:=paste0(as.character(date), combine2)]
+emerging_trends = drop$combine3
+out[combine3 %in% emerging_trends, outlier:=F]
+
+# drop the unecessary variables
+out[ ,c('combine2', 'combine3'):=NULL]
+
+# subset again to only the sexes, facilities, variables with outliers
+out[ , combine:=paste0(org_unit_id, sex, element)]
+out_new = out[outlier==T, unique(combine)]
+out = out[combine %in% out_new]
 
 #----------------------------
 # create the graphs
@@ -112,7 +149,7 @@ for (e in unique(out$element)) {
 
 #--------------------------------
 # print out the list of plots into a pdf
-pdf(paste0(dir, 'outliers/pnls_outputs/arv_outliers.pdf'), height=6, width=10)
+pdf(paste0(dir, 'pnls_outliers/pnls_outputs/arv_outliers.pdf'), height=6, width=10)
 
 for(i in seq(length(list_of_plots))) { 
   print(list_of_plots[[i]])
@@ -121,9 +158,15 @@ for(i in seq(length(list_of_plots))) {
 dev.off()
 
 #--------------------------------
+# create a data set exclusively of the outliers to remove
+# save it to remove from the full data 
 
+out[ , c('combine', 'count'):=NULL]
+out = out[outlier==T]
 
+saveRDS(out, paste0(dir, 'pnls_outliers/list_of_arv_outliers.rds'))
 
+#--------------------------------
 
 
 
