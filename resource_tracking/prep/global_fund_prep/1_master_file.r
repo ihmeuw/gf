@@ -11,7 +11,7 @@ rm(list=ls())
 # ---------------------------------------------------------------------
 
 user = "elineb" #Change to your username 
-country = "cod" #Change to the country you want to update. 
+country = "gtm" #Change to the country you want to update. 
 code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
