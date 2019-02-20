@@ -22,7 +22,7 @@ prep_map <- function(map){
 #--------------------------------
 
   original_map <- copy(map) #Save an original copy for comparison later 
-  new_rows <- fread("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/gf_mapping_additions.csv") #Add in new rows to previously approved map
+  new_rows <- fread(paste0(dir, "mapping/multi_country/intervention_categories/gf_mapping_additions.csv")) #Add in new rows to previously approved map
   new_rows = new_rows[, .(module, intervention, code, coefficient, disease)]
   map = rbind(map, new_rows)
 
@@ -391,7 +391,7 @@ if(nrow(check_rssh_cats)>0 & include_stops == TRUE){
 #Write final mapp and .diff files for comparison
 #--------------------------------------------------------------------------------
 
-  write.csv(map, "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/gf_mapping.csv")
+  write.csv(map, paste0(dir, "mapping/multi_country/intervention_categories/gf_mapping.csv"))
 
   #Write a "diff" file to repository to make comparing changes easier. 
   removed_rows = anti_join(original_map, map)

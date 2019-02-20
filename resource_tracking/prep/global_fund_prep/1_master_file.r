@@ -12,7 +12,7 @@ rm(list=ls())
 
 user = "elineb" #Change to your username 
 country = "gtm" #Change to the country you want to update. 
-code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes', user, '/gf/'))
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes/', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
 # ---------------------------------------
@@ -45,7 +45,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
   
   map = read_xlsx(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
   map = data.table(map)
-  source(paste0(gf_prep_code, "2_verify_module_mapping.r"))
+  source(paste0(gf_prep_code, "2_verify_module_mapping.R"))
   module_map <- prep_map(map)
   
 # ----------------------------------------------
@@ -74,7 +74,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
   }
   
   if (prep_gos == TRUE){
-    source(paste0(gf_prep_code, "3b_prep_gos_data.r"))
+    source(paste0(gf_prep_code, "3b_prep_gos_data.R"))
   }
   
 # ----------------------------------------------
@@ -93,7 +93,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 6: Verify budget numbers
 # ----------------------------------------------
 
-  source(paste0(gf_prep_code, "6_verify_financial_numbers.r")) 
+  #source(paste0(gf_prep_code, "6_verify_financial_numbers.r")) 
  
 # ----------------------------------------------
 # STEP 7: Upload to Basecamp

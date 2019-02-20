@@ -72,16 +72,16 @@ total_data = total_data[-(1:3), , drop = FALSE]
 total_data = total_data[1:(nrow(total_data) - 3),, drop = FALSE]
 
 
-# Translate data that we wil be using to English
-reason_eng = translate_data[1:14]
-risk_eng = translate_data[16:24]
-setnames(risk_eng, old = c("reason_for_visit", "reason_for_visit_eng"), new = c("risk_condition", "risk_condition_eng"))
-preg_eng = translate_data[26:31]
-setnames(preg_eng, old = c("reason_for_visit", "reason_for_visit_eng"), new = c("pregnancy_stage", "pregnancy_stage_eng"))
-
-total_data = merge(total_data, reason_eng, by = "reason_for_visit")
-total_data = merge(total_data, risk_eng, by = "risk_condition")
-total_data = merge(total_data, preg_eng, by = "pregnancy_stage")
+# Translate data that we wil be using to English - EKL need to rework this, because I can't find this file from Naomi
+# reason_eng = translate_data[1:14]
+# risk_eng = translate_data[16:24]
+# setnames(risk_eng, old = c("reason_for_visit", "reason_for_visit_eng"), new = c("risk_condition", "risk_condition_eng"))
+# preg_eng = translate_data[26:31]
+# setnames(preg_eng, old = c("reason_for_visit", "reason_for_visit_eng"), new = c("pregnancy_stage", "pregnancy_stage_eng"))
+# 
+# total_data = merge(total_data, reason_eng, by = "reason_for_visit")
+# total_data = merge(total_data, risk_eng, by = "risk_condition")
+# total_data = merge(total_data, preg_eng, by = "pregnancy_stage")
 
 #Replace "-" with NAs
 total_data = total_data[, lapply(.SD, function(x) replace(x, which(x=='-'), NA))]
@@ -102,7 +102,7 @@ total_data[grepl("QUETZALTENANGO", hospital_department), hospital_department := 
 
 
 # SIGSA COLUMNS THAT MERGE WITH SIGPRO
-sigsa_data = total_data[,c("date", "identifier", "pre_orientaiton_test", "completed_hiv_screening_test", "hiv_screening_result", "risk_condition_eng", "sexual_orientation", "age", "sex", "municipality", "hospital_department", "health_service")]
+sigsa_data = total_data[,c("date", "identifier", "pre_orientaiton_test", "completed_hiv_screening_test", "hiv_screening_result", "risk_condition", "sexual_orientation", "age", "sex", "municipality", "hospital_department", "health_service")]
 sigsa_data$data_source = "SIGSA"
 
 #SIGPRO
@@ -131,10 +131,12 @@ testing_person_sigpro$sexual_orientation = "undetermined"
 
 sigpro_data = testing_person_sigpro[,c("fechareal", "codigounico", "prePruebaVIH", "pruebaVIH", "resultadoVIH", "subgrupo", "sexual_orientation", "age", "sex", "municipio", "departamento", 'lugar')]
 names(sigpro_data) = c("date", "identifier", "pre_orientaiton_test", "completed_hiv_screening_test", "hiv_screening_result", "risk_condition_eng", "sexual_orientation", "age", "sex", "municipality", "hospital_department", "health_service")
+sigpro_data$risk_condition = sigpro_data$risk_condition_eng
+sigpro_data$risk_condition_eng = NULL
 sigpro_data$data_source = "SIGPRO"
 sigpro_data$date = as.Date(sigpro_data$date)
 
-testing_data = rbind(sigpro_data, sigsa_data)
+testing_data = rbind(sigpro_data, sigsa_data) #We have dates to 2020 here. 
 
 #create a unique anonymus identifier
 dt_unique = unique(testing_data[,"identifier"])
@@ -144,7 +146,7 @@ testing_data$identifier = NULL
 
 # Count which visit number this is (to check how many poeple are attending the clinic)
 testing_data = testing_data[order(date)]
-testing_data[, visit_num := seq_len(.N), by = id]
+testing_data[, visit_num := seq_len(.N), by = id] #We have dates to 2020 here. 
 
 # find sex variable and make all the same
 testing_data$sex = substring(testing_data$sex, 1, 1)
@@ -161,7 +163,7 @@ testing_data$pre_orientaiton_test = ifelse(toupper(testing_data$pre_orientaiton_
 # make departments the same
 testing_data$hospital_department = toupper(fix_diacritics(testing_data$hospital_department))
 testing_data$municipality = toupper(fix_diacritics(testing_data$municipality))
-testing_data[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"]
+testing_data[grepl("QUETZALTENANGO", hospital_department), hospital_department := "QUEZALTENANGO"] #We have dates to 2020 here. 
 
 
 # create binary
