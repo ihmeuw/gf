@@ -38,9 +38,9 @@ raw_data[, intervention:=gsub("hss", "", intervention)]
 # Adjust module and intervention manually in the raw data 
 #-------------------------------------------------------
 if (prep_files == TRUE){
-  source(paste0(gf_prep_code, "budget_pudr_prep/", country, "_prep/correct_modules_interventions.r"))
+  source(paste0(gf_prep_code, "budget_pudr_prep/", country, "_prep/correct_modules_interventions.R"))
 } else if (prep_gos == TRUE){
-  source(paste0(gf_prep_code, "gos_prep/correct_modules_interventions.r"))
+  source(paste0(gf_prep_code, "gos_prep/correct_modules_interventions.R"))
 }
 
 raw_data = correct_modules_interventions(raw_data)
@@ -64,7 +64,7 @@ if(nrow(unmapped_mods)>0){
 #   not the grant-level (assigned in the file list) 
 #------------------------------------------------------------
 
-source(paste0(gf_prep_code, "5_remap_diseases.r"))
+source(paste0(gf_prep_code, "5_remap_diseases.R"))
 raw_data = remap_diseases(raw_data)
 
 #----------------------------------------------------------------------------
