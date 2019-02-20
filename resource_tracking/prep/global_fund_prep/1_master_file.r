@@ -87,7 +87,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 5: Aggregate all data sources
 # ----------------------------------------------
 
-  #source(paste0(code_dir, "aggregate_all_data_sources.r"))
+  source(paste0(code_dir, "aggregate_all_data_sources.r"))
 
 # ----------------------------------------------
 # STEP 6: Verify budget numbers
