@@ -106,12 +106,12 @@ sigsa_data = total_data[,c("date", "identifier", "pre_orientaiton_test", "comple
 sigsa_data$data_source = "SIGSA"
 
 #SIGPRO
-sigpro_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/sigsa_sigpro/raw_sigpro/')
+sigpro_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/sigsa_sigpro/')
 sigpro_file = 'SIGRPRO_masterlist.csv'
 file_list = fread(paste0(sigpro_dir, sigpro_file))
 #test = file_list[type == "HIVTEST"]
-test = file_list[sheet_name == "sigpro_f4_JanNov2018 - PB_TVC"] #EKL We're only reading in one file here - how are the others getting brought in? 
-testing_person_sigpro = fread(paste0(sigpro_dir, test$file_name[1])) #EKL We're only reading in one file here - how are the others getting brought in? 
+test = file_list[file_name == "sigpro_f4_JanNov2018 - PB_TVC.csv"] #EKL We're only reading in one file here - how are the others getting brought in? 
+testing_person_sigpro = fread(paste0(sigpro_dir, "sigpro/february_transfer/", test$file_name[1])) #EKL We're only reading in one file here - how are the others getting brought in? 
 
 # Fixing input errors in the input files
 testing_person_sigpro$fechareal = ifelse(testing_person_sigpro$tema == "San Benito", as.Date(as.numeric(testing_person_sigpro$departamento),  origin = "1899-12-30"), as.Date(testing_person_sigpro$fechareal))

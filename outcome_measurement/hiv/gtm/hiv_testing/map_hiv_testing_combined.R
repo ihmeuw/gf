@@ -50,14 +50,15 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 #------------ Prep Data------------------------
 #### Prep Data
 # define main directory
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/SIGSA/')
-prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/sigsa_sigpro/prepped_data/')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/SIGSA/')
+prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/sigsa_sigpro/sigpro_outputs/')
 mapping_dir = paste0(root, '/Project/Evaluation/GF/mapping/gtm/')
 
 # Read in file (this is prepped with SIGSA and SIGPRO level )
-dt = readRDS(paste0(prep_dir, "hiv_patientlvl_combined.rds"))
+#dt = readRDS(paste0(prep_dir, "hiv_patientlvl_combined.rds"))
+dt = readRDS(paste0(prep_dir, "sigpro_wide.rds"))
 
-# remove repeat positive tests for patients, only keep the first postivie test and all negative tests before it
+# remove repeat positive tests for patients, only eep the first postivie test and all negative tests before it
 total_dt = dt
 
 # change name for risk condition to merge SIGSA and SIGPRO
@@ -197,7 +198,7 @@ ratio_by_MSM_sex = find_pos_ratio(dt_by_MSM_male, c("date", "isMSM", "sex"))
     theme_bw() 
   
   
-  outFile = paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/sigsa_sigpro/visualizations/SIGSA_SIGRPO_testing_comp_new.pdf')
+  outFile = paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/sigsa_sigpro/visualizations/SIGSA_SIGRPO_testing_comp_new.pdf')
   
   pdf(outFile, height=5.5, width=7)
   pa0

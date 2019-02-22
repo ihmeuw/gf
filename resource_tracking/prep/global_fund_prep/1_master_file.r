@@ -11,8 +11,8 @@ rm(list=ls())
 # ---------------------------------------------------------------------
 
 user = "elineb" #Change to your username 
-country = "gtm" #Change to the country you want to update. 
-code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes/', user, '/gf/'))
+country = "cod" #Change to the country you want to update. 
+code_loc = ifelse(Sys.info()[1]=='Windows', 'H:/gf/', paste0('/homes/', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
 # ---------------------------------------
@@ -23,7 +23,7 @@ prep_gos <- FALSE
 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-rerun_filelist <- FALSE  #Set to TRUE if you want to prep all files in the file list again. 
+rerun_filelist <- TRUE  #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist <- FALSE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 
 # ---------------------------------------
@@ -81,19 +81,19 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 4: Map prepped data 
 # ----------------------------------------------
   
-  source(paste0(gf_prep_code, "4_map_data.R"))
+  #source(paste0(gf_prep_code, "4_map_data.R"))
   
 # ----------------------------------------------
 # STEP 5: Aggregate all data sources
 # ----------------------------------------------
 
-  source(paste0(code_dir, "aggregate_all_data_sources.r"))
+  #source(paste0(code_dir, "aggregate_all_data_sources.r"))
 
 # ----------------------------------------------
 # STEP 6: Verify budget numbers
 # ----------------------------------------------
 
-  #source(paste0(gf_prep_code, "6_verify_financial_numbers.r")) 
+ #source(paste0(gf_prep_code, "6_verify_financial_numbers.r")) 
  
 # ----------------------------------------------
 # STEP 7: Upload to Basecamp

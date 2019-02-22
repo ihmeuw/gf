@@ -15,99 +15,94 @@ if (prep_gos == TRUE){
 }
 
 #-------------------------------------------------------
-# Prep data for merge 
+# Split data into data that can be mapped to modular 
+# framework immediately, and what needs to be mapped to NLP. 
 #-------------------------------------------------------
-#Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
-raw_data <- strip_chars(raw_data)
+mod_framework_files = file_list[mod_framework_format == TRUE, .(file_name)]
+map_data = raw_data[fileName%in%mod_framework_files$file_name] 
+nlp_data = raw_data[!fileName%in%mod_framework_files$file_name] 
 
-#Correct common acronyms in the resource database and the module map. 
-raw_data[, module:=replace_acronyms(module)]
-raw_data[, intervention:=replace_acronyms(intervention)]
+# PART 1: MAP FILES THAT ARE ALREADY MAPPED TO MODULAR FRAMEWORK 
+{
+    #-------------------------------------------------------
+    # Prep mapping data for merge 
+    #-------------------------------------------------------
+    #Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
+    map_data <- strip_chars(map_data)
+    
+    #Correct common acronyms in the resource database and the module map. 
+    map_data[, module:=replace_acronyms(module)]
+    map_data[, intervention:=replace_acronyms(intervention)]
+    
+    module_map[, module:=replace_acronyms(module)]
+    module_map[, intervention:=replace_acronyms(intervention)]
+    
+    #--------------------------------------------------------
+    # Adjust module and intervention manually in the raw data 
+    #-------------------------------------------------------
+    # if (prep_files == TRUE){
+    #   source(paste0(gf_prep_code, "budget_pudr_prep/", country, "_prep/correct_modules_interventions.R"))
+    # } else if (prep_gos == TRUE){
+    #   source(paste0(gf_prep_code, "gos_prep/correct_modules_interventions.R"))
+    # }
+    # 
+    # raw_data = correct_modules_interventions(raw_data)
+    #------------------------------------------------------------
+    # Map budgets and PUDRs to module mapping framework 
+    #------------------------------------------------------------
+    
+    # Check for unmapped modules/interventions before mapping
+    gf_concat <- paste0(module_map$module, module_map$intervention)
+    rt_concat <- paste0(raw_data$module, raw_data$intervention)
+    unmapped_mods <- raw_data[!rt_concat%in%gf_concat]
+    
+    if(nrow(unmapped_mods)>0){
+      print(unique(unmapped_mods[, c("module", "intervention"), with= FALSE]))
+      print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
+      stop("You have unmapped original modules/interventions!")
+    }
+    
+    #------------------------------------------------------------
+    # Remap diseases so they apply at the intervention level, 
+    #   not the grant-level (assigned in the file list) 
+    #------------------------------------------------------------
+    
+    source(paste0(gf_prep_code, "5_remap_diseases.R"))
+    raw_data = remap_diseases(raw_data)
+    
+    #----------------------------------------------------------------------------
+    # Merge with module map on module, intervention, and disease to pull in code
+    #----------------------------------------------------------------------------
+    mapped_data <- merge(raw_data, module_map, by=c("module", "intervention", "disease"), all.x=TRUE)
+    dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
+    
+    if(nrow(dropped_mods) >0){
+      # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+      print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
+      stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
+    }
+    
+    #-------------------------------------------------------
+    # #Remap all RSSH codes to the RSSH disease, and make sure 
+    #there aren't any HSS diseases still hanging around. 
+    # ------------------------------------------------------
+    mapped_data[substring(code, 1, 1)=='R', disease:='rssh']
+    mapped_data[disease == 'hss', disease:='rssh']
 
-module_map[, module:=replace_acronyms(module)]
-module_map[, intervention:=replace_acronyms(intervention)]
-
-#Temporary fix for UGA - should be removed!
-module_map[, module:=gsub("hss", "", module)]
-module_map[, intervention:=gsub("hss", "", intervention)]
-
-raw_data[, module:=gsub("hss", "", module)]
-raw_data[, intervention:=gsub("hss", "", intervention)]
-
-#--------------------------------------------------------
-# Adjust module and intervention manually in the raw data 
-#-------------------------------------------------------
-if (prep_files == TRUE){
-  source(paste0(gf_prep_code, "budget_pudr_prep/", country, "_prep/correct_modules_interventions.R"))
-} else if (prep_gos == TRUE){
-  source(paste0(gf_prep_code, "gos_prep/correct_modules_interventions.R"))
 }
 
-raw_data = correct_modules_interventions(raw_data)
-#------------------------------------------------------------
-# Map budgets and PUDRs to module mapping framework 
-#------------------------------------------------------------
-
-# Check for unmapped modules/interventions before mapping
-gf_concat <- paste0(module_map$module, module_map$intervention)
-rt_concat <- paste0(raw_data$module, raw_data$intervention)
-unmapped_mods <- raw_data[!rt_concat%in%gf_concat]
-
-if(nrow(unmapped_mods)>0){
-  print(unique(unmapped_mods[, c("module", "intervention"), with= FALSE]))
-  print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
-  stop("You have unmapped original modules/interventions!")
+# PART 1: APPLY MACHINE LEARNING ALGORITHM TO PRE-2016 FILES
+{
+  
 }
 
-#------------------------------------------------------------
-# Remap diseases so they apply at the intervention level, 
-#   not the grant-level (assigned in the file list) 
-#------------------------------------------------------------
 
-source(paste0(gf_prep_code, "5_remap_diseases.R"))
-raw_data = remap_diseases(raw_data)
-
-#----------------------------------------------------------------------------
-# Merge with module map on module, intervention, and disease to pull in code
-#----------------------------------------------------------------------------
-mapped_data <- merge(raw_data, module_map, by=c("module", "intervention", "disease"), all.x=TRUE)
-
-#Merge with intervention using code merged from previous line to pull in gf_module and gf_intervention. 
-map_dir <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/"
-final_mapping <- load_mapping_list(paste0(map_dir, "intervention_and_indicator_list.xlsx")
-                                   , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
-setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
-final_mapping = final_mapping[, .(code, gf_module, gf_intervention, abbrev_module, abbrev_intervention)]
-
-# Merge the dataset with gf_module/intervention to the raw file data by code. 
-mapped_data<- merge(mapped_data, final_mapping, by="code", all.x=TRUE) 
-dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
-
-if(nrow(dropped_mods) >0){
-  # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
-  print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
-  stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
-}
-
-#-------------------------------------------------------
-# #Remap all RSSH codes to the RSSH disease, and make sure 
-#there aren't any HSS diseases still hanging around. 
-# ------------------------------------------------------
-mapped_data[substring(code, 1, 1)=='R', disease:='rssh']
-mapped_data[disease == 'hss', disease:='rssh']
+mapped_data = rbind(mapped_data, nlp_data)
 
 #-------------------------------------------------------
 # Split HIV/TB combined grants  
 # ------------------------------------------------------
-
 mapped_data = split_hiv_tb(mapped_data)
-
-#-----------------------------------------
-# Apply redistribution coefficients
-# ----------------------------------------
-mapped_data$budget <- mapped_data$budget*mapped_data$coefficient
-mapped_data$expenditure <- mapped_data$expenditure*mapped_data$coefficient
-mapped_data$disbursement <- mapped_data$disbursement*mapped_data$coefficient
 
 #-----------------------------------------
 # Add in location variables
