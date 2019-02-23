@@ -56,6 +56,7 @@ for(i in 1:nrow(file_list)){
   tmpData$primary_recipient <- file_list$primary_recipient[i]
   tmpData$secondary_recipient <- file_list$secondary_recipient[i]
   tmpData$grant_status <- file_list$grant_status[i]
+  tmpData$mod_framework_format = file_list$mod_framework_format[i]
   if(i==1){
     resource_database = tmpData 
   } 
