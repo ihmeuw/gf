@@ -25,7 +25,7 @@ convert_date_to_quarter <- function(dt){
 # ---------------------------------------------------
 pnlp_hz <- readRDS(pnlpHZFile) # hz level, monthly - get completeness from this
 dt_pnlp <- readRDS(pnlpFile) # national level, monthly
-setnames(dt_pnlp, "mean", "value")
+  setnames(dt_pnlp, "mean", "value")
 dt_base <- readRDS(snisBaseFile) # facility level, monthly
 dt_sigl <- readRDS(snisSiglFile) # facility level, monthly
 # ---------------------------------------------------
@@ -33,12 +33,16 @@ dt_sigl <- readRDS(snisSiglFile) # facility level, monthly
 # ---------------------------------------------------
 # Change variable names / other set up
 # ---------------------------------------------------
-# subset to post-2017 data (before that is really incomplete)
-dt_base <- dt_base[ year >= 2017, ]
-dt_sigl <- dt_sigl[ year >= 2017, ]
+# Subset DHIS2 data sets to 2018 data onward (before that is really incomplete)
+dt_base <- dt_base[ year >= 2018, ]
+dt_sigl <- dt_sigl[ year >= 2018, ]
+# UNTIL WE GET NEW DATA - remove 2018 Q3 due to very low completeness
+dt_base <- dt_base[date <= "2018-06-01"]
 
 dt_base$type <- trimws(dt_base$type)  # for some reason there is both "malaria" and "malaria " in the type unique values
-dt_base <- dt_base[ type == "malaria", ]
+dt_base <- dt_base[ type == "malaria", ] # subset to malaria data only
+
+# Standardize indicator names
 dt_base$element <- trimws(dt_base$element)
 dt_base$element_eng <- trimws(dt_base$element_eng)
 
@@ -62,7 +66,7 @@ dt_base[element_eng== "A 1.4 Presumed malaria", element_eng := "presumedMalaria"
 dt_base[element_eng== "A 1.4 Presumed malaria treated", element_eng := "presumedMalariaTreated"]
 dt_base[element_eng== "A 1.4 Suspected malaria case", element_eng := "suspectedMalaria"]
 
-dt_sigl$type <- trimws(dt_sigl$type)  # for some reason there is both "malaria" and "malaria " in the type unique values
+dt_sigl$type <- trimws(dt_sigl$type)  
 dt_sigl <- dt_sigl[ type == "malaria", ]
 dt_sigl$element <- trimws(dt_sigl$element)
 dt_sigl$element_eng <- trimws(dt_sigl$element_eng)
@@ -101,48 +105,49 @@ dt_sigl[is.na(subpopulation), subpopulation:="none"]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
-# Completeness measure from SNIS --> USE comp_base_totals and comp_sigl
+# Calculate completeness measure from SNIS data --> USE comp_base and comp_sigl after running this block of code
 # ---------------------------------------------------
-# FOR BASE DATA
-dt_comp_base <- dt_base[, .(num_fac_per_indicator_ever = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category")]
+# BASE SERVICES DATA------------>
+# calculate the number of unique facilities reporting by indicator, indicator-month, and indicator-year
+# since we are just using 2018 for now, number of unique facilities by indicator-year will be the same as by indicator-ever
+# not using this one now... # dt_comp_base <- dt_base[, .(num_fac_per_indicator_ever = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category")]
 dt_comp_base2 <- dt_base[, .(num_fac_per_indicator_month = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category", "date", "year", "quarter")]
-# dt_comp_base3 <- dt_base[, .(num_fac_per_indicator_year = length(unique(org_unit))), by=c("element_eng", "category", "year")]
-comp_base <- merge(dt_comp_base, dt_comp_base2, by=c("element_eng", "indicator", "subpopulation", "category"), all = TRUE)
-# comp_base <- merge(comp_base, dt_comp_base3, by=c("element_eng", "category", "year"), all = TRUE)
-# comp_base[, indicator_month_comp := num_fac_per_indicator_month / num_fac_per_indicator_ever]
+dt_comp_base3 <- dt_base[, .(num_fac_per_indicator_year = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category", "year")]
 
-# weighted average over category and subpopulations by quarter year and indicator
-# first - need to remove RDT_positive because we just want to use RDT_completed in the model for now. Other indicators can be averaged across subpopulations
-comp_base_totals <- comp_base[subpopulation != "positive"]
+comp_base <- merge(dt_comp_base2, dt_comp_base3, by=c("element_eng", "indicator", "subpopulation", "category", "year"), all = TRUE)
+
+# calculate completeness over category and subpopulations by QUARTER, year, and indicator - sum numerator and denominator and then calculate  
+comp_base_totals <- comp_base[subpopulation != "positive"] # first - need to remove RDT_positive because we just want to use RDT_completed in the model for now. 
+# Other indicators can be averaged across subpopulations
 comp_base_totals <- comp_base_totals[, .(num = sum(num_fac_per_indicator_month),
-                                  denom = sum(num_fac_per_indicator_ever)),
+                                  denom = sum(num_fac_per_indicator_year)),
                               by=c("indicator", "year", "quarter")]
 comp_base_totals[, completeness:= num/denom]
-  # UNTIL WE GET NEW DATA - remove 2018 Q3 due to very low completeness
-    dt_base <- dt_base[date <= "2018-06-01"]
-    
-# separate calculation for totalPatientsTreated
-comp_base_patientsTreated <- comp_base[indicator %in% c("mildMalariaTreated", "severeMalariaTreated", "presumedMalariaTreated")]
-comp_base_patientsTreated <- comp_base_patientsTreated[, .(num = sum(num_fac_per_indicator_month),
-                                                           denom = sum(num_fac_per_indicator_ever)),
+
+# separate calculation for totalPatientsTreated, since this invloves a combination of indicators
+comp_patientsTreated <- comp_base[indicator %in% c("mildMalariaTreated", "severeMalariaTreated", "presumedMalariaTreated")]
+comp_patientsTreated <- comp_patientsTreated[, .(num = sum(num_fac_per_indicator_month),
+                                                           denom = sum(num_fac_per_indicator_year)),
                                                        by=c("year", "quarter")]
-comp_base_patientsTreated[, completeness:= num/denom]
-comp_base_patientsTreated[, indicator := "totalPatientsTreated"]
+comp_patientsTreated[, completeness:= num/denom]
+comp_patientsTreated[, indicator := "totalPatientsTreated"]
 
-# attach totalPatientsTreated values for completeness back to full data set of completeness measures
-comp_base_totals <- rbindlist(list(comp_base_totals, comp_base_patientsTreated), use.names= TRUE)
+# bind totalPatientsTreated values for completeness back to full data set of completeness measures
+comp_base <- rbindlist(list(comp_base_totals, comp_patientsTreated), use.names= TRUE)
 
-# FOR SIGL DATA
-dt_comp_sigl <- dt_sigl[, .(num_fac_per_indicator_ever = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category")]
-dt_comp_sigl2 <- dt_sigl[, .(num_fac_per_indicator_month = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category", "date")]
-comp_sigl <- merge(dt_comp_sigl, dt_comp_sigl2, by=c("element_eng", "indicator", "subpopulation", "category"), all = TRUE)
-comp_sigl[, indicator_month_comp := num_fac_per_indicator_month / num_fac_per_indicator_ever]
+# SIGL (supply chain) DATA------------>
+dt_comp_sigl <- dt_sigl[, .(num_fac_per_indicator_year = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category", "year")]
+dt_comp_sigl2 <- dt_sigl[, .(num_fac_per_indicator_month = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category", "year", "date")]
+comp_sigl <- merge(dt_comp_sigl, dt_comp_sigl2, by=c("element_eng", "indicator", "subpopulation", "category", "year"), all = TRUE)
+comp_sigl[, indicator_month_comp := num_fac_per_indicator_month / num_fac_per_indicator_year]
 comp_sigl <- convert_date_to_quarter(comp_sigl)
+
+# quarterly????
 # ---------------------------------------------------
 
 # ---------------------------------------------------
-# Completeness from PNLP --> USE pnlp_fac_natl_qtr
-# (get/agg from hz level) 
+# Completeness from PNLP --> USE pnlp_comp after running this block of code
+# Calculate completeness from the hz level pnlp data
 # (not indicator-specific unfortunately - just date specific at natl level)
 # ---------------------------------------------------
 pnlp_hz$variable <- as.character(pnlp_hz$variable)
@@ -157,15 +162,13 @@ pnlp_fac[, healthFacilities_proportionReporting := healthFacilities_reporting / 
 pnlp_fac[healthFacilities_proportionReporting > 1, healthFacilities_reporting := healthFacilities_total] # this will make the proportions = 1, but we want 
 # to sum and then divide (I think?) rather than average 
 # so the proportions are weighted by total # of facilities
-pnlp_fac_natl <- pnlp_fac[, .(healthFacilities_reporting = sum(healthFacilities_reporting),
-                              healthFacilities_total = sum(healthFacilities_total)),
-                          by = "date"]
+pnlp_fac <- convert_date_to_quarter(pnlp_fac)
 
-pnlp_fac_natl <- convert_date_to_quarter(pnlp_fac_natl)
-pnlp_fac_natl_qtr <- pnlp_fac_natl[, .(healthFacilities_reporting = sum(healthFacilities_reporting),
-                                       healthFacilities_total = sum(healthFacilities_total)),
-                                   by = c("quarter", "year")]
-pnlp_fac_natl_qtr[ , prop_fac_reporting:= healthFacilities_reporting / healthFacilities_total]
+# sum numerator and denominator to national level, quarterly
+pnlp_comp <- pnlp_fac[, .(healthFacilities_reporting = sum(healthFacilities_reporting),
+                              healthFacilities_total = sum(healthFacilities_total)),
+                          by = c("quarter", "year")]
+pnlp_comp[ , completeness:= healthFacilities_reporting / healthFacilities_total]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -222,7 +225,7 @@ pnlp_natl_qtr[ indicator == "mildMalariaTreated", subpopulation := "none"]
 
 pnlp_natl_qtr <-  pnlp_natl_qtr[, .(value = sum(value, na.rm=TRUE)), by=c("year", "quarter", "indicator", "subpopulation")]
 
-# we need to create variable for totalPatientsTreated and a variable for ACT_received, will do this separately then merge back on
+# we need to create variable for totalPatientsTreated and a variable for ACT_received, will do this separately then rbind back together
 acts_rec <- pnlp_natl_qtr[ indicator %in% c("ASAQreceived", "ArtLum")]
 acts_rec <- acts_rec[, .(value = sum(value, na.rm=TRUE)), by=c("year", "quarter")]
 acts_rec[, indicator := "ACT_received"]
@@ -267,16 +270,15 @@ sigl_final <- sigl_natl_qtr[, .(year, quarter, indicator, value)]
 # Put it all together!
 # ---------------------------------------------------
 # final clean up of completeness data
-pnlp_comp <- pnlp_fac_natl_qtr[, .(year, quarter, prop_fac_reporting)]
-setnames(pnlp_comp, "prop_fac_reporting", "completeness")
+pnlp_comp <- pnlp_comp[, .(year, quarter, completeness)]
 
 sigl_comp <- comp_sigl[ indicator == "ITN", ]
 sigl_comp <- sigl_comp[, .(completeness = mean(indicator_month_comp)), by = c("year", "quarter", "indicator") ]  # can do a simple avg here since denom is all the same
 sigl_comp <- sigl_comp[ indicator == "ITN", indicator := "ITN_consumed"]
 
 base_indicators <- unique(base_final$indicator)
-comp_base_totals <- comp_base_totals[ indicator == "RDT", indicator := "RDT_completed"]
-base_comp <- comp_base_totals[indicator %in% base_indicators,]
+comp_base <- comp_base[ indicator == "RDT", indicator := "RDT_completed"]
+base_comp <- comp_base[indicator %in% base_indicators,]
 base_comp <- base_comp[, .(year, quarter, indicator, completeness)]
 
 # merge completeness measures with data sets
@@ -289,11 +291,6 @@ sigl_final[, data_source := "SNIS_sigl"]
     
 # bind all data sets together into final data set for pilot
 pilot_dataset <- rbindlist(list(pnlp_final, base_final, sigl_final), use.names = TRUE)
-
-# clean up dates, so we have only SNIS after 2017 (remove 2017 pnlp where there is SNIS data) 
-# and make sure we don't have SNIS after 2018 Q2 (at least now, 1/16/19 while it's not complete)
-remove_rows <- pilot_dataset[indicator %in% c("SP", "severeMalariaTreated", "RDT_completed", "totalPatientsTreated", "ITN_consumed") & data_source == "PNLP" & year == 2017, ]
-pilot_dataset <- pilot_dataset[!remove_rows, on= colnames(pilot_dataset)]
 
 # save dataset
 saveRDS(pilot_dataset, outputFile2b)
