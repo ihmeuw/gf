@@ -11,16 +11,16 @@
 if (prep_gos == TRUE){
   raw_data <- copy(totalGos)
 } else if (prep_files == TRUE){
-  raw_data <- copy(resource_database)
+  raw_data =resource_database
 }
 
 #-------------------------------------------------------
 # Split data into data that can be mapped to modular 
 # framework immediately, and what needs to be mapped to NLP. 
 #-------------------------------------------------------
-mod_framework_files = file_list[mod_framework_format == TRUE, .(file_name)]
-map_data = raw_data[fileName%in%mod_framework_files$file_name] 
-nlp_data = raw_data[!fileName%in%mod_framework_files$file_name] 
+# mod_framework_files = file_list[mod_framework_format == TRUE, .(file_name)]
+# map_data = raw_data[fileName%in%mod_framework_files$file_name] 
+# nlp_data = raw_data[!fileName%in%mod_framework_files$file_name] 
 
 # PART 1: MAP FILES THAT ARE ALREADY MAPPED TO MODULAR FRAMEWORK 
 {
@@ -28,11 +28,11 @@ nlp_data = raw_data[!fileName%in%mod_framework_files$file_name]
     # Prep mapping data for merge 
     #-------------------------------------------------------
     #Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
-    map_data <- strip_chars(map_data)
+    raw_data = strip_chars(raw_data)
     
     #Correct common acronyms in the resource database and the module map. 
-    map_data[, module:=replace_acronyms(module)]
-    map_data[, intervention:=replace_acronyms(intervention)]
+    raw_data[, module:=replace_acronyms(module)]
+    raw_data[, intervention:=replace_acronyms(intervention)]
     
     module_map[, module:=replace_acronyms(module)]
     module_map[, intervention:=replace_acronyms(intervention)]
@@ -47,6 +47,9 @@ nlp_data = raw_data[!fileName%in%mod_framework_files$file_name]
     # }
     # 
     # raw_data = correct_modules_interventions(raw_data)
+    
+    #Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
+    raw_data[module == 'rsshintegratedservicedeliveryandqualityimprovement' & intervention == 'otherinterventionsforadolescentandyouth' & sda_activity =='all', module:='preventionprogramsforadolescentsandyouthinandoutofschool']
     #------------------------------------------------------------
     # Map budgets and PUDRs to module mapping framework 
     #------------------------------------------------------------
@@ -73,7 +76,7 @@ nlp_data = raw_data[!fileName%in%mod_framework_files$file_name]
     #----------------------------------------------------------------------------
     # Merge with module map on module, intervention, and disease to pull in code
     #----------------------------------------------------------------------------
-    mapped_data <- merge(raw_data, module_map, by=c("module", "intervention", "disease"), all.x=TRUE)
+    mapped_data <- merge(raw_data, module_map, by=c("module", "intervention", "disease"), all.x=TRUE, allow.cartesian = TRUE)
     dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
     
     if(nrow(dropped_mods) >0){
@@ -91,13 +94,15 @@ nlp_data = raw_data[!fileName%in%mod_framework_files$file_name]
 
 }
 
-# PART 1: APPLY MACHINE LEARNING ALGORITHM TO PRE-2016 FILES
+# PART 2: APPLY MACHINE LEARNING ALGORITHM TO PRE-2016 FILES
 {
   
 }
 
 
-mapped_data = rbind(mapped_data, nlp_data)
+#mapped_data = rbind(mapped_data, nlp_data)
+
+
 
 #-------------------------------------------------------
 # Split HIV/TB combined grants  

@@ -23,18 +23,18 @@
 
 #---------------------------------------
 
-cod_prepped <- "J:/Project/Evaluation/GF/resource_tracking/cod/prepped/"
-gtm_prepped <- "J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/"
-uga_prepped <- "J:/Project/Evaluation/GF/resource_tracking/uga/prepped/"
+cod_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/")
+gtm_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/gtm/prepped/")
+uga_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/uga/prepped/")
 
-final_write <- "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/"
+final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/")
 
 
 # --------------------------------------------
 # Load the prepped GOS data - to be used for both 
 # final budgets and final expenditures 
 #----------------------------------------------
-gos_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv", 
+gos_data <- data.table(read.csv(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv"), 
                                 fileEncoding = "latin1"))
 
 ##change the dates into date format: 
@@ -218,9 +218,9 @@ saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rd
 #----------------------------------
 # 3. GF FILE ITERATIONS
 #----------------------------------
-all_gf_cod <- readRDS("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds")
-all_gf_uga <- readRDS("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_pudr_iterations.rds")  
-all_gf_gtm <- readRDS("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_pudr_iterations.rds")
+all_gf_cod <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds"))
+all_gf_uga <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_pudr_iterations.rds"))  
+all_gf_gtm <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_pudr_iterations.rds"))
 
 all_files = list(all_gf_cod, all_gf_gtm, all_gf_uga)
 all_gf_files <- rbindlist(all_files, use.names = TRUE, fill = TRUE)

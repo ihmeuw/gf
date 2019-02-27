@@ -62,9 +62,17 @@ byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'expe
 resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expenditure=sum(na.omit(expenditure))), by=byVars]
 
 #Hacky fix - this should be fixed earlier in the prep functions, but remove anything at this point that has NAs for module, intervention, and budget OR expenditure. 
+resource_database[module == 'Unspecified' | module == 'unspecified', module:=NA]
+resource_database[tolower(intervention)=='unspecified', intervention:=NA]
+resource_database[module=='all', module:=NA]
+resource_database[tolower(intervention)=='all', intervention:=NA]
 resource_database = resource_database[!(is.na(module) & is.na(intervention) & (budget == 0 | expenditure == 0))]
 
 #Make sure you have all the files here that you started with in your filelist. 
 # rt_files <- unique(resource_database$fileName)
 # stopifnot(length(unique(file_list$file_name)) == length(rt_files))
 # stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
+
+#Only keep post-2016 files - temporary fix to make sure most recent data is accurate! 
+post_mf_files = file_list[mod_framework_format == TRUE]
+resource_database = resource_database[fileName%in%post_mf_files$file_name]

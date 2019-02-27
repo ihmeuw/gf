@@ -97,60 +97,67 @@ failed_tests_uga = unique(rbind(failed_budgets_uga, failed_expenditures_uga))
 }
 
 # ------------------
-# DRC File prep 
+# DRC file prep 
 # ------------------
 {
-dt_drc = file_iterations[loc_name == "cod"]
-cod_budgets = check_budgets_pudrs(dt_drc)
-cod_rssh_review <- dt_drc[substring(code, 1, 1)=='R', .(orig_module, orig_intervention, gf_module, gf_intervention, fileName, code)]
-cod_rssh = check_budgets_pudrs(dt_drc[substring(code, 1, 1)=='R'])
-
-colnames(cod_rssh) <- c('start_date', 'fileName', 'grant_number', 'data_source', 'rssh_budget', 'rssh_exp')
-
-cod_budgets <- merge(cod_budgets, cod_rssh, all = TRUE)
-cols <- c('budget', 'expenditure', 'rssh_budget', 'rssh_exp')
-cod_budgets = cod_budgets[, lapply(.SD, round), .SDcols=cols, by=c('start_date', 'fileName', 'grant_number', 'data_source')]
-# ------------------
-# DRC Unit tests 
-# ------------------
-
-cod_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/cod_tests.csv"))
-cod_tests$start_date <- as.Date(cod_tests$start_date, format = "%m/%d/%Y")
-
-#Format correctly. 
-cols <- c('correct_bug_sum', 'correct_exp_sum', 'correct_rssh_bug', 'correct_rssh_exp')
-cod_tests = cod_tests[, lapply(.SD, function(x) substring(x, 1, nchar(x)-4)), by = c('fileName', 'start_date')]
-cod_tests = cod_tests[, lapply(.SD, function(x) gsub("[[:punct:]]", "", x)), by = c('fileName', 'start_date')]
-cod_tests = cod_tests[, lapply(.SD, function(x) as.numeric(x)), .SDcols=cols, by=c('fileName', 'start_date')]
-
-cod_merge <- merge(cod_tests, cod_budgets, by = c('start_date', 'fileName')) 
-if(nrow(cod_merge) != nrow(cod_tests)){
-  print("ERROR: Not all DRC tests merged.")
-  unmerged_cod_tests = cod_tests[!(fileName%in%cod_merge$fileName)][order(fileName, start_date)]
+  dt_cod = file_iterations[loc_name == "cod"]
+  cod_budgets = check_budgets_pudrs(dt_cod)
+  
+  # ------------------
+  # DRC unit tests
+  # ------------------
+  
+  cod_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/cod_tests.csv"))
+  cod_tests$start_date <- as.Date(cod_tests$start_date, format="%m/%d/%Y")
+  
+  cod_tests$correct_bug_sum <- gsub("[[:punct:]]", "", cod_tests$correct_bug_sum)
+  cod_tests$correct_exp_sum <- gsub("[[:punct:]]", "", cod_tests$correct_exp_sum)
+  cod_tests$correct_bug_sum <- as.numeric(cod_tests$correct_bug_sum)
+  cod_tests$correct_exp_sum <- as.numeric(cod_tests$correct_exp_sum)
+  
+  cod_merge <- merge(cod_tests, cod_budgets, by = c('start_date', 'fileName')) 
+  if(nrow(cod_merge) != nrow(cod_tests)){
+    print("ERROR: Not all DRC tests merged.")
+    unmerged_cod_tests = cod_tests[!(fileName%in%cod_merge$fileName)][order(fileName, start_date)]
+  }
+  
+  cod_merge$budget = round(cod_merge$budget)
+  cod_merge$expenditure = round(cod_merge$expenditure)
+  
+  cod_merge <- cod_merge[, .(fileName, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
+  cod_merge$country <- "cod" #For sorting out failed tests later if any. 
+  
+  failed_budgets_cod <- cod_merge[correct_bug_sum != budget, ]
+  failed_expenditures_cod <- cod_merge[correct_exp_sum != expenditure, ]
+  failed_tests_cod = unique(rbind(failed_budgets_cod, failed_expenditures_cod)) 
+  
 }
 
-cod_merge$budget = round(cod_merge$budget)
-cod_merge$expenditure = round(cod_merge$expenditure)
-cod_merge$correct_rssh_bug = round(cod_merge$correct_rssh_bug)
-cod_merge$correct_rssh_exp = round(cod_merge$correct_rssh_exp)
+# ------------------
+# RSSH tests
+# ------------------
 
-cod_merge <- cod_merge[, .(fileName, correct_bug_sum, correct_exp_sum, correct_rssh_bug, correct_rssh_exp, rssh_budget, rssh_exp, budget, expenditure, start_date)]
-cod_merge$country <- "cod"
+rssh_tests <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/rssh_tests.csv"))
+rssh_by_rt_code <- file_iterations[substring(code, 1, 1) == 'R']
+rssh_by_rt_code = rssh_by_rt_code[, .(rt_code_rssh = round(sum(budget, na.rm = TRUE))), by = c('fileName')]
+rssh_by_rt_code[is.na(rt_code_rssh), rt_code_rssh:=0]
 
-failed_budgets_cod <- cod_merge[correct_bug_sum != budget & !is.na(correct_bug_sum), ]
-failed_expenditures_cod <- cod_merge[correct_exp_sum != expenditure & !is.na(correct_exp_sum), ]
-failed_rssh_cod <- cod_merge[(correct_rssh_bug!=rssh_budget & !is.na(correct_rssh_bug)) | (correct_rssh_exp!=rssh_exp & !is.na(correct_rssh_exp))]
-failed_rssh_cod <- failed_rssh_cod[, .(fileName, correct_rssh_bug, correct_rssh_exp, rssh_budget, rssh_exp, start_date)]
-failed_tests_cod = rbind(failed_budgets_cod, failed_expenditures_cod)
+check_rssh <- merge(rssh_tests, rssh_by_rt_code, by = c('fileName'), all.y = TRUE)
+unwritten_rssh_tests = check_rssh[is.na(correct_rssh)]
 
+#unmerged_tests = anti_join(rssh_tests, rssh_by_rt_code, by='fileName')
+if(nrow(unwritten_rssh_tests)!=0){
+  print("ERROR: Some files are don't have a unit test written for RSSH. Review 'unwritten rssh tests'. ")
 }
+check_rssh = check_rssh[!is.na(correct_rssh)]
 
+failed_rssh_tests = check_rssh[correct_rssh!=rt_code_rssh]
 # ------------------------------------
 # Print results and summary statistics
 # ------------------------------------
 {
 
-failed_rssh <- rbind(failed_rssh_cod)
+  print("...")
 failed_tests <- rbind(failed_tests_gtm, failed_tests_cod, failed_tests_uga, fill = TRUE)
   
 if (nrow(failed_tests) != 0){
@@ -201,9 +208,6 @@ print(paste0("Testing ", round(nrow(unique(cod_filelist[grant_status=='active' &
              , "% of not active files DRC"))
 print("...")
 
-print("Total RSSH tests failed Uganda: ")
-print("Total RSSH tests failed DRC:")
-print("Total RSSH tests failed Guatemala:" )
 
 total_tests <- nrow(cod_tests) + nrow(gtm_tests) + nrow(uga_tests)
 total_merges <- nrow(cod_merge) + nrow(gtm_merge) + nrow(uga_merge)
@@ -212,13 +216,14 @@ total_unmerged <- total_tests - total_merges
 print(paste0("Total merged tests that failed either a budget or expenditure calculation: ", round(nrow(failed_tests)/total_merges*100, 2), "%")) #Total failed tests over total of rows of merge datasets. 
 print(paste0("Total tests that failed, including non-merges: ", round((total_unmerged + nrow(failed_tests))/total_tests*100, 2), "%")) #/total tests 
 print(paste0("Total tests merged: ", total_merges, " out of ", total_tests, ", or ", round((total_merges/total_tests)*100, 2), "%"))
+print(paste0("Total RSSH tests failed: ", nrow(failed_rssh_tests)))
+print(paste0("Percentage of RSSH tests failed: ", round(nrow(failed_rssh_tests)/nrow(check_rssh)*100, 2), "%"))
 
 
-#Remove everything but the failed tests so it's easy to see what to analyze. 
 rm(list= ls()[!(ls() %in% c('failed_tests','failed_tests_cod', 'failed_tests_gtm', 'failed_tests_uga'
                             , 'gtm_tests', 'gtm_merge', 'cod_tests', 'cod_merge', 'uga_tests', 'uga_merge', 
                             'unmerged_cod_tests', 'unmerged_gtm_tests', 'unmerged_uga_tests', 
-                            'failed_rssh_cod'))])
+                             'failed_rssh_tests', 'unwritten_rssh_tests'))])
 
 
 }
