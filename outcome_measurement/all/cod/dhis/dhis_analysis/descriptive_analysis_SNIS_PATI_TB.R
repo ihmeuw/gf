@@ -39,7 +39,7 @@ pnlp_hz_level = paste0(dir_pnlp, "imputedData_run2_agg_hz.rds")
 # ----------------------------------------------
 # Read in data
 # ----------------------------------------------
-cases <- readRDS(pati_cases)
+snis_cases <- readRDS(pati_cases)
 snis_reg <- readRDS(pati_registered)
 snis_res <- readRDS(pati_results)
 pnlt_res <- read.csv(pnlt_case_outcomes, stringsAsFactors = FALSE) %>% as.data.table()
