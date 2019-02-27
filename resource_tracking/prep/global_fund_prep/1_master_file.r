@@ -10,8 +10,8 @@ rm(list=ls())
 # - add in an option to only rework one file (make database append-only)
 # ---------------------------------------------------------------------
 
-user = "elineb" #Change to your username 
-country = "cod" #Change to the country you want to update. 
+user = Sys.info()[['user']] #Change to your username 
+country = "cod" #Change to the iso3 code of the country you want to update. 
 code_loc = ifelse(Sys.info()[1]=='Windows', 'H:/gf/', paste0('/homes/', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
@@ -22,6 +22,7 @@ prep_files <- TRUE
 prep_gos <- FALSE
 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
+# this doesn't appear to have a function in scripts 2-6... is it just planned for later?
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
 rerun_filelist <- TRUE  #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist <- FALSE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
@@ -30,6 +31,8 @@ limit_filelist <- FALSE #Set to TRUE if you want to only run files that will be 
 # #Mark which grants are currently active to save in file - this should be updated every grant period! 
 # ---------------------------------------
 
+# this info is a good cadidate to save as a little csv somewhere... 
+# as a general rule of thumb, try not to embed anything that resembles data/metadata in the code
 current_gtm_grants <- c('GTM-H-HIVOS', 'GTM-H-INCAP', 'GTM-M-MSPAS', 'GTM-T-MSPAS')
 current_gtm_grant_period <- c('2018', '2019-2020', '2018-2020', '2016-2019')
 
@@ -43,7 +46,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 1: Read in and verify module mapping framework
 # ----------------------------------------------
   
-  map = read_xlsx(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
+  map = read_xlsx(paste0(dir, "mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
   map = data.table(map)
   source(paste0(gf_prep_code, "2_verify_module_mapping.R"))
   module_map <- prep_map(map)
@@ -54,7 +57,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
   
   if (prep_files == TRUE){
     file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE)
-    file_list$start_date <- as.Date(file_list$start_date, format = "%m/%d/%Y")
+    file_list[, start_date:=as.Date(start_date, format = "%m/%d/%Y")]
     file_list = file_list[, -c('notes')]
     
     #Validate file list 

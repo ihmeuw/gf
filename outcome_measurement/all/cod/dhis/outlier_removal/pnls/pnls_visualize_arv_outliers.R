@@ -33,8 +33,11 @@ dt = merge(dt, facilities, by='org_unit_id', all.x=T)
 
 #------------------------------------
 # identify outliers at various levels/thresholds
+<<<<<<< HEAD
+=======
 #Hi Audrey, we had a merge conflict with lines 38-40 vs. lines 42-44. We kept them both, which one would you like to keep? -Emily and Jen 
 
+>>>>>>> 000d22b4b6abbd9d72fe31d0711bdf364e7d9f23
 dt[ ,thresh5:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,thresh10:=median(resid)+(10*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,thresh20:=median(resid)+(20*sd(resid)), by=.(org_unit_id, element)]
@@ -45,14 +48,20 @@ dt[thresh10 < value & 100 <=value, outlier:=TRUE]
 dt[(value <= thresh10 | value < 100), outlier:=FALSE]
 
 # set lower and upper bounds
+<<<<<<< HEAD
+=======
 #Hi Audrey, we had a merge conflict with lines 54-59 vs. lines 61-66. We kept them both, which one would you like to keep? -Emily and Jen 
+>>>>>>> 000d22b4b6abbd9d72fe31d0711bdf364e7d9f23
 dt[ ,upper:=median(resid)+(10*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,lower:=(median(resid)-(10*sd(resid))), by=.(org_unit_id, element)]
 
 # add a 5 SD bound just to be sure
 dt[ ,upper_mid:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,lower_mid:=(median(resid)-(5*sd(resid))), by=.(org_unit_id, element)]
+<<<<<<< HEAD
+=======
 
+>>>>>>> 000d22b4b6abbd9d72fe31d0711bdf364e7d9f23
 
 # typically no values are below lower, but check
 dt[value < lower, outlier:=TRUE]
@@ -72,6 +81,8 @@ dt[ ,facility:=word(org_unit, 2, -1)]
 dt[ , combine:=paste0(org_unit_id, sex, element)]
 out_orgs = dt[outlier==T, unique(combine)]
 out = dt[combine %in% out_orgs]
+<<<<<<< HEAD
+=======
 
  # # subset to only the sexes within facilities and elements that have outliers
 
@@ -79,6 +90,7 @@ out = dt[combine %in% out_orgs]
 # out_sex = dt[outlier==T, unique(combine)]
 # out = dt[combine %in% out_sex]
 
+>>>>>>> 000d22b4b6abbd9d72fe31d0711bdf364e7d9f23
 out[ , combine:=NULL]
 
 #----------------------------

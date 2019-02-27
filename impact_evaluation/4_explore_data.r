@@ -33,6 +33,7 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 # compute cumulative budgets
 rtVars = names(data)
 rtVars = rtVars[grepl('budget|other_dah', rtVars)]
+setorder(data, date) # order by data so cumulative budget is always accurate even if data is somehow scrambled before
 for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v))]
 # ----------------------------------------------------------------------------
 
