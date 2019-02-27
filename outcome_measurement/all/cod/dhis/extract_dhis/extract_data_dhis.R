@@ -140,6 +140,7 @@ end_date = as.Date(end_date)
 
 dates = seq(start_date,end_date, by = 'month')
 
+# EXTRACTION LOOP-----------------
 for (i in 1:((length(dates))-1) ){
   
   org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
@@ -183,13 +184,18 @@ for (i in 1:((length(dates))-1) ){
                                      pace = 10,
                                      update_date = paste0(update_year, '-01-01'))
   
-  # save intermediate data - 2nd iteration
-  extracted_data2$download_number = 2
-  saveRDS(extracted_data2,  paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', 'base_0', save_month_start, '_', 
-                                   save_year_start, '_0', save_month_end, '_', save_year_end, '_second_download.rds'))
-  
-  print(paste0("Loop number is ", i, " of ", (length(dates)-1) ))
+  # save intermediate data - 2nd download
+  if (nrow(extracted_data2)==0){ 
+    print(paste0("skipping iteration ", i, " second download (second download is empty)"))
+    next
+  } else {
+    extracted_data2$download_number = 2
+    saveRDS(extracted_data2,  paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', 'base_0', save_month_start, '_', 
+                                     save_year_start, '_0', save_month_end, '_', save_year_end, '_second_download.rds'))
+  }
+  print(paste0("Loop ", i, " of ", (length(dates)-1), " complete" ))
 }
+#------------------------
 #------------------------
 # read in all files and rbind together to save one file of data
 files = list.files( paste0('./pre_prep/', set_name, '/intermediate_data/'), recursive=TRUE)
