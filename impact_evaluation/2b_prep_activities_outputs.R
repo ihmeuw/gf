@@ -94,12 +94,10 @@ dt_sigl[element== "C1 12.1 Artesunate 200mg Suppositoire - quantit� consomm�
 dt_sigl[element== "C1 12.1 MIILD - pi�ce - quantit� consomm�e", 
               element_eng := "ITN_consumed"]
 
-#Convert all dates to quarters
 dt_pnlp <- convert_date_to_quarter(dt_pnlp)
 dt_base <- convert_date_to_quarter(dt_base)
 dt_sigl <- convert_date_to_quarter(dt_sigl)
 
-#Pull out "indicator" and "subpopulation" variables from element 
 dt_base[, c("indicator", "subpopulation") := tstrsplit(element_eng, "_", fixed=TRUE)]
 dt_base[is.na(subpopulation), subpopulation:="none"]
 dt_sigl[, c("indicator", "subpopulation") := tstrsplit(element_eng, "_", fixed=TRUE)]
