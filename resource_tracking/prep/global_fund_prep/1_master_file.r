@@ -46,7 +46,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 1: Read in and verify module mapping framework
 # ----------------------------------------------
   
-  map = read_xlsx(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
+  map = read_xlsx(paste0(dir, "mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
   map = data.table(map)
   source(paste0(gf_prep_code, "2_verify_module_mapping.R"))
   module_map <- prep_map(map)
