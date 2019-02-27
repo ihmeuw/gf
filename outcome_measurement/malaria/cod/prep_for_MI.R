@@ -4,6 +4,7 @@
   # 6/15/18
   # prep of PNLP data for multiple imputation
     setwd('C:/local/gf/')
+  # Cleaned up/edited/redone - 02/19
 # ----------------------------------------------
 
 
@@ -27,6 +28,7 @@
 
 # ----------------------------------------------
   # Overview - Files and Directories
+# ---------------------------------------------- 
     # data directory
       dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/"
       
@@ -34,7 +36,7 @@
       fullData <- "fullData_dps_standardized.csv"
       
     # output files
-      output_dt <- "PNLP_2010to2017_preppedForMI_update_1_22_19.csv"
+      output_dt <- "PNLP_2010to2017_preppedForMI_updated_1_22_19.csv"
       
     # functions:
       getmode <- function(v) {
@@ -46,15 +48,15 @@
 
 # ----------------------------------------------     
   # read in data
+# ---------------------------------------------- 
     fullData <- fread( paste0(dir_prepped, fullData) ) 
-      
-    fullData2 <- fread(paste0(dir_prepped, "final_data_for_imputation.csv"))
-    fullData3 <- fread(paste0(dir_prepped, "PNLP_2010to2017_preppedForMI.csv"))
 # ----------------------------------------------     
       
       
 # ----------------------------------------------     
-  # ADD TO PREP CODE ****************************** change where month/date is duplicated (in original data) ******************************
+  # ADD TO PREP CODE ****************************** 
+# ----------------------------------------------  
+    # change where month/date is duplicated (in original data) ******************************
       fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "342", date:= "2016-07-01" ]
       fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "320", date:= "2016-08-01" ]
       fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "326", date:= "2016-09-01" ]
@@ -80,7 +82,7 @@
       fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "617", date:= "2017-09-01" ]
       
   # Where DPS = 0, those health zones (bambu and manguredj) weren't in the most recent year of data (2017) but in retrospect it seems like
-  # they should be other healht zones - change so they match up
+  # they should be other health zones/dps - change so they match up
       
       # bambu-nord kivu is probably the same as bambo-nord kivu 
       fullData[ dps == "0" & health_zone == "bambu", dps := "nord kivu"]
@@ -93,55 +95,59 @@
 
       
 # ----------------------------------------------     
-  # take a subset of fullData that will be used in MI
-    
+# take a subset of fullData that will be used in MI
+# ---------------------------------------------- 
     all_vars <- c(colnames(fullData))
-    
+      
     # remove unneccessary id variables
     id_vars <- c("V1", "province", "dps", "dps_in_original_data", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month",
                  "year", "stringdate", "date", "natl", "natl_name", "province11", "province11_name", "province26", "province26_name", "dps_name_2015", "dps_name_2014", 
                  "dps_name_2013", "dps_name_2012", "dps_name_2010to2011")
-    
     measured_vars <- all_vars[!all_vars %in% id_vars]
     
-    id_vars <- c("province11_name", "dps", "health_zone", "date", "year")
-    
+    id_vars <- c("dps", "health_zone", "date", "donor", "operational_support_partner", "population")
     vars_to_keep <- c(id_vars, measured_vars)
     
-    ameliaDT <- fullData[, c(vars_to_keep), with=F]
+    ameliaDT <- fullData[, vars_to_keep, with=FALSE]
                          
-    # remove repetitive or not useful variables 
-    vars_to_remove <- c("reports_expected", "reports_received", "ASAQused_total", "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete")
-    ameliaDT <- ameliaDT[, -c(vars_to_remove), with=F]
+    # remove internal totals and/or not useful variables 
+    remove_vars <- c("reports_expected", "reports_received", "ASAQused_total", "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete")
+    ameliaDT <- ameliaDT[, -remove_vars, with=FALSE]
 # ----------------------------------------------   
 
 
 # ---------------------------------------------- 
-# Deterministically Impute Total Health Facilities
-    
-  # new column to take the proportion of health facilities reporting out of total health facilities
-    ameliaDT[, year:= year(date)]
-    # keep track of what the original values are before we change them:
-        ameliaDT[, healthFacilities_totalOrig := healthFacilities_total]
-        ameliaDT[, healthFacilities_numReportedOrig := healthFacilities_numReported]
+# Deterministically impute total health facilities and convert the number reporting to a proportion over the total, then drop the original variable for number reporting and impute
+    # the proportion so that we can back calculate the number reporting and it will always be less than the total number of facilities.
+# ----------------------------------------------   
+ameliaDT[, year:= year(date)]
+# keep track of what the original values are before we change them:
+  ameliaDT[, healthFacilities_total_orig := healthFacilities_total]
+  ameliaDT[, healthFacilities_numReported_orig := healthFacilities_numReported]
+
+  # NOTE: commented out 01/19 because I think we would want to handle this problem AFTER taking max of total fac and set the num reported rather than the total
     # when health facilities reporting is greater than total health facilities, change health facilities total to = health facilities reporting
-      # NOTE: commented out 1/22/19 because I think we would want to handle this problem AFTER taking max of total fac and set the num reported rather than the total 
       # ameliaDT[healthFacilities_numReported > healthFacilities_total, healthFacilities_total:=healthFacilities_numReported]
-        
-        # when health facilities reporting are greater than total health facilities,set health facilities reporting to NA - set both to be NA?
-        ameliaDT[healthFacilities_numReported > healthFacilities_total, healthFacilities_numReported:= NA]
-        
-    # when healthFacilities_total variable is missing for a given year set it to be the same as the following year (since it is mostly earlier years missing)
-      test <- ameliaDT[, .(healthFacilities_max = max(healthFacilities_total, na.rm=T)), by=c("dps", "health_zone", "year")]
-      test <- test[healthFacilities_max == "-Inf", healthFacilities_max:=NA]  # result was -Inf where all values were missing by group
-      # order by year descending for use of na.locf later 
-      test <- test[order(dps, health_zone, -year),]
       
-      # warning - na.locf won't work if all health facilities total data is missing in most recent year
-      # manually set mabalako 2017 so that it works
-      test[health_zone=="mabalako" & year==2017, healthFacilities_max:=28]
-      #na.locf replaces an NA with the most recent non NA prior to it
-      test[, healthFacilities_max:= na.locf(healthFacilities_max), by=health_zone]
+# Number of health facilities reporting should not be greater than the total number of health facilities (but occasionally it is)...
+  # when the number of health facilities reporting is greater than total health facilities:
+    # if the number of health facilities reporting is less than the max number of health facilities by health zone and year, 
+    # set health facilities total = health facilities reporting
+    ameliaDT <- ameliaDT[, healthFacilities_max := max(healthFacilities_total, na.rm=TRUE), by=c("dps", "health_zone", "year")]
+    ameliaDT <- ameliaDT[healthFacilities_max == "-Inf", healthFacilities_max:=NA]  # result was -Inf where all values were missing by unique group
+    ameliaDT[healthFacilities_numReported > healthFacilities_total, healthFacilities_numReported:= NA]
+
+# when healthFacilities_total variable is missing for a given year set it to be the same as the following year (since it is mostly earlier years missing)
+  test <- ameliaDT[, .(healthFacilities_max = max(healthFacilities_total, na.rm=TRUE)), by=c("dps", "health_zone", "year")]
+  test <- test[healthFacilities_max == "-Inf", healthFacilities_max:=NA]  # result was -Inf where all values were missing by group
+  # order by year descending for use of na.locf later 
+  test <- test[order(dps, health_zone, -year),]
+  
+  # warning - na.locf won't work if all health facilities total data is missing in most recent year
+  # manually set mabalako 2017 so that it works
+  test[health_zone=="mabalako" & year==2017, healthFacilities_max:=28]
+  #na.locf replaces an NA with the most recent non NA prior to it
+  test[, healthFacilities_max:= na.locf(healthFacilities_max), by=health_zone]
 
 # TO DO - go back and add this in?? Ask David (1/22/19)         
       # # in some cases the mode facilities occurs 7 of 8 times and there's one random outlier value.  We want to change those
