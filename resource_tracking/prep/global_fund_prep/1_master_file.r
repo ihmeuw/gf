@@ -10,8 +10,8 @@ rm(list=ls())
 # - add in an option to only rework one file (make database append-only)
 # ---------------------------------------------------------------------
 
-country = "cod" #Change to the country you want to update. 
 user = Sys.info()[['user']] #Change to your username 
+country = "cod" #Change to the iso3 code of the country you want to update. 
 code_loc = ifelse(Sys.info()[1]=='Windows', 'H:/gf/', paste0('/homes/', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
