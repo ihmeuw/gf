@@ -46,14 +46,14 @@ dt_base <- dt_base[ type == "malaria", ] # subset to malaria data only
 dt_base$element <- trimws(dt_base$element)
 dt_base$element_eng <- trimws(dt_base$element_eng)
 
-dt_base[element== "A 2.1 MILD distribués a la CPN2+", element_eng := "ITN_distAtANC"]
-dt_base[element== "A 2.1 MILD distribués a la CPN1", element_eng := "ITN_distAtANC"]
+dt_base[element== "A 2.1 MILD distribuï¿½s a la CPN2+", element_eng := "ITN_distAtANC"]
+dt_base[element== "A 2.1 MILD distribuï¿½s a la CPN1", element_eng := "ITN_distAtANC"]
 dt_base[element== "A 1.4 TDR positif", element_eng := "RDT_positive"]
-dt_base[element== "A 1.4 TDR réalisé", element_eng := "RDT_completed"]
-dt_base[element== "A 2.1 Sulfadox. + Pyrimét 1ère dose reçue", element_eng := "SP_1st"]
-dt_base[element== "A 2.1 Sulfadox. + Pyrimét 2ème dose reçue", element_eng := "SP_2nd"]
-dt_base[element== "A 2.1 Sulfadox. + Pyrimét 3ème dose reçue", element_eng := "SP_3rd"]
-dt_base[element== "A 2.1 Sulfadox. + Pyrimét 4ème dose reçue", element_eng := "SP_4th"]
+dt_base[element== "A 1.4 TDR rï¿½alisï¿½", element_eng := "RDT_completed"]
+dt_base[element== "A 2.1 Sulfadox. + Pyrimï¿½t 1ï¿½re dose reï¿½ue", element_eng := "SP_1st"]
+dt_base[element== "A 2.1 Sulfadox. + Pyrimï¿½t 2ï¿½me dose reï¿½ue", element_eng := "SP_2nd"]
+dt_base[element== "A 2.1 Sulfadox. + Pyrimï¿½t 3ï¿½me dose reï¿½ue", element_eng := "SP_3rd"]
+dt_base[element== "A 2.1 Sulfadox. + Pyrimï¿½t 4ï¿½me dose reï¿½ue", element_eng := "SP_4th"]
 dt_base[element_eng== "A 1.4 Severe malaria treated", element_eng := "severeMalariaTreated"]
 dt_base[element_eng== "A 1.5 Severe malaria treated - pregnant woman", element_eng := "severeMalariaTreated_pregnantWomen"]
 dt_base[element_eng== "A 1.4 Confirmed simple malaria treated", element_eng := "mildMalariaTreated"]
@@ -71,33 +71,35 @@ dt_sigl <- dt_sigl[ type == "malaria", ]
 dt_sigl$element <- trimws(dt_sigl$element)
 dt_sigl$element_eng <- trimws(dt_sigl$element_eng)
 
-dt_sigl[element== "C1 12.1 Artesunate-Amodiaquine (+14 ans, 6 cés) 100mg+270mg Comprimé - quantité consommée", 
+dt_sigl[element== "C1 12.1 Artesunate-Amodiaquine (+14 ans, 6 cï¿½s) 100mg+270mg Comprimï¿½ - quantitï¿½ consommï¿½e", 
               element_eng := "ASAQconsumed_14yrsAndOlder"]
-dt_sigl[element== "C2 12.2 Artesunate 60mg Injectable - Quantité consommée", 
+dt_sigl[element== "C2 12.2 Artesunate 60mg Injectable - Quantitï¿½ consommï¿½e", 
               element_eng := "ASAQconsumed_inj"]
-dt_sigl[element== "C1 12.1 Artesunate 400mg Suppositoire - quantité consommée", 
+dt_sigl[element== "C1 12.1 Artesunate 400mg Suppositoire - quantitï¿½ consommï¿½e", 
               element_eng := "ASAQconsumed_supp400"]
-dt_sigl[element== "C1 12.1 Artesunate-Amodiaquine (6-13 ans, 3 cés) 100mg+270mg Comprimé - quantité consommée", 
+dt_sigl[element== "C1 12.1 Artesunate-Amodiaquine (6-13 ans, 3 cï¿½s) 100mg+270mg Comprimï¿½ - quantitï¿½ consommï¿½e", 
               element_eng := "ASAQconsumed_6to13yrs"]
-dt_sigl[element== "C1 12.1 Artesunate-Amodiaquine (2-11 mois) 25mg+67,5mg Comprimé - quantité consommée", 
+dt_sigl[element== "C1 12.1 Artesunate-Amodiaquine (2-11 mois) 25mg+67,5mg Comprimï¿½ - quantitï¿½ consommï¿½e", 
               element_eng := "ASAQconsumed_2to11mos"]
-dt_sigl[element== "C1 12.1 Artesunate-Amodiaquine (12-59 mois) 50mg+135mg Comprimé - quantité consommée", 
+dt_sigl[element== "C1 12.1 Artesunate-Amodiaquine (12-59 mois) 50mg+135mg Comprimï¿½ - quantitï¿½ consommï¿½e", 
               element_eng := "ASAQconsumed_1to5yrs"]
-dt_sigl[element== "C1 12.1 Lumefantrine+ Artemether 40mg+240mg Comprimé - quantité consommée", 
+dt_sigl[element== "C1 12.1 Lumefantrine+ Artemether 40mg+240mg Comprimï¿½ - quantitï¿½ consommï¿½e", 
               element_eng := "ArtLumConsumed_240+40"]
-dt_sigl[element== "C1 12.1 Lumefantrine+ Artemether 80mg+480mg Comprimé - quantité consommée", 
+dt_sigl[element== "C1 12.1 Lumefantrine+ Artemether 80mg+480mg Comprimï¿½ - quantitï¿½ consommï¿½e", 
               element_eng := "ArtLumConsumed_480+80"]
-dt_sigl[element== "C1 12.1 Sulfadoxine + Pyriméthamine 500mg+25mg Cés - quantité consommée", 
+dt_sigl[element== "C1 12.1 Sulfadoxine + Pyrimï¿½thamine 500mg+25mg Cï¿½s - quantitï¿½ consommï¿½e", 
               element_eng := "SP_consumed"]
-dt_sigl[element== "C1 12.1 Artesunate 200mg Suppositoire - quantité consommée", 
+dt_sigl[element== "C1 12.1 Artesunate 200mg Suppositoire - quantitï¿½ consommï¿½e", 
               element_eng := "ASAQconsumed_supp200"]
-dt_sigl[element== "C1 12.1 MIILD - pièce - quantité consommée", 
+dt_sigl[element== "C1 12.1 MIILD - piï¿½ce - quantitï¿½ consommï¿½e", 
               element_eng := "ITN_consumed"]
 
+#Convert all dates to quarters
 dt_pnlp <- convert_date_to_quarter(dt_pnlp)
 dt_base <- convert_date_to_quarter(dt_base)
 dt_sigl <- convert_date_to_quarter(dt_sigl)
 
+#Pull out "indicator" and "subpopulation" variables from element 
 dt_base[, c("indicator", "subpopulation") := tstrsplit(element_eng, "_", fixed=TRUE)]
 dt_base[is.na(subpopulation), subpopulation:="none"]
 dt_sigl[, c("indicator", "subpopulation") := tstrsplit(element_eng, "_", fixed=TRUE)]
@@ -239,7 +241,7 @@ patients_treated[, subpopulation := "none"]
 pnlp_final <- rbindlist(list(acts_rec, patients_treated, pnlp_natl_qtr), use.names = TRUE)
 
 # remove variables we don't need for pilot dataset
-pnlp_final <- pnlp_final[!indicator %in% c("mildMalariaTreated", "ASAQreceived", "ArtLum")]
+pnlp_final <- pnlp_final[!indicator %in% c("mildMalariaTreated", "ASAQreceived", "ArtLum")] #You might want to pull these from a dynamic document, so if the list of indicators changes later it will update. EL
 # rename pnlp variables to match to pilot dataset
 pnlp_final[ indicator == "ITN" & subpopulation == "consumed", indicator := "ITN_consumed" ]
 pnlp_final[ indicator == "ITN" & subpopulation == "received", indicator := "ITN_received" ]
