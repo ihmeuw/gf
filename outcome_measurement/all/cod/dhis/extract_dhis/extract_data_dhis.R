@@ -7,6 +7,8 @@
 # Caitlin O'Brien-Carelli
 # 1/15/2018
 
+# Audrey Batzel
+# 2/22/19 - updated to work around problem of some facilities not downloading still even with changed pace
 #---------------------------
 # Extract single data sets by specifying the data set number
 # Data will be merged with the meta data to create complete data sets
@@ -31,7 +33,7 @@ library(stringr)
 library(RCurl)
 library(XML)
 library(plyr)
-
+library(openxlsx)
 #---------------------------
 # Set the directory to download the data
 # detect if operating on windows or on the cluster 
@@ -55,20 +57,20 @@ source(paste0(dir, 'code/dhis_extracting_functions.R'))
 # Input the start year, end year, and output directory
 
 # select the start year and end year for the download
-start_year = '2016'
-end_year = '2017'
+start_year = '2018'
+end_year = '2019'
 start_month = '01'
-end_month = '01' # start month is inclusive, end month is exclusive
+end_month = '02' # start month is inclusive, end month is exclusive
 
 # change the update year to before the data begins
-update_year = as.character(as.numeric(start_year) - 1)
+update_year = "2009"
 
 #identify the data set(s) you want to download by number (list below)
-set = 29
+set = 2
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'pnls'
+set_name = 'base'
 
 #---------------------------
 # available data sets by number: 
@@ -118,7 +120,6 @@ password = 'Snisrdcongo1'
 # other meta data is used for the merge 
 
 data_sets = readRDS(paste0(dir, 'meta_data/data_sets.rds'))
-org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
 
 #-----------------------------------------------
 
@@ -130,16 +131,96 @@ org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
 # click 'plots' tab to watch download progress
 # extract_all_data is a function in the dhisextractr package
 
-extracted_data = extract_all_data(base_url = base_url, 
+# loop through months to extract data
+start_date = paste0(start_year, '-', start_month, "-01")
+start_date = as.Date(start_date)
+
+end_date = paste0(end_year, '-', end_month, "-01")
+end_date = as.Date(end_date)
+
+dates = seq(start_date,end_date, by = 'month')
+
+for (i in 1:((length(dates))-1) ){
+  
+  org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
+  
+  start_current_loop = dates[i]
+  end_current_loop = dates[i+1]
+  
+  # extract month of data
+  extracted_data = extract_all_data(base_url = base_url, 
+                                    data_sets = data_sets[set, ],
+                                    org_units = org_units, 
+                                    deb_period = start_current_loop,
+                                    end_period = end_current_loop,
+                                    userID = userID, 
+                                    password = password,
+                                    pace = 10,
+                                    update_date = paste0(update_year, '-01-01'))
+  
+  save_month_start = month(start_current_loop)
+  save_year_start = year(start_current_loop)
+  save_month_end = month(end_current_loop)
+  save_year_end = year(end_current_loop)
+  
+  # save intermediate data - 1st iteration
+  extracted_data$download_number = 1
+  saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', 'base_0', save_month_start, '_', 
+                                 save_year_start, '_0', save_month_end, '_', save_year_end, '_first_download.rds'))
+  
+  
+  # extract month again on subset of org_units
+  extracted_fac = unique(extracted_data$org_unit_ID) %>% as.character
+  org_units <- org_units[!org_unit_ID %in% extracted_fac]
+  
+  extracted_data2 = extract_all_data(base_url = base_url, 
                                      data_sets = data_sets[set, ],
                                      org_units = org_units, 
-                                     deb_period = paste0(start_year, '-', start_month, '-01'),
-                                     end_period = paste0(end_year, '-', end_month, '-01'),
+                                     deb_period = start_current_loop,
+                                     end_period = end_current_loop,
                                      userID = userID, 
                                      password = password,
-                                     pace = 40,
+                                     pace = 10,
                                      update_date = paste0(update_year, '-01-01'))
+  
+  # save intermediate data - 2nd iteration
+  extracted_data2$download_number = 2
+  saveRDS(extracted_data2,  paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', 'base_0', save_month_start, '_', 
+                                   save_year_start, '_0', save_month_end, '_', save_year_end, '_second_download.rds'))
+  
+  print(paste0("Loop number is ", i, " of ", (length(dates)-1) ))
+}
+#------------------------
+# read in all files and rbind together to save one file of data
+files = list.files( paste0('./pre_prep/', set_name, '/intermediate_data/'), recursive=TRUE)
 
+if (set_name=='base' | set_name=='sigl') {
+  keep_vars = read.xlsx(paste0(dir, 'catalogues/data_elements_cod.xlsx'))
+  keep_vars = data.table(keep_vars)
+  keep_vars[ , keep:=as.numeric(keep)]
+  keep_vars = keep_vars[keep==1, element_id]
+}
+
+dt = data.table()
+# read in the files 
+i = 1
+for(f in files) {
+  #load the RDs file
+  vec = f
+  current_data = data.table(readRDS(paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', f)))
+  current_data[ , file:=vec ]
+  
+  # subset to only the variables needed for large data sets
+  if (folder=='base' | folder=='sigl') {
+    current_data[ , data_element_ID:=as.character(data_element_ID)]
+    current_data = current_data[data_element_ID %in% keep_vars]  
+  } 
+  
+  # append to the full data 
+  if(i==1) dt = current_data
+  if(i>1)  dt = rbind(dt, current_data)
+  i = i+1
+}
 
 # save the data table in its individual folder in 'pre_prep' for merge and prep:
 saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', 
