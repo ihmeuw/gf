@@ -198,7 +198,7 @@ split_mods_interventions <- function(dt, mod, keyword){
 #Given a country's file list, only keeps the files that will be kept after GOS data is prioritized in step 4. 
 prioritize_gos = function(file_list){
   file_list = file_list[file_iteration=='final']
-  gos_data <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv")
+  gos_data <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv"))
   
   gos_data$start_date <- as.Date(gos_data$start_date, "%Y-%m-%d")
   loc <- if(country=='uga'){

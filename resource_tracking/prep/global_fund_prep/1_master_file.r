@@ -24,7 +24,7 @@ prep_gos <- FALSE
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
 rerun_filelist <- TRUE  #Set to TRUE if you want to prep all files in the file list again. 
-limit_filelist <- FALSE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
+limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 
 # ---------------------------------------
 # #Mark which grants are currently active to save in file - this should be updated every grant period! 

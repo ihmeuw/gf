@@ -38,9 +38,7 @@ gtm_tests$correct_exp_sum <- gsub("[[:punct:]]", "", gtm_tests$correct_exp_sum)
 gtm_tests$correct_bug_sum <- as.numeric(gtm_tests$correct_bug_sum)
 gtm_tests$correct_exp_sum <- as.numeric(gtm_tests$correct_exp_sum)
 
-gtm_tests$start_date <- gsub("\"\"", "\"", gtm_tests$start_date, fixed = TRUE)
-gtm_tests$start_date <- substring(gtm_tests$start_date, 2, 11)
-gtm_tests$start_date <- as.Date(gtm_tests$start_date, format = "%Y-%m-%d")
+gtm_tests$start_date <- as.Date(gtm_tests$start_date, format = "%m/%d/%Y")
 gtm_merge <- merge(gtm_tests, gtm_budgets, by = c('start_date', 'fileName')) 
 
 if(nrow(gtm_merge) != nrow(gtm_tests)){

@@ -6,14 +6,16 @@
 read_fileList = function(){
   
 options(scipen=100)
-document_prep <- paste0(country_code_dir, "document_prep_functions/")
   
 # ----------------------------------------------
 ###### source the functions that we need 
 # ----------------------------------------------
-source(paste0(document_prep, "prep_detailed_uga_budget.R"))
-source(paste0(document_prep, "prep_summary_uga_budget.R"))
-source(paste0(document_prep, "prep_pudr_uga.R"))
+# source(paste0(document_prep, "prep_detailed_uga_budget.R"))
+source(paste0(country_code_dir, "prep_summary_uga_budget.R"))
+# source(paste0(document_prep, "prep_pudr_uga.R"))
+source(paste0(gf_prep_code, "budget_pudr_prep/prep_general_detailed_budget.R"))
+source(paste0(gf_prep_code, "budget_pudr_prep/prep_modular_approach_pudr.R"))
+
 
 # ---------------------------------------------
 ########## Set up variables and load the prep files ########
@@ -32,9 +34,8 @@ for(i in 1:nrow(file_list)){
   file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
 
   if(file_list$function_type[i]=="detailed"){##most detailed level of budgets 
-    tmpData <- prep_detailed_uga_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
-                                       file_list$start_date[i], file_list$qtr_number[i],
-                                       cashText, file_list$grant[i], 
+  tmpData <- prep_general_detailed_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
+                                       file_list$start_date[i], file_list$qtr_number[i], file_list$grant[i], 
                                         file_list$disease[i], file_list$period[i],file_list$data_source[i])
   } else if (file_list$function_type[i]=="summary"){ ##not much detail, only high level SDAs: 
     tmpData <- prep_summary_uga_budget(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
@@ -44,7 +45,7 @@ for(i in 1:nrow(file_list)){
                                        file_list$data_source[i])
   ##LFA data cleaning: 
   } else if (file_list$function_type[i]=="pudr"){ ##has expenditure data 
-    tmpData <- prep_pudr_uga(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
+    tmpData <- prep_modular_approach_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                              file_list$start_date[i], file_list$disease[i], file_list$period[i], 
                              file_list$grant[i], file_list$primary_recipient[i],file_list$data_source[i])
   }
@@ -70,36 +71,3 @@ for(i in 1:nrow(file_list)){
 return(resource_database)
 
 } 
-
-# resource_database$century <- substring(resource_database$start_date, 1, 2)
-# unique(resource_database$century)
-# resource_database$century <- NULL
-
-#For verifying 
-# budget_check <- copy(tmpData)
-# budget_check$budget <- gsub("[0-9.]", "", budget_check$budget)
-# unique(budget_check$budget)
-# 
-# check_files <- budget_check[budget != ""]
-# stopifnot(nrow(check_files)==0)
-
-#Emily ask David what we want to do with this code. We should have the same process for each country. 
-# ---------------------------------------------
-########## We'll split the TB/HIV grants as follows: ########
-########## If the module explicitly says TB, then assign as TB ########
-########## Otherwise, default it to HIV ########
-# ---------------------------------------------
-## split hiv/tb into hiv or tb (for module/intervention mapping purposes): 
-# get_hivtb_split <- function(disease,module){
-#   x <- disease
-#  if(disease=="hiv/tb"){
-#    if(grepl(paste(c("tb", "tuber"), collapse="|"), module)){ 
-#     x <- "tb"
-#   } else { ##otherwise, map it to HIV
-#     x <- "hiv"
-#   }
-#  }
-# return(x)
-# }
-# 
-# cleaned_database$disease <- mapply(get_hivtb_split, cleaned_database$disease, cleaned_database$module)

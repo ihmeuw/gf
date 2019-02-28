@@ -44,7 +44,7 @@ for(i in 1:nrow(file_list)){
   file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
 
   if(file_list$sheet[i]%in%mod_approach_sheet_names){
-    tmpData <- prep_modular_approach_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
+  tmpData <- prep_modular_approach_pudr(file_dir, file_list$file_name[i], as.character(file_list$sheet[i]), 
                                        file_list$start_date[i], file_list$disease[i], file_list$period[i], file_list$grant[i],
                                         file_list$primary_recipient[i], file_list$data_source[i])
   }
