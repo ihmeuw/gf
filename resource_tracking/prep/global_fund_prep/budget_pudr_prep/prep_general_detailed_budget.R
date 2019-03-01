@@ -19,24 +19,24 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr
   ### look at gf_data and find what is being droped where.
   ########
   
-  folder = "budgets"
-  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-  # 
-  dir = file_dir
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet[i]
-  start_date = file_list$start_date[i]
-  period = file_list$period[i]
-  disease = file_list$disease[i]
-  grant = file_list$grant[i]
-  recipient = file_list$primary_recipient
-  source = file_list$data_source[i]
-  qtr_num = file_list$qtr_number[i]
-  
+  # folder = "budgets"
+  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+  # #
+  # dir = file_dir
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # grant = file_list$grant[i]
+  # recipient = file_list$primary_recipient
+  # source = file_list$data_source[i]
+  # qtr_num = file_list$qtr_number[i]
+
   #-------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
-  verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget')
+  verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget')
   if (!sheet_name%in%verified_sheet_names){
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
     print(paste0("Sheet name: '", sheet_name, "'"))
@@ -133,57 +133,51 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr
   #-------------------------------------
   # 3. Reshape data long
   #-------------------------------------
-  for (i in 1:quarters){ #EMILY START HERE! 
-    if (i == 1){
-      date_range[i] = start_date
-    } else{
-      date_range[i] = as.Date(start_date + days(period*(i-1))) #Create a range of start dates that can map to the quarter columns, incrementing by period.
-    }
+  date_range = rep(start_date, quarters) #Make a vector of the date variables the quarters correspond to. 
+  for (i in 2:quarters){ 
+    date_range[i] = as.Date(start_date + days(period*(i-1))) 
   }
-  budget_dataset = melt(gf_data, id.vars = c('module', 'intervention', 'activity_description', 'cost_category'))
-  budget_dataset[, value:=as.numeric(value)] #Go ahead and make budget numeric at this point
+  budget_dataset = melt(gf_data, id.vars = c('module', 'intervention', 'activity_description', 'cost_category'), value.name = "budget")
+  budget_dataset[, budget:=as.numeric(budget)] #Go ahead and make budget numeric at this point
   
+  #Replace "budget q1", etc. with the actual date it corresponds to. 
+  old_quarters = unique(budget_dataset$variable)
+  new_quarters = date_range
   
+  #For every value of old_quarters, if variable equals old_quarter
+  for (i in 1:length(old_quarters)){
+    budget_dataset[variable == old_quarters[i], start_date:=new_quarters[i]]
+  }
+  
+  budget_dataset = budget_dataset[, -c('variable')]
+
   #-------------------------------------
   # 4. Generate new variables
   #-------------------------------------
-  gf_data$start_date <- start_date
-  gf_data$data_source <- source
-  gf_data$period <- period
-  gf_data$disease <- disease
-  gf_data$grant_number <- grant
-  gf_data$year <- year(gf_data$start_date)
+  budget_dataset$data_source <- source
+  budget_dataset$period <- period
+  budget_dataset$disease <- disease
+  budget_dataset$grant_number <- grant
+  budget_dataset$year <- year(budget_dataset$start_date)
   
   #-------------------------------------
   # 5. Validate data
   #-------------------------------------
-  budget_dataset = gf_data
-  
-  #Check to make sure budget and expenditure can be converted to numeric safely,
-  # and the total for these columns is not '0' for the file. (may have grabbed wrong column).
-  stopifnot(class(budget_dataset$budget) == 'character' & class(budget_dataset$expenditure)=='character')
-  
-  budget_dataset[, budget:=as.numeric(budget)]
-  budget_dataset[, expenditure:=as.numeric(expenditure)]
-  
-  #Check these by summing the total for the file, and making sure it's not 0.
+  #Make sure that the total budget is not 0 (was not converted from numeric correctly, or wrong column was grabbed.)
   check_budgets = budget_dataset[ ,
                                   lapply(.SD, sum, na.rm = TRUE),
-                                  .SDcols = c("budget", "expenditure")]
+                                  .SDcols = c("budget")]
   
-  verified_0_expenditure <- c("UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", 
-                              "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx") #These files have 0 for all expenditure.
-  
-  if(inFile%in%verified_0_expenditure){
-    stopifnot(check_budgets[, 1]>0)
-  } else {
-    stopifnot(check_budgets[, 1]>0 & check_budgets[, 2]>0)
-  }
-  
+  stopifnot(check_budgets[, 1]>0)
+
   #Check column names, and that you have at least some valid data for the file.
   if (nrow(budget_dataset)==0){
     stop(paste0("All data dropped for ", inFile))
   }
+  
+  #Make sure you have all the columns you need for analysis
+  check_names = c('module', 'intervention', 'cost_category', 'activity_description', 'budget', 'start_date')
+  stopifnot(check_names%in%names(budget_dataset))
   
   #--------------------------------
   # Note: Are there any other checks I could add here? #EKL

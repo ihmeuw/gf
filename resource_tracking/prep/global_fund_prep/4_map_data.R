@@ -49,7 +49,7 @@ if (prep_gos == TRUE){
     # raw_data = correct_modules_interventions(raw_data)
     
     #Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
-    raw_data[module == 'rsshintegratedservicedeliveryandqualityimprovement' & intervention == 'otherinterventionsforadolescentandyouth' & sda_activity =='all', module:='preventionprogramsforadolescentsandyouthinandoutofschool']
+    raw_data[module == 'rsshintegratedservicedeliveryandqualityimprovement' & intervention == 'otherinterventionsforadolescentandyouth' & activity_description=='all', module:='preventionprogramsforadolescentsandyouthinandoutofschool']
     #------------------------------------------------------------
     # Map budgets and PUDRs to module mapping framework 
     #------------------------------------------------------------
@@ -76,7 +76,9 @@ if (prep_gos == TRUE){
     #----------------------------------------------------------------------------
     # Merge with module map on module, intervention, and disease to pull in code
     #----------------------------------------------------------------------------
-    mapped_data <- merge(raw_data, module_map, by=c("module", "intervention", "disease"), all.x=TRUE, allow.cartesian = TRUE)
+    module_map = module_map[, .(code, disease, module, intervention, gf_module, gf_intervention, abbreviated_module)] #Only keep the columns we want for the final dataset
+    module_map = unique(module_map)
+    mapped_data <- merge(raw_data, module_map, by=c("module", "intervention", "disease"), all.x=TRUE)
     dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
     
     if(nrow(dropped_mods) >0){
@@ -207,20 +209,14 @@ if(country == "cod"){
 # --------------------------------------------------------
 
 #Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
-mapped_data = mapped_data[, .(abbrev_intervention, abbrev_module, adm1, budget, code, current_grant, data_source, disbursement, disease, 
-                                              expenditure, file_iteration, fileName, gf_intervention, gf_module, grant_number, grant_period, lang, loc_name,
-                                              orig_intervention, orig_module, period, primary_recipient, sda_activity, secondary_recipient, start_date, year)]
+mapped_data = mapped_data[, .(abbreviated_module, adm1, budget, code, current_grant, data_source, disbursement, disease, 
+                                              expenditure, file_iteration, fileName,  gf_module, gf_intervention, grant_number, grant_period, lang, loc_name,
+                                              orig_intervention, orig_module, period, primary_recipient, activity_description, secondary_recipient, start_date, year)]
 
-desired_cols <- c("abbrev_intervention", "abbrev_module", "adm1", "budget", "code", "current_grant", "data_source", "disbursement", "disease", 
+desired_cols <- c("abbreviated_module", "adm1", "budget", "code", "current_grant", "data_source", "disbursement", "disease", 
                   "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "lang", "loc_name", 
-                  "orig_intervention", "orig_module", "period", "primary_recipient", "sda_activity", "secondary_recipient", "start_date", "year")
-stopifnot(sort(colnames(mapped_data)) == desired_cols)  #Emily we do want to have correct column names here. 
-
-#Rename columns 
-colnames(mapped_data)[colnames(mapped_data)=='gf_module'] <- 'module'
-colnames(mapped_data)[colnames(mapped_data)=='gf_intervention'] <- 'intervention'
-colnames(mapped_data)[colnames(mapped_data)=='sda_activity'] <- 'activity_description'
-
+                  "orig_intervention", "orig_module", "period", "primary_recipient", "activity_description", "secondary_recipient", "start_date", "year")
+stopifnot(sort(colnames(mapped_data)) == sort(desired_cols))  #Emily we do want to have correct column names here. 
 
 #After variables are removed, collapse dataset to simplify
 byVars <- colnames(mapped_data)
@@ -228,8 +224,8 @@ byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disburs
 mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'disbursement'), by=byVars]
 
 #Reorder data 
-mapped_data = mapped_data[order(grant_number, start_date, year, module, intervention, activity_description, loc_name, adm1, 
-                                budget, expenditure, disbursement, abbrev_module, abbrev_intervention, orig_module, orig_intervention, current_grant, fileName)]
+mapped_data = mapped_data[order(grant_number, start_date, year, gf_module, gf_intervention, activity_description, loc_name, adm1, 
+                                budget, expenditure, disbursement, orig_module, orig_intervention, current_grant, fileName)]
 #------------------------------------------------------------
 # Remove any special characters so .csv will store correctly 
 #------------------------------------------------------------

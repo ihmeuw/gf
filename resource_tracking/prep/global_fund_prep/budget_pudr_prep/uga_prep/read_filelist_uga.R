@@ -53,7 +53,6 @@ for(i in 1:nrow(file_list)){
   tmpData$grant_period = file_list$grant_period[i]
   tmpData$file_iteration = file_list$file_iteration[i]
   tmpData$lang <- file_list$language[i]
-  tmpData$recipient <- NULL 
   tmpData$primary_recipient <- file_list$primary_recipient[i]
   tmpData$secondary_recipient <- file_list$secondary_recipient[i]
   tmpData$grant_status <- file_list$grant_status[i]

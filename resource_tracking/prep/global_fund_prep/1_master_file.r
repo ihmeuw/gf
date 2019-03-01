@@ -11,7 +11,7 @@ rm(list=ls())
 # ---------------------------------------------------------------------
 
 user = "elineb" #Change to your username 
-country = "uga" #Change to the country you want to update. 
+country = "cod" #Change to the country you want to update. 
 code_loc = ifelse(Sys.info()[1]=='Windows', 'H:/gf/', paste0('/homes/', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
@@ -88,7 +88,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 5: Aggregate all data sources
 # ----------------------------------------------
 
-  #source(paste0(code_dir, "aggregate_all_data_sources.r"))
+  source(paste0(code_dir, "aggregate_all_data_sources.R"))
 
 # ----------------------------------------------
 # STEP 6: Verify budget numbers

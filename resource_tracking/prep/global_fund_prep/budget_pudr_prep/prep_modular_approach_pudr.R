@@ -157,9 +157,6 @@ prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disea
   gf_data$grant_number <- grant
   gf_data$year <- year(gf_data$start_date)
 
-  gf_data$cost_category <- "all"
-  gf_data$sda_activity <- "all"
-
   #-------------------------------------
   # 4. Validate data
   #-------------------------------------
