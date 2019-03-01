@@ -43,3 +43,10 @@ gos_code = paste0(gf_prep_code, "gos_prep/")
 
 #Source shared functions
 source(paste0(code_dir, "shared_prep_functions.R"), encoding="UTF-8")
+
+#Source document prep functions 
+setwd(budget_pudr_code)
+doc_prep_functions = list.files()
+for (file in doc_prep_functions){
+  source(file)
+}

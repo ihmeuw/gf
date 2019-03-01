@@ -10,11 +10,11 @@
 #Sheet names that don't work so far: "LFA EFR_7", "LFA_Annex-SR Financials", "LFA_Total PR Cash Outflow_3", "LFA_Total PR Cash Outflow_3A"
 
 # start function
-prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disease, period, grant, recipient, source) {
+prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, disease, period) {
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
-  # # 
+  #
   # master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", file_list$loc_id[i], "/grants/")
   # 
   # folder = "budgets"

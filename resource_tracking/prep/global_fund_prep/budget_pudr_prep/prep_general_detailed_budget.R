@@ -6,8 +6,9 @@
 # Emily add pre and post conditions.  
 # ----------------------------------------------
 
+#Emily start here! Reformat this so it will work for DRC budgets as well (French). 
 
-prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr_num, grant, disease, period, data_source) {
+prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, disease, period, qtr_num) {
 
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
@@ -18,22 +19,15 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr
   ### uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
+  #
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date[i]
+  period = file_list$period[i]
+  disease = file_list$disease[i]
+  qtr_num = file_list$qtr_number[i]
   
-  # folder = "budgets"
-  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-  # #
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
-  # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # grant = file_list$grant[i]
-  # recipient = file_list$primary_recipient
-  # source = file_list$data_source[i]
-  # qtr_num = file_list$qtr_number[i]
-
   #-------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget')
@@ -49,7 +43,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr
   # Remove diacritical marks
   #-------------------------------------
   for (i in 1:ncol(gf_data)){
-    gf_data1 = gf_data[, fix_diacritics(gf_data[, .(i)])]
+    gf_data = gf_data[, fix_diacritics(gf_data[, .(i)])]
   }
   
   #General function for grants.
@@ -59,8 +53,8 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, qtr
   #Find the correct column indices based on a grep condition. (Want to keep module, intervention, budget, cost category, and activity description)
   
   #Grab module and intervention rows 
-  module_col <- grep("Module", gf_data)
-  intervention_col <- grep("Intervention", gf_data)
+  module_col <- grep("module", tolower(gf_data))
+  intervention_col <- grep("intervention", tolower(gf_data))
   #Remove "Module ID and Intervention Sub ID columns" 
   mod_id_col = grep("module id", tolower(gf_data))
   intervention_id_col = grep("intervention sub id", tolower(gf_data))

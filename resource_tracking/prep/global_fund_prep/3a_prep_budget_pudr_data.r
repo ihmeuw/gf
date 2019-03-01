@@ -11,19 +11,64 @@
 #-------------------------
 #To do: 
 # - add a check to make sure we have all files from file list in final data
-# - add a check to make sure total sum for a file isn't 'na' after we convert to numeric
 #--------------------------
 
+#----------------------------------------------------
+# 1. Rerun prep functions, or read in prepped files
+#----------------------------------------------------
 if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, but only if all are run
-  # Read in file list 
-  source(paste0(country_code_dir, "read_filelist_", country, ".R"))
-  resource_database <- read_fileList()
+  
+  pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
+  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget')
+  
+  #DRC 
+  
+  for(i in 1:nrow(file_list)){
+    folder = "budgets"
+    folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+    version = ifelse(file_list$file_iteration[i] == "initial", "iterations", "")
+    file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+    if (version != ""){
+      file_dir = paste0(file_dir, version, "/")
+    }
+    
+    inFile = paste0(file_dir, file_list$file_name[i])
+    args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$disease[i], file_list$period[i])
+    
+    if(file_list$function_type[i] == 'detailed' & file_list$sheet[i]%in%general_detailed_budget_sheets){
+      args[length(args)+1] = file_list$qtr_number[i]
+      tmpData = do.call(prep_general_detailed_budget, args)
+    } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){
+      tmpData = do.call(prep_modular_approach_pudr, args)
+    }
+    
+    tmpData$data_source <- file_list$data_source[i]
+    tmpData$grant_period = file_list$grant_period[i]
+    tmpData$primary_recipient <- file_list$primary_recipient[i]
+    tmpData$secondary_recipient <- file_list$secondary_recipient[i]
+    tmpData$file_iteration <- file_list$file_iteration[i]
+    tmpData$fileName <- file_list$file_name[i]
+    tmpData$grant_status <- file_list$grant_status[i]
+    tmpData$mod_framework_format = file_list$mod_framework_format[i]
+    if(i==1){
+      resource_database = tmpData
+    } 
+    if(i>1){
+      resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill = TRUE)
+    }
+    print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
+  }
   
   saveRDS(resource_database, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+  
+  
 } else {
   resource_database <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
 }
 
+#------------------------------------------------------------------
+# 2. Run some checks to make sure this data was prepped correctly. 
+#-----------------------------------------------------------------
 original_db <- copy(resource_database)
 #Make sure all budget data pulled is actually numeric- this is an easy check to see if prep functions are working correctly. 
 verify_numeric_budget = resource_database[, .(budget=gsub("[[:digit:]]", "", budget))]

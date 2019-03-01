@@ -11,7 +11,7 @@
 
 read_fileList = function(){
   
-options(scipen=100)
+
 document_prep <- paste0(code_dir, "global_fund_prep/")
   
 # ----------------------------------------------
