@@ -49,7 +49,10 @@ if (prep_gos == TRUE){
     # raw_data = correct_modules_interventions(raw_data)
     
     #Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
-    raw_data[module == 'rsshintegratedservicedeliveryandqualityimprovement' & intervention == 'otherinterventionsforadolescentandyouth' & activity_description=='all', module:='preventionprogramsforadolescentsandyouthinandoutofschool']
+    raw_data[module == 'rsshintegratedservicedeliveryandqualityimprovement' & intervention == 'otherinterventionsforadolescentandyouth' & is.na(activity_description), module:='preventionprogramsforadolescentsandyouthinandoutofschool']
+    raw_data[module == 'systcmesdesanteresiliantsetperennesprestationdeservicesintegresetameliorationdelaqualite' & intervention == 'autresinterventionsciblantlesjeunesetlesadolescents', module:='programmesdepreventiondestinesauxadolescentsetauxjeunesscolarisesounon']
+    raw_data[module == 'systcmesdesanteresiliantsetperennessystcmedegestiondelinformationsanitaireetsuivietevaluation' & intervention == 'implicationdetouslesprestatairesdesoins', 
+              module:='priseenchargeetpreventiondelatuberculose']
     #------------------------------------------------------------
     # Map budgets and PUDRs to module mapping framework 
     #------------------------------------------------------------
@@ -130,17 +133,17 @@ mapped_data$loc_name <- country
 mapped_data$current_grant = FALSE 
 if(country == "cod"){
   for (i in 1:length(current_cod_grants)){
-    mapped_data[grant_number==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 
+    mapped_data[grant==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 
               current_grant:=TRUE]
   }
 } else if (country == "gtm"){
   for (i in 1:length(current_gtm_grants)){
-    mapped_data[grant_number==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], 
+    mapped_data[grant==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], 
               current_grant:=TRUE]
   }
 } else if (country == "uga"){
   for (i in 1:length(current_uga_grants)){
-    mapped_data[grant_number==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
+    mapped_data[grant==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
               current_grant:=TRUE]
   }
 }
@@ -209,9 +212,9 @@ if(country == "cod"){
 # --------------------------------------------------------
 
 #Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
-mapped_data = mapped_data[, .(abbreviated_module, adm1, budget, code, current_grant, data_source, disbursement, disease, 
-                                              expenditure, file_iteration, fileName,  gf_module, gf_intervention, grant_number, grant_period, lang, loc_name,
-                                              orig_intervention, orig_module, period, primary_recipient, activity_description, secondary_recipient, start_date, year)]
+mapped_data = mapped_data[, .(abbreviated_module, activity_description, adm1, budget, code, cost_category, current_grant, data_source, disbursement, disease, 
+                                              expenditure, file_iteration, file_name,  gf_module, gf_intervention, grant, grant_period, language, loc_name,
+                                              orig_intervention, orig_module, primary_recipient, secondary_recipient, start_date, year)]
 
 desired_cols <- c("abbreviated_module", "adm1", "budget", "code", "current_grant", "data_source", "disbursement", "disease", 
                   "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "lang", "loc_name", 
@@ -224,8 +227,8 @@ byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disburs
 mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'disbursement'), by=byVars]
 
 #Reorder data 
-mapped_data = mapped_data[order(grant_number, start_date, year, gf_module, gf_intervention, activity_description, loc_name, adm1, 
-                                budget, expenditure, disbursement, orig_module, orig_intervention, current_grant, fileName)]
+mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, activity_description, loc_name, adm1, 
+                                budget, expenditure, disbursement, orig_module, orig_intervention, current_grant, file_name)]
 #------------------------------------------------------------
 # Remove any special characters so .csv will store correctly 
 #------------------------------------------------------------

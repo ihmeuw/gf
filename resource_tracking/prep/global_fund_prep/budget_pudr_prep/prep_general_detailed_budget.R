@@ -6,9 +6,7 @@
 # Emily add pre and post conditions.  
 # ----------------------------------------------
 
-#Emily start here! Reformat this so it will work for DRC budgets as well (French). 
-
-prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, disease, period, qtr_num) {
+prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, period, qtr_num, language) {
 
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
@@ -27,7 +25,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, dis
   period = file_list$period[i]
   disease = file_list$disease[i]
   qtr_num = file_list$qtr_number[i]
-  
+  language = file_list$language[i]
   #-------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget')
@@ -42,8 +40,12 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, dis
   #-------------------------------------
   # Remove diacritical marks
   #-------------------------------------
-  for (i in 1:ncol(gf_data)){
-    gf_data = gf_data[, fix_diacritics(gf_data[, .(i)])]
+  gf_data = gf_data[, lapply(gf_data, fix_diacritics)]
+  
+  if (language == 'fr'){
+    qtr_text = 'sorties de tresorerie'
+  } else if (language == 'eng'){
+    qtr_text == 'cash outflow'
   }
   
   #General function for grants.
@@ -52,53 +54,79 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, dis
   #-------------------------------------
   #Find the correct column indices based on a grep condition. (Want to keep module, intervention, budget, cost category, and activity description)
   
-  #Grab module and intervention rows 
-  module_col <- grep("module", tolower(gf_data))
-  intervention_col <- grep("intervention", tolower(gf_data))
+  #Find the row that has the column names in it
+  name_row = 1 
+  while(is.na(gf_data[name_row, 2])){
+    name_row = name_row + 1
+  }
+  
+  names = gf_data[name_row, ]
+  names = tolower(names)
+  
+  #Grab module and intervention rows
+  module_col <- grep("module", names)
+  intervention_col <- grep("intervention", names)
   #Remove "Module ID and Intervention Sub ID columns" 
-  mod_id_col = grep("module id", tolower(gf_data))
-  intervention_id_col = grep("intervention sub id", tolower(gf_data))
+  mod_id_col = grep("module id", names)
+  intervention_id_col = grep("intervention sub id", names)
+  cat_budget_col = grep("catalytic budget", names)
+  
   module_col = module_col[!module_col%in%mod_id_col]
-  intervention_col = intervention_col[!intervention_col%in%intervention_id_col] 
+  intervention_col = intervention_col[!intervention_col%in%intervention_id_col & !intervention_col%in%cat_budget_col] 
   
   stopifnot(length(module_col)==1 & length(intervention_col)==1)
   
   #Grab cost category and activity description
-  activity_col = grep("activity description", tolower(gf_data))
-  cost_category_col = grep("cost input", tolower(gf_data))
-  drop_cost_category = grep("cost input id|cost input sub id|cost input no", tolower(gf_data)) #Drop extra cost category columns
-  cost_category_col = cost_category_col[!cost_category_col%in%drop_cost_category]
+  if (language == "eng"){
+    activity_col = grep("activity description", names)
+    cost_category_col = grep("cost input", names)
+    drop_cost_category = grep("cost input id|cost input sub id|cost input no", names) #Drop extra cost category columns
+    cost_category_col = cost_category_col[!cost_category_col%in%drop_cost_category]
+  } else if (language == "fr"){
+    activity_col = grep("description de l'activite", names)
+    cost_category_col = grep("element de cout", names)
+  }
   
   stopifnot(length(activity_col)==1 & length(cost_category_col)==1)
   
   #Grab all budget rows 
-  budget_cols = grep("cash outflow", tolower(gf_data))
-  #stopifnot(length(budget_cols) == qtr_num) - This doesn't work here. 
+  budget_cols = grep(qtr_text, names)
   
   total_subset = c(module_col, intervention_col, activity_col, cost_category_col, budget_cols)
   gf_data = gf_data[, total_subset, with=FALSE]
   
-  #Add names to columns - the first row that's not 'NA' in 
-  name_row = 1 
-  while(is.na(gf_data[name_row, 1])){
-    name_row = name_row + 1
-  }
-  
-  new_names = c(gf_data[name_row, ])
-  names(gf_data) = tolower(new_names)
+  #Change column names using the name row you found before. 
+  names = names[total_subset]
+  names(gf_data) = names
   #Do a sanity check here. 
   stopifnot(names(gf_data[, 1]) == 'module' & names(gf_data[, 2]) == 'intervention')
   
   #Do one more subset to grab only the budget columns with quarter-level data. (Keep the first 4 columns and everything that matches this condition)
-  quarter_cols = grep("q", names(gf_data))
-  second_subset = c(1:4, quarter_cols)
+  budget_periods = names[5:length(names)]
+  budget_periods = gsub(qtr_text, "", budget_periods)
+  
+  if (language == "eng"){
+    quarter_cols = grep("q", names(gf_data))
+  } else if (language == 'fr'){
+    quarter_cols = budget_periods[nchar(budget_periods)<=4] #Don't grab any total rows 
+    quarter_cols = quarter_cols[!grepl("a", quarter_cols)]
+    quarter_cols = paste0(qtr_text, quarter_cols)
+    quarter_cols = as.character(quarter_cols)
+    quarter_cols = grep(paste(quarter_cols, collapse="|"), names(gf_data))
+  }
+
+  second_subset = c(1:4, quarter_cols) #Only keep module, intervention, activity description, and the budget columns by quarter
   gf_data = gf_data[, second_subset, with = FALSE]
   
   #Reset names for the whole thing 
   quarters = ncol(gf_data)-4
   old_qtr_names = c()
   for (i in 1:quarters){
-    old_qtr_names[i] = paste0("q", i, " cash outflow")
+    if(language == "eng"){
+      old_qtr_names[i] = paste0("q", i, qtr_text)
+    } else if (language == "fr"){
+      old_qtr_names[i] = paste0(qtr_text, " t", i)
+    }
   }
   
   new_qtr_names = c()
@@ -106,7 +134,11 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, dis
     new_qtr_names[i] = paste0("budget_q", i)
   }
   
-  old_names = c('activity description', 'cost input', old_qtr_names)
+  if (language == "eng"){
+    old_names = c('activity description', 'cost input', old_qtr_names)
+  } else if (language == "fr") {
+    old_names = c("description de l'activite", "element de cout", old_qtr_names)
+  }
   new_names = c('activity_description', 'cost_category', new_qtr_names)
   
   setnames(gf_data, old=old_names, new=new_names)
@@ -129,7 +161,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, dis
   #-------------------------------------
   date_range = rep(start_date, quarters) #Make a vector of the date variables the quarters correspond to. 
   for (i in 2:quarters){ 
-    date_range[i] = as.Date(start_date + days(period*(i-1))) 
+    month(date_range[i]) = month(date_range[i]) + 3*(i-1) 
   }
   budget_dataset = melt(gf_data, id.vars = c('module', 'intervention', 'activity_description', 'cost_category'), value.name = "budget")
   budget_dataset[, budget:=as.numeric(budget)] #Go ahead and make budget numeric at this point
@@ -146,16 +178,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, dis
   budget_dataset = budget_dataset[, -c('variable')]
 
   #-------------------------------------
-  # 4. Generate new variables
-  #-------------------------------------
-  budget_dataset$data_source <- source
-  budget_dataset$period <- period
-  budget_dataset$disease <- disease
-  budget_dataset$grant_number <- grant
-  budget_dataset$year <- year(budget_dataset$start_date)
-  
-  #-------------------------------------
-  # 5. Validate data
+  # 4. Validate data
   #-------------------------------------
   #Make sure that the total budget is not 0 (was not converted from numeric correctly, or wrong column was grabbed.)
   check_budgets = budget_dataset[ ,

@@ -54,7 +54,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # ----------------------------------------------
   
   if (prep_files == TRUE){
-    file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE)
+    file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE, encoding = "Latin-1")
     file_list$start_date <- as.Date(file_list$start_date, format = "%m/%d/%Y")
     file_list = file_list[, -c('notes')]
     

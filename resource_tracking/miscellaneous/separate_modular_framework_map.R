@@ -29,30 +29,30 @@ cleaned_interventions = fread(paste0(j, "Project/Evaluation/GF/mapping/multi_cou
 #Read in file lists, and keep only the files that are from 2017 or later  `
 #-----------------------------------------------------------------------
 
-cod_filelist <- fread(paste0(j, "Project/Evaluation/GF/resource_tracking/cod/grants/cod_budget_filelist.csv"))
+cod_filelist <- fread(paste0(j, "Project/Evaluation/GF/resource_tracking/cod/grants/cod_budget_filelist.csv"), encoding = "Latin-1")
 cod_filelist[, loc_name:='cod']
 post_mf_cod = cod_filelist[grant_period == "2018-2020" & file_name != '10Jul12_Final Budget SSF_ ZAR-H-CORDAID.xlsm' & file_name != 'initial_gf_budgets_2018_2020.csv']
 pre_mf_cod = cod_filelist[!(file_name%in%post_mf_cod$file_name)]
 cod_filelist[, mod_framework_format:=FALSE]
 cod_filelist[file_name%in%post_mf_cod$file_name, mod_framework_format:=TRUE]
-write.csv(cod_filelist, paste0(j, "Project/Evaluation/GF/resource_tracking/cod/grants/cod_budget_filelist.csv"), row.names = FALSE)
+#write.csv(cod_filelist, paste0(j, "Project/Evaluation/GF/resource_tracking/cod/grants/cod_budget_filelist.csv"), row.names = FALSE, encoding = "Latin-1")
 
-gtm_filelist <- fread(paste0(j, "Project/Evaluation/GF/resource_tracking/gtm/grants/gtm_budget_filelist.csv"))
+gtm_filelist <- fread(paste0(j, "Project/Evaluation/GF/resource_tracking/gtm/grants/gtm_budget_filelist.csv"), encoding = "Latin-1")
 #Is this all? How about 2016-2019? 
 gtm_filelist[, loc_name:='gtm']
 pre_mf_gtm <- gtm_filelist[grant_period != "2019-2022" & grant_period != "2018-2020" & grant_period != "2019-2021" & grant_period != "2018"]
 post_mf_gtm <- gtm_filelist[!(file_name%in%pre_mf_gtm$file_name)]
 gtm_filelist[, mod_framework_format:=FALSE]
 gtm_filelist[file_name%in%post_mf_gtm$file_name, mod_framework_format:=TRUE]
-write.csv(gtm_filelist, paste0(j, "Project/Evaluation/GF/resource_tracking/gtm/grants/gtm_budget_filelist.csv"), row.names = FALSE)
+#write.csv(gtm_filelist, paste0(j, "Project/Evaluation/GF/resource_tracking/gtm/grants/gtm_budget_filelist.csv"), row.names = FALSE, encoding = "Latin-1")
 
-uga_filelist <- fread(paste0(j, "Project/Evaluation/GF/resource_tracking/uga/grants/uga_budget_filelist.csv"))
+uga_filelist <- fread(paste0(j, "Project/Evaluation/GF/resource_tracking/uga/grants/uga_budget_filelist.csv"), encoding = "Latin-1")
 uga_filelist[, loc_name:='gtm']
 pre_mf_uga = uga_filelist[grant_period != "2018-2020"]
 post_mf_uga = uga_filelist[!(file_name%in%pre_mf_uga$file_name)]
 uga_filelist[, mod_framework_format:=FALSE]
 uga_filelist[file_name%in%post_mf_uga$file_name, mod_framework_format:=TRUE]
-write.csv(uga_filelist, paste0(j, "Project/Evaluation/GF/resource_tracking/uga/grants/uga_budget_filelist.csv"), row.names = FALSE)
+# write.csv(uga_filelist, paste0(j, "Project/Evaluation/GF/resource_tracking/uga/grants/uga_budget_filelist.csv"), row.names = FALSE, encoding = "Latin-1")
 
 pre_mf_files <- list(pre_mf_cod, pre_mf_gtm, pre_mf_uga) 
 pre_mf_files <- rbindlist(pre_mf_files, use.names = TRUE, fill = TRUE) #Output this for documentation. 
@@ -66,7 +66,8 @@ post_mf_files <- rbindlist(post_mf_files, use.names = TRUE, fill = TRUE)
 
 cod_data <- readRDS(paste0(j, "Project/Evaluation/GF/resource_tracking/cod/prepped/raw_bound_gf_files.RDS"))
 cod_data[, loc_name:='cod']
-cod_data[is.na(lang), lang:='eng'] #Reviewed these visually and they're all English. 
+cod_data[is.na(language), language:='eng'] #Reviewed these visually and they're all English.
+setnames(cod_data, old=c('language', 'file_name'), new=c('lang', 'fileName'))
 pre_mf_cod_data = cod_data[fileName%in%pre_mf_cod$file_name]
 post_mf_cod_data = cod_data[fileName%in%post_mf_cod$file_name]
 
@@ -176,6 +177,15 @@ post_2017_map[disease == 'tb/hiv', disease:='hiv/tb']
 post_2017_map = post_2017_map[, .(module, intervention, disease, lang, loc_name, code, coefficient)]
 post_2017_map = unique(post_2017_map)
 
+#For every HIV and TB code, duplicate the code for HIV/TB
+hiv_codes = post_2017_map[disease == 'hiv']
+tb_codes = post_2017_map[disease == 'tb'] 
+
+hiv_codes[, disease:='hiv/tb']
+tb_codes[, disease:='hiv/tb']
+
+post_2017_map = rbind(post_2017_map, hiv_codes, use.names = TRUE)
+post_2017_map = rbind(post_2017_map, tb_codes, use.names = TRUE)
 #Make sure you don't have any unexpected NAs
 nrow(post_2017_map[is.na(code)])
 nrow(post_2017_map[is.na(coefficient)])

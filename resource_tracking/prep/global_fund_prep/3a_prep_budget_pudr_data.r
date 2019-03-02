@@ -33,23 +33,25 @@ if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, 
     }
     
     inFile = paste0(file_dir, file_list$file_name[i])
-    args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$disease[i], file_list$period[i])
+    args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$period[i])
     
     if(file_list$function_type[i] == 'detailed' & file_list$sheet[i]%in%general_detailed_budget_sheets){
       args[length(args)+1] = file_list$qtr_number[i]
+      args[length(args)+1] = file_list$language[i]
       tmpData = do.call(prep_general_detailed_budget, args)
     } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){
       tmpData = do.call(prep_modular_approach_pudr, args)
     }
     
-    tmpData$data_source <- file_list$data_source[i]
-    tmpData$grant_period = file_list$grant_period[i]
-    tmpData$primary_recipient <- file_list$primary_recipient[i]
-    tmpData$secondary_recipient <- file_list$secondary_recipient[i]
-    tmpData$file_iteration <- file_list$file_iteration[i]
-    tmpData$fileName <- file_list$file_name[i]
-    tmpData$grant_status <- file_list$grant_status[i]
-    tmpData$mod_framework_format = file_list$mod_framework_format[i]
+    #Add indexing data
+    append_cols = file_list[i, .(data_source, grant_period, primary_recipient, secondary_recipient, file_name, grant_status, disease, grant, 
+                                 mod_framework_format, file_iteration, language)]
+    for (col in names(append_cols)){
+      tmpData[, (col):=append_cols[, get(col)]]
+    }  
+    tmpData$year <- year(tmpData$start_date)
+    
+    #Bind data together 
     if(i==1){
       resource_database = tmpData
     } 
@@ -77,8 +79,8 @@ verify_numeric_budget = verify_numeric_budget[!is.na(budget) & budget != ""]
 stopifnot(nrow(verify_numeric_budget)==0)
 
 # Make sure there are no overlapping quarters for the same grant (duplicate files. )
-fpm_overlap <- duplicated(resource_database[data_source == "fpm" & file_iteration == "final", .(grant_number, start_date)])
-pudr_overlap <- duplicated(resource_database[data_source == "pudr" & file_iteration == "final", .(grant_number, start_date)])
+fpm_overlap <- duplicated(resource_database[data_source == "fpm" & file_iteration == "final", .(grant, start_date)])
+pudr_overlap <- duplicated(resource_database[data_source == "pudr" & file_iteration == "final", .(grant, start_date)])
 stopifnot(nrow(fpm_overlap)==0 & nrow(pudr_overlap)==0)
 
 rm(fpm_overlap, pudr_overlap)
@@ -94,10 +96,10 @@ verified_0_budget <- c('UGD-708-G08-M_PUDR 30Nov2011.xls', 'UGD-708-G08-M_PUDR_3
 verified_0_expenditure <- c('GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx')
 
 #Make sure that no files have a total sum of 0; this would indicate an error in the prep code. 
-check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by=.(fileName)]
-check_0_budgets = check_0_budgets[budget == 0 & !fileName%in%verified_0_budget]
-check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = sum(expenditure, na.rm = TRUE)), by=.(fileName)]
-check_0_expenditure <- check_0_expenditure[expenditure == 0 & !fileName%in%verified_0_expenditure]
+check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by=.(file_name)]
+check_0_budgets = check_0_budgets[budget == 0 & !file_name%in%verified_0_budget]
+check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = sum(expenditure, na.rm = TRUE)), by=.(file_name)]
+check_0_expenditure <- check_0_expenditure[expenditure == 0 & !file_name%in%verified_0_expenditure]
 stopifnot(nrow(check_0_budgets)==0 & nrow(check_0_expenditure)==0)
 
 #check for duplicates, and sum their values if they exist:
@@ -114,10 +116,10 @@ resource_database[tolower(intervention)=='all', intervention:=NA]
 resource_database = resource_database[!(is.na(module) & is.na(intervention) & (budget == 0 | expenditure == 0))]
 
 #Make sure you have all the files here that you started with in your filelist. 
-# rt_files <- unique(resource_database$fileName)
+# rt_files <- unique(resource_database$file_name)
 # stopifnot(length(unique(file_list$file_name)) == length(rt_files))
 # stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
 
 #Only keep post-2016 files - temporary fix to make sure most recent data is accurate! 
 post_mf_files = file_list[mod_framework_format == TRUE]
-resource_database = resource_database[fileName%in%post_mf_files$file_name]
+resource_database = resource_database[file_name%in%post_mf_files$file_name]

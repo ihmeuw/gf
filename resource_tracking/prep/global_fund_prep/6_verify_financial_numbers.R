@@ -19,7 +19,8 @@
 # final_expenditures <- readRDS(paste0(file_dir, "final_expenditures.rds"))
 # file_iterations <- rbind(final_budgets, final_expenditures, fill = TRUE)
 
-file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
+#file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
+file_iterations <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds"))
 
 # -----------------------
 # Guatemala file prep 
@@ -100,29 +101,34 @@ failed_tests_uga = unique(rbind(failed_budgets_uga, failed_expenditures_uga))
 {
   dt_cod = file_iterations[loc_name == "cod"]
   cod_budgets = check_budgets_pudrs(dt_cod)
+  cod_budgets[, quarter:=quarter(start_date)]
+  cod_budgets[, year:=year(start_date)]
   
   # ------------------
   # DRC unit tests
   # ------------------
   
-  cod_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/cod_tests.csv"))
+  cod_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/cod_tests.csv"), encoding = "Latin-1")
   cod_tests$start_date <- as.Date(cod_tests$start_date, format="%m/%d/%Y")
+  
+  cod_tests[, quarter:=quarter(start_date)]
+  cod_tests[, year:=year(start_date)]
   
   cod_tests$correct_bug_sum <- gsub("[[:punct:]]", "", cod_tests$correct_bug_sum)
   cod_tests$correct_exp_sum <- gsub("[[:punct:]]", "", cod_tests$correct_exp_sum)
   cod_tests$correct_bug_sum <- as.numeric(cod_tests$correct_bug_sum)
   cod_tests$correct_exp_sum <- as.numeric(cod_tests$correct_exp_sum)
   
-  cod_merge <- merge(cod_tests, cod_budgets, by = c('start_date', 'fileName')) 
+  cod_merge <- merge(cod_tests, cod_budgets, by = c('quarter', 'year', 'file_name')) 
   if(nrow(cod_merge) != nrow(cod_tests)){
     print("ERROR: Not all DRC tests merged.")
-    unmerged_cod_tests = cod_tests[!(fileName%in%cod_merge$fileName)][order(fileName, start_date)]
+    unmerged_cod_tests = cod_tests[!(file_name%in%cod_merge$file_name)][order(file_name, start_date)]
   }
   
   cod_merge$budget = round(cod_merge$budget)
   cod_merge$expenditure = round(cod_merge$expenditure)
   
-  cod_merge <- cod_merge[, .(fileName, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
+  cod_merge <- cod_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, quarter, year, data_source.x)]
   cod_merge$country <- "cod" #For sorting out failed tests later if any. 
   
   failed_budgets_cod <- cod_merge[correct_bug_sum != budget, ]
@@ -136,11 +142,12 @@ failed_tests_uga = unique(rbind(failed_budgets_uga, failed_expenditures_uga))
 # ------------------
 
 rssh_tests <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/rssh_tests.csv"))
+setnames(rssh_tests, old='fileName', new='file_name')
 rssh_by_rt_code <- file_iterations[substring(code, 1, 1) == 'R']
-rssh_by_rt_code = rssh_by_rt_code[, .(rt_code_rssh = round(sum(budget, na.rm = TRUE))), by = c('fileName')]
+rssh_by_rt_code = rssh_by_rt_code[, .(rt_code_rssh = round(sum(budget, na.rm = TRUE))), by = c('file_name')]
 rssh_by_rt_code[is.na(rt_code_rssh), rt_code_rssh:=0]
 
-check_rssh <- merge(rssh_tests, rssh_by_rt_code, by = c('fileName'), all.y = TRUE)
+check_rssh <- merge(rssh_tests, rssh_by_rt_code, by = c('file_name'), all.y = TRUE)
 unwritten_rssh_tests = check_rssh[is.na(correct_rssh)]
 
 #unmerged_tests = anti_join(rssh_tests, rssh_by_rt_code, by='fileName')
