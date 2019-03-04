@@ -49,10 +49,13 @@ if (prep_gos == TRUE){
     # raw_data = correct_modules_interventions(raw_data)
     
     #Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
+    #2018-2020 grants 
     raw_data[module == 'rsshintegratedservicedeliveryandqualityimprovement' & intervention == 'otherinterventionsforadolescentandyouth' & is.na(activity_description), module:='preventionprogramsforadolescentsandyouthinandoutofschool']
     raw_data[module == 'systcmesdesanteresiliantsetperennesprestationdeservicesintegresetameliorationdelaqualite' & intervention == 'autresinterventionsciblantlesjeunesetlesadolescents', module:='programmesdepreventiondestinesauxadolescentsetauxjeunesscolarisesounon']
     raw_data[module == 'systcmesdesanteresiliantsetperennessystcmedegestiondelinformationsanitaireetsuivietevaluation' & intervention == 'implicationdetouslesprestatairesdesoins', 
               module:='priseenchargeetpreventiondelatuberculose']
+    
+    
     #------------------------------------------------------------
     # Map budgets and PUDRs to module mapping framework 
     #------------------------------------------------------------
@@ -75,19 +78,30 @@ if (prep_gos == TRUE){
     
     source(paste0(gf_prep_code, "5_remap_diseases.R"))
     raw_data = remap_diseases(raw_data)
-    
+
     #----------------------------------------------------------------------------
     # Merge with module map on module, intervention, and disease to pull in code
     #----------------------------------------------------------------------------
+    mergeVars = c('disease', 'module', 'intervention')
     module_map = module_map[, .(code, disease, module, intervention, gf_module, gf_intervention, abbreviated_module)] #Only keep the columns we want for the final dataset
     module_map = unique(module_map)
-    mapped_data <- merge(raw_data, module_map, by=c("module", "intervention", "disease"), all.x=TRUE)
+    module_map = module_map[!is.na(code)]
+    map_dups = module_map[duplicated(module_map, by=mergeVars)]
+    if (nrow(map_dups)!=0){
+      stop("There are duplicates in key variables in module map - review before merging to avoid inflating budget numbers")
+    }
+    
+    mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x=TRUE)
     dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
     
     if(nrow(dropped_mods) >0){
       # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
       print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
       stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
+    }
+    
+    if(nrow(mapped_data)!=nrow(raw_data)){
+      stop("Some rows were duplicated in the mapping process, which will inflate budgets. Review merge.")
     }
     
     #-------------------------------------------------------

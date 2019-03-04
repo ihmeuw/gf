@@ -251,7 +251,7 @@ prioritize_gos = function(file_list){
 #----------------------------------------------
 #Sums budget by key variables
 check_budgets_pudrs = function(dt){
-  keyVars = c("start_date", "fileName", "grant_number", "data_source")
+  keyVars = c("start_date", "file_name", "grant", "data_source")
   #Deciding not to split by disease here because we just want the total for the whole quarter. 
   dt[, budget:=as.numeric(budget)]
   dt[, expenditure:=as.numeric(expenditure)]

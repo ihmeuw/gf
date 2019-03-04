@@ -18,17 +18,17 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   ### look at gf_data and find what is being droped where.
   ########
   #
-  dir = file_dir
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet[i]
-  start_date = file_list$start_date[i]
-  period = file_list$period[i]
-  disease = file_list$disease[i]
-  qtr_num = file_list$qtr_number[i]
-  language = file_list$language[i]
+  # dir = file_dir
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # qtr_num = file_list$qtr_number[i]
+  # language = file_list$language[i]
   #-------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
-  verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget')
+  verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget')
   if (!sheet_name%in%verified_sheet_names){
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
     print(paste0("Sheet name: '", sheet_name, "'"))
@@ -45,7 +45,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   if (language == 'fr'){
     qtr_text = 'sorties de tresorerie'
   } else if (language == 'eng'){
-    qtr_text == 'cash outflow'
+    qtr_text = 'cash outflow'
   }
   
   #General function for grants.
@@ -54,21 +54,30 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   #-------------------------------------
   #Find the correct column indices based on a grep condition. (Want to keep module, intervention, budget, cost category, and activity description)
   
-  #Find the row that has the column names in it
-  name_row = 1 
-  while(is.na(gf_data[name_row, 2])){
-    name_row = name_row + 1
+  correctly_named = grepl("module", tolower(names(gf_data)))
+  #If there isn't a column named 'module', find the row with the names on it. 
+  if (!TRUE%in%correctly_named){
+    #Find the row that has the column names in it
+    name_row = 1 
+    while(is.na(gf_data[name_row, 2])){
+      name_row = name_row + 1
+    }
+    
+    names = gf_data[name_row, ]
+    names = tolower(names)
+  } else { #Otherwise, just grab the names of the data table. 
+    names = tolower(names(gf_data))
+    names = fix_diacritics(names)
   }
   
-  names = gf_data[name_row, ]
-  names = tolower(names)
+  names=gsub("\r\n", "", names)
   
   #Grab module and intervention rows
   module_col <- grep("module", names)
   intervention_col <- grep("intervention", names)
   #Remove "Module ID and Intervention Sub ID columns" 
-  mod_id_col = grep("module id", names)
-  intervention_id_col = grep("intervention sub id", names)
+  mod_id_col = grep("module id|moduleid", names)
+  intervention_id_col = grep("intervention sub id|intervention salesforce id", names)
   cat_budget_col = grep("catalytic budget", names)
   
   module_col = module_col[!module_col%in%mod_id_col]
@@ -80,7 +89,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   if (language == "eng"){
     activity_col = grep("activity description", names)
     cost_category_col = grep("cost input", names)
-    drop_cost_category = grep("cost input id|cost input sub id|cost input no", names) #Drop extra cost category columns
+    drop_cost_category = grep("cost input id|cost input sub id|cost input no|cost input salesforce id", names) #Drop extra cost category columns
     cost_category_col = cost_category_col[!cost_category_col%in%drop_cost_category]
   } else if (language == "fr"){
     activity_col = grep("description de l'activite", names)
@@ -123,7 +132,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   old_qtr_names = c()
   for (i in 1:quarters){
     if(language == "eng"){
-      old_qtr_names[i] = paste0("q", i, qtr_text)
+      old_qtr_names[i] = paste0("q", i, " ", qtr_text)
     } else if (language == "fr"){
       old_qtr_names[i] = paste0(qtr_text, " t", i)
     }
@@ -147,7 +156,9 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   # 2. Subset rows
   #-------------------------------------
   #Remove the name row and everything before it, because we know the spreadsheet hasn't started before that point
-  gf_data = gf_data[-(1:name_row)]
+  if(name_row!=1){
+    gf_data = gf_data[-(1:name_row)]
+  }
   
   #Remove rows where first 4 variables (module, intervention, activity, and cost category) are NA
   gf_data = gf_data[!(is.na(module) & is.na(intervention) & is.na(activity_description) & is.na(cost_category))]

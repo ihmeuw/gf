@@ -35,7 +35,7 @@ export_dir = paste0(dir, "resource_tracking/", country, "/prepped/")
 combined_output_dir = paste0(dir, "resource_tracking/multi_country/mapping")
 
 #Code filepaths 
-code_loc = ifelse(Sys.info()[1]=='Windows', 'H:/gf/', paste0('/homes/', user, '/gf/'))
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
 code_dir = paste0(code_loc, "resource_tracking/prep/")
 gf_prep_code = paste0(code_dir, "global_fund_prep/")
 budget_pudr_code = paste0(gf_prep_code, "budget_pudr_prep/")

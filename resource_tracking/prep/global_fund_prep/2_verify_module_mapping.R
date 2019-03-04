@@ -37,75 +37,22 @@ prep_map <- function(map){
 #--------------------------------------------------------------------------------
 # CLEANING- Dropping modules/interventions that map to codes that don't make sense. 
 #--------------------------------------------------------------------------------
-map = map[!(module == "treatmentcareandsupport" & intervention == "na" & disease == "hss" & (code == "R1_2" | code == "R1_3"))]
-map = map[!(module == "tbcareandprevention" & disease == "hiv")] #2 cases of this, for interventions 'all' and 'casedetectionanddiagnosis.' There are also TB entries for these sections. 
-map = map[!(module == 'removinglegalbarrierstoaccess' & intervention == 'policyadvocacyonlegalrights' & code == 'R7_2')]
-map = map[!(module == 'beyondtb' & intervention == 'all' & disease == 'malaria' & code == "R2")]
-#Remove all 'treatment' modules that have an RSSH code 
-map = map[!(module %in% c('tb_treatment', 'treatmentdiagnosis', 'treatmentmanagementofmalariainschools', 'treatmentprompteffectiveantimalarialtreatment',
-                        'treatmentprompteffectiveantimalarialtreatmentprivatesector') & code %in% c('R4', 'R7_4', 'R1'))]
-map = map[!(module=='priseenchargeetpreventiondelatuberculose' & intervention == 'all' & disease == 'hiv')]
-map = map[!(module=='tuberculosemultiresistante' & intervention == 'all' & disease == 'hiv')]
-map = map[!(module=='hivprevention' & code == 'R7_5' & disease %in% c('malaria', 'tb', 'hss'))]
-map = map[!(module=='malprevention' & code == 'R7_3' & disease %in% c('hiv', 'tb', 'hss'))]
-map = map[!(module == 'supportiveenvironment' & intervention == 'na' & code == 'H6_8')]
-map = map[!(module == 'mdrtb' & substring(code, 0, 1)=='H')]
-map = map[!(module == 'hivhealthsystemsstrengthening' & disease%in%c('tb', 'malaria', 'hss'))]
-map = map[!(module == 'tbhealthsystemsstrengthening' & disease%in%c('hiv', 'malaria', 'hss'))]
-map = map[!(module == 'malhealthsystemsstrengthening' & disease%in%c('tb', 'hiv', 'hss'))]
 
 
 #--------------------------------------------------------------------------------
 # CLEANING- Removing typos and close string matches from map  
 #--------------------------------------------------------------------------------
-map = map[module == "healthsystemstrengthening", module:='healthsystemsstrengthening']
 
 #--------------------------------------------------------------------------------
 # CLEANING- Replacing modules/interventions that are typos or unspecified. 
 #--------------------------------------------------------------------------------
-#Split modules/interventions - see shared mapping functions for function documentation. 
-map = split_mods_interventions(map, "preventionbehavioralchangecommunicationcommunityoutreach", "prevention")
-map = split_mods_interventions(map, "preventionbloodsafetyanduniversalprecautions", "prevention")
-#map = split_mods_interventions(map, "preventionbehavioralchangecommunicationmassmedia", "prevention")
 
-#Unclear classifications; could be clarified.
-map[module=='hivprevention' & intervention=='preventionbcccommunityoutreach' & disease == 'hiv', code:='H1_1']
-map[module=='malprevention' & intervention=='preventionbcccommunityoutreach' & disease == 'malaria', code:='M3_5']
-
-#Correcting RSSH modules after it was decided to leave 'rssh' at beginning of string
-map = map[module == 'healthmanagementinformationsystemsandme', module:='rsshhealthmanagementinformationsystemsandme']
-map = map[module == 'communityresponsesandsystems', module:= 'rsshcommunityresponsesandsystems']
-map = map[module == 'nationalhealthstrategies', module:= 'rsshnationalhealthstrategies']
-map = map[module == 'integratedservicedeliveryandqualityimprovement', module:= 'rsshintegratedservicedeliveryandqualityimprovement']
-map = map[module == 'procurementandsupplychainmanagementsystems', module:= 'rsshprocurementandsupplychainmanagementsystems']
-map = map[module == 'humanresourcesforhealthincludingcommunityhealthworkers', module:= 'rsshhumanresourcesforhealthincludingcommunityhealthworkers']
-map = map[module == 'financialmanagementsystems', module:= 'rsshfinancialmanagementsystems']
-
-#Correcting incorrect mappings 
-map[intervention == 'volet3preventiondelatransmissionverticaleduvih' & module == 'preventiondelatransmissiondelamcreslenfantptme', code:='H5_3']
 
 #--------------------------------------------------------------------------------
 # CLEANING (Checks 1 & 2)- Remove duplicates in module, intervention, and disease 
 # with coefficients of 1, then check. 
 #--------------------------------------------------------------------------------
-map = map[(module == "healthsystemsstrengthening" & intervention == "servicedelivery"), code:='R4']
-map = map[(module == "malhealthsystemsstrengthening" & intervention == "informationsystem"), code:= 'R2']
-map = map[(module == "malsupportiveenvironment" & intervention == "leadershipandgovernance"), code:= 'R6_1']
-map = map[!(module == "malsupportiveenvironment" & intervention == "leadershipandgovernance" & coefficient == 0.5)] #This should always map to code R6_1. 
-map = map[(module == "performancebasedfinancing" & intervention == "performancebasedfinancing"), code:= 'R98']
-map = map[(module == "procurementandsupplychainmanagementsystems" & intervention == "nationalproductselectionregistrationandqualitymonitoring"), code:="R1_4"]
-map = map[(module == "programmanagement" & intervention == "programmanagement" & disease == "hiv"), code:="H9"]
-map = map[(module == "programmanagement" & intervention == "programmanagement" & disease == "tb"), code:="T4"]
-map = map[(module == "tbhealthsystemsstrengthening" & intervention == "supportiveenvironmentprogrammanagementandadministration"), code:="R8_1"]
-map = map[(module == "tbhivcollaborativeactivities" & intervention == "tbhiv"), code:="T2_1"]
-map = map[(module == "treatmentcareandsupport" & intervention == "na" & disease == "hiv"), code:="H6"]
-map = map[(module == "treatmentcareandsupport" & intervention == "na" & disease == "malaria"), code:="M2"]
-map = map[(module == "treatmentcareandsupport" & intervention == "na" & disease == "tb"), code:="T1"]
-map = map[(module == "tbtreatment" & intervention == "mdrtb"), code:="T3_2"]
-map = map[!(module == 'rsshprocurementandsupplychainmanagementsystems' & intervention == 'nationalproductselectionregistrationandqualitymonitoring'
-            & code == 'R1_3')]
-map = map[!(module == 'healthsystemsstrengthening' & intervention == 'humanresources' & (code == "M1_6" | code == "M3_5"))]
-map = map[!(module == 'healthsystemsstrengthening' & intervention == 'humanresources' & code == "R3_1")]
+
 
 #--------------------------------------------------------------------------------
 # CLEANING (Check 3) Remove specific mappings to 'na', 'all', or 'other'. 
@@ -119,10 +66,7 @@ map = map[!(module == 'healthsystemsstrengthening' & intervention == 'humanresou
 # CLEANING (Check 5)- Remove duplicates in module/intervention 
 #     with different mapping codes.  
 #--------------------------------------------------------------------------------
-map[module == 'rsshcommunityresponsesandsystems' & intervention == 'communitybasedmonitoring' & code == "H9_2", code:='R7_1']
-map = map[!(module=='mdrtb' & intervention == 'casedetectionanddiagnosismdrtb' & code == 'H7_8')]
-map = map[!(module == 'suivietevaluation' & intervention == 'traitementtuberculosemultiresistante' & code == 'H7_8')]
-map = map[!(module=='suivietevaluation' & intervention == 'depistageetdiagnosticdesmaladiestuberculosemultiresistante' & code == 'H6_6')]
+
 
 #--------------------------------------------------------------------------------
 # CLEANING (Check 6) Remove duplicate mappings in the same language
@@ -132,72 +76,17 @@ map = map[!(module=='suivietevaluation' & intervention == 'depistageetdiagnostic
 # CLEANING (Check 7)- Fix cases where module/intervention is mapping
 #   to incorrect code by disease. 
 #--------------------------------------------------------------------------------
-map = map[!(module == 'intervencionesdeprevencionespecificas' & intervention == 'iecccc' & disease == 'hiv' & code == 'M2_3')]
+
 
 #--------------------------------------------------------------------------------
 # CLEANING (Check 8)- Remove RSSH mappings that don't make sense. 
 #--------------------------------------------------------------------------------
-map[, prefix:=substring(code, 0, 1)]
-map = map[!(module == 'otherspecify' & intervention == 'all' & prefix == 'R')]
-map = map[!(module == 'other' & intervention == 'all' & prefix == 'R')]
-map = map[!(module == 'otherunidentified' & intervention == 'otherunidentified' & prefix == 'R')]
-map = map[!(module == 'beyondtb' & intervention == 'all' & prefix=='R')]
 
-#Correcting some RSSH mappings to disease codes
-map[module == 'malprevention' & intervention == 'bcccommunityoutreach', code:='M3_5']
-#map[module == 'tbtreatment' & 'expandandconsolidatehighqualitydotsservices', code:='T1'] #David 
-map[, prefix:=NULL]
-
-#Correcting some modules back to what they originally were in the budgets, pulling all manual changes into the same file! 
-map[intervention == 'rsssuivietevaluationcommunicationregulicredelinformation' & module == 'rsssuivietevaluationcommunicationregulicredelinformation', 
-    module:='unspecified']
-map[intervention == 'rsssuivietevaluationanalyseexamenettransparence' & module == 'rsssuivietevaluationanalyseexamenettransparence', 
-    module:='unspecified']
-map[intervention == 'rsssuivietevaluationenquete' & module == 'rsssuivietevaluationenquete', 
-    module:='unspecified']
-map[intervention == 'gestiondeprogrammegestiondesubvention' & module == 'gestiondeprogrammegestiondesubvention', 
-    module:='unspecified']
-map[intervention == 'priseenchargepreparationetriposteauxepidemies' & module == 'priseenchargepreparationetriposteauxepidemies', 
-    module:='unspecified']
-map[intervention == 'priseenchargetraitementenmilieuhospitalier' & module == 'priseenchargetraitementenmilieuhospitalier', 
-    module:='unspecified']
-interventions = c('analyseexamenettransparence', 'depistageduvihetconseildanslecadredesprogrammesdestinesauxprofessionnelsdusexeetyleursclients', 
-                  'enquetes', 'financementfondesurlesresultats', 'gestiondelasubvention', 'gestiondeprogrammepolitiqueplanificationcoordinationetgestion', 
-                  'gestionfinancicreperformancetransparenceetobligationredditionnelledessystcmesdegestionfinancicrepublicsdanslesecteurdelasante',
-                  'performancetransparenceetobligationredditionnelledessystcmesdegestionfinancicrepublicsdanslesecteurdelasante',
-                  'priseenchargeetpreventiondelatuberculosedepistageetdiagnosticdesmaladies', 'priseenchargeetpreventiondelatuberculoseimplicationdetouslesprestatairesdesoins',
-                  'suivietevaluationanalyseexamenettransparence', 'suivietevaluationcommunicationregulicredelinformation', 'suivietevaluationenquete',
-                  'traitementantiretroviralarvetsuivi', 'tuberculosemultiresistantedepistageetdiagnosticdesmaladiestuberculosemultiresistante', 'tuberculosemultiresistantetraitementtuberculosemultiresistante',
-                  'tuberculosevihimplicationdetouslesprestatairesdesoins', 'tuberculosevihinterventionsconcerteesdeluttecontrelatuberculoseetlevih')
-map[intervention%in%interventions & module == intervention, module:='unspecified'] #This was one specific type of change either Irena or Naomi made, 
-#where if the module didn't exist they assigned it the same information as the intervention, where it's really 'unspecified' in the raw files. 
 #--------------------------------------------------------------------------------
 # CLEANING (Check 10) Make sure that program management, performance based financing, and unspecified
 #     in 'module' are NOT categorized as RSSH, unless they're with an RSSH grant. 
 #   (They should have the disease of the grant they're in)
 #--------------------------------------------------------------------------------
-map[disease=='hiv' & code == 'R8', code:='H9']
-map[disease=='hiv' & code == 'R8_1', code:='H9_1']
-map[disease=='hiv' & code == 'R8_2', code:='H9_2']
-map[disease=='hiv' & code == 'R8_3', code:='H9_3']
-map[disease == 'hiv' & code == 'R98', code:= 'H98']
-map[disease == 'hiv' & code == 'R99', code:= 'H99']
-
-map[disease=='hiv/tb' & code == 'R8_1', code:='H9_1']
-
-map[disease=='tb' & code == 'R8', code:='T4']
-map[disease=='tb' & code == 'R8_1', code:='T4_1']
-map[disease=='tb' & code == 'R8_2', code:='T4_2']
-map[disease=='tb' & code == 'R8_3', code:='T4_3']
-map[disease=='tb' & code == 'R98', code:='T98']
-map[disease=='tb' & code == 'R99', code:='T99']
-
-map[disease=='malaria' & code == 'R8', code:='M4']
-map[disease=='malaria' & code == 'R8_1', code:='M4_1']
-map[disease=='malaria' & code == 'R8_2', code:='M4_2']
-map[disease=='malaria' & code == 'R8_3', code:='M4_3']
-map[disease=='malaria' & code == 'R98', code:='M98']
-map[disease=='malaria' & code == 'R99', code:='M99']
 
 
 #--------------------------------------------------------------------------------
@@ -357,10 +246,10 @@ check_rssh = check_rssh[verified == FALSE]
 
 check_rssh = check_rssh[order(module)]
 
-if(nrow(check_rssh)>0 & include_stops == TRUE){
-  print("Unverified RSSH modules:")
-  print(unique(check_rssh[!(module %in% problem_mods), .(module)]))
-}
+# if(nrow(check_rssh)>0 & include_stops == TRUE){
+#   print("Unverified RSSH modules:")
+#   print(unique(check_rssh[!(module %in% problem_mods), .(module)]))
+# }
 
 #print(unique(check_rssh[module %in% problem_mods, .(module, intervention, code)])) #Need to check with David on these. 
 map[, prefix:=NULL]

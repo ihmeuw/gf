@@ -12,7 +12,7 @@ rm(list=ls())
 
 user = "elineb" #Change to your username 
 country = "cod" #Change to the country you want to update. 
-code_loc = ifelse(Sys.info()[1]=='Windows', 'H:/gf/', paste0('/homes/', user, '/gf/'))
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
 # ---------------------------------------
@@ -42,19 +42,39 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # ----------------------------------------------
 # STEP 1: Read in and verify module mapping framework
 # ----------------------------------------------
+
+  all_interventions = fread(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/all_interventions.csv"))
+  setnames(all_interventions, old=c('module', 'intervention'), new=c('gf_module', 'gf_intervention'))
   
-  # map = read_xlsx(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
-  # map = data.table(map)
-  # source(paste0(gf_prep_code, "2_verify_module_mapping.R"))
-  # module_map <- prep_map(map)
-  module_map = readRDS(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/post_2017_map.rds"))
+  #Read in the pre- and post-2017 maps, verify them, and rbind them. 
+  map = read_xlsx(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
+  map = data.table(map)
+  source(paste0(gf_prep_code, "2_verify_module_mapping.R"))
+  pre_2017_map <- prep_map(map)
+  pre_2017_map = pre_2017_map[, .(module, intervention, code, coefficient, disease)]
+  pre_2017_map = merge(pre_2017_map, all_interventions, by=c('code', 'disease'))
+  pre_2017_map = unique(pre_2017_map)
+  
+  post_2017_map = readRDS(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/post_2017_map.rds"))
+  post_2017_map = post_2017_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention, abbreviated_module)]
+  
+  #Remove rows from pre_2017_map that are in post_2017_map 
+  pre_2017_concat = paste0(pre_2017_map$module, pre_2017_map$intervention, pre_2017_map$disease)
+  pre_2017_map$concat = pre_2017_concat
+  post_2017_concat = paste0(post_2017_map$module, post_2017_map$intervention, post_2017_map$disease)
+  post_2017_map$concat = post_2017_concat
+  
+  pre_2017_map = pre_2017_map[!(concat%in%post_2017_map$concat)]
+  
+  module_map = rbind(pre_2017_map, post_2017_map, use.names = TRUE, fill = TRUE)
+  module_map = module_map[, -c('concat')]
   
 # ----------------------------------------------
 # STEP 2: Prep a single source of data
 # ----------------------------------------------
   
   if (prep_files == TRUE){
-    file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE, encoding = "Latin-1")
+    file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE, encoding="Latin-1")
     file_list$start_date <- as.Date(file_list$start_date, format = "%m/%d/%Y")
     file_list = file_list[, -c('notes')]
     

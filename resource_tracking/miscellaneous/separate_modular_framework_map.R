@@ -180,12 +180,15 @@ post_2017_map = unique(post_2017_map)
 #For every HIV and TB code, duplicate the code for HIV/TB
 hiv_codes = post_2017_map[disease == 'hiv']
 tb_codes = post_2017_map[disease == 'tb'] 
+#We only want to keep TB specific codes from TB 
+tb_codes = tb_codes[gf_module == 'TB/HIV' | gf_module == 'TB care and prevention'] #Drop out TB/HIV and Program management 
 
 hiv_codes[, disease:='hiv/tb']
 tb_codes[, disease:='hiv/tb']
 
 post_2017_map = rbind(post_2017_map, hiv_codes, use.names = TRUE)
 post_2017_map = rbind(post_2017_map, tb_codes, use.names = TRUE)
+
 #Make sure you don't have any unexpected NAs
 nrow(post_2017_map[is.na(code)])
 nrow(post_2017_map[is.na(coefficient)])
@@ -232,6 +235,11 @@ setdiff(cleaned_interventions$code, eng_codes$code)
 
 setdiff(cleaned_interventions$code, post_2017_map$code)
 
+#Clean up map, and add 'unspecified' codes. 
+post_2017_map = post_2017_map[!is.na(code)]
+unspecified_codes = data.table(code=c('H99', 'T99', 'M99', 'H99'), module=rep("unspecified", 4), intervention=rep("unspecified", 4), disease=c('hiv', 'tb', 'malaria', 'hiv/tb'), coefficient=rep(1, 4),
+                               gf_module=rep("Unspecified", 4), gf_intervention=rep("Unspecified", 4), abbreviated_module=rep("Unspecified", 4))
+rbind(post_2017_map, unspecified_codes, use.names = TRUE, fill = TRUE)
 saveRDS(post_2017_map, paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/post_2017_map.rds"))
 write.csv(post_2017_map, paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/post_2017_map.csv"), row.names = FALSE)
 

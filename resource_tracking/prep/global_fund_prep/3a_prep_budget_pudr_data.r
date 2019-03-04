@@ -19,9 +19,7 @@
 if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, but only if all are run
   
   pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
-  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget')
-  
-  #DRC 
+  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget')
   
   for(i in 1:nrow(file_list)){
     folder = "budgets"
@@ -39,8 +37,16 @@ if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, 
       args[length(args)+1] = file_list$qtr_number[i]
       args[length(args)+1] = file_list$language[i]
       tmpData = do.call(prep_general_detailed_budget, args)
+      
     } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){
       tmpData = do.call(prep_modular_approach_pudr, args)
+      
+    } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i] == 'cod'){
+      args[length(args)+1] = file_list$qtr_number[i]
+      tmpData = do.call(prep_summary_budget_cod, args)
+      
+    } else {
+      print(paste0("File not being processed: ", file_list$file_name[i]))
     }
     
     #Add indexing data
@@ -105,15 +111,13 @@ stopifnot(nrow(check_0_budgets)==0 & nrow(check_0_expenditure)==0)
 #check for duplicates, and sum their values if they exist:
 dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
 print(paste0(nrow(dups), " duplicates found in database; values will be summed"))
-byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'expenditure')]
-resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expenditure=sum(na.omit(expenditure))), by=byVars]
+byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'expenditure', 'disbursement')]
+resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expenditure=sum(na.omit(expenditure)), disbursement=sum(na.omit(disbursement))), by=byVars]
 
 #Hacky fix - this should be fixed earlier in the prep functions, but remove anything at this point that has NAs for module, intervention, and budget OR expenditure. 
-resource_database[module == 'Unspecified' | module == 'unspecified', module:=NA]
-resource_database[tolower(intervention)=='unspecified', intervention:=NA]
-resource_database[module=='all', module:=NA]
-resource_database[tolower(intervention)=='all', intervention:=NA]
-resource_database = resource_database[!(is.na(module) & is.na(intervention) & (budget == 0 | expenditure == 0))]
+resource_database[module=='all', module:='unspecified']
+resource_database[tolower(intervention)=='all', intervention:='unspecified']
+resource_database = resource_database[!(module=='unspecified' & intervention=='unspecified' & budget == 0 & expenditure == 0)]
 
 #Make sure you have all the files here that you started with in your filelist. 
 # rt_files <- unique(resource_database$file_name)
