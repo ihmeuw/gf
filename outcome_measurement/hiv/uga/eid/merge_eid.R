@@ -1,11 +1,15 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 1/9/2019
+# 2/28/2019
 # Bind the Early Infant Diagnosis data sets together
 # Merge in the information about facilities
 # Creates a usable EID data set 
 # ----------------------------------------------
+
+# I AM CHANGING THIS CODE AS AN EXAMPLE
+
+# fix this bad code
 
 # --------------------
 # Set up R
@@ -22,13 +26,16 @@ library(RColorBrewer)
 # -----------------------------------------------
 # detect if operating on windows or on the cluster 
 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+# root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+# 
+# # set the working directory to loop over the downloaded files
+# dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/eid/sex_data/')
 
-# --------------
+# # -----------------
 # set files and directories for the uganda viral load data
 
 # set the working directory to loop over the downloaded files
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/eid/sex_data/')
+dir = ('/Users/caitlinobrien-carelli/Documents/eid/sex_data')
 setwd(dir)
 
 # list existing files
@@ -95,15 +102,34 @@ setnames(full_data, 'hiv_positive_infants', 'hiv_pos_inf')
 
 full_data[sex=='f', sex:='Female']
 full_data[sex=='m', sex:='Male']
-full_data[sex=='UNKNOWN', sex:='Unknown']
+full_data[sex=='UNKNOWN', sex:=NA]
 
 # ----------------------------------------------
 # merge in the meta data on districts and facilities
 
-# merge in the names of the facilities
+# merge in facility names
+facilities = readRDS('/Users/caitlinobrien-carelli/Documents/eid/facility_names.rds')
+full_data = merge(full_data, facilities, by='id', all.x=T)
 
 # full_data = merge(full_data, facilities, by='id', all.x=TRUE)
+districts = readRDS('/Users/caitlinobrien-carelli/Documents/eid/district_names.rds')
 
+vl = readRDS('/Users/caitlinobrien-carelli/Documents/eid/uvl_facilities_names.rds')
+
+
+
+fac = facilities$facility 
+dh = vl$dhis2_name
+fac[fac %in% dh]
+
+x = vl$facility
+fac[x %in% fac]
+
+
+eid = facilities$facility
+vl = vl$facility
+
+length(eid[eid %in% vl])
 
 # -----------------------------------------------
 # save the product
