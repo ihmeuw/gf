@@ -9,6 +9,11 @@
 # -----------------------------------------------
 # Load/prep data and functions
 
+source('./impact_evaluation/_common/set_up_r.r')
+
+# load the custom predict_lavaan.r function
+source('./impact_evaluation/_common/predict_lavaan.r')
+
 # load home-made sem graphing function FIX THIS FILE PATH
 source('./impact_evaluation/visualizations/graphLavaan.r')
 
@@ -49,18 +54,31 @@ newData[, budget_M3_1_cumulative:=budget_M3_1_cumulative+5000] # take some away 
 
 newData = newData[1]
 
-# predict counterfactual
+# predict counterfactual using lavPredict
 # https://github.com/yrosseel/lavaan/issues/44#issuecomment-265239994 for solution to lavPredict
-preds = data.table(lavPredict(semFit, optim.method='BFGS', newdata=newData, type='yhat'))
-preds$value_ITN_received
+preds_lavPredict = data.table(lavPredict(semFit, optim.method='BFGS', newdata=newData, type='yhat'))
+preds_lavPredict$value_ITN_received
 data$value_ITN_received
-# i <- which(!grepl('budget',colnames(cv)))
-# j <- which(grepl('budget',colnames(cv)))
-# cv <- fitted(semFit)$cov
-# coef <- solve(cv[j,j],cv[j,i])
-# n = colnames(cv)[j]
-# preds <- data.table(as.matrix(data[,n,with=F])%*%coef)
-# preds[, date:=data$date]
+
+# predict counterfactual using algebra
+cv <- fitted(semFit)$cov
+i <- which(!grepl('budget',colnames(cv)))
+j <- which(grepl('budget',colnames(cv)))
+coef <- solve(cv[j,j],cv[j,i])
+n = colnames(cv)[j]
+preds_algebra <- data.table(as.matrix(newData[,n,with=F])%*%coef)
+
+# predict counterfactual using predict_lavaan
+preds_predict_lavaan = data.table(predict_lavaan(semFit, newdata=newData))
+
+
+# check results
+preds_lavPredict$value_ITN_received # returns same as original data
+preds_algebra$value_ITN_received # returns something different... is it correct?
+preds_predict_lavaan$value_ITN_received # returns correct number because it accounts for order
+data$value_ITN_received[1]
+
+
 
 cf = merge(data, preds, 'date')
 cf = melt(cf, id.vars='date')
