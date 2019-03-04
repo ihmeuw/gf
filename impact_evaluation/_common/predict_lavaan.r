@@ -17,7 +17,7 @@ predict_lavaan <- function(fit, newdata = NULL){
   
   #Add some new columns to newdata
   newdata$Intercept <- 1
-  newdata[lavNames(fit, "ov.nox")] <- 0
+  # newdata[lavNames(fit, "ov.nox")] <- 0
   
   
   mod_df <- data.frame(lhs = fit@ParTable$lhs,
