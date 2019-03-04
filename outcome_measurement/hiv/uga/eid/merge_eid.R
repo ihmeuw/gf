@@ -7,6 +7,10 @@
 # Creates a usable EID data set 
 # ----------------------------------------------
 
+# I AM CHANGING THIS CODE AS AN EXAMPLE
+
+# fix this bad code
+
 # --------------------
 # Set up R
 rm(list=ls())
