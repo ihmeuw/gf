@@ -33,7 +33,7 @@ predict_lavaan <- function(fit, newdata = NULL){
   mod_df[which(mod_df$op=="~1"),]$rhs <- "Intercept"
   
   #get rid of exogenous on lhs
-  mod_df <- mod_df[-which(mod_df$exo==1),]
+  mod_df <- mod_df[mod_df$exo!=1,]
   
   #Order by lhs
   mod_df <- mod_df[sort(mod_df$lhs, index.return=TRUE)$ix,]
