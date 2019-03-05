@@ -263,4 +263,10 @@ do.call('grid.arrange',c(p5b, list(top=textGrob('Correlations - RDT Inputs and A
 do.call('grid.arrange',c(p5c, list(top=textGrob('Correlations - ACT Inputs and Activities', gp=gpar(fontsize=16)))))
 do.call('grid.arrange',c(p6, list(top=textGrob('Correlations - All Activities and Outputs', gp=gpar(fontsize=16)))))
 dev.off()
+
+# save a time-stamped version for reproducibility
+date_time = gsub('-|:| ', '_', Sys.time())
+outputFile4Archive = gsub('visualizations/', 'visualizations/archive/', outputFile4)
+outputFile4Archive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile4Archive)
+file.copy(outputFile4, outputFile4Archive)
 # --------------------------------
