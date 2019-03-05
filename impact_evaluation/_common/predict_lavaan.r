@@ -80,7 +80,7 @@ predict_lavaan <- function(fit, newdata = NULL){
     
     #use formula to get right part of the data in right format
     mod_mat <- model.matrix(form, newdata)[,-1]
-    new_val = mod_mat %*% subdf$est
+    new_val = t(t(mod_mat)) %*% subdf$est
     
     fit_df[[r]] <- new_val
     newdata[[r]] <- new_val
