@@ -1,5 +1,9 @@
 # model: drc_malaria2.r
 # purpose: bayesian version of drc_malaria1
+
+# TO DO
+# Add arrow from RDT_completed to severeMalariaTreated, totalPatientsTreated and ACTs_CHWs
+
 model = '
 
 	# linkage 1 regressions
