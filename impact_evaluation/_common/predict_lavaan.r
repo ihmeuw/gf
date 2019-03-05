@@ -1,5 +1,9 @@
 # predict function for lavaan, taken from:
 # https://github.com/yrosseel/lavaan/issues/44
+
+# to do
+# how to run without dropping covariances?? or is it even necessary since it's built into the coefficients?
+
 predict_lavaan <- function(fit, newdata = NULL){
   stopifnot(inherits(fit, "lavaan"))
   
