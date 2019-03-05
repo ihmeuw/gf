@@ -125,17 +125,19 @@ ameliaDT[, year:= year(date)]
   ameliaDT[, healthFacilities_total_orig := healthFacilities_total]
   ameliaDT[, healthFacilities_numReported_orig := healthFacilities_numReported]
 
+  ameliaDT$healthFacilities_total <- as.numeric(ameliaDT$healthFacilities_total)
   # NOTE: commented out 01/19 because I think we would want to handle this problem AFTER taking max of total fac and set the num reported rather than the total
     # when health facilities reporting is greater than total health facilities, change health facilities total to = health facilities reporting
       # ameliaDT[healthFacilities_numReported > healthFacilities_total, healthFacilities_total:=healthFacilities_numReported]
       
 # Number of health facilities reporting should not be greater than the total number of health facilities (but occasionally it is)...
   # when the number of health facilities reporting is greater than total health facilities:
-    # if the number of health facilities reporting is less than the max number of health facilities by health zone and year, 
-    # set health facilities total = health facilities reporting
+    # if the number of health facilities reporting is equal to the max of health facilities total by health zone/year, then set
+      # health facilities total = health facilities max
     ameliaDT <- ameliaDT[, healthFacilities_max := max(healthFacilities_total, na.rm=TRUE), by=c("dps", "health_zone", "year")]
     ameliaDT <- ameliaDT[healthFacilities_max == "-Inf", healthFacilities_max:=NA]  # result was -Inf where all values were missing by unique group
-    ameliaDT[healthFacilities_numReported > healthFacilities_total, healthFacilities_numReported:= NA]
+    ameliaDT[healthFacilities_numReported == healthFacilities_max, healthFacilities_total:= healthFacilities_max]
+    # if health facilities total = health
 
 # when healthFacilities_total variable is missing for a given year set it to be the same as the following year (since it is mostly earlier years missing)
   test <- ameliaDT[, .(healthFacilities_max = max(healthFacilities_total, na.rm=TRUE)), by=c("dps", "health_zone", "year")]
