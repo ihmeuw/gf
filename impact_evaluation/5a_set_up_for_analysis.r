@@ -24,8 +24,8 @@ data = readRDS(outputFile3)
 	data$other_dah_M1_2 = NULL
 	
 	# combine M2 (all case management) with M2_1 (facility tx) for GF budgets (one summary budget from 2015-2017 has it)
-	data[, budget_M2_1:=budget_M2_1+budget_M2]
-	data$budget_M2 = NULL
+	data[, expenditure_M2_1:=expenditure_M2_1+expenditure_M2]
+	data$expenditure_M2 = NULL
 	
 	# set other_dah to NA (not 0) after 2016
 	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017, (v):=NA]

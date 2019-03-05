@@ -57,11 +57,11 @@ newData = newData*scaling_factors
 # scenario 1: reallocate 25% from ITNs to ACTs for 2016-2018
 newData[, reallocation1:=0]
 newData[, reallocation2:=0]
-newData[date>=2016, reallocation1:=.25*budget_M1_1]
-newData[date>=2016, reallocation2:=.25*budget_M1_2]
-newData[, budget_M1_1:=budget_M1_1-reallocation1]
-newData[, budget_M1_2:=budget_M1_2-reallocation2]
-newData[, budget_M2_1:=budget_M2_1+reallocation1+reallocation2]
+newData[date>=2016, reallocation1:=.25*expenditure_M1_1]
+newData[date>=2016, reallocation2:=.25*expenditure_M1_2]
+newData[, expenditure_M1_1:=expenditure_M1_1-reallocation1]
+newData[, expenditure_M1_2:=expenditure_M1_2-reallocation2]
+newData[, expenditure_M2_1:=expenditure_M2_1+reallocation1+reallocation2]
 newData$reallocation1 = NULL
 newData$reallocation2 = NULL
 
@@ -98,7 +98,7 @@ cf[, graph_var:=!grepl('budget|other_dah',variable)]
 cf[, variable:=gsub('.x|.y','',variable)]
 
 # show counterfactual budget
-# ggplot(cf[grepl('budget_cumulative',variable)], aes(y=value, x=))
+# ggplot(cf[grepl('expenditure_cumulative',variable)], aes(y=value, x=))
 
 # graph comparison
 ggplot(cf[graph_var==TRUE], aes(y=value, x=variable, fill=cf)) + 

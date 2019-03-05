@@ -16,16 +16,16 @@ load(outputFile5a)
 # -------------------------
 # Run series of unrelated linear models
 
-lmFit1 = lm(value_ITN_received ~ budget_M1_1_cumulative + other_dah_M1_1_cumulative, data)
-lmFit2 = lm(value_RDT_received ~ budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
-lmFit3 = lm(value_ACT_received ~ budget_M2_1_cumulative + budget_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
+lmFit1 = lm(value_ITN_received ~ expenditure_M1_1_cumulative + other_dah_M1_1_cumulative, data)
+lmFit2 = lm(value_RDT_received ~ expenditure_M2_1_cumulative + expenditure_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
+lmFit3 = lm(value_ACT_received ~ expenditure_M2_1_cumulative + expenditure_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
 
 # linkage 2 regressions
 lmFit4 = lm(value_ITN_consumed ~ value_ITN_received, data)
 lmFit5 = lm(value_ACTs_CHWs ~ value_ACT_received, data)
 lmFit6 = lm(value_RDT_completed ~ value_RDT_received, data)
-lmFit7 = lm(value_SP ~ budget_M3_1_cumulative, data)
-lmFit8 = lm(value_severeMalariaTreated ~ budget_M2_6_cumulative + value_ACT_received, data)
+lmFit7 = lm(value_SP ~ expenditure_M3_1_cumulative, data)
+lmFit8 = lm(value_severeMalariaTreated ~ expenditure_M2_6_cumulative + value_ACT_received, data)
 lmFit9 = lm(value_totalPatientsTreated ~ value_ACT_received, data)
 
 summary(lmFit1)
