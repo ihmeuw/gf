@@ -43,48 +43,62 @@ p = semGraph(semFit, nodeTable=nodeTable)
 # ----------------------------------------------
 # Example counterfactual
 
-# set up alternative budget FIX THIS WRONG MATH
+# get actual predictions
+preds_actual = data.table(predict_lavaan(semFit, newdata=data))
+
+# set up alternative budget
 newData = copy(data)
-newData[, budget_M1_1_cumulative:=budget_M1_1_cumulative+5000] # take some away from ITNs and give it to ACTs
-newData[, budget_M1_2_cumulative:=budget_M1_2_cumulative+5000] # take some away from ITNs and give it to ACTs
-newData[, budget_M2_1_cumulative:=budget_M2_1_cumulative+5000] # take some away from ITNs and give it to ACTs
-newData[, budget_M2_3_cumulative:=budget_M2_3_cumulative+5000] # take some away from ITNs and give it to ACTs
-newData[, budget_M2_6_cumulative:=budget_M2_6_cumulative+5000] # take some away from ITNs and give it to ACTs
-newData[, budget_M3_1_cumulative:=budget_M3_1_cumulative+5000] # take some away from ITNs and give it to ACTs
 
-newData = newData[1]
+# convert back to actual dollars using scaling factors
+if (!all(names(newData)==names(scaling_factors))) stop('Different order of variables in scaling factors')
+newData = newData*scaling_factors
 
-# predict counterfactual using lavPredict
-# https://github.com/yrosseel/lavaan/issues/44#issuecomment-265239994 for solution to lavPredict
-preds_lavPredict = data.table(lavPredict(semFit, optim.method='BFGS', newdata=newData, type='yhat'))
-preds_lavPredict$value_ITN_received
-data$value_ITN_received
+# set up counterfactual scenarios
+# scenario 1: reallocate 25% from ITNs to ACTs for 2016-2018
+newData[, reallocation1:=0]
+newData[, reallocation2:=0]
+newData[date>=2016, reallocation1:=.25*budget_M1_1]
+newData[date>=2016, reallocation2:=.25*budget_M1_2]
+newData[, budget_M1_1:=budget_M1_1-reallocation1]
+newData[, budget_M1_2:=budget_M1_2-reallocation2]
+newData[, budget_M2_1:=budget_M2_1+reallocation1+reallocation2]
+newData$reallocation1 = NULL
+newData$reallocation2 = NULL
 
-# predict counterfactual using algebra
-cv <- fitted(semFit)$cov
-i <- which(!grepl('budget',colnames(cv)))
-j <- which(grepl('budget',colnames(cv)))
-coef <- solve(cv[j,j],cv[j,i])
-n = colnames(cv)[j]
-preds_algebra <- data.table(as.matrix(newData[,n,with=F])%*%coef)
+# recompute cumulatives
+rtVars = names(newData)
+rtVars = rtVars[grepl('budget', rtVars) & !grepl('cumulative', rtVars)]
+for(v in rtVars) newData[, (paste0(v,'_cumulative')):=cumsum(get(v))]
+
+# convert back to re-scaled values
+if (!all(names(newData)==names(scaling_factors))) stop('Different order of variables in scaling factors')
+newData = newData/scaling_factors
 
 # predict counterfactual using predict_lavaan
-preds_predict_lavaan = data.table(predict_lavaan(semFit, newdata=newData))
+# adapted from https://github.com/yrosseel/lavaan/issues/44
+preds = data.table(predict_lavaan(semFit, newdata=newData))
+preds[, date:=data$date]
 
+# bring back variables that didn't get predictions
+preds = merge(preds, newData, by='date', suffixes=c('','.y'))
+dropVars = names(preds)[grepl('.y',names(preds))]
+preds = preds[, names(scaling_factors), with=FALSE]
 
-# check results
-preds_lavPredict$value_ITN_received # returns same as original data
-preds_algebra$value_ITN_received # returns something different... is it correct?
-preds_predict_lavaan$value_ITN_received # returns correct number because it accounts for order
-data$value_ITN_received[1]
+head(preds_actual)
+head(preds)
 
-
+# convert actuals and counterfactuals to unscaled levels
+data = data*scaling_factors
+preds = preds*scaling_factors
 
 cf = merge(data, preds, 'date')
 cf = melt(cf, id.vars='date')
 cf[, cf:=ifelse(grepl('.y',variable),'Counterfactual Budget', 'Actual Budget')]
-cf[, graph_var:=grepl('.x|.y', variable)]
+cf[, graph_var:=!grepl('budget|other_dah',variable)]
 cf[, variable:=gsub('.x|.y','',variable)]
+
+# show counterfactual budget
+# ggplot(cf[grepl('budget_cumulative',variable)], aes(y=value, x=))
 
 # graph comparison
 ggplot(cf[graph_var==TRUE], aes(y=value, x=variable, fill=cf)) + 
