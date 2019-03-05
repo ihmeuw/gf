@@ -24,7 +24,7 @@ prep_map <- function(map){
   original_map <- copy(map) #Save an original copy for comparison later 
   new_rows <- fread(paste0(dir, "mapping/multi_country/intervention_categories/gf_mapping_additions.csv")) #Add in new rows to previously approved map
   new_rows = new_rows[, .(module, intervention, code, coefficient, disease)]
-  map = rbind(map, new_rows)
+  map = rbind(map, new_rows, fill = TRUE)
 
 # -------------------------------
 #
@@ -275,6 +275,16 @@ if(nrow(check_rssh_cats)>0 & include_stops == TRUE){
   stop(paste0(print(nrow(check_rssh_cats)), " cases where general modules are incorrectly classified as RSSH")) #Check with David here. 
 }
 
+#--------------------------------------------------------------------------------
+# 11. Review cases where you have an unspecified module/intervention and a coefficient < 1
+#--------------------------------------------------------------------------------
+unspecified = map[module=='unspecified' | module=='all' | intervention == 'all' | intervention == 'unspecified' | is.na(module) | is.na(intervention)]
+unspecified = unspecified[coefficient!=1][order(module, intervention)]
+
+if(nrow(unspecified)>0 & include_stops == TRUE){
+  print(unique(unspecified[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
+  stop(paste0(print(nrow(unspecified)), " cases where unspecified module/interventions are split among several interventions")) #Check with David here. 
+}
 
 #--------------------------------------------------------------------------------
 #Write final mapp and .diff files for comparison

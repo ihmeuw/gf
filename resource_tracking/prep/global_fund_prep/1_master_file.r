@@ -43,31 +43,32 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 1: Read in and verify module mapping framework
 # ----------------------------------------------
 
-  all_interventions = fread(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/all_interventions.csv"))
-  setnames(all_interventions, old=c('module', 'intervention'), new=c('gf_module', 'gf_intervention'))
+  # all_interventions = fread(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/all_interventions.csv"))
+  # setnames(all_interventions, old=c('module', 'intervention'), new=c('gf_module', 'gf_intervention'))
   
   #Read in the pre- and post-2017 maps, verify them, and rbind them. 
-  map = read_xlsx(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"), sheet='module_mapping')
-  map = data.table(map)
   source(paste0(gf_prep_code, "2_verify_module_mapping.R"))
-  pre_2017_map <- prep_map(map)
-  pre_2017_map = pre_2017_map[, .(module, intervention, code, coefficient, disease)]
-  pre_2017_map = merge(pre_2017_map, all_interventions, by=c('code', 'disease'))
-  pre_2017_map = unique(pre_2017_map)
+  # whole_map <- fread(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/gf_mapping.csv"))
+  # whole_map = whole_map[, .(module, intervention, code, coefficient, disease)]
+  # whole_map = merge(whole_map, all_interventions, by=c('code', 'disease'))
+  # whole_map = unique(whole_map)
   
   post_2017_map = readRDS(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/post_2017_map.rds"))
   post_2017_map = post_2017_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention, abbreviated_module)]
   
   #Remove rows from pre_2017_map that are in post_2017_map 
-  pre_2017_concat = paste0(pre_2017_map$module, pre_2017_map$intervention, pre_2017_map$disease)
-  pre_2017_map$concat = pre_2017_concat
-  post_2017_concat = paste0(post_2017_map$module, post_2017_map$intervention, post_2017_map$disease)
-  post_2017_map$concat = post_2017_concat
+  # whole_concat = paste0(whole_map$module, whole_map$intervention, whole_map$disease)
+  # whole_map$concat = whole_concat
+  # post_2017_concat = paste0(post_2017_map$module, post_2017_map$intervention, post_2017_map$disease)
+  # post_2017_map$concat = post_2017_concat
+  # 
+  # whole_map = whole_map[!(concat%in%post_2017_map$concat)]
+  # 
+  # module_map = rbind(whole_map, post_2017_map, use.names = TRUE, fill = TRUE)
+  # module_map = module_map[, -c('concat')]
+  module_map = post_2017_map
   
-  pre_2017_map = pre_2017_map[!(concat%in%post_2017_map$concat)]
-  
-  module_map = rbind(pre_2017_map, post_2017_map, use.names = TRUE, fill = TRUE)
-  module_map = module_map[, -c('concat')]
+  module_map = prep_map(module_map)
   
 # ----------------------------------------------
 # STEP 2: Prep a single source of data

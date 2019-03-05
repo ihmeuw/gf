@@ -41,7 +41,7 @@ if (prep_gos == TRUE){
     # Adjust module and intervention manually in the raw data 
     #-------------------------------------------------------
     # if (prep_files == TRUE){
-    #   source(paste0(gf_prep_code, "budget_pudr_prep/", country, "_prep/correct_modules_interventions.R"))
+    #   source(paste0(gf_prep_code, "budget_pudr_prep/correct_modules_interventions_", country, ".R"))
     # } else if (prep_gos == TRUE){
     #   source(paste0(gf_prep_code, "gos_prep/correct_modules_interventions.R"))
     # }
@@ -49,12 +49,8 @@ if (prep_gos == TRUE){
     # raw_data = correct_modules_interventions(raw_data)
     
     #Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
-    #2018-2020 grants 
-    raw_data[module == 'rsshintegratedservicedeliveryandqualityimprovement' & intervention == 'otherinterventionsforadolescentandyouth' & is.na(activity_description), module:='preventionprogramsforadolescentsandyouthinandoutofschool']
-    raw_data[module == 'systcmesdesanteresiliantsetperennesprestationdeservicesintegresetameliorationdelaqualite' & intervention == 'autresinterventionsciblantlesjeunesetlesadolescents', module:='programmesdepreventiondestinesauxadolescentsetauxjeunesscolarisesounon']
-    raw_data[module == 'systcmesdesanteresiliantsetperennessystcmedegestiondelinformationsanitaireetsuivietevaluation' & intervention == 'implicationdetouslesprestatairesdesoins', 
-              module:='priseenchargeetpreventiondelatuberculose']
-    
+    source(paste0(budget_pudr_code, "correct_modules_interventions.R"))
+    raw_data = correct_modules_interventions(raw_data)
     
     #------------------------------------------------------------
     # Map budgets and PUDRs to module mapping framework 
