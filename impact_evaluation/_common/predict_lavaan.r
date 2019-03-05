@@ -77,7 +77,10 @@ predict_lavaan <- function(fit, newdata = NULL){
     #make a formula
     rhs <- paste0(subdf$rhs, collapse=" + ")
     form <- as.formula(paste0(r, " ~ ", rhs))
-    
+      
+	# exclude variables that are intercept-only, these are what we modify in the counterfactual
+	if (all(rhs=='Intercept')) next
+	
     #use formula to get right part of the data in right format
     mod_mat <- model.matrix(form, newdata)[,-1]
     new_val = t(t(mod_mat)) %*% subdf$est
