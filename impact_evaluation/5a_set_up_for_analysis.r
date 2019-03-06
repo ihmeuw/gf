@@ -104,4 +104,10 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 # ---------------------------------------------------------
 # Save file
 save(list=c('data', 'scaling_factors'), file=outputFile5a)
+
+# save a time-stamped version for reproducibility
+date_time = gsub('-|:| ', '_', Sys.time())
+outputFile5aArchive = gsub('prepped_data/', 'prepped_data/archive/', outputFile5a)
+outputFile5aArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5aArchive)
+file.copy(outputFile5a, outputFile5aArchive)
 # ---------------------------------------------------------
