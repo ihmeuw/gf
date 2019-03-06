@@ -108,16 +108,18 @@ check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = 
 check_0_expenditure <- check_0_expenditure[expenditure == 0 & !file_name%in%verified_0_expenditure]
 stopifnot(nrow(check_0_budgets)==0 & nrow(check_0_expenditure)==0)
 
+#Hacky fix - this should be fixed earlier in the prep functions, but remove anything at this point that has NAs for module, intervention, and budget OR expenditure. 
+resource_database[module=='all', module:='unspecified']
+resource_database[tolower(intervention)=='all', intervention:='unspecified']
+resource_database[is.na(module), module:='unspecified'] 
+resource_database[is.na(intervention), intervention:='unspecified']
+resource_database = resource_database[!(module=='unspecified' & intervention=='unspecified' & budget == 0 & expenditure == 0)]
+
 #check for duplicates, and sum their values if they exist:
 dups<-resource_database[duplicated(resource_database) | duplicated(resource_database, fromLast=TRUE)]
 print(paste0(nrow(dups), " duplicates found in database; values will be summed"))
 byVars = names(resource_database)[!names(resource_database)%in%c('budget', 'expenditure', 'disbursement')]
 resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expenditure=sum(na.omit(expenditure)), disbursement=sum(na.omit(disbursement))), by=byVars]
-
-#Hacky fix - this should be fixed earlier in the prep functions, but remove anything at this point that has NAs for module, intervention, and budget OR expenditure. 
-resource_database[module=='all', module:='unspecified']
-resource_database[tolower(intervention)=='all', intervention:='unspecified']
-resource_database = resource_database[!(module=='unspecified' & intervention=='unspecified' & budget == 0 & expenditure == 0)]
 
 #Make sure you have all the files here that you started with in your filelist. 
 # rt_files <- unique(resource_database$file_name)

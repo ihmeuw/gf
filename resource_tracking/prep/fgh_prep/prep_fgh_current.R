@@ -1,41 +1,60 @@
-
 # ----------------------------------------------
-# Irena Chen
-#
-# 2/22/2018
-
-### This code cleans the FGH csv file and turns it into something that is like our resource tracking database
-
+# AUTHOR: Emily Linebarger, based on code by Irena Chen
+# PURPOSE: Read in FGH data and clean into a presentable format.  
+# DATE: Last updated March 2019. 
 # ----------------------------------------------
-# call libraries 
-# ----------------------------------------------
+
 rm(list=ls())
-library(tools)
-library(data.table)
-library(lubridate)
-library(grDevices)
-library(readxl)
-library(reshape)
-library(scales)
+# ----------------------------------------------------------------------
+# To do list for this code: 
 
-#----------------------------------------------
-# Source functions
-# ---------------------------------------------
-repo = 'C:/Users/elineb/Documents/gf/'
-source(paste0(repo, 'resource_tracking/prep/shared_mapping_functions.R'))
-source(paste0(repo, 'resource_tracking/prep/fgh_prep/fgh_prep_functions.R'))
+# ---------------------------------------------------------------------
+
+user = "elineb" #Change to your username 
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
+source(paste0(code_loc, 'resource_tracking/prep/fgh_prep/fgh_prep_functions.R'))
+
+
+# ---------------------------------------
+# Install packages and set up R  
+# ---------------------------------------
+
+library(data.table)
+library(readstata13)
+options(scipen=100)
+
+# ---------------------------------------
+# Set global variables and filepaths.  
+# ---------------------------------------
+
+#J:drive filepaths
+j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
+dir = paste0(j, '/Project/Evaluation/GF/')
+combined_output_dir = paste0(dir, "resource_tracking/multi_country/mapping")
+
+#Code filepaths 
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
+code_dir = paste0(code_loc, "resource_tracking/prep/")
+gf_prep_code = paste0(code_dir, "global_fund_prep/")
+budget_pudr_code = paste0(gf_prep_code, "budget_pudr_prep/")
+gos_code = paste0(gf_prep_code, "gos_prep/")
+
+#Source shared functions
+source(paste0(code_dir, "shared_prep_functions.R"), encoding="UTF-8")
 
 # ----------------------------------------------
 # Load the DAH data and other raw files 
 # ----------------------------------------------
 
-fgh_data <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/ihme_dah_cod_uga_gtm_1990_2016.csv")
-fgh_mapping <- fread("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/fgh_mapping.csv")
+fgh_data <- fread(paste0(j, "Project/Evaluation/GF/resource_tracking/multi_country/gf/ihme_dah_cod_uga_gtm_1990_2016.csv"))
+fgh_mapping <- fread(paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/fgh_mapping.csv"))
 fgh_mapping = fgh_mapping[disease != "" & code != "" & !is.na(coefficient)] #Only keep the rows we've classified fully. 
 fgh_mapping = fgh_mapping[, !"disease"] #Remove the disease column because we don't need it. 
-final_map <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"
-final_mapping <- load_mapping_list(final_map, include_rssh_by_disease = FALSE)
+
+final_mapping <- fread(paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/gf_mapping.csv"))
 final_mapping = final_mapping[, !"disease"] #Remove the disease column because we don't need it.
+
+new_fgh_data = read.dta13(paste0(j, "/Project/IRH/DAH/RESEARCH/INTEGRATED DATABASES/DATA/FGH_2018/FGH_EZ_2018.dta"))
 
 # ----------------------------------------------
 # Prep the DAH data

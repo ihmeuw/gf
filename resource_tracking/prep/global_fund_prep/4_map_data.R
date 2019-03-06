@@ -11,7 +11,7 @@
 if (prep_gos == TRUE){
   raw_data <- copy(totalGos)
 } else if (prep_files == TRUE){
-  raw_data =resource_database
+  raw_data = resource_database
 }
 
 #-------------------------------------------------------
@@ -78,15 +78,12 @@ if (prep_gos == TRUE){
     #----------------------------------------------------------------------------
     # Merge with module map on module, intervention, and disease to pull in code
     #----------------------------------------------------------------------------
+    
+    pre_coeff_check = raw_data[, lapply(.SD, sum), .SDcols=c('budget', 'expenditure', 'disbursement')]
     mergeVars = c('disease', 'module', 'intervention')
-    module_map = module_map[, .(code, disease, module, intervention, gf_module, gf_intervention, abbreviated_module)] #Only keep the columns we want for the final dataset
     module_map = unique(module_map)
     module_map = module_map[!is.na(code)]
-    map_dups = module_map[duplicated(module_map, by=mergeVars)]
-    if (nrow(map_dups)!=0){
-      stop("There are duplicates in key variables in module map - review before merging to avoid inflating budget numbers")
-    }
-    
+
     mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x=TRUE)
     dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
     
@@ -94,10 +91,6 @@ if (prep_gos == TRUE){
       # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
       print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
       stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
-    }
-    
-    if(nrow(mapped_data)!=nrow(raw_data)){
-      stop("Some rows were duplicated in the mapping process, which will inflate budgets. Review merge.")
     }
     
     #-------------------------------------------------------
@@ -136,6 +129,18 @@ if(country == "cod"){
 }
 
 mapped_data$loc_name <- country
+
+#-------------------------------------------------------
+# Redistribute using mapped coefficient 
+# ------------------------------------------------------
+remapped_rows = nrow(mapped_data[coefficient != 1])
+print(paste0("A total of ", remapped_rows, " rows will be redistributed."))
+mapped_data[, budget:=budget*coefficient]
+mapped_data[, expenditure:=expenditure*coefficient]
+mapped_data[, disbursement:=disbursement*coefficient]
+
+post_coeff_check = mapped_data[, lapply(.SD, sum), .SDcols=c('budget', 'expenditure', 'disbursement')]
+stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]] & pre_coeff_check[[3]] == post_coeff_check[[3]])
 
 #-----------------------------------------
 # Add in variable for current grant 
@@ -222,14 +227,14 @@ if(country == "cod"){
 # --------------------------------------------------------
 
 #Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
-mapped_data = mapped_data[, .(abbreviated_module, activity_description, adm1, budget, code, cost_category, current_grant, data_source, disbursement, disease, 
-                                              expenditure, file_iteration, file_name,  gf_module, gf_intervention, grant, grant_period, language, loc_name,
-                                              orig_intervention, orig_module, primary_recipient, secondary_recipient, start_date, year)]
-
-desired_cols <- c("abbreviated_module", "adm1", "budget", "code", "current_grant", "data_source", "disbursement", "disease", 
-                  "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "lang", "loc_name", 
-                  "orig_intervention", "orig_module", "period", "primary_recipient", "activity_description", "secondary_recipient", "start_date", "year")
-stopifnot(sort(colnames(mapped_data)) == sort(desired_cols))  #Emily we do want to have correct column names here. 
+# mapped_data = mapped_data[, .(abbreviated_module, activity_description, adm1, budget, code, cost_category, current_grant, data_source, disbursement, disease, 
+#                                               expenditure, file_iteration, file_name,  gf_module, gf_intervention, grant, grant_period, language, loc_name,
+#                                               orig_intervention, orig_module, primary_recipient, secondary_recipient, start_date, year)]
+# 
+# desired_cols <- c("abbreviated_module", "adm1", "budget", "code", "current_grant", "data_source", "disbursement", "disease", 
+#                   "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "lang", "loc_name", 
+#                   "orig_intervention", "orig_module", "period", "primary_recipient", "activity_description", "secondary_recipient", "start_date", "year")
+# stopifnot(sort(colnames(mapped_data)) == sort(desired_cols))  #Emily we do want to have correct column names here. 
 
 #After variables are removed, collapse dataset to simplify
 byVars <- colnames(mapped_data)

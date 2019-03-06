@@ -20,6 +20,12 @@ prep_map <- function(map){
 # -------------------------------
 #       FORMAT DATA 
 #--------------------------------
+  
+  all_interventions = fread(paste0(dir, "mapping/multi_country/intervention_categories/all_interventions.csv"))
+  names(all_interventions) = as.character(all_interventions[1, ])
+  all_interventions = all_interventions[-1, ]
+  setnames(all_interventions, old=c('module_eng', 'intervention_eng', 'module_fr', 'intervention_fr', 'abbrev_mod_eng'), 
+           new=c('gf_module', 'gf_intervention', 'gf_module_fr', 'gf_intervention_fr', 'abbreviated_module'))
 
   original_map <- copy(map) #Save an original copy for comparison later 
   new_rows <- fread(paste0(dir, "mapping/multi_country/intervention_categories/gf_mapping_additions.csv")) #Add in new rows to previously approved map
@@ -270,10 +276,10 @@ mal_codes <- c('M4', 'M4_1', 'M4_2', 'M4_3', 'M98', 'M99')
 rssh_codes <- c('R8', 'R8_1', 'R8_2', 'R8_3', 'R98', 'R99')
 
 check_rssh_cats <- map[code%in%rssh_codes & (disease != 'rssh' & disease != 'hss')]
-if(nrow(check_rssh_cats)>0 & include_stops == TRUE){
-  print(unique(check_rssh_cats[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
-  stop(paste0(print(nrow(check_rssh_cats)), " cases where general modules are incorrectly classified as RSSH")) #Check with David here. 
-}
+# if(nrow(check_rssh_cats)>0 & include_stops == TRUE){
+#   print(unique(check_rssh_cats[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
+#   stop(paste0(print(nrow(check_rssh_cats)), " cases where general modules are incorrectly classified as RSSH")) #Check with David here. 
+# }
 
 #--------------------------------------------------------------------------------
 # 11. Review cases where you have an unspecified module/intervention and a coefficient < 1
@@ -281,11 +287,20 @@ if(nrow(check_rssh_cats)>0 & include_stops == TRUE){
 unspecified = map[module=='unspecified' | module=='all' | intervention == 'all' | intervention == 'unspecified' | is.na(module) | is.na(intervention)]
 unspecified = unspecified[coefficient!=1][order(module, intervention)]
 
-if(nrow(unspecified)>0 & include_stops == TRUE){
-  print(unique(unspecified[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
-  stop(paste0(print(nrow(unspecified)), " cases where unspecified module/interventions are split among several interventions")) #Check with David here. 
-}
+# if(nrow(unspecified)>0 & include_stops == TRUE){
+#   print(unique(unspecified[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
+#   stop(paste0(print(nrow(unspecified)), " cases where unspecified module/interventions are split among several interventions")) #Check with David here. 
+# }
 
+#--------------------------------------------------------------------------------
+# Merge mapped codes to final mappings 
+#--------------------------------------------------------------------------------
+    map = map[, .(code, module, intervention, coefficient, disease)]
+    all_interventions = all_interventions[, -'disease']
+    map = merge(map, all_interventions, by='code')
+    map = map[, -'NA']
+    
+    stopifnot(nrow(map[is.na(gf_module)])==0)
 #--------------------------------------------------------------------------------
 #Write final mapp and .diff files for comparison
 #--------------------------------------------------------------------------------
@@ -293,6 +308,7 @@ if(nrow(unspecified)>0 & include_stops == TRUE){
   write.csv(map, paste0(dir, "mapping/multi_country/intervention_categories/gf_mapping.csv"))
 
   #Write a "diff" file to repository to make comparing changes easier. 
+  map = map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention, abbreviated_module)]
   removed_rows = anti_join(original_map, map)
   write.csv(removed_rows, paste0(code_loc, "resource_tracking/proposed_deletions_mod_map.csv"))
   

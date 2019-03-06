@@ -19,81 +19,87 @@
 # final_expenditures <- readRDS(paste0(file_dir, "final_expenditures.rds"))
 # file_iterations <- rbind(final_budgets, final_expenditures, fill = TRUE)
 
-#file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
-file_iterations <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds"))
+file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
+#file_iterations <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds"))
 
 # -----------------------
 # Guatemala file prep 
 # -----------------------
-# {
-# gtm_budgets = file_iterations[loc_name == "gtm"]
-# gtm_budgets = check_budgets_pudrs(gtm_budgets)
-# 
-# # -----------------------
-# # Guatemala unit tests 
-# # -----------------------
-# 
-# gtm_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/gtm_tests.csv"))
-# gtm_tests$correct_bug_sum <- gsub("[[:punct:]]", "", gtm_tests$correct_bug_sum)
-# gtm_tests$correct_exp_sum <- gsub("[[:punct:]]", "", gtm_tests$correct_exp_sum)
-# gtm_tests$correct_bug_sum <- as.numeric(gtm_tests$correct_bug_sum)
-# gtm_tests$correct_exp_sum <- as.numeric(gtm_tests$correct_exp_sum)
-# 
-# gtm_tests$start_date <- as.Date(gtm_tests$start_date, format = "%m/%d/%Y")
-# gtm_merge <- merge(gtm_tests, gtm_budgets, by = c('start_date', 'file_name')) 
-# 
-# if(nrow(gtm_merge) != nrow(gtm_tests)){
-#   print("ERROR: Not all Guatemala tests merged.")
-#   unmerged_gtm_tests = gtm_tests[!(file_name%in%gtm_merge$file_name)][order(file_name, start_date)]
-# }
-# 
-# gtm_merge$budget = round(gtm_merge$budget)
-# gtm_merge$expenditure = round(gtm_merge$expenditure)
-# 
-# gtm_merge <- gtm_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
-# gtm_merge$country <- "gtm" #For sorting out failed tests later if any. 
-# 
-# failed_budgets_gtm <- gtm_merge[correct_bug_sum != budget, ]
-# failed_expenditures_gtm <- gtm_merge[correct_exp_sum != expenditure, ]
-# failed_tests_gtm = unique(rbind(failed_budgets_gtm, failed_expenditures_gtm)) 
-# 
-# }
+{
+gtm_budgets = file_iterations[loc_name == "gtm"]
+gtm_budgets = check_budgets_pudrs(gtm_budgets)
+
+# -----------------------
+# Guatemala unit tests
+# -----------------------
+
+gtm_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/gtm_tests.csv"))
+gtm_tests$correct_bug_sum <- gsub("[[:punct:]]", "", gtm_tests$correct_bug_sum)
+gtm_tests$correct_exp_sum <- gsub("[[:punct:]]", "", gtm_tests$correct_exp_sum)
+gtm_tests$correct_bug_sum <- as.numeric(gtm_tests$correct_bug_sum)
+gtm_tests$correct_exp_sum <- as.numeric(gtm_tests$correct_exp_sum)
+
+gtm_tests$start_date <- as.Date(gtm_tests$start_date, format = "%m/%d/%Y")
+gtm_merge <- merge(gtm_tests, gtm_budgets, by = c('start_date', 'file_name'))
+
+gtm_merge <- merge(gtm_tests, gtm_budgets, by = c('start_date', 'file_name')) 
+if(nrow(gtm_merge) != nrow(gtm_tests)){
+  print("ERROR: Not all Guatemala tests merged.")
+  unmerged_gtm_tests = gtm_tests[!file_name%in%gtm_merge$file_name, .(file_name)]
+}
+not_tested_gtm = unique(gtm_budgets[!file_name%in%gtm_merge$file_name, .(file_name)])
+if(nrow(not_tested_gtm)!=0){
+  print("ERROR: Some files in Guatemala are not being tested.")
+  not_tested_gtm = unique(gtm_budgets[!file_name%in%gtm_merge$file_name, .(file_name)])
+}
+
+gtm_merge$budget = round(gtm_merge$budget)
+gtm_merge$expenditure = round(gtm_merge$expenditure)
+
+gtm_merge <- gtm_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
+gtm_merge$country <- "gtm" #For sorting out failed tests later if any.
+
+failed_budgets_gtm <- gtm_merge[correct_bug_sum != budget, ]
+failed_expenditures_gtm <- gtm_merge[correct_exp_sum != expenditure, ]
+failed_tests_gtm = unique(rbind(failed_budgets_gtm, failed_expenditures_gtm))
+
+}
 # ------------------
 # Uganda file prep 
 # ------------------
-# {
-# dt_uga = file_iterations[loc_name == "uga"]
-# uga_budgets = check_budgets_pudrs(dt_uga)
-# 
-# # ------------------
-# # Uganda unit tests
-# # ------------------
-# 
-# uga_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/uga_tests.csv"))
-# uga_tests$start_date <- as.Date(uga_tests$start_date, format="%m/%d/%Y")
-# 
-# uga_tests$correct_bug_sum <- gsub("[[:punct:]]", "", uga_tests$correct_bug_sum)
-# uga_tests$correct_exp_sum <- gsub("[[:punct:]]", "", uga_tests$correct_exp_sum)
-# uga_tests$correct_bug_sum <- as.numeric(uga_tests$correct_bug_sum)
-# uga_tests$correct_exp_sum <- as.numeric(uga_tests$correct_exp_sum)
-# 
-# uga_merge <- merge(uga_tests, uga_budgets, by = c('start_date', 'file_name')) 
-# if(nrow(uga_merge) != nrow(uga_tests)){
-#   print("ERROR: Not all Uganda tests merged.")
-#   unmerged_uga_tests = uga_tests[!(file_name%in%uga_merge$file_name)][order(file_name, start_date)]
-# }
-# 
-# uga_merge$budget = round(uga_merge$budget)
-# uga_merge$expenditure = round(uga_merge$expenditure)
-# 
-# uga_merge <- uga_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
-# uga_merge$country <- "uga" #For sorting out failed tests later if any. 
-# 
-# failed_budgets_uga <- uga_merge[correct_bug_sum != budget, ]
-# failed_expenditures_uga <- uga_merge[correct_exp_sum != expenditure, ]
-# failed_tests_uga = unique(rbind(failed_budgets_uga, failed_expenditures_uga)) 
-# 
-# }
+{
+dt_uga = file_iterations[loc_name == "uga"]
+uga_budgets = check_budgets_pudrs(dt_uga)
+
+# ------------------
+# Uganda unit tests
+# ------------------
+
+uga_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/uga_tests.csv"))
+uga_tests$start_date <- as.Date(uga_tests$start_date, format="%m/%d/%Y")
+
+uga_tests$correct_bug_sum <- gsub("[[:punct:]]", "", uga_tests$correct_bug_sum)
+uga_tests$correct_exp_sum <- gsub("[[:punct:]]", "", uga_tests$correct_exp_sum)
+uga_tests$correct_bug_sum <- as.numeric(uga_tests$correct_bug_sum)
+uga_tests$correct_exp_sum <- as.numeric(uga_tests$correct_exp_sum)
+
+uga_merge <- merge(uga_tests, uga_budgets, by = c('start_date', 'file_name'))
+if(nrow(uga_merge) != nrow(uga_tests)){
+  print("ERROR: Not all Uganda tests merged.")
+  unmerged_uga_tests = uga_tests[!(file_name%in%uga_merge$file_name)][order(file_name, start_date)]
+}
+
+uga_merge$budget = round(uga_merge$budget)
+uga_merge$expenditure = round(uga_merge$expenditure)
+
+uga_merge <- uga_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
+uga_merge$country <- "uga" #For sorting out failed tests later if any.
+
+failed_budgets_uga <- uga_merge[correct_bug_sum != budget, ]
+failed_expenditures_uga <- uga_merge[correct_exp_sum != expenditure, ]
+failed_tests_uga = unique(rbind(failed_budgets_uga, failed_expenditures_uga))
+
+}
 
 # ------------------
 # DRC file prep 
@@ -140,10 +146,6 @@ file_iterations <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/c
   failed_budgets_cod <- cod_merge[correct_bug_sum != budget, ]
   failed_expenditures_cod <- cod_merge[correct_exp_sum != expenditure, ]
   failed_tests_cod = unique(rbind(failed_budgets_cod, failed_expenditures_cod)) 
-  
-  #What are the errors we want to know about? 
-  #1. When there are files in your final data that don't have a test written for them, or aren't being tested (not merging)
-  #2. When there are tests you've written that aren't merging. 
   
 }
 
