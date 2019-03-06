@@ -46,7 +46,7 @@ summary(lmFit9)
 # Should we include value_ACT_received in the value_severeMalariaTreated linkage 2 regression?
 # Currently combining M1_1 (mass campaigns) and M1_2 (continuous) because FGH can't distinguish
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
-source('./impact_evaluation/models/drc_malaria2.r')
+source('./impact_evaluation/models/drc_malaria4.r')
 # ----------------------------------------------
 
 

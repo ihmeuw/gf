@@ -28,7 +28,7 @@ data = readRDS(outputFile3)
 	data$exp_M2 = NULL
 	
 	# set other_dah to NA (not 0) after 2016
-	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017, (v):=NA]
+	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017 & get(v)==0, (v):=NA]
 	
 	# drop M2_3 from other_dah for now because it's identifcal to M2_1
 	# data$other_dah_M2_3 = NULL
@@ -58,6 +58,9 @@ for(v in names(data)) {
 	data[is.na(get(v)), (v):=tmp]
 }
 data$tmp = NULL
+
+# now remake ghe_cumulative TEMPORARY
+data[, ghe_cumulative:=cumsum(ghe)]
 
 # drop completeness variables (for now)
 for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
