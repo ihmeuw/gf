@@ -12,12 +12,16 @@
 # - Incorporate final GF module and abbrev module in 2017 map. Don't want to have to map twice. 
 #---------------------------------------------------------------
 
+#To do- split files into english, french, and spanish training data sets. Include activity descriptions. 
+
+#Eventually just need to have post-2017 maps for French, English, and Spanish. 
+
 rm(list=ls())
 library(data.table)
 
 user = "elineb"
 j = ifelse(Sys.info()[1]=='Windows','J:','/home/j/')
-code_loc = ifelse(Sys.info()[1]=='Windows', 'H:/gf/', paste0('/homes/', user, '/gf/'))
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0('C:/Users/', user, '/Documents/gf/'), paste0('/homes/', user, '/gf/'))
 
 source(paste0(code_loc, "resource_tracking/prep/shared_prep_functions.R"), encoding = "UTF-8")
 
@@ -190,7 +194,8 @@ post_2017_map = rbind(post_2017_map, hiv_codes, use.names = TRUE)
 post_2017_map = rbind(post_2017_map, tb_codes, use.names = TRUE)
 
 #Make sure you don't have any unexpected NAs
-nrow(post_2017_map[is.na(code)])
+nrow(post_2017_map[is.na(code)]) #- these are incorrectly coded. I would like to keep the map clean and only have things that we're 
+# 100% confident about. For these observations, we'll also run through NLP. 
 nrow(post_2017_map[is.na(coefficient)])
 nrow(post_2017_map[is.na(loc_name)])
 nrow(post_2017_map[is.na(lang)])
@@ -202,6 +207,9 @@ unique(post_2017_map[substring(code, 1, 1) == 'R', .(module)])
 
 #Check that coefficients are all 1, we should have no redistribution. 
 post_2017_map[coefficient != 1]
+
+#Drop any observations where code is NA at this point. 
+post_2017_map = post_2017_map[!is.na(code)]
 
 #-----------------------------------------------------------------------
 # Merge this validated map back onto the post modular framwork one last 

@@ -1,5 +1,5 @@
 CODE REVIEW INSTRUCTIONS: 
-1. Change to branch "code_review" in the repository (ask Emily if you don't know how to do this!) 
+1. Change to branch "code_review" in the repository (ask Emily if you don't know how to do this!) Pull branch 'develop' into 'code_review' to get the latest code. 
 2. To submit code you'd like to be reviewed: 
 	Add a file path to the repo location below, and add an optional comment asking for a specific reviewer/giving details. 
 	To accept changes, simply accept the pull request you're tagged in (see below).
@@ -17,10 +17,9 @@ CODE REVIEW INSTRUCTIONS:
 		Submit the pull request with a comment explaining the edits you made. 
 	Make sure to remove the open review request from the list below! 
 
-	
-	
 
 OPEN REVIEW REQUESTS: 
-*Example* Hi David, could you please review the following two files for me? 
+*Example* Hi David, could you please review the following two files for me? (Date requested: 2/8/19)
 "C:\Users\elineb\Documents\gf\resource_tracking\prep\global_fund_prep\gos\prep_gos_data.R"
 "C:\Users\elineb\Documents\gf\resource_tracking\miscellaneous\graph_ghe_using_sicoin.r"
+

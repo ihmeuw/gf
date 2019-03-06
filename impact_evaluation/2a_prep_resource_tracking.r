@@ -2,23 +2,16 @@
 # AUTHOR: Audrey Batzel and Emily Linebarger
 # PURPOSE: Prepare resource tracking data for merge 
 #          with activities and outputs.  
-# DATE: Last updated January 2019. 
+# DATE: Last updated March 2019. 
 # INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------------------
 
 #------------------------------------
 # TO-DO: 
-# -Do we want to include any GHE data? 
 # - Make this a general function that can be subset to any type of country and disease. 
 #Should I keep data source in here to match 
 
 
-# 1. rectangularize the RT data so that every module/intervention (at least those with any output data)
-# appears for every quarter for the entire range of the data
-# 2. reshape module/interventions wide so that each row is uniquely identified 
-# by quarter and there's a column for every financing source/intervention
-#it's true, we don't care about modules and interventions that don't have a corresponding activity/output variable,
-#so go ahead and drop those from the data prior to merging (edited) 
 #------------------------------------
 
 
@@ -57,6 +50,9 @@ final_expenditures[loc_name == 'Congo (Democratic Republic)', loc_name:='cod']
 final_expenditures[loc_name == 'Guatemala', loc_name:='gtm']
 final_expenditures[loc_name == 'Uganda', loc_name:='uga']
 
+# quick fixes that shouldn't be necessary once earlier code is fixed
+fgh[sda_activity=='mal_comm_con_dah_17', code:='M2_3']
+
 #------------------------------------
 # Subset data and prep for merge
 #------------------------------------
@@ -67,60 +63,66 @@ setnames(exp_subset, old=c("gf_module","gf_intervention"), new=c("module", "inte
 other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') & country == 'Congo (Democratic Republic)' & (disease == 'malaria' | disease == 'hss'), 
                 .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]
 ghe = ghe[fin_data_type == "mean" & financing_source == 'public' & country == "Congo (Democratic Republic)", .(ghe = sum(disbursement, na.rm = TRUE)), 
-        by = .(year, loc_name, disease)]
+        by = .(year)]
 
 #Split other_dah and ghe into quarters
 n_years <- (2018-1990)+1 #This is the range we have data for. 
 quarters <- data.table(year=rep(1990:2018, 4))[order(year)]
 quarters[, quarter:=rep(1:4, n_years)]
 
+#Split each data set out by quarter
 other_dah = merge(quarters, other_dah, by='year', all.x = TRUE, allow.cartesian=TRUE)
 other_dah[, other_dah:=other_dah/4]
+
 ghe = merge(quarters, ghe, by='year', all.x = TRUE, allow.cartesian = TRUE)
 ghe[, ghe:=ghe/4]
+ghe[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+ghe[, date:=year+quarter]
 
-#Generate variables for budget subset 
 exp_subset[, quarter:=quarter(start_date)]
 exp_subset[, year:=year(start_date)]
 exp_subset[, start_date:=NULL]
 
-#Merge budget and fgh data together, and create date variable
-prepped_rt <- rbind(exp_subset, other_dah, fill = TRUE) #Note - we still have observations with 'na' for code at this point. 
-
-#------------------------------------
-# Merge data with map of indicator codes
-#------------------------------------
-
-#Map to intervention and indicator using the map for DRC malaria. 
+#Match exp and FGH data to codes to only keep relevant modules/interventions (all = TRUE)
 drc_mal_map_codes = drc_mal_map[, .(code, indicator, indicator_type)]
-prepped_rt <- merge(prepped_rt, drc_mal_map_codes, by = c('code'), allow.cartesian = TRUE)
+exp_subset = merge(exp_subset, drc_mal_map_codes, by=c('code'), allow.cartesian = TRUE)
+other_dah = merge(other_dah, drc_mal_map_codes, by=c('code'), allow.cartesian = TRUE)
 
-#Create date variable 
-prepped_rt[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-prepped_rt[, date:=year+quarter]
+print(paste0("Codes kept in exp data: ", unique(exp_subset[, .(code)])))
+print(paste0("Codes kept in FGH data: ", unique(other_dah[, .(code)])))
 
-#Should have no missing module, intervention, code, or date at this point! 
-stopifnot(nrow(prepped_rt[is.na(module)|is.na(intervention)|is.na(code)])!= 0)
-stopifnot(nrow(prepped_rt[is.na(date)])!= 0)
+#Create date variable
+exp_subset[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+exp_subset[, date:=year+quarter]
+other_dah[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+other_dah[, date:=year+quarter]
 
 #Cast data wide 
-rt_wide = dcast(prepped_rt, date~code, value.var=c('expenditure','other_dah'), fun.aggregate = sum)
+exp_wide = dcast(exp_subset, date~code, value.var=c('expenditure'), fun.aggregate = sum)
 frame = data.table(date=seq(1990, 2020, by=.25))
-rt_wide = merge(frame, rt_wide, by='date', all.x=TRUE)
-for(v in names(rt_wide)) rt_wide[is.na(get(v)), (v):=0]
+exp_wide = merge(frame, exp_wide, by='date', all.x=TRUE)
+for(v in names(exp_wide)) exp_wide[is.na(get(v)), (v):=0]
 
-#Add on total GHE spending for each quarter
-ghe[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-ghe[, date:=year+quarter]
+other_dah_wide = dcast(other_dah, date~code, value.var=c('other_dah'), fun.aggregate = sum)
+frame = data.table(date=seq(1990, 2020, by=.25))
+other_dah_wide = merge(frame, other_dah_wide, by='date', all.x=TRUE)
+for(v in names(other_dah_wide)) other_dah_wide[is.na(get(v)), (v):=0]
+
+#Set column names for merge 
+names = colnames(exp_wide[, 2:ncol(exp_wide)])
+names <- paste("exp", names, sep = "_")
+colnames(exp_wide) <- c('date', names)
+
+names = colnames(other_dah_wide[, 2:ncol(other_dah_wide)])
+names <- paste("other_dah", names, sep = "_")
+colnames(other_dah_wide) <- c('date', names)
+
+#Merge both files together 
+rt_wide <- merge(other_dah_wide, exp_wide, by=c('date'))
+
+#Add on GHE as a control variable 
 ghe = ghe[, .(date, ghe)]
-rt_wide = merge(rt_wide, ghe, by='date')
-#-----------------------------------------------------------
-# Make sure data are uniquely identified in the way you want 
-#-----------------------------------------------------------
-# 
-# #Make sure resource tracking data is uniquely identified by year, quarter, module, intervention, and indicator 
-# rt_wide = rt_wide[, .(budget=sum(budget, na.rm=TRUE), other_dah=sum(other_dah, na.rm=TRUE)), by=.(year, quarter, module, intervention, sda_activity, indicator, indicator_type, code, loc_name, disease)]
-# stopifnot(nrow(unique(rt_wide[, .(year, quarter, module, intervention, sda_activity, indicator, indicator_type, loc_name, disease)]))==nrow(rt_wide))
-# stopifnot(nrow(unique(rt_wide[, .(year, quarter, code, indicator, indicator_type,loc_name, disease)]))==nrow(rt_wide))
+rt_wide = merge(rt_wide, ghe, by='date', all.x = TRUE)
 
+#Save output file
 saveRDS(rt_wide, outputFile2a)

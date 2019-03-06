@@ -46,11 +46,31 @@ dt = dt[date < '2018-09-01']
 source("./core/standardizeHZNames.R")
 source("./core/standardizeDPSNames.R")
 dt$health_zone = standardizeHZNames(dt$health_zone)
-dt$health_zone = standardizeDPSNames(dt$dps)
+dt$dps = standardizeDPSNames(dt$dps)
 
-# drop giant outlier
-dt[element=='PLHIV on IPT' & value==36141, value:=0]
-dt[element=="Malnourished PLHIV who received supplemental nutrition" & value==1726, value:=0]
+#--------------------------
+# sum over case as it is not useful
+vars = c("org_unit_id",   "org_unit", "date", "element",
+         "subpop", "sex", "age", "org_unit_type", "level", 
+         "dps", "health_zone", "mtk", "maternity", "tb")
+
+dt = dt[ ,.(value=sum(value)), by=vars]
+
+# read in the outliers and remove them
+out = readRDS(paste0(dir, 'pnls_outliers/list_of_arv_outliers.rds'))
+
+# create a unique identifier to remove
+out[ ,combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
+dt[ ,combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
+
+# drop the outliers 
+dt = dt[!combine %in% out$combine]
+dt[ ,combine:=NULL]
+
+# remove one outlier by hand in which the qr did not work
+dt = dt[!(value==651 & element=="Malnourished PLHIV who received supplemental nutrition")]
+
+# --------------------
 
 #----------------------------------------
 # upload the shape files 
@@ -199,7 +219,8 @@ ggplot(coord_vl, aes(x=long, y=lat, group=group, fill=value)) +
   theme(plot.title=element_text(size=22, vjust=-1), plot.subtitle=element_text(size=18),
         legend.title=element_text(size=18), legend.text=element_text(size=16), 
         strip.text=element_text(size=16)) +
-  geom_label_repel(data = names, aes(label = label, x = long, y = lat, group = region), inherit.aes=FALSE, size=4)
+  geom_label_repel(data = names, aes(label = label, x = long, y = lat, group = region), 
+                   inherit.aes=FALSE, size=4)
 
 
 coord_vl_gf = coord_vl
@@ -223,13 +244,6 @@ dev.off()
 
 #---------------------------------------------
 # all variables in a single data set
-
-
-
-
-
-coordinatesl
-
 
 # shape the data wide
 

@@ -36,16 +36,34 @@ dt = readRDS(paste0(dir, 'prepped/pnls_arv.rds'))
 # subset to before August of 2018
 dt = dt[date < '2018-09-01']
 
+#--------------------------
+# sum over case as it is not useful
+vars = c("org_unit_id",   "org_unit", "date", "element",
+         "subpop", "sex", "age", "org_unit_type", "level", 
+         "dps", "health_zone", "mtk", "maternity", "tb")
+
+dt = dt[ ,.(value=sum(value)), by=vars]
+
+# read in the outliers and remove them
+out = readRDS(paste0(dir, 'pnls_outliers/list_of_arv_outliers.rds'))
+
+# create a unique identifier to remove
+out[ ,combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
+dt[ ,combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
+
+# drop the outliers 
+dt = dt[!combine %in% out$combine]
+dt[ ,combine:=NULL]
+
+# remove one outlier by hand in which the qr did not work
+dt = dt[!(value==651 & element=="Malnourished PLHIV who received supplemental nutrition")]
+
 # --------------------
 # source the standardization functions for the geographic units and apply
 source("./core/standardizeHZNames.R")
 source("./core/standardizeDPSNames.R")
 dt$health_zone = standardizeHZNames(dt$health_zone)
 dt$health_zone = standardizeDPSNames(dt$dps)
-
-# drop giant outlier
-dt[element=='PLHIV on IPT' & value==36141, value:=0]
-dt[element=="Malnourished PLHIV who received supplemental nutrition" & value==1726, value:=0]
 
 # -------------------------------------------------
 # ARV Visuals 
@@ -59,20 +77,7 @@ sex_colors = c('#b2182b', '#4575b4')
 tri_colors = c('#a50026', '#fdae61', '#abd9e9')
 
 #----------------------
-# identifying Podi
-# 
-# stru = dt[element=="Patients still on ART in the structure", unique(org_unit)]
-# podi_vec = dt[element=="Patients on ART in the Podi", unique(org_unit)]
-# podi_vec[podi_vec %in% stru]
-# 
-# dt[org_unit %in% podi_vec, podi:=TRUE]
-# dt[!org_unit %in% podi_vec, podi:=FALSE]
-# 
-# dt[element=="Patients still on ART in the structure", sum(value), by=podi]
-# dt[element=="Patients on ART in the Podi", sum(value), by=podi]
-
-#----------------------
-# REPORTING
+# Reporting completeness
 
 # facilities reporting and patients on art by sex
 fac = dt[ ,.(facilities_reporting=length(unique(org_unit))), by=date]
@@ -319,8 +324,36 @@ ggplot(tb_hiv, aes(x=date, y=value, color=element)) +
   facet_wrap(~sex) +
   theme_bw() +
   scale_color_manual(values=sex_colors) +
-  labs(color='Sex', x='Date', y='Count', 
+  labs(color=' ', x='Date', y='Count', 
        title="Patients on ART screened for TB by sex")
+
+#------------------
+# comparative counts - detected and started treatment
+
+tb_tx = tb[element=="TB cases detected among PLHIV in the month" | element=="PLHIV diagnosed with TB who started anti-TB treatment during the month"]
+tb_tx = tb_tx[ ,.(value=sum(value)), by=.(date, element, sex)]
+tb_tx = dcast(tb_tx, sex+date~element)
+
+# add a ratio
+setnames(tb_tx, c('Sex', 'Date', 'txed', 'cases'))
+tb_tx[ ,ratio:=round(100*(txed/cases), 1)]
+tb_tx = melt(tb_tx, id.vars=c('Sex', 'Date'))
+
+
+tb_tx$variable = factor(tb_tx$variable, c('cases', 'txed', 'ratio'),
+                        c('TB cases detected among PLHIV', 
+                          'PLHIV diagnosed with TB who started anti-TB treatment',
+                          'Percentage of cases treated'))
+
+# count of patients screened for tb out of those on ART
+ggplot(tb_tx[variable!='Percentage of cases treated'], aes(x=Date, y=value, color=variable)) +
+  geom_point() + 
+  geom_line() +
+  facet_wrap(~Sex, scales='free_y') +
+  theme_bw() +
+  scale_color_manual(values=sex_colors) +
+  labs(color='Sex', x='Date', y='Count', 
+       title="TB cases detected who were treated (equality issues)")
 
 #--------------------
 # pregnant and lactating women 
@@ -352,7 +385,7 @@ ggplot(tb_plw, aes(x=Date, y=value)) +
   theme_bw() +
   facet_wrap(~variable, scales='free_y') +
   labs(x='Date', y='Count',
-       title='Percentage of HIV+ pregnant and lactating women screened for and diagnosed with TB',
+       title='HIV+ pregnant and lactating women screened for and diagnosed with TB',
        caption='Source: SNIS PNLS')
 
 tb_plw_ratio = melt(tb_plw_ratio, id.vars='Date')
@@ -368,7 +401,6 @@ ggplot(tb_plw_ratio, aes(x=Date, y=value)) +
   labs(x='Date', y='Percent(%)',
        title='Percentage of HIV+ Pregnant and lactating women screened for and diagnosed with TB',
        caption='Source: SNIS PNLS')
-
 
 #----------------------------------------------------
 # post-exposure prophylaxis
@@ -387,9 +419,8 @@ ggplot(pep, aes(x=date, y=value, color=sex)) +
        title='HIV-exposed persons who received post-exposure prophylaxis',
        caption='Source: SNIS PNLS')
 
-
 #----------------------------------------------------
-# DURVIVORS OF SEXUAL VIOLENE
+# Sruvivors of sexual violence
 
 # SUBSET TO SVS
 svs = dt[subpop=='svs']
@@ -449,7 +480,7 @@ ggplot(svs[element!="HIV-exposed Persons who received a PEP Kit"], aes(x=date, y
 # visualize all of the variables
 # organize the order
 
-element_vector = c("Patients still on ART in the structure",    "Patients on ART in the Podi",       
+element_vector = c("Patients still on ART in the structure",  "Patients on ART in the Podi",       
                    "PLHIV awaiting care", "PLHIV registered as LTFU in the course of a month",
                    "PLHIV who developed side effects", "PLHIV who received a CD4 test", 
                    "PLHIV enrolled in HIV-related services",  "PLHIV on Cotrimoxazole prophylaxis", 
@@ -460,8 +491,9 @@ element_vector = c("Patients still on ART in the structure",    "Patients on ART
                    "PLHIV diagnosed with TB who started anti-TB treatment during the month", 
                    "PLHIV who received a nutritional assessment and counseling", 
                    "Malnourished PLHIV", "Malnourished PLHIV who are not responding to treatment", 
-                   "Malnourished PLHIV who received supplemental nutrition", "Malnourished PLHIV who were rehabilitated",                               
+                   "Malnourished PLHIV LTFU", "Malnourished PLHIV who received supplemental nutrition", "Malnourished PLHIV who were rehabilitated",                               
                    "Malnourished PLHIV who died", "PLHIV who received an initial viral load test",
+                   "PLHIV who received a viral load test", "PLHIV with an undetectable viral load after six months", 
                    "PLHIV on ARVs who received a viral load test after six months", "PLHIV with an undetectable viral load", 
                   "PLHIV on ART with an undetectable viral load after the initial test", "Registered deaths of PLHIV in the course of a month")
 
