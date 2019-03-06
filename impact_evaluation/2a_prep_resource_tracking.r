@@ -58,11 +58,11 @@ fgh[sda_activity=='mal_comm_con_dah_17', code:='M2_3']
 #------------------------------------
 
 #Subset to only the columns we want from resource tracking database and impact evaluation map 
-exp_subset = final_expenditures[country == "Congo (Democratic Republic)" & (disease == "malaria" | disease == "hss"), .(expenditure, start_date, code, loc_name, disease, gf_module, gf_intervention)]
+exp_subset = final_expenditures[loc_name == 'cod' & (disease == "malaria" | disease == "hss" | disease == 'rssh'), .(expenditure, start_date, code, loc_name, disease, gf_module, gf_intervention)]
 setnames(exp_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
-other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') & country == 'Congo (Democratic Republic)' & (disease == 'malaria' | disease == 'hss'), 
+other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') & country == 'Congo (Democratic Republic)' & (disease == 'malaria' | disease == 'hss' | disease == 'rssh'), 
                 .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]
-ghe = ghe[fin_data_type == "mean" & financing_source == 'public' & country == "Congo (Democratic Republic)", .(ghe = sum(disbursement, na.rm = TRUE)), 
+ghe = ghe[fin_data_type == "mean" & financing_source == 'public' & loc_name == 'cod', .(ghe = sum(disbursement, na.rm = TRUE)), 
         by = .(year)]
 
 #Split other_dah and ghe into quarters
