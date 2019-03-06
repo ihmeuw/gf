@@ -13,7 +13,7 @@
 # Rquires: data.table, ggplot2, stringr
 
 # TO DO
-# Add caption listing control variables not displayed
+
 
 # rm(list=ls())
 # fitObject = readRDS('C:/local/tmpsemfit.rds')
