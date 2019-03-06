@@ -54,7 +54,7 @@ source('./impact_evaluation/models/drc_malaria4.r')
 # Run model
 if ('semFit' %in% ls()) rm('semFit')
 # semFit = sem(model, data)
-semFit = bsem(model, data, adapt=5000, burnin=1000, sample=1000)
+semFit = bsem(model, data, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 summary(semFit)
 # --------------------------------------------------------------
 
