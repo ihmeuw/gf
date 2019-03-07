@@ -55,33 +55,35 @@ inFile <- 'sigl_for_qr.rds'
 # read in the subset of PNLS data specific to viral load 
 
 # data set with equality constraints checked and an entry for both tests/undetectable
-vl <- readRDS(paste0(dir, 'prepped/', inFile))
+dt <- readRDS(paste0(dir, 'prepped/', inFile))
 
 # # remove new cases (not of interest for outlier detection)
-# vl = vl[case=='Old']
-# vl[ , case:=NULL]
+# dt = dt[case=='Old']
+# dt[ , case:=NULL]
 
 # make variable ids
-vl[, element_id:=.GRP, by='variable']
+dt[, element_id:=.GRP, by='variable']
+dt[, variable_id:=.GRP, by='drug']
 
 # loop over elements and org units, run quantreg once per each
 i=1
-for (e in unique(vl$element_id)) { 
-  for(o in unique(vl$org_unit_id)) { 
-    
-    # skip if this job has already run and resubmitAll is FALSE
-    if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/abatzel/qr_results/quantreg_output', i, '.rds'))) { 
-       i=i+1
-       next
-    } else {
-      # run the quantile regression and list the residuals
-      system(paste0('qsub -o /ihme/scratch/users/abatzel/quantreg_output -e /ihme/scratch/users/abatzel/quantreg_output -cwd -N quantreg_output_', 
-                    i, ' ../../../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i, ' ', inFile, ' TRUE'))
-      i=i+1
+for (v in unique(dt$variable_id)) {
+  for (e in unique(dt$element_id)) { 
+    for(o in unique(dt$org_unit_id)) { 
+      
+      # skip if this job has already run and resubmitAll is FALSE
+      if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/abatzel/qr_results/quantreg_output', i, '.rds'))) { 
+         i=i+1
+         next
+      } else {
+        # run the quantile regression and list the residuals
+        system(paste0('qsub -o /ihme/scratch/users/abatzel/quantreg_output -e /ihme/scratch/users/abatzel/quantreg_output -cwd -N quantreg_output_', 
+                      i, ' ../../../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i, ' ', inFile, ' TRUE', ' ', v ))
+        i=i+1
+      }
     }
   }
 }
-
 # wait for files to be done
 i = i-1
 numFiles = length(list.files('/ihme/scratch/users/abatzel/qr_results'))

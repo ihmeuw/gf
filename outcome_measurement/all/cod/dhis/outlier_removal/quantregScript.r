@@ -4,9 +4,13 @@ o = commandArgs()[5]
 i = commandArgs()[6]
 fileName = commandArgs()[7]
 impute = commandArgs()[8]
+v = commandArgs()[9]
 print(e)
 print(o)
 print(i)
+print(v)
+print(fileName)
+print(impute)
 
 # detect if operating on windows or on the cluster 
 library(data.table)
@@ -17,34 +21,35 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # load the data
-vl <- readRDS(paste0(dir, 'prepped/', fileName))
-vl = data.table(vl)
+dt <- readRDS(paste0(dir, 'prepped/', fileName))
+dt = data.table(dt)
 
 # remove new cases (not of interest for outlier detection)
 if (fileName=='viral_load_pnls_interim.rds') { 
-  vl = vl[case=='Old']
-  vl[ , case:=NULL]
+  dt = dt[case=='Old']
+  dt[ , case:=NULL]
 }
 
 # make variable ids
-vl[, element_id:=.GRP, by='variable']
+dt[, variable_id:=.GRP, by='drug']
+dt[, element_id:=.GRP, by='variable']
 
 # subset the data
-subset = vl[element_id==e & org_unit_id==o] 
+subset = dt[element_id==e & org_unit_id==o & variable_id == v, ] 
 head(subset)
 
 # skip cases that will fail
 n = nrow(subset[!is.na(value), ])
-var = var(subset$value)
+var = var(subset$value, na.rm=T)
 nx = length(unique(subset$date))
 
 # skip if less than 3 data points
 if(n>=3 & var!=0 & nx>=2) {  
   
-  # add fixed effect on group if more than one group exists
-  form = 'value~date'
-  if (length(unique(subset$group))>1) form = paste0(form, '+factor(group)')
-  form = as.formula(form)
+  # # add fixed effect on group if more than one group exists
+  # form = 'value~date'
+  # if (length(unique(subset$drug))>1) form = paste0(form, '+factor(drug)')
+  # form = as.formula(form)
 
   # run quantreg
   quantFit <- rq(form, data=subset, tau=0.5)
