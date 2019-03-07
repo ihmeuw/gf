@@ -39,10 +39,10 @@ library(quantreg)
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # output file
-outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis/viral_load/outlier_screen/quantreg_results.rds')
+outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/viral_load/outlier_screen/quantreg_results.rds')
 
 # whether or not to resubmit jobs that have completed already
 resubmitAll = TRUE
@@ -76,7 +76,7 @@ for (e in unique(vl$element_id)) {
     } else {
       # run the quantile regression and list the residuals
       system(paste0('qsub -o /ihme/scratch/users/abatzel/quantreg_output -e /ihme/scratch/users/abatzel/quantreg_output -cwd -N quantreg_output_', 
-                    i, ' ../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i, ' ', inFile, ' TRUE'))
+                    i, ' ../../../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i, ' ', inFile, ' TRUE'))
       i=i+1
     }
   }
