@@ -32,9 +32,11 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 
 # compute cumulative exps
 rtVars = names(data)
-rtVars = rtVars[grepl('exp|other_dah', rtVars)]
+rtVars = rtVars[grepl('exp|other_dah|ghe', rtVars)]
+data[is.na(ghe), ghe:=0]
 setorder(data, date) # order by data so cumulative exp is always accurate even if data is somehow scrambled before
 for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v))]
+data[ghe==0, ghe:=NA]
 # ----------------------------------------------------------------------------
 
 
@@ -59,6 +61,9 @@ codes$Intervention = NULL
 setnames(codes, c('Abbreviated Module','Abbreviated Intervention'), c('module','intervention'))
 long = merge(long, codes, by.x='indicator',by.y='Code',all.x=TRUE)
 long[intervention=='LLIN: Mass campaign' & metric=='other_dah', intervention:='LLIN: Cont. and Mass Distribution']
+
+# handle ghe
+long[variable %in% c('ghe','ghe_cumulative'), intervention:='All GHE']
 
 # label other indicators nicely
 long[is.na(intervention), activity:=ifelse(grepl('received',indicator), 'Activity', 'Output')]
@@ -90,22 +95,21 @@ p1b = ggplot(long[!is.na(intervention) & metric=='exp' & cumulative=='Cumulative
 	labs(title='Time Series - Global Fund', y='Cumulative Expenditure', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
-
 # time series of inputs
-p1c = ggplot(long[!is.na(intervention) & metric=='other_dah' & cumulative=='Not Cumulative'], 
+p1c = ggplot(long[!is.na(intervention) & metric %in% c('other_dah','ghe') & cumulative=='Not Cumulative'], 
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Time Series - Other Development Assistance for Malaria', 
+	labs(title='Time Series - Government and Other Development Assistance for Malaria', 
 		y='Disbursement', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
 # time series of cumulative inputs
-p1d = ggplot(long[!is.na(intervention) & metric=='other_dah' & cumulative=='Cumulative'], 
+p1d = ggplot(long[!is.na(intervention) & metric %in% c('other_dah','ghe') & cumulative=='Cumulative'], 
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Time Series - Other Development Assistance for Malaria', 
+	labs(title='Time Series - Government and Other Development Assistance for Malaria', 
 		y='Cumulative Disbursement', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
@@ -182,7 +186,7 @@ p4d = ggplot(long[activity=='Output' & metric=='value'], aes(x=value)) +
 # scatterplot of ITN correlations
 p5a = list()
 i=1
-for(v in c('exp_M1_1_cumulative', 'exp_M1_2_cumulative', 'other_dah_M1_1_cumulative')) { 
+for(v in c('exp_M1_1_cumulative', 'exp_M1_2_cumulative', 'other_dah_M1_1_cumulative', 'ghe_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5a[[i]] = ggplot(data[!is.na(value_ITN_received) & !is.na(get(v))], 
 			aes_string(y='value_ITN_received', x=v)) + 
@@ -197,7 +201,7 @@ for(v in c('exp_M1_1_cumulative', 'exp_M1_2_cumulative', 'other_dah_M1_1_cumulat
 p5b = list()
 i=1
 for(v in c('exp_M2_1_cumulative', 'exp_M2_3_cumulative', 
-	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative')) { 
+	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative', 'ghe_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5b[[i]] = ggplot(data[!is.na(value_RDT_received) & !is.na(get(v))], 
 			aes_string(y='value_RDT_received', x=v)) + 
@@ -212,7 +216,7 @@ for(v in c('exp_M2_1_cumulative', 'exp_M2_3_cumulative',
 p5c = list()
 i=1
 for(v in c('exp_M2_1_cumulative','exp_M2_3_cumulative', 
-	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative')) { 
+	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative', 'ghe_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5c[[i]] = ggplot(data[!is.na(value_RDT_received) & !is.na(get(v))], 
 			aes_string(y='value_ACT_received', x=v)) + 
