@@ -1,17 +1,25 @@
-# handle incoming arguments
-e = commandArgs()[4]
-o = commandArgs()[5]
-i = commandArgs()[6]
-fileName = commandArgs()[7]
-impute = commandArgs()[8]
-v = commandArgs()[9]
 
-print(e)
-print(o)
-print(i)
-print(v)
-print(fileName)
-print(impute)
+# commented out for doing array job
+# # handle incoming arguments
+# e = commandArgs()[4]
+# o = commandArgs()[5]
+# i = commandArgs()[6]
+# fileName = commandArgs()[7]
+# impute = commandArgs()[8]
+# v = commandArgs()[9]
+# 
+# print(e)
+# print(o)
+# print(i)
+# print(v)
+# print(fileName)
+# print(impute) 
+
+i = as.integer(Sys.getenv("SGE_TASK_ID"))
+array_table = fread('/ihme/scratch/users/abatzel/array_table_for_qr.csv')
+e = array_table[i]$element_id # available/consumed/lost
+o = array_table[i]$org_unit_id # unique facility id
+v = array_table[i]$variable_id # drug 
 
 # detect if operating on windows or on the cluster 
 library(data.table)
@@ -22,18 +30,20 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # load the data
-dt <- readRDS(paste0(dir, 'prepped/', fileName))
+# dt <- readRDS(paste0(dir, 'prepped/', fileName))
+dt <- readRDS('/ihme/scratch/users/abatzel/data_for_qr.rds')
 dt = data.table(dt)
+
+# **** NO LONGER NEED THIS since reading the data in from /ihme/scratch/ after it is prepped
+# # make variable ids
+# dt[, variable_id:=.GRP, by='drug']
+# dt[, element_id:=.GRP, by='variable']
 
 # remove new cases (not of interest for outlier detection)
 if (fileName=='viral_load_pnls_interim.rds') { 
   dt = dt[case=='Old']
   dt[ , case:=NULL]
 }
-
-# make variable ids
-dt[, variable_id:=.GRP, by='drug']
-dt[, element_id:=.GRP, by='variable']
 
 # subset the data
 subset = dt[element_id==e & org_unit_id==o & variable_id == v, ] 

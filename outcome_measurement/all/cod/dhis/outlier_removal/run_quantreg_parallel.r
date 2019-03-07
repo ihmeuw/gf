@@ -1,10 +1,11 @@
 # Prep & remove outliers from the COD DHIS2 PNLS Viral Load data 
-
+# Impute missing data in DHIS2 SIGL data
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli / Audrey Batzel (3-7-19)
 #
 # 10/1/2018
 # The current working directory should be the same as this script
+# This code must be run on the cluster. 
 # ----------------------------------------------
 
 # --------------------
@@ -49,7 +50,8 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # output file
-outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/viral_load/outlier_screen/quantreg_results.rds')
+outFileName = 'sigl_quantreg_imputation'
+outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/', outFileName, '.rds')
 
 # whether or not to resubmit jobs that have completed already
 resubmitAll = TRUE
@@ -78,30 +80,43 @@ if (inFile=='viral_load_pnls_interim.rds') {
 # make variable ids
 if (inFile=='sigl_for_qr.rds') { dt[, variable_id:=.GRP, by='drug']}
 dt[, element_id:=.GRP, by='variable']
+
+# make array table to set up for 
+array_table = expand.grid(unique(dt$org_unit_id), unique(dt$element_id), unique(dt$variable_id))
+write.csv(array_table, paste0('/ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
+saveRDS(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.rds'))
 #------------------------------------
 
 #------------------------------------
 # run quantregScript.r as separate qsubs for each subset of date, org_unit, element, and variable.
 #------------------------------------
-# loop over elements and org units, run quantreg once per each
-i=1
-for (v in unique(dt$variable_id)) {
-  for (e in unique(dt$element_id)) { 
-    for(o in unique(dt$org_unit_id)) { 
-      # skip if this job has already run and resubmitAll is FALSE
-      if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/', user_name, '/qr_results/quantreg_output', i, '.rds'))) { 
-         i=i+1
-         next
-      } else {
-        # run the quantile regression and list the residuals
-        system(paste0('qsub -o /ihme/scratch/users/', user_name, '/quantreg_output -e /ihme/scratch/users/', user_name, '/quantreg_output -cwd -N quantreg_output_', i, ' ../../../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i, ' ', inFile, ' ', impute, ' ', v ))
-        i=i+1
-      }
-    }
-  }
-}
+# array job
+N = nrow(array_table)
+PATH = paste0('/ihme/scratch/users/', user_name, '/quantreg_output')
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ../../../../../code/r_shell.sh ./quantregScript.r'))
+       
+# # loop over elements and org units, run quantreg once per each
+# i=1
+# for (v in unique(dt$variable_id)) {
+#   for (e in unique(dt$element_id)) { 
+#     for(o in unique(dt$org_unit_id)) { 
+#       # skip if this job has already run and resubmitAll is FALSE
+#       if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/', user_name, '/qr_results/quantreg_output', i, '.rds'))) { 
+#          i=i+1
+#          next
+#       } else {
+#         # run the quantile regression and list the residuals
+#         system(paste0('qsub -o /ihme/scratch/users/', user_name, '/quantreg_output -e /ihme/scratch/users/', user_name, '/quantreg_output -cwd -N quantreg_output_', i, ' ../../../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i, ' ', inFile, ' ', impute, ' ', v ))
+#         i=i+1
+#       }
+#     }
+#   }
+# }
+#------------------------------------
 
+#------------------------------------
 # wait for files to be done
+#------------------------------------
 i = i-1
 numFiles = length(list.files('/ihme/scratch/users/', user_name, '/qr_results'))
 while(numFiles<i) { 
@@ -133,5 +148,7 @@ saveRDS(fullData, outFile)
 if (cleanup==TRUE) { 
   system('rm /ihme/scratch/users/', user_name, '/qr_results/*')
   system('rm /ihme/scratch/users/', user_name, '/quantreg_output/*')
+  system('rm /ihme/scratch/users/', user_name, '/array_table_for_qr.csv')
+  system('rm /ihme/scratch/users/', user_name, '/data_for_qr.rds')
 }
 #------------------------------------
