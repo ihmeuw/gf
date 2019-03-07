@@ -57,7 +57,7 @@ if(n>=3 & var!=0 & nx>=2) {
   # list the residuals and add them to the out file
   r <- resid(quantFit)
   subset[, fitted_value:=predict(quantFit)]
-  if (impute==TRUE) {
+  if (impute=='TRUE') {
     subset[is.na(value), got_imputed:=1]
     subset[is.na(value), value:=fitted_value]
   }
@@ -69,5 +69,5 @@ if(n>=3 & var!=0 & nx>=2) {
 }
 
 # save
-print(paste0('Saving: ', paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i, '.rds')))
-saveRDS(subset, paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i, '.rds'))
+print(paste0('Saving: ', paste0('/ihme/scratch/users/abatzel/qr_results/quantreg_output', i, '.rds')))
+saveRDS(subset, paste0('/ihme/scratch/users/abatzel/qr_results/quantreg_output', i, '.rds'))
