@@ -7,9 +7,9 @@
 model = '
 
 	# linkage 1 regressions
-	value_ITN_received ~ 1*exp_M1_1_cumulative + prior("dgamma(1,1)")*exp_M1_2_cumulative + prior("dgamma(1,1)")*other_dah_M1_1_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
-	value_RDT_received ~ 1*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
-	value_ACT_received ~ 1*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
+	value_ITN_received ~ prior("dgamma(1,1)")*exp_M1_1_cumulative + prior("dgamma(1,1)")*exp_M1_2_cumulative + prior("dgamma(1,1)")*other_dah_M1_1_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
+	value_RDT_received ~ prior("dgamma(1,1)")*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
+	value_ACT_received ~ prior("dgamma(1,1)")*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
 	
 	# linkage 1 regressions with hotfixes for heywood cases (temporary)
 
@@ -19,7 +19,7 @@ model = '
 	value_ACTs_CHWs ~ prior("dgamma(1,1)")*value_ACT_received
 	value_RDT_completed ~ prior("dgamma(1,1)")*value_RDT_received
 	value_SP ~ prior("dgamma(1,1)")*exp_M3_1_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
-	value_severeMalariaTreated ~ 1*exp_M2_6_cumulative + prior("dgamma(1,1)")*value_ACT_received + date + prior("dgamma(1,1)")*ghe_cumulative
+	value_severeMalariaTreated ~ prior("dgamma(1,1)")*exp_M2_6_cumulative + prior("dgamma(1,1)")*value_ACT_received + date + prior("dgamma(1,1)")*ghe_cumulative
 	value_totalPatientsTreated ~ prior("dgamma(1,1)")*value_ACT_received
 	
 	# latent variables
