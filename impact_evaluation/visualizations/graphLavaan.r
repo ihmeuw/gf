@@ -13,10 +13,10 @@
 # Rquires: data.table, ggplot2, stringr
 
 # TO DO
-
+# use unstandardized coefficients and multiply by scaling factors for "per unit" interpretability?
 
 # rm(list=ls())
-# fitObject = readRDS('C:/local/tmpsemfit.rds')
+# fitObject = semFit
 # nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
 # labSize1=5
 # labSize2=3
@@ -104,11 +104,19 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=T
 			di = ifelse(edgeTable[i]$xstart<mean(edgeTable$xstart), -1, 1)
 			# curved arrows going downward need to bend the other way
 			if (edgeTable[i]$yend < edgeTable[i]$ystart) di = -di 
-			
-			p = p + 
-				geom_curve(data=edgeTable[i], 
-					aes(x=xstart, y=ystart, xend=xend, yend=yend, color=est), 
-					size=labSize2*.25, curvature=di*(1/(0.4*el)), angle=90)
+			# add curves to graph (different depending on direction of curve)
+			if (di<0) {
+				p = p + 
+					geom_curve(data=edgeTable[i], 
+						aes(x=xstart+boxWidth, y=ystart, xend=xend+boxWidth, yend=yend, color=est), 
+						size=labSize2*.25, curvature=di*(1/(0.4*el)), angle=90)
+			}
+			if (di>=0) { 
+				p = p + 
+					geom_curve(data=edgeTable[i], 
+						aes(x=xstart, y=ystart, xend=xend, yend=yend, color=est), 
+						size=labSize2*.25, curvature=di*(1/(0.4*el)), angle=90)			
+			}
 		}
 	}
 	
@@ -142,7 +150,7 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=T
 		labs(color='Effect\nSize', caption=paste('Control variables not displayed:', paste(exclVars, collapse =',')))
 	
 	# clean up plot
-	p = p + theme_void()
+	p = p + theme_void() + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'))
 	
 	# -------------------------------------------------------------------------------
 	return(p)
