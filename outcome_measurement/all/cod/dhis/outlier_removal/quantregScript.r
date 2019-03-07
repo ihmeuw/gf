@@ -5,6 +5,7 @@ i = commandArgs()[6]
 fileName = commandArgs()[7]
 impute = commandArgs()[8]
 v = commandArgs()[9]
+
 print(e)
 print(o)
 print(i)
@@ -40,16 +41,19 @@ head(subset)
 
 # skip cases that will fail
 n = nrow(subset[!is.na(value), ])
+print(n)
 var = var(subset$value, na.rm=T)
+print(var)
 nx = length(unique(subset$date))
+print(nx)
 
 # skip if less than 3 data points
 if(n>=3 & var!=0 & nx>=2) {  
-  
+  # create formula
+  form = 'value~date'
   # # add fixed effect on group if more than one group exists
-  # form = 'value~date'
-  # if (length(unique(subset$drug))>1) form = paste0(form, '+factor(drug)')
-  # form = as.formula(form)
+  # if (length(unique(subset$group))>1) form = paste0(form, '+factor(group)')
+  form = as.formula(form)
 
   # run quantreg
   quantFit <- rq(form, data=subset, tau=0.5)
@@ -62,12 +66,15 @@ if(n>=3 & var!=0 & nx>=2) {
   # list the residuals and add them to the out file
   r <- resid(quantFit)
   subset[, fitted_value:=predict(quantFit)]
+  
   if (impute=='TRUE') {
     subset[is.na(value), got_imputed:=1]
     subset[is.na(value), value:=fitted_value]
   }
+  
   subset[, resid:=r]
   head(subset)
+  
 } else { 
   subset[, fitted_value:=NA]
   subset[, resid:=NA]
