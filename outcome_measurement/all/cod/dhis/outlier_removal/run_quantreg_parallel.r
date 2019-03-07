@@ -114,6 +114,7 @@ while(numFiles<i) {
 #------------------------------------
 # collect all output into one data table
 #------------------------------------
+fullData = data.table()
 for (j in seq(i)) {
   tmp = readRDS(paste0('/ihme/scratch/users/', user_name, '/qr_results/quantreg_output', j, '.rds'))
   if(j==1) fullData = tmp
