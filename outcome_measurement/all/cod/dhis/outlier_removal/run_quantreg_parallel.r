@@ -74,7 +74,7 @@ for (e in unique(vl$element_id)) {
        next
     } else {
       # run the quantile regression and list the residuals
-      system(paste0('qsub -o /ihme/scratch/users/ccarelli/quantreg_output -e /ihme/scratch/users/ccarelli/quantreg_output -cwd -N  quantreg_output_', i, ' ../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i))
+      system(paste0('qsub -o /ihme/scratch/users/ccarelli/quantreg_output -e /ihme/scratch/users/ccarelli/quantreg_output -cwd -N quantreg_output_', i, ' ../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i))
       i=i+1
     }
   }
