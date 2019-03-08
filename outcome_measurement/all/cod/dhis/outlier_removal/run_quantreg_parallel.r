@@ -130,11 +130,12 @@ while(numFiles<i) {
 #------------------------------------
 
 #------------------------------------
-# collect all output into one data table
+# once all files are done, collect all output into one data table
 #------------------------------------
 fullData = data.table()
-for (j in seq(i)) {
-  tmp = readRDS(paste0('/ihme/scratch/users/', user_name, '/qr_results/quantreg_output', j, '.rds'))
+
+for (j in seq(N)) {
+  tmp = read.fst(paste0('/ihme/scratch/users/', user_name, '/qr_results/quantreg_output', j, '.fst'), as.data.table = TRUE)
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', j))
@@ -152,6 +153,6 @@ if (cleanup==TRUE) {
   system('rm /ihme/scratch/users/', user_name, '/qr_results/*')
   system('rm /ihme/scratch/users/', user_name, '/quantreg_output/*')
   system('rm /ihme/scratch/users/', user_name, '/array_table_for_qr.csv')
-  system('rm /ihme/scratch/users/', user_name, '/data_for_qr.rds')
+  system('rm /ihme/scratch/users/', user_name, '/data_for_qr.fst')
 }
 #------------------------------------
