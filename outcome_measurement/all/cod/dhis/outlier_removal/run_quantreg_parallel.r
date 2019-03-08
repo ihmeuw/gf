@@ -14,6 +14,7 @@
 rm(list=ls())
 library(data.table)
 library(quantreg)
+library(fst) # to save data tables as .fst for faster read/write and full random access
 
 user_name = 'abatzel'
 # --------------------
@@ -41,24 +42,22 @@ user_name = 'abatzel'
 #------------------------------------
 
 #------------------------------------
-# set directories and arguments
+# set directories, switchs, arguments  <---- CHANGE THESE FOR YOUR OWN DATA
 #------------------------------------
 # detect if operating on windows or on the cluster 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
 
-# output file
-outFileName = 'sigl_quantreg_imputation'
-outFile <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/', outFileName, '.rds')
+# files:
+inFile = paste0(dir, 'sigl_for_qr.rds') # read off j at the beginning
+outFile = paste0(dir, 'sigl_quantreg_imputation_results.rds') # at the very end, once all of the files are aggregated from /ihme/scratch/
 
 # whether or not to resubmit jobs that have completed already
 resubmitAll = TRUE
-
 # whether or not to delete all files from parallel runs at the end
 cleanup = TRUE
-
 # whether or note to impute missing data as part of the quantile regression (set as a character TRUE/FALSE so it can be read as a command arg)
 impute = "TRUE"
 #------------------------------------
@@ -66,25 +65,28 @@ impute = "TRUE"
 #------------------------------------
 # read in and set up the data
 #------------------------------------
-inFile <- 'sigl_for_qr.rds'
-
 # data set with equality constraints checked and an entry for both tests/undetectable
-dt <- readRDS(paste0(dir, 'prepped/', inFile))
+dt <- readRDS(inFile)
 
 # remove new cases (not of interest for outlier detection)
-if (inFile=='viral_load_pnls_interim.rds') { 
+if (inFile == paste0(dir, 'viral_load_pnls_interim.rds')) { 
   dt = dt[case=='Old']
   dt[ , case:=NULL]
 }
 
 # make variable ids
-if (inFile=='sigl_for_qr.rds') { dt[, variable_id:=.GRP, by='drug']}
+if (inFile == paste0(dir, 'sigl_for_qr.rds')) { dt[, variable_id:=.GRP, by='drug']}
 dt[, element_id:=.GRP, by='variable']
 
-# make array table to set up for 
-array_table = expand.grid(unique(dt$org_unit_id), unique(dt$element_id), unique(dt$variable_id))
+# sort dt so indexing works correctly when retrieving data using fst
+dt <- setorder(dt, org_unit_id)
+
+# make array table to set up for submitting an array job
+array_table = expand.grid(unique(dt$org_unit_id))
+
+# save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, paste0('/ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
-saveRDS(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.rds'))
+write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 #------------------------------------
 
 #------------------------------------
@@ -93,8 +95,9 @@ saveRDS(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.rds'))
 # array job
 N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/quantreg_output')
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ../../../../../code/r_shell.sh ./quantregScript.r'))
-       
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.r'))
+       # NOTE: file paths now relative to the root of the repo
+
 # # loop over elements and org units, run quantreg once per each
 # i=1
 # for (v in unique(dt$variable_id)) {
@@ -117,7 +120,7 @@ system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:',
 #------------------------------------
 # wait for files to be done
 #------------------------------------
-i = i-1
+i = N-1
 numFiles = length(list.files('/ihme/scratch/users/', user_name, '/qr_results'))
 while(numFiles<i) { 
   print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 5 seconds...'))
