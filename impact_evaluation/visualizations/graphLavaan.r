@@ -9,7 +9,7 @@
 # standardized, (logical) whether or not to display standardized coefficients
 # labSize1, labSize2, (numeric) large and small text sizes
 # boxHeight, boxWidth, (numeric) height and width of boxes
-# linewidth, (numeric) edge thickness and arrow size
+# lineWidth, (numeric) edge thickness and arrow size
 # midpoint, (numeric [0,1]), user-specified midpoint for edge bending
 # curved, (numeric) 0=straight lines, 1=1 bend, 2=2 bends, 3=step-wise (1 and 2 NOT IMPLEMENTED)
 # tapered, (logical) whether to taper edges from start to finish NOT IMPLEMENTED
@@ -17,7 +17,8 @@
 # Rquires: data.table, ggplot2, stringr
 
 # TO DO
-# use unstandardized coefficients and multiply by scaling factors for "per unit" interpretability?
+# make "repel" code respect the xstart order
+
 
 # rm(list=ls())
 # fitObject = semFit
@@ -26,17 +27,23 @@
 # labSize2=3
 # variances = TRUE
 # edgeLabels = TRUE
-# standardized = FALSE
+# standardized = TRUE
 # boxWidth=4
 # boxHeight=1
-# linewidth=1
+# lineWidth=1
 # midpoint=0.4
-# curved=3
+# curved=2
 
 semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA, 
 	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, 
-	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1, linewidth=3, midpoint=.5, 
-	curved=0) {
+	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, 
+	curved=0, tapered=TRUE) {
+
+	# ------------------------------------------------------
+	# Load functions/parameters
+	source('./impact_evaluation/visualizations/drawPaths.r')
+	# ------------------------------------------------------
+
 
 	# -------------------------------------------------------------------------------
 	# Set up node table
@@ -86,14 +93,16 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	setnames(edgeTable, c('x','y','label'), c('xend','yend','labelend'))
 	
 	# make start and end y-values repel eachother a little
-	edgeTable[, grp:=.GRP, by=c('yend','xend')]
-	for (g in unique(edgeTable$grp)) {
-		N = nrow(edgeTable[grp==g & op!='~~'])
-		if (N==1) next
-		edgeTable[grp==g & op!='~~', half:=rep(seq(N/2), each=N/2)]
-		edgeTable[grp==g & op!='~~', n:=seq(.N), by=half]
-		edgeTable[grp==g & op!='~~' & half==1, yend:=yend-n*(boxHeight*.15)]
-		edgeTable[grp==g & op!='~~' & half==2, yend:=yend+n*(boxHeight*.15)]
+	if (curved>0) { 
+		edgeTable[, grp:=.GRP, by=c('yend','xend')]
+		for (g in unique(edgeTable$grp)) {
+			N = nrow(edgeTable[grp==g & op!='~~'])
+			if (N==1) next
+			edgeTable[grp==g & op!='~~', half:=rep(seq(N/2), each=N/2)]
+			edgeTable[grp==g & op!='~~', n:=seq(.N), by=half]
+			edgeTable[grp==g & op!='~~' & half==1, yend:=yend-n*(boxHeight*.15)]
+			edgeTable[grp==g & op!='~~' & half==2, yend:=yend+n*(boxHeight*.15)]
+		}
 	}
 	
 	# identify middle of each path for coefficient labels (plus a user-specified midpoint "s")
@@ -120,6 +129,44 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	# -------------------------------------------------------------------------------
 	
 	
+	# --------------------------------------------------------------------------------------------------
+	# Generate paths for edges
+	if (curved %in% c(1,2)) { 
+		# generate an edge path for each pair of connected nodes using edgeMaker
+		len = 500
+		paths = lapply(1:nrow(edgeTable[op!='~~']), drawPaths, edges=edgeTable, len=len, curved=curved, boxWidth=boxWidth)
+		paths = data.table(do.call(rbind, paths))
+		
+		# identify the type of the end of each edge
+		paths[, c('start', 'end'):=tstrsplit(group, '>', fixed=TRUE)]
+		
+		# add weights/operators to paths
+		vars = c('rhs', 'lhs', 'est', 'op')
+		paths = merge(paths, edgeTable[, vars, with=FALSE], by.x=c('start', 'end'), by.y=c('rhs', 'lhs'))	
+		
+		# identify last segment of each path for arrows
+		paths[, x_prev:=shift(x), by='group']
+		paths[, y_prev:=shift(y), by='group']
+		paths[, max:=max(sequence), by='group'] 
+		
+		# identify middle of each path for coefficient labels
+		paths[, mid:=floor(median(sequence)), by='group']
+		paths[sequence==mid, mid_id:=seq_len(.N), by=group]
+		paths[mid_id==2, mid:=NA]
+		
+		# Discretize path colors into 12 bins for better control over colors
+		# min = floor(min(edgeTable$est))
+		# max = ceiling(max(edgeTable$est))
+		# breaks = c(min, quantile(c(min, 0), c(.5, .9)), -.01, quantile(c(0, max), c(.1, .5, .75)), max)
+		# paths[, est_cat:=.bincode(est, breaks, right=FALSE, include.lowest=TRUE)]
+		# means = paths[, mean(est), by='est_cat'][order(est_cat)]
+		# paths = merge(paths, means, by='est_cat')
+		# paths[, est_cat:=V1]
+		# paths[, V1:=NULL]
+	}
+	# --------------------------------------------------------------------------------------------------
+	
+	
 	# -------------------------------------------------------------------------------
 	# Graph
 	
@@ -132,14 +179,27 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	if (curved==0) { 
 		p = p + 
 			geom_segment(data=edgeTable[op!='~~'], aes(x=xstart+boxWidth, y=ystart, xend=xend, yend=yend, color=est), 
-				arrow=arrow(), size=linewidth)
+				arrow=arrow(length=unit(lineWidth*.25,'cm')), size=lineWidth)
+	}
+	if (curved%in%c(1,2)) { 
+		if (tapered) { 
+			p = p + geom_path(data=paths[op!='~~'], aes(x=x, y=y, group=group, color=est, size=-sequence*(.25*lineWidth)))
+			p = p + geom_segment(data=paths[op!='~~' & sequence==max], aes(x=x_prev, y=y_prev, xend=x, yend=y, group=group, color=est), 
+				arrow=arrow(length=unit(lineWidth*.25,'cm')), size=0)
+		}
+		if (!tapered) { 
+			p = p + geom_path(data=paths[op!='~~'], aes(x=x, y=y, group=group, color=est), size=lineWidth)
+			p = p + geom_segment(data=paths[op!='~~' & sequence==max], aes(x=x_prev, y=y_prev, xend=x, yend=y, group=group, color=est), 
+				arrow=arrow(length=unit(lineWidth*.25,'cm')), size=0)
+		}
 	}
 	# stepwise
 	if (curved==3) { 
 		p = p + 
-			geom_segment(data=edgeTable[op!='~~'], aes(x=xstart, y=ystart, xend=xmid_s, yend=ystart, color=est), size=linewidth, alpha=.5) + 
-			geom_segment(data=edgeTable[op!='~~'], aes(x=xmid_s, y=ystart, xend=xmid_s, yend=yend, color=est), size=linewidth, alpha=.5) + 
-			geom_segment(data=edgeTable[op!='~~'], aes(x=xmid_s, y=yend, xend=xend, yend=yend, color=est), size=linewidth, alpha=.5, arrow=arrow(length=unit(linewidth*.25,'cm')))
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xstart, y=ystart, xend=xmid_s, yend=ystart, color=est), size=lineWidth, alpha=.5) + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xmid_s, y=ystart, xend=xmid_s, yend=yend, color=est), size=lineWidth, alpha=.5) + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xmid_s, y=yend, xend=xend, yend=yend, color=est), size=lineWidth, alpha=.5, 
+				arrow=arrow(length=unit(lineWidth*.25,'cm')))
 	}
 	
 	# add covariances with curvature based on edge length
@@ -169,7 +229,7 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	
 	# add edge labels
 	if (edgeLabels) { 
-		if (curved==0) { 
+		if (curved!=3) { 
 			p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=ymid+(min(edgeTable$ystart)*.25), 
 				label=round(est,2)), size=labSize2*.8, lwd=0)
 		}
@@ -204,6 +264,7 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	
 	# clean up plot
 	p = p + theme_void() + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'))
+	if (curved %in% c(1,2)) p = p + scale_size_continuous(guide = FALSE)
 	
 	# -------------------------------------------------------------------------------
 	return(p)
