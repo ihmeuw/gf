@@ -9,8 +9,10 @@
 # standardized, (logical) whether or not to display standardized coefficients
 # labSize1, labSize2, (numeric) large and small text sizes
 # boxHeight, boxWidth, (numeric) height and width of boxes
-# curved, (numeric) 0=straight lines, 1=1 bend, 2=2 bends
-# tapered, (logical) whether to taper edges from start to finish
+# linewidth, (numeric) edge thickness and arrow size
+# midpoint, (numeric [0,1]), user-specified midpoint for edge bending
+# curved, (numeric) 0=straight lines, 1=1 bend, 2=2 bends, 3=step-wise (1 and 2 NOT IMPLEMENTED)
+# tapered, (logical) whether to taper edges from start to finish NOT IMPLEMENTED
 # Returns: a graph
 # Rquires: data.table, ggplot2, stringr
 
@@ -27,10 +29,14 @@
 # standardized = FALSE
 # boxWidth=4
 # boxHeight=1
+# linewidth=1
+# midpoint=0.4
+# curved=3
 
 semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA, 
 	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, 
-	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1) {
+	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1, linewidth=3, midpoint=.5, 
+	curved=0) {
 
 	# -------------------------------------------------------------------------------
 	# Set up node table
@@ -79,9 +85,22 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	edgeTable = merge(edgeTable, nodeTable, by.x='lhs', by.y='variable')
 	setnames(edgeTable, c('x','y','label'), c('xend','yend','labelend'))
 	
-	# identify middle of each path for coefficient labels
+	# make start and end y-values repel eachother a little
+	edgeTable[, grp:=.GRP, by=c('yend','xend')]
+	for (g in unique(edgeTable$grp)) {
+		N = nrow(edgeTable[grp==g & op!='~~'])
+		if (N==1) next
+		edgeTable[grp==g & op!='~~', half:=rep(seq(N/2), each=N/2)]
+		edgeTable[grp==g & op!='~~', n:=seq(.N), by=half]
+		edgeTable[grp==g & op!='~~' & half==1, yend:=yend-n*(boxHeight*.15)]
+		edgeTable[grp==g & op!='~~' & half==2, yend:=yend+n*(boxHeight*.15)]
+	}
+	
+	# identify middle of each path for coefficient labels (plus a user-specified midpoint "s")
 	edgeTable[, xmid:=(xstart+boxWidth+xend)/2]
 	edgeTable[, ymid:=(ystart+yend)/2]
+	edgeTable[, xmid_s:=xmid-((0.5-midpoint)*(xend-xstart))]
+	edgeTable[, ymid_s:=ymid-((0.5-midpoint)*(yend-ystart))]
 	
 	# identify the length of each path
 	edgeTable[,edge_length:=sqrt(((yend-ystart)^2)+((xend-xstart)^2))]
@@ -109,13 +128,20 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 
 	
 	# add edges
-	p = p + 
-		# geom_segment(data=edgeTable[op!='~~'], aes(x=xstart+boxWidth, y=ystart, xend=xend, yend=yend, color=est), 
-			# arrow=arrow(), size=labSize2)
-		geom_segment(data=edgeTable[op!='~~'], aes(x=xstart, y=ystart, xend=xmid, yend=ystart, color=est), size=labSize2, alpha=.5) + 
-		geom_segment(data=edgeTable[op!='~~'], aes(x=xmid, y=ystart, xend=xmid, yend=yend, color=est), size=labSize2, alpha=.5) + 
-		geom_segment(data=edgeTable[op!='~~'], aes(x=xmid, y=yend, xend=xend, yend=yend, color=est), size=labSize2, alpha=.5, arrow=arrow())
-			
+	# straight
+	if (curved==0) { 
+		p = p + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xstart+boxWidth, y=ystart, xend=xend, yend=yend, color=est), 
+				arrow=arrow(), size=linewidth)
+	}
+	# stepwise
+	if (curved==3) { 
+		p = p + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xstart, y=ystart, xend=xmid_s, yend=ystart, color=est), size=linewidth, alpha=.5) + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xmid_s, y=ystart, xend=xmid_s, yend=yend, color=est), size=linewidth, alpha=.5) + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xmid_s, y=yend, xend=xend, yend=yend, color=est), size=linewidth, alpha=.5, arrow=arrow(length=unit(linewidth*.25,'cm')))
+	}
+	
 	# add covariances with curvature based on edge length
 	if (variances==TRUE) { 
 		for(i in which(edgeTable$op=='~~' & edgeTable$rhs!=edgeTable$lhs)) { 		
@@ -143,8 +169,14 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	
 	# add edge labels
 	if (edgeLabels) { 
-		p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=ymid+(min(edgeTable$ystart)*.25), 
-			label=round(est,2)), size=labSize2*.8, lwd=0)
+		if (curved==0) { 
+			p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=ymid+(min(edgeTable$ystart)*.25), 
+				label=round(est,2)), size=labSize2*.8, lwd=0)
+		}
+		if (curved==3) { 
+			p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=yend, 
+				label=round(est,2)), size=labSize2*.8, lwd=0)
+		}
 	}
 	
 	# add nodes
