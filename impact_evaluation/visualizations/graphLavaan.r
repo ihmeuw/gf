@@ -110,8 +110,11 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	
 	# add edges
 	p = p + 
-		geom_segment(data=edgeTable[op!='~~'], aes(x=xstart+boxWidth, y=ystart, xend=xend, yend=yend, color=est), 
-			arrow=arrow(), size=labSize2)
+		# geom_segment(data=edgeTable[op!='~~'], aes(x=xstart+boxWidth, y=ystart, xend=xend, yend=yend, color=est), 
+			# arrow=arrow(), size=labSize2)
+		geom_segment(data=edgeTable[op!='~~'], aes(x=xstart, y=ystart, xend=xmid, yend=ystart, color=est), size=labSize2, alpha=.5) + 
+		geom_segment(data=edgeTable[op!='~~'], aes(x=xmid, y=ystart, xend=xmid, yend=yend, color=est), size=labSize2, alpha=.5) + 
+		geom_segment(data=edgeTable[op!='~~'], aes(x=xmid, y=yend, xend=xend, yend=yend, color=est), size=labSize2, alpha=.5, arrow=arrow())
 			
 	# add covariances with curvature based on edge length
 	if (variances==TRUE) { 
