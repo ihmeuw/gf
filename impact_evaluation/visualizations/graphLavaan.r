@@ -3,10 +3,12 @@
 # fitObject, a lavaan or blavaan object
 # infoTable, a data.table containing 4 columns (rows correspond to model variables in any order): 
 # 	variable (exactly as in model), x, y (where it should appear in graph) and label (optional)
+# scaling_factors, optional data.table containing one column per model variable, data represents factors used to rescale variables
 # edgeLabels, (logical) whether or not to label coefficients
+# variances, (logical) whether or not to show variances
+# standardized, (logical) whether or not to display standardized coefficients
 # labSize1, labSize2, (numeric) large and small text sizes
 # boxHeight, boxWidth, (numeric) height and width of boxes
-# variances, (logical) whether or not to show variances
 # curved, (numeric) 0=straight lines, 1=1 bend, 2=2 bends
 # tapered, (logical) whether to taper edges from start to finish
 # Returns: a graph
@@ -22,11 +24,13 @@
 # labSize2=3
 # variances = TRUE
 # edgeLabels = TRUE
+# standardized = FALSE
 # boxWidth=4
 # boxHeight=1
 
-semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=TRUE, labSize1=5, labSize2=3, 
-	boxWidth=4, boxHeight=1) {
+semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA, 
+	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, 
+	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1) {
 
 	# -------------------------------------------------------------------------------
 	# Set up node table
@@ -52,8 +56,22 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=T
 	# edgeTable[, est:=as.numeric(est)]
 	# edgeTable[, se:=as.numeric(se)]
 	# edgeTable$label = NULL
-	edgeTable = data.table(standardizedSolution(fitObject))
-	setnames(edgeTable, 'est.std', 'est')
+	if (standardized==TRUE) {
+		edgeTable = data.table(standardizedSolution(fitObject))
+		setnames(edgeTable, 'est.std', 'est')
+	}
+	if (standardized==FALSE) { 
+		edgeTable = data.table(parTable(fitObject))[, c('lhs','op','rhs','est'), with=FALSE]
+	}
+	# multiply by scaling factors if we're showing actual coefficients (if possible)
+	if (!all(is.na(scaling_factors))) {
+		tmp = unique(melt(scaling_factors, value.name='scaling_factor'))
+		edgeTable = merge(edgeTable, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
+		edgeTable = merge(edgeTable, tmp, by.x='lhs', by.y='variable', all.x=TRUE)
+		edgeTable[is.na(scaling_factor.x), scaling_factor.x:=1]
+		edgeTable[is.na(scaling_factor.y), scaling_factor.y:=1]
+		edgeTable[, est:=est/scaling_factor.x*scaling_factor.y]
+	}
 	
 	# identify start and end locations
 	edgeTable = merge(edgeTable, nodeTable, by.x='rhs', by.y='variable')

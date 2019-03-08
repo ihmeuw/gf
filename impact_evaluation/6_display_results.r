@@ -36,7 +36,8 @@ nodeTable = nodeTable[variable %in% names(data)]
 # lavaanPlot(model=semFit, coefs=TRUE)
 
 # my sem graph function
-p = semGraph(semFit, nodeTable=nodeTable)
+p = semGraph(semFit, nodeTable=nodeTable, 
+	scaling_factors=NA, standardized=TRUE)
 # ----------------------------------------------
 
 
