@@ -3,30 +3,47 @@
 # fitObject, a lavaan or blavaan object
 # infoTable, a data.table containing 4 columns (rows correspond to model variables in any order): 
 # 	variable (exactly as in model), x, y (where it should appear in graph) and label (optional)
+# scaling_factors, optional data.table containing one column per model variable, data represents factors used to rescale variables
 # edgeLabels, (logical) whether or not to label coefficients
+# variances, (logical) whether or not to show variances
+# standardized, (logical) whether or not to display standardized coefficients
 # labSize1, labSize2, (numeric) large and small text sizes
 # boxHeight, boxWidth, (numeric) height and width of boxes
-# variances, (logical) whether or not to show variances
-# curved, (numeric) 0=straight lines, 1=1 bend, 2=2 bends
-# tapered, (logical) whether to taper edges from start to finish
+# lineWidth, (numeric) edge thickness and arrow size
+# midpoint, (numeric [0,1]), user-specified midpoint for edge bending
+# curved, (numeric) 0=straight lines, 1=1 bend, 2=2 bends, 3=step-wise (1 and 2 NOT IMPLEMENTED)
+# tapered, (logical) whether to taper edges from start to finish NOT IMPLEMENTED
 # Returns: a graph
 # Rquires: data.table, ggplot2, stringr
 
 # TO DO
+# make "repel" code respect the xstart order
 
 
 # rm(list=ls())
-# fitObject = readRDS('C:/local/tmpsemfit.rds')
+# fitObject = semFit
 # nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
 # labSize1=5
 # labSize2=3
 # variances = TRUE
 # edgeLabels = TRUE
+# standardized = TRUE
 # boxWidth=4
 # boxHeight=1
+# lineWidth=1
+# midpoint=0.4
+# curved=2
 
-semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=TRUE, labSize1=5, labSize2=3, 
-	boxWidth=4, boxHeight=1) {
+semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA, 
+	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, 
+	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, 
+	curved=0, tapered=TRUE) {
+
+	# ------------------------------------------------------
+	# Load functions/parameters
+	source('./impact_evaluation/visualizations/drawPaths.r')
+	# ------------------------------------------------------
+
 
 	# -------------------------------------------------------------------------------
 	# Set up node table
@@ -52,8 +69,22 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=T
 	# edgeTable[, est:=as.numeric(est)]
 	# edgeTable[, se:=as.numeric(se)]
 	# edgeTable$label = NULL
-	edgeTable = data.table(standardizedSolution(fitObject))
-	setnames(edgeTable, 'est.std', 'est')
+	if (standardized==TRUE) {
+		edgeTable = data.table(standardizedSolution(fitObject))
+		setnames(edgeTable, 'est.std', 'est')
+	}
+	if (standardized==FALSE) { 
+		edgeTable = data.table(parTable(fitObject))[, c('lhs','op','rhs','est'), with=FALSE]
+	}
+	# multiply by scaling factors if we're showing actual coefficients (if possible)
+	if (!all(is.na(scaling_factors))) {
+		tmp = unique(melt(scaling_factors, value.name='scaling_factor'))
+		edgeTable = merge(edgeTable, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
+		edgeTable = merge(edgeTable, tmp, by.x='lhs', by.y='variable', all.x=TRUE)
+		edgeTable[is.na(scaling_factor.x), scaling_factor.x:=1]
+		edgeTable[is.na(scaling_factor.y), scaling_factor.y:=1]
+		edgeTable[, est:=est/scaling_factor.x*scaling_factor.y]
+	}
 	
 	# identify start and end locations
 	edgeTable = merge(edgeTable, nodeTable, by.x='rhs', by.y='variable')
@@ -61,9 +92,24 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=T
 	edgeTable = merge(edgeTable, nodeTable, by.x='lhs', by.y='variable')
 	setnames(edgeTable, c('x','y','label'), c('xend','yend','labelend'))
 	
-	# identify middle of each path for coefficient labels
+	# make start and end y-values repel eachother a little
+	if (curved>0) { 
+		edgeTable[, grp:=.GRP, by=c('yend','xend')]
+		for (g in unique(edgeTable$grp)) {
+			N = nrow(edgeTable[grp==g & op!='~~'])
+			if (N==1) next
+			edgeTable[grp==g & op!='~~', half:=rep(seq(N/2), each=N/2)]
+			edgeTable[grp==g & op!='~~', n:=seq(.N), by=half]
+			edgeTable[grp==g & op!='~~' & half==1, yend:=yend-n*(boxHeight*.15)]
+			edgeTable[grp==g & op!='~~' & half==2, yend:=yend+n*(boxHeight*.15)]
+		}
+	}
+	
+	# identify middle of each path for coefficient labels (plus a user-specified midpoint "s")
 	edgeTable[, xmid:=(xstart+boxWidth+xend)/2]
 	edgeTable[, ymid:=(ystart+yend)/2]
+	edgeTable[, xmid_s:=xmid-((0.5-midpoint)*(xend-xstart))]
+	edgeTable[, ymid_s:=ymid-((0.5-midpoint)*(yend-ystart))]
 	
 	# identify the length of each path
 	edgeTable[,edge_length:=sqrt(((yend-ystart)^2)+((xend-xstart)^2))]
@@ -83,6 +129,44 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=T
 	# -------------------------------------------------------------------------------
 	
 	
+	# --------------------------------------------------------------------------------------------------
+	# Generate paths for edges
+	if (curved %in% c(1,2)) { 
+		# generate an edge path for each pair of connected nodes using edgeMaker
+		len = 500
+		paths = lapply(1:nrow(edgeTable[op!='~~']), drawPaths, edges=edgeTable, len=len, curved=curved, boxWidth=boxWidth)
+		paths = data.table(do.call(rbind, paths))
+		
+		# identify the type of the end of each edge
+		paths[, c('start', 'end'):=tstrsplit(group, '>', fixed=TRUE)]
+		
+		# add weights/operators to paths
+		vars = c('rhs', 'lhs', 'est', 'op')
+		paths = merge(paths, edgeTable[, vars, with=FALSE], by.x=c('start', 'end'), by.y=c('rhs', 'lhs'))	
+		
+		# identify last segment of each path for arrows
+		paths[, x_prev:=shift(x), by='group']
+		paths[, y_prev:=shift(y), by='group']
+		paths[, max:=max(sequence), by='group'] 
+		
+		# identify middle of each path for coefficient labels
+		paths[, mid:=floor(median(sequence)), by='group']
+		paths[sequence==mid, mid_id:=seq_len(.N), by=group]
+		paths[mid_id==2, mid:=NA]
+		
+		# Discretize path colors into 12 bins for better control over colors
+		# min = floor(min(edgeTable$est))
+		# max = ceiling(max(edgeTable$est))
+		# breaks = c(min, quantile(c(min, 0), c(.5, .9)), -.01, quantile(c(0, max), c(.1, .5, .75)), max)
+		# paths[, est_cat:=.bincode(est, breaks, right=FALSE, include.lowest=TRUE)]
+		# means = paths[, mean(est), by='est_cat'][order(est_cat)]
+		# paths = merge(paths, means, by='est_cat')
+		# paths[, est_cat:=V1]
+		# paths[, V1:=NULL]
+	}
+	# --------------------------------------------------------------------------------------------------
+	
+	
 	# -------------------------------------------------------------------------------
 	# Graph
 	
@@ -91,10 +175,33 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=T
 
 	
 	# add edges
-	p = p + 
-		geom_segment(data=edgeTable[op!='~~'], aes(x=xstart+boxWidth, y=ystart, xend=xend, yend=yend, color=est), 
-			arrow=arrow(), size=labSize2)
-			
+	# straight
+	if (curved==0) { 
+		p = p + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xstart+boxWidth, y=ystart, xend=xend, yend=yend, color=est), 
+				arrow=arrow(length=unit(lineWidth*.25,'cm')), size=lineWidth)
+	}
+	if (curved%in%c(1,2)) { 
+		if (tapered) { 
+			p = p + geom_path(data=paths[op!='~~'], aes(x=x, y=y, group=group, color=est, size=-sequence*(.25*lineWidth)))
+			p = p + geom_segment(data=paths[op!='~~' & sequence==max], aes(x=x_prev, y=y_prev, xend=x, yend=y, group=group, color=est), 
+				arrow=arrow(length=unit(lineWidth*.25,'cm')), size=0)
+		}
+		if (!tapered) { 
+			p = p + geom_path(data=paths[op!='~~'], aes(x=x, y=y, group=group, color=est), size=lineWidth)
+			p = p + geom_segment(data=paths[op!='~~' & sequence==max], aes(x=x_prev, y=y_prev, xend=x, yend=y, group=group, color=est), 
+				arrow=arrow(length=unit(lineWidth*.25,'cm')), size=0)
+		}
+	}
+	# stepwise
+	if (curved==3) { 
+		p = p + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xstart, y=ystart, xend=xmid_s, yend=ystart, color=est), size=lineWidth, alpha=.5) + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xmid_s, y=ystart, xend=xmid_s, yend=yend, color=est), size=lineWidth, alpha=.5) + 
+			geom_segment(data=edgeTable[op!='~~'], aes(x=xmid_s, y=yend, xend=xend, yend=yend, color=est), size=lineWidth, alpha=.5, 
+				arrow=arrow(length=unit(lineWidth*.25,'cm')))
+	}
+	
 	# add covariances with curvature based on edge length
 	if (variances==TRUE) { 
 		for(i in which(edgeTable$op=='~~' & edgeTable$rhs!=edgeTable$lhs)) { 		
@@ -104,18 +211,32 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=T
 			di = ifelse(edgeTable[i]$xstart<mean(edgeTable$xstart), -1, 1)
 			# curved arrows going downward need to bend the other way
 			if (edgeTable[i]$yend < edgeTable[i]$ystart) di = -di 
-			
-			p = p + 
-				geom_curve(data=edgeTable[i], 
-					aes(x=xstart, y=ystart, xend=xend, yend=yend, color=est), 
-					size=labSize2*.25, curvature=di*(1/(0.4*el)), angle=90)
+			# add curves to graph (different depending on direction of curve)
+			if (di<0) {
+				p = p + 
+					geom_curve(data=edgeTable[i], 
+						aes(x=xstart+boxWidth, y=ystart, xend=xend+boxWidth, yend=yend, color=est), 
+						size=labSize2*.25, curvature=di*(1/(0.4*el)), angle=90)
+			}
+			if (di>=0) { 
+				p = p + 
+					geom_curve(data=edgeTable[i], 
+						aes(x=xstart, y=ystart, xend=xend, yend=yend, color=est), 
+						size=labSize2*.25, curvature=di*(1/(0.4*el)), angle=90)			
+			}
 		}
 	}
 	
 	# add edge labels
 	if (edgeLabels) { 
-		p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=ymid+(min(edgeTable$ystart)*.25), 
-			label=round(est,2)), size=labSize2*.8, lwd=0)
+		if (curved!=3) { 
+			p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=ymid+(min(edgeTable$ystart)*.25), 
+				label=round(est,2)), size=labSize2*.8, lwd=0)
+		}
+		if (curved==3) { 
+			p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=yend, 
+				label=round(est,2)), size=labSize2*.8, lwd=0)
+		}
 	}
 	
 	# add nodes
@@ -142,7 +263,8 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, edgeLabels=TRUE, variances=T
 		labs(color='Effect\nSize', caption=paste('Control variables not displayed:', paste(exclVars, collapse =',')))
 	
 	# clean up plot
-	p = p + theme_void()
+	p = p + theme_void() + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'))
+	if (curved %in% c(1,2)) p = p + scale_size_continuous(guide = FALSE)
 	
 	# -------------------------------------------------------------------------------
 	return(p)
