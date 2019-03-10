@@ -12,7 +12,7 @@
 # NOTE:
 # The GADM shapefile that we are using for DPS-level maps is not included in the alternate spellings csv
 # I'm not sure if it's possible to include it based on how it is formatted so I've added code to do that 
-# part "manually" but at least it will be included in this function.  - Audrey
+# part 'manually' but at least it will be included in this function.  - Audrey
 # --------------------------------------------------------
 
 standardizeHZNames = function(nameVector=NULL) {
@@ -27,7 +27,7 @@ standardizeHZNames = function(nameVector=NULL) {
 	alternateNames = fread(altNamesFile, header=TRUE)
 	
 	# prep data table
-	alternateNames = unique(alternateNames[, c('health_zone','hz_shp1','hz_shp2', "hz_snis", "hz_pnlp", "hz_snis_cleaned", "hz_pnlt"), with=FALSE])
+	alternateNames = unique(alternateNames[, c('health_zone','hz_shp1','hz_shp2', 'hz_snis', 'hz_pnlp', 'hz_snis_cleaned', 'hz_pnlt'), with=FALSE])
 	alternateNames = melt(alternateNames, id.vars=c('health_zone'), value.name='alternate_name')
 	
 	# make sure standard names are also an option as an input
@@ -36,12 +36,13 @@ standardizeHZNames = function(nameVector=NULL) {
 	alternateNames = rbind(alternateNames, tmp, fill=TRUE)
 	
 	# clean up alternate names
+	alternateNames[, alternate_name:=iconv(alternate_name, 'WINDOWS-1252','UTF-8')]
 	alternateNames[, alternate_name:=tolower(alternate_name)]
 	alternateNames[, alternate_name:=iconv(alternate_name, to='ASCII//TRANSLIT')]
 	alternateNames[, alternate_name:=gsub(' ', '-', alternate_name)]
 	
 	# remove duplicates from alternate names list
-	alternateNames = unique(alternateNames[,c('health_zone','alternate_name')])
+	alternateNames = unique(alternateNames[,c('health_zone','alternate_name'), with=FALSE])
 	
 	# clean up input vector
 	nameVector = tolower(nameVector)
