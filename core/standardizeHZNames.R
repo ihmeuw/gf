@@ -45,6 +45,7 @@ standardizeHZNames = function(nameVector=NULL) {
 	alternateNames = unique(alternateNames[,c('health_zone','alternate_name'), with=FALSE])
 	
 	# clean up input vector
+	nameVector = iconv(nameVector, 'WINDOWS-1252','UTF-8')
 	nameVector = tolower(nameVector)
 	nameVector = iconv(nameVector, to='ASCII//TRANSLIT')
 	nameVector = gsub(' ', '-', nameVector)
