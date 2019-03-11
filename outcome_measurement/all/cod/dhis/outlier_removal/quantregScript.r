@@ -27,7 +27,7 @@
 # get the task_id to index the array table
 i = as.integer(Sys.getenv("SGE_TASK_ID"))
 # read in the array table 
-array_table = fread('/ihme/scratch/users/abatzel/array_table_for_qr.csv')
+array_table = read.csv('/ihme/scratch/users/abatzel/array_table_for_qr.csv')
 
 # read org unit from the array table
 o = array_table[i]$org_unit_id # unique facility id

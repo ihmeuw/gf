@@ -121,11 +121,11 @@ system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:',
 # wait for files to be done
 #------------------------------------
 i = N-1
-numFiles = length(list.files('/ihme/scratch/users/', user_name, '/qr_results'))
+numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/qr_results')))
 while(numFiles<i) { 
-  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 5 seconds...'))
-  numFiles = length(list.files('/ihme/scratch/users/', user_name, '/qr_results'))
-  Sys.sleep(5)
+  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 60 seconds...'))
+  numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/qr_results')))
+  Sys.sleep(60)
 }
 #------------------------------------
 
@@ -150,9 +150,9 @@ saveRDS(fullData, outFile)
 # clean up parallel files
 #------------------------------------
 if (cleanup==TRUE) { 
-  system('rm /ihme/scratch/users/', user_name, '/qr_results/*')
-  system('rm /ihme/scratch/users/', user_name, '/quantreg_output/*')
-  system('rm /ihme/scratch/users/', user_name, '/array_table_for_qr.csv')
-  system('rm /ihme/scratch/users/', user_name, '/data_for_qr.fst')
+  system(paste0('rm /ihme/scratch/users/', user_name, '/qr_results/*'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg_output/*'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 }
 #------------------------------------
