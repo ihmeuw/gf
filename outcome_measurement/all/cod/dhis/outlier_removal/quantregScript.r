@@ -1,7 +1,11 @@
 #------------------------------------
 # This script is run on the cluster by run_quantreg_parallel.r
 #------------------------------------
+library(data.table)
+library(quantreg)
+library(fst) # to save data tables as .fst for faster read/write and full random access
 
+user_name = 'abatzel'
 #------------------------------------
 # handle arguments
 #------------------------------------
@@ -28,6 +32,7 @@
 i = as.integer(Sys.getenv("SGE_TASK_ID"))
 # read in the array table 
 array_table = read.csv('/ihme/scratch/users/abatzel/array_table_for_qr.csv')
+array_table <- as.data.table(array_table)
 
 # read org unit from the array table
 o = array_table[i]$org_unit_id # unique facility id
@@ -36,9 +41,9 @@ o = array_table[i]$org_unit_id # unique facility id
 #------------------------------------
 # set up
 #------------------------------------
-library(data.table)
-library(quantreg)
-library(fst)
+# library(data.table)
+# library(quantreg)
+# library(fst)
 
 # # detect if operating on windows or on the cluster 
 # root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
@@ -53,7 +58,7 @@ library(fst)
 # make a table of values to index rows by unique org_unit for retrieving rows while reading in the data
 index_table <- data.table(index = seq(1:17104), f = seq(from= 1, to = 11339952, by = 663), t = seq(from= 663, to = 11339952, by = 663))
 from_row = index_table[ i, f ]
-to_row = index_table[ i, f ]
+to_row = index_table[ i, t ]
 
 # dt <- readRDS(paste0(dir, 'prepped/', fileName))
 # dt <- readRDS('/ihme/scratch/users/abatzel/data_for_qr.rds')
@@ -71,8 +76,8 @@ dt <- read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', from = from_row , 
 #   dt[ , case:=NULL]
 # }
 
-if ( length(unique(dt$org_unit_id) == 1)& nrow(dt)==663 ) {
-  print("Indexing for read.rst() worked correctly!")
+if ( length(unique(dt$org_unit_id) == 1) & nrow(dt)==663 & unique(dt$org_unit_id) == o ) {
+  print("Indexing for read.fst() worked correctly!")
   subset = copy(dt)
 } else {
   print("Indexing for read.fst() did not work correctly! Retrying by reading in full dt!")
@@ -96,11 +101,11 @@ for (e in unique(subset$element_id)) {
     
     # skip cases that will fail
     n = nrow(subset_further[!is.na(value), ])
-    # print(n)
+    print(n)
     var = var(subset_further$value, na.rm=T)
-    # print(var)
+    print(var)
     nx = length(unique(subset_further$date))
-    # print(nx)
+    print(nx)
     
     # skip if less than 3 data points or variance is 0
     if(n>=3 & var!=0 & nx>=2) {  
@@ -119,15 +124,17 @@ for (e in unique(subset$element_id)) {
         # summary(quantFit)
         
         # list the residuals and add them to the out file
-        r <- resid(quantFit)
-        subset_further[, fitted_value:=predict(quantFit)]
+        # r <- resid(quantFit)
+        subset_further[, fitted_value:=predict(quantFit, newdata = subset_further)]
+        
+        subset_further[, resid:=(fitted_value - value)]
+        subset_further[, skipped_qr := "no"]
         
         # if (impute=='TRUE') {
-        subset_further[is.na(value), value:=fitted_value]
         subset_further[is.na(value), got_imputed:="yes"]
+        subset_further[is.na(value), value:=fitted_value]
         # }
-        subset_further[, resid:=r]
-        subset_further[, skipped_qr := "no"]
+        
     } else { # if the data doesn't pass the conditions necessary for qr, then skip qr & add these vars
       subset_further[, fitted_value:=NA]
       subset_further[, got_imputed:=NA]
@@ -135,10 +142,19 @@ for (e in unique(subset$element_id)) {
       subset_further[, skipped_qr := "yes"]
     }
     # for each iteration of the loop, add the subset of data to a combined results data table.
-      if(nrow(combined_qr_results)==0) combined_qr_results = subset_further # first time through, just set combined results to be = the data
-      if(nrow(combined_qr_results)>0) combined_qr_results = rbind(combined_qr_results, subset_further) # subsequent times through, add in combined results
+      if(nrow(combined_qr_results)==0){
+        combined_qr_results = subset_further # first time through, just set combined results to be = the data 
+      } else if (nrow(combined_qr_results)>0){
+        combined_qr_results = rbind(combined_qr_results, subset_further) # subsequent times through, add in combined results
+      }
+  
   }
 }
+
+# for manual testing:
+v = v + 1
+
+e = e + 1
 
 # at the end of this loop, the number of rows should be equal to what we started with (663), so check that!
 if (nrow(combined_qr_results) != 663) {print("something went wrong with internal loop - number of rows is not the right number!")}
