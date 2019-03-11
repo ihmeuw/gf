@@ -46,16 +46,9 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 1: Read in and verify module mapping framework
 # ----------------------------------------------
 
-  # all_interventions = fread(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/all_interventions.csv"))
-  # setnames(all_interventions, old=c('module', 'intervention'), new=c('gf_module', 'gf_intervention'))
-  
   #Read in the pre- and post-2017 maps, verify them, and rbind them. 
   source(paste0(gf_prep_code, "2_verify_module_mapping.R"))
-  # whole_map <- fread(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/gf_mapping.csv"))
-  # whole_map = whole_map[, .(module, intervention, code, coefficient, disease)]
-  # whole_map = merge(whole_map, all_interventions, by=c('code', 'disease'))
-  # whole_map = unique(whole_map)
-  
+
   post_2017_map = readRDS(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/post_2017_map.rds"))
   post_2017_map[, module:=as.character(module)]
   post_2017_map[, intervention:=as.character(intervention)]
@@ -63,19 +56,24 @@ current_uga_grant_period <- rep("2018-2020", 5)
   post_2017_map[, loc_name:=as.character(loc_name)]
   post_2017_map[, lang:=as.character(lang)]
   
-  post_2017_map = post_2017_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention, abbreviated_module)]
+  post_2017_map = post_2017_map[, .(code, module, intervention, coefficient, disease)]
   
-  #Remove rows from pre_2017_map that are in post_2017_map 
-  # whole_concat = paste0(whole_map$module, whole_map$intervention, whole_map$disease)
-  # whole_map$concat = whole_concat
-  # post_2017_concat = paste0(post_2017_map$module, post_2017_map$intervention, post_2017_map$disease)
-  # post_2017_map$concat = post_2017_concat
+  all_interventions = fread(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/all_interventions.csv"))
+  all_eng = all_interventions[, .(code, module_eng, intervention_eng, disease)]
+  setnames(all_eng, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
+  # all_fr = all_interventions[, .(code, module_fr, intervention_fr, disease)]
+  # setnames(all_fr, old=c('module_fr', 'intervention_fr'), new=c('module', 'intervention'))
+  # all_esp = all_interventions[, .(code, module_esp, intervention_esp, disease)]
+  # setnames(all_esp, old=c('module_esp', 'intervention_esp'), new=c('module', 'intervention'))
   # 
-  # whole_map = whole_map[!(concat%in%post_2017_map$concat)]
-  # 
-  # module_map = rbind(whole_map, post_2017_map, use.n`ames = TRUE, fill = TRUE)
-  # module_map = module_map[, -c('concat')]
-  module_map = post_2017_map
+  all_langs = list(all_eng)
+  all_langs = rbindlist(all_langs)
+  all_langs[, coefficient:=1]
+  all_langs = strip_chars(all_langs)
+  all_langs = all_langs[, -c('orig_module', 'orig_intervention')]
+  
+  module_map = rbind(post_2017_map, all_langs)
+  module_map = unique(module_map)
   
   module_map = prep_map(module_map)
   

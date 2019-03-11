@@ -23,7 +23,8 @@
 #final_budgets <- readRDS(budgetFile)
 final_expenditures <- readRDS(expendituresFile)
 fgh <- fread(fghFile)
-ghe <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh.csv"))
+fgh = fgh[, .(sda_activity, year, loc_name, disease, code, module_eng, intervention_eng, country, fin_data_type, financing_source, disbursement)]
+setnames(fgh, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
 
 #------------------------------------
 # Validate data 
@@ -62,8 +63,10 @@ exp_subset = final_expenditures[loc_name == 'cod' & (disease == "malaria" | dise
 setnames(exp_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
 other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') & country == 'Congo (Democratic Republic)' & (disease == 'malaria' | disease == 'hss' | disease == 'rssh'), 
                 .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]
-ghe = ghe[fin_data_type == "mean" & financing_source == 'public' & loc_name == 'cod', .(ghe = sum(disbursement, na.rm = TRUE)), 
+ghe = fgh[fin_data_type == "model_estimates" & financing_source == 'ghe' & loc_name == 'cod', .(ghe = sum(disbursement, na.rm = TRUE)), 
         by = .(year)]
+oop = fgh[fin_data_type == "model_estimates" & financing_source == 'oop' & loc_name == 'cod', .(oop = sum(disbursement, na.rm = TRUE)), 
+          by = .(year)]
 
 #Split other_dah and ghe into quarters
 n_years <- (2018-1990)+1 #This is the range we have data for. 
@@ -78,6 +81,11 @@ ghe = merge(quarters, ghe, by='year', all.x = TRUE, allow.cartesian = TRUE)
 ghe[, ghe:=ghe/4]
 ghe[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
 ghe[, date:=year+quarter]
+
+oop = merge(quarters, oop, by='year', all.x = TRUE, allow.cartesian = TRUE)
+oop[, oop:=oop/4]
+oop[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+oop[, date:=year+quarter]
 
 exp_subset[, quarter:=quarter(start_date)]
 exp_subset[, year:=year(start_date)]
@@ -120,9 +128,11 @@ colnames(other_dah_wide) <- c('date', names)
 #Merge both files together 
 rt_wide <- merge(other_dah_wide, exp_wide, by=c('date'))
 
-#Add on GHE as a control variable 
+#Add on GHE and OOP as control variables 
 ghe = ghe[, .(date, ghe)]
 rt_wide = merge(rt_wide, ghe, by='date', all.x = TRUE)
+oop = oop[, .(date, oop)]
+rt_wide = merge(rt_wide, oop, by='date', all.x = TRUE)
 
 #Save output file
 saveRDS(rt_wide, outputFile2a)

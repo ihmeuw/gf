@@ -21,6 +21,7 @@
 
 file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
 #file_iterations <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds"))
+gos_data = fread(paste0(combined_output_dir, "/prepped_gos_data.csv"))
 
 # -----------------------
 # Guatemala file prep 
@@ -168,6 +169,39 @@ if(nrow(unwritten_rssh_tests)!=0){
 check_rssh = check_rssh[!is.na(correct_rssh)]
 
 failed_rssh_tests = check_rssh[correct_rssh!=rt_code_rssh]
+
+# ------------------
+# GOS Tests 
+# ------------------
+
+gos_tests = fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/gos_tests.csv"))
+
+gos_rssh = gos_data[substring(code, 1, 1)=='R']
+gos_rssh = gos_rssh[, .(gos_rssh = round(sum(budget, na.rm = TRUE))), by=c('grant_number')]
+
+
+gos_data[is.na(budget), budget:=0]
+gos_data[is.na(expenditure), expenditure:=0]
+gos_data = gos_data[ , 
+              lapply(.SD, sum) , 
+              by = 'grant_number', 
+              .SDcols = c("budget", "expenditure")]
+gos_data <- unique(gos_data)
+gos_data[, budget:=round(budget)]
+gos_data[, expenditure:=round(expenditure)]
+
+gos_data = merge(gos_data, gos_rssh, by='grant_number', all = TRUE)
+gos_merge = merge(gos_data, gos_tests, by='grant_number', all.x = TRUE)
+
+#Find failed tests and untested grants 
+untested_gos = gos_merge[is.na(correct_bug_sum)]
+if (nrow(untested_gos)!=0){
+  print("ERROR: Some GOS grants don't have tests written for them. Review 'untested gos'.")
+}
+gos_merge = gos_merge[!is.na(correct_bug_sum)] #Only review failures for tests you've written and merged. 
+failed_gos_rssh = gos_merge[gos_rssh!=correct_rssh]
+failed_tests_gos = gos_merge[correct_bug_sum!=budget | correct_exp_sum != expenditure]
+
 # ------------------------------------
 # Print results and summary statistics
 # ------------------------------------
@@ -175,8 +209,9 @@ failed_rssh_tests = check_rssh[correct_rssh!=rt_code_rssh]
 
   print("...")
 failed_tests <- rbind(failed_tests_gtm, failed_tests_cod, failed_tests_uga, fill = TRUE)
+failed_rssh_tests = rbind(failed_rssh_tests, failed_gos_rssh, fill = TRUE)
   
-if (nrow(failed_tests) != 0){
+if (nrow(failed_tests) != 0 | nrow(failed_rssh_tests)!=0){
   print("Unit tests failed; review budget calculations.")
   print(paste0(nrow(failed_tests_gtm), " Guatemala tests failed (", round(nrow(failed_tests_gtm)/nrow(gtm_merge)*100, 2), "%); ", 
                nrow(gtm_merge), " out of ", nrow(gtm_tests), " tests are included in this percentage."))
@@ -184,6 +219,8 @@ if (nrow(failed_tests) != 0){
                nrow(uga_merge), " out of ", nrow(uga_tests), " tests are included in this percentage."))
   print(paste0(nrow(failed_tests_cod), " DRC tests failed (", round(nrow(failed_tests_cod)/nrow(cod_merge)*100, 2), "%); ", 
                nrow(cod_merge), " out of ", nrow(cod_tests), " tests are included in this percentage."))
+  print(paste0(nrow(failed_tests_gos), " GOS tests for all three countries failed (", round(nrow(failed_tests_gos)/nrow(gos_merge)*100, 2), "%); ", 
+               nrow(gos_merge), " out of ", nrow(gos_tests), " tests are included in this percentage."))
   print("...")
   
 } else {
@@ -240,10 +277,10 @@ print(paste0("Total RSSH tests failed: ", nrow(failed_rssh_tests)))
 print(paste0("Percentage of RSSH tests failed: ", round(nrow(failed_rssh_tests)/nrow(check_rssh)*100, 2), "%"))
 
 
-rm(list= ls()[!(ls() %in% c('failed_tests','failed_tests_cod', 'failed_tests_gtm', 'failed_tests_uga'
+rm(list= ls()[!(ls() %in% c('failed_tests','failed_tests_cod', 'failed_tests_gtm', 'failed_tests_uga', 'failed_tests_gos'
                             , 'gtm_tests', 'gtm_merge', 'cod_tests', 'cod_merge', 'uga_tests', 'uga_merge', 
                             'unmerged_cod_tests', 'unmerged_gtm_tests', 'unmerged_uga_tests', 
-                             'failed_rssh_tests', 'unwritten_rssh_tests', 'not_tested_cod'))])
+                             'failed_rssh_tests', 'unwritten_rssh_tests', 'not_tested_cod', 'untested_gos'))])
 
 
 }

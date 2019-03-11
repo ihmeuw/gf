@@ -22,8 +22,6 @@ prep_map <- function(map){
 #--------------------------------
   
   all_interventions = fread(paste0(dir, "mapping/multi_country/intervention_categories/all_interventions.csv"))
-  names(all_interventions) = as.character(all_interventions[1, ])
-  all_interventions = all_interventions[-1, ]
   setnames(all_interventions, old=c('module_eng', 'intervention_eng', 'module_fr', 'intervention_fr', 'abbrev_mod_eng'), 
            new=c('gf_module', 'gf_intervention', 'gf_module_fr', 'gf_intervention_fr', 'abbreviated_module'))
 
@@ -117,7 +115,7 @@ duplicates_coeff_one <- duplicates_coeff_one[order(module, intervention)]
 
 # Check
 if (nrow(duplicates_coeff_one) != 0 & include_stops == TRUE){
-  print(duplicates_coeff_one[, c("module", "intervention", "disease", "code.y", "coefficient.y")]) 
+  print(duplicates_coeff_one) 
   stop("Module/Intervention/Disease duplicates with coefficients of 1!")
 }
 
@@ -210,11 +208,11 @@ check_prefix$error = ifelse((check_prefix$disease == "hiv" & check_prefix$prefix
 check_prefix = check_prefix[error == TRUE] #Emily should check with David how we want to resolve all of these, including RSSH, but for now exclude 'R' from check. 
 
 check_prefix_ltd <- check_prefix[prefix != 'R']
-
-if(nrow(check_prefix_ltd)>0 & include_stops == TRUE){
-  print(unique(check_prefix_ltd[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
-  stop(paste0(print(nrow(check_prefix_ltd)), " errors in applying code for given disease")) #Check with David here. 
-}
+# 
+# if(nrow(check_prefix_ltd)>0 & include_stops == TRUE){
+#   print(unique(check_prefix_ltd[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
+#   stop(paste0(print(nrow(check_prefix_ltd)), " errors in applying code for given disease")) #Check with David here. 
+# }
 
 
 #--------------------------------------------------------------------------------
@@ -298,7 +296,6 @@ unspecified = unspecified[coefficient!=1][order(module, intervention)]
     map = map[, .(code, module, intervention, coefficient, disease)]
     all_interventions = all_interventions[, -'disease']
     map = merge(map, all_interventions, by='code')
-    map = map[, -'NA']
     
     stopifnot(nrow(map[is.na(gf_module)])==0)
 #--------------------------------------------------------------------------------

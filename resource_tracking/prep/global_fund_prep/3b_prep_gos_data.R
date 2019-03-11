@@ -34,7 +34,7 @@ gos_clean$grant_period_start = NULL
 gos_clean$grant_period_end = NULL
 
 # ----------------------------------------------
-# Load the GMS tab from the Excel book  
+# Load the GMS tab from the Excel book  # Need to rework this as we're thinking about NLP. 
 # ----------------------------------------------
 gms_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/Expenditures from GMS and GOS for PCE IHME countries.xlsx',
                                    sheet=as.character('GMS SDAs - extract')))
@@ -64,6 +64,9 @@ totalGos[kDT, on=.(disease), disease := i.map_disease]
 totalGos$data_source <- "gos"
 totalGos$loc_name <- totalGos$country
 totalGos$fileName = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
+
+totalGos[is.na(module), module:='unspecified']
+totalGos[is.na(intervention), intervention:='unspecified']
 
 # ----------------------------------------------
 ###### Map the GOS/GMS modules to the current GF Framework ###### 

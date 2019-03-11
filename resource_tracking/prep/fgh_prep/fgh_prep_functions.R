@@ -12,10 +12,11 @@ get_dah_source_channel <- function(channel){ #EKL do we like these classificatio
     x <- "U.S. bilateral assistance"
   } else if(channel == "NGO" | channel == "INTLNGO" | channel == "US_FOUND" | channel == "BMGF"){
     x <- "NGOs and foundations"
-  } else if(channel == "AfDB" | channel == "WB_IDA" | channel == "WB_IBRD" | channel == "AsDB" | channel == "IDB" | channel == "UNITAID"){
+  } else if(channel == "AfDB" | channel == "WB_IDA" | channel == "WB_IBRD" | channel == "AsDB" | channel == "IDB" | channel == "UNITAID"
+            | channel == "UNFPA" | channel == "UNICEF" | channel == "UNAIDS" | channel == "WHO" | channel == "PAHO"){
     x <- "UN agencies, The World Bank and other regional development banks"
-  } else if (channel == "GAVI"){
-    x <- "GAVI"
+  } else if (channel == "CEPI" | channel == "GAVI"){
+    x = "Multilateral organizations (GAVI, CEPI)"
   }
   return(x)
 }
@@ -46,11 +47,10 @@ get_disease <- function(sda_orig){
     x <- "malaria"
   } else if (grepl("tb", sda_orig)){
     x <- "tb"
-  } else if (grepl("hss", sda_orig)){
+  } 
+  if (grepl("swap|hss", sda_orig)){
     x <- "hss"
-  } else {
-    x <- x
-  }
+  } 
   return(x)
 }
 

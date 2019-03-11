@@ -9,7 +9,7 @@
 # Read in the version of the data you want to map (logic variables set in master file)
 #----------------------------------------------------------------------------
 if (prep_gos == TRUE){
-  raw_data <- copy(totalGos)
+  raw_data = totalGos
 } else if (prep_files == TRUE){
   raw_data = resource_database
 }
@@ -95,10 +95,14 @@ if (prep_gos == TRUE){
     
     #-------------------------------------------------------
     # #Remap all RSSH codes to the RSSH disease, and make sure 
-    #there aren't any HSS diseases still hanging around. 
+    #there aren't any HSS diseases still hanging around. Remap all codes to their correct disease.  
     # ------------------------------------------------------
     mapped_data[substring(code, 1, 1)=='R', disease:='rssh']
     mapped_data[disease == 'hss', disease:='rssh']
+    
+    mapped_data[substring(code, 1, 1)=='H', disease:='hiv']
+    mapped_data[substring(code, 1, 1)=='T', disease:='tb']
+    mapped_data[substring(code, 1, 1)=='M', disease:='malaria']
 
 }
 
