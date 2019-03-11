@@ -36,7 +36,11 @@ nodeTable = nodeTable[variable %in% names(data)]
 # lavaanPlot(model=semFit, coefs=TRUE)
 
 # my sem graph function
-p = semGraph(semFit, nodeTable=nodeTable)
+source('./impact_evaluation/visualizations/graphLavaan.r')
+p = semGraph(semFit, nodeTable=nodeTable, 
+	scaling_factors=NA, standardized=TRUE, 
+	lineWidth=1.5, curved=2, tapered=FALSE)
+p
 # ----------------------------------------------
 
 
@@ -57,17 +61,17 @@ newData = newData*scaling_factors
 # scenario 1: reallocate 25% from ITNs to ACTs for 2016-2018
 newData[, reallocation1:=0]
 newData[, reallocation2:=0]
-newData[date>=2016, reallocation1:=.25*budget_M1_1]
-newData[date>=2016, reallocation2:=.25*budget_M1_2]
-newData[, budget_M1_1:=budget_M1_1-reallocation1]
-newData[, budget_M1_2:=budget_M1_2-reallocation2]
-newData[, budget_M2_1:=budget_M2_1+reallocation1+reallocation2]
+newData[date>=2016, reallocation1:=.25*exp_M1_1]
+newData[date>=2016, reallocation2:=.25*exp_M1_2]
+newData[, exp_M1_1:=exp_M1_1-reallocation1]
+newData[, exp_M1_2:=exp_M1_2-reallocation2]
+newData[, exp_M2_1:=exp_M2_1+reallocation1+reallocation2]
 newData$reallocation1 = NULL
 newData$reallocation2 = NULL
 
 # recompute cumulatives
 rtVars = names(newData)
-rtVars = rtVars[grepl('budget', rtVars) & !grepl('cumulative', rtVars)]
+rtVars = rtVars[grepl('exp', rtVars) & !grepl('cumulative', rtVars)]
 for(v in rtVars) newData[, (paste0(v,'_cumulative')):=cumsum(get(v))]
 
 # convert back to re-scaled values
@@ -94,11 +98,11 @@ preds = preds*scaling_factors
 cf = merge(data, preds, 'date')
 cf = melt(cf, id.vars='date')
 cf[, cf:=ifelse(grepl('.y',variable),'Counterfactual Budget', 'Actual Budget')]
-cf[, graph_var:=!grepl('budget|other_dah',variable)]
+cf[, graph_var:=!grepl('exp|other_dah',variable)]
 cf[, variable:=gsub('.x|.y','',variable)]
 
 # show counterfactual budget
-# ggplot(cf[grepl('budget_cumulative',variable)], aes(y=value, x=))
+# ggplot(cf[grepl('exp_cumulative',variable)], aes(y=value, x=))
 
 # graph comparison
 ggplot(cf[graph_var==TRUE], aes(y=value, x=variable, fill=cf)) + 
