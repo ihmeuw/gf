@@ -30,12 +30,14 @@ user_name = 'abatzel'
 
 # get the task_id to index the array table
 i = as.integer(Sys.getenv("SGE_TASK_ID"))
+print(i)
 # read in the array table 
 array_table = read.csv('/ihme/scratch/users/abatzel/array_table_for_qr.csv')
 array_table <- as.data.table(array_table)
 
 # read org unit from the array table
 o = array_table[i]$org_unit_id # unique facility id
+print(o)
 #------------------------------------
 
 #------------------------------------
@@ -147,7 +149,7 @@ for (e in unique(subset$element_id)) {
       } else if (nrow(combined_qr_results)>0){
         combined_qr_results = rbind(combined_qr_results, subset_further) # subsequent times through, add in combined results
       }
-  
+  print(paste0("completed loop with varaible_id = ", v, " and element_id = ", e))
   }
 }
 
