@@ -151,11 +151,6 @@ for (e in unique(subset$element_id)) {
   }
 }
 
-# for manual testing:
-v = v + 1
-
-e = e + 1
-
 # at the end of this loop, the number of rows should be equal to what we started with (663), so check that!
 if (nrow(combined_qr_results) != 663) {print("something went wrong with internal loop - number of rows is not the right number!")}
 #------------------------------------
