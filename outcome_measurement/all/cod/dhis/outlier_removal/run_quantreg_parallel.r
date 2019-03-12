@@ -83,6 +83,7 @@ dt <- setorder(dt, org_unit_id)
 
 # make array table to set up for submitting an array job
 array_table = expand.grid(unique(dt$org_unit_id))
+array_table = as.data.table(array_table)
 setnames(array_table, "Var1", "org_unit_id")
 
 # save the array table and the data with IDs to /ihme/scratch/
