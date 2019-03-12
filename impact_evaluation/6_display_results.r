@@ -39,7 +39,7 @@ nodeTable = nodeTable[variable %in% names(data)]
 source('./impact_evaluation/visualizations/graphLavaan.r')
 p = semGraph(semFit, nodeTable=nodeTable, 
 	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=2, tapered=FALSE)
+	lineWidth=1.5, curved=0, tapered=FALSE)
 p
 # ----------------------------------------------
 
