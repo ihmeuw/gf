@@ -147,9 +147,9 @@ for (e in unique(subset$element_id)) {
       if(nrow(combined_qr_results)==0){
         combined_qr_results = subset_further # first time through, just set combined results to be = the data 
       } else if (nrow(combined_qr_results)>0){
-        combined_qr_results = rbind(combined_qr_results, subset_further) # subsequent times through, add in combined results
+        combined_qr_results = rbindlist( list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) # subsequent times through, add in combined results
       }
-  print(paste0("completed loop with varaible_id = ", v, " and element_id = ", e))
+  print(paste0("completed loop with variable_id = ", v, " and element_id =", e))
   }
 }
 
