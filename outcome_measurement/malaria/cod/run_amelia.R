@@ -9,109 +9,91 @@
   # THE FOLLOWING R SCRIPT WAS RUN ON THE CLUSTER AT IHME
 # ----------------------------------------------
 
-
 # --------------------
-  # Set up R / install packages
-  tol = commandArgs()[4]
-  run_name = commandArgs()[5]
-  dpsArg = commandArgs()[6]
-  #hzArg = commandArgs()[7]
-  
-  tol = as.numeric(gsub('\r', '', tol))
-  run_name = gsub('\r', '', run_name)
-  dpsArg = as.numeric(gsub('\r', '', dpsArg))
-  #hzArg = as.numeric(gsub('\r', '', hzArg))
-  
-  print(tol)
-  print(run_name)
-  print(dpsArg)
+# Set up R / install packages
+tol = commandArgs()[4]
+tol = as.numeric(gsub('\r', '', tol))
+print(tol)
 
-  library(data.table)
-  library(stringr)
-  library(reshape2)
-  library(ggplot2)
-  library(stats)
-  library(Rcpp)
-  library(Amelia)
-  library(parallel)
-  library(boot)
+run_name = commandArgs()[5]
+run_name = gsub('\r', '', run_name)
+print(run_name)
+
+library(data.table)
+library(stringr)
+library(reshape2)
+library(ggplot2)
+library(stats)
+library(Rcpp)
+library(Amelia)
+library(parallel)
+library(boot)
 # --------------------  
 
+# ----------------------------------------------
+# Overview - Files and Directories
+
+# data directory
+# when run on Unix, data directory needs to be set to /home/j (to run on the cluster), so set this here:
+  j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+  dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
+
+# input file:
+  input <- "PNLP_dt_forMI_updated_3_11_19.rds"
+
+# output directory:
+  output_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation')
+
+# output file:
+  imputed_data_file <- paste0("PNLP_imputedData_", run_name, ".rds")
+# ----------------------------------------------
 
 # ----------------------------------------------
-  # Overview - Files and Directories
-  
-    # data directory
-    # when run on Unix, data directory needs to be set to /home/j (to run on the cluster), so set this here:
-      j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-      dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
-    
-    # input file:
-      input <- "final_data_for_impuation.csv"
-    
-    # output directory:
-      output_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/DPSLevelPriors_imputations/')
-    
-    # output files
-      imputed_data_file <- paste0("imputedData", run_name, ".rds")
-      imputed_data_file_right_after_imputation <- paste0("imputedDataNoExp", run_name, ".rds")
-# ----------------------------------------------
+# read in data table prepped by prep_for_MI.R
+dt <- readRDS(paste0( dir, input ))
 
+dt$dps <- gsub(" ", "-", dt$dps)
 
+all_vars <- names(dt)
+id_vars <- c("id", "dps", "health_zone", "date", "donor", "operational_support_partner", "population")
+indicators <- all_vars[!all_vars %in% id_vars] 
+
+dt = dt[, lapply(.SD, as.numeric), .SDcols=indicators, by = c(id_vars) ]
 # ----------------------------------------------
-  # read in data table prepped by prep_for_MI.R 
-    dt <- fread(paste0(dir, input)) 
-      dt <- dt[, V1:=NULL]
-      
-      dt$dps <- gsub(" ", "-", dt$dps)
-    
-      all_vars <- c(colnames(dt))
-      id_vars <- c("province", "dps", "health_zone", "date", "id")
-      indicators <- all_vars[!all_vars %in% id_vars] 
-      indicators <- indicators[!indicators %in% c("V1")]
-      
-      for (i in indicators){
-        dt$i <- as.double(dt$i)
-      }
-      
-      # subset to dps and hz based on input argument
-      dt <- dt[dps==dpsArg, ]
-# ----------------------------------------------
-           
 
 # ---------------------------------------------- 
-  # save original data
-    dtOrig <- copy(dt)
+# save original data
+  dtOrig <- copy(dt)
       
-  # store which observations had zero so we can switch them back to zero at the end, after imputation
-    for (ind in indicators) dt[get(ind)<0, (ind):=NA]
-    zeroes <- dt[, lapply(.SD, function(x) {x==0}), .SDcols=indicators, by= c(id_vars)] 
-      
+# store which observations had zero so we can switch them back to zero at the end, after imputation
+  for (ind in indicators) dt[get(ind)<0, (ind):=NA]
+  zeroes <- dt[, lapply(.SD, function(x) {x==0}), .SDcols=indicators, by= c(id_vars)] 
+    
 # log transform all of the data except for healthFacilitiesProportion to run amelia on it
   indicators <- indicators[!indicators %in% c("healthFacilitiesProportion")]
-    
-  # logit transform the healthFacilities proportion data
-    N <- length( dt$healthFacilitiesProportion[!is.na(dt$healthFacilitiesProportion)])
-    
-    prop_lsqueeze <- dt[, .(health_zone, dps, date, healthFacilitiesProportion =((healthFacilitiesProportion*(N-1)+0.5)/N))]
-    prop_lsqueeze <- prop_lsqueeze[, healthFacilitiesProportion:= logit(healthFacilitiesProportion)]
-    
-  # replace all 0s with really low values so log works 
-    for(var in indicators) {
-      # taking the 5th percentile for each column to replace the 0s with 
-      pctle <- quantile(dt[get(var)!=0][[var]], .01, na.rm=TRUE)  
-      # change/store these back in dt so that we can use that to run amelia() on
-      dt[get(var)==0, (var):=pctle]
-    }
-    
-  # log transform
-    dtLog <- dt[, lapply(.SD, function(x) log(x)), .SDcols=indicators, by= c(id_vars)]
   
-  # make a constant to convince amelia to extrapolate
-    dtLog[, random:=runif(nrow(dtLog))]
-    
-  # merge the logit transformation of health facilities prop with dtLog
-    dtLog <- merge(dtLog, prop_lsqueeze, by=c("health_zone", "dps", "date"), all=T)
+# logit transform the healthFacilities proportion data
+  N <- length( dt$healthFacilitiesProportion[!is.na(dt$healthFacilitiesProportion)])
+  
+  prop_lsqueeze <- dt[, .(health_zone, dps, date, healthFacilitiesProportion =((healthFacilitiesProportion*(N-1)+0.5)/N))]
+  prop_lsqueeze <- prop_lsqueeze[, healthFacilitiesProportion:= logit(healthFacilitiesProportion)]
+  
+# replace all 0s with really low values so log works 
+  for(var in indicators) {
+    # taking the 5th percentile for each column to replace the 0s with 
+    pctle <- quantile(dt[get(var)!=0][[var]], .01, na.rm=TRUE)  
+    # change/store these back in dt so that we can use that to run amelia() on
+    dt[get(var)==0, (var):=pctle]
+  }
+  
+# log transform
+  dtLog <- dt[, lapply(.SD, function(x) log(x)), .SDcols=indicators, by= c(id_vars)]
+
+# make a constant to convince amelia to extrapolate
+  dtLog[, random:=runif(nrow(dtLog))]
+  
+# merge the logit transformation of health facilities prop with dtLog
+  dtLog <- merge(dtLog, prop_lsqueeze, by=c("health_zone", "dps", "date"), all=T)
 # ---------------------------------------------- 
     
     
