@@ -19,7 +19,7 @@ gos_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/m
 oldNames <-  c("Country","Grant Number", "Year", "Financial Reporting Period Start Date",
                "Financial Reporting Period End Date","Module", "Intervention", "Total Budget Amount (in budget currency)", 
                "Total Expenditure Amount (in Budget currency)", "Component", "Current IP  Start Date", "Current IP  End Date")
-newNames <-  c("country","grant_number", "year","start_date","end_date","module","intervention", 
+newNames <-  c("country","grant", "year","start_date","end_date","module","intervention", 
                "budget", "expenditure", "disease", "grant_period_start", "grant_period_end")
 
 setnames(gos_data,oldNames, newNames)
@@ -62,43 +62,9 @@ kDT = data.table(map_disease = names(map_disease), value = TRUE, disease = unnam
 totalGos[kDT, on=.(disease), disease := i.map_disease]
 
 totalGos$data_source <- "gos"
-totalGos$loc_name <- totalGos$country
-totalGos$fileName = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
+totalGos$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
+
 
 totalGos[is.na(module), module:='unspecified']
 totalGos[is.na(intervention), intervention:='unspecified']
-
-# ----------------------------------------------
-###### Map the GOS/GMS modules to the current GF Framework ###### 
-# Run the map_modules_and_interventions.R script first
-# ----------------------------------------------
-# totalGos <- strip_chars(totalGos, unwanted_array, remove_chars)
-# 
-# mapping_list <- load_mapping_list(paste0("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx")
-#                                   , include_rssh_by_disease = FALSE) ##set the boolean to false for just mapping
-# 
-# ## before we get it ready for mapping, copy over so we have the correct punctuation for final mapping: 
-# final_mapping <- copy(mapping_list)
-# final_mapping$disease <- NULL ## we will be joining on code 
-# setnames(final_mapping, c("module", "intervention"), c("gf_module", "gf_intervention"))
-# 
-# ##this loads the list of modules/interventions with their assigned codes
-# gf_mapping_list <- total_mapping_list(paste0("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"),
-#                                       mapping_list, unwanted_array, remove_chars)
-# 
-# gos_init_mapping <- merge(totalGos, gf_mapping_list, by=c("module", "intervention", "disease"), all.x=TRUE,allow.cartesian = TRUE)
-# 
-# ##use this to check if any modules/interventions were dropped:
-# # dropped_gf <- gos_init_mapping[is.na(gos_init_mapping$code)]
-# 
-# mappedGos <- merge(gos_init_mapping, final_mapping, by="code")
-# 
-# # ----------------------------------------------
-# ###### export the mapped dataset ###### 
-# # ----------------------------------------------
-# 
-# write.csv(mappedGos, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv",
-#           row.names = FALSE, fileEncoding = "latin1")
-
-
 

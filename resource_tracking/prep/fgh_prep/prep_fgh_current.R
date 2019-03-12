@@ -120,7 +120,7 @@ fgh_mapped$fin_data_type <- "actual"
 # ----------------------------------------------
 
 ##country codes for GTM, UGA, and DRC
-country_codes <- c(128, 190,171)
+country_codes <- c(128, 190, 171)
 
 ghe_data <- ghe_data[location_id %in% country_codes]
 

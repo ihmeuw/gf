@@ -61,8 +61,8 @@ get_loc_id <- function(country){
     x <- "gtm"
   } else if(grepl("Uganda", country)){
     x <- "uga"
-  } else {
-    x <- x
+  } else if (grepl("Senegal", country)) {
+    x <- "sen"
   }
   return(x)
 }
@@ -73,8 +73,8 @@ get_country_name <- function(loc_name){
     x <- "Guatemala"
   } else if(grepl("UGA", loc_name)){
     x <- "Uganda"
-  } else {
-    x <- x
+  } else if (grepl("SEN", loc_name)) {
+    x <- "Senegal"
   }
   return(x)
 }

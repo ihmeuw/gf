@@ -1,9 +1,10 @@
-# ----------------------------------------------
-# Irena Chen
-#
-# 3/27/2018
-
-### This code contains functions that map RT data to the GF Modular Framework 
+# ----------------------------------------------------------------------------------
+# AUTHOR: Emily Linebarger, based on code by Irena Chen
+# PURPOSE: Shared functions for the resource tracking database. All of these functions 
+# perform calculations, for string-prep and file-loading functions 
+# review 'shared_prep_functions'. 
+# DATE: Last updated March 2019. 
+#-----------------------------------------------------------------------------------
 
 #----------------------------------------------
 #Functions to verify budgets, used in step 5. 
@@ -54,4 +55,11 @@ total_budget_by_grantPeriod = function(dt_g){
   return(unique(dt_g[data_source == "fpm", c("grant_number", "grant_period", "bug_sum", "fileName")]))
 }
 
+#-------------------------- 
+# Sum, removing NA's (simple function to add into data tables) 
+#---------------------------
+sum_na_rm <- function(col){
+  col = sum(col, na.rm = TRUE)
+  return(col)
+}
 

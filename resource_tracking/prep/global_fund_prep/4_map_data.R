@@ -49,8 +49,10 @@ if (prep_gos == TRUE){
     # raw_data = correct_modules_interventions(raw_data)
     
     #Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
-    source(paste0(budget_pudr_code, "correct_modules_interventions.R"))
-    raw_data = correct_modules_interventions(raw_data)
+    if (prep_files == TRUE){
+      source(paste0(budget_pudr_code, "correct_modules_interventions.R"))
+      raw_data = correct_modules_interventions(raw_data)
+    }
     
     #------------------------------------------------------------
     # Map budgets and PUDRs to module mapping framework 
@@ -78,13 +80,18 @@ if (prep_gos == TRUE){
     #----------------------------------------------------------------------------
     # Merge with module map on module, intervention, and disease to pull in code
     #----------------------------------------------------------------------------
-    
-    pre_coeff_check = raw_data[, lapply(.SD, sum), .SDcols=c('budget', 'expenditure', 'disbursement')]
+    if (prep_files == TRUE){
+      pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
+    } else {
+      pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure')]
+      pre_coeff_check[[1]] = round(pre_coeff_check[[1]])
+      pre_coeff_check[[2]] = round(pre_coeff_check[[2]])
+    }
     mergeVars = c('disease', 'module', 'intervention')
-    module_map = unique(module_map)
+    #module_map = unique(module_map)
     module_map = module_map[!is.na(code)]
 
-    mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x=TRUE)
+    mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x = TRUE, allow.cartesian = TRUE)
     dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
     
     if(nrow(dropped_mods) >0){
@@ -121,19 +128,6 @@ if (prep_gos == TRUE){
 # ------------------------------------------------------
 mapped_data = split_hiv_tb(mapped_data)
 
-#-----------------------------------------
-# Add in location variables
-# ----------------------------------------
-if(country == "cod"){
-  mapped_data$adm1 <- 171
-} else if (country == "gtm"){
-  mapped_data$adm1 <- 128 
-} else if (country == "uga"){
-  mapped_data$adm1 <- 190
-}
-
-mapped_data$loc_name <- country
-
 #-------------------------------------------------------
 # Redistribute using mapped coefficient 
 # ------------------------------------------------------
@@ -141,10 +135,19 @@ remapped_rows = nrow(mapped_data[coefficient != 1])
 print(paste0("A total of ", remapped_rows, " rows will be redistributed."))
 mapped_data[, budget:=budget*coefficient]
 mapped_data[, expenditure:=expenditure*coefficient]
-mapped_data[, disbursement:=disbursement*coefficient]
+if (prep_files == TRUE){
+  mapped_data[, disbursement:=disbursement*coefficient]
+}
 
-post_coeff_check = mapped_data[, lapply(.SD, sum), .SDcols=c('budget', 'expenditure', 'disbursement')]
-stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]] & pre_coeff_check[[3]] == post_coeff_check[[3]])
+if (prep_files == TRUE){
+  post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
+  stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]] & pre_coeff_check[[3]] == post_coeff_check[[3]])
+} else {
+  post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure')]
+  post_coeff_check[[1]] = round(post_coeff_check[[1]])
+  post_coeff_check[[2]] = round(post_coeff_check[[2]])
+  stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]])
+}
 
 #-----------------------------------------
 # Add in variable for current grant 
@@ -274,5 +277,6 @@ if (prep_files == TRUE){
 }
 
 if (prep_gos == TRUE){
-  saveRDS(mapped_data, paste0(export_dir, "prepped_gos_data.rds"))
+  saveRDS(mapped_data, paste0(combined_output_dir, "prepped_gos_data.rds"))
+  write.csv(mapped_data, paste0(combined_output_dir, "prepped_gos_data.csv"), row.names = FALSE)
 }

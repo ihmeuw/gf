@@ -11,7 +11,7 @@ rm(list=ls())
 # ---------------------------------------------------------------------
 
 user = "elineb" #Change to your username 
-country = "gtm" #Change to the country you want to update. 
+country = "uga" #Change to the country you want to update. 
 code_loc = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
 source(paste0(code_loc, "resource_tracking/prep/set_up_r.R"))
 
@@ -27,6 +27,8 @@ verbose = FALSE #Set to true if you would like warning messages printed (helpful
 rerun_filelist <- TRUE  #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 
+test_current_files = FALSE #Set to true if you would like to run unit tests on current database. Set to false if you would like to 
+# run tests on archived database. 
 # ---------------------------------------
 # #Mark which grants are currently active to save in file - this should be updated every grant period! 
 # ---------------------------------------
@@ -110,7 +112,7 @@ current_uga_grant_period <- rep("2018-2020", 5)
 # STEP 4: Map prepped data 
 # ----------------------------------------------
   
-  #source(paste0(gf_prep_code, "4_map_data.R"))
+  source(paste0(gf_prep_code, "4_map_data.R"))
   
 # ----------------------------------------------
 # STEP 5: Aggregate all data sources

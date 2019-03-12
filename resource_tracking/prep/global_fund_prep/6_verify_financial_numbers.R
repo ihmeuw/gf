@@ -9,19 +9,22 @@
 #-------------------------
 #To do: 
 # - incorporate SICOIN checks again
-# - add expenditure checks to UGA
-# - add RSSH checks for all countries. 
-# - Are we testing each prep function for each country? 
-# - 
-
 #--------------------------
-# final_budgets <- readRDS(paste0(file_dir, "final_budgets.rds")) #Change to final budgets for right now, but will want to test all files eventually! 
-# final_expenditures <- readRDS(paste0(file_dir, "final_expenditures.rds"))
-# file_iterations <- rbind(final_budgets, final_expenditures, fill = TRUE)
 
-file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
-#file_iterations <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds"))
-gos_data = fread(paste0(combined_output_dir, "/prepped_gos_data.csv"))
+if (test_current_files == TRUE){
+  file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
+  gos_data = readRDS(paste0(combined_output_dir, "/prepped_gos_data.rds"))
+} else {
+  print("WARNING: TESTING ARCHIVED DATABASE. REVIEW SWITCH 'test_current_files'")
+  # Old resource tracking database, for comparison. Was archived on Dec 3, 2018
+  file_iterations = fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/archive/total_resource_tracking_data 12032018.csv")
+  file_iterations$start_date <- as.Date(file_iterations$start_date)
+  file_iterations$budget <- as.numeric(file_iterations$budget)
+  file_iterations$expenditure <- as.numeric(file_iterations$expenditure)
+  gos_data = file_iterations[data_source == 'gos']
+  setnames(file_iterations, old=c('fileName', 'grant_number'), new=c('file_name', 'grant'))
+  
+}
 
 # -----------------------
 # Guatemala file prep 
@@ -69,36 +72,47 @@ failed_tests_gtm = unique(rbind(failed_budgets_gtm, failed_expenditures_gtm))
 # Uganda file prep 
 # ------------------
 {
-dt_uga = file_iterations[loc_name == "uga"]
-uga_budgets = check_budgets_pudrs(dt_uga)
-
-# ------------------
-# Uganda unit tests
-# ------------------
-
-uga_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/uga_tests.csv"))
-uga_tests$start_date <- as.Date(uga_tests$start_date, format="%m/%d/%Y")
-
-uga_tests$correct_bug_sum <- gsub("[[:punct:]]", "", uga_tests$correct_bug_sum)
-uga_tests$correct_exp_sum <- gsub("[[:punct:]]", "", uga_tests$correct_exp_sum)
-uga_tests$correct_bug_sum <- as.numeric(uga_tests$correct_bug_sum)
-uga_tests$correct_exp_sum <- as.numeric(uga_tests$correct_exp_sum)
-
-uga_merge <- merge(uga_tests, uga_budgets, by = c('start_date', 'file_name'))
-if(nrow(uga_merge) != nrow(uga_tests)){
-  print("ERROR: Not all Uganda tests merged.")
-  unmerged_uga_tests = uga_tests[!(file_name%in%uga_merge$file_name)][order(file_name, start_date)]
-}
-
-uga_merge$budget = round(uga_merge$budget)
-uga_merge$expenditure = round(uga_merge$expenditure)
-
-uga_merge <- uga_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
-uga_merge$country <- "uga" #For sorting out failed tests later if any.
-
-failed_budgets_uga <- uga_merge[correct_bug_sum != budget, ]
-failed_expenditures_uga <- uga_merge[correct_exp_sum != expenditure, ]
-failed_tests_uga = unique(rbind(failed_budgets_uga, failed_expenditures_uga))
+  dt_uga = file_iterations[loc_name == "uga"]
+  uga_budgets = check_budgets_pudrs(dt_uga)
+  uga_budgets[, quarter:=quarter(start_date)]
+  uga_budgets[, year:=year(start_date)]
+  setnames(uga_budgets, old='file_name', new='file_name')
+  # ------------------
+  # DRC unit tests
+  # ------------------
+  
+  uga_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/uga_tests.csv"), encoding = "Latin-1")
+  uga_tests$start_date <- as.Date(uga_tests$start_date, format="%m/%d/%Y")
+  
+  uga_tests[, quarter:=quarter(start_date)]
+  uga_tests[, year:=year(start_date)]
+  
+  uga_tests$correct_bug_sum <- gsub("[[:punct:]]", "", uga_tests$correct_bug_sum)
+  uga_tests$correct_exp_sum <- gsub("[[:punct:]]", "", uga_tests$correct_exp_sum)
+  uga_tests$correct_bug_sum <- as.numeric(uga_tests$correct_bug_sum)
+  uga_tests$correct_exp_sum <- as.numeric(uga_tests$correct_exp_sum)
+  
+  uga_merge <- merge(uga_tests, uga_budgets, by = c('start_date', 'file_name')) 
+  if(nrow(uga_merge) != nrow(uga_tests)){
+    print("ERROR: Not all Uganda tests merged.")
+    unmerged_uga_tests = uga_tests[!file_name%in%uga_merge$file_name, .(file_name)]
+  }
+  not_tested_uga = unique(uga_budgets[!file_name%in%uga_merge$file_name, .(file_name)])
+  if(nrow(not_tested_uga)!=0){
+    print("ERROR: Some files in Uganda are not being tested.")
+    not_tested_uga = unique(uga_budgets[!file_name%in%uga_merge$file_name, .(file_name)])
+  }
+  
+  
+  uga_merge$budget = round(uga_merge$budget)
+  uga_merge$expenditure = round(uga_merge$expenditure)
+  
+  uga_merge <- uga_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
+  uga_merge$country <- "uga" #For sorting out failed tests later if any. 
+  
+  failed_budgets_uga <- uga_merge[correct_bug_sum != budget, ]
+  failed_expenditures_uga <- uga_merge[correct_exp_sum != expenditure, ]
+  failed_tests_uga = unique(rbind(failed_budgets_uga, failed_expenditures_uga)) 
 
 }
 
@@ -280,7 +294,8 @@ print(paste0("Percentage of RSSH tests failed: ", round(nrow(failed_rssh_tests)/
 rm(list= ls()[!(ls() %in% c('failed_tests','failed_tests_cod', 'failed_tests_gtm', 'failed_tests_uga', 'failed_tests_gos'
                             , 'gtm_tests', 'gtm_merge', 'cod_tests', 'cod_merge', 'uga_tests', 'uga_merge', 
                             'unmerged_cod_tests', 'unmerged_gtm_tests', 'unmerged_uga_tests', 
-                             'failed_rssh_tests', 'unwritten_rssh_tests', 'not_tested_cod', 'untested_gos'))])
+                             'failed_rssh_tests', 'unwritten_rssh_tests', 'not_tested_cod', 'not_tested_gtm', 'not_tested_uga',
+                            'untested_gos', 'combined_output_dir'))])
 
 
 }

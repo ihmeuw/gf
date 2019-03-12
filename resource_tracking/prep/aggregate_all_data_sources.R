@@ -16,7 +16,6 @@
 
 #---------------------------------------
 #To do list for this code: 
-# - David wants to prioritize GOS over FPM where we have it (through 2017). 
 # - Get SICOIN and FGH running 
 # - Remove 'fill = TRUE' from each Rbind- data should have same column names. 
 
@@ -34,25 +33,8 @@ final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country
 # Load the prepped GOS data - to be used for both 
 # final budgets and final expenditures 
 #----------------------------------------------
-gos_data <- data.table(read.csv(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.csv"), 
-                                fileEncoding = "latin1"))
-
-##change the dates into date format: 
-gos_data$start_date <- as.Date(gos_data$start_date, "%Y-%m-%d")
-gos_data$end_date <- as.Date(gos_data$end_date, "%Y-%m-%d")
-gos_data[, period:=end_date - start_date]
-gos_data$period <- as.integer(gos_data$period)
-
-##since we don't have subnational data for GOS, just make it a copy of the country variable: 
-gos_data$adm1 <- gos_data$loc_name
-gos_data$adm2 <- gos_data$loc_name
-
-#Make variables numeric 
-gos_data$budget <- as.numeric(gos_data$budget)
-gos_data$expenditure <- as.numeric(gos_data$expenditure)
-
-setnames(gos_data, old=c('grant_number', 'fileName'), new=c('grant', 'file_name'))
-
+gos_data <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.rds"))
+            
 #----------------------------------
 # 1. FINAL GF BUDGETS 
 #----------------------------------
@@ -92,41 +74,37 @@ stopifnot(nrow(check_qtr_uga)==0)
 #Bind budgets together
 final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga, fill=TRUE) 
 final_budgets$start_date <- as.Date(final_budgets$start_date, "%Y-%m-%d")
-final_budgets <- rbind(final_budgets, gos_data, fill = TRUE) 
 
 #Manually edit grant numbers in GOS to match our labeling - EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE. 
-final_budgets[grant == 'GUA-M-MSPAS', grant:='GTM-M-MSPAS']
 final_budgets[grant == 'GTM-T-UPCOMING', grant:='GTM-T-MSPAS']
 final_budgets[grant == 'GTM-M-UPCOMING', grant:='GTM-M-MSPAS']
 final_budgets[grant == 'UGD-708-G13-H', grant:='UGA-708-G13-H']
 
 #Check that all grant numbers in GF budgets correlate to GOS grant numbers
-fpm_grants = unique(final_budgets[data_source=='fpm', .(grant)])[order(grant)]
-gos_grants = unique(final_budgets[data_source == 'gos', .(grant)])[order(grant)]
+fpm_grants = unique(final_budgets[, .(grant)])[order(grant)]
+gos_grants = unique(gos_data[, .(grant)])[order(grant)]
 for(i in 1:nrow(fpm_grants)){
   if (!fpm_grants$grant[i] %in% gos_grants$grant){
-    print("Grant number may not merge correctly: check grant labeling")
+    print("Grant number may not merge correctly between final budgets and GOS: check grant labeling")
     print(paste0(i, " ", fpm_grants$grant[i]))
   }
 }
 
 #Where we have the same grant information in FPM and GOS, prioritize GOS for complete years. 
 gos_grant_list <- unique(gos_data[, .(grant, start_date)])
-for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant number and year. 
-  if (i == 1){
-    gos_prioritized_budgets = final_budgets[!(data_source == 'fpm' & grant == as.vector(gos_grant_list$grant[i]) & start_date == as.vector(gos_grant_list$start_date[i]))]
-  } else {
-    gos_prioritized_budgets = gos_prioritized_budgets[!(data_source == 'fpm' & grant == as.vector(gos_grant_list$grant[i]) & start_date == as.vector(gos_grant_list$start_date[i]))]
-  }
-}
+gos_grant_list$concat = paste0(gos_grant_list$grant, gos_grant_list$start_date)
+final_budgets$concat = paste0(final_budgets$grant, final_budgets$start_date)
 
+print("The following grant/date pairs will be dropped from final budgets, because they're also represented in GOS")
+print(unique(final_budgets[concat%in%gos_grant_list$concat, concat]))
+
+final_budgets = final_budgets[!concat%in%gos_grant_list$concat]
+
+final_budgets <- rbind(final_budgets, gos_data, fill = TRUE) 
 
 # Verify data 
 na_year <- gos_prioritized_budgets[is.na(year)]
 stopifnot(nrow(na_year)==0)
-
-#Generate variables 
-#gos_prioritized_budgets[, end_date:=start_date + period-1]
 
 #Check that you've got the current grants right. 
 all_current_grants = unique(gos_prioritized_budgets[current_grant==TRUE, .(grant, grant_period, file_name)])
@@ -176,37 +154,32 @@ stopifnot(nrow(check_qtr_uga)==0)
 
 #Bind expenditures together
 final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, fill = TRUE) 
-final_expenditures <- rbind(final_expenditures, gos_data, fill = TRUE) 
 
-#Correct grant labels so they merge correctly #EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE 
-final_expenditures[grant == 'GUA-M-MSPAS', grant:='GTM-M-MSPAS']
-
-#Check that all grant numbers in GF expenditures correlate to GOS grant numbers
-pudr_grants = unique(final_expenditures[data_source=='pudr', .(grant)])[order(grant)]
-gos_grants = unique(final_expenditures[data_source == 'gos', .(grant)])[order(grant)]
-for(i in 1:nrow(pudr_grants)){
-  if (!pudr_grants$grant[i] %in% gos_grants$grant){
-    print("Grant number may not merge correctly: check grant labeling")
-    print(paste0(i, " ", pudr_grants$grant[i]))
+#Check that all grant numbers in GF budgets correlate to GOS grant numbers
+fpm_grants = unique(final_expenditures[, .(grant)])[order(grant)]
+gos_grants = unique(gos_data[, .(grant)])[order(grant)]
+for(i in 1:nrow(fpm_grants)){
+  if (!fpm_grants$grant[i] %in% gos_grants$grant){
+    print("Grant number may not merge correctly between final expenditures and GOS: check grant labeling")
+    print(paste0(i, " ", fpm_grants$grant[i]))
   }
 }
 
 #Where we have the same grant information in FPM and GOS, prioritize GOS for complete years. 
 gos_grant_list <- unique(gos_data[, .(grant, start_date)])
-for(i in 1:nrow(gos_grant_list)){ #Flag duplicate data sources for same grant number and year. 
-  if (i == 1){
-    gos_prioritized_expenditures = final_expenditures[!(data_source == 'pudr' & grant == as.vector(gos_grant_list$grant[i]) & start_date == as.vector(gos_grant_list$start_date[i]))]
-  } else {
-    gos_prioritized_expenditures = gos_prioritized_expenditures[!(data_source == 'pudr' & grant == as.vector(gos_grant_list$grant[i]) & start_date == as.vector(gos_grant_list$start_date[i]))]
-  }
-}
+gos_grant_list$concat = paste0(gos_grant_list$grant, gos_grant_list$start_date)
+final_expenditures$concat = paste0(final_expenditures$grant, final_expenditures$start_date)
+
+print("The following grant/date pairs will be dropped from final budgets, because they're also represented in GOS")
+print(unique(final_expenditures[concat%in%gos_grant_list$concat, concat]))
+
+final_expenditures = final_expenditures[!concat%in%gos_grant_list$concat]
+
+gos_prioritized_expenditures <- rbind(final_expenditures, gos_data, fill = TRUE) 
 
 # Verify data 
 na_year <- gos_prioritized_expenditures[is.na(year)]
 stopifnot(nrow(na_year)==0)
-
-#Generate variables 
-#gos_prioritized_expenditures[, end_date:=start_date + period-1]
 
 #Check that you've got the current grants right. 
 all_current_grants = unique(gos_prioritized_expenditures[current_grant==TRUE, .(grant, grant_period, file_name)])
