@@ -7,6 +7,8 @@
 # This exists just for code organizational purposes
 # --------------------------------------------------
 
+# to do
+# make this work on the cluster (it fails to load lubridate and other packages)
 
 # ------------------
 # Load packages
@@ -110,13 +112,15 @@ outputFile2b = paste0(ieDir, 'outputs_activites_for_pilot.RDS')
 outputFile2b_wide = paste0(ieDir, 'outputs_activities_for_pilot_wide.RDS')
 
 # output file from 2c_prep_outcomes_impact.r
+outputFile2c_estimates = paste0(ieDir, 'aggregated_rasters.rds')
 outputFile2c = paste0(ieDir, 'outcomes_impact.rds')
 
 # output file from 3_merge_data.R
 outputFile3 = paste0(ieDir, 'pilot_data.RDS')
 
 # output file from 4_explore_data.r (graphs)
-outputFile4 = paste0(ieDir, '../visualizations/pilot_data_exploratory_graphs.pdf')
+outputFile4a = paste0(ieDir, '../visualizations/pilot_data_exploratory_graphs.pdf')
+outputFile4b = paste0(ieDir, '../visualizations/second_half_exploratory_graphs.pdf')
 
 # output file from 5a_set_up_for_analysis.r
 outputFile5a = paste0(ieDir, 'pilot_data_pre_model.rdata')
