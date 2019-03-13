@@ -70,6 +70,7 @@ for(f in files) {
   
   # add a date variable
   current_data[ ,date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+  current_data[ ,year:=year(date)]
   
   # append to the full data 
   if(i==1) full_data = current_data
@@ -88,14 +89,14 @@ full_data[ ,c('pcr_one', 'pcr_two', 'month', 'pcr_one_hiv_positive_infants',
        'pcr_two_art_initiated'):=NULL]
 
 # shorten the hiv positive variable
-setnames(full_data, 'hiv_positive_infants', 'hiv_pos_inf')
+setnames(full_data, 'hiv_positive_infants', 'hiv_pos_infants')
 
 #---------------
 # rename the sex variable
 
 full_data[sex=='f', sex:='Female']
 full_data[sex=='m', sex:='Male']
-full_data[sex=='UNKNOWN', sex:='Unknown']
+full_data[sex=='UNKNOWN', sex:=NA]
 
 # ----------------------------------------------
 # merge in the meta data on districts and facilities
