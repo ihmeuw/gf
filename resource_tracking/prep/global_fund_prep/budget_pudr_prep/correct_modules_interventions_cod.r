@@ -120,10 +120,10 @@ resource_database[module == "comprehensivepreventionprogramsforpeoplewhoinjectdr
 resource_database[module == "rsshhumanresourcesforhealthhrhincludingcommunityhealthworkers", module:= "rsshhumanresourcesforhealthincludingcommunityhealthworkers"]
 resource_database[module == "4", module:= "all"]
 resource_database[intervention == "6", intervention:= "all"]
-resource_database[sda_activity == "9", sda_activity:= "all"]
+resource_database[activity_description == "9", activity_description:= "all"]
 
 #EKL 1/2/19 initial_gf_budgets_2018_2020.csv
-resource_database[fileName == 'initial_gf_budgets_2018_2020.csv' & module == 'tuberculosemultiresistante' & intervention == 'all', disease:='tb']
+resource_database[file_name == 'initial_gf_budgets_2018_2020.csv' & module == 'tuberculosemultiresistante' & intervention == 'all', disease:='tb']
 
 #EKL 1/28/19 "Revised LFA_COD-H-MOH_PUDR_S2 2016 17.04.17 for denominator change.xlsx" "LFA_CAG TB_S2_2016.xlsx"
 resource_database[intervention == 'analyseexamenettransparence' & module == 'unspecified', module:='suivietevaluation']

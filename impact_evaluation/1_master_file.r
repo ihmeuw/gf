@@ -59,7 +59,7 @@ if(rerun_outputs == TRUE){
 # Merge datasets together 
 # ---------------------------------------
 if (rerun_merge==TRUE) { 
-	source('./impact_evaluation/3_merge_data.r')
+	source('./impact_evaluation/3_merge_data.R')
 }
 
 # ---------------------------------------
