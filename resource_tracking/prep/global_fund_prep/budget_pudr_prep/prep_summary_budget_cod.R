@@ -17,9 +17,8 @@
 # qtr_num = 12
 
 
-prep_summary_budget = function(dir, inFile, sheet_name, start_date, 
-                                   qtr_num, disease, loc_id, period, grant, recipient, source, lang){
-  
+prep_summary_budget_cod = function(dir, inFile, sheet_name, start_date, period, qtr_num){
+
   
   ######## TROUBLESHOOTING HELP
   ### fill in variables below with information from line where the code breaks (use file list to find variables)
@@ -27,29 +26,20 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   ### look at gf_data and find what is being droped where.
   ########
   
-  # file_dir <- 'official_budgets/COD-M-SANRU_SB2.xlsx'
   # dir = file_dir
-  # inFile = 'official_budgets/COD-M-SANRU_SB2.xlsx'
-  # sheet_name = "Y compris EnquêteMortalité 822k"
-  # start_date = "2015-01-01"
-  # qtr_num = 12
-  # period = 90
-  # disease = "malaria"
-  # recipient = "MoH"
-  # lang = "fr"
-  # grant = "COD-M-SANRU"
-  # source = "fpm"
-  # loc_id = "cod"
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # qtr_num = file_list$qtr_number[i]
+  # language = file_list$language[i]
   
   
   # ----------------------------------------------
   ##set up functions to handle french and english budgets differently
   # ----------------------------------------------
-  ## create a vector of start_dates that correspond to each quarter in the budget 
-  
-  str_replace(start_date, "\\\\", "")
-  start_date = substring(start_date, 2, 11) 
-  start_date = as.Date(start_date)
+  ## create a vector of start_dates that correspond to each quarter in the budget
   
   dates <- rep(start_date, qtr_num) # 
   for (i in 1:length(dates)){
@@ -69,12 +59,6 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   } else {
     gf_data <- data.table(read_excel(paste0(dir, inFile)))
   }
-  # print(start_date)
-  # str_replace(start_date, "\\\\", "")
-  # print(start_date)
-  # start_date = substring(start_date, 2, 11)
-  # print(start_date)
-  # start_date = as.Date(start_date)
   
   colnames(gf_data)[1] <- "cost_category"
   ##only keep data that has a value in the "category" column 
@@ -136,22 +120,12 @@ prep_summary_budget = function(dir, inFile, sheet_name, start_date,
   if(sheet_name == "RESUME BUDGET V2 CONSOLIDE"){
     budget_dataset = separate(budget_dataset, module, into=c("module", "intervention"), sep="-")
   }else{
-    budget_dataset$intervention <- "All"  
+    budget_dataset$intervention <- NA
   }
   
-  ##add all of the other RT variables 
-  budget_dataset$disease <- disease
-  budget_dataset$sda_activity <- "All"
-  budget_dataset$loc_name <- loc_id
-  budget_dataset$period <- period
-  budget_dataset$grant_number <- grant
-  budget_dataset$recipient <- recipient
-  budget_dataset$qtr <- NULL
-  budget_dataset$expenditure <- 0 
-  budget_dataset$cost_category <- "all"
-  budget_dataset$data_source <- source
-  budget_dataset$year <- year(budget_dataset$start_date)
-  budget_dataset$lang <- lang
+  #Restrict to just the columns you need. 
+  budget_dataset = budget_dataset[,-c('qtr')]
+ 
   
   return(budget_dataset)
   

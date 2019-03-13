@@ -28,10 +28,14 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 import_folder = 'pre_prep/merged/'
 
 # input data sets
-base_data <- 'base_2016_01_01_2018_12_01.rds'
+base_data <- 'base_2018_01_01_2019_01_01.rds'
 pnls_data <- 'pnls_subset_2014_11_01_2018_12_01.rds'
-sigl_data <- 'sigl_2016_01_01_2018_12_01.rds'
+sigl_data <- 'sigl_2018_01_01_2019_01_01.rds'
+pati_data <- 'tb_pati_v_registered_2017_01_01_2018_10_01.rds'
 
+# archived data for 2017 data:
+base_archive <- 'prepped/archive/base_services_drc_01_2017_09_2018_prepped.rds'
+sigl_archive <- 'prepped/archive/sigl_drc_01_2015_07_2018_prepped.rds'
 # ---------------------------------------------
 # import the tableau data sets and rbind them together 
 
@@ -61,83 +65,96 @@ elements = c("aZwnLALknnj", "AxJhIi7tUam", "CGZbvJchfjk",
              "jocZb4TE1U2", "wleambjupW9", "uV53nh3MrYl", "jrtkdRjvNKv",
              "jJuipTLZK4o", "DXz4Zxd4fKq", "gHBcPOF5y3z", "jm3jeYdVkBl", 
              "QvVGcIERRFc", "Wo3vNpLXPPm", "ovziGhkDOKb", "aeTpblK0SVC",
-             "WjEIQZvEFqa", "ncXfF8VViSh", "KEv4JxAgpFK")
+             "WjEIQZvEFqa", "ncXfF8VViSh", "KEv4JxAgpFK", "kGmdIbd3mbn",
+             "fsBcCCKHGUx", "pOZcn5GNnRD", "okUsVMBrhZC", "IhUBOQkWKoo",
+             "pgHWKBydVPw", "B7A1sbUixQL", "SP3Kv0MybgA", "QoJw73JZCkb",
+             "MMU2mFrLpBb", "hLVx9BdEkVZ", "AIlNCyG5OOX", "ti2YQSNVmw1",
+             "nB8OBp7TIVR", "sDKDNVBDNYZ", "Jy7o0gHyA1W", "fIVevsf0eej",
+             "ANzWXWvvbX1", "OF6Jci2VF2x", "BtF9VwZSqdz", "rEtqA3DojjN", 
+             "AxeUO0gRsAR", "HJVFrQH0Tn4", "S40yEtRViXS", "zN8t1RPspMj", 
+             "jxW9eJlwooQ", "RWdaG7J6RiH")
+           #  "eeE4fgP5fml", "DQkITx9AQjm",  # TB-HIV
+           #  "QStu7Ux1Loa", "sJRCCgJJBHD", "eO8nthpRoT4", "FMLmCNm7QTf",
+           #  "dg8e1fPD4pb")
 
 
 # import the data sets and subset to the relevant variables
 base = readRDS(paste0(dir, import_folder, base_data))
-base = base[year(date)=='2017' | year(date)=='2018']
-base = base[element_id %in% elements]
-
 pnls = readRDS(paste0(dir, import_folder, pnls_data))
-pnls = pnls[year(date)=='2017' | year(date)=='2018']
-pnls = pnls[element_id %in% elements]
-
 sigl = readRDS(paste0(dir, import_folder, sigl_data))
-sigl = sigl[year(date)=='2017' | year(date) =='2018']
-sigl = sigl[element_id %in% elements]
+pati = readRDS(paste0(dir, import_folder, pati_data))
+
+base_2017 = readRDS(paste0(dir, base_archive))
+sigl_2017 = readRDS(paste0(dir, sigl_archive))
+
+# subset base_2017 and sigl_2017 to just the 2017 data and rbind with base and sigl
+base_2017 = base_2017[year == 2017, ]
+sigl_2017 = sigl_2017[year == 2017, ]
+base = rbindlist(list(base, base_2017), use.names = TRUE, fill = TRUE)
+sigl = rbindlist(list(sigl, sigl_2017), use.names = TRUE, fill = TRUE)
 
 # create a data set identifier
 base[ ,set:='base']
 pnls[ ,set:='pnls']
 sigl[ ,set:='sigl']
+pati[ ,set:='pati']
 
+# subset elements before combining since data sets are so large
+pnls = pnls[element_id %in% elements, ]
 pnls[, country:= "République Démocratique du Congo"]
-drop_cols <- c("coordinates")
+base = base[element_id %in% elements, ]
+sigl = sigl[element_id %in% elements, ]
+pati = pati[element_id %in% elements, ]
+
+drop_cols <- c("coordinates", "download_number", "last_update")
 base <- base[ , !(drop_cols), with = FALSE]
 sigl <- sigl[ , !(drop_cols), with = FALSE]
+pati <- pati[ , !(drop_cols), with = FALSE]
 
-# the code works up to here - you will need to edit after this
-dt = rbindlist( list(base, sigl, pnls), use.names = TRUE, fill= TRUE )
-if (nrow(base) + nrow(sigl) + nrow(pnls) != nrow(dt)) stop ("rbind did not work correctly")
+dt = rbindlist( list(base, sigl, pnls, pati), use.names = TRUE, fill= TRUE )
+if (nrow(base) + nrow(sigl) + nrow(pnls) + nrow(pati) != nrow(dt)) stop ("rbind did not work correctly")
+
 # ---------------------------------------------
 
 # ---------------------------------------------
 # save the interim data set so you don't need to load all the data every time
-
-saveRDS(dt, paste0(dir, 'pre_prep/merged/tableau_interim.rds'))
+saveRDS(dt, paste0(dir, 'pre_prep/merged/tableau/tableau_interim_3_4_19_(sigl_updated_2017_included).rds'))
+# dt = readRDS(paste0(dir, 'pre_prep/merged/tableau/tableau_interim_3_4_19_(sigl_updated).rds'))
 # ---------------------------------------------
 
 # ---------------------------------------------
 # check the english translations of the elements
-# for future downloads, change the english translations in the csv so they are correct after merge
+# read in csv of data elements with name changes:
+names = read.csv(paste0(dir, import_folder, 'tableau/rename_vars_tableau.csv'))
+names = as.data.table(names)
+names = names[, .(element_id, rename)]
 
-# change order of drug names and dosage to mirror the french elements
-dt[element_id=='KEv4JxAgpFK', element_eng:='C2 12.2 Determine HIV 1 + 2 test kit - quantity consumed']
-dt[element_id=='QvVGcIERRFc', element_eng:='C1 12.1 Artesunate-amodiaquine (12-59 months) 50mg + 135mg tablet - amount consumed']
-dt[element_id=='Wo3vNpLXPPm', element_eng:='C1 12.1 Artesunate-amodiaquine (2-11 months) 25mg + 67.5mg tablet  - amount consumed']
-dt[element_id=='jm3jeYdVkBl', element_eng:='C1 12.1 Artesunate-amodiaquine (14 years, 6 and over) 100mg + 270mg tablet - amount consumed']
-dt[element_id=='ovziGhkDOKb', element_eng:='C1 12.1 Artesunate-amodiaquine (6-13 years, 3 and over) 100mg + 270mg tablet - amount consumed']
-dt[element_id=='ncXfF8VViSh', element_eng:='C1 12.1 Rifampicin isoniazid + Pyrimetham Ethamb (RHZE) 150mg + 75mg + 400mg + 275mg these - amount consumed']
+dt = merge(dt, names, by = "element_id")
+dt[, element_eng := NULL]
+setnames(dt, "rename", "element_eng")
+# ---------------------------------------------
 
-dt[element_id=='WjEIQZvEFqa', element_eng:='C1 12.1 Lumefantrine + Artemether 80mg + 480mg - amount consumed' ]
-dt[element_id=='aeTpblK0SVC', element_eng:='C1 12.1 Lumefantrine + Artemether 40mg + 240mg - amount consumed' ]
+# ---------------------------------------------
+# only keep data from 2017 on:
+dt = dt[date >= "2017-01-01",]
 
-# fix the english translations
-dt[element_id=='DXz4Zxd4fKq', element_eng:='Pregnant or lactating women tested for HIV']
-dt[element_id=='gHBcPOF5y3z', element_eng:='Pregnant or lactating women who tested HIV+']
+# test unique identifiers:
+if (nrow(dt) != nrow( unique( dt[, .(date, org_unit_id, element, category)]))) stop('Unique identifiers do not uniquely identify rows in dt')
 
-# change amount to quantity
-dt$element_eng <- gsub("amount", "quantity", dt$element_eng)
-
-#---------------------------------------
 # create a variable for the number of facilities reporting at the health zone level
+facilities = dt[, .(facilities_reporting = length(unique(org_unit))), 
+                 by=.(set, element, element_eng, date, dps, health_zone, category, level)]
 
-facilities = dt[ ,.(facilities_reporting=length(unique(org_unit))), 
-                  by=.(set, element, date, health_zone, dps, category, level)]
-
-#-----------------------------------
 # sum over health zone to change data to the health facility type level 
 dt$value <- as.numeric(dt$value) # the NAs introduced here were listed as "NULL" before when the value was character type
-dt <- dt[ ,.(value=sum(value)), by=.(set, data_set, element_id, element, element_eng, date,
-                                     category,  health_zone, dps, level)] 
-# Note: th
+dt <- dt[, .(value = sum(value)), 
+          by=.(set, element, element_eng, date, dps, health_zone, category, level)] 
 
 # merge in the number of facilities
-dt = merge(dt, facilities, by=c('set', 'element', 'date', 
-                           'health_zone', 'dps', 'category', 'level'), all = TRUE)
+dt = merge(dt, facilities, by=c('set', 'element', 'element_eng', 'date', 'health_zone', 'dps', 'category', 'level'), all = TRUE)
+# ---------------------------------------------
 
-#----------------------------
+# ---------------------------------------------
 # create age and sex variables 
 dt[grep(category, pattern='>5'), age:='5+ years']
 dt[grep(category, pattern='<5'), age:='Under 5 years']
@@ -183,24 +200,24 @@ dt[category=='SA/PP, 20 et 24 ans', age:='20 - 24 years']
 dt[category=='SA/PP, 25 et 49 ans', age:='25 - 49 years']
 dt[category=='SA/PP, 50 ans et plus', age:='50+']
 dt[category=='SA/PP, Moins de 15 ans', age:='< 15 years'] 
-
-dt$element_eng <- gsub("FE", "pregnant women", dt$element_eng)
 dt[grep(element, pattern='FE'), sex:='Female']
 dt[grep(element, pattern='CPN'), sex:='Female']
-
-# only stock data should be missing sex
-dt[is.na(sex), unique(category)]
+dt[grep(element_eng, pattern='LLIN'), sex:=NA]
 
 # fix type
 dt[set=='pnls', type:='hiv']
 dt[set=="base", type:='malaria']
+dt[set=="pati", type:='tb']
 dt[grep(element, pattern='Artesunate'), type:='malaria']
 dt[grep(element, pattern='Lumefantrine'), type:='malaria']
 dt[grep(element, pattern='RHZE'), type:='tb']
 dt[grep(element, pattern='VIH'), type:='hiv']
-#-------------------------------
-# test graphs to confirm it worked
+dt[grep(element_eng, pattern='LLIN'), type:='malaria']
+# ---------------------------------------------
 
+# ---------------------------------------------
+# test graphs to confirm it worked
+# ---------------------------------------------
 # pdf(paste0(dir,'tableau/tableau_indicators.pdf'), height=6, width=12)
 # 
 # base <- dt [set=='base',.(count=sum(value, na.rm=T)), by=.(element_eng, date)]
@@ -244,31 +261,25 @@ dt[grep(element, pattern='VIH'), type:='hiv']
 #   scale_y_continuous(labels = scales::comma)
 # 
 # dev.off()
+# ---------------------------------------------
 
-#------------------------------
+# ---------------------------------------------
 # add umlauts to merge with tableau
-
 dt[dps=='Kasai', dps:='Kasaï']
 dt[dps=='Kasai Central', dps:='Kasaï Central']
 dt[dps=='Kasai Oriental', dps:='Kasaï Oriental']
 dt[dps=='Mai-Ndombe', dps:='Maï-Ndombe']
 
-#--------------------------------------------------------
-
 # change type to disease
 setnames(dt, 'type', 'disease')
-#----------------------------------------------------
+# ---------------------------------------------
 
-#-------------------------------
-# Export as an Excel document 
+# ---------------------------------------------
+# Export tableau data set
 
 # save as a RDS file 
-saveRDS(dt, paste0(dir, 'tableau/tableau_01_2017_12_2018_updated_01_2019.rds'))
+saveRDS(dt, paste0(dir, 'tableau/tableau_prepped_updated_03_04_2019.rds'))
 
-# read in the RDS file so you don't have to rerun the code
-# tabl <- readRDS(paste0(dir, 'tableau/tableau_01_2017_12_2018_updated_01_2019.rds'))
-
-#------------------------------
 # use xlsx instead of csv because it preserves the french special characters
 # use the openxlsx package (not xlsx!) as the java in xlsx cannot accomodate size
 # openxlsx works on the cluster (no need to install)
@@ -277,7 +288,8 @@ saveRDS(dt, paste0(dir, 'tableau/tableau_01_2017_12_2018_updated_01_2019.rds'))
 dt_date_subset <- dt[ date <= "2018-09-01", ]
 
 # start and end date are both inclusive
-write.xlsx(dt_date_subset, paste0(dir, 'tableau/tableau_01_2017_09_2018_updated_01_2019.xlsx'))
+write.xlsx(dt_date_subset, paste0(dir, 'tableau/tableau_01_2017_09_2018_updated_03_04_2019.xlsx'))
+saveRDS(dt_date_subset, paste0(dir, 'tableau/tableau_01_2017_09_2018_updated_03_04_2019.rds'))
 #-------------------------------
 
 

@@ -1,5 +1,9 @@
 # predict function for lavaan, taken from:
 # https://github.com/yrosseel/lavaan/issues/44
+
+# to do
+# how to run without dropping covariances?? or is it even necessary since it's built into the coefficients?
+
 predict_lavaan <- function(fit, newdata = NULL){
   stopifnot(inherits(fit, "lavaan"))
   
@@ -17,7 +21,7 @@ predict_lavaan <- function(fit, newdata = NULL){
   
   #Add some new columns to newdata
   newdata$Intercept <- 1
-  newdata[lavNames(fit, "ov.nox")] <- 0
+  # newdata[lavNames(fit, "ov.nox")] <- 0
   
   
   mod_df <- data.frame(lhs = fit@ParTable$lhs,
@@ -33,7 +37,7 @@ predict_lavaan <- function(fit, newdata = NULL){
   mod_df[which(mod_df$op=="~1"),]$rhs <- "Intercept"
   
   #get rid of exogenous on lhs
-  mod_df <- mod_df[-which(mod_df$exo==1),]
+  mod_df <- mod_df[mod_df$exo!=1,]
   
   #Order by lhs
   mod_df <- mod_df[sort(mod_df$lhs, index.return=TRUE)$ix,]
@@ -73,10 +77,13 @@ predict_lavaan <- function(fit, newdata = NULL){
     #make a formula
     rhs <- paste0(subdf$rhs, collapse=" + ")
     form <- as.formula(paste0(r, " ~ ", rhs))
-    
+      
+	# exclude variables that are intercept-only, these are what we modify in the counterfactual
+	if (all(rhs=='Intercept')) next
+	
     #use formula to get right part of the data in right format
     mod_mat <- model.matrix(form, newdata)[,-1]
-    new_val = mod_mat %*% subdf$est
+    new_val = t(t(mod_mat)) %*% subdf$est
     
     fit_df[[r]] <- new_val
     newdata[[r]] <- new_val

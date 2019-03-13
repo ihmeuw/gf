@@ -24,18 +24,18 @@ data = readRDS(outputFile3)
 	data$other_dah_M1_2 = NULL
 	
 	# combine M2 (all case management) with M2_1 (facility tx) for GF budgets (one summary budget from 2015-2017 has it)
-	data[, budget_M2_1:=budget_M2_1+budget_M2]
-	data$budget_M2 = NULL
+	data[, exp_M2_1:=exp_M2_1+exp_M2]
+	data$exp_M2 = NULL
 	
 	# set other_dah to NA (not 0) after 2016
-	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017, (v):=NA]
+	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017 & get(v)==0, (v):=NA]
 	
 	# drop M2_3 from other_dah for now because it's identifcal to M2_1
 	# data$other_dah_M2_3 = NULL
 
 # compute cumulative budgets
 rtVars = names(data)
-rtVars = rtVars[grepl('budget|other_dah', rtVars)]
+rtVars = rtVars[grepl('exp|other_dah', rtVars)]
 for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v))]
 
 # subset dates now that cumulative variables are computed
@@ -58,6 +58,9 @@ for(v in names(data)) {
 	data[is.na(get(v)), (v):=tmp]
 }
 data$tmp = NULL
+
+# now remake ghe_cumulative TEMPORARY
+data[, ghe_cumulative:=cumsum(ghe)]
 
 # drop completeness variables (for now)
 for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
@@ -101,4 +104,10 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 # ---------------------------------------------------------
 # Save file
 save(list=c('data', 'scaling_factors'), file=outputFile5a)
+
+# save a time-stamped version for reproducibility
+date_time = gsub('-|:| ', '_', Sys.time())
+outputFile5aArchive = gsub('prepped_data/', 'prepped_data/archive/', outputFile5a)
+outputFile5aArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5aArchive)
+file.copy(outputFile5a, outputFile5aArchive)
 # ---------------------------------------------------------

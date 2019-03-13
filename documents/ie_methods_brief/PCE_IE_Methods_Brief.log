@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6730 64-bit) (preloaded format=pdflatex 2018.8.11)  8 FEB 2019 17:04
+This is pdfTeX, Version 3.14159265-2.6-1.40.19 (MiKTeX 2.9.6730 64-bit) (preloaded format=pdflatex 2018.8.11)  25 FEB 2019 16:53
 entering extended mode
 **./PCE_IE_Methods_Brief.tex
 (PCE_IE_Methods_Brief.tex
@@ -396,69 +396,58 @@ Underfull \hbox (badness 10000) in paragraph at lines 228--229
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 254--255
+Underfull \hbox (badness 914) in paragraph at lines 242--243
+[]\OT1/cmr/m/n/10 Comprehensive im-pact mod-el-ing along re-sults
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 256--257
+
+ []
+
+LaTeX Font Info:    Try loading font information for OMS+cmr on input line 282.
+
+("C:\Users\davidp6\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\omscmr.fd"
+File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
+)
+LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 282.
+
+Underfull \hbox (badness 10000) in paragraph at lines 289--290
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 277--278
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 279--280
+Underfull \hbox (badness 10000) in paragraph at lines 291--292
 
  []
 
 
 LaTeX Font Warning: Font shape `OT1/cmss/m/it' in size <8> not available
-(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 285.
+(Font)              Font shape `OT1/cmss/m/sl' tried instead on input line 292.
 
 
 [1{C:/Users/davidp6/AppData/Local/MiKTeX/2.9/pdftex/config/pdftex.map}
 
 
 ]
-Underfull \hbox (badness 10000) in paragraph at lines 292--293
+Underfull \hbox (badness 10000) in paragraph at lines 306--307
 
  []
 
-<Differentiated_Plans_Image.png, id=11, 500.87125pt x 623.83063pt>
+<Differentiated_Plans_Image.png, id=12, 554.57187pt x 666.99188pt>
 File: Differentiated_Plans_Image.png Graphic file (type png)
 <use Differentiated_Plans_Image.png>
-Package pdftex.def Info: Differentiated_Plans_Image.png  used on input line 298
+Package pdftex.def Info: Differentiated_Plans_Image.png  used on input line 312
 .
-(pdftex.def)             Requested size: 200.34494pt x 249.52783pt.
+(pdftex.def)             Requested size: 221.82481pt x 266.79202pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 307--308
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 309--310
+Underfull \hbox (badness 10000) in paragraph at lines 322--323
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 316--317
-
- []
-
-<SEM_Diagram_Malaria.pdf, id=12, 963.6pt x 542.025pt>
-File: SEM_Diagram_Malaria.pdf Graphic file (type pdf)
-<use SEM_Diagram_Malaria.pdf>
-Package pdftex.def Info: SEM_Diagram_Malaria.pdf  used on input line 323.
-(pdftex.def)             Requested size: 337.26506pt x 189.71158pt.
-
-Overfull \hbox (51.67628pt too wide) in paragraph at lines 323--323
- [][] 
- []
-
-
-LaTeX Warning: `h' float specifier changed to `ht'.
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 328--329
+Underfull \hbox (badness 10000) in paragraph at lines 324--326
 
  []
 
@@ -467,8 +456,58 @@ Underfull \hbox (badness 10000) in paragraph at lines 330--331
 
  []
 
+
+Underfull \hbox (badness 10000) in paragraph at lines 332--334
+
+ []
+
 [2 <./Differentiated_Plans_Image.png>]
-Underfull \hbox (badness 10000) in paragraph at lines 332--333
+Overfull \hbox (3.02824pt too wide) in paragraph at lines 342--343
+\OT1/cmr/m/n/10 the sub-na-tional re-source track-ing study in Uganda.
+ []
+
+
+Underfull \hbox (badness 1584) in paragraph at lines 343--344
+\OT1/cmr/m/n/10 the epi-demi-o-log-i-cal sta-tus of malaria in the
+ []
+
+
+Overfull \hbox (1.55592pt too wide) in paragraph at lines 347--349
+[]\OT1/cmr/m/n/10 These ex-am-ples are in-dica-tive of the types of country-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 347--349
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 356--357
+
+ []
+
+<SEM_Diagram_Malaria.pdf, id=16, 820.5013pt x 529.98203pt>
+File: SEM_Diagram_Malaria.pdf Graphic file (type pdf)
+<use SEM_Diagram_Malaria.pdf>
+Package pdftex.def Info: SEM_Diagram_Malaria.pdf  used on input line 363.
+(pdftex.def)             Requested size: 266.65976pt x 172.24211pt.
+
+Overfull \hbox (20.8197pt too wide) in paragraph at lines 363--363
+ [][] 
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 368--369
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 370--371
+
+ []
+
+[3 <./SEM_Diagram_Malaria.pdf>]
+Underfull \hbox (badness 10000) in paragraph at lines 372--373
 
  []
 
@@ -476,94 +515,55 @@ Underfull \hbox (badness 10000) in paragraph at lines 332--333
 
 pdfTeX warning: pdflatex (file ./Pages_from_pilot_data_exploratory_graphs.pdf):
  PDF inclusion: found PDF version <1.6>, but at most version <1.5> allowed
-<Pages_from_pilot_data_exploratory_graphs.pdf, id=16, 650.43pt x 397.485pt>
+<Pages_from_pilot_data_exploratory_graphs.pdf, id=35, 650.43pt x 397.485pt>
 File: Pages_from_pilot_data_exploratory_graphs.pdf Graphic file (type pdf)
 <use Pages_from_pilot_data_exploratory_graphs.pdf>
 Package pdftex.def Info: Pages_from_pilot_data_exploratory_graphs.pdf  used on 
-input line 337.
+input line 377.
 (pdftex.def)             Requested size: 243.91064pt x 149.0565pt.
 
-Underfull \hbox (badness 10000) in paragraph at lines 341--342
+Underfull \hbox (badness 10000) in paragraph at lines 381--382
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 347--348
+Underfull \hbox (badness 10000) in paragraph at lines 387--388
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 354--355
+Underfull \hbox (badness 10000) in paragraph at lines 392--394
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 357--358
+Underfull \hbox (badness 10000) in paragraph at lines 399--401
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 359--360
+Underfull \hbox (badness 10000) in paragraph at lines 405--406
 
  []
 
-[3 <./SEM_Diagram_Malaria.pdf> <./Pages_from_pilot_data_exploratory_graphs.pdf>
-]
-LaTeX Font Info:    Try loading font information for OMS+cmr on input line 366.
-
- ("C:\Users\davidp6\AppData\Local\Programs\MiKTeX 2.9\tex\latex\base\omscmr.fd"
-File: omscmr.fd 2014/09/29 v2.5h Standard LaTeX font definitions
-)
-LaTeX Font Info:    Font shape `OMS/cmr/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 366.
-
-Overfull \hbox (3.02824pt too wide) in paragraph at lines 366--367
-\OT1/cmr/m/n/10 the sub-na-tional re-source track-ing study in Uganda.
- []
-
-
-Underfull \hbox (badness 1584) in paragraph at lines 367--368
-\OT1/cmr/m/n/10 the epi-demi-o-log-i-cal sta-tus of malaria in the
- []
-
-
-Overfull \hbox (1.55592pt too wide) in paragraph at lines 371--372
-[]\OT1/cmr/m/n/10 These ex-am-ples are in-dica-tive of the types of country-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 371--372
+[4 <./Pages_from_pilot_data_exploratory_graphs.pdf>]
+Underfull \hbox (badness 10000) in paragraph at lines 407--408
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 375--376
+Underfull \hbox (badness 10000) in paragraph at lines 409--410
 
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 378--379
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 380--381
-
- []
-
-
-Underfull \hbox (badness 10000) in paragraph at lines 382--383
-
- []
-
-[4]
-Underfull \hbox (badness 10000) in paragraph at lines 384--385
+Underfull \hbox (badness 10000) in paragraph at lines 411--413
 
  []
 
 No file PCE_IE_Methods_Brief.bbl.
 
-PCE_IE_Methods_Brief.tex:389: LaTeX Error: \begin{document} ended by \end{backm
+PCE_IE_Methods_Brief.tex:417: LaTeX Error: \begin{document} ended by \end{backm
 atter}.
 
 See the LaTeX manual or LaTeX Companion for explanation.
@@ -572,7 +572,7 @@ Your command was ignored.
 Type  I <command> <return>  to replace it with another command,
 or  <return>  to continue without it.
 
-PCE_IE_Methods_Brief.tex:389: Extra \endgroup
+PCE_IE_Methods_Brief.tex:417: Extra \endgroup
 Things are pretty mixed up, but I think the worst is over.
 
 
@@ -591,11 +591,11 @@ LaTeX Warning: There were multiply-defined labels.
 Here is how much of TeX's memory you used:
  5703 strings out of 492973
  91595 string characters out of 3125806
- 273345 words of memory out of 3000000
+ 272345 words of memory out of 3000000
  9481 multiletter control sequences out of 15000+200000
  7501 words of font info for 27 fonts, out of 3000000 for 9000
  1141 hyphenation exceptions out of 8191
- 41i,9n,46p,1079b,322s stack positions out of 5000i,500n,10000p,200000b,50000s
+ 41i,9n,46p,1087b,266s stack positions out of 5000i,500n,10000p,200000b,50000s
 <C:/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfon
 ts/cm/cmr10.pfb><C:/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1
 /public/amsfonts/cm/cmss10.pfb><C:/Users/davidp6/AppData/Local/Programs/MiKTeX 
@@ -605,7 +605,7 @@ ppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/cm/cmssbx10.pfb><C
 :/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/public/amsfonts/c
 m/cmsy10.pfb><C:/Users/davidp6/AppData/Local/Programs/MiKTeX 2.9/fonts/type1/pu
 blic/amsfonts/cm/cmti10.pfb>
-Output written on PCE_IE_Methods_Brief.pdf (5 pages, 374012 bytes).
+Output written on PCE_IE_Methods_Brief.pdf (5 pages, 376171 bytes).
 PDF statistics:
  70 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)

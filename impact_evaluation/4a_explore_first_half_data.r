@@ -19,21 +19,24 @@ test = nrow(data)==nrow(unique(data[,'date', with=F]))
 if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify rows.'))
 
 # last-minute prep that shouldn't be necessary after bugs are fixed
-	# combine the two ITN budget categories since FGH can't distinguish
+	# combine the two ITN exp categories since FGH can't distinguish
 	data[, other_dah_M1_1:=other_dah_M1_1+other_dah_M1_2]
 	data$other_dah_M1_2 = NULL
 	
-	# combine M2 (all case management) with M2_1 (facility tx) for GF budgets (one summary budget from 2015-2017 has it)
-	data[, budget_M2_1:=budget_M2_1+budget_M2]
-	data$budget_M2 = NULL
+	# combine M2 (all case management) with M2_1 (facility tx) for GF exps (one summary exp from 2015-2017 has it)
+	data[, exp_M2_1:=exp_M2_1+exp_M2]
+	data$exp_M2 = NULL
 	
 	# set other_dah to NA (not 0) after 2016
 	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017, (v):=NA]
 
-# compute cumulative budgets
+# compute cumulative exps
 rtVars = names(data)
-rtVars = rtVars[grepl('budget|other_dah', rtVars)]
+rtVars = rtVars[grepl('exp|other_dah|ghe', rtVars)]
+data[is.na(ghe), ghe:=0]
+setorder(data, date) # order by data so cumulative exp is always accurate even if data is somehow scrambled before
 for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v))]
+data[ghe==0, ghe:=NA]
 # ----------------------------------------------------------------------------
 
 
@@ -59,6 +62,9 @@ setnames(codes, c('Abbreviated Module','Abbreviated Intervention'), c('module','
 long = merge(long, codes, by.x='indicator',by.y='Code',all.x=TRUE)
 long[intervention=='LLIN: Mass campaign' & metric=='other_dah', intervention:='LLIN: Cont. and Mass Distribution']
 
+# handle ghe
+long[variable %in% c('ghe','ghe_cumulative'), intervention:='All GHE']
+
 # label other indicators nicely
 long[is.na(intervention), activity:=ifelse(grepl('received',indicator), 'Activity', 'Output')]
 
@@ -74,37 +80,36 @@ nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
 # Make time series graphs
 
 # time series of inputs
-p1a = ggplot(long[!is.na(intervention) & metric=='budget' & cumulative=='Not Cumulative'], 
+p1a = ggplot(long[!is.na(intervention) & metric=='exp' & cumulative=='Not Cumulative'], 
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Time Series - Global Fund', y='Budget', x='Quarter', color='Intervention') + 
+	labs(title='Time Series - Global Fund', y='Expenditure', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
 # time series of cumulative inputs
-p1b = ggplot(long[!is.na(intervention) & metric=='budget' & cumulative=='Cumulative'], 
+p1b = ggplot(long[!is.na(intervention) & metric=='exp' & cumulative=='Cumulative'], 
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Time Series - Global Fund', y='Cumulative Budget', x='Quarter', color='Intervention') + 
+	labs(title='Time Series - Global Fund', y='Cumulative Expenditure', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
-
 # time series of inputs
-p1c = ggplot(long[!is.na(intervention) & metric=='other_dah' & cumulative=='Not Cumulative'], 
+p1c = ggplot(long[!is.na(intervention) & metric %in% c('other_dah','ghe') & cumulative=='Not Cumulative'], 
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Time Series - Other Development Assistance for Malaria', 
+	labs(title='Time Series - Government and Other Development Assistance for Malaria', 
 		y='Disbursement', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
 # time series of cumulative inputs
-p1d = ggplot(long[!is.na(intervention) & metric=='other_dah' & cumulative=='Cumulative'], 
+p1d = ggplot(long[!is.na(intervention) & metric %in% c('other_dah','ghe') & cumulative=='Cumulative'], 
 		aes(y=value, x=date, color=intervention)) + 
 	geom_line() + 
 	geom_point() + 
-	labs(title='Time Series - Other Development Assistance for Malaria', 
+	labs(title='Time Series - Government and Other Development Assistance for Malaria', 
 		y='Cumulative Disbursement', x='Quarter', color='Intervention') + 
 	theme_bw(base_size=16)
 
@@ -146,10 +151,10 @@ p3b = ggplot(long[activity=='Output' & metric=='completeness'],
 # Make distribution graphs
 
 # histograms of distributions for inputs
-p4a = ggplot(long[!is.na(intervention) & cumulative=='Cumulative' & metric=='budget'], aes(x=value)) + 
+p4a = ggplot(long[!is.na(intervention) & cumulative=='Cumulative' & metric=='exp'], aes(x=value)) + 
 	geom_histogram() + 
 	facet_wrap(~intervention, scales='free') + 
-	labs(title='Histograms - Global Fund', y='Frequency (Quarters)', x='Cumulative Budget') + 
+	labs(title='Histograms - Global Fund', y='Frequency (Quarters)', x='Cumulative Expenditure') + 
 	theme_bw(base_size=16)
 
 # histograms of distributions for inputs
@@ -181,7 +186,7 @@ p4d = ggplot(long[activity=='Output' & metric=='value'], aes(x=value)) +
 # scatterplot of ITN correlations
 p5a = list()
 i=1
-for(v in c('budget_M1_1_cumulative', 'budget_M1_2_cumulative', 'other_dah_M1_1_cumulative')) { 
+for(v in c('exp_M1_1_cumulative', 'exp_M1_2_cumulative', 'other_dah_M1_1_cumulative', 'ghe_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5a[[i]] = ggplot(data[!is.na(value_ITN_received) & !is.na(get(v))], 
 			aes_string(y='value_ITN_received', x=v)) + 
@@ -195,8 +200,8 @@ for(v in c('budget_M1_1_cumulative', 'budget_M1_2_cumulative', 'other_dah_M1_1_c
 # scatterplot of RDT correlations
 p5b = list()
 i=1
-for(v in c('budget_M2_1_cumulative', 'budget_M2_3_cumulative', 
-	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative')) { 
+for(v in c('exp_M2_1_cumulative', 'exp_M2_3_cumulative', 
+	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative', 'ghe_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5b[[i]] = ggplot(data[!is.na(value_RDT_received) & !is.na(get(v))], 
 			aes_string(y='value_RDT_received', x=v)) + 
@@ -210,8 +215,8 @@ for(v in c('budget_M2_1_cumulative', 'budget_M2_3_cumulative',
 # scatterplot of ACT correlations
 p5c = list()
 i=1
-for(v in c('budget_M2_1_cumulative','budget_M2_3_cumulative', 
-	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative')) { 
+for(v in c('exp_M2_1_cumulative','exp_M2_3_cumulative', 
+	'other_dah_M2_cumulative', 'other_dah_M2_3_cumulative', 'ghe_cumulative')) { 
 	l = nodeTable[variable==v]$label
 	p5c[[i]] = ggplot(data[!is.na(value_RDT_received) & !is.na(get(v))], 
 			aes_string(y='value_ACT_received', x=v)) + 
@@ -227,7 +232,7 @@ p6 = list()
 pairs = data.table(y=c('value_ITN_consumed','value_ACTs_CHWs','value_RDT_completed',
 	'value_SP','value_severeMalariaTreated','value_totalPatientsTreated'), 
 	x=c('value_ITN_received','value_ACT_received','value_RDT_received',
-	'budget_M3_1_cumulative','budget_M2_6_cumulative','value_ACT_received'))
+	'exp_M3_1_cumulative','exp_M2_6_cumulative','value_ACT_received'))
 for(i in seq(nrow(pairs))) { 
 	vy=pairs[i]$y
 	vx=pairs[i]$x
@@ -244,7 +249,7 @@ for(i in seq(nrow(pairs))) {
 
 # --------------------------------
 # Save file
-pdf(outputFile4, height=5.5, width=9)
+pdf(outputFile4a, height=5.5, width=9)
 # p1a
 p1b
 # p1c
@@ -262,4 +267,10 @@ do.call('grid.arrange',c(p5b, list(top=textGrob('Correlations - RDT Inputs and A
 do.call('grid.arrange',c(p5c, list(top=textGrob('Correlations - ACT Inputs and Activities', gp=gpar(fontsize=16)))))
 do.call('grid.arrange',c(p6, list(top=textGrob('Correlations - All Activities and Outputs', gp=gpar(fontsize=16)))))
 dev.off()
+
+# save a time-stamped version for reproducibility
+date_time = gsub('-|:| ', '_', Sys.time())
+outputFile4aArchive = gsub('visualizations/', 'visualizations/archive/', outputFile4a)
+outputFile4aArchive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile4aArchive)
+file.copy(outputFile4a, outputFile4aArchive)
 # --------------------------------

@@ -10,11 +10,11 @@
 #Sheet names that don't work so far: "LFA EFR_7", "LFA_Annex-SR Financials", "LFA_Total PR Cash Outflow_3", "LFA_Total PR Cash Outflow_3A"
 
 # start function
-prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disease, period, grant, recipient, source) {
+prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, period) {
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
-  # # 
+  #
   # master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", file_list$loc_id[i], "/grants/")
   # 
   # folder = "budgets"
@@ -151,14 +151,6 @@ prep_modular_approach_pudr = function(dir, inFile, sheet_name, start_date, disea
   # 3. Generate new variables
   #-------------------------------------
   gf_data$start_date <- start_date
-  gf_data$data_source <- source
-  gf_data$period <- period
-  gf_data$disease <- disease
-  gf_data$grant_number <- grant
-  gf_data$year <- year(gf_data$start_date)
-
-  gf_data$cost_category <- "all"
-  gf_data$sda_activity <- "all"
 
   #-------------------------------------
   # 4. Validate data

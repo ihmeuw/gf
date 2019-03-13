@@ -50,23 +50,25 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 #------------ Prep Data------------------------
 #### Prep Data
 # define main directory
-dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/SIGSA/')
-prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/prepped_data/')
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/SIGSA/')
+prep_dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/sigsa_sigpro/sigpro_outputs/')
 mapping_dir = paste0(root, '/Project/Evaluation/GF/mapping/gtm/')
 
 # Read in file (this is prepped with SIGSA and SIGPRO level )
-dt = readRDS(paste0(prep_dir, "hiv_patientlvl_combined.rds"))
+#dt = readRDS(paste0(prep_dir, "hiv_patientlvl_combined.rds"))
+dt = readRDS(paste0(prep_dir, "sigpro_wide.rds"))
 
-# remove repeat positive tests for patients, only keep the first postivie test and all negative tests before it
+# remove repeat positive tests for patients, only eep the first postivie test and all negative tests before it
 total_dt = dt
 
 # change name for risk condition to merge SIGSA and SIGPRO
 total_dt$risk_condition_eng = ifelse(total_dt$risk_condition_eng == 'TRANS TRABAJADORAS SEXUALES', "Sex Worker", total_dt$risk_condition_eng)
 
 #Make binaries to make calculations easier
-total_dt$isPosTest = ifelse(total_dt$hiv_screening_result == "REACTIVO", 1, 0)
+total_dt$isPosTest = ifelse(total_dt$hiv_screening_result == "REACTIVO", 1, 0) #Check to make sure these are capturing everything in new data! 
 total_dt$completedTest = ifelse(total_dt$completed_hiv_screening_test == "SI", 1, 0)
 
+#EKL - at this point we only have through Feb. 2018. 
 # change all dates to the first of the month to merge dates
 total_dt$date = as.Date(paste0(year(total_dt$date), '-', month(total_dt$date), "-01"))
 
@@ -89,12 +91,14 @@ dt_map = total_dt
 dt_map = dt_map[,.(date, completedTest, isPosTest, risk_condition_eng, sex, isMSM, isSexWorker)]
 dt_map = unique(dt_map)
 
+#Drop out one case where year is 2020- need to move this to a data cleaning file! 
+dt_map = dt_map[year(date)<2019]
   
 # melt to make long
 mapping_long = melt(dt_map, id.vars = c('date', 'risk_condition_eng', "sex", "isMSM", "isSexWorker"))
 #mapping_long [is.na(isMSM), isMSM := 3]
 mapping_long$isMSM = ifelse(mapping_long$isMSM == 1, "Men who have sex with Men", ifelse(mapping_long$isMSM == 0, "Not Men who have Sex with Men", mapping_long$isMSM))
-mapping_long = mapping_long[year(date) != 2014 & year(date) != 2018] 
+mapping_long = mapping_long[year(date) != 2014] 
 
 find_pos_ratio = function(dt_total, var_name){
   #function finds positive ratios
@@ -194,7 +198,7 @@ ratio_by_MSM_sex = find_pos_ratio(dt_by_MSM_male, c("date", "isMSM", "sex"))
     theme_bw() 
   
   
-  outFile = paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/HIV/visualizations/SIGSA_SIGRPO_testing_comp.pdf')
+  outFile = paste0(root, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/sigsa_sigpro/visualizations/SIGSA_SIGRPO_testing_comp_new.pdf')
   
   pdf(outFile, height=5.5, width=7)
   pa0

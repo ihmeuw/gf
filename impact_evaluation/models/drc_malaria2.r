@@ -1,11 +1,15 @@
 # model: drc_malaria2.r
 # purpose: bayesian version of drc_malaria1
+
+# TO DO
+# Add arrow from RDT_completed to severeMalariaTreated, totalPatientsTreated and ACTs_CHWs
+
 model = '
 
 	# linkage 1 regressions
-	value_ITN_received ~ 1*budget_M1_1_cumulative + prior("dgamma(1,1)")*budget_M1_2_cumulative + prior("dgamma(1,1)")*other_dah_M1_1_cumulative + date
-	value_RDT_received ~ 1*budget_M2_1_cumulative + prior("dgamma(1,1)")*budget_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date
-	value_ACT_received ~ 1*budget_M2_1_cumulative + prior("dgamma(1,1)")*budget_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date
+	value_ITN_received ~ 1*exp_M1_1_cumulative + prior("dgamma(1,1)")*exp_M1_2_cumulative + prior("dgamma(1,1)")*other_dah_M1_1_cumulative + date
+	value_RDT_received ~ 1*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date
+	value_ACT_received ~ 1*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date
 	
 	# linkage 1 regressions with hotfixes for heywood cases (temporary)
 
@@ -14,8 +18,8 @@ model = '
 	value_ITN_consumed ~ prior("dgamma(1,1)")*value_ITN_received
 	value_ACTs_CHWs ~ prior("dgamma(1,1)")*value_ACT_received
 	value_RDT_completed ~ prior("dgamma(1,1)")*value_RDT_received
-	value_SP ~ prior("dgamma(1,1)")*budget_M3_1_cumulative
-	value_severeMalariaTreated ~ 1*budget_M2_6_cumulative + prior("dgamma(1,1)")*value_ACT_received
+	value_SP ~ prior("dgamma(1,1)")*exp_M3_1_cumulative
+	value_severeMalariaTreated ~ 1*exp_M2_6_cumulative + prior("dgamma(1,1)")*value_ACT_received
 	value_totalPatientsTreated ~ prior("dgamma(1,1)")*value_ACT_received
 	
 	# latent variables
@@ -32,20 +36,20 @@ model = '
 	# value_totalPatientsTreated ~ 1*value_totalPatientsTreated
 	
 	# covariances
-	budget_M1_1_cumulative ~~ other_dah_M1_1_cumulative
-	budget_M1_2_cumulative ~~ other_dah_M1_1_cumulative
-	budget_M2_1_cumulative ~~ other_dah_M2_cumulative
-	budget_M2_1_cumulative ~~ other_dah_M2_cumulative
-	budget_M2_6_cumulative ~~ other_dah_M2_cumulative
-	budget_M2_3_cumulative ~~ other_dah_M2_3_cumulative
+	exp_M1_1_cumulative ~~ other_dah_M1_1_cumulative
+	exp_M1_2_cumulative ~~ other_dah_M1_1_cumulative
+	exp_M2_1_cumulative ~~ other_dah_M2_cumulative
+	exp_M2_1_cumulative ~~ other_dah_M2_cumulative
+	exp_M2_6_cumulative ~~ other_dah_M2_cumulative
+	exp_M2_3_cumulative ~~ other_dah_M2_3_cumulative
 	
 	value_ITN_consumed ~~ value_RDT_completed
 	value_RDT_completed ~~ value_totalPatientsTreated
 	
 	# fixed covariances
-	budget_M2_3_cumulative ~~ 0*budget_M3_1_cumulative
-	budget_M2_3_cumulative ~~ 0*budget_M2_6_cumulative
-	budget_M2_6_cumulative ~~ 0*budget_M3_1_cumulative
+	exp_M2_3_cumulative ~~ 0*exp_M3_1_cumulative
+	exp_M2_3_cumulative ~~ 0*exp_M2_6_cumulative
+	exp_M2_6_cumulative ~~ 0*exp_M3_1_cumulative
 	
 	value_ITN_consumed ~~ 0*value_ACTs_CHWs
 	# value_ITN_consumed ~~ 0*value_RDT_completed

@@ -15,5 +15,8 @@ remap_diseases <- function(resource_database){
   #French corrections 
   resource_database[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
   
+  #Correct all tb/hiv to hiv/tb
+  resource_database[disease == 'tb/hiv', disease:='hiv/tb']
+  
   return(resource_database) 
 }
