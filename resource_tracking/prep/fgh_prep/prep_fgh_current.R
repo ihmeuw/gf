@@ -12,34 +12,8 @@ rm(list=ls())
 
 user = "elineb" #Change to your username 
 code_loc = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
+source(paste0(code_loc, 'resource_tracking/prep/set_up_r.R'))
 source(paste0(code_loc, 'resource_tracking/prep/fgh_prep/fgh_prep_functions.R'))
-
-
-# ---------------------------------------
-# Install packages and set up R  
-# ---------------------------------------
-
-library(data.table)
-library(readstata13)
-options(scipen=100)
-
-# ---------------------------------------
-# Set global variables and filepaths.  
-# ---------------------------------------
-
-#J:drive filepaths
-j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
-dir = paste0(j, '/Project/Evaluation/GF/')
-combined_output_dir = paste0(dir, "resource_tracking/multi_country/mapping")
-
-#Code filepaths 
-code_loc = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
-code_dir = paste0(code_loc, "resource_tracking/prep/")
-gf_prep_code = paste0(code_dir, "global_fund_prep/")
-budget_pudr_code = paste0(gf_prep_code, "budget_pudr_prep/")
-gos_code = paste0(gf_prep_code, "gos_prep/")
-
-#Source shared functions
 source(paste0(code_dir, "shared_prep_functions.R"), encoding="UTF-8")
 
 # ----------------------------------------------
@@ -119,9 +93,6 @@ fgh_mapped$fin_data_type <- "actual"
 # prep the HIV THE data from the FGH team  
 # ----------------------------------------------
 
-##country codes for GTM, UGA, and DRC
-country_codes <- c(128, 190, 171)
-
 ghe_data <- ghe_data[location_id %in% country_codes]
 
 ghe_data$model <- NULL
@@ -162,6 +133,7 @@ ghe_mapped <- merge(ghe_cleaned, final_mapping, by='code', all.x = TRUE)
 ghe_mapped[adm1==128, loc_name:="GTM"]
 ghe_mapped[adm1==190, loc_name:="UGA"]
 ghe_mapped[adm1==171, loc_name:="COD"]
+ghe_mapped[adm1==216, loc_name:='SEN']
 
 ghe_mapped$financing_source <- mapply(get_the_source_channel, as.character(ghe_mapped$fin_data_type))
 ghe_mapped = ghe_mapped[financing_source != "the"]

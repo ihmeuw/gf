@@ -29,20 +29,6 @@ limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be s
 
 test_current_files = FALSE #Set to true if you would like to run unit tests on current database. Set to false if you would like to 
 # run tests on archived database. 
-# ---------------------------------------
-# #Mark which grants are currently active to save in file - this should be updated every grant period! 
-# ---------------------------------------
-
-# this info is a good cadidate to save as a little csv somewhere... 
-# as a general rule of thumb, try not to embed anything that resembles data/metadata in the code
-current_gtm_grants <- c('GTM-H-HIVOS', 'GTM-H-INCAP', 'GTM-M-MSPAS', 'GTM-T-MSPAS')
-current_gtm_grant_period <- c('2018', '2019-2020', '2018-2020', '2016-2019')
-
-current_cod_grants <- c('COD-C-CORDAID', 'COD-H-MOH', 'COD-T-MOH', 'COD-M-MOH', 'COD-M-SANRU')
-current_cod_grant_period <- rep("2018-2020", 5)
-
-current_uga_grants <- c('UGA-C-TASO', 'UGA-H-MoFPED', 'UGA-M-MoFPED', 'UGA-M-TASO', 'UGA-T-MoFPED')
-current_uga_grant_period <- rep("2018-2020", 5)
 
 # ----------------------------------------------
 # STEP 1: Read in and verify module mapping framework
