@@ -249,7 +249,7 @@ for(i in seq(nrow(pairs))) {
 
 # --------------------------------
 # Save file
-pdf(outputFile4, height=5.5, width=9)
+pdf(outputFile4a, height=5.5, width=9)
 # p1a
 p1b
 # p1c
@@ -270,7 +270,7 @@ dev.off()
 
 # save a time-stamped version for reproducibility
 date_time = gsub('-|:| ', '_', Sys.time())
-outputFile4Archive = gsub('visualizations/', 'visualizations/archive/', outputFile4)
-outputFile4Archive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile4Archive)
-file.copy(outputFile4, outputFile4Archive)
+outputFile4aArchive = gsub('visualizations/', 'visualizations/archive/', outputFile4a)
+outputFile4aArchive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile4aArchive)
+file.copy(outputFile4a, outputFile4aArchive)
 # --------------------------------
