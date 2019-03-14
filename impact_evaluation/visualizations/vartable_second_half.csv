@@ -1,0 +1,7 @@
+variable,x,y,label
+lag_mildMalariaTreated_rate,0,4.5,Lag Tx Cvg. (mild)
+lag_ITN_rate,0,2.5,Lag ITN Cvg.
+lag_severeMalariaTreated_rate,0,0.5,Lag Tx. Cvg. (severe)
+newCasesMalariaMild_rate,5,4.5,Incidence Rate (mild)
+newCasesMalariaSevere_rate,5,0.5,Incidence Rate (severe)
+malariaDeaths_rate,10,2.5,Mortality Rate
