@@ -34,8 +34,8 @@ outFile = paste0(dir, 'sigl_quantreg_imputation_results.rds') # at the very end,
 # once all files are done, collect all output into one data table
 #------------------------------------
 fullData = data.table()
-
-for (j in seq(N)) {
+numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/qr_results')))
+for (j in seq(numFiles)) {
   tmp = read.fst(paste0('/ihme/scratch/users/', user_name, '/qr_results/quantreg_output', j, '.fst'), as.data.table = TRUE)
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
