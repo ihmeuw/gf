@@ -213,17 +213,18 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 			# identify edge length
 			el = edgeTable[i]$edge_length
 			# set direction of curve
-			di = ifelse(edgeTable[i]$xstart<mean(edgeTable$xstart), -1, 1)
+			side = ifelse(edgeTable[i]$xstart<mean(edgeTable$xstart), 'left', 'right')
+			di = ifelse(side=='left', -1, 1)
 			# curved arrows going downward need to bend the other way
 			if (edgeTable[i]$yend < edgeTable[i]$ystart) di = -di 
 			# add curves to graph (different depending on direction of curve)
-			if (di<0) {
+			if (side=='right') {
 				p = p + 
 					geom_curve(data=edgeTable[i], 
 						aes(x=xstart+boxWidth, y=ystart, xend=xend+boxWidth, yend=yend, color=est), 
 						size=labSize2*.25, curvature=di*(1/(0.4*el)), angle=90)
 			}
-			if (di>=0) { 
+			if (side=='left') { 
 				p = p + 
 					geom_curve(data=edgeTable[i], 
 						aes(x=xstart, y=ystart, xend=xend, yend=yend, color=est), 
