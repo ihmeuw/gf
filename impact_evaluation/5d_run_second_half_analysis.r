@@ -73,13 +73,13 @@ semGraph(parTable=means, nodeTable=nodeTable,
 # Save model output and clean up
 
 # save
-save(list=c('data','model','semFit','scaling_factors'), file=outputFile5b)
+save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5d)
 
 # save a time-stamped version for reproducibility
 date_time = gsub('-|:| ', '_', Sys.time())
-outputFile5bArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5b)
-outputFile5bArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5bArchive)
-save(list=c('data','model','semFit','scaling_factors'), file=outputFile5bArchive)
+outputFile5dArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5d)
+outputFile5dArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5dArchive)
+save(list=c('data','model','semFit','scaling_factors'), file=outputFile5dArchive)
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
