@@ -98,7 +98,7 @@ preds = preds*scaling_factors
 cf = merge(data, preds, 'date')
 cf = melt(cf, id.vars='date')
 cf[, cf:=ifelse(grepl('.y',variable),'Counterfactual Budget', 'Actual Budget')]
-cf[, graph_var:=!grepl('exp|other_dah',variable)]
+cf[, graph_var:=!grepl('exp|other_dah|ghe',variable)]
 cf[, variable:=gsub('.x|.y','',variable)]
 
 # show counterfactual budget
