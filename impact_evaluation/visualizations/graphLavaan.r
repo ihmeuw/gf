@@ -1,6 +1,7 @@
 # Function that makes a diagram of SEM output
 # Arguments: 
-# fitObject, a lavaan or blavaan object
+# fitObject, a lavaan or blavaan object (this or parTable is required)
+# parTable, the result of parTable(fitObject) or standardizedSolution(fitObject) (must match "standardized"), if fitObject isn't provided
 # infoTable, a data.table containing 4 columns (rows correspond to model variables in any order): 
 # 	variable (exactly as in model), x, y (where it should appear in graph) and label (optional)
 # scaling_factors, optional data.table containing one column per model variable, data represents factors used to rescale variables
@@ -34,7 +35,7 @@
 # midpoint=0.4
 # curved=2
 
-semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA, 
+semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_factors=NA, 
 	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, 
 	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, 
 	curved=0, tapered=TRUE) {
@@ -51,7 +52,8 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	# test any variables not in model
 	
 	# test any variables not in nodeTable
-	modelVars = unique(c(fitObject@ParTable$lhs, fitObject@ParTable$rhs))
+	if (!is.null(fitObject)) modelVars = unique(c(fitObject@ParTable$lhs, fitObject@ParTable$rhs))
+	if (!is.null(parTable)) modelVars = unique(c(parTable$lhs, parTable$rhs))
 	modelVars = modelVars[modelVars!='']
 	exclVars = modelVars[!modelVars %in% nodeTable$variable]
 	
@@ -70,11 +72,14 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 	# edgeTable[, se:=as.numeric(se)]
 	# edgeTable$label = NULL
 	if (standardized==TRUE) {
-		edgeTable = data.table(standardizedSolution(fitObject))
+		if (!is.null(fitObject)) edgeTable = data.table(standardizedSolution(fitObject))
+		if (!is.null(parTable)) edgeTable = data.table(parTable)
 		setnames(edgeTable, 'est.std', 'est')
 	}
 	if (standardized==FALSE) { 
-		edgeTable = data.table(parTable(fitObject))[, c('lhs','op','rhs','est'), with=FALSE]
+		vars = c('lhs','op','rhs','est')
+		if (!is.null(fitObject)) edgeTable = data.table(parTable(fitObject))[, vars, with=FALSE]
+		if (!is.null(parTable)) edgeTable = data.table(parTable[, vars, with=FALSE])
 	}
 	# multiply by scaling factors if we're showing actual coefficients (if possible)
 	if (!all(is.na(scaling_factors))) {
@@ -244,7 +249,7 @@ semGraph = function(fitObject=NULL, nodeTable=NULL, scaling_factors=NA,
 		# geom_point(data=nodeTable, aes(y=y, x=x), size=labSize2*5, shape=22, fill='white') + 
 		geom_rect(data=nodeTable, aes(ymin=y-(boxHeight*.5), ymax=y+(boxHeight*.5), xmin=x, xmax=x+boxWidth), 
 			fill='white', color='black') + 
-		geom_text(data=nodeTable, aes(y=y, x=x+(0.05*boxWidth), label=str_wrap(label,20)), size=labSize2, hjust=0) 
+		geom_text(data=nodeTable, aes(y=y, x=x+(0.05*boxWidth), label=str_wrap(label,30)), size=labSize2, hjust=0) 
 	
 	# improve legend
 	p = p + 
