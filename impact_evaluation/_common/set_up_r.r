@@ -12,6 +12,7 @@
 
 # ------------------
 # Load packages
+set.seed(1)
 library(data.table)
 library(lubridate)
 library(readxl)
@@ -127,6 +128,9 @@ outputFile5a = paste0(ieDir, 'pilot_data_pre_model.rdata')
 
 # output file from 5b_run_analysis.R
 outputFile5b = paste0(ieDir, 'pilot_model_results.rdata')
+
+# output file from 5c_set_up_for_second_half_analysis.r
+outputFile5c = paste0(ieDir, 'second_half_data_pre_model.rdata')
 
 # output file from 6_display_results.r
 outputFile6 = paste0(ieDir, '../visualizations/pilot_model_results.pdf')
