@@ -199,7 +199,7 @@ p7 = ggplot(long_agg[grepl('rate',variable) & !grepl('lag_',variable) &
 		aes(x=value)) + 
 	geom_histogram() + 
 	facet_wrap(~variable, scales='free') + 
-	labs(title='Histograms - Outcomes', y='Frequency', x='Coverage') + 
+	labs(title='Histograms - Impact', y='Frequency', x='Coverage') + 
 	theme_bw(base_size=16)	
 	
 # health zone
@@ -207,7 +207,7 @@ p8 = ggplot(long[grepl('rate',variable) & section=='Impact'],
 		aes(x=value)) + 
 	geom_histogram() + 
 	facet_wrap(~variable, scales='free') + 
-	labs(title='Histograms - Outcomes', subtitle='By Health Zone', 
+	labs(title='Histograms - Impact', subtitle='By Health Zone', 
 		y='Frequency', x='Coverage') + 
 	theme_bw(base_size=16)
 # ----------------------------------------------
@@ -215,6 +215,11 @@ p8 = ggplot(long[grepl('rate',variable) & section=='Impact'],
 
 # ----------------------------------------------
 # Make correlation graphs
+
+# log transform
+logVars = c('newCasesMalariaMild_rate','newCasesMalariaSevere_rate', 'malariaDeaths_rate')
+for(v in logVars) data[, (v):=log(get(v))]
+for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
 
 # lag-acts and incidence
 p9 = list()
@@ -242,23 +247,27 @@ for(v in c('lag_mildMalariaTreated_rate', 'lag_severeMalariaTreated_rate',
 		geom_point() + 
 		geom_smooth(method='lm', se=FALSE) + 
 		labs(y='Observed Mortality Rate', x=v) + 
-		theme_bw(base_size=16)
+		theme_bw()
 	i=i+1
 }
 
-# lag-acts and incidence at health zone level
+# lag-acts and incidence at health zone level (sampled because this graph is huge)
+sampled_hzs = unique(data$health_zone)
+sampled_hzs = sampled_hzs[sample(length(sampled_hzs),.1*length(sampled_hzs))]
+sample = data[health_zone %in% sampled_hzs]
 p11 = list()
-p11[[1]] = ggplot(data, 
-		aes(y=log(newCasesMalariaMild_rate), x=lag_mildMalariaTreated_rate)) + 
+p11[[1]] = ggplot(sample, 
+		aes(y=newCasesMalariaMild_rate, x=lag_mildMalariaTreated_rate)) + 
 	geom_point() + 
 	geom_smooth(method='lm', se=FALSE) + 
 	labs(y='Log of Observed Incidence Rate', x='Lag of Observed Treatment Coverage') + 
 	theme_bw(base_size=16)
-p11[[2]] = ggplot(data, 
-		aes(y=log(newCasesMalariaSevere_rate), x=lag_severeMalariaTreated_rate)) + 
+p11[[2]] = ggplot(sample, 
+		aes(y=newCasesMalariaSevere_rate, x=lag_severeMalariaTreated_rate, caption=' ')) + 
 	geom_point() + 
 	geom_smooth(method='lm', se=FALSE) + 
-	labs(y='Log of Observed Severe Incidence Rate', x='Lag of Observed Severe Treatment Coverage') + 
+	labs(y='Log of Observed Severe Incidence Rate', x='Lag of Observed Severe Treatment Coverage', 
+		caption='10% sample of observations') + 
 	theme_bw(base_size=16)
 
 # acts and mortality at health zone level
@@ -267,15 +276,31 @@ i=1
 for(v in c('lag_mildMalariaTreated_rate', 'lag_severeMalariaTreated_rate',
 	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate')) { 
 	# l = nodeTable[variable==v]$label
-	p12[[i]] = ggplot(data[!is.na(malariaDeaths_rate) & malariaDeaths_rate<1000 & 
-			!is.na(get(v)) & get(v)<lim], 
-			aes_string(y='log(malariaDeaths_rate)', x=v)) + 
+	p12[[i]] = ggplot(sample[!is.na(malariaDeaths_rate) & !is.na(get(v))], 
+			aes_string(y='malariaDeaths_rate', x=v)) + 
 		geom_point() + 
 		geom_smooth(method='lm', se=FALSE) + 
-		labs(y='Log of Observed Mortality Rate', x=v) + 
-		theme_bw(base_size=16)
+		labs(y='Log of Observed Mortality Rate', x=v, caption=' ') + 
+		theme_bw()
+	if (i==4) p12[[i]] = p12[[i]] + labs(caption=paste0('Variables log-transformed:', paste(logVars, collapse=',')))
 	i=i+1
 }
+
+# acts and incidence exploring ecological fallacy
+p13 = list()
+p13 = ggplot(sample, 
+		aes(y=newCasesMalariaMild_rate, x=lag_mildMalariaTreated_rate, group=health_zone)) + 
+	geom_point() + 
+	geom_smooth(method='lm', se=FALSE) + 
+	labs(y='Log of Observed Incidence Rate', x='Lag of Observed Treatment Coverage') + 
+	theme_bw(base_size=16)
+# p13[[2]] = ggplot(sample, 
+		# aes(y=newCasesMalariaSevere_rate, x=lag_severeMalariaTreated_rate, caption=' ')) + 
+	# geom_point() + 
+	# geom_smooth(method='lm', se=FALSE) + 
+	# labs(y='Log of Observed Severe Incidence Rate', x='Lag of Observed Severe Treatment Coverage', 
+		# caption='10% sample of observations') + 
+	# theme_bw(base_size=16)
 
 # ----------------------------------------------
 
