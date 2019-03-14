@@ -38,7 +38,7 @@ outDir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/eid')
 # Load/prep data
 
 # loop over years - can be altered to run years separately
-y = c('14', '15', '16', '17', '18')
+y = c('14', '15', '16', '17', '18', '19')
 m = c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12')
 s = c('m', 'f', 'UNKNOWN')
 p = c("FIRST", "SECOND", "UNKNOWN" )

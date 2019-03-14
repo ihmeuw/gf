@@ -1,41 +1,43 @@
-
 # ----------------------------------------------
-# Irena Chen
-#
-# 2/22/2018
-
-### This code cleans the FGH csv file and turns it into something that is like our resource tracking database
-
+# AUTHOR: Emily Linebarger, based on code by Irena Chen
+# PURPOSE: Read in FGH data and clean into a presentable format.  
+# DATE: Last updated March 2019. 
 # ----------------------------------------------
-# call libraries 
-# ----------------------------------------------
+
 rm(list=ls())
-library(tools)
-library(data.table)
-library(lubridate)
-library(grDevices)
-library(readxl)
-library(reshape)
-library(scales)
+# ----------------------------------------------------------------------
+# To do list for this code: 
 
-#----------------------------------------------
-# Source functions
-# ---------------------------------------------
-repo = 'C:/Users/elineb/Documents/gf/'
-source(paste0(repo, 'resource_tracking/prep/shared_mapping_functions.R'))
-source(paste0(repo, 'resource_tracking/prep/fgh_prep/fgh_prep_functions.R'))
+# ---------------------------------------------------------------------
+
+user = "elineb" #Change to your username 
+code_loc = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
+source(paste0(code_loc, 'resource_tracking/prep/set_up_r.R'))
+source(paste0(code_loc, 'resource_tracking/prep/fgh_prep/fgh_prep_functions.R'))
+source(paste0(code_dir, "shared_prep_functions.R"), encoding="UTF-8")
 
 # ----------------------------------------------
 # Load the DAH data and other raw files 
 # ----------------------------------------------
 
-fgh_data <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/ihme_dah_cod_uga_gtm_1990_2016.csv")
-fgh_mapping <- fread("J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/fgh_mapping.csv")
+# fgh_data <- fread(paste0(j, "Project/Evaluation/GF/resource_tracking/multi_country/gf/ihme_dah_cod_uga_gtm_1990_2016.csv"))
+fgh_data1 = read.dta13(paste0(j, "/Project/IRH/DAH/RESEARCH/INTEGRATED DATABASES/DATA/FGH_2018/FGH_EZ_2018.dta"))
+setDT(fgh_data1)
+
+ghe_data <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/gpr_corrected_final_gbd4.csv")
+
+#Subset to our target countries 
+fgh_data = fgh_data1[iso3_rc == "COD" | iso3_rc == "GTM" | iso3_rc == "UGA" | iso3_rc == "SEN"] #Adding Senegal in here. 
+
+#Read in the mapping documents 
+fgh_mapping <- fread(paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/fgh_mapping.csv"))
 fgh_mapping = fgh_mapping[disease != "" & code != "" & !is.na(coefficient)] #Only keep the rows we've classified fully. 
 fgh_mapping = fgh_mapping[, !"disease"] #Remove the disease column because we don't need it. 
-final_map <- "J:/Project/Evaluation/GF/mapping/multi_country/intervention_categories/intervention_and_indicator_list.xlsx"
-final_mapping <- load_mapping_list(final_map, include_rssh_by_disease = FALSE)
-final_mapping = final_mapping[, !"disease"] #Remove the disease column because we don't need it.
+
+final_mapping <- fread(paste0(j, "Project/Evaluation/GF/mapping/multi_country/intervention_categories/all_interventions.csv"))
+names(final_mapping) = as.character(final_mapping[1, ])
+final_mapping = final_mapping[-1, ]
+final_mapping = final_mapping[, -c("disease")] #Remove the disease column because we don't need it.
 
 # ----------------------------------------------
 # Prep the DAH data
@@ -43,27 +45,26 @@ final_mapping = final_mapping[, !"disease"] #Remove the disease column because w
 
 setnames(fgh_data, c("source", "iso3_rc"), c("dah_origin","loc_name"))
 
-fgh_data$oid_zika_dah_17 = as.numeric(fgh_data$oid_zika_dah_17)
 fgh_data$financing_source <- mapply(get_dah_source_channel, fgh_data$channel)
-fgh_data$channel = NULL
-fghData<- fgh_data[, -c("dah_origin", "dah_17", "total_mal_17", "total_hiv_17", "total_tb_17"), with=FALSE] #Remove 'total' columns and origin variable - it looks like 
-#this is giving the closest sum to "dah_17" from the raw file, but it's not 100% accurate. Need the codebook to make sure we're including the right columns here. 
+fgh_data = fgh_data[, -c('channel')] #Remove unnecessary categorical variables 
+disease_vars = grep("hiv|mal|tb|swap", names(fgh_data)) #Grab HIV, TB, Malaria, and RSSH variables 
+id_vars = grep("year|financing_source|loc_name", names(fgh_data))
+keep_cols =c(id_vars, disease_vars)
+
+fgh_data = fgh_data[, .SD, .SDcols=keep_cols]
+
+#Drop 'total' columns 
+fgh_data = fgh_data[, -c('hiv_dah_18', 'mal_dah_18', 'tb_dah_18', 'swap_hss_total_dah_18')]
 
 ## "melt" the data: 
-fghData <-  melt(fghData, id=c("year", "financing_source", "loc_name"), variable.name = "sda_activity", value.name="disbursement") #Do we want these different funding streams to be "activities"?? EKL
+fghData <-  melt(fgh_data, id=c("year", "financing_source", "loc_name"), variable.name = "sda_activity", value.name="disbursement")
 fghData$disbursement <- as.numeric(fghData$disbursement)
 
-#EKL would really like to get a codebook if this data if at all possible- what does dah_17 represent? 
 ##get the disease column: 
 fghData$disease <- mapply(get_disease, fghData$sda_activity)
 
-## add in 
-fghData[loc_name=='COD', adm1:=171] 
-fghData[loc_name=='GTM', adm1:=128] 
-fghData[loc_name=='UGA',  adm1:=190] 
-
 ##sum the disbursement by the other variables just to remove any duplicates: 
-byVars = c('year', 'disease', 'financing_source','sda_activity', 'loc_name', 'adm1')
+byVars = c('year', 'disease', 'financing_source','sda_activity', 'loc_name')
 fghData = fghData[, disbursement:=sum(na.omit(disbursement)), 
                   by=byVars]
 fghData = unique(fghData)
@@ -91,11 +92,6 @@ fgh_mapped$fin_data_type <- "actual"
 # ----------------------------------------------
 # prep the HIV THE data from the FGH team  
 # ----------------------------------------------
-
-ghe_data <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/gpr_corrected_final_gbd4.csv")
-
-##country codes for GTM, UGA, and DRC
-country_codes <- c(128, 190,171)
 
 ghe_data <- ghe_data[location_id %in% country_codes]
 
@@ -137,6 +133,7 @@ ghe_mapped <- merge(ghe_cleaned, final_mapping, by='code', all.x = TRUE)
 ghe_mapped[adm1==128, loc_name:="GTM"]
 ghe_mapped[adm1==190, loc_name:="UGA"]
 ghe_mapped[adm1==171, loc_name:="COD"]
+ghe_mapped[adm1==216, loc_name:='SEN']
 
 ghe_mapped$financing_source <- mapply(get_the_source_channel, as.character(ghe_mapped$fin_data_type))
 ghe_mapped = ghe_mapped[financing_source != "the"]
@@ -146,7 +143,7 @@ ghe_mapped$fin_data_type <- mapply(transform_fin_data_type, as.character(ghe_map
 # ----------------------------------------------
 # ## rbind the DAH and the forecasted HIV THE: 
 # ----------------------------------------------
-totalFgh <- rbind(fgh_mapped, ghe_mapped, fill = TRUE) #EKL how are we sure these data don't overlap? 
+totalFgh <- rbind(fgh_mapped, ghe_mapped, fill = TRUE, use.names = TRUE) #EKL how are we sure these data don't overlap? 
 
 
 # ----------------------------------------------
@@ -163,9 +160,6 @@ totalFgh$lang <- "eng"
 
 totalFgh$country = mapply(get_country_name, totalFgh$loc_name)
 totalFgh$loc_name = tolower(totalFgh$loc_name)
-
-#Remove all total rows from data. 
-totalFgh = totalFgh[!grep("total_", sda_activity)] #This should not happen here!!! EKL Needs to happen above. 
 
 # ----------------------------------------------
 # export the FGH data 
