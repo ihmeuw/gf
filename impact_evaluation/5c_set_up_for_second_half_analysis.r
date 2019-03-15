@@ -29,6 +29,8 @@ data[, date:=as.numeric(year(date)+((month(date)/12)-1))]
 # Data transformations and other fixes for Heywood cases
 
 # apply limits
+data[ITN>1000, ITN:=NA]
+data[SSCACT>50000, SSCACT:=NA]
 data[!is.finite(SP_rate), SP_rate:=NA]
 data[!is.finite(RDT_rate), RDT_rate:=NA]
 data[ACTs_CHWs_rate>1000, ACTs_CHWs_rate:=NA]
@@ -62,7 +64,8 @@ data$tmp = NULL
 data = na.omit(data)
 
 # log-transform
-logVars = c('RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate',
+logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated',
+	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate',
 	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate')
 for(v in logVars) data[, (v):=log(get(v))]
 for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
@@ -80,16 +83,15 @@ for(v in names(data)) {
 scaling_factors = scaling_factors[rep(1,nrow(data))]
 for(v in names(scaling_factors)) data[, (v):=get(v)/scaling_factors[[v]]]
 
-# compute lags (after rescaling because it creates more NA's)
-data[, lag_ITN_rate:=data.table::shift(ITN_rate), by='health_zone']
-data[, lag_mildMalariaTreated_rate:=data.table::shift(mildMalariaTreated_rate), by='health_zone']
-data[, lag_severeMalariaTreated_rate:=data.table::shift(severeMalariaTreated_rate), by='health_zone']
+# compute leads (after rescaling because it creates more NA's)
+leadVars = c('newCasesMalariaMild_rate', 'newCasesMalariaSevere_rate', 'malariaDeaths_rate')
+for(v in leadVars) data[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
 data = na.omit(data)
 
 # health zone dummies
-data[, health_zone:=gsub(' |-', '_', health_zone)]
-hzs = unique(data$health_zone)
-data[, (hzs):=lapply(hzs, function(x) health_zone==x)]
+# data[, health_zone:=gsub(' |-', '_', health_zone)]
+# hzs = unique(data$health_zone)
+# data[, (hzs):=lapply(hzs, function(x) health_zone==x)]
 # -----------------------------------------------------------------------
 
 

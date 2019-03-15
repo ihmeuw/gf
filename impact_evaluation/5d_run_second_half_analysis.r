@@ -22,23 +22,23 @@ load(outputFile5c)
 
 
 # linkage 2 regressions
-lmFit4 = lm(newCasesMalariaMild_rate ~ ITN_rate + lag_mildMalariaTreated_rate + health_zone + date, data)
-lmFit5 = lm(newCasesMalariaSevere_rate ~ ITN_rate + lag_severeMalariaTreated_rate + health_zone + date, data)
-lmFit6 = lm(malariaDeaths_rate ~ newCasesMalariaMild_rate + newCasesMalariaSevere_rate + lag_mildMalariaTreated_rate + lag_severeMalariaTreated_rate + health_zone + date, data)
+# lmFit4 = lm(newCasesMalariaMild_rate ~ ITN_rate + lag_mildMalariaTreated_rate + health_zone + date, data)
+# lmFit5 = lm(newCasesMalariaSevere_rate ~ ITN_rate + lag_severeMalariaTreated_rate + health_zone + date, data)
+# lmFit6 = lm(malariaDeaths_rate ~ newCasesMalariaMild_rate + newCasesMalariaSevere_rate + lag_mildMalariaTreated_rate + lag_severeMalariaTreated_rate + health_zone + date, data)
 
-tmp = summary(lmFit4)$coefficients
-tmp[!grepl('health_zone',rownames(tmp)),]
-tmp = summary(lmFit5)$coefficients
-tmp[!grepl('health_zone',rownames(tmp)),]
-tmp = summary(lmFit6)$coefficients
-tmp[!grepl('health_zone',rownames(tmp)),]
+# tmp = summary(lmFit4)$coefficients
+# tmp[!grepl('health_zone',rownames(tmp)),]
+# tmp = summary(lmFit5)$coefficients
+# tmp[!grepl('health_zone',rownames(tmp)),]
+# tmp = summary(lmFit6)$coefficients
+# tmp[!grepl('health_zone',rownames(tmp)),]
 # -------------------------
 
 
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-source('./impact_evaluation/models/drc_malaria_impact1.r')
+source('./impact_evaluation/models/drc_malaria_impact3.r')
 
 # swap in health zone dummies where health_zone is specified (for convenience)
 # model = gsub('health_zone', paste(unique(data$health_zone)[-1],collapse='+'), model)
@@ -49,24 +49,29 @@ source('./impact_evaluation/models/drc_malaria_impact1.r')
 # Run model
 if ('semFit' %in% ls()) rm('semFit')
 # semFit = sem(model, data)
-semFits = lapply(unique(data$health_zone), function(h) sem(model, data[health_zone==h]))
+# semFits = lapply(sample(unique(data$health_zone), 50), function(h) sem(model, data[health_zone==h]))
+semFits = mclapply(sample(unique(data$health_zone), 10), function(h)  { 
+	print(h)
+	suppressWarnings(
+		bsem(model, data[health_zone==h], adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+	)
+}, mc.cores=ifelse(Sys.info()[1]=='Windows',1,24))
 for(i in seq(length(semFits))) { 
 	tmp = data.table(standardizedSolution(semFits[[i]]))
 	tmp[, health_zone:=unique(data$health_zone)[i]]
 	if (i==1) summaries = copy(tmp)
 	if (i>1) summaries = rbind(summaries, copy(tmp))
 }
-means = summaries[,.(est.std=mean(est.std),se=mean(se),ci.lower=mean(ci.lower),ci.upper=mean(ci.upper)), 
-	by=c('lhs','op','rhs')]
+means = summaries[,.(est.std=mean(est.std)), by=c('lhs','op','rhs')]
 means
 # --------------------------------------------------------------
 
-nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable_second_half.csv')
-source('./impact_evaluation/visualizations/graphLavaan.r')
-semGraph(parTable=means, nodeTable=nodeTable, 
-	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE, 
-	boxWidth=2, boxHeight=.5)
+# nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable_second_half.csv')
+# source('./impact_evaluation/visualizations/graphLavaan.r')
+# semGraph(parTable=means, nodeTable=nodeTable, 
+	# scaling_factors=NA, standardized=TRUE, 
+	# lineWidth=1.5, curved=0, tapered=FALSE, 
+	# boxWidth=2, boxHeight=.5)
 
 
 # ------------------------------------------------------------------

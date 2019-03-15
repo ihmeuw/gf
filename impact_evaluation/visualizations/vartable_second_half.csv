@@ -1,13 +1,16 @@
 variable,x,y,label
-value_ITN_consumed,,,ITNs Dist. (#)
-value_RDT_completed,,,RDTs Used (#)
-value_ACTs_CHWs,,,CHW Tx (#)
-value_totalPatientsTreated,,,Pat.'s Tx (#)
-value_severeMalariaTreated,,,Sev. Tx (#)
-value_SP,,,ACTs in ANC (#)
-lag_mildMalariaTreated_rate,0,4.5,Lag Tx Cvg. (mild)
-lag_ITN_rate,0,2.5,Lag ITN Cvg.
-lag_severeMalariaTreated_rate,0,0.5,Lag Tx. Cvg. (severe)
-newCasesMalariaMild_rate,5,4.5,Incidence Rate (mild)
-newCasesMalariaSevere_rate,5,0.5,Incidence Rate (severe)
-malariaDeaths_rate,10,2.5,Mortality Rate
+SSCACT,0,5.5,CHW Tx (#)
+mildMalariaTreated,0,4.5,Pat.'s Tx (#)
+RDT,0,3.5,RDTs Used (#)
+severeMalariaTreated,0,2.5,Sev. Tx (#)
+ITN,0,1.5,ITNs Dist. (#)
+SP,0,0.5,ACTs in ANC (#)
+ACTs_CHWs_rate,4.5,5.5,CHW Tx. Cvg.
+mildMalariaTreated_rate,6.5,4.5,Tx Cvg. (mild)
+RDT_rate,2.5,3.5,RDT Cvg.
+severeMalariaTreated_rate,6.5,2.5,Tx. Cvg. (severe)
+ITN_rate,4.5,1.5,ITN Cvg.
+SP_rate,4.5,0.5,ANC ACT Cvg.
+lead_newCasesMalariaMild_rate,11,4.5,Lead of Inc. Rate (mild)
+lead_newCasesMalariaSevere_rate,11,1.5,Lead of Inc. Rate (severe)
+lead_malariaDeaths_rate,14,3,Lead of Mortality Rate
