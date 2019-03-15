@@ -1,4 +1,10 @@
 variable,x,y,label
+value_ITN_consumed,,,ITNs Dist. (#)
+value_RDT_completed,,,RDTs Used (#)
+value_ACTs_CHWs,,,CHW Tx (#)
+value_totalPatientsTreated,,,Pat.'s Tx (#)
+value_severeMalariaTreated,,,Sev. Tx (#)
+value_SP,,,ACTs in ANC (#)
 lag_mildMalariaTreated_rate,0,4.5,Lag Tx Cvg. (mild)
 lag_ITN_rate,0,2.5,Lag ITN Cvg.
 lag_severeMalariaTreated_rate,0,0.5,Lag Tx. Cvg. (severe)

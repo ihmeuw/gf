@@ -28,15 +28,10 @@ data[, date:=as.numeric(year(date)+((month(date)/12)-1))]
 # -----------------------------------------------------------------------
 # Data transformations and other fixes for Heywood cases
 
-# make rates
-data[, ITN_rate:=ITN/population]
-data[, mildMalariaTreated_rate:=mildMalariaTreated/newCasesMalariaMild]
-data[, severeMalariaTreated_rate:=severeMalariaTreated/newCasesMalariaSevere]
-data[, malariaDeaths_rate:=malariaDeaths/population*100000]
-data[, newCasesMalariaMild_rate:=newCasesMalariaMild/population*100000]
-data[, newCasesMalariaSevere_rate:=newCasesMalariaSevere/population*100000]
-
 # apply limits
+data[!is.finite(SP_rate), SP_rate:=NA]
+data[!is.finite(RDT_rate), RDT_rate:=NA]
+data[ACTs_CHWs_rate>1000, ACTs_CHWs_rate:=NA]
 data[mildMalariaTreated_rate>2, mildMalariaTreated_rate:=NA]
 data[severeMalariaTreated_rate>2.5, severeMalariaTreated_rate:=NA]
 data[newCasesMalariaMild_rate>100000, newCasesMalariaMild_rate:=NA]
@@ -67,7 +62,8 @@ data$tmp = NULL
 data = na.omit(data)
 
 # log-transform
-logVars = c('ITN_rate','newCasesMalariaMild_rate','newCasesMalariaSevere_rate', 'malariaDeaths_rate')
+logVars = c('RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate',
+	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate')
 for(v in logVars) data[, (v):=log(get(v))]
 for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
 

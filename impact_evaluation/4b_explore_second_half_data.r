@@ -53,17 +53,7 @@ data_agg[year>=2017, itn_coverage:=NA]
 data_agg[year>=2018, prevalence:=NA]
 data_agg[year>=2018, malariaDeaths:=NA]
 
-# make rates at HZ and national level
-data[, act_coverage_rate:=act_coverage/incidence]
-data[, mildMalariaTreated_rate:=mildMalariaTreated/newCasesMalariaMild]
-data[, severeMalariaTreated_rate:=severeMalariaTreated/newCasesMalariaSevere]
-data[, itn_coverage_rate:=itn_coverage/population]
-data[, incidence_rate:=(incidence/12)/population*100000]
-data[, prevalence_rate:=(prevalence/12)/population]
-data[, mortality_rate:=(mortality/12)/population*100000]
-data[, malariaDeaths_rate:=malariaDeaths/population*100000]
-data[, newCasesMalariaMild_rate:=newCasesMalariaMild/population*100000]
-data[, newCasesMalariaSevere_rate:=newCasesMalariaSevere/population*100000]
+# make rates at national level
 data_agg[, act_coverage_rate:=act_coverage/incidence]
 data_agg[, mildMalariaTreated_rate:=mildMalariaTreated/newCasesMalariaMild]
 data_agg[, severeMalariaTreated_rate:=severeMalariaTreated/newCasesMalariaSevere]

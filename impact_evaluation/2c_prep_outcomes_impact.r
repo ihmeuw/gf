@@ -10,8 +10,7 @@
 
 # to do
 # use incidence as denominator for ACT coverage
-# add testing and SSC referral coverage indicators from PNLP
-# add malaria deaths from DHIS
+# add malaria deaths, SSC variables, SP administered, ANC visits and suspectedMalaria from DHIS
 # fix handling of duplicate HZ names in shapefile, pnlp and snis
 
 # ----------------------------------------------
@@ -122,16 +121,21 @@ pnlp = readRDS(pnlpHZFile)
 dt_base = readRDS(snisBaseFile)
 
 # subset
-inds = c('severeMalariaTreated','mildMalariaTreated','ITN',
+inds = c('severeMalariaTreated','mildMalariaTreated',
+	'ITN','RDT','SP','SSCACT',
+	'ANC','SSCcasesCrossReferred','SSCcasesReferred','suspectedMalaria',
 	'newCasesMalariaMild','newCasesMalariaSevere','malariaDeaths')
 pnlp = pnlp[indicator %in% inds]
 pnlp = pnlp[!which(indicator=='ITN' & subpopulation=='received')]
+pnlp = pnlp[!which(indicator=='SP' & subpopulation%in%c('2nd','3rd','4th'))]
+pnlp = pnlp[!which(indicator=='ANC' & subpopulation%in%c('2nd','3rd','4th'))]
+pnlp = pnlp[!which(indicator=='RDT' & subpopulation%in%c('positive','received'))]
 elems = c('A 1.4 Severe malaria treated', 'A 1.4 Confirmed simple malaria treated',
 		'"A 1.5 Severe malaria treated - pregnant woman', 
 		'A 1.5 Confirmed simple malaria treated - pregnant woman',
 		'A 1.4 Severe malaria', 'A 1.4 Confirmed simple malaria',
 		'A 1.5 Severe malaria - pregnant woman', 
-		'A 1.5 Confirmed simple malaria - pregnant woman')
+		'A 1.5 Confirmed simple malaria - pregnant woman') 
 dt_base = dt_base[element_eng %in% elems & date<'2018-07-01']
 
 # aggreate age groups
@@ -203,6 +207,29 @@ data_wide[incidence==0, incidence:=NA]
 data_wide[, all_missing:=all(is.na(incidence)), by='health_zone']
 data_wide = data_wide[all_missing!=TRUE]
 data_wide$all_missing = NULL
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
+# Compute rates 
+
+# program data
+data_wide[, ACTs_CHWs_rate:=SSCACT/(SSCcasesCrossReferred+SSCcasesReferred)]
+data_wide[, SP_rate:=SP/ANC]
+data_wide[, RDT_rate:=RDT/suspectedMalaria]
+data_wide[, ITN_rate:=ITN/population]
+data_wide[, mildMalariaTreated_rate:=mildMalariaTreated/newCasesMalariaMild]
+data_wide[, severeMalariaTreated_rate:=severeMalariaTreated/newCasesMalariaSevere]
+data_wide[, malariaDeaths_rate:=malariaDeaths/population*100000]
+data_wide[, newCasesMalariaMild_rate:=newCasesMalariaMild/population*100000]
+data_wide[, newCasesMalariaSevere_rate:=newCasesMalariaSevere/population*100000]
+
+# model estimates
+data_wide[, act_coverage_rate:=act_coverage/incidence]
+data_wide[, itn_coverage_rate:=itn_coverage/population]
+data_wide[, incidence_rate:=(incidence/12)/population*100000]
+data_wide[, prevalence_rate:=(prevalence/12)/population]
+data_wide[, mortality_rate:=(mortality/12)/population*100000]
 # ------------------------------------------------------------------------
 
 
