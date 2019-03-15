@@ -1,8 +1,5 @@
-# model: drc_malaria4.r
-# purpose: drc_malaria2 with GHE and controls for completeness
-
-# TO DO
-# Add arrow from RDT_completed to severeMalariaTreated, totalPatientsTreated and ACTs_CHWs
+# model: drc_malaria_impact1.r
+# purpose: simplest possible second-half model
 
 model = '
 
