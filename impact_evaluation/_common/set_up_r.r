@@ -74,7 +74,7 @@ fghFile = paste0(rtDir, 'prepped_current_fgh.csv')
 
 # activities/outputs files
 pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
-pnlpHZFile = paste0(pnlpDir, 'imputedData_run2_agg_hz.rds')
+pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
 snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
 snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
 
