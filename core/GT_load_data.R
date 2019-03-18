@@ -14,8 +14,13 @@ library(stringdist)
 library(haven)
 
 # ----Configure--------------------------------------------
-if (!'at_ciesar' %in% ls()) at_ciesar = 1 # parameter for who's running the code
-if (at_ciesar) { 
+
+#Changed this to run with a explicitly set boolean. EKL 3/18/19
+#Boolean logic switch: 
+# Set at_ciesar = 1 if you want CIESAR's local filepaths. 
+at_ciesar = FALSE
+
+if (at_ciesar==TRUE) { 
 	dataPath = "PCE/Covariates and Other Data/GIS/"
 	codePath = "PCE/gf/"
 } else { 
@@ -60,8 +65,8 @@ gtmDeptosIGN = readOGR(paste0(dataPath, "GT-IGN-cartografia_basica-Departamentos
 gtmDeptosIGN@data$CODIGO = floor(as.numeric(as.character(gtmDeptosIGN@data$CODIGO))/100)
 gtmDeptosIGN = gtmDeptosIGN[gtmDeptosIGN$CODIGO != 23,]
 # Municipalities data with population estimates for 2015.
-if (at_ciesar) munisGT = read.csv(paste0(dataPath, "../Demographics/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv"), encoding = "UTF-8")
-if (!at_ciesar) munisGT = read.csv(paste0(dataPath, "/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv"), encoding = "UTF-8")
+if (at_ciesar == TRUE) munisGT = read.csv(paste0(dataPath, "../Demographics/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv"), encoding = "UTF-8")
+if (at_ciesar== FALSE) munisGT = read.csv(paste0(dataPath, "/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv"), encoding = "UTF-8")
 dt.munisGT = data.table(munisGT)[, 
                                  .(NOMBRE__ = first(NOMBRE__), COD_MUNI__, first(COD_DEPT__),
                                  AREA_KM__ = sum(AREA_KM__), Poblacion2010 = sum(Poblacion2010), 
