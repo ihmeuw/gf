@@ -22,18 +22,19 @@
 
 #---------------------------------------
 
-cod_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/")
-gtm_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/gtm/prepped/")
-uga_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/uga/prepped/")
+dir = paste0(j, "/Project/Evaluation/GF/resource_tracking")
+cod_prepped <- paste0(dir, "/_gf_files_gos/cod/prepped_data/")
+gtm_prepped <- paste0(dir, "/_gf_files_gos/gtm/prepped_data/")
+uga_prepped <- paste0(dir, "/_gf_files_gos/uga/prepped_data/")
 
-final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/")
+final_write <- paste0(dir, "/multi_country/mapping/")
 
 
 # --------------------------------------------
 # Load the prepped GOS data - to be used for both 
 # final budgets and final expenditures 
 #----------------------------------------------
-gos_data <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.rds"))
+gos_data <- readRDS(paste0(dir, "/_gf_files_gos/gos/prepped_data/prepped_gos_data.rds"))
             
 #----------------------------------
 # 1. FINAL GF BUDGETS 
