@@ -1,13 +1,26 @@
 ######################################################
-# Summarizing Guatemala incidence estimates from GBD
+# Summarizing Guatemala and regional incidence estimates from GBD
 # J. Ross
 # July 17, 2018
+# Updated March 2019 with GBD 2017 results
 #
 #########################################################
 
 rm(list=ls())
 
 library(ggplot2)
+library(data.table)
+
+gbd_tb<-fread("J:/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2017/GBD results tool 2015-2017 region cent America.csv")
+
+gbd_tb<- gbd_tb[,c('location_id', 'location_name', 'cause_id', 'year', 'val')]
+
+annual <- gbd_tb[, list(inc_sum=sum(val ,na.rm=TRUE)), by=c('year', 'location_id', 'location_name')]
+
+annual <- annual[order(-year)]
+
+#The following section is older code that refers to GBD 2016
+
 
 tb<-read.csv("J:/Project/Evaluation/GF/outcome_measurement/gtm/TUBERCULOSIS/gbd_2016/tb_no_hiv_bothsex_inc_count.csv")
 tb<-tb[tb$Year>1999 & complete.cases(tb),]
