@@ -5,6 +5,7 @@
 # Script that loads packages and file names
 # Intended to be called by 1_master_file.r
 # This exists just for code organizational purposes
+# (use /ihme/singularity-images/health_fin/forecasting/shells/health_fin_forecasting_Rterm.sh on IHME's new cluster)
 # --------------------------------------------------
 
 # to do
@@ -12,6 +13,7 @@
 
 # ------------------
 # Load packages
+set.seed(1)
 library(data.table)
 library(lubridate)
 library(readxl)
@@ -22,7 +24,6 @@ library(Rcpp)
 library(grid)
 library(gridExtra)
 library(ggrepel)
-library(lubridate)
 library(boot)
 library(lavaan)
 library(blavaan)
@@ -73,7 +74,7 @@ fghFile = paste0(rtDir, 'prepped_current_fgh.csv')
 
 # activities/outputs files
 pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
-pnlpHZFile = paste0(pnlpDir, 'imputedData_run2_agg_hz.rds')
+pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
 snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
 snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
 
@@ -127,6 +128,12 @@ outputFile5a = paste0(ieDir, 'pilot_data_pre_model.rdata')
 
 # output file from 5b_run_analysis.R
 outputFile5b = paste0(ieDir, 'pilot_model_results.rdata')
+
+# output file from 5c_set_up_for_second_half_analysis.r
+outputFile5c = paste0(ieDir, 'second_half_data_pre_model.rdata')
+
+# output file from 5d_run_second_half_analysis.r
+outputFile5d = paste0(ieDir, 'second_half_model_results.rdata')
 
 # output file from 6_display_results.r
 outputFile6 = paste0(ieDir, '../visualizations/pilot_model_results.pdf')

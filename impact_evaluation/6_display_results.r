@@ -19,9 +19,11 @@ source('./impact_evaluation/visualizations/graphLavaan.r')
 
 # load model results
 load(outputFile5b)
+load(outputFile5d)
 
 # load nodeTable for graphing FIX THIS FILE PATH
-nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
+nodeTable1 = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
+nodeTable2 = fread('C:/local/gf/impact_evaluation/visualizations/vartable_second_half.csv')
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable = nodeTable[variable %in% names(data)]
@@ -35,12 +37,17 @@ nodeTable = nodeTable[variable %in% names(data)]
 # semPaths(semFit, 'std', intercepts=FALSE)
 # lavaanPlot(model=semFit, coefs=TRUE)
 
-# my sem graph function
-source('./impact_evaluation/visualizations/graphLavaan.r')
-p = semGraph(semFit, nodeTable=nodeTable, 
+# my sem graph function for first half model
+p1 = semGraph(semFit, nodeTable=nodeTable, 
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE)
-p
+# p
+
+# my sem graph function for second half model
+p2 = semGraph(parTable=means, nodeTable=nodeTable, 
+	scaling_factors=NA, standardized=TRUE, 
+	lineWidth=1.5, curved=0, tapered=FALSE, 
+	boxWidth=2, boxHeight=.5)
 # ----------------------------------------------
 
 
@@ -98,7 +105,7 @@ preds = preds*scaling_factors
 cf = merge(data, preds, 'date')
 cf = melt(cf, id.vars='date')
 cf[, cf:=ifelse(grepl('.y',variable),'Counterfactual Budget', 'Actual Budget')]
-cf[, graph_var:=!grepl('exp|other_dah',variable)]
+cf[, graph_var:=!grepl('exp|other_dah|ghe',variable)]
 cf[, variable:=gsub('.x|.y','',variable)]
 
 # show counterfactual budget
