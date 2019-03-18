@@ -8,28 +8,28 @@
 
 # TO DO
 # fix time series graph so that there are gaps where appropriate (use `group` aesthetic)
+#Note that we're renaming service delivery area as module for the old data - we should fix this.
 # ----------------------------------------------
 # Load the GOS tab from the Excel book  
 # ----------------------------------------------
 
 gos_data  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
                                    sheet=as.character('GOS Mod-Interv - Extract')))
+#Drop the columns you don't need 
+gos_data = gos_data[, -c('Budget currency')]
 
 ## reset column names
 oldNames <- names(gos_data)
-newNames <-  c("country","grant", "year","start_date","end_date","module","intervention", 
-               "budget", "expenditure", "disease", "grant_period_start", "grant_period_end")
+newNames <-  c("country","grant", "grant_period_start", "grant_period_end",
+               "start_date","end_date", "year", "module","intervention", 
+               "budget", "expenditure", "disease")
 
-setnames(gos_data,oldNames, newNames)
+setnames(gos_data, oldNames, newNames)
 
-#gos_sum <- gos_data[, sum(budget), by=.(year, country, disease)][order(country, disease, year)]
+gos_data$grant_period = paste0(year(as.Date(gos_data$grant_period_start)), "-",year(as.Date(gos_data$grant_period_end)))
+gos_data = gos_data[, -c('grant_period_start', 'grant_period_end')]
 
-##subset the columns that we want 
-gos_clean <- gos_data[, newNames, with=FALSE]
-
-gos_clean$grant_period = paste0(year(as.Date(gos_clean$grant_period_start)), "-",year(as.Date(gos_clean$grant_period_end)))
-gos_clean$grant_period_start = NULL
-gos_clean$grant_period_end = NULL
+stopifnot(nrow(gos_data[is.na(year)])==0)
 
 # ----------------------------------------------
 # Load the GMS tab from the Excel book  # Need to rework this as we're thinking about NLP. 
@@ -38,30 +38,23 @@ gms_data  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and GO
                                    sheet=as.character('GMS SDAs - extract')))
 
 ##repeat the subsetting that we did above (grabbing only the columns we want)
-gmsOld <- c(oldNames[1:5], "Service Delivery Area", "Total Budget Amount (USD equ)", "Total Expenditure Amount (USD equ)", "Component", "Program Start Date", "Program End Date")
-gmsNew <- c(newNames[1:6], newNames[8:10], "grant_period_start", "grant_period_end")
-setnames(gms_data, gmsOld, gmsNew)
-gms_clean <- gms_data[, gmsNew, with=FALSE]
+gmsOld <- names(gms_data)
+gmsNew <-  c("country","grant", "grant_period_start", "grant_period_end",
+             "start_date","end_date", "year", "module","standard_sda", 
+             "budget", "expenditure", "disease")
+setnames(gms_data, gmsOld, gmsNew) 
 
-gms_clean$grant_period = paste0(year(as.Date(gms_clean$grant_period_start)), "-",year(as.Date(gms_clean$grant_period_end)))
-gms_clean$grant_period_start = NULL
-gms_clean$grant_period_end = NULL
+gms_data = gms_data[, -c('standard_sda')]
 
-##combine both GOS and GMS datasets into one dataset
-totalGos <- rbind(gms_clean, gos_clean, fill = TRUE)
+gms_data$grant_period = paste0(year(as.Date(gms_data$grant_period_start)), "-",year(as.Date(gms_data$grant_period_end)))
+gms_data = gms_data[, -c('grant_period_start', 'grant_period_end')]
+stopifnot(nrow(gms_data[is.na(year)])==0)
 
-# ----------------------------------------------
-###### Load the GMS tab from the Excel book  ###### 
-# ----------------------------------------------
-map_disease <- unique(totalGos$disease)
-names(map_disease) <- c("tb", "malaria", "hiv", "hss", "hiv/tb")
-  
-kDT = data.table(map_disease = names(map_disease), value = TRUE, disease = unname(map_disease))
-totalGos[kDT, on=.(disease), disease := i.map_disease]
+##combine both GOS and GMS datasets into one dataset, and add final variables. 
+totalGos <- rbind(gms_data, gos_data, fill = TRUE)
 
 totalGos$data_source <- "gos"
 totalGos$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
-
 
 totalGos[is.na(module), module:='unspecified']
 totalGos[is.na(intervention), intervention:='unspecified']
