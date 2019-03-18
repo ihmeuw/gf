@@ -82,25 +82,28 @@ final_budgets[grant == 'GTM-M-UPCOMING', grant:='GTM-M-MSPAS']
 final_budgets[grant == 'UGD-708-G13-H', grant:='UGA-708-G13-H']
 
 #Check that all grant numbers in GF budgets correlate to GOS grant numbers
-fpm_grants = unique(final_budgets[, .(grant)])[order(grant)]
-gos_grants = unique(gos_data[, .(grant)])[order(grant)]
-for(i in 1:nrow(fpm_grants)){
-  if (!fpm_grants$grant[i] %in% gos_grants$grant){
-    print("Grant number may not merge correctly between final budgets and GOS: check grant labeling")
-    print(paste0(i, " ", fpm_grants$grant[i]))
-  }
+fpm_grants = unique(final_budgets[order(grant)]$grant)
+gos_grants = unique(gos_data[order(grant)]$grant)
+mismatches = fpm_grants[!fpm_grants %in% gos_grants]
+print(paste('The following grants are only available in FPM data, not GOS:', paste(mismatches, collapse=', ')))
+
+# Drop any previous grants from the FPM data
+final_budgets = final_budgets[grant_period!='2015-2017']
+
+# Identify if GOS has any of the current grants in it
+# (some grants have continued from the past with the same name, so grant_period is necessary)
+fpm_grant_periods = unique(final_budgets[,c('grant','grant_period')])
+gos_grant_periods = unique(gos_data[,c('grant','grant_period')])
+overlap = merge(fpm_grant_periods, gos_grant_periods)
+
+# Drop any current grants from the GOS data
+if (nrow(overlap)>0) { 
+	for(i in seq(nrow(overlap))) {
+		gos_data = gos_data[!which(grant==overlap$grant & grant_period==overlap$grant_period)]
+	}
 }
 
-#Where we have the same grant information in FPM and GOS, prioritize GOS for complete years. 
-gos_grant_list <- unique(gos_data[, .(grant, start_date)])
-gos_grant_list$concat = paste0(gos_grant_list$grant, gos_grant_list$start_date)
-final_budgets$concat = paste0(final_budgets$grant, final_budgets$start_date)
-
-print("The following grant/date pairs will be dropped from final budgets, because they're also represented in GOS")
-print(unique(final_budgets[concat%in%gos_grant_list$concat, concat]))
-
-final_budgets = final_budgets[!concat%in%gos_grant_list$concat]
-
+# Append together FPM and GOS data
 final_budgets <- rbind(final_budgets, gos_data, fill = TRUE) 
 
 # Verify data 
