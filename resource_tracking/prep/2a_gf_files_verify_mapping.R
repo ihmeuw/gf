@@ -12,7 +12,7 @@
 # map to be used for mapping modules and interventions. 
 # ---------------------------------------------
 
-post_2017_map = readRDS(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/post_2017_map.rds"))
+post_2017_map = readRDS(paste0(mapping_dir, "post_2017_map.rds"))
 post_2017_map[, module:=as.character(module)]
 post_2017_map[, intervention:=as.character(intervention)]
 post_2017_map[, disease:=as.character(disease)]
@@ -21,7 +21,7 @@ post_2017_map[, lang:=as.character(lang)]
 
 post_2017_map = post_2017_map[, .(code, module, intervention, coefficient, disease)]
 
-all_interventions = fread(paste0(j, "/Project/Evaluation/GF/mapping/multi_country/intervention_categories/all_interventions.csv"))
+all_interventions = fread(paste0(mapping_dir, "all_interventions.csv"))
 all_eng = all_interventions[, .(code, module_eng, intervention_eng, disease)]
 setnames(all_eng, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
 # all_fr = all_interventions[, .(code, module_fr, intervention_fr, disease)]
@@ -37,21 +37,19 @@ all_langs = all_langs[, -c('orig_module', 'orig_intervention')]
 
 module_map = rbind(post_2017_map, all_langs)
 module_map = unique(module_map)
-
-module_map = prep_map(module_map)
   
 # -------------------------------
 #       FORMAT DATA 
 #--------------------------------
   
-  all_interventions = fread(paste0(dir, "mapping/multi_country/intervention_categories/all_interventions.csv"))
+  all_interventions = fread(paste0(mapping_dir, "all_interventions.csv"))
   setnames(all_interventions, old=c('module_eng', 'intervention_eng', 'module_fr', 'intervention_fr', 'abbrev_mod_eng'), 
            new=c('gf_module', 'gf_intervention', 'gf_module_fr', 'gf_intervention_fr', 'abbreviated_module'))
 
-  original_map <- copy(map) #Save an original copy for comparison later 
-  new_rows <- fread(paste0(dir, "mapping/multi_country/intervention_categories/gf_mapping_additions.csv")) #Add in new rows to previously approved map
+  original_map <- copy(module_map) #Save an original copy for comparison later 
+  new_rows <- fread(paste0(mapping_dir, "gf_mapping_additions.csv")) #Add in new rows to previously approved map
   new_rows = new_rows[, .(module, intervention, code, coefficient, disease)]
-  map = rbind(map, new_rows, fill = TRUE)
+  module_map = rbind(module_map, new_rows, fill = TRUE)
 
 # -------------------------------
 #
@@ -325,13 +323,13 @@ unspecified = unspecified[coefficient!=1][order(module, intervention)]
 #Write final mapp and .diff files for comparison
 #--------------------------------------------------------------------------------
 
-  write.csv(module_map, paste0(dir, "mapping/multi_country/intervention_categories/gf_mapping.csv"))
+  write.csv(module_map, paste0(mapping_dir, "gf_mapping.csv"))
 
   #Write a "diff" file to repository to make comparing changes easier. 
   module_map = module_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention, abbreviated_module)]
   removed_rows = anti_join(original_map, module_map)
-  write.csv(removed_rows, paste0(code_loc, "resource_tracking/proposed_deletions_mod_map.csv"))
+  write.csv(removed_rows, paste0(code_dir, "proposed_deletions_mod_map.csv"))
   
   added_rows = anti_join(module_map, original_map)
-  write.csv(added_rows, paste0(code_loc, "resource_tracking/proposed_additions_mod_map.csv"))
+  write.csv(added_rows, paste0(code_dir, "proposed_additions_mod_map.csv"))
   

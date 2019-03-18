@@ -114,11 +114,10 @@ return(dt)
 
 prioritize_gos = function(file_list){
   file_list = file_list[file_iteration=='final']
-  gos_data <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.rds"))
+  gos_data <- readRDS(paste0(dir, "_gf_files_gos/gos/prepped_data/prepped_gos_data.rds"))
   
-  gos_data$start_date <- as.Date(gos_data$start_date, "%Y-%m-%d")
-  loc = unique(file_list$country)
-  gos_data = gos_data[country==loc, ]
+  loc = unique(file_list$loc_name)
+  gos_data = gos_data[loc_name==loc, ]
   
   #Expand file list by period to see what quarters you're going to get from each file. 
   file_list[, coefficient:=period/90]
@@ -134,12 +133,10 @@ prioritize_gos = function(file_list){
   rect_by_qtr[, quarter:=quarter(new_start_date)]
   
   #See which files will be dropped when GOS data is prioritized in step 4. 
-  gos_grant_list <- unique(gos_data[, .(grant_number, start_date)])
+  gos_grant_list <- unique(gos_data[, .(grant, start_date)])
   gos_grant_list[, year:=year(start_date)]
   gos_grant_list[, quarter:=quarter(start_date)]
-  gos_grant_list[, grant:=grant_number]
-  gos_grant_list[, grant_number:=NULL]
-  
+
   files_to_keep <- merge(gos_grant_list, rect_by_qtr, by=c('grant', 'quarter', 'year'), all.y = TRUE)
   
   #If both merge, ok to drop. 

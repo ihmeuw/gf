@@ -12,13 +12,11 @@
 # Load the GOS tab from the Excel book  
 # ----------------------------------------------
 
-gos_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/Expenditures from GMS and GOS for PCE IHME countries.xlsx',
+gos_data  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
                                    sheet=as.character('GOS Mod-Interv - Extract')))
 
 ## reset column names
-oldNames <-  c("Country","Grant Number", "Year", "Financial Reporting Period Start Date",
-               "Financial Reporting Period End Date","Module", "Intervention", "Total Budget Amount (in budget currency)", 
-               "Total Expenditure Amount (in Budget currency)", "Component", "Current IP  Start Date", "Current IP  End Date")
+oldNames <- names(gos_data)
 newNames <-  c("country","grant", "year","start_date","end_date","module","intervention", 
                "budget", "expenditure", "disease", "grant_period_start", "grant_period_end")
 
@@ -36,7 +34,7 @@ gos_clean$grant_period_end = NULL
 # ----------------------------------------------
 # Load the GMS tab from the Excel book  # Need to rework this as we're thinking about NLP. 
 # ----------------------------------------------
-gms_data  <- data.table(read_excel('J:/Project/Evaluation/GF/resource_tracking/multi_country/gf/Expenditures from GMS and GOS for PCE IHME countries.xlsx',
+gms_data  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
                                    sheet=as.character('GMS SDAs - extract')))
 
 ##repeat the subsetting that we did above (grabbing only the columns we want)

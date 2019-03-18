@@ -45,7 +45,7 @@ gos_raw = paste0(dir, "_gf_files_gos/gos/raw_data/")
 gos_prepped = paste0(dir, "_gf_files_gos/gos/prepped_data/")
 
 #Source shared functions
-source(paste0(common_dir, "global_variables.R"), encoding="UTF-8")
-source(paste0(common_dir, "shared_string_functions.R"))
+source(paste0(common_dir, "global_variables.R"))
+source(paste0(common_dir, "shared_string_functions.R"), encoding="UTF-8")
 source(paste0(common_dir, "shared_calculation_functions.R"))
 

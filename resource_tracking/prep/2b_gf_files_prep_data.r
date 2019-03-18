@@ -8,17 +8,6 @@
 #To do: 
 
 #--------------------------
-#-----------------------------------------------
-# Set up filepaths and source functions
-#-----------------------------------------------
-#Source document prep functions 
-setwd(budget_pudr_code)
-doc_prep_functions = list.files()
-for (file in doc_prep_functions){
-  source(file)
-}
-
-export_dir = paste0(dir, "resource_tracking/", country, "/prepped/")
 
 #----------------------------------------------------
 # Read in file list 

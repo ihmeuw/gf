@@ -16,7 +16,7 @@ rm(list=ls())
 
 user = "elineb" #Change to your username 
 code_dir = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
-source(paste0(code_dir, "resource_tracking/prep/_common/set_up_r.R"))
+source(paste0(code_dir, "resource_tracking/prep/_common/set_up_r.R"), encoding="UTF-8")
 # ---------------------------------------
 # Boolean logic switches 
 # ---------------------------------------
@@ -34,9 +34,9 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # STEP 2: GF FILES AND GOS DATA 
 # ----------------------------------------------
 
-country = "uga" #Change to the country you want to update. 
-master_file_dir = paste0(dir, "resource_tracking/", country, "/grants/")
-export_dir = paste0(dir, "resource_tracking/", country, "/prepped/")
+country = "gtm" #Change to the country you want to update. 
+master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
+export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
 
 #Source document prep functions 
 setwd(paste0(code_dir, "gf_files_prep_functions"))
