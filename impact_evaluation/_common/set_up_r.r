@@ -5,6 +5,7 @@
 # Script that loads packages and file names
 # Intended to be called by 1_master_file.r
 # This exists just for code organizational purposes
+# (use /ihme/singularity-images/health_fin/forecasting/shells/health_fin_forecasting_Rterm.sh on IHME's new cluster)
 # --------------------------------------------------
 
 # to do
@@ -23,7 +24,6 @@ library(Rcpp)
 library(grid)
 library(gridExtra)
 library(ggrepel)
-library(lubridate)
 library(boot)
 library(lavaan)
 library(blavaan)
