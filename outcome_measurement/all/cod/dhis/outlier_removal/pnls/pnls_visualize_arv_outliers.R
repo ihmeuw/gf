@@ -22,7 +22,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # read in the file
-dt = readRDS(paste0(dir, 'pnls_outliers/arv_quantreg_results.rds'))
+dt = readRDS(paste0(dir, 'pnls_outliers/qr_results_full.rds'))
 
 #------------------------------------
 # merge in the facility names to label the graphs 
@@ -39,11 +39,6 @@ dt[ ,thresh5:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,thresh10:=median(resid)+(10*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,thresh20:=median(resid)+(20*sd(resid)), by=.(org_unit_id, element)]
 
-# dt[ ,thresh5:=median(resid, na.rm=T)+(5*sd(resid, na.rm=T)), by=org_unit_id]
-# dt[ ,thresh10:=median(resid, na.rm=T)+(10*sd(resid, na.rm=T)), by=org_unit_id]
-# dt[ ,thresh20:=median(resid, na.rm=T)+(20*sd(resid, na.rm=T)), by=org_unit_id]
-
-
 # select outliers 
 # the value is 100 or more and greater than 10 times the SD of the residuals 
 dt[thresh10 < value & 100 <=value, outlier:=TRUE]
@@ -58,13 +53,6 @@ dt[ ,lower:=(median(resid)-(10*sd(resid))), by=.(org_unit_id, element)]
 dt[ ,upper_mid:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,lower_mid:=(median(resid)-(5*sd(resid))), by=.(org_unit_id, element)]
 
-# dt[ ,upper:=median(resid, na.rm=T)+(10*sd(resid, na.rm=T)), by=org_unit_id]
-# dt[ ,lower:=(median(resid, na.rm=T)-(10*sd(resid, na.rm=T))), by=org_unit_id]
-
-# # add a 5 SD bound just to be sure
-# dt[ ,upper_mid:=median(resid, na.rm=T)+(5*sd(resid, na.rm=T)), by=org_unit_id]
-# dt[ ,lower_mid:=(median(resid, na.rm=T)-(5*sd(resid, na.rm=T))), by=org_unit_id]
-
 
 # typically no values are below lower, but check
 dt[value < lower, outlier:=TRUE]
@@ -75,6 +63,8 @@ dt[value < lower, outlier:=TRUE]
 dt[ ,facility:=word(org_unit, 2, -1)]
 
 #------------------------------------
+# subset to only the sexes within facilities and elements that have outliers
+
 #One more merge conflict! -Emily and Jen 
 # subset to the health facilities with outliers and visualize 
 
@@ -90,6 +80,44 @@ out = dt[combine %in% out_orgs]
 # out = dt[combine %in% out_sex]
 
 out[ , combine:=NULL]
+
+#----------------------------
+# eliminate outliers that are part of an emerging trend
+
+# create a unique identifier to drop out emerging trends
+out[ , combine2:=paste0(org_unit_id, sex, element, subpop, age)]
+
+# subset to only the age categories, subpops with outliers
+out[ , count:=sum(outlier), by=combine2]
+drop = out[1 < count]
+
+# create a simpler data tabledrop
+drop = drop[ ,.(combine2, org_unit_id, element, sex, age, subpop, date, outlier, value)]
+
+# order by the unique identifier and then by date 
+drop[order(combine2, date)]
+
+# the subsequent or previous data point is within 50 of the past data point
+drop[ , value_lag:=shift(value, type='lag')]
+drop[ , value_lead:=shift(value, type='lead')]
+drop[outlier==T & (abs(value_lead - value) <= 50), dif:=T]
+drop[outlier==T & (abs(value_lag - value) <= 50), dif:=T]
+drop[is.na(dif), dif:=F]
+drop = drop[dif==T]
+
+# convert outliers to FALSE 
+drop[ , combine3:=paste0(as.character(date), combine2)]
+out[ , combine3:=paste0(as.character(date), combine2)]
+emerging_trends = drop$combine3
+out[combine3 %in% emerging_trends, outlier:=F]
+
+# drop the unecessary variables
+out[ ,c('combine2', 'combine3'):=NULL]
+
+# subset again to only the sexes, facilities, variables with outliers
+out[ , combine:=paste0(org_unit_id, sex, element)]
+out_new = out[outlier==T, unique(combine)]
+out = out[combine %in% out_new]
 
 #----------------------------
 # create the graphs
@@ -137,7 +165,7 @@ for (e in unique(out$element)) {
 
 #--------------------------------
 # print out the list of plots into a pdf
-pdf(paste0(dir, 'outliers/pnls_outputs/arv_outliers.pdf'), height=6, width=10)
+pdf(paste0(dir, 'pnls_outliers/pnls_outputs/arv_outliers.pdf'), height=6, width=10)
 
 for(i in seq(length(list_of_plots))) { 
   print(list_of_plots[[i]])
@@ -146,9 +174,15 @@ for(i in seq(length(list_of_plots))) {
 dev.off()
 
 #--------------------------------
+# create a data set exclusively of the outliers to remove
+# save it to remove from the full data 
 
+out[ , c('combine', 'count'):=NULL]
+out = out[outlier==T]
 
+saveRDS(out, paste0(dir, 'pnls_outliers/list_of_arv_outliers.rds'))
 
+#--------------------------------
 
 
 

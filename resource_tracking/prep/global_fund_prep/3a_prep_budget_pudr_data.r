@@ -65,6 +65,6 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expendi
 resource_database = resource_database[!(is.na(module) & is.na(intervention) & (budget == 0 | expenditure == 0))]
 
 #Make sure you have all the files here that you started with in your filelist. 
-rt_files <- unique(resource_database$fileName)
-stopifnot(length(unique(file_list$file_name)) == length(rt_files))
-stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
+# rt_files <- unique(resource_database$fileName)
+# stopifnot(length(unique(file_list$file_name)) == length(rt_files))
+# stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))

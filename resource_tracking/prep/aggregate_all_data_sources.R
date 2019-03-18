@@ -222,12 +222,12 @@ all_gf_cod <- readRDS("J:/Project/Evaluation/GF/resource_tracking/cod/prepped/bu
 all_gf_uga <- readRDS("J:/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_pudr_iterations.rds")  
 all_gf_gtm <- readRDS("J:/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_pudr_iterations.rds")
 
-all_gf_files <- rbind(all_gf_cod, all_gf_uga, all_gf_gtm, fill = TRUE)
+all_files = list(all_gf_cod, all_gf_gtm, all_gf_uga)
+all_gf_files <- rbindlist(all_files, use.names = TRUE, fill = TRUE)
 
 #Write data 
-#write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
 saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations.rds"))
-
+write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
 
 #----------------------------------
 # 4. GOVERNMENT HEALTH EXPENDITURE

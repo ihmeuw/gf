@@ -56,6 +56,7 @@ for(i in 1:nrow(file_list)){
   tmpData$file_iteration = file_list$file_iteration[i]
   tmpData$year <- year(tmpData$start_date)
   tmpData$grant_status <- file_list$grant_status[i]
+  tmpData$mod_framework_format = file_list$mod_framework_format[i]
   if(i==1){
     resource_database = tmpData
   }
