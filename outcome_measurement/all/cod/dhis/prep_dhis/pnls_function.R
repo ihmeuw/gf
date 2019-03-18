@@ -68,7 +68,7 @@ elements = x[ ,.(element = unique(element)), by=.(element_id)]
 saveRDS(elements, paste0(dir, 'meta_data/translate/pnls_elements.rds'))
 
 #---------------------
-# xlsx files do not work well on the clsuter
+# xlsx files do not work well on the cluster
 # code to run offline
 # to_translate = readRDS(elements, paste0(dir, 'meta_data/translate/pnls_elements.rds'))
 # write.xlsx(paste0(paste0(dir,'meta_data/translate/pnls_elements_to_translate.xlsx' )))
