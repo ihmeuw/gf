@@ -107,7 +107,7 @@ if (nrow(overlap)>0) {
 final_budgets <- rbind(final_budgets, gos_data, fill = TRUE) 
 
 # Verify data 
-na_year <- gos_prioritized_budgets[is.na(year)]
+na_year <- final_budgets[is.na(year)]
 stopifnot(nrow(na_year)==0)
 
 #Check that you've got the current grants right. 
