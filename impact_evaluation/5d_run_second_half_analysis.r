@@ -9,6 +9,15 @@ source('./impact_evaluation/_common/set_up_r.r')
 
 
 # ---------------------------
+# Settings
+
+# whether to run in parallel using qsub or mclapply
+runAsQsub = FALSE
+if(Sys.info()[1]=='Windows') runAsQsub = FALSE
+# ---------------------------
+
+
+# ---------------------------
 # Load data
 set.seed(1)
 load(outputFile5c)
@@ -48,20 +57,49 @@ source('./impact_evaluation/models/drc_malaria_impact3.r')
 # --------------------------------------------------------------
 # Run model
 if ('semFit' %in% ls()) rm('semFit')
-# semFit = sem(model, data)
-# semFits = lapply(sample(unique(data$health_zone), 50), function(h) sem(model, data[health_zone==h]))
-semFits = mclapply(sample(unique(data$health_zone), 10), function(h)  { 
-	print(h)
-	suppressWarnings(
-		bsem(model, data[health_zone==h], adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
-	)
-}, mc.cores=ifelse(Sys.info()[1]=='Windows',1,24))
+
+# run locally if specified
+if(runAsQsub==FALSE) { 
+	# run all sems
+	semFits = mclapply(unique(data$health_zone), function(h) { 
+		print(h)
+		suppressWarnings(
+			bsem(model, data[health_zone==h], adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+		)
+	}, mc.cores=ifelse(Sys.info()[1]=='Windows',1,24))
+}
+
+# run fully in parallel if specified
+if (runAsQsub==TRUE) { 
+	# save copy of input file for jobs
+	file.copy(outputFile5c, outputFile5c_scratch)
+	# store T (length of array)
+	hzs = unique(data$health_zone)
+	T = length(hzs)
+	# submit array job
+	system(paste0('qsub -N ie_job_array -t 1:', T, 
+		' -l fthread=1 -l m_mem_free=1G -q all.q -P ihme_general'))
+	# wait for jobs to finish
+	while(length(list.files(clustertmpDir2))<T) { 
+		Sys.sleep(5)
+		print(paste(length(list.files(clustertmpDir2)), 'of', T, 'files found...'))
+	}
+	# collect output
+	semFits = lapply(1:T, function(t) { 
+		load(paste0(clustertmpDir2, 'second_half_model_results_', task_id, '.rdata'))
+		return(semFit)
+	})
+}
+
+# store summaries of each sem
 for(i in seq(length(semFits))) { 
 	tmp = data.table(standardizedSolution(semFits[[i]]))
 	tmp[, health_zone:=unique(data$health_zone)[i]]
 	if (i==1) summaries = copy(tmp)
 	if (i>1) summaries = rbind(summaries, copy(tmp))
 }
+
+# compute averages
 means = summaries[,.(est.std=mean(est.std)), by=c('lhs','op','rhs')]
 means
 # --------------------------------------------------------------
