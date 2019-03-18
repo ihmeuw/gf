@@ -1,17 +1,9 @@
 pnls_subset = function(x) {
 
-# to run a test without re-running the file merge 
-# x = readRDS(paste0(dir, 'pre_prep/merged/', folder,'_', min, '_', max, '.rds' ))
-  
 #---------------------
-# convert factors to characters
-x[ , element:=as.character(element)]
-x[ , data_set:=as.character(category)]
-x[ , data_set:=as.character(data_set)]
+# drop the english element for final prep
 
-# drop unecessary variables
-x[ ,c('coordinates', 'country', 'element_eng'):=NULL]  
-
+x[ , element_eng:=NULL]  
 #---------------------------------------
 # drop out duplicate entries
 

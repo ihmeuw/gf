@@ -16,7 +16,7 @@ library(stringr)
 # --------------------
 
 # shell script for working on the cluster
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1347 -s 10 -P snis_download
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 2 
 
 # --------------------
 # set working directories
@@ -230,14 +230,9 @@ dt[ ,element_eng:= gsub('VIH', 'HIV', element_eng)]
 dt[ ,element_eng:= gsub('PLWHA', 'PLHIV', element_eng)]
 dt[ ,element_eng:= gsub('INH', 'IPT', element_eng)]
 
+# fix co-infected
 dt[ ,element_eng:= gsub('co-infectes', 'coinfected', element_eng)]
 
-
-#------------------------------------
-# run the pnls subset function 
-
-
-pnls_subset(dt)
 
 #-------------------------------------
 # save a single data set 

@@ -1,19 +1,42 @@
 # Final cleaning on PNLS
-# Run the function on the subset and 
+# Use this to manually aggregate the final variables
+# --------------------
+# Set up R
+rm(list=ls())
+library(data.table)
+library(ggplot2)
+library(dplyr)
+library(stringr) 
+library(xlsx)
+# --------------------
 
+# shell script for working on the cluster
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 2 
+
+# --------------------
+# set working directories
+
+# detect if operating on windows or on the cluster 
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+
+# set the directory for input and output
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+setwd(dir)
 
 #---------------------------------------
+# load the file that represents a subset (no sex or )
+
+dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_drug_2017_01_01_2018_12_01.rds'))
+
+#-----------------------------
 # export the abbreviated elements for translation
 
 # to do this on the cluster, you must export as an RDS, then use local code to save
-elements = x[ ,.(element = unique(element)), by=.(element_id)]
-saveRDS(elements, paste0(dir, 'meta_data/translate/pnls_elements.rds'))
+elements = dt[ ,.(element = unique(element)), by=.(element_id)]
+set = dt[ ,tolower(unique(set))]
 
-#---------------------
-# xlsx files do not work well on the cluster
-# code to run offline
-# to_translate = readRDS(elements, paste0(dir, 'meta_data/translate/pnls_elements.rds'))
-# write.xlsx(paste0(paste0(dir,'meta_data/translate/pnls_elements_to_translate.xlsx' )))
+# save the list as an excel file 
+write.xlsx(paste0(paste0(dir,'meta_data/translate/pnls_elements_to_translate', set, '.xlsx' )))
 
 # translate using onlinedoctranslator.com and save as file path below
 #---------------------
