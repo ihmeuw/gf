@@ -1,0 +1,53 @@
+,element_id,element,element_eng,rename
+1,AxJhIi7tUam,A 1.4 Paludisme grave,A 1.4 Severe malaria,Cases of severe malaria
+2,CGZbvJchfjk,A 1.4 Paludisme grave traité,A 1.4 Severe malaria treated,Cases of severe malaria treated
+3,CIzQAR8IWH1,A 1.4 TDR réalisé,A 1.4 TDR achieved,RDT completed
+4,JXm8J8GRJxI,A 1.4 Paludisme présumé traité,A 1.4 Malaria alleged treaty,Cases of presumed malaria treated
+5,SpmQSLRPMl4,A 1.4 TDR positif,1.4 A positive TDR,RDT positive
+6,aK0QXqm8Zxn,A 1.4 Paludisme présumé,A 1.4 presumed Malaria,Cases of presumed malaria
+7,nRm30I4w9En,A 1.4 Paludisme simple confirmé traité [PN],A mere 1.4 Confirmed malaria Treaty [PN],"Cases of uncomplicated, confirmed malaria treated"
+8,rfeqp2kdOGi,A 1.4 Paludisme simple confirmé,1.4 A single confirmed malaria,"Cases of uncomplicated, confirmed malaria"
+9,IhUBOQkWKoo,A 2.1 Sulfadox. + Pyrimét 4ème dose reçue,A 2.1 Sulfadox. + Pyrimét fourth dose,SP 4th dose
+10,fsBcCCKHGUx,A 2.1 Sulfadox. + Pyrimét 2ème dose reçue,A 2.1 Sulfadox. + Pyrimét 2nd dose,SP 2nd dose
+11,jocZb4TE1U2,A 1.5 Paludisme simple confirmé FE,A single 1.5 Confirmed malaria FE,"Cases of uncomplicated, confirmed malaria - pregnant women"
+12,jrtkdRjvNKv,A 2.1 MILD distribués a la CPN2+,A 2.1 LLINs distributed has ANC2 +,LLIN distributed at 2nd ANC
+13,kGmdIbd3mbn,A 2.1 CPN 1,A 2.1 CPN 1,1st ANC
+14,okUsVMBrhZC,A 2.1 Sulfadox. + Pyrimét 1ère dose reçue,A 2.1 Sulfadox. + Pyrimét first dose,SP 1st dose
+15,pOZcn5GNnRD,A 2.1 Sulfadox. + Pyrimét 3ème dose reçue,A 2.1 Sulfadox. + Pyrimét 3rd dose,SP 3rd dose
+16,scjrnpQxZ85,A 1.5 Paludisme grave FE,A 1.5 Severe malaria FE,Cases of severe malaria - pregnant women
+17,uV53nh3MrYl,A 2.1 MILD distribués a la CPN1,A 2.1 LLINs distributed to the CPN1,LLIN distributed at 1st ANC
+18,ukhWLb7dPET,A 1.5 Paludisme grave traité FE,A 1.5 Severe malaria FE treated,Cases of severe malaria treated - pregnant women
+19,wleambjupW9,A 1.5 Paludisme simple confirmé traité selon PN-FE,A single 1.5 Confirmed malaria treated according PN-FE,"Cases of uncomplicated, confirmed malaria treated - pregnant women"
+20,AxeUO0gRsAR,C1 12.1 MIILD - pièce - stock disponible utilisable,C1 12.1 LLINs - room - Available usable,LLIN stock available
+21,HJVFrQH0Tn4,C1 12.1 MIILD - pièce - jours rupture de stock,C1 12.1 LLINs - room - days out of stock,LLIN days out of stock
+22,KEv4JxAgpFK,C2 12.2 Determine VIH test 1+2 Pce - Quantité consommée,C2 12.2 Determine HIV 1 + 2 test kit - Quantity consumed,Determine HIV 1 + 2 test kit - quantity consumed
+23,QvVGcIERRFc,C1 12.1 Artesunate-Amodiaquine (12-59 mois) 50mg+135mg Comprimé - quantité consommée,C1 12.1 Artesunate-amodiaquine (12-59 months) 50mg + 135mg tablet - amount consumed,ASAQ (12-59 mos) 50mg+135mg - quantity consumed
+24,S40yEtRViXS,C1 12.1 MIILD - pièce - quantité consommée,C1 LLIN 12.1 - room - consumed amount,LLIN quantity consumed
+25,WjEIQZvEFqa,C1 12.1 Lumefantrine+ Artemether 80mg+480mg Comprimé - quantité consommée,C1 12.1 Lumefantrine + 80mg Artemether + 480mg tablet - amount consumed,AL 80mg+480mg - quantity consumed
+26,Wo3vNpLXPPm,"C1 12.1 Artesunate-Amodiaquine (2-11 mois) 25mg+67,5mg Comprimé - quantité consommée","C1 12.1 Artesunate-amodiaquine (2-11 months) + 25mg tablet 67,5mg - amount consumed",ASAQ (2-11mos) 25mg+67.5mg - quantity consumed
+27,aeTpblK0SVC,C1 12.1 Lumefantrine+ Artemether 40mg+240mg Comprimé - quantité consommée,C1 12.1 Lumefantrine + 40mg Artemether + 240mg tablet - amount consumed,AL 40mg+240mg - quantity consumed
+28,jm3jeYdVkBl,"C1 12.1 Artesunate-Amodiaquine (+14 ans, 6 cés) 100mg+270mg Comprimé - quantité consommée","C1 12.1 Artesunate-amodiaquine (14 years, 6 over) 100mg + 270mg tablet - amount consumed",ASAQ (14yrs+) 100mg+270mg - quantity consumed
+29,ncXfF8VViSh,C1 12.1 Rifamp +isoniazide +Pyrimetham+Ethamb (RHZE) 150mg+75mg+400mg+275mg Cés - quantité consommée,C1 12.1 Rifampicin + Isoniazid + Pyrimetham + Ethamb (RHZE) 150mg + 75mg  + 400mg + 275mg - amount consumed,RHZE 150mg+75mg+400mg+275mg -quantity consumed
+30,ovziGhkDOKb,"C1 12.1 Artesunate-Amodiaquine (6-13 ans, 3 cés) 100mg+270mg Comprimé - quantité consommée","C1 12.1 Artesunate-amodiaquine C1 12.1 (6-13 years, 3 over) 100mg + 270mg tablet - amount consumed",ASAQ (6-13yrs) 100mg+270mg - quantity consumed
+31,zN8t1RPspMj,C1 12.1 MIILD - pièce - quantité perdue,C1 LLIN 12.1 - room - quantity lost,LLIN quantity lost
+32,DXz4Zxd4fKq,Femmes enceintes ou allaitantes testées,Pregnant or nursing women tested,Pregnant or lactating women tested for HIV
+33,gHBcPOF5y3z,Femmes enceintes ou allaitantes VIH+,pregnant or breastfeeding women HIV +,Pregnant or lactating women who tested HIV+
+34,jJuipTLZK4o,TDF/3TC/EFV(300/300/600 mg) - 30 ces,TDF / 3TC / EFV (300/300/600 mg) - 30 these,TDF / 3TC / EFV (300/300/600 mg) - 30 these
+35,AIlNCyG5OOX,TB_Nombre adulte Retrt 2SRHZE/1 RHZE /5RHE,TB_Nombre adult Retrt 2SRHZE / 1 RHZE / 5RHE,Retreatment - adults - 2SRHZE / 1RHZE / 5RHE
+36,ANzWXWvvbX1,TB_Nombre de TB Cas contact,TB_Nombre TB Case Contact,Number TB case contacts
+37,B7A1sbUixQL,TB_Frottis positifs  (NP et Rech)_Frottis,positive TB_Frottis (NP and Rech) _Frottis,Sputum smear positive (new and relapse cases)
+38,BtF9VwZSqdz,"TB_Nombre de TB Prisonniers	","TB_Nombre TB Prisoners	",TB cases - prisoners
+39,Jy7o0gHyA1W,TB_Nombre enfant Retrt 2SRHZE/1 RHZE /5RHE,TB_Nombre child Retrt 2SRHZE / 1 RHZE / 5RHE,Retreatment - children - 2SRHZE / 1RHZE / 5RHE
+40,MMU2mFrLpBb,TB_Nombre adulte Initial   2RHZE / 10 RH,TB_Nombre adult Initial 2RHZE / 10 HR,Initial treatment - adults - 2RHZE / 10HR
+41,OF6Jci2VF2x,TB_Nombre de TB Mineurs,TB_Nombre TB Minors,TB cases - miners
+42,QoJw73JZCkb,TB_Frottis effectués (NP et rech)_Frottis,TB_Frottis made (NP rech) _Frottis,Sputum smear completed (new and relapse cases)
+43,SP3Kv0MybgA,TB_Frottis effectués (NP et rech)_Expert,TB_Frottis made (NP rech) _Expert,Expert completed (new and relapse cases)
+44,fIVevsf0eej,"TB_Nombre enfant Retrt  3RHZE/5RHE 	","TB_Nombre child Retrt 3RHZE / 5RHE 	",Retreatment - children - 3RHZE / 5RHE
+45,hLVx9BdEkVZ,TB_Nombre adulte Initial  2RHZE / 4RH,TB_Nombre adult Initial 2RHZE / 4RH,Initial treatment - adults - 2RHZE / 4RH
+46,nB8OBp7TIVR,TB_Nombre enfant Initial   2RHZE / 10 RH,TB_Nombre child Initial 2RHZE / 10 HR,Initial treatment - children - 2RHZE / 10HR
+47,pgHWKBydVPw,TB_Frottis positifs  (NP et Rech)_Expert,positive TB_Frottis (NP and Rech) _Expert,Expert positive (new and relapse cases)
+48,rEtqA3DojjN,TB_Nombre traité Cas contact,TB_Nombre Treaty Cases Contact,Number of TB case contacts treated
+49,sDKDNVBDNYZ,TB_Nombre enfant Initial  2RHZE / 4RH,TB_Nombre child Initial 2RHZE / 4RH,Initial treatment - children - 2RHZE / 4RH
+50,ti2YQSNVmw1,TB_Nombre adulte Retrt  3RHZE/5RHE,TB_Nombre adult Retrt 3RHZE / 5RHE,Retreatment - adults - 3RHZE / 5RHE
+51,jxW9eJlwooQ,TB_Nombre traité Mineurs,TB_Nombre treated Minors,TB cases treated - miners
+52,RWdaG7J6RiH,TB_Nombre traité Prisonniers,TB_Nombre treated Prisoners,TB cases treated - prisoners
