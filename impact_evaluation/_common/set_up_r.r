@@ -5,7 +5,7 @@
 # Script that loads packages and file names
 # Intended to be called by 1_master_file.r
 # This exists just for code organizational purposes
-# (use /ihme/singularity-images/health_fin/forecasting/shells/health_fin_forecasting_Rterm.sh on IHME's new cluster)
+# (use singularity exec /share/singularity-images/health_fin/forecasting/best.img R on IHME's new cluster)
 # --------------------------------------------------
 
 # to do
@@ -28,7 +28,7 @@ library(boot)
 library(lavaan)
 library(blavaan)
 library(viridis)
-library(Hmisc)
+# library(Hmisc)
 # library(lavaanPlot)
 # library(semPlot)
 library(raster)
@@ -102,6 +102,18 @@ admin2ShapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 # ---------------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------------
+# Intermediate file locations
+username = Sys.info()[['user']]
+clustertmpDir1 = paste0('/ihme/scratch/users/', username, '/impact_evaluation/combined_files/')
+clustertmpDir2 = paste0('/ihme/scratch/users/', username, '/impact_evaluation/parallel_files/')
+clustertmpDireo = paste0('/ihme/scratch/users/', username, '/impact_evaluation/errors_output/')
+if (file.exists(clustertmpDir1)!=TRUE) dir.create(clustertmpDir1) 
+if (file.exists(clustertmpDir2)!=TRUE) dir.create(clustertmpDir2) 
+if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo) 
+# ---------------------------------------------------------------------------------
+
+
 # -----------------------------------------------------------------------------
 # Output Files
 
@@ -131,6 +143,7 @@ outputFile5b = paste0(ieDir, 'pilot_model_results.rdata')
 
 # output file from 5c_set_up_for_second_half_analysis.r
 outputFile5c = paste0(ieDir, 'second_half_data_pre_model.rdata')
+outputFile5c_scratch = paste0(clustertmpDir1, 'second_half_data_pre_model.rdata')
 
 # output file from 5d_run_second_half_analysis.r
 outputFile5d = paste0(ieDir, 'second_half_model_results.rdata')
