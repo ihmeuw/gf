@@ -5,7 +5,7 @@
 # Script that loads packages and file names
 # Intended to be called by 1_master_file.r
 # This exists just for code organizational purposes
-# (use /usr/local/codem/public_use_anaconda/bin/R on IHME's new cluster)
+# (use singularity exec /share/singularity-images/health_fin/forecasting/best.img R on IHME's new cluster)
 # --------------------------------------------------
 
 # to do
