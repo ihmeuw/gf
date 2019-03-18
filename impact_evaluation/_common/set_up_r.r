@@ -102,6 +102,16 @@ admin2ShapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 # ---------------------------------------------------------------------------------
 
 
+# ---------------------------------------------------------------------------------
+# Intermediate file locations
+username = Sys.info()[['user']]
+clustertmpDir1 = paste0('/ihme/scratch/users/', username, '/impact_evaluation/combined_files/')
+clustertmpDir2 = paste0('/ihme/scratch/users/', username, '/impact_evaluation/parallel_files/')
+if (file.exists(clustertmpDir1)!=TRUE) dir.create(clustertmpDir1) 
+if (file.exists(clustertmpDir2)!=TRUE) dir.create(clustertmpDir2) 
+# ---------------------------------------------------------------------------------
+
+
 # -----------------------------------------------------------------------------
 # Output Files
 
@@ -131,6 +141,7 @@ outputFile5b = paste0(ieDir, 'pilot_model_results.rdata')
 
 # output file from 5c_set_up_for_second_half_analysis.r
 outputFile5c = paste0(ieDir, 'second_half_data_pre_model.rdata')
+outputFile5c_scratch = paste0(clustertmpDir1, 'second_half_data_pre_model.rdata')
 
 # output file from 5d_run_second_half_analysis.r
 outputFile5d = paste0(ieDir, 'second_half_model_results.rdata')
