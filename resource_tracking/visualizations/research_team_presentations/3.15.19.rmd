@@ -7,11 +7,16 @@ output: html_document
 
 ```{r setup, include=FALSE, echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
 library(data.table)
 library(ggplot2)
 dt = readRDS("J:/Project/Evaluation/GF/resource_tracking/_fgh/prepped_data/ghe_actuals_malaria.rds")
 
 drc = dt[ihme_loc_id == 'COD']
+drc[value_code == 'the_malaria', group:='the']
+drc[value_code%in%c('fs_malaria_domestic_public', 'fs_malaria_domestic_private_oop', 'fs_malaria_domestic_private'), group:='fs_malaria']
+drc[value_code%in%c('func_malaria_cure_care', 'func_malaria_pharm', 'func_malaria_prev', 'func_malaria_complement'), group:='func_malaria']
+
 drc_ghe = drc[value_code == 'fs_malaria_domestic_public']
 ```
 
@@ -21,14 +26,19 @@ Plot of government health expenditure on malaria
 
 ```{r, echo=FALSE }
 
-ggplot(drc, aes(x=year_id, y=value, color=source_type, shape=value_code)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Government Health Expenditure on Malaria, DRC") + scale_y_continuous(limits=c(0, 30000000), labels=seq(0, 30000000, by=10000000))
-ggplot(drc[value_code=='fs_malaria_domestic_public'], aes(x=year_id, y=value, color=source_type, shape=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Domestic Public Spending on Malaria, DRC (fs_malaria_domestic_public)") + scale_y_continuous(limits=c(0, 30000000), labels=seq(0, 30000000, by=10000000))
+#ggplot(drc, aes(x=year_id, y=value, color=source_type, shape=value_code)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Government Health Expenditure on Malaria, DRC") + scale_y_continuous(limits=c(0, 30000000), labels=seq(0, 30000000, by=10000000))
+#ggplot(drc[value_code=='fs_malaria_domestic_public'], aes(x=year_id, y=value, color=source_type, shape=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Domestic Public Spending on Malaria, DRC (fs_malaria_domestic_public)") + scale_y_continuous(limits=c(0, 30000000), labels=seq(0, 30000000, by=10000000))
 #ggplot(drc[value_code=='func_malaria_cure_care'], aes(x=year_id, y=value, color=source_type, shape=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Domestic Public Spending on Malaria, DRC (func_malaria_cure_care)")
 #ggplot(drc[value_code=='func_malaria_fprev'], aes(x=year_id, y=value, color=source_type, shape=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Domestic Public Spending on Malaria, DRC (func_malaria_prev)")
 
-ggplot(drc[value_code=='fs_malaria_domestic_public'], aes(x=year_id, y=value, color=source_type, shape=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Domestic Public Spending on Malaria, DRC (fs_malaria_domestic_public)") + geom_smooth(method="lm") + scale_y_continuous(limits=c(0, 30000000), labels=seq(0, 30000000, by=10000000))
+#ggplot(drc[value_code=='fs_malaria_domestic_public'], aes(x=year_id, y=value, color=source_type, shape=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Domestic Public Spending on Malaria, DRC (fs_malaria_domestic_public)") + geom_smooth(method="lm") + scale_y_continuous(limits=c(0, 30000000), labels=seq(0, 30000000, by=10000000))
 
-ggplot(drc_ghe, aes(x=year_id, y=value, color=source_type, shape=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Domestic Public Spending on Malaria, DRC (fs_malaria_domestic_public)") + scale_y_continuous(limits=c(0, 30000000), labels=seq(0, 30000000, by=10000000))
+#ggplot(drc_ghe, aes(x=year_id, y=value, color=source_type, shape=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Domestic Public Spending on Malaria, DRC (fs_malaria_domestic_public)") + scale_y_continuous(limits=c(0, 30000000), labels=seq(0, 30000000, by=10000000)) 
+
+ggplot(drc, aes(x=year_id, y=value, color=group, shape=group)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Comparison of different data sources (FS, FUNC, and THE)") + geom_line()
+ggplot(drc, aes(x=year_id, y=value, color=group, shape=group)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Comparison of different data sources (FS, FUNC, and THE) without trend line") 
+ggplot(drc, aes(x=year_id, y=value, color=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Government Health Expenditure on Malaria, DRC") + facet_wrap(vars(group))
+#It seems there are three groups of these categories to plot separately: the_malaria (on its own), the three fs_malaria variables and then the func_malaria variables. Could you just make a quick time series plot like the first one, facetted by those three groups (with scales=’free_y’). Might also help to connect the dots.
 
 
 ```
@@ -37,14 +47,14 @@ The unique values in the data are `r unique(drc[, value_code])`.
 The unique sources in the data are `r unique(drc[, source_type])`
 
 And the years we have each one for are 
-```{r, echo=FALSE}
+```{r, echo=FALSE, include=FALSE}
 unique(drc[, .(year_id, value_code)])[order(year_id)]
 unique(drc[, .(year_id, source_type)])[order(year_id)]
 ```
 
 
 Some more specific analyses on GHE for malaria specifically `(value_code == fs_domestic_malaria_public)`
-```{r, echo=FALSE}
+```{r, echo=FALSE, include=FALSE}
 
 ggplot(drc_ghe[source_type == "nha"], aes(x=year_id, y=value, color=source_type, shape=source_type)) + geom_point() + theme_bw() + labs(x="Year", y="USD", title = "Domestic Public Spending on Malaria, NHAs only") + geom_smooth(method="lm") + 
   scale_y_continuous(limits=c(0, 30000000), labels=seq(0, 30000000, by=10000000))
