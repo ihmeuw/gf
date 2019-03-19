@@ -43,10 +43,12 @@ write.xlsx(paste0(paste0(dir,'meta_data/translate/pnls_elements_to_translate', s
 
 # import the translated elements
 new_elements = read.xlsx(paste0(paste0(dir,
-                                       'meta_data/translate/pnls_elements_translations.xlsx' )))
+                'meta_data/translate/pnls_elements_translations', set, '.xlsx' )))
 
 # reset the variable name for the merge and merge on element id
 setnames(new_elements, 'element', 'element_eng')
+
+# be sure 
 x = merge(x, new_elements, by='element_id', all.x=T )
 
 #---------------------------------------
