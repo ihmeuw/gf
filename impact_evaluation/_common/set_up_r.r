@@ -133,6 +133,10 @@ outputFile2c = paste0(ieDir, 'outcomes_impact.rds')
 # output file from 3_merge_data.R
 outputFile3 = paste0(ieDir, 'pilot_data.RDS')
 
+# output files from 3b_correct_to_models.r
+outputFile3b = paste0(ieDir, 'outcomes_impact_corrected.RDS')
+outputFile3bGraphs = paste0(ieDir, '../visualizations/outcomes_impact_correction_results.pdf')
+
 # output file from 4_explore_data.r (graphs)
 outputFile4a = paste0(ieDir, '../visualizations/pilot_data_exploratory_graphs.pdf')
 outputFile4b = paste0(ieDir, '../visualizations/second_half_exploratory_graphs.pdf')
