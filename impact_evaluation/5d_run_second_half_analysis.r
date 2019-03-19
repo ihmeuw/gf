@@ -89,8 +89,8 @@ if (runAsQsub==TRUE) {
 	# collect output
 	print('Collecting output...')
 	semFits = lapply(seq(T), function(i) {
-		suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rdata')))
-	}
+		suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rds')))
+	})
 }
 
 # store summaries of each sem

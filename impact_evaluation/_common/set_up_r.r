@@ -104,6 +104,7 @@ admin2ShapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 
 # ---------------------------------------------------------------------------------
 # Intermediate file locations
+if (Sys.info()[1]!='Windows') {
 username = Sys.info()[['user']]
 clustertmpDir1 = paste0('/ihme/scratch/users/', username, '/impact_evaluation/combined_files/')
 clustertmpDir2 = paste0('/ihme/scratch/users/', username, '/impact_evaluation/parallel_files/')
@@ -111,6 +112,7 @@ clustertmpDireo = paste0('/ihme/scratch/users/', username, '/impact_evaluation/e
 if (file.exists(clustertmpDir1)!=TRUE) dir.create(clustertmpDir1) 
 if (file.exists(clustertmpDir2)!=TRUE) dir.create(clustertmpDir2) 
 if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo) 
+}
 # ---------------------------------------------------------------------------------
 
 
