@@ -49,5 +49,6 @@ summary[, health_zone:=h]
 outputFile5etmp = paste0(clustertmpDir2, 'second_half_model_results_', task_id, '.rdata')
 
 # save
+print(paste('Saving:', outputFile5etmp))
 save(list=c('subData','model','semFit','summary'), file=outputFile5etmp)
 # ------------------------------------------------------------------
