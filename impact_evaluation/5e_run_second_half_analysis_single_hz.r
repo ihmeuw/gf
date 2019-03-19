@@ -46,8 +46,11 @@ summary[, health_zone:=h]
 # Save model output and clean up
 
 # make unique file name
-outputFile5etmp = paste0(clustertmpDir2, 'second_half_model_results_', task_id, '.rdata')
+outputFile5etmp1 = paste0(clustertmpDir2, 'second_half_model_results_', task_id, '.rdata')
+outputFile5etmp2 = paste0(clustertmpDir2, 'second_half_semFit_', task_id, '.rds')
 
 # save
-save(list=c('subData','model','semFit','summary'), file=outputFile5etmp)
+print(paste('Saving:', outputFile5etmp))
+# save(list=c('subData','model','semFit','summary'), file=outputFile5etmp1)
+saveRDS('semFit', file=outputFile5etmp2)
 # ------------------------------------------------------------------
