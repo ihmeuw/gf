@@ -25,10 +25,7 @@ if (prep_files == TRUE){
   stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
   stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
   
-  #Turn this variable on to run only a limited section of each country's file list; i.e. only the part that will be kept after GOS data is prioritized in step 4 (aggregate data). 
-  if(limit_filelist==TRUE){
-    file_list = prioritize_gos(file_list)
-  }
+  file_list = prioritize_gos(file_list)
 
 }
 
@@ -90,7 +87,8 @@ if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, 
   
   
 } else {
-  resource_database <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+  resource_database <- readRDS(paste0(dir, "_gf_files_gos/", country, "/prepped_data/raw_bound_gf_files.RDS"))
+  resource_database = resource_database[file_name%in%file_list$file_name]
 }
 
 #------------------------------------------------------------------

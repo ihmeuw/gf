@@ -9,7 +9,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 library(data.table)
 library(ggplot2)
-dt = readRDS("J:/Project/Evaluation/GF/resource_tracking/_fgh/prepped_data/ghe_actuals_malaria.rds")
+dt = readRDS(paste0(fgh_raw, "ghe_actuals_malaria.rds"))
 
 drc = dt[ihme_loc_id == 'COD']
 drc_ghe = drc[value_code == 'fs_malaria_domestic_public']
