@@ -66,7 +66,7 @@ for(h in sample(unique(data$health_zone), 15)) {
 	hzOutcomePlotsMild[[i]] = ggplot(wide[health_zone==h & section=='outcomes'], 
 		aes(y=lead_newCasesMalariaMild_rate, x=value)) + 
 	geom_point() + 
-	geom_line() + 
+	geom_smooth() + 
 	facet_wrap(~variable, scales='free') + 
 	labs(title=h) + 
 	theme_bw()
@@ -87,7 +87,7 @@ for(h in sample(unique(data$health_zone), 15)) {
 	hzOutcomePlotsSev[[i]] = ggplot(wide[health_zone==h & section=='outcomes'], 
 		aes(y=lead_newCasesMalariaSevere_rate, x=value)) + 
 	geom_point() + 
-	geom_line() + 
+	geom_smooth() + 
 	facet_wrap(~variable, scales='free') + 
 	labs(title=h) + 
 	theme_bw()
@@ -107,7 +107,7 @@ for(h in sample(unique(data$health_zone), 15)) {
 	hzOutcomePlotsMort[[i]] = ggplot(wide[health_zone==h & section=='outcomes'], 
 		aes(y=lead_malariaDeaths_rate, x=value)) + 
 	geom_point() + 
-	geom_line() + 
+	geom_smooth() + 
 	facet_wrap(~variable, scales='free') + 
 	labs(title=h) + 
 	theme_bw()
