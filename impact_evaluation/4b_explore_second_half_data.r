@@ -62,7 +62,7 @@ wide = merge(long[variable!='lead_newCasesMalariaMild_rate'], incidenceMild, by=
 
 i=1
 hzOutcomePlotsMild=list()
-for(h in unique(data$health_zone)) {
+for(h in sample(unique(data$health_zone), 15)) {
 	hzOutcomePlotsMild[[i]] = ggplot(wide[health_zone==h & section=='outcomes'], 
 		aes(y=lead_newCasesMalariaMild_rate, x=value)) + 
 	geom_point() + 
@@ -83,7 +83,7 @@ wide = merge(wide[variable!='lead_newCasesMalariaSevere_rate'], incidenceSevere,
 
 i=1
 hzOutcomePlotsSev=list()
-for(h in unique(data$health_zone)) {
+for(h in sample(unique(data$health_zone), 15)) {
 	hzOutcomePlotsSev[[i]] = ggplot(wide[health_zone==h & section=='outcomes'], 
 		aes(y=lead_newCasesMalariaSevere_rate, x=value)) + 
 	geom_point() + 
@@ -103,7 +103,7 @@ wide = merge(wide[variable!='lead_malariaDeaths_rate'], mortality, by=byVars)
 
 i=1
 hzOutcomePlotsMort=list()
-for(h in unique(data$health_zone)) {
+for(h in sample(unique(data$health_zone), 15)) {
 	hzOutcomePlotsMort[[i]] = ggplot(wide[health_zone==h & section=='outcomes'], 
 		aes(y=lead_malariaDeaths_rate, x=value)) + 
 	geom_point() + 
