@@ -88,13 +88,8 @@ if (runAsQsub==TRUE) {
 	}
 	# collect output
 	print('Collecting output...')
-	semFits = list()
-	for(i in seq(50)) { 
-		suppressWarnings(load(paste0(clustertmpDir2, 'second_half_model_results_', i, '.rdata')))
-		semFits[[i]] = semFit
-		rm('semFit','subData','summary')
-		cat(paste0('\r', format(object.size(semFit),units='Mb')))
-		flush.console() 
+	semFits = lapply(seq(T), function(i) {
+		suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rdata')))
 	}
 }
 
