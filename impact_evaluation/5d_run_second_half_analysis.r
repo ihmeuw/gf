@@ -139,4 +139,11 @@ file.copy(outputFile5d_big, outputFile5dArchive_big)
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
+
+# clean up qsub files
+if (runAsQsub==TRUE) { 
+	system(paste0('rm ', clustertmpDireo, '/*'))
+	system(paste0('rm ', clustertmpDir1	, '/*'))
+	system(paste0('rm ', clustertmpDir2	, '/*'))
+}
 # ------------------------------------------------------------------
