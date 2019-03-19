@@ -12,7 +12,7 @@ source('./impact_evaluation/_common/set_up_r.r')
 # Settings
 
 # whether to run in parallel using qsub or mclapply
-runAsQsub = FALSE
+runAsQsub = TRUE
 if(Sys.info()[1]=='Windows') runAsQsub = FALSE
 # ---------------------------
 
@@ -72,26 +72,34 @@ if(runAsQsub==FALSE) {
 # run fully in parallel if specified
 if (runAsQsub==TRUE) { 
 	# save copy of input file for jobs
-	file.copy(outputFile5c, outputFile5c_scratch)
+	file.copy(outputFile5c, outputFile5c_scratch, overwrite=TRUE)
 	# store T (length of array)
 	hzs = unique(data$health_zone)
 	T = length(hzs)
 	# submit array job
-	system(paste0('qsub -N ie_job_array -t 1:', T, 
-		' -l fthread=1 -l m_mem_free=1G -q all.q -P ihme_general'))
+	system(paste0('qsub -cwd -N ie_job_array -t 1:', T, 
+		' -l fthread=1 -l m_mem_free=1G -q all.q -P ihme_general -e ', 
+		clustertmpDireo, ' -o ', clustertmpDireo, 
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/5e_run_second_half_analysis_single_hz.r'))
 	# wait for jobs to finish
 	while(length(list.files(clustertmpDir2))<T) { 
 		Sys.sleep(5)
 		print(paste(length(list.files(clustertmpDir2)), 'of', T, 'files found...'))
 	}
 	# collect output
-	semFits = lapply(1:T, function(t) { 
-		load(paste0(clustertmpDir2, 'second_half_model_results_', task_id, '.rdata'))
-		return(semFit)
-	})
+	print('Collecting output...')
+	semFits = list()
+	for(i in seq(50)) { 
+		suppressWarnings(load(paste0(clustertmpDir2, 'second_half_model_results_', i, '.rdata')))
+		semFits[[i]] = semFit
+		rm('semFit','subData','summary')
+		cat(paste0('\r', format(object.size(semFit),units='Mb')))
+		flush.console() 
+	}
 }
 
 # store summaries of each sem
+print('Summarizing results...')
 for(i in seq(length(semFits))) { 
 	tmp = data.table(standardizedSolution(semFits[[i]]))
 	tmp[, health_zone:=unique(data$health_zone)[i]]
@@ -115,14 +123,19 @@ means
 # ------------------------------------------------------------------
 # Save model output and clean up
 
-# save
-save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5d)
+# save all sem fits just in case they're needed
+outputFile5d_big = gsub('.rdata','_all_semFits.rdata',outputFile5d)
+save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5d_big)
+save(list=c('data','model','summaries','means','scaling_factors'), file=outputFile5d)
 
 # save a time-stamped version for reproducibility
 date_time = gsub('-|:| ', '_', Sys.time())
 outputFile5dArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5d)
 outputFile5dArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5dArchive)
-save(list=c('data','model','semFit','scaling_factors'), file=outputFile5dArchive)
+file.copy(outputFile5d, outputFile5dArchive)
+outputFile5dArchive_big = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5d_big)
+outputFile5dArchive_big = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5dArchive_big)
+file.copy(outputFile5d_big, outputFile5dArchive_big)
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
