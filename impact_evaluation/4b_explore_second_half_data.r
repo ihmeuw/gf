@@ -70,11 +70,13 @@ tsWide1[!variable %in% c('ITN_rate', 'RDT_rate') & section=='outcomes',
 	model_value:=act_coverage_rate]
 
 hzOutcomePlotsTs = lapply(sample(unique(data$health_zone), 15), function(h) { 
-	ggplot(tsWide1[health_zone==h & section=='outcomes'], aes(y=value, x=date, color=variable)) + 
-		geom_point() + 
-		geom_line(aes(y=model_value)) + 
+	ggplot(tsWide1[health_zone==h & section=='outcomes'], aes(y=value, x=date)) + 
+		geom_point(aes(color='Observed Program Data')) + 
+		geom_line(aes(y=model_value, color='LBD/MAP Model Estimate')) + 
+		scale_color_manual('', values=c('Observed Program Data'='black', 
+			'LBD/MAP Model Estimate'='blue')) + 
 		facet_wrap(~variable, scales='free') + 
-		labs(title=h, caption='LBD/MAP model estimate shown as line') + 
+		labs(title=h) + 
 		theme_bw()
 })
 
@@ -92,9 +94,11 @@ tsWide2[variable!='malariaDeaths_rate' & section=='impact',
 	model_value:=incidence_rate]
 
 hzImpactPlotsTs = lapply(sample(unique(data$health_zone), 15), function(h) { 
-	ggplot(tsWide2[health_zone==h & section=='impact'], aes(y=value, x=date, color=variable)) + 
-		geom_point() + 
-		geom_line(aes(y=model_value)) + 
+	ggplot(tsWide2[health_zone==h & section=='impact'], aes(y=value, x=date)) + 
+		geom_point(aes(color='Observed Program Data')) + 
+		geom_line(aes(y=model_value, color='LBD/MAP Model Estimate')) + 
+		scale_color_manual('', values=c('Observed Program Data'='black', 
+			'LBD/MAP Model Estimate'='blue')) + 
 		facet_wrap(~variable, scales='free') + 
 		labs(title=h, caption='LBD/MAP model estimate shown as line') + 
 		theme_bw()
