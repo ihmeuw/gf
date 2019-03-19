@@ -63,6 +63,11 @@ data$tmp = NULL
 # na omit
 data = na.omit(data)
 
+# remake ITN_rate now that it can be cumulative
+data = data[order(health_zone, date)]
+data[,ITN_cumul:=cumsum(ITN), by='health_zone']
+data[, ITN_rate:=ITN/population]
+
 # log-transform
 logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated',
 	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate',
