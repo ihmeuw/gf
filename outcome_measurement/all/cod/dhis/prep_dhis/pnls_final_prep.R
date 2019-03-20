@@ -7,7 +7,7 @@ library(data.table)
 library(ggplot2)
 library(dplyr)
 library(stringr) 
-library(xlsx)
+library(openxlsx)
 # --------------------
 
 # shell script for working on the cluster
@@ -28,20 +28,39 @@ setwd(dir)
 
 dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_pmtct_2017_01_01_2018_12_01.rds'))
 
+#----------------------------------------------
+#Add in subpops that weren't captured before
+dt[grep("AMF", element), subpop:='AMF']
+dt[element_id=='eVULOZGDgFZ', subpop:='plw']
+dt[element_id=='hSZGwtEX9pt', subpop:='serodisc']
+#--------------------------------------------
+
 #-----------------------------
 # check the subpops and sexes in the indicators are all captured
 # then strip them from the indicators
-dt[ ,unique(element)]
 
-dt[ ,unique(subpop)]
+dt[, unique(element)]
+unique(dt[is.na(subpop), .(element)])
 
-dt[grep('enceintes', element), unique(subpop)]
-dt[grep('', element), unique(subpop)]
+#Remove subpop strings
+dt[ ,element1:=tolower(element)]
+dt[ ,element1:=gsub("femmes enceintes ou allaitantes", "", element1)]
+dt[, element1:=gsub("femmes enc. ou allaitantes", "", element1)]
+dt[, element1:=gsub("femmes enceintes et allaitantes", "", element1)]
+dt[, element1:=gsub("femmes enceintes ouallaitantes", "", element1)]
+dt[, element1:=gsub("femmes enceintes", "", element1)]
+dt[ ,element1:=gsub("eev", "", element1)]
+dt[, element1:=gsub("partenaires masculins", "", element1)]
+dt[, element1:=gsub("enfants exposés", "", element1)]
+dt[, element1:=gsub("couples discordants", "", element1)]
+dt[, element1:=gsub("amf", "", element1)]
 
+#
 
-dt[ ,element1:=tolower(fix_diacritics(element))]
-dt[ ,element2:=gsub("femmes enceintes ou allaitantes", " ", element1)]
-dt[ ,element2:=gsub("eev", " ", element1)]
+dt[, element1:=trimws(element1)]
+
+dt[, unique(element1)]
+
 #-----------------------------
 
 # export the abbreviated elements for translation
@@ -51,14 +70,14 @@ elements = dt[ ,.(element = unique(element)), by=.(element_id)]
 set = dt[ ,tolower(unique(set))]
 
 # save the list as an excel file 
-write.xlsx(paste0(paste0(dir,'meta_data/translate/pnls_elements_to_translate', set, '.xlsx' )))
+write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate', set, '.xlsx' ))
 
 # translate using onlinedoctranslator.com and save as file path below
 #---------------------
 
 # import the translated elements
-new_elements = read.xlsx(paste0(paste0(dir,
-                'meta_data/translate/pnls_elements_translations_', set, '.xlsx' )))
+new_elements = read.xlsx(paste0(dir,
+                'meta_data/translate/pnls_elements_translations_', set, '.xlsx' ))
 
 # reset the variable name for the merge and merge on element id
 setnames(new_elements, 'element', 'element_eng')
