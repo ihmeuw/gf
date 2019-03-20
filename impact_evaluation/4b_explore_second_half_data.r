@@ -103,7 +103,6 @@ hzImpactPlotsTs = lapply(sample(unique(data$health_zone), 15), function(h) {
 		labs(title=h, caption='LBD/MAP model estimate shown as line') + 
 		theme_bw()
 })
-
 # ----------------------------------------------
 
 
