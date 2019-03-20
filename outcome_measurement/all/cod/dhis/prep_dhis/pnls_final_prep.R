@@ -29,6 +29,21 @@ setwd(dir)
 dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_pmtct_2017_01_01_2018_12_01.rds'))
 
 #-----------------------------
+# check the subpops and sexes in the indicators are all captured
+# then strip them from the indicators
+dt[ ,unique(element)]
+
+dt[ ,unique(subpop)]
+
+dt[grep('enceintes', element), unique(subpop)]
+dt[grep('', element), unique(subpop)]
+
+
+dt[ ,element1:=tolower(fix_diacritics(element))]
+dt[ ,element2:=gsub("femmes enceintes ou allaitantes", " ", element1)]
+dt[ ,element2:=gsub("eev", " ", element1)]
+#-----------------------------
+
 # export the abbreviated elements for translation
 
 # to do this on the cluster, you must export as an RDS, then use local code to save
