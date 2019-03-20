@@ -50,7 +50,7 @@ outputFile5etmp1 = paste0(clustertmpDir2, 'second_half_model_results_', task_id,
 outputFile5etmp2 = paste0(clustertmpDir2, 'second_half_semFit_', task_id, '.rds')
 
 # save
-print(paste('Saving:', outputFile5etmp))
+print(paste('Saving:', outputFile5etmp2))
 # save(list=c('subData','model','semFit','summary'), file=outputFile5etmp1)
 saveRDS('semFit', file=outputFile5etmp2)
 # ------------------------------------------------------------------
