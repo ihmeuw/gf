@@ -22,18 +22,19 @@
 
 #---------------------------------------
 
-cod_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/")
-gtm_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/gtm/prepped/")
-uga_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/uga/prepped/")
+cod_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/prepped_data/")
+gtm_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/prepped_data/")
+uga_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/uga/prepped_data/")
 
-final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/")
+final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/")
 
 
 # --------------------------------------------
 # Load the prepped GOS data - to be used for both 
 # final budgets and final expenditures 
 #----------------------------------------------
-gos_data <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_gos_data.rds"))
+gos_data <- readRDS(paste0(gos_prepped, "prepped_gos_data.rds"))
+gos_data[loc_name]
             
 #----------------------------------
 # 1. FINAL GF BUDGETS 
@@ -80,26 +81,9 @@ final_budgets[grant == 'GTM-T-UPCOMING', grant:='GTM-T-MSPAS']
 final_budgets[grant == 'GTM-M-UPCOMING', grant:='GTM-M-MSPAS']
 final_budgets[grant == 'UGD-708-G13-H', grant:='UGA-708-G13-H']
 
-#Check that all grant numbers in GF budgets correlate to GOS grant numbers
-fpm_grants = unique(final_budgets[, .(grant)])[order(grant)]
-gos_grants = unique(gos_data[, .(grant)])[order(grant)]
-for(i in 1:nrow(fpm_grants)){
-  if (!fpm_grants$grant[i] %in% gos_grants$grant){
-    print("Grant number may not merge correctly between final budgets and GOS: check grant labeling")
-    print(paste0(i, " ", fpm_grants$grant[i]))
-  }
-}
-
-#Where we have the same grant information in FPM and GOS, prioritize GOS for complete years. 
-gos_grant_list <- unique(gos_data[, .(grant, start_date)])
-gos_grant_list$concat = paste0(gos_grant_list$grant, gos_grant_list$start_date)
-final_budgets$concat = paste0(final_budgets$grant, final_budgets$start_date)
-
-print("The following grant/date pairs will be dropped from final budgets, because they're also represented in GOS")
-print(unique(final_budgets[concat%in%gos_grant_list$concat, concat]))
-
-final_budgets = final_budgets[!concat%in%gos_grant_list$concat]
-
+#Keep only GOS through 2016, and only final budgets after. (Keep all GOS for as long as we have it)
+gos_data = gos_data[year <=gos_year]
+final_budgets = final_budgets[year>gos_year]
 final_budgets <- rbind(final_budgets, gos_data, fill = TRUE) 
 
 # Verify data 
@@ -155,26 +139,10 @@ stopifnot(nrow(check_qtr_uga)==0)
 #Bind expenditures together
 final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, fill = TRUE) 
 
-#Check that all grant numbers in GF budgets correlate to GOS grant numbers
-fpm_grants = unique(final_expenditures[, .(grant)])[order(grant)]
-gos_grants = unique(gos_data[, .(grant)])[order(grant)]
-for(i in 1:nrow(fpm_grants)){
-  if (!fpm_grants$grant[i] %in% gos_grants$grant){
-    print("Grant number may not merge correctly between final expenditures and GOS: check grant labeling")
-    print(paste0(i, " ", fpm_grants$grant[i]))
-  }
-}
-
-#Where we have the same grant information in FPM and GOS, prioritize GOS for complete years. 
-gos_grant_list <- unique(gos_data[, .(grant, start_date)])
-gos_grant_list$concat = paste0(gos_grant_list$grant, gos_grant_list$start_date)
-final_expenditures$concat = paste0(final_expenditures$grant, final_expenditures$start_date)
-
-print("The following grant/date pairs will be dropped from final budgets, because they're also represented in GOS")
-print(unique(final_expenditures[concat%in%gos_grant_list$concat, concat]))
-
-final_expenditures = final_expenditures[!concat%in%gos_grant_list$concat]
-
+#Keep only GOS through 2016, and only final expenditures after. (Keep all GOS for as long as we have it)
+gos_data = gos_data[year <=2016]
+final_expenditures = final_expenditures[year>2016]
+final_expenditures <- rbind(final_expenditures, gos_data, fill = TRUE) 
 gos_prioritized_expenditures <- rbind(final_expenditures, gos_data, fill = TRUE) 
 
 # Verify data 
