@@ -108,7 +108,7 @@ means = summaries[,.(est.std=mean(est.std)), by=c('lhs','op','rhs')]
 means
 # --------------------------------------------------------------
 
-# nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable_second_half.csv')
+# nodeTable = fread('./impact_evaluation/visualizations/vartable_second_half.csv')
 # source('./impact_evaluation/visualizations/graphLavaan.r')
 # semGraph(parTable=means, nodeTable=nodeTable, 
 	# scaling_factors=NA, standardized=TRUE, 
