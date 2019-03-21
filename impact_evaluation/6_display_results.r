@@ -14,7 +14,7 @@ source('./impact_evaluation/_common/set_up_r.r')
 # load the custom predict_lavaan.r function
 source('./impact_evaluation/_common/predict_lavaan.r')
 
-# load home-made sem graphing function FIX THIS FILE PATH
+# load home-made sem graphing function
 source('./impact_evaluation/visualizations/graphLavaan.r')
 
 # load model results
@@ -23,7 +23,7 @@ data1=copy(data)
 load(outputFile5d)
 data2=copy(data)
 
-# load nodeTable for graphing FIX THIS FILE PATH
+# load nodeTable for graphing
 nodeTable1 = fread('./impact_evaluation/visualizations/vartable.csv')
 nodeTable2 = fread('./impact_evaluation/visualizations/vartable_second_half.csv')
 
