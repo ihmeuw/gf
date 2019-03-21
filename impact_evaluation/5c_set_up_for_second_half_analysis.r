@@ -14,7 +14,12 @@ source('./impact_evaluation/_common/set_up_r.r')
 # Load/prep data
 
 # load
-data = readRDS(outputFile2c)
+data = readRDS(outputFile3b)
+
+# replace data with corrected data
+adjVars = names(data)[grepl('_adj',names(data))]
+for(v in adjVars) data[, (gsub('_adj','',v)):=get(v)]
+data = data[, -adjVars, with=FALSE]
 
 # drop unnecessary variables
 dropVars = c('act_coverage','incidence','prevalence','mortality','itn_coverage','year')
@@ -38,7 +43,7 @@ data[mildMalariaTreated_rate>2, mildMalariaTreated_rate:=NA]
 data[severeMalariaTreated_rate>2.5, severeMalariaTreated_rate:=NA]
 data[newCasesMalariaMild_rate>100000, newCasesMalariaMild_rate:=NA]
 data[newCasesMalariaSevere_rate>100000, newCasesMalariaSevere_rate:=NA]
-data[malariaDeaths_rate>1000, malariaDeaths_rate:=NA]
+data[malariaDeaths_rate>500, malariaDeaths_rate:=NA]
 
 # last-minute prep that shouldn't be necessary after bugs are fixed
 # extrapolate where necessary TEMPORARY
