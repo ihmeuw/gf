@@ -104,7 +104,7 @@ for(i in seq(length(semFits))) {
 }
 
 # compute averages
-means = summaries[,.(est.std=mean(est.std), ci.lower=mean(ci.lower), ci.upper=mean(ci.upper)), by=c('lhs','op','rhs')]
+means = summaries[,.(est.std=mean(est.std), se=mean(se)), by=c('lhs','op','rhs')]
 means
 # --------------------------------------------------------------
 

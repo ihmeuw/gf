@@ -78,7 +78,7 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	if (standardized==TRUE) {
 		if (!is.null(fitObject)) edgeTable = data.table(standardizedSolution(fitObject, se=TRUE))
 		if (!is.null(parTable)) edgeTable = data.table(parTable)
-		setnames(edgeTable, c('est.std','ci.lower','ci.upper'), c('est', 'lower','upper'))
+		setnames(edgeTable, 'est.std', 'est')
 	}
 	if (standardized==FALSE) { 
 		vars = c('lhs','op','rhs','est')
@@ -139,7 +139,7 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	# make nice labels for edges if necessary
 	if (edgeLabels==TRUE) {
 		# estimate 1.96*std error assuming symmetrical
-		if (uncertainty==TRUE) edgeTable[, se196:=upper-est]
+		if (uncertainty==TRUE) edgeTable[, se196:=se*1.96]
 		edgeTable[, edge_label:=as.character(round(est,2))]
 		if (uncertainty==TRUE) edgeTable[, edge_label:=paste0(edge_label, ' (\u00b1', round(se196,2),')')] 
 	}
