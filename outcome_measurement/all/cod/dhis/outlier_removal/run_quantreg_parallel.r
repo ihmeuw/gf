@@ -68,12 +68,6 @@ impute = "TRUE"
 # data set with equality constraints checked and an entry for both tests/undetectable
 dt <- readRDS(inFile)
 
-# remove new cases (not of interest for outlier detection)
-if (inFile == paste0(dir, 'viral_load_pnls_interim.rds')) { 
-  dt = dt[case=='Old']
-  dt[ , case:=NULL]
-}
-
 # make variable ids
 if (inFile == paste0(dir, 'sigl_for_qr.rds')) { dt[, variable_id:=.GRP, by='drug']}
 dt[, element_id:=.GRP, by='variable']
