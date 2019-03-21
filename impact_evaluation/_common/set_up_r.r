@@ -33,6 +33,7 @@ library(viridis)
 # library(semPlot)
 library(raster)
 library(parallel)
+library(dplyr)
 # ------------------
 
 
@@ -73,10 +74,11 @@ expendituresFile = paste0(rtDir, 'final_expenditures.rds')
 fghFile = paste0(rtDir, 'prepped_current_fgh.csv')
 
 # activities/outputs files
-pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
-pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
-snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
-snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
+# pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
+# pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
+# snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
+# snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
+combinedFile <- paste0(ieDir, 'base_pnlp_sigl_combined_data_hz_level.rds')
 
 # outcomes/impact files
 mapITNFiles = list.files(paste0(lbdDir, 'mapitncov/mean/1y/'), '*.tif', 
