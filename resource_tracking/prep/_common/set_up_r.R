@@ -41,8 +41,16 @@ common_dir = paste0(code_dir, "_common/")
 
 fgh_raw = paste0(dir, "_fgh/raw_data/")
 fgh_prepped = paste0(dir, "_fgh/prepped_data/")
+
 gos_raw = paste0(dir, "_gf_files_gos/gos/raw_data/")
 gos_prepped = paste0(dir, "_gf_files_gos/gos/prepped_data/")
+
+fgh_ghe_malaria_raw = paste0(dir, "_ghe/fgh_ghe_actuals_malaria/raw_data/")
+fgh_ghe_malaria_prepped = paste0(dir, "_ghe/fgh_ghe_actuals_malaria/prepped_data/")
+
+sicoin_raw = paste0(dir, "_ghe/sicoin_gtm/raw_data/")
+sicoin_prepped = paste0(dir, "_ghe/sicoin_gtm/prepped_data/")
+
 
 #Source shared functions
 source(paste0(common_dir, "global_variables.R"))

@@ -34,7 +34,9 @@ final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos
 # final budgets and final expenditures 
 #----------------------------------------------
 gos_data <- readRDS(paste0(gos_prepped, "prepped_gos_data.rds"))
-gos_data[loc_name]
+for (i in 1:nrow(code_lookup_tables)){
+  gos_data[country==code_lookup_tables$country[[i]], loc_name:=code_lookup_tables$iso_code[[i]]]
+}
             
 #----------------------------------
 # 1. FINAL GF BUDGETS 
