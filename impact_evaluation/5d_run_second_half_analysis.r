@@ -97,14 +97,14 @@ if (runAsQsub==TRUE) {
 # store summaries of each sem
 print('Summarizing results...')
 for(i in seq(length(semFits))) { 
-	tmp = data.table(standardizedSolution(semFits[[i]]))
+	tmp = data.table(standardizedSolution(semFits[[i]], se=TRUE))
 	tmp[, health_zone:=unique(data$health_zone)[i]]
 	if (i==1) summaries = copy(tmp)
 	if (i>1) summaries = rbind(summaries, copy(tmp))
 }
 
 # compute averages
-means = summaries[,.(est.std=mean(est.std)), by=c('lhs','op','rhs')]
+means = summaries[,.(est.std=mean(est.std), ci.lower=mean(ci.lower), ci.upper=mean(ci.upper)), by=c('lhs','op','rhs')]
 means
 # --------------------------------------------------------------
 
