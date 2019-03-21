@@ -52,13 +52,13 @@ correct_modules_interventions <- function(resource_database){
   resource_database[module == "mdrtbtreatmentmdrtb", module:= "mdrtb"]
   resource_database[module == "hivhealthsystemsstrengthening" & intervention == "tostrengthenhealthandcommunitysystemstoenablethedeliveryoftheproposedpmtctandtreatmentinterventions", 
                     intervention := 'servicedelivery']
-  resource_database[module == "supportiveenvironment" & sda_activity == "Supportive environment: Program management and administration", intervention:='supportiveenvironmentprogrammanagementandadministration']
-  resource_database[module == 'hivhealthsystemsstrengthening' & sda_activity == 'HSS: Service delivery', intervention:= 'servicedelivery']
-  resource_database[module == 'hivhealthsystemsstrengthening' & sda_activity == "HSS: Information system & Operational research", intervention:= 'informationsystemoperationalresearch']
+  resource_database[module == "supportiveenvironment" & activity_description == "Supportive environment: Program management and administration", intervention:='supportiveenvironmentprogrammanagementandadministration']
+  resource_database[module == 'hivhealthsystemsstrengthening' & activity_description == 'HSS: Service delivery', intervention:= 'servicedelivery']
+  resource_database[module == 'hivhealthsystemsstrengthening' & activity_description == "HSS: Information system & Operational research", intervention:= 'informationsystemoperationalresearch']
   resource_database[module == 'healthsystemstrengthening', module:= 'healthsystemsstrengthening']
-  resource_database[module == 'healthsystemsstrengthening' & sda_activity == 'HSS: Community Systems Strengthening', intervention := 'communitysystemsstrengthening']
-  resource_database[module == 'healthsystemsstrengthening' & sda_activity == 'HSS: Information system & Operational research', intervention := 'informationsystemoperationalresearch']
-  resource_database[module == 'healthsystemsstrengthening' & sda_activity == 'Supportive environment: Program management and administration', intervention := 'supportiveenvironmentprogrammanagementandadministration']
+  resource_database[module == 'healthsystemsstrengthening' & activity_description == 'HSS: Community Systems Strengthening', intervention := 'communitysystemsstrengthening']
+  resource_database[module == 'healthsystemsstrengthening' & activity_description == 'HSS: Information system & Operational research', intervention := 'informationsystemoperationalresearch']
+  resource_database[module == 'healthsystemsstrengthening' & activity_description == 'Supportive environment: Program management and administration', intervention := 'supportiveenvironmentprogrammanagementandadministration']
   
   #EKL 12/18/18 "UGD-708-G08-M_PUDR 30Jun14.xls"
   resource_database[module == "pleaseselect", module:= 'all']
