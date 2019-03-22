@@ -100,7 +100,7 @@ hzImpactPlotsTs = lapply(sample(unique(data$health_zone), 15), function(h) {
 		scale_color_manual('', values=c('Observed Program Data'='black', 
 			'LBD/MAP Model Estimate'='blue')) + 
 		facet_wrap(~variable, scales='free') + 
-		labs(title=h, caption='LBD/MAP model estimate shown as line') + 
+		labs(title=h) + 
 		theme_bw()
 })
 # ----------------------------------------------
