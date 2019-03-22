@@ -7,6 +7,11 @@
   # Modified for COD PNLP data 2010-2017
   
   # THE FOLLOWING R SCRIPT WAS RUN ON THE CLUSTER AT IHME
+
+  # 3/11/19 this version of run_amelia log transforms the data, 
+  # lemon squeezes healthFacilitiesProportion, then runs amelia
+  # then rbinds all "m" together, transforms the data back, and saves.
+  # no priors
 # ----------------------------------------------
 
 # --------------------
@@ -95,7 +100,7 @@ for(var in indicators) {
 # log transform
 dtLog <- dt[, lapply(.SD, function(x) log(x)), .SDcols=indicators, by= c(id_vars)]
 
-# make a constant to convince amelia to extrapolate
+# make a uniform random variable to convince amelia to extrapolate
 dtLog[, random:=runif(nrow(dtLog))]
 
 # merge the logit transformation of health facilities prop with dtLog
@@ -131,8 +136,10 @@ amelia.results <- amelia(dtLog, m=1, cs= "health_zone", ts="date", idvars= id_va
 # ----------------------------------------------
 
 # ----------------------------------------------         
-# bind amelia results into one data.table, include a column with the imputation number in order to keep track of diff iterations
+# bind amelia results into one data.table, and save
+# ----------------------------------------------         
   for( i in 1:50 ) {
+    # include a column with the imputation number in order to keep track of diff iterations
     amelia.results$imputations[[i]]$imputation_number <- i
     if (i==1) amelia_data <- data.table(amelia.results$imputations[[i]])
     if (i>1) amelia_data <- rbind(amelia_data, amelia.results$imputations[[i]])
@@ -142,7 +149,8 @@ saveRDS(amelia_data, paste0(output_dir, initial_imputed_data_file))
 # ----------------------------------------------  
   
 # ----------------------------------------------
-# Inv.logit() and exp() the data produced by amelia() to re-transform it back to how it was before imputation
+# inv.logit() and exp() the data produced by amelia() to re-transform it back to how it was before imputation
+# set original zeroes back to zero
 # ----------------------------------------------S
 # include imputation number in the id_vars used to exponentiate the data set so exp() happens for each of the 50 imputations
 imputed_id_vars <- c(id_vars, "imputation_number")
@@ -164,7 +172,9 @@ for (var in indicators){
 # ----------------------------------------------  
   
 # ---------------------------------------------- 
-# export imputed data to have a saved full version (do this as an RDS so it is faster/smaller file)
+# export imputed data to have a saved full version 
+# (do this as an RDS so it is faster/smaller file)
+# ---------------------------------------------- 
 saveRDS(dtExp, paste0(output_dir, cleaned_imputed_data_file))
 # ---------------------------------------------- 
     

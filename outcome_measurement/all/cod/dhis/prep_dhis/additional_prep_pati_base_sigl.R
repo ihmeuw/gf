@@ -29,8 +29,8 @@ out_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/pr
 # input files
 registered <- paste0(dir, "tb_pati_v_registered_2017_01_01_2018_10_01.rds")
 results <- paste0(dir,"tb_pati_v_result_2016_01_01_2018_10_01.rds")
-base_data <- paste0(dir, "base_2016_01_01_2018_12_01.rds")
-sigl_data <- paste0(dir, "sigl_2016_01_01_2018_12_01.rds")
+base_data <- paste0(dir, "base_2018_01_01_2019_01_01.rds")
+sigl_data <- paste0(dir, "sigl_2018_01_01_2019_01_01.rds")
 
 # output files
 pati_cases <- "pati_tb/tb_pati_new_tb_cases_relapses_by_age_sex.rds"
@@ -63,6 +63,7 @@ more_prep <- function(data.table){
   data.table$dps <- standardizeDPSNames(data.table$dps)
   return(data.table)
 }
+
 base <- more_prep(base)
 sigl <- more_prep(sigl)
 dt1 <- more_prep(dt1) # the warning that this introduces NAs can be ignored, because all of those NAs were "NULL" in the original data 
@@ -70,6 +71,7 @@ dt2 <- more_prep(dt2)
 # ----------------------------------------------
 
 # ----------------------------------------------
+# PATI data sets:
 # separate new-TB cases and relapses by age group and sex variable from the rest of the data since this is the only one broken down by age and sex
 # ----------------------------------------------
 cases_by_age_sex <- dt1[category != "default", ]

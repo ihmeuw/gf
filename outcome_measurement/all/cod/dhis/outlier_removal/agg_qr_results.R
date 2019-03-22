@@ -43,6 +43,9 @@ for (j in seq(numFiles)) {
   flush.console() 
 }
 
+# faster binding:
+system("cat ./folder_name/* > ./newFiel.csv")
+
 # save full data
 write.fst(fullData, paste0('/ihme/scratch/users/', user_name, '/agg_quantreg_output.fst'))
 saveRDS(fullData, outFile)
