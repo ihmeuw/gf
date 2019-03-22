@@ -51,7 +51,9 @@ longT[variable %in% impactVars, section:='impact']
 longT[, model_estimate:=ifelse(variable %in% modelVars, TRUE, FALSE)]
 
 # sample of health zones to graph
-hzs = sample(unique(data$health_zone), 15) 
+hzs = c('bambu', 'boga', 'bokoro', 'mambasa', 'opienge', 'titule', 'tumba', 'wamba', 
+	sample(unique(data$health_zone), 10) )
+# hzs = sample(unique(data$health_zone), 15)
 # ----------------------------------------------
 
 
