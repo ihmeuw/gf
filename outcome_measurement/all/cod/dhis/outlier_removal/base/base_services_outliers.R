@@ -32,7 +32,7 @@ library(quantreg)
 # then call R
 
 # then source this script (located in your working directory)
-# source('pnls_arvs_run_qr_parallel.R')
+# source('base_services_outliers.R')
 
 #------------------------------------
 # set directories
