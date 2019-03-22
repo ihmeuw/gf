@@ -41,6 +41,9 @@ if (set=='base') {dt = readRDS(paste0(dir, 'pre_prep/merged/base_2018_01_01_2019
 
 # convert values to numerics 
 dt[ ,value:=as.numeric(as.character(value))]
+
+# subset date
+dt = dt[year(date) < 2019]
 # ---------------------------------------
 
 # drop case and additional geographic information
