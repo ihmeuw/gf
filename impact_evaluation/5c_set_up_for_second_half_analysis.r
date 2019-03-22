@@ -70,12 +70,12 @@ data = na.omit(data)
 
 # remake ITN_rate now that it can be cumulative
 data = data[order(health_zone, date)]
-data[,ITN_cumul:=cumsum(ITN), by='health_zone']
-data[, ITN_rate:=ITN/population]
+data[,ITN_cumul:=cumsum(ITN_rate*population), by='health_zone']
+data[, ITN_rate_cumul:=ITN_cumul/population]
 
 # log-transform
 logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated',
-	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate',
+	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate','ITN_rate_cumul',
 	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate')
 for(v in logVars) data[, (v):=log(get(v))]
 for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
