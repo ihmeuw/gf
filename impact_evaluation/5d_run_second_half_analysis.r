@@ -108,7 +108,7 @@ if (runAsQsub==TRUE) {
 	# wait for jobs to finish (2 files per job)
 	while(length(list.files(clustertmpDir2))<(T*2)) { 
 		Sys.sleep(5)
-		print(paste(length(list.files(clustertmpDir2)), 'of', T, 'files found...'))
+		print(paste(length(list.files(clustertmpDir2)), 'of', T*2, 'files found...'))
 	}
 	# collect output
 	print('Collecting output...')
