@@ -100,7 +100,7 @@ for(i in seq(length(semFits))) {
 	tmp = data.table(standardizedSolution(semFits[[i]], se=TRUE))
 	tmp[, health_zone:=unique(data$health_zone)[i]]
 	if (i==1) summaries = copy(tmp)
-	if (i>1) summaries = rbind(summaries, copy(tmp))
+	if (i>1) summaries = rbind(summaries, tmp)
 }
 
 # compute averages
@@ -120,9 +120,10 @@ means
 # Save model output and clean up
 
 # save all sem fits just in case they're needed
+print(paste('Saving', outputFile5d))
+save(list=c('data','model','summaries','means','scaling_factors'), file=outputFile5d)
 outputFile5d_big = gsub('.rdata','_all_semFits.rdata',outputFile5d)
 save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5d_big)
-save(list=c('data','model','summaries','means','scaling_factors'), file=outputFile5d)
 
 # save a time-stamped version for reproducibility
 date_time = gsub('-|:| ', '_', Sys.time())
@@ -137,6 +138,7 @@ file.copy(outputFile5d_big, outputFile5dArchive_big)
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
 
 # clean up qsub files
+print(paste('Cleaning up cluster temp files...'))
 if (runAsQsub==TRUE) { 
 	system(paste0('rm ', clustertmpDireo, '/*'))
 	system(paste0('rm ', clustertmpDir1	, '/*'))
