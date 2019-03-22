@@ -80,7 +80,17 @@ if(runAsQsub==FALSE) {
 		suppressWarnings(
 			bsem(model, data[health_zone==h], adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 		)
+		
 	}, mc.cores=ifelse(Sys.info()[1]=='Windows',1,24))
+		
+	# store summaries of each sem
+	print('Summarizing results...')
+	for(i in seq(length(semFits))) { 
+		tmp = data.table(standardizedSolution(semFits[[i]], se=TRUE))
+		tmp[, health_zone:=unique(data$health_zone)[i]]
+		if (i==1) summaries = copy(tmp)
+		if (i>1) summaries = rbind(summaries, tmp)
+	}
 }
 
 # run fully in parallel if specified
@@ -102,18 +112,11 @@ if (runAsQsub==TRUE) {
 	}
 	# collect output
 	print('Collecting output...')
-	semFits = lapply(seq(T), function(i) {
-		suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rds')))
-	})
-}
-
-# store summaries of each sem
-print('Summarizing results...')
-for(i in seq(length(semFits))) { 
-	tmp = data.table(standardizedSolution(semFits[[i]], se=TRUE))
-	tmp[, health_zone:=unique(data$health_zone)[i]]
-	if (i==1) summaries = copy(tmp)
-	if (i>1) summaries = rbind(summaries, tmp)
+	for(i in seq(T)) { 
+		summary = readRDS(paste0(clustertmpDir2, 'second_half_summary_', i, '.rds'))
+		if (i==1) summaries = copy(summary)
+		if (i>1) summaries = rbind(summaries, summary)
+	}
 }
 
 # compute averages
@@ -128,10 +131,17 @@ means
 # save all sem fits just in case they're needed
 print(paste('Saving', outputFile5d))
 save(list=c('data','model','summaries','means','scaling_factors'), file=outputFile5d)
+
+# save full output for archiving
+print(paste('Saving', outputFile5d_big))
+semFits = lapply(seq(T), function(i) {
+	suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rds')))
+})
 outputFile5d_big = gsub('.rdata','_all_semFits.rdata',outputFile5d)
 save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5d_big)
 
 # save a time-stamped version for reproducibility
+print('Archiving files...')
 date_time = gsub('-|:| ', '_', Sys.time())
 outputFile5dArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5d)
 outputFile5dArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5dArchive)
