@@ -29,12 +29,22 @@ load(outputFile5c)
 # Run series of unrelated linear models
 
 # linkage 1 regressions
-
+lmFit1 = lm(ITN_rate_cumul ~ ITN, data)
+lmFit2 = lm(mildMalariaTreated_rate ~ mildMalariaTreated + RDT_rate, data)
+lmFit3 = lm(severeMalariaTreated_rate ~ severeMalariaTreated + RDT_rate, data)
+lmFit4 = lm(ACTs_CHWs_rate ~ SSCACT, data)
+lmFit5 = lm(SP_rate ~ SP, data)
+lmFit6 = lm(RDT_rate ~ RDT, data)
 
 # linkage 2 regressions
-# lmFit4 = lm(newCasesMalariaMild_rate ~ ITN_rate + lag_mildMalariaTreated_rate + health_zone + date, data)
-# lmFit5 = lm(newCasesMalariaSevere_rate ~ ITN_rate + lag_severeMalariaTreated_rate + health_zone + date, data)
-# lmFit6 = lm(malariaDeaths_rate ~ newCasesMalariaMild_rate + newCasesMalariaSevere_rate + lag_mildMalariaTreated_rate + lag_severeMalariaTreated_rate + health_zone + date, data)
+lmFit7 = lm(lead_newCasesMalariaMild_rate ~ ITN_rate_cumul + mildMalariaTreated_rate + ACTs_CHWs_rate + SP_rate + date, data)
+lmFit8 = lm(lead_newCasesMalariaSevere_rate ~ ITN_rate_cumul + severeMalariaTreated_rate + ACTs_CHWs_rate + SP_rate + date, data)
+lmFit9 = lm(lead_malariaDeaths_rate ~ lead_newCasesMalariaMild_rate + lead_newCasesMalariaSevere_rate + mildMalariaTreated_rate + severeMalariaTreated_rate + ACTs_CHWs_rate + SP_rate + date, data)
+
+# summarize
+summary(lmFit7)
+summary(lmFit8)
+summary(lmFit9)
 
 # tmp = summary(lmFit4)$coefficients
 # tmp[!grepl('health_zone',rownames(tmp)),]
@@ -58,6 +68,9 @@ source('./impact_evaluation/models/drc_malaria_impact3.r')
 # --------------------------------------------------------------
 # Run model
 if ('semFit' %in% ls()) rm('semFit')
+
+# no health zone fixed effects (warning: slow)
+# semFit = bsem(model, data, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 
 # run locally if specified
 if(runAsQsub==FALSE) { 
@@ -107,13 +120,6 @@ for(i in seq(length(semFits))) {
 means = summaries[,.(est.std=mean(est.std), se=mean(se)), by=c('lhs','op','rhs')]
 means
 # --------------------------------------------------------------
-
-# nodeTable = fread('./impact_evaluation/visualizations/vartable_second_half.csv')
-# source('./impact_evaluation/visualizations/graphLavaan.r')
-# semGraph(parTable=means, nodeTable=nodeTable, 
-	# scaling_factors=NA, standardized=TRUE, 
-	# lineWidth=1.5, curved=0, tapered=FALSE, 
-	# boxWidth=2, boxHeight=.5)
 
 
 # ------------------------------------------------------------------
