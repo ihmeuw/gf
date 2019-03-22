@@ -25,17 +25,14 @@ if (prep_files == TRUE){
   stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
   stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
   
-  #Turn this variable on to run only a limited section of each country's file list; i.e. only the part that will be kept after GOS data is prioritized in step 4 (aggregate data). 
-  if(limit_filelist==TRUE){
-    file_list = prioritize_gos(file_list)
-  }
+  file_list = prioritize_gos(file_list)
 
 }
 
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
 #----------------------------------------------------
-if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, but only if all are run
+if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
   general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget')
@@ -86,11 +83,12 @@ if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, 
     print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
   }
   
-  saveRDS(resource_database, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+  saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))
   
   
 } else {
-  resource_database <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+  resource_database <- readRDS(paste0(dir, "_gf_files_gos/", country, "/prepped_data/raw_bound_gf_files.RDS"))
+  resource_database = resource_database[file_name%in%file_list$file_name]
 }
 
 #------------------------------------------------------------------

@@ -41,6 +41,28 @@ ggplot(results[est<5], aes(x=est)) +
 	facet_grid(a~b, scales='free_y')
 
 	
+# normal
+
+n=1000
+mus = seq(-5,5,by=1)
+sigmas = seq(.5,3,by=1)
+i=1
+for(mu in mus) {
+	for(sigma in sigmas) { 
+		if (i==1) results = data.table(mu=rep(mu,n), sigma=rep(sigma,n), est=rnorm(n,mu,sigma))
+		if (i>1) results = rbind(results, data.table(mu=rep(mu,n), sigma=rep(sigma,n), est=rlnorm(n,mu,sigma)))
+	}
+		i=i+1
+}
+results[, params:=paste0(mu,',',sigma)]
+results = results[est<quantile(est,.8)]
+ggplot(results[est<4], aes(x=est)) + 
+	geom_histogram(aes(y = ..density..), color='black') + 
+	geom_smooth(stat='density') + 
+	facet_wrap(~params, scales='free') + 
+	theme(axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+	
 # lognormal
 
 n=1000

@@ -3,6 +3,7 @@
 # 
 # 1/18/2019
 # This runs the SEM dose-response model
+# qsub -l archive=TRUE -cwd -N ie_script_5d -l fthread=4 -l m_mem_free=4G -q all.q -P ihme_general -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/5d_run_second_half_analysis.r
 # ------------------------------------------------
 
 source('./impact_evaluation/_common/set_up_r.r')
@@ -88,31 +89,26 @@ if (runAsQsub==TRUE) {
 	}
 	# collect output
 	print('Collecting output...')
-	semFits = list()
-	for(i in seq(50)) { 
-		suppressWarnings(load(paste0(clustertmpDir2, 'second_half_model_results_', i, '.rdata')))
-		semFits[[i]] = semFit
-		rm('semFit','subData','summary')
-		cat(paste0('\r', format(object.size(semFit),units='Mb')))
-		flush.console() 
-	}
+	semFits = lapply(seq(T), function(i) {
+		suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rds')))
+	})
 }
 
 # store summaries of each sem
 print('Summarizing results...')
 for(i in seq(length(semFits))) { 
-	tmp = data.table(standardizedSolution(semFits[[i]]))
+	tmp = data.table(standardizedSolution(semFits[[i]], se=TRUE))
 	tmp[, health_zone:=unique(data$health_zone)[i]]
 	if (i==1) summaries = copy(tmp)
 	if (i>1) summaries = rbind(summaries, copy(tmp))
 }
 
 # compute averages
-means = summaries[,.(est.std=mean(est.std)), by=c('lhs','op','rhs')]
+means = summaries[,.(est.std=mean(est.std), se=mean(se)), by=c('lhs','op','rhs')]
 means
 # --------------------------------------------------------------
 
-# nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable_second_half.csv')
+# nodeTable = fread('./impact_evaluation/visualizations/vartable_second_half.csv')
 # source('./impact_evaluation/visualizations/graphLavaan.r')
 # semGraph(parTable=means, nodeTable=nodeTable, 
 	# scaling_factors=NA, standardized=TRUE, 
@@ -139,4 +135,11 @@ file.copy(outputFile5d_big, outputFile5dArchive_big)
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
+
+# clean up qsub files
+if (runAsQsub==TRUE) { 
+	system(paste0('rm ', clustertmpDireo, '/*'))
+	system(paste0('rm ', clustertmpDir1	, '/*'))
+	system(paste0('rm ', clustertmpDir2	, '/*'))
+}
 # ------------------------------------------------------------------

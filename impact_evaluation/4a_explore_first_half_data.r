@@ -71,8 +71,8 @@ long[is.na(intervention), activity:=ifelse(grepl('received',indicator), 'Activit
 # subset dates
 long = long[date>=2010 & date<2019]
 
-# load "node table" for convenient labels FIX THIS FILE PATH
-nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
+# load "node table" for convenient labels
+nodeTable = fread('./impact_evaluation/visualizations/vartable.csv')
 # ----------------------------------------------
 
 

@@ -8,6 +8,7 @@
 # edgeLabels, (logical) whether or not to label coefficients
 # variances, (logical) whether or not to show variances
 # standardized, (logical) whether or not to display standardized coefficients
+# uncertainty, (logical) whether or not to display standard errors next to coefficients
 # labSize1, labSize2, (numeric) large and small text sizes
 # boxHeight, boxWidth, (numeric) height and width of boxes
 # lineWidth, (numeric) edge thickness and arrow size
@@ -19,24 +20,27 @@
 
 # TO DO
 # make "repel" code respect the xstart order
+# make uncertainty=TRUE work with standardized=FALSE
 
 
 # rm(list=ls())
 # fitObject = semFit
-# nodeTable = fread('C:/local/gf/impact_evaluation/visualizations/vartable.csv')
+# parTable = NULL
+# nodeTable = fread('./impact_evaluation/visualizations/vartable.csv')
 # labSize1=5
 # labSize2=3
 # variances = TRUE
 # edgeLabels = TRUE
 # standardized = TRUE
+# uncertainty = TRUE
 # boxWidth=4
 # boxHeight=1
 # lineWidth=1
 # midpoint=0.4
-# curved=2
+# curved=0
 
 semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_factors=NA, 
-	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, 
+	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, uncertainty=TRUE, 
 	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, 
 	curved=0, tapered=TRUE) {
 
@@ -72,7 +76,7 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	# edgeTable[, se:=as.numeric(se)]
 	# edgeTable$label = NULL
 	if (standardized==TRUE) {
-		if (!is.null(fitObject)) edgeTable = data.table(standardizedSolution(fitObject))
+		if (!is.null(fitObject)) edgeTable = data.table(standardizedSolution(fitObject, se=TRUE))
 		if (!is.null(parTable)) edgeTable = data.table(parTable)
 		setnames(edgeTable, 'est.std', 'est')
 	}
@@ -131,6 +135,14 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	
 	# always drop variances that are exactly zero assuming they've been manually excluded
 	edgeTable = edgeTable[!(op=='~~' & est==0)]
+	
+	# make nice labels for edges if necessary
+	if (edgeLabels==TRUE) {
+		# estimate 1.96*std error assuming symmetrical
+		if (uncertainty==TRUE) edgeTable[, se196:=se*1.96]
+		edgeTable[, edge_label:=as.character(round(est,2))]
+		if (uncertainty==TRUE) edgeTable[, edge_label:=paste0(edge_label, ' (\u00b1', round(se196,2),')')] 
+	}
 	# -------------------------------------------------------------------------------
 	
 	
@@ -237,11 +249,11 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	if (edgeLabels) { 
 		if (curved!=3) { 
 			p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=ymid+(min(edgeTable$ystart)*.25), 
-				label=round(est,2)), size=labSize2*.8, lwd=0)
+				label=edge_label), size=labSize2*.8, lwd=0)
 		}
 		if (curved==3) { 
 			p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=yend, 
-				label=round(est,2)), size=labSize2*.8, lwd=0)
+				label=edge_label), size=labSize2*.8, lwd=0)
 		}
 	}
 	
