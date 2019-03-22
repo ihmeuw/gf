@@ -18,7 +18,7 @@ data = readRDS(outputFile3b)
 
 # replace data with corrected data
 adjVars = names(data)[grepl('_adj',names(data))]
-for(v in adjVars) data[, (v):=get(gsub('_adj','',v))]
+for(v in adjVars) data[, (gsub('_adj','',v)):=get(v)]
 data = data[, -adjVars, with=FALSE]
 
 # drop unnecessary variables
