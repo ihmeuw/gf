@@ -35,12 +35,10 @@ convert_quarter_to_decimal <- function(dt){
 # ---------------------------------------------------
 # Read in data
 # ---------------------------------------------------
-# pnlp_hz <- readRDS(pnlpHZFile) # hz level, monthly - get completeness from this
-# dt_pnlp <- readRDS(pnlpFile) # national level, monthly
-#   setnames(dt_pnlp, "mean", "value")
-# dt_base <- readRDS(snisBaseFile) # facility level, monthly
-# dt_sigl <- readRDS(snisSiglFile) # facility level, monthly
 dt <- readRDS(combinedFile)
+sigl_comp <- readRDS(comp_sigl_file)
+base_comp <- readRDS(comp_base_file)
+pnlp_comp <- readRDS(pnlpHZFile)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -55,9 +53,15 @@ dt <- as.data.table(dt)
 dt <- convert_date_to_quarter(dt)
 # ---------------------------------------------------
 
-# # ---------------------------------------------------
-# # Calculate completeness measure from SNIS data --> USE comp_base and comp_sigl after running this block of code
-# # ---------------------------------------------------
+# ---------------------------------------------------
+# Merge completeness measure from SNIS dashboard
+# ---------------------------------------------------
+base_comp[, data_set := "snis_base_services"]
+sigl_comp[, data_set := "snis_sigl"]
+dt_base <- merge(dt[data_set == "snis_base_services", ], base_comp, by = c("data_set", "date", "dps", "health_zone"), all = TRUE)
+dt_sigl <- merge(dt[data_set == "snis_sigl", ], sigl_comp, by = c("data_set", "date", "dps", "health_zone"), all = TRUE)
+dt_pnlp <- dt[data_set == "pnlp"]
+
 # # BASE SERVICES DATA------------>
 # # calculate the number of unique facilities reporting by indicator, indicator-month, and indicator-year
 # # since we are just using 2018 for now, number of unique facilities by indicator-year will be the same as by indicator-ever
@@ -94,34 +98,30 @@ dt <- convert_date_to_quarter(dt)
 # comp_sigl <- convert_date_to_quarter(comp_sigl)
 # 
 # # quarterly????
-# # ---------------------------------------------------
-# 
-# # ---------------------------------------------------
-# # Completeness from PNLP --> USE pnlp_comp after running this block of code
-# # Calculate completeness from the hz level pnlp data
-# # (not indicator-specific unfortunately - just date specific at natl level)
-# # ---------------------------------------------------
-# pnlp_hz$variable <- as.character(pnlp_hz$variable)
-# 
-# pnlp_fac <- pnlp_hz[variable %in% c("healthFacilities_numReportedWithinDeadline", "healthFacilities_total", "healthFacilitiesProduct"), .(dps, health_zone, date, variable, mean)]
-# setnames(pnlp_fac, "mean", "value")
-# 
-# pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable)
-# pnlp_fac[, healthFacilities_reporting := healthFacilitiesProduct / healthFacilities_total]
-# pnlp_fac[, healthFacilities_proportionReporting := healthFacilities_reporting / healthFacilities_total]
-# 
-# pnlp_fac[healthFacilities_proportionReporting > 1, healthFacilities_reporting := healthFacilities_total] # this will make the proportions = 1, but we want 
-# # to sum and then divide (I think?) rather than average 
-# # so the proportions are weighted by total # of facilities
-# pnlp_fac <- convert_date_to_quarter(pnlp_fac)
-# 
-# # sum numerator and denominator to national level, quarterly
-# pnlp_comp <- pnlp_fac[, .(healthFacilities_reporting = sum(healthFacilities_reporting),
-#                               healthFacilities_total = sum(healthFacilities_total)),
-#                           by = c("quarter", "year")]
-# pnlp_comp[ , completeness:= healthFacilities_reporting / healthFacilities_total]
-# # ---------------------------------------------------
-# 
+# ---------------------------------------------------
+
+# ---------------------------------------------------
+# Completeness from PNLP --> USE pnlp_comp after running this block of code
+# Calculate completeness from the hz level pnlp data
+# (not indicator-specific unfortunately - just date specific at natl level)
+# ---------------------------------------------------
+pnlp_comp$variable <- as.character(pnlp_comp$variable)
+
+pnlp_fac <- pnlp_comp[variable %in% c("healthFacilities_total", "healthFacilitiesProduct"), .(dps, health_zone, date, variable, mean)]
+setnames(pnlp_fac, "mean", "value")
+
+pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable)
+pnlp_fac[, healthFacilities_reporting := healthFacilitiesProduct / healthFacilities_total]
+pnlp_fac[, healthFacilities_proportionReporting := healthFacilities_reporting / healthFacilities_total]
+
+# correction for where proportion reporting is > 1
+pnlp_fac[healthFacilities_proportionReporting > 1, healthFacilities_reporting := healthFacilities_total] 
+pnlp_fac[, healthFacilities_proportionReporting := healthFacilities_reporting / healthFacilities_total]
+pnlp_fac <- convert_date_to_quarter(pnlp_fac)
+
+pnlp_comp[ , completeness:= healthFacilities_reporting / healthFacilities_total]
+# ---------------------------------------------------
+
 # # ---------------------------------------------------
 # # Aggregate to national data
 # # ---------------------------------------------------
