@@ -5,6 +5,16 @@
 # This runs the SEM dose-response model
 # ------------------------------------------------
 
+source('./impact_evaluation/_common/set_up_r.r')
+
+# ---------------------------
+# Settings
+
+# whether to run in parallel using qsub or mclapply
+runAsQsub = TRUE
+if(Sys.info()[1]=='Windows') runAsQsub = FALSE
+# ---------------------------
+
 
 # ---------------------------
 # Load data
@@ -53,9 +63,60 @@ source('./impact_evaluation/models/drc_malaria4.r')
 # --------------------------------------------------------------
 # Run model
 if ('semFit' %in% ls()) rm('semFit')
-# semFit = sem(model, data)
-semFit = bsem(model, data, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
-summary(semFit)
+
+# no health zone fixed effects (warning: slow)
+# semFit = bsem(model, data, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+
+# run locally if specified
+if(runAsQsub==FALSE) { 
+	# run all sems
+	semFits = mclapply(unique(data$health_zone), function(h) { 
+		print(h)
+		suppressWarnings(
+			bsem(model, data[health_zone==h], adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+		)
+		
+	}, mc.cores=ifelse(Sys.info()[1]=='Windows',1,24))
+		
+	# store summaries of each sem
+	print('Summarizing results...')
+	for(i in seq(length(semFits))) { 
+		tmp = data.table(standardizedSolution(semFits[[i]], se=TRUE))
+		tmp[, health_zone:=unique(data$health_zone)[i]]
+		if (i==1) summaries = copy(tmp)
+		if (i>1) summaries = rbind(summaries, tmp)
+	}
+}
+
+# run fully in parallel if specified
+if (runAsQsub==TRUE) { 
+	# save copy of input file for jobs
+	file.copy(outputFile5a, outputFile5a_scratch, overwrite=TRUE)
+	# store T (length of array)
+	hzs = unique(data$health_zone)
+	T = length(hzs)
+	# submit array job
+	system(paste0('qsub -cwd -N ie_job_array -t 1:', T, 
+		' -l fthread=1 -l m_mem_free=1G -q all.q -P ihme_general -e ', 
+		clustertmpDireo, ' -o ', clustertmpDireo, 
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/5b_run_first_half_analysis_single_hz.r'))
+	# wait for jobs to finish (2 files per job)
+	while(length(list.files(clustertmpDir2))<(T*2)) { 
+		Sys.sleep(5)
+		print(paste(length(list.files(clustertmpDir2)), 'of', T*2, 'files found...'))
+	}
+	# collect output
+	print('Collecting output...')
+	for(i in seq(T)) { 
+		summary = readRDS(paste0(clustertmpDir2, 'first_half_summary_', i, '.rds'))
+		if (i==1) summaries = copy(summary)
+		if (i>1) summaries = rbind(summaries, summary)
+	}
+}
+
+# compute averages
+means = summaries[,.(est.std=mean(est.std), se=mean(se)), by=c('lhs','op','rhs')]
+means
 # --------------------------------------------------------------
 
 
