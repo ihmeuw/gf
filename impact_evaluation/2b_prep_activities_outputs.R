@@ -6,6 +6,7 @@
 # -----------------------------------------------------------
 
 # ---------------------------------------------------
+library(dplyr)
 # FUNCTIONS
 convert_date_to_quarter <- function(dt){
   dt$year <- year(dt$date)
@@ -35,12 +36,10 @@ convert_quarter_to_decimal <- function(dt){
 # ---------------------------------------------------
 # Read in data
 # ---------------------------------------------------
-# pnlp_hz <- readRDS(pnlpHZFile) # hz level, monthly - get completeness from this
-# dt_pnlp <- readRDS(pnlpFile) # national level, monthly
-#   setnames(dt_pnlp, "mean", "value")
-# dt_base <- readRDS(snisBaseFile) # facility level, monthly
-# dt_sigl <- readRDS(snisSiglFile) # facility level, monthly
 dt <- readRDS(combinedFile)
+sigl_comp <- readRDS(comp_sigl_file)
+base_comp <- readRDS(comp_base_file)
+pnlp_comp <- readRDS(pnlpHZFile)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -55,97 +54,53 @@ dt <- as.data.table(dt)
 dt <- convert_date_to_quarter(dt)
 # ---------------------------------------------------
 
-# # ---------------------------------------------------
-# # Calculate completeness measure from SNIS data --> USE comp_base and comp_sigl after running this block of code
-# # ---------------------------------------------------
-# # BASE SERVICES DATA------------>
-# # calculate the number of unique facilities reporting by indicator, indicator-month, and indicator-year
-# # since we are just using 2018 for now, number of unique facilities by indicator-year will be the same as by indicator-ever
-# # not using this one now... # dt_comp_base <- dt_base[, .(num_fac_per_indicator_ever = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category")]
-# dt_comp_base2 <- dt_base[, .(num_fac_per_indicator_month = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category", "date", "year", "quarter")]
-# dt_comp_base3 <- dt_base[, .(num_fac_per_indicator_year = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category", "year")]
-# 
-# comp_base <- merge(dt_comp_base2, dt_comp_base3, by=c("element_eng", "indicator", "subpopulation", "category", "year"), all = TRUE)
-# 
-# # calculate completeness over category and subpopulations by QUARTER, year, and indicator - sum numerator and denominator and then calculate  
-# comp_base_totals <- comp_base[subpopulation != "positive"] # first - need to remove RDT_positive because we just want to use RDT_completed in the model for now. 
-# # Other indicators can be averaged across subpopulations
-# comp_base_totals <- comp_base_totals[, .(num = sum(num_fac_per_indicator_month),
-#                                   denom = sum(num_fac_per_indicator_year)),
-#                               by=c("indicator", "year", "quarter")]
-# comp_base_totals[, completeness:= num/denom]
-# 
-# # separate calculation for totalPatientsTreated, since this invloves a combination of indicators
-# comp_patientsTreated <- comp_base[indicator %in% c("mildMalariaTreated", "severeMalariaTreated", "presumedMalariaTreated")]
-# comp_patientsTreated <- comp_patientsTreated[, .(num = sum(num_fac_per_indicator_month),
-#                                                            denom = sum(num_fac_per_indicator_year)),
-#                                                        by=c("year", "quarter")]
-# comp_patientsTreated[, completeness:= num/denom]
-# comp_patientsTreated[, indicator := "totalPatientsTreated"]
-# 
-# # bind totalPatientsTreated values for completeness back to full data set of completeness measures
-# comp_base <- rbindlist(list(comp_base_totals, comp_patientsTreated), use.names= TRUE)
-# 
-# # SIGL (supply chain) DATA------------>
-# dt_comp_sigl <- dt_sigl[, .(num_fac_per_indicator_year = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category", "year")]
-# dt_comp_sigl2 <- dt_sigl[, .(num_fac_per_indicator_month = length(unique(org_unit))), by=c("element_eng", "indicator", "subpopulation", "category", "year", "date")]
-# comp_sigl <- merge(dt_comp_sigl, dt_comp_sigl2, by=c("element_eng", "indicator", "subpopulation", "category", "year"), all = TRUE)
-# comp_sigl[, indicator_month_comp := num_fac_per_indicator_month / num_fac_per_indicator_year]
-# comp_sigl <- convert_date_to_quarter(comp_sigl)
-# 
-# # quarterly????
-# # ---------------------------------------------------
-# 
-# # ---------------------------------------------------
-# # Completeness from PNLP --> USE pnlp_comp after running this block of code
-# # Calculate completeness from the hz level pnlp data
-# # (not indicator-specific unfortunately - just date specific at natl level)
-# # ---------------------------------------------------
-# pnlp_hz$variable <- as.character(pnlp_hz$variable)
-# 
-# pnlp_fac <- pnlp_hz[variable %in% c("healthFacilities_numReportedWithinDeadline", "healthFacilities_total", "healthFacilitiesProduct"), .(dps, health_zone, date, variable, mean)]
-# setnames(pnlp_fac, "mean", "value")
-# 
-# pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable)
-# pnlp_fac[, healthFacilities_reporting := healthFacilitiesProduct / healthFacilities_total]
-# pnlp_fac[, healthFacilities_proportionReporting := healthFacilities_reporting / healthFacilities_total]
-# 
-# pnlp_fac[healthFacilities_proportionReporting > 1, healthFacilities_reporting := healthFacilities_total] # this will make the proportions = 1, but we want 
-# # to sum and then divide (I think?) rather than average 
-# # so the proportions are weighted by total # of facilities
-# pnlp_fac <- convert_date_to_quarter(pnlp_fac)
-# 
-# # sum numerator and denominator to national level, quarterly
-# pnlp_comp <- pnlp_fac[, .(healthFacilities_reporting = sum(healthFacilities_reporting),
-#                               healthFacilities_total = sum(healthFacilities_total)),
-#                           by = c("quarter", "year")]
-# pnlp_comp[ , completeness:= healthFacilities_reporting / healthFacilities_total]
-# # ---------------------------------------------------
-# 
-# # ---------------------------------------------------
-# # Aggregate to national data
-# # ---------------------------------------------------
-# base_natl <- dt_base[, .(value = sum(value, na.rm=TRUE)), by=c("date", "year", "type", "element", "element_eng", "category", "quarter", "indicator", "subpopulation")]
-# sigl_natl <- dt_sigl[, .(value = sum(value, na.rm=TRUE)), by=c("date", "year", "type", "element", "element_eng", "category", "quarter", "indicator", "subpopulation")]
-# # ---------------------------------------------------
-# 
 # ---------------------------------------------------
-# Aggregate to quarterly data / can sum over category in SNIS
+# Aggregate to quarterly data 
 # ---------------------------------------------------
-# dt_pnlp[ is.na(subpopulation), subpopulation:= "none"]
-# pnlp_natl_qtr <-  dt_pnlp[, .(value = sum(value, na.rm=TRUE)), by=c("year", "quarter", "indicator", "subpopulation")]
-# pnlp_natl_qtr$data_source = "PNLP"
-# 
-# base_natl_qtr <-  base_natl[, .(value = sum(value, na.rm=TRUE)), by=c("quarter", "year", "type", "element", "element_eng", "indicator", "subpopulation")]
-# base_natl_qtr$data_source = "SNIS_base_services"
-# 
-# sigl_natl_qtr <-  sigl_natl[, .(value = sum(value, na.rm=TRUE)), by=c("quarter", "year", "type", "element", "element_eng", "indicator", "subpopulation")]
-# sigl_natl_qtr$data_source = "SNIS_sigl"
-
-# quarterly combined data, by data set. 
-dt <- dt[, year := year(date)]
 dt <- dt[, .(value = sum(value, na.rm = TRUE)), by = .(year, quarter, dps, health_zone, data_set, indicator, subpopulation)]
-# -------------------------------------------------
+# ---------------------------------------------------
+
+# ---------------------------------------------------
+# Merge completeness measure from SNIS dashboard  - NOTE: they need to be re-downloaded at a quarterly time point
+# ---------------------------------------------------
+base_comp[, data_set := "snis_base_services"]
+sigl_comp[, data_set := "snis_sigl"]
+
+dt_base <- merge(dt[data_set == "snis_base_services", ], base_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all = TRUE)
+dt_sigl <- merge(dt[data_set == "snis_sigl", ], sigl_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all = TRUE)
+dt_pnlp <- dt[data_set == "pnlp"]
+# ---------------------------------------------------
+
+# ---------------------------------------------------
+# Completeness from PNLP --> USE pnlp_comp after running this block of code
+# Calculate completeness from the hz level pnlp data
+# (not indicator-specific unfortunately - just date specific at natl level)
+# ---------------------------------------------------
+pnlp_comp$variable <- as.character(pnlp_comp$variable)
+
+pnlp_fac <- pnlp_comp[variable %in% c("healthFacilities_total", "healthFacilitiesProduct"), .(dps, health_zone, date, variable, mean)]
+setnames(pnlp_fac, "mean", "value")
+
+pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable)
+pnlp_fac[, healthFacilities_reporting := healthFacilitiesProduct / healthFacilities_total]
+pnlp_fac[, healthFacilities_proportionReporting := healthFacilities_reporting / healthFacilities_total]
+
+# correction for where proportion reporting is > 1
+pnlp_fac[healthFacilities_proportionReporting > 1, healthFacilities_reporting := healthFacilities_total] 
+pnlp_fac[, healthFacilities_proportionReporting := healthFacilities_reporting / healthFacilities_total]
+pnlp_fac <- convert_date_to_quarter(pnlp_fac)
+
+# sum numerator and denominator quarterly
+pnlp_comp <- pnlp_fac[, .(healthFacilities_reporting = sum(healthFacilities_reporting),
+                          healthFacilities_total = sum(healthFacilities_total)),
+                          by = .(dps, health_zone, year, quarter) ]
+pnlp_comp[ , completeness:= healthFacilities_reporting / healthFacilities_total]
+pnlp_comp = pnlp_comp[, .(dps, health_zone, year, quarter, completeness)]
+pnlp_comp[, data_set := "pnlp"]
+
+dt_pnlp <- merge(dt_pnlp, pnlp_comp, by= c('year', 'quarter', 'dps', 'health_zone', 'data_set'), all.x = TRUE)
+dt = rbindlist( list(dt_base, dt_pnlp, dt_sigl), use.names = TRUE, fill = TRUE)
+# ---------------------------------------------------
 
 # ---------------------------------------------------
 # Subset to years where data wasn't fully imputed and just the indicators we want for activities/outputs
@@ -207,36 +162,6 @@ dt_final <- dt_final[,.(year, quarter, dps, health_zone, indicator, value)]
 
 saveRDS(dt_final, outputFile2b)
 # ---------------------------------------------------
-
-# # ---------------------------------------------------
-# # Put it all together!
-# # ---------------------------------------------------
-# # final clean up of completeness data
-# pnlp_comp <- pnlp_comp[, .(year, quarter, completeness)]
-# 
-# sigl_comp <- comp_sigl[ indicator == "ITN", ]
-# sigl_comp <- sigl_comp[, .(completeness = mean(indicator_month_comp)), by = c("year", "quarter", "indicator") ]  # can do a simple avg here since denom is all the same
-# sigl_comp <- sigl_comp[ indicator == "ITN", indicator := "ITN_consumed"]
-# 
-# base_indicators <- unique(base_final$indicator)
-# comp_base <- comp_base[ indicator == "RDT", indicator := "RDT_completed"]
-# base_comp <- comp_base[indicator %in% base_indicators,]
-# base_comp <- base_comp[, .(year, quarter, indicator, completeness)]
-# 
-# # merge completeness measures with data sets
-# pnlp_final <- merge(pnlp_final, pnlp_comp, by = c("year", "quarter"))
-# pnlp_final[, data_source := "PNLP"]
-# base_final <- merge(base_final, base_comp, by = c("year", "quarter", "indicator"))
-# base_final[, data_source := "SNIS_base"]
-# sigl_final <- merge(sigl_final, sigl_comp, by = c("year", "quarter", "indicator"))
-# sigl_final[, data_source := "SNIS_sigl"]
-#     
-# # bind all data sets together into final data set for pilot
-# pilot_dataset <- rbindlist(list(pnlp_final, base_final, sigl_final), use.names = TRUE)
-# 
-# # save dataset
-# saveRDS(pilot_dataset, outputFile2b)
-# # ---------------------------------------------------
 
 # ---------------------------------------------------
 # switch data to wide format
