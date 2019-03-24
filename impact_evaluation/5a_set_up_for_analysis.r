@@ -79,14 +79,19 @@ data$tmp = NULL
 data[, ghe_cumulative:=cumsum(ghe), by='health_zone']
 data[, oop_cumulative:=cumsum(oop), by='health_zone']
 
+# na omit (for health zones that were entirely missing)
+data = na.omit(data)
+
 # drop completeness variables (for now)
 for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
 
 # transform completeness variables
 # for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
 
-# na omit (for health zones that were entirely missing)
-data = na.omit(data)
+# log-transform all variables (confirmed manually)
+logVars =names(data)[!names(data)%in%c('health_zone','date')]
+for(v in logVars) data[, (v):=log(get(v))]
+for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
 
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
