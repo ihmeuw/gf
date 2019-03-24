@@ -3,7 +3,7 @@
 # 
 # 1/18/2019
 # This runs the SEM dose-response model
-# qsub -l archive=TRUE -cwd -N ie_script_5d -l fthread=4 -l m_mem_free=4G -q all.q -P ihme_general -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/5d_run_second_half_analysis.r
+# qsub -l archive=TRUE -cwd -N ie_script_5e -l fthread=4 -l m_mem_free=4G -q all.q -P ihme_general -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/5e_run_second_half_analysis.r
 # ------------------------------------------------
 
 source('./impact_evaluation/_common/set_up_r.r')
@@ -21,7 +21,7 @@ if(Sys.info()[1]=='Windows') runAsQsub = FALSE
 # ---------------------------
 # Load data
 set.seed(1)
-load(outputFile5c)
+load(outputFile5d)
 # ---------------------------
 
 
@@ -45,13 +45,6 @@ lmFit9 = lm(lead_malariaDeaths_rate ~ lead_newCasesMalariaMild_rate + lead_newCa
 summary(lmFit7)
 summary(lmFit8)
 summary(lmFit9)
-
-# tmp = summary(lmFit4)$coefficients
-# tmp[!grepl('health_zone',rownames(tmp)),]
-# tmp = summary(lmFit5)$coefficients
-# tmp[!grepl('health_zone',rownames(tmp)),]
-# tmp = summary(lmFit6)$coefficients
-# tmp[!grepl('health_zone',rownames(tmp)),]
 # -------------------------
 
 
@@ -96,7 +89,7 @@ if(runAsQsub==FALSE) {
 # run fully in parallel if specified
 if (runAsQsub==TRUE) { 
 	# save copy of input file for jobs
-	file.copy(outputFile5c, outputFile5c_scratch, overwrite=TRUE)
+	file.copy(outputFile5d, outputFile5d_scratch, overwrite=TRUE)
 	# store T (length of array)
 	hzs = unique(data$health_zone)
 	T = length(hzs)
@@ -129,26 +122,26 @@ means
 # Save model output and clean up
 
 # save all sem fits just in case they're needed
-print(paste('Saving', outputFile5d))
-save(list=c('data','model','summaries','means','scaling_factors'), file=outputFile5d)
+print(paste('Saving', outputFile5e))
+save(list=c('data','model','summaries','means','scaling_factors'), file=outputFile5e)
 
 # save full output for archiving
-print(paste('Saving', outputFile5d_big))
+print(paste('Saving', outputFile5e_big))
 semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rds')))
 })
-outputFile5d_big = gsub('.rdata','_all_semFits.rdata',outputFile5d)
-save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5d_big)
+outputFile5e_big = gsub('.rdata','_all_semFits.rdata',outputFile5e)
+save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5e_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
 date_time = gsub('-|:| ', '_', Sys.time())
-outputFile5dArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5d)
-outputFile5dArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5dArchive)
-file.copy(outputFile5d, outputFile5dArchive)
-outputFile5dArchive_big = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5d_big)
-outputFile5dArchive_big = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5dArchive_big)
-file.copy(outputFile5d_big, outputFile5dArchive_big)
+outputFile5eArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5e)
+outputFile5eArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5eArchive)
+file.copy(outputFile5e, outputFile5eArchive)
+outputFile5eArchive_big = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5e_big)
+outputFile5eArchive_big = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5eArchive_big)
+file.copy(outputFile5e_big, outputFile5eArchive_big)
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)

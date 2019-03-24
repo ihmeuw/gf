@@ -121,11 +121,11 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 
 # ---------------------------------------------------------
 # Save file
-save(list=c('data', 'scaling_factors'), file=outputFile5c)
+save(list=c('data', 'scaling_factors'), file=outputFile5d)
 
 # save a time-stamped version for reproducibility
 date_time = gsub('-|:| ', '_', Sys.time())
-outputFile5cArchive = gsub('prepped_data/', 'prepped_data/archive/', outputFile5c)
-outputFile5cArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5cArchive)
-file.copy(outputFile5c, outputFile5cArchive)
+outputFile5dArchive = gsub('prepped_data/', 'prepped_data/archive/', outputFile5d)
+outputFile5dArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5dArchive)
+file.copy(outputFile5d, outputFile5dArchive)
 # ---------------------------------------------------------
