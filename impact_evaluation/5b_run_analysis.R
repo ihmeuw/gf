@@ -26,17 +26,17 @@ load(outputFile5a)
 # -------------------------
 # Run series of unrelated linear models
 
-lmFit1 = lm(value_ITN_received ~ exp_M1_1_cumulative + exp_M1_2_cumulative + other_dah_M1_1_cumulative, data)
-lmFit2 = lm(value_RDT_received ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
-lmFit3 = lm(value_ACT_received ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
+lmFit1 = lm(ITN_received ~ exp_M1_1_cumulative + exp_M1_2_cumulative + other_dah_M1_1_cumulative, data)
+lmFit2 = lm(RDT_received ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
+lmFit3 = lm(ACT_received ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
 
 # linkage 2 regressions
-lmFit4 = lm(value_ITN_consumed ~ value_ITN_received, data)
-lmFit5 = lm(value_ACTs_CHWs ~ value_ACT_received, data)
-lmFit6 = lm(value_RDT_completed ~ value_RDT_received, data)
-lmFit7 = lm(value_SP ~ exp_M3_1_cumulative, data)
-lmFit8 = lm(value_severeMalariaTreated ~ exp_M2_6_cumulative + value_ACT_received, data)
-lmFit9 = lm(value_totalPatientsTreated ~ value_ACT_received, data)
+lmFit4 = lm(ITN_consumed ~ ITN_received, data)
+lmFit5 = lm(ACTs_SSC ~ ACT_received, data)
+lmFit6 = lm(RDT_completed ~ RDT_received, data)
+lmFit7 = lm(SP ~ exp_M3_1_cumulative, data)
+lmFit8 = lm(severeMalariaTreated ~ exp_M2_6_cumulative + ACT_received, data)
+lmFit9 = lm(totalPatientsTreated ~ ACT_received, data)
 
 summary(lmFit1)
 summary(lmFit2)
@@ -53,7 +53,7 @@ summary(lmFit9)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-# Should we include value_ACT_received in the value_severeMalariaTreated linkage 2 regression?
+# Should we include ACT_received in the severeMalariaTreated linkage 2 regression?
 # Currently combining M1_1 (mass campaigns) and M1_2 (continuous) because FGH can't distinguish
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
 source('./impact_evaluation/models/drc_malaria4.r')
@@ -70,10 +70,10 @@ if ('semFit' %in% ls()) rm('semFit')
 # run locally if specified
 if(runAsQsub==FALSE) { 
 	# run all sems
-	semFits = mclapply(unique(data$health_zone), function(h) { 
+	semFits = mclapply(unique(data$health_zone)[1], function(h) { 
 		print(h)
 		suppressWarnings(
-			bsem(model, data[health_zone==h], adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+			bsem(model, data[health_zone==h], adapt=500, burnin=100, sample=100, bcontrol=list(thin=3))
 		)
 		
 	}, mc.cores=ifelse(Sys.info()[1]=='Windows',1,24))
