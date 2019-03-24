@@ -18,6 +18,10 @@ source('./impact_evaluation/_common/set_up_r.r')
 # load
 data = readRDS(outputFile3)
 
+# make unique health zone names for convenience
+data[, health_zone:=paste0(health_zone, '_', dps)]
+data$dps = NULL
+
 # last-minute prep that shouldn't be necessary after bugs are fixed
 	# combine the two ITN budget categories since FGH can't distinguish
 	data[, other_dah_M1_1:=other_dah_M1_1+other_dah_M1_2]
@@ -36,7 +40,7 @@ data = readRDS(outputFile3)
 # compute cumulative budgets
 rtVars = names(data)
 rtVars = rtVars[grepl('exp|other_dah', rtVars)]
-for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v))]
+for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v)), by='health_zone']
 
 # subset dates now that cumulative variables are computed
 data = data[date>=2010 & date<2019]
@@ -47,20 +51,33 @@ data = data[date>=2010 & date<2019]
 # Data transformations and other fixes for Heywood cases
 
 # drop zero-variance variables
-for(v in names(data)) if (sd(data[[v]],na.rm=T)==0) data[[v]] = NULL
+numVars = names(data)[names(data)!='health_zone']
+for(v in numVars) { 
+	if (sd(data[[v]],na.rm=T)==0) data[[v]] = NULL
+}
 
 # extrapolate where necessary TEMPORARY
-for(v in names(data)) {
-	form = as.formula(paste0(v,'~date'))
-	lmFit = glm(form, data, family='poisson')
-	data[, tmp:=exp(predict(lmFit, newdata=data))]
-	# print(ggplot(data, aes_string(y=v,x='date')) + geom_point() + geom_line(aes(y=tmp)) + labs(title=v))
-	data[is.na(get(v)), (v):=tmp]
+i=1
+for(v in numVars) {
+	for(h in unique(data$health_zone)) { 
+		i=i+1
+		if (!any(is.na(data[health_zone==h][[v]]))) next
+		if (!any(!is.na(data[health_zone==h][[v]]))) next
+		form = as.formula(paste0(v,'~date'))
+		lmFit = glm(form, data[health_zone==h], family='poisson')
+		data[health_zone==h, tmp:=exp(predict(lmFit, newdata=data[health_zone==h]))]
+		# print(ggplot(data, aes_string(y=v,x='date')) + geom_point() + geom_line(aes(y=tmp)) + labs(title=v))
+		data[health_zone==h & is.na(get(v)), (v):=tmp]
+		pct_complete = floor(i/(length(numVars)*length(unique(data$health_zone)))*100)
+		cat(paste0('\r', pct_complete, '% Complete'))
+		flush.console() 
+	}
 }
 data$tmp = NULL
 
 # now remake ghe_cumulative TEMPORARY
-data[, ghe_cumulative:=cumsum(ghe)]
+data[, ghe_cumulative:=cumsum(ghe), by='health_zone']
+data[, oop_cumulative:=cumsum(oop), by='health_zone']
 
 # drop completeness variables (for now)
 for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
@@ -68,21 +85,21 @@ for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
 # transform completeness variables
 # for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
 
-# na omit
+# na omit (for health zones that were entirely missing)
 data = na.omit(data)
 
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
 scaling_factors = data.table(date=1)
 for(v in names(data)) { 
-	if (v=='date') next
+	if (v %in% c('health_zone','date')) next
 	s=1
 	while(var(data[[v]]/s)>1000) s=s*10
 	while(var(data[[v]]/s)<100) s=s/10
 	scaling_factors[,(v):=s]
 }
 scaling_factors = scaling_factors[rep(1,nrow(data))]
-data = data/scaling_factors
+for(v in names(scaling_factors)) data[, (v):=get(v)/scaling_factors[[v]]]
 # data[, lapply(.SD, var)]
 # -----------------------------------------------------------------------
 
