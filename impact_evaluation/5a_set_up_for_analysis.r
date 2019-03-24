@@ -108,7 +108,7 @@ for(v in names(scaling_factors)) data[, (v):=get(v)/scaling_factors[[v]]]
 # Run final tests
 
 # test unique identifiers
-test = nrow(data)==nrow(unique(data[,'date', with=F]))
+test = nrow(data)==nrow(unique(data[,c('health_zone','date'), with=F]))
 if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify rows.'))
 
 # test for collinearity
