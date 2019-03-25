@@ -20,8 +20,14 @@ source('./impact_evaluation/visualizations/graphLavaan.r')
 # load model results
 load(outputFile5b)
 data1=copy(data)
-load(outputFile5d)
+means1 = copy(means)
+summaries1 = copy(summaries)
+scaling_factors1=copy(scaling_factors)
+load(outputFile5e)
 data2=copy(data)
+means2 = copy(means)
+summaries2 = copy(summaries)
+scaling_factors2=copy(scaling_factors)
 
 # load nodeTable for graphing
 nodeTable1 = fread('./impact_evaluation/visualizations/vartable.csv')
@@ -37,15 +43,15 @@ nodeTable2 = nodeTable2[variable %in% names(data2)]
 # Display results
 
 # my sem graph function for first half model
-p1 = semGraph(semFit, nodeTable=nodeTable1, 
+p1 = semGraph(parTable=means1, nodeTable=nodeTable1, 
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE)
 
 # my sem graph function for second half model
-p2 = semGraph(parTable=means, nodeTable=nodeTable2, 
+p2 = semGraph(parTable=means2, nodeTable=nodeTable2, 
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE, 
-	boxWidth=2, boxHeight=.5)
+	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
 # ----------------------------------------------
 
 
