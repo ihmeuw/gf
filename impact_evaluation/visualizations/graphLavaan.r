@@ -13,6 +13,7 @@
 # boxHeight, boxWidth, (numeric) height and width of boxes
 # lineWidth, (numeric) edge thickness and arrow size
 # midpoint, (numeric [0,1]), user-specified midpoint for edge bending
+# buffer, (numeric vector length 4), multipliers to add extra space around plot (0=no space), order is xmin, xmax, ymin, ymax
 # curved, (numeric) 0=straight lines, 1=1 bend, 2=2 bends, 3=step-wise (1 and 2 NOT IMPLEMENTED)
 # tapered, (logical) whether to taper edges from start to finish NOT IMPLEMENTED
 # Returns: a graph
@@ -36,12 +37,13 @@
 # boxWidth=4
 # boxHeight=1
 # lineWidth=1
+# buffer=c(.25,.25,.25,.25)
 # midpoint=0.4
 # curved=0
 
 semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_factors=NA, 
 	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, uncertainty=TRUE, 
-	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, 
+	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, buffer=c(.25,.25,.25,.25),
 	curved=0, tapered=TRUE) {
 
 	# ------------------------------------------------------
@@ -262,17 +264,17 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 		# geom_point(data=nodeTable, aes(y=y, x=x), size=labSize2*5, shape=22, fill='white') + 
 		geom_rect(data=nodeTable, aes(ymin=y-(boxHeight*.5), ymax=y+(boxHeight*.5), xmin=x, xmax=x+boxWidth), 
 			fill='white', color='black') + 
-		geom_text(data=nodeTable, aes(y=y, x=x+(0.05*boxWidth), label=str_wrap(label,30)), size=labSize2, hjust=0) 
+		geom_text(data=nodeTable, aes(y=y, x=x+(0.05*boxWidth), label=str_wrap(label,19)), size=labSize2, hjust=0) 
 	
 	# improve legend
 	p = p + 
 		scale_color_viridis(direction=-1) 
 	
 	# add buffer space to axes
-	ymax = max(nodeTable$y)+(0.25*sd(nodeTable$y))
-	ymin = min(nodeTable$y)-(0.25*sd(nodeTable$y))
-	xmax = max(nodeTable$x)+(0.25*sd(nodeTable$x))
-	xmin = min(nodeTable$x)-(0.25*sd(nodeTable$x))
+	ymax = max(nodeTable$y)+(buffer[4]*sd(nodeTable$y))
+	ymin = min(nodeTable$y)-(buffer[3]*sd(nodeTable$y))
+	xmax = max(nodeTable$x)+(buffer[2]*sd(nodeTable$x))
+	xmin = min(nodeTable$x)-(buffer[1]*sd(nodeTable$x))
 	p = p + 
 		expand_limits(y=c(ymin, ymax), x=c(xmin, xmax)) 
 	
