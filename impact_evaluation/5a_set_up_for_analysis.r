@@ -78,6 +78,15 @@ data$tmp = NULL
 # now remake ghe_cumulative TEMPORARY
 data[, ghe_cumulative:=cumsum(ghe), by='health_zone']
 data[, oop_cumulative:=cumsum(oop), by='health_zone']
+data[, ITN_received_cumulative:=cumsum(ITN_received), by='health_zone']
+data[, RDT_received_cumulative:=cumsum(RDT_received), by='health_zone']
+data[, ACT_received_cumulative:=cumsum(ACT_received), by='health_zone']
+data[, ITN_consumed_cumulative:=cumsum(ITN_consumed), by='health_zone']
+data[, ACTs_SSC_cumulative:=cumsum(ACTs_SSC), by='health_zone']
+data[, RDT_completed_cumulative:=cumsum(RDT_completed), by='health_zone']
+data[, SP_cumulative:=cumsum(SP), by='health_zone']
+data[, severeMalariaTreated_cumulative:=cumsum(severeMalariaTreated), by='health_zone']
+data[, totalPatientsTreated_cumulative:=cumsum(totalPatientsTreated), by='health_zone']
 
 # na omit (for health zones that were entirely missing)
 data = na.omit(data)
@@ -85,11 +94,15 @@ data = na.omit(data)
 # drop completeness variables (for now)
 for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
 
+# split before trasnformations
+untransformed = copy(data)
+
 # transform completeness variables
 # for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
 
-# log-transform all variables (confirmed manually)
+# # log-transform all variables (NEED CONFIRMATION AT HZ LEVEL)
 logVars =names(data)[!names(data)%in%c('health_zone','date')]
+logVars = c('ITN_consumed_cumulative','ACTs_SSC_cumulative','RDT_completed_cumulative','SP_cumulative','severeMalariaTreated_cumulative','totalPatientsTreated_cumulative')
 for(v in logVars) data[, (v):=log(get(v))]
 for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
 
@@ -125,7 +138,7 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 
 # ---------------------------------------------------------
 # Save file
-save(list=c('data', 'scaling_factors'), file=outputFile5a)
+save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile5a)
 
 # save a time-stamped version for reproducibility
 date_time = gsub('-|:| ', '_', Sys.time())
