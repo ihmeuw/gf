@@ -18,7 +18,7 @@ for(v in names(scaling_factors)) data[,(v):=get(v)*scaling_factors[[v]]]
 
 # exponentiate
 logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated',
-	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate',
+	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate','ITN_rate_cumul','case_fatality',
 	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate')
 for(v in logVars) data[, (v):=exp(get(v))]
 # ----------------------------------------------------------------------------
