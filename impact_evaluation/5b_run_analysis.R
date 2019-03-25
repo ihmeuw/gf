@@ -104,21 +104,24 @@ if (runAsQsub==TRUE) {
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/5c_run_first_half_analysis_single_hz.r'))
 	# wait for jobs to finish (2 files per job)
-	while(length(list.files(clustertmpDir2))<(T*2)) { 
+	while(length(list.files(clustertmpDir2, pattern='_summary_'))<(T)) { 
 		Sys.sleep(5)
-		print(paste(length(list.files(clustertmpDir2)), 'of', T*2, 'files found...'))
+		print(paste(length(list.files(clustertmpDir2, pattern='_summary_')), 'of', T, 'files found...'))
 	}
 	# collect output
 	print('Collecting output...')
+	summaries = NULL
 	for(i in seq(T)) { 
-		summary = readRDS(paste0(clustertmpDir2, 'first_half_summary_', i, '.rds'))
-		if (i==1) summaries = copy(summary)
-		if (i>1) summaries = rbind(summaries, summary)
+		file = paste0(clustertmpDir2, 'first_half_summary_', i, '.rds')
+		if (!file.exists(file)) next 
+		summary = readRDS(file)
+		if (is.null(summaries)) summaries = copy(summary)
+		if (!is.null(summaries)) summaries = rbind(summaries, summary)
 	}
 }
 
 # compute averages
-means = summaries[,.(est.std=mean(est.std), se=mean(se)), by=c('lhs','op','rhs')]
+means = summaries[,.(est.std=mean(est.std), se.std=mean(se.std)), by=c('lhs','op','rhs')]
 means
 # --------------------------------------------------------------
 
@@ -128,7 +131,7 @@ means
 
 # save all sem fits just in case they're needed
 print(paste('Saving', outputFile5b))
-save(list=c('data','model','summaries','means','scaling_factors'), file=outputFile5b)
+save(list=c('data','untransformed','model','summaries','means','scaling_factors'), file=outputFile5b)
 
 # save full output for archiving
 print(paste('Saving', outputFile5b_big))
@@ -136,7 +139,7 @@ semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 })
 outputFile5b_big = gsub('.rdata','_all_semFits.rdata',outputFile5b)
-save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5b_big)
+save(list=c('data','untransformed','model','semFits','summaries','means','scaling_factors'), file=outputFile5b_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
