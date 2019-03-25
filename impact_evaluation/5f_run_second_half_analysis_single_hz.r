@@ -37,7 +37,10 @@ source('./impact_evaluation/models/drc_malaria_impact3.r')
 semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 
 # store summary
-summary = data.table(standardizedSolution(semFit, se=TRUE))
+standardizedSummary = data.table(standardizedSolution(semFit, se=TRUE))
+setnames(standardizedSummary, c('se','ci.lower', 'ci.upper'), c('se.std','ci.lower.std','ci.upper.std'))
+summary = data.table(parTable(semFit))
+summary = merge(summary, standardizedSummary, by=c('lhs','op','rhs'))
 summary[, health_zone:=h]
 # --------------------------------------------------------------
 

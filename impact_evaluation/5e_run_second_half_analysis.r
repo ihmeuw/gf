@@ -115,7 +115,7 @@ if (runAsQsub==TRUE) {
 }
 
 # compute averages
-means = summaries[,.(est.std=mean(est.std), se=mean(se)), by=c('lhs','op','rhs')]
+means = summaries[,.(est.std=mean(est.std), se.std=mean(se.std)), by=c('lhs','op','rhs')]
 means
 # --------------------------------------------------------------
 
