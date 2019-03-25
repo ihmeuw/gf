@@ -33,7 +33,9 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd("C:/Users/ccarelli/local/gf/")
 
 # choose the data set you are working with: pnls or base
+# set the disease for base servies - malaria or hiv
 set = 'base'
+if (set=='base') { qr_disease = 'malaria'}
 
 # read in the data 
 if (set=='pnls') {dt = readRDS(paste0(dir, 'prepped/pnls_arv.rds'))}
@@ -41,10 +43,17 @@ if (set=='base') {dt = readRDS(paste0(dir, 'pre_prep/merged/base_2018_01_01_2019
 
 # convert values to numerics 
 dt[ ,value:=as.numeric(as.character(value))]
+dt = dt[!is.na(value)] # 52 values are listed as 'null', drop out missing values
 
 # subset date
 dt = dt[year(date) < 2019]
 # ---------------------------------------
+# keep only the malaria-related elements in base services
+if (set=='base') { 
+  dt[grepl('Paludisme', element) | grepl('TDR', element) | grepl('MILD', element) | grepl('Sulfadox', element), disease:='malaria']
+  dt[is.na(disease), disease:='hiv']
+  dt = dt[disease==qr_disease]
+  dt[ , disease:=NULL] }
 
 # drop case and additional geographic information
 # there is no element_id as the elements are aggregated 
@@ -60,12 +69,6 @@ dt[, element_id:=.GRP, by='element']
 if (set=='pnls') {saveRDS(dt, paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))}
 if (set=='base') {saveRDS(dt, paste0(dir, 'outliers/base_to_screen.rds'))}
 # ---------------------------------------
-
-
-
-
-
-
 
 
 
