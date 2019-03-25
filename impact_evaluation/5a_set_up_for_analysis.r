@@ -36,6 +36,9 @@ data$dps = NULL
 	
 	# drop M2_3 from other_dah for now because it's identifcal to M2_1
 	# data$other_dah_M2_3 = NULL
+	
+	# iccm didn't exist prior to 2014, wasn't reported until 2015, consider it zero
+	data[date<2015, ACTs_SSC:=0]
 
 # compute cumulative budgets
 rtVars = names(data)
