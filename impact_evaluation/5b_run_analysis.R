@@ -59,7 +59,9 @@ summary(lmFit9)
 source('./impact_evaluation/models/drc_malaria4.r')
 
 # test run
-# semFit = bsem(model, data[health_zone==unique(data$health_zone)[1]], adapt=500, burnin=100, sample=100, bcontrol=list(thin=3))
+# tmp = data[health_zone==unique(data$health_zone)[1]]
+# for(v in names(tmp)[!names(tmp)%in%c('health_zone','date')]) tmp[, (v):=get(v)+rpois(nrow(tmp), sd(tmp[[v]])/10)]
+# semFit = bsem(model, tmp, adapt=500, burnin=100, sample=100, bcontrol=list(thin=3))
 # ----------------------------------------------
 
 

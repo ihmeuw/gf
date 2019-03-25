@@ -34,6 +34,12 @@ source('./impact_evaluation/models/drc_malaria4.r')
 
 # --------------------------------------------------------------
 # Run model
+# jitter to avoid perfect collinearity
+for(v in names(subData)[!names(subData)%in%c('health_zone','date')]) { 
+	subData[, (v):=get(v)+rpois(nrow(subData), sd(subData[[v]])/10)]
+}
+
+# fit model
 semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 
 # store summary
