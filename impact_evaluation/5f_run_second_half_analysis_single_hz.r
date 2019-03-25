@@ -18,7 +18,7 @@ source('./impact_evaluation/_common/set_up_r.r')
 # ---------------------------
 # Load data
 set.seed(1)
-load(outputFile5c_scratch)
+load(outputFile5d_scratch)
 
 # subset to current health zone
 h = unique(data$health_zone)[task_id]
