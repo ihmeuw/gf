@@ -39,12 +39,14 @@ lmFit6 = lm(RDT_rate ~ RDT, data)
 # linkage 2 regressions
 lmFit7 = lm(lead_newCasesMalariaMild_rate ~ ITN_rate_cumul + mildMalariaTreated_rate + ACTs_CHWs_rate + SP_rate + date, data)
 lmFit8 = lm(lead_newCasesMalariaSevere_rate ~ ITN_rate_cumul + severeMalariaTreated_rate + ACTs_CHWs_rate + SP_rate + date, data)
-lmFit9 = lm(lead_malariaDeaths_rate ~ lead_newCasesMalariaMild_rate + lead_newCasesMalariaSevere_rate + mildMalariaTreated_rate + severeMalariaTreated_rate + ACTs_CHWs_rate + SP_rate, data)
+lmFit9 = lm(lead_case_fatality ~ mildMalariaTreated_rate + severeMalariaTreated_rate + ACTs_CHWs_rate, data)
+lmFit10 = lm(lead_malariaDeaths_rate ~ lead_newCasesMalariaMild_rate + lead_newCasesMalariaSevere_rate + lead_case_fatality, data)
 
 # summarize
 summary(lmFit7)
 summary(lmFit8)
 summary(lmFit9)
+summary(lmFit10)
 # -------------------------
 
 

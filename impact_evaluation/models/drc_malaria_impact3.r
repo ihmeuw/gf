@@ -14,9 +14,10 @@ model = '
 	RDT_rate ~ prior("dgamma(1,1)")*RDT
 	
 	# linkage 2 regressions
-	lead_newCasesMalariaMild_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dunif(-1,0)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate
-	lead_newCasesMalariaSevere_rate ~ prior("dunif(-1,0)")*ITN_rate_cumul + prior("dnorm(-1,1)")*severeMalariaTreated_rate + prior("dunif(-1,0)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate
-	lead_malariaDeaths_rate ~ lead_newCasesMalariaMild_rate + lead_newCasesMalariaSevere_rate + prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dunif(-1,0)")*severeMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate
+	lead_newCasesMalariaMild_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate
+	lead_newCasesMalariaSevere_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*severeMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate
+	lead_case_fatality ~ prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dnorm(-1,1)")*severeMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate
+	lead_malariaDeaths_rate ~ lead_newCasesMalariaMild_rate + lead_newCasesMalariaSevere_rate + lead_case_fatality
 	
 	# latent variables
 	
