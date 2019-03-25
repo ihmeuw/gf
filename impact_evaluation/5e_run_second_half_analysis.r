@@ -128,11 +128,11 @@ print(paste('Saving', outputFile5e))
 save(list=c('data','model','summaries','means','scaling_factors'), file=outputFile5e)
 
 # save full output for archiving
+outputFile5e_big = gsub('.rdata','_all_semFits.rdata',outputFile5e)
 print(paste('Saving', outputFile5e_big))
 semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rds')))
 })
-outputFile5e_big = gsub('.rdata','_all_semFits.rdata',outputFile5e)
 save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5e_big)
 
 # save a time-stamped version for reproducibility
