@@ -1,9 +1,10 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
-# Run quantile regression on the ARVs data from PNLS
+# Run quantile regression on the Base Services data for malaria
+# For use in the SEM for the April TERG meeting
 #
-# 10/1/2018
-# The current working directory should be the same as this script
+# 3/25/2019
+# The current working directory should be the same as the location of this script
 # ----------------------------------------------
 
 # --------------------
@@ -15,6 +16,9 @@ library(quantreg)
 # --------------------
 # make sure qr_results exists
 # cd /ihme/scratch/users/ccarelli/
+
+# copy over the base services data from j - to source from scracth
+# cp '/home/j/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outliers/base_to_screen.rds' '/ihme/scratch/users/ccarelli/'
 
 # to delete files in the directory
 # rm qr_results/*
@@ -55,8 +59,10 @@ cleanup = TRUE
 #-----------------------------------
 # read in the subset of PNLS data specific to viral load 
 
-# data set with equality constraints checked and an entry for both tests/undetectable
-dt = readRDS(paste0(dir, 'outliers/base_to_screen.rds'))
+# data set 
+#dt = readRDS(paste0(dir, 'outliers/base_to_screen.rds'))
+
+dt = readRDS('/ihme/scratch/users/ccarelli/base_to_screen.rds')
 
 # loop over elements and org units, run quantreg once per each
 i=1
@@ -84,24 +90,6 @@ while(numFiles<i) {
   Sys.sleep(2)
 }
 
-# 
-# # collect all output into one data table
-# for (j in seq(i)) {
-#   tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j, '.rds'))
-#   if(j==1) fullData = tmp
-#   if(j>1) fullData = rbind(fullData, tmp)
-#   cat(paste0('\r', j))
-#   flush.console() 
-# }
-# 
-# # save full data
-# saveRDS(fullData, outFile)
-# 
-# # clean up parallel files
-# if (cleanup==TRUE) { 
-#   system('rm /ihme/scratch/users/ccarelli/qr_results/*')
-#   system('rm /ihme/scratch/users/ccarelli/quantreg_output/*')
-# }
 
 #--------------------------------------------------------
 # alternate code to rbind files in a cluster IDE
