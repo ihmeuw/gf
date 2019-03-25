@@ -13,4 +13,5 @@ ITN_rate_cumul,4.5,1.5,ITN Cvg.
 SP_rate,4.5,0.5,ANC ACT Cvg.
 lead_newCasesMalariaMild_rate,11,4.5,Lead of Inc. Rate (mild)
 lead_newCasesMalariaSevere_rate,11,1.5,Lead of Inc. Rate (severe)
-lead_malariaDeaths_rate,14,3,Lead of Mortality Rate
+lead_malariaDeaths_rate,15,3,Lead of Mortality Rate
+lead_case_fatality,12,3,Lead of Case Fatality
