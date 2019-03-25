@@ -66,3 +66,9 @@ merge_file = merge_file[, -c('mean','tmp','prop','total','total_tx')]
 # merge_file <- merge_file[, .(year, quarter, code, module, intervention, indicator, indicator_type, value, completeness, budget, loc_name, disease, other_dah, data_source)]
 
 saveRDS(merge_file, outputFile3)
+
+# save a time-stamped version for reproducibility
+date_time = gsub('-|:| ', '_', Sys.time())
+outputFile3Archive = gsub('prepped_data/', 'prepped_data/archive/', outputFile3)
+outputFile3Archive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile3Archive)
+file.copy(outputFile3, outputFile3Archive)
