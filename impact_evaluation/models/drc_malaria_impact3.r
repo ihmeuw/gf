@@ -17,7 +17,7 @@ model = '
 	lead_newCasesMalariaMild_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate
 	lead_newCasesMalariaSevere_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*severeMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate
 	lead_case_fatality ~ prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dnorm(-1,1)")*severeMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate
-	lead_malariaDeaths_rate ~ lead_newCasesMalariaMild_rate + lead_newCasesMalariaSevere_rate + lead_case_fatality
+	lead_malariaDeaths_rate ~ prior("dnorm(-1,1)")*lead_newCasesMalariaMild_rate + prior("dnorm(-1,1)")*lead_newCasesMalariaSevere_rate + prior("dgamma(1,1)")*lead_case_fatality
 	
 	# latent variables
 	
