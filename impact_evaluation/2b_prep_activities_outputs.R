@@ -31,6 +31,7 @@ convert_quarter_to_decimal <- function(dt){
   dt$date <- as.numeric(dt$date)
   return(dt)
 }
+source('./core/standardizeHZNames.R')
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -40,14 +41,25 @@ dt <- readRDS(combinedFile)
 sigl_comp <- readRDS(comp_sigl_file)
 base_comp <- readRDS(comp_base_file)
 pnlp_comp <- readRDS(pnlpHZFile)
+
+# standardize health zone names in SNIS files - because of the three that we combined, will need to avg across health_zones
+base_comp[ , health_zone := standardizeHZNames(health_zone)]
+sigl_comp[ , health_zone := standardizeHZNames(health_zone)]
+
+base_comp = base_comp[, .(completeness = mean(completeness)), by = .(dps, dps_code, health_zone, date, year, quarter)]
+sigl_comp = sigl_comp[, .(completeness = mean(completeness)), by = .(dps, dps_code, health_zone, date, year, quarter)]
+
+if (nrow(base_comp[duplicated(base_comp[, .(health_zone, dps, year, quarter)])]) != 0 
+    & nrow(sigl_comp[duplicated(sigl_comp[, .(health_zone, dps, year, quarter)])]) != 0){
+  stop ( "Unique identifiers do not uniquely idenitfy rows!")}
 # ---------------------------------------------------
 
 # ---------------------------------------------------
 # Change variable names / other set up
 # ---------------------------------------------------
-# Subset DHIS2 data sets to 2018 data onward (use PNLP up to 2017)
-remove_data <- dt[ data_set == "snis_base_services" & date < "2018-01-01",]
-remove_data <- rbind(remove_data, dt[ data_set == "snis_sigl" & date < "2018-01-01",])
+# Subset DHIS2 data sets to 2018 data onward (use PNLP up to 2017); for now, stop at Q4 2018
+remove_data <- dt[ (data_set == "snis_base_services" & date < "2018-01-01") | (data_set == "snis_base_services" & date > "2018-12-01"),]
+remove_data <- rbind(remove_data, dt[ (data_set == "snis_sigl" & date < "2018-01-01") | (data_set == "snis_base_services" & date > "2018-12-01"),])
 dt <-  anti_join(dt, remove_data)
 dt <- as.data.table(dt)
 
@@ -66,8 +78,16 @@ dt <- dt[, .(value = sum(value, na.rm = TRUE)), by = .(year, quarter, dps, healt
 base_comp[, data_set := "snis_base_services"]
 sigl_comp[, data_set := "snis_sigl"]
 
-dt_base <- merge(dt[data_set == "snis_base_services", ], base_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all = TRUE)
-dt_sigl <- merge(dt[data_set == "snis_sigl", ], sigl_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all = TRUE)
+base_comp[, year := as.numeric(year)]
+sigl_comp[, year := as.numeric(year)]
+dt[, year := as.numeric(year)]
+
+base_comp[, quarter := as.numeric(quarter)]
+sigl_comp[, quarter := as.numeric(quarter)]
+dt[, quarter := as.numeric(quarter)]
+
+dt_base <- merge(dt[data_set == "snis_base_services", ], base_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all.x = TRUE)
+dt_sigl <- merge(dt[data_set == "snis_sigl", ], sigl_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all.x = TRUE)
 dt_pnlp <- dt[data_set == "pnlp"]
 # ---------------------------------------------------
 
@@ -83,23 +103,19 @@ setnames(pnlp_fac, "mean", "value")
 
 pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable)
 pnlp_fac[, healthFacilities_reporting := healthFacilitiesProduct / healthFacilities_total]
-pnlp_fac[, healthFacilities_proportionReporting := healthFacilities_reporting / healthFacilities_total]
+pnlp_fac[, completeness := healthFacilities_reporting / healthFacilities_total]
 
 # correction for where proportion reporting is > 1
-pnlp_fac[healthFacilities_proportionReporting > 1, healthFacilities_reporting := healthFacilities_total] 
-pnlp_fac[, healthFacilities_proportionReporting := healthFacilities_reporting / healthFacilities_total]
-pnlp_fac <- convert_date_to_quarter(pnlp_fac)
+pnlp_fac[completeness > 1, healthFacilities_reporting := healthFacilities_total] 
 
 # sum numerator and denominator quarterly
+pnlp_fac <- convert_date_to_quarter(pnlp_fac)
 pnlp_comp <- pnlp_fac[, .(healthFacilities_reporting = sum(healthFacilities_reporting),
                           healthFacilities_total = sum(healthFacilities_total)),
                           by = .(dps, health_zone, year, quarter) ]
 pnlp_comp[ , completeness:= healthFacilities_reporting / healthFacilities_total]
 pnlp_comp = pnlp_comp[, .(dps, health_zone, year, quarter, completeness)]
 pnlp_comp[, data_set := "pnlp"]
-
-dt_pnlp <- merge(dt_pnlp, pnlp_comp, by= c('year', 'quarter', 'dps', 'health_zone', 'data_set'), all.x = TRUE)
-dt = rbindlist( list(dt_base, dt_pnlp, dt_sigl), use.names = TRUE, fill = TRUE)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -134,42 +150,46 @@ dt[ indicator == "SSCACT", subpopulation := "none"]
 dt[ indicator == "severeMalariaTreated", subpopulation := "none"]
 dt[ indicator == "simpleConfMalariaTreated", subpopulation := "none"]
 
-dt <-  dt[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, indicator, subpopulation)]
+dt <-  dt[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, indicator, subpopulation, completeness)]
 
 # we need to create variable for totalPatientsTreated and a variable for ACT_received, will do this separately then rbind back together
 acts_rec <- dt[ indicator %in% c("ALreceived", "ASAQreceived") ]
-acts_rec <- acts_rec[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set)]
+acts_rec <- acts_rec[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
 acts_rec[, indicator := "ACT_received"]
 acts_rec[, subpopulation := "none"]
 
 patients_treated <- dt[ grepl("treated", indicator, ignore.case = TRUE), ]
-patients_treated <- patients_treated[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set)]
+patients_treated <- patients_treated[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
 patients_treated[, indicator := "totalPatientsTreated"]
 patients_treated[, subpopulation := "none"]
 
 dt_final <- rbindlist(list(acts_rec, patients_treated, dt), use.names = TRUE)
 
-# remove variables we don't need for pilot dataset
+# remove variables we don't need for impact model
 dt_final <- dt_final[!indicator %in% c("simpleConfMalariaTreated", "ASAQreceived", "ALreceived", "presumedMalariaTreated")]
 
-# rename pnlp variables to match to pilot dataset
+# rename pnlp variables to match to impact model
 dt_final[ indicator == "LLIN" & subpopulation == "consumed", indicator := "ITN_consumed" ]
 dt_final[ indicator == "LLIN" & subpopulation == "received", indicator := "ITN_received" ]
 dt_final[ indicator == "RDT" & subpopulation == "completed", indicator := "RDT_completed" ]
 dt_final[ indicator == "RDT" & subpopulation == "received", indicator := "RDT_received" ]
 dt_final[ indicator == "SSCACT", indicator := "ACTs_SSC" ]
-dt_final <- dt_final[,.(year, quarter, dps, health_zone, indicator, value)]
+dt_final <- dt_final[,.(year, quarter, dps, health_zone, indicator, value, completeness)]
+
+dt_final = convert_quarter_to_decimal(dt_final)
 
 saveRDS(dt_final, outputFile2b)
+dt_final <- readRDS(outputFile2b)
+archive(dt_final, outputFile2b)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
 # switch data to wide format
 # ---------------------------------------------------
 # dt <- readRDS(outputFile2b)
-dt_final <- dcast.data.table(dt_final, year + quarter + dps + health_zone ~ indicator, value.var = c("value"))
-# dt_final <- dcast.data.table(dt_final, year + quarter + dps + health_zone ~ indicator, value.var = c("value", "completeness"))
+# dt_final_wide <- dcast.data.table(dt_final, date + dps + health_zone ~ indicator, value.var = c("value"))
+dt_final_wide <- dcast.data.table(dt_final, date + dps + health_zone ~ indicator, value.var = c("value", "completeness"))
 
-dt_final = convert_quarter_to_decimal(dt_final)
-saveRDS(dt_final, outputFile2b_wide)
+saveRDS(dt_final_wide, outputFile2b_wide)
+archive(dt_final_wide, outputFile2b_wide)
 # ---------------------------------------------------
