@@ -34,7 +34,7 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # STEP 2: GF FILES AND GOS DATA 
 # ----------------------------------------------
 
-country = "uga" #Change to the country you want to update. 
+country = "cod" #Change to the country you want to update. 
 master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
 export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
 

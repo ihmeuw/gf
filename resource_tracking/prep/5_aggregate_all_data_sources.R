@@ -83,10 +83,44 @@ final_budgets[grant == 'GTM-T-UPCOMING', grant:='GTM-T-MSPAS']
 final_budgets[grant == 'GTM-M-UPCOMING', grant:='GTM-M-MSPAS']
 final_budgets[grant == 'UGD-708-G13-H', grant:='UGA-708-G13-H']
 
-#Keep only GOS through 2016, and only final budgets after. (Keep all GOS for as long as we have it)
-gos_data = gos_data[year <=gos_year]
-final_budgets = final_budgets[year>gos_year]
-final_budgets <- rbind(final_budgets, gos_data, fill = TRUE) 
+#Wherever there is a grant quarter in the final budgets that doesn't exist in GOS, take that whole grant for the grant 
+# period and replace the GOS with the final budgets data. 
+gos_data[, start_date:=as.Date(start_date)]
+gos_data[, end_date:=as.Date(end_date)]
+
+#Find out what quarters we have GOS data for. 
+gos_timeframe = unique(gos_data[, .(grant, start_date, end_date)])
+
+gos_timeframe[, grant_start:=min(start_date), by='grant']
+gos_timeframe[, grant_end:=max(end_date), by='grant']
+
+#Shift all of the end-year variables up one click, and see if they correspond to another start date. 
+gos_timeframe[, end_date:=end_date+days(1)]
+gost_timeframe = gos_timeframe[order(grant, start_date)]
+setDT(gos_timeframe)
+grants=as.vector(unique(gos_timeframe[!is.na(grant), .(grant)]))
+
+for (x in 1:nrow(grants)){
+  test = gos_timeframe[grant%in%grants[x]][order(start_date)]
+  if (nrow(test)!=1){ 
+    for (i in 2:nrow(test)-1){
+      if (test$end_date[i]!=test$start_date[i+1]){
+        print(paste0("Warning: there are missing dates for ", grants[x]))
+        gos_timeframe[grant==grants[x] & end_date==test$end_date[i], data_gap:=TRUE]
+      }
+    }
+    if (test$end_date[nrow(test)]-1 != test$grant_end[nrow(test)]){
+      print(paste0("Warning: there are missing dates for ", grants[x]))
+      gos_timeframe[grant==grants[x] & end_date==test$end_date[i], data_gap:=TRUE]
+    }
+  }
+}
+
+gos_gaps = gos_timeframe[data_gap==TRUE, .(grant, start_date, end_date)]
+
+gos_gaps = unique(gos_gaps)
+gos_gaps = gos_gaps[order(grant, start_date)]
+write.csv(gos_gaps, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/known_gos_gaps.csv", row.names=FALSE)
 
 # Verify data 
 na_year <- gos_prioritized_budgets[is.na(year)]
@@ -184,6 +218,7 @@ sicoin_data <- data.table(read.csv("J:/Project/Evaluation/GF/resource_tracking/g
 sicoin_data$start_date <- as.Date(sicoin_data$start_date,"%Y-%m-%d")
 totalGtm$start_date <- as.Date(totalGtm$start_date,"%Y-%m-%d")
 sicoin_data$grant_period = year(sicoin_data$start_date)
+
 
 #----------------------------------
 # 5. FGH ACTUALS 

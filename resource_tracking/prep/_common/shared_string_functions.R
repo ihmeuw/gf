@@ -121,7 +121,7 @@ prioritize_gos = function(file_list){
   file_list[, end_date:=start_date+days_in_budget]
   
   file_list[, end_year:=year(end_date)]
-  file_list = file_list[!end_year<=gos_year]
+  file_list = file_list[!end_year<gos_year]
   
   file_list= file_list[, -c('end_date', 'end_year', 'days_in_budget')]
   
