@@ -98,12 +98,15 @@ saveRDS(fgh_mapped, paste0(fgh_prepped, "prepped_current_fgh.rds"))
 # GHE ACTUALS (Malaria and HIV, coming from separate files)
 # ----------------------------------------------
 
-ghe_malaria = fread(paste0(j, "/Project/IRH/Malaria/processed_data/all_data_vetted_usd2018.csv"), stringsAsFactors = FALSE)
+ghe_malaria = fread(paste0(j, "/Project/IRH/Malaria/processed_data/all_data_vetted.csv"), stringsAsFactors = FALSE)
 ghe_malaria = ghe_malaria[tolower(ihme_loc_id)%in%code_lookup_tables$iso_code]
 ghe_malaria[, year_diff:=year_end-year_start]
 unique(ghe_malaria$year_diff)
 
-ghe_malaria = ghe_malaria[, .(ihme_loc_id, year_id, value_code, value, units_new, units_year_new, location_name, source_type)]
+ghe_malaria = ghe_malaria[, .(ihme_loc_id, year_id, value_code, value, source_type)]
+
+ghe_malaria[, value:=gsub(",", "", value)]
+ghe_malaria[, value:=as.numeric(value)]
 
 saveRDS(ghe_malaria, paste0(fgh_prepped, "ghe_actuals_malaria.rds"))
 write.csv(ghe_malaria, paste0(fgh_prepped, "ghe_actuals_malaria.csv"), row.names=FALSE)

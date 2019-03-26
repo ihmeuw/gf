@@ -255,9 +255,12 @@ byVars <- colnames(mapped_data)
 byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disbursement']
 mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'disbursement'), by=byVars]
 
+#Add in iso code variable
+mapped_data$loc_name = country
+
 #Reorder data 
-mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, activity_description, loc_name, adm1, 
-                                budget, expenditure, disbursement, orig_module, orig_intervention, current_grant, file_name)]
+# mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, activity_description, loc_name, adm1, 
+#                                 budget, expenditure, disbursement, orig_module, orig_intervention, current_grant, file_name)]
 #------------------------------------------------------------
 # Remove any special characters so .csv will store correctly 
 #------------------------------------------------------------
