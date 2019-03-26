@@ -16,7 +16,7 @@ model = '
 	
 	# linkage 2 regressions
 	ITN_consumed_cumulative ~ prior("dgamma(1,1)")*ITN_received_cumulative
-	ACTs_SSC_cumulative ~  prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative
+	ACTs_SSC_cumulative ~  prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + prior("dgamma(1,1)")*ghe_cumulative
 	RDT_completed_cumulative ~ prior("dgamma(1,1)")*RDT_received_cumulative
 	SP_cumulative ~ prior("dgamma(1,1)")*exp_M3_1_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
 	severeMalariaTreated_cumulative ~ prior("dgamma(1,1)")*exp_M2_6_cumulative + prior("dgamma(1,1)")*ACT_received_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
