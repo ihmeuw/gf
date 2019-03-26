@@ -11,11 +11,11 @@ library(data.table)
 library(quantreg)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-# set the directory for input and output
+# set the directory for output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
-# load the data
-dt = readRDS(paste0(dir, 'outliers/base_quantreg_results.rds'))
+# load the data from scratch
+dt = readRDS('/ihme/scratch/users/ccarelli/base_to_screen.rds')
 dt = data.table(dt)
 
 # subset the data
@@ -32,7 +32,6 @@ if(n>=3 & var!=0 & nx>=2) {
   
   # add fixed effect on group if more than one group exists
   form = 'value~date'
-  if (length(unique(subset$group))>1) form = paste0(form, '+factor(group)')
   form = as.formula(form)
   
   # run quantreg

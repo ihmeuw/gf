@@ -48,6 +48,9 @@ gos_prepped = paste0(dir, "_gf_files_gos/gos/prepped_data/")
 fgh_ghe_malaria_raw = paste0(dir, "_ghe/fgh_ghe_actuals_malaria/raw_data/")
 fgh_ghe_malaria_prepped = paste0(dir, "_ghe/fgh_ghe_actuals_malaria/prepped_data/")
 
+who_raw = paste0(dir, "_ghe/who/raw_data/")
+who_prepped = paste0(dir, "_ghe/who/prepped_data/")
+
 sicoin_raw = paste0(dir, "_ghe/sicoin_gtm/raw_data/")
 sicoin_prepped = paste0(dir, "_ghe/sicoin_gtm/prepped_data/")
 

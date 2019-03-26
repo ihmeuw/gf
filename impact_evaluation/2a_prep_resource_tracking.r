@@ -15,15 +15,66 @@
 #------------------------------------
 
 
+#Temporary prep binding together gos data and final expenditures. EKL 3/25/19
+gos_data = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/prepped_data/prepped_gos_data.rds")
+gos_data = gos_data[country=="Congo (Democratic Republic)"]
+gos_data[, loc_name:='cod']
+gos_grants_to_keep = unique(gos_data[disease=='malaria', .(grant)])
+gos_grants_to_keep = gos_grants_to_keep[!is.na(grant)]
+gos_data = gos_data[grant%in%gos_grants_to_keep$grant]
+gos_data[, start_date:=as.Date(start_date)]
+gos_data[, end_date:=as.Date(end_date)]
+
+#Expand GOS to be at the quarter-level; the same as the final expenditures 
+gos_data[, time_diff:=end_date - start_date] 
+gos_data[, num_quarters:=as.numeric(round(time_diff/90))] #90 days in each period
+
+#Expand data by num_quarters
+gos_data <- expandRows(gos_data, "num_quarters")
+
+#Reformat date variable, and generate 'quarter' variable
+byVars = colnames(gos_data)
+gos_data[, seq:=seq(from=0, to=100), by=byVars] #100 is an arbitrary number here, we just need something that's greater than the max # of quarters in any file
+gos_data[, quarter:=quarter(start_date)]
+gos_data[, year:=year(start_date)]
+
+#While seq is not 0, go through the loop below.
+#If seq is greater than or equal to 4, add 1 to year and divide everything by 4. Continue this loop while max(seq) > 4.
+#Can you use lapply to apply this to every row?
+while (gos_data$seq >0){
+  if (gos_data$quarter == 4){
+    gos_data$quarter == 1
+    gos_data$year = gos_data$year + 1
+  } else {
+    gos_data$quarter = gos_data$quarter +1
+  }
+  seq = seq - 1
+}
+
+
+#Increment year and quarter using the 'seq' variable to flag subsequent quarters
+#Quarter = 1 := q=2, year same
+# q = 2 := q:=3, year same
+# q = 3 := q= 4, year same
+# q = 4 := q = 1, increment year by 1
+
+cod_data = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/prepped_data/final_expenditures.rds")
+cod_grants_to_keep = unique(cod_data[disease=='malaria', .(grant)])
+cod_grants_to_keep = cod_grants_to_keep[!is.na(grant)]
+cod_data = cod_data[grant%in%cod_grants_to_keep$grant]
+
+final_expenditures = rbind(gos_data, cod_data, fill=TRUE)
+
 #------------------------------------
 #Read in previously prepped datasets 
 #------------------------------------
 
 #Read in final budget and expenditure data from RT database, and bind together. 
 #final_budgets <- readRDS(budgetFile)
-final_expenditures <- readRDS(expendituresFile)
-fgh <- fread(fghFile)
-fgh = fgh[, .(sda_activity, year, loc_name, disease, code, module_eng, intervention_eng, country, fin_data_type, financing_source, disbursement)]
+#final_expenditures <- readRDS(expendituresFile)
+fgh <- readRDS(fghFile)
+who <- readRDS(whoFile)
+fgh = fgh[, .(sda_activity, year, loc_name, disease, code, module_eng, intervention_eng, fin_data_type, financing_source, disbursement)]
 setnames(fgh, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
 
 #------------------------------------
@@ -61,9 +112,9 @@ fgh[sda_activity=='mal_comm_con_dah_17', code:='M2_3']
 #Subset to only the columns we want from resource tracking database and impact evaluation map 
 exp_subset = final_expenditures[loc_name == 'cod' & (disease == "malaria" | disease == "hss" | disease == 'rssh'), .(expenditure, start_date, code, loc_name, disease, gf_module, gf_intervention)]
 setnames(exp_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
-other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') & country == 'Congo (Democratic Republic)' & (disease == 'malaria' | disease == 'hss' | disease == 'rssh'), 
+other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') & loc_name=='COD' & (disease == 'malaria' | disease == 'hss' | disease == 'rssh'), 
                 .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]
-ghe = fgh[fin_data_type == "model_estimates" & financing_source == 'ghe' & loc_name == 'cod', .(ghe = sum(disbursement, na.rm = TRUE)), 
+ghe = who[loc_name == 'cod' & indicator=='domestic_ghe_malaria', .(ghe = sum(expenditure, na.rm = TRUE)), 
         by = .(year)]
 oop = fgh[fin_data_type == "model_estimates" & financing_source == 'oop' & loc_name == 'cod', .(oop = sum(disbursement, na.rm = TRUE)), 
           by = .(year)]

@@ -36,6 +36,9 @@ data$dps = NULL
 	
 	# drop M2_3 from other_dah for now because it's identifcal to M2_1
 	# data$other_dah_M2_3 = NULL
+	
+	# iccm didn't exist prior to 2014, wasn't reported until 2015, consider it zero
+	data[date<2015, ACTs_SSC:=0]
 
 # compute cumulative budgets
 rtVars = names(data)
@@ -66,7 +69,9 @@ for(v in numVars) {
 		form = as.formula(paste0(v,'~date'))
 		lmFit = glm(form, data[health_zone==h], family='poisson')
 		data[health_zone==h, tmp:=exp(predict(lmFit, newdata=data[health_zone==h]))]
-		# print(ggplot(data, aes_string(y=v,x='date')) + geom_point() + geom_line(aes(y=tmp)) + labs(title=v))
+		lim = max(data[health_zone==h][[v]], na.rm=T)+sd(data[health_zone==h][[v]], na.rm=T)
+		data[health_zone==h & tmp>lim, tmp:=lim]
+		# print(ggplot(data[health_zone==h], aes_string(y=v,x='date')) + geom_point() + geom_line(aes(y=tmp)) + labs(title=v))
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
 		pct_complete = floor(i/(length(numVars)*length(unique(data$health_zone)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
