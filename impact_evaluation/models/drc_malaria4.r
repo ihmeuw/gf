@@ -13,7 +13,7 @@ model = '
 	
 	# linkage 1 regressions with hotfixes for heywood cases (temporary)
 
-	ACTs_SSC
+	
 	# linkage 2 regressions
 	ITN_consumed_cumulative ~ prior("dgamma(1,1)")*ITN_received_cumulative
 	ACTs_SSC_cumulative ~  prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative
