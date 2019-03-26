@@ -15,13 +15,13 @@
 # ---------------------------------------
 # Install packages and set up R  
 # ---------------------------------------
+setwd("C:/local/gf") # set to the root of the repo
 
 # clear memory
 rm(list=ls())
 
 # run setup code (load file paths and packages)
 source('./impact_evaluation/_common/set_up_r.r')
-
 
 # ---------------------------------------
 # Set boolean switches
