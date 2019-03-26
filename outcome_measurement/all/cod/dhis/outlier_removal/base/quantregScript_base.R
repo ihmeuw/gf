@@ -11,10 +11,10 @@ library(data.table)
 library(quantreg)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-# set the directory for input and output
+# set the directory for output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
-# load the data
+# load the data from scratch
 dt = readRDS('/ihme/scratch/users/ccarelli/base_to_screen.rds')
 dt = data.table(dt)
 

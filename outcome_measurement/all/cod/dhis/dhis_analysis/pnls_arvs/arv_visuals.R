@@ -37,26 +37,21 @@ dt = readRDS(paste0(dir, 'prepped/pnls_arv.rds'))
 dt = dt[date < '2018-09-01']
 
 #--------------------------
-# sum over case as it is not useful
-vars = c("org_unit_id",   "org_unit", "date", "element",
-         "subpop", "sex", "age", "org_unit_type", "level", 
-         "dps", "health_zone", "mtk", "maternity", "tb")
-
-dt = dt[ ,.(value=sum(value)), by=vars]
-
 # read in the outliers and remove them
-out = readRDS(paste0(dir, 'pnls_outliers/list_of_arv_outliers.rds'))
+outliers = readRDS(paste0(dir, 'pnls_outliers/list_of_arv_outliers.rds'))
 
 # create a unique identifier to remove
-out[ ,combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
-dt[ ,combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
+outliers[ , combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
+dt[ , combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
 
 # drop the outliers 
-dt = dt[!combine %in% out$combine]
-dt[ ,combine:=NULL]
+dt = dt[!combine %in% outliers$combine]
+dt[ , combine:=NULL]
 
 # remove one outlier by hand in which the qr did not work
 dt = dt[!(value==651 & element=="Malnourished PLHIV who received supplemental nutrition")]
+
+# --------------------
 
 # --------------------
 # source the standardization functions for the geographic units and apply
@@ -68,7 +63,8 @@ dt$health_zone = standardizeDPSNames(dt$dps)
 # -------------------------------------------------
 # ARV Visuals 
 
-pdf(paste0(dir, 'outputs/pnls/arv_initial_graphs_new.pdf'), width=12, height=7)
+# pdf(paste0(dir, 'outputs/pnls/pnls_arv_graphs.pdf'), width=12, height=7)
+
 #----------------------
 # COLOR SCHEMES
 
@@ -138,7 +134,34 @@ ggplot(fac2, aes(x=date, y=facilities_reporting, color=level)) +
                     subtitle=("Health centers reported separately to highlight scale of reporting"),
                     caption="Source: SNIS")
 
+
+# facilities reported out of ever reported (percentage)
+ever_reported = dt[ ,.(total_report=length(unique(org_unit))), by=level]
+totals = merge(fac2, ever_reported, by='level', all.x=T)
+totals[ ,reporting_ratio:=round(100*(facilities_reporting/total_report))]
+totals[ ,label:=paste0(level, ' (n=', total_report, ')')]
+
+ggplot(totals[!is.na(level)], aes(x=date, y=reporting_ratio, color=label)) +
+  geom_point(alpha=0.4) +
+  geom_line() +
+  theme_bw() + labs(x='Date', y='Percent of facilities reporting', color='Health facility level (n= number of facilities)',
+                    title="Percentage of facilities reporting that have ever reported",
+                    subtitle=("Denominator: all the health facilities that have ever reported to the data set"),
+                    caption="Source: SNIS")
+
+
 #----------------------------------------------------
+# bar graphs
+
+art_bar_vars = c("Patients still on ART in the structure", "Patients on ART in the Podi", 
+                 "PLHIV enrolled in HIV-related services", "PLHIV on IPT", "PLHIV on Cotrimoxazole prophylaxis")
+
+art_bar = dt[element %in% art_bar_vars]
+
+
+
+
+
 # HIV-RELATED SERVICES
 
 serv_vars = c("PLHIV screened for TB in the month", "PLHIV on Cotrimoxazole prophylaxis",

@@ -21,8 +21,12 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
+# choose the data set to run the code on - pnls, base, or sigl
+set = 'pnls'
+
 # read in the file
-dt = readRDS(paste0(dir, 'pnls_outliers/qr_results_full.rds'))
+if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/qr_results_full.rds'))}
+if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base_quantreg_results.rds'))}
 
 #------------------------------------
 # merge in the facility names to label the graphs 
@@ -33,83 +37,55 @@ dt = merge(dt, facilities, by='org_unit_id', all.x=T)
 
 #------------------------------------
 # identify outliers at various levels/thresholds
-<<<<<<< HEAD
-=======
-#Hi Audrey, we had a merge conflict with lines 38-40 vs. lines 42-44. We kept them both, which one would you like to keep? -Emily and Jen 
 
->>>>>>> 000d22b4b6abbd9d72fe31d0711bdf364e7d9f23
+# identify the thresholds based on the SD of the residuals
 dt[ ,thresh5:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,thresh10:=median(resid)+(10*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,thresh20:=median(resid)+(20*sd(resid)), by=.(org_unit_id, element)]
 
 # select outliers 
 # the value is 100 or more and greater than 10 times the SD of the residuals 
-dt[thresh10 < value & 100 <=value, outlier:=TRUE]
-dt[(value <= thresh10 | value < 100), outlier:=FALSE]
+dt[thresh10 < value, outlier:=T]
+dt[value < 100, outlier:=F]
+dt[is.na(outlier), outlier:=F]
 
 # set lower and upper bounds
-<<<<<<< HEAD
-=======
-#Hi Audrey, we had a merge conflict with lines 54-59 vs. lines 61-66. We kept them both, which one would you like to keep? -Emily and Jen 
->>>>>>> 000d22b4b6abbd9d72fe31d0711bdf364e7d9f23
 dt[ ,upper:=median(resid)+(10*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,lower:=(median(resid)-(10*sd(resid))), by=.(org_unit_id, element)]
 
 # add a 5 SD bound just to be sure
 dt[ ,upper_mid:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
 dt[ ,lower_mid:=(median(resid)-(5*sd(resid))), by=.(org_unit_id, element)]
-<<<<<<< HEAD
-=======
-
->>>>>>> 000d22b4b6abbd9d72fe31d0711bdf364e7d9f23
-
-# typically no values are below lower, but check
-dt[value < lower, outlier:=TRUE]
 
 #----------------------------
-# create an alternate org_unit name for the graphs
+# remove the dps code from the facility name for the graph titles
 
 dt[ ,facility:=word(org_unit, 2, -1)]
 
 #------------------------------------
-# subset to only the sexes within facilities and elements that have outliers
-
-#One more merge conflict! -Emily and Jen 
-# subset to the health facilities with outliers and visualize 
-
 # subet to the health facilities, sexes, and variables with outliers
 dt[ , combine:=paste0(org_unit_id, sex, element)]
 out_orgs = dt[outlier==T, unique(combine)]
 out = dt[combine %in% out_orgs]
-<<<<<<< HEAD
-=======
 
- # # subset to only the sexes within facilities and elements that have outliers
-
-# dt[ , combine:=paste0(org_unit_id, sex, element)]
-# out_sex = dt[outlier==T, unique(combine)]
-# out = dt[combine %in% out_sex]
-
->>>>>>> 000d22b4b6abbd9d72fe31d0711bdf364e7d9f23
+# drop the unique identifier
 out[ , combine:=NULL]
 
 #----------------------------
 # eliminate outliers that are part of an emerging trend
+# do not demarcate any two or more consecutive outliers as outliers
 
 # create a unique identifier to drop out emerging trends
 out[ , combine2:=paste0(org_unit_id, sex, element, subpop, age)]
 
-# subset to only the age categories, subpops with outliers
+# subset to only the age categories, subpops with more than one outlier
 out[ , count:=sum(outlier), by=combine2]
 drop = out[1 < count]
-
-# create a simpler data tabledrop
-drop = drop[ ,.(combine2, org_unit_id, element, sex, age, subpop, date, outlier, value)]
 
 # order by the unique identifier and then by date 
 drop[order(combine2, date)]
 
-# the subsequent or previous data point is within 50 of the past data point
+# the subsequent or previous outlier is within 50 of the past data point
 drop[ , value_lag:=shift(value, type='lag')]
 drop[ , value_lead:=shift(value, type='lead')]
 drop[outlier==T & (abs(value_lead - value) <= 50), dif:=T]
@@ -117,7 +93,7 @@ drop[outlier==T & (abs(value_lag - value) <= 50), dif:=T]
 drop[is.na(dif), dif:=F]
 drop = drop[dif==T]
 
-# convert outliers to FALSE 
+# convert outliers that are part of an emerging trend to false
 drop[ , combine3:=paste0(as.character(date), combine2)]
 out[ , combine3:=paste0(as.character(date), combine2)]
 emerging_trends = drop$combine3
@@ -189,10 +165,8 @@ dev.off()
 # create a data set exclusively of the outliers to remove
 # save it to remove from the full data 
 
-out[ , c('combine', 'count'):=NULL]
-out = out[outlier==T]
-
-saveRDS(out, paste0(dir, 'pnls_outliers/list_of_arv_outliers.rds'))
+outliers = out[outlier==T]
+saveRDS(outliers, paste0(dir, 'pnls_outliers/list_of_arv_outliers.rds'))
 
 #--------------------------------
 

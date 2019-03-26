@@ -63,14 +63,14 @@ start_month = '01'
 end_month = '02' # start month is inclusive, end month is exclusive
 
 # change the update year to before the data begins
-update_year = "2009"
+update_year = '2009'
 
 #identify the data set(s) you want to download by number (list below)
-set = 2
+set = 29
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'base'
+set_name = 'pnls'
 
 #---------------------------
 # available data sets by number: 
