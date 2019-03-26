@@ -15,8 +15,8 @@
   #     - No longer rectangularizing by health_zone - month.  In the raw data, there are some health zones that don't show up in different years.  I matched the ones I could on name
   #         but there are still some that didn't match up.  I can rectangularize these if we want to, but maybe it's safer to assume they didn't exist where they didn't report any
   #         data for the entire year/didn't exist in the data sheets we received. 
+  #     - Had made corrections to avoid over-imputing, but check these, because I think it might be wrong.
 # ----------------------------------------------
-
 
 # --------------------
   # Set up R / install packages
@@ -34,7 +34,6 @@
     library(tidyr)
     library(dplyr)
 # --------------------
-
 
 # ----------------------------------------------
   # Overview - Files and Directories
@@ -55,13 +54,11 @@
       }
 # ----------------------------------------------   
 
-
 # ----------------------------------------------     
   # read in data
 # ---------------------------------------------- 
     fullData <- fread( paste0(dir_prepped, fullData) ) 
 # ----------------------------------------------     
-      
       
 # ----------------------------------------------     
   # ADD TO PREP CODE ****************************** 
@@ -124,7 +121,6 @@
     remove_vars <- c("reports_expected", "reports_received", "ASAQused_total", "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete")
     ameliaDT <- ameliaDT[, -remove_vars, with=FALSE]
 # ----------------------------------------------   
-
 
 # ---------------------------------------------- 
 # Deterministically impute total health facilities and convert the number reporting to a proportion over the total, then drop the original variable for number reporting and impute
@@ -190,7 +186,6 @@ ameliaDT[, year:= year(date)]
       if ( ameliaDT[healthFacilitiesProportion > 1, .N] > 0 ) stop("Proportion of health facilities reporting must be 1.0 or less")
 # ----------------------------------------------   
 
-
 # ---------------------------------------------- 
 # Standardize Test Results
   # combine age groups for tests to account for where these are separated out in different years of data- check with David, is this okay? best way to do this?
@@ -202,7 +197,6 @@ ameliaDT[, year:= year(date)]
     ameliaDT <- ameliaDT[, -c("year", "smearTest_completedUnder5", "smearTest_completed5andOlder", "smearTest_positiveUnder5", "smearTest_positive5andOlder",
                               "RDT_positive5andOlder", "RDT_positiveUnder5", "RDT_completedUnder5", "RDT_completed5andOlder")]
 # ----------------------------------------------     
-    
     
 # ----------------------------------------------
 # 3/11/19 Commenting this out because we don't want to back cast years where the health zone might not have existed. 
@@ -221,30 +215,6 @@ ameliaDT[, year:= year(date)]
   # add an id column
     ameliaDT[, id:= .I]
 # ----------------------------------------------
-    
-# ----------------------------------------------     
-# The following was originally included in pnlp_stats.R (which was a continuation of prep from this file, but now putting this here in order
-  # to keep all of the prep code in the same file.)
-    # when a health zone is entirely na for an indicator over the entire time series,
-    # set those NAs to 0 to avoid overimputing
-    dtMelt <- melt(finalDT, id.vars= id_vars)
-    dtMelt[, value := as.numeric(value)]
-    
-    dtMeltNAs <- dtMelt[, .(totNAObs = sum(is.na(value))), by= c("dps", "health_zone", "variable" )]
-    dtMeltNAs <- dtMeltNAs[totNAObs==96, noData:= T]
-    
-    dtMerge <- merge(dtMelt, dtMeltNAs, by= c("dps", "health_zone", "variable"))
-    
-    dtMerge <- dtMerge[noData==T, value:=0]
-    
-    dtMerge <- dtMerge[, totNAObs:= NULL]
-    dtMerge <- dtMerge[, noData:= NULL]
-    
-    dtMerge[ value < 0, value:= NA]
-    
-    finalDT <- dcast(dtMerge, province + dps + health_zone + date + id ~ variable, value.var = "value")
-    finalDT <- as.data.table(finalDT)
-# ----------------------------------------------  
 
 # ----------------------------------------------  
 # remove vars not needed for imputation - we will impute the proportion of health facilities reporting, and then use that to back-calculate the number reporting

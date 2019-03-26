@@ -28,34 +28,47 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+
+# set working directory to git repository
 setwd("C:/Users/ccarelli/local/gf/")
 
+# choose the data set you are working with: pnls or base
+# set the disease for base servies - malaria or hiv
+set = 'base'
+if (set=='base') { qr_disease = 'malaria'}
+
 # read in the data 
-dt = readRDS(paste0(dir, 'prepped/pnls_arv.rds'))
+if (set=='pnls') {dt = readRDS(paste0(dir, 'prepped/pnls_arv.rds'))}
+if (set=='base') {dt = readRDS(paste0(dir, 'pre_prep/merged/base_2018_01_01_2019_01_01.rds'))}
 
-# subset to before August of 2018
-dt = dt[date < '2018-09-01']
+# convert values to numerics 
+dt[ ,value:=as.numeric(as.character(value))]
+dt = dt[!is.na(value)] # 52 values are listed as 'null', drop out missing values
 
+# subset date
+dt = dt[year(date) < 2019]
 # ---------------------------------------
+# keep only the malaria-related elements in base services
+if (set=='base') { 
+  dt[grepl('Paludisme', element) | grepl('TDR', element) | grepl('MILD', element) | grepl('Sulfadox', element), disease:='malaria']
+  dt[is.na(disease), disease:='hiv']
+  dt = dt[disease==qr_disease]
+  dt[ , disease:=NULL] }
 
 # drop case and additional geographic information
 # there is no element_id as the elements are aggregated 
-dt = dt[ ,.(value=sum(value)),
-         by=.(element, org_unit_id, date, sex, age, subpop)]
+if (set=='pnls') {byvars = c('element', 'org_unit_id', 'date', 'sex', 'age', 'subpop')}
+if (set=='base') {byvars = c('element', 'org_unit_id', 'date', 'category')}
+
+dt = dt[ ,.(value=sum(value)), by=byvars]
 
 # make variable ids
 dt[, element_id:=.GRP, by='element']
 
 # save the prepped file
-saveRDS(dt, paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))
-
+if (set=='pnls') {saveRDS(dt, paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))}
+if (set=='base') {saveRDS(dt, paste0(dir, 'outliers/base_to_screen.rds'))}
 # ---------------------------------------
-
-
-
-
-
-
 
 
 

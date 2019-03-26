@@ -33,6 +33,7 @@ library(viridis)
 # library(semPlot)
 library(raster)
 library(parallel)
+# library(dplyr)
 # ------------------
 
 
@@ -76,10 +77,13 @@ fghFile = paste0(fghDir, 'prepped_current_fgh.rds')
 whoFile = paste0(whoDir, 'who_prepped.rds')
 
 # activities/outputs files
-pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
+# pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
 pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
-snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
-snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
+# snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
+# snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
+combinedFile <- paste0(ieDir, 'base_pnlp_sigl_combined_data_hz_level.rds')
+comp_base_file <- paste0(dhisDir, "base_reporting_completeness_hz_prepped.rds")
+comp_sigl_file <-paste0(dhisDir, "sigl1_reporting_completeness_hz_prepped.rds")
 
 # outcomes/impact files
 mapITNFiles = list.files(paste0(lbdDir, 'mapitncov/mean/1y/'), '*.tif', 
@@ -146,16 +150,21 @@ outputFile4b = paste0(ieDir, '../visualizations/second_half_exploratory_graphs.p
 
 # output file from 5a_set_up_for_analysis.r
 outputFile5a = paste0(ieDir, 'pilot_data_pre_model.rdata')
+if (Sys.info()[1]!='Windows') { 
+	outputFile5a_scratch = paste0(clustertmpDir1, 'first_half_data_pre_model.rdata')
+}
 
 # output file from 5b_run_analysis.R
 outputFile5b = paste0(ieDir, 'pilot_model_results.rdata')
 
-# output file from 5c_set_up_for_second_half_analysis.r
-outputFile5c = paste0(ieDir, 'second_half_data_pre_model.rdata')
-outputFile5c_scratch = paste0(clustertmpDir1, 'second_half_data_pre_model.rdata')
+# output file from 5d_set_up_for_second_half_analysis.r
+outputFile5d = paste0(ieDir, 'second_half_data_pre_model.rdata')
+if (Sys.info()[1]!='Windows') { 
+	outputFile5d_scratch = paste0(clustertmpDir1, 'second_half_data_pre_model.rdata')
+}
 
-# output file from 5d_run_second_half_analysis.r
-outputFile5d = paste0(ieDir, 'second_half_model_results.rdata')
+# output file from 5e_run_second_half_analysis.r
+outputFile5e = paste0(ieDir, 'second_half_model_results.rdata')
 
 # output file from 6_display_results.r
 outputFile6 = paste0(ieDir, '../visualizations/pilot_model_results.pdf')

@@ -2,40 +2,40 @@
 # purpose: drc_malaria2 with GHE and controls for completeness
 
 # TO DO
-# Add arrow from RDT_completed to severeMalariaTreated, totalPatientsTreated and ACTs_CHWs
+# Add arrow from RDT_completed to severeMalariaTreated, totalPatientsTreated and ACTs_SSC
 
 model = '
 
 	# linkage 1 regressions
-	value_ITN_received ~ prior("dgamma(1,1)")*exp_M1_1_cumulative + prior("dgamma(1,1)")*exp_M1_2_cumulative + prior("dgamma(1,1)")*other_dah_M1_1_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
-	value_RDT_received ~ prior("dgamma(1,1)")*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
-	value_ACT_received ~ prior("dgamma(1,1)")*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
+	ITN_received_cumulative ~ prior("dgamma(1,1)")*exp_M1_1_cumulative + prior("dgamma(1,1)")*exp_M1_2_cumulative + prior("dgamma(1,1)")*other_dah_M1_1_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
+	RDT_received_cumulative ~ prior("dgamma(1,1)")*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
+	ACT_received_cumulative ~ prior("dgamma(1,1)")*exp_M2_1_cumulative + prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
 	
 	# linkage 1 regressions with hotfixes for heywood cases (temporary)
 
 	
 	# linkage 2 regressions
-	value_ITN_consumed ~ prior("dgamma(1,1)")*value_ITN_received
-	value_ACTs_CHWs ~ prior("dgamma(1,1)")*value_ACT_received
-	value_RDT_completed ~ prior("dgamma(1,1)")*value_RDT_received
-	value_SP ~ prior("dgamma(1,1)")*exp_M3_1_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
-	value_severeMalariaTreated ~ prior("dgamma(1,1)")*exp_M2_6_cumulative + prior("dgamma(1,1)")*value_ACT_received + date + prior("dgamma(1,1)")*ghe_cumulative
-	value_totalPatientsTreated ~ prior("dgamma(1,1)")*value_ACT_received
+	ITN_consumed_cumulative ~ prior("dgamma(1,1)")*ITN_received_cumulative
+	ACTs_SSC_cumulative ~ prior("dgamma(1,1)")*ACT_received_cumulative
+	RDT_completed_cumulative ~ prior("dgamma(1,1)")*RDT_received_cumulative
+	SP_cumulative ~ prior("dgamma(1,1)")*exp_M3_1_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
+	severeMalariaTreated_cumulative ~ prior("dgamma(1,1)")*exp_M2_6_cumulative + prior("dgamma(1,1)")*ACT_received_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
+	totalPatientsTreated_cumulative ~ prior("dgamma(1,1)")*ACT_received_cumulative
 	
-	# latent variables
+	# # latent variables
 	
-	# fixed variances
-	# value_RDT_received ~ 1*value_RDT_received
-	# value_ACT_received ~ 1*value_ACT_received
-	# value_ITN_received ~ 1*value_ITN_received
-	# value_ITN_consumed ~ 1*value_ITN_consumed
-	# value_ACTs_CHWs ~ 1*value_ACTs_CHWs
-	# value_RDT_completed ~ 1*value_RDT_completed
-	# value_SP ~ 1*value_SP
-	# value_severeMalariaTreated ~ 1*value_severeMalariaTreated
-	# value_totalPatientsTreated ~ 1*value_totalPatientsTreated
+	# # fixed variances
+	# # RDT_received_cumulative ~ 1*RDT_received_cumulative
+	# # ACT_received_cumulative ~ 1*ACT_received_cumulative
+	# # ITN_received_cumulative ~ 1*ITN_received_cumulative
+	# # ITN_consumed_cumulative ~ 1*ITN_consumed_cumulative
+	# # ACTs_SSC_cumulative ~ 1*ACTs_SSC_cumulative
+	# # RDT_completed_cumulative ~ 1*RDT_completed_cumulative
+	# # SP_cumulative ~ 1*SP_cumulative
+	# # severeMalariaTreated_cumulative ~ 1*severeMalariaTreated_cumulative
+	# # totalPatientsTreated_cumulative ~ 1*totalPatientsTreated_cumulative
 	
-	# covariances
+	# # covariances
 	exp_M1_1_cumulative ~~ other_dah_M1_1_cumulative
 	exp_M1_2_cumulative ~~ other_dah_M1_1_cumulative
 	exp_M2_1_cumulative ~~ other_dah_M2_cumulative
@@ -43,31 +43,31 @@ model = '
 	exp_M2_6_cumulative ~~ other_dah_M2_cumulative
 	exp_M2_3_cumulative ~~ other_dah_M2_3_cumulative
 	
-	value_ITN_consumed ~~ value_RDT_completed
-	value_RDT_completed ~~ value_totalPatientsTreated
+	# ITN_consumed_cumulative ~~ RDT_completed_cumulative
+	# RDT_completed_cumulative ~~ totalPatientsTreated_cumulative
 	
 	# fixed covariances
 	exp_M2_3_cumulative ~~ 0*exp_M3_1_cumulative
 	exp_M2_3_cumulative ~~ 0*exp_M2_6_cumulative
 	exp_M2_6_cumulative ~~ 0*exp_M3_1_cumulative
 	
-	value_ITN_consumed ~~ 0*value_ACTs_CHWs
-	# value_ITN_consumed ~~ 0*value_RDT_completed
-	value_ITN_consumed ~~ 0*value_SP
-	value_ITN_consumed ~~ 0*value_severeMalariaTreated
-	value_ITN_consumed ~~ 0*value_totalPatientsTreated
+	ITN_consumed_cumulative ~~ 0*ACTs_SSC_cumulative
+	ITN_consumed_cumulative ~~ 0*RDT_completed_cumulative
+	ITN_consumed_cumulative ~~ 0*SP_cumulative
+	ITN_consumed_cumulative ~~ 0*severeMalariaTreated_cumulative
+	ITN_consumed_cumulative ~~ 0*totalPatientsTreated_cumulative
 	
-	value_ACTs_CHWs ~~ 0*value_RDT_completed
-	value_ACTs_CHWs ~~ 0*value_SP
-	value_ACTs_CHWs ~~ 0*value_severeMalariaTreated
-	value_ACTs_CHWs ~~ 0*value_totalPatientsTreated
+	ACTs_SSC_cumulative ~~ 0*RDT_completed_cumulative
+	ACTs_SSC_cumulative ~~ 0*SP_cumulative
+	ACTs_SSC_cumulative ~~ 0*severeMalariaTreated_cumulative
+	ACTs_SSC_cumulative ~~ 0*totalPatientsTreated_cumulative
 	
-	value_RDT_completed ~~ 0*value_SP
-	value_RDT_completed ~~ 0*value_severeMalariaTreated
-	# value_RDT_completed ~~ 0*value_totalPatientsTreated
+	RDT_completed_cumulative ~~ 0*SP_cumulative
+	RDT_completed_cumulative ~~ 0*severeMalariaTreated_cumulative
+	# RDT_completed_cumulative ~~ 0*totalPatientsTreated_cumulative
 	
-	value_SP ~~ 0*value_severeMalariaTreated
-	value_SP ~~ 0*value_totalPatientsTreated
+	SP_cumulative ~~ 0*severeMalariaTreated_cumulative
+	SP_cumulative ~~ 0*totalPatientsTreated_cumulative
 	
-	value_severeMalariaTreated ~~ 0*value_totalPatientsTreated
+	severeMalariaTreated_cumulative ~~ 0*totalPatientsTreated_cumulative
 '

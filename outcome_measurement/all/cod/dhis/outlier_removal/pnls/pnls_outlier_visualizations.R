@@ -21,9 +21,18 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
-# read in the file
-dt = readRDS(paste0(dir, 'pnls_outliers/arv_quantreg_results_test.rds'))
+set == 'base'
 
+# read in the file
+if (set=='base') {dt = readRDS(paste0(dir, 'pnls_outliers/arv_quantreg_results_test.rds'))}
+if (set=='pnls') {dt = readRDS(paste0(dir, 'outliers/base_quantreg_results.rds'))}
+
+# merge in org_unit names 
+if (set=='base') {
+  org_units = readRDS()
+ merge(dt, org_units, by='org_unit_id', all.x=T)
+   
+}
 #------------------------------------
 # identify outliers at various levels/thresholds
 dt[ ,thresh4:=median(resid)+(5*sd(resid)), by=org_unit_id]
