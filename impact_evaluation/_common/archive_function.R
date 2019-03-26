@@ -1,9 +1,9 @@
 # save a time-stamped version of output files in archive folder, for reproducibility of impact evaluation results
 
 
-archive <- function( object, outputFile ){
+archive <- function( outputFile ){
   
-  if( class(object)[1] != "data.table" & class(object)[1] != "data.frame" ) stop ("Object is not a data table or data frame, you might not want to save it as an RDS")
+  #if( class(object)[1] != "data.table" & class(object)[1] != "data.frame" ) stop ("Object is not a data table or data frame, you might not want to save it as an RDS")
   
   date_time = gsub('-|:| ', '_', Sys.time())
   
