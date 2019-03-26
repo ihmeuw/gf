@@ -34,6 +34,7 @@ farm[mammal==T, sum(counts)]
 
 # TEST FOR BETHANY
 # COUNT THE NUMBER OF TOADS
+# How many toads are there?
 
 
 #-----------------------------------------
