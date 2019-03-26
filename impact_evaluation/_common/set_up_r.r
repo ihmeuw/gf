@@ -65,6 +65,9 @@ indicatorMapFile = paste0(ieDir, 'DRC Indicator map - to code from.xlsx')
 
 # list of interventions and codes
 mfFile = paste0(mapDir, '/intervention_and_indicator_list.xlsx')
+
+# archive function
+source('./impact_evaluation/_common/archive_function.R')
 # ------------------------------------------------------------------------
 
 
@@ -83,8 +86,8 @@ pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
 # snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
 # snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
 combinedFile <- paste0(ieDir, 'base_pnlp_sigl_combined_data_hz_level.rds')
-comp_base_file <- paste0(dhisDir, "base_reporting_completeness_hz_prepped.rds")
-comp_sigl_file <-paste0(dhisDir, "sigl1_reporting_completeness_hz_prepped.rds")
+comp_base_file <- paste0(dhisDir, "base_reporting_completeness_hz_prepped_quarterly.rds")
+comp_sigl_file <-paste0(dhisDir, "sigl1_reporting_completeness_hz_prepped_quarterly.rds")
 
 # outcomes/impact files
 mapITNFiles = list.files(paste0(lbdDir, 'mapitncov/mean/1y/'), '*.tif', 

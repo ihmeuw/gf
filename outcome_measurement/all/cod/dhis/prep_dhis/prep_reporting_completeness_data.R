@@ -33,10 +33,10 @@ dir_dhis = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/'
 data_set = "sigl1"
 
 # input file:
-inFile = paste0(dir_dhis, 'completeness_reports/', data_set, '_reporting_completeness_hz.xls')
+inFile = paste0(dir_dhis, 'completeness_reports/', data_set, '_reporting_completeness_hz_quarterly.xls')
   
 # output file:
-outFile = paste0(dir_dhis, 'completeness_reports/prepped/', data_set, '_reporting_completeness_hz_prepped.rds')
+outFile = paste0(dir_dhis, 'prepped/', data_set, '_reporting_completeness_hz_prepped_quarterly.rds')
 
 # functions
 source('./core/standardizeHZNames.R')
@@ -53,11 +53,13 @@ dt <- as.data.table(dt)
 # ----------------------------------------------
 # prep data
 # ----------------------------------------------
+# clean up unneccessary first couple rows and column names
 colnames(dt) <- unlist(dt[2, ])
 dt <- dt[-(1:2),]
 colnames(dt)[1] = 'health_zone'
 dt$dps_code = unlist(lapply(strsplit(dt$health_zone, " "), "[", 1))
 
+# standardize health zone name
 dt$health_zone1 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 2))
 dt$health_zone2 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 3))
 dt$health_zone3 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 4))
@@ -66,9 +68,7 @@ dt[health_zone3=='Zone', health_zone:=paste(health_zone1, health_zone2)]
 dt[health_zone2=='Zone', health_zone:=health_zone1]
 dt[ , c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
 
-dt$health_zone = standardizeHZNames(dt$health_zone)
-
-# get dps names merged to completeness data
+# get dps names merged to completeness data based on the dps code in the health zone name
 facilities = data.table(readRDS(paste0(dir_dhis, 'meta_data/master_facilities.rds')))
 dps_code_matching = unique(facilities[, .(health_zone, dps)])
 dps_code_matching$dps_code = unlist(lapply(strsplit(dps_code_matching$dps, " "), "[", 1))
@@ -85,16 +85,29 @@ dps_code_matching = dps_code_matching[!is.na(dps)]
 
 dt = merge(dt, dps_code_matching, by = "dps_code")
 
+# edit dates to be usable in the format we want - depends on whether input file is quarterly or monthly
 dt = melt.data.table(dt, id.vars = c("dps", "dps_code", "health_zone"), variable.name = "date", value.name = "completeness")
-dt[, c("month", "year"):= tstrsplit(date, " ")]
-mos = unique(dt[, .(month, year)])
-mos[, month_number := rep(seq(1:12))]
-mos = unique(mos[year!="2019", .(month, month_number)])
-dt = merge(dt, mos, by = "month", all = TRUE)
-dt[, month:= NULL]
-setnames(dt, "month_number", "month")
-dt[, date := as.Date(as.yearmon(paste(year, month, sep = "-")))]
-dt[, c("year", "month", "dps_code") := NULL]
+dt[, date := as.character(date)]
+if( grepl(inFile, pattern= "quarterly") ) {
+  dt[, year := sapply(strsplit(date, " "), tail, 1)]
+  dt[ grepl(date, pattern= "Jan", ignore.case = TRUE), quarter := "1"]
+  dt[ grepl(date, pattern= "Avr", ignore.case = TRUE), quarter := "2"]
+  dt[ grepl(date, pattern= "Juil", ignore.case = TRUE), quarter := "3"]
+  dt[ grepl(date, pattern= "Oct", ignore.case = TRUE), quarter := "4"]
+} else {
+  dt[, c("month", "year"):= tstrsplit(date, " ")]
+  mos = unique(dt[, .(month, year)])
+  mos[, month_number := rep(seq(1:12))]
+  mos = unique(mos[year!="2019", .(month, month_number)])
+  dt = merge(dt, mos, by = "month", all = TRUE)
+  dt[, month:= NULL]
+  setnames(dt, "month_number", "month")
+  dt[, date := as.Date(as.yearmon(paste(year, month, sep = "-")))]
+  dt[, c("year", "month", "dps_code") := NULL]
+}
+
+# make sure completeness is numeric
+dt$completeness = as.character(dt$completeness) # do as.character() first **just in case** it was a factor, to prevent it from changing values
 dt$completeness = as.numeric(dt$completeness)
 
 saveRDS(dt, outFile)
