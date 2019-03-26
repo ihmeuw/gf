@@ -45,7 +45,9 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # directories
 dir = paste0(j, '/Project/Evaluation/GF/')
 ieDir = paste0(dir, 'impact_evaluation/cod/prepped_data/')
-rtDir = paste0(dir, 'resource_tracking/multi_country/mapping/')
+rtDir = paste0(dir, 'resource_tracking/_gf_files_gos/combined_prepped_data/')
+fghDir = paste0(dir, 'resource_tracking/_fgh/prepped_data/')
+whoDir = paste0(dir, 'resource_tracking/_ghe/who/prepped_data/')
 mapDir = paste0(dir, '/mapping/multi_country/intervention_categories')
 pnlpDir = paste0(dir, 'outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
 dhisDir = paste0(dir, 'outcome_measurement/cod/dhis_data/prepped/')
@@ -70,7 +72,8 @@ mfFile = paste0(mapDir, '/intervention_and_indicator_list.xlsx')
 # resource tracking files with prepped budgets, expenditures, disbursements
 budgetFile = paste0(rtDir, 'final_budgets.rds')
 expendituresFile = paste0(rtDir, 'final_expenditures.rds')
-fghFile = paste0(rtDir, 'prepped_current_fgh.csv')
+fghFile = paste0(fghDir, 'prepped_current_fgh.rds')
+whoFile = paste0(whoDir, 'who_prepped.rds')
 
 # activities/outputs files
 pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
