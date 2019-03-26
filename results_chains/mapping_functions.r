@@ -115,6 +115,15 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
       plot_data <- rbind(plot_data, sicoin_merge)
   }
   
+  #A hacky fix to change financing source to French for DRC reports
+  if (1==2){ #Don't run, just leaving here for documentation
+    plot_data[financing_source == 'Other bilateral assistance', financing_source:='Autre assistance bilatérale']
+    plot_data[financing_source=='NGOs and foundations', financing_source:='ONG et fondations']
+    plot_data[financing_source=="UN agencies, The World Bank and other regional development banks", financing_source:='Organismes onusiens, Banque mondiale et autres banques régionales de développement']
+    plot_data[financing_source=="U.S. bilateral assistance", financing_source:='Assistance bilatérale américaine']
+    plot_data[financing_source=="The Global Fund", financing_source:='Fonds mondial']
+  }
+  
   plot_data[, disbursement:=sum(disbursement), by = .(financing_source, year)]
   plot_data = plot_data[!duplicated(plot_data)]
   
