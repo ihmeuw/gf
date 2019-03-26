@@ -179,8 +179,7 @@ dt_final <- dt_final[,.(year, quarter, dps, health_zone, indicator, value, compl
 dt_final = convert_quarter_to_decimal(dt_final)
 
 saveRDS(dt_final, outputFile2b)
-dt_final <- readRDS(outputFile2b)
-archive(dt_final, outputFile2b)
+archive(outputFile2b)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -191,5 +190,5 @@ archive(dt_final, outputFile2b)
 dt_final_wide <- dcast.data.table(dt_final, date + dps + health_zone ~ indicator, value.var = c("value", "completeness"))
 
 saveRDS(dt_final_wide, outputFile2b_wide)
-archive(dt_final_wide, outputFile2b_wide)
+archive(outputFile2b_wide)
 # ---------------------------------------------------
