@@ -32,37 +32,44 @@ dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_pmtct_2017_01_01_2018_12_01.rds
 #Add in subpops that weren't captured before
 dt[grep("AMF", element), subpop:='AMF']
 dt[element_id=='eVULOZGDgFZ', subpop:='plw']
-dt[element_id=='hSZGwtEX9pt', subpop:='serodisc']
+
 #--------------------------------------------
+
+#---------------------------------------------------
+# Make a binary variable for EEV
+dt[, eev:=grepl("EEV|Enfant", element)]
+#---------------------------------------------------
+
 
 #-----------------------------
 # check the subpops and sexes in the indicators are all captured
 # then strip them from the indicators
 
-dt[, unique(element)]
-unique(dt[is.na(subpop), .(element)])
-
-#Remove subpop strings
-dt[ ,element1:=tolower(element)]
-dt[ ,element1:=gsub("femmes enceintes ou allaitantes", "", element1)]
-dt[, element1:=gsub("femmes enc. ou allaitantes", "", element1)]
-dt[, element1:=gsub("femmes enceintes et allaitantes", "", element1)]
-dt[, element1:=gsub("femmes enceintes ouallaitantes", "", element1)]
-dt[, element1:=gsub("femmes enceintes", "", element1)]
-dt[ ,element1:=gsub("eev", "", element1)]
-dt[, element1:=gsub("partenaires masculins", "", element1)]
-dt[, element1:=gsub("enfants exposés", "", element1)]
-dt[, element1:=gsub("couples discordants", "", element1)]
-dt[, element1:=gsub("amf", "", element1)]
-
-#
-
-dt[, element1:=trimws(element1)]
-
-dt[, unique(element1)]
+############## DOESN'T NEED TO BE RE-RUN, BUT LEAVING FOR DOCUMENTATION EKL 3/26/19 #########################
+# dt[, unique(element)]
+# unique(dt[is.na(subpop), .(element)])
+# 
+# #Remove subpop strings to review 
+# dt[ ,element1:=tolower(element)]
+# dt[ ,element1:=gsub("femmes enceintes ou allaitantes", "", element1)]
+# dt[, element1:=gsub("femmes enc. ou allaitantes", "", element1)]
+# dt[, element1:=gsub("femmes enceintes et allaitantes", "", element1)]
+# dt[, element1:=gsub("femmes enceintes ouallaitantes", "", element1)]
+# dt[, element1:=gsub("femmes enceintes", "", element1)]
+# dt[ ,element1:=gsub("eev", "", element1)]
+# dt[, element1:=gsub("partenaires masculins", "", element1)]
+# dt[, element1:=gsub("enfants exposés", "", element1)]
+# dt[, element1:=gsub("couples discordants", "", element1)]
+# dt[, element1:=gsub("amf", "", element1)]
+# 
+# #
+# 
+# dt[, element1:=trimws(element1)]
+# 
+# dt[, unique(element1)]
+###############################################################################################################
 
 #-----------------------------
-
 # export the abbreviated elements for translation
 
 # to do this on the cluster, you must export as an RDS, then use local code to save
@@ -70,7 +77,7 @@ elements = dt[ ,.(element = unique(element)), by=.(element_id)]
 set = dt[ ,tolower(unique(set))]
 
 # save the list as an excel file 
-write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate', set, '.xlsx' ))
+#write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate_', set, '.xlsx' )) #Leaving in for documentation; don't need to write over this file. 
 
 # translate using onlinedoctranslator.com and save as file path below
 #---------------------
@@ -78,79 +85,51 @@ write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate'
 # import the translated elements
 new_elements = read.xlsx(paste0(dir,
                 'meta_data/translate/pnls_elements_translations_', set, '.xlsx' ))
-
-# reset the variable name for the merge and merge on element id
-setnames(new_elements, 'element', 'element_eng')
-
-#Putting this in here for now - couldn't get read .xlsx to work, but these were the files I used. 
-# elements = read.csv("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/meta_data/translate/pnls_elements.csv")
-# new_elements = read.csv("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/meta_data/translate/pnls_elements_translated_pmtct.csv")
+setDT(new_elements)
 
 # be sure 
-x = merge(elements, new_elements, by='element_id', all.x=T )
+x = merge(elements, new_elements, by=c('element_id', 'element'), all.x=T )
 setDT(x)
 #---------------------------------------
 
-#PMTCT edits 
-x[, element_eng:=tolower(element_eng)]
+#---------------------------------------------------------------------
+# Merge the data and the new English elements together 
+new_elements = new_elements[, .(element_id, element_eng, eev_test)]
+new_elements[, element_eng:=trimws(element_eng)]
+dt = dt[, -c('element_eng')] #Not sure why this is already in here? 
 
-x[, first_word:=word(element_eng, 1)]
-x[, second_word:=word(element_eng, 2)]
-x[, last_word:=word(element_eng, -1)]
-
-#How can you make sure you're not overwriting any cases? Do any of these overlap? 
-
-
-#Variables for children
-# x[grep("eev", element_eng), new_var:='Children exposed to HIV']
-# x[grep("children exposed", element_eng), new_var:='Children exposed to HIV']
-
-#Variables for pregnant and lactating women
-x[element=='Femmes enceintes ou allaitantes VIH+ ayant bénéficié d’un appui nutritionnel', new_var:='Pregnant or lactating women who are HIV+ and receiving supplemental nutrition']
-x[element=='Femmes enceintes ou allaitantes testées' | element=='Femmes enc. ou allaitantes testées-service', new_var:='Pregnant or lactating women who were tested']
-x[element=='Femmes allaitantes qui sont passées de l’Option A à l’Option B+', new_var:='Pregnant or lactating women who were moved from Option A to Option B+']
-x[element=='Femmes enceintes ou allaitantes VIH+' | element == 'Femmes enc. ou allaitantes VIH+ service', new_var:='Pregnant or lactating women who are HIV+']
-x[element=='Femmes enc. ou allaitantes informées des résultats-service' | element=='Femmes enceintes ou allaitantes informées des résultats', new_var:='Pregnant or lactating women who were informed of their results']
-x[element=='Femmes enceintes ou allaitantes VIH+ et informées de leurs résultats' | element=='Femmes enc. ou allaitantes VIH+ et informées de leurs résultats-service', 
-  new_var:='Pregnant or lactating women who are HIV+ and were informed of their results']
-x[element=='Total femmes enceintes ouallaitantes reçues dans la structure', new_var:='Total pregnant or lactating women received in the health system']
-x[element=="Femmes enceintes ou allaitantes ne connaissant leur statut VIH+ avant d'arriver dans la structure sous TAR" |
-    element=="Femmes enceintes ou allaitantes ne connaissant pas leur statut VIH avant toute intervention dans la structure", new_var:=
-    "Pregnant or lactating women who don't know their HIV status before arriving in the facility for ART"]
-x[element=='Femmes enceintes ou allaitantes conseillées' | element=='Femmes enc. ou allaitantes conseillées-service', new_var:='Pregnant or lactating women who were counseled']
-x[element=='Femmes enceintes ou allaitantes VIH+ ayant bénéficié d’une évaluation et conseils nutritionnels', new_var:='Pregnant or lactating women who are HIV+ and have received nutritional counseling']
-x[element=='Femmes enceintes ou allaitantes VIH+ ayant bénéficié du screening SGBV', new_var:=
-    'Pregnant or lactating women who are HIV+ who have received a screening for survivors of sexual violence']
-x[element=='Femmes enceintes ou allaitantes mises sous ARV le mois passé et qui sont encore sous TARV le mois suivant', new_var:=
-    'Pregnant or lactating women who were on ARV during the past month and are still on ARV the following month']
-x[element=='Femmes enceintes ou allaitantes VIH+ dépistées malnutries', new_var:='Pregnant or lactating women who were tested for malnutrition']
-x[element=="Femmes enceintes et allaitantes connaissant leur statut VIH+ avant d'arriver dans la structure sous TAR", new_var:=
-    'Pregnant or lactating women who know their HIV status before arriving at the health facility for ART']
-
-#Make a subset of variables regarding pregnant and lactating women 
-preg = x[grep("allaitantes", element), .(element, new_var, first_word, second_word)]
-preg = preg[is.na(new_var)]
-View(preg)
+dt = merge(dt, new_elements, by='element_id', all.x = TRUE)
+#---------------------------------------------------------------------
 
 
-#General cases
-# x[grep("counseled and tested", element_eng), new_var:='Counseled and Tested']
-# x[grep("couples tested", element_eng), new_var:='Couples tested']
-# x[grep('hiv +', element_eng), new_var:='HIV positive']
-x[grep('PVVIH sous ARVavec une charge virale indétectable', element), new_var:='PLHIV with an undetectable viral load']
-# x[grep('PVVIH sous prophylaxie à l’INH', element), new_var:='PLHIV under isoniazid profylaxis']
-x[grep('plwha with active search of tb in the month', element_eng), new_var:='PLHIV screened for TB in the month']
-x[grep('plwha with active search of tb during mois', element_eng), new_var:='PLHIV screened for TB in the month']
-# x[grep('plwha benefiting cd4', element_eng), new_var:='PLHIV benefiting from CD4']
-x[grep('plwha on arvs benefiting from a viral-load', element_eng), new_var:='PLHIV with an undetectable viral load']
+#--------------------------------------------------------------------
+# Make sure that the totals are correct for the new file 
+unique(dt[, .(subpop, element_eng)][order(subpop, element_eng)]) #Visual checks
+unique(dt[, .(element_eng)])
 
-duplicate_words = x[is.na(new_var) & duplicated(first_word) & duplicated(second_word), .(first_word, second_word, element_eng)] #This might help you highlight groups. 
-duplicate_words = unique(duplicate_words)
+#Check what's going on with 'service' variable, and then drop it.
+dt[element=='"Femmes enc. ou allaitantes informées des résultats-service', sum(value, na.rm = TRUE)]
+dt[element=="Femmes enc. ou allaitantes informées des résultats", sum(value, na.rm = TRUE)]
 
-duplicate_words = duplicate_words[order(first_word, second_word)]
-View(duplicate_words)
-#Review cases that have the same first and second word, but different last words. 
+dt[element=='Femmes enc. ou allaitantes testées-service', sum(value, na.rm = TRUE)] #Flag - these are different values!
+dt[element=='Femmes enceintes ou allaitantes testées', sum(value, na.rm = TRUE)]
 
-#Make sure that there are unique subgroups among each new_var above before you collapse. 
+#Do a deeper dive
+table(dt[element=='Femmes enceintes ou allaitantes testées', .(value, level)])
+table(dt[element=='Femmes enc. ou allaitantes testées-service', .(value, level)])
+
+#One more pair 
+dt[element=='Femmes enc. ou allaitantes conseillées-service', sum(value, na.rm=TRUE)] #These are also slightly off. 
+dt[element=='Femmes enceintes ou allaitantes conseillées', sum(value, na.rm = TRUE)]
+
+
+#Drop out the variables with "service" at the end - doing this by element ID because they don't all have hyphens. 
+unique(dt[grep("service", element), .(element, element_id)])
+dt = dt[!(element_id == "PnwLDzr2HX8" | element_id == "sIauzwAH8Oo" | element_id == "umSBpgIOOU1" | element_id == "vRJFy0MuKiw" | element_id == "wlm4P0V0ySD")]
+unique(dt[grep("service", element), .(element, element_id)])
+#---------------------------------------------------------------------
+
+#Save the final file 
+saveRDS(dt, paste0(dir, 'prepped/pnls_sets/pnls_pmtct_prepped_2017_01_01_2018_12_01.rds'))
 
 
