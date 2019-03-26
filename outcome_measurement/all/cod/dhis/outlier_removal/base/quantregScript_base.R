@@ -32,7 +32,6 @@ if(n>=3 & var!=0 & nx>=2) {
   
   # add fixed effect on group if more than one group exists
   form = 'value~date'
-  if (length(unique(subset$group))>1) form = paste0(form, '+factor(group)')
   form = as.formula(form)
   
   # run quantreg

@@ -1,76 +1,4 @@
-# Maps of PNLS ARV data set
-# ----------------------------------------------
-# Caitlin O'Brien-Carelli
-#
-# 1/30/19
-# ----------------------------------------------
 
-# --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(ggplot2)
-library(dplyr)
-library(stringr) 
-library(openxlsx)
-library(RColorBrewer)
-library(rgeos)
-library(raster)
-library(ggplot2)
-library(rgdal)
-library(maptools)
-library(ggrepel)
-# --------------------
-
-# shell script for working on the cluster
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_download
-
-# --------------------
-# set working directories
-
-# detect if operating on windows or on the cluster 
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-
-# set the directory for input and output
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-setwd("C:/Users/ccarelli/local/gf/")
-
-# read in the data 
-dt = readRDS(paste0(dir, 'prepped/pnls_arv.rds'))
-
-# subset to before August of 2018
-dt = dt[date < '2018-09-01']
-
-# --------------------
-# source the standardization functions for the geographic units and apply
-source("./core/standardizeHZNames.R")
-source("./core/standardizeDPSNames.R")
-dt$health_zone = standardizeHZNames(dt$health_zone)
-dt$dps = standardizeDPSNames(dt$dps)
-
-#--------------------------
-# sum over case as it is not useful
-vars = c("org_unit_id",   "org_unit", "date", "element",
-         "subpop", "sex", "age", "org_unit_type", "level", 
-         "dps", "health_zone", "mtk", "maternity", "tb")
-
-dt = dt[ ,.(value=sum(value)), by=vars]
-
-# read in the outliers and remove them
-out = readRDS(paste0(dir, 'pnls_outliers/list_of_arv_outliers.rds'))
-
-# create a unique identifier to remove
-out[ ,combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
-dt[ ,combine:=paste0(org_unit_id, element, age, sex, subpop, as.character(date))]
-
-# drop the outliers 
-dt = dt[!combine %in% out$combine]
-dt[ ,combine:=NULL]
-
-# remove one outlier by hand in which the qr did not work
-dt = dt[!(value==651 & element=="Malnourished PLHIV who received supplemental nutrition")]
-
-# --------------------
 
 #----------------------------------------
 # upload the shape files 
@@ -135,8 +63,9 @@ setnames(fac, 'dps', 'id')
 # merge with the coordinates
 coord_fac = merge(fac, coordinates, by='id', all=T)
 
+#----------------------------------------
 
-# pdf(paste0(dir, 'outputs/pnls/arv_initial_maps.pdf'), width=12, height=7)
+ pdf(paste0(dir, 'outputs/pnls/arv_initial_maps.pdf'), width=12, height=7)
 
 # Number of facilities reporting 
 ggplot(coord_fac, aes(x=long, y=lat, group=group, fill=facilities_reporting)) + 
@@ -192,7 +121,6 @@ ggplot(coord_fac, aes(x=long, y=lat, group=group, fill=factor(rationalization)))
         legend.title=element_text(size=18), legend.text=element_text(size=16),
         plot.caption=element_text(size=18)) +
   geom_label_repel(data = names, aes(label = region, x = long, y = lat, group = region), inherit.aes=FALSE, size=4)
-
 
 
 #--------------------------------
