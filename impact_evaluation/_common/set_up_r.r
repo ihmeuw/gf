@@ -34,6 +34,7 @@ library(viridis)
 library(raster)
 library(parallel)
 # library(dplyr)
+library(splitstackshape)
 # ------------------
 
 
