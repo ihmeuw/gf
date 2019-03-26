@@ -53,8 +53,6 @@ summary(lmFit9)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-# Should we include ACT_received in the severeMalariaTreated linkage 2 regression?
-# Currently combining M1_1 (mass campaigns) and M1_2 (continuous) because FGH can't distinguish
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
 source('./impact_evaluation/models/drc_malaria4.r')
 
@@ -124,7 +122,6 @@ if (runAsQsub==TRUE) {
 
 # compute averages
 means = summaries[,.(est.std=mean(est.std), se.std=mean(se.std)), by=c('lhs','op','rhs')]
-means
 # --------------------------------------------------------------
 
 

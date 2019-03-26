@@ -63,6 +63,7 @@ cleanup = TRUE
 #dt = readRDS(paste0(dir, 'outliers/base_to_screen.rds'))
 
 dt = readRDS('/ihme/scratch/users/ccarelli/base_to_screen.rds')
+dt = data.table(dt)
 
 # loop over elements and org units, run quantreg once per each
 i=1
@@ -95,7 +96,7 @@ while(numFiles<i) {
 # alternate code to rbind files in a cluster IDE
 # do not source! run separately in an IDDE (for speed and connection)
 
-# # rbind the files together and save to the j drive 
+# # rbind the files together and save to the j drive
 # numFiles = length(list.files('/ihme/scratch/users/ccarelli/qr_results'))
 # numFiles
 # i = 1
@@ -105,7 +106,7 @@ while(numFiles<i) {
 #   if(j==1) fullData = tmp
 #   if(j>1) fullData = rbind(fullData, tmp)
 #   cat(paste0('\r', j))
-#   flush.console() 
+#   flush.console()
 #   i = i+1
 # }
 # 
