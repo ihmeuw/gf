@@ -51,9 +51,9 @@ longT[variable %in% impactVars, section:='impact']
 longT[, model_estimate:=ifelse(variable %in% modelVars, TRUE, FALSE)]
 
 # sample of health zones to graph
-hzs = c('bambu', 'boga', 'bokoro', 'mambasa', 'opienge', 'titule', 'tumba', 'wamba', 
-	sample(unique(data$health_zone), 10) )
-# hzs = sample(unique(data$health_zone), 15)
+# hzs = c('bambu', 'boga', 'bokoro', 'mambasa', 'opienge', 'titule', 'tumba', 'wamba', 
+	# sample(unique(data$health_zone), 10) )
+hzs = sample(unique(data$health_zone), 20)
 # ----------------------------------------------
 
 
@@ -165,13 +165,33 @@ for(h in hzs) {
 	i=i+1
 }
 
+# outcomes and case fatality by health zone
+fatality = longT[variable=='lead_case_fatality']
+setnames(fatality, 'value', 'lead_case_fatality')
+fatality = fatality[, -dropVars, with=FALSE]
+wide = merge(wide[variable!='lead_case_fatality'], fatality, by=byVars)
+fatVars = c('mildMalariaTreated_rate', 'severeMalariaTreated_rate', 'ACTs_CHWs_rate')
+
+i=1
+hzOutcomePlotsFat=list()
+for(h in hzs) {
+	hzOutcomePlotsFat[[i]] = ggplot(wide[health_zone==h & variable%in%fatVars], 
+		aes(y=lead_case_fatality, x=value)) + 
+	geom_point(color='#4daf4a') + 
+	geom_smooth(method='lm', color='#377eb8') + 
+	facet_wrap(~variable, scales='free') + 
+	labs(title='Correlations: Outcomes and Case Fatality', subtitle=h, 
+		caption='Values adjusted to trend from model estimates, log-transformed and rescaled') + 
+	theme_bw()
+	i=i+1
+}
+
 # outcomes and mortality by health zone
 mortality = longT[variable=='lead_malariaDeaths_rate']
 setnames(mortality, 'value', 'lead_malariaDeaths_rate')
 mortality = mortality[, -dropVars, with=FALSE]
 wide = merge(wide[variable!='lead_malariaDeaths_rate'], mortality, by=byVars)
-mortVars = c('newCasesMalariaMild_rate', 'newCasesMalariaSevere_rate', 
-	'mildMalariaTreated_rate', 'severeMalariaTreated_rate', 'ACTs_CHWs_rate', 'SP_rate')
+mortVars = c('newCasesMalariaMild_rate', 'newCasesMalariaSevere_rate', 'lead_case_fatality')
 
 i=1
 hzOutcomePlotsMort=list()
@@ -187,7 +207,6 @@ for(h in hzs) {
 	i=i+1
 }
 
-
 # ----------------------------------------------
 
 
@@ -196,16 +215,28 @@ for(h in hzs) {
 pdf(outputFile4b, height=5.5, width=9)
 for(i in seq(length(hzs))) { 
 	print(hzOutcomePlotsTs[[i]])
+}
+for(i in seq(length(hzs))) { 
 	print(hzImpactPlotsTs[[i]])
+}
+for(i in seq(length(hzs))) { 
 	print(hzOutcomePlotsMild[[i]])
+}
+for(i in seq(length(hzs))) { 
 	print(hzOutcomePlotsSev[[i]])
+}
+for(i in seq(length(hzs))) { 
+	print(hzOutcomePlotsFat[[i]])
+}
+for(i in seq(length(hzs))) { 
 	print(hzOutcomePlotsMort[[i]])
 }
 dev.off()
 
 # save a time-stamped version for reproducibility
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile4bArchive = gsub('visualizations/', 'visualizations/archive/', outputFile4b)
-outputFile4bArchive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile4bArchive)
-file.copy(outputFile4b, outputFile4bArchive)
+archive(outputFile4b)
+# date_time = gsub('-|:| ', '_', Sys.time())
+# outputFile4bArchive = gsub('visualizations/', 'visualizations/archive/', outputFile4b)
+# outputFile4bArchive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile4bArchive)
+# file.copy(outputFile4b, outputFile4bArchive)
 # --------------------------------
