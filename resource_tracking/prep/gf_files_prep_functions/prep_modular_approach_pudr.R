@@ -147,10 +147,34 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   gf_data[is.na(module) | module == '0' , module:="Unspecified"]
   gf_data[is.na(intervention) | intervention == '0' , module:="Unspecified"]
 
-  #-------------------------------------
-  # 3. Generate new variables
-  #-------------------------------------
+  #-------------------------------------------------------------------------
+  # 3. Generate date variables, and expand data to be at the quarter-level. 
+  #-------------------------------------------------------------------------
   gf_data$start_date <- start_date
+  gf_data$period <- period
+  
+  # #Expand GOS to be at the quarter-level; the same as the final expenditures 
+  # totals_check = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'grant_period')][order(grant, grant_period)]
+  # gf_data[, time_diff:=end_date-start_date]
+  # gf_data[, num_quarters:=as.numeric(round(time_diff/90))] #90 days in each period
+  # 
+  # #Expand data by num_quarters, and generate a variable to iterate over
+  # gf_data <- expandRows(gf_data, "num_quarters")
+  # byVars = names(gf_data)
+  # gf_data[, seq:=seq(0, 100, by=1), by=byVars]
+  # 
+  # #Increment the start date, and split up budget and expenditure. 
+  # gf_data[, start_date:=start_date + months(3*seq)]
+  # gf_data[, time_diff:=as.numeric(round(time_diff/90))]
+  # gf_data[, budget:=budget/time_diff]
+  # gf_data[, expenditure:=expenditure/time_diff]
+  # 
+  # #Make sure you haven't changed any budget/expenditure numbers, and clean up
+  # totals_check2 = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'grant_period')][order(grant, grant_period)]
+  # for (i in 1:nrow(totals_check)){
+  #   stopifnot(totals_check$budget[i]==totals_check2$budget[i] | totals_check$expenditure[i]==totals_check2$expenditure[i])
+  # }
+  # gf_data = gf_data[, -c('time_diff', 'seq', 'end_date')]
 
   #-------------------------------------
   # 4. Validate data
@@ -182,7 +206,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   if (nrow(budget_dataset)==0){
     stop(paste0("All data dropped for ", inFile))
   }
-
+  
   #--------------------------------
   # Note: Are there any other checks I could add here? #EKL
   # -------------------------------
