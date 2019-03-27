@@ -63,3 +63,10 @@ sum_na_rm <- function(col){
   return(col)
 }
 
+
+#--------------------------------------------------------------------------------
+# Orders a dataset to be at the quarter-level given a start and an end date. 
+#--------------------------------------------------------------------------------
+
+
+
