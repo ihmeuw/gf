@@ -89,7 +89,7 @@ gos_data[, start_date:=as.Date(start_date)]
 gos_data[, end_date:=as.Date(end_date)]
 
 #Find out what quarters we have GOS data for. 
-gos_timeframe = unique(gos_data[, .(grant, start_date, end_date)])
+gos_timeframe = unique(gos_data[, .(grant, start_date, end_date, grant_period)])
 
 gos_timeframe[, grant_start:=min(start_date), by='grant']
 gos_timeframe[, grant_end:=max(end_date), by='grant']
@@ -120,7 +120,7 @@ for (x in 1:nrow(grants)){
 }
 
 #Need to grab the rows with data gaps, and the one immediately after them. 
-gos_gaps = gos_timeframe[grant%in%grants_with_gaps, .(grant, start_date, end_date, data_gap)]
+gos_gaps = gos_timeframe[grant%in%grants_with_gaps, .(grant, start_date, end_date, grant_period, data_gap)]
 
 gos_gaps = gos_gaps[order(grant, start_date)]
 write.csv(gos_gaps, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/known_gos_gaps.csv", row.names=FALSE)
