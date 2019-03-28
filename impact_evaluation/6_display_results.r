@@ -63,8 +63,5 @@ p2
 dev.off()
 
 # save a time-stamped version for reproducibility
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile6Archive = gsub('visualizations/', 'visualizations/archive/', outputFile6)
-outputFile6Archive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile6Archive)
-file.copy(outputFile6, outputFile6Archive)
+archive(outputFile6)
 # -----------------------------------

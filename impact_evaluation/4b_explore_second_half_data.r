@@ -235,8 +235,4 @@ dev.off()
 
 # save a time-stamped version for reproducibility
 archive(outputFile4b)
-# date_time = gsub('-|:| ', '_', Sys.time())
-# outputFile4bArchive = gsub('visualizations/', 'visualizations/archive/', outputFile4b)
-# outputFile4bArchive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile4bArchive)
-# file.copy(outputFile4b, outputFile4bArchive)
 # --------------------------------

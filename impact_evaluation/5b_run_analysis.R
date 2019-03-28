@@ -147,13 +147,8 @@ save(list=c('data','untransformed','model','semFits','summaries','means','scalin
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile5bArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5b)
-outputFile5bArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5bArchive)
-file.copy(outputFile5b, outputFile5bArchive)
-outputFile5bArchive_big = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5b_big)
-outputFile5bArchive_big = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5bArchive_big)
-file.copy(outputFile5b_big, outputFile5bArchive_big)
+archive(outputFile5b)
+archive(outputFile5b_big)
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
