@@ -58,8 +58,8 @@ p2 = semGraph(parTable=means2, nodeTable=nodeTable2,
 # -----------------------------------
 # Save output
 pdf(outputFile6, height=6, width=9)
-p1
-p2
+print(p1)
+print(p2)
 dev.off()
 
 # save a time-stamped version for reproducibility
