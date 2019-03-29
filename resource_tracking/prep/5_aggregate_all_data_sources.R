@@ -89,7 +89,7 @@ gos_data[, start_date:=as.Date(start_date)]
 gos_data[, end_date:=as.Date(end_date)]
 
 #Find out what quarters we have GOS data for. 
-gos_timeframe = unique(gos_data[, .(grant, start_date, end_date)])
+gos_timeframe = unique(gos_data[, .(grant, start_date, end_date, grant_period)])
 
 gos_timeframe[, grant_start:=min(start_date), by='grant']
 gos_timeframe[, grant_end:=max(end_date), by='grant']
@@ -100,6 +100,7 @@ gost_timeframe = gos_timeframe[order(grant, start_date)]
 setDT(gos_timeframe)
 grants=as.vector(unique(gos_timeframe[!is.na(grant), .(grant)]))
 
+grants_with_gaps=character()
 for (x in 1:nrow(grants)){
   test = gos_timeframe[grant%in%grants[x]][order(start_date)]
   if (nrow(test)!=1){ 
@@ -107,18 +108,20 @@ for (x in 1:nrow(grants)){
       if (test$end_date[i]!=test$start_date[i+1]){
         print(paste0("Warning: there are missing dates for ", grants[x]))
         gos_timeframe[grant==grants[x] & end_date==test$end_date[i], data_gap:=TRUE]
+        grants_with_gaps = append(grants_with_gaps, as.character(grants[x]))
       }
     }
     if (test$end_date[nrow(test)]-1 != test$grant_end[nrow(test)]){
       print(paste0("Warning: there are missing dates for ", grants[x]))
       gos_timeframe[grant==grants[x] & end_date==test$end_date[i], data_gap:=TRUE]
+      grants_with_gaps = append(grants_with_gaps, as.character(grants[x]))
     }
   }
 }
 
-gos_gaps = gos_timeframe[data_gap==TRUE, .(grant, start_date, end_date)]
+#Need to grab the rows with data gaps, and the one immediately after them. 
+gos_gaps = gos_timeframe[grant%in%grants_with_gaps, .(grant, start_date, end_date, grant_period, data_gap)]
 
-gos_gaps = unique(gos_gaps)
 gos_gaps = gos_gaps[order(grant, start_date)]
 write.csv(gos_gaps, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/known_gos_gaps.csv", row.names=FALSE)
 

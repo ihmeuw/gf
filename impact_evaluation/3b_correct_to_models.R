@@ -151,8 +151,5 @@ for(h in names(plots)) {
 dev.off()
 
 # save a time-stamped version for reproducibility
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile3bArchive = gsub('prepped_data/', 'prepped_data/archive/', outputFile3b)
-outputFile3bArchive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile3bArchive)
-file.copy(outputFile3b, outputFile3bArchive)
+archive(outputFile3b)
 # --------------------------------

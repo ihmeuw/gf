@@ -77,6 +77,9 @@ data = data[order(health_zone, date)]
 data[,ITN_cumul:=cumsum(ITN_rate*population), by='health_zone']
 data[, ITN_rate_cumul:=ITN_cumul/population]
 
+# split before trasnformations
+untransformed = copy(data)
+
 # log-transform
 logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated',
 	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate','ITN_rate_cumul','case_fatality',
@@ -100,6 +103,7 @@ for(v in names(scaling_factors)) data[, (v):=get(v)/scaling_factors[[v]]]
 # compute leads (after rescaling because it creates more NA's)
 leadVars = c('newCasesMalariaMild_rate', 'newCasesMalariaSevere_rate', 'malariaDeaths_rate', 'case_fatality')
 for(v in leadVars) data[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
+for(v in leadVars) untransformed[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
 data = na.omit(data)
 # -----------------------------------------------------------------------
 
@@ -120,11 +124,8 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 
 # ---------------------------------------------------------
 # Save file
-save(list=c('data', 'scaling_factors'), file=outputFile5d)
+save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile5d)
 
 # save a time-stamped version for reproducibility
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile5dArchive = gsub('prepped_data/', 'prepped_data/archive/', outputFile5d)
-outputFile5dArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5dArchive)
-file.copy(outputFile5d, outputFile5dArchive)
+archive(outputFile5d)
 # ---------------------------------------------------------

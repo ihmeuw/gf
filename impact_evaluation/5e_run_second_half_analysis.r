@@ -114,9 +114,14 @@ if (runAsQsub==TRUE) {
 	}
 }
 
-# compute averages
-means = summaries[,.(est.std=mean(est.std), se.std=mean(se.std)), by=c('lhs','op','rhs')]
-means
+
+# compute averages (approximation of standard error, would be better as Monte Carlo simulation)
+paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
+summaries[, se_ratio.std:=se.std/est.std]
+summaries[, se_ratio:=se/est]
+means = summaries[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
+means[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
+means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # --------------------------------------------------------------
 
 
@@ -137,13 +142,8 @@ save(list=c('data','model','semFits','summaries','means','scaling_factors'), fil
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile5eArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5e)
-outputFile5eArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5eArchive)
-file.copy(outputFile5e, outputFile5eArchive)
-outputFile5eArchive_big = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5e_big)
-outputFile5eArchive_big = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5eArchive_big)
-file.copy(outputFile5e_big, outputFile5eArchive_big)
+archive(outputFile5e)
+archive(outputFile5e_big)
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)

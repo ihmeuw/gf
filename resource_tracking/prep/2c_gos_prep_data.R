@@ -59,3 +59,9 @@ totalGos$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
 totalGos[is.na(module), module:='unspecified']
 totalGos[is.na(intervention), intervention:='unspecified']
 
+for (i in 1:nrow(code_lookup_tables)){
+  totalGos[country==code_lookup_tables$country[[i]], loc_name:=code_lookup_tables$iso_code[[i]]]
+}
+
+totalGos[, start_date:=as.Date(start_date)]
+totalGos[, end_date:=as.Date(end_date)]

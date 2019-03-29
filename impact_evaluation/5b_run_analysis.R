@@ -120,8 +120,13 @@ if (runAsQsub==TRUE) {
 	}
 }
 
-# compute averages
-means = summaries[,.(est.std=mean(est.std), se.std=mean(se.std)), by=c('lhs','op','rhs')]
+# compute averages (approximation of standard error, would be better as Monte Carlo simulation)
+paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
+summaries[, se_ratio.std:=se.std/est.std]
+summaries[, se_ratio:=se/est]
+means = summaries[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
+means[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
+means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # --------------------------------------------------------------
 
 
@@ -133,22 +138,17 @@ print(paste('Saving', outputFile5b))
 save(list=c('data','untransformed','model','summaries','means','scaling_factors'), file=outputFile5b)
 
 # save full output for archiving
+outputFile5b_big = gsub('.rdata','_all_semFits.rdata',outputFile5b)
 print(paste('Saving', outputFile5b_big))
 semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 })
-outputFile5b_big = gsub('.rdata','_all_semFits.rdata',outputFile5b)
 save(list=c('data','untransformed','model','semFits','summaries','means','scaling_factors'), file=outputFile5b_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile5bArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5b)
-outputFile5bArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5bArchive)
-file.copy(outputFile5b, outputFile5bArchive)
-outputFile5bArchive_big = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5b_big)
-outputFile5bArchive_big = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5bArchive_big)
-file.copy(outputFile5b_big, outputFile5bArchive_big)
+archive(outputFile5b)
+archive(outputFile5b_big)
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
