@@ -32,8 +32,8 @@ hz_shape = "health_zones_who/health2.shp"
 
 # functions
 setwd('C:/local/gf/')
-source('./core/standardizeDPSnames_function.R')
-source('./core/standardizeHZnames_function.R')
+source('./core/standardizeDPSnames.R')
+source('./core/standardizeHZnames.R')
 # ----------------------------------------------   
 
 # ----------------------------------------------     
@@ -70,7 +70,7 @@ hk = hk[health_zone %in% c("kashobwe", "kasenga")]
 sapply(hk, function(x) sum(is.na(x)))
 hk[, date:=as.Date(date)]
 
-g <- ggplot(hk, aes(x=date, y=healthFacilities_total, color = health_zone)) +
+g_hk <- ggplot(hk, aes(x=date, y=newCasesMalariaMild_under5, color = health_zone)) +
   geom_point() + geom_line() +
   ggtitle("Time series comparison between health zones") +
   theme_bw() +
@@ -78,7 +78,7 @@ g <- ggplot(hk, aes(x=date, y=healthFacilities_total, color = health_zone)) +
         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14), 
         strip.text = element_text(size = 14)) +
   scale_y_continuous( label= scales :: comma )
-g
+g_hk
 # so, treat kashobwe as missing in 2010/2011 and impute it?
 
 nkivu = fullData[dps == "nord kivu" | dps == "0",]
@@ -87,8 +87,8 @@ nkivu[, date:=as.Date(date)]
 # https://reliefweb.int/sites/reliefweb.int/files/resources/RDCongo%20Reference%20Map%20-%20Province%20du%20Nord%20Kivu%20-%20Carte%20administrative%20%28Mars%202012%29.pdf
 # This makes it look like there are territories that have health zones within them.  Sometimes the health zone has the same name as the terrirtory
 
-nkivu_subset = nkivu[health_zone %in% c("beni", "oicha", "kamango", "mabalako")]
-g <- ggplot(nkivu_subset, aes(x=date, y=newCasesMalariaMild_under5, color = health_zone)) +
+nkivu_subset = nkivu[health_zone %in% c("walikale", "itebero", "kibua", "pinga")]
+g_nkivu <- ggplot(nkivu_subset, aes(x=date, y=newCasesMalariaMild_under5, color = health_zone)) +
   geom_point() + geom_line() +
   ggtitle("Time series comparison between health zones") +
   theme_bw() +
@@ -96,17 +96,17 @@ g <- ggplot(nkivu_subset, aes(x=date, y=newCasesMalariaMild_under5, color = heal
         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14), 
         strip.text = element_text(size = 14)) +
   scale_y_continuous( label= scales :: comma )
-g
+g_nkivu
 
 # HZ: (/territory)...
-# Alimbongo: (/Lubero) looks like alimbongo could have been included in lubero prior to 2012?    nkivu[health_zone %in% c("alimbongo", "lubero")]
-# Bambo: (/Rutshuru) likely wasn't included in rutshuru?     nkivu[health_zone %in% c("bambo", "bambu", "rutshuru", "kibirizi")]
-# Kibirizi: (/Rutshuru) could maybe have been included in rutshuru?    nkivu[health_zone %in% c("bambo", "bambu", "rutshuru", "kibirizi")]
-# Itebero: (/Walikale) doesn't look included in walikale or pinga    nkivu[health_zone %in% c("walikale", "itebero", "kibua", "pinga")]  
-# Kibua: (/Walikale)  doesn't look included in walikale or pinga     nkivu[health_zone %in% c("walikale", "itebero", "kibua", "pinga")]
-# Nyiragongo: (/Nyiragongo)   nkivu_subset = nkivu[health_zone %in% c("nyiragongo", "karisimbi", "goma")]
+# Alimbongo: (/Lubero) looks like alimbongo could have been included in lubero prior to 2012?     nkivu[health_zone %in% c("alimbongo", "lubero")]
+# Bambo: (/Rutshuru) likely wasn't included in rutshuru?                                          nkivu[health_zone %in% c("bambo", "bambu", "rutshuru", "kibirizi")]
+# Kibirizi: (/Rutshuru) could maybe have been included in rutshuru?                               nkivu[health_zone %in% c("bambo", "bambu", "rutshuru", "kibirizi")]
+# Itebero: (/Walikale) doesn't look included in walikale or pinga                                 nkivu[health_zone %in% c("walikale", "itebero", "kibua", "pinga")]  
+# Kibua: (/Walikale)  doesn't look included in walikale or pinga                                  nkivu[health_zone %in% c("walikale", "itebero", "kibua", "pinga")]
+# Nyiragongo: (/Nyiragongo)                                                                       nkivu[health_zone %in% c("nyiragongo", "karisimbi", "goma")]
 # Mabalako: looks like it could be included in Beni Oicha 
-# Kamango: look slike it could have been included in Beni or Oicha Katwa Mutwanga
+# Kamango: looks like it could have been included in Beni or Oicha Katwa Mutwanga
 # Kalungata: ??
 
 
