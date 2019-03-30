@@ -34,7 +34,7 @@ pati_registered <- paste0(snis_dir, "pati_tb/tb_pati_cases_registered.rds")
 pati_results <- paste0(snis_dir, "pati_tb/tb_pati_case_results.rds")
 pnlt_case_outcomes <- paste0(pnlt_dir, 'PNLT_case_outcomes_2018.csv')
 pnlt_case_screening <- paste0(pnlt_dir,"PNLT_case_screening_2018.csv")
-pnlp_hz_level = paste0(pnlp_dir, "imputedData_run2_agg_hz.rds")
+pnlp_hz_level = paste0(pnlp_dir, "archive/imputedData_run2_agg_hz.rds")
 pnls_data = paste0(snis_dir, "pnls_sets/pnls_clean_all_sets.rds")
 # ----------------------------------------------
 
@@ -139,34 +139,75 @@ dt <- dt[ indicator != "tot_cas_reg",]
 # ----------------------------------------------
 
 # ----------------------------------------------
-# number of facilities reporting national, time series graph
+# number of facilities reporting national and dps, time series graph
 # ----------------------------------------------
-num_fac_over_time <- snis_res[, unique(org_unit_id), by = c("date")]
-num_fac_over_time <- num_fac_over_time[, .N, by= c("date")] 
+num_fac_over_time <- snis_res[, unique(org_unit_id), by = c("date", "dps")]
+num_fac_over_time <- num_fac_over_time[, .N, by= c("date", "dps")] 
 num_fac_over_time$data = "snis_pati_case_results"
+num_fac_over_time[, date := as.Date(date)]
 
-num_fac_over_time2 <- snis_reg[, unique(org_unit_id), by = c("date")]
-num_fac_over_time2 <- num_fac_over_time2[, .N, by= c("date")]
+num_fac_over_time2 <- snis_reg[, unique(org_unit_id), by = c("date", "dps")]
+num_fac_over_time2 <- num_fac_over_time2[, .N, by= c("date", "dps")]
 num_fac_over_time2$data = "snis_pati_cases_registered"
+num_fac_over_time2[, date := as.Date(date)]
 
 num_fac_over_time_natl <- rbindlist(list(num_fac_over_time, num_fac_over_time2), fill= TRUE, use.names = TRUE)
 # num_fac_over_time_natl <- dcast.data.table(num_fac_over_time_natl, date ~ data, value.var = "N")
 # basically shows we only want to use 2018-Q1 to 2018-Q3 for now
 num_fac_over_time_natl[, date := as.Date(date)]
 
-g <- ggplot(num_fac_over_time_natl, aes(x=date, y=N, color = data)) + 
+g <- ggplot(num_fac_over_time_natl, aes(x=date, y=N, color = data)) +
   geom_point() + geom_line() +
   ggtitle(paste0("Number of facilities reporting over time, nationally")) +
+  theme_bw() +
+  theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16),
+        legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14)) +
+  scale_y_continuous( label= scales :: comma ) +
+  labs(caption= "Source: DHIS2 PATI TB; downloaded January 2019", y= "Number of facilities") +
+  guides(color = guide_legend(title = "Data sheet:"))
+print(g)
+
+pdf(paste0(out_dir, "ts_facilities_reporting_natl.pdf"), height = 9, width = 13)
+print(g)
+dev.off()
+
+num_fac_over_time[ , i := .GRP, by = "dps"]
+num_fac_over_time[ i %in% 1:5, group := 1]
+num_fac_over_time[ i %in% 6:10, group := 2]
+num_fac_over_time[ i %in% 11:15, group := 3]
+num_fac_over_time[ i %in% 16:20, group := 4]
+num_fac_over_time[ i %in% 21:26, group := 5]
+num_fac_over_time2[ , i := .GRP, by = "dps"]
+num_fac_over_time2[ i %in% 1:5, group := 1]
+num_fac_over_time2[ i %in% 6:10, group := 2]
+num_fac_over_time2[ i %in% 11:15, group := 3]
+num_fac_over_time2[ i %in% 16:20, group := 4]
+num_fac_over_time2[ i %in% 21:26, group := 5]
+
+pdf(paste0(out_dir, "ts_facilities_reporting_DPS.pdf"), height = 9, width = 13)
+for (x in unique(num_fac_over_time$group)) {
+g <- ggplot(num_fac_over_time[group == x, ], aes(x=date, y=N, color = dps)) + 
+  geom_point() + geom_line() +
+  ggtitle(paste0("Number of facilities reporting over time, by dps")) +
   theme_bw() +
   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), 
         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14)) +
   scale_y_continuous( label= scales :: comma ) +
-  labs(caption= "Source: DHIS2") +
-  guides(color = guide_legend(title = "Data sheet:"))
+  labs(caption= "Source: SNIS PATI case results; downloaded January 2019", y = "Number of facilities")
 print(g)
+}
 
-pdf(paste0(out_dir, "pati_facilities_reporting_ts.pdf"), height = 9, width = 13)
+for (x in unique(num_fac_over_time2$group)) {
+g <- ggplot(num_fac_over_time2[group == x, ], aes(x=date, y=N, color = dps)) + 
+  geom_point() + geom_line() +
+  ggtitle(paste0("Number of facilities reporting over time, by dps")) +
+  theme_bw() +
+  theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), 
+        legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14)) +
+  scale_y_continuous( label= scales :: comma ) +
+  labs(caption= "Source: SNIS PATI cases registered; downloaded January 2019", y = "Number of facilities" )
 print(g)
+}
 dev.off()
 # ----------------------------------------------
 
@@ -245,7 +286,9 @@ snis_reg_natl$element <- as.character(snis_reg_natl$element)
 # ----------------------------------------------
 # Comparison of IPT for HIV between PNLS / PATI
 # ----------------------------------------------
-
+###################
+ ##### TO DO #####
+###################
 # ----------------------------------------------
 
 # ----------------------------------------------

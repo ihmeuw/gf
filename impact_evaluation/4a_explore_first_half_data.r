@@ -269,8 +269,5 @@ do.call('grid.arrange',c(p6, list(top=textGrob('Correlations - All Activities an
 dev.off()
 
 # save a time-stamped version for reproducibility
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile4aArchive = gsub('visualizations/', 'visualizations/archive/', outputFile4a)
-outputFile4aArchive = gsub('.pdf', paste0('_', date_time, '.pdf'), outputFile4aArchive)
-file.copy(outputFile4a, outputFile4aArchive)
+archive(outputFile4a)
 # --------------------------------

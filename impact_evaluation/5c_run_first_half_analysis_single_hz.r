@@ -36,7 +36,7 @@ source('./impact_evaluation/models/drc_malaria4.r')
 # Run model
 # jitter to avoid perfect collinearity
 for(v in names(subData)[!names(subData)%in%c('health_zone','date')]) { 
-	subData[, (v):=get(v)+rpois(nrow(subData), sd(subData[[v]])/10)]
+	subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+1)/10)]
 }
 
 # fit model

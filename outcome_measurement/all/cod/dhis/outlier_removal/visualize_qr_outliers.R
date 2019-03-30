@@ -22,40 +22,43 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # choose the data set to run the code on - pnls, base, or sigl
-set = 'pnls'
+set = 'sigl'
 
 # read in the file
 if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/qr_results_full.rds'))}
 if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base_quantreg_results.rds'))}
-
+if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl_quantreg_imputation_results.rds'))
 #------------------------------------
 # merge in the facility names to label the graphs 
 
 facilities = readRDS(paste0(dir, 'meta_data/master_facilities.rds'))
 facilities = facilities[ ,.(org_unit_id, org_unit)]
-dt = merge(dt, facilities, by='org_unit_id', all.x=T)
+dt = merge(dt, facilities, by='org_unit_id', all.x=TRUE)
 
 #------------------------------------
 # identify outliers at various levels/thresholds
+if (set=='pnls') idVars = c('org_unit_id', 'element')
+if (set=='base') idVars = c('org_unit_id', 'element')
+if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable') 
 
 # identify the thresholds based on the SD of the residuals
-dt[ ,thresh5:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
-dt[ ,thresh10:=median(resid)+(10*sd(resid)), by=.(org_unit_id, element)]
-dt[ ,thresh20:=median(resid)+(20*sd(resid)), by=.(org_unit_id, element)]
+dt[ , thresh5 :=  median(resid) +  (5*sd(resid)), by = idVars]
+dt[ , thresh10 := median(resid) + (10*sd(resid)), by = idVars]
+dt[ , thresh20 := median(resid) + (20*sd(resid)), by = idVars]
 
 # select outliers 
 # the value is 100 or more and greater than 10 times the SD of the residuals 
-dt[thresh10 < value, outlier:=T]
-dt[value < 100, outlier:=F]
-dt[is.na(outlier), outlier:=F]
+dt[thresh10 < value, outlier:=TRUE]
+dt[value < 100, outlier:=FALSE]
+dt[is.na(outlier), outlier:=FALSE]
 
 # set lower and upper bounds
-dt[ ,upper:=median(resid)+(10*sd(resid)), by=.(org_unit_id, element)]
-dt[ ,lower:=(median(resid)-(10*sd(resid))), by=.(org_unit_id, element)]
+dt[ , upper:= ( median(resid) + (10*sd(resid)) ), by = idVars]
+dt[ , lower:= ( median(resid) - (10*sd(resid)) ), by = idVars]
 
 # add a 5 SD bound just to be sure
-dt[ ,upper_mid:=median(resid)+(5*sd(resid)), by=.(org_unit_id, element)]
-dt[ ,lower_mid:=(median(resid)-(5*sd(resid))), by=.(org_unit_id, element)]
+dt[ , upper_mid := (median(resid) + (5*sd(resid)) ), by = idVars]
+dt[ , lower_mid := (median(resid) - (5*sd(resid)) ), by = idVars]
 
 #----------------------------
 # remove the dps code from the facility name for the graph titles

@@ -78,8 +78,9 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	# edgeTable[, se:=as.numeric(se)]
 	# edgeTable$label = NULL
 	if (standardized==TRUE) {
+		vars = c('lhs','op','rhs','est.std', 'se.std')
 		if (!is.null(fitObject)) edgeTable = data.table(standardizedSolution(fitObject, se=TRUE))
-		if (!is.null(parTable)) edgeTable = data.table(parTable)
+		if (!is.null(parTable)) edgeTable = data.table(parTable[, vars, with=FALSE])
 		setnames(edgeTable, c('est.std', 'se.std'), c('est', 'se'))
 	}
 	if (standardized==FALSE) { 

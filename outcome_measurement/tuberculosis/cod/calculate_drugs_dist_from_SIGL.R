@@ -31,6 +31,7 @@ imputed_data = paste0(data_path, 'sigl_quantreg_imputation_results.rds')
 prepped_drug_data <- "drugs_consumed_lost_available_update_3_6_19.rds"
 prepped_for_qr = "sigl_for_qr.rds"
 post_qr = "sigl_quantreg_imputation_results.rds"
+drugs_dist = "drugs_dist_update_3_28_19.rds"
 
 # # functions
 # source('./core/standardizeHZNames.R')
@@ -154,31 +155,46 @@ sum(missing[num_missing == 26, num_missing]) # 2752906 = the number missing the 
 # 5406912 / 6566509 * 100 = 82% of the missing data that is still missing could potentially be account for other ways...
 # 6566509 - 5406912 = 1159597 data points still missing
 
-# now, exclude org_unit_id - drug where all values are NA, across date and variable (realized I could have used all(is.na(x))...) 
+# now, exclude org_unit_id - drug where all values are NA by facility and drug, across time and specific variable (realized I could probably have used all(is.na(x))...) 
 missing = dt[is.na(value), .(num_missing= .N), by = c("org_unit_id", "drug")] 
 exclude_from_rect = unique( missing[num_missing == 39, .(org_unit_id, drug)] )
 dt_for_calc = anti_join(dt, exclude_from_rect, by = c("org_unit_id", "drug"))
 dt_for_calc = as.data.table(dt_for_calc)
+
+# verification of results step - compare median of observed values by id vars to the median of imputed values
+# should be similar, so note any cases that are really different
+check1= dt_for_calc[is.na(got_imputed), .(med_observed = median(value, na.rm = TRUE)), by = .(org_unit_id, drug, variable)]
+check2= dt_for_calc[got_imputed == "yes", .(med_imputed = median(value, na.rm = TRUE)), by = .(org_unit_id, drug, variable)]
+check3= dt_for_calc[, .(med_fitted = median(fitted_value, na.rm = TRUE)), by = .(org_unit_id, drug, variable)]
+check = merge(check1, check2, all = TRUE)
+check = merge(check, check3, all = TRUE)
+check[, med_imputed := round(med_imputed, digits = 2)]
+check[, abs_diff := abs(med_observed - med_imputed) ]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
 # Calculate drugs received(/distributed?) using the formula:
 # received(n) = available(n) + consumed(n) + lost(n) - avialable(n-1)
 # ---------------------------------------------------
+# aggregate to hz level first to improve calculation.
+dt_for_calc[, c("variable_id", "element_id", "got_imputed", "skipped_qr", "fitted_value", "resid", "med_imputed",
+                "med_fitted", "med_observed") := NULL]
+
+dt_hz = dt_for_calc[, .(value = sum(value, na.rm = TRUE)), by= .(health_zone, dps, date, drug, variable)]
+
 # cast wide
-dt_for_calc[, c("variable_id", "element_id", "got_imputed", "skipped_qr", "fitted_value", "resid") := NULL]
 # create formula for cast
-all_vars <- colnames(dt_for_calc)
+all_vars <- colnames(dt_hz)
 vars_for_cast <- all_vars[!all_vars %in% c("variable", "value")]
 f <- as.formula(paste(paste(vars_for_cast, collapse = " + "), "~ variable"))
 # cast variable wide so we can add/subtract vars
-dt_for_calc_wide <- dcast.data.table(dt_for_calc, f, value.var = "value")
+dt_for_calc_wide <- dcast.data.table(dt_hz, f, value.var = "value")
 
 # identify where previous date (by month) is missing in the data,
 # by unique identifiers
-calc <- setorderv(dt_for_calc_wide, c("org_unit_id", "drug", "date"))
+calc <- setorderv(dt_for_calc_wide, c("health_zone", "drug", "date"))
 calc <- calc[, previous_date := (date - months(1))]
-calc <- calc[, actual_previous_date := data.table::shift(date, 1L, type="lag"), by=c('org_unit_id', 'drug')] #by=c('org_unit_id', 'drug', 'category')]
+calc <- calc[, actual_previous_date := data.table::shift(date, 1L, type="lag"), by=c('health_zone', 'drug')] #by=c('org_unit_id', 'drug', 'category')]
 calc <- calc[, include_in_calculation := ifelse(previous_date == actual_previous_date, TRUE, FALSE), ]
 
 # calculate received, only for dates where the previous month exists
@@ -186,34 +202,29 @@ calc <- calc[, include_in_calculation := ifelse(previous_date == actual_previous
 calc[is.na(lost), lost:= 0]
 calc[include_in_calculation==TRUE, received := (available + consumed + lost - ( data.table::shift(available, 1L, type="lag") ))]
 
-# aggregate to health zone values
-sd_cols = c("available", "consumed", "lost", "received")
-hz_level <- calc[, lapply(.SD, sum, na.rm=TRUE), by=c("date", "dps", "health_zone", "drug", "category"), .SDcols = sd_cols]
+# # aggregate to health zone values
+# sd_cols = c("available", "consumed", "lost", "received")
+# hz_level <- calc[, lapply(.SD, sum, na.rm=TRUE), by=c("date", "dps", "health_zone", "drug", "category"), .SDcols = sd_cols]
 
 # save a copy of the data with drugs distributed for analysis/comparison to PNLP
 saveRDS(calc, paste0(data_path, drugs_dist))
+    # calc <- readRDS(paste0(data_path, "drugs_dist_update_3_28_19.rds"))
 
-calc <- readRDS(paste0(data_path, drugs_dist))
-# where level/org unit type is health zone, the actual field for health zone is blank
-# fill this in so that we can aggregate to health zone level
-calc[is.na(health_zone), edit_hz_string:= TRUE]
-calc[org_unit_type =="health zone", health_zone:= org_unit]
-calc[, health_zone:= tolower(health_zone)]
-
-calc[edit_hz_string== TRUE, health_zone:= sapply(str_split(health_zone, " ", 2),'[', 2)]
-calc[edit_hz_string== TRUE, health_zone := str_squish(health_zone)]
-calc[edit_hz_string== TRUE, health_zone := trimws(health_zone)]
-calc[edit_hz_string== TRUE, health_zone := gsub(" zone de santé", "", health_zone)]
-
-calc[, health_zone:= gsub(" ", "-", health_zone)]
-
-calc[, health_zone := standardizeHZNames(health_zone)]
+# # where level/org unit type is health zone, the actual field for health zone is blank
+# # fill this in so that we can aggregate to health zone level
+# calc[is.na(health_zone), edit_hz_string:= TRUE]
+# calc[org_unit_type =="health zone", health_zone:= org_unit]
+# calc[, health_zone:= tolower(health_zone)]
+# 
+# calc[edit_hz_string== TRUE, health_zone:= sapply(str_split(health_zone, " ", 2),'[', 2)]
+# calc[edit_hz_string== TRUE, health_zone := str_squish(health_zone)]
+# calc[edit_hz_string== TRUE, health_zone := trimws(health_zone)]
+# calc[edit_hz_string== TRUE, health_zone := gsub(" zone de santé", "", health_zone)]
+# 
+# calc[, health_zone:= gsub(" ", "-", health_zone)]
+# 
+# calc[, health_zone := standardizeHZNames(health_zone)]
 # ---------------------------------------------------
 
-# ---------------------------------------------------
-# Save
-# ---------------------------------------------------
-saveRDS(calc, paste0(data_path, drugs_dist))
-# ---------------------------------------------------
 
   
