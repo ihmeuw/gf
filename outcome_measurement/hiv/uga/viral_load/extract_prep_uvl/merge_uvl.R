@@ -26,7 +26,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set files and directories for the uganda viral load data
 
 # set the working directory to loop over the downloaded files
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/sex/')
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/age_sex_tb/')
 setwd(dir)
 
 # list existing files
@@ -80,9 +80,11 @@ for(f in files) {
   current_data[, sex:=(meta_data[5])]
   current_data[ , sex:=(substr(current_data$sex, 1, 1))] # to remove .rds
   
-  # add if tb status is included 
-  # current_data[, tb:=gsub('tb', '', meta_data[6])]
-  # current_data[, tb:=gsub('.rds', '', tb)]
+  current_data[, tb:=gsub('tb', '', meta_data[6])]
+  current_data[, tb:=gsub('.rds', '', tb)]
+  
+  current_data[ , age:=(substr(current_data$sex, 1, 1))] # to remove .rds
+  
 
   # append to the full data 
   if(i==1) full_data = current_data
@@ -106,7 +108,7 @@ max = full_data[ , max(year)]
 # merge in facility and district names
 
 # reset directory
-new_dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/')
+new_dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/prepped_data')
 
 # load facilities
 facilities = readRDS(paste0(new_dir, 'webscrape/facilities.rds'))
@@ -135,9 +137,16 @@ full_data = full_data[!is.na(district)]
 full_data = rbind(full_data, replace)
 
 # ---------------------------
+# source the prep function
+
+
+
+
+
+
 # save the product
 
-saveRDS(full_data, paste0(new_dir, 'merged/vl_', min, '_', max, '.rds'))
+saveRDS(full_data, paste0(new_dir, 'prepped_data/vl_', min, '_', max, '.rds'))
 
 # ----------------------------------------------
 

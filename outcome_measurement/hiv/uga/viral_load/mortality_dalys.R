@@ -1,6 +1,6 @@
 # Calculate deaths and DALYs
 # Caitlin O'Brien-Carelli
-# Prep UVL data for analysis
+# Calculate DALYs and mortality for HIv in Uganda
 # 12/31/2018
 #
 # ----------------------------------------------

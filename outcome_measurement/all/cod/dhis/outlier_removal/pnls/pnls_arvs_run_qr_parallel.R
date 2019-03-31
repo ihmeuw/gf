@@ -91,27 +91,27 @@ while(numFiles<i) {
 # rbind files in a cluster IDE
 # do not source! run separately in an IDDE (for speed and connection)
 # 
-# # rbind the files together and save to the j drive 
-# numFiles = length(list.files('/ihme/scratch/users/ccarelli/qr_results'))
-# numFiles
-# i = 1
-# 
-# for (j in seq(i:numFiles)) {
-#   tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j, '.rds'))
-#   if(j==1) fullData = tmp
-#   if(j>1) fullData = rbind(fullData, tmp)
-#   cat(paste0('\r', j))
-#   flush.console() 
-#   i = i+1
-# }
-# 
-# # save the rds file to the j drive
-# saveRDS(fullData, paste0('/home/j/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/pnls_outliers/qr_results.rds'))
-# 
-# # clean up parallel files
-# system('rm /ihme/scratch/users/ccarelli/qr_results/*')
-# system('rm /ihme/scratch/users/ccarelli/quantreg_output/*')
-# 
+# rbind the files together and save to the j drive
+numFiles = length(list.files('/ihme/scratch/users/ccarelli/qr_results'))
+numFiles
+i = 1
+
+for (j in seq(i:numFiles)) {
+  tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j, '.rds'))
+  if(j==1) fullData = tmp
+  if(j>1) fullData = rbind(fullData, tmp)
+  cat(paste0('\r', j))
+  flush.console()
+  i = i+1
+}
+
+# save the rds file to the j drive
+saveRDS(fullData, paste0('/home/j/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/pnls_outliers/qr_results.rds'))
+
+# clean up parallel files
+system('rm /ihme/scratch/users/ccarelli/qr_results/*')
+system('rm /ihme/scratch/users/ccarelli/quantreg_output/*')
+
 # #--------------------------------------------------------
 # 
 # 
