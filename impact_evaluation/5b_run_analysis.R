@@ -26,9 +26,9 @@ load(outputFile5a)
 # -------------------------
 # Run series of unrelated linear models
 
-lmFit1 = lm(ITN_received_cumulative ~ exp_M1_1_cumulative + exp_M1_2_cumulative + other_dah_M1_1_cumulative, data)
-lmFit2 = lm(RDT_received_cumulative ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
-lmFit3 = lm(ACT_received_cumulative ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative, data)
+lmFit1 = lm(ITN_received_cumulative ~ exp_M1_1_cumulative + exp_M1_2_cumulative + other_dah_M1_1_cumulative + completeness_ITN_received, data)
+lmFit2 = lm(RDT_received_cumulative ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative + completeness_RDT_received, data)
+lmFit3 = lm(ACT_received_cumulative ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative + completeness_ACT_received, data)
 
 # linkage 2 regressions
 lmFit4 = lm(ITN_consumed_cumulative ~ ITN_received_cumulative, data)
@@ -54,7 +54,7 @@ summary(lmFit9)
 # Define model object
 # DECISIONS
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
-source('./impact_evaluation/models/drc_malaria4.r')
+source('./impact_evaluation/models/drc_malaria5.r')
 
 # test run
 # tmp = data[health_zone==unique(data$health_zone)[1]]
@@ -147,8 +147,8 @@ save(list=c('data','untransformed','model','semFits','summaries','means','scalin
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
-archive(outputFile5b)
-archive(outputFile5b_big)
+archive(outputFile5b, 'model_runs')
+archive(outputFile5b_big, 'model_runs')
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
