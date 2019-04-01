@@ -74,7 +74,40 @@ setnames(mediation_means, c('label.x','label.y'), c('label_lhs','label_rhs'))
 
 
 # -----------------------------------------------
-# Set up second half data
+# Pools funders together, weighting by investment size
+
+# reshape data long
+long = melt(data1, id.vars=c('health_zone','date'))
+
+# aggregate to total across whole time series (unrescaling not necessary)
+long = long[, .(value=sum(value)), by=variable]
+
+# merge to means
+pooled_means1 = merge(means1, long, by.x='rhs', by.y='variable', all.x=TRUE)
+
+# take the weighted average across funders
+pooled_means1[grepl('\\$',label_rhs), label_rhs:='Pooled Investment']
+byVars = c('lhs','label_lhs','label_rhs')
+pooled_means1 = pooled_means1[, .(est_unrescaled=weighted.mean(est_unrescaled, value), 
+	se_unrescaled=weighted.mean(se_unrescaled, value)), by=byVars]
+	
+# get uncertainty
+pooled_means1[, lower_unrescaled:=est_unrescaled-(1.96*se_unrescaled)]
+pooled_means1[, upper_unrescaled:=est_unrescaled+(1.96*se_unrescaled)]
+# -----------------------------------------------
+
+
+# -----------------------------------------------
+# Set up second half estimates
+
+# subset to coefficients of interest
+means2 = means2[op=='~' & !grepl('completeness|date',rhs)]
+
+# compute uncertainty intervals
+means2[, lower:=est-(1.96*se)]
+means2[, lower.std:=est.std-(1.96*se.std)]
+means2[, upper:=est+(1.96*se)]
+means2[, upper.std:=est.std+(1.96*se.std)]
 
 # unrescale
 tmp = unique(melt(scaling_factors1, value.name='scaling_factor'))
@@ -209,6 +242,17 @@ p6 = ggplot(means2[lhs %in% mortVars],
 		x='Outcome') + 
 	theme_bw() + 
 	coord_flip()
+	
+# graph pooled coefficients from inputs to activities
+p7 = ggplot(pooled_means1[lhs %in% actVars], 
+		aes(y=est_unrescaled, ymin=lower_unrescaled, 
+			ymax=upper_unrescaled, x=label_lhs)) + 
+	geom_bar(stat='identity') + 
+	geom_errorbar(width=.25) + 
+	labs(title='Efficiency', subtitle='Activities', 
+		y='Activities per Additional Dollar Invested',x='Input') + 
+	theme_bw() + 
+	coord_flip()
 # ----------------------------------------------
 
 
@@ -221,6 +265,7 @@ p3
 p4
 p5
 p6
+p7
 dev.off()
 
 # save a time-stamped version for reproducibility
