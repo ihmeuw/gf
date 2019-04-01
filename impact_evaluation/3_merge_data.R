@@ -31,9 +31,11 @@ outputs_activities_rect = merge(frame, outputs_activities, by=c('dps','health_zo
 merge_file <- merge(resource_tracking_rect, outputs_activities_rect, by=c('dps','health_zone','date'))
 
 # distribute inputs by health zone proportionally to activities
-inVars = c('other_dah_M1_1', 'other_dah_M1_2', 'other_dah_M2', 'other_dah_M2_3', 'exp_M1_1', 'exp_M1_2', 'exp_M2', 'exp_M2_1', 'exp_M2_3', 'exp_M2_6', 'exp_M3_1', 'ghe', 'oop')
-actVars = c('value_ITN_received', 'value_ITN_received', 'value_total_tx', 'value_total_tx', 'value_ITN_received', 'value_ITN_received', 'value_total_tx', 'value_total_tx', 
-            'value_total_tx', 'value_total_tx', 'value_ACT_received', 'value_total', 'value_total')
+inVars = c('other_dah_M1_1', 'other_dah_M1_2', 'other_dah_M2', 'other_dah_M2_3', 'exp_M1_1', 
+	'exp_M1_2', 'exp_M2', 'exp_M2_1', 'exp_M2_3', 'exp_M2_6', 'exp_M3_1', 'ghe', 'oop')
+actVars = c('value_ITN_received', 'value_ITN_received', 'value_total_tx', 'value_total_tx', 
+	'value_ITN_received', 'value_ITN_received', 'value_total_tx', 'value_total_tx', 
+	'value_total_tx', 'value_total_tx', 'value_ACT_received', 'value_total', 'value_total')
 merge_file[, value_total_tx:= value_ACT_received + value_RDT_received]
 merge_file[, value_total:= value_ACT_received + value_RDT_received + value_ITN_received]
 for(i in seq_along(inVars)) {
@@ -43,6 +45,7 @@ for(i in seq_along(inVars)) {
 	# disallow zeroes
 	min = min(merge_file[get(a)>0][[a]], na.rm=TRUE)
 	merge_file[, mean:=mean(get(a), na.rm=TRUE), by=health_zone]
+	merge_file[is.na(mean), mean:=min]
 	
 	# distribute proportionally
 	merge_file[, tmp:=get(a)+min]
@@ -57,7 +60,7 @@ for(i in seq_along(inVars)) {
 }	
 
 # clean up 
-merge_file = merge_file[, -c('mean','tmp','prop','total','total_tx')]
+merge_file = merge_file[, -c('mean','tmp','prop','value_total','value_total_tx')]
 
 # merge_file$loc_name = 'cod'
 # merge_file$disease = 'malaria'
