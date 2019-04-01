@@ -22,6 +22,7 @@ raw_gos_mf  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and 
                                    sheet=as.character('GOS Mod-Interv - Extract')))
 raw_gos_sdas  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
                                    sheet=as.character('GMS SDAs - extract')))
+new_gos = read.delim2(paste0(gos_raw, "Budget and exp PCE countries 2015 to 2017.txt"))
 modular_framework = fread(paste0(mapping_dir, "all_interventions.csv"))
 
 #--------------------------------------------------------

@@ -37,6 +37,9 @@ dt[stock_category=='Sortie', stock_category:='output']
 #Make a test kit data table 
 test_kit_vars = c("HIV 1+2, Determine Complete, Kit de 100 tests", "HIV 1/2, Double Check Gold, Kit de 100 test", "HIV 1+2, Uni-Gold HIV, Kit de 20 tests")
 test_kits = dt[element%in%test_kit_vars]
+test_kits = test_kits[, .(element_id, date, element, value, stock_category)]
+test_kits[, value:=sum(value), by=c('element_id', 'element', 'date', 'stock_category')]
+test_kits = unique(test_kits)
 #--------------------------------------------------------------
 #Make some charts 
 #--------------------------------------------------------------
@@ -54,17 +57,17 @@ dps_level_so[, mean_fac_days_so:=value/total_facilities]
 
 tt1 = ggplot(test_kits[element=="HIV 1+2, Determine Complete, Kit de 100 tests"], aes(x=date, y=value)) + 
   facet_wrap(~stock_category, scales='free_y')+
-  geom_point(color='darkorange') + 
+  geom_point() + geom_line() + 
   labs(title="Determine stock categories over time, with free_y scales")
 
 tt2 = ggplot(test_kits[element=="HIV 1/2, Double Check Gold, Kit de 100 test"], aes(x=date, y=value)) + 
   facet_wrap(~stock_category, scales='free_y')+
-  geom_point(color='deeppink2') + 
+  geom_point() + geom_line() + 
   labs(title="Double-check gold stock categories over time, with free_y scales")
 
 tt3 = ggplot(test_kits[element=="HIV 1+2, Uni-Gold HIV, Kit de 20 tests"], aes(x=date, y=value)) + 
   facet_wrap(~stock_category, scales='free_y')+
-  geom_point(color='darkorchid') + 
+  geom_point() + geom_line() + 
   labs(title="Uni-gold stock categories over time, with free_y scales")
 
 # •	Make a DPS level map for each. I would start with a count of days out of stock per district (just sum by district) and make one map for each type of test kits 
@@ -145,7 +148,23 @@ so9 <- ggplot(uni_gold_so_trim, aes(x=date, y=value, color=dps)) +
 mean_fac_so1 = ggplot(dps_level_so, aes(x=date, y=mean_fac_days_so, color=dps)) + 
   geom_point() + 
   theme_bw() + 
-  labs(title = "Mean facility-days stocked out, by district")
+  labs(title = "Mean facility-days stocked out, by district, for all commodities")
+
+mean_fac_so2 = ggplot(dps_level_so[element=="HIV 1+2, Uni-Gold HIV, Kit de 20 tests"], aes(x=date, y=mean_fac_days_so, color=dps)) + 
+  geom_point() + 
+  theme_bw() + 
+  labs(title = "Mean facility-days stocked out, by district, uni-gold")
+
+mean_fac_so3 = ggplot(dps_level_so[element=="HIV 1/2, Double Check Gold, Kit de 100 test"], aes(x=date, y=mean_fac_days_so, color=dps)) + 
+  geom_point() + 
+  theme_bw() + 
+  labs(title = "Mean facility-days stocked out, by district, double-check")
+
+mean_fac_so4 = ggplot(dps_level_so[element=="HIV 1+2, Determine Complete, Kit de 100 tests"], aes(x=date, y=mean_fac_days_so, color=dps)) + 
+  geom_point() + 
+  theme_bw() + 
+  labs(title = "Mean facility-days stocked out, by district, determine")
+
 #--------------------------------------------------------------
 #Make the graphs, and write to a .PDF
 #--------------------------------------------------------------
@@ -156,17 +175,20 @@ tt1
 tt2
 tt3
 
-so1
-so2
-so3
-so4
-so5
-so6
-so7
-so8
-so9
+# so1
+# so2
+# so3
+# so4
+# so5
+# so6
+# so7
+# so8
+# so9
 
-mean_fac_so1
+# mean_fac_so1
+# mean_fac_so2
+# mean_fac_so3
+# mean_fac_so4
 
 dev.off()
 
@@ -180,16 +202,15 @@ outFile = paste0(saveDir, 'drug_all_elements.pdf')
 pdf(outFile, height=5.5, width=7)
 
 for (var in unique(dt$element)){
-  temp = dt[element==var, .(date, value, element, stock_category, dps)]
-  temp[, value:=sum(value), by=.(date, element, stock_category, dps)]
+  temp = dt[element==var, .(date, value, element, stock_category)]
+  temp[, value:=sum(value), by=.(date, element, stock_category)]
   temp = unique(temp)
   
-  plot = ggplot(temp, aes(x=date, y=value, color=dps)) + 
-    geom_point() +
+  plot = ggplot(temp, aes(x=date, y=value)) + 
+    geom_point() + geom_line() + 
     theme_bw() + 
     facet_wrap(~stock_category, scales='free_y')+
     labs(title= var)
-  plot 
-  Sys.sleep(5)
+  print(plot) 
 }
 dev.off()

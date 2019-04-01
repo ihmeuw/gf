@@ -57,12 +57,15 @@ outputs = reshape_wide(outputs)
 outcomes = reshape_wide(outcomes)
 impact = reshape_wide(impact)
 
+activities$municipality <- ""
+outputs$municipality<-""
+outcomes$municipality<-""
+impact$municipality <-""
+
 write.csv(activities, paste0(save_loc, "blank_dr_activities.csv"), row.names = FALSE)
 write.csv(outputs, paste0(save_loc, "blank_dr_outputs.csv"), row.names = FALSE)
 write.csv(outcomes, paste0(save_loc, "blank_dr_outcomes.csv"), row.names = FALSE)
 write.csv(impact, paste0(save_loc, "blank_dr_impact.csv"), row.names = FALSE)
-
-
 
 
 
