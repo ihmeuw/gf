@@ -280,8 +280,11 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 		expand_limits(y=c(ymin, ymax), x=c(xmin, xmax)) 
 	
 	# labels
+	capt = paste('Control variables not displayed:', paste(exclVars, collapse =', '))
+	capt = str_wrap(capt, 80)
+	if (length(exclVars)==0) capt='' 
 	p = p + 
-		labs(color='Effect\nSize', caption=paste('Control variables not displayed:', paste(exclVars, collapse =',')))
+		labs(color='Effect\nSize', caption=capt)
 	
 	# clean up plot
 	p = p + theme_void() + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'))
