@@ -149,9 +149,9 @@ dt = dt[!is.na(district)]
 dt = rbind(dt, replace_districts)
 
 # ---------------------------
-# save the interim product
+# save the interim product (merged but not fully prepped)
 
- saveRDS(dt, paste0(out_dir, 'merged_vl_', min_date, '_', max_date, '.rds'))
+# saveRDS(dt, paste0(out_dir, 'merged_vl_', min_date, '_', max_date, '.rds'))
 # ---------------------------
 # run final prep
 # includes using mean imputation to replace missing sex

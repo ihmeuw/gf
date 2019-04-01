@@ -32,8 +32,8 @@ user_name = 'ccarelli'
 # cp '/home/j/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outliers/base_to_screen.rds' '/ihme/scratch/users/ccarelli/'
 
 # to delete files in the directory
-# rm qr_results/*
-# rm quantreg_output/*
+# rm base_results/*
+# rm base_output/*
 
 # set the working directory in the qlogin by navigating to it
 # cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod/dhis/outlier_removal/base
@@ -99,8 +99,8 @@ write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 #------------------------------------
 # array job
 N = nrow(array_table)
-PATH = paste0('/ihme/scratch/users/', user_name, '/quantreg_output')
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.r'))
+PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_base2.r'))
 
 # NOTE: file paths now relative to the root of the repo
 
@@ -127,10 +127,10 @@ system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:',
 # wait for files to be done
 #------------------------------------
 i = N-1
-numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/qr_results')))
+numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/base_results')))
 while(numFiles<i) { 
   print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 60 seconds...'))
-  numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/qr_results')))
+  numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/base_results')))
   Sys.sleep(60)
 }
 #------------------------------------
@@ -141,7 +141,7 @@ while(numFiles<i) {
 fullData = data.table()
 
 for (j in seq(N)) {
-  tmp = read.fst(paste0('/ihme/scratch/users/', user_name, '/qr_results/quantreg_output', j, '.fst'), as.data.table = TRUE)
+  tmp = read.fst(paste0('/ihme/scratch/users/', user_name, '/base_results/base_output', j, '.fst'), as.data.table = TRUE)
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', j))

@@ -25,26 +25,11 @@ o = array_table[i]$org_unit_id # unique facility id
 print(o)
 
 #------------------------------------
-
-#------------------------------------
-# set up
-#------------------------------------
-# library(data.table)
-# library(quantreg)
-# library(fst)
-
-# # detect if operating on windows or on the cluster 
-# root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-# 
-# # set the directory for output
-# dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-#------------------------------------
-
-#------------------------------------
+#-----------------------------------
 # load the data & subset to task_id/org_unit
 #------------------------------------
 # make a table of values to index rows by unique org_unit for retrieving rows while reading in the data
-index_table <- data.table(index = seq(1:N, f = seq(from= 1, to = 11339952, by = 663), t = seq(from= 663, to = 11339952, by = 663))
+index_table <- data.table(index = seq(1:N, f = seq(from= 1, to = 11339952, by = 663), t = seq(from= 663, to = 11339952), by = 663)
 from_row = index_table[ i, f ]
 to_row = index_table[ i, t ]
 
@@ -52,17 +37,6 @@ to_row = index_table[ i, t ]
 # dt <- readRDS('/ihme/scratch/users/abatzel/data_for_qr.rds')
 # dt = data.table(dt)
 dt = read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', from = from_row , to = to_row, as.data.table = TRUE) 
-
-# **** NO LONGER NEED THIS since reading the data in from /ihme/scratch/ after it is prepped in run_quantreg_parallel
-# # make variable ids
-# dt[, variable_id:=.GRP, by='drug']
-# dt[, element_id:=.GRP, by='variable']
-
-# # remove new cases (not of interest for outlier detection)
-# if (fileName=='viral_load_pnls_interim.rds') { 
-#   dt = dt[case=='Old']
-#   dt[ , case:=NULL]
-# }
 
 if ( length(unique(dt$org_unit_id) == 1) & nrow(dt)==663 & unique(dt$org_unit_id) == o ) {
   print("Indexing for read.fst() worked correctly!")
