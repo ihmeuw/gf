@@ -36,7 +36,7 @@ user_name = 'ccarelli'
 # rm base_output/*
 
 # set the working directory in the qlogin by navigating to it
-# cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod/dhis/outlier_removal/base
+# cd /ihme/code/ccarelli/gf/
 
 # print the contents
 # ls
@@ -47,7 +47,7 @@ user_name = 'ccarelli'
 # then call R
 
 # then source this script (located in your working directory)
-# source('base_quantreg_parallel.R')
+# source('./outcome_measurement/all/cod/dhis/outlier_removal/base/base_quantreg_parallel.R')
 
 #------------------------------------
 
@@ -68,8 +68,6 @@ resubmitAll = TRUE
 
 # whether or not to delete all files from parallel runs at the end
 cleanup = TRUE
-
-
 
 #------------------------------------
 
@@ -99,7 +97,7 @@ write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 # array job
 N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./quantregScript_base2.R'))
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./quantregScript_base2.r'))
 
 #------------------------------------
 
