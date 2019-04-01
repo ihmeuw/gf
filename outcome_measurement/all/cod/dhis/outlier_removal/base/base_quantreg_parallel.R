@@ -85,9 +85,6 @@ dt = setorder(dt, org_unit_id)
 array_table = data.table(expand.grid(unique(dt$org_unit_id)))
 setnames(array_table, "Var1", "org_unit_id")
 
-# subset for testing:
-array_table = array_table[1:5,]
-
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, paste0('/ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
 write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
