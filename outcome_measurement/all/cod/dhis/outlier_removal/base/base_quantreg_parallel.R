@@ -69,6 +69,8 @@ resubmitAll = TRUE
 # whether or not to delete all files from parallel runs at the end
 cleanup = TRUE
 
+
+
 #------------------------------------
 
 #------------------------------------
@@ -97,7 +99,7 @@ write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 # array job
 N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base/quantregScript_base2.r'))
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./quantregScript_base2.R'))
 
 #------------------------------------
 
