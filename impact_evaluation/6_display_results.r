@@ -44,11 +44,22 @@ nodeTable2 = nodeTable2[variable %in% names(data2)]
 
 # my sem graph function for first half model
 p1 = semGraph(parTable=means1, nodeTable=nodeTable1, 
-	scaling_factors=NA, standardized=TRUE, 
+	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
 	lineWidth=1.5, curved=0, tapered=FALSE)
 
 # my sem graph function for second half model
 p2 = semGraph(parTable=means2, nodeTable=nodeTable2, 
+	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
+	lineWidth=1.5, curved=0, tapered=FALSE, 
+	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
+
+# my sem graph function for first half model with coefficients
+p3 = semGraph(parTable=means1, nodeTable=nodeTable1, 
+	scaling_factors=NA, standardized=TRUE, 
+	lineWidth=1.5, curved=0, tapered=FALSE)
+
+# my sem graph function for second half model with coefficients
+p4 = semGraph(parTable=means2, nodeTable=nodeTable2, 
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE, 
 	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
@@ -60,6 +71,8 @@ p2 = semGraph(parTable=means2, nodeTable=nodeTable2,
 pdf(outputFile6, height=6, width=9)
 print(p1)
 print(p2)
+print(p3)
+print(p4)
 dev.off()
 
 # save a time-stamped version for reproducibility
