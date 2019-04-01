@@ -3,7 +3,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli / Audrey Batzel (3-7-19)
 #
-# 10/1/2018
+# 4/1/2019
 # The current working directory should be the same as this script
 # This code must be run on the cluster
 
@@ -47,7 +47,7 @@ user_name = 'ccarelli'
 # then call R
 
 # then source this script (located in your working directory)
-# source('base_quantreg_parallel.r')
+# source('base_quantreg_parallel.R')
 
 #------------------------------------
 
@@ -55,7 +55,7 @@ user_name = 'ccarelli'
 # set directories, switchs, arguments  
 #------------------------------------
 # detect if operating on windows or on the cluster 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
