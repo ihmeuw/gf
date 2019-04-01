@@ -110,12 +110,15 @@ urls = adply(arguments, 1, build_url)
 #--------------------------------------------------
 # download the meta data on districts and facilities
 
+# if you need to update the facilities extraction code on the cluster:
+# cd /ihme/code/ccarelli/gf/
+# git pull
+
 # downloads meta data and saves automatically
 src_dir = '/ihme/code/ccarelli/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/dist_facilities_uvl.R'
 
 # to source locally (typically run on the cluster)
-src_dir = "C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/dist_facilities_uvl.R"
-
+# src_dir = "C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/dist_facilities_uvl.R"
 
 # download the facilities data 
 source(src_dir)
