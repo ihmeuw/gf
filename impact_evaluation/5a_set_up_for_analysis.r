@@ -38,7 +38,11 @@ data$dps = NULL
 	# data$other_dah_M2_3 = NULL
 	
 	# iccm didn't exist prior to 2014, wasn't reported until 2015, consider it zero
-	data[date<2015, ACTs_SSC:=0]
+	data[date<2015, value_ACTs_SSC:=0]
+	
+	# completeness reported as a percentage not proportion
+	complVars = names(data)[grepl('completeness',names(data))]
+	for(v in complVars) data[get(v)>1, (v):=get(v)/100]
 
 # compute cumulative budgets
 rtVars = names(data)
@@ -46,7 +50,7 @@ rtVars = rtVars[grepl('exp|other_dah', rtVars)]
 for(v in rtVars) data[, (paste0(v,'_cumulative')):=cumsum(get(v)), by='health_zone']
 
 # subset dates now that cumulative variables are computed
-data = data[date>=2010 & date<2019]
+data = data[date>=2010 & date<2018.75]
 # -----------------------------------------------------------------
 
 
@@ -55,9 +59,7 @@ data = data[date>=2010 & date<2019]
 
 # drop zero-variance variables
 numVars = names(data)[names(data)!='health_zone']
-for(v in numVars) { 
-	if (sd(data[[v]],na.rm=T)==0) data[[v]] = NULL
-}
+for(v in numVars) if (all(is.na(data[[v]]))) data[[v]] = NULL
 
 # extrapolate where necessary TEMPORARY
 i=1
@@ -82,31 +84,35 @@ data$tmp = NULL
 
 # now remake ghe_cumulative TEMPORARY
 data[, ghe_cumulative:=cumsum(ghe), by='health_zone']
-data[, oop_cumulative:=cumsum(oop), by='health_zone']
-data[, ITN_received_cumulative:=cumsum(ITN_received), by='health_zone']
-data[, RDT_received_cumulative:=cumsum(RDT_received), by='health_zone']
-data[, ACT_received_cumulative:=cumsum(ACT_received), by='health_zone']
-data[, ITN_consumed_cumulative:=cumsum(ITN_consumed), by='health_zone']
-data[, ACTs_SSC_cumulative:=cumsum(ACTs_SSC), by='health_zone']
-data[, RDT_completed_cumulative:=cumsum(RDT_completed), by='health_zone']
-data[, SP_cumulative:=cumsum(SP), by='health_zone']
-data[, severeMalariaTreated_cumulative:=cumsum(severeMalariaTreated), by='health_zone']
-data[, totalPatientsTreated_cumulative:=cumsum(totalPatientsTreated), by='health_zone']
+# data[, oop_cumulative:=cumsum(oop), by='health_zone']
+data[, ITN_received_cumulative:=cumsum(value_ITN_received), by='health_zone']
+data[, RDT_received_cumulative:=cumsum(value_RDT_received), by='health_zone']
+data[, ACT_received_cumulative:=cumsum(value_ACT_received), by='health_zone']
+data[, ITN_consumed_cumulative:=cumsum(value_ITN_consumed), by='health_zone']
+data[, ACTs_SSC_cumulative:=cumsum(value_ACTs_SSC), by='health_zone']
+data[, RDT_completed_cumulative:=cumsum(value_RDT_completed), by='health_zone']
+data[, SP_cumulative:=cumsum(value_SP), by='health_zone']
+data[, severeMalariaTreated_cumulative:=cumsum(value_severeMalariaTreated), by='health_zone']
+data[, totalPatientsTreated_cumulative:=cumsum(value_totalPatientsTreated), by='health_zone']
 
 # na omit (for health zones that were entirely missing)
 data = na.omit(data)
 
-# drop completeness variables (for now)
-for(v in names(data)[grepl('completeness', names(data))]) data[[v]]=NULL
-
-# split before trasnformations
+# split before transformations
 untransformed = copy(data)
 
-# transform completeness variables
-# for(v in names(data)[grepl('completeness', names(data))]) data[, (v):=logit(get(v))]
+# transform completeness variables using approximation of logit that allows 1's and 0's
+# (Smithson et al 2006 Psychological methods "A better lemon squeezer")
+smithsonTransform = function(x) { 
+	N=length( x[!is.na(x)] )
+	prop_lsqueeze = logit(((x*(N-1))+0.5)/N)
+}
+for(v in complVars) { 
+	data[get(v)>1, (v):=1]
+	data[, (v):=smithsonTransform(get(v))]
+}
 
-# # log-transform all variables (NEED CONFIRMATION AT HZ LEVEL)
-logVars =names(data)[!names(data)%in%c('health_zone','date')]
+# # log-transform all variables
 logVars = c('ITN_consumed_cumulative','ACTs_SSC_cumulative','RDT_completed_cumulative','SP_cumulative','severeMalariaTreated_cumulative','totalPatientsTreated_cumulative')
 for(v in logVars) data[, (v):=log(get(v))]
 for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
