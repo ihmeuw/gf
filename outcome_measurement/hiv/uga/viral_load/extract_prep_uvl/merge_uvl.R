@@ -36,7 +36,10 @@ out_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard
 files = list.files('./', recursive=TRUE)
 length(files)
 
-# --------------
+# ---------------------------
+# source the function 
+
+source("C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/prep_uvl.R")
 
 # ----------------------------------------------
 # add identifying variables to the existing data tables using file names
@@ -150,11 +153,15 @@ dt = rbind(dt, replace_districts)
 
  saveRDS(dt, paste0(out_dir, 'merged_vl_', min_date, '_', max_date, '.rds'))
 # ---------------------------
+# run final prep
+# includes using mean imputation to replace missing sex
 
+dt = prep_uvl(dt)
+# ---------------------------
+# save the final product 
 
-
-
-
+saveRDS(dt, paste0(out_dir, 'uvl_prepped_', min_date, '_', max_date, '.rds'))
+# ---------------------------
 
 
 

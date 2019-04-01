@@ -3,9 +3,10 @@
 # 3/31/2019
 #-----------------------
 
- dt = readRDS(paste0(out_dir, 'merged_vl_', min_date, '_', max_date, '.rds'))
+# to run the function without the merge:
+# dt = readRDS(paste0(out_dir, 'merged_vl_', min_date, '_', max_date, '.rds'))
 
-prep_uvl = function(x) {}
+prep_uvl = function(x) {
 
 #-----------------------
 # set working directory
@@ -73,16 +74,6 @@ merge_new_dists = function(x) {
 # there should be 113 districts - 112 plus one missing
 merge_new_dists(dt)
 length(unique(dt$district))
-
-# -------------------------
-
-# ------------------------
-# combine the duplicates into single entries
-
-# print the number of duplicate entries and drop the duplicates
-dt[ ,combine:=paste0(date,'_', facility_id,'_', sex, age, tb_status)]
-print(paste("There are", nrow(dt[duplicated(combine)]), "duplicate entries!"))
-dt = dt[!duplicated(combine)]
 
 # ------------------------
 # full data table of all duplicate entries as single entries
@@ -268,11 +259,9 @@ dt[valid_results < suppressed]
 dt[ ,year:=year(date)]
 
 #-------------------------------
-# save the final data as an RDS
+return(dt)
 
-saveRDS(dt, file= paste0(dir, "/prepped/age_sex_tb.rds"))
-
-#-------------------------------
+}
 
 
 
