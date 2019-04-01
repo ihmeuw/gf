@@ -34,6 +34,11 @@ source('./impact_evaluation/models/drc_malaria_impact3.r')
 
 # --------------------------------------------------------------
 # Run model
+# jitter completeness variables to avoid perfect collinearity
+for(v in names(subData)[grepl('completeness', names(subData))]) { 
+	subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+1)/10)]
+}
+
 semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 
 # store summary
