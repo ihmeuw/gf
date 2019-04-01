@@ -20,8 +20,7 @@
 # Copy shell script into a qlogin session to open an IDE
 # request at least 10 slots for extractions 
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 20 -P snis_download
-
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 
 #---------------------------
 # Set up R
 rm(list=ls())

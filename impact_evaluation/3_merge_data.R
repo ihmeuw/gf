@@ -31,10 +31,13 @@ outputs_activities_rect = merge(frame, outputs_activities, by=c('dps','health_zo
 merge_file <- merge(resource_tracking_rect, outputs_activities_rect, by=c('dps','health_zone','date'))
 
 # distribute inputs by health zone proportionally to activities
-inVars = c('other_dah_M1_1', 'other_dah_M1_2', 'other_dah_M2', 'other_dah_M2_3', 'exp_M1_1', 'exp_M1_2', 'exp_M2', 'exp_M2_1', 'exp_M2_3', 'exp_M2_6', 'exp_M3_1', 'ghe', 'oop')
-actVars = c('ITN_received', 'ITN_received', 'total_tx', 'total_tx', 'ITN_received', 'ITN_received', 'total_tx', 'total_tx', 'total_tx', 'total_tx', 'ACT_received', 'total', 'total')
-merge_file[, total_tx:=ACT_received+RDT_received]
-merge_file[, total:=ACT_received+RDT_received+ITN_received]
+inVars = c('other_dah_M1_1', 'other_dah_M1_2', 'other_dah_M2', 'other_dah_M2_3', 'exp_M1_1', 
+	'exp_M1_2', 'exp_M2', 'exp_M2_1', 'exp_M2_3', 'exp_M2_6', 'exp_M3_1', 'ghe', 'oop')
+actVars = c('value_ITN_received', 'value_ITN_received', 'value_total_tx', 'value_total_tx', 
+	'value_ITN_received', 'value_ITN_received', 'value_total_tx', 'value_total_tx', 
+	'value_total_tx', 'value_total_tx', 'value_ACT_received', 'value_total', 'value_total')
+merge_file[, value_total_tx:= value_ACT_received + value_RDT_received]
+merge_file[, value_total:= value_ACT_received + value_RDT_received + value_ITN_received]
 for(i in seq_along(inVars)) {
 	v = inVars[i]
 	a = actVars[i]
@@ -42,6 +45,7 @@ for(i in seq_along(inVars)) {
 	# disallow zeroes
 	min = min(merge_file[get(a)>0][[a]], na.rm=TRUE)
 	merge_file[, mean:=mean(get(a), na.rm=TRUE), by=health_zone]
+	merge_file[is.na(mean), mean:=min]
 	
 	# distribute proportionally
 	merge_file[, tmp:=get(a)+min]
@@ -56,8 +60,7 @@ for(i in seq_along(inVars)) {
 }	
 
 # clean up 
-merge_file = merge_file[, -c('mean','tmp','prop','total','total_tx')]
-
+merge_file = merge_file[, -c('mean','tmp','prop','value_total','value_total_tx')]
 
 # merge_file$loc_name = 'cod'
 # merge_file$disease = 'malaria'
@@ -65,7 +68,7 @@ merge_file = merge_file[, -c('mean','tmp','prop','total','total_tx')]
 # merge_file <- merge_file[, .(year, quarter, code, module, intervention, indicator, indicator_type, value, completeness, budget, loc_name, disease, data_source)] #EKL are we missing some variables?
 # merge_file <- merge_file[, .(year, quarter, code, module, intervention, indicator, indicator_type, value, completeness, budget, loc_name, disease, other_dah, data_source)]
 
+# save
 saveRDS(merge_file, outputFile3)
-
 # save a time-stamped version for reproducibility
 archive(outputFile3)
