@@ -29,23 +29,26 @@ print(o)
 # load the data & subset to task_id/org_unit
 #------------------------------------
 # make a table of values to index rows by unique org_unit for retrieving rows while reading in the data
-index_table <- data.table(index = seq(1:N, f = seq(from= 1, to = 11339952, by = 663), t = seq(from= 663, to = 11339952), by = 663)
-from_row = index_table[ i, f ]
-to_row = index_table[ i, t ]
+# index_table <- data.table(index = seq(1:N, f = seq(from= 1, to = 11339952, by = 663), t = seq(from= 663, to = 11339952), by = 663)
+# from_row = index_table[ i, f ]
+# to_row = index_table[ i, t ]
 
 # dt <- readRDS(paste0(dir, 'prepped/', fileName))
 # dt <- readRDS('/ihme/scratch/users/abatzel/data_for_qr.rds')
 # dt = data.table(dt)
-dt = read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', from = from_row , to = to_row, as.data.table = TRUE) 
+# dt = read.fst('/ihme/scratch/users/', username, '/data_for_qr.fst', from = from_row , to = to_row, as.data.table = TRUE) 
+# 
+# if ( length(unique(dt$org_unit_id) == 1) & nrow(dt)==663 & unique(dt$org_unit_id) == o ) {
+#   print("Indexing for read.fst() worked correctly!")
+#   subset = copy(dt)
+# } else {
+#   print("Indexing for read.fst() did not work correctly! Retrying by reading in full dt!")
+#   dt <- read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', as.data.table = TRUE)
+#   subset = dt[org_unit_id==o, ] 
+# }
 
-if ( length(unique(dt$org_unit_id) == 1) & nrow(dt)==663 & unique(dt$org_unit_id) == o ) {
-  print("Indexing for read.fst() worked correctly!")
-  subset = copy(dt)
-} else {
-  print("Indexing for read.fst() did not work correctly! Retrying by reading in full dt!")
-  dt <- read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', as.data.table = TRUE)
-  subset = dt[org_unit_id==o, ] 
-}
+dt <- read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', as.data.table = TRUE)
+subset = dt[org_unit_id==o, ] 
 
 # # subset the data by facility - to the current org_unit_id we want
 # subset = dt[org_unit_id==o, ] 
@@ -57,7 +60,7 @@ if ( length(unique(dt$org_unit_id) == 1) & nrow(dt)==663 & unique(dt$org_unit_id
 combined_qr_results <- data.table()
 
 for (e in unique(subset$element_id)) {
-  for (v in unique(subset$variable_id)) {
+  # for (v in unique(subset$variable_id)) {
     # subset the data further based on loop parameters for qr
     subset_further = subset[element_id == e & variable_id == v, ] 
     
