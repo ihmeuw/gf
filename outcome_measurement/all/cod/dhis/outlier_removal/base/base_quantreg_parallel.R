@@ -100,27 +100,9 @@ write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 # array job
 N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_base2.r'))
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./quantregScript_base2.r'))
 
-# NOTE: file paths now relative to the root of the repo
 
-# # loop over elements and org units, run quantreg once per each
-# i=1
-# for (v in unique(dt$variable_id)) {
-#   for (e in unique(dt$element_id)) { 
-#     for(o in unique(dt$org_unit_id)) { 
-#       # skip if this job has already run and resubmitAll is FALSE
-#       if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/', user_name, '/qr_results/quantreg_output', i, '.rds'))) { 
-#          i=i+1
-#          next
-#       } else {
-#         # run the quantile regression and list the residuals
-#         system(paste0('qsub -o /ihme/scratch/users/', user_name, '/quantreg_output -e /ihme/scratch/users/', user_name, '/quantreg_output -cwd -N quantreg_output_', i, ' ../../../../../core/r_shell.sh ./quantregScript.r ', e, ' ', o, ' ', i, ' ', inFile, ' ', impute, ' ', v ))
-#         i=i+1
-#       }
-#     }
-#   }
-# }
 #------------------------------------
 
 #------------------------------------
@@ -129,9 +111,9 @@ system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:',
 i = N-1
 numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/base_results')))
 while(numFiles<i) { 
-  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 60 seconds...'))
+  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 5 seconds...'))
   numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/base_results')))
-  Sys.sleep(60)
+  Sys.sleep(5)
 }
 #------------------------------------
 
@@ -156,8 +138,8 @@ saveRDS(fullData, outFile)
 # clean up parallel files
 #------------------------------------
 if (cleanup==TRUE) { 
-  system(paste0('rm /ihme/scratch/users/', user_name, '/qr_results/*'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg_output/*'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/base_results/*'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/base_output/*'))
   system(paste0('rm /ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
   system(paste0('rm /ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 }
