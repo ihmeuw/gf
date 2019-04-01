@@ -22,29 +22,17 @@ model = '
 	severeMalariaTreated_cumulative ~ prior("dgamma(1,1)")*exp_M2_6_cumulative + prior("dgamma(1,1)")*ACT_received_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative
 	totalPatientsTreated_cumulative ~ prior("dgamma(1,1)")*ACT_received_cumulative
 	
-	# # latent variables
+	# latent variables
 	
-	# # fixed variances
-	# # RDT_received_cumulative ~ 1*RDT_received_cumulative
-	# # ACT_received_cumulative ~ 1*ACT_received_cumulative
-	# # ITN_received_cumulative ~ 1*ITN_received_cumulative
-	# # ITN_consumed_cumulative ~ 1*ITN_consumed_cumulative
-	# # ACTs_SSC_cumulative ~ 1*ACTs_SSC_cumulative
-	# # RDT_completed_cumulative ~ 1*RDT_completed_cumulative
-	# # SP_cumulative ~ 1*SP_cumulative
-	# # severeMalariaTreated_cumulative ~ 1*severeMalariaTreated_cumulative
-	# # totalPatientsTreated_cumulative ~ 1*totalPatientsTreated_cumulative
+	# fixed variances
 	
-	# # covariances
+	# covariances
 	exp_M1_1_cumulative ~~ other_dah_M1_1_cumulative
 	exp_M1_2_cumulative ~~ other_dah_M1_1_cumulative
 	exp_M2_1_cumulative ~~ other_dah_M2_cumulative
 	exp_M2_1_cumulative ~~ other_dah_M2_cumulative
 	exp_M2_6_cumulative ~~ other_dah_M2_cumulative
 	exp_M2_3_cumulative ~~ other_dah_M2_3_cumulative
-	
-	# ITN_consumed_cumulative ~~ RDT_completed_cumulative
-	# RDT_completed_cumulative ~~ totalPatientsTreated_cumulative
 	
 	# fixed covariances
 	exp_M2_3_cumulative ~~ 0*exp_M3_1_cumulative
@@ -64,7 +52,6 @@ model = '
 	
 	RDT_completed_cumulative ~~ 0*SP_cumulative
 	RDT_completed_cumulative ~~ 0*severeMalariaTreated_cumulative
-	# RDT_completed_cumulative ~~ 0*totalPatientsTreated_cumulative
 	
 	SP_cumulative ~~ 0*severeMalariaTreated_cumulative
 	SP_cumulative ~~ 0*totalPatientsTreated_cumulative
