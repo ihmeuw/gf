@@ -34,7 +34,7 @@ setwd("C:/Users/ccarelli/local/gf/")
 
 # choose the data set you are working with: pnls or base
 # set the disease for base servies - malaria or hiv
-set = 'pnls'
+set = 'base'
 if (set=='base') { qr_disease = 'malaria'}
 
 # read in the data 
