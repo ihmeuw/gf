@@ -147,8 +147,8 @@ save(list=c('data','untransformed','model','semFits','summaries','means','scalin
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
-archive(outputFile5b)
-archive(outputFile5b_big)
+archive(outputFile5b, 'model_runs')
+archive(outputFile5b_big, 'model_runs')
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
