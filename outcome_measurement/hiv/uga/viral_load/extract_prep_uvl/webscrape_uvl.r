@@ -45,6 +45,10 @@ a = c('0,1,2,3,4', '5,6,7,8,9,10', '11, 12, 13, 14, 15',
          '61,62,63,64,65', '66,67,68,69,70', '71,72,73,74,75', '76,77,78,79,80', 
          '81,82,83,84,85', '86,87,88,89,90', '91,92,93,94,95', '96,97,98,99')
 
+# calculate the number of downloads
+length(y)*length(m)*length(t)*length(s)*length(a)
+
+
 #--------------------
 # to test the loop
 # y = '16'
@@ -110,12 +114,15 @@ urls = adply(arguments, 1, build_url)
 #--------------------------------------------------
 # download the meta data on districts and facilities
 
+# if you need to update the facilities extraction code on the cluster:
+# cd /ihme/code/ccarelli/gf/
+# git pull
+
 # downloads meta data and saves automatically
 src_dir = '/ihme/code/ccarelli/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/dist_facilities_uvl.R'
 
 # to source locally (typically run on the cluster)
-src_dir = "C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/dist_facilities_uvl.R"
-
+# src_dir = "C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/dist_facilities_uvl.R"
 
 # download the facilities data 
 source(src_dir)

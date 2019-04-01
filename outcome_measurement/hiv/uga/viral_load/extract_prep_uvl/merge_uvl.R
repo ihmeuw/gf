@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 12/24/2018
+# 3/31/2019
 # Rbind the UVL data sets together
 # Run dist_facilities_uvl.R to download facility and district names
 # ----------------------------------------------
@@ -20,20 +20,26 @@ library(plyr)
 # -----------------------------------------------
 # detect if operating on windows or on the cluster 
 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # --------------
 # set files and directories for the uganda viral load data
 
 # set the working directory to loop over the downloaded files
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/age_sex_tb/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/age_sex_tb/')
 setwd(dir)
+
+# set output directory
+out_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/prepped/')
 
 # list existing files
 files = list.files('./', recursive=TRUE)
 length(files)
 
-# --------------
+# ---------------------------
+# source the function 
+
+source("C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/prep_uvl.R")
 
 # ----------------------------------------------
 # add identifying variables to the existing data tables using file names
@@ -70,85 +76,94 @@ for(f in files) {
   # skip to next if there was no data for this combination
   if (length(current_data)==0) next
   
-  # to check the position of variables: 
-  # positions: year = 4; month = 3; sex=5, tb_status=6
-  
   # extract meta data from file name
   meta_data = strsplit(f, '_')[[1]]
-  current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
   current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
+  current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
   current_data[, sex:=(meta_data[5])]
-  current_data[ , sex:=(substr(current_data$sex, 1, 1))] # to remove .rds
+  current_data[, tb:=(meta_data[6])]
+  current_data[, age:=(meta_data[7])]
+
+  # rename sex values
+  current_data[sex=='m', sex:='Male']
+  current_data[sex=='f', sex:='Female']
+  current_data[sex=='x', sex:=NA]
   
-  current_data[, tb:=gsub('tb', '', meta_data[6])]
-  current_data[, tb:=gsub('.rds', '', tb)]
-  
-  current_data[ , age:=(substr(current_data$sex, 1, 1))] # to remove .rds
-  
+  # rename TB values as a logical 
+  current_data[tb=='y', tb_status:=TRUE]
+  current_data[tb=='n', tb_status:=FALSE]
+  current_data[tb=='x', tb_status:=NA]
+  current_data[ ,tb:=NULL]
 
   # append to the full data 
-  if(i==1) full_data = current_data
-  if(i>1) full_data = rbind(full_data, current_data)
+  if(i==1) dt = current_data
+  if(i>1) dt = rbind(dt, current_data)
   i = i+1
 }
 
-# view the final product of full_data
-str(full_data)
+# view the final product of dt
+str(dt)
 
 # ----------------------------------------------
 # create a date variable
-full_data[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
-full_data[ , month:=NULL]
+dt[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
+dt[ , c('month', 'year'):=NULL]
 
 # save the date range for the file name
-min = full_data[ , min(year)]
-max = full_data[ , max(year)]
+min_date = dt[ , min(year(date))]
+max_date = dt[ , max(year(date))]
 
 # ---------------------------
 # merge in facility and district names
 
 # reset directory
-new_dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/prepped_data')
+new_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/meta_data')
 
 # load facilities
-facilities = readRDS(paste0(new_dir, 'webscrape/facilities.rds'))
+facilities = readRDS(paste0(new_dir, '/facilities.rds'))
+
+# merge in the facilities 
+# use district and hub ids in the data, not metadata
 facilities[ ,c('district_id', 'hub_id'):=NULL]
-full_data = merge(full_data, facilities, by='facility_id', all.x=TRUE)
+dt = merge(dt, facilities, by='facility_id', all.x=TRUE)
 
 # some districts have multiple ids in the data set
-full_data[district_id==30, district:='Kabale']
-full_data[district_id==134, district:='Rakai']
-full_data[district_id==89, district:='Gomba']
-full_data[district_id==135, district:='Manafwa']
-full_data[district_id==131, district:='Nebbi']
-full_data[district_id==136, district:='Pallisa']
+dt[district_id==30, district:='Kabale']
+dt[district_id==134, district:='Rakai']
+dt[district_id==89, district:='Gomba']
+dt[district_id==135, district:='Manafwa']
+dt[district_id==131, district:='Nebbi']
+dt[district_id==136, district:='Pallisa']
 
 # add districts that failed to merge
-districts = full_data[!is.na(district),.(district_alt=unique(district)), by=district_id]
+districts = dt[!is.na(district),.(district_alt=unique(district)), by=district_id]
 districts = districts[!duplicated(district_alt)]
 
-replace = merge(full_data[is.na(district)], districts, by='district_id', all.x=T)
-replace[ , district:=district_alt]
-replace[ , district_alt:=NULL]
+replace_districts = merge(dt[is.na(district)], districts, by='district_id', all.x=T)
+replace_districts[ , district:=district_alt]
+replace_districts[ , district_alt:=NULL]
 
 # merge in the replacements
 # automatically drops out facility left blanks
-full_data = full_data[!is.na(district)]
-full_data = rbind(full_data, replace)
+dt = dt[!is.na(district)]
+dt = rbind(dt, replace_districts)
 
 # ---------------------------
-# source the prep function
+# save the interim product
+
+ saveRDS(dt, paste0(out_dir, 'merged_vl_', min_date, '_', max_date, '.rds'))
+# ---------------------------
+# run final prep
+# includes using mean imputation to replace missing sex
+
+dt = prep_uvl(dt)
+# ---------------------------
+# save the final product 
+
+saveRDS(dt, paste0(out_dir, 'uvl_prepped_', min_date, '_', max_date, '.rds'))
+# ---------------------------
 
 
-
-
-
-
-# save the product
-
-saveRDS(full_data, paste0(new_dir, 'prepped_data/vl_', min, '_', max, '.rds'))
-
-# ----------------------------------------------
 
 
 

@@ -1,35 +1,26 @@
-# ----------------------------------------------
+# prep function - source from merge_uvl.R
 # Caitlin O'Brien-Carelli
-# Prep UVL data for analysis
-# 12/24/2018
-#
-# ----------------------------------------------
+# 3/31/2019
+#-----------------------
 
-# --------------------
-# Set up R
-rm(list=ls())
-library(ggplot2)
-library(stringr) 
-library(plyr)
-library(data.table)
-# --------------------
+# to run the function without the merge:
+# dt = readRDS(paste0(out_dir, 'merged_vl_', min_date, '_', max_date, '.rds'))
 
-# --------------------
-# detect if operating on windows or on the cluster 
+prep_uvl = function(x) {
 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-
+#-----------------------
 # set working directory
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
-setwd(dir)
-#--------------------------------------------------------
-# import the merged data
-dt = readRDS(paste0(dir, '/merged/vl_2014_2018.rds'))
+prep_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
+setwd(prep_dir)
 
 # ----------------------------------------------
-# drop out 55 patients in 'facility left blank'
+# drop out patients in 'facility left blank' facilities
 
-dt = dt[facility!='Facility Left Blank']
+print(paste("There are", dt[facility=='Facility Left Blank', sum(patients_received)], 
+            "patients where the facility is missing."))
+
+dt[facility=='Facility Left Blank', facility:=NA]
+dt = dt[!is.na(facility)]
 
 #---------------------------------------------
 # some facilities are associated with multiple district ids
@@ -61,11 +52,6 @@ dt[facility_id==8358, district_id:=39]
 dt[facility_id==8359, district_id:=7]
 
 #-----------------------------------------
-# drop out the 'facility left blank' facility with no district information
-# contains only 55 patients
-dt = dt[district_id!=121]
-
-#-------------------------------------------
 # change district names from new 2016/17 districts to match the shape file
 
 merge_new_dists = function(x) {
@@ -89,30 +75,13 @@ merge_new_dists = function(x) {
 merge_new_dists(dt)
 length(unique(dt$district))
 
-# -------------------------
-# rename sex
-dt[sex=='m', sex:='Male']
-dt[sex=='f', sex:='Female']
-dt[sex=='x', sex:='Unknown']
-
 # ------------------------
-# combine the duplicates into single entries
-
-# 42 duplicate entries
-dt[ ,combine:=paste0(date,'_', facility_id,'_', sex)]
-dt[duplicated(combine)]
-
 # full data table of all duplicate entries as single entries
 # drop out hub
-dt = dt[ , .(patients_received=sum(patients_received),
-                samples_received=sum(samples_received),  
-                rejected_samples=sum(rejected_samples), 
-                dbs_samples=sum(dbs_samples), 
-                samples_tested=sum(total_results),
-                suppressed=sum(suppressed), valid_results=sum(valid_results)),
-            by=.(facility_id, facility, district_id, district, dhis2_name,
-                 sex, date)]
+byvars = c("facility_id", "facility", "dhis2_name", "hub",  "district", "date",
+           "age", "sex", "tb_status")
 
+dt = dt[ ,lapply(.SD, sum), by=byvars, .SDcols=2:8]
 
 # -------------------------------------------
 # determine facility levels from facility name
@@ -121,23 +90,22 @@ dt = dt[ , .(patients_received=sum(patients_received),
 dt[, facility_1:=paste(facility, '_')] # creates a space after the name
 dt[, facility_1:=tolower(facility_1)]
 
-dt[grepl(pattern="\\sii\\s", facility_1), level:='HC II'] 
-dt[grepl(pattern="\\sii", facility_1) & grepl(pattern="\\siii", facility_1), level:='2'] 
+# set the levels
+dt[grepl(pattern="\\sii", facility_1), level:='HC II'] 
 dt[grepl(pattern="iii", facility_1), level:='HC III']
 dt[grepl(pattern="\\siv",facility_1), level:='HC IV']
 dt[grepl(pattern="hospital", facility_1) & !grepl(pattern='military hospital', facility_1), level:='Hospital']
 dt[grepl(pattern="military hospital", facility_1), level:='Military Hospital']
 
-# TASO unique health centers
+# TASO health centers do not have associated levels
 dt[grepl(pattern="taso", facility_1), level:='TASO']
 
 #-----------------------------------------------
 # use dhis2name to get facility levels not contained in the udt dashboard name
-dt[!is.na(dhis2_name), dhis2_name1:=paste(dhis2_name, '_')] # creates a space after the name
-dt[!is.na(dhis2_name), dhis2_name1:=tolower(dhis2_name1)]
+dt[!is.na(dhis2_name), dhis2_name1:=tolower(paste(dhis2_name, '_'))] # creates a space after the name
 
+# set the levels where level is in dhis2 name but not in the vl dashboard name
 dt[grepl(pattern="\\sii\\s", dhis2_name1), level2:='HC II'] 
-dt[grepl(pattern="\\sii", dhis2_name1) & grepl(pattern="\\siii", dhis2_name1), level2:='2'] 
 dt[grepl(pattern="iii", dhis2_name1), level2:='HC III']
 dt[grepl(pattern="\\siv",dhis2_name1), level2:='HC IV']
 dt[grepl(pattern="hospital", dhis2_name1) & !grepl(pattern='military hospital', dhis2_name1), level2:='Hospital']
@@ -146,73 +114,57 @@ dt[grepl(pattern="military hospital", dhis2_name1), level2:='Military Hospital']
 # replace missing levels from facility names with levels from dhis2names
 dt[is.na(level), level:=level2]
 
-# facility name and dhis2name disagree
-dt[facility_id==2335, level:='HC II'] 
-
 # number of facilities without level
 dt[is.na(level), length(unique(facility))]
 
 #--------------------------------
 # create a variable to identify prisons
-dt[grep(pattern="prison", facility_1), prison:='Yes']
-dt[grep(pattern="prison", dhis2_name1), prison:='Yes'] # using dhis2name captures a remand center
-dt[is.na(prison), prison:='No']
+dt[grep(pattern="prison", facility_1), prison:=T]
+dt[grep(pattern="prison", dhis2_name1), prison:=T] # using dhis2name captures a remand center
+dt[is.na(prison), prison:=F]
 
 # delete excess variables
 dt[ , c("facility_1", "dhis2_name1", 'level2'):=NULL]
 
 #--------------------------------
-# convert integers to numerics 
-vars = c('facility_id', 'facility', 'district_id', 'district', 
-          'dhis2_name', 'sex', 'date', 'level', 'prison')
-
-dt = dt[ ,lapply(.SD, as.numeric), .SDcols=8:14, by=vars]
-
-#--------------- 
 
 #-----------------------------------------------
 # assign unknown sex using mean imputation
 
 # create a data set to calculate the sex ratio by district
+# the first data table represents the total number of each sex for each variable
 vars = c('district', 'sex')
-ratio = dt[sex!='Unknown' & !is.na(district), lapply(.SD, sum), .SDcols=10:16, by=vars]
+ratio = dt[!is.na(sex), lapply(.SD, sum), by=vars, .SDcols=10:16]
 
-# create a data table of totals
+# create a data table of total for all variables, regardless of sex
 total = ratio[ ,lapply(.SD, sum), .SDcols=3:9, by=district]
 total[ , sex:='Total']
 
 # bind them together and drop the males
 total = rbind(ratio, total)
-total = total[order(district)]
-total = total[sex!='Male']
 
+# there should be 112 each
+total[ ,length(unique(district)), by=sex]
+
+# drop out the males to create a female ratio
+total = total[sex!='Male']
+total = total[order(district, sex)]
 #-------------------------------
 
 #-------------------------------
 # replace the female values with the ratio for every variable
 
-total[, patients_received:=(patients_received/shift(patients_received, type='lead'))]
-total[, samples_received:=(samples_received/shift(samples_received, type='lead'))]
-total[, rejected_samples:=(rejected_samples/shift(rejected_samples, type='lead'))]
-total[, dbs_samples:=(dbs_samples/shift(dbs_samples, type='lead'))]
-total[, samples_tested:=(samples_tested/shift(samples_tested, type='lead'))]
-total[, suppressed:=(suppressed/shift(suppressed, type='lead'))]
-total[, valid_results:=(valid_results/shift(valid_results, type='lead'))]
+#  write as a function that tells you the percentage of the group that is female
+create_ratio = function(x) { x = (x/shift(x, type='lead'))}
 
-#-------------------------------
+# create a data set with the female ratio
+females = total[ ,lapply(.SD, create_ratio), .SDcols=3:9, by='district']
+females = females[!is.na(samples_received)]
+females[ ,sex:='Female']
+#------------------------------
 # replace the total values with the male ratio
 
-# create a data set of the female ratio
-females = total[sex=='Female']
-
-# calculate the male ration
-male_fun = function(x) {
-  x = (1 - x) 
-}
-
-# create a male ratio data set
-total = total[sex=='Female']
-males = total[ ,lapply(.SD, male_fun), .SDcols=3:9, by=.(district, sex)]
+males = females[ ,lapply(.SD, function(x) {x = 1 - x}), by='district', .SDcols=2:8]
 males[ ,sex:='Male']
 
 #-------------------------------
@@ -223,58 +175,51 @@ ratio = rbind(females, males)
 
 # reset the names for the merge
 setnames(ratio, c("patients_received", "samples_received",  "rejected_samples",  "dbs_samples",   
-                  "samples_tested", "suppressed", "valid_results"),
+                  "total_results", "suppressed", "valid_results"),
                   c("patients_received1", "samples_received1",  "rejected_samples1",  "dbs_samples1",   
-                   "samples_tested1", "suppressed1", "valid_results1"))
+                   "total_results1", "suppressed1", "valid_results1"))
 
-
-# if a ratio is missing, assign the patients received ratio
-ratio[is.na(samples_received1), samples_received1:=patients_received1]
-ratio[is.na(rejected_samples1), rejected_samples1:=patients_received1]
-ratio[is.na(dbs_samples1), dbs_samples1:=patients_received1]
-ratio[is.na(samples_tested1), samples_tested1:=patients_received1]
-ratio[is.na(suppressed1), suppressed1:=patients_received1]
-ratio[is.na(valid_results1), valid_results1:=patients_received1]
+# replace the missing values with the patients received ratio
+replace_vars = c("patients_received1", "samples_received1",  "rejected_samples1",  "dbs_samples1",   
+"total_results1", "suppressed1", "valid_results1")
+for (r in replace_vars) { ratio[is.na(get(r)), (r):=patients_received1]}
 
 #-------------------------------
 # create a data set of unknowns - double in size to apply ratios
-fems = dt[sex=='Unknown']
-men = dt[sex=='Unknown']
-fems[ , sex:='Female']
-men[ ,sex:='Male']
-people = rbind(fems, men)
 
+fems = dt[is.na(sex)]
+fems[ , sex:='Female']
+men = dt[is.na(sex)]
+men[ , sex:='Male']
+unknown_sex = rbind(fems, men) 
+
+unknowns = merge(unknown_sex, ratio, by=c('district', 'sex'), all.x=T)
+ 
 #-------------------------------
 # merge in the ratios
 
-unknowns = merge(people, ratio, by=c('district', 'sex'), all.x=T)
-
 # calculate the new values
-unknowns[!is.na(district), patients_received:=(patients_received*patients_received1)]
-unknowns[!is.na(district), samples_received:=(samples_received*samples_received1)]
-unknowns[!is.na(district), rejected_samples:=(rejected_samples*rejected_samples1)]
-unknowns[!is.na(district), dbs_samples:=(dbs_samples*dbs_samples1)]
-unknowns[!is.na(district), samples_tested:=(samples_tested*samples_tested1)]
-unknowns[!is.na(district), suppressed:=(suppressed*suppressed1)]
-unknowns[!is.na(district), valid_results:=(valid_results*valid_results1)]
-
-# drop out the people with unknown district
-unknowns = unknowns[!is.na(district)]
+unknowns[ , patients_received:=(patients_received*patients_received1)]
+unknowns[ , samples_received:=(samples_received*samples_received1)]
+unknowns[ , rejected_samples:=(rejected_samples*rejected_samples1)]
+unknowns[ , dbs_samples:=(dbs_samples*dbs_samples1)]
+unknowns[ , total_results:=(total_results*total_results1)]
+unknowns[ , suppressed:=(suppressed*suppressed1)]
+unknowns[ , valid_results:=(valid_results*valid_results1)]
 
 # drop unnecessary variables
 unknowns[ , c("patients_received1", "samples_received1",  "rejected_samples1",  "dbs_samples1",   
-            "samples_tested1", "suppressed1", "valid_results1"):=NULL]
+             "total_results1", "suppressed1", "valid_results1"):=NULL]
 
 # round to single digit
-vars = c( 'facility_id', 'district_id', 'facility', 'dhis2_name',  
-          'district', 'sex', 'date','level', 'prison')
+vars = c( 'facility_id', 'facility', 'dhis2_name', 'hub',  
+          'district', 'sex', 'age', 'date', 'tb_status', 'level', 'prison')
 
 unknowns = unknowns[ ,lapply(.SD, round, 1), .SDcols=10:16, by=vars]
 
 #-------------------------------
 # merge in new values
-
-dt = dt[sex!='Unknown']
+dt = dt[!is.na(sex)]
 dt = rbind(dt, unknowns)
 
 # sum over values to ensure new females and males are incorporated
@@ -283,15 +228,6 @@ dt = dt[ ,lapply(.SD, sum), .SDcols=10:16, by=vars]
 #-------------------------------
 # final quality checks 
 
-# check for missing data - show all be 0 rows
-dt[is.na(patients_received)]
-dt[is.na(samples_received)]
-dt[is.na(rejected_samples)]
-dt[is.na(dbs_samples)]
-dt[is.na(samples_tested)]
-dt[is.na(suppressed)]
-dt[is.na(valid_results)]
-
 #--------------------------------------------
 # check equality constraints
 # if the variables violate equality constraints, alter them
@@ -299,29 +235,23 @@ dt[is.na(valid_results)]
 # samples received can be greater than patients received
 dt[samples_received < rejected_samples, rejected_samples:=samples_received]
 dt[samples_received < dbs_samples, dbs_samples:=samples_received]
-dt[samples_received < samples_tested, samples_tested:=samples_received]
+dt[samples_received < total_results, total_results:=samples_received]
 dt[samples_received < valid_results, valid_results:=samples_received]
-dt[samples_tested < valid_results, valid_results:=samples_tested]
+dt[total_results < valid_results, valid_results:=total_results]
 dt[valid_results < suppressed, suppressed:=valid_results]
 
 # -------------------------------------------
 # calculate plasma samples
 dt[ , plasma_samples:=(samples_received - dbs_samples)]
 
-# change to the correct order
-dt = dt[ ,.(patients_received, samples_received, rejected_samples, dbs_samples, 
-            plasma_samples, samples_tested, valid_results, suppressed), 
-            by=.(facility_id, district_id, dhis2_name, level, prison,
-                 facility, district, sex, date)]
-
 #--------------------------------------------
 # final equality constraints check
 dt[samples_received < rejected_samples]
 dt[samples_received < dbs_samples]
 dt[samples_received < plasma_samples ]
-dt[samples_received < samples_tested]
+dt[samples_received < total_results]
 dt[samples_received < valid_results]
-dt[samples_tested < valid_results]
+dt[total_results < valid_results]
 dt[valid_results < suppressed]
 
 #-------------------------------
@@ -329,11 +259,9 @@ dt[valid_results < suppressed]
 dt[ ,year:=year(date)]
 
 #-------------------------------
-# save the final data as an RDS
+return(dt)
 
-saveRDS(dt, file= paste0(dir, "/prepped_data/sex_data.rds"))
-
-#-------------------------------
+}
 
 
 
