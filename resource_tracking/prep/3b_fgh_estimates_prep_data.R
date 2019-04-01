@@ -10,74 +10,76 @@
 # ----------------------------------------------
 # Read in the raw FGH estimates 
 # ----------------------------------------------
-ghe_data <- fread(paste0(fgh_raw, "gpr_corrected_final_gbd4.csv"))
+fgh_estimates <- fread(paste0(fgh_raw, "gpr_corrected_final_gbd4.csv"))
+final_mapping = read.csv(paste0(mapping_dir, "all_interventions.csv"))
 
 #Subset to our countries. 
-ghe_data <- ghe_data[location_id %in%code_lookup_tables$ihme_country_code]
-ghe_data = ghe_data[, .(location_id, year_id, value_code, ensemble_mean, ensemble_lower, ensemble_upper)] #Drop 'model' and 'hiv_pop' variables
+fgh_estimates <- fgh_estimates[location_id %in%code_lookup_tables$ihme_country_code]
+fgh_estimates = fgh_estimates[, .(location_id, year_id, value_code, ensemble_mean, ensemble_lower, ensemble_upper)] #Drop 'model' and 'hiv_pop' variables
 
-setnames(ghe_data, c("location_id", "year_id"), c("adm1", "year")) ##POSSIBLY HERE
-ghe_wide <- reshape(ghe_data,direction='wide',
+setnames(fgh_estimates, c("location_id", "year_id"), c("adm1", "year")) ##POSSIBLY HERE
+fgh_estimates_wide <- reshape(fgh_estimates,direction='wide',
                     idvar=c("adm1", "year"),
                     timevar="value_code")
 
-## (THE - OOP+PPP+GHE = DAH (in theory))
+## (THE - OOP+PPP+GHE = DAH (in theory)) #EKL this seems questionable to me- are we depending on this? 4/1/19
 
-oop_vars <- names(ghe_wide)[grepl(c("oop"), names(ghe_wide))]
-ppp_vars <- names(ghe_wide)[grepl(c("ppp"), names(ghe_wide))]
-ghe_vars <- names(ghe_wide)[grepl(c("public"), names(ghe_wide))]
+oop_vars <- names(fgh_estimates_wide)[grepl(c("oop"), names(fgh_estimates_wide))]
+ppp_vars <- names(fgh_estimates_wide)[grepl(c("ppp"), names(fgh_estimates_wide))]
+ghe_vars <- names(fgh_estimates_wide)[grepl(c("public"), names(fgh_estimates_wide))]
 
 
 ##only take the variables that we want: 
-ghe_cleaned <- ghe_wide[, c("adm1", "year", 
+fgh_estimates_cleaned <- fgh_estimates_wide[, c("adm1", "year", 
                             "ensemble_mean.fs_hiv_domestic_private_oop","ensemble_lower.fs_hiv_domestic_private_oop", "ensemble_upper.fs_hiv_domestic_private_oop",
                             "ensemble_mean.fs_hiv_domestic_private_ppp",  "ensemble_lower.fs_hiv_domestic_private_ppp", "ensemble_upper.fs_hiv_domestic_private_ppp",
                             "ensemble_mean.fs_hiv_domestic_public",  "ensemble_lower.fs_hiv_domestic_public", "ensemble_upper.fs_hiv_domestic_public",
                             "ensemble_upper.the_hiv", "ensemble_lower.the_hiv", "ensemble_mean.the_hiv"), with=FALSE]
 
 #reshape "long" so that all of the dah/the/other estimates are in 1 column: 
-ghe_cleaned <- melt(ghe_cleaned, id.vars = c("adm1", "year"),
+fgh_estimates_cleaned <- melt(fgh_estimates_cleaned, id.vars = c("adm1", "year"),
                     variable.name = "fin_data_type", value="disbursement")
 
-#add the disease variable, and module/intervention (all will be an 'Unspecified') for HIV
-ghe_cleaned$disease <- 'hiv'
-ghe_cleaned$code <- 'H99'
+# Add code. Will be 'unspecified' for all. 
+fgh_estimates_cleaned$code <- 'H99'
 
 #Map to final mapping 
-ghe_mapped <- merge(ghe_cleaned, final_mapping, by='code', all.x = TRUE)
+fgh_estimates_mapped <- merge(fgh_estimates_cleaned, final_mapping, by='code', all.x = TRUE)
 
 ##assign loc_name id based on their ISO codes:
-ghe_mapped = gen_iso_code(ghe_mapped, ghe_mapped$adm1)
+for (i in 1:nrow(code_lookup_tables)){
+  fgh_estimates_mapped[adm1==code_lookup_tables$ihme_country_code[[i]], loc_name:=code_lookup_tables$iso_code[[i]]]
+}
 
-ghe_mapped$financing_source <- mapply(get_the_source_channel, as.character(ghe_mapped$fin_data_type))
-ghe_mapped = ghe_mapped[financing_source != "the"]
-ghe_mapped$fileName <- "gpr_corrected_final_gbd4.csv"
+fgh_estimates_mapped$financing_source <- mapply(get_the_source_channel, as.character(fgh_estimates_mapped$fin_data_type))
+fgh_estimates_mapped = fgh_estimates_mapped[financing_source != "the"]
+fgh_estimates_mapped$fileName <- "gpr_corrected_final_gbd4.csv"
 
-ghe_mapped$fin_data_type <- mapply(transform_fin_data_type, as.character(ghe_mapped$fin_data_type)) #CHECK FOR ESTIMATES VS MODELS
+fgh_estimates_mapped$fin_data_type <- mapply(transform_fin_data_type, as.character(fgh_estimates_mapped$fin_data_type)) #CHECK FOR ESTIMATES VS MODELS
 
 # ----------------------------------------------
-# Import DAH by disease 
+# Import DAH by disease
 # ----------------------------------------------
 
-fgh_estimates <- fread(paste0(j, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv'), stringsAsFactors = FALSE)
-fgh_estimates = fgh_estimates[!fin_data_type == 'actual']
-
-percent_disbursed = fgh_estimates[,.(year, country, disease, financing_source, disbursement)]
-percent_disbursed = percent_disbursed[financing_source %in% c("bil_usa", "other_dah", "gf")]
-
-percent_disbursed$financing_source = NULL
-percent_disbursed = unique(percent_disbursed)
-  
-percent_disbursed = percent_disbursed[, numerator := sum(disbursement), by = c('year', 'country', 'disease')]
-percent_disbursed = percent_disbursed[, denominator:= sum(disbursement), by = c('year', 'country')]
-percent_disbursed$disbursement = NULL
-percent_disbursed = unique(percent_disbursed)
-percent_disbursed =  percent_disbursed[, disbursed_weight := numerator/denominator, by = c('year', 'country', 'disease')]
-percent_disbursed$numerator = NULL
-percent_disbursed$denominator = NULL
-percent_disbursed$financing_source = "dah"
-dah_weight = percent_disbursed[year == 2016] 
-dah_weight$year = NULL
+# fgh_actuals <- fread(paste0(mapping_dir, 'prepped_current_fgh.csv'), stringsAsFactors = FALSE)
+# fgh_actuals = fgh_actuals[!fin_data_type == 'actual']
+# 
+# percent_disbursed = fgh_actuals[,.(year, country, disease, financing_source, disbursement)]
+# percent_disbursed = percent_disbursed[financing_source %in% c("bil_usa", "other_dah", "gf")]
+# 
+# percent_disbursed$financing_source = NULL
+# percent_disbursed = unique(percent_disbursed)
+# 
+# percent_disbursed = percent_disbursed[, numerator := sum(disbursement), by = c('year', 'country', 'disease')]
+# percent_disbursed = percent_disbursed[, denominator:= sum(disbursement), by = c('year', 'country')]
+# percent_disbursed$disbursement = NULL
+# percent_disbursed = unique(percent_disbursed)
+# percent_disbursed =  percent_disbursed[, disbursed_weight := numerator/denominator, by = c('year', 'country', 'disease')]
+# percent_disbursed$numerator = NULL
+# percent_disbursed$denominator = NULL
+# percent_disbursed$financing_source = "dah"
+# dah_weight = percent_disbursed[year == 2016]
+# dah_weight$year = NULL
 
 
 # continue
@@ -85,7 +87,7 @@ output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/')
 input_dir <- paste0("Project/IRH/Forecasting/data/feather_storage_draws_2018/scenarios_he_raked/")
 hiv_dir <- paste0("Project/IRH/HIV/03_model_outputs/forecast/for_gbd_hiv/")
 
-##names of the files to be cleaned 
+##names of the files to be cleaned
 ghe_file <- "GHES"
 the_file <- "THE"
 dah_file <- "DAH"
@@ -94,7 +96,7 @@ oop_file <- "OOP"
 ppp_file <- "PPP"
 
 # ----------------------------------------------
-## get the forecasted datasets using the above function: 
+## get the forecasted datasets using the above function:
 # ----------------------------------------------
 ghe_prepped <- get_prepped_forecast(root, input_dir,ghe_file)
 ghe_prepped$financing_source <- "ghe_forecasted"
@@ -146,8 +148,8 @@ pce_total = rbind(pce_dah, pce_not_dah)
 ##add in RT variables so we can join this data to the RT database
 # ----------------------------------------------
 
-pce_total$fileName = ifelse(pce_total$financing_source == "dah", "DAH.csv", 
-                            ifelse(pce_total$financing_source == "ghe", "GHES.csv", 
+pce_total$fileName = ifelse(pce_total$financing_source == "dah", "DAH.csv",
+                            ifelse(pce_total$financing_source == "ghe", "GHES.csv",
                                    ifelse(pce_total$financing_source == "ppp", "PPP.csv",
                                           "OOP.csv")))
 
@@ -158,5 +160,6 @@ total_fgh$loc_name = tolower(total_fgh$loc_name)
 # ----------------------------------------------
 ##export to the J Drive: 
 # ----------------------------------------------
-write.csv(total_fgh, paste0(root, 'Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_prepped_fgh_total.csv'), row.names=FALSE)
+saveRDS(fgh_estimates_mapped, paste0(fgh_prepped, "prepped_fgh_estimates.rds"))
+write.csv(fgh_estimates_mapped, paste0(fgh_prepped, 'prepped_fgh_estimates.csv'), row.names=FALSE)
 

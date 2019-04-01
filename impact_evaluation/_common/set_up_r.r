@@ -78,7 +78,8 @@ source('./impact_evaluation/_common/archive_function.R')
 budgetFile = paste0(rtDir, 'final_budgets.rds')
 expendituresFile = paste0(rtDir, 'final_expenditures.rds')
 fghFile = paste0(fghDir, 'prepped_current_fgh.rds')
-whoFile = paste0(whoDir, 'who_prepped.rds')
+gheMalFile = paste0(fghDir, 'prepped_current_fgh.rds')
+whoFile = paste0(whoDir, 'ghe_actuals_malaria.rds')
 
 # activities/outputs files
 # pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
