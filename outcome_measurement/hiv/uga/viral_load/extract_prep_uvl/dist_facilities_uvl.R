@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # David, Phillips, Caitlin O'Brien-Carelli
 #
-# 12/24/2018
+# 3/31/2019
 # Source from webscrape_uvl.R
 # To extract a list of districts and facilities 
 # Facilities and districts are stored in separate urls
@@ -108,10 +108,34 @@ facilities = merge(facilities, districts, by='district_id', all.x=T)
 
 # merge the hubs into the meta data
 facilities = merge(facilities, hubs, by='hub_id', all.x=T)
+
+# ------------------------------------
+# error fix in original data:
+# some facilities lack a district id but contain district name in parenthesexs
+facilities[facility_id==2091, district:='Masindi']
+facilities[facility_id==8313, district:='Butebo']
+facilities[facility_id==2204, district:='Kaliro']
+facilities[facility_id==1018, district:='Hoima']
+facilities[facility_id==2374, district:='Kabale']
+facilities[facility_id==8311, district:='Kole']  
+facilities[facility_id==8290, district:='Rakai']  
+facilities[facility_id==8260, district:='Lyantonde']  
+
+# merge in district ids based on names
+setnames(districts, 'district_id', 'district_id_new')
+facilities = merge(facilities, districts, by='district', all.x=T)
+facilities[is.na(district_id) & !is.na(district), district_id:=district_id_new]
+facilities[ ,district_id_new:=NULL]
+
+# some ids are not in the original list
+facilities[facility_id==8313, district_id:=136]
+facilities[facility_id==8311, district_id:=104]  
+facilities[facility_id==8290, district_id:=80]  
+# ----------------------------------------------
   
 # save full facilities and data to merge into downloads from Uganda VL
 saveRDS(facilities, paste0(root,
-              '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/facilities.rds'))
+              '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/meta_data/facilities.rds'))
 
 # ----------------------------------------------
   

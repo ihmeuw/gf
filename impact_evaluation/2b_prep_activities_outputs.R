@@ -178,6 +178,11 @@ dt_final <- dt_final[,.(year, quarter, dps, health_zone, indicator, value, compl
 
 dt_final = convert_quarter_to_decimal(dt_final)
 
+# add in SSC data from SNIS
+# dt_final = readRDS(outputFile2b)
+ssc = readRDS(ssc_file)
+dt_final <- rbindlist(list(dt_final, ssc), use.names=TRUE, fill = TRUE)
+  
 saveRDS(dt_final, outputFile2b)
 archive(outputFile2b)
 # ---------------------------------------------------

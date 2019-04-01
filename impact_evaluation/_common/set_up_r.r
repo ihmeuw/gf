@@ -88,6 +88,7 @@ pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
 combinedFile <- paste0(ieDir, 'base_pnlp_sigl_combined_data_hz_level.rds')
 comp_base_file <- paste0(dhisDir, "base_reporting_completeness_hz_prepped_quarterly.rds")
 comp_sigl_file <-paste0(dhisDir, "sigl1_reporting_completeness_hz_prepped_quarterly.rds")
+ssc_file <- paste0(dhisDir, "SSC_data_2017_2018_prepped.rds")
 
 # outcomes/impact files
 mapITNFiles = list.files(paste0(lbdDir, 'mapitncov/mean/1y/'), '*.tif', 

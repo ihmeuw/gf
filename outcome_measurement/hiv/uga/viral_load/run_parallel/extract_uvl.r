@@ -1,7 +1,8 @@
 # ----------------------------------------------
 # David Phillips, Caitlin O'Brien-Carelli
 #
-# 12/21/2018
+# 3/31/2019
+
 # Function that runs VL extraction for a single month-years
 # Inputs:
 # y - 2-digit year
@@ -9,8 +10,9 @@
 # Outputs:
 # nothing. saves one file per age/sex/tb status
 # ----------------------------------------------
+# start a cluster IDE 
 
-
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1347 -s 10 
 # --------------------
 # Set up R
 y <- commandArgs()[4]
@@ -18,6 +20,7 @@ m <- commandArgs()[5]
 allAges <- commandArgs()[6]
 allTbs <- commandArgs()[7]
 bothSexes <- commandArgs()[8]
+
 library(jsonlite)
 # --------------------
 
@@ -26,7 +29,7 @@ library(jsonlite)
 # Files and directories
 
 # output file
-dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/no_filters/'
+dir = '/home/j/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/age_sex_tb/'
 
 # parameters
 ages = c('0,1', '1,2,3,4', '5,6,7,8,9,10', '11, 12, 13, 14, 15', 
@@ -46,12 +49,12 @@ if (bothSexes==TRUE) sexes = ''
 # whether or not to re-download everything (or just new data)
 reload_everything = FALSE
 
-# for testing purposes
-# y='16'
-# m='01'
-# ages = '0,1'
-# tbs = 'n'
-# sexes = 'f'
+# to test the loop
+y = '16'
+m = '01'
+ages = '0,1'
+tbs = 'n'
+sexes = 'f'
 # ----------------------------------------------
 
 

@@ -62,48 +62,48 @@ graphFile = paste0(outDir, 'HIV_Prevalence_', timestamp, '_', y1, '_new.pdf')
 # # COD map
 # # load shapefiles
 # mapCOD = shapefile(shapeFileCOD)
-# 
+#
 # # load raster data
 # rasterData1 = raster(inFile, band=band)
-# 
+#
 # # load the ground cover data
 # lakes = shapefile(shapeFileLakes)
-# 
+#
 # # crop to the two countries
 # rasterDataCOD1 = crop(rasterData1, extent(mapCOD))
-# 
+#
 # # mask the bodies of water
 # # rasterDataCOD1 = mask(rasterDataCOD1, lakes, inverse=TRUE)
-# 
+#
 # # convert to data tables
 # dataCOD1 = data.table(as.data.frame(rasterDataCOD1, xy=TRUE))
-# 
+#
 # # import shape file
 # shapeDataCOD = data.table(fortify(mapCOD))
-# 
+#
 # # rename
 # setnames(dataCOD1, c('x','y','prev'))
-# 
+#
 # # colors
 # cols1 = rev(brewer.pal(6, 'RdYlBu'))
 # border = 'grey65'
 # breaks = c(5, 10, 15)
-# 
+#
 # # legend limits so both countries are on same scale
 # lims = range(dataCOD1$prev, na.rm=TRUE)*100
-# 
+#
 # # store maps
-# ggplot(dataCOD1, aes(y=y, x=x, fill=prev*100)) + 
-#   geom_tile() + 
+# ggplot(dataCOD1, aes(y=y, x=x, fill=prev*100)) +
+#   geom_tile() +
 #   geom_path(data=shapeDataCOD, aes(x=long, y=lat, group=group),
-#             color=border, size=.05, inherit.aes=FALSE) + 
-#   scale_fill_gradientn('HIV Prevalence (%)', colors=cols1, 
-#                na.value='white', breaks=breaks) + 
-#   coord_fixed(ratio=1) + 
-#   scale_x_continuous('', breaks = NULL) + 
-#   scale_y_continuous('', breaks = NULL) + 
-#   theme_minimal(base_size=16) + 
-#   theme(plot.title=element_text(hjust=.5)) 
+#             color=border, size=.05, inherit.aes=FALSE) +
+#   scale_fill_gradientn('HIV Prevalence (%)', colors=cols1,
+#                na.value='white', breaks=breaks) +
+#   coord_fixed(ratio=1) +
+#   scale_x_continuous('', breaks = NULL) +
+#   scale_y_continuous('', breaks = NULL) +
+#   theme_minimal(base_size=16) +
+#   theme(plot.title=element_text(hjust=.5))
 
 
 
