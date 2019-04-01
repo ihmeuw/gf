@@ -57,9 +57,8 @@ if (nrow(base_comp[duplicated(base_comp[, .(health_zone, dps, year, quarter)])])
 # ---------------------------------------------------
 # Change variable names / other set up
 # ---------------------------------------------------
-# Subset DHIS2 data sets to 2018 data onward (use PNLP up to 2017); for now, stop at Q4 2018
-remove_data <- dt[ (data_set == "snis_base_services" & date < "2018-01-01") | (data_set == "snis_base_services" & date > "2018-12-01"),]
-remove_data <- rbind(remove_data, dt[ (data_set == "snis_sigl" & date < "2018-01-01") | (data_set == "snis_base_services" & date > "2018-12-01"),])
+# Subset DHIS2 data sets to 2018 data onward (use PNLP up to 2017)
+remove_data <- dt[ (grepl(data_set, pattern = "snis")) & (date < "2018-01-01"),]
 dt <-  anti_join(dt, remove_data)
 dt <- as.data.table(dt)
 
@@ -89,6 +88,9 @@ dt[, quarter := as.numeric(quarter)]
 dt_base <- merge(dt[data_set == "snis_base_services", ], base_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all.x = TRUE)
 dt_sigl <- merge(dt[data_set == "snis_sigl", ], sigl_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all.x = TRUE)
 dt_pnlp <- dt[data_set == "pnlp"]
+
+dt_base[ , completeness := completeness/100]
+dt_sigl[ , completeness := completeness/100]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -116,6 +118,9 @@ pnlp_comp <- pnlp_fac[, .(healthFacilities_reporting = sum(healthFacilities_repo
 pnlp_comp[ , completeness:= healthFacilities_reporting / healthFacilities_total]
 pnlp_comp = pnlp_comp[, .(dps, health_zone, year, quarter, completeness)]
 pnlp_comp[, data_set := "pnlp"]
+
+dt_pnlp <- merge(dt_pnlp, pnlp_comp, by= c('year', 'quarter', 'dps', 'health_zone', 'data_set'), all.x = TRUE)
+dt = rbindlist( list(dt_base, dt_pnlp, dt_sigl), use.names = TRUE, fill = TRUE)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -125,8 +130,8 @@ pnlp_comp[, data_set := "pnlp"]
 dt[ data_set =="pnlp" & grepl(indicator, pattern = 'AL') & year < 2015, value := NA]
 
 # keep SSCACT with subpop = NA for 2015 and 2016, keep with subpops <5 and >5 for 2017
-dt[ data_set == "pnlp" & indicator == "SSCACT" & is.na(subpopulation) & year < 2015, value := NA]
-dt[ data_set == "pnlp" & indicator == "SSCACT" & is.na(subpopulation) & year > 2016, value := NA]
+dt[ data_set == "pnlp" & indicator == "SSCACT" & year < 2015, value := 0] # iccm didn't exist prior to 2014
+dt[ data_set == "pnlp" & indicator == "SSCACT" & is.na(subpopulation) & year == 2017, value := NA]
 dt[ data_set == "pnlp" & indicator == "SSCACT" & !is.na(subpopulation) & year < 2017, value := NA]
 
 dt <- dt[!is.na(value)]
@@ -153,6 +158,7 @@ dt[ indicator == "simpleConfMalariaTreated", subpopulation := "none"]
 dt <-  dt[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, indicator, subpopulation, completeness)]
 
 # we need to create variable for totalPatientsTreated and a variable for ACT_received, will do this separately then rbind back together
+# NOTE: do not have to calculate completeness separately, because completeness is the same for each indicator (varies across time and health zones)
 acts_rec <- dt[ indicator %in% c("ALreceived", "ASAQreceived") ]
 acts_rec <- acts_rec[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
 acts_rec[, indicator := "ACT_received"]
