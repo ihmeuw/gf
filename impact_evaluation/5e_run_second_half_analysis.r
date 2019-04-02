@@ -97,7 +97,7 @@ if (runAsQsub==TRUE) {
 	T = length(hzs)
 	# submit array job
 	system(paste0('qsub -cwd -N ie_job_array -t 1:', T, 
-		' -l fthread=1 -l m_mem_free=1G -q all.q -P ihme_general -e ', 
+		' -l fthread=2 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/5f_run_second_half_analysis_single_hz.r'))
 	# wait for jobs to finish (2 files per job)
