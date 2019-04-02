@@ -49,6 +49,7 @@ nodeTable2 = fread('./impact_evaluation/visualizations/vartable_second_half.csv'
 nodeTable1 = nodeTable1[variable %in% names(data1)]
 nodeTable2 = nodeTable2[variable %in% names(data2)]
 nodeTable = rbind(nodeTable1, nodeTable2)
+nodeTable[, label:=gsub('Lead of','',label)]
 
 # bring in labels
 
@@ -186,7 +187,8 @@ level1Graph[is.na(label), label:='-Unexplained by Model-']
 level2Graph = merge(level2, nodeTable, by.x='rhs', by.y='variable', all.x=TRUE)
 level2Graph[is.na(label), label:='-Unexplained by Model-']
 estimatesGraph = merge(estimates, nodeTable, by.x='rhs', by.y='variable', all.x=TRUE)
-estimatesGraph[is.na(label), label:='-Unexplained by Model-']
+estimatesGraph[rhs=='unexplained', label:='-Unexplained by Model-']
+estimatesGraph[rhs=='unexplained' & lhs=='unexplained', label:='']
 level3Graph = merge(level3, nodeTable, by.x='rhs', by.y='variable', all.x=TRUE)
 level3Graph[is.na(label), label:='-Unexplained by Model-']
 level4Graph = merge(level4, nodeTable, by.x='rhs', by.y='variable', all.x=TRUE)
@@ -199,8 +201,8 @@ level6Graph = merge(level5, nodeTable, by.x='rhs', by.y='variable', all.x=TRUE)
 level6Graph[is.na(label), label:='-Unexplained by Model-']
 level6Graph[rhs=='date', label:='Time Trend']
 estimatesGraph2 = merge(estimates2, nodeTable, by.x='rhs', by.y='variable', all.x=TRUE)
-estimatesGraph2[is.na(label), label:='-Unexplained by Model-']
-estimatesGraph2[rhs=='date', label:='Time Trend']
+estimatesGraph2[rhs=='unexplained', label:='-Unexplained by Model-']
+estimatesGraph2[rhs=='unexplained' & lhs=='unexplained', label:='']
 
 # aggregate funders
 level4Graph[grepl('exp_',rhs), label:='Global Fund']
@@ -216,6 +218,19 @@ level6Graph[grepl('ghe_',rhs), label:='Government']
 level6Graph[grepl('other_dah_',rhs), label:='All Other Donors']
 level6Graph = level6Graph[, .(est.std=sum(est.std)), by=c('lhs','label','level')]
 
+# add empty holes
+hole = level1Graph[1]
+for(v in names(hole)) { 
+	if (class(hole[[v]])=='character') hole[, (v):='']
+	if (class(hole[[v]])=='numeric') hole[, (v):=0]
+}
+hole[, hole:=1]
+for(i in 1:6) { 
+	get(paste0('level',i,'Graph'))[,x:=1]
+	assign(paste0('level',i,'Graph'), 
+		rbind(get(paste0('level',i,'Graph')), hole, fill=TRUE))
+}
+
 # colors
 cols = brewer.pal(12, 'Paired')
 cols = c('#969696', cols)
@@ -226,9 +241,10 @@ cols = c('#969696', cols)
 # Graph
 
 # pie chart of contributors to mortality
-p1 = ggplot(level1Graph, aes(y=est.std, x=1, fill=label)) + 
-	geom_bar(width=1, color = 'gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label, x=1.1), size = 3, position=position_stack(vjust=.5)) +
+p1 = ggplot(level1Graph, aes(y=est.std, x=x, fill=label)) + 
+	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+	annotate('text', label='Declining\nMortality\nRates', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on Mortality Rates') + 
@@ -236,10 +252,11 @@ p1 = ggplot(level1Graph, aes(y=est.std, x=1, fill=label)) +
 	theme(legend.position='none')
 
 # pie chart of contributors to case fatality
-p2 = ggplot(level2Graph[lhs=='lead_case_fatality'], 
-		aes(y=est.std, x=1, fill=label)) + 
-	geom_bar(width=1, color = 'gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label, x=1.1), size = 3, position=position_stack(vjust=.5)) +
+p2 = ggplot(level2Graph[lhs=='lead_case_fatality' | hole==1], 
+		aes(y=est.std, x=x, fill=label)) + 
+	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+	annotate('text', label='Declining\nCase Fatality', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on Case Fatality') + 
@@ -247,10 +264,11 @@ p2 = ggplot(level2Graph[lhs=='lead_case_fatality'],
 	theme(legend.position='none')
 
 # pie chart of contributors to mild incidence
-p3 = ggplot(level2Graph[lhs=='lead_newCasesMalariaMild_rate'], 
-		aes(y=est.std, x=1, fill=label)) + 
-	geom_bar(width=1, color = 'gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label, x=1.1), size = 3, position=position_stack(vjust=.5)) +
+p3 = ggplot(level2Graph[lhs=='lead_newCasesMalariaMild_rate' | hole==1], 
+		aes(y=est.std, x=x, fill=label)) + 
+	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+	annotate('text', label='Declining\nIncidence Rates\n(mild)', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on Incidence Rates (mild)') + 
@@ -258,10 +276,11 @@ p3 = ggplot(level2Graph[lhs=='lead_newCasesMalariaMild_rate'],
 	theme(legend.position='none')
 
 # pie chart of contributors to severe incidence
-p4 = ggplot(level2Graph[lhs=='lead_newCasesMalariaSevere_rate'], 
-		aes(y=est.std, x=1, fill=label)) + 
-	geom_bar(width=1, color = 'gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label, x=1.1), size = 3, position=position_stack(vjust=.5)) +
+p4 = ggplot(level2Graph[lhs=='lead_newCasesMalariaSevere_rate' | hole==1], 
+		aes(y=est.std, x=x, fill=label)) + 
+	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+	annotate('text', label='Declining\nIncidence Rates\n(severe)', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on Incidence Rates (severe)') + 
@@ -269,20 +288,22 @@ p4 = ggplot(level2Graph[lhs=='lead_newCasesMalariaSevere_rate'],
 	theme(legend.position='none')
 
 # sunburst of last two levels	
-p5 = ggplot(estimatesGraph, aes(x = level, y = est.std, fill = fill, alpha = level)) +
-	geom_col(width = 1, color = 'gray90', size = 0.25, position = position_stack()) +
-	geom_text_repel(aes(label = label), size = 2.5, position = position_stack(vjust = 0.5)) +
-	coord_polar(theta = 'y') +
-	scale_alpha_manual(values = c('0' = 0, '1' = 1, '2' = 0.7), guide = F) +
+p5 = ggplot(estimatesGraph, aes(x=level, y=est.std, fill=fill, alpha=level)) +
+	geom_col(width=1, color='gray90', size=0.25, position=position_stack()) +
+	geom_text_repel(aes(label=label), size=2.5, position=position_stack(vjust=0.5)) +
+	annotate('text', 1.25, 0, label='Declining\nMortality\nRates', size=5, vjust=1.25) +
+	coord_polar(theta='y') +
+	scale_alpha_manual(values=c('0'=0, '1'=1, '2'=0.7), guide=F) +
 	scale_fill_manual('', values=rev(cols[1:4])) +
 	theme_void() + 
 	theme(legend.position='none')
 
 # pie chart of contributors to mild treatment
-p6 = ggplot(level3Graph[lhs=='mildMalariaTreated_rate'], 
-		aes(y=est.std, x=1, fill=label)) + 
-	geom_bar(width=1, color = 'gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label, x=1.1), size = 3, position=position_stack(vjust=.5)) +
+p6 = ggplot(level3Graph[lhs=='mildMalariaTreated_rate' | hole==1], 
+		aes(y=est.std, x=x, fill=label)) + 
+	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+	annotate('text', label='Increasing\nTreatment Coverage\n(mild)', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on Treatment Coverage (mild)') + 
@@ -290,10 +311,11 @@ p6 = ggplot(level3Graph[lhs=='mildMalariaTreated_rate'],
 	theme(legend.position='none')
 
 # pie chart of contributors to severe treatment
-p7 = ggplot(level3Graph[lhs=='severeMalariaTreated_rate'], 
+p7 = ggplot(level3Graph[lhs=='severeMalariaTreated_rate' | hole==1], 
 		aes(y=est.std, x=1, fill=label)) + 
-	geom_bar(width=1, color = 'gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label, x=1.1), size = 3, position=position_stack(vjust=.5)) +
+	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+	annotate('text', label='Increasing\nTreatment Coverage\n(severe)', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on Treatment Coverage (severe)') + 
@@ -301,10 +323,11 @@ p7 = ggplot(level3Graph[lhs=='severeMalariaTreated_rate'],
 	theme(legend.position='none')
 
 # pie chart of contributors to itn coverage
-p8 = ggplot(level3Graph[lhs=='ITN_rate_cumul'], 
-		aes(y=est.std, x=1, fill=label)) + 
-	geom_bar(width=1, color = 'gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label, x=1.1), size = 3, position=position_stack(vjust=.5)) +
+p8 = ggplot(level3Graph[lhs=='ITN_rate_cumul' | hole==1], 
+		aes(y=est.std, x=x, fill=label)) + 
+	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+	annotate('text', label='Increasing\nITN Coverage', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on ITN Coverage') + 
@@ -312,10 +335,11 @@ p8 = ggplot(level3Graph[lhs=='ITN_rate_cumul'],
 	theme(legend.position='none')
 
 # pie chart of contributors to act shipment
-p9 = ggplot(level6Graph[lhs=='ACT_received_cumulative' & label!='Time Trend'], 
-		aes(y=est.std, x=1, fill=label)) + 
-	geom_bar(width=1, color = 'gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label, x=1.1), size = 3, position=position_stack(vjust=.5)) +
+p9 = ggplot(level6Graph[(lhs=='ACT_received_cumulative' & label!='Time Trend') | 
+		hole==1], aes(y=est.std, x=x, fill=label)) + 
+	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+	annotate('text', label='Increasing\nACT Distribution', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on ACT Distribution') + 
@@ -323,10 +347,11 @@ p9 = ggplot(level6Graph[lhs=='ACT_received_cumulative' & label!='Time Trend'],
 	theme(legend.position='none')
 
 # pie chart of contributors to itn shipment
-p10 = ggplot(level6Graph[lhs=='ITN_received_cumulative' & label!='Time Trend'], 
-		aes(y=est.std, x=1, fill=label)) + 
-	geom_bar(width=1, color = 'gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label, x=1.1), size = 3, position=position_stack(vjust=.5)) +
+p10 = ggplot(level6Graph[(lhs=='ITN_received_cumulative' & label!='Time Trend') | 
+		hole==1], aes(y=est.std, x=x, fill=label)) + 
+	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+	annotate('text', label='Increasing\nITN Distribution', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on ITN Distribution') + 
@@ -334,11 +359,12 @@ p10 = ggplot(level6Graph[lhs=='ITN_received_cumulative' & label!='Time Trend'],
 	theme(legend.position='none')
 
 # sunburst of ITNs
-p11 = ggplot(estimatesGraph2, aes(x = level, y = est.std, fill = fill, alpha = level)) +
-	geom_col(width = 1, color = 'gray90', size = 0.25, position = position_stack()) +
-	geom_text_repel(aes(label = label), size = 2.5, position = position_stack(vjust = 0.5)) +
-	coord_polar(theta = 'y') +
-	scale_alpha_manual(values = c('0'=0, '2' = 1, '3' = 0.7), guide = F) +
+p11 = ggplot(estimatesGraph2, aes(x=level, y=est.std, fill=fill, alpha=level)) +
+	geom_col(width=1, color='gray90', size=0.25, position=position_stack()) +
+	geom_text_repel(aes(label=label), size=2.5, position=position_stack(vjust=0.5)) +
+	annotate('text', 1, 0, label='Increasing\nITN Distribution', size=5, vjust=1.25) +
+	coord_polar(theta='y') +
+	scale_alpha_manual(values=c('0'=0, '2'=1, '3'=0.7), guide=F) +
 	scale_fill_manual('', values=rev(cols[1:2])) +
 	theme_void() + 
 	theme(legend.position='none')
