@@ -84,6 +84,9 @@ dt = setorder(dt, org_unit_id)
 # make array table to set up for submitting an array job
 array_table = data.table(expand.grid(unique(dt$org_unit_id)))
 setnames(array_table, "Var1", "org_unit_id")
+array_table[ ,org_unit_id:=as.character(org_unit_id)]
+
+array_table = array_table[1:20]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, paste0('/ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
@@ -97,7 +100,7 @@ write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 # array job
 N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./quantregScript_base2.r'))
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base/quantregScript_base2.r'))
 
 #------------------------------------
 
