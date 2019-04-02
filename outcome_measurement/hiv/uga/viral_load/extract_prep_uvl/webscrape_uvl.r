@@ -22,7 +22,7 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # Files and directories
 
 # whether or not to re-download everything (or just new data)
-reload_everything = TRUE
+reload_everything = FALSE
 
 # output directory
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
