@@ -59,7 +59,7 @@ data = data[date>=2010 & date<2018.75]
 # Data transformations and other fixes for Heywood cases
 
 # drop zero-variance variables
-numVars = names(data)[names(data)!='health_zone']
+numVars = names(data)[!names(data)%in%c('orig_health_zone','health_zone')]
 for(v in numVars) if (all(is.na(data[[v]]))) data[[v]] = NULL
 
 # extrapolate where necessary TEMPORARY
@@ -122,7 +122,7 @@ for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))]
 # see Kline Principles and Practice of SEM (2011) page 67
 scaling_factors = data.table(date=1)
 for(v in names(data)) { 
-	if (v %in% c('health_zone','date')) next
+	if (v %in% c('orig_health_zone','health_zone','date')) next
 	s=1
 	while(var(data[[v]]/s)>1000) s=s*10
 	while(var(data[[v]]/s)<100) s=s/10
