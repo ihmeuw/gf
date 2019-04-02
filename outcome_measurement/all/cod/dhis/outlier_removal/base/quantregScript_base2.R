@@ -13,8 +13,10 @@ user_name = 'ccarelli'
 #------------------------------------
 
 # get the task_id to index the array table
-i = as.integer(Sys.getenv("SGE_TASK_ID"))
-print(i)
+# i = as.integer(Sys.getenv("SGE_TASK_ID"))
+# print(i)
+
+i = 5
 
 # read in the array table 
 array_table = read.csv(paste0('/ihme/scratch/users/', user_name,'/array_table_for_qr.csv'))
@@ -25,11 +27,13 @@ o = array_table[i]$org_unit_id # unique facility id
 print(o)
 
 #------------------------------------
+
 #-----------------------------------
 # load the data & subset to task_id/org_unit
 #------------------------------------
 
-dt = read.fst(paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'), as.data.table = TRUE)
+dt = read.fst(paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
+dt = data.table(dt)
 subset = dt[org_unit_id==o] 
 
 #------------------------------------
@@ -78,7 +82,7 @@ for (e in unique(subset$element_id)) {
     if(nrow(combined_qr_results)==0){
       combined_qr_results = subset_further # first time through, just set combined results to be = the data 
     } else if (nrow(combined_qr_results)>0){
-      combined_qr_results = rbindlist( list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) # subsequent times through, add in combined results
+      combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) # subsequent times through, add in combined results
     }
     print(paste0("completed loop with element_id =", e))
   }
