@@ -52,6 +52,7 @@ means1 = merge(means1, tmp, by.x='lhs', by.y='variable', all.x=TRUE)
 means1[is.na(scaling_factor.x), scaling_factor.x:=1]
 means1[is.na(scaling_factor.y), scaling_factor.y:=1]
 means1[, est_unrescaled:=est/scaling_factor.x*scaling_factor.y]
+means1[, se_unrescaled:=se/scaling_factor.x*scaling_factor.y]
 means1[, lower_unrescaled:=lower/scaling_factor.x*scaling_factor.y]
 means1[, upper_unrescaled:=upper/scaling_factor.x*scaling_factor.y]
 
@@ -77,7 +78,7 @@ setnames(mediation_means, c('label.x','label.y'), c('label_lhs','label_rhs'))
 # Pools funders together, weighting by investment size
 
 # reshape data long
-long = melt(data1, id.vars=c('health_zone','date'))
+long = melt(data1, id.vars=c('orig_health_zone','health_zone','date'))
 
 # aggregate to total across whole time series (unrescaling not necessary)
 long = long[, .(value=sum(value)), by=variable]
@@ -137,11 +138,8 @@ setnames(means2, c('label.x','label.y'), c('label_lhs','label_rhs'))
 # ITN, ACT and RDT shipment costs
 for(c in c('ITN','ACT','RDT')) {
 	output = paste0(c, '_received_cumulative')
-	commodity_cost = means1[lhs==output,c('rhs','est_unrescaled','se_unrescaled'), with=F]
-	commodity_cost[grepl('exp',rhs), funder:='Global Fund']
-	commodity_cost[grepl('other_dah',rhs), funder:='All Other Donors']
-	commodity_cost[grepl('ghe',rhs), funder:='Government']
-	commodity_cost = commodity_cost[, .(est=sum(est_unrescaled), se=mean(se_unrescaled)), by=funder]
+	commodity_cost = pooled_means1[lhs==output,c('label_rhs','est_unrescaled','se_unrescaled'), with=F]
+	commodity_cost = commodity_cost[, .(est=sum(est_unrescaled), se=mean(se_unrescaled))]
 	commodity_cost[, lower:=est+(1.96*se)]
 	commodity_cost[, upper:=est-(1.96*se)]
 	commodity_cost$se = NULL
@@ -259,13 +257,13 @@ p7 = ggplot(pooled_means1[lhs %in% actVars],
 # ----------------------------------------------
 # Save
 pdf(outputFile6b, height=5.5, width=9)
-p1
-p2
-p3
-p4
-p5
-p6
-p7
+print(p1)
+print(p2)
+print(p3)
+print(p4)
+print(p5)
+print(p6)
+print(p7)
 dev.off()
 
 # save a time-stamped version for reproducibility
