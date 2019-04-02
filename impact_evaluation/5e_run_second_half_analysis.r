@@ -101,9 +101,9 @@ if (runAsQsub==TRUE) {
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/5f_run_second_half_analysis_single_hz.r'))
 	# wait for jobs to finish (2 files per job)
-	while(length(list.files(clustertmpDir2, pattern='_summary_'))<(T)) { 
+	while(length(list.files(clustertmpDir2, pattern='second_half_summary_'))<(T)) { 
 		Sys.sleep(5)
-		print(paste(length(list.files(clustertmpDir2, pattern='_summary_')), 'of', T, 'files found...'))
+		print(paste(length(list.files(clustertmpDir2, pattern='second_half_summary_')), 'of', T, 'files found...'))
 	}
 	# collect output
 	print('Collecting output...')
