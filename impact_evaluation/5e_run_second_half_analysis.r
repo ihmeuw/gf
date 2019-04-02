@@ -53,7 +53,7 @@ summary(lmFit10)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-source('./impact_evaluation/models/drc_malaria_impact3.r')
+source('./impact_evaluation/models/drc_malaria_impact4.r')
 
 # swap in health zone dummies where health_zone is specified (for convenience)
 # model = gsub('health_zone', paste(unique(data$health_zone)[-1],collapse='+'), model)
