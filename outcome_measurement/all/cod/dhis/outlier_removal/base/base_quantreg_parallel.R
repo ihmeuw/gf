@@ -75,7 +75,7 @@ cleanup = TRUE
 # read in and set up the data
 #------------------------------------
 # data set with equality constraints checked and an entry for both tests/undetectable
-dt = readRDS('/ihme/scratch/users/ccarelli/base_to_screen.rds')
+dt = readRDS(paste0('/ihme/scratch/users/', user_name, '/base_to_screen.rds'))
 dt = data.table(dt)
 
 # sort dt so indexing works correctly when retrieving data using fst
@@ -86,7 +86,7 @@ array_table = data.table(expand.grid(unique(dt$org_unit_id)))
 setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
-array_table = array_table[1:20]
+array_table = array_table[1:20,]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, paste0('/ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
