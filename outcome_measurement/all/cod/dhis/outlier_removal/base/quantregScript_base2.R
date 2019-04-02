@@ -29,7 +29,7 @@ print(o)
 # load the data & subset to task_id/org_unit
 #------------------------------------
 
-dt = read.fst(paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst', as.data.table = TRUE))
+dt = read.fst(paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'), as.data.table = TRUE)
 subset = dt[org_unit_id==o] 
 
 #------------------------------------
