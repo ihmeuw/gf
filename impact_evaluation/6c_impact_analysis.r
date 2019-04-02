@@ -78,16 +78,16 @@ while(any(outcomeVars %in% means$lhs)) {
 	unexplained1[!grepl('completeness',rhs) & !grepl('completeness',lhs), rhs:='unexplained']
 
 	# drop completeness controls
-	unexplained1 = unexplained1[!grepl('completeness',rhs)]
-	unexplained1 = unexplained1[!grepl('completeness',lhs)]
-	currentLevel = currentLevel[!grepl('completeness',rhs)]
-	currentLevel = currentLevel[!grepl('completeness',lhs)]
 	currentLevel = rbind(currentLevel, unexplained1)
 	
 	# compute explained variance
 	# currentLevel[, est.std:=est.std^2]
 	# currentLevel[, est.std:=est.std/sum(est.std), by=lhs]
 	currentLevel[, est.std:=abs(est.std)/sum(abs(est.std)), by=lhs]
+	
+	# drop completeness controls
+	currentLevel = currentLevel[!grepl('completeness',rhs)]
+	currentLevel = currentLevel[!grepl('completeness',lhs)]	
 	
 	# assign
 	currentLevel = currentLevel[order(lhs, rhs)]
