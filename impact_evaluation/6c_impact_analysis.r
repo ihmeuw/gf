@@ -10,6 +10,7 @@
 # Load/prep data and functions
 
 source('./impact_evaluation/_common/set_up_r.r')
+library(RColorBrewer)
 
 # load model results
 load(outputFile5b)
@@ -162,11 +163,12 @@ estimates2$level2_sum=NULL
 
 # add higher-level unexplained
 estimates2 = rbind(estimates2, data.table(lhs='unexplained',rhs='unexplained',
-	est.std=estimates2[level==2][rhs=='unexplained']$est.std, se.std=0, level=3))
+	est.std=estimates2[level==2][rhs=='unexplained']$est.std, 
+	se.std=0, level=3), fill=TRUE)
 
 # add level 0
 estimates2 = rbind(estimates2, data.table(lhs='Parent',rhs='Parent',
-	est.std=0, se.std=0, level=0))
+	est.std=0, se.std=0, level=0), fill=TRUE)
 	
 estimates2[level==2, fill:=rhs]
 estimates2[level==3, fill:=lhs]
