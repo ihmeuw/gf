@@ -99,7 +99,7 @@ if (runAsQsub==TRUE) {
 	hzs = unique(data$health_zone)
 	T = length(hzs)
 	# submit array job
-	system(paste0('qsub -cwd -N ie_job_array -t 1:', T, 
+	system(paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
 		' -l fthread=2 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/5c_run_first_half_analysis_single_hz.r'))
@@ -156,7 +156,7 @@ if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
 # clean up qsub files
 print(paste('Cleaning up cluster temp files...'))
 if (runAsQsub==TRUE) { 
-	system(paste0('rm ', clustertmpDireo, '/first_half_*'))
+	system(paste0('rm ', clustertmpDireo, '/ie1_job_array*'))
 	system(paste0('rm ', clustertmpDir1	, '/first_half_*'))
 	system(paste0('rm ', clustertmpDir2	, '/first_half_*'))
 }
