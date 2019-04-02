@@ -6,6 +6,9 @@
 # -----------------------------------
 
 
+# to do
+# show % explained by "data quality" (completeness)?
+
 # -----------------------------------------------
 # Load/prep data and functions
 
@@ -72,9 +75,15 @@ while(any(outcomeVars %in% means$lhs)) {
 
 	# get unexplained
 	unexplained1 = means[lhs%in%outcomeVars & rhs%in%outcomeVars, byVars, with=FALSE]
-	unexplained1[, rhs:='unexplained']
-	currentLevel = rbind(currentLevel, unexplained1)
+	unexplained1[!grepl('completeness',rhs) & !grepl('completeness',lhs), rhs:='unexplained']
 
+	# drop completeness controls
+	unexplained1 = unexplained1[!grepl('completeness',rhs)]
+	unexplained1 = unexplained1[!grepl('completeness',lhs)]
+	currentLevel = currentLevel[!grepl('completeness',rhs)]
+	currentLevel = currentLevel[!grepl('completeness',lhs)]
+	currentLevel = rbind(currentLevel, unexplained1)
+	
 	# compute explained variance
 	# currentLevel[, est.std:=est.std^2]
 	# currentLevel[, est.std:=est.std/sum(est.std), by=lhs]
@@ -146,7 +155,7 @@ estimates[, level:=as.character(level)]
 # -----------------------------------------------
 # Reassemble estimates leading up to ITN coverage
 
-estimates2 = means[grepl('ITN',lhs) & (op=='~' | lhs==rhs)]
+estimates2 = means[grepl('ITN',lhs) & (op=='~' | lhs==rhs) & !grepl('completeness', rhs)]
 estimates2$op=NULL
 estimates2[lhs==rhs, rhs:='unexplained']
 estimates2[, est.std:=abs(est.std)/sum(abs(est.std)), by=lhs]
@@ -374,17 +383,17 @@ p11 = ggplot(estimatesGraph2, aes(x=level, y=est.std, fill=fill, alpha=level)) +
 # -----------------------------------------------
 # Save
 pdf(outputFile6c, height=5.5, width=9)
-p1
-p2
-p3
-p4
-p5
-p6
-p7
-p8
-p9
-p10
-p11
+print(p1)
+print(p2)
+print(p3)
+print(p4)
+print(p5)
+print(p6)
+print(p7)
+print(p8)
+print(p9)
+print(p10)
+print(p11)
 dev.off()
 
 archive(outputFile6c)
