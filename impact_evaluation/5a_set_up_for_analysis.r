@@ -19,6 +19,7 @@ source('./impact_evaluation/_common/set_up_r.r')
 data = readRDS(outputFile3)
 
 # make unique health zone names for convenience
+data[, orig_health_zone:=health_zone]
 data[, health_zone:=paste0(health_zone, '_', dps)]
 data$dps = NULL
 
