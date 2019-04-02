@@ -17,8 +17,8 @@ i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
 
 # read in the array table 
-array_table = read.csv('/ihme/scratch/users/', user_name,'/array_table_for_qr.csv')
-array_table = as.data.table(array_table)
+array_table = read.csv(paste0('/ihme/scratch/users/', user_name,'/array_table_for_qr.csv'))
+array_table = data.table(array_table)
 
 # read org unit from the array table
 o = array_table[i]$org_unit_id # unique facility id
@@ -29,7 +29,7 @@ print(o)
 # load the data & subset to task_id/org_unit
 #------------------------------------
 
-dt = read.fst('/ihme/scratch/users/', user_name, '/data_for_qr.fst', as.data.table = TRUE)
+dt = read.fst(paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst', as.data.table = TRUE))
 subset = dt[org_unit_id==o] 
 
 #------------------------------------
