@@ -28,7 +28,7 @@ subData = data[health_zone==h]
 
 # ----------------------------------------------
 # Define model object
-source('./impact_evaluation/models/drc_malaria_impact3.r')
+source('./impact_evaluation/models/drc_malaria_impact4.r')
 # ----------------------------------------------
 
 
