@@ -78,8 +78,8 @@ source('./impact_evaluation/_common/archive_function.R')
 budgetFile = paste0(rtDir, 'final_budgets.rds')
 expendituresFile = paste0(rtDir, 'final_expenditures.rds')
 fghFile = paste0(fghDir, 'prepped_current_fgh.rds')
-gheMalFile = paste0(fghDir, 'prepped_current_fgh.rds')
-whoFile = paste0(whoDir, 'ghe_actuals_malaria.rds')
+gheMalFile = paste0(fghDir, 'ghe_actuals_malaria.rds')
+whoFile = paste0(whoDir, 'who_prepped.rds')
 
 # activities/outputs files
 # pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
@@ -89,7 +89,6 @@ pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
 combinedFile <- paste0(ieDir, 'base_pnlp_sigl_combined_data_hz_level.rds')
 comp_base_file <- paste0(dhisDir, "base_reporting_completeness_hz_prepped_quarterly.rds")
 comp_sigl_file <-paste0(dhisDir, "sigl1_reporting_completeness_hz_prepped_quarterly.rds")
-ssc_file <- paste0(dhisDir, "SSC_data_2017_2018_prepped.rds")
 
 # outcomes/impact files
 mapITNFiles = list.files(paste0(lbdDir, 'mapitncov/mean/1y/'), '*.tif', 
