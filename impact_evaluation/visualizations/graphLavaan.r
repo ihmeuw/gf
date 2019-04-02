@@ -281,13 +281,14 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	
 	# labels
 	capt = paste('Control variables not displayed:', paste(exclVars, collapse =', '))
-	capt = str_wrap(capt, 80)
+	capt = str_wrap(capt, 100)
 	if (length(exclVars)==0) capt='' 
 	p = p + 
 		labs(color='Effect\nSize', caption=capt)
 	
 	# clean up plot
-	p = p + theme_void() + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'))
+	p = p + theme_void() + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'), 
+	plot.caption=element_text(size=6))
 	if (curved %in% c(1,2)) p = p + scale_size_continuous(guide = FALSE)
 	
 	# -------------------------------------------------------------------------------

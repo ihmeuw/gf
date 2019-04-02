@@ -1,5 +1,5 @@
 variable,x,y,label
-SSCACT,0,5.5,Pat.'s Tx in iCCM (#)
+SSCACT,0,5.5,Pat.'s Tx iCCM (#)
 mildMalariaTreated,0,4.5,Pat.'s Tx (#)
 RDT,0,3.5,RDTs Used (#)
 severeMalariaTreated,0,2.5,Sev. Tx (#)
