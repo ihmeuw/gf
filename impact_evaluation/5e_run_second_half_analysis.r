@@ -151,8 +151,8 @@ if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
 # clean up qsub files
 print(paste('Cleaning up cluster temp files...'))
 if (runAsQsub==TRUE) { 
-	system(paste0('rm ', clustertmpDireo, '/*'))
-	system(paste0('rm ', clustertmpDir1	, '/*'))
-	system(paste0('rm ', clustertmpDir2	, '/*'))
+	system(paste0('rm ', clustertmpDireo, '/second_half_*'))
+	system(paste0('rm ', clustertmpDir1	, '/second_half_*'))
+	system(paste0('rm ', clustertmpDir2	, '/second_half_*'))
 }
 # ------------------------------------------------------------------
