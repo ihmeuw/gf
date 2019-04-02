@@ -12,12 +12,12 @@ model = '
 
 	
 	# linkage 2 regressions
-	ITN_consumed_cumulative ~ prior("dgamma(1,1)")*ITN_received_cumulative
+	ITN_consumed_cumulative ~ prior("dgamma(1,1)")*ITN_received_cumulative + completeness_ITN_consumed
 	ACTs_SSC_cumulative ~  prior("dgamma(1,1)")*exp_M2_3_cumulative + prior("dgamma(1,1)")*other_dah_M2_3_cumulative + prior("dgamma(1,1)")*ghe_cumulative + completeness_ACTs_SSC
-	RDT_completed_cumulative ~ prior("dgamma(1,1)")*RDT_received_cumulative
+	RDT_completed_cumulative ~ prior("dgamma(1,1)")*RDT_received_cumulative + completeness_RDT_completed
 	SP_cumulative ~ prior("dgamma(1,1)")*exp_M3_1_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative + completeness_SP
 	severeMalariaTreated_cumulative ~ prior("dgamma(1,1)")*exp_M2_6_cumulative + prior("dgamma(1,1)")*ACT_received_cumulative + date + prior("dgamma(1,1)")*ghe_cumulative + completeness_severeMalariaTreated
-	totalPatientsTreated_cumulative ~ prior("dgamma(1,1)")*ACT_received_cumulative
+	totalPatientsTreated_cumulative ~ prior("dgamma(1,1)")*ACT_received_cumulative + completeness_totalPatientsTreated
 	
 	# latent variables
 	
