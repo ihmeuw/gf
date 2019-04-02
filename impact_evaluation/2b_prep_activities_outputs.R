@@ -32,6 +32,7 @@ convert_quarter_to_decimal <- function(dt){
   return(dt)
 }
 source('./core/standardizeHZNames.R')
+source('./core/standardizeDPSNames.R')
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -41,17 +42,21 @@ dt <- readRDS(combinedFile)
 sigl_comp <- readRDS(comp_sigl_file)
 base_comp <- readRDS(comp_base_file)
 pnlp_comp <- readRDS(pnlpHZFile)
+pnlp_comp[ , health_zone := standardizeHZNames(health_zone)]
+pnlp_comp[ , dps := standardizeDPSNames(dps)]
 
 # standardize health zone names in SNIS files - because of the three that we combined, will need to avg across health_zones
 base_comp[ , health_zone := standardizeHZNames(health_zone)]
 sigl_comp[ , health_zone := standardizeHZNames(health_zone)]
+base_comp[ , dps := standardizeDPSNames(dps)]
+sigl_comp[ , dps := standardizeDPSNames(dps)]
 
 base_comp = base_comp[, .(completeness = mean(completeness)), by = .(dps, dps_code, health_zone, date, year, quarter)]
 sigl_comp = sigl_comp[, .(completeness = mean(completeness)), by = .(dps, dps_code, health_zone, date, year, quarter)]
 
 if (nrow(base_comp[duplicated(base_comp[, .(health_zone, dps, year, quarter)])]) != 0 
     & nrow(sigl_comp[duplicated(sigl_comp[, .(health_zone, dps, year, quarter)])]) != 0){
-  stop ( "Unique identifiers do not uniquely idenitfy rows!")}
+  stop ( "Unique identifiers do not uniquely identify rows!")}
 # ---------------------------------------------------
 
 # ---------------------------------------------------
