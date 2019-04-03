@@ -134,8 +134,8 @@ for(v in names(scaling_factors)) data[, (v):=get(v)/scaling_factors[[v]]]
 
 # compute lags (after rescaling because it creates more NA's)
 lagVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
-for(v in lagVars) data[, (paste0('lag_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
-for(v in lagVars) untransformed[, (paste0('lag_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
+for(v in lagVars) data[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='health_zone']
+for(v in lagVars) untransformed[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='health_zone']
 data = na.omit(data)
 # -----------------------------------------------------------------------
 
