@@ -12,14 +12,15 @@
 task_id <- as.integer(Sys.getenv("SGE_TASK_ID"))
 
 # cut args down to non-system variables
-args = commandArgs()
-args[!grepl('--|/opt/R/lib/R/bin/exec/R',args)]
-
-# the first argument should be the same as the task ID
-if(is.na(task_id) | is.null(task_id)) task_id = args[1]
+args = commandArgs(trailingOnly=TRUE)
 
 # the second argument should be the model version to use
-modelVersion = args[2]
+modelVersion = args[1]
+
+# print for log
+print(paste('Task ID:', task_id))
+print(paste('Command Args:', args))
+print(paste('Model Version:', modelVersion))
 # ----------------------------------------------
 
 source('./impact_evaluation/_common/set_up_r.r')

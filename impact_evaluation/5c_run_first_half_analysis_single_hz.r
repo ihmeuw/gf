@@ -14,11 +14,8 @@ task_id <- as.integer(Sys.getenv("SGE_TASK_ID"))
 # store non-system command arguments
 args = commandArgs(trailingOnly=TRUE)
 
-# the first argument should be the same as the task ID
-if(is.na(task_id) | is.null(task_id)) task_id = args[1]
-
 # the second argument should be the model version to use
-modelVersion = args[2]
+modelVersion = args[1]
 
 # print for log
 print(paste('Task ID:', task_id))
