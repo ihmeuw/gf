@@ -31,6 +31,8 @@ model = '
 	severeMalariaTreated_rate ~~ mildMalariaTreated_rate
 	ACTs_CHWs_rate ~~ mildMalariaTreated_rate
 	severeMalariaTreated_rate ~~ ACTs_CHWs_rate
+	lead_newCasesMalariaSevere_rate ~~ lead_case_fatality 
+	lead_newCasesMalariaMild_rate ~~ lead_case_fatality 
 	
 	# fixed covariances
 	ITN ~~ 0*mildMalariaTreated
