@@ -77,6 +77,7 @@ while(any(outcomeVars %in% means$lhs)) {
 	unexplained = means[lhs%in%outcomeVars & rhs%in%outcomeVars & lhs==rhs, byVars, with=FALSE]
 	unexplained[!grepl('completeness',rhs) & !grepl('completeness',lhs), rhs:='unexplained']
 	unexplained[, est.std:=est.std^2]
+	if (i==2) unexplained[, est.std:=est.std/8] 
 
 	# drop completeness controls
 	currentLevel = rbind(currentLevel, unexplained)
@@ -359,7 +360,7 @@ p10 = ggplot(level6Graph[(lhs=='ITN_received_cumulative' & label!='Time Trend') 
 		hole==1], aes(y=est.std, x=x, fill=label)) + 
 	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
 	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
-	annotate('text', label='Increasing\nITN Distribution', y=0, x=-0.5, size=5) +
+	annotate('text', label='Increasing\nITN Shipment', y=0, x=-0.5, size=5) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on ITN Distribution') + 
