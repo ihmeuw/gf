@@ -16,7 +16,7 @@ user_name = 'ccarelli'
 # i = as.integer(Sys.getenv("SGE_TASK_ID"))
 # print(i)
 
-i = 5
+i = 7
 
 # read in the array table 
 array_table = read.csv(paste0('/ihme/scratch/users/', user_name,'/array_table_for_qr.csv'))
