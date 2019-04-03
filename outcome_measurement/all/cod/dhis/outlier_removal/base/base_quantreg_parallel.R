@@ -101,9 +101,6 @@ PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
 setwd('/ihme/code/ccarelli/gf/')
 system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./base_script.r'))
 
-
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N base_jobs -cwd ./core/r_shell.sh ./base_script.r'))
-
 #------------------------------------
 
 
