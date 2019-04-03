@@ -116,7 +116,6 @@ N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
 setwd('/ihme/code/ccarelli/gf/')
 
-
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base_script.R'))
 
 
@@ -142,7 +141,7 @@ while(numFiles<i) {
 fullData = data.table()
 
 for (j in seq(N)) {
-  tmp = read.fst(paste0(parallelDir, '/base_output', j, '.fst'), as.data.table=TRUE)
+  tmp = read.fst(paste0(parallelDir, '/quantreg_output', j, '.fst'), as.data.table=TRUE)
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', j))
@@ -157,9 +156,9 @@ saveRDS(fullData, outFile)
 # clean up parallel files
 #------------------------------------
 if (cleanup==TRUE) { 
-  system(paste0('rm /ihme/scratch/users/', user_name, '/base_results/*'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/base_output/*'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/data_for_qr.fst'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg/parallel_files/*'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg/errors_output/*'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg/array_table_for_qr.csv'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg/data_for_qr.fst'))
 }
 #------------------------------------
