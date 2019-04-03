@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 3/31/2019
+# 4/3/2019
 # Rbind the UVL data sets together
 # Run dist_facilities_uvl.R to download facility and district names
 # ----------------------------------------------
@@ -83,7 +83,17 @@ for(f in files) {
   current_data[, sex:=(meta_data[5])]
   current_data[, tb:=(meta_data[6])]
   current_data[, age:=(meta_data[7])]
-
+  
+  # create an age category
+  age_start = trimws(str_split(unique(current_data$age), ',')[[1]][1])
+  
+  x = length(str_split(unique(current_data$age), ',')[[1]])
+  age_end = trimws(str_split(unique(current_data$age), ',')[[1]][x])
+  
+  # replace the long character string with an age category
+  age_replace = paste(age_start, '-', age_end)
+  current_data[ , age:=age_replace]
+  
   # rename sex values
   current_data[sex=='m', sex:='Male']
   current_data[sex=='f', sex:='Female']
@@ -93,7 +103,7 @@ for(f in files) {
   current_data[tb=='y', tb_status:=TRUE]
   current_data[tb=='n', tb_status:=FALSE]
   current_data[tb=='x', tb_status:=NA]
-  current_data[ ,tb:=NULL]
+  current_data[ , tb:=NULL]
 
   # append to the full data 
   if(i==1) dt = current_data
