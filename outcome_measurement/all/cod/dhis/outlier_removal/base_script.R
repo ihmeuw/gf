@@ -6,17 +6,17 @@ library(data.table)
 library(quantreg)
 library(fst) 
 
-user_name = 'ccarelli'
+user_name = Sys.info()[['user']]
 
 #------------------------------------
 # handle arguments
 #------------------------------------
 
 # get the task_id to index the array table
-# i = as.integer(Sys.getenv("SGE_TASK_ID"))
-# print(i)
+i = as.integer(Sys.getenv("SGE_TASK_ID"))
+print(i)
 
-i = 4
+if (is.na(i) | is.null(i)) i = 4
 
 print("It worked!")
 
