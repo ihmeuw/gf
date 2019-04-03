@@ -4,7 +4,7 @@
 # Caitlin O'Brien-Carelli / Audrey Batzel (3-7-19)
 #
 # 4/1/2019
-# The current working directory should be the same as this script
+# The current working directory should be the root of this repository
 # This code must be run on the cluster
 
 # ----------------------------------------------
@@ -48,7 +48,7 @@ library(data.table)
 library(quantreg)
 library(fst) # to save data tables as .fst for faster read/write and full random access
 
-user_name = 'ccarelli'
+user_name = Sys.info()[['user']]
 # --------------------
 #------------------------------------
 # set directories, switchs, arguments  
@@ -98,7 +98,6 @@ write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 # array job
 N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
-setwd('/ihme/code/ccarelli/gf/')
 system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./base_script.r'))
 
 
