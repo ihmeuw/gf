@@ -33,7 +33,7 @@ rerun_merge <- FALSE
 rerun_adjust <- FALSE
 rerun_explore <- FALSE
 rerun_models <- FALSE
-rerun_analysis <- FALSE
+rerun_analysis <- TRUE
 rerun_post <- FALSE
 
 # ---------------------------------------
@@ -75,7 +75,7 @@ if (rerun_merge==TRUE) {
 # ---------------------------------------
 # Correct rates to model estimates
 # ---------------------------------------
-if (rerun_adjust==TRUE)
+if (rerun_adjust==TRUE) { 
 	source('./impact_evaluation/3b_correct_to_models.R')
 }
 
