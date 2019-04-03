@@ -18,6 +18,8 @@ user_name = 'ccarelli'
 
 i = 7
 
+print("It worked!")
+
 # read in the array table 
 array_table = read.csv(paste0('/ihme/scratch/users/', user_name,'/array_table_for_qr.csv'))
 array_table = data.table(array_table)
