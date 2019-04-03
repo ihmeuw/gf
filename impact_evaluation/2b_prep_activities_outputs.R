@@ -42,8 +42,8 @@ dt <- readRDS(combinedFile)
 sigl_comp <- readRDS(comp_sigl_file)
 base_comp <- readRDS(comp_base_file)
 pnlp_comp <- readRDS(pnlpHZFile)
-pnlp_comp[ , health_zone := standardizeHZNames(health_zone)]
 pnlp_comp[ , dps := standardizeDPSNames(dps)]
+pnlp_comp[ , health_zone := standardizeHZNames(health_zone)]
 
 # standardize health zone names in SNIS files - because of the three that we combined, will need to avg across health_zones
 base_comp[ , health_zone := standardizeHZNames(health_zone)]
@@ -108,7 +108,13 @@ pnlp_comp$variable <- as.character(pnlp_comp$variable)
 pnlp_fac <- pnlp_comp[variable %in% c("healthFacilities_total", "healthFacilitiesProduct"), .(dps, health_zone, date, variable, mean)]
 setnames(pnlp_fac, "mean", "value")
 
-pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable)
+# because of the way we have standardized health zones, we need to sum vars (in rerun of imputation, do this BEFORE***)
+# check =  pnlp_fac[health_zone %in% c("uvira", "bambu")]
+# ggplot( pnlp_fac[health_zone %in% c("uvira", "bambu") & dps %in% c("ituri", "sud-kivu")], aes( x = date, y = value, color = health_zone )) +
+#   geom_point() + facet_grid(health_zone ~ variable, scales = "free") + theme_bw()
+pnlp_fac = pnlp_fac[, .(value = sum(value)), by = .(dps, health_zone, date, variable)]
+
+pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable, value.var = "value")
 pnlp_fac[, healthFacilities_reporting := healthFacilitiesProduct / healthFacilities_total]
 pnlp_fac[, completeness := healthFacilities_reporting / healthFacilities_total]
 
