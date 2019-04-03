@@ -113,7 +113,7 @@ for(v in complVars) {
 	data[, (v):=smithsonTransform(get(v))]
 }
 
-# # log-transform all variables
+# log-transform all variables
 logVars = c('ITN_consumed_cumulative','ACTs_SSC_cumulative','RDT_completed_cumulative','SP_cumulative','severeMalariaTreated_cumulative','totalPatientsTreated_cumulative')
 for(v in logVars) data[, (v):=log(get(v))]
 for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
@@ -131,6 +131,12 @@ for(v in names(data)) {
 scaling_factors = scaling_factors[rep(1,nrow(data))]
 for(v in names(scaling_factors)) data[, (v):=get(v)/scaling_factors[[v]]]
 # data[, lapply(.SD, var)]
+
+# compute lags (after rescaling because it creates more NA's)
+lagVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
+for(v in lagVars) data[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='health_zone']
+for(v in lagVars) untransformed[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='health_zone']
+data = na.omit(data)
 # -----------------------------------------------------------------------
 
 
