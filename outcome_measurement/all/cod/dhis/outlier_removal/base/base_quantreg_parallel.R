@@ -113,10 +113,7 @@ write.fst(dt, scratchInFile)
 # array job
 N = nrow(array_table)
 
-system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./base_script.r'))
-
-
-system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd ./core/r_shell.sh ./base_script.r'))
+system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base_script.R'))
 
 #------------------------------------
 
