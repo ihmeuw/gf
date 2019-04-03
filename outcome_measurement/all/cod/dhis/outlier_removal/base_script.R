@@ -20,21 +20,27 @@ if (is.na(i) | is.null(i)) i = 4
 
 print("It worked!")
 
+# file paths
+scratchDir = paste0('/ihme/scratch/users/', user_name, '/quantreg/')
+scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
+arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
+parallelDir = paste0(scratchDir, 'parallel_files/')
+outFile = paste0(parallelDir, '/quantreg_output', i, '.fst')
+
+
 # read in the array table 
-array_table = read.csv(paste0('/ihme/scratch/users/', user_name,'/array_table_for_qr.csv'))
-array_table = data.table(array_table)
+array_table = fread(arrayFile)
 
 # read org unit from the array table
 o = array_table[i]$org_unit_id # unique facility id
 print(o)
-
 #------------------------------------
 
 #-----------------------------------
 # load the data & subset to task_id/org_unit
 #------------------------------------
 
-dt = read.fst(paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
+dt = read.fst(scratchInFile)
 dt = data.table(dt)
 subset = dt[org_unit_id==o] 
 
@@ -94,6 +100,6 @@ for (e in unique(subset$element_id)) {
 # Then, save the combined data set which has quant reg imputation results for all combinations of drug/variable for a specific org_unit
 # (i will be = number of org units) / this will be done for each org_unit!
 #------------------------------------
-print(paste0('Saving: ', paste0('/ihme/scratch/users/', user_name, '/base_results/quantreg_output', i, '.fst')))
-write.fst(combined_qr_results, paste0('/ihme/scratch/users/', user_name, '/base_results/quantreg_output', i, '.fst'))
+print(paste0('Saving: ', outFile))
+write.fst(combined_qr_results, outFile)
 #------------------------------------
