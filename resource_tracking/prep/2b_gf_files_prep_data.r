@@ -6,7 +6,7 @@
 
 #-------------------------
 #To do: 
-
+# Make sure that final files in file list don't have overlapping quarters, NOT just duplicate start dates. 
 #--------------------------
 
 #----------------------------------------------------
@@ -18,14 +18,23 @@ if (prep_files == TRUE){
   file_list = file_list[, -c('notes')]
   
   #Validate file list 
-  desired_cols <- c('file_name', 'sheet', 'function_type', 'start_date', 'disease', 'data_source', 'period', 'qtr_number', 'grant', 'primary_recipient',
-                    'secondary_recipient', 'language', 'geography', 'grant_period', 'grant_status', 'file_iteration')
-  #stopifnot(colnames(file_list) %in% desired_cols)
+  desired_cols <- c("file_name", "function_type", "sheet", "disease", "loc_id", "data_source", "period", "qtr_number", "grant", "primary_recipient", 
+                    "secondary_recipient", "language", "grant_period", "grant_status", "start_date", "file_iteration", "geography_detail", "loc_name", "mod_framework_format")
+  stopifnot(colnames(file_list) %in% desired_cols)
   
   stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
   stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
   
+  #Prioritize GOS data where we have it 
   file_list = prioritize_gos(file_list)
+  
+  #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
+  file_list[file_iteration=='final', date_dup:=seq(0, 10, by=1), by=c('grant', 'start_date', 'data_source')]
+  
+  if ( nrow(file_list[date_dup>0])!=0){
+    print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
+    print("There are duplicates in final files - review file list.")
+  }
 
 }
 
@@ -35,7 +44,10 @@ if (prep_files == TRUE){
 if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
-  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget')
+  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', 'Detailed Budget Revisé')
+  
+  budget_cols = c("activity_description", "budget", "cost_category", "intervention", "module", "start_date") #These are the only columns that should be returned from a budget function. 
+  pudr_cols = c("budget", "expenditure", "intervention", "module", "period", "start_date") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){
     folder = "budgets"
@@ -49,18 +61,37 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     inFile = paste0(file_dir, file_list$file_name[i])
     args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$period[i])
     
-    if(file_list$function_type[i] == 'detailed' & file_list$sheet[i]%in%general_detailed_budget_sheets){
+    if(file_list$function_type[i] == 'detailed' & file_list$sheet[i]%in%general_detailed_budget_sheets){ #Prep standardized detailed budgets. 
       args[length(args)+1] = file_list$qtr_number[i]
       args[length(args)+1] = file_list$language[i]
       tmpData = do.call(prep_general_detailed_budget, args)
       
-    } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){
+      stopifnot(sort(names(tmpData)) == budget_cols)
+      
+    } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){ #Prep standardized 'modular approach' PUDRs. 
       tmpData = do.call(prep_modular_approach_pudr, args)
       
-    } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i] == 'cod'){
+      stopifnot(sort(names(tmpData)) == pudr_cols)
+      
+    } else if (file_list$function_type[i]=='pudr' & file_list$sheet[i]%in%c('INTEGRACION')){ #Prep more general Guatemala PUDRs. 
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$disease[i], file_list$period[i],
+                  file_list$grant[i], file_list$source[i], file_list$loc_name[i], file_list$language[i])
+      tmpData = do.call(prep_pudr_gtm, args)
+      
+      stopifnot(sort(names(tmpData)) == pudr_cols)
+      
+    }  else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i] == 'cod'){ #Prep summary budgets from DRC. 
       args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_summary_budget_cod, args)
       
+      stopifnot(sort(names(tmpData)) == budget_cols)
+      
+    } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i]=='gtm') {
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$disease[i], file_list$period[i],
+                    file_list$grant[i], file_list$primary_recipient[i], file_list$language[i])
+      tmpData = do.call(prep_summary_budget_gtm, args)
+      
+      stopifnot(sort(names(tmpData)) == budget_cols)
     } else {
       print(paste0("File not being processed: ", file_list$file_name[i]))
     }
@@ -80,7 +111,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     if(i>1){
       resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill = TRUE)
     }
-    print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
+    print(paste0(i, " ", file_list$data_source[i], " ", file_list$function_type[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
   }
   
   saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))

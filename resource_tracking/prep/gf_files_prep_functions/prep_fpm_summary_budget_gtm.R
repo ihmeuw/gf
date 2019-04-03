@@ -10,7 +10,7 @@
 # ----------------------------------------------
 ##function to clean the data: 
 # ----------------------------------------------
-prep_fpm_summary_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, grant, primary_recipient, lang){
+prep_summary_budget_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, grant, primary_recipient, lang){
   
   if(!is.na(sheet_name)){
     gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))
@@ -60,16 +60,7 @@ prep_fpm_summary_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   budget_dataset<- melt(gf_data,id.vars =c("module", "intervention"), variable.name = "start_date", value.name="budget")
   budget_dataset$start_date <- as.Date(budget_dataset$start_date, "%Y-%m-%d")
   budget_dataset$budget <- as.numeric(budget_dataset$budget)
-  
-  ##add categories
-  budget_dataset$disease <- disease 
-  budget_dataset$period <- period
-  budget_dataset$recipient <- primary_recipient
-  budget_dataset$sda_activity <- "All"
-  budget_dataset$expenditure <- 0 
-  budget_dataset$lang <- lang
-  budget_dataset$cost_category <- "all"
-  budget_dataset$grant_number <- grant
+ 
   return(budget_dataset)
   
 }

@@ -194,7 +194,8 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
                   .SDcols = c("budget", "expenditure")]
 
   verified_0_expenditure <- c("UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", 
-                              "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx") #These files have 0 for all expenditure.
+                              "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx", 
+                              "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx") #These files have 0 for all expenditure.
   
   if(inFile%in%verified_0_expenditure){
     stopifnot(check_budgets[, 1]>0)

@@ -1,27 +1,23 @@
-# ----------------------------------------------
-# Irena Chen
-#
-# 10/31/2017
-# Template for prepping C-COIN budget data 
-# Inputs:
-# inFile - name of the file to be prepped
-# year - which year the dataset corresponds to
-#
-# Outputs:
-# budget_dataset - prepped data.table object
-
+# ------------------------------------------------------------------------
+# AUTHOR: Emily Linebarger, based off of code by Irena Chen
+# PURPOSE: Prep special-case PUDRs for Guatemala that don't fit into the 
+#   standard modular approach format. 
+#`  Files should be added to the if-statement logic below with FILE NAME ONLY 
+#   to prevent the the wrong logic being used on the wrong file. 
+# DATE: Last updated April 2019.
+# ------------------------------------------------------------------------
 
 # ----------------------------------------------
 # function to prep the data
 # ----------------------------------------------
-prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, grant, source, loc_name, lang) {
+prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, grant, source, loc_name, lang) {
   
   ######## TROUBLESHOOTING HELP
   ### fill in variables below: inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant, recipient_name 
   ### with information from line where the code breaks, and then uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
-# 
+
   folder = "budgets"
   folder = ifelse (file_list$data_source[i] == "fpm" , folder, "pudrs")
   file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
@@ -37,124 +33,80 @@ prep_gtm_pudr = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   grant = file_list$grant[i]
   source = file_list$data_source[i]
   loc_name = 'gtm'
-  #
+  
   # Load/prep data
   gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
   
   #Remove diacritical marks from inFile so it can be used for if-else statements below 
   inFile = fix_diacritics(inFile)
   
-  if((grant%in%"GTM-T-MSPAS"&sheet_name!="INTEGRACION"|sheet_name=="LFA Expenditure_7B")){
-    colnames(gf_data)[1] <- "module"
-    colnames(gf_data)[2] <- "intervention"
-    colnames(gf_data)[3] <- "budget"
-    colnames(gf_data)[4] <- "expenditure"
-    gf_data$sda_activity <- "all"
-    gf_data$recipient <- loc_name ##change this when we get SR info
-    start_row <- grep("modul", tolower(gf_data$module))
-    end_row <- grep("implem", tolower(gf_data$module))
-    if (inFile == "GTM-T-MSPAS_Progress Report Disbursement_30Jun2017_EFREnglish_270917.xlsx"){
-      start_row <- 29
-      end_row <- 48 
+  # -----------------------------------------------------------------------------
+  # Test the inputs to make sure that they are the correct type
+  if (class(inFile)!='character') stop('Error: inFile argument must be a string!')
+  if (class(year)=='character') stop('Error: year argument must be a number!')
+  # -----------------------------------------------------------------------------
+  # Files and directories
+  
+  #------------------------------------------------------------
+  # 1. Decide which category of file this document belongs to. 
+  #-------------------------------------------------------------
+  cat1 = c("GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xls") #Files similar to: "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/raw_data/active/GTM-T-MSPAS/pudrs/GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xls"
+  
+  #Sanity check: Is this sheet name one you've checked before? 
+  if (!inFile%in%cat1){
+    print(inFile)
+    stop("This file has not been run with this function before - Are you sure you want this function? Add file name to verified list within function to proceed.")
+  }
+  
+  #-------------------------------------
+  # 1. Prep category 1 type files. 
+  #-------------------------------------
+  if (inFile%in%cat1){
+    #Grab module-intervention block of rows - first find the columns you need
+    start_col <- grep("By Module - Intervention", gf_data)
+    end_col <- grep("Total Ejecutado", gf_data)
+    
+    stopifnot(length(start_col)==1 & length(end_col)==1)
+    
+    #Then find the rows you need by grepping those columns 
+    start_row <- grep("By Module - Intervention", gf_data[[start_col]])
+    end_row <- grep("Total", gf_data[[start_col]])
+    x = 1
+    while (end_row[x] < start_row){ #Grab the next 'total' row past your start column. 
+      x = x + 1
     }
-    if (inFile == "PUDR_P32_HivosGT_030518.xlsx"){
-      start_row <- grep("Modular Approach", gf_data$module)
-      end_row <- 106
-    }
-    if (inFile == "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx"){
-      start_row <- grep("Modular Approach", gf_data$module)
-      end_row <- 50
-    }
-    if (!(length(start_row)==1 & length(end_row) == 1)){
-      stop(paste0("Incorrect parameters specified for subset. Verify grep condition for file: ", inFile))
-    }
-    gf_data <- gf_data[start_row:end_row,]
-    gf_data <- gf_data[-1, ,drop = FALSE]
-    gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
+    end_row = end_row[x]
+    stopifnot(length(start_row)==1 & length(end_row)==1)
+    
+    #Subset to this section. 
+    gf_data = gf_data[start_row:end_row, start_col:end_col]
+    
+    #Set the names, and remove the first and last rows (We know that the first one is names, and the last one is total)
+    names(gf_data) = as.character(gf_data[1, ])
+    gf_data = gf_data[2:(nrow(gf_data)-1), ]
+    
+    #Only keep the intervention, budget, and expenditure columns. 
+    gf_data = gf_data[, c(1:3, 7)]
+    names(gf_data) = c('intervention', 'budget_q3', 'budget_q4', 'expenditure')
+    gf_data[, intervention:=gsub("MDR-TB", "MDRTB", intervention)]
+    split = strsplit(gf_data$intervention, "-")
+    gf_data[, module:=sapply(split,`[`,1)]
+    gf_data[, intervention:=sapply(split,`[`,2)]
+    
+  }
 
-    } else if (sheet_name=="LFA_Annex-SR Financials"){
-      colnames(gf_data)[1] <- "recipient"
-      colnames(gf_data)[5] <- "budget"
-      colnames(gf_data)[6] <- "disbursement"
-      colnames(gf_data)[11] <- "expenditure"
-      gf_data <- gf_data[c(grep("entity", tolower(gf_data$recipient)):(grep("total", tolower(gf_data$recipient)))),]
-      gf_data$sda_activity <- "all"
-      gf_data$module <- "all"
-      gf_data$intervention <- "all"
-      gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure", "disbursement"),with=FALSE]
-  } else if (sheet_name=="INTEGRACION"){
-      colnames(gf_data)[2] <- "code"
-      colnames(gf_data)[3] <- "module"
-      colnames(gf_data)[4] <- "budget"
-      colnames(gf_data)[5] <- "expenditure"
-      gf_data <- gf_data[c(grep("intid", tolower(gf_data$code)):(grep("costinput", tolower(gf_data$code)))),]
-      gf_data <- gf_data[, c("module", "budget", "expenditure"),with=FALSE]
-      gf_data <- na.omit(gf_data, cols=1, invert=FALSE)
-      setDT(gf_data)[, paste0("module", 1:2) := tstrsplit(module, "-")]
-      gf_data$module <- NULL
-      setnames(gf_data, c("module1", "module2"), c("module", "intervention"))
-      gf_data$recipient <- loc_name
-      gf_data$sda_activity <- "all"
-      gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
-  } else if (sheet_name=="PR EFR_7A"){
-    colnames(gf_data)[2] <- "module"
-    colnames(gf_data)[3] <- "sda_activity"
-    colnames(gf_data)[4] <- "intervention"
-    colnames(gf_data)[5] <- "budget"
-    colnames(gf_data)[6] <- "expenditure"
-    gf_data$recipient <- loc_name
-    gf_data <- gf_data[c(grep("object", tolower(gf_data$sda_activity)):(grep("name", tolower(gf_data$sda_activity)))),]
-    gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
-  } else if (inFile == "GUA-M-MSPAS EFR FASE II -2016_Ingles_RevALF.xlsm") {
-    colnames(gf_data)[2] <- "module"
-    colnames(gf_data)[4] <- "intervention"
-    colnames(gf_data)[5] <- "budget"
-    colnames(gf_data)[7] <- "expenditure"
-    start_row <- 33
-    end_row <- 43
-    gf_data = gf_data[start_row:end_row, .(module, intervention, budget, expenditure)]
-    gf_data$sda_activity <- "all"
-    gf_data <- gf_data[, c("module","sda_activity", "intervention", "budget", "expenditure"),with=FALSE]
-  } else { 
-      print(paste0("An else-statement was entered in GTM PUDR prep function. Review prep code for: ", 
-            inFile))
-  }
-  
-  #Emily verify that this isn't dropping budget information! Can we do this another way? 
-  if (inFile != "PUDR_P32_HivosGT_030518.xlsx"){
-    budget_dataset <- gf_data[-1, drop = FALSE]
-    budget_dataset <- budget_dataset[-nrow(budget_dataset) ,drop = FALSE]
-  } else {
-    budget_dataset = gf_data
-  }
-  
-  #This command makes me nervous everywhere I see it. EKL 1/9/18. Need to be verifying budget totals before dropping NAs. 
-  budget_dataset <- na.omit(budget_dataset , cols=1, invert=FALSE)
-  
-  #Emily what is this prep code doing? 
-  toMatch <- c("total", "module")
-  budget_dataset <- budget_dataset[!grepl(paste0(toMatch, collapse="|"), tolower(budget_dataset$module)),]
-  
-  #Need to rewrite this to 1.) Make sure only invalid rows are being dropped and 2.) We have checks in place. 
-  #Add numeric budget check here. 
-  
-  
-  if (qtr_num == 1 & !('start_date'%in%colnames(budget_dataset))){
-    budget_dataset$start_date <- start_date
-  }
+  #Subset to only these columns.
+  gf_data = gf_data[, .(module, intervention, budget, expenditure)]
+    
+
   if(!'start_date'%in%colnames(budget_dataset)){
     stop("PUDR with multiple quarters- review GTM prep code.")
   }
-  budget_dataset$year <- year(budget_dataset$start_date)
   budget_dataset$period <- period
-  budget_dataset$disease <- disease
-  budget_dataset$grant_number <- grant
-  budget_dataset$lang <- lang
-  budget_dataset$cost_category <- "all"
-  # 
-  # # ----------------------------------------------
-  # 
-  # return prepped data
+  
+  #-----------------------------------------------------------
+  # Return prepped data
+  #-----------------------------------------------------------
   return(budget_dataset)
 }
 
