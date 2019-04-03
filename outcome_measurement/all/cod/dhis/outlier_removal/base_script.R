@@ -16,7 +16,7 @@ user_name = 'ccarelli'
 # i = as.integer(Sys.getenv("SGE_TASK_ID"))
 # print(i)
 
-i = 7
+i = 4
 
 print("It worked!")
 

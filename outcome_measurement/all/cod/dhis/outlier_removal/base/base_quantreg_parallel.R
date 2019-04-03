@@ -10,17 +10,6 @@
 # ----------------------------------------------
 
 # --------------------
-# Set up R
-# --------------------
-rm(list=ls())
-library(data.table)
-library(quantreg)
-library(fst) # to save data tables as .fst for faster read/write and full random access
-
-user_name = 'ccarelli'
-# --------------------
-
-# --------------------
 # Manual set up on the cluster
 #---------------------
 
@@ -51,6 +40,16 @@ user_name = 'ccarelli'
 
 #------------------------------------
 
+# --------------------
+# Set up R
+# --------------------
+rm(list=ls())
+library(data.table)
+library(quantreg)
+library(fst) # to save data tables as .fst for faster read/write and full random access
+
+user_name = 'ccarelli'
+# --------------------
 #------------------------------------
 # set directories, switchs, arguments  
 #------------------------------------
@@ -68,7 +67,6 @@ resubmitAll = TRUE
 
 # whether or not to delete all files from parallel runs at the end
 cleanup = TRUE
-
 #------------------------------------
 
 #------------------------------------
@@ -101,9 +99,13 @@ write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
 setwd('/ihme/code/ccarelli/gf/')
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base_script.r'))
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./base_script.r'))
+
+
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N base_jobs -cwd ./core/r_shell.sh ./base_script.r'))
 
 #------------------------------------
+
 
 #------------------------------------
 # wait for files to be done
