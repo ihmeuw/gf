@@ -16,7 +16,7 @@ user_name = Sys.info()[['user']]
 i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
 
-if (is.na(i) | is.null(i)) i = 4
+# if (is.na(i) | is.null(i)) i = 4
 
 print("It worked!")
 
