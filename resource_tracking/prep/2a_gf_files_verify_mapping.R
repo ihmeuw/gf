@@ -323,7 +323,8 @@ unspecified = unspecified[coefficient!=1][order(module, intervention)]
 #Write final mapp and .diff files for comparison
 #--------------------------------------------------------------------------------
 
-  write.csv(module_map, paste0(mapping_dir, "gf_mapping.csv"))
+  write.csv(module_map, paste0(mapping_dir, "gf_mapping.csv"), row.names = FALSE)
+  saveRDS(module_map, paste0(mapping_dir, "gf_mapping.rds"))
 
   #Write a "diff" file to repository to make comparing changes easier. 
   module_map = module_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention, abbreviated_module)]
