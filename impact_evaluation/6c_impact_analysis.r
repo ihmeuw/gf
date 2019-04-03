@@ -74,20 +74,19 @@ while(any(outcomeVars %in% means$lhs)) {
 	currentLevel = means[lhs%in%outcomeVars & op=='~', byVars, with=FALSE]
 
 	# get unexplained
-	unexplained1 = means[lhs%in%outcomeVars & rhs%in%outcomeVars, byVars, with=FALSE]
-	unexplained1[!grepl('completeness',rhs) & !grepl('completeness',lhs), rhs:='unexplained']
+	unexplained = means[lhs%in%outcomeVars & rhs%in%outcomeVars & lhs==rhs, byVars, with=FALSE]
+	unexplained[!grepl('completeness',rhs) & !grepl('completeness',lhs), rhs:='unexplained']
+	unexplained[, est.std:=est.std^2]
 
 	# drop completeness controls
-	currentLevel = rbind(currentLevel, unexplained1)
+	currentLevel = rbind(currentLevel, unexplained)
 	
-	# compute explained variance
-	# currentLevel[, est.std:=est.std^2]
-	# currentLevel[, est.std:=est.std/sum(est.std), by=lhs]
-	currentLevel[, est.std:=abs(est.std)/sum(abs(est.std)), by=lhs]
-	
-	# drop completeness controls
+	# drop completeness controls and rescale
 	currentLevel = currentLevel[!grepl('completeness',rhs)]
 	currentLevel = currentLevel[!grepl('completeness',lhs)]	
+	
+	# compute explained variance
+	currentLevel[, est.std:=abs(est.std)/sum(abs(est.std)), by=lhs]	
 	
 	# assign
 	currentLevel = currentLevel[order(lhs, rhs)]
