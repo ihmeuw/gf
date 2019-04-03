@@ -15,6 +15,9 @@ source('./impact_evaluation/_common/set_up_r.r')
 # whether to run in parallel using qsub or mclapply
 runAsQsub = TRUE
 if(Sys.info()[1]=='Windows') runAsQsub = FALSE
+
+# model version to use
+modelVersion = 'drc_malaria_impact4'
 # ---------------------------
 
 
@@ -53,10 +56,13 @@ summary(lmFit10)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-source('./impact_evaluation/models/drc_malaria_impact4.r')
+source(paste0('./impact_evaluation/models/', modelVersion, '.r'))
 
-# swap in health zone dummies where health_zone is specified (for convenience)
-# model = gsub('health_zone', paste(unique(data$health_zone)[-1],collapse='+'), model)
+# reduce the data down to only necessary variables
+parsedModel = lavParseModelString(model)
+modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+modelVars = c('orig_health_zone','health_zone','date',modelVars)
+data = data[, modelVars, with=FALSE]
 # ----------------------------------------------
 
 
@@ -99,7 +105,7 @@ if (runAsQsub==TRUE) {
 	system(paste0('qsub -cwd -N ie2_job_array -t 1:', T, 
 		' -l fthread=2 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
-		' ./core/r_shell_blavaan.sh ./impact_evaluation/5f_run_second_half_analysis_single_hz.r'))
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/5f_run_second_half_analysis_single_hz.r ', modelVersion))
 	# wait for jobs to finish (2 files per job)
 	while(length(list.files(clustertmpDir2, pattern='second_half_summary_'))<(T)) { 
 		Sys.sleep(5)
