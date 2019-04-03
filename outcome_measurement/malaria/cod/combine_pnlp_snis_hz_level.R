@@ -31,7 +31,7 @@ dir_pnlp = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_dat
 dir_dhis = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
 out_dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
 
-# input file:
+# input files:
 input_dhis_base <- "base_services_prepped.rds"
 input_dhis_sigl <- "sigl_prepped.rds"
 after_imputation_pnlp <- "imputedData_run2_agg_hz.rds"
