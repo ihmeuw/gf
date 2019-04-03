@@ -112,14 +112,10 @@ write.fst(dt, scratchInFile)
 #------------------------------------
 # array job
 N = nrow(array_table)
-<<<<<<< HEAD
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
 setwd('/ihme/code/ccarelli/gf/')
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./base_script.r'))
-=======
-
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base_script.R'))
->>>>>>> 8f288f26a13dc29a79deb3e4ff972a0fc47e50b4
+
 
 #------------------------------------
 
