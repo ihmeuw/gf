@@ -10,17 +10,6 @@
 # ----------------------------------------------
 
 # --------------------
-# Set up R
-# --------------------
-rm(list=ls())
-library(data.table)
-library(quantreg)
-library(fst) # to save data tables as .fst for faster read/write and full random access
-
-user_name = 'ccarelli'
-# --------------------
-
-# --------------------
 # Manual set up on the cluster
 #---------------------
 
@@ -51,6 +40,16 @@ user_name = 'ccarelli'
 
 #------------------------------------
 
+# --------------------
+# Set up R
+# --------------------
+rm(list=ls())
+library(data.table)
+library(quantreg)
+library(fst) # to save data tables as .fst for faster read/write and full random access
+
+user_name = 'ccarelli'
+# --------------------
 #------------------------------------
 # set directories, switchs, arguments  
 #------------------------------------
@@ -68,14 +67,13 @@ resubmitAll = TRUE
 
 # whether or not to delete all files from parallel runs at the end
 cleanup = TRUE
-
 #------------------------------------
 
 #------------------------------------
 # read in and set up the data
 #------------------------------------
 # data set with equality constraints checked and an entry for both tests/undetectable
-dt = readRDS('/ihme/scratch/users/ccarelli/base_to_screen.rds')
+dt = readRDS(paste0('/ihme/scratch/users/', user_name, '/base_to_screen.rds'))
 dt = data.table(dt)
 
 # sort dt so indexing works correctly when retrieving data using fst
@@ -84,6 +82,9 @@ dt = setorder(dt, org_unit_id)
 # make array table to set up for submitting an array job
 array_table = data.table(expand.grid(unique(dt$org_unit_id)))
 setnames(array_table, "Var1", "org_unit_id")
+array_table[ ,org_unit_id:=as.character(org_unit_id)]
+
+array_table = array_table[1:10,]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, paste0('/ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
@@ -97,13 +98,19 @@ write.fst(dt, paste0('/ihme/scratch/users/', user_name, '/data_for_qr.fst'))
 # array job
 N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
-system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./quantregScript_base2.r'))
+setwd('/ihme/code/ccarelli/gf/')
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./base_script.r'))
+
+
+system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N base_jobs -cwd ./core/r_shell.sh ./base_script.r'))
 
 #------------------------------------
+
 
 #------------------------------------
 # wait for files to be done
 #------------------------------------
+
 i = N-1
 numFiles = length(list.files(paste0('/ihme/scratch/users/', user_name, '/base_results')))
 while(numFiles<i) { 

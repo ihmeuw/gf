@@ -1,11 +1,11 @@
 variable,x,y,label
-SSCACT,0,5.5,Pat.'s Tx in iCCM (#)
+SSCACT,0,5.5,Pat.'s Tx iCCM (#)
 mildMalariaTreated,0,4.5,Pat.'s Tx (#)
 RDT,0,3.5,RDTs Used (#)
 severeMalariaTreated,0,2.5,Sev. Tx (#)
 ITN,0,1.5,ITNs Dist. (#)
 SP,0,0.5,SP in ANC (#)
-ACTs_CHWs_rate,4,5.5,CHW Tx. Cvg.
+ACTs_CHWs_rate,4,5.5,iCCM Tx. Cvg.
 mildMalariaTreated_rate,6,4.5,Tx Cvg. (mild)
 RDT_rate,2.5,3.5,RDT Cvg.
 severeMalariaTreated_rate,6,2.5,Tx. Cvg. (severe)

@@ -53,7 +53,7 @@ summary(lmFit10)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-source('./impact_evaluation/models/drc_malaria_impact3.r')
+source('./impact_evaluation/models/drc_malaria_impact4.r')
 
 # swap in health zone dummies where health_zone is specified (for convenience)
 # model = gsub('health_zone', paste(unique(data$health_zone)[-1],collapse='+'), model)
@@ -96,14 +96,14 @@ if (runAsQsub==TRUE) {
 	hzs = unique(data$health_zone)
 	T = length(hzs)
 	# submit array job
-	system(paste0('qsub -cwd -N ie_job_array -t 1:', T, 
-		' -l fthread=1 -l m_mem_free=1G -q all.q -P ihme_general -e ', 
+	system(paste0('qsub -cwd -N ie2_job_array -t 1:', T, 
+		' -l fthread=2 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/5f_run_second_half_analysis_single_hz.r'))
 	# wait for jobs to finish (2 files per job)
-	while(length(list.files(clustertmpDir2, pattern='_summary_'))<(T)) { 
+	while(length(list.files(clustertmpDir2, pattern='second_half_summary_'))<(T)) { 
 		Sys.sleep(5)
-		print(paste(length(list.files(clustertmpDir2, pattern='_summary_')), 'of', T, 'files found...'))
+		print(paste(length(list.files(clustertmpDir2, pattern='second_half_summary_')), 'of', T, 'files found...'))
 	}
 	# collect output
 	print('Collecting output...')
@@ -151,8 +151,8 @@ if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
 # clean up qsub files
 print(paste('Cleaning up cluster temp files...'))
 if (runAsQsub==TRUE) { 
-	system(paste0('rm ', clustertmpDireo, '/*'))
-	system(paste0('rm ', clustertmpDir1	, '/*'))
-	system(paste0('rm ', clustertmpDir2	, '/*'))
+	system(paste0('rm ', clustertmpDireo, '/ie2_job_array*'))
+	system(paste0('rm ', clustertmpDir1	, '/second_half_*'))
+	system(paste0('rm ', clustertmpDir2	, '/second_half_*'))
 }
 # ------------------------------------------------------------------

@@ -26,11 +26,14 @@ source('./impact_evaluation/_common/set_up_r.r')
 # ---------------------------------------
 # Set boolean switches
 # ---------------------------------------
-rerun_inputs <- TRUE 
+rerun_inputs <- FALSE 
 rerun_outputs <- FALSE
-rerun_merge <- TRUE
+rerun_outcomes <- FALSE
+rerun_merge <- FALSE
+rerun_adjust <- FALSE
 rerun_explore <- FALSE
-rerun_analysis <- FALSE
+rerun_models <- FALSE
+rerun_analysis <- TRUE
 rerun_post <- FALSE
 
 # ---------------------------------------
@@ -56,10 +59,24 @@ if(rerun_outputs == TRUE){
 }
 
 # ---------------------------------------
+# Prep outputs, outcomes and impact data 
+# ---------------------------------------
+if(rerun_outcomes == TRUE){
+  source('./impact_evaluation/2c_prep_outcomes_impact.r')
+}
+
+# ---------------------------------------
 # Merge datasets together 
 # ---------------------------------------
 if (rerun_merge==TRUE) { 
 	source('./impact_evaluation/3_merge_data.R')
+}
+
+# ---------------------------------------
+# Correct rates to model estimates
+# ---------------------------------------
+if (rerun_adjust==TRUE) { 
+	source('./impact_evaluation/3b_correct_to_models.R')
 }
 
 # ---------------------------------------
@@ -69,19 +86,34 @@ if (rerun_merge==TRUE) {
 
 # ---------------------------------------
 # Exploratory graphs etc 
+# these scripts have gotten a little convoluted over time
+# 4b actually relies on the output from 5d...
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
-	source('./impact_evaluation/4_explore_data.r')
+	source('./impact_evaluation/4a_explore_first_half_data.r')
+	source('./impact_evaluation/4b_explore_second_half_data.r')
 }
 
 # ---------------------------------------
-# Run analysis 
+# Run model 
+# usually a good idea to run 5a and 5d one at a time and check output
+# 5b and 5e will be very slow if not on IHME's cluster
 # ---------------------------------------
-if (rerun_analysis==TRUE) { 
+if (rerun_models==TRUE) { 
 	source('./impact_evaluation/5a_set_up_for_analysis.r')
 	source('./impact_evaluation/5b_run_analysis.r')
-	source('./impact_evaluation/6_display_results.r')
+	source('./impact_evaluation/5d_set_up_for_second_half_analysis.r')
+	source('./impact_evaluation/5e_run_second_half_analysis.r')
+}
+
+
+# ---------------------------------------
+# Run analyses based on model
+# ---------------------------------------
+if (rerun_analysis==TRUE) { 
+	source('./impact_evaluation/6a_display_sem_results.r')
+	source('./impact_evaluation/6b_efficiency_effectiveness.r')
+	source('./impact_evaluation/6c_impact_analysis.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', outputFile3))
-

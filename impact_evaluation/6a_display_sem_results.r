@@ -50,7 +50,7 @@ p1 = semGraph(parTable=means1, nodeTable=nodeTable1,
 # my sem graph function for second half model
 p2 = semGraph(parTable=means2, nodeTable=nodeTable2, 
 	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
-	lineWidth=1.5, curved=0, tapered=FALSE, 
+	lineWidth=1.5, curved=0, tapered=FALSE, variances=FALSE, 
 	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
 
 # my sem graph function for first half model with coefficients

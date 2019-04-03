@@ -14,9 +14,12 @@ model = '
 	RDT_rate ~ prior("dgamma(1,1)")*RDT + completeness_RDT_completed
 	
 	# linkage 2 regressions
-	lead_newCasesMalariaMild_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate
-	lead_newCasesMalariaSevere_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*severeMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate
-	lead_case_fatality ~ prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dnorm(-1,1)")*severeMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate
+	lead_newCasesMalariaMild_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate + completeness_ITN_consumed + completeness_totalPatientsTreated + completeness_ACTs_SSC + completeness_SP
+	
+	lead_newCasesMalariaSevere_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*severeMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate + completeness_ITN_consumed + completeness_severeMalariaTreated + completeness_ACTs_SSC + completeness_SP
+	
+	lead_case_fatality ~ prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dnorm(-1,1)")*severeMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + completeness_totalPatientsTreated + completeness_severeMalariaTreated + completeness_ACTs_SSC
+	
 	lead_malariaDeaths_rate ~ prior("dnorm(-1,1)")*lead_newCasesMalariaMild_rate + prior("dnorm(-1,1)")*lead_newCasesMalariaSevere_rate + prior("dgamma(1,1)")*lead_case_fatality
 	
 	# latent variables
@@ -24,6 +27,12 @@ model = '
 	# fixed variances
 	
 	# covariances
+	lead_newCasesMalariaSevere_rate ~~ lead_newCasesMalariaMild_rate
+	severeMalariaTreated_rate ~~ mildMalariaTreated_rate
+	ACTs_CHWs_rate ~~ mildMalariaTreated_rate
+	severeMalariaTreated_rate ~~ ACTs_CHWs_rate
+	lead_newCasesMalariaSevere_rate ~~ lead_case_fatality 
+	lead_newCasesMalariaMild_rate ~~ lead_case_fatality 
 	
 	# fixed covariances
 	ITN ~~ 0*mildMalariaTreated
