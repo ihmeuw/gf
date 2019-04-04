@@ -84,16 +84,6 @@ for(f in files) {
   current_data[, tb:=(meta_data[6])]
   current_data[, age:=(meta_data[7])]
   
-  # create an age category
-  age_start = trimws(str_split(unique(current_data$age), ',')[[1]][1])
-  
-  x = length(str_split(unique(current_data$age), ',')[[1]])
-  age_end = trimws(str_split(unique(current_data$age), ',')[[1]][x])
-  
-  # replace the long character string with an age category
-  age_replace = paste(age_start, '-', age_end)
-  current_data[ , age:=age_replace]
-  
   # rename sex values
   current_data[sex=='m', sex:='Male']
   current_data[sex=='f', sex:='Female']
@@ -122,6 +112,22 @@ dt[ , c('month', 'year'):=NULL]
 # save the date range for the file name
 min_date = dt[ , min(year(date))]
 max_date = dt[ , max(year(date))]
+
+
+# create an age category
+age_start = trimws(str_split(unique(current_data$age), ',')[[1]][1])
+
+x = length(str_split(unique(current_data$age), ',')[[1]])
+age_end = trimws(str_split(unique(current_data$age), ',')[[1]][x])
+
+dt[ ,age_start:=(unlist(lapply(strsplit(dt$age, " "), "[", 2)))]
+
+
+
+
+# replace the long character string with an age category
+age_replace = paste(age_start, '-', age_end)
+current_data[ , age:=age_replace]
 
 # ---------------------------
 # merge in facility and district names
