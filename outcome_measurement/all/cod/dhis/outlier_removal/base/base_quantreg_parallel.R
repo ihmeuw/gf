@@ -21,8 +21,8 @@
 # cp '/home/j/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outliers/base_to_screen.rds' '/ihme/scratch/users/ccarelli/'
 
 # to delete files in the directory
-# rm base_results/*
-# rm base_output/*
+# rm quantreg/parallel_files/*
+# rm quantreg/errors_output/*
 
 # set the working directory in the qlogin by navigating to it
 # cd /ihme/code/ccarelli/gf/
@@ -100,7 +100,8 @@ array_table = data.table(expand.grid(unique(dt$org_unit_id)))
 setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
-array_table = array_table[1:10,]
+# for testing, subset to ten rows
+# array_table = array_table[1:10,]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, arrayFile)
@@ -114,6 +115,7 @@ write.fst(dt, scratchInFile)
 N = nrow(array_table)
 PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
 setwd('/ihme/code/ccarelli/gf/')
+
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base_script.R'))
 
 
@@ -139,7 +141,7 @@ while(numFiles<i) {
 fullData = data.table()
 
 for (j in seq(N)) {
-  tmp = read.fst(paste0(parallelDir, '/base_output', j, '.fst'), as.data.table=TRUE)
+  tmp = read.fst(paste0(parallelDir, '/quantreg_output', j, '.fst'), as.data.table=TRUE)
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', j))
@@ -154,9 +156,9 @@ saveRDS(fullData, outFile)
 # clean up parallel files
 #------------------------------------
 if (cleanup==TRUE) { 
-  system(paste0('rm /ihme/scratch/users/', user_name, '/base_results/*'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/base_output/*'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/data_for_qr.fst'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg/parallel_files/*'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg/errors_output/*'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg/array_table_for_qr.csv'))
+  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg/data_for_qr.fst'))
 }
 #------------------------------------

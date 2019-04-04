@@ -26,7 +26,7 @@ reload_everything = FALSE
 
 # output directory
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
-out_dir = paste0(dir, '/webscrape/age_sex_tb')
+out_dir = paste0(dir, '/webscrape/age_sex')
 
 # ----------------------------------------------
 
@@ -34,16 +34,29 @@ out_dir = paste0(dir, '/webscrape/age_sex_tb')
 # Load/prep data
 
 # loop over years - can be altered to run years separately
-y = c('14', '15', '16', '17', '18', '19')
+y = c('15', '16', '17', '18')
 m = c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12')
-t = c('y','n','x')
+
 s = c('m', 'f', 'x')
-a = c('0,1,2,3,4', '5,6,7,8,9,10', '11, 12, 13, 14, 15', 
-         '16, 17, 18, 19, 20', '21, 22, 23, 24, 25', '26, 27, 28, 29, 30', 
-         '31, 32, 33, 34, 35', '36, 37, 38, 39', '40,41, 42, 43, 44, 45', 
-         '46, 47, 48, 49, 50', '51, 52, 53, 54, 55', '56, 57, 58, 59, 60', 
-         '61,62,63,64,65', '66,67,68,69,70', '71,72,73,74,75', '76,77,78,79,80', 
-         '81,82,83,84,85', '86,87,88,89,90', '91,92,93,94,95', '96,97,98,99')
+
+a = c('0,1,2,3,4', '5,6,7,8,9', '10,11,12,13,14', 
+      '15,16,17,18,19', '20,21,22,23,24', '25,26,27,28,29', 
+      '30,31,32,33,34', '35,36,37,38,39', '40,41,42,43,44', 
+      '45,46,47,48,49', '50,51,52,53,54', '55,56,57,58,59', 
+      '60,61,62,63,64')
+
+
+# t = c('y','n','x')
+
+# # for all age groups
+# a = c('0,1,2,3,4', '5,6,7,8,9', '10,11,12,13,14', 
+#       '15,16,17,18,19', '20,21,22,23,24', '25,26,27,28,29', 
+#       '30,31,32,33,34', '35,36,37,38,39', '40,41,42,43,44', 
+#       '45,46,47,48,49', '50,51,52,53,54', '55,56,57,58,59', 
+#       '60,61,62,63,64', '65,66,67,68,69', '70,71,72,73,74', 
+#       '75,76,77,78,79', '80,81,82,83,84', '85,86,87,88,89', 
+#       '90,91,92,93,94', '95,96,97,98,99')
+
 
 # calculate the number of downloads
 length(y)*length(m)*length(t)*length(s)*length(a)
@@ -60,7 +73,7 @@ length(y)*length(m)*length(t)*length(s)*length(a)
 
 #--------------------
 # input arguments - if not including tb, drop t
-arguments = expand.grid(y=y, m=m, t=t, s=s, a=a)
+arguments = expand.grid(y=y, m=m, s=s, a=a)
 
 build_url = function(page_specs) {
   
@@ -68,13 +81,13 @@ build_url = function(page_specs) {
   
   y = page_specs$y
   m = page_specs$m
-  t = page_specs$t
+  # t = page_specs$t
   s = page_specs$s
   a = page_specs$a 
   
   
   # tb status file
-  outFile = paste0(out_dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_',t,'_',a,'_.rds')
+  outFile = paste0(out_dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_',a,'_.rds')
   check = file.exists(outFile)
   
   # only download if it doesn't already exist
