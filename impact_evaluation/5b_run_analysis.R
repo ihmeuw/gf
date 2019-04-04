@@ -13,6 +13,9 @@ source('./impact_evaluation/_common/set_up_r.r')
 # whether to run in parallel using qsub or mclapply
 runAsQsub = TRUE
 if(Sys.info()[1]=='Windows') runAsQsub = FALSE
+
+# model version to use
+modelVersion = 'drc_malaria6'
 # ---------------------------
 
 
@@ -54,12 +57,13 @@ summary(lmFit9)
 # Define model object
 # DECISIONS
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
-source('./impact_evaluation/models/drc_malaria5.r')
+source(paste0('./impact_evaluation/models/', modelVersion, '.r'))
 
-# test run
-# tmp = data[health_zone==unique(data$health_zone)[1]]
-# for(v in names(tmp)[!names(tmp)%in%c('health_zone','date')]) tmp[, (v):=get(v)+rpois(nrow(tmp), sd(tmp[[v]])/10)]
-# semFit = bsem(model, tmp, adapt=500, burnin=100, sample=100, bcontrol=list(thin=3))
+# reduce the data down to only necessary variables
+parsedModel = lavParseModelString(model)
+modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+modelVars = c('orig_health_zone','health_zone','date',modelVars)
+data = data[, modelVars, with=FALSE]
 # ----------------------------------------------
 
 
@@ -102,7 +106,7 @@ if (runAsQsub==TRUE) {
 	system(paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
 		' -l fthread=2 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
-		' ./core/r_shell_blavaan.sh ./impact_evaluation/5c_run_first_half_analysis_single_hz.r'))
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/5c_run_first_half_analysis_single_hz.r ', modelVersion))
 	# wait for jobs to finish (2 files per job)
 	while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
 		Sys.sleep(5)

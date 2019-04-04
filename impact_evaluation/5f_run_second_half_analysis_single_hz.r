@@ -8,8 +8,19 @@
 # ------------------------------------------------
 
 # ----------------------------------------------
-# Store task ID from command line
+# Store task ID and other args from command line
 task_id <- as.integer(Sys.getenv("SGE_TASK_ID"))
+
+# cut args down to non-system variables
+args = commandArgs(trailingOnly=TRUE)
+
+# the second argument should be the model version to use
+modelVersion = args[1]
+
+# print for log
+print(paste('Task ID:', task_id))
+print(paste('Command Args:', args))
+print(paste('Model Version:', modelVersion))
 # ----------------------------------------------
 
 source('./impact_evaluation/_common/set_up_r.r')
@@ -28,7 +39,7 @@ subData = data[health_zone==h]
 
 # ----------------------------------------------
 # Define model object
-source('./impact_evaluation/models/drc_malaria_impact4.r')
+source(paste0('./impact_evaluation/models/', modelVersion, '.r'))
 # ----------------------------------------------
 
 
