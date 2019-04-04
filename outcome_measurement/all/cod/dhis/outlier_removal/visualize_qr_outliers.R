@@ -68,10 +68,17 @@ if (set=='pnls') idVars = c('org_unit_id', 'element')
 if (set=='base') idVars = c('org_unit_id', 'element')
 if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable') 
 
+# threshold for outlier removal
+dt[ , mad_resid:=mad(resid), by = idVars]
+dt[ , sd_resid:=sd(resid, by=idVars)]
+dt[mad_resid < 1, thresh_var:=sd_resid]
+dt[(mad_resid >= 1), thresh_var:=mad_resid]
+dt[ ,sd_resid:=NULL]
+
 # identify the thresholds based on the SD of the residuals
-dt[ , thresh5 :=  median(resid) +  (5*sd(resid)), by = idVars]
-dt[ , thresh10 := median(resid) + (10*sd(resid)), by = idVars]
-dt[ , thresh20 := median(resid) + (20*sd(resid)), by = idVars]
+dt[ , thresh5 :=  median(resid) + (5*thresh_var), by = idVars]
+dt[ , thresh10 := median(resid) + (10*thresh_var), by = idVars]
+dt[ , thresh20 := median(resid) + (20*thresh_var), by = idVars]
 
 # select outliers 
 # the value is 100 or more and greater than 10 times the SD of the residuals 
@@ -84,13 +91,12 @@ dt[100 < value & thresh10 < value, unique(outlier)]
 dt[value <=100 & thresh10 >= value, unique(outlier)]
 
 # set lower and upper bounds
-dt[ , upper:= ( median(resid) + (10*sd(resid)) ), by = idVars]
-dt[ , lower:= ( median(resid) - (10*sd(resid)) ), by = idVars]
+dt[ , upper:= ( median(resid) + (10*thresh_var) ), by = idVars]
+dt[ , lower:= ( median(resid) - (10*thresh_var) ), by = idVars]
 
 # add a 5 SD bound just to be sure
-dt[ , upper_mid := (median(resid) + (5*sd(resid)) ), by = idVars]
-dt[ , lower_mid := (median(resid) - (5*sd(resid)) ), by = idVars]
-
+dt[ , upper_mid := (median(resid) + (5*thresh_var) ), by = idVars]
+dt[ , lower_mid := (median(resid) - (5*thresh_var) ), by = idVars]
 #----------------------------
 # remove the dps code from the facility name for the graph titles
 
@@ -100,7 +106,8 @@ dt[ , lower_mid := (median(resid) - (5*sd(resid)) ), by = idVars]
 # subset to the health facilities, sexes, and variables with outliers
 
 if (set=='pnls') {dt[ , combine:=paste0(org_unit_id, sex, element)]}
-if (set=='base')  {dt[ , combine:=paste0(org_unit_id, category, element)]}
+if (set=='base') {dt[ , combine:=paste0(org_unit_id, category, element)]}
+if (set=='sigl') dt
 
 out_orgs = dt[outlier==T, unique(combine)]
 out = dt[combine %in% out_orgs]
