@@ -90,10 +90,10 @@ dt[ , lower_mid := (median(resid) - (5*sd(resid)) ), by = idVars]
 #----------------------------
 # remove the dps code from the facility name for the graph titles
 
-dt[ ,facility:=word(org_unit, 2, -1)]
+# dt[ ,facility:=word(org_unit, 2, -1)]
 
 #------------------------------------
-# subet to the health facilities, sexes, and variables with outliers
+# subset to the health facilities, sexes, and variables with outliers
 dt[ , combine:=paste0(org_unit_id, sex, element)]
 out_orgs = dt[outlier==T, unique(combine)]
 out = dt[combine %in% out_orgs]
