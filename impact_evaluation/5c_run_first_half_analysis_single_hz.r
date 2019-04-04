@@ -5,6 +5,8 @@
 # This runs the second-half SEM dose response model for one health zone
 # Intended to be run in parallel by 5d
 # The current working directory should be the root of this repo
+# Command-Line Arguments:
+# modelVersion - (character) name of the model script to loaded (not including the file extension)
 # ------------------------------------------------
 
 # ----------------------------------------------
