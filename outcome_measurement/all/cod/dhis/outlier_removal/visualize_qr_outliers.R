@@ -100,7 +100,8 @@ dt[ , lower_mid := (median(resid) - (5*sd(resid)) ), by = idVars]
 # subset to the health facilities, sexes, and variables with outliers
 
 if (set=='pnls') {dt[ , combine:=paste0(org_unit_id, sex, element)]}
-if (set=='base')  {dt[ , combine:=paste0(org_unit_id, category, element)]}
+if (set=='base') {dt[ , combine:=paste0(org_unit_id, category, element)]}
+if (set=='sigl') dt
 
 out_orgs = dt[outlier==T, unique(combine)]
 out = dt[combine %in% out_orgs]
