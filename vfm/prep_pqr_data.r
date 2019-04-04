@@ -24,11 +24,11 @@ j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 
 # input file
 dir = paste0(j, '/Project/Evaluation/GF/vfm/')
-transactionFile = paste0(dir, 'unit_cost_data/Transaction List All - External Search.csv')
-referenceFileARV = paste0(dir, 'unit_cost_data/PQR Public Anti-Retroviral.xlsx')
-referenceFileTB = paste0(dir, 'unit_cost_data/PQR Public Anti-TB medicine.xlsx')
-referenceFileMal = paste0(dir, 'unit_cost_data/PQR Public Anti-malaria medicine.xlsx')
-referenceFileTests = paste0(dir, 'unit_cost_data/PQR Public Diagnostic test.xlsx')
+transactionFile = paste0(dir, 'unit_cost_data/download_12.18.18/Transaction List All - External Search.csv')
+referenceFileARV = paste0(dir, 'unit_cost_data/download_12.18.18/PQR Public Anti-Retroviral.xlsx')
+referenceFileTB = paste0(dir, 'unit_cost_data/download_12.18.18/PQR Public Anti-TB medicine.xlsx')
+referenceFileMal = paste0(dir, 'unit_cost_data/download_12.18.18/PQR Public Anti-malaria medicine.xlsx')
+referenceFileTests = paste0(dir, 'unit_cost_data/download_12.18.18/PQR Public Diagnostic test.xlsx')
 
 # output files
 outFile1 = paste0(dir, 'outputs/pqr_transaction_data_prepped.rdata')
