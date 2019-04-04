@@ -25,12 +25,12 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 source('./core/standardizeHZNames.R')
 
 # choose the data set to run the code on - pnls, base, or sigl
-set = 'sigl'
+set = 'base'
 
 # read in the file
-if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/qr_results_full.rds'))}
-if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base_quantreg_results.rds'))}
-if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl_quantreg_imputation_results.rds'))
+if (set=='pnls') dt = readRDS(paste0(dir, 'pnls_outliers/qr_results_full.rds'))
+if (set=='base') dt = readRDS(paste0(dir, 'outliers/base_quantreg_results.rds'))
+if (set=='sigl')dt = readRDS(paste0(dir, 'prepped/sigl_quantreg_imputation_results.rds')) 
 #------------------------------------
 
 #------------------------------------
@@ -75,9 +75,13 @@ dt[ , thresh20 := median(resid) + (20*sd(resid)), by = idVars]
 
 # select outliers 
 # the value is 100 or more and greater than 10 times the SD of the residuals 
-dt[thresh10 < value, outlier:=TRUE]
+dt[thresh10 < value, outlier:=TRUE] 
 dt[value < 100, outlier:=FALSE]
 dt[is.na(outlier), outlier:=FALSE]
+
+# test outliers correctly identified (should spit out true and false )
+dt[100 < value & thresh10 < value, unique(outlier)]
+dt[value <=100 & thresh10 >= value, unique(outlier)]
 
 # set lower and upper bounds
 dt[ , upper:= ( median(resid) + (10*sd(resid)) ), by = idVars]
@@ -94,13 +98,23 @@ dt[ , lower_mid := (median(resid) - (5*sd(resid)) ), by = idVars]
 
 #------------------------------------
 # subset to the health facilities, sexes, and variables with outliers
-dt[ , combine:=paste0(org_unit_id, sex, element)]
+
+if (set=='pnls') {dt[ , combine:=paste0(org_unit_id, sex, element)]}
+if (set=='base')  {dt[ , combine:=paste0(org_unit_id, category, element)]}
+
 out_orgs = dt[outlier==T, unique(combine)]
 out = dt[combine %in% out_orgs]
 
 # drop the unique identifier
 out[ , combine:=NULL]
+dt[ , combine:=NULL]
+#----------------------------
+# eliminate outliers that are part of an emerging trend
+# do not demarcate any two or more consecutive outliers as outliers
 
+# define unique identifiers
+if (set=='pnls') { subset_vars = c('org_unit_id', 'sex', 'element', 'subpop', 'age')}
+if (set=='base') { subset_vars = c(org_unit_id,  element, subpop, age)}
 #----------------------------
 # eliminate outliers that are part of an emerging trend
 # do not demarcate any two or more consecutive outliers as outliers
