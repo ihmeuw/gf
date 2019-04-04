@@ -114,6 +114,7 @@ if (rerun_analysis==TRUE) {
 	source('./impact_evaluation/6a_display_sem_results.r')
 	source('./impact_evaluation/6b_efficiency_effectiveness.r')
 	source('./impact_evaluation/6c_impact_analysis.r')
+	source('./impact_evaluation/6d_effect_sizes_by_hz.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', outputFile3))

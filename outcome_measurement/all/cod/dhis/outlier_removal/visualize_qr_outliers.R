@@ -100,7 +100,7 @@ dt[ , lower_mid := (median(resid) - (5*thresh_var) ), by = idVars]
 #----------------------------
 # remove the dps code from the facility name for the graph titles
 
-dt[ ,facility:=word(org_unit, 2, -1)]
+# dt[ ,facility:=word(org_unit, 2, -1)]
 
 #------------------------------------
 # subset to the health facilities, sexes, and variables with outliers
