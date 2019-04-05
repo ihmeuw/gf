@@ -16,7 +16,7 @@
 # saveRDS(fgh_data, paste0(j, "/Project/Evaluation/GF/resource_tracking/_fgh/raw_data/FGH_EZ_2018.rds"))
 
 #This is the previous version of the FGH data, which only had information through 2016. 
-# fgh_data <- fread(paste0(j, "Project/Evaluation/GF/resource_tracking/multi_country/gf/ihme_dah_cod_uga_gtm_1990_2016.csv"))
+# fgh_data <- fread(paste0(fgh_raw, "archive/ihme_dah_cod_uga_gtm_1990_2016.csv"))
 
 # ----------------------------------------------
 # DAH ACTUALS 
@@ -53,11 +53,11 @@ fghData <-  melt(fgh_data, id=c("year", "financing_source", "loc_name"), variabl
 fghData$disbursement <- as.numeric(fghData$disbursement)
 
 ##get the disease column: 
-fghData[grepl("hiv", sda_orig), disease:='hiv']
-fghData[grepl("mal", sda_orig), disease:='malaria']
-fghData[grepl("tb", sda_orig), disease:='tb']
-fghData[grepl("swap|hss", sda_orig), disease:='rssh']
-fgh_data[is.na(disease), disease:='other']
+fghData[grepl("hiv", sda_activity), disease:='hiv']
+fghData[grepl("mal", sda_activity), disease:='malaria']
+fghData[grepl("tb", sda_activity), disease:='tb']
+fghData[grepl("swap|hss", sda_activity), disease:='rssh']
+fghData[is.na(disease), disease:='other']
 
 ##sum the disbursement by the other variables just to remove any duplicates: 
 byVars = c('year', 'disease', 'financing_source','sda_activity', 'loc_name')
@@ -101,12 +101,12 @@ saveRDS(fgh_mapped, paste0(fgh_prepped, "prepped_current_fgh.rds"))
 ghe_malaria = fread(paste0(j, "/Project/IRH/Malaria/processed_data/all_data_vetted.csv"), stringsAsFactors = FALSE)
 ghe_malaria = ghe_malaria[tolower(ihme_loc_id)%in%code_lookup_tables$iso_code]
 ghe_malaria[, year_diff:=year_end-year_start]
-unique(ghe_malaria$year_diff)
-
-ghe_malaria = ghe_malaria[, .(ihme_loc_id, year_id, value_code, value, source_type)]
+unique(ghe_malarghe_malaria = ghe_malaria[, .(ihme_loc_id, year_id, value_code, value, source_type, report_year)]
 
 ghe_malaria[, value:=gsub(",", "", value)]
 ghe_malaria[, value:=as.numeric(value)]
 
 saveRDS(ghe_malaria, paste0(fgh_prepped, "ghe_actuals_malaria.rds"))
-write.csv(ghe_malaria, paste0(fgh_prepped, "ghe_actuals_malaria.csv"), row.names=FALSE)
+write.csv(ghe_malaria, paste0(fgh_prepped, "ghe_actuals_malaria.csv"), row.names=FALSE)ia$year_diff)
+
+

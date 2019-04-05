@@ -20,6 +20,9 @@ library(quantreg)
 # rm qr_results/*
 # rm quantreg_output/*
 
+# copy over the file
+# cp  /home/j/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/pnls_outliers/arvs_to_screen.rds   /ihme/scratch/users/ccarelli/ 
+
 # set the working directory in the qlogin by navigating to it
 # cd /ihme/code/ccarelli/gf/outcome_measurement/all/cod/dhis/outlier_removal/pnls
 
@@ -56,14 +59,14 @@ cleanup = TRUE
 # read in the subset of PNLS data specific to viral load 
 
 # data set with equality constraints checked and an entry for both tests/undetectable
-dt = readRDS(paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))
+dt = readRDS('/ihme/scratch/users/ccarelli/arvs_to_screen.rds')
 
 # loop over elements and org units, run quantreg once per each
 i=1
 for (e in unique(dt$element_id)) {
   for(o in unique(dt$org_unit_id)) { 
     
-    # skip if this job has already run and resubmitAll is FALSE
+    # skip if this job has already run and resubmitAll is FALSE/
     if (resubmitAll==FALSE & file.exists(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i, '.rds'))) { 
       i=i+1
       next
@@ -84,30 +87,11 @@ while(numFiles<i) {
   Sys.sleep(2)
 }
 
-# 
-# # collect all output into one data table
-# for (j in seq(i)) {
-#   tmp = readRDS(paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', j, '.rds'))
-#   if(j==1) fullData = tmp
-#   if(j>1) fullData = rbind(fullData, tmp)
-#   cat(paste0('\r', j))
-#   flush.console() 
-# }
-# 
-# # save full data
-# saveRDS(fullData, outFile)
-# 
-# # clean up parallel files
-# if (cleanup==TRUE) { 
-#   system('rm /ihme/scratch/users/ccarelli/qr_results/*')
-#   system('rm /ihme/scratch/users/ccarelli/quantreg_output/*')
-# }
-
 #--------------------------------------------------------
-# alternate code to rbind files in a cluster IDE
+# rbind files in a cluster IDE
 # do not source! run separately in an IDDE (for speed and connection)
-
-# rbind the files together and save to the j drive 
+# 
+# rbind the files together and save to the j drive
 numFiles = length(list.files('/ihme/scratch/users/ccarelli/qr_results'))
 numFiles
 i = 1
@@ -117,7 +101,7 @@ for (j in seq(i:numFiles)) {
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', j))
-  flush.console() 
+  flush.console()
   i = i+1
 }
 
@@ -128,7 +112,7 @@ saveRDS(fullData, paste0('/home/j/Project/Evaluation/GF/outcome_measurement/cod/
 system('rm /ihme/scratch/users/ccarelli/qr_results/*')
 system('rm /ihme/scratch/users/ccarelli/quantreg_output/*')
 
-#--------------------------------------------------------
-
-
-
+# #--------------------------------------------------------
+# 
+# 
+# 

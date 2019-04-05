@@ -15,7 +15,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # load the data
-dt = readRDS(paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))
+dt = readRDS('/ihme/scratch/users/ccarelli/arvs_to_screen.rds')
 dt = data.table(dt)
 
 # subset the data

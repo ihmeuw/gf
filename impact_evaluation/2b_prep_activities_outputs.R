@@ -32,6 +32,7 @@ convert_quarter_to_decimal <- function(dt){
   return(dt)
 }
 source('./core/standardizeHZNames.R')
+source('./core/standardizeDPSNames.R')
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -41,25 +42,28 @@ dt <- readRDS(combinedFile)
 sigl_comp <- readRDS(comp_sigl_file)
 base_comp <- readRDS(comp_base_file)
 pnlp_comp <- readRDS(pnlpHZFile)
+pnlp_comp[ , dps := standardizeDPSNames(dps)]
+pnlp_comp[ , health_zone := standardizeHZNames(health_zone)]
 
 # standardize health zone names in SNIS files - because of the three that we combined, will need to avg across health_zones
 base_comp[ , health_zone := standardizeHZNames(health_zone)]
 sigl_comp[ , health_zone := standardizeHZNames(health_zone)]
+base_comp[ , dps := standardizeDPSNames(dps)]
+sigl_comp[ , dps := standardizeDPSNames(dps)]
 
 base_comp = base_comp[, .(completeness = mean(completeness)), by = .(dps, dps_code, health_zone, date, year, quarter)]
 sigl_comp = sigl_comp[, .(completeness = mean(completeness)), by = .(dps, dps_code, health_zone, date, year, quarter)]
 
 if (nrow(base_comp[duplicated(base_comp[, .(health_zone, dps, year, quarter)])]) != 0 
     & nrow(sigl_comp[duplicated(sigl_comp[, .(health_zone, dps, year, quarter)])]) != 0){
-  stop ( "Unique identifiers do not uniquely idenitfy rows!")}
+  stop ( "Unique identifiers do not uniquely identify rows!")}
 # ---------------------------------------------------
 
 # ---------------------------------------------------
 # Change variable names / other set up
 # ---------------------------------------------------
-# Subset DHIS2 data sets to 2018 data onward (use PNLP up to 2017); for now, stop at Q4 2018
-remove_data <- dt[ (data_set == "snis_base_services" & date < "2018-01-01") | (data_set == "snis_base_services" & date > "2018-12-01"),]
-remove_data <- rbind(remove_data, dt[ (data_set == "snis_sigl" & date < "2018-01-01") | (data_set == "snis_base_services" & date > "2018-12-01"),])
+# Subset DHIS2 data sets to 2018 data onward (use PNLP up to 2017)
+remove_data <- dt[ (grepl(data_set, pattern = "snis")) & (date < "2018-01-01"),]
 dt <-  anti_join(dt, remove_data)
 dt <- as.data.table(dt)
 
@@ -89,6 +93,9 @@ dt[, quarter := as.numeric(quarter)]
 dt_base <- merge(dt[data_set == "snis_base_services", ], base_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all.x = TRUE)
 dt_sigl <- merge(dt[data_set == "snis_sigl", ], sigl_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all.x = TRUE)
 dt_pnlp <- dt[data_set == "pnlp"]
+
+dt_base[ , completeness := completeness/100]
+dt_sigl[ , completeness := completeness/100]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -101,7 +108,13 @@ pnlp_comp$variable <- as.character(pnlp_comp$variable)
 pnlp_fac <- pnlp_comp[variable %in% c("healthFacilities_total", "healthFacilitiesProduct"), .(dps, health_zone, date, variable, mean)]
 setnames(pnlp_fac, "mean", "value")
 
-pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable)
+# because of the way we have standardized health zones, we need to sum vars (in rerun of imputation, do this BEFORE***)
+# check =  pnlp_fac[health_zone %in% c("uvira", "bambu")]
+# ggplot( pnlp_fac[health_zone %in% c("uvira", "bambu") & dps %in% c("ituri", "sud-kivu")], aes( x = date, y = value, color = health_zone )) +
+#   geom_point() + facet_grid(health_zone ~ variable, scales = "free") + theme_bw()
+pnlp_fac = pnlp_fac[, .(value = sum(value)), by = .(dps, health_zone, date, variable)]
+
+pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable, value.var = "value")
 pnlp_fac[, healthFacilities_reporting := healthFacilitiesProduct / healthFacilities_total]
 pnlp_fac[, completeness := healthFacilities_reporting / healthFacilities_total]
 
@@ -116,6 +129,9 @@ pnlp_comp <- pnlp_fac[, .(healthFacilities_reporting = sum(healthFacilities_repo
 pnlp_comp[ , completeness:= healthFacilities_reporting / healthFacilities_total]
 pnlp_comp = pnlp_comp[, .(dps, health_zone, year, quarter, completeness)]
 pnlp_comp[, data_set := "pnlp"]
+
+dt_pnlp <- merge(dt_pnlp, pnlp_comp, by= c('year', 'quarter', 'dps', 'health_zone', 'data_set'), all.x = TRUE)
+dt = rbindlist( list(dt_base, dt_pnlp, dt_sigl), use.names = TRUE, fill = TRUE)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -125,8 +141,8 @@ pnlp_comp[, data_set := "pnlp"]
 dt[ data_set =="pnlp" & grepl(indicator, pattern = 'AL') & year < 2015, value := NA]
 
 # keep SSCACT with subpop = NA for 2015 and 2016, keep with subpops <5 and >5 for 2017
-dt[ data_set == "pnlp" & indicator == "SSCACT" & is.na(subpopulation) & year < 2015, value := NA]
-dt[ data_set == "pnlp" & indicator == "SSCACT" & is.na(subpopulation) & year > 2016, value := NA]
+dt[ data_set == "pnlp" & indicator == "SSCACT" & year < 2015, value := 0] # iccm didn't exist prior to 2014
+dt[ data_set == "pnlp" & indicator == "SSCACT" & is.na(subpopulation) & year == 2017, value := NA]
 dt[ data_set == "pnlp" & indicator == "SSCACT" & !is.na(subpopulation) & year < 2017, value := NA]
 
 dt <- dt[!is.na(value)]
@@ -153,6 +169,7 @@ dt[ indicator == "simpleConfMalariaTreated", subpopulation := "none"]
 dt <-  dt[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, indicator, subpopulation, completeness)]
 
 # we need to create variable for totalPatientsTreated and a variable for ACT_received, will do this separately then rbind back together
+# NOTE: do not have to calculate completeness separately, because completeness is the same for each indicator (varies across time and health zones)
 acts_rec <- dt[ indicator %in% c("ALreceived", "ASAQreceived") ]
 acts_rec <- acts_rec[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
 acts_rec[, indicator := "ACT_received"]
@@ -178,6 +195,11 @@ dt_final <- dt_final[,.(year, quarter, dps, health_zone, indicator, value, compl
 
 dt_final = convert_quarter_to_decimal(dt_final)
 
+# add in SSC data from SNIS
+# dt_final = readRDS(outputFile2b)
+ssc = readRDS(ssc_file)
+dt_final <- rbindlist(list(dt_final, ssc), use.names=TRUE, fill = TRUE)
+  
 saveRDS(dt_final, outputFile2b)
 archive(outputFile2b)
 # ---------------------------------------------------

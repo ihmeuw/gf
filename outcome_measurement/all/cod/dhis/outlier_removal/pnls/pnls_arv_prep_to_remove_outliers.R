@@ -18,7 +18,7 @@ library(RColorBrewer)
 # --------------------
 
 # shell script for working on the cluster
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_download
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 
 
 # --------------------
 # set working directories

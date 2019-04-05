@@ -54,14 +54,30 @@ sigl <- readRDS(sigl_data)
 # ----------------------------------------------
 
 # ----------------------------------------------
+# fix sigl health zones 
+# ----------------------------------------------
+# health_zone is na where org_unit_type is health zone. 
+sigl[is.na(health_zone) & org_unit_type == "health_zone", health_zone1 := unlist(lapply(strsplit(org_unit, " "), "[", 2))]
+sigl[is.na(health_zone) & org_unit_type == "health_zone", health_zone2 := unlist(lapply(strsplit(org_unit, " "), "[", 3))]
+sigl[is.na(health_zone) & org_unit_type == "health_zone", health_zone3 := unlist(lapply(strsplit(org_unit, " "), "[", 4))]
+sigl[ health_zone3 != 'Zone' & health_zone2 != 'Zone', health_zone := paste(health_zone1, health_zone2, health_zone3) ]
+sigl[ health_zone3=='Zone', health_zone := paste(health_zone1, health_zone2)]
+sigl[ health_zone2=='Zone', health_zone := health_zone1]
+sigl[, c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
+# ----------------------------------------------
+
+# ----------------------------------------------
 # more prep
 # ----------------------------------------------
-more_prep <- function(data.table){
-  data.table$value <- as.character(data.table$value)
-  data.table$value <- as.numeric(data.table$value) 
-  data.table$health_zone <- standardizeHZNames(data.table$health_zone)
-  data.table$dps <- standardizeDPSNames(data.table$dps)
-  return(data.table)
+more_prep <- function(dt){
+  dt$value <- as.character(dt$value)
+  check = copy(dt)
+  check[, value_numeric := as.numeric(value)]
+  if(check[is.na(value_numeric), unique(value)] == "NULL") print("Checked that NAs introduced were recorded as 'NULL' in the data before converting to numeric" )
+  dt$value <- as.numeric(dt$value) 
+  dt$dps <- standardizeDPSNames(dt$dps)
+  dt$health_zone <- standardizeHZNames(dt$health_zone)
+  return(dt)
 }
 
 base <- more_prep(base)
@@ -90,8 +106,6 @@ cases_by_age_sex[, category := NULL]
 
 # drop unneeded vars
 cases_subset <- cases_by_age_sex[, .(date, quarter, dps, health_zone, health_area, org_unit, org_unit_id, org_unit_type, level, element, element_eng, age, sex, value)]
-# ----------------------------------------------
-
 # ----------------------------------------------
 # cast wide the results data
 # ----------------------------------------------

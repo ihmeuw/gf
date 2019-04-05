@@ -525,7 +525,6 @@ list_of_plots = NULL
 i=1
 
 for(e in element_vector) {
-  # look up district name
    
   name = e
   list_of_plots[[i]] = ggplot(loop[element==e], aes(x=date, y=value, color=sex)) + 
@@ -542,12 +541,7 @@ for(i in seq(length(list_of_plots))) {
 } 
 
 # #----------------------------------------------------
-# 
-# # deaths 
-# # pull in gbd estimates 
-# deaths = dt[element=="Registered deaths of PLHIV in the course of a month" ]
 
-# deaths = dt[element=="Registered deaths of PLHIV in the course of a month"]
 
 dev.off() 
 

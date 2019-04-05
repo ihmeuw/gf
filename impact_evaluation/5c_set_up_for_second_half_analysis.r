@@ -13,6 +13,13 @@ source('./impact_evaluation/_common/set_up_r.r')
 # -----------------------------------------------------------------
 # Load/prep data
 
+# load completeness estimates from outputFile5a (TEMPORARY)
+load(outputFile5a)
+complVars = names(data)[grepl('completeness',names(data))]
+completeness = data[,c('orig_health_zone','date', complVars), with=FALSE]
+setnames(completeness, 'orig_health_zone', 'health_zone')
+completeness = completeness[, lapply(.SD, mean), by=c('health_zone','date')]
+
 # load
 data = readRDS(outputFile3b)
 
@@ -30,6 +37,12 @@ data[, date:=as.numeric(year(date)+((month(date)/12)-1))]
 
 # make MI ratio
 data[, case_fatality:=malariaDeaths/(newCasesMalariaMild+newCasesMalariaSevere)]
+
+# bring in completeness (TEMPORARY)
+data = merge(data, completeness, by=c('health_zone','date'), all.x=TRUE)
+data = data[order(health_zone, date)]
+library(zoo)
+for(v in complVars) data[, (v):=na.locf(get(v)), by='health_zone']
 # -----------------------------------------------------------------
 
 
@@ -127,8 +140,5 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile5d)
 
 # save a time-stamped version for reproducibility
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile5dArchive = gsub('prepped_data/', 'prepped_data/archive/', outputFile5d)
-outputFile5dArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5dArchive)
-file.copy(outputFile5d, outputFile5dArchive)
+archive(outputFile5d)
 # ---------------------------------------------------------

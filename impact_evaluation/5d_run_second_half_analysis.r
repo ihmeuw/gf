@@ -15,6 +15,9 @@ source('./impact_evaluation/_common/set_up_r.r')
 # whether to run in parallel using qsub or mclapply
 runAsQsub = TRUE
 if(Sys.info()[1]=='Windows') runAsQsub = FALSE
+
+# model version to use
+modelVersion = 'drc_malaria_impact4'
 # ---------------------------
 
 
@@ -53,10 +56,13 @@ summary(lmFit10)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-source('./impact_evaluation/models/drc_malaria_impact3.r')
+source(paste0('./impact_evaluation/models/', modelVersion, '.r'))
 
-# swap in health zone dummies where health_zone is specified (for convenience)
-# model = gsub('health_zone', paste(unique(data$health_zone)[-1],collapse='+'), model)
+# reduce the data down to only necessary variables
+parsedModel = lavParseModelString(model)
+modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+modelVars = c('orig_health_zone','health_zone','date',modelVars)
+data = data[, modelVars, with=FALSE]
 # ----------------------------------------------
 
 
@@ -96,14 +102,15 @@ if (runAsQsub==TRUE) {
 	hzs = unique(data$health_zone)
 	T = length(hzs)
 	# submit array job
-	system(paste0('qsub -cwd -N ie_job_array -t 1:', T, 
-		' -l fthread=1 -l m_mem_free=1G -q all.q -P ihme_general -e ', 
+	system(paste0('qsub -cwd -N ie2_job_array -t 1:', T, 
+		' -l fthread=1 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
-		' ./core/r_shell_blavaan.sh ./impact_evaluation/5f_run_second_half_analysis_single_hz.r'))
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/5e_run_single_model.r ', 
+		modelVersion, ' 1 FALSE'))
 	# wait for jobs to finish (2 files per job)
-	while(length(list.files(clustertmpDir2, pattern='_summary_'))<(T)) { 
+	while(length(list.files(clustertmpDir2, pattern='second_half_summary_'))<(T)) { 
 		Sys.sleep(5)
-		print(paste(length(list.files(clustertmpDir2, pattern='_summary_')), 'of', T, 'files found...'))
+		print(paste(length(list.files(clustertmpDir2, pattern='second_half_summary_')), 'of', T, 'files found...'))
 	}
 	# collect output
 	print('Collecting output...')
@@ -142,13 +149,8 @@ save(list=c('data','model','semFits','summaries','means','scaling_factors'), fil
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
-date_time = gsub('-|:| ', '_', Sys.time())
-outputFile5eArchive = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5e)
-outputFile5eArchive = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5eArchive)
-file.copy(outputFile5e, outputFile5eArchive)
-outputFile5eArchive_big = gsub('prepped_data/', 'prepped_data/model_runs/', outputFile5e_big)
-outputFile5eArchive_big = gsub('.rdata', paste0('_', date_time, '.rdata'), outputFile5eArchive_big)
-file.copy(outputFile5e_big, outputFile5eArchive_big)
+archive(outputFile5e, 'model_runs')
+archive(outputFile5e_big, 'model_runs')
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
@@ -156,8 +158,8 @@ if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
 # clean up qsub files
 print(paste('Cleaning up cluster temp files...'))
 if (runAsQsub==TRUE) { 
-	system(paste0('rm ', clustertmpDireo, '/*'))
-	system(paste0('rm ', clustertmpDir1	, '/*'))
-	system(paste0('rm ', clustertmpDir2	, '/*'))
+	system(paste0('rm ', clustertmpDireo, '/ie2_job_array*'))
+	system(paste0('rm ', clustertmpDir1	, '/second_half_*'))
+	system(paste0('rm ', clustertmpDir2	, '/second_half_*'))
 }
 # ------------------------------------------------------------------

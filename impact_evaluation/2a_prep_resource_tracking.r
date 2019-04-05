@@ -94,9 +94,17 @@ final_expenditures = rbind(gos_data, cod_data, fill=TRUE)
 #final_expenditures <- readRDS(expendituresFile)
 fgh <- readRDS(fghFile)
 who <- readRDS(whoFile)
+oop <- readRDS(gheMalFile)
+
 fgh = fgh[, .(sda_activity, year, loc_name, disease, code, module_eng, intervention_eng, fin_data_type, financing_source, disbursement)]
 setnames(fgh, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
 
+#For OOP, take only the data from the most recent year of reporting. 
+oop = oop[value_code == "fs_malaria_domestic_private_oop"]
+oop[order(year_id)]
+oop = oop[!((year_id == 2012 & report_year == 2015) | (year_id == 2013 & report_year == 2015) | (year_id == 2014 & report_year == 2016))]
+setnames(oop, old=c('year_id', 'value'), new=c( 'year', 'oop'))
+oop$report_year <- NULL
 #------------------------------------
 # Validate data 
 #------------------------------------
@@ -136,8 +144,6 @@ other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fun
                 .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]
 ghe = who[loc_name == 'cod' & indicator=='domestic_ghe_malaria', .(ghe = sum(expenditure, na.rm = TRUE)), 
         by = .(year)]
-oop = fgh[fin_data_type == "model_estimates" & financing_source == 'oop' & loc_name == 'cod', .(oop = sum(disbursement, na.rm = TRUE)), 
-          by = .(year)]
 
 #Split other_dah and ghe into quarters
 n_years <- (2018-1990)+1 #This is the range we have data for. 
