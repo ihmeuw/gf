@@ -44,8 +44,6 @@ dt = read.fst(scratchInFile)
 dt = data.table(dt)
 subset = dt[org_unit_id==o] 
 
-# convert date to a character vector as a separate tracker
-dt[ , date_track:=as.character(date)]
 #------------------------------------
 
 #------------------------------------
