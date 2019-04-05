@@ -89,9 +89,6 @@ cleanup = TRUE
 # data set with equality constraints checked and an entry for both tests/undetectable
 dt = readRDS(inFile)
 
-# convert date to a character vector as a separate tracker
-dat[ , date_track:=as.character(date)]
-
 # sort dt so indexing works correctly when retrieving data using fst
 dt = setorder(dt, org_unit_id)
 
@@ -101,7 +98,7 @@ setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
 # for testing, subset to ten rows
-array_table = array_table[1:10, ]
+# array_table = array_table[1:20, ]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, arrayFile)
