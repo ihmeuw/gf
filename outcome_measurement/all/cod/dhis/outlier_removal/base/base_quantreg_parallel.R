@@ -140,6 +140,7 @@ for (j in seq(N)) {
   tmp = read.fst(paste0(parallelDir, 'quantreg_output', j, '.fst'), as.data.table=TRUE)
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
+  fullData[ , date:=as.Date(date, origin = "1970-01-01")]
   cat(paste0('\r', j))
   flush.console() 
 }
