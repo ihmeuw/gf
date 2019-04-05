@@ -17,9 +17,6 @@
 # make sure qr_results exists
 # cd /ihme/scratch/users/ccarelli/
 
-# copy over the base services data from j - to source from scracth
-# cp '/home/j/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outliers/base_to_screen.rds' '/ihme/scratch/users/ccarelli/'
-
 # to delete files in the directory
 # rm quantreg/parallel_files/*
 # rm quantreg/errors_output/*
