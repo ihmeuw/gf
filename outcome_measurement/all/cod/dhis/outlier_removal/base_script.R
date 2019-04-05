@@ -54,7 +54,7 @@ combined_qr_results = data.table()
 for (e in unique(subset$element_id)) {
     
   # subset the data further based on loop parameters for qr
-    subset_further = subset[element_id == e ] 
+    subset_further = subset[element_id == e] 
     
     # skip cases that will fail
     n = nrow(subset_further[!is.na(value), ])

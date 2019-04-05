@@ -92,6 +92,9 @@ cleanup = TRUE
 # data set with equality constraints checked and an entry for both tests/undetectable
 dt = readRDS(inFile)
 
+# convert date to a character vector as a separate tracker
+dat[ , date_track:=as.character(date)]
+
 # sort dt so indexing works correctly when retrieving data using fst
 dt = setorder(dt, org_unit_id)
 
@@ -101,7 +104,7 @@ setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
 # for testing, subset to ten rows
-# array_table = array_table[1:10,]
+array_table = array_table[1:10, ]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, arrayFile)
@@ -113,11 +116,8 @@ write.fst(dt, scratchInFile)
 #------------------------------------
 # array job
 N = nrow(array_table)
-PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
-setwd('/ihme/code/ccarelli/gf/')
 
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base_script.R'))
-
 
 #------------------------------------
 
@@ -141,7 +141,7 @@ while(numFiles<i) {
 fullData = data.table()
 
 for (j in seq(N)) {
-  tmp = read.fst(paste0(parallelDir, '/quantreg_output', j, '.fst'), as.data.table=TRUE)
+  tmp = read.fst(paste0(parallelDir, 'quantreg_output', j, '.fst'), as.data.table=TRUE)
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', j))
