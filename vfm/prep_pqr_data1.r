@@ -19,7 +19,7 @@ pqr = fread("download_4.4.19/PQR_ExternalReportingView.csv", stringsAsFactors = 
 #-------------------------------------------------------------------
 # Drop columns that aren't needed and rename 
 #-------------------------------------------------------------------
-names(pqr)
+sort(names(pqr))
 
 #Try to create a small subset of usable data, that just has our countries and a few key variables. 
 key_cols = c("Country Name", "Grant Name", "Grant Start Date", "Grant End Date", "IP Start Date", "IP End Date", "Actual Delivery Date", "Actual Delivery Month Name", 
@@ -28,7 +28,7 @@ key_cols = c("Country Name", "Grant Name", "Grant Start Date", "Grant End Date",
              "Total Product Cost (USD)", "Total Tariff Cost (USD)", "Treatment Dose", "Treatment Frequency", "Unit Cost (USD)", "Unit Cost : Avg Diag",
              "Unit Cost : Avg detail", "Unit Cost : Avg Diag old", "Purchase Order Date", "Purchase Order Month Name", "Purchase Order Month", "Purchase Order Quarter", "Purchase Order Week", "Purchase Order Year", "Purchase Order Latest Approval Date",                        
              "Purchase Order Original Approval Date", "Scheduled Delivery Date", "Scheduled Delivery Month Name", "Scheduled Delivery Month", "Scheduled Delivery Quarter", 
-             "Scheduled Delivery Week", "Scheduled Delivery Year")
+             "Scheduled Delivery Week", "Scheduled Delivery Year", "Product Category")
 
 countries = c("Congo (Democratic Republic)", "Senegal", "Uganda", "Guatemala")
 
