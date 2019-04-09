@@ -19,12 +19,25 @@ pqr = fread("download_4.4.19/PQR_ExternalReportingView.csv", stringsAsFactors = 
 #-------------------------------------------------------------------
 # Drop columns that aren't needed and rename 
 #-------------------------------------------------------------------
+<<<<<<< HEAD
 names = names(pqr)
 
 #Try to create a small subset of usable data, that just has our countries and a few key variables. 
 key_cols = c("Country Name", "Grant Name", "Grant Start Date", "Grant End Date", "IP Start Date", "IP End Date", "Product Name (EN)", "Product Code", "Strength Dosage Form (EN)", "Strength",
              "Supplier", "Product Category", "Treatment Dose", "Treatment Frequency",  "Suom Name (EN)", "Pack quantity", "Product pack (USD)", "Some or All of Goods Prepaid", "Prod Cat Filter" )
 supply_chain_cols = names[grep("year|month|week|day|date", tolower(names))] #Look at supply chain lags. 
+=======
+sort(names(pqr))
+
+#Try to create a small subset of usable data, that just has our countries and a few key variables. 
+key_cols = c("Country Name", "Grant Name", "Grant Start Date", "Grant End Date", "IP Start Date", "IP End Date", "Actual Delivery Date", "Actual Delivery Month Name", 
+             "Actual Delivery Month", "Actual Delivery Quarter", "Actual Delivery Week", "Actual Delivery Year", "Product Name (EN)", "Product Code", "Strength Dosage Form (EN)", "Strength",
+             "Supplier", "Tariff Cost (LC)", "Tariff Cost (USD)", "Total Freight & Insurance Cost (USD)", "Total Handling & Agent Cost (USD)", "Total Package Quantity",                                 
+             "Total Product Cost (USD)", "Total Tariff Cost (USD)", "Treatment Dose", "Treatment Frequency", "Unit Cost (USD)", "Unit Cost : Avg Diag",
+             "Unit Cost : Avg detail", "Unit Cost : Avg Diag old", "Purchase Order Date", "Purchase Order Month Name", "Purchase Order Month", "Purchase Order Quarter", "Purchase Order Week", "Purchase Order Year", "Purchase Order Latest Approval Date",                        
+             "Purchase Order Original Approval Date", "Scheduled Delivery Date", "Scheduled Delivery Month Name", "Scheduled Delivery Month", "Scheduled Delivery Quarter", 
+             "Scheduled Delivery Week", "Scheduled Delivery Year", "Product Category")
+>>>>>>> d774e68df72e187518b44300a6f54c51ced31b13
 
 #Key cols - country, disease, product, unit, reference price (pull everything related), and pack size, and 
 #Unit, mean, median, and international reference price. 

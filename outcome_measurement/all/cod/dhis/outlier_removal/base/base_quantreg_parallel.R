@@ -17,9 +17,6 @@
 # make sure qr_results exists
 # cd /ihme/scratch/users/ccarelli/
 
-# copy over the base services data from j - to source from scracth
-# cp '/home/j/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outliers/base_to_screen.rds' '/ihme/scratch/users/ccarelli/'
-
 # to delete files in the directory
 # rm quantreg/parallel_files/*
 # rm quantreg/errors_output/*
@@ -101,7 +98,7 @@ setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
 # for testing, subset to ten rows
-# array_table = array_table[1:10,]
+# array_table = array_table[1:20, ]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, arrayFile)
@@ -113,12 +110,8 @@ write.fst(dt, scratchInFile)
 #------------------------------------
 # array job
 N = nrow(array_table)
-PATH = paste0('/ihme/scratch/users/', user_name, '/base_output')
-setwd('/ihme/code/ccarelli/gf/')
 
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base_script.R'))
-
-
 #------------------------------------
 
 
@@ -141,9 +134,10 @@ while(numFiles<i) {
 fullData = data.table()
 
 for (j in seq(N)) {
-  tmp = read.fst(paste0(parallelDir, '/quantreg_output', j, '.fst'), as.data.table=TRUE)
+  tmp = read.fst(paste0(parallelDir, 'quantreg_output', j, '.fst'), as.data.table=TRUE)
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
+  fullData[ , date:=as.Date(date, origin = "1970-01-01")]
   cat(paste0('\r', j))
   flush.console() 
 }

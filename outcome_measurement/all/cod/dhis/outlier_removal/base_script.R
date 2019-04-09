@@ -16,10 +16,6 @@ user_name = Sys.info()[['user']]
 i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
 
-# if (is.na(i) | is.null(i)) i = 4
-
-print("It worked!")
-
 # file paths
 scratchDir = paste0('/ihme/scratch/users/', user_name, '/quantreg/')
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
@@ -54,7 +50,7 @@ combined_qr_results = data.table()
 for (e in unique(subset$element_id)) {
     
   # subset the data further based on loop parameters for qr
-    subset_further = subset[element_id == e ] 
+    subset_further = subset[element_id == e] 
     
     # skip cases that will fail
     n = nrow(subset_further[!is.na(value), ])
