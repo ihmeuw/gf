@@ -28,14 +28,14 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   # language = file_list$language[i]
   #-------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
-  verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', 'Detailed Budget Revisé')
+  verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', 'Detailed Budget Revise')
   if (!sheet_name%in%verified_sheet_names){
-    stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
     print(paste0("Sheet name: '", sheet_name, "'"))
+    stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
   }
   
   # Load/prep data
-  gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
+  gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name))
   initial_rows = nrow(gf_data) #Save to run a check on later. 
   
   #-------------------------------------

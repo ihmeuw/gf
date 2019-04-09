@@ -44,7 +44,7 @@ if (prep_files == TRUE){
 if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
-  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', 'Detailed Budget Revisé')
+  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise")
   
   budget_cols = c("activity_description", "budget", "cost_category", "intervention", "module", "start_date") #These are the only columns that should be returned from a budget function. 
   pudr_cols = c("budget", "expenditure", "intervention", "module", "period", "start_date") #These are the only columns that should be returned from a pudr function. 
@@ -94,6 +94,8 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       stopifnot(sort(names(tmpData)) == budget_cols)
     } else {
       print(paste0("File not being processed: ", file_list$file_name[i]))
+      print(paste0("Check logic conditions. This file has the function_type: ", file_list$function_type[i],
+            " and the sheet name: ", file_list$sheet[i]))
     }
     
     #Add indexing data

@@ -46,7 +46,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   }
   
   # Load/prep data
-  gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
+  gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name))
 
   #General function for grants.
   #-------------------------------------

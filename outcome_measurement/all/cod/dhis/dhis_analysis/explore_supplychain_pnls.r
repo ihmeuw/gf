@@ -65,7 +65,6 @@ coord[, id:=as.numeric(id)]
 coord_ann = rbind(coord, coord)
 coord_ann[, year:=rep(2017:2018, each=nrow(coord))] #What years do you have data for? 
 
-
 #--------------------------------------------------------------
 #Clean the data 
 #--------------------------------------------------------------
@@ -81,12 +80,15 @@ dt[stock_category=='Sortie', stock_category:='output']
 dt[, year:=year(date)]
 
 #Check to make sure there aren't impossible reporting periods for stock-out days per month, and drop these values
-unique(dt[value >31 & stock_category == "number_of_days_stocked_out", .(value)]) #Caitlin do we want to clean any of these? 
-dt = dt[value> 31 & stock_category == "number_of_days_stocked_out", value:=NA]
+date_frame = data.table(month = seq(1, 12, by=1), expected_days = c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+dt[, month:=month(date)]
+dt = merge(dt, date_frame, all.x = TRUE, by = 'month')
+
+#unique(dt[value >31 & stock_category == "number_of_days_stocked_out", .(value)]) #Caitlin do we want to clean any of these? 
+dt[value>expected_days & stock_category == "number_of_days_stocked_out", impossible_so_days:=TRUE] #Create a boolean value to flag which NAs you've created. 
+dt[value>expected_days & stock_category == "number_of_days_stocked_out", value:=NA] #Replace impossible days stocked out with NA
 
 #Create a variable to delineate first-line and second-line regimens
-# Caitlin - it looks like drugs can be combined here. Do we want to examine stocks individually? 
-#Caitlin - review these doses? 
 
 #From treatment regimen PDF in DRC - 
 # Initiation du TAR (*) :
@@ -105,6 +107,8 @@ dt[element_id == "ANTg88cSB09", regimen:=2] #AZT+3TC+EFV
 unique(dt[!is.na(regimen), .(regimen, element)][order(regimen)])
 #Are there any other second-line regimens we can pull here? 
 
+#Save a cleaned data set here so you can run quantile regression 
+saveRDS(dt, paste0(dir, "prepped/pnls_drug.rds"))
 #--------------------------------------------------------------
 # Subset this cleaned data set into specialized data tables
 #--------------------------------------------------------------
