@@ -111,6 +111,7 @@ write.fst(dt, scratchInFile)
 # array job
 N = nrow(array_table)
 
+setwd('/ihme/code/ccarelli/gf/')
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/base_script.R'))
 #------------------------------------
 
@@ -137,7 +138,6 @@ for (j in seq(N)) {
   tmp = read.fst(paste0(parallelDir, 'quantreg_output', j, '.fst'), as.data.table=TRUE)
   if(j==1) fullData = tmp
   if(j>1) fullData = rbind(fullData, tmp)
-  fullData[ , date:=as.Date(date, origin = "1970-01-01")]
   cat(paste0('\r', j))
   flush.console() 
 }
@@ -156,3 +156,5 @@ if (cleanup==TRUE) {
   system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg/data_for_qr.fst'))
 }
 #------------------------------------
+
+

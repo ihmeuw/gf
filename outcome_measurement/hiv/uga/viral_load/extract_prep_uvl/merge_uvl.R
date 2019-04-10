@@ -22,24 +22,21 @@ library(plyr)
 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-# --------------
+# ---------------------------
 # set files and directories for the uganda viral load data
 
 # set the working directory to loop over the downloaded files
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/webscrape/age_sex_tb/')
+dir = ('/ihme/scratch/users/ccarelli/webscrape_uvl')
 setwd(dir)
 
 # set output directory
-out_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/prepped/')
+outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/prepped/')
 
 # list existing files
 files = list.files('./', recursive=TRUE)
 length(files)
 
 # ---------------------------
-# source the function 
-
-source("C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/prep_uvl.R")
 
 # ----------------------------------------------
 # add identifying variables to the existing data tables using file names
@@ -60,7 +57,7 @@ for(f in files) {
   
   district_id = unlist(current_data$id[[1]])
   district_id = data.table(district_id)
-
+  
   hub_id = unlist(current_data$id[[2]])
   hub_id = data.table(hub_id)
   
@@ -68,7 +65,7 @@ for(f in files) {
   facility_id = data.table(facility_id)
   
   current_data[ ,id:=NULL]
-
+  
   current_data = cbind(current_data, district_id)
   current_data = cbind(current_data, hub_id)
   current_data = cbind(current_data, facility_id)
@@ -81,20 +78,20 @@ for(f in files) {
   current_data[, month:=as.numeric(substr(meta_data[3],1,2))]
   current_data[, year:=as.numeric(substr(meta_data[4],1,4))]
   current_data[, sex:=(meta_data[5])]
-  current_data[, tb:=(meta_data[6])]
-  current_data[, age:=(meta_data[7])]
+  current_data[, age:=(meta_data[6])]
   
   # rename sex values
   current_data[sex=='m', sex:='Male']
   current_data[sex=='f', sex:='Female']
   current_data[sex=='x', sex:=NA]
   
-  # rename TB values as a logical 
-  current_data[tb=='y', tb_status:=TRUE]
-  current_data[tb=='n', tb_status:=FALSE]
-  current_data[tb=='x', tb_status:=NA]
-  current_data[ , tb:=NULL]
-
+  # create a clear age category
+  age_start = str_split(unique(current_data$age), ',')[[1]][1]
+  age_end = str_split(unique(current_data$age), ',')[[1]][5]
+  current_data[ , age:=paste(age_start, '-', age_end)]
+  
+  current_data[ ,file:=f]
+  
   # append to the full data 
   if(i==1) dt = current_data
   if(i>1) dt = rbind(dt, current_data)
@@ -109,25 +106,13 @@ str(dt)
 dt[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 dt[ , c('month', 'year'):=NULL]
 
+# ----------------------------------------------
 # save the date range for the file name
 min_date = dt[ , min(year(date))]
 max_date = dt[ , max(year(date))]
 
-
-# create an age category
-age_start = trimws(str_split(unique(current_data$age), ',')[[1]][1])
-
-x = length(str_split(unique(current_data$age), ',')[[1]])
-age_end = trimws(str_split(unique(current_data$age), ',')[[1]][x])
-
-dt[ ,age_start:=(unlist(lapply(strsplit(dt$age, " "), "[", 2)))]
-
-
-
-
-# replace the long character string with an age category
-age_replace = paste(age_start, '-', age_end)
-current_data[ , age:=age_replace]
+# save merged data 
+saveRDS(dt, paste0(outDir, 'vl_merged', min_date, '_', max_date, '_.rds'))
 
 # ---------------------------
 # merge in facility and district names

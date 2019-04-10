@@ -16,7 +16,7 @@ library(plyr)
 
 # --------------------
 # detect if on windows or on the cluster 
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # ----------------------------------------------
 # Files and directories
@@ -25,8 +25,9 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 reload_everything = FALSE
 
 # output directory
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
-out_dir = paste0(dir, '/webscrape/age_sex')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
+scratchDir = paste0('/ihme/scratch/users/ccarelli/')
+out_dir = paste0(scratchDir, 'webscrape_uvl')
 
 # ----------------------------------------------
 
@@ -34,19 +35,14 @@ out_dir = paste0(dir, '/webscrape/age_sex')
 # Load/prep data
 
 # loop over years - can be altered to run years separately
-y = c('15', '16', '17', '18')
+# do 2015 tomorrow
+y = c('15', '16')
 m = c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12')
-
 s = c('m', 'f', 'x')
-
 a = c('0,1,2,3,4', '5,6,7,8,9', '10,11,12,13,14', 
       '15,16,17,18,19', '20,21,22,23,24', '25,26,27,28,29', 
       '30,31,32,33,34', '35,36,37,38,39', '40,41,42,43,44', 
-      '45,46,47,48,49', '50,51,52,53,54', '55,56,57,58,59', 
-      '60,61,62,63,64')
-
-
-# t = c('y','n','x')
+      '45,46,47,48,49')
 
 # # for all age groups
 # a = c('0,1,2,3,4', '5,6,7,8,9', '10,11,12,13,14', 
@@ -59,16 +55,14 @@ a = c('0,1,2,3,4', '5,6,7,8,9', '10,11,12,13,14',
 
 
 # calculate the number of downloads
-length(y)*length(m)*length(t)*length(s)*length(a)
-
+length(y)*length(m)*length(s)*length(a)
 
 #--------------------
 # to test the loop
 # y = '16'
 # m = '01'
 # a = '0,1,2,3,4'
-# t = 'n'
-# s = 'f'
+# s = c('f', 'm')
 #--------------------
 
 #--------------------
@@ -81,28 +75,23 @@ build_url = function(page_specs) {
   
   y = page_specs$y
   m = page_specs$m
-  # t = page_specs$t
   s = page_specs$s
   a = page_specs$a 
   
   
   # tb status file
-  outFile = paste0(out_dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_',a,'_.rds')
+  outFile = paste0(out_dir, '/facilities_suppression_', m,'_','20', y,'_', s,'_', a,'_.rds')
   check = file.exists(outFile)
   
   # only download if it doesn't already exist
   if (check==FALSE | reload_everything==TRUE) {
     
-   
-    # tb status url
-    url = paste0('https://vldash.cphluganda.org/live?age_ids=%5B',
+    url = paste0('https://vldash.cphluganda.org/live/?age_ids=%5B',
                  a, '%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', 
-                 y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%22', 
-                 t, '%22%5D&to_date=20',y,m)
+                 y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%5D&to_date=20',y,m)
     
     
     # to determine where errors occur
-  
     # load
     existence = tryCatch(fromJSON(url), error = function(x) {return("Does not exist")})
     
@@ -112,7 +101,7 @@ build_url = function(page_specs) {
       existence = "Successfully saved"
     } 
 
-    results = data.table("page_specs" = paste(y, m, t, s, a), 
+    results = data.table("page_specs" = paste(y, m, s, a), 
                           "url" = url,
                          "existence" = existence)
     return(results)
