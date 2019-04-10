@@ -75,7 +75,7 @@ check_qtr_uga <- check_qtr_uga[duplicated(check_qtr_uga, by = c("start_date", "g
 stopifnot(nrow(check_qtr_uga)==0)
 
 #Bind budgets together
-final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga, fill=TRUE) 
+final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga) 
 final_budgets$start_date <- as.Date(final_budgets$start_date, "%Y-%m-%d")
 
 #Manually edit grant numbers in GOS to match our labeling - EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE. 
@@ -88,42 +88,16 @@ final_budgets[grant == 'UGD-708-G13-H', grant:='UGA-708-G13-H']
 gos_data[, start_date:=as.Date(start_date)]
 gos_data[, end_date:=as.Date(end_date)]
 
-#Find out what quarters we have GOS data for. 
-gos_timeframe = unique(gos_data[, .(grant, start_date, end_date, grant_period)])
+#Find the "maximum" (latest) date you have GOS data for, and find the "minimum" (earliest) date you have budget data for. 
+#Compare them to each other and make sure there aren't any gaps. 
+gos_dates = unique(gos_data[, .(gos_end_date = max(end_date)), by='grant'])
+budget_dates = unique(final_budgets[, .(budget_start_date=min(start_date)), by='grant'])
 
-gos_timeframe[, grant_start:=min(start_date), by='grant']
-gos_timeframe[, grant_end:=max(end_date), by='grant']
+check_dates = merge(budget_dates, gos_dates, by='grant', all.x = TRUE) #We only want to do this check for grants where we have final budget data 
+stopifnot(nrow(check_dates[!is.na(gos_end_date) & gos_end_date+1 != budget_start_date])==0)
 
-#Shift all of the end-year variables up one click, and see if they correspond to another start date. 
-gos_timeframe[, end_date:=end_date+days(1)]
-gost_timeframe = gos_timeframe[order(grant, start_date)]
-setDT(gos_timeframe)
-grants=as.vector(unique(gos_timeframe[!is.na(grant), .(grant)]))
-
-grants_with_gaps=character()
-for (x in 1:nrow(grants)){
-  test = gos_timeframe[grant%in%grants[x]][order(start_date)]
-  if (nrow(test)!=1){ 
-    for (i in 2:nrow(test)-1){
-      if (test$end_date[i]!=test$start_date[i+1]){
-        print(paste0("Warning: there are missing dates for ", grants[x]))
-        gos_timeframe[grant==grants[x] & end_date==test$end_date[i], data_gap:=TRUE]
-        grants_with_gaps = append(grants_with_gaps, as.character(grants[x]))
-      }
-    }
-    if (test$end_date[nrow(test)]-1 != test$grant_end[nrow(test)]){
-      print(paste0("Warning: there are missing dates for ", grants[x]))
-      gos_timeframe[grant==grants[x] & end_date==test$end_date[i], data_gap:=TRUE]
-      grants_with_gaps = append(grants_with_gaps, as.character(grants[x]))
-    }
-  }
-}
-
-#Need to grab the rows with data gaps, and the one immediately after them. 
-gos_gaps = gos_timeframe[grant%in%grants_with_gaps, .(grant, start_date, end_date, grant_period, data_gap)]
-
-gos_gaps = gos_gaps[order(grant, start_date)]
-write.csv(gos_gaps, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/known_gos_gaps.csv", row.names=FALSE)
+#Bind together these two files 
+gos_prioritized_budgets = rbind(final_budgets, gos_data, fill = TRUE) #There are some columns that don't exist in both sources, so fill = TRUE
 
 # Verify data 
 na_year <- gos_prioritized_budgets[is.na(year)]
