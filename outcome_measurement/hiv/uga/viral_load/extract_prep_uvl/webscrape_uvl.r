@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 3/31/2018
+# 4/10/2018
 # Loop to download data from the Uganda Viral Load Dashboard
 # Run this file, then prep_uvl
 # ----------------------------------------------
@@ -124,7 +124,7 @@ urls = adply(arguments, 1, build_url)
 #--------------------------------------------------
 # download the meta data on districts and facilities
 
-# download the facilities data 
+# source the code that downloads facility names, districts, hubs
 source(src_dir)
 #--------------------------------------------------
 

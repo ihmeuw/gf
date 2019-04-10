@@ -90,8 +90,6 @@ for(f in files) {
   age_end = str_split(unique(current_data$age), ',')[[1]][5]
   current_data[ , age:=paste(age_start, '-', age_end)]
   
-  current_data[ ,file:=f]
-  
   # append to the full data 
   if(i==1) dt = current_data
   if(i>1) dt = rbind(dt, current_data)
@@ -105,14 +103,6 @@ str(dt)
 # create a date variable
 dt[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 dt[ , c('month', 'year'):=NULL]
-
-# ----------------------------------------------
-# save the date range for the file name
-min_date = dt[ , min(year(date))]
-max_date = dt[ , max(year(date))]
-
-# save merged data 
-saveRDS(dt, paste0(outDir, 'vl_merged', min_date, '_', max_date, '_.rds'))
 
 # ---------------------------
 # merge in facility and district names
@@ -150,20 +140,20 @@ dt = dt[!is.na(district)]
 dt = rbind(dt, replace_districts)
 
 # ---------------------------
-# save the interim product (merged but not fully prepped)
-
-# saveRDS(dt, paste0(out_dir, 'merged_vl_', min_date, '_', max_date, '.rds'))
-# ---------------------------
 # run final prep
 # includes using mean imputation to replace missing sex
 
 dt = prep_uvl(dt)
 # ---------------------------
-# save the final product 
 
-saveRDS(dt, paste0(out_dir, 'uvl_prepped_', min_date, '_', max_date, '.rds'))
-# ---------------------------
+# ----------------------------------------------
+# save the date range for the file name
+min_date = dt[ , min(year(date))]
+max_date = dt[ , max(year(date))]
 
+# save merged data 
+saveRDS(dt, paste0(outDir, 'uvl_prepped_', min_date, '_', max_date, '_.rds'))
+# ----------------------------------------------
 
 
 
