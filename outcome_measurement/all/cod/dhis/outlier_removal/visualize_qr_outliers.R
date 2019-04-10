@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'sigl'
+set = 'base'
 
 # user name for sourcing functions
 user_name = 'ccarelli'
@@ -158,7 +158,7 @@ dt[is.na(outlier), outlier:=FALSE]
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
-dt[ , facility:=word(org_unit, 2, -1)]
+# dt[ , facility:=word(org_unit, 2, -1)]
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
 
@@ -358,14 +358,6 @@ for(i in seq(length(list_of_plots))) {
 dev.off()
 
 #--------------------------------
-# create a data set exclusively of the outliers to remove
-# save it to remove from the full data 
-
-outliers = out[outlier==T]
-saveRDS(outliers, paste0(dir, outFile2))
-
-#--------------------------------
-
 
 
 
