@@ -16,40 +16,39 @@ setwd(prep_dir)
 # ----------------------------------------------
 # drop out patients in 'facility left blank' facilities
 
-print(paste("There are", dt[facility=='Facility Left Blank', sum(patients_received)], 
+print(paste("There are", dt[is.na(facility), sum(patients_received)], 
             "patients where the facility is missing."))
 
-dt[facility=='Facility Left Blank', facility:=NA]
 dt = dt[!is.na(facility)]
 
 #---------------------------------------------
 # some facilities are associated with multiple district ids
 # using the health facility inventory, choose a single district id
-
-dt[facility_id==8335, district_id:=7]
-dt[facility_id==8336, district_id:=68]
-dt[facility_id==8337, district_id:=97]
-dt[facility_id==8338, district_id:=31]
-dt[facility_id==8339, district_id:=84]
-dt[facility_id==8340, district_id:=101]
-dt[facility_id==8341, district_id:=20]
-
-dt[facility_id==8344, district_id:=97]
-dt[facility_id==8345, district_id:=97]
-dt[facility_id==8346, district_id:=86]
-dt[facility_id==8347, district_id:=29]
-dt[facility_id==8348, district_id:=31]
-
-dt[facility_id==8350, district_id:=5]
-dt[facility_id==8351, district_id:=85]
-dt[facility_id==8352, district_id:=15]
-dt[facility_id==8353, district_id:=64]
-dt[facility_id==8354, district_id:=86]
-dt[facility_id==8355, district_id:=30]
-dt[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
-dt[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
-dt[facility_id==8358, district_id:=39]
-dt[facility_id==8359, district_id:=7]
+# 
+# dt[facility_id==8335, district_id:=7]
+# dt[facility_id==8336, district_id:=68]
+# dt[facility_id==8337, district_id:=97]
+# dt[facility_id==8338, district_id:=31]
+# dt[facility_id==8339, district_id:=84]
+# dt[facility_id==8340, district_id:=101]
+# dt[facility_id==8341, district_id:=20]
+# 
+# dt[facility_id==8344, district_id:=97]
+# dt[facility_id==8345, district_id:=97]
+# dt[facility_id==8346, district_id:=86]
+# dt[facility_id==8347, district_id:=29]
+# dt[facility_id==8348, district_id:=31]
+# 
+# dt[facility_id==8350, district_id:=5]
+# dt[facility_id==8351, district_id:=85]
+# dt[facility_id==8352, district_id:=15]
+# dt[facility_id==8353, district_id:=64]
+# dt[facility_id==8354, district_id:=86]
+# dt[facility_id==8355, district_id:=30]
+# dt[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
+# dt[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
+# dt[facility_id==8358, district_id:=39]
+# dt[facility_id==8359, district_id:=7]
 
 #-----------------------------------------
 # change district names from new 2016/17 districts to match the shape file
@@ -79,9 +78,9 @@ length(unique(dt$district))
 # full data table of all duplicate entries as single entries
 # drop out hub
 byvars = c("facility_id", "facility", "dhis2_name", "hub",  "district", "date",
-           "age", "sex", "tb_status")
+           "age", "sex")
 
-dt = dt[ ,lapply(.SD, sum), by=byvars, .SDcols=2:8]
+dt = dt[ ,lapply(.SD, sum), by=byvars, .SDcols=4:10]
 
 # -------------------------------------------
 # determine facility levels from facility name
@@ -134,7 +133,7 @@ dt[ , c("facility_1", "dhis2_name1", 'level2'):=NULL]
 # create a data set to calculate the sex ratio by district
 # the first data table represents the total number of each sex for each variable
 vars = c('district', 'sex')
-ratio = dt[!is.na(sex), lapply(.SD, sum), by=vars, .SDcols=10:16]
+ratio = dt[!is.na(sex), lapply(.SD, sum), by=vars, .SDcols=9:15]
 
 # create a data table of total for all variables, regardless of sex
 total = ratio[ ,lapply(.SD, sum), .SDcols=3:9, by=district]
@@ -213,9 +212,9 @@ unknowns[ , c("patients_received1", "samples_received1",  "rejected_samples1",  
 
 # round to single digit
 vars = c( 'facility_id', 'facility', 'dhis2_name', 'hub',  
-          'district', 'sex', 'age', 'date', 'tb_status', 'level', 'prison')
+          'district', 'sex', 'age', 'date', 'level', 'prison')
 
-unknowns = unknowns[ ,lapply(.SD, round, 1), .SDcols=10:16, by=vars]
+unknowns = unknowns[ ,lapply(.SD, round, 1), .SDcols=9:15, by=vars]
 
 #-------------------------------
 # merge in new values
@@ -223,7 +222,7 @@ dt = dt[!is.na(sex)]
 dt = rbind(dt, unknowns)
 
 # sum over values to ensure new females and males are incorporated
-dt = dt[ ,lapply(.SD, sum), .SDcols=10:16, by=vars]
+dt = dt[ ,lapply(.SD, sum), .SDcols=9:15, by=vars]
 
 #-------------------------------
 # final quality checks 
@@ -246,13 +245,14 @@ dt[ , plasma_samples:=(samples_received - dbs_samples)]
 
 #--------------------------------------------
 # final equality constraints check
-dt[samples_received < rejected_samples]
-dt[samples_received < dbs_samples]
-dt[samples_received < plasma_samples ]
-dt[samples_received < total_results]
-dt[samples_received < valid_results]
-dt[total_results < valid_results]
-dt[valid_results < suppressed]
+if (nrow(dt[samples_received < rejected_samples]) +
+nrow(dt[samples_received < dbs_samples]) +
+nrow(dt[samples_received < plasma_samples]) +
+nrow(dt[samples_received < total_results]) +
+nrow(dt[samples_received < valid_results]) +
+nrow(dt[total_results < valid_results]) +
+nrow(dt[valid_results < suppressed]) ==0) { print("Equality constraints met!")
+  } else {print("Gahh! Look at your data.")}
 
 #-------------------------------
 # add a year variable
