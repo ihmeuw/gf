@@ -38,6 +38,8 @@ outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/
 files = list.files('./', recursive=TRUE)
 length(files)
 
+# source code
+source('/ihme/code/ccarelli/gf/hiv/uga/viral_load/extract_prep_uvl/prep_uvl.R')
 # ---------------------------
 
 # ----------------------------------------------
