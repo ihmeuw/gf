@@ -43,8 +43,8 @@ for (j in seq(numFiles)) {
   flush.console() 
 }
 
-# faster binding:
-system("cat ./folder_name/* > ./newFiel.csv")
+# # faster binding:
+# system("cat ./folder_name/* > ./newFile.csv")
 
 # save full data
 write.fst(fullData, paste0('/ihme/scratch/users/', user_name, '/agg_quantreg_output.fst'))

@@ -37,7 +37,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
 if (set=='base') outFile = 'outliers/base_outliers_replaced.pdf'
 if (set=='sigl') outFile = 'outliers/sigl_drugs_qr_outliers.pdf'
-if (set=='sigl') outFile2 = 'outliers/list_of_sigl_drugs_outliers.pdf'
+
 #------------------------------------
 # source function for health zone names
 
