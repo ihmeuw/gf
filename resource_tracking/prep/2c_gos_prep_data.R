@@ -14,8 +14,8 @@
 # ----------------------------------------------
 
 #This is now the archived file - reading it in for 
-gos_data_old  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
-                                   sheet=as.character('GOS Mod-Interv - Extract'), detectDates=TRUE))
+# gos_data_old  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
+#                                    sheet=as.character('GOS Mod-Interv - Extract'), detectDates=TRUE))
 
 gos_data = data.table(read.xlsx(paste0(gos_raw, "By_Cost_Category_data .xlsx"), detectDates = TRUE))
 
@@ -79,6 +79,11 @@ gms_data$grant_period = paste0(year(as.Date(gms_data$grant_period_start)), "-",y
 gms_data = gms_data[, -c('grant_period_start', 'grant_period_end')]
 stopifnot(nrow(gms_data[is.na(year)])==0)
 
+gms_data[, disease:=tolower(disease)]
+gms_data[disease == "hiv/aids", disease:='hiv']
+gms_data[disease == "health systems strengthening", disease:='rssh']
+gms_data[disease == 'tuberculosis', disease:='tb']
+
 gms_data = gms_data[order(country, disease, grant, grant_period, start_date, end_date, year, module, budget, expenditure)]
 
 #-------------------------------------------------
@@ -121,6 +126,8 @@ totalGos$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
 
 totalGos[is.na(module), module:='unspecified']
 totalGos[is.na(intervention), intervention:='unspecified']
+totalGos[module=='Not Defined', module:='unspecified']
+totalGos[intervention=='Not Defined', intervention:='unspecified']
 
 for (i in 1:nrow(code_lookup_tables)){
   totalGos[country==code_lookup_tables$country[[i]], loc_name:=code_lookup_tables$iso_code[[i]]]

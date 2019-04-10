@@ -74,15 +74,15 @@ if (prep_gos == TRUE){
     #------------------------------------------------------------
     
     #Correct all tb/hiv to hiv/tb
-    resource_database[disease == 'tb/hiv', disease:='hiv/tb']
+    raw_data[disease == 'tb/hiv', disease:='hiv/tb']
     
     #English corrections
-    resource_database[module=='hivhealthsystemsstrengthening', disease:='hiv']
-    resource_database[module=='malhealthsystemsstrengthening', disease:='malaria']
-    resource_database[module=='tbhealthsystemsstrengthening', disease:='tb']
+    raw_data[module=='hivhealthsystemsstrengthening', disease:='hiv']
+    raw_data[module=='malhealthsystemsstrengthening', disease:='malaria']
+    raw_data[module=='tbhealthsystemsstrengthening', disease:='tb']
     
     #French corrections 
-    resource_database[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
+    raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
 
     #----------------------------------------------------------------------------
     # Merge with module map on module, intervention, and disease to pull in code
@@ -160,20 +160,22 @@ if (prep_files == TRUE){
 # Add in variable for current grant 
 # ----------------------------------------
 mapped_data$current_grant = FALSE 
-if(country == "cod"){
-  for (i in 1:length(current_cod_grants)){
-    mapped_data[grant==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 
-              current_grant:=TRUE]
-  }
-} else if (country == "gtm"){
-  for (i in 1:length(current_gtm_grants)){
-    mapped_data[grant==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], 
-              current_grant:=TRUE]
-  }
-} else if (country == "uga"){
-  for (i in 1:length(current_uga_grants)){
-    mapped_data[grant==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
-              current_grant:=TRUE]
+if (prep_files == TRUE){
+  if(country == "cod"){
+    for (i in 1:length(current_cod_grants)){
+      mapped_data[grant==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 
+                current_grant:=TRUE]
+    }
+  } else if (country == "gtm"){
+    for (i in 1:length(current_gtm_grants)){
+      mapped_data[grant==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], 
+                current_grant:=TRUE]
+    }
+  } else if (country == "uga"){
+    for (i in 1:length(current_uga_grants)){
+      mapped_data[grant==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
+                current_grant:=TRUE]
+    }
   }
 }
 
@@ -252,11 +254,13 @@ if(country == "cod"){
 
 #After variables are removed, collapse dataset to simplify
 byVars <- colnames(mapped_data)
-byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disbursement']
-mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'disbursement'), by=byVars]
-
-#Add in iso code variable
-mapped_data$loc_name = country
+if (prep_files == TRUE){
+  byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disbursement']
+  mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'disbursement'), by=byVars]
+} else if (prep_gos == TRUE){
+  byVars = byVars[byVars != 'budget' & byVars != 'expenditure']
+  mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure'), by=byVars]
+}
 
 #Reorder data 
 # mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, activity_description, loc_name, adm1, 

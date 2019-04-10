@@ -21,7 +21,7 @@ post_2017_map[, lang:=as.character(lang)]
 
 post_2017_map = post_2017_map[, .(code, module, intervention, coefficient, disease)]
 
-all_interventions = fread(paste0(mapping_dir, "all_interventions.csv"))
+all_interventions = fread(paste0(mapping_dir, "all_interventions.csv"), encoding = "Latin-1")
 all_eng = all_interventions[, .(code, module_eng, intervention_eng, disease)]
 setnames(all_eng, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
 # all_fr = all_interventions[, .(code, module_fr, intervention_fr, disease)]

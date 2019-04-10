@@ -75,6 +75,9 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   }
   
   names=gsub("\r\n", "", names)
+  if (inFile == "1d_GTM-T-MSPAS Detailed budget_FINAL_01062016.xlsx"){ #This file has periods instead of spaces between words. 
+    names = gsub("\\.", " ", names)
+  }
   
   #Grab module and intervention rows
   module_col <- grep("modul", names)
@@ -165,6 +168,8 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
     new_names = c('module', 'intervention', 'activity_description', 'cost_category', new_qtr_names)
   }
   
+  #If there is any whitespace in column names, remove it. 
+  names(gf_data) = trimws(names(gf_data))
   setnames(gf_data, old=old_names, new=new_names)
   
   #-------------------------------------
