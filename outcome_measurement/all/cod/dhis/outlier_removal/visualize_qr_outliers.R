@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'base'
+set = 'sigl'
 
 # user name for sourcing functions
 user_name = 'ccarelli'
@@ -73,6 +73,37 @@ if (set == 'sigl') {
   
   dt[ got_imputed== "yes", value := NA ]
 }
+
+#-----------------------------------
+# hacky bae function - i will get rid of this
+if (set=='base') {
+  
+  # keep the french element
+  setnames(dt, 'element', 'element_fr')
+  
+  # translate the elements to english
+  dt[element_id==1, element:='Severe malaria' ]
+  dt[element_id==2, element:='Severe malaria treated' ]
+  dt[element_id==3, element:='RDT performed' ]
+  dt[element_id==4, element:='Presumed malaria treated' ]
+  dt[element_id==5, element:='Positive RDT' ]
+  dt[element_id==6, element:='Presumed malaria' ]
+  dt[element_id==7, element:='Simple confirmed malaria treated' ]
+  dt[element_id==8 , element:='Simple confirmed malaria' ]
+  dt[element_id==9 , element:='SP 4th dose' ]
+  dt[element_id==10 , element:='SP 2nd dose' ]
+  
+  dt[element_id==11 , element:='Simple confirmed malaria - pregnant woman' ]
+  dt[element_id==12 , element:='LLIN distribued at ANC 2+' ]
+  dt[element_id==13 , element:='SP 1st dose' ]
+  dt[element_id==14 , element:='SP 3rd dose' ]
+  dt[element_id==15 , element:='Severe malaria - pregnant women' ]
+  dt[element_id==16 , element:='LLIN distributed at ANC 1' ]
+  dt[element_id==17 , element:='Severe malaria treated - pregnant woman' ]
+  dt[element_id==18 , element:='Simple malaria treated - pregnant woman' ]
+}
+
+
 #------------------------------------
 # fix the date 
 
@@ -127,7 +158,7 @@ dt[is.na(outlier), outlier:=FALSE]
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
-# dt[ , facility:=word(org_unit, 2, -1)]
+dt[ , facility:=word(org_unit, 2, -1)]
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
 
@@ -182,10 +213,11 @@ out[ ,c('count', 'combine2', 'combine3'):=NULL]
 # as some outliers have now been changed
 if (set=='pnls') out[ , combine:=paste0(org_unit_id, sex, element)]
 if (set=='base') out[ , combine:=paste0(org_unit_id, element)]
+if (set=='sigl') out[, combine:=paste0(org_unit_id, drug)]
 
 out_new = out[outlier==T, unique(combine)]
 out = out[combine %in% out_new]
-out[ ,combine:=NULL]
+out[ , combine:=NULL]
 
 #----------------------------
 # create the graphs
