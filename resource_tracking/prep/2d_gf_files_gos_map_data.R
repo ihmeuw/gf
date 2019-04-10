@@ -157,28 +157,9 @@ if (prep_files == TRUE){
 }
 
 #-----------------------------------------
-# Add in variable for current grant 
+# Add in variable for current grant, and location variable
 # ----------------------------------------
 mapped_data$current_grant = FALSE 
-<<<<<<< HEAD
-if (prep_files == TRUE){
-  if(country == "cod"){
-    for (i in 1:length(current_cod_grants)){
-      mapped_data[grant==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 
-                current_grant:=TRUE]
-    }
-  } else if (country == "gtm"){
-    for (i in 1:length(current_gtm_grants)){
-      mapped_data[grant==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], 
-                current_grant:=TRUE]
-    }
-  } else if (country == "uga"){
-    for (i in 1:length(current_uga_grants)){
-      mapped_data[grant==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
-                current_grant:=TRUE]
-    }
-  }
-=======
 for (i in 1:length(current_cod_grants)){
   mapped_data[grant==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 
               current_grant:=TRUE]
@@ -190,9 +171,11 @@ for (i in 1:length(current_gtm_grants)){
 for (i in 1:length(current_uga_grants)){
   mapped_data[grant==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
               current_grant:=TRUE]
->>>>>>> 67a1bf6baf04f125aa7a843fb5565ae3ab2e5ece
 }
 
+for (i in 1:nrow(code_lookup_tables)){
+  mapped_data[loc_name==code_lookup_tables$iso_code[i], country:=code_lookup_tables$country[i]]
+}
 
 #--------------------------------------------------------
 # Split data into quarters - Emily just verify that this split is definitely happening in the prep functions. 
@@ -258,22 +241,8 @@ for (i in 1:length(current_uga_grants)){
 # --------------------------------------------------------
 
 #Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
-if (prep_files == TRUE){
-  mapped_data = mapped_data[, .(abbreviated_module, activity_description, budget, code, current_grant, data_source, disbursement, disease,
-                                                expenditure, file_iteration, file_name, gf_intervention, gf_module, grant, grant_period, language, loc_name,
-                                                orig_intervention, orig_module, primary_recipient, secondary_recipient, start_date, year)]
-  
-  desired_cols <- c("abbreviated_module", "activity_description", "budget", "code", "current_grant", "data_source", "disbursement", "disease",
-                    "expenditure", "file_iteration", "file_name", "gf_intervention", "gf_module", "grant", "grant_period", "language", "loc_name",
-                    "orig_intervention", "orig_module", "primary_recipient", "secondary_recipient", "start_date", "year")
-  stopifnot(sort(colnames(mapped_data)) == sort(desired_cols)) #Adding this stop to stop the code if there's an error
-} else if (prep_gos == TRUE){
-  mapped_data = mapped_data[, c("abbreviated_module", "budget", "code", "country", "current_grant", "data_source", "disease", "end_date", "expenditure", "file_name", "gf_intervention", "gf_module", 
-                                "grant", "grant_period", "intervention", "loc_name", "module", "orig_intervention", "orig_module", "start_date", "year")]
-  desired_cols = c("abbreviated_module", "budget", "code", "country", "current_grant", "data_source", "disease", "end_date", "expenditure", "file_name", "gf_intervention", "gf_module", 
-                   "grant", "grant_period", "intervention", "loc_name", "module", "orig_intervention", "orig_module", "start_date", "year")      
-  stopifnot(sort(colnames(mapped_data)) == sort(desired_cols)) #Adding this stop to stop the code if there's an error
-}
+# Only keep the variable names that are in the codebook for consistency. This should constantly be reviewed. 
+mapped_data = mapped_data[, names(mapped_data)%in%codebook$Variable, with=FALSE]
 
 #After variables are removed, collapse dataset to simplify
 byVars <- colnames(mapped_data)

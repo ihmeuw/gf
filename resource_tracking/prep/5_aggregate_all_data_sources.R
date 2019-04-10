@@ -28,7 +28,6 @@ uga_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos
 
 final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/")
 
-
 # --------------------------------------------
 # Load the prepped GOS data - to be used for both 
 # final budgets and final expenditures 
@@ -209,6 +208,8 @@ stopifnot(nrow(na_year)==0)
 all_current_grants = unique(gos_prioritized_expenditures[current_grant==TRUE, .(grant, grant_period, file_name)])
 expected_current_grants <- length(current_gtm_grants) + length(current_uga_grants) + length(current_cod_grants)
 stopifnot(nrow(all_current_grants)==expected_current_grants)
+
+#Subset the rows 
 
 # Write data 
 write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)

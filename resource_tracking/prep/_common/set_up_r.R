@@ -54,6 +54,7 @@ who_prepped = paste0(dir, "_ghe/who/prepped_data/")
 sicoin_raw = paste0(dir, "_ghe/sicoin_gtm/raw_data/")
 sicoin_prepped = paste0(dir, "_ghe/sicoin_gtm/prepped_data/")
 
+codebook = read.xlsx(paste0(dir, "documentation/RT_Codebook.xlsx"))
 
 #Source shared functions
 source(paste0(common_dir, "global_variables.R"))
