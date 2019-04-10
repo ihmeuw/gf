@@ -16,10 +16,10 @@ url = 'https://vldash.cphluganda.org/other_data'
               
 # load
 data = fromJSON(url)
+
+# set the output directory
+outDir_facilities = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/meta_data/')
   
-# original function to extract the facility ids from the list
-# facilities_full <- data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]]))) 
- 
 #-----------------------------
 # extract the facilities and their associated meta data 
 
@@ -101,7 +101,24 @@ hubs_1 = data$hubs
   hubs[ , hub_id:=as.numeric(hub_id)]
   
 # ----------------------------------------------
-# create a single meta data file to merge with a data set
+# export meta data files
+  
+# save facilities data to merge into downloads from Uganda VL
+setnames(facilities, c('hub_id', 'district_id'), c('meta_hub_id', 'meta_district_id') )
+saveRDS(facilities, paste0(outDir_facilities, 'facilities.rds'))
+  
+# save districts data to merge into downloads from Uganda VL
+saveRDS(districts, paste0(outDir_facilities, 'districts.rds'))
+
+# save full facilities and data to merge into downloads from Uganda VL
+saveRDS(hubs, paste0(outDir_facilities, 'hubs.rds'))
+# ----------------------------------------------
+  
+  
+  
+  
+  
+  
   
 # merge the district names into the facilities meta data 
 facilities = merge(facilities, districts, by='district_id', all.x=T)

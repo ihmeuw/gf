@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 4/3/2019
+# 4/10/2019
 # Rbind the UVL data sets together
 # Run dist_facilities_uvl.R to download facility and district names
 # ----------------------------------------------
@@ -30,12 +30,16 @@ dir = ('/ihme/scratch/users/ccarelli/webscrape_uvl')
 setwd(dir)
 
 # set output directory
+# set the output directory
+metaDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/meta_data/')
 outDir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/prepped/')
 
 # list existing files
 files = list.files('./', recursive=TRUE)
 length(files)
 
+# source code
+source('/ihme/code/ccarelli/gf/hiv/uga/viral_load/extract_prep_uvl/prep_uvl.R')
 # ---------------------------
 
 # ----------------------------------------------
@@ -105,39 +109,36 @@ dt[, date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 dt[ , c('month', 'year'):=NULL]
 
 # ---------------------------
-# merge in facility and district names
+# merge in facility, hub, and district names
 
-# reset directory
-new_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/meta_data')
+# facility names
+facilities = readRDS(paste0(metaDir, 'facilities.rds'))
+dt = merge(dt, facilities, by='facility_id', all.x=T)
 
-# load facilities
-facilities = readRDS(paste0(new_dir, '/facilities.rds'))
+# district names
+districts = readRDS(paste0(metaDir, 'districts.rds'))
+dt = merge(dt, districts, by='district_id', all.x=T)
 
-# merge in the facilities 
-# use district and hub ids in the data, not metadata
-facilities[ ,c('district_id', 'hub_id'):=NULL]
-dt = merge(dt, facilities, by='facility_id', all.x=TRUE)
+# hub names
+hubs = readRDS(paste0(metaDir, 'hubs.rds'))
+dt = merge(dt, hubs, by='hub_id', all.x=T)
+# ---------------------------
+# fix failures to merge 
 
-# some districts have multiple ids in the data set
-dt[district_id==30, district:='Kabale']
-dt[district_id==134, district:='Rakai']
-dt[district_id==89, district:='Gomba']
-dt[district_id==135, district:='Manafwa']
-dt[district_id==131, district:='Nebbi']
-dt[district_id==136, district:='Pallisa']
+# facility left blank
+dt[facility=='Facility Left Blank', facility:=NA]
 
-# add districts that failed to merge
-districts = dt[!is.na(district),.(district_alt=unique(district)), by=district_id]
-districts = districts[!duplicated(district_alt)]
+# missing districts
+dt[district_id==121, district:='Hoima']
 
-replace_districts = merge(dt[is.na(district)], districts, by='district_id', all.x=T)
-replace_districts[ , district:=district_alt]
-replace_districts[ , district_alt:=NULL]
+# use the hub id from the meta data to identify missed merges
+# second pass fixes a huge number of merge issues
+dt[is.na(hub), hub_id:=meta_hub_id]
+dt[ , hub:=NULL]
+dt = merge(dt, hubs, by='hub_id', all.x=T)
 
-# merge in the replacements
-# automatically drops out facility left blanks
-dt = dt[!is.na(district)]
-dt = rbind(dt, replace_districts)
+# delete excess variables
+dt[ ,c('meta_hub_id', 'meta_district_id'):=NULL]
 
 # ---------------------------
 # run final prep
