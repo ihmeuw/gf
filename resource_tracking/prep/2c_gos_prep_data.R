@@ -60,6 +60,8 @@ substrEnd <- function(x, n){
 gos_data[, grant:=substrEnd(grant, 4)]
 stopifnot(nrow(gos_data[is.na(year)])==0)
 
+gos_data$file_name = "By_Cost_Category_data .xlsx"
+
 # ----------------------------------------------
 # Load the GMS tab from the Excel book  # Need to rework this as we're thinking about NLP. 
 # ----------------------------------------------
@@ -80,12 +82,19 @@ gms_data = gms_data[, -c('grant_period_start', 'grant_period_end')]
 stopifnot(nrow(gms_data[is.na(year)])==0)
 
 gms_data[, disease:=tolower(disease)]
+<<<<<<< HEAD
 gms_data[disease == "hiv/aids", disease:='hiv']
 gms_data[disease == "health systems strengthening", disease:='rssh']
 gms_data[disease == 'tuberculosis', disease:='tb']
+=======
+gms_data[disease=="hiv/aids", disease:='hiv']
+gms_data[disease=='health systems strengthening', disease:='rssh']
+gms_data[disease=='tuberculosis', disease:='tb']
+>>>>>>> 67a1bf6baf04f125aa7a843fb5565ae3ab2e5ece
 
 gms_data = gms_data[order(country, disease, grant, grant_period, start_date, end_date, year, module, budget, expenditure)]
 
+gms_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
 #-------------------------------------------------
 # Compare two datasets to each other, and merge 
 #-------------------------------------------------
@@ -119,10 +128,21 @@ unique(gos_data[!grant%in%gms_data$grant, .(grant)])
 ##combine both GOS and GMS datasets into one dataset, and add final variables. 
 sort(names(gms_data))
 sort(names(gos_data))
-totalGos <- rbind(gms_data, gos_data, fill = TRUE)
+
+#Review the start and end dates for these files in one last check. 
+gos_dates = unique(gos_data[, .(mf_start = min(start_date)), by='grant'])
+gms_dates = unique(gms_data[, .(sda_end =max(end_date)), by='grant'])
+check_dates = merge(gos_dates, gms_dates, by='grant')
+
+#Secondary check to make sure that all grants that don't merge aren't typos 
+gms_dates[!grant%in%gos_dates$grant, .(grant)]
+gos_dates[!grant%in%gms_dates$grant, .(grant)]
+
+
+#Bind final datasets together
+totalGos <- rbind(gms_data, gos_data, fill=TRUE)
 
 totalGos$data_source <- "gos"
-totalGos$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
 
 totalGos[is.na(module), module:='unspecified']
 totalGos[is.na(intervention), intervention:='unspecified']
@@ -135,4 +155,5 @@ for (i in 1:nrow(code_lookup_tables)){
 
 totalGos[, start_date:=as.Date(start_date)]
 totalGos[, end_date:=as.Date(end_date)]
+
 

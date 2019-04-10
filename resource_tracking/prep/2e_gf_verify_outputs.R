@@ -13,7 +13,7 @@
 
 if (test_current_files == TRUE){
   file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
-  gos_data = readRDS(paste0(combined_output_dir, "/prepped_gos_data.rds"))
+  gos_data = readRDS(paste0(gos_prepped, "/prepped_gos_data.rds"))
 } else {
   print("WARNING: TESTING ARCHIVED DATABASE. REVIEW SWITCH 'test_current_files'")
   # Old resource tracking database, for comparison. Was archived on Dec 3, 2018

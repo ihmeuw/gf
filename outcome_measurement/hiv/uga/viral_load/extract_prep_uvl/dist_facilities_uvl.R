@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # David, Phillips, Caitlin O'Brien-Carelli
 #
-# 3/31/2019
+# 4/10/2019
 # Source from webscrape_uvl.R
 # To extract a list of districts and facilities 
 # Facilities and districts are stored in separate urls
@@ -18,7 +18,7 @@ url = 'https://vldash.cphluganda.org/other_data'
 data = fromJSON(url)
   
 # original function to extract the facility ids from the list
-#facilities_full <- data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]]))) 
+# facilities_full <- data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]]))) 
  
 #-----------------------------
 # extract the facilities and their associated meta data 
@@ -131,6 +131,9 @@ facilities[ ,district_id_new:=NULL]
 facilities[facility_id==8313, district_id:=136]
 facilities[facility_id==8311, district_id:=104]  
 facilities[facility_id==8290, district_id:=80]  
+
+# replace facility left blank with NA
+facilities[facility=='Facility Left Blank', facility:=NA]
 # ----------------------------------------------
   
 # save full facilities and data to merge into downloads from Uganda VL

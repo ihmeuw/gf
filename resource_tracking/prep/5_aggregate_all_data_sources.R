@@ -34,9 +34,6 @@ final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos
 # final budgets and final expenditures 
 #----------------------------------------------
 gos_data <- readRDS(paste0(gos_prepped, "prepped_gos_data.rds"))
-for (i in 1:nrow(code_lookup_tables)){
-  gos_data[country==code_lookup_tables$country[[i]], loc_name:=code_lookup_tables$iso_code[[i]]]
-}
             
 #----------------------------------
 # 1. FINAL GF BUDGETS 
@@ -75,7 +72,7 @@ check_qtr_uga <- check_qtr_uga[duplicated(check_qtr_uga, by = c("start_date", "g
 stopifnot(nrow(check_qtr_uga)==0)
 
 #Bind budgets together
-final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga, fill=TRUE) 
+final_budgets <- rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga) 
 final_budgets$start_date <- as.Date(final_budgets$start_date, "%Y-%m-%d")
 
 #Manually edit grant numbers in GOS to match our labeling - EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE. 
@@ -88,42 +85,34 @@ final_budgets[grant == 'UGD-708-G13-H', grant:='UGA-708-G13-H']
 gos_data[, start_date:=as.Date(start_date)]
 gos_data[, end_date:=as.Date(end_date)]
 
-#Find out what quarters we have GOS data for. 
-gos_timeframe = unique(gos_data[, .(grant, start_date, end_date, grant_period)])
+#Find the "maximum" (latest) date you have GOS data for, and find the "minimum" (earliest) date you have budget data for. 
+#Compare them to each other and make sure there aren't any gaps. 
+gos_dates = unique(gos_data[, .(gos_end_date = max(end_date)), by='grant'])
+budget_dates = unique(final_budgets[, .(budget_start_date=min(start_date)), by='grant'])
 
-gos_timeframe[, grant_start:=min(start_date), by='grant']
-gos_timeframe[, grant_end:=max(end_date), by='grant']
-
-#Shift all of the end-year variables up one click, and see if they correspond to another start date. 
-gos_timeframe[, end_date:=end_date+days(1)]
-gost_timeframe = gos_timeframe[order(grant, start_date)]
-setDT(gos_timeframe)
-grants=as.vector(unique(gos_timeframe[!is.na(grant), .(grant)]))
-
-grants_with_gaps=character()
-for (x in 1:nrow(grants)){
-  test = gos_timeframe[grant%in%grants[x]][order(start_date)]
-  if (nrow(test)!=1){ 
-    for (i in 2:nrow(test)-1){
-      if (test$end_date[i]!=test$start_date[i+1]){
-        print(paste0("Warning: there are missing dates for ", grants[x]))
-        gos_timeframe[grant==grants[x] & end_date==test$end_date[i], data_gap:=TRUE]
-        grants_with_gaps = append(grants_with_gaps, as.character(grants[x]))
-      }
-    }
-    if (test$end_date[nrow(test)]-1 != test$grant_end[nrow(test)]){
-      print(paste0("Warning: there are missing dates for ", grants[x]))
-      gos_timeframe[grant==grants[x] & end_date==test$end_date[i], data_gap:=TRUE]
-      grants_with_gaps = append(grants_with_gaps, as.character(grants[x]))
-    }
+#If you have more data in GOS than in final budgets at this point, go ahead and drop it, because
+# it represents a partial grant period. Review these drops. 
+check_dates = merge(budget_dates, gos_dates, by='grant', all.x = TRUE) #We only want to do this check for grants where we have final budget data 
+drop_gos = check_dates[!is.na(gos_end_date) & gos_end_date+1 != budget_start_date]
+if (nrow(drop_gos) != 0){
+  print(drop_gos)
+  print("Some grants don't match seamlessly between GOS data and final budgets. Review.")
+  for (i in 1:nrow(drop_gos)){
+    print(paste0("Dropping the following GOS rows for ", drop_gos$grant[i], " based on a budget start date of ", drop_gos$budget_start_date[i]))
+    print(unique(gos_data[(grant == drop_gos$grant[i] & start_date>=drop_gos$budget_start_date[i]), .(grant, start_date, end_date)]))
+    gos_data = gos_data[!(grant == drop_gos$grant[i] & start_date>=drop_gos$budget_start_date[i])]
   }
 }
 
-#Need to grab the rows with data gaps, and the one immediately after them. 
-gos_gaps = gos_timeframe[grant%in%grants_with_gaps, .(grant, start_date, end_date, grant_period, data_gap)]
+#Check one more time 
+gos_dates = unique(gos_data[, .(gos_end_date = max(end_date)), by='grant'])
+budget_dates = unique(final_budgets[, .(budget_start_date=min(start_date)), by='grant'])
+check_dates = merge(budget_dates, gos_dates, by='grant', all.x = TRUE) #We only want to do this check for grants where we have final budget data
+check_dates = check_dates[!is.na(gos_end_date) & gos_end_date+1 != budget_start_date]
+stopifnot(nrow(check_dates)==0)
 
-gos_gaps = gos_gaps[order(grant, start_date)]
-write.csv(gos_gaps, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/known_gos_gaps.csv", row.names=FALSE)
+#Bind together these two files 
+gos_prioritized_budgets = rbind(final_budgets, gos_data, fill = TRUE) #There are some columns that don't exist in both sources, so fill = TRUE
 
 # Verify data 
 na_year <- gos_prioritized_budgets[is.na(year)]
@@ -178,11 +167,39 @@ stopifnot(nrow(check_qtr_uga)==0)
 #Bind expenditures together
 final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, fill = TRUE) 
 
-#Keep only GOS through 2016, and only final expenditures after. (Keep all GOS for as long as we have it)
-gos_data = gos_data[year <=2016]
-final_expenditures = final_expenditures[year>2016]
-final_expenditures <- rbind(final_expenditures, gos_data, fill = TRUE) 
-gos_prioritized_expenditures <- rbind(final_expenditures, gos_data, fill = TRUE) 
+#Wherever there is a grant quarter in the final budgets that doesn't exist in GOS, take that whole grant for the grant 
+# period and replace the GOS with the final budgets data. 
+gos_data[, start_date:=as.Date(start_date)]
+gos_data[, end_date:=as.Date(end_date)]
+
+#Find the "maximum" (latest) date you have GOS data for, and find the "minimum" (earliest) date you have expenditure data for. 
+#Compare them to each other and make sure there aren't any gaps. 
+gos_dates = unique(gos_data[, .(gos_end_date = max(end_date)), by='grant'])
+expenditure_dates = unique(final_expenditures[, .(expenditure_start_date=min(start_date)), by='grant'])
+
+#If you have more data in GOS than in final expenditures at this point, go ahead and drop it, because
+# it represents a partial grant period. Review these drops. 
+check_dates = merge(expenditure_dates, gos_dates, by='grant', all.x = TRUE) #We only want to do this check for grants where we have final expenditure data 
+drop_gos = check_dates[!is.na(gos_end_date) & gos_end_date+1 != expenditure_start_date]
+if (nrow(drop_gos) != 0){
+  print(drop_gos)
+  print("Some grants don't match seamlessly between GOS data and final expenditures. Review.")
+  for (i in 1:nrow(drop_gos)){
+    print(paste0("Dropping the following GOS rows for ", drop_gos$grant[i], " based on a expenditure start date of ", drop_gos$expenditure_start_date[i]))
+    print(unique(gos_data[(grant == drop_gos$grant[i] & start_date>=drop_gos$expenditure_start_date[i]), .(grant, start_date, end_date)]))
+    gos_data = gos_data[!(grant == drop_gos$grant[i] & start_date>=drop_gos$expenditure_start_date[i])]
+  }
+}
+
+#Check one more time 
+gos_dates = unique(gos_data[, .(gos_end_date = max(end_date)), by='grant'])
+expenditure_dates = unique(final_expenditures[, .(expenditure_start_date=min(start_date)), by='grant'])
+check_dates = merge(expenditure_dates, gos_dates, by='grant', all.x = TRUE) #We only want to do this check for grants where we have final expenditure data
+check_dates = check_dates[!is.na(gos_end_date) & gos_end_date+1 != expenditure_start_date]
+stopifnot(nrow(check_dates)==0) 
+
+#Bind together these final files
+gos_prioritized_expenditures = rbind(final_expenditures, gos_data, fill = TRUE) #There are some columns that don't exist in both sources, so fill = TRUE
 
 # Verify data 
 na_year <- gos_prioritized_expenditures[is.na(year)]
@@ -200,9 +217,9 @@ saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rd
 #----------------------------------
 # 3. GF FILE ITERATIONS
 #----------------------------------
-all_gf_cod <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/prepped/budget_pudr_iterations.rds"))
-all_gf_uga <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/uga/prepped/budget_pudr_iterations.rds"))  
-all_gf_gtm <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/gtm/prepped/budget_pudr_iterations.rds"))
+all_gf_cod <- readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/budget_pudr_iterations.rds"))
+all_gf_uga <- readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/budget_pudr_iterations.rds"))  
+all_gf_gtm <- readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/budget_pudr_iterations.rds"))
 
 all_files = list(all_gf_cod, all_gf_gtm, all_gf_uga)
 all_gf_files <- rbindlist(all_files, use.names = TRUE, fill = TRUE)

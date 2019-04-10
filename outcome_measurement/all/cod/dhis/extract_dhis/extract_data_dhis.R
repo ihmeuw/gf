@@ -65,11 +65,11 @@ end_month = '02' # start month is inclusive, end month is exclusive
 update_year = '2009'
 
 #identify the data set(s) you want to download by number (list below)
-set = 29
+set = 24
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'pnls'
+set_name = 'pati'
 
 #---------------------------
 # available data sets by number: 
@@ -155,7 +155,7 @@ for (i in 1:((length(dates))-1) ){
                                     end_period = end_current_loop,
                                     userID = userID, 
                                     password = password,
-                                    pace = 10,
+                                    pace = 20,
                                     update_date = paste0(update_year, '-01-01'))
   
   save_month_start = month(start_current_loop)
@@ -232,3 +232,4 @@ saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_',
                                start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
 #-------------------------
+
