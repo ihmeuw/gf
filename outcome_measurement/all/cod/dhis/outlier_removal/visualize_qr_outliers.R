@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'base'
+set = 'sigl'
 
 # user name for sourcing functions
 user_name = 'ccarelli'
@@ -35,14 +35,14 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 # output files
 
 if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
+if (set=='base') outFile = 'outliers/base_outliers_replaced.pdf'
 if (set=='sigl') outFile = 'outliers/sigl_drugs_qr_outliers.pdf'
 if (set=='sigl') outFile2 = 'outliers/list_of_sigl_drugs_outliers.pdf'
 #------------------------------------
 # source function for health zone names
 
-# reset working directory
-
 # source function - locally or on the cluster
+# reset working directory using user_name to specify path
 # setwd()
 # source('./core/standardizeHZNames.R')
 #------------------------------------
@@ -84,7 +84,7 @@ facilities = readRDS(paste0(dir, 'meta_data/master_facilities.rds'))
 facilities = facilities[ ,.(org_unit_id, org_unit)]
 dt = merge(dt, facilities, by='org_unit_id', all.x=TRUE)
 
-# comment?
+# fix merge issue
 if (set == 'sigl') {
   dt[, org_unit.x := NULL]
   setnames(dt, "org_unit.y", "org_unit") }
@@ -99,6 +99,7 @@ if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable')
 # identify outliers using the median of the fitted values + 10 MADS of the residuals
 
 # threshold for outlier removal
+# not sure if you need NA removal here
 dt[ , mad_resid:=mad(resid), by = idVars]
 dt[ , sd_resid:=sd(resid), by=idVars]
 dt[ , thresh_var:=mad_resid]
@@ -106,17 +107,17 @@ dt[mad_resid < 1, thresh_var:=sd_resid]
 dt[ , c('sd_resid', 'mad_resid'):=NULL]
 
 # identify the thresholds based on the SD of the fitted_valueuals
-dt[!all(is.na(resid)), thresh5:=median(fitted_value) + (5*thresh_var), by = idVars]
-dt[!all(is.na(resid)), thresh10:=median(fitted_value) + (10*thresh_var), by = idVars]
+dt[!all(is.na(resid)), thresh5:=median(fitted_value, na.rm=T) + (5*thresh_var), by = idVars]
+dt[!all(is.na(resid)), thresh10:=median(fitted_value, na.rm=T) + (10*thresh_var), by = idVars]
 
 # set lower and upper bounds
 # does this need to be for only !all(is.na) as well? not sure
 dt[ , upper:=thresh10]
-dt[ , lower:=(median(fitted_value) - (10*thresh_var)), by = idVars]
+dt[!all(is.na(resid)), lower:=(median(fitted_value, na.rm=T) - (10*thresh_var)), by = idVars]
 
 # add a 5 SD bound to investigate on the graphs
-dt[ , upper_mid:=median(fitted_value) + (5*thresh_var), by = idVars]
-dt[ , lower_mid:=median(fitted_value) - (5*thresh_var), by = idVars]
+dt[!all(is.na(resid)), upper_mid:=median(fitted_value, na.rm=T) + (5*thresh_var), by = idVars]
+dt[!all(is.na(resid)), lower_mid:=median(fitted_value, , na.rm=T) - (5*thresh_var), by = idVars]
 
 # select outliers
 # the value is 100 or more and greater than 10 times the SD of the fitted_values
