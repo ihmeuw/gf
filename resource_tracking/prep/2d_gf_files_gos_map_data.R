@@ -74,15 +74,15 @@ if (prep_gos == TRUE){
     #------------------------------------------------------------
     
     #Correct all tb/hiv to hiv/tb
-    resource_database[disease == 'tb/hiv', disease:='hiv/tb']
+    raw_data[disease == 'tb/hiv', disease:='hiv/tb']
     
     #English corrections
-    resource_database[module=='hivhealthsystemsstrengthening', disease:='hiv']
-    resource_database[module=='malhealthsystemsstrengthening', disease:='malaria']
-    resource_database[module=='tbhealthsystemsstrengthening', disease:='tb']
+    raw_data[module=='hivhealthsystemsstrengthening', disease:='hiv']
+    raw_data[module=='malhealthsystemsstrengthening', disease:='malaria']
+    raw_data[module=='tbhealthsystemsstrengthening', disease:='tb']
     
     #French corrections 
-    resource_database[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
+    raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
 
     #----------------------------------------------------------------------------
     # Merge with module map on module, intervention, and disease to pull in code
@@ -160,22 +160,19 @@ if (prep_files == TRUE){
 # Add in variable for current grant 
 # ----------------------------------------
 mapped_data$current_grant = FALSE 
-if(country == "cod"){
-  for (i in 1:length(current_cod_grants)){
-    mapped_data[grant==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 
+for (i in 1:length(current_cod_grants)){
+  mapped_data[grant==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 
               current_grant:=TRUE]
-  }
-} else if (country == "gtm"){
-  for (i in 1:length(current_gtm_grants)){
-    mapped_data[grant==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], 
-              current_grant:=TRUE]
-  }
-} else if (country == "uga"){
-  for (i in 1:length(current_uga_grants)){
-    mapped_data[grant==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
-              current_grant:=TRUE]
-  }
 }
+for (i in 1:length(current_gtm_grants)){
+  mapped_data[grant==current_gtm_grants[i] & grant_period==current_gtm_grant_period[i], 
+              current_grant:=TRUE]
+}
+for (i in 1:length(current_uga_grants)){
+  mapped_data[grant==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
+              current_grant:=TRUE]
+}
+
 
 #--------------------------------------------------------
 # Split data into quarters - Emily just verify that this split is definitely happening in the prep functions. 
@@ -241,26 +238,41 @@ if(country == "cod"){
 # --------------------------------------------------------
 
 #Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
-# mapped_data = mapped_data[, .(abbreviated_module, activity_description, adm1, budget, code, cost_category, current_grant, data_source, disbursement, disease, 
-#                                               expenditure, file_iteration, file_name,  gf_module, gf_intervention, grant, grant_period, language, loc_name,
-#                                               orig_intervention, orig_module, primary_recipient, secondary_recipient, start_date, year)]
-# 
-# desired_cols <- c("abbreviated_module", "adm1", "budget", "code", "current_grant", "data_source", "disbursement", "disease", 
-#                   "expenditure", "file_iteration", "fileName", "gf_intervention", "gf_module", "grant_number", "grant_period", "lang", "loc_name", 
-#                   "orig_intervention", "orig_module", "period", "primary_recipient", "activity_description", "secondary_recipient", "start_date", "year")
-# stopifnot(sort(colnames(mapped_data)) == sort(desired_cols))  #Emily we do want to have correct column names here. 
+if (prep_files == TRUE){
+  mapped_data = mapped_data[, .(abbreviated_module, activity_description, budget, code, current_grant, data_source, disbursement, disease,
+                                                expenditure, file_iteration, file_name, gf_intervention, gf_module, grant, grant_period, language, loc_name,
+                                                orig_intervention, orig_module, primary_recipient, secondary_recipient, start_date, year)]
+  
+  desired_cols <- c("abbreviated_module", "activity_description", "budget", "code", "current_grant", "data_source", "disbursement", "disease",
+                    "expenditure", "file_iteration", "file_name", "gf_intervention", "gf_module", "grant", "grant_period", "language", "loc_name",
+                    "orig_intervention", "orig_module", "primary_recipient", "secondary_recipient", "start_date", "year")
+  stopifnot(sort(colnames(mapped_data)) == sort(desired_cols)) #Adding this stop to stop the code if there's an error
+} else if (prep_gos == TRUE){
+  mapped_data = mapped_data[, c("abbreviated_module", "budget", "code", "country", "current_grant", "data_source", "disease", "end_date", "expenditure", "file_name", "gf_intervention", "gf_module", 
+                                "grant", "grant_period", "intervention", "loc_name", "module", "orig_intervention", "orig_module", "start_date", "year")]
+  desired_cols = c("abbreviated_module", "budget", "code", "country", "current_grant", "data_source", "disease", "end_date", "expenditure", "file_name", "gf_intervention", "gf_module", 
+                   "grant", "grant_period", "intervention", "loc_name", "module", "orig_intervention", "orig_module", "start_date", "year")      
+  stopifnot(sort(colnames(mapped_data)) == sort(desired_cols)) #Adding this stop to stop the code if there's an error
+}
 
 #After variables are removed, collapse dataset to simplify
 byVars <- colnames(mapped_data)
-byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disbursement']
-mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'disbursement'), by=byVars]
-
-#Add in iso code variable
-mapped_data$loc_name = country
+if (prep_files == TRUE){
+  byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disbursement']
+  mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'disbursement'), by=byVars]
+} else if (prep_gos == TRUE){
+  byVars = byVars[byVars != 'budget' & byVars != 'expenditure']
+  mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure'), by=byVars]
+}
 
 #Reorder data 
-# mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, activity_description, loc_name, adm1, 
-#                                 budget, expenditure, disbursement, orig_module, orig_intervention, current_grant, file_name)]
+if (prep_files == TRUE){
+  mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, activity_description, country, loc_name, 
+                                budget, expenditure, disbursement, orig_module, orig_intervention, current_grant, file_name)]
+} else if (prep_gos == TRUE){
+  mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, country, loc_name, 
+                                  budget, expenditure, orig_module, orig_intervention, current_grant, file_name)]
+}
 #------------------------------------------------------------
 # Remove any special characters so .csv will store correctly 
 #------------------------------------------------------------
@@ -287,6 +299,6 @@ if (prep_files == TRUE){
 }
 
 if (prep_gos == TRUE){
-  saveRDS(mapped_data, paste0(combined_output_dir, "prepped_gos_data.rds"))
-  write.csv(mapped_data, paste0(combined_output_dir, "prepped_gos_data.csv"), row.names = FALSE)
+  saveRDS(mapped_data, paste0(gos_prepped, "prepped_gos_data.rds"))
+  write.csv(mapped_data, paste0(gos_prepped, "prepped_gos_data.csv"), row.names = FALSE)
 }
