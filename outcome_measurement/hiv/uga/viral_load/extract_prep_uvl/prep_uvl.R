@@ -20,36 +20,6 @@ print(paste("There are", dt[is.na(facility), sum(patients_received)],
             "patients where the facility is missing."))
 
 dt = dt[!is.na(facility)]
-
-#---------------------------------------------
-# some facilities are associated with multiple district ids
-# using the health facility inventory, choose a single district id
-# 
-# dt[facility_id==8335, district_id:=7]
-# dt[facility_id==8336, district_id:=68]
-# dt[facility_id==8337, district_id:=97]
-# dt[facility_id==8338, district_id:=31]
-# dt[facility_id==8339, district_id:=84]
-# dt[facility_id==8340, district_id:=101]
-# dt[facility_id==8341, district_id:=20]
-# 
-# dt[facility_id==8344, district_id:=97]
-# dt[facility_id==8345, district_id:=97]
-# dt[facility_id==8346, district_id:=86]
-# dt[facility_id==8347, district_id:=29]
-# dt[facility_id==8348, district_id:=31]
-# 
-# dt[facility_id==8350, district_id:=5]
-# dt[facility_id==8351, district_id:=85]
-# dt[facility_id==8352, district_id:=15]
-# dt[facility_id==8353, district_id:=64]
-# dt[facility_id==8354, district_id:=86]
-# dt[facility_id==8355, district_id:=30]
-# dt[facility_id==8356, district_id:=69] # not in inventory, majority in Mukono
-# dt[facility_id==8357, district_id:=35] # not in inventory, chose Kampala
-# dt[facility_id==8358, district_id:=39]
-# dt[facility_id==8359, district_id:=7]
-
 #-----------------------------------------
 # change district names from new 2016/17 districts to match the shape file
 
@@ -148,7 +118,6 @@ total[ ,length(unique(district)), by=sex]
 # drop out the males to create a female ratio
 total = total[sex!='Male']
 total = total[order(district, sex)]
-#-------------------------------
 
 #-------------------------------
 # replace the female values with the ratio for every variable

@@ -39,7 +39,7 @@ files = list.files('./', recursive=TRUE)
 length(files)
 
 # source code
-source('/ihme/code/ccarelli/gf/hiv/uga/viral_load/extract_prep_uvl/prep_uvl.R')
+source('/ihme/code/ccarelli/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/prep_uvl.R')
 # ---------------------------
 
 # ----------------------------------------------
