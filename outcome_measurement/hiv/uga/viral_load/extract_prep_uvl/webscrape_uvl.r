@@ -123,9 +123,6 @@ urls = adply(arguments, 1, build_url)
 # downloads meta data and saves automatically
 src_dir = '/ihme/code/ccarelli/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/dist_facilities_uvl.R'
 
-# to source locally (typically run on the cluster)
-# src_dir = "C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/viral_load/extract_prep_uvl/dist_facilities_uvl.R"
-
 # download the facilities data 
 source(src_dir)
 #--------------------------------------------------
