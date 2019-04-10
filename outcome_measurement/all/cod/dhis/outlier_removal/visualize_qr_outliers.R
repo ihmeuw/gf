@@ -131,8 +131,8 @@ if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable')
 
 # threshold for outlier removal
 # not sure if you need NA removal here
-dt[ , mad_resid:=mad(resid), by = idVars]
-dt[ , sd_resid:=sd(resid), by=idVars]
+dt[ , mad_resid:=mad(resid, na.rm=T), by = idVars]
+dt[ , sd_resid:=sd(resid, na.rm=T), by=idVars]
 dt[ , thresh_var:=mad_resid]
 dt[mad_resid < 1, thresh_var:=sd_resid]
 dt[ , c('sd_resid', 'mad_resid'):=NULL]
@@ -158,7 +158,8 @@ dt[is.na(outlier), outlier:=FALSE]
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
-# dt[ , facility:=word(org_unit, 2, -1)]
+dt[ , facility:=word(org_unit, 2, -1)]
+
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
 
