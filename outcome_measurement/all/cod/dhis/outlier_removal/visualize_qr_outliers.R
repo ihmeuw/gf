@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'sigl'
+set = 'base'
 
 # user name for sourcing functions
 user_name = 'ccarelli'
@@ -117,7 +117,7 @@ dt[!all(is.na(resid)), lower:=(median(fitted_value, na.rm=T) - (10*thresh_var)),
 
 # add a 5 SD bound to investigate on the graphs
 dt[!all(is.na(resid)), upper_mid:=median(fitted_value, na.rm=T) + (5*thresh_var), by = idVars]
-dt[!all(is.na(resid)), lower_mid:=median(fitted_value, , na.rm=T) - (5*thresh_var), by = idVars]
+dt[!all(is.na(resid)), lower_mid:=median(fitted_value, na.rm=T) - (5*thresh_var), by = idVars]
 
 # select outliers
 # the value is 100 or more and greater than 10 times the SD of the fitted_values
@@ -127,12 +127,13 @@ dt[is.na(outlier), outlier:=FALSE]
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
-dt[ , facility:=word(org_unit, 2, -1)]
+# dt[ , facility:=word(org_unit, 2, -1)]
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
 
-if (set=='pnls') {dt[ , combine:=paste0(org_unit_id, sex, element)]}
-if (set=='base')  {dt[ , combine:=paste0(org_unit_id, element)]}
+if (set=='pnls') dt[ , combine:=paste0(org_unit_id, sex, element)]
+if (set=='base')  dt[ , combine:=paste0(org_unit_id, element)]
+if (set=='sigl') dt[ , combine := paste0(org_unit_id, drug)]
 
 out_orgs = dt[outlier==T, unique(combine)]
 out = dt[combine %in% out_orgs]
@@ -148,6 +149,7 @@ dt[ , combine:=NULL]
 # create a unique identifier to drop out emerging trends
 if (set=='pnls') out[ , combine2:=paste0(org_unit_id, sex, element, subpop, age)]
 if (set=='base') out[ , combine2:=paste0(org_unit_id, element, category)]
+if (set=='sigl') out[ , combine2:=paste0(org_unit_id, drug, variable)]
 
 # subset to only the age categories, subpops with more than one outlier
 out[ , count:=sum(outlier), by=combine2]
