@@ -6,18 +6,15 @@
 
 #---------------------------------------------------------------------
 # TO DO LIST 
-#  For elements where stock category is NA, investigate what's going on. *DONE
-#  Make sex-stratified graphs for elements that have them. *DONE
-#  Add a variable for regimen - first, second. *DONE, NEEDS REVIEW
-# Check for data entry errors - are there more than 30 days out of stock for a given facility in a given month? *DONE (simple version)
-# Check for data inconsistencies in the 'value' variable - why are we getting such high stock-out days for map m1 in 2018?
-#  Move on to mapping first line treatment regimen - 
-#  1. Map mean test kits per facility. Try without a facet wrap, and then facet wrap by year. *DONE - facet wrapped by year. Code needs review. 
-#  2. Reporting completeness - length(unique(facility)), by = date *DONE
-#  3. Look at first line treatment, days out of stock. *DONE
-#  4. Stratify the variables you can by sex. *DONE 
+#  Add available-usable stock to title where it refers to it in slides, 
+# Split sex-stratified variables out into their own PDF. 
+# For two indicators in test-kits PDFs, generate both 'total counts' and 'mean facility-days' maps
+#     make these labels really clear! 
+# Generate a map that shows changes in stock-out days in a district over time, facet-wrapped by month, for only 2018 data. 
+#   Take this same map and subset to the facility-level. 
 # 
-# 
+
+# Not urgent - check online PNLS dashboard and make sure new first-line treatment exists. 
 #---------------------------------------------------------------------
 
 #Observations about this dataset: 
@@ -59,11 +56,25 @@ dt[!NAME_1%in%shapefile@data$NAME_1] #Check that merge will work correctly - thi
 
 dt = merge(dt, shape_names, by='NAME_1', all.x = TRUE)
 
+#Make a year variable - be careful with the gaps in the data. 
+dt[, year:=year(date)]
+
+
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 coord = data.table(fortify(shapefile)) 
 coord[, id:=as.numeric(id)]
 coord_ann = rbind(coord, coord)
 coord_ann[, year:=rep(2017:2018, each=nrow(coord))] #What years do you have data for? 
+
+#Make a coordinate map for the months you have available in the data. 
+dates_avail = unique(dt[, .(date)][order(date)])
+coord_months = data.table()
+for (i in dates_avail){
+  print(i)
+  temp = coord
+  temp[, date:=i]
+  coord_months = rbind(coord_months, temp)
+}
 
 #--------------------------------------------------------------
 #Clean the data 
@@ -76,9 +87,6 @@ dt[stock_category=='Stock Initial', stock_category:='initial_stock']
 dt[stock_category=="Entrée", stock_category:='input']
 dt[stock_category=='Sortie', stock_category:='output']
 
-#Make a year variable - be careful with the gaps in the data. 
-dt[, year:=year(date)]
-
 #Check to make sure there aren't impossible reporting periods for stock-out days per month, and drop these values
 date_frame = data.table(month = seq(1, 12, by=1), expected_days = c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
 dt[, month:=month(date)]
@@ -87,6 +95,14 @@ dt = merge(dt, date_frame, all.x = TRUE, by = 'month')
 #unique(dt[value >31 & stock_category == "number_of_days_stocked_out", .(value)]) #Caitlin do we want to clean any of these? 
 dt[value>expected_days & stock_category == "number_of_days_stocked_out", impossible_so_days:=TRUE] #Create a boolean value to flag which NAs you've created. 
 dt[value>expected_days & stock_category == "number_of_days_stocked_out", value:=NA] #Replace impossible days stocked out with NA
+
+# Generate a variable 'any_stock_out' where the denominator is all stock_category 'number of days stocked out' 
+#   (Including the 'impossible' NAs for now), and the numerator = 1 if value != 0 & value != NA. 
+#   (for that given month, they had at least one day stocked out.)
+#   Numerator = 0 if value == 0. Numerator == NA if value == NA. 
+dt[stock_category == 'number_of_days_stocked_out', any_stock_out:=0]
+dt[!is.na(any_stock_out) & value>0 & !is.na(value), any_stock_out:=1]
+dt[is.na(value) & !is.na(any_stock_out), any_stock_out:=NA]
 
 #Create a variable to delineate first-line and second-line regimens
 
@@ -104,7 +120,7 @@ dt[element_id =="W7sym5eCc44", regimen:=2]  #"AZT/3TC/NVP(300/150/200 mg) - 60 c
 dt[element_id == "pzMcLYBCPYG", regimen:=2] #AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces
 dt[element_id == "ANTg88cSB09", regimen:=2] #AZT+3TC+EFV
 
-unique(dt[!is.na(regimen), .(regimen, element)][order(regimen)])
+unique(dt[is.na(regimen), .(regimen, element)][order(regimen)])
 #Are there any other second-line regimens we can pull here? 
 
 #Save a cleaned data set here so you can run quantile regression 
@@ -194,8 +210,9 @@ saveRDS(dt, paste0(dir, "prepped/pnls_drug.rds"))
   
 }
 
-#Measure stock-outs of first-line treatment regimens
+#Measure stock-outs of first-line treatment regimens, both by total counts and by mean-facility-days. 
 {
+  #TOTAL COUNTS 
   regimen = annual_dt[!is.na(regimen) & stock_category == 'number_of_days_stocked_out', 
                       .(value = sum(value, na.rm = TRUE)), by = c('element_id', 'year', 'dps', 'id', 'regimen')] #Review this variable creation above and make sure all drugs are included 
   #I'm only getting 3 of the 5 drugs here - do I not have stock-out data for all? 
@@ -205,6 +222,64 @@ saveRDS(dt, paste0(dir, "prepped/pnls_drug.rds"))
   azt_3tc_nvp2_map = merge(regimen[element_id == "W7sym5eCc44"], coord_ann, by=c('id', 'year'), all.y = TRUE) #AZT/3TC/NVP(300/150/200 mg) - 60 ces
   tdf_3tc_efv_map = merge(regimen[element_id == "jJuipTLZK4o"], coord_ann, by=c('id', 'year'), all.y = TRUE) #TDF/3TC/EFV(300/300/600 mg) - 30 ces
   
+  #MEAN FACILITY-DAYS
+  facs_per_district = dt[!is.na(regimen) & stock_category == "number_of_days_stocked_out", .(facs=length(unique(org_unit_id))), by=dps]
+  
+  treat_so_per_facility = annual_dt[!is.na(regimen) & stock_category == "number_of_days_stocked_out", .(element_id, element, value, dps, year, id, date)]
+  treat_so_per_facility = treat_so_per_facility[, .(value=sum(value, na.rm = TRUE)), by = c('element_id', 'element', 'dps', 'year', 'id')] #Collapse here, because you want to get rid of the date-level. 
+  treat_so_per_facility = merge(treat_so_per_facility, facs_per_district, by='dps', all.x = TRUE)
+  treat_so_per_facility[, treat_per_fac:=round(value/facs, 2)]
+  
+  #Merge with coordinate system so it can be mapped 
+  mean_so_map1 = merge(treat_so_per_facility[element_id=='pzMcLYBCPYG'], coord_ann, by=c('id', 'year'), all.y=TRUE) #"AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces"
+  mean_so_map2 = merge(treat_so_per_facility[element_id=='W7sym5eCc44'], coord_ann, by=c('id', 'year'), all.y=TRUE) #For "AZT/3TC/NVP(300/150/200 mg) - 60 ces" 
+  mean_so_map3 = merge(treat_so_per_facility[element_id=='jJuipTLZK4o'], coord_ann, by=c('id', 'year'), all.y=TRUE) #"TDF/3TC/EFV(300/300/600 mg) - 30 ces"
+
+}
+# Generate a variable 'monthly_so_rate' That represents the percentage of days in the month that a given facility was 
+# Stocked out. *Note that you'll have to recalculate this based on the level of aggregation (facility, dps, etc.)
+# Denominator represents total potential days in the month (Jan = 31, Feb = 28, etc.) and only gets created for 
+# 'number_of_days_stocked_out'. 
+# Numerator is the number of days stocked out. 
+#Do this only for first line treatment drugs right now! 
+{
+  facs_per_district = dt[stock_category == "number_of_days_stocked_out" & !is.na(value) & element_id=='jJuipTLZK4o', .(facs=length(unique(org_unit_id))), by=c('dps', 'date')] #Exclude impossible day values here. 
+  
+  monthly_so_rate_dps = dt[stock_category == 'number_of_days_stocked_out' & element_id=='jJuipTLZK4o', .(id, value, date, expected_days, dps)]
+  monthly_so_rate_dps = monthly_so_rate_dps[, .(value=sum(value, na.rm = TRUE)), by=c('id', 'date', 'expected_days', 'dps')]
+  
+  monthly_so_rate_dps = merge(monthly_so_rate_dps, facs_per_district, by=c('dps', 'date'))
+  
+  #Generate a variable at the dps level. 
+  monthly_so_rate_dps[, expected_days_dps:=expected_days*facs]
+  monthly_so_rate_dps[, monthly_so_rate:=round(value/expected_days_dps, 2)]
+  
+  monthly_so_rate_map = merge(monthly_so_rate_dps, coord_months, by=c('id', 'date'), all.y=TRUE) 
+  
+}
+#Make a map that shows how the number of stock-out days in a district has changed over time. 
+#Just do this for the first line drug combination for now. 
+{
+  #Use the monthly stock out rate graph that you've already made above. 
+  #Do a very simple visual aid - create a variable 'change' that == 'increase' if the stock-out days in this month were 
+  #higher than the stock-out days last month, and 'decrease' otherwise. 
+  monthly_so_change = data.table()
+  for (district in unique(monthly_so_rate_dps$dps)){
+    # i = 1. If stock out days for i = 2 are higher than me, 'increase'. Otherwise 'decrease'. 
+    temp = monthly_so_rate_dps[dps==district]
+    if (nrow(temp)!=1){
+      for (i in 2:nrow(temp)-1){
+        temp$status[i+1] = ifelse(temp$monthly_so_rate[i]<temp$monthly_so_rate[i+1], "INCREASE", "DECREASE")
+        temp$change[i+1] = temp$monthly_so_rate[i+1]-temp$monthly_so_rate[i]
+      }
+    }
+    monthly_so_change= rbind(monthly_so_change, temp, fill=T)
+  }
+  
+  monthly_so_change_map = merge(monthly_so_change, coord_months, by=c('id', 'date'), all.y=TRUE) 
+  
+  #And make a nice color scheme to go with it. 
+  colScale = scale_fill_gradient2(low="red", high="green", midpoint=0)
 }
 
 #--------------------------------------------------------------
@@ -254,7 +329,7 @@ rep2 = ggplot(report_map, aes(x=long, y=lat, group=group, fill=facilities_by_dps
   theme_void() +
   facet_wrap(~year, strip.position = "bottom") +
   labs(title="Reporting completeness by year and district, DRC")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  theme(plot.title=element_text(vjust=-1), plot.subtitle=element_text(vjust=6)) 
 
 
 # Start with a single variable. Make a data table called ‘det’ that includes just the Determine variable and the number of days stocked out.
@@ -269,8 +344,7 @@ m1 = ggplot(det_so_map, aes(x=long, y=lat, group=group, fill=value)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
   theme_void() +
   facet_wrap(~year, strip.position="bottom") +
-  labs(title="Determine days out of stock by district, DRC")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  labs(title="Determine total days out of stock by district, DRC", subtitle="Annual maps restricted to Jan-Aug")
 
 m2 = ggplot(uni_so_map, aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
@@ -279,8 +353,7 @@ m2 = ggplot(uni_so_map, aes(x=long, y=lat, group=group, fill=value)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
   facet_wrap(~year, strip.position="bottom") +
-  labs(title="Uni-Gold days out of stock by district, DRC")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  labs(title="Uni-Gold total days out of stock by district, DRC", subtitle="Annual maps restricted to Jan-Aug") 
 
 m3 = ggplot(doub_so_map, aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
@@ -289,8 +362,8 @@ m3 = ggplot(doub_so_map, aes(x=long, y=lat, group=group, fill=value)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Purples'))) + 
   theme_void() +
   facet_wrap(~year, strip.position="bottom") +
-  labs(title="Double-Check days out of stock by district, DRC")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  labs(title="Double-Check total days out of stock by district, DRC", subtitle="Annual maps restricted to Jan-Aug")
+
 
 #Map mean test kits per facility. Try without a facet wrap, and then facet wrap by year. 
 m4 = ggplot(det_per_fac_map, aes(x=long, y=lat, group=group, fill=kits_per_fac)) + 
@@ -300,8 +373,8 @@ m4 = ggplot(det_per_fac_map, aes(x=long, y=lat, group=group, fill=kits_per_fac))
   scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
   theme_void() +
   facet_wrap(~year, strip.position="bottom") +
-  labs(title="Mean Determine test kits per facility, DRC")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  labs(title="Mean Determine test kits per facility, by district", subtitle="Annual data restricted to Jan-Aug", 
+        caption="*Denominator only includes facilities with 'available, usable stock' of test kits")
 
 m5 = ggplot(uni_per_fac_map, aes(x=long, y=lat, group=group, fill=kits_per_fac)) + 
   coord_fixed() +
@@ -310,8 +383,8 @@ m5 = ggplot(uni_per_fac_map, aes(x=long, y=lat, group=group, fill=kits_per_fac))
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
   facet_wrap(~year, strip.position="bottom") +
-  labs(title="Mean Uni-Gold test kits per facility, DRC")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  labs(title="Mean Uni-Gold test kits per facility, by district", subtitle="Annual data restricted to Jan-Aug", 
+       caption="*Denominator only includes facilities with 'available, usable stock' of test kits")
 
 m6 = ggplot(doub_per_fac_map, aes(x=long, y=lat, group=group, fill=kits_per_fac)) + 
   coord_fixed() +
@@ -320,8 +393,8 @@ m6 = ggplot(doub_per_fac_map, aes(x=long, y=lat, group=group, fill=kits_per_fac)
   scale_fill_gradientn(colors=(brewer.pal(9, 'Purples'))) + 
   theme_void() +
   facet_wrap(~year, strip.position="bottom") +
-  labs(title="Mean Double-Gold test kits per facility, DRC")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  labs(title="Mean Double-Check Gold test kits per facility, by district", subtitle="Annual data restricted to Jan-Aug", 
+       caption="*Denominator only includes facilities with 'available, usable stock' of test kits")
 
 
 #Map treatment stock-outs for first-line and second-line drugs 
@@ -333,8 +406,7 @@ treat1 = ggplot(azt_3tc_nvp1_map, aes(x=long, y=lat, group=group, fill=value)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Purples'))) + 
   theme_void() +
   facet_wrap(~year, strip.position = "bottom") +
-  labs(title="AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces days out of stock by district")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  labs(title="'AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces' total days out of stock by district", subtitle="Annual data restricted to Jan-Aug")
 
 treat2 = ggplot(azt_3tc_nvp2_map, aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
@@ -343,8 +415,7 @@ treat2 = ggplot(azt_3tc_nvp2_map, aes(x=long, y=lat, group=group, fill=value)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
   facet_wrap(~year, strip.position = "bottom") +
-  labs(title="AZT/3TC/NVP(300/150/200 mg) - 60 ces days out of stock by district")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  labs(title="'AZT/3TC/NVP(300/150/200 mg) - 60 ces' total days out of stock by district", subtitle="Annual data restricted to Jan-Aug")
 
 treat3 = ggplot(tdf_3tc_efv_map, aes(x=long, y=lat, group=group, fill=value)) + 
   coord_fixed() +
@@ -353,9 +424,68 @@ treat3 = ggplot(tdf_3tc_efv_map, aes(x=long, y=lat, group=group, fill=value)) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Greens'))) + 
   theme_void() +
   facet_wrap(~year, strip.position="bottom") +
-  labs(title="TDF/3TC/EFV(300/300/600 mg) - 30 ces days out of stock by district")+
-  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+  labs(title="'TDF/3TC/EFV(300/300/600 mg) - 30 ces' total days out of stock by district", subtitle="Annual data restricted to Jan-Aug")
 
+treat4 = ggplot(mean_so_map1, aes(x=long, y=lat, group=group, fill=treat_per_fac)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Purples'))) + 
+  theme_void() +
+  facet_wrap(~year, strip.position = "bottom") +
+  labs(title="'AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces' mean facility-days out of stock by district", subtitle="Annual data restricted to Jan-Aug", 
+       caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
+
+treat5 = ggplot(mean_so_map2, aes(x=long, y=lat, group=group, fill=treat_per_fac)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
+  theme_void() +
+  facet_wrap(~year, strip.position = "bottom") +
+  labs(title="'AZT/3TC/NVP(300/150/200 mg) - 60 ces' mean facility-days out of stock by district", subtitle="Annual data restricted to Jan-Aug", 
+       caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
+
+treat6 = ggplot(mean_so_map3, aes(x=long, y=lat, group=group, fill=treat_per_fac)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Greens'))) + 
+  theme_void() +
+  facet_wrap(~year, strip.position="bottom") +
+  labs(title="'TDF/3TC/EFV(300/300/600 mg) - 30 ces' mean facility-days out of stock by district", subtitle="Annual data restricted to Jan-Aug", 
+       caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
+
+treat7 = ggplot(monthly_so_rate_map[year(date)==2018], aes(x=long, y=lat, group=group, fill=monthly_so_rate)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  scale_fill_gradientn(colors=(brewer.pal(9, 'Purples'))) + 
+  theme_void() +
+  facet_wrap(~date, strip.position = "bottom") +
+  labs(title="'AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces' stock-out rate per district by month for 2018", subtitle="Data controlled for reporting", 
+       caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
+
+treat8 = ggplot(monthly_so_change_map[year(date)==2018], aes(x=long, y=lat, group=group, color=status, fill=status)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  theme_void() +
+  scale_fill_manual(breaks = c("DECREASE", "INCREASE"), 
+                    values=c("green", "red"))+
+  facet_wrap(~date) +
+  labs(title="'AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces' absolute changes in stock-out rate for 2018", subtitle="Data controlled for reporting", 
+       caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
+
+treat9 = ggplot(monthly_so_change_map[year(date)==2018], aes(x=long, y=lat, group=group, fill=change)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  theme_void() +
+  colScale+
+  facet_wrap(~date) +
+  labs(title="'AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces' rate of change of stock-outs by district", subtitle="Data controlled for reporting", 
+       caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
 
 #--------------------------------------------------------------
 #Make the graphs, and write to a .PDF
@@ -420,8 +550,16 @@ outFile = paste0(saveDir, 'drug_treatment.pdf')
 pdf(outFile, height=5.5, width=7)
 
 treat1
+treat4
+
 treat2
+treat5
+
 treat3
+treat6
+
+treat7
+treat8
 
 
 dev.off()
