@@ -466,7 +466,7 @@ treat7 = ggplot(monthly_so_rate_map[year(date)==2018], aes(x=long, y=lat, group=
   labs(title="'AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces' stock-out rate per district by month for 2018", subtitle="Data controlled for reporting", 
        caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
 
-treat8 = ggplot(monthly_so_change_map[year(date)==2018], aes(x=long, y=lat, group=group, color=status, fill=status)) + 
+treat8 = ggplot(monthly_so_change_map[year(date)==2018], aes(x=long, y=lat, group=group, fill=status)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
@@ -560,6 +560,7 @@ treat6
 
 treat7
 treat8
+treat9
 
 
 dev.off()
