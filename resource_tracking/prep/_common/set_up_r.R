@@ -11,6 +11,7 @@
 library(lubridate)
 library(data.table)
 library(foreign)
+library(ggplot2)
 library(glue)
 library(readstata13)
 library(stats)

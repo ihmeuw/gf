@@ -1,0 +1,99 @@
+---
+title: "Resource Tracking Descriptive Verification"
+author: "Emily Linebarger"
+date: "April 12, 2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+user = "elineb" #Change to your username 
+code_dir = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
+source(paste0(code_dir, "resource_tracking/prep/_common/set_up_r.R"), encoding="UTF-8")
+
+budgets = readRDS(paste0(combined_output_dir, "final_budgets.rds"))
+expenditures = readRDS(paste0(combined_output_dir, "final_expenditures.rds"))
+```
+
+## Review variables 
+
+Are the formats of the variables what you expect? 
+```{r, echo=FALSE}
+# str(budgets)
+# str(expenditures)
+```
+
+Check specific variable values 
+```{r, echo=FALSE}
+
+disease_flag_b = unique(budgets$disease)%in%c('hiv', 'malaria', 'rssh', 'tb')
+disease_flag_p = unique(expenditures$disease)%in%c('hiv', 'malaria', 'rssh', 'tb')
+
+sdate_flag_b = is.Date(budgets$start_date)
+sdate_flag_p = is.Date(expenditures$start_date)
+
+edate_flag_b = is.Date(budgets$end_date)
+edate_flag_p = is.Date(expenditures$end_date)
+
+
+```
+
+Are you returning only expected values for 'disease' column in budgets?: `r disease_flag_b`
+Are you returning only expected values for 'disease' column in PUDRs?: `r disease_flag_p`
+
+Is your start date variable a date in budgets? `r sdate_flag_b`
+What about your end date variable? `r edate_flag_b`
+What's the range of start date? `r range(budgets$start_date)`
+
+Is your start date variable a date in PUDRs? `r sdate_flag_p`
+What about your end date variable? `r edate_flag_p`
+What's the range of start date? `r range(expenditures$start_date)`
+
+What values do you have for language, loc_name, and country?
+For budgets: 
+```{r, echo=FALSE}
+unique(budgets$language)
+unique(budgets$loc_name)
+unique(budgets$country)
+```
+For expenditures: 
+```{r, echo=FALSE}
+unique(expenditures$language)
+unique(expenditures$loc_name)
+unique(expenditures$country)
+```
+
+Is the 'current grant' flag working correctly? Make sure all files are sorted by this boolean correctly. 
+```{r, echo=FALSE}
+unique(budgets[current_grant==TRUE, .(current_grant, grant, grant_period)][order(grant, grant_period)])
+unique(budgets[current_grant==FALSE, .(current_grant, grant, grant_period)][order(grant, grant_period)])
+```
+
+## Plot data
+Visualize the budget data by grant and year. 
+Focus only on current grant first. 
+```{r, echo=FALSE}
+sum_current_grants = budgets[, .(budget=sum(budget, na.rm = TRUE)), by=.(grant, year, loc_name)]
+current_uga = ggplot(sum_current_grants[grant%in%current_uga_grants & year>=2015], aes(x=year, y=budget, fill=grant)) + 
+  geom_bar(stat="identity")+
+  facet_wrap(~grant, scales='free_y')+
+  theme_bw() + labs(title="Sum of budget per year, for currently active grants in Uganda", x="Year", y="Budget, with free-y scales", 
+                    caption="*Years limited to 2015-present")
+
+current_gtm = ggplot(sum_current_grants[grant%in%current_gtm_grants & year>=2015], aes(x=year, y=budget, fill=grant)) + 
+  geom_bar(stat="identity")+
+  facet_wrap(~grant, scales='free_y')+
+  theme_bw() + labs(title="Sum of budget per year, for currently active grants in Uganda", x="Year", y="Budget, with free-y scales", 
+                    caption="*Years limited to 2015 - present")
+
+current_cod = ggplot(sum_current_grants[grant%in%current_cod_grants & year>=2015], aes(x=year, y=budget, fill=grant)) + 
+  geom_bar(stat="identity")+
+  facet_wrap(~grant, scales='free_y')+
+  theme_bw() + labs(title="Sum of budget per year, for currently active grants in DRC", x="Year", y="Budget, with free-y scales", 
+                    caption="*Years limited to 2015 - present")
+
+current_cod
+current_gtm
+current_uga
+
+```
