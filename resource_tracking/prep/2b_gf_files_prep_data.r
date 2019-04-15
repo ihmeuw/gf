@@ -176,3 +176,15 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expendi
 rt_files <- unique(resource_database$file_name)
 stopifnot(length(unique(file_list$file_name)) == length(rt_files))
 stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
+
+#Add in a variable for the disease of the file before you start mapping process. 
+resource_database[, disease_grant:=strsplit(grant, "-")]
+resource_database[, disease_grant:=sapply(disease_grant, "[", 2 )]
+unique(resource_database$disease_grant) #Visual check that these all make sense. 
+
+resource_database[disease_grant=='C', disease_grant:='hiv/tb']
+resource_database[disease_grant=='H', disease_grant:='hiv']
+resource_database[disease_grant=='T', disease_grant:='tb']
+resource_database[disease_grant=='S' | disease_grant=='R', disease_grant:='rssh']
+resource_database[disease_grant=='M', disease_grant:='malaria']
+

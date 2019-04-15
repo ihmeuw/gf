@@ -37,17 +37,23 @@ gos_data[, disease:=tolower(disease)]
 gos_data[disease == "hiv/aids", disease:="hiv"]
 gos_data[disease == "tuberculosis", disease:="tb"]
 
-#--------------------------------------------------------------------------
-#What does the 'expenditure_aggregation_type' column mean?? 
-# NEED TO REVIEW THIS
+#Investigate the 'expenditure_aggregation_type' category, and then drop irrelevant values
 unique(gos_data$expenditure_aggregation_type)
-gos_data = gos_data[, -c("cost_category", "expenditure_aggregation_type", "implementing_entity")]
-#--------------------------------------------------------------------------
+check = gos_data[measure_names == "Prorated Cumulative Budget USD Equ", .(budget=sum(measure_values, na.rm = T)), by=c('grant', 'start_date', 'end_date', 'expenditure_aggregation_type')]
+check[, budget:=round(budget)] #It's okay if they're off by a decimal place. 
+check = dcast(check, grant+start_date+end_date~expenditure_aggregation_type, value.var='budget', fun.aggregate = sum)
+names(check) <- c('grant', 'start_date', 'end_date', 'agg_cost_group', 'agg_implement', 'agg_intervention' )
+error = check[agg_cost_group != agg_implement | agg_cost_group != agg_intervention | agg_implement != agg_intervention]
+
+write.csv(error, paste0(gos_raw, "Differences between expenditure aggregation categories.csv"), row.names=FALSE)
+
+#Drop columns before reshape
+gos_data = gos_data[, -c("cost_category", "implementing_entity", "expenditure_aggregation_type")]
 
 #Standardize 'budget' and 'expenditure' columns, and melt. 
 gos_data[measure_names == "Prorated Cumulative Budget USD Equ", measure_names:='budget']
 gos_data[measure_names == "Prorated Cumulative Expenditure USD Equ", measure_names:="expenditure"]
-gos_data = dcast(gos_data, year+country+disease+grant+start_date+end_date+module+intervention~measure_names, value.var ='measure_values', fun.aggregate = sum_na_rm)
+gos_data = dcast(gos_data, year+country+disease+grant+start_date+end_date+module+intervention+expenditure_aggregation_type~measure_names, value.var ='measure_values', fun.aggregate = sum_na_rm)
 
 gos_data = gos_data[order(country, disease, grant, start_date, end_date, year, module, intervention, budget, expenditure)]
 sort(names(gos_data))
@@ -82,15 +88,10 @@ gms_data = gms_data[, -c('grant_period_start', 'grant_period_end')]
 stopifnot(nrow(gms_data[is.na(year)])==0)
 
 gms_data[, disease:=tolower(disease)]
-<<<<<<< HEAD
 gms_data[disease == "hiv/aids", disease:='hiv']
 gms_data[disease == "health systems strengthening", disease:='rssh']
 gms_data[disease == 'tuberculosis', disease:='tb']
-=======
-gms_data[disease=="hiv/aids", disease:='hiv']
-gms_data[disease=='health systems strengthening', disease:='rssh']
-gms_data[disease=='tuberculosis', disease:='tb']
->>>>>>> 67a1bf6baf04f125aa7a843fb5565ae3ab2e5ece
+
 
 gms_data = gms_data[order(country, disease, grant, grant_period, start_date, end_date, year, module, budget, expenditure)]
 
@@ -101,6 +102,8 @@ gms_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
 
 range(gms_data$start_date)
 range(gms_data$end_date)
+range(gos_data$start_date)
+range(gos_data$end_date)
 
 #Want to keep the new data for as much as we have it for, and then back-fill with the old data. 
 date_range = gos_data[, .(start_date = min(start_date)), by='grant']

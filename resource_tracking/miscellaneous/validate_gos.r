@@ -14,15 +14,12 @@ code_dir = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Document
 source(paste0(code_dir, "resource_tracking/prep/_common/set_up_r.R"), encoding="UTF-8")
 
 gos_data <- readRDS(paste0(gos_prepped, "prepped_gos_data.rds"))
-for (i in 1:nrow(code_lookup_tables)){
-  gos_data[country==code_lookup_tables$country[[i]], loc_name:=code_lookup_tables$iso_code[[i]]]
-}
 
-raw_gos_mf  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
+raw_gos_mf  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
                                    sheet=as.character('GOS Mod-Interv - Extract')))
-raw_gos_sdas  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
+raw_gos_sdas  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
                                    sheet=as.character('GMS SDAs - extract')))
-new_gos = read.delim2(paste0(gos_raw, "Budget and exp PCE countries 2015 to 2017.txt"))
+new_gos = read.xlsx(paste0(gos_raw, "By_Cost_Category_data .xlsx"))
 modular_framework = fread(paste0(mapping_dir, "all_interventions.csv"))
 
 #--------------------------------------------------------
@@ -66,6 +63,13 @@ for (x in 1:nrow(grants)){
 
 #Need to grab the rows with data gaps, and the one immediately after them. 
 gos_gaps = gos_timeframe[grant%in%grants_with_gaps, .(grant, start_date, end_date, grant_period, data_gap)]
+gos_gaps[is.na(data_gap), data_gap:=FALSE]
+gos_gaps1 = data.table()
+for (i in 1:nrow(gos_gaps)){
+  print(i)
+  temp = gos_gaps[i]
+  temp[data_gap==TRUE, keep:=TRUE]
+}
 
 gos_gaps = gos_gaps[order(grant, start_date)]
 write.csv(gos_gaps, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/known_gos_gaps.csv", row.names=FALSE)
