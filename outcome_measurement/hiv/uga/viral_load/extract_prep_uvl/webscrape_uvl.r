@@ -44,8 +44,8 @@ src_dir = '/ihme/code/ccarelli/gf/outcome_measurement/hiv/uga/viral_load/extract
 
 # loop over years - can be altered to run years separately
 # do 2015 tomorrow
-y = c('19')
-m = c('01', '02', '03')
+y = c('14')
+m = c('08', '09', '10', '11', '12')
 s = c('m', 'f', 'x')
 a = c('0,1,2,3,4', '5,6,7,8,9', '10,11,12,13,14', 
       '15,16,17,18,19', '20,21,22,23,24', '25,26,27,28,29', 

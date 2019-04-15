@@ -94,6 +94,9 @@ for(f in files) {
   age_end = str_split(unique(current_data$age), ',')[[1]][5]
   current_data[ , age:=paste(age_start, '-', age_end)]
   
+  # file name to check
+  # current_data[ ,file_name:=f]
+  
   # append to the full data 
   if(i==1) dt = current_data
   if(i>1) dt = rbind(dt, current_data)
@@ -155,7 +158,4 @@ max_date = dt[ , max(year(date))]
 # save merged data 
 saveRDS(dt, paste0(outDir, 'uvl_prepped_', min_date, '_', max_date, '_.rds'))
 # ----------------------------------------------
-
-
-
 
