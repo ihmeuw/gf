@@ -256,7 +256,7 @@ cod_tested_grants <- unique(cod_tests[, .(file_name)])
 uga_tested_grants <- unique(uga_tests[, .(file_name)])
 
 print(paste0("Testing ", round(gtm_tests_nodup[type == "pudr", .N]/gtm_filelist[data_source == "pudr", .N]*100, 2), "% of PUDRs and ", 
-             round(gtm_tests_nodup[format != "pudr", .N]/gtm_filelist[data_source != "pudr", .N]*100, 2), "% of budgets in Guatemala"))
+             round(gtm_tests_nodup[type != "pudr", .N]/gtm_filelist[data_source != "pudr", .N]*100, 2), "% of budgets in Guatemala"))
 print(paste0("Testing ", round(nrow(unique(gtm_filelist[grant_status=='active' & file_name%in%gtm_tested_grants$file_name, .(file_name)]))/nrow(unique(gtm_filelist[grant_status=='active', .(file_name)]))*100, 2), 
              "% of active files and ", round(nrow(unique(gtm_filelist[grant_status=='not_active' & file_name%in%gtm_tested_grants$file_name, .(file_name)]))/nrow(unique(gtm_filelist[grant_status=='not_active', .(file_name)]))*100, 2)
              , "% of not active files Guatemala"))
@@ -275,11 +275,6 @@ print(paste0("Testing ", round(nrow(unique(cod_filelist[grant_status=='active' &
 "% of active files and ", round(nrow(unique(cod_filelist[grant_status=='not_active' & file_name%in%cod_tested_grants$file_name, .(file_name)]))/nrow(unique(cod_filelist[grant_status=='not_active', .(file_name)]))*100, 2)
              , "% of not active files DRC"))
 print("...")
-
-if (nrow(not_tested_cod)!=0){
-  print("Warning: There are files in your database for DRC that aren't currently in the list of tests.")
-  print(not_tested_cod)
-}
 
 total_tests <- nrow(cod_tests) + nrow(gtm_tests) + nrow(uga_tests)
 total_merges <- nrow(cod_merge) + nrow(gtm_merge) + nrow(uga_merge)
