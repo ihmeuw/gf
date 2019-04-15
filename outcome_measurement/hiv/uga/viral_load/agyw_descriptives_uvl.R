@@ -16,6 +16,8 @@ library(ggplot2)
 library(stringr) 
 library(plyr)
 library(RColorBrewer)
+library(raster)
+library(maptools)
 # --------------------
 
 # -----------------------------------------------
@@ -271,6 +273,16 @@ ggplot(age_line[year(date)==2017 | year(date)==2018], aes(x=date, y=ratio, color
 dev.off()
 
 #---------------------------------
+# map
+
+  
+# call map code
+# create maps of viral suppression by region for age groups by sex
+
+
+
+
+
 # tables 
 
 

@@ -157,5 +157,8 @@ max_date = dt[ , max(year(date))]
 
 # save merged data 
 saveRDS(dt, paste0(outDir, 'uvl_prepped_', min_date, '_', max_date, '_.rds'))
+
+# create a message saying the data was saved 
+print(paste0("Saved file: ", outDir, 'uvl_prepped_', min_date, '_', max_date, '_.rds'))
 # ----------------------------------------------
 
