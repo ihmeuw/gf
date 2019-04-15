@@ -27,6 +27,10 @@ setwd(dir)
 # load the file that represents a subset (no sex or )
 dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_vct_2017_01_01_2018_12_01.rds'))
 
+#------------------------------------
+#Edit subpops where needed
+dt[element_id=='bJSh3ipNspj', subpop:=NA] #Malades reçus en hospitalisation (Pédiatrie,MI, Chirurgie, gynécologie et autres)
+
 #-----------------------------
 # export the abbreviated elements for translation
 
@@ -63,7 +67,7 @@ dt = merge(dt, new_elements, by='element_id', all.x = TRUE)
 
 #--------------------------------------------------------------------
 # Make sure that the totals are correct for the new file 
-unique(dt[, .(subpop, element_eng, element)][order(subpop)]) #Visual checks
+unique(dt[, .(subpop, element_eng)][order(subpop)]) #Visual checks
 unique(dt[, .(element_eng)]) #Got this down to 19. 
 
 
