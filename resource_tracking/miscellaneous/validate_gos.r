@@ -16,10 +16,10 @@ source(paste0(code_dir, "resource_tracking/prep/_common/set_up_r.R"), encoding="
 gos_data <- readRDS(paste0(gos_prepped, "prepped_gos_data.rds"))
 
 raw_gos_mf  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
-                                   sheet=as.character('GOS Mod-Interv - Extract')))
+                                   sheet=as.character('GOS Mod-Interv - Extract'), detectDates=TRUE))
 raw_gos_sdas  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
-                                   sheet=as.character('GMS SDAs - extract')))
-new_gos = read.xlsx(paste0(gos_raw, "By_Cost_Category_data .xlsx"))
+                                   sheet=as.character('GMS SDAs - extract'), detectDates=TRUE))
+new_gos = read.xlsx(paste0(gos_raw, "By_Cost_Category_data .xlsx"), detectDates=TRUE)
 modular_framework = fread(paste0(mapping_dir, "all_interventions.csv"))
 
 #--------------------------------------------------------
@@ -100,3 +100,101 @@ unique(modular_framework$module_eng)
 
 unique(raw_gos_mf$Intervention) #Some of these don't fit into the modular framework either (MSM and TGs). Need to review. 
 unique(modular_framework$intervention_eng)
+
+#---------------------------------------------------
+# COMPARE DIFFERENCES BETWEEN OLD GOS AND NEW FOR 2015-2017
+#---------------------------------------------------
+# Pull over prep code from prep_gos 
+## reset column names
+new_gos_15_17 = copy(new_gos)
+setDT(new_gos_15_17)
+old_gos_15_17 = copy(raw_gos_mf)
+setDT(old_gos_15_17)
+
+{
+  #Are there differences in totals by grant, start_date, and end_date when summing the two files? 
+  ## reset column names
+  oldNames <- names(new_gos_15_17)
+  newNames <- gsub("\\.", "_", oldNames)
+  newNames = tolower(newNames)
+  
+  setnames(new_gos_15_17, oldNames, newNames)
+  
+  setnames(new_gos_15_17, old=c('calendar_year', 'component_name', 'intervention_name', 'module_name', 'expenditure_startdate', 'expenditure_enddate', 'ip_name'),
+           new = c('year', 'disease', 'intervention', 'module', 'start_date', 'end_date', 'grant'))
+  
+  #Only keep the countries we care about 
+  new_gos_15_17 = new_gos_15_17[country%in%c("Congo (Democratic Republic)", "Guatemala", "Uganda", "Senegal")]
+  
+  #Standardize disease column 
+  new_gos_15_17[, disease:=tolower(disease)]
+  new_gos_15_17[disease == "hiv/aids", disease:="hiv"]
+  new_gos_15_17[disease == "tuberculosis", disease:="tb"]
+  
+  #Only keep expenditure aggregation category 'intervention'
+  new_gos_15_17[expenditure_aggregation_type=='Intervention']
+  
+  #Drop columns before reshape
+  new_gos_15_17 = new_gos_15_17[, -c("cost_category", "implementing_entity", "expenditure_aggregation_type")]
+  
+  #Standardize 'budget' and 'expenditure' columns, and melt. 
+  new_gos_15_17[measure_names == "Prorated Cumulative Budget USD Equ", measure_names:='budget']
+  new_gos_15_17[measure_names == "Prorated Cumulative Expenditure USD Equ", measure_names:="expenditure"]
+  new_gos_15_17 = dcast(new_gos_15_17, year+country+disease+grant+start_date+end_date+module+intervention~measure_names, value.var ='measure_values', fun.aggregate = sum_na_rm)
+  #Get rid of the P01, P02 etc. at the end of the string. 
+  substrEnd <- function(x, n){
+    substr(x, 1, nchar(x)-n+1)
+  }
+  new_gos_15_17[, grant:=substrEnd(grant, 4)]
+  
+}
+{
+  oldNames <- names(old_gos_15_17)
+  newNames <- gsub("\\.", "_", oldNames)
+  newNames = tolower(newNames)
+  
+  setnames(old_gos_15_17, oldNames, newNames)
+  setnames(old_gos_15_17, old=c("financial_reporting_period_start_date", 'financial_reporting_period_end_date', "total_budget_amount_(in_budget_currency)", 
+                                "total_expenditure_amount_(in_budget_currency)", "grant_number"),
+           new=c('start_date', 'end_date', 'budget', 'expenditure', 'grant'))
+}
+
+#Merge the two files together to see what's different. 
+old_date = old_gos_15_17[, .(budget_old=sum(budget, na.rm=T)), by=c('grant', 'start_date', 'end_date')]
+new_date = new_gos_15_17[, .(budget_new=sum(budget, na.rm=T)), by=c('grant', 'start_date', 'end_date')]
+
+merge1 = merge(old_date, new_date, all=T)
+print(paste0(nrow(merge1), " rows in merge. Of these, ", nrow(merge1[budget_old!=budget_new]), " have budgets that don't match."))
+print(merge1[budget_old!=budget_new])
+merge1$diff = "MATCH"
+merge1[budget_old<budget_new, diff:="OLD LESS THAN NEW"]
+merge1[budget_new<budget_old, diff:="NEW LESS THAN OLD"]
+
+#Try by year. 
+old_year = old_gos_15_17[, .(budget_old=sum(budget, na.rm=T)), by=c('grant', 'year')]
+new_year = new_gos_15_17[, .(budget_new=sum(budget, na.rm=T)), by=c('grant', 'year')]
+
+merge2 = merge(old_year, new_year, all=T)
+print(paste0(nrow(merge2), " rows in merge. Of these, ", nrow(merge2[budget_old!=budget_new]), " have budgets that don't match."))
+print(merge2[budget_old!=budget_new])
+merge2$diff = "MATCH"
+merge2[budget_old<budget_new, diff:="OLD LESS THAN NEW"]
+merge2[budget_new<budget_old, diff:="NEW LESS THAN OLD"]
+
+#What are the differences in the start dates, end dates, and grants between the files? 
+old_gos_15_17[, concat:=paste0(grant, "_", start_date, "_", end_date)]
+new_gos_15_17[, concat:=paste0(grant, "_", start_date, "_", end_date)]
+
+sort(unique(old_gos_15_17$concat))
+sort(unique(new_gos_15_17$concat))
+
+date_check_old = old_gos_15_17[, .(grant, start_date, end_date, concat)]
+setnames(date_check_old, c("grant", "start_date", "end_date"), c("grant_old", "start_date_old", "end_date_old"))
+date_check_old = unique(date_check_old)
+date_check_new = new_gos_15_17[, .(grant, start_date, end_date, concat)]
+setnames(date_check_new, c("grant", "start_date", "end_date"), c("grant_new", "start_date_new", "end_date_new"))
+date_check_new = unique(date_check_new)
+
+date_check = merge(date_check_old, date_check_new, by='concat', all=T)
+View(date_check[grant_old%in%c('UGA-H-MoFPED', 'UGA-S-MoFPED', 'UGA-M-MoFPED') 
+                | grant_new%in%c('UGA-H-MoFPED', 'UGA-S-MoFPED', 'UGA-M-MoFPED')])
