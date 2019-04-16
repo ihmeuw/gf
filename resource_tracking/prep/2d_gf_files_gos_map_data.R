@@ -156,9 +156,14 @@ if (prep_files == TRUE){
   stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]])
 }
 
-#-----------------------------------------
+#-----------------------------------------------------------
+# Add in a variable for 'includes RSSH'
+#-----------------------------------------------------------
+mapped_data[]
+
+#-----------------------------------------------------------
 # Add in variable for current grant, and location variable
-# ----------------------------------------
+# ----------------------------------------------------------
 mapped_data$current_grant = FALSE 
 for (i in 1:length(current_cod_grants)){
   mapped_data[grant==current_cod_grants[i] & grant_period==current_cod_grant_period[i], 

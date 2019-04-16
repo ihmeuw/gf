@@ -105,6 +105,8 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       tmpData[, (col):=append_cols[, get(col)]]
     }  
     tmpData$year <- year(tmpData$start_date)
+    tmpData$grant_disease <- tmpData$disease #Add in a column to represent the disease of the whole grant- this way when grant 
+    #gets reclassified later, we'll still be able to tally by disease and grant period. 
     
     #Bind data together 
     if(i==1){

@@ -74,26 +74,35 @@ Visualize the budget data by grant and year.
 Focus only on current grant first. 
 ```{r, echo=FALSE}
 sum_current_grants = budgets[, .(budget=sum(budget, na.rm = TRUE)), by=.(grant, year, loc_name)]
-current_uga = ggplot(sum_current_grants[grant%in%current_uga_grants & year>=2015], aes(x=year, y=budget, fill=grant)) + 
-  geom_bar(stat="identity")+
-  facet_wrap(~grant, scales='free_y')+
-  theme_bw() + labs(title="Sum of budget per year, for currently active grants in Uganda", x="Year", y="Budget, with free-y scales", 
+grants = unique(current_uga_grants)
+for (grant_number in grants){
+current_uga = ggplot(sum_current_grants[grant==grant_number & year>=2015], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="forestgreen")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", grant_number), x="Year", y="Budget", 
                     caption="*Years limited to 2015-present")
+print(current_uga)
+print(sum_current_grants[grant==grant_number])
+}
 
-current_gtm = ggplot(sum_current_grants[grant%in%current_gtm_grants & year>=2015], aes(x=year, y=budget, fill=grant)) + 
-  geom_bar(stat="identity")+
-  facet_wrap(~grant, scales='free_y')+
-  theme_bw() + labs(title="Sum of budget per year, for currently active grants in Uganda", x="Year", y="Budget, with free-y scales", 
-                    caption="*Years limited to 2015 - present")
+grants = unique(current_cod_grants)
+for (grant_number in grants){
+current_cod = ggplot(sum_current_grants[grant==grant_number & year>=2015], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="blue")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", grant_number), x="Year", y="Budget", 
+                    caption="*Years limited to 2015-present")
+print(current_cod)
+print(sum_current_grants[grant==grant_number])
+}
 
-current_cod = ggplot(sum_current_grants[grant%in%current_cod_grants & year>=2015], aes(x=year, y=budget, fill=grant)) + 
-  geom_bar(stat="identity")+
-  facet_wrap(~grant, scales='free_y')+
-  theme_bw() + labs(title="Sum of budget per year, for currently active grants in DRC", x="Year", y="Budget, with free-y scales", 
-                    caption="*Years limited to 2015 - present")
+grants = unique(current_gtm_grants)
+for (grant_number in grants){
+current_gtm = ggplot(sum_current_grants[grant==grant_number & year>=2015], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="purple")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", grant_number), x="Year", y="Budget", 
+                    caption="*Years limited to 2015-present")
+print(current_gtm)
+print(sum_current_grants[grant==grant_number])
+}
 
-current_cod
-current_gtm
-current_uga
 
 ```

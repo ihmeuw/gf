@@ -328,9 +328,9 @@ unspecified = unspecified[coefficient!=1][order(module, intervention)]
 
   #Write a "diff" file to repository to make comparing changes easier. 
   module_map = module_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention, abbreviated_module)]
-  removed_rows = anti_join(original_map, module_map)
-  write.csv(removed_rows, paste0(code_dir, "proposed_deletions_mod_map.csv"))
-  
-  added_rows = anti_join(module_map, original_map)
-  write.csv(added_rows, paste0(code_dir, "proposed_additions_mod_map.csv"))
-  
+  # removed_rows = anti_join(original_map, module_map)
+  # write.csv(removed_rows, paste0(code_dir, "proposed_deletions_mod_map.csv"))
+  # 
+  # added_rows = anti_join(module_map, original_map)
+  # write.csv(added_rows, paste0(code_dir, "proposed_additions_mod_map.csv"))
+  # 

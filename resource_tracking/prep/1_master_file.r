@@ -55,6 +55,7 @@ if (prep_files == TRUE){
 }
 source(paste0(code_dir, "2d_gf_files_gos_map_data.R"))
 source(paste0(code_dir, "2e_gf_verify_outputs.R"))
+source(paste0(code_dir, "2f_gf_visualize_data.rmd"))
   
 # ----------------------------------------------
 # STEP 3: FGH ACTUALS AND ESTIMATES 
