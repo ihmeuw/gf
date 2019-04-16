@@ -15,120 +15,87 @@ if (prep_gos == TRUE){
 }
 
 #-------------------------------------------------------
-# Split data into data that can be mapped to modular 
-# framework immediately, and what needs to be mapped to NLP. 
+# Prep mapping data for merge 
 #-------------------------------------------------------
-# mod_framework_files = file_list[mod_framework_format == TRUE, .(file_name)]
-# map_data = raw_data[fileName%in%mod_framework_files$file_name] 
-# nlp_data = raw_data[!fileName%in%mod_framework_files$file_name] 
+#Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
+raw_data = strip_chars(raw_data)
 
-# PART 1: MAP FILES THAT ARE ALREADY MAPPED TO MODULAR FRAMEWORK 
-{
-    #-------------------------------------------------------
-    # Prep mapping data for merge 
-    #-------------------------------------------------------
-    #Remove whitespaces, punctuation, and unwanted characters from module and intervention. 
-    raw_data = strip_chars(raw_data)
-    
-    #Correct common acronyms in the resource database and the module map. 
-    raw_data[, module:=replace_acronyms(module)]
-    raw_data[, intervention:=replace_acronyms(intervention)]
-    
-    module_map[, module:=replace_acronyms(module)]
-    module_map[, intervention:=replace_acronyms(intervention)]
-    
-    #--------------------------------------------------------
-    # Adjust module and intervention manually in the raw data 
-    #-------------------------------------------------------
-    # if (prep_files == TRUE){
-    #   source(paste0(gf_prep_code, "budget_pudr_prep/correct_modules_interventions_", country, ".R"))
-    # } else if (prep_gos == TRUE){
-    #   source(paste0(gf_prep_code, "gos_prep/correct_modules_interventions.R"))
-    # }
-    # 
-    # raw_data = correct_modules_interventions(raw_data)
-    
-    #Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
-    if (prep_files == TRUE){
-      raw_data = correct_modules_interventions(raw_data)
-    }
-    
-    #------------------------------------------------------------
-    # Map budgets and PUDRs to module mapping framework 
-    #------------------------------------------------------------
-    
-    # Check for unmapped modules/interventions before mapping
-    gf_concat <- paste0(module_map$module, module_map$intervention)
-    rt_concat <- paste0(raw_data$module, raw_data$intervention)
-    unmapped_mods <- raw_data[!rt_concat%in%gf_concat]
-    
-    if(nrow(unmapped_mods)>0){
-      print(unique(unmapped_mods[, c("module", "intervention"), with= FALSE]))
-      print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
-      stop("You have unmapped original modules/interventions!")
-    }
-    
-    #------------------------------------------------------------
-    # Remap diseases so they apply at the intervention level, 
-    #   not the grant-level (assigned in the file list) 
-    #------------------------------------------------------------
-    
-    #Correct all tb/hiv to hiv/tb
-    raw_data[disease == 'tb/hiv', disease:='hiv/tb']
-    
-    #English corrections
-    raw_data[module=='hivhealthsystemsstrengthening', disease:='hiv']
-    raw_data[module=='malhealthsystemsstrengthening', disease:='malaria']
-    raw_data[module=='tbhealthsystemsstrengthening', disease:='tb']
-    
-    #French corrections 
-    raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
+#Correct common acronyms in the resource database and the module map. 
+raw_data[, module:=replace_acronyms(module)]
+raw_data[, intervention:=replace_acronyms(intervention)]
 
-    #----------------------------------------------------------------------------
-    # Merge with module map on module, intervention, and disease to pull in code
-    #----------------------------------------------------------------------------
-    if (prep_files == TRUE){
-      pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
-    } else {
-      pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure')]
-      pre_coeff_check[[1]] = round(pre_coeff_check[[1]])
-      pre_coeff_check[[2]] = round(pre_coeff_check[[2]])
-    }
-    mergeVars = c('disease', 'module', 'intervention')
-    #module_map = unique(module_map)
-    module_map = module_map[!is.na(code)]
+module_map[, module:=replace_acronyms(module)]
+module_map[, intervention:=replace_acronyms(intervention)]
 
-    mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x = TRUE, allow.cartesian = TRUE)
-    dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
-    
-    if(nrow(dropped_mods) >0){
-      # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
-      print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
-      stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
-    }
-    
-    #-------------------------------------------------------
-    # #Remap all RSSH codes to the RSSH disease, and make sure 
-    #there aren't any HSS diseases still hanging around. Remap all codes to their correct disease.  
-    # ------------------------------------------------------
-    mapped_data[substring(code, 1, 1)=='R', disease:='rssh']
-    mapped_data[disease == 'hss', disease:='rssh']
-    
-    mapped_data[substring(code, 1, 1)=='H', disease:='hiv']
-    mapped_data[substring(code, 1, 1)=='T', disease:='tb']
-    mapped_data[substring(code, 1, 1)=='M', disease:='malaria']
-
+#Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
+if (prep_files == TRUE){
+  raw_data = correct_modules_interventions(raw_data)
 }
 
-# PART 2: APPLY MACHINE LEARNING ALGORITHM TO PRE-2016 FILES
-{
-  
+#------------------------------------------------------------
+# Map budgets and PUDRs to module mapping framework 
+#------------------------------------------------------------
+
+# Check for unmapped modules/interventions before mapping
+gf_concat <- paste0(module_map$module, module_map$intervention)
+rt_concat <- paste0(raw_data$module, raw_data$intervention)
+unmapped_mods <- raw_data[!rt_concat%in%gf_concat]
+
+if(nrow(unmapped_mods)>0){
+  print(unique(unmapped_mods[, c("module", "intervention"), with= FALSE]))
+  print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
+  stop("You have unmapped original modules/interventions!")
 }
 
+#------------------------------------------------------------
+# Remap diseases so they apply at the intervention level, 
+#   not the grant-level (assigned in the file list) 
+#------------------------------------------------------------
 
-#mapped_data = rbind(mapped_data, nlp_data)
+#Correct all tb/hiv to hiv/tb
+raw_data[disease == 'tb/hiv', disease:='hiv/tb']
 
+#English corrections
+raw_data[module=='hivhealthsystemsstrengthening', disease:='hiv']
+raw_data[module=='malhealthsystemsstrengthening', disease:='malaria']
+raw_data[module=='tbhealthsystemsstrengthening', disease:='tb']
 
+#French corrections 
+raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
+
+#----------------------------------------------------------------------------
+# Merge with module map on module, intervention, and disease to pull in code
+#----------------------------------------------------------------------------
+if (prep_files == TRUE){
+  pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
+} else {
+  pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure')]
+  pre_coeff_check[[1]] = round(pre_coeff_check[[1]])
+  pre_coeff_check[[2]] = round(pre_coeff_check[[2]])
+}
+mergeVars = c('disease', 'module', 'intervention')
+#module_map = unique(module_map)
+module_map = module_map[!is.na(code)]
+
+mapped_data <- merge(raw_data, module_map, by=mergeVars, all.x = TRUE, allow.cartesian = TRUE)
+dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
+
+if(nrow(dropped_mods) >0){
+  # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
+  print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
+  stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
+}
+
+#-------------------------------------------------------
+# #Remap all RSSH codes to the RSSH disease, and make sure 
+#there aren't any HSS diseases still hanging around. Remap all codes to their correct disease.  
+# ------------------------------------------------------
+mapped_data[substring(code, 1, 1)=='R', disease:='rssh']
+mapped_data[disease == 'hss', disease:='rssh']
+
+mapped_data[substring(code, 1, 1)=='H', disease:='hiv']
+mapped_data[substring(code, 1, 1)=='T', disease:='tb']
+mapped_data[substring(code, 1, 1)=='M', disease:='malaria']
 
 #-------------------------------------------------------
 # Split HIV/TB combined grants  
@@ -159,7 +126,16 @@ if (prep_files == TRUE){
 #-----------------------------------------------------------
 # Add in a variable for 'includes RSSH'
 #-----------------------------------------------------------
-mapped_data[]
+#By file and grant (to catch both budgets and GOS), should be "TRUE"
+#if there is at least one 'R' code. 
+mapped_data[, code_start:=substring(code, 1, 1)]
+codes = unique(mapped_data[, .(code_start, grant, file_name)])
+codes = dcast(codes, grant+file_name~code_start, value.var='file_name')
+codes[is.na(R), includes_rssh:=FALSE]
+codes[!is.na(R), includes_rssh:=TRUE]
+codes = codes[, .(grant, file_name, includes_rssh)]
+
+mapped_data = merge(mapped_data, codes, all.x=T, by=c('grant', 'file_name'))
 
 #-----------------------------------------------------------
 # Add in variable for current grant, and location variable
@@ -178,68 +154,17 @@ for (i in 1:length(current_uga_grants)){
               current_grant:=TRUE]
 }
 
+if (prep_files==TRUE){
+  mapped_data$loc_name = country
+}
 for (i in 1:nrow(code_lookup_tables)){
   mapped_data[loc_name==code_lookup_tables$iso_code[i], country:=code_lookup_tables$country[i]]
 }
 
-#--------------------------------------------------------
-# Split data into quarters - Emily just verify that this split is definitely happening in the prep functions. 
-# -------------------------------------------------------
-# stopifnot(nrow(test_split[is.na(period) | period == 0])) #Make sure you have a 'period' variable to splice up file!
-# 
-# #Delete this bit! 
-# test_split <- copy(final_budgets)
-# test_split = test_split[period != 90][order(sda_activity)]
-# test_split = test_split[1:10] 
-# 
-# #Find how many quarters each line needs to be split into.
-# #If not an even number, round up, and put the last bit in one extra quarter beyond.
-# test_split[, qsplit:=period/90] #90 days in each period
-# test_split[, num_quarters:=ceiling(qsplit)]
-# test_split[, qremainder:=qsplit%%1]
-# 
-# #Expand data by num_quarters
-# test_split <- expandRows(test_split, "num_quarters")
-# 
-# #Reformat date variable, and generate 'quarter' variable
-# byVars = colnames(test_split)
-# test_split[, seq:=seq(from=0, to=100), by=byVars] #100 is an arbitrary number here, we just need something that's greater than the max # of quarters in any file
-# test_split[, quarter:=quarter(start_date)]
-# test_split[, year:=year(start_date)] 
-# 
-# #While seq is not 0, go through the loop below. 
-# #If seq is greater than or equal to 4, add 1 to year and divide everything by 4. Continue this loop while max(seq) > 4. 
-# #Can you use lapply to apply this to every row? 
-# while (test_split$seq >0){
-#   if (test_split$quarter == 4){
-#     test_split$quarter == 1
-#     test_split$year = test_split$year + 1
-#   } else {
-#     test_split$quarter = test_split$quarter +1
-#   }
-#   seq = seq - 1
-# }
-# 
-# 
-# #Increment year and quarter using the 'seq' variable to flag subsequent quarters
-# #Quarter = 1 := q=2, year same 
-# # q = 2 := q:=3, year same 
-# # q = 3 := q= 4, year same 
-# # q = 4 := q = 1, increment year by 1
-# 
-# test_split = test_split[, .(module, intervention, sda_activity, period, start_date, budget, expenditure, 
-#                             disbursement, qsplit, qremainder, seq, quarter, year)] #DELETE ME!! 
-# 
-# #Split financial variables - start by sectioning off any remainder. #EMILY START HERE
-# for (i in 1:20){
-#   while (qsplit>1){
-# 
-#   }
-# }
-# 
-# 
-# test_split[-c('qsplit', 'num_quarters', 'qremainder', 'seq')]
-# #If there is a 'remainder' quarter, split that bit off and save
+# --------------------------------------------------------
+#Verify that everything is at the quarter-level here 
+# --------------------------------------------------------
+unique(mapped_data[, start_date-end_date])
 
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  

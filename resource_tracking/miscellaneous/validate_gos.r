@@ -132,7 +132,7 @@ setDT(old_gos_15_17)
   new_gos_15_17[disease == "tuberculosis", disease:="tb"]
   
   #Only keep expenditure aggregation category 'intervention'
-  new_gos_15_17[expenditure_aggregation_type=='Intervention']
+  new_gos_15_17 = new_gos_15_17[expenditure_aggregation_type=='Intervention'] #Using this for now because it seems to have more data. 
   
   #Drop columns before reshape
   new_gos_15_17 = new_gos_15_17[, -c("cost_category", "implementing_entity", "expenditure_aggregation_type")]
@@ -177,9 +177,11 @@ new_year = new_gos_15_17[, .(budget_new=sum(budget, na.rm=T)), by=c('grant', 'ye
 merge2 = merge(old_year, new_year, all=T)
 print(paste0(nrow(merge2), " rows in merge. Of these, ", nrow(merge2[budget_old!=budget_new]), " have budgets that don't match."))
 print(merge2[budget_old!=budget_new])
-merge2$diff = "MATCH"
-merge2[budget_old<budget_new, diff:="OLD LESS THAN NEW"]
-merge2[budget_new<budget_old, diff:="NEW LESS THAN OLD"]
+
+#Bring in the final budgets from 2015-2017 where possible and look at differences between file
+budgets_15_17= fread("C:/Users/elineb/Desktop/2015_2017_FINAL_BUDGETS.csv")
+
+merge2 = merge(merge2, budgets_15_17, by=c('grant', 'year'), all=T)
 
 #What are the differences in the start dates, end dates, and grants between the files? 
 old_gos_15_17[, concat:=paste0(grant, "_", start_date, "_", end_date)]
@@ -198,3 +200,17 @@ date_check_new = unique(date_check_new)
 date_check = merge(date_check_old, date_check_new, by='concat', all=T)
 View(date_check[grant_old%in%c('UGA-H-MoFPED', 'UGA-S-MoFPED', 'UGA-M-MoFPED') 
                 | grant_new%in%c('UGA-H-MoFPED', 'UGA-S-MoFPED', 'UGA-M-MoFPED')])
+
+#What are the grant periods between the files? 
+new_gos_15_17[, grant_period:=paste0(year(start_date), "-", year(end_date))]
+old_gos_15_17[, grant_period:=paste0(year(current_ip_start_date), "-", year(current_ip_end_date))]
+unique(old_gos_15_17[, .(grant, grant_period)])
+unique(new_gos_15_17[, .(grant, grant_period)])
+
+#How many grants are impacted by data gaps? 
+gos_gaps_prepped = data.table(read.xlsx("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/GOS Gaps.xlsx", detectDates=TRUE))
+gos_gaps_prepped[, year:=year(start_date)]
+gos_gaps_prepped[, .N, by=year][order(year)]
+unique_gap_grants = unique(gos_gaps_prepped$grant)
+num = length(unique_gap_grants[unique_gap_grants%in%gos_data$grant])
+denom = length(unique(gos_data$grant))

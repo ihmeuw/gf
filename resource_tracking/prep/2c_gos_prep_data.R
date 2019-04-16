@@ -45,6 +45,10 @@ check = dcast(check, grant+start_date+end_date~expenditure_aggregation_type, val
 names(check) <- c('grant', 'start_date', 'end_date', 'agg_cost_group', 'agg_implement', 'agg_intervention' )
 error = check[agg_cost_group != agg_implement | agg_cost_group != agg_intervention | agg_implement != agg_intervention]
 
+#Drop everything but "Intervention" aggregation column for now. 
+#THIS NEEDS TO BE EDITED EKL
+gos_data = gos_data[expenditure_aggregation_type=="Intervention"]
+
 write.csv(error, paste0(gos_raw, "Differences between expenditure aggregation categories.csv"), row.names=FALSE)
 
 #Drop columns before reshape
@@ -141,7 +145,6 @@ check_dates = merge(gos_dates, gms_dates, by='grant')
 gms_dates[!grant%in%gos_dates$grant, .(grant)]
 gos_dates[!grant%in%gms_dates$grant, .(grant)]
 
-
 #Bind final datasets together
 totalGos <- rbind(gms_data, gos_data, fill=TRUE)
 
@@ -159,4 +162,63 @@ for (i in 1:nrow(code_lookup_tables)){
 totalGos[, start_date:=as.Date(start_date)]
 totalGos[, end_date:=as.Date(end_date)]
 
+#--------------------------------------------------------
+# Split data into quarters 
+# -------------------------------------------------------
+pretest = totalGos[, .(pre_budget=sum(budget, na.rm=T)), by=c('grant', 'year')]
+
+#Generate the variables you need to split
+totalGos[, days_reported:=as.numeric(end_date-start_date)] #How many lines does each day represent? 
+
+{
+  #Do a random test here. This can be deleted. 
+  totalGos = totalGos[order(expenditure)] #Randomize
+  test_split = totalGos[1:20]
+  setDT(test_split)
+  pretest = test_split[, .(pre_budget=sum(budget, na.rm=T)), by=c('grant', 'year')]
+}
+#Find how many quarters each line needs to be split into.
+#If not an even number, round up, and put the last bit in one extra quarter beyond.
+test_split[, qsplit:=days_reported/90] #90 days in each period
+test_split[, num_quarters:=ceiling(qsplit)]
+test_split[, qremainder:=qsplit%%1]
+
+#Expand data by num_quarters
+test_split <- expandRows(test_split, "num_quarters")
+
+#Reformat date variable, and generate 'quarter' variable
+byVars = colnames(test_split)
+test_split[, seq:=seq(from=0, to=100), by=byVars] #100 is an arbitrary number here, we just need something that's greater than the max # of quarters in any file
+test_split[, quarter:=quarter(start_date)]
+test_split[, year:=year(start_date)]
+
+#While seq is not 0, go through the loop below.
+#If seq is greater than or equal to 4, add 1 to year and divide everything by 4. Continue this loop while max(seq) > 4.
+#EMILY START HERE 
+# If seq is 0, do nothing. 
+# if seq is >=4, 
+max_split = max(test_split$seq)
+while(max_split>=4){
+  test_split[seq>=4, year:=year+1]
+  test_split[seq>=4, seq:=seq-4]
+  max_split = max(test_split$seq)
+}
+dt[, quarter:=quarter+(quarter*seq)]
+
+test_split = test_split[, .(module, intervention, sda_activity, period, start_date, budget, expenditure,
+                            disbursement, qsplit, qremainder, seq, quarter, year)] #DELETE ME!!
+
+#Split financial variables - start by sectioning off any remainder. #EMILY START HERE
+for (i in 1:20){
+  while (qsplit>1){
+    
+  }
+}
+
+
+test_split[-c('qsplit', 'num_quarters', 'qremainder', 'seq')]
+#If there is a 'remainder' quarter, split that bit off and save
+
+posttest = totalGos[, .(post_budget=sum(budget, na.rm=T)), by=c('grant', 'year')]
+totals_check = merge(pretest, posttest, by=c('grant', 'year'), all=T)
 
