@@ -37,7 +37,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
 if (set=='base') outFile = 'outliers/base_outliers_replaced.pdf'
 if (set=='sigl') outFile = 'outliers/sigl_drugs_qr_outliers.pdf'
-if (set=='sigl') outFile2 = 'outliers/list_of_sigl_drugs_outliers.pdf'
+
 #------------------------------------
 # source function for health zone names
 
@@ -73,6 +73,37 @@ if (set == 'sigl') {
   
   dt[ got_imputed== "yes", value := NA ]
 }
+
+#-----------------------------------
+# hacky bae function - i will get rid of this
+if (set=='base') {
+  
+  # keep the french element
+  setnames(dt, 'element', 'element_fr')
+  
+  # translate the elements to english
+  dt[element_id==1, element:='Severe malaria' ]
+  dt[element_id==2, element:='Severe malaria treated' ]
+  dt[element_id==3, element:='RDT performed' ]
+  dt[element_id==4, element:='Presumed malaria treated' ]
+  dt[element_id==5, element:='Positive RDT' ]
+  dt[element_id==6, element:='Presumed malaria' ]
+  dt[element_id==7, element:='Simple confirmed malaria treated' ]
+  dt[element_id==8 , element:='Simple confirmed malaria' ]
+  dt[element_id==9 , element:='SP 4th dose' ]
+  dt[element_id==10 , element:='SP 2nd dose' ]
+  
+  dt[element_id==11 , element:='Simple confirmed malaria - pregnant woman' ]
+  dt[element_id==12 , element:='LLIN distribued at ANC 2+' ]
+  dt[element_id==13 , element:='SP 1st dose' ]
+  dt[element_id==14 , element:='SP 3rd dose' ]
+  dt[element_id==15 , element:='Severe malaria - pregnant women' ]
+  dt[element_id==16 , element:='LLIN distributed at ANC 1' ]
+  dt[element_id==17 , element:='Severe malaria treated - pregnant woman' ]
+  dt[element_id==18 , element:='Simple malaria treated - pregnant woman' ]
+}
+
+
 #------------------------------------
 # fix the date 
 
@@ -100,8 +131,8 @@ if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable')
 
 # threshold for outlier removal
 # not sure if you need NA removal here
-dt[ , mad_resid:=mad(resid), by = idVars]
-dt[ , sd_resid:=sd(resid), by=idVars]
+dt[ , mad_resid:=mad(resid, na.rm=T), by = idVars]
+dt[ , sd_resid:=sd(resid, na.rm=T), by=idVars]
 dt[ , thresh_var:=mad_resid]
 dt[mad_resid < 1, thresh_var:=sd_resid]
 dt[ , c('sd_resid', 'mad_resid'):=NULL]
@@ -127,7 +158,8 @@ dt[is.na(outlier), outlier:=FALSE]
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
-# dt[ , facility:=word(org_unit, 2, -1)]
+dt[ , facility:=word(org_unit, 2, -1)]
+
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
 
@@ -182,10 +214,11 @@ out[ ,c('count', 'combine2', 'combine3'):=NULL]
 # as some outliers have now been changed
 if (set=='pnls') out[ , combine:=paste0(org_unit_id, sex, element)]
 if (set=='base') out[ , combine:=paste0(org_unit_id, element)]
+if (set=='sigl') out[, combine:=paste0(org_unit_id, drug)]
 
 out_new = out[outlier==T, unique(combine)]
 out = out[combine %in% out_new]
-out[ ,combine:=NULL]
+out[ , combine:=NULL]
 
 #----------------------------
 # create the graphs
@@ -326,14 +359,6 @@ for(i in seq(length(list_of_plots))) {
 dev.off()
 
 #--------------------------------
-# create a data set exclusively of the outliers to remove
-# save it to remove from the full data 
-
-outliers = out[outlier==T]
-saveRDS(outliers, paste0(dir, outFile2))
-
-#--------------------------------
-
 
 
 

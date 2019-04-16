@@ -16,10 +16,10 @@ url = 'https://vldash.cphluganda.org/other_data'
               
 # load
 data = fromJSON(url)
+
+# set the output directory
+outDir_facilities = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/meta_data/')
   
-# original function to extract the facility ids from the list
-# facilities_full <- data.table(rbindlist(lapply(1:length(data$facilities), function(x) data$facilities[[x]]))) 
- 
 #-----------------------------
 # extract the facilities and their associated meta data 
 
@@ -101,44 +101,15 @@ hubs_1 = data$hubs
   hubs[ , hub_id:=as.numeric(hub_id)]
   
 # ----------------------------------------------
-# create a single meta data file to merge with a data set
+# export meta data files
   
-# merge the district names into the facilities meta data 
-facilities = merge(facilities, districts, by='district_id', all.x=T)
-
-# merge the hubs into the meta data
-facilities = merge(facilities, hubs, by='hub_id', all.x=T)
-
-# ------------------------------------
-# error fix in original data:
-# some facilities lack a district id but contain district name in parenthesexs
-facilities[facility_id==2091, district:='Masindi']
-facilities[facility_id==8313, district:='Butebo']
-facilities[facility_id==2204, district:='Kaliro']
-facilities[facility_id==1018, district:='Hoima']
-facilities[facility_id==2374, district:='Kabale']
-facilities[facility_id==8311, district:='Kole']  
-facilities[facility_id==8290, district:='Rakai']  
-facilities[facility_id==8260, district:='Lyantonde']  
-
-# merge in district ids based on names
-setnames(districts, 'district_id', 'district_id_new')
-facilities = merge(facilities, districts, by='district', all.x=T)
-facilities[is.na(district_id) & !is.na(district), district_id:=district_id_new]
-facilities[ ,district_id_new:=NULL]
-
-# some ids are not in the original list
-facilities[facility_id==8313, district_id:=136]
-facilities[facility_id==8311, district_id:=104]  
-facilities[facility_id==8290, district_id:=80]  
-
-# replace facility left blank with NA
-facilities[facility=='Facility Left Blank', facility:=NA]
-# ----------------------------------------------
+# save facilities data to merge into downloads from Uganda VL
+setnames(facilities, c('hub_id', 'district_id'), c('meta_hub_id', 'meta_district_id') )
+saveRDS(facilities, paste0(outDir_facilities, 'facilities.rds'))
   
+# save districts data to merge into downloads from Uganda VL
+saveRDS(districts, paste0(outDir_facilities, 'districts.rds'))
+
 # save full facilities and data to merge into downloads from Uganda VL
-saveRDS(facilities, paste0(root,
-              '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard/meta_data/facilities.rds'))
-
+saveRDS(hubs, paste0(outDir_facilities, 'hubs.rds'))
 # ----------------------------------------------
-  
