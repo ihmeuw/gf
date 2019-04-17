@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'base'
+set = 'sigl'
 
 # user name for sourcing functions
 user_name = 'ccarelli'
@@ -43,8 +43,8 @@ if (set=='sigl') outFile = 'outliers/sigl_drugs_qr_outliers.pdf'
 
 # source function - locally or on the cluster
 # reset working directory using user_name to specify path
-# setwd()
-# source('./core/standardizeHZNames.R')
+setwd('C:/local/gf')
+source('./core/standardizeHZNames.R')
 #------------------------------------
 # read in the file
 
@@ -75,7 +75,7 @@ if (set == 'sigl') {
 }
 
 #-----------------------------------
-# hacky bae function - i will get rid of this
+# hacky base function - i will get rid of this
 if (set=='base') {
   
   # keep the french element
@@ -102,12 +102,11 @@ if (set=='base') {
   dt[element_id==17 , element:='Severe malaria treated - pregnant woman' ]
   dt[element_id==18 , element:='Simple malaria treated - pregnant woman' ]
 }
-
-
+#------------------------------------
 #------------------------------------
 # fix the date 
-
-dt[ ,date:=as.Date(date, origin='1970-01-01')]
+dt[ , date:=as.Date(date, origin='1970-01-01')]
+#------------------------------------
 #------------------------------------
 # merge in the facility names to label the graphs 
 
@@ -127,38 +126,38 @@ if (set=='base') idVars = c('org_unit_id', 'element')
 if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable') 
 
 #------------------------------------
-# identify outliers using the median of the fitted values + 10 MADS of the residuals
+# identify outliers where the residuals are larger than the median of the residuals +/- 10 MADS of the residuals
 
 # threshold for outlier removal
 # not sure if you need NA removal here
-dt[ , mad_resid:=mad(resid, na.rm=T), by = idVars]
-dt[ , sd_resid:=sd(resid, na.rm=T), by=idVars]
-dt[ , thresh_var:=mad_resid]
-dt[mad_resid < 1, thresh_var:=sd_resid]
-dt[ , c('sd_resid', 'mad_resid'):=NULL]
+dt[!all(is.na(resid)) , mad_resid := mad(resid, na.rm=TRUE), by = idVars]
+dt[!all(is.na(resid)) , sd_resid := sd(resid, na.rm=TRUE), by = idVars]
+dt[ , thresh_var := mad_resid]
+# if mad of residuals is less than one, use SD 
+dt[ mad_resid < 1, thresh_var := sd_resid]
+dt[ , c('sd_resid', 'mad_resid') := NULL]
 
-# identify the thresholds based on the SD of the fitted_valueuals
-dt[!all(is.na(resid)), thresh5:=median(fitted_value, na.rm=T) + (5*thresh_var), by = idVars]
-dt[!all(is.na(resid)), thresh10:=median(fitted_value, na.rm=T) + (10*thresh_var), by = idVars]
+# identify the thresholds for outliers using the thresh_var (mad or sd of residuals) + the median of the residuals
+dt[!all(is.na(resid)), thresh5 := median(resid, na.rm=TRUE) + (5 * thresh_var), by = idVars]
+dt[!all(is.na(resid)), thresh10 := median(resid, na.rm=TRUE) + (10 * thresh_var), by = idVars]
 
 # set lower and upper bounds
 # does this need to be for only !all(is.na) as well? not sure
-dt[ , upper:=thresh10]
-dt[!all(is.na(resid)), lower:=(median(fitted_value, na.rm=T) - (10*thresh_var)), by = idVars]
+dt[ , upper := fitted_value + (10 * thresh_var)]
+dt[ , lower := fitted_value - (10 * thresh_var)]
 
 # add a 5 SD bound to investigate on the graphs
-dt[!all(is.na(resid)), upper_mid:=median(fitted_value, na.rm=T) + (5*thresh_var), by = idVars]
-dt[!all(is.na(resid)), lower_mid:=median(fitted_value, na.rm=T) - (5*thresh_var), by = idVars]
+dt[ , upper_mid := fitted_value + (5 * thresh_var)]
+dt[ , lower_mid := fitted_value - (5 * thresh_var)]
 
 # select outliers
-# the value is 100 or more and greater than 10 times the SD of the fitted_values
-dt[(value < lower | upper < value) & 100 < value, outlier:=TRUE]
-dt[is.na(outlier), outlier:=FALSE]
+# the value is 100 or more and greater than 10 times the mad of the fitted_values
+dt[, outlier := ifelse( (value > 100 & ( resid > thresh10 )), TRUE, FALSE) ]
 
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
-dt[ , facility:=word(org_unit, 2, -1)]
+# dt[ , facility:=word(org_unit, 2, -1)]
 
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
@@ -167,13 +166,16 @@ if (set=='pnls') dt[ , combine:=paste0(org_unit_id, sex, element)]
 if (set=='base')  dt[ , combine:=paste0(org_unit_id, element)]
 if (set=='sigl') dt[ , combine := paste0(org_unit_id, drug)]
 
-out_orgs = dt[outlier==T, unique(combine)]
+out_orgs = dt[outlier == TRUE, unique(combine)]
 out = dt[combine %in% out_orgs]
 
 # drop the unique identifier
-out[ , combine:=NULL]
-dt[ , combine:=NULL]
+out[ , combine := NULL]
+dt[ , combine := NULL]
 
+# number of outliers
+dt[outlier==TRUE, .N] 
+# ( dt[outlier==TRUE, .N]  / dt[!is.na(value), .N] ) * 100 # for sigl = 811; 0.017% of non-missing data
 #----------------------------
 # eliminate outliers that are part of an emerging trend
 # do not demarcate any two or more consecutive outliers as outliers
@@ -184,8 +186,8 @@ if (set=='base') out[ , combine2:=paste0(org_unit_id, element, category)]
 if (set=='sigl') out[ , combine2:=paste0(org_unit_id, drug, variable)]
 
 # subset to only the age categories, subpops with more than one outlier
-out[ , count:=sum(outlier), by=combine2]
-drop = out[1 < count & outlier==T]
+out[ , count := sum(outlier), by = combine2]
+drop = out[ 1 < count & outlier == TRUE]
 
 # order by the unique identifier and then by date
 drop = drop[order(combine2, date)]
@@ -219,6 +221,10 @@ if (set=='sigl') out[, combine:=paste0(org_unit_id, drug)]
 out_new = out[outlier==T, unique(combine)]
 out = out[combine %in% out_new]
 out[ , combine:=NULL]
+
+# view distribution of outliers by variable
+if (set == 'sigl') dist = out[outlier == TRUE, .N, by = c('drug', 'variable')]
+if (set == 'sigl') dist2 = out[outlier == TRUE, .N, by = c('drug')]
 
 #----------------------------
 # create the graphs
