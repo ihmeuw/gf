@@ -90,8 +90,10 @@ if (rerun_adjust==TRUE) {
 # 4b actually relies on the output from 5d...
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
-	source('./impact_evaluation/drc/4a_explore_first_half_data.r')
-	source('./impact_evaluation/drc/4b_explore_second_half_data.r')
+	source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
+	source('./impact_evaluation/drc/4d_set_up_for_second_half_analysis.r')
+	source('./impact_evaluation/drc/4c_explore_first_half_data.r')
+	source('./impact_evaluation/drc/4d_explore_second_half_data.r')
 }
 
 # ---------------------------------------
@@ -100,12 +102,9 @@ if (rerun_explore==TRUE) {
 # 5b and 5e will be very slow if not on IHME's cluster
 # ---------------------------------------
 if (rerun_models==TRUE) { 
-	source('./impact_evaluation/drc/5a_set_up_for_analysis.r')
-	source('./impact_evaluation/drc/5b_run_analysis.r')
-	source('./impact_evaluation/drc/5d_set_up_for_second_half_analysis.r')
-	source('./impact_evaluation/drc/5e_run_second_half_analysis.r')
+	source('./impact_evaluation/drc/5a_run_first_half_analysis.r')
+	source('./impact_evaluation/drc/5b_run_second_half_analysis.r')
 }
-
 
 # ---------------------------------------
 # Run analyses based on model
