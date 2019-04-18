@@ -6,6 +6,9 @@
 # The current working directory should be the root of this repo (set manually by user)
 # ------------------------------------------------
 
+# To Do
+# Make this and 4d work based on model object for generic use
+
 source('./impact_evaluation/drc/set_up_r.r')
 
 # ----------------------------------------------------------------------------
