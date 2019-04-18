@@ -11,7 +11,7 @@
 # testRun - (logical) TRUE will run the model with limited MCMC steps, FALSE will run the full thing
 # ------------------------------------------------
 
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 
 
 # ----------------------------------------------
@@ -64,7 +64,7 @@ for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','d
 # Run model
 
 # define model object
-source(paste0('./impact_evaluation/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # fit model
 if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))

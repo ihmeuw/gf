@@ -6,7 +6,7 @@
 # The current working directory should be the root of this repo (set manually by user)
 # ------------------------------------------------
 
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 
 # ----------------------------------------------------------------------------
 # Load/prep data
@@ -72,7 +72,7 @@ long[is.na(intervention), activity:=ifelse(grepl('received',indicator), 'Activit
 long = long[date>=2010 & date<2019]
 
 # load "node table" for convenient labels
-nodeTable = fread('./impact_evaluation/visualizations/vartable.csv')
+nodeTable = fread('./impact_evaluation/drc/visualizations/vartable.csv')
 # ----------------------------------------------
 
 

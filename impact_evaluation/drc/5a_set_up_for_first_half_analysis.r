@@ -10,7 +10,7 @@
 # TO DO
 # how to implement counterfactual before calculating cumulatives and standardizing variance???
 
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 
 # -----------------------------------------------------------------
 # Load/prep data

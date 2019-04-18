@@ -7,7 +7,7 @@
 # ----------------------------------------------
 
 
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 
 
 # ------------------------------------------------------------------

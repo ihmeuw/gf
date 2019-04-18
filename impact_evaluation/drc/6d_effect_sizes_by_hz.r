@@ -10,14 +10,14 @@
 # Load/prep data and functions
 
 library(rgeos) # for gsimplify
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 source('./core/standardizeHZNames.R')
 
 # load model results
 load(outputFile5b)
 
 # load nodeTable for graphing
-# nodeTable = fread('./impact_evaluation/visualizations/vartable.csv')
+# nodeTable = fread('./impact_evaluation/drc/visualizations/vartable.csv')
 
 # shape file location
 shapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')

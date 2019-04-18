@@ -6,7 +6,7 @@
 # qsub -l archive=TRUE -cwd -N ie_script_5e -l fthread=4 -l m_mem_free=4G -q all.q -P ihme_general -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/5e_run_second_half_analysis.r
 # ------------------------------------------------
 
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 
 
 # ---------------------------
@@ -56,7 +56,7 @@ summary(lmFit10)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-source(paste0('./impact_evaluation/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)

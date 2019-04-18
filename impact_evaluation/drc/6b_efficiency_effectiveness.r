@@ -9,7 +9,7 @@
 # -----------------------------------------------
 # Load/prep data and functions
 
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 
 # load model results
 load(outputFile5b)
@@ -24,8 +24,8 @@ summaries2 = copy(summaries)
 scaling_factors2=copy(scaling_factors)
 
 # load nodeTable for graphing
-nodeTable1 = fread('./impact_evaluation/visualizations/vartable.csv')
-nodeTable2 = fread('./impact_evaluation/visualizations/vartable_second_half.csv')
+nodeTable1 = fread('./impact_evaluation/drc/visualizations/vartable.csv')
+nodeTable2 = fread('./impact_evaluation/drc/visualizations/vartable_second_half.csv')
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable1 = nodeTable1[variable %in% names(data1)]
