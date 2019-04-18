@@ -2,7 +2,7 @@
 # David Phillips
 # 
 # 3/25/2019
-# Analyze relative magnitude of coefficients, i.e. bottleneck analysis
+# Analyze specific effect sizes by health zone
 # -----------------------------------
 
 
@@ -14,7 +14,7 @@ source('./impact_evaluation/drc/set_up_r.r')
 source('./core/standardizeHZNames.R')
 
 # load model results
-load(outputFile5b)
+load(outputFile5a)
 
 # load nodeTable for graphing
 # nodeTable = fread('./impact_evaluation/drc/visualizations/vartable.csv')

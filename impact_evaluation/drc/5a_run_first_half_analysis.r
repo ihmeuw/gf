@@ -22,7 +22,7 @@ modelVersion = 'drc_malaria6'
 # ---------------------------
 # Load data
 set.seed(1)
-load(outputFile5a)
+load(outputFile4a)
 # ---------------------------
 
 
@@ -98,7 +98,7 @@ if(runAsQsub==FALSE) {
 # run fully in parallel if specified
 if (runAsQsub==TRUE) { 
 	# save copy of input file for jobs
-	file.copy(outputFile5a, outputFile5a_scratch, overwrite=TRUE)
+	file.copy(outputFile4a, outputFile4a_scratch, overwrite=TRUE)
 	# store T (length of array)
 	hzs = unique(data$health_zone)
 	T = length(hzs)
@@ -106,7 +106,7 @@ if (runAsQsub==TRUE) {
 	system(paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
 		' -l fthread=1 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
-		' ./core/r_shell_blavaan.sh ./impact_evaluation/5e_run_single_model.r ', 
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/5c_run_single_model.r ', 
 		modelVersion, ' 1 FALSE'))
 	# wait for jobs to finish (2 files per job)
 	while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
@@ -139,21 +139,21 @@ means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # Save model output and clean up
 
 # save all sem fits just in case they're needed
-print(paste('Saving', outputFile5b))
-save(list=c('data','untransformed','model','summaries','means','scaling_factors'), file=outputFile5b)
+print(paste('Saving', outputFile5a))
+save(list=c('data','untransformed','model','summaries','means','scaling_factors'), file=outputFile5a)
 
 # save full output for archiving
-outputFile5b_big = gsub('.rdata','_all_semFits.rdata',outputFile5b)
-print(paste('Saving', outputFile5b_big))
+outputFile5a_big = gsub('.rdata','_all_semFits.rdata',outputFile5a)
+print(paste('Saving', outputFile5a_big))
 semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 })
-save(list=c('data','untransformed','model','semFits','summaries','means','scaling_factors'), file=outputFile5b_big)
+save(list=c('data','untransformed','model','semFits','summaries','means','scaling_factors'), file=outputFile5a_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
-archive(outputFile5b, 'model_runs')
-archive(outputFile5b_big, 'model_runs')
+archive(outputFile5a, 'model_runs')
+archive(outputFile5a_big, 'model_runs')
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)

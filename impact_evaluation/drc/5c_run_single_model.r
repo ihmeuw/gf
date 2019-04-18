@@ -43,10 +43,10 @@ print(paste('Test Run:', testRun))
 # ---------------------------------------------------------------------------------------------------
 # Load data
 set.seed(1)
-if (Sys.info()[1]!='Windows' & modelStage==1) load(outputFile5a_scratch)
-if (Sys.info()[1]=='Windows' & modelStage==1) load(outputFile5a)
-if (Sys.info()[1]!='Windows' & modelStage==2) load(outputFile5d_scratch)
-if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile5d)
+if (Sys.info()[1]!='Windows' & modelStage==1) load(outputFile4a_scratch)
+if (Sys.info()[1]=='Windows' & modelStage==1) load(outputFile4a)
+if (Sys.info()[1]!='Windows' & modelStage==2) load(outputFile4b_scratch)
+if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile4b)
 
 # subset to current health zone
 h = unique(data$health_zone)[task_id]

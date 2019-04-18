@@ -249,7 +249,7 @@ for(i in seq(nrow(pairs))) {
 
 # --------------------------------
 # Save file
-pdf(outputFile4a, height=5.5, width=9)
+pdf(outputFile4c, height=5.5, width=9)
 # p1a
 p1b
 # p1c
@@ -269,5 +269,5 @@ do.call('grid.arrange',c(p6, list(top=textGrob('Correlations - All Activities an
 dev.off()
 
 # save a time-stamped version for reproducibility
-archive(outputFile4a)
+archive(outputFile4c)
 # --------------------------------

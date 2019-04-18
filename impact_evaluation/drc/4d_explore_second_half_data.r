@@ -10,7 +10,7 @@ source('./impact_evaluation/drc/set_up_r.r')
 
 # ----------------------------------------------------------------------------
 # Load/prep data
-load(outputFile5c)
+load(outputFile4b)
 
 # unrescale
 transformedData = copy(data)
@@ -212,7 +212,7 @@ for(h in hzs) {
 
 # --------------------------------
 # Save file
-pdf(outputFile4b, height=5.5, width=9)
+pdf(outputFile4d, height=5.5, width=9)
 for(i in seq(length(hzs))) { 
 	print(hzOutcomePlotsTs[[i]])
 }
@@ -234,5 +234,5 @@ for(i in seq(length(hzs))) {
 dev.off()
 
 # save a time-stamped version for reproducibility
-archive(outputFile4b)
+archive(outputFile4d)
 # --------------------------------

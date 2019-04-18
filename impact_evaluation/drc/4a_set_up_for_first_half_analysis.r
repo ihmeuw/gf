@@ -156,8 +156,8 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 
 # ---------------------------------------------------------
 # Save file
-save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile5a)
+save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile4a)
 
 # save a time-stamped version for reproducibility
-archive(outputFile5a)
+archive(outputFile4a)
 # ---------------------------------------------------------

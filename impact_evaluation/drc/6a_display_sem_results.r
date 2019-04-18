@@ -18,12 +18,12 @@ source('./impact_evaluation/_common/predict_lavaan.r')
 source('./impact_evaluation/visualizations/graphLavaan.r')
 
 # load model results
-load(outputFile5b)
+load(outputFile5a)
 data1=copy(data)
 means1 = copy(means)
 summaries1 = copy(summaries)
 scaling_factors1=copy(scaling_factors)
-load(outputFile5e)
+load(outputFile5b)
 data2=copy(data)
 means2 = copy(means)
 summaries2 = copy(summaries)
@@ -68,7 +68,7 @@ p4 = semGraph(parTable=means2, nodeTable=nodeTable2,
 
 # -----------------------------------
 # Save output
-pdf(outputFile6, height=6, width=9)
+pdf(outputFile6a, height=6, width=9)
 print(p1)
 print(p2)
 print(p3)
@@ -76,5 +76,5 @@ print(p4)
 dev.off()
 
 # save a time-stamped version for reproducibility
-archive(outputFile6)
+archive(outputFile6a)
 # -----------------------------------
