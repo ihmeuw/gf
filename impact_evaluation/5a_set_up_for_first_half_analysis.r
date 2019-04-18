@@ -113,7 +113,7 @@ for(v in complVars) {
 	data[, (v):=smithsonTransform(get(v))]
 }
 
-# log-transform all variables
+# log-transform some variables
 logVars = c('ITN_consumed_cumulative','ACTs_SSC_cumulative','RDT_completed_cumulative','SP_cumulative','severeMalariaTreated_cumulative','totalPatientsTreated_cumulative')
 for(v in logVars) data[, (v):=log(get(v))]
 for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
