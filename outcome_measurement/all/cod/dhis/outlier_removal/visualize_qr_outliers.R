@@ -36,7 +36,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
 if (set=='base') outFile = 'outliers/base_outliers_replaced.pdf'
-if (set=='sigl') outFile = 'outliers/sigl_drugs_qr_outliers.pdf'
+if (set=='sigl') outFile = 'outliers/sigl_drugs_qr_outliers_04_17_19.pdf'
 
 #------------------------------------
 # source function for health zone names
@@ -127,6 +127,13 @@ if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable')
 
 #------------------------------------
 # identify outliers where the residuals are larger than the median of the residuals +/- 10 MADS of the residuals
+# set threshold for different data sets:
+if (set=='pnls' | set == 'base'){
+  t1 = 5
+  t2 = 10  }
+if (set=='sigl'){
+  t1 = 10
+  t2 = 20 }
 
 # threshold for outlier removal
 # not sure if you need NA removal here
@@ -138,21 +145,28 @@ dt[ mad_resid < 1, thresh_var := sd_resid]
 dt[ , c('sd_resid', 'mad_resid') := NULL]
 
 # identify the thresholds for outliers using the thresh_var (mad or sd of residuals) + the median of the residuals
-dt[!all(is.na(resid)), thresh5 := median(resid, na.rm=TRUE) + (5 * thresh_var), by = idVars]
-dt[!all(is.na(resid)), thresh10 := median(resid, na.rm=TRUE) + (10 * thresh_var), by = idVars]
+dt[!all(is.na(resid)), thresh1 := median(resid, na.rm=TRUE) + (t1 * thresh_var), by = idVars]
+dt[!all(is.na(resid)), thresh2 := median(resid, na.rm=TRUE) + (t2 * thresh_var), by = idVars]
 
 # set lower and upper bounds
 # does this need to be for only !all(is.na) as well? not sure
-dt[ , upper := fitted_value + (10 * thresh_var)]
-dt[ , lower := fitted_value - (10 * thresh_var)]
+dt[ , upper := fitted_value + (t2 * thresh_var)]
+dt[ , lower := fitted_value - (t2 * thresh_var)]
 
 # add a 5 SD bound to investigate on the graphs
-dt[ , upper_mid := fitted_value + (5 * thresh_var)]
-dt[ , lower_mid := fitted_value - (5 * thresh_var)]
+dt[ , upper_mid := fitted_value + (t1 * thresh_var)]
+dt[ , lower_mid := fitted_value - (t1 * thresh_var)]
 
 # select outliers
-# the value is 100 or more and greater than 10 times the mad of the fitted_values
-dt[, outlier := ifelse( (value > 100 & ( resid > thresh10 )), TRUE, FALSE) ]
+# set minimum value to be considered an outlier
+if (set=='pnls' | set == 'base'){
+  limit = 100}
+if (set=='sigl'){
+  limit =  100}
+# the value is greater than the limit set above and greater than 10 times the mad of residuals 
+# or less than 10 times the negative mad of the residuals
+dt[, outlier := ifelse( (value > limit & ( resid > thresh2 )), TRUE, FALSE) ]
+dt[(value > limit & ( resid < -thresh2 )), outlier :=TRUE]
 
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
