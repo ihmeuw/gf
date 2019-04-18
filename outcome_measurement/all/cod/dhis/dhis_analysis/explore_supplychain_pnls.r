@@ -9,9 +9,9 @@
 #  Add available-usable stock to title where it refers to it in slides, 
 # Split sex-stratified variables out into their own PDF. 
 # For two indicators in test-kits PDFs, generate both 'total counts' and 'mean facility-days' maps
-#     make these labels really clear! 
+#     make these labels really clear! *DONE
 # Generate a map that shows changes in stock-out days in a district over time, facet-wrapped by month, for only 2018 data. 
-#   Take this same map and subset to the facility-level. 
+#   Take this same map and subset to the facility-level. *DONE
 # 
 
 # Not urgent - check online PNLS dashboard and make sure new first-line treatment exists. 
@@ -128,6 +128,10 @@ saveRDS(dt, paste0(dir, "prepped/pnls_drug.rds"))
 #--------------------------------------------------------------
 # Subset this cleaned data set into specialized data tables
 #--------------------------------------------------------------
+
+#Make some nice color scales to use later on. 
+colScale = scale_fill_gradient2(low="red", high="green", midpoint=0)
+colScale2 = scale_fill_gradient2(low="green", high="red", midpoint=0)
 
 #Create an 'annual' dataset to address the reporting lag at the end of 2018. 
 # Subset both years to only the first 9 months so they are comparable. 
@@ -277,10 +281,47 @@ saveRDS(dt, paste0(dir, "prepped/pnls_drug.rds"))
   }
   
   monthly_so_change_map = merge(monthly_so_change, coord_months, by=c('id', 'date'), all.y=TRUE) 
-  
-  #And make a nice color scheme to go with it. 
-  colScale = scale_fill_gradient2(low="red", high="green", midpoint=0)
+
 }
+{
+  health_posts = dt[level%in%c("health_post")]
+  facs_per_district_hp = health_posts[stock_category == "number_of_days_stocked_out" & !is.na(value) & element_id=='jJuipTLZK4o', .(facs=length(unique(org_unit_id))), by=c('dps', 'date')] #Exclude impossible day values here. 
+  
+  monthly_so_rate_dps_hp = health_posts[stock_category == 'number_of_days_stocked_out' & element_id=='jJuipTLZK4o', .(id, value, date, expected_days, dps)]
+  monthly_so_rate_dps_hp = monthly_so_rate_dps_hp[, .(value=sum(value, na.rm = TRUE)), by=c('id', 'date', 'expected_days', 'dps')]
+  
+  monthly_so_rate_dps_hp = merge(monthly_so_rate_dps_hp, facs_per_district_hp, by=c('dps', 'date'))
+  
+  #Generate a variable at the dps level. 
+  monthly_so_rate_dps_hp[, expected_days_dps:=expected_days*facs]
+  monthly_so_rate_dps_hp[, monthly_so_rate:=round(value/expected_days_dps, 2)]
+  
+  monthly_so_rate_map_hp = merge(monthly_so_rate_dps_hp, coord_months, by=c('id', 'date'), all.y=TRUE) 
+  
+}
+#Make a map that shows how the number of stock-out days in a district has changed over time. 
+#Just do this for the first line drug combination for now. 
+{
+  #Use the monthly stock out rate graph that you've already made above. 
+  #Do a very simple visual aid - create a variable 'change' that == 'increase' if the stock-out days in this month were 
+  #higher than the stock-out days last month, and 'decrease' otherwise. 
+  monthly_so_change_hp = data.table()
+  for (district in unique(monthly_so_rate_dps_hp$dps)){
+    # i = 1. If stock out days for i = 2 are higher than me, 'increase'. Otherwise 'decrease'. 
+    temp = monthly_so_rate_dps_hp[dps==district]
+    if (nrow(temp)!=1){
+      for (i in 2:nrow(temp)-1){
+        temp$status[i+1] = ifelse(temp$monthly_so_rate[i]<temp$monthly_so_rate[i+1], "INCREASE", "DECREASE")
+        temp$change[i+1] = temp$monthly_so_rate[i+1]-temp$monthly_so_rate[i]
+      }
+    }
+    monthly_so_change_hp= rbind(monthly_so_change_hp, temp, fill=T)
+  }
+  
+  monthly_so_change_map_hp = merge(monthly_so_change_hp, coord_months, by=c('id', 'date'), all.y=TRUE) 
+  
+}
+
 
 #--------------------------------------------------------------
 #Make some maps and charts
@@ -453,7 +494,7 @@ treat6 = ggplot(mean_so_map3, aes(x=long, y=lat, group=group, fill=treat_per_fac
   scale_fill_gradientn(colors=(brewer.pal(9, 'Greens'))) + 
   theme_void() +
   facet_wrap(~year, strip.position="bottom") +
-  labs(title="'TDF/3TC/EFV(300/300/600 mg) - 30 ces' mean facility-days out of stock by district", subtitle="Annual data restricted to Jan-Aug", 
+  labs(title="TDF/3TC/EFV mean facility-days out of stock by district", subtitle="Annual data restricted to Jan-Aug", 
        caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
 
 treat7 = ggplot(monthly_so_rate_map[year(date)==2018], aes(x=long, y=lat, group=group, fill=monthly_so_rate)) + 
@@ -463,7 +504,7 @@ treat7 = ggplot(monthly_so_rate_map[year(date)==2018], aes(x=long, y=lat, group=
   scale_fill_gradientn(colors=(brewer.pal(9, 'Purples'))) + 
   theme_void() +
   facet_wrap(~date, strip.position = "bottom") +
-  labs(title="'AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces' stock-out rate per district by month for 2018", subtitle="Data controlled for reporting", 
+  labs(title="TDF/3TC/EFV stock-out rate per district by month", subtitle="Data controlled for reporting", 
        caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
 
 treat8 = ggplot(monthly_so_change_map[year(date)==2018], aes(x=long, y=lat, group=group, fill=status)) + 
@@ -474,7 +515,7 @@ treat8 = ggplot(monthly_so_change_map[year(date)==2018], aes(x=long, y=lat, grou
   scale_fill_manual(breaks = c("DECREASE", "INCREASE"), 
                     values=c("green", "red"))+
   facet_wrap(~date) +
-  labs(title="'AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces' absolute changes in stock-out rate for 2018", subtitle="Data controlled for reporting", 
+  labs(title="TDF/3TC/EFV absolute changes in stock-out rate for 2018", subtitle="Data controlled for reporting", 
        caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
 
 treat9 = ggplot(monthly_so_change_map[year(date)==2018], aes(x=long, y=lat, group=group, fill=change)) + 
@@ -482,9 +523,31 @@ treat9 = ggplot(monthly_so_change_map[year(date)==2018], aes(x=long, y=lat, grou
   geom_polygon() + 
   geom_path(size=0.01) + 
   theme_void() +
-  colScale+
+  colScale2+
   facet_wrap(~date) +
-  labs(title="'AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces' rate of change of stock-outs by district", subtitle="Data controlled for reporting", 
+  labs(title="TDF/3TC/EFV rate of change of stock-outs by district", subtitle="Data controlled for reporting", 
+       caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
+
+#Add one more map that shows absolute changes in stock at the level of each facility. 
+treat10 = ggplot(monthly_so_change_map_hp[year(date)==2018], aes(x=long, y=lat, group=group, fill=status)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  theme_void() +
+  scale_fill_manual(breaks = c("DECREASE", "INCREASE"), 
+                    values=c("green", "red"))+
+  facet_wrap(~date) +
+  labs(title="TDF/3TC/EFV absolute changes in stock-out rate for 2018, health posts only", subtitle="Data controlled for reporting", 
+       caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
+
+treat11 = ggplot(monthly_so_change_map_hp[year(date)==2018], aes(x=long, y=lat, group=group, fill=change)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  theme_void() +
+  colScale2+
+  facet_wrap(~date) +
+  labs(title="TDF/3TC/EFV rate of change of stock-outs by district, health posts only", subtitle="Data controlled for reporting", 
        caption = "*Denominator only includes facilities that reported data for the given treatment regimen")
 
 #--------------------------------------------------------------
@@ -562,5 +625,7 @@ treat7
 treat8
 treat9
 
+treat10
+treat11
 
 dev.off()

@@ -19,7 +19,15 @@ setwd(prep_dir)
 print(paste("There are", dt[is.na(facility), sum(patients_received)], 
             "patients where the facility is missing."))
 
-dt = dt[!is.na(facility)]
+print(paste("But only", dt[is.na(facility) & is.na(district), sum(patients_received)], 
+            "patients where the facility and district are missing."))
+
+# drop out facilities with no name and no associated district
+dt = dt[!(is.na(facility) & is.na(district))]
+
+# add a facility name for the facilities that are missing
+dt[is.na(facility), facility:=paste0('Facility #', facility_id)]
+
 #-----------------------------------------
 # change district names from new 2016/17 districts to match the shape file
 
