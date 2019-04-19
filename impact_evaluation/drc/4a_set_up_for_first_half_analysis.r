@@ -80,17 +80,14 @@ data = na.omit(data)
 # Data transformations and other fixes for Heywood cases
 
 # make cumulative variables
-data[, ghe_cumulative:=cumsum(ghe), by='health_zone']
-# data[, oop_cumulative:=cumsum(oop), by='health_zone']
-data[, ITN_received_cumulative:=cumsum(value_ITN_received), by='health_zone']
-data[, RDT_received_cumulative:=cumsum(value_RDT_received), by='health_zone']
-data[, ACT_received_cumulative:=cumsum(value_ACT_received), by='health_zone']
-data[, ITN_consumed_cumulative:=cumsum(value_ITN_consumed), by='health_zone']
-data[, ACTs_SSC_cumulative:=cumsum(value_ACTs_SSC), by='health_zone']
-data[, RDT_completed_cumulative:=cumsum(value_RDT_completed), by='health_zone']
-data[, SP_cumulative:=cumsum(value_SP), by='health_zone']
-data[, severeMalariaTreated_cumulative:=cumsum(value_severeMalariaTreated), by='health_zone']
-data[, totalPatientsTreated_cumulative:=cumsum(value_totalPatientsTreated), by='health_zone']
+cumulVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
+cumulVars = c(cumulVars, 'value_ITN_received', 'value_RDT_received', 'value_ACT_received', 
+	'value_ITN_consumed', 'value_ACTs_SSC', 'value_RDT_completed', 'value_SP', 
+	'value_severeMalariaTreated', 'value_totalPatientsTreated')
+for(v in cumulVars) { 
+	nv = gsub('value_','',v) 
+	data[, (paste0(nv,'_cumulative')):=cumsum(get(v)), by='health_zone']
+}
 
 # split before transformations
 untransformed = copy(data)
@@ -150,6 +147,7 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 
 # -------------------------------------------------------------------------
 # Save file
+print(paste('Saving:', outputFile4a)) 
 save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile4a)
 
 # save a time-stamped version for reproducibility
