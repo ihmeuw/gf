@@ -7,229 +7,130 @@
 # ------------------------------------------------
 
 source('./impact_evaluation/drc/set_up_r.r')
+library(GGally)
 
-# ----------------------------------------------------------------------------
+# --------------------------------------------------------------------
 # Load/prep data
+
+# load data from step 4a
 load(outputFile4b)
 
-# unrescale
-transformedData = copy(data)
-for(v in names(scaling_factors)) data[,(v):=get(v)*scaling_factors[[v]]]
+# load model object
+modelVersion = 'drc_malaria_impact4'
+source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
-# exponentiate
-logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated',
-	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate','ITN_rate_cumul','case_fatality',
-	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate')
-for(v in logVars) data[, (v):=exp(get(v))]
-# ----------------------------------------------------------------------------
+# load "node table" for convenient labels
+nodeTable = fread(nodeTableFile2)
+
+# sample n random health zones to graph
+n = 6
+hzs = sample(data$health_zone, n)
+sample = data[health_zone %in% hzs]
+sample_untr = untransformed[health_zone %in% hzs]
+# --------------------------------------------------------------------
 
 
 # ----------------------------------------------
 # Set up to graph
 
-# variable lists
-byVars = c('date','health_zone')
-outcomeVars = c('ACTs_CHWs_rate', 'mildMalariaTreated_rate', 
-	'RDT_rate', 'severeMalariaTreated_rate', 'ITN_rate', 
-	'SP_rate','itn_coverage_rate', 'act_coverage_rate')
-impactVars = c('newCasesMalariaMild_rate','newCasesMalariaSevere_rate',
-	'malariaDeaths_rate', 'incidence_rate', 'prevalence_rate', 
-	'mortality_rate')
-modelVars = c('itn_coverage_rate', 'act_coverage_rate', 
-	'incidence_rate', 'prevalence_rate', 'mortality_rate')
-	
-# melt un-transformed data long
-long=melt(data, id.vars=byVars)
-long[variable %in% outcomeVars, section:='outcomes']
-long[variable %in% impactVars, section:='impact']
-long[, model_estimate:=ifelse(variable %in% modelVars, TRUE, FALSE)]
-	
-# melt transformed data long
-longT=melt(transformedData, id.vars=byVars)
-longT[variable %in% outcomeVars, section:='outcomes']
-longT[variable %in% impactVars, section:='impact']
-longT[, model_estimate:=ifelse(variable %in% modelVars, TRUE, FALSE)]
+# parse model object
+parsedModel = lavParseModelString(model)
+modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 
-# sample of health zones to graph
-# hzs = c('bambu', 'boga', 'bokoro', 'mambasa', 'opienge', 'titule', 'tumba', 'wamba', 
-	# sample(unique(data$health_zone), 10) )
-hzs = sample(unique(data$health_zone), 20)
+# organize completeness variables last, remove date
+complVars = modelVars[grepl('completeness',modelVars)]
+modelVars = c(modelVars[!modelVars %in% complVars], complVars)
+modelVars = modelVars[modelVars!='date']
+
+# organize groups of variables
+lhsVars = unique(parsedModel$lhs[parsedModel$op=='~'])
+varGroups = lapply(lhsVars, function(v) { 
+	c(v, parsedModel$rhs[parsedModel$lhs==v & parsedModel$rhs!='date'])
+})
+
+# melt long
+long = melt(sample, id.vars=c('health_zone','date'))
+long = merge(long, nodeTable, by='variable', all.x=TRUE)
+long[is.na(label), label:=variable]
 # ----------------------------------------------
 
 
-# ----------------------------------------------
+# -------------------------------------------------------------------
+# Make histograms
+
+# transformed data as seen by the model
+histograms = lapply(modelVars, function(v) {
+	l = nodeTable[variable==v]$label
+	ggplot(sample, aes_string(x=v)) + 
+		geom_histogram() + 
+		facet_wrap(~health_zone, scales='free') + 
+		labs(title=paste('Histograms of', l), y='Frequency', x=l, 
+			subtitle=paste('Random Sample of', n, 'Health Zones'),
+			caption='Variables are post-transformation. Transformations may include: 
+			cumulative, log, logit, lag and variance-standardization.') + 
+		theme_bw()
+})
+
+# untransformed data
+histograms_untr = lapply(modelVars, function(v) {
+	l = nodeTable[variable==v]$label
+	for(ext in c('_cumulative','lag_','lead_')) {
+		if (grepl(ext, v)) v = gsub(ext,'',v) 
+	}
+	if (!v %in% names(sample_untr)) v = paste0('value_',v) 
+	ggplot(sample_untr, aes_string(x=v)) + 
+		geom_histogram() + 
+		facet_wrap(~health_zone, scales='free') + 
+		labs(title=paste('Histograms of', l, '(Without Transformation)'), 
+			y='Frequency', x=l, 
+			subtitle=paste('Random Sample of', n, 'Health Zones')) + 
+		theme_bw()
+})
+# -------------------------------------------------------------------
+
+
+# ---------------------------------------------------------------------------------------
 # Make time series graphs
-
-# outcomes by health zone
-itnCoverage = long[variable=='itn_coverage_rate']
-actCoverage = long[variable=='act_coverage_rate']
-dropVars = c('variable','section','model_estimate')
-itnCoverage = itnCoverage[, -dropVars, with=FALSE]
-actCoverage = actCoverage[, -dropVars, with=FALSE]
-setnames(itnCoverage, 'value', 'itn_coverage_rate')
-setnames(actCoverage, 'value', 'act_coverage_rate')
-tsWide1 = merge(long[!variable %in% modelVars], itnCoverage, by=byVars)
-tsWide1 = merge(tsWide1, actCoverage, by=byVars)
-tsWide1[variable=='ITN_rate', model_value:=itn_coverage_rate]
-tsWide1[!variable %in% c('ITN_rate', 'RDT_rate') & section=='outcomes', 
-	model_value:=act_coverage_rate]
-
-hzOutcomePlotsTs = lapply(hzs, function(h) { 
-	ggplot(tsWide1[health_zone==h & section=='outcomes'], aes(y=value, x=date)) + 
-		geom_point(aes(color='Observed Program Data'), alpha=.75) + 
-		geom_line(aes(y=model_value, color='LBD/MAP Model Estimate'), alpha=.75) + 
-		scale_color_manual('', values=c('Observed Program Data'='#525252', 
-			'LBD/MAP Model Estimate'='blue')) + 
-		facet_wrap(~variable, scales='free') + 
-		labs(title='Time Series: Outcomes', subtitle=h, 
-			caption='Values adjusted to trend from model estimates') + 
+tsPlots = lapply(seq(length(varGroups)), function(g) {
+	l = nodeTable[variable==lhsVars[g]]$label
+	ggplot(long[variable%in%varGroups[[g]]], aes(y=value, x=date, color=label)) + 
+		geom_line() + 
+		facet_wrap(~health_zone) + 
+		labs(title=paste('Time series of variables related to', l), y='Value', x='Date', 
+			subtitle=paste('Random Sample of', n, 'Health Zones'),
+			caption='Variables are post-transformation. Transformations may include: 
+			cumulative, log, logit, lag and variance-standardization.') + 
 		theme_bw()
-})
-
-# incidence/mortality by health zone
-incidence = long[variable=='incidence_rate']
-mortality = long[variable=='mortality_rate']
-incidence = incidence[, -dropVars, with=FALSE]
-mortality = mortality[, -dropVars, with=FALSE]
-setnames(incidence, 'value', 'incidence_rate')
-setnames(mortality, 'value', 'mortality_rate')
-tsWide2 = merge(long[!variable %in% modelVars], incidence, by=byVars)
-tsWide2 = merge(tsWide2, mortality, by=byVars)
-tsWide2[variable=='malariaDeaths_rate', model_value:=mortality_rate]
-tsWide2[variable!='malariaDeaths_rate' & section=='impact', 
-	model_value:=incidence_rate]
-tsWide2[variable=='newCasesMalariaSevere_rate', model_value:=NA]
-
-hzImpactPlotsTs = lapply(hzs, function(h) { 
-	ggplot(tsWide2[health_zone==h & section=='impact'], aes(y=value, x=date)) + 
-		geom_point(aes(color='Observed Program Data'), alpha=.75) + 
-		geom_line(aes(y=model_value, color='LBD/MAP Model Estimate'), alpha=.75) + 
-		scale_color_manual('', values=c('Observed Program Data'='#525252', 
-			'LBD/MAP Model Estimate'='blue')) + 
-		facet_wrap(~variable, scales='free') + 
-		labs(title='Time Series: Impact', subtitle=h, 
-			caption='Values adjusted to trend from model estimates') + 
-		theme_bw()
-})
-# ----------------------------------------------
-
-
-# ----------------------------------------------
-# Make distribution graphs
-
-
-# ----------------------------------------------
+}) 
+# ---------------------------------------------------------------------------------------
 
 
 # ----------------------------------------------
 # Make correlation graphs
-
-
-# outcomes and incidence by health zone
-incidenceMild = longT[variable=='lead_newCasesMalariaMild_rate']
-setnames(incidenceMild, 'value', 'lead_newCasesMalariaMild_rate')
-incidenceMild = incidenceMild[, -dropVars, with=FALSE]
-wide = merge(longT[variable!='lead_newCasesMalariaMild_rate'], incidenceMild, by=byVars)
-
-i=1
-hzOutcomePlotsMild=list()
-for(h in hzs) {
-	hzOutcomePlotsMild[[i]] = ggplot(wide[health_zone==h & section=='outcomes' & model_estimate==FALSE], 
-		aes(y=lead_newCasesMalariaMild_rate, x=value)) + 
-	geom_point(color='#4daf4a') + 
-	geom_smooth(method='lm', color='#377eb8') + 
-	facet_wrap(~variable, scales='free') + 
-	labs(title='Correlations: Outcomes and Incidence (Uncomplicated)', subtitle=h, 
-		caption='Values adjusted to trend from model estimates, log-transformed and rescaled') + 
-	theme_bw()
-	i=i+1
-}
-
-# outcomes and severe incidence by health zone
-incidenceSevere = longT[variable=='lead_newCasesMalariaSevere_rate']
-setnames(incidenceSevere, 'value', 'lead_newCasesMalariaSevere_rate')
-incidenceSevere = incidenceSevere[, -dropVars, with=FALSE]
-wide = merge(wide[variable!='lead_newCasesMalariaSevere_rate'], incidenceSevere, by=byVars)
-
-i=1
-hzOutcomePlotsSev=list()
-for(h in hzs) {
-	hzOutcomePlotsSev[[i]] = ggplot(wide[health_zone==h & section=='outcomes' & model_estimate==FALSE], 
-		aes(y=lead_newCasesMalariaSevere_rate, x=value)) + 
-	geom_point(color='#4daf4a') + 
-	geom_smooth(method='lm', color='#377eb8') + 
-	facet_wrap(~variable, scales='free') + 
-	labs(title='Correlations: Outcomes and Incidence (Severe)', subtitle=h, 
-		caption='Values adjusted to trend from model estimates, log-transformed and rescaled') + 
-	theme_bw()
-	i=i+1
-}
-
-# outcomes and case fatality by health zone
-fatality = longT[variable=='lead_case_fatality']
-setnames(fatality, 'value', 'lead_case_fatality')
-fatality = fatality[, -dropVars, with=FALSE]
-wide = merge(wide[variable!='lead_case_fatality'], fatality, by=byVars)
-fatVars = c('mildMalariaTreated_rate', 'severeMalariaTreated_rate', 'ACTs_CHWs_rate')
-
-i=1
-hzOutcomePlotsFat=list()
-for(h in hzs) {
-	hzOutcomePlotsFat[[i]] = ggplot(wide[health_zone==h & variable%in%fatVars], 
-		aes(y=lead_case_fatality, x=value)) + 
-	geom_point(color='#4daf4a') + 
-	geom_smooth(method='lm', color='#377eb8') + 
-	facet_wrap(~variable, scales='free') + 
-	labs(title='Correlations: Outcomes and Case Fatality', subtitle=h, 
-		caption='Values adjusted to trend from model estimates, log-transformed and rescaled') + 
-	theme_bw()
-	i=i+1
-}
-
-# outcomes and mortality by health zone
-mortality = longT[variable=='lead_malariaDeaths_rate']
-setnames(mortality, 'value', 'lead_malariaDeaths_rate')
-mortality = mortality[, -dropVars, with=FALSE]
-wide = merge(wide[variable!='lead_malariaDeaths_rate'], mortality, by=byVars)
-mortVars = c('newCasesMalariaMild_rate', 'newCasesMalariaSevere_rate', 'lead_case_fatality')
-
-i=1
-hzOutcomePlotsMort=list()
-for(h in hzs) {
-	hzOutcomePlotsMort[[i]] = ggplot(wide[health_zone==h & variable%in%mortVars], 
-		aes(y=lead_malariaDeaths_rate, x=value)) + 
-	geom_point(color='#4daf4a') + 
-	geom_smooth(method='lm', color='#377eb8') + 
-	facet_wrap(~variable, scales='free') + 
-	labs(title='Correlations: Outcomes and Mortality', subtitle=h, 
-		caption='Values adjusted to trend from model estimates, log-transformed and rescaled') + 
-	theme_bw()
-	i=i+1
-}
-
+corPlots = lapply(seq(length(varGroups)), function(g) {
+	l = nodeTable[variable==lhsVars[g]]$label
+	vars = nodeTable[variable %in% varGroups[[g]]]
+	leftout = varGroups[[g]][!varGroups[[g]] %in% vars$variable]
+	vars = rbind(vars, data.table(variable=leftout, label=leftout), fill=TRUE)
+	ggpairs(sample[, vars$variable, with=FALSE], 
+		title=paste('Correlations between variables related to', l),
+		columnLabels=vars$label, lower=list(continuous='smooth'))
+})
 # ----------------------------------------------
 
 
 # --------------------------------
 # Save file
 pdf(outputFile4d, height=5.5, width=9)
-for(i in seq(length(hzs))) { 
-	print(hzOutcomePlotsTs[[i]])
+for(i in seq(length(tsPlots))) { 
+	print(tsPlots[[i]])
 }
-for(i in seq(length(hzs))) { 
-	print(hzImpactPlotsTs[[i]])
+for(i in seq(length(corPlots))) { 
+	print(corPlots[[i]])
 }
-for(i in seq(length(hzs))) { 
-	print(hzOutcomePlotsMild[[i]])
-}
-for(i in seq(length(hzs))) { 
-	print(hzOutcomePlotsSev[[i]])
-}
-for(i in seq(length(hzs))) { 
-	print(hzOutcomePlotsFat[[i]])
-}
-for(i in seq(length(hzs))) { 
-	print(hzOutcomePlotsMort[[i]])
+for(i in seq(length(histograms))) { 
+	print(histograms[[i]])
+	print(histograms_untr[[i]])
 }
 dev.off()
 
