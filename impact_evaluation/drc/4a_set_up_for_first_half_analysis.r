@@ -4,6 +4,7 @@
 # 1/18/2019
 # Final pre-processing for first half impact evaluation model
 # The current working directory should be the root of this repo (set manually by user)
+# Note: for some reason the regressions under "extrapolate where necessary" are very slow on the cluster...
 # ------------------------------------------------
 
 source('./impact_evaluation/drc/set_up_r.r')
