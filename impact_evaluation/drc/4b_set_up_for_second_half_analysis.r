@@ -43,11 +43,6 @@ data = merge(data, completeness, by=c('health_zone','date'), all.x=TRUE)
 data = data[order(health_zone, date)]
 library(zoo)
 for(v in complVars) data[, (v):=na.locf(get(v)), by='health_zone']
-# -----------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------
-# Data transformations and other fixes for Heywood cases
 
 # apply limits
 data[ITN>1000, ITN:=NA]
@@ -61,9 +56,13 @@ data[newCasesMalariaMild_rate>100000, newCasesMalariaMild_rate:=NA]
 data[newCasesMalariaSevere_rate>100000, newCasesMalariaSevere_rate:=NA]
 data[malariaDeaths_rate>500, malariaDeaths_rate:=NA]
 data[case_fatality>1, case_fatality:=NA]
+# -----------------------------------------------------------------
 
-# last-minute prep that shouldn't be necessary after bugs are fixed
-# extrapolate where necessary TEMPORARY
+
+# -----------------------------------------------------------------
+# Ensure all variables have complete time series 
+
+# extrapolate where necessary using GLM (better would be to use multiple imputation)
 i=0
 for(v in names(data)) {
 	for(h in unique(data$health_zone)) { 
@@ -73,7 +72,6 @@ for(v in names(data)) {
 		form = as.formula(paste0(v,'~date'))
 		lmFit = glm(form, data[health_zone==h], family='poisson')
 		data[health_zone==h, tmp:=exp(predict(lmFit, newdata=data[health_zone==h]))]
-		# print(ggplot(data[health_zone==h], aes_string(y=v,x='date')) + geom_point() + geom_line(aes(y=tmp)) + labs(title=v, subtitle=h))
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
 		pct_complete = floor(i/(length(names(data))*length(unique(data$health_zone)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
@@ -84,6 +82,11 @@ data$tmp = NULL
 
 # na omit
 data = na.omit(data)
+# -----------------------------------------------------------------
+
+
+# -----------------------------------------------------------------------
+# Data transformations and other fixes for Heywood cases
 
 # remake ITN_rate now that it can be cumulative
 data = data[order(health_zone, date)]
@@ -97,26 +100,29 @@ untransformed = copy(data)
 logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated',
 	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate','ITN_rate_cumul','case_fatality',
 	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate')
-for(v in logVars) data[, (v):=log(get(v))]
-for(v in logVars) data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
+for(v in logVars) { 
+	data[, (v):=log(get(v))]
+	data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
+}
 
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
 scaling_factors = data.table(date=1)
-for(v in names(data)) { 
-	if (v %in% c('health_zone','date')) next
+numVars = names(data)[!names(data) %in% c('health_zone','date')]
+for(v in numVars) { 
 	s=1
 	while(var(data[[v]]/s)>10) s=s*10
 	while(var(data[[v]]/s)<1) s=s/10
 	scaling_factors[,(v):=s]
 }
-scaling_factors = scaling_factors[rep(1,nrow(data))]
 for(v in names(scaling_factors)) data[, (v):=get(v)/scaling_factors[[v]]]
 
 # compute leads (after rescaling because it creates more NA's)
 leadVars = c('newCasesMalariaMild_rate', 'newCasesMalariaSevere_rate', 'malariaDeaths_rate', 'case_fatality')
-for(v in leadVars) data[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
-for(v in leadVars) untransformed[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
+for(v in leadVars) { 
+	data[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
+	untransformed[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
+}
 data = na.omit(data)
 # -----------------------------------------------------------------------
 
@@ -129,16 +135,13 @@ test = nrow(data)==nrow(unique(data[,c('health_zone','date'), with=F]))
 if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify rows.'))
 
 # test for collinearity
-
-# test for variables with an order of magnitude different variance
-
 # ---------------------------------------------------------------------------------------
 
 
-# ---------------------------------------------------------
+# --------------------------------------------------------------------------
 # Save file
 save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile4b)
 
 # save a time-stamped version for reproducibility
 archive(outputFile4b)
-# ---------------------------------------------------------
+# --------------------------------------------------------------------------

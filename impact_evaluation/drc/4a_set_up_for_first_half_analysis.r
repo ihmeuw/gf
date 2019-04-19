@@ -62,7 +62,6 @@ for(v in numVars) {
 		data[health_zone==h, tmp:=exp(predict(lmFit, newdata=data[health_zone==h]))]
 		lim = max(data[health_zone==h][[v]], na.rm=T)+sd(data[health_zone==h][[v]], na.rm=T)
 		data[health_zone==h & tmp>lim, tmp:=lim]
-		# print(ggplot(data[health_zone==h], aes_string(y=v,x='date')) + geom_point() + geom_line(aes(y=tmp)) + labs(title=v))
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
 		pct_complete = floor(i/(length(numVars)*length(unique(data$health_zone)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
