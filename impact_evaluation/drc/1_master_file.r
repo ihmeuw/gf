@@ -86,8 +86,8 @@ if (rerun_adjust==TRUE) {
 
 # ---------------------------------------
 # Exploratory graphs etc 
-# these scripts have gotten a little convoluted over time
-# 4b actually relies on the output from 5d...
+# usually a good idea to run 4a and 4b one at a time and check output
+# 4a and 4b will be very slow if not on IHME's cluster
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
 	source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
@@ -97,9 +97,7 @@ if (rerun_explore==TRUE) {
 }
 
 # ---------------------------------------
-# Run model 
-# usually a good idea to run 5a and 5d one at a time and check output
-# 5b and 5e will be very slow if not on IHME's cluster
+# Run models 
 # ---------------------------------------
 if (rerun_models==TRUE) { 
 	source('./impact_evaluation/drc/5a_run_first_half_analysis.r')
