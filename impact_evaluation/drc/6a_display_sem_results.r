@@ -15,7 +15,7 @@ source('./impact_evaluation/drc/set_up_r.r')
 source('./impact_evaluation/_common/predict_lavaan.r')
 
 # load home-made sem graphing function
-source('./impact_evaluation/visualizations/graphLavaan.r')
+source('./impact_evaluation/_common/graphLavaan.r')
 
 # load model results
 load(outputFile5a)
@@ -61,6 +61,17 @@ p3 = semGraph(parTable=means1, nodeTable=nodeTable1,
 # my sem graph function for second half model with coefficients
 p4 = semGraph(parTable=means2, nodeTable=nodeTable2, 
 	scaling_factors=NA, standardized=TRUE, 
+	lineWidth=1.5, curved=0, tapered=FALSE, 
+	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
+
+# my sem graph function for first half "unrelated regressions" model
+p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+	scaling_factors=NA, standardized=FALSE, 
+	lineWidth=1.5, curved=0, tapered=FALSE)
+
+# my sem graph function for second half "unrelated regressions" model
+p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2, 
+	scaling_factors=NA, standardized=FALSE, 
 	lineWidth=1.5, curved=0, tapered=FALSE, 
 	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
 # ----------------------------------------------

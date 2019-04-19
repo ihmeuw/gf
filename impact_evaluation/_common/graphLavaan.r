@@ -48,7 +48,7 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 
 	# ------------------------------------------------------
 	# Load functions/parameters
-	source('./impact_evaluation/visualizations/drawPaths.r')
+	source('./impact_evaluation/_common/drawPaths.r')
 	# ------------------------------------------------------
 
 
