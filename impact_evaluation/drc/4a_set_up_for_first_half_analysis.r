@@ -115,6 +115,7 @@ for(v in logVars) {
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
 scaling_factors = data.table(date=1)
+numVars = names(data)[!names(data)%in%c('orig_health_zone','health_zone','date')]
 for(v in numVars) {
 	s=1
 	while(var(data[[v]]/s)>1000) s=s*10
