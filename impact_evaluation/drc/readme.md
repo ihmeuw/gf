@@ -1,4 +1,17 @@
 # Organization of this folder
+
+/models/
+Folder to contain different versions of the "model object", an R script that stores a single character string which represents the equations of the model. Variables in the equations must match variables in the output data from 4a or 4b, priors must be specified according to JAGS syntax, 4c, 4d, 5a and 5b must refer to a script in this folder (see below).
+
+/data_quality_corrections/
+Folder to contain additional adjustments that happen before the main sequence of scripts
+
+/misc/
+Folder to contain random stuff that is handy but not terribly importantly
+
+/visualizations/
+Folder to contain additional code for making graphs, as well as the "nodetables", which contain the list of variables in a model, the coordinates where they should be displayed in the final path diagram (see 6a below), and nice (short) labels for visualizations. Should be one for the first half and one for the second half of the results chain.
+
 1_master_file.r
 Runs all other scripts in order if you want
 
