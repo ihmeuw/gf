@@ -140,6 +140,7 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 
 # --------------------------------------------------------------------------
 # Save file
+print(paste('Saving:', outputFile4b)) 
 save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile4b)
 
 # save a time-stamped version for reproducibility

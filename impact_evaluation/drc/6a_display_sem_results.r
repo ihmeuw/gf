@@ -79,6 +79,7 @@ p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
 
 # -----------------------------------
 # Save output
+print(paste('Saving:', outputFile6a)) 
 pdf(outputFile6a, height=6, width=9)
 print(p1)
 print(p2)

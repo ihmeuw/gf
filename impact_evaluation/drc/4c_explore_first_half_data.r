@@ -121,6 +121,7 @@ corPlots = lapply(seq(length(varGroups)), function(g) {
 
 # --------------------------------
 # Save file
+print(paste('Saving:', outputFile4c)) 
 pdf(outputFile4c, height=5.5, width=9)
 for(i in seq(length(tsPlots))) { 
 	print(tsPlots[[i]])

@@ -256,6 +256,7 @@ p7 = ggplot(pooled_means1[lhs %in% actVars],
 
 # ----------------------------------------------
 # Save
+print(paste('Saving:', outputFile6b)) 
 pdf(outputFile6b, height=5.5, width=9)
 print(p1)
 print(p2)

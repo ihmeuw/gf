@@ -383,6 +383,7 @@ sum(estimatesGraph2[level==3][2:3]$est.std)/sum(estimatesGraph2[level==3][2:7]$e
 
 # -----------------------------------------------
 # Save
+print(paste('Saving:', outputFile6c)) 
 pdf(outputFile6c, height=5.5, width=9)
 print(p1)
 print(p2)

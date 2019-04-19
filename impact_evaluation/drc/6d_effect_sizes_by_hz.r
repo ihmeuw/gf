@@ -145,6 +145,7 @@ p3 = ggplot(data=mapData[variable=='RDT Shipment Efficiency'], aes(x=long, y=lat
 
 # ------------------------------------
 # Save
+print(paste('Saving:', outputFile6d)) 
 pdf(outputFile6d, height=6, width=10)
 grid.arrange(p1,p2,p3,top=textGrob(title,gp=gpar(fontsize=18)),ncol=3)
 dev.off()
