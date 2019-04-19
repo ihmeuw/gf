@@ -17,7 +17,7 @@ source('./core/standardizeHZNames.R')
 load(outputFile5a)
 
 # load nodeTable for graphing
-# nodeTable = fread('./impact_evaluation/drc/visualizations/vartable.csv')
+# nodeTable = fread('./impact_evaluation/drc/visualizations/nodetable_first_half.csv')
 
 # shape file location
 shapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')

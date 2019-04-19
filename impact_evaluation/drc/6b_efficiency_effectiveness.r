@@ -24,8 +24,8 @@ summaries2 = copy(summaries)
 scaling_factors2=copy(scaling_factors)
 
 # load nodeTable for graphing
-nodeTable1 = fread('./impact_evaluation/drc/visualizations/vartable.csv')
-nodeTable2 = fread('./impact_evaluation/drc/visualizations/vartable_second_half.csv')
+nodeTable1 = fread(nodeTableFile1)
+nodeTable2 = fread(nodeTableFile2)
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable1 = nodeTable1[variable %in% names(data1)]
