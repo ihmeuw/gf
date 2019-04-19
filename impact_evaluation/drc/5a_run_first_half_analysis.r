@@ -16,6 +16,9 @@ if(Sys.info()[1]=='Windows') runAsQsub = FALSE
 
 # model version to use
 modelVersion = 'drc_malaria6'
+
+# load function that runs a SEM as unrelated regressions
+source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 # ---------------------------
 
 
@@ -24,33 +27,6 @@ modelVersion = 'drc_malaria6'
 set.seed(1)
 load(outputFile4a)
 # ---------------------------
-
-
-# -------------------------
-# Run series of unrelated linear models
-
-lmFit1 = lm(ITN_received_cumulative ~ exp_M1_1_cumulative + exp_M1_2_cumulative + other_dah_M1_1_cumulative + completeness_ITN_received, data)
-lmFit2 = lm(RDT_received_cumulative ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative + completeness_RDT_received, data)
-lmFit3 = lm(ACT_received_cumulative ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative + completeness_ACT_received, data)
-
-# linkage 2 regressions
-lmFit4 = lm(ITN_consumed_cumulative ~ ITN_received_cumulative, data)
-lmFit5 = lm(ACTs_SSC_cumulative ~ ACT_received_cumulative, data)
-lmFit6 = lm(RDT_completed_cumulative ~ RDT_received_cumulative, data)
-lmFit7 = lm(SP_cumulative ~ exp_M3_1_cumulative, data)
-lmFit8 = lm(severeMalariaTreated_cumulative ~ exp_M2_6_cumulative + ACT_received_cumulative, data)
-lmFit9 = lm(totalPatientsTreated_cumulative ~ ACT_received_cumulative, data)
-
-summary(lmFit1)
-summary(lmFit2)
-summary(lmFit3)
-summary(lmFit4)
-summary(lmFit5)
-summary(lmFit6)
-summary(lmFit7)
-summary(lmFit8)
-summary(lmFit9)
-# -------------------------
 
 
 # ----------------------------------------------
@@ -65,6 +41,12 @@ modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('orig_health_zone','health_zone','date',modelVars)
 data = data[, modelVars, with=FALSE]
 # ----------------------------------------------
+
+
+# ------------------------------------------------------
+# Run series of unrelated linear models for comparison
+urFit = lavaanUR(model, data)
+# ------------------------------------------------------
 
 
 # --------------------------------------------------------------
@@ -106,7 +88,7 @@ if (runAsQsub==TRUE) {
 	system(paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
 		' -l fthread=1 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
-		' ./core/r_shell_blavaan.sh ./impact_evaluation/5c_run_single_model.r ', 
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
 		modelVersion, ' 1 FALSE'))
 	# wait for jobs to finish (2 files per job)
 	while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
