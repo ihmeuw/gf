@@ -122,7 +122,7 @@ means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 
 # save all sem fits just in case they're needed
 print(paste('Saving', outputFile5a))
-save(list=c('data','untransformed','model','summaries','means','scaling_factors'), file=outputFile5a)
+save(list=c('data','untransformed','model','summaries','means','scaling_factors', 'urFit'), file=outputFile5a)
 
 # save full output for archiving
 outputFile5a_big = gsub('.rdata','_all_semFits.rdata',outputFile5a)
@@ -130,7 +130,7 @@ print(paste('Saving', outputFile5a_big))
 semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 })
-save(list=c('data','untransformed','model','semFits','summaries','means','scaling_factors'), file=outputFile5a_big)
+save(list=c('data','untransformed','model','semFits','summaries','means','scaling_factors', 'urFit'), file=outputFile5a_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
