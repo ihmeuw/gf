@@ -13,8 +13,8 @@ source('./impact_evaluation/drc/set_up_r.r')
 # -----------------------------------------------------------------
 # Load/prep data
 
-# load completeness estimates from outputFile5a (TEMPORARY)
-load(outputFile5a)
+# load completeness estimates from outputFile4a (TEMPORARY)
+load(outputFile4a)
 complVars = names(data)[grepl('completeness',names(data))]
 completeness = data[,c('orig_health_zone','date', complVars), with=FALSE]
 setnames(completeness, 'orig_health_zone', 'health_zone')
