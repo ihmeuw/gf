@@ -17,7 +17,7 @@ source('./core/standardizeHZNames.R')
 load(outputFile5a)
 
 # load nodeTable for graphing
-# nodeTable = fread('./impact_evaluation/drc/visualizations/vartable.csv')
+# nodeTable = fread('./impact_evaluation/drc/visualizations/nodetable_first_half.csv')
 
 # shape file location
 shapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
@@ -145,6 +145,7 @@ p3 = ggplot(data=mapData[variable=='RDT Shipment Efficiency'], aes(x=long, y=lat
 
 # ------------------------------------
 # Save
+print(paste('Saving:', outputFile6d)) 
 pdf(outputFile6d, height=6, width=10)
 grid.arrange(p1,p2,p3,top=textGrob(title,gp=gpar(fontsize=18)),ncol=3)
 dev.off()

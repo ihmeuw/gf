@@ -18,6 +18,9 @@ if(Sys.info()[1]=='Windows') runAsQsub = FALSE
 
 # model version to use
 modelVersion = 'drc_malaria_impact4'
+
+# load function that runs a SEM as unrelated regressions
+source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 # ---------------------------
 
 
@@ -26,31 +29,6 @@ modelVersion = 'drc_malaria_impact4'
 set.seed(1)
 load(outputFile4b)
 # ---------------------------
-
-
-# -------------------------
-# Run series of unrelated linear models
-
-# linkage 1 regressions
-lmFit1 = lm(ITN_rate_cumul ~ ITN, data)
-lmFit2 = lm(mildMalariaTreated_rate ~ mildMalariaTreated + RDT_rate, data)
-lmFit3 = lm(severeMalariaTreated_rate ~ severeMalariaTreated + RDT_rate, data)
-lmFit4 = lm(ACTs_CHWs_rate ~ SSCACT, data)
-lmFit5 = lm(SP_rate ~ SP, data)
-lmFit6 = lm(RDT_rate ~ RDT, data)
-
-# linkage 2 regressions
-lmFit7 = lm(lead_newCasesMalariaMild_rate ~ ITN_rate_cumul + mildMalariaTreated_rate + ACTs_CHWs_rate + SP_rate + date, data)
-lmFit8 = lm(lead_newCasesMalariaSevere_rate ~ ITN_rate_cumul + severeMalariaTreated_rate + ACTs_CHWs_rate + SP_rate + date, data)
-lmFit9 = lm(lead_case_fatality ~ mildMalariaTreated_rate + severeMalariaTreated_rate + ACTs_CHWs_rate, data)
-lmFit10 = lm(lead_malariaDeaths_rate ~ lead_newCasesMalariaMild_rate + lead_newCasesMalariaSevere_rate + lead_case_fatality, data)
-
-# summarize
-summary(lmFit7)
-summary(lmFit8)
-summary(lmFit9)
-summary(lmFit10)
-# -------------------------
 
 
 # ----------------------------------------------
@@ -64,6 +42,12 @@ modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('orig_health_zone','health_zone','date',modelVars)
 data = data[, modelVars, with=FALSE]
 # ----------------------------------------------
+
+
+# ------------------------------------------------------
+# Run series of unrelated linear models for comparison
+urFit = lavaanUR(model, data)
+# ------------------------------------------------------
 
 
 # --------------------------------------------------------------
@@ -105,7 +89,7 @@ if (runAsQsub==TRUE) {
 	system(paste0('qsub -cwd -N ie2_job_array -t 1:', T, 
 		' -l fthread=1 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
-		' ./core/r_shell_blavaan.sh ./impact_evaluation/5ec_run_single_model.r ', 
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
 		modelVersion, ' 2 FALSE'))
 	# wait for jobs to finish (2 files per job)
 	while(length(list.files(clustertmpDir2, pattern='second_half_summary_'))<(T)) { 
@@ -137,7 +121,7 @@ means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 
 # save all sem fits just in case they're needed
 print(paste('Saving', outputFile5b))
-save(list=c('data','model','summaries','means','scaling_factors'), file=outputFile5b)
+save(list=c('data','model','summaries','means','scaling_factors','urFit'), file=outputFile5b)
 
 # save full output for archiving
 outputFile5b_big = gsub('.rdata','_all_semFits.rdata',outputFile5b)
@@ -145,7 +129,7 @@ print(paste('Saving', outputFile5b_big))
 semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rds')))
 })
-save(list=c('data','model','semFits','summaries','means','scaling_factors'), file=outputFile5b_big)
+save(list=c('data','model','semFits','summaries','means','scaling_factors','urFit'), file=outputFile5b_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')

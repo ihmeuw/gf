@@ -15,7 +15,7 @@ source('./impact_evaluation/drc/set_up_r.r')
 source('./impact_evaluation/_common/predict_lavaan.r')
 
 # load home-made sem graphing function
-source('./impact_evaluation/visualizations/graphLavaan.r')
+source('./impact_evaluation/_common/graphLavaan.r')
 
 # load model results
 load(outputFile5a)
@@ -30,8 +30,8 @@ summaries2 = copy(summaries)
 scaling_factors2=copy(scaling_factors)
 
 # load nodeTable for graphing
-nodeTable1 = fread('./impact_evaluation/drc/visualizations/vartable.csv')
-nodeTable2 = fread('./impact_evaluation/drc/visualizations/vartable_second_half.csv')
+nodeTable1 = fread(nodeTableFile1)
+nodeTable2 = fread(nodeTableFile2)
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable1 = nodeTable1[variable %in% names(data1)]
@@ -63,11 +63,23 @@ p4 = semGraph(parTable=means2, nodeTable=nodeTable2,
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE, 
 	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
+
+# my sem graph function for first half "unrelated regressions" model
+p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+	scaling_factors=NA, standardized=FALSE, 
+	lineWidth=1.5, curved=0, tapered=FALSE)
+
+# my sem graph function for second half "unrelated regressions" model
+p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2, 
+	scaling_factors=NA, standardized=FALSE, 
+	lineWidth=1.5, curved=0, tapered=FALSE, 
+	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
 # ----------------------------------------------
 
 
 # -----------------------------------
 # Save output
+print(paste('Saving:', outputFile6a)) 
 pdf(outputFile6a, height=6, width=9)
 print(p1)
 print(p2)

@@ -45,8 +45,8 @@ means[rhs=='severeMalariaTreated', rhs:='severeMalariaTreated_cumulative']
 means[rhs=='mildMalariaTreated', rhs:='totalPatientsTreated_cumulative']
 
 # load nodeTable for graphing
-nodeTable1 = fread('./impact_evaluation/drc/visualizations/vartable.csv')
-nodeTable2 = fread('./impact_evaluation/drc/visualizations/vartable_second_half.csv')
+nodeTable1 = fread(nodeTableFile1)
+nodeTable2 = fread(nodeTableFile2)
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable1 = nodeTable1[variable %in% names(data1)]
@@ -383,6 +383,7 @@ sum(estimatesGraph2[level==3][2:3]$est.std)/sum(estimatesGraph2[level==3][2:7]$e
 
 # -----------------------------------------------
 # Save
+print(paste('Saving:', outputFile6c)) 
 pdf(outputFile6c, height=5.5, width=9)
 print(p1)
 print(p2)

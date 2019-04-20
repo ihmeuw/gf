@@ -112,6 +112,11 @@ popFiles = list.files(paste0(lbdDir, 'worldpop_raked/total/1y/'), '*.tif',
 
 # shapefiles
 admin2ShapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
+
+# "nodetables" aka "nodetables" 
+# listing names of variables in each model, their labels and coordinates for the SEM graph
+nodeTableFile1 = './impact_evaluation/drc/visualizations/nodetable_first_half.csv'
+nodeTableFile2 = './impact_evaluation/drc/visualizations/nodetable_second_half.csv'
 # ---------------------------------------------------------------------------------
 
 
