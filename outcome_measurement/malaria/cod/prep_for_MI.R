@@ -39,7 +39,7 @@
   # Overview - Files and Directories
 # ---------------------------------------------- 
     # data directory
-      dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/"
+      dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/archive/"
       
     # input files
       fullData <- "fullData_dps_standardized.csv"
@@ -52,6 +52,9 @@
         uniqv <- unique(v)
         uniqv[which.max(tabulate(match(v, uniqv)))]
       }
+      
+  # dt = fread(paste0( dir_prepped, "PNLP_2010to2017_prepped.csv"), stringsAsFactors = FALSE)
+  # dt = readRDS(paste0('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/archive/imputedData_run2_agg_hz.rds'))
 # ----------------------------------------------   
 
 # ----------------------------------------------     
@@ -122,6 +125,29 @@
     ameliaDT <- ameliaDT[, -remove_vars, with=FALSE]
 # ----------------------------------------------   
 
+# ----------------------------------------------     
+# take a subset of fullData that will be used in MI
+# ---------------------------------------------- 
+    # further outlier removal - using QR:
+    
+    # noticed problem with duplicate values:
+    ind = names(ameliaDT)[ grepl(names(ameliaDT), pattern = "ASAQ")]
+    ind = ind[1:8]
+    id_vars = c('health_zone', 'dps', 'date')
+
+    example = ameliaDT[, c(id_vars, ind), with = FALSE]
+    
+    duplicates = example[ duplicated(example[, ind, with = FALSE])]
+    # remove rows of all NA
+    duplicates = duplicates[ rowSums(is.na(duplicates)) != 8]
+    # remove rows of all 0s
+    duplicates = duplicates[  rowSums(duplicates[, -1:-3]) != 0,  ]
+
+    duplicates_count = duplicates[ duplicated(duplicates[, ind, with = FALSE])]
+    duplicates_count2 = duplicates_count[ duplicated(duplicates_count[, ind, with = FALSE])]
+    duplicates_count3 = duplicates_count2[ duplicated(duplicates_count2[, ind, with = FALSE])]
+# ---------------------------------------------- 
+    
 # ---------------------------------------------- 
 # Deterministically impute total health facilities and convert the number reporting to a proportion over the total, then drop the original variable for number reporting and impute
     # the proportion so that we can back calculate the number reporting and it will always be less than the total number of facilities.
