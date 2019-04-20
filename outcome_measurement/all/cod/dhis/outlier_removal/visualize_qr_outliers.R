@@ -102,11 +102,11 @@ if (set=='base') {
   dt[element_id==17 , element:='Severe malaria treated - pregnant woman' ]
   dt[element_id==18 , element:='Simple malaria treated - pregnant woman' ]
 }
-#------------------------------------
+
 #------------------------------------
 # fix the date 
 dt[ , date:=as.Date(date, origin='1970-01-01')]
-#------------------------------------
+
 #------------------------------------
 # merge in the facility names to label the graphs 
 
@@ -158,16 +158,22 @@ dt[ , upper_mid := fitted_value + (t1 * thresh_var)]
 dt[ , lower_mid := fitted_value - (t1 * thresh_var)]
 
 # select outliers
-# set minimum value to be considered an outlier
+# set minimum value to be considered an outlier based on the 99.5 percentile of the variable 
 if (set=='pnls' | set == 'base'){
   limit = 100}
 if (set=='sigl'){
-  limit =  100}
+  quantiles = dt[ , .( limit = quantile(value, 0.995, na.rm = TRUE), quantile = rep( 0.995)), by = c("variable","level")]
+  dt = merge(dt, quantiles, by = c("variable", "level"))
+}
+
 # the value is greater than the limit set above and greater than 10 times the mad of residuals 
 # or less than 10 times the negative mad of the residuals
 dt[, outlier := ifelse( (value > limit & ( resid > thresh2 )), TRUE, FALSE) ]
 dt[(value > limit & ( resid < -thresh2 )), outlier :=TRUE]
 
+# number of outliers
+dt[outlier==TRUE, .N] 
+# ( dt[outlier==TRUE, .N]  / dt[!is.na(value), .N] ) * 100 # for sigl = 811; 0.017% of non-missing data
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
@@ -177,7 +183,7 @@ dt[(value > limit & ( resid < -thresh2 )), outlier :=TRUE]
 # subset to the health facilities and elements that contain outliers
 
 if (set=='pnls') dt[ , combine:=paste0(org_unit_id, sex, element)]
-if (set=='base')  dt[ , combine:=paste0(org_unit_id, element)]
+if (set=='base')dt[ , combine:=paste0(org_unit_id, element)]
 if (set=='sigl') dt[ , combine := paste0(org_unit_id, drug)]
 
 out_orgs = dt[outlier == TRUE, unique(combine)]
@@ -187,9 +193,6 @@ out = dt[combine %in% out_orgs]
 out[ , combine := NULL]
 dt[ , combine := NULL]
 
-# number of outliers
-dt[outlier==TRUE, .N] 
-# ( dt[outlier==TRUE, .N]  / dt[!is.na(value), .N] ) * 100 # for sigl = 811; 0.017% of non-missing data
 #----------------------------
 # eliminate outliers that are part of an emerging trend
 # do not demarcate any two or more consecutive outliers as outliers
@@ -236,9 +239,9 @@ out_new = out[outlier==T, unique(combine)]
 out = out[combine %in% out_new]
 out[ , combine:=NULL]
 
-# view distribution of outliers by variable
-if (set == 'sigl') dist = out[outlier == TRUE, .N, by = c('drug', 'variable')]
-if (set == 'sigl') dist2 = out[outlier == TRUE, .N, by = c('drug')]
+# # view distribution of outliers by variable
+# if (set == 'sigl') dist = out[outlier == TRUE, .N, by = c('drug', 'variable')]
+# if (set == 'sigl') dist2 = out[outlier == TRUE, .N, by = c('drug')]
 
 #----------------------------
 # create the graphs
@@ -286,8 +289,6 @@ for (e in unique(out$element)) {
       
     }}}
 }
-
-
 #----------------------------
 if (set == 'sigl'){
   for (d in unique(out$drug)) {
@@ -321,7 +322,6 @@ if (set == 'sigl'){
         i=i+1
       }}
 }
-
 #----------------------------
 if (set=='base') {
   
@@ -377,7 +377,6 @@ for(i in seq(length(list_of_plots))) {
 } 
 
 dev.off()
-
 #--------------------------------
 
 
