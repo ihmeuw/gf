@@ -21,7 +21,7 @@ setwd("C:/local/gf") # set to the root of the repo
 rm(list=ls())
 
 # run setup code (load file paths and packages)
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 
 # ---------------------------------------
 # Set boolean switches
@@ -48,35 +48,35 @@ setDT(drc_mal_map)
 # Prep resource tracking data  
 # ---------------------------------------
 if(rerun_inputs == TRUE){
-  source('./impact_evaluation/2a_prep_resource_tracking.r')
+  source('./impact_evaluation/drc/2a_prep_resource_tracking.r')
 }
 
 # ---------------------------------------
 # Prep activities and outputs data 
 # ---------------------------------------
 if(rerun_outputs == TRUE){
-  source('./impact_evaluation/2b_prep_activities_outputs.r')
+  source('./impact_evaluation/drc/2b_prep_activities_outputs.r')
 }
 
 # ---------------------------------------
 # Prep outputs, outcomes and impact data 
 # ---------------------------------------
 if(rerun_outcomes == TRUE){
-  source('./impact_evaluation/2c_prep_outcomes_impact.r')
+  source('./impact_evaluation/drc/2c_prep_outcomes_impact.r')
 }
 
 # ---------------------------------------
 # Merge datasets together 
 # ---------------------------------------
 if (rerun_merge==TRUE) { 
-	source('./impact_evaluation/3_merge_data.R')
+	source('./impact_evaluation/drc/3_merge_data.R')
 }
 
 # ---------------------------------------
 # Correct rates to model estimates
 # ---------------------------------------
 if (rerun_adjust==TRUE) { 
-	source('./impact_evaluation/3b_correct_to_models.R')
+	source('./impact_evaluation/drc/3b_correct_to_models.R')
 }
 
 # ---------------------------------------
@@ -86,35 +86,32 @@ if (rerun_adjust==TRUE) {
 
 # ---------------------------------------
 # Exploratory graphs etc 
-# these scripts have gotten a little convoluted over time
-# 4b actually relies on the output from 5d...
+# usually a good idea to run 4a and 4b one at a time and check output
+# 4a and 4b will be very slow if not on IHME's cluster
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
-	source('./impact_evaluation/4a_explore_first_half_data.r')
-	source('./impact_evaluation/4b_explore_second_half_data.r')
+	source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
+	source('./impact_evaluation/drc/4b_set_up_for_second_half_analysis.r')
+	source('./impact_evaluation/drc/4c_explore_first_half_data.r')
+	source('./impact_evaluation/drc/4d_explore_second_half_data.r')
 }
 
 # ---------------------------------------
-# Run model 
-# usually a good idea to run 5a and 5d one at a time and check output
-# 5b and 5e will be very slow if not on IHME's cluster
+# Run models 
 # ---------------------------------------
 if (rerun_models==TRUE) { 
-	source('./impact_evaluation/5a_set_up_for_analysis.r')
-	source('./impact_evaluation/5b_run_analysis.r')
-	source('./impact_evaluation/5d_set_up_for_second_half_analysis.r')
-	source('./impact_evaluation/5e_run_second_half_analysis.r')
+	source('./impact_evaluation/drc/5a_run_first_half_analysis.r')
+	source('./impact_evaluation/drc/5b_run_second_half_analysis.r')
 }
-
 
 # ---------------------------------------
 # Run analyses based on model
 # ---------------------------------------
 if (rerun_analysis==TRUE) { 
-	source('./impact_evaluation/6a_display_sem_results.r')
-	source('./impact_evaluation/6b_efficiency_effectiveness.r')
-	source('./impact_evaluation/6c_impact_analysis.r')
-	source('./impact_evaluation/6d_effect_sizes_by_hz.r')
+	source('./impact_evaluation/drc/6a_display_sem_results.r')
+	source('./impact_evaluation/drc/6b_efficiency_effectiveness.r')
+	source('./impact_evaluation/drc/6c_impact_analysis.r')
+	source('./impact_evaluation/drc/6d_effect_sizes_by_hz.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', outputFile3))

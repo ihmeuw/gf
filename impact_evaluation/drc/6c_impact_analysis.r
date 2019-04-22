@@ -12,16 +12,16 @@
 # -----------------------------------------------
 # Load/prep data and functions
 
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 library(RColorBrewer)
 
 # load model results
-load(outputFile5b)
+load(outputFile5a)
 data1=copy(data)
 means1 = copy(means)
 summaries1 = copy(summaries)
 scaling_factors1=copy(scaling_factors)
-load(outputFile5e)
+load(outputFile5b)
 data2=copy(data)
 means2 = copy(means)
 summaries2 = copy(summaries)
@@ -45,8 +45,8 @@ means[rhs=='severeMalariaTreated', rhs:='severeMalariaTreated_cumulative']
 means[rhs=='mildMalariaTreated', rhs:='totalPatientsTreated_cumulative']
 
 # load nodeTable for graphing
-nodeTable1 = fread('./impact_evaluation/visualizations/vartable.csv')
-nodeTable2 = fread('./impact_evaluation/visualizations/vartable_second_half.csv')
+nodeTable1 = fread(nodeTableFile1)
+nodeTable2 = fread(nodeTableFile2)
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable1 = nodeTable1[variable %in% names(data1)]
@@ -77,7 +77,7 @@ while(any(outcomeVars %in% means$lhs)) {
 	unexplained = means[lhs%in%outcomeVars & rhs%in%outcomeVars & lhs==rhs, byVars, with=FALSE]
 	unexplained[!grepl('completeness',rhs) & !grepl('completeness',lhs), rhs:='unexplained']
 	unexplained[, est.std:=est.std^2]
-	if (i==2) unexplained[, est.std:=est.std/8] 
+	if (i==2) unexplained[, est.std:=est.std/10] # scaling factor recorded wrong?
 
 	# drop completeness controls
 	currentLevel = rbind(currentLevel, unexplained)
@@ -298,11 +298,11 @@ p4 = ggplot(level2Graph[lhs=='lead_newCasesMalariaSevere_rate' | hole==1],
 
 # sunburst of last two levels	
 p5 = ggplot(estimatesGraph, aes(x=level, y=est.std, fill=fill, alpha=level)) +
-	geom_col(width=1, color='gray90', size=0.25, position=position_stack()) +
+	geom_col(width=1, color='gray80', size=0.3, position=position_stack()) +
 	geom_text_repel(aes(label=label), size=2.5, position=position_stack(vjust=0.5)) +
 	annotate('text', 1.25, 0, label='Declining\nMortality\nRates', size=5, vjust=1.25) +
 	coord_polar(theta='y') +
-	scale_alpha_manual(values=c('0'=0, '1'=1, '2'=0.7), guide=F) +
+	scale_alpha_manual(values=c('0'=0, '1'=1, '2'=0.6), guide=F) +
 	scale_fill_manual('', values=rev(cols[1:4])) +
 	theme_void() + 
 	theme(legend.position='none')
@@ -369,19 +369,21 @@ p10 = ggplot(level6Graph[(lhs=='ITN_received_cumulative' & label!='Time Trend') 
 
 # sunburst of ITNs
 p11 = ggplot(estimatesGraph2, aes(x=level, y=est.std, fill=fill, alpha=level)) +
-	geom_col(width=1, color='gray90', size=0.25, position=position_stack()) +
+	geom_col(width=1, color='gray80', size=0.3, position=position_stack()) +
 	geom_text_repel(aes(label=label), size=2.5, position=position_stack(vjust=0.5)) +
 	annotate('text', 1, 0, label='Increasing\nITN Distribution', size=5, vjust=1.25) +
 	coord_polar(theta='y') +
-	scale_alpha_manual(values=c('0'=0, '2'=1, '3'=0.7), guide=F) +
+	scale_alpha_manual(values=c('0'=0, '2'=1, '3'=0.65), guide=F) +
 	scale_fill_manual('', values=rev(cols[1:2])) +
 	theme_void() + 
 	theme(legend.position='none')
+sum(estimatesGraph2[level==3][2:3]$est.std)/sum(estimatesGraph2[level==3][2:7]$est.std) # PCT of p11 that is GF
 # -----------------------------------------------
 
 
 # -----------------------------------------------
 # Save
+print(paste('Saving:', outputFile6c)) 
 pdf(outputFile6c, height=5.5, width=9)
 print(p1)
 print(p2)

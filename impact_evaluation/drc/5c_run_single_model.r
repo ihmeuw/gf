@@ -11,7 +11,7 @@
 # testRun - (logical) TRUE will run the model with limited MCMC steps, FALSE will run the full thing
 # ------------------------------------------------
 
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 
 
 # ----------------------------------------------
@@ -43,10 +43,10 @@ print(paste('Test Run:', testRun))
 # ---------------------------------------------------------------------------------------------------
 # Load data
 set.seed(1)
-if (Sys.info()[1]!='Windows' & modelStage==1) load(outputFile5a_scratch)
-if (Sys.info()[1]=='Windows' & modelStage==1) load(outputFile5a)
-if (Sys.info()[1]!='Windows' & modelStage==2) load(outputFile5d_scratch)
-if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile5d)
+if (Sys.info()[1]!='Windows' & modelStage==1) load(outputFile4a_scratch)
+if (Sys.info()[1]=='Windows' & modelStage==1) load(outputFile4a)
+if (Sys.info()[1]!='Windows' & modelStage==2) load(outputFile4b_scratch)
+if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile4b)
 
 # subset to current health zone
 h = unique(data$health_zone)[task_id]
@@ -64,7 +64,7 @@ for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','d
 # Run model
 
 # define model object
-source(paste0('./impact_evaluation/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # fit model
 if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))

@@ -3,9 +3,10 @@
 # 
 # 1/18/2019
 # This runs the SEM dose-response model
+# qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=12G -q all.q -P ihme_general -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5a_run_first_half_analysis.r
 # ------------------------------------------------
 
-source('./impact_evaluation/_common/set_up_r.r')
+source('./impact_evaluation/drc/set_up_r.r')
 
 # ---------------------------
 # Settings
@@ -16,48 +17,24 @@ if(Sys.info()[1]=='Windows') runAsQsub = FALSE
 
 # model version to use
 modelVersion = 'drc_malaria6'
+
+# load function that runs a SEM as unrelated regressions
+source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 # ---------------------------
 
 
 # ---------------------------
 # Load data
 set.seed(1)
-load(outputFile5a)
+load(outputFile4a)
 # ---------------------------
-
-
-# -------------------------
-# Run series of unrelated linear models
-
-lmFit1 = lm(ITN_received_cumulative ~ exp_M1_1_cumulative + exp_M1_2_cumulative + other_dah_M1_1_cumulative + completeness_ITN_received, data)
-lmFit2 = lm(RDT_received_cumulative ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative + completeness_RDT_received, data)
-lmFit3 = lm(ACT_received_cumulative ~ exp_M2_1_cumulative + exp_M2_3_cumulative + other_dah_M2_cumulative + other_dah_M2_3_cumulative + completeness_ACT_received, data)
-
-# linkage 2 regressions
-lmFit4 = lm(ITN_consumed_cumulative ~ ITN_received_cumulative, data)
-lmFit5 = lm(ACTs_SSC_cumulative ~ ACT_received_cumulative, data)
-lmFit6 = lm(RDT_completed_cumulative ~ RDT_received_cumulative, data)
-lmFit7 = lm(SP_cumulative ~ exp_M3_1_cumulative, data)
-lmFit8 = lm(severeMalariaTreated_cumulative ~ exp_M2_6_cumulative + ACT_received_cumulative, data)
-lmFit9 = lm(totalPatientsTreated_cumulative ~ ACT_received_cumulative, data)
-
-summary(lmFit1)
-summary(lmFit2)
-summary(lmFit3)
-summary(lmFit4)
-summary(lmFit5)
-summary(lmFit6)
-summary(lmFit7)
-summary(lmFit8)
-summary(lmFit9)
-# -------------------------
 
 
 # ----------------------------------------------
 # Define model object
 # DECISIONS
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
-source(paste0('./impact_evaluation/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
@@ -65,6 +42,12 @@ modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('orig_health_zone','health_zone','date',modelVars)
 data = data[, modelVars, with=FALSE]
 # ----------------------------------------------
+
+
+# ------------------------------------------------------
+# Run series of unrelated linear models for comparison
+urFit = lavaanUR(model, data)
+# ------------------------------------------------------
 
 
 # --------------------------------------------------------------
@@ -98,7 +81,7 @@ if(runAsQsub==FALSE) {
 # run fully in parallel if specified
 if (runAsQsub==TRUE) { 
 	# save copy of input file for jobs
-	file.copy(outputFile5a, outputFile5a_scratch, overwrite=TRUE)
+	file.copy(outputFile4a, outputFile4a_scratch, overwrite=TRUE)
 	# store T (length of array)
 	hzs = unique(data$health_zone)
 	T = length(hzs)
@@ -106,7 +89,7 @@ if (runAsQsub==TRUE) {
 	system(paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
 		' -l fthread=1 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
-		' ./core/r_shell_blavaan.sh ./impact_evaluation/5e_run_single_model.r ', 
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
 		modelVersion, ' 1 FALSE'))
 	# wait for jobs to finish (2 files per job)
 	while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
@@ -139,21 +122,21 @@ means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # Save model output and clean up
 
 # save all sem fits just in case they're needed
-print(paste('Saving', outputFile5b))
-save(list=c('data','untransformed','model','summaries','means','scaling_factors'), file=outputFile5b)
+print(paste('Saving', outputFile5a))
+save(list=c('data','untransformed','model','summaries','means','scaling_factors', 'urFit'), file=outputFile5a)
 
 # save full output for archiving
-outputFile5b_big = gsub('.rdata','_all_semFits.rdata',outputFile5b)
-print(paste('Saving', outputFile5b_big))
+outputFile5a_big = gsub('.rdata','_all_semFits.rdata',outputFile5a)
+print(paste('Saving', outputFile5a_big))
 semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 })
-save(list=c('data','untransformed','model','semFits','summaries','means','scaling_factors'), file=outputFile5b_big)
+save(list=c('data','untransformed','model','semFits','summaries','means','scaling_factors', 'urFit'), file=outputFile5a_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
-archive(outputFile5b, 'model_runs')
-archive(outputFile5b_big, 'model_runs')
+archive(outputFile5a, 'model_runs')
+archive(outputFile5a_big, 'model_runs')
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
