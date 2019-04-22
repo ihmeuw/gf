@@ -236,7 +236,26 @@ date_check2 = date_check[, .(grant, year, quarter)]
 date_check2 = date_check2[duplicated(date_check2)]
 
 date_check = merge(date_check2, date_check, all.x=T, by=c('grant', 'year', 'quarter'))
+write.xlsx(date_check, paste0(dir, "_gf_files_gos/gos/Overlaps within Intervention Category.xlsx"))
 stopifnot(nrow(date_check)==0) #David please review this. 
+
+#For places where we do have duplicate quarters, what's going on with budget/expenditure? 
+overlap = unique(totalGos[, .(grant, year, quarter, orig_start_date, orig_end_date, budget, expenditure)])
+overlap = merge(date_check2, overlap, by=c('grant', 'year', 'quarter'), all.x=T)
+overlap = overlap[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'year', 'quarter', 'orig_start_date', 'orig_end_date')]
+overlap[, month_diff:=(as.yearmon(orig_end_date)-as.yearmon(orig_start_date))*12] #David please review this. 
+overlap = overlap[order(grant, year, quarter, month_diff)] #Make the smaller date range always be on the top
+overlap[, seq:=sequence(.N), by=c('grant', 'year', 'quarter')]
+
+#Cast the data wide so you can compare budget/expenditure
+overlap = dcast(overlap, grant+year+quarter~seq, value.var=c('budget', 'expenditure'), fun.aggregate=sum_na_rm) #Here, '1' represents the shorter time period, and '2' represents the longer time period
+overlap[, budget_diff:=budget_2-budget_1]
+overlap[, exp_diff:=expenditure_2-expenditure_1] #David please review this. 
+
+#Check that the days within a month start and end at the same time. 
+days = totalGos[, .(start_day=day(start_date), end_day=day(end_date), start_date, end_date)]
+days_check = days[start_day!=end_day]
+days_check = unique(days_check) #There are some dates that start in the middle of the month - do we just want to start on the first no matter what?  David. 
 
 #Aggregate to the quarter level. 
 totalGos_qtr = totalGos[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c(
