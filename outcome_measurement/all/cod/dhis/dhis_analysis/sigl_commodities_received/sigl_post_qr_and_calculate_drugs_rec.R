@@ -1,4 +1,49 @@
-# load in imputed data:
+setwd('C:/local/gf/')
+# Audrey Batzel
+
+# 4/18/19 split this off into it's own file because it was getting to overwhelming/complex
+# this file is for manipulating the results of QR on SIGL drugs available, consumed, and lost data, to include:
+  # - removing outliers
+  # - fixing bad QR results (where fitted value is negative, replace with 0)
+  # - replace > 99.5 percentile with missing where QR was skipped (some of these look to be outliers, but since
+  #     QR didn't run on them, they won't be caught with the other outlier method.)
+  # - handle values still missing with median imputation
+
+# Then aggregate to hz level and calculate drugs/commodities received
+# ----------------------------------------------
+
+# --------------------
+# Set up R / install packages
+## -------------------
+rm(list=ls())
+library(data.table)
+library(lubridate)
+library(stringr)
+library(ggplot2)
+library(dplyr)
+# -------------------------
+# Files and directories
+# detect if operating on windows or on the cluster 
+root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+
+# set directories
+data_path <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
+catalogue_path <- paste0(root, "/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/catalogues/")
+
+# input files
+data <-"sigl_prepped.rds"
+cat <- "data_elements_cod.csv"
+imputed_data = paste0(data_path, 'sigl_quantreg_imputation_results.rds')
+
+# output files 
+prepped_drug_data <- "drugs_consumed_lost_available_update_3_6_19.rds"
+prepped_for_qr = "sigl_for_qr.rds"
+post_qr = "sigl_quantreg_imputation_results.rds"
+drugs_dist = "drugs_dist_update_3_28_19.rds"
+
+# # functions
+# source('./core/standardizeHZNames.R')
+# -------------------------# load in imputed data:
 dt = readRDS(paste0(data_path, post_qr))
 dt[, date := as.Date(date, origin = "1970-01-01")]
 
