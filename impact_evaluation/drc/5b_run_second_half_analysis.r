@@ -3,7 +3,7 @@
 # 
 # 1/18/2019
 # This runs the SEM dose-response model
-# qsub -l archive=TRUE -cwd -N ie_script_5e -l fthread=4 -l m_mem_free=4G -q all.q -P ihme_general -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/5e_run_second_half_analysis.r
+# qsub -l archive=TRUE -cwd -N ie_script_5b -l fthread=12 -l m_mem_free=12G -q all.q -P ihme_general -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5b_run_second_half_analysis.r
 # ------------------------------------------------
 
 source('./impact_evaluation/drc/set_up_r.r')
@@ -39,7 +39,7 @@ source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('orig_health_zone','health_zone','date',modelVars)
+modelVars = c('health_zone','date',modelVars)
 data = data[, modelVars, with=FALSE]
 # ----------------------------------------------
 

@@ -58,3 +58,5 @@ Code that makes sunburst graphs to explore explained variance
 
 6d_effect_sizes_by_hz.r
 Code that makes a map of specific coefficients by admin-2
+
+Additional notes: Every script sources set_up_r.r to load all the file paths it needs so there are no clashes in file names. They also use the function ./impact_evaluation/_common/archive_function.R to automatically time-stamp their resulting file because this inevitably gets re-run a million times and it's useful to have all the history.
