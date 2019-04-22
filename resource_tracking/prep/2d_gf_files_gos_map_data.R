@@ -9,7 +9,7 @@
 # Read in the version of the data you want to map (logic variables set in master file)
 #----------------------------------------------------------------------------
 if (prep_gos == TRUE){
-  raw_data = totalGos
+  raw_data = totalGos_qtr
 } else if (prep_files == TRUE){
   raw_data = resource_database
 }

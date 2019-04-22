@@ -322,6 +322,21 @@ colScale2 = scale_fill_gradient2(low="green", high="red", midpoint=0)
   
 }
 
+#Look at proportion of days out of stock. Do you get different totals when you sum 2018 over the whole year versus first 9 months? 
+
+#First, only do 9 months. 
+test1 = annual_dt[element_id=='jJuipTLZK4o' & stock_category == "number_of_days_stocked_out", .(facs=length(unique(org_unit_id))), by=dps]
+
+test2 = annual_dt[element_id=='jJuipTLZK4o' & stock_category == "number_of_days_stocked_out", .(value=sum(value, na.rm = TRUE)), by = c('element_id', 'element', 'dps', 'year', 'id')] #Collapse here, because you want to get rid of the date-level. 
+test2 = merge(test1, test2, by='dps')
+test2[, treat_per_fac:=round(value/facs, 2)]
+
+#Now, do the whole year. 
+test3 = dt[element_id=='jJuipTLZK4o' & stock_category == "number_of_days_stocked_out", .(facs=length(unique(org_unit_id))), by=dps]
+
+test4 = dt[element_id=='jJuipTLZK4o' & stock_category == "number_of_days_stocked_out", .(value=sum(value, na.rm = TRUE)), by = c('element_id', 'element', 'dps', 'year', 'id')] #Collapse here, because you want to get rid of the date-level. 
+test4 = merge(test3, test4, by='dps')
+test4[, treat_per_fac:=round(value/facs, 2)]
 
 #--------------------------------------------------------------
 #Make some maps and charts

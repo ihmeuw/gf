@@ -20,8 +20,8 @@ source(paste0(code_dir, "resource_tracking/prep/_common/set_up_r.R"), encoding="
 # ---------------------------------------
 # Boolean logic switches 
 # ---------------------------------------
-prep_files <- TRUE
-prep_gos <- FALSE
+prep_files <- FALSE
+prep_gos <- TRUE
 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 

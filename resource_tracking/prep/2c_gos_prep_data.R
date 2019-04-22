@@ -41,12 +41,14 @@ gos_data[disease == "tuberculosis", disease:="tb"]
 unique(gos_data$expenditure_aggregation_type)
 check = gos_data[measure_names == "Prorated Cumulative Budget USD Equ", .(budget=sum(measure_values, na.rm = T)), by=c('grant', 'start_date', 'end_date', 'expenditure_aggregation_type')]
 check[, budget:=round(budget)] #It's okay if they're off by a decimal place. 
+write.xlsx(check[grant=="SEN-S-MOHP01"], "C:/Users/elineb/Desktop/Issue_2_example.xlsx")
 check = dcast(check, grant+start_date+end_date~expenditure_aggregation_type, value.var='budget', fun.aggregate = sum)
 names(check) <- c('grant', 'start_date', 'end_date', 'agg_cost_group', 'agg_implement', 'agg_intervention' )
 error = check[agg_cost_group != agg_implement | agg_cost_group != agg_intervention | agg_implement != agg_intervention]
 
 #Drop everything but "Intervention" aggregation column for now. 
 #THIS NEEDS TO BE EDITED EKL
+unique(gos_data[expenditure_aggregation_type=="Intervention", .(module, intervention)])
 gos_data = gos_data[expenditure_aggregation_type=="Intervention"]
 
 write.csv(error, paste0(gos_raw, "Differences between expenditure aggregation categories.csv"), row.names=FALSE)
@@ -57,7 +59,7 @@ gos_data = gos_data[, -c("cost_category", "implementing_entity", "expenditure_ag
 #Standardize 'budget' and 'expenditure' columns, and melt. 
 gos_data[measure_names == "Prorated Cumulative Budget USD Equ", measure_names:='budget']
 gos_data[measure_names == "Prorated Cumulative Expenditure USD Equ", measure_names:="expenditure"]
-gos_data = dcast(gos_data, year+country+disease+grant+start_date+end_date+module+intervention+expenditure_aggregation_type~measure_names, value.var ='measure_values', fun.aggregate = sum_na_rm)
+gos_data = dcast(gos_data, year+country+disease+grant+start_date+end_date+module+intervention~measure_names, value.var ='measure_values', fun.aggregate = sum_na_rm)
 
 gos_data = gos_data[order(country, disease, grant, start_date, end_date, year, module, intervention, budget, expenditure)]
 sort(names(gos_data))
@@ -164,61 +166,71 @@ totalGos[, end_date:=as.Date(end_date)]
 
 #--------------------------------------------------------
 # Split data into quarters 
+# FOR THIS - GO AHEAD AND SPLIT EVERYTHING INTO MONTHS, AND THEN AGGREGATE INTO QUARTERS. 
 # -------------------------------------------------------
-pretest = totalGos[, .(pre_budget=sum(budget, na.rm=T)), by=c('grant', 'year')]
+pretest = totalGos[, .(pre_budget=sum(budget, na.rm=T)), by=c('grant')]
+totalGos[, orig_start_date:=start_date]
+totalGos[, orig_end_date:=end_date]
+
+#Review some dates that will cause issues later on. 
+totalGos[end_date=="2009-07-30", end_date:=as.Date("2009-07-31")] #There are actually 31 days in August. 
+totalGos[end_date=="2010-01-01", end_date:=as.Date("2009-12-31")] #This actually ended on the 31st of December of 2009. 
 
 #Generate the variables you need to split
-totalGos[, days_reported:=as.numeric(end_date-start_date)] #How many lines does each day represent? 
+totalGos[, end_date:=end_date+1] #Increment end date by one day, so you can grab the full month range it covers. 
+#Find the difference in months, split by month, and then aggregate up to the quarter-level. 
+totalGos[, months_reported:=(as.yearmon(end_date)-as.yearmon(start_date))*12]
 
-{
-  #Do a random test here. This can be deleted. 
-  totalGos = totalGos[order(expenditure)] #Randomize
-  test_split = totalGos[1:20]
-  setDT(test_split)
-  pretest = test_split[, .(pre_budget=sum(budget, na.rm=T)), by=c('grant', 'year')]
-}
-#Find how many quarters each line needs to be split into.
-#If not an even number, round up, and put the last bit in one extra quarter beyond.
-test_split[, qsplit:=days_reported/90] #90 days in each period
-test_split[, num_quarters:=ceiling(qsplit)]
-test_split[, qremainder:=qsplit%%1]
+#Expand data by the number of months, and then split 
+nrow(totalGos)
+totalGos[, split:=months_reported] #Generate this here, because you'll want to divide the budget by this number. 
+totalGos[, sum(split)]
+totalGos <- expandRows(totalGos, "months_reported")
+nrow(totalGos) 
 
-#Expand data by num_quarters
-test_split <- expandRows(test_split, "num_quarters")
+#Divide budget and expenditure by the months each date range represents
+totalGos[, budget:=budget/split]
+totalGos[, expenditure:=expenditure/split]
 
 #Reformat date variable, and generate 'quarter' variable
-byVars = colnames(test_split)
-test_split[, seq:=seq(from=0, to=100), by=byVars] #100 is an arbitrary number here, we just need something that's greater than the max # of quarters in any file
-test_split[, quarter:=quarter(start_date)]
-test_split[, year:=year(start_date)]
+byVars = colnames(totalGos)
+totalGos[, seq:=sequence(.N), by=byVars] #But this indexes at 1, so...
+totalGos[, seq:=seq-1] #Subtract 1 here. 
+
+#Get the starting month and year variables, and then increment them. 
+totalGos[, month:=month(start_date)]
+totalGos[, year:=year(start_date)]
 
 #While seq is not 0, go through the loop below.
 #If seq is greater than or equal to 4, add 1 to year and divide everything by 4. Continue this loop while max(seq) > 4.
-#EMILY START HERE 
-# If seq is 0, do nothing. 
-# if seq is >=4, 
-max_split = max(test_split$seq)
-while(max_split>=4){
-  test_split[seq>=4, year:=year+1]
-  test_split[seq>=4, seq:=seq-4]
-  max_split = max(test_split$seq)
+# If month + seq + 1 equals 12, than
+totalGos[, new_month:=month+seq]
+max_month = max(totalGos$new_month)
+print(max_month)
+while (max_month>12){
+  totalGos[new_month>12, year:=year+1]
+  totalGos[new_month>12, new_month:=new_month-12]
+  max_month = max(totalGos$new_month)
+  print(max_month)
 }
-dt[, quarter:=quarter+(quarter*seq)]
+#View(totalGos[1:300, .(start_date, end_date, seq, month, new_month, year)])
 
-test_split = test_split[, .(module, intervention, sda_activity, period, start_date, budget, expenditure,
-                            disbursement, qsplit, qremainder, seq, quarter, year)] #DELETE ME!!
+#Now, add a quarter variable. 
+totalGos[new_month<4, quarter:=1]
+totalGos[new_month>=4 & new_month<7, quarter:=2]
+totalGos[new_month>=7 & new_month<10, quarter:=3]
+totalGos[new_month>=10, quarter:=4]
+unique(totalGos[, .(new_month, quarter)][order(quarter, new_month)])
 
-#Split financial variables - start by sectioning off any remainder. #EMILY START HERE
-for (i in 1:20){
-  while (qsplit>1){
-    
-  }
-}
+#Aggregate to the quarter level. 
+totalGos_qtr = totalGos[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c(
+  'quarter', 'year', 'country', 'loc_name', 'grant', 'module', 'intervention', 'disease', 'grant_period', 'file_name', 'data_source')]
 
+#Check that the days within a month start and end at the same time. 
+days = totalGos[, .(start_day=day(start_date), end_day=day(end_date), start_date, end_date)]
+days_check = days[start_day!=end_day]
+days_check = unique(days_check) #There are some dates that start in the middle of the month - do we just want to start on the first no matter what? 
 
-test_split[-c('qsplit', 'num_quarters', 'qremainder', 'seq')]
-#If there is a 'remainder' quarter, split that bit off and save
-
-posttest = totalGos[, .(post_budget=sum(budget, na.rm=T)), by=c('grant', 'year')]
-totals_check = merge(pretest, posttest, by=c('grant', 'year'), all=T)
+posttest = totalGos_qtr[, .(post_budget=sum(budget, na.rm=T)), by=c('grant')]
+totals_check = merge(pretest, posttest, by=c('grant'), all=T)
 
