@@ -9,6 +9,14 @@
 # TO DO
 # fix time series graph so that there are gaps where appropriate (use `group` aesthetic)
 #Note that we're renaming service delivery area as module for the old data - we should fix this.
+
+
+# ----------------------------------------------
+# Output files other than the essential ones defined in set_up_r.R
+# ----------------------------------------------
+checkFile = paste0(gos_raw, "Grants missing intervention information in new GOS file.csv")
+
+
 # ----------------------------------------------
 # Load the GOS tab from the Excel book  
 # ----------------------------------------------
@@ -38,15 +46,15 @@ gos_data[, disease:=tolower(disease)]
 gos_data[disease == "hiv/aids", disease:="hiv"]
 gos_data[disease == "tuberculosis", disease:="tb"]
 
-#Investigate the 'expenditure_aggregation_type' category, and then drop irrelevant values
-unique(gos_data$expenditure_aggregation_type)
-check = gos_data[measure_names == "Prorated Cumulative Budget USD Equ", .(budget=sum(measure_values, na.rm = T)), by=c('grant', 'start_date', 'end_date', 'expenditure_aggregation_type')]
-check[, budget:=round(budget)] #It's okay if they're off by a decimal place. 
-write.xlsx(check[grant=="SEN-S-MOHP01"], "C:/Users/elineb/Desktop/Issue_2_example.xlsx")
-check = dcast(check, grant+start_date+end_date~expenditure_aggregation_type, value.var='budget', fun.aggregate = sum)
-names(check) <- c('grant', 'start_date', 'end_date', 'agg_cost_group', 'agg_implement', 'agg_intervention' )
-error = check[agg_cost_group != agg_implement | agg_cost_group != agg_intervention | agg_implement != agg_intervention]
-write.csv(error, paste0(gos_raw, "Differences between expenditure aggregation categories.csv"), row.names=FALSE)
+#Standardize 'budget' and 'expenditure' columns 
+gos_data[measure_names == "Prorated Cumulative Budget USD Equ", measure_names:='budget']
+gos_data[measure_names == "Prorated Cumulative Expenditure USD Equ", measure_names:="expenditure"]
+
+#Investigate the 'expenditure_aggregation_type' category
+check = gos_data[, sum(measure_values, na.rm=TRUE), by=c('grant','measure_names','expenditure_aggregation_type')]
+check = dcast(check, grant+measure_names~expenditure_aggregation_type)
+missing_intervention = check[Intervention==0]
+write.csv(missing_intervention, checkFile, row.names=FALSE)
 
 #Drop everything but "Intervention" aggregation column.
 unique(gos_data[expenditure_aggregation_type=="Intervention", .(module, intervention)])
