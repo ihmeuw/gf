@@ -57,28 +57,25 @@ missing_intervention = check[Intervention==0]
 write.csv(missing_intervention, checkFile, row.names=FALSE)
 
 #Drop everything but "Intervention" aggregation column.
-unique(gos_data[expenditure_aggregation_type=="Intervention", .(module, intervention)])
 gos_data = gos_data[expenditure_aggregation_type=="Intervention"]
 
 #Drop columns before reshape
 gos_data = gos_data[, -c("cost_category", "implementing_entity", "expenditure_aggregation_type")]
 
-#Standardize 'budget' and 'expenditure' columns, and melt. 
-gos_data[measure_names == "Prorated Cumulative Budget USD Equ", measure_names:='budget']
-gos_data[measure_names == "Prorated Cumulative Expenditure USD Equ", measure_names:="expenditure"]
-gos_data = dcast(gos_data, year+country+disease+grant+start_date+end_date+module+intervention~measure_names, value.var ='measure_values', fun.aggregate = sum_na_rm)
+# reshape budget and expenditure wide
+gos_data = dcast(gos_data, year+country+disease+grant+start_date+end_date+module+intervention~measure_names, value.var ='measure_values')
 
+# order rows and columns
 gos_data = gos_data[order(country, disease, grant, start_date, end_date, year, module, intervention, budget, expenditure)]
 sort(names(gos_data))
 
-unique(gos_data$grant)
-#Get rid of the P01, P02 etc. at the end of the string. #David - this is something else we should confirm with Sylvie! 
-substrEnd <- function(x, n){
-  substr(x, 1, nchar(x)-n+1)
-}
-gos_data[, grant:=substrEnd(grant, 4)]
+#Get rid of the P01, P02 etc. at the end of the string. these are always 3 characters
+gos_data[, grant:=str_sub(grant, 1, -4)]
+
+# test that year is never missing
 stopifnot(nrow(gos_data[is.na(year)])==0)
 
+# identify original file name
 gos_data$file_name = "By_Cost_Category_data .xlsx"
 
 # ----------------------------------------------
