@@ -9,6 +9,14 @@
 # TO DO
 # fix time series graph so that there are gaps where appropriate (use `group` aesthetic)
 #Note that we're renaming service delivery area as module for the old data - we should fix this.
+
+
+# ----------------------------------------------
+# Output files other than the essential ones defined in set_up_r.R
+# ----------------------------------------------
+checkFile = paste0(gos_raw, "Grants missing intervention information in new GOS file.csv")
+
+
 # ----------------------------------------------
 # Load the GOS tab from the Excel book  
 # ----------------------------------------------
@@ -38,40 +46,50 @@ gos_data[, disease:=tolower(disease)]
 gos_data[disease == "hiv/aids", disease:="hiv"]
 gos_data[disease == "tuberculosis", disease:="tb"]
 
-#Investigate the 'expenditure_aggregation_type' category, and then drop irrelevant values
-unique(gos_data$expenditure_aggregation_type)
-check = gos_data[measure_names == "Prorated Cumulative Budget USD Equ", .(budget=sum(measure_values, na.rm = T)), by=c('grant', 'start_date', 'end_date', 'expenditure_aggregation_type')]
-check[, budget:=round(budget)] #It's okay if they're off by a decimal place. 
-write.xlsx(check[grant=="SEN-S-MOHP01"], "C:/Users/elineb/Desktop/Issue_2_example.xlsx")
-check = dcast(check, grant+start_date+end_date~expenditure_aggregation_type, value.var='budget', fun.aggregate = sum)
-names(check) <- c('grant', 'start_date', 'end_date', 'agg_cost_group', 'agg_implement', 'agg_intervention' )
-error = check[agg_cost_group != agg_implement | agg_cost_group != agg_intervention | agg_implement != agg_intervention]
-write.csv(error, paste0(gos_raw, "Differences between expenditure aggregation categories.csv"), row.names=FALSE)
+#Standardize 'budget' and 'expenditure' columns 
+gos_data[measure_names == "Prorated Cumulative Budget USD Equ", measure_names:='budget']
+gos_data[measure_names == "Prorated Cumulative Expenditure USD Equ", measure_names:="expenditure"]
+
+#Investigate the 'expenditure_aggregation_type' category
+check = gos_data[, sum(measure_values, na.rm=TRUE), by=c('grant','measure_names','expenditure_aggregation_type')]
+check = dcast(check, grant+measure_names~expenditure_aggregation_type)
+missing_intervention = check[Intervention==0]
+write.csv(missing_intervention, checkFile, row.names=FALSE)
 
 #Drop everything but "Intervention" aggregation column.
-unique(gos_data[expenditure_aggregation_type=="Intervention", .(module, intervention)])
 gos_data = gos_data[expenditure_aggregation_type=="Intervention"]
 
 #Drop columns before reshape
 gos_data = gos_data[, -c("cost_category", "implementing_entity", "expenditure_aggregation_type")]
 
-#Standardize 'budget' and 'expenditure' columns, and melt. 
-gos_data[measure_names == "Prorated Cumulative Budget USD Equ", measure_names:='budget']
-gos_data[measure_names == "Prorated Cumulative Expenditure USD Equ", measure_names:="expenditure"]
-gos_data = dcast(gos_data, year+country+disease+grant+start_date+end_date+module+intervention~measure_names, value.var ='measure_values', fun.aggregate = sum_na_rm)
+# reshape budget and expenditure wide
+gos_data = dcast(gos_data, year+country+disease+grant+start_date+end_date+module+intervention~measure_names, value.var ='measure_values')
 
+# order rows and columns
 gos_data = gos_data[order(country, disease, grant, start_date, end_date, year, module, intervention, budget, expenditure)]
 sort(names(gos_data))
 
-unique(gos_data$grant)
-#Get rid of the P01, P02 etc. at the end of the string. #David - this is something else we should confirm with Sylvie! 
-substrEnd <- function(x, n){
-  substr(x, 1, nchar(x)-n+1)
-}
-gos_data[, grant:=substrEnd(grant, 4)]
+#Get rid of the P01, P02 etc. at the end of the string. these are always 3 characters
+gos_data[, grant:=str_sub(grant, 1, -4)]
+
+# test that year is never missing
 stopifnot(nrow(gos_data[is.na(year)])==0)
 
+# identify original file name
 gos_data$file_name = "By_Cost_Category_data .xlsx"
+
+# check for overlapping time periods within the same grant
+for(g in unique(gos_data$grant)) { 
+	for(d in c(unique(gos_data[grant==g]$start_date), unique(gos_data[grant==g]$end_date))) { 
+		if(nrow(gos_data[grant==g & start_date<s & end_date>s])>0) { 
+			print(paste('Grant:', g, 'has overlapping time periods:'))
+			print(gos_data[grant==g, .(budget=sum(budget,na.rm=T)), by=c('grant','start_date','end_date')])
+		}
+	}
+}
+
+# check for not defined
+gos_data[module=='Not Defined']
 
 # ----------------------------------------------
 # Load the GMS tab from the Excel book  

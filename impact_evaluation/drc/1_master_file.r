@@ -15,7 +15,6 @@
 # ---------------------------------------
 # Install packages and set up R  
 # ---------------------------------------
-setwd("C:/local/gf") # set to the root of the repo
 
 # clear memory
 rm(list=ls())
