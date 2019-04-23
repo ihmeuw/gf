@@ -78,6 +78,19 @@ stopifnot(nrow(gos_data[is.na(year)])==0)
 # identify original file name
 gos_data$file_name = "By_Cost_Category_data .xlsx"
 
+# check for overlapping time periods within the same grant
+for(g in unique(gos_data$grant)) { 
+	for(d in c(unique(gos_data[grant==g]$start_date), unique(gos_data[grant==g]$end_date))) { 
+		if(nrow(gos_data[grant==g & start_date<s & end_date>s])>0) { 
+			print(paste('Grant:', g, 'has overlapping time periods:'))
+			print(gos_data[grant==g, .(budget=sum(budget,na.rm=T)), by=c('grant','start_date','end_date')])
+		}
+	}
+}
+
+# check for not defined
+gos_data[module=='Not Defined']
+
 # ----------------------------------------------
 # Load the GMS tab from the Excel book  
 # ----------------------------------------------
