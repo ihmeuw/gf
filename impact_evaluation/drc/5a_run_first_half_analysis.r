@@ -3,6 +3,7 @@
 # 
 # 1/18/2019
 # This runs the SEM dose-response model
+# qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=12G -q all.q -P ihme_general -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5a_run_first_half_analysis.r
 # ------------------------------------------------
 
 source('./impact_evaluation/drc/set_up_r.r')

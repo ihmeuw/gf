@@ -105,6 +105,8 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       tmpData[, (col):=append_cols[, get(col)]]
     }  
     tmpData$year <- year(tmpData$start_date)
+    tmpData$grant_disease <- tmpData$disease #Add in a column to represent the disease of the whole grant- this way when grant 
+    #gets reclassified later, we'll still be able to tally by disease and grant period. 
     
     #Bind data together 
     if(i==1){
@@ -149,7 +151,8 @@ resource_database$disbursement <- as.numeric(resource_database$disbursement)
 #Add files here that had a sum total for 0 in raw file. 
 verified_0_budget <- c('UGD-708-G08-M_PUDR 30Nov2011.xls', 'UGD-708-G08-M_PUDR_30June2012.xls')
 #Add PUDRs here that did not report any expenditure. 
-verified_0_expenditure <- c('GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx', 'UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx')
+verified_0_expenditure <- c('GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx', 'UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 
+                            "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx")
 
 #Make sure that no files have a total sum of 0; this would indicate an error in the prep code. 
 check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by=.(file_name)]
@@ -175,3 +178,15 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expendi
 rt_files <- unique(resource_database$file_name)
 stopifnot(length(unique(file_list$file_name)) == length(rt_files))
 stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
+
+#Add in a variable for the disease of the file before you start mapping process. 
+resource_database[, disease_grant:=strsplit(grant, "-")]
+resource_database[, disease_grant:=sapply(disease_grant, "[", 2 )]
+unique(resource_database$disease_grant) #Visual check that these all make sense. 
+
+resource_database[disease_grant=='C', disease_grant:='hiv/tb']
+resource_database[disease_grant=='H', disease_grant:='hiv']
+resource_database[disease_grant=='T', disease_grant:='tb']
+resource_database[disease_grant=='S' | disease_grant=='R', disease_grant:='rssh']
+resource_database[disease_grant=='M', disease_grant:='malaria']
+

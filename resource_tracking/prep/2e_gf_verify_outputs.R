@@ -13,7 +13,7 @@
 
 if (test_current_files == TRUE){
   file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
-  gos_data = readRDS(paste0(combined_output_dir, "/prepped_gos_data.rds"))
+  gos_data = readRDS(paste0(gos_prepped, "/prepped_gos_data.rds"))
 } else {
   print("WARNING: TESTING ARCHIVED DATABASE. REVIEW SWITCH 'test_current_files'")
   # Old resource tracking database, for comparison. Was archived on Dec 3, 2018
@@ -37,7 +37,7 @@ gtm_budgets = check_budgets_pudrs(gtm_budgets)
 # Guatemala unit tests
 # -----------------------
 
-gtm_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/gtm_tests.csv"))
+gtm_tests<-fread(paste0(dir, "_gf_files_gos/gtm/gtm_tests.csv"))
 gtm_tests$correct_bug_sum <- gsub("[[:punct:]]", "", gtm_tests$correct_bug_sum)
 gtm_tests$correct_exp_sum <- gsub("[[:punct:]]", "", gtm_tests$correct_exp_sum)
 gtm_tests$correct_bug_sum <- as.numeric(gtm_tests$correct_bug_sum)
@@ -60,7 +60,7 @@ if(nrow(not_tested_gtm)!=0){
 gtm_merge$budget = round(gtm_merge$budget)
 gtm_merge$expenditure = round(gtm_merge$expenditure)
 
-gtm_merge <- gtm_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
+gtm_merge <- gtm_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source)]
 gtm_merge$country <- "gtm" #For sorting out failed tests later if any.
 
 failed_budgets_gtm <- gtm_merge[correct_bug_sum != budget, ]
@@ -81,7 +81,7 @@ failed_tests_gtm = unique(rbind(failed_budgets_gtm, failed_expenditures_gtm))
   # DRC unit tests
   # ------------------
   
-  uga_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/uga_tests.csv"), encoding = "Latin-1")
+  uga_tests<-fread(paste0(dir, "_gf_files_gos/uga/uga_tests.csv"), encoding = "Latin-1")
   uga_tests$start_date <- as.Date(uga_tests$start_date, format="%m/%d/%Y")
   
   uga_tests[, quarter:=quarter(start_date)]
@@ -129,7 +129,7 @@ failed_tests_gtm = unique(rbind(failed_budgets_gtm, failed_expenditures_gtm))
   # DRC unit tests
   # ------------------
   
-  cod_tests<-fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/cod_tests.csv"), encoding = "Latin-1")
+  cod_tests<-fread(paste0(dir, "_gf_files_gos/cod/cod_tests.csv"), encoding = "Latin-1")
   cod_tests$start_date <- as.Date(cod_tests$start_date, format="%m/%d/%Y")
   
   cod_tests[, quarter:=quarter(start_date)]
@@ -168,7 +168,7 @@ failed_tests_gtm = unique(rbind(failed_budgets_gtm, failed_expenditures_gtm))
 # RSSH tests
 # ------------------
 
-rssh_tests <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/rssh_tests.csv"))
+rssh_tests <- fread(paste0(dir, "_gf_files_gos/rssh_tests.csv"))
 rssh_by_rt_code <- file_iterations[substring(code, 1, 1) == 'R']
 rssh_by_rt_code = rssh_by_rt_code[, .(rt_code_rssh = round(sum(budget, na.rm = TRUE))), by = c('file_name')]
 rssh_by_rt_code[is.na(rt_code_rssh), rt_code_rssh:=0]
@@ -188,24 +188,25 @@ failed_rssh_tests = check_rssh[correct_rssh!=rt_code_rssh]
 # GOS Tests 
 # ------------------
 
-gos_tests = fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/multi_country/gf/testing_budget_numbers/gos_tests.csv"))
+gos_tests = fread(paste0(dir, "_gf_files_gos/gos/gos_tests.csv"))
+
 
 gos_rssh = gos_data[substring(code, 1, 1)=='R']
-gos_rssh = gos_rssh[, .(gos_rssh = round(sum(budget, na.rm = TRUE))), by=c('grant_number')]
+gos_rssh = gos_rssh[, .(gos_rssh = round(sum(budget, na.rm = TRUE))), by=c('grant')]
 
 
 gos_data[is.na(budget), budget:=0]
 gos_data[is.na(expenditure), expenditure:=0]
 gos_data = gos_data[ , 
               lapply(.SD, sum) , 
-              by = 'grant_number', 
+              by = 'grant', 
               .SDcols = c("budget", "expenditure")]
 gos_data <- unique(gos_data)
 gos_data[, budget:=round(budget)]
 gos_data[, expenditure:=round(expenditure)]
 
-gos_data = merge(gos_data, gos_rssh, by='grant_number', all = TRUE)
-gos_merge = merge(gos_data, gos_tests, by='grant_number', all.x = TRUE)
+gos_data = merge(gos_data, gos_rssh, by='grant', all = TRUE)
+gos_merge = merge(gos_data, gos_tests, by='grant', all.x = TRUE)
 
 #Find failed tests and untested grants 
 untested_gos = gos_merge[is.na(correct_bug_sum)]
@@ -242,9 +243,9 @@ if (nrow(failed_tests) != 0 | nrow(failed_rssh_tests)!=0){
   print("...")
 }
 
-uga_filelist <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/uga/grants/uga_budget_filelist.csv"))
-cod_filelist <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/cod/grants/cod_budget_filelist.csv"))
-gtm_filelist <- fread(paste0(j, "/Project/Evaluation/GF/resource_tracking/gtm/grants/gtm_budget_filelist.csv"))
+uga_filelist <- fread(paste0(dir, "_gf_files_gos/uga/raw_data/uga_budget_filelist.csv"))
+cod_filelist <- fread(paste0(dir, "_gf_files_gos/cod/raw_data/cod_budget_filelist.csv"))
+gtm_filelist <- fread(paste0(dir, "_gf_files_gos/gtm/raw_data/gtm_budget_filelist.csv"))
 
 gtm_tests_nodup <- gtm_tests[!duplicated(file_name)]
 cod_tests_nodup <- cod_tests[!duplicated(file_name)]
@@ -254,8 +255,8 @@ gtm_tested_grants <- unique(gtm_tests[, .(file_name)])
 cod_tested_grants <- unique(cod_tests[, .(file_name)])
 uga_tested_grants <- unique(uga_tests[, .(file_name)])
 
-print(paste0("Testing ", round(gtm_tests_nodup[format == "pudr", .N]/gtm_filelist[data_source == "pudr", .N]*100, 2), "% of PUDRs and ", 
-             round(gtm_tests_nodup[format != "pudr", .N]/gtm_filelist[data_source != "pudr", .N]*100, 2), "% of budgets in Guatemala"))
+print(paste0("Testing ", round(gtm_tests_nodup[type == "pudr", .N]/gtm_filelist[data_source == "pudr", .N]*100, 2), "% of PUDRs and ", 
+             round(gtm_tests_nodup[type != "pudr", .N]/gtm_filelist[data_source != "pudr", .N]*100, 2), "% of budgets in Guatemala"))
 print(paste0("Testing ", round(nrow(unique(gtm_filelist[grant_status=='active' & file_name%in%gtm_tested_grants$file_name, .(file_name)]))/nrow(unique(gtm_filelist[grant_status=='active', .(file_name)]))*100, 2), 
              "% of active files and ", round(nrow(unique(gtm_filelist[grant_status=='not_active' & file_name%in%gtm_tested_grants$file_name, .(file_name)]))/nrow(unique(gtm_filelist[grant_status=='not_active', .(file_name)]))*100, 2)
              , "% of not active files Guatemala"))
@@ -274,11 +275,6 @@ print(paste0("Testing ", round(nrow(unique(cod_filelist[grant_status=='active' &
 "% of active files and ", round(nrow(unique(cod_filelist[grant_status=='not_active' & file_name%in%cod_tested_grants$file_name, .(file_name)]))/nrow(unique(cod_filelist[grant_status=='not_active', .(file_name)]))*100, 2)
              , "% of not active files DRC"))
 print("...")
-
-if (nrow(not_tested_cod)!=0){
-  print("Warning: There are files in your database for DRC that aren't currently in the list of tests.")
-  print(not_tested_cod)
-}
 
 total_tests <- nrow(cod_tests) + nrow(gtm_tests) + nrow(uga_tests)
 total_merges <- nrow(cod_merge) + nrow(gtm_merge) + nrow(uga_merge)
