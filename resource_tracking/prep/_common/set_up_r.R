@@ -37,9 +37,8 @@ combined_output_dir = paste0(dir, "_gf_files_gos/combined_prepped_data/")
 mapping_dir = paste0(dir, "modular_framework_mapping/")
 
 #Code filepaths 
-repo = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
-code_dir = paste0(repo, "resource_tracking/prep/")
-common_dir = paste0(code_dir, "_common/")
+code_dir = "./resource_tracking/prep/"
+common_dir = paste0(code_dir, "/_common/")
 
 fgh_raw = paste0(dir, "_fgh/raw_data/")
 fgh_prepped = paste0(dir, "_fgh/prepped_data/")

@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'sigl'
+set = 'base'
 
 # user name for sourcing functions
 user_name = 'ccarelli'
@@ -35,21 +35,23 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 # output files
 
 if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
-if (set=='base') outFile = 'outliers/base_outliers_replaced.pdf'
-if (set=='sigl') outFile = 'outliers/sigl_drugs_qr_outliers_04_17_19.pdf'
-
+if (set=='base') outFile = 'outliers/base/base_outliers_replaced.pdf'
+if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_23_19.pdf'
+                  outData = 'prepped/outliers_removed/sigl_drugs_rec_prepped_outliers_labelled.rds' }
 #------------------------------------
 # source function for health zone names
 
 # source function - locally or on the cluster
 # reset working directory using user_name to specify path
-setwd('C:/local/gf')
+ if (username=='ccarelli') { setwd('C:/Users/ccarelli/local/gf')
+   } else {setwd('C:/local/gf')}
+
 source('./core/standardizeHZNames.R')
 #------------------------------------
 # read in the file
 
-if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/qr_results_full.rds'))}
-if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base_quantreg_results.rds'))}
+if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/base/qr_results_full.rds'))}
+if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base/base_quantreg_results.rds'))}
 if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl_quantreg_imputation_results.rds'))
 #------------------------------------
 
@@ -72,6 +74,16 @@ if (set == 'sigl') {
   dt$health_zone <- standardizeHZNames(dt$health_zone)
   
   dt[ got_imputed== "yes", value := NA ]
+  
+  #fix where level is NA because we are going to do outlier detection by level
+  dt[is.na(level) & grepl(org_unit, pattern = "zone", ignore.case= TRUE), level := "health_zone"]
+  dt[is.na(level) & grepl(org_unit, pattern = "aire", ignore.case= TRUE), level := "health_area"]
+  dt[is.na(level) & grepl(org_unit, pattern = "polyc", ignore.case= TRUE), level := "polyclinic"]
+  dt[is.na(level) & grepl(org_unit, pattern = "hos.*cent|cent.*hos|CH", ignore.case= TRUE), level:="hospital_center"]
+  dt[is.na(level) & grepl(org_unit, pattern = "m*dical", ignore.case= TRUE), level:="medical_center"]
+  dt[is.na(level) & grepl(org_unit, pattern = "r*rence", ignore.case= TRUE), level:="reference_health_center"]
+  dt[is.na(level) & grepl(org_unit, pattern = "cent|CS", ignore.case= TRUE), level:="health_center"]
+  dt[is.na(level) & grepl(org_unit, pattern = "clin", ignore.case= TRUE), level:="clinic"]
 }
 
 #-----------------------------------
@@ -177,13 +189,13 @@ dt[outlier==TRUE, .N]
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
-# dt[ , facility:=word(org_unit, 2, -1)]
+dt[ , facility:=word(org_unit, 2, -1)]
 
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
-
+#----------------------------
 if (set=='pnls') dt[ , combine:=paste0(org_unit_id, sex, element)]
-if (set=='base')dt[ , combine:=paste0(org_unit_id, element)]
+if (set=='base') dt[ , combine:=paste0(org_unit_id, element)]
 if (set=='sigl') dt[ , combine := paste0(org_unit_id, drug)]
 
 out_orgs = dt[outlier == TRUE, unique(combine)]
@@ -192,11 +204,12 @@ out = dt[combine %in% out_orgs]
 # drop the unique identifier
 out[ , combine := NULL]
 dt[ , combine := NULL]
+#----------------------------
 
 #----------------------------
 # eliminate outliers that are part of an emerging trend
 # do not demarcate any two or more consecutive outliers as outliers
-
+#----------------------------
 # create a unique identifier to drop out emerging trends
 if (set=='pnls') out[ , combine2:=paste0(org_unit_id, sex, element, subpop, age)]
 if (set=='base') out[ , combine2:=paste0(org_unit_id, element, category)]
@@ -242,17 +255,34 @@ out[ , combine:=NULL]
 # # view distribution of outliers by variable
 # if (set == 'sigl') dist = out[outlier == TRUE, .N, by = c('drug', 'variable')]
 # if (set == 'sigl') dist2 = out[outlier == TRUE, .N, by = c('drug')]
+#----------------------------
+
+#----------------------------
+# save a version of the data set with final outliers (after threshold set and emerging trends dropped) labelled
+#----------------------------
+# need to set the values in "drop" to NOT be outliers:
+if (set == "sigl"){
+  drop[ , outlier:= FALSE]
+  merge_vars = names(dt)[!names(dt) %in% "outlier"]
+  drop = drop[, c(merge_vars, "outlier"), with= FALSE]
+  check = merge(dt, drop, by = merge_vars, all.x = TRUE)
+  check[ outlier.y == FALSE, outlier.x := FALSE]
+  check[, outlier.y := NULL]
+  setnames(check, "outlier.x", "outlier")
+  
+  saveRDS(check, paste0(dir, outData))
+}
+#----------------------------
 
 #----------------------------
 # create the graphs
-
+#----------------------------
 # create a palette
 greys = brewer.pal(9, 'Greys')
 
 # create a list of plots
 list_of_plots = NULL
 i=1
-
 #----------------------------
 # loop through the graphs 
 if (set == 'pnls'){
@@ -305,7 +335,7 @@ if (set == 'sigl'){
         # create the plot
         list_of_plots[[i]] = ggplot(out[drug==d & org_unit_id==o], aes(x=date, y=value)) +
           geom_point() +
-          geom_line(aes(x=date, y=fitted_value), alpha = 0.5) +
+          geom_line(aes(x=date, y=fitted_value), alpha = 0.3) +
           geom_point(data = out[drug==d & org_unit_id==o & outlier==TRUE], color='#d73027', size=3, alpha=0.8) +
           geom_point(data = out[drug==d & org_unit_id==o & outlier==TRUE], aes(x=date, y=fitted_value), 
                      color='#4575b4', size=3, alpha=0.8) +
@@ -370,6 +400,7 @@ if (set=='base') {
 
 #--------------------------------
 # print out the list of plots into a pdf
+#--------------------------------
 pdf(paste0(dir, outFile), height=6, width=10)
 
 for(i in seq(length(list_of_plots))) { 
@@ -378,6 +409,16 @@ for(i in seq(length(list_of_plots))) {
 
 dev.off()
 #--------------------------------
+# remove outliers from the data set and perform final prep
+
+# runs outlier removal on base and formats as prepped data 
+if (set=='base') dt = base_remove(dt)
+  
+#--------------------------------
+
+
+
+
 
 
 
