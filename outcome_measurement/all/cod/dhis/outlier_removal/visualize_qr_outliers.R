@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'sigl'
+set = 'base'
 
 # user name for sourcing functions
 user_name = 'ccarelli'
@@ -43,13 +43,15 @@ if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_23_19
 
 # source function - locally or on the cluster
 # reset working directory using user_name to specify path
-setwd('C:/local/gf')
-source('./core/standardizeHZNames.R')
+#  if (username=='ccarelli') { setwd('C:/Users/ccarelli/local/gf')
+#    } else {setwd('C:/local/gf')}
+# 
+# source('./core/standardizeHZNames.R')
 #------------------------------------
 # read in the file
 
-if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/qr_results_full.rds'))}
-if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base_quantreg_results.rds'))}
+if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/base/qr_results_full.rds'))}
+if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base/base_quantreg_results.rds'))}
 if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl_quantreg_imputation_results.rds'))
 #------------------------------------
 
@@ -187,7 +189,7 @@ dt[outlier==TRUE, .N]
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
-# dt[ , facility:=word(org_unit, 2, -1)]
+dt[ , facility:=word(org_unit, 2, -1)]
 
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
@@ -407,6 +409,16 @@ for(i in seq(length(list_of_plots))) {
 
 dev.off()
 #--------------------------------
+# remove outliers from the data set and perform final prep
+
+# runs outlier removal on base and formats as prepped data 
+if (set=='base') dt = base_remove(dt)
+  
+#--------------------------------
+
+
+
+
 
 
 
