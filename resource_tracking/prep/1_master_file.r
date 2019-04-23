@@ -20,8 +20,8 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # ---------------------------------------
 # Boolean logic switches 
 # ---------------------------------------
-prep_files <- TRUE
-prep_gos <- FALSE
+prep_files <- FALSE
+prep_gos <- TRUE
 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
@@ -34,7 +34,7 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # STEP 2: GF FILES AND GOS DATA 
 # ----------------------------------------------
 if (prep_files == TRUE){
-  country = "cod" #Change to the country you want to update. 
+  country = "uga" #Change to the country you want to update. 
   master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
   export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
 }
@@ -49,12 +49,13 @@ for (file in doc_prep_functions){
 # Load and verify mapping, prep data, and map data. 
 source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
 if (prep_files == TRUE){
-  source(paste0(code_dir, "2b_gf_files_prep_data.R"))
+  source(paste0(code_dir, "2b_gf_files_prep_data.r"))
 } else if (prep_gos == TRUE){
   source(paste0(code_dir, "2c_gos_prep_data.R"))
 }
 source(paste0(code_dir, "2d_gf_files_gos_map_data.R"))
 source(paste0(code_dir, "2e_gf_verify_outputs.R"))
+source(paste0(code_dir, "2f_gf_visualize_data.rmd"))
   
 # ----------------------------------------------
 # STEP 3: FGH ACTUALS AND ESTIMATES 

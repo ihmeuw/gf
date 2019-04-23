@@ -6,8 +6,8 @@
 # ---------------------------------------------------------------------------------------------------
 # #Mark which grants are currently active to save in file - this should be updated every grant period! 
 # ----------------------------------------------------------------------------------------------------
-current_gtm_grants <- c('GTM-H-HIVOS', 'GTM-H-INCAP', 'GTM-M-MSPAS', 'GTM-T-MSPAS')
-current_gtm_grant_period <- c('2018', '2019-2020', '2018-2020', '2016-2019')
+current_gtm_grants <- c('GTM-H-HIVOS', 'GTM-H-INCAP', 'GTM-M-MSPAS', 'GTM-M-MSPAS', 'GTM-T-MSPAS', 'GTM-T-MSPAS')
+current_gtm_grant_period <- c('2018', '2018-2020', '2018-2020', '2019-2021', '2016-2019', '2019-2022')
 
 current_cod_grants <- c('COD-C-CORDAID', 'COD-H-MOH', 'COD-T-MOH', 'COD-M-MOH', 'COD-M-SANRU')
 current_cod_grant_period <- rep("2018-2020", 5)
