@@ -43,10 +43,10 @@ if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_23_19
 
 # source function - locally or on the cluster
 # reset working directory using user_name to specify path
-#  if (username=='ccarelli') { setwd('C:/Users/ccarelli/local/gf')
-#    } else {setwd('C:/local/gf')}
-# 
-# source('./core/standardizeHZNames.R')
+ if (username=='ccarelli') { setwd('C:/Users/ccarelli/local/gf')
+   } else {setwd('C:/local/gf')}
+
+source('./core/standardizeHZNames.R')
 #------------------------------------
 # read in the file
 
