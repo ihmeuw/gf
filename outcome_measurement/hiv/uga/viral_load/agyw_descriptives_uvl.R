@@ -18,6 +18,11 @@ library(plyr)
 library(RColorBrewer)
 library(raster)
 library(maptools)
+library(gplots)
+library(corrplot)
+library(raster)
+library(maptools)
+library(ggrepel)
 # --------------------
 
 # -----------------------------------------------
@@ -63,6 +68,129 @@ tri_sex = c('#bd0026', '#74c476', '#3182bd')
 wrap_colors = c('#3182bd', '#fecc5c', '#bd0026', '#74c476', '#8856a7', '#f768a1')
 sex_colors = c('#bd0026', '#3182bd', '#74c476', '#8856a7') # colors by sex plus one for facilities
 single_red = '#bd0026'
+#--------------------------------------
+# merge in regions
+
+# import the regions 
+regions = fread(paste0(j, '/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv'))
+regions = regions[ ,.(dist112_name, region10_alt)]
+setnames(regions, c('district', 'region'))
+regions = regions[!duplicated(regions)]
+
+# merge the regions into the data 
+dt = merge(dt, regions, by='district', all.x=T)
+
+#--------------------------------------
+# create maps
+
+graph_region(dt)
+
+# 15 - 24 vl suppression by region
+
+reg = dt[(age=='15 - 19' | age=='20 - 24') & (year=='2017' | year=='2018')]
+reg = reg[ , lapply(.SD, sum), .SDcols=11:18, by=.(region, sex, year)]
+reg[ ,ratio:=round(100*(suppressed/valid_results), 1)]
+
+write.csv(reg[sex=='Male' & year=='2018'], paste0(outDir, 'table.csv'))
+
+#--------------------------------------
+
+
+
+# chi2 test 
+
+
+# make contingency table
+dt_chi = dt[ ,.(value=round(100*(sum(suppressed)/sum(valid_results)), 1)), by=.(sex, Age=age) ]
+
+dt_chi = dcast(dt_chi, Age~sex)
+dt_chi[ ,Age:=as.character(Age)]
+dt_chi = as.matrix(dt_chi)
+write.table(dt_chi, paste0(outDir, 'contingency.txt'), row.names=F)
+
+dt_chi = read.table(paste0(outDir, 'contingency.txt'), row.names=1, skip=1)
+setnames(dt_chi, c("Female", "Male"))
+
+
+dt2 = as.table(as.matrix(dt_chi))
+
+balloonplot(t(dt2), main ="dt_chi", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+
+chisq = chisq.test(dt_chi)
+chisq
+
+
+round(chisq$expected, 1)
+
+corrplot(chisq$residuals, is.cor = FALSE)
+
+
+
+
+
+
+
+library(betareg)
+fit = betareg(I(suppressed/valid_results) ~ factor(age)*factor(sex), dt)
+
+
+frame = unique(dt[,c('age','sex')])
+frame[, est:=predict(fit)]
+frame[, upper:=predict(fit, )]
+
+#---------------------
+
+# make contingency table
+dt_chi = dt[ ,.(value=sum(suppressed), 1), by=.(sex, Age=age) ]
+
+dt_chi = dcast(dt_chi, Age~sex)
+dt_chi[ ,Age:=as.character(Age)]
+
+balloonplot(dt_chi)
+dt_chi = as.matrix(dt_chi)
+write.table(dt_chi, paste0(outDir, 'contingency.txt'), row.names=F)
+
+dt_chi = read.table(paste0(outDir, 'contingency.txt'), row.names=1, skip=1)
+setnames(dt_chi, c("Female", "Male"))
+
+
+
+dt2 = as.table(as.matrix(dt_chi))
+
+balloonplot(t(dt2), main ="Number virally suppressed", xlab ="", ylab="",
+            label = FALSE, show.margins = FALSE)
+
+chisq = chisq.test(dt_chi)
+chisq
+
+
+round(chisq$expected, 1)
+
+corrplot(chisq$residuals, is.cor = FALSE)
+
+corrplot(chisq$residuals, type = "upper", order = "hclust", 
+         tl.col = "black", tl.srt = 45, is.cor=F)
+
+
+
+corrplot(chisq$residuals, type="full", 
+         tl.col = "black", is.cor=F)
+
+
+
+dcast(dt_chi, Age~Female+Male)
+
+#-------------
+# correlation matrix
+
+cor_plot = cor(dt2)
+
+library(corrplot)
+
+
+
+
 
 #--------------------------
 # facilities reporting
@@ -272,7 +400,12 @@ ggplot(age_line[year(date)==2017 | year(date)==2018], aes(x=date, y=ratio, color
 
 dev.off()
 
-#---------------------------------
+
+
+
+
+
+
 # map
 
   
@@ -318,13 +451,15 @@ write.csv(sup, paste0(outDir, 'ratio.csv'))
 
 
 
+ratio = dt[ ,.(value = sum(patients_received)), by=.(sex, Year=year(date))][order(sex, Year)]
 
+ratio = dcast(ratio, Year~sex)
 
+ratio[ , submit:=round(Female/Male, 1)]
 
+dt[age=='15 - 19' | age=='15 - 24',.(samples=sum(patients_received)), by=sex]
 
-
-
-
+dt[age=='25 - 29' | age=='30 - 34',.(samples=sum(patients_received)), by=sex]
 
 
 

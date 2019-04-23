@@ -26,12 +26,14 @@ dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # set the folder for 
 import_folder = 'pre_prep/merged/'
+prepped_folder = 'prepped/'
 
 # input data sets
 base_data <- 'base_2018_01_01_2019_01_01.rds'
 pnls_data <- 'pnls_subset_2014_11_01_2018_12_01.rds'
 sigl_data <- 'sigl_2018_01_01_2019_01_01.rds'
 pati_data <- 'tb_pati_v_registered_2017_01_01_2018_10_01.rds'
+ssc_data <- 'ssc_prepped.rds'
 
 # archived data for 2017 data:
 base_archive <- 'prepped/archive/base_services_drc_01_2017_09_2018_prepped.rds'
@@ -83,6 +85,7 @@ base = readRDS(paste0(dir, import_folder, base_data))
 pnls = readRDS(paste0(dir, import_folder, pnls_data))
 sigl = readRDS(paste0(dir, import_folder, sigl_data))
 pati = readRDS(paste0(dir, import_folder, pati_data))
+ssc = readRDS(paste0(dir, prepped_folder, ssc_data))
 
 base_2017 = readRDS(paste0(dir, base_archive))
 sigl_2017 = readRDS(paste0(dir, sigl_archive))
@@ -98,21 +101,25 @@ base[ ,set:='base']
 pnls[ ,set:='pnls']
 sigl[ ,set:='sigl']
 pati[ ,set:='pati']
+ssc[, set:='ssc']
 
 # subset elements before combining since data sets are so large
 pnls = pnls[element_id %in% elements, ]
-pnls[, country:= "République Démocratique du Congo"]
+pnls[, country:= "R?publique D?mocratique du Congo"]
 base = base[element_id %in% elements, ]
 sigl = sigl[element_id %in% elements, ]
 pati = pati[element_id %in% elements, ]
+ssc = ssc[element_id %in% elements, ]
 
 drop_cols <- c("coordinates", "download_number", "last_update")
 base <- base[ , !(drop_cols), with = FALSE]
 sigl <- sigl[ , !(drop_cols), with = FALSE]
 pati <- pati[ , !(drop_cols), with = FALSE]
+ssc <- ssc[ , !(drop_cols), with = FALSE]
 
-dt = rbindlist( list(base, sigl, pnls, pati), use.names = TRUE, fill= TRUE )
-if (nrow(base) + nrow(sigl) + nrow(pnls) + nrow(pati) != nrow(dt)) stop ("rbind did not work correctly")
+
+dt = rbindlist( list(base, sigl, pnls, pati, ssc), use.names = TRUE, fill= TRUE )
+if (nrow(base) + nrow(sigl) + nrow(pnls) + nrow(pati) + nrow(ssc) != nrow(dt)) stop ("rbind did not work correctly")
 
 # ---------------------------------------------
 
@@ -164,18 +171,18 @@ dt[grep(category, pattern='CPN'), sex:='Female']
 dt[grep(category, pattern='SA/PP'), sex:='Female']
 # dt[category=='5 and over', age:='5 +']
 # dt[category=='Under 5', age:='Under 5']
-# dt[category=='Féminin, 1 et 4 ans', age:='1 - 4 years']
-# dt[category=='Féminin, 10 et 14 ans', age:='10 - 14 years']
-# dt[category=='Féminin, 15 et 19 ans', age:='15 - 19 years']
-# dt[category=='Féminin, 20 et 24 ans', age:='20 - 24 years']
-# dt[category=='Féminin, 25 et 49 ans', age:='25 - 49 years']
-# dt[category=='Féminin, 5 et 9 ans', age:='5 - 9 years']
-# dt[category=='Féminin, 50 ans et plus', age:='50 +']
-# dt[category=='Féminin, Moins d\'un an', age:='< 1 year']
+# dt[category=='F?minin, 1 et 4 ans', age:='1 - 4 years']
+# dt[category=='F?minin, 10 et 14 ans', age:='10 - 14 years']
+# dt[category=='F?minin, 15 et 19 ans', age:='15 - 19 years']
+# dt[category=='F?minin, 20 et 24 ans', age:='20 - 24 years']
+# dt[category=='F?minin, 25 et 49 ans', age:='25 - 49 years']
+# dt[category=='F?minin, 5 et 9 ans', age:='5 - 9 years']
+# dt[category=='F?minin, 50 ans et plus', age:='50 +']
+# dt[category=='F?minin, Moins d\'un an', age:='< 1 year']
 # 
-# dt[category=="Féminin, Moins de 14 ans", age:='< 14 years']
-# dt[category=="Féminin, 15 et 24 ans", age:='15 - 24 years']
-# dt[category=="Féminin, 25 ans et plus", age:='25+ years']
+# dt[category=="F?minin, Moins de 14 ans", age:='< 14 years']
+# dt[category=="F?minin, 15 et 24 ans", age:='15 - 24 years']
+# dt[category=="F?minin, 25 ans et plus", age:='25+ years']
 # 
 # dt[category=="Masculin, Moins de 14 ans", age:='< 14 years']
 # dt[category=="Masculin, 15 et 24 ans", age:='15 - 24 years']
@@ -265,10 +272,10 @@ dt[grep(element_eng, pattern='LLIN'), type:='malaria']
 
 # ---------------------------------------------
 # add umlauts to merge with tableau
-dt[dps=='Kasai', dps:='Kasaï']
-dt[dps=='Kasai Central', dps:='Kasaï Central']
-dt[dps=='Kasai Oriental', dps:='Kasaï Oriental']
-dt[dps=='Mai-Ndombe', dps:='Maï-Ndombe']
+dt[dps=='Kasai', dps:='Kasa?']
+dt[dps=='Kasai Central', dps:='Kasa? Central']
+dt[dps=='Kasai Oriental', dps:='Kasa? Oriental']
+dt[dps=='Mai-Ndombe', dps:='Ma?-Ndombe']
 
 # change type to disease
 setnames(dt, 'type', 'disease')
