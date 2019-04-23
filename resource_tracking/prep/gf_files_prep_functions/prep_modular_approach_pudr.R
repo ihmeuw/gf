@@ -10,17 +10,11 @@
 #Sheet names that don't work so far: "LFA EFR_7", "LFA_Annex-SR Financials", "LFA_Total PR Cash Outflow_3", "LFA_Total PR Cash Outflow_3A"
 
 # start function
-prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, period) {
+prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, period, qtr_number) {
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
-  #
-  # master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", file_list$loc_id[i], "/grants/")
-  # 
-  # folder = "budgets"
-  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-  # 
+
   # dir = file_dir
   # inFile = file_list$file_name[i]
   # sheet_name = file_list$sheet[i]
@@ -30,6 +24,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # grant = file_list$grant[i]
   # recipient = file_list$primary_recipient
   # source = file_list$data_source[i]
+  # qtr_number = file_list$qtr_number[i]
 
   # -----------------------------------------------------------------------------
   # Test the inputs to make sure that they are the correct type
@@ -99,6 +94,10 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
 
   #Subset to only these columns.
   gf_data = gf_data[, .(module, intervention, budget, expenditure)]
+  
+  #Make budget and expenditure numeric. 
+  gf_data[, budget:=as.numeric(budget)]
+  gf_data[, expenditure:=as.numeric(expenditure)]
 
   #-------------------------------------
   # 2. Subset rows
@@ -150,31 +149,48 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #-------------------------------------------------------------------------
   # 3. Generate date variables, and expand data to be at the quarter-level. 
   #-------------------------------------------------------------------------
-  gf_data$start_date <- start_date
-  gf_data$period <- period
+  up_to_here = copy(gf_data)
+  totals_check = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]
   
-  # #Expand GOS to be at the quarter-level; the same as the final expenditures 
-  # totals_check = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'grant_period')][order(grant, grant_period)]
-  # gf_data[, time_diff:=end_date-start_date]
-  # gf_data[, num_quarters:=as.numeric(round(time_diff/90))] #90 days in each period
-  # 
-  # #Expand data by num_quarters, and generate a variable to iterate over
-  # gf_data <- expandRows(gf_data, "num_quarters")
-  # byVars = names(gf_data)
-  # gf_data[, seq:=seq(0, 100, by=1), by=byVars]
-  # 
-  # #Increment the start date, and split up budget and expenditure. 
-  # gf_data[, start_date:=start_date + months(3*seq)]
-  # gf_data[, time_diff:=as.numeric(round(time_diff/90))]
-  # gf_data[, budget:=budget/time_diff]
-  # gf_data[, expenditure:=expenditure/time_diff]
-  # 
-  # #Make sure you haven't changed any budget/expenditure numbers, and clean up
-  # totals_check2 = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'grant_period')][order(grant, grant_period)]
-  # for (i in 1:nrow(totals_check)){
-  #   stopifnot(totals_check$budget[i]==totals_check2$budget[i] | totals_check$expenditure[i]==totals_check2$expenditure[i])
-  # }
-  # gf_data = gf_data[, -c('time_diff', 'seq', 'end_date')]
+  #Add in date variables 
+  gf_data[, quarter:=quarter(start_date)]
+  gf_data[, year:=year(start_date)]
+  
+  gf_data[, period:=period]
+  gf_data[, qtr_number:=qtr_number]
+  gf_data[, qtr_split:=round((period*qtr_number)/90)]
+  gf_data[, split:=round((period*qtr_number)/90)] #Create this variable twice so you can divide budget/expenditure after expansion
+ 
+  #Expand data by the number of days, and generate a variable to iterate over
+  gf_data <- expandRows(gf_data, "qtr_split")
+  byVars = names(gf_data)
+  gf_data[, seq:=sequence(.N), by=byVars]
+  gf_data[, seq:=seq-1] #Decrement by 1 because sequence indexes at 1. 
+  
+  #While seq is not 0, go through the loop below.
+  #If seq is greater than or equal to 4, add 1 to year and divide everything by 4. Continue this loop while max(seq) > 4.
+  # If month + seq + 1 equals 12, than
+  gf_data[, new_qtr:=qtr_number+seq]
+  max_quarter = max(gf_data$new_qtr)
+  print(max_quarter)
+  while (max_quarter>4){
+    gf_data[new_qtr>4, year:=year+1]
+    gf_data[new_qtr>4, new_qtr:=new_qtr-4]
+    max_quarter = max(totalGos$new_qtr)
+    print(max_qtr)
+  }
+
+  #Split up budget and expenditure.
+  gf_data[, budget:=budget/split]
+  gf_data[, expenditure:=expenditure/split]
+
+  #Make sure you haven't changed any budget/expenditure numbers, and clean up
+  totals_check2 = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]
+  for (i in 1:nrow(totals_check)){
+    stopifnot(totals_check$budget[i]==totals_check2$budget[i] | totals_check$expenditure[i]==totals_check2$expenditure[i])
+  }
+  gf_data = gf_data[, -c('period', 'qtr_number', 'split', 'seq', 'quarter')]
+  setnames(gf_data, 'new_qtr', 'quarter')
 
   #-------------------------------------
   # 4. Validate data

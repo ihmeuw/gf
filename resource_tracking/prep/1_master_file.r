@@ -20,12 +20,12 @@ source(paste0(code_dir, "resource_tracking/prep/_common/set_up_r.R"), encoding="
 # ---------------------------------------
 # Boolean logic switches 
 # ---------------------------------------
-prep_files <- FALSE
-prep_gos <- TRUE
+prep_files <- TRUE
+prep_gos <- FALSE
 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
-verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-rerun_filelist <- FALSE #Set to TRUE if you want to prep all files in the file list again. 
+verbose = TRUE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
+rerun_filelist <- TRUE #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 
 test_current_files = TRUE #Set to true if you would like to run unit tests on current database. Set to false if you would like to run tests on archived database. 
@@ -34,7 +34,7 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # STEP 2: GF FILES AND GOS DATA 
 # ----------------------------------------------
 if (prep_files == TRUE){
-  country = "uga" #Change to the country you want to update. 
+  country = "cod" #Change to the country you want to update. 
   master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
   export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
 }

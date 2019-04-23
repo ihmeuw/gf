@@ -29,7 +29,8 @@ if (prep_files == TRUE){
   file_list = prioritize_gos(file_list)
   
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=seq(0, 10, by=1), by=c('grant', 'start_date', 'data_source')]
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')] 
+  file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
   
   if ( nrow(file_list[date_dup>0])!=0){
     print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
@@ -69,6 +70,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       stopifnot(sort(names(tmpData)) == budget_cols)
       
     } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){ #Prep standardized 'modular approach' PUDRs. 
+      args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_modular_approach_pudr, args)
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
