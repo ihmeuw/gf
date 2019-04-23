@@ -140,6 +140,7 @@ if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable')
 #------------------------------------
 # identify outliers where the residuals are larger than the median of the residuals +/- 10 MADS of the residuals
 # set threshold for different data sets:
+
 if (set=='pnls' | set == 'base'){
   t1 = 5
   t2 = 10  }
