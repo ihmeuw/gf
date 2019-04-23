@@ -3,7 +3,7 @@
 # 
 # 1/18/2019
 # This runs the SEM dose-response model
-# qsub -l archive=TRUE -cwd -N ie_script_5b -l fthread=12 -l m_mem_free=12G -q all.q -P ihme_general -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5b_run_second_half_analysis.r
+# qsub -l archive=TRUE -cwd -N ie_script_5b -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5b_run_second_half_analysis.r
 # ------------------------------------------------
 
 source('./impact_evaluation/drc/set_up_r.r')
@@ -87,7 +87,7 @@ if (runAsQsub==TRUE) {
 	T = length(hzs)
 	# submit array job
 	system(paste0('qsub -cwd -N ie2_job_array -t 1:', T, 
-		' -l fthread=1 -l m_mem_free=2G -q all.q -P ihme_general -e ', 
+		' -l fthread=1 -l m_mem_free=2G -q all.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
 		modelVersion, ' 2 FALSE'))
