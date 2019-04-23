@@ -37,7 +37,8 @@ combined_output_dir = paste0(dir, "_gf_files_gos/combined_prepped_data/")
 mapping_dir = paste0(dir, "modular_framework_mapping/")
 
 #Code filepaths 
-common_dir = "./resource_tracking/prep/_common/"
+code_dir = "./resource_tracking/prep/"
+common_dir = paste0(code_dir, "/_common/")
 
 fgh_raw = paste0(dir, "_fgh/raw_data/")
 fgh_prepped = paste0(dir, "_fgh/prepped_data/")
