@@ -58,24 +58,24 @@ if (set=='base') {
 # drop case and additional geographic information
 # there is no element_id as the elements are aggregated 
 if (set=='pnls') {byvars = c('element', 'org_unit_id', 'date', 'sex', 'age', 'subpop')}
-if (set=='base') {byvars = c('element', 'org_unit_id', 'date', 'category')}
+if (set=='base') {byvars = c('element', 'element_id', 'org_unit_id', 'date', 'category')}
 
 dt = dt[ ,.(value=sum(value)), by=byvars]
 
 # make variable ids
+setnames(dt, 'element_id', 'old_element_id')
 dt[, element_id:=.GRP, by='element']
 
 # save the prepped file
 if (set=='pnls') {saveRDS(dt, paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))}
 if (set=='base') {saveRDS(dt, paste0(dir, 'outliers/base_to_screen.rds'))}
 # ---------------------------------------
+# save old element ids for merge 
 
+elements = dt[ ,.(element=unique(element)), by=.(element_id, old_element_id)]
+saveRDS(elements, paste0(dir, 'meta_data/elements_fix.rds'))
 
-
-
-
-
-
+# ---------------------------------------
 
 
 

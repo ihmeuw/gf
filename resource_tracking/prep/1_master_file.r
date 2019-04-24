@@ -2,6 +2,8 @@
 # AUTHOR: Emily Linebarger 
 # PURPOSE: Master file for updating resource tracking database. 
 # DATE: Last updated March 2019
+# 
+# The current working directory should be the root of this repository
 # ----------------------------------------------
 
 rm(list=ls())
@@ -14,9 +16,7 @@ rm(list=ls())
 # STEP 1: SET UP R
 # ----------------------------------------------
 
-user = "elineb" #Change to your username 
-code_dir = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
-source(paste0(code_dir, "resource_tracking/prep/_common/set_up_r.R"), encoding="UTF-8")
+source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # ---------------------------------------
 # Boolean logic switches 
 # ---------------------------------------
@@ -40,8 +40,7 @@ if (prep_files == TRUE){
 }
 
 #Source document prep functions 
-setwd(paste0(code_dir, "gf_files_prep_functions"))
-doc_prep_functions = list.files()
+doc_prep_functions = list.files(paste0(code_dir, "gf_files_prep_functions"), full.names=TRUE)
 for (file in doc_prep_functions){
   source(file)
 }
@@ -62,8 +61,7 @@ source(paste0(code_dir, "2f_gf_visualize_data.rmd"))
 # ----------------------------------------------
 
 #Source document prep functions 
-setwd(paste0(code_dir, "fgh_prep_functions"))
-prep_functions = list.files()
+prep_functions = list.files(paste0(code_dir, "fgh_prep_functions"), full.names=TRUE)
 for (file in prep_functions){
   source(file)
 }
@@ -76,8 +74,7 @@ source(paste0(code_dir, "3b_fgh_estimates_prep_data.R"))
 # STEP 4: GHE (CURRENTLY ONLY SICOIN)
 # ----------------------------------------------
 #Source document prep functions 
-setwd(paste0(code_dir, "ghe_sicoin_prep_functions"))
-prep_functions = list.files()
+prep_functions = list.files(paste0(code_dir, "ghe_sicoin_prep_functions"), full.names=TRUE)
 for (file in prep_functions){
   source(file)
 }
