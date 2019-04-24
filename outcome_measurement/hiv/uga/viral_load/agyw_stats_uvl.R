@@ -18,6 +18,7 @@ library(gplots)
 library(corrplot)
 library(boot)
 library(betareg)
+library(stargazer)
 # --------------------
 
 # -----------------------------------------------
@@ -52,8 +53,15 @@ dt = merge(dt, regions, by='district', all.x=T)
 dt$age = factor(dt$age, levels = c("0 - 4", "5 - 9", "10 - 14", "15 - 19",
                                    "20 - 24", "25 - 29", "30 - 34", "35 - 39", 
                                    "40 - 44", "45 - 49"))
+
+# reset name to age category to add a continuous age variable
+setnames(dt, 'age', 'age_cat')
+
 # add an associated integer
-dt[ ,age_cont:=(5*as.numeric(age))]
+dt[ ,age:=(5*as.numeric(age_cat))]
+
+# add year to use as a variable in the model
+dt[ ,year:=year(date)]
 
 # sex, district, facility level
 dt[ ,sex:=factor(sex)]
@@ -74,13 +82,20 @@ smithsonTransform = function(x) {
 
 #---------------------------
 
+test = dt[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=level]
+test[ ,ratio:=suppressed/valid_results]
+
+
 #-------------------------------------------------------------------------
 # facility level regression 
 
 # sum to the facility level
 vl = dt[  ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), 
-          by=.(facility, level, sex, age, age_cont, district, region)]
+          by=.(facility, level, sex, age, age_cat, district, region)]
 vl[ , ratio:=(suppressed/valid_results)]
+
+#--------------------------
+# visualize the distribution and lemon squeeze the data 
 
 # visualize the distribution of the ratios
 ggplot(vl, aes(x=ratio)) +
@@ -90,13 +105,13 @@ ggplot(vl, aes(x=ratio)) +
   labs(title = "Viral suppression ratio (facility level)", y='Count of ratios', x='Ratio')
 
 # lemon squeeze the ratio
-vl[ ,lemon:=smithsonTransform(ratio)]
+vl[ ,lemon_vl_ratio:=smithsonTransform(ratio)]
 
 # graph the two distributions
-vl_new = melt(vl, id.vars=c('facility', 'level', 'district', 'region', 'sex', 'age', 'age_cont'))
-vl_new = vl_new[variable=='ratio' | variable=='lemon']
+vl_new = melt(vl, id.vars=c('facility', 'level', 'district', 'region', 'sex', 'age', 'age_cat'))
+vl_new = vl_new[variable=='ratio' | variable=='lemon_vl_ratio']
 vl_new[variable=='ratio', variable:='Viral suppression ratio']
-vl_new[variable=='lemon', variable:='Lemon-squeezed viral suppression ratio']
+vl_new[variable=='lemon_vl_ratio', variable:='Lemon-squeezed viral suppression ratio']
 
 # visualize the distribution of ratios
 ggplot(vl_new, aes(x=value)) +
@@ -107,60 +122,91 @@ ggplot(vl_new, aes(x=value)) +
   labs(title = "Viral suppression ratio (facility level)", y='Count of ratios', x='Ratio')
 
 # check for heteroscedastisticity in the age distribution
-ggplot(vl, aes(x=age, y=ratio)) +
+ggplot(vl, aes(x=age_cat, y=ratio)) +
   geom_jitter() +
   theme_bw() +
   theme(text=element_text(size=22)) +
-  labs(title = "Viral suppression ratio within a health facility", y='Age category', x='Ratio')
+  labs(title = "Viral suppression ratio within a health facility", y='Ratio', x='Age Category')
 
-# facet by sex
-ggplot(vl, aes(x=age, y=ratio, color=sex)) +
+# check for heteroscedastisticity in the age distribution
+ggplot(vl, aes(x=level, y=ratio)) +
+  geom_jitter() +
+  theme_bw() +
+  theme(text=element_text(size=22), axis.text.x=element_text(size=12, angle=90)) +
+  labs(title = "Viral suppression ratio within a health facility", y='Ratio', x='Health facility level')
+
+# check for heteroscedastisticity in the age distribution by sex
+ggplot(vl, aes(x=age_cat, y=ratio, color=sex)) +
   geom_jitter() +
   theme_bw() +
   facet_wrap(~sex) +
   theme(text=element_text(size=22), axis.text.x=element_text(size=12, angle=90)) +
-  labs(title = "Viral suppression ratio within a health facility", y='Age category', x='Ratio') 
+  labs(title = "Viral suppression ratio within a health facility", y='Ratio', x='Age category') 
 
-
-# run the nice model
-betaFac = betareg(lemon~sex+age_cont+level+district, vl)
+#-------------------------------
+# run the main model 
+beta = betareg(lemon_vl_ratio~sex+age+level+region, vl)
 
 # summarize the model 
-summary(betaFac)
+summary(beta)
 
-# run with region instead of district
-betaFac_reg = betareg(lemon~sex+age_cont+level+region, vl)
 
-# summarize the region model 
-summary(betaFac_reg)
-predict(betaFac_reg)
+
+
+vl[,predictions:=predict(beta, newdata=reg)]
+
+# samples received by sex, age, year - all years
+ggplot(reg, aes(x=region, y=predictions, fill=sex)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  theme_bw() +
+  labs(y='Viral suppression ratio', x='Region', fill='Sex') 
+
+
+#-------------------------------
+# add a covariate for year 
+
+# sum to the facility level
+vl_yr = dt[  ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), 
+             by=.(district, sex, age, age_cat, level, region, year)]
+vl_yr[ , ratio:=(suppressed/valid_results)]
+vl_yr[ ,lemon_vl_ratio:=smithsonTransform(ratio)]
+
+# check the trend in ratios by year
+ggplot(vl_yr, aes(x=year, y=ratio, color=sex)) +
+  geom_jitter() +
+  theme_bw() +
+  facet_wrap(~sex) +
+  theme(text=element_text(size=22), axis.text.x=element_text(size=12, angle=90)) +
+  labs(title = "Viral suppression ratio within a health facility", y='Ratio', x='Age category') 
+
+# with year as dummy variables (reference = 2014)
+beta_yr1 = betareg(lemon_vl_ratio~sex+age+level+region+factor(year), vl_yr)
+summary(beta_yr1)
+
+# with year as a continuous variable (each additional year)
+beta_yr2 = betareg(lemon_vl_ratio~sex+age+year+level+region, vl_yr)
+summary(beta_yr2)
+
+
 #-------------------------------------------------------------------------
+# run with an interaction term 
 
-
-#------------------------
-# test regressuib for interpretation 
-
-beta_test2 = betareg(lemon~age_cont+sex+region, vl)
-summary(beta_test2)
-
-agyw = betareg(lemon~region*factor(age)*sex, vl)
+beta_interact = betareg(lemon~region*age*sex, vl)
+summary(beta_interact)
 
 predict(beta_test)
 
 #-------------------------
 
+#-----------------------------------------------
+# run with district instead of region as a covariate
+betaFac_dist = betareg(lemon~sex+age_cont+level+district, vl)
 
-
-
-
-
-
-
-
-
+# summarize the region model 
+summary(betaFac_dist)
 
 #-----------------------------------------------
-# district level regression 
+# district level regression - regressions with direct-level data points
 # use facility level to examine at the lowest level
 
 # sum to the district level
@@ -197,6 +243,32 @@ betaDist = betareg(lemon~sex+age+district, dist)
 
 # print the output
 summary(betaDist)
+
+#--------------------------------------------------
+# regional regression to test
+# use facility level to examine at the lowest level
+
+# sum to the district level
+reg = dt[  ,.(suppressed=sum(suppressed), valid_results=sum(valid_results))  , by=.(region, sex)]
+reg[ , ratio:=(suppressed/valid_results)]
+
+# number of observationa
+reg[ ,lemon:=smithsonTransform(ratio)]
+
+# run the regional regression on sex
+reg_sex = betareg(lemon~sex, data = reg)
+
+
+predict(reg_sex, newdata=df)
+
+reg[,predictions:=predict(reg_sex, newdata=reg)]
+
+# samples received by sex, age, year - all years
+ggplot(reg, aes(x=region, y=predictions, fill=sex)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  theme_bw() +
+  labs(y='Viral suppression ratio', x='Region', fill='Sex') 
+
 
 #--------------------------------------------------
 # original smithson transformation function 
