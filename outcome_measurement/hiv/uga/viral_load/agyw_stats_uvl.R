@@ -205,42 +205,25 @@ beta_yr_alt = betareg(lemon_vl_ratio~sex+age+factor(year)+level+region, vl)
 summary(beta_yr_alt)
 
 #-------------------------------
-# add a covariate for year 
+# create a map
 
-# sum to the district
-vl_yr = dt[  ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), 
-             by=.(facility, district, sex, age, age_cat, region, year)]
-vl_yr[ , ratio:=(suppressed/valid_results)]
-vl_yr[ ,lemon_vl_ratio:=smithsonTransform(ratio)]
+vl_sub = dt[  ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), 
+              by=.(facility, sex, year, age, age_cat, region)]
 
+vl_sub[ ,ratio:=suppressed/valid_results]
+vl_sub[ , lemon:=smithsonTransform(ratio)]
 
-# with year as a continuous variable
-beta_yr = betareg(lemon_vl_ratio~sex+age+year+region, vl_yr)
-summary(beta_yr)
+# run with dummies by year
+beta_map = betareg(lemon~sex+age+year+region, vl_sub)
 
-vl_yr[, predictions:=predict(beta_yr, newdata=vl_yr)]
-vl_yr[ ,predictions:=(100*predictions)]
+# summarize the model 
+summary(beta_map)
 
-vl_yr[,c('lower','upper'):=predict(beta_yr, newdata=vl_yr, interval='confidence')]
-
-
-# samples received by sex, age, year - all years
-ggplot(vl_yr[year==2018 &(age_cat=='15 - 19' | age_cat=='20 - 24')], aes(x=region, y=predictions, fill=sex)) +
-  geom_bar(stat="identity", position=position_dodge()) +
-  geom_errorbar(data = vl_yr[year==2018 & (age_cat=='15 - 19' | age_cat=='20 - 24')], (aes(x=region, ymin=lower, ymax=upper))) +
-  facet_wrap(~age_cat) +
-  theme_bw() +
-  labs(y='Viral suppression ratio', x='Region', fill='Sex') 
-
-
-
-
-
-# with year as a dummy variable (reference = 2014)
-beta_yr2 = betareg(lemon_vl_ratio~sex+age+year+level+region, vl_yr)
-summary(beta_yr2)
-
-
+# subset to the predictions of interest
+vl_sub[, predictions:=predict(beta_map, newdata=vl_sub)]
+vl_sub[ , predictions:=(100*predictions)]
+vl_sub = vl_sub[year==2018 & (age==20 | age==25)]
+vl_sub = vl_sub[ ,.(predictions = unique(predictions)), by=.(sex, age, age_cat, region)]
 
 
 
@@ -254,7 +237,7 @@ predict(beta_test)
 
 #-------------------------
 
-#-----------------------------------------------
+#------------------------------------------------------------------
 # run with district instead of region as a covariate
 betaFac_dist = betareg(lemon~sex+age_cont+level+district, vl)
 
