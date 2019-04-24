@@ -122,6 +122,21 @@ ggplot(vl, aes(x=age, y=ratio, color=sex)) +
   labs(title = "Viral suppression ratio within a health facility", y='Age category', x='Ratio') 
 
 
+# run the nice model
+betaFac = betareg(lemon~sex+age_cont+level+district, vl)
+
+# summarize the model 
+summary(betaFac)
+
+# run with region instead of district
+betaFac_reg = betareg(lemon~sex+age_cont+level+region, vl)
+
+# summarize the region model 
+summary(betaFac_reg)
+predict(betaFac_reg)
+#-------------------------------------------------------------------------
+
+
 #------------------------
 # test regressuib for interpretation 
 
@@ -137,19 +152,12 @@ predict(beta_test)
 
 
 
-# run the nice model
-betaFac = betareg(lemon~sex+age_cont+level+district, vl)
 
-# summarize the model 
-summary(betaFac)
 
-# run with region instead of district
-betaFac_reg = betareg(lemon~sex+age_cont+level+region, vl)
 
-# summarize the region model 
-summary(betaFac_reg)
-predict(betaFac_reg)
-#-------------------------------------------------------------------------
+
+
+
 
 #-----------------------------------------------
 # district level regression 
