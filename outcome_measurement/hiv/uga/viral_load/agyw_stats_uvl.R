@@ -17,11 +17,16 @@ library(RColorBrewer)
 library(gplots)
 library(corrplot)
 library(boot)
-library(betareg)
 library(stargazer)
 # --------------------
 
-# -----------------------------------------------
+# this package is not automatically installed on the cluster
+# install.packages("betareg", lib='/ihme/scratch/users/ccarelli/packages/')
+
+# load betareg package
+library(betareg, lib.loc='/ihme/scratch/users/ccarelli/packages/')
+
+# ----------------------------------------------
 # detect if operating on windows or on the cluster 
 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
@@ -80,41 +85,37 @@ smithsonTransform = function(x) {
   prop_lsqueeze = (((x*(N-1))+0.5)/N)
 }
 
-#---------------------------
-
-test = dt[ ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), by=level]
-test[ ,ratio:=suppressed/valid_results]
-
+#--------------------------
 
 #-------------------------------------------------------------------------
-# facility level regression 
+# facility level regressions
 
 # sum to the facility level
 vl = dt[  ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), 
-          by=.(facility, level, sex, age, age_cat, district, region)]
+          by=.(facility, sex, age, year, age_cat, level, district, region)]
 vl[ , ratio:=(suppressed/valid_results)]
+
+# lemon squeeze the ratio
+vl[ ,lemon_vl_ratio:=smithsonTransform(ratio)]
 
 #--------------------------
 # visualize the distribution and lemon squeeze the data 
 
 # visualize the distribution of the ratios
-ggplot(vl, aes(x=ratio)) +
+ggplot(vl[year==2018], aes(x=ratio)) +
   geom_histogram(color='black', fill='white') +
   theme_bw() +
   theme(text=element_text(size=24)) +
   labs(title = "Viral suppression ratio (facility level)", y='Count of ratios', x='Ratio')
 
-# lemon squeeze the ratio
-vl[ ,lemon_vl_ratio:=smithsonTransform(ratio)]
-
 # graph the two distributions
-vl_new = melt(vl, id.vars=c('facility', 'level', 'district', 'region', 'sex', 'age', 'age_cat'))
+vl_new = melt(vl[year==2018], id.vars=c('facility', 'level', 'district', 'region', 'sex', 'age', 'age_cat', 'year'))
 vl_new = vl_new[variable=='ratio' | variable=='lemon_vl_ratio']
 vl_new[variable=='ratio', variable:='Viral suppression ratio']
 vl_new[variable=='lemon_vl_ratio', variable:='Lemon-squeezed viral suppression ratio']
 
 # visualize the distribution of ratios
-ggplot(vl_new, aes(x=value)) +
+ggplot(vl_new[year==2018], aes(x=value)) +
   geom_histogram(color='black', fill='white') +
   theme_bw() +
   facet_wrap(~variable, scales='free') +
@@ -122,70 +123,125 @@ ggplot(vl_new, aes(x=value)) +
   labs(title = "Viral suppression ratio (facility level)", y='Count of ratios', x='Ratio')
 
 # check for heteroscedastisticity in the age distribution
-ggplot(vl, aes(x=age_cat, y=ratio)) +
+ggplot(vl[year==2018], aes(x=age_cat, y=ratio)) +
   geom_jitter() +
   theme_bw() +
   theme(text=element_text(size=22)) +
   labs(title = "Viral suppression ratio within a health facility", y='Ratio', x='Age Category')
 
-# check for heteroscedastisticity in the age distribution
-ggplot(vl, aes(x=level, y=ratio)) +
+# check for heteroscedastisticity in the facility levels
+ggplot(vl[year==2018], aes(x=level, y=ratio)) +
   geom_jitter() +
   theme_bw() +
   theme(text=element_text(size=22), axis.text.x=element_text(size=12, angle=90)) +
   labs(title = "Viral suppression ratio within a health facility", y='Ratio', x='Health facility level')
 
 # check for heteroscedastisticity in the age distribution by sex
-ggplot(vl, aes(x=age_cat, y=ratio, color=sex)) +
+ggplot(vl[year==2018], aes(x=age_cat, y=ratio, color=sex)) +
   geom_jitter() +
   theme_bw() +
   facet_wrap(~sex) +
   theme(text=element_text(size=22), axis.text.x=element_text(size=12, angle=90)) +
   labs(title = "Viral suppression ratio within a health facility", y='Ratio', x='Age category') 
 
-#-------------------------------
+# check the trend in ratios by year
+ggplot(vl, aes(x=year, y=ratio, color=sex)) +
+  geom_jitter() +
+  theme_bw() +
+  facet_wrap(~sex) +
+  theme(text=element_text(size=22), axis.text.x=element_text(size=12, angle=90)) +
+  labs(title = "Viral suppression ratio within a health facility", y='Ratio', x='Age category') 
+
+#----------------------------------
 # run the main model 
-beta = betareg(lemon_vl_ratio~sex+age+level+region, vl)
+beta = betareg(lemon_vl_ratio~sex+age+year+level+region, vl)
 
 # summarize the model 
 summary(beta)
 
+# plot the predicted values and standard errords
+vl[, predictions:=predict(beta, newdata=vl)]
+vl[ , predictions:=(100*predictions)]
+vl[ ,c('lower','upper'):=predict(beta, interval='confidence')] # this gives incorrect values
 
-
-
-vl[,predictions:=predict(beta, newdata=reg)]
-
-# samples received by sex, age, year - all years
-ggplot(reg, aes(x=region, y=predictions, fill=sex)) +
+# test graph - predicted sex ratios by region and sex 
+ggplot(vl[(age_cat=='15 - 19' | age_cat=='20 - 24') & level=='HC III' & year==2018], aes(x=region, y=predictions, fill=sex)) +
+  # geom_errorbar(data = vl[(age_cat=='15 - 19' | age_cat=='20 - 24') & level=='HC III'], (aes(x=region, ymin=lower, ymax=upper))) +
+  facet_wrap(~age_cat) +
   geom_bar(stat="identity", position=position_dodge()) +
   theme_bw() +
-  labs(y='Viral suppression ratio', x='Region', fill='Sex') 
+  theme() +
+  coord_cartesian(ylim=c(50, 100)) +
+  labs(y='Viral suppression ratio', x='Region', fill='Sex', title='Predicted viral suppression ratio, 2018, HC IIIs, ages 15 - 24') +
+  theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
 
+# test graph - true ratios
+ggplot(vl[(age_cat=='15 - 19' | age_cat=='20 - 24') & level=='HC III' & year==2018], aes(x=region, y=100*ratio, fill=sex)) +
+  # geom_errorbar(data = vl[(age_cat=='15 - 19' | age_cat=='20 - 24') & level=='HC III'], (aes(x=region, ymin=lower, ymax=upper))) +
+  facet_wrap(~age_cat) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  theme_bw() +
+  theme() +
+  coord_cartesian(ylim=c(50, 100)) +
+  labs(y='Viral suppression ratio', x='Region', fill='Sex', title='Viral suppression ratio, all years') +
+  theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
+
+ggplot(vl[level=='HC III' & year==2018], aes(x=age_cat, y=predictions, fill=sex)) +
+  # geom_errorbar(data = vl[(age_cat=='15 - 19' | age_cat=='20 - 24') & level=='HC III'], (aes(x=region, ymin=lower, ymax=upper))) +
+  facet_wrap(~region) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  theme_bw() +
+  theme() +
+  labs(y='Viral suppression ratio', x='Region', fill='Sex', title='Viral suppression ratio, all years') +
+  theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
+
+#------------------
+# alternate model with years as a categorical (reference = 2014)
+
+# run with dummies by year
+beta_yr_alt = betareg(lemon_vl_ratio~sex+age+factor(year)+level+region, vl)
+
+# summarize the model 
+summary(beta_yr_alt)
 
 #-------------------------------
 # add a covariate for year 
 
-# sum to the facility level
+# sum to the district
 vl_yr = dt[  ,.(suppressed=sum(suppressed), valid_results=sum(valid_results)), 
-             by=.(district, sex, age, age_cat, level, region, year)]
+             by=.(facility, district, sex, age, age_cat, region, year)]
 vl_yr[ , ratio:=(suppressed/valid_results)]
 vl_yr[ ,lemon_vl_ratio:=smithsonTransform(ratio)]
 
-# check the trend in ratios by year
-ggplot(vl_yr, aes(x=year, y=ratio, color=sex)) +
-  geom_jitter() +
+
+# with year as a continuous variable
+beta_yr = betareg(lemon_vl_ratio~sex+age+year+region, vl_yr)
+summary(beta_yr)
+
+vl_yr[, predictions:=predict(beta_yr, newdata=vl_yr)]
+vl_yr[ ,predictions:=(100*predictions)]
+
+vl_yr[,c('lower','upper'):=predict(beta_yr, newdata=vl_yr, interval='confidence')]
+
+
+# samples received by sex, age, year - all years
+ggplot(vl_yr[year==2018 &(age_cat=='15 - 19' | age_cat=='20 - 24')], aes(x=region, y=predictions, fill=sex)) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  geom_errorbar(data = vl_yr[year==2018 & (age_cat=='15 - 19' | age_cat=='20 - 24')], (aes(x=region, ymin=lower, ymax=upper))) +
+  facet_wrap(~age_cat) +
   theme_bw() +
-  facet_wrap(~sex) +
-  theme(text=element_text(size=22), axis.text.x=element_text(size=12, angle=90)) +
-  labs(title = "Viral suppression ratio within a health facility", y='Ratio', x='Age category') 
+  labs(y='Viral suppression ratio', x='Region', fill='Sex') 
 
-# with year as dummy variables (reference = 2014)
-beta_yr1 = betareg(lemon_vl_ratio~sex+age+level+region+factor(year), vl_yr)
-summary(beta_yr1)
 
-# with year as a continuous variable (each additional year)
+
+
+
+# with year as a dummy variable (reference = 2014)
 beta_yr2 = betareg(lemon_vl_ratio~sex+age+year+level+region, vl_yr)
 summary(beta_yr2)
+
+
+
 
 
 #-------------------------------------------------------------------------
@@ -259,9 +315,8 @@ reg[ ,lemon:=smithsonTransform(ratio)]
 reg_sex = betareg(lemon~sex, data = reg)
 
 
-predict(reg_sex, newdata=df)
-
 reg[,predictions:=predict(reg_sex, newdata=reg)]
+reg[,c('lower', 'upper'):=predict(reg_sex, newdata=reg, interval='confidence')]
 
 # samples received by sex, age, year - all years
 ggplot(reg, aes(x=region, y=predictions, fill=sex)) +
