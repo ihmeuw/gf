@@ -41,7 +41,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   }
   
   # Load/prep data
-  gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name))
+  gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
 
   #General function for grants.
   #-------------------------------------
@@ -149,7 +149,6 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #-------------------------------------------------------------------------
   # 3. Generate date variables, and expand data to be at the quarter-level. 
   #-------------------------------------------------------------------------
-  up_to_here = copy(gf_data)
   totals_check = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]
   
   #Add in date variables 
@@ -172,12 +171,10 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # If month + seq + 1 equals 12, than
   gf_data[, new_qtr:=qtr_number+seq]
   max_quarter = max(gf_data$new_qtr)
-  print(max_quarter)
   while (max_quarter>4){
     gf_data[new_qtr>4, year:=year+1]
     gf_data[new_qtr>4, new_qtr:=new_qtr-4]
     max_quarter = max(totalGos$new_qtr)
-    print(max_qtr)
   }
 
   #Split up budget and expenditure.
@@ -191,18 +188,21 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   }
   gf_data = gf_data[, -c('period', 'qtr_number', 'split', 'seq', 'quarter')]
   setnames(gf_data, 'new_qtr', 'quarter')
+  
+  #Generate new start date variable. 
+  gf_data[quarter==1, month:="01"]
+  gf_data[quarter==2, month:="04"]
+  gf_data[quarter==3, month:="07"]
+  gf_data[quarter==4, month:="10"]
+  
+  gf_data[, start_date:=paste0(month, "-01-", year)]
+  gf_data[, start_date:=as.Date(start_date, "%m-%d-%Y")]
+  gf_data[, month:=NULL]
 
   #-------------------------------------
   # 4. Validate data
   #-------------------------------------
   budget_dataset = gf_data
-
-  #Check to make sure budget and expenditure can be converted to numeric safely,
-  # and the total for these columns is not '0' for the file. (may have grabbed wrong column).
-  stopifnot(class(budget_dataset$budget) == 'character' & class(budget_dataset$expenditure)=='character')
-
-  budget_dataset[, budget:=as.numeric(budget)]
-  budget_dataset[, expenditure:=as.numeric(expenditure)]
 
   #Check these by summing the total for the file, and making sure it's not 0.
   check_budgets = budget_dataset[ ,
@@ -219,13 +219,6 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
     stopifnot(check_budgets[, 1]>0 & check_budgets[, 2]>0)
   }
 
-  #Check column names, and that you have at least some valid data for the file.
-  if (nrow(budget_dataset)==0){
-    stop(paste0("All data dropped for ", inFile))
-  }
-  
-  #--------------------------------
-  # Note: Are there any other checks I could add here? #EKL
   # -------------------------------
 
 

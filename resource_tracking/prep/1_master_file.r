@@ -15,7 +15,7 @@ rm(list=ls())
 # ----------------------------------------------
 # STEP 1: SET UP R
 # ----------------------------------------------
-
+setwd("C:/Users/elineb/Documents/gf/") #Change to the root of your repository
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # ---------------------------------------
 # Boolean logic switches 
@@ -24,7 +24,7 @@ prep_files <- TRUE
 prep_gos <- FALSE
 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping)
-verbose = TRUE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
+verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
 rerun_filelist <- TRUE #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist <- TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 

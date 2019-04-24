@@ -47,8 +47,8 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
   general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise")
   
-  budget_cols = c("activity_description", "budget", "cost_category", "intervention", "module", "start_date") #These are the only columns that should be returned from a budget function. 
-  pudr_cols = c("budget", "expenditure", "intervention", "module", "period", "start_date") #These are the only columns that should be returned from a pudr function. 
+  budget_cols = c("activity_description", "budget", "cost_category", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
+  pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){
     folder = "budgets"
@@ -86,7 +86,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_summary_budget_cod, args)
       
-      stopifnot(sort(names(tmpData)) == budget_cols)
+      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
       
     } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i]=='gtm') {
       args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$disease[i], file_list$period[i],
