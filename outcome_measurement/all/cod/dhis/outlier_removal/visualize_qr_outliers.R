@@ -43,10 +43,10 @@ if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_23_19
 
 # source function - locally or on the cluster
 # reset working directory using user_name to specify path
- if (username=='ccarelli') { setwd('C:/Users/ccarelli/local/gf')
-   } else {setwd('C:/local/gf')}
-
-source('./core/standardizeHZNames.R')
+#  if (username=='ccarelli') { setwd('C:/Users/ccarelli/local/gf')
+#    } else {setwd('C:/local/gf')}
+# 
+# source('./core/standardizeHZNames.R')
 #------------------------------------
 # read in the file
 
@@ -411,6 +411,64 @@ for(i in seq(length(list_of_plots))) {
 dev.off()
 #--------------------------------
 # remove outliers from the data set and perform final prep
+
+# function to remove outliers from base and save as a prepped file
+base_remove = function(x) {
+  
+  out = out[outlier==T]
+  
+  # create a unique identifier
+  dt[ ,combine:=paste0(org_unit_id, element_id, category, date, value)]
+  out[ , combine:=paste0(org_unit_id, element_id, category, date, value)]
+  
+  # subset to the outliers identified
+  list_of_outliers = out$combine 
+  dt[combine %in% list_of_outliers, outlier_new:=TRUE]
+  dt[is.na(outlier_new), outlier_new:=FALSE]
+  dt[ , combine:=NULL]
+  
+  # eliminate only the outliers that do not violate the emerging trends rule
+  dt = dt[outlier_new!=TRUE]
+  dt[  , c('outlier', 'outlier_new'):=NULL]
+  
+  # look at structure of original prepped data 
+  og = readRDS(paste0( dir, '/prepped/base_services_prepped.rds'))
+  head(og)        
+  
+  #----------------------        
+  # format to to look the same as prepped data 
+  
+  #----------------------
+  # subset to the necessary elements and rename
+  
+  dt[ ,c('fitted_value', 'resid', 'thresh_var', 'thresh1',
+         'thresh2', 'upper', 'lower', 'upper_mid', 'lower_mid',
+         'facility', 'org_unit', 'element_fr'):=NULL]
+  
+  setnames(dt, 'element', 'element_eng')
+  dt[ , data_set:='A- Services de Base']
+  
+  #----------------------
+  # merge in facilities meta data 
+  
+  meta = readRDS(paste0(dir, 'meta_data/master_facilities.rds'))
+  dt = merge(dt, meta, by='org_unit_id', all.x=T)
+  
+  #----------------------
+  # merge in original element ids based on the names
+  elements = readRDS(paste0(dir, 'meta_data/elements_fix.rds'))
+  dt = merge(dt, elements, by='element_id', all.x=T)
+  
+  #----------------------
+  dt = dt[ ,.(org_unit_id, element_id, org_unit, element_eng, date, category, 
+         value, org_unit_type, level, country, dps, health_zone,
+         health_area, element, data_set, coordinates)]
+  
+  #----------------------
+  saveRDS(dt, paste0(dir, '/prepped/base_services_prepped_outliers_removed.rds'))
+  return(dt)
+  
+}
 
 # runs outlier removal on base and formats as prepped data 
 if (set=='base') dt = base_remove(dt)
