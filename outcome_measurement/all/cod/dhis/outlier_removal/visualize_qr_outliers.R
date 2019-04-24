@@ -178,11 +178,11 @@ if (set=='sigl'){
 
 # the value is greater than the limit set above and greater than 10 times the mad of residuals 
 # or less than 10 times the negative mad of the residuals
-dt[, outlier := ifelse( (value > limit & ( resid > thresh2 )), TRUE, FALSE) ]
-dt[(value > limit & ( resid < -thresh2 )), outlier :=TRUE]
+dt[, outlier := ifelse( (value > limit & ( value > upper )), TRUE, FALSE) ]
+dt[ (value > limit & ( value < lower )), outlier :=TRUE ]
 
 # number of outliers
-dt[outlier==TRUE, .N] 
+dt[ outlier==TRUE, .N ] 
 # ( dt[outlier==TRUE, .N]  / dt[!is.na(value), .N] ) * 100 # for sigl = 811; 0.017% of non-missing data
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
@@ -244,7 +244,7 @@ out[ ,c('count', 'combine2', 'combine3'):=NULL]
 # as some outliers have now been changed
 if (set=='pnls') out[ , combine:=paste0(org_unit_id, sex, element)]
 if (set=='base') out[ , combine:=paste0(org_unit_id, element)]
-if (set=='sigl') out[, combine:=paste0(org_unit_id, drug)]
+if (set=='sigl') out[ , combine:=paste0(org_unit_id, drug)]
 
 out_new = out[outlier==T, unique(combine)]
 out = out[combine %in% out_new]
