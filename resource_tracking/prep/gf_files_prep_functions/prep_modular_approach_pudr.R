@@ -174,7 +174,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   while (max_quarter>4){
     gf_data[new_qtr>4, year:=year+1]
     gf_data[new_qtr>4, new_qtr:=new_qtr-4]
-    max_quarter = max(totalGos$new_qtr)
+    max_quarter = max(gf_data$new_qtr)
   }
 
   #Split up budget and expenditure.
