@@ -94,6 +94,12 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       tmpData = do.call(prep_summary_budget_gtm, args)
       
       stopifnot(sort(names(tmpData)) == budget_cols)
+    } else if (file_list$function_type[i]=='summary' & file_list$loc_name[i]=='uga'){
+      args[length(args)+1] = file_list$qtr_number[i]
+      args[length(args)+1] = file_list$grant[i]
+      tmpData = do.call(prep_summary_uga_budget, args)
+      
+      stopifnot(sort(names(tmpData)) == budget_cols)
     } else {
       print(paste0("File not being processed: ", file_list$file_name[i]))
       print(paste0("Check logic conditions. This file has the function_type: ", file_list$function_type[i],
@@ -184,6 +190,9 @@ stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
 #Add in a variable for the disease of the file before you start mapping process. 
 resource_database[, disease_grant:=strsplit(grant, "-")]
 resource_database[, disease_grant:=sapply(disease_grant, "[", 2 )]
+#Correct some known issues 
+resource_database[grant=="UGD-011-G10-S", disease_grant:='S']
+resource_database[grant=="UGD-708-G13-H", disease_grant:='H']
 unique(resource_database$disease_grant) #Visual check that these all make sense. 
 
 resource_database[disease_grant=='C', disease_grant:='hiv/tb']

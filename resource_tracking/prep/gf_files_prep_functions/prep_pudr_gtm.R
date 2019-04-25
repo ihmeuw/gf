@@ -17,7 +17,7 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   ### with information from line where the code breaks, and then uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
-
+# 
   folder = "budgets"
   folder = ifelse (file_list$data_source[i] == "fpm" , folder, "pudrs")
   file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
@@ -35,7 +35,7 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   loc_name = 'gtm'
   
   # Load/prep data
-  gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
+  gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name))
   
   #Remove diacritical marks from inFile so it can be used for if-else statements below 
   inFile = fix_diacritics(inFile)
@@ -50,7 +50,7 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
   #------------------------------------------------------------
   # 1. Decide which category of file this document belongs to. 
   #-------------------------------------------------------------
-  cat1 = c("GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xls") #Files similar to: "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/raw_data/active/GTM-T-MSPAS/pudrs/GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xls"
+  cat1 = c("GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xlsx") #Files similar to: "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/raw_data/active/GTM-T-MSPAS/pudrs/GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xls"
   
   #Sanity check: Is this sheet name one you've checked before? 
   if (!inFile%in%cat1){
@@ -87,22 +87,45 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, disease, 
     
     #Only keep the intervention, budget, and expenditure columns. 
     gf_data = gf_data[, c(1:3, 7)]
-    names(gf_data) = c('intervention', 'budget_q3', 'budget_q4', 'expenditure')
+    names(gf_data) = c('intervention', 'budget_q3', 'budget_q4', 'expenditure') #EKL CAN WE TAKE OUT THIS HARD-CODING?? 
     gf_data[, intervention:=gsub("MDR-TB", "MDRTB", intervention)]
     split = strsplit(gf_data$intervention, "-")
     gf_data[, module:=sapply(split,`[`,1)]
     gf_data[, intervention:=sapply(split,`[`,2)]
     
-  }
-
-  #Subset to only these columns.
-  gf_data = gf_data[, .(module, intervention, budget, expenditure)]
+    budget_dataset = melt(gf_data, id.vars=c('module', 'intervention'), measure.vars=c('budget_q3', 'budget_q4', 'expenditure'))
+    budget_dataset[variable%in%c('budget_q3', 'budget_q4'), split:=1]
+    budget_dataset[variable=='expenditure', split:=2]
     
-
-  if(!'start_date'%in%colnames(budget_dataset)){
-    stop("PUDR with multiple quarters- review GTM prep code.")
+    budget_dataset <- expandRows(budget_dataset, "split")
+    
+    #Assign a quarter variable to budget and expenditure
+    budget_dataset[, quarter:=seq(3, 4, by=1), by=c('module', 'intervention', 'variable', 'value')]
+    budget_dataset[variable=='budget_q3', quarter:=3]
+    budget_dataset[variable=='budget_q4', quarter:=4]
+    budget_dataset[, year:=year(start_date)]
+    
+    #Rename the budget values, and then reshape 
+    budget_dataset[variable=='budget_q3'|variable=='budget_q4', variable:='budget']
+    budget_dataset[, value:=as.numeric(value)]
+    
+    budget_dataset = dcast(budget_dataset, module+intervention+quarter+year~variable, value.var="value", fun.aggregate=sum_na_rm)
+    
+    #Add 'start date' variable
+    budget_dataset[quarter==1, month:="01"]
+    budget_dataset[quarter==2, month:="04"]
+    budget_dataset[quarter==3, month:="07"]
+    budget_dataset[quarter==4, month:="10"]
+    
+    budget_dataset[, start_date:=paste0(month, "-01-", year)]
+    budget_dataset[, start_date:=as.Date(start_date, "%m-%d-%Y")]
+    
+    budget_dataset = budget_dataset[, -c('month')]
+    
+    
+    
   }
-  budget_dataset$period <- period
+  
   
   #-----------------------------------------------------------
   # Return prepped data

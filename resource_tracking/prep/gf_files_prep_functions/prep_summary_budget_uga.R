@@ -10,7 +10,7 @@
 
 # ----------------------------------------------
 ##function to clean the data: 
-prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num, cashText, grant, disease, period, recipient, source){
+prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, period, qtr_num, grant){
   
   ######## TROUBLESHOOTING HELP
   ### fill in variables below with information from line where the code breaks (use file list to find variables)
@@ -30,9 +30,9 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   # data_source = file_list$data_source[i]
 
   if(!is.na(sheet_name)){
-    gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile), sheet=as.character(sheet_name), detectDates=TRUE))
   } else {
-    gf_data <- data.table(read_excel(paste0(dir, inFile)))
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile), detectDates=TRUE))
   }
   
   ##we don't need the first column
@@ -129,7 +129,6 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   }
   
   ##add categories
-  budget_dataset$disease <- disease 
   budget_dataset$start_date = as.Date(budget_dataset$start_date)
   if(inFile == 'UGD-011-G10-S_IL1_SumBudget_24Aug12.xls'){
     budget_dataset$period = ifelse(year(budget_dataset$start_date) == 2012, 120, ifelse(
@@ -138,10 +137,9 @@ prep_summary_uga_budget = function(dir, inFile, sheet_name, start_date, qtr_num,
   budget_dataset$period = ifelse(month(budget_dataset$start_date) == 8 | (budget_dataset$start_date == "2014-05-01" & grant == 'UGD-011-G10-S'), 60, 
                                  ifelse(month(org) == 8 & (budget_dataset$start_date == max(budget_dataset$start_date)), 120, period))} #make up for the 1st period being 2 months and the final being 4 months
   budget_dataset$grant_number <- grant
-  budget_dataset$recipient <- recipient
-  budget_dataset$cost_category <- "all"
   budget_dataset$data_source <- source
   budget_dataset$start_date <- as.Date(budget_dataset$start_date)
+  budget_dataset$quarter <- quarter(budget_dataset$start_date)
   budget_dataset$year <- year(budget_dataset$start_date)
   return(budget_dataset)
   

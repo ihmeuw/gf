@@ -66,7 +66,7 @@ raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv'
 #----------------------------------------------------------------------------
 # Merge with module map on module, intervention, and disease to pull in code
 #----------------------------------------------------------------------------
-if (prep_files == TRUE){
+if ('disbursement'%in%names(raw_data)){
   pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
 } else {
   pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure')]
@@ -83,7 +83,7 @@ dropped_mods <- mapped_data[is.na(mapped_data$gf_module), ]
 if(nrow(dropped_mods) >0){
   # Check if anything is dropped in the merge -> if you get an error. Check the mapping spreadsheet
   print(unique(dropped_mods[, c("module", "intervention", "disease"), with= FALSE]))
-  stop("Modules/interventions were dropped! - Check Mapping Spreadsheet codes vs intervention tabs")
+  stop("Modules/interventions were dropped!")
 }
 
 #-------------------------------------------------------
@@ -109,11 +109,11 @@ remapped_rows = nrow(mapped_data[coefficient != 1])
 print(paste0("A total of ", remapped_rows, " rows will be redistributed."))
 mapped_data[, budget:=budget*coefficient]
 mapped_data[, expenditure:=expenditure*coefficient]
-if (prep_files == TRUE){
+if ('disbursement'%in%names(mapped_data)){
   mapped_data[, disbursement:=disbursement*coefficient]
 }
 
-if (prep_files == TRUE){
+if ('disbursement'%in%names(mapped_data)){
   post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
   stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]] & pre_coeff_check[[3]] == post_coeff_check[[3]])
 } else {
@@ -162,33 +162,33 @@ for (i in 1:nrow(code_lookup_tables)){
 }
 
 # --------------------------------------------------------
-#Verify that everything is at the quarter-level here 
-# --------------------------------------------------------
-unique(mapped_data[, start_date-end_date])
-
-# --------------------------------------------------------
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------
 
 #Note that I'm dropping 'module' and 'intervention' - which were corrected from the original text, but are just used for mapping. EKL 1/29/19
 # Only keep the variable names that are in the codebook for consistency. This should constantly be reviewed. 
+dropped_vars = names(mapped_data)[!names(mapped_data)%in%codebook$Variable]
+if (length(dropped_vars)!=0){
+  print("Some variables are being dropped because they aren't in the codebook - Review to make sure these shouldn't be in the final data.")
+  print(dropped_vars)
+}
 mapped_data = mapped_data[, names(mapped_data)%in%codebook$Variable, with=FALSE]
 
 #After variables are removed, collapse dataset to simplify
 byVars <- colnames(mapped_data)
-if (prep_files == TRUE){
+if ('disbursement'%in%names(mapped_data)){
   byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disbursement']
   mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'disbursement'), by=byVars]
-} else if (prep_gos == TRUE){
+} else {
   byVars = byVars[byVars != 'budget' & byVars != 'expenditure']
   mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure'), by=byVars]
 }
 
 #Reorder data 
-if (prep_files == TRUE){
+if ('disbursement'%in%names(mapped_data)){
   mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, activity_description, country, loc_name, 
                                 budget, expenditure, disbursement, orig_module, orig_intervention, current_grant, file_name)]
-} else if (prep_gos == TRUE){
+} else{
   mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, country, loc_name, 
                                   budget, expenditure, orig_module, orig_intervention, current_grant, file_name)]
 }

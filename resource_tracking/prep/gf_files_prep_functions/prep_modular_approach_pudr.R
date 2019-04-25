@@ -126,6 +126,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #Some datasets have an extra title row with "[Module]" in the module column.
   #It's easier to find this by grepping the budget column, though.
   extra_module_row <- grep("budget for reporting period", tolower(gf_data$budget))
+  extra_module_row = c(extra_module_row, grep("module", tolower(gf_data$module)))
   if (length(extra_module_row) > 0){
     if (verbose == TRUE){
       print(paste0("Extra rows being dropped in GTM PU/DR prep function. First column: ", gf_data[extra_module_row, 1]))
