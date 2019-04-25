@@ -93,7 +93,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
                     file_list$grant[i], file_list$primary_recipient[i], file_list$language[i])
       tmpData = do.call(prep_summary_budget_gtm, args)
       
-      stopifnot(sort(names(tmpData)) == budget_cols)
+      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
     } else if (file_list$function_type[i]=='summary' & file_list$loc_name[i]=='uga'){
       args[length(args)+1] = file_list$qtr_number[i]
       args[length(args)+1] = file_list$grant[i]
