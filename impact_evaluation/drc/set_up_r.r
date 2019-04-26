@@ -178,7 +178,7 @@ outputFile5a = paste0(ieDir, 'first_half_model_results.rdata')
 outputFile5b = paste0(ieDir, 'second_half_model_results.rdata')
 
 # output file from 6_display_results.r
-outputFile6a = paste0(ieDir, '../visualizations/first_half_model_results.pdf')
+outputFile6a = paste0(ieDir, '../visualizations/sem_diagrams.pdf')
 outputFile6b = paste0(ieDir, '../visualizations/bottleneck_analysis.pdf')
 outputFile6c = paste0(ieDir, '../visualizations/impact_analysis.pdf')
 outputFile6d = paste0(ieDir, '../visualizations/health_zone_effects.pdf')
