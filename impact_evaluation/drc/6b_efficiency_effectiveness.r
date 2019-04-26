@@ -45,16 +45,11 @@ means1[, lower.std:=est.std-(1.96*se.std)]
 means1[, upper:=est+(1.96*se)]
 means1[, upper.std:=est.std+(1.96*se.std)]
 
-# unrescale
-tmp = unique(melt(scaling_factors1, value.name='scaling_factor'))
-means1 = merge(means1, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
-means1 = merge(means1, tmp, by.x='lhs', by.y='variable', all.x=TRUE)
-means1[is.na(scaling_factor.x), scaling_factor.x:=1]
-means1[is.na(scaling_factor.y), scaling_factor.y:=1]
-means1[, est_unrescaled:=est/scaling_factor.x*scaling_factor.y]
-means1[, se_unrescaled:=se/scaling_factor.x*scaling_factor.y]
-means1[, lower_unrescaled:=lower/scaling_factor.x*scaling_factor.y]
-means1[, upper_unrescaled:=upper/scaling_factor.x*scaling_factor.y]
+# swap in rescaled values?
+means1[, est_unrescaled:=est]
+means1[, se_unrescaled:=se]
+means1[, lower_unrescaled:=lower]
+means1[, upper_unrescaled:=upper]
 
 # estimate the combination of coefficients and their next downstream coefficient (mediation)
 # (uncertainty needs improving)
@@ -109,16 +104,6 @@ means2[, lower:=est-(1.96*se)]
 means2[, lower.std:=est.std-(1.96*se.std)]
 means2[, upper:=est+(1.96*se)]
 means2[, upper.std:=est.std+(1.96*se.std)]
-
-# unrescale
-tmp = unique(melt(scaling_factors1, value.name='scaling_factor'))
-means2 = merge(means2, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
-means2 = merge(means2, tmp, by.x='lhs', by.y='variable', all.x=TRUE)
-means2[is.na(scaling_factor.x), scaling_factor.x:=1]
-means2[is.na(scaling_factor.y), scaling_factor.y:=1]
-means2[, est_unrescaled:=est/scaling_factor.x*scaling_factor.y]
-means2[, lower_unrescaled:=lower/scaling_factor.x*scaling_factor.y]
-means2[, upper_unrescaled:=upper/scaling_factor.x*scaling_factor.y]
 
 # exponentiate
 means2[, est_unrescaled:=1.01^est_unrescaled] # 1.01 to make it "per 1% increase in x"
