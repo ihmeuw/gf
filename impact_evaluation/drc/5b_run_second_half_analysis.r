@@ -107,7 +107,8 @@ if (runAsQsub==TRUE) {
 
 
 # compute averages (approximation of standard error, would be better as Monte Carlo simulation)
-paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
+paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se',
+				'est_unrescaled','lower_unrescaled','upper_unrescaled')
 summaries[, se_ratio.std:=se.std/est.std]
 summaries[, se_ratio:=se/est]
 means = summaries[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
