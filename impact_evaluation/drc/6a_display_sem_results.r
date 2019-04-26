@@ -11,9 +11,6 @@
 
 source('./impact_evaluation/drc/set_up_r.r')
 
-# load the custom predict_lavaan.r function
-source('./impact_evaluation/_common/predict_lavaan.r')
-
 # load home-made sem graphing function
 source('./impact_evaluation/_common/graphLavaan.r')
 
@@ -22,12 +19,12 @@ load(outputFile5a)
 data1=copy(data)
 means1 = copy(means)
 summaries1 = copy(summaries)
-scaling_factors1=copy(scaling_factors)
+urFit1 = copy(urFit)
 load(outputFile5b)
 data2=copy(data)
 means2 = copy(means)
 summaries2 = copy(summaries)
-scaling_factors2=copy(scaling_factors)
+urFit2 = copy(urFit)
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
