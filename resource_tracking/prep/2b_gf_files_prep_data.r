@@ -92,6 +92,11 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       tmpData = do.call(prep_summary_budget_gtm, args)
       
       stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
+    } else if (file_list$function_type[i]=='old_detailed' & file_list$loc_name[i]=="gtm"){ 
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$period[i])
+      tmpData = do.call(prep_summary_budget_gtm, args)
+      
+      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
     } else if (file_list$function_type[i]=='summary' & file_list$loc_name[i]=='uga'){
       args[length(args)+1] = file_list$qtr_number[i]
       args[length(args)+1] = file_list$grant[i]
