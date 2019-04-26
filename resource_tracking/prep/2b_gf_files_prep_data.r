@@ -75,9 +75,8 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
       
-    } else if (file_list$function_type[i]=='pudr' & file_list$sheet[i]%in%c('INTEGRACION')){ #Prep more general Guatemala PUDRs. 
-      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$disease[i], file_list$period[i],
-                  file_list$grant[i], file_list$source[i], file_list$loc_name[i], file_list$language[i])
+    } else if (file_list$function_type[i]=='pudr' & file_list$sheet[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$period[i])
       tmpData = do.call(prep_pudr_gtm, args)
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
@@ -89,8 +88,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
       
     } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i]=='gtm') {
-      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$disease[i], file_list$period[i],
-                    file_list$grant[i], file_list$primary_recipient[i], file_list$language[i])
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i])
       tmpData = do.call(prep_summary_budget_gtm, args)
       
       stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
