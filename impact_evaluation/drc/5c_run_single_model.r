@@ -108,6 +108,7 @@ summary = merge(summary, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
 summary = merge(summary, tmp, by.x='lhs', by.y='variable', all.x=TRUE, suffixes=c('.rhs','.lhs'))
 summary[is.na(scaling_factor.rhs), scaling_factor.rhs:=1]
 summary[is.na(scaling_factor.lhs), scaling_factor.lhs:=1]
+summary[, est_raw:=est] # just to be able to see the rescaled value
 summary[, est:=est/(scaling_factor.rhs/scaling_factor.lhs)]
 summary[, se:=se/(scaling_factor.rhs/scaling_factor.lhs)]
 
@@ -116,6 +117,7 @@ urFit = merge(urFit, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
 urFit = merge(urFit, tmp, by.x='lhs', by.y='variable', all.x=TRUE, suffixes=c('.rhs','.lhs'))
 urFit[is.na(scaling_factor.rhs), scaling_factor.rhs:=1]
 urFit[is.na(scaling_factor.lhs), scaling_factor.lhs:=1]
+urFit[, est_raw:=est] # just to be able to see the rescaled value
 urFit[, est:=est/(scaling_factor.rhs/scaling_factor.lhs)]
 urFit[, se:=se/(scaling_factor.rhs/scaling_factor.lhs)]
 
