@@ -10,12 +10,19 @@
 # ----------------------------------------------
 ##function to clean the data: 
 # ----------------------------------------------
-prep_summary_budget_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, grant, primary_recipient, lang){
+prep_summary_budget_gtm = function(dir, inFile, sheet, start_date, qtr_num){
   
-  if(!is.na(sheet_name)){
-    gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))
+  # dir = file_dir
+  # inFile = file_list$file_name[i]
+  # sheet = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # qtr_num = file_list$qtr_number[i]
+
+  
+  if(!is.na(sheet)){
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile), sheet=as.character(sheet), detectDates=TRUE))
   } else {
-    gf_data <- data.table(read_excel(paste0(dir, inFile)))
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile), detectDates=TRUE))
   }
   
   gf_data <- gf_data[, -1]
@@ -60,6 +67,10 @@ prep_summary_budget_gtm = function(dir, inFile, sheet_name, start_date, qtr_num,
   budget_dataset<- melt(gf_data,id.vars =c("module", "intervention"), variable.name = "start_date", value.name="budget")
   budget_dataset$start_date <- as.Date(budget_dataset$start_date, "%Y-%m-%d")
   budget_dataset$budget <- as.numeric(budget_dataset$budget)
+  
+  #Add quarter and year variables. 
+  budget_dataset[, quarter:=quarter(start_date)]
+  budget_dataset[, year:=year(start_date)]
  
   return(budget_dataset)
   

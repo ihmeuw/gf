@@ -34,6 +34,7 @@ pnls_data <- 'pnls_subset_2014_11_01_2018_12_01.rds'
 sigl_data <- 'sigl_2018_01_01_2019_01_01.rds'
 pati_data <- 'tb_pati_v_registered_2017_01_01_2018_10_01.rds'
 ssc_data <- 'ssc_prepped.rds'
+supervisions_data <- 'supervisions_prepped.rds'
 
 # archived data for 2017 data:
 base_archive <- 'prepped/archive/base_services_drc_01_2017_09_2018_prepped.rds'
@@ -86,6 +87,7 @@ pnls = readRDS(paste0(dir, import_folder, pnls_data))
 sigl = readRDS(paste0(dir, import_folder, sigl_data))
 pati = readRDS(paste0(dir, import_folder, pati_data))
 ssc = readRDS(paste0(dir, prepped_folder, ssc_data))
+supervisions = readRDS(paste0(dir, prepped_folder, supervisions_data))
 
 base_2017 = readRDS(paste0(dir, base_archive))
 sigl_2017 = readRDS(paste0(dir, sigl_archive))
@@ -102,6 +104,7 @@ pnls[ ,set:='pnls']
 sigl[ ,set:='sigl']
 pati[ ,set:='pati']
 ssc[, set:='ssc']
+supervisions[, set:='supervisions']
 
 # subset elements before combining since data sets are so large
 pnls = pnls[element_id %in% elements, ]
@@ -110,16 +113,17 @@ base = base[element_id %in% elements, ]
 sigl = sigl[element_id %in% elements, ]
 pati = pati[element_id %in% elements, ]
 ssc = ssc[element_id %in% elements, ]
+supervisions = supervisions[element_id %in% elements, ]
 
 drop_cols <- c("coordinates", "download_number", "last_update")
 base <- base[ , !(drop_cols), with = FALSE]
 sigl <- sigl[ , !(drop_cols), with = FALSE]
 pati <- pati[ , !(drop_cols), with = FALSE]
 ssc <- ssc[ , !(drop_cols), with = FALSE]
+supervisions <- supervisions[ , !(drop_cols), with = FALSE]
 
-
-dt = rbindlist( list(base, sigl, pnls, pati, ssc), use.names = TRUE, fill= TRUE )
-if (nrow(base) + nrow(sigl) + nrow(pnls) + nrow(pati) + nrow(ssc) != nrow(dt)) stop ("rbind did not work correctly")
+dt = rbindlist( list(base, sigl, pnls, pati, ssc, supervisions), use.names = TRUE, fill= TRUE )
+if (nrow(base) + nrow(sigl) + nrow(pnls) + nrow(pati) + nrow(ssc) + nrow(supervisions)!= nrow(dt)) stop ("rbind did not work correctly")
 
 # ---------------------------------------------
 

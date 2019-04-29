@@ -35,7 +35,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   }
   
   # Load/prep data
-  gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name))
+  gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
   initial_rows = nrow(gf_data) #Save to run a check on later. 
   
   #-------------------------------------
@@ -74,11 +74,9 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
     names = fix_diacritics(names)
   }
   
-  names=gsub("\r\n", "", names)
-  if (inFile == "1d_GTM-T-MSPAS Detailed budget_FINAL_01062016.xlsx"){ #This file has periods instead of spaces between words. 
-    names = gsub("\\.", " ", names)
-  }
-  
+  names=gsub("\r\n", "", names) #Remove extraneous characters
+  names = gsub("\\.", " ", names) #Remove periods
+
   #Grab module and intervention rows
   module_col <- grep("modul", names)
   intervention_col <- grep("intervention|intervencion", names)
@@ -215,6 +213,10 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   }
   
   budget_dataset = budget_dataset[, -c('variable')]
+  
+  #Add quarter and year variables 
+  budget_dataset[, quarter:=quarter(start_date)]
+  budget_dataset[, year:=year(start_date)]
 
   #-------------------------------------
   # 4. Validate data

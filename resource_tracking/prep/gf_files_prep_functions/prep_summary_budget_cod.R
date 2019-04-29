@@ -55,9 +55,9 @@ prep_summary_budget_cod = function(dir, inFile, sheet_name, start_date, period, 
   # ----------------------------------------------
   
   if(!is.na(sheet_name)){
-    gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name), col_names = FALSE))
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile), sheet=as.character(sheet_name), detectDates=TRUE))
   } else {
-    gf_data <- data.table(read_excel(paste0(dir, inFile)))
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile), detectDates=TRUE))
   }
   
   colnames(gf_data)[1] <- "cost_category"
@@ -119,12 +119,14 @@ prep_summary_budget_cod = function(dir, inFile, sheet_name, start_date, period, 
   
   if(sheet_name == "RESUME BUDGET V2 CONSOLIDE"){
     budget_dataset = separate(budget_dataset, module, into=c("module", "intervention"), sep="-")
-  }else{
+  } else{
     budget_dataset$intervention <- NA
   }
   
-  #Restrict to just the columns you need. 
+  #Fix formatting on date columns.  
   budget_dataset = budget_dataset[,-c('qtr')]
+  budget_dataset[, quarter:=quarter(start_date)]
+  budget_dataset[, year:=year(start_date)]
  
   
   return(budget_dataset)
