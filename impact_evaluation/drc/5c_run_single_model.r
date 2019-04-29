@@ -14,7 +14,7 @@
 source('./impact_evaluation/drc/set_up_r.r')
 
 # for testing purposes
-# task_id = 1
+# task_id = 178
 # args = c('drc_malaria6', '1', 'TRUE')
 
 # ----------------------------------------------
@@ -55,6 +55,12 @@ if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile4b)
 h = unique(data$health_zone)[task_id]
 subData = data[health_zone==h]
 
+# jitter to avoid perfect collinearity
+for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','date')]) { 
+	if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
+	if (!all(subData[[v]]>0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
+}
+
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
 scaling_factors = data.table(date=1)
@@ -66,12 +72,6 @@ for(v in numVars) {
 	scaling_factors[,(v):=s]
 }
 for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
-
-# jitter to avoid perfect collinearity
-for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','date')]) { 
-	if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
-	if (!all(subData[[v]]>0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
-}
 # ---------------------------------------------------------------------------------------------------
 
 
