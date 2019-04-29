@@ -112,9 +112,7 @@ if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
 
 # clean up qsub files
 print(paste('Cleaning up cluster temp files...'))
-if (runAsQsub==TRUE) { 
-	system(paste0('rm ', clustertmpDireo, '/ie1_job_array*'))
-	system(paste0('rm ', clustertmpDir1	, '/first_half_*'))
-	system(paste0('rm ', clustertmpDir2	, '/first_half_*'))
-}
+system(paste0('rm ', clustertmpDireo, '/ie1_job_array*'))
+system(paste0('rm ', clustertmpDir1	, '/first_half_*'))
+system(paste0('rm ', clustertmpDir2	, '/first_half_*'))
 # ------------------------------------------------------------------
