@@ -41,5 +41,5 @@ gen_ihme_country_code = function(dt, iso_col){
 # What year do we have GOS data through? Want to make this 
 # a static variable so it can be easily updated as we receive new data
 #-----------------------------------------------------------------------------------
-gos_year = 2014
+gos_year = 2017
 
