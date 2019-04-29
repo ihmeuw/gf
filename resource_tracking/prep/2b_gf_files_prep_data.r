@@ -29,7 +29,8 @@ if (prep_files == TRUE){
   file_list = prioritize_gos(file_list)
   
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=seq(0, 10, by=1), by=c('grant', 'start_date', 'data_source')]
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')] 
+  file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
   
   if ( nrow(file_list[date_dup>0])!=0){
     print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
@@ -46,8 +47,8 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
   general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise")
   
-  budget_cols = c("activity_description", "budget", "cost_category", "intervention", "module", "start_date") #These are the only columns that should be returned from a budget function. 
-  pudr_cols = c("budget", "expenditure", "intervention", "module", "period", "start_date") #These are the only columns that should be returned from a pudr function. 
+  budget_cols = c("activity_description", "budget", "cost_category", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
+  pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){
     folder = "budgets"
@@ -69,13 +70,13 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       stopifnot(sort(names(tmpData)) == budget_cols)
       
     } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){ #Prep standardized 'modular approach' PUDRs. 
+      args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_modular_approach_pudr, args)
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
       
-    } else if (file_list$function_type[i]=='pudr' & file_list$sheet[i]%in%c('INTEGRACION')){ #Prep more general Guatemala PUDRs. 
-      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$disease[i], file_list$period[i],
-                  file_list$grant[i], file_list$source[i], file_list$loc_name[i], file_list$language[i])
+    } else if (file_list$function_type[i]=='pudr' & file_list$sheet[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$period[i])
       tmpData = do.call(prep_pudr_gtm, args)
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
@@ -84,12 +85,22 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_summary_budget_cod, args)
       
-      stopifnot(sort(names(tmpData)) == budget_cols)
+      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
       
     } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i]=='gtm') {
-      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$disease[i], file_list$period[i],
-                    file_list$grant[i], file_list$primary_recipient[i], file_list$language[i])
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i])
       tmpData = do.call(prep_summary_budget_gtm, args)
+      
+      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
+    } else if (file_list$function_type[i]=='old_detailed' & file_list$loc_name[i]=="gtm"){ 
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$period[i])
+      tmpData = do.call(prep_summary_budget_gtm, args)
+      
+      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
+    } else if (file_list$function_type[i]=='summary' & file_list$loc_name[i]=='uga'){
+      args[length(args)+1] = file_list$qtr_number[i]
+      args[length(args)+1] = file_list$grant[i]
+      tmpData = do.call(prep_summary_uga_budget, args)
       
       stopifnot(sort(names(tmpData)) == budget_cols)
     } else {
@@ -182,6 +193,9 @@ stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
 #Add in a variable for the disease of the file before you start mapping process. 
 resource_database[, disease_grant:=strsplit(grant, "-")]
 resource_database[, disease_grant:=sapply(disease_grant, "[", 2 )]
+#Correct some known issues 
+resource_database[grant=="UGD-011-G10-S", disease_grant:='S']
+resource_database[grant=="UGD-708-G13-H", disease_grant:='H']
 unique(resource_database$disease_grant) #Visual check that these all make sense. 
 
 resource_database[disease_grant=='C', disease_grant:='hiv/tb']

@@ -1,96 +1,103 @@
-#----------------------------------------------
-# Irena Chen
-#
-# 5/16/2018
-##This cleans the GUA-M-MSPAS 2014-2016 budget
-# Inputs:
-# inFile - name of the file to be prepped
-# Outputs:
-# budget_dataset - prepped data.table object
+#-------------------------------------------------------------
+# Emily Linebarger, based off of code written by Irena Chen
+# Prepares old detailed budgets in Guatemala for integration 
+# into the resource database
+# Updated: April 2019
+#-------------------------------------------------------------
 
 
-# ----------------------------------------------
-##Function to prepare the budgets: 
-# ----------------------------------------------
-
-prep_other_budget = function(dir, inFile, sheet_name, start_date, qtr_num, disease, period, lang, grant){
+prep_other_budget = function(dir, inFile, sheet_name, start_date, qtr_num, period){
   
-  # dir = file_dir
+  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
   # inFile = file_list$file_name[i]
   # sheet_name = file_list$sheet[i]
   # start_date = file_list$start_date[i]
   # qtr_num = file_list$qtr_number[i]
   # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # lang = file_list$language[i]
-  # grant = file_list$grant[i]
 
+  verified_files = c("GUA-M-MSPAS_SB_Y4-6a_IL8.xlsx")
+  verified_sheets = c("Detailed Budget - Year 1", "Detailed Budget - Year 2")
+  if (!inFile%in%verified_files){
+    print(inFile)
+    stop("This file has not been run with this function before - Are you sure you want this function? Add file name to verified list within function to proceed.")
+  }
   
   ##load the FPM data: 
   if(!is.na(sheet_name)){
-    gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet_name)))
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile), sheet=as.character(sheet_name), detectDates=TRUE))
   } else {
-    gf_data <- data.table(read_excel(paste0(dir, inFile)))
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile), detectDates=TRUE))
   }
-
   
-  gf_data <- Filter(function(x)!all(is.na(x)), gf_data)
-  setDT(gf_data)
-  if(sheet_name=="Detailed Budget - Year 2"){
-    gf_data1 <- gf_data[,c("X__3", "X__4", "GASTOS\r\nQuarter 1","GASTOS \r\nQuarter 2", "GASTOS\r\nQuarter 3",  "GASTOS \r\nQuarter 4"), with=FALSE]
-  } else if (sheet_name=="Detailed Budget - Year 1"){
-    gf_data1 <- gf_data[,c("X__3", "X__4", "Gastos Q1","Gastos Q2", "GASTOS\r\nQuarter 3",  "GASTOS \r\nQuarter 4"), with=FALSE]
-  } else {
-    gf_data1 <- gf_data[,c("X__3", "X__4", "X__24", "X__26", "X__28", "X__30"), with=FALSE]
-  }
-  if(sheet_name!="Detailed Budget - Year 3"){
-    gf_data1 <- gf_data1[-c(1:3),]
-  } else {
-    gf_data1 <- gf_data1[-c(1:2),]
-  }
+  #-------------------------------------
+  # 1. Subset columns.
+  #-------------------------------------
+  #First, find Service Delivery Area and activity columns. They're labeled in a different row than budget and expenditure. 
+  
+  correctly_named = grepl("service delivery area", tolower(names(gf_data)))
+  #If there isn't a column named 'module', find the row with the names on it. 
+  if (!TRUE%in%correctly_named){
+    #Find the row that has the column names in it
+    name_row = 1 
+    while(is.na(gf_data[name_row, 2])){
+      name_row = name_row + 1
+    }
     
-  setnames(gf_data1, c("module", "sda_activity", "Q1", "Q2", "Q3", "Q4"))
-  #Where are other NAs coming from? We should flag these every time 
+    subtitle_row = gf_data[name_row, ]
+    subtitle_row = tolower(subtitle_row)
+  } 
+  title_row = tolower(names(gf_data))
   
-  #Only keep data that has a value in the 'module' column. 
-  gf_data1<- gf_data1[!is.na(module)]
+  #Grab service delivery area and activity rows
+  sda_col <- grep("service delivery area", subtitle_row)
+  activity_col <- grep("activity", subtitle_row)
+ 
+  stopifnot(length(sda_col)==1 & length(activity_col)==1)
   
-  budget_dataset<- melt(gf_data1,id=c("module","sda_activity"), 
-                        variable.name = "qtr", value.name="budget")
+  #Now, find budget and expenditure columns. 
+  budget_cols = grep("total amount", subtitle_row) 
+  expenditure_cols = grep("gastos.quarter", title_row)
+  budget_cols = budget_cols[!budget_cols%in%expenditure_cols]
   
-  budget_dataset[, budget:=as.numeric(budget)]
+  #Subset to these columns. 
+  gf_data = gf_data[, c(sda_col, activity_col, budget_cols, expenditure_cols), with=FALSE]
   
-  #Make sure the conversions above are working. 
-  if(budget_dataset[, sum(budget, na.rm = TRUE)]==0){
-    stop(paste0("All budget data converted to NA for file: ", inFile, ". Validate prep_fpm_other_budget function."))
-  }
+  #Set names
+  names(gf_data) <- c('module', 'activity_description', 'budget_q1', 'budget_q2', 'budget_q3', 'budget_q4', 'expenditure_q1', 'expenditure_q2', 'expenditure_q3', 'expenditure_q4')
   
-  dates <- rep(start_date, qtr_num) # 
-    for (i in 1:length(dates)){
-      if (i==1){
-        dates[i] <- start_date
-      } else {
-        dates[i] <- dates[i-1]%m+% months(3)
-      }
-    }
-    if(length(dates) != length(unique(budget_dataset$qtr))){
-      stop('quarters were dropped!')
-    }
-    ##turn the list of dates into a dictionary (but only for quarters!) : 
-  dates <- setNames(dates,unique(budget_dataset$qtr))
+  #-------------------------------------
+  # 2. Subset rows
+  #-------------------------------------
+  gf_data = gf_data[!is.na(budget_q1) | is.na(module)]
+  gf_data = gf_data[!budget_q1 == 'Total amount']
   
+  #-------------------------------------
+  # 3. Reshape to the quarter-level. 
+  #-------------------------------------
+  budget_dataset = melt(gf_data, id.vars=c('module', 'activity_description'))
+  budget_dataset[, quarter:=tstrsplit(variable, "_", keep=2)] #Pull out a quarter variable
+  budget_dataset[, quarter:=gsub("q", "", quarter)]
+  budget_dataset[, quarter:=as.numeric(quarter)]
   
-    ## now match quarters with start dates 
-  kDT = data.table(qtr = names(dates), value = TRUE, start_date = unname(dates))
-  budget_dataset <-budget_dataset[kDT, on=.(qtr), start_date := i.start_date ]
-  budget_dataset$qtr <- NULL
-  budget_dataset$period <- period
-  budget_dataset$disease <- disease
-  budget_dataset$lang <- lang
-  budget_dataset$intervention <- "all"
-  budget_dataset$cost_category <- "all"
-  budget_dataset$recipient <- "MoH"
-  budget_dataset$grant_number = grant
+  budget_dataset[, variable:=tstrsplit(variable, "_", keep=1)]
+  # print(unique(budget_dataset$variable))
+  # print(unique(budget_dataset$quarter))
+  
+  #Add year and start_date variables
+  budget_dataset[, year:=year(start_date)]
+  #Generate new start date variable. 
+  budget_dataset[quarter==1, month:="01"]
+  budget_dataset[quarter==2, month:="04"]
+  budget_dataset[quarter==3, month:="07"]
+  budget_dataset[quarter==4, month:="10"]
+  
+  budget_dataset[, start_date:=paste0(month, "-01-", year)]
+  budget_dataset[, start_date:=as.Date(start_date, "%m-%d-%Y")]
+  budget_dataset[, month:=NULL]
+  
+  #One last cast to make budget and expenditure their own values 
+  budget_dataset[, value:=as.numeric(value)]
+  budget_dataset = dcast(budget_dataset, module+activity_description+start_date+year+quarter~variable, value.var='value', fun.aggregate=sum_na_rm)
   
   return(budget_dataset)  
 }
