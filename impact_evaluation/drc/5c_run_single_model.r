@@ -52,6 +52,18 @@ if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile4b)
 h = unique(data$health_zone)[task_id]
 subData = data[health_zone==h]
 
+# rescale variables to have similar variance
+# see Kline Principles and Practice of SEM (2011) page 67
+scaling_factors = data.table(date=1)
+numVars = names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','date')]
+for(v in numVars) {
+	s=1
+	while(var(subData[[v]]/s)>1000) s=s*10
+	while(var(subData[[v]]/s)<100) s=s/10
+	scaling_factors[,(v):=s]
+}
+for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
+
 # jitter to avoid perfect collinearity
 for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','date')]) { 
 	if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
@@ -83,21 +95,14 @@ setnames(standardizedSummary, c('se','ci.lower', 'ci.upper'), c('se.std','ci.low
 summary = data.table(parTable(semFit))
 summary = summary[, c('lhs','op','rhs','est','se'), with=FALSE]
 
-# compute uncertainty intervals
-summary[, lower:=est-(1.95996*se)]
-summary[, upper:=est+(1.95996*se)]
-
 # unrescale coefficients to reflect actual units of x and y variables
 tmp = unique(melt(scaling_factors, value.name='scaling_factor'))
 summary = merge(summary, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
 summary = merge(summary, tmp, by.x='lhs', by.y='variable', all.x=TRUE, suffixes=c('.rhs','.lhs'))
 summary[is.na(scaling_factor.rhs), scaling_factor.rhs:=1]
 summary[is.na(scaling_factor.lhs), scaling_factor.lhs:=1]
-summary[, est_unrescaled:=est/(scaling_factor.rhs/scaling_factor.lhs)]
-summary[, lower_unrescaled:=lower/(scaling_factor.rhs/scaling_factor.lhs)]
-summary[, upper_unrescaled:=upper/(scaling_factor.rhs/scaling_factor.lhs)]
-summary$lower = NULL
-summary$upper = NULL
+summary[, est:=est/(scaling_factor.rhs/scaling_factor.lhs)]
+summary[, se:=se/(scaling_factor.rhs/scaling_factor.lhs)]
 
 # store summary
 summary = merge(summary, standardizedSummary, by=c('lhs','op','rhs'))

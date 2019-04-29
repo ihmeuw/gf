@@ -112,19 +112,7 @@ for(v in logVars) {
 	data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
 }
 
-# rescale variables to have similar variance
-# see Kline Principles and Practice of SEM (2011) page 67
-scaling_factors = data.table(date=1)
-numVars = names(data)[!names(data)%in%c('orig_health_zone','health_zone','date')]
-for(v in numVars) {
-	s=1
-	while(var(data[[v]]/s)>1000) s=s*10
-	while(var(data[[v]]/s)<100) s=s/10
-	scaling_factors[,(v):=s]
-}
-for(v in names(scaling_factors)) data[, (v):=get(v)/scaling_factors[[v]]]
-
-# compute lags (after rescaling because it creates more NA's)
+# compute lags
 lagVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
 for(v in lagVars) { 
 	data[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='health_zone']
@@ -149,7 +137,7 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 # -------------------------------------------------------------------------
 # Save file
 print(paste('Saving:', outputFile4a)) 
-save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile4a)
+save(list=c('data', 'untransformed'), file=outputFile4a)
 
 # save a time-stamped version for reproducibility
 archive(outputFile4a)
