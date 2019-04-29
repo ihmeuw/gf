@@ -68,6 +68,9 @@ mfFile = paste0(mapDir, '/intervention_and_indicator_list.xlsx')
 
 # archive function
 source('./impact_evaluation/_common/archive_function.R')
+
+# function that runs a SEM as unrelated regressions
+source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 # ------------------------------------------------------------------------
 
 
