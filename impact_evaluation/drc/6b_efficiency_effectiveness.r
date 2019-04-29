@@ -16,12 +16,10 @@ load(outputFile5a)
 data1=copy(data)
 means1 = copy(means)
 summaries1 = copy(summaries)
-scaling_factors1=copy(scaling_factors)
 load(outputFile5b)
 data2=copy(data)
 means2 = copy(means)
 summaries2 = copy(summaries)
-scaling_factors2=copy(scaling_factors)
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
@@ -46,18 +44,18 @@ means1[, upper:=est+(1.96*se)]
 means1[, upper.std:=est.std+(1.96*se.std)]
 
 # swap in rescaled values?
-means1[, est_unrescaled:=est]
-means1[, se_unrescaled:=se]
-means1[, lower_unrescaled:=lower]
-means1[, upper_unrescaled:=upper]
+means1[, est:=est]
+means1[, se:=se]
+means1[, lower:=lower]
+means1[, upper:=upper]
 
 # estimate the combination of coefficients and their next downstream coefficient (mediation)
 # (uncertainty needs improving)
 mediation_means = merge(means1, means1, by.x='rhs', by.y='lhs')
-mediation_means[, est_unrescaled:=est.y*est.std.x]
-mediation_means[, se_unrescaled:=se_unrescaled.y*est.std.x]
-mediation_means[, lower_unrescaled:=est_unrescaled-(1.96*se_unrescaled)]
-mediation_means[, upper_unrescaled:=est_unrescaled+(1.96*se_unrescaled)]
+mediation_means[, est:=est.y*est.std.x]
+mediation_means[, se:=se.y*est.std.x]
+mediation_means[, lower:=est-(1.96*se)]
+mediation_means[, upper:=est+(1.96*se)]
 
 # pull in labels
 means1 = merge(means1, nodeTable1, by.x='lhs', by.y='variable')
@@ -84,12 +82,12 @@ pooled_means1 = merge(means1, long, by.x='rhs', by.y='variable', all.x=TRUE)
 # take the weighted average across funders
 pooled_means1[grepl('\\$',label_rhs), label_rhs:='Pooled Investment']
 byVars = c('lhs','label_lhs','label_rhs')
-pooled_means1 = pooled_means1[, .(est_unrescaled=weighted.mean(est_unrescaled, value), 
-	se_unrescaled=weighted.mean(se_unrescaled, value)), by=byVars]
+pooled_means1 = pooled_means1[, .(est=weighted.mean(est, value), 
+	se=weighted.mean(se, value)), by=byVars]
 	
 # get uncertainty
-pooled_means1[, lower_unrescaled:=est_unrescaled-(1.96*se_unrescaled)]
-pooled_means1[, upper_unrescaled:=est_unrescaled+(1.96*se_unrescaled)]
+pooled_means1[, lower:=est-(1.96*se)]
+pooled_means1[, upper:=est+(1.96*se)]
 # -----------------------------------------------
 
 
@@ -106,9 +104,9 @@ means2[, upper:=est+(1.96*se)]
 means2[, upper.std:=est.std+(1.96*se.std)]
 
 # exponentiate
-means2[, est_unrescaled:=1.01^est_unrescaled] # 1.01 to make it "per 1% increase in x"
-means2[, lower_unrescaled:=1.01^lower_unrescaled] # 1.01 to make it "per 1% increase in x"
-means2[, upper_unrescaled:=1.01^upper_unrescaled] # 1.01 to make it "per 1% increase in x"
+means2[, est:=1.01^est] # 1.01 to make it "per 1% increase in x"
+means2[, lower:=1.01^lower] # 1.01 to make it "per 1% increase in x"
+means2[, upper:=1.01^upper] # 1.01 to make it "per 1% increase in x"
 
 # pull in labels
 means2 = merge(means2, nodeTable2, by.x='lhs', by.y='variable')
@@ -123,8 +121,8 @@ setnames(means2, c('label.x','label.y'), c('label_lhs','label_rhs'))
 # ITN, ACT and RDT shipment costs
 for(c in c('ITN','ACT','RDT')) {
 	output = paste0(c, '_received_cumulative')
-	commodity_cost = pooled_means1[lhs==output,c('label_rhs','est_unrescaled','se_unrescaled'), with=F]
-	commodity_cost = commodity_cost[, .(est=sum(est_unrescaled), se=mean(se_unrescaled))]
+	commodity_cost = pooled_means1[lhs==output,c('label_rhs','est','se'), with=F]
+	commodity_cost = commodity_cost[, .(est=sum(est), se=mean(se))]
 	commodity_cost[, lower:=est+(1.96*se)]
 	commodity_cost[, upper:=est-(1.96*se)]
 	commodity_cost$se = NULL
@@ -152,8 +150,8 @@ mortVars = c('lead_malariaDeaths_rate', 'lead_case_fatality')
 
 # graph coefficients from inputs to activities
 p1 = ggplot(means1[lhs %in% actVars & rhs!='date'], 
-		aes(y=est_unrescaled, ymin=lower_unrescaled, 
-			ymax=upper_unrescaled, x=label_rhs)) + 
+		aes(y=est, ymin=lower, 
+			ymax=upper, x=label_rhs)) + 
 	geom_bar(stat='identity') + 
 	geom_errorbar(width=.25) + 
 	facet_wrap(~label_lhs, scales='free', ncol=1) + 
@@ -164,8 +162,8 @@ p1 = ggplot(means1[lhs %in% actVars & rhs!='date'],
 	
 # graph coefficients from inputs to outputs
 p2 = ggplot(mediation_means[lhs %in% outVars1 & !rhs.y %in% actVars], 
-		aes(y=est_unrescaled, ymin=lower_unrescaled, 
-			ymax=upper_unrescaled, x=label_rhs)) + 
+		aes(y=est, ymin=lower, 
+			ymax=upper, x=label_rhs)) + 
 	geom_bar(stat='identity') + 
 	geom_errorbar(width=.25) + 
 	facet_wrap(~label_lhs, scales='free', ncol=1) + 
@@ -176,8 +174,8 @@ p2 = ggplot(mediation_means[lhs %in% outVars1 & !rhs.y %in% actVars],
 	
 # graph coefficients from inputs to outputs
 p3 = ggplot(mediation_means[lhs %in% outVars2 & !rhs.y %in% actVars], 
-		aes(y=est_unrescaled, ymin=lower_unrescaled, 
-			ymax=upper_unrescaled, x=label_rhs)) + 
+		aes(y=est, ymin=lower, 
+			ymax=upper, x=label_rhs)) + 
 	geom_bar(stat='identity') + 
 	geom_errorbar(width=.25) + 
 	facet_wrap(~label_lhs, scales='free', ncol=1) + 
@@ -200,8 +198,8 @@ p4 = ggplot(means1[lhs %in% actVars & rhs!='date'],
 	
 # graph coefficients from outcomes to incidence
 p5 = ggplot(means2[lhs %in% incVars], 
-		aes(y=100-est_unrescaled*100, ymin=100-lower_unrescaled*100, 
-			ymax=100-upper_unrescaled*100, x=label_rhs)) + 
+		aes(y=100-est*100, ymin=100-lower*100, 
+			ymax=100-upper*100, x=label_rhs)) + 
 	geom_bar(stat='identity') + 
 	geom_errorbar(width=.25) + 
 	geom_hline(yintercept=0) + 
@@ -214,8 +212,8 @@ p5 = ggplot(means2[lhs %in% incVars],
 
 # graph coefficients from outcomes to incidence
 p6 = ggplot(means2[lhs %in% mortVars], 
-		aes(y=100-est_unrescaled*100, ymin=100-lower_unrescaled*100, 
-			ymax=100-upper_unrescaled*100, x=label_rhs)) + 
+		aes(y=100-est*100, ymin=100-lower*100, 
+			ymax=100-upper*100, x=label_rhs)) + 
 	geom_bar(stat='identity') + 
 	geom_errorbar(width=.25) + 
 	geom_hline(yintercept=0) + 
@@ -228,8 +226,8 @@ p6 = ggplot(means2[lhs %in% mortVars],
 	
 # graph pooled coefficients from inputs to activities
 p7 = ggplot(pooled_means1[lhs %in% actVars], 
-		aes(y=est_unrescaled, ymin=lower_unrescaled, 
-			ymax=upper_unrescaled, x=label_lhs)) + 
+		aes(y=est, ymin=lower, 
+			ymax=upper, x=label_lhs)) + 
 	geom_bar(stat='identity') + 
 	geom_errorbar(width=.25) + 
 	labs(title='Efficiency', subtitle='Activities', 
