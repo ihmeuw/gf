@@ -104,8 +104,8 @@ for(v in complVars) {
 }
 
 # log-transform some variables
-logVars = c('ITN_consumed_cumulative','ACTs_SSC_cumulative',
-	'RDT_completed_cumulative','SP_cumulative',
+logVars = c('ITN_consumed_cumulative','ACTs_SSC_cumulative', 'ACT_received_cumulative', 
+	'RDT_completed_cumulative','SP_cumulative', 'ITN_received_cumulative', 
 	'severeMalariaTreated_cumulative','totalPatientsTreated_cumulative')
 for(v in logVars) { 
 	data[, (v):=log(get(v))]
