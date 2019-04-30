@@ -46,7 +46,6 @@ urFits2[, se_ratio:=se/est]
 urFit2 = urFits2[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
 urFit2[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
 urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
-
 # -----------------------------------------------
 
 
