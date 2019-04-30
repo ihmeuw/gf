@@ -39,7 +39,7 @@ source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('orig_health_zone','health_zone','date',modelVars)
-data = data[, modelVars, with=FALSE]
+data = data[, unique(modelVars), with=FALSE]
 # ----------------------------------------------
 
 
