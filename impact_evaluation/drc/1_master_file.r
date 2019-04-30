@@ -30,8 +30,8 @@ rerun_outputs <- FALSE
 rerun_outcomes <- FALSE
 rerun_merge <- FALSE
 rerun_adjust <- FALSE
-rerun_explore <- FALSE
-rerun_models <- FALSE
+rerun_explore <- TRUE
+rerun_models <- TRUE
 rerun_analysis <- TRUE
 rerun_post <- FALSE
 
@@ -113,4 +113,4 @@ if (rerun_analysis==TRUE) {
 	source('./impact_evaluation/drc/6d_effect_sizes_by_hz.r')
 }
 
-print(paste('Master script completed. Outputs saved here:', outputFile3))
+print(paste('Master script completed. Outputs saved here:', ieDir))
