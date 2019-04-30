@@ -4,7 +4,7 @@ source('./impact_evaluation/drc/set_up_r.r')
 # FIRST HALF
 
 # manually if you know which jobs failed
-for(i in c(178)) {
+for(i in c(405,406,407)) {
 	system(paste0('qsub -cwd -N ie1_job_array -t ', i, 
 		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
@@ -18,12 +18,12 @@ load(outputFile4a)
 hzs = unique(data$health_zone)
 T = length(hzs)
 modelVersion = 'drc_malaria6'
-skip = c() # jobs to manually skip
+skip = c(405,406,407) # jobs to manually skip
 for(i in seq(T)) { 
 	if(file.exists(paste0(clustertmpDir2, 'first_half_summary_', i, '.rds'))) next
 	if(i %in% skip) next
 	system(paste0('qsub -cwd -N ie1_job_array -t ', i, 
-		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
+		' -l fthread=1 -l m_mem_free=2G -q all.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
 		modelVersion, ' 1 FALSE'))
