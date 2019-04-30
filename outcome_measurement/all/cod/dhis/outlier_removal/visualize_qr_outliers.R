@@ -138,7 +138,7 @@ if (set=='base') idVars = c('org_unit_id', 'element')
 if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable') 
 
 #------------------------------------
-# identify outliers where the residuals are larger than the median of the residuals +/- 10 MADS of the residuals
+# identify outliers where the residuals are larger than +/- 10 MADS of the fitted values
 # set threshold for different data sets:
 
 if (set=='pnls' | set == 'base'){
@@ -156,10 +156,6 @@ dt[ , thresh_var := mad_resid]
 # if mad of residuals is less than one, use SD 
 dt[ mad_resid < 1, thresh_var := sd_resid]
 dt[ , c('sd_resid', 'mad_resid') := NULL]
-
-# identify the thresholds for outliers using the thresh_var (mad or sd of residuals) + the median of the residuals
-dt[!all(is.na(resid)), thresh1 := median(resid, na.rm=TRUE) + (t1 * thresh_var), by = idVars]
-dt[!all(is.na(resid)), thresh2 := median(resid, na.rm=TRUE) + (t2 * thresh_var), by = idVars]
 
 # set lower and upper bounds
 # does this need to be for only !all(is.na) as well? not sure
@@ -410,6 +406,9 @@ for(i in seq(length(list_of_plots))) {
 
 dev.off()
 #--------------------------------
+
+
+#------------------------------------------------------------
 # remove outliers from the data set and perform final prep
 
 # function to remove outliers from base and save as a prepped file
@@ -428,23 +427,23 @@ base_remove = function(x) {
   dt[ , combine:=NULL]
   
   # eliminate only the outliers that do not violate the emerging trends rule
-  dt = dt[outlier_new!=TRUE]
+  dt = dt[outlier_new==FALSE]
   dt[  , c('outlier', 'outlier_new'):=NULL]
   
   # look at structure of original prepped data 
   og = readRDS(paste0( dir, '/prepped/base_services_prepped.rds'))
   head(og)        
   
-  #----------------------        
+  #---------------------- ----------------------------------------       
   # format to to look the same as prepped data 
   
   #----------------------
   # subset to the necessary elements and rename
   
-  dt[ ,c('fitted_value', 'resid', 'thresh_var', 'thresh1',
-         'thresh2', 'upper', 'lower', 'upper_mid', 'lower_mid',
+  dt[ ,c('fitted_value', 'resid', 'thresh_var', 'upper', 'lower', 'upper_mid', 'lower_mid',
          'facility', 'org_unit', 'element_fr'):=NULL]
   
+  # rename the elements to the english elements and label the data set
   setnames(dt, 'element', 'element_eng')
   dt[ , data_set:='A- Services de Base']
   
@@ -459,11 +458,15 @@ base_remove = function(x) {
   elements = readRDS(paste0(dir, 'meta_data/elements_fix.rds'))
   dt = merge(dt, elements, by='element_id', all.x=T)
   
-  #----------------------
-  dt = dt[ ,.(org_unit_id, element_id, org_unit, element_eng, date, category, 
-         value, org_unit_type, level, country, dps, health_zone,
-         health_area, element, data_set, coordinates)]
+  # fix to include correct element ids 
+  dt[ ,element_id:=NULL]
+  setnames(dt, 'old_element_id', 'element_id')
   
+  # format appropriately
+  dt = dt[ ,.(org_unit_id, element_id, org_unit, element_eng, date, category, value, 
+         org_unit_type, level, country, dps, health_zone, health_area, element, data_set, coordinates)]
+  
+
   #----------------------
   saveRDS(dt, paste0(dir, '/prepped/base_services_prepped_outliers_removed.rds'))
   return(dt)

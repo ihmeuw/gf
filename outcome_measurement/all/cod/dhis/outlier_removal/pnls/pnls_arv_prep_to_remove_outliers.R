@@ -49,11 +49,12 @@ dt = dt[!is.na(value)] # 52 values are listed as 'null', drop out missing values
 dt = dt[year(date) < 2019]
 # ---------------------------------------
 # keep only the malaria-related elements in base services
-if (set=='base') { 
-  dt[grepl('Paludisme', element) | grepl('TDR', element) | grepl('MILD', element) | grepl('Sulfadox', element), disease:='malaria']
-  dt[is.na(disease), disease:='hiv']
-  dt = dt[disease==qr_disease]
-  dt[ , disease:=NULL] }
+# if you do this, you will drop out anc visits and audrey will be sad
+# if (set=='base') { 
+#   dt[grepl('Paludisme', element) | grepl('TDR', element) | grepl('MILD', element) | grepl('Sulfadox', element), disease:='malaria']
+#   dt[is.na(disease), disease:='hiv']
+#   dt = dt[disease==qr_disease]
+#   dt[ , disease:=NULL] }
 
 # drop case and additional geographic information
 # there is no element_id as the elements are aggregated 
