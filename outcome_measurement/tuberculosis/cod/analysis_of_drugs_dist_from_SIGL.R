@@ -20,7 +20,7 @@ out_dir = 'J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/SNIS_
 # input files
 data <-"sigl_drc_01_2015_07_2018_prepped.rds"
 cat <- "data_elements_cod.csv"
-pnlp = "archive/imputedData_run2_agg_dps.rds"
+pnlp = "archive/imputedData_run2_agg_hz.rds"
 
 # output files 
 # older files:
@@ -30,7 +30,6 @@ pnlp = "archive/imputedData_run2_agg_dps.rds"
 # functions
 source('./core/standardizeHZNames.R')
 source('./core/standardizeDPSNames.R')
-# source('./outcome_measurement/malaria/cod/function_rename_variable.R')
 # -------------------------
 
 # ---------------------------------------------------
@@ -40,32 +39,41 @@ dt_pnlp <- readRDS(paste0(dir_pnlp, pnlp))
 # ---------------------------------------------------
 
 # ---------------------------------------------------
-dt_dist$dps <- standardizeDPSNames(dt_dist$dps)
-dt_pnlp$dps <- standardizeDPSNames(dt_pnlp$dps)
+# dt_dist$dps <- standardizeDPSNames(dt_dist$dps)
+# dt_pnlp$dps <- standardizeDPSNames(dt_pnlp$dps)
 setnames(dt_pnlp, "mean", "value")
-
-dist_dps <- dt_dist[, .(received = sum(received, na.rm = TRUE)), by = .(dps, date, drug)]
-dist_dps$date <- as.Date(dist_dps$date)
-dist_dps <- dist_dps[grepl("ASAQ", drug), ]
+# 
+# dist_dps <- dt_dist[, .(received = sum(received, na.rm = TRUE)), by = .(dps, date, drug)]
+# dist_dps$date <- as.Date(dist_dps$date)
+# dist_dps <- dist_dps[grepl("ASAQ", drug), ]
 
 dt_pnlp <- dt_pnlp[indicator %in% c("ASAQreceived")]
 dt_pnlp$date <- as.Date(dt_pnlp$date)
 dt_pnlp[, drug:= paste0(indicator, "_", subpopulation)]
 
 dt_pnlp$source = "PNLP"
-dist_dps$source = "SIGL"
+# dist_dps$source = "SIGL"
 
 dt_pnlp[, drug := gsub("received", "", drug)]
-dist_dps[, drug := gsub("12to59mos", "1to5yrs", drug)]
+# dist_dps[, drug := gsub("12to59mos", "1to5yrs", drug)]
+dt_snis = calc[ , drug := gsub("12to59mos", "1to5yrs", drug)]
 
 setnames(dt_pnlp, "value", "received")
-dt_pnlp = dt_pnlp[, names(dist_dps), with = FALSE]
+# dt_pnlp = dt_pnlp[, names(dist_dps), with = FALSE]
 vars = unique(dt_pnlp$drug)
-dist_dps = dist_dps[ drug %in% vars, ]
+# dist_dps = dist_dps[ drug %in% vars, ]
+dt_snis = dt_snis[drug %in% vars, ]
+dt_snis$source = "SNIS (calculated)"
+
+cols = names(dt_snis)[names(dt_snis) %in% names(dt_pnlp)]
+cols 
+
 dt_compare <- rbindlist(list(dist_dps, dt_pnlp), use.names=TRUE)
 
 
-pdf(paste0(out_dir, "comparison_of_pnlp_sigl_drugs_received_03_28_19.pdf"), height = 12, width = 15)
+
+
+# pdf(paste0(out_dir, "comparison_of_pnlp_sigl_drugs_received_03_28_19.pdf"), height = 12, width = 15)
 for (d in unique(dt_compare$dps)){
   g <- ggplot(dt_compare[dps == d], aes(x=date, y=received, color=source)) + 
     geom_point() + geom_line() +
@@ -78,6 +86,6 @@ for (d in unique(dt_compare$dps)){
     guides(color = guide_legend(title= "Data Source:"))
   print(g)
 }
-dev.off()
+# dev.off()
 
 
