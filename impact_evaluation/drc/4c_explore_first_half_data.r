@@ -67,7 +67,7 @@ histograms = lapply(modelVars, function(v) {
 		labs(title=paste('Histograms of', l), y='Frequency', x=l, 
 			subtitle=paste('Random Sample of', n, 'Health Zones'),
 			caption='Variables are post-transformation. Transformations may include: 
-			cumulative, log, logit, lag and variance-standardization.') + 
+			cumulative, log, logit and lag.') + 
 		theme_bw()
 })
 
@@ -99,7 +99,7 @@ tsPlots = lapply(seq(length(varGroups)), function(g) {
 		labs(title=paste('Time series of variables related to', l), y='Value', x='Date', 
 			subtitle=paste('Random Sample of', n, 'Health Zones'),
 			caption='Variables are post-transformation. Transformations may include: 
-			cumulative, log, logit, lag and variance-standardization.') + 
+			cumulative, log, logit and lag.') + 
 		theme_bw()
 }) 
 # ---------------------------------------------------------------------------------------

@@ -43,12 +43,6 @@ means1[, lower.std:=est.std-(1.96*se.std)]
 means1[, upper:=est+(1.96*se)]
 means1[, upper.std:=est.std+(1.96*se.std)]
 
-# swap in rescaled values?
-means1[, est:=est]
-means1[, se:=se]
-means1[, lower:=lower]
-means1[, upper:=upper]
-
 # estimate the combination of coefficients and their next downstream coefficient (mediation)
 # (uncertainty needs improving)
 mediation_means = merge(means1, means1, by.x='rhs', by.y='lhs')
