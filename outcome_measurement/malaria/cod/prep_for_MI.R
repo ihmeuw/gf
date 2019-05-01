@@ -101,45 +101,45 @@ fullData <- fread( paste0(dir_prepped, fullData) )
 # ----------------------------------------------     
 # take a subset of fullData that will be used in MI
 # ---------------------------------------------- 
-    all_vars <- c(colnames(fullData))
-      
-    # remove unneccessary id variables
-    id_vars <- c("V1", "province", "dps", "dps_in_original_data", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month",
-                 "year", "stringdate", "date", "natl", "natl_name", "province11", "province11_name", "province26", "province26_name", "dps_name_2015", "dps_name_2014", 
-                 "dps_name_2013", "dps_name_2012", "dps_name_2010to2011")
-    measured_vars <- all_vars[!all_vars %in% id_vars]
+  all_vars <- c(colnames(fullData))
     
-    id_vars <- c("dps", "health_zone", "date", "donor", "operational_support_partner", "population")
-    vars_to_keep <- c(id_vars, measured_vars)
-    
-    ameliaDT <- fullData[, vars_to_keep, with=FALSE]
-                         
-    # remove internal totals and/or not useful variables 
-    remove_vars <- c("reports_expected", "reports_received", "ASAQused_total", "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete")
-    ameliaDT <- ameliaDT[, -remove_vars, with=FALSE]
+  # remove unneccessary id variables
+  id_vars <- c("V1", "province", "dps", "dps_in_original_data", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month",
+               "year", "stringdate", "date", "natl", "natl_name", "province11", "province11_name", "province26", "province26_name", "dps_name_2015", "dps_name_2014", 
+               "dps_name_2013", "dps_name_2012", "dps_name_2010to2011")
+  measured_vars <- all_vars[!all_vars %in% id_vars]
+  
+  id_vars <- c("dps", "health_zone", "date", "donor", "operational_support_partner", "population")
+  vars_to_keep <- c(id_vars, measured_vars)
+  
+  ameliaDT <- fullData[, vars_to_keep, with=FALSE]
+                       
+  # remove internal totals and/or not useful variables 
+  remove_vars <- c("reports_expected", "reports_received", "ASAQused_total", "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete")
+  ameliaDT <- ameliaDT[, -remove_vars, with=FALSE]
 # ----------------------------------------------   
 
 # ----------------------------------------------     
 # take a subset of fullData that will be used in MI
 # ---------------------------------------------- 
-    # further outlier removal - using QR:
-    
-    # noticed problem with duplicate values:
-    ind = names(ameliaDT)[ grepl(names(ameliaDT), pattern = "ASAQ")]
-    ind = ind[1:8]
-    id_vars = c('health_zone', 'dps', 'date')
-
-    example = ameliaDT[, c(id_vars, ind), with = FALSE]
-    
-    duplicates = example[ duplicated(example[, ind, with = FALSE])]
-    # remove rows of all NA
-    duplicates = duplicates[ rowSums(is.na(duplicates)) != 8]
-    # remove rows of all 0s
-    duplicates = duplicates[  rowSums(duplicates[, -1:-3]) != 0,  ]
-
-    duplicates_count = duplicates[ duplicated(duplicates[, ind, with = FALSE])]
-    duplicates_count2 = duplicates_count[ duplicated(duplicates_count[, ind, with = FALSE])]
-    duplicates_count3 = duplicates_count2[ duplicated(duplicates_count2[, ind, with = FALSE])]
+  # further outlier removal - using QR:
+  
+  # noticed problem with duplicate values:
+  ind = names(ameliaDT)[ grepl(names(ameliaDT), pattern = "ASAQ")]
+  ind = ind[1:8]
+  id_vars = c('health_zone', 'dps', 'date')
+  
+  example = ameliaDT[, c(id_vars, ind), with = FALSE]
+  
+  duplicates = example[ duplicated(example[, ind, with = FALSE])]
+  # remove rows of all NA
+  duplicates = duplicates[ rowSums(is.na(duplicates)) != 8]
+  # remove rows of all 0s
+  duplicates = duplicates[  rowSums(duplicates[, -1:-3]) != 0,  ]
+  
+  duplicates_count = duplicates[ duplicated(duplicates[, ind, with = FALSE])]
+  duplicates_count2 = duplicates_count[ duplicated(duplicates_count[, ind, with = FALSE])]
+  duplicates_count3 = duplicates_count2[ duplicated(duplicates_count2[, ind, with = FALSE])]
 # ---------------------------------------------- 
     
 # ---------------------------------------------- 
