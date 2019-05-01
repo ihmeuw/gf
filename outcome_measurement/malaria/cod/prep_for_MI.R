@@ -4,7 +4,7 @@
   # 6/15/18
   # prep of PNLP data for multiple imputation
     setwd('C:/local/gf/')
-  # Cleaned up/edited/redone - 02/19 and 03/19
+  # Cleaned up/edited/redone - 02/19 through 5/19
 
   # TO DO:
   # Check with David:
@@ -19,88 +19,82 @@
 # ----------------------------------------------
 
 # --------------------
-  # Set up R / install packages
-    rm(list=ls())
-    library(data.table)
-    library(reshape2)
-    library(stringr)
-    library(RColorBrewer)
-    library(ggplot2)
-    library(lubridate)
-    library(readxl)
-    library(stats)
-    library(rlang)
-    library(zoo)
-    library(tidyr)
-    library(dplyr)
+# Set up R / install packages
+rm(list=ls())
+library(data.table)
+library(reshape2)
+library(stringr)
+library(RColorBrewer)
+library(ggplot2)
+library(lubridate)
+library(readxl)
+library(stats)
+library(rlang)
+library(zoo)
+library(tidyr)
+library(dplyr)
 # --------------------
 
 # ----------------------------------------------
-  # Overview - Files and Directories
+# Overview - Files and Directories
 # ---------------------------------------------- 
-    # data directory
-      dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/archive/"
-      
-    # input files
-      fullData <- "fullData_dps_standardized.csv"
-      
-    # output files
-      output_dt <- "PNLP_dt_forMI_updated_3_11_19.rds"
-      
-    # functions:
-      getmode <- function(v) {
-        uniqv <- unique(v)
-        uniqv[which.max(tabulate(match(v, uniqv)))]
-      }
-      
-  # dt = fread(paste0( dir_prepped, "PNLP_2010to2017_prepped.csv"), stringsAsFactors = FALSE)
-  # dt = readRDS(paste0('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/archive/imputedData_run2_agg_hz.rds'))
+# data directory
+dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/archive/"
+
+# input files
+fullData <- "fullData_dps_standardized.csv"
+
+# output files
+output_dt <- "PNLP_dt_forMI_updated_3_11_19.rds"
+
+# dt = fread(paste0( dir_prepped, "PNLP_2010to2017_prepped.csv"), stringsAsFactors = FALSE)
+# dt = readRDS(paste0('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/archive/imputedData_run2_agg_hz.rds'))
 # ----------------------------------------------   
 
 # ----------------------------------------------     
-  # read in data
+# read in data
 # ---------------------------------------------- 
-    fullData <- fread( paste0(dir_prepped, fullData) ) 
+fullData <- fread( paste0(dir_prepped, fullData) ) 
 # ----------------------------------------------     
       
 # ----------------------------------------------     
-  # ADD TO PREP CODE ****************************** 
+# ADD TO PREP CODE ****************************** 
 # ----------------------------------------------  
-    # change where month/date is duplicated (in original data) ******************************
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "342", date:= "2016-07-01" ]
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "320", date:= "2016-08-01" ]
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "326", date:= "2016-09-01" ]
+  # change where month/date is duplicated (in original data) ******************************
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "342", date:= "2016-07-01" ]
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "320", date:= "2016-08-01" ]
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "326", date:= "2016-09-01" ]
+  
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "489", date:= "2017-07-01" ]
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "551", date:= "2017-08-01" ]
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "596", date:= "2017-09-01" ]
+  
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "359", date:= "2016-07-01" ]
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "438", date:= "2016-08-01" ]
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "415", date:= "2016-09-01" ]
+  
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "370", date:= "2017-07-01" ]
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "402", date:= "2017-08-01" ]
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "361", date:= "2017-09-01" ]
+  
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "491", date:= "2016-07-01" ]
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "446", date:= "2016-08-01" ]
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "480", date:= "2016-09-01" ]
+  
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "539", date:= "2017-07-01" ]
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "525", date:= "2017-08-01" ]
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "617", date:= "2017-09-01" ]
 
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "489", date:= "2017-07-01" ]
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "551", date:= "2017-08-01" ]
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "596", date:= "2017-09-01" ]
-      
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "359", date:= "2016-07-01" ]
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "438", date:= "2016-08-01" ]
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "415", date:= "2016-09-01" ]
-      
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "370", date:= "2017-07-01" ]
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "402", date:= "2017-08-01" ]
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "361", date:= "2017-09-01" ]
-      
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "491", date:= "2016-07-01" ]
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "446", date:= "2016-08-01" ]
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "480", date:= "2016-09-01" ]
-      
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "539", date:= "2017-07-01" ]
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "525", date:= "2017-08-01" ]
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "617", date:= "2017-09-01" ]
-      
   # Where DPS = 0, those health zones (bambu and manguredj) weren't in the most recent year of data (2017) but in retrospect it seems like
   # they should be other health zones/dps - change so they match up
-      
-      # bambu-nord kivu is probably the same as bambo-nord kivu 
-      fullData[ dps == "0" & health_zone == "bambu", dps := "nord kivu"]
-      fullData[ dps == "nord kivu" & health_zone == "bambu", health_zone := "bambo"]
-      
-      # manguredj and mangupa both probably the same ('manguredjipa')
-      fullData[ dps == "0" & health_zone == "manguredj", dps := "nord kivu"]
-      fullData[ dps == "nord kivu" & health_zone == "manguredj", health_zone := "mangupa"]
+  
+  # bambu-nord kivu is probably the same as bambo-nord kivu 
+  fullData[ dps == "0" & health_zone == "bambu", dps := "nord kivu"]
+  fullData[ dps == "nord kivu" & health_zone == "bambu", health_zone := "bambo"]
+  
+  # manguredj and mangupa both probably the same ('manguredjipa')
+  fullData[ dps == "0" & health_zone == "manguredj", dps := "nord kivu"]
+  fullData[ dps == "nord kivu" & health_zone == "manguredj", health_zone := "mangupa"]
 # ----------------------------------------------   
 
       
