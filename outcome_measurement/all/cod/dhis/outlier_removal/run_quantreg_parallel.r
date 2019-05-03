@@ -43,19 +43,15 @@ library(fst) # to save data tables as .fst for faster read/write and full random
 user = Sys.info()[['user']]
 
 # choose the data set you want to load
-set = 'base'
+set = 'pnlp'
 
-# ------------------------------------------------
 #------------------------------------
 # clean up parallel files
 #------------------------------------
 # before starting the process, delete the existing files on the cluster
 # this allows us to avoid duplication or aggregating old files 
 
-system(paste0('rm /ihme/scratch/users/', user, '/qr_results/*'))
-system(paste0('rm /ihme/scratch/users/', user, '/quantreg_output/*'))
-system(paste0('rm /ihme/scratch/users/', user, '/array_table_for_qr.csv'))
-system(paste0('rm /ihme/scratch/users/', user, '/data_for_qr.fst'))
+system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) # removes all files and folders within the directory
 # ------------------------------------------------
 
 #------------------------------------
@@ -66,7 +62,6 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-PATH = paste0('/ihme/scratch/users/', user, '/quantreg_output')
 scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
 parallelDir = paste0(scratchDir, 'parallel_files/')
 if (!file.exists(scratchDir)) dir.create(scratchDir)
@@ -84,7 +79,7 @@ if (!file.exists(oeDir)) dir.create(oeDir)
 # initial file is read off of j 
 # output file is the aggregate of the files from /ihme/scratch
 
-if (set=='sigl') {inFile = paste0(dir, 'sigl_for_qr.rds') 
+if (set=='sigl') {inFile = paste0(dir, 'prepped/sigl/sigl_for_qr.rds') 
 outFile = paste0(dir, 'sigl_quantreg_imputation_results.rds') }
 
 if (set=='base') {inFile = paste0(dir, 'outliers/base_to_screen.rds')
@@ -94,7 +89,7 @@ if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement
 outFile = paste0(dir, 'outliers/pnlp_quantreg_results.rds')}
 
 #------------------------------------
-# interim files
+# set arguments and interim files to use on the cluster
 arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
 
 # whether or not to resubmit jobs that have completed already
@@ -112,6 +107,11 @@ impute = TRUE
 
 dt = readRDS(inFile)
 
+# format the pnlp data in the same format as the base data
+# this assigns an element id to each variable and refered to the health zone as an org_unit
+if (set=='pnlp') { setnames(dt, 'health_zone', 'org_unit_id')
+  dt[, element_id:=.GRP, by='variable'] }
+
 # sort the data table so the indexing works correctly when retrieving data using fst
 dt = setorder(dt, org_unit_id)
 
@@ -119,6 +119,9 @@ dt = setorder(dt, org_unit_id)
 array_table = data.table(expand.grid(unique(dt$org_unit_id)))
 setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
+
+# for testing, subset to 20 rows
+array_table = array_table[1:20, ]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, arrayFile)
@@ -137,8 +140,12 @@ N = nrow(array_table)
 # base data set: run value~date on each org_unit and element
 if (set=='base') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_base.R'))
 
+# base data set: run value~date on each org_unit and element
+if (set=='pnlp') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N pnlp_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_base.R'))
+
 # sigl data set: run value~date on each org_unit, element, and variable
 if (set=='sigl') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.r'))
+
 
 #----------------------------------------------------------
 #------------------------------------
@@ -167,6 +174,9 @@ for (j in seq(N)) {
   flush.console() 
 }
 
+# change the name of the health zones back to 'health_zone'
+if (set=='pnlp') setnames(dt, 'org_unit_id', 'health_zone')
+
 # save full data
 saveRDS(fullData, outFile)
-#------------------------------------------------------------
+#------------------------------------
