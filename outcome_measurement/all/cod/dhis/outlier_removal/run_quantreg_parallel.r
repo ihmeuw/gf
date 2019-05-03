@@ -43,7 +43,7 @@ library(fst) # to save data tables as .fst for faster read/write and full random
 user = Sys.info()[['user']]
 
 # choose the data set you want to load
-set = 'pnlp'
+set = 'base'
 
 #------------------------------------
 # clean up parallel files
@@ -142,13 +142,14 @@ write.fst(dt, scratchInFile)
 N = nrow(array_table)
 
 # base data set: run value~date on each org_unit and element
-if (set=='base') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_base_pnlp.R'))
+if (set=='base') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R'))
 
 # sigl data set: run value~date on each org_unit, element, and variable
 if (set=='sigl') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.R'))
 
 # pnlp data set: run value~date on each org_unit and element
-if (set=='pnlp') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N pnlp_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_base_pnlp.R'))
+if (set=='pnlp') {
+  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N pnlp_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) }
 
 #----------------------------------------------------------
 #------------------------------------
