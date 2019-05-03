@@ -1,53 +1,101 @@
-# handle incoming arguments
-e = commandArgs()[4]
-o = commandArgs()[5]
-i = commandArgs()[6]
-print(e)
-print(o)
-print(i)
+#------------------------------------
+# This script is run on the cluster by base_quantreg_parallel.r
+#------------------------------------
 
-# detect if operating on windows or on the cluster 
 library(data.table)
 library(quantreg)
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+library(fst) 
 
-# set the directory for output
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+user_name = Sys.info()[['user']]
 
-# load the data from scratch
-dt = readRDS('/ihme/scratch/users/ccarelli/base_to_screen.rds')
+#------------------------------------
+# handle arguments
+#------------------------------------
+
+# get the task_id to index the array table
+i = as.integer(Sys.getenv("SGE_TASK_ID"))
+print(i)
+
+# file paths
+scratchDir = paste0('/ihme/scratch/users/', user_name, '/quantreg/')
+scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
+arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
+parallelDir = paste0(scratchDir, 'parallel_files/')
+outFile = paste0(parallelDir, '/quantreg_output', i, '.fst')
+
+
+# read in the array table 
+array_table = fread(arrayFile)
+
+# read org unit from the array table
+o = array_table[i]$org_unit_id # unique facility id
+print(o)
+#------------------------------------
+
+#-----------------------------------
+# load the data & subset to task_id/org_unit
+#------------------------------------
+
+dt = read.fst(scratchInFile)
 dt = data.table(dt)
+subset = dt[org_unit_id==o] 
 
-# subset the data
-subset = dt[element_id==e & org_unit_id==o] 
-head(subset)
+#------------------------------------
 
-# skip cases that will fail
-n = nrow(subset)
-var = var(subset$value)
-nx = length(unique(subset$date))
+#------------------------------------
+# loop through drug and variable, run quant reg, and then combine results
+#------------------------------------
+combined_qr_results = data.table()
 
-# skip if less than 3 data points
-if(n>=3 & var!=0 & nx>=2) {  
-  
-  # add fixed effect on group if more than one group exists
-  form = 'value~date'
-  form = as.formula(form)
-  
-  # run quantreg
-  quantFit = rq(form, data=subset, tau=0.5)
-  summary(quantFit)
-  
-  # list the residuals and add them to the out file
-  r = resid(quantFit)
-  subset[, fitted_value:=predict(quantFit)]
-  subset[, resid:=r]
-  head(subset)
-} else { 
-  subset[, fitted_value:=NA]
-  subset[, resid:=NA]
-}
+for (e in unique(subset$element_id)) {
+    
+  # subset the data further based on loop parameters for qr
+    subset_further = subset[element_id == e] 
+    
+    # skip cases that will fail
+    n = nrow(subset_further[!is.na(value), ])
+    print(n)
+    var = var(subset_further$value, na.rm=T)
+    print(var)
+    nx = length(unique(subset_further$date))
+    print(nx)
+    
+    # skip if less than 3 data points or variance is 0
+    if(n>=3 & var!=0 & nx>=2) {  
+      # create formula
+      form = 'value~date'
+      
+      # # add fixed effect on group if more than one group exist
+      form = as.formula(form)
+      
+      # run quantreg
+      quantFit <- rq(form, data=subset_further, tau=0.5)
+      summary(quantFit)
+      
+      # list the residuals and add them to the out file
+      r = resid(quantFit)
+      subset_further[, fitted_value:=predict(quantFit)]
+      subset_further[, resid:=r]
+      head(subset_further)
+    } else { 
+      subset_further[, fitted_value:=NA]
+      subset_further[, resid:=NA]
+    }
+    
+    # for each iteration of the loop, add the subset of data to a combined results data table.
+    if(nrow(combined_qr_results)==0){
+      combined_qr_results = subset_further # first time through, just set combined results to be = the data 
+    } else if (nrow(combined_qr_results)>0){
+      combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) # subsequent times through, add in combined results
+    }
+    print(paste0("completed loop with element_id =", e))
+  }
 
-# save
-print(paste0('Saving: ', paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i, '.rds')))
-saveRDS(subset, paste0('/ihme/scratch/users/ccarelli/qr_results/quantreg_output', i, '.rds'))
+
+#------------------------------------
+# Then, save the combined data set which has quant reg imputation results for all combinations of drug/variable for a specific org_unit
+# (i will be = number of org units) / this will be done for each org_unit!
+#------------------------------------
+print(paste0('Saving: ', outFile))
+write.fst(combined_qr_results, outFile)
+#------------------------------------
