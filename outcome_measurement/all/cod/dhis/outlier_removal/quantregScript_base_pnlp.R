@@ -6,7 +6,7 @@ library(data.table)
 library(quantreg)
 library(fst) 
 
-user_name = Sys.info()[['user']]
+user = Sys.info()[['user']]
 
 #------------------------------------
 # handle arguments
@@ -17,7 +17,7 @@ i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
 
 # file paths
-scratchDir = paste0('/ihme/scratch/users/', user_name, '/quantreg/')
+scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
 arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
 parallelDir = paste0(scratchDir, 'parallel_files/')
@@ -38,6 +38,7 @@ print(o)
 
 dt = read.fst(scratchInFile)
 dt = data.table(dt)
+dt[ ,date:=as.Date(date)]
 subset = dt[org_unit_id==o] 
 
 #------------------------------------

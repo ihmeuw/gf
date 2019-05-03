@@ -43,7 +43,7 @@ library(fst) # to save data tables as .fst for faster read/write and full random
 user = Sys.info()[['user']]
 
 # choose the data set you want to load
-set = 'sigl'
+set = 'pnlp'
 
 #------------------------------------
 # clean up parallel files
@@ -124,7 +124,7 @@ setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
 # for testing, subset to a few rows
-array_table = array_table[1:2, ]
+array_table = array_table[1, ]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, arrayFile)
