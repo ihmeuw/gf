@@ -1,5 +1,5 @@
 #------------------------------------
-# This script is run on the cluster by base_quantreg_parallel.r
+# This script is run on the cluster by run_quantreg_parallel.r
 #------------------------------------
 
 library(data.table)
@@ -69,8 +69,8 @@ for (e in unique(subset$element_id)) {
       form = as.formula(form)
       
       # run quantreg
-      quantFit <- rq(form, data=subset_further, tau=0.5)
-      summary(quantFit)
+      quantFit = rq(form, data=subset_further, tau=0.5)
+      summary(quantFit) 
       
       # list the residuals and add them to the out file
       r = resid(quantFit)
