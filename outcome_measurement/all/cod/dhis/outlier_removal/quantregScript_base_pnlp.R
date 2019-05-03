@@ -38,7 +38,7 @@ print(o)
 
 dt = read.fst(scratchInFile)
 dt = data.table(dt)
-dt[ ,date:=as.Date(date)]
+dt[ ,date:=as.Date(date)] # date must be formatted as a date variable
 subset = dt[org_unit_id==o] 
 
 #------------------------------------
