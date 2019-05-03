@@ -95,7 +95,7 @@ outFile = paste0(dir, 'outliers/base_quantreg_results.rds')
 resubmitAll = TRUE
 
 # whether or not to delete all files from parallel runs at the end
-cleanup = TRUE
+cleanup = FALSE
 
 # whether or not to impute missing data as part of the qr 
 # (set as a character TRUE/FALSE so it can be read as a command arg)
