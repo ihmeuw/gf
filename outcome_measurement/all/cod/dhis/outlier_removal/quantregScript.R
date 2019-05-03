@@ -23,7 +23,6 @@ arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
 parallelDir = paste0(scratchDir, 'parallel_files/')
 outFile = paste0(parallelDir, '/quantreg_output', i, '.fst')
 
-
 # read in the array table 
 array_table = fread(arrayFile)
 
@@ -38,7 +37,7 @@ print(o)
 
 dt = read.fst(scratchInFile)
 dt = data.table(dt)
-dt[ ,date:=as.Date(date)] # date must be formatted as a date variable
+dt[ , date:=as.Date(date)] # date must be formatted as a date variable
 subset = dt[org_unit_id==o] 
 
 #------------------------------------

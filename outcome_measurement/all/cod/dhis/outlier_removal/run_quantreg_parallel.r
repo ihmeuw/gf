@@ -117,7 +117,7 @@ if (set=='sigl') {dt[, element_id:=.GRP, by='drug']
 
 # sort the data table so the indexing works correctly when retrieving data using fst
 dt = setorder(dt, org_unit_id)
-dat[ ,date:=as.Date(date)] # regression only runs with date as a date variable
+dt[ ,date:=as.Date(date)] # regression only runs with date as a date variable
 
 # make array table to set up for submitting an array job
 array_table = data.table(expand.grid(unique(dt$org_unit_id)))
@@ -125,7 +125,7 @@ setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
 # for testing, subset to a few rows
-array_table = array_table[1, ]
+array_table = array_table[1:5, ]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, arrayFile)
@@ -142,14 +142,7 @@ write.fst(dt, scratchInFile)
 N = nrow(array_table)
 
 # base data set: run value~date on each org_unit and element
-if (set=='base') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R'))
-
-# sigl data set: run value~date on each org_unit, element, and variable
-if (set=='sigl') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.R'))
-
-# pnlp data set: run value~date on each org_unit and element
-if (set=='pnlp') {
-  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N pnlp_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) }
+system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
 
 #----------------------------------------------------------
 #------------------------------------
