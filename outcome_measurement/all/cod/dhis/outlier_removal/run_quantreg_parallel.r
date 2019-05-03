@@ -117,6 +117,7 @@ if (set=='sigl') {dt[, element_id:=.GRP, by='drug']
 
 # sort the data table so the indexing works correctly when retrieving data using fst
 dt = setorder(dt, org_unit_id)
+dat[ ,date:=as.Date(date)] # regression only runs with date as a date variable
 
 # make array table to set up for submitting an array job
 array_table = data.table(expand.grid(unique(dt$org_unit_id)))
