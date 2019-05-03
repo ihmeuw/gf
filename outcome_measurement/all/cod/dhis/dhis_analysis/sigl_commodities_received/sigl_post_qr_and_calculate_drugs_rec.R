@@ -10,111 +10,171 @@ setwd('C:/local/gf/')
   # - handle values still missing with median imputation
 
 # Then aggregate to hz level and calculate drugs/commodities received
+
+# 4/23/19 updated with post qr and outliers labeled data
 # ----------------------------------------------
 
 # --------------------
 # Set up R / install packages
-## -------------------
+# -------------------
 rm(list=ls())
 library(data.table)
 library(lubridate)
 library(stringr)
 library(ggplot2)
 library(dplyr)
-# -------------------------
+library(readxl)
+# -------------------
+
+# ----------------------------------------------
 # Files and directories
+# ----------------------------------------------
 # detect if operating on windows or on the cluster 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set directories
-data_path <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
-catalogue_path <- paste0(root, "/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/catalogues/")
+dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # input files
-data <-"sigl_prepped.rds"
-cat <- "data_elements_cod.csv"
-imputed_data = paste0(data_path, 'sigl_quantreg_imputation_results.rds')
+data = "prepped/sigl/sigl_drugs_prepped_outliers_labeled.rds"
+pre_qr = "prepped/sigl/sigl_for_qr.rds"
+more_outliers = 'outliers/sigl/sigl_more_outliers_to_remove.xlsx'
 
-# output files 
-prepped_drug_data <- "drugs_consumed_lost_available_update_3_6_19.rds"
-prepped_for_qr = "sigl_for_qr.rds"
-post_qr = "sigl_quantreg_imputation_results.rds"
-drugs_dist = "drugs_dist_update_3_28_19.rds"
+# output file
+outData = 'prepped/sigl/sigl_prepped_drugs_received.rds'
+# ----------------------------------------------
 
-# # functions
-# source('./core/standardizeHZNames.R')
-# -------------------------# load in imputed data:
-dt = readRDS(paste0(data_path, post_qr))
-dt[, date := as.Date(date, origin = "1970-01-01")]
+# ----------------------------------------------
+# load data
+# ----------------------------------------------
+dt = readRDS(paste0(dir, data)) 
+outliers = as.data.table(read_xlsx(paste0(dir, more_outliers)))
+outliers[,date := as.Date(date)]
+# ----------------------------------------------
 
-# # Figure out how much of the missingness could be from a facility not stocking certain drugs:
-# # total missing values = 6566509
-# missing = dt[is.na(value), .(num_missing= .N), by = c("org_unit_id", "drug")] # this will be across all time/all variables of a drug...
-# # right now all missing would be = 39 NAs
-# sum(missing[num_missing == 39, num_missing]) / sum(missing$num_missing) # 62 % of all missing is due to facilities with no data at all (whole time series) for the drug (both avail and consumed)
-# # Then, the same, excluded the variable "lost"
-# missing = dt[is.na(value), .(num_missing= .N), by = c("org_unit_id", "drug", "variable")] 
-# missing[ variable == "lost", sum(num_missing)] # = 2654006, so 40% of total missing is from the "lost" variable
-# missing = dt[is.na(value) & variable != "lost", .(num_missing= .N), by = c("org_unit_id", "drug")] 
-# sum(missing[num_missing == 26, num_missing]) # 2752906 = the number missing the full time series for drugs not including the lost variable
-# # 2752906 + 2654006 = 5406912 missing due to facility missing all data for the drug or the lost variable missing
-# # 5406912 / 6566509 * 100 = 82% of the missing data that is still missing could potentially be account for other ways...
-# # 6566509 - 5406912 = 1159597 data points still missing
+# ----------------------------------------------
+# Further data prep to be able to calculate drugs/commodities received
+# ----------------------------------------------
+# Impute missing values with fitted value where got_imputed == "yes" and number_of_values is greater than or equal to 5
+dt[got_imputed == "yes" & number_of_values >= 5, value := fitted_value]
+dt[got_imputed == "yes" & number_of_values < 5, got_imputed := "no"]
 
-# now, exclude org_unit_id - drug where all values are NA by facility and drug, across time and specific variable (realized I could probably have used all(is.na(x))...) 
-# missing = dt[is.na(value), .(num_missing= .N), by = c("org_unit_id", "drug")] 
-# exclude_from_rect = unique( missing[num_missing == 39, .(org_unit_id, drug)] )
-# dt_for_calc = anti_join(dt, exclude_from_rect, by = c("org_unit_id", "drug"))
-# dt_for_calc = as.data.table(dt_for_calc)
-dt[, completely_missing:=all(is.na(value)), by=c('org_unit_id','drug')]
-dt = dt[completely_missing==FALSE]
+# remove manually identified outliers
+dt = merge(dt, outliers, all = TRUE, by = c('org_unit_id', 'date', 'drug', 'variable', 'value'))
+dt[outlier.y == TRUE, outlier.x:= TRUE]
+setnames(dt, 'outlier.x', 'outlier')
+dt[,outlier.y := NULL]
 
-# verification of results step - compare median of observed values by id vars to the median of imputed values
-# should be similar, so note any cases that are really different
-check1= dt[is.na(got_imputed) & skipped_qr == "no", .(med_observed = median(value, na.rm = TRUE)), by = .(org_unit_id, level, drug, variable)]
-check2= dt[got_imputed == "yes" & skipped_qr == "no", .(med_imputed = median(value, na.rm = TRUE)), by = .(org_unit_id,level,  drug, variable)]
-check3= dt[skipped_qr == "no", .(med_fitted = median(fitted_value, na.rm = TRUE)), by = .(org_unit_id, level, drug, variable)]
+# Replace outlier values with fitted values
+dt[outlier == TRUE, value := fitted_value]
 
-dt[ got_imputed== "yes", value := NA ]
-# want to try changing minimum # of values needed to run QR from 3 to 4..
-# get the number of values that were present before QR imputation
-check4 = dt[!is.na(value) & skipped_qr == "no", .N, by = .(org_unit_id, level, drug, variable) ]
+# Fix QR results where fitted value is negative - replace with 0
+dt[fitted_value < 0 & got_imputed == "yes", value := 0]
+  # there are 31 cases where value is still less than 0 because the orig value was an outlier and we replaced it with fitted
+  dt[fitted_value < 0 & outlier == TRUE, value := 0]
+  if( nrow(dt[value < 0, ]) != 0 ) stop ("You have negative values in the data set - fix this!")
 
-check = merge(check1, check2, all = TRUE)
-check = merge(check, check3, all = TRUE)
-check = merge(check, check4, all = TRUE)
+# Replace > 99.5 percentile with missing where QR was skipped (some of these look to be outliers, but since
+# QR didn't run on them, they won't be caught with the other outlier method.)
+dt[skipped_qr == "yes" & value > limit, outlier := TRUE ]
+dt[skipped_qr == "yes" & value > limit, value := NA ]
 
-check[, med_imputed := round(med_imputed, digits = 2)]
-check[, abs_diff := abs(med_observed - med_imputed) ]
+# Use median imputation to fill in missing where QR was skipped and/or reset to missing when min to run QR was raised to 5
+dt[ , median_by_id_vars := median(value, na.rm = TRUE), by = .(org_unit_id, drug, variable)]
+dt[ is.na(value), value := median_by_id_vars]
 
-dt = merge(dt, check, all = TRUE, by = c('org_unit_id', 'drug', 'variable'))
+# check number still missing:
+dt[is.na(value), .N] # 609752
 
-# make figures that show an example of good fit and bad fit
-o = 'kVjIG3QXgoX'
-d = 'RH_150mg+75mg'
+# where lost is na, set it to be 0
+dt[variable == "lost" & is.na(value), value := 0]
 
-ex = ggplot( dt[ org_unit_id == o & drug == d, ], aes(x=date, y=value)) +
-  geom_point(size = 2) +
-  geom_line(aes(x=date, y=fitted_value), alpha = 0.5) +
-  geom_point(data= dt[  org_unit_id == o & drug == d & got_imputed == "yes" ], aes(x=date, y = fitted_value), color='#d73027', alpha=0.8) +
-  facet_wrap(~ variable, scales = "free") + 
-  theme_bw()
-ex
+# check number still missing:
+dt[is.na(value), .N] # 46657  # I think based on what we've done so far these will only be cases where one variable is completely missing but another
+                             # is actually present in the data
+# ----------------------------------------------
 
-# set fitted values back to value where imputation was true
-dt[ got_imputed == "yes", value := fitted_value]
-# ---------------------------------------------------
+# ----------------------------------------------
+# make figures of outliers where QR was skipped 
+# ----------------------------------------------
+# Set of histograms for where QR was skipped, by level/drug/variable
+loop = unique(dt[,.(level, drug, variable)])
+loop = loop[!is.na(level),]
 
-# ---------------------------------------------------
-# Calculate drugs received(/distributed?) using the formula:
-# received(n) = available(n) + consumed(n) + lost(n) - avialable(n-1)
-# ---------------------------------------------------
-# aggregate to hz level first to improve calculation.
-dt_for_calc = dt[, c("variable_id", "element_id", "got_imputed", "skipped_qr", "fitted_value", "resid", "med_imputed",
-                     "med_fitted", "med_observed") := NULL]
+list_of_plots = NULL
+i=1
 
-dt_hz = dt_for_calc[, .(value = sum(value, na.rm = TRUE)), by= .(health_zone, dps, date, drug, variable)]
+for( index in 1:nrow(loop)){
+  l = loop[ index, level ]
+  d = loop[ index, drug ]
+  v = loop[ index, variable ]
+  
+  list_of_plots[[i]] = ggplot(dt[skipped_qr == "yes" & level == l & drug == d & variable == v, ], aes(x=value)) + 
+    geom_histogram() + 
+    geom_vline(xintercept = dt[skipped_qr == "yes" & level == l & drug == d & variable == v, unique(limit) ], color = 'red', size = 1.5, linetype = "dashed") +
+    theme_bw() + 
+    labs(title =paste("Histogram for:", l, d, v, "for original values in the data where QR was not run \n(less than 5 data points and or 0 variance)"),
+         subtitle = "Red line shows cut off of 99.5 percentile for this limit-drug-variable combination")
+  i = i + 1
+}
 
+pdf(paste0(dir, "outliers/sigl/histograms_by_leveldrugvariable_QRskipped.pdf"), height=6, width=10)
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+} 
+dev.off()
+
+# subset to the health facilities and elements that contain outliers where QR skipped
+dt[ , combine := paste0(org_unit_id, drug)]
+out_orgs = dt[skipped_qr == "yes" & outlier == TRUE, unique(combine)]
+out = dt[combine %in% out_orgs]
+
+# drop the unique identifier
+out[ , combine := NULL]
+dt[ , combine := NULL]
+
+# checked emerging trends and not relevant here
+
+# create a list of plots
+list_of_plots = NULL
+i=1
+
+for (d in unique(out$drug)) {
+  for (o in unique(out[drug==d]$org_unit_id)) {
+    # title states drug variable, facility
+    title = paste0(d, ' in ', out[org_unit_id==o, unique(org_unit)])
+    
+    # create the plot
+    list_of_plots[[i]] = ggplot(out[drug==d & org_unit_id==o], aes(x=date, y=orig_value)) +
+      geom_point(size = 3) +
+      geom_line(aes(x=date, y=median_by_id_vars), color = 'black') +
+      geom_line(aes(x=date, y=limit), color = 'red') +
+      geom_point(data = out[drug==d & org_unit_id==o & outlier==TRUE & skipped_qr == "yes"], color='#d73027', size=3, alpha=0.8) +
+      geom_point(data = out[drug==d & org_unit_id==o & outlier==TRUE & skipped_qr == "yes"], aes(x=date, y=median_by_id_vars), 
+                 color='#4575b4', size=3, alpha=0.8) +
+      facet_wrap(~variable, scales = "free") +
+      labs(title=title, x='Date', y='Count',
+           color='Age', subtitle= "Outliers where QR was not run (<3 data points) and imputation with median (black line) \nRed line shows 99.5 percentile by level, drug, and variable, which was used to ID outliers \nRed points are outliers; black points are other original values") +
+      theme_bw()
+    
+    i=i+1
+  }}
+
+pdf(paste0(dir, qr_skipped_outliers), height=6, width=10)
+for(i in seq(length(list_of_plots))) { 
+  print(list_of_plots[[i]])
+} 
+dev.off()
+# ----------------------------------------------
+
+# ----------------------------------------------
+# Calculate drugs/commodities received
+# ----------------------------------------------
+# Aggregate to hz level
+dt_hz = dt[, .(value = sum(value, na.rm = TRUE)), by = .(dps, health_zone, date, drug, variable)] 
+
+# Formula/calculate:
+# received(n) = available(n) + consumed(n) + lost(n) - available(n-1)
 # cast wide
 # create formula for cast
 all_vars <- colnames(dt_hz)
@@ -132,31 +192,179 @@ calc <- calc[, include_in_calculation := ifelse(previous_date == actual_previous
 
 # calculate received, only for dates where the previous month exists
 # use shift to get the value for the previous date of the available variable
-calc[is.na(lost), lost:= 0]
-calc[include_in_calculation==TRUE, received := (available + consumed + lost - ( data.table::shift(available, 1L, type="lag") ))]
+# calc[, received2 := (available + consumed + lost - (data.table::shift(available))), by = c('health_zone', 'drug')]
+# calc[, received1 := (available + (data.table::shift(consumed)) + (data.table::shift(lost)) - (data.table::shift(available))), by = c('health_zone', 'drug')]
+calc[, received := (data.table::shift(available, type='lead')) - available + consumed + lost, by = c('health_zone', 'drug')] # USE THIS FORMULA
 
-# # aggregate to health zone values
-# sd_cols = c("available", "consumed", "lost", "received")
-# hz_level <- calc[, lapply(.SD, sum, na.rm=TRUE), by=c("date", "dps", "health_zone", "drug", "category"), .SDcols = sd_cols]
+#--------------------
+# calc[ received < 0, .N, by = 'date']
 
-# save a copy of the data with drugs distributed for analysis/comparison to PNLP
-saveRDS(calc, paste0(data_path, drugs_dist))
-# calc <- readRDS(paste0(data_path, "drugs_dist_update_3_28_19.rds"))
+# violin plot of received by date
+calc$date = as.character(calc$date)
+p <- ggplot(calc, aes(x=date, y=received)) + 
+  geom_violin() + theme_bw() + geom_boxplot(width = 0.1)
+p
 
-# # where level/org unit type is health zone, the actual field for health zone is blank
-# # fill this in so that we can aggregate to health zone level
-# calc[is.na(health_zone), edit_hz_string:= TRUE]
-# calc[org_unit_type =="health zone", health_zone:= org_unit]
-# calc[, health_zone:= tolower(health_zone)]
-# 
-# calc[edit_hz_string== TRUE, health_zone:= sapply(str_split(health_zone, " ", 2),'[', 2)]
-# calc[edit_hz_string== TRUE, health_zone := str_squish(health_zone)]
-# calc[edit_hz_string== TRUE, health_zone := trimws(health_zone)]
-# calc[edit_hz_string== TRUE, health_zone := gsub(" zone de santé", "", health_zone)]
-# 
-# calc[, health_zone:= gsub(" ", "-", health_zone)]
-# 
-# calc[, health_zone := standardizeHZNames(health_zone)]
-# ---------------------------------------------------
+plot = ggplot(calc, aes(x=received)) + 
+  geom_histogram(binwidth = 1000) + facet_wrap( ~date, scales = "free_y")
+plot
 
+# where received is negative, set to 0
+calc[ received < 0 , received := 0]
+
+# save a copy of the data to be used in the results chain model:
+calc[, c('previous_date','actual_previous_date', 'include_in_calculation'):= NULL]
+saveRDS(calc, paste0(dir, outData))
+# ----------------------------------------------
+
+# ----------------------------------------------
+# graphs / checks 
+# ----------------------------------------------
+check = dt[ value > limit, ]
+check = check[value > 5000, ]
+
+plot <- ggplot(calc[received < 100000 & received > -50000,], aes(x=received)) + 
+        geom_histogram(color="black", fill="white", binwidth = 500) + 
+        theme_bw() + labs(subtitle = "Note: bounded this by -50,000 and 100,000 so it was easier to see \nThere were 35 values below -50,000 and 17 above 100,000")
+plot
+
+pdf(paste0(dir, "outliers/sigl/histogram_drugs_recieved.pdf"), height=6, width=10)
+print(plot)
+dev.off()
+
+calc[received < -50000, .N] 
+# -------------------------
+calc_long = calc[, .(dps, health_zone, date, drug, available, consumed, lost, received)]
+calc_long = melt.data.table(calc_long, id.vars = c("dps", "health_zone", "date", "drug"))
+calc_long[, variable := as.character(variable)]
+
+plot_list = NULL
+hzs = unique(calc$health_zone)
+
+i = 1
+for (h in hzs){
+  plot_list[[i]] = ggplot(calc_long[health_zone == h & grepl(drug, pattern = "ASAQ_") & !grepl(drug, pattern = "supp|inj"),], aes(x=date, y=value, color = variable)) + 
+    geom_point() + geom_line() +
+    theme_bw() + ggtitle(paste0("health zone = ", h)) +
+    facet_wrap( ~ drug, scales = "free")
+  i = i + 1
+}
+
+# save a subset of this data for David to work on the formula:
+save_subset = calc_long[health_zone == hzs[3] & drug == "ASAQ_14yrsAndOlder",]
+save = dcast.data.table(save_subset, dps + health_zone + date + drug ~ variable )
+saveRDS(save, paste0(dir, "outliers/sigl/subset_of_data_adi_ASAQ14+.rds"))
+
+pdf(paste0(dir, "outliers/sigl/time_series_drugs_received_hz_level_(cont).pdf"), height=6, width=10)
+for(i in 222:(length(plot_list))) { 
+  print(plot_list[[i]])
+}
+dev.off()
+# ----------------------------------------------
+
+# ----------------------------------------------
+# time series figures for manual outlier removal
+# ----------------------------------------------
+loop_through = unique(dt[value > 50000 & value > limit, .(drug, org_unit_id, variable, date, value, level)])
+plot_list = NULL
+i = 1
+for (row in 1:nrow(loop_through)){
+  d = loop_through[row, drug]
+  o = loop_through[row, org_unit_id]
+  v = loop_through[row, variable]
+  date = loop_through[row, date]
+  value = loop_through[row, value]
+  level = loop_through[row, level]
+  if( is.na(level) )  level = "no level reported"
+  plot_list[[i]] = ggplot(dt[org_unit_id == o & drug == d & variable == v,], aes(x=date, y=value, color = variable)) + 
+    geom_point() + geom_line() +
+    theme_bw() + ggtitle(paste(o, "(", level, ")", date, d, v, value))
+  i = i + 1
+}
+pdf(paste0(dir, "outliers/sigl/sigl_additional_outlier_screening_manual.pdf"), height=6, width=10)
+for(i in 1:(length(plot_list))) { 
+  print(plot_list[[i]])
+}
+dev.off()
+
+d = "SP"
+o = "xEgqynT6g7G"
+v = "available"
+g = ggplot(dt[org_unit_id == o & drug == d & variable == v,], aes(x=date, y=value, color = variable)) + 
+  geom_point() + geom_line() +
+  theme_bw() + ggtitle(paste(o, d, v))
+print(g)
+
+h = "kenge"
+g = ggplot(calc_long[health_zone == h & drug == d ,], aes(x=date, y=value, color = variable)) + 
+  geom_point() + geom_line() +
+  theme_bw() + ggtitle(paste0("health zone = ", h))
+print(g)
+# ----------------------------------------------
+
+# ----------------------------------------------
+# compare with some hz's in pnlp
+# ----------------------------------------------
+dir_pnlp = paste0('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
+# pnlp = "archive/imputedData_run2_agg_hz.rds"
+pnlp = "archive/imputedData_run2_agg_dps.rds"
+source('./core/standardizeDPSNames.R')
+source('./core/standardizeHZNames.R')
+
+dt_pnlp <- readRDS(paste0(dir_pnlp, pnlp))
+setnames(dt_pnlp, "mean", "value")
+
+dt_pnlp <- dt_pnlp[indicator %in% c("ASAQreceived")]
+dt_pnlp$date <- as.Date(dt_pnlp$date)
+dt_pnlp[, drug:= paste0(indicator, "_", subpopulation)]
+dt_pnlp$source = "PNLP"
+dt_pnlp[, drug := gsub("received", "", drug)]
+setnames(dt_pnlp, "value", "received")
+
+dt_snis = calc[ , drug := gsub("12to59mos", "1to5yrs", drug)]
+dt_snis$source = "SNIS (calculated)"
+vars = unique(dt_pnlp$drug)
+dt_snis = dt_snis[drug %in% vars, ]
+
+dt_snis = dt_snis[, .(received = sum(received, na.rm = TRUE)), by = c("dps", "date", "drug", "source")]
+
+cols = names(dt_snis)[names(dt_snis) %in% names(dt_pnlp)]
+dt_snis = dt_snis[, cols, with = FALSE]
+dt_pnlp = dt_pnlp[, cols, with = FALSE]
+
+dt_compare <- rbindlist(list(dt_snis, dt_pnlp), use.names=TRUE)
+dt_compare$dps = standardizeDPSNames(dt_compare$dps)
+dt_compare$health_zone = standardizeHZNames(dt_compare$health_zone)
+dps = unique(dt_compare$dps)
+hzs = unique(dt_compare$health_zone)
+
+plot_list_hz = NULL
+plot_list_dps = NULL
+i = 1
+# for (x in hzs){
+for (x in dps){
+  # plot_list_hz[[i]] <- ggplot(dt_compare[health_zone == x], aes(x=date, y=received, color=source)) + 
+  plot_list_dps[[i]] <- ggplot(dt_compare[dps == x], aes(x=date, y=received, color=source)) + 
+    geom_point() + geom_line() +
+    ggtitle(paste0("Time series showing PNLP and calculated variable using SIGL in ", x)) +
+    ylab("Drugs/doses received") + xlab("Date") + theme_bw() +
+    theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), 
+          legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=14), legend.position = "bottom") +
+    facet_wrap( ~drug, scales = "free") +
+    scale_y_continuous( label= scales :: comma ) + 
+    guides(color = guide_legend(title= "Data Source:"))
+  i = i + 1
+}
+# pdf(paste0(dir, "outliers/sigl/time_series_drugs_received_hz_level_pnlp_comparison.pdf"), height=6, width=10)
+# for(i in seq(length(plot_list_hz))) {
+#   print(plot_list_hz[[i]])
+# }
+# dev.off()
+
+pdf(paste0(dir, "outliers/sigl/time_series_drugs_received_dps_level_pnlp_comparison.pdf"), height=6, width=10)
+for(i in seq(length(plot_list_dps))) {
+  print(plot_list_dps[[i]])
+}
+dev.off()
+# ----------------------------------------------
 

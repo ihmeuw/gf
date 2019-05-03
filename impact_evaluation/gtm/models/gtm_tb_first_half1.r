@@ -1,6 +1,9 @@
-# model: gtm_tb_first_half1 adapted from drc_malaria1
-# by J Ross
+# model: gtm_tb_first_half1 adapted from drc_malaria1 by J Ross.
 # This is a computationally viable model that adapts the DRC malaria SEM for the GTM TB context
+# May 2019
+#
+# In-process regression equations are indicated with the #, which I remove once variable names are formalized
+
 
 model = '
 
@@ -14,12 +17,14 @@ model = '
 	
 	# Linkage 2 = relationships between activities and outputs or inputs and outputs
 	# linkage 2 regressions
-	value_ITN_consumed ~ value_ITN_received
-	value_ACTs_CHWs ~ value_ACT_received
-	value_RDT_completed ~ value_RDT_received
-	value_SP ~ budget_M3_1_cumulative
-	value_severeMalariaTreated ~ 1*budget_M2_6_cumulative + value_ACT_received
-	value_totalPatientsTreated ~ value_ACT_received
+
+  #routine surveillance and case notification ~ Cases Notified_value
+  Active Case Finding Missions Conducted_value ~ Cases Notified_value
+  Active Case Finding Missions Conducted_value ~ Children in Contact with TB Started IPT_value
+  Number of Cases Screened for MDR_value ~ Persons with MDR-TB treated
+  Number of Cases Screened for MDR_value ~ MDR Cases Notified_value
+  #Prisoners Screened_value ~ prisoners found to have TB
+  
 	
 	# latent variables
 	

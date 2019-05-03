@@ -4,7 +4,7 @@
   # 6/15/18
   # prep of PNLP data for multiple imputation
     setwd('C:/local/gf/')
-  # Cleaned up/edited/redone - 02/19 and 03/19
+  # Cleaned up/edited/redone - 02/19 through 5/19
 
   # TO DO:
   # Check with David:
@@ -19,133 +19,127 @@
 # ----------------------------------------------
 
 # --------------------
-  # Set up R / install packages
-    rm(list=ls())
-    library(data.table)
-    library(reshape2)
-    library(stringr)
-    library(RColorBrewer)
-    library(ggplot2)
-    library(lubridate)
-    library(readxl)
-    library(stats)
-    library(rlang)
-    library(zoo)
-    library(tidyr)
-    library(dplyr)
+# Set up R / install packages
+rm(list=ls())
+library(data.table)
+library(reshape2)
+library(stringr)
+library(RColorBrewer)
+library(ggplot2)
+library(lubridate)
+library(readxl)
+library(stats)
+library(rlang)
+library(zoo)
+library(tidyr)
+library(dplyr)
 # --------------------
 
 # ----------------------------------------------
-  # Overview - Files and Directories
+# Overview - Files and Directories
 # ---------------------------------------------- 
-    # data directory
-      dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/archive/"
-      
-    # input files
-      fullData <- "fullData_dps_standardized.csv"
-      
-    # output files
-      output_dt <- "PNLP_dt_forMI_updated_3_11_19.rds"
-      
-    # functions:
-      getmode <- function(v) {
-        uniqv <- unique(v)
-        uniqv[which.max(tabulate(match(v, uniqv)))]
-      }
-      
-  # dt = fread(paste0( dir_prepped, "PNLP_2010to2017_prepped.csv"), stringsAsFactors = FALSE)
-  # dt = readRDS(paste0('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/archive/imputedData_run2_agg_hz.rds'))
+# data directory
+dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/archive/"
+
+# input files
+fullData <- "fullData_dps_standardized.csv"
+
+# output files
+output_dt <- "PNLP_dt_forMI_updated_3_11_19.rds"
+
+# dt = fread(paste0( dir_prepped, "PNLP_2010to2017_prepped.csv"), stringsAsFactors = FALSE)
+# dt = readRDS(paste0('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/archive/imputedData_run2_agg_hz.rds'))
 # ----------------------------------------------   
 
 # ----------------------------------------------     
-  # read in data
+# read in data
 # ---------------------------------------------- 
-    fullData <- fread( paste0(dir_prepped, fullData) ) 
+fullData <- fread( paste0(dir_prepped, fullData) ) 
 # ----------------------------------------------     
       
 # ----------------------------------------------     
-  # ADD TO PREP CODE ****************************** 
+# ADD TO PREP CODE ****************************** 
 # ----------------------------------------------  
-    # change where month/date is duplicated (in original data) ******************************
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "342", date:= "2016-07-01" ]
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "320", date:= "2016-08-01" ]
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "326", date:= "2016-09-01" ]
+  # change where month/date is duplicated (in original data) ******************************
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "342", date:= "2016-07-01" ]
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "320", date:= "2016-08-01" ]
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "326", date:= "2016-09-01" ]
+  
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "489", date:= "2017-07-01" ]
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "551", date:= "2017-08-01" ]
+  fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "596", date:= "2017-09-01" ]
+  
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "359", date:= "2016-07-01" ]
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "438", date:= "2016-08-01" ]
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "415", date:= "2016-09-01" ]
+  
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "370", date:= "2017-07-01" ]
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "402", date:= "2017-08-01" ]
+  fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "361", date:= "2017-09-01" ]
+  
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "491", date:= "2016-07-01" ]
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "446", date:= "2016-08-01" ]
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "480", date:= "2016-09-01" ]
+  
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "539", date:= "2017-07-01" ]
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "525", date:= "2017-08-01" ]
+  fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "617", date:= "2017-09-01" ]
 
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "489", date:= "2017-07-01" ]
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "551", date:= "2017-08-01" ]
-      fullData[health_zone=='kwamouth' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "596", date:= "2017-09-01" ]
-      
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "359", date:= "2016-07-01" ]
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "438", date:= "2016-08-01" ]
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "415", date:= "2016-09-01" ]
-      
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "370", date:= "2017-07-01" ]
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "402", date:= "2017-08-01" ]
-      fullData[health_zone=='mushie' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "361", date:= "2017-09-01" ]
-      
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-01-01" & ANC_1st == "491", date:= "2016-07-01" ]
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-02-01" & ANC_1st == "446", date:= "2016-08-01" ]
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2016-03-01" & ANC_1st == "480", date:= "2016-09-01" ]
-      
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-01-01" & ANC_1st == "539", date:= "2017-07-01" ]
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-02-01" & ANC_1st == "525", date:= "2017-08-01" ]
-      fullData[health_zone=='nioki' & dps=='mai-ndombe' & date=="2017-03-01" & ANC_1st == "617", date:= "2017-09-01" ]
-      
   # Where DPS = 0, those health zones (bambu and manguredj) weren't in the most recent year of data (2017) but in retrospect it seems like
   # they should be other health zones/dps - change so they match up
-      
-      # bambu-nord kivu is probably the same as bambo-nord kivu 
-      fullData[ dps == "0" & health_zone == "bambu", dps := "nord kivu"]
-      fullData[ dps == "nord kivu" & health_zone == "bambu", health_zone := "bambo"]
-      
-      # manguredj and mangupa both probably the same ('manguredjipa')
-      fullData[ dps == "0" & health_zone == "manguredj", dps := "nord kivu"]
-      fullData[ dps == "nord kivu" & health_zone == "manguredj", health_zone := "mangupa"]
+  
+  # bambu-nord kivu is probably the same as bambo-nord kivu 
+  fullData[ dps == "0" & health_zone == "bambu", dps := "nord kivu"]
+  fullData[ dps == "nord kivu" & health_zone == "bambu", health_zone := "bambo"]
+  
+  # manguredj and mangupa both probably the same ('manguredjipa')
+  fullData[ dps == "0" & health_zone == "manguredj", dps := "nord kivu"]
+  fullData[ dps == "nord kivu" & health_zone == "manguredj", health_zone := "mangupa"]
 # ----------------------------------------------   
 
       
 # ----------------------------------------------     
 # take a subset of fullData that will be used in MI
 # ---------------------------------------------- 
-    all_vars <- c(colnames(fullData))
-      
-    # remove unneccessary id variables
-    id_vars <- c("V1", "province", "dps", "dps_in_original_data", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month",
-                 "year", "stringdate", "date", "natl", "natl_name", "province11", "province11_name", "province26", "province26_name", "dps_name_2015", "dps_name_2014", 
-                 "dps_name_2013", "dps_name_2012", "dps_name_2010to2011")
-    measured_vars <- all_vars[!all_vars %in% id_vars]
+  all_vars <- c(colnames(fullData))
     
-    id_vars <- c("dps", "health_zone", "date", "donor", "operational_support_partner", "population")
-    vars_to_keep <- c(id_vars, measured_vars)
-    
-    ameliaDT <- fullData[, vars_to_keep, with=FALSE]
-                         
-    # remove internal totals and/or not useful variables 
-    remove_vars <- c("reports_expected", "reports_received", "ASAQused_total", "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete")
-    ameliaDT <- ameliaDT[, -remove_vars, with=FALSE]
+  # remove unneccessary id variables
+  id_vars <- c("V1", "province", "dps", "dps_in_original_data", "health_zone", "donor", "operational_support_partner", "population", "quarter", "month",
+               "year", "stringdate", "date", "natl", "natl_name", "province11", "province11_name", "province26", "province26_name", "dps_name_2015", "dps_name_2014", 
+               "dps_name_2013", "dps_name_2012", "dps_name_2010to2011")
+  measured_vars <- all_vars[!all_vars %in% id_vars]
+  
+  id_vars <- c("dps", "health_zone", "date", "donor", "operational_support_partner", "population")
+  vars_to_keep <- c(id_vars, measured_vars)
+  
+  ameliaDT <- fullData[, vars_to_keep, with=FALSE]
+                       
+  # remove internal totals and/or not useful variables 
+  remove_vars <- c("reports_expected", "reports_received", "ASAQused_total", "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete")
+  ameliaDT <- ameliaDT[, -remove_vars, with=FALSE]
 # ----------------------------------------------   
 
 # ----------------------------------------------     
 # take a subset of fullData that will be used in MI
 # ---------------------------------------------- 
-    # further outlier removal - using QR:
-    
-    # noticed problem with duplicate values:
-    ind = names(ameliaDT)[ grepl(names(ameliaDT), pattern = "ASAQ")]
-    ind = ind[1:8]
-    id_vars = c('health_zone', 'dps', 'date')
-
-    example = ameliaDT[, c(id_vars, ind), with = FALSE]
-    
-    duplicates = example[ duplicated(example[, ind, with = FALSE])]
-    # remove rows of all NA
-    duplicates = duplicates[ rowSums(is.na(duplicates)) != 8]
-    # remove rows of all 0s
-    duplicates = duplicates[  rowSums(duplicates[, -1:-3]) != 0,  ]
-
-    duplicates_count = duplicates[ duplicated(duplicates[, ind, with = FALSE])]
-    duplicates_count2 = duplicates_count[ duplicated(duplicates_count[, ind, with = FALSE])]
-    duplicates_count3 = duplicates_count2[ duplicated(duplicates_count2[, ind, with = FALSE])]
+  # further outlier removal - using QR:
+  
+  # noticed problem with duplicate values:
+  ind = names(ameliaDT)[ grepl(names(ameliaDT), pattern = "ASAQ")]
+  ind = ind[1:8]
+  id_vars = c('health_zone', 'dps', 'date')
+  
+  example = ameliaDT[, c(id_vars, ind), with = FALSE]
+  
+  duplicates = example[ duplicated(example[, ind, with = FALSE])]
+  # remove rows of all NA
+  duplicates = duplicates[ rowSums(is.na(duplicates)) != 8]
+  # remove rows of all 0s
+  duplicates = duplicates[  rowSums(duplicates[, -1:-3]) != 0,  ]
+  
+  duplicates_count = duplicates[ duplicated(duplicates[, ind, with = FALSE])]
+  duplicates_count2 = duplicates_count[ duplicated(duplicates_count[, ind, with = FALSE])]
+  duplicates_count3 = duplicates_count2[ duplicated(duplicates_count2[, ind, with = FALSE])]
 # ---------------------------------------------- 
     
 # ---------------------------------------------- 

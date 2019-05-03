@@ -14,11 +14,11 @@ source('./impact_evaluation/drc/set_up_r.r')
 # check operating system
 if(Sys.info()[1]=='Windows') stop('This script is currently only functional on IHME\'s cluster')
 
+# whether to rerun everything or only jobs that don't already have output
+rerunAll = FALSE
+
 # model version to use
 modelVersion = 'drc_malaria6'
-
-# load function that runs a SEM as unrelated regressions
-source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 # ---------------------------
 
 
@@ -47,18 +47,30 @@ data = data[, unique(modelVars), with=FALSE]
 # Run model (each health zone in parallel)
 
 # save copy of input file for jobs
-file.copy(outputFile4a, outputFile4a_scratch, overwrite=TRUE)
+if (rerunAll==TRUE) file.copy(outputFile4a, outputFile4a_scratch, overwrite=TRUE)
 
 # store T (length of array)
 hzs = unique(data$health_zone)
 T = length(hzs)
 
-# submit array job
-system(paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
-	' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
-	clustertmpDireo, ' -o ', clustertmpDireo, 
-	' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
-	modelVersion, ' 1 FALSE'))
+# store cluster command to submit array of jobs
+qsubCommand = paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
+		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
+		clustertmpDireo, ' -o ', clustertmpDireo, 
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
+		modelVersion, ' 1 FALSE')
+
+# submit array job if we're re-running everything
+if (rerunAll==TRUE) system(qsubCommand)
+
+# submit specific jobs that don't have output files if not re-running everything
+if (rerunAll==FALSE) { 
+	for(i in seq(T)) {
+		tmpFile = paste0(clustertmpDir2, 'first_half_summary_', i, '.rds')
+		if (file.exists(tmpFile)) next
+		system(gsub(paste0('1:',T), i, qsubCommand))
+	}
+}
 
 # wait for jobs to finish (2 files per job)
 while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
