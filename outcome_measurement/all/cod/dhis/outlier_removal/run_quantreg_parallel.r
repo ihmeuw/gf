@@ -46,6 +46,9 @@ user = Sys.info()[['user']]
 set = 'base'
 
 # ------------------------------------------------
+#------------------------------------
+# clean up parallel files
+#------------------------------------
 # before starting the process, delete the existing files on the cluster
 # this allows us to avoid duplication or aggregating old files 
 
@@ -69,6 +72,9 @@ parallelDir = paste0(scratchDir, 'parallel_files/')
 if (!file.exists(scratchDir)) dir.create(scratchDir)
 if (!file.exists(parallelDir)) dir.create(parallelDir)
 
+# input data file to be copied to the cluster
+scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
+
 # place for cluster output/error files
 oeDir = paste0(scratchDir, 'errors_output/')
 if (!file.exists(oeDir)) dir.create(oeDir)
@@ -82,14 +88,14 @@ if (set=='sigl') {inFile = paste0(dir, 'sigl_for_qr.rds')
 outFile = paste0(dir, 'sigl_quantreg_imputation_results.rds') }
 
 if (set=='base') {inFile = paste0(dir, 'outliers/base_to_screen.rds')
-scratchInFile = paste0(scratchDir, 'data_for_qr.fst')}
+outFile = paste0(dir, 'outliers/base_quantreg_results.rds')}
+
+if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/pnlp_for_qr.rds')
+outFile = paste0(dir, 'outliers/pnlp_quantreg_results.rds')}
 
 #------------------------------------
 # interim files
 arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
-
-# output file
-outFile = paste0(dir, 'outliers/base_quantreg_results.rds')
 
 # whether or not to resubmit jobs that have completed already
 resubmitAll = TRUE
@@ -132,7 +138,7 @@ N = nrow(array_table)
 if (set=='base') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N base_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_base.R'))
 
 # sigl data set: run value~date on each org_unit, element, and variable
-if (set=='sigl') system(paste0('qsub -e ', PATH, ' -o ', PATH,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.r'))
+if (set=='sigl') system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N all_quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.r'))
 
 #----------------------------------------------------------
 #------------------------------------
@@ -163,15 +169,4 @@ for (j in seq(N)) {
 
 # save full data
 saveRDS(fullData, outFile)
-#------------------------------------
-
-#------------------------------------
-# clean up parallel files
-#------------------------------------
-if (cleanup==TRUE) { 
-  system(paste0('rm /ihme/scratch/users/', user_name, '/qr_results/*'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg_output/*'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/data_for_qr.fst'))
-}
-#------------------------------------
+#------------------------------------------------------------
