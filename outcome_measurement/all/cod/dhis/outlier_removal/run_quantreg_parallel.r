@@ -109,11 +109,11 @@ dt = readRDS(inFile)
 
 # format the pnlp data in the same format as the base data
 # this assigns an element id to each variable and refered to the health zone as an org_unit
-if (set=='pnlp') { setnames(dt, 'health_zone', 'org_unit_id')
-dt[, element_id:=.GRP, by='variable'] }
+if (set=='pnlp') setnames(dt, 'health_zone', 'org_unit_id')
+if (set=='pnlp') dt[, element_id:=.GRP, by='variable'] 
 
-if (set=='sigl') {dt[, element_id:=.GRP, by='drug']
-  dt[, variable_id:=.GRP, by='variable']}
+if (set=='sigl') dt[, element_id:=.GRP, by='drug']
+if (set=='sigl') dt[, variable_id:=.GRP, by='variable']
 
 # sort the data table so the indexing works correctly when retrieving data using fst
 dt = setorder(dt, org_unit_id)
@@ -142,7 +142,7 @@ write.fst(dt, scratchInFile)
 N = nrow(array_table)
 
 # base data set: run value~date on each org_unit and element
-system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
+system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregscript.R')) 
 
 #----------------------------------------------------------
 #------------------------------------
