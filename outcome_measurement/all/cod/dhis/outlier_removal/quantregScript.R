@@ -1,5 +1,6 @@
 #------------------------------------
 # This script is run on the cluster by run_quantreg_parallel.r
+# source from the cluster
 #------------------------------------
 
 library(data.table)
