@@ -46,7 +46,7 @@ set = 'base'
 # switches
 
 cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
-cleanup_end = FALSE # "" /end
+cleanup_end = FALSE # "" /end; default to FALSE
 impute = 'TRUE' # whether or not to impute missing data as part of the qr
 cat_files = TRUE # whether or not to concatenate all of the files at the end
 #------------------------------------
@@ -156,6 +156,8 @@ while(numFiles<i) {
   numFiles = length(list.files(parallelDir))
   Sys.sleep(5)
 }
+
+
 #------------------------------------
 
 #------------------------------------
@@ -171,7 +173,8 @@ if (cat_files == TRUE){
 #------------------------------------
 # end cleanup
 #------------------------------------
+# removes all files and folders within the directory
 if (cleanup_end == TRUE){
-  system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) # removes all files and folders within the directory
+  system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) 
 }
 #------------------------------------

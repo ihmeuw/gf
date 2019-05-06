@@ -25,6 +25,10 @@ arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
 parallelDir = paste0(scratchDir, 'parallel_files/')
 outFile = paste0(parallelDir, 'quantreg_output', i, '.fst')
 
+# confirm the file folders exist
+if (!file.exists(scratchDir)) dir.create(scratchDir)
+if (!file.exists(parallelDir)) dir.create(parallelDir)
+
 # read in the array table 
 array_table = fread(arrayFile)
 
