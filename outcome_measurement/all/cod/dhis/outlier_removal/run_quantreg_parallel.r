@@ -144,7 +144,7 @@ write.fst(dt, scratchInFile)
 N = nrow(array_table)
 
 # base data set: run value~date on each org_unit and element
-system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregscript.R')) 
+system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
 
 #----------------------------------------------------------
 #------------------------------------
