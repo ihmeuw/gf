@@ -86,9 +86,7 @@ for (e in unique(subset$element_id)) {
     # for each iteration of the loop, add the subset of data to a combined results data table.
     if(nrow(combined_qr_results)==0){
       combined_qr_results = subset_further # first time through, just set combined results to be = the data 
-    } else (nrow(combined_qr_results)>0) {
-      combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) # subsequent times through, add in combined results
-    }
+    } else { combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) }
     print(paste0("completed loop with element_id =", e))
   }
 
