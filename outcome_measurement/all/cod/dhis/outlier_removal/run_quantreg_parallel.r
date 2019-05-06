@@ -139,7 +139,7 @@ N = nrow(array_table)
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
 
 # # base data set: run value~date on each org_unit and element
-# system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R -l m_mem_free=1G -l fthread=2 -P proj_pce -q all')) 
+# system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R -l m_mem_free=2G -l fthread=2 -l h_rt=00:20:00 -P proj_pce -q all.q')) 
 #------------------------------------
 
 #------------------------------------
