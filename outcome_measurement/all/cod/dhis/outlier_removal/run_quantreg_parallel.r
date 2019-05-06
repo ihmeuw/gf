@@ -68,7 +68,7 @@ arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
 # switches
 cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
 cleanup_end = FALSE # "" /end
-impute = TRUE # whether or not to impute missing data as part of the qr
+impute = 'TRUE' # whether or not to impute missing data as part of the qr
 cat_files = TRUE # whether or not to concatenate all of the files at the end
 #------------------------------------
 
