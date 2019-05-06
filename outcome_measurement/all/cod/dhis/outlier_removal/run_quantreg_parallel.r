@@ -11,20 +11,14 @@
 #------------------------------------
 # Manual set up on the cluster
 #------------------------------------
-# make sure qr_results exists
-# cd /ihme/scratch/users/ccarelli/
+# 1) set the working directory in the qlogin by navigating to it
+  # cd /ihme/code/ccarelli/gf/
+  # cd /ihme/code/abatzel/gf/
 
-# set the working directory in the qlogin by navigating to it
-# cd /ihme/code/ccarelli/gf/
-# cd /ihme/code/abatzel/gf/
+# 2) once you have navigated to the directory, 
+  # git pull R (make sure you have pushed from github desktop)
 
-# print the contents
-# ls
-
-# once you navigate to the directory, git pull R
-# make sure you have pushed from github desktop
-
-# then call R
+# 3) call R
 #------------------------------------
 
 #------------------------------------
