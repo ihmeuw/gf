@@ -158,25 +158,8 @@ while(numFiles<i) {
 # once all files are done, collect all output into one data table
 #------------------------------------
 if (cat_files == TRUE){
-  # fullData = data.table()
-  # 
-  # for (k in seq(N)) {
-  #   tmp = read.fst(paste0(parallelDir, 'quantreg_output', k, '.fst'), as.data.table=TRUE)
-  #   if(k==1) fullData = tmp
-  #   if(k>1) fullData = rbind(fullData, tmp)
-  #   cat(paste0('\r', j))
-  #   flush.console()
-  # }
-  # 
-  # # change the name of the health zones back to 'health_zone'
-  # if (set=='pnlp') setnames(dt, 'org_unit_id', 'health_zone')
-  # 
-  # # save full data
-  # saveRDS(fullData, outFile)
-  # scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
-  # parallelDir = paste0(scratchDir, 'parallel_files/')
 
-  # faster binding:
+# bind all of the files together to create a single data set
   system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* > ', outFile))
 }
 #------------------------------------
@@ -184,10 +167,7 @@ if (cat_files == TRUE){
 #------------------------------------
 # end cleanup
 #------------------------------------
-if (cleanup_end==TRUE) { 
-  system(paste0('rm /ihme/scratch/users/', user_name, '/qr_results/*'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/quantreg_output/*'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/array_table_for_qr.csv'))
-  system(paste0('rm /ihme/scratch/users/', user_name, '/data_for_qr.fst'))
+if (cleanup_end == TRUE){
+  system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) # removes all files and folders within the directory
 }
 #------------------------------------
