@@ -66,7 +66,6 @@ if (!file.exists(oeDir)) dir.create(oeDir)
 arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
 
 # switches
-resubmitAll = TRUE # whether or not to resubmit jobs that have completed already
 cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
 cleanup_end = FALSE # "" /end
 impute = TRUE # whether or not to impute missing data as part of the qr
@@ -79,8 +78,6 @@ cat_files = TRUE # whether or not to concatenate all of the files at the end
 if (cleanup_start == TRUE){
   # before starting the process, delete the existing files on the cluster
   # this allows us to avoid duplication or aggregating old files 
-  system(paste0('rm -r /ihme/scratch/users/', user, '/qr_results/*'))
-  system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg_output/*'))
   system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) # removes all files and folders within the directory
 }
 #------------------------------------
@@ -140,6 +137,9 @@ N = nrow(array_table)
 
 # base data set: run value~date on each org_unit and element
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
+
+# # base data set: run value~date on each org_unit and element
+# system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R -l m_mem_free=1G -l fthread=2 -P proj_pce -q all -l archive=TRUE')) 
 #------------------------------------
 
 #------------------------------------
