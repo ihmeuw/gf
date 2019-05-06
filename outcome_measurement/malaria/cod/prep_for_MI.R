@@ -39,13 +39,15 @@ library(dplyr)
 # Overview - Files and Directories
 # ---------------------------------------------- 
 # data directory
-dir_prepped <-"J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/archive/"
-
+dir_prepped = "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/archive/"
+dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/"
+  
 # input files
-fullData <- "fullData_dps_standardized.csv"
+fullData = "fullData_dps_standardized.csv"
 
 # output files
-output_dt <- "PNLP_dt_forMI_updated_3_11_19.rds"
+output_for_qr = "pnlp_for_qr.rds"
+output_dt = "PNLP_dt_forMI_updated_3_11_19.rds"
 
 # dt = fread(paste0( dir_prepped, "PNLP_2010to2017_prepped.csv"), stringsAsFactors = FALSE)
 # dt = readRDS(paste0('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/archive/imputedData_run2_agg_hz.rds'))
@@ -96,10 +98,9 @@ fullData <- fread( paste0(dir_prepped, fullData) )
   fullData[ dps == "0" & health_zone == "manguredj", dps := "nord kivu"]
   fullData[ dps == "nord kivu" & health_zone == "manguredj", health_zone := "mangupa"]
 # ----------------------------------------------   
-
       
 # ----------------------------------------------     
-# take a subset of fullData that will be used in MI
+# subset columns to only necessary ones
 # ---------------------------------------------- 
   all_vars <- c(colnames(fullData))
     
@@ -118,30 +119,72 @@ fullData <- fread( paste0(dir_prepped, fullData) )
   remove_vars <- c("reports_expected", "reports_received", "ASAQused_total", "peopleTested_5andOlder", "peopleTested_under5", "PMA_ASAQ", "PMA_TPI", "PMA_ITN", "PMA_complete")
   ameliaDT <- ameliaDT[, -remove_vars, with=FALSE]
 # ----------------------------------------------   
-
+  
 # ----------------------------------------------     
-# take a subset of fullData that will be used in MI
+# further outlier removal - using QR:
 # ---------------------------------------------- 
-  # further outlier removal - using QR:
+# melt long to run qr on the data
+dt = melt.data.table(ameliaDT, id.vars = id_vars, variable.factor = FALSE)
+  
+# save a copy of the data table for use in QR:
+saveRDS(dt, paste0(dir, output_for_qr))
+
+# RUN QUANTILE REGRESSION ON THE CLUSTER - (including visualize_qr_outliers.R to look into the outliers more)
+
+# load in data set with outliers labelled
+# ---------------------------------------------- 
+  
+# ----------------------------------------------     
+# remove duplicates
+# ---------------------------------------------- 
+  # create an id in ameliaDT
+  ameliaDT$id <- seq(1:nrow(ameliaDT))
+  id_vars = c(id_vars, 'id')
   
   # noticed problem with duplicate values:
-  ind = names(ameliaDT)[ grepl(names(ameliaDT), pattern = "ASAQ")]
-  ind = ind[1:8]
-  id_vars = c('health_zone', 'dps', 'date')
+  inds = names(ameliaDT)[!names(ameliaDT) %in% id_vars]
+  inds = inds[58:75]
   
-  example = ameliaDT[, c(id_vars, ind), with = FALSE]
+  # get all duplicates over inds
+  dups = ameliaDT[ (duplicated( ameliaDT[, inds, with = FALSE] )) | (duplicated( ameliaDT[, inds, with = FALSE], fromLast =  TRUE )) , ]
+  # exclude "duplicates" where all are na and/or 0  
+  # dups = dups[ rowSums( dups[, ..inds], na.rm = TRUE ) != 0 , ]
   
-  duplicates = example[ duplicated(example[, ind, with = FALSE])]
-  # remove rows of all NA
-  duplicates = duplicates[ rowSums(is.na(duplicates)) != 8]
-  # remove rows of all 0s
-  duplicates = duplicates[  rowSums(duplicates[, -1:-3]) != 0,  ]
+  inds = names(ameliaDT)[!names(ameliaDT) %in% id_vars]
+  inds = inds[1:27]
+  dups2 = ameliaDT[ (duplicated( ameliaDT[, inds, with = FALSE] )) | (duplicated( ameliaDT[, inds, with = FALSE], fromLast =  TRUE )) , ]
+  # dups2 = dups2[ rowSums( dups2[, ..inds], na.rm = TRUE ) != 0 , ]
   
-  duplicates_count = duplicates[ duplicated(duplicates[, ind, with = FALSE])]
-  duplicates_count2 = duplicates_count[ duplicated(duplicates_count[, ind, with = FALSE])]
-  duplicates_count3 = duplicates_count2[ duplicated(duplicates_count2[, ind, with = FALSE])]
+  check1 = as.data.table(anti_join(dups, dups2, by = id_vars))
+  # # this way is more memory-efficient: (both get same results)
+  # dt[, dups := as.numeric(duplicated(dt[, inds, with=FALSE]))]
+  # dt[, dups := max(dups), by=inds ]
+  # dt[, row_sum := rowSums(.SD, na.rm = TRUE), .SDcols = inds]
+  # dt[row_sum == 0, dups := 0]
+
+  # use the id variable in dups to set those entire rows to na
+  set_to_na = unique(dups$id)
+  check = copy(ameliaDT)
+  check = check[set_to_na, (names(ameliaDT)[!names(ameliaDT) %in% id_vars]) := .SD[NA] ]
+  
+  small_subset = ameliaDT[500:1000, 1:15]
+  dup_matrix = data.table()
+  inds = names(small_subset)[!names(small_subset) %in% id_vars]
+  tot_cols = length(small_subset[, inds, with = FALSE])
+  
+  for(i in seq(nrow(small_subset))) { 
+    for(j in seq(nrow(small_subset))) { 
+      if (i==j) next 
+      n = sum( small_subset[i, inds, with=FALSE]==small_subset[j, inds, with=FALSE], na.rm=T)
+      if (n < ((tot_cols) - 1)) next
+      tmp = data.table(i=i, j=j, num_identical=n)
+      dup_matrix = rbind(dup_matrix, tmp)
+    }
+  }
+
+  small_subset[c(dup_matrix$j, dup_matrix$i), is_duplicated:=TRUE]
 # ---------------------------------------------- 
-    
+  
 # ---------------------------------------------- 
 # Deterministically impute total health facilities and convert the number reporting to a proportion over the total, then drop the original variable for number reporting and impute
     # the proportion so that we can back calculate the number reporting and it will always be less than the total number of facilities.
