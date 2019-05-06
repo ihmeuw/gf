@@ -163,10 +163,23 @@ while(numFiles<i) {
 #------------------------------------
 if (cat_files == TRUE){
 # bind all of the files together to create a single data set
-  system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* > scratchDir, /full_quantreg_results.fst'))
-  dt = read.fst(paste0(scratchDir, '/full_quantreg_results.fst'))
+  system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* >', scratchDir, 'full_quantreg_results.fst'))
+  dt = read.fst(paste0(scratchDir, 'full_quantreg_results.fst'))
   saveRDS(dt, outFile)
   }
+
+#---------------------------------------
+# old code to concatenate files - leave as k since i and j are already used
+# this is less efficient - do not use if cat code works
+
+# for (k in seq(N)) {
+#   tmp = read.fst(paste0(parallelDir, 'quantreg_output', k, '.fst'), as.data.table=TRUE)
+#   if(k==1) fullData = tmp
+#   if(k>1) fullData = rbind(fullData, tmp)
+#   cat(paste0('\r', k)) }
+# 
+# # save the resulting file 
+# saveRDS(fullData, outFile)
 
 #------------------------------------
 
