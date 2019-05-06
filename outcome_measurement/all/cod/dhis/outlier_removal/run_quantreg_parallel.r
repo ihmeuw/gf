@@ -157,7 +157,11 @@ while(numFiles<i) {
 #------------------------------------
 if (cat_files == TRUE){
 # bind all of the files together to create a single data set
-  system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* > ', outFile)) }
+  system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* > scratchDir, /full_quantreg_results.fst'))
+  dt = read.fst(paste0(scratchDir, '/full_quantreg_results.fst'))
+  saveRDS(dt, outFile)
+  }
+
 #------------------------------------
 
 #------------------------------------
@@ -167,3 +171,9 @@ if (cat_files == TRUE){
 if (cleanup_end == TRUE){
   system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) }
 #------------------------------------
+
+
+
+
+
+
