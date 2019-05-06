@@ -39,7 +39,7 @@ library(fst) # to save data tables as .fst for faster read/write and full random
 user = Sys.info()[['user']]
 
 # choose the data set you want to load
-set = 'base'
+set = 'pnlp'
 #------------------------------------
 
 #------------------------------------
@@ -124,7 +124,7 @@ setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
 # for testing, subset to a few rows
-array_table = array_table[1:10, ]
+# array_table = array_table[1:10, ]
 
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, arrayFile)
@@ -151,12 +151,10 @@ system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N
 #------------------------------------
 i = N-1
 numFiles = length(list.files(parallelDir))
-while(numFiles<i) { 
+while(numFiles<i) {
   print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 5 seconds...'))
   numFiles = length(list.files(parallelDir))
-  Sys.sleep(5)
-}
-
+  Sys.sleep(5) }
 
 #------------------------------------
 
@@ -164,10 +162,8 @@ while(numFiles<i) {
 # once all files are done, collect all output into one data table
 #------------------------------------
 if (cat_files == TRUE){
-
 # bind all of the files together to create a single data set
-  system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* > ', outFile))
-}
+  system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* > ', outFile)) }
 #------------------------------------
 
 #------------------------------------
@@ -175,6 +171,5 @@ if (cat_files == TRUE){
 #------------------------------------
 # removes all files and folders within the directory
 if (cleanup_end == TRUE){
-  system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) 
-}
+  system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) }
 #------------------------------------
