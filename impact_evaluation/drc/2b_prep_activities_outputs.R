@@ -153,6 +153,26 @@ dt <- dt[! (indicator %in% "RDT" & subpopulation %in% "consumed")]
 dt <- dt[! (data_set %in% "snis_base_services" & indicator %in% "LLIN"), ]
 # ---------------------------------------------------
 
+
+# ---------------------------------------------------
+# Set aside child-specific variables
+
+# possible child-specific subpops (not all are present)
+subpops = c('1to5yrs','2to11mos','under5','completedUnder5','0to11mos')
+under5 = dt[subpopulation %in% subpops]
+
+# rename the indicator to reflect subpopulation
+under5[, indicator:=paste0(indicator, '_under5')]
+
+# aggregate across infants/children
+byVars = c('year', 'quarter', 'dps', 'health_zone', 'data_set', 'indicator', 'completeness')
+under5 = under5[, .(value = sum(value, na.rm=TRUE)), by=byVars]
+
+# append to data
+dt = rbind(dt, under5, fill=TRUE)
+# ---------------------------------------------------
+
+
 # ---------------------------------------------------
 # Sum together variables to create the ones needed for the model
 # ---------------------------------------------------
@@ -175,6 +195,9 @@ acts_rec <- acts_rec[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dp
 acts_rec[, indicator := "ACT_received"]
 acts_rec[, subpopulation := "none"]
 
+# rename the under5 ASAQreceived variable to be consistent with ACT_received variable name
+dt[indicator=='ASAQreceived_under5', indicator:='ACT_received_under5']
+
 patients_treated <- dt[ grepl("treated", indicator, ignore.case = TRUE), ]
 patients_treated <- patients_treated[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
 patients_treated[, indicator := "totalPatientsTreated"]
@@ -183,7 +206,7 @@ patients_treated[, subpopulation := "none"]
 dt_final <- rbindlist(list(acts_rec, patients_treated, dt), use.names = TRUE)
 
 # remove variables we don't need for impact model
-dt_final <- dt_final[!indicator %in% c("simpleConfMalariaTreated", "ASAQreceived", "ALreceived", "presumedMalariaTreated")]
+dt_final <- dt_final[!indicator %in% c("simpleConfMalariaTreated", "simpleConfMalariaTreated_under5", "ASAQreceived", "ALreceived", "presumedMalariaTreated", "presumedMalariaTreated_under5")]
 
 # rename pnlp variables to match to impact model
 dt_final[ indicator == "LLIN" & subpopulation == "consumed", indicator := "ITN_consumed" ]
@@ -191,6 +214,7 @@ dt_final[ indicator == "LLIN" & subpopulation == "received", indicator := "ITN_r
 dt_final[ indicator == "RDT" & subpopulation == "completed", indicator := "RDT_completed" ]
 dt_final[ indicator == "RDT" & subpopulation == "received", indicator := "RDT_received" ]
 dt_final[ indicator == "SSCACT", indicator := "ACTs_SSC" ]
+dt_final[ indicator == "SSCACT_under5", indicator := "ACTs_SSC_under5" ]
 dt_final <- dt_final[,.(year, quarter, dps, health_zone, indicator, value, completeness)]
 
 dt_final = convert_quarter_to_decimal(dt_final)

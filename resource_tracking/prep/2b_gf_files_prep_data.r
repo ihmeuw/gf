@@ -23,7 +23,7 @@ if (prep_files == TRUE){
   stopifnot(colnames(file_list) %in% desired_cols)
   
   stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
-  stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
+  stopifnot((unique(file_list$file_iteration))%in%c("final", "initial"))
   
   #Prioritize GOS data where we have it 
   file_list = prioritize_gos(file_list)
