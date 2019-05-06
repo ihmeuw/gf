@@ -65,16 +65,12 @@ if (!file.exists(oeDir)) dir.create(oeDir)
 # set arguments and interim files to use on the cluster
 arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
 
-# whether or not to resubmit jobs that have completed already
-resubmitAll = TRUE
-
-# whether or not to delete all files from parallel runs at the beginning/end
-cleanup_start = TRUE
-cleanup_end = FALSE
-
-# whether or not to impute missing data as part of the qr 
-# (set as a character TRUE/FALSE so it can be read as a command arg)
-impute = TRUE
+# switches
+resubmitAll = TRUE # whether or not to resubmit jobs that have completed already
+cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
+cleanup_end = FALSE # "" /end
+impute = TRUE # whether or not to impute missing data as part of the qr
+cat_files = TRUE # whether or not to concatenate all of the files at the end
 #------------------------------------
 
 #------------------------------------
@@ -132,12 +128,11 @@ array_table = array_table[1:10, ]
 # save the array table and the data with IDs to /ihme/scratch/
 write.csv(array_table, arrayFile)
 write.fst(dt, scratchInFile)
+#------------------------------------
 
-#--------------------------------------------------------------------------------
-
-#----------------------------------------
+#------------------------------------
 # run quantregScript.r as separate qsubs
-#-----------------------------------------
+#------------------------------------
 # file pathways are now relative to the root of the repository
 
 # determine the number of rows in the array job
@@ -145,12 +140,11 @@ N = nrow(array_table)
 
 # base data set: run value~date on each org_unit and element
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
+#------------------------------------
 
-#----------------------------------------------------------
 #------------------------------------
 # wait for files to be done
 #------------------------------------
-
 i = N-1
 numFiles = length(list.files(parallelDir))
 while(numFiles<i) { 
@@ -163,21 +157,28 @@ while(numFiles<i) {
 #------------------------------------
 # once all files are done, collect all output into one data table
 #------------------------------------
-fullData = data.table()
+if (cat_files == TRUE){
+  # fullData = data.table()
+  # 
+  # for (k in seq(N)) {
+  #   tmp = read.fst(paste0(parallelDir, 'quantreg_output', k, '.fst'), as.data.table=TRUE)
+  #   if(k==1) fullData = tmp
+  #   if(k>1) fullData = rbind(fullData, tmp)
+  #   cat(paste0('\r', j))
+  #   flush.console()
+  # }
+  # 
+  # # change the name of the health zones back to 'health_zone'
+  # if (set=='pnlp') setnames(dt, 'org_unit_id', 'health_zone')
+  # 
+  # # save full data
+  # saveRDS(fullData, outFile)
+  # scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
+  # parallelDir = paste0(scratchDir, 'parallel_files/')
 
-for (k in seq(N)) {
-  tmp = read.fst(paste0(parallelDir, 'quantreg_output', k, '.fst'), as.data.table=TRUE)
-  if(k==1) fullData = tmp
-  if(k>1) fullData = rbind(fullData, tmp)
-  cat(paste0('\r', j))
-  flush.console() 
+  # faster binding:
+  system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* > ', outFile))
 }
-
-# change the name of the health zones back to 'health_zone'
-if (set=='pnlp') setnames(dt, 'org_unit_id', 'health_zone')
-
-# save full data
-saveRDS(fullData, outFile)
 #------------------------------------
 
 #------------------------------------
