@@ -1,6 +1,7 @@
 #------------------------------------
 # This script is run on the cluster by run_quantreg_parallel.r
 # source from the cluster
+# runs quantile regression on all data sets from DHIS
 #------------------------------------
 
 library(data.table)
