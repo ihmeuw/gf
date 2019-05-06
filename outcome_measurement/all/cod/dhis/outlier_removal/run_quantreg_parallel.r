@@ -43,6 +43,25 @@ set = 'base'
 #------------------------------------
 
 #------------------------------------
+# switches
+
+cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
+cleanup_end = FALSE # "" /end
+impute = 'TRUE' # whether or not to impute missing data as part of the qr
+cat_files = TRUE # whether or not to concatenate all of the files at the end
+#------------------------------------
+
+#------------------------------------
+# clean up parallel files at the start
+#------------------------------------
+if (cleanup_start == TRUE){
+  # before starting the process, delete the existing files on the cluster
+  # this allows us to avoid duplication or aggregating old files 
+  system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) # removes all files and folders within the directory
+}
+#------------------------------------
+
+#------------------------------------
 # set directories, switchs, arguments  
 #------------------------------------
 # detect if operating on windows or on the cluster 
@@ -65,21 +84,6 @@ if (!file.exists(oeDir)) dir.create(oeDir)
 # set arguments and interim files to use on the cluster
 arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
 
-# switches
-cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
-cleanup_end = FALSE # "" /end
-impute = 'TRUE' # whether or not to impute missing data as part of the qr
-cat_files = TRUE # whether or not to concatenate all of the files at the end
-#------------------------------------
-
-#------------------------------------
-# clean up parallel files at the start
-#------------------------------------
-if (cleanup_start == TRUE){
-  # before starting the process, delete the existing files on the cluster
-  # this allows us to avoid duplication or aggregating old files 
-  system(paste0('rm -r /ihme/scratch/users/', user, '/quantreg/*')) # removes all files and folders within the directory
-}
 #------------------------------------
 
 #------------------------------------
