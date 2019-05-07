@@ -15,6 +15,9 @@ current_cod_grant_period <- rep("2018-2020", 5)
 current_uga_grants <- c('UGA-C-TASO', 'UGA-H-MoFPED', 'UGA-M-MoFPED', 'UGA-M-TASO', 'UGA-T-MoFPED')
 current_uga_grant_period <- rep("2018-2020", 5)
 
+current_sen_grants <- c('SEN-H-ANCS', 'SEN-H-CNLS', 'SEN-M-PNLP', 'SEN-Z-MOH')
+current_sen_grant_period <- rep(NA, 5)
+
 #---------------------------------------------------------------------------------------------
 # Store a list of the IHME internal country codes that correspond to our project's iso codes. 
 # To be used throughout the database for consistency. 

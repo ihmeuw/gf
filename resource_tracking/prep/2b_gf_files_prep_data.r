@@ -19,11 +19,17 @@ if (prep_files == TRUE){
   
   #Validate file list 
   desired_cols <- c("file_name", "function_type", "sheet", "disease", "loc_id", "data_source", "period", "qtr_number", "grant", "primary_recipient", 
-                    "secondary_recipient", "language", "grant_period", "grant_status", "start_date", "file_iteration", "geography_detail", "loc_name", "mod_framework_format")
+                    "secondary_recipient", "language", "grant_period", "grant_status", "start_date", "file_iteration", "geography_detail", 
+                    "loc_name", "mod_framework_format", "currency")
   stopifnot(colnames(file_list) %in% desired_cols)
   
+<<<<<<< Updated upstream
   stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
   stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
+=======
+  stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr"))
+  stopifnot((unique(file_list$file_iteration))%in%c("final", "initial"))
+>>>>>>> Stashed changes
   
   #Prioritize GOS data where we have it 
   file_list = prioritize_gos(file_list)
@@ -111,7 +117,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, secondary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language)]
+                                 mod_framework_format, file_iteration, language, currency)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
     }  
@@ -189,18 +195,3 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expendi
 rt_files <- unique(resource_database$file_name)
 stopifnot(length(unique(file_list$file_name)) == length(rt_files))
 stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
-
-#Add in a variable for the disease of the file before you start mapping process. 
-resource_database[, disease_grant:=strsplit(grant, "-")]
-resource_database[, disease_grant:=sapply(disease_grant, "[", 2 )]
-#Correct some known issues 
-resource_database[grant=="UGD-011-G10-S", disease_grant:='S']
-resource_database[grant=="UGD-708-G13-H", disease_grant:='H']
-unique(resource_database$disease_grant) #Visual check that these all make sense. 
-
-resource_database[disease_grant=='C', disease_grant:='hiv/tb']
-resource_database[disease_grant=='H', disease_grant:='hiv']
-resource_database[disease_grant=='T', disease_grant:='tb']
-resource_database[disease_grant=='S' | disease_grant=='R', disease_grant:='rssh']
-resource_database[disease_grant=='M', disease_grant:='malaria']
-

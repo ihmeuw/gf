@@ -28,6 +28,9 @@ module_map[, module:=replace_acronyms(module)]
 module_map[, intervention:=replace_acronyms(intervention)]
 
 #Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
+if (!'activity_description'%in%names(raw_data)){ #If this column doesn't exist, add it as 'NA' so the code below can run
+  raw_data[, activity_description:=NA]
+}
 if (prep_files == TRUE){
   raw_data = correct_modules_interventions(raw_data)
 }
@@ -153,14 +156,55 @@ for (i in 1:length(current_uga_grants)){
   mapped_data[grant==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
               current_grant:=TRUE]
 }
+for (i in 1:length(current_sen_grants)){
+  mapped_data[grant==current_sen_grants[i] & grant_period==current_sen_grant_period[i], 
+              current_grant:=TRUE]
+}
 
 if (prep_files==TRUE){
   mapped_data$loc_name = country
 }
+<<<<<<< Updated upstream
 for (i in 1:nrow(code_lookup_tables)){
   mapped_data[loc_name==code_lookup_tables$iso_code[i], country:=code_lookup_tables$country[i]]
 }
 
+=======
+
+#--------------------------------------------------------------------------------
+#Add in a variable for the disease of the grant #Yuck - Emily try to rewrite this code. 
+#--------------------------------------------------------------------------------
+mapped_data[, disease_split:=strsplit(grant, "-")]
+potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
+
+for (i in 1:nrow(mapped_data)){
+  if (mapped_data$disease_split[[i]][2]%in%potential_diseases){
+    mapped_data[i, grant_disease:=sapply(disease_split, "[", 2 )]
+  } else if (mapped_data$disease_split[[i]][3]%in%potential_diseases){
+    mapped_data[i, grant_disease:=sapply(disease_split, "[", 3 )]
+  } else if (mapped_data$disease_split[[i]][4]%in%potential_diseases){
+    mapped_data[i, grant_disease:=sapply(disease_split, "[", 4 )]
+  }
+}
+
+mapped_data[, disease_split:=NULL]
+
+unique(mapped_data[!grant_disease%in%potential_diseases, .(grant, grant_disease)]) #Visual check that these all make sense. 
+
+mapped_data[grant_disease=='C', grant_disease:='hiv/tb']
+mapped_data[grant_disease=='H', grant_disease:='hiv']
+mapped_data[grant_disease=='T', grant_disease:='tb']
+mapped_data[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
+mapped_data[grant_disease=='M', grant_disease:='malaria']
+mapped_data[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
+
+stopifnot(unique(mapped_data$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
+
+# --------------------------------------------------------
+# Convert currencies to USD #EMILY START HERE  
+# --------------------------------------------------------
+
+>>>>>>> Stashed changes
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------
