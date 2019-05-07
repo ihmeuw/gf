@@ -48,7 +48,7 @@ x[grep(pattern="centre sante", x=org_unit1), level:='health_center']
 x[grep(pattern="centre de sante de reference", x=org_unit1), level:='reference_health_center']
 
 x[grep(pattern="poste de sante", x=org_unit1), level:='health_post']
-x[grep(pattern="poste", x=org_unit1), level:='health_post']
+x[grep(pattern="post", x=org_unit1), level:='health_post']
 
 x[grep(pattern="centre medical", x=org_unit1), level:='medical_center']
 

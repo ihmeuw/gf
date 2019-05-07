@@ -22,15 +22,9 @@ if (prep_files == TRUE){
                     "secondary_recipient", "language", "grant_period", "grant_status", "start_date", "file_iteration", "geography_detail", 
                     "loc_name", "mod_framework_format", "currency")
   stopifnot(colnames(file_list) %in% desired_cols)
-  
-<<<<<<< Updated upstream
-  stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
-  stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
-=======
   stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr"))
   stopifnot((unique(file_list$file_iteration))%in%c("final", "initial"))
->>>>>>> Stashed changes
-  
+
   #Prioritize GOS data where we have it 
   file_list = prioritize_gos(file_list)
   

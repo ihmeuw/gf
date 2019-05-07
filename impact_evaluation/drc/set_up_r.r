@@ -68,6 +68,9 @@ mfFile = paste0(mapDir, '/intervention_and_indicator_list.xlsx')
 
 # archive function
 source('./impact_evaluation/_common/archive_function.R')
+
+# function that runs a SEM as unrelated regressions
+source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 # ------------------------------------------------------------------------
 
 
@@ -156,7 +159,7 @@ outputFile3b = paste0(ieDir, 'outcomes_impact_corrected.RDS')
 outputFile3bGraphs = paste0(ieDir, '../visualizations/outcomes_impact_correction_results.pdf')
 
 # output file from 4a_set_up_for_analysis.r
-outputFile4a = paste0(ieDir, 'inputs_outputs_pre_model.rdata')
+outputFile4a = paste0(ieDir, 'first_half_pre_model.rdata')
 if (Sys.info()[1]!='Windows') { 
 	outputFile4a_scratch = paste0(clustertmpDir1, 'first_half_data_pre_model.rdata')
 }
@@ -168,7 +171,7 @@ if (Sys.info()[1]!='Windows') {
 }
 
 # output file from 4c and 4d_explore_data.r (graphs)
-outputFile4c = paste0(ieDir, '../visualizations/inputs_outputs_exploratory_graphs.pdf')
+outputFile4c = paste0(ieDir, '../visualizations/first_half_exploratory_graphs.pdf')
 outputFile4d = paste0(ieDir, '../visualizations/second_half_exploratory_graphs.pdf')
 
 # output file from 5a_run_first_half_analysis.R
@@ -178,7 +181,7 @@ outputFile5a = paste0(ieDir, 'first_half_model_results.rdata')
 outputFile5b = paste0(ieDir, 'second_half_model_results.rdata')
 
 # output file from 6_display_results.r
-outputFile6a = paste0(ieDir, '../visualizations/first_half_model_results.pdf')
+outputFile6a = paste0(ieDir, '../visualizations/sem_diagrams.pdf')
 outputFile6b = paste0(ieDir, '../visualizations/bottleneck_analysis.pdf')
 outputFile6c = paste0(ieDir, '../visualizations/impact_analysis.pdf')
 outputFile6d = paste0(ieDir, '../visualizations/health_zone_effects.pdf')

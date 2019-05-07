@@ -49,54 +49,46 @@ urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # -----------------------------------------------
 
 
+# -----------------------------------------------
+# Compare SEM to GLM
+
+# merge
+comp = merge(summaries1, urFits1, by=c('lhs','op','rhs','health_zone'),suffixes=c('_sem','_glm'))
+
+# -----------------------------------------------
+
+
 # ----------------------------------------------
 # Display results
-
-# my sem graph function for first half model
-p1 = semGraph(parTable=means1, nodeTable=nodeTable1, 
-	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
-	lineWidth=1.5, curved=0, tapered=FALSE)
-
-# my sem graph function for second half model
-p2 = semGraph(parTable=means2, nodeTable=nodeTable2, 
-	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
-	lineWidth=1.5, curved=0, tapered=FALSE, variances=FALSE, 
-	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
-
-# my sem graph function for first half model with coefficients
-p3 = semGraph(parTable=means1, nodeTable=nodeTable1, 
-	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE)
-
-# my sem graph function for second half model with coefficients
-p4 = semGraph(parTable=means2, nodeTable=nodeTable2, 
-	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE, 
-	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
-
-# my sem graph function for first half "unrelated regressions" model
-p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
-	scaling_factors=NA, standardized=FALSE, 
-	lineWidth=1.5, curved=0, tapered=FALSE)
-
-# my sem graph function for second half "unrelated regressions" model
-p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2, 
-	scaling_factors=NA, standardized=FALSE, 
-	lineWidth=1.5, curved=0, tapered=FALSE, 
-	boxWidth=2, boxHeight=.5, buffer=c(.2, .25, .25, .25))
+ggplot(comp[op=='~' & lhs=='ITN_received_cumulative'], 
+		aes(y=est_sem, x=est_glm)) + 
+	geom_point() + 
+	geom_abline(intercept=0, slope=1) + 
+	facet_wrap(~rhs, scales='free') + 
+	labs(title='Coefficients Relating to ITN Received', 
+		y='SEM Estimate', x='GLM Estimate') + 
+	theme_bw()
+	
+	
+ggplot(comp[op=='~' & lhs=='ACT_received_cumulative'], 
+		aes(y=est_sem, x=est_glm)) + 
+	geom_point() + 
+	geom_abline(intercept=0, slope=1) + 
+	facet_wrap(~rhs, scales='free') + 
+	labs(title='Coefficients Relating to ACT Received', 
+		y='SEM Estimate', x='GLM Estimate') + 
+	theme_bw()
 # ----------------------------------------------
 
 
-# -----------------------------------
-# Save output
-print(paste('Saving:', outputFile6a)) 
-pdf(outputFile6a, height=6, width=9)
-print(p1)
-print(p2)
-print(p3)
-print(p4)
-dev.off()
+# # -----------------------------------
+# # Save output
+# print(paste('Saving:', outputFile6e)) 
+# pdf(outputFile6e, height=6, width=9)
+# print(p1)
 
-# save a time-stamped version for reproducibility
-archive(outputFile6a)
-# -----------------------------------
+# dev.off()
+
+# # save a time-stamped version for reproducibility
+# archive(outputFile6e)
+# # -----------------------------------

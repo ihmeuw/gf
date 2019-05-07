@@ -50,6 +50,42 @@ module_map = unique(module_map)
   new_rows <- fread(paste0(mapping_dir, "gf_mapping_additions.csv")) #Add in new rows to previously approved map
   new_rows = new_rows[, .(module, intervention, code, coefficient, disease)]
   module_map = rbind(module_map, new_rows, fill = TRUE)
+  
+  #-------------------------------------------------------------------------------
+  # Expand the map for HIV/TB and RSSH 
+  #------------------------------------------------------------------------------
+  # If one module/intervention maps to RSSH for one disease (hiv, tb, or malaria)
+  #   then it should also map to the same disease for the other two.
+  all_rssh = module_map[substr(code, 1, 1)=='R']
+  #Remove any program management or unspecified
+  all_rssh = all_rssh[!code%in%c('R8', 'R8_1', 'R8_2', 'R8_3', 'R98', 'R99')]
+  mal_rssh = copy(all_rssh)
+  mal_rssh[, disease:='malaria']
+  hiv_rssh = copy(all_rssh)
+  hiv_rssh[, disease:='hiv']
+  tb_rssh = copy(all_rssh)
+  tb_rssh[, disease:='tb']
+  hivtb_rssh = copy(all_rssh)
+  hivtb_rssh[, disease:='hiv/tb']
+
+  all = list(mal_rssh, hiv_rssh, tb_rssh, hivtb_rssh, module_map)
+  module_map = rbindlist(all, use.names=TRUE)
+
+  # All codes that are okay under HIV OR TB will also be okay if they match with the same
+  # line item from a specific HIV/TB grant.
+  hiv = module_map[substr(code, 1, 1)=='H']
+  #Remove program management, PBF, and unspecified
+  hiv = hiv[!code%in%c('H13, H13_1', 'H13_2', 'H13_3', 'H98', 'H99')]
+  tb = module_map[substr(code, 1, 1)=='T']
+  #Remove program management, TB/HIV, PBF, and Unspecified.
+  tb = tb[!substr(code, 1, 2)%in%c('T2', 'T4', 'T9')]
+  hiv[, disease:='hiv/tb']
+  tb[, disease:='hiv/tb']
+
+  hivtb = list(hiv, tb, module_map)
+  module_map = rbindlist(hivtb, use.names=TRUE)
+
+  module_map = unique(module_map) #OK to here
 
 # -------------------------------
 #
@@ -59,10 +95,19 @@ module_map = unique(module_map)
   #These are the variables that are merged onto the raw data, so it's important to check duplicates with these. 
   keyVars = c('module', 'intervention', 'disease')
   
+  #Remove whitespace from 'code' column before doing checks below
+  module_map[, code:=trimws(code)]
+  all_interventions[, code:=trimws(code)]
+  
+  #Drop out French, Spanish, and abbreviated modules for now.  
+  #module_map = module_map[, -c('gf_intervention_fr', 'gf_module_fr', 'module_esp', 'intervention_esp', 'abbreviated_module')]
+  
 #--------------------------------------------------------------------------------
 # CLEANING- Dropping modules/interventions that map to codes that don't make sense. 
 #--------------------------------------------------------------------------------
-
+ #These are new changes after the way we've modified the 'general' and 'other' mappings - EKL 5/1/19
+  module_map[module=="preventionprogramsforadolescentsandyouthinandoutofschool" & intervention == "unspecified", code:="H8"]
+  module_map[module=="tbhiv" & intervention=="keypopulationstbhivothers" & disease=="hiv/tb", code:="H11_5"]
 
 #--------------------------------------------------------------------------------
 # CLEANING- Removing typos and close string matches from map  
@@ -71,13 +116,25 @@ module_map = unique(module_map)
 #--------------------------------------------------------------------------------
 # CLEANING- Replacing modules/interventions that are typos or unspecified. 
 #--------------------------------------------------------------------------------
-
+ #Fixing diseases that were unspecified 
+  module_map[code=="H99" & disease!='hiv' & disease!='hiv/tb', disease:='hiv']
+  module_map[code=="M99", disease:='malaria']
+  module_map[code=="T99", disease:="tb"]
+  
+  module_map[code=="H99", abbreviated_module:="Unspecified"]
+  module_map[code=="M99", abbreviated_module:="Unspecified"]
+  module_map[code=="T99", abbreviated_module:="Unspecified"] #Ok to here. 
+  
 
 #--------------------------------------------------------------------------------
 # CLEANING (Checks 1 & 2)- Remove duplicates in module, intervention, and disease 
 # with coefficients of 1, then check. 
 #--------------------------------------------------------------------------------
-
+module_map = module_map[!(code=="H10_8" & module=="tbhiv" & intervention=="collaborativeactivitieswithotherprogramsandsectorstbhiv")]
+module_map = module_map[!(code=="H99" & module=="unspecified" & intervention=="unspecified" & coefficient<1)]
+module_map = module_map[!(code=="T99" & module=="unspecified" & intervention=="unspecified" & coefficient<1)]
+module_map = module_map[!(code=="M99" & module=="unspecified" & intervention=="unspecified" & coefficient<1)]
+module_map = module_map[!(code=="R99" & module=="unspecified" & intervention=="unspecified" & coefficient<1)]
 
 #--------------------------------------------------------------------------------
 # CLEANING (Check 3) Remove specific mappings to 'na', 'all', or 'other'. 
@@ -117,7 +174,7 @@ module_map = unique(module_map)
 #--------------------------------------------------------------------------------
 # CLEANING - remove duplicates created by running checks above.
 #--------------------------------------------------------------------------------
-module_map = unique(module_map)
+module_map = unique(module_map) #Ok to here. 
 
 #-------------------------------------------------------------------------------
 #
@@ -146,14 +203,14 @@ if (nrow(duplicates_coeff_one) != 0 & include_stops == TRUE){
 #   greater than or less than 1 (budget shrinking or growing) 
 #--------------------------------------------------------------------------------
 redistribution_map <- module_map[coefficient!=1]
-redistribution_map[, coeff_sum:=round(sum(coefficient), 1), by=keyVars]
+redistribution_map[, coeff_sum:=round(sum(coefficient), 3), by=keyVars]
 
-redistribution_error = redistribution_map[coeff_sum != 1.0]
+redistribution_error = redistribution_map[coeff_sum!=1.000]
 if(nrow(redistribution_error)>0 & include_stops == TRUE){
   print(unique(redistribution_error[, c("module", "intervention", "code"), with = FALSE]))
   stop(paste0(print(nrow(redistribution_error)), " lines have coefficients that don't sum to 1 by key variables."))
 }
-
+ #Ok to here. 
 #--------------------------------------------------------------------------------
 # 3. Remove all cases where "na" or "all" was mapping to a specific code. ***EMILY KEEP WORKING HERE- CHECK IF CODE IS GOING TO 'UNSPECIFIED'. 
 #--------------------------------------------------------------------------------
@@ -228,7 +285,7 @@ check_prefix$error = ifelse((check_prefix$disease == "hiv" & check_prefix$prefix
                               (check_prefix$disease == "hss" & check_prefix$prefix != "R"), TRUE, FALSE)
 check_prefix = check_prefix[error == TRUE] #Emily should check with David how we want to resolve all of these, including RSSH, but for now exclude 'R' from check. 
 
-check_prefix_ltd <- check_prefix[prefix != 'R']
+check_prefix_ltd <- check_prefix[prefix != 'R'] #Ok to here. 
 # 
 # if(nrow(check_prefix_ltd)>0 & include_stops == TRUE){
 #   print(unique(check_prefix_ltd[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
@@ -277,7 +334,7 @@ check_rssh = check_rssh[order(module)]
 # }
 
 #print(unique(check_rssh[module %in% problem_mods, .(module, intervention, code)])) #Need to check with David on these. 
-module_map[, prefix:=NULL]
+module_map[, prefix:=NULL] #Ok to here. 
 #--------------------------------------------------------------------------------
 # 9. Add a check to verify that if observations have the same module, intervention, 
 #    and code, they should have the same coefficient. 
@@ -293,11 +350,11 @@ hiv_codes <- c('H9', 'H9_1', 'H9_2', 'H9_3', 'H98', 'H99')
 tb_codes <- c('T4', 'T4_1', 'T4_2', 'T4_3', 'T98', 'T99')
 mal_codes <- c('M4', 'M4_1', 'M4_2', 'M4_3', 'M98', 'M99')
 rssh_codes <- c('R8', 'R8_1', 'R8_2', 'R8_3', 'R98', 'R99')
-
-check_rssh_cats <- module_map[code%in%rssh_codes & (disease != 'rssh' & disease != 'hss')]
+# 
+# check_rssh_cats <- module_map[code%in%rssh_codes & (disease != 'rssh' & disease != 'hss')]
 # if(nrow(check_rssh_cats)>0 & include_stops == TRUE){
 #   print(unique(check_rssh_cats[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
-#   stop(paste0(print(nrow(check_rssh_cats)), " cases where general modules are incorrectly classified as RSSH")) #Check with David here. 
+#   stop(paste0(print(nrow(check_rssh_cats)), " cases where general modules are incorrectly classified as RSSH")) #Check with David here.
 # }
 
 #--------------------------------------------------------------------------------
@@ -308,26 +365,57 @@ unspecified = unspecified[coefficient!=1][order(module, intervention)]
 
 # if(nrow(unspecified)>0 & include_stops == TRUE){
 #   print(unique(unspecified[, c("module", "intervention", 'code', 'disease'), with = FALSE]))
-#   stop(paste0(print(nrow(unspecified)), " cases where unspecified module/interventions are split among several interventions")) #Check with David here. 
+#   stop(paste0(print(nrow(unspecified)), " cases where unspecified module/interventions are split among several interventions")) #Check with David here.
 # }
+
+#--------------------------------------------------------------------------------
+# 12. Make sure that "other" and "general" are assigned correctly
+#--------------------------------------------------------------------------------
+
+#It's an error if the intervention is "unspecified", and it's in the "other" category. 
+unspecified = module_map[intervention=="unspecified", .(module, intervention, code)]
+error = unspecified[nchar(code)>2]
+
+other_codes = c('H1_8', 'H2_11', 'H3_11', 'H4_12', 'H5_11', 'H6_10', 'H7_5', 'H8_11', 'H9_5', 'H10_8', 'H11_8', 'H12_8', 'H13_3', 
+                'T1_10', 'T2_8', 'T3_10', 'T4_3', 
+                'M1_7', 'M2_11', 'M3_7', 'M4_3', 
+                'R1_5', 'R2_7', 'R3_3', 'R4_6', 'R5_3', 'R6_2', 'R7_5', 'R8_3')
+
+error2 = unspecified[code%in%other_codes] #These were reviewed by hand by EKL 5/1/19
+
 
 #--------------------------------------------------------------------------------
 # Merge mapped codes to final mappings 
 #--------------------------------------------------------------------------------
-    module_map = module_map[, .(code, module, intervention, coefficient, disease)]
-    all_interventions = all_interventions[, -'disease']
-    module_map = merge(module_map, all_interventions, by='code')
+    module_map = module_map[, .(code, module, intervention, coefficient, disease)] #Ok to here. 
+    all_interventions = all_interventions[, .(gf_module, gf_intervention, code)] #Drop out French, Spanish, and the abbreviations for now. 
+    module_map = merge(module_map, all_interventions, by='code', all.x = TRUE)
     
-    stopifnot(nrow(module_map[is.na(gf_module)])==0)
+    stopifnot(nrow(module_map[is.na(gf_module)])==0) 
 #--------------------------------------------------------------------------------
 #Write final mapp and .diff files for comparison
 #--------------------------------------------------------------------------------
-
+    
+    #Final sanity check before saving! 
+    nrow(module_map)
+    module_map = unique(module_map)
+    nrow(module_map)
+    duplicates = module_map[duplicated(module_map, by=c('module', 'intervention', 'disease'))]
+    duplicates = duplicates[, .(module, intervention, disease, coefficient)]
+    duplicates = merge(duplicates, module_map[, .(module, intervention, disease, coefficient)], by=c(keyVars, 'coefficient'))
+    duplicates[, coeff_sum:=sum(coefficient), by=keyVars]
+    duplicates = duplicates[round(coeff_sum, 3)!=1.000]
+    duplicates = duplicates[order(module, intervention, disease)]
+    if (nrow(duplicates)!=0){
+      print(duplicates)
+      stop("There are duplicates in key merge variables - review map before saving.")
+    }
+    
   write.csv(module_map, paste0(mapping_dir, "gf_mapping.csv"), row.names = FALSE)
   saveRDS(module_map, paste0(mapping_dir, "gf_mapping.rds"))
 
   #Write a "diff" file to repository to make comparing changes easier. 
-  module_map = module_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention, abbreviated_module)]
+  module_map = module_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention)]
   # removed_rows = anti_join(original_map, module_map)
   # write.csv(removed_rows, paste0(code_dir, "proposed_deletions_mod_map.csv"))
   # 

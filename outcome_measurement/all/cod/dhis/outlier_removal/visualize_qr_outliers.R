@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'base'
+set = 'sigl'
 
 # user name for sourcing functions
 user_name = 'ccarelli'
@@ -31,60 +31,20 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
-#------------------------------------
+#-----------------------------------
 # output files
 
 if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
 if (set=='base') outFile = 'outliers/base/base_outliers_replaced.pdf'
-if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_23_19.pdf'
-                  outData = 'prepped/outliers_removed/sigl_drugs_rec_prepped_outliers_labelled.rds' }
-#------------------------------------
-# source function for health zone names
-
-# source function - locally or on the cluster
-# reset working directory using user_name to specify path
- if (username=='ccarelli') { setwd('C:/Users/ccarelli/local/gf')
-   } else {setwd('C:/local/gf')}
-
-source('./core/standardizeHZNames.R')
+if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_24_19_updated_rules.pdf'
+                  outData = 'prepped/sigl_drugs_prepped_outliers_labeled.rds' }
 #------------------------------------
 # read in the file
 
 if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/base/qr_results_full.rds'))}
 if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base/base_quantreg_results.rds'))}
-if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl_quantreg_imputation_results.rds'))
+if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl/prepped_sigl_quantreg_imputation_results.rds'))
 #------------------------------------
-
-#------------------------------------
-# fix problem in sigl where when health zone is the org unit type, the health_zone variable was missing and 
-# got set incorrectly to bena-tshadi.
-
-# ALSO - set value back to missing where it was imputed (with fitted value, so we can always go back and add it later)
-#------------------------------------
-if (set == 'sigl') {
-  dt[org_unit_type == "health_zone", health_zone := NA]
-  dt[is.na(health_zone) & org_unit_type == "health_zone", health_zone1 := unlist(lapply(strsplit(org_unit, " "), "[", 2))]
-  dt[is.na(health_zone) & org_unit_type == "health_zone", health_zone2 := unlist(lapply(strsplit(org_unit, " "), "[", 3))]
-  dt[is.na(health_zone) & org_unit_type == "health_zone", health_zone3 := unlist(lapply(strsplit(org_unit, " "), "[", 4))]
-  dt[ health_zone3 != 'Zone' & health_zone2 != 'Zone', health_zone := paste(health_zone1, health_zone2, health_zone3) ]
-  dt[ health_zone3=='Zone', health_zone := paste(health_zone1, health_zone2)]
-  dt[ health_zone2=='Zone', health_zone := health_zone1]
-  dt[, c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
-  
-  dt$health_zone <- standardizeHZNames(dt$health_zone)
-  
-  dt[ got_imputed== "yes", value := NA ]
-  
-  #fix where level is NA because we are going to do outlier detection by level
-  dt[is.na(level) & grepl(org_unit, pattern = "zone", ignore.case= TRUE), level := "health_zone"]
-  dt[is.na(level) & grepl(org_unit, pattern = "aire", ignore.case= TRUE), level := "health_area"]
-  dt[is.na(level) & grepl(org_unit, pattern = "polyc", ignore.case= TRUE), level := "polyclinic"]
-  dt[is.na(level) & grepl(org_unit, pattern = "hos.*cent|cent.*hos|CH", ignore.case= TRUE), level:="hospital_center"]
-  dt[is.na(level) & grepl(org_unit, pattern = "m*dical", ignore.case= TRUE), level:="medical_center"]
-  dt[is.na(level) & grepl(org_unit, pattern = "r*rence", ignore.case= TRUE), level:="reference_health_center"]
-  dt[is.na(level) & grepl(org_unit, pattern = "cent|CS", ignore.case= TRUE), level:="health_center"]
-  dt[is.na(level) & grepl(org_unit, pattern = "clin", ignore.case= TRUE), level:="clinic"]
-}
 
 #-----------------------------------
 # hacky base function - i will get rid of this
@@ -138,8 +98,9 @@ if (set=='base') idVars = c('org_unit_id', 'element')
 if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable') 
 
 #------------------------------------
-# identify outliers where the residuals are larger than the median of the residuals +/- 10 MADS of the residuals
+# identify outliers where the residuals are larger than +/- 10 MADS of the fitted values
 # set threshold for different data sets:
+
 if (set=='pnls' | set == 'base'){
   t1 = 5
   t2 = 10  }
@@ -152,13 +113,11 @@ if (set=='sigl'){
 dt[!all(is.na(resid)) , mad_resid := mad(resid, na.rm=TRUE), by = idVars]
 dt[!all(is.na(resid)) , sd_resid := sd(resid, na.rm=TRUE), by = idVars]
 dt[ , thresh_var := mad_resid]
+dt[ , stat_used := "mad"] # I want to keep track of which stat is used so we can assess if SD is working okay in place of mad
 # if mad of residuals is less than one, use SD 
 dt[ mad_resid < 1, thresh_var := sd_resid]
+dt[ mad_resid < 1, stat_used := "sd"]
 dt[ , c('sd_resid', 'mad_resid') := NULL]
-
-# identify the thresholds for outliers using the thresh_var (mad or sd of residuals) + the median of the residuals
-dt[!all(is.na(resid)), thresh1 := median(resid, na.rm=TRUE) + (t1 * thresh_var), by = idVars]
-dt[!all(is.na(resid)), thresh2 := median(resid, na.rm=TRUE) + (t2 * thresh_var), by = idVars]
 
 # set lower and upper bounds
 # does this need to be for only !all(is.na) as well? not sure
@@ -174,22 +133,22 @@ dt[ , lower_mid := fitted_value - (t1 * thresh_var)]
 if (set=='pnls' | set == 'base'){
   limit = 100}
 if (set=='sigl'){
-  quantiles = dt[ , .( limit = quantile(value, 0.995, na.rm = TRUE), quantile = rep( 0.995)), by = c("variable","level")]
-  dt = merge(dt, quantiles, by = c("variable", "level"))
+  quantiles = dt[ , .( limit = quantile(value, 0.995, na.rm = TRUE), quantile = rep( 0.995)), by = c("variable","level", "drug")]
+  dt = merge(dt, quantiles, by = c("variable", "level", "drug"))
 }
 
 # the value is greater than the limit set above and greater than 10 times the mad of residuals 
 # or less than 10 times the negative mad of the residuals
-dt[, outlier := ifelse( (value > limit & ( resid > thresh2 )), TRUE, FALSE) ]
-dt[(value > limit & ( resid < -thresh2 )), outlier :=TRUE]
+dt[, outlier := ifelse( (value > limit & ( value > upper )), TRUE, FALSE) ]
+dt[ (value < lower ), outlier :=TRUE ]
 
 # number of outliers
-dt[outlier==TRUE, .N] 
+dt[ outlier==TRUE, .N ] 
 # ( dt[outlier==TRUE, .N]  / dt[!is.na(value), .N] ) * 100 # for sigl = 811; 0.017% of non-missing data
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
 
-dt[ , facility:=word(org_unit, 2, -1)]
+# dt[ , facility:=word(org_unit, 2, -1)]
 
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
@@ -246,7 +205,7 @@ out[ ,c('count', 'combine2', 'combine3'):=NULL]
 # as some outliers have now been changed
 if (set=='pnls') out[ , combine:=paste0(org_unit_id, sex, element)]
 if (set=='base') out[ , combine:=paste0(org_unit_id, element)]
-if (set=='sigl') out[, combine:=paste0(org_unit_id, drug)]
+if (set=='sigl') out[ , combine:=paste0(org_unit_id, drug)]
 
 out_new = out[outlier==T, unique(combine)]
 out = out[combine %in% out_new]
@@ -258,7 +217,7 @@ out[ , combine:=NULL]
 #----------------------------
 
 #----------------------------
-# save a version of the data set with final outliers (after threshold set and emerging trends dropped) labelled
+# save a version of the data set with final outliers (after threshold set and emerging trends outliers dropped) labelled
 #----------------------------
 # need to set the values in "drop" to NOT be outliers:
 if (set == "sigl"){
@@ -409,7 +368,72 @@ for(i in seq(length(list_of_plots))) {
 
 dev.off()
 #--------------------------------
+
+
+#------------------------------------------------------------
 # remove outliers from the data set and perform final prep
+
+# function to remove outliers from base and save as a prepped file
+base_remove = function(x) {
+  
+  out = out[outlier==T]
+  
+  # create a unique identifier
+  dt[ ,combine:=paste0(org_unit_id, element_id, category, date, value)]
+  out[ , combine:=paste0(org_unit_id, element_id, category, date, value)]
+  
+  # subset to the outliers identified
+  list_of_outliers = out$combine 
+  dt[combine %in% list_of_outliers, outlier_new:=TRUE]
+  dt[is.na(outlier_new), outlier_new:=FALSE]
+  dt[ , combine:=NULL]
+  
+  # eliminate only the outliers that do not violate the emerging trends rule
+  dt = dt[outlier_new==FALSE]
+  dt[  , c('outlier', 'outlier_new'):=NULL]
+  
+  # look at structure of original prepped data 
+  og = readRDS(paste0( dir, '/prepped/base_services_prepped.rds'))
+  head(og)        
+  
+  #---------------------- ----------------------------------------       
+  # format to to look the same as prepped data 
+  
+  #----------------------
+  # subset to the necessary elements and rename
+  
+  dt[ ,c('fitted_value', 'resid', 'thresh_var', 'upper', 'lower', 'upper_mid', 'lower_mid',
+         'facility', 'org_unit', 'element_fr'):=NULL]
+  
+  # rename the elements to the english elements and label the data set
+  setnames(dt, 'element', 'element_eng')
+  dt[ , data_set:='A- Services de Base']
+  
+  #----------------------
+  # merge in facilities meta data 
+  
+  meta = readRDS(paste0(dir, 'meta_data/master_facilities.rds'))
+  dt = merge(dt, meta, by='org_unit_id', all.x=T)
+  
+  #----------------------
+  # merge in original element ids based on the names
+  elements = readRDS(paste0(dir, 'meta_data/elements_fix.rds'))
+  dt = merge(dt, elements, by='element_id', all.x=T)
+  
+  # fix to include correct element ids 
+  dt[ ,element_id:=NULL]
+  setnames(dt, 'old_element_id', 'element_id')
+  
+  # format appropriately
+  dt = dt[ ,.(org_unit_id, element_id, org_unit, element_eng, date, category, value, 
+         org_unit_type, level, country, dps, health_zone, health_area, element, data_set, coordinates)]
+  
+
+  #----------------------
+  saveRDS(dt, paste0(dir, '/prepped/base_services_prepped_outliers_removed.rds'))
+  return(dt)
+  
+}
 
 # runs outlier removal on base and formats as prepped data 
 if (set=='base') dt = base_remove(dt)

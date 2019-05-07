@@ -149,6 +149,7 @@ cleaned_database$intervention <- "all"
 
 dups<-cleaned_database[duplicated(cleaned_database) | duplicated(cleaned_database, fromLast=TRUE)]
 
+#EMILY THIS CAN'T HAPPEN. 
 # Convert from Quitzal to USD
 conversion_table = data.table("year" = c("2004", "2005", "2006", "2007", "2008", "2009", "2010", "2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018"), 
                               "conversion" = c(7.74022,	7.5532,	7.3301,	7.45875,	7.42153,	8.01039,	7.92282,	7.64965,	7.68406,	7.71407,	7.59794,	7.49704,	7.43533,	7.18309,	7.31697))

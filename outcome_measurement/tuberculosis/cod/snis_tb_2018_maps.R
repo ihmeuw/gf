@@ -41,6 +41,7 @@ outFile = "dps_maps_2018_quarterly.pdf"
 
 # functions
 source('./core/standardizeDPSNames.R')
+source('./core/standardizeHZNames.R')
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -48,6 +49,7 @@ source('./core/standardizeDPSNames.R')
 # ----------------------------------------------
 snis_cases <- readRDS(pati_cases)
 snis_reg <- readRDS(pati_registered)
+snis_reg[, element := as.character(element)]
 snis_res <- readRDS(pati_results)
 drcShape <- shapefile( paste0(shape_dir, dps_shapefile) )
 # ----------------------------------------------
@@ -84,7 +86,9 @@ snis_reg_dps$element <- as.character(snis_reg_dps$element)
 #cast wide and rename vars for calculation
 snis_reg = snis_reg[, .(quarter, date, org_unit, health_zone, dps, element, value)]
 snis_reg = snis_reg[, .(value = sum(value)), by = .(quarter, date, org_unit, health_zone, dps, element)]
+
 wide = dcast.data.table(snis_reg, quarter + date + org_unit + health_zone + dps ~ element)
+wide = dcast.data.table(snis_reg_dps, quarter + dps ~ element)
 
 # wide = dcast.data.table(snis_reg_dps, quarter + date + health_zone + dps ~ element)
 setnames(wide, "TB-Patients (nouveaux et rechutes) avec résultat de test VIH connu", "TB_patients_known_HIV_test_result")
@@ -99,19 +103,23 @@ setnames(wide, "TB-Nouveau Cas de tuberculose extrapulmonaire, confirmés bactéri
 
 #calculate vars
 wide[, notified_cases := tpc_relapse + tpp_relapse + tep_relapse + tpc_new + tpp_new + tep_new]
-wide[, perc_notif_cases_with_hiv_test := (TB_patients_known_HIV_test_result / notified_cases) * 100]
-wide[, perc_hiv_pos_on_art := (TB_patients_positive_HIV_on_ART / TB_patients_positive_HIV) * 100]
+wide[notified_cases != 0, perc_notif_cases_with_hiv_test := (TB_patients_known_HIV_test_result / notified_cases) * 100]
+wide[TB_patients_positive_HIV != 0, perc_hiv_pos_on_art := (TB_patients_positive_HIV_on_ART / TB_patients_positive_HIV) * 100]
 
 #scatterplots to look at the vars
-ggplot(wide, aes(notified_cases, TB_patients_known_HIV_test_result, color = as.character(date))) + geom_point() + geom_abline() + theme_bw()
+ggplot(wide, aes(notified_cases, TB_patients_known_HIV_test_result)) + geom_point() + geom_abline() + theme_bw() + 
+  ggtitle("Scatterplot showing numerator and denominator for 'Percent of TB patients with a known HIV test result' \nNote:all points should be below the diagonal line")
 check = wide[ TB_patients_known_HIV_test_result > notified_cases, ]
 check = check[,.(dps, date, quarter, TB_patients_known_HIV_test_result, notified_cases, tpp_new, tpp_relapse, tpc_new, tpc_relapse, tep_new, tep_relapse)]
 
-ggplot(wide, aes(TB_patients_positive_HIV, TB_patients_positive_HIV_on_ART)) + geom_point() + geom_abline() + theme_bw() + xlim(0, 500)+ ylim(0, 500)
-check = wide[ TB_patients_positive_HIV_on_ART > TB_patients_positive_HIV, ]
+ggplot(wide, aes(TB_patients_positive_HIV, TB_patients_positive_HIV_on_ART)) + geom_point() + geom_abline() + theme_bw() + xlim(0, 100)+ ylim(0, 100) + 
+  ggtitle("Scatterplot showing numerator and denominator for 'Percent of TB/HIV patients on ART' \nNote:all points should be below the diagonal line")
+check = wide[ TB_patients_positive_HIV_on_ART > TB_patients_positive_HIV, ] 
 
 #melt
+#dt = melt.data.table(wide, id.vars = c('quarter', 'date','dps', 'health_zone', 'org_unit'))
 dt = melt.data.table(wide, id.vars = c('quarter', 'dps'))
+
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -120,6 +128,7 @@ dt = melt.data.table(wide, id.vars = c('quarter', 'dps'))
 # list of vars to map
 vars = c("perc_notif_cases_with_hiv_test", "perc_hiv_pos_on_art")
 dt = dt[variable %in% vars]
+#dt_dps = dt[, .(value = sum(value, na.rm = TRUE)), by = .(quarter, dps, variable)]
 
 coordinates = as.data.table(fortify(drcShape, region='NAME_1'))
 coordinates$id <- standardizeDPSNames(coordinates$id)
@@ -161,6 +170,12 @@ for (var in vars) {
   
   i=i+1
 }
+
+pdf(paste0(out_dir, "maps_tbhiv_coverage_indciators.pdf"), height=6, width=10)
+for(i in seq(length(plots))) { 
+  print(plots[[i]])
+}
+dev.off()
 # ----------------------------------------------
 # ----------------------------------------------
 dt = snis_res_dps

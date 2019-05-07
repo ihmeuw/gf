@@ -48,6 +48,9 @@ checkFile = paste0(gos_raw, "Grants missing intervention information in new GOS 
   gos_data[disease=="Tuberculosis", disease:="tb"]
   gos_data[disease=="Health Systems Strengthening", disease:="rssh"]
   
+  #Add file name 
+  gos_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
+  
   # EMILY - DO WE WANT TO SEE IF WE HAVE OTHER DATA QUALITY ISSUES IN THIS FILE? 
 
 }
@@ -217,6 +220,13 @@ for (i in 1:nrow(code_lookup_tables)){
 totalGos[, start_date:=as.Date(start_date)]
 totalGos[, end_date:=as.Date(end_date)]
 
+#Sum duplicates in all variables before you split by quarter - there is one case of this for the grant "COD-H-MOH and module "Treatment, care and support" EKL 5/1/19 
+dups<-totalGos[duplicated(totalGos) | duplicated(totalGos, fromLast=TRUE)]
+print(paste0(nrow(dups), " duplicates found in database; values will be summed"))
+byVars = names(totalGos)
+byVars = byVars[!byVars%in%c('budget', 'expenditure')]
+totalGos = totalGos[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=byVars]
+
 #--------------------------------------------------------------------------------------------
 # Split data into quarters 
 # Because data is not evenly split into quarters (sometimes aggregated to 10 months, etc.)
@@ -229,8 +239,10 @@ totalGos[, orig_end_date:=end_date]
 
 #You have some time periods that start and end in the middle of the month. 
 #Address these cases. 
-# unique(totalGos[, .(day(start_date))]) #You have some time periods that end in the middle of the month - increment these. 
-# unique(totalGos[, .(day(end_date))])
+unique(totalGos[, .(day(start_date))]) #You have some time periods that end in the middle of the month - increment these. 
+unique(totalGos[, .(day(end_date))])
+
+#EMILY LOOK AT CASES WHERE END DATE IS 1. JUST SUBTRACT ONE FROM THE END MONTH. 
 
 #Grab the month and the year of the start and end dates, and standardize them to the beginning and ending of every month.  EMILY START HERE
 totalGos[, start_month:=month(start_date)]
@@ -255,77 +267,67 @@ unique(totalGos[, .(day(end_date))])
 
 #Generate the variables you need to split
 totalGos[, end_date:=end_date+1] #Increment end date by one day, so you can grab the full month range it covers. 
+# Can you just grab the month of the end date and then increment by 1? 
+#Just count the months between the start date and end date, no matter what day the end date ends on. 
 
 #--------------------------------------------------------------------------
 #The totals are okay before we start this check. 
 #Expand data by the number of months, and then split 
 #Make a data frame to merge onto that has the exact number of duplicated rows you'll need to create
-expansion = data.table()
-# totalGos = totalGos[grant=="COD-810-G11-H"]
-for (i in 1:nrow(totalGos)){
-  row = totalGos[i]
-  rep_num = (as.yearmon(row$end_date)-as.yearmon(row$start_date))*12
-  row = row[rep(seq_len(nrow(row)), each=rep_num)]
-  row[, split:=rep_num] #Save a variable to divide budget and expenditure by later. 
-  expansion = rbind(expansion, row)
-}
+totalGos[, splits:=(as.yearmon(end_date)-as.yearmon(start_date))*12]
+totalGos[, splits := ceiling(splits)]
+totalGos[, splits := as.integer(splits)]
+totalGos = expandRows(totalGos, "splits", drop = FALSE)
+check = totalGos[, .N, by = names(totalGos)]
+stopifnot(nrow(check[splits!=N])==0)
 
 #Divide budget and expenditure by the months each date range represents
-expansion[is.na(budget), budget:=0]
-expansion[is.na(expenditure), expenditure:=0]
-expansion[, budget:=budget/split]
-expansion[, expenditure:=expenditure/split]
-
-posttest = expansion_qtr[, .(post_budget=sum(budget, na.rm=T)), by=c('grant')]
-totals_check = merge(pretest, posttest, by=c('grant'), all=T)
-totals_check[, pre_budget:=round(pre_budget)]
-totals_check[, post_budget:=round(post_budget)]
-totals_error = totals_check[pre_budget!=post_budget]
-stopifnot(nrow(totals_error)==0) #David we need to review these. 
+totalGos[is.na(budget), budget:=0]
+totalGos[is.na(expenditure), expenditure:=0]
+totalGos[, budget:=budget/splits]
+totalGos[, expenditure:=expenditure/splits]
 
 #Reformat date variable, and generate 'quarter' variable
-byVars = colnames(expansion)
-expansion[, seq:=sequence(.N), by=byVars] #But this indexes at 1, so...
-expansion[, seq:=seq-1] #Subtract 1 here. 
+byVars = colnames(totalGos)
+totalGos[, seq:=sequence(.N), by=byVars] #But this indexes at 1, so...
+totalGos[, seq:=seq-1] #Subtract 1 here. 
 
 #Get the starting month and year variables, and then increment them. 
-expansion[, month:=month(start_date)]
-expansion[, year:=year(start_date)]
+totalGos[, month:=month(start_date)]
+totalGos[, year:=year(start_date)]
 
 #While seq is not 0, go through the loop below.
 #If seq is greater than or equal to 4, add 1 to year and divide everything by 4. Continue this loop while max(seq) > 4.
 # If month + seq + 1 equals 12, than
-expansion[, new_month:=month+seq]
-max_month = max(expansion$new_month)
-print(max_month)
+totalGos[, new_month:=month+seq]
+max_month = max(totalGos$new_month)
 while (max_month>12){
-  expansion[new_month>12, year:=year+1]
-  expansion[new_month>12, new_month:=new_month-12]
-  max_month = max(expansion$new_month)
-  print(max_month)
+  totalGos[new_month>12, year:=year+1]
+  totalGos[new_month>12, new_month:=new_month-12]
+  max_month = max(totalGos$new_month)
 }
-#View(expansion[1:300, .(start_date, end_date, seq, month, new_month, year)])
+#View(totalGos[1:300, .(start_date, end_date, seq, month, new_month, year)])
 
 #Now, add a quarter variable. 
-expansion[new_month<4, quarter:=1]
-expansion[new_month>=4 & new_month<7, quarter:=2]
-expansion[new_month>=7 & new_month<10, quarter:=3]
-expansion[new_month>=10, quarter:=4]
-unique(expansion[, .(new_month, quarter)][order(quarter, new_month)])
+totalGos[new_month<4, quarter:=1]
+totalGos[new_month>=4 & new_month<7, quarter:=2]
+totalGos[new_month>=7 & new_month<10, quarter:=3]
+totalGos[new_month>=10, quarter:=4]
+unique(totalGos[, .(new_month, quarter)][order(quarter, new_month)])
 
 #See if you have any duplicate quarters 
-date_check = unique(expansion[, .(new_month, year, grant, orig_start_date, orig_end_date)])
+date_check = unique(totalGos[, .(new_month, year, grant, orig_start_date, orig_end_date)])
 date_check = date_check[order(grant, year, new_month)]
 date_check2 = date_check[, .(grant, year, new_month)]
 date_check2 = date_check2[duplicated(date_check2)]
 
 date_check = merge(date_check2, date_check, all.x=T, by=c('grant', 'year', 'new_month'))
 write.xlsx(date_check, paste0(dir, "_gf_files_gos/gos/Overlaps within Intervention Category.xlsx"))
-stopifnot(nrow(date_check)==0) #David please review this. 
+# stopifnot(nrow(date_check)==0) #David please review this. 
 
 #Checks we can add back in if we want; I was mainly doing these for the new GOS file. EKL 4/26/19
 # #For places where we do have duplicate quarters, what's going on with budget/expenditure? 
-# overlap = unique(expansion[, .(grant, year, quarter, orig_start_date, orig_end_date, budget, expenditure)])
+# overlap = unique(totalGos[, .(grant, year, quarter, orig_start_date, orig_end_date, budget, expenditure)])
 # overlap = merge(date_check2, overlap, by=c('grant', 'year', 'quarter'), all.x=T)
 # overlap = overlap[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'year', 'quarter', 'orig_start_date', 'orig_end_date')]
 # overlap[, month_diff:=(as.yearmon(orig_end_date)-as.yearmon(orig_start_date))*12] #David please review this. 
@@ -337,20 +339,29 @@ stopifnot(nrow(date_check)==0) #David please review this.
 # overlap[, budget_diff:=budget_2-budget_1]
 # overlap[, exp_diff:=expenditure_2-expenditure_1] #David please review this. 
 
-posttest = expansion[, .(post_budget=sum(budget, na.rm=T)), by=c('grant')] #The error has already happened at this line
-
 #Aggregate to the quarter level.  
-expansion_qtr = expansion[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c(
+totalGos_qtr = totalGos[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c(
   'quarter', 'year', 'country', 'grant', 'module', 'intervention', 'disease', 'grant_period', 'file_name', 'data_source')]
 
 #Make sure pre- and post-totals match 
-posttest = expansion_qtr[, .(post_budget=sum(budget, na.rm=T)), by=c('grant')]
+posttest = totalGos_qtr[, .(post_budget=sum(budget, na.rm=T)), by=c('grant')]
 totals_check = merge(pretest, posttest, by=c('grant'), all=T)
 totals_check[, pre_budget:=round(pre_budget)]
 totals_check[, post_budget:=round(post_budget)]
 totals_error = totals_check[pre_budget!=post_budget]
 stopifnot(nrow(totals_error)==0) #David we need to review these. 
 
+#Add in a loc_name variable 
+for (i in 1:nrow(code_lookup_tables)){
+  totalGos_qtr[country==code_lookup_tables$country[i], loc_name:=code_lookup_tables$iso_code[i]]
+}
 
-
+#Fix start date variable. 
+totalGos_qtr[quarter==1, month:='01']
+totalGos_qtr[quarter==2, month:='04']
+totalGos_qtr[quarter==3, month:='07']
+totalGos_qtr[quarter==4, month:='10']
+totalGos_qtr[, start_date:=as.Date(paste0(month, "-01-", year), format="%m-%d-%Y")] #Just calling quarter month for now, so even though 
+# we know the data is more disaggregated, if we've grouped to Q1 it will start on January 1st. We might want to modify this! EKL 5/1/19 
+totalGos_qtr = totalGos_qtr[, -c('month')]
 

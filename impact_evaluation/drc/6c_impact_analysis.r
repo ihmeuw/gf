@@ -20,12 +20,10 @@ load(outputFile5a)
 data1=copy(data)
 means1 = copy(means)
 summaries1 = copy(summaries)
-scaling_factors1=copy(scaling_factors)
 load(outputFile5b)
 data2=copy(data)
 means2 = copy(means)
 summaries2 = copy(summaries)
-scaling_factors2=copy(scaling_factors)
 
 # put together coefficient tables
 means = rbind(means1, means2)
@@ -77,7 +75,6 @@ while(any(outcomeVars %in% means$lhs)) {
 	unexplained = means[lhs%in%outcomeVars & rhs%in%outcomeVars & lhs==rhs, byVars, with=FALSE]
 	unexplained[!grepl('completeness',rhs) & !grepl('completeness',lhs), rhs:='unexplained']
 	unexplained[, est.std:=est.std^2]
-	if (i==2) unexplained[, est.std:=est.std/10] # scaling factor recorded wrong?
 
 	# drop completeness controls
 	currentLevel = rbind(currentLevel, unexplained)

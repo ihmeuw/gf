@@ -182,6 +182,9 @@ vrTb <- vrData[cause_id%in%tb_death_codes]
 
 setnames(vrTb, "deaths", "tb_deaths")
 
+#Jen's line to save interim TB file
+#write.csv(vrTb, file=paste0(vr_dir, "Redist_TB_gtm_vr.csv"))
+
 
 # ----------------------------------------------
 ## GUATEMALA MAPPING 

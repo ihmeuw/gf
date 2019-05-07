@@ -33,14 +33,6 @@ shapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 # subset to coefficients of interest
 summaries = summaries[op=='~' & grepl('_received_',lhs) & grepl('exp|other_dah|ghe', rhs)]
 
-# unrescale
-tmp = unique(melt(scaling_factors1, value.name='scaling_factor'))
-summaries = merge(summaries, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
-summaries = merge(summaries, tmp, by.x='lhs', by.y='variable', all.x=TRUE)
-summaries[is.na(scaling_factor.x), scaling_factor.x:=1]
-summaries[is.na(scaling_factor.y), scaling_factor.y:=1]
-summaries[, est_unrescaled:=est/scaling_factor.x*scaling_factor.y]
-
 # pool funders together, weighting by investment size
 # reshape data long
 long = melt(data, id.vars=c('orig_health_zone','health_zone','date'))
@@ -54,10 +46,10 @@ pooled_summaries = merge(summaries, long, by.x='rhs', by.y='variable', all.x=TRU
 # take the weighted average across funders
 pooled_summaries[grepl('exp|other_dah|ghe', rhs), rhs:='Pooled Investment']
 byVars = c('health_zone','lhs','rhs')
-pooled_summaries = pooled_summaries[, .(est_unrescaled=weighted.mean(est_unrescaled, value)), by=byVars]
+pooled_summaries = pooled_summaries[, .(est=weighted.mean(est, value)), by=byVars]
 
 # reshape outputs wide
-pooled_summaries = dcast(pooled_summaries, health_zone~lhs, value.var='est_unrescaled')
+pooled_summaries = dcast(pooled_summaries, health_zone~lhs, value.var='est')
 # -----------------------------------------------
 
 

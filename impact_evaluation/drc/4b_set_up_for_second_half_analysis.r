@@ -105,18 +105,6 @@ for(v in logVars) {
 	data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
 }
 
-# rescale variables to have similar variance
-# see Kline Principles and Practice of SEM (2011) page 67
-scaling_factors = data.table(date=1)
-numVars = names(data)[!names(data) %in% c('health_zone','date')]
-for(v in numVars) { 
-	s=1
-	while(var(data[[v]]/s)>10) s=s*10
-	while(var(data[[v]]/s)<1) s=s/10
-	scaling_factors[,(v):=s]
-}
-for(v in names(scaling_factors)) data[, (v):=get(v)/scaling_factors[[v]]]
-
 # compute leads (after rescaling because it creates more NA's)
 leadVars = c('newCasesMalariaMild_rate', 'newCasesMalariaSevere_rate', 'malariaDeaths_rate', 'case_fatality')
 for(v in leadVars) { 
