@@ -1,43 +1,42 @@
+setwd("C:/Users/elineb/Documents/gf/") 
+# working directory should be the root of the repository
+
 #-------------------------------------
-# AUTHOR: Emily Linebarger
+# AUTHOR: Emily Linebarger / Audrey Batzel (modified 5/7/19)
 # PURPOSE: Prep SSC data from PNLS
 # DATE: April 2019
+rm(list=ls())
 #-------------------------------------
 
 #--------------------------------------------------
 # Set up R, and read in data 
 #--------------------------------------------------
-rm(list=ls())
 library(data.table)
-setwd("C:/Users/elineb/Documents/gf/") #Set to your repo
 
+# directories:
 j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
-raw_dir = paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/dhis_data/pre_prep/ssc/")
+dir = paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/dhis_data/pre_prep/ssc/")
 prepped_dir = paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/")
 
-raw_ssc = readRDS(paste0(raw_dir, "SSC_data_2017_2018.rds"))
-setDT(raw_ssc)
+ssc = readRDS(paste0(dir, "SSC_data_2017_2018.rds"))
+
 base_services = readRDS(paste0(prepped_dir, "base_services_prepped.rds"))
 catalog = fread(paste0(j, "Project/Evaluation/GF/outcome_measurement/cod/dhis_data/catalogues/data_elements_cod.csv"))
 
+# functions
 source('./core/standardizeDPSNames.R')
+source('./core/standardizeHZNames.R')
 
-ssc = copy(raw_ssc)
+# load data
+#--------------------------------------------------
+
 #--------------------------------------------------
 # Standardize variable names  
 #--------------------------------------------------
 names(ssc) = tolower(names(ssc))
 
-#It looks like "hz" is the same as "health_zone" in base services. Standardize this. 
-setnames(ssc, "hz", "health_zone")
-ssc[, health_zone:=gsub(" Zone de Santé", "", health_zone)]
-ssc[, health_zone:=tstrsplit(health_zone, " ", fixed=TRUE, keep=c(2))]
-ssc[, health_zone:=tolower(health_zone)]
-
-#check it worked - verify this with Audrey. 
-unique(ssc[!health_zone%in%base_services$health_zone, .(health_zone)])
-
-#Standardize variable names for DPS. 
+# standardize health zone and dps names (simplified this)
+ssc[,]
 ssc[, dps:=standardizeDPSNames(dps)]
 
 #--------------------------------------------------
