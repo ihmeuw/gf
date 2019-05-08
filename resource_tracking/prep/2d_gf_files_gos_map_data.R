@@ -225,29 +225,14 @@ stopifnot(unique(mapped_data$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 
 # --------------------------------------------------------
 
 #Split the data table so you can pass it to the FGH team's function cleanly. 
-stopifnot(unique(mapped_data$currency)%in% c('USD', 'EUR'))
+stopifnot(unique(mapped_data$currency)%in% c('USD', 'EUR', 'LOC'))
 
 in_USD = mapped_data[currency=='USD']
-needs_conversion = mapped_data[currency!='USD'] #But really, we only want Euros here. Just wrote it like this to catch everything. EKL
+needs_conversion = mapped_data[currency!='USD'] 
+stopifnot(unique(needs_conversion$currency)%in%c('EUR', 'LOC'))
 
-needs_conversion = mapped_data[currency=='EUR', .(budget, expenditure, year, loc_name)]
-
-needs_conversion[, loc_name:=toupper(loc_name)]
-needs_conversion[, year:=as.numeric(year)]
-needs_conversion[, currency_year:=year]
-needs_conversion[is.na(budget), budget:=0]
-needs_conversion[is.na(expenditure), expenditure:=0]
-needs_conversion[, loc_name:='GTM']
-converted_to_USD = currency_conversion(data = needs_conversion,
-                                       col.loc = 'loc_name',
-                                       col.currency.year = 'year',
-                                       currency = 'EUR',
-                                       col.value = c('budget','expenditure'),
-                                       base.year = 2018,
-                                       base.unit = 'USD',
-                                       simplify = T,
-                                       converter.version = 3)
-
+valueVars = c('budget', 'expenditure', 'disbursement')
+converted_to_USD = convert_eur_usd(needs_conversion, 'year', valueVars)
 
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  

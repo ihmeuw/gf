@@ -20,7 +20,7 @@ if (prep_files == TRUE){
   #Validate file list 
   desired_cols <- c("file_name", "function_type", "sheet", "disease", "loc_id", "data_source", "period", "qtr_number", "grant", "primary_recipient", 
                     "secondary_recipient", "language", "grant_period", "grant_status", "start_date", "file_iteration", "geography_detail", 
-                    "loc_name", "mod_framework_format", "currency")
+                    "loc_name", "mod_framework_format", "currency", "eur_to_usd_rate", "loc_to_usd_rate")
   stopifnot(colnames(file_list) %in% desired_cols)
   stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr"))
   stopifnot((unique(file_list$file_iteration))%in%c("final", "initial"))
@@ -163,7 +163,7 @@ resource_database$disbursement <- as.numeric(resource_database$disbursement)
 verified_0_budget <- c('UGD-708-G08-M_PUDR 30Nov2011.xls', 'UGD-708-G08-M_PUDR_30June2012.xls')
 #Add PUDRs here that did not report any expenditure. 
 verified_0_expenditure <- c('GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx', 'UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 
-                            "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx")
+                            "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx", "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx")
 
 #Make sure that no files have a total sum of 0; this would indicate an error in the prep code. 
 check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by=.(file_name)]

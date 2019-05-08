@@ -25,6 +25,7 @@
 cod_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/prepped_data/")
 gtm_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/prepped_data/")
 uga_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/uga/prepped_data/")
+sen_prepped <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/sen/prepped_data/")
 
 final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/")
 
@@ -34,14 +35,12 @@ final_write <- paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos
 #----------------------------------------------
 gos_data <- readRDS(paste0(gos_prepped, "prepped_gos_data.rds"))
             
-#----------------------------------
-# 1. FINAL GF BUDGETS 
-#----------------------------------
+#-----------------------------------------------------------
+# 1. FINAL GF BUDGETS - ONLY HAVE GTM, UGA, AND DRC FOR NOW
+#-----------------------------------------------------------
 # Merge all 3 countries 
 final_budgets_cod <- readRDS(paste0(cod_prepped, "final_budgets.rds"))
-
 final_budgets_gtm <- readRDS(paste0(gtm_prepped, "final_budgets.rds"))
-
 final_budgets_uga = readRDS(paste0(uga_prepped, "final_budgets.rds"))
 
 #-------------------------------------------
@@ -184,10 +183,9 @@ saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets.rds"))
 #----------------------------------
 # Merge all 3 countries 
 final_expenditures_cod <- readRDS(paste0(cod_prepped, "final_expenditures.rds"))
-
 final_expenditures_gtm <- readRDS(paste0(gtm_prepped, "final_expenditures.rds"))
-
 final_expenditures_uga <- readRDS(paste0(uga_prepped, "final_expenditures.rds"))
+final_expenditures_sen <- readRDS(paste0(sen_prepped, "final_expenditures.rds"))
 
 #-------------------------------------------
 # Hacky fix for duplicate budget quarters -- 
@@ -199,7 +197,7 @@ check_qtr_cod <- final_expenditures_cod[, .(start_date, grant, file_name)]
 check_qtr_cod <- unique(check_qtr_cod) #Remove duplicate lines in module, intervention, etc. 
 #Make sure there are no duplicates in start date and grant number that are coming from different files. 
 check_qtr_cod <- check_qtr_cod[duplicated(check_qtr_cod, by = c("start_date", "grant")), ]
-check_qtr_cod = merge(check_qtr_cod, final_budgets_cod[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
+check_qtr_cod = merge(check_qtr_cod, final_expenditures_cod[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
 check_qtr_cod = unique(check_qtr_cod)
 if (nrow(check_qtr_cod)!=0){
   print("Warning: There are overlapping expenditure quarters in DRC. Review data to prevent double-counting.")
@@ -211,7 +209,7 @@ check_qtr_gtm <- final_expenditures_gtm[, .(start_date, grant, file_name)]
 check_qtr_gtm <- unique(check_qtr_gtm) #Remove duplicate lines in module, intervention, etc. 
 #Make sure there are no duplicates in start date and grant number that are coming from different files. 
 check_qtr_gtm <- check_qtr_gtm[duplicated(check_qtr_gtm, by = c("start_date", "grant")), ]
-check_qtr_gtm = merge(check_qtr_gtm, final_budgets_gtm[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
+check_qtr_gtm = merge(check_qtr_gtm, final_expenditures_gtm[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
 check_qtr_gtm = unique(check_qtr_gtm)
 if (nrow(check_qtr_gtm)!=0){
   print("Warning: There are overlapping expenditure categories in Guatemala. Review data to prevent double-counting.")
@@ -223,14 +221,26 @@ check_qtr_uga <- final_expenditures_uga[, .(start_date, grant, file_name)]
 check_qtr_uga <- unique(check_qtr_uga) #Remove duplicate lines in module, intervention, etc. 
 #Make sure there are no duplicates in start date and grant number that are coming from different files. 
 check_qtr_uga <- check_qtr_uga[duplicated(check_qtr_uga, by = c("start_date", "grant")), ]
-check_qtr_uga = merge(check_qtr_uga, final_budgets_uga[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
+check_qtr_uga = merge(check_qtr_uga, final_expenditures_uga[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
 check_qtr_uga = unique(check_qtr_uga)
 if (nrow(check_qtr_uga)!=0){
   print("Warning: There are overlapping budget quarters in Uganda. Review data to prevent double-counting.")
   print(check_qtr_uga)
 }
+
+setDT(final_expenditures_sen)
+check_qtr_sen <- final_expenditures_sen[, .(start_date, grant, file_name)]
+check_qtr_sen <- unique(check_qtr_sen) #Remove duplicate lines in module, intervention, etc. 
+#Make sure there are no duplicates in start date and grant number that are coming from different files. 
+check_qtr_sen <- check_qtr_sen[duplicated(check_qtr_sen, by = c("start_date", "grant")), ]
+check_qtr_sen = merge(check_qtr_sen, final_expenditures_sen[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
+check_qtr_sen = unique(check_qtr_sen)
+if (nrow(check_qtr_sen)!=0){
+  print("Warning: There are overlapping budget quarters in sennda. Review data to prevent double-counting.")
+  print(check_qtr_sen)
+}
 #Bind expenditures together
-final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, fill = TRUE) 
+final_expenditures <- rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, final_expenditures_sen, fill = TRUE) 
 
 #Wherever there is a grant quarter in the final budgets that doesn't exist in GOS, take that whole grant for the grant 
 # period and replace the GOS with the final budgets data. 
@@ -307,7 +317,7 @@ stopifnot(nrow(na_year)==0)
 
 #Check that you've got the current grants right. 
 all_current_grants = unique(gos_prioritized_expenditures[current_grant==TRUE, .(grant, grant_period, file_name)])
-expected_current_grants <- length(current_gtm_grants) + length(current_uga_grants) + length(current_cod_grants)
+expected_current_grants <- length(current_gtm_grants) + length(current_uga_grants) + length(current_cod_grants) + length(current_sen_grants)
 if (nrow(all_current_grants)!=expected_current_grants){
   print("ERROR: Not all current grants are marked with the 'current_grant' flag in expenditures.")
 }
@@ -322,8 +332,9 @@ saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rd
 all_gf_cod <- readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/budget_pudr_iterations.rds"))
 all_gf_uga <- readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/budget_pudr_iterations.rds"))  
 all_gf_gtm <- readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/budget_pudr_iterations.rds"))
+all_gf_sen <- readRDS(paste0(dir, "_gf_files_gos/sen/prepped_data/budget_pudr_iterations.rds"))
 
-all_files = list(all_gf_cod, all_gf_gtm, all_gf_uga)
+all_files = list(all_gf_cod, all_gf_gtm, all_gf_uga, all_gf_sen)
 all_gf_files <- rbindlist(all_files, use.names = TRUE, fill = TRUE)
 
 #Write data 
