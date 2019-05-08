@@ -64,6 +64,7 @@ data[newCasesMalariaSevere_under5_rate>50000, newCasesMalariaSevere_under5_rate:
 data[malariaDeaths_rate>500, malariaDeaths_rate:=NA]
 data[malariaDeaths_under5_rate>2000, malariaDeaths_under5_rate:=NA]
 data[case_fatality>1, case_fatality:=NA]
+data[!is.finite(case_fatality_under5), case_fatality_under5:=NA]
 # -----------------------------------------------------------------
 
 
@@ -78,7 +79,7 @@ for(v in names(data)) {
 		if (!any(is.na(data[health_zone==h][[v]]))) next
 		if (!any(!is.na(data[health_zone==h][[v]]))) next
 		form = as.formula(paste0(v,'~date'))
-		lmFit = glm(form, data[health_zone==h], family='poisson')
+		lmFit = lm(form, data[health_zone==h])
 		data[health_zone==h, tmp:=exp(predict(lmFit, newdata=data[health_zone==h]))]
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
 		pct_complete = floor(i/(length(names(data))*length(unique(data$health_zone)))*100)
