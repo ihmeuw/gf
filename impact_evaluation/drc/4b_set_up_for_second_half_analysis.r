@@ -42,8 +42,8 @@ data[, case_fatality_under5:=malariaDeaths_under5/(newCasesMalariaMild_under5+ne
 # bring in completeness (TEMPORARY)
 data = merge(data, completeness, by=c('health_zone','date'), all.x=TRUE)
 data = data[order(health_zone, date)]
-library(zoo)
-for(v in complVars) data[, (v):=na.locf(get(v)), by='health_zone']
+# library(zoo)
+# for(v in complVars) data[, (v):=na.locf(get(v)), by='health_zone']
 
 # apply limits
 data[ITN>1000, ITN:=NA]
