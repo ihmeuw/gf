@@ -19,28 +19,42 @@ data = readRDS(outputFile2c)
 # apply limits
 data[ITN>1000, ITN:=NA]
 data[SSCACT>50000, SSCACT:=NA]
+data[SSCACT_under5>1000, SSCACT_under5:=NA]
 data[!is.finite(SP_rate), SP_rate:=NA]
 data[!is.finite(RDT_rate), RDT_rate:=NA]
 data[ACTs_CHWs_rate>1000, ACTs_CHWs_rate:=NA]
+data[ACTs_CHWs_under5_rate>500, ACTs_CHWs_under5_rate:=NA]
 data[mildMalariaTreated_rate>2, mildMalariaTreated_rate:=NA]
+data[mildMalariaTreated_under5_rate>100, mildMalariaTreated_under5_rate:=NA]
 data[severeMalariaTreated_rate>2.5, severeMalariaTreated_rate:=NA]
+data[severeMalariaTreated_under5_rate>200, severeMalariaTreated_under5_rate:=NA]
 data[newCasesMalariaMild_rate>100000, newCasesMalariaMild_rate:=NA]
+data[newCasesMalariaMild_under5_rate>100000, newCasesMalariaMild_under5_rate:=NA]
 data[newCasesMalariaSevere_rate>100000, newCasesMalariaSevere_rate:=NA]
+data[newCasesMalariaSevere_under5_rate>50000, newCasesMalariaSevere_under5_rate:=NA]
 data[malariaDeaths_rate>500, malariaDeaths_rate:=NA]
+data[malariaDeaths_under5_rate>2000, malariaDeaths_under5_rate:=NA]
 # ------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------
 # Correct directly-modeled indicators
-modInds = c('mildMalariaTreated_rate', 'ITN_rate', 
-	'newCasesMalariaMild_rate', 'malariaDeaths_rate')
-compInds = c('act_coverage_rate','itn_coverage_rate', 
-	'incidence_rate', 'mortality_rate')
 
+# list variables to be corrected and their corresponding model variable
+# note: these vectors must be the same length and order matters
+modInds = c('mildMalariaTreated_rate', 'ITN_rate', 
+	'newCasesMalariaMild_rate', 'malariaDeaths_rate', 
+	'mildMalariaTreated_under5_rate', 'newCasesMalariaMild_under5_rate', 
+	'malariaDeaths_under5_rate')
+compInds = c('act_coverage_rate', 'itn_coverage_rate', 
+	'incidence_rate', 'mortality_rate',
+	'act_coverage_rate', 'incidence_rate', 'mortality_rate')
+
+print('Cross-walking indicators that have direct model estimates...')
+j=1
 for(i in seq(length(modInds))) {  
 	for(h in unique(data$health_zone)) { 
 		# store variables
-		print(paste(i, h))
 		m = modInds[i]
 		c = compInds[i]
 		
@@ -66,6 +80,12 @@ for(i in seq(length(modInds))) {
 		# store adjusted values
 		data[health_zone==h, (paste0(m, '_adj')):=preds + resids]
 		data[health_zone==h & get(paste0(m, '_adj'))<0, (paste0(m, '_adj')):=0]
+		
+		# display progress
+		p = floor(j/(length(modInds)*length(unique(data$health_zone)))*100)
+		cat(paste0('\r', p, '% Complete'))
+		flush.console()
+		j=j+1
 	}
 }
 # ------------------------------------------------------------------------
@@ -73,19 +93,30 @@ for(i in seq(length(modInds))) {
 
 # ------------------------------------------------------------------------
 # Correct other indicators
-adjInds = c('ACTs_CHWs_rate', 'severeMalariaTreated_rate', 
-		'SP_rate', 'newCasesMalariaSevere_rate')
-compInds = c('mildMalariaTreated_rate', 'mildMalariaTreated_rate', 
-	'mildMalariaTreated_rate', 'newCasesMalariaMild_rate')
 
+# list variables to be corrected and their corresponding model variable
+adjInds = c('ACTs_CHWs_rate', 'severeMalariaTreated_rate', 
+		'SP_rate', 'newCasesMalariaSevere_rate', 
+		'ACTs_CHWs_under5_rate', 'severeMalariaTreated_under5_rate', 
+		'newCasesMalariaSevere_under5_rate')
+proxInds = c('mildMalariaTreated_rate', 'mildMalariaTreated_rate', 
+	'mildMalariaTreated_rate', 'newCasesMalariaMild_rate', 
+	'mildMalariaTreated_rate', 'mildMalariaTreated_rate', 'newCasesMalariaMild_rate')
+
+print('Cross-walking indicators that have proxy model estimates...')
 for(i in seq(length(modInds))) {  
 	a=adjInds[i]
-	c=compInds[i]
+	c=proxInds[i]
 
 	# adjust to maintain the same ratio with the corrected indicators
 	data[, ratio:=get(a)/get(c)]
 	data[, (paste0(a, '_adj')):=get(paste0(c,'_adj'))*ratio]
 	data$ratio = NULL
+	
+	# display progress
+	p = floor(i/length(modInds)*100)
+	cat(paste0('\r', p, '% Complete'))
+	flush.console() 
 }
 # ------------------------------------------------------------------------
 
@@ -95,7 +126,7 @@ for(i in seq(length(modInds))) {
 colors = c('Original Data'='black', 
 	'LBD/MAP Estimate'='blue', 'Corrected Data'='red')
 plots = list()
-set.seed(1)
+print('Graphing...')
 for(h in unique(data$health_zone)) {  
 		
 	plots[[h]] = lapply(1:4, function(i) { 
