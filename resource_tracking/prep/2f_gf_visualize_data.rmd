@@ -7,14 +7,78 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-user = "elineb" #Change to your username 
-code_dir = ifelse(Sys.info()[1]=='Windows', paste0("C:/Users/", user, "/Documents/gf/"), paste0('/homes/', user, '/gf/'))
-source(paste0(code_dir, "resource_tracking/prep/_common/set_up_r.R"), encoding="UTF-8")
+setwd("C:/Users/elineb/Documents/gf/") #Change to the root of your repository
+source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 
 budgets = readRDS(paste0(combined_output_dir, "final_budgets.rds"))
 expenditures = readRDS(paste0(combined_output_dir, "final_expenditures.rds"))
 ```
 
+## Plot data
+Visualize the budget data by grant and year. 
+Focus only on current grant first. 
+```{r, echo=FALSE}
+sum_current_grants = budgets[, .(budget=sum(budget, na.rm = TRUE)), by=.(grant, year, loc_name)]
+grants = unique(current_uga_grants)
+for (grant_number in grants){
+current_uga = ggplot(sum_current_grants[grant==grant_number & year>=2015], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="forestgreen")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", grant_number), x="Year", y="Budget", 
+                    caption="*Years limited to 2015-present")
+print(current_uga)
+print(sum_current_grants[grant==grant_number])
+}
+
+grants = unique(current_cod_grants)
+for (grant_number in grants){
+current_cod = ggplot(sum_current_grants[grant==grant_number & year>=2015], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="blue")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", grant_number), x="Year", y="Budget", 
+                    caption="*Years limited to 2015-present")
+print(current_cod)
+print(sum_current_grants[grant==grant_number])
+}
+
+grants = unique(current_gtm_grants)
+for (grant_number in grants){
+current_gtm = ggplot(sum_current_grants[grant==grant_number & year>=2015], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="purple")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", grant_number), x="Year", y="Budget", 
+                    caption="*Years limited to 2015-present")
+print(current_gtm)
+print(sum_current_grants[grant==grant_number])
+}
+
+
+```
+
+##Visualize by disease and country 
+```{r, echo=FALSE}
+sum_by_country_disease = budgets[, .(budget=sum(budget, na.rm=TRUE)), by=c('country', 'year', 'disease')]
+countries = unique(budgets$country)
+for (loc in countries){
+hiv = ggplot(sum_by_country_disease[country==loc & disease=='hiv'], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="red")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", loc, " for HIV"), x="Year", y="Budget")
+print(hiv)
+
+tb = ggplot(sum_by_country_disease[country==loc & disease=='tb'], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="blue")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", loc, " for TB"), x="Year", y="Budget")
+print(tb)
+
+malaria = ggplot(sum_by_country_disease[country==loc & disease=='malaria'], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="yellow")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", loc, " for Malaria"), x="Year", y="Budget")
+print(malaria)
+
+rssh = ggplot(sum_by_country_disease[country==loc & disease=='rssh'], aes(x=year, y=budget)) + 
+  geom_bar(stat="identity", fill="purple")+
+  theme_bw() + labs(title=paste0("Sum of budget per year for ", loc, " for RSSH"), x="Year", y="Budget")
+print(rssh)
+}
+
+```
 ## Review variables 
 
 Are the formats of the variables what you expect? 
@@ -69,40 +133,32 @@ unique(budgets[current_grant==TRUE, .(current_grant, grant, grant_period)][order
 unique(budgets[current_grant==FALSE, .(current_grant, grant, grant_period)][order(grant, grant_period)])
 ```
 
-## Plot data
-Visualize the budget data by grant and year. 
-Focus only on current grant first. 
+Is the 'grant_disease' flag working correctly? Make sure that the disease makes sense for the name of the grant. 
+First showing budget and then expenditure. 
 ```{r, echo=FALSE}
-sum_current_grants = budgets[, .(budget=sum(budget, na.rm = TRUE)), by=.(grant, year, loc_name)]
-grants = unique(current_uga_grants)
-for (grant_number in grants){
-current_uga = ggplot(sum_current_grants[grant==grant_number & year>=2015], aes(x=year, y=budget)) + 
-  geom_bar(stat="identity", fill="forestgreen")+
-  theme_bw() + labs(title=paste0("Sum of budget per year for ", grant_number), x="Year", y="Budget", 
-                    caption="*Years limited to 2015-present")
-print(current_uga)
-print(sum_current_grants[grant==grant_number])
-}
+unique(budgets[, .(grant, grant_disease)])
+unique(expenditures[, .(grant, grant_disease)])
+```
 
-grants = unique(current_cod_grants)
-for (grant_number in grants){
-current_cod = ggplot(sum_current_grants[grant==grant_number & year>=2015], aes(x=year, y=budget)) + 
-  geom_bar(stat="identity", fill="blue")+
-  theme_bw() + labs(title=paste0("Sum of budget per year for ", grant_number), x="Year", y="Budget", 
-                    caption="*Years limited to 2015-present")
-print(current_cod)
-print(sum_current_grants[grant==grant_number])
-}
+What are the data gaps between GOS and budgets, expenditures? 
+```{r, echo=TRUE}
+budgets_only = budgets[data_source=='fpm']
+gos_budgets = budgets[data_source=='gos' & grant%in%budgets_only$grant]
 
-grants = unique(current_gtm_grants)
-for (grant_number in grants){
-current_gtm = ggplot(sum_current_grants[grant==grant_number & year>=2015], aes(x=year, y=budget)) + 
-  geom_bar(stat="identity", fill="purple")+
-  theme_bw() + labs(title=paste0("Sum of budget per year for ", grant_number), x="Year", y="Budget", 
-                    caption="*Years limited to 2015-present")
-print(current_gtm)
-print(sum_current_grants[grant==grant_number])
-}
+expenditures_only = expenditures[data_source=='pudr']
+gos_expenditures = expenditures[data_source=='gos' & grant%in%expenditures_only$grant] 
+
+budgets_only[, .(min_start_date = min(start_date)), by='grant']
+gos_budgets[, .(max_start_date = max(start_date)), by='grant']
+
+expenditures_only[, .(min_start_date = min(start_date)), by='grant']
+gos_expenditures[, .(max_start_date = max(start_date)), by='grant']
+
+```
+Look at the unique values of each variable in the data that's not numeric. 
+```{r, echo=FALSE}
+stopifnot(sort(names(budgets))==sort(names(expenditures)))
+str(budgets)
 
 
 ```

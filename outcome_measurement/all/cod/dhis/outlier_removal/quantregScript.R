@@ -1,12 +1,14 @@
 #------------------------------------
-# This script is run on the cluster by base_quantreg_parallel.r
+# This script is run on the cluster by run_quantreg_parallel.r
+# source from the cluster
+# runs quantile regression on all data sets from DHIS
 #------------------------------------
 
 library(data.table)
 library(quantreg)
 library(fst) 
 
-user_name = Sys.info()[['user']]
+user = Sys.info()[['user']]
 
 #------------------------------------
 # handle arguments
@@ -17,12 +19,15 @@ i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
 
 # file paths
-scratchDir = paste0('/ihme/scratch/users/', user_name, '/quantreg/')
+scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
 arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
 parallelDir = paste0(scratchDir, 'parallel_files/')
-outFile = paste0(parallelDir, '/quantreg_output', i, '.fst')
+outFile = paste0(parallelDir, 'quantreg_output', i, '.fst')
 
+# confirm the file folders exist
+if (!file.exists(scratchDir)) dir.create(scratchDir)
+if (!file.exists(parallelDir)) dir.create(parallelDir)
 
 # read in the array table 
 array_table = fread(arrayFile)
@@ -69,8 +74,8 @@ for (e in unique(subset$element_id)) {
       form = as.formula(form)
       
       # run quantreg
-      quantFit <- rq(form, data=subset_further, tau=0.5)
-      summary(quantFit)
+      quantFit = rq(form, data=subset_further, tau=0.5)
+      summary(quantFit) 
       
       # list the residuals and add them to the out file
       r = resid(quantFit)
@@ -82,13 +87,9 @@ for (e in unique(subset$element_id)) {
       subset_further[, resid:=NA]
     }
     
-    # for each iteration of the loop, add the subset of data to a combined results data table.
-    if(nrow(combined_qr_results)==0){
-      combined_qr_results = subset_further # first time through, just set combined results to be = the data 
-    } else if (nrow(combined_qr_results)>0){
-      combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) # subsequent times through, add in combined results
-    }
-    print(paste0("completed loop with element_id =", e))
+    if (nrow(combined_qr_results)==0) {
+      combined_qr_results = subset_further 
+      } else { combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) }
   }
 
 

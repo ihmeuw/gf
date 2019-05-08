@@ -14,7 +14,6 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
-
   # dir = file_dir
   # inFile = file_list$file_name[i]
   # sheet_name = file_list$sheet[i]
@@ -170,7 +169,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #While seq is not 0, go through the loop below.
   #If seq is greater than or equal to 4, add 1 to year and divide everything by 4. Continue this loop while max(seq) > 4.
   # If month + seq + 1 equals 12, than
-  gf_data[, new_qtr:=qtr_number+seq]
+  gf_data[, new_qtr:=quarter+seq]
   max_quarter = max(gf_data$new_qtr)
   while (max_quarter>4){
     gf_data[new_qtr>4, year:=year+1]

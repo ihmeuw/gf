@@ -2,7 +2,7 @@
 # AUTHOR: Emily Linebarger 
 # PURPOSE: Map prepped GOS and GF files to final mappings, split HIV/TB
 #          combined grants, and save to final save location. 
-# DATE: Last updated February 2019. 
+# DATE: Last updated May 2019. 
 # ------------------------------------------------------------------
 
 #----------------------------------------------------------------------------
@@ -62,7 +62,12 @@ raw_data[module=='tbhealthsystemsstrengthening', disease:='tb']
 
 #French corrections 
 raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
-
+# 
+# map = copy(module_map)
+# module_map=map
+# #EMILY TO DELETE - DOING A TINY CHECK HERE
+# raw_data = raw_data[module=="atencionyprevenciondetuberculosis" & intervention=="poblacionesclaveafectadas"]
+# module_map = module_map[module=="atencionyprevenciondetuberculosis" & intervention=="poblacionesclaveafectadas"]
 #----------------------------------------------------------------------------
 # Merge with module map on module, intervention, and disease to pull in code
 #----------------------------------------------------------------------------
@@ -73,6 +78,7 @@ if ('disbursement'%in%names(raw_data)){
   pre_coeff_check[[1]] = round(pre_coeff_check[[1]])
   pre_coeff_check[[2]] = round(pre_coeff_check[[2]])
 }
+
 mergeVars = c('disease', 'module', 'intervention')
 #module_map = unique(module_map)
 module_map = module_map[!is.na(code)]
@@ -123,6 +129,23 @@ if ('disbursement'%in%names(mapped_data)){
   stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]])
 }
 
+#Debug the check above, if needed. 
+#What line items got changed between the two files? 
+# test = unique(raw_data[, .(module, intervention, disease, budget)])
+# test = test[budget!=0]
+# test[, set:='raw']
+# test2 = mapped_data[, .(module, intervention, disease, budget, coefficient)]
+# mapped_data = mapped_data[budget!=0]
+# test2[, set:='mapped']
+# check = merge(test, test2, by=c('module', 'intervention', 'disease'), all=TRUE, allow.cartesian=TRUE)
+# #You want to find the cases here where raw budget/coefficient doesn't equal mapped budget
+# 
+# check = check[is.na(set.x)|is.na(set.y)][order(module, intervention, disease)]
+# check = check[budget!=0]
+# View(check[1:300])
+# 
+# check[is.na(set.x) & module=="atencionyprevenciondetuberculosis" & intervention=="poblacionesclaveafectadas"]
+# check[is.na(set.y) & module=="atencionyprevenciondetuberculosis" & intervention=="poblacionesclaveafectadas"]
 #-----------------------------------------------------------
 # Add in a variable for 'includes RSSH'
 #-----------------------------------------------------------
@@ -156,11 +179,38 @@ for (i in 1:length(current_uga_grants)){
 
 if (prep_files==TRUE){
   mapped_data$loc_name = country
-}
-for (i in 1:nrow(code_lookup_tables)){
-  mapped_data[loc_name==code_lookup_tables$iso_code[i], country:=code_lookup_tables$country[i]]
+  for (i in 1:nrow(code_lookup_tables)){
+    mapped_data[loc_name==code_lookup_tables$iso_code[i], country:=code_lookup_tables$country[i]]
+  }
 }
 
+#--------------------------------------------------------------------------------
+#Add in a variable for the disease of the grant #Yuck - Emily try to rewrite this code. 
+#--------------------------------------------------------------------------------
+mapped_data[, disease_split:=strsplit(grant, "-")]
+potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R')
+
+for (i in 1:nrow(mapped_data)){
+  if (mapped_data$disease_split[[i]][2]%in%potential_diseases){
+    mapped_data[i, grant_disease:=sapply(disease_split, "[", 2 )]
+  } else if (mapped_data$disease_split[[i]][3]%in%potential_diseases){
+    mapped_data[i, grant_disease:=sapply(disease_split, "[", 3 )]
+  } else if (mapped_data$disease_split[[i]][4]%in%potential_diseases){
+    mapped_data[i, grant_disease:=sapply(disease_split, "[", 4 )]
+  }
+}
+
+mapped_data[, disease_split:=NULL]
+
+unique(mapped_data[!grant_disease%in%potential_diseases, .(grant, grant_disease)]) #Visual check that these all make sense. 
+
+mapped_data[grant_disease=='C', grant_disease:='hiv/tb']
+mapped_data[grant_disease=='H', grant_disease:='hiv']
+mapped_data[grant_disease=='T', grant_disease:='tb']
+mapped_data[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
+mapped_data[grant_disease=='M', grant_disease:='malaria']
+
+stopifnot(unique(mapped_data$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------

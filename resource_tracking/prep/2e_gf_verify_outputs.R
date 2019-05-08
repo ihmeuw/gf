@@ -287,9 +287,9 @@ print(paste0("Total RSSH tests failed: ", nrow(failed_rssh_tests)))
 print(paste0("Percentage of RSSH tests failed: ", round(nrow(failed_rssh_tests)/nrow(check_rssh)*100, 2), "%"))
 
 
+#What are the files you need to review? Only keep these, so it's easier to go through them. 
 rm(list= ls()[!(ls() %in% c('failed_tests','failed_tests_cod', 'failed_tests_gtm', 'failed_tests_uga', 'failed_tests_gos'
-                            , 'gtm_tests', 'gtm_merge', 'cod_tests', 'cod_merge', 'uga_tests', 'uga_merge', 
-                            'unmerged_cod_tests', 'unmerged_gtm_tests', 'unmerged_uga_tests', 
+                            , 'unmerged_cod_tests', 'unmerged_gtm_tests', 'unmerged_uga_tests', 
                              'failed_rssh_tests', 'unwritten_rssh_tests', 'not_tested_cod', 'not_tested_gtm', 'not_tested_uga',
                             'untested_gos', 'combined_output_dir'))])
 
