@@ -55,6 +55,9 @@ if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile4b)
 h = unique(data$health_zone)[task_id]
 subData = data[health_zone==h]
 
+# define model object
+source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
+
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
@@ -83,9 +86,6 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 
 # ----------------------------------------------------------------
 # Run model
-
-# define model object
-source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # fit model
 if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
