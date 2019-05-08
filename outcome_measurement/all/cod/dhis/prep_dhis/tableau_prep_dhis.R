@@ -42,9 +42,13 @@ sigl_archive = 'prepped/archive/sigl_drc_01_2015_07_2018_prepped.rds'
 
 # out files:
 out_interim = 'pre_prep/merged/tableau/tableau_interim_4_30_19.rds'
-out_final = 'tableau/tableau_prepped_updated_4_30_19.rds'
-out_final_basecamp_xlsx = 'tableau/tableau_01_2017_09_2018_updated_04_30_2019.xlsx'
-out_final_basecamp_rds = 'tableau/tableau_01_2017_09_2018_updated_04_30_2019.rds'
+out_final = 'tableau/tableau_prepped_updated_05_07_19.rds'
+out_final_basecamp_xlsx = 'tableau/tableau_01_2017_09_2018_updated_05_07_2019.xlsx'
+out_final_basecamp_rds = 'tableau/tableau_01_2017_09_2018_updated_05_07_2019.rds'
+
+#functions:
+source("./core/standardizeHZNames.R")
+source("./core/standardizeDPSNames.R")
 # ---------------------------------------------
 
 # ---------------------------------------------
@@ -119,6 +123,9 @@ ssc <- ssc[ , !(drop_cols), with = FALSE]
 supervisions <- supervisions[ , !(drop_cols), with = FALSE]
 pnls <- pnls[ , !(drop_cols), with = FALSE]
 
+ssc[, date := as.Date(date)]
+supervisions[, date := as.Date(date)]
+
 dt = rbindlist( list(base, sigl, pnls, pati, ssc, supervisions, base_cpn), use.names = TRUE, fill= TRUE )
 if (nrow(base) + nrow(sigl) + nrow(pnls) + nrow(pati) + nrow(ssc) + nrow(supervisions)!= nrow(dt)) stop ("rbind did not work correctly")
 dt$year = year(dt$date)
@@ -128,19 +135,22 @@ dt$year = year(dt$date)
 # save the interim data set so you don't need to load all the data every time
 saveRDS(dt, paste0(dir, out_interim))
 dt = readRDS(paste0(dir, out_interim))
+dt = dt[!data_set %in% c('ssc', 'supervisions')]
 # ---------------------------------------------
 
 # ---------------------------------------------
 # level is na in random places - fix this:
 # ---------------------------------------------
-dt[, c('org_unit', 'org_unit_type', 'level', 'data_set'):= NULL]
+dt[is.na(health_zone) & org_unit_type %in% c("health_zone", "health zone"), level := "health_zone"]
+dt[is.na(health_zone) & org_unit_type %in% c("health_zone", "health zone"), health_zone := org_unit]
+
+dt[, c('org_unit', 'org_unit_type', 'level', 'data_set'):= NULL] 
 facilities[, c('health_area', 'health_zone', 'dps', 'opening_date', 'coordinates', 'country') := NULL ]
 facilities[ is.na(level) & org_unit_type == "health_area", level := "health_area"]
 facilities[ is.na(level) & org_unit_type == "health_zone", level := "health_zone"]
 facilities[ is.na(level) & org_unit_type == "dps", level := "dps"]
 
 dt = merge(dt, facilities, all.x = TRUE, by = c('org_unit_id'))
-dt[is.na(org_unit_id), level := "health_zone"]
 
 dt[is.na(level) & grepl(org_unit, pattern = "polyc", ignore.case= TRUE), level := "polyclinic"]
 dt[is.na(level) & grepl(org_unit, pattern = "posta", ignore.case= TRUE), level := "health_post"]
@@ -155,6 +165,20 @@ dt[is.na(level) & grepl(org_unit, pattern = "Centrede", ignore.case= TRUE), leve
 dt[is.na(level) & grepl(org_unit, pattern = "Cente de san", ignore.case= TRUE), level:="health_center"]
 dt[is.na(level) & grepl(org_unit, pattern = "CH", ignore.case= FALSE), level:="hospital_center"]
 dt[is.na(level) & grepl(org_unit, pattern = "spital", ignore.case= FALSE), level:="hospital"]
+
+# bind ssc and supervisions back on
+dt = rbindlist( list(dt, ssc, supervisions), use.names = TRUE, fill= TRUE )
+
+dt[, health_zone := standardizeHZNames(health_zone)]
+dt[, dps := standardizeDPSNames(dps)]
+
+# hacky fix for now - the only health zone that didn't work was 'mont-ngafula' (because normally it is either mont-ngafula-ii or mont-ngafula-i) 
+dt[is.na(health_zone), health_zone := 'mont-ngafula']
+
+# sum over health zone because standardize function creates duplicates of masisi and uvira in SNIS
+dt$value <- as.numeric(dt$value) # the NAs introduced here were listed as "NULL" before when the value was character type
+check = dt[, .(value = sum(value)), by = .(set, element, element_eng, element_id, date, dps, health_zone, category, level, org_unit_id, org_unit, 
+                                         health_area, quarter, org_unit_type)]
 # ---------------------------------------------
 
 # ---------------------------------------------
@@ -165,7 +189,8 @@ names = read.csv(paste0(dir, 'pre_prep/merged/tableau/rename_vars_tableau.csv'))
 names = as.data.table(names)
 names = names[, .(element_id, rename)]
 
-dt = merge(dt, names, by = "element_id")
+dt = merge(dt, names, all.x= TRUE, by = "element_id")
+dt[is.na(rename), rename:= element_eng]
 dt[, element_eng := NULL]
 setnames(dt, "rename", "element_eng")
 # ---------------------------------------------
@@ -175,17 +200,18 @@ setnames(dt, "rename", "element_eng")
 dt = dt[date >= "2017-01-01",]
 
 # test unique identifiers:
-if (nrow(dt) != nrow( unique( dt[, .(date, org_unit_id, element, category)]))) stop('Unique identifiers do not uniquely identify rows in dt')
+if (nrow(dt) != nrow( unique( dt[, .(date, org_unit_id, health_zone, dps, element, category)]))) stop('Unique identifiers do not uniquely identify rows in dt')
 
 # create a variable for the number of facilities reporting at the health zone level
 fac_reporting = dt[, .(facilities_reporting = length(unique(org_unit))), by=.(set, element, element_eng, date, dps, health_zone, category, level)]
+fac_reporting[ level == "health_zone", facilities_reporting:=1]
 
 # sum over level to change data to the health facility type level 
-dt$value <- as.numeric(dt$value) # the NAs introduced here were listed as "NULL" before when the value was character type
 dt <- dt[, .(value = sum(value, na.rm = TRUE)), by=.(set, date, year, quarter, dps, health_zone, level, element, element_eng, category)] 
 
 # merge in the number of facilities
 dt = merge(dt, fac_reporting, by=c('set', 'element', 'element_eng', 'date', 'health_zone', 'dps', 'category', 'level'), all = TRUE)
+setnames(dt, "facilities_reporting", "units_reporting")
 # ---------------------------------------------
 
 # ---------------------------------------------
@@ -214,20 +240,20 @@ dt[grep(element_eng, pattern='LLIN'), sex:=NA]
 # fix type
 dt[set=='pnls', type:='hiv']
 dt[set=="base", type:='malaria']
-dt[set=="pati_tb", type:='tb']
 dt[grep(element, pattern='Artesunate'), type:='malaria']
 dt[grep(element, pattern='Lumefantrine'), type:='malaria']
 dt[grep(element, pattern='RHZE'), type:='tb']
 dt[grep(element, pattern='VIH'), type:='hiv']
+dt[set=="pati_tb", type:='tb']
 dt[grep(element_eng, pattern='LLIN'), type:='malaria']
 # ---------------------------------------------
 
 # ---------------------------------------------
-# add umlauts to merge with tableau
-dt[dps=='Kasai', dps:='Kasa?']
-dt[dps=='Kasai Central', dps:='Kasa? Central']
-dt[dps=='Kasai Oriental', dps:='Kasa? Oriental']
-dt[dps=='Mai-Ndombe', dps:='Ma?-Ndombe']
+# # add umlauts to merge with tableau
+# dt[dps=='Kasai', dps:='Kasaï']
+# dt[dps=='Kasai Central', dps:='Kasaï Central']
+# dt[dps=='Kasai Oriental', dps:='Kasaï Oriental']
+# dt[dps=='Mai-Ndombe', dps:='Maï-Ndombe']
 
 # change type to disease
 setnames(dt, 'type', 'disease')
