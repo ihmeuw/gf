@@ -54,7 +54,7 @@ if(rerun_inputs == TRUE){
 # Prep activities and outputs data 
 # ---------------------------------------
 if(rerun_outputs == TRUE){
-  source('./impact_evaluation/drc/2b_prep_activities_outputs.r')
+  source('./impact_evaluation/drc/2b_prep_activities_outputs.R')
 }
 
 # ---------------------------------------

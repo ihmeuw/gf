@@ -16,7 +16,7 @@ source('./impact_evaluation/drc/set_up_r.r')
 if(Sys.info()[1]=='Windows') stop('This script is currently only functional on IHME\'s cluster')
 
 # whether to rerun everything or only jobs that failed
-rerunAll = FALSE
+rerunAll = TRUE
 
 # model version to use
 modelVersion = 'drc_malaria_impact4'
