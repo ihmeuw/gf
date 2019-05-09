@@ -2,8 +2,11 @@
 # create data tables for distinct graphs
 # Caitlin O'Brien-Carelli, modified by Emily Linebarger
 # 12/14/2018
-# ----------------------
+
+
+# -----------------------------------------------
 # Set up R
+#------------------------------------------------
 library(raster)
 library(ggplot2)
 library(tibble)
@@ -11,52 +14,56 @@ library(dplyr)
 library(RColorBrewer)
 library(maptools)
 
-# ----------------------
 # home drive 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # data directory
 dir = paste0(j,  'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
 
-# working directory to aggregate
+#-------------------------------------------------
+# Read in data 
+# ------------------------------------------------
 dt = readRDS(paste0(dir, 'pnls_drug.rds'))
 
 #Read in the shapefile
 shapefile = shapefile("J:/Project/Evaluation/GF/mapping/cod/gadm36_COD_shp/gadm36_COD_1.shp")
 shapefile@data$NAME_1 = standardizeDPSNames(shapefile@data$NAME_1)
+
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 coord = data.table(fortify(shapefile)) 
 coord[, id:=as.numeric(id)]
 coord_ann = rbind(coord, coord)
 coord_ann[, year:=rep(2017:2018, each=nrow(coord))] #What years do you have data for? 
 
+#---------------------------------------------------------
 #Set global variables here so you can re-run for any drug. 
+#---------------------------------------------------------
 drug_id = "Gv1UQdMw5wL"
 drug_name = "Determine test kit"
 full_date_range = "Jan 2017 - Dec 2018"
-#Make a test kit data table 
-{
-  # element_id                                  element
-  # 21: Gv1UQdMw5wL                           HIV 1+2, Determine Complete, Kit de 100 tests
-  # 22: ctP0MNHiq3B                                  HIV 1+2, Uni-Gold HIV, Kit de 20 tests
-  # 23: k3JmmwNHkmY                             HIV 1/2, Double Check Gold, Kit de 100 test
-  
-  test_kit_vars = c("Gv1UQdMw5wL", "ctP0MNHiq3B", "k3JmmwNHkmY")
-  test_kits = dt[element_id%in%test_kit_vars]
-  test_kits = test_kits[, .(element_id, date, element, value, stock_category)]
-  test_kits[, value:=sum(value, na.rm = TRUE), by=c('element_id', 'element', 'date', 'stock_category')]
-  test_kits = unique(test_kits)
-}
 
+
+#---------------------------------------------------------
+# Make specialized 'base' data tables.  
+# These are labeled in Snake Case to distinguish from data tables 
+# created below. 
+#---------------------------------------------------------
+FacsReportingByDate = dt[, .(facilities=length(unique(org_unit_id))), by=date]
+FacsReportingDrugByDate = dt[element_id==drug_id, .(facilities_reporting_on_drug=as.numeric(length(unique(org_unit_id)))), by=date]
+
+StockoutsForTargetDrug = dt[element_id==drug_id & stock_category=='number_of_days_stocked_out' & value>0 & !is.na(value)]
+StockoutsForTargetDrug[, facilities_stocked_out:=as.numeric(length(unique(org_unit_id))), by=date]
+
+
+#--------------------------------------------------
+# Prep code for maps and graphs
+#--------------------------------------------------
 
 #---------------------------------
 # reporting completeness data prep - graphs 1, 2
 
-# total facilities/art sites and whether they reported
-report = dt[ ,.(facilities=length(unique(org_unit_id))), by=date]
 #Did they report for the specific drug you're targeting? 
-tk = dt[element_id==drug_id, .(facs_reporting_on_drug=length(unique(org_unit_id))), by=date]
-report = merge(report, tk, by='date', all.x=TRUE)
+report = merge(FacsReportingByDate, FacsReportingDrugByDate, by='date', all.x=TRUE)
 
 report[is.na(facs_reporting_on_drug), facs_reporting_on_drug:=0]
 report[ , drug_reporting_ratio:=100*(facs_reporting_on_drug/facilities)]
@@ -77,9 +84,7 @@ report$variable = factor(report$variable, c( 'facilities',  'facs_reporting_on_d
 #-----------------------------
 # stock outs of ARVs - 3, 4, 5
 
-drug_so = dt[element_id==drug_id & stock_category=='number_of_days_stocked_out' & value>0 & !is.na(value), 
-             .(facilities_stocked_out=as.numeric(length(unique(org_unit_id)))), by=date] #Count all facilities that reported stock out information for this drug, with greater than 0 days in the month. 
-drug_so2 = dt[element_id==drug_id, .(facilities_reporting=as.numeric(length(unique(org_unit_id)))), by=date]
+drug_so = StockoutsForTargetDrug[, .(facilities_stocked_out=as.numeric(length(unique(org_unit_id)))), by=date] #Count all facilities that reported stock out information for this drug, with greater than 0 days in the month. 
 drug_so = merge(drug_so, drug_so2, by='date', all=T)
 drug_so[is.na(facilities_reporting), facilities_reporting:=0]
 drug_so[ ,ratio:=round(100*(facilities_stocked_out/facilities_reporting), 2)]
@@ -138,7 +143,6 @@ labels_vec2 = c(l172, l182)
 
 so_days2$year = factor(so_days2$year, c(2017, 2018), 
                       labels_vec2)
-
 
 #---------------------------------------
 # ARV stockout maps - 8:12

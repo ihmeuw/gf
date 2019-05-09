@@ -14,8 +14,8 @@
 source('./impact_evaluation/drc/set_up_r.r')
 
 # for testing purposes
-# task_id = 178
-# args = c('drc_malaria6', '1', 'TRUE')
+# task_id = 12
+# args = c('drc_malaria_impact4_under5', '2', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -55,6 +55,15 @@ if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile4b)
 h = unique(data$health_zone)[task_id]
 subData = data[health_zone==h]
 
+# define model object
+source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
+
+# reduce the data down to only necessary variables
+parsedModel = lavParseModelString(model)
+modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+modelVars = c('health_zone','date',modelVars)
+subData = subData[, unique(modelVars), with=FALSE]
+
 # jitter to avoid perfect collinearity
 for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','date')]) { 
 	if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
@@ -77,9 +86,6 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 
 # ----------------------------------------------------------------
 # Run model
-
-# define model object
-source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # fit model
 if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))

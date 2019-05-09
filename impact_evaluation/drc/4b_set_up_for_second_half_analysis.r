@@ -37,25 +37,34 @@ data[, date:=as.numeric(year(date)+((month(date)/12)-1))]
 
 # make MI ratio
 data[, case_fatality:=malariaDeaths/(newCasesMalariaMild+newCasesMalariaSevere)]
+data[, case_fatality_under5:=malariaDeaths_under5/(newCasesMalariaMild_under5+newCasesMalariaSevere_under5)]
 
 # bring in completeness (TEMPORARY)
 data = merge(data, completeness, by=c('health_zone','date'), all.x=TRUE)
 data = data[order(health_zone, date)]
-library(zoo)
-for(v in complVars) data[, (v):=na.locf(get(v)), by='health_zone']
+# library(zoo)
+# for(v in complVars) data[, (v):=na.locf(get(v)), by='health_zone']
 
 # apply limits
 data[ITN>1000, ITN:=NA]
 data[SSCACT>50000, SSCACT:=NA]
+data[SSCACT_under5>1000, SSCACT_under5:=NA]
 data[!is.finite(SP_rate), SP_rate:=NA]
 data[!is.finite(RDT_rate), RDT_rate:=NA]
 data[ACTs_CHWs_rate>1000, ACTs_CHWs_rate:=NA]
+data[ACTs_CHWs_under5_rate>500, ACTs_CHWs_under5_rate:=NA]
 data[mildMalariaTreated_rate>2, mildMalariaTreated_rate:=NA]
+data[mildMalariaTreated_under5_rate>100, mildMalariaTreated_under5_rate:=NA]
 data[severeMalariaTreated_rate>2.5, severeMalariaTreated_rate:=NA]
+data[severeMalariaTreated_under5_rate>200, severeMalariaTreated_under5_rate:=NA]
 data[newCasesMalariaMild_rate>100000, newCasesMalariaMild_rate:=NA]
+data[newCasesMalariaMild_under5_rate>100000, newCasesMalariaMild_under5_rate:=NA]
 data[newCasesMalariaSevere_rate>100000, newCasesMalariaSevere_rate:=NA]
+data[newCasesMalariaSevere_under5_rate>50000, newCasesMalariaSevere_under5_rate:=NA]
 data[malariaDeaths_rate>500, malariaDeaths_rate:=NA]
+data[malariaDeaths_under5_rate>2000, malariaDeaths_under5_rate:=NA]
 data[case_fatality>1, case_fatality:=NA]
+data[!is.finite(case_fatality_under5), case_fatality_under5:=NA]
 # -----------------------------------------------------------------
 
 
@@ -70,7 +79,7 @@ for(v in names(data)) {
 		if (!any(is.na(data[health_zone==h][[v]]))) next
 		if (!any(!is.na(data[health_zone==h][[v]]))) next
 		form = as.formula(paste0(v,'~date'))
-		lmFit = glm(form, data[health_zone==h], family='poisson')
+		lmFit = lm(form, data[health_zone==h])
 		data[health_zone==h, tmp:=exp(predict(lmFit, newdata=data[health_zone==h]))]
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
 		pct_complete = floor(i/(length(names(data))*length(unique(data$health_zone)))*100)
@@ -98,15 +107,21 @@ untransformed = copy(data)
 
 # log-transform
 logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated',
-	'RDT_rate','SP_rate','ACTs_CHWs_rate','ITN_rate','ITN_rate_cumul','case_fatality',
-	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate')
+	'SSCACT_under5','mildMalariaTreated_under5','severeMalariaTreated_under5', 
+	'RDT_rate','SP_rate','ACTs_CHWs_rate','ACTs_CHWs_under5_rate',
+	'ITN_rate','ITN_rate_cumul','case_fatality','case_fatality_under5',
+	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate',
+	'newCasesMalariaMild_under5_rate','newCasesMalariaSevere_under5_rate','malariaDeaths_under5_rate')
 for(v in logVars) { 
 	data[, (v):=log(get(v))]
 	data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
 }
 
 # compute leads (after rescaling because it creates more NA's)
-leadVars = c('newCasesMalariaMild_rate', 'newCasesMalariaSevere_rate', 'malariaDeaths_rate', 'case_fatality')
+leadVars = c('newCasesMalariaMild_rate', 'newCasesMalariaSevere_rate', 
+	'malariaDeaths_rate', 'case_fatality',
+	'newCasesMalariaMild_under5_rate', 'newCasesMalariaSevere_under5_rate', 
+	'malariaDeaths_under5_rate', 'case_fatality_under5')
 for(v in leadVars) { 
 	data[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']
 	untransformed[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead'), by='health_zone']

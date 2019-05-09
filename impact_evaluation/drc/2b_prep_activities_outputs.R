@@ -32,7 +32,7 @@ convert_quarter_to_decimal <- function(dt){
   return(dt)
 }
 source('./core/standardizeHZNames.R')
-source('./core/standardizeDPSNames.R')
+source('./core/standardizeDPSNames.r')
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -199,8 +199,12 @@ acts_rec[, subpopulation := "none"]
 dt[indicator=='ASAQreceived_under5', indicator:='ACT_received_under5']
 
 patients_treated <- dt[ grepl("treated", indicator, ignore.case = TRUE), ]
+children_treated = patients_treated[subpopulation %in% subpops]
 patients_treated <- patients_treated[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
+children_treated <- children_treated[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
 patients_treated[, indicator := "totalPatientsTreated"]
+children_treated[, indicator := "totalPatientsTreated_under5"]
+patients_treated = rbind(patients_treated, children_treated)
 patients_treated[, subpopulation := "none"]
 
 dt_final <- rbindlist(list(acts_rec, patients_treated, dt), use.names = TRUE)

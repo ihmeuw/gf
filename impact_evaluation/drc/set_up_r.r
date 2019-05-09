@@ -91,7 +91,7 @@ pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
 # snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
 combinedFile <- paste0(ieDir, 'base_pnlp_sigl_combined_data_hz_level.rds')
 comp_base_file <- paste0(dhisDir, "base_reporting_completeness_hz_prepped_quarterly.rds")
-comp_sigl_file <-paste0(dhisDir, "sigl1_reporting_completeness_hz_prepped_quarterly.rds")
+comp_sigl_file <-paste0(dhisDir, "sigl/sigl1_reporting_completeness_hz_prepped_quarterly.rds")
 ssc_file <- paste0(dhisDir, "SSC_data_2017_2018_prepped.rds")
 
 # outcomes/impact files

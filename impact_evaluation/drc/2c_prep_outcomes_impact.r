@@ -2,7 +2,7 @@
 # David Phillips
 # 
 # 3/10/2019
-# Prep outputs, outcomes and impact indicators for "second half" dose response model
+# Prep outputs, outcomes and impact indicators for 'second half' dose response model
 # Intended to be run by 1_master_file.r
 # WARNING: the line `aggregate to admin2 level` uses 16 cores on the cluster
 # ----------------------------------------------
@@ -10,8 +10,7 @@
 
 # to do
 # use incidence as denominator for ACT coverage
-# add malaria deaths, SSC variables, SP administered, ANC visits and suspectedMalaria from DHIS
-# fix handling of duplicate HZ names in shapefile, pnlp and snis
+# fix handling of duplicate HZ names in shapefile
 
 # ----------------------------------------------
 # Set up R
@@ -117,45 +116,39 @@ if (reprep_rasters==FALSE) data = readRDS(outputFile2c_estimates)
 # Load/prep program data
 
 # load
-pnlp = readRDS(pnlpHZFile) 
-dt_base = readRDS(snisBaseFile)
+pnlp_snis = readRDS(combinedFile)
 
 # subset
 inds = c('severeMalariaTreated','mildMalariaTreated',
 	'ITN','RDT','SP','SSCACT',
 	'ANC','SSCcasesCrossReferred','SSCcasesReferred','suspectedMalaria',
 	'newCasesMalariaMild','newCasesMalariaSevere','malariaDeaths')
-pnlp = pnlp[indicator %in% inds]
-pnlp = pnlp[!which(indicator=='ITN' & subpopulation=='received')]
-pnlp = pnlp[!which(indicator=='SP' & subpopulation%in%c('2nd','3rd','4th'))]
-pnlp = pnlp[!which(indicator=='ANC' & subpopulation%in%c('2nd','3rd','4th'))]
-pnlp = pnlp[!which(indicator=='RDT' & subpopulation%in%c('positive','received'))]
-elems = c('A 1.4 Severe malaria treated', 'A 1.4 Confirmed simple malaria treated',
-		'"A 1.5 Severe malaria treated - pregnant woman', 
-		'A 1.5 Confirmed simple malaria treated - pregnant woman',
-		'A 1.4 Severe malaria', 'A 1.4 Confirmed simple malaria',
-		'A 1.5 Severe malaria - pregnant woman', 
-		'A 1.5 Confirmed simple malaria - pregnant woman') 
-dt_base = dt_base[element_eng %in% elems & date<'2018-07-01']
+pnlp_snis[indicator=='LLIN', indicator:='ITN']
+pnlp_snis[indicator=='simpleConfMalariaTreated', indicator:='mildMalariaTreated']
+pnlp_snis[indicator=='newCasesMalariaSimpleConf', indicator:='newCasesMalariaMild']
+pnlp_snis = pnlp_snis[!which(indicator=='ITN' & subpopulation %in% c('received','stockOutDays','available','lost'))]
+pnlp_snis = pnlp_snis[!which(indicator=='ITN' & subpopulation %in% c('distAtANC1', 'distAtANC2'))] # these appear to be included in "consumed"
+pnlp_snis = pnlp_snis[!which(indicator=='SP' & subpopulation%in%c('2nd','3rd','4th'))]
+pnlp_snis = pnlp_snis[!which(indicator=='ANC' & subpopulation%in%c('2nd','3rd','4th'))]
+pnlp_snis = pnlp_snis[!which(indicator=='RDT' & subpopulation!='completed')]
+if(!all(inds %in% pnlp_snis$indicator)) stop('Some indicators have gone missing from combinedFile')
+pnlp_snis = pnlp_snis[indicator %in% inds & date<'2018-07-01']
 
-# aggreate age groups
+# set aside under-5
+subpops = c('1to5yrs','2to11mos','under5','completedUnder5','0to11mos')
+under5 = pnlp_snis[subpopulation %in% subpops]
+under5[, indicator:=paste0(indicator,'_under5')]
+
+# aggreate out all remaining subpopulations (manually confirmed ok)
 byVars = c('dps','health_zone','date','indicator')
-pnlp = pnlp[, .(value_pnlp=sum(mean)), by=byVars]
-dt_base[grepl('Severe malaria treated', element_eng), 
-	indicator:='severeMalariaTreated']
-dt_base[grepl('simple malaria treated', element_eng), 
-	indicator:='mildMalariaTreated']
-dt_base[element_eng %in% c('A 1.4 Confirmed simple malaria', 
-	'A 1.5 Confirmed simple malaria - pregnant woman'), 
-	indicator:='newCasesMalariaMild']
-dt_base[element_eng %in% c('A 1.4 Severe malaria', 
-	'A 1.5 Severe malaria - pregnant woman'), 
-	indicator:='newCasesMalariaSevere']
-dt_base = dt_base[!is.na(indicator), .(value_snis=sum(value)), by=byVars]
+pnlp_snis = pnlp_snis[!is.na(indicator), .(value_snis=sum(value)), by=byVars]
+under5 = under5[!is.na(indicator), .(value_snis=sum(value)), by=byVars]
 
-# make year variables
-pnlp[, year:=year(date)]
-dt_base[, year:=year(date)]
+# add under-5s as new rows
+pnlp_snis = rbind(pnlp_snis, under5)
+
+# make year variable
+pnlp_snis[, year:=year(date)]
 # ------------------------------------------------------------------------
 
 
@@ -164,27 +157,20 @@ dt_base[, year:=year(date)]
 
 # standardize health zones
 data[, health_zone:=standardizeHZNames(health_zone)]
-pnlp[, health_zone:=standardizeHZNames(health_zone)]
-dt_base[, health_zone:=standardizeHZNames(health_zone)]
+pnlp_snis[, health_zone:=standardizeHZNames(health_zone)]
 
 # collapse out DPS FIX ME!!!
 byVars = c('health_zone','indicator','year')
 data = data[, .(value_lbd=sum(value_lbd)), by=byVars]
-byVars = c('health_zone','date','indicator','year')
-pnlp = pnlp[, .(value_pnlp=sum(value_pnlp)), by=byVars]
-dt_base = dt_base[, .(value_snis=sum(value_snis)), by=byVars]
+pnlp_snis = pnlp_snis[, .(value_snis=sum(value_snis)), by=c(byVars, 'date')]
 
 # reshape wide FIX ME
 data_wide = dcast(data, health_zone+year~indicator, value.var='value_lbd')
-pnlp_wide = dcast(pnlp, health_zone+date+year~indicator, value.var='value_pnlp')
-dt_base_wide = dcast(dt_base, health_zone+date+year~indicator, value.var='value_snis')
+pnlp_snis_wide = dcast(pnlp_snis, health_zone+date+year~indicator, value.var='value_snis')
 
 # combine data FIX ME! ADD DPS TO HANDLE DUPLICATE HZ NAMES
-pnlp_wide = pnlp_wide[year<2018]
-dt_base_wide = dt_base_wide[year>=2018]
-program = rbind(pnlp_wide, dt_base_wide, fill=TRUE)
-data_wide = data_wide[year>=min(program$year)]
-data_wide = merge(data_wide, program, by=c('health_zone','year'), all.y=TRUE)
+data_wide = data_wide[year>=min(pnlp_snis_wide$year) & year<=max(pnlp_snis_wide$year)]
+data_wide = merge(data_wide, pnlp_snis_wide, by=c('health_zone','year'), all.y=TRUE)
 
 data_wide = data_wide[!is.na(health_zone)]
 # ------------------------------------------------------------------------
@@ -215,14 +201,34 @@ data_wide$all_missing = NULL
 
 # program data
 data_wide[, ACTs_CHWs_rate:=SSCACT/(SSCcasesCrossReferred+SSCcasesReferred)]
+data_wide[, ACTs_CHWs_under5_rate:=SSCACT_under5/(SSCcasesCrossReferred_under5+SSCcasesReferred_under5)]
 data_wide[, SP_rate:=SP/ANC]
 data_wide[, RDT_rate:=RDT/suspectedMalaria]
 data_wide[, ITN_rate:=ITN/population]
 data_wide[, mildMalariaTreated_rate:=mildMalariaTreated/newCasesMalariaMild]
+data_wide[, mildMalariaTreated_under5_rate:=mildMalariaTreated_under5/newCasesMalariaMild_under5]
 data_wide[, severeMalariaTreated_rate:=severeMalariaTreated/newCasesMalariaSevere]
+data_wide[, severeMalariaTreated_under5_rate:=severeMalariaTreated_under5/newCasesMalariaSevere_under5]
 data_wide[, malariaDeaths_rate:=malariaDeaths/population*100000]
+data_wide[, malariaDeaths_under5_rate:=malariaDeaths_under5/population*100000]
 data_wide[, newCasesMalariaMild_rate:=newCasesMalariaMild/population*100000]
+data_wide[, newCasesMalariaMild_under5_rate:=newCasesMalariaMild_under5/population*100000]
 data_wide[, newCasesMalariaSevere_rate:=newCasesMalariaSevere/population*100000]
+data_wide[, newCasesMalariaSevere_under5_rate:=newCasesMalariaSevere_under5/population*100000]
+
+# set whole-series infinite rates to all zero
+rateVars = names(data_wide)[grepl('_rate',names(data_wide))]
+for(v in rateVars) { 
+	data_wide[, tmp:=sum(!is.finite(get(v))), , by='health_zone']
+	data_wide[, N:=.N, , by='health_zone']
+	data_wide[tmp==N, (v):=0]
+}
+data_wide$tmp = NULL
+data_wide$N = NULL
+
+# set individual infinite rates (denominator = zero) to NA... about 500 of these
+rateVars = names(data_wide)[grepl('_rate',names(data_wide))]
+for(v in rateVars) data_wide[!is.finite(get(v)), (v):=NA]
 
 # model estimates
 data_wide[, act_coverage_rate:=act_coverage/incidence]
@@ -233,8 +239,17 @@ data_wide[, mortality_rate:=(mortality/12)/population*100000]
 # ------------------------------------------------------------------------
 
 
+# ------------------------------------------------------------------------
+# Test unique identifiers
+n1 = nrow(data_wide)
+n2 = nrow(data_wide[,c('health_zone','date'),with=FALSE])
+if (n1!=n2) stop('health_zone and date do not uniquely identify rows!')
+# ------------------------------------------------------------------------
+
+
 # --------------------------------
 # Save intermediate file
 data_wide = data_wide[order(health_zone, date)]
 saveRDS(data_wide, outputFile2c)
+archive(outputFile2c)
 # --------------------------------
