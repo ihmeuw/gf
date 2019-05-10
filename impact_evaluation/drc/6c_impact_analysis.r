@@ -33,14 +33,14 @@ means[lhs=='ITN', lhs:='ITN_consumed_cumulative']
 means[lhs=='SSCACT', lhs:='ACTs_SSC_cumulative']
 means[lhs=='RDT', lhs:='RDT_completed_cumulative']
 means[lhs=='SP', lhs:='SP_cumulative']
-means[lhs=='severeMalariaTreated', lhs:='severeMalariaTreated_cumulative']
-means[lhs=='mildMalariaTreated', lhs:='totalPatientsTreated_cumulative']
+means[lhs=='severeMalariaTreated_under5', lhs:='severeMalariaTreated_cumulative']
+means[lhs=='mildMalariaTreated_under5', lhs:='totalPatientsTreated_cumulative']
 means[rhs=='ITN', rhs:='ITN_consumed_cumulative']
-means[rhs=='SSCACT', rhs:='ACTs_SSC_cumulative']
+means[rhs=='SSCACT_under5', rhs:='ACTs_SSC_cumulative']
 means[rhs=='RDT', rhs:='RDT_completed_cumulative']
 means[rhs=='SP', rhs:='SP_cumulative']
-means[rhs=='severeMalariaTreated', rhs:='severeMalariaTreated_cumulative']
-means[rhs=='mildMalariaTreated', rhs:='totalPatientsTreated_cumulative']
+means[rhs=='severeMalariaTreated_under5', rhs:='severeMalariaTreated_cumulative']
+means[rhs=='mildMalariaTreated_under5', rhs:='totalPatientsTreated_cumulative']
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
@@ -61,7 +61,7 @@ nodeTable[, label:=gsub('Lead of','',label)]
 # Compute explained variance
 
 # establish the outcome variable
-outcomeVar = 'lead_malariaDeaths_rate'
+outcomeVar = 'lead_malariaDeaths_under5_rate'
 byVars = c('lhs', 'rhs', 'est.std', 'se.std')
 
 # prep each level of coefficients
@@ -124,7 +124,7 @@ tmplevel1 = copy(level1)
 tmplevel2 = copy(level2)
 
 # make dummy level 0
-level0 = data.table(lhs='Parent', rhs='lead_malariaDeaths_rate', 
+level0 = data.table(lhs='Parent', rhs='lead_malariaDeaths_under5_rate', 
 	est.std=0, se.std=0, level=0)
 estimates = rbind(level0, tmplevel1)
 
@@ -258,7 +258,7 @@ p1 = ggplot(level1Graph, aes(y=est.std, x=x, fill=label)) +
 	theme(legend.position='none')
 
 # pie chart of contributors to case fatality
-p2 = ggplot(level2Graph[lhs=='lead_case_fatality' | hole==1], 
+p2 = ggplot(level2Graph[lhs=='lead_case_fatality_under5' | hole==1], 
 		aes(y=est.std, x=x, fill=label)) + 
 	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
 	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
@@ -270,7 +270,7 @@ p2 = ggplot(level2Graph[lhs=='lead_case_fatality' | hole==1],
 	theme(legend.position='none')
 
 # pie chart of contributors to mild incidence
-p3 = ggplot(level2Graph[lhs=='lead_newCasesMalariaMild_rate' | hole==1], 
+p3 = ggplot(level2Graph[lhs=='lead_newCasesMalariaMild_under5_rate' | hole==1], 
 		aes(y=est.std, x=x, fill=label)) + 
 	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
 	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
@@ -282,7 +282,7 @@ p3 = ggplot(level2Graph[lhs=='lead_newCasesMalariaMild_rate' | hole==1],
 	theme(legend.position='none')
 
 # pie chart of contributors to severe incidence
-p4 = ggplot(level2Graph[lhs=='lead_newCasesMalariaSevere_rate' | hole==1], 
+p4 = ggplot(level2Graph[lhs=='lead_newCasesMalariaSevere_under5_rate' | hole==1], 
 		aes(y=est.std, x=x, fill=label)) + 
 	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
 	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
@@ -305,7 +305,7 @@ p5 = ggplot(estimatesGraph, aes(x=level, y=est.std, fill=fill, alpha=level)) +
 	theme(legend.position='none')
 
 # pie chart of contributors to mild treatment
-p6 = ggplot(level3Graph[lhs=='mildMalariaTreated_rate' | hole==1], 
+p6 = ggplot(level3Graph[lhs=='mildMalariaTreated_under5_rate' | hole==1], 
 		aes(y=est.std, x=x, fill=label)) + 
 	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
 	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
@@ -317,7 +317,7 @@ p6 = ggplot(level3Graph[lhs=='mildMalariaTreated_rate' | hole==1],
 	theme(legend.position='none')
 
 # pie chart of contributors to severe treatment
-p7 = ggplot(level3Graph[lhs=='severeMalariaTreated_rate' | hole==1], 
+p7 = ggplot(level3Graph[lhs=='severeMalariaTreated_under5_rate' | hole==1], 
 		aes(y=est.std, x=1, fill=label)) + 
 	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
 	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
@@ -341,7 +341,7 @@ p8 = ggplot(level3Graph[lhs=='ITN_rate_cumul' | hole==1],
 	theme(legend.position='none')
 
 # pie chart of contributors to act shipment
-p9 = ggplot(level6Graph[(lhs=='ACT_received_cumulative' & label!='Time Trend') | 
+p9 = ggplot(level6Graph[(lhs=='ACT_received_under5_cumulative' & label!='Time Trend') | 
 		hole==1], aes(y=est.std, x=x, fill=label)) + 
 	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
 	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +

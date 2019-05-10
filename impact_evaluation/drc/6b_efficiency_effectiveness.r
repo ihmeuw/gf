@@ -115,6 +115,7 @@ setnames(means2, c('label.x','label.y'), c('label_lhs','label_rhs'))
 # ITN, ACT and RDT shipment costs
 for(c in c('ITN','ACT','RDT')) {
 	output = paste0(c, '_received_cumulative')
+	if (!output %in% pooled_means1$lhs) output = gsub('_cumulative','_under5_cumulative',output) 
 	commodity_cost = pooled_means1[lhs==output,c('label_rhs','est','se'), with=F]
 	commodity_cost = commodity_cost[, .(est=sum(est), se=mean(se))]
 	commodity_cost[, lower:=est+(1.96*se)]
@@ -130,17 +131,21 @@ for(c in c('ITN','ACT','RDT')) {
 	print(paste0('Overall cost to ship one ', c, ':'))
 	print(commodity_cost)
 }
+
+# pooled, mediated means comparing different types of treatment
+
 # -----------------------------------------------
 
 
 # ----------------------------------------------
 # Bottlenecks in efficiency and effectiveness
 
-actVars = c('ITN_received_cumulative', 'ACT_received_cumulative', 'RDT_received_cumulative')
-outVars1 = c('RDT_completed_cumulative', 'severeMalariaTreated_cumulative', 'totalPatientsTreated_cumulative')
-outVars2 = c('ACTs_SSC_cumulative', 'ITN_consumed_cumulative', 'SP_cumulative')
-incVars = c('lead_newCasesMalariaMild_rate', 'lead_newCasesMalariaSevere_rate')
-mortVars = c('lead_malariaDeaths_rate', 'lead_case_fatality')
+actVars = c('ITN_received_cumulative', 'ACT_received_under5_cumulative', 'RDT_received_cumulative')
+outVars1 = c('RDT_completed_cumulative', 'severeMalariaTreated_under5_cumulative', 'totalPatientsTreated_under5_cumulative')
+outVars2 = c('ACTs_SSC_under5_cumulative', 'ITN_consumed_cumulative', 'SP_cumulative')
+outVarsTx = c('severeMalariaTreated_under5_cumulative', 'totalPatientsTreated_under5_cumulative', 'ACTs_SSC_under5_cumulative')
+incVars = c('lead_newCasesMalariaMild_under5_rate', 'lead_newCasesMalariaSevere_under5_rate')
+mortVars = c('lead_malariaDeaths_under5_rate', 'lead_case_fatality_under5')
 
 # graph coefficients from inputs to activities
 p1 = ggplot(means1[lhs %in% actVars & rhs!='date'], 
@@ -228,6 +233,17 @@ p7 = ggplot(pooled_means1[lhs %in% actVars],
 		y='Activities per Additional Dollar Invested',x='Input') + 
 	theme_bw() + 
 	coord_flip()
+	
+# graph pooled coefficients from inputs to treatment outputs
+# p8 = ggplot(pooled_means1[lhs %in% outVarsTx], 
+		# aes(y=est, ymin=lower, 
+			# ymax=upper, x=label_lhs)) + 
+	# geom_bar(stat='identity') + 
+	# geom_errorbar(width=.25) + 
+	# labs(title='Efficiency', subtitle='Activities', 
+		# y='Activities per Additional Dollar Invested',x='Input') + 
+	# theme_bw() + 
+	# coord_flip()
 # ----------------------------------------------
 
 
