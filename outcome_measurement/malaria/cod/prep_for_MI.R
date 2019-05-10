@@ -33,14 +33,15 @@ library(rlang)
 library(zoo)
 library(tidyr)
 library(dplyr)
+library(parallel)
 # --------------------
 
 # ----------------------------------------------
 # Overview - Files and Directories
 # ---------------------------------------------- 
 # data directory
-dir_prepped = "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/archive/"
-dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/"
+dir_prepped = "/home/j/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/archive/"
+dir = "/home/j/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/"
   
 # input files
 fullData = "fullData_dps_standardized.csv"
@@ -141,49 +142,88 @@ saveRDS(dt, paste0(dir, output_for_qr))
   ameliaDT$id <- seq(1:nrow(ameliaDT))
   id_vars = c(id_vars, 'id')
   
-  # noticed problem with duplicate values:
-  inds = names(ameliaDT)[!names(ameliaDT) %in% id_vars]
-  inds = inds[58:75]
+  # # noticed problem with duplicate values:
+  # inds = names(ameliaDT)[!names(ameliaDT) %in% id_vars]
+  # inds = inds[58:75]
+  # 
+  # # get all duplicates over inds
+  # dups = ameliaDT[ (duplicated( ameliaDT[, inds, with = FALSE] )) | (duplicated( ameliaDT[, inds, with = FALSE], fromLast =  TRUE )) , ]
+  # # exclude "duplicates" where all are na and/or 0  
+  # # dups = dups[ rowSums( dups[, ..inds], na.rm = TRUE ) != 0 , ]
+  # 
+  # inds = names(ameliaDT)[!names(ameliaDT) %in% id_vars]
+  # inds = inds[1:27]
+  # dups2 = ameliaDT[ (duplicated( ameliaDT[, inds, with = FALSE] )) | (duplicated( ameliaDT[, inds, with = FALSE], fromLast =  TRUE )) , ]
+  # # dups2 = dups2[ rowSums( dups2[, ..inds], na.rm = TRUE ) != 0 , ]
+  # 
+  # check1 = as.data.table(anti_join(dups, dups2, by = id_vars))
+  # # # this way is more memory-efficient: (both get same results)
+  # # dt[, dups := as.numeric(duplicated(dt[, inds, with=FALSE]))]
+  # # dt[, dups := max(dups), by=inds ]
+  # # dt[, row_sum := rowSums(.SD, na.rm = TRUE), .SDcols = inds]
+  # # dt[row_sum == 0, dups := 0]
+  # 
+  # # use the id variable in dups to set those entire rows to na
+  # set_to_na = unique(dups$id)
+  # check = copy(ameliaDT)
+  # check = check[set_to_na, (names(ameliaDT)[!names(ameliaDT) %in% id_vars]) := .SD[NA] ]
   
-  # get all duplicates over inds
-  dups = ameliaDT[ (duplicated( ameliaDT[, inds, with = FALSE] )) | (duplicated( ameliaDT[, inds, with = FALSE], fromLast =  TRUE )) , ]
-  # exclude "duplicates" where all are na and/or 0  
-  # dups = dups[ rowSums( dups[, ..inds], na.rm = TRUE ) != 0 , ]
   
-  inds = names(ameliaDT)[!names(ameliaDT) %in% id_vars]
-  inds = inds[1:27]
-  dups2 = ameliaDT[ (duplicated( ameliaDT[, inds, with = FALSE] )) | (duplicated( ameliaDT[, inds, with = FALSE], fromLast =  TRUE )) , ]
-  # dups2 = dups2[ rowSums( dups2[, ..inds], na.rm = TRUE ) != 0 , ]
+  # different way to detect duplicates:
   
-  check1 = as.data.table(anti_join(dups, dups2, by = id_vars))
-  # # this way is more memory-efficient: (both get same results)
-  # dt[, dups := as.numeric(duplicated(dt[, inds, with=FALSE]))]
-  # dt[, dups := max(dups), by=inds ]
-  # dt[, row_sum := rowSums(.SD, na.rm = TRUE), .SDcols = inds]
-  # dt[row_sum == 0, dups := 0]
+  # # test runs:
+  # # loop over rows and compare them, keeping track of the number of values that are the same
+  # small_subset = ameliaDT[1901:2200, 1:25]
+  # dup_matrix = data.table()
+  # current_dup_matrix = data.table()
+  # inds = names(small_subset)[!names(small_subset) %in% id_vars]
+  # tot_cols = length(small_subset[, inds, with = FALSE])
+  # 
+  # #by number identical
+  # dup_matrix = mclapply(seq(nrow(small_subset)), function(i) { 
+  #     print(paste('Checking against row', i, 'for duplicates...'))
+  #   for(j in seq(from=i+1, to=nrow(small_subset))) { 
+  #     if (i==j) next 
+  #     n = sum( small_subset[i, inds, with=FALSE] == small_subset[j, inds, with=FALSE], na.rm=T)
+  #     if (n < ((tot_cols) - 5)) next
+  #     tmp = data.table(i=i, j=j, num_identical=n)
+  #     current_dup_matrix = rbind(current_dup_matrix, tmp)
+  #   }
+  #   if (nrow(current_dup_matrix)>0) return(current_dup_matrix)
+  # }, mc.cores=ifelse(Sys.info()[1]=='Windows',1,30))
+  # 
+  # dup_matrix = rbindlist(dup_matrix)
+  
+  saveRDS(dup_matrix, paste0(dir, "pnlp_matrix_of_duplicate_rows.rds"))
+  
+  # small_subset[c(dup_matrix$j, dup_matrix$i), is_duplicated:=TRUE]
+  
+# full run:
+dup_matrix = data.table()
+current_dup_matrix = data.table()
+inds = names(ameliaDT)[!names(ameliaDT) %in% id_vars]
+tot_cols = length(ameliaDT[, inds, with = FALSE])
 
-  # use the id variable in dups to set those entire rows to na
-  set_to_na = unique(dups$id)
-  check = copy(ameliaDT)
-  check = check[set_to_na, (names(ameliaDT)[!names(ameliaDT) %in% id_vars]) := .SD[NA] ]
-  
-  small_subset = ameliaDT[500:1000, 1:15]
-  dup_matrix = data.table()
-  inds = names(small_subset)[!names(small_subset) %in% id_vars]
-  tot_cols = length(small_subset[, inds, with = FALSE])
-  
-  for(i in seq(nrow(small_subset))) { 
-    for(j in seq(nrow(small_subset))) { 
-      if (i==j) next 
-      n = sum( small_subset[i, inds, with=FALSE]==small_subset[j, inds, with=FALSE], na.rm=T)
-      if (n < ((tot_cols) - 1)) next
-      tmp = data.table(i=i, j=j, num_identical=n)
-      dup_matrix = rbind(dup_matrix, tmp)
-    }
+#by number identical
+dup_matrix = mclapply(c(1), function(i) {
+  print(paste('Checking against row', i, 'for duplicates...'))
+  for(j in seq(from=i+1, to=nrow(ameliaDT))) {
+    if (i==j) next
+    # print( paste("beginning of for loop", j ))
+    n = sum( ameliaDT[i, inds, with=FALSE] == ameliaDT[j, inds, with=FALSE], na.rm=T)
+    if (n < ((tot_cols) - 12)) next
+    tmp = data.table(i=i, j=j, num_identical=n)
+    current_dup_matrix = rbind(current_dup_matrix, tmp)
+    # print(paste('Checking against row', j, 'for duplicates...'))
   }
+  if (nrow(current_dup_matrix)>0) return(current_dup_matrix)
+}, mc.cores=ifelse(Sys.info()[1]=='Windows',1,48))
 
-  small_subset[c(dup_matrix$j, dup_matrix$i), is_duplicated:=TRUE]
-# ---------------------------------------------- 
+dup_matrix = rbindlist(dup_matrix)
+saveRDS(dup_matrix, paste0(dir, "pnlp_matrix_of_duplicate_rows.rds"))
+dup_matrix = readRDS("J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/pnlp_matrix_of_duplicate_rows.rds")
+
+----------------------------------------------
   
 # ---------------------------------------------- 
 # Deterministically impute total health facilities and convert the number reporting to a proportion over the total, then drop the original variable for number reporting and impute

@@ -23,11 +23,11 @@ standardizeHZNames = function(nameVector=NULL) {
   
 	# load spreadsheet connecting all known names to standardized names
 	require(data.table)
-	altNamesFile = './core/standardized_hzs_final_inc_pnlt.csv'
+	altNamesFile = './core/hz_renaming_file.csv'
 	alternateNames = fread(altNamesFile, header=TRUE)
 	
 	# prep data table
-	alternateNames = unique(alternateNames[, c('health_zone','hz_shp1','hz_shp2', 'hz_snis', 'hz_pnlp', 'hz_snis_cleaned', 'hz_pnlt'), with=FALSE])
+	alternateNames = unique(alternateNames[, c('health_zone','hz_shp1','hz_shp2', 'hz_snis', 'hz_pnlp', 'hz_snis_cleaned', 'hz_pnlt', 'hz_sv'), with=FALSE])
 	alternateNames = melt(alternateNames, id.vars=c('health_zone'), value.name='alternate_name')
 	
 	# make sure standard names are also an option as an input
@@ -36,6 +36,7 @@ standardizeHZNames = function(nameVector=NULL) {
 	alternateNames = rbind(alternateNames, tmp, fill=TRUE)
 	
 	# clean up alternate names
+	alternateNames[, alternate_name:=gsub('é', 'e', alternate_name)]
 	alternateNames[, alternate_name:=iconv(alternate_name, 'WINDOWS-1252','UTF-8')]
 	alternateNames[, alternate_name:=tolower(alternate_name)]
 	alternateNames[, alternate_name:=iconv(alternate_name, to='ASCII//TRANSLIT')]
@@ -43,8 +44,10 @@ standardizeHZNames = function(nameVector=NULL) {
 	
 	# remove duplicates from alternate names list
 	alternateNames = unique(alternateNames[,c('health_zone','alternate_name'), with=FALSE])
+	alternateNames = alternateNames[ !is.na(alternate_name) ]
 	
 	# clean up input vector
+	nameVector = gsub('é', 'e', nameVector)
 	nameVector = iconv(nameVector, 'WINDOWS-1252','UTF-8')
 	nameVector = tolower(nameVector)
 	nameVector = iconv(nameVector, to='ASCII//TRANSLIT')

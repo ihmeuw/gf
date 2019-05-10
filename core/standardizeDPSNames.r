@@ -32,11 +32,11 @@ standardizeDPSNames = function(nameVector=NULL) {
   
 	# load spreadsheet connecting all known names to standardized names
 	require(data.table)
-	altNamesFile = './core/alternate_hz_spellings.csv'
+	altNamesFile = './core/dps_renaming_file.csv'
 	alternateNames = fread(altNamesFile)
 	
 	# prep data table
-	alternateNames = unique(alternateNames[, c('dps','dps_snis','dps_pnlp'), with=FALSE])
+	alternateNames = unique(alternateNames[, c('dps','dps_snis','dps_pnlp', 'dps_sv'), with=FALSE])
 	alternateNames = melt(alternateNames, id.vars='dps', value.name='alternate_name')
 	
 	# make sure standard names are also an option as an input
