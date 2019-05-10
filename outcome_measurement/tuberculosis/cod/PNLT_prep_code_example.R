@@ -26,7 +26,7 @@ library(zoo)
 # Files and Directories
 
 # directory where you stored the data
-dir = 'C:/local/Basecamp_PNLT_Data'  # where the TB files are stored 
+dir = 'C:/local/Basecamp_PNLT_Data/'  # where the TB files are stored 
 
 # which sheet type do you want to prep?
 # This code preps “DEP”, “EVAL”, “AGE SEX”, “SUIVI BACT” separately
@@ -49,7 +49,7 @@ sheetList = list()
 
 # loop over files (note: for DEP this takes about an hour on my computer)
 i=1
-for (f in files[1:36]) { 
+for (f in files) { 
 	# display the name of the current file to monitor progress
 	print(f)
 

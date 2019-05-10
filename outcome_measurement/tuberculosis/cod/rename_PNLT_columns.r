@@ -27,7 +27,7 @@ library(zoo)
 # Files and Directories
 
 # directory where you stored the data
-dir = 'C:/local/Basecamp_PNLT_Data'  # where the TB files are stored 
+dir = 'C:/local/Basecamp_PNLT_Data/'  # where the TB files are stored 
 
 # which sheet type do you want to prep?
 # This code preps “DEP”, “EVAL”, “AGE SEX”, “SUIVI BACT” separately
