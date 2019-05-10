@@ -4,13 +4,13 @@
 
 :: small
 robocopy J:\Project\Evaluation\GF\vfm C:\local\GF_copy\vfm /mir
-robocopy J:\Project\Evaluation\GF\impact_evaluation C:\local\GF_copy\impact_evaluation /mir
 robocopy J:\Project\Evaluation\GF\mapping C:\local\GF_copy\mapping /mir
 robocopy J:\Project\Evaluation\GF\miscellaneous C:\local\GF_copy\miscellaneous /mir
 robocopy J:\Project\Evaluation\GF\results_chains C:\local\GF_copy\results_chains /mir
 robocopy J:\Project\Evaluation\GF\special_assessments C:\local\GF_copy\special_assessments /mir
 
 :: big
+robocopy J:\Project\Evaluation\GF\impact_evaluation C:\local\GF_copy\impact_evaluation /mir
 robocopy J:\Project\Evaluation\GF\outcome_measurement\cod C:\local\GF_copy\outcome_measurement\cod /mir 
 robocopy J:\Project\Evaluation\GF\outcome_measurement\uga C:\local\GF_copy\outcome_measurement\uga /mir 
 robocopy J:\Project\Evaluation\GF\outcome_measurement\gtm C:\local\GF_copy\outcome_measurement\gtm /mir 
