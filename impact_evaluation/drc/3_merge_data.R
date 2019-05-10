@@ -5,7 +5,7 @@
 # INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------------------
 
-
+source('./impact_evaluation/drc/set_up_r.r')
 
 # ----------------------------------------------------------
 # Load data
