@@ -118,8 +118,8 @@ admin2ShapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph
-nodeTableFile1 = './impact_evaluation/drc/visualizations/nodetable_first_half_under5.csv'
-nodeTableFile2 = './impact_evaluation/drc/visualizations/nodetable_second_half_under5.csv'
+nodeTableFile1 = './impact_evaluation/drc/visualizations/nodetable_first_half.csv'
+nodeTableFile2 = './impact_evaluation/drc/visualizations/nodetable_second_half.csv'
 # ---------------------------------------------------------------------------------
 
 
@@ -181,8 +181,8 @@ outputFile5a = paste0(ieDir, 'first_half_model_results.rdata')
 outputFile5b = paste0(ieDir, 'second_half_model_results.rdata')
 
 # output file from 6_display_results.r
-outputFile6a = paste0(ieDir, '../visualizations/sem_diagrams_under5.pdf')
-outputFile6b = paste0(ieDir, '../visualizations/bottleneck_analysis_under5.pdf')
-outputFile6c = paste0(ieDir, '../visualizations/impact_analysis_under5.pdf')
-outputFile6d = paste0(ieDir, '../visualizations/health_zone_effects_under5.pdf')
+outputFile6a = paste0(ieDir, '../visualizations/sem_diagrams.pdf')
+outputFile6b = paste0(ieDir, '../visualizations/bottleneck_analysis.pdf')
+outputFile6c = paste0(ieDir, '../visualizations/impact_analysis.pdf')
+outputFile6d = paste0(ieDir, '../visualizations/health_zone_effects.pdf')
 # -----------------------------------------------------------------------------
