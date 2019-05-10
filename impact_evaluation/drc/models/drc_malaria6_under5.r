@@ -17,7 +17,7 @@ model = '
 	RDT_completed_cumulative ~ prior("dgamma(1,1)")*RDT_received_cumulative + completeness_RDT_completed
 	SP_cumulative ~ prior("dgamma(1,1)")*lag_exp_M3_1_cumulative + date + prior("dgamma(1,1)")*lag_ghe_cumulative + completeness_SP
 	severeMalariaTreated_under5_cumulative ~ prior("dgamma(1,1)")*lag_exp_M2_6_cumulative + prior("dgamma(1,1)")*ACT_received_under5_cumulative + date + prior("dgamma(1,1)")*lag_ghe_cumulative + completeness_severeMalariaTreated
-	totalPatientsTreated_cumulative ~ prior("dgamma(1,1)")*ACT_received_under5_cumulative + completeness_totalPatientsTreated
+	totalPatientsTreated_under5_cumulative ~ prior("dgamma(1,1)")*ACT_received_under5_cumulative + completeness_totalPatientsTreated
 	
 	# latent variables
 	
@@ -40,18 +40,18 @@ model = '
 	ITN_consumed_cumulative ~~ 0*RDT_completed_cumulative
 	ITN_consumed_cumulative ~~ 0*SP_cumulative
 	ITN_consumed_cumulative ~~ 0*severeMalariaTreated_under5_cumulative
-	ITN_consumed_cumulative ~~ 0*totalPatientsTreated_cumulative
+	ITN_consumed_cumulative ~~ 0*totalPatientsTreated_under5_cumulative
 	
 	ACTs_SSC_under5_cumulative ~~ 0*RDT_completed_cumulative
 	ACTs_SSC_under5_cumulative ~~ 0*SP_cumulative
 	ACTs_SSC_under5_cumulative ~~ 0*severeMalariaTreated_under5_cumulative
-	ACTs_SSC_under5_cumulative ~~ 0*totalPatientsTreated_cumulative
+	ACTs_SSC_under5_cumulative ~~ 0*totalPatientsTreated_under5_cumulative
 	
 	RDT_completed_cumulative ~~ 0*SP_cumulative
 	RDT_completed_cumulative ~~ 0*severeMalariaTreated_under5_cumulative
 	
 	SP_cumulative ~~ 0*severeMalariaTreated_under5_cumulative
-	SP_cumulative ~~ 0*totalPatientsTreated_cumulative
+	SP_cumulative ~~ 0*totalPatientsTreated_under5_cumulative
 	
-	severeMalariaTreated_under5_cumulative ~~ 0*totalPatientsTreated_cumulative
+	severeMalariaTreated_under5_cumulative ~~ 0*totalPatientsTreated_under5_cumulative
 '
