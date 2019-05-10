@@ -1,144 +1,134 @@
 # ----------------------------------------------
 # Audrey Batzel
-# Prep PNLT data - example code
+# Example code to assemble the PNLT data
 
-# NOTE: for the code to work, organize files like this:
-  # 1.	Create a folder for all of the TB data  example: “National TB Program”
-  # 2.	Within this folder, create a folder for each year of data. 
-  # 3.	Within each year folder, include all of the files for that year (for all DPS and all quarters).
+# Instructions:
+# 1. Store the 2016-2018 TB data in a folder identical to Basecamp (one sub-folder for each year) 
+# 2. Change the 'dir' object to reflect the location of the data on your computer
+# 3. Change the sheet_type object to reflect the sheet within each excel file you want to extract
+# 4. Run the whole script
 # ----------------------------------------------
 
+
 # --------------------
-## Set up R / install packages
-# -------------------
+# Set up R / install packages
+# note: if a package is not installed, run install.packages('package.name'); then, rerun library(package.name) 
 rm(list=ls())
 library(data.table)  
 library(reshape2)
 library(stringr)
 library(readxl)
-library(tidyr)
-library(dplyr)
-library(openxlsx)
-# NOTE: if a package is not installed, run install.packages("package.name"); then, rerun library(package.name) above. 
+library(zoo)
 # --------------------
 
-# ----------------------------------------------
-## Overview - Files and Directories
-# ----------------------------------------------
-# directories
-dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program/"  # where the TB files are stored 
-out_dir = "" # where you want to save the data
 
-# output files
-outFile = paste0(out_dir, "") # name of the output file 
-# ----------------------------------------------
+# --------------------------------------------------------
+# Files and Directories
 
-# ----------------------------------------------
-# Prep each type of sheet / data (“DEP”, “EVAL”, “AGE SEX”, “SUIVI BACT”) separately
-# NOTE: this code is set up to prep "DEP" sheets as an example.
-sheet_type = "DEP"
-# ----------------------------------------------
+# directory where you stored the data
+dir = 'C:/local/Basecamp_PNLT_Data'  # where the TB files are stored 
 
-# ----------------------------------------------
-# LOOP THROUGH YEARS
-years = list.files(dir)
+# which sheet type do you want to prep?
+# This code preps “DEP”, “EVAL”, “AGE SEX”, “SUIVI BACT” separately
+sheet_type = 'DEP'
 
-# Initialize a data table for the entire time series to add the prepped years to as you loop through years
-dt_all_years = data.table()
-for ( year in years ){  # this is in a loop to demonstrate how it might be done all together, but you may need to step through the loop
-                        # year by year and file by file at first, since each file might have specific differences that need to be addressed. 
-                        # You can do that by setting y = years[1] manually, as an example.
-  
-  # Create a list of files for the year 
-  files = list.files(paste0(dir, year))
-  # Exclude "synthesis" files, keep only the DPS files
-  files = files[!grepl(files, pattern = "synth", ignore.case = TRUE)]
+# output file
+outFile = paste0(dir, 'cleaned_', sheet_type, '_data.csv') 
+# --------------------------------------------------------
 
-  # Create a data table of file information
-  dt_files <- as.data.table(files)
-  setnames(dt_files, "files", "file_name")
-  dt_files[, file_name := trimws(file_name)]
-  
-  dt_files[, dps := file_name]
-  dt_files[, year := lapply( strsplit(file_name, " "), tail, 1)] 
-  dt_files[, dps := gsub(paste0(" ", year), "", dps), by = file_name]
-  dt_files[, year := gsub(".xlsx", "", year)]
-  dt_files[, quarter:= lapply(strsplit(dps, " "), tail, 1)] 
-  dt_files[, dps := gsub(paste0(" ", quarter), "", dps), by = file_name]
-  dt_files[, quarter := gsub("T", "", quarter)]
-  dt_files[, quarter := as.numeric(quarter)]
-  
-  # For each DPS, take the latest quarter (should be T3 or T4 most commonly):
-  dt_files[, max_quarter := max(quarter), by= "dps" ] # will need to make sure there aren't typos in DPS name.
-  loop_files = dt_files[max_quarter == quarter, ]
-  
-  # Initialize a data table for the year to add the prepped DPS to as you loop through DPS
-  dt_by_year = data.table()
-  # LOOP THROUGH DPS, using the "latest quarter" files for each
-  for (file in loop_files$file_name){ # this is in a loop to demonstrate how it might be done all together, but you may need to step through the loop
-                                   # year by year and file by file at first, since each file might have specific differences that need to be addressed. 
-                                   # You can do that by setting file = loop_files$file_name[1] manually, as an example.
-    
-    max = loop_files[ file_name == file, max_quarter]
-    
-    # Get the sheet names for the file
-    sheets = excel_sheets(paste0(dir, year, "/", file))
-    sheets = sheets[grepl( sheets, pattern = sheet_type, ignore.case = TRUE)]
-    sheets = sheets[!grepl( sheets, pattern = "synth", ignore.case = TRUE)]
-    sheets = trimws(sheets)
-    
-    # Create a data table with the sheet information
-    dt_sheets <- as.data.table(sheets)
-    setnames(dt_sheets, "sheets", "sheet_name")
-    
-    dt_sheets[, year:= lapply( strsplit(sheet_name, " "), tail, 1)] 
-    dt_sheets[, sheet_type := sheet_name]
-    dt_sheets[, sheet_type := gsub(paste0(" ", year), "", sheet_type), by = sheet_name]
-    dt_sheets[, quarter :=  lapply( strsplit(sheet_type, " "), tail, 1)] 
-    dt_sheets[, sheet_type := gsub(paste0(" ", quarter), "", sheet_type), by = sheet_name]
-    dt_sheets[, quarter := gsub("T", "", quarter)]
-    dt_sheets[, quarter := as.numeric(quarter)]
-    
-    # Get the sheets to loop through:
-    loop_sheets = dt_sheets[ quarter <= max, ]
-    
-    # Initialize a data table for the DPS to add the prepped data sheets to as you loop through sheets
-    dt_by_dps = data.table()
-    # LOOP THROUGH SHEETS, up to max_quarter, prep each data sheet, and add it to dt_by_dps
-    for (sheet in loop_sheets$sheet_name){# this is in a loop to demonstrate how it might be done all together, but you may need to step through the loop
-                                          # year by year and file by file at first, since each file might have specific differences that need to be addressed. 
-                                          # You can do that by setting sheet = loop_sheets$sheet_name[1] manually, as an example.
-      
-      # read in the file and the sheet
-      dt <- data.table(read_excel(paste0(dir, year, "/", file), sheet= sheet))
-      
-      # prep the data
-          # //////////////////////////////////// 
-          ####### INSERT PREP CODE HERE ########
-          # //////////////////////////////////// 
-      
-      # add columns to the data from the data tables you made to get file and sheet information
-      dt$quarter = dt_sheets[sheet_name == sheet, quarter]
-      dt$dps = dt_files[file_name == file, dps]
-      dt$year = dt_files[file_name == file, year]
-      
-      # add the data to the data table for the dps
-      dt_by_dps = rbindlist(list(dt_by_dps, dt), use.names=TRUE, fill= TRUE)
-    }
-    # when all of the sheets in one DPS are prepped, add that DPS data to the data table for the year data
-    dt_by_year = rbindlist(list(dt_by_year, dt_by_dps), use.names=TRUE, fill= TRUE)
-    
-    # if you want to save the data by year as an intermediate step, do so here!
-    saveRDS(dt_by_year, "") # add where to save the file
-    
-  }
-  # when all of the DPS in one year are prepped, add that year's data to the data table for the whole time series
-  dt_all_years = rbindlist(list(dt_all_years, dt_by_year), use.names=TRUE, fill= TRUE)
+
+# ----------------------------------------------------------------------------------
+# Loop over files and get the necessary sheets out of them
+
+# list all the files in this directory (excluding synthesis files)
+files = list.files(dir, recursive=TRUE)
+files = files[!grepl('synth', files, ignore.case=TRUE)]
+
+# set up a list to store all the data in
+sheetList = list()
+
+# loop over files (note: for DEP this takes about an hour on my computer)
+i=1
+for (f in files[1:36]) { 
+	# display the name of the current file to monitor progress
+	print(f)
+
+	# look up the names of the sheets in this file
+    sheets = excel_sheets(paste0(dir, '/', f))
+	
+	# get the sheet specified by sheet_type (excluding synthesis sheets)
+    sheets = sheets[grepl(sheet_type, sheets, ignore.case=TRUE)]
+    sheets = sheets[!grepl('synth', sheets, ignore.case=TRUE)]
+
+	# loop over sheets and load them into R (even if they are empty)
+	for(s in sheets) { 
+		# load the sheet and convert to data.table for convenience
+		currentSheet = read_excel(paste0(dir, '/', f), sheet=s, col_names=FALSE)
+		currentSheet = data.table(currentSheet)
+		
+		# identify which file and sheet this came from
+		currentSheet[, file:=f]
+		currentSheet[, sheet:=s]
+			
+		# store the data in the list
+		sheetList[[i]] = currentSheet
+		i=i+1
+	}
 }
-# ----------------------------------------------
+# ----------------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------------
+# Clean each individual sheet
+
+# set up a list to store all the data in
+cleanedSheets = list()
+
+# loop over sheets
+for(s in seq(length(sheetList))) {
+
+	# carry down the column names
+	tmp = copy(sheetList[[s]])
+	tmp = tmp[, lapply(.SD, na.locf, na.rm=F)]
+	
+	# drop rows with no data
+	tmp = tmp[, n_not_missing:=rowSums(!is.na(.SD))]
+	tmp = tmp[n_not_missing>0]
+	tmp$n_not_missing = NULL
+	
+	# drop columns with no data
+	tmp = tmp[,colSums(is.na(tmp))<nrow(tmp), with=FALSE]
+	
+	# set data to NA if I carried down the column name too far
+	for(v in names(tmp)) tmp[get(v)==v, (v):=NA]
+	
+	# get DPS, year and quarter from file name and sheet name
+	for(y in seq(2016,2018)) tmp[grepl(as.character(y),file), year:=y]
+	for(q in seq(4)) tmp[grepl(as.character(q),sheet), quarter:=q]
+	tmp[, dps:=gsub(year, '', file)]
+	tmp[, dps:=gsub(quarter, '', dps)]
+	for(x in c('Data TB /', ' T .xlsx', ' T .xls')) tmp[, dps:=gsub(x, '', dps)]
+	
+	# store
+	cleanedSheets[[s]] = copy(tmp)
+}
+# -------------------------------------------------------------------------------
+
+
+# -------------------------------------------------------------------------------
+# Set column names for each individual sheet
+
+# define a bunch of lists of possible name arrangements (done manually)
+names1 = c('N', 'CSDT_ZS', 'Population_Totale', 'Population_couverte', 'Presumes_TB', 'Frottis_effectues_NP_et_rech', 'Frottis_positifs_NP_et_Rech', 'Presumes_TB_soumis_a_lexamen_Ziehl_Auramine', 'Presumes_TB_soumis_a_lexamen_Ziehl_Auramine_positif', 'Presumes_soumis_au_Genexpert', 'MTB_detecte_resistance_a_rifampicine_non_detectee_MTB_RIF', '_RR', 'Invalide_Aucun_resultat_Erreur', 'Nouveau_patient', 'Rechute', 'Apres_echec', 'Apres_perdu_de_vue', 'Nouveau_patient', 'Rechute', 'Hors_Rechute', 'Nouveau_patient', 'Rechute', 'Hors_Rechute', 'Autre_patient_deja_traite', 'Total_des_cas_incident_NP_et_Rech', 'Total_des_cas', 'Nombre_de_cas_ayant_ete_orientes_par_la_communaute', 'Total_patients_en_traitement_et_qui_ont_reçu_une_forme_de_soutien_a_lobservance_du_traitement_de_la_communaute', 'Teste_au_VIH_connaissant_leur_statut', 'VIH', 'VIH_sous_Cotri', 'VIH_sous_TARV', 'Teste_au_VIH_connaissant_leur_statut', 'VIH', 'VIH_sous_Cotri', 'VIH_sous_TARV', 'Nombre_des_PVVIH_avec_recherche_de_la_TB', 'Nombre_des_PVVIH_exclus_de_la_TB', 'Nombre_des_PVVIH_mis_sous_lINH', 'Presumes_TB_MR_RR', 'Confirmes_TBMR_RR', 'confirmes_TB_XDR', 'Presumes_TB_MR_RR', 'Confirmes_TBMR_RR', 'confirmes_TB_XDR', 'Presumes_TB_MR_RR', 'Confirmes_TBMR_RR', 'confirmes_TB_XDR', 'Presumes_TB_MR_RR', 'Confirmes_TBMR_RR', 'confirmes_TB_XDR', 'ZS', 'HZS', 'Transfrontalier', 'ZS', 'HZS', 'Transfrontalier', 'Enfant_de_0_5_ans_sous_INH', 'Prisonniers', 'Miniers', 'Cas_contact', 'Autres', 'Total', 'Appartenance', 'Cas', 'file', 'sheet', 'year', 'quarter', 'dps')
+names2 = c(KEEP GOING)
+
+# set names for sheets that have identical formats (please double check)
+for(s in c(1:8, 11, 12, 17:44, 51, 52, 100, 105, 107:116, 134:143)) setnames(cleanedSheets[[s]], names1)
+for(s in c(OTHER ROWS)) setnames(cleanedSheets[[s]], names2)
+# -------------------------------------------------------------------------------
+
 
 # ----------------------------------------------
 # Save the data
-# ----------------------------------------------
-saveRDS(dt_all_years, outFile)
+write.csv(data, outFile, row.names=FALSE)
 # ----------------------------------------------
