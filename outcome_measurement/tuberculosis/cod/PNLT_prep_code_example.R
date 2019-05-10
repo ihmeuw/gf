@@ -1,12 +1,12 @@
 # ----------------------------------------------
 # Audrey Batzel
-# Example code to assemble the PNLT data
+# Code that appends a set of sheets from many PNLT datasets
 
 # Instructions:
 # 1. Store the 2016-2018 TB data in a folder identical to Basecamp (one sub-folder for each year) 
 # 2. Change the 'dir' object to reflect the location of the data on your computer
 # 3. Change the sheet_type object to reflect the sheet within each excel file you want to extract
-# 4. Run the whole script
+# 4. Run the whole script (it saves a list containing all the sheets)
 # ----------------------------------------------
 
 
@@ -33,7 +33,7 @@ dir = 'C:/local/Basecamp_PNLT_Data'  # where the TB files are stored
 sheet_type = 'DEP'
 
 # output file
-outFile = paste0(dir, 'cleaned_', sheet_type, '_data.csv') 
+outFile = paste0(dir, 'appended_', sheet_type, '_data.csv') 
 # --------------------------------------------------------
 
 
@@ -69,6 +69,7 @@ for (f in files[1:36]) {
 		# identify which file and sheet this came from
 		currentSheet[, file:=f]
 		currentSheet[, sheet:=s]
+		currentSheet[, item:=i]
 			
 		# store the data in the list
 		sheetList[[i]] = currentSheet
@@ -115,20 +116,7 @@ for(s in seq(length(sheetList))) {
 # -------------------------------------------------------------------------------
 
 
-# -------------------------------------------------------------------------------
-# Set column names for each individual sheet
-
-# define a bunch of lists of possible name arrangements (done manually)
-names1 = c('N', 'CSDT_ZS', 'Population_Totale', 'Population_couverte', 'Presumes_TB', 'Frottis_effectues_NP_et_rech', 'Frottis_positifs_NP_et_Rech', 'Presumes_TB_soumis_a_lexamen_Ziehl_Auramine', 'Presumes_TB_soumis_a_lexamen_Ziehl_Auramine_positif', 'Presumes_soumis_au_Genexpert', 'MTB_detecte_resistance_a_rifampicine_non_detectee_MTB_RIF', '_RR', 'Invalide_Aucun_resultat_Erreur', 'Nouveau_patient', 'Rechute', 'Apres_echec', 'Apres_perdu_de_vue', 'Nouveau_patient', 'Rechute', 'Hors_Rechute', 'Nouveau_patient', 'Rechute', 'Hors_Rechute', 'Autre_patient_deja_traite', 'Total_des_cas_incident_NP_et_Rech', 'Total_des_cas', 'Nombre_de_cas_ayant_ete_orientes_par_la_communaute', 'Total_patients_en_traitement_et_qui_ont_reçu_une_forme_de_soutien_a_lobservance_du_traitement_de_la_communaute', 'Teste_au_VIH_connaissant_leur_statut', 'VIH', 'VIH_sous_Cotri', 'VIH_sous_TARV', 'Teste_au_VIH_connaissant_leur_statut', 'VIH', 'VIH_sous_Cotri', 'VIH_sous_TARV', 'Nombre_des_PVVIH_avec_recherche_de_la_TB', 'Nombre_des_PVVIH_exclus_de_la_TB', 'Nombre_des_PVVIH_mis_sous_lINH', 'Presumes_TB_MR_RR', 'Confirmes_TBMR_RR', 'confirmes_TB_XDR', 'Presumes_TB_MR_RR', 'Confirmes_TBMR_RR', 'confirmes_TB_XDR', 'Presumes_TB_MR_RR', 'Confirmes_TBMR_RR', 'confirmes_TB_XDR', 'Presumes_TB_MR_RR', 'Confirmes_TBMR_RR', 'confirmes_TB_XDR', 'ZS', 'HZS', 'Transfrontalier', 'ZS', 'HZS', 'Transfrontalier', 'Enfant_de_0_5_ans_sous_INH', 'Prisonniers', 'Miniers', 'Cas_contact', 'Autres', 'Total', 'Appartenance', 'Cas', 'file', 'sheet', 'year', 'quarter', 'dps')
-names2 = c(KEEP GOING)
-
-# set names for sheets that have identical formats (please double check)
-for(s in c(1:8, 11, 12, 17:44, 51, 52, 100, 105, 107:116, 134:143)) setnames(cleanedSheets[[s]], names1)
-for(s in c(OTHER ROWS)) setnames(cleanedSheets[[s]], names2)
-# -------------------------------------------------------------------------------
-
-
 # ----------------------------------------------
 # Save the data
-write.csv(data, outFile, row.names=FALSE)
+saveRDS(data, outFile)
 # ----------------------------------------------
