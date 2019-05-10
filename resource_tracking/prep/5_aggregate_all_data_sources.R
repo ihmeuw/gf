@@ -323,7 +323,7 @@ if (nrow(all_current_grants)!=expected_current_grants){
 }
 
 # Write data 
-write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
+# write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
 saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rds"))
 
 #----------------------------------

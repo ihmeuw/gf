@@ -277,17 +277,20 @@ mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, 
 # ---------------------------------------------
 
 if (prep_files == TRUE){
-  final_budgets <- mapped_data[file_iteration == "final" & data_source == "fpm"] #Emily should we remove the expenditure column here? 
-  final_expenditures <- mapped_data[file_iteration == "final" & data_source == "pudr"]
+  # final_budgets <- mapped_data[file_iteration == "final" & data_source == "fpm"] #Emily should we remove the expenditure column here? 
+  # final_expenditures <- mapped_data[file_iteration == "final" & data_source == "pudr"]
+  
+  final_budgets <- mapped_data[data_source == "fpm"]
+  final_expenditures <- mapped_data[data_source == "pudr"]
   
   # Save RDS file
   saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
   saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
   saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
   
-  write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"))
-  write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"))
-  write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"))
+  # write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"))
+  # write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"))
+  # write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"))
 }
 
 if (prep_gos == TRUE){

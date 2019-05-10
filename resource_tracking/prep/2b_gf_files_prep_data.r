@@ -26,18 +26,20 @@ if (prep_files == TRUE){
   stopifnot((unique(file_list$file_iteration))%in%c("final", "initial"))
 
   #Prioritize GOS data where we have it 
-  file_list = prioritize_gos(file_list)
+  # file_list = prioritize_gos(file_list)
   
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')] 
-  file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
-  
-  if ( nrow(file_list[date_dup>0])!=0){
-    print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
-    print("There are duplicates in final files - review file list.")
-  }
+  # file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')] 
+  # file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
+  # 
+  # if ( nrow(file_list[date_dup>0])!=0){
+  #   print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
+  #   print("There are duplicates in final files - review file list.")
+  # }
 
 }
+
+file_list = file_list[data_source=='pudr' & year(start_date)>=2018]
 
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
@@ -45,9 +47,10 @@ if (prep_files == TRUE){
 if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
-  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise")
+  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
+                                      'DETAIL')
   
-  budget_cols = c("activity_description", "budget", "cost_category", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
+  budget_cols = c("activity_description", "budget", "cost_category", "currency", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
   pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){
