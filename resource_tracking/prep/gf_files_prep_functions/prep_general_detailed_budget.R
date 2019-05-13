@@ -109,13 +109,27 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   #Grab currency row 
   if (language=="fr"){
     currency_col = grep("monnaie de paiement", names)
+  } else {
+    currency_col <- which(names=="currency")
+    if (length(currency_col)!=1){
+      currency_test <- grep("USD|Local", gf_data)
+      currency_col = currency_col[currency_col%in%keep_currency] #Drop out other 'currency' named columns. 
+    }
   }
   stopifnot(length(currency_col)==1)
+  
+  #Grab implementer column 
+  if (language=="eng" | language=="fr"){
+    implementer_col = grep("implementer", names)
+  } else {
+    implementer_col = grep("implementador|receptor", names)
+  }
+  stopifnot(length(implementer_col)==1)
   
   #Grab all budget rows 
   budget_cols = grep(qtr_text, names)
   
-  total_subset = c(module_col, intervention_col, activity_col, cost_category_col, currency_col, budget_cols)
+  total_subset = c(module_col, intervention_col, activity_col, cost_category_col, currency_col, implementer_col, budget_cols)
   gf_data = gf_data[, total_subset, with=FALSE]
   
   #Change column names using the name row you found before. 
@@ -142,11 +156,11 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
     quarter_cols = grep(paste(quarter_cols, collapse="|"), names(gf_data))
   }
 
-  second_subset = c(1:5, quarter_cols) #Only keep module, intervention, activity description, currency column, and the budget columns by quarter
+  second_subset = c(1:6, quarter_cols) #Only keep module, intervention, activity description, currency column, and the budget columns by quarter
   gf_data = gf_data[, second_subset, with = FALSE]
   
   #Reset names for the whole thing 
-  quarters = ncol(gf_data)-5
+  quarters = ncol(gf_data)-6
   old_qtr_names = c()
   for (i in 1:quarters){
     if(language == "eng" | language == "esp"){
@@ -168,8 +182,13 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
     old_names = c("description de l'activite", "element de cout", "monnaie de paiement", old_qtr_names)
     new_names = c('activity_description', 'cost_category', "currency", new_qtr_names)
   } else if (language == "esp"){
-    old_names = c('modulo', 'intervencion', 'descripcion de la actividad', 'categoria de gastos', old_qtr_names)
-    new_names = c('module', 'intervention', 'activity_description', 'cost_category', new_qtr_names)
+    if ('implementador'%in% names){
+    old_names = c('modulo', 'intervencion', 'descripcion de la actividad', 'categoria de gastos', "implementador", old_qtr_names)
+    new_names = c('module', 'intervention', 'activity_description', 'cost_category', "implementer", new_qtr_names)
+    } else {
+      old_names = c('modulo', 'intervencion', 'descripcion de la actividad', 'categoria de gastos', "receptor", old_qtr_names)
+      new_names = c('module', 'intervention', 'activity_description', 'cost_category', "implementer", new_qtr_names)
+    }
   }
   
   #If there is any whitespace in column names, remove it. 
@@ -187,7 +206,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   
   #Remove rows where first 4 variables (module, intervention, activity, and cost category) are NA, checking that their sum is 0 for key variables first. 
   check_na_sum = gf_data[is.na(module) & is.na(intervention) & is.na(activity_description) & is.na(cost_category)]
-  check_na_sum = melt(check_na_sum, id.vars = c('module', 'intervention', 'activity_description', 'cost_category'), value.name = "budget")
+  check_na_sum = melt(check_na_sum, id.vars = c('module', 'intervention', 'activity_description', 'cost_category', 'currency'), value.name = "budget")
   check_na_sum[, budget:=as.numeric(budget)]
   na_budget = check_na_sum[, sum(budget, na.rm = TRUE)]
   if (na_budget!=0){
@@ -206,7 +225,8 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   for (i in 2:quarters){ 
     month(date_range[i]) = month(date_range[i]) + 3*(i-1) 
   }
-  budget_dataset = melt(gf_data, id.vars = c('module', 'intervention', 'activity_description', 'cost_category', 'currency'), value.name = "budget")
+  budget_dataset = melt(gf_data, id.vars = c('module', 'intervention', 'activity_description', 'cost_category', 'currency', 'implementer'), 
+                        value.name = "budget")
   budget_dataset[, budget:=as.numeric(budget)] #Go ahead and make budget numeric at this point
   
   #Replace "budget q1", etc. with the actual date it corresponds to. 
@@ -243,7 +263,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   }
   
   #Make sure you have all the columns you need for analysis
-  check_names = c('module', 'intervention', 'cost_category', 'activity_description', 'budget', 'start_date', 'currency')
+  check_names = c('module', 'intervention', 'cost_category', 'activity_description', 'budget', 'start_date', 'currency', 'implementer')
   stopifnot(check_names%in%names(budget_dataset))
   
   #--------------------------------
