@@ -78,7 +78,7 @@ failed_tests_gtm = unique(rbind(failed_budgets_gtm, failed_expenditures_gtm))
   uga_budgets[, year:=year(start_date)]
   setnames(uga_budgets, old='file_name', new='file_name')
   # ------------------
-  # DRC unit tests
+  # UGA unit tests
   # ------------------
   
   uga_tests<-fread(paste0(dir, "_gf_files_gos/uga/uga_tests.csv"), encoding = "Latin-1")
@@ -165,6 +165,52 @@ failed_tests_gtm = unique(rbind(failed_budgets_gtm, failed_expenditures_gtm))
 }
 
 # ------------------
+# Senegal file prep 
+# ------------------
+{
+  dt_sen = file_iterations[loc_name == "sen"]
+  sen_budgets = check_budgets_pudrs(dt_sen)
+  sen_budgets[, quarter:=quarter(start_date)]
+  sen_budgets[, year:=year(start_date)]
+  # ------------------
+  # SEN unit tests
+  # ------------------
+  
+  sen_tests<-fread(paste0(dir, "_gf_files_gos/sen/sen_tests.csv"), encoding = "Latin-1")
+  sen_tests$start_date <- as.Date(sen_tests$start_date, format="%m/%d/%Y")
+  
+  sen_tests[, quarter:=quarter(start_date)]
+  sen_tests[, year:=year(start_date)]
+  
+  sen_tests$correct_bug_sum <- gsub("[[:punct:]]", "", sen_tests$correct_bug_sum)
+  sen_tests$correct_exp_sum <- gsub("[[:punct:]]", "", sen_tests$correct_exp_sum)
+  sen_tests$correct_bug_sum <- as.numeric(sen_tests$correct_bug_sum)
+  sen_tests$correct_exp_sum <- as.numeric(sen_tests$correct_exp_sum)
+  
+  sen_merge <- merge(sen_tests, sen_budgets, by = c('start_date', 'file_name')) 
+  if(nrow(sen_merge) != nrow(sen_tests)){
+    print("ERROR: Not all Senegal tests merged.")
+    unmerged_sen_tests = sen_tests[!file_name%in%sen_merge$file_name, .(file_name)]
+  }
+  not_tested_sen = unique(sen_budgets[!file_name%in%sen_merge$file_name, .(file_name)])
+  if(nrow(not_tested_sen)!=0){
+    print("ERROR: Some files in DRC are not being tested.")
+    not_tested_sen = unique(sen_budgets[!file_name%in%sen_merge$file_name, .(file_name)])
+  }
+  sen_merge$budget = round(sen_merge$budget)
+  sen_merge$expenditure = round(sen_merge$expenditure)
+  
+  sen_merge <- sen_merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, data_source.x)]
+  sen_merge$country <- "sen" #For sorting out failed tests later if any. 
+  
+  failed_budgets_sen <- sen_merge[correct_bug_sum != budget, ]
+  failed_expenditures_sen <- sen_merge[correct_exp_sum != expenditure, ]
+  failed_tests_sen = unique(rbind(failed_budgets_sen, failed_expenditures_sen)) 
+  
+}
+
+
+# ------------------
 # RSSH tests
 # ------------------
 
@@ -223,7 +269,7 @@ failed_tests_gos = gos_merge[correct_bug_sum!=budget | correct_exp_sum != expend
 {
 
   print("...")
-failed_tests <- rbind(failed_tests_gtm, failed_tests_cod, failed_tests_uga, fill = TRUE)
+failed_tests <- rbind(failed_tests_gtm, failed_tests_cod, failed_tests_uga, failed_tests_sen, fill = TRUE)
 failed_rssh_tests = rbind(failed_rssh_tests, failed_gos_rssh, fill = TRUE)
   
 if (nrow(failed_tests) != 0 | nrow(failed_rssh_tests)!=0){
@@ -234,7 +280,9 @@ if (nrow(failed_tests) != 0 | nrow(failed_rssh_tests)!=0){
                nrow(uga_merge), " out of ", nrow(uga_tests), " tests are included in this percentage."))
   print(paste0(nrow(failed_tests_cod), " DRC tests failed (", round(nrow(failed_tests_cod)/nrow(cod_merge)*100, 2), "%); ", 
                nrow(cod_merge), " out of ", nrow(cod_tests), " tests are included in this percentage."))
-  print(paste0(nrow(failed_tests_gos), " GOS tests for all three countries failed (", round(nrow(failed_tests_gos)/nrow(gos_merge)*100, 2), "%); ", 
+  print(paste0(nrow(failed_tests_sen), " Senegal tests failed (", round(nrow(failed_tests_sen)/nrow(sen_merge)*100, 2), "%); ", 
+               nrow(sen_merge), " out of ", nrow(sen_tests), " tests are included in this percentage."))
+  print(paste0(nrow(failed_tests_gos), " GOS tests for all four countries failed (", round(nrow(failed_tests_gos)/nrow(gos_merge)*100, 2), "%); ", 
                nrow(gos_merge), " out of ", nrow(gos_tests), " tests are included in this percentage."))
   print("...")
   
@@ -246,14 +294,17 @@ if (nrow(failed_tests) != 0 | nrow(failed_rssh_tests)!=0){
 uga_filelist <- fread(paste0(dir, "_gf_files_gos/uga/raw_data/uga_budget_filelist.csv"))
 cod_filelist <- fread(paste0(dir, "_gf_files_gos/cod/raw_data/cod_budget_filelist.csv"))
 gtm_filelist <- fread(paste0(dir, "_gf_files_gos/gtm/raw_data/gtm_budget_filelist.csv"))
+sen_filelist <- fread(paste0(dir, "_gf_files_gos/sen/raw_data/sen_budget_filelist.csv"))
 
 gtm_tests_nodup <- gtm_tests[!duplicated(file_name)]
 cod_tests_nodup <- cod_tests[!duplicated(file_name)]
 uga_tests_nodup <- uga_tests[!duplicated(file_name)]
+sen_tests_nodup <- sen_tests[!duplicated(file_name)]
 
 gtm_tested_grants <- unique(gtm_tests[, .(file_name)])
 cod_tested_grants <- unique(cod_tests[, .(file_name)])
 uga_tested_grants <- unique(uga_tests[, .(file_name)])
+sen_tested_grants <- unique(sen_tests[, .(file_name)])
 
 print(paste0("Testing ", round(gtm_tests_nodup[type == "pudr", .N]/gtm_filelist[data_source == "pudr", .N]*100, 2), "% of PUDRs and ", 
              round(gtm_tests_nodup[type != "pudr", .N]/gtm_filelist[data_source != "pudr", .N]*100, 2), "% of budgets in Guatemala"))
@@ -276,8 +327,15 @@ print(paste0("Testing ", round(nrow(unique(cod_filelist[grant_status=='active' &
              , "% of not active files DRC"))
 print("...")
 
-total_tests <- nrow(cod_tests) + nrow(gtm_tests) + nrow(uga_tests)
-total_merges <- nrow(cod_merge) + nrow(gtm_merge) + nrow(uga_merge)
+print(paste0("Testing ", round(sen_tests_nodup[type == "pudr", .N]/sen_filelist[data_source == "pudr", .N]*100, 2), "% of PUDRs and ", 
+             round(sen_tests_nodup[type != "pudr", .N]/sen_filelist[data_source != "pudr", .N]*100, 2), "% of budgets in Senegal"))
+print(paste0("Testing ", round(nrow(unique(sen_filelist[grant_status=='active' & file_name%in%sen_tested_grants$file_name, .(file_name)]))/nrow(unique(sen_filelist[grant_status=='active', .(file_name)]))*100, 2), 
+             "% of active files and ", round(nrow(unique(sen_filelist[grant_status=='not_active' & file_name%in%sen_tested_grants$file_name, .(file_name)]))/nrow(unique(sen_filelist[grant_status=='not_active', .(file_name)]))*100, 2)
+             , "% of not active files Senegal"))
+print("...")
+
+total_tests <- nrow(cod_tests) + nrow(gtm_tests) + nrow(uga_tests) + nrow(sen_tests)
+total_merges <- nrow(cod_merge) + nrow(gtm_merge) + nrow(uga_merge) + nrow(sen_merge)
 total_unmerged <- total_tests - total_merges
 
 print(paste0("Total merged tests that failed either a budget or expenditure calculation: ", round(nrow(failed_tests)/total_merges*100, 2), "%")) #Total failed tests over total of rows of merge datasets. 
@@ -288,9 +346,9 @@ print(paste0("Percentage of RSSH tests failed: ", round(nrow(failed_rssh_tests)/
 
 
 #What are the files you need to review? Only keep these, so it's easier to go through them. 
-rm(list= ls()[!(ls() %in% c('failed_tests','failed_tests_cod', 'failed_tests_gtm', 'failed_tests_uga', 'failed_tests_gos'
-                            , 'unmerged_cod_tests', 'unmerged_gtm_tests', 'unmerged_uga_tests', 
-                             'failed_rssh_tests', 'unwritten_rssh_tests', 'not_tested_cod', 'not_tested_gtm', 'not_tested_uga',
+rm(list= ls()[!(ls() %in% c('failed_tests','failed_tests_cod', 'failed_tests_gtm', 'failed_tests_uga', 'failed_tests_sen', 'failed_tests_gos',
+                            'unmerged_cod_tests', 'unmerged_gtm_tests', 'unmerged_uga_tests', 'unmerged_sen_tests', 
+                             'failed_rssh_tests', 'unwritten_rssh_tests', 'not_tested_cod', 'not_tested_gtm', 'not_tested_uga', 'not_tested_sen',
                             'untested_gos', 'combined_output_dir'))])
 
 

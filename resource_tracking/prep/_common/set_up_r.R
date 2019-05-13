@@ -25,6 +25,7 @@ library(dplyr)
 library(openxlsx)
 
 options(scipen=100)
+options(digits=6)
 
 # ---------------------------------------
 # Set global variables and filepaths.  

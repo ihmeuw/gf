@@ -124,12 +124,20 @@ if ('disbursement'%in%names(mapped_data)){
 
 if ('disbursement'%in%names(mapped_data)){
   post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
-  stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]] & pre_coeff_check[[3]] == post_coeff_check[[3]])
+  post_coeff_check[[1]] = round(post_coeff_check[[1]])
+  post_coeff_check[[2]] = round(post_coeff_check[[2]])
+  post_coeff_check[[3]] = round(post_coeff_check[[3]])
+  
+  stopifnot(abs(pre_coeff_check[[1]]-post_coeff_check[[1]]) < 1) #Decision by David Phillips 5/10/19 - it's okay if there is less than one cent difference between the pre- and post-redistribution. 
+  stopifnot(abs(pre_coeff_check[[2]]-post_coeff_check[[2]]) < 1)
+  stopifnot(abs(pre_coeff_check[[3]]-post_coeff_check[[3]]) < 1)
 } else {
   post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure')]
   post_coeff_check[[1]] = round(post_coeff_check[[1]])
   post_coeff_check[[2]] = round(post_coeff_check[[2]])
-  stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]])
+  
+  stopifnot(abs(pre_coeff_check[[1]]-post_coeff_check[[1]]) < 1) #Decision by David Phillips 5/10/19 - it's okay if there is less than one cent difference between the pre- and post-redistribution. 
+  stopifnot(abs(pre_coeff_check[[2]]-post_coeff_check[[2]]) < 1)
 }
 
 #Debug the check above, if needed. 
@@ -195,7 +203,7 @@ if (prep_files==TRUE){
 #Add in a variable for the disease of the grant #Yuck - Emily try to rewrite this code. 
 #--------------------------------------------------------------------------------
 mapped_data[, disease_split:=strsplit(grant, "-")]
-potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R')
+potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
 
 for (i in 1:nrow(mapped_data)){
   if (mapped_data$disease_split[[i]][2]%in%potential_diseases){
@@ -221,18 +229,43 @@ mapped_data[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #oNLY 
 stopifnot(unique(mapped_data$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
 
 # --------------------------------------------------------
-# Convert currencies to USD #EMILY START HERE  
+# Convert currencies to USD 
 # --------------------------------------------------------
+orig_rows = nrow(mapped_data)
+stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD"))
 
-#Split the data table so you can pass it to the FGH team's function cleanly. 
-stopifnot(unique(mapped_data$currency)%in% c('USD', 'EUR', 'LOC'))
+#Do a check before and after converting to make sure you've got the same totals. 
+pre_conversion_check = mapped_data[, .(pre_budget=sum(budget, na.rm=T), pre_expenditure=sum(expenditure, na.rm=T)), by='file_name']
 
-in_USD = mapped_data[currency=='USD']
-needs_conversion = mapped_data[currency!='USD'] 
-stopifnot(unique(needs_conversion$currency)%in%c('EUR', 'LOC'))
-
+#Pull apart the files that are in Euros vs. USD, and convert Euros. 
 valueVars = c('budget', 'expenditure', 'disbursement')
-converted_to_USD = convert_eur_usd(needs_conversion, 'year', valueVars)
+in_USD = mapped_data[file_currency=='USD']
+in_USD[, budget_new:=budget]
+in_USD[, expenditure_new:=expenditure]
+in_USD[, disbursement_new:=disbursement]
+
+needs_conversion = mapped_data[file_currency!='USD']
+stopifnot(needs_conversion$file_currency%in%c("LOC", "EUR")) #These are the only currencies the function supports. 
+converted_to_USD = convert_eur_usd(needs_conversion, 'year')
+
+mapped_data = rbind(in_USD, converted_to_USD, fill=TRUE, use.names=TRUE) #You're not losing any rows here. 
+stopifnot(nrow(mapped_data)==orig_rows)
+
+#Post-check. 
+mapped_data$eur_usd <- NULL
+post_conversion_check = convert_usd_eur(mapped_data, 'year')
+post_conversion_check = post_conversion_check[, .(post_budget=sum(budget, na.rm=T), post_expenditure=sum(expenditure, na.rm=T)), by='file_name']
+
+conversion_check = merge(pre_conversion_check, post_conversion_check, by='file_name', all=T)
+conversion_check = conversion_check[, lapply(.SD, round), .SDcols = 2:5, by='file_name'][, lapply(.SD, as.integer), .SDcols = 2:5, by='file_name']
+if (nrow(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])==0){
+  View(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])
+  stop("Errors in currency conversion - review 'conversion_check'." )
+}
+
+#If the check above works, then you're okay to rename budget and expenditure 
+mapped_data = mapped_data[, -c('budget', 'expenditure', 'disbursement')]
+setnames(mapped_data, c('budget_new', 'expenditure_new', 'disbursement_new'), c('budget', 'expenditure', 'disbursement'))
 
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  
@@ -277,8 +310,8 @@ mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, 
 # ---------------------------------------------
 
 if (prep_files == TRUE){
-  # final_budgets <- mapped_data[file_iteration == "final" & data_source == "fpm"] #Emily should we remove the expenditure column here? 
-  # final_expenditures <- mapped_data[file_iteration == "final" & data_source == "pudr"]
+  final_budgets <- mapped_data[file_iteration == "final" & data_source == "fpm"] #Emily should we remove the expenditure column here?
+  final_expenditures <- mapped_data[file_iteration == "final" & data_source == "pudr"]
   
   final_budgets <- mapped_data[data_source == "fpm"]
   final_expenditures <- mapped_data[data_source == "pudr"]
@@ -288,9 +321,9 @@ if (prep_files == TRUE){
   saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
   saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
   
-  # write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"))
-  # write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"))
-  # write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"))
+  write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"))
+  write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"))
+  write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"))
 }
 
 if (prep_gos == TRUE){

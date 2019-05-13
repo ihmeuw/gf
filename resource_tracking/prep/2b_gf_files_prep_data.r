@@ -20,26 +20,24 @@ if (prep_files == TRUE){
   #Validate file list 
   desired_cols <- c("file_name", "function_type", "sheet", "disease", "loc_id", "data_source", "period", "qtr_number", "grant", "primary_recipient", 
                     "secondary_recipient", "language", "grant_period", "grant_status", "start_date", "file_iteration", "geography_detail", 
-                    "loc_name", "mod_framework_format", "currency", "eur_to_usd_rate", "loc_to_usd_rate")
+                    "loc_name", "mod_framework_format", "file_currency", "eur_to_usd_rate", "loc_to_usd_rate")
   stopifnot(colnames(file_list) %in% desired_cols)
   stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr"))
   stopifnot((unique(file_list$file_iteration))%in%c("final", "initial"))
 
-  #Prioritize GOS data where we have it 
-  # file_list = prioritize_gos(file_list)
-  
+  #Prioritize GOS data where we have it
+  file_list = prioritize_gos(file_list)
+
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  # file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')] 
-  # file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
-  # 
-  # if ( nrow(file_list[date_dup>0])!=0){
-  #   print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
-  #   print("There are duplicates in final files - review file list.")
-  # }
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')]
+  file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
+
+  if ( nrow(file_list[date_dup>0])!=0){
+    print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
+    print("There are duplicates in final files - review file list.")
+  }
 
 }
-
-file_list = file_list[data_source=='pudr' & year(start_date)>=2018]
 
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
@@ -50,7 +48,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
                                       'DETAIL')
   
-  budget_cols = c("activity_description", "budget", "cost_category", "currency", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
+  budget_cols = c("activity_description", "budget", "cost_category", "currency", "implementer", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
   pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){
@@ -77,12 +75,14 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       tmpData = do.call(prep_modular_approach_pudr, args)
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
+      tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
     } else if (file_list$function_type[i]=='pudr' & file_list$sheet[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 
       args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$period[i])
       tmpData = do.call(prep_pudr_gtm, args)
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
+      tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
     }  else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i] == 'cod'){ #Prep summary budgets from DRC. 
       args[length(args)+1] = file_list$qtr_number[i]
@@ -114,13 +114,11 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, secondary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language, currency)]
+                                 mod_framework_format, file_iteration, language, eur_to_usd_rate, loc_to_usd_rate, file_currency)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
     }  
     tmpData$year <- year(tmpData$start_date)
-    tmpData$grant_disease <- tmpData$disease #Add in a column to represent the disease of the whole grant- this way when grant 
-    #gets reclassified later, we'll still be able to tally by disease and grant period. 
     
     #Bind data together 
     if(i==1){
