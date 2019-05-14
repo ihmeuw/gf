@@ -113,7 +113,7 @@ return(dt)
 # --------------------------------------------------------------------------------
 
 prioritize_gos = function(file_list){
-  file_list = file_list[file_iteration == 'final'] 
+  file_list = file_list[!(data_source=="fpm" & file_iteration=="initial")] #Drop out initial budgets, you don't need these. 
   
   file_list[, qtr_number:=as.numeric(qtr_number)]
   file_list[, period:=as.numeric(period)]

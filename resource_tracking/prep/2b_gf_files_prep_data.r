@@ -29,7 +29,7 @@ if (prep_files == TRUE){
   file_list = prioritize_gos(file_list)
 
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')]
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')] #EMILY NEED TO RETHINK THIS. 
   file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
   if ( nrow(file_list[date_dup>0])!=0){
@@ -77,14 +77,20 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       stopifnot(sort(names(tmpData)) == pudr_cols)
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
-    } else if (file_list$function_type[i]=='pudr' & file_list$sheet[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 
+    } else if (file_list$function_type[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 
       args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$period[i])
       tmpData = do.call(prep_pudr_gtm, args)
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
-    }  else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i] == 'cod'){ #Prep summary budgets from DRC. 
+    } else if (file_list$function_type[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet[i]%in%c('PR EFR_7A')){
+      args[length(args)+1] = file_list$qtr_number[i]
+      tmpData = do.call(prep_gtm_pudr2, args)
+      
+      stopifnot(sort(names(tmpData)) == pudr_cols)
+      tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
+    } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i] == 'cod'){ #Prep summary budgets from DRC. 
       args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_summary_budget_cod, args)
       
@@ -96,10 +102,10 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       
       stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
     } else if (file_list$function_type[i]=='old_detailed' & file_list$loc_name[i]=="gtm"){ 
-      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$period[i])
-      tmpData = do.call(prep_summary_budget_gtm, args)
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i])
+      tmpData = do.call(prep_other_budget_gtm, args)
       
-      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
+      stopifnot(sort(names(tmpData)) == c('budget', "expenditure", 'intervention', 'module', 'quarter', 'start_date', 'year'))
     } else if (file_list$function_type[i]=='summary' & file_list$loc_name[i]=='uga'){
       args[length(args)+1] = file_list$qtr_number[i]
       args[length(args)+1] = file_list$grant[i]
