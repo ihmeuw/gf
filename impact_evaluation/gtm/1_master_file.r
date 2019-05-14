@@ -1,7 +1,8 @@
 # ----------------------------------------------
-# AUTHOR: Audrey Batzel and Emily Linebarger
+# AUTHOR: Audrey Batzel, Emily Linebarger, 
+# David Phillips, and Jen Ross
 # PURPOSE: Master file for preparing impact evaluation dataset. 
-# DATE: Last updated January 2019. 
+# DATE: Last updated May 2019. 
 # 
 # INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------
@@ -20,7 +21,7 @@
 rm(list=ls())
 
 # run setup code (load file paths and packages)
-source('./impact_evaluation/drc/set_up_r.r')
+source('./impact_evaluation/gtm/set_up_r.r')
 
 # ---------------------------------------
 # Set boolean switches
@@ -39,9 +40,8 @@ rerun_post <- FALSE
 # Read in common files 
 # ---------------------------------------
 
-drc_mal_map <- read_excel(indicatorMapFile)
-setDT(drc_mal_map)
-
+indicatorMap <- read_excel(indicatorMapFile)
+setDT(indicatorMap)
 
 # ---------------------------------------
 # Prep resource tracking data  
