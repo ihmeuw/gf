@@ -8,7 +8,9 @@
 
 #------------------------------------
 # TO-DO: 
-
+#Have you pulled out all the possible codes from the FGH data? 
+# Are you using the most recent file for FGH? 
+#How are we going to handle missing 2018 SICOIN data? 
 
 #------------------------------------
 
@@ -24,20 +26,19 @@ quarters[, quarter:=rep(1:4, n_years)]
   #GLOBAL FUND EXPENDITURES AND GOS 
   #----------------------------------
   expenditures = readRDS(expendituresFile)
-  expenditures = expenditures[loc_name=='gtm' & (grant_disease%in%c('tb', 'hiv', 'hiv/tb') | disease=='rssh'), #Jen - making sure we want to pull all RSSH? 
-                              .(expenditure, start_date, code, loc_name, disease, gf_module, gf_intervention)]
+  expenditures = expenditures[loc_name=='gtm', .(year, quarter, gf_module, gf_intervention, code, disease, loc_name, expenditure)] #Will subset by disease in code section below. 
   setnames(expenditures, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
   
   #----------------------------------
   # FGH DATA (OTHER_DAH)
   #----------------------------------
   fgh <- readRDS(fghFile)
-  fgh = fgh[loc_name=="GTM" & disease%in%c('tb', 'hss'), .(sda_activity, year, loc_name, disease, code, module_eng, intervention_eng, fin_data_type, financing_source, disbursement)]
+  fgh = fgh[loc_name=="GTM", .(sda_activity, year, loc_name, disease, code, module_eng, intervention_eng, fin_data_type, financing_source, disbursement)]
   setnames(fgh, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
   
   #Pull out other DAH. 
   other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') , 
-                  .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]
+                  .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(year, module, intervention, sda_activity, code, disease, loc_name)]
   
   #Split into quarters 
   other_dah = merge(quarters, other_dah, by='year', all.x = TRUE, allow.cartesian=TRUE)
@@ -46,7 +47,7 @@ quarters[, quarter:=rep(1:4, n_years)]
   #----------------------------------
   # WHO EXPENDITURE DATA 
   #----------------------------------
-  who <- readRDS(whoFile) #We might not end up using this for Guatemala. 
+  # who <- readRDS(whoFile) #We might not end up using this for Guatemala. 
   
   #---------------------------------
   #SICOIN DATA 
@@ -58,64 +59,119 @@ quarters[, quarter:=rep(1:4, n_years)]
 #------------------------------------
 # Validate data 
 #------------------------------------
+#??? Anything here? 
 
-
-
+#-------------------------------------
+# Format indicator map file 
+#-------------------------------------
+names(indicatorMap) = tolower(names(indicatorMap))
+indicatorMap = indicatorMap[, .(indicator, type, code)]
+  
 #------------------------------------
 # Select relevant codes. 
 #------------------------------------
+{
+  #Subset data into each bundle of codes, and then recombine. 
+  codes_needed = unique(indicatorMap$code)
 
-  #-------------------------------------
-  # Format indicator map file 
-  #-------------------------------------
-  names(indicatorMap) = tolower(names(indicatorMap))
-  indicatorMap = indicatorMap[, .(indicator, type, code)]
+    #---------------------------------------------
+    # GF Expenditures - can we make this a loop? 
+    #---------------------------------------------
+    #Make classification categories in data - first by unique codes...
+    expenditures[code=="T1_1", T1_1:=TRUE]
+    expenditures[code=="T1_2", T1_2:=TRUE]
+    expenditures[code=="T1_5", T1_5:=TRUE]
+    expenditures[code=="T1_6", T1_6:=TRUE]
+    expenditures[code=="T1_7", T1_7:=TRUE]
+    expenditures[code=="T2_1", T2_1:=TRUE]
+    expenditures[code=="T3_1", T3_1:=TRUE]
+    expenditures[code=="T3_2", T3_2:=TRUE]
+    
+    #And then for combination categories. 
+    expenditures[substr(code, 1, 2)=='R1', R1_ALL:=TRUE]
+    expenditures[substr(code, 1, 2)=='R2', R2_ALL:=TRUE]
+    expenditures[substr(code, 1, 2)=='T2', T2_ALL:=TRUE]
+    expenditures[substr(code, 1, 2)=='T3', T3_ALL:=TRUE]
+    expenditures[disease=='tb', TB_ALL:=TRUE]
+    expenditures[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
+    expenditures[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
+    
+    codes_generated = names(expenditures)[!names(expenditures)%in%c('year', 'quarter', 'module', 'intervention', 'code', 'disease', 'loc_name', 'expenditure')]
+    if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
+    
+    #Review what codes each logic condition is matching to visually. 
+    cols = c(5, 9:ncol(expenditures))
+    unique(expenditures[, cols, with=FALSE][order(code)])
+    
+    #Make summary data tables for each of these codes, and then merge them together. 
+    exp_wide = data.table(year = integer(), quarter=integer())
+    for (col in codes_generated){
+      assign(col, expenditures[get(col)==TRUE, .(exp=sum(expenditure, na.rm=T)),
+                               by=c('year', 'quarter')])
+      setnames(get(col), 'exp', paste0('exp_', col))
+      exp_wide = merge(exp_wide, get(col), by=c('year', 'quarter'), all=T)
+    }
+    
+    #---------------------------------------------
+    # Other DAH 
+    #---------------------------------------------
+    #Make classification categories in data - first by unique codes...
+    other_dah[code=="T1_1", T1_1:=TRUE]
+    other_dah[code=="T1_2", T1_2:=TRUE]
+    other_dah[code=="T1_5", T1_5:=TRUE]
+    other_dah[code=="T1_6", T1_6:=TRUE]
+    other_dah[code=="T1_7", T1_7:=TRUE]
+    other_dah[code=="T2_1", T2_1:=TRUE]
+    other_dah[code=="T3_1", T3_1:=TRUE]
+    other_dah[code=="T3_2", T3_2:=TRUE]
+    
+    #And then for combination categories. 
+    other_dah[substr(code, 1, 2)=='R1', R1_ALL:=TRUE]
+    other_dah[substr(code, 1, 2)=='R2', R2_ALL:=TRUE]
+    other_dah[substr(code, 1, 2)=='T2', T2_ALL:=TRUE]
+    other_dah[substr(code, 1, 2)=='T3', T3_ALL:=TRUE]
+    other_dah[disease=='tb', TB_ALL:=TRUE]
+    other_dah[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
+    other_dah[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
+    
+    codes_generated = names(other_dah)[!names(other_dah)%in%c('year', 'quarter', 'module', 'intervention', 'code', 'disease', 'loc_name', 'sda_activity', 'other_dah')]
+    if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
+    
+    #Review what codes each logic condition is matching to visually. 
+    cols = c(6, 10:ncol(other_dah))
+    unique(other_dah[, cols, with=FALSE][order(code)])
+    
+    #Make summary data tables for each of these codes, and then merge them together. 
+    dah_wide = data.table(year = integer(), quarter=integer())
+    for (col in codes_generated){
+      assign(col, other_dah[get(col)==TRUE, .(other_dah=sum(other_dah, na.rm=T)),
+                               by=c('year', 'quarter')])
+      setnames(get(col), 'other_dah', paste0('other_dah_', col))
+      dah_wide = merge(dah_wide, get(col), by=c('year', 'quarter'), all=T)
+    }
   
-  #emily start here 5/14/19
-  
+}
 
-#Match exp and FGH data to codes to only keep relevant modules/interventions (all = TRUE)
-map_codes = indicatorMap[, .(code, indicator, indicator_type)]
 
-  
-  exp_subset = merge(exp_subset, drc_mal_map_codes, by=c('code'), allow.cartesian = TRUE)
-other_dah = merge(other_dah, drc_mal_map_codes, by=c('code'), allow.cartesian = TRUE)
 
-print(paste0("Codes kept in exp data: ", unique(exp_subset[, .(code)])))
-print(paste0("Codes kept in FGH data: ", unique(other_dah[, .(code)])))
+#------------------------------------
+# Shape data wide and merge.  
+#------------------------------------
 
 #Create date variable
-exp_subset[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-exp_subset[, date:=year+quarter]
-other_dah[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-other_dah[, date:=year+quarter]
+exp_wide[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+exp_wide[, date:=year+quarter]
+exp_wide = exp_wide[, -c('year', 'quarter')]
 
-#Cast data wide 
-exp_wide = dcast(exp_subset, date~code, value.var=c('expenditure'), fun.aggregate = sum)
-frame = data.table(date=seq(1990, 2020, by=.25))
-exp_wide = merge(frame, exp_wide, by='date', all.x=TRUE)
-for(v in names(exp_wide)) exp_wide[is.na(get(v)), (v):=0]
+dah_wide[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc.
+dah_wide[, date:=year+quarter]
+dah_wide = dah_wide[, -c('year', 'quarter')]
 
-other_dah_wide = dcast(other_dah, date~code, value.var=c('other_dah'), fun.aggregate = sum)
-frame = data.table(date=seq(1990, 2020, by=.25))
-other_dah_wide = merge(frame, other_dah_wide, by='date', all.x=TRUE)
-for(v in names(other_dah_wide)) other_dah_wide[is.na(get(v)), (v):=0]
-
-#Set column names for merge 
-names = colnames(exp_wide[, 2:ncol(exp_wide)])
-names <- paste("exp", names, sep = "_")
-colnames(exp_wide) <- c('date', names)
-
-names = colnames(other_dah_wide[, 2:ncol(other_dah_wide)])
-names <- paste("other_dah", names, sep = "_")
-colnames(other_dah_wide) <- c('date', names)
-
-#Merge both files together 
-rt_wide <- merge(other_dah_wide, exp_wide, by=c('date'))
+rt_wide <- merge(dah_wide, exp_wide, by=c('date'), all=T)
 
 #Add on GHE and OOP as control variables 
-ghe = ghe[, .(date, ghe)]
-rt_wide = merge(rt_wide, ghe, by='date', all.x = TRUE)
+# ghe = ghe[, .(date, ghe)]
+# rt_wide = merge(rt_wide, ghe, by='date', all.x = TRUE)
 
 #Save output file
 saveRDS(rt_wide, outputFile2a)
