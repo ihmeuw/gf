@@ -129,8 +129,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     #Bind data together 
     if(i==1){
       resource_database = tmpData
-    } 
-    if(i>1){
+    } else {
       resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill = TRUE)
     }
     print(paste0(i, " ", file_list$data_source[i], " ", file_list$function_type[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on

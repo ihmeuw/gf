@@ -21,15 +21,15 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = TRUE
+prep_files = FALSE
 prep_gos = FALSE
 prep_fgh = FALSE 
-prep_ghe = FALSE 
+prep_ghe = TRUE
 
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-rerun_filelist = TRUE #Set to TRUE if you want to prep all files in the file list again. 
+rerun_filelist = FALSE #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 test_current_files = TRUE #Set to true if you would like to run unit tests on current database. Set to false if you would like to run tests on archived database. 
 
@@ -77,6 +77,7 @@ if (prep_fgh){
 # STEP 4: PREP GHE (CURRENTLY ONLY SICOIN)
 # ----------------------------------------------
 if (prep_ghe){
+  source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
   #Source document prep functions 
   prep_functions = list.files(paste0(code_dir, "ghe_sicoin_prep_functions"), full.names=TRUE)
   for (file in prep_functions){
