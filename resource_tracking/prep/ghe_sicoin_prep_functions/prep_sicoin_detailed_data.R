@@ -65,13 +65,13 @@ prep_detailed_sicoin = function(inFile) {
     for (col in drop_col){
       drop_rows = c(drop_rows, grep(drop_text, tolower(gf_data[[col]])))
     }
+    if (verbose){
+      print("Dropping the following rows from data:")
+      print(gf_data[drop_rows])
+    }
+    # if (length(drop_rows)> 3) stop("There are more than three extraneous rows dropping - review logic condition.")
+    gf_data = gf_data[!drop_rows]
   }
-  if (verbose){
-    print("Dropping the following rows from data:")
-    print(gf_data[drop_rows])
-  }
-  # if (length(drop_rows)> 3) stop("There are more than three extraneous rows dropping - review logic condition.")
-  gf_data = gf_data[!drop_rows]
   
   #Now, find the actual budget and expenditure columns - the ones where activity description has an amount associated with it. 
   # This makes sure you don't actually include a total row! 

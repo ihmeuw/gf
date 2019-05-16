@@ -23,6 +23,7 @@ library(rlang)
 library(zoo)
 library(dplyr)
 library(openxlsx)
+library(readxl)
 
 options(scipen=100)
 options(digits=6)
@@ -62,5 +63,6 @@ codebook = read.xlsx(paste0(dir, "documentation/RT_Codebook.xlsx"))
 source(paste0(common_dir, "global_variables.R"))
 source(paste0(common_dir, "shared_string_functions.R"), encoding="UTF-8")
 source(paste0(common_dir, "shared_calculation_functions.R"))
+source(paste0(j, '/Project/IRH/HIV/code/currency_conversion.R')) #FGH team's currency conversion function. 
 
 

@@ -231,3 +231,33 @@ convert_usd_eur = function(dt, yearVar=NULL){
   #                                        converter.version = 3)
 }
 
+
+
+#Recursively find the terminal directories within a given filepath. 
+get_dirs = function(path, list){
+  setwd(path) #Navigate to the given directory. 
+  dirs = list.dirs(path, recursive=FALSE) #List the directories in this folder, non-recursively. 
+  #If there is more than one directory, keep recursing.
+  if (length(dirs)>1){ 
+    #You want to grab the first directory name, add to a path, and keep recursing. 
+    for (next_dir in dirs){
+      list = get_dirs(next_dir, list)  
+    }
+  } else { #If there are no more directories, then add your current path to the final list and return it.  
+    return(c(list, path))
+  }
+  #If you've made it to the end, and there are no more subfolders, then return the list of terminal file paths in this folder. 
+  return(list)
+}
+
+#Once you've found a terminal directory, grab the file names that live in it, and return as a list
+get_files = function(path){
+  list = character()
+  setwd(path)
+  files = list.files()
+  for (file in files){
+    new_path = paste0(path, "/", file) 
+    list = c(list, new_path)
+  }
+  return(list)
+}
