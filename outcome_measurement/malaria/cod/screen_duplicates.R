@@ -3,6 +3,10 @@
 #
 # 5/16/2019
 # screen PNLP data for duplicate rows
+
+# qsub to run this script on the cluster:
+# qsub -e /ihme/scratch/users/abatzel/duplicate_removal_output/ -o /ihme/scratch/users/abatzel/duplicate_removal_output/ -cwd -l fthread=50 -l m_mem_free=50G -l h_rt=108:00:00 -P proj_pce -q long.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/screen_duplicates.R
+
 # ----------------------------------------------
 
 # --------------------
@@ -63,7 +67,7 @@ tot_cols = length(dt[, inds, with = FALSE])
 
 
 dup_matrix = mclapply(seq(nrow(dt)), function(i) {
-  sink(file = paste0(dir, "output_from_duplicates_loop/dups_", i, ".txt"))
+  # sink(file = paste0(dir, "output_from_duplicates_loop/dups_", i, ".txt"))
   
   print(paste('Checking row', i, 'for duplicates...'))
   
@@ -90,7 +94,7 @@ dup_matrix = mclapply(seq(nrow(dt)), function(i) {
     
   }
   if (nrow(current_dup_matrix)>0) return(current_dup_matrix)
-  sink()
+  # sink()
 }, mc.cores=ifelse(Sys.info()[1]=='Windows', 1, 55 ))
 
 
