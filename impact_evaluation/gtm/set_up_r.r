@@ -46,13 +46,13 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # directories
 dir = paste0(j, '/Project/Evaluation/GF/')
-ieDir = paste0(dir, 'impact_evaluation/cod/prepped_data/')
+ieDir = paste0(dir, 'impact_evaluation/gtm/prepped_data/')
 rtDir = paste0(dir, 'resource_tracking/_gf_files_gos/combined_prepped_data/')
 fghDir = paste0(dir, 'resource_tracking/_fgh/prepped_data/')
 whoDir = paste0(dir, 'resource_tracking/_ghe/who/prepped_data/')
 mapDir = paste0(dir, '/mapping/multi_country/intervention_categories')
-pnlpDir = paste0(dir, 'outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
-dhisDir = paste0(dir, 'outcome_measurement/cod/dhis_data/prepped/')
+#pnlpDir = paste0(dir, 'outcome_measurement/cod/prepped_data/PNLP/post_imputation/') #DAVID - DO WE WANT TO KEEP THESE? 
+#dhisDir = paste0(dir, 'outcome_measurement/cod/dhis_data/prepped/')
 lbdDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/')
 # ---------------------------------------------------------------------------------
 
@@ -61,10 +61,10 @@ lbdDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/')
 # Supporting Files
 
 # code-friendly version of indicator map file
-indicatorMapFile = paste0(ieDir, 'DRC Indicator map - to code from.xlsx')
+indicatorMapFile = paste0(ieDir, 'GTM Indicator map.xlsx')
 
 # list of interventions and codes
-mfFile = paste0(mapDir, '/intervention_and_indicator_list.xlsx')
+mfFile = "J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.csv"
 
 # archive function
 source('./impact_evaluation/_common/archive_function.R')
@@ -85,36 +85,10 @@ gheMalFile = paste0(fghDir, 'ghe_actuals_malaria.rds')
 whoFile = paste0(whoDir, 'who_prepped.rds')
 
 # activities/outputs files
-# pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
-pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
-# snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
-# snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
-combinedFile <- paste0(ieDir, 'base_pnlp_sigl_combined_data_hz_level.rds')
-comp_base_file <- paste0(dhisDir, "base_reporting_completeness_hz_prepped_quarterly.rds")
-comp_sigl_file <-paste0(dhisDir, "sigl/sigl1_reporting_completeness_hz_prepped_quarterly.rds")
-ssc_file <- paste0(dhisDir, "SSC_data_2017_2018_prepped.rds")
 
 # outcomes/impact files
-mapITNFiles = list.files(paste0(lbdDir, 'mapitncov/mean/1y/'), '*.tif', 
-	full.names=TRUE)
-mapITNFiles = mapITNFiles[!grepl('tif.',mapITNFiles)]
-mapACTFiles = list.files(paste0(lbdDir, 'map_antimalarial/mean/1y/'), '*.tif', 
-	full.names=TRUE)
-mapACTFiles = mapACTFiles[!grepl('tif.',mapACTFiles)]
-mapIncidenceFiles = list.files(paste0(lbdDir, 'map_pf_incidence/mean/1y/'), 
-	'*.tif', full.names=TRUE)
-mapIncidenceFiles = mapIncidenceFiles[!grepl('tif.',mapIncidenceFiles)]
-mapPrevalenceFiles = list.files(paste0(lbdDir, 'map_pf_prevalence/mean/1y/'), 
-	'*.tif', full.names=TRUE)
-mapPrevalenceFiles = mapPrevalenceFiles[!grepl('tif.',mapPrevalenceFiles)]
-mapMortalityFiles = list.files(paste0(lbdDir, '../18_Malaria_GBD/raw/'), 
-	'*.tif', full.names=TRUE)
-mapMortalityFiles = mapMortalityFiles[!grepl('tif.',mapMortalityFiles)]
-popFiles = list.files(paste0(lbdDir, 'worldpop_raked/total/1y/'), '*.tif', 
-	full.names=TRUE)
 
 # shapefiles
-admin2ShapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph

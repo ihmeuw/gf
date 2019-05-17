@@ -22,38 +22,39 @@
 # If stock category is NA, then it is sex-stratified. 
 #We seem to just have data gaps for the same 3 districts in 2017? 
 
+#Set up R, and read in data. 
+#Read in data set, and source the setup. 
 rm(list=ls())
+
+# -----------------------------------------------
+# Set up R
+#------------------------------------------------
 library(data.table)
+library(raster)
+library(ggplot2)
+library(tibble)
+library(dplyr)
+library(RColorBrewer)
 library(rgdal)
 library(rgeos)
+library(maptools)
 
-setwd("C:/Users/elineb/Documents/gf") #Set this to the root of your repo
-source('./core/standardizeDPSNames.R')
-#--------------------------------------------------------------
-#Read in data 
-#--------------------------------------------------------------
-# detect if operating on windows or on the cluster 
+setwd("C:/Users/elineb/Documents/gf")
+
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+dir = paste0(j,  'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/') #Home directory
 
-# set the directory for input and output
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-saveDir = paste0(dir, "outputs/pnls/")
+#-------------------------------------------------
+# Read in data 
+# ------------------------------------------------
+source('./core/standardizeDPSNames.R')
 
-rawDT = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_drug_2017_01_01_2018_12_01.rds'))
-dt = copy(rawDT) #Just doing this so I don't have to read in file over and over
+rawDT = readRDS(paste0(dir, 'pnls_sets/pnls_drug_2017_01_01_2018_12_01.rds'))
+dt = copy(rawDT) #This is a big file, so it's nice to copy it here so rerunning code is fast. 
+
+#Read in the shapefile
 shapefile = shapefile("J:/Project/Evaluation/GF/mapping/cod/gadm36_COD_shp/gadm36_COD_1.shp")
 shapefile@data$NAME_1 = standardizeDPSNames(shapefile@data$NAME_1)
-
-#Make it possible to merge the data with the shape file
-shape_names = data.table(id = seq(0, 25, by=1), NAME_1=shapefile@data$NAME_1) #This matches the data when you fortify the shapefile below
-
-dt[, NAME_1:=standardizeDPSNames(dps)]
-dt[!NAME_1%in%shapefile@data$NAME_1] #Check that merge will work correctly - this data table should have 0 rows. 
-
-dt = merge(dt, shape_names, by='NAME_1', all.x = TRUE)
-
-#Make a year variable - be careful with the gaps in the data. 
-dt[, year:=year(date)]
 
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 coord = data.table(fortify(shapefile)) 
@@ -70,6 +71,17 @@ for (i in dates_avail){
   temp[, date:=i]
   coord_months = rbind(coord_months, temp)
 }
+
+#Make it possible to merge the data with the shape file
+shape_names = data.table(id = seq(0, 25, by=1), NAME_1=shapefile@data$NAME_1) #This matches the data when you fortify the shapefile below
+
+dt[, NAME_1:=standardizeDPSNames(dps)]
+dt[!NAME_1%in%shapefile@data$NAME_1] #Check that merge will work correctly - this data table should have 0 rows. 
+
+dt = merge(dt, shape_names, by='NAME_1', all.x = TRUE)
+
+#Make a year variable - be careful with the gaps in the data. 
+dt[, year:=year(date)]
 
 #--------------------------------------------------------------
 #Clean the data 
