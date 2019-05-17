@@ -21,10 +21,10 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = FALSE
+prep_files = TRUE
 prep_gos = FALSE
 prep_fgh = FALSE 
-prep_ghe = TRUE
+prep_ghe = FALSE
 
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
