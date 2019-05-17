@@ -42,7 +42,7 @@ g4 = ggplot(drug_so_thresh[variable!=paste0('Percentage of facilities stocked ou
   geom_line() +
   theme_bw() +
   labs(title=paste0('Number of facilities that were stocked out of ', drug_name, ' in a given month'), 
-       subtitle = 'Weeks in which at least 50% of facilities reported',
+       subtitle = 'Weeks in which at least 25% of facilities reported',
        y='Number of facilities', x='Date', color="")
 
 # 5 - percentage of art sites that reported that were stocked out
@@ -127,7 +127,6 @@ g11 = ggplot(roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) +
   scale_fill_gradientn(colors=brewer.pal(9, 'Reds')) +
   theme_void() +
   labs(title=paste0("Districts with more facility-weeks of stockouts for ", drug_name, " in 2018 than 2017"), 
-       caption="The number of facilities remained the same from 2017 to 2018",
        subtitle='Same time period: January - November', fill="Difference in weeks (2018 - 2017)") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
 
@@ -135,7 +134,7 @@ g11 = ggplot(roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) +
 g12 = ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
   coord_fixed() +
   geom_polygon() +
-  geom_path() +
+  geom_path(color="black") +
   facet_wrap(~year) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) +
   theme_void() +
@@ -147,97 +146,80 @@ g12 = ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
 
 # #--------------------------------
 # # facility level scatter plots - 27:29
-# 
-# # arv stockouts by level
-# g28 = ggplot(scatter[art_site==TRUE], aes(x=level2, y=arvs)) +
-#   geom_jitter(width=0.25, alpha=0.2) + theme_bw() + 
-#   labs(title='Weeks stocked out of ARVs by facility level (ART sites)', subtitle='2017 - 2018', x='Facility level',
-#        y='Weeks stocked out of ARVs')
-# 
-# # arv stockouts by level, year       
-# g29 = ggplot(scatter2[art_site==TRUE], aes(x=level2, y=arvs)) +
-#   geom_jitter(width=0.25, alpha=0.2) + 
-#   facet_wrap(~year) +
-#   labs(title='Weeks stocked out of ARVs by facility level (ART sites)', x='Facility level', 
-#        y='Weeks stocked out of ARVs', subtitle='Same time period: January - September') +
-#   theme_bw()
-# 
-# # test kit stockouts by level, year       
-# g30 = ggplot(scatter, aes(x=level2, y=test_kits)) +
-#   geom_jitter(width=0.25, alpha=0.5) + 
-#   labs(title='Weeks stocked out of HIV test kits by facility level', x='Facility level', 
-#        y='Weeks stocked out of HIV test kits') +
-#   theme_bw()
-# 
-# # test kit stockouts by level, year       
-# g31 = ggplot(scatter2, aes(x=level2, y=test_kits)) +
-#   geom_jitter(width=0.25, alpha=0.5) + 
-#   facet_wrap(~year) +
-#   labs(title='Weeks stocked out of HIV test kits by facility level', x='Facility level', 
-#        y='Weeks stocked out of HIV test kits', subtitle='Same time period: January - September') +
-#   theme_bw()
-# 
+
+# stockouts by level 
+g28 = ggplot(scatter, aes(x=level2, y=weeks_out)) +
+  geom_jitter(width=0.25, alpha=0.2) + theme_bw() +
+  labs(title=paste0('Weeks stocked out of ', drug_name, ' by facility level'), subtitle=full_date_range, x='Facility level',
+       y='Weeks stocked out')
+
+# stockouts by level, year
+g29 = ggplot(scatter2, aes(x=level2, y=weeks_out)) +
+  geom_jitter(width=0.25, alpha=0.2) +
+  facet_wrap(~year) +
+  labs(title=paste0('Weeks stocked out of ', drug_name, ' by facility level'), subtitle=partial_date_range, x='Facility level',
+       y='Weeks stocked out') + 
+  theme_bw()
+
+
 # #--------------------------------
 # # finale maps - categorical stock outs - 30:33
-# 
-# # Number of weeks stocked out, categorical
-# g32 = ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) + 
-#   coord_fixed() +
-#   geom_polygon() + 
-#   geom_path(size=0.01) + 
-#   facet_wrap(~variable) +
-#   scale_fill_gradientn(colors=brewer.pal(9, 'YlGnBu')) + 
-#   theme_void() +
-#   labs(title="Number of facilities stocked out of ARVs by time stocked out, 2017", 
-#        subtitle="Cumulative: one month is equal to four weeks stocked out of ARVs", 
-#        caption='Source: HMIS', fill="Number of facilities") +
-#   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
-# 
-# # at least one stockout
-# g33 = ggplot(final[year==2017 & variable!='No stock outs reported'], aes(x=long, y=lat, group=group, fill=value)) + 
-#   coord_fixed() +
-#   geom_polygon() + 
-#   geom_path(size=0.01) + 
-#   facet_wrap(~variable) +
-#   scale_fill_gradientn(colors=brewer.pal(9, 'YlGnBu')) + 
-#   theme_void() +
-#   labs(title="Number of facilities stocked out of ARVs by time stocked out, 2017", 
-#        subtitle="Minimum one week of stockout", 
-#        caption='Source: HMIS', fill="Number of facilities") +
-#   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
-# 
-# 
-# # Number of weeks stocked out, categorical
-# g34 = ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) + 
-#   coord_fixed() +
-#   geom_polygon() + 
-#   geom_path(size=0.01) + 
-#   facet_wrap(~variable) +
-#   scale_fill_gradientn(colors=brewer.pal(9, 'YlOrBr')) + 
-#   theme_void() +
-#   labs(title="Number of facilities stocked out of ARVs by time stocked out, 2018", 
-#        subtitle="Cumulative: one month is equal to four weeks stocked out of ARVs", 
-#        caption='Source: HMIS', fill="Number of facilities") +
-#   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
-# 
-# # at least one stockout
-# g35 = ggplot(final[year==2018 & variable!='No stock outs reported'], aes(x=long, y=lat, group=group, fill=value)) + 
-#   coord_fixed() +
-#   geom_polygon() + 
-#   geom_path(size=0.01) + 
-#   facet_wrap(~variable) +
-#   scale_fill_gradientn(colors=brewer.pal(9, 'YlOrBr')) + 
-#   theme_void() +
-#   labs(title="Number of facilities stocked out of ARVs by time stocked out, 2018", 
-#        subtitle="Minimum one week of stockout", 
-#        caption='Source: HMIS', fill="Number of facilities") +
-#   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
-#------------------------------
+# Number of weeks stocked out, categorical
+g32 = ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) +
+  coord_fixed() +
+  geom_polygon() +
+  geom_path(size=0.01) +
+  facet_wrap(~variable) +
+  scale_fill_gradientn(colors=brewer.pal(9, 'YlGnBu')) +
+  theme_void() +
+  labs(title=paste0("Number of facilities stocked out of ", drug_name, " by time stocked out, 2018"),
+       subtitle="Cumulative: one month is equal to four weeks stocked out of ARVs",
+       caption='Source: PNLS', fill="Number of facilities") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
 
+# at least one stockout
+g33 = ggplot(final[year==2017 & variable!='No stock outs reported'], aes(x=long, y=lat, group=group, fill=value)) +
+  coord_fixed() +
+  geom_polygon() +
+  geom_path(size=0.01) +
+  facet_wrap(~variable) +
+  scale_fill_gradientn(colors=brewer.pal(9, 'YlGnBu')) +
+  theme_void() +
+  labs(title=paste0("Number of facilities stocked out of ", drug_name, " by time stocked out, 2017"),
+       subtitle="Minimum one week of stockout",
+       caption='Source: PNLS', fill="Number of facilities") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
+
+
+# Number of weeks stocked out, categorical
+g34 = ggplot(final[year==2018], aes(x=long, y=lat, group=group, fill=value)) +
+  coord_fixed() +
+  geom_polygon() +
+  geom_path(size=0.01) +
+  facet_wrap(~variable) +
+  scale_fill_gradientn(colors=brewer.pal(9, 'YlOrBr')) +
+  theme_void() +
+  labs(title=paste0("Number of facilities stocked out of ", drug_name, " by time stocked out, 2018"),
+       subtitle="Cumulative: one month is equal to four weeks stocked out of ARVs",
+       caption='Source: PNLS', fill="Number of facilities") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
+
+# at least one stockout
+g35 = ggplot(final[year==2018 & variable!='No stock outs reported'], aes(x=long, y=lat, group=group, fill=value)) +
+  coord_fixed() +
+  geom_polygon() +
+  geom_path(size=0.01) +
+  facet_wrap(~variable) +
+  scale_fill_gradientn(colors=brewer.pal(9, 'YlOrBr')) +
+  theme_void() +
+  labs(title=paste0("Number of facilities stocked out of ", drug_name, " by time stocked out, 2018"),
+       subtitle="Minimum one week of stockout",
+       caption='Source: PNLS', fill="Number of facilities") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
 
 #--------------------------------------------------------------
-#Make some maps and charts
+# Additional analyses
 #--------------------------------------------------------------
 
 g36 = ggplot(report_map, aes(x=long, y=lat, group=group, fill=facilities_by_dps)) + 
@@ -247,7 +229,7 @@ g36 = ggplot(report_map, aes(x=long, y=lat, group=group, fill=facilities_by_dps)
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
   facet_wrap(~year, strip.position = "bottom") +
-  labs(title=paste0("Reporting completeness by year and district for ", drug_name), fill="% of facilities reporting")+
+  labs(title=paste0("Reporting completeness by year and district for ", drug_name), fill="# of facilities reporting")+
   theme(plot.title=element_text(vjust=-1), plot.subtitle=element_text(vjust=6)) 
 
 
@@ -296,6 +278,35 @@ g40 = ggplot(monthly_so_change_map_hp[year(date)==2018], aes(x=long, y=lat, grou
   labs(title=paste0(drug_name, " rate of change of stock-outs by district, health posts only"), subtitle="Data controlled for reporting", 
        caption = "*Denominator only includes facilities that reported data for the given treatment regimen", fill="Month-to-month change")
 
+#----------------------------------------------------------
+# Breaking down categorical graphs above further. 
+# Number of weeks stocked out, categorical
+# at least one stockout
+g41 = ggplot(final2[year==2017 & !variable%in%c('No stock outs reported', '0-2mo')], aes(x=long, y=lat, group=group, fill=value)) +
+  coord_fixed() +
+  geom_polygon() +
+  geom_path(size=0.01) +
+  facet_wrap(~variable) +
+  scale_fill_gradientn(colors=brewer.pal(9, 'YlGnBu')) +
+  theme_void() +
+  labs(title=paste0("Number of facilities stocked out of ", drug_name, " by time stocked out, 2017"),
+       subtitle="Greater than 2 months of stockout",
+       caption='Source: PNLS', fill="Number of facilities") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
+
+# at least one stockout
+g42 = ggplot(final2[year==2018 & !variable%in%c('No stock outs reported', '0-2mo')], aes(x=long, y=lat, group=group, fill=value)) +
+  coord_fixed() +
+  geom_polygon() +
+  geom_path(size=0.01) +
+  facet_wrap(~variable) +
+  scale_fill_gradientn(colors=brewer.pal(9, 'YlOrBr')) +
+  theme_void() +
+  labs(title=paste0("Number of facilities stocked out of ", drug_name, " by time stocked out, 2018"),
+       subtitle="Greater than 2 months of stockout",
+       caption='Source: PNLS', fill="Number of facilities") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
+
 
 # export the maps and graphs as a pdf
 outDir = "J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pnls/"
@@ -314,16 +325,14 @@ print(g9)
 print(g10)
 print(g11)
 print(g12)
-
-# print(g28)
-# print(g29)
-# print(g30) 
-# print(g31)
-# print(g32)
-# print(g33)
-# print(g34)
-# print(g35)
-
+print(g28)
+print(g29)
+print(g32)
+print(g33)
+print(g41)
+print(g34)
+print(g35)
+print(g42)
 print(g37)
 print(g38)
 # print(g39)

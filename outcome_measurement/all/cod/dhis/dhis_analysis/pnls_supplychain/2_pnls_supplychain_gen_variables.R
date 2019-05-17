@@ -35,6 +35,7 @@ codeDir = "./outcome_measurement/all/cod/dhis/dhis_analysis/pnls_supplychain/"
 target_drugs = c("Gv1UQdMw5wL", "ctP0MNHiq3B", "k3JmmwNHkmY")
 drug_names = c("Determine test kit", "Uni-Gold test kit", "Double-check test kit")
 full_date_range = "Jan 2017 - Dec 2018" #Imported into the graphs automatically - update as you get more data. 
+partial_date_range = "Same time period: January - September" #Date range of 'AnnualDT' below - to have comparable time periods. Update as you get more data. 
 
 #-------------------------------------------------
 # Read in data 
@@ -64,6 +65,10 @@ for (i in dates_avail){
   coord_months = rbind(coord_months, temp)
 }
 
+# Add in a clustered level variable to make scatter plots with later. THIS NEEDS TO BE VERIFIED. 
+dt[ level%in%c('health_post', 'dispensary'), level2:=2]
+dt[ level%in%c('health_center', 'reference_health_center', 'medical_center', 'clinic', 'polyclinic'), level2:=3]
+dt[ level%in%c('general_reference_hospital', 'hospital_center', 'hospital', 'secondary_hospital', 'medical_surgical_center'), level2:=4]
 
 # ------------------------------------------------------
 # Prep some color palettes
@@ -82,8 +87,6 @@ wrap_colors = c('#3182bd', '#fecc5c', '#bd0026', '#74c476', '#8856a7', '#f768a1'
 sex_colors = c('#bd0026', '#3182bd', '#74c476', '#8856a7') # colors by sex plus one for facilities
 single_red = '#bd0026'
 
-
-#Make some nice color scales to use later on. 
 colScale = scale_fill_gradient2(low="red", high="green", midpoint=0)
 colScale2 = scale_fill_gradient2(low="green", high="red", midpoint=0)
 
@@ -151,7 +154,7 @@ for (i in 1:length(target_drugs)){
   drug_so[ ,ratio:=round(100*(facilities_stocked_out/facs_reporting_on_drug), 2)]
   
   # calculate 50% of facilities to graph above a reporting threshold
-  n = dt[, length(unique(org_unit_id))/2 ]
+  n = dt[, length(unique(org_unit_id))/4 ]
   drug_so_thresh = drug_so[facs_reporting_on_drug > n]
   
   drug_so = melt(drug_so, id.vars='date')
@@ -174,8 +177,8 @@ for (i in 1:length(target_drugs)){
                .(days=sum(value, na.rm=T)), by=.(year, org_unit_id)] #Do we want to have greater than 0 in this calculation? 
   # Sanity check - are there any days greater than 365? This shouldn't be possible. 
   range(so_days$days)
-  so_days = so_days[days >=1] #Caitlin this was just > 1 in your code? 
-  so_days = so_days[ ,.(facilities=length(unique(org_unit_id))), by=.(days, year)]
+  so_days = so_days[days >=1] #Caitlin this was just > 1 in your code? Only keep where there was one or more days of stockouts. 
+  so_days = so_days[ ,.(facilities=length(unique(org_unit_id))), by=.(days, year)] #EMILY IS THIS WHAT YOU WANT HERE? 
   so_days[, weeks_stocked_out:=ceiling(days/7)]
   
   # labels 
@@ -214,7 +217,11 @@ for (i in 1:length(target_drugs)){
   stock_add = dt[element_id==drug_id & stock_category=="number_of_days_stocked_out", .(days_out=sum(value, na.rm=T)), by=c('year', 'id')]
   stock = merge(stock, stock_add, by=c('year', 'id'), all=T)
   stock[, percent_out:=round(100*(days_out/total_days), 1)]
-  stock = merge(stock, coord_ann, by=c('id', 'year'))
+  
+  unique(stock[percent_out==100, .(id, year, total_days, days_out)]) #Verifying that there are some cases with 100% of days stocked-out. 
+  stock[is.na(percent_out)]
+  
+  stock = merge(stock, coord_ann, by=c('id', 'year'), all.y=T)
   
   #---------------------------------------
   # Stockout maps- 8:12
@@ -258,54 +265,49 @@ for (i in 1:length(target_drugs)){
   #Merge with coordinate system so it can be mapped 
   kits_per_fac_map = merge(kits_per_facility, coord_ann, by=c('id', 'year'), all.y=TRUE)
   
-  #More graphs to adapt
-  {
-  
-  
-  # 
-  # #-------------------------------------------
   # # scatter plots (facility level)
-  # 
-  # dt[ level=='HC II', level2:=2]
-  # dt[ level=='HC III', level2:=3]
-  # dt[ level=='HC IV', level2:=4]
-  # dt[ level=='Hospital', level2:=5]
-  # 
-  # scatter = dt[ ,.(arvs=sum(arvs, na.rm=T), test_kits=sum(test_kits, na.rm=T)), by=.(facility, level2, art_site)]
-  # scatter2 = dt[month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01',.(arvs=sum(arvs, na.rm=T), 
-  #                                       test_kits=sum(test_kits, na.rm=T)), by=.(facility, level2, year, art_site)]
-  # 
-  # #---------------------------------------
-  # # finale maps - categorical arv stockouts 
-  # 
-  # final = dt[art_site==TRUE,.(arvs=sum(arvs, na.rm=T)) , by=.(facility, year, id) ]
-  # final = final[ ,.(facilities=length(unique(facility))), by=.(arvs, year, id)]
-  # final[ ,months:=(arvs/4)]
-  # final[months==0, category:='no_stock_out']
-  # final[0 < months & months <= 1, category:='one_week_2_mos']
-  # final[1 < months & months <= 2, category:='two_4_mos']
-  # final[2 < months, category:='four_months']
-  # final = final[ ,.(value=sum(facilities)), by=.(year, id, variable=category)]
-  # final = dcast(final, year+id ~ variable)
-  # 
-  # final[is.na(no_stock_out), no_stock_out:=0]
-  # final[is.na(one_week_2_mos), one_week_2_mos:=0]
-  # final[is.na(two_4_mos), two_4_mos:=0]
-  # final[is.na(four_months), four_months:=0]
-  # 
-  # final = merge(final, coord_ann, by=c('id', 'year'), all.y=TRUE)
-  # final = melt(final, id.vars=c('year', 'id', 'long', 'lat', 'order', 'hole',
-  #                               'piece', 'group'))
-  # 
-  # final$variable = factor(final$variable, c('no_stock_out', 'one_week_2_mos',
-  #                                           'two_4_mos', 'four_months'),
-  #                                            c('No stock outs reported',
-  #                                           '1 week - 1 month ', '1+ - 2 months ', '2+ months'))
+  dt[ level%in%c('health_post', 'dispensary'), level2:=2]
+  dt[ level%in%c('health_center', 'reference_health_center', 'medical_center', 'clinic', 'polyclinic'), level2:=3]
+  dt[ level%in%c('general_reference_hospital', 'hospital_center', 'hospital', 'secondary_hospital', 'medical_surgical_center'), level2:=4]
   
-  }
+  #See stockouts clustered by level, full time series. 
+  scatter = dt[element_id==drug_id & stock_category=='number_of_days_stocked_out', .(days_out=sum(value, na.rm=T)), by=.(org_unit_id, level2)]
+  scatter[, weeks_out:=days_out/7]
+  #See stockouts clustered by level, subset to only Jan-Sep. 
+  scatter2 = AnnualDT[element_id==drug_id & stock_category=='number_of_days_stocked_out', .(days_out=sum(value, na.rm=T)), by=.(org_unit_id, level2, year)]
+  scatter2[, weeks_out:=days_out/7]
+  
+  #---------------------------------------
+  # finale maps - categorical arv stockouts
+
+  final = dt[element_id==drug_id & stock_category=="number_of_days_stocked_out",.(days_out=sum(value, na.rm=T)) , by=.(org_unit_id, year, id) ]
+  final = final[ ,.(org_unit_id=length(unique(org_unit_id))), by=.(days_out, year, id)]
+  final[ ,months:=(days_out/30)]
+  final[months==0, category:='no_stock_out']
+  final[0 < months & months <= 1, category:='one_week_2_mos']
+  final[1 < months & months <= 2, category:='two_4_mos']
+  final[2 < months, category:='four_months']
+  final = final[ ,.(value=sum(org_unit_id)), by=.(year, id, variable=category)]
+  final = dcast(final, year+id ~ variable)
+
+  final[is.na(no_stock_out), no_stock_out:=0]
+  final[is.na(one_week_2_mos), one_week_2_mos:=0]
+  final[is.na(two_4_mos), two_4_mos:=0]
+  final[is.na(four_months), four_months:=0]
+
+  final = merge(final, coord_ann, by=c('id', 'year'), all.y=TRUE)
+  final = melt(final, id.vars=c('year', 'id', 'long', 'lat', 'order', 'hole',
+                                'piece', 'group'))
+
+  final$variable = factor(final$variable, c('no_stock_out', 'one_week_2_mos',
+                                            'two_4_mos', 'four_months'),
+                                             c('No stock outs reported',
+                                            '1 week - 1 month ', '1+ - 2 months ', '2+ months'))
+  
+  
   
   #---------------------------------------------------
-  # Map stock-out rate changes over time
+  # Data tables for additional analyses
   #---------------------------------------------------
   # Generate a variable 'monthly_so_rate' That represents the percentage of days in the month that a given facility was 
   # Stocked out. *Note that you'll have to recalculate this based on the level of aggregation (facility, dps, etc.)
@@ -386,6 +388,45 @@ for (i in 1:length(target_drugs)){
     }
     
     monthly_so_change_map_hp = merge(monthly_so_change_hp, coord_months, by=c('id', 'date'), all.y=TRUE) 
+    
+  }
+  
+  #--------------------------------------------
+  # Break apart the categorical maps even further, using the structure of the 'final' data table created above. 
+  #Disaggregate everything with more than 2 months stocked out. 
+  {
+    final2 = dt[element_id==drug_id & stock_category=="number_of_days_stocked_out",.(days_out=sum(value, na.rm=T)) , by=.(org_unit_id, year, id) ]
+    final2 = final2[ ,.(org_unit_id=length(unique(org_unit_id))), by=.(days_out, year, id)]
+    final2[ ,months:=(days_out/30)]
+    
+    final2[months==0, category:='no_stock_out']
+    final2[0 < months & months <= 2, category:='zero_two_months']
+    final2[2 < months & months <= 4, category:='two_four_months']
+    final2[4 < months & months <=6, category:='four_six_months']
+    final2[6 < months & months <=8, category:='six_eight_months']
+    final2[8 < months & months <=10, category:='eight_ten_months']
+    final2[months>10, category:='ten_year_months']
+    
+    final2 = final2[ ,.(value=sum(org_unit_id)), by=.(year, id, variable=category)]
+    final2 = dcast(final2, year+id ~ variable)
+    
+    for (var in c('no_stock_out', 'zero_two_months', 'two_four_months', 'four_six_months', 'six_eight_months', 'eight_ten_months',
+                  'ten_year_months')){
+      if (var%in%names(final2)){
+        final2[is.na(get(var)), (var):=0]
+      }
+    }
+    
+    final2 = merge(final2, coord_ann, by=c('id', 'year'), all.y=TRUE)
+    final2 = melt(final2, id.vars=c('year', 'id', 'long', 'lat', 'order', 'hole',
+                                  'piece', 'group'))
+    
+    final2$variable = factor(final2$variable,  c('no_stock_out', 'zero_two_months', 'two_four_months', 'four_six_months', 
+                                                 'six_eight_months', 'eight_ten_months',
+                                                 'ten_year_months'),
+                            c('No stock outs reported', '0-2 mo', '2-4 mo', '4-6 mo', '6-8 mo', '8-10 mo', '10-12 mo'))
+    
+    
     
   }
   
