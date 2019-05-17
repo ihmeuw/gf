@@ -1,30 +1,36 @@
-Chapter 1: Inputs
+---
+title: "Untitled"
+author: "IHME PCE"
+date: "May 16, 2019"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+```
 
-
+Inputs 
+ 
+ 
 Analysis of the inputs to the TB results chain focuses on the financial contributions of the Global Fund and other major funders for TB in Guatemala. While PCE reviewed guidelines for the diagnosis, treatment, and prevention of TB and MDR-TB published by the MoH to inform the overall evaluation, the analysis in this section centers on financial inputs. The following figures show the relative contributions of the Global Fund and other funders to overall spending on TB in Guatemala in 2018 (Figure 2) and historically (Figure 3), and the breakdown of major budget categories for the Global Fund TB grants in Guatemala (Figure 4). 
-
-
+ 
+ 
 The Ministry of Health (MoH) funds the largest share of TB spending in 2018, representing 47% of funding, whereas the Global Fund represented 23% of funding. This share has been largely consistent over time, as seen in figure 3, with the MoH representing the bulk of TB spending from 2012-2016[1]. 
-
-
+ 
+ 
 Figure 2: Global Fund versus other funder spending for TB in Guatemala, 2018
   
-
+ 
 Source: National TB Program Funding Landscape/Funding Request 2019-2022, produced by PCE team
 Figure 3: Funding Landscape for tuberculosis, 2012-2016
   
-
+ 
 Source: IHME Financing Global Health 2016
 The PCE is also tracking budgets from previous grant cycles, in addition to the current 2016 - 2019 grant, in order to assess longer-term trends in Global Fund contributions to program outputs. Figure 4 displays these trends aggregated into broader categories (see annex X for full table categorizing modules/interventions into these five categories).
-
-
+ 
+ 
 As seen in figure 4, the overall amount allocated to TB has been increasing since 2010, with the largest share of the increase going to the treatment category ($1.9 million in 2010 to $756.3 million budgeted for 2020). The main treatment categories that have been funded since 2016 are case detection and diagnosis ($4.9 million) and MDR-TB ($2.2 million). Further disaggregation into budget modules for TB/HIV and MDR-TB is shown in Section 3.1 of the Annual Country Report. There has also been an increase in the amount of RSSH funds, going from a low of 0% in 2014 and 2015 to 7.9% of the planned budget for 2020. These RSSH interventions are primarily focused on HMIS and procurement and supply chain management systems. 
-
-Chapter 2: Outputs 
-
-More text on outputs to go here! 
-And a sample figure. 
-
-
-________________
+ 
+ 
+ 
+ 
+________________ 
 [1] Data only available through 2016.
