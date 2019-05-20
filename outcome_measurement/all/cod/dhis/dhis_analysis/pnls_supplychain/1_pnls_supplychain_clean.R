@@ -111,6 +111,9 @@ dt[stock_category == 'number_of_days_stocked_out', any_stock_out:=0]
 dt[!is.na(any_stock_out) & value>0 & !is.na(value), any_stock_out:=1]
 dt[is.na(value) & !is.na(any_stock_out), any_stock_out:=NA]
 
+#If you've replaced the value with NA, also make expected days NA. 
+dt[is.na(value) & impossible_so_days==TRUE, expected_days:=NA]
+
 #Create a variable to delineate first-line and second-line regimens
 
 #From treatment regimen PDF in DRC - 
@@ -131,7 +134,7 @@ unique(dt[is.na(regimen), .(regimen, element)][order(regimen)])
 #Are there any other second-line regimens we can pull here? 
 
 #Save a cleaned data set here so you can run quantile regression 
-saveRDS(dt, paste0(dir, "prepped/pnls_drug.rds"))
+saveRDS(dt, paste0(dir, "pnls_drug.rds"))
 
 # 
 # 

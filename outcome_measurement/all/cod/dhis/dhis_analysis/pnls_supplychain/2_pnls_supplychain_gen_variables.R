@@ -179,7 +179,6 @@ for (i in 1:length(target_drugs)){
   range(so_days$days)
   so_days = so_days[days >=1] #Caitlin this was just > 1 in your code? Only keep where there was one or more days of stockouts. 
   so_days = so_days[ ,.(facilities=length(unique(org_unit_id))), by=.(days, year)] #EMILY IS THIS WHAT YOU WANT HERE? 
-  so_days[, weeks_stocked_out:=ceiling(days/7)]
   
   # labels 
   labels = so_days[ ,.(total=sum(facilities)), by=year]
@@ -239,12 +238,13 @@ for (i in 1:length(target_drugs)){
   num_facilities = dt[element_id==drug_id & stock_category=='number_of_days_stocked_out' & !is.na(value), .(facilities=length(unique(org_unit_id))), by=.(year, id)]
   num_facilities = merge(stockout, num_facilities)
   num_facilities[ , mean_weeks:=round((weeks_stocked_out/facilities), 1)]
+  num_facilities[ , mean_days:=round((days_stocked_out/facilities), 1)]
   so_map_norm = merge(num_facilities, coord_ann, by=c('id', 'year'), all.y=TRUE)
   
   # rates of change in facility-weeks per year
   stockout[ , year2:=paste0('n', year)]
   roc = dcast(data = stockout, id ~ year2, value.var=c('days_stocked_out', 'weeks_stocked_out'))
-  roc[ , change:=(weeks_stocked_out_n2018 - weeks_stocked_out_n2017)]
+  roc[ , change:=(days_stocked_out_n2018 - days_stocked_out_n2017)]
   roc_map = merge(coord, roc, by='id')
   
   # only districts with more stockouts in 2018 than 2017
@@ -254,12 +254,12 @@ for (i in 1:length(target_drugs)){
   #---------------------------------------------------
   # Mean test-kits per facility 
   #---------------------------------------------------
-  facs_per_district = dt[element_id==drug_id & stock_category == "available_usable_stock", .(facs=length(unique(org_unit_id))), by=dps] #Find the number of facs per district with available test-kit stock. 
+  facs_per_district = dt[element_id==drug_id & stock_category == "available_usable_stock", .(facs=length(unique(org_unit_id))), by=c('dps','year')] #Find the number of facs per district with available test-kit stock. 
   
   kits_per_facility = dt[element_id==drug_id & stock_category == "available_usable_stock", .(element_id, value, dps, year, id, date)]
   kits_per_facility = kits_per_facility[(date< "2018-09-01" & year == 2018) | (date < '2017-09-01' & year == 2017)] #Subset to handle time lags. 
   kits_per_facility = kits_per_facility[, .(value=sum(value, na.rm = TRUE)), by = c('element_id', 'dps', 'year', 'id')] #Collapse here, because you want to get rid of the date-level. 
-  kits_per_facility = merge(kits_per_facility, facs_per_district, by='dps', all.x = TRUE)
+  kits_per_facility = merge(kits_per_facility, facs_per_district, by=c('dps', 'year'), all.x = TRUE)
   kits_per_facility[, kits_per_fac:=round(value/facs, 2)]
   
   #Merge with coordinate system so it can be mapped 
@@ -318,8 +318,12 @@ for (i in 1:length(target_drugs)){
   {
     facs_per_district = dt[stock_category == "number_of_days_stocked_out" & !is.na(value) & element_id==drug_id, .(facs=length(unique(org_unit_id))), by=c('dps', 'date')] #Exclude impossible day values here. 
     
-    monthly_so_rate_dps = dt[stock_category == 'number_of_days_stocked_out' & element_id==drug_id, .(id, value, date, expected_days, dps)]
+    monthly_so_rate_dps = dt[stock_category == 'number_of_days_stocked_out' &!is.na(value) & element_id==drug_id, .(id, value, date, expected_days, dps)]
     monthly_so_rate_dps = monthly_so_rate_dps[, .(value=sum(value, na.rm = TRUE)), by=c('id', 'date', 'expected_days', 'dps')]
+    
+    dups = monthly_so_rate_dps[duplicated(monthly_so_rate_dps, by=c('id', 'date'))]
+    dups = merge(dups, monthly_so_rate_dps, by=c('id', 'date'))
+    stopifnot(nrow(dups)==0)
     
     monthly_so_rate_dps = merge(monthly_so_rate_dps, facs_per_district, by=c('dps', 'date'))
     

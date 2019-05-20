@@ -59,52 +59,52 @@ g5 = ggplot(drug_so[variable==paste0('Percentage of facilities stocked out of ',
 # arv stockout bar graphs
 bar_color = brewer.pal(5, 'RdYlBu') 
 
-# 6 - stacked bar of weeks stocked out 
-g6 = ggplot(so_days[weeks_stocked_out!=0], aes(x=weeks_stocked_out, y=facilities, fill=factor(year))) + 
+# 6 - stacked bar of days stocked out 
+g6 = ggplot(so_days[days!=0], aes(x=days, y=facilities, fill=factor(year))) + 
   geom_bar(stat='identity', position='dodge') +
   theme_minimal() +
   scale_fill_manual(values=bar_color) +
-  labs(title = paste0("Facilities stocked out of ", drug_name, " for at least one week by total weeks stocked out"), x='Number of weeks out of stock*', 
-       y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", 
-       fill='Year (total weeks)',
+  labs(title = paste0("Facilities stocked out of ", drug_name, " for at least one day by total days stocked out"), x='Number of days out of stock*', 
+       y="Number of facilities", caption="*Does not include facilities stocked out for 0 days", 
+       fill='Year (total facilities\nreporting)',
        subtitle=full_date_range)
 
-# 7 - stacked bar of weeks_stocked_out stocked out 
-g7 = ggplot(so_days2[weeks_stocked_out!=0 ], aes(x=weeks_stocked_out, y=facilities, fill=factor(year))) + 
+# 7 - stacked bar of days stocked out 
+g7 = ggplot(so_days2[days!=0 ], aes(x=days, y=facilities, fill=factor(year))) + 
   geom_bar(stat='identity', position='dodge') +
   theme_minimal() +
   scale_fill_manual(values=bar_color) +
-  labs(title = paste0("Facilities stocked out of ", drug_name, " for at least one week by total weeks stocked out"),
-       subtitle='Same time period: January - November', x='Number of weeks out of stock*', 
-       y="Number of facilities", caption="*Does not include facilities stocked out for 0 weeks", fill='Year (total weeks)')
+  labs(title = paste0("Facilities stocked out of ", drug_name, " for at least one day by total days stocked out"),
+       subtitle='Same time period: January - November', x='Number of days out of stock*', 
+       y="Number of facilities", caption="*Does not include facilities stocked out for 0 days", fill='Year (total facilities\nreporting)')
 
 
 #-----------------------
 # ARV stockout maps - 8:15
 
-# map of facility-weeks of stock outs - 8
-g8 = ggplot(so_map, aes(x=long, y=lat, group=group, fill=weeks_stocked_out)) + 
+# map of facility-days of stock outs - 8
+g8 = ggplot(so_map, aes(x=long, y=lat, group=group, fill=days_stocked_out)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
   facet_wrap(~year) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) + 
   theme_void() +
-  labs(title=paste0("Total facility-weeks of stockouts for ", drug_name), 
-       caption="*A facility-week is defined as each week a facility reports", 
-       subtitle='Same time period: January - November',fill="Facility-weeks*") +
+  labs(title=paste0("Total facility-days of stockouts for ", drug_name), 
+       caption="*A facility-day is defined as each day a facility reports", 
+       subtitle='Same time period: January - November',fill="Facility-days*") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
-# mean weeks stocked out per facility - 9
-g9 = ggplot(so_map_norm, aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
+# mean days stocked out per facility - 9
+g9 = ggplot(so_map_norm, aes(x=long, y=lat, group=group, fill=mean_days)) + 
   coord_fixed() +
   geom_polygon() + 
   geom_path(size=0.01) + 
   facet_wrap(~year) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
   theme_void() +
-  labs(title=paste0("Mean number of weeks stocked out of ", drug_name, " by district"), 
-       subtitle='Same time period: January - November',fill="Mean weeks per facility") +
+  labs(title=paste0("Mean number of days stocked out of ", drug_name, " by district"), 
+       subtitle='Same time period: January - November',fill="Mean days per facility") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # rate of change in annual facility-weeks stocked out - 10
@@ -114,9 +114,9 @@ g10 = ggplot(roc_map, aes(x=long, y=lat, group=group, fill=change)) +
   geom_path(size=0.01) +
   scale_fill_gradientn(colors=rev(brewer.pal(9, 'RdYlBu'))) +
   theme_void() +
-  labs(title=paste0("Rate of change: facility-weeks of ", drug_name, " stockouts in 2018 minus 2017"),
-       caption="* Positive difference = more weeks stocked out in 2018 than 2017",
-       subtitle='Same time period: January - November',fill="Difference in weeks (2018 - 2017)*") +
+  labs(title=paste0("Rate of change: facility-days of ", drug_name, " stockouts in 2018 minus 2017"),
+       caption="* Positive difference = more days stocked out in 2018 than 2017",
+       subtitle='Same time period: January - November',fill="Difference in days (2018 - 2017)*") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
 
 # facilities with more stockouts - 11
@@ -126,21 +126,21 @@ g11 = ggplot(roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) +
   geom_path(size=0.01) +
   scale_fill_gradientn(colors=brewer.pal(9, 'Reds')) +
   theme_void() +
-  labs(title=paste0("Districts with more facility-weeks of stockouts for ", drug_name, " in 2018 than 2017"), 
-       subtitle='Same time period: January - November', fill="Difference in weeks (2018 - 2017)") +
+  labs(title=paste0("Districts with more facility-days of stockouts for ", drug_name, " in 2018 than 2017"), 
+       subtitle='Same time period: January - November', fill="Difference in days (2018 - 2017)") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
 
-# # percentage of weeks stocked out - 12
+# # percentage of days stocked out - 12
 g12 = ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
   coord_fixed() +
   geom_polygon() +
-  geom_path(color="black") +
+  geom_path() +
   facet_wrap(~year) +
   scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) +
   theme_void() +
-  labs(title=paste0("Percentage of facility-weeks stocked out of ", drug_name), 
-       subtitle=paste0("Weeks facilities were stocked out/Total weeks in which facilities reported on ", drug_name), 
-       caption='Source: PNLS', fill="% of weeks stocked out") +
+  labs(title=paste0("Percentage of facility-days stocked out of ", drug_name), 
+       subtitle=paste0("Days facilities were stocked out/Total days in which facilities reported on ", drug_name), 
+       caption='Source: PNLS', fill="% of days stocked out") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
 
 
@@ -148,17 +148,17 @@ g12 = ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) +
 # # facility level scatter plots - 27:29
 
 # stockouts by level 
-g28 = ggplot(scatter, aes(x=level2, y=weeks_out)) +
+g28 = ggplot(scatter, aes(x=level2, y=days_out)) +
   geom_jitter(width=0.25, alpha=0.2) + theme_bw() +
-  labs(title=paste0('Weeks stocked out of ', drug_name, ' by facility level'), subtitle=full_date_range, x='Facility level',
-       y='Weeks stocked out')
+  labs(title=paste0('Days stocked out of ', drug_name, ' by facility level'), subtitle=full_date_range, x='Facility level',
+       y='Days stocked out')
 
 # stockouts by level, year
-g29 = ggplot(scatter2, aes(x=level2, y=weeks_out)) +
+g29 = ggplot(scatter2, aes(x=level2, y=days_out)) +
   geom_jitter(width=0.25, alpha=0.2) +
   facet_wrap(~year) +
-  labs(title=paste0('Weeks stocked out of ', drug_name, ' by facility level'), subtitle=partial_date_range, x='Facility level',
-       y='Weeks stocked out') + 
+  labs(title=paste0('Days stocked out of ', drug_name, ' by facility level'), subtitle=partial_date_range, x='Facility level',
+       y='Days stocked out') + 
   theme_bw()
 
 
