@@ -20,7 +20,7 @@ if (prep_files == TRUE){
   #Validate file list 
   desired_cols <- c("file_name", "function_type", "sheet", "disease", "loc_id", "data_source", "period", "qtr_number", "grant", "primary_recipient", 
                     "secondary_recipient", "language", "grant_period", "grant_status", "start_date", "file_iteration", "geography_detail", 
-                    "loc_name", "mod_framework_format", "file_currency", "eur_to_usd_rate", "loc_to_usd_rate")
+                    "loc_name", "mod_framework_format", "file_currency", "eur_to_usd_rate", "loc_to_usd_rate", "pudr_semester")
   stopifnot(colnames(file_list) %in% desired_cols)
   stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr"))
   stopifnot((unique(file_list$file_iteration))%in%c("final", "initial"))
@@ -105,7 +105,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i])
       tmpData = do.call(prep_other_budget_gtm, args)
       
-      stopifnot(sort(names(tmpData)) == c('budget', "expenditure", 'intervention', 'module', 'quarter', 'start_date', 'year'))
+      stopifnot(sort(names(tmpData)) == c('activity_description', 'budget', "expenditure", 'module', 'quarter', 'start_date', 'year'))
     } else if (file_list$function_type[i]=='summary' & file_list$loc_name[i]=='uga'){
       args[length(args)+1] = file_list$qtr_number[i]
       args[length(args)+1] = file_list$grant[i]
@@ -120,7 +120,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, secondary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language, eur_to_usd_rate, loc_to_usd_rate, file_currency)]
+                                 mod_framework_format, file_iteration, language, eur_to_usd_rate, loc_to_usd_rate, file_currency, pudr_semester)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
     }  

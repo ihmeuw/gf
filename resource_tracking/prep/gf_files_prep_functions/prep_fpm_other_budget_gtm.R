@@ -68,7 +68,8 @@ prep_other_budget_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, p
   gf_data = gf_data[, c(sda_col, activity_col, budget_cols, expenditure_cols), with=FALSE]
   
   #Set names
-  names(gf_data) <- c('module', 'intervention', 'budget_q1', 'budget_q2', 'budget_q3', 'budget_q4', 'expenditure_q1', 'expenditure_q2', 'expenditure_q3', 'expenditure_q4')
+  names(gf_data) <- c('module', 'activity_description', 'budget_q1', 'budget_q2', 'budget_q3', 'budget_q4', 'expenditure_q1', 'expenditure_q2', 'expenditure_q3', 'expenditure_q4')
+  #There is no intervention column in this dataset. 
   
   #-------------------------------------
   # 2. Subset rows
@@ -79,7 +80,7 @@ prep_other_budget_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, p
   #-------------------------------------
   # 3. Reshape to the quarter-level. 
   #-------------------------------------
-  budget_dataset = melt(gf_data, id.vars=c('module', 'intervention'))
+  budget_dataset = melt(gf_data, id.vars=c('module', 'activity_description'))
   budget_dataset[, quarter:=tstrsplit(variable, "_", keep=2)] #Pull out a quarter variable
   budget_dataset[, quarter:=gsub("q", "", quarter)]
   budget_dataset[, quarter:=as.numeric(quarter)]
@@ -102,7 +103,7 @@ prep_other_budget_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, p
   
   #One last cast to make budget and expenditure their own values 
   budget_dataset[, value:=as.numeric(value)]
-  budget_dataset = dcast(budget_dataset, module+intervention+start_date+year+quarter~variable, value.var='value', fun.aggregate=sum_na_rm)
+  budget_dataset = dcast(budget_dataset, module+activity_description+start_date+year+quarter~variable, value.var='value', fun.aggregate=sum_na_rm)
   
   return(budget_dataset)  
 }

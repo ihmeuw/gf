@@ -234,38 +234,39 @@ stopifnot(unique(mapped_data$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 
 orig_rows = nrow(mapped_data)
 stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD"))
 
-#Do a check before and after converting to make sure you've got the same totals. 
-pre_conversion_check = mapped_data[, .(pre_budget=sum(budget, na.rm=T), pre_expenditure=sum(expenditure, na.rm=T)), by='file_name']
-
-#Pull apart the files that are in Euros vs. USD, and convert Euros. 
-valueVars = c('budget', 'expenditure', 'disbursement')
-in_USD = mapped_data[file_currency=='USD']
-in_USD[, budget_new:=budget]
-in_USD[, expenditure_new:=expenditure]
-in_USD[, disbursement_new:=disbursement]
-
 needs_conversion = mapped_data[file_currency!='USD']
-stopifnot(needs_conversion$file_currency%in%c("LOC", "EUR")) #These are the only currencies the function supports. 
-converted_to_USD = convert_eur_usd(needs_conversion, 'year')
-
-mapped_data = rbind(in_USD, converted_to_USD, fill=TRUE, use.names=TRUE) #You're not losing any rows here. 
-stopifnot(nrow(mapped_data)==orig_rows)
-
-#Post-check. 
-mapped_data$eur_usd <- NULL
-post_conversion_check = convert_usd_eur(mapped_data, 'year')
-post_conversion_check = post_conversion_check[, .(post_budget=sum(budget, na.rm=T), post_expenditure=sum(expenditure, na.rm=T)), by='file_name']
-
-conversion_check = merge(pre_conversion_check, post_conversion_check, by='file_name', all=T)
-conversion_check = conversion_check[, lapply(.SD, round), .SDcols = 2:5, by='file_name'][, lapply(.SD, as.integer), .SDcols = 2:5, by='file_name']
-if (nrow(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])==0){
-  View(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])
-  stop("Errors in currency conversion - review 'conversion_check'." )
+if (nrow(needs_conversion)!=0){
+  #Do a check before and after converting to make sure you've got the same totals. 
+  pre_conversion_check = mapped_data[, .(pre_budget=sum(budget, na.rm=T), pre_expenditure=sum(expenditure, na.rm=T)), by='file_name']
+  
+  #Pull apart the files that are in Euros vs. USD, and convert Euros. 
+  valueVars = c('budget', 'expenditure', 'disbursement')
+  in_USD = mapped_data[file_currency=='USD']
+  in_USD[, budget_new:=budget]
+  in_USD[, expenditure_new:=expenditure]
+  in_USD[, disbursement_new:=disbursement]
+  
+  stopifnot(needs_conversion$file_currency%in%c("LOC", "EUR")) #These are the only currencies the function supports. 
+  converted_to_USD = convert_eur_usd(needs_conversion, 'year')
+  mapped_data = rbind(in_USD, converted_to_USD, fill=TRUE, use.names=TRUE) #You're not losing any rows here. 
+  stopifnot(nrow(mapped_data)==orig_rows)
+  
+  #Post-check. 
+  mapped_data$eur_usd <- NULL
+  post_conversion_check = convert_usd_eur(mapped_data, 'year')
+  post_conversion_check = post_conversion_check[, .(post_budget=sum(budget, na.rm=T), post_expenditure=sum(expenditure, na.rm=T)), by='file_name']
+  
+  conversion_check = merge(pre_conversion_check, post_conversion_check, by='file_name', all=T)
+  conversion_check = conversion_check[, lapply(.SD, round), .SDcols = 2:5, by='file_name'][, lapply(.SD, as.integer), .SDcols = 2:5, by='file_name']
+  if (nrow(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])==0){
+    View(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])
+    stop("Errors in currency conversion - review 'conversion_check'." )
+  }
+  
+  #If the check above works, then you're okay to rename budget and expenditure 
+  mapped_data = mapped_data[, -c('budget', 'expenditure', 'disbursement')]
+  setnames(mapped_data, c('budget_new', 'expenditure_new', 'disbursement_new'), c('budget', 'expenditure', 'disbursement'))
 }
-
-#If the check above works, then you're okay to rename budget and expenditure 
-mapped_data = mapped_data[, -c('budget', 'expenditure', 'disbursement')]
-setnames(mapped_data, c('budget_new', 'expenditure_new', 'disbursement_new'), c('budget', 'expenditure', 'disbursement'))
 
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  
@@ -305,6 +306,28 @@ mapped_data$activity_description <- str_replace_all(mapped_data$activity_descrip
 mapped_data$orig_module <- str_replace_all(mapped_data$orig_module, "[^[:alnum:]]", " ")
 mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, "[^[:alnum:]]", " ")
 
+# ----------------------------------------------
+# Create an absorption file 
+# ---------------------------------------------
+# I’ve been thinking about the best thing to do here as well. I’m pretty sure I’ve figured it out. First, let’s label them by their semester(s), 
+#because what we’re currently calling “final” isn’t final. I would just call them “semester 1” and “semester 1-2”. I think we’re going to get a “semester 3” PUDR alone 
+#and a “semester 3-4” after that.
+# 
+# Anyway, here’s what I propose for organization, and please let me know if you have other ideas:
+#   
+#   1.	When we’re analyzing absorption, we want to compare the semester 1 file to the semester 1-2 file, so we need both files to be together in the
+#database (and subsequent PUDRs). Let’s save this as its own dataset called the “absorption dataset”, and just be really mindful of the fact that it contains overlapping time periods.
+# 2.	This will be different from the expenditure dataset, in which we should use the semester 1 file for the first semester, and the semester 1-2 file
+#minus the semester 1 file for the second semester. This will give us a good time series of expenditure alone, but we can’t use it to compute absorption 
+#because we don’t know enough about reprogramming. 
+# 3.	Finally, for a time series of budgets, we should continue using the detailed budget from the FR. Let’s make sure there’s always a caption 
+#or something that says “budget numbers do not reflect grant revisions or reallocation”.
+# 
+# So, which data source we use and how depends on the quantity we’re analyzing (budget, expenditure or absorption). Absorption is the only one that must have overlapping time periods.
+
+
+absorption = mapped_data[data_source=="pudr"]
+#Reshape absorption wide by semester, with unique identifiers grant, 
 # ----------------------------------------------
 # Write the prepped data as .csvs
 # ---------------------------------------------
