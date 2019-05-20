@@ -29,7 +29,7 @@ prep_ghe = FALSE
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-rerun_filelist = FALSE #Set to TRUE if you want to prep all files in the file list again. 
+rerun_filelist = TRUE #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 test_current_files = TRUE #Set to true if you would like to run unit tests on current database. Set to false if you would like to run tests on archived database. 
 
@@ -38,7 +38,7 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
-    country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+    country = "sen" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
     master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
     export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
   }

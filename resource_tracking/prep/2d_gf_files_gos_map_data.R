@@ -306,47 +306,53 @@ mapped_data$activity_description <- str_replace_all(mapped_data$activity_descrip
 mapped_data$orig_module <- str_replace_all(mapped_data$orig_module, "[^[:alnum:]]", " ")
 mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, "[^[:alnum:]]", " ")
 
-# ----------------------------------------------
-# Create an absorption file 
-# ---------------------------------------------
-# I’ve been thinking about the best thing to do here as well. I’m pretty sure I’ve figured it out. First, let’s label them by their semester(s), 
-#because what we’re currently calling “final” isn’t final. I would just call them “semester 1” and “semester 1-2”. I think we’re going to get a “semester 3” PUDR alone 
-#and a “semester 3-4” after that.
-# 
-# Anyway, here’s what I propose for organization, and please let me know if you have other ideas:
-#   
-#   1.	When we’re analyzing absorption, we want to compare the semester 1 file to the semester 1-2 file, so we need both files to be together in the
-#database (and subsequent PUDRs). Let’s save this as its own dataset called the “absorption dataset”, and just be really mindful of the fact that it contains overlapping time periods.
-# 2.	This will be different from the expenditure dataset, in which we should use the semester 1 file for the first semester, and the semester 1-2 file
-#minus the semester 1 file for the second semester. This will give us a good time series of expenditure alone, but we can’t use it to compute absorption 
-#because we don’t know enough about reprogramming. 
-# 3.	Finally, for a time series of budgets, we should continue using the detailed budget from the FR. Let’s make sure there’s always a caption 
-#or something that says “budget numbers do not reflect grant revisions or reallocation”.
-# 
-# So, which data source we use and how depends on the quantity we’re analyzing (budget, expenditure or absorption). Absorption is the only one that must have overlapping time periods.
+# ----------------------------------------------------------------------------
+# Create unique datasets - final budgets, final expenditures, and absorption
+# ---------------------------------------------------------------------------
 
+# 1. Create an absorption dataset shaped wide by grant, grant period, module, and intervention, that shows budget/expenditure by semester. 
+# 2. For the expenditure dataset, we should subtract the earlier quarter in a year from the later quarters, and then append all of this to create an expenditure dataset. 
 
-absorption = mapped_data[data_source=="pudr"]
-#Reshape absorption wide by semester, with unique identifiers grant, 
+if (prep_files){
+  #1. Budgets 
+  final_budgets = mapped_data[file_iteration == "final" & data_source == "fpm"] #Only want the final versions of budgets. 
+
+  #2. Expenditures 
+  byVars = names(mapped_data)
+  byVars = byVars[!byVars%in%c('budget', 'expenditure', 'disbursement', 'year', 'quarter', 'start_date')]
+  final_expenditures = mapped_data[data_source == "pudr"] #EMILY CAN YOU MAKE SURE YOU DON'T HAVE MORE THAN ONE FINAL AND ONE INITIAL FILE??? NEED TO RETHINK DUPLICATES. 
+  #For the same grant in the same grant period, you want to get the total for each PUDR and subtract semester 1 from semester 1-2. 
+  
+  final_expenditures = final_expenditures[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
+                                   by=byVars]
+  final_expenditures = dcast(final_expenditures, grant+grant_period+disease+gf_module+gf_intervention+orig_module+orig_intervention+activity_description~pudr_semester, 
+                      value.var=c('budget', 'expenditure'))
+  final_expenditures[, `budget_Semester 1-2`:=`budget_Semester 1-2`-`budget_Semester 1`]
+  final_expenditures[, `expenditure_Semester 1-2`:=`expenditure_Semester 1-2`-`expenditure_Semester 1`]
+  setnames(final_expenditures, c('budget_Semester 1-2', 'expenditure_Semester 1-2'), c('budget_Semester 2', 'expenditure_Semester 2')) #EMILY CHECK WITH DAVID THAT THIS IS THE RIGHT THING TO DO. 
+  
+  #3. Absorption
+  absorption = mapped_data[data_source=="pudr", .(grant, grant_period, gf_module, gf_intervention, budget, expenditure, pudr_semester, 
+                                                  orig_module, orig_intervention, code)]
+  absorption = dcast(absorption, grant+grant_period+gf_module+gf_intervention+code+orig_module+orig_intervention~pudr_semester, 
+                     value.var=c('budget', 'expenditure'), fun.aggregate=sum_na_rm)
+}
+
 # ----------------------------------------------
 # Write the prepped data as .csvs
 # ---------------------------------------------
 
-if (prep_files == TRUE){
-  final_budgets <- mapped_data[file_iteration == "final" & data_source == "fpm"] #Emily should we remove the expenditure column here?
-  final_expenditures <- mapped_data[file_iteration == "final" & data_source == "pudr"]
-  
-  final_budgets <- mapped_data[data_source == "fpm"]
-  final_expenditures <- mapped_data[data_source == "pudr"]
-  
+if (prep_files){
   # Save RDS file
   saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
   saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
   saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
+  saveRDS(absorption, paste0(export_dir, "absorption.rds"))
   
-  write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"))
-  write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"))
-  write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"))
+  write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), row.names=FALSE)
+  write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
+  write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"), row.names=FALSE)
+  write.csv(absorption, paste0(export_dir, "absorption.rds"), row.names=FALSE)
 }
 
 if (prep_gos == TRUE){
