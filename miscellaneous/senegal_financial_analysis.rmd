@@ -1,0 +1,6 @@
+---
+title: "Senegal financial analysis"
+author: "Emily Linebarger"
+date: "May 8, 2019"
+output: pdf_document
+---

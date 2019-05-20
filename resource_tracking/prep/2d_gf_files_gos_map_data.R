@@ -28,6 +28,9 @@ module_map[, module:=replace_acronyms(module)]
 module_map[, intervention:=replace_acronyms(intervention)]
 
 #Make some raw corrections here - These weren't accurate enough to put in the map, but we still need to account for them. 
+if (!'activity_description'%in%names(raw_data)){ #If this column doesn't exist, add it as 'NA' so the code below can run
+  raw_data[, activity_description:=NA]
+}
 if (prep_files == TRUE){
   raw_data = correct_modules_interventions(raw_data)
 }
@@ -121,12 +124,20 @@ if ('disbursement'%in%names(mapped_data)){
 
 if ('disbursement'%in%names(mapped_data)){
   post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
-  stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]] & pre_coeff_check[[3]] == post_coeff_check[[3]])
+  post_coeff_check[[1]] = round(post_coeff_check[[1]])
+  post_coeff_check[[2]] = round(post_coeff_check[[2]])
+  post_coeff_check[[3]] = round(post_coeff_check[[3]])
+  
+  stopifnot(abs(pre_coeff_check[[1]]-post_coeff_check[[1]]) < 1) #Decision by David Phillips 5/10/19 - it's okay if there is less than one cent difference between the pre- and post-redistribution. 
+  stopifnot(abs(pre_coeff_check[[2]]-post_coeff_check[[2]]) < 1)
+  stopifnot(abs(pre_coeff_check[[3]]-post_coeff_check[[3]]) < 1)
 } else {
   post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure')]
   post_coeff_check[[1]] = round(post_coeff_check[[1]])
   post_coeff_check[[2]] = round(post_coeff_check[[2]])
-  stopifnot(pre_coeff_check[[1]] == post_coeff_check[[1]] & pre_coeff_check[[2]] == post_coeff_check[[2]])
+  
+  stopifnot(abs(pre_coeff_check[[1]]-post_coeff_check[[1]]) < 1) #Decision by David Phillips 5/10/19 - it's okay if there is less than one cent difference between the pre- and post-redistribution. 
+  stopifnot(abs(pre_coeff_check[[2]]-post_coeff_check[[2]]) < 1)
 }
 
 #Debug the check above, if needed. 
@@ -176,6 +187,10 @@ for (i in 1:length(current_uga_grants)){
   mapped_data[grant==current_uga_grants[i] & grant_period==current_uga_grant_period[i], 
               current_grant:=TRUE]
 }
+for (i in 1:length(current_sen_grants)){
+  mapped_data[grant==current_sen_grants[i] & grant_period==current_sen_grant_period[i], 
+              current_grant:=TRUE]
+}
 
 if (prep_files==TRUE){
   mapped_data$loc_name = country
@@ -188,7 +203,7 @@ if (prep_files==TRUE){
 #Add in a variable for the disease of the grant #Yuck - Emily try to rewrite this code. 
 #--------------------------------------------------------------------------------
 mapped_data[, disease_split:=strsplit(grant, "-")]
-potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R')
+potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
 
 for (i in 1:nrow(mapped_data)){
   if (mapped_data$disease_split[[i]][2]%in%potential_diseases){
@@ -209,8 +224,50 @@ mapped_data[grant_disease=='H', grant_disease:='hiv']
 mapped_data[grant_disease=='T', grant_disease:='tb']
 mapped_data[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
 mapped_data[grant_disease=='M', grant_disease:='malaria']
+mapped_data[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
 
 stopifnot(unique(mapped_data$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
+
+# --------------------------------------------------------
+# Convert currencies to USD 
+# --------------------------------------------------------
+orig_rows = nrow(mapped_data)
+stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD"))
+
+needs_conversion = mapped_data[file_currency!='USD']
+if (nrow(needs_conversion)!=0){
+  #Do a check before and after converting to make sure you've got the same totals. 
+  pre_conversion_check = mapped_data[, .(pre_budget=sum(budget, na.rm=T), pre_expenditure=sum(expenditure, na.rm=T)), by='file_name']
+  
+  #Pull apart the files that are in Euros vs. USD, and convert Euros. 
+  valueVars = c('budget', 'expenditure', 'disbursement')
+  in_USD = mapped_data[file_currency=='USD']
+  in_USD[, budget_new:=budget]
+  in_USD[, expenditure_new:=expenditure]
+  in_USD[, disbursement_new:=disbursement]
+  
+  stopifnot(needs_conversion$file_currency%in%c("LOC", "EUR")) #These are the only currencies the function supports. 
+  converted_to_USD = convert_eur_usd(needs_conversion, 'year')
+  mapped_data = rbind(in_USD, converted_to_USD, fill=TRUE, use.names=TRUE) #You're not losing any rows here. 
+  stopifnot(nrow(mapped_data)==orig_rows)
+  
+  #Post-check. 
+  mapped_data$eur_usd <- NULL
+  post_conversion_check = convert_usd_eur(mapped_data, 'year')
+  post_conversion_check = post_conversion_check[, .(post_budget=sum(budget, na.rm=T), post_expenditure=sum(expenditure, na.rm=T)), by='file_name']
+  
+  conversion_check = merge(pre_conversion_check, post_conversion_check, by='file_name', all=T)
+  conversion_check = conversion_check[, lapply(.SD, round), .SDcols = 2:5, by='file_name'][, lapply(.SD, as.integer), .SDcols = 2:5, by='file_name']
+  if (nrow(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])==0){
+    View(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])
+    stop("Errors in currency conversion - review 'conversion_check'." )
+  }
+  
+  #If the check above works, then you're okay to rename budget and expenditure 
+  mapped_data = mapped_data[, -c('budget', 'expenditure', 'disbursement')]
+  setnames(mapped_data, c('budget_new', 'expenditure_new', 'disbursement_new'), c('budget', 'expenditure', 'disbursement'))
+}
+
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------
@@ -249,22 +306,53 @@ mapped_data$activity_description <- str_replace_all(mapped_data$activity_descrip
 mapped_data$orig_module <- str_replace_all(mapped_data$orig_module, "[^[:alnum:]]", " ")
 mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, "[^[:alnum:]]", " ")
 
+# ----------------------------------------------------------------------------
+# Create unique datasets - final budgets, final expenditures, and absorption
+# ---------------------------------------------------------------------------
+
+# 1. Create an absorption dataset shaped wide by grant, grant period, module, and intervention, that shows budget/expenditure by semester. 
+# 2. For the expenditure dataset, we should subtract the earlier quarter in a year from the later quarters, and then append all of this to create an expenditure dataset. 
+
+if (prep_files){
+  #1. Budgets 
+  final_budgets = mapped_data[file_iteration == "final" & data_source == "fpm"] #Only want the final versions of budgets. 
+
+  #2. Expenditures 
+  byVars = names(mapped_data)
+  byVars = byVars[!byVars%in%c('budget', 'expenditure', 'disbursement', 'year', 'quarter', 'start_date')]
+  final_expenditures = mapped_data[data_source == "pudr"] #EMILY CAN YOU MAKE SURE YOU DON'T HAVE MORE THAN ONE FINAL AND ONE INITIAL FILE??? NEED TO RETHINK DUPLICATES. 
+  #For the same grant in the same grant period, you want to get the total for each PUDR and subtract semester 1 from semester 1-2. 
+  
+  final_expenditures = final_expenditures[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
+                                   by=byVars]
+  final_expenditures = dcast(final_expenditures, grant+grant_period+disease+gf_module+gf_intervention+orig_module+orig_intervention+activity_description~pudr_semester, 
+                      value.var=c('budget', 'expenditure'))
+  final_expenditures[, `budget_Semester 1-2`:=`budget_Semester 1-2`-`budget_Semester 1`]
+  final_expenditures[, `expenditure_Semester 1-2`:=`expenditure_Semester 1-2`-`expenditure_Semester 1`]
+  setnames(final_expenditures, c('budget_Semester 1-2', 'expenditure_Semester 1-2'), c('budget_Semester 2', 'expenditure_Semester 2')) #EMILY CHECK WITH DAVID THAT THIS IS THE RIGHT THING TO DO. 
+  
+  #3. Absorption
+  absorption = mapped_data[data_source=="pudr", .(grant, grant_period, gf_module, gf_intervention, budget, expenditure, pudr_semester, 
+                                                  orig_module, orig_intervention, code)]
+  absorption = dcast(absorption, grant+grant_period+gf_module+gf_intervention+code+orig_module+orig_intervention~pudr_semester, 
+                     value.var=c('budget', 'expenditure'), fun.aggregate=sum_na_rm)
+}
+
 # ----------------------------------------------
 # Write the prepped data as .csvs
 # ---------------------------------------------
 
-if (prep_files == TRUE){
-  final_budgets <- mapped_data[file_iteration == "final" & data_source == "fpm"] #Emily should we remove the expenditure column here? 
-  final_expenditures <- mapped_data[file_iteration == "final" & data_source == "pudr"]
-  
+if (prep_files){
   # Save RDS file
   saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
   saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
   saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
+  saveRDS(absorption, paste0(export_dir, "absorption.rds"))
   
-  write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"))
-  write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"))
-  write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"))
+  write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), row.names=FALSE)
+  write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
+  write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"), row.names=FALSE)
+  write.csv(absorption, paste0(export_dir, "absorption.rds"), row.names=FALSE)
 }
 
 if (prep_gos == TRUE){

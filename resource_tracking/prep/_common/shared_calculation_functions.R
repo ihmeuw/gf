@@ -65,8 +65,199 @@ sum_na_rm <- function(col){
 
 
 #--------------------------------------------------------------------------------
-# Orders a dataset to be at the quarter-level given a start and an end date. 
+# Orders a dataset to be at the quarter-level given a start and an end date. - EMILY WANT TO ADD THIS
 #--------------------------------------------------------------------------------
 
+#---------------------------------------------------------------------------------
+# Converts from euros to USD for a given year. 
+# Based off of the FGH team's currency conversion function, but with euros added 
+# (and much simpler). 
+#---------------------------------------------------------------------------------
+
+convert_eur_usd = function(dt, yearVar=NULL){
+  if (is.null(yearVar)) stop("year argument is NULL")
+  if (class(yearVar)!='character') stop("year must be a character")
+  if (!yearVar %in% names(dt)) stop("year argument is not a variable in data table")
+  
+  #Pulled out from FGH team's currency conversion function - Emily Linebarger, 5/7/19 
+  oecd_xrate = fread(paste0(j, "/Project/IRH/HIV/01_data/raw_data/xrates_oecd_121118.csv")) #This data includes 1995-2017. 
+  oecd_xrate = oecd_xrate[LOCATION == "EA19", .(TIME, Value)]
+  setnames(oecd_xrate, c('TIME','Value'), c(yearVar, 'eur_usd'))
+  oecd_xrate[, (yearVar):= as.integer(get(yearVar))]
+  
+  #Re-extracted from the OECD's website to grab 2018 as well. 
+  oecd_xrate2 = fread(paste0(code_dir, "_common/oecd_conversion_rates_2018.csv"))
+  oecd_xrate2 = oecd_xrate2[LOCATION == "EA19", .(TIME, Value)]
+  setnames(oecd_xrate2, c('TIME','Value'), c(yearVar, 'eur_usd'))
+  oecd_xrate2[, (yearVar):= as.integer(get(yearVar))]
+  
+  #Bind these two time series together. 
+  oecd_xrate = rbind(oecd_xrate, oecd_xrate2)
+  
+  #Create one more data table that has several years into the future, with the latest exchange rate available. 
+  #This is a temporary patch until more data (or a better method) becomes available! 
+  latest_rate = oecd_xrate[get(yearVar)==max(get(yearVar)), .(eur_usd)]
+  xrate_extension = data.table(year = seq(2019, 2023, by=1), eur_usd = rep(latest_rate, 5)) #Extend 5 years into the future - this should catch all of our current data. 
+  oecd_xrate = rbind(oecd_xrate, xrate_extension)
+  
+  #Round OECD exchange rates to 6 significant figures 
+  oecd_xrate[, eur_usd:=as.numeric(eur_usd)]
+  oecd_xrate[, eur_usd:=round(eur_usd, 6)]
+  
+  #Merge data 
+  converted_to_USD <- merge(dt, oecd_xrate, 
+                            by = yearVar, 
+                            all.x = T)
+  #Validate data 
+  stopifnot(nrow(converted_to_USD[is.na(yearVar)])==0)
+  stopifnot(nrow(converted_to_USD[is.na(eur_usd)])==0)
+  
+  #Convert financial variables. 
+  converted_to_USD[is.na(budget), budget:=0]
+  converted_to_USD[is.na(expenditure), expenditure:=0]
+  converted_to_USD[is.na(disbursement), disbursement:=0]
+  
+  converted_to_USD[, budget_new:=budget/eur_usd]
+  converted_to_USD[, expenditure_new:=expenditure/eur_usd]
+  converted_to_USD[, disbursement_new:=disbursement/eur_usd]
+  
+  converted_to_USD[, orig_currency:= 'EUR']
+  
+  return(converted_to_USD)
+
+}
 
 
+convert_usd_eur = function(dt, yearVar=NULL){
+  if (is.null(yearVar)) stop("year argument is NULL")
+  if (class(yearVar)!='character') stop("year must be a character")
+  if (!yearVar %in% names(dt)) stop("year argument is not a variable in data table")
+  
+  #Pulled out from FGH team's currency conversion function - Emily Linebarger, 5/7/19 
+  oecd_xrate = fread(paste0(j, "/Project/IRH/HIV/01_data/raw_data/xrates_oecd_121118.csv")) #This data includes 1995-2017. 
+  oecd_xrate = oecd_xrate[LOCATION == "EA19", .(TIME, Value)]
+  setnames(oecd_xrate, c('TIME','Value'), c(yearVar, 'eur_usd'))
+  oecd_xrate[, (yearVar):= as.integer(get(yearVar))]
+  
+  #Re-extracted from the OECD's website to grab 2018 as well. 
+  oecd_xrate2 = fread(paste0(code_dir, "_common/oecd_conversion_rates_2018.csv"))
+  oecd_xrate2 = oecd_xrate2[LOCATION == "EA19", .(TIME, Value)]
+  setnames(oecd_xrate2, c('TIME','Value'), c(yearVar, 'eur_usd'))
+  oecd_xrate2[, (yearVar):= as.integer(get(yearVar))]
+  
+  #Bind these two time series together. 
+  oecd_xrate = rbind(oecd_xrate, oecd_xrate2)
+  
+  #Create one more data table that has several years into the future, with the latest exchange rate available. 
+  #This is a temporary patch until more data (or a better method) becomes available! 
+  latest_rate = oecd_xrate[get(yearVar)==max(get(yearVar)), .(eur_usd)]
+  xrate_extension = data.table(year = seq(2019, 2023, by=1), eur_usd = rep(latest_rate, 5)) #Extend 5 years into the future - this should catch all of our current data. 
+  oecd_xrate = rbind(oecd_xrate, xrate_extension)
+  
+  #Round OECD exchange rates to 6 significant figures 
+  oecd_xrate[, eur_usd:=as.numeric(eur_usd)]
+  oecd_xrate[, eur_usd:=round(eur_usd, 6)]
+  
+  #Merge data 
+  converted_to_USD <- merge(dt, oecd_xrate, 
+                            by = yearVar, 
+                            all.x = T)
+  #Validate data 
+  stopifnot(nrow(converted_to_USD[is.na(yearVar)])==0)
+  stopifnot(nrow(converted_to_USD[is.na(eur_usd)])==0)
+  
+  #Convert financial variables. 
+  converted_to_USD[is.na(budget_new), budget_new:=0]
+  converted_to_USD[is.na(expenditure_new), expenditure_new:=0]
+  converted_to_USD[is.na(disbursement_new), disbursement_new:=0]
+  
+  converted_to_USD[, budget:=budget_new*eur_usd]
+  converted_to_USD[, expenditure:=expenditure_new*eur_usd]
+  converted_to_USD[, disbursement:=disbursement_new*eur_usd]
+  
+  converted_to_USD[, orig_currency:= 'USD']
+  
+  return(converted_to_USD)
+  
+}
+
+
+#Attempts to use FGH team's currency function - these were unsuccessful. If we can debug this function it would be better to return to it. 
+# The common function was returning all budget and expenditure values as NA.
+# Emily Linebarger 5/7/19 
+{
+  # source(paste0(j, '/Project/IRH/HIV/code/currency_conversion.R')) #FGH team's currency conversion function. 
+  # 
+  # #How to use the FGH team's currency conversion function - an example from Miranda Tao
+  # test <- data.table(iso3 = c('UGA','UGA','GTM','GTM','COD','COD'),
+  #                    year = c(2000, 2001, 2003, 2004, 2003,2004),
+  #                    currency_year = c(2000, 2001, 2003, 2004, 2003,2004),
+  #                    val1 = runif(n = 6,min = 4000, max = 8000),
+  #                    val2 = runif(n = 6, min = 300, max = 1000))
+  # 
+  # test_new_1 <- currency_conversion(data = test,
+  #                                   col.loc = 'iso3',
+  #                                   col.currency.year = 'currency_year',
+  #                                   currency = 'EUR',
+  #                                   col.value = c('val1','val2'),
+  #                                   base.year = 2018,
+  #                                   base.unit = 'USD',
+  #                                   simplify = T,
+  #                                   converter.version = 3)
+  # 
+  # `col.loc` is location column(must be iso3 code) in your data,
+  # `col.value` is value column that you want to be converted (can take multiple value columns)
+  # `currency` is the raw currency of the value you want to be converted
+  # `col.currency.year` is the column for year of the currency
+  # `base.year` is 2018 in your case
+  # `base.unit` is usd in your case
+  # data = needs_conversion 
+  # col.loc = 'loc_name'
+  # col.currency.year='year'
+  # currency='EUR'
+  # col.value=c('budget', 'expenditure')
+  # base.year=2018
+  # base.unit='USD'
+  # simplify=T
+  # converter.version=3
+  # converted_to_USD = currency_conversion(data = needs_conversion,
+  #                                        col.loc = 'loc_name',
+  #                                        col.currency.year = 'year',
+  #                                        currency = 'EUR',
+  #                                        col.value = c('budget','expenditure'),
+  #                                        base.year = 2018,
+  #                                        base.unit = 'USD',
+  #                                        simplify = T,
+  #                                        converter.version = 3)
+}
+
+
+
+#Recursively find the terminal directories within a given filepath. 
+get_dirs = function(path, list){
+  setwd(path) #Navigate to the given directory. 
+  dirs = list.dirs(path, recursive=FALSE) #List the directories in this folder, non-recursively. 
+  #If there is more than one directory, keep recursing.
+  if (length(dirs)>1){ 
+    #You want to grab the first directory name, add to a path, and keep recursing. 
+    for (next_dir in dirs){
+      list = get_dirs(next_dir, list)  
+    }
+  } else { #If there are no more directories, then add your current path to the final list and return it.  
+    return(c(list, path))
+  }
+  #If you've made it to the end, and there are no more subfolders, then return the list of terminal file paths in this folder. 
+  return(list)
+}
+
+#Once you've found a terminal directory, grab the file names that live in it, and return as a list
+get_files = function(path){
+  list = character()
+  setwd(path)
+  files = list.files()
+  for (file in files){
+    new_path = paste0(path, "/", file) 
+    list = c(list, new_path)
+  }
+  return(list)
+}

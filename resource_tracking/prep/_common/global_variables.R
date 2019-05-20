@@ -15,6 +15,9 @@ current_cod_grant_period <- rep("2018-2020", 5)
 current_uga_grants <- c('UGA-C-TASO', 'UGA-H-MoFPED', 'UGA-M-MoFPED', 'UGA-M-TASO', 'UGA-T-MoFPED')
 current_uga_grant_period <- rep("2018-2020", 5)
 
+current_sen_grants <- c('SEN-H-ANCS', 'SEN-H-CNLS', 'SEN-M-PNLP', 'SEN-Z-MOH')
+current_sen_grant_period <- rep("2018-2020", 5)
+
 #---------------------------------------------------------------------------------------------
 # Store a list of the IHME internal country codes that correspond to our project's iso codes. 
 # To be used throughout the database for consistency. 
@@ -41,5 +44,5 @@ gen_ihme_country_code = function(dt, iso_col){
 # What year do we have GOS data through? Want to make this 
 # a static variable so it can be easily updated as we receive new data
 #-----------------------------------------------------------------------------------
-gos_year = 2017
+gos_year = 2015
 
