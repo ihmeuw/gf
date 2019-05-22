@@ -5,7 +5,7 @@
 # post-processing of duplicates - compare indices in dup matrix to figure out how many that are the same are 0s (if it is all of them, we will want to remove those as "duplicates" for example)
 
 # qsub to run this script on the cluster:
-# qsub -e /ihme/scratch/users/abatzel/duplicate_fix_output/ -o /ihme/scratch/users/abatzel/duplicate_fix_output/ -cwd -l fthread=50 -l m_mem_free=50G -l h_rt=108:00:00 -P proj_pce -q long.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/update_duplicates.R
+# qsub -e /ihme/scratch/users/abatzel/duplicate_fix_output/ -o /ihme/scratch/users/abatzel/duplicate_fix_output/ -cwd -l fthread=50 -l m_mem_free=20G -l h_rt=24:00:00 -P proj_pce -q all.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/update_duplicates.R
 
 
 ## RUN ON THE CLUSTER: 
