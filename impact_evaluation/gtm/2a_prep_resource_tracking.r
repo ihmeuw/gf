@@ -10,7 +10,8 @@
 # TO-DO: 
 #Have you pulled out all the possible codes from the FGH data? 
 # Are you using the most recent file for FGH? 
-#How are we going to handle missing 2018 SICOIN data? 
+#How are we going to handle missing 2018 SICOIN data?
+# Is SICOIN data only GHE? 
 
 #------------------------------------
 
@@ -52,9 +53,14 @@ quarters[, quarter:=rep(1:4, n_years)]
   #---------------------------------
   #SICOIN DATA 
   #----------------------------------
+  sicoin = readRDS(sicoinFile) #EMILY ARE YOU SURE THIS IS ALREADY SUBSET INTO GHE??? 
   
-
-
+  #Collapse into quarters - SICOIN data is monthly. 
+  sicoin[, quarter:=quarter(start_date)]
+  sicoin[, year:=year(start_date)]
+  
+  sicoin = sicoin[, .(expenditure=sum(expenditure, na.rm=T)), by=c('year', 'quarter', 'gf_module', 
+                                                                   'gf_intervention', 'activity', 'code', 'disease')]
 
 #------------------------------------
 # Validate data 
@@ -149,6 +155,44 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
       setnames(get(col), 'other_dah', paste0('other_dah_', col))
       dah_wide = merge(dah_wide, get(col), by=c('year', 'quarter'), all=T)
     }
+    
+    #---------------------------------------------
+    # SICOIN (GHE)
+    #---------------------------------------------
+    #Make classification categories in data - first by unique codes...
+    sicoin[code=="T1_1", T1_1:=TRUE]
+    sicoin[code=="T1_2", T1_2:=TRUE]
+    sicoin[code=="T1_5", T1_5:=TRUE]
+    sicoin[code=="T1_6", T1_6:=TRUE]
+    sicoin[code=="T1_7", T1_7:=TRUE]
+    sicoin[code=="T2_1", T2_1:=TRUE]
+    sicoin[code=="T3_1", T3_1:=TRUE]
+    sicoin[code=="T3_2", T3_2:=TRUE]
+    
+    #And then for combination categories. 
+    sicoin[substr(code, 1, 2)=='R1', R1_ALL:=TRUE]
+    sicoin[substr(code, 1, 2)=='R2', R2_ALL:=TRUE]
+    sicoin[substr(code, 1, 2)=='T2', T2_ALL:=TRUE]
+    sicoin[substr(code, 1, 2)=='T3', T3_ALL:=TRUE]
+    sicoin[disease=='tb', TB_ALL:=TRUE]
+    sicoin[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
+    sicoin[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
+    
+    codes_generated = names(sicoin)[!names(sicoin)%in%c('year', 'quarter', 'module', 'intervention', 'code', 'disease', 'loc_name', 'sda_activity', 'sicoin')]
+    if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
+    
+    #Review what codes each logic condition is matching to visually. 
+    cols = c(6, 10:ncol(sicoin))
+    unique(sicoin[, cols, with=FALSE][order(code)])
+    
+    #Make summary data tables for each of these codes, and then merge them together. 
+    ghe_wide = data.table(year = integer(), quarter=integer())
+    for (col in codes_generated){
+      assign(col, sicoin[get(col)==TRUE, .(ghe=sum(expenditure, na.rm=T)),
+                            by=c('year', 'quarter')])
+      setnames(get(col), 'ghe', paste0('ghe_', col))
+      ghe_wide = merge(ghe_wide, get(col), by=c('year', 'quarter'), all=T)
+    }
   
 }
 
@@ -167,11 +211,15 @@ dah_wide[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc.
 dah_wide[, date:=year+quarter]
 dah_wide = dah_wide[, -c('year', 'quarter')]
 
+ghe_wide[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc.
+ghe_wide[, date:=year+quarter]
+ghe_wide = ghe_wide[, -c('year', 'quarter')]
+
 rt_wide <- merge(dah_wide, exp_wide, by=c('date'), all=T)
+rt_wide <- merge(rt_wide, ghe_wide, by=c('date'), all=T)
 
 #Add on GHE and OOP as control variables 
-# ghe = ghe[, .(date, ghe)]
-# rt_wide = merge(rt_wide, ghe, by='date', all.x = TRUE)
+# Add on OOP. 
 
 #Save output file
 saveRDS(rt_wide, outputFile2a)
