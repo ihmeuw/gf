@@ -4,7 +4,6 @@
 # 12/14/2018
 
 #Read in data set, and source the setup. 
-rm(list=ls())
 
 # -----------------------------------------------
 # Set up R
@@ -19,12 +18,12 @@ library(rgdal)
 library(rgeos)
 library(maptools)
 
-setwd("C:/Users/elineb/Documents/gf")
-
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j,  'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/') #Home directory
-saveDir = paste0(j, 'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pnls/')
-codeDir = "./outcome_measurement/all/cod/dhis/dhis_analysis/pnls_supplychain/"
+# setwd("C:/Users/elineb/Documents/gf")
+# 
+# j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+# dir = paste0(j,  'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/') #Home directory
+# saveDir = paste0(j, 'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pnls/')
+# codeDir = "./outcome_measurement/all/cod/dhis/dhis_analysis/pnls_supplychain/"
 
 #---------------------------------------------------------
 #Set global variables here so you can re-run for any drug. 
@@ -66,9 +65,12 @@ for (i in dates_avail){
 }
 
 # Add in a clustered level variable to make scatter plots with later. THIS NEEDS TO BE VERIFIED. 
+# CHANGE LEVEL 2 TO A STRING NAME. 
 dt[ level%in%c('health_post', 'dispensary'), level2:=2]
 dt[ level%in%c('health_center', 'reference_health_center', 'medical_center', 'clinic', 'polyclinic'), level2:=3]
 dt[ level%in%c('general_reference_hospital', 'hospital_center', 'hospital', 'secondary_hospital', 'medical_surgical_center'), level2:=4]
+
+#sUBSET TO ONE WITH ALL 12, AND THEN MAKE LEVEL 2 TO HEALTH POST, HEALTH CENTER, HOSPITAL, AND OTHER. 
 
 # ------------------------------------------------------
 # Prep some color palettes
@@ -93,9 +95,7 @@ colScale2 = scale_fill_gradient2(low="green", high="red", midpoint=0)
 #-------------------------------------
 #MAKE DRUG-SPECIFIC GRAPHS 
 #-------------------------------------
-for (i in 1:length(target_drugs)){
-  drug_id = target_drugs[i] #Pull the element ID
-  drug_name = drug_names[i] #Pull a clean name for the drug to make pretty labels
+generate_data = function(dt=dt, drug_id, drug_name){
   
   print(drug_id)
   print(drug_name)
@@ -278,7 +278,8 @@ for (i in 1:length(target_drugs)){
   scatter2[, weeks_out:=days_out/7]
   
   #---------------------------------------
-  # finale maps - categorical arv stockouts
+  # finale maps - categorical arv stockouts # ADD BOTH FREQUENCY AND DURATION - 
+  # CHECK OUT SHIFT FUNCTION WITH AUDREY. EMILY 
 
   final = dt[element_id==drug_id & stock_category=="number_of_days_stocked_out",.(days_out=sum(value, na.rm=T)) , by=.(org_unit_id, year, id) ]
   final = final[ ,.(org_unit_id=length(unique(org_unit_id))), by=.(days_out, year, id)]
@@ -433,9 +434,10 @@ for (i in 1:length(target_drugs)){
     
     
   }
+}
   
   #-------------------------------------------------------
   # Source the visualization code 
   #-------------------------------------------------------
-  source(paste0(codeDir, "3_pnls_supplychain_visualize.R"))
-}
+  # source(paste0(codeDir, "3_pnls_supplychain_visualize.R"))
+
