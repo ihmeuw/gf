@@ -20,7 +20,7 @@
 # Copy shell script into a qlogin session to open an IDE
 # request at least 10 slots for extractions 
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 
+# sh /ihme/code/jpy_rstudio/jpy_rstudio_qsub_script.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -l m_mem_free=4G -l fthread=2 -P proj_pce -q all -t rstudio -l archive=TRUE -l h_rt=72:00:00
 #---------------------------
 # Set up R
 rm(list=ls())
@@ -139,6 +139,9 @@ end_date = as.Date(end_date)
 
 dates = seq(start_date,end_date, by = 'month')
 
+# NOTE: make sure there is an "intermediate_data" folder within the data set folder to save the data too.  I have set older versions to be "intermediate_data_archive"
+# and then created a new "intermediate_data" folder, otherwise it will still work but will overwrite old files (maybe this is okay because we have the combined file from intermediate ones still?)
+# TO DO: someday will make this all happen through the code...
 # EXTRACTION LOOP-----------------
 for (i in 1:((length(dates))-1) ){
   
@@ -165,7 +168,7 @@ for (i in 1:((length(dates))-1) ){
   
   # save intermediate data - 1st iteration
   extracted_data$download_number = 1
-  saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', 'base_0', save_month_start, '_', 
+  saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', set_name,'_0', save_month_start, '_', 
                                  save_year_start, '_0', save_month_end, '_', save_year_end, '_first_download.rds'))
   
   
