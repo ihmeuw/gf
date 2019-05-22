@@ -20,7 +20,7 @@
 # Copy shell script into a qlogin session to open an IDE
 # request at least 10 slots for extractions 
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 
+# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 20 
 #---------------------------
 # Set up R
 rm(list=ls())
@@ -57,19 +57,19 @@ source(paste0(dir, 'code/dhis_extracting_functions.R'))
 
 # select the start year and end year for the download
 start_year = '2018'
-end_year = '2019'
+end_year = '2018'
 start_month = '01'
-end_month = '02' # start month is inclusive, end month is exclusive
+end_month = '03' # start month is inclusive, end month is exclusive
 
 # change the update year to before the data begins
 update_year = '2009'
 
 #identify the data set(s) you want to download by number (list below)
-set = 24
+set = 29
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'pati'
+set_name = 'pnls'
 
 #---------------------------
 # available data sets by number: 
@@ -119,6 +119,7 @@ password = 'Snisrdcongo1'
 # other meta data is used for the merge 
 
 data_sets = readRDS(paste0(dir, 'meta_data/data_sets.rds'))
+org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
 
 #-----------------------------------------------
 
@@ -142,8 +143,6 @@ dates = seq(start_date,end_date, by = 'month')
 # EXTRACTION LOOP-----------------
 for (i in 1:((length(dates))-1) ){
   
-  org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
-  
   start_current_loop = dates[i]
   end_current_loop = dates[i+1]
   
@@ -165,7 +164,7 @@ for (i in 1:((length(dates))-1) ){
   
   # save intermediate data - 1st iteration
   extracted_data$download_number = 1
-  saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', 'base_0', save_month_start, '_', 
+  saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', set_name, '_0', save_month_start, '_', 
                                  save_year_start, '_0', save_month_end, '_', save_year_end, '_first_download.rds'))
   
   
