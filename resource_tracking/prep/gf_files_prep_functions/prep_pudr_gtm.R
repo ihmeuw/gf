@@ -138,7 +138,7 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     
     #Drop extra rows that don't have module specified, and drop title row
     gf_data = gf_data[!module=="Seleccione…", ]
-    gf_data = gf_data[!module=="Macrocategoría"]
+    gf_data = gf_data[!module=="Macrocategoría"|module=="macrocategoria" | module=="Macrocategoria"]
     
     #Make budget and expenditure numeric
     gf_data[, budget:=as.numeric(budget)]
@@ -195,6 +195,11 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     
     budget_dataset = copy(gf_data)
   }
+  
+  #-----------------------------------------------------------
+  # Drop out unneeded rows 
+  #-----------------------------------------------------------
+  budget_dataset = budget_dataset[!grep("Macrocategor", module)]
   
   #-----------------------------------------------------------
   # Return prepped data

@@ -1,7 +1,8 @@
 # ----------------------------------------------
-# Irena Chen
+# AUTHOR: Emily Linebarger, based on code by Irena Chem
+#DATE: Written Nov. 2017, modified May 2019
 #
-# 11/2/2017
+# 
 # Template for prepping SICOIN detailed data (most of the GHE data is formatted like this)
 # Inputs:
 # inFile - name of the file to be prepped
@@ -13,7 +14,11 @@
 # ----------------------------------------------
 
 # start function
-prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
+prep_detailed_sicoin = function(inFile) {
+  
+  #Inputs for debugging
+  # inFile = paste0(sicoinDir, file_list$file_path[i], file_list$file_name[i])
+
   # --------------------
   # Test the inputs
   if (class(inFile)!='character') stop('Error: inFile argument must be a string!')
@@ -23,80 +28,129 @@ prep_detailed_sicoin = function(inFile, start_date, disease, period, source) {
   
   # Load/prep data
   gf_data <- data.table(read_excel(inFile))
-  ## remove empty columns 
-  gf_data<- Filter(function(x)!all(is.na(x)), gf_data)
-  # ----------------------------------------------
-  if(source=="ghe"){
-    if(length(grep("DONACIONES", gf_data$X__12))==0){
-      if(year(start_date)==2005 & month(start_date)==11){
-        gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__13):.N),]
-      } else {
-        gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):.N),]
-      }
-    } else if(length(grep("INGRESOS CORRIENTES", gf_data$X__12)) !=0){
-      gf_data <- gf_data[c(grep("INGRESOS CORRIENTES", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
-    } else {
-      gf_data <- gf_data[c(grep("RECURSOS DEL TESORO", gf_data$X__12):grep("DONACIONES", gf_data$X__12)),]
-    }
   
-    ## grab loc_id: 
-    gf_data$X__3 <- na.locf(gf_data$X__3, na.rm=FALSE) #admin1 code
-    gf_data$X__4 <- na.locf(gf_data$X__4, na.rm=FALSE) ##admin2 code
-    gf_data$X__14 <- na.locf(gf_data$X__14, na.rm=FALSE) ##muni name
-    # remove rows where cost_categories are missing values
-    gf_data <- na.omit(gf_data, cols="X__15")
-    # ----------------------------------------------
-    ## Code to aggregate into a dataset 
-    ## now get region + budgeted expenses 
-    if(period==365){
-      budget_dataset <- gf_data[, c("X__3","X__4","X__14","X__15", "X__22", "X__29"), with=FALSE]
-    } else {
-      budget_dataset <- gf_data[, c("X__3","X__4","X__14","X__15", "X__27", "X__29"), with=FALSE]
+  # ----------------------------------------------
+  #Need to get - location out
+  
+  #---------------------------------------------------
+  # 1. Subset columns 
+  #---------------------------------------------------
+  #First, find the row that has the names in it. 
+  description_col = grep("descripcion", tolower(gf_data)) #We don't actually save this one but it helps us get the columns we need. 
+  stopifnot(length(description_col)==1)
+  department_col = description_col + 2 #These 3 columns are shifted over one box. 
+  municip_col = description_col + 3
+  activity_col = description_col + 4
+  
+  budget_col = grep("asignado", tolower(gf_data))
+  modified_col = grep("modificado", tolower(gf_data)) #We actually want the budget column between 'asignado' and 'modificado' that has an activity associated with it. 
+  stopifnot(length(budget_col)==1 & length(modified_col)==1)
+  budget_cols = budget_col:modified_col
+  
+  expenditure_col = grep("devengado", tolower(gf_data))
+  paid_col = grep("pagado", tolower(gf_data))
+  stopifnot(length(expenditure_col)==1 & length(paid_col)==1)
+  expenditure_cols = expenditure_col:paid_col
+  
+  subset1 = c(department_col, municip_col, activity_col, budget_cols, expenditure_cols)
+  gf_data = gf_data[, subset1, with=FALSE]
+  names(gf_data)[1:3] <- c('department', 'municipality', 'activity') #Set names. 
+  
+  #Do a quick drop of unneeded rows - this makes the next subset easier. 
+  #Drop the rows you don't need at the very bottom. 
+  drop_text = "otros recursos|donaciones|prestamos externos|colocaciones internas|ingresos corrientes   government resources|ingresos propios  government resources"
+  drop_col = grep(drop_text, tolower(gf_data)) #VERIFY WITH DAVID - ARE WE OKAY TO DROP THESE SECTIONS? 
+  if (length(drop_col)!=0){ # (the drop_col changes from file to file, based on the section staggering, so needed to set this dynamically)
+    drop_rows = integer()
+    for (col in drop_col){
+      drop_rows = c(drop_rows, grep(drop_text, tolower(gf_data[[col]])))
     }
-    
-    names(budget_dataset) <- c("adm1","adm2", "loc_name", "sda_orig", "budget", "disbursement")
-   
-    ##enforce variable classes 
-    if (!is.numeric(budget_dataset$budget)) budget_dataset[,budget:=as.numeric(budget)]
-    if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
-    # government resources are split by income (taxes) and "treasury" 
-    #we don't care, so sum by just the municipality and SDA: 
-    
-    budget_dataset <- budget_dataset[, list(budget=sum(na.omit(budget)), disbursement=sum(na.omit(disbursement))),
-                                   by=c("adm1","adm2", "loc_name", "sda_orig")]
-  } else if (source=="gf"&period==365) {
-    colnames(gf_data)[3] <- "loc_id"
-    gf_data$X__11 <- na.locf(gf_data$X__11, na.rm=FALSE) ##fill in NAs with the previous row value 
-    gf_data$loc_id <- na.locf(gf_data$loc_id, na.rm=FALSE)
-    gf_data <- na.omit(gf_data, cols="X__10")
-    budget_dataset <- gf_data[, c("loc_id", "X__10", "X__11", "X__19", "X__26"), with=FALSE]
-    # remove rows where cost_categories are missing values
-    names(budget_dataset) <- c("loc_id", "sda_orig", "loc_name", "budget", "disbursement")
-    budget_dataset <- na.omit(budget_dataset, cols="loc_name")
-    loc_names <- unique(budget_dataset$loc_name)
-    budget_dataset <- budget_dataset[!budget_dataset$sda_orig%in%loc_names]
+    if (verbose){
+      print("Dropping the following rows from data:")
+      print(gf_data[drop_rows])
+    }
+    # if (length(drop_rows)> 3) stop("There are more than three extraneous rows dropping - review logic condition.")
+    gf_data = gf_data[!drop_rows]
   }
-  toMatch <- c("government", "recursos", "resources", "multire", "total")
-  budget_dataset <- budget_dataset[ !grepl(paste(toMatch, collapse="|"), tolower(budget_dataset$loc_name)),]
-# ----------------------------------------------
-
-  ## Create other variables 
-  budget_dataset$financing_source <- source
-  budget_dataset$start_date <- start_date
-  budget_dataset$period <- period
-  budget_dataset$expenditure <- 0 ## change this once we figure out where exp data is
-  budget_dataset$disease <- disease
-  # ----------------------------------------------
   
-  # Enforce variable classes again 
-  if (!is.numeric(budget_dataset$budget)) budget_dataset[,budget:=as.numeric(budget)]
-  if (!is.numeric(budget_dataset$disbursement)) budget_dataset[,disbursement:=as.numeric(disbursement)]
-  if (!is.numeric(budget_dataset$expenditure)) budget_dataset[,expenditure:=as.numeric(expenditure)]
-
+  #Now, find the actual budget and expenditure columns - the ones where activity description has an amount associated with it. 
+  # This makes sure you don't actually include a total row! 
+  budget_start = grep("asignado", tolower(gf_data)) #First, reset your column indices after subsetting above. 
+  exp_start = grep("devengado", tolower(gf_data))
+  stopifnot(length(budget_start)==1 & length(exp_start)==1)
+  
+  #Find the row where activity description is not NA, and make sure you have a budget and expenditure amount associated with it. 
+  activities = gf_data[!is.na(activity)]
+  # *You want the first column after the 'budget start' that doesn't have NAs to represent the final budget, and the same for expenditure.
+  budget_cols = budget_start:(exp_start-1)
+  exp_cols = exp_start:ncol(activities)
+  
+  #Find the first column in the budget section that doesn't have "NA's" as values. 
+  budget_col = budget_start
+  while(anyNA(activities[[budget_col]]) & budget_col%in%budget_cols){ #Only check within a certain subset! 
+    budget_col = budget_col + 1
+  }
+  #Find the first column in the expenditure section that doesn't have "NA's" as values. 
+  exp_col = exp_start
+  while(anyNA(activities[[exp_col]]) & exp_col%in%exp_cols){ #Only check within a certain subset! 
+    exp_col = exp_col + 1
+  }
+  
+  stopifnot(length(budget_col)==1 & length(exp_col)==1)
+  
+  #Subset to the correct budget and expenditure columns. 
+  subset2 = c(1, 2, 3, budget_col, exp_col)
+  gf_data = gf_data[, subset2, with=FALSE]
+  
+  names(gf_data)[4:5] = c('budget', 'expenditure')
+  
+  #----------------------------------------------------------
+  # 2. Fill in the rows, and only keep the rows you need. 
+  #---------------------------------------------------------
+  #Fill in the columns so the data is not staggered. 
+  #First, set a 'start point' in the first row 
+  check_first_row = is.na(gf_data[1])
+  if (FALSE%in%check_first_row){
+    stop("Start point creates an error - review values in first row.")
+  }
+  #Fill the staggered columns using the na.locf function 
+  gf_data[1, department:="BLANK"]
+  gf_data[, department_new:=na.locf(department)]
+  
+  gf_data[1, municipality:="BLANK"]
+  gf_data[, municipality_new:=na.locf(municipality)]
+  
+  gf_data[1, activity:="BLANK"]
+  gf_data[, activity_new:=na.locf(activity)]
+  
+  #Subset rows 
+  gf_data = gf_data[!is.na(budget) | !is.na(expenditure), .(department_new, municipality_new, activity_new, budget, expenditure)]
+  names(gf_data) = c('department', 'municipality', 'activity', 'budget', 'expenditure')
+  
+  #Drop title row with "blanks" in categories - this row has nothing for budget/expenditure 
+  gf_data = gf_data[!department=='BLANK']
+  
   # ----------------------------------------------
+  # 3. Data quality checks 
+  # ----------------------------------------------
+  gf_data[, budget:=as.numeric(budget)]
+  gf_data[, expenditure:=as.numeric(expenditure)]
+  
+  #Flag if budget or expenditure total to 0. 
+  budget_check = gf_data[, sum(budget)]
+  exp_check = gf_data[, sum(expenditure)]
+  if(budget_check==0) stop("Budget total 0 - review file prep.")
+  if (verbose & exp_check==0){
+    print("Expenditure total is 0 - this may not signify an error, but review file prep.")
+  }
+  
+  # Flag if there is not both budget and expenditure for a single line item. 
+  na_check = gf_data[(is.na(budget) & !is.na(expenditure)) | (!is.na(budget) & is.na(expenditure))]
+  if (nrow(na_check)!=0) stop("Rows have NAs for budget but values for expenditure, or vice versa. Review file prep.")
   
   # return prepped data
-  return(budget_dataset)
+  stopifnot(names(gf_data)%in%c('department', 'municipality', 'activity', 'budget', 'expenditure'))
+  return(gf_data)
   
 }
 

@@ -388,7 +388,7 @@ error2 = unspecified[code%in%other_codes] #These were reviewed by hand by EKL 5/
 # Merge mapped codes to final mappings 
 #--------------------------------------------------------------------------------
     module_map = module_map[, .(code, module, intervention, coefficient, disease)] #Ok to here. 
-    all_interventions = all_interventions[, .(gf_module, gf_intervention, code)] #Drop out French, Spanish, and the abbreviations for now. 
+    all_interventions = unique(all_interventions[, .(gf_module, gf_intervention, code)]) #Drop out French, Spanish, and the abbreviations for now. 
     module_map = merge(module_map, all_interventions, by='code', all.x = TRUE)
     
     stopifnot(nrow(module_map[is.na(gf_module)])==0) 
@@ -400,9 +400,9 @@ error2 = unspecified[code%in%other_codes] #These were reviewed by hand by EKL 5/
     nrow(module_map)
     module_map = unique(module_map)
     nrow(module_map)
-    duplicates = module_map[duplicated(module_map, by=c('module', 'intervention', 'disease'))]
-    duplicates = duplicates[, .(module, intervention, disease, coefficient)]
-    duplicates = merge(duplicates, module_map[, .(module, intervention, disease, coefficient)], by=c(keyVars, 'coefficient'))
+    duplicates = module_map[duplicated(module_map, by=c('module', 'intervention', 'disease', 'code'))]
+    duplicates = duplicates[, .(module, intervention, disease, coefficient, code)]
+    duplicates = merge(duplicates, module_map[, .(module, intervention, disease, coefficient, code)], by=c(keyVars, 'coefficient', 'code'))
     duplicates[, coeff_sum:=sum(coefficient), by=keyVars]
     duplicates = duplicates[round(coeff_sum, 3)!=1.000]
     duplicates = duplicates[order(module, intervention, disease)]

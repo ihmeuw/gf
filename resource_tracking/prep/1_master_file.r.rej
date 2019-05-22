@@ -1,0 +1,11 @@
+diff a/resource_tracking/prep/1_master_file.r b/resource_tracking/prep/1_master_file.r	(rejected hunks)
+@@ -34,7 +34,9 @@
+  # STEP 2: GF FILES AND GOS DATA 
+  # ----------------------------------------------
+  if (prep_files == TRUE){
+++<<<<<<< Updated upstream
+ +  country = "uga" #Change to the country you want to update. 
+++=======
+    country = "sen" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+ +>>>>>>> Stashed changes
+    master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")

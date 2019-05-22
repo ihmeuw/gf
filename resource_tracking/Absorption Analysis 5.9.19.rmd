@@ -1,0 +1,87 @@
+---
+title: "2018 Absorption Analysis"
+author: "IHME PCE"
+date: "May 9, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+# rm(list=ls())
+library(data.table)
+library(knitr)
+library(ggplot2)
+
+#Need to check with David if we want to produce the same figures as we did for Synthesis. 
+expenditures = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures.rds")
+pudrs = expenditures[data_source=='pudr']
+all_interventions = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds") #Pull in to get abbrev module. 
+all_interventions = all_interventions[, .(module_eng, abbrev_mod_eng)] 
+names(all_interventions) = c('gf_module', 'abbrev_mod')
+all_interventions = unique(all_interventions)
+all_interventions = all_interventions[!is.na(abbrev_mod)]
+
+pudrs = merge(pudrs, all_interventions, by='gf_module', all.x=T)
+
+#Format variables nicely 
+#Disease 
+pudrs[disease=='hiv', disease:='HIV']
+pudrs[disease=='tb', disease:='TB']
+pudrs[disease=='malaria', disease:='Malaria']
+pudrs[disease=='rssh', disease:='RSSH']
+
+#Country 
+pudrs[country=="Congo (Democratic Republic)", country:='DRC']
+
+#Fix modules 
+pudrs[abbrev_mod == "Prevention programs for general pop.", abbrev_mod:="Prevention general pop."]
+
+#Create a "semester" variable to aggregate across 
+pudrs[quarter(start_date)%in%c(1, 2), semester:=1]
+pudrs[quarter(start_date)%in%c(3, 4), semester:=2]
+pudrs[, semester:=factor(semester, levels=c(1, 2), labels=c('Q1-Q2', 'Q3-Q4'))]
+
+#Format the 'file iteration' variable 
+pudrs[, file_iteration:=factor(file_iteration, levels=c('initial', 'final'), labels=c('Initial PUDR (Q1-Q2 2018)', 'Final PUDR (Q1-Q4 2018)'))]
+
+#but let’s do average absorption by country, absorption by grant and also broken down into modules… and what else we did for synthesis? 
+#First, sum the budget and expenditure for the entire country, and then calculate absorption. 
+absorption_by_country = pudrs[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('country', 'file_iteration', 'year')]
+absorption_by_country[, absorption:=(expenditure/budget)*100]
+
+absorption_by_module = pudrs[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'file_iteration', 'year', 'disease')]
+absorption_by_module[, absorption:=(expenditure/budget)*100]
+
+```
+
+## Absorption analysis for current PUDRs in PCE countries
+
+# Average absorption by country and version of PUDR
+*Using most recent PUDR data*
+```{r, echo=FALSE, warning=FALSE}
+absorption_by_country[, absorption:=round(absorption, 2)]
+final = absorption_by_country[, .(file_iteration, country, absorption)]
+final = dcast(final, file_iteration~country, fun.aggregate=sum, value.var="absorption") #It shouldn't matter what function you use here because the observations are unique. 
+setnames(final, 'file_iteration', 'PUDR Version')
+kable(final, caption = "Average absorption by country (%)")
+```
+
+# Average absorption by module
+*Numbers shown are averages across all IHME PCE countries*
+
+```{r echo=FALSE, warning=FALSE}
+absorption_by_module = absorption_by_module[order(disease)]
+diseases = unique(pudrs$disease)
+for (var in diseases){
+  g4 = ggplot(absorption_by_module[disease==var], aes(x=reorder(abbrev_mod, absorption), y=absorption, fill=file_iteration)) + 
+    geom_bar(stat="identity", position="dodge") + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, hjust=1), legend.title=element_blank(), plot.margin = unit(c(1, 1, 1, 1.5), "cm")) + 
+    scale_fill_manual(breaks=c("Initial PUDR (Q1-Q2 2018)", "Final PUDR (Q1-Q4 2018)"), values=c("chartreuse2", "chartreuse4"), labels=c("Initial PUDR", "Final PUDR")) + 
+    # coord_flip() + 
+    # facet_wrap(~file_iteration) + 
+    labs(x="Module", y="Absorption rate (%)", title=paste0("Absorption rate by module for 2018\n ", var, " PUDRs"), 
+         caption="*Not all PUDRs have been received for this period")
+  g4
+  
+}
+```
