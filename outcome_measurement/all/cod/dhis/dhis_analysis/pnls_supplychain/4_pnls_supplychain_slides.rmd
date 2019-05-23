@@ -24,7 +24,7 @@ setwd(repo_root)
 source('./core/standardizeDPSNames.R')
 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j,  'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/') #Home directory
+dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/') #Home directory
 saveDir = paste0(j, 'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pnls/')
 codeDir = paste0(repo_root, "outcome_measurement/all/cod/dhis/dhis_analysis/pnls_supplychain/")
 
@@ -96,16 +96,16 @@ source(paste0(codeDir, "4_pnls_supplychain_graph_functions.r"))
 
 ## Reporting Completeness
 
-```{r reporting1, echo=FALSE}
+```{r reporting1, echo=FALSE, warning=FALSE}
 # Run for Determine test kits, but could also run for all drugs? 
-g1 = gen_report1(dt, drugs[call=="DETERMINE", drug_id], drugs[call=="DETERMINE", drug_name], full_date_range)
-g1
+plot = gen_report1(dt, drugs[call=="DETERMINE", drug_id], drugs[call=="DETERMINE", drug_name], full_date_range)
+plot
 ```
 
 ## Reporting Completeness
-```{r reporting2, echo=FALSE}
-g2 = gen_report2(dt, drugs[call=="DETERMINE", drug_id], drugs[call=="DETERMINE", drug_name], full_date_range)
-g2
+```{r reporting2, echo=FALSE, warning=FALSE}
+plot = gen_report2(dt, drugs[call=="DETERMINE", drug_id], drugs[call=="DETERMINE", drug_name], full_date_range)
+plot
 ```
 
 ## Reporting completeness
@@ -113,14 +113,17 @@ g2
 GRAPH TO GO HERE 
 
 ## Stockouts of first-line test kits 
-```{r stockout1, echo=FALSE}
-g3 = gen_stockout1(dt, drugs[call=="DETERMINE", drug_id], drugs[call=="DETERMINE", drug_name], full_date_range)
-g3
+```{r stockout1, echo=FALSE, warning=FALSE}
+plot = gen_stockout1(dt, drugs[call=="DETERMINE", drug_id], drugs[call=="DETERMINE", drug_name])
+plot
 ```
 
 ## Percentage of facilities stocked out of first-line test kits
 
-GRAPH TO GO HERE
+```{r stockout1, echo=FALSE, warning=FALSE}
+plot = gen_stockout2(dt, drugs[call=="DETERMINE", drug_id], drugs[call=="DETERMINE", drug_name])
+plot
+```
 
 ## Stockouts of first-line test kits, controlled for reporting
 
