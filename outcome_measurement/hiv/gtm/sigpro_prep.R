@@ -1,6 +1,6 @@
 # ----------------------------------------------
 # Caitlin O'Brien- Carelli
-# Format IGSS data sets 
+# Format SIGPRO October Transfer
 
 # ----------------------------------------------
 
@@ -212,10 +212,9 @@ saveRDS(f2, paste0(dir, 'prepped/', files[[2]], '_prepped.RDS'))
 f3 = f3[ ,.(pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  post_test_completed=postPruebaVIH, informed_of_result=conoceResultadoVIH, informed_of_sif_result=conoceResultadoSif, 
             condoms=condonesMasculinos, female_condoms=condonesFemeninos, flavored_condoms=condonesSabores, lube_packets=lubriSachet, lube_tubes=lubriTubo ,
             pop=grupo, subpop=subgrupo, result=resultadoVIH, pqExtendido, sr_code=codejecutor,            
-            activity=tipoActividad, sif_result=resultadoSif, unmovil, date=fechareal,  department=departamento, muni=municipio, disease=tema)]
+            activity=tipoActividad, sif_result=resultadoSif, unmovil, date=fechareal,  department=departamento, muni=municipio, theme=tema)]
 
 # put the columns into lower case for reformatting
-
 f3 = f3[ ,lapply(.SD, tolower), .SDcols=c(1:length(f3))]
 
 #----------------------------
@@ -238,10 +237,11 @@ f3[ , informed_of_sif_result:=(informed_of_sif_result=='s')]
 f3[ , pqExtendido:=(pqExtendido=='s')]
 
 # format and create a marker for positive tests
-f2[result=='reactivo', result:='reactive']
-f2[result=='no reactivo', result:='nonreactive']
-f2[result=='indeterminado', result:='indeterminate']
-f2[ , hiv_pos:=(result=='reactive')]
+f3[result=='reactivo', result:='reactive']
+f3[result=='no reactivo', result:='nonreactive']
+f3[result=='indeterminado', result:='indeterminate']
+f3[result=='prueba no realizada', result:='test not done']
+f3[ , hiv_pos:=(result=='reactive')]
 
 #-------------------------------
 # create a gender category
@@ -264,16 +264,76 @@ f3[ , set:=files[[3]]]
 # only a single data entry error
 f3[ , flag:=(2016 < year(date))]
 
-# drop unecessary variables
-f3[ ,c('month', 'year')]
-
 #--------------------------
 # save the file 
 
 saveRDS(f3, paste0(dir, 'prepped/', files[[3]], '_prepped.RDS'))
+
+#-------------------------------------------------------------
+# format f4
+
+# keep and rename these variables
+# month and year show no association with date - multiple years of data but only one code
+f4 = f4[ ,.(referral=refervih, pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  post_test_completed=postPruebaVIH, 
+            informed_of_result=conoceResultadoVIH, informed_of_sif_result=conoceResultadoSif, 
+            condoms=condonesMasculinos, female_condoms=condonesFemeninos, flavored_condoms=condonesSabores, lube_packets=lubriSachet, lube_tubes=lubriTubo ,
+            pop=grupo, subpop=subgrupo, result=resultadoVIH, sr_code=codejecutor,            
+            activity=tipoActividad, sif_result=resultadoSif, unmovil, date=fechareal,  department=departamento, muni=municipio, theme=tema)]
+
+# put the columns into lower case for reformatting
+f4 = f4[ ,lapply(.SD, tolower), .SDcols=c(1:length(f4))]
+
+#----------------------------
+# format the dates 
+f4[date=='null', date:=NA]
+f4[ ,date:=as.Date(as.numeric(date), origin='1899-12-30')]
+
+#----------------------------
+# match the sr codes
+
+f4[ ,sr_code:=gsub("nac0", "", sr_code)]
+
+#-------------------------------
+# convert yes and no to a logical 
+
+f4[ , pre_test_completed:=(pre_test_completed=='s')]
+f4[ , test_completed:=(test_completed=='s')]
+f4[ , post_test_completed:=(post_test_completed=='s')]
+f4[ , informed_of_result:=(informed_of_result=='s')]
+f4[ , informed_of_sif_result:=(informed_of_sif_result=='s')]
+
+# format and create a marker for positive tests
+f4[result=='reactivo', result:='reactive']
+f4[result=='no reactivo', result:='nonreactive']
+f4[result=='indeterminado', result:='indeterminate']
+f4[result=='prueba no realizada', result:='test not done']
+
+f4[ , hiv_pos:=(result=='reactive')]
+
+#-------------------------------
+# create a gender category
+
+# no category for PV
+f4[pop=='hsh', gender:='Male']
+f4[pop=='trans', gender:='Trans']
+f4[pop=='mts', gender:='Female']
+
+# translate populations 
+f4[pop=='hsh', pop:='msm']
+f4[pop=='mts', pop:='fsw']
+f4[subpop=='trans privadas de libertad', pop:='prisoners']
+
 #--------------------------
-f4 = data.table(read.xlsx(files[[4]], sheet=2))
+# label the data set
+f4[ , set:=files[[4]]]
 
+# only a single data entry error
+f4[, flag:=(is.na(date))]
 
+#--------------------------
+# save the file 
 
+saveRDS(f4, paste0(dir, 'prepped/', files[[4]], '_prepped.RDS'))
 
+#--------------------------
+#-------------------------------------------------------------

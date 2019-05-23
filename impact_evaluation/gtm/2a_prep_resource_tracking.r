@@ -178,7 +178,7 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     sicoin[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
     sicoin[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
     
-    codes_generated = names(sicoin)[!names(sicoin)%in%c('year', 'quarter', 'module', 'intervention', 'code', 'disease', 'loc_name', 'sda_activity', 'sicoin')]
+    codes_generated = names(sicoin)[!names(sicoin)%in%c('year', 'quarter', 'gf_module', 'gf_intervention', 'activity', 'expenditure', 'code', 'disease')]
     if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
     
     #Review what codes each logic condition is matching to visually. 

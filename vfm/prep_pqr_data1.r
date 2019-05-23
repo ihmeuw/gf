@@ -19,15 +19,10 @@ pqr = fread("download_4.4.19/PQR_ExternalReportingView.csv", stringsAsFactors = 
 #-------------------------------------------------------------------
 # Drop columns that aren't needed and rename 
 #-------------------------------------------------------------------
-<<<<<<< HEAD
 names = names(pqr)
-
-#Try to create a small subset of usable data, that just has our countries and a few key variables. 
-key_cols = c("Country Name", "Grant Name", "Grant Start Date", "Grant End Date", "IP Start Date", "IP End Date", "Product Name (EN)", "Product Code", "Strength Dosage Form (EN)", "Strength",
-             "Supplier", "Product Category", "Treatment Dose", "Treatment Frequency",  "Suom Name (EN)", "Pack quantity", "Product pack (USD)", "Some or All of Goods Prepaid", "Prod Cat Filter" )
-supply_chain_cols = names[grep("year|month|week|day|date", tolower(names))] #Look at supply chain lags. 
-=======
 sort(names(pqr))
+
+#Do we have any more granular information than the 
 
 #Try to create a small subset of usable data, that just has our countries and a few key variables. 
 key_cols = c("Country Name", "Grant Name", "Grant Start Date", "Grant End Date", "IP Start Date", "IP End Date", "Actual Delivery Date", "Actual Delivery Month Name", 
@@ -36,15 +31,15 @@ key_cols = c("Country Name", "Grant Name", "Grant Start Date", "Grant End Date",
              "Total Product Cost (USD)", "Total Tariff Cost (USD)", "Treatment Dose", "Treatment Frequency", "Unit Cost (USD)", "Unit Cost : Avg Diag",
              "Unit Cost : Avg detail", "Unit Cost : Avg Diag old", "Purchase Order Date", "Purchase Order Month Name", "Purchase Order Month", "Purchase Order Quarter", "Purchase Order Week", "Purchase Order Year", "Purchase Order Latest Approval Date",                        
              "Purchase Order Original Approval Date", "Scheduled Delivery Date", "Scheduled Delivery Month Name", "Scheduled Delivery Month", "Scheduled Delivery Quarter", 
-             "Scheduled Delivery Week", "Scheduled Delivery Year", "Product Category")
->>>>>>> d774e68df72e187518b44300a6f54c51ced31b13
+             "Scheduled Delivery Week", "Scheduled Delivery Year", "Product Category", "PR Name", "Prtype", "PR Type Code", "PR Type Name", "PR Sub Type Name",
+             "PR Sub Type Code", "Sub Continent Name", "Sub National Name", "Suom Name")
 
 #Key cols - country, disease, product, unit, reference price (pull everything related), and pack size, and 
 #Unit, mean, median, and international reference price. 
 cost_cols = names[grep("cost|avg|median|price", tolower(names))]
 cost_cols = c(cost_cols, c("Supplier/Agent/Manufacturer/Intermediatry", "Manufacturer"))
 
-all_cols = c(key_cols, supply_chain_cols, cost_cols)
+all_cols = c(key_cols, cost_cols)
 names[!names%in%all_cols] #See what you haven't categorized yet. 
 
 countries = c("Congo (Democratic Republic)", "Senegal", "Uganda", "Guatemala", "Mozambique", "Sudan", "Myanmar", "Cambodia") #Keep EHG's countries in here as well. 
@@ -57,6 +52,7 @@ subset = subset[, -lc_cols, with = FALSE]
 
 #Review duplicated variable names 
 dup_names = names(subset)[duplicated(names(subset))]
+dup_names
 
 #An ugly way to do this- just force drop these duplicate names 
 subset = subset[, -dup_names, with=FALSE]
@@ -70,6 +66,46 @@ new_names = gsub(")", "", new_names)
 new_names = gsub(" ", "_", new_names)
 
 setnames(subset, old_names, new_names)
+
+#-------------------------------------------------------------------
+# Format dates correctly 
+#-------------------------------------------------------------------
+date_vars = c('grant_start_date', 'grant_end_date', 'ip_start_date', 'ip_end_date', 'actual_delivery_date', 'purchase_order_date', 
+              'scheduled_delivery_date')
+for (v in date_vars){
+  subset[, (v):=substr(get(v), 1, 11)]
+  subset[, (v):=as.Date(get(v), format="%m/%d/%Y")]
+}
+
+#-------------------------------------------------------------------
+# Pull a 'grant disease' variable that can be used to flag 
+# drug types, along with product_category. 
+#-------------------------------------------------------------------
+subset[, disease_split:=strsplit(grant_name, "-")]
+potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
+
+for (i in 1:nrow(subset)){
+  if (subset$disease_split[[i]][2]%in%potential_diseases){
+    subset[i, grant_disease:=sapply(disease_split, "[", 2 )]
+  } else if (subset$disease_split[[i]][3]%in%potential_diseases){
+    subset[i, grant_disease:=sapply(disease_split, "[", 3 )]
+  } else if (subset$disease_split[[i]][4]%in%potential_diseases){
+    subset[i, grant_disease:=sapply(disease_split, "[", 4 )]
+  }
+}
+
+subset[, disease_split:=NULL]
+
+unique(subset[!grant_disease%in%potential_diseases, .(grant_name, grant_disease)]) #Visual check that these all make sense. 
+
+subset[grant_disease=='C', grant_disease:='hiv/tb']
+subset[grant_disease=='H', grant_disease:='hiv']
+subset[grant_disease=='T', grant_disease:='tb']
+subset[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
+subset[grant_disease=='M', grant_disease:='malaria']
+subset[grant_disease=='Z' & grant_name=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
+
+stopifnot(unique(subset$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
 #-------------------------------------------------------------------
 # Save the products you care about for each disease
 #-------------------------------------------------------------------
@@ -92,15 +128,6 @@ unique(david2[, .(prod_cat_filter, product_name_en)][order(prod_cat_filter)])
 #Output these datasets
 saveRDS(david1, paste0(dir, "/drc_mal_pqr_subset1.rds"))
 saveRDS(david2, paste0(dir, "/drc_mal_pqr_subset2.rds"))
-
-#Reset names. 
-# old_names = names(subset)
-# new_names = tolower(old_names)
-# new_names = gsub("\\(", "", new_names)
-# new_names = gsub(")", "", new_names)
-# new_names = gsub(" ", "_", new_names)
-# 
-# setnames(subset, old_names, new_names)
 
 #-------------------------------------------------------------------
 # Flag some variables that are disease-specific
@@ -143,32 +170,36 @@ saveRDS(mal_subset, "prepped_data/mal_pqr.rds")
 saveRDS(tb_subset, "prepped_data/tb_pqr.rds")
 
 
-
-
+#-------------------------------------------------------------------
+# Make a specialized Guatemala TB grants file 
+#-------------------------------------------------------------------
+gtm = subset[country_name=="Guatemala" & grant_disease%in%c('tb', 'hiv/tb')]
+gtm = gtm[order(-grant_start_date)]
+saveRDS(gtm, "J:/Project/Evaluation/GF/impact_evaluation/gtm/prepped_data/pqr_data.rds")
 
 
 
 #RMEI code- drop this somewhere else 
 #-----------------------------------------------------------
-rmei_vars = c('Volume', "Actual Delivery Month", "Actual Delivery Year", "Other Bednet Size (Invoice)", "Strength", "Pack quantity", "Product Name (EN)", 'Country Name')
-rmei_interest_vars = c(mal_prev, mal_test, mal_treat)
-
-rmei_locs = c("Belize", "Colombia", "Costa Rica", "Dominican Republic", "El Salvador", "Guatemala", "Honduras", "Mexico", "Nicaragua", "Panama")
-rmei_data = pqr[`Country Name`%in%rmei_locs, rmei_vars, with=FALSE]
-rmei_data = rmei_data[`Product Name (EN)`%in%rmei_interest_vars]
-rmei_data = rmei_data[, .(`Product Name (EN)`, `Country Name`, `Actual Delivery Year`)][order(`Country Name`, `Actual Delivery Year`)]
-names(rmei_data) = c('product', 'country', 'delivery_year')
-
-mal_nets = c("Duranet", "Insecticide-treated net (ITN)", "Long-Lasting Insecticidal Net (LLIN)", "MAGNet", "MiraNet", "Permanet 2.0", "Permanet 3.0", "Netprotect", "Yorkool LN", "Yahe LN", "Royal Sentry", 
-             "Olyset", "Dawa-Plus 2.0")
-irs = "zz-Pirimiphos Methyl CS"
-
-rmei_data[product%in%mal_nets, category:="LLIN"]
-rmei_data[product%in%irs, category:="IRS"]
-rmei_data[product%in%mal_treat, category:="Treatment"]
-rmei_data[product%in%mal_test, category:="Testing"]
-
-write.csv(rmei_data, paste0(dir, "/prepped_data/rmei_key_variables.csv"), row.names = FALSE)
+# rmei_vars = c('Volume', "Actual Delivery Month", "Actual Delivery Year", "Other Bednet Size (Invoice)", "Strength", "Pack quantity", "Product Name (EN)", 'Country Name')
+# rmei_interest_vars = c(mal_prev, mal_test, mal_treat)
+# 
+# rmei_locs = c("Belize", "Colombia", "Costa Rica", "Dominican Republic", "El Salvador", "Guatemala", "Honduras", "Mexico", "Nicaragua", "Panama")
+# rmei_data = pqr[`Country Name`%in%rmei_locs, rmei_vars, with=FALSE]
+# rmei_data = rmei_data[`Product Name (EN)`%in%rmei_interest_vars]
+# rmei_data = rmei_data[, .(`Product Name (EN)`, `Country Name`, `Actual Delivery Year`)][order(`Country Name`, `Actual Delivery Year`)]
+# names(rmei_data) = c('product', 'country', 'delivery_year')
+# 
+# mal_nets = c("Duranet", "Insecticide-treated net (ITN)", "Long-Lasting Insecticidal Net (LLIN)", "MAGNet", "MiraNet", "Permanet 2.0", "Permanet 3.0", "Netprotect", "Yorkool LN", "Yahe LN", "Royal Sentry", 
+#              "Olyset", "Dawa-Plus 2.0")
+# irs = "zz-Pirimiphos Methyl CS"
+# 
+# rmei_data[product%in%mal_nets, category:="LLIN"]
+# rmei_data[product%in%irs, category:="IRS"]
+# rmei_data[product%in%mal_treat, category:="Treatment"]
+# rmei_data[product%in%mal_test, category:="Testing"]
+# 
+# write.csv(rmei_data, paste0(dir, "/prepped_data/rmei_key_variables.csv"), row.names = FALSE)
 #--------------------------------------------------------------
 
 

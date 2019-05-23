@@ -52,8 +52,6 @@ fghDir = paste0(dir, 'resource_tracking/_fgh/prepped_data/')
 whoDir = paste0(dir, 'resource_tracking/_ghe/who/prepped_data/')
 mapDir = paste0(dir, '/mapping/multi_country/intervention_categories')
 sicoinDir = paste0(dir, 'resource_tracking/_ghe/sicoin_gtm/prepped_data/')
-#pnlpDir = paste0(dir, 'outcome_measurement/cod/prepped_data/PNLP/post_imputation/') #DAVID - DO WE WANT TO KEEP THESE? 
-#dhisDir = paste0(dir, 'outcome_measurement/cod/dhis_data/prepped/')
 lbdDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/')
 # ---------------------------------------------------------------------------------
 
@@ -87,8 +85,11 @@ whoFile = paste0(whoDir, 'who_prepped.rds')
 sicoinFile = paste0(sicoinDir, 'prepped_sicoin_data.rds')
 
 # activities/outputs files
+actFile = paste0(ieDir, "activities_5.22.19.csv")
+outputsFile = paste0(ieDir, "outputs_5.22.19.csv")
 
 # outcomes/impact files
+impactFile = paste0(ieDir, "impact_5.22.19.csv")
 
 # shapefiles
 
