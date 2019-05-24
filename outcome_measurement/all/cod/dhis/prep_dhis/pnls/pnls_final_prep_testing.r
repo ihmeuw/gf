@@ -75,14 +75,14 @@ dt[ ,unique(element_eng), by=.(element, subpop)]
 #--------------------------------------------------------------------
 # add a binary for testing type
 
-dt[grep('cdiv', element), test_type:='provider initiated']
-dt[grep('cdv', element), test_type:='voluntary']
+dt[grep('CDIV', element), test_type:='provider initiated']
+dt[grep('CDV', element), test_type:='voluntary']
 
 #----------------------------------------
 # final collapse 
 
-
-
+Vars = names(dt)[names(dt)!='value' & names(dt)!='element_id' & names(dt)!='element']
+dt = dt[,.(value=sum(value)), by=Vars]
 
 #-----------------------------------
 #Save the final file 
