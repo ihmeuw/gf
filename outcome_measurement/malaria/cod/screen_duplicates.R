@@ -101,7 +101,7 @@ dup_matrix = mclapply(seq(nrow(dt)), function(i) {
 dup_matrix_final = rbindlist(dup_matrix)
 saveRDS(dup_matrix_final, paste0(dir, outFile))
 
-remove_ids = unique(c(dup_matrix_final$i, dup_matrix_final$j))
+# remove_ids = unique(c(dup_matrix_final$i, dup_matrix_final$j))
 
 
 
