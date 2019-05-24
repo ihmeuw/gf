@@ -39,7 +39,7 @@ elements = dt[ ,.(element = unique(element)), by=.(element_id)]
 set = dt[ ,tolower(unique(set))]
 
 # save the list as an excel file 
-write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate_', set, '.xlsx' )) #Leaving in for documentation; don't need to write over this file. 
+write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate_', set, 'jan_download.xlsx' )) #Leaving in for documentation; don't need to write over this file. 
 
 # translate using onlinedoctranslator.com and save as file path below
 #---------------------
@@ -48,32 +48,46 @@ write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate_
 new_elements = read.xlsx(paste0(dir,
                 'meta_data/translate/pnls_elements_translations_', set, '.xlsx' ))
 setDT(new_elements)
-setnames(new_elements, 'element', 'element_eng')
 
-# be sure 
-x = merge(elements, new_elements, by=c('element_id'), all.x=T )
-setDT(x)
+# drop out french elements for the merge 
+new_elements[ ,element:=NULL]
+
+# check to make sure you didn't include additional spaces
+new_elements[, element_eng:=trimws(element_eng)]
 #---------------------------------------
 
 #---------------------------------------------------------------------
 # Merge the data and the new English elements together 
-new_elements = new_elements[, .(element_id, element_eng)]
-new_elements[, element_eng:=trimws(element_eng)]
-dt = dt[, -c('element_eng')] #Not sure why this is already in here? 
+
+# drop the previous english elements out the data for the corrected elements
+dt[ ,c("element_eng", "org_unit_type", "mtk", "maternity", "case",
+       "stock_category", "tb"):=NULL] # all org_units are facilities
 
 dt = merge(dt, new_elements, by='element_id', all.x = TRUE)
 #---------------------------------------------------------------------
-
-
-#--------------------------------------------------------------------
 # Make sure that the totals are correct for the new file 
-unique(dt[, .(subpop, element_eng)][order(subpop)]) #Visual checks
-unique(dt[, .(element_eng)]) #Got this down to 19. 
+
+# skipped one subpopulation
+dt[is.na(subpop) & grepl("Couples", element), subpop:='couple']
+
+# check that the elements were identified correctly
+dt[ ,unique(element_eng), by=.(element, subpop)]
+#--------------------------------------------------------------------
+# add a binary for testing type
+
+dt[grep('cdiv', element), test_type:='provider initiated']
+dt[grep('cdv', element), test_type:='voluntary']
+
+#----------------------------------------
+# final collapse 
 
 
-#---------------------------------------------------------------------
 
+
+#-----------------------------------
 #Save the final file 
-saveRDS(dt, paste0(dir, "prepped/pnls_sets/pnls_", set, "_prepped_2017_01_01_2018_12_01.rds"))
+saveRDS(dt, paste0(dir, "prepped/pnls_final/pnls_vct_final"))
+
+#-----------------------------------
 
 

@@ -64,7 +64,7 @@ f = rbind(f, f2)
 # drop informed of result - early data only has pos and neg
 f = f[ ,.(tests=sum(test_completed)), by=.(set, sr, sr_code,
         department, muni, date, theme, pop, subpop,
-      gender, result)]
+        gender, result)]
 
 dcast(data = f, set+sr+sr_code+department+muni+date+theme+pop+subpop+gender~result, value.var='tests')
 
@@ -78,4 +78,7 @@ f1 = f1[age!='total']
 setnames(f1, "category", "pop")
 
 
-dcast(f1, sr+sr_code+pop+diagnosis" "pop"       "age"       "total"     "gender"    "pregnant"  "flag"      "date"      "set"     set~diagnosis)
+dcast(f1, sr+sr_code+pop+diagnosis+age+total+gender+pregnant+flag+date+set~diagnosis, value.var='total')
+
+
+

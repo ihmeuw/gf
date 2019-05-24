@@ -33,6 +33,19 @@ setwd(dir)
 
 dt = readRDS(paste0(dir, 'pre_prep/merged/pnls_subset_2014_11_01_2018_12_01.rds'))
 
+#---------------------------------------
+# reporting completeness
+# 
+# report = dt[ ,.(facilities=length(unique(org_unit_id))), by=date]
+# 
+# ggplot(report, aes(x=date, y=facilities)) +
+#   geom_point() +
+#   geom_line() +
+#   labs(x="Date", y="Facilities reporting",
+#        title='Total facilities reporting by date') +
+#   theme_bw()
+#---------------------------------------
+
 # subset to 2017 on 
 dt = dt[2017 <=  year(date) ]
 
@@ -233,7 +246,6 @@ dt[ ,element_eng:= gsub('INH', 'IPT', element_eng)]
 # fix co-infected
 dt[ ,element_eng:= gsub('co-infectes', 'coinfected', element_eng)]
 
-
 #-------------------------------------
 # save a single data set 
 saveRDS(dt, paste0(dir, 'prepped/pnls_sets/pnls_clean_all_sets.rds'))
@@ -256,3 +268,4 @@ for (s in sets) {
 }
 
 #----------------------------------------
+

@@ -151,11 +151,9 @@ f2[ ,test_date:=NULL]
 f2[ ,sr_code:=gsub("nac0", "", sr_code)]
 
 # format sr names
-f2[!grep('cas', sr), sr1:=lapply(strsplit(sr, '-'), '[', 3)]
-f2[grep('cas', sr), sr1:=lapply(strsplit(sr, '-'), '[', 2)]
-f2[grep('peniten', sr), sr1:=lapply(strsplit(sr, '-'), '[', 2)]
-f2[ ,sr:=sr1]
-f2[ ,sr1:=NULL]
+f2[ , sr:=sapply(strsplit(sr, '-'), '[', 3)]
+f2[grep('cas', sr), sr:=sapply(strsplit(sr, '-'), '[', 2)]
+f2[grep('peniten', sr), sr:=sapply(strsplit(sr, '-'), '[', 2)]
 
 #-------------------------------
 # convert yes and no to a logical 
