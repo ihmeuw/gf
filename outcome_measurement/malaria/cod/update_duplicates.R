@@ -58,9 +58,21 @@ dup_list = mclapply( seq(nrow(dups)), function(x) {
     
     print(paste0("Progress status: ", x))
     
+    return(current_dup_matrix)
+    
     }, mc.cores=ifelse(Sys.info()[1]=='Windows', 1, 50 ))
 
 dups_zeroes = rbindlist(dup_list)
 
 saveRDS(dups_zeroes, paste0(dir, outFile))
 # ---------------------------------------------- 
+
+
+
+
+
+
+
+
+
+
