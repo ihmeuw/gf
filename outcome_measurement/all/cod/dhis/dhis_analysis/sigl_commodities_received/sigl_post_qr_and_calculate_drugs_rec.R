@@ -1,7 +1,7 @@
 setwd('C:/local/gf/')
 # Audrey Batzel
 
-# 4/18/19 split this off into it's own file because it was getting to overwhelming/complex
+# 4/18/19 split this off into it's own file because it was getting too overwhelming/complex
 # this file is for manipulating the results of QR on SIGL drugs available, consumed, and lost data, to include:
   # - removing outliers
   # - fixing bad QR results (where fitted value is negative, replace with 0)

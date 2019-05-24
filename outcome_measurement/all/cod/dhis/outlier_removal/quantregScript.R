@@ -79,12 +79,14 @@ for (e in unique(subset$element_id)) {
       
       # list the residuals and add them to the out file
       r = resid(quantFit)
-      subset_further[, fitted_value:=predict(quantFit)]
+      subset_further[, fitted_value:=predict(quantFit, newdata = subset_further)]
       subset_further[, resid:=r]
-      head(subset_further)
+      # head(subset_further)
+      subset_further[, skipped_qr := "no"]
     } else { 
       subset_further[, fitted_value:=NA]
       subset_further[, resid:=NA]
+      subset_further[, skipped_qr := "yes"]
     }
     
     if (nrow(combined_qr_results)==0) {
