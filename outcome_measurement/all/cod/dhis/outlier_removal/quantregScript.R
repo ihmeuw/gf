@@ -42,8 +42,8 @@ print(o)
 #------------------------------------
 
 dt = read.fst(scratchInFile)
-dt = data.table(dt)
-subset = dt[org_unit_id==o] 
+dt = as.data.table(dt)
+subset = dt[org_unit_id==o, ] 
 
 #------------------------------------
 
