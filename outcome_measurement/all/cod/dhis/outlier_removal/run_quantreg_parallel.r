@@ -41,8 +41,8 @@ set = 'pnlp'
 cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
 cleanup_end = FALSE # "" /end; default to FALSE
 # impute = 'TRUE' # whether or not to impute missing data as part of the qr
-cat_files = TRUE # whether or not to concatenate all of the files at the end
-agg_to_DPS = FALSE # whether or not to aggregate the data to DPS level before running QR. 
+# cat_files = TRUE # whether or not to concatenate all of the files at the end
+agg_to_DPS = TRUE # whether or not to aggregate the data to DPS level before running QR. 
 #------------------------------------
 
 #------------------------------------
@@ -136,7 +136,7 @@ setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
 # for testing, subset to a few rows
-array_table = array_table[1:10, ]
+# array_table = array_table[1:10, ]
 
 # save the array table and the data with IDs to /ihme/scratch/users/(user_name)/quantreg/
 write.fst(array_table, arrayFile)
@@ -177,25 +177,25 @@ while(numFiles<i) {
 #------------------------------------
 # once all files are done, collect all output into one data table
 #------------------------------------
-if (cat_files == TRUE){
-# bind all of the files together to create a single data set
-  system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* >', scratchDir, 'full_quantreg_results.fst'))
-  dt = read.fst(paste0(scratchDir, 'full_quantreg_results.fst'))
-  saveRDS(dt, outFile)
-  }
+# if (cat_files == TRUE){
+# # bind all of the files together to create a single data set
+#   system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* >', scratchDir, 'full_quantreg_results.fst'))
+#   dt = read.fst(paste0(scratchDir, 'full_quantreg_results.fst'))
+#   saveRDS(dt, outFile)
+# }
 
 #---------------------------------------
 # old code to concatenate files - leave as k since i and j are already used
 # this is less efficient - do not use if cat code works
 
-# for (k in seq(N)) {
-#   tmp = read.fst(paste0(parallelDir, 'quantreg_output', k, '.fst'), as.data.table=TRUE)
-#   if(k==1) fullData = tmp
-#   if(k>1) fullData = rbind(fullData, tmp)
-#   cat(paste0('\r', k)) }
-# 
-# # save the resulting file 
-# saveRDS(fullData, outFile)
+for (k in seq(N)) {
+  tmp = read.fst(paste0(parallelDir, 'quantreg_output', k, '.fst'), as.data.table=TRUE)
+  if(k==1) fullData = tmp
+  if(k>1) fullData = rbind(fullData, tmp)
+  cat(paste0('\r', k)) }
+
+# save the resulting file
+saveRDS(fullData, outFile)
 
 #------------------------------------
 
