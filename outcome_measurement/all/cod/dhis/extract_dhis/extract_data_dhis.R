@@ -218,7 +218,7 @@ for(f in files) {
   current_data[ , file:=vec ]
   
   # subset to only the variables needed for large data sets
-  if (folder=='base' | folder=='sigl') {
+  if (set_name=='base' | set_name=='sigl') {
     current_data[ , data_element_ID:=as.character(data_element_ID)]
     current_data = current_data[data_element_ID %in% keep_vars]  
   } 
@@ -226,12 +226,13 @@ for(f in files) {
   # append to the full data 
   if(i==1) dt = current_data
   if(i>1)  dt = rbind(dt, current_data)
+  print(paste0("Status: ", i))
   i = i+1
 }
 
 # save the data table in its individual folder in 'pre_prep' for merge and prep:
 saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', 
-                               start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
+                               start_month, '_', start_year, '_', end_month, '_', end_year, '_combined_download.rds'))
 
 #-------------------------
 
