@@ -136,7 +136,7 @@ setnames(array_table, "Var1", "org_unit_id")
 array_table[ ,org_unit_id:=as.character(org_unit_id)]
 
 # for testing, subset to a few rows
-# array_table = array_table[1:10, ]
+array_table = array_table[1:10, ]
 
 # save the array table and the data with IDs to /ihme/scratch/users/(user_name)/quantreg/
 write.csv(array_table, arrayFile)
@@ -157,9 +157,9 @@ N = nrow(array_table)
 # FOR NEW CLUSTER:
 # run quantregScript for each org_unit (submit one array job, with the array by org_unit)
 if (set == 'sigl'){
-  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs -l m_mem_free=10G -l fthread=2 -l h_rt=00:36:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.R')) 
+  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs -l m_mem_free=10G -l fthread=10 -l h_rt=00:36:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.R')) 
 } else {
-  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=10G -l fthread=2 -l h_rt=00:20:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
+  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=10G -l fthread=10 -l h_rt=00:20:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
 }
 #------------------------------------
 

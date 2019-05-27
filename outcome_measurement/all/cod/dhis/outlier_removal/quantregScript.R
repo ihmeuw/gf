@@ -3,7 +3,7 @@
 # source from the cluster
 # runs quantile regression on all data sets from DHIS
 #------------------------------------
-
+rm(list=ls())
 library(data.table)
 library(quantreg)
 library(fst) 
