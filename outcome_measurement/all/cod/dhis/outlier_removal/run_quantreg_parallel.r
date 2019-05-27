@@ -76,7 +76,7 @@ if (!file.exists(oeDir)) dir.create(oeDir)
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
 
 # set arguments and interim files to use on the cluster
-arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
+arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 #------------------------------------
 
 #------------------------------------
@@ -139,7 +139,7 @@ array_table[ ,org_unit_id:=as.character(org_unit_id)]
 array_table = array_table[1:10, ]
 
 # save the array table and the data with IDs to /ihme/scratch/users/(user_name)/quantreg/
-write.csv(array_table, arrayFile)
+write.fst(array_table, arrayFile)
 write.fst(dt, scratchInFile)
 #------------------------------------
 
