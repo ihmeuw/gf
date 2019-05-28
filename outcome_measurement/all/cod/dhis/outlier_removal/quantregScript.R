@@ -3,7 +3,7 @@
 # source from the cluster
 # runs quantile regression on all data sets from DHIS
 #------------------------------------
-
+rm(list=ls())
 library(data.table)
 library(quantreg)
 library(fst) 
@@ -21,16 +21,14 @@ print(i)
 # file paths
 scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
-arrayFile = paste0(scratchDir, 'array_table_for_qr.csv')
+arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 parallelDir = paste0(scratchDir, 'parallel_files/')
 outFile = paste0(parallelDir, 'quantreg_output', i, '.fst')
 
-# confirm the file folders exist
-if (!file.exists(scratchDir)) dir.create(scratchDir)
-if (!file.exists(parallelDir)) dir.create(parallelDir)
-
 # read in the array table 
-array_table = fread(arrayFile)
+array_table = read.fst(arrayFile)
+array_table = as.data.table(array_table)
+head(array_table)
 
 # read org unit from the array table
 o = array_table[i]$org_unit_id # unique facility id
@@ -42,8 +40,8 @@ print(o)
 #------------------------------------
 
 dt = read.fst(scratchInFile)
-dt = data.table(dt)
-subset = dt[org_unit_id==o] 
+dt = as.data.table(dt)
+subset = dt[org_unit_id==o, ] 
 
 #------------------------------------
 
@@ -78,11 +76,10 @@ for (e in unique(subset$element_id)) {
       summary(quantFit) 
       
       # list the residuals and add them to the out file
-      r = resid(quantFit)
       subset_further[, fitted_value:=predict(quantFit, newdata = subset_further)]
-      subset_further[, resid:=r]
-      # head(subset_further)
+      subset_further[, resid:=(fitted_value - value)]
       subset_further[, skipped_qr := "no"]
+      
     } else { 
       subset_further[, fitted_value:=NA]
       subset_further[, resid:=NA]
