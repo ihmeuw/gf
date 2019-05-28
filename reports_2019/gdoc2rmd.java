@@ -6,21 +6,28 @@ import java.util.*;
 
 public class gdoc2rmd { 
    
+   HashMap<String, Integer> figureCounter; 
+   
     public static void main(String[] args) throws IOException {   
         //Build up a dictionary to convert certain character strings into R markdown code. 
         HashMap<String, String> dict = makeDictionary();    
         HashMap<String, Integer> figureCounter = makeCounter(dict);   
         
         Scanner console = new Scanner(System.in);
-        System.out.print("What is the name of the plain text file you'd like to convert? ");
+        System.out.println("What is the name of the plain text file you'd like to convert? ");
         //Need to test if this is actually a file. 
         String inFile = console.nextLine();
-        String outputFile = "gdoc2rmd_out.rmd";
+        System.out.println("What is the title of your document?"); 
+        String title = console.nextLine(); 
+        System.out.println("Who is the author of your document?"); 
+        String author = console.nextLine(); 
+        String outputFile = "gdoc2rmd_out2.rmd";
         
         // open code file and construct tree
         Scanner fileScan = new Scanner(new File(inFile));
         PrintStream output = new PrintStream(new File(outputFile)); 
         System.setOut(output); 
+        writeYamlHeader(title, author); 
         processFile(fileScan, dict, figureCounter);            
         output.close(); 
     }
@@ -32,7 +39,9 @@ public class gdoc2rmd {
       
       //Build up dictionary - add new conversions here. 
       //Start every counter at 0. 
-      dict.put("Chapter", "##"); 
+      dict.put("Chapter", "###"); 
+      dict.put("Section", "##"); 
+      dict.put("Figure:", ""); 
       return(dict);
     }
     
@@ -50,20 +59,26 @@ public class gdoc2rmd {
     }
     
     //Accepts a Scanner over a file, and formats it in 
-    // the markup language we've selected. 
+    // the markup language we've select(key + " " + incrementCount(key, counter) + " ")ed. 
     public static void processFile(Scanner fileScan, HashMap<String, String> dict, HashMap<String, Integer> counter){
-      writeYamlHeader(); 
       while(fileScan.hasNextLine()){
          System.out.println(); 
          String line = fileScan.nextLine(); 
          String lineArray[] = line.split(" ", 2); 
          String key = lineArray[0]; 
          Set<String> allKeys = dict.keySet(); 
-   	   if	(findHeaderKeys(key, allKeys)){
+   	   if	(findHeaderKeys(key, allKeys) & !key.equals("Figure:")){
    			System.out.print(convertHeaderKeys(key, allKeys, dict, counter));	//Find the key and convert it if needed. 
             if (lineArray.length > 1){
                System.out.print(lineArray[1]); 
             }
+         } else if (key.equals("Figure:")){
+            System.out.println("<center>"); 
+            System.out.print("Figure " + incrementCount(key) + ": "); 
+            if (lineArray.length > 1){
+               System.out.println(lineArray[1]); 
+            }
+            System.out.println("</center>"); 
          } else {
       	   System.out.println(line);	
          }
@@ -85,22 +100,23 @@ public class gdoc2rmd {
       if (allKeys.contains(key)){
          return(dict.get(key) + " "); 
       }
-      return(key + " " + incrementCount(key, counter) + " "); 
+      return(key + " " + incrementCount(key) + " "); 
     }
     
     //Increment the count for a given header. 
-    public static int incrementCount(String key, HashMap<String, Integer> counter){
-      int count = counter.get(key);
-      counter.put(key, count++); 
+    public static int incrementCount(String key){
+      int count = figureCounter.get(key);
+      count = count++; 
+      figureCounter.put(key, count); 
       return(count); 
     }
     
     //Write a standard YAML header. 
-    public static void writeYamlHeader(){
+    public static void writeYamlHeader(String title, String author){
       System.out.println("---"); 
-      System.out.println("title: \"Untitled\""); 
-      System.out.println("author: \"IHME PCE\""); 
-      System.out.println("date: \"May 16, 2019\"");
+      System.out.println("title: \"" + title + "\""); 
+      System.out.println("author: \"" + author + "\""); 
+      //System.out.println("date: \"May 16, 2019\""); //Do we need date? 
       System.out.println("output: pdf_document"); 
       System.out.println("---"); 
       System.out.println("```{r setup, include=FALSE}"); 
