@@ -323,19 +323,28 @@ if (prep_files){
   final_expenditures = mapped_data[data_source == "pudr"] #EMILY CAN YOU MAKE SURE YOU DON'T HAVE MORE THAN ONE FINAL AND ONE INITIAL FILE??? NEED TO RETHINK DUPLICATES. 
   #For the same grant in the same grant period, you want to get the total for each PUDR and subtract semester 1 from semester 1-2. 
   
-  final_expenditures = final_expenditures[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
-                                   by=byVars]
-  final_expenditures = dcast(final_expenditures, grant+grant_period+disease+gf_module+gf_intervention+orig_module+orig_intervention+activity_description~pudr_semester, 
+ 
+  #Can you find the duplicate quarters by grant name and grant period first? 
+  dups = unique(mapped_data[data_source=="pudr", .(grant, grant_period, quarter, pudr_semester, file_name)])
+  dups[, dup:=seq(from=0, to=nrow(dups), by=1), by=c('grant', 'grant_period', 'quarter')]
+  overlap = dups[dup>0]
+  overlap = merge(overlap[, .(grant, grant_period, quarter)], dups, by=c('grant', 'grant_period', 'quarter'), all.x=T)
+  if (nrow(overlap)!=0){
+    print("There is overlap in PUDR semesters. Subtract earlier expenditure from later expenditure.")
+  }
+  
+  for (i in 1:nrow(overlap)){
+    
+  }
+  
+  final_expenditures = dcast(final_expenditures, grant+grant_period+disease+gf_module+gf_intervention+orig_module+orig_intervention+activity_description~quarter, 
                       value.var=c('budget', 'expenditure', 'disbursement'), fun.aggregate = sum_na_rm)
   final_expenditures[, `budget_Semester 1-2`:=`budget_Semester 1-2`-`budget_Semester 1`]
   final_expenditures[, `expenditure_Semester 1-2`:=`expenditure_Semester 1-2`-`expenditure_Semester 1`]
   setnames(final_expenditures, c('budget_Semester 1-2', 'expenditure_Semester 1-2'), c('budget_Semester 2', 'expenditure_Semester 2')) #EMILY CHECK WITH DAVID THAT THIS IS THE RIGHT THING TO DO. 
   
   #3. Absorption
-  absorption = mapped_data[data_source=="pudr", .(grant, grant_period, gf_module, gf_intervention, budget, expenditure, pudr_semester, 
-                                                  orig_module, orig_intervention, code)]
-  absorption = dcast(absorption, grant+grant_period+gf_module+gf_intervention+code+orig_module+orig_intervention~pudr_semester, 
-                     value.var=c('budget', 'expenditure'), fun.aggregate=sum_na_rm)
+  absorption = mapped_data[data_source=="pudr", .(grant, grant_period, pudr_semester, gf_module, gf_intervention, code, budget, expenditure)]
 }
 
 # ----------------------------------------------

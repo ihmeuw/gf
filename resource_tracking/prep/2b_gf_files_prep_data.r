@@ -36,7 +36,12 @@ if (prep_files == TRUE){
     print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
     print("There are duplicates in final files - review file list.")
   }
-
+  
+  pudr_dup = unique(file_list[data_source=="pudr", .(grant, grant_period, pudr_semester, file_name)])
+  pudr_dup[, pudr_dup:=seq(0, nrow(pudr_dup), by=1), by=c('grant', 'grant_period', 'pudr_semester')]
+  if (nrow(file_list$pudr_dup==1)>0){
+    stop("There are duplicates in PUDRs between semesters - review file list.")
+  }
 }
 
 #----------------------------------------------------

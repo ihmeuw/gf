@@ -109,10 +109,13 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   stopifnot(length(activity_col)==1 & length(cost_category_col)==1)
   
   #Grab implementer column 
-  if (language=="eng" | language=="fr"){
+  if (language=="eng" | language == "fr"){
     implementer_col = grep("implementer", names)
     if (length(implementer_col)==0){
       implementer_col = grep("recipient", names)
+    }
+    if (length(implementer_col) == 0){
+      implementer_col = grep("recipiendaire", names)
     }
   } else {
     implementer_col = grep("implementador|receptor", names)
@@ -179,6 +182,9 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
     new_names = c('activity_description', 'cost_category', new_qtr_names)
     if ('recipient'%in%names(gf_data)){
       setnames(gf_data, 'recipient', 'implementer')
+    }
+    if ("recipiendaire"%in%names(gf_data)){
+      setnames(gf_data, "recipiendaire", 'implementer')
     }
   } else if (language == "esp"){
     if ('implementador'%in% names){
