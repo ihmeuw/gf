@@ -48,7 +48,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
                                       'DETAIL')
   
-  budget_cols = c("activity_description", "budget", "cost_category", "currency", "implementer", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
+  budget_cols = c("activity_description", "budget", "cost_category", "implementer", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
   pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){

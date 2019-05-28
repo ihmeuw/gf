@@ -326,7 +326,7 @@ if (prep_files){
   final_expenditures = final_expenditures[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
                                    by=byVars]
   final_expenditures = dcast(final_expenditures, grant+grant_period+disease+gf_module+gf_intervention+orig_module+orig_intervention+activity_description~pudr_semester, 
-                      value.var=c('budget', 'expenditure'))
+                      value.var=c('budget', 'expenditure', 'disbursement'), fun.aggregate = sum_na_rm)
   final_expenditures[, `budget_Semester 1-2`:=`budget_Semester 1-2`-`budget_Semester 1`]
   final_expenditures[, `expenditure_Semester 1-2`:=`expenditure_Semester 1-2`-`expenditure_Semester 1`]
   setnames(final_expenditures, c('budget_Semester 1-2', 'expenditure_Semester 1-2'), c('budget_Semester 2', 'expenditure_Semester 2')) #EMILY CHECK WITH DAVID THAT THIS IS THE RIGHT THING TO DO. 
