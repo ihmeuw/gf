@@ -12,6 +12,7 @@ library(data.table)
 library(raster)
 library(ggplot2)
 library(ggrepel)
+library(geosphere)
 library(knitr)
 library(tibble)
 library(dplyr)
@@ -26,7 +27,7 @@ source('./core/standardizeDPSNames.R')
 
 #Set up directories 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/') #Home directory
+dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/pnls_final/') #Home directory
 saveDir = paste0(j, 'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pnls/')
 codeDir = paste0(repo_root, "outcome_measurement/all/cod/dhis/dhis_analysis/pnls_supplychain/")
 
@@ -125,9 +126,12 @@ plot = gen_so_pct1(dt, drug_id, drug_name, full_date_range)
 plot
 ```
 
-## Percentage of facility-days stocked out, 2018 only 
+## Percentage of facility-days stocked out, with labels
 
-GRAPH WITH LABELS TO GO HERE 
+```{r so_pct2, echo=FALSE, warning=FALSE}
+plot = gen_so_pct2(dt, drug_id, drug_name, full_date_range)
+plot
+```
 
 ## Days stocked out by facility level (all)
 
@@ -185,9 +189,12 @@ plot = gen_mean_units1(dt, coord_ann, drug_id, drug_name, full_date_range)
 plot
 ```
 
-## Drug units per facility by district, 2018 only 
+## Drug units per facility by district, with labels 
 
-GRAPH WITH LABELS TO GO HERE 
+```{r mean_units2, echo=FALSE, warning=FALSE}
+plot = gen_mean_units2(dt, coord_ann, drug_id, drug_name, full_date_range)
+plot
+```
 
 ## Facilities with a full month of stock-out, 2017
 

@@ -405,22 +405,39 @@ gen_so_pct2 = function(dt=dt, drug_id, drug_name, date_range){
   stock_add = dt[element_id==drug_id & stock_category=="number_of_days_stocked_out", .(days_out=sum(value, na.rm=T)), by=c('year', 'id', 'dps')]
   stock = merge(stock, stock_add, by=c('year', 'id', 'dps'), all=T)
   stock[, percent_out:=round(100*(days_out/total_days), 1)]
-  
   stock = merge(stock, coord_ann, by=c('id', 'year'), all.y=T)
-  # Just pick a few things to label - only if percent out is > 80%. 
-  stock$dps <- ifelse(stock$percent_out>80, stock$dps, "")
   
-  so_pct2 = ggplot(stock[year==2018], aes(x=long, y=lat, group=group, fill=percent_out, label=dps)) +
-    coord_fixed() +
-    geom_polygon() +
-    geom_path() +
-    geom_text_repel() + 
-    scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) +
-    theme_void() +
+  #----------------------
+  #For each DPS, find it's center. 
+  districts = unique(stock$dps)
+  districts = districts[!is.na(districts)]
+  all_centers = data.table()
+  for (district in districts){
+    centers = stock[dps==district, .(long, lat)]
+    center = as.data.table(centroid(centers))
+    center[, dps:=district]
+    all_centers = rbind(all_centers, center)
+  }
+
+  # Generate a labels dataset
+  labels = unique(stock[, .(id, dps, percent_out, year)])
+  labels[, label:= paste0(dps, ": ", percent_out, "%")]
+  labels = merge(labels, all_centers, by=c('dps'))
+  #----------------------
+  
+  so_pct2 = ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) + 
+    geom_polygon() + 
+    theme_void() + 
+    facet_wrap(~year) + 
+    scale_fill_gradientn('% Facilties\nstocked out', colours=ratio_colors) + 
+    coord_fixed(ratio=1) + 
+    scale_x_continuous('', breaks = NULL) + 
+    scale_y_continuous('', breaks = NULL) + 
     labs(title=paste0("Percentage of facility-days stocked out of ", drug_name),
          subtitle=paste0("Days facilities were stocked out/Total days in which facilities reported on ", drug_name),
          fill="% of days stocked out") +
-    theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6))
+    theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) + 
+    geom_label_repel(data = labels, aes(label = label, x = lon, y = lat, group = label), inherit.aes=FALSE, size=3)
   
   return(so_pct2)
 }
@@ -671,6 +688,52 @@ gen_mean_units1 = function(dt=dt, coord_ann=coord_ann, drug_id, drug_name, date_
          caption="*Denominator only includes facilities with 'available, usable stock' of this drug",
          fill="Kits per facility")
   return(mean_units1)
+}
+
+
+#Map mean test kits per facility. Try without a facet wrap, and then facet wrap by year.
+gen_mean_units2 = function(dt=dt, coord_ann=coord_ann, drug_id, drug_name, date_range){
+  facs_per_district = dt[element_id==drug_id & stock_category == "available_usable_stock", .(facs=length(unique(org_unit_id))), by=c('dps','year')] #Find the number of facs per district with available test-kit stock. 
+  
+  kits_per_facility = dt[element_id==drug_id & stock_category == "available_usable_stock", .(element_id, value, dps, year, id, date)]
+  kits_per_facility = kits_per_facility[(date< "2018-09-01" & year == 2018) | (date < '2017-09-01' & year == 2017)] #Subset to handle time lags. 
+  kits_per_facility = kits_per_facility[, .(value=sum(value, na.rm = TRUE)), by = c('element_id', 'dps', 'year', 'id')] #Collapse here, because you want to get rid of the date-level. 
+  kits_per_facility = merge(kits_per_facility, facs_per_district, by=c('dps', 'year'), all.x = TRUE)
+  kits_per_facility[, kits_per_fac:=round(value/facs, 2)]
+  kits_per_facility = merge(kits_per_facility, coord_ann, by=c('id', 'year'), all.y=TRUE)
+  
+  #----------------------
+  #For each DPS, find it's center. 
+  districts = unique(kits_per_facility$dps)
+  districts = districts[!is.na(districts)]
+  all_centers = data.table()
+  for (district in districts){
+    centers = kits_per_facility[dps==district, .(long, lat)]
+    center = as.data.table(centroid(centers))
+    center[, dps:=district]
+    all_centers = rbind(all_centers, center)
+  }
+  
+  # Generate a labels dataset
+  labels = unique(kits_per_facility[, .(id, dps, kits_per_fac, year)])
+  labels[, label:= paste0(dps, ": ", kits_per_fac)]
+  labels = merge(labels, all_centers, by=c('dps'))
+  #----------------------
+  
+  mean_units2 = ggplot(kits_per_facility, aes(x=long, y=lat, group=group, fill=kits_per_fac)) + 
+    geom_polygon() + 
+    theme_void() + 
+    facet_wrap(~year) + 
+    scale_fill_gradientn('Kits per\nFacility', colours=ratio_colors) + 
+    coord_fixed(ratio=1) + 
+    scale_x_continuous('', breaks = NULL) + 
+    scale_y_continuous('', breaks = NULL) + 
+    labs(title=paste0(drug_name, " kits per facility, by district"), subtitle="Annual data restricted to Jan-Aug",
+         caption="*Denominator only includes facilities with 'available, usable stock' of this drug",
+         fill="Kits per facility") + 
+    theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) + 
+    geom_label_repel(data = labels, aes(label = label, x = lon, y = lat, group = label), inherit.aes=FALSE, size=3)
+  return(mean_units2)
 }
 
 #--------------------------------------------------------------

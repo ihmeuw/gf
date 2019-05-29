@@ -12,6 +12,7 @@ library(data.table)
 library(raster)
 library(ggplot2)
 library(ggrepel)
+library(geosphere)
 library(knitr)
 library(tibble)
 library(dplyr)
@@ -125,9 +126,12 @@ plot = gen_so_pct1(dt, drug_id, drug_name, full_date_range)
 plot
 ```
 
-## Percentage of facility-days stocked out, 2018 only 
+## Percentage of facility-days stocked out, with labels
 
-GRAPH WITH LABELS TO GO HERE 
+```{r so_pct2, echo=FALSE, warning=FALSE}
+plot = gen_so_pct2(dt, drug_id, drug_name, full_date_range)
+plot
+```
 
 ## Days stocked out by facility level (all)
 
@@ -185,9 +189,12 @@ plot = gen_mean_units1(dt, coord_ann, drug_id, drug_name, full_date_range)
 plot
 ```
 
-## Drug units per facility by district, 2018 only 
+## Drug units per facility by district, with labels 
 
-GRAPH WITH LABELS TO GO HERE 
+```{r mean_units2, echo=FALSE, warning=FALSE}
+plot = gen_mean_units2(dt, coord_ann, drug_id, drug_name, full_date_range)
+plot
+```
 
 ## Facilities with a full month of stock-out, 2017
 
