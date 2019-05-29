@@ -1,5 +1,5 @@
 ---
-title: "Guatemala Report 2019"
+title: "Test Report"
 author: "IHME PCE"
 output: pdf_document
 ---
@@ -25,7 +25,7 @@ The Ministry of Health (MoH) funds the largest share of TB spending in 2018, rep
 
 
 <center>
-Figure 0: Global Fund versus other funder spending for TB in Guatemala, 2018
+Figure 1: Global Fund versus other funder spending for TB in Guatemala, 2018
 </center>
 
 ![](figure2.png)
@@ -37,7 +37,7 @@ Figure 0: Global Fund versus other funder spending for TB in Guatemala, 2018
 Source: National TB Program Funding Landscape/Funding Request 2019-2022, produced by PCE team
 
 <center>
-Figure 0: Funding Landscape for tuberculosis, 2012-2016
+Figure 2: Funding Landscape for tuberculosis, 2012-2016
 </center>
 
 ![](figure3.png)

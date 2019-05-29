@@ -6,16 +6,14 @@ import java.util.*;
 
 public class gdoc2rmd { 
    
-   HashMap<String, Integer> figureCounter; 
-   
     public static void main(String[] args) throws IOException {   
-        //Build up a dictionary to convert certain character strings into R markdown code. 
-        HashMap<String, String> dict = makeDictionary();    
-        HashMap<String, Integer> figureCounter = makeCounter(dict);   
+        //Build up a dictionary of "keys" and their given counts.  
+        Map<String, keyCounter> dict = makeDictionary();      
         
+        //Take user input to set up the file. 
         Scanner console = new Scanner(System.in);
         System.out.println("What is the name of the plain text file you'd like to convert? ");
-        //Need to test if this is actually a file. 
+        // *Need to test if this is actually a file. 
         String inFile = console.nextLine();
         System.out.println("What is the title of your document?"); 
         String title = console.nextLine(); 
@@ -23,44 +21,34 @@ public class gdoc2rmd {
         String author = console.nextLine(); 
         String outputFile = "gdoc2rmd_out2.rmd";
         
-        // open code file and construct tree
+        //Create a scanner over the given input file, and set up the output file. 
         Scanner fileScan = new Scanner(new File(inFile));
         PrintStream output = new PrintStream(new File(outputFile)); 
         System.setOut(output); 
+        
+        //Write the YAML header and process the file. 
         writeYamlHeader(title, author); 
-        processFile(fileScan, dict, figureCounter);            
+        processFile(fileScan, dict);            
         output.close(); 
     }
     
     //Build up a dictionary of keywords to convert to formatted 
     // R-markdown text. 
-    public static HashMap<String, String> makeDictionary(){
-      HashMap<String, String> dict = new HashMap<String, String>(); 
+    public static Map<String, keyCounter> makeDictionary(){
+      Map<String, keyCounter> dict = new HashMap<String, keyCounter>(); 
       
       //Build up dictionary - add new conversions here. 
       //Start every counter at 0. 
-      dict.put("Chapter", "###"); 
-      dict.put("Section", "##"); 
-      dict.put("Figure:", ""); 
+      dict.put("Chapter", new keyCounter("Chapter", 0, "###")); 
+      dict.put("Section", new keyCounter("Section", 0, "##")); 
+      dict.put("Figure:", new keyCounter("Figure", 0, "")); 
       return(dict);
     }
     
-    //Build up a counter to auto-number figures and chapters from 
-    // the given dictionary. 
-    public static HashMap<String, Integer> makeCounter(HashMap<String, String> dict){
-      HashMap<String, Integer> counter = new HashMap<String, Integer>(); 
-      
-      //For all the keys that have been added to the dictionary above, 
-      // start the count at 0. 
-      for (String key:dict.keySet()){
-         counter.put(key, 0); 
-      } 
-      return(counter);
-    }
     
     //Accepts a Scanner over a file, and formats it in 
     // the markup language we've select(key + " " + incrementCount(key, counter) + " ")ed. 
-    public static void processFile(Scanner fileScan, HashMap<String, String> dict, HashMap<String, Integer> counter){
+    public static void processFile(Scanner fileScan, Map<String, keyCounter> dict){
       while(fileScan.hasNextLine()){
          System.out.println(); 
          String line = fileScan.nextLine(); 
@@ -68,13 +56,15 @@ public class gdoc2rmd {
          String key = lineArray[0]; 
          Set<String> allKeys = dict.keySet(); 
    	   if	(findHeaderKeys(key, allKeys) & !key.equals("Figure:")){
-   			System.out.print(convertHeaderKeys(key, allKeys, dict, counter));	//Find the key and convert it if needed. 
+   			System.out.print(convertHeaderKeys(key, allKeys, dict));	//Find the key and convert it if needed. 
             if (lineArray.length > 1){
                System.out.print(lineArray[1]); 
             }
          } else if (key.equals("Figure:")){
             System.out.println("<center>"); 
-            System.out.print("Figure " + incrementCount(key) + ": "); 
+            updateCount(dict, key); 
+            keyCounter counter = dict.get(key);  
+            System.out.print("Figure " + counter.getCount() + ": "); 
             if (lineArray.length > 1){
                System.out.println(lineArray[1]); 
             }
@@ -96,20 +86,22 @@ public class gdoc2rmd {
     }
     
     //Convert a given header to its corresponding R markdown code. 
-    public static String convertHeaderKeys(String key, Set<String> allKeys, HashMap<String, String> dict, HashMap<String, Integer> counter){
+    public static String convertHeaderKeys(String key, Set<String> allKeys, Map<String, keyCounter> dict){
       if (allKeys.contains(key)){
          return(dict.get(key) + " "); 
       }
-      return(key + " " + incrementCount(key) + " "); 
+      updateCount(dict, key); 
+      keyCounter counter = dict.get(key); 
+      return(key + " " + counter.getCount() + " "); 
     }
     
-    //Increment the count for a given header. 
-    public static int incrementCount(String key){
-      int count = figureCounter.get(key);
-      count = count++; 
-      figureCounter.put(key, count); 
-      return(count); 
-    }
+    //Update the count after calling a certain key in the dictionary. 
+    public static Map<String, keyCounter> updateCount(Map<String, keyCounter> dict, String key){
+      keyCounter counter = dict.get(key); 
+      counter.add(); 
+      dict.put(key, counter); 
+      return(dict); 
+    } 
     
     //Write a standard YAML header. 
     public static void writeYamlHeader(String title, String author){
