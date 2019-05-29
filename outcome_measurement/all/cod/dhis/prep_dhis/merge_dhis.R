@@ -31,8 +31,8 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # source the merge and prep functions from the J Drive
-source(paste0(dir, 'code/merge_functions.R'))
-source(paste0(dir, 'code/pnls_function.R'))
+source(paste0(dir, 'z_code/merge_functions.R'))
+source(paste0(dir, 'z_code/pnls_function.R'))
 
 #---------------------------------
 

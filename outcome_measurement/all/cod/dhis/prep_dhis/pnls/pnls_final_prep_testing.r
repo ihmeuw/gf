@@ -86,7 +86,7 @@ dt = dt[,.(value=sum(value)), by=Vars]
 
 #-----------------------------------
 #Save the final file 
-saveRDS(dt, paste0(dir, "prepped/pnls_final/pnls_vct_final"))
+saveRDS(dt, paste0(dir, "prepped/pnls_final/pnls_vct_final.rds"))
 
 #-----------------------------------
 
