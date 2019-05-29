@@ -34,7 +34,8 @@ f3 = readRDS(paste0(dir, 'prepped/sigpro_f3_completo 2018.xlsx_prepped.RDS'))
 f4 = readRDS(paste0(dir, 'prepped/sigpro_f4_completo 2018.xlsx_prepped.RDS'))
 
 #----------------------------------------
-# combine the data sets
+# combine the data sets - f3 and f4
+# patient level data
 
 # subset and combine similar data sets
 vars = c("set", "sr_code", "department", "muni", "date",  
@@ -49,6 +50,8 @@ f = rbind(f3, f4)
 f[ , sr:=NA]
 
 #---------------------------
+# combine the data sets - f2 with f3 and f4
+
 # subset and combine the patient level data
 vars2 = c("set", "sr_code", "sr", "department", "muni", "date",  
           "pop", "subpop", "gender", "test_completed",
@@ -61,24 +64,79 @@ f2[ ,theme:=NA]
 # bind it in
 f = rbind(f, f2)
 
-# drop informed of result - early data only has pos and neg
-f = f[ ,.(tests=sum(test_completed)), by=.(set, sr, sr_code,
+#---------------------------
+# add sr names based on codes and names in other data sets
+
+f[sr_code==401, sr:='otrans']
+f[sr_code==402, sr:='fma']
+f[sr_code==403, sr:='conevih']
+f[sr_code==404, sr:='gp']
+f[sr_code==405, sr:='ffi']
+f[sr_code==406, sr:='gente nueva']
+f[sr_code==407, sr:='idei']
+f[sr_code==408, sr:='proyecto vida']
+
+#---------------------------
+# fill in missing test completion values
+
+# some tests say not completed, but have a results
+f[result=='reactive' | result=='nonreactive' | result=='indeterminate', test_completed:=T]
+
+# ensure consistency
+f[result=="test not done", test_completed:=FALSE]
+
+#---------------------------
+# drop erroneous values
+
+# check unique values for erroneous values
+f[ ,unique(sr_code), by=sr]
+f[ ,unique(department)]
+f[ ,unique(muni)]
+
+#---------------------------
+# fix outlier dates 
+
+# test = f[ ,.(test_completed=sum(test_completed)), by=date]
+# 
+# ggplot(test, aes(x=date, y=test_completed)) +
+#   geom_point() +
+#   geom_line()
+
+f[2019 < year(date), date:=NA]
+f[year(date) < 2013, date:=NA] # reporting appears to begin in 2013
+
+#-------------------------------------------------------
+# sum the final results 
+
+# drop informed of result - early data only has positive or negative
+# no information in f1 on informing patients
+f = f[ ,.(test_completed=sum(test_completed)), by=.(set, sr, sr_code,
         department, muni, date, theme, pop, subpop,
         gender, result)]
-
-dcast(data = f, set+sr+sr_code+department+muni+date+theme+pop+subpop+gender~result, value.var='tests')
-
 
 #---------------------------
 # aggregate to the sr, muni, department level
 
-f1 = f1[grep('vih', diagnosis)]
-f1 = f1[age!='total']
+# fix the age categories
+# drop out 'total' age groups
+f1 = f1[age!="total"]
 
-setnames(f1, "category", "pop")
+# update the age
+f1[!grepl("-", age) & !grepl("<", age) & !grepl("\\+", age), age:=NA]
 
+#---------------------------
+# keep only hiv-related data 
 
-dcast(f1, sr+sr_code+pop+diagnosis+age+total+gender+pregnant+flag+date+set~diagnosis, value.var='total')
+f1 = f1[grep("vih", result)]
 
+# format the test results to resemble the other data
+f1[grep("negativo", result), result:="nonreactive"]
+f1[grep("positivo", result), result:="reactive"]
+f1[grep("presuntivo", result), result:="test not done"]
 
+# create a variable for hiv test completed
+f1[result=="nonreactive" | result=="reactive", test_completed:=TRUE]
+f1[result=="test not done", test_completed:=FALSE]
+
+#---------------------------
 
