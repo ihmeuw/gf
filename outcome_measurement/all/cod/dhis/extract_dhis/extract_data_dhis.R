@@ -56,10 +56,10 @@ source(paste0(dir, 'code/dhis_extracting_functions.R'))
 # Input the start year, end year, and output directory
 
 # select the start year and end year for the download
-start_year = '2018'
+start_year = '2017'
 end_year = '2018'
 start_month = '01'
-end_month = '03' # start month is inclusive, end month is exclusive
+end_month = '01' # start month is inclusive, end month is exclusive
 
 # change the update year to before the data begins
 update_year = '2009'
@@ -173,7 +173,7 @@ for (i in 1:((length(dates))-1) ){
   
   # extract month again on subset of org_units
   extracted_fac = unique(extracted_data$org_unit_ID) %>% as.character
-  org_units <- org_units[!org_unit_ID %in% extracted_fac]
+  org_units = org_units[!org_unit_ID %in% extracted_fac]
   
   extracted_data2 = extract_all_data(base_url = base_url, 
                                      data_sets = data_sets[set, ],
@@ -197,6 +197,7 @@ for (i in 1:((length(dates))-1) ){
   print(paste0("Loop ", i, " of ", (length(dates)-1), " complete" ))
 }
 #------------------------
+
 #------------------------
 # read in all files and rbind together to save one file of data
 files = list.files( paste0('./pre_prep/', set_name, '/intermediate_data/'), recursive=TRUE)
@@ -226,7 +227,7 @@ for(f in files) {
   # append to the full data 
   if(i==1) dt = current_data
   if(i>1)  dt = rbind(dt, current_data)
-  i = i+1
+  i = i+1 }
 
 # save the data table in its individual folder in 'pre_prep' for merge and prep:
 saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', 
