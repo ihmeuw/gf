@@ -13,8 +13,13 @@ public class keyCounter{
    public keyCounter(String key, int count, String markup){
       this.key = key; 
       this.count = count; 
-      this.markup = markup; 
+      this.markup = markup;  
    }
+   
+   //Including a toString method for printing. 
+   public String toString(){
+      return(this.markup + " " + this.key + " " + this.count + ": "); 
+   } 
    
    //Returns this class's key. 
    public String getKey(){

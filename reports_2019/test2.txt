@@ -1,7 +1,7 @@
-Inputs
+Chapter: Inputs
 
 
-Analysis of the inputs to the TB results chain focuses on the financial contributions of the Global Fund and other major funders for TB in Guatemala. While PCE reviewed guidelines for the diagnosis, treatment, and prevention of TB and MDR-TB published by the MoH to inform the overall evaluation, the analysis in this section centers on financial inputs. The following figures show the relative contributions of the Global Fund and other funders to overall spending on TB in Guatemala in 2018 (Figure 2) and historically (Figure 3), and the breakdown of major budget categories for the Global Fund TB grants in Guatemala (Figure 4). 
+Analysis of the inputs to the TB results chain focuses on the financial contributions of the Global Fund and other major funders for TB in Guatemala. While PCE reviewed guidelines for the diagnosis, treatment, and prevention of TB and MDR-TB published by the MoH to inform the overall evaluation, the analysis in this section centers on financial inputs. The following figures show the relative contributions of the Global Fund and other funders to overall spending on TB in Guatemala in 2018 (Figure 2) and historically (Figure 3), and the breakdown of major budget categories for the Global Fund TB grants in Guatemala (Figure 4) [@de_guatemala_caracterizacion_2013]. 
 
 
 The Ministry of Health (MoH) funds the largest share of TB spending in 2018, representing 47% of funding, whereas the Global Fund represented 23% of funding. This share has been largely consistent over time, as seen in figure 3, with the MoH representing the bulk of TB spending from 2012-2016[1]. 
@@ -14,6 +14,9 @@ Figure: Global Fund versus other funder spending for TB in Guatemala, 2018
 Source: National TB Program Funding Landscape/Funding Request 2019-2022, produced by PCE team
 Figure: Funding Landscape for tuberculosis, 2012-2016
 ![](figure3.png)
+
+
+{CODE script.r}
   
 
 Source: IHME Financing Global Health 2016
