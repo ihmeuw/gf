@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
 # Caitlin O'Brien-Carelli
 #
-# 1/25/2019
+# 5/29/2019
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -19,7 +19,8 @@ library(openxlsx)
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 10 -P snis_merge
+# script to open a long-lasting large IDE
+# qsub -terse -N rst_ide_19_05_14_160329 -q long.q -l fthread=20 -l m_mem_free=20G -l h_rt=70:00:00 -e archive=TRUE -P proj_pce /ihme/code/jpy_rstudio/jpy_rstudio_shell.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -t rstudio -p 1247 -o 1 -G r
 
 # ---------------------------------
 # set working directories
@@ -31,8 +32,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # source the merge and prep functions from the J Drive
-source(paste0(dir, 'z_code/merge_functions.R'))
-source(paste0(dir, 'z_code/pnls_function.R'))
+source(paste0(dir, 'code/merge_functions.R'))
 
 #---------------------------------
 
@@ -53,7 +53,7 @@ if (folder=='base' | folder=='sigl') {
 
 #---------------------------------
 # drop diacritical marks
-# sourcing this function on the cluster fails 
+# leave in script: sourcing this function on the cluster alters the function
 
 fix_diacritics = function(x) {
   replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
@@ -64,50 +64,63 @@ fix_diacritics = function(x) {
   
   replace_me = paste(names(replacement_chars), collapse='')
   replace_with = paste(replacement_chars, collapse = '')
-  return(chartr(replace_me, replace_with, x))
-  
-}
+  return(chartr(replace_me, replace_with, x)) }
 
 #---------------------------------
-# set the working directory and read in the files
-setwd(paste0(dir, 'pre_prep/', folder, '/'))
+# # set the working directory and read in the files
+# setwd(paste0(dir, 'pre_prep/', folder, '/'))
+# 
+# # list the files in the working directory
+# files = list.files('./', recursive=TRUE)
+# 
+# # read in the files 
+# i = 1
+# for(f in files) {
+#   #load the RDs file
+#   vec = f
+#   current_data = data.table(readRDS(f))
+#   current_data[ ,file:=vec]
+#   
+#   # subset to only the variables needed for large data sets
+#   if (folder=='base' | folder=='sigl') {
+#   current_data[ , data_element_ID:=as.character(data_element_ID)]
+#   current_data = current_data[data_element_ID %in% keep_vars]  
+#   } 
+# 
+#   # append to the full data 
+#   if(i==1) dt = current_data
+#   if(i>1)  dt = rbind(dt, current_data)
+#   i = i+1
+# }
 
-# list the files in the working directory
-files = list.files('./', recursive=TRUE)
+#---------------------------------
+# load the newly downloaded, combined data sets
 
-# read in the files 
-i = 1
-for(f in files) {
-  #load the RDs file
-  vec = f
-  current_data = data.table(readRDS(f))
-  current_data[ ,file:=vec]
-  
-  # subset to only the variables needed for large data sets
-  if (folder=='base' | folder=='sigl') {
-  current_data[ , data_element_ID:=as.character(data_element_ID)]
-  current_data = current_data[data_element_ID %in% keep_vars]  
-  } 
-
-  # append to the full data 
-  if(i==1) dt = current_data
-  if(i>1)  dt = rbind(dt, current_data)
-  i = i+1
-}
+if (folder=='pnls') {
+  dt = readRDS(paste0(dir, '/pre_prep/pnls/pnls_01_2018_04_2019_combined_download.rds'))
+  dt[ , download_number:=NULL] }
 
 #---------------------------------
 # eliminate overlapping dates
+# this willwork even on a single, combined file
+
+# check for overlapping dates
 dt = dt[!is.na(period)]
 dt = overlap(dt)
 #---------------------------------
 # remove the factoring of value to avoid errors
-dt[ , value:=as.character(value)] 
+#introduces some NAs as some values are NULL
+
+dt[ , value:=as.numeric(as.character(value))] 
+dt = dt[!is.na(value)]
 #---------------------------------
 # merge in the meta data 
-# includes english translations
+# includes english translations to be formatted later
+
 dt = merge_meta_data(dt)
 #---------------------------------
 # run the prep function to prepare some variables for use
+
 dt = prep_dhis(dt)
 #--------------------------------------
 # save the merged rds file 
@@ -119,7 +132,7 @@ max = dt[ , max(date)]
 max = gsub('-', '_', max)
 
 # save a merged rds file 
-saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_', min, '_', max, '.rds' ))
+saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_full_', min, '_', max, '.rds' ))
 
 #--------------------------------------
 # save a subsetted version of pnls with only relevant variables
