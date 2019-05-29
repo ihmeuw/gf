@@ -22,38 +22,38 @@ checkFile = paste0(gos_raw, "Grants missing intervention information in new GOS 
 # ----------------------------------------------
 
 #PREP OLD GOS 2015-2017 FILE 
-{
-  gos_data  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
-                                     sheet=as.character('GOS Mod-Interv - Extract'), detectDates=TRUE))
-  ## reset column names
-  oldNames <- names(gos_data)
-  newNames <- gsub("\\.", "_", oldNames)
-  newNames = tolower(newNames)
-  
-  setnames(gos_data, oldNames, newNames)
-  setnames(gos_data, c('financial_reporting_period_start_date', 'financial_reporting_period_end_date', "total_budget_amount_(in_budget_currency)", 
-                       "total_expenditure_amount_(in_budget_currency)", "component", "grant_number"),
-           c('start_date', 'end_date', 'budget', 'expenditure', 'disease', "grant"))
-  
-  #Keep only the columns you need 
-  gos_data = gos_data[, .(country, grant, start_date, end_date, year, module, intervention, budget, expenditure, disease)]
-  
-  #Make budget and expenditure numeric
-  gos_data[, budget:=as.numeric(budget)]
-  gos_data[, expenditure:=as.numeric(expenditure)]
-  
-  #Fix disease column 
-  gos_data[disease=="HIV/AIDS", disease:='hiv']
-  gos_data[disease=="Malaria", disease:="malaria"]
-  gos_data[disease=="Tuberculosis", disease:="tb"]
-  gos_data[disease=="Health Systems Strengthening", disease:="rssh"]
-  
-  #Add file name 
-  gos_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
-  
-  # EMILY - DO WE WANT TO SEE IF WE HAVE OTHER DATA QUALITY ISSUES IN THIS FILE? 
-
-}
+# {
+#   gos_data  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
+#                                      sheet=as.character('GOS Mod-Interv - Extract'), detectDates=TRUE))
+#   ## reset column names
+#   oldNames <- names(gos_data)
+#   newNames <- gsub("\\.", "_", oldNames)
+#   newNames = tolower(newNames)
+#   
+#   setnames(gos_data, oldNames, newNames)
+#   setnames(gos_data, c('financial_reporting_period_start_date', 'financial_reporting_period_end_date', "total_budget_amount_(in_budget_currency)", 
+#                        "total_expenditure_amount_(in_budget_currency)", "component", "grant_number"),
+#            c('start_date', 'end_date', 'budget', 'expenditure', 'disease', "grant"))
+#   
+#   #Keep only the columns you need 
+#   gos_data = gos_data[, .(country, grant, start_date, end_date, year, module, intervention, budget, expenditure, disease)]
+#   
+#   #Make budget and expenditure numeric
+#   gos_data[, budget:=as.numeric(budget)]
+#   gos_data[, expenditure:=as.numeric(expenditure)]
+#   
+#   #Fix disease column 
+#   gos_data[disease=="HIV/AIDS", disease:='hiv']
+#   gos_data[disease=="Malaria", disease:="malaria"]
+#   gos_data[disease=="Tuberculosis", disease:="tb"]
+#   gos_data[disease=="Health Systems Strengthening", disease:="rssh"]
+#   
+#   #Add file name 
+#   gos_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
+#   
+#   # EMILY - DO WE WANT TO SEE IF WE HAVE OTHER DATA QUALITY ISSUES IN THIS FILE? 
+# 
+# }
 
 #PREP NEW GOS 2015-2017 FILE 
 {
@@ -151,6 +151,9 @@ gms_data[disease == "hiv/aids", disease:='hiv']
 gms_data[disease == "health systems strengthening", disease:='rssh']
 gms_data[disease == 'tuberculosis', disease:='tb']
 
+# Make intervention "unspecified" for this whole dataset
+gms_data[, intervention:='unspecified']
+
 gms_data = gms_data[order(country, disease, grant, grant_period, start_date, end_date, year, module, budget, expenditure)]
 
 gms_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
@@ -158,52 +161,54 @@ gms_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
 #-------------------------------------------------
 # Compare two datasets to each other, and merge 
 #-------------------------------------------------
-
-range(gms_data$start_date)
-range(gms_data$end_date)
-range(gos_data$start_date)
-range(gos_data$end_date)
-
-#Want to keep the new data for as much as we have it for, and then back-fill with the old data. 
-# What dates do we have the new GOS data for? 
-date_range = gos_data[, .(start_date = min(start_date)), by='grant'] #What's the earliest start date for each grant?
-for (i in 1:nrow(date_range)){
-  #Want to drop rows in old data where the start date in the old data is after the earliest start date in the new data. 
-  drop = gms_data[(grant==date_range$grant[i]&start_date>date_range$start_date[i])] #See what rows you'll be dropping. 
-
-  if (nrow(drop)!=0){
-    print(paste0("Dropping rows based on start date, because we have new data for ",  date_range$grant[i], 
-                 " from ", date_range$start_date[i]))
-    print(drop[, .(grant, start_date, end_date)])
-    gms_data = gms_data[!(grant==date_range$grant[i]&start_date>date_range$start_date[i])]
-  }
-  drop2 = gms_data[(grant==date_range$grant[i]&end_date>date_range$start_date[i])] #Fencepost problem - had to rerun one more time if N=1
-  if (nrow(drop2)!=0){
-    print(paste0("Dropping rows based on start date, because we have new data for ",  date_range$grant[i], 
-                 " from ", date_range$start_date[i]))
-    print(drop2[, .(grant, start_date, end_date)])
-    gms_data = gms_data[!(grant==date_range$grant[i]&end_date>date_range$start_date[i])]
-  }
-}
-
-#Are we catching all grant names in this check? 
-unique(gos_data[!grant%in%gms_data$grant, .(grant)])
-
-##combine both GOS and GMS datasets into one dataset, and add final variables. 
-sort(names(gms_data))
-sort(names(gos_data))
-
-#Review the start and end dates for these files in one last check. 
-gos_dates = unique(gos_data[, .(mf_start = min(start_date)), by='grant'])
-gms_dates = unique(gms_data[, .(sda_end =max(end_date)), by='grant'])
-check_dates = merge(gos_dates, gms_dates, by='grant')
-
-#Secondary check to make sure that all grants that don't merge aren't typos 
-gms_dates[!grant%in%gos_dates$grant, .(grant)]
-gos_dates[!grant%in%gms_dates$grant, .(grant)]
+# 
+# range(gms_data$start_date)
+# range(gms_data$end_date)
+# range(gos_data$start_date)
+# range(gos_data$end_date)
+# 
+# #Want to keep the new data for as much as we have it for, and then back-fill with the old data. 
+# # What dates do we have the new GOS data for? 
+# date_range = gos_data[, .(start_date = min(start_date)), by='grant'] #What's the earliest start date for each grant?
+# for (i in 1:nrow(date_range)){
+#   #Want to drop rows in old data where the start date in the old data is after the earliest start date in the new data. 
+#   drop = gms_data[(grant==date_range$grant[i]&start_date>date_range$start_date[i])] #See what rows you'll be dropping. 
+# 
+#   if (nrow(drop)!=0){
+#     print(paste0("Dropping rows based on start date, because we have new data for ",  date_range$grant[i], 
+#                  " from ", date_range$start_date[i]))
+#     print(drop[, .(grant, start_date, end_date)])
+#     gms_data = gms_data[!(grant==date_range$grant[i]&start_date>date_range$start_date[i])]
+#   }
+#   drop2 = gms_data[(grant==date_range$grant[i]&end_date>date_range$start_date[i])] #Fencepost problem - had to rerun one more time if N=1
+#   if (nrow(drop2)!=0){
+#     print(paste0("Dropping rows based on start date, because we have new data for ",  date_range$grant[i], 
+#                  " from ", date_range$start_date[i]))
+#     print(drop2[, .(grant, start_date, end_date)])
+#     gms_data = gms_data[!(grant==date_range$grant[i]&end_date>date_range$start_date[i])]
+#   }
+# }
+# 
+# #Are we catching all grant names in this check? 
+# unique(gos_data[!grant%in%gms_data$grant, .(grant)])
+# 
+# ##combine both GOS and GMS datasets into one dataset, and add final variables. 
+# sort(names(gms_data))
+# sort(names(gos_data))
+# 
+# #Review the start and end dates for these files in one last check. 
+# gos_dates = unique(gos_data[, .(mf_start = min(start_date)), by='grant'])
+# gms_dates = unique(gms_data[, .(sda_end =max(end_date)), by='grant'])
+# check_dates = merge(gos_dates, gms_dates, by='grant')
+# 
+# #Secondary check to make sure that all grants that don't merge aren't typos 
+# gms_dates[!grant%in%gos_dates$grant, .(grant)]
+# gos_dates[!grant%in%gms_dates$grant, .(grant)]
 
 #Bind final datasets together
-totalGos <- rbind(gms_data, gos_data, fill=TRUE)
+#totalGos <- rbind(gms_data, gos_data, fill=TRUE)
+
+totalGos <- gms_data
 
 #Reformat modules/interventions for remapping
 totalGos[is.na(module), module:='unspecified']
@@ -364,4 +369,7 @@ totalGos_qtr[quarter==4, month:='10']
 totalGos_qtr[, start_date:=as.Date(paste0(month, "-01-", year), format="%m-%d-%Y")] #Just calling quarter month for now, so even though 
 # we know the data is more disaggregated, if we've grouped to Q1 it will start on January 1st. We might want to modify this! EKL 5/1/19 
 totalGos_qtr = totalGos_qtr[, -c('month')]
+
+#Add file currency in USD 
+totalGos_qtr$file_currency = "USD"
 

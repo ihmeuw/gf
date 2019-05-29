@@ -156,8 +156,8 @@ gos_expenditures[, .(max_start_date = max(start_date)), by='grant']
 
 ```
 Look at the unique values of each variable in the data that's not numeric. 
-```{r, echo=FALSE}
-stopifnot(sort(names(budgets))==sort(names(expenditures)))
+```{r, echo=FALSE, include=FALSE}
+#stopifnot(sort(names(budgets))==sort(names(expenditures)))
 str(budgets)
 
 
