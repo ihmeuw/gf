@@ -94,13 +94,6 @@ for(f in files) {
 }
 
 #---------------------------------
-# load the newly downloaded, combined data sets
-
-if (folder=='pnls') {
-  dt = readRDS(paste0(dir, '/pre_prep/pnls/pnls_01_2018_04_2019_combined_download.rds'))
-  dt[ , download_number:=NULL] }
-
-#---------------------------------
 # eliminate overlapping dates
 # this willwork even on a single, combined file
 

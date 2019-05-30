@@ -33,8 +33,6 @@ out_dir = paste0(dir, 'prepped/')
 # read in the data 
 setwd(paste0(dir, 'sigpro/october_transfer_2018/'))
 
-dt = list()
-
 # list existing files
 files = list.files('./', recursive=TRUE)
 
@@ -102,8 +100,8 @@ f1[age=="00-01", age:='0 - 1 year']
 #--------------------------
 # flag the problems
 f1[age=='total' | age=="41913" | age=="43348", flag:=TRUE]
-f1[12 < month, flag:=TRUE]
-f1[is.na(flag), flag:=FALSE]
+f1[ , flag:=(12 < month)]
+
 
 #--------------------------
 # create a date variable based on existing information
@@ -115,7 +113,7 @@ f1[month <= 12,date:=as.Date(paste0(year, '-', month, '-01'), format='%Y-%m-%d')
 #--------------------------
 # drop unknown variable - may add later once clarity on code
 
-f1[ ,c('numeroInforme', 'year', 'month'):=NULL]
+f1[ ,c('year', 'month'):=NULL]
 f1[ , set:=files[[1]]]
 
 #--------------------------
@@ -128,11 +126,11 @@ saveRDS(f1, paste0(dir, 'prepped/', files[[1]], '_prepped.RDS'))
 # prep f2
 
 # drop unecessary variables (usually codes associated with values)
-f2[ ,c('numeroInforme', 'codactiv','cui', 'codgrupo', 'codsubgrupo', 
-       'codpais', 'codmunicipio','codigoResultado'):=NULL]
+f2[ ,c('codactiv','cui', 'codgrupo', 'codsubgrupo', 
+       'codpais', 'codigoResultado'):=NULL]
 
 #translate the variables 
-setnames(f2, c('sr', 'sr_code', 'year', 'month', 'pop', 'subpop', 'muni', 'department',
+setnames(f2, c('sr', 'sr_code', 'year', 'month', 'numeroInforme', 'pop', 'subpop', 'muni_code', 'muni', 'department',
               'condoms_delivered', 'female_condoms_delivered', 'lube_tubes_delivered',
               'lube_packets_delivered', 'pamphlets_delivered', 'test_date', 'test_completed',
               'pre_test_completed', 'post_test_completed', 'result', 'informed_of_result', 'referred'))
@@ -167,7 +165,6 @@ f2[ , referred:=(referred=='s')]
 f2[result=='reactivo', result:='reactive']
 f2[result=='no reactivo', result:='nonreactive']
 f2[result=='indeterminado', result:='indeterminate']
-f2[ , hiv_pos:=(result=='reactive')]
 
 #-------------------------------
 # create a gender category
@@ -189,11 +186,13 @@ f2[subpop=='hsh trabajador sexual', pop:='msm']
 
 # check to make sure trans people are classified correctly
 f2[gender=='Trans', pop:='trans']
+
 #--------------------------
 # flag the errant entries - only date in this case
 # name the data set for the combination 
 
 f2[ ,flag:=(year(date)!=2014 & year(date)!=2015 & year(date)!=2016)]
+f2[is.na(date), flag:=TRUE]
 f2[ , set:=files[[2]]]
 
 #--------------------------
@@ -207,10 +206,13 @@ saveRDS(f2, paste0(dir, 'prepped/', files[[2]], '_prepped.RDS'))
 
 # keep and rename these variables
 # month and year show no association with date - multiple years of data but only one code
-f3 = f3[ ,.(pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  post_test_completed=postPruebaVIH, informed_of_result=conoceResultadoVIH, informed_of_sif_result=conoceResultadoSif, 
-            condoms=condonesMasculinos, female_condoms=condonesFemeninos, flavored_condoms=condonesSabores, lube_packets=lubriSachet, lube_tubes=lubriTubo ,
+f3 = f3[ ,.(pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  post_test_completed=postPruebaVIH,
+            informed_of_result=conoceResultadoVIH, informed_of_sif_result=conoceResultadoSif, 
+            condoms=condonesMasculinos, female_condoms=condonesFemeninos, flavored_condoms=condonesSabores, 
+            lube_packets=lubriSachet, lube_tubes=lubriTubo ,
             pop=grupo, subpop=subgrupo, result=resultadoVIH, pqExtendido, sr_code=codejecutor,            
-            activity=tipoActividad, sif_result=resultadoSif, unmovil, date=fechareal,  department=departamento, muni=municipio, theme=tema)]
+            activity=tipoActividad, sif_result=resultadoSif, unmovil, date=fechareal,  department=departamento,
+            muni=municipio, theme=tema)]
 
 # put the columns into lower case for reformatting
 f3 = f3[ ,lapply(.SD, tolower), .SDcols=c(1:length(f3))]
@@ -364,13 +366,6 @@ f5['2019-02-01' < date, date:=NA]
 
 f5[ ,sr_code:=gsub("nac0", "", sr_code)]
 
-# add sr names based on codes and names in other data sets
-f5[sr_code==401, sr:='otrans']
-f5[sr_code==402, sr:='fma']
-f5[sr_code==403, sr:='conevih']
-f5[sr_code==404, sr:='gp']
-f5[sr_code==405, sr:='ffi']
-
 #-------------------------------
 # convert yes and no to a logical 
 
@@ -410,10 +405,6 @@ f5[, flag:=(is.na(date))]
 
 saveRDS(f5, paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
 #---------------------------------------------------
-
-
-
-
 
 
 

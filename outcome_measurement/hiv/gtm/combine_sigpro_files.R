@@ -67,15 +67,16 @@ f = rbind(f, f2)
 
 #---------------------------
 # add sr names based on codes and names in other data sets
-
-f[sr_code==401, sr:='otrans']
-f[sr_code==402, sr:='fma']
-f[sr_code==403, sr:='conevih']
-f[sr_code==404, sr:='gp']
-f[sr_code==405, sr:='ffi']
-f[sr_code==406, sr:='gente nueva']
-f[sr_code==407, sr:='idei']
-f[sr_code==408, sr:='proyecto vida']
+# 
+# f[sr_code==401, sr:='otrans']
+# f[sr_code==402, sr:='fma']
+# f[sr_code==403, sr:='conevih']
+# f[sr_code==404, sr:='gp']
+# f[sr_code==405, sr:='ffi']
+# f[sr_code==406, sr:='gente nueva']
+# f[sr_code==407, sr:='idei']
+# f[sr_code==408, sr:='proyecto vida']
+# f[sr_code==409, sr:='idei']
 
 #---------------------------
 # add values - patients level so each row is 1
@@ -160,6 +161,17 @@ f1 = f1[ ,.(value=sum(value)), by=otherVars]
 # bind the data together
 
 f = rbind(f, f1)
+
+#---------------------------
+# add f5
+
+f5 = readRDS(paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
+
+# format it
+
+
+
+
 #--------------------------------------------------------
 # save the product
 
