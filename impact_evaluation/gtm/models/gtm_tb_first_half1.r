@@ -1,4 +1,4 @@
-# model: gtm_tb_first_half1 adapted from drc_malaria1 by J Ross.
+# model: gtm_tb_first_half1 adapted by J Ross from drc_malaria1 code by D Phillips.
 # This is a computationally viable model that adapts the DRC malaria SEM for the GTM TB context
 # May 2019
 #
@@ -30,48 +30,18 @@ model = '
   Children_in_Contact_with_TB_Started_IPT_out ~ exp_T1_7 + ghe_T1_7 + other_dah_T1_7 + Isoniazid_Distributed_act + date #Add outreach teams
   Cases_Notified_in_Prisons_out ~ exp_T1_6 + ghe_T1_6 + other_dah_T1_6 + date
 	
+
+  #These are all leftover examples from the malaria model that I have not updated yet for TB---------------------------------------------------------------------
 	# latent variables
 	
 	# fixed variances
 	# value_RDT_received ~ 1*value_RDT_received
-	# value_ACT_received ~ 1*value_ACT_received
-	# value_ITN_received ~ 1*value_ITN_received
-	# value_ITN_consumed ~ 1*value_ITN_consumed
-	# value_ACTs_CHWs ~ 1*value_ACTs_CHWs
-	# value_RDT_completed ~ 1*value_RDT_completed
-	# value_SP ~ 1*value_SP
-	# value_severeMalariaTreated ~ 1*value_severeMalariaTreated
-	# value_totalPatientsTreated ~ 1*value_totalPatientsTreated
 	
 	# covariances
   # This is where to specify the relationships between inputs and other inputs
-	budget_M1_1_cumulative ~~ other_dah_M1_1_cumulative
-	# budget_M1_2_cumulative ~~ other_dah_M1_2_cumulative
-	budget_M2_1_cumulative ~~ other_dah_M2_cumulative
-	budget_M2_3_cumulative ~~ other_dah_M2_3_cumulative
-	
-	# fixed covariances
-	budget_M2_3_cumulative ~~ 0*budget_M3_1_cumulative
-	budget_M2_3_cumulative ~~ 0*budget_M2_6_cumulative
-	budget_M2_6_cumulative ~~ 0*budget_M3_1_cumulative
+	# budget_M1_1_cumulative ~~ other_dah_M1_1_cumulative
 
-	value_ITN_consumed ~~ 0*value_ACTs_CHWs
-	value_ITN_consumed ~~ 0*value_RDT_completed
-	value_ITN_consumed ~~ 0*value_SP
-	value_ITN_consumed ~~ 0*value_severeMalariaTreated
-	value_ITN_consumed ~~ 0*value_totalPatientsTreated
-	
-	value_ACTs_CHWs ~~ 0*value_RDT_completed
-	value_ACTs_CHWs ~~ 0*value_SP
-	value_ACTs_CHWs ~~ 0*value_severeMalariaTreated
-	value_ACTs_CHWs ~~ 0*value_totalPatientsTreated
-	
-	value_RDT_completed ~~ 0*value_SP
-	value_RDT_completed ~~ 0*value_severeMalariaTreated
-	value_RDT_completed ~~ 0*value_totalPatientsTreated
-	
-	value_SP ~~ 0*value_severeMalariaTreated
-	value_SP ~~ 0*value_totalPatientsTreated
-	
-	value_severeMalariaTreated ~~ 0*value_totalPatientsTreated
+	# fixed covariances
+	# budget_M2_3_cumulative ~~ 0*budget_M3_1_cumulative
+
 '
