@@ -47,7 +47,6 @@ dup_matrix_final = "final_pnlp_duplicates_matrix.rds"
 # ---------------------------------------------- 
 dt = readRDS( paste0(dir, dt_for_dup_removal) ) 
 dups = readRDS( paste0(dir, dup_matrix_initial) )
-zeroes = readRDS( paste0(dir, dups_zeroes) )
 # ----------------------------------------------   
 
 # ----------------------------------------------     
@@ -81,11 +80,11 @@ dups = dups[! i %in% ids_to_remove]
 dups = dups[! j %in% ids_to_remove]
 # ----------------------------------------------
 
-# ----------------------------------------------
-# save here
-# ----------------------------------------------
-saveRDS(dups, paste0(dir, dup_matrix_output) )
-# ----------------------------------------------
+# # ----------------------------------------------
+# # save here
+# # ----------------------------------------------
+# saveRDS(dups, paste0(dir, dup_matrix_output) )
+# # ----------------------------------------------
 
 # ----------------------------------------------     
 # loop through remaining ids and get the number that are the same that are 0
@@ -93,14 +92,28 @@ saveRDS(dups, paste0(dir, dup_matrix_output) )
 ## RUN ON THE CLUSTER ( update_duplicates.R )
 
 # load result from this: 
-num_zeroes = readRDS(paste0(dir, dups_zeroes))
+zeroes = readRDS(paste0(dir, dups_zeroes))
 
 # merge with dups
-dups = merge(dups, num_zeroes, by = c("i", "j"), all = TRUE)
+dups = merge(dups, zeroes, by = c("i", "j"), all = TRUE)
+# calculate the proportion of identical columns that are 0s
+dups[, prop_identical_0s := num_identical_0s/num_identical]
+
+# remove rows that aren't actually duplicates...
+dups = dups[num_identical != num_identical_0s]  # where the identical columns are only ones that are 0s
+dups = dups[ proportion_identical_j > .2, ] # where the identical columns are a small portion of non-na columns in the corresponding row
+dups =  dups[ num_identical > 15, ] # where the number of identical columns is less than 15 (vetted most of these by hand)
+dups = dups[ prop_identical_0s <= .9 ] # where the identical columns are at least 90% 0s
+
+# # add id column for subsetting
+# dups[ , id := seq(1:nrow(dups))]
+# def_dups = dups[ ( i_j_same_number_not_na == TRUE | (proportion_identical_i >= 0.8 & proportion_identical_j >= 0.8) ) & num_identical >= 30 & prop_identical_0s <= 0.7, ]
+# maybe_dups = dups[ ! id %in% unique(def_dups$id)]
 # ----------------------------------------------
 
 # ----------------------------------------------     
-# 
+# get the ids to remove from the final dups dt
 # ----------------------------------------------
+remove_ids = unique(c(dups$i, dups$j))
 # ----------------------------------------------
 
