@@ -49,10 +49,10 @@ f4 = data.table(read.xlsx(files[[4]], sheet=2))
 
 # rename columns in english
 setnames(f1, c('sr', 'sr_code', 'year', 'month', 'numeroInforme', 
-               'pop', 'diagnosis', 'category', 'age', 'total'))
+               'pop', 'result', 'category', 'age', 'total'))
 
 # put the columns into lower case for reformatting
-f1 = f1[ ,lapply(.SD, tolower), .SDcols=c(1:10)]
+f1 = f1[ ,lapply(.SD, tolower), .SDcols=c(1:length(f1))]
 
 # format date and valuevariables
 f1[ ,month:=as.numeric(month)]
@@ -70,7 +70,7 @@ f1[pop=='parejas de mts', pop:='fsw partners']
 f1[pop=='otros', pop:='others']
 f1[pop=='jrs', pop:='at_risk_youth']
 f1[grep('positiva', pop), pop:='family of pregnant women'] # check
-f1[pop=='mujeres embarazadas', pop:='pregant women']
+f1[pop=='mujeres embarazadas', pop:='pregnant women']
 
 #--------------------------
 # gender category
@@ -334,4 +334,90 @@ f4[, flag:=(is.na(date))]
 saveRDS(f4, paste0(dir, 'prepped/', files[[4]], '_prepped.RDS'))
 
 #--------------------------
-#-------------------------------------------------------------
+#---------------------------------------------------------------------------
+
+#-----------------------------------------
+# read in the february 2019 testing data 
+
+# 2019 testing 
+f5 = fread(paste0(dir, 'sigpro/february_transfer_2019/sigpro_f4_JanNov2018 - PB_TVC.csv'))
+
+# keep only the relevant variables
+f5 = f5[ ,.(referral=refervih, pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  post_test_completed=postPruebaVIH, 
+                informed_of_result=conoceResultadoVIH, condoms=condonesMasculinos, female_condoms=condonesFemeninos, 
+                flavored_condoms=condonesSabores, lube_packets=lubriSachet, lube_tubes=lubriTubo, impresos, 
+                pop=grupo, subpop=subgrupo, result=resultadoVIH, sr_code=codejecutor,            
+                activity=tipoActividad, date=fechareal,  department=departamento, muni=municode, theme=tema,
+                pqBasico, gender=Gender, age=Age)]
+   
+# put the columns into lower case for reformatting
+f5 = f5[ ,lapply(.SD, tolower), .SDcols=c(1:length(f5))]
+
+#----------------------------
+# format the dates and drop impossible values
+f5[date=='', date:=NA]
+f5[ , date:=ymd(date)]
+f5['2019-02-01' < date, date:=NA]
+
+#----------------------------
+# match the sr codes
+
+f5[ ,sr_code:=gsub("nac0", "", sr_code)]
+
+# add sr names based on codes and names in other data sets
+f5[sr_code==401, sr:='otrans']
+f5[sr_code==402, sr:='fma']
+f5[sr_code==403, sr:='conevih']
+f5[sr_code==404, sr:='gp']
+f5[sr_code==405, sr:='ffi']
+
+#-------------------------------
+# convert yes and no to a logical 
+
+f5[ , referral:=(referral=='s')]
+f5[ , pre_test_completed:=(pre_test_completed=='s')]
+f5[ , test_completed:=(test_completed=='s')]
+f5[ , post_test_completed:=(post_test_completed=='s')]
+f5[ , informed_of_result:=(informed_of_result=='s')]
+
+# format and create a marker for positive tests
+f5[result=='reactivo', result:='reactive']
+f5[result=='no reactivo', result:='nonreactive']
+f5[result=='indeterminado', result:='indeterminate']
+f5[result=='prueba no realizada', result:='test not done']
+
+f5[ , hiv_pos:=(result=='reactive')]
+
+#-------------------------------
+# create a gender category
+
+f5[gender=='m', gender:='Male']
+f5[gender=='t', gender:='Trans']
+f5[gender=='f', gender:='Female']
+
+# translate populations 
+f5[pop=='hsh', pop:='msm']
+
+#--------------------------
+# label the data set
+f5[ , set:='sigpro_f4_JanNov2018 - PB_TVC.csv']
+
+# only a single data entry error
+f5[, flag:=(is.na(date))]
+
+#--------------------------
+# save the file 
+
+saveRDS(f5, paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
+#---------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+

@@ -32,6 +32,7 @@ f1 = readRDS(paste0(dir, 'prepped/sigpro_f1_completo 2018.xlsx_prepped.RDS'))
 f2 = readRDS(paste0(dir, 'prepped/sigpro_f2_completo 2018.xlsx_prepped.RDS'))
 f3 = readRDS(paste0(dir, 'prepped/sigpro_f3_completo 2018.xlsx_prepped.RDS'))
 f4 = readRDS(paste0(dir, 'prepped/sigpro_f4_completo 2018.xlsx_prepped.RDS'))
+f5 = readRDS(paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
 
 #----------------------------------------
 # combine the data sets - f3 and f4
@@ -39,7 +40,7 @@ f4 = readRDS(paste0(dir, 'prepped/sigpro_f4_completo 2018.xlsx_prepped.RDS'))
 
 # subset and combine similar data sets
 vars = c("set", "sr_code", "department", "muni", "date",  
-         "theme", "pop", "subpop", "gender", "test_completed",
+         "theme", "pop", "subpop", "gender", 
          "result", "informed_of_result", "flag")
 
 f3 = f3[, vars, with=FALSE]
@@ -54,7 +55,7 @@ f[ , sr:=NA]
 
 # subset and combine the patient level data
 vars2 = c("set", "sr_code", "sr", "department", "muni", "date",  
-          "pop", "subpop", "gender", "test_completed",
+          "pop", "subpop", "gender", 
          "result", "informed_of_result", "flag")
 
 # subset and add theme
@@ -77,13 +78,8 @@ f[sr_code==407, sr:='idei']
 f[sr_code==408, sr:='proyecto vida']
 
 #---------------------------
-# fill in missing test completion values
-
-# some tests say not completed, but have a results
-f[result=='reactive' | result=='nonreactive' | result=='indeterminate', test_completed:=T]
-
-# ensure consistency
-f[result=="test not done", test_completed:=FALSE]
+# add values - patients level so each row is 1
+f[ ,value:=1]
 
 #---------------------------
 # drop erroneous values
@@ -102,15 +98,15 @@ f[ ,unique(muni)]
 #   geom_point() +
 #   geom_line()
 
-f[2019 < year(date), date:=NA]
 f[year(date) < 2013, date:=NA] # reporting appears to begin in 2013
+f['2018-08-01' < date, date:=NA]
 
 #-------------------------------------------------------
 # sum the final results 
 
 # drop informed of result - early data only has positive or negative
 # no information in f1 on informing patients
-f = f[ ,.(test_completed=sum(test_completed)), by=.(set, sr, sr_code,
+f = f[ ,.(value=sum(value)), by=.(set, sr, sr_code,
         department, muni, date, theme, pop, subpop,
         gender, result)]
 
@@ -134,9 +130,42 @@ f1[grep("negativo", result), result:="nonreactive"]
 f1[grep("positivo", result), result:="reactive"]
 f1[grep("presuntivo", result), result:="test not done"]
 
-# create a variable for hiv test completed
-f1[result=="nonreactive" | result=="reactive", test_completed:=TRUE]
-f1[result=="test not done", test_completed:=FALSE]
+#---------------------------
+# create subpopulations 
+
+# reset variable name
+setnames(f1, "category", "subpop")
+f1[subpop=='mujeres' | subpop=='hombres' | subpop=='trans', subpop:=NA] # captured in gender
 
 #---------------------------
+# drop unecessary variables and create variables for rbind
+
+f1[ ,c("flag", "pregnant"):=NULL]
+
+# add variables in f
+f1[ ,department:=NA]
+f1[ ,muni:=NA]
+f1[ ,theme:=NA]
+
+# finalize shaped long
+setnames(f1, "total", "value")
+
+#---------------------------
+# sum over the age categories
+
+otherVars = names(f1)[names(f1)!='value' & names(f1)!='age']
+f1 = f1[ ,.(value=sum(value)), by=otherVars]
+
+#---------------------------
+# bind the data together
+
+f = rbind(f, f1)
+#--------------------------------------------------------
+# save the product
+
+saveRDS(f, paste0(dir, 'prepped/sigpro_october_2018_transfer_prepped.RDS'))
+
+#--------------------------------------------------------
+
+
 
