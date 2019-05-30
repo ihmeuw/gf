@@ -29,7 +29,7 @@ if (prep_files == TRUE){
   file_list = prioritize_gos(file_list)
 
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')] #EMILY NEED TO RETHINK THIS. 
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source', 'pudr_semester')] #EMILY NEED TO RETHINK THIS. 
   file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
   if ( nrow(file_list[date_dup>0])!=0){

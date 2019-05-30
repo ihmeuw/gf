@@ -314,28 +314,45 @@ mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, 
 # 2. For the expenditure dataset, we should subtract the earlier quarter in a year from the later quarters, and then append all of this to create an expenditure dataset. 
 
 if (prep_files){
+  #-------------------------------------------
   #1. Budgets 
   final_budgets = mapped_data[file_iteration == "final" & data_source == "fpm"] #Only want the final versions of budgets. 
-
+  
+  #-------------------------------------------
   #2. Expenditures 
-  # byVars = names(mapped_data)
-  # byVars = byVars[!byVars%in%c('budget', 'expenditure', 'disbursement', 'year', 'quarter', 'start_date')]
-  # final_expenditures = mapped_data[data_source == "pudr"] #EMILY CAN YOU MAKE SURE YOU DON'T HAVE MORE THAN ONE FINAL AND ONE INITIAL FILE??? NEED TO RETHINK DUPLICATES. 
-  # #For the same grant in the same grant period, you want to get the total for each PUDR and subtract semester 1 from semester 1-2. 
-  # 
-  # final_expenditures = final_expenditures[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
-  #                                  by=byVars]
-  # final_expenditures = dcast(final_expenditures, grant+grant_period+disease+gf_module+gf_intervention+orig_module+orig_intervention+activity_description~pudr_semester, 
-  #                     value.var=c('budget', 'expenditure'))
-  # final_expenditures[, `budget_Semester 1-2`:=`budget_Semester 1-2`-`budget_Semester 1`]
-  # final_expenditures[, `expenditure_Semester 1-2`:=`expenditure_Semester 1-2`-`expenditure_Semester 1`]
-  # setnames(final_expenditures, c('budget_Semester 1-2', 'expenditure_Semester 1-2'), c('budget_Semester 2', 'expenditure_Semester 2')) #EMILY CHECK WITH DAVID THAT THIS IS THE RIGHT THING TO DO. 
-  # 
-  # #3. Absorption
-  # absorption = mapped_data[data_source=="pudr", .(grant, grant_period, gf_module, gf_intervention, budget, expenditure, pudr_semester, 
-  #                                                 orig_module, orig_intervention, code)]
-  # absorption = dcast(absorption, grant+grant_period+gf_module+gf_intervention+code+orig_module+orig_intervention~pudr_semester, 
-  #                    value.var=c('budget', 'expenditure'), fun.aggregate=sum_na_rm)
+  byVars = names(mapped_data)
+  byVars = byVars[!byVars%in%c('budget', 'expenditure', 'disbursement', 'year', 'quarter', 'start_date')]
+  final_expenditures = mapped_data[data_source == "pudr"] #EMILY CAN YOU MAKE SURE YOU DON'T HAVE MORE THAN ONE FINAL AND ONE INITIAL FILE??? NEED TO RETHINK DUPLICATES.
+  #For the same grant in the same grant period, you want to get the total for each PUDR and subtract semester 1 from semester 1-2.
+
+  final_expenditures = final_expenditures[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)),
+                                   by=byVars]
+  final_expenditures = dcast(final_expenditures, grant+grant_period+disease+gf_module+gf_intervention+orig_module+orig_intervention+activity_description~pudr_semester,
+                      value.var=c('budget', 'expenditure'))
+  final_expenditures[, `budget_Semester 1-2`:=`budget_Semester 1-2`-`budget_Semester 1`]
+  final_expenditures[, `expenditure_Semester 1-2`:=`expenditure_Semester 1-2`-`expenditure_Semester 1`]
+  setnames(final_expenditures, c('budget_Semester 1-2', 'expenditure_Semester 1-2'), c('budget_Semester 2', 'expenditure_Semester 2')) #EMILY CHECK WITH DAVID THAT THIS IS THE RIGHT THING TO DO.
+  
+  #-------------------------------------------
+  #3. Absorption
+  absorption = mapped_data[data_source=="pudr", .(grant, grant_period, code, gf_module, gf_intervention, budget, expenditure, pudr_semester)]
+  setnames(absorption, 'pudr_semester', 'pudr_code')
+  absorption = merge(absorption, pudr_labels, by=c('pudr_code'), all.x=T)
+  
+  #Calculate absorption by module/intervention 
+  absorption = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
+                          by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'semester')]
+  absorption[, absorption:=(expenditure/budget)*100]
+  
+  absorption_wide=data.table()
+  grants = unique(absorption[, .(grant, grant_period)])
+  for (i in 1:nrow(grants)){
+    subset = absorption[grant==grants$grant[i] & grant_period==grants$grant_period[i], .(grant, grant_period, gf_module, gf_intervention, absorption, semester)]
+    
+    subset_wide = dcast(subset, grant+grant_period+gf_module+gf_intervention~semester,
+                        value.var=c('absorption'))
+    absorption_wide=rbind(absorption_wide, subset_wide, fill=TRUE)
+  }
 }
 
 # ----------------------------------------------
@@ -347,12 +364,12 @@ if (prep_files){
   saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
   # saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
   saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
-  #saveRDS(absorption, paste0(export_dir, "absorption.rds"))
+  saveRDS(absorption_wide, paste0(export_dir, "absorption.rds"))
   
   write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), row.names=FALSE)
   #write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
   write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"), row.names=FALSE)
-  #write.csv(absorption, paste0(export_dir, "absorption.rds"), row.names=FALSE)
+  write.csv(absorption_wide, paste0(export_dir, "absorption.rds"), row.names=FALSE)
 }
 
 if (prep_gos == TRUE){
