@@ -25,6 +25,12 @@ names(outputs_activities) <- gsub("_x", "", names(outputs_activities))
 # -----------------------------------------------------------------------------------------------------
 # Prep/merge data
 
+# test unique identifiers
+n = nrow(resource_tracking)
+if (n!=length(unique(resource_tracking$date))) stop('date doesn\'t uniquely identify rows in the resource tracking data!')
+n = nrow(outputs_activities)
+if (n!=nrow(unique(outputs_activities[,c('date','department'),with=F]))) stop('date doesn\'t uniquely identify rows in the resource tracking data!')
+
 # rectangularize before merge
 frame = expand.grid(date = unique(outputs_activities$date), department = unique(outputs_activities$department))
 

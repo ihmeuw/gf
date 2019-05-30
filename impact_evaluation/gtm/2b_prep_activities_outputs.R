@@ -40,43 +40,53 @@ a_mun[!a_mun%in%o_mun] #Some municipalities aren't matching here.
 o_mun[!o_mun%in%a_mun] #Some municipalities aren't matching here. 
 
 #Subset data to only department-level, because municipalities aren't matching right now. 
-#------------------------
-# Activities
-#------------------------
-#Make a department-level dataset and a municipality-level dataset. 
-dep_level_a = activities[, .(date, department, Total_Drugs_Distributed_value_d_x, Isoniazid_Distributed_value_d, Number_of_Cases_Screened_for_MDR_value_d, Total_Drugs_Distributed_value_d_y)]
-names(dep_level_a) = gsub("_d", "", names(dep_level_a))
-dep_level_a = unique(dep_level_a)
 
-mun_level_a = activities[, .(date, department, PLHIV_Screened_for_TB_value_m, TB_Patients_Tested_for_HIV_value_m)] #Don't need municipality here. 
-mun_level_a = mun_level_a[, .(PLHIV_Screened_for_TB_value=sum(PLHIV_Screened_for_TB_value_m, na.rm=T), TB_Patients_Tested_for_HIV_value=sum(TB_Patients_Tested_for_HIV_value_m, na.rm=T)), 
-          by=c('date', 'department')]
+# test for repeated muni codes across departments
+unique = unique(activities[,c('department','municipality'),with=F])
+unique = unique[, .N, by='municipality']
+if (any(unique$N>1)) stop('Some municipalities appear in more than one department (in the activities data)!') 
+unique = unique(outputs[,c('department','municipality'),with=F])
+unique = unique[, .N, by='municipality']
+if (any(unique$N>1)) stop('Some municipalities appear in more than one department (in the outputs data)!') 
 
-activities1 = merge(dep_level_a, mun_level_a, by=c('date', 'department'), all=T)
-#Make sure you've accounted for all columns except municipality. 
-stopifnot(ncol(activities1) == ncol(activities)-1)
-new_names = names(activities1)[3:ncol(activities1)]  #Resest the names so they're distinguishable from activity variables. 
-new_names = paste0(new_names, "_act")
-names(activities1)[3:ncol(activities1)] <- new_names
+# test for missing department or muni codes
+if (any(is.na(activities$department))) stop('There are missing department codes in the activities data')
+if (any(is.na(outputs$department))) stop('There are missing department codes in the outputs data')
+if (any(is.na(activities$municipality))) stop('There are missing municipality codes in the activities data')
+if (any(is.na(outputs$municipality))) stop('There are missing municipality codes in the outputs data')
 
 #------------------------
-# Outputs
+# Collapse Activities
 #------------------------
-dep_level_o = outputs[, .(date, department, Cases_Started_on_Treatment_value_d, Cases_Notified_in_Prisons_value, 
-                             MDR_Cases_Notified_value_d, MDR_Cases_Started_Treatment_value_d)]
-names(dep_level_o) = gsub("_d", "", names(dep_level_o))
-dep_level_o = unique(dep_level_o)
 
-mun_level_o = outputs[, .(date, department, Cases_Notified_value_m, Additional_Cases_Detected_via_ACF_value_m, PLHIV_started_on_IPT_value_m,
-                             Children_in_Contact_with_TB_Started_IPT_value_m, `HIV/TB_Cases_Notified_value_m`, Cases_Started_on_Treatment_in_Prisons_value_m)] #Don't need municipality here. 
-mun_vars = names(mun_level_o)[3:ncol(mun_level_o)]
-for (v in mun_vars){
-  mun_level_o[, (v):=sum(get(v), na.rm=T), by=c('date', 'department')]
-}
-mun_level_o = unique(mun_level_o)
-names(mun_level_o) <- gsub("_m", "", names(mun_level_o))
+# identify variables at department-level and muni-level
+deptVars = c('Total_Drugs_Distributed_value_d_x', 'Isoniazid_Distributed_value_d', 'Number_of_Cases_Screened_for_MDR_value_d', 'Total_Drugs_Distributed_value_d_y')
+muniVars = c('TPLHIV_Screened_for_TB_value_m', 'TB_Patients_Tested_for_HIV_value_m')
 
-outputs1 = merge(dep_level_o, mun_level_o, by=c('date', 'department'), all=T)
+# collapse to department level 
+# (average variables that are already at department-level, sum variables that are muni-level)
+byVars = c('date','department')
+tmp1 = activities[, lapply(.SD, mean), .SDcols=deptVars, by=byVars]
+tmp2 = activities[, lapply(.SD, sum), .SDcols=muniVars, by=byVars]
+activities1 = merge(tmp1, tmp2, by=byVars)
+
+
+#------------------------
+# Collapse Outputs
+#------------------------
+
+# identify variables at department-level and muni-level
+deptVars = c('Cases_Started_on_Treatment_value_d', 'Cases_Notified_in_Prisons_value', 'MDR_Cases_Notified_value_d', 'MDR_Cases_Started_Treatment_value_d')
+muniVars = c('Cases_Notified_value_m', 'Additional_Cases_Detected_via_ACF_value_m', 'PLHIV_started_on_IPT_value_m', 
+	'Children_in_Contact_with_TB_Started_IPT_value_m', 'HIV/TB_Cases_Notified_value_m', 
+	'Cases_Started_on_Treatment_in_Prisons_value_m')
+
+# collapse to department level 
+# (average variables that are already at department-level, sum variables that are muni-level)
+tmp1 = activities[, lapply(.SD, mean), .SDcols=deptVars, by=byVars]
+tmp2 = activities[, lapply(.SD, sum), .SDcols=muniVars, by=byVars]
+outputs1 = merge(tmp1, tmp2, by=byVars)
+
 #Make sure you've accounted for all columns except municipality. 
 stopifnot(ncol(outputs1) == ncol(outputs)-1)
 new_names = names(outputs1)[3:ncol(outputs1)]  #Resest the names so they're distinguishable from activity variables. 
