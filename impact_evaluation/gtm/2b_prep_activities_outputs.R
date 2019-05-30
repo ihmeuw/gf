@@ -1,0 +1,98 @@
+# Emily Linebarger, based on code by Audrey Batzel
+# May/June 2019 
+# Prep activities and outputs data for TB impact model in Guatemala. 
+# The current working directory should be the root of this repo (set manually by user)
+# -----------------------------------------------------------
+
+# ---------------------------------------------------
+# Read in data
+# ---------------------------------------------------
+drc = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/outputs_activities_for_pilot_wide.RDS") #For reference 
+activities = fread(actFile)
+outputs = fread(outputsFile)
+
+#Add _ to names of data. 
+names(activities) = gsub(" ", "_", names(activities))
+names(outputs) = gsub(" ", "_", names(outputs))
+
+#----------------------------------------------------
+# Validate files, and subset data. 
+#----------------------------------------------------
+#Make sure that merge below will work - dates.  
+a_dates = unique(activities$date)
+o_dates = unique(outputs$date)
+
+a_dates[!a_dates%in%o_dates] #Don't have output data for 2018.  
+o_dates[!o_dates%in%a_dates] #Nothing. 
+
+#Departments
+a_depts = unique(activities$department)
+o_depts = unique(outputs$department)
+
+a_depts[!a_depts%in%o_depts] #None. 
+o_depts[!o_depts%in%a_depts] #None. 
+
+#Municipalities
+a_mun = unique(activities$municipality)
+o_mun = unique(outputs$municipality)
+
+a_mun[!a_mun%in%o_mun] #Some municipalities aren't matching here. 
+o_mun[!o_mun%in%a_mun] #Some municipalities aren't matching here. 
+
+#Subset data to only department-level, because municipalities aren't matching right now. 
+#------------------------
+# Activities
+#------------------------
+#Make a department-level dataset and a municipality-level dataset. 
+dep_level_a = activities[, .(date, department, Total_Drugs_Distributed_value_d_x, Isoniazid_Distributed_value_d, Number_of_Cases_Screened_for_MDR_value_d, Total_Drugs_Distributed_value_d_y)]
+names(dep_level_a) = gsub("_d", "", names(dep_level_a))
+dep_level_a = unique(dep_level_a)
+
+mun_level_a = activities[, .(date, department, PLHIV_Screened_for_TB_value_m, TB_Patients_Tested_for_HIV_value_m)] #Don't need municipality here. 
+mun_level_a = mun_level_a[, .(PLHIV_Screened_for_TB_value=sum(PLHIV_Screened_for_TB_value_m, na.rm=T), TB_Patients_Tested_for_HIV_value=sum(TB_Patients_Tested_for_HIV_value_m, na.rm=T)), 
+          by=c('date', 'department')]
+
+activities1 = merge(dep_level_a, mun_level_a, by=c('date', 'department'), all=T)
+#Make sure you've accounted for all columns except municipality. 
+stopifnot(ncol(activities1) == ncol(activities)-1)
+new_names = names(activities1)[3:ncol(activities1)]  #Resest the names so they're distinguishable from activity variables. 
+new_names = paste0(new_names, "_act")
+names(activities1)[3:ncol(activities1)] <- new_names
+
+#------------------------
+# Outputs
+#------------------------
+dep_level_o = outputs[, .(date, department, Cases_Started_on_Treatment_value_d, Cases_Notified_in_Prisons_value, 
+                             MDR_Cases_Notified_value_d, MDR_Cases_Started_Treatment_value_d)]
+names(dep_level_o) = gsub("_d", "", names(dep_level_o))
+dep_level_o = unique(dep_level_o)
+
+mun_level_o = outputs[, .(date, department, Cases_Notified_value_m, Additional_Cases_Detected_via_ACF_value_m, PLHIV_started_on_IPT_value_m,
+                             Children_in_Contact_with_TB_Started_IPT_value_m, `HIV/TB_Cases_Notified_value_m`, Cases_Started_on_Treatment_in_Prisons_value_m)] #Don't need municipality here. 
+mun_vars = names(mun_level_o)[3:ncol(mun_level_o)]
+for (v in mun_vars){
+  mun_level_o[, (v):=sum(get(v), na.rm=T), by=c('date', 'department')]
+}
+mun_level_o = unique(mun_level_o)
+names(mun_level_o) <- gsub("_m", "", names(mun_level_o))
+
+outputs1 = merge(dep_level_o, mun_level_o, by=c('date', 'department'), all=T)
+#Make sure you've accounted for all columns except municipality. 
+stopifnot(ncol(outputs1) == ncol(outputs)-1)
+new_names = names(outputs1)[3:ncol(outputs1)]  #Resest the names so they're distinguishable from activity variables. 
+new_names = paste0(new_names, "_out")
+names(outputs1)[3:ncol(outputs1)] <- new_names
+
+#-----------------------------------------------------
+# Merge data 
+#-----------------------------------------------------
+
+dt_final = merge(activities1, outputs1, by=c('date', 'department'))
+#-----------------------------------------------------
+# Save data 
+#-----------------------------------------------------
+saveRDS(dt_final, outputFile2b)
+archive(outputFile2b)
+
+
+

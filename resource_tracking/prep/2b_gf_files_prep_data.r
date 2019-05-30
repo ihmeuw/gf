@@ -6,7 +6,7 @@
 
 #-------------------------
 #To do: 
-
+# Make sure that final files in file list don't have overlapping quarters, NOT just duplicate start dates. 
 #--------------------------
 
 #----------------------------------------------------
@@ -18,27 +18,43 @@ if (prep_files == TRUE){
   file_list = file_list[, -c('notes')]
   
   #Validate file list 
-  desired_cols <- c('file_name', 'sheet', 'function_type', 'start_date', 'disease', 'data_source', 'period', 'qtr_number', 'grant', 'primary_recipient',
-                    'secondary_recipient', 'language', 'geography', 'grant_period', 'grant_status', 'file_iteration')
-  #stopifnot(colnames(file_list) %in% desired_cols)
-  
-  stopifnot(sort(unique(file_list$data_source)) == c("fpm", "pudr"))
-  stopifnot(sort(unique(file_list$file_iteration)) == c("final", "initial"))
-  
-  #Turn this variable on to run only a limited section of each country's file list; i.e. only the part that will be kept after GOS data is prioritized in step 4 (aggregate data). 
-  if(limit_filelist==TRUE){
-    file_list = prioritize_gos(file_list)
-  }
+  desired_cols <- c("file_name", "function_type", "sheet", "disease", "loc_id", "data_source", "period", "qtr_number", "grant", "primary_recipient", 
+                    "secondary_recipient", "language", "grant_period", "grant_status", "start_date", "file_iteration", "geography_detail", 
+                    "loc_name", "mod_framework_format", "file_currency", "eur_to_usd_rate", "loc_to_usd_rate", "pudr_semester")
+  stopifnot(colnames(file_list) %in% desired_cols)
+  stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr"))
+  stopifnot((unique(file_list$file_iteration))%in%c("final", "initial"))
 
+  #Prioritize GOS data where we have it
+  file_list = prioritize_gos(file_list)
+
+  #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')] #EMILY NEED TO RETHINK THIS. 
+  file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
+
+  if ( nrow(file_list[date_dup>0])!=0){
+    print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
+    print("There are duplicates in final files - review file list.")
+  }
+  
+  pudr_dup = unique(file_list[data_source=="pudr", .(grant, grant_period, pudr_semester, file_name)])
+  pudr_dup[, pudr_dup:=seq(0, nrow(pudr_dup), by=1), by=c('grant', 'grant_period', 'pudr_semester')]
+  if (nrow(file_list$pudr_dup==1)>0){
+    stop("There are duplicates in PUDRs between semesters - review file list.")
+  }
 }
 
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
 #----------------------------------------------------
-if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, but only if all are run
+if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
-  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget')
+  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
+                                      'DETAIL')
+  
+  budget_cols = c("activity_description", "budget", "cost_category", "implementer", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
+  pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){
     folder = "budgets"
@@ -52,25 +68,64 @@ if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, 
     inFile = paste0(file_dir, file_list$file_name[i])
     args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$period[i])
     
-    if(file_list$function_type[i] == 'detailed' & file_list$sheet[i]%in%general_detailed_budget_sheets){
+    if(file_list$function_type[i] == 'detailed' & file_list$sheet[i]%in%general_detailed_budget_sheets){ #Prep standardized detailed budgets. 
       args[length(args)+1] = file_list$qtr_number[i]
       args[length(args)+1] = file_list$language[i]
       tmpData = do.call(prep_general_detailed_budget, args)
       
-    } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){
+      stopifnot(sort(names(tmpData)) == budget_cols)
+      
+    } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){ #Prep standardized 'modular approach' PUDRs. 
+      args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_modular_approach_pudr, args)
       
-    } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i] == 'cod'){
+      stopifnot(sort(names(tmpData)) == pudr_cols)
+      tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
+      
+    } else if (file_list$function_type[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$period[i])
+      tmpData = do.call(prep_pudr_gtm, args)
+      
+      stopifnot(sort(names(tmpData)) == pudr_cols)
+      tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
+      
+    } else if (file_list$function_type[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet[i]%in%c('PR EFR_7A')){
+      args[length(args)+1] = file_list$qtr_number[i]
+      tmpData = do.call(prep_gtm_pudr2, args)
+      
+      stopifnot(sort(names(tmpData)) == pudr_cols)
+      tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
+    } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i] == 'cod'){ #Prep summary budgets from DRC. 
       args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_summary_budget_cod, args)
       
+      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
+      
+    } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i]=='gtm') {
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i])
+      tmpData = do.call(prep_summary_budget_gtm, args)
+      
+      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
+    } else if (file_list$function_type[i]=='old_detailed' & file_list$loc_name[i]=="gtm"){ 
+      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i])
+      tmpData = do.call(prep_other_budget_gtm, args)
+      
+      stopifnot(sort(names(tmpData)) == c('activity_description', 'budget', "expenditure", 'module', 'quarter', 'start_date', 'year'))
+    } else if (file_list$function_type[i]=='summary' & file_list$loc_name[i]=='uga'){
+      args[length(args)+1] = file_list$qtr_number[i]
+      args[length(args)+1] = file_list$grant[i]
+      tmpData = do.call(prep_summary_uga_budget, args)
+      
+      stopifnot(sort(names(tmpData)) == budget_cols)
     } else {
       print(paste0("File not being processed: ", file_list$file_name[i]))
+      print(paste0("Check logic conditions. This file has the function_type: ", file_list$function_type[i],
+            " and the sheet name: ", file_list$sheet[i]))
     }
     
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, secondary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language)]
+                                 mod_framework_format, file_iteration, language, eur_to_usd_rate, loc_to_usd_rate, file_currency, pudr_semester)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
     }  
@@ -79,18 +134,18 @@ if (rerun_filelist == TRUE & limit_filelist == FALSE){ #Save the prepped files, 
     #Bind data together 
     if(i==1){
       resource_database = tmpData
-    } 
-    if(i>1){
+    } else {
       resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill = TRUE)
     }
-    print(paste0(i, " ", file_list$data_source[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
+    print(paste0(i, " ", file_list$data_source[i], " ", file_list$function_type[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
   }
   
-  saveRDS(resource_database, paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+  saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))
   
   
 } else {
-  resource_database <- readRDS(paste0(j, "/Project/Evaluation/GF/resource_tracking/", country, "/prepped/raw_bound_gf_files.RDS"))
+  resource_database <- readRDS(paste0(dir, "_gf_files_gos/", country, "/prepped_data/raw_bound_gf_files.RDS"))
+  resource_database = resource_database[file_name%in%file_list$file_name]
 }
 
 #------------------------------------------------------------------
@@ -118,7 +173,8 @@ resource_database$disbursement <- as.numeric(resource_database$disbursement)
 #Add files here that had a sum total for 0 in raw file. 
 verified_0_budget <- c('UGD-708-G08-M_PUDR 30Nov2011.xls', 'UGD-708-G08-M_PUDR_30June2012.xls')
 #Add PUDRs here that did not report any expenditure. 
-verified_0_expenditure <- c('GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx', 'UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx')
+verified_0_expenditure <- c('GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx', 'UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 'UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx', 
+                            "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx", "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx")
 
 #Make sure that no files have a total sum of 0; this would indicate an error in the prep code. 
 check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by=.(file_name)]

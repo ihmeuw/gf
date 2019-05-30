@@ -1,0 +1,80 @@
+---
+title: "Senegal Current Grant Overview"
+author: "Emily Linebarger"
+date: "May 10, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+library(data.table)
+library(knitr)
+library(ggplot2)
+library(formattable)
+
+budgets = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/sen/prepped_data/final_budgets.rds")
+setDT(budgets)
+expenditures = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/sen/prepped_data/final_expenditures.rds")
+setDT(expenditures)
+
+all_interventions = readRDS("C:/Users/elineb/Desktop/all_interventions.rds") #Pull in to get abbrev module. 
+all_interventions = all_interventions[, .(module_eng, abbrev_mod_eng)] 
+names(all_interventions) = c('gf_module', 'abbrev_mod')
+all_interventions = unique(all_interventions)
+all_interventions = all_interventions[!is.na(abbrev_mod)]
+
+budgets = merge(budgets, all_interventions, by='gf_module', all.x=T)
+expenditures = merge(expenditures, all_interventions, by='gf_module', all.x=T)
+```
+# Country overview 
+There are currently four active grants in Senegal.   
+1. SEN-H-ANCS (PR - Alliance Nationale des Communautés pour la Santé)  
+2. SEN-H-CNLS (PR - Conseil National de Lutte contre le SIDA de la République du Sénégal)  
+3. SEN-M-PNLP (PR - Ministry of Health and Social Action of the Republic of Senegal)   
+4. SEN-Z-MOH (PR - Ministry of Health and Social Action of the Republic of Senegal), which is a combined TB/RSSH grant.   
+
+# Funding landscape overview 
+*All numbers reported in USD*
+```{r Overview, echo=FALSE, warning = FALSE}
+grant_summary = budgets[, .(budget=sum(budget, na.rm=T)), by=c('grant', 'grant_period')]
+#Format budget as currency 
+grant_summary[, budget:=currency(budget, digits = 0L)]
+kable(grant_summary, caption="Total from detailed budgets")
+
+absorption = expenditures[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by='grant']
+absorption[, absorption:=expenditure/budget]
+absorption[, absorption:=round(absorption, 2)]
+kable(absorption[, .(grant, budget, expenditure, absorption)], caption = "Reported expenditure and absorption")
+
+```
+
+```{r Analysis by module, echo=FALSE, warning=FALSE}
+by_module = budgets[, .(budget=sum(budget, na.rm=T)), by=c('grant', 'abbrev_mod')]
+grants = unique(budgets$grant)
+for (var in grants){
+  modplot = ggplot(by_module[grant==var], aes(x=reorder(abbrev_mod, budget), y=budget, fill=grant)) +
+    geom_bar(stat="identity") +
+    theme_bw() +
+    theme(legend.title=element_blank()) +
+    coord_flip() +
+    labs(x="Module", y="Budget (USD)", title=paste0("Modules ranked by budget"))
+  print(modplot)
+}
+```
+For the modules with the highest spend in each grant, what are the main interventions? 
+```{r Key Interventions, echo=FALSE, warning=FALSE}
+
+sen_m_pnlp = budgets[grant=="SEN-M-PNLP" & abbrev_mod=="Vector control", .(budget=sum(budget, na.rm=T)), by=c('gf_intervention')]
+kable(sen_m_pnlp[order(-budget)], caption="SEN-M-PNLP, Module: Vector Control")
+
+
+sen_h_ancs = budgets[grant=="SEN-H-ANCS" & abbrev_mod=="Program mgmt", .(budget=sum(budget, na.rm=T)), by=c('gf_intervention')]
+kable(sen_h_ancs[order(-budget)], caption="SEN-H-ANCS, Module: Program Management")
+
+sen_h_cnls = budgets[grant=="SEN-H-CNLS" & abbrev_mod=="Treatment, care & support", .(budget=sum(budget, na.rm=T)), by=c('gf_intervention')]
+kable(sen_h_cnls[order(-budget)], caption="SEN-H-CNLS, Module: Treatment, care & support")
+
+sen_z_moh = budgets[grant=="SEN-Z-MOH" & abbrev_mod=="Care & prevention", .(budget=sum(budget, na.rm=T)), by=c('gf_intervention')]
+kable(sen_h_cnls[order(-budget)], caption="SEN-Z-MOH, Module: Care & prevention")
+
+
+```

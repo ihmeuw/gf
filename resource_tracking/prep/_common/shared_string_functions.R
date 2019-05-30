@@ -109,47 +109,21 @@ return(dt)
 
 # --------------------------------------------------------------------------------
 #Given a country's file list, only keeps the files that will be kept after GOS data 
-# is prioritized in step 4. 
+# is prioritized in step 4. Right now, drop everything before 2017. 
 # --------------------------------------------------------------------------------
 
 prioritize_gos = function(file_list){
-  file_list = file_list[file_iteration=='final']
-  gos_data <- readRDS(paste0(dir, "_gf_files_gos/gos/prepped_data/prepped_gos_data.rds"))
+  file_list = file_list[!(data_source=="fpm" & file_iteration=="initial")] #Drop out initial budgets, you don't need these. 
   
-  loc = unique(file_list$loc_name)
-  gos_data = gos_data[loc_name==loc, ]
+  file_list[, qtr_number:=as.numeric(qtr_number)]
+  file_list[, period:=as.numeric(period)]
+  file_list[, days_in_budget:=period*qtr_number]
+  file_list[, end_date:=start_date+days_in_budget]
   
-  #Expand file list by period to see what quarters you're going to get from each file. 
-  file_list[, coefficient:=period/90]
-  file_list[, num_quarters:=round(qtr_number*coefficient)]
+  file_list[, end_year:=year(end_date)]
+  file_list = file_list[!end_year<=gos_year] #The variable 'gos_year' is set in global variables. 
   
-  rect_by_qtr <- file_list[rep(1:nrow(file_list), file_list$num_quarters)] # 
-  rect_by_qtr[, qtr_count:=seq(0, max(num_quarters)), by=.(file_name)]
-  rect_by_qtr[, new_start_date:=start_date + (months(3)*qtr_count)]
-  
-  #Simplify this data.table so it's easier to compare with GOS. 
-  rect_by_qtr = rect_by_qtr[, .(new_start_date, file_name, grant)]
-  rect_by_qtr[, year:=year(new_start_date)]
-  rect_by_qtr[, quarter:=quarter(new_start_date)]
-  
-  #See which files will be dropped when GOS data is prioritized in step 4. 
-  gos_grant_list <- unique(gos_data[, .(grant, start_date)])
-  gos_grant_list[, year:=year(start_date)]
-  gos_grant_list[, quarter:=quarter(start_date)]
-
-  files_to_keep <- merge(gos_grant_list, rect_by_qtr, by=c('grant', 'quarter', 'year'), all.y = TRUE)
-  
-  #If both merge, ok to drop. 
-  #If they're only in GOS, ok to drop. 
-  #If they're only in budgets, keep these files, these are the files we want to run. 
-  
-  files_to_keep <- unique(files_to_keep[is.na(start_date), .(file_name)]) #These are the files that didn't match with any GOS data; need to keep and prep this data. 
-  
-  file_list = file_list[file_name%in%files_to_keep$file_name] #Run it this way so you don't accidentally remove files with quarters you needed to keep. 
-  
-  #Remove unnecessary variables you created
-  file_list[, coefficient:=NULL]
-  file_list[, num_quarters:=NULL]
+  file_list= file_list[, -c('end_date', 'end_year', 'days_in_budget')]
   
   return(file_list)
 }

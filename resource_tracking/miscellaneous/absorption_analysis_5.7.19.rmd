@@ -1,0 +1,183 @@
+---
+title: "Absorption analysis for 2018 PUDRs"
+author: "IHME PCE"
+date: "May 7, 2019"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+# rm(list=ls())
+library(data.table)
+library(knitr)
+library(ggplot2)
+
+#Need to check with David if we want to produce the same figures as we did for Synthesis. 
+expenditures = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures.rds")
+pudrs = expenditures[data_source=='pudr']
+all_interventions = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds") #Pull in to get abbrev module. 
+all_interventions = all_interventions[, .(module_eng, abbrev_mod_eng)] 
+names(all_interventions) = c('gf_module', 'abbrev_mod')
+all_interventions = unique(all_interventions)
+all_interventions = all_interventions[!is.na(abbrev_mod)]
+
+pudrs = merge(pudrs, all_interventions, by='gf_module', all.x=T)
+
+#Format variables nicely 
+#Disease 
+pudrs[disease=='hiv', disease:='HIV']
+pudrs[disease=='tb', disease:='TB']
+pudrs[disease=='malaria', disease:='Malaria']
+pudrs[disease=='rssh', disease:='RSSH']
+
+#Country 
+pudrs[country=="Congo (Democratic Republic)", country:='DRC']
+
+#Create a "semester" variable to aggregate across 
+pudrs[quarter(start_date)%in%c(1, 2), semester:=1]
+pudrs[quarter(start_date)%in%c(3, 4), semester:=2]
+pudrs[, semester:=factor(semester, levels=c(1, 2), labels=c('Q1-Q2', 'Q3-Q4'))]
+
+#Format the 'file iteration' variable 
+pudrs[, file_iteration:=factor(file_iteration, levels=c('initial', 'final'), labels=c('Initial PUDR', 'Final PUDR'))]
+
+#Use this to highlight where we have missing data.
+full_time_series = data.table(start_date=c('2018-01-01', '2018-04-01', '2018-07-01', '2018-10-01')) 
+full_time_series[, start_date:=as.Date(start_date)]
+
+#but let’s do average absorption by country, absorption by grant and also broken down into modules… and what else we did for synthesis? 
+#First, sum the budget and expenditure for the entire country, and then calculate absorption. 
+absorption_by_country = pudrs[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('country', 'file_iteration', 'year')]
+absorption_by_country[, absorption:=(expenditure/budget)*100]
+
+absorption_country_only = pudrs[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('country')]
+absorption_country_only[, absorption:=(expenditure/budget)*100]
+
+absorption_by_grant = pudrs[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('country', 'grant', 'country')]
+absorption_by_grant[, absorption:=(expenditure/budget)*100]
+absorption_by_grant = absorption_by_grant[order(country)]
+
+absorption_by_grant_q1_q2 = pudrs[quarter(start_date)<3, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('country', 'grant', 'year', 'country')]
+absorption_by_grant_q1_q2[, absorption:=(expenditure/budget)*100]
+absorption_by_grant_q1_q2 = absorption_by_grant_q1_q2[order(country)]
+
+absorption_by_grant_q3_q4 = pudrs[quarter(start_date)>=3, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('country', 'grant', 'year', 'country')]
+absorption_by_grant_q3_q4[, absorption:=(expenditure/budget)*100]
+absorption_by_grant_q3_q4 = absorption_by_grant_q3_q4[order(country)]
+
+absorption_by_module = pudrs[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'file_iteration', 'year', 'disease')]
+absorption_by_module[, absorption:=(expenditure/budget)*100]
+
+absorption_by_intervention = pudrs[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('gf_module', 'gf_intervention', 'file_iteration', 'year', 'disease')]
+absorption_by_intervention[, absorption:=(expenditure/budget)*100]
+
+#Generate a dataset that will recreate the graphic from the synthesis report.
+#First, cluster some modules together. 
+absorption_range = copy(pudrs)
+absorption_range[abbrev_mod%in%c("Prevention programs for CSW & clients", "Prevention programs for transgender", "Prevention programs for youth/adol.", 
+                                        "Prevention programs for MSM", "Prevention programs for IJU"), abbrev_mod:='Prevention programs for KVP']
+absorption_range[abbrev_mod%in%c("HR & health workers", "Community systems", "Service delivery", "PSM", "Nat. health strategies", "Info systems & M&E"), 
+                        abbrev_mod:='RSSH']
+
+#Split this up into one dataset for Q1/Q2 and one for Q3/Q4
+absorption_range_q1_q2 = absorption_range[quarter(start_date)<3, .(absorption=(expenditure/budget)*100), by=c('disease', 'abbrev_mod', 'country', 'country', 'disease')]
+absorption_range_q1_q2[, max:=max(absorption, na.rm=TRUE), by=c('disease', 'abbrev_mod')]
+absorption_range_q1_q2[, min:=min(absorption, na.rm=TRUE), by=c('disease', 'abbrev_mod')]
+absorption_range_q1_q2[, mean:=mean(absorption, na.rm=TRUE), by=c('disease', 'abbrev_mod')]
+absorption_range_q1_q2 = unique(absorption_range_q1_q2[, .(disease, abbrev_mod, min, mean, max, disease, country)])
+
+absorption_range_q3_q4 = absorption_range[quarter(start_date)>=3, .(absorption=(expenditure/budget)*100), by=c('disease', 'abbrev_mod', 'country', 'country', 'disease')]
+absorption_range_q3_q4[, max:=max(absorption, na.rm=TRUE), by=c('disease', 'abbrev_mod')]
+absorption_range_q3_q4[, min:=min(absorption, na.rm=TRUE), by=c('disease', 'abbrev_mod')]
+absorption_range_q3_q4[, mean:=mean(absorption, na.rm=TRUE), by=c('disease', 'abbrev_mod')]
+absorption_range_q3_q4 = unique(absorption_range_q3_q4[, .(disease, abbrev_mod, min, mean, max, disease, country)])
+
+```
+
+## Absorption analysis for current PUDRs in PCE countries
+
+# Average absorption by country
+*Using most recent PUDR data*
+```{r, echo=FALSE, warning=FALSE}
+absorption_country_only[, absorption:=round(absorption, 2)]
+kable(absorption_country_only)
+```
+
+# Average absorption by country and quarter
+*Using most recent PUDR data*
+```{r, echo=FALSE, warning=FALSE}
+absorption_by_country[, absorption:=round(absorption, 2)]
+kable(absorption_by_country[, .(country, file_iteration, absorption)])
+```
+
+There have been mixed results on absorption for the countries in the PCE. For Uganda and Guatemala, absorption has fallen between the first and second semesters of 2018, while for DRC and Senegal absorption has improved. There is a wide range of absorption number, with a minimum of `r absorption_by_country[, min(absorption)]` in `r absorption_by_country[absorption==min(absorption), unique(country)]` and a maximum of `r absorption_by_country[, max(absorption)]` in `r absorption_by_country[absorption==max(absorption), unique(country)]`.
+
+# Average absorption by grant
+*Shows average absorption across entire reporting period of latest PUDR*
+```{r, echo=FALSE, warning=FALSE}
+absorption_by_grant[, absorption:=round(absorption, 2)]
+kable(absorption_by_grant[, .(country, grant, absorption)])
+```
+
+Although average absorption by country is low for all PCE countries, with a maximum of `r absorption_country_only[absorption==max(absorption), .(absorption)]` in `r absorption_country_only[absorption==max(absorption), .(country)]`, the grant-level averages show more variation. Within DRC, for example, the absorption by grant ranges from `r absorption_by_grant[country=="DRC", min(absorption)]` to `r absorption_by_grant[country=="DRC", max(absorption)]` percent. 
+
+# Absorption range 
+```{r, echo=FALSE, warning=FALSE}
+#Reproducing the synthesis graph
+g6 = ggplot(data = absorption_range_q1_q2, aes(x = abbrev_mod, color = disease)) + 
+  geom_pointrange(mapping=aes(y=mean, ymin=min, ymax=max)) + 
+  geom_point(aes(y = mean)) +
+  theme_bw() + theme(legend.position = 'none') + 
+  coord_flip() + 
+  labs(title = "Range of absorption for PCE countries by module\n for Q1/Q2 2018", y = "Absorption (%)", x = "Module", 
+       caption = "Points represent average absorption across country/disease, with range showing min and max") + 
+  facet_wrap(vars(disease))
+
+g6
+
+g7 = ggplot(data = absorption_range_q3_q4, aes(x = abbrev_mod, color = disease)) + 
+  geom_pointrange(mapping=aes(y=mean, ymin=min, ymax=max)) + 
+  geom_point(aes(y = mean)) +
+  theme_bw() + theme(legend.position = 'none') + 
+  coord_flip() + 
+  labs(title = "Range of absorption for PCE countries by module\n for Q3/Q4 2018", y = "Absorption (%)", x = "Module", 
+       caption = "Points represent average absorption across country/disease, with range showing min and max") + 
+  facet_wrap(vars(disease))
+
+g7 
+```
+
+Absorption by module shows that there has been a slight downward trend in absorption between the first and second halves of 2018, although it's important to note that the PCE is missing several PUDRs for Q3/Q4 2018. These data gaps are also noticeable through the missing error bars in the second graph, for many of these modules, we only have one grant reporting. 
+
+# Average absorption by module
+
+```{r echo=FALSE, warning=FALSE}
+absorption_by_module = absorption_by_module[order(disease)]
+# absorption_by_module <- within(absorption_by_module, 
+#                    semester <- factor(semester, levels=c("Q1-Q2", "Q3-Q4")))
+diseases = unique(pudrs$disease)
+for (var in diseases){
+  g4 = ggplot(absorption_by_module[disease==var], aes(x=reorder(abbrev_mod, absorption), y=absorption, fill=file_iteration)) + 
+    geom_bar(stat="identity", position="dodge") + 
+    theme_bw() + 
+    theme(axis.text.x = element_text(angle=45, hjust=1), legend.title=element_blank()) + 
+    scale_fill_manual(breaks=c("Initial PUDR", "Final PUDR"), values=c("chartreuse2", "chartreuse4"), labels=c("Initial PUDR", "Final PUDR")) + 
+    #coord_flip()
+    labs(x="Module", y="Absorption rate (%)", title=paste0("Absorption rate by module for 2018\n ", var, " PUDRs"), 
+         caption="*Not all PUDRs have been received for this period")
+  print(g4)
+}
+```
+
+Across all diseases, program management has consistently been an important part of early grant implementation, with average absorption rates by disease shown below. 
+```{r echo=FALSE, warning=FALSE}
+pgm_mgmt = pudrs[abbrev_mod=="Program mgmt", .(budget, expenditure, disease, file_iteration)]
+pgm_mgmt[, absorption:=(expenditure/budget)*100]
+pgm_mgmt = pgm_mgmt[, .("absorption (%)"=sum(absorption, na.rm=T)), by=c('disease', 'file_iteration')]
+kable(pgm_mgmt)
+```
+
+
+# Rate of change of absorption by module 
+In the data we have, the rate of change of absorption between reporting periods has been 0. We will continue to monitor this statistic as we receive more PUDRs. 

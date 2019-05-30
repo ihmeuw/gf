@@ -20,8 +20,7 @@
 # Copy shell script into a qlogin session to open an IDE
 # request at least 10 slots for extractions 
 
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1247 -s 20 -P snis_download
-
+# sh /ihme/code/jpy_rstudio/jpy_rstudio_qsub_script.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -l m_mem_free=50G -l fthread=20 -P proj_pce -q all -t rstudio -l archive=TRUE -l h_rt=72:00:00
 #---------------------------
 # Set up R
 rm(list=ls())
@@ -57,20 +56,20 @@ source(paste0(dir, 'code/dhis_extracting_functions.R'))
 # Input the start year, end year, and output directory
 
 # select the start year and end year for the download
-start_year = '2018'
-end_year = '2019'
+start_year = '2017'
+end_year = '2018'
 start_month = '01'
-end_month = '02' # start month is inclusive, end month is exclusive
+end_month = '01' # start month is inclusive, end month is exclusive
 
 # change the update year to before the data begins
-update_year = "2009"
+update_year = '2009'
 
 #identify the data set(s) you want to download by number (list below)
-set = 2
+set = 29
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'base'
+set_name = 'pnls'
 
 #---------------------------
 # available data sets by number: 
@@ -120,6 +119,7 @@ password = 'Snisrdcongo1'
 # other meta data is used for the merge 
 
 data_sets = readRDS(paste0(dir, 'meta_data/data_sets.rds'))
+org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
 
 #-----------------------------------------------
 
@@ -140,10 +140,11 @@ end_date = as.Date(end_date)
 
 dates = seq(start_date,end_date, by = 'month')
 
+# NOTE: make sure there is an "intermediate_data" folder within the data set folder to save the data too.  I have set older versions to be "intermediate_data_archive"
+# and then created a new "intermediate_data" folder, otherwise it will still work but will overwrite old files (maybe this is okay because we have the combined file from intermediate ones still?)
+# TO DO: someday will make this all happen through the code...
 # EXTRACTION LOOP-----------------
 for (i in 1:((length(dates))-1) ){
-  
-  org_units = readRDS(paste0(dir, 'meta_data/org_units.rds'))
   
   start_current_loop = dates[i]
   end_current_loop = dates[i+1]
@@ -156,7 +157,7 @@ for (i in 1:((length(dates))-1) ){
                                     end_period = end_current_loop,
                                     userID = userID, 
                                     password = password,
-                                    pace = 10,
+                                    pace = 20,
                                     update_date = paste0(update_year, '-01-01'))
   
   save_month_start = month(start_current_loop)
@@ -166,13 +167,13 @@ for (i in 1:((length(dates))-1) ){
   
   # save intermediate data - 1st iteration
   extracted_data$download_number = 1
-  saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', 'base_0', save_month_start, '_', 
+  saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', set_name,'_0', save_month_start, '_', 
                                  save_year_start, '_0', save_month_end, '_', save_year_end, '_first_download.rds'))
   
   
   # extract month again on subset of org_units
   extracted_fac = unique(extracted_data$org_unit_ID) %>% as.character
-  org_units <- org_units[!org_unit_ID %in% extracted_fac]
+  org_units = org_units[!org_unit_ID %in% extracted_fac]
   
   extracted_data2 = extract_all_data(base_url = base_url, 
                                      data_sets = data_sets[set, ],
@@ -196,6 +197,7 @@ for (i in 1:((length(dates))-1) ){
   print(paste0("Loop ", i, " of ", (length(dates)-1), " complete" ))
 }
 #------------------------
+
 #------------------------
 # read in all files and rbind together to save one file of data
 files = list.files( paste0('./pre_prep/', set_name, '/intermediate_data/'), recursive=TRUE)
@@ -225,11 +227,11 @@ for(f in files) {
   # append to the full data 
   if(i==1) dt = current_data
   if(i>1)  dt = rbind(dt, current_data)
-  i = i+1
-}
+  i = i+1 }
 
 # save the data table in its individual folder in 'pre_prep' for merge and prep:
 saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', 
                                start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
 #-------------------------
+

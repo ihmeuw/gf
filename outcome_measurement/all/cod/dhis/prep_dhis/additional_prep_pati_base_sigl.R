@@ -29,8 +29,8 @@ out_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/pr
 # input files
 registered <- paste0(dir, "tb_pati_v_registered_2017_01_01_2018_10_01.rds")
 results <- paste0(dir,"tb_pati_v_result_2016_01_01_2018_10_01.rds")
-base_data <- paste0(dir, "base_2016_01_01_2018_12_01.rds")
-sigl_data <- paste0(dir, "sigl_2016_01_01_2018_12_01.rds")
+base_data <- paste0(dir, "base_2018_01_01_2019_01_01.rds")
+sigl_data <- paste0(dir, "sigl_2018_01_01_2019_01_01.rds")
 
 # output files
 pati_cases <- "pati_tb/tb_pati_new_tb_cases_relapses_by_age_sex.rds"
@@ -54,15 +54,32 @@ sigl <- readRDS(sigl_data)
 # ----------------------------------------------
 
 # ----------------------------------------------
+# fix sigl health zones 
+# ----------------------------------------------
+# health_zone is na where org_unit_type is health zone. 
+sigl[is.na(health_zone) & org_unit_type == "health_zone", health_zone1 := unlist(lapply(strsplit(org_unit, " "), "[", 2))]
+sigl[is.na(health_zone) & org_unit_type == "health_zone", health_zone2 := unlist(lapply(strsplit(org_unit, " "), "[", 3))]
+sigl[is.na(health_zone) & org_unit_type == "health_zone", health_zone3 := unlist(lapply(strsplit(org_unit, " "), "[", 4))]
+sigl[ health_zone3 != 'Zone' & health_zone2 != 'Zone', health_zone := paste(health_zone1, health_zone2, health_zone3) ]
+sigl[ health_zone3=='Zone', health_zone := paste(health_zone1, health_zone2)]
+sigl[ health_zone2=='Zone', health_zone := health_zone1]
+sigl[, c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
+# ----------------------------------------------
+
+# ----------------------------------------------
 # more prep
 # ----------------------------------------------
-more_prep <- function(data.table){
-  data.table$value <- as.character(data.table$value)
-  data.table$value <- as.numeric(data.table$value) 
-  data.table$health_zone <- standardizeHZNames(data.table$health_zone)
-  data.table$dps <- standardizeDPSNames(data.table$dps)
-  return(data.table)
+more_prep <- function(dt){
+  dt$value <- as.character(dt$value)
+  check = copy(dt)
+  check[, value_numeric := as.numeric(value)]
+  if(check[is.na(value_numeric), unique(value)] == "NULL") print("Checked that NAs introduced were recorded as 'NULL' in the data before converting to numeric" )
+  dt$value <- as.numeric(dt$value) 
+  dt$dps <- standardizeDPSNames(dt$dps)
+  dt$health_zone <- standardizeHZNames(dt$health_zone)
+  return(dt)
 }
+
 base <- more_prep(base)
 sigl <- more_prep(sigl)
 dt1 <- more_prep(dt1) # the warning that this introduces NAs can be ignored, because all of those NAs were "NULL" in the original data 
@@ -70,6 +87,7 @@ dt2 <- more_prep(dt2)
 # ----------------------------------------------
 
 # ----------------------------------------------
+# PATI data sets:
 # separate new-TB cases and relapses by age group and sex variable from the rest of the data since this is the only one broken down by age and sex
 # ----------------------------------------------
 cases_by_age_sex <- dt1[category != "default", ]
@@ -88,8 +106,6 @@ cases_by_age_sex[, category := NULL]
 
 # drop unneeded vars
 cases_subset <- cases_by_age_sex[, .(date, quarter, dps, health_zone, health_area, org_unit, org_unit_id, org_unit_type, level, element, element_eng, age, sex, value)]
-# ----------------------------------------------
-
 # ----------------------------------------------
 # cast wide the results data
 # ----------------------------------------------

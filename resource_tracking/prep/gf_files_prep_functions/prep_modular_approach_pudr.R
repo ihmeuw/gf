@@ -10,17 +10,10 @@
 #Sheet names that don't work so far: "LFA EFR_7", "LFA_Annex-SR Financials", "LFA_Total PR Cash Outflow_3", "LFA_Total PR Cash Outflow_3A"
 
 # start function
-prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, period) {
+prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, period, qtr_number) {
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
-  #
-  # master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/", file_list$loc_id[i], "/grants/")
-  # 
-  # folder = "budgets"
-  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-  # 
   # dir = file_dir
   # inFile = file_list$file_name[i]
   # sheet_name = file_list$sheet[i]
@@ -30,6 +23,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # grant = file_list$grant[i]
   # recipient = file_list$primary_recipient
   # source = file_list$data_source[i]
+  # qtr_number = file_list$qtr_number[i]
 
   # -----------------------------------------------------------------------------
   # Test the inputs to make sure that they are the correct type
@@ -46,7 +40,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   }
   
   # Load/prep data
-  gf_data <-data.table(read_excel(paste0(dir,inFile), sheet=sheet_name))
+  gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
 
   #General function for grants.
   #-------------------------------------
@@ -99,6 +93,10 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
 
   #Subset to only these columns.
   gf_data = gf_data[, .(module, intervention, budget, expenditure)]
+  
+  #Make budget and expenditure numeric. 
+  gf_data[, budget:=as.numeric(budget)]
+  gf_data[, expenditure:=as.numeric(expenditure)]
 
   #-------------------------------------
   # 2. Subset rows
@@ -127,6 +125,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #Some datasets have an extra title row with "[Module]" in the module column.
   #It's easier to find this by grepping the budget column, though.
   extra_module_row <- grep("budget for reporting period", tolower(gf_data$budget))
+  extra_module_row = c(extra_module_row, grep("module", tolower(gf_data$module)))
   if (length(extra_module_row) > 0){
     if (verbose == TRUE){
       print(paste0("Extra rows being dropped in GTM PU/DR prep function. First column: ", gf_data[extra_module_row, 1]))
@@ -147,22 +146,63 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   gf_data[is.na(module) | module == '0' , module:="Unspecified"]
   gf_data[is.na(intervention) | intervention == '0' , module:="Unspecified"]
 
-  #-------------------------------------
-  # 3. Generate new variables
-  #-------------------------------------
-  gf_data$start_date <- start_date
+  #-------------------------------------------------------------------------
+  # 3. Generate date variables, and expand data to be at the quarter-level. 
+  #-------------------------------------------------------------------------
+  totals_check = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]
+  
+  #Add in date variables 
+  gf_data[, quarter:=quarter(start_date)]
+  gf_data[, year:=year(start_date)]
+  
+  gf_data[, period:=period]
+  gf_data[, qtr_number:=qtr_number]
+  gf_data[, qtr_split:=round((period*qtr_number)/90)]
+  gf_data[, split:=round((period*qtr_number)/90)] #Create this variable twice so you can divide budget/expenditure after expansion
+ 
+  #Expand data by the number of days, and generate a variable to iterate over
+  gf_data <- expandRows(gf_data, "qtr_split")
+  byVars = names(gf_data)
+  gf_data[, seq:=sequence(.N), by=byVars]
+  gf_data[, seq:=seq-1] #Decrement by 1 because sequence indexes at 1. 
+  
+  #While seq is not 0, go through the loop below.
+  #If seq is greater than or equal to 4, add 1 to year and divide everything by 4. Continue this loop while max(seq) > 4.
+  # If month + seq + 1 equals 12, than
+  gf_data[, new_qtr:=quarter+seq]
+  max_quarter = max(gf_data$new_qtr)
+  while (max_quarter>4){
+    gf_data[new_qtr>4, year:=year+1]
+    gf_data[new_qtr>4, new_qtr:=new_qtr-4]
+    max_quarter = max(gf_data$new_qtr)
+  }
+
+  #Split up budget and expenditure.
+  gf_data[, budget:=budget/split]
+  gf_data[, expenditure:=expenditure/split]
+
+  #Make sure you haven't changed any budget/expenditure numbers, and clean up
+  totals_check2 = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]
+  for (i in 1:nrow(totals_check)){
+    stopifnot(totals_check$budget[i]==totals_check2$budget[i] | totals_check$expenditure[i]==totals_check2$expenditure[i])
+  }
+  gf_data = gf_data[, -c('period', 'qtr_number', 'split', 'seq', 'quarter')]
+  setnames(gf_data, 'new_qtr', 'quarter')
+  
+  #Generate new start date variable. 
+  gf_data[quarter==1, month:="01"]
+  gf_data[quarter==2, month:="04"]
+  gf_data[quarter==3, month:="07"]
+  gf_data[quarter==4, month:="10"]
+  
+  gf_data[, start_date:=paste0(month, "-01-", year)]
+  gf_data[, start_date:=as.Date(start_date, "%m-%d-%Y")]
+  gf_data[, month:=NULL]
 
   #-------------------------------------
   # 4. Validate data
   #-------------------------------------
   budget_dataset = gf_data
-
-  #Check to make sure budget and expenditure can be converted to numeric safely,
-  # and the total for these columns is not '0' for the file. (may have grabbed wrong column).
-  stopifnot(class(budget_dataset$budget) == 'character' & class(budget_dataset$expenditure)=='character')
-
-  budget_dataset[, budget:=as.numeric(budget)]
-  budget_dataset[, expenditure:=as.numeric(expenditure)]
 
   #Check these by summing the total for the file, and making sure it's not 0.
   check_budgets = budget_dataset[ ,
@@ -170,7 +210,9 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
                   .SDcols = c("budget", "expenditure")]
 
   verified_0_expenditure <- c("UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", 
-                              "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx") #These files have 0 for all expenditure.
+                              "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx", 
+                              "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx", 
+                              "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx") #These files have 0 for all expenditure.
   
   if(inFile%in%verified_0_expenditure){
     stopifnot(check_budgets[, 1]>0)
@@ -178,13 +220,6 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
     stopifnot(check_budgets[, 1]>0 & check_budgets[, 2]>0)
   }
 
-  #Check column names, and that you have at least some valid data for the file.
-  if (nrow(budget_dataset)==0){
-    stop(paste0("All data dropped for ", inFile))
-  }
-
-  #--------------------------------
-  # Note: Are there any other checks I could add here? #EKL
   # -------------------------------
 
 

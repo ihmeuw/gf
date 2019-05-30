@@ -35,9 +35,8 @@ uga_save <- "J:/Project/Evaluation/GF/impact_evaluation/uga/visualizations"
 # ---------------------------------------
 #allRT <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv")
 
-fgh = fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/prepped_current_fgh.csv")
+fgh = readRDS("J:/Project/Evaluation/GF/resource_tracking/_fgh/prepped_data/prepped_current_fgh.rds")
 #Change country factors so they look better
-fgh$country <- factor(fgh$country, c('Congo (Democratic Republic)', 'Guatemala', 'Uganda'), c('DRC', 'Guatemala', 'Uganda')) 
 fgh_actual = fgh[fin_data_type == "actual"]#Split FGH between actual numbers and model estimates. 
 fgh_estimates = fgh[fin_data_type != "actual"] 
 

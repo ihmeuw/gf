@@ -29,7 +29,6 @@ library(rgdal)
 library(tibble)
 library(dplyr)
 library(plyr)
-library(ggrepel)
 
 # --------------------
 

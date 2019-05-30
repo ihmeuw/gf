@@ -18,15 +18,15 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 new_base_data <- paste0(dir, "pre_prep/merged/base_2018_01_01_2019_01_01.rds")
 archive_base_data <- paste0(dir, "prepped/archive/base_services_drc_01_2017_09_2018_prepped.rds")
 
-new_sigl_data <- paste0(dir, "")
-archive_sigl_data <- paste0(dir, "")
+new_sigl_data <- paste0(dir, "pre_prep/merged/sigl_2018_01_01_2019_01_01.rds")
+archive_sigl_data <- paste0(dir, "prepped/archive/sigl_drc_01_2015_07_2018_prepped.rds")
 # ----------------------------------------------
 
 # ----------------------------------------------
 # Read in the data
 # ----------------------------------------------
-new_data = readRDS(new_base_data)
-old_data = readRDS(archive_base_data)
+new_data = readRDS(new_sigl_data)
+old_data = readRDS(archive_sigl_data)
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -123,7 +123,7 @@ run_checks <- function(new, old, data_element_to_check){
   
   value_comp[, diff:= new - old]
   value_comp[, new_less_than_old := ifelse(diff < 0, TRUE, FALSE)]  
-  print( "These are the dps-months that have lower numbers of cases: ")
+  print( paste0("These are the dps-months that have lower numbers of ", data_element_to_check, ": "))
   print( value_comp[new_less_than_old== TRUE, ])
   
   # ----------------------------------------------
@@ -134,7 +134,7 @@ run_checks <- function(new, old, data_element_to_check){
   
   value_comp_hz[, diff:= new - old]
   value_comp_hz[, new_less_than_old := ifelse(diff < 0, TRUE, FALSE)]  
-  print( "These are the dps-months that have lower numbers of cases: ")
+  print( paste0("These are the hz-months that have lower numbers of ", data_element_to_check, ": "))
   print( value_comp_hz[new_less_than_old== TRUE, ])
   
 }  

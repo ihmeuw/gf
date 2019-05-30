@@ -1,0 +1,224 @@
+---
+title: "PNLS Supply Chain Analysis-Second Line Treatment (AZT/3TC/NVP)"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE, echo=FALSE}
+# -----------------------------------------------
+# Set up R
+#------------------------------------------------
+library(data.table)
+library(raster)
+library(ggplot2)
+library(ggrepel)
+library(geosphere)
+library(knitr)
+library(tibble)
+library(dplyr)
+library(RColorBrewer)
+library(rgdal)
+library(rgeos)
+library(rmarkdown)
+library(maptools)
+repo_root = "C:/Users/elineb/Documents/gf/" #Set to the root of your repository 
+setwd(repo_root)
+source('./core/standardizeDPSNames.R')
+
+#Set up directories 
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/pnls_final/') #Home directory
+saveDir = paste0(j, 'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pnls/')
+codeDir = paste0(repo_root, "outcome_measurement/all/cod/dhis/dhis_analysis/pnls_supplychain/")
+
+source(paste0(codeDir, "4_set_up_data.r"))
+source(paste0(codeDir, "4_pnls_supplychain_graph_functions.r"))
+#-----------------------------------------------
+#SET THE GLOBAL VARIABLES FOR THIS R MARKDOWN 
+#-----------------------------------------------
+drug_id = "W7sym5eCc44"
+drug_name = "AZT/3TC/NVP"
+full_date_range = "Jan 2017 - Dec 2018" #Imported into the graphs automatically - update as you get more data. 
+partial_date_range = "Same time period: January - September" #Date range of 'AnnualDT' below - to have comparable time periods. Update as you get more data. 
+
+```
+
+## Reporting Completeness
+
+```{r reporting1, echo=FALSE, warning=FALSE}
+# Run for Determine test kits, but could also run for all drugs? 
+plot = gen_report1(dt, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Reporting Completeness
+```{r reporting2, echo=FALSE, warning=FALSE}
+plot = gen_report2(dt, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Reporting completeness
+
+```{r reporting3, echo=FALSE, warning=FALSE}
+plot = gen_report3(dt, coord_ann, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Stockouts of second-line treatment drugs
+```{r stockout1, echo=FALSE, warning=FALSE}
+plot = gen_stockout1(dt, drug_id, drug_name)
+plot
+```
+
+## Percentage of facilities stocked out of second-line treatment drugs
+
+```{r stockout2, echo=FALSE, warning=FALSE}
+plot = gen_stockout2(dt, drug_id, drug_name)
+plot
+```
+
+## Total days stocked out by facility
+
+```{r so_days1, echo=FALSE, warning=FALSE}
+plot = gen_so_days1(dt, drug_id, drug_name, full_date_range)
+plot
+``` 
+
+## Map of total facility-days of stockouts
+
+```{r so_map1, echo=FALSE, warning=FALSE}
+plot = gen_so_map1(dt, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Map of mean number of days stocked out
+
+```{r so_map2, echo=FALSE, warning=FALSE}
+plot = gen_so_map2(dt, coord_ann, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Rate of change of stockouts
+
+```{r roc1, echo=FALSE, warning=FALSE}
+plot = gen_roc1(dt, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Stock-out rate of change, by month
+
+```{r monthly_so_roc1, echo=FALSE, warning=FALSE}
+plot = gen_monthly_so_roc1(dt, coord_months, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Districts with more stockouts in 2018 than 2017
+
+```{r roc3, echo=FALSE, warning=FALSE}
+plot = gen_roc3(dt, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Percentage of facility-days stocked out
+
+```{r so_pct1, echo=FALSE, warning=FALSE}
+plot = gen_so_pct1(dt, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Percentage of facility-days stocked out, with labels
+
+```{r so_pct2, echo=FALSE, warning=FALSE}
+plot = gen_so_pct2(dt, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Days stocked out by facility level (all)
+
+```{r scatter1, echo=FALSE, warning=FALSE}
+plot = gen_scatter1(dt, drug_id, drug_name, full_date_range)
+plot
+``` 
+
+## Days stocked out by facility level (grouped)
+
+```{r scatter2, echo=FALSE, warning=FALSE}
+plot = gen_scatter2(dt, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Days stocked out by facility level (grouped, by year)
+
+```{r scatter3, echo=FALSE, warning=FALSE}
+plot = gen_scatter3(dt, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Stock-out duration, 2017 (No stockouts - 2 MO)
+
+```{r cat1_2017, echo=FALSE, warning=FALSE}
+plot = gen_cat1_2017(dt, coord_ann, drug_id, drug_name)
+plot
+``` 
+
+## Stock-out duration, 2017 (2-month intervals)
+
+```{r cat3_2017, echo=FALSE, warning=FALSE}
+plot = gen_cat3_2017(dt, coord_ann, drug_id, drug_name)
+plot
+```
+
+## Stock-out duration, 2018 (No stockouts - 2 MO)
+
+```{r cat1_2018, echo=FALSE, warning=FALSE}
+plot = gen_cat1_2018(dt, coord_ann, drug_id, drug_name)
+plot
+```
+
+## Stock-out duration, 2018 (2-month intervals)
+
+```{r cat3_2018, echo=FALSE, warning=FALSE}
+plot = gen_cat3_2018(dt, coord_ann, drug_id, drug_name)
+plot
+```
+
+## Drug units per facility, by district
+
+```{r mean_units1, echo=FALSE, warning=FALSE}
+plot = gen_mean_units1(dt, coord_ann, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Drug units per facility by district, with labels
+
+```{r mean_units2, echo=FALSE, warning=FALSE}
+plot = gen_mean_units2(dt, coord_ann, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Facilities with a full month of stock-out, 2017
+
+```{r full_months_17_1, echo=FALSE, warning=FALSE}
+plot = gen_full_months1_17(dt, coord_months, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Proportion of facilities stocked out for a whole month, 2017
+
+```{r full_months_17_2, echo=FALSE, warning=FALSE}
+plot = gen_full_months2_17(dt, coord_months, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Facilities with a full month of stock-out, 2018
+
+```{r full_months_18_1, echo=FALSE, warning=FALSE}
+plot = gen_full_months1_18(dt, coord_months, drug_id, drug_name, full_date_range)
+plot
+```
+
+## Proportion of facilities stocked out for a whole month, 2018
+
+```{r full_months_18_2, echo=FALSE, warning=FALSE}
+plot = gen_full_months2_18(dt, coord_months, drug_id, drug_name, full_date_range)
+plot
+```
