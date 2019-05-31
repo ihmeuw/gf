@@ -50,8 +50,8 @@ gen_report1 = function(dt=dt, drug_id, drug_name, date_range){
     theme_bw() +
     # facet_wrap(~indicator) +
     scale_color_manual(values = brewer.pal(4, 'RdYlBu')) +
-    labs(x='Date', y='Number of health facilities', title=paste0('Number of facilities reporting supply chain information for ', drug_name),
-         subtitle=date_range, color="")
+    labs(x='Date', y='Number of health facilities', title=paste0('Number of facilities reporting* supply chain information for ', drug_name),
+         subtitle=date_range, caption="*Reporting on any stock indicator", color="")
 
   return(report1)
 }
@@ -67,8 +67,8 @@ gen_report2 = function(dt=dt, drug_id, drug_name, date_range){
     geom_line() +
     theme_bw() +
     #facet_wrap(~variable) +
-    labs(x='Date', y='% of facilities', title=paste0('Percentage of health facilities reporting supply chain information for ', drug_name),
-         subtitle=date_range, color='% Reporting')
+    labs(x='Date', y='% of facilities', title=paste0('Percentage of health facilities reporting* supply chain information for ', drug_name),
+         subtitle=date_range, color='% Reporting', caption="*Reporting on any stock indicator")
   
   return(report2)
 }
@@ -79,6 +79,38 @@ gen_report3 = function(dt=dt, coord_ann=coord_ann, drug_id, drug_name, date_rang
   report_by_dps = unique(report_by_dps[, .(year, id, facilities_by_dps, dps)]) 
   report_map = merge(report_by_dps, coord_ann, by = c('id', 'year'), all.y = TRUE, allow.cartesian = TRUE)
   
+  #----------------------
+  #For each DPS, find it's center. 
+  districts = unique(report_map$dps)
+  districts = districts[!is.na(districts)]
+  all_centers = data.table()
+  for (district in districts){
+    centers = report_map[dps==district, .(long, lat)]
+    center = as.data.table(centroid(centers))
+    center[, dps:=district]
+    all_centers = rbind(all_centers, center)
+  }
+  
+  # Generate a labels dataset
+  labels = unique(report_map[, .(id, dps, facilities_by_dps, year)])
+  labels[, label:= paste0(dps, ": ", facilities_by_dps)]
+  labels = merge(labels, all_centers, by=c('dps'))
+  #----------------------
+  
+  # mean_units2 = ggplot(kits_per_facility, aes(x=long, y=lat, group=group, fill=kits_per_fac)) + 
+  #   geom_polygon() + 
+  #   theme_void() + 
+  #   facet_wrap(~year) + 
+  #   scale_fill_gradientn('Kits per\nFacility', colours=ratio_colors) + 
+  #   coord_fixed(ratio=1) + 
+  #   scale_x_continuous('', breaks = NULL) + 
+  #   scale_y_continuous('', breaks = NULL) + 
+  #   labs(title=paste0(drug_name, " kits per facility, by district"), subtitle="Annual data restricted to Jan-Aug",
+  #        caption="*Denominator only includes facilities with 'available, usable stock' of this drug",
+  #        fill="Kits per facility") + 
+  #   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) + 
+  #   geom_label_repel(data = labels, aes(label = label, x = lon, y = lat, group = label), inherit.aes=FALSE, size=3)
+  
   report_map1 = ggplot(report_map, aes(x=long, y=lat, group=group, fill=facilities_by_dps)) + 
     coord_fixed() +
     geom_polygon() + 
@@ -86,8 +118,9 @@ gen_report3 = function(dt=dt, coord_ann=coord_ann, drug_id, drug_name, date_rang
     scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
     theme_void() +
     facet_wrap(~year, strip.position = "bottom") +
-    labs(title=paste0("Reporting completeness by year and district for ", drug_name), fill="# of facilities reporting")+
-    theme(plot.title=element_text(vjust=-1), plot.subtitle=element_text(vjust=6)) 
+    labs(title=paste0("Reporting completeness* by year and district for ", drug_name), caption="*Facilities reporting on any stock indicator", 
+         fill="# of facilities reporting")+
+    geom_label_repel(data = labels, aes(label = label, x = lon, y = lat, group = label), inherit.aes=FALSE, size=3)
   return(report_map1)
 }
 
