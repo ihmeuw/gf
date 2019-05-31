@@ -31,8 +31,6 @@ load(outputFile4a)
 
 # ----------------------------------------------
 # Define model object
-# DECISIONS
-# including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
 source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables

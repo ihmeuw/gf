@@ -32,7 +32,6 @@ load(outputFile4b)
 
 # ----------------------------------------------
 # Define model object
-# DECISIONS
 source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
