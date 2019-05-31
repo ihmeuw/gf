@@ -79,34 +79,20 @@ while(any(outcomeVars %in% means$lhs)) {
 	# compute explained variance
 	currentLevel[, est.std:=abs(est.std)/sum(abs(est.std)), by=lhs]	
 	
+	# drop fixed variances and covariances
+	currentLevel = currentLevel[se.std!=0]
+	
 	# assign
 	currentLevel = currentLevel[order(lhs, rhs)]
 	currentLevel[, level:=i]
 	assign(paste0('level',i), currentLevel)
-	currentLevel$level = NULL
+	# currentLevel$level = NULL
 	
 	# update outcome vars to the next level down
 	outcomeVars = currentLevel$rhs
-
-	# rename
-	var = paste0('level', i, '_var')
-	estVar = paste0('level', i, '_est')
-	setnames(currentLevel, c('rhs', 'est.std', 'se.std'), 
-		c(var, estVar, paste0('level', i, '_se')))
-	
-	# merge levels (many-to-many hence the crazy lapply)
-	if (i==1) estimates = copy(currentLevel) 
-	if (i>1) {
-		prevVar = paste0('level', i-1, '_var')
-		estimates = lapply(1:nrow(estimates), function(l) {
-			merge(estimates[l], currentLevel, 
-				by.x=prevVar, by.y='lhs', all.x=TRUE)
-		})
-		estimates = rbindlist(estimates)
-		estimates[is.na(get(var)), (var):='NA']
-	}
 	i=i+1
 }
+nLevels = i-1
 # -----------------------------------------------
 
 
