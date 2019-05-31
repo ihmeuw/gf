@@ -120,11 +120,12 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, secondary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language, eur_to_usd_rate, loc_to_usd_rate, file_currency, pudr_semester)]
+                                 mod_framework_format, file_iteration, language, eur_to_usd_rate, loc_to_usd_rate, file_currency, pudr_semester, period)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
     }  
     tmpData$year <- year(tmpData$start_date)
+    tmpData[, file_start_date:=min(start_date), by='file_name']
     
     #Bind data together 
     if(i==1){

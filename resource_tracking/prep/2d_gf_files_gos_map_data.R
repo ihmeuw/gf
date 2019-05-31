@@ -320,24 +320,69 @@ if (prep_files){
   
   #-------------------------------------------
   #2. Expenditures 
-  byVars = names(mapped_data)
-  byVars = byVars[!byVars%in%c('budget', 'expenditure', 'disbursement', 'year', 'quarter', 'start_date')]
-  final_expenditures = mapped_data[data_source == "pudr"] #EMILY CAN YOU MAKE SURE YOU DON'T HAVE MORE THAN ONE FINAL AND ONE INITIAL FILE??? NEED TO RETHINK DUPLICATES.
-  #For the same grant in the same grant period, you want to get the total for each PUDR and subtract semester 1 from semester 1-2.
-
-  final_expenditures = final_expenditures[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)),
-                                   by=byVars]
-  final_expenditures = dcast(final_expenditures, grant+grant_period+disease+gf_module+gf_intervention+orig_module+orig_intervention+activity_description~pudr_semester,
-                      value.var=c('budget', 'expenditure'))
-  final_expenditures[, `budget_Semester 1-2`:=`budget_Semester 1-2`-`budget_Semester 1`]
-  final_expenditures[, `expenditure_Semester 1-2`:=`expenditure_Semester 1-2`-`expenditure_Semester 1`]
-  setnames(final_expenditures, c('budget_Semester 1-2', 'expenditure_Semester 1-2'), c('budget_Semester 2', 'expenditure_Semester 2')) #EMILY CHECK WITH DAVID THAT THIS IS THE RIGHT THING TO DO.
+  expenditures = mapped_data[data_source=="pudr"]
+  setnames(expenditures, 'pudr_semester', 'pudr_code')
+  expenditures = merge(expenditures, pudr_labels, by='pudr_code', all.x=T)
   
+  #Make sure this merge worked. 
+  if (nrow(expenditures[is.na(semester)])>0){
+    print(unique(expenditures[is.na(semester), .(pudr_code)]))
+    stop("Values of pudr_code did not merge correctly.")
+  }
+  
+  #Generate new variables, and flag where you would have overlap in files. 
+  expenditures[, semester:=substr(pudr_code, 3, nchar(pudr_code))]
+  dup_files = unique(expenditures[, .(grant, grant_period, file_name, pudr_code, quarter, year)])
+  dup_files[, dup:=seq(0, nrow(dup_files)), by=c('grant', 'grant_period', 'quarter', 'year')]
+  expenditures = merge(expenditures, dup_files, by=c('grant', 'grant_period', 'file_name', 'pudr_code', 'quarter', 'year'))
+  
+  #Pull out data that has overlap (dup == 1), and subtract earlier PUDRs from later PUDRs. 
+  #Sum out the quarter-level
+  {
+    valueVars = c('budget', 'expenditure', 'disbursement')
+    exp_collapse = expenditures[dup==1, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
+                                by=c('grant', 'grant_period', 'file_name', 'orig_module', 'orig_intervention', 'code', 'activity_description', 'semester', 
+                                     'year', 'pudr_grant_year')]
+    
+    stopifnot(unique(exp_collapse$semester)%in%c('A', 'AB'))
+    exp_collapse = dcast(exp_collapse, grant+grant_period+file_name+orig_module+orig_intervention+code+activity_description+year+pudr_grant_year~semester, 
+                         value.var=valueVars)
+    
+    #Subtract earlier semesters from later semesters 
+    #First, replace NAs with 0's. 
+    exp_collapse[is.na(budget_A), budget_A:=0] #EMILY IS THIS THE BEST WAY TO DO THIS?? 
+    exp_collapse[is.na(budget_AB), budget_AB:=0]
+    exp_collapse[is.na(expenditure_A), expenditure_A:=0]
+    exp_collapse[is.na(expenditure_AB), expenditure_AB:=0]
+    exp_collapse[is.na(disbursement_A), disbursement_A:=0]
+    exp_collapse[is.na(disbursement_AB), disbursement_AB:=0]
+    
+    exp_collapse[, budget_B:=budget_AB-budget_A]
+    exp_collapse[, expenditure_B:=expenditure_AB-expenditure_A]
+    exp_collapse[, disbursement_B:=disbursement_AB-disbursement_A]
+    
+    exp_collapse = exp_collapse[, -c('budget_AB', 'expenditure_AB', 'disbursement_AB')]
+    
+    #reshape this data back long, and merge back onto the rest of the expenditure dataset. 
+    exp_melt = melt(exp_collapse, id.vars=c('grant', 'grant_period', 'file_name', 'orig_module', 'orig_intervention', 'code', 'activity_description', 'year', 
+                                                'pudr_grant_year'))
+    exp_melt[, semester:=tstrsplit(variable, "_", keep=2)]
+    stopifnot(unique(exp_melt$semester)%in%c('A', 'B'))
+    exp_melt[, variable:=tstrsplit(variable, "_", keep=1)]
+    stopifnot(unique(exp_melt$budget)%in%c('A', 'B'))
+  }
+  
+  
+  #Subtract duplicate expenditure data to get a unique dataset. 
   #-------------------------------------------
   #3. Absorption
   absorption = mapped_data[data_source=="pudr", .(grant, grant_period, code, gf_module, gf_intervention, budget, expenditure, pudr_semester)]
   setnames(absorption, 'pudr_semester', 'pudr_code')
   absorption = merge(absorption, pudr_labels, by=c('pudr_code'), all.x=T)
+  if (nrow(absorption[is.na(semester)])>0){
+    print(unique(absorption[is.na(semester), .(pudr_code)]))
+    stop("Values of pudr_code did not merge correctly.")
+  }
   
   #Calculate absorption by module/intervention 
   absorption = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
@@ -353,6 +398,7 @@ if (prep_files){
                         value.var=c('absorption'))
     absorption_wide=rbind(absorption_wide, subset_wide, fill=TRUE)
   }
+
 }
 
 # ----------------------------------------------
