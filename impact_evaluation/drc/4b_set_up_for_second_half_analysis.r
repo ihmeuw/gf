@@ -80,7 +80,7 @@ for(v in names(data)) {
 		if (!any(!is.na(data[health_zone==h][[v]]))) next
 		form = as.formula(paste0(v,'~date'))
 		lmFit = lm(form, data[health_zone==h])
-		data[health_zone==h, tmp:=exp(predict(lmFit, newdata=data[health_zone==h]))]
+		data[health_zone==h, tmp:=(predict(lmFit, newdata=data[health_zone==h]))]
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
 		pct_complete = floor(i/(length(names(data))*length(unique(data$health_zone)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
