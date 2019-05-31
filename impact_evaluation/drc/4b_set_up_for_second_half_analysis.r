@@ -95,7 +95,7 @@ data = na.omit(data)
 
 
 # -----------------------------------------------------------------------
-# Data transformations and other fixes for Heywood cases
+# Data transformations
 
 # remake ITN_rate now that it can be cumulative
 data = data[order(health_zone, date)]
