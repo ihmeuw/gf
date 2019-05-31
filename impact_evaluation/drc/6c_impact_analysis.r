@@ -29,18 +29,16 @@ summaries2 = copy(summaries)
 means = rbind(means1, means2)
 
 # standardize variable names (should be fixed earlier)
-means[lhs=='ITN', lhs:='ITN_consumed_cumulative']
-means[lhs=='SSCACT', lhs:='ACTs_SSC_cumulative']
-means[lhs=='RDT', lhs:='RDT_completed_cumulative']
-means[lhs=='SP', lhs:='SP_cumulative']
-means[lhs=='severeMalariaTreated', lhs:='severeMalariaTreated_cumulative']
-means[lhs=='mildMalariaTreated', lhs:='totalPatientsTreated_cumulative']
-means[rhs=='ITN', rhs:='ITN_consumed_cumulative']
-means[rhs=='SSCACT', rhs:='ACTs_SSC_cumulative']
-means[rhs=='RDT', rhs:='RDT_completed_cumulative']
-means[rhs=='SP', rhs:='SP_cumulative']
-means[rhs=='severeMalariaTreated', rhs:='severeMalariaTreated_cumulative']
-means[rhs=='mildMalariaTreated', rhs:='totalPatientsTreated_cumulative']
+origVars = c('ITN','SSCACT','RDT','SP','severeMalariaTreated','mildMalariaTreated',
+	'SSCACT_under5','severeMalariaTreated_under5','mildMalariaTreated_under5')
+newVars = c('ITN_consumed_cumulative','ACTs_SSC_cumulative','RDT_completed_cumulative',
+	'SP_cumulative','severeMalariaTreated_cumulative','totalPatientsTreated_cumulative',
+	'ACTs_SSC_under5_cumulative','severeMalariaTreated_under5_cumulative',
+	'totalPatientsTreated_under5_cumulative')
+for(i in seq(length(origVars))) {
+	means[lhs==origVars[i], lhs:=newVars[i]]
+	means[rhs==origVars[i], rhs:=newVars[i]]
+}	
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
