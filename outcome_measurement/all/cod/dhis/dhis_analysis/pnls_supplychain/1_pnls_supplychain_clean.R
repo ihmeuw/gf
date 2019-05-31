@@ -114,6 +114,10 @@ dt[is.na(value) & !is.na(any_stock_out), any_stock_out:=NA]
 #If you've replaced the value with NA, also make expected days NA. 
 dt[is.na(value) & impossible_so_days==TRUE, expected_days:=NA]
 
+
+#Check if there are any observations where available stock is greater than 0, but facility reported a stockout for the whole month. 
+so_error = dt[value==]
+
 #Create a variable to delineate first-line and second-line regimens
 
 #From treatment regimen PDF in DRC - 
