@@ -7,7 +7,7 @@
 
 
 # to do
-# show % explained by "data quality" (completeness)?
+# show % explained by 'data quality' (completeness)?
 
 # -----------------------------------------------
 # Load/prep data and functions
@@ -17,13 +17,11 @@ library(RColorBrewer)
 
 # load model results
 load(outputFile5a)
-data1=copy(data)
 means1 = copy(means)
-summaries1 = copy(summaries)
+data1 = copy(data)
 load(outputFile5b)
-data2=copy(data)
 means2 = copy(means)
-summaries2 = copy(summaries)
+data2 = copy(data)
 
 # put together coefficient tables
 means = rbind(means1, means2)
@@ -49,9 +47,6 @@ nodeTable1 = nodeTable1[variable %in% names(data1)]
 nodeTable2 = nodeTable2[variable %in% names(data2)]
 nodeTable = rbind(nodeTable1, nodeTable2)
 nodeTable[, label:=gsub('Lead of','',label)]
-
-# bring in labels
-
 # -----------------------------------------------
 
 
