@@ -240,6 +240,16 @@ data_wide[, mortality_rate:=(mortality/12)/population*100000]
 
 
 # ------------------------------------------------------------------------
+# Identify HZs with iCCM
+
+# all iccm data before 2015 was imputed
+iccmVars = c('SSCACT','SSCcasesCrossReferred','SSCcasesReferred','ACTs_CHWs_rate')
+iccmVars = c(iccmVars, paste0(iccmVars,'_under5'))
+for(v in iccmVars) data_wide[year<2015, (v):=0]
+# ------------------------------------------------------------------------
+
+
+# ------------------------------------------------------------------------
 # Test unique identifiers
 n1 = nrow(data_wide)
 n2 = nrow(data_wide[,c('health_zone','date'),with=FALSE])
