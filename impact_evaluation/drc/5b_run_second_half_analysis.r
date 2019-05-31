@@ -32,7 +32,6 @@ load(outputFile4b)
 
 # ----------------------------------------------
 # Define model object
-# DECISIONS
 source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
@@ -104,7 +103,7 @@ means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 
 # save all sem fits just in case they're needed
 print(paste('Saving', outputFile5b))
-save(list=c('data','model','summaries','means','urFits'), file=outputFile5b)
+save(list=c('data','model','summaries','means','urFits','modelVersion'), file=outputFile5b)
 
 # save full output for archiving
 outputFile5b_big = gsub('.rdata','_all_semFits.rdata',outputFile5b)
@@ -112,7 +111,7 @@ print(paste('Saving', outputFile5b_big))
 semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'second_half_semFit_', i, '.rds')))
 })
-save(list=c('data','model','semFits','summaries','means','urFits'), file=outputFile5b_big)
+save(list=c('data','model','semFits','summaries','means','urFits','modelVersion'), file=outputFile5b_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
