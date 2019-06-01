@@ -61,15 +61,12 @@ vars = c("set", "sr_code", "department", "muni", "date",
 
 f3 = f3[, vars, with=FALSE]
 f4 = f4[, vars, with=FALSE]
-F5 = f5[ ,vars, with=FALSE]
+f5 = f5[ ,vars, with=FALSE]
 
 # bind and add variable to fit with f2
 f = rbind(f3, f4)
+f = rbind(f, f5)
 f[ , sr:=NA]
-
-
-
-
 
 #---------------------------
 # combine the data sets - f2 with f3 and f4
@@ -174,10 +171,26 @@ f1 = f1[ ,.(value=sum(value)), by=byVars]
 
 f = rbind(f, f1)
 
+#---------------------------
+# create monthly dates
+
+f[ ,month:=as.character(month(date))]
+f[month!="10" & month!="11" & month!="12", month:=paste0("0", month)]
+f[ , month_date:=paste0(year(date), '-', month, '-01')]
+f[ , month_date:=ymd(month_date)]
+f[!is.na(date), date:=month_date] # accounts for missing dates
+
+# drop unecessary variables
+f[ ,c("month_date", "month"):=NULL]
+
+# sum to monthly totals
+byVars = names(f)[names(f)!='value']
+f = f[ ,.(value=sum(value)), by=byVars]
+
 #--------------------------------------------------------
 # save the product
 
-saveRDS(f, paste0(dir, 'prepped/sigpro_october_2018_transfer_prepped.RDS'))
+saveRDS(f, paste0(dir, 'prepped/sigpro_testing_transfer_prepped.RDS'))
 
 #--------------------------------------------------------
 
