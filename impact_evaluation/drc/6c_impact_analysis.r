@@ -54,7 +54,7 @@ nodeTable[, label:=gsub('Lead of','',label)]
 # Compute explained variance
 
 # establish the outcome variable
-outcomeVar = 'lead_malariaDeaths_rate'
+outcomeVar = 'lead_malariaDeaths_under5_rate'
 byVars = c('lhs', 'rhs', 'est.std', 'se.std')
 
 # prep each level of coefficients
@@ -112,6 +112,7 @@ setup2LevelSB = function(var='ITN_consumed_cumulative', pcts=TRUE) {
 	tmplevel1 = tmplevel1[lhs==var]
 
 	# find the most distal set of estimates that contain the child variables to the given variable	
+	tmplevel2=copy(tmplevel1)
 	for(i in rev(seq(nLevels))) {
 		childVars = unique(tmplevel1$rhs)
 		childVars = childVars[childVars!='unexplained']
@@ -174,6 +175,10 @@ setup2LevelSB = function(var='ITN_consumed_cumulative', pcts=TRUE) {
 
 # --------------------------------------------------------------------------------------------
 # Graph sunbursts
+
+# colors
+cols = brewer.pal(12, 'Paired')
+cols = c('#969696', cols)
 
 # store variables
 outcomeVars = NULL
