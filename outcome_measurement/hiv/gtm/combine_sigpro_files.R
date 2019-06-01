@@ -178,12 +178,12 @@ f[ ,month:=as.character(month(date))]
 f[month!="10" & month!="11" & month!="12", month:=paste0("0", month)]
 f[ , month_date:=paste0(year(date), '-', month, '-01')]
 f[ , month_date:=ymd(month_date)]
-f[!is.na(date), date:=month_date] # accounts for missing dates
+f[!is.na(date), date:=month_date] # accounts for missing dates, warning is ok
 
 # drop unecessary variables
 f[ ,c("month_date", "month"):=NULL]
 
-# sum to monthly totals
+# sum to monthly totals (rather than daily)
 byVars = names(f)[names(f)!='value']
 f = f[ ,.(value=sum(value)), by=byVars]
 
