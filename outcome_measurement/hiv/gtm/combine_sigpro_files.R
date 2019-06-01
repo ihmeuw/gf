@@ -35,20 +35,41 @@ f4 = readRDS(paste0(dir, 'prepped/sigpro_f4_completo 2018.xlsx_prepped.RDS'))
 f5 = readRDS(paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
 
 #----------------------------------------
+# Remove values flagged as errors 
+
+# f1 errors
+f1 = f1[age!='total']
+f1[age=="41913" | age=="43348", age:=NA] # months over 12 already have missing dates
+
+# f2 errors 
+f2[year(date)!=2014 & year(date)!=2015 & year(date)!=2016, date:=NA]
+
+# f3 errors; no errors in f4
+f3[year(date) < 2016, date:=NA]
+
+# f5 errors 
+f5['2019-02-01' < date, date:=NA]
+
+#----------------------------------------
 # combine the data sets - f3 and f4
 # patient level data
 
 # subset and combine similar data sets
 vars = c("set", "sr_code", "department", "muni", "date",  
          "theme", "pop", "subpop", "gender", 
-         "result", "informed_of_result", "flag")
+         "result", "informed_of_result")
 
 f3 = f3[, vars, with=FALSE]
 f4 = f4[, vars, with=FALSE]
+F5 = f5[ ,vars, with=FALSE]
 
 # bind and add variable to fit with f2
 f = rbind(f3, f4)
 f[ , sr:=NA]
+
+
+
+
 
 #---------------------------
 # combine the data sets - f2 with f3 and f4
@@ -56,51 +77,43 @@ f[ , sr:=NA]
 # subset and combine the patient level data
 vars2 = c("set", "sr_code", "sr", "department", "muni", "date",  
           "pop", "subpop", "gender", 
-         "result", "informed_of_result", "flag")
+         "result", "informed_of_result")
 
 # subset and add theme
 f2 = f2[ ,vars2, with=FALSE]
-f2[ ,theme:=NA]
+f2[ , theme:=NA]
 
 # bind it in
+# keep informed of result - only NA if the test was not done 
 f = rbind(f, f2)
 
 #---------------------------
 # add sr names based on codes and names in other data sets
-# 
-# f[sr_code==401, sr:='otrans']
-# f[sr_code==402, sr:='fma']
-# f[sr_code==403, sr:='conevih']
-# f[sr_code==404, sr:='gp']
-# f[sr_code==405, sr:='ffi']
-# f[sr_code==406, sr:='gente nueva']
-# f[sr_code==407, sr:='idei']
-# f[sr_code==408, sr:='proyecto vida']
-# f[sr_code==409, sr:='idei']
+
+# werkin on it :( 
 
 #---------------------------
+# for the sr level data, add a value for each patient
 # add values - patients level so each row is 1
+
 f[ ,value:=1]
 
-#---------------------------
-# drop erroneous values
-
-# check unique values for erroneous values
-f[ ,unique(sr_code), by=sr]
-f[ ,unique(department)]
-f[ ,unique(muni)]
+# fix sr names with poor formatting
+f[ , sr:=trimws(sr)]
 
 #---------------------------
-# fix outlier dates 
-
-# test = f[ ,.(test_completed=sum(test_completed)), by=date]
+# perform data quality checks on the patient level data 
 # 
-# ggplot(test, aes(x=date, y=test_completed)) +
+# # check unique values for erroneous values
+# f[ ,unique(sr_code), by=sr]
+# f[ ,unique(department)]
+# f[ ,unique(muni)]
+# 
+# # check for outlier dates 
+# test = f[ ,.(pts=sum(value)), by=date]
+# ggplot(test, aes(x=date, y=pts)) +
 #   geom_point() +
 #   geom_line()
-
-f[year(date) < 2013, date:=NA] # reporting appears to begin in 2013
-f['2018-08-01' < date, date:=NA]
 
 #-------------------------------------------------------
 # sum the final results 
@@ -122,11 +135,11 @@ f1 = f1[age!="total"]
 f1[!grepl("-", age) & !grepl("<", age) & !grepl("\\+", age), age:=NA]
 
 #---------------------------
-# keep only hiv-related data 
+# keep only hiv-related data, drop syphilis
 
 f1 = f1[grep("vih", result)]
 
-# format the test results to resemble the other data
+# format the test results to contain the same variables as the other data
 f1[grep("negativo", result), result:="nonreactive"]
 f1[grep("positivo", result), result:="reactive"]
 f1[grep("presuntivo", result), result:="test not done"]
@@ -136,41 +149,30 @@ f1[grep("presuntivo", result), result:="test not done"]
 
 # reset variable name
 setnames(f1, "category", "subpop")
-f1[subpop=='mujeres' | subpop=='hombres' | subpop=='trans', subpop:=NA] # captured in gender
-
-#---------------------------
-# drop unecessary variables and create variables for rbind
-
-f1[ ,c("flag", "pregnant"):=NULL]
-
-# add variables in f
-f1[ ,department:=NA]
-f1[ ,muni:=NA]
-f1[ ,theme:=NA]
 
 # finalize shaped long
 setnames(f1, "total", "value")
 
 #---------------------------
+# drop unecessary variables and create variables for rbind
+
+f1[ ,c("flag", "pregnant", "numeroInforme"):=NULL] # subpop captures pregnancy
+
+# add variables that occur in the patient level data captured in f
+f1[ ,department:=NA]
+f1[ ,muni:=NA]
+f1[ ,theme:=NA]
+
+#---------------------------
 # sum over the age categories
 
-otherVars = names(f1)[names(f1)!='value' & names(f1)!='age']
-f1 = f1[ ,.(value=sum(value)), by=otherVars]
+byVars = names(f1)[names(f1)!='value' & names(f1)!='age']
+f1 = f1[ ,.(value=sum(value)), by=byVars]
 
 #---------------------------
 # bind the data together
 
 f = rbind(f, f1)
-
-#---------------------------
-# add f5
-
-f5 = readRDS(paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
-
-# format it
-
-
-
 
 #--------------------------------------------------------
 # save the product
