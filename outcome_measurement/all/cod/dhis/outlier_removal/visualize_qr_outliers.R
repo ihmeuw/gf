@@ -38,7 +38,7 @@ if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
 if (set=='base') outFile = 'outliers/base/base_outliers_replaced.pdf'
 if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_24_19_updated_rules.pdf'
                   outData = 'prepped/sigl_drugs_prepped_outliers_labeled.rds' }
-if (set=='pnlp') {outFile1 = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
+if (set=='pnlp') {outFile = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
                   outFile2 = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (do not correspond to DPS level outliers)'
                   outFile_dps = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures_dpsLevel'
                   outData = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_labeled.rds' }
@@ -157,8 +157,8 @@ if (set %in% c('pnls', 'sigl', 'base')){
   dt[, outlier := ifelse( (value > limit & ( value > t2_upper )), TRUE, FALSE) ]
   dt[ (value < t2_lower ), outlier :=TRUE ]}
 if (set == 'pnlp') {
-  dt[, outlier := ifelse( value > t2_upper, TRUE, FALSE) ]
-  dt[ (value < t2_lower ), outlier :=TRUE ]
+  dt[, outlier := ifelse( value > t3_upper, TRUE, FALSE) ]
+  dt[ (value < t3_lower ), outlier :=TRUE ]
 }
 # number of outliers
 dt[ outlier==TRUE, .N ]  # 9,220 at fitted_value +/- 20 MADs 
@@ -190,9 +190,9 @@ if (set == 'pnlp') {
   dt_dps[ (value < t2_lower ), outlier_dpsLevel2 :=TRUE ]
   dt_dps[, outlier_dpsLevel1 := ifelse( value > t1_upper, TRUE, FALSE) ]
   dt_dps[ (value < t1_lower ), outlier_dpsLevel1 :=TRUE ]
-  # dt_dps[ outlier_dpsLevel1==TRUE, .N ] # 1,594 at t2
+  # dt_dps[ outlier_dpsLevel1==TRUE, .N ] # 945 at fitted_value +/- 10 MADs 
   
-  dt = merge(dt, dt_dps[, .(org_unit_id, date, variable, element_id, outlier_dpsLevel1, outlier_dpsLevel2, outlier_dpsLevel3, outlier_dpsLevel4)], all = TRUE, 
+  dt = merge(dt, dt_dps[, .(org_unit_id, date, variable, element_id, outlier_dpsLevel1, outlier_dpsLevel2, outlier_dpsLevel3)], all = TRUE, 
              by.x=c('dps', 'date', 'variable', 'element_id'), by.y=c('org_unit_id', 'date', 'variable', 'element_id'))
   
   dt[ outlier == TRUE & outlier_dpsLevel1 == TRUE, outlier_in_both_wdps1 := TRUE ]
@@ -511,7 +511,6 @@ if (set=='base') {
 }
 #----------------------------
 if (set=='pnlp') {
-  setnames(out, "health_zone", "org_unit_id")
   setnames(out, "variable", "element")
 
   # loop through the graphs 
@@ -548,16 +547,6 @@ if (set=='pnlp') {
       i=i+1
     }}
 }
-
-ggplot(out[element==e & org_unit_id==o], aes(x=date, y=value)) +
-  geom_point() +
-  geom_line(data = out[element==e & org_unit_id==o], aes(x=date, y=fitted_value2), color='#9ebcda')
-
-
-quantFit = rq(value ~ date, data=out, tau=0.5)
-summary(quantFit) 
-out[, fitted_value2:=predict(quantFit, newdata = out)]
-out[!is.na(value), fitted_value2:=predict(quantFit)]
 #--------------------------------
 
 #--------------------------------
