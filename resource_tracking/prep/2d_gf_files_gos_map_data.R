@@ -334,13 +334,19 @@ if (prep_files){
   expenditures[, semester:=substr(pudr_code, 3, nchar(pudr_code))]
   dup_files = unique(expenditures[, .(grant, grant_period, file_name, pudr_code, quarter, year)])
   dup_files[, dup:=seq(0, nrow(dup_files)), by=c('grant', 'grant_period', 'quarter', 'year')]
-  expenditures = merge(expenditures, dup_files, by=c('grant', 'grant_period', 'file_name', 'pudr_code', 'quarter', 'year'))
+  dup_files = unique(dup_files[dup!=0, .(grant, grant_period, quarter, year)])
   
-  #Pull out data that has overlap (dup == 1), and subtract earlier PUDRs from later PUDRs. 
+  #Tag these dup files in the expenditures dataset so you can do the subtraction below
+  for (i in 1:nrow(dup_files)){
+    expenditures[grant==dup_files$grant[i] & grant_period==dup_files$grant_period[i] & quarter==dup_files$quarter[i] & year==dup_files$year[i], 
+                 dup:=TRUE]
+  }
+  expenditures[is.na(dup), dup:=FALSE]
+  #Pull out data that has overlap, and subtract earlier PUDRs from later PUDRs. 
   #Sum out the quarter-level
   {
     valueVars = c('budget', 'expenditure', 'disbursement')
-    exp_collapse = expenditures[dup==1, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
+    exp_collapse = expenditures[dup==TRUE, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
                                 by=c('grant', 'grant_period', 'file_name', 'orig_module', 'orig_intervention', 'code', 'activity_description', 'semester', 
                                      'year', 'pudr_grant_year')]
     
@@ -372,8 +378,20 @@ if (prep_files){
     stopifnot(unique(exp_melt$budget)%in%c('A', 'B'))
   }
   
+  # Cast back so budget, expenditure, and disbursement are variable names again. 
+  exp_recast = dcast(exp_melt, grant+grant_period+file_name+orig_module+orig_intervention+code+activity_description+year+pudr_grant_year+semester~variable, value.var='value')
   
-  #Subtract duplicate expenditure data to get a unique dataset. 
+  #Merge back onto expenditure data that DIDN'T need subtraction 
+  exp_no_subtract = expenditures[, .(grant, grant_period, file_name, orig_module, orig_intervention, code, activity_description, year, pudr_grant_year, 
+                               semester, budget, disbursement, expenditure)]
+  expenditures = rbind(exp_recast, exp_no_subtract) 
+  
+  # Add on additional variables 
+  merge_vars = unique(mapped_data[, .(grant, grant_period, file_name, orig_module, orig_intervention, code, activity_description, year, 
+                                      disease, primary_recipient, language, grant_status, implementer, gf_module, gf_intervention, includes_rssh, current_grant, 
+                                      loc_name, country, grant_disease)])
+  expenditures = merge(expenditures, merge_vars)
+  
   #-------------------------------------------
   #3. Absorption
   absorption = mapped_data[data_source=="pudr", .(grant, grant_period, code, gf_module, gf_intervention, budget, expenditure, pudr_semester)]
@@ -392,10 +410,11 @@ if (prep_files){
   absorption_wide=data.table()
   grants = unique(absorption[, .(grant, grant_period)])
   for (i in 1:nrow(grants)){
-    subset = absorption[grant==grants$grant[i] & grant_period==grants$grant_period[i], .(grant, grant_period, gf_module, gf_intervention, absorption, semester)]
+    subset = absorption[grant==grants$grant[i] & grant_period==grants$grant_period[i], .(grant, grant_period, gf_module, gf_intervention, 
+                                                                                         absorption, budget, expenditure, semester)]
     
     subset_wide = dcast(subset, grant+grant_period+gf_module+gf_intervention~semester,
-                        value.var=c('absorption'))
+                        value.var=c('budget', 'expenditure', 'absorption'))
     absorption_wide=rbind(absorption_wide, subset_wide, fill=TRUE)
   }
 
@@ -408,12 +427,12 @@ if (prep_files){
 if (prep_files){
   # Save RDS file
   saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
-  # saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
+  saveRDS(expenditures, paste0(export_dir, "final_expenditures.rds"))
   saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
   saveRDS(absorption_wide, paste0(export_dir, "absorption.rds"))
   
   write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), row.names=FALSE)
-  #write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
+  write.csv(expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
   write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"), row.names=FALSE)
   write.csv(absorption_wide, paste0(export_dir, "absorption.rds"), row.names=FALSE)
 }
