@@ -10,11 +10,9 @@
 rm(list=ls())
 library(lubridate)
 library(data.table)
-library(openxlsx)
 library(ggplot2)
-library(Hmisc)
 library(stringr)
-library(XLConnect)
+library(tools)
 #---------------------------------------
 # Set up directories 
 #----------------------------------------
@@ -35,7 +33,7 @@ f4 = readRDS(paste0(dir, 'prepped/sigpro_f4_completo 2018.xlsx_prepped.RDS'))
 f5 = readRDS(paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
 
 #----------------------------------------
-# Remove values flagged as errors 
+# Remove errant values in all five data sets
 
 # f1 errors
 f1 = f1[age!='total']
@@ -50,9 +48,13 @@ f3[year(date) < 2016, date:=NA]
 # f5 errors 
 f5['2019-02-01' < date, date:=NA]
 
-#----------------------------------------
-# combine the data sets - f3 and f4
-# patient level data
+#--------------------------------------------------------------------------
+
+#--------------------------------------------------------------------------
+# FORMAT SETS AND COMBINE 
+
+#------------------------------------------
+# combine the patient level data sets - f3, f4, and f5
 
 # subset and combine similar data sets
 vars = c("set", "sr_code", "department", "muni", "date",  
@@ -61,15 +63,14 @@ vars = c("set", "sr_code", "department", "muni", "date",
 
 f3 = f3[, vars, with=FALSE]
 f4 = f4[, vars, with=FALSE]
-f5 = f5[ ,vars, with=FALSE]
+f5 = f5[,vars, with=FALSE]
+f = rbind(f3, f4, f5)
 
-# bind and add variable to fit with f2
-f = rbind(f3, f4)
-f = rbind(f, f5)
+# add an SR category to merge with f2
 f[ , sr:=NA]
 
 #---------------------------
-# combine the data sets - f2 with f3 and f4
+# combine the data sets - f2 with f3, f4, f5
 
 # subset and combine the patient level data
 vars2 = c("set", "sr_code", "sr", "department", "muni", "date",  
@@ -82,15 +83,11 @@ f2[ , theme:=NA]
 
 # bind it in
 # keep informed of result - only NA if the test was not done 
-f = rbind(f, f2)
+# f now includes all patient level data 
+f = rbind(f, f2) # all patient level data not in a single data set
 
 #---------------------------
-# add sr names based on codes and names in other data sets
-
-# werkin on it :( 
-
-#---------------------------
-# for the sr level data, add a value for each patient
+# aggregate patient level data to the SR level 
 # add values - patients level so each row is 1
 
 f[ ,value:=1]
@@ -113,8 +110,9 @@ f[ , sr:=trimws(sr)]
 #   geom_line()
 
 #-------------------------------------------------------
-# sum the final results 
+# COMBINE WITH SR LEVEL DATA 
 
+# sum to the sr/gender level
 # drop informed of result - early data only has positive or negative
 # no information in f1 on informing patients
 f = f[ ,.(value=sum(value)), by=.(set, sr, sr_code,
@@ -125,10 +123,6 @@ f = f[ ,.(value=sum(value)), by=.(set, sr, sr_code,
 # aggregate to the sr, muni, department level
 
 # fix the age categories
-# drop out 'total' age groups
-f1 = f1[age!="total"]
-
-# update the age
 f1[!grepl("-", age) & !grepl("<", age) & !grepl("\\+", age), age:=NA]
 
 #---------------------------
@@ -156,9 +150,9 @@ setnames(f1, "total", "value")
 f1[ ,c("flag", "pregnant", "numeroInforme"):=NULL] # subpop captures pregnancy
 
 # add variables that occur in the patient level data captured in f
-f1[ ,department:=NA]
-f1[ ,muni:=NA]
-f1[ ,theme:=NA]
+f1[ , department:=NA]
+f1[ , muni:=NA]
+f1[ , theme:=NA]
 
 #---------------------------
 # sum over the age categories
@@ -170,10 +164,11 @@ f1 = f1[ ,.(value=sum(value)), by=byVars]
 # bind the data together
 
 f = rbind(f, f1)
+#-------------------------------------------------
+# FORMAT THE FULLY COMBINED DATA 
 
-#---------------------------
+#------------------------------
 # create monthly dates
-
 f[ ,month:=as.character(month(date))]
 f[month!="10" & month!="11" & month!="12", month:=paste0("0", month)]
 f[ , month_date:=paste0(year(date), '-', month, '-01')]
@@ -186,6 +181,22 @@ f[ ,c("month_date", "month"):=NULL]
 # sum to monthly totals (rather than daily)
 byVars = names(f)[names(f)!='value']
 f = f[ ,.(value=sum(value)), by=byVars]
+
+#------------------------------
+
+#------------------------------
+# format geographic information 
+
+# remove errors from department names
+f[department=='totonicapã¡n', department:='totonicapan']
+f[department=='quichã©', department:='quiche']
+f[department=='suchitepã©quez', department:='suchitepequez']
+f[department=='sacatepã©quez', department:='sacatepequez']
+f[department=='petã©n', department:='peten']
+f[department=='sololã¡', department:='solola']
+f[ ,department:=toTitleCase(department)]
+
+# remove errors from municipalities 
 
 #--------------------------------------------------------
 # save the product

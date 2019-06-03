@@ -88,7 +88,7 @@ f1[pop=='fsw', gender:='Female']
 f1[grep('homb', category), gender:='Male']
 f1[grep('nino', category), gender:='Male']
 
-f1[grep('trans', category), gender:='trans']
+f1[grep('trans', category), gender:='Trans']
 
 # add a pregnancy binary
 f1[category=='embarazadas', pregnant:=TRUE]
@@ -159,6 +159,7 @@ f2[ ,sr_code:=gsub("nac0", "", sr_code)]
 f2[ , sr:=sapply(strsplit(sr, '-'), '[', 3)]
 f2[grep('cas', sr), sr:=sapply(strsplit(sr, '-'), '[', 2)]
 f2[grep('peniten', sr), sr:=sapply(strsplit(sr, '-'), '[', 2)]
+f2[ , sr:=trimws(sr)]
 
 #-------------------------------
 # convert yes and no to a logical 
@@ -411,11 +412,7 @@ f5[, flag:=(is.na(date))]
 # save the file 
 
 saveRDS(f5, paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
+
 #---------------------------------------------------
-
-
-
-
-
 
 
