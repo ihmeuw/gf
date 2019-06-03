@@ -38,15 +38,18 @@ if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
 if (set=='base') outFile = 'outliers/base/base_outliers_replaced.pdf'
 if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_24_19_updated_rules.pdf'
                   outData = 'prepped/sigl_drugs_prepped_outliers_labeled.rds' }
-if (set=='pnlp') {outFile = '../prepped_data/PNLP/pnlp_outliers_figures_3rdThreshold.pdf'
-                  outData = '../prepped_data/PNLP/pnlp_outliers_labeled.rds' }
+if (set=='pnlp') {outFile1 = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
+                  outFile2 = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (do not correspond to DPS level outliers)'
+                  outFile_dps = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures_dpsLevel'
+                  outData = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_labeled.rds' }
 #------------------------------------
 # read in the file
 
 if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/base/qr_results_full.rds'))}
 if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base/base_quantreg_results.rds'))}
 if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl/prepped_sigl_quantreg_imputation_results.rds'))
-if (set=='pnlp') dt = readRDS(paste0(dir, '../prepped_data/PNLP/pnlp_quantreg_results.rds'))
+if (set=='pnlp') { dt = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results.rds'))
+                   dt_dps = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds'))}
 #------------------------------------
 
 #-----------------------------------
@@ -89,8 +92,6 @@ if (set %in% c('pnls', 'base', 'sigl')) {
   facilities = facilities[ ,.(org_unit_id, org_unit)]
   dt = merge(dt, facilities, by='org_unit_id', all.x=TRUE) }
 
-if (set == 'pnlp') setnames(dt, 'org_unit_id', 'health_zone')
-
 # fix merge issue
 if (set == 'sigl') {
   dt[, org_unit.x := NULL]
@@ -101,7 +102,7 @@ if (set == 'sigl') {
 if (set=='pnls') idVars = c('org_unit_id', 'element')
 if (set=='base') idVars = c('org_unit_id', 'element')
 if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable') 
-if (set=='pnlp') idVars = c('health_zone', 'variable')
+if (set=='pnlp') idVars = c('org_unit_id', 'variable')
 
 #------------------------------------
 # identify outliers where the residuals are larger than +/- 10 MADS of the fitted values
