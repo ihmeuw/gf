@@ -115,8 +115,13 @@ if (set=='sigl') dt[, variable_id:=.GRP, by='variable']
 
 # aggregate to DPS level before running (if agg_to_DPS is TRUE)
 if (agg_to_DPS == TRUE){
-  dt = dt[, .(value = sum(value, na.rm=TRUE)), by = .(dps, date, variable, element_id )]
+  # if all hzs at a particular date (within DPS and variable) are NA we want it to be NA (not 0, like what happens with na.rm = TRUE)
+  # dt_dps = dt[, .(value = sum(value, na.rm=TRUE)), by = .(dps, date, variable, element_id )]
+  
+  dt[, value_dps := ifelse(!all(is.na(value)), sum(value, na.rm=TRUE), sum(value)), by = .(dps, date, variable, element_id )]
+  dt = unique(dt[, .(dps, date, variable, element_id, value_dps)])
   setnames(dt, "dps", "org_unit_id")
+  setnames(dt, "value_dps", "value")
 }
 
 # sort the data table so the indexing works correctly when retrieving data using fst
