@@ -77,7 +77,7 @@ data = na.omit(data)
 
 
 # -----------------------------------------------------------------------
-# Data transformations and other fixes for Heywood cases
+# Data transformations
 
 # make cumulative variables
 cumulVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]

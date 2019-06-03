@@ -33,7 +33,7 @@ dropVars = c('act_coverage','incidence','prevalence','mortality','itn_coverage',
 data = data[,-dropVars, with=FALSE]
 
 # convert date to numeric
-data[, date:=as.numeric(year(date)+((month(date)/12)-1))]
+data[, date:=as.numeric(year(date)+((month(date)-1)/12))]
 
 # make MI ratio
 data[, case_fatality:=malariaDeaths/(newCasesMalariaMild+newCasesMalariaSevere)]
@@ -80,7 +80,7 @@ for(v in names(data)) {
 		if (!any(!is.na(data[health_zone==h][[v]]))) next
 		form = as.formula(paste0(v,'~date'))
 		lmFit = lm(form, data[health_zone==h])
-		data[health_zone==h, tmp:=exp(predict(lmFit, newdata=data[health_zone==h]))]
+		data[health_zone==h, tmp:=(predict(lmFit, newdata=data[health_zone==h]))]
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
 		pct_complete = floor(i/(length(names(data))*length(unique(data$health_zone)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
@@ -95,7 +95,7 @@ data = na.omit(data)
 
 
 # -----------------------------------------------------------------------
-# Data transformations and other fixes for Heywood cases
+# Data transformations
 
 # remake ITN_rate now that it can be cumulative
 data = data[order(health_zone, date)]
@@ -141,11 +141,11 @@ if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify
 # ---------------------------------------------------------------------------------------
 
 
-# --------------------------------------------------------------------------
+# -------------------------------------------------------
 # Save file
 print(paste('Saving:', outputFile4b)) 
-save(list=c('data', 'untransformed', 'scaling_factors'), file=outputFile4b)
+save(list=c('data', 'untransformed'), file=outputFile4b)
 
 # save a time-stamped version for reproducibility
 archive(outputFile4b)
-# --------------------------------------------------------------------------
+# -------------------------------------------------------

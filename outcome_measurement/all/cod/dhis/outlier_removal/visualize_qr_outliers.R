@@ -14,47 +14,43 @@ library(RColorBrewer)
 library(stringr)
 # --------------------
 
-#---------------------------------------------
+#------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
-#---------------------------------------------
+
 set = 'pnlp'
 
 # user name for sourcing functions
-user_name =  Sys.info()[['user']]
-#---------------------------------------------
+user_name = 'abatzel'
 
-#---------------------------------------------
-# set directories / input & output files
-#---------------------------------------------
+#------------------------------------
+# set directories
+
 # detect if operating on windows or on the cluster 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-#---------------------
+
+#-----------------------------------
 # output files
 
 if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
 if (set=='base') outFile = 'outliers/base/base_outliers_replaced.pdf'
 if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_24_19_updated_rules.pdf'
                   outData = 'prepped/sigl_drugs_prepped_outliers_labeled.rds' }
-if (set=='pnlp') {outFile = '../prepped_data/PNLP/outliers/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
-                  outFile2 = '../prepped_data/PNLP/outliers/pnlp_outliers_figures (do not correspond to DPS level outliers).pdf'
-                  outData = '../prepped_data/PNLP/outliers/pnlp_outliers_labeled.rds' }
-#---------------------
+if (set=='pnlp') {outFile = '../prepped_data/PNLP/pnlp_outliers_figures_3rdThreshold.pdf'
+                  outData = '../prepped_data/PNLP/pnlp_outliers_labeled.rds' }
+#------------------------------------
 # read in the file
 
 if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/base/qr_results_full.rds'))}
 if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base/base_quantreg_results.rds'))}
 if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl/prepped_sigl_quantreg_imputation_results.rds'))
-if (set=='pnlp') { 
-  dt = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results.rds'))
-  dt_dps = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds'))}
-#---------------------------------------------
+if (set=='pnlp') dt = readRDS(paste0(dir, '../prepped_data/PNLP/pnlp_quantreg_results.rds'))
+#------------------------------------
 
-#---------------------------------------------
-# hacky base function - i will get rid of this - Caitlin
-#---------------------------------------------
+#-----------------------------------
+# hacky base function - i will get rid of this
 if (set=='base') {
   
   # keep the french element
@@ -81,36 +77,36 @@ if (set=='base') {
   dt[element_id==17 , element:='Severe malaria treated - pregnant woman' ]
   dt[element_id==18 , element:='Simple malaria treated - pregnant woman' ]
 }
-#---------------------------------------------
 
-#---------------------------------------------
-# post-qr processing
-#---------------------------------------------
+#------------------------------------
 # fix the date 
 if (set != 'pnlp') dt[ , date:=as.Date(date, origin='1970-01-01')]
 
+#------------------------------------
 # merge in the facility names to label the graphs 
 if (set %in% c('pnls', 'base', 'sigl')) {
   facilities = readRDS(paste0(dir, 'meta_data/master_facilities.rds'))
   facilities = facilities[ ,.(org_unit_id, org_unit)]
   dt = merge(dt, facilities, by='org_unit_id', all.x=TRUE) }
 
+if (set == 'pnlp') setnames(dt, 'org_unit_id', 'health_zone')
+
 # fix merge issue
 if (set == 'sigl') {
   dt[, org_unit.x := NULL]
   setnames(dt, "org_unit.y", "org_unit") }
 
-# set id vars
+#------------------------------------
+# identify outliers at various levels/thresholds
 if (set=='pnls') idVars = c('org_unit_id', 'element')
 if (set=='base') idVars = c('org_unit_id', 'element')
 if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable') 
-if (set=='pnlp') idVars = c('org_unit_id', 'variable')
-#---------------------------------------------
+if (set=='pnlp') idVars = c('health_zone', 'variable')
 
-#---------------------------------------------
-# identify outliers where the values are larger than +/- 10 MADS of the fitted values
-#---------------------------------------------
+#------------------------------------
+# identify outliers where the residuals are larger than +/- 10 MADS of the fitted values
 # set threshold for different data sets:
+
 if (set=='pnls' | set == 'base') {
   t1 = 5
   t2 = 10  } else if (set=='sigl'){
@@ -121,27 +117,31 @@ if (set=='pnls' | set == 'base') {
       t3 = 20
       t4 = 25}
 
-# get the mad (or sd) of the residuals
-dt[!all(is.na(resid)) , mad_resid := mad(resid, na.rm=TRUE), by = idVars] # not sure if you need NA removal here
-dt[!all(is.na(resid)) , sd_resid := sd(resid, na.rm=TRUE), by = idVars] # not sure if you need NA removal here
+# threshold for outlier removal
+# not sure if you need NA removal here
+dt[!all(is.na(resid)) , mad_resid := mad(resid, na.rm=TRUE), by = idVars]
+dt[!all(is.na(resid)) , sd_resid := sd(resid, na.rm=TRUE), by = idVars]
 dt[ , thresh_var := mad_resid]
 dt[ , stat_used := "mad"] # I want to keep track of which stat is used so we can assess if SD is working okay in place of mad
-dt[ mad_resid < 1, thresh_var := sd_resid] # if mad of residuals is less than one, use SD 
+# if mad of residuals is less than one, use SD 
+dt[ mad_resid < 1, thresh_var := sd_resid]
 dt[ mad_resid < 1, stat_used := "sd"]
-dt[ is.na(thresh_var), stat_used := NA]
 dt[ , c('sd_resid', 'mad_resid') := NULL]
 
 # set lower and upper bounds
-# add multiple bounds to investigate on the graphs
-dt[ , t1_upper := fitted_value + (t1 * thresh_var)]
-dt[ , t1_lower := fitted_value - (t1 * thresh_var)]
-dt[ , t2_upper := fitted_value + (t2 * thresh_var)]
-dt[ , t2_lower := fitted_value - (t2 * thresh_var)]
+# does this need to be for only !all(is.na) as well? not sure
+dt[ , upper := fitted_value + (t2 * thresh_var)]
+dt[ , lower := fitted_value - (t2 * thresh_var)]
+
+# add a 5 SD bound to investigate on the graphs
+dt[ , upper_mid := fitted_value + (t1 * thresh_var)]
+dt[ , lower_mid := fitted_value - (t1 * thresh_var)]
 
 if (set == 'pnlp'){
   dt[ , t3_upper := fitted_value + (t3 * thresh_var)]
   dt[ , t3_lower := fitted_value - (t3 * thresh_var)]
 }
+
 # select outliers
 # set minimum value to be considered an outlier based on the 99.5 percentile of the variable 
 if (set=='pnls' | set == 'base'){
@@ -150,6 +150,7 @@ if (set=='sigl'){
   quantiles = dt[ , .( limit = quantile(value, 0.995, na.rm = TRUE), quantile = rep( 0.995)), by = c("variable","level", "drug")]
   dt = merge(dt, quantiles, by = c("variable", "level", "drug"))
 }
+
 # the value is greater than the limit set above and greater than 10 times the mad of residuals 
 # or less than 10 times the negative mad of the residuals
 if (set %in% c('pnls', 'sigl', 'base')){
@@ -291,41 +292,35 @@ for (j in 11:100){
 }
 #---------------------------------------------
 
+# number of outliers
+dt[ outlier==TRUE, .N ] 
+# ( dt[outlier==TRUE, .N]  / dt[!is.na(value), .N] ) * 100 # for sigl = 811; 0.017% of non-missing data
 #---------------------------------------------
 # remove the dps code from the facility name for the graph titles
-#---------------------------------------------
+
 # dt[ , facility:=word(org_unit, 2, -1)]
-#---------------------------------------------
 
-#---------------------------------------------
+#----------------------------------------------
 # subset to the health facilities and elements that contain outliers
-#---------------------------------------------
-# pnlp - create two sets to graph, one where outliers in hz are also representative of outliers at dps level, 
-# and one where outliers at hz level don't create a corresponding outlier at dps level...
-if (set == 'pnlp') {
-  dt[ outlier == TRUE & outlier_dpsLevel3 != TRUE, outlier_hzLevel_only := TRUE]
-  dt[ outlier_hzLevel_only == TRUE, outlier := FALSE] }
-
+#----------------------------
 if (set=='pnls') dt[ , combine:=paste0(org_unit_id, sex, element)]
 if (set=='base') dt[ , combine:=paste0(org_unit_id, element)]
 if (set=='sigl') dt[ , combine := paste0(org_unit_id, drug)]
-if (set=='pnlp') dt[ , combine := paste0(org_unit_id, variable)]
+if (set=='pnlp') dt[ , combine := paste0(health_zone, variable)]
 
 out_orgs = dt[outlier == TRUE, unique(combine)]
-#PNLP - for hz outliers not at dps level:
-out_orgs = dt[outlier_hzLevel_only == TRUE, unique(combine)]
 out = dt[combine %in% out_orgs]
 
 # drop the unique identifier
 out[ , combine := NULL]
 dt[ , combine := NULL]
-#---------------------------------------------
+#----------------------------
 
-#---------------------------------------------
+#----------------------------
 # EMERGING TRENDS RULE:
 # eliminate outliers that are part of an emerging trend
 # do not demarcate any two or more consecutive outliers as outliers
-#---------------------------------------------
+#----------------------------
 if (set != 'pnlp'){
   # create a unique identifier to drop out emerging trends
   if (set=='pnls') out[ , combine2:=paste0(org_unit_id, sex, element, subpop, age)]
@@ -396,6 +391,7 @@ if (set == "sigl"){
 #----------------------------
 # create a palette
 greys = brewer.pal(9, 'Greys')
+
 # create a list of plots
 list_of_plots = NULL
 i=1
@@ -423,9 +419,9 @@ for (e in unique(out$element)) {
                    color='#4575b4', size=3, alpha=0.8) +
         facet_wrap(~subpop) +
         scale_color_manual(values=greys)+
-        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=t1_lower, ymax=t1_upper), 
+        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=lower_mid, ymax=upper_mid), 
                     alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=lower, ymax=t2_upper), 
+        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=lower, ymax=upper), 
                     alpha=0.2, fill='#feb24c', color=NA) +
         labs(title=title, subtitle=subtitle, x='Date', y='Count',
              color='Age') +
@@ -457,9 +453,9 @@ if (set == 'sigl'){
                      color='#4575b4', size=3, alpha=0.8) +
           facet_wrap(~variable, scales = "free") +
           scale_color_manual(values=greys) +
-          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper), 
+          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=lower_mid, ymax=upper_mid), 
                       alpha=0.2, fill='#feb24c', color=NA) +
-          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=lower, ymax=t2_upper), 
+          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=lower, ymax=upper), 
                       alpha=0.2, fill='#feb24c', color=NA) +
           labs(title=title, subtitle=subtitle, x='Date', y='Count',
                color='Age') +
@@ -502,9 +498,9 @@ if (set=='base') {
                    color='#4575b4', size=2, alpha=0.8) +
         facet_wrap(~category) +
         scale_color_manual(values=greys) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper),
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=lower_mid, ymax=upper_mid),
                     alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t2_lower, ymax=t2_upper), 
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=lower, ymax=upper), 
                     alpha=0.2, fill='#feb24c', color=NA) +
         labs(title=title, subtitle=subtitle, x='Date', y='Count') +
         theme_bw()
@@ -515,6 +511,7 @@ if (set=='base') {
 }
 #----------------------------
 if (set=='pnlp') {
+  setnames(out, "health_zone", "org_unit_id")
   setnames(out, "variable", "element")
 
   # loop through the graphs 
@@ -537,13 +534,13 @@ if (set=='pnlp') {
         geom_point(data = out[element==e & org_unit_id==o & outlier==TRUE], aes(x=date, y=fitted_value), 
                    color='#4575b4', size=2, alpha=0.8) +
         scale_color_manual(values=greys) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper),
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=lower_mid, ymax=upper_mid),
                     alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t2_lower, ymax=t2_upper),
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=lower, ymax=upper),
                     alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t3_lower, ymax=t3_upper),
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=threshold3_lower, ymax=threshold3_upper),
                     alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t4_lower, ymax=t4_upper),
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=threshold4_lower, ymax=threshold4_upper),
                     alpha=0.2, fill='#feb24c', color=NA) +
         labs(title=title, x='Date', y='Count') +
         theme_bw()
@@ -551,12 +548,22 @@ if (set=='pnlp') {
       i=i+1
     }}
 }
+
+ggplot(out[element==e & org_unit_id==o], aes(x=date, y=value)) +
+  geom_point() +
+  geom_line(data = out[element==e & org_unit_id==o], aes(x=date, y=fitted_value2), color='#9ebcda')
+
+
+quantFit = rq(value ~ date, data=out, tau=0.5)
+summary(quantFit) 
+out[, fitted_value2:=predict(quantFit, newdata = out)]
+out[!is.na(value), fitted_value2:=predict(quantFit)]
 #--------------------------------
 
 #--------------------------------
 # print out the list of plots into a pdf
 #--------------------------------
-pdf(paste0(dir, outFile2), height=6, width=10)
+pdf(paste0(dir, outFile), height=6, width=10)
 
 for(i in seq(length(list_of_plots))) { 
   print(list_of_plots[[i]])
@@ -598,7 +605,7 @@ base_remove = function(x) {
   #----------------------
   # subset to the necessary elements and rename
   
-  dt[ ,c('fitted_value', 'resid', 'thresh_var', 't2_upper', 't2_lower', 't1_upper', 't1_lower',
+  dt[ ,c('fitted_value', 'resid', 'thresh_var', 'upper', 'lower', 'upper_mid', 'lower_mid',
          'facility', 'org_unit', 'element_fr'):=NULL]
   
   # rename the elements to the english elements and label the data set

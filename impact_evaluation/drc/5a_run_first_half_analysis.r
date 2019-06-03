@@ -18,7 +18,7 @@ if(Sys.info()[1]=='Windows') stop('This script is currently only functional on I
 rerunAll = TRUE
 
 # model version to use
-modelVersion = 'drc_malaria6'
+modelVersion = 'drc_malaria6_under5'
 # ---------------------------
 
 
@@ -31,8 +31,6 @@ load(outputFile4a)
 
 # ----------------------------------------------
 # Define model object
-# DECISIONS
-# including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
 source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
@@ -55,7 +53,7 @@ T = length(hzs)
 
 # store cluster command to submit array of jobs
 qsubCommand = paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
-		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
+		' -l fthread=1 -l m_mem_free=2G -q all.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
 		modelVersion, ' 1 FALSE')
@@ -104,7 +102,7 @@ means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 
 # save all sem fits just in case they're needed
 print(paste('Saving', outputFile5a))
-save(list=c('data','model','summaries','means','urFits'), file=outputFile5a)
+save(list=c('data','model','summaries','means','urFits','modelVersion'), file=outputFile5a)
 
 # save full output for archiving
 outputFile5a_big = gsub('.rdata','_all_semFits.rdata',outputFile5a)
@@ -112,7 +110,7 @@ print(paste('Saving', outputFile5a_big))
 semFits = lapply(seq(T), function(i) {
 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 })
-save(list=c('data','model','semFits','summaries','means','urFits'), file=outputFile5a_big)
+save(list=c('data','model','semFits','summaries','means','urFits','modelVersion'), file=outputFile5a_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')

@@ -94,13 +94,6 @@ for(f in files) {
 }
 
 #---------------------------------
-# eliminate overlapping dates
-# this willwork even on a single, combined file
-
-# check for overlapping dates
-dt = dt[!is.na(period)]
-dt = overlap(dt)
-#---------------------------------
 # remove the factoring of value to avoid errors
 #introduces some NAs as some values are NULL
 
@@ -138,13 +131,4 @@ if (folder=='pnls') {
 }
 
 #---------------------------------------
-
-
-
-
-
-
-
-
-
 

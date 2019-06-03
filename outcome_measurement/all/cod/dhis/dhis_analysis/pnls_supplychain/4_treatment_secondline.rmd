@@ -42,10 +42,12 @@ partial_date_range = "Same time period: January - September" #Date range of 'Ann
 
 ```
 
+## DRC Treatment Regimen
+TDF+3TC+EFV is first-line treatment, and TDF+3TC+NVP, AZT+3TC+EFV, and AZT+3TC+NVP are second-line. We only have AZT+3TC+NVP available in the data, so this is the only drug in the graphs for second-line. 
+
 ## Reporting Completeness
 
 ```{r reporting1, echo=FALSE, warning=FALSE}
-# Run for Determine test kits, but could also run for all drugs? 
 plot = gen_report1(dt, drug_id, drug_name, full_date_range)
 plot
 ```
@@ -83,9 +85,9 @@ plot = gen_so_days1(dt, drug_id, drug_name, full_date_range)
 plot
 ``` 
 
-## Map of total facility-days of stockouts
 
-```{r so_map1, echo=FALSE, warning=FALSE}
+```{r so_map1, echo=FALSE, warning=FALSE, include=FALSE}
+## Map of total facility-days of stockouts
 plot = gen_so_map1(dt, drug_id, drug_name, full_date_range)
 plot
 ```
@@ -104,9 +106,9 @@ plot = gen_roc1(dt, drug_id, drug_name, full_date_range)
 plot
 ```
 
-## Stock-out rate of change, by month
 
-```{r monthly_so_roc1, echo=FALSE, warning=FALSE}
+```{r monthly_so_roc1, echo=FALSE, warning=FALSE, include=FALSE}
+## Stock-out rate of change, by month
 plot = gen_monthly_so_roc1(dt, coord_months, drug_id, drug_name, full_date_range)
 plot
 ```
@@ -118,9 +120,9 @@ plot = gen_roc3(dt, drug_id, drug_name, full_date_range)
 plot
 ```
 
-## Percentage of facility-days stocked out
 
-```{r so_pct1, echo=FALSE, warning=FALSE}
+```{r so_pct1, echo=FALSE, warning=FALSE, include=FALSE}
+## Percentage of facility-days stocked out
 plot = gen_so_pct1(dt, drug_id, drug_name, full_date_range)
 plot
 ```
@@ -132,6 +134,38 @@ plot = gen_so_pct2(dt, drug_id, drug_name, full_date_range)
 plot
 ```
 
+## DPS stocked out for 85% of the year or greater
+```{r so_pct3, echo=FALSE, warning=FALSE}
+ stock = dt[element_id==drug_id & stock_category=="number_of_days_stocked_out", .(total_days=sum(expected_days, na.rm=T)), by=c('year', 'id', 'dps')]#Count all facilities that reported stock out information for this drug, with greater than 0 days in the month. 
+  stock_add = dt[element_id==drug_id & stock_category=="number_of_days_stocked_out", .(days_out=sum(value, na.rm=T)), by=c('year', 'id', 'dps')]
+  stock = merge(stock, stock_add, by=c('year', 'id', 'dps'), all=T)
+  stock[, percent_out:=round(100*(days_out/total_days), 1)]
+  
+  #Pull DPS that have higher than 85% 
+  high_so = unique(stock[percent_out>85, .(dps)])
+  high_so_out = dt[dps%in%high_so$dps & !is.na(value) & stock_category=='number_of_days_stocked_out', .(facilities_reporting=length(unique(org_unit_id))), by=c('dps', 'year')]
+  high_so_out2 = dt[dps%in%high_so$dps & !is.na(value) & stock_category=='number_of_days_stocked_out', .(org_unit_id, value, expected_days, level)]
+  high_so_out2[, fac_pct_days_so:=(value/expected_days)*100]
+  high_so_out2 = merge(high_so_out2, unique(dt[, .(org_unit_id, dps)]), by='org_unit_id')
+  
+  #Scatter this by level and DPS
+  scatter3 = ggplot(high_so_out2[!is.na(level)], aes(x=level, y=fac_pct_days_so)) +
+      geom_jitter(width=0.25, alpha=0.2) + theme_bw() +
+    theme(axis.text.x = element_text(angle = 30, hjust=1)) + 
+    facet_wrap(~dps)+
+      labs(title=paste0('Percentage of facility days stocked out of ', drug_name, ' by facility,\nfor DPS with 85% of days stocked out or greater'), subtitle=full_date_range, x='Unique facilities',
+           y='% Days stocked out')
+  
+  scatter3
+ 
+```
+
+## Number of facilities reporting for each DPS with 85% of days stocked out, by year
+
+```{r, scatter4, echo=FALSE, warning=FALSE}
+kable(high_so_out[order(dps, year)])
+```
+
 ## Days stocked out by facility level (all)
 
 ```{r scatter1, echo=FALSE, warning=FALSE}
@@ -139,42 +173,42 @@ plot = gen_scatter1(dt, drug_id, drug_name, full_date_range)
 plot
 ``` 
 
-## Days stocked out by facility level (grouped)
 
-```{r scatter2, echo=FALSE, warning=FALSE}
+```{r scatter2, echo=FALSE, warning=FALSE, include=FALSE}
+## Days stocked out by facility level (grouped)
 plot = gen_scatter2(dt, drug_id, drug_name, full_date_range)
 plot
 ```
 
-## Days stocked out by facility level (grouped, by year)
 
-```{r scatter3, echo=FALSE, warning=FALSE}
+```{r scatter3, echo=FALSE, warning=FALSE, include=FALSE}
+## Days stocked out by facility level (grouped, by year)
 plot = gen_scatter3(dt, drug_id, drug_name, full_date_range)
 plot
 ```
 
-## Stock-out duration, 2017 (No stockouts - 2 MO)
+## Prolonged stock-outs, 2017 (No stockouts - 2 MO)
 
 ```{r cat1_2017, echo=FALSE, warning=FALSE}
 plot = gen_cat1_2017(dt, coord_ann, drug_id, drug_name)
 plot
 ``` 
 
-## Stock-out duration, 2017 (2-month intervals)
+## Prolonged stock-outs, 2017 (2-month intervals)
 
 ```{r cat3_2017, echo=FALSE, warning=FALSE}
 plot = gen_cat3_2017(dt, coord_ann, drug_id, drug_name)
 plot
 ```
 
-## Stock-out duration, 2018 (No stockouts - 2 MO)
+## Prolonged stock-outs, 2018 (No stockouts - 2 MO)
 
 ```{r cat1_2018, echo=FALSE, warning=FALSE}
 plot = gen_cat1_2018(dt, coord_ann, drug_id, drug_name)
 plot
 ```
 
-## Stock-out duration, 2018 (2-month intervals)
+## Prolonged stock-outs, 2018 (2-month intervals)
 
 ```{r cat3_2018, echo=FALSE, warning=FALSE}
 plot = gen_cat3_2018(dt, coord_ann, drug_id, drug_name)
@@ -221,4 +255,58 @@ plot
 ```{r full_months_18_2, echo=FALSE, warning=FALSE}
 plot = gen_full_months2_18(dt, coord_months, drug_id, drug_name, full_date_range)
 plot
+```
+
+## EXTRA SLIDES 
+
+## Reporting completeness, for stock-out data only 
+```{r, extra1, echo=FALSE, warning=FALSE}
+FacsReportingByDPS = dt[stock_category=='number_of_days_stocked_out', .(facilities_by_dps=length(unique(org_unit_id))), by=c('year', 'dps')]
+  report_by_dps = merge(FacsReportingByDPS, dt[element_id==drug_id & stock_category=="number_of_days_stocked_out"], by=c('year', 'dps'))
+  report_by_dps = unique(report_by_dps[, .(year, id, facilities_by_dps, dps)]) 
+  report_map = merge(report_by_dps, coord_ann, by = c('id', 'year'), all.y = TRUE, allow.cartesian = TRUE)
+  
+  #----------------------
+  #For each DPS, find it's center. 
+  districts = unique(report_map$dps)
+  districts = districts[!is.na(districts)]
+  all_centers = data.table()
+  for (district in districts){
+    centers = report_map[dps==district, .(long, lat)]
+    center = as.data.table(centroid(centers))
+    center[, dps:=district]
+    all_centers = rbind(all_centers, center)
+  }
+  
+  # Generate a labels dataset
+  labels = unique(report_map[, .(id, dps, facilities_by_dps, year)])
+  labels[, label:= paste0(dps, ": ", facilities_by_dps)]
+  labels = merge(labels, all_centers, by=c('dps'))
+  #----------------------
+  
+  # mean_units2 = ggplot(kits_per_facility, aes(x=long, y=lat, group=group, fill=kits_per_fac)) + 
+  #   geom_polygon() + 
+  #   theme_void() + 
+  #   facet_wrap(~year) + 
+  #   scale_fill_gradientn('Kits per\nFacility', colours=ratio_colors) + 
+  #   coord_fixed(ratio=1) + 
+  #   scale_x_continuous('', breaks = NULL) + 
+  #   scale_y_continuous('', breaks = NULL) + 
+  #   labs(title=paste0(drug_name, " kits per facility, by district"), subtitle="Annual data restricted to Jan-Aug",
+  #        caption="*Denominator only includes facilities with 'available, usable stock' of this drug",
+  #        fill="Kits per facility") + 
+  #   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) + 
+  #   geom_label_repel(data = labels, aes(label = label, x = lon, y = lat, group = label), inherit.aes=FALSE, size=3)
+  
+  report_map1 = ggplot(report_map, aes(x=long, y=lat, group=group, fill=facilities_by_dps)) + 
+    coord_fixed() +
+    geom_polygon() + 
+    geom_path(size=0.01) + 
+    scale_fill_gradientn(colors=(brewer.pal(9, 'Blues'))) + 
+    theme_void() +
+    facet_wrap(~year, strip.position = "bottom") +
+    labs(title=paste0("Reporting completeness* by year and district for ", drug_name), caption="Facilities reporting stock-out information", 
+         fill="# of facilities reporting")+
+    geom_label_repel(data = labels, aes(label = label, x = lon, y = lat, group = label), inherit.aes=FALSE, size=3)
+  report_map1
 ```
