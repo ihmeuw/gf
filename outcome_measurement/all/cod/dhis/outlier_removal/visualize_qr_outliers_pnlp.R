@@ -37,11 +37,11 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
 if (set=='base') outFile = 'outliers/base/base_outliers_replaced.pdf'
 if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_04_24_19_updated_rules.pdf'
-                  outData = 'prepped/sigl_drugs_prepped_outliers_labeled.rds' }
+outData = 'prepped/sigl_drugs_prepped_outliers_labeled.rds' }
 if (set=='pnlp') {outFile = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
-                  outFile2 = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (do not correspond to DPS level outliers)'
-                  outFile_dps = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures_dpsLevel'
-                  outData = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_labeled.rds' }
+outFile2 = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (do not correspond to DPS level outliers)'
+outFile_dps = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures_dpsLevel'
+outData = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_labeled.rds' }
 #------------------------------------
 # read in the file
 
@@ -49,7 +49,7 @@ if (set=='pnls') {dt = readRDS(paste0(dir, 'pnls_outliers/base/qr_results_full.r
 if (set=='base') {dt = readRDS(paste0(dir, 'outliers/base/base_quantreg_results.rds'))}
 if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl/prepped_sigl_quantreg_imputation_results.rds'))
 if (set=='pnlp') { dt = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results.rds'))
-                   dt_dps = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds'))}
+dt_dps = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds'))}
 #------------------------------------
 
 #-----------------------------------
@@ -206,59 +206,59 @@ if (set == 'pnlp') {
 # for PNLP only - example of outlier in dps level but NOT in hz level
 #---------------------------------------------
 if (set == "pnlp") {
-check_hz = unique(dt[ outlier == TRUE, .(dps, date, variable) ] )
-check_dps = unique(dt_dps[ outlier_dpsLevel3 == TRUE, .(org_unit_id, date, variable)])
-setnames(check_dps, "org_unit_id", "dps")
-
-# Are there any in check_dps that are NOT in check_hz? as in, are there any that are dps level outliers that don't have 
-# any corresponding health zone level outliers? 
-check_hz[, hz_level := TRUE ]
-check_dps[, dps_level := TRUE ]
-
-check = merge(check_hz, check_dps, by = c('dps', 'date', 'variable'), all = TRUE)
-
-check = check[is.na(hz_level),]
-
-for (j in 11:100){
-  d = check[ j, dps ]
-  d = "lualaba"
-  v = check[ j, variable ]
-  v = "ANC_1st"
-  outlier_dates = check[ j, date ]
-
-  dt_hz = dt[ dps == d & variable == v, ]
-  dt_dps_subset = dt_dps[ org_unit_id == d & variable == v, ]
+  check_hz = unique(dt[ outlier == TRUE, .(dps, date, variable) ] )
+  check_dps = unique(dt_dps[ outlier_dpsLevel3 == TRUE, .(org_unit_id, date, variable)])
+  setnames(check_dps, "org_unit_id", "dps")
   
-  greys = brewer.pal(9, 'Greys')
+  # Are there any in check_dps that are NOT in check_hz? as in, are there any that are dps level outliers that don't have 
+  # any corresponding health zone level outliers? 
+  check_hz[, hz_level := TRUE ]
+  check_dps[, dps_level := TRUE ]
   
-  list_of_plots = NULL
-  i=1
+  check = merge(check_hz, check_dps, by = c('dps', 'date', 'variable'), all = TRUE)
   
-  list_of_plots[[i]] = ggplot(dt_dps_subset, aes(x=date, y=value)) +
-    geom_line(alpha = 0.5) +
-    geom_point(alpha = 0.5) +
-    geom_line(data = dt_dps_subset[], aes(x=date, y=fitted_value), color='black', alpha=0.9) +
-    geom_point(data = dt_dps_subset[outlier_dpsLevel3==TRUE, ], color='#d73027', size=3) +
-    geom_point(data = dt_dps_subset[outlier_dpsLevel3==TRUE, ], aes(x=date, y=fitted_value),
-               color='#4575b4', size=2, alpha=0.9) +
-    scale_color_manual(values=greys) +
-    geom_ribbon(data = dt_dps_subset[], aes(ymin=t1_lower, ymax=t1_upper),
-                alpha=0.2, fill='#feb24c', color=NA) +
-    geom_ribbon(data = dt_dps_subset[], aes(ymin=t2_lower, ymax=t2_upper),
-                alpha=0.2, fill='#feb24c', color=NA) +
-    geom_ribbon(data = dt_dps_subset[], aes(ymin=t3_lower, ymax=t3_upper),
-                alpha=0.2, fill='#feb24c', color=NA) +
-    geom_ribbon(data = dt_dps_subset[], aes(ymin=t4_lower, ymax=t4_upper),
-                alpha=0.2, fill='#feb24c', color=NA) +
-    labs(title=paste0(d, " - ", v), x='Date', y='Count') +
-    theme_bw()
+  check = check[is.na(hz_level),]
   
-  i = 2
-  # loop through the graphs
-  for (hz in unique(dt_hz$health_zone)) {
+  for (j in 11:100){
+    d = check[ j, dps ]
+    d = "lualaba"
+    v = check[ j, variable ]
+    v = "ANC_1st"
+    outlier_dates = check[ j, date ]
+    
+    dt_hz = dt[ dps == d & variable == v, ]
+    dt_dps_subset = dt_dps[ org_unit_id == d & variable == v, ]
+    
+    greys = brewer.pal(9, 'Greys')
+    
+    list_of_plots = NULL
+    i=1
+    
+    list_of_plots[[i]] = ggplot(dt_dps_subset, aes(x=date, y=value)) +
+      geom_line(alpha = 0.5) +
+      geom_point(alpha = 0.5) +
+      geom_line(data = dt_dps_subset[], aes(x=date, y=fitted_value), color='black', alpha=0.9) +
+      geom_point(data = dt_dps_subset[outlier_dpsLevel3==TRUE, ], color='#d73027', size=3) +
+      geom_point(data = dt_dps_subset[outlier_dpsLevel3==TRUE, ], aes(x=date, y=fitted_value),
+                 color='#4575b4', size=2, alpha=0.9) +
+      scale_color_manual(values=greys) +
+      geom_ribbon(data = dt_dps_subset[], aes(ymin=t1_lower, ymax=t1_upper),
+                  alpha=0.2, fill='#feb24c', color=NA) +
+      geom_ribbon(data = dt_dps_subset[], aes(ymin=t2_lower, ymax=t2_upper),
+                  alpha=0.2, fill='#feb24c', color=NA) +
+      geom_ribbon(data = dt_dps_subset[], aes(ymin=t3_lower, ymax=t3_upper),
+                  alpha=0.2, fill='#feb24c', color=NA) +
+      geom_ribbon(data = dt_dps_subset[], aes(ymin=t4_lower, ymax=t4_upper),
+                  alpha=0.2, fill='#feb24c', color=NA) +
+      labs(title=paste0(d, " - ", v), x='Date', y='Count') +
+      theme_bw()
+    
+    i = 2
+    # loop through the graphs
+    for (hz in unique(dt_hz$health_zone)) {
       # title states variable, sex, facility
       title = paste0(hz, " (DPS = ", d, ") - ", unique(dt_hz$variable))
-  
+      
       # create the plot
       list_of_plots[[i]] = ggplot(dt_hz[health_zone == hz,], aes(x=date, y=value)) +
         geom_line(alpha = 0.5) +
@@ -279,16 +279,16 @@ for (j in 11:100){
                     alpha=0.2, fill='#feb24c', color=NA) +
         labs(title=title, x='Date', y='Count') +
         theme_bw()
-  
+      
       i=i+1
+    }
+    
+    pdf( paste0(dir, "../prepped_data/PNLP/outliers/problem_examples/dpsLevel_example_", j, ".pdf"), height = 10, width = 12 )
+    for(i in seq(length(list_of_plots))) {
+      print(list_of_plots[[i]])
+    }
+    dev.off()
   }
-
-  pdf( paste0(dir, "../prepped_data/PNLP/outliers/problem_examples/dpsLevel_example_", j, ".pdf"), height = 10, width = 12 )
-  for(i in seq(length(list_of_plots))) {
-    print(list_of_plots[[i]])
-  }
-  dev.off()
-}
 }
 #---------------------------------------------
 
@@ -303,7 +303,9 @@ for (j in 11:100){
 if (set=='pnls') dt[ , combine:=paste0(org_unit_id, sex, element)]
 if (set=='base') dt[ , combine:=paste0(org_unit_id, element)]
 if (set=='sigl') dt[ , combine := paste0(org_unit_id, drug)]
-if (set=='pnlp') dt[ , combine := paste0(health_zone, variable)]
+if (set=='pnlp') { dt[ , combine := paste0(org_unit_id, variable)]
+  dt_dps[ , combine := paste0(org_unit_id, variable)] 
+}
 
 out_orgs = dt[outlier == TRUE, unique(combine)]
 out = dt[combine %in% out_orgs]
@@ -395,71 +397,71 @@ i=1
 #----------------------------
 # loop through the graphs 
 if (set == 'pnls'){
-for (e in unique(out$element)) {
-  for (o in unique(out[element==e]$org_unit_id)) {
-    for (s in unique(out[element==e & org_unit_id==o]$sex)) {
-      
-      # title states variable, sex, facility
-      name = out[org_unit_id==o, unique(facility)]
-      title = paste0(e,' (', s, '): ', name)
-      
-      # create a subtitle with the outlier and the fitted value to impute
-      out_point = out[element==e & org_unit_id==o & sex==s & outlier==TRUE, unique(value)]
-      fit_point = out[element==e & org_unit_id==o & sex==s & outlier==TRUE, unique(fitted_value)]
-      subtitle = paste0('Outlier value=', out_point, '; Fitted value=', round(fit_point, 1))
-      
-      # create the plot
-      list_of_plots[[i]] = ggplot(out[element==e & org_unit_id==o & sex==s], aes(x=date, y=value, color=age)) +
-        geom_line() +
-        geom_point(data = out[element==e & org_unit_id==o & sex==s & outlier==TRUE], color='#d73027', size=3, alpha=0.8) +
-        geom_point(data = out[element==e & org_unit_id==o & sex==s & outlier==TRUE], aes(x=date, y=fitted_value), 
-                   color='#4575b4', size=3, alpha=0.8) +
-        facet_wrap(~subpop) +
-        scale_color_manual(values=greys)+
-        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=t1_lower, ymax=t1_upper), 
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=t2_lower, ymax=t2_upper), 
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        labs(title=title, subtitle=subtitle, x='Date', y='Count',
-             color='Age') +
-        theme_bw()
-      
-      i=i+1
-      
-    }}}
-}
-#----------------------------
-if (set == 'sigl'){
-  for (d in unique(out$drug)) {
-    for (o in unique(out[drug==d]$org_unit_id)) {
-        # title states drug variable, facility
-        title = paste0(d, ' in ', out[org_unit_id==o, unique(org_unit)])
+  for (e in unique(out$element)) {
+    for (o in unique(out[element==e]$org_unit_id)) {
+      for (s in unique(out[element==e & org_unit_id==o]$sex)) {
+        
+        # title states variable, sex, facility
+        name = out[org_unit_id==o, unique(facility)]
+        title = paste0(e,' (', s, '): ', name)
         
         # create a subtitle with the outlier and the fitted value to impute
-        out_point = out[drug==d & org_unit_id==o & outlier==TRUE, unique(value)]
-        fit_point = out[drug==d & org_unit_id==o & outlier==TRUE, unique(fitted_value)]
+        out_point = out[element==e & org_unit_id==o & sex==s & outlier==TRUE, unique(value)]
+        fit_point = out[element==e & org_unit_id==o & sex==s & outlier==TRUE, unique(fitted_value)]
         subtitle = paste0('Outlier value=', out_point, '; Fitted value=', round(fit_point, 1))
         
-        
         # create the plot
-        list_of_plots[[i]] = ggplot(out[drug==d & org_unit_id==o], aes(x=date, y=value)) +
-          geom_point() +
-          geom_line(aes(x=date, y=fitted_value), alpha = 0.3) +
-          geom_point(data = out[drug==d & org_unit_id==o & outlier==TRUE], color='#d73027', size=3, alpha=0.8) +
-          geom_point(data = out[drug==d & org_unit_id==o & outlier==TRUE], aes(x=date, y=fitted_value), 
+        list_of_plots[[i]] = ggplot(out[element==e & org_unit_id==o & sex==s], aes(x=date, y=value, color=age)) +
+          geom_line() +
+          geom_point(data = out[element==e & org_unit_id==o & sex==s & outlier==TRUE], color='#d73027', size=3, alpha=0.8) +
+          geom_point(data = out[element==e & org_unit_id==o & sex==s & outlier==TRUE], aes(x=date, y=fitted_value), 
                      color='#4575b4', size=3, alpha=0.8) +
-          facet_wrap(~variable, scales = "free") +
-          scale_color_manual(values=greys) +
-          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper), 
+          facet_wrap(~subpop) +
+          scale_color_manual(values=greys)+
+          geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=t1_lower, ymax=t1_upper), 
                       alpha=0.2, fill='#feb24c', color=NA) +
-          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=t2_lower, ymax=t2_upper), 
+          geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=t2_lower, ymax=t2_upper), 
                       alpha=0.2, fill='#feb24c', color=NA) +
           labs(title=title, subtitle=subtitle, x='Date', y='Count',
                color='Age') +
           theme_bw()
         
         i=i+1
-      }}
+        
+      }}}
+}
+#----------------------------
+if (set == 'sigl'){
+  for (d in unique(out$drug)) {
+    for (o in unique(out[drug==d]$org_unit_id)) {
+      # title states drug variable, facility
+      title = paste0(d, ' in ', out[org_unit_id==o, unique(org_unit)])
+      
+      # create a subtitle with the outlier and the fitted value to impute
+      out_point = out[drug==d & org_unit_id==o & outlier==TRUE, unique(value)]
+      fit_point = out[drug==d & org_unit_id==o & outlier==TRUE, unique(fitted_value)]
+      subtitle = paste0('Outlier value=', out_point, '; Fitted value=', round(fit_point, 1))
+      
+      
+      # create the plot
+      list_of_plots[[i]] = ggplot(out[drug==d & org_unit_id==o], aes(x=date, y=value)) +
+        geom_point() +
+        geom_line(aes(x=date, y=fitted_value), alpha = 0.3) +
+        geom_point(data = out[drug==d & org_unit_id==o & outlier==TRUE], color='#d73027', size=3, alpha=0.8) +
+        geom_point(data = out[drug==d & org_unit_id==o & outlier==TRUE], aes(x=date, y=fitted_value), 
+                   color='#4575b4', size=3, alpha=0.8) +
+        facet_wrap(~variable, scales = "free") +
+        scale_color_manual(values=greys) +
+        geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper), 
+                    alpha=0.2, fill='#feb24c', color=NA) +
+        geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=t2_lower, ymax=t2_upper), 
+                    alpha=0.2, fill='#feb24c', color=NA) +
+        labs(title=title, subtitle=subtitle, x='Date', y='Count',
+             color='Age') +
+        theme_bw()
+      
+      i=i+1
+    }}
 }
 
 #----------------------------
@@ -509,7 +511,7 @@ if (set=='base') {
 #----------------------------
 if (set=='pnlp') {
   setnames(out, "variable", "element")
-
+  
   # loop through the graphs 
   for (e in unique(out$element)) {
     for (o in unique(out[element==e]$org_unit_id)) {
@@ -615,9 +617,9 @@ base_remove = function(x) {
   
   # format appropriately
   dt = dt[ ,.(org_unit_id, element_id, org_unit, element_eng, date, category, value, 
-         org_unit_type, level, country, dps, health_zone, health_area, element, data_set, coordinates)]
+              org_unit_type, level, country, dps, health_zone, health_area, element, data_set, coordinates)]
   
-
+  
   #----------------------
   saveRDS(dt, paste0(dir, '/prepped/base_services_prepped_outliers_removed.rds'))
   return(dt)
@@ -626,7 +628,7 @@ base_remove = function(x) {
 
 # runs outlier removal on base and formats as prepped data 
 if (set=='base') dt = base_remove(dt)
-  
+
 #--------------------------------
 
 
