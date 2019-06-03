@@ -87,10 +87,9 @@ if (set=='base') {
 # post-qr processing
 #---------------------------------------------
 # fix the date 
-dt[ , date:=as.Date(date, origin='1970-01-01')]
+if (set != 'pnlp') dt[ , date:=as.Date(date, origin='1970-01-01')]
 
 # merge in the facility names to label the graphs 
-
 if (set %in% c('pnls', 'base', 'sigl')) {
   facilities = readRDS(paste0(dir, 'meta_data/master_facilities.rds'))
   facilities = facilities[ ,.(org_unit_id, org_unit)]
@@ -117,10 +116,10 @@ if (set=='pnls' | set == 'base') {
   t2 = 10  } else if (set=='sigl'){
     t1 = 10
     t2 = 20 } else if (set == 'pnlp'){
-      t1 = 5
-      t2 = 10
-      t3 = 15
-      t4 = 20}
+      t1 = 10
+      t2 = 15
+      t3 = 20
+      t4 = 25}
 
 # get the mad (or sd) of the residuals
 dt[!all(is.na(resid)) , mad_resid := mad(resid, na.rm=TRUE), by = idVars] # not sure if you need NA removal here
@@ -142,8 +141,6 @@ dt[ , t2_lower := fitted_value - (t2 * thresh_var)]
 if (set == 'pnlp'){
   dt[ , t3_upper := fitted_value + (t3 * thresh_var)]
   dt[ , t3_lower := fitted_value - (t3 * thresh_var)]
-  dt[ , t4_upper := fitted_value + (t4 * thresh_var)]
-  dt[ , t4_lower := fitted_value - (t4 * thresh_var)]
 }
 # select outliers
 # set minimum value to be considered an outlier based on the 99.5 percentile of the variable 
@@ -157,13 +154,13 @@ if (set=='sigl'){
 # or less than 10 times the negative mad of the residuals
 if (set %in% c('pnls', 'sigl', 'base')){
   dt[, outlier := ifelse( (value > limit & ( value > t2_upper )), TRUE, FALSE) ]
-  dt[ (value < lower ), outlier :=TRUE ]}
+  dt[ (value < t2_lower ), outlier :=TRUE ]}
 if (set == 'pnlp') {
-  dt[, outlier := ifelse( value > t3_upper, TRUE, FALSE) ]
-  dt[ (value < t3_lower ), outlier :=TRUE ]
+  dt[, outlier := ifelse( value > t2_upper, TRUE, FALSE) ]
+  dt[ (value < t2_lower ), outlier :=TRUE ]
 }
 # number of outliers
-dt[ outlier==TRUE, .N ]  # 13,743 for PNLP at t3
+dt[ outlier==TRUE, .N ]  # 9,220 at fitted_value +/- 20 MADs 
 # ( dt[outlier==TRUE, .N]  / dt[!is.na(value), .N] ) * 100 # for sigl = 811; 0.017% of non-missing data; for PNLP, 0.55% of non-missing data
 
 # for pnlp - identify outliers in dps level qr results, and use that to identify hz level outliers
@@ -185,8 +182,6 @@ if (set == 'pnlp') {
   dt_dps[ , t2_lower := fitted_value - (t2 * thresh_var)]
   dt_dps[ , t3_upper := fitted_value + (t3 * thresh_var)]
   dt_dps[ , t3_lower := fitted_value - (t3 * thresh_var)]
-  dt_dps[ , t4_upper := fitted_value + (t4 * thresh_var)]
-  dt_dps[ , t4_lower := fitted_value - (t4 * thresh_var)]
   
   dt_dps[, outlier_dpsLevel3 := ifelse( value > t3_upper, TRUE, FALSE) ]
   dt_dps[ (value < t3_lower ), outlier_dpsLevel3 :=TRUE ]
@@ -194,9 +189,7 @@ if (set == 'pnlp') {
   dt_dps[ (value < t2_lower ), outlier_dpsLevel2 :=TRUE ]
   dt_dps[, outlier_dpsLevel1 := ifelse( value > t1_upper, TRUE, FALSE) ]
   dt_dps[ (value < t1_lower ), outlier_dpsLevel1 :=TRUE ]
-  dt_dps[, outlier_dpsLevel4 := ifelse( value > t4_upper, TRUE, FALSE) ]
-  dt_dps[ (value < t4_lower ), outlier_dpsLevel4 :=TRUE ]
-  # dt_dps[ outlier_dpsLevel2==TRUE, .N ] # 1,594 at t2
+  # dt_dps[ outlier_dpsLevel1==TRUE, .N ] # 1,594 at t2
   
   dt = merge(dt, dt_dps[, .(org_unit_id, date, variable, element_id, outlier_dpsLevel1, outlier_dpsLevel2, outlier_dpsLevel3, outlier_dpsLevel4)], all = TRUE, 
              by.x=c('dps', 'date', 'variable', 'element_id'), by.y=c('org_unit_id', 'date', 'variable', 'element_id'))
@@ -227,9 +220,9 @@ check = check[is.na(hz_level),]
 
 for (j in 11:100){
   d = check[ j, dps ]
-  #d = "bas congo"
+  d = "lualaba"
   v = check[ j, variable ]
-  #v = "ANC_1st"
+  v = "ANC_1st"
   outlier_dates = check[ j, date ]
 
   dt_hz = dt[ dps == d & variable == v, ]
@@ -244,8 +237,8 @@ for (j in 11:100){
     geom_line(alpha = 0.5) +
     geom_point(alpha = 0.5) +
     geom_line(data = dt_dps_subset[], aes(x=date, y=fitted_value), color='black', alpha=0.9) +
-    geom_point(data = dt_dps_subset[outlier_dpsLevel2==TRUE & date %in% outlier_dates, ], color='#d73027', size=3) +
-    geom_point(data = dt_dps_subset[outlier_dpsLevel2==TRUE], aes(x=date, y=fitted_value),
+    geom_point(data = dt_dps_subset[outlier_dpsLevel3==TRUE, ], color='#d73027', size=3) +
+    geom_point(data = dt_dps_subset[outlier_dpsLevel3==TRUE, ], aes(x=date, y=fitted_value),
                color='#4575b4', size=2, alpha=0.9) +
     scale_color_manual(values=greys) +
     geom_ribbon(data = dt_dps_subset[], aes(ymin=t1_lower, ymax=t1_upper),
@@ -256,7 +249,7 @@ for (j in 11:100){
                 alpha=0.2, fill='#feb24c', color=NA) +
     geom_ribbon(data = dt_dps_subset[], aes(ymin=t4_lower, ymax=t4_upper),
                 alpha=0.2, fill='#feb24c', color=NA) +
-    labs(title=paste0(d, " - ", v, " (", outlier_dates, ")"), x='Date', y='Count') +
+    labs(title=paste0(d, " - ", v), x='Date', y='Count') +
     theme_bw()
   
   i = 2
