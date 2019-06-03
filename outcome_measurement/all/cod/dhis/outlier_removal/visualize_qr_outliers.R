@@ -130,17 +130,16 @@ dt[ mad_resid < 1, stat_used := "sd"]
 dt[ , c('sd_resid', 'mad_resid') := NULL]
 
 # set lower and upper bounds
-# does this need to be for only !all(is.na) as well? not sure
-dt[ , upper := fitted_value + (t2 * thresh_var)]
-dt[ , lower := fitted_value - (t2 * thresh_var)]
-
-# add a 5 SD bound to investigate on the graphs
-dt[ , upper_mid := fitted_value + (t1 * thresh_var)]
-dt[ , lower_mid := fitted_value - (t1 * thresh_var)]
+dt[ , t1_upper := fitted_value + (t1 * thresh_var)]
+dt[ , t1_lower := fitted_value - (t1 * thresh_var)]
+dt[ , t2_upper := fitted_value + (t2 * thresh_var)]
+dt[ , t2_lower := fitted_value - (t2 * thresh_var)]
 
 if (set == 'pnlp'){
   dt[ , t3_upper := fitted_value + (t3 * thresh_var)]
   dt[ , t3_lower := fitted_value - (t3 * thresh_var)]
+  dt[ , t4_upper := fitted_value + (t4 * thresh_var)]
+  dt[ , t4_lower := fitted_value - (t4 * thresh_var)]
 }
 
 # select outliers
@@ -420,9 +419,9 @@ for (e in unique(out$element)) {
                    color='#4575b4', size=3, alpha=0.8) +
         facet_wrap(~subpop) +
         scale_color_manual(values=greys)+
-        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=lower_mid, ymax=upper_mid), 
+        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=t1_lower, ymax=t1_upper), 
                     alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=lower, ymax=upper), 
+        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=t2_lower, ymax=t2_upper), 
                     alpha=0.2, fill='#feb24c', color=NA) +
         labs(title=title, subtitle=subtitle, x='Date', y='Count',
              color='Age') +
@@ -454,9 +453,9 @@ if (set == 'sigl'){
                      color='#4575b4', size=3, alpha=0.8) +
           facet_wrap(~variable, scales = "free") +
           scale_color_manual(values=greys) +
-          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=lower_mid, ymax=upper_mid), 
+          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper), 
                       alpha=0.2, fill='#feb24c', color=NA) +
-          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=lower, ymax=upper), 
+          geom_ribbon(data = out[drug==d & org_unit_id==o], aes(ymin=t2_lower, ymax=t2_upper), 
                       alpha=0.2, fill='#feb24c', color=NA) +
           labs(title=title, subtitle=subtitle, x='Date', y='Count',
                color='Age') +
@@ -499,9 +498,9 @@ if (set=='base') {
                    color='#4575b4', size=2, alpha=0.8) +
         facet_wrap(~category) +
         scale_color_manual(values=greys) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=lower_mid, ymax=upper_mid),
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper),
                     alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=lower, ymax=upper), 
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t2_lower, ymax=t2_upper), 
                     alpha=0.2, fill='#feb24c', color=NA) +
         labs(title=title, subtitle=subtitle, x='Date', y='Count') +
         theme_bw()
@@ -535,9 +534,9 @@ if (set=='pnlp') {
         geom_point(data = out[element==e & org_unit_id==o & outlier==TRUE], aes(x=date, y=fitted_value), 
                    color='#4575b4', size=2, alpha=0.8) +
         scale_color_manual(values=greys) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=lower_mid, ymax=upper_mid),
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper),
                     alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=lower, ymax=upper),
+        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t2_lower, ymax=t2_upper),
                     alpha=0.2, fill='#feb24c', color=NA) +
         geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=threshold3_lower, ymax=threshold3_upper),
                     alpha=0.2, fill='#feb24c', color=NA) +
@@ -606,7 +605,7 @@ base_remove = function(x) {
   #----------------------
   # subset to the necessary elements and rename
   
-  dt[ ,c('fitted_value', 'resid', 'thresh_var', 'upper', 'lower', 'upper_mid', 'lower_mid',
+  dt[ ,c('fitted_value', 'resid', 'thresh_var', 't2_upper', 't2_lower', 't1_upper', 't1_lower',
          'facility', 'org_unit', 'element_fr'):=NULL]
   
   # rename the elements to the english elements and label the data set
