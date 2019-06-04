@@ -30,7 +30,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/')
 setwd(paste0(dir, 'sigpro/'))
 
 # to output prepped files
-out_dir = paste0(dir, 'prepped/')
+out_dir = paste0(dir, 'prepped/sigpro/')
 
 #-----------------------------------------
 # read in the data 
@@ -59,10 +59,10 @@ setnames(f1, c('sr', 'sr_code', 'year', 'month', 'numeroInforme',
 # put the columns into lower case for reformatting
 f1 = f1[ ,lapply(.SD, tolower), .SDcols=c(1:length(f1))]
 
-# format date and valuevariables
+# format date and value variables
 f1[ ,month:=as.numeric(month)]
 f1[ ,year:=as.numeric(year)]
-f1[ ,total:=as.numeric(total)]
+f1[ ,total:=as.numeric(as.character(total))] # in case of factor variable
 #-----------------------------------------
 # translate sub-populations 
 
@@ -74,33 +74,31 @@ f1[pop=='parejas de ppl', pop:='prisoner partners']
 f1[pop=='parejas de mts', pop:='fsw partners']
 f1[pop=='otros', pop:='others']
 f1[pop=='jrs', pop:='at_risk_youth']
-f1[grep('positiva', pop), pop:='family of pregnant women'] # check
+f1[grep('positiva', pop), pop:='family of pregnant women'] 
 f1[pop=='mujeres embarazadas', pop:='pregnant women']
 
 #--------------------------
-# gender category
+# crate a gender category
 
 f1[grep('mujer', category), gender:='Female']
 f1[grep('embarazada', category), gender:='Female']
 f1[grep('nina', category), gender:='Female']
 f1[pop=='fsw', gender:='Female']
-
 f1[grep('homb', category), gender:='Male']
 f1[grep('nino', category), gender:='Male']
-
-f1[grep('trans', category), gender:='trans']
+f1[grep('trans', category), gender:='Trans']
 
 # add a pregnancy binary
 f1[category=='embarazadas', pregnant:=TRUE]
 f1[category!='embarazadas', pregnant:=FALSE]
 
 # change the population of transgender folks away from msm
-f1[gender=='trans', pop:='trans']
+f1[gender=='Trans', pop:='trans']
 #--------------------------
 # format age categories 
 
 f1[age=="50-mas", age:='50+']
-f1[age=="  < 1", age:='<1']
+f1[age=="  < 1", age:=trimws(age)]
 f1[age=="00-18m", age:='0 - 18 mos']
 f1[age=="00-01", age:='0 - 1 year']
 
@@ -125,18 +123,18 @@ f1[ , set:=files[[1]]]
 #--------------------------
 # save the file 
 
-saveRDS(f1, paste0(dir, 'prepped/', files[[1]], '_prepped.RDS'))
+saveRDS(f1, paste0(out_dir, files[[1]], '_prepped.RDS'))
 #--------------------------
 
 #------------------------------------------------------------------
 # prep f2
 
 # drop unecessary variables (usually codes associated with values)
-f2[ ,c('codactiv', 'codgrupo', 'codsubgrupo', 'numeroInforme',
+f2[ ,c('codactiv', 'codgrupo', 'codsubgrupo', 
        'codpais', 'codigoResultado'):=NULL]
 
 #translate the variables 
-setnames(f2, c('sr', 'sr_code', 'year', 'month', 'cui', 
+setnames(f2, c('sr', 'sr_code', 'numeroInforme', 'year', 'month', 'cui', 
                'pop', 'subpop', 'muni_code', 'muni', 'department',
               'condoms_delivered', 'female_condoms_delivered', 'lube_tubes_delivered',
               'lube_packets_delivered', 'pamphlets_delivered', 'date', 'test_completed',
@@ -149,6 +147,8 @@ f2 = f2[ ,lapply(.SD, tolower), .SDcols=c(1:length(f2))]
 
 #----------------------------
 # format the dates 
+
+# excel date origin is 1899
 f2[ ,date:=as.Date(as.numeric(date), origin='1899-12-30')]
 
 #----------------------------
@@ -159,6 +159,7 @@ f2[ ,sr_code:=gsub("nac0", "", sr_code)]
 f2[ , sr:=sapply(strsplit(sr, '-'), '[', 3)]
 f2[grep('cas', sr), sr:=sapply(strsplit(sr, '-'), '[', 2)]
 f2[grep('peniten', sr), sr:=sapply(strsplit(sr, '-'), '[', 2)]
+f2[ , sr:=trimws(sr)]
 
 #-------------------------------
 # convert yes and no to a logical 
@@ -217,12 +218,17 @@ saveRDS(f2, paste0(dir, 'prepped/', files[[2]], '_prepped.RDS'))
 
 # keep and rename these variables
 # month and year show no association with date - multiple years of data but only one code
-f3 = f3[ ,.(cui=codigounico, pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  post_test_completed=postPruebaVIH,
-            informed_of_result=conoceResultadoVIH, informed_of_sif_result=conoceResultadoSif, 
-            condoms=condonesMasculinos, female_condoms=condonesFemeninos, flavored_condoms=condonesSabores, 
+f3 = f3[ ,.(cui=codigounico, pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  
+            post_test_completed=postPruebaVIH,
+            informed_of_result=conoceResultadoVIH, 
+            informed_of_sif_result=conoceResultadoSif, 
+            condoms=condonesMasculinos, female_condoms=condonesFemeninos, 
+            flavored_condoms=condonesSabores, 
             lube_packets=lubriSachet, lube_tubes=lubriTubo ,
-            pop=grupo, subpop=subgrupo, result=resultadoVIH, pqExtendido, sr_code=codejecutor,            
-            activity=tipoActividad, sif_result=resultadoSif, unmovil, date=fechareal,  department=departamento,
+            pop=grupo, subpop=subgrupo, result=resultadoVIH, pqExtendido, 
+            sr_code=codejecutor,            
+            activity=tipoActividad, sif_result=resultadoSif, unmovil, 
+            date=fechareal,  department=departamento,
             muni=municipio, theme=tema)]
 
 # put the columns into lower case for reformatting
@@ -411,11 +417,7 @@ f5[, flag:=(is.na(date))]
 # save the file 
 
 saveRDS(f5, paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
+
 #---------------------------------------------------
-
-
-
-
-
 
 

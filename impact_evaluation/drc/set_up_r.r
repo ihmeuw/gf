@@ -8,8 +8,13 @@
 # (use singularity exec /share/singularity-images/health_fin/forecasting/best.img R on IHME's new cluster)
 # --------------------------------------------------
 
-# to do
-# make this work on the cluster (it fails to load lubridate and other packages)
+# --------------------------------------------
+# Output file labels (set to '' for default) 
+# in case we're running some secondary analysis
+# this only affects files from step 5 onward
+fileLabel = '_oop_test'
+# --------------------------------------------
+
 
 # ------------------
 # Load packages
@@ -175,14 +180,14 @@ outputFile4c = paste0(ieDir, '../visualizations/first_half_exploratory_graphs.pd
 outputFile4d = paste0(ieDir, '../visualizations/second_half_exploratory_graphs.pdf')
 
 # output file from 5a_run_first_half_analysis.R
-outputFile5a = paste0(ieDir, 'first_half_model_results.rdata')
+outputFile5a = paste0(ieDir, 'first_half_model_results', fileLabel, '.rdata')
 
 # output file from 5b_run_second_half_analysis.r
-outputFile5b = paste0(ieDir, 'second_half_model_results.rdata')
+outputFile5b = paste0(ieDir, 'second_half_model_results', fileLabel, '.rdata')
 
 # output file from 6_display_results.r
-outputFile6a = paste0(ieDir, '../visualizations/sem_diagrams.pdf')
-outputFile6b = paste0(ieDir, '../visualizations/bottleneck_analysis.pdf')
-outputFile6c = paste0(ieDir, '../visualizations/impact_analysis.pdf')
-outputFile6d = paste0(ieDir, '../visualizations/health_zone_effects.pdf')
+outputFile6a = paste0(ieDir, '../visualizations/sem_diagrams', fileLabel, '.pdf')
+outputFile6b = paste0(ieDir, '../visualizations/bottleneck_analysis', fileLabel, '.pdf')
+outputFile6c = paste0(ieDir, '../visualizations/impact_analysis', fileLabel, '.pdf')
+outputFile6d = paste0(ieDir, '../visualizations/health_zone_effects', fileLabel, '.pdf')
 # -----------------------------------------------------------------------------
