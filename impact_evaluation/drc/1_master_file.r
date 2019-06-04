@@ -21,7 +21,7 @@ rm(list=ls())
 
 # output file labels (set to '' for default) 
 # in case we're running some secondary analysis
-# this only affects files from step 3 onward
+# this only affects files from step 5 onward
 fileLabel = '_oop_test'
 
 # run setup code (load file paths and packages)
