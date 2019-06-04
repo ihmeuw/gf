@@ -26,11 +26,11 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/')
 #----------------------------------------
 # load sigpro testing data 
 
-f1 = readRDS(paste0(dir, 'prepped/sigpro_f1_completo 2018.xlsx_prepped.RDS'))
-f2 = readRDS(paste0(dir, 'prepped/sigpro_f2_completo 2018.xlsx_prepped.RDS'))
-f3 = readRDS(paste0(dir, 'prepped/sigpro_f3_completo 2018.xlsx_prepped.RDS'))
-f4 = readRDS(paste0(dir, 'prepped/sigpro_f4_completo 2018.xlsx_prepped.RDS'))
-f5 = readRDS(paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
+f1 = readRDS(paste0(dir, 'prepped/sigpro/sigpro_f1_completo 2018.xlsx_prepped.RDS'))
+f2 = readRDS(paste0(dir, 'prepped/sigpro/sigpro_f2_completo 2018.xlsx_prepped.RDS'))
+f3 = readRDS(paste0(dir, 'prepped/sigpro/sigpro_f3_completo 2018.xlsx_prepped.RDS'))
+f4 = readRDS(paste0(dir, 'prepped/sigpro/sigpro_f4_completo 2018.xlsx_prepped.RDS'))
+f5 = readRDS(paste0(dir, 'prepped/sigpro/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
 
 #----------------------------------------
 # Remove errant values in all five data sets
@@ -42,10 +42,10 @@ f1[age=="41913" | age=="43348", age:=NA] # months over 12 already have missing d
 # f2 errors 
 f2[year(date)!=2014 & year(date)!=2015 & year(date)!=2016, date:=NA]
 
-# f3 errors; no errors in f4
+# f3 errors - impossible dates; no errors in f4
 f3[year(date) < 2016, date:=NA]
 
-# f5 errors 
+# f5 errors - values after the extraction
 f5['2019-02-01' < date, date:=NA]
 
 #--------------------------------------------------------------------------
@@ -95,20 +95,6 @@ f[ ,value:=1]
 # fix sr names with poor formatting
 f[ , sr:=trimws(sr)]
 
-#---------------------------
-# perform data quality checks on the patient level data 
-# 
-# # check unique values for erroneous values
-# f[ ,unique(sr_code), by=sr]
-# f[ ,unique(department)]
-# f[ ,unique(muni)]
-# 
-# # check for outlier dates 
-# test = f[ ,.(pts=sum(value)), by=date]
-# ggplot(test, aes(x=date, y=pts)) +
-#   geom_point() +
-#   geom_line()
-
 #-------------------------------------------------------
 # COMBINE WITH SR LEVEL DATA 
 
@@ -133,7 +119,8 @@ f1 = f1[grep("vih", result)]
 # format the test results to contain the same variables as the other data
 f1[grep("negativo", result), result:="nonreactive"]
 f1[grep("positivo", result), result:="reactive"]
-f1[grep("presuntivo", result), result:="test not done"]
+# classify presumptive as test not done 
+f1[grep("presuntivo", result), result:="test not done"] 
 
 #---------------------------
 # create subpopulations 
