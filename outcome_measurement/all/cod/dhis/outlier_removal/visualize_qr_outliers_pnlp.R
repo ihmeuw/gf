@@ -25,21 +25,20 @@ user_name = 'abatzel'
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/figures/')
 
 #-----------------------------------
 # output files
-outFile = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
-outFile2 = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (do not correspond to DPS level outliers)'
-outFile_dps = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures_dpsLevel'
-outData = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_labeled.rds' 
+outFile = 'pnlp_outliers_figures (correspond to DPS level outliers).pdf'
+outFile2 = 'pnlp_outliers_figures (do not correspond to DPS level outliers).pdf'
+outFile_dps = 'pnlp_outliers_figures_dpsLevel.pdf'
+outFile_rdts = 'outliers_in_RDTs.pdf'
+outData = 'pnlp_outliers_labeled.rds' 
 #------------------------------------
 # read in the file
 dt = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results.rds'))
 dt_dps = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds'))
 #------------------------------------
-
-#-----------------------------------
 
 #------------------------------------
 # identify outliers at various levels/thresholds
@@ -106,38 +105,40 @@ dt_dps[, outlier_dpsLevel2 := ifelse( value > t2_upper, TRUE, FALSE) ]
 dt_dps[ (value < t2_lower ), outlier_dpsLevel2 :=TRUE ]
 dt_dps[, outlier_dpsLevel1 := ifelse( value > t1_upper, TRUE, FALSE) ]
 dt_dps[ (value < t1_lower ), outlier_dpsLevel1 :=TRUE ]
-  # dt_dps[ outlier_dpsLevel1==TRUE, .N ] # 945 at fitted_value +/- 10 MADs 
+  # dt_dps[ outlier_dpsLevel2==TRUE, .N ] # 945 at fitted_value +/- 10 MADs; 533 at fitted_value +/- 15 MADs
   
 dt = merge(dt, dt_dps[, .(org_unit_id, date, variable, element_id, outlier_dpsLevel1, outlier_dpsLevel2, outlier_dpsLevel3)], all = TRUE, 
            by.x=c('dps', 'date', 'variable', 'element_id'), by.y=c('org_unit_id', 'date', 'variable', 'element_id'))
 
-dt[ outlier == TRUE & outlier_dpsLevel1 == TRUE, outlier_in_both_wdps1 := TRUE ]
-dt[ outlier == TRUE & outlier_dpsLevel2 == TRUE, outlier_in_both_wdps2 := TRUE ]
-dt[ outlier == TRUE & outlier_dpsLevel3 == TRUE, outlier_in_both_wdps3 := TRUE ]
-# dt[ outlier_in_both_wdps3 == TRUE, .N] 
+dt[ , outlier_in_both_wdps1 := ifelse(outlier == TRUE & outlier_dpsLevel1 == TRUE, TRUE, FALSE) ]
+dt[ , outlier_in_both_wdps2 := ifelse(outlier == TRUE & outlier_dpsLevel2 == TRUE, TRUE, FALSE) ]
+dt[ , outlier_in_both_wdps3 := ifelse(outlier == TRUE & outlier_dpsLevel3 == TRUE, TRUE, FALSE) ]
+# dt[ outlier_in_both_wdps2 == TRUE, .N] # 648 outliers at health zone level (+/- 20 MADs) with corresponding outlier at DPS level (+/- 15 MADs)
 #---------------------------------------------
 
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
-#----------------------------
-if (set=='pnls') dt[ , combine:=paste0(org_unit_id, sex, element)]
-if (set=='base') dt[ , combine:=paste0(org_unit_id, element)]
-if (set=='sigl') dt[ , combine := paste0(org_unit_id, drug)]
-if (set=='pnlp') { dt[ , combine := paste0(org_unit_id, variable)]
-  dt_dps[ , combine := paste0(org_unit_id, variable)] 
-}
+#----------------------------------------------
+dt[ , combine := paste0(org_unit_id, variable)]
 
-out_orgs = dt[outlier == TRUE, unique(combine)]
-out = dt[combine %in% out_orgs]
+out_orgs_w_dps = dt[outlier_in_both_wdps2 == TRUE, unique(combine)]
+out_hz_w_dps = dt[combine %in% out_orgs_w_dps]
+out_hz_w_dps[ outlier_in_both_wdps2 != TRUE, outlier := FALSE ]
 
-# drop the unique identifier
-out[ , combine := NULL]
-dt[ , combine := NULL]
+out_orgs_wo_dps = dt[outlier == TRUE & outlier_dpsLevel2 != TRUE, unique(combine)]
+out_hz_wo_dps = dt[combine %in% out_orgs_wo_dps]
+out_hz_wo_dps[ outlier_in_both_wdps2 == TRUE, outlier := FALSE ] # setting outlier to be FALSE here for graphing purposes (we don't want these points to show )
 #----------------------------
+dt_dps[ , combine := paste0(org_unit_id, variable)] 
 
-#----------------------------
+dt_dps[, outlier:= ifelse(outlier_dpsLevel2 == TRUE, TRUE, FALSE)]
+out_orgs_dps = dt_dps[outlier == TRUE, unique(combine)]
+out_dps = dt_dps[combine %in% out_orgs_dps]
+#----------------------------------------------
+
+#----------------------------------------------
 # create the graphs
-#----------------------------
+#----------------------------------------------
 # create a palette
 greys = brewer.pal(9, 'Greys')
 
@@ -145,49 +146,55 @@ greys = brewer.pal(9, 'Greys')
 list_of_plots = NULL
 i=1
 #----------------------------
-if (set=='pnlp') {
-  setnames(out, "variable", "element")
-  
-  # loop through the graphs 
-  for (e in unique(out$element)) {
-    for (o in unique(out[element==e]$org_unit_id)) {
-      
-      # title states variable, sex, facility
-      title = paste0(e,': ', o)
-      
-      # create a subtitle with the outlier and the fitted value to impute
-      out_points = out[element==e & org_unit_id==o & outlier==TRUE, .(value=unique(value))]
-      fit_points = out[element==e & org_unit_id==o & outlier==TRUE, .(fitted_value=unique(fitted_value))]
-      
-      # create the plot
-      list_of_plots[[i]] = ggplot(out[element==e & org_unit_id==o], aes(x=date, y=value)) +
-        geom_line() +
-        geom_point(alpha=0.2) +
-        geom_line(data = out[element==e & org_unit_id==o], aes(x=date, y=fitted_value), color='#9ebcda', alpha=0.4) +
-        geom_point(data = out[element==e & org_unit_id==o & outlier==TRUE], color='#d73027', size=2, alpha=0.8) +
-        geom_point(data = out[element==e & org_unit_id==o & outlier==TRUE], aes(x=date, y=fitted_value), 
-                   color='#4575b4', size=2, alpha=0.8) +
-        scale_color_manual(values=greys) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper),
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t2_lower, ymax=t2_upper),
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=threshold3_lower, ymax=threshold3_upper),
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=threshold4_lower, ymax=threshold4_upper),
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        labs(title=title, x='Date', y='Count') +
-        theme_bw()
-      
-      i=i+1
-    }}
-}
+
+# out <- copy(out_dps)
+# subtitle = "Red points show DPS level outliers"
+
+out <- copy(out_hz_w_dps)
+subtitle = "Red points show HZ-level outliers also identified as DPS-level outliers"
+# RDTs subset:
+out = out[grepl(variable, pattern = "RDT"), ]
+
+# out <- copy(out_hz_wo_dps)
+# subtitle = "Red points show HZ-level outliers NOT identified as DPS-level outliers,\nand therefore not counted as outliers in final data"
+
+setnames(out, "variable", "element")
+
+# loop through the graphs 
+for (e in unique(out$element)) {
+  for (o in unique(out[element==e]$org_unit_id)) {
+    
+    # create the plot
+    list_of_plots[[i]] = ggplot(out[element==e & org_unit_id==o], aes(x=date, y=value)) +
+      geom_line(alpha = 0.5) +
+      geom_point(alpha = 0.5) +
+      geom_line(data = out[element==e & org_unit_id==o], aes(x=date, y=fitted_value), color='black') +
+      geom_point(data = out[element==e & org_unit_id==o & outlier==TRUE], color='#d73027', size=3) +
+      geom_point(data = out[element==e & org_unit_id==o & outlier==TRUE], aes(x=date, y=fitted_value), 
+                 color='#4575b4', size=2) +
+      scale_color_manual(values=greys) +
+      geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t1_lower, ymax=t1_upper),
+                  alpha=0.2, fill='#feb24c', color=NA) +
+      geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t2_lower, ymax=t2_upper),
+                  alpha=0.2, fill='#feb24c', color=NA) +
+      geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t3_lower, ymax=t3_upper),
+                  alpha=0.2, fill='#feb24c', color=NA) +
+      geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t4_lower, ymax=t4_upper),
+                  alpha=0.2, fill='#feb24c', color=NA) +
+      labs(title=paste0(e,': ', o), x='Date', y='Count', subtitle = subtitle) +
+      theme_bw()
+    i = i + 1
+}}
+
 #--------------------------------
 
 #--------------------------------
 # print out the list of plots into a pdf
 #--------------------------------
-pdf(paste0(dir, outFile), height=6, width=10)
+# pdf(paste0(dir, outFile_dps), height=6, width=10)
+# pdf(paste0(dir, outFile), height=6, width=10)
+# pdf(paste0(dir, outFile2), height=6, width=10)
+pdf(paste0(dir, outFile_rdts), height=6, width=10)
 
 for(i in seq(length(list_of_plots))) { 
   print(list_of_plots[[i]])
@@ -199,92 +206,92 @@ dev.off()
 
 
 #---------------------------------------------
-# for PNLP only - example of outlier in dps level but NOT in hz level
+# outliers in dps level but NOT in hz level ??
 #---------------------------------------------
-if (set == "pnlp") {
-  check_hz = unique(dt[ outlier == TRUE, .(dps, date, variable) ] )
-  check_dps = unique(dt_dps[ outlier_dpsLevel3 == TRUE, .(org_unit_id, date, variable)])
-  setnames(check_dps, "org_unit_id", "dps")
+check_hz = unique(dt[ outlier == TRUE, .(dps, date, variable) ] )
+check_dps = unique(dt_dps[ outlier_dpsLevel2 == TRUE, .(org_unit_id, date, variable)])
+setnames(check_dps, "org_unit_id", "dps")
+
+# Are there any in check_dps that are NOT in check_hz? as in, are there any that are dps level outliers that don't have 
+# any corresponding health zone level outliers? 
+check_hz[, hz_level := TRUE ]
+check_dps[, dps_level := TRUE ]
+
+check = merge(check_hz, check_dps, by = c('dps', 'date', 'variable'), all = TRUE)
+
+check = check[is.na(hz_level),]
+
+unique(check$variable) 
+# look into variables that are included in the RC model
+check = check[ variable %in% c('ANC_2nd', 'ANC_3rd', 'SP_1st', 'ArtLum_received', 'ArtLum_used', 'RDT_received', 'RDT_completed', 'ITN_received', 'ITN_distAtPreschool',
+                               'ASAQreceived_14yrsAndOlder', 'ASAQreceived_2to11mos', 'SSCACT_5andOlder')]
+check_vars = unique(check[, .(dps, variable)])
+
+for (j in 1:nrow(check_vars)){
+  d = check_vars[ j, dps ]
+  v = check_vars[ j, variable ]
+  outlier_dates = check[ dps == d & variable == v, unique(date) ]
   
-  # Are there any in check_dps that are NOT in check_hz? as in, are there any that are dps level outliers that don't have 
-  # any corresponding health zone level outliers? 
-  check_hz[, hz_level := TRUE ]
-  check_dps[, dps_level := TRUE ]
+  dt_hz = dt[ dps == d & variable == v, ]
+  dt_dps_subset = dt_dps[ org_unit_id == d & variable == v, ]
   
-  check = merge(check_hz, check_dps, by = c('dps', 'date', 'variable'), all = TRUE)
+  greys = brewer.pal(9, 'Greys')
   
-  check = check[is.na(hz_level),]
+  list_of_plots = NULL
+  i=1
   
-  for (j in 11:100){
-    d = check[ j, dps ]
-    d = "lualaba"
-    v = check[ j, variable ]
-    v = "ANC_1st"
-    outlier_dates = check[ j, date ]
+  list_of_plots[[i]] = ggplot(dt_dps_subset, aes(x=date, y=value)) +
+    geom_line(alpha = 0.5) +
+    geom_point(alpha = 0.5) +
+    geom_line(data = dt_dps_subset[], aes(x=date, y=fitted_value), color='black', alpha=0.9) +
+    geom_point(data = dt_dps_subset[outlier_dpsLevel2==TRUE & date %in% outlier_dates, ], color='#d73027', size=3) +
+    geom_point(data = dt_dps_subset[outlier_dpsLevel2==TRUE & date %in% outlier_dates, ], aes(x=date, y=fitted_value),
+               color='#4575b4', size=2, alpha=0.9) +
+    scale_color_manual(values=greys) +
+    geom_ribbon(data = dt_dps_subset[], aes(ymin=t1_lower, ymax=t1_upper),
+                alpha=0.2, fill='#feb24c', color=NA) +
+    geom_ribbon(data = dt_dps_subset[], aes(ymin=t2_lower, ymax=t2_upper),
+                alpha=0.2, fill='#feb24c', color=NA) +
+    geom_ribbon(data = dt_dps_subset[], aes(ymin=t3_lower, ymax=t3_upper),
+                alpha=0.2, fill='#feb24c', color=NA) +
+    labs(title=paste0(d, " - ", v), x='Date', y='Count', subtitle= "Red points show dates where there were no HZ-level outliers") +
+    theme_bw()
+  
+  i = 2
+  # loop through the graphs
+  for (hz in unique(dt_hz$health_zone)) {
+    # title states variable, sex, facility
+    title = paste0(hz, " (DPS = ", d, ") - ", unique(dt_hz$variable))
     
-    dt_hz = dt[ dps == d & variable == v, ]
-    dt_dps_subset = dt_dps[ org_unit_id == d & variable == v, ]
-    
-    greys = brewer.pal(9, 'Greys')
-    
-    list_of_plots = NULL
-    i=1
-    
-    list_of_plots[[i]] = ggplot(dt_dps_subset, aes(x=date, y=value)) +
+    # create the plot
+    list_of_plots[[i]] = ggplot(dt_hz[health_zone == hz,], aes(x=date, y=value)) +
       geom_line(alpha = 0.5) +
       geom_point(alpha = 0.5) +
-      geom_line(data = dt_dps_subset[], aes(x=date, y=fitted_value), color='black', alpha=0.9) +
-      geom_point(data = dt_dps_subset[outlier_dpsLevel3==TRUE, ], color='#d73027', size=3) +
-      geom_point(data = dt_dps_subset[outlier_dpsLevel3==TRUE, ], aes(x=date, y=fitted_value),
+      geom_line(data = dt_hz[health_zone == hz,], aes(x=date, y=fitted_value), color='black', alpha=0.9) +
+      geom_point(data = dt_hz[health_zone == hz & date %in% outlier_dates,], color='blue', size=3) +
+      geom_point(data = dt_hz[health_zone == hz & outlier==TRUE], color='#d73027', size=2, alpha=0.9) +
+      geom_point(data = dt_hz[health_zone == hz & outlier==TRUE], aes(x=date, y=fitted_value),
                  color='#4575b4', size=2, alpha=0.9) +
       scale_color_manual(values=greys) +
-      geom_ribbon(data = dt_dps_subset[], aes(ymin=t1_lower, ymax=t1_upper),
+      geom_ribbon(data = dt_hz[health_zone == hz,], aes(ymin=t1_lower, ymax=t1_upper),
                   alpha=0.2, fill='#feb24c', color=NA) +
-      geom_ribbon(data = dt_dps_subset[], aes(ymin=t2_lower, ymax=t2_upper),
+      geom_ribbon(data = dt_hz[health_zone == hz,], aes(ymin=t2_lower, ymax=t2_upper),
                   alpha=0.2, fill='#feb24c', color=NA) +
-      geom_ribbon(data = dt_dps_subset[], aes(ymin=t3_lower, ymax=t3_upper),
+      geom_ribbon(data = dt_hz[health_zone == hz,], aes(ymin=t3_lower, ymax=t3_upper),
                   alpha=0.2, fill='#feb24c', color=NA) +
-      geom_ribbon(data = dt_dps_subset[], aes(ymin=t4_lower, ymax=t4_upper),
+      geom_ribbon(data = dt_hz[health_zone == hz,], aes(ymin=t4_lower, ymax=t4_upper),
                   alpha=0.2, fill='#feb24c', color=NA) +
-      labs(title=paste0(d, " - ", v), x='Date', y='Count') +
+      labs(title=title, x='Date', y='Count', subtitle = "Blue points show dates where there was an outlier identified at the DPS level") +
       theme_bw()
     
-    i = 2
-    # loop through the graphs
-    for (hz in unique(dt_hz$health_zone)) {
-      # title states variable, sex, facility
-      title = paste0(hz, " (DPS = ", d, ") - ", unique(dt_hz$variable))
-      
-      # create the plot
-      list_of_plots[[i]] = ggplot(dt_hz[health_zone == hz,], aes(x=date, y=value)) +
-        geom_line(alpha = 0.5) +
-        geom_point(alpha = 0.5) +
-        geom_line(data = dt_hz[health_zone == hz,], aes(x=date, y=fitted_value), color='black', alpha=0.9) +
-        geom_point(data = dt_hz[health_zone == hz & date %in% outlier_dates,], color='blue', size=3) +
-        geom_point(data = dt_hz[health_zone == hz & outlier==TRUE], color='#d73027', size=2, alpha=0.9) +
-        geom_point(data = dt_hz[health_zone == hz & outlier==TRUE], aes(x=date, y=fitted_value),
-                   color='#4575b4', size=2, alpha=0.9) +
-        scale_color_manual(values=greys) +
-        geom_ribbon(data = dt_hz[health_zone == hz,], aes(ymin=t1_lower, ymax=t1_upper),
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = dt_hz[health_zone == hz,], aes(ymin=t2_lower, ymax=t2_upper),
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = dt_hz[health_zone == hz,], aes(ymin=t3_lower, ymax=t3_upper),
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = dt_hz[health_zone == hz,], aes(ymin=t4_lower, ymax=t4_upper),
-                    alpha=0.2, fill='#feb24c', color=NA) +
-        labs(title=title, x='Date', y='Count') +
-        theme_bw()
-      
-      i=i+1
-    }
-    
-    pdf( paste0(dir, "../prepped_data/PNLP/outliers/problem_examples/dpsLevel_example_", j, ".pdf"), height = 10, width = 12 )
-    for(i in seq(length(list_of_plots))) {
-      print(list_of_plots[[i]])
-    }
-    dev.off()
+    i=i+1
   }
+  
+  pdf( paste0(dir, "examples_outlierDPSlevel_noneHZlevel/dpsLevel_example_", j, ".pdf"), height = 10, width = 12 )
+  for(i in seq(length(list_of_plots))) {
+    print(list_of_plots[[i]])
+  }
+  dev.off()
 }
 #---------------------------------------------
 
