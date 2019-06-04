@@ -54,7 +54,7 @@ nodeTable[, label:=gsub('Lead of','',label)]
 # Compute explained variance
 
 # establish the outcome variable
-outcomeVar = 'lead_malariaDeaths_under5_rate'
+outcomeVar = 'lead_malariaDeaths_rate'
 byVars = c('lhs', 'rhs', 'est.std', 'se.std')
 
 # prep each level of coefficients
@@ -199,8 +199,8 @@ sunBursts = lapply(rev(outcomeVars), function(v) {
 	# get label
 	l = nodeTable[variable==v]$label
 	l = paste('Increasing\n', l)
-	if (v %in% c('lead_malariaDeaths_under5_rate', 'lead_case_fatality_under5', 
-		'lead_newCasesMalariaMild_under5_rate', 'lead_newCasesMalariaSevere_under5_rate')) {
+	if (v %in% c('lead_malariaDeaths_rate', 'lead_case_fatality', 
+		'lead_newCasesMalariaMild_rate', 'lead_newCasesMalariaSevere_rate')) {
 		l = gsub('Increasing', 'Declining', l)
 	}
 	
