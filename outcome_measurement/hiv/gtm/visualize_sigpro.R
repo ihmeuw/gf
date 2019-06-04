@@ -33,7 +33,7 @@ dt$result = factor(dt$result, c("indeterminate", "nonreactive",
                    c("Indeterminate result", "Non-reactive", "Reactive", 
                      "Test not done"))
 
-pdf(paste0(dir, 'outputs/sigpro_data_quality_visuals.pdf'), width="12", height="9")
+pdf(paste0(dir, 'outputs/sigpro_data_quality_visuals.pdf'), height=6, width=9)
 
 #----------------------------------------
 # tests performed by data set
@@ -74,7 +74,6 @@ ggplot(tests[result=='Reactive' | result=='Non-reactive'], aes(x=date, y=value, 
        title="Test results by gender identity", 
        subtitle="Excludes indeterminate results") +
         theme(text = element_text(size=18))
-
 
 #----------------------------------------
 # by sr code and sr code/data set 

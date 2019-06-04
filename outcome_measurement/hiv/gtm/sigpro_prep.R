@@ -218,9 +218,12 @@ saveRDS(f2, paste0(dir, 'prepped/', files[[2]], '_prepped.RDS'))
 
 # keep and rename these variables
 # month and year show no association with date - multiple years of data but only one code
-f3 = f3[ ,.(cui=codigounico, pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  post_test_completed=postPruebaVIH,
-            informed_of_result=conoceResultadoVIH, informed_of_sif_result=conoceResultadoSif, 
-            condoms=condonesMasculinos, female_condoms=condonesFemeninos, flavored_condoms=condonesSabores, 
+f3 = f3[ ,.(cui=codigounico, pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  
+            post_test_completed=postPruebaVIH,
+            informed_of_result=conoceResultadoVIH, 
+            informed_of_sif_result=conoceResultadoSif, 
+            condoms=condonesMasculinos, female_condoms=condonesFemeninos, 
+            flavored_condoms=condonesSabores, 
             lube_packets=lubriSachet, lube_tubes=lubriTubo ,
             pop=grupo, subpop=subgrupo, result=resultadoVIH, pqExtendido, sr_code=codejecutor,            
             activity=tipoActividad, sif_result=resultadoSif, unmovil, date=fechareal,  department=departamento,
