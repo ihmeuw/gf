@@ -8,8 +8,13 @@
 # (use singularity exec /share/singularity-images/health_fin/forecasting/best.img R on IHME's new cluster)
 # --------------------------------------------------
 
-# to do
-# make this work on the cluster (it fails to load lubridate and other packages)
+# --------------------------------------------
+# Output file labels (set to '' for default) 
+# in case we're running some secondary analysis
+# this only affects files from step 5 onward
+fileLabel = '_oop_test'
+# --------------------------------------------
+
 
 # ------------------
 # Load packages
