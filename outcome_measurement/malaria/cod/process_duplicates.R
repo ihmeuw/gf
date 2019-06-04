@@ -30,7 +30,7 @@ library(parallel)
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # data directory
-dir = paste0(root, "/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/")
+dir = paste0(root, "/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/")
 
 # input files
 dt_for_dup_removal = "ameliaDT_with_index_for_dup_removal.rds"
@@ -57,7 +57,7 @@ dups = dups[ num_identical != 0, ]
 # ----------------------------------------------   
 
 # ----------------------------------------------     
-# get the number of NAs in each row in dt
+# get the number of NAs in each of the comapred row in dt
 # ----------------------------------------------
 id_vars <- c("dps", "health_zone", "date", "donor", "operational_support_partner", "population", "id")
 inds = names(dt)[!names(dt) %in% id_vars]
