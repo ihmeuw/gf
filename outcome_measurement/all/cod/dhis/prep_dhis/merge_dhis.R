@@ -15,6 +15,7 @@ library(ggplot2)
 library(dplyr)
 library(stringr) 
 library(openxlsx)
+library(lubridate)
 # --------------------
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
@@ -76,7 +77,8 @@ files = list.files('./', recursive=TRUE)
 # read in the files
 i = 1
 for(f in files) {
-  #load the RDs file
+ 
+   #load the RDs file
   file_name = f
   current_data = data.table(readRDS(f))
   current_data[ , file:=file_name]
@@ -130,8 +132,8 @@ saveRDS(paste0(dir, 'pre_prep/', folder, '/', folder, min_date, '_', max_date, '
 #---------------------------------
 # collapse across the file names 
 
-byVars = names(dt)
-dt[ ]
+byVars = names(dt)[names(dt)!='download_number' & names(dt)!='file']
+dt[ , .(value=sum(value)), by=byVars]
 
 
 
