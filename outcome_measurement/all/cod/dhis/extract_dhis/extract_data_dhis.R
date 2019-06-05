@@ -65,7 +65,7 @@ end_month = '01' # start month is inclusive, end month is exclusive
 update_year = '2009'
 
 #identify the data set(s) you want to download by number (list below)
-set = 29
+set = 30
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
@@ -74,35 +74,39 @@ set_name = 'pnls'
 #---------------------------
 # available data sets by number: 
 
-# 1	 00 Temporaire 
-# 2	 A - Services de Base
-# 3	 B - Services Secondaires
-# 4	 C1 - SIGL1
-# 5	 C2 - SIGL2
-# 6	 C. SIGL BCZ_CDR_BCAF
-# 7	 C. SIGL FOSA
-# 8	 DQI Bureau central de la Zone - Trimestriel
-# 9	 DQI Centre de Sante - Trimestriel
-# 10 DQI Hospital - Trimestriel
-# 11 D - Service Hopital
-# 12 E - Banque de Sang et Transfusion
-# 13 F - Activites BCZ
-# 14 G - Hygiene aux frontieres
-# 15 H - Relevee Epidemiologique Hebdomadaire
-# 16 I-Surveillance EBOLA
-# 17 I-Surveillance Journaliare EBOLA
-# 18 MILD_Denombrement
-# 19 MILD_Distribution
-# 20 OSQD Bureau Central de la ZS
-# 21 OSQD Centre de Sante
-# 22 OSQD Hospital
-# 23 OSQD Verification - Audit
-# 24 PATI V - TB Cas enregistre
-# 25 PATI V - TB resultat
-# 26 PepfarConnect
-# 27 PNLP CS Site Sentinelle
-# 28 PNLP HGR Site Sentinelle
-# 29 PNLS- Canevas Unique FOSA
+# 1: pMbC0FJPkcm A- Services de Base 
+# 2: maDtHIFrSHx B- Services Secondaires 
+# 3: pePpSnKtAh3 C1- SIGL1 
+# 4: s6yd0w2KXWa C2- SIGL2 
+# 5: kzug4nJpnis Canevas UNIQUE PNLS 2019 
+# 6: l8ppzBjgihH C. SIGL BCZ_CDR_BCAF 
+# 7: oTgCLoG5OkY C- SIGL FOSA
+# 8: YYIBtkA3LbT  Data PF h
+# 9: EbG2JnCIPKD  DQI Bureau central de la Zone - Trimestriel 
+# 10: ycHbewznGao DQI Centre de Santé - Trimestriel 
+# 11: cKVdn82G240 DQI Hôpital - Trimestriel 
+# 12: OeWrFwkFMvf D- Service Hopital 
+# 13: uGr4KMkDzav E- Banque de Sang et Transfusion 
+# 14: CUa7hLcHtia Export Data TB 
+# 15: LmME0nSMLMz Export Data TB Precedent 
+# 16: ktBWTI6yjTB F- Activites BCZ 
+# 17: iriO2vCt72x G- Hygiene aux frontieres 
+# 18: Fo5ux0Ja21i H- Relevé Epidémiologique Hebdomadaire 
+# 19: hGTha9836Lk I-Surveillance EBOLA 
+# 20: LBXxOUxWLQe I-Surveillance Journalière EBOLA 
+# 21: q2LW2KL8h8O MILD_Denombrement 
+# 22: dUg9MGucvYg MILD_Distribution 
+# 23: p9OV146elYx OSQD Bureau Central de la ZS 
+# 24: dmtwHoZEHpS OSQD Centre de Santé 
+# 25: uhUlD7EQo5Y OSQD Hôpital 
+# 26: aWLL9odsL7p OSQD Vérification - Audit 
+# 27: E39d4kc5aPR PepfarConnect 
+# 28: FLATAfhyaHb PNLP CS Site Sentinelle 
+# 29: z6oEr8JcJ57 PNLP HGR Site Sentinelle 
+# 30: wIMw0dzITTs PNLS- Canevas Unique FOSA 
+# 31: jcaxCOQLeQC PNLT -  Rapport Trimestriel Tuberculose 2019 
+# 32: mV0r6yDCZy3 Population 
+                            
 
 #---------------------------
 

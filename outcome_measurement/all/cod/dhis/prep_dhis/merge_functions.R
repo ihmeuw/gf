@@ -18,13 +18,6 @@ overlap = function(x) {
     x[ , c('period', 'year', 'month'):=NULL]
   } else {
     
-    # create a date variable 
-    x[ , period:= as.character(period)]
-    x[ , year:=substr(period, 1, 4)]
-    x[ , month:=substr(period, 5, 6)]
-    x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
-    x[ , c('period', 'year', 'month'):=NULL] }
-  
   #---------------------
   # eliminate the overlapping dates 
   x[ , extraction_date:=max(date), by=file]
