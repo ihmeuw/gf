@@ -94,14 +94,6 @@ for(f in files) {
   current_data = current_data[data_element_ID %in% keep_vars]
   }
   
-  # add a date variable
-  current_data[ , date:=ymd(paste0(as.character(period), '01'))]
-  current_data[ , period:=NULL]
-  
-  # create a date variable based on last update 
-  current_data[ , last_update:=as.character(last_update)]
-  current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
-  
   # append to the full data
   if(i==1) dt = current_data
   if(i>1)  dt = rbind(dt, current_data)
@@ -110,12 +102,20 @@ for(f in files) {
 }
 
 #---------------------------------
+# do some initial formatting 
+
 # remove the factoring of value to avoid errors
 # introduces some NAs as some values are NULL
-
 dt[ , value:=as.numeric(as.character(value))] 
 print(paste0("There are ,", dt[is.na(value), nrow(value)], " missing values in the raw data."))
 dt = dt[!is.na(value)] 
+
+# add a date variable
+dt[ , date:=ymd(paste0(as.character(period), '01'))]
+
+# create a date variable based on last update 
+dt[ , last_update:=as.character(last_update)]
+dt[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
 
 #---------------------------------
 # save the interim raw data before the merge with the meta data 
