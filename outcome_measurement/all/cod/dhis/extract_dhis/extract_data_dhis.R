@@ -198,40 +198,4 @@ for (i in 1:((length(dates))-1) ){
 }
 #------------------------
 
-#------------------------
-# read in all files and rbind together to save one file of data
-files = list.files( paste0('./pre_prep/', set_name, '/intermediate_data/'), recursive=TRUE)
-
-if (set_name=='base' | set_name=='sigl') {
-  keep_vars = read.xlsx(paste0(dir, 'catalogues/data_elements_cod.xlsx'))
-  keep_vars = data.table(keep_vars)
-  keep_vars[ , keep:=as.numeric(keep)]
-  keep_vars = keep_vars[keep==1, element_id]
-}
-
-dt = data.table()
-# read in the files 
-i = 1
-for(f in files) {
-  #load the RDs file
-  vec = f
-  current_data = data.table(readRDS(paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', f)))
-  current_data[ , file:=vec ]
-  
-  # subset to only the variables needed for large data sets
-  if (folder=='base' | folder=='sigl') {
-    current_data[ , data_element_ID:=as.character(data_element_ID)]
-    current_data = current_data[data_element_ID %in% keep_vars]  
-  } 
-  
-  # append to the full data 
-  if(i==1) dt = current_data
-  if(i>1)  dt = rbind(dt, current_data)
-  i = i+1 }
-
-# save the data table in its individual folder in 'pre_prep' for merge and prep:
-saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', 
-                               start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
-
-#-------------------------
 
