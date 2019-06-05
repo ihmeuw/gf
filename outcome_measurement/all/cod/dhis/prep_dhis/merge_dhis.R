@@ -99,6 +99,13 @@ for(f in files) {
 
 dt[ , value:=as.numeric(as.character(value))] 
 dt = dt[!is.na(value)]
+
+#---------------------------------
+# collapse across the file names 
+
+
+
+
 #---------------------------------
 # merge in the meta data 
 # includes english translations to be formatted later
