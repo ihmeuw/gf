@@ -82,11 +82,11 @@ for(f in files) {
   file_name = f
   current_data = data.table(readRDS(f))
   current_data[ , file:=file_name]
-  
-  # add download number if it is not already included
-  download = str_split(file_name, '_')[[1]][6]
-  if (download=='first') current_data[ , download_number:=1]
-  if (download=='second') current_data[ , download_number:=2]
+  # 
+  # # add download number if it is not already included
+  # download = str_split(file_name, '_')[[1]][6]
+  # if (download=='first') current_data[ , download_number:=1]
+  # if (download=='second') current_data[ , download_number:=2]
 
   # subset to only the variables needed for large data sets
   if (folder=='base' | folder=='sigl') {
@@ -134,8 +134,6 @@ saveRDS(paste0(dir, 'pre_prep/', folder, '/', folder, min_date, '_', max_date, '
 
 byVars = names(dt)[names(dt)!='download_number' & names(dt)!='file']
 dt[ , .(value=sum(value)), by=byVars]
-
-
 
 #---------------------------------
 # merge in the meta data 
