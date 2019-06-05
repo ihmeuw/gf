@@ -77,32 +77,61 @@ files = list.files('./', recursive=TRUE)
 i = 1
 for(f in files) {
   #load the RDs file
-  vec = f
+  file_name = f
   current_data = data.table(readRDS(f))
-  current_data[ ,file:=vec]
+  current_data[ , file:=file_name]
+  
+  # add download number if it is not already included
+  download = str_split(file_name, '_')[[1]][6]
+  if (download=='first') current_data[ , download_number:=1]
+  if (download=='second') current_data[ , download_number:=2]
 
   # subset to only the variables needed for large data sets
   if (folder=='base' | folder=='sigl') {
   current_data[ , data_element_ID:=as.character(data_element_ID)]
   current_data = current_data[data_element_ID %in% keep_vars]
   }
-
+  
+  # add a date variable
+  current_data[ , date:=ymd(paste0(as.character(period), '01'))]
+  current_data[ , period:=NULL]
+  
+  # create a date variable based on last update 
+  current_data[ , last_update:=as.character(last_update)]
+  current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
+  
   # append to the full data
   if(i==1) dt = current_data
   if(i>1)  dt = rbind(dt, current_data)
   i = i+1
+
 }
 
 #---------------------------------
 # remove the factoring of value to avoid errors
-#introduces some NAs as some values are NULL
+# introduces some NAs as some values are NULL
 
 dt[ , value:=as.numeric(as.character(value))] 
-dt = dt[!is.na(value)]
+print(paste0("There are ,", dt[is.na(value), nrow(value)], " missing values in the raw data."))
+dt = dt[!is.na(value)] 
+
+#---------------------------------
+# save the interim raw data before the merge with the meta data 
+
+# include the date range in the file name
+min_date = dt[ , min(date)]
+min_date = gsub('-', '_', min_date)
+max_date = dt[ , max(date)]
+max_date = gsub('-', '_', max_date)
+
+# save the raw data before the merge 
+saveRDS(paste0(dir, 'pre_prep/', folder, '/', folder, min_date, '_', max_date, 'full.rds'))
 
 #---------------------------------
 # collapse across the file names 
 
+byVars = names(dt)
+dt[ ]
 
 
 
