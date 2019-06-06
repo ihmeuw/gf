@@ -16,7 +16,7 @@ overlap = function(x) {
     x[quarter=='Q4', month:='10']
     x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
     x[ , c('period', 'year', 'month'):=NULL]
-  } else {
+  }
     
   #---------------------
   # eliminate the overlapping dates 
@@ -47,96 +47,83 @@ merge_meta_data = function(x) {
   
   # once the master facilities list if updated, read in master facilities
   facilities = data.table(readRDS(paste0(dir, 'meta_data/master_facilities.rds')))
-  data_elements = data.table(readRDS(paste0(dir, 'meta_data/data_elements.rds')))
+  data_elements = data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
   categories = data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
   
   # drop unecessary variables
-  data_elements[ , c('data_set_url', 'element_url'):=NULL]
+  data_elements[ , c('datasets_url', 'data_element_url'):=NULL]
   categories[ , url_list:=NULL]
   
   #-------------------
   # change the names of the ID variables in elements and categories to match for the merge
-  setnames(facilities, 'org_unit_id', 'id')
-  setnames(data_elements, 'element_id', 'data_element_id')
-  setnames(categories, c('category', 'category_name'))
+  setnames(categories,'displayName', 'category_name')
+  setnames(categories,'ID', 'category')
+  setnames(x, 'org_unit_ID', 'org_unit_id')
+  setnames(x, 'data_element_ID', 'data_element_id')
   
   #-------------------
   # merge in the meta data 
   
-  # change the organisational unit id to be called 'id' and change var types for the merge
-  setnames(x, 'org_unit_ID', 'id')
-  setnames(x, 'data_element_ID', 'data_element_id')
-  x[ , group:=NULL]
-  x[ , id:=as.character(id)]
+  # change the variable classes for the merge
+  x[ , org_unit_id:=as.character(org_unit_id)]
   x[ , category:=as.character(category)]
-  x[ , last_update:=as.character(last_update)]
+  x[ , data_element_id:=as.character(data_element_id)]
+  x[ , last_update:=ymd(last_update)]
   
   # merge in the facilities meta data 
-  y = merge(x, facilities, by='id', all.x=T)
+  y = merge(x, facilities, by='org_unit_id', all.x=T)
 
   # merge in the data elements
   # some data elements contain duplicate ids - set if statements for these sets
-  if (folder=='pnls') {
-    y[ , data_set_id:='wIMw0dzITTs']
-    y = merge(y, data_elements, by=c('data_set_id', 'data_element_id'), all.x=T)
-  } else if (folder=='base') { 
-    y[ , data_set_id:='pMbC0FJPkcm']
-    y = merge(y, data_elements, by=c('data_set_id', 'data_element_id'), all.x=T)
-  } else { y = merge(y, data_elements, by='data_element_id', all.x=T) }
+  if (folder=='pnls') y[ , data_set_id:='wIMw0dzITTs']
+  if (folder=='base') y[ , data_set_id:='pMbC0FJPkcm']
   
+  # subset down the list of elements to the data set being processed
+  sub_id = y[ , unique(data_set_id)]
+  data_elements = data_elements[datasets_ID==sub_id]
+  
+  # merge in the variable names 
+  y = merge(y, data_elements, by='data_element_id', all.x=T)
+
   # merge in the categories
   y = data.table(merge(y, categories, by='category', all.x=T))
-  
-  # save last update to analyze lags
-  y[ , last_update:=unlist(lapply(str_split(last_update, 'T'), '[', 1))]
-  y[ , last_upate:=as.Date(last_update)]
-  
+
   # drop unecessary variables to simplify
-  y[ , c('category', 'file', 'opening_date', 'data_set_id'):=NULL] 
+  y[ , c('category', 'opening_date', 'data_set_id'):=NULL] 
+  setnames(y, 'category_name', 'category')
   
   #-------------------
-  # rename variables and place in an intuitive order 
-  # check if the data table contains quarterly data 
-  
-  names_vector = names(y)
-  if ("quarter" %in% names_vector) {
-  
-  # rename the variables - different variables in quarterly data 
-  y = y[ ,.(org_unit_id=id, element_id=data_element_id,
-            org_unit, element_eng, quarter, date, category=category_name,
-            value, org_unit_type, level, country, dps, health_zone,
-            health_area, element, data_set=data_sets, coordinates)]
-  } else {
-    y = y[ ,.(org_unit_id=id, element_id=data_element_id,
-              org_unit, element_eng, date, category=category_name,
-              value, org_unit_type, level, country, dps, health_zone,
-              health_area, element, data_set=data_sets, coordinates)]
-  }
+  # merge in the english translations
+  translations = data.table(readRDS(paste0(dir, 'meta_data/data_elements.rds')))
+  translations = translations[ ,.(data_set_id, data_element_id=element_id, element_eng)]
+  translations = translations[data_set_id==sub_id]
+  translations[ ,data_set_id:=NULL]
+  y = merge(y, translations, by='data_element_id', all.x=T)
 
   # return the new data set
-  return(y) }
-
+  return(y) 
+}
 
 #--------------------------------------------------------------
 # prep function for all data sets
 
-prep_dhis = function(x) {
+prep_dhis_geography = function(x) {
   
   #--------------------------------------
   # replace the dps/hz with just the name, excluding the code and word 'province'
   # some health zones and provinces have two names before 'province'
   
   # replace dps with the name only
-  x$dps1 = unlist(lapply(strsplit(dt$dps, " "), "[", 2))
-  x$dps2 = unlist(lapply(strsplit(dt$dps, " "), "[", 3))
+  x$dps1 = unlist(lapply(strsplit(x$dps, " "), "[", 2))
+  x$dps2 = unlist(lapply(strsplit(x$dps, " "), "[", 3))
   x[dps2!='Province', dps:=paste(dps1, dps2)]
   x[dps2=='Province', dps:=dps1]
   x[ , c('dps1', 'dps2'):=NULL]
   
   # replace health zone with the name only
-  x$health_zone1 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 2))
-  x$health_zone2 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 3))
-  x$health_zone3 = unlist(lapply(strsplit(dt$health_zone, " "), "[", 4))
+  x$health_zone1 = unlist(lapply(strsplit(x$health_zone, " "), "[", 2))
+  x$health_zone2 = unlist(lapply(strsplit(x$health_zone, " "), "[", 3))
+  x$health_zone3 = unlist(lapply(strsplit(x$health_zone, " "), "[", 4))
   x[health_zone3 != 'Zone' & health_zone2 != 'Zone', health_zone:=paste(health_zone1, health_zone2, health_zone3) ]
   x[health_zone3=='Zone', health_zone:=paste(health_zone1, health_zone2)]
   x[health_zone2=='Zone', health_zone:=health_zone1]
