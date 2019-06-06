@@ -86,6 +86,14 @@ for(f in files[1:15]) {
   if (folder=='pnls') { download = str_split(file_name, '_')[[1]][6]
   if (download=='first') current_data[ , download_number:=1]
   if (download=='second') current_data[ , download_number:=2] }
+  
+  # add a date variable
+  current_data[ , period:=as.character(period)]
+  current_data[!(grep("Q", period)) , date:=ymd(paste0(period, '01'))] # do not perform on quarterly data 
+  
+  # create a date variable based on last update
+  current_data[ , last_update:=as.character(last_update)]
+  current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
 
   # subset to only the variables needed for large data sets
   if (folder=='base' | folder=='sigl') {
@@ -118,6 +126,14 @@ for(f in files[16:length(files)]) {
   if (folder=='pnls') { download = str_split(file_name, '_')[[1]][6]
   if (download=='first') current_data[ , download_number:=1]
   if (download=='second') current_data[ , download_number:=2] }
+
+  # add a date variable
+  current_data[ , period:=as.character(period)]
+  current_data[!(grep("Q", period)) , date:=ymd(paste0(period, '01'))] # do not perform on quarterly data 
+  
+  # create a date variable based on last update
+  current_data[ , last_update:=as.character(last_update)]
+  current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
   
   # subset to only the variables needed for large data sets
   if (folder=='base' | folder=='sigl') {
@@ -154,15 +170,8 @@ dt2 = NULL
 # remove the factoring of value to avoid errors
 # introduces some NAs as some values are NULL
 dt[ , value:=as.numeric(as.character(value))]
-print(paste0("There are ,", , " missing values in the raw data."))
+print(paste0("There are ", dt[is.na(value), .N] , " missing values in the raw data."))
 dt = dt[!is.na(value)]
-
-# add a date variable
-dt[ , date:=ymd(paste0(as.character(period), '01'))]
-
-# create a date variable based on last update
-dt[ , last_update:=as.character(last_update)]
-dt[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
 
 #---------------------------------
 # save the interim raw data before the merge with the meta data 
