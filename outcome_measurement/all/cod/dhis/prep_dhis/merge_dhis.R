@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
-# Caitlin O'Brien-Carelli
+# Caitlin O'Brien-Carelli, Audrey Batzel
 #
-# 5/29/2019
+# 6/6/2019
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -37,8 +37,8 @@ source(paste0(dir, 'code/merge_functions.R'))
 
 # change the folder to the name of the data set you want to merge
 # this is the only argument to change 
-folder = 'pnls'
 
+folder = 'pnls'
 #---------------------------------
 
 #---------------------------------
@@ -74,6 +74,7 @@ setwd(paste0(dir, 'pre_prep/', folder, '/intermediate_data/'))
 files = list.files('./', recursive=TRUE)
 
 # read in the files
+# run as two loops due to file size limitations 
 i = 1
 for(f in files[1:15]) {
  
@@ -85,16 +86,18 @@ for(f in files[1:15]) {
   # add download number if it is not already included
   if (folder=='pnls') { download = str_split(file_name, '_')[[1]][6]
   if (download=='first') current_data[ , download_number:=1]
-  if (download=='second') current_data[ , download_number:=2] }
+  if (download=='second') current_data[ , download_number:=2] 
+  }
   
   # add a date variable
-  current_data[ , period:=as.character(period)]
-  current_data[!(grep("Q", period)) , date:=ymd(paste0(period, '01'))] # do not perform on quarterly data 
-  
-  # create a date variable based on last update
-  current_data[ , last_update:=as.character(last_update)]
-  current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
+  current_data[ ,period:=paste0(as.character(period), '01')]
+  current_data[ ,date:=as.Date(period, format='%Y%m%d')]
 
+  # create a date variable based on last update
+  current_data[ ,last_update:=as.character(last_update)]
+  current_data[ ,last_update:=unlist(lapply(str_split(last_update, 'T'), '[', 1))]
+  current_data[ ,last_update:=as.Date(last_update, format='%Y-%m-%d')]
+  
   # subset to only the variables needed for large data sets
   if (folder=='base' | folder=='sigl') {
   current_data[ , data_element_ID:=as.character(data_element_ID)]
@@ -113,7 +116,7 @@ for(f in files[1:15]) {
   i = i+1
 }
 
-# read in the files
+# read in the files for the second loop
 i = 1
 for(f in files[16:length(files)]) {
   
@@ -125,15 +128,17 @@ for(f in files[16:length(files)]) {
   # add download number if it is not already included
   if (folder=='pnls') { download = str_split(file_name, '_')[[1]][6]
   if (download=='first') current_data[ , download_number:=1]
-  if (download=='second') current_data[ , download_number:=2] }
+  if (download=='second') current_data[ , download_number:=2] 
+  }
 
   # add a date variable
   current_data[ , period:=as.character(period)]
-  current_data[!(grep("Q", period)) , date:=ymd(paste0(period, '01'))] # do not perform on quarterly data 
+  current_data[ , date:=ymd(paste0(period, '01'))] 
   
   # create a date variable based on last update
   current_data[ , last_update:=as.character(last_update)]
-  current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
+  current_data$last_update = unlist(lapply(str_split(current_data$last_update, 'T'), '[', 1))
+  current_data[ ,last_update:=ymd(last_update)]
   
   # subset to only the variables needed for large data sets
   if (folder=='base' | folder=='sigl') {
