@@ -78,15 +78,15 @@ files = list.files('./', recursive=TRUE)
 i = 1
 for(f in files) {
  
-   #load the RDs file
+  #load the RDs file
   file_name = f
   current_data = data.table(readRDS(f))
   current_data[ , file:=file_name]
-  # 
-  # # add download number if it is not already included
-  # download = str_split(file_name, '_')[[1]][6]
-  # if (download=='first') current_data[ , download_number:=1]
-  # if (download=='second') current_data[ , download_number:=2]
+  
+  # add download number if it is not already included
+  download = str_split(file_name, '_')[[1]][6]
+  if (download=='first') current_data[ , download_number:=1]
+  if (download=='second') current_data[ , download_number:=2]
 
   # subset to only the variables needed for large data sets
   if (folder=='base' | folder=='sigl') {
@@ -97,23 +97,25 @@ for(f in files) {
   # append to the full data
   if(i==1) dt = current_data
   if(i>1)  dt = rbind(dt, current_data)
+  print(paste("Rbound", file_name, "to the full data"))
+  print(i)
   i = i+1
-
 }
 
-#---------------------------------
-# do some initial formatting 
+
+# #---------------------------------
+# # do some initial formatting 
 
 # remove the factoring of value to avoid errors
 # introduces some NAs as some values are NULL
-dt[ , value:=as.numeric(as.character(value))] 
+dt[ , value:=as.numeric(as.character(value))]
 print(paste0("There are ,", dt[is.na(value), nrow(value)], " missing values in the raw data."))
-dt = dt[!is.na(value)] 
+dt = dt[!is.na(value)]
 
 # add a date variable
 dt[ , date:=ymd(paste0(as.character(period), '01'))]
 
-# create a date variable based on last update 
+# create a date variable based on last update
 dt[ , last_update:=as.character(last_update)]
 dt[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
 
