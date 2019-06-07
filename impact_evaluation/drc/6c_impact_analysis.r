@@ -76,17 +76,16 @@ while(any(outcomeVars %in% means$lhs)) {
 	currentLevel = currentLevel[!grepl('completeness',rhs)]
 	currentLevel = currentLevel[!grepl('completeness',lhs)]	
 	
-	# compute explained variance
-	currentLevel[, est.std:=abs(est.std)/sum(abs(est.std)), by=lhs]	
-	
 	# drop fixed variances and covariances
 	currentLevel = currentLevel[se.std!=0]
+	
+	# compute explained variance
+	currentLevel[, est.std:=abs(est.std)/sum(abs(est.std)), by=lhs]	
 	
 	# assign
 	currentLevel = currentLevel[order(lhs, rhs)]
 	currentLevel[, level:=i]
 	assign(paste0('level',i), currentLevel)
-	# currentLevel$level = NULL
 	
 	# update outcome vars to the next level down
 	outcomeVars = currentLevel$rhs
