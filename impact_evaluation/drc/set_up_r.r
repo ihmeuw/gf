@@ -12,7 +12,7 @@
 # Output file labels (set to '' for default) 
 # in case we're running some secondary analysis
 # this only affects files from step 5 onward
-fileLabel = '_oop_test'
+fileLabel = ''
 # --------------------------------------------
 
 
