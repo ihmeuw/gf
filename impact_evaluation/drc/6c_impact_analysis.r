@@ -163,8 +163,9 @@ setup2LevelSB = function(var='ITN_consumed_cumulative', pcts=TRUE) {
 	# bring in labels
 	out = merge(out, nodeTable, by.x='rhs', by.y='variable', all.x=TRUE)
 	out[rhs=='unexplained', label:='-Unexplained by Model-']
-	out[, label:=paste(label, '-', round(est.std*100, 1), '%')]
-	if (pcts==TRUE) out[rhs==lhs & level==2, label:='']
+	out[is.na(label), label:='']
+	if (pcts==TRUE) out[label!='', label:=paste(label, '-', round(est.std*100, 1), '%')]
+	out[rhs==lhs & level==2, label:='']
 	
 	# return
 	return(out)
@@ -203,11 +204,18 @@ sunBursts = lapply(rev(outcomeVars), function(v) {
 		l = gsub('Increasing', 'Declining', l)
 	}
 	
+	# label sizes based on the number of labels
+	nLabels = length(graphData[label!='']$label)
+	if (nLabels<5) s=3.5
+	if (nLabels>=5) s=3
+	if (nLabels>=10) s=2.5
+	if (nLabels>=20) s=2
+	
 	# graph
-	ggplot(graphData, aes(x=level, y=est.std, fill=fill, alpha=level)) +
+	ggplot(graphData, aes(x=as.numeric(level), y=est.std, fill=fill, alpha=level)) +
 		geom_col(width=1, color='gray80', size=0.3, position=position_stack()) +
-		geom_text_repel(aes(label=label), size=2.5, position=position_stack(vjust=0.5)) +
-		annotate('text', 1, 0, label=l, size=5, vjust=1.25) +
+		geom_text_repel(aes(label=label, x=as.numeric(level)+.5), size=s, position=position_stack(vjust=0.5), segment.color='black') +
+		annotate('text', 0, 0, label=l, size=5, vjust=1.25) +
 		coord_polar(theta='y') +
 		scale_alpha_manual(values=c('0'=0, '1'=1, '2'=0.65), guide=F) +
 		scale_fill_manual('', values=rev(cols[1:c])) +
