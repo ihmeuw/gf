@@ -140,11 +140,6 @@ setnames(gms_data, gmsOld, gmsNew)
 
 gms_data = gms_data[, -c('standard_sda')]
 
-#Add grant period variable
-gms_data$grant_period = paste0(year(as.Date(gms_data$grant_period_start)), "-",year(as.Date(gms_data$grant_period_end)))
-gms_data = gms_data[, -c('grant_period_start', 'grant_period_end')]
-stopifnot(nrow(gms_data[is.na(year)])==0)
-
 #Relabel disease
 gms_data[, disease:=tolower(disease)]
 gms_data[disease == "hiv/aids", disease:='hiv']
@@ -154,10 +149,27 @@ gms_data[disease == 'tuberculosis', disease:='tb']
 # Make intervention "unspecified" for this whole dataset
 gms_data[, intervention:='unspecified']
 
-gms_data = gms_data[order(country, disease, grant, grant_period, start_date, end_date, year, module, budget, expenditure)]
+gms_data = gms_data[order(country, disease, grant, start_date, end_date, year, module, budget, expenditure)]
 
 gms_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
 
+# Do you have overlap in grant period here, or anything else that would signify PUDR semesters? 
+overlap = unique(gms_data[, .(grant, grant_period_start, grant_period_end, start_date, end_date)])
+overlap[, dup:=seq(0, nrow(overlap), by=1), by=c('grant', 'grant_period_start', 'grant_period_end')]
+overlap2 = unique(overlap[dup>0, .(grant, grant_period_start, grant_period_end)])
+
+for (i in 1:nrow(overlap2)){
+  gms_data[grant==overlap2$grant[i] & grant_period_start==overlap2$grant_period_start[i] & grant_period_end==overlap2$grant_period_end[i], date_overlap:=TRUE]
+}
+gms_data[is.na(date_overlap), date_overlap:=FALSE]
+
+#Count the number of rows that have overlap 
+gms_data[, count:=1]
+gms_data[, .(count=sum(count)), by='date_overlap']
+#Does the year always represent the right thing? 
+
+
+# Do we need to divide this up to the quarter-level? 
 #-------------------------------------------------
 # Compare two datasets to each other, and merge 
 #-------------------------------------------------
@@ -372,4 +384,6 @@ totalGos_qtr = totalGos_qtr[, -c('month')]
 
 #Add file currency in USD 
 totalGos_qtr$file_currency = "USD"
+
+print("Step B: Prep GOS data completed.")
 

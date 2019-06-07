@@ -11,12 +11,9 @@
 # - incorporate SICOIN checks again
 #--------------------------
 
-base_dir = "J:/Project/Evaluation/GF/resource_tracking/"
+base_dir = "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/"
 
-if (test_current_files == TRUE){
-  file_iterations <- readRDS(paste0(combined_output_dir, "/budget_pudr_iterations.rds"))
-  gos_data = readRDS(paste0(gos_prepped, "/prepped_gos_data.rds"))
-} else {
+if (test_current_files != TRUE){
   print("WARNING: TESTING ARCHIVED DATABASE. REVIEW SWITCH 'test_current_files'")
   # Old resource tracking database, for comparison. Was archived on Dec 3, 2018
   file_iterations = fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/archive/total_resource_tracking_data 12032018.csv")
@@ -26,43 +23,112 @@ if (test_current_files == TRUE){
   gos_data = file_iterations[type == 'gos']
   setnames(file_iterations, old=c('fileName', 'grant_number'), new=c('file_name', 'grant'))
   
+  #EMILY DO WE WANT TO KEEP THIS CHECK AROUND? CODE BELOW NO LONGER WORKS. 
+  
 }
 
 # -----------------------
 # Country-level tests 
 # -----------------------
-loc_names = c('cod', 'gtm', 'sen', 'uga')
-countries = c('DRC', 'Guatemala', 'Senegal', 'Uganda')
+loc_names = c('sen')
+countries = c('Senegal')
 
+all_failed_budgets = data.table() 
+all_failed_expenditures = data.table() 
+all_failed_absorption = data.table()
 for (i in 1:length(loc_names)){
-  #Sum budget by quarter for each country/file. 
-  budget_pudrs = file_iterations[loc_name == loc_names[i]]
-  budget_pudrs = budget_pudrs[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('file_name', 'start_date')]
+  loc_name = loc_names[i]
+  country = countries[i]
   
-  #Read in country-level tests. 
-  tests = fread(paste0(base_dir, "_gf_files_gos/", loc_names[i], "/", loc_names[i], "_tests.csv"))
-  tests[, start_date:=as.Date(start_date, format = "%m/%d/%Y")] 
-  assign(paste0(loc_names[i], "_tests"), tests) #Make a country-specific test file for summary statistics later. 
+  budgets = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_budgets.rds"))
+  expenditures = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_expenditures.rds"))
+  absorption = readRDS(paste0(base_dir, loc_name, "/prepped_data/absorption.rds"))
   
-  #Merge tests and data, and check this merge. 
-  merge <- merge(tests, budget_pudrs, by = c('start_date', 'file_name'))
-  if(nrow(merge) != nrow(tests)){
-    print(paste0("Warning: Not all ", countries[i], " tests merged."))
-    assign(paste0(loc_names[i], "_unmerged_tests") , tests[!file_name%in%merge$file_name, .(file_name)])
+  budget_tests = read.xlsx(paste0(base_dir, loc_name, "/", loc_name, "_tests.xlsx"), sheet="budget", detectDates=T)
+  expenditure_tests = read.xlsx(paste0(base_dir, loc_name, "/", loc_name, "_tests.xlsx"), sheet="expenditure", detectDates=T)
+  absorption_tests = read.xlsx(paste0(base_dir, loc_name, "/", loc_name, "_tests.xlsx"), sheet="absorption", detectDates=T)
+  
+  #----------------------------
+  # BUDGET
+  #---------------------------- 
+  budgets1 = budgets[, .(budget=sum(budget, na.rm=T)), by=c('file_name', 'start_date')] #Collapse budget file. 
+  budgets1 = merge(budgets1, budget_tests, by=c('file_name', 'start_date'))
+  budgets1[, correct_bug_sum:=round(correct_bug_sum)]
+  budgets1[, budget:=round(budget)]
+  
+  #Check to make sure everything merged 
+  if (nrow(budget_tests)!=nrow(budgets1)){
+    print(paste0("Some tests did not merge for ", country, ". Review merge."))
   }
-  assign(paste0(loc_names[i], "_not_tested"), unique(budget_pudrs[!file_name%in%merge$file_name, .(file_name)]))
-  if (nrow(get(paste0(loc_names[i], "_not_tested")))!=0){
-    print(paste0("ERROR: Some files in ", countries[i], " are not being tested."))
+  
+  #Check to make sure all files are being tested. 
+  untested_files = unique(budgets$file_name)
+  untested_files = untested_files[!untested_files%in%budgets1$file_name]
+  if (length(untested_files)!=0){
+    print(paste0("Some files are not being tested for ", country, "."))
+    print(untested_files)
+  }
+  
+  failed_budgets = budgets1[correct_bug_sum!=budget]
+  failed_budgets[, loc:=loc_name]
+  all_failed_budgets = rbind(all_failed_budgets, failed_budgets)
+ 
+  #----------------------------
+  # EXPENDITURE
+  #----------------------------
+  expenditures1 = expenditures[, .(expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'pudr_grant_year', 'semester')] #Collapse expenditure file. 
+  expenditures1 = merge(expenditures1, expenditure_tests, by=c('grant', 'grant_period', 'pudr_grant_year', 'semester'))
+  expenditures1[, correct_exp:=round(correct_exp)]
+  expenditures1[, expenditure:=round(expenditure)]
+  
+  #Check to make sure everything merged 
+  if (nrow(expenditure_tests)!=nrow(expenditures1)){
+    print(paste0("Some tests did not merge for ", country, ". Review merge."))
+  }
+  
+  #Check to make sure all files are being tested. 
+  untested_grants = unique(expenditures[, .(grant, grant_period, pudr_grant_year, semester)])
+  untested_grants[, concat:=paste0(grant, "_", grant_period, "_", pudr_grant_year, "_", semester)]
+  expenditures1[, concat:=paste0(grant, "_", grant_period, "_", pudr_grant_year, "_", semester)]
+  untested_grants = untested_grants[!concat%in%expenditures1$concat]
+  if (length(untested_files)!=0){
+    print(paste0("Some files are not being tested for ", country, "."))
+    print(untested_files)
+  }
+  
+  failed_expenditures = expenditures1[correct_exp!=expenditure]
+  failed_expenditures[, loc:=loc_name]
+  all_failed_expenditures = rbind(all_failed_expenditures, failed_expenditures) 
+  
+  #----------------------------
+  # ABSORPTION
+  #----------------------------
+  absorption1 = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')] #Collapse absorption file. 
+  absorption1[, absorption:=(expenditure/budget)*100]
+  absorption1 = merge(absorption1, absorption_tests, by=c('grant', 'grant_period', 'semester'))
+  for (var in c('budget', 'expenditure', 'absorption', 'correct_budget', 'correct_expenditure', 'correct_absorption')){
+    absorption1[, (var):=round(get(var), 2)]
   }
  
-  #Simplify numbers and format of merge data table
-  merge[, budget:=round(budget)]
-  merge[, expenditure:=round(expenditure)]
-  merge[, loc_name:=loc_names[i]] #For sorting out failed tests later. 
-  merge <- merge[, .(file_name, correct_bug_sum, correct_exp_sum, budget, expenditure, start_date, type, loc_name)]
+  #Check to make sure everything merged 
+  if (nrow(absorption_tests)!=nrow(absorption1)){
+    print(paste0("Some tests did not merge for ", country, ". Review merge."))
+  }
   
-  #Pull out which tests failed, i.e. where budget or expenditure did not match their expected values. 
-  assign(paste0(loc_names[i], "_failed_tests"), merge[correct_bug_sum!=budget | correct_exp_sum != expenditure], envir=.GlobalEnv)
+  #Check to make sure all files are being tested. 
+  untested_grants = unique(absorption[, .(grant, grant_period, semester)])
+  untested_grants[, concat:=paste0(grant, "_", grant_period, "_", semester)]
+  absorption1[, concat:=paste0(grant, "_", grant_period, "_", semester)]
+  untested_grants = untested_grants[!concat%in%absorption1$concat]
+  if (length(untested_files)!=0){
+    print(paste0("Some files are not being tested for ", country, "."))
+    print(untested_files)
+  }
+  
+  failed_absorption = absorption1[absorption!=correct_absorption]
+  failed_absorption[, loc:=loc_name]
+  all_failed_absorption = rbind(all_failed_absorption, failed_absorption)
+  
 }
 
 # ------------------

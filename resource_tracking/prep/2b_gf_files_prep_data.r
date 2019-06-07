@@ -196,3 +196,5 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expendi
 rt_files <- unique(resource_database$file_name)
 stopifnot(length(unique(file_list$file_name)) == length(rt_files))
 stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
+
+print("Step B: Prep GF files completed.")
