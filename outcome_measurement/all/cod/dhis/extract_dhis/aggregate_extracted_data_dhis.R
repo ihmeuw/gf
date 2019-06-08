@@ -44,28 +44,15 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 #---------------------------
-# source the necessary functions to download the data 
-# change the location of the sourced file to your home directory or source from J
-
-source(paste0(dir, 'code/dhis_extracting_functions.R')) 
-
-# check to make sure the package loaded by viewing a help file
-?extract_all_data
 
 #---------------------------
-# Input the start year, end year, and output directory
+# Set these to the correct values for the extraction:
 
 # select the start year and end year for the download
 start_year = '2017'
 end_year = '2018'
 start_month = '01'
 end_month = '01' # start month is inclusive, end month is exclusive
-
-# change the update year to before the data begins
-update_year = '2009'
-
-#identify the data set(s) you want to download by number (list below)
-set = 29
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
@@ -75,12 +62,12 @@ set_name = 'pnls'
 # read in all files and rbind together to save one file of data
 files = list.files( paste0('./pre_prep/', set_name, '/intermediate_data/'), recursive=TRUE)
 
-if (set_name=='base' | set_name=='sigl') {
-  keep_vars = read.xlsx(paste0(dir, 'catalogues/data_elements_cod.xlsx'))
-  keep_vars = data.table(keep_vars)
-  keep_vars[ , keep:=as.numeric(keep)]
-  keep_vars = keep_vars[keep==1, element_id]
-}
+# if (set_name=='base' | set_name=='sigl') {
+#   keep_vars = read.xlsx(paste0(dir, 'catalogues/data_elements_cod.xlsx'))
+#   keep_vars = data.table(keep_vars)
+#   keep_vars[ , keep:=as.numeric(keep)]
+#   keep_vars = keep_vars[keep==1, element_id]
+# }
 
 dt = data.table()
 # read in the files 
@@ -91,11 +78,11 @@ for(f in files) {
   current_data = data.table(readRDS(paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', f)))
   current_data[ , file:=vec ]
   
-  # subset to only the variables needed for large data sets
-  if (folder=='base' | folder=='sigl') {
-    current_data[ , data_element_ID:=as.character(data_element_ID)]
-    current_data = current_data[data_element_ID %in% keep_vars]  
-  } 
+  # # subset to only the variables needed for large data sets
+  # if (folder=='base' | folder=='sigl') {
+  #   current_data[ , data_element_ID:=as.character(data_element_ID)]
+  #   current_data = current_data[data_element_ID %in% keep_vars]
+  # }
   
   # append to the full data 
   if(i==1) dt = current_data
