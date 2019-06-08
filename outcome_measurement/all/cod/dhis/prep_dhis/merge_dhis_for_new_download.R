@@ -30,7 +30,7 @@ library(lubridate)
 # change the folder to the name of the data set you want to merge
 # this is the only argument to change 
 
-folder = 'base'
+folder = 'sigl'
 #---------------------------------
 
 # --------------------------------
@@ -138,13 +138,26 @@ if( nrow(unique(dt[, byVars, with = FALSE])) != nrow(dt)) stop( 'Unique identifi
 if (folder == "base"){
   # instead of using the overlap() function, just do this manually
   dt2 = readRDS(paste0( dir_pre_prep, 'base_01_2016_01_2019.rds'))
+  
+  dt2 = as.data.table(dt2)
+  dt2[ , data_element_ID:=as.character(data_element_ID)]
+  dt2 = dt2[data_element_ID %in% keep_vars]
+  dt2[ , date:=ymd(paste0(as.character(period), '01'))]
+  
+  dt2 = dt2[date <= "2017-12-01", ]
+  
+} else if (folder == "sigl"){
+  # instead of using the overlap() function, just do this manually
+  dt2 = readRDS(paste0( dir_pre_prep, 'sigl_01_2016_01_2019.rds'))
+  
+  dt2 = as.data.table(dt2)
+  dt2[ , data_element_ID:=as.character(data_element_ID)]
+  dt2 = dt2[data_element_ID %in% keep_vars]
+  dt2[ , date:=ymd(paste0(as.character(period), '01'))]
+  
+  dt2 = dt2[date <= "2016-12-01", ]
+  
 }
-dt2 = as.data.table(dt2)
-dt2[ , data_element_ID:=as.character(data_element_ID)]
-dt2 = dt2[data_element_ID %in% keep_vars]
-dt2[ , date:=ymd(paste0(as.character(period), '01'))]
-
-dt2 = dt2[date <= "2017-12-01", ]
 
 dt2[ , value:=as.character(value)]
 dt2[ , value:=as.numeric(value)]
@@ -267,6 +280,8 @@ x[health_zone3 != 'Zone' & health_zone2 != 'Zone', health_zone:=paste(health_zon
 x[health_zone3=='Zone', health_zone:=paste(health_zone1, health_zone2)]
 x[health_zone2=='Zone', health_zone:=health_zone1]
 x[ , c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
+
+dt = copy(x)
 #---------------------------------
 
 #---------------------------------
@@ -280,17 +295,6 @@ max = gsub('-', '_', max)
 # save a merged rds file 
 saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_', min, '_', max, '.rds' ))
 #---------------------------------
-
-#---------------------------------
-# save a subsetted version of pnls with only relevant variables
-# variables in pnls are repeated based on stratification 
-# drop duplicates and save
-
-if (folder=='pnls') {
-  dt = pnls_subset(dt)
-  saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_subset_', min, '_', max, '.rds' ))
-}
-#---------------------------------------
 
 
 
