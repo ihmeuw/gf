@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
-# Caitlin O'Brien-Carelli
+# Caitlin O'Brien-Carelli, Audrey Batzel
 #
-# 5/29/2019
+# 6/6/2019
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -35,13 +35,12 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 # source the merge and prep functions from the J Drive
 source(paste0(dir, 'code/merge_functions.R'))
 
-#---------------------------------
-
-#---------------------------------
 # change the folder to the name of the data set you want to merge
 # this is the only argument to change 
 
 folder = 'pnls'
+#---------------------------------
+
 #---------------------------------
 # create a vector of variables to subset the larger data sets 
 
@@ -75,19 +74,30 @@ setwd(paste0(dir, 'pre_prep/', folder, '/intermediate_data/'))
 files = list.files('./', recursive=TRUE)
 
 # read in the files
+# run as two loops due to file size limitations 
 i = 1
-for(f in files) {
+for(f in files[1:15]) {
  
-   #load the RDs file
+  #load the RDs file
   file_name = f
   current_data = data.table(readRDS(f))
   current_data[ , file:=file_name]
-  # 
-  # # add download number if it is not already included
-  # download = str_split(file_name, '_')[[1]][6]
-  # if (download=='first') current_data[ , download_number:=1]
-  # if (download=='second') current_data[ , download_number:=2]
+  
+  # add download number if it is not already included
+  if (folder=='pnls') { download = str_split(file_name, '_')[[1]][6]
+  if (download=='first') current_data[ , download_number:=1]
+  if (download=='second') current_data[ , download_number:=2] 
+  }
+  
+  # add a date variable
+  current_data[ ,period:=paste0(as.character(period), '01')]
+  current_data[ ,date:=as.Date(period, format='%Y%m%d')]
 
+  # create a date variable based on last update
+  current_data[ ,last_update:=as.character(last_update)]
+  current_data[ ,last_update:=unlist(lapply(str_split(last_update, 'T'), '[', 1))]
+  current_data[ ,last_update:=as.Date(last_update, format='%Y-%m-%d')]
+  
   # subset to only the variables needed for large data sets
   if (folder=='base' | folder=='sigl') {
   current_data[ , data_element_ID:=as.character(data_element_ID)]
@@ -97,25 +107,76 @@ for(f in files) {
   # append to the full data
   if(i==1) dt = current_data
   if(i>1)  dt = rbind(dt, current_data)
+  print(paste("Rbound", file_name, "to the full data"))
+  print(i)
+  
+  # save interim files to j in case the rbind fails 
+  if (i==15) saveRDS(dt, paste0(dir, 'pre_prep/', folder, '/', folder,'_first_half.rds'))
+  if (i==15) print("Completed first loop!")
   i = i+1
-
 }
 
+# read in the files for the second loop
+i = 1
+for(f in files[16:length(files)]) {
+  
+  #load the RDs file
+  file_name = f
+  current_data = data.table(readRDS(f))
+  current_data[ , file:=file_name]
+  
+  # add download number if it is not already included
+  if (folder=='pnls') { download = str_split(file_name, '_')[[1]][6]
+  if (download=='first') current_data[ , download_number:=1]
+  if (download=='second') current_data[ , download_number:=2] 
+  }
+
+  # add a date variable
+  current_data[ , period:=as.character(period)]
+  current_data[ , date:=ymd(paste0(period, '01'))] 
+  
+  # create a date variable based on last update
+  current_data[ , last_update:=as.character(last_update)]
+  current_data$last_update = unlist(lapply(str_split(current_data$last_update, 'T'), '[', 1))
+  current_data[ ,last_update:=ymd(last_update)]
+  
+  # subset to only the variables needed for large data sets
+  if (folder=='base' | folder=='sigl') {
+    current_data[ , data_element_ID:=as.character(data_element_ID)]
+    current_data = current_data[data_element_ID %in% keep_vars]
+  }
+  
+  # append to the full data
+  if(i==1) dt2 = current_data
+  if(i>1)  dt2 = rbind(dt2, current_data)
+  print(paste("Rbound", file_name, "to the full data"))
+  print(i)
+  
+  # save interim files to j in case the rbind fails 
+  if (i==(length(files)-15)) saveRDS(dt2, paste0(dir, 'pre_prep/', folder, '/', folder,'_second_half.rds'))
+  if (i==(length(files)-15)) print("Completed second loop!")
+  
+  i = i+1
+}
+
+# confirm it is a data able
+dt = data.table(dt)
+dt2 = data.table(dt2)
+
+# bind both iterations for a full data set
+dt = rbind(dt, dt2)
+
+# clean up the large files from the global environment
+dt2 = NULL
+
 #---------------------------------
-# do some initial formatting 
+# initial formatting 
 
 # remove the factoring of value to avoid errors
 # introduces some NAs as some values are NULL
-dt[ , value:=as.numeric(as.character(value))] 
-print(paste0("There are ,", dt[is.na(value), nrow(value)], " missing values in the raw data."))
-dt = dt[!is.na(value)] 
-
-# add a date variable
-dt[ , date:=ymd(paste0(as.character(period), '01'))]
-
-# create a date variable based on last update 
-dt[ , last_update:=as.character(last_update)]
-dt[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
+dt[ , value:=as.numeric(as.character(value))]
+print(paste0("There are ", dt[is.na(value), .N] , " missing values in the raw data."))
+dt = dt[!is.na(value)]
 
 #---------------------------------
 # save the interim raw data before the merge with the meta data 
@@ -124,16 +185,17 @@ dt[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
 min_date = dt[ , min(date)]
 min_date = gsub('-', '_', min_date)
 max_date = dt[ , max(date)]
-max_date = gsub('-', '_', max_date)
+max_date = gsub('-', '_', max_date) 
 
 # save the raw data before the merge 
-saveRDS(paste0(dir, 'pre_prep/', folder, '/', folder, min_date, '_', max_date, 'full.rds'))
+saveRDS(dt, paste0(dir, 'pre_prep/', folder, '/', folder, '_', min_date, '_', max_date, '_full.rds'))
 
 #---------------------------------
 # collapse across the file names 
 
-byVars = names(dt)[names(dt)!='download_number' & names(dt)!='file']
-dt[ , .(value=sum(value)), by=byVars]
+dt[ ,c('group', 'period'):=NULL]
+byVars = names(dt)[names(dt)!='download_number' & names(dt)!='file' & names(dt)!='value']
+dt = dt[ , .(value=sum(value)), by=byVars]
 
 #---------------------------------
 # merge in the meta data 
@@ -143,7 +205,7 @@ dt = merge_meta_data(dt)
 #---------------------------------
 # run the prep function to prepare some variables for use
 
-dt = prep_dhis(dt)
+dt = prep_dhis_geography(dt)
 #--------------------------------------
 # save the merged rds file 
 
