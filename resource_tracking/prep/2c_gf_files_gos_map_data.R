@@ -317,7 +317,7 @@ if (prep_files){
   #-------------------------------------------
   #1. Budgets 
   final_budgets = mapped_data[file_iteration == "final" & data_source == "fpm"] #Only want the final versions of budgets. 
-  final_budgets = final_budgets[, -c('expenditure', 'disbursement')]
+  final_budgets = final_budgets[, -c('expenditure', 'lfa_exp_adjustment', 'disbursement')]
   
   #-------------------------------------------
   #2. Expenditures 
@@ -434,13 +434,13 @@ if (prep_files){
     expenditures = expenditures[, -c('budget', 'disbursement')]
     
   } else { #If you don't have duplicate files, collapse your dataset to be in the same format. 
-    expenditures1 = expenditures[, .(expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'code', 'year', 'pudr_grant_year', 'semester', 'gf_module', 'gf_intervention', 'disease')]
-    expenditures1 = merge(expenditures1, pudr_labels, by=c('semester', 'pudr_grant_year'), all.x=T)
-    if (nrow(expenditures1[is.na(semester_code)])>0){
+    expenditures = expenditures[, .(expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'code', 'year', 'pudr_grant_year', 'semester', 'gf_module', 'gf_intervention', 'disease')]
+    expenditures = merge(expenditures, pudr_labels, by=c('semester', 'pudr_grant_year'), all.x=T)
+    if (nrow(expenditures[is.na(semester_code)])>0){
       stop("Some values of PUDR labels did not merge correctly onto expenditure dataset.")
     }
-    expenditures1 = expenditures1[, -c('semester', 'pudr_order', 'pudr_code')]
-    setnames(expenditures1, 'semester_code', 'semester')
+    expenditures = expenditures[, -c('semester', 'pudr_order', 'pudr_code')]
+    setnames(expenditures, 'semester_code', 'semester')
   }
 
   #-------------------------------------------

@@ -74,7 +74,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_modular_approach_pudr, args)
       
-      stopifnot(sort(names(tmpData)) == pudr_cols)
+      stopifnot(pudr_cols%in%names(tmpData))
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
     } else if (file_list$function_type[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 

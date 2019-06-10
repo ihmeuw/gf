@@ -13,7 +13,7 @@
 
 base_dir = "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/"
 
-if (test_current_files != TRUE){
+if (!test_current_files){
   print("WARNING: TESTING ARCHIVED DATABASE. REVIEW SWITCH 'test_current_files'")
   # Old resource tracking database, for comparison. Was archived on Dec 3, 2018
   file_iterations = fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/archive/total_resource_tracking_data 12032018.csv")
@@ -24,21 +24,30 @@ if (test_current_files != TRUE){
   setnames(file_iterations, old=c('fileName', 'grant_number'), new=c('file_name', 'grant'))
   
   #EMILY DO WE WANT TO KEEP THIS CHECK AROUND? CODE BELOW NO LONGER WORKS. 
-  
+} else {
+  all_budgets = readRDS(paste0(base_dir, "combined_prepped_data/final_budgets.rds"))
+  all_expenditures = readRDS(paste0(base_dir, "combined_prepped_data/final_expenditures.rds"))
+  all_absorption = readRDS(paste0(base_dir, "combined_prepped_data/absorption.rds"))
 }
 
 # -----------------------
 # Country-level tests 
 # -----------------------
-loc_names = c('sen')
-countries = c('Senegal')
+loc_names = c('cod', 'gtm', 'uga', 'sen')
+countries = c('DRC', 'Guatemala', 'Uganda', 'Senegal')
 
 all_failed_budgets = data.table() 
 all_failed_expenditures = data.table() 
 all_failed_absorption = data.table()
+
+all_untested_budgets = data.table() 
+all_untested_expenditures = data.table() 
+all_untested_absorption = data.table() 
 for (i in 1:length(loc_names)){
   loc_name = loc_names[i]
   country = countries[i]
+  print(paste0("TESTING ", country ))
+  print("...")
   
   budgets = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_budgets.rds"))
   expenditures = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_expenditures.rds"))
@@ -57,196 +66,155 @@ for (i in 1:length(loc_names)){
   budgets1[, budget:=round(budget)]
   
   #Check to make sure everything merged 
-  if (nrow(budget_tests)!=nrow(budgets1)){
-    print(paste0("Some tests did not merge for ", country, ". Review merge."))
+  if (nrow(budgets1[is.na(correct_bug_sum)])>0){
+    print(paste0("Some budget tests did not merge for ", country, ". Review merge.")) #EMILY WILL THIS EVER BE FLAGGED IN THIS SETUP? 
   }
   
   #Check to make sure all files are being tested. 
   untested_files = unique(budgets$file_name)
   untested_files = untested_files[!untested_files%in%budgets1$file_name]
   if (length(untested_files)!=0){
-    print(paste0("Some files are not being tested for ", country, "."))
-    print(untested_files)
+    print(paste0("Some budget files are not being tested for ", country, "."))
+    all_untested_budgets = rbind(all_untested_budgets, untested_files, fill=T)
   }
   
   failed_budgets = budgets1[correct_bug_sum!=budget]
   failed_budgets[, loc:=loc_name]
-  all_failed_budgets = rbind(all_failed_budgets, failed_budgets)
+  all_failed_budgets = rbind(all_failed_budgets, failed_budgets, fill=T)
  
   #----------------------------
   # EXPENDITURE
   #----------------------------
   expenditures1 = expenditures[, .(expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'pudr_grant_year', 'semester')] #Collapse expenditure file. 
-  expenditures1 = merge(expenditures1, expenditure_tests, by=c('grant', 'grant_period', 'pudr_grant_year', 'semester'))
+  expenditures1 = merge(expenditures1, expenditure_tests, by=c('grant', 'grant_period', 'pudr_grant_year', 'semester'), all.x=T)
   expenditures1[, correct_exp:=round(correct_exp)]
   expenditures1[, expenditure:=round(expenditure)]
   
   #Check to make sure everything merged 
-  if (nrow(expenditure_tests)!=nrow(expenditures1)){
-    print(paste0("Some tests did not merge for ", country, ". Review merge."))
+  if (nrow(expenditures1[is.na(correct_exp)])>0){
+    print(paste0("Some expenditure tests did not merge for ", country, ". Review merge."))
   }
   
   #Check to make sure all files are being tested. 
-  untested_grants = unique(expenditures[, .(grant, grant_period, pudr_grant_year, semester)])
+  untested_grants = unique(expenditures1[is.na(correct_exp), .(grant, grant_period, pudr_grant_year, semester)])
   untested_grants[, concat:=paste0(grant, "_", grant_period, "_", pudr_grant_year, "_", semester)]
   expenditures1[, concat:=paste0(grant, "_", grant_period, "_", pudr_grant_year, "_", semester)]
   untested_grants = untested_grants[!concat%in%expenditures1$concat]
-  if (length(untested_files)!=0){
-    print(paste0("Some files are not being tested for ", country, "."))
-    print(untested_files)
+  if (length(untested_grants)!=0){
+    print(paste0("Some expenditure numbers are not being tested for ", country, "."))
+    all_untested_expenditures = rbind(all_untested_expenditures, untested_grants, fill=T)
   }
   
   failed_expenditures = expenditures1[correct_exp!=expenditure]
   failed_expenditures[, loc:=loc_name]
-  all_failed_expenditures = rbind(all_failed_expenditures, failed_expenditures) 
+  all_failed_expenditures = rbind(all_failed_expenditures, failed_expenditures, fill=T) 
   
   #----------------------------
   # ABSORPTION
   #----------------------------
   absorption1 = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')] #Collapse absorption file. 
   absorption1[, absorption:=(expenditure/budget)*100]
-  absorption1 = merge(absorption1, absorption_tests, by=c('grant', 'grant_period', 'semester'))
+  absorption1 = merge(absorption1, absorption_tests, by=c('grant', 'grant_period', 'semester'), all.x=T)
   for (var in c('budget', 'expenditure', 'absorption', 'correct_budget', 'correct_expenditure', 'correct_absorption')){
     absorption1[, (var):=round(get(var), 2)]
   }
  
   #Check to make sure everything merged 
-  if (nrow(absorption_tests)!=nrow(absorption1)){
-    print(paste0("Some tests did not merge for ", country, ". Review merge."))
+  if (nrow(absorption1[is.na(correct_budget)])>0){
+    print(paste0("Some absorption tests did not merge for ", country, ". Review merge."))
   }
   
   #Check to make sure all files are being tested. 
-  untested_grants = unique(absorption[, .(grant, grant_period, semester)])
+  untested_grants = unique(absorption1[is.na(correct_budget), .(grant, grant_period, semester)])
   untested_grants[, concat:=paste0(grant, "_", grant_period, "_", semester)]
   absorption1[, concat:=paste0(grant, "_", grant_period, "_", semester)]
   untested_grants = untested_grants[!concat%in%absorption1$concat]
-  if (length(untested_files)!=0){
-    print(paste0("Some files are not being tested for ", country, "."))
-    print(untested_files)
+  if (length(untested_grants)!=0){
+    print(paste0("Some absorption numbers are not being tested for ", country, "."))
+    all_untested_absorption = rbind(all_absorption, untested_grants, fill=T)
   }
   
   failed_absorption = absorption1[absorption!=correct_absorption]
   failed_absorption[, loc:=loc_name]
-  all_failed_absorption = rbind(all_failed_absorption, failed_absorption)
+  all_failed_absorption = rbind(all_failed_absorption, failed_absorption, fill=T)
   
 }
 
 # ------------------
 # RSSH tests
 # ------------------
-print("...")
-rssh_tests <- fread(paste0(dir, "_gf_files_gos/rssh_tests.csv"))
-rssh_by_rt_code <- file_iterations[substring(code, 1, 1) == 'R']
-rssh_by_rt_code = rssh_by_rt_code[, .(rt_code_rssh = round(sum(budget, na.rm = TRUE))), by = c('file_name')]
-rssh_by_rt_code[is.na(rt_code_rssh), rt_code_rssh:=0]
-
-check_rssh <- merge(rssh_tests, rssh_by_rt_code, by = c('file_name'), all.y = TRUE)
-unwritten_rssh_tests = check_rssh[is.na(correct_rssh)]
-
-#unmerged_tests = anti_join(rssh_tests, rssh_by_rt_code, by='file_name')
-if(nrow(unwritten_rssh_tests)!=0){
-  print("ERROR: Some files are don't have a unit test written for RSSH. Review 'unwritten rssh tests'. ")
-}
-check_rssh = check_rssh[!is.na(correct_rssh)]
-
-failed_rssh_tests = check_rssh[correct_rssh!=rt_code_rssh]
+# print("...")
+# rssh_tests <- fread(paste0(dir, "_gf_files_gos/rssh_tests.csv"))
+# rssh_by_rt_code <- all_budgets[substring(code, 1, 1) == 'R']
+# rssh_by_rt_code = rssh_by_rt_code[, .(rt_code_rssh = round(sum(budget, na.rm = TRUE))), by = c('file_name')]
+# rssh_by_rt_code[is.na(rt_code_rssh), rt_code_rssh:=0]
+# 
+# check_rssh <- merge(rssh_tests, rssh_by_rt_code, by = c('file_name'), all.y = TRUE)
+# unwritten_rssh_tests = check_rssh[is.na(correct_rssh)]
+# 
+# #unmerged_tests = anti_join(rssh_tests, rssh_by_rt_code, by='file_name')
+# if(nrow(unwritten_rssh_tests)!=0){
+#   print("ERROR: Some files are don't have a unit test written for RSSH. Review 'unwritten rssh tests'. ")
+# }
+# check_rssh = check_rssh[!is.na(correct_rssh)]
+# 
+# failed_rssh_tests = check_rssh[correct_rssh!=rt_code_rssh]
 
 # ------------------
 # GOS Tests 
 # ------------------
 
-gos_tests = fread(paste0(dir, "_gf_files_gos/gos/gos_tests.csv"))
-
-gos_rssh = gos_data[substring(code, 1, 1)=='R']
-gos_rssh = gos_rssh[, .(gos_rssh = round(sum(budget, na.rm = TRUE))), by=c('grant')]
-
-gos_data[is.na(budget), budget:=0]
-gos_data[is.na(expenditure), expenditure:=0]
-gos_data = gos_data[ , 
-              lapply(.SD, sum) , 
-              by = 'grant', 
-              .SDcols = c("budget", "expenditure")]
-gos_data <- unique(gos_data)
-gos_data[, budget:=round(budget)]
-gos_data[, expenditure:=round(expenditure)]
-
-gos_data = merge(gos_data, gos_rssh, by='grant', all = TRUE)
-gos_merge = merge(gos_data, gos_tests, by='grant', all.x = TRUE)
-
-#Find failed tests and untested grants 
-untested_gos = gos_merge[is.na(correct_bug_sum)]
-if (nrow(untested_gos)!=0){
-  print("ERROR: Some GOS grants don't have tests written for them. Review 'untested gos'.")
-}
-gos_merge = gos_merge[!is.na(correct_bug_sum)] #Only review failures for tests you've written and merged. 
-failed_gos_rssh = gos_merge[gos_rssh!=correct_rssh]
-failed_tests_gos = gos_merge[correct_bug_sum!=budget | correct_exp_sum != expenditure]
+# gos_tests = fread(paste0(dir, "_gf_files_gos/gos/gos_tests.csv"))
+# 
+# gos_rssh = gos_data[substring(code, 1, 1)=='R']
+# gos_rssh = gos_rssh[, .(gos_rssh = round(sum(budget, na.rm = TRUE))), by=c('grant')]
+# 
+# gos_data[is.na(budget), budget:=0]
+# gos_data[is.na(expenditure), expenditure:=0]
+# gos_data = gos_data[ , 
+#               lapply(.SD, sum) , 
+#               by = 'grant', 
+#               .SDcols = c("budget", "expenditure")]
+# gos_data <- unique(gos_data)
+# gos_data[, budget:=round(budget)]
+# gos_data[, expenditure:=round(expenditure)]
+# 
+# gos_data = merge(gos_data, gos_rssh, by='grant', all = TRUE)
+# gos_merge = merge(gos_data, gos_tests, by='grant', all.x = TRUE)
+# 
+# #Find failed tests and untested grants 
+# untested_gos = gos_merge[is.na(correct_bug_sum)]
+# if (nrow(untested_gos)!=0){
+#   print("ERROR: Some GOS grants don't have tests written for them. Review 'untested gos'.")
+# }
+# gos_merge = gos_merge[!is.na(correct_bug_sum)] #Only review failures for tests you've written and merged. 
+# failed_gos_rssh = gos_merge[gos_rssh!=correct_rssh]
+# failed_tests_gos = gos_merge[correct_bug_sum!=budget | correct_exp_sum != expenditure]
 
 # ------------------------------------
 # Print results and summary statistics
 # ------------------------------------
 {
 
-#Country statistics 
-for (i in 1:length(loc_names)){
-  assign(paste0(loc_names[i], "_filelist"), fread(paste0(dir, "_gf_files_gos/", loc_names[i], "/raw_data/", loc_names[i], "_budget_filelist.csv"))) #The raw country file list. 
-  assign(paste0(loc_names[i], "_unique_tests"), get(paste0(loc_names[i], "_tests"))[!duplicated(file_name)]) #A full DT of the unique files tested. 
-  assign(paste0(loc_names[i], "_tested_grants"), unique(get(paste0(loc_names[i], "_tests"))[, .(file_name)])) #A unique list of the file names tested.
-}
-  
+  #Country statistics 
   print("...")
-failed_tests <- rbind(gtm_failed_tests, cod_failed_tests, uga_failed_tests, sen_failed_tests, fill = TRUE)
-failed_rssh_tests = rbind(failed_rssh_tests, failed_gos_rssh, fill = TRUE)
+  print("...")
+  print("UNIT TEST RESULTS") 
+  print(paste0("Total number of failed budget tests: ", nrow(all_failed_budgets)))
+  print(paste0("Total number of failed expenditure tests: ", nrow(all_failed_expenditures)))
+  print(paste0("Total number of failed absorption tests: ", nrow(all_failed_absorption)))
+  print("...")
   
-if (nrow(failed_tests) != 0 | nrow(failed_rssh_tests)!=0){
-  print("Unit tests failed; review budget calculations.")
-
-  for (i in 1:length(loc_names)){
-    n_failed = nrow(failed_tests[loc_name==loc_names[i]])
-    unique_tests = nrow(get(paste0(loc_names[i], "_tested_grants")))
-    fail_pct = round(((n_failed/unique_tests)*100), 2)
-    print(paste0(n_failed, " ", countries[i], " tests failed (", fail_pct, "%) of unique files."))
-    print("...")
+  # Flag if any files did not merge 
+  if (nrow(all_untested_budgets) + nrow(all_untested_expenditures) + nrow(all_untested_absorption)>0){
+    print("SOME FINAL DATA IS NOT BEING TESTED; REVIEW UNTESTED FILES.")
   }
- 
-} else {
-  print("All unit tests passed.")
-  print("...")
-}
+  
+  #Flag if any unit tests have failed. 
+  if (nrow(all_failed_budgets) + nrow(all_failed_expenditures) + nrow(all_failed_absorption)>0){
+    print("UNIT TESTS FAILED; REVIEW PREP CODE")
+  }
 
-# #Country statistics 
-# for (i in 1:length(loc_names)){
-#   print(paste0("Testing ", round(all_tests[type == "pudr", .N]/filelist[type == "pudr", .N]*100, 2), "% of PUDRs and ", 
-#                round(gtm_tests_nodup[type != "pudr", .N]/gtm_filelist[type != "pudr", .N]*100, 2), "% of budgets in Guatemala"))
-#   
-# }
-
-
-# print(paste0("Testing ", round(gtm_tests_nodup[type == "pudr", .N]/gtm_filelist[type == "pudr", .N]*100, 2), "% of PUDRs and ", 
-#              round(gtm_tests_nodup[type != "pudr", .N]/gtm_filelist[type != "pudr", .N]*100, 2), "% of budgets in Guatemala"))
-# print(paste0("Testing ", round(nrow(unique(gtm_filelist[grant_status=='active' & file_name%in%gtm_tested_grants$file_name, .(file_name)]))/nrow(unique(gtm_filelist[grant_status=='active', .(file_name)]))*100, 2), 
-#              "% of active files and ", round(nrow(unique(gtm_filelist[grant_status=='not_active' & file_name%in%gtm_tested_grants$file_name, .(file_name)]))/nrow(unique(gtm_filelist[grant_status=='not_active', .(file_name)]))*100, 2)
-#              , "% of not active files Guatemala"))
-# print("...")
-
-
-# total_tests <- nrow(cod_tests) + nrow(gtm_tests) + nrow(uga_tests) + nrow(sen_tests)
-# total_merges <- nrow(cod_merge) + nrow(gtm_merge) + nrow(uga_merge) + nrow(sen_merge)
-# total_unmerged <- total_tests - total_merges
-# 
-# print(paste0("Total merged tests that failed either a budget or expenditure calculation: ", round(nrow(failed_tests)/total_merges*100, 2), "%")) #Total failed tests over total of rows of merge datasets. 
-# print(paste0("Total tests that failed, including non-merges: ", round((total_unmerged + nrow(failed_tests))/total_tests*100, 2), "%")) #/total tests 
-# print(paste0("Total tests merged: ", total_merges, " out of ", total_tests, ", or ", round((total_merges/total_tests)*100, 2), "%"))
-# print(paste0("Total RSSH tests failed: ", nrow(failed_rssh_tests)))
-# print(paste0("Percentage of RSSH tests failed: ", round(nrow(failed_rssh_tests)/nrow(check_rssh)*100, 2), "%"))
-# 
-
-#What are the files you need to review? Only keep these, so it's easier to go through them. 
-rm(list= ls()[!(ls() %in% c('failed_tests','cod_failed_tests', 'gtm_failed_tests', 'uga_failed_tests', 'sen_failed_tests', 'failed_tests_gos',
-                            'cod_unmerged_tests', 'gtm_unmerged_tests', 'sen_unmerged_tests', 'uga_unmerged_tests', 
-                            'cod_not_tested', 'gtm_not_tested', 'sen_not_tested', 'uga_not_tested',
-                             'failed_rssh_tests', 'unwritten_rssh_tests',
-                            'untested_gos', 'combined_output_dir'))])
 
 
 }

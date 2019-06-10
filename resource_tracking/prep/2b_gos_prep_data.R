@@ -22,38 +22,38 @@ checkFile = paste0(gos_raw, "Grants missing intervention information in new GOS 
 # ----------------------------------------------
 
 #PREP OLD GOS 2015-2017 FILE 
-# {
-#   gos_data  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
-#                                      sheet=as.character('GOS Mod-Interv - Extract'), detectDates=TRUE))
-#   ## reset column names
-#   oldNames <- names(gos_data)
-#   newNames <- gsub("\\.", "_", oldNames)
-#   newNames = tolower(newNames)
-#   
-#   setnames(gos_data, oldNames, newNames)
-#   setnames(gos_data, c('financial_reporting_period_start_date', 'financial_reporting_period_end_date', "total_budget_amount_(in_budget_currency)", 
-#                        "total_expenditure_amount_(in_budget_currency)", "component", "grant_number"),
-#            c('start_date', 'end_date', 'budget', 'expenditure', 'disease', "grant"))
-#   
-#   #Keep only the columns you need 
-#   gos_data = gos_data[, .(country, grant, start_date, end_date, year, module, intervention, budget, expenditure, disease)]
-#   
-#   #Make budget and expenditure numeric
-#   gos_data[, budget:=as.numeric(budget)]
-#   gos_data[, expenditure:=as.numeric(expenditure)]
-#   
-#   #Fix disease column 
-#   gos_data[disease=="HIV/AIDS", disease:='hiv']
-#   gos_data[disease=="Malaria", disease:="malaria"]
-#   gos_data[disease=="Tuberculosis", disease:="tb"]
-#   gos_data[disease=="Health Systems Strengthening", disease:="rssh"]
-#   
-#   #Add file name 
-#   gos_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
-#   
-#   # EMILY - DO WE WANT TO SEE IF WE HAVE OTHER DATA QUALITY ISSUES IN THIS FILE? 
-# 
-# }
+{
+  gos_data  <- data.table(read.xlsx(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
+                                     sheet=as.character('GOS Mod-Interv - Extract'), detectDates=TRUE))
+  ## reset column names
+  oldNames <- names(gos_data)
+  newNames <- gsub("\\.", "_", oldNames)
+  newNames = tolower(newNames)
+
+  setnames(gos_data, oldNames, newNames)
+  setnames(gos_data, c('financial_reporting_period_start_date', 'financial_reporting_period_end_date', "total_budget_amount_(in_budget_currency)",
+                       "total_expenditure_amount_(in_budget_currency)", "component", "grant_number"),
+           c('start_date', 'end_date', 'budget', 'expenditure', 'disease', "grant"))
+
+  #Keep only the columns you need
+  gos_data = gos_data[, .(country, grant, start_date, end_date, year, module, intervention, budget, expenditure, disease)]
+
+  #Make budget and expenditure numeric
+  gos_data[, budget:=as.numeric(budget)]
+  gos_data[, expenditure:=as.numeric(expenditure)]
+
+  #Fix disease column
+  gos_data[disease=="HIV/AIDS", disease:='hiv']
+  gos_data[disease=="Malaria", disease:="malaria"]
+  gos_data[disease=="Tuberculosis", disease:="tb"]
+  gos_data[disease=="Health Systems Strengthening", disease:="rssh"]
+
+  #Add file name
+  gos_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
+
+  # EMILY - DO WE WANT TO SEE IF WE HAVE OTHER DATA QUALITY ISSUES IN THIS FILE?
+
+}
 
 #PREP NEW GOS 2015-2017 FILE 
 {
@@ -218,9 +218,7 @@ gms_data[, .(count=sum(count)), by='date_overlap']
 # gos_dates[!grant%in%gms_dates$grant, .(grant)]
 
 #Bind final datasets together
-#totalGos <- rbind(gms_data, gos_data, fill=TRUE)
-
-totalGos <- gms_data
+totalGos <- rbind(gms_data, gos_data, fill=TRUE)
 
 #Reformat modules/interventions for remapping
 totalGos[is.na(module), module:='unspecified']

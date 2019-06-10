@@ -14,6 +14,8 @@ prep_other_budget_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, p
   # start_date = file_list$start_date[i]
   # qtr_num = file_list$qtr_number[i]
   # period = file_list$period[i]
+  
+  TOTAL_ROW = 566 # For the file "GUA-M-MSPAS_SB_Y4-6a_IL8.xlsx", after this row is the total row and other data that you want to drop. Verify that this is correct for other files! 
 
   verified_files = c("GUA-M-MSPAS_SB_Y4-6a_IL8.xlsx")
   verified_sheets = c("Detailed Budget - Year 1", "Detailed Budget - Year 2", "Detailed Budget - Year 3")
@@ -74,8 +76,8 @@ prep_other_budget_gtm = function(dir, inFile, sheet_name, start_date, qtr_num, p
   #-------------------------------------
   # 2. Subset rows
   #-------------------------------------
-  gf_data = gf_data[!is.na(budget_q1) | is.na(module)]
-  gf_data = gf_data[!budget_q1 == 'Total amount']
+  gf_data = gf_data[budget_q1 != 'Total amount']
+  gf_data = gf_data[1:TOTAL_ROW, ]
   
   #-------------------------------------
   # 3. Reshape to the quarter-level. 

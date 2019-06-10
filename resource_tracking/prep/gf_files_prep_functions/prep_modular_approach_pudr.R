@@ -51,6 +51,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   intervention_col <- grep("Modular Approach - Interventions", gf_data)
   budget_col <- grep("Budget for Reporting Period", gf_data)
   expenditure_col <- grep("Actual Expenditure", gf_data)
+  lfa_adjustment_col <- grep("Local Fund Agent Adjustment on Expenditures", gf_data)
 
   #Remove the 'cumulative expenditure' and 'cumulative budget' columns.
   if (length(expenditure_col)!=1){
@@ -75,6 +76,10 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   stopifnot(length(budget_col)==1 & length(expenditure_col)==1)
   colnames(gf_data)[budget_col] <- "budget"
   colnames(gf_data)[expenditure_col] <- "expenditure"
+  if (sheet_name!="PR Expenditure_7A"){
+    stopifnot(length(lfa_adjustment_col)==1)
+    colnames(gf_data)[lfa_adjustment_col] <- "lfa_exp_adjustment"
+  }
 
   #Check to see if this file has module and intervention.
   if (is.na(module_col)){
@@ -92,11 +97,20 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   }
 
   #Subset to only these columns.
-  gf_data = gf_data[, .(module, intervention, budget, expenditure)]
+  if (sheet_name!="PR Expenditure_7A"){
+    gf_data = gf_data[, .(module, intervention, budget, expenditure, lfa_exp_adjustment)]
+  } else {
+    gf_data = gf_data[, .(module, intervention, budget, expenditure)]
+  }
   
-  #Make budget and expenditure numeric. 
+  #Make budget and expenditure numeric, and make LFA expenditure adjustment column 0 if NA (for subtraction later). 
   gf_data[, budget:=as.numeric(budget)]
   gf_data[, expenditure:=as.numeric(expenditure)]
+  
+  if (sheet_name!="PR Expenditure_7A"){
+    gf_data[, lfa_exp_adjustment:=as.numeric(lfa_exp_adjustment)]
+    gf_data[is.na(lfa_exp_adjustment), lfa_exp_adjustment:=0]
+  }
 
   #-------------------------------------
   # 2. Subset rows
@@ -180,6 +194,9 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #Split up budget and expenditure.
   gf_data[, budget:=budget/split]
   gf_data[, expenditure:=expenditure/split]
+  if (sheet_name!="PR Expenditure_7A"){
+    gf_data[, lfa_exp_adjustment:=lfa_exp_adjustment/split]
+  }
 
   #Make sure you haven't changed any budget/expenditure numbers, and clean up
   totals_check2 = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]
