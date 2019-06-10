@@ -101,11 +101,11 @@ for(f in files[1:15]) {
   current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
   
   # append to the full data
-  if(i==1) dt = current_data
-  if(i>1)  dt = rbind(dt, current_data)
+  if(i==1) dt1 = current_data
+  if(i>1)  dt1 = rbind(dt1, current_data)
   
-  if (i==15) saveRDS()
-    
+  # save the completed rbind for the first half of the data 
+  if (i==15) saveRDS(dt1, paste0(dir, 'pre_prep/', folder, '/', folder, '_first_half.rds'))
   i = i+1
 
 }
@@ -136,11 +136,17 @@ for(f in files[16:length(files)]) {
   current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
   
   # append to the full data
-  if(i==1) dt = current_data
-  if(i>1)  dt = rbind(dt, current_data)
+  if(i==1) dt2 = current_data
+  if(i>1)  dt2 = rbind(dt2, current_data)
+  
+  # save the completed rbind for the second half of the data 
+  if (i==length(files)) saveRDS(dt2, paste0(dir, 'pre_prep/', folder, '/', folder, '_second_half.rds'))
   i = i+1
   
 }
+
+# bind the two sets together
+dt = rbind(dt1, dt2)
 
 #---------------------------------
 # remove the factoring of value to avoid errors
