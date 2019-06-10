@@ -33,7 +33,7 @@ dt$result = factor(dt$result, c("indeterminate", "nonreactive",
                    c("Indeterminate result", "Non-reactive", "Reactive", 
                      "Test not done"))
 
-pdf(paste0(dir, 'outputs/sigpro_data_quality_visuals.pdf'), height=6, width=9)
+pdf(paste0(dir, 'outputs/sigpro_data_quality_visuals.pdf'), height=8, width=12)
 
 #----------------------------------------
 # tests performed by data set
@@ -47,7 +47,7 @@ ggplot(set, aes(x=date, y=value, color=set)) +
   labs(x="Date", y="Count", color="Excel sheet", 
        title="Number of screenings and tests performed by data set*",
        subtitle="*sigpro_f1 includes pregnant women, while other sheets do not") +
-       theme(text = element_text(size=18))
+       theme(text = element_text(size=16))
 
 #----------------------------------------
 # number of people screened and tested by gender
@@ -73,7 +73,7 @@ ggplot(tests[result=='Reactive' | result=='Non-reactive'], aes(x=date, y=value, 
   labs(x="Date", y="Count", color="Gender", 
        title="Test results by gender identity", 
        subtitle="Excludes indeterminate results") +
-        theme(text = element_text(size=18))
+        theme(text = element_text(size=16))
 
 #----------------------------------------
 # by sr code and sr code/data set 
@@ -99,7 +99,7 @@ ggplot(code_set, aes(x=date, y=value, color=sr_code)) +
   facet_wrap(~set, scales='free_y') +
   labs(x="Date", y="Count", color="SR code", 
        title="Number of screenings and tests performed by data set and SR code") +
-  theme(text = element_text(size=18))
+  theme(text = element_text(size=16))
 
 #----------------------------------------
 # screenings and tests performed by department
@@ -113,7 +113,7 @@ ggplot(dep, aes(x=date, y=value, color=department)) +
   labs(x="Date", y="Count", color="Department", 
        title="Number of screenings and tests performed by Department",
        subtitle="First data set in the time series is missing geographic information") +
-  theme(text = element_text(size=18))
+  theme(text = element_text(size=16))
 
 #----------------------------------------
 
