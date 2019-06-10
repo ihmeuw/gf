@@ -6,7 +6,6 @@
 # The current working directory should be the root of this repo (set manually by user)
 # ------------------------------------------------
 
-source('./impact_evaluation/drc/set_up_r.r')
 library(GGally)
 
 # --------------------------------------------------------------------
@@ -16,17 +15,17 @@ library(GGally)
 load(outputFile4a)
 
 # load model object
-modelVersion = 'drc_malaria6'
-source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
+modelVersion = 'gtm_tb_first_half1'
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 
 # load "node table" for convenient labels
 nodeTable = fread(nodeTableFile1)
 
 # sample n random health zones to graph
 n = 6
-hzs = sample(data$health_zone, n)
-sample = data[health_zone %in% hzs]
-sample_untr = untransformed[health_zone %in% hzs]
+dpts = sample(data$department, n)
+sample = data[department %in% dpts]
+sample_untr = untransformed[department %in% dpts]
 # --------------------------------------------------------------------
 
 
@@ -34,7 +33,7 @@ sample_untr = untransformed[health_zone %in% hzs]
 # Set up to graph
 
 # parse model object
-parsedModel = lavParseModelString(model)
+parsedModel = lavParseModelString(model) #THIS LINE IS CREATING AN ERROR FOR ME - EMILY LINEBARGER 6/10/19
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 
 # organize completeness variables last, remove date
