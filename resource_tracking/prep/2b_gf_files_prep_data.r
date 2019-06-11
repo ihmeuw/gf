@@ -138,6 +138,10 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))
   
+  #If you don't have lfa_exp_adjustment in any of the files for this country, add it as NA so checks later will work. 
+  if (!'lfa_exp_adjustment'%in%names(resource_database)){
+    resource_database[, lfa_exp_adjustment:=NA]
+  }
   
 } else {
   resource_database <- readRDS(paste0(dir, "_gf_files_gos/", country, "/prepped_data/raw_bound_gf_files.RDS"))
