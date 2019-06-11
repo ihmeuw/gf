@@ -186,84 +186,21 @@ saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets.rds"))
 #----------------------------------
 # Merge all 3 countries 
 final_expenditures_cod = readRDS(paste0(cod_prepped, "final_expenditures.rds"))
+final_expenditures_cod[, loc_name:='cod']
 final_expenditures_gtm = readRDS(paste0(gtm_prepped, "final_expenditures.rds"))
+final_expenditures_gtm[, loc_name:='gtm']
 final_expenditures_uga = readRDS(paste0(uga_prepped, "final_expenditures.rds"))
+final_expenditures_uga[, loc_name:='uga']
 final_expenditures_sen = readRDS(paste0(sen_prepped, "final_expenditures.rds"))
+final_expenditures_sen[, loc_name:='sen']
 
 #Bind expenditures together
 final_expenditures = rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, final_expenditures_sen, fill = TRUE) 
 
-#Wherever there is a grant quarter in the final budgets that doesn't exist in GOS, take that whole grant for the grant 
-# period and replace the GOS with the final budgets data. 
-gos_data[, start_date:=as.Date(start_date)]
-gos_prioritized_expenditures = final_expenditures
-
-# #Bind the files together. 
-# gos_prioritized_expenditures = rbind(final_expenditures, gos_data, fill = TRUE) #There are some columns that don't exist in both sources, so fill = TRUE
-# 
-# #Check for overlapping grant periods in recent data. 
-# grant_period_mat = unique(gos_prioritized_expenditures[, .(data_source, grant, grant_period, file_name, start_date)])
-# grant_period_mat[, min_date:=min(start_date), by=c('file_name', 'grant', 'grant_period', 'data_source')]
-# grant_period_mat[, max_date:=max(start_date), by=c('file_name', 'grant', 'grant_period', 'data_source')]
-# grant_period_mat = unique(grant_period_mat[, .(min_date, max_date, grant, grant_period, data_source)])
-# grant_period_mat = dcast.data.table(grant_period_mat, grant+grant_period~data_source, value.var = c("min_date", "max_date"))
-# 
-# #Reorder this data table. 
-# grant_period_mat = grant_period_mat[, .(grant, grant_period, min_date_fpm, max_date_fpm, min_date_gos, max_date_gos)]
-# 
-# #I only care about cases where we have the same data source reporting for the same grant period/grant, so drop NAs. 
-# grant_period_mat = grant_period_mat[!(is.na(min_date_fpm) & is.na(max_date_fpm))]
-# grant_period_mat = grant_period_mat[!(is.na(min_date_gos) & is.na(max_date_gos))]
-# 
-# #Do these sources conflict? 
-# grant_period_mat[max_date_gos>min_date_fpm, conflict:=TRUE]
-# grant_period_mat = grant_period_mat[conflict==TRUE]
-# if (nrow(grant_period_mat)>0){
-#   print("Warning: Duplicate dates present in GOS and final expenditures files.")
-#   print(grant_period_mat)
-#   
-#   #Build up the list of grant quarters you need to drop from GOS
-#   drop_gos = data.table()
-#   for (i in 1:nrow(grant_period_mat)){
-#     quarters = unique(gos_prioritized_expenditures[data_source == 'gos' & grant==grant_period_mat$grant[i] & grant_period==grant_period_mat$grant_period[i] & 
-#                                                 start_date>=grant_period_mat$min_date_fpm[i], 
-#                                               .(grant, grant_period, start_date)])
-#     drop_gos = rbind(drop_gos, quarters, fill=TRUE)
-#   }
-#   print("Dropping the following quarters from GOS data")
-#   print(drop_gos)
-#   for (i in 1:nrow(drop_gos)){
-#     gos_prioritized_expenditures = gos_prioritized_expenditures[!(
-#       data_source=='gos' & 
-#         grant==drop_gos$grant[i] & 
-#         grant_period==drop_gos$grant_period[i] & 
-#         start_date==drop_gos$start_date[i]
-#     )]
-#   }
-#   
-# }
-# 
-# #Look for what might be data gaps between GOS and expenditure data (EMILY - WOULD BE GOOD TO EXPAND THIS CHECK TO LOOK FOR DATA GAPS IN GENERAL)
-# gos_in_expenditures = gos_data[grant%in%final_expenditures$grant, .(start_date, grant)] 
-# expenditure_dates = final_expenditures[, .(expenditure_start = min(start_date)), by='grant']
-# gos_in_expenditures = gos_in_expenditures[, .(gos_end = max(start_date)), by='grant']
-# date_check = merge(gos_in_expenditures, expenditure_dates, by=c('grant'))
-# date_check = date_check[gos_end!=expenditure_start]
-# if (nrow(date_check)!=0){
-#   print("Warning: There are potential reporting gaps between GOS and final expenditures. Review output 'Gaps between expenditures and GOS' in GOS folder.")
-#   write.csv(date_check, paste0(dir, "_gf_files_gos/gos/Gaps between expenditures and GOS.csv"), row.names=FALSE)
-# }
-# 
-# # Verify data 
-# na_year = gos_prioritized_expenditures[is.na(year)]
-# stopifnot(nrow(na_year)==0)
-# 
-# #Check that you've got the current grants right. 
-# all_current_grants = unique(gos_prioritized_expenditures[current_grant==TRUE, .(grant, grant_period, file_name)])
-# expected_current_grants = length(current_gtm_grants) + length(current_uga_grants) + length(current_cod_grants) + length(current_sen_grants)
-# if (nrow(all_current_grants)!=expected_current_grants){
-#   print("ERROR: Not all current grants are marked with the 'current_grant' flag in expenditures.")
-# }
+#For final expenditures, to reduce data gaps, use GOS through 2017 and then PUDRs after that. 
+final_expenditures = final_expenditures[year>=2018]
+gos_expenditures = gos_data[year<2018]
+gos_prioritized_expenditures = rbind(final_expenditures, gos_expenditures, use.names=TRUE, fill=TRUE)
 
 # Write data 
 write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)

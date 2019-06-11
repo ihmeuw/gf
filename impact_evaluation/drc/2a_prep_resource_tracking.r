@@ -15,75 +15,9 @@
 #------------------------------------
 
 
-#Temporary prep binding together gos data and final expenditures. EKL 3/25/19
-gos_data = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/prepped_data/prepped_gos_data.rds")
-setDT(gos_data)
-gos_data = gos_data[country=="Congo (Democratic Republic)"]
-gos_data[, loc_name:='cod']
-gos_grants_to_keep = unique(gos_data[disease=='malaria', .(grant)])
-gos_grants_to_keep = gos_grants_to_keep[!is.na(grant)]
-gos_data = gos_data[grant%in%gos_grants_to_keep$grant]
-gos_data[, start_date:=as.Date(start_date)]
-gos_data[, end_date:=as.Date(end_date)]
-
-#Expand GOS to be at the quarter-level; the same as the final expenditures 
-totals_check = gos_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'grant_period')][order(grant, grant_period)]
-gos_data[, time_diff:=end_date-start_date]
-gos_data[, num_quarters:=as.numeric(round(time_diff/90))] #90 days in each period
-
-#Expand data by num_quarters, and generate a variable to iterate over
-gos_data <- expandRows(gos_data, "num_quarters")
-byVars = names(gos_data)
-gos_data[, seq:=seq(0, 100, by=1), by=byVars]
-
-#Increment the start date, and split up budget and expenditure. 
-gos_data[, start_date:=start_date + months(3*seq)]
-gos_data[, time_diff:=as.numeric(round(time_diff/90))]
-gos_data[, budget:=budget/time_diff]
-gos_data[, expenditure:=expenditure/time_diff]
-
-#Make sure you haven't changed any budget/expenditure numbers, and clean up
-totals_check2 = gos_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'grant_period')][order(grant, grant_period)]
-for (i in 1:nrow(totals_check)){
-  stopifnot(totals_check$budget[i]==totals_check2$budget[i] | totals_check$expenditure[i]==totals_check2$expenditure[i])
-}
-gos_data = gos_data[, -c('time_diff', 'seq', 'end_date')]
-
-#Read in final expenditure data 
-cod_data = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/prepped_data/final_expenditures.rds")
-setDT(cod_data)
-cod_grants_to_keep = unique(cod_data[disease=='malaria', .(grant)])
-cod_grants_to_keep = cod_grants_to_keep[!is.na(grant)]
-cod_data = cod_data[grant%in%cod_grants_to_keep$grant]
-
-#Expand expenditure data to be at the quarter-level (hacky fix adding in end dates here; need to be added in prep function)
-totals_check = cod_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'grant_period')][order(grant, grant_period)]
-cod_data[file_name=='COD-M-MOH_PU 30 Juin2018_Révision du 29 Oct 2018.xlsx', end_date:=as.Date("2018-06-30")]
-cod_data[file_name=='COD-M-SANRU - PU 30 june 2018 - Révision Oct2018 (final)_IHME.xlsx', end_date:=as.Date("2018-06-30")]
-cod_data[file_name=='Final LFA_COD-M-MOH_PUDR_S2_201631032017.xlsx', end_date:=as.Date("2018-12-31")]
-
-cod_data[, time_diff:=end_date-start_date]
-cod_data[, num_quarters:=as.numeric(round(time_diff/90))] #90 days in each period
-
-#Expand data by num_quarters, and generate a variable to iterate over
-cod_data <- expandRows(cod_data, "num_quarters")
-byVars = names(cod_data)
-cod_data[, seq:=seq(0, 100, by=1), by=byVars]
-
-#Increment the start date, and split up budget and expenditure. 
-cod_data[, start_date:=start_date + months(3*seq)]
-cod_data[, time_diff:=as.numeric(round(time_diff/90))]
-cod_data[, budget:=budget/time_diff]
-cod_data[, expenditure:=expenditure/time_diff]
-
-#Make sure you haven't changed any budget/expenditure numbers, and clean up
-totals_check2 = cod_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'grant_period')][order(grant, grant_period)]
-for (i in 1:nrow(totals_check)){
-  stopifnot(totals_check$budget[i]==totals_check2$budget[i] | totals_check$expenditure[i]==totals_check2$expenditure[i])
-}
-cod_data = cod_data[, -c('time_diff', 'seq', 'end_date')]
-
-final_expenditures = rbind(gos_data, cod_data, fill=TRUE)
+#Final Expenditures (includes GOS)
+final_expenditures = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures.rds")
+final_expenditures = final_expenditures[loc_name=="cod"]
 
 #------------------------------------
 #Read in previously prepped datasets 
