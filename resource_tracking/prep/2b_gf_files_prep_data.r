@@ -37,9 +37,9 @@ if (prep_files == TRUE){
     print("There are duplicates in final files - review file list.")
   }
   
-  pudr_dup = unique(file_list[data_source=="pudr", .(grant, grant_period, pudr_semester, file_name)])
-  pudr_dup[, pudr_dup:=seq(0, nrow(pudr_dup), by=1), by=c('grant', 'grant_period', 'pudr_semester')]
-  if (nrow(file_list$pudr_dup==1)>0){
+  file_list[data_source=="pudr" & file_iteration=="final", pudr_dup:=seq(0, nrow(file_list), by=1), by=c('grant', 'grant_period', 'pudr_semester')]
+  if (nrow(file_list[pudr_dup>0 & !is.na(pudr_dup)])>0){
+    print(file_list[pudr_dup>0 & !is.na(pudr_dup)])
     stop("There are duplicates in PUDRs between semesters - review file list.")
   }
 }

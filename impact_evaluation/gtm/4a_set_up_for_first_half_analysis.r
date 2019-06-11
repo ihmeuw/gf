@@ -24,7 +24,7 @@ data = readRDS(outputFile3)
 # 	complVars = names(data)[grepl('completeness',names(data))]
 # 	for(v in complVars) data[get(v)>1, (v):=get(v)/100]
 # 
-# # subset dates now that cumulative variables are computed
+# # subset dates now that cumulative variables are computed (MOVE THIS AFTER CUMULATIVE SUMS EMILY)
 # data = data[date>=2010 & date<2018.75]
 # -----------------------------------------------------------------
 

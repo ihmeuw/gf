@@ -61,13 +61,13 @@ for (i in 1:length(loc_names)){
   # BUDGET
   #---------------------------- 
   budgets1 = budgets[, .(budget=sum(budget, na.rm=T)), by=c('file_name', 'start_date')] #Collapse budget file. 
-  budgets1 = merge(budgets1, budget_tests, by=c('file_name', 'start_date'))
+  budgets1 = merge(budgets1, budget_tests, by=c('file_name', 'start_date'), all.y=T)
   budgets1[, correct_bug_sum:=round(correct_bug_sum)]
   budgets1[, budget:=round(budget)]
   
   #Check to make sure everything merged 
   if (nrow(budgets1[is.na(correct_bug_sum)])>0){
-    print(paste0("Some budget tests did not merge for ", country, ". Review merge.")) #EMILY WILL THIS EVER BE FLAGGED IN THIS SETUP? 
+    print(paste0("Some budget tests did not merge for ", country, ". Review merge."))  
   }
   
   #Check to make sure all files are being tested. 
@@ -86,13 +86,13 @@ for (i in 1:length(loc_names)){
   # EXPENDITURE
   #----------------------------
   expenditures1 = expenditures[, .(expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'pudr_grant_year', 'semester')] #Collapse expenditure file. 
-  expenditures1 = merge(expenditures1, expenditure_tests, by=c('grant', 'grant_period', 'pudr_grant_year', 'semester'), all.x=T)
+  expenditures1 = merge(expenditures1, expenditure_tests, by=c('grant', 'grant_period', 'pudr_grant_year', 'semester'), all.y=T)
   expenditures1[, correct_exp:=round(correct_exp)]
   expenditures1[, expenditure:=round(expenditure)]
   
   #Check to make sure everything merged 
   if (nrow(expenditures1[is.na(correct_exp)])>0){
-    print(paste0("Some expenditure tests did not merge for ", country, ". Review merge."))
+    print(paste0("Some expenditure tests did not merge for ", country, ". Review merge.")) 
   }
   
   #Check to make sure all files are being tested. 
@@ -100,7 +100,7 @@ for (i in 1:length(loc_names)){
   untested_grants[, concat:=paste0(grant, "_", grant_period, "_", pudr_grant_year, "_", semester)]
   expenditures1[, concat:=paste0(grant, "_", grant_period, "_", pudr_grant_year, "_", semester)]
   untested_grants = untested_grants[!concat%in%expenditures1$concat]
-  if (length(untested_grants)!=0){
+  if (nrow(untested_grants)!=0){
     print(paste0("Some expenditure numbers are not being tested for ", country, "."))
     all_untested_expenditures = rbind(all_untested_expenditures, untested_grants, fill=T)
   }
@@ -114,7 +114,7 @@ for (i in 1:length(loc_names)){
   #----------------------------
   absorption1 = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')] #Collapse absorption file. 
   absorption1[, absorption:=(expenditure/budget)*100]
-  absorption1 = merge(absorption1, absorption_tests, by=c('grant', 'grant_period', 'semester'), all.x=T)
+  absorption1 = merge(absorption1, absorption_tests, by=c('grant', 'grant_period', 'semester'), all.y=T)
   for (var in c('budget', 'expenditure', 'absorption', 'correct_budget', 'correct_expenditure', 'correct_absorption')){
     absorption1[, (var):=round(get(var), 2)]
   }
@@ -129,9 +129,9 @@ for (i in 1:length(loc_names)){
   untested_grants[, concat:=paste0(grant, "_", grant_period, "_", semester)]
   absorption1[, concat:=paste0(grant, "_", grant_period, "_", semester)]
   untested_grants = untested_grants[!concat%in%absorption1$concat]
-  if (length(untested_grants)!=0){
+  if (nrow(untested_grants)!=0){
     print(paste0("Some absorption numbers are not being tested for ", country, "."))
-    all_untested_absorption = rbind(all_absorption, untested_grants, fill=T)
+    all_untested_absorption = rbind(all_untested_absorption, untested_grants, fill=T)
   }
   
   failed_absorption = absorption1[absorption!=correct_absorption]
