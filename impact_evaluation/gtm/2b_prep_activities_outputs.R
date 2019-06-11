@@ -14,6 +14,8 @@ outputs = fread(outputsFile)
 #Add _ to names of data. 
 names(activities) = gsub(" ", "_", names(activities))
 names(outputs) = gsub(" ", "_", names(outputs))
+names(activities) = gsub("/", "_", names(activities))
+names(outputs) = gsub("/", "_", names(outputs))
 
 #----------------------------------------------------
 # Validate files, and subset data. 
@@ -68,7 +70,7 @@ names(dep_level_o) = gsub("_d", "", names(dep_level_o))
 dep_level_o = unique(dep_level_o)
 
 mun_level_o = outputs[, .(date, department, Cases_Notified_value_m, Additional_Cases_Detected_via_ACF_value_m, PLHIV_started_on_IPT_value_m,
-                             Children_in_Contact_with_TB_Started_IPT_value_m, `HIV/TB_Cases_Notified_value_m`, Cases_Started_on_Treatment_in_Prisons_value_m)] #Don't need municipality here. 
+                             Children_in_Contact_with_TB_Started_IPT_value_m, `HIV_TB_Cases_Notified_value_m`, Cases_Started_on_Treatment_in_Prisons_value_m)] #Don't need municipality here. 
 mun_vars = names(mun_level_o)[3:ncol(mun_level_o)]
 for (v in mun_vars){
   mun_level_o[, (v):=sum(get(v), na.rm=T), by=c('date', 'department')]

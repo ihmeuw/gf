@@ -23,7 +23,7 @@ model = '
 	# Linkage 2 = relationships between activities and outputs or inputs and outputs
   
   Cases_Notified_out ~ exp_T1_1 + ghe_T1_1 + other_dah_T1_1 + date #Can add outreach and training and microscopy tests if data come through
-  HIV/TB_Cases_Notified_out ~ PLHIV_Screened_for_TB_act + TB_Patients_Tested_for_HIV_act + date
+  HIV_TB_Cases_Notified_out ~ PLHIV_Screened_for_TB_act + TB_Patients_Tested_for_HIV_act + date
   MDR_Cases_Notified_out ~ Number_of_Cases_Screened_for_MDR_act + date
   Cases_Started_on_Treatment_out ~ exp_T1_1 + ghe_T1_1 + other_dah_T1_1 + Isoniazid_Distributed_act + date #Can add outreach if data come through
   MDR_Cases_Started_Treatment_out ~ exp_T3_2 + ghe_T3_2 + other_dah_T3_2 + Number_of_Cases_Screened_for_MDR_act + date

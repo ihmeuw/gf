@@ -35,8 +35,7 @@ codeDir = paste0(repo_root, "outcome_measurement/all/cod/dhis/dhis_analysis/pnls
 #-------------------------------------
 # CLEAN DATA 
 #------------------------------------
-# source(paste0(codeDir, "1_pnls_supplychain_clean.r"))
-
+source(paste0(codeDir, "1_pnls_supplychain_clean.r"))
 
 #-------------------------------------
 # VISUALIZE  
@@ -50,5 +49,11 @@ codeDir = paste0(repo_root, "outcome_measurement/all/cod/dhis/dhis_analysis/pnls
 source(paste0(codeDir, "4_set_up_data.r"))
 source(paste0(codeDir, "4_pnls_supplychain_graph_functions.r"))
 
+#Render testing R-markdowns
 rmarkdown::render(paste0(codeDir, "4_determine_analysis.rmd"))
+rmarkdown::render(paste0(codeDir, "4_unigold_analysis.rmd"))
+rmarkdown::render(paste0(codeDir, "4_doublecheck_analysis.rmd"))
+
+#Render treatment R-markdowns
 rmarkdown::render(paste0(codeDir, "4_treatment_firstline.rmd"))
+rmarkdown::render(paste0(codeDir, "4_treatment_secondline.rmd"))

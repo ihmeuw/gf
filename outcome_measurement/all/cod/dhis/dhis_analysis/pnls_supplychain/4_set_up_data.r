@@ -8,6 +8,9 @@
 preppedDT = readRDS(paste0(dir, 'pnls_drug.rds'))
 dt = copy(preppedDT)
 
+#Only limit to 2018 for now. 
+dt[year<=2018]
+
 #Read in the shapefile
 shapefile = shapefile("J:/Project/Evaluation/GF/mapping/cod/gadm36_COD_shp/gadm36_COD_1.shp")
 shapefile@data$NAME_1 = standardizeDPSNames(shapefile@data$NAME_1)

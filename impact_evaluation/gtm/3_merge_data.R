@@ -52,6 +52,7 @@ redistribution_mat = merge(redistribution_mat, indicatorMap[, .(indicator, type,
 
 # Fix names where they match with indicator map 
 redistribution_mat[, indicator:=gsub(" ", "_", indicator)]
+redistribution_mat[, indicator:=gsub("/", "_", indicator)]
 redistribution_mat[, indicator:=paste0(indicator, "_", substr(type, 1, 3))]
 
 output_vars = names(outputs_activities)[!names(outputs_activities)%in%c('department', 'date')]

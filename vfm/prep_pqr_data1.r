@@ -106,31 +106,19 @@ subset[grant_disease=='M', grant_disease:='malaria']
 subset[grant_disease=='Z' & grant_name=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
 
 stopifnot(unique(subset$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
-#-------------------------------------------------------------------
-# Save the products you care about for each disease
-#-------------------------------------------------------------------
-mal_prev = c("Duranet", "Insecticide-treated net (ITN)", "Long-Lasting Insecticidal Net (LLIN)", "MAGNet", "MiraNet", "Permanet 2.0", "Permanet 3.0", "Netprotect", "zz-Pirimiphos Methyl CS", "Yorkool LN", "Yahe LN", "Royal Sentry", 
-             "Olyset", "Dawa-Plus 2.0")
-mal_test = c("Malaria RDT: Pan", "Malaria RDT: P.f./P.v", "Malaria RDT: P.f.", "Microscopes & accessories", "Malaria RDT: P.f/Pan")
-mal_treat = c("Quinine", "Artesunate", "Artesunate + [Sulfadoxine+Pyrimethamine] - Co-blis", "Artesunate + Amodiaquine - Co-blister", "Artesunate + Amodiaquine - FDC", "Artesunate + Mefloquine - Co-blister", "Artesunate + Mefloquine FDC", 
-              "Artesunate+Pyronaridine tetraphosphate", "Artemether", "Artemether+Lumefantrine - FDC", "Sulfadoxine+Pyrimethamine - FDC")
 
-david1 = subset[prod_cat_filter%in%c("Anti-malaria medicine", "Diagnostic test")]
-david2 = subset[product_name_en%in%c(mal_prev, mal_test, mal_treat)]
-
-#What is the difference in the products between these two datasets? 
-unique(length(david1$product_name_en))
-unique(length(david2$product_name_en))
-
-unique(david1[, .(prod_cat_filter, product_name_en)][order(prod_cat_filter)])
-unique(david2[, .(prod_cat_filter, product_name_en)][order(prod_cat_filter)])
-
-#Output these datasets
-saveRDS(david1, paste0(dir, "/drc_mal_pqr_subset1.rds"))
-saveRDS(david2, paste0(dir, "/drc_mal_pqr_subset2.rds"))
+#-----------------------------------------------------------------------
+# Fix the 'category' variable so it can be used to make disease subsets
+#-----------------------------------------------------------------------
+subset[product_category%in%c("Pruebas de diagnÃ³stico", "Tests de diagnostic", "Diagnostic test"), product_category:="DIAGNOSTIC TESTS"]
+subset[product_category%in%c("Mosquitero/IRS", "Bednet/IRS", "Moustiquaire/IRS"), product_category:="INSECTICIDE-TREATED NET"]
+subset[product_category%in%c("Anti-Retroviral", "AntirÃ©troviral", "Antirretroviral"), product_category:="ANTI-RETROVIRAL"]
+subset[product_category%in%c("PrÃ©servatif", "Condom", "Preservativo"), product_category:="CONDOM"]
+subset[product_category%in%c("Anti-malaria medicine", "AntipaludÃ©en", "AntimalÃ¡rico"), product_category:="ANTI-MALARIAL MEDICINE"]
+subset[product_category%in%c("Antituberculeux", "Anti-TB medicine", "Antituberculoso"), product_category:="ANTI-TB MEDICINE"]
 
 #-------------------------------------------------------------------
-# Flag some variables that are disease-specific
+# Flag some variables that are disease-specific THESE NEED TO BE VERIFIED BY A CLINICIAN EKL 6/10/19
 #-------------------------------------------------------------------
 hiv_prev = c("Female Condom", "Male Latex Condom")
 hiv_test = c("HIV & hepatitis/syphilis combined tests", "HIV CD4 testing consumables/test kits", "HIV CD4 testing equipment", "HIV RDT and EIA", "HIV Testing Equipment (other than molecular)", "HIV virological testing consumables/test kits", 

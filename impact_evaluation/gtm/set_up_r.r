@@ -46,7 +46,9 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # directories
 dir = paste0(j, '/Project/Evaluation/GF/')
-ieDir = paste0(dir, 'impact_evaluation/gtm/prepped_data/')
+ieDir = paste0(dir, 'impact_evaluation/gtm/')
+preppedIeDir =  paste0(ieDir, 'prepped_data/')
+visIeDir = paste0(ieDir, 'visualizations/')
 rtDir = paste0(dir, 'resource_tracking/_gf_files_gos/combined_prepped_data/')
 fghDir = paste0(dir, 'resource_tracking/_fgh/prepped_data/')
 whoDir = paste0(dir, 'resource_tracking/_ghe/who/prepped_data/')
@@ -60,7 +62,7 @@ lbdDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/')
 # Supporting Files
 
 # code-friendly version of indicator map file
-indicatorMapFile = paste0(ieDir, 'GTM Indicator map.xlsx')
+indicatorMapFile = paste0(preppedIeDir, 'GTM Indicator map.xlsx')
 
 # list of interventions and codes
 mfFile = "J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.csv"
@@ -85,11 +87,11 @@ whoFile = paste0(whoDir, 'who_prepped.rds')
 sicoinFile = paste0(sicoinDir, 'prepped_sicoin_data.rds')
 
 # activities/outputs files
-actFile = paste0(ieDir, "activities_5.22.19.csv")
-outputsFile = paste0(ieDir, "outputs_5.22.19.csv")
+actFile = paste0(preppedIeDir, "activities_5.22.19.csv")
+outputsFile = paste0(preppedIeDir, "outputs_5.22.19.csv")
 
 # outcomes/impact files
-impactFile = paste0(ieDir, "impact_5.22.19.csv")
+impactFile = paste0(preppedIeDir, "impact_5.22.19.csv")
 
 # shapefiles
 
@@ -118,48 +120,48 @@ if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo)
 # Output Files
 
 # output file from 2a_prep_resource_tracking.r
-outputFile2a = paste0(ieDir, 'prepped_resource_tracking.RDS')
+outputFile2a = paste0(preppedIeDir, 'prepped_resource_tracking.RDS')
 
 # output file from 2b_prep_activities_outputs.R
-outputFile2b = paste0(ieDir, 'outputs_activites_for_pilot.RDS')
-outputFile2b_wide = paste0(ieDir, 'outputs_activities_for_pilot_wide.RDS')
+outputFile2b = paste0(preppedIeDir, 'outputs_activites_for_pilot.RDS')
+outputFile2b_wide = paste0(preppedIeDir, 'outputs_activities_for_pilot_wide.RDS')
 
 # output file from 2c_prep_outcomes_impact.r
-outputFile2c_estimates = paste0(ieDir, 'aggregated_rasters.rds')
-outputFile2c = paste0(ieDir, 'outcomes_impact.rds')
+outputFile2c_estimates = paste0(preppedIeDir, 'aggregated_rasters.rds')
+outputFile2c = paste0(preppedIeDir, 'outcomes_impact.rds')
 
 # output file from 3_merge_data.R
-outputFile3 = paste0(ieDir, 'inputs_outputs.RDS')
+outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')
 
 # output files from 3b_correct_to_models.r
-outputFile3b = paste0(ieDir, 'outcomes_impact_corrected.RDS')
-outputFile3bGraphs = paste0(ieDir, '../visualizations/outcomes_impact_correction_results.pdf')
+outputFile3b = paste0(preppedIeDir, 'outcomes_impact_corrected.RDS')
+outputFile3bGraphs = paste0(visIeDir, 'outcomes_impact_correction_results.pdf')
 
 # output file from 4a_set_up_for_analysis.r
-outputFile4a = paste0(ieDir, 'first_half_pre_model.rdata')
+outputFile4a = paste0(preppedIeDir, 'first_half_pre_model.rdata')
 if (Sys.info()[1]!='Windows') { 
 	outputFile4a_scratch = paste0(clustertmpDir1, 'first_half_data_pre_model.rdata')
 }
 
 # output file from 4b_set_up_for_second_half_analysis.r
-outputFile4b = paste0(ieDir, 'second_half_data_pre_model.rdata')
+outputFile4b = paste0(preppedIeDir, 'second_half_data_pre_model.rdata')
 if (Sys.info()[1]!='Windows') { 
 	outputFile4b_scratch = paste0(clustertmpDir1, 'second_half_data_pre_model.rdata')
 }
 
 # output file from 4c and 4d_explore_data.r (graphs)
-outputFile4c = paste0(ieDir, '../visualizations/first_half_exploratory_graphs.pdf')
-outputFile4d = paste0(ieDir, '../visualizations/second_half_exploratory_graphs.pdf')
+outputFile4c = paste0(preppedIeDir, 'first_half_exploratory_graphs.pdf')
+outputFile4d = paste0(preppedIeDir, 'second_half_exploratory_graphs.pdf')
 
 # output file from 5a_run_first_half_analysis.R
-outputFile5a = paste0(ieDir, 'first_half_model_results.rdata')
+outputFile5a = paste0(preppedIeDir, 'first_half_model_results.rdata')
 
 # output file from 5b_run_second_half_analysis.r
-outputFile5b = paste0(ieDir, 'second_half_model_results.rdata')
+outputFile5b = paste0(preppedIeDir, 'second_half_model_results.rdata')
 
 # output file from 6_display_results.r
-outputFile6a = paste0(ieDir, '../visualizations/sem_diagrams.pdf')
-outputFile6b = paste0(ieDir, '../visualizations/bottleneck_analysis.pdf')
-outputFile6c = paste0(ieDir, '../visualizations/impact_analysis.pdf')
-outputFile6d = paste0(ieDir, '../visualizations/health_zone_effects.pdf')
+outputFile6a = paste0(visIeDir, 'sem_diagrams.pdf')
+outputFile6b = paste0(visIeDir, 'bottleneck_analysis.pdf')
+outputFile6c = paste0(visIeDir, 'impact_analysis.pdf')
+outputFile6d = paste0(visIeDir, 'health_zone_effects.pdf')
 # -----------------------------------------------------------------------------

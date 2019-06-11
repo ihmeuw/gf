@@ -778,8 +778,8 @@ gen_monthly_so_roc1 = function(dt=dt, coord_months=coord_months, drug_id, drug_n
   monthly_so_rate_dps = dt[stock_category == 'number_of_days_stocked_out' &!is.na(value) & element_id==drug_id, .(id, value, date, expected_days, dps)]
   monthly_so_rate_dps = monthly_so_rate_dps[, .(value=sum(value, na.rm = TRUE)), by=c('id', 'date', 'expected_days', 'dps')]
   
-  dups = monthly_so_rate_dps[duplicated(monthly_so_rate_dps, by=c('id', 'date'))]
-  dups = merge(dups, monthly_so_rate_dps, by=c('id', 'date'))
+  dups = monthly_so_rate_dps[duplicated(monthly_so_rate_dps, by=c('id', 'date', 'dps'))]
+  dups = merge(dups, monthly_so_rate_dps, by=c('id', 'date', 'dps'))
   stopifnot(nrow(dups)==0)
   
   monthly_so_rate_dps = merge(monthly_so_rate_dps, facs_per_district, by=c('dps', 'date'))
