@@ -51,7 +51,7 @@ for (i in 1:length(loc_names)){
   
   budgets = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_budgets.rds"))
   expenditures = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_expenditures.rds"))
-  absorption = readRDS(paste0(base_dir, loc_name, "/prepped_data/absorption.rds"))
+  absorption = readRDS(paste0(base_dir, loc_name, "/prepped_data/", loc_name, "_absorption.rds"))
   
   budget_tests = read.xlsx(paste0(base_dir, loc_name, "/", loc_name, "_tests.xlsx"), sheet="budget", detectDates=T)
   expenditure_tests = read.xlsx(paste0(base_dir, loc_name, "/", loc_name, "_tests.xlsx"), sheet="expenditure", detectDates=T)
