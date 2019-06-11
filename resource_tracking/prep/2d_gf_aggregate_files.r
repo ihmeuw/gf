@@ -272,17 +272,17 @@ saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rd
 #----------------------------------
 # 3. ABSORPTION
 #----------------------------------
-absorption_cod = readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/absorption.rds"))
-absorption_uga = readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/absorption.rds"))  
-absorption_gtm = readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/absorption.rds"))
-absorption_sen = readRDS(paste0(dir, "_gf_files_gos/sen/prepped_data/absorption.rds"))
-
-all_files = list(absorption_cod, absorption_gtm, absorption_uga, absorption_sen)
-absorption_files = rbindlist(all_files, use.names = TRUE, fill = TRUE)
-
-#Write data 
-saveRDS(absorption_files, paste0(final_write, "absorption.rds"))
-write.csv(absorption_files, paste0(final_write, "absorption.csv"), row.names = FALSE)
+# absorption_cod = readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/absorption_cod.rds"))
+# absorption_uga = readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/absorption_uga.rds"))  
+# absorption_gtm = readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/absorption_gtm.rds"))
+# absorption_sen = readRDS(paste0(dir, "_gf_files_gos/sen/prepped_data/absorption_sen.rds"))
+# 
+# all_files = list(absorption_cod, absorption_gtm, absorption_uga, absorption_sen)
+# absorption_files = rbindlist(all_files, use.names = TRUE, fill = TRUE)
+# 
+# #Write data 
+# saveRDS(absorption_files, paste0(final_write, "absorption.rds"))
+# write.csv(absorption_files, paste0(final_write, "absorption.csv"), row.names = FALSE)
 
 #----------------------------------
 # 4. GF FILE ITERATIONS
