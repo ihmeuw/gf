@@ -108,6 +108,21 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   
   stopifnot(length(activity_col)==1 & length(cost_category_col)==1)
   
+  #Grab currency row 
+  if (language=="fr"){
+    currency_col = grep("monnaie de paiement", names)
+  } else {
+    currency_col <- which(names=="currency")
+    if (length(currency_col)!=1){
+      currency_test <- grep("USD|Local", gf_data)
+      currency_col = currency_col[currency_col%in%currency_test] #Drop out other 'currency' named columns. 
+    }
+  }
+  if (inFile == "UGA-C-TASO_DB_IMPP2_GF Adjusted_20Feb2018_FINAL.XLSX" | inFile=="UGA-M-TASO_DB_IMPP2_17 Dec_GF Final.xlsx" | inFile =="UGA-T-MoFPED_DB_ IMPP4_GF Final.xlsx"){ #These files have 2 currency columns. 
+    currency_col = 19
+  }
+  stopifnot(length(currency_col)==1)
+  
   #Grab implementer column 
   if (language=="eng" | language == "fr"){
     implementer_col = grep("implementer", names)
@@ -172,20 +187,21 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   }
   
   if (language == "eng"){
-    old_names = c('activity description', 'cost input', old_qtr_names)
-    new_names = c('activity_description', 'cost_category', new_qtr_names)
-    if ('recipient'%in%names(gf_data)){
-      setnames(gf_data, 'recipient', 'implementer')
+    if ('recipient'%in%names){
+      old_names = c('activity description', 'cost input', 'recipient', old_qtr_names)
+      new_names = c('activity_description', 'cost_category', 'implementer', new_qtr_names)
+    } else {
+      old_names = c('activity description', 'cost input', old_qtr_names)
+      new_names = c('activity_description', 'cost_category', new_qtr_names)
     }
   } else if (language == "fr") {
-    old_names = c("description de l'activite", "element de cout", old_qtr_names)
-    new_names = c('activity_description', 'cost_category', new_qtr_names)
-    if ('recipient'%in%names(gf_data)){
-      setnames(gf_data, 'recipient', 'implementer')
-    }
-    if ("recipiendaire"%in%names(gf_data)){
-      setnames(gf_data, "recipiendaire", 'implementer')
-    }
+    if ("recipiendaire"%in%names){
+      old_names = c("description de l'activite", "element de cout", "monnaie de paiement", "recipiendaire", old_qtr_names)
+      new_names = c('activity_description', 'cost_category', "currency", "implementer", new_qtr_names)
+    } else {
+      old_names = c("description de l'activite", "element de cout", "monnaie de paiement", old_qtr_names)
+      new_names = c('activity_description', 'cost_category', "currency", new_qtr_names)
+    } 
   } else if (language == "esp"){
     if ('implementador'%in% names){
     old_names = c('modulo', 'intervencion', 'descripcion de la actividad', 'categoria de gastos', "implementador", old_qtr_names)

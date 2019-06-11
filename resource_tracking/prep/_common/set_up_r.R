@@ -59,6 +59,8 @@ sicoin_prepped = paste0(dir, "_ghe/sicoin_gtm/prepped_data/")
 
 codebook = read.xlsx(paste0(dir, "documentation/RT_Codebook.xlsx"))
 
+pudr_labels = read.xlsx(paste0(dir, "documentation/PUDR Semester Labeling.xlsx"))
+
 #Source shared functions
 source(paste0(common_dir, "global_variables.R"))
 source(paste0(common_dir, "shared_string_functions.R"), encoding="UTF-8")

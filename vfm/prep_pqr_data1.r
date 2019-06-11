@@ -139,6 +139,10 @@ tb_treat = c("Isoniazid", "Rifampicin", "Pyrazinamide", "Streptomycin", "Ethambu
              "Amikacin", "Protionamide", "PAS Sodium", "Ofloxacin", "Cycloserine", "Capreomycin", "Bedaquiline", "Amoxicillin+Clavulanate - FDC", "Ethambutol+Isoniazid - FDC", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", 
              "Ethionamide", "Kanamycin", "Levofloxacin", "Moxifloxacin", "Meropenem", "Linezolid", "Clofazimine")
   
+
+tb_drugs1 = c("Rifampicin" , "Pyrazinamide", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", "Isoniazid", "Ethambutol+Isoniazid+Rifampicin - FDC", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", "Ethambutol+Isoniazid - FDC")
+tb_drugs2 = c("Capreomycin", "Clofazimine",   "Cycloserine" , "Kanamycin", "Moxifloxacin",  "Bedaquiline", "Ethionamide", "Levofloxacin", "Linezolid". "Protionamide", "Amikacin", "Streptomycin")
+
 #Check that these variables have captured everything 
 classified = c(hiv_prev, hiv_test, hiv_treat, mal_prev, mal_test, mal_treat, tb_prev, tb_test, tb_treat)
 unique(subset[!product_name_en%in%classified, .(product_name_en)][order(product_name_en)])

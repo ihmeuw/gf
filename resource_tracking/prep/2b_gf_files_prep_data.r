@@ -29,7 +29,7 @@ if (prep_files == TRUE){
   file_list = prioritize_gos(file_list)
 
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source')] #EMILY NEED TO RETHINK THIS. 
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source', 'pudr_semester')] #EMILY NEED TO RETHINK THIS. 
   file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
   if ( nrow(file_list[date_dup>0])!=0){
@@ -79,7 +79,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       args[length(args)+1] = file_list$qtr_number[i]
       tmpData = do.call(prep_modular_approach_pudr, args)
       
-      stopifnot(sort(names(tmpData)) == pudr_cols)
+      stopifnot(pudr_cols%in%names(tmpData))
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
     } else if (file_list$function_type[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 
@@ -125,11 +125,12 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, secondary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language, eur_to_usd_rate, loc_to_usd_rate, file_currency, pudr_semester)]
+                                 mod_framework_format, file_iteration, language, eur_to_usd_rate, loc_to_usd_rate, file_currency, pudr_semester, period)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
     }  
     tmpData$year <- year(tmpData$start_date)
+    tmpData[, file_start_date:=min(start_date), by='file_name']
     
     #Bind data together 
     if(i==1){
@@ -142,6 +143,10 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))
   
+  #If you don't have lfa_exp_adjustment in any of the files for this country, add it as NA so checks later will work. 
+  if (!'lfa_exp_adjustment'%in%names(resource_database)){
+    resource_database[, lfa_exp_adjustment:=NA]
+  }
   
 } else {
   resource_database <- readRDS(paste0(dir, "_gf_files_gos/", country, "/prepped_data/raw_bound_gf_files.RDS"))
@@ -200,3 +205,5 @@ resource_database= resource_database[, list(budget=sum(na.omit(budget)) ,expendi
 rt_files <- unique(resource_database$file_name)
 stopifnot(length(unique(file_list$file_name)) == length(rt_files))
 stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
+
+print("Step B: Prep GF files completed.")

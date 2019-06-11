@@ -115,10 +115,12 @@ convert_eur_usd = function(dt, yearVar=NULL){
   #Convert financial variables. 
   converted_to_USD[is.na(budget), budget:=0]
   converted_to_USD[is.na(expenditure), expenditure:=0]
+  converted_to_USD[is.na(lfa_exp_adjustment), lfa_exp_adjustment:=0]
   converted_to_USD[is.na(disbursement), disbursement:=0]
   
   converted_to_USD[, budget_new:=budget/eur_usd]
   converted_to_USD[, expenditure_new:=expenditure/eur_usd]
+  converted_to_USD[, lfa_exp_adjustment_new:=lfa_exp_adjustment/eur_usd]
   converted_to_USD[, disbursement_new:=disbursement/eur_usd]
   
   converted_to_USD[, orig_currency:= 'EUR']

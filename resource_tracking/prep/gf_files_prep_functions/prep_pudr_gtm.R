@@ -19,12 +19,12 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
   ########
 # 
 
-  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
-  # qtr_number = file_list$qtr_number[i]
-  # period = file_list$period[i]
+  dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet[i]
+  start_date = file_list$start_date[i]
+  qtr_number = file_list$qtr_number[i]
+  period = file_list$period[i]
   # 
   # Load/prep data
   gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name))
@@ -81,6 +81,8 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     #Only keep the intervention, budget, and expenditure columns. 
     gf_data = gf_data[, c(1:3, 7)]
     names(gf_data) = c('intervention', 'budget_q3', 'budget_q4', 'expenditure') #EKL CAN WE TAKE OUT THIS HARD-CODING?? 
+    
+    #Split the intervention column into module and intervention. 
     gf_data[, intervention:=gsub("MDR-TB", "MDRTB", intervention)]
     split = strsplit(gf_data$intervention, "-")
     gf_data[, module:=sapply(split,`[`,1)]
@@ -92,6 +94,10 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     
     budget_dataset <- expandRows(budget_dataset, "split")
     
+    #Divide expenditure by 2 because you've expanded rows to the quarter-level. 
+    budget_dataset[, value:=as.numeric(value)]
+    budget_dataset[variable=='expenditure', value:=value/2]
+    
     #Assign a quarter variable to budget and expenditure
     budget_dataset[, quarter:=seq(3, 4, by=1), by=c('module', 'intervention', 'variable', 'value')]
     budget_dataset[variable=='budget_q3', quarter:=3]
@@ -100,7 +106,6 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     
     #Rename the budget values, and then reshape 
     budget_dataset[variable=='budget_q3'|variable=='budget_q4', variable:='budget']
-    budget_dataset[, value:=as.numeric(value)]
     
     budget_dataset = dcast(budget_dataset, module+intervention+quarter+year~variable, value.var="value", fun.aggregate=sum_na_rm)
     
@@ -138,6 +143,7 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     
     #Drop extra rows that don't have module specified, and drop title row
     gf_data = gf_data[!module=="Seleccione…", ]
+    gf_data = gf_data[!is.na(module) & !is.na(intervention)]
     gf_data = gf_data[!module=="Macrocategoría"|module=="macrocategoria" | module=="Macrocategoria"]
     
     #Make budget and expenditure numeric
@@ -194,12 +200,10 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     }
     
     budget_dataset = copy(gf_data)
+    #Drop out unneeded rows 
+    budget_dataset = budget_dataset[!grep("Macrocategor", module)]
   }
-  
-  #-----------------------------------------------------------
-  # Drop out unneeded rows 
-  #-----------------------------------------------------------
-  budget_dataset = budget_dataset[!grep("Macrocategor", module)]
+ 
   
   #-----------------------------------------------------------
   # Return prepped data

@@ -75,9 +75,9 @@ raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv'
 # Merge with module map on module, intervention, and disease to pull in code
 #----------------------------------------------------------------------------
 if ('disbursement'%in%names(raw_data)){
-  pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
+  pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment', 'disbursement')]
 } else {
-  pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure')]
+  pre_coeff_check = raw_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment')]
   pre_coeff_check[[1]] = round(pre_coeff_check[[1]])
   pre_coeff_check[[2]] = round(pre_coeff_check[[2]])
 }
@@ -118,12 +118,24 @@ remapped_rows = nrow(mapped_data[coefficient != 1])
 print(paste0("A total of ", remapped_rows, " rows will be redistributed."))
 mapped_data[, budget:=budget*coefficient]
 mapped_data[, expenditure:=expenditure*coefficient]
+mapped_data[, lfa_exp_adjustment:=lfa_exp_adjustment*coefficient]
 if ('disbursement'%in%names(mapped_data)){
   mapped_data[, disbursement:=disbursement*coefficient]
 }
 
 if ('disbursement'%in%names(mapped_data)){
-  post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'disbursement')]
+  post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment', 'disbursement')]
+  post_coeff_check[[1]] = round(post_coeff_check[[1]])
+  post_coeff_check[[2]] = round(post_coeff_check[[2]])
+  post_coeff_check[[3]] = round(post_coeff_check[[3]])
+  post_coeff_check[[4]] = round(post_coeff_check[[4]])
+  
+  stopifnot(abs(pre_coeff_check[[1]]-post_coeff_check[[1]]) < 1) #Decision by David Phillips 5/10/19 - it's okay if there is less than one cent difference between the pre- and post-redistribution. 
+  stopifnot(abs(pre_coeff_check[[2]]-post_coeff_check[[2]]) < 1)
+  stopifnot(abs(pre_coeff_check[[3]]-post_coeff_check[[3]]) < 1)
+  stopifnot(abs(pre_coeff_check[[4]]-post_coeff_check[[4]]) < 1)
+} else {
+  post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment')]
   post_coeff_check[[1]] = round(post_coeff_check[[1]])
   post_coeff_check[[2]] = round(post_coeff_check[[2]])
   post_coeff_check[[3]] = round(post_coeff_check[[3]])
@@ -131,13 +143,6 @@ if ('disbursement'%in%names(mapped_data)){
   stopifnot(abs(pre_coeff_check[[1]]-post_coeff_check[[1]]) < 1) #Decision by David Phillips 5/10/19 - it's okay if there is less than one cent difference between the pre- and post-redistribution. 
   stopifnot(abs(pre_coeff_check[[2]]-post_coeff_check[[2]]) < 1)
   stopifnot(abs(pre_coeff_check[[3]]-post_coeff_check[[3]]) < 1)
-} else {
-  post_coeff_check = mapped_data[, lapply(.SD, sum_na_rm), .SDcols=c('budget', 'expenditure')]
-  post_coeff_check[[1]] = round(post_coeff_check[[1]])
-  post_coeff_check[[2]] = round(post_coeff_check[[2]])
-  
-  stopifnot(abs(pre_coeff_check[[1]]-post_coeff_check[[1]]) < 1) #Decision by David Phillips 5/10/19 - it's okay if there is less than one cent difference between the pre- and post-redistribution. 
-  stopifnot(abs(pre_coeff_check[[2]]-post_coeff_check[[2]]) < 1)
 }
 
 #Debug the check above, if needed. 
@@ -237,13 +242,16 @@ stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD"))
 needs_conversion = mapped_data[file_currency!='USD']
 if (nrow(needs_conversion)!=0){
   #Do a check before and after converting to make sure you've got the same totals. 
-  pre_conversion_check = mapped_data[, .(pre_budget=sum(budget, na.rm=T), pre_expenditure=sum(expenditure, na.rm=T)), by='file_name']
+  pre_conversion_check = mapped_data[, .(pre_budget=sum(budget, na.rm=T), pre_expenditure=sum(expenditure, na.rm=T), 
+                                         pre_lfa_exp=sum(lfa_exp_adjustment, na.rm=T)), by='file_name']
   
   #Pull apart the files that are in Euros vs. USD, and convert Euros. 
-  valueVars = c('budget', 'expenditure', 'disbursement')
-  in_USD = mapped_data[file_currency=='USD']
+  valueVars = c('budget', 'expenditure', 'disbursement', 'lfa_exp_adjustment')
+  in_USD = copy(mapped_data)
+  in_USD = in_USD[file_currency=='USD']
   in_USD[, budget_new:=budget]
   in_USD[, expenditure_new:=expenditure]
+  in_USD[, lfa_exp_adjustment_new:=lfa_exp_adjustment]
   in_USD[, disbursement_new:=disbursement]
   
   stopifnot(needs_conversion$file_currency%in%c("LOC", "EUR")) #These are the only currencies the function supports. 
@@ -251,21 +259,22 @@ if (nrow(needs_conversion)!=0){
   mapped_data = rbind(in_USD, converted_to_USD, fill=TRUE, use.names=TRUE) #You're not losing any rows here. 
   stopifnot(nrow(mapped_data)==orig_rows)
   
-  #Post-check. 
-  mapped_data$eur_usd <- NULL
-  post_conversion_check = convert_usd_eur(mapped_data, 'year')
-  post_conversion_check = post_conversion_check[, .(post_budget=sum(budget, na.rm=T), post_expenditure=sum(expenditure, na.rm=T)), by='file_name']
-  
-  conversion_check = merge(pre_conversion_check, post_conversion_check, by='file_name', all=T)
-  conversion_check = conversion_check[, lapply(.SD, round), .SDcols = 2:5, by='file_name'][, lapply(.SD, as.integer), .SDcols = 2:5, by='file_name']
-  if (nrow(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])==0){
-    View(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])
-    stop("Errors in currency conversion - review 'conversion_check'." )
-  }
+  # #Post-check. 
+  # mapped_data$eur_usd <- NULL
+  # post_conversion_check = convert_usd_eur(mapped_data, 'year')
+  # post_conversion_check = post_conversion_check[, .(post_budget=sum(budget, na.rm=T), post_expenditure=sum(expenditure, na.rm=T)), by='file_name']
+  # 
+  # conversion_check = merge(pre_conversion_check, post_conversion_check, by='file_name', all=T)
+  # conversion_check = conversion_check[, lapply(.SD, round), .SDcols = 2:5, by='file_name'][, lapply(.SD, as.integer), .SDcols = 2:5, by='file_name']
+  # if (nrow(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])==0){
+  #   View(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])
+  #   stop("Errors in currency conversion - review 'conversion_check'." )
+  # }
   
   #If the check above works, then you're okay to rename budget and expenditure 
-  mapped_data = mapped_data[, -c('budget', 'expenditure', 'disbursement')]
-  setnames(mapped_data, c('budget_new', 'expenditure_new', 'disbursement_new'), c('budget', 'expenditure', 'disbursement'))
+  mapped_data = mapped_data[, -c('budget', 'expenditure', 'disbursement', 'lfa_exp_adjustment')]
+  setnames(mapped_data, c('budget_new', 'expenditure_new', 'disbursement_new', 'lfa_exp_adjustment_new'), 
+           c('budget', 'expenditure', 'disbursement', 'lfa_exp_adjustment'))
 }
 
 # --------------------------------------------------------
@@ -284,20 +293,20 @@ mapped_data = mapped_data[, names(mapped_data)%in%codebook$Variable, with=FALSE]
 #After variables are removed, collapse dataset to simplify
 byVars <- colnames(mapped_data)
 if ('disbursement'%in%names(mapped_data)){
-  byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disbursement']
-  mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'disbursement'), by=byVars]
+  byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars !='disbursement' & byVars !='lfa_exp_adjustment']
+  mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment', 'disbursement'), by=byVars]
 } else {
-  byVars = byVars[byVars != 'budget' & byVars != 'expenditure']
-  mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure'), by=byVars]
+  byVars = byVars[byVars != 'budget' & byVars != 'expenditure' & byVars != 'lfa_exp_adjustment']
+  mapped_data = mapped_data[, lapply(.SD, function(x) sum(x, na.rm=TRUE)), .SDcols=c('budget', 'expenditure', 'lfa_exp_adjustment'), by=byVars]
 }
 
 #Reorder data 
 if ('disbursement'%in%names(mapped_data)){
   mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, activity_description, country, loc_name, 
-                                budget, expenditure, disbursement, orig_module, orig_intervention, current_grant, file_name)]
+                                budget, expenditure, lfa_exp_adjustment, disbursement, orig_module, orig_intervention, current_grant, file_name)]
 } else{
   mapped_data = mapped_data[order(grant, start_date, year, gf_module, gf_intervention, country, loc_name, 
-                                  budget, expenditure, orig_module, orig_intervention, current_grant, file_name)]
+                                  budget, expenditure, lfa_exp_adjustment, orig_module, orig_intervention, current_grant, file_name)]
 }
 #------------------------------------------------------------
 # Remove any special characters so .csv will store correctly 
@@ -314,37 +323,172 @@ mapped_data$orig_intervention <- str_replace_all(mapped_data$orig_intervention, 
 # 2. For the expenditure dataset, we should subtract the earlier quarter in a year from the later quarters, and then append all of this to create an expenditure dataset. 
 
 if (prep_files){
+  #-------------------------------------------
   #1. Budgets 
   final_budgets = mapped_data[file_iteration == "final" & data_source == "fpm"] #Only want the final versions of budgets. 
+  final_budgets = final_budgets[, -c('expenditure', 'lfa_exp_adjustment', 'disbursement')]
+  
+  #-------------------------------------------
+  #2. Expenditures - pull out expenditures file, and generate 'final expenditure' variable. 
+  expenditures = mapped_data[data_source=="pudr" & file_iteration=="final"]
+  expenditures[, final_expenditure:=expenditure+lfa_exp_adjustment]
+  expenditures = expenditures[, -c('expenditure', 'lfa_exp_adjustment')]
+  setnames(expenditures, 'final_expenditure', 'expenditure')
+  
+  #Add in PUDR semester variable. 
+  setnames(expenditures, 'pudr_semester', 'pudr_code')
+  expenditures = merge(expenditures, pudr_labels, by='pudr_code', all.x=T)
+  exp_check1 = expenditures[, .(correct_exp=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'code', 'semester_code', 'pudr_grant_year')]
+  setnames(exp_check1, 'semester_code', 'semester')
+  
+  #Make sure this merge worked. 
+  if (nrow(expenditures[is.na(semester)])>0){
+    print(unique(expenditures[is.na(semester), .(pudr_code)]))
+    stop("Values of pudr_code did not merge correctly.")
+  }
+  
+  #Generate new variables, and flag where you would have overlap in files. 
+  dup_files = unique(expenditures[, .(grant, grant_period, semester_code, pudr_grant_year)][order(grant, grant_period)])
+  dup_files[, dup:=seq(0, nrow(dup_files)), by=c('grant', 'grant_period')]
+  dup_files = unique(dup_files[dup!=0, .(grant, grant_period)]) #But this isn't the only condition on whether you have overlap. Now, check if the same files for the same grant overlap in time. 
+  
+  #First, see if dup==1. This tells you that you have duplicate files you need to compare. 
+  #Tag these dup files in the expenditures dataset 
+  for (i in 1:nrow(dup_files)){
+    expenditures[grant==dup_files$grant[i] & grant_period==dup_files$grant_period[i],
+                 dup:=TRUE]
+  }
+  expenditures[is.na(dup), dup:=FALSE]
+  
+  #Second, see if you actually have overlap in the quarters, which happens when you have a year-long PUDR. 
+  dup_files2 = unique(expenditures[dup==TRUE, .(grant, grant_period, pudr_grant_year, semester_code, dup)][order(grant, grant_period, pudr_grant_year, semester_code)])
+  dup_files2[nchar(semester_code)==2, yearlong:=TRUE]
+  dup_files2 = dup_files2[yearlong==TRUE, .(grant, grant_period, pudr_grant_year)]
 
-  #2. Expenditures 
-  byVars = names(mapped_data)
-  byVars = byVars[!byVars%in%c('budget', 'expenditure', 'disbursement', 'year', 'quarter', 'start_date')]
-  final_expenditures = mapped_data[data_source == "pudr"] #EMILY CAN YOU MAKE SURE YOU DON'T HAVE MORE THAN ONE FINAL AND ONE INITIAL FILE??? NEED TO RETHINK DUPLICATES. 
-  #For the same grant in the same grant period, you want to get the total for each PUDR and subtract semester 1 from semester 1-2. 
-  
- 
-  #Can you find the duplicate quarters by grant name and grant period first? 
-  dups = unique(mapped_data[data_source=="pudr", .(grant, grant_period, quarter, pudr_semester, file_name)])
-  dups[, dup:=seq(from=0, to=nrow(dups), by=1), by=c('grant', 'grant_period', 'quarter')]
-  overlap = dups[dup>0]
-  overlap = merge(overlap[, .(grant, grant_period, quarter)], dups, by=c('grant', 'grant_period', 'quarter'), all.x=T)
-  if (nrow(overlap)!=0){
-    print("There is overlap in PUDR semesters. Subtract earlier expenditure from later expenditure.")
-  }
-  
-  for (i in 1:nrow(overlap)){
+  #If you find duplicate semesters, subtract them, and then reassemble the dataset. 
+  if(nrow(dup_files2)>0){
+    for (i in 1:nrow(dup_files2)){
+      expenditures[grant==dup_files2$grant[i] & grant_period==dup_files2$grant_period[i] & pudr_grant_year==dup_files2$pudr_grant_year[i],
+                   overlap:=TRUE]
+    }
+    expenditures[is.na(overlap), overlap:=FALSE]
     
+    flagged_overlap = unique(expenditures[overlap==TRUE, .(grant, grant_period, file_name, semester_code)][order(grant, grant_period, semester_code)])
+    if(nrow(flagged_overlap)!=0){
+      print("The following PUDRs were flagged as overlapping, and will be subtracted for the expenditure dataset.")
+      print(flagged_overlap)
+    }
+
+  #EMILY ADD A CHECK HERE THAT YOU ONLY HAVE ONE DUPLICATE THAT WILL BE SUBTRACTED. 
+  #Pull out data that has overlap, and subtract earlier PUDRs from later PUDRs. 
+  #Sum out the quarter-level
+  
+    valueVars = c('budget', 'expenditure', 'disbursement')
+    exp_collapse = expenditures[overlap==TRUE, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
+                                by=c('grant', 'grant_period', 'code', 'semester_code', 'pudr_grant_year')]
+    #Validate the data that you've pulled - make sure semesters will work with code below. 
+    stopifnot(unique(exp_collapse$semester_code)%in%c('A', 'AB'))
+    exp_collapse = dcast(exp_collapse, grant+grant_period+pudr_grant_year+code~semester_code, value.var=valueVars)
+    #EMILY FLAG CASES HERE WHERE WE DON'T HAVE A MODULE/INTERVENTION IN ONE PUDR OR THE OTHER 
+    
+    #Subtract earlier semesters from later semesters 
+    #First, replace NAs with 0's. 
+    exp_collapse[is.na(budget_A), budget_A:=0] #EMILY IS THIS THE BEST WAY TO DO THIS??
+    exp_collapse[is.na(budget_AB), budget_AB:=0]
+    exp_collapse[is.na(expenditure_A), expenditure_A:=0]
+    exp_collapse[is.na(expenditure_AB), expenditure_AB:=0]
+    exp_collapse[is.na(disbursement_A), disbursement_A:=0]
+    exp_collapse[is.na(disbursement_AB), disbursement_AB:=0]
+    
+    exp_collapse[, budget_B:=budget_AB-budget_A]
+    exp_collapse[, expenditure_B:=expenditure_AB-expenditure_A]
+    exp_collapse[, disbursement_B:=disbursement_AB-disbursement_A]
+    
+    negatives = exp_collapse[expenditure_B<0]
+    if (nrow(negatives)!=0){
+      print("There were negative values generated for expenditure. Review 'negative'.")
+      write.csv(negatives, paste0(dir, "_gf_files_gos/", country, "/visualizations/", country, "_negative_expenditure.csv"), row.names=FALSE)
+    }
+    
+    exp_collapse = exp_collapse[, -c('budget_AB', 'expenditure_AB', 'disbursement_AB')]
+    
+    #reshape this data back long, and merge back onto the rest of the expenditure dataset. 
+    exp_melt = melt(exp_collapse, id.vars=c('grant', 'grant_period', 'code', 'pudr_grant_year'))
+    exp_melt[, semester:=tstrsplit(variable, "_", keep=2)]
+    stopifnot(unique(exp_melt$semester)%in%c('A', 'B'))
+    exp_melt[, variable:=tstrsplit(variable, "_", keep=1)]
+    stopifnot(unique(exp_melt$budget)%in%c('A', 'B'))
+    
+    # Cast back so budget, expenditure, and disbursement are variable names again. 
+    exp_recast = dcast(exp_melt, grant+grant_period+code+pudr_grant_year+semester~variable, value.var='value')
+    
+    #Merge back onto expenditure data that DIDN'T need subtraction 
+    exp_no_subtract = expenditures[overlap==FALSE, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE), disbursement=sum(disbursement, na.rm=TRUE)), 
+                                   by=c('grant', 'grant_period', 'code', 'pudr_grant_year', 'semester_code')]
+    setnames(exp_no_subtract, 'semester_code', 'semester')
+    expenditures = rbind(exp_recast, exp_no_subtract)  #EMILY CAN YOU CHECK THE NUMBER OF ROWS AS COMPARED TO THE ORIGINAL HERE? AND CAN YOU CHECK DUPLICATE OBSERVATIONS? 
+    
+    duplicates = expenditures[duplicated(expenditures)] 
+    if(nrow(duplicates)!=0){
+      stop(paste0("There are ", nrow(duplicates), "in expenditures file. Review summing and appending code."))
+    }
+    duplicates <- NULL 
+    
+    # Add on additional variables 
+    before_merge = nrow(expenditures)
+    merge_vars = unique(mapped_data[, .(grant, grant_period, code, #These are your identifying variables in your expenditures dataset. 
+                                        gf_module, gf_intervention, disease)]) #These are identified by code
+    expenditures = merge(expenditures, merge_vars, by=c('grant', 'grant_period', 'code'))
+    after_merge = nrow(expenditures)
+    if (before_merge!=after_merge){
+      stop("The number of rows before and after additional variables were added to expenditure do not match. Check merge condition.")
+    }
+    
+    #Remove extra financial variables. 
+    expenditures = expenditures[, -c('budget', 'disbursement')]
+    
+  } else { #If you don't have duplicate files, collapse your dataset to be in the same format. 
+    expenditures = expenditures[, .(expenditure=sum(expenditure, na.rm=T)),
+                                by=c('grant', 'grant_period', 'code', 'year', 'pudr_grant_year', 'semester', 'gf_module', 'gf_intervention', 'disease')]
+    
+    #Add in PUDR label value. 
+    expenditures = merge(expenditures, pudr_labels, by=c('semester', 'pudr_grant_year'), all.x=T)
+    if (nrow(expenditures[is.na(semester_code)])>0){
+      stop("Some values of PUDR labels did not merge correctly onto expenditure dataset.")
+    }
+    expenditures = expenditures[, -c('semester', 'pudr_order', 'pudr_code')]
+    setnames(expenditures, 'semester_code', 'semester')
+  }
+
+  #-------------------------------------------
+  #3. Absorption
+  absorption = mapped_data[data_source=="pudr" & file_iteration=="final", .(grant, grant_period, code, gf_module, gf_intervention, budget, expenditure, lfa_exp_adjustment, pudr_semester)]
+  absorption[, expenditure:=expenditure+lfa_exp_adjustment] #Calculate final expenditure. 
+  absorption = absorption[, -c('lfa_exp_adjustment')]
+  setnames(absorption, 'pudr_semester', 'pudr_code')
+  absorption = merge(absorption, pudr_labels, by=c('pudr_code'), all.x=T)
+  if (nrow(absorption[is.na(semester)])>0){
+    print(unique(absorption[is.na(semester), .(pudr_code)]))
+    stop("Values of pudr_code did not merge correctly.")
   }
   
-  final_expenditures = dcast(final_expenditures, grant+grant_period+disease+gf_module+gf_intervention+orig_module+orig_intervention+activity_description~quarter, 
-                      value.var=c('budget', 'expenditure', 'disbursement'), fun.aggregate = sum_na_rm)
-  final_expenditures[, `budget_Semester 1-2`:=`budget_Semester 1-2`-`budget_Semester 1`]
-  final_expenditures[, `expenditure_Semester 1-2`:=`expenditure_Semester 1-2`-`expenditure_Semester 1`]
-  setnames(final_expenditures, c('budget_Semester 1-2', 'expenditure_Semester 1-2'), c('budget_Semester 2', 'expenditure_Semester 2')) #EMILY CHECK WITH DAVID THAT THIS IS THE RIGHT THING TO DO. 
+  #Calculate absorption by module/intervention 
+  absorption = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
+                          by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'semester', 'code')]
+  absorption[, absorption:=(expenditure/budget)*100]
+  absorption[, loc_name:=country]
   
-  #3. Absorption
-  absorption = mapped_data[data_source=="pudr", .(grant, grant_period, pudr_semester, gf_module, gf_intervention, code, budget, expenditure)]
+  absorption_wide=data.table()
+  grants = unique(absorption[, .(grant, grant_period)])
+  for (i in 1:nrow(grants)){
+    subset = absorption[grant==grants$grant[i] & grant_period==grants$grant_period[i], .(grant, grant_period, gf_module, gf_intervention, 
+                                                                                         absorption, budget, expenditure, code, semester)]
+    
+    subset_wide = dcast(subset, grant+grant_period+gf_module+gf_intervention+code~semester,
+                        value.var=c('budget', 'expenditure', 'absorption'))
+    absorption_wide=rbind(absorption_wide, subset_wide, fill=TRUE)
+  }
+
 }
 
 # ----------------------------------------------
@@ -354,17 +498,19 @@ if (prep_files){
 if (prep_files){
   # Save RDS file
   saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
-  saveRDS(final_expenditures, paste0(export_dir, "final_expenditures.rds"))
+  saveRDS(expenditures, paste0(export_dir, "final_expenditures.rds"))
   saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
   saveRDS(absorption, paste0(export_dir, "absorption.rds"))
   
   write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), row.names=FALSE)
-  write.csv(final_expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
+  write.csv(expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
   write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"), row.names=FALSE)
-  write.csv(absorption, paste0(export_dir, "absorption.rds"), row.names=FALSE)
+  write.csv(absorption, paste0(export_dir, "absorption.csv"), row.names=FALSE)
 }
 
 if (prep_gos == TRUE){
   saveRDS(mapped_data, paste0(gos_prepped, "prepped_gos_data.rds"))
   write.csv(mapped_data, paste0(gos_prepped, "prepped_gos_data.csv"), row.names = FALSE)
 }
+
+print("Step C: Map data completed. Outputs saved in prepped_data folder.")
