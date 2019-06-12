@@ -188,7 +188,7 @@ measured_vars <- measured_vars[!measured_vars %in% c(id_vars_for_amelia, "combin
 num_of_runs = 50
 
 amelia.results <- amelia(dt, m=num_of_runs, cs= "combine", ts="date", idvars= id_vars_for_amelia, tolerance= tol, # the passed in tolerance
-                         lags = measured_vars, leads= measured_vars,
+                         # lags = measured_vars, leads= measured_vars,
                          parallel= parallelMethod, ncpus= num_of_runs ) # ncpus should correspond to m
 # ---------------------------------------------- 
   
