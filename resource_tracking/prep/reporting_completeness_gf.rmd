@@ -34,11 +34,11 @@ gos_data = gos_data[year<2018]
 pudr_subset = rbind(gos_data, pudr_subset, use.names=T, fill=T)
 
 #Do the same transformations as the budget dataset
-pudrs[, quarter:=quarter(start_date)]
-pudrs[, year:=year(start_date)]
-pudrs[, quarter:=(quarter/4)-0.25]
-pudrs[, date:=year+quarter]
-pudrs = unique(pudrs[ , .(grant, file_name, date, loc_name)])
+pudr_subset[, quarter:=quarter(start_date)]
+pudr_subset[, year:=year(start_date)]
+pudr_subset[, quarter:=(quarter/4)-0.25]
+pudr_subset[, date:=year+quarter]
+pudr_subset = unique(pudr_subset[ , .(grant, file_name, date, loc_name)])
 
 #Read in Global Fund metadata, and format it to match pudr/budget data above. 
 ip_periods = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv")
@@ -88,9 +88,9 @@ for (i in 1:nrow(expected_periods)){
 all_expected = all_expected[date>=2015]
 
 #Append Senegal files that we know we should have, but don't yet. 
-pudrs = merge(pudrs, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
-pudrs[is.na(file_name) & date<current_date, missing_pudr_date:=date]
-missing_pudr_qtrs = unique(pudrs[is.na(file_name) & date<=current_date, .(loc_name, grant, date)])
+pudr_subset = merge(pudr_subset, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
+pudr_subset[is.na(file_name) & date<current_date, missing_pudr_date:=date]
+missing_pudr_qtrs = unique(pudr_subset[is.na(file_name) & date<=current_date, .(loc_name, grant, date)])
 missing_pudr_qtrs[, quarter:=((date%%1)*4)+1]
 missing_pudr_qtrs[, year:=floor(date)]
 
@@ -101,7 +101,7 @@ missing_budget_qtrs[, quarter:=((date%%1)*4)+1]
 missing_budget_qtrs[, year:=floor(date)]
 
 pudr_coverage = function(country, country_name){
-  pudr_coverage = ggplot(pudrs[loc_name==country]) + 
+  pudr_coverage = ggplot(pudr_subset[loc_name==country]) + 
   geom_point(aes(x=date, y=grant), shape=19) + 
   geom_point(aes(x=missing_pudr_date, y=grant), color="blue", size=6, alpha=0.5, shape=15) +
   theme_bw() + 
