@@ -32,18 +32,6 @@
 # --------------------
 # Set up R / install packages
 # --------------------
-tol = commandArgs()[4]
-tol = as.numeric(gsub('\r', '', tol))
-print(tol)
-
-run_name = commandArgs()[5]
-run_name = gsub('\r', '', run_name)
-print(run_name)
-
-aggregate = commandArgs()[6]
-aggregate = gsub('\r', '', aggregate)
-print(aggregate)
-
 library(data.table)
 library(stringr)
 library(reshape2)
@@ -58,28 +46,41 @@ library(boot)
 # ----------------------------------------------
 # Overview - Files and Directories
 # ----------------------------------------------
+# detect the user operating on the cluster
+user = Sys.info()[['user']]
+
 # data directory
 # when run on Unix, data directory needs to be set to /home/j (to run on the cluster), so set this here:
   j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
   dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/')
-  output_dir <- paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
   
-# detect the user operating on the cluster
-  user = Sys.info()[['user']]
-  
-# set the directory for cluster output and error messages
-  oeDir = paste0('/ihme/scratch/users/', user, '/mi_errors_output/')
+  scratchDir = paste0('/ihme/scratch/users/', user, '/')
+  if (!file.exists(scratchDir)) dir.create(scratchDir)
+  resultsDir = paste0(scratchDir, 'mi_results/')
+  if (!file.exists(resultsDir)) dir.create(resultsDir)
+  oeDir = paste0(scratchDir, 'mi_errors_output/')
   if (!file.exists(oeDir)) dir.create(oeDir)
-  
+
 # input file:
   inFile = 'PNLP_dt_forMI_updated_6_10_19.rds'
-
-# output files:
-  rawFile = paste0("PNLP_imputed_rawData_", run_name, ".rds")
-  cleanedFile = paste0("PNLP_imputedData_", run_name, ".rds")
   
 # set switches
+  aggregate = "agg" # noAgg for FALSE
+  lags_leads = "no_lags_leads" # "lags_and_leads" for TRUE
+  tolerance = 0.1
   cleanup_start = FALSE
+
+# set run_name manually:
+  run_name = 'run0_1_aggVars_noLagsLeads'
+  
+# output files:
+  if (aggregate == "agg"){ 
+    outFile = "data_for_amelia_aggVars.rds" } else {
+    outFile = "data_for_amelia_noAggVars.rds" }
+  
+  # output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
+  # rawFile = paste0("PNLP_imputed_rawData_", run_name, ".rds")
+  # cleanedFile = paste0("PNLP_imputedData_", run_name, ".rds")
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -96,10 +97,8 @@ if (cleanup_start == TRUE){
 # ---------------------------------------------- 
 dt = readRDS(paste0(dir, inFile))
 dt[, thinSmearTest := NULL]
-# test subset
-# dt = dt[dps == unique(dt$dps)[1]]
 
-if (aggregate == "agg"){
+if (aggregate == "agg"){ 
   # combine age groups for variables where these are combined in different years of data- check with David, is this okay? best way to do this?
   dt[, RDT_completed := ifelse( year <= 2014, RDT_completed, (RDT_completedUnder5 + RDT_completed5andOlder))]
   dt[, RDT_positive := ifelse( year <= 2014, RDT_positive, (RDT_positiveUnder5 + RDT_positive5andOlder))]
@@ -119,8 +118,7 @@ if (aggregate == "agg"){
   
   dt = dt[, -c("year", "SSCACT_5andOlder", "SSCACT_under5", "SSCRDT_completedUnder5", "SSCRDT_completed5andOlder",
                "SSCRDT_positiveUnder5", "SSCRDT_positive5andOlder", "SSCcasesCrossReferred_5andOlder", "SSCcasesCrossReferred_under5",
-               "SSCcasesReferred_5andOlder", "SSCcasesReferred_under5", "SSCfevers_5andOlder", "SSCfevers_under5" )]
-}
+               "SSCcasesReferred_5andOlder", "SSCcasesReferred_under5", "SSCfevers_5andOlder", "SSCfevers_under5" )]}
 
 all_vars = names(dt)
 id_vars = c("id", "dps", "health_zone", "date", "donor", "operational_support_partner", "population")
@@ -163,78 +161,62 @@ dtLog[, random:=runif(nrow(dtLog))]
 
 # merge the logit transformation of health facilities prop with dtLog
 dt <- merge(dtLog, prop_lsqueeze, by=c("health_zone", "dps", "date"), all=TRUE)
-# ---------------------------------------------- 
-    
-# ---------------------------------------------- 
-# set up parameters and run amelia
-# ---------------------------------------------- 
-# set up for parallel
-parallelMethod = ifelse(as.logical(Sys.info()['sysname']=='Windows'), 'snow', 'multicore')
-ncores = detectCores()
-
-# run imputation - no polytime
-# ts variable: date
-# cs variable: health zone and dps
-# MI will ignore ID vars and include them as is in the output
-# lags/leads: all indicators
-# intercs = FALSE by default
-dt[ , combine := paste(dps, health_zone, sep = "_")] # make a combined variable for dps-health_zone to use for the cs var in amelia
-
-id_vars_for_amelia = id_vars[!id_vars %in% c("date")]  # needs to exclude date and health_zone
-
-measured_vars <- colnames(dt)
-measured_vars <- measured_vars[!measured_vars %in% c(id_vars_for_amelia, "combine", "date", with=FALSE)]
-
-num_of_runs = 50
-
-amelia.results <- amelia(dt, m=num_of_runs, cs= "combine", ts="date", idvars= id_vars_for_amelia, tolerance= tol, # the passed in tolerance
-                         # lags = measured_vars, leads= measured_vars,
-                         parallel= parallelMethod, ncpus= num_of_runs ) # ncpus should correspond to m
-# ---------------------------------------------- 
-  
 # ----------------------------------------------
 
-# ----------------------------------------------         
-# bind amelia results into one data.table, and save
-# ----------------------------------------------         
-for( i in 1:num_of_runs ) {
-    # include a column with the imputation number in order to keep track of diff iterations
-    amelia.results$imputations[[i]]$imputation_number <- i
-    if (i==1) amelia_data <- data.table(amelia.results$imputations[[i]])
-    if (i>1) amelia_data <- rbind(amelia_data, amelia.results$imputations[[i]])}
-  
-saveRDS(amelia_data, paste0(output_dir, rawFile))
-# ----------------------------------------------  
-  
+# ---------------------------------------------- 
+# save data sets to /ihme/scratch/ on the cluster
+# ---------------------------------------------- 
+saveRDS(dt, paste0(scratchDir, outFile))
+# ---------------------------------------------- 
+
+# ---------------------------------------------- 
+# submit qsubs to run amelia 50 times
 # ----------------------------------------------
-# inv.logit() and exp() the data produced by amelia() to re-transform it back to how it was before imputation
-# set original zeroes back to zero
-# ----------------------------------------------S
-# include imputation number in the id_vars used to exponentiate the data set so exp() happens for each of the 50 imputations
-imputed_id_vars <- c(id_vars, "imputation_number")
+N = 50
+system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N ', run_name, ' -l m_mem_free=10G -l fthread=1 -l h_rt=50:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia_qsub.R ', tolerance, ' ', aggregate, ' ', lags_leads, ' ', run_name)) 
+# ----------------------------------------------
 
-# make sure healthFaciliesProportion is excluded from indicators bc we will inv.logit() it rather than exp()
-inds <- inds[!inds %in% c("healthFacilitiesProportion")]
-
-# inv.logit of healthFacilitiesProportion
-amelia_data[, healthFacilitiesProportion:= inv.logit(healthFacilitiesProportion)]
-amelia_data[, healthFacilitiesProportion:=((healthFacilitiesProportion * N)-0.5) / (N-1)]
-
-# exponentiate the rest of the data set
-dtExp <- amelia_data[, lapply(.SD, function(x) exp(x)), .SDcols=inds]
-
-# convert values back to 0s that were originally 0s
-for (var in inds){
-  dtExp <- dtExp[zeroes[get(var)== TRUE, id], (var):= 0]
-}
-# ----------------------------------------------  
-  
-# ---------------------------------------------- 
-# export imputed data to have a saved full version 
-# (do this as an RDS so it is faster/smaller file)
-# ---------------------------------------------- 
-saveRDS(dtExp, paste0(output_dir, cleanedFile))
-# ---------------------------------------------- 
+# # ----------------------------------------------         
+# # bind amelia results into one data.table, and save
+# # ----------------------------------------------         
+# for( i in 1:num_of_runs ) {
+#     # include a column with the imputation number in order to keep track of diff iterations
+#     amelia.results$imputations[[i]]$imputation_number <- i
+#     if (i==1) amelia_data <- data.table(amelia.results$imputations[[i]])
+#     if (i>1) amelia_data <- rbind(amelia_data, amelia.results$imputations[[i]])}
+#   
+# saveRDS(amelia_data, paste0(output_dir, rawFile))
+# # ----------------------------------------------  
+#   
+# # ----------------------------------------------
+# # inv.logit() and exp() the data produced by amelia() to re-transform it back to how it was before imputation
+# # set original zeroes back to zero
+# # ----------------------------------------------S
+# # include imputation number in the id_vars used to exponentiate the data set so exp() happens for each of the 50 imputations
+# imputed_id_vars <- c(id_vars, "imputation_number")
+# 
+# # make sure healthFaciliesProportion is excluded from indicators bc we will inv.logit() it rather than exp()
+# inds <- inds[!inds %in% c("healthFacilitiesProportion")]
+# 
+# # inv.logit of healthFacilitiesProportion
+# amelia_data[, healthFacilitiesProportion:= inv.logit(healthFacilitiesProportion)]
+# amelia_data[, healthFacilitiesProportion:=((healthFacilitiesProportion * N)-0.5) / (N-1)]
+# 
+# # exponentiate the rest of the data set
+# dtExp <- amelia_data[, lapply(.SD, function(x) exp(x)), .SDcols=inds]
+# 
+# # convert values back to 0s that were originally 0s
+# for (var in inds){
+#   dtExp <- dtExp[zeroes[get(var)== TRUE, id], (var):= 0]
+# }
+# # ----------------------------------------------  
+#   
+# # ---------------------------------------------- 
+# # export imputed data to have a saved full version 
+# # (do this as an RDS so it is faster/smaller file)
+# # ---------------------------------------------- 
+# saveRDS(dtExp, paste0(output_dir, cleanedFile))
+# # ---------------------------------------------- 
     
     
 
