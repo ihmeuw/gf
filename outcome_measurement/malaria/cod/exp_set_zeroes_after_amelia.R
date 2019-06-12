@@ -93,11 +93,15 @@ dt[, healthFacilitiesProportion:= inv.logit(healthFacilitiesProportion)]
 dt[, healthFacilitiesProportion:=((healthFacilitiesProportion * N)-0.5) / (N-1)]
 
 # exponentiate the rest of the data set
-dtExp <- dt[, lapply(.SD, function(x) exp(x)), .SDcols=inds]
+dtExp <- dt[, lapply(.SD, function(x) exp(x)), .SDcols=inds, by = c(imputed_id_vars, "healthFacilitiesProportion")]
+
+reps = max(dt$imputation_number)
+zeroes = do.call("rbind", replicate(reps, zeroes, simplify = FALSE))
 
 # convert values back to 0s that were originally 0s
 for (var in inds){
-  dtExp <- dtExp[zeroes[get(var)== TRUE, id], (var):= 0]
+  set_ids = zeroes[get(var) == TRUE, id]
+  dtExp = dtExp[id %in% set_ids, (var):= 0]
 }
 # ----------------------------------------------
 
@@ -105,5 +109,5 @@ for (var in inds){
 # export imputed data to have a saved full version
 # (do this as an RDS so it is faster/smaller file)
 # ----------------------------------------------
-saveRDS(dtExp, paste0(output_dir, cleanedFile))
+saveRDS(dtExp, paste0(dir, cleanedFile))
 # ----------------------------------------------
