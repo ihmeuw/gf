@@ -194,47 +194,6 @@ N = 50
 system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N ', run_name, ' -l m_mem_free=10G -l fthread=1 -l h_rt=50:00:00 -l archive=TRUE -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia_qsub.R ', tolerance, ' ', aggregate, ' ', lags_leads, ' ', run_name)) 
 # ----------------------------------------------
 
-# # ----------------------------------------------         
-# # bind amelia results into one data.table, and save
-# # ----------------------------------------------         
-# for( i in 1:num_of_runs ) {
-#     # include a column with the imputation number in order to keep track of diff iterations
-#     amelia.results$imputations[[i]]$imputation_number <- i
-#     if (i==1) amelia_data <- data.table(amelia.results$imputations[[i]])
-#     if (i>1) amelia_data <- rbind(amelia_data, amelia.results$imputations[[i]])}
-#   
-# saveRDS(amelia_data, paste0(output_dir, rawFile))
-# # ----------------------------------------------  
-#   
-# # ----------------------------------------------
-# # inv.logit() and exp() the data produced by amelia() to re-transform it back to how it was before imputation
-# # set original zeroes back to zero
-# # ----------------------------------------------S
-# # include imputation number in the id_vars used to exponentiate the data set so exp() happens for each of the 50 imputations
-# imputed_id_vars <- c(id_vars, "imputation_number")
-# 
-# # make sure healthFaciliesProportion is excluded from indicators bc we will inv.logit() it rather than exp()
-# inds <- inds[!inds %in% c("healthFacilitiesProportion")]
-# 
-# # inv.logit of healthFacilitiesProportion
-# amelia_data[, healthFacilitiesProportion:= inv.logit(healthFacilitiesProportion)]
-# amelia_data[, healthFacilitiesProportion:=((healthFacilitiesProportion * N)-0.5) / (N-1)]
-# 
-# # exponentiate the rest of the data set
-# dtExp <- amelia_data[, lapply(.SD, function(x) exp(x)), .SDcols=inds]
-# 
-# # convert values back to 0s that were originally 0s
-# for (var in inds){
-#   dtExp <- dtExp[zeroes[get(var)== TRUE, id], (var):= 0]
-# }
-# # ----------------------------------------------  
-#   
-# # ---------------------------------------------- 
-# # export imputed data to have a saved full version 
-# # (do this as an RDS so it is faster/smaller file)
-# # ---------------------------------------------- 
-# saveRDS(dtExp, paste0(output_dir, cleanedFile))
-# # ---------------------------------------------- 
     
     
 
