@@ -15,7 +15,7 @@
 # ----------------------------------------------
 # THE FOLLOWING R SCRIPT WAS RUN ON THE CLUSTER AT IHME
 # qsub to run this script on the cluster:
-# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=50 -l m_mem_free=50G -l h_rt=120:00:00 -P proj_pce -q long.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia.R 0.01 run01_aggVars agg
+# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=50 -l m_mem_free=50G -l h_rt=120:00:00 -P proj_pce -q long.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia.R 0.01 run01_aggVars_nolagsLeads agg
 
 # runs:
 # 0.1 test_run no_agg
@@ -188,7 +188,7 @@ measured_vars <- measured_vars[!measured_vars %in% c(id_vars_for_amelia, "combin
 num_of_runs = 50
 
 amelia.results <- amelia(dt, m=num_of_runs, cs= "combine", ts="date", idvars= id_vars_for_amelia, tolerance= tol, # the passed in tolerance
-                         # lags = measured_vars, leads= measured_vars,
+                         lags = measured_vars, leads= measured_vars,
                          parallel= parallelMethod, ncpus= num_of_runs ) # ncpus should correspond to m
 # ---------------------------------------------- 
   
