@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
 # Caitlin O'Brien-Carelli
 #
-# 5/29/2019
+# 6/11/2019
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -15,6 +15,7 @@ library(ggplot2)
 library(dplyr)
 library(stringr) 
 library(openxlsx)
+library(lubridate)
 # --------------------
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
@@ -76,10 +77,15 @@ files = list.files('./', recursive=TRUE)
 # read in the files
 i = 1
 for(f in files[1:15]) {
+  
   #load the RDs file
   file_name = f
   current_data = data.table(readRDS(f))
   current_data[ , file:=file_name]
+  
+  # skip blank downloads
+  if(nrow(current_data)==0) i = i+1
+  if(nrow(current_data)==0) next
   
   # add download number if it is not already included
   download = str_split(file_name, '_')[[1]][6]
@@ -91,30 +97,46 @@ for(f in files[1:15]) {
   current_data[ , data_element_ID:=as.character(data_element_ID)]
   current_data = current_data[data_element_ID %in% keep_vars]
   }
-  
+
   # add a date variable
-  current_data[ , date:=ymd(paste0(as.character(period), '01'))]
-  current_data[ , period:=NULL]
+  current_data[ , date:=paste0(as.character(period), '01')]
+  current_data[ , date:=as.Date(date, format='%Y%m%d')]
+  current_data[ , c('period', 'group'):=NULL]
+  
+  # convert variable types
+  current_data[ , data_element_ID:=as.character(data_element_ID)]
+  current_data[ , org_unit_ID:=as.character(org_unit_ID)]
+  current_data[ , category:=as.character(category)]
   
   # create a date variable based on last update 
   current_data[ , last_update:=as.character(last_update)]
-  current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
-  
+  current_data$last_update = unlist(lapply(str_split(current_data$last_update, 'T'), '[', 1))
+  current_data[ ,last_update:=as.Date(last_update, format="%Y-%m-%d")]
+
   # append to the full data
   if(i==1) dt1 = current_data
   if(i>1)  dt1 = rbind(dt1, current_data)
   
+  print(paste("Rbound", file_name, "to the full data"))
+  print(paste("Index:", i))
+  
   # save the completed rbind for the first half of the data 
   if (i==15) saveRDS(dt1, paste0(dir, 'pre_prep/', folder, '/', folder, '_first_half.rds'))
   i = i+1
-
 }
+
+# start indexing over 
+i = 1
 
 for(f in files[16:length(files)]) {
   #load the RDs file
   file_name = f
   current_data = data.table(readRDS(f))
   current_data[ , file:=file_name]
+  
+  # skip blank downloads
+  if(nrow(current_data)==0) i = i+1
+  if(nrow(current_data)==0) next
   
   # add download number if it is not already included
   download = str_split(file_name, '_')[[1]][6]
@@ -128,25 +150,46 @@ for(f in files[16:length(files)]) {
   }
   
   # add a date variable
-  current_data[ , date:=ymd(paste0(as.character(period), '01'))]
-  current_data[ , period:=NULL]
+  current_data[ , date:=paste0(as.character(period), '01')]
+  current_data[ , date:=as.Date(date, format='%Y%m%d')]
+  current_data[ , c('period', 'group'):=NULL]
+  
+  # convert variable types
+  current_data[ , data_element_ID:=as.character(data_element_ID)]
+  current_data[ , org_unit_ID:=as.character(org_unit_ID)]
+  current_data[ , category:=as.character(category)]
   
   # create a date variable based on last update 
   current_data[ , last_update:=as.character(last_update)]
-  current_data[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
-  
+  current_data$last_update = unlist(lapply(str_split(current_data$last_update, 'T'), '[', 1))
+  current_data[ ,last_update:=as.Date(last_update, format="%Y-%m-%d")]
+
   # append to the full data
   if(i==1) dt2 = current_data
   if(i>1)  dt2 = rbind(dt2, current_data)
   
+  print(paste("Rbound", file_name, "to the full data"))
+  print(paste("Second round index:", i))
+  
   # save the completed rbind for the second half of the data 
-  if (i==length(files)) saveRDS(dt2, paste0(dir, 'pre_prep/', folder, '/', folder, '_second_half.rds'))
+  if (i==length(files)-15) saveRDS(dt2, paste0(dir, 'pre_prep/', folder, '/', folder, '_second_half.rds'))
   i = i+1
   
 }
 
+#---------------------------------
+# perform distinct functions on half the data each time 
+
+# merge in the meta data 
+dt1 = merge_meta_data(dt1)
+dt2 = merge_meta_data(dt2)
+
 # bind the two sets together
-dt = rbind(dt1, dt2)
+dt = data.table(rbind(dt1, dt2))
+
+# drop out the additional large files
+dt1 = NULL
+dt2 = NULL
 
 #---------------------------------
 # remove the factoring of value to avoid errors
@@ -166,12 +209,12 @@ max_date = dt[ , max(date)]
 max_date = gsub('-', '_', max_date)
 
 # save the raw data before the merge 
-saveRDS(paste0(dir, 'pre_prep/', folder, '/', folder, min_date, '_', max_date, 'full.rds'))
+saveRDS(dt, paste0(dir, 'pre_prep/', folder, '/', folder, min_date, '_', max_date, 'full.rds'))
 
 #---------------------------------
 # collapse across the file names 
 
-byVars = names(dt)[names(dt)!='file_name' & names(dt)!='download_number' & names(dt)!='value']
+byVars = names(dt)[names(dt)!='file' & names(dt)!='download_number' & names(dt)!='value']
 dt = dt[ ,.(value=sum(value)), by=byVars]
 
 #---------------------------------
@@ -182,7 +225,7 @@ dt = merge_meta_data(dt)
 #---------------------------------
 # run the prep function to prepare some variables for use
 
-dt = prep_dhis(dt)
+dt = prep_dhis_geography(dt)
 #--------------------------------------
 # save the merged rds file 
 

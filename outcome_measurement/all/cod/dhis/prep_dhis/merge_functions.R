@@ -50,6 +50,22 @@ merge_meta_data = function(x) {
   data_elements = data.table(readRDS(paste0(dir, 'meta_data/updated_data_elements.rds')))
   categories = data.table(readRDS(paste0(dir, 'meta_data/data_elements_categories.rds')))
   
+  # replace dps with the name only
+  facilities$dps1 = unlist(lapply(strsplit(facilities$dps, " "), "[", 2))
+  facilities$dps2 = unlist(lapply(strsplit(facilities$dps, " "), "[", 3))
+  facilities[dps2!='Province', dps:=paste(dps1, dps2)]
+  facilities[dps2=='Province', dps:=dps1]
+  facilities[ , c('dps1', 'dps2'):=NULL]
+  
+  # replace health zone with the name only
+  facilities$health_zone1 = unlist(lapply(strsplit(facilities$health_zone, " "), "[", 2))
+  facilities$health_zone2 = unlist(lapply(strsplit(facilities$health_zone, " "), "[", 3))
+  facilities$health_zone3 = unlist(lapply(strsplit(facilities$health_zone, " "), "[", 4))
+  facilities[health_zone3 != 'Zone' & health_zone2 != 'Zone', health_zone:=paste(health_zone1, health_zone2, health_zone3) ]
+  facilities[health_zone3=='Zone', health_zone:=paste(health_zone1, health_zone2)]
+  facilities[health_zone2=='Zone', health_zone:=health_zone1]
+  facilities[ , c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
+
   # drop unecessary variables
   data_elements[ , c('datasets_url', 'data_element_url'):=NULL]
   categories[ , url_list:=NULL]
@@ -63,12 +79,6 @@ merge_meta_data = function(x) {
   
   #-------------------
   # merge in the meta data 
-  
-  # change the variable classes for the merge
-  x[ , org_unit_id:=as.character(org_unit_id)]
-  x[ , category:=as.character(category)]
-  x[ , data_element_id:=as.character(data_element_id)]
-  x[ , last_update:=ymd(last_update)]
   
   # merge in the facilities meta data 
   y = merge(x, facilities, by='org_unit_id', all.x=T)
@@ -92,6 +102,8 @@ merge_meta_data = function(x) {
   y[ , c('category', 'opening_date', 'data_set_id'):=NULL] 
   setnames(y, 'category_name', 'category')
   
+  print("Metadata merged; beginning to add translations.")
+  
   #-------------------
   # merge in the english translations
   translations = data.table(readRDS(paste0(dir, 'meta_data/data_elements.rds')))
@@ -99,39 +111,13 @@ merge_meta_data = function(x) {
   translations = translations[data_set_id==sub_id]
   translations[ ,data_set_id:=NULL]
   y = merge(y, translations, by='data_element_id', all.x=T)
+  
+  #--------------------------------------
 
   # return the new data set
   return(y) 
 }
 
-#--------------------------------------------------------------
-# prep function for all data sets
-
-prep_dhis_geography = function(x) {
-  
-  #--------------------------------------
-  # replace the dps/hz with just the name, excluding the code and word 'province'
-  # some health zones and provinces have two names before 'province'
-  
-  # replace dps with the name only
-  x$dps1 = unlist(lapply(strsplit(x$dps, " "), "[", 2))
-  x$dps2 = unlist(lapply(strsplit(x$dps, " "), "[", 3))
-  x[dps2!='Province', dps:=paste(dps1, dps2)]
-  x[dps2=='Province', dps:=dps1]
-  x[ , c('dps1', 'dps2'):=NULL]
-  
-  # replace health zone with the name only
-  x$health_zone1 = unlist(lapply(strsplit(x$health_zone, " "), "[", 2))
-  x$health_zone2 = unlist(lapply(strsplit(x$health_zone, " "), "[", 3))
-  x$health_zone3 = unlist(lapply(strsplit(x$health_zone, " "), "[", 4))
-  x[health_zone3 != 'Zone' & health_zone2 != 'Zone', health_zone:=paste(health_zone1, health_zone2, health_zone3) ]
-  x[health_zone3=='Zone', health_zone:=paste(health_zone1, health_zone2)]
-  x[health_zone2=='Zone', health_zone:=health_zone1]
-  x[ , c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
-  
-  #--------------------------------------
-  return(x)
-}
 
 #--------------------------------------------------------------
 # function to prep and subset pnls 
