@@ -99,7 +99,6 @@ dt = readRDS(paste0(dir, inFile))
 dt[, thinSmearTest := NULL]
 # test subset
 dt = dt[dps == unique(dt$dps)[1]]
-dt = dt[ health_zone %in% unique(dt$health_zone)[1:3]]
 
 if (aggregate == "agg"){
   # combine age groups for variables where these are combined in different years of data- check with David, is this okay? best way to do this?
