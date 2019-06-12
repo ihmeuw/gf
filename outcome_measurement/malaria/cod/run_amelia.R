@@ -27,8 +27,7 @@
 # 0.01 run01_aggVars_wlagsleads agg
 
 # test subset qsub
-# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=55 
-# -l m_mem_free=10G -l h_rt=1:00:00 -P proj_pce -q all.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia.R 0.1 test_run no_agg
+# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=10 -l m_mem_free=20G -l h_rt=2:00:00 -P proj_pce -q all.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia.R 0.1 test_run no_agg
 # ----------------------------------------------
 
 # --------------------
@@ -97,6 +96,7 @@ if (cleanup_start == TRUE){
 # read in data table prepped by prep_for_MI.R and initial set up
 # ---------------------------------------------- 
 dt = readRDS(paste0(dir, inFile))
+dt[, thinSmearTest := NULL]
 # test subset
 dt = dt[dps == unique(dt$dps)[1]]
 dt = dt[ health_zone %in% unique(dt$health_zone)[1:3]]
