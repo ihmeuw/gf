@@ -15,8 +15,7 @@
 # ----------------------------------------------
 # THE FOLLOWING R SCRIPT WAS RUN ON THE CLUSTER AT IHME
 # qsub to run this script on the cluster:
-# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=55 
-# -l m_mem_free=100G -l h_rt=100:00:00 -P proj_pce -q long.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia.R 0.001 run001 no_agg
+# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=50 -l m_mem_free=50G -l h_rt=120:00:00 -P proj_pce -q long.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia.R 0.01 run01_aggVars agg
 
 # runs:
 # 0.1 test_run no_agg
@@ -98,7 +97,7 @@ if (cleanup_start == TRUE){
 dt = readRDS(paste0(dir, inFile))
 dt[, thinSmearTest := NULL]
 # test subset
-dt = dt[dps == unique(dt$dps)[1]]
+# dt = dt[dps == unique(dt$dps)[1]]
 
 if (aggregate == "agg"){
   # combine age groups for variables where these are combined in different years of data- check with David, is this okay? best way to do this?
@@ -186,7 +185,7 @@ id_vars_for_amelia = id_vars[!id_vars %in% c("date")]  # needs to exclude date a
 measured_vars <- colnames(dt)
 measured_vars <- measured_vars[!measured_vars %in% c(id_vars_for_amelia, "combine", "date", with=FALSE)]
 
-num_of_runs = 5
+num_of_runs = 50
 
 amelia.results <- amelia(dt, m=num_of_runs, cs= "combine", ts="date", idvars= id_vars_for_amelia, tolerance= tol, # the passed in tolerance
                          lags = measured_vars, leads= measured_vars,
