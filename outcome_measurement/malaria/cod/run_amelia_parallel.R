@@ -13,21 +13,41 @@
 
 # 6/2019 run for final model with data improvements (end of month deliverable)
 # ----------------------------------------------
+
+# ----------------------------------------------
 # THE FOLLOWING R SCRIPT WAS RUN ON THE CLUSTER AT IHME
-# qsub to run this script on the cluster:
-# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=50 -l m_mem_free=50G -l h_rt=120:00:00 -P proj_pce -q long.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia.R 0.01 run01_aggVars_nolagsLeads agg
+# steps to run this script:
+# 1) set the working directory in the qlogin by navigating to it
+
+# 2) once you have navigated to the directory, 
+# git pull (make sure you have pushed from github desktop)
+
+# 3) to open an interactive r session on the cluser:
+# singularity exec /share/singularity-images/health_fin/forecasting/best_new.img R
+
+# set switches
+aggregate = "agg" # noAgg for FALSE
+lags_leads = "no_lags_leads" # "lags_and_leads" for TRUE
+tolerance = 1.0
+cleanup_start = FALSE
+
+# set run_name manually:
+run_name = 'run1_0_aggVars_noLagsLeads'
 
 # runs:
-# 0.1 test_run no_agg
-# 0.1 test_run_aggVars agg
-# 0.001 run001_wlagsleads no_agg
-# 0.001 run001_aggVars_wlagsleads agg
-# 0.01 run01_wlagsleads no_agg
-# 0.01 run01_aggVars_wlagsleads agg
+# for testing-
+# 1.0 run1_0_aggVars_noLagsLeads
+# 1.0 run1_0_noAgg_noLagsLeads
+# other - 
+# 0.1 run0_1_aggVars_noLagsLeads
+# 0.1 run0_1_noAgg_noLagsLeads
 
-# test subset qsub
-# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=10 -l m_mem_free=20G -l h_rt=2:00:00 -P proj_pce -q all.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia.R 0.1 test_run no_agg
+# 0.001 run0_001_wlagsleads no_agg
+# 0.001 run0_001_aggVars_wlagsleads agg
+# 0.01 run0_01_wlagsleads no_agg
+# 0.01 run0_01_aggVars_wlagsleads agg
 # ----------------------------------------------
+
 
 # --------------------
 # Set up R / install packages
@@ -64,20 +84,16 @@ user = Sys.info()[['user']]
 # input file:
   inFile = 'PNLP_dt_forMI_updated_6_10_19.rds'
   
-# set switches
-  aggregate = "agg" # noAgg for FALSE
-  lags_leads = "no_lags_leads" # "lags_and_leads" for TRUE
-  tolerance = 0.1
-  cleanup_start = FALSE
-
-# set run_name manually:
-  run_name = 'run0_1_aggVars_noLagsLeads'
-  
 # output files:
   if (aggregate == "agg"){ 
     outFile = "data_for_amelia_aggVars.rds" } else {
     outFile = "data_for_amelia_noAggVars.rds" }
-  
+  if (aggregate == "agg"){ 
+    origData = "initial_data_for_amelia_aggVars.rds" } else {
+    origData = "initial_data_for_amelia_noAggVars.rds" }
+  if (aggregate == "agg"){ 
+    zeroesData = "zeroes_data_for_amelia_aggVars.rds" } else {
+    zeroesData = "zeroes_data_for_amelia_noAggVars.rds" }
   # output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
   # rawFile = paste0("PNLP_imputed_rawData_", run_name, ".rds")
   # cleanedFile = paste0("PNLP_imputedData_", run_name, ".rds")
@@ -130,12 +146,14 @@ inds = all_vars[!all_vars %in% id_vars]
 # but "lemon-squeeze" healthFacilitiesProportion
 # ---------------------------------------------- 
 # save original data
-dtOrig <- copy(dt)
+saveRDS(dt, paste0(scratchDir, origData))
     
 # store which observations had zero so we can switch them back to zero at the end, after imputation
 for (ind in inds) dt[ get(ind) < 0, (ind) := NA]
 zeroes <- dt[, lapply(.SD, function(x) {x==0}), .SDcols=inds, by= c(id_vars)] 
-  
+# save zeroes
+saveRDS(zeroes, paste0(scratchDir, zeroesData))
+
 # log transform all of the data except for healthFacilitiesProportion to run amelia on it
 log_inds <- inds[!inds %in% c("healthFacilitiesProportion")]
 
@@ -173,7 +191,7 @@ saveRDS(dt, paste0(scratchDir, outFile))
 # submit qsubs to run amelia 50 times
 # ----------------------------------------------
 N = 50
-system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N ', run_name, ' -l m_mem_free=10G -l fthread=1 -l h_rt=50:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia_qsub.R ', tolerance, ' ', aggregate, ' ', lags_leads, ' ', run_name)) 
+system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N ', run_name, ' -l m_mem_free=10G -l fthread=1 -l h_rt=50:00:00 -l archive=TRUE -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia_qsub.R ', tolerance, ' ', aggregate, ' ', lags_leads, ' ', run_name)) 
 # ----------------------------------------------
 
 # # ----------------------------------------------         

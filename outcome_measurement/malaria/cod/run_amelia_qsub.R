@@ -69,6 +69,9 @@ rawFile = paste0("imputedRawData_", run_name, "_", i, ".rds")
 # ---------------------------------------------- 
 dt = readRDS(paste0(scratchDir, inFile))
 
+#test subset
+dt = dt[ dps == unique(dt$dps)[1], ]
+
 dt[ , combine := paste(dps, health_zone, sep = "_")] # make a combined variable for dps-health_zone to use for the cs var in amelia
 
 id_vars = c("id", "dps", "health_zone", "date", "donor", "operational_support_partner", "population")
@@ -93,7 +96,7 @@ parallelMethod = ifelse(as.logical(Sys.info()['sysname']=='Windows'), 'snow', 'm
 
 if (lags_leads == "lags_and_leads"){ 
   amelia.results <- amelia(dt, m=1, cs= "combine", ts="date", idvars= id_vars_for_amelia, tolerance= tol, # the passed in tolerance
-                           # lags = measured_vars, leads= measured_vars,
+                           lags = measured_vars, leads= measured_vars,
                            parallel= parallelMethod, ncpus= 2 ) # ncpus should correspond to m
   } else {
   amelia.results <- amelia(dt, m=1, cs= "combine", ts="date", idvars= id_vars_for_amelia, tolerance= tol, # the passed in tolerance
