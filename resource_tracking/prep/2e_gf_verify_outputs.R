@@ -24,12 +24,7 @@ if (!test_current_files){
   setnames(file_iterations, old=c('fileName', 'grant_number'), new=c('file_name', 'grant'))
   
   #EMILY DO WE WANT TO KEEP THIS CHECK AROUND? CODE BELOW NO LONGER WORKS. 
-} else {
-  all_budgets = readRDS(paste0(base_dir, "combined_prepped_data/final_budgets.rds"))
-  all_expenditures = readRDS(paste0(base_dir, "combined_prepped_data/final_expenditures.rds"))
-  all_absorption = readRDS(paste0(base_dir, "combined_prepped_data/absorption.rds"))
-}
-
+} 
 # -----------------------
 # Country-level tests 
 # -----------------------
@@ -51,7 +46,7 @@ for (i in 1:length(loc_names)){
   
   budgets = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_budgets.rds"))
   expenditures = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_expenditures.rds"))
-  absorption = readRDS(paste0(base_dir, loc_name, "/prepped_data/", loc_name, "_absorption.rds"))
+  absorption = readRDS(paste0(base_dir, loc_name, "/prepped_data/absorption_", loc_name, ".rds"))
   
   budget_tests = read.xlsx(paste0(base_dir, loc_name, "/", loc_name, "_tests.xlsx"), sheet="budget", detectDates=T)
   expenditure_tests = read.xlsx(paste0(base_dir, loc_name, "/", loc_name, "_tests.xlsx"), sheet="expenditure", detectDates=T)

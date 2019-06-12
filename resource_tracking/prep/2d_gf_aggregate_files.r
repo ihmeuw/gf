@@ -196,11 +196,22 @@ final_expenditures_sen[, loc_name:='sen']
 
 #Bind expenditures together
 final_expenditures = rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, final_expenditures_sen, fill = TRUE) 
+final_expenditures[, year:=year(start_date)]
+final_expenditures[, data_source:='pudr']
 
 #For final expenditures, to reduce data gaps, use GOS through 2017 and then PUDRs after that. 
 final_expenditures = final_expenditures[year>=2018]
 gos_expenditures = gos_data[year<2018]
-gos_prioritized_expenditures = rbind(final_expenditures, gos_expenditures, use.names=TRUE, fill=TRUE)
+
+#Drop unneeded variables, and generate a few needed ones 
+gos_expenditures = gos_expenditures[, -c('activity_description', 'budget', 'country', 'current_grant', 'file_name', 'includes_rssh', 'orig_module', 'orig_intervention', 'quarter', 'year')]
+gos_expenditures[, data_source:='gos']
+gos_expenditures[, end_date:=(start_date%m+%months(3))-1] #All of the GOS data is at the quarter-level. 
+
+final_expenditures = final_expenditures[, -c('pudr_grant_year', 'year')]
+
+#Append datasets 
+gos_prioritized_expenditures = rbind(gos_expenditures, final_expenditures, use.names=TRUE, fill=TRUE)
 
 # Write data 
 write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)

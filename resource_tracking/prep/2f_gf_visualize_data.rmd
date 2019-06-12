@@ -12,7 +12,15 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 
 budgets = readRDS(paste0(combined_output_dir, "final_budgets.rds"))
 expenditures = readRDS(paste0(combined_output_dir, "final_expenditures.rds"))
+
+sen_absorption = readRDS(paste0(dir, "_gf_files_gos/sen/prepped_data/absorption_sen.rds"))
+cod_absorption = readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/absorption_cod.rds"))
+gtm_absorption = readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/absorption_gtm.rds"))
+uga_absorption = readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/absorption_uga.rds"))
+
 ```
+
+# BUDGETS AND EXPENDITURES 
 
 ## Plot data
 Visualize the budget data by grant and year. 
@@ -52,7 +60,7 @@ print(sum_current_grants[grant==grant_number])
 
 ```
 
-##Visualize by disease and country 
+## Visualize by disease and country 
 ```{r, echo=FALSE}
 sum_by_country_disease = budgets[, .(budget=sum(budget, na.rm=TRUE)), by=c('country', 'year', 'disease')]
 countries = unique(budgets$country)
@@ -79,6 +87,7 @@ print(rssh)
 }
 
 ```
+
 ## Review variables 
 
 Are the formats of the variables what you expect? 
@@ -140,25 +149,72 @@ unique(budgets[, .(grant, grant_disease)])
 unique(expenditures[, .(grant, grant_disease)])
 ```
 
-What are the data gaps between GOS and budgets, expenditures? 
-```{r, echo=TRUE}
-budgets_only = budgets[data_source=='fpm']
-gos_budgets = budgets[data_source=='gos' & grant%in%budgets_only$grant]
+# ABSORPTION GRAPHS
 
-expenditures_only = expenditures[data_source=='pudr']
-gos_expenditures = expenditures[data_source=='gos' & grant%in%expenditures_only$grant] 
+```{r cod_absorption, echo=FALSE, warning=FALSE} 
+absorption_by_country = cod_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')]
+absorption_by_country[, absorption:=(expenditure/budget)*100]
 
-budgets_only[, .(min_start_date = min(start_date)), by='grant']
-gos_budgets[, .(max_start_date = max(start_date)), by='grant']
+#Where you don't have data for a semester, show it as NA. 
+all_semesters = expand.grid(semester=unique(absorption_by_country$semester), grant=unique(absorption_by_country$grant))
+absorption_by_country = merge(absorption_by_country, all_semesters, all.y=T, by=c('grant', 'semester')) 
 
-expenditures_only[, .(min_start_date = min(start_date)), by='grant']
-gos_expenditures[, .(max_start_date = max(start_date)), by='grant']
+by_grant = ggplot(absorption_by_country, aes(x=grant, y=absorption, group=semester, fill=semester)) + 
+  geom_bar(stat="identity", position="dodge")+
+  theme_bw()+
+  labs(title="DRC Absorption by grant and semester", y="Absorption (%)", x="Grant")
+
+by_grant
 
 ```
-Look at the unique values of each variable in the data that's not numeric. 
-```{r, echo=FALSE, include=FALSE}
-#stopifnot(sort(names(budgets))==sort(names(expenditures)))
-str(budgets)
 
+```{r gtm_absorption, echo=FALSE, warning=FALSE} 
+absorption_by_country = gtm_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')]
+absorption_by_country[, absorption:=(expenditure/budget)*100]
+
+#Where you don't have data for a semester, show it as NA. 
+all_semesters = expand.grid(semester=unique(absorption_by_country$semester), grant=unique(absorption_by_country$grant))
+absorption_by_country = merge(absorption_by_country, all_semesters, all.y=T, by=c('grant', 'semester')) 
+
+by_grant = ggplot(absorption_by_country, aes(x=grant, y=absorption, group=semester, fill=semester)) + 
+  geom_bar(stat="identity", position="dodge")+
+  theme_bw()+
+  labs(title="Guatemala Absorption by grant and semester", y="Absorption (%)", x="Grant") 
+
+by_grant
+
+```
+
+```{r sen_absorption, echo=FALSE, warning=FALSE} 
+absorption_by_country = sen_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')]
+absorption_by_country[, absorption:=(expenditure/budget)*100]
+
+#Where you don't have data for a semester, show it as NA. 
+all_semesters = expand.grid(semester=unique(absorption_by_country$semester), grant=unique(absorption_by_country$grant))
+absorption_by_country = merge(absorption_by_country, all_semesters, all.y=T, by=c('grant', 'semester')) 
+
+by_grant = ggplot(absorption_by_country, aes(x=grant, y=absorption, group=semester, fill=semester)) + 
+  geom_bar(stat="identity", position="dodge")+
+  theme_bw()+
+  labs(title="Senegal Absorption by grant and semester", y="Absorption (%)", x="Grant")
+
+by_grant
+
+```
+
+```{r uga_absorption, echo=FALSE, warning=FALSE} 
+absorption_by_country = uga_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')]
+absorption_by_country[, absorption:=(expenditure/budget)*100]
+
+#Where you don't have data for a semester, show it as NA. 
+all_semesters = expand.grid(semester=unique(absorption_by_country$semester), grant=unique(absorption_by_country$grant))
+absorption_by_country = merge(absorption_by_country, all_semesters, all.y=T, by=c('grant', 'semester')) 
+
+by_grant = ggplot(absorption_by_country, aes(x=grant, y=absorption, group=semester, fill=semester)) + 
+  geom_bar(stat="identity", position="dodge")+
+  theme_bw()+
+  labs(title="Uganda Absorption by grant and semester", y="Absorption (%)", x="Grant") 
+
+by_grant
 
 ```

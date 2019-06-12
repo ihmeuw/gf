@@ -384,11 +384,13 @@ if (prep_files){
   #Sum out the quarter-level
   
     valueVars = c('budget', 'expenditure', 'disbursement')
-    exp_collapse = expenditures[overlap==TRUE, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
-                                by=c('grant', 'grant_period', 'code', 'semester_code', 'pudr_grant_year')]
+    exp_collapse = expenditures[overlap==TRUE]
+    exp_collapse[, start_date:=min(start_date), by='file_name']
+    exp_collapse = exp_collapse[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
+                                by=c('grant', 'grant_period', 'code', 'semester_code', 'pudr_grant_year', 'start_date')]
     #Validate the data that you've pulled - make sure semesters will work with code below. 
     stopifnot(unique(exp_collapse$semester_code)%in%c('A', 'AB'))
-    exp_collapse = dcast(exp_collapse, grant+grant_period+pudr_grant_year+code~semester_code, value.var=valueVars)
+    exp_collapse = dcast(exp_collapse, grant+grant_period+pudr_grant_year+code+start_date~semester_code, value.var=valueVars)
     #EMILY FLAG CASES HERE WHERE WE DON'T HAVE A MODULE/INTERVENTION IN ONE PUDR OR THE OTHER 
     
     #Subtract earlier semesters from later semesters 
@@ -413,21 +415,30 @@ if (prep_files){
     exp_collapse = exp_collapse[, -c('budget_AB', 'expenditure_AB', 'disbursement_AB')]
     
     #reshape this data back long, and merge back onto the rest of the expenditure dataset. 
-    exp_melt = melt(exp_collapse, id.vars=c('grant', 'grant_period', 'code', 'pudr_grant_year'))
+    exp_melt = melt(exp_collapse, id.vars=c('grant', 'grant_period', 'code', 'pudr_grant_year', 'start_date'))
     exp_melt[, semester:=tstrsplit(variable, "_", keep=2)]
     stopifnot(unique(exp_melt$semester)%in%c('A', 'B'))
     exp_melt[, variable:=tstrsplit(variable, "_", keep=1)]
     stopifnot(unique(exp_melt$budget)%in%c('A', 'B'))
     
     # Cast back so budget, expenditure, and disbursement are variable names again. 
-    exp_recast = dcast(exp_melt, grant+grant_period+code+pudr_grant_year+semester~variable, value.var='value')
+    exp_recast = dcast(exp_melt, grant+grant_period+code+pudr_grant_year+semester+start_date~variable, value.var='value')
+    exp_recast[semester=="B", start_date:=start_date %m+% months(6)]
+    exp_recast[, duration_quarters:=2]
     
     #Merge back onto expenditure data that DIDN'T need subtraction 
     exp_no_subtract = expenditures[overlap==FALSE, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE), disbursement=sum(disbursement, na.rm=TRUE)), 
-                                   by=c('grant', 'grant_period', 'code', 'pudr_grant_year', 'semester_code')]
+                                   by=c('grant', 'grant_period', 'code', 'pudr_grant_year', 'semester_code', 'start_date', 'duration_quarters')]
     setnames(exp_no_subtract, 'semester_code', 'semester')
-    expenditures = rbind(exp_recast, exp_no_subtract)  #EMILY CAN YOU CHECK THE NUMBER OF ROWS AS COMPARED TO THE ORIGINAL HERE? AND CAN YOU CHECK DUPLICATE OBSERVATIONS? 
     
+    #Append datasets
+    expenditures = rbind(exp_recast, exp_no_subtract) 
+    
+    #Create date variables 
+    expenditures[, end_date:=(start_date %m+% months((duration_quarters*3)))-1]
+    expenditures = expenditures[, -c('duration_quarters')]
+    
+    #Check duplicates
     duplicates = expenditures[duplicated(expenditures)] 
     if(nrow(duplicates)!=0){
       stop(paste0("There are ", nrow(duplicates), "in expenditures file. Review summing and appending code."))
@@ -447,9 +458,37 @@ if (prep_files){
     #Remove extra financial variables. 
     expenditures = expenditures[, -c('budget', 'disbursement')]
     
+    #Add in grant disease variable 
+    expenditures[, disease_split:=strsplit(grant, "-")]
+    potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
+    
+    for (i in 1:nrow(expenditures)){
+      if (expenditures$disease_split[[i]][2]%in%potential_diseases){
+        expenditures[i, grant_disease:=sapply(disease_split, "[", 2 )]
+      } else if (expenditures$disease_split[[i]][3]%in%potential_diseases){
+        expenditures[i, grant_disease:=sapply(disease_split, "[", 3 )]
+      } else if (expenditures$disease_split[[i]][4]%in%potential_diseases){
+        expenditures[i, grant_disease:=sapply(disease_split, "[", 4 )]
+      }
+    }
+    
+    expenditures[, disease_split:=NULL]
+    
+    unique(expenditures[!grant_disease%in%potential_diseases, .(grant, grant_disease)]) #Visual check that these all make sense. 
+    
+    expenditures[grant_disease=='C', grant_disease:='hiv/tb']
+    expenditures[grant_disease=='H', grant_disease:='hiv']
+    expenditures[grant_disease=='T', grant_disease:='tb']
+    expenditures[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
+    expenditures[grant_disease=='M', grant_disease:='malaria']
+    expenditures[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
+    
+    stopifnot(unique(expenditures$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
+    
   } else { #If you don't have duplicate files, collapse your dataset to be in the same format. 
+    expenditures[, start_date:=min(start_date), by='file_name']
     expenditures = expenditures[, .(expenditure=sum(expenditure, na.rm=T)),
-                                by=c('grant', 'grant_period', 'code', 'year', 'pudr_grant_year', 'semester', 'gf_module', 'gf_intervention', 'disease')]
+                                by=c('grant', 'grant_period', 'code', 'year', 'pudr_grant_year', 'semester', 'start_date', 'gf_module', 'gf_intervention', 'disease')]
     
     #Add in PUDR label value. 
     expenditures = merge(expenditures, pudr_labels, by=c('semester', 'pudr_grant_year'), all.x=T)
@@ -458,11 +497,43 @@ if (prep_files){
     }
     expenditures = expenditures[, -c('semester', 'pudr_order', 'pudr_code')]
     setnames(expenditures, 'semester_code', 'semester')
+    
+    #Create date variables 
+    expenditures[, end_date:=(start_date %m+% months((duration_quarters*3)))-1]
+    expenditures = expenditures[, -c('duration_quarters')]
+    
+    #Add in grant disease variable 
+    expenditures[, disease_split:=strsplit(grant, "-")]
+    potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
+    
+    for (i in 1:nrow(expenditures)){
+      if (expenditures$disease_split[[i]][2]%in%potential_diseases){
+        expenditures[i, grant_disease:=sapply(disease_split, "[", 2 )]
+      } else if (expenditures$disease_split[[i]][3]%in%potential_diseases){
+        expenditures[i, grant_disease:=sapply(disease_split, "[", 3 )]
+      } else if (expenditures$disease_split[[i]][4]%in%potential_diseases){
+        expenditures[i, grant_disease:=sapply(disease_split, "[", 4 )]
+      }
+    }
+    
+    expenditures[, disease_split:=NULL]
+    
+    unique(expenditures[!grant_disease%in%potential_diseases, .(grant, grant_disease)]) #Visual check that these all make sense. 
+    
+    expenditures[grant_disease=='C', grant_disease:='hiv/tb']
+    expenditures[grant_disease=='H', grant_disease:='hiv']
+    expenditures[grant_disease=='T', grant_disease:='tb']
+    expenditures[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
+    expenditures[grant_disease=='M', grant_disease:='malaria']
+    expenditures[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
+    
+    stopifnot(unique(expenditures$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
+    
   }
 
   #-------------------------------------------
   #3. Absorption
-  absorption = mapped_data[data_source=="pudr" & file_iteration=="final", .(grant, grant_period, code, gf_module, gf_intervention, budget, expenditure, lfa_exp_adjustment, pudr_semester)]
+  absorption = mapped_data[data_source=="pudr" & file_iteration=="final", .(grant, grant_period, code, gf_module, gf_intervention, budget, expenditure, lfa_exp_adjustment, pudr_semester, start_date)]
   absorption[, expenditure:=expenditure+lfa_exp_adjustment] #Calculate final expenditure. 
   absorption = absorption[, -c('lfa_exp_adjustment')]
   setnames(absorption, 'pudr_semester', 'pudr_code')
@@ -474,21 +545,51 @@ if (prep_files){
   
   #Calculate absorption by module/intervention 
   absorption = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
-                          by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'semester', 'code')]
+                          by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'semester', 'code', 'duration_quarters', 'start_date')]
   absorption[, absorption:=(expenditure/budget)*100]
+  
+  #Add additional variables 
+  absorption[, end_date:=start_date %m+% months((duration_quarters*3))]
+  absorption = absorption[, -c('duration_quarters')]
   absorption[, loc_name:=country]
   
-  absorption_wide=data.table()
-  grants = unique(absorption[, .(grant, grant_period)])
-  for (i in 1:nrow(grants)){
-    subset = absorption[grant==grants$grant[i] & grant_period==grants$grant_period[i], .(grant, grant_period, gf_module, gf_intervention, 
-                                                                                         absorption, budget, expenditure, code, semester)]
-    
-    subset_wide = dcast(subset, grant+grant_period+gf_module+gf_intervention+code~semester,
-                        value.var=c('budget', 'expenditure', 'absorption'))
-    absorption_wide=rbind(absorption_wide, subset_wide, fill=TRUE)
+  absorption[, disease:=substr(code, 1, 1)]
+  absorption[disease=='H', disease:='hiv']
+  absorption[disease=='T', disease:='tb']
+  absorption[disease=='M', disease:='malaria']
+  absorption[disease=='R', disease:='rssh']
+  
+  #Add in grant disease variable 
+  absorption[, disease_split:=strsplit(grant, "-")]
+  potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
+  
+  for (i in 1:nrow(absorption)){
+    if (absorption$disease_split[[i]][2]%in%potential_diseases){
+      absorption[i, grant_disease:=sapply(disease_split, "[", 2 )]
+    } else if (absorption$disease_split[[i]][3]%in%potential_diseases){
+      absorption[i, grant_disease:=sapply(disease_split, "[", 3 )]
+    } else if (absorption$disease_split[[i]][4]%in%potential_diseases){
+      absorption[i, grant_disease:=sapply(disease_split, "[", 4 )]
+    }
   }
-
+  
+  absorption[, disease_split:=NULL]
+  
+  unique(absorption[!grant_disease%in%potential_diseases, .(grant, grant_disease)]) #Visual check that these all make sense. 
+  
+  absorption[grant_disease=='C', grant_disease:='hiv/tb']
+  absorption[grant_disease=='H', grant_disease:='hiv']
+  absorption[grant_disease=='T', grant_disease:='tb']
+  absorption[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
+  absorption[grant_disease=='M', grant_disease:='malaria']
+  absorption[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
+  
+  stopifnot(unique(absorption$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
+  
+  #Make Nan, Infinity all NA 
+  absorption[is.nan(absorption), absorption:=NA]
+  absorption[!is.finite(absorption), absorption:=NA]
+  
 }
 
 # ----------------------------------------------

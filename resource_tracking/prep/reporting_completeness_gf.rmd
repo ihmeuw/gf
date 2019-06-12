@@ -17,38 +17,53 @@ current_year = year(current_date)
 current_quarter = (quarter(current_date)/4)-0.25
 current_date = current_year+current_quarter
 
-#Read in data 
-dir = "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/"
-dt = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/budget_pudr_iterations.rds")
-setDT(dt)
-dt[, quarter:=(quarter/4)-0.25]
-dt[, date:=year+quarter]
-pudrs = unique(dt[data_source=="pudr", .(grant, grant_period, file_name, date, loc_name, quarter, year)])
-budgets = unique(dt[data_source=="fpm", .(grant, grant_period, file_name, date, loc_name, quarter, year)])
+#Read in data - only need to check budgets and expenditure files for now, alhough it might be nice to add in expenditure (?) EKL 6/12/19
+dir = "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/"
+budgets = readRDS(paste0(dir, "final_budgets.rds"))
+budgets[, quarter:=(quarter/4)-0.25]
+budgets[, date:=year+quarter]
+budgets = unique(budgets[, .(grant, file_name, date, loc_name)])
 
-# Need PUDRs and budgets for the entire date range of current grants (2015-2020). 
-cod_files = fread(paste0(dir, "cod/raw_data/cod_budget_filelist.csv"))
-gtm_files = fread(paste0(dir, "gtm/raw_data/gtm_budget_filelist.csv"))
-sen_files = fread(paste0(dir, "sen/raw_data/sen_budget_filelist.csv"))
-uga_files = fread(paste0(dir, "uga/raw_data/uga_budget_filelist.csv"))
+#Because final expenditure data is NOT disaggregated into quarters; remerge this data with GOS from the budget_pudr_iterations file in the same wa as 2d_gf_aggregate_files.r
+pudrs = readRDS(paste0(dir, "budget_pudr_iterations.rds"))
+pudrs = pudrs[data_source=="pudr" & file_iteration=="final"]
+gos_data = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/prepped_data/prepped_gos_data.rds")
+  
+pudr_subset = pudrs[year>=2018]
+gos_data = gos_data[year<2018]
+pudr_subset = rbind(gos_data, pudr_subset, use.names=T, fill=T)
 
-all_files = rbind(cod_files, gtm_files, sen_files, uga_files, fill=TRUE)
-all_files[, start_date:=as.Date(start_date, format="%m/%d/%Y")]
-all_files = all_files[, .(file_name, data_source, grant, grant_period, start_date, grant_status, loc_name, period, qtr_number)]
-all_files[, end_date:=start_date+(period*qtr_number)]
+#Do the same transformations as the budget dataset
+pudrs[, quarter:=quarter(start_date)]
+pudrs[, year:=year(start_date)]
+pudrs[, quarter:=(quarter/4)-0.25]
+pudrs[, date:=year+quarter]
+pudrs = unique(pudrs[ , .(grant, file_name, date, loc_name)])
 
-target_files = all_files[end_date>"2015-01-01"]
-current_grants = unique(target_files[, .(loc_name, grant, grant_period)][order(loc_name, grant, grant_period)])
+#Read in Global Fund metadata, and format it to match pudr/budget data above. 
+ip_periods = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv")
+ip_periods = ip_periods[GeographicAreaName%in%c('Congo (Democratic Republic)', 'Guatemala', 'Uganda', 'Senegal'), .(GeographicAreaName, ComponentName, GrantAgreementNumber, 
+                                                                                                                      IsActive, 
+                                                                                                                 ImplementationPeriodStartDate, ImplementationPeriodEndDate)]
+names(ip_periods) <- c('loc_name', 'disease', 'grant', 'is_active', 'start_date', 'end_date') #Only need implementation period variables here! 
+date_vars = c('start_date', 'end_date')
+for (var in date_vars){
+  ip_periods[nchar(get(var))==20, (var):=substr(get(var), 1, 8)]
+  ip_periods[nchar(get(var))==21, (var):=substr(get(var), 1, 9)]
+  ip_periods[nchar(get(var))==22, (var):=substr(get(var), 1, 10)]
+  
+  ip_periods[, (var):=as.Date(get(var), format="%m/%d/%Y")]
+}
 
-#Add Senegal expected grant periods that we don't have any files for yet
-senegal_expected = data.table(loc_name="sen", grant=c('SEN-H-ANCS', 'SEN-H-CNLS', 'SEN-M-PNLP', 'SEN-Z-MOH'), grant_period="2015-2017", 
-                              start_date=as.Date("2015-01-01"), end_date=as.Date("2017-10-01"))
-current_grants = rbind(current_grants, senegal_expected, fill=TRUE)
-current_grants = current_grants[, .(loc_name, grant, grant_period)][order(loc_name, grant, grant_period)]
+ip_periods[loc_name=="Congo (Democratic Republic)", loc_name:='cod']
+ip_periods[loc_name=="Guatemala", loc_name:='gtm']
+ip_periods[loc_name=="Senegal", loc_name:='sen']
+ip_periods[loc_name=="Uganda", loc_name:='uga']
+
+current_grants = ip_periods[is_active==TRUE]
 
 # Need a dataset of expected grants and grant periods. 
-expected_periods = unique(target_files[, .(grant, start_date, end_date, loc_name, grant_period)])
-expected_periods = rbind(expected_periods, senegal_expected)
+expected_periods = ip_periods[, .(loc_name, grant, start_date, end_date)]
 
 #Add variables. 
 expected_periods[, start_year:=year(start_date)]
@@ -62,7 +77,7 @@ all_expected = data.table()
 for (i in 1:nrow(expected_periods)){
   seq = seq(expected_periods[i, start_decimal], expected_periods[i, end_decimal], by=0.25)
   seq_table = data.table(date=seq)
-  append_cols = expected_periods[i, .(grant, loc_name, grant_period, start_year, end_year, start_quarter, end_quarter)]
+  append_cols = expected_periods[i, .(grant, loc_name, start_year, end_year, start_quarter, end_quarter)]
     for (col in names(append_cols)){
       seq_table[, (col):=append_cols[, get(col)]]
     }  
@@ -73,13 +88,13 @@ for (i in 1:nrow(expected_periods)){
 all_expected = all_expected[date>=2015]
 
 #Append Senegal files that we know we should have, but don't yet. 
-pudrs = merge(pudrs, all_expected, all.y=T, by=c('loc_name', 'grant', 'grant_period', 'date'))
+pudrs = merge(pudrs, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
 pudrs[is.na(file_name) & date<current_date, missing_pudr_date:=date]
 missing_pudr_qtrs = unique(pudrs[is.na(file_name) & date<=current_date, .(loc_name, grant, date)])
 missing_pudr_qtrs[, quarter:=((date%%1)*4)+1]
 missing_pudr_qtrs[, year:=floor(date)]
 
-budgets = merge(budgets, all_expected, all.y=T, by=c('loc_name', 'grant', 'grant_period', 'date'))
+budgets = merge(budgets, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
 budgets[is.na(file_name) & date<current_date, missing_budget_date:=date]
 missing_budget_qtrs = unique(budgets[is.na(file_name), .(loc_name, grant, date)])
 missing_budget_qtrs[, quarter:=((date%%1)*4)+1]
@@ -113,7 +128,7 @@ The list of grants in this time period is:
 kable(current_grants)
 ```
 
-This list is built from the metadata on the Global Fund files we have in our possession, and grant period start and end dates should be verified with the Global Fund website. 
+This list is built from the metadata from the Global Fund's website.  
 
 ## DRC Missing PUDRs
 ```{r, warning=FALSE, echo=FALSE}
