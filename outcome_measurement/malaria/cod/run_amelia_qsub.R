@@ -69,8 +69,8 @@ rawFile = paste0("imputedRawData_", run_name, "_", i, ".rds")
 # ---------------------------------------------- 
 dt = readRDS(paste0(scratchDir, inFile))
 
-#test subset
-dt = dt[ dps == unique(dt$dps)[1], ]
+# #test subset
+# dt = dt[ dps == unique(dt$dps)[1], ]
 
 dt[ , combine := paste(dps, health_zone, sep = "_")] # make a combined variable for dps-health_zone to use for the cs var in amelia
 
