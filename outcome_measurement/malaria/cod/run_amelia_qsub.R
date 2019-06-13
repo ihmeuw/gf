@@ -111,7 +111,7 @@ if (lags_leads == "lags_and_leads"){
 amelia.results$imputations[[1]]$imputation_number <- i
 amelia_data <- data.table(amelia.results$imputations[[1]])
 
-saveRDS(amelia_data, paste0(output_dir, rawFile))
+saveRDS(amelia_data, paste0(output_dir, run_name, "/", rawFile))
 # ----------------------------------------------
 
 

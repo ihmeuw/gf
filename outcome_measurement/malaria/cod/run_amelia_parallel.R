@@ -25,6 +25,7 @@
 # 3) to open an interactive r session on the cluser:
 # singularity exec /share/singularity-images/health_fin/forecasting/best_new.img R
 
+# 4)
 # set switches
 aggregate = "agg" # noAgg for FALSE
 lags_leads = "no_lags_leads" # "lags_and_leads" for TRUE
@@ -32,7 +33,7 @@ tolerance = 1.0
 cleanup_start = FALSE
 
 # set run_name manually:
-run_name = 'run1_0_aggVars_noLagsLeads'
+run_name = 'run0_1_aggVars_noLagsLeads'
 
 # runs:
 # for testing-
@@ -46,8 +47,9 @@ run_name = 'run1_0_aggVars_noLagsLeads'
 # 0.001 run0_001_aggVars_wlagsleads agg
 # 0.01 run0_01_wlagsleads no_agg
 # 0.01 run0_01_aggVars_wlagsleads agg
-# ----------------------------------------------
 
+# 5) run this script up to the qsub line
+# ----------------------------------------------
 
 # --------------------
 # Set up R / install packages
@@ -94,18 +96,27 @@ user = Sys.info()[['user']]
   if (aggregate == "agg"){ 
     zeroesData = "zeroes_data_for_amelia_aggVars.rds" } else {
     zeroesData = "zeroes_data_for_amelia_noAggVars.rds" }
-  # output_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
-  # rawFile = paste0("PNLP_imputed_rawData_", run_name, ".rds")
-  # cleanedFile = paste0("PNLP_imputedData_", run_name, ".rds")
 # ----------------------------------------------
-
-# ----------------------------------------------
+  
 # ----------------------------------------------
 if (cleanup_start == TRUE){
   # before starting the process, delete the existing files on the cluster
   # this allows us to avoid duplication or aggregating old files 
   system(paste0('rm -r /ihme/scratch/users/', user, '/mi_errors_output/*')) # removes all files and folders within the directory
 }  
+# ----------------------------------------------
+  
+# ---------------------------------------------- 
+# submit qsubs to run amelia 50 times
+# ----------------------------------------------
+N = 50
+system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N ', run_name, ' -l m_mem_free=10G -l fthread=1 -l h_rt=50:00:00 -l archive=TRUE -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia_qsub.R ', tolerance, ' ', aggregate, ' ', lags_leads, ' ', run_name)) 
+# ----------------------------------------------
+  
+
+
+# ----------------------------------------------
+# BELOW IS PREP CODE PREVIOUSLY RUN ON THE CLUSTER, don't have to do it again
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -187,12 +198,6 @@ dt <- merge(dtLog, prop_lsqueeze, by=c("health_zone", "dps", "date"), all=TRUE)
 saveRDS(dt, paste0(scratchDir, outFile))
 # ---------------------------------------------- 
 
-# ---------------------------------------------- 
-# submit qsubs to run amelia 50 times
-# ----------------------------------------------
-N = 50
-system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N ', run_name, ' -l m_mem_free=10G -l fthread=1 -l h_rt=50:00:00 -l archive=TRUE -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia_qsub.R ', tolerance, ' ', aggregate, ' ', lags_leads, ' ', run_name)) 
-# ----------------------------------------------
 
     
     
