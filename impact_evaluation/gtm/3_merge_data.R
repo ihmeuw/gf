@@ -16,9 +16,7 @@ resource_tracking <- readRDS(outputFile2a)
 # Read in the previously saved file for outputs/activities in 2b
 outputs_activities <- readRDS(outputFile2b)
 #Remove errors in names for outputs_activities here - but these need to be addressed earlier! 
-outputs_activities = outputs_activities[, -c('Total_Drugs_Distributed_value_y_act')] #Drop duplicate variables from a merge
 names(outputs_activities) <- gsub("_value", "", names(outputs_activities))
-names(outputs_activities) <- gsub("_x", "", names(outputs_activities))
 # ----------------------------------------------------------
 
 
@@ -34,6 +32,8 @@ outputs_activities_rect = merge(frame, outputs_activities, by=c('department','da
 # Merge rectangularized resource tracking and outputs/activites data 
 merge_file <- merge(resource_tracking_rect, outputs_activities_rect, by=c('department','date'), all=TRUE)
 setDT(merge_file)
+
+#Check for uniqueness and NAs here. 
 # -----------------------------------------------------------------------------------------------------
 	
 
