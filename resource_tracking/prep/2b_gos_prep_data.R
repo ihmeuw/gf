@@ -173,49 +173,49 @@ gms_data[, .(count=sum(count)), by='date_overlap']
 #-------------------------------------------------
 # Compare two datasets to each other, and merge 
 #-------------------------------------------------
-# 
-# range(gms_data$start_date)
-# range(gms_data$end_date)
-# range(gos_data$start_date)
-# range(gos_data$end_date)
-# 
-# #Want to keep the new data for as much as we have it for, and then back-fill with the old data. 
-# # What dates do we have the new GOS data for? 
-# date_range = gos_data[, .(start_date = min(start_date)), by='grant'] #What's the earliest start date for each grant?
-# for (i in 1:nrow(date_range)){
-#   #Want to drop rows in old data where the start date in the old data is after the earliest start date in the new data. 
-#   drop = gms_data[(grant==date_range$grant[i]&start_date>date_range$start_date[i])] #See what rows you'll be dropping. 
-# 
-#   if (nrow(drop)!=0){
-#     print(paste0("Dropping rows based on start date, because we have new data for ",  date_range$grant[i], 
-#                  " from ", date_range$start_date[i]))
-#     print(drop[, .(grant, start_date, end_date)])
-#     gms_data = gms_data[!(grant==date_range$grant[i]&start_date>date_range$start_date[i])]
-#   }
-#   drop2 = gms_data[(grant==date_range$grant[i]&end_date>date_range$start_date[i])] #Fencepost problem - had to rerun one more time if N=1
-#   if (nrow(drop2)!=0){
-#     print(paste0("Dropping rows based on start date, because we have new data for ",  date_range$grant[i], 
-#                  " from ", date_range$start_date[i]))
-#     print(drop2[, .(grant, start_date, end_date)])
-#     gms_data = gms_data[!(grant==date_range$grant[i]&end_date>date_range$start_date[i])]
-#   }
-# }
-# 
-# #Are we catching all grant names in this check? 
-# unique(gos_data[!grant%in%gms_data$grant, .(grant)])
-# 
-# ##combine both GOS and GMS datasets into one dataset, and add final variables. 
-# sort(names(gms_data))
-# sort(names(gos_data))
-# 
-# #Review the start and end dates for these files in one last check. 
-# gos_dates = unique(gos_data[, .(mf_start = min(start_date)), by='grant'])
-# gms_dates = unique(gms_data[, .(sda_end =max(end_date)), by='grant'])
-# check_dates = merge(gos_dates, gms_dates, by='grant')
-# 
-# #Secondary check to make sure that all grants that don't merge aren't typos 
-# gms_dates[!grant%in%gos_dates$grant, .(grant)]
-# gos_dates[!grant%in%gms_dates$grant, .(grant)]
+
+range(gms_data$start_date)
+range(gms_data$end_date)
+range(gos_data$start_date)
+range(gos_data$end_date)
+
+#Want to keep the new data for as much as we have it for, and then back-fill with the old data.
+# What dates do we have the new GOS data for?
+date_range = gos_data[, .(start_date = min(start_date)), by='grant'] #What's the earliest start date for each grant?
+for (i in 1:nrow(date_range)){
+  #Want to drop rows in old data where the start date in the old data is after the earliest start date in the new data.
+  drop = gms_data[(grant==date_range$grant[i]&start_date>date_range$start_date[i])] #See what rows you'll be dropping.
+
+  if (nrow(drop)!=0){
+    print(paste0("Dropping rows based on start date, because we have new data for ",  date_range$grant[i],
+                 " from ", date_range$start_date[i]))
+    print(drop[, .(grant, start_date, end_date)])
+    gms_data = gms_data[!(grant==date_range$grant[i]&start_date>date_range$start_date[i])]
+  }
+  drop2 = gms_data[(grant==date_range$grant[i]&end_date>date_range$start_date[i])] #Fencepost problem - had to rerun one more time if N=1
+  if (nrow(drop2)!=0){
+    print(paste0("Dropping rows based on start date, because we have new data for ",  date_range$grant[i],
+                 " from ", date_range$start_date[i]))
+    print(drop2[, .(grant, start_date, end_date)])
+    gms_data = gms_data[!(grant==date_range$grant[i]&end_date>date_range$start_date[i])]
+  }
+}
+
+#Are we catching all grant names in this check?
+unique(gos_data[!grant%in%gms_data$grant, .(grant)])
+
+##combine both GOS and GMS datasets into one dataset, and add final variables.
+sort(names(gms_data))
+sort(names(gos_data))
+
+#Review the start and end dates for these files in one last check.
+gos_dates = unique(gos_data[, .(mf_start = min(start_date)), by='grant'])
+gms_dates = unique(gms_data[, .(sda_end =max(end_date)), by='grant'])
+check_dates = merge(gos_dates, gms_dates, by='grant')
+
+#Secondary check to make sure that all grants that don't merge aren't typos
+gms_dates[!grant%in%gos_dates$grant, .(grant)]
+gos_dates[!grant%in%gms_dates$grant, .(grant)]
 
 #Bind final datasets together
 totalGos <- rbind(gms_data, gos_data, fill=TRUE)
@@ -353,6 +353,9 @@ write.xlsx(date_check, paste0(dir, "_gf_files_gos/gos/Overlaps within Interventi
 # overlap = dcast(overlap, grant+year+quarter~seq, value.var=c('budget', 'expenditure'), fun.aggregate=sum_na_rm) #Here, '1' represents the shorter time period, and '2' represents the longer time period
 # overlap[, budget_diff:=budget_2-budget_1]
 # overlap[, exp_diff:=expenditure_2-expenditure_1] #David please review this. 
+
+totalGos[, grant_period:=paste0(year(grant_period_start), "-", year(grant_period_end))]
+totalGos[grant_period=="NA-NA", grant_period:=NA]
 
 #Aggregate to the quarter level.  
 totalGos_qtr = totalGos[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c(

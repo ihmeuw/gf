@@ -21,8 +21,8 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = TRUE
-prep_gos = FALSE
+prep_files = FALSE
+prep_gos = TRUE
 prep_fgh = FALSE 
 prep_ghe = FALSE
 
@@ -58,8 +58,8 @@ if (prep_files | prep_gos){
   }
   source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
   source(paste0(code_dir, "2d_gf_aggregate_files.R"))
-  source(paste0(code_dir, "2e_gf_verify_outputs.R"))
-  rmarkdown::render(paste0(code_dir, "2f_gf_visualize_data.rmd"))
+  #source(paste0(code_dir, "2e_gf_verify_outputs.R"))
+  #rmarkdown::render(paste0(code_dir, "2f_gf_visualize_data.rmd"))
 }
 # ----------------------------------------------
 # STEP 3: PREP FGH ACTUALS AND ESTIMATES 

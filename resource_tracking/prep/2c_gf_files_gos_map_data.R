@@ -10,6 +10,7 @@
 #----------------------------------------------------------------------------
 if (prep_gos == TRUE){
   raw_data = totalGos_qtr
+  raw_data[, lfa_exp_adjustment:=0] #There is no LFA expenditure adjustment in GOS data; but add it to make code run. 
 } else if (prep_files == TRUE){
   raw_data = resource_database
 }

@@ -445,7 +445,7 @@ $(document).ready(function () {
 <p>Check specific variable values</p>
 <p>Are you returning only expected values for ‘disease’ column in budgets?: TRUE, TRUE, TRUE, TRUE Are you returning only expected values for ‘disease’ column in PUDRs?: TRUE, TRUE, TRUE, TRUE</p>
 <p>Is your start date variable a date in budgets? TRUE What about your end date variable? FALSE What’s the range of start date? 2003-04-01, 2023-04-01</p>
-<p>Is your start date variable a date in PUDRs? TRUE What about your end date variable? TRUE What’s the range of start date? 2003-04-01, 2018-07-01</p>
+<p>Is your start date variable a date in PUDRs? TRUE What about your end date variable? TRUE What’s the range of start date? 2003-04-01, 2018-10-01</p>
 <p>What values do you have for language, loc_name, and country? For budgets:</p>
 <pre><code>## [1] &quot;fr&quot;  &quot;eng&quot; &quot;esp&quot; NA</code></pre>
 <pre><code>## [1] &quot;cod&quot; &quot;gtm&quot; &quot;uga&quot; &quot;sen&quot;</code></pre>
@@ -453,10 +453,8 @@ $(document).ready(function () {
 ## [3] &quot;Uganda&quot;                      &quot;Senegal&quot;</code></pre>
 <p>For expenditures:</p>
 <pre><code>## NULL</code></pre>
-<pre><code>## [1] &quot;gtm&quot; &quot;cod&quot; &quot;sen&quot; &quot;uga&quot;</code></pre>
-<pre><code>## [1] NA                            &quot;Congo (Democratic Republic)&quot;
-## [3] &quot;Guatemala&quot;                   &quot;Senegal&quot;                    
-## [5] &quot;Uganda&quot;</code></pre>
+<pre><code>## [1] &quot;cod&quot; &quot;gtm&quot; &quot;sen&quot; &quot;uga&quot;</code></pre>
+<pre><code>## NULL</code></pre>
 <p>Is the ‘current grant’ flag working correctly? Make sure all files are sorted by this boolean correctly.</p>
 <pre><code>##     current_grant         grant grant_period
 ##  1:          TRUE COD-C-CORDAID    2018-2020
@@ -633,73 +631,77 @@ $(document).ready(function () {
 ## 74:        ZAR-S-MOH          rssh
 ##                grant grant_disease</code></pre>
 <pre><code>##                grant grant_disease
-##  1:      GTM-H-HIVOS           hiv
-##  2:      GTM-M-MSPAS       malaria
-##  3:      GTM-T-MSPAS            tb
-##  4:    GUA-311-G06-H           hiv
-##  5:    COD-607-G05-T            tb
-##  6:    COD-809-G07-M       malaria
-##  7:    COD-810-G08-M       malaria
-##  8:    COD-810-G11-H           hiv
-##  9:    COD-810-G12-H           hiv
-## 10:    COD-H-CORDAID           hiv
-## 11:      COD-H-SANRU           hiv
-## 12:        COD-M-MOH       malaria
-## 13:        COD-M-PSI       malaria
-## 14:      COD-M-PSI-X       malaria
-## 15:      COD-M-SANRU       malaria
-## 16:    COD-T-CARITAS            tb
-## 17:        COD-T-MOH            tb
-## 18:    GTM-304-G01-H           hiv
-## 19:    GTM-405-G02-M       malaria
-## 20:    GTM-607-G03-T            tb
-## 21:    GTM-610-G04-T            tb
-## 22:    GUA-311-G05-H           hiv
-## 23:      GUA-M-MSPAS       malaria
-## 24: SEN-102-G01-H-00           hiv
-## 25: SEN-102-G02-M-00       malaria
-## 26: SEN-102-G04-H-00           hiv
-## 27:    SEN-405-G03-M       malaria
-## 28:    SEN-607-G05-H           hiv
-## 29:    SEN-607-G06-H           hiv
-## 30:    SEN-708-G07-M       malaria
-## 31:    SEN-708-G08-T            tb
-## 32:       SEN-H-ANCS           hiv
-## 33:       SEN-H-CNLS           hiv
-## 34:     SEN-M-IntraH       malaria
-## 35:       SEN-M-PNLP       malaria
-## 36:        SEN-S-MOH          rssh
-## 37:       SNG-H-DLSI           hiv
-## 38:         SNG-M-IH       malaria
-## 39:       SNG-M-PNLP       malaria
-## 40:       SNG-T-PLAN            tb
-## 41:        SNG-T-PNT            tb
-## 42:    UGA-011-G09-S          rssh
-## 43: UGA-102-G01-H-00           hiv
-## 44: UGA-202-G02-M-00       malaria
-## 45: UGA-202-G03-T-00            tb
-## 46:    UGA-607-G06-T            tb
-## 47:    UGA-708-G13-H           hiv
-## 48:       UGA-C-TASO        hiv/tb
-## 49:       UGA-M-TASO       malaria
-## 50:     UGA-T-MoFPED            tb
-## 51:    UGD-011-G10-S          rssh
-## 52:    UGD-011-G11-M       malaria
-## 53:    UGD-011-G12-M       malaria
-## 54:    UGD-405-G05-M       malaria
-## 55:    UGD-708-G07-H           hiv
-## 56:    UGD-708-G08-M       malaria
-## 57: ZAR-202-G01-T-00            tb
-## 58:    ZAR-304-G02-H           hiv
-## 59:    ZAR-304-G03-M       malaria
-## 60:    ZAR-506-G04-T            tb
-## 61:    ZAR-708-G06-H           hiv
-## 62:    ZAR-809-G10-H           hiv
-## 63:    ZAR-810-G09-M       malaria
-## 64:    ZAR-911-G13-T            tb
-## 65:    ZAR-911-G14-T            tb
-## 66:        ZAR-M-MOH       malaria
-## 67:        ZAR-S-MOH          rssh
+##  1:    COD-607-G05-T            tb
+##  2:    COD-809-G07-M       malaria
+##  3:    COD-810-G08-M       malaria
+##  4:    COD-810-G11-H           hiv
+##  5:    COD-810-G12-H           hiv
+##  6:    COD-H-CORDAID           hiv
+##  7:      COD-H-SANRU           hiv
+##  8:        COD-M-MOH       malaria
+##  9:        COD-M-PSI       malaria
+## 10:      COD-M-PSI-X       malaria
+## 11:      COD-M-SANRU       malaria
+## 12:    COD-T-CARITAS            tb
+## 13:        COD-T-MOH            tb
+## 14:    GTM-304-G01-H           hiv
+## 15:    GTM-405-G02-M       malaria
+## 16:    GTM-607-G03-T            tb
+## 17:    GTM-610-G04-T            tb
+## 18:    GUA-311-G05-H           hiv
+## 19:    GUA-311-G06-H           hiv
+## 20:      GUA-M-MSPAS       malaria
+## 21: SEN-102-G01-H-00           hiv
+## 22: SEN-102-G02-M-00       malaria
+## 23: SEN-102-G04-H-00           hiv
+## 24:    SEN-405-G03-M       malaria
+## 25:    SEN-607-G05-H           hiv
+## 26:    SEN-607-G06-H           hiv
+## 27:    SEN-708-G07-M       malaria
+## 28:    SEN-708-G08-T            tb
+## 29:       SEN-H-ANCS           hiv
+## 30:       SEN-H-CNLS           hiv
+## 31:     SEN-M-IntraH       malaria
+## 32:       SEN-M-PNLP       malaria
+## 33:        SEN-S-MOH          rssh
+## 34:       SNG-H-DLSI           hiv
+## 35:         SNG-M-IH       malaria
+## 36:       SNG-M-PNLP       malaria
+## 37:       SNG-T-PLAN            tb
+## 38:        SNG-T-PNT            tb
+## 39:    UGA-011-G09-S          rssh
+## 40: UGA-102-G01-H-00           hiv
+## 41: UGA-202-G02-M-00       malaria
+## 42: UGA-202-G03-T-00            tb
+## 43:    UGA-607-G06-T            tb
+## 44:    UGA-708-G13-H           hiv
+## 45:       UGA-C-TASO        hiv/tb
+## 46:       UGA-M-TASO       malaria
+## 47:     UGA-T-MoFPED            tb
+## 48:    UGD-011-G10-S          rssh
+## 49:    UGD-011-G11-M       malaria
+## 50:    UGD-011-G12-M       malaria
+## 51:    UGD-405-G05-M       malaria
+## 52:    UGD-708-G07-H           hiv
+## 53:    UGD-708-G08-M       malaria
+## 54: ZAR-202-G01-T-00            tb
+## 55:    ZAR-304-G02-H           hiv
+## 56:    ZAR-304-G03-M       malaria
+## 57:    ZAR-506-G04-T            tb
+## 58:    ZAR-708-G06-H           hiv
+## 59:    ZAR-809-G10-H           hiv
+## 60:    ZAR-810-G09-M       malaria
+## 61:    ZAR-911-G13-T            tb
+## 62:    ZAR-911-G14-T            tb
+## 63:        ZAR-M-MOH       malaria
+## 64:        ZAR-S-MOH          rssh
+## 65:    COD-C-CORDAID        hiv/tb
+## 66:        COD-H-MOH           hiv
+## 67:      GTM-H-HIVOS           hiv
+## 68:      GTM-T-MSPAS            tb
+## 69:     UGA-H-MoFPED           hiv
+## 70:     UGA-M-MoFPED       malaria
+## 71:        SEN-Z-MOH            tb
 ##                grant grant_disease</code></pre>
 </div>
 </div>
