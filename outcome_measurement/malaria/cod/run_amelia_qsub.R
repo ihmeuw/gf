@@ -94,6 +94,9 @@ parallelMethod = ifelse(as.logical(Sys.info()['sysname']=='Windows'), 'snow', 'm
 # lags/leads: all indicators
 # intercs = FALSE by default
 
+# quick check 
+lags_leads == "lags_and_leads"
+
 if (lags_leads == "lags_and_leads"){ 
   amelia.results <- amelia(dt, m=1, cs= "combine", ts="date", idvars= id_vars_for_amelia, tolerance= tol, # the passed in tolerance
                            lags = measured_vars, leads= measured_vars,
