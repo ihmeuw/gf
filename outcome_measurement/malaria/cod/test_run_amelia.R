@@ -97,7 +97,7 @@ if (cleanup_start == TRUE){
 dt = readRDS(paste0(dir, inFile))
 dt[, thinSmearTest := NULL]
 # test subset
-# dt = dt[dps == unique(dt$dps)[1]]
+dt = dt[dps == unique(dt$dps)[1]]
 
 if (aggregate == "agg"){
   # combine age groups for variables where these are combined in different years of data- check with David, is this okay? best way to do this?
@@ -185,7 +185,7 @@ id_vars_for_amelia = id_vars[!id_vars %in% c("date")]  # needs to exclude date a
 measured_vars <- colnames(dt)
 measured_vars <- measured_vars[!measured_vars %in% c(id_vars_for_amelia, "combine", "date", with=FALSE)]
 
-num_of_runs = 50
+num_of_runs = 5
 
 amelia.results <- amelia(dt, m=num_of_runs, cs= "combine", ts="date", idvars= id_vars_for_amelia, tolerance= tol, # the passed in tolerance
                          # lags = measured_vars, leads= measured_vars,
