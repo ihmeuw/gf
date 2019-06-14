@@ -32,17 +32,17 @@ library(fst) # to save data tables as .fst for faster read/write and full random
 user = Sys.info()[['user']]
 
 # choose the data set you want to load
-set = 'pnlp'
+set = 'base'
 #------------------------------------
 
 #------------------------------------
 # switches
 
-cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
+cleanup_start = FALSE # whether or not to delete all files from parallel runs at the beginning
 cleanup_end = FALSE # "" /end; default to FALSE
 # impute = 'TRUE' # whether or not to impute missing data as part of the qr
 # cat_files = TRUE # whether or not to concatenate all of the files at the end
-agg_to_DPS = TRUE # whether or not to aggregate the data to DPS level before running QR. 
+agg_to_DPS = FALSE # whether or not to aggregate the data to DPS level before running QR. 
 #------------------------------------
 
 #------------------------------------
@@ -63,7 +63,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
+scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg2/')
 parallelDir = paste0(scratchDir, 'parallel_files/')
 if (!file.exists(scratchDir)) dir.create(scratchDir)
 if (!file.exists(parallelDir)) dir.create(parallelDir)
@@ -106,10 +106,8 @@ dt = readRDS(inFile)
 
 # format the pnlp data in the same format as the base data
 # this assigns an element id to each variable and refered to the health zone as an org_unit
-if (set=='pnlp') dt[, org_unit_id := paste(dps, health_zone, sep = "_")]
-
-dt[, element_id:=.GRP, by='variable'] 
-
+if (set=='pnlp') {dt[, org_unit_id := paste(dps, health_zone, sep = "_")]
+                  dt[, element_id:=.GRP, by='variable']}
 if (set=='sigl') dt[, element_id:=.GRP, by='drug']
 if (set=='sigl') dt[, variable_id:=.GRP, by='variable']
 
@@ -125,20 +123,26 @@ if (agg_to_DPS == TRUE){
 }
 
 # sort the data table so the indexing works correctly when retrieving data using fst
-dt = setorder(dt, org_unit_id)
+# dt = setorder(dt, org_unit_id)
+dt = setorder(dt, element_id)
 dt[ ,date:=as.Date(date)] # regression only runs with date as a date variable
+dt[, org_unit_id := as.character(org_unit_id)]
 
 # check that unique identifiers uniquely identify data:
-if ( nrow(unique(dt[, .(org_unit_id, date, variable, element_id)])) != nrow(dt)) stop( "check unique identifiers...")
+if (set != 'base') {if ( nrow(unique(dt[, .(org_unit_id, date, variable, element_id)])) != nrow(dt)) stop( "check unique identifiers...")}
+if (set == 'base') {if ( nrow(unique(dt[, .(org_unit_id, date, element, element_id, category)])) != nrow(dt)) stop( "check unique identifiers...")}
 #------------------------------------
 
 #------------------------------------
 # make array table to submit an array job and saved
 #------------------------------------
 # make array table to set up for submitting an array job
-array_table = data.table(expand.grid(unique(dt$org_unit_id)))
-setnames(array_table, "Var1", "org_unit_id")
-array_table[ ,org_unit_id:=as.character(org_unit_id)]
+# array_table = data.table(expand.grid(unique(dt$org_unit_id)))
+# setnames(array_table, "Var1", "org_unit_id")
+# array_table[ ,org_unit_id:=as.character(org_unit_id)]
+
+array_table = data.table(expand.grid(unique(dt$element_id)))
+setnames(array_table, "Var1", "element_id")
 
 # for testing, subset to a few rows
 # array_table = array_table[1:10, ]
@@ -164,7 +168,7 @@ N = nrow(array_table)
 if (set == 'sigl'){
   system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs -l m_mem_free=10G -l fthread=10 -l h_rt=00:36:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.R')) 
 } else {
-  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=10G -l fthread=10 -l h_rt=00:20:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
+  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=15G -l fthread=1 -l h_rt=04:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
 }
 #------------------------------------
 
