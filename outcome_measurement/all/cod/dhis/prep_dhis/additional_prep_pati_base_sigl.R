@@ -31,6 +31,7 @@ registered <- paste0(dir, "pre_prep/merged/tb_pati_v_registered_2017_01_01_2018_
 results <- paste0(dir,"pre_prep/merged/tb_pati_v_result_2016_01_01_2018_10_01.rds")
 base_data <- paste0(dir, "pre_prep/merged/base_2016_01_01_2019_04_01.rds")
 sigl_data <- paste0(dir, "pre_prep/merged/sigl_2018_01_01_2019_01_01.rds")
+base_2017 = paste0(dir, "prepped/archive/base_services_drc_01_2017_09_2018_prepped.rds")
 
 # output files
 pati_cases <- "pati_tb/tb_pati_new_tb_cases_relapses_by_age_sex.rds"
@@ -87,6 +88,12 @@ dt2 <- more_prep(dt2)
 # ----------------------------------------------
 
 # ----------------------------------------------
+# SIGL:
+# ----------------------------------------------
+saveRDS(sigl, paste0(out_dir, sigl_out))
+# ----------------------------------------------
+
+# ----------------------------------------------
 # BASE:
 # add in english translations from the old meta data
 # ----------------------------------------------
@@ -98,6 +105,32 @@ dt[element.x!=element.y,] # check that they are the same
 dt[, element.y := NULL]
 setnames(dt, 'element.x', 'element')
 dt[, c("data_set_url", "element_url", "data_sets"):=NULL]
+
+# replace 2017 data (from Jan 2019 download) that was added into the merge code for the most recent download (June 2019) with the 2017 data
+# from the Sept 2018 download (check show it has more facilities reporting and more cases reported for more facilities)
+dt_base_2017 = readRDS(base_2017)
+# subset to 2017 from sept 18 download
+dt17 = dt_base_2017[year == 2017,  ]
+# remove 2017 in recently prepped data
+dt[ , year := year(date)]
+dt = dt[ year != 2017, ]
+# combine dt and dt17 to get full time series
+dt[, c('category_id', 'country', 'data_set_id'):= NULL]
+dt17[, c('type', 'mtk', 'drug', 'tableau', 'month'):= NULL]
+dt[, last_update := as.character(last_update)]
+dt = rbindlist(list(dt, dt17), use.names = TRUE, fill = TRUE)
+# remove data that is incomplete due to reporting lag because this will affect QR
+reporting = dt[, unique(org_unit_id), by = 'date']
+reporting = reporting[, .N, by = 'date']
+plot(reporting, N ~ date)
+dt = dt[ year >= 2017, ] # remove before 2017
+dt = dt[ date != "2019-04-01", ] # remove last month of the download (april 2019)
+
+# resave data
+saveRDS(dt, paste0(out_dir, base_out))
+
+#check unique ids:
+if( nrow(unique(dt[, .(date, org_unit_id, element, category)])) != nrow(dt) ) stop("need to check unique id vars - they do not uniquely id rows")
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -129,15 +162,11 @@ formula_for_cast <- as.formula(paste(paste(vars, collapse=" + "), "category", se
 dt2 <- dcast.data.table(dt2, formula_for_cast, value.var = "value")
 dt2 <- dt2[is.na(default), ]
 # ----------------------------------------------
-
-# ----------------------------------------------
 # save prepped data
 # ----------------------------------------------
 saveRDS(cases_subset, paste0(out_dir, pati_cases))
 saveRDS(reg, paste0(out_dir, pati_registered))
 saveRDS(dt2, paste0(out_dir, pati_results))
-saveRDS(base, paste0(out_dir, base_out))
-saveRDS(sigl, paste0(out_dir, sigl_out))
 # ----------------------------------------------
 
 
