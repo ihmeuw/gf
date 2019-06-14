@@ -26,7 +26,7 @@
 # 0.01 run01_aggVars_wlagsleads agg
 
 # test subset qsub
-# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=10 -l m_mem_free=20G -l h_rt=2:00:00 -P proj_pce -q all.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/run_amelia.R 0.1 test_run no_agg
+# qsub -e /ihme/scratch/users/abatzel/mi_errors_output/ -o /ihme/scratch/users/abatzel/mi_errors_output/ -cwd -l fthread=10 -l m_mem_free=20G -l h_rt=2:00:00 -P proj_pce -q all.q -l archive=TRUE ./core/r_shell.sh ./outcome_measurement/malaria/cod/test_run_amelia.R 0.1 test_run_aggVars agg
 # ----------------------------------------------
 
 # --------------------
