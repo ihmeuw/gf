@@ -23,14 +23,14 @@ library(tidyr)
 # ----------------------------------------------
 # data directory
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/pre_prep/merged/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 out_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
 
 # input files
-registered <- paste0(dir, "tb_pati_v_registered_2017_01_01_2018_10_01.rds")
-results <- paste0(dir,"tb_pati_v_result_2016_01_01_2018_10_01.rds")
-base_data <- paste0(dir, "base_2018_01_01_2019_01_01.rds")
-sigl_data <- paste0(dir, "sigl_2018_01_01_2019_01_01.rds")
+registered <- paste0(dir, "pre_prep/merged/tb_pati_v_registered_2017_01_01_2018_10_01.rds")
+results <- paste0(dir,"pre_prep/merged/tb_pati_v_result_2016_01_01_2018_10_01.rds")
+base_data <- paste0(dir, "pre_prep/merged/base_2016_01_01_2019_04_01.rds")
+sigl_data <- paste0(dir, "pre_prep/merged/sigl_2018_01_01_2019_01_01.rds")
 
 # output files
 pati_cases <- "pati_tb/tb_pati_new_tb_cases_relapses_by_age_sex.rds"
@@ -70,11 +70,11 @@ sigl[, c('health_zone1', 'health_zone2', 'health_zone3'):=NULL]
 # more prep
 # ----------------------------------------------
 more_prep <- function(dt){
-  dt$value <- as.character(dt$value)
-  check = copy(dt)
-  check[, value_numeric := as.numeric(value)]
-  if(check[is.na(value_numeric), unique(value)] == "NULL") print("Checked that NAs introduced were recorded as 'NULL' in the data before converting to numeric" )
-  dt$value <- as.numeric(dt$value) 
+  # dt$value <- as.character(dt$value)
+  # check = copy(dt)
+  # check[, value_numeric := as.numeric(value)]
+  # if(check[is.na(value_numeric), unique(value)] == "NULL") print("Checked that NAs introduced were recorded as 'NULL' in the data before converting to numeric" )
+  # dt$value <- as.numeric(dt$value) 
   dt$dps <- standardizeDPSNames(dt$dps)
   dt$health_zone <- standardizeHZNames(dt$health_zone)
   return(dt)
@@ -84,6 +84,20 @@ base <- more_prep(base)
 sigl <- more_prep(sigl)
 dt1 <- more_prep(dt1) # the warning that this introduces NAs can be ignored, because all of those NAs were "NULL" in the original data 
 dt2 <- more_prep(dt2)
+# ----------------------------------------------
+
+# ----------------------------------------------
+# BASE:
+# add in english translations from the old meta data
+# ----------------------------------------------
+meta_data = readRDS(paste0(dir, 'meta_data/data_elements.rds'))
+dt = merge(base, meta_data, all.x = TRUE, by = "element_id")
+dt[, element.x := as.character(element.x)]
+dt[, element.y := as.character(element.y)]
+dt[element.x!=element.y,] # check that they are the same
+dt[, element.y := NULL]
+setnames(dt, 'element.x', 'element')
+dt[, c("data_set_url", "element_url", "data_sets"):=NULL]
 # ----------------------------------------------
 
 # ----------------------------------------------
