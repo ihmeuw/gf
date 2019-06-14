@@ -39,7 +39,7 @@ dir = paste0(root, "/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/
 dt_for_dup_removal = "ameliaDT_with_index_for_dup_removal.rds"
 
 # output files
-outFile =  "pnlp_matrix_of_duplicate_rows.rds"
+outFile =  "pnlp_matrix_of_duplicate_rows (initial results).rds"
 # ----------------------------------------------   
 
 # ----------------------------------------------     
