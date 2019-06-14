@@ -5,7 +5,7 @@
 # and then convert 0s back
 
 aggregate = "agg"
-run_name = 'run1_0_aggVars_noLagsLeads'
+run_name = 'run_0_001_aggVars_lagsLeads'
 # ----------------------------------------------
 
 # --------------------
@@ -59,7 +59,8 @@ cleanedFile = paste0("PNLP_imputedData_", run_name, ".rds")
 dtOrig = readRDS(paste0(scratchDir, origData))
 zeroes = readRDS(paste0(scratchDir, zeroesData))
 
-files = list.files(paste0(dir, 'raw_files/'), recursive=TRUE)
+files = list.files(paste0(dir, 'raw_files/', run_name, '/'), recursive=TRUE)
+if (length(files)!= 50) stop("Missing imputation results; there are not 50 files.")
 
 dt = data.table()
 
@@ -67,7 +68,7 @@ dt = data.table()
 for(f in files) {
   # load the RDS file
   file_name = f
-  current_data = data.table(readRDS(paste0(dir, 'raw_files/', f)))
+  current_data = data.table(readRDS(paste0(dir, 'raw_files/', run_name, '/', f)))
   # rbind data together
   dt = rbind(dt, current_data)
 }
@@ -79,6 +80,10 @@ for(f in files) {
 # ----------------------------------------------
 all_vars = names(dt)
 id_vars = c("id", "dps", "health_zone", "date", "donor", "operational_support_partner", "population")
+
+dt[, random:=NULL]
+
+if (dim(dt)[1] != 2477400 | dim(dt)[2] != 89) stop("check data - dimensions aren't right")
 
 # include imputation number in the id_vars used to exponentiate the data set so exp() happens for each of the 50 imputations
 imputed_id_vars <- c(id_vars, "imputation_number", "combine")
@@ -93,15 +98,19 @@ dt[, healthFacilitiesProportion:= inv.logit(healthFacilitiesProportion)]
 dt[, healthFacilitiesProportion:=((healthFacilitiesProportion * N)-0.5) / (N-1)]
 
 # exponentiate the rest of the data set
-dtExp <- dt[, lapply(.SD, function(x) exp(x)), .SDcols=inds, by = c(imputed_id_vars, "healthFacilitiesProportion")]
+dtExp <- dt[, lapply(.SD, function(x) exp(x)), .SDcols=inds, by = c(imputed_id_vars)]
 
-reps = max(dt$imputation_number)
-zeroes = do.call("rbind", replicate(reps, zeroes, simplify = FALSE))
+dtFac = dt[, c(imputed_id_vars, "healthFacilitiesProportion"), with = FALSE]
+dt = merge(dtExp, dtFac, by = imputed_id_vars )
+
+# reps = max(dt$imputation_number)
+# zeroes = do.call("rbind", replicate(reps, zeroes, simplify = FALSE))
+if (dim(dt)[1] != 2477400 | dim(dt)[2] != 89) stop("check data - dimensions aren't right")
 
 # convert values back to 0s that were originally 0s
 for (var in inds){
   set_ids = zeroes[get(var) == TRUE, id]
-  dtExp = dtExp[id %in% set_ids, (var):= 0]
+  dt = dt[id %in% set_ids, (var):= 0]
 }
 # ----------------------------------------------
 
@@ -109,5 +118,5 @@ for (var in inds){
 # export imputed data to have a saved full version
 # (do this as an RDS so it is faster/smaller file)
 # ----------------------------------------------
-saveRDS(dtExp, paste0(dir, cleanedFile))
+saveRDS(dt, paste0(dir, cleanedFile))
 # ----------------------------------------------
