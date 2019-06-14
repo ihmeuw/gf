@@ -25,7 +25,7 @@ library(lubridate)
 # files take a long time to load - merge in a cluster IDE
 
 # script to open a long-lasting large IDE
-# qsub -terse -N rst_ide_19_05_14_160329 -q long.q -l fthread=20 -l m_mem_free=20G -l h_rt=70:00:00 -e archive=TRUE -P proj_pce /ihme/code/jpy_rstudio/jpy_rstudio_shell.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -t rstudio -p 1247 -o 1 -G r
+# qsub -terse -N rst_ide -q all.q -l fthread=10 -l m_mem_free=30G -l h_rt=70:00:00 -l archive=TRUE -P proj_pce /ihme/code/jpy_rstudio/jpy_rstudio_shell.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -t rstudio -p 1247 -o 1 -G r
 
 # change the folder to the name of the data set you want to merge
 # this is the only argument to change 
@@ -205,9 +205,9 @@ data_elements[ , c('datasets_url', 'data_element_url'):=NULL]
 categories[ , url_list:=NULL]
 
 # change the names of vars in dt so they match with meta data
+setnames(x, 'category', 'category_id')
 setnames(x, 'org_unit_ID', 'org_unit_id')
 setnames(x, 'data_element_ID', 'data_element_id')
-setnames(x, 'category', 'category_id')
 
 # change the names of vars in meta data so they match with dt
 setnames(categories, 'ID', 'category_id')
