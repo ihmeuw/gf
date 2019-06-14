@@ -25,19 +25,19 @@ user_name = 'abatzel'
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/figures/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/')
 
 #-----------------------------------
 # output files
-outFile = 'pnlp_outliers_figures (correspond to DPS level outliers).pdf'
-outFile2 = 'pnlp_outliers_figures (do not correspond to DPS level outliers).pdf'
-outFile_dps = 'pnlp_outliers_figures_dpsLevel.pdf'
-outFile_rdts = 'outliers_in_RDTs.pdf'
+outFile = 'figures/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
+outFile2 = 'figures/pnlp_outliers_figures (do not correspond to DPS level outliers).pdf'
+outFile_dps = 'figures/pnlp_outliers_figures_dpsLevel.pdf'
+outFile_rdts = 'figures/outliers_in_RDTs.pdf'
 outData = 'pnlp_outliers_labeled.rds' 
 #------------------------------------
 # read in the file
-dt = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results.rds'))
-dt_dps = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds'))
+dt = readRDS(paste0(dir, 'pnlp_quantreg_results.rds'))
+dt_dps = readRDS(paste0(dir, 'pnlp_quantreg_results_dpsLevel.rds'))
 #------------------------------------
 
 #------------------------------------
@@ -110,14 +110,26 @@ dt_dps[ (value < t1_lower ), outlier_dpsLevel1 :=TRUE ]
 dt = merge(dt, dt_dps[, .(org_unit_id, date, variable, element_id, outlier_dpsLevel1, outlier_dpsLevel2, outlier_dpsLevel3)], all = TRUE, 
            by.x=c('dps', 'date', 'variable', 'element_id'), by.y=c('org_unit_id', 'date', 'variable', 'element_id'))
 
-dt[ , outlier_in_both_wdps1 := ifelse(outlier == TRUE & outlier_dpsLevel1 == TRUE, TRUE, FALSE) ]
+#dt[ , outlier_in_both_wdps1 := ifelse(outlier == TRUE & outlier_dpsLevel1 == TRUE, TRUE, FALSE) ]
 dt[ , outlier_in_both_wdps2 := ifelse(outlier == TRUE & outlier_dpsLevel2 == TRUE, TRUE, FALSE) ]
-dt[ , outlier_in_both_wdps3 := ifelse(outlier == TRUE & outlier_dpsLevel3 == TRUE, TRUE, FALSE) ]
+#dt[ , outlier_in_both_wdps3 := ifelse(outlier == TRUE & outlier_dpsLevel3 == TRUE, TRUE, FALSE) ]
 # dt[ outlier_in_both_wdps2 == TRUE, .N] # 648 outliers at health zone level (+/- 20 MADs) with corresponding outlier at DPS level (+/- 15 MADs)
 #---------------------------------------------
 
 #----------------------------------------------
-# subset to the health facilities and elements that contain outliers
+# save a copy of the data with outliers identified
+#----------------------------------------------
+dt = dt[, .(dps, health_zone, date, variable, donor, operational_support_partner, population, value, outlier, outlier_in_both_wdps2)]
+dt = dt[ , outlier:= outlier_in_both_wdps2]
+dt[, outlier_in_both_wdps2:=NULL]
+
+dt[outlier==TRUE, .N]
+
+saveRDS(dt, paste0(dir, outData))
+#----------------------------------------------
+
+#----------------------------------------------
+# for graphing: subset to the health facilities and elements that contain outliers
 #----------------------------------------------
 dt[ , combine := paste0(org_unit_id, variable)]
 
