@@ -214,7 +214,6 @@ dt = data.table(rbind(dt1, dt2))
 # drop out the additional large files
 dt1 = NULL
 dt2 = NULL
-
 #---------------------------------
 # remove the factoring of value to avoid errors
 # introduces some NAs as some values are NULL
@@ -239,6 +238,8 @@ print("File saved!")
 #----------------------------------------------------------------
 
 #----------------------------------------------------------------
+
+#---------------------------------
 # read in the interim file you saved
 
 # file_name1 = paste0(dir, 'pre_prep/', folder, '/', folder, min_date, '_', max_date, 'full.rds')
@@ -305,7 +306,6 @@ data_elements = data_elements[datasets_ID==sub_id]
 
 # drop unecessary variables
 data_elements[ , c('datasets_url', 'data_element_url'):=NULL]
-
 #-------------------------------
 # format variable names 
 
@@ -423,7 +423,9 @@ saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_full_', min, '_', max, '_LO
 
 #-----------------------------------------------------------------------------
 
-#-----------------------------------------------------------
+#-----------------------------------------------------------------------------
+
+#------------------------
 # read in the full data set you saved
 
 # dt = readRDS(paste0(dir, 'pre_prep/merged/', folder,'_full_', min, '_', max, '.rds' ))
@@ -449,6 +451,6 @@ if (folder=='pnls') {
     set_name = as.character(s)
     saveRDS(x, paste0(dir, 'pre_prep/merged/', folder, '_', set_name, '_subset_', min, '_', max, '.rds' ))
   } }
-  
-#--------------------------------------------------------
+
+#-----------------------------------------------------------------------------
 
