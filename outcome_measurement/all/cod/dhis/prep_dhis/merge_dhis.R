@@ -421,7 +421,7 @@ max = gsub('-', '_', max)
 # save a merged rds file 
 saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_full_', min, '_', max, '_LOCAL.rds' ))
 
-#------------------------------------------
+#-----------------------------------------------------------------------------
 
 #-----------------------------------------------------------
 # read in the full data set you saved
@@ -431,29 +431,24 @@ saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_full_', min, '_', max, '_LO
 # local copy of the full data set 
 # dt = readRDS("C:/Users/ccarelli/Documents/dhis_data/pre_prep/merged/pnls_full_2017_01_01_2019_04_01.rds")
 
+#-------------------------------------------------------
+# save subsetted pnls data sets as variables in pnls are repeated based on stratification 
 
-if (folder=='pnls') dt = dt[drop==FALSE]
-if (folder=='pnls') dt[ ,element_eng:=]
 
-  #--------------------------------------
-  # save a subsetted version of pnls with only relevant variables
-  # variables in pnls are repeated based on stratification 
-  # drop duplicates and save
-
+# loop through the sets and save individual files 
 if (folder=='pnls') {
   
-  for (s in unique(dt$set)) {
-    x = dt[set==s]
-    
-    
-  }
+  # drop out duplicate variables and errant values 
+  dt = dt[drop==FALSE]
+  dt = dt[!is.na(pnls_set)] # missing sets appear to be a part of malaria sentinel site data 
+  dt[ ,c('element_eng', 'drop'):=NULL] 
   
+ # loop through and save files by data set
+  for (s in unique(dt$pnls_set)) {
+    x = dt[pnls_set==s]
+    set_name = as.character(s)
+    saveRDS(x, paste0(dir, 'pre_prep/merged/', folder, '_', set_name, '_subset_', min, '_', max, '.rds' ))
+  } }
   
-}
-  
-  
-saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_subset_', min, '_', max, '.rds' ))
-
-
-#---------------------------------------
+#--------------------------------------------------------
 
