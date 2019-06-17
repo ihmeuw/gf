@@ -13,11 +13,19 @@ user_name = Sys.info()[['user']]
 i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
 
-# read in the array table 
-array_table = read.csv('/ihme/scratch/users/abatzel/array_table_for_qr.csv')
-array_table = as.data.table(array_table)
+# file paths
+scratchDir = paste0('/ihme/scratch/users/', user_name, '/quantreg/')
+scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
+arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
+parallelDir = paste0(scratchDir, 'parallel_files/')
+outFile = paste0(parallelDir, 'quantreg_output', i, '.fst')
 
-# read org unit from the array table
+# read in the array table 
+array_table = read.fst(arrayFile)
+array_table = as.data.table(array_table)
+head(array_table)
+
+# get QR ids from array table
 d = array_table[i]$drug_id # unique facility id
 print(d)
 
