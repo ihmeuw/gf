@@ -34,7 +34,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 dt = readRDS(paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2019_04_01.rds'))
 
 #---------------------------------------
-# reporting completeness
+# reporting completeness: diagnostic plot
 
 report = dt[ ,.(facilities=length(unique(org_unit_id))), by=date]
 
@@ -130,8 +130,18 @@ dt[grep('enfants', element1), subpop:='exposed_infant']
 dt[grep('eev', element1), subpop:='exposed_infant']
 dt[grep('handicap', element1), subpop:='disabled']
 
+
+#------------------------------------------------------------
 # save interim output 
-saveRDS(dt, paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2019_04_01_subpops.rds'))
+
+# arguments for the save
+min = dt[ , min(date)]
+min = gsub('-', '_', min)
+max = dt[ , max(date)]
+max = gsub('-', '_', max)
+
+# save the output with subpops created 
+saveRDS(dt, paste0(dir, 'pre_prep/merged/pnls_subset_', min, '_', max, '_subpops.rds'))
 
 #------------------------------------------------------------
 # generate age and sex categories
@@ -227,14 +237,22 @@ dt[ , c('data_set', 'element1','category1'):=NULL]
 #------------------------------------
 # save interim output 
 
-saveRDS(dt, paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2019_04_01_subpops_ages.rds'))
+# including ages
+saveRDS(dt, paste0(dir, 'pre_prep/merged/pnls_subset_', min, '_', max, '_subpops_ages.rds'))
 
 #------------------------------------
 # collapse on category
 
+# check that the number of rows is the same before and after 
+before = nrow(dt)
+
 # the categories are now reflected in the sex, age, subpop, and maternity variables
 names = names(dt)[names(dt)!='category' & names(dt)!='value' & names(dt)!='country']
 dt = dt[ ,.(value=sum(value, na.rm=T)), by=names]
+
+# check that the number of rows is the same before and after 
+after = nrow(dt)
+if (before!=after) print("Houston, we have a problem. There is an issue with the category collapse.")
 
 #-------------------------------------
 # save a single data set 
@@ -244,11 +262,6 @@ saveRDS(dt, paste0(dir, 'prepped/pnls_sets/pnls_clean_all_sets.rds'))
 #--------------------------------------
 # save each data set as a distinct RDS file
 
-# arguments for the save
-min = dt[ , min(date)]
-min = gsub('-', '_', min)
-max = dt[ , max(date)]
-max = gsub('-', '_', max)
 
 # save the sets 
 for (s in unique(dt$pnls_set)) {
