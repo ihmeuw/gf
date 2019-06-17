@@ -1,5 +1,6 @@
 # model: drc_malaria6.r
 # purpose: drc_malaria6 with OOP expenditure in places
+# do time fixed effects even make sense for the first half model if there are no subnational input data? might as well just compute the ratio of inputs to outputs without using a model... (should be the same either way though)
 
 model = '
 
