@@ -51,13 +51,9 @@ subset = dt[element_id==e, ]
 #------------------------------------
 combined_qr_results = data.table()
 
-org_units = unique(subset$org_unit_id)
-
-for (o in 1:100) {
-    print(o)
-    org = org_units[o]
+for (o in unique(subset$org_unit_id)) {
   # subset the data further based on loop parameters for qr
-    subset_further = subset[org_unit_id == org,] 
+    subset_further = subset[org_unit_id == o,] 
     
     # skip cases that will fail
     n = nrow(subset_further[!is.na(value), ])
