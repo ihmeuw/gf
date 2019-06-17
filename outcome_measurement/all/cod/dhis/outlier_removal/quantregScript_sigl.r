@@ -129,5 +129,5 @@ for (o in unique(subset$org_unit_id)) {
 # (i will be = number of org units) / this will be done for each org_unit!
 #------------------------------------
 print(paste0('Saving: ', paste0('/ihme/scratch/users/abatzel/qr_results/quantreg_output', i, '.fst')))
-write.fst(combined_qr_results, paste0('/ihme/scratch/users/abatzel/qr_results/quantreg_output', i, '.fst'))
+write.fst(combined_qr_results, outFile)
 #------------------------------------
