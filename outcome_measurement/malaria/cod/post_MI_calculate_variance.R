@@ -59,19 +59,19 @@ inds = c(inds, "healthFacilities_numReporting")
 # ----------------------------------------------
 
 # ----------------------------------------------
-# Calculate mean, upper, and lower across impuations by HEALTH ZONE
+# Calculate MEDIAN, upper, and lower across impuations by HEALTH ZONE
 # ----------------------------------------------
 id_vars = id_vars[!id_vars %in% "imputation_number"]
 
-mean = dt[, lapply(.SD, mean), by = id_vars, .SDcols = inds]
+median = dt[, lapply(.SD, median), by = id_vars, .SDcols = inds]
 lower = dt[, lapply(.SD, quantile, .05), by = id_vars, .SDcols = inds]
 upper = dt[, lapply(.SD, quantile, .95), by = id_vars, .SDcols = inds]
 
-mean = melt.data.table(mean, id.vars = id_vars, variable.factor = FALSE, value.name = "value")
+median = melt.data.table(median, id.vars = id_vars, variable.factor = FALSE, value.name = "value")
 lower = melt.data.table(lower, id.vars = id_vars, variable.factor = FALSE, value.name = "lower")
 upper = melt.data.table(upper, id.vars = id_vars, variable.factor = FALSE, value.name = "upper")
 
-agg_hz = merge(mean, lower, by = c(id_vars, "variable"))
+agg_hz = merge(median, lower, by = c(id_vars, "variable"))
 agg_hz = merge(agg_hz, upper, by = c(id_vars, "variable"))
 
 # get rid of lower and upper values for values that were NOT missing, so these don't show up on the graph
@@ -85,7 +85,7 @@ saveRDS(agg_hz, paste0(dir, condensed_imputed_data_hz))
 # ----------------------------------------------
 
 # ----------------------------------------------
-# Aggregate first and then calculate mean and variance across imputations by DPS
+# Aggregate first and then calculate median and variance across imputations by DPS
 # ----------------------------------------------
 id_vars = c("dps", "date")
 
@@ -93,19 +93,19 @@ id_vars = c("dps", "date")
 agg_dps = dt[, lapply(.SD, sum), by = c(id_vars, "imputation_number"), .SDcols = inds]
 if ( nrow(agg_dps) != (nrow(unique(dt[, c("date", "dps")]))*50)) stop("unique identifiers don't uniquely identify rows")
 
-# then compute the mean, upper and lower across all imputations for each unique dps/date (the same way as for hz, only unique id's are different)
-mean = agg_dps[, lapply(.SD, mean), by = id_vars, .SDcols = inds]
+# then compute the median, upper and lower across all imputations for each unique dps/date (the same way as for hz, only unique id's are different)
+median = agg_dps[, lapply(.SD, median), by = id_vars, .SDcols = inds]
 lower = agg_dps[, lapply(.SD, quantile, .05), by = id_vars, .SDcols = inds]
 upper = agg_dps[, lapply(.SD, quantile, .95), by = id_vars, .SDcols = inds]
 
-mean = melt.data.table(mean, id.vars = id_vars, variable.factor = FALSE, value.name = "value")
+median = melt.data.table(median, id.vars = id_vars, variable.factor = FALSE, value.name = "value")
 lower = melt.data.table(lower, id.vars = id_vars, variable.factor = FALSE, value.name = "lower")
 upper = melt.data.table(upper, id.vars = id_vars, variable.factor = FALSE, value.name = "upper")
                         
-dps_level = merge(mean, lower, by = c(id_vars, "variable"))
+dps_level = merge(median, lower, by = c(id_vars, "variable"))
 dps_level = merge(dps_level, upper, by = c(id_vars, "variable"))
 
-# set upper and lower values to NA where the value was not imputed (where mean==lower and mean==upper)
+# set upper and lower values to NA where the value was not imputed (where median==lower and median==upper)
 dps_level[upper==lower, lower := NA ]
 dps_level[is.na(lower), upper := NA ]
 
@@ -116,7 +116,7 @@ saveRDS(dps_level, paste0(dir, condensed_imputed_data_dps))
 # ----------------------------------------------
 
 # ----------------------------------------------
-# Aggregate first and then calculate mean and variance across imputations by COUNTRY
+# Aggregate first and then calculate median and variance across imputations by COUNTRY
 # 8/29/18 update: changed country level confidence interval
 # ----------------------------------------------
 id_vars = c("date")
@@ -125,19 +125,19 @@ id_vars = c("date")
 agg_natl = dt[, lapply(.SD, sum), by = c(id_vars, "imputation_number"), .SDcols = inds]
 if ( nrow(agg_natl) != ( nrow(unique(dt[, c("date")]))*50 )) stop("unique identifiers don't uniquely identify rows")
 
-# then compute the mean, upper and lower across all imputations for each unique dps/date
-mean = agg_natl[, lapply(.SD, mean), by = id_vars, .SDcols = inds]
+# then compute the median, upper and lower across all imputations for each unique dps/date
+median = agg_natl[, lapply(.SD, median), by = id_vars, .SDcols = inds]
 lower = agg_natl[, lapply(.SD, quantile, .05), by = id_vars, .SDcols = inds]
 upper = agg_natl[, lapply(.SD, quantile, .95), by = id_vars, .SDcols = inds]
 
-mean = melt.data.table(mean, id.vars = id_vars, variable.factor = FALSE, value.name = "value")
+median = melt.data.table(median, id.vars = id_vars, variable.factor = FALSE, value.name = "value")
 lower = melt.data.table(lower, id.vars = id_vars, variable.factor = FALSE, value.name = "lower")
 upper = melt.data.table(upper, id.vars = id_vars, variable.factor = FALSE, value.name = "upper")
 
-natl_level = merge(mean, lower, by = c(id_vars, "variable"))
+natl_level = merge(median, lower, by = c(id_vars, "variable"))
 natl_level = merge(natl_level, upper, by = c(id_vars, "variable"))
 
-# set upper and lower values to NA where the value was not imputed (where mean==lower and mean==upper)
+# set upper and lower values to NA where the value was not imputed (where median==lower and median==upper)
 natl_level[upper==lower, lower := NA ]
 natl_level[is.na(lower), upper := NA ]
 
