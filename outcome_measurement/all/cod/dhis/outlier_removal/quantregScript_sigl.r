@@ -45,7 +45,9 @@ print(v)
 # # dt <- readRDS('/ihme/scratch/users/abatzel/data_for_qr.rds')
 # # dt = data.table(dt)
 # dt <- read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', from = from_row , to = to_row, as.data.table = TRUE) 
-dt = read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', as.data.table = TRUE) 
+
+dt = read.fst(scratchInFile)
+dt = as.data.table(dt)
 
 # **** NO LONGER NEED THIS since reading the data in from /ihme/scratch/ after it is prepped in run_quantreg_parallel
 # # make variable ids
