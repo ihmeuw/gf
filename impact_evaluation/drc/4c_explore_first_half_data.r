@@ -45,7 +45,7 @@ modelVars = modelVars[modelVars!='date']
 # organize groups of variables
 lhsVars = unique(parsedModel$lhs[parsedModel$op=='~'])
 varGroups = lapply(lhsVars, function(v) { 
-	c(v, parsedModel$rhs[parsedModel$lhs==v & parsedModel$rhs!='date'])
+	c(v, parsedModel$rhs[parsedModel$lhs==v & parsedModel$rhs!='date' & parsedModel$op=='~'])
 })
 
 # melt long
