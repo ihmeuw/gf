@@ -35,8 +35,9 @@ out_dir = paste0(dir, 'prepped/sigpro/')
 #-----------------------------------------
 # load in the file 
 
-dt = data.table(read.csv(paste0(dir,'sigsa/Patient Level Data/Solicitud 0593-2018 Sigsa 6 mensual producción TB y VIH 2014 al 2017_csv.csv'), skip=3,
-                         stringsAsFactors = FALSE))
+dt = data.table(read.csv(paste0(dir,
+      'sigsa/Patient Level Data/Solicitud 0593-2018 Sigsa 6 mensual producción TB y VIH 2014 al 2017_csv.csv'), 
+                         skip=3, stringsAsFactors = FALSE))
 #-----------------------------------------
 # format the column names and drop unecessary variables 
 
@@ -56,8 +57,9 @@ dt = dt[-1]
 # drop the last three rows - just summary information/often blank
 dt = head(dt, -3)
 
+
 #subset to the hiv-related variables
-dt = dt[ ,c(1:9, 12:19, 21:30, 38)]
+dt = dt[ ,c(1:9, 12:19, 21:25, 27:30, 38)]
 
 #-----------------------------------------
 # rename the variables in english 
@@ -67,7 +69,7 @@ new_names = c("year", "month", "health_area", "health_district", "health_service
               "birthday_month", "birthday_year", "nationality", "gender", "residence_dept",
               "residence_muni", "sexual_orientation", "linguistic_community",
               "risk_condition", "reason_for_orientation", 
-              "pregnancy_post_partum", "pre_test", "test_completed", "hiv", "result",
+              "pregnancy_post_partum", "pre_test", "hiv_test", "result",
               "confirmatory_test", "confirmatory_result", "referral")
 
 setnames(dt, new_names)
@@ -99,35 +101,45 @@ for (v in vars) dt[get(v)=="-", (v):=NA]
 
 # replace si and no values with logicals
 dt[!is.na(pre_test), pre_test1:=(pre_test=='Si')]
-dt[!is.na(test_completed), test_completed1:=(test_completed=='Si')]
-dt[!is.na(hiv), hiv1:=(hiv=='Si')]
-dt[!is.na(result), result1:=(result=='Si')]
+dt[!is.na(hiv_test), hiv_test1:=(hiv_test=='Si')]
 dt[!is.na(confirmatory_test), confirmatory_test1:=(confirmatory_test=='Si')]
-dt[!is.na(confirmatory_result), confirmatory_result1:=(confirmatory_result=='Si')]
 
 # delete the character variables in favor of the logicals
-dt[ ,c("pre_test", "test_completed", "hiv", "result",
-      "confirmatory_test", "confirmatory_result"):=NULL]
+dt[ ,c("pre_test", "hiv_test", "confirmatory_test"):=NULL]
 
 # use the new variables
-setnames(dt, c("pre_test1", "test_completed1", "hiv1", "result1",
-               "confirmatory_test1", "confirmatory_result1"),
-              c("pre_test", "test_completed", "hiv", "result",
-               "confirmatory_test", "confirmatory_result"))
+setnames(dt, c("pre_test1", "hiv_test1", "confirmatory_test1"),
+              c("pre_test",  "hiv_test", "confirmatory_test"))
 
 #-----------------------------------------
 # format gender
 
 dt[gender=="Femenino", gender:="Female"]
 dt[gender=="Masculino", gender:="Male"]
+
 #-----------------------------------------
 # format the department and municipalities
 
-names = c(names(dt)[1:2], names(dt)[12:length(dt)])
+names = c(names(dt)[4:9], names(dt)[11:length(dt)])
+dt = dt[ ,lapply(.SD, tolower), by=names, .SDcols=c(1:3, 10)]
 
+# very slow to load
+# dt = dt[ ,lapply(.SD, toTitleCase), by=names, .SDcols=c(1:3, 10)]
 
-dt = dt[ ,lapply(.SD, tolower), by=names, .SDcols=c(3:5, 10:11)]
-# dt = dt[ ,lapply(.SD, toTitleCase), by=names, .SDcols=c(1:3, 10:11)]
+#-----------------------------------------
+# format the sr names
+
+dt$sr = unlist(lapply(strsplit(dt$service_type, "\\("), "[", 2))
+dt[ , sr:=trimws(gsub("\\)", "", sr))]
+
+#-----------------------------------------
+# add monthly date for graphs and a pregnancy binary
+
+dt[ ,month_date:=as.Date(paste0(year(date), '-', month(date), '-01'), '%Y-%m-%d')]
+
+# pregnancy binary
+dt[reason_for_orientation=='Embarazo' | pregnancy_post_partum=="Primer Trimestre (01 - 12 Semanas)", pregnant:=TRUE]
+dt[is.na(pregnant), pregnant:=FALSE]
 
 #-----------------------------------------
 # save a prepped version 

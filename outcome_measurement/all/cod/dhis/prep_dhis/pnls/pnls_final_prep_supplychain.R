@@ -26,7 +26,8 @@ setwd(dir)
 #---------------------------------------
 # load the file that represents a subset (no sex or )
 
-dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_drug_2017_01_01_2018_12_01.rds'))
+# I think I have changed this to the correct file for you - Caitlin 
+dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_drug_2017_01_01_2019_04_01.rds'))
 
 #-----------------------------
 # export the abbreviated elements for translation

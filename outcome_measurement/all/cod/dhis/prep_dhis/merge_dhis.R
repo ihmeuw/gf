@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
 # Caitlin O'Brien-Carelli
 #
-# 6/11/2019
+# 6/17/2019
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -25,8 +25,8 @@ memory.limit(size = 20000)
 # merge on the cluster
 # files take a long time to load - merge in a cluster IDE
 
-# script to open a long-lasting large IDE
-# qsub -terse -N rst_ide_19_05_14_160329 -q long.q -l fthread=20 -l m_mem_free=20G -l h_rt=70:00:00 -e archive=TRUE -P proj_pce /ihme/code/jpy_rstudio/jpy_rstudio_shell.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -t rstudio -p 1247 -o 1 -G r
+# script to open a long-lasting large IDE - only 30G works
+# qsub -terse -N rst_ide_19_05_14_160329 -q long.q -l fthread=1 -l m_mem_free=30G -l h_rt=70:00:00 -e archive=TRUE -P proj_pce /ihme/code/jpy_rstudio/jpy_rstudio_shell.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -t rstudio -p 1247 -o 1 -G r
 
 # ---------------------------------
 # set working directories
@@ -35,13 +35,7 @@ memory.limit(size = 20000)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-# dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-
-# local directory 
-dir = 'C:/Users/ccarelli/Documents/dhis_data/'
-
-# source the merge and prep functions from the J Drive
-# source(paste0(dir, 'code/merge_functions.R'))
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 #---------------------------------
 
@@ -77,10 +71,7 @@ fix_diacritics = function(x) {
 
 #---------------------------------
 # set the working directory and read in the files
-# setwd(paste0(dir, 'pre_prep/', folder, '/intermediate_data/'))
-
-# local working directory 
-setwd('C:/Users/ccarelli/Documents/dhis_data/pre_prep/pnls/intermediate_data')
+setwd(paste0(dir, 'pre_prep/', folder, '/intermediate_data/'))
 
 # list the files in the working directory
 files = list.files('./', recursive=TRUE)
@@ -200,7 +191,7 @@ for(f in files[16:length(files)]) {
   # save the completed rbind for the second half of the data 
   # merge in the categories
   if (i==length(files)-15) dt2 = merge(dt2, categories, by='category', all.x=T)
-  # if (i==length(files)-15) saveRDS(dt2, paste0(dir, 'pre_prep/', folder, '/', folder, '_second_half.rds'))
+  if (i==length(files)-15) saveRDS(dt2, paste0(dir, 'pre_prep/', folder, '/', folder, '_second_half.rds'))
   i = i+1
   
 }
@@ -419,25 +410,10 @@ max = dt[ , max(date)]
 max = gsub('-', '_', max)
 
 # save a merged rds file 
-saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_full_', min, '_', max, '_LOCAL.rds' ))
+saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_full_', min, '_', max, '.rds' ))
 
-#-----------------------------------------------------------------------------
-
-#-----------------------------------------------------------------------------
-
-#------------------------
-# read in the full data set you saved
-
-# dt = readRDS(paste0(dir, 'pre_prep/merged/', folder,'_full_', min, '_', max, '.rds' ))
-
-# local copy of the full data set 
-# dt = readRDS("C:/Users/ccarelli/Documents/dhis_data/pre_prep/merged/pnls_full_2017_01_01_2019_04_01.rds")
-
-#-------------------------------------------------------
-# save subsetted pnls data sets as variables in pnls are repeated based on stratification 
-
-
-# loop through the sets and save individual files 
+#--------------------------------------
+# save a subset of the file for pnls 
 if (folder=='pnls') {
   
   # drop out duplicate variables and errant values 
@@ -445,12 +421,9 @@ if (folder=='pnls') {
   dt = dt[!is.na(pnls_set)] # missing sets appear to be a part of malaria sentinel site data 
   dt[ ,c('element_eng', 'drop'):=NULL] 
   
- # loop through and save files by data set
-  for (s in unique(dt$pnls_set)) {
-    x = dt[pnls_set==s]
-    set_name = as.character(s)
-    saveRDS(x, paste0(dir, 'pre_prep/merged/', folder, '_', set_name, '_subset_', min, '_', max, '.rds' ))
-  } }
+  # save the subsetted data 
+  saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_subset_', min, '_', max, '.rds'))
+  print(paste0("Final PNLS output: ", dir, 'pre_prep/merged/', folder,'_subset_', min, '_', max, '.rds'))
+}  
 
-#-----------------------------------------------------------------------------
-
+#---------------------------------------------------------------------------------------
