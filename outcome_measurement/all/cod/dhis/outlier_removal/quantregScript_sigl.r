@@ -18,10 +18,10 @@ array_table = read.csv('/ihme/scratch/users/abatzel/array_table_for_qr.csv')
 array_table = as.data.table(array_table)
 
 # read org unit from the array table
-d = array_table[i]$drug # unique facility id
+d = array_table[i]$drug_id # unique facility id
 print(d)
 
-v = array_table[i]$variable # unique facility id
+v = array_table[i]$variable_id # unique facility id
 print(v)
 #------------------------------------
 
@@ -54,7 +54,7 @@ dt = read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', as.data.table = TRU
 # }
 
 # subset the data by facility - to the current drug and variable from the array table
-subset = dt[drug==d & variable==v, ]
+subset = dt[drug_id==d & variable_id==v, ]
 #------------------------------------
 
 #------------------------------------
