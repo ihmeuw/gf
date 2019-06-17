@@ -15,7 +15,7 @@ source('./impact_evaluation/drc/set_up_r.r')
 
 # for testing purposes
 # task_id = 12
-# args = c('drc_malaria_impact4_under5', '2', 'TRUE')
+# args = c('drc_malaria6', '1', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line
