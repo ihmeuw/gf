@@ -17,6 +17,7 @@ library(boot)
 
 run_name = commandArgs()[5]
 run_name = gsub('\r', '', run_name)
+run_name = "run_0_01_aggVars_lagsLeads"
 # --------------------  
 
 

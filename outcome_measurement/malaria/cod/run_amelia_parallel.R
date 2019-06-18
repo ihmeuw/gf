@@ -27,11 +27,12 @@
 
 # 4)
 # set switches
-aggregate = "agg" # noAgg for FALSE
-lags_leads = "no_lags_leads" # "lags_and_leads" for TRUE
-tolerance = 0.1
+tolerance = 0.01
+aggregate = "no" # "agg" for TRUE
+lags_leads = "no" # "lags_and_leads" for TRUE
+
 # set run_name manually:
-run_name = 'run_0_1_aggVars_noLagsLeads'
+run_name = 'run_0_01_noAgg_noLagsLeads'
 
 cleanup_start = FALSE
 # runs:

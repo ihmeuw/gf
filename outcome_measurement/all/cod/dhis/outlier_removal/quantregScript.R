@@ -19,7 +19,7 @@ i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
 
 # file paths
-scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
+scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg2/')
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
 arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 parallelDir = paste0(scratchDir, 'parallel_files/')
@@ -31,8 +31,9 @@ array_table = as.data.table(array_table)
 head(array_table)
 
 # read org unit from the array table
-o = array_table[i]$org_unit_id # unique facility id
-print(o)
+# o = array_table[i]$org_unit_id # unique facility id
+e = array_table[i]$element_id # unique facility id
+print(e)
 #------------------------------------
 
 #-----------------------------------
@@ -41,8 +42,8 @@ print(o)
 
 dt = read.fst(scratchInFile)
 dt = as.data.table(dt)
-subset = dt[org_unit_id==o, ] 
-
+#subset = dt[org_unit_id==o, ] 
+subset = dt[element_id==e, ] 
 #------------------------------------
 
 #------------------------------------
@@ -50,18 +51,17 @@ subset = dt[org_unit_id==o, ]
 #------------------------------------
 combined_qr_results = data.table()
 
-for (e in unique(subset$element_id)) {
-    
+for (o in unique(subset$org_unit_id)) {
   # subset the data further based on loop parameters for qr
-    subset_further = subset[element_id == e] 
+    subset_further = subset[org_unit_id == o,] 
     
     # skip cases that will fail
     n = nrow(subset_further[!is.na(value), ])
-    print(n)
+    #print(n)
     var = var(subset_further$value, na.rm=T)
-    print(var)
+    #print(var)
     nx = length(unique(subset_further$date))
-    print(nx)
+    #print(nx)
     
     # skip if less than 3 data points or variance is 0
     if(n>=3 & var!=0 & nx>=2) {  

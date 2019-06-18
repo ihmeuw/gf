@@ -5,90 +5,66 @@ library(data.table)
 library(quantreg)
 library(fst) # to save data tables as .fst for faster read/write and full random access
 
-user_name = 'abatzel'
+user_name = Sys.info()[['user']]
 #------------------------------------
 # handle arguments
 #------------------------------------
-# commented out for doing array job
-# # handle incoming arguments
-# e = commandArgs()[4]
-# o = commandArgs()[5]
-# i = commandArgs()[6]
-# fileName = commandArgs()[7]
-# impute = commandArgs()[8]
-# v = commandArgs()[9]
-
-# fileName = # commandArgs()[4]
-# impute = "TRUE" # commandArgs()[5]
-
-# print(e)
-# print(o)
-# print(i)
-# print(v)
-# print(fileName)
-# print(impute) 
-
 # get the task_id to index the array table
 i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
+
+# file paths
+scratchDir = paste0('/ihme/scratch/users/', user_name, '/quantreg/')
+scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
+arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
+parallelDir = paste0(scratchDir, 'parallel_files/')
+outFile = paste0(parallelDir, 'quantreg_output', i, '.fst')
+
 # read in the array table 
-array_table = read.csv('/ihme/scratch/users/abatzel/array_table_for_qr.csv')
-array_table <- as.data.table(array_table)
+array_table = read.fst(arrayFile)
+array_table = as.data.table(array_table)
+head(array_table)
 
-# read org unit from the array table
-o = array_table[i]$org_unit_id # unique facility id
-print(o)
-#------------------------------------
+# get QR ids from array table
+d = array_table[i]$drug_id # unique facility id
+print(d)
 
-#------------------------------------
-# set up
-#------------------------------------
-# library(data.table)
-# library(quantreg)
-# library(fst)
-
-# # detect if operating on windows or on the cluster 
-# root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-# 
-# # set the directory for output
-# dir <- paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+v = array_table[i]$variable_id # unique facility id
+print(v)
 #------------------------------------
 
 #------------------------------------
 # load the data & subset to task_id/org_unit
 #------------------------------------
-# make a table of values to index rows by unique org_unit for retrieving rows while reading in the data
-index_table <- data.table(index = seq(1:17104), f = seq(from= 1, to = 11339952, by = 663), t = seq(from= 663, to = 11339952, by = 663))
-from_row = index_table[ i, f ]
-to_row = index_table[ i, t ]
+# # make a table of values to index rows by unique org_unit for retrieving rows while reading in the data
+# index_table <- data.table(index = seq(1:17104), f = seq(from= 1, to = 11339952, by = 663), t = seq(from= 663, to = 11339952, by = 663))
+# from_row = index_table[ i, f ]
+# to_row = index_table[ i, t ]
+# 
+# # dt <- readRDS(paste0(dir, 'prepped/', fileName))
+# # dt <- readRDS('/ihme/scratch/users/abatzel/data_for_qr.rds')
+# # dt = data.table(dt)
+# dt <- read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', from = from_row , to = to_row, as.data.table = TRUE) 
 
-# dt <- readRDS(paste0(dir, 'prepped/', fileName))
-# dt <- readRDS('/ihme/scratch/users/abatzel/data_for_qr.rds')
-# dt = data.table(dt)
-dt <- read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', from = from_row , to = to_row, as.data.table = TRUE) 
+dt = read.fst(scratchInFile)
+dt = as.data.table(dt)
 
 # **** NO LONGER NEED THIS since reading the data in from /ihme/scratch/ after it is prepped in run_quantreg_parallel
 # # make variable ids
 # dt[, variable_id:=.GRP, by='drug']
 # dt[, element_id:=.GRP, by='variable']
 
-# # remove new cases (not of interest for outlier detection)
-# if (fileName=='viral_load_pnls_interim.rds') { 
-#   dt = dt[case=='Old']
-#   dt[ , case:=NULL]
+# if ( length(unique(dt$org_unit_id) == 1) & nrow(dt)==663 & unique(dt$org_unit_id) == o ) {
+#   print("Indexing for read.fst() worked correctly!")
+#   subset = copy(dt)
+# } else {
+#   print("Indexing for read.fst() did not work correctly! Retrying by reading in full dt!")
+#   dt <- read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', as.data.table = TRUE)
+#   subset = dt[org_unit_id==o, ] 
 # }
 
-if ( length(unique(dt$org_unit_id) == 1) & nrow(dt)==663 & unique(dt$org_unit_id) == o ) {
-  print("Indexing for read.fst() worked correctly!")
-  subset = copy(dt)
-} else {
-  print("Indexing for read.fst() did not work correctly! Retrying by reading in full dt!")
-  dt <- read.fst('/ihme/scratch/users/abatzel/data_for_qr.fst', as.data.table = TRUE)
-  subset = dt[org_unit_id==o, ] 
-}
-
-# # subset the data by facility - to the current org_unit_id we want
-# subset = dt[org_unit_id==o, ] 
+# subset the data by facility - to the current drug and variable from the array table
+subset = dt[drug_id==d & variable_id==v, ]
 #------------------------------------
 
 #------------------------------------
@@ -96,21 +72,20 @@ if ( length(unique(dt$org_unit_id) == 1) & nrow(dt)==663 & unique(dt$org_unit_id
 #------------------------------------
 combined_qr_results <- data.table()
 
-for (e in unique(subset$element_id)) {
-  for (v in unique(subset$variable_id)) {
+for (o in unique(subset$org_unit_id)) {
     # subset the data further based on loop parameters for qr
-    subset_further = subset[element_id == e & variable_id == v, ] 
+    subset_further = subset[org_unit_id == o, ] 
     
     # skip cases that will fail
     n = nrow(subset_further[!is.na(value), ])
-    print(n)
+    #print(n)
     var = var(subset_further$value, na.rm=T)
-    print(var)
+    #print(var)
     nx = length(unique(subset_further$date))
-    print(nx)
+    #print(nx)
     
     # skip if less than 3 data points or variance is 0
-    if(n>=3 & var!=0 & nx>=2) {  
+    if(n>=5 & var!=0 & nx>=2) {  
         # create formula
         form = 'value~date'
         # # add fixed effect on group if more than one group exists
@@ -121,25 +96,18 @@ for (e in unique(subset$element_id)) {
         quantFit <- rq(form, data=subset_further, tau=0.5)
         summary(quantFit)
         
-        # run quantreg - no fixed effect on group
-        # quantFit <- rq(value~date, data=subset, tau=0.5)
-        # summary(quantFit)
-        
-        # list the residuals and add them to the out file
-        # r <- resid(quantFit)
+        # save the fitted value and resid
         subset_further[, fitted_value:=predict(quantFit, newdata = subset_further)]
         
         subset_further[, resid:=(fitted_value - value)]
         subset_further[, skipped_qr := "no"]
         
         # if (impute=='TRUE') {
-        subset_further[is.na(value), got_imputed:="yes"]
-        subset_further[is.na(value), value:=fitted_value]
+        # subset_further[is.na(value), got_imputed:="yes"]
+        # subset_further[is.na(value), value:=fitted_value]
         # }
-        
     } else { # if the data doesn't pass the conditions necessary for qr, then skip qr & add these vars
       subset_further[, fitted_value:=NA]
-      subset_further[, got_imputed:=NA]
       subset_further[, resid:=NA]
       subset_further[, skipped_qr := "yes"]
     }
@@ -149,12 +117,11 @@ for (e in unique(subset$element_id)) {
       } else if (nrow(combined_qr_results)>0){
         combined_qr_results = rbindlist( list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) # subsequent times through, add in combined results
       }
-  print(paste0("completed loop with variable_id = ", v, " and element_id =", e))
-  }
+  print(paste0("completed loop for org_unit_id = ", o))
 }
-
-# at the end of this loop, the number of rows should be equal to what we started with (663), so check that!
-if (nrow(combined_qr_results) != 663) {print("something went wrong with internal loop - number of rows is not the right number!")}
+ 
+# # at the end of this loop, the number of rows should be equal to what we started with (663), so check that!
+# if (nrow(combined_qr_results) != 663) {print("something went wrong with internal loop - number of rows is not the right number!")}
 #------------------------------------
 
 #------------------------------------
@@ -162,5 +129,5 @@ if (nrow(combined_qr_results) != 663) {print("something went wrong with internal
 # (i will be = number of org units) / this will be done for each org_unit!
 #------------------------------------
 print(paste0('Saving: ', paste0('/ihme/scratch/users/abatzel/qr_results/quantreg_output', i, '.fst')))
-write.fst(combined_qr_results, paste0('/ihme/scratch/users/abatzel/qr_results/quantreg_output', i, '.fst'))
+write.fst(combined_qr_results, outFile)
 #------------------------------------

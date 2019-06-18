@@ -38,100 +38,79 @@ source('./core/standardizeDPSNames.r')
 # ---------------------------------------------------
 # Read in data
 # ---------------------------------------------------
-dt <- readRDS(combinedFile)
-sigl_comp <- readRDS(comp_sigl_file)
-base_comp <- readRDS(comp_base_file)
-pnlp_comp <- readRDS(pnlpHZFile)
-pnlp_comp[ , dps := standardizeDPSNames(dps)]
-pnlp_comp[ , health_zone := standardizeHZNames(health_zone)]
-
-# standardize health zone names in SNIS files - because of the three that we combined, will need to avg across health_zones
-base_comp[ , health_zone := standardizeHZNames(health_zone)]
-sigl_comp[ , health_zone := standardizeHZNames(health_zone)]
-base_comp[ , dps := standardizeDPSNames(dps)]
-sigl_comp[ , dps := standardizeDPSNames(dps)]
-
-base_comp = base_comp[, .(completeness = mean(completeness)), by = .(dps, dps_code, health_zone, date, year, quarter)]
-sigl_comp = sigl_comp[, .(completeness = mean(completeness)), by = .(dps, dps_code, health_zone, date, year, quarter)]
-
-if (nrow(base_comp[duplicated(base_comp[, .(health_zone, dps, year, quarter)])]) != 0 
-    & nrow(sigl_comp[duplicated(sigl_comp[, .(health_zone, dps, year, quarter)])]) != 0){
-  stop ( "Unique identifiers do not uniquely identify rows!")}
+dt = readRDS(combined_data_file)
+snis_comp = readRDS(snis_comp_file)
+pnlp_comp = readRDS(pnlp_hz_file)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
 # Change variable names / other set up
 # ---------------------------------------------------
-# Subset DHIS2 data sets to 2018 data onward (use PNLP up to 2017)
-remove_data <- dt[ (grepl(data_set, pattern = "snis")) & (date < "2018-01-01"),]
-dt <-  anti_join(dt, remove_data)
-dt <- as.data.table(dt)
-
-dt <- convert_date_to_quarter(dt)
+dt = dt[ date <= "2019-03-01"]
+dt = convert_date_to_quarter(dt)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
 # Aggregate to quarterly data 
 # ---------------------------------------------------
-dt <- dt[, .(value = sum(value, na.rm = TRUE)), by = .(year, quarter, dps, health_zone, data_set, indicator, subpopulation)]
+dt = dt[, .(value = sum(value, na.rm = TRUE)), by = .(year, quarter, dps, health_zone, data_set, element, category, indicator, subpopulation)]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
-# Merge completeness measure from SNIS dashboard  - NOTE: they need to be re-downloaded at a quarterly time point
+# Merge completeness measure from SNIS dashboard  (downloaded at hz - quarterly level)
 # ---------------------------------------------------
-base_comp[, data_set := "snis_base_services"]
-sigl_comp[, data_set := "snis_sigl"]
-
-base_comp[, year := as.numeric(year)]
-sigl_comp[, year := as.numeric(year)]
+snis_comp[, year := as.numeric(year)]
 dt[, year := as.numeric(year)]
-
-base_comp[, quarter := as.numeric(quarter)]
-sigl_comp[, quarter := as.numeric(quarter)]
+snis_comp[, quarter := as.numeric(quarter)]
 dt[, quarter := as.numeric(quarter)]
+setnames(snis_comp, "set", "data_set")
 
-dt_base <- merge(dt[data_set == "snis_base_services", ], base_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all.x = TRUE)
-dt_sigl <- merge(dt[data_set == "snis_sigl", ], sigl_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all.x = TRUE)
-dt_pnlp <- dt[data_set == "pnlp"]
+dt = merge(dt, snis_comp, by = c("data_set", "year", "quarter", "dps", "health_zone"), all.x = TRUE)
+dt[, date := NULL]
 
-dt_base[ , completeness := completeness/100]
-dt_sigl[ , completeness := completeness/100]
+dt[ , completeness := completeness/100]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
-# Completeness from PNLP --> USE pnlp_comp after running this block of code
+# Completeness from PNLP 
 # Calculate completeness from the hz level pnlp data
 # (not indicator-specific unfortunately - just date specific at natl level)
 # ---------------------------------------------------
 pnlp_comp$variable <- as.character(pnlp_comp$variable)
 
-pnlp_fac <- pnlp_comp[variable %in% c("healthFacilities_total", "healthFacilitiesProduct"), .(dps, health_zone, date, variable, mean)]
-setnames(pnlp_fac, "mean", "value")
+pnlp_comp = pnlp_comp[variable %in% c("healthFacilities_total", "healthFacilities_numReporting"), .(dps, health_zone, date, variable, value)]
 
-# because of the way we have standardized health zones, we need to sum vars (in rerun of imputation, do this BEFORE***)
-# check =  pnlp_fac[health_zone %in% c("uvira", "bambu")]
-# ggplot( pnlp_fac[health_zone %in% c("uvira", "bambu") & dps %in% c("ituri", "sud-kivu")], aes( x = date, y = value, color = health_zone )) +
-#   geom_point() + facet_grid(health_zone ~ variable, scales = "free") + theme_bw()
-pnlp_fac = pnlp_fac[, .(value = sum(value)), by = .(dps, health_zone, date, variable)]
+# health zone changes - include these in completeness calculation (sum over facilities)
+# Haut Katanga:
+# do not impute data for Kashobwe before 2012; after imputation add to Kasenga 
+pnlp_comp[ health_zone == "kashobwe", health_zone := "kasenga" ]
+# Nord Kivu:
+# do not impute Alimbongo before 2012; after imputation add to Lubero
+pnlp_comp[ health_zone == "alimbongo", health_zone := "lubero"]
+# do not impute Kibirizi before 2016; after imputation add to Rutshuru  
+pnlp_comp[health_zone == "kibirizi", health_zone := "rutshuru"]
+# do not impute Mabalako before 2013; after imputation add to Beni 
+pnlp_comp[health_zone == "mabalako", health_zone := "beni"]
+# do not impute Kamango before 2012; after imputation add Kamango to Mutwanga (Oicha?).
+pnlp_comp[health_zone == "kamango", health_zone := "mutwanga"]
 
-pnlp_fac <- dcast.data.table(pnlp_fac, dps + health_zone + date ~ variable, value.var = "value")
-pnlp_fac[, healthFacilities_reporting := healthFacilitiesProduct / healthFacilities_total]
-pnlp_fac[, completeness := healthFacilities_reporting / healthFacilities_total]
+pnlp_comp = convert_date_to_quarter(pnlp_comp)
+
+# sum over these health zone changes, and date in year-quarters (rather than year-months)
+pnlp_comp = pnlp_comp[, .(value = sum(value)), by = .(dps, health_zone, year, quarter, variable)]
+# calculate completeness by finding the percentage of facilities reporting of the total
+pnlp_comp = dcast.data.table(pnlp_comp, dps + health_zone + year + quarter ~ variable, value.var = "value")
+pnlp_comp[, completeness := healthFacilities_numReporting / healthFacilities_total]
 
 # correction for where proportion reporting is > 1
-pnlp_fac[completeness > 1, healthFacilities_reporting := healthFacilities_total] 
+pnlp_comp[completeness > 1, completeness := 1] 
 
-# sum numerator and denominator quarterly
-pnlp_fac <- convert_date_to_quarter(pnlp_fac)
-pnlp_comp <- pnlp_fac[, .(healthFacilities_reporting = sum(healthFacilities_reporting),
-                          healthFacilities_total = sum(healthFacilities_total)),
-                          by = .(dps, health_zone, year, quarter) ]
-pnlp_comp[ , completeness:= healthFacilities_reporting / healthFacilities_total]
-pnlp_comp = pnlp_comp[, .(dps, health_zone, year, quarter, completeness)]
 pnlp_comp[, data_set := "pnlp"]
 
-dt_pnlp <- merge(dt_pnlp, pnlp_comp, by= c('year', 'quarter', 'dps', 'health_zone', 'data_set'), all.x = TRUE)
-dt = rbindlist( list(dt_base, dt_pnlp, dt_sigl), use.names = TRUE, fill = TRUE)
+dt = merge(dt, pnlp_comp, by= c('year', 'quarter', 'dps', 'health_zone', 'data_set'), all.x = TRUE)
+setnames(dt, 'completeness.x', 'completeness')
+dt[is.na(completeness) & !is.na(completeness.y), completeness := completeness.y]
+dt[, c('completeness.y', 'healthFacilities_numReporting', 'healthFacilities_total') := NULL]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -142,10 +121,13 @@ dt[ data_set =="pnlp" & grepl(indicator, pattern = 'AL') & year < 2015, value :=
 
 # keep SSCACT with subpop = NA for 2015 and 2016, keep with subpops <5 and >5 for 2017
 dt[ data_set == "pnlp" & indicator == "SSCACT" & year < 2015, value := 0] # iccm didn't exist prior to 2014
-dt[ data_set == "pnlp" & indicator == "SSCACT" & is.na(subpopulation) & year == 2017, value := NA]
-dt[ data_set == "pnlp" & indicator == "SSCACT" & !is.na(subpopulation) & year < 2017, value := NA]
+# commenting these out for now because the current version of the data had subpops aggregated for imputation (we have 
+# a version of them separate)
+# dt[ data_set == "pnlp" & indicator == "SSCACT" & is.na(subpopulation) & year == 2017, value := NA]
+# dt[ data_set == "pnlp" & indicator == "SSCACT" & !is.na(subpopulation) & year < 2017, value := NA]
+dt[ data_set == "pnlp" & indicator == "SSCACT" & year < 2015, completeness := 1]
 
-dt <- dt[!is.na(value)]
+dt <- dt[is.na(value)]
 
 dt <- dt[ indicator %in% c("LLIN", "ASAQreceived", "SP", "ALreceived", "SSCACT", "simpleConfMalariaTreated", "severeMalariaTreated", "presumedMalariaTreated", "RDT") 
           & !subpopulation %in% c("lost", "available", "stockOutDays", "positive"), ]

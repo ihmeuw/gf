@@ -90,14 +90,9 @@ gheMalFile = paste0(fghDir, 'ghe_actuals_malaria.rds')
 whoFile = paste0(whoDir, 'who_prepped.rds')
 
 # activities/outputs files
-# pnlpFile = paste0(pnlpDir, 'imputedData_run2_agg_country.rds') # pnlp
-pnlpHZFile = paste0(pnlpDir, 'archive/imputedData_run2_agg_hz.rds')
-# snisBaseFile <- paste0(dhisDir, 'archive/base_services_drc_01_2017_09_2018_prepped.rds') # snis base services
-# snisSiglFile <- paste0(dhisDir, 'archive/sigl_drc_01_2015_07_2018_prepped.rds') # snis sigl (supply chain)
-combinedFile <- paste0(ieDir, 'base_pnlp_sigl_combined_data_hz_level.rds')
-comp_base_file <- paste0(dhisDir, "base_reporting_completeness_hz_prepped_quarterly.rds")
-comp_sigl_file <-paste0(dhisDir, "sigl/sigl1_reporting_completeness_hz_prepped_quarterly.rds")
-ssc_file <- paste0(dhisDir, "SSC_data_2017_2018_prepped.rds")
+pnlp_hz_file = paste0(pnlpDir, 'imputedData_run_0_001_aggVars_lagsLeads_condensed_hz_median.rds')
+combined_data_file = paste0(ieDir, 'base_pnlp_sigl_combined_data_hz_level.rds')
+snis_comp_file = paste0(dhisDir, "all_data_sets_completeness_hz_quarterly.rds")
 
 # outcomes/impact files
 mapITNFiles = list.files(paste0(lbdDir, 'mapitncov/mean/1y/'), '*.tif', 

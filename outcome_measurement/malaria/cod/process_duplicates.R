@@ -94,13 +94,33 @@ saveRDS(dups, paste0(dir, dup_matrix_output) )
 
 # load result from this: 
 num_zeroes = readRDS(paste0(dir, dups_zeroes))
+dups = readRDS(paste0(dir, dup_matrix_output))
 
 # merge with dups
 dups = merge(dups, num_zeroes, by = c("i", "j"), all = TRUE)
 # ----------------------------------------------
 
 # ----------------------------------------------     
-# 
+# Other rules to narrow dups to actual duplicates
 # ----------------------------------------------
+# remove results where the number of identical columns are all 0 - only 85 rows in dups though
+dups = dups[ num_identical != num_identical_0s, ]
+dups[ , identical_not_zero := num_identical - num_identical_0s]
+dups = dups[ proportion_identical_j > .8, ]
+dups = dups[ identical_not_zero > 15, ]
+
+# checks:
+# freq = dt[ , .N, by = "ASAQreceived_14yrsAndOlder"]
+# View(dt[ ASAQreceived_14yrsAndOlder == 176, ])
+
+# check = dt[ dps == "kasai central" & date == "2017-09-01"]
+# ids_to_check = unique(check$id)
+# dups_check = dups[ j %in% ids_to_check, ]
+# ----------------------------------------------
+
+# ----------------------------------------------     
+# save final matrix for dups removal
+# ----------------------------------------------
+saveRDS(dups, paste0(dir, dup_matrix_final))
 # ----------------------------------------------
 

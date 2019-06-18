@@ -16,7 +16,7 @@ library(parallel)
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(root, "/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/")
 dt_for_dup_removal = "ameliaDT_with_index_for_dup_removal.rds"
-dups =  "pnlp_matrix_of_duplicate_rows.rds"
+dups =  "pnlp_matrix_of_duplicate_rows (initial results).rds"
 
 # output files
 outFile = "number_of_zeroes_for_dup_matrix.rds"

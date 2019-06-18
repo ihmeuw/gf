@@ -97,7 +97,7 @@ untransformed = copy(data)
 # (Smithson et al 2006 Psychological methods "A better lemon squeezer")
 smithsonTransform = function(x) { 
 	N=length( x[!is.na(x)] )
-	prop_lsqueeze = logit(((x*(N-1))+0.5)/N)
+	logit(((x*(N-1))+0.5)/N)
 }
 for(v in complVars) { 
 	data[get(v)>1, (v):=1]

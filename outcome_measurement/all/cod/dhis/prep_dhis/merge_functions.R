@@ -113,7 +113,6 @@ merge_meta_data = function(x) {
   y = merge(y, translations, by='data_element_id', all.x=T)
   
   #--------------------------------------
-
   # return the new data set
   return(y) 
 }

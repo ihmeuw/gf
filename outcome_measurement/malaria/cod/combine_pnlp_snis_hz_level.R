@@ -11,7 +11,7 @@ setwd('C:/local/gf/')
 rm(list=ls())
 library(data.table)
 library(stringr)
-library(reshape2)
+library(reshape2) bvnv
 library(ggplot2)
 library(lubridate)
 library(readxl)
@@ -27,15 +27,16 @@ library(openxlsx)
 # data directory
 # when run on Unix, data directory needs to be set to /home/j (to run on the cluster), so set this here:
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir_pnlp = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/archive/')
+dir_pnlp = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
 dir_dhis = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
 out_dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/')
 
 # input files:
-input_dhis_base <- "base_services_prepped.rds"
-input_dhis_sigl <- "sigl_prepped.rds"
-after_imputation_pnlp <- "imputedData_run2_agg_hz.rds"
-
+input_dhis_base <- "base/base_prepped_outliers_replaced.rds"
+input_dhis_sigl <- "sigl/sigl_prepped_drugs_received.rds"
+after_imputation_pnlp <- "imputedData_run_0_001_aggVars_lagsLeads_condensed_hz_median.rds"
+input_dhis_ssc = "ssc_supervisions_prepped.rds"
+  
 # output file:
 combined_data <- "base_pnlp_sigl_combined_data_hz_level.rds"
 combined_data_malaria <- "snis_pnlp_malaria_hz_level.rds"
@@ -56,68 +57,92 @@ variable_matching = variable_matching[!is.na(indicator),]
 pnlp <- readRDS(paste0(dir_pnlp, after_imputation_pnlp)) 
 base <- readRDS(paste0(dir_dhis, input_dhis_base))
 sigl <- readRDS(paste0(dir_dhis, input_dhis_sigl))
+ssc = readRDS(paste0(dir_dhis, input_dhis_ssc))
 # ----------------------------------------------
 
 # ----------------------------------------------
 # Clean data
 # ----------------------------------------------
-# base / sigl - clean column names
-    # standardize dps/hz names
-    pnlp$health_zone <- standardizeHZNames(pnlp$health_zone)
-    base$health_zone <- standardizeHZNames(base$health_zone)
-    sigl$health_zone <- standardizeHZNames(sigl$health_zone)
-    pnlp$dps <- standardizeDPSNames(pnlp$dps)
-    base$dps <- standardizeDPSNames(base$dps)
-    sigl$dps <- standardizeDPSNames(sigl$dps)
-    
-    # trim ws to make sure all of these variables are uniform/match up with what they should
-    # base$type <- trimws(base$type)  # for some reason there is both "malaria" and "malaria " in the type unique values
-    base$element <- trimws(base$element)
-    base$element_eng <- trimws(base$element_eng)
-    sigl$element <- trimws(sigl$element)
-    sigl$element_eng <- trimws(sigl$element_eng)
-    
-    # drop columns we don't need
-    drop_cols <- c("coordinates", "country", "mtk", "org_unit_id", "element_id", "last_update", "download_number")
-    base <- base[ , !(drop_cols), with = FALSE]    
-    sigl <- sigl[ , !(drop_cols), with = FALSE]
+# standardize dps names in base (all others are already done)
+  base$dps <- standardizeDPSNames(base$dps)
+
+# trim ws to make sure all of these variables are uniform/match up with what they should
+  base$element <- trimws(base$element)
+  base$element_eng <- trimws(base$element_eng)
+  ssc$element <- trimws(ssc$element)
+  ssc$element_eng <- trimws(ssc$element_eng)
+  
+# sum base and ssc to health zone level:
+  base = base[, .(value = sum(value, na.rm = TRUE)), by = c("date", "year", "dps", "health_zone", "data_set", "element", "element_eng", "category")]
+  ssc = ssc[, .(value = sum(value, na.rm =TRUE)),  by = c("date", "dps", "health_zone", "data_set", "element", "element_eng") ]
+  ssc[, year := year(date)]
+  
+  sigl = melt.data.table(sigl, id.vars = c("date", "dps", "health_zone", "data_set", "drug") , variable.name = "element", variable.factor = FALSE)
+  sigl[ , element := paste0(drug, "_", element)]
+  sigl[, drug:= NULL]
+  sigl[, year := year(date)]
 
 # Standardize element/indicator names -> moved to a file to read in:
-    # NOTE can add variables by adding names to this excel file
+  # NOTE can add variables by adding names to this excel file
   base = merge(base, variable_matching, by.x = c("data_set", "element"), by.y = c("data_set_dhis", "dhis_indicator"), all.x = TRUE)
   sigl = merge(sigl, variable_matching, by.x = c("data_set", "element"), by.y = c("data_set_dhis", "dhis_indicator"), all.x = TRUE)
-  
-  base = base[!is.na(indicator),]
-  sigl = sigl[!is.na(indicator),]
-  
-  base[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
-  sigl[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
-
-  base[category == "<5 ans" & indicator != "RDT", subpopulation := "under5"]
-  base[category == ">5 ans" & indicator != "RDT", subpopulation := "5andOlder"]
 
 # pnlp - standardize indicator names
-pnlp[indicator=="ITN", indicator:= "LLIN"]
-pnlp[indicator=="newCasesMalariaMild", indicator:= "newCasesMalariaSimpleConf"]
-pnlp[indicator=="mildMalariaTreated", indicator:= "simpleConfMalariaTreated"]
-pnlp[ indicator == "ArtLum" & subpopulation == "used", indicator := "ALused"]
-pnlp[ indicator == "ArtLum" & subpopulation =="received", indicator := "ALreceived"]
+  pnlp[ , c('combine', 'donor','operational_support_partner', 'population', 'lower', 'upper', 'id') := NULL]
+  
+  pnlp[,  c("indicator", "subpopulation") := tstrsplit(variable, "_", fixed=TRUE)]
+  base[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
+  sigl[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
+    
+  pnlp[indicator=="ITN", indicator:= "LLIN"]
+  pnlp[indicator=="newCasesMalariaMild", indicator:= "newCasesMalariaSimpleConf"]
+  pnlp[indicator=="mildMalariaTreated", indicator:= "simpleConfMalariaTreated"]
+  pnlp[ indicator == "ArtLum" & subpopulation == "used", variable := "ALused"]
+  pnlp[ indicator == "ArtLum" & subpopulation == "used", indicator := "AL"]
+  pnlp[ indicator == "ArtLum" & subpopulation =="received", variable := "ALreceived"]
+  pnlp[ indicator == "ArtLum" & subpopulation =="received", indicator := "AL"]
+  setnames(pnlp, "variable", "element")
+  pnlp[, data_set := "pnlp"]
+  pnlp[, year := year(date)]
+  
+  base[category == "<5 ans" & indicator != "RDT", subpopulation := "under5"]
+  base[category == ">5 ans" & indicator != "RDT", subpopulation := "5andOlder"]
+  
+  base = base[ year >= "2018", ]
+  sigl = sigl[ year >= "2018", ]
+  ssc = ssc[ year >= "2018", ]
+# ----------------------------------------------
 
-setnames(pnlp, "mean", "value")
-drop_cols_pnlp <- c("upper", "lower", "variable", "province")
-pnlp <- pnlp[ , !(drop_cols_pnlp), with = FALSE] 
-
-# all - add data set names
-base[, data_set := "snis_base_services"]
-pnlp[, data_set := "pnlp"]
-sigl[, data_set := "snis_sigl"]
-
-# agg base and sigl to hz level
-base = base[, .(value = sum(value, na.rm = TRUE)), by= .(data_set, date, dps, health_zone, indicator, subpopulation)]
-sigl = sigl[, .(value = sum(value, na.rm = TRUE)), by= .(data_set, date, dps, health_zone, indicator, subpopulation)]
-
-dt <- rbindlist(list(pnlp, base, sigl), use.names = TRUE, fill = TRUE)
-saveRDS(dt, paste0(out_dir, combined_data))
+# ----------------------------------------------
+# combine all data sources together
+# ----------------------------------------------
+  dt <- rbindlist(list(pnlp, base, sigl, ssc), use.names = TRUE, fill = TRUE)
+  
+  dt[grepl(data_set, pattern = "Base"), data_set := "base"]
+  dt[grepl(data_set, pattern = "SIGL2"), data_set := "sigl2"]
+  dt[grepl(data_set, pattern = "SIGL1"), data_set := "sigl1"]
+  
+  dt[element == "B 10.2 Dont traités selon la politique nationale - Cas de fièvre", element:= "SSCACT"]
+  
+  # aggregate health zones, based on the decisons we made for Nord Kivu with PNLP
+   # Haut-Katanga:
+   # do not impute data for Kashobwe before 2012; after imputation add to Kasenga 
+    dt[ health_zone == "kashobwe", health_zone := "kasenga" ]
+   # Nord Kivu:
+   # do not impute Alimbongo before 2012; after imputation add to Lubero
+    dt[ health_zone == "alimbongo", health_zone := "lubero"]
+   # do not impute Kibirizi before 2016; after imputation add to Rutshuru  
+    dt[health_zone == "kibirizi", health_zone := "rutshuru"]
+   # do not impute Mabalako before 2013; after imputation add to Beni 
+    dt[health_zone == "mabalako", health_zone := "beni"]
+   # do not impute Kamango before 2012; after imputation add Kamango to Mutwanga (Oicha?).
+    dt[health_zone == "kamango", health_zone := "mutwanga"]
+  
+    dt = dt[, .(value = sum(value, na.rm = TRUE)), by = .(dps, health_zone, date, year, data_set, element, indicator, subpopulation, element_eng, category)]
+  
+  saveRDS(dt, paste0(out_dir, combined_data))
+  
+  nrow(unique(dt[, .(dps, health_zone, date, data_set, element, category)]))
 # ----------------------------------------------
 
 # # ----------------------------------------------
