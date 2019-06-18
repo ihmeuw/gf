@@ -16,8 +16,7 @@
 
 
 #Final Expenditures (includes GOS)
-final_expenditures = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures.rds")
-final_expenditures = final_expenditures[loc_name=="cod"]
+final_expenditures = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/cod_expenditures.rds")
 
 #------------------------------------
 #Read in previously prepped datasets 
@@ -59,11 +58,6 @@ oop$report_year <- NULL
 #Emily right now all of these are coming from Guatemala. Need to sort out, but we can ignore for DRC malaria. 
 #stopifnot(nrow(duplicate_files)==0)
 
-#Reset loc_name to match iso code. 
-final_expenditures[loc_name == 'Congo (Democratic Republic)', loc_name:='cod']
-final_expenditures[loc_name == 'Guatemala', loc_name:='gtm']
-final_expenditures[loc_name == 'Uganda', loc_name:='uga']
-
 # quick fixes that shouldn't be necessary once earlier code is fixed
 fgh[sda_activity=='mal_comm_con_dah_17', code:='M2_3']
 
@@ -72,7 +66,7 @@ fgh[sda_activity=='mal_comm_con_dah_17', code:='M2_3']
 #------------------------------------
 
 #Subset to only the columns we want from resource tracking database and impact evaluation map 
-exp_subset = final_expenditures[loc_name == 'cod' & (disease == "malaria" | disease == "hss" | disease == 'rssh'), .(expenditure, start_date, code, loc_name, disease, gf_module, gf_intervention)]
+exp_subset = final_expenditures[, .(expenditure, start_date, code, loc_name, disease, gf_module, gf_intervention)] #This data has already been subset down to DRC malaria in prep. 
 setnames(exp_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
 other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') & loc_name=='COD' & (disease == 'malaria' | disease == 'hss' | disease == 'rssh'), 
                 .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]

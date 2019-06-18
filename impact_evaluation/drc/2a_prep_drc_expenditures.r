@@ -11,7 +11,7 @@
 #   taking budget data, and applying the last available semester's absorption rate to it. 
 #   This will only be possible for COD-M-SANRU and COD-M-PSI, because we don't have budget data for the missing period for COD-M-MOH. 
 #   All methodological decisions made by David Phillips 6/13/19.
-
+options(scipen=100)
 
 #Read in data 
 final_expenditures = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures.rds")
@@ -46,6 +46,9 @@ budget_fill = merge(budget_fill, absorption_by_int, by=c('grant', 'gf_module', '
 budget_fill = merge(budget_fill, absorption_by_mod, by=c('grant', 'gf_module'), all.x=T)
 stopifnot(nrow(budget_fill[is.na(s2_mod_absorption_2016)])==0) #Do you have at least one absorption value you can multiply by? 
 
+#Reduce max absorption to 100% 
+budget_fill[s2_int_absorption_2016>1 & !is.na(s2_int_absorption_2016), s2_int_absorption_2016:=1]
+budget_fill[s2_mod_absorption_2016>1 & !is.na(s2_mod_absorption_2016), s2_mod_absorption_2016:=1]
 
 #Where possible, adjust budget at the intervention level, and if that's not possible adjust by the module level. 
 budget_fill[!is.na(s2_int_absorption_2016), expenditure:=budget*s2_int_absorption_2016]
@@ -60,17 +63,29 @@ unique(cod_expenditures[start_date>="2015-01-01", .(grant, start_date)])
 #SAVE DATA 
 saveRDS(cod_expenditures, "J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/cod_expenditures.rds")
 
+save_loc = "J:/Project/Evaluation/GF/impact_evaluation/cod/visualizations/"
 #Make some graphs of the new data you have. 
-ggplot(cod_expenditures[start_date>="2015-01-01"], aes(x=start_date, y=expenditure, color=gf_module))+
-  geom_point()+
-  theme_bw()+
-  facet_wrap(~grant)
+pdf(paste0(save_loc, "DRC Expenditures by Module.pdf"), height=5.5, width=7)
+mods = unique(cod_expenditures[start_date>="2015-01-01", .(gf_module)])
+cod_expenditures[, gf_int:=substr(gf_intervention, 1, 33)]
+for (mod in mods$gf_module){
+  plot = ggplot(cod_expenditures[start_date>="2015-01-01" & gf_module==mod], aes(x=start_date, y=expenditure, color=gf_int))+
+    geom_point()+
+    theme_bw()+
+    xlim(as.Date("2015-01-01"), as.Date("2018-10-01"))+
+    facet_wrap(~grant)+
+    labs(title=mod)
+  print(plot)
+}
+dev.off(); 
+cod_expenditures = cod_expenditures[, -c('gf_int')]
 
 by_grant = cod_expenditures[, .(expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'start_date')]
 ggplot(by_grant[start_date>="2015-01-01"], aes(x=start_date, y=expenditure))+
   geom_point()+ geom_line() + 
   theme_bw()+
-  facet_wrap(~grant)
+  facet_wrap(~grant)+
+ggsave(paste0(save_loc, "DRC Expenditures by Grant.png"))
 
 toView = cod_expenditures[start_date>="2015-01-01", .(expenditure=sum(expenditure, na.rm=T)), 
                                                              by=c('grant', 'start_date')][order(grant, start_date)]

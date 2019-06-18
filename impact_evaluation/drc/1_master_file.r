@@ -47,6 +47,7 @@ setDT(drc_mal_map)
 # Prep resource tracking data  
 # ---------------------------------------
 if(rerun_inputs == TRUE){
+  source('./impact_evaluation/drc/2a_prep_drc_expenditures.r')
   source('./impact_evaluation/drc/2a_prep_resource_tracking.r')
 }
 
