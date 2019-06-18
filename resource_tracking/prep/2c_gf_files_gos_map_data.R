@@ -490,7 +490,6 @@ if (prep_files){
     expenditures[, start_date:=min(start_date), by='file_name']
     expenditures = expenditures[, .(expenditure=sum(expenditure, na.rm=T)),
                                 by=c('grant', 'grant_period', 'code', 'year', 'pudr_grant_year', 'semester', 'start_date', 'gf_module', 'gf_intervention', 'disease')]
-    
     #Add in PUDR label value. 
     expenditures = merge(expenditures, pudr_labels, by=c('semester', 'pudr_grant_year'), all.x=T)
     if (nrow(expenditures[is.na(semester_code)])>0){

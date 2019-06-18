@@ -202,6 +202,7 @@ final_expenditures[, data_source:='pudr']
 #For final expenditures, to reduce data gaps, use GOS through 2017 and then PUDRs after that. 
 final_expenditures = final_expenditures[year>=2018]
 gos_expenditures = gos_data[year<2018]
+gos_expenditures$lfa_exp_adjustment<-NULL #Drop this column; it was just added during mapping step to make code run more easily. 
 
 #Drop unneeded variables, and generate a few needed ones 
 gos_expenditures = gos_expenditures[, -c('activity_description', 'budget', 'country', 'current_grant', 'file_name', 'includes_rssh', 'orig_module', 'orig_intervention', 'quarter', 'year')]
