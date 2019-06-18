@@ -29,10 +29,10 @@ imputed_data = paste0("PNLP_imputedData_", run_name, ".rds")
 imputed_data_long = paste0("imputedData_", run_name, "_long.rds")
 imputed_data_long_corrected = paste0("imputedData_", run_name, "_long_corrected.rds")
 
-condensed_imputed_data_dps = paste0("imputedData_", run_name, "_condensed_dps.rds")
-condensed_imputed_data_country = paste0("imputedData_", run_name, "_condensed_country.rds")
-condensed_imputed_data_country2 = paste0("imputedData_", run_name, "_condensed_country_byYear.rds")
-condensed_imputed_data_hz = paste0("imputedData_", run_name, "_condensed_hz.rds")
+condensed_imputed_data_dps = paste0("imputedData_", run_name, "_condensed_dps_median.rds")
+condensed_imputed_data_country = paste0("imputedData_", run_name, "_condensed_country_median.rds")
+condensed_imputed_data_country2 = paste0("imputedData_", run_name, "_condensed_country_byYear_median.rds")
+condensed_imputed_data_hz = paste0("imputedData_", run_name, "_condensed_hz_median.rds")
 # ----------------------------------------------
   
 # ---------------------------------------------- 
@@ -40,6 +40,8 @@ condensed_imputed_data_hz = paste0("imputedData_", run_name, "_condensed_hz.rds"
 # ---------------------------------------------- 
 # Load imputed data
 dt <- readRDS(paste0(dir, imputed_data))
+
+if(sum(is.na(dt[, inds, with = FALSE])) != 0) stop("Imputation didn't work correctly, or something went wrong afterwards; no values should be missing now")
 
 # Set up var vectors for manipulation
 all_vars = c(colnames(dt))
@@ -105,7 +107,7 @@ upper = melt.data.table(upper, id.vars = id_vars, variable.factor = FALSE, value
 dps_level = merge(median, lower, by = c(id_vars, "variable"))
 dps_level = merge(dps_level, upper, by = c(id_vars, "variable"))
 
-# set upper and lower values to NA where the value was not imputed (where median==lower and median==upper)
+# get rid of lower and upper values for values that were NOT missing, so these don't show up on the graph
 dps_level[upper==lower, lower := NA ]
 dps_level[is.na(lower), upper := NA ]
 
@@ -137,7 +139,7 @@ upper = melt.data.table(upper, id.vars = id_vars, variable.factor = FALSE, value
 natl_level = merge(median, lower, by = c(id_vars, "variable"))
 natl_level = merge(natl_level, upper, by = c(id_vars, "variable"))
 
-# set upper and lower values to NA where the value was not imputed (where median==lower and median==upper)
+# get rid of lower and upper values for values that were NOT missing, so these don't show up on the graph
 natl_level[upper==lower, lower := NA ]
 natl_level[is.na(lower), upper := NA ]
 
