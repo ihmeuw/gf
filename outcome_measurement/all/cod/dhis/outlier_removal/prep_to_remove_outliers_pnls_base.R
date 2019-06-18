@@ -39,14 +39,14 @@ if (set=='base') { qr_disease = 'malaria'}
 
 # read in the data 
 if (set=='pnls') {dt = readRDS(paste0(dir, 'prepped/pnls_arv.rds'))}
-if (set=='base') {dt = readRDS(paste0(dir, 'pre_prep/merged/base_2018_01_01_2019_01_01.rds'))}
+if (set=='base') {dt = readRDS(paste0(dir, 'prepped/base_services_prepped.rds'))}
 
 # convert values to numerics 
 dt[ ,value:=as.numeric(as.character(value))]
 dt = dt[!is.na(value)] # 52 values are listed as 'null', drop out missing values
 
-# subset date
-dt = dt[year(date) < 2019]
+# # subset date
+# dt = dt[year(date) < 2019]
 # ---------------------------------------
 # keep only the malaria-related elements in base services
 # if you do this, you will drop out anc visits and audrey will be sad
@@ -61,7 +61,27 @@ dt = dt[year(date) < 2019]
 if (set=='pnls') {byvars = c('element', 'org_unit_id', 'date', 'sex', 'age', 'subpop')}
 if (set=='base') {byvars = c('element', 'element_id', 'org_unit_id', 'date', 'category')}
 
-dt = dt[ ,.(value=sum(value)), by=byvars]
+if (set == 'pnls') dt = dt[ ,.(value=sum(value)), by=byvars]
+# instead of doing this ^ check unique id's:
+if (nrow(unique(dt[, byvars, with = FALSE])) != nrow(dt)) stop("check unique ids - you may need to sum across value, but unique ids do not uniquely id rows")
+
+# remove some variables not needed in base
+if (set == 'base'){
+  dt[, element:= as.character(element)]
+  elements = unique(dt$element)
+  elements[grepl(elements, pattern = "A 1.9")]
+  elements = elements[!grepl(elements, pattern = "A 1.9")]
+  elements[grepl(elements, pattern = "A 3.2")]
+  elements = elements[!grepl(elements, pattern = "A 3.2")]
+  elements[grepl(elements, pattern = "A 4.5")]
+  elements = elements[!grepl(elements, pattern = "A 4.5")]
+  elements[grepl(elements, pattern = "A 1.8")]
+  elements = elements[!grepl(elements, pattern = "A 1.8")]
+  elements[grepl(elements, pattern = "A 4.6")]
+  elements = elements[!grepl(elements, pattern = "A 4.6")]
+  
+  dt = dt[element %in% elements, ]
+}
 
 # make variable ids
 setnames(dt, 'element_id', 'old_element_id')
@@ -70,6 +90,7 @@ dt[, element_id:=.GRP, by='element']
 # save the prepped file
 if (set=='pnls') {saveRDS(dt, paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))}
 if (set=='base') {saveRDS(dt, paste0(dir, 'outliers/base_to_screen.rds'))}
+
 # ---------------------------------------
 # save old element ids for merge 
 
