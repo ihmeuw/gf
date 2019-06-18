@@ -24,10 +24,14 @@ names(outputs_activities) <- gsub("_value", "", names(outputs_activities))
 # Prep/merge data
 
 # rectangularize before merge
-frame = expand.grid(date = unique(outputs_activities$date), department = unique(outputs_activities$department))
+departments = unique(outputs_activities$department)
+departments = departments[!is.na(departments)]
+frame = expand.grid(date = unique(outputs_activities$date), department = departments)
 
-resource_tracking_rect = merge(frame, resource_tracking, by='date', all=TRUE)
+resource_tracking_rect = merge(frame, resource_tracking, by='date', all=TRUE) #Do I need to divide resource tracking dollars here? 
+stopifnot(nrow(resource_tracking_rect[is.na(date) | is.na(department)])==0)
 outputs_activities_rect = merge(frame, outputs_activities, by=c('department','date'), all=TRUE)
+stopifnot(nrow(outputs_activities_rect[is.na(date) | is.na(department)])==0)
 
 # Merge rectangularized resource tracking and outputs/activites data 
 merge_file <- merge(resource_tracking_rect, outputs_activities_rect, by=c('department','date'), all=TRUE)
