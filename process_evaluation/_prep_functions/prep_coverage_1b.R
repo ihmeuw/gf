@@ -1,6 +1,6 @@
 # ----------------------------------------------
 # AUTHOR: Emily Linebarger, based on code written by Irena Chen
-# PURPOSE: Prep commonly-formatted coverage indicator sheetf from 
+# PURPOSE: Prep commonly-formatted coverage indicator sheet from 
 #   PU/DRs across countries. 
 # DATE: Last updated June 2019. 
 # ----------------------------------------------
@@ -9,11 +9,11 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
-  # dir = "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/sen/raw_data/active/SEN-H-ANCS/pudrs/"
-  # inFile = "SEN-H-ANCS_PUDR (Juil-Dec18) LFA, 15Mar18.xlsx"
-  # sheet_name = "Coverage Indicators_1B"
-  # language = "fr" 
-  # 
+  dir = "C:/Users/elineb/Desktop/PUDR_indicator_extraction/"
+  inFile = filelist$file_name[i]
+  sheet_name = filelist$sheet[i]
+  language = filelist$language[i]
+
   STOP_COL = 6 #What column starts to have sub-names? (After you've dropped out first 2 columns)
   
   # Sanity check: Is this sheet name one you've checked before? 
@@ -73,12 +73,22 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
     result_col = grep("résultats", names)
     lfa_result_col = grep("verified result", names)
     gf_result_col = grep("global fund validated result", names) 
-  } 
+  } else if (language == "eng"){
+    reference_col = grep("baseline", names) 
+    target_col = grep("target", names)
+    result_col = grep("result", names) 
+    lfa_result_col = grep("verified result", names)
+    gf_result_col = grep("global fund validated result", names)
+  }
   reference_col = reference_col[reference_col>STOP_COL]
   target_col = target_col[target_col>STOP_COL]
   result_col = result_col[result_col>STOP_COL]
   lfa_result_col = lfa_result_col[lfa_result_col>STOP_COL]
   gf_result_col = gf_result_col[gf_result_col>STOP_COL]
+  
+  if (length(result_col)>1){ #The word 'result' appears several times for English files, and you just want the first column here. 
+    result_col = result_col[1]
+  }
   
   #Are you only pulling one observation, and do these match the format of files you've seen before? 
   stopifnot(length(reference_col)==1 & reference_col == 7) 
