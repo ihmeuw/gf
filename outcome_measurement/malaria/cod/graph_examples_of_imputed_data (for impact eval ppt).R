@@ -28,13 +28,13 @@ library(openxlsx)
 # when run on Unix, data directory needs to be set to /home/j (to run on the cluster), so set this here:
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/')
-out_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/"
+out_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/visualizations/PNLP_Data/mi_examples/"
   
 # input files:
-inFile = paste0(dir, "imputedData_run_0_001_aggVars_lagsLeads_condensed_hz.rds") #post_imputation
+inFile = paste0(dir, "imputedData_run_0_001_aggVars_lagsLeads_condensed_hz_median.rds") #post_imputation
 
 # output file:
-outFile = paste0(out_dir, "MI_results_examples_by_hz.pdf")
+out_folder = "median_midpoint/"
 
 # functions
 source('./core/standardizeHZNames.R')
@@ -59,10 +59,6 @@ pnlp <- readRDS(inFile)
 pnlp[ !is.na(lower) & !is.na(upper) , imputed := TRUE]
 pnlp[ is.na(lower) & is.na(upper) , imputed := FALSE]
 
-
-pnlp <- readRDS(inFile) 
-pnlp[ !is.na(lower) & !is.na(upper) , imputed := TRUE]
-pnlp[ is.na(lower) & is.na(upper) , imputed := FALSE]
 # pnlp[, health_zone := standardizeHZNames(health_zone)] 
 # pnlp[, dps := standardizeDPSNames(dps)] 
 
@@ -88,7 +84,7 @@ inds = c("ANC_1st", "SP_1st", "ASAQreceived_14yrsAndOlder", "ASAQused_1to5yrs", 
          "newCasesMalariaSevere_5andOlder", "newCasesMalariaMild_pregnantWomen", "ITN_received", "ITN_distAtANC")
 
 for (ind in inds) {
-  outFile = paste0(out_dir, "mi_examples/MI_results_examples_", ind, ".pdf")
+  outFile = paste0(out_dir, out_folder, "MI_results_examples_", ind, ".pdf")
   # sample = sample(hzDPS$id, 30)
   random_subset_hzDPS = copy(hzDPS) #hzDPS[id %in% sample, ]
   
