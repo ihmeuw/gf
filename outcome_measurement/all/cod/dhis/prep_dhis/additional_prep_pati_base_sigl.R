@@ -26,11 +26,15 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 out_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
 
+# setwd('C:/local/GF_copy/')
+# dir = "./outcome_measurement/cod/dhis_data/"
+# out_dir  = "./outcome_measurement/cod/dhis_data/prepped/"
+
 # input files
 registered <- paste0(dir, "pre_prep/merged/tb_pati_v_registered_2017_01_01_2018_10_01.rds")
 results <- paste0(dir,"pre_prep/merged/tb_pati_v_result_2016_01_01_2018_10_01.rds")
 base_data <- paste0(dir, "pre_prep/merged/base_2016_01_01_2019_04_01.rds")
-sigl_data <- paste0(dir, "pre_prep/merged/sigl_2018_01_01_2019_01_01.rds")
+sigl_data <- paste0(dir, "pre_prep/merged/sigl_2016_01_01_2019_04_01.rds")
 base_2017 = paste0(dir, "prepped/archive/base_services_drc_01_2017_09_2018_prepped.rds")
 
 # output files
@@ -38,7 +42,7 @@ pati_cases <- "pati_tb/tb_pati_new_tb_cases_relapses_by_age_sex.rds"
 pati_registered <- "pati_tb/tb_pati_cases_registered.rds"
 pati_results <- "pati_tb/tb_pati_case_results.rds"
 base_out <- "base_services_prepped.rds"
-sigl_out <- "sigl_prepped.rds"
+sigl_out <- "sigl/sigl_prepped.rds"
 
 # functions
 source('./core/standardizeHZNames.R')
@@ -57,7 +61,8 @@ sigl <- readRDS(sigl_data)
 # ----------------------------------------------
 # fix sigl health zones 
 # ----------------------------------------------
-# health_zone is na where org_unit_type is health zone. 
+# health_zone is na where org_unit_type is health zone- we want these to be corrected so that every 
+# row has a health_zone! (this isn't a problem in the other DHIS2 sets)
 sigl[is.na(health_zone) & org_unit_type == "health_zone", health_zone1 := unlist(lapply(strsplit(org_unit, " "), "[", 2))]
 sigl[is.na(health_zone) & org_unit_type == "health_zone", health_zone2 := unlist(lapply(strsplit(org_unit, " "), "[", 3))]
 sigl[is.na(health_zone) & org_unit_type == "health_zone", health_zone3 := unlist(lapply(strsplit(org_unit, " "), "[", 4))]
@@ -75,7 +80,7 @@ more_prep <- function(dt){
   # check = copy(dt)
   # check[, value_numeric := as.numeric(value)]
   # if(check[is.na(value_numeric), unique(value)] == "NULL") print("Checked that NAs introduced were recorded as 'NULL' in the data before converting to numeric" )
-  # dt$value <- as.numeric(dt$value) 
+  # dt$value <- as.numeric(dt$value)
   dt$dps <- standardizeDPSNames(dt$dps)
   dt$health_zone <- standardizeHZNames(dt$health_zone)
   return(dt)
@@ -90,7 +95,24 @@ dt2 <- more_prep(dt2)
 # ----------------------------------------------
 # SIGL:
 # ----------------------------------------------
-saveRDS(sigl, paste0(out_dir, sigl_out))
+meta_data = readRDS(paste0(dir, 'meta_data/data_elements.rds'))
+dt = merge(sigl, meta_data, all.x = TRUE, by = "element_id")
+dt[, element.x := as.character(element.x)]
+dt[, element.y := as.character(element.y)]
+dt[element.x!=element.y,] # check that they are the same
+dt[, element.y := NULL]
+setnames(dt, 'element.x', 'element')
+dt[, c("data_set_url", "element_url", "data_sets"):=NULL]
+
+# remove data that is incomplete due to reporting lag because this will affect QR
+reporting = dt[, unique(org_unit_id), by = 'date']
+reporting = reporting[, .N, by = 'date']
+plot(reporting, N ~ date)
+dt[ , year := year(date)]
+dt = dt[ year >= 2017, ] # remove before 2017
+dt = dt[ date != "2019-04-01", ] # remove last month of the download (april 2019)
+
+saveRDS(dt, paste0(out_dir, sigl_out))
 # ----------------------------------------------
 
 # ----------------------------------------------
