@@ -85,7 +85,7 @@ for (o in unique(subset$org_unit_id)) {
     #print(nx)
     
     # skip if less than 3 data points or variance is 0
-    if(n>=3 & var!=0 & nx>=2) {  
+    if(n>=5 & var!=0 & nx>=2) {  
         # create formula
         form = 'value~date'
         # # add fixed effect on group if more than one group exists
