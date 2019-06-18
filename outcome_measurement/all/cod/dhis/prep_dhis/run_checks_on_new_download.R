@@ -19,18 +19,18 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 new_base_data <- paste0(dir, "prepped/base_services_prepped.rds") 
 base_data_2017 =  paste0(dir, "pre_prep/base/base_01_2016_01_2019.rds") # 2017 data from the "problem" download in January, so need to check it 
 archive_base_data <- paste0(dir, "prepped/archive/base_services_drc_01_2017_09_2018_prepped.rds")
-more_recent_base_data = paste0(dir, 'pre_prep/merged/base_2018_01_01_2019_01_01.rds')
+prev_base_data = paste0(dir, 'pre_prep/merged/base_2018_01_01_2019_01_01.rds')
 
-new_sigl_data <- paste0(dir, "pre_prep/merged/sigl_2018_01_01_2019_01_01.rds")
-archive_sigl_data <- paste0(dir, "prepped/archive/sigl_drc_01_2015_07_2018_prepped.rds")
+new_sigl_data = paste0(dir, "prepped/sigl/sigl_prepped.rds")
+prev_sigl_data = paste0(dir, "pre_prep/merged/sigl_2018_01_01_2019_01_01.rds")
+archive_sigl_data = paste0(dir, "prepped/archive/sigl_drc_01_2015_07_2018_prepped.rds")
 # ----------------------------------------------
 
 # ----------------------------------------------
 # Read in the data
 # ----------------------------------------------
-new = readRDS(new_base_data)
-old_data = readRDS(more_recent_base_data)
-old = readRDS(archive_base_data)
+new = readRDS(new_sigl_data)
+old = readRDS(prev_sigl_data)
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -81,6 +81,8 @@ run_checks <- function(new, old, data_element_to_check){
   dt = dt[date >= min_date, ]
   dt = dt[date <= max_date, ]
   
+  dt[ , dps := standardizeDPSNames(dps)]
+  dt[ , health_zone := standardizeHZNames(health_zone)]
   # subset to 2017 to compare versions of that data:
   # dt = dt[date >= "2017-01-01", ]
   # dt = dt[date <= "2017-12-01", ]
@@ -189,7 +191,7 @@ run_checks <- function(new, old, data_element_to_check){
   value_comp_fac[, diff:= new - old]
   value_comp_fac[, new_less_than_old := ifelse(diff < 0, TRUE, FALSE)]  
   print( paste0("These are the facility-months that have lower numbers of ", data_element_to_check, ": "))
-  print( value_comp_fac[new_less_than_old== TRUE, .N])
+  print( value_comp_fac[new_less_than_old== TRUE, ])
   
   max_loss_hz <- value_comp_fac[ diff < 0, max(abs(diff))]
   print( "The maximum negative difference is: ")
@@ -209,7 +211,7 @@ run_checks <- function(new, old, data_element_to_check){
 # check national values compared to national values on SNIS dashboard
 # ----------------------------------------------
 #sum to natl level
-natl = dt[, .(value = sum(value, na.rm = TRUE)), by = c('date', 'element', 'category')] 
+natl = new[, .(value = sum(value, na.rm = TRUE)), by = c('date', 'element', 'category')] 
 
 ggplot(natl[ element == 'A 1.4 Paludisme grave', ], aes(x = date, y = value)) + geom_point() + theme_bw()
 
