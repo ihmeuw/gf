@@ -53,8 +53,8 @@
   fgh_data = fgh_data[, -c('hiv_dah_18', 'mal_dah_18', 'tb_dah_18', 'swap_hss_total_dah_18')]
   
   ## "melt" the data: 
-  fghData <-  melt(fgh_data, id=c("year", "financing_source", "loc_name"), variable.name = "activity_description", value.name="expenditure")
-  fghData$expenditure <- as.numeric(fghData$expenditure)
+  fghData <-  melt(fgh_data, id=c("year", "financing_source", "loc_name"), variable.name = "activity_description", value.name="disbursement")
+  fghData$disbursement <- as.numeric(fghData$disbursement)
   
   ##get the disease column: 
   fghData[grepl("hiv", activity_description), disease:='hiv']
@@ -66,9 +66,9 @@
     stop("Not all rows were correctly labeled with disease!")
   }
   
-  ##sum the expenditure by the other variables just to remove any duplicates: 
+  ##sum the disbursement by the other variables just to remove any duplicates: 
   byVars = c('loc_name', 'year', 'financing_source', 'disease', 'activity_description')
-  fghData = fghData[, .(expenditure=sum(expenditure, na.rm=T)), 
+  fghData = fghData[, .(disbursement=sum(disbursement, na.rm=T)), 
                     by=byVars]
   
   fghData$fin_data_type <- "actual"
@@ -86,8 +86,8 @@
   stopifnot(nrow(final_mapping[dup==TRUE])==0)
   final_mapping$dup<-NULL
   
-  #Check that expenditure will still be correct after coefficient redistribution. 
-  pre_check = fghData[, .(pre_check = sum(expenditure, na.rm=T)), by='activity_description']
+  #Check that disbursement will still be correct after coefficient redistribution. 
+  pre_check = fghData[, .(pre_check = sum(disbursement, na.rm=T)), by='activity_description']
   
   #Map this data to global fund modules and interventions. 
   fgh_to_codes <- merge(fghData, fgh_mapping, by='activity_description', all.x = TRUE, allow.cartesian=T)
@@ -102,9 +102,9 @@
   }
   
   #Apply redistributive coefficients 
-  fgh_mapped[, expenditure:=expenditure*coefficient]
+  fgh_mapped[, disbursement:=disbursement*coefficient]
   
-  post_check = fgh_mapped[, .(post_check = sum(expenditure, na.rm=T)), by='activity_description']
+  post_check = fgh_mapped[, .(post_check = sum(disbursement, na.rm=T)), by='activity_description']
   post_check = merge(pre_check, post_check, by='activity_description', all=T)
   if (nrow(post_check[pre_check!=post_check])!=0){
     print(post_check[pre_check!=post_check])
@@ -115,10 +115,26 @@
   #the number of rows of fgh_to_codes and fgh_mapped at this point should be the same. 
   stopifnot(nrow(fgh_mapped) == nrow(fgh_to_codes))
   
+  #-----------------------------------------------
+  # Relabel "unspecified" columns
+  #-----------------------------------------------
+  fgh_mapped[module_eng=="Unspecified" & disease=="rssh", module_eng:="Unspecified RSSH"]
+  fgh_mapped[intervention_eng=="Unspecified" & disease=="rssh", intervention_eng:="Unspecified RSSH"]
+  
+  fgh_mapped[module_eng=="Unspecified" & disease=="hiv", module_eng:="Unspecified HIV"]
+  fgh_mapped[intervention_eng=="Unspecified" & disease=="hiv", intervention_eng:="Unspecified HIV"]
+  
+  fgh_mapped[module_eng=="Unspecified" & disease=="malaria", module_eng:="Unspecified Malaria"]
+  fgh_mapped[intervention_eng=="Unspecified" & disease=="malaria", intervention_eng:="Unspecified Malaria"]
+  
+  fgh_mapped[module_eng=="Unspecified" & disease=="tb", module_eng:="Unspecified TB"]
+  fgh_mapped[intervention_eng=="Unspecified" & disease=="tb", intervention_eng:="Unspecified TB"]
+  
   # ----------------------------------------------
   # Sort the data nicely 
   # ----------------------------------------------
-  fgh_mapped = fgh_mapped[, .(loc_name, year, financing_source, disease, activity_description, expenditure, code, module_eng, intervention_eng)] #Would be good to do this off of the codebook!! Emily 6/19/19
+  fgh_mapped = fgh_mapped[, .(loc_name, year, financing_source, disease, activity_description, disbursement, code, module_eng, intervention_eng)] #Would be good to do this off of the codebook!! Emily 6/19/19
+  setnames(fgh_mapped, c('module_eng', 'intervention_eng'), c('gf_module', 'gf_intervention'))
   fgh_mapped = fgh_mapped[order(loc_name, year, financing_source, disease, activity_description)]
   
   # ----------------------------------------------

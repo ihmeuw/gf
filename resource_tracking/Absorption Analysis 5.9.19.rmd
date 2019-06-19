@@ -12,7 +12,10 @@ library(knitr)
 library(ggplot2)
 
 #Need to check with David if we want to produce the same figures as we did for Synthesis. 
-expenditures = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures.rds")
+j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
+dir = paste0(j, "Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/")
+setwd(dir)
+expenditures = readRDS(paste0(dir, "final_expenditures.rds"))
 pudrs = expenditures[data_source=='pudr']
 all_interventions = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds") #Pull in to get abbrev module. 
 all_interventions = all_interventions[, .(module_eng, abbrev_mod_eng)] 
@@ -28,6 +31,10 @@ pudrs[disease=='hiv', disease:='HIV']
 pudrs[disease=='tb', disease:='TB']
 pudrs[disease=='malaria', disease:='Malaria']
 pudrs[disease=='rssh', disease:='RSSH']
+
+# Make budget and expenditure 0 where there is NA
+pudrs[is.na(budget), budget:=0]
+pudrs[is.na(expenditure), expenditure:=0]
 
 #Country 
 pudrs[country=="Congo (Democratic Republic)", country:='DRC']
@@ -66,7 +73,7 @@ kable(final, caption = "Average absorption by country (%)")
 ```
 
 # Average absorption by module
-*Numbers shown are averages across all IHME PCE countries*
+*Numbers shown are pooled across all IHME PCE countries*
 
 ```{r echo=FALSE, warning=FALSE}
 absorption_by_module = absorption_by_module[order(disease)]
