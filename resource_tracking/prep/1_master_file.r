@@ -17,8 +17,11 @@ rm(list=ls())
 # ----------------------------------------------
 if (Sys.info()[1]=='Windows'){
   setwd("C:/Users/elineb/Documents/gf/") #Change to the root of your repository
+  source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
+} else {
+  source("/homes/elineb/gf/resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 }
-source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
+  
 # ---------------------------------------
 # Boolean logic switches 
 # ---------------------------------------
