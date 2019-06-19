@@ -21,33 +21,28 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-setwd(dir)
 
 #---------------------------------------
-# load the file that represents a subset (no sex or )
-dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_vct_2017_01_01_2018_12_01.rds'))
+# load the file that represents a subset (no sex, age, or support)
+dt = data.table(readRDS(paste0(dir, 'prepped/pnls_sets/pnls_vct_2017_01_01_2019_02_01.rds')))
 
-#------------------------------------
-#Edit subpops where needed
-dt[element_id=='bJSh3ipNspj', subpop:=NA] #Malades reçus en hospitalisation (Pédiatrie,MI, Chirurgie, gynécologie et autres)
-
-#-----------------------------
+#---------------------------------------
 # export the abbreviated elements for translation
 
 # to do this on the cluster, you must export as an RDS, then use local code to save
 elements = dt[ ,.(element = unique(element)), by=.(element_id)]
-set = dt[ ,tolower(unique(set))]
+set_name = dt[ ,tolower(unique(pnls_set))]
 
 # save the list as an excel file 
-write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate_', set, 'jan_download.xlsx' )) #Leaving in for documentation; don't need to write over this file. 
+write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate_', set_name, '_june_download.xlsx' )) 
 
 # translate using onlinedoctranslator.com and save as file path below
-#---------------------
+# should be: pnls_elements_translations, set, .xlsx
+
+#---------------------------------------
 
 # import the translated elements
-new_elements = read.xlsx(paste0(dir,
-                'meta_data/translate/pnls_elements_translations_', set, '.xlsx' ))
-setDT(new_elements)
+new_elements = data.table(read.xlsx(paste0(dir, 'meta_data/translate/pnls_elements_translations_', set_name, '.xlsx' )))
 
 # drop out french elements for the merge 
 new_elements[ ,element:=NULL]
@@ -60,8 +55,7 @@ new_elements[, element_eng:=trimws(element_eng)]
 # Merge the data and the new English elements together 
 
 # drop the previous english elements out the data for the corrected elements
-dt[ ,c("element_eng", "org_unit_type", "mtk", "maternity", "case",
-       "stock_category", "tb"):=NULL] # all org_units are facilities
+dt[ ,c("maternity", "case","stock_category", "tb"):=NULL] # all of these elements are missing
 
 dt = merge(dt, new_elements, by='element_id', all.x = TRUE)
 #---------------------------------------------------------------------
@@ -71,17 +65,18 @@ dt = merge(dt, new_elements, by='element_id', all.x = TRUE)
 dt[is.na(subpop) & grepl("Couples", element), subpop:='couple']
 
 # check that the elements were identified correctly
-dt[ ,unique(element_eng), by=.(element, subpop)]
+# View(dt[ , unique(element_eng), by=.(element, subpop)])
 #--------------------------------------------------------------------
-# add a binary for testing type
-
+# # add a binary for testing type
+# drop as we are not interested in this issue
+# 
 dt[grep('CDIV', element), test_type:='provider initiated']
 dt[grep('CDV', element), test_type:='voluntary']
 
 #----------------------------------------
 # final collapse 
 
-Vars = names(dt)[names(dt)!='value' & names(dt)!='element_id' & names(dt)!='element']
+Vars = names(dt)[names(dt)!='value' & names(dt)!='element_id' & names(dt)!='element' & names(dt)!='last_update' & names(dt)!='coordinates']
 dt = dt[,.(value=sum(value)), by=Vars]
 
 #-----------------------------------
@@ -89,5 +84,7 @@ dt = dt[,.(value=sum(value)), by=Vars]
 saveRDS(dt, paste0(dir, "prepped/pnls_final/pnls_vct_final.rds"))
 
 #-----------------------------------
+
+
 
 
