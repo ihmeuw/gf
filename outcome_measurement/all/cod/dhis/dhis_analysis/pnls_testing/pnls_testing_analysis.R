@@ -379,10 +379,33 @@ ggplot(t6[subpop!='Patients'], aes(x=subpop, y=mean_tests, label=mean_tests, fil
 
 cases = dt[variable=='HIV+' | variable=='HIV+ and informed of their results']
 
+# check the cases variable
+ c1 = cases[ ,.(value=sum(value)), by=.(sex, date, variable)] 
+ 
+ ggplot(c1, aes(x=date, y=value, color=variable)) +
+          geom_point() +
+          geom_line() +
+          facet_wrap(~sex) +
+          theme_bw() +
+   labs(title = 'Patients who tested HIV+',
+        y='HIV+', x="Date", color='Sex') +
+   theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
+ 
+# percentage informed of their results
+ # this ratio should never be over 100
+ c2 = dcast(c1, sex+date~variable)
+ setnames(c2, c('HIV+', 'HIV+ and informed of their results'),
+          c('hiv_pos', 'informed'))
+c2[ , ratio:=100*round(informed/hiv_pos, 1)]
 
-
-
-
+ggplot(c2, aes(x=date, y=ratio, color=sex)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  facet_wrap(~sex) +
+  labs(title = 'Percentage of patients who tested HIV+ who were informed of their results', 
+       y='Percent (%)', x="Date", color='Sex') +
+  theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
 
 
 #-----------------------------------------------------------------
