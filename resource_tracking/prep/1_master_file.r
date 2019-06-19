@@ -15,15 +15,17 @@ rm(list=ls())
 # ----------------------------------------------
 # STEP 1: SET UP R
 # ----------------------------------------------
-setwd("C:/Users/elineb/Documents/gf/") #Change to the root of your repository
+if (Sys.info()[1]=='Windows'){
+  setwd("C:/Users/elineb/Documents/gf/") #Change to the root of your repository
+}
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # ---------------------------------------
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = TRUE
+prep_files = FALSE
 prep_gos = FALSE
-prep_fgh = FALSE 
+prep_fgh = TRUE
 prep_ghe = FALSE
 
 #Processing options 
@@ -57,9 +59,9 @@ if (prep_files | prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
   source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
-  #source(paste0(code_dir, "2d_gf_aggregate_files.R"))
-  #source(paste0(code_dir, "2e_gf_verify_outputs.R"))
-  #rmarkdown::render(paste0(code_dir, "2f_gf_visualize_data.rmd"))
+  source(paste0(code_dir, "2d_gf_aggregate_files.R"))
+  source(paste0(code_dir, "2e_gf_verify_outputs.R"))
+  rmarkdown::render(paste0(code_dir, "2f_gf_visualize_data.rmd"))
 }
 # ----------------------------------------------
 # STEP 3: PREP FGH ACTUALS AND ESTIMATES 
@@ -72,8 +74,9 @@ if (prep_fgh){
   }
   
   #Prep and map actuals and estimates. *Would be good to add in a mapping verification and calculations verification step! 
-  source(paste0(code_dir, "3a_fgh_actuals_prep_data.R"))
-  source(paste0(code_dir, "3b_fgh_estimates_prep_data.R"))
+  # source(paste0(code_dir, "3a_fgh_actuals_prep_data.R"))
+ source(paste0(code_dir, "3b_fgh_estimates_prep_data.R"))
+  # source(paste0(code_dir, "3c_fgh_validate_data.r"))
 } 
 # ----------------------------------------------
 # STEP 4: PREP GHE (CURRENTLY ONLY SICOIN)
@@ -89,21 +92,9 @@ if (prep_ghe){
   # Prep and map SICOIN data.*Would be good to add in a mapping verification and calculations verification step!   
   source(paste0(code_dir, "4a_ghe_sicoin_prep_data"))
 } 
-# ----------------------------------------------
-# STEP 5: Aggregate all data sources
-# ----------------------------------------------
-
-source(paste0(code_dir, "5_aggregate_all_data_sources.R"))
 
 # ----------------------------------------------
-# STEP 6: VALIDATE ALL DATA SOURCES 
-# ----------------------------------------------
-
-source(paste0(code_dir, "2e_gf_verify_outputs.R"))
-source(paste0(code_dir, "2f_gf_visualize_data.rmd"))
-
-# ----------------------------------------------
-# STEP 7: UPLOAD TO BASECAMP 
+# STEP 5: UPLOAD TO BASECAMP 
 # ----------------------------------------------
 
 #Open in Spyder, and run: "C:/Users/user/Documents/gf/resource_tracking/prep/6_basecamp_upload.py"

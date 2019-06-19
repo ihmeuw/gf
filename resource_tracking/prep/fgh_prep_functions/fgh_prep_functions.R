@@ -61,7 +61,7 @@ transform_fin_data_type <- function(fin_data_type){
 get_prepped_forecast <- function(root,input_dir, fin_type){
   fin_type = "DAH"
   ghe_forecast <- data.table(read_feather(paste0(root, input_dir, fin_type,"_totes_compile.feather")))
-  pce_forecast <- ghe_forecast[iso3%in%c("GTM", "UGA", "COD")&scenario=="reference"]
+  pce_forecast <- ghe_forecast[iso3%in%c("GTM", "UGA", "SEN", "COD")&scenario=="reference"]
   pce_forecast$scenario <- NULL
   pce_forecast$df <- NULL
   

@@ -11,7 +11,9 @@
 # Read in the raw FGH estimates 
 # ----------------------------------------------
 fgh_estimates <- fread(paste0(fgh_raw, "gpr_corrected_final_gbd4.csv"))
-final_mapping = read.csv(paste0(mapping_dir, "all_interventions.csv"))
+final_mapping = data.table(read.csv(paste0(mapping_dir, "all_interventions.csv")))
+final_mapping = unique(final_mapping[, .(module_eng, intervention_eng, code)])
+
 
 #Subset to our countries. 
 fgh_estimates <- fgh_estimates[location_id %in%code_lookup_tables$ihme_country_code]
@@ -98,17 +100,17 @@ ppp_file <- "PPP"
 # ----------------------------------------------
 ## get the forecasted datasets using the above function:
 # ----------------------------------------------
-ghe_prepped <- get_prepped_forecast(root, input_dir,ghe_file)
+ghe_prepped <- get_prepped_forecast(j, input_dir, ghe_file)
 ghe_prepped$financing_source <- "ghe_forecasted"
 
-dah_prepped <- get_prepped_forecast(root, input_dir, dah_file)
+dah_prepped <- get_prepped_forecast(j, input_dir, dah_file)
 dah_prepped$financing_source <- "dah_forecasted"
 
 pce_forecast <- rbind(ghe_prepped, dah_prepped)
 setnames(pce_forecast, "iso3", "loc_name")
 pce_forecast$adm1 <- mapply(get_country_codes, tolower(pce_forecast$loc_name), "all")
 
-hiv_prepped <- get_hiv_forecast(root, hiv_dir, hiv_file, pce_codes)
+hiv_prepped <- get_hiv_forecast(j, hiv_dir, hiv_file, pce_codes)
 hiv_prepped$loc_name <- mapply(get_country_names, hiv_prepped$adm1,"all")
 
 pce_total <- rbind(hiv_prepped, pce_forecast)
