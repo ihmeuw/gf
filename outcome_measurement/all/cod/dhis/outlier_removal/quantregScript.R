@@ -19,7 +19,7 @@ i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
 
 # file paths
-scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg2/')
+scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
 arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 parallelDir = paste0(scratchDir, 'parallel_files/')
@@ -42,7 +42,6 @@ print(e)
 
 dt = read.fst(scratchInFile)
 dt = as.data.table(dt)
-#subset = dt[org_unit_id==o, ] 
 subset = dt[element_id==e, ] 
 #------------------------------------
 

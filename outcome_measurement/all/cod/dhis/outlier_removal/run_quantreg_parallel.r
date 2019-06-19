@@ -29,10 +29,11 @@ library(quantreg)
 library(fst) # to save data tables as .fst for faster read/write and full random access
 
 # detect the user operating on the cluster
+dt
 user = Sys.info()[['user']]
 
 # choose the data set you want to load
-set = 'sigl'
+set = 'pnls'
 #------------------------------------
 
 #------------------------------------
@@ -95,8 +96,10 @@ if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement
     outFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds')
   } else {
     outFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_quantreg_results.rds')
-  }
-}
+  }}
+
+if(set=='pnls') {infile = paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2019_04_01.rds')
+              outFile = paste0(dir, '/outlier_screened/pnls_subset_2017_01_01_2019_04_01_screened.rds')}
 #------------------------------------
 
 #------------------------------------
@@ -108,7 +111,7 @@ dt[ , date:=as.Date(date)] # regression only runs with date as a date variable
 dt[, org_unit_id := as.character(org_unit_id)]
 
 # format the pnlp data in the same format as the base data
-# this assigns an element id to each variable and refered to the health zone as an org_unit
+# this assigns an element id to each variable and refers to the health zone as an org_unit for pnlp
 if (set=='pnlp') {dt[, org_unit_id := paste(dps, health_zone, sep = "_")]
                   dt[, element_id:=.GRP, by='variable']}
 if (set=='sigl') {dt[, variable := as.character(variable)]
@@ -116,6 +119,9 @@ if (set=='sigl') {dt[, variable := as.character(variable)]
                   dt[, drug_id:=.GRP, by='drug']
                   dt[, variable_id:=.GRP, by='variable']
                   dt[, completely_missing := NULL]}
+if (set=='pnls') setnames(dt, 'element_id', 'id')
+if (set=='pnls') dt[ ,element_id:=.GRP, by='id']
+
 
 # aggregate to DPS level before running (if agg_to_DPS is TRUE)
 if (agg_to_DPS == TRUE){
@@ -167,8 +173,6 @@ write.fst(dt, scratchInFile)
 # determine the number of rows in the array job
 N = nrow(array_table)
 
-# # run value~date on each org_unit and element
-# system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
 
 # FOR NEW CLUSTER:
 # run quantregScript for each org_unit (submit one array job, with the array by org_unit)
@@ -190,19 +194,8 @@ while(numFiles<i) {
   Sys.sleep(5) }
 #------------------------------------
 
-#------------------------------------
-# once all files are done, collect all output into one data table
-#------------------------------------
-# if (cat_files == TRUE){
-# # bind all of the files together to create a single data set
-#   system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* >', scratchDir, 'full_quantreg_results.fst'))
-#   dt = read.fst(paste0(scratchDir, 'full_quantreg_results.fst'))
-#   saveRDS(dt, outFile)
-# }
-
 #---------------------------------------
 # old code to concatenate files - leave as k since i and j are already used
-# this is less efficient - do not use if cat code works
 
 for (k in seq(N)) {
   tmp = read.fst(paste0(parallelDir, 'quantreg_output', k, '.fst'), as.data.table=TRUE)
