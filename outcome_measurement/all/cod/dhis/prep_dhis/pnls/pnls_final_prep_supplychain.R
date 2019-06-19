@@ -27,28 +27,28 @@ setwd(dir)
 # load the file that represents a subset (no sex or )
 
 # I think I have changed this to the correct file for you - Caitlin 
-dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_drug_2017_01_01_2019_04_01.rds'))
+dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_drug_2017_01_01_2019_02_01.rds'))
 
 #-----------------------------
 # export the abbreviated elements for translation
 
 # to do this on the cluster, you must export as an RDS, then use local code to save
-elements = dt[ ,.(element = unique(element)), by=.(element_id)]
-set = dt[ ,tolower(unique(set))]
-
-# save the list as an excel file 
-write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate_', set, '.xlsx' )) #Leaving in for documentation; don't need to write over this file. 
+# elements = dt[ ,.(element = unique(element)), by=.(element_id)]
+set = dt[ ,tolower(unique(pnls_set))]
+# 
+# # save the list as an excel file 
+# write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate_', set, '.xlsx' )) #Leaving in for documentation; don't need to write over this file. 
 
 # translate using onlinedoctranslator.com and save as file path below
 #---------------------
 
 # import the translated elements
-new_elements = read.xlsx(paste0(dir,
-                'meta_data/translate/pnls_elements_translations_', set, '.xlsx' ))
+new_elements = read.xlsx(paste0(dir,'meta_data/translate/pnls_elements_translations_', set, '.xlsx' ))
 setDT(new_elements)
 
 # be sure 
 x = merge(elements, new_elements, by=c('element_id', 'element'), all.x=T )
+stopifnot(nrow(x[is.na(element_eng)])==0)
 setDT(x)
 #---------------------------------------
 
