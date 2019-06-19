@@ -46,8 +46,6 @@ source(paste0(codeDir, "1_pnls_supplychain_clean.r"))
 #-------------------------------------
 # MAKE SLIDES   
 #------------------------------------
-source(paste0(codeDir, "4_set_up_data.r"))
-source(paste0(codeDir, "4_pnls_supplychain_graph_functions.r"))
 
 #Render testing R-markdowns
 rmarkdown::render(paste0(codeDir, "4_determine_analysis.rmd"))

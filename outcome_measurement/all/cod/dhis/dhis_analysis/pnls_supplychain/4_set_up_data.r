@@ -4,16 +4,27 @@
 # DATE: Updated May 2019
 #-----------------------------------------
 
-#Source the prep code 
-preppedDT = readRDS(paste0(dir, 'pnls_drug.rds'))
-dt = copy(preppedDT)
+if (use_sigl_only){
+  dt = readRDS("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/sigl/sigl_for_pnls_supplychain.rds")
+  dt[, year:=year(date)]
+} else { #Use the PNLS/SIGL combined data
+  dt = readRDS(paste0(dir, 'pnls_drug.rds'))
+}
 
 #Only limit to 2018 for now. 
-dt[year<=2018]
+dt = dt[year<=2018]
 
 #Read in the shapefile
 shapefile = shapefile("J:/Project/Evaluation/GF/mapping/cod/gadm36_COD_shp/gadm36_COD_1.shp")
 shapefile@data$NAME_1 = standardizeDPSNames(shapefile@data$NAME_1)
+shapefile@data$dps = shapefile@data$NAME_1
+
+#Pull in the ID variable for SIGL data only
+if (use_sigl_only){
+  shape_names = data.table(id = seq(0, 25, by=1), dps=shapefile@data$NAME_1) #This matches the data when you fortify the shapefile below
+  dt[!dps%in%shapefile@data$dps] #Check that merge will work correctly - this data table should have 0 rows. 
+  dt = merge(dt, shape_names, by='dps', all.x = TRUE)
+}
 
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 coord = data.table(fortify(shapefile)) 
@@ -42,6 +53,24 @@ dt$level = factor(dt$level, c('health_center', 'reference_health_center', 'gener
 dt[, level2:=level]
 dt[!level%in%c('Health post', 'Health center', 'Hospital'), level2:='Other']
 
+
+#Do some other prep if you've got SIGL data only - this mimics prep for both datasets together, and code should probably be integrated. EKL 6/18/19
+if (use_sigl_only){
+  #Check to make sure there aren't impossible reporting periods for stock-out days per month, and drop these values
+  date_frame = data.table(month = seq(1, 12, by=1), expected_days = c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+  dt[, month:=month(date)]
+  dt = merge(dt, date_frame, all.x = TRUE, by = 'month')
+  dt[value>expected_days & stock_category == "number_of_days_stocked_out", impossible_so_days:=TRUE] #Create a boolean value to flag which NAs you've created. 
+  dt[value>expected_days & stock_category == "number_of_days_stocked_out", value:=NA] #Replace impossible days stocked out with NA
+  
+  
+  dt[stock_category == 'number_of_days_stocked_out', any_stock_out:=0]
+  dt[!is.na(any_stock_out) & value>0 & !is.na(value), any_stock_out:=1]
+  dt[is.na(value) & !is.na(any_stock_out), any_stock_out:=NA]
+  
+  #If you've replaced the value with NA, also make expected days NA. 
+  dt[is.na(value) & impossible_so_days==TRUE, expected_days:=NA]
+}
 # ------------------------------------------------------
 # Prep some color palettes
 #-------------------------------------------------------
