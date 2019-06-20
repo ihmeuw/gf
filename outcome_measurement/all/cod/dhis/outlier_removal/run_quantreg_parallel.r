@@ -166,10 +166,6 @@ if (set != 'sigl'){
   names(array_table) = c("drug_id", "variable_id")
 }
 
-# for testing, subset to a few rows
-array_table = array_table[element_id==222]
-dt = dt[element_id==222]
-
 # save the array table and the data with IDs to /ihme/scratch/users/(user_name)/quantreg/
 write.fst(array_table, arrayFile)
 write.fst(dt, scratchInFile)
@@ -191,7 +187,7 @@ setwd(paste0('/ihme/code/', user, '/gf/'))
 if (set == 'sigl'){
   system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs -l m_mem_free=20G -l fthread=1 -l h_rt=02:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.r')) 
 } else {
-  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=15G -l fthread=1 -l h_rt=04:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
+  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=15G -l fthread=1 -l h_rt=04:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.r')) 
 }
 #------------------------------------
 

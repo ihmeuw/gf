@@ -23,7 +23,7 @@ scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
 arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 parallelDir = paste0(scratchDir, 'parallel_files/')
-outFile = paste0(parallelDir, 'quantreg_output', i, '.fst')
+outFile = paste0(parallelDir, 'quantreg_output_', i, '.fst')
 
 # read in the array table 
 array_table = read.fst(arrayFile)

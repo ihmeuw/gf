@@ -375,9 +375,8 @@ ggplot(mean_tests2[!is.na(facility_level)], aes(x=date, y=mean_tests, color=faci
   theme_bw() +
   facet_wrap(~next_level) +
   labs(color="", x='Date', y='Count', 
-       title='Mean HIV tests per facility per month by level',
-       ) +
-  theme(text = element_text(size=18)) +
+       title='Mean HIV tests per facility per month by level') +
+  theme(text = element_text(size=14)) +
   scale_y_continuous(labels = scales::comma)
 
 #-----------------------------------
@@ -406,6 +405,7 @@ ggplot(mean_tests_cat[!is.na(facility_level)], aes(x=reorder(facility_level, -me
 #----------------------------------------------------------
 # testing among key populations
 
+#-------------------------------
 # testing among key populations over time 
 t5 = tests_alt[variable=='Tested and received the results',.(value=sum(value)), by=.(subpop, date)]
 t5[subpop=='Patients', key_pop:='All patients']
@@ -420,6 +420,7 @@ ggplot(t5, aes(x=date, y=value, color=subpop)) +
   theme(text = element_text(size=18)) + 
   theme_bw() 
 
+#-------------------------------
 # counseling testing among key populations over time 
 pop = t5[key_pop=='Key population']
 pop[ ,key_pop:=NULL]
@@ -433,10 +434,12 @@ ggplot(check, aes(x=date, y=value, color=set)) +
   geom_line() +
   facet_wrap(~subpop) +
   labs(color="", x='Date', y='Count', 
-       title='Counseled and tested = patients tested for key populations') +
+       title='Counseled and tested = patients tested for key populations',
+       subtitle = "Diagnostic graph showing a repeat indicator") +
   theme(text = element_text(size=18)) + 
   theme_bw() 
 
+#-------------------------------
 # tests performed by key population by year
 t5_bar = t5[ ,.(value=sum(value)), by=.(subpop, key_pop, year=year(date))]
 
@@ -447,10 +450,25 @@ ggplot(t5_bar[key_pop=='Key population'], aes(x=subpop, y=value, label=value, fi
   scale_fill_manual(values = c('#d73027', '#fdae61')) +
   labs(title = 'Tested for HIV and received the results by year',
        y='Tested for HIV', x="Key population", fill="Year") +
-  theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
+  theme(text = element_text(size=16), axis.text.x=element_text(size=12, angle=90))
 
+#-------------------------------
+# tests performed by key population and by funder by year
+tf_bar = dt[ ,.(value=sum(value)), by=.(subpop, year=year(date), funder)]
 
-# mean tests performed for each sub population by facility by year
+ggplot(tf_bar[subpop!='Patients'], aes(x=subpop, y=value, label=value, fill=factor(year))) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  theme_bw() +
+  facet_wrap(~funder) +
+  scale_fill_manual(values = c('#9ebcda', '#0570b0')) +
+  labs(title = 'Tested for HIV and received the results by funder, year',
+       y='Tested for HIV', x="Key population", fill="Year") +
+  theme(text = element_text(size=16), axis.text.x=element_text(size=12, angle=90)) +
+  scale_y_continuous(labels = scales::comma)
+
+#-------------------------------
+# mean tests performed per facility for each sub population by year
+
 t6 = t5[ ,.(value=sum(value)), by=.(subpop, key_pop, year=year(date))]
 fac6 = dt[ ,.(facilities=length(unique(org_unit_id))), by=.(year=year(date))]
 t6 = merge(t6, fac6, by='year')
@@ -465,8 +483,30 @@ ggplot(t6[subpop!='Patients'], aes(x=subpop, y=mean_tests, label=mean_tests, fil
        y='Tested for HIV', x="Key population", fill="Year") +
   theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
 
+#-------------------------------
+# mean tests performed per facility for each sub population by funder, year
+
+tf = dt[ ,.(value=sum(value)), by=.(subpop, key_pop, year=year(date))]
+fac6 = dt[ ,.(facilities=length(unique(org_unit_id))), by=.(year=year(date))]
+t6 = merge(t6, fac6, by='year')
+t6[ ,mean_tests:=round(value/facilities, 1), by=.(year, subpop)]
+
+ggplot(t6[subpop!='Patients'], aes(x=subpop, y=mean_tests, label=mean_tests, fill=factor(year))) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  geom_text(aes(label=mean_tests), vjust=-1, position=position_dodge(0.9)) +
+  theme_bw() +
+  scale_fill_manual(values = c('#66bd63', '#fee08b')) +
+  labs(title = 'Mean patients per health facility who were tested and received their results',
+       y='Tested for HIV', x="Key population", fill="Year") +
+  theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
+
+
 #------------------------------
 # hiv tests performed by funder
+
+
+
+
 
 
 #-----------------------------------------------------------------
