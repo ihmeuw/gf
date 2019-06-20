@@ -28,14 +28,14 @@ library(data.table)
 
 # detect the user operating on the cluster
 user = Sys.info()[['user']]
-library(fst, lib.loc=paste0('/ihme/scratch/users/', user))
-library(SparseM, lib.loc=paste0('/ihme/scratch/users/', user)) 
-library(quantreg, lib.loc=paste0('/ihme/scratch/users/', user))
 
-# install.packages('quantreg', lib='/ihme/scratch/users/abatzel')
-# install.packages('SparseM', lib='/ihme/scratch/users/abatzel')
-# install.packages('fst', lib='/ihme/scratch/users/abatzel')
+# these libraries must be loaded locally from scratch if using an ide
+library(fst, lib.loc=paste0('/ihme/scratch/users/', user, '/packages'))
+library(SparseM, lib.loc=paste0('/ihme/scratch/users/', user, '/packages')) 
+library(quantreg, lib.loc=paste0('/ihme/scratch/users/', user, '/packages'))
 
+# set the working directory because this is america
+setwd(paste0('/ihme/code/', user, '/gf/'))
 
 # choose the data set you want to load
 set = 'pnls'
@@ -167,7 +167,8 @@ if (set != 'sigl'){
 }
 
 # for testing, subset to a few rows
-# array_table = array_table[1:10, ]
+array_table = array_table[element_id==222]
+dt = dt[element_id==222]
 
 # save the array table and the data with IDs to /ihme/scratch/users/(user_name)/quantreg/
 write.fst(array_table, arrayFile)

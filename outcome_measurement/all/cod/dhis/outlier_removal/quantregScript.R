@@ -27,8 +27,7 @@ outFile = paste0(parallelDir, 'quantreg_output', i, '.fst')
 
 # read in the array table 
 array_table = read.fst(arrayFile)
-array_table = as.data.table(array_table)
-head(array_table)
+array_table = data.table(array_table)
 
 # read org unit from the array table
 # o = array_table[i]$org_unit_id # unique facility id
@@ -41,7 +40,7 @@ print(e)
 #------------------------------------
 
 dt = read.fst(scratchInFile)
-dt = as.data.table(dt)
+dt = data.table(dt)
 subset = dt[element_id==e, ] 
 #------------------------------------
 
