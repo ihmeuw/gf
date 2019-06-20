@@ -99,14 +99,16 @@ Are the formats of the variables what you expect?
 Check specific variable values 
 ```{r, echo=FALSE}
 
-disease_flag_b = unique(budgets$disease)%in%c('hiv', 'malaria', 'rssh', 'tb')
-disease_flag_p = unique(expenditures$disease)%in%c('hiv', 'malaria', 'rssh', 'tb')
+disease_flag_b = (unique(budgets$disease)%in%c('hiv', 'malaria', 'rssh', 'tb'))
+disease_flag_p = (unique(expenditures$disease)%in%c('hiv', 'malaria', 'rssh', 'tb'))
 
 sdate_flag_b = is.Date(budgets$start_date)
 sdate_flag_p = is.Date(expenditures$start_date)
 
 edate_flag_b = is.Date(budgets$end_date)
 edate_flag_p = is.Date(expenditures$end_date)
+
+
 
 
 ```
@@ -121,6 +123,9 @@ What's the range of start date? `r range(budgets$start_date)`
 Is your start date variable a date in PUDRs? `r sdate_flag_p`
 What about your end date variable? `r edate_flag_p`
 What's the range of start date? `r range(expenditures$start_date)`
+
+What's the range of years in your budgets dataset? `r range(budgets$year)`
+What's the range of years in your expenditures dataset? `r range(expenditures$year)`
 
 What values do you have for language, loc_name, and country?
 For budgets: 
