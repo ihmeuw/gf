@@ -17,11 +17,11 @@ rm(list=ls())
 # ----------------------------------------------
 if (Sys.info()[1]=='Windows'){
   setwd("C:/Users/elineb/Documents/gf/") #Change to the root of your repository
-  source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 } else {
-  source("/homes/elineb/gf/resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
+  setwd("/ihme/homes/elineb/gf/")
 }
-  
+source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
+
 # ---------------------------------------
 # Boolean logic switches 
 # ---------------------------------------
@@ -77,9 +77,9 @@ if (prep_fgh){
   }
   
   #Prep and map actuals and estimates. *Would be good to add in a mapping verification and calculations verification step! 
-  # source(paste0(code_dir, "3a_fgh_actuals_prep_data.R"))
- source(paste0(code_dir, "3b_fgh_estimates_prep_data.R"))
-  # source(paste0(code_dir, "3c_fgh_validate_data.r"))
+  source(paste0(code_dir, "3a_fgh_actuals_prep_data.R"))
+  # source(paste0(code_dir, "3b_fgh_estimates_prep_data.R"))
+  source(paste0(code_dir, "3c_fgh_validate_data.r"))
 } 
 # ----------------------------------------------
 # STEP 4: PREP GHE (CURRENTLY ONLY SICOIN)

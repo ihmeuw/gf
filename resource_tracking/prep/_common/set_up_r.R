@@ -17,7 +17,7 @@ library(glue)
 library(readstata13)
 library(stats)
 library(stringr)
-library(splitstackshape)
+# library(splitstackshape)
 library(tidyr)
 library(tools)
 library(rlang)
@@ -34,7 +34,7 @@ options(digits=6)
 # ---------------------------------------
 
 #J:drive filepaths
-j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
+j = ifelse(Sys.info()[1]=='Windows','J:','/home/j/')
 dir = paste0(j, '/Project/Evaluation/GF/resource_tracking/')
 combined_output_dir = paste0(dir, "_gf_files_gos/combined_prepped_data/")
 mapping_dir = paste0(dir, "modular_framework_mapping/")
