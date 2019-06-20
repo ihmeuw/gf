@@ -25,12 +25,17 @@
 #------------------------------------
 rm(list=ls())
 library(data.table)
-library(quantreg)
-library(fst) # to save data tables as .fst for faster read/write and full random access
 
 # detect the user operating on the cluster
-dt
 user = Sys.info()[['user']]
+library(fst, lib.loc=paste0('/ihme/scratch/users/', user))
+library(SparseM, lib.loc=paste0('/ihme/scratch/users/', user)) 
+library(quantreg, lib.loc=paste0('/ihme/scratch/users/', user))
+
+# install.packages('quantreg', lib='/ihme/scratch/users/abatzel')
+# install.packages('SparseM', lib='/ihme/scratch/users/abatzel')
+# install.packages('fst', lib='/ihme/scratch/users/abatzel')
+
 
 # choose the data set you want to load
 set = 'pnls'
@@ -88,7 +93,7 @@ arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 if (set=='sigl') {inFile = paste0(dir, 'prepped/sigl/sigl_for_qr.rds') 
 outFile = paste0(dir, 'sigl_quantreg_imputation_results.rds') }
 
-if (set=='base') {inFile = paste0(dir, 'outliers/base_to_screen.rds')
+if (set=='base') {inFile = paste0(dir, 'outliers/base/base_to_screen.rds')
 outFile = paste0(dir, 'outliers/base_quantreg_results.rds')}
 
 if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_for_qr.rds')
@@ -96,19 +101,23 @@ if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement
     outFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds')
   } else {
     outFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_quantreg_results.rds')
-  }}
+  }
+}
 
-if(set=='pnls') {infile = paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2019_04_01.rds')
-              outFile = paste0(dir, '/outlier_screened/pnls_subset_2017_01_01_2019_04_01_screened.rds')}
+
+if(set=='pnls') inFile = paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2019_04_01.rds')
+if(set=='pnls') outFile = paste0(dir, 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_screened.rds')
 #------------------------------------
 
 #------------------------------------
 # read in and set up the data
 #------------------------------------
 dt = readRDS(inFile)
+dt = data.table(dt)
 
+# format the variable types for the regressions
 dt[ , date:=as.Date(date)] # regression only runs with date as a date variable
-dt[, org_unit_id := as.character(org_unit_id)]
+dt[, org_unit_id:=as.character(org_unit_id)]
 
 # format the pnlp data in the same format as the base data
 # this assigns an element id to each variable and refers to the health zone as an org_unit for pnlp
@@ -119,6 +128,7 @@ if (set=='sigl') {dt[, variable := as.character(variable)]
                   dt[, drug_id:=.GRP, by='drug']
                   dt[, variable_id:=.GRP, by='variable']
                   dt[, completely_missing := NULL]}
+
 if (set=='pnls') setnames(dt, 'element_id', 'id')
 if (set=='pnls') dt[ ,element_id:=.GRP, by='id']
 
@@ -135,7 +145,6 @@ if (agg_to_DPS == TRUE){
 }
 
 # check that unique identifiers uniquely identify data:
-if (!set %in% c('base', 'sigl')) {if ( nrow(unique(dt[, .(org_unit_id, date, variable, element_id)])) != nrow(dt)) stop( "check unique identifiers...")}
 if (set == 'base') {if ( nrow(unique(dt[, .(org_unit_id, date, element, element_id, category)])) != nrow(dt)) stop( "check unique identifiers...")}
 if (set == 'sigl') {if ( nrow(unique(dt[, .(org_unit_id, date, variable_id, drug_id)])) != nrow(dt)) stop( "check unique identifiers...")}
 #------------------------------------
@@ -173,7 +182,9 @@ write.fst(dt, scratchInFile)
 # determine the number of rows in the array job
 N = nrow(array_table)
 
-
+# set the working directory even if david does not want you to
+setwd(paste0('/ihme/code/', user, '/gf/'))
+      
 # FOR NEW CLUSTER:
 # run quantregScript for each org_unit (submit one array job, with the array by org_unit)
 if (set == 'sigl'){

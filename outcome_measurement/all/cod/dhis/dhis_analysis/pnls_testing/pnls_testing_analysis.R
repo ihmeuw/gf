@@ -51,24 +51,34 @@ dt = dt[date < '2019-01-01']
 #------------------------------------
 # factor sub populations for graphs 
 
-dt$subpop = factor(dt$subpop, c("miner", "couple", "csw_customer", "other_groups", "csw", "idu", "customer",
-                                "trucker", "fisher", "serodisc", "msm", "prisoner", "uniform", "trans"),    
-                   c('Miners', 'Couples', 'CSW Clients', 'Other Groups', 'CSWs', 'IDUs', 'Patients', 'Truckers', 'Fisherpeople',
-                     'Serodiscordant couples', 'MSM', 'Prisoners', 'Military personnel', 'Trans people'))
+dt$subpop = factor(dt$subpop, 
+                   c("prisoner", "trans", "idu", "trucker", "msm", "uniform", "csw_customer", 
+                     "fisher", "miner", "other_groups", "csw", "customer"),    
+                   c("Prisoners", "Trans people", "IDUs", "Truckers", "MSM", 
+                     "Military personnel", "CSW Clients", "Fisher people", "Miners", 
+                     "Other groups", "CSWs", "Patients")) 
 
+#------------------------------------
 # create smaller health facility groupings for graphs 
+
 dt[grep('hospital',facility_level), next_level:='Hospitals']
 dt[facility_level=='reference_health_center', next_level:='Reference health centers']
-dt[facility_level=='health_center' | facility_level=='health_post' , next_level:='Health centers and health posts']
+dt[facility_level=='health_center' | facility_level=='health_post' | facility_level=='dispensary', next_level:='Health centers, posts, and dispensaries']
 dt[is.na(next_level), next_level:='Other types of facilities']
+
+# factor facility level for graphs
+dt$facility_level = factor(dt$facility_level, 
+                  rev(c("health_center", "reference_health_center", "health_post", "hospital", 
+                    "general_reference_hospital", "hospital_center", "medical_center",
+                    "clinic", "secondary_hospital",  "dispensary","polyclinic", "medical_surgical_center")),
+                  rev(c("Health Center", "Reference Health Center", "Health Post", "Hospital", 
+                    "General Reference Hospital", "Hospital Center", "Medical Center",
+                    "Clinic", "Secondary Hospital",  "Dispensary","Polyclinic", "Medical surgical center")))
 
 #------------------------------------------------------------------
 # HIV Testing Visualizations
 
-pdf("C:/Users/ccarelli/Documents/outputs/hiv_graphs.pdf", width=12, height=9)
-
-# 
-# pdf(paste0(dir, 'outputs/pnls/pnls_vct_graphs.pdf'), width=12, height=7)
+ pdf(paste0(dir, 'outputs/pnls_hiv_testing/pnls_vct_graphs.pdf'), width=12, height=7)
 
 #----------------------
 # COLOR SCHEMES
@@ -77,6 +87,8 @@ quad_colors = c('#542788','#66bd63', '#b2182b', '#4575b4')
 sex_colors = c('#b2182b', '#4575b4')
 tri_colors = c('#a50026', '#fdae61', '#abd9e9')
 test_colors = c('#a50026', '#fdae61',  '#4575b4')
+colors12 = c(brewer.pal(11, 'Spectral'), '#a6d96a')
+bi= c("#fdae61", "#8073ac")
 
 #----------------------
 
@@ -124,8 +136,8 @@ ggplot(fac, aes(x=date, y=value, color=sex, group=sex)) +
   facet_wrap(~variable, scales='free_y') +
   scale_color_manual(values=quad_colors) +
   theme_bw() + labs(x='Date', y='Count', color='',
-                    title="Reporting completeness: facilities reporting and patients receiving a consultation",
-                    caption="Source: SNIS") +
+                    title="Reporting completeness: facilities reporting and patients who received a consultation*",
+                    caption='*Indicator: new patients who received a treatment consultation') +
   theme(text=element_text(size=18), axis.title=element_text(size=18), axis.text=(element_text(size=16)),
         plot.title=element_text(size=20), legend.text =element_text(size=18),
         plot.subtitle=element_text(size=16))
@@ -143,25 +155,48 @@ ggplot(fac2, aes(x=date, y=facilities_reporting, color=facility_level)) +
   facet_wrap(~hc, scales='free_y') +
   theme_bw() + labs(x='Date', y='Facilities reporting', color='Health facility level',
                     title="Reporting completeness by health facility level",
-                    subtitle=("Health centers reported separately in order to highlight scale of reporting"),
+                    subtitle=("Health centers reported separately in order to highlight the scale of reporting"),
                     caption="Source: SNIS-PNLS")
+
+#-----------------
+# bar graph of reporting composition over time by health facility level
+
+fac_bar = dt[ ,.(facilities = length(unique(org_unit_id))), by=.(date, facility_level)]
+
+ggplot(fac_bar[!is.na(facility_level)], aes(x=date, y = facilities, fill = facility_level)) + 
+  geom_bar(position = "fill",stat = "identity") +
+  labs(x='Date', y='Percentage of all health facilities reporting',
+       title='Composition of facilities reporting', fill="Facility level") +
+  scale_fill_manual(values = colors12) +
+  theme_bw()
 
 #-----------------
 # reporting by smaller groupings of health facilities
 
 sample = dt[ ,length(unique(org_unit_id))]
-
 final_report = dt[ ,.(facilities=length(unique(org_unit_id))), by=.(next_level, date)]
+
 ggplot(final_report, aes(x=date, y=facilities, color=next_level)) +
   geom_point(alpha=0.4) +
   geom_line() +
   theme_bw() + labs(x='Date', y='Count', color='Health facility level',
                     title="Total health facilities reporting by level",
-                    subtitle=(paste0(sample, " facilities have ever reported to PNLS")),
+                    subtitle=(paste0(sample, " facilities reported to PNLS on HIV testing")),
                     caption="Source: SNIS")
 
 #-----------------
+# bar graph of reporting composition over time by aggregate categories of facility level
+
+ggplot(final_report[!is.na(next_level)], aes(x=date, y = facilities, label=facilities, fill = next_level)) + 
+  geom_bar(position = "fill",stat = "identity") +
+  labs(x='Date', y='Percentage of all health facilities reporting', 
+       fill='Facility level', title='Composition of health facilities by facility category') +
+  scale_fill_manual(values = colors12) +
+  theme_bw()
+
+#-----------------
 # facilities reported out of ever reported (percentage)
+
 ever_reported = dt[ ,.(total_report=length(unique(org_unit))), by=facility_level]
 totals = merge(fac2, ever_reported, by='facility_level', all.x=T)
 totals[ ,reporting_ratio:=round(100*(facilities_reporting/total_report))]
@@ -199,30 +234,21 @@ ggplot(all, aes(x=date, y=value, color=variable)) +
   geom_point() +
   geom_line() +
   labs(x='Date', y='Count', 
-       title='Counts of variables', color="Variables in the VCT data set") +
+       title='Counts of variables in PNLS-VCT', color="Variables in the VCT data set") +
   theme(text = element_text(size=18)) +
   theme_bw()
 
-# every variable on one graph - bar
-all2 = dt[ ,.(value=sum(value)), by=variable][order(value)]
-
-ggplot(all2, aes(x=variable, y=value, fill='#998ec3')) +
-  geom_bar(stat='identity') +
-  theme(axis.text.x=element_text(size=16, angle=90), axis.text.y=element_text(size=16)) +
-  theme_bw() +
-  scale_fill_manual(values='#998ec3') +
-  guides(fill=F) +
-  theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90)) +
-  scale_y_continuous(labels = scales::comma)
+#-----------------------------------------------------------------
 
 #-----------------------------------------------------------------
-# tests performed 
+# TESTS PERFORMED
 
 tests = dt[variable=='Tested' | variable=='Counseled' | variable=='Tested and received the results' | variable=='Tested and informed of their results']
 
-tests$variable = factor(tests$variable, c("Counseled", "Tested and received the results", "Tested",
+tests$variable = factor(tests$variable,
+                        c("Counseled", "Tested and received the results", "Tested",
                           "Counseled and tested", "Tested and informed of their results"),                        
-        c("Counseled", "Tested and received the results", "Tested",
+                          c("Counseled", "Tested and received the results", "Tested",
                           "Counseled and tested", "Tested and informed of the results"))
 
 #----------------------
@@ -236,7 +262,7 @@ ggplot(t1, aes(x=date, y=value, color=variable))+
   scale_color_manual(values=brewer.pal(5, 'RdYlBu')) +
   labs(color="", x='Date', y='Count', 
        title='HIv testing variables') +
-  theme(text = element_text(size=26)) +
+  theme(text = element_text(size=18)) +
   scale_y_continuous(labels = scales::comma)
 
 #----------------------
@@ -252,7 +278,7 @@ ggplot(t2, aes(x=variable, y=value, fill=year)) +
   scale_fill_manual(values=rev(brewer.pal(4, 'Blues'))) +
   labs(title = 'HIV testing variables', x="",
        y='Count', fill="Year") +
-  theme(text = element_text(size=22))
+  theme(text = element_text(size=18),  axis.text.x=element_text(size=12, angle=90))
 
 #------------------------------
 # subset to the key testing variables
@@ -268,7 +294,7 @@ ggplot(t3, aes(x=variable, y=value, fill=year)) +
   scale_fill_manual(values=sex_colors) +
   labs(title = 'HIV testing and counseling',
        y='Count', fill="Year", x="") +
-  theme(text = element_text(size=22))
+  theme(text = element_text(size=18))
 
 #------------------------------
 # time trend of key testing variable
@@ -278,6 +304,22 @@ t4 = tests_alt[ ,.(value=sum(value)), by=.(variable, date)]
 ggplot(t4, aes(x=date, y=value, color=variable)) +
   geom_point() +
   geom_line() +
+  scale_color_manual(values=sex_colors) +
+  labs(color="", x='Date', y='Count', 
+       title='HIV testing and counseling') +
+  theme(text = element_text(size=18)) + 
+  theme_bw() + 
+  scale_y_continuous(labels = scales::comma)
+
+#------------------------------
+# time trend of key testing variables by sex
+t5 = tests_alt[ ,.(value=sum(value)), by=.(variable, date, sex)]
+
+ggplot(t5[!is.na(sex)], aes(x=date, y=value, color=sex)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~variable) +
+  scale_color_manual(values=sex_colors) +
   labs(color="", x='Date', y='Count', 
        title='HIV testing and counseling') +
   theme(text = element_text(size=20)) + 
@@ -285,8 +327,28 @@ ggplot(t4, aes(x=date, y=value, color=variable)) +
   scale_y_continuous(labels = scales::comma)
 
 #------------------------------
+# tested and received the results by sex, subpop
+
+t6 = tests_alt[variable=='Tested and received the results',.(value=sum(value)), by=.(date, sex, subpop)]
+
+ggplot(t6, aes(x=date, y=value, color=sex)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~subpop, scales='free_y') +
+  scale_color_manual(values=sex_colors) +
+  labs(color="", x='Date', y='Count',
+       caption = 'Note: gender of trans people likely not consistently recorded',
+       title='HIV testing and counseling') +
+  theme(text = element_text(size=20)) + 
+  theme_bw() + 
+  scale_y_continuous(labels = scales::comma)
+
+#-------------------------------------------------------------
+# NORMALIZED TESTING VARIABLES
+
 # mean patients counseled and tested by facility and by sex
 
+#-----------------------------------
 # mean tests per facility
 mean_tests = tests_alt[ , .(value=sum(value), facilities=length(unique(org_unit_id))), by=.(date, variable)]
 mean_tests[ ,mean_tests:=value/facilities]
@@ -295,10 +357,12 @@ ggplot(mean_tests, aes(x=date, y=mean_tests, color=variable)) +
   geom_point() +
   geom_line() +
   theme_bw() +
+  scale_color_manual(values=bi) +
   labs(color="", x='Date', y='Count', 
        title='Mean HIV patients counseled and tested per facility per month') +
   theme(text = element_text(size=20))
 
+#-----------------------------------
 # mean tests per facility by level
 mean_tests2 = tests_alt[ , .(value=sum(value), facilities=length(unique(org_unit_id))), by=.(date, facility_level, next_level)]
 mean_tests2[ , mean_tests:=value/facilities]
@@ -313,7 +377,25 @@ ggplot(mean_tests2, aes(x=date, y=mean_tests, color=facility_level)) +
   theme(text = element_text(size=20)) +
   scale_y_continuous(labels = scales::comma)
 
-#------------------------------
+#-----------------------------------
+# mean tests per facility per month by level 
+
+sun = c(brewer.pal(12, 'YlOrRd'), brewer.pal(5, 'Reds'))
+
+mean_tests_cat = tests_alt[ , .(value=sum(value), facilities=length(unique(org_unit_id))), by=.(date, facility_level)]
+mean_tests_cat[ , mean_tests:=value/facilities]
+mean_tests_cat[ , mean_tests_mo:=mean(mean_tests), by=facility_level]
+mean_tests_cat = mean_tests_cat[ ,.(mean_tests=unique(mean_tests_mo)), by=facility_level][rev(order(mean_tests))]
+
+ggplot(mean_tests_cat[!is.na(facility_level)], aes(x=reorder(facility_level, -mean_tests), y = mean_tests, fill=facility_level)) +
+  geom_bar(stat='identity') +
+  scale_fill_manual(values=sun) +
+  theme_bw() +
+  labs(title='Mean tests performed per month per facility by facility level',
+       x='Facility level', y='Mean tests per facility per month', fill="Facility level") +
+  theme(text=element_text(size=16), axis.text.x = (element_text(angle=90)))
+
+#-----------------------------------
 
 #----------------------------------------------------------
 # testing among key populations
@@ -373,14 +455,18 @@ ggplot(t6[subpop!='Patients'], aes(x=subpop, y=mean_tests, label=mean_tests, fil
   geom_text(aes(label=mean_tests), vjust=-1, position=position_dodge(0.9)) +
   theme_bw() +
   scale_fill_manual(values = c('#66bd63', '#fee08b')) +
-  labs(title = 'Mean patients per health facility who were testged and received their results',
+  labs(title = 'Mean patients per health facility who were tested and received their results',
        y='Tested for HIV', x="Key population", fill="Year") +
   theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
 
 
 #-----------------------------------------------------------------
-# case identification
 
+
+#-----------------------------------------------------------------
+# HIV CASE  IDENTIFICATION 
+
+#---------------------------------
 cases = dt[variable=='HIV+' | variable=='HIV+ and informed of their results']
 
 # check the cases variable
@@ -390,6 +476,7 @@ cases = dt[variable=='HIV+' | variable=='HIV+ and informed of their results']
           geom_point() +
           geom_line() +
           facet_wrap(~sex) +
+    
           theme_bw() +
    labs(title = 'Patients who tested HIV+',
         y='HIV+', x="Date", color='Sex') +
@@ -411,8 +498,15 @@ ggplot(c2, aes(x=date, y=ratio, color=sex)) +
        y='Percent (%)', x="Date", color='Sex') +
   theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
 
+#----------------------------------------------------------------------------------------
+# tests by funder
+
+
+
+
+
 #---------------------------------------
-# cases by key populationm, year, funder
+# cases by key population, year, funder
 
 hiv = dt[variable=='HIV+']
 
@@ -621,6 +715,12 @@ ggplot(cad3[subpop!='Patients'], aes(x=subpop, y=value, label=value, fill=variab
 
 
 #----------------------------------------------------
+
+
+
+
+
+
 
 #----------------------------------------------------
 
