@@ -717,9 +717,9 @@ gen_mean_units1 = function(dt=dt, coord_ann=coord_ann, drug_id, drug_name, date_
     scale_fill_gradientn(colors=(brewer.pal(9, 'Reds'))) +
     theme_void() +
     facet_wrap(~year, strip.position="bottom") +
-    labs(title=paste0(drug_name, " kits per facility, by district"), subtitle="Annual data restricted to Jan-Aug",
+    labs(title=paste0(drug_name, " units per facility, by district"), subtitle="Annual data restricted to Jan-Aug",
          caption="*Denominator only includes facilities with 'available, usable stock' of this drug",
-         fill="Kits per facility")
+         fill="Units per facility")
   return(mean_units1)
 }
 
@@ -757,13 +757,13 @@ gen_mean_units2 = function(dt=dt, coord_ann=coord_ann, drug_id, drug_name, date_
     geom_polygon() + 
     theme_void() + 
     facet_wrap(~year) + 
-    scale_fill_gradientn('Kits per\nFacility', colours=ratio_colors) + 
+    scale_fill_gradientn('Units per\nFacility', colours=ratio_colors) + 
     coord_fixed(ratio=1) + 
     scale_x_continuous('', breaks = NULL) + 
     scale_y_continuous('', breaks = NULL) + 
-    labs(title=paste0(drug_name, " kits per facility, by district"), subtitle="Annual data restricted to Jan-Aug",
+    labs(title=paste0(drug_name, " units per facility, by district"), subtitle="Annual data restricted to Jan-Aug",
          caption="*Denominator only includes facilities with 'available, usable stock' of this drug",
-         fill="Kits per facility") + 
+         fill="Units per facility") + 
     theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) + 
     geom_label_repel(data = labels, aes(label = label, x = lon, y = lat, group = label), inherit.aes=FALSE, size=3)
   return(mean_units2)

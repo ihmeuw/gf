@@ -31,6 +31,10 @@ dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepp
 saveDir = paste0(j, 'Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pnls/')
 codeDir = paste0(repo_root, "outcome_measurement/all/cod/dhis/dhis_analysis/pnls_supplychain/")
 
+#Set boolean switches
+use_sigl_only = TRUE
+
+#Source functions
 source(paste0(codeDir, "4_set_up_data.r"))
 source(paste0(codeDir, "4_pnls_supplychain_graph_functions.r"))
 #-----------------------------------------------
@@ -223,3 +227,4 @@ plot
 plot = gen_full_months2_18(dt, coord_months, drug_id, drug_name, full_date_range)
 plot
 ```
+

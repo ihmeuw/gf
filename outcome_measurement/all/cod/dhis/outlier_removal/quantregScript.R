@@ -19,16 +19,15 @@ i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
 
 # file paths
-scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg2/')
+scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
 arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 parallelDir = paste0(scratchDir, 'parallel_files/')
-outFile = paste0(parallelDir, 'quantreg_output', i, '.fst')
+outFile = paste0(parallelDir, 'quantreg_output_', i, '.fst')
 
 # read in the array table 
 array_table = read.fst(arrayFile)
-array_table = as.data.table(array_table)
-head(array_table)
+array_table = data.table(array_table)
 
 # read org unit from the array table
 # o = array_table[i]$org_unit_id # unique facility id
@@ -41,8 +40,7 @@ print(e)
 #------------------------------------
 
 dt = read.fst(scratchInFile)
-dt = as.data.table(dt)
-#subset = dt[org_unit_id==o, ] 
+dt = data.table(dt)
 subset = dt[element_id==e, ] 
 #------------------------------------
 

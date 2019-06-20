@@ -79,8 +79,11 @@ dt[ , element1:=fix_diacritics(tolower(element))]
 #--------------------------------------
 # create subpopulations from the elements
 
+# identify customers/patients
+dt[grepl('client', element1) & !grepl('ps', element1), subpop:='customer']
+
 # run other first in case more specific populations are included
-dt[grep('autres', element1), subpop:='others']
+dt[grep('autres', element1), subpop:='other_groups']
 dt[grep('prisonniers', element1), subpop:='prisoner']
 dt[grep('udi', element1), subpop:='idu']
 dt[grep('tg', element1), subpop:='trans']
@@ -107,8 +110,8 @@ dt[grep('svs', element1), subpop:='svs']
 dt[grep('survivants', element1), subpop:='svs'] 
 
 # commercial sex workers and clients
-dt[grep('ps', element1), subpop:='csw']
-dt[grep('client', element1), subpop:='csw_client']
+dt[grep('ps', element1), subpop:='csw'] # will include sex worker customers
+dt[grepl('client', element1) & grepl('ps', element1), subpop:='csw_customer'] # overwrite sex worker customers
 
 # refugees and idps
 dt[grep('deplaces', element1), subpop:='idp']
@@ -129,7 +132,6 @@ dt[grep('enfants de rue', element1), subpop:='street_children']
 dt[grep('enfants', element1), subpop:='exposed_infant']
 dt[grep('eev', element1), subpop:='exposed_infant']
 dt[grep('handicap', element1), subpop:='disabled']
-
 
 #------------------------------------------------------------
 # save interim output 
@@ -243,25 +245,20 @@ saveRDS(dt, paste0(dir, 'pre_prep/merged/pnls_subset_', min, '_', max, '_subpops
 #------------------------------------
 # collapse on category
 
-# check that the number of rows is the same before and after 
-before = nrow(dt)
-
 # the categories are now reflected in the sex, age, subpop, and maternity variables
 names = names(dt)[names(dt)!='category' & names(dt)!='value' & names(dt)!='country']
 dt = dt[ ,.(value=sum(value, na.rm=T)), by=names]
 
 # check that the number of rows is the same before and after 
-after = nrow(dt)
-if (before!=after) print("Houston, we have a problem. There is an issue with the category collapse.")
+
 
 #-------------------------------------
 # save a single data set 
 
-saveRDS(dt, paste0(dir, 'prepped/pnls_sets/pnls_clean_all_sets.rds'))
+saveRDS(dt, paste0(dir, 'prepped/pnls_sets/pnls_clean_all_sets_', min, '_', max, '.rds'))
 
 #--------------------------------------
 # save each data set as a distinct RDS file
-
 
 # save the sets 
 for (s in unique(dt$pnls_set)) {
@@ -271,4 +268,19 @@ for (s in unique(dt$pnls_set)) {
                              set_name,'_', min, '_', max,'.rds')) }
 
 #----------------------------------------
+# data set reporting diagnostic plots
+
+set_counts = dt[ ,.(value=length(unique(org_unit_id))), by=.(date, pnls_set)]
+
+ggplot(set_counts, aes(x=date, y=value, color=pnls_set)) +
+  geom_point() +
+  geom_line() +
+  labs(x="Date", y="Facilities reporting",
+       title='Total facilities reporting by data set within PNLS') +
+  theme_bw() +
+  theme(text=element_text(size=18))
+
+#--------------------------------------------------------------------
+
+
 
