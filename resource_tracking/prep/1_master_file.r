@@ -26,9 +26,9 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = FALSE
+prep_files = TRUE
 prep_gos = FALSE
-prep_fgh = TRUE
+prep_fgh = FALSE
 prep_ghe = FALSE
 
 #Processing options 
@@ -43,7 +43,7 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
-    country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+    country = "sen" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
     master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
     export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
   }
@@ -63,8 +63,8 @@ if (prep_files | prep_gos){
   }
   source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
   source(paste0(code_dir, "2d_gf_aggregate_files.R"))
-  source(paste0(code_dir, "2e_gf_verify_outputs.R"))
-  rmarkdown::render(paste0(code_dir, "2f_gf_visualize_data.rmd"))
+  # source(paste0(code_dir, "2e_gf_verify_outputs.R"))
+  # rmarkdown::render(paste0(code_dir, "2f_gf_visualize_data.rmd"))
 }
 # ----------------------------------------------
 # STEP 3: PREP FGH ACTUALS AND ESTIMATES 

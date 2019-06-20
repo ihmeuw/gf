@@ -49,7 +49,7 @@ if (prep_files == TRUE){
 #----------------------------------------------------
 if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
-  pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
+  pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B', 'ALF RFR_7')
   general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
                                       'DETAIL')
   

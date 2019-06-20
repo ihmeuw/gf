@@ -33,7 +33,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # Files and directories
   
   #Sanity check: Is this sheet name one you've checked before? 
-  verified_sheet_names <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B')
+  verified_sheet_names <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B', 'ALF RFR_7')
   if (!sheet_name%in%verified_sheet_names){
     print(sheet_name)
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
@@ -52,6 +52,26 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   budget_col <- grep("Budget for Reporting Period", gf_data)
   expenditure_col <- grep("Actual Expenditure", gf_data)
   lfa_adjustment_col <- grep("Local Fund Agent Adjustment on Expenditures", gf_data)
+  
+  if (sheet_name == "ALF RFR_7"){
+    module_col = grep("Macrocatégorie", gf_data)
+    intervention_col = grep("Domaine de prestation de services", gf_data)
+    budget_col = grep("Budget", gf_data) 
+    budget_col = budget_col[1] #Just want the first observation of budget. 
+    if (intervention_col+1 != budget_col){
+      stop("This file has a different format than ones reviewed before. Review raw data")
+    }
+    lfa_adjustment_col = grep("Ajustement au budget par l'ALF", gf_data)
+    expenditure_col = grep("Dépenses", gf_data)
+    expenditure_col = expenditure_col[2] #You want the second observation here, to skip LFA adjustment column. 
+    if (inFile == "Plan TB PUDR 2016.xlsx"){
+      expenditure_col = 7
+    }
+    if (is.na(lfa_adjustment_col) | is.na(expenditure_col)) stop("Expenditure or LFA adjustment columns are NA")
+    if ((lfa_adjustment_col+1) != expenditure_col){
+      stop("This file has a different format than ones reviewed before. Review raw data")
+    }
+  }
 
   #Remove the 'cumulative expenditure' and 'cumulative budget' columns.
   if (length(expenditure_col)!=1){
@@ -118,6 +138,13 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #Select only the section of the excel that's broken up by intervention
   start_row <- grep("modular approach", tolower(gf_data$module))
   end_row <- grep("grand total", tolower(gf_data$module))
+  
+  if (sheet_name == "ALF RFR_7"){
+    start_row = grep("Macrocatégorie", gf_data$module)
+    end_row1 = grep("Veuillez sélectionner...", gf_data$module)
+    end_row2 = grep("Veuillez sélectionner...", gf_data$intervention)
+    end_row = end_row1[end_row1%in%end_row2]
+  }
 
   x = 1
   while (end_row[x] < start_row){
@@ -130,16 +157,20 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   gf_data = gf_data[start_row:end_row, ]
 
   #Rename data, and remove invalid rows
-  check_drop <- gf_data[((is.na(module) | module == '0') & (is.na(intervention) | intervention == '0') & (is.na(budget)|budget=='0') & (is.na(expenditure)|expenditure=='0')),]
+  check_drop <- gf_data[((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
+                         & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+                         & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
   if (verbose == TRUE){
     print(paste0("Invalid rows currently being dropped: (only module and intervention columns shown) ", check_drop[, c('module', 'intervention')]))
   }
-  gf_data<-  gf_data[!((is.na(module) | module == '0') & (is.na(intervention) | intervention == '0')& (is.na(budget)|budget=='0') & (is.na(expenditure)|expenditure=='0')),]
+  gf_data<-  gf_data[!((is.na(module) | module == '0' | module=="Veuillez sélectionner...") 
+                       & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+                       & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)),]
 
   #Some datasets have an extra title row with "[Module]" in the module column.
   #It's easier to find this by grepping the budget column, though.
   extra_module_row <- grep("budget for reporting period", tolower(gf_data$budget))
-  extra_module_row = c(extra_module_row, grep("module", tolower(gf_data$module)))
+  extra_module_row = c(extra_module_row, grep("module|macrocatégorie", tolower(gf_data$module)))
   if (length(extra_module_row) > 0){
     if (verbose == TRUE){
       print(paste0("Extra rows being dropped in GTM PU/DR prep function. First column: ", gf_data[extra_module_row, 1]))
@@ -157,8 +188,8 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   }
 
   #Replace any modules or interventions that didn't have a pair with "Unspecified".
-  gf_data[is.na(module) | module == '0' , module:="Unspecified"]
-  gf_data[is.na(intervention) | intervention == '0' , module:="Unspecified"]
+  gf_data[is.na(module) | module == '0' | module == "Veuillez sélectionner..." , module:="Unspecified"]
+  gf_data[is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...", intervention:="Unspecified"]
 
   #-------------------------------------------------------------------------
   # 3. Generate date variables, and expand data to be at the quarter-level. 
