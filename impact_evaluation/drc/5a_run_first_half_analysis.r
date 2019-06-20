@@ -53,7 +53,7 @@ T = length(hzs)
 
 # store cluster command to submit array of jobs
 qsubCommand = paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
-		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
+		' -l fthread=1 -l m_mem_free=2G -q all.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
 		modelVersion, ' 1 FALSE')
