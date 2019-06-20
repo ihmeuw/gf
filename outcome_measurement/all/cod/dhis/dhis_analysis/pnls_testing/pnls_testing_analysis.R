@@ -77,8 +77,8 @@ dt$facility_level = factor(dt$facility_level,
 
 #------------------------------------------------------------------
 # HIV Testing Visualizations
-# 
-#  pdf(paste0(dir, 'outputs/pnls_hiv_testing/pnls_vct_graphs.pdf'), width=12, height=7)
+
+pdf(paste0(dir, 'outputs/pnls_hiv_testing/pnls_vct_graphs.pdf'), width=12, height=7)
 
 #----------------------
 # COLOR SCHEMES
@@ -486,32 +486,22 @@ ggplot(t6[subpop!='Patients'], aes(x=subpop, y=mean_tests, label=mean_tests, fil
 #-------------------------------
 # mean tests performed per facility for each sub population by funder, year
 
-tf = dt[ ,.(value=sum(value)), by=.(subpop, key_pop, year=year(date))]
-fac6 = dt[ ,.(facilities=length(unique(org_unit_id))), by=.(year=year(date))]
-t6 = merge(t6, fac6, by='year')
-t6[ ,mean_tests:=round(value/facilities, 1), by=.(year, subpop)]
+tf = dt[ ,.(value=sum(value)), by=.(subpop, funder, year=year(date))]
+facf = dt[ ,.(facilities=length(unique(org_unit_id))), by=.(year=year(date), funder)]
+tf = merge(tf, facf, by=c('year', 'funder'))
+tf[ , mean_tests:=round(value/facilities), by=.(year, subpop, funder)]
 
-ggplot(t6[subpop!='Patients'], aes(x=subpop, y=mean_tests, label=mean_tests, fill=factor(year))) +
+ggplot(tf[subpop!='Patients'], aes(x=subpop, y=mean_tests, label=mean_tests, fill=factor(year))) +
   geom_bar(stat="identity", position=position_dodge()) +
   geom_text(aes(label=mean_tests), vjust=-1, position=position_dodge(0.9)) +
+  facet_wrap(~funder) +
   theme_bw() +
-  scale_fill_manual(values = c('#66bd63', '#fee08b')) +
+  scale_fill_manual(values = c('#33a02c', '#b2df8a')) +
   labs(title = 'Mean patients per health facility who were tested and received their results',
        y='Tested for HIV', x="Key population", fill="Year") +
   theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
 
-
-#------------------------------
-# hiv tests performed by funder
-
-
-
-
-
-
 #-----------------------------------------------------------------
-
-
 #-----------------------------------------------------------------
 # HIV CASE  IDENTIFICATION 
 
@@ -552,10 +542,6 @@ ggplot(c2, aes(x=date, y=ratio, color=sex)) +
        subtitle = 'This ratio should never be over 100: data quality question',
        y='Percent (%)', x="Date", color='Sex') +
   theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
-
-
-
-
 
 #---------------------------------------
 # cases by key population, year, funder
@@ -767,12 +753,6 @@ ggplot(cad3[subpop!='Patients'], aes(x=subpop, y=value, label=value, fill=variab
 
 
 #----------------------------------------------------
-
-
-
-
-
-
 
 #----------------------------------------------------
 
