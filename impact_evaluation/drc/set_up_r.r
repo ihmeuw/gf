@@ -85,7 +85,7 @@ source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 # resource tracking files with prepped budgets, expenditures, disbursements
 budgetFile = paste0(rtDir, 'final_budgets.rds')
 expendituresFile = paste0(rtDir, 'final_expenditures.rds')
-fghFile = paste0(fghDir, 'prepped_current_fgh.rds')
+fghFile = paste0(fghDir, 'archive/prepped_current_fgh.rds')
 gheMalFile = paste0(fghDir, 'ghe_actuals_malaria.rds')
 whoFile = paste0(whoDir, 'who_prepped.rds')
 

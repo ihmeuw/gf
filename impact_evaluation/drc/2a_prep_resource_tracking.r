@@ -97,9 +97,11 @@ exp_subset[, year:=year(start_date)]
 exp_subset[, start_date:=NULL]
 
 #Match exp and FGH data to codes to only keep relevant modules/interventions (all = TRUE)
-drc_mal_map_codes = drc_mal_map[, .(code, indicator, indicator_type)]
-exp_subset = merge(exp_subset, drc_mal_map_codes, by=c('code'), allow.cartesian = TRUE)
-other_dah = merge(other_dah, drc_mal_map_codes, by=c('code'), allow.cartesian = TRUE)
+keep_codes = unique(drc_mal_map$code)
+exp_subset = exp_subset[code%in%keep_codes]
+check_m1_1 = exp_subset[year==2016 & code=="M1_1", .(sum(expenditure, na.rm=T))]
+stopifnot(check_m1_1 == 58438309)
+other_dah = other_dah[code%in%keep_codes]
 
 print(paste0("Codes kept in exp data: ", unique(exp_subset[, .(code)])))
 print(paste0("Codes kept in FGH data: ", unique(other_dah[, .(code)])))
