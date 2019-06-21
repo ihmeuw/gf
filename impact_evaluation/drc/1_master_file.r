@@ -4,6 +4,7 @@
 # DATE: Last updated January 2019. 
 # 
 # INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
+# This will execute the whole thing on the cluster: qsub -cwd -N master_run -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/master/ -o /ihme/scratch/users/davidp6/impact_evaluation/master/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/1_master_file.r
 # ----------------------------------------------
 
 #-----------------------------------------

@@ -33,7 +33,7 @@ dropVars = c('act_coverage','incidence','prevalence','mortality','itn_coverage',
 data = data[,-dropVars, with=FALSE]
 
 # convert date to numeric
-data[, date:=as.numeric(year(date)+((month(date)-1)/12))]
+if (class(data$date)=='Date') data[, date:=as.numeric(year(date)+((month(date)-1)/12))]
 
 # make MI ratio
 data[, case_fatality:=malariaDeaths/(newCasesMalariaMild+newCasesMalariaSevere)]
