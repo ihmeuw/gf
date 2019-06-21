@@ -90,8 +90,8 @@ if (rerun_adjust==TRUE) {
 # 4a and 4b will be very slow if not on IHME's cluster
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
-	source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
-	source('./impact_evaluation/drc/4b_set_up_for_second_half_analysis.r')
+	# source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
+	# source('./impact_evaluation/drc/4b_set_up_for_second_half_analysis.r')
 	source('./impact_evaluation/drc/4c_explore_first_half_data.r')
 	source('./impact_evaluation/drc/4d_explore_second_half_data.r')
 }
@@ -100,7 +100,7 @@ if (rerun_explore==TRUE) {
 # Run models 
 # ---------------------------------------
 if (rerun_models==TRUE) { 
-	source('./impact_evaluation/drc/5a_run_first_half_analysis.r')
+	# source('./impact_evaluation/drc/5a_run_first_half_analysis.r')
 	source('./impact_evaluation/drc/5b_run_second_half_analysis.r')
 }
 
