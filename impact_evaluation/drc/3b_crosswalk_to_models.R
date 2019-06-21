@@ -34,6 +34,12 @@ data[newCasesMalariaSevere_rate>100000, newCasesMalariaSevere_rate:=NA]
 data[newCasesMalariaSevere_under5_rate>50000, newCasesMalariaSevere_under5_rate:=NA]
 data[malariaDeaths_rate>500, malariaDeaths_rate:=NA]
 data[malariaDeaths_under5_rate>2000, malariaDeaths_under5_rate:=NA]
+
+# one health zone (butembo) has all zeroes for map estimates of act cvg, use its neighbor
+if(all(is.na(data[health_zone=='butembo']$act_coverage_rate))) { 
+	beni = data[health_zone=='beni']$act_coverage_rate
+	data[health_zone=='butembo', act_coverage_rate:=beni]
+}
 # ------------------------------------------------------------------
 
 
@@ -53,7 +59,9 @@ compInds = c('act_coverage_rate', 'itn_coverage_rate',
 print('Cross-walking indicators that have direct model estimates...')
 j=1
 for(i in seq(length(modInds))) {  
-	for(h in unique(data$health_zone)) { 
+	for(h in unique(data$health_zone)) {
+		print(i)
+		print(h)
 		# store variables
 		m = modInds[i]
 		c = compInds[i]

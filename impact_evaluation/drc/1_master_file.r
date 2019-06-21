@@ -76,7 +76,7 @@ if (rerun_merge==TRUE) {
 # Correct rates to model estimates
 # ---------------------------------------
 if (rerun_adjust==TRUE) { 
-	source('./impact_evaluation/drc/3b_correct_to_models.R')
+	source('./impact_evaluation/drc/3b_crosswalk_to_models.R')
 }
 
 # ---------------------------------------
