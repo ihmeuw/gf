@@ -10,6 +10,9 @@ library(fst)
 
 user = Sys.info()[['user']]
 
+# check if it sourced using direct sourcing
+print("I sourced! Very exciting.")
+
 #------------------------------------
 # handle arguments
 #------------------------------------
