@@ -60,8 +60,6 @@ print('Cross-walking indicators that have direct model estimates...')
 j=1
 for(i in seq(length(modInds))) {  
 	for(h in unique(data$health_zone)) {
-		print(i)
-		print(h)
 		# store variables
 		m = modInds[i]
 		c = compInds[i]
