@@ -23,7 +23,7 @@ data[SSCACT_under5>1000, SSCACT_under5:=NA]
 data[!is.finite(SP_rate), SP_rate:=NA]
 data[!is.finite(RDT_rate), RDT_rate:=NA]
 data[ACTs_CHWs_rate>1000, ACTs_CHWs_rate:=NA]
-data[ACTs_CHWs_under5_rate>500, ACTs_CHWs_under5_rate:=NA]
+# data[ACTs_CHWs_under5_rate>500, ACTs_CHWs_under5_rate:=NA]
 data[mildMalariaTreated_rate>2, mildMalariaTreated_rate:=NA]
 data[mildMalariaTreated_under5_rate>100, mildMalariaTreated_under5_rate:=NA]
 data[severeMalariaTreated_rate>2.5, severeMalariaTreated_rate:=NA]
@@ -102,6 +102,9 @@ adjInds = c('ACTs_CHWs_rate', 'severeMalariaTreated_rate',
 proxInds = c('mildMalariaTreated_rate', 'mildMalariaTreated_rate', 
 	'mildMalariaTreated_rate', 'newCasesMalariaMild_rate', 
 	'mildMalariaTreated_rate', 'mildMalariaTreated_rate', 'newCasesMalariaMild_rate')
+	
+proxInds = proxInds[!adjInds=='ACTs_CHWs_under5_rate'] # remove this for now... not ready
+adjInds = adjInds[!adjInds=='ACTs_CHWs_under5_rate']
 
 print('Cross-walking indicators that have proxy model estimates...')
 for(i in seq(length(modInds))) {  
