@@ -16,6 +16,7 @@
 # Set up R
 source('./impact_evaluation/drc/set_up_r.r')
 source('./core/standardizeHZNames.R')
+source('./core/standardizeDPSNames.R')
 reprep_rasters=FALSE
 # ----------------------------------------------
 
@@ -108,71 +109,120 @@ if(reprep_rasters==TRUE) {
 	# save here to avoid having to rerun this so much
 	saveRDS(data, outputFile2c_estimates)
 }
-if (reprep_rasters==FALSE) data = readRDS(outputFile2c_estimates)
+if (reprep_rasters==FALSE) data_est = readRDS(outputFile2c_estimates)
 # ------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------
 # Load/prep program data
 
-# load
-pnlp_snis = readRDS(combinedFile)
+# load data from outputs_activites and combined file to get new variables for outcomes_impact
+data_2b = readRDS(outputFile2b)
+pnlp_snis = readRDS(combined_data_file)
+pnlp_snis[ element == "B 10.2 Cas de fièvre dans une zone à risque du paludisme", indicator:= "SSCfevers"]
 
 # subset
-inds = c('severeMalariaTreated','mildMalariaTreated',
-	'ITN','RDT','SP','SSCACT',
-	'ANC','SSCcasesCrossReferred','SSCcasesReferred','suspectedMalaria',
-	'newCasesMalariaMild','newCasesMalariaSevere','malariaDeaths')
-pnlp_snis[indicator=='LLIN', indicator:='ITN']
+inds = c('simpleConfMalariaTreated','newCasesMalariaSimpleConf', 'newCasesMalariaSevere',
+	        'ANC','SSCfevers','suspectedMalaria', 'malariaDeaths', 'totalDeathsAllDiseases', 'SP')
+
+pnlp_snis = pnlp_snis[indicator %in% inds & date <= '2019-03-01']
+# check that all indicators are in the combined file
+if(!all(inds %in% pnlp_snis$indicator)) stop('Some indicators have gone missing from combinedFile')
+
 pnlp_snis[indicator=='simpleConfMalariaTreated', indicator:='mildMalariaTreated']
 pnlp_snis[indicator=='newCasesMalariaSimpleConf', indicator:='newCasesMalariaMild']
-pnlp_snis = pnlp_snis[!which(indicator=='ITN' & subpopulation %in% c('received','stockOutDays','available','lost'))]
-pnlp_snis = pnlp_snis[!which(indicator=='ITN' & subpopulation %in% c('distAtANC1', 'distAtANC2'))] # these appear to be included in "consumed"
-pnlp_snis = pnlp_snis[!which(indicator=='SP' & subpopulation%in%c('2nd','3rd','4th'))]
 pnlp_snis = pnlp_snis[!which(indicator=='ANC' & subpopulation%in%c('2nd','3rd','4th'))]
-pnlp_snis = pnlp_snis[!which(indicator=='RDT' & subpopulation!='completed')]
-if(!all(inds %in% pnlp_snis$indicator)) stop('Some indicators have gone missing from combinedFile')
-pnlp_snis = pnlp_snis[indicator %in% inds & date<'2018-07-01']
+pnlp_snis = pnlp_snis[!which(indicator=='SP' & subpopulation%in%c('2nd','3rd','4th', 'available', 'consumed', 'lost', 'received'))]
 
 # set aside under-5
 subpops = c('1to5yrs','2to11mos','under5','completedUnder5','0to11mos')
 under5 = pnlp_snis[subpopulation %in% subpops]
 under5[, indicator:=paste0(indicator,'_under5')]
 
+# check that data set is unique for date and indicator
+if ( nrow(unique(pnlp_snis[,.(indicator, date)])) != nrow(unique(pnlp_snis[,.(indicator, data_set, date)])) ) stop("Cannot sum over data set - you have overlapping dates in different data sets!")
+
 # aggreate out all remaining subpopulations (manually confirmed ok)
-byVars = c('dps','health_zone','date','indicator')
-pnlp_snis = pnlp_snis[!is.na(indicator), .(value_snis=sum(value)), by=byVars]
-under5 = under5[!is.na(indicator), .(value_snis=sum(value)), by=byVars]
+byVars = c('dps','health_zone','date','year', 'indicator', 'data_set')
+pnlp_snis = pnlp_snis[, .(value_snis=sum(value)), by=byVars]
+under5 = under5[, .(value_snis=sum(value)), by=byVars]
 
 # add under-5s as new rows
 pnlp_snis = rbind(pnlp_snis, under5)
-
-# make year variable
-pnlp_snis[, year:=year(date)]
 # ------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------
-# Append and reshape
+# Append data together and reshape
+pnlp_snis[, dps:=standardizeDPSNames(dps)]
 
 # standardize health zones
-data[, health_zone:=standardizeHZNames(health_zone)]
-pnlp_snis[, health_zone:=standardizeHZNames(health_zone)]
+data_est[, health_zone:=standardizeHZNames(health_zone)]
+  
+# health zone name changes to make other data sources consistent with PNLP (see PNLP documenation for more info)
+data_est[health_zone == "kashobwe", health_zone := "kasenga" ]
+data_est[health_zone == "alimbongo", health_zone := "lubero"]
+data_est[health_zone == "kibirizi", health_zone := "rutshuru"]
+data_est[health_zone == "mabalako", health_zone := "beni"]
+data_est[health_zone == "kamango", health_zone := "mutwanga"]
 
 # collapse out DPS FIX ME!!!
-byVars = c('health_zone','indicator','year')
-data = data[, .(value_lbd=sum(value_lbd)), by=byVars]
+byVars = c('health_zone','indicator','year') 
+data_est = data_est[, .(value_lbd=sum(value_lbd)), by=byVars]
+
+# *******CHECK THIS********
+# aggregate pnlp_snis data to quarterly level data..
+pnlp_snis[, quarter := quarter(date)]
+# make date format match data_2b
+pnlp_snis[, quarter := as.character(quarter)]
+pnlp_snis[ quarter == '1', quarter:= '.00']
+pnlp_snis[ quarter == '2', quarter:= '.25']
+pnlp_snis[ quarter == '3', quarter:= '.50']
+pnlp_snis[ quarter == '4', quarter:= '.75']
+pnlp_snis[, year := as.character(year)]
+pnlp_snis[, date := paste0(year, quarter)]
+pnlp_snis[, quarter := NULL]
+pnlp_snis[, date := as.numeric(date)]
+
+# date is now quarterly so can sum over this variable for date
+pnlp_snis = pnlp_snis[, .(value_snis=sum(value_snis)), by=.(dps, health_zone, date, year, indicator)]
+
+# change this so SP isn't duplicated when we combine pnlp_snis and data_2b... also
+# we decided to use the sum of SP 1st, 2nd, 3rd, and 4th(where applicable) for outputs,
+# but only SP_1st to get SP rate over ANC visits for outcomes
+data_2b[indicator == "SP", indicator := "SP_all"]
+
+#make data_2b match with pnlp_snis
+setnames(data_2b, "value", "value_snis")
+data_2b[, date := as.character(date)]
+data_2b[, year := substr(date, 1, 4)]
+data_2b[, date := as.numeric(date)]
+data_2b[, year := as.numeric(year)]
+
+pnlp_snis = rbindlist(list(pnlp_snis, data_2b), use.names = TRUE, fill = TRUE)
+# *************************
+
+# collapse out DPS (cont.)
 pnlp_snis = pnlp_snis[, .(value_snis=sum(value_snis)), by=c(byVars, 'date')]
 
 # reshape wide FIX ME
-data_wide = dcast(data, health_zone+year~indicator, value.var='value_lbd')
+data_est_wide = dcast(data_est, health_zone+year~indicator, value.var='value_lbd')
 pnlp_snis_wide = dcast(pnlp_snis, health_zone+date+year~indicator, value.var='value_snis')
 
 # combine data FIX ME! ADD DPS TO HANDLE DUPLICATE HZ NAMES
-data_wide = data_wide[year>=min(pnlp_snis_wide$year) & year<=max(pnlp_snis_wide$year)]
-data_wide = merge(data_wide, pnlp_snis_wide, by=c('health_zone','year'), all.y=TRUE)
+data_est_wide = data_est_wide[year>=min(pnlp_snis_wide$year) & year<=max(pnlp_snis_wide$year)]
+pnlp_snis_wide[ , year := as.numeric(year)]
 
-data_wide = data_wide[!is.na(health_zone)]
+# hz_shp = unique(data_est_wide$health_zone)
+# hz_pnlp_snis = unique(pnlp_snis_wide$health_zone)
+# hz_pnlp_snis[!hz_pnlp_snis %in% hz_shp]
+# hz_shp[!hz_shp %in% hz_pnlp_snis]
+# length(hz_pnlp_snis[hz_pnlp_snis %in% hz_shp])
+# length(hz_shp[hz_shp %in% hz_pnlp_snis])
+
+data_wide = merge(data_est_wide, pnlp_snis_wide, by=c('health_zone','year'), all.y=TRUE)
+
+# data_wide = data_wide[!is.na(health_zone)]
 # ------------------------------------------------------------------------
 
 
@@ -188,20 +238,26 @@ data_wide[, all_missing:=all(is.na(population)), by='health_zone']
 data_wide = data_wide[all_missing!=TRUE]
 data_wide$all_missing = NULL
 
-# one health zone has all zeroes for incidence. drop it too
-data_wide[incidence==0, incidence:=NA]
-data_wide[, all_missing:=all(is.na(incidence)), by='health_zone']
-data_wide = data_wide[all_missing!=TRUE]
-data_wide$all_missing = NULL
+# # one health zone has all zeroes for incidence. drop it too
+# data_wide[incidence==0, incidence:=NA]
+# data_wide[, all_missing:=all(is.na(incidence)), by='health_zone']
+# data_wide = data_wide[all_missing!=TRUE]
+# data_wide$all_missing = NULL
 # ------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------
 # Compute rates 
+# set var names to be what's below:
+setnames(data_wide, 'ACTs_SSC', 'SSCACT')
+setnames(data_wide, 'RDTs_SSC', 'SSCRDT')
+setnames(data_wide, 'ITN_consumed', 'ITN') # is this right? it would be ITNs used/distributed not ITNs recevied (at health facilities) 
+setnames(data_wide, 'RDT_completed', 'RDT')
 
 # program data
-data_wide[, ACTs_CHWs_rate:=SSCACT/(SSCcasesCrossReferred+SSCcasesReferred)]
-data_wide[, ACTs_CHWs_under5_rate:=SSCACT_under5/(SSCcasesCrossReferred_under5+SSCcasesReferred_under5)]
+data_wide[, ACTs_CHWs_rate:=SSCACT/SSCfevers]
+  # data_wide[, ACTs_CHWs_under5_rate:=SSCACT_under5/(SSCfevers)]
+data_wide[, RDTs_CHWs_rate:=SSCRDT/SSCfevers]
 data_wide[, SP_rate:=SP/ANC]
 data_wide[, RDT_rate:=RDT/suspectedMalaria]
 data_wide[, ITN_rate:=ITN/population]
@@ -243,7 +299,7 @@ data_wide[, mortality_rate:=(mortality/12)/population*100000]
 # Identify HZs with iCCM
 
 # all iccm data before 2015 was imputed
-iccmVars = c('SSCACT','SSCcasesCrossReferred','SSCcasesReferred','ACTs_CHWs_rate')
+iccmVars = c('SSCACT','SSCfevers','ACTs_CHWs_rate')
 iccmVars = c(iccmVars, paste0(iccmVars,'_under5'))
 for(v in iccmVars) data_wide[year<2015, (v):=0]
 # ------------------------------------------------------------------------

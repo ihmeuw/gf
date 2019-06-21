@@ -83,7 +83,7 @@ id_vars = c("id", "dps", "health_zone", "date", "donor", "operational_support_pa
 
 dt[, random:=NULL]
 
-if (dim(dt)[1] != 2477400 | dim(dt)[2] != 89) stop("check data - dimensions aren't right")
+if (dim(dt)[1] != 2477400 ) stop("check data - dimensions aren't right")
 
 # include imputation number in the id_vars used to exponentiate the data set so exp() happens for each of the 50 imputations
 imputed_id_vars <- c(id_vars, "imputation_number", "combine")
@@ -105,7 +105,7 @@ dt = merge(dtExp, dtFac, by = imputed_id_vars )
 
 # reps = max(dt$imputation_number)
 # zeroes = do.call("rbind", replicate(reps, zeroes, simplify = FALSE))
-if (dim(dt)[1] != 2477400 | dim(dt)[2] != 89) stop("check data - dimensions aren't right")
+if (dim(dt)[1] != 2477400) stop("check data - dimensions aren't right")
 
 # convert values back to 0s that were originally 0s
 for (var in inds){

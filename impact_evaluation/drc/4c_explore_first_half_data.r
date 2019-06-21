@@ -52,6 +52,9 @@ varGroups = lapply(lhsVars, function(v) {
 long = melt(sample, id.vars=c('orig_health_zone','health_zone','date'))
 long = merge(long, nodeTable, by='variable', all.x=TRUE)
 long[is.na(label), label:=variable]
+long_untr = melt(sample_untr, id.vars=c('orig_health_zone','health_zone','date'))
+long_untr = merge(long_untr, nodeTable, by='variable', all.x=TRUE)
+long_untr[is.na(label), label:=variable]
 # ----------------------------------------------
 
 
@@ -83,7 +86,8 @@ histograms_untr = lapply(modelVars, function(v) {
 		facet_wrap(~health_zone, scales='free') + 
 		labs(title=paste('Histograms of', l, '(Without Transformation)'), 
 			y='Frequency', x=l, 
-			subtitle=paste('Random Sample of', n, 'Health Zones')) + 
+			subtitle=paste('Random Sample of', n, 'Health Zones'), 
+			caption='Variables are pre-transformation.') + 
 		theme_bw()
 })
 # -------------------------------------------------------------------
@@ -100,6 +104,18 @@ tsPlots = lapply(seq(length(varGroups)), function(g) {
 			subtitle=paste('Random Sample of', n, 'Health Zones'),
 			caption='Variables are post-transformation. Transformations may include: 
 			cumulative, log, logit and lag.') + 
+		theme_bw()
+}) 
+
+# untransformed data
+tsPlots = lapply(seq(length(varGroups)), function(g) {
+	l = nodeTable[variable==lhsVars[g]]$label
+	ggplot(long[variable%in%varGroups[[g]]], aes(y=value, x=date, color=label)) + 
+		geom_line() + 
+		facet_wrap(~health_zone) + 
+		labs(title=paste('Time series of variables related to', l), y='Value', x='Date', 
+			subtitle=paste('Random Sample of', n, 'Health Zones'),
+			caption='Variables are pre-transformation.') + 
 		theme_bw()
 }) 
 # ---------------------------------------------------------------------------------------
