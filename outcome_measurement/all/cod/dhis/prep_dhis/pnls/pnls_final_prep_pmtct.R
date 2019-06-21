@@ -26,11 +26,11 @@ setwd(dir)
 #---------------------------------------
 # load the file that represents a subset (no sex or )
 
-dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_pmtct_2017_01_01_2018_12_01.rds'))
+dt = readRDS(paste0(dir, 'prepped/pnls_sets/pnls_pmtct_2017_01_01_2019_02_01.rds'))
 
 #----------------------------------------------
 #Add in subpops that weren't captured before
-dt[grep("AMF", element), subpop:='AMF']
+dt[grep("AMF", element), subpop:='AMF'] #Autres membres de familles
 dt[element_id=='eVULOZGDgFZ', subpop:='plw']
 
 #--------------------------------------------
@@ -74,7 +74,7 @@ dt[, eev:=grepl("EEV|Enfant", element)]
 
 # to do this on the cluster, you must export as an RDS, then use local code to save
 elements = dt[ ,.(element = unique(element)), by=.(element_id)]
-set = dt[ ,tolower(unique(set))]
+set = "pmtct"
 
 # save the list as an excel file 
 #write.xlsx(elements, paste0(dir,'meta_data/translate/pnls_elements_to_translate_', set, '.xlsx' )) #Leaving in for documentation; don't need to write over this file. 
@@ -83,22 +83,22 @@ set = dt[ ,tolower(unique(set))]
 #---------------------
 
 # import the translated elements
-new_elements = read.xlsx(paste0(dir,
-                'meta_data/translate/pnls_elements_translations_', set, '.xlsx' ))
+new_elements = read.xlsx(paste0(dir, 'meta_data/translate/pnls_elements_translations_', set, '.xlsx' ))
 setDT(new_elements)
 
 # be sure 
 x = merge(elements, new_elements, by=c('element_id', 'element'), all.x=T )
 setDT(x)
+stopifnot(nrow(x[is.na(element_eng)])==0) #Make sure everything merged. 
 #---------------------------------------
 
 #---------------------------------------------------------------------
 # Merge the data and the new English elements together 
 new_elements = new_elements[, .(element_id, element_eng, eev_test)]
 new_elements[, element_eng:=trimws(element_eng)]
-dt = dt[, -c('element_eng')] #Not sure why this is already in here? 
 
 dt = merge(dt, new_elements, by='element_id', all.x = TRUE)
+stopifnot(nrow(dt[is.na(element_eng)])==0)
 #---------------------------------------------------------------------
 
 
@@ -115,8 +115,8 @@ dt[element=='Femmes enc. ou allaitantes testées-service', sum(value, na.rm = TR
 dt[element=='Femmes enceintes ou allaitantes testées', sum(value, na.rm = TRUE)]
 
 #Do a deeper dive
-table(dt[element=='Femmes enceintes ou allaitantes testées', .(value, level)])
-table(dt[element=='Femmes enc. ou allaitantes testées-service', .(value, level)])
+table(dt[element=='Femmes enceintes ou allaitantes testées', .(value, na.rm=T)])
+table(dt[element=='Femmes enc. ou allaitantes testées-service', .(value, na.rm=T)])
 
 #One more pair 
 dt[element=='Femmes enc. ou allaitantes conseillées-service', sum(value, na.rm=TRUE)] #These are also slightly off. 
@@ -129,7 +129,27 @@ dt = dt[!(element_id == "PnwLDzr2HX8" | element_id == "sIauzwAH8Oo" | element_id
 unique(dt[grep("service", element), .(element, element_id)])
 #---------------------------------------------------------------------
 
+
+#------------------------------------------------------------------
+# Collapse the variables 
+print(paste0("There were ", nrow(dt), " rows of data before collapse."))
+
+Vars = names(dt)[names(dt)!='value' & names(dt)!='element_id' & names(dt)!='element' & names(dt)!='last_update' & names(dt)!='coordinates']
+dt = dt[,.(value=sum(value)), by=Vars]
+
+print(paste0("There are ", nrow(dt), " rows of data after collapse."))
+
+
 #Save the final file 
-saveRDS(dt, paste0(dir, 'prepped/pnls_sets/pnls_pmtct_prepped_2017_01_01_2018_12_01.rds'))
+saveRDS(dt, paste0(dir, 'prepped/pnls_final/pnls_pmtct.rds'))
+
+#------------------------------------------------------------------------------------------
+#Save one version of the dataset with just HIV+ and tested for Caitlin to merge on VCT data 
+
+for_vct_merge = dt[subpop%in%c('plw', 'exposed_infant')&element_eng%in%c('HIV+', 'Tested', 'Counseled'), 
+                   .(value=sum(value, na.rm=T)), by=c('org_unit_id', 'date', 'org_unit', 'dps', 'health_zone', 
+                                                       'health_area', 'org_unit_type', 'facility_level', 'pnls_set', 
+                                                       'subpop', 'sex', 'age', 'element_eng')]
+saveRDS(for_vct_merge, paste0(dir, 'prepped/pnls_final/pmtct_for_vct_merge.rds'))
 
 
