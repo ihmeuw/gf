@@ -42,6 +42,13 @@ dt = readRDS(combined_data_file)
 snis_comp = readRDS(snis_comp_file)
 pnlp_comp = readRDS(pnlp_hz_file)
 
+dt[, dps := standardizeDPSNames(dps)]
+snis_comp[, dps := standardizeDPSNames(dps)]
+pnlp_comp[, dps := standardizeDPSNames(dps)]
+dt[, health_zone := standardizeHZNames(health_zone)]
+snis_comp[, health_zone := standardizeHZNames(health_zone)]
+pnlp_comp[, health_zone := standardizeHZNames(health_zone)]
+
 #check unique identifiers
 nrow(unique(dt[, .(dps, health_zone, date, data_set, element, indicator, subpopulation)])) == nrow(dt)
 nrow(unique(snis_comp[, .(dps, health_zone, year, quarter, set)])) == nrow(snis_comp)
@@ -58,7 +65,7 @@ dt = convert_date_to_quarter(dt)
 # ---------------------------------------------------
 # Aggregate to quarterly data 
 # ---------------------------------------------------
-dt = dt[, .(value = sum(value, na.rm = TRUE)), by = .(year, quarter, dps, health_zone, data_set, element, indicator, subpopulation)]
+dt = dt[, .(value = sum(value, na.rm = FALSE)), by = .(year, quarter, dps, health_zone, data_set, element, indicator, subpopulation)]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -80,7 +87,8 @@ dt = merge(dt, snis_comp, by = c("year", "quarter", "dps", "health_zone", "data_
 
 dt[ , completeness := completeness/100]
 
-dt[, date := NULL]
+# for SIGL drugs received data (2018 on) - set completeness to 100% because we imputed data at the facility level
+dt[ grepl(element, pattern = "AL|ASAQ") & !grepl(element, pattern = "stockOut") & data_set == 'sigl1', completeness := 1.0]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -143,7 +151,7 @@ nrow(unique(dt[, .(dps, health_zone, year, quarter, data_set, element, indicator
 dt[ data_set =="pnlp" & grepl(indicator, pattern = 'AL') & year < 2015, value := NA]
 
 # keep SSCACT with subpop = NA for 2015 and 2016, keep with subpops <5 and >5 for 2017
-dt[ data_set == "pnlp" & indicator == "SSCACT" & year < 2015, value := 0] # iccm didn't exist prior to 2014
+dt[ data_set == "pnlp" & indicator == "SSCACT" & year < 2015, value := 0] # iccm didn't exist prior to 2015
 # commenting these out for now because the current version of the data had subpops aggregated for imputation (we have 
 # a version of them separate)
 # dt[ data_set == "pnlp" & indicator == "SSCACT" & is.na(subpopulation) & year == 2017, value := NA]
@@ -152,15 +160,23 @@ dt[ data_set == "pnlp" & indicator == "SSCACT" & year < 2015, completeness := 1]
 dt[ data_set == "pnlp" & indicator == "SSCACT", element := "SSCACT"]
 dt[ data_set == "secondaires" & element == "SSCACT", indicator := "SSCACT"]
 
+dt[ data_set == "pnlp" & indicator == "SSCRDT" & year < 2015, value := 0] # iccm didn't exist prior to 2015
+dt[ data_set == "pnlp" & indicator == "SSCRDT" & year < 2015, completeness := 1]
+dt[ data_set == "secondaires" & element == "SSCRDT_completed", subpopulation := "completed"]
+
 dt = dt[!is.na(value)] # NAs created above for pnlp, no NAs in pnlp before that
 
-dt = dt[ indicator %in% c("LLIN", "ASAQreceived", "SP", "AL", "SSCACT", "simpleConfMalariaTreated", "severeMalariaTreated", "presumedMalariaTreated", "RDT", "ANC"), ]
+inds = unique(dt$element)
+inds = inds[grepl(inds, pattern = "AL") & !grepl(inds, pattern = "available|lost|consumed")]
+inds = c(inds, "LLIN", "ASAQreceived", "SP", "AL", "SSCACT", "SSCRDT", "simpleConfMalariaTreated", "severeMalariaTreated", "presumedMalariaTreated", "RDT", "ANC")
+
+dt = dt[ indicator %in% inds, ]
 dt = dt[!subpopulation %in% c("lost", "available", "stockOutDays", "positive"), ]
 dt = dt[! (indicator %in% "RDT" & subpopulation %in% "consumed")]
 dt = dt[! (indicator %in% "AL" & subpopulation %in% "used")]
 dt = dt[! (data_set %in% "base" & indicator %in% "LLIN"), ]
 dt = dt[! (data_set %in% "sigl1" & indicator %in% "SP"), ]
-dt = dt[! indicator %in% c("ANC")]
+dt = dt[! indicator %in% c("ANC", "ALused")]
 
 dt[, element := NULL]
 #check unique identifiers
@@ -179,7 +195,7 @@ under5[, indicator:=paste0(indicator, '_under5')]
 
 # aggregate across infants/children
 byVars = c('year', 'quarter', 'dps', 'health_zone', 'data_set', 'indicator', 'completeness')
-under5 = under5[, .(value = sum(value, na.rm=TRUE)), by=byVars]
+under5 = under5[, .(value = sum(value, na.rm=FALSE)), by=byVars]
 
 # append to data
 dt = rbind(dt, under5, fill=TRUE)
@@ -202,37 +218,42 @@ dt[ indicator == "SSCACT", subpopulation := "none"]
 dt[ indicator == "severeMalariaTreated", subpopulation := "none"]
 dt[ indicator == "simpleConfMalariaTreated", subpopulation := "none"]
 dt[ indicator == "presumedMalariaTreated", subpopulation := "none"]
+dt[ indicator == "ALreceived", subpopulation := "none"]
 
-dt = dt[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, indicator, subpopulation, completeness)]
+dt = dt[, .(value = sum(value, na.rm=FALSE)), by=.(year, quarter, dps, health_zone, data_set, indicator, subpopulation, completeness)]
 
 #check unique identifiers
 nrow(unique(dt[, .(dps, health_zone, year, quarter, data_set, indicator, subpopulation)])) == nrow(dt)
 
-# we need to create variable for totalPatientsTreated and a variable for ACT_received, will do this separately then rbind back together
+# we need to create variable for totalPatientsTreated and a variable for ACT_received, will do this separately then rbind back together for totalPatientsTreated
+# because we want to also keep severeMalariaTreatedin the data. For ACT_received we can do this the same way as above, by changing the var names and summing. 
 # NOTE: do not have to calculate completeness separately, because completeness is the same for each indicator (varies across time and health zones)
-acts_rec <- dt[ indicator %in% c("AL", "ASAQreceived") ]
-acts_rec <- acts_rec[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
-acts_rec[, indicator := "ACT_received"]
-acts_rec[, subpopulation := "none"]
-
+dt[ indicator %in% c("AL", "ASAQreceived", "ALreceived"), subpopulation:="received"]
+dt[ indicator %in% c("AL", "ASAQreceived", "ALreceived"), indicator := "ACT_received"] 
 # rename the under5 ASAQreceived variable to be consistent with ACT_received variable name
 dt[indicator=='ASAQreceived_under5', indicator:='ACT_received_under5']
+dt[indicator=='ACT_received_under5', subpopulation:="received"]
+
+dt = dt[, .(value = sum(value, na.rm=FALSE)), by=.(year, quarter, dps, health_zone, data_set, indicator, subpopulation, completeness)]
+nrow(unique(dt[, .(dps, health_zone, year, quarter, data_set, indicator, subpopulation)])) == nrow(dt)
 
 patients_treated = dt[ grepl("treated", indicator, ignore.case = TRUE) & ! grepl("under5", indicator, ignore.case = TRUE), ]
+patients_treated = patients_treated[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
+patients_treated[, indicator := "totalPatientsTreated"]
 
 children_treated = dt[ grepl("treated", indicator, ignore.case = TRUE) & grepl("under5", indicator, ignore.case = TRUE), ]
-
-patients_treated <- patients_treated[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
-children_treated <- children_treated[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
-patients_treated[, indicator := "totalPatientsTreated"]
+children_treated = children_treated[, .(value = sum(value, na.rm=TRUE)), by=.(year, quarter, dps, health_zone, data_set, completeness)]
 children_treated[, indicator := "totalPatientsTreated_under5"]
+
 patients_treated = rbind(patients_treated, children_treated)
 patients_treated[, subpopulation := "none"]
 
-dt_final <- rbindlist(list(acts_rec, patients_treated, dt), use.names = TRUE)
+dt_final = rbind(dt, patients_treated)
+# since we have all patients treated combined (but also want to keep severe cases treated) drop out simple confirmed cases treated and presumed cases treated
+dt_final = dt_final[ !indicator %in% c('simpleConfMalariaTreated', 'simpleConfMalariaTreated_under5', 'presumedMalariaTreated', 'presumedMalariaTreated_under5')]
 
-# remove variables we don't need for impact model
-dt_final <- dt_final[!indicator %in% c("simpleConfMalariaTreated", "simpleConfMalariaTreated_under5", "ASAQreceived", "AL", "presumedMalariaTreated", "presumedMalariaTreated_under5")]
+#check unique identifiers
+nrow(unique(dt_final[, .(dps, health_zone, year, quarter, data_set, indicator, subpopulation)])) == nrow(dt_final)
 
 # rename pnlp variables to match to impact model
 dt_final[ indicator == "LLIN" & subpopulation == "consumed", indicator := "ITN_consumed" ]
@@ -240,11 +261,16 @@ dt_final[ indicator == "LLIN" & subpopulation == "received", indicator := "ITN_r
 dt_final[ indicator == "RDT" & subpopulation == "completed", indicator := "RDT_completed" ]
 dt_final[ indicator == "RDT" & subpopulation == "received", indicator := "RDT_received" ]
 dt_final[ indicator == "SSCACT", indicator := "ACTs_SSC" ]
-dt_final[ indicator == "SSCACT_under5", indicator := "ACTs_SSC_under5" ]
-dt_final <- dt_final[,.(year, quarter, dps, health_zone, indicator, value, completeness)]
+dt_final[ indicator == "SSCRDT", indicator := "RDTs_SSC" ]
+
+#check unique identifiers
+nrow(unique(dt_final[, .(dps, health_zone, year, quarter, indicator, completeness)])) == nrow(dt_final)
+
+# dt_final[ indicator == "SSCACT_under5", indicator := "ACTs_SSC_under5" ] # not in this version of the data. 
+dt_final = dt_final[,.(year, quarter, dps, health_zone, indicator, value, completeness)]
 
 dt_final = convert_quarter_to_decimal(dt_final)
-  
+
 #check unique identifiers
 nrow(unique(dt_final[, .(dps, health_zone, date, indicator)])) == nrow(dt_final)
 
