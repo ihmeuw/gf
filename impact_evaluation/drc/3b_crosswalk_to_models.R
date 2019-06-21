@@ -85,8 +85,8 @@ for(i in seq(length(modInds))) {
 		
 		# store adjusted values
 		data[health_zone==h, (paste0(m, '_adj')):=get(c) + resids]
-		idx = which(is.na(data[health_zone==h][[c]]))
-		data[health_zone==h][idx, (paste0(m, '_adj')):=preds[idx] + resids[idx]]
+		data[health_zone==h, tmp:=preds + resids] # use fit2 to project beyond model estimates
+		data[health_zone==h & is.na(get(paste0(m, '_adj'))), (paste0(m, '_adj')):=tmp]
 		data[health_zone==h & get(paste0(m, '_adj'))<0, (paste0(m, '_adj')):=0]
 		
 		# display progress
@@ -98,7 +98,7 @@ for(i in seq(length(modInds))) {
 }
 # ------------------------------------------------------------------------
 
-
+data[health_zone==h, c('date',c,m,paste0(m,'_adj')),with=F]
 # ------------------------------------------------------------------------
 # Correct other indicators
 
