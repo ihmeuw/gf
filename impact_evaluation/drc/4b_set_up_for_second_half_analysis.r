@@ -48,7 +48,7 @@ data = data[order(health_zone, date)]
 # apply limits
 data[ITN>1000, ITN:=NA]
 data[SSCACT>50000, SSCACT:=NA]
-data[SSCACT_under5>1000, SSCACT_under5:=NA]
+# data[SSCACT_under5>1000, SSCACT_under5:=NA]
 data[!is.finite(SP_rate), SP_rate:=NA]
 data[!is.finite(RDT_rate), RDT_rate:=NA]
 data[ACTs_CHWs_rate>1000, ACTs_CHWs_rate:=NA]
@@ -113,7 +113,7 @@ logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated
 	'ITN_rate','ITN_rate_cumul','case_fatality','case_fatality_under5',
 	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate',
 	'newCasesMalariaMild_under5_rate','newCasesMalariaSevere_under5_rate','malariaDeaths_under5_rate')
-logVars = logVars[logVars!='ACTs_CHWs_under5_rate']
+logVars = logVars[!logVars %in% c('ACTs_CHWs_under5_rate','SSCACT_under5')]
 for(v in logVars) { 
 	data[, (v):=log(get(v))]
 	data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
