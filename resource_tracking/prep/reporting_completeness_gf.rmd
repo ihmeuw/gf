@@ -1,7 +1,7 @@
 ---
 title: "Resource Tracking Data Gaps"
 author: "Emily Linebarger"
-date: "June 3, 2019"
+date: "June 21, 2019"
 output: pdf_document
 ---
 
@@ -29,8 +29,8 @@ pudrs = readRDS(paste0(dir, "budget_pudr_iterations.rds"))
 pudrs = pudrs[data_source=="pudr" & file_iteration=="final"]
 gos_data = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/prepped_data/prepped_gos_data.rds")
   
-pudr_subset = pudrs[year>=2018]
-gos_data = gos_data[year<2018]
+pudr_subset = pudrs[year>=2017]
+gos_data = gos_data[year<2017]
 pudr_subset = rbind(gos_data, pudr_subset, use.names=T, fill=T)
 
 #Do the same transformations as the budget dataset
