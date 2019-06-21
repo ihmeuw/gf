@@ -113,7 +113,7 @@ proxInds = proxInds[!adjInds=='ACTs_CHWs_under5_rate'] # remove this for now... 
 adjInds = adjInds[!adjInds=='ACTs_CHWs_under5_rate']
 
 print('Cross-walking indicators that have proxy model estimates...')
-for(i in seq(length(modInds))) {  
+for(i in seq(length(adjInds))) {  
 	a=adjInds[i]
 	c=proxInds[i]
 
