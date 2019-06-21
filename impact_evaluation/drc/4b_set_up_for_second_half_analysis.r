@@ -52,7 +52,7 @@ data[SSCACT_under5>1000, SSCACT_under5:=NA]
 data[!is.finite(SP_rate), SP_rate:=NA]
 data[!is.finite(RDT_rate), RDT_rate:=NA]
 data[ACTs_CHWs_rate>1000, ACTs_CHWs_rate:=NA]
-data[ACTs_CHWs_under5_rate>500, ACTs_CHWs_under5_rate:=NA]
+# data[ACTs_CHWs_under5_rate>500, ACTs_CHWs_under5_rate:=NA]
 data[mildMalariaTreated_rate>2, mildMalariaTreated_rate:=NA]
 data[mildMalariaTreated_under5_rate>100, mildMalariaTreated_under5_rate:=NA]
 data[severeMalariaTreated_rate>2.5, severeMalariaTreated_rate:=NA]
@@ -113,6 +113,7 @@ logVars = c('ITN','RDT','SP','SSCACT','mildMalariaTreated','severeMalariaTreated
 	'ITN_rate','ITN_rate_cumul','case_fatality','case_fatality_under5',
 	'newCasesMalariaMild_rate','newCasesMalariaSevere_rate','malariaDeaths_rate',
 	'newCasesMalariaMild_under5_rate','newCasesMalariaSevere_under5_rate','malariaDeaths_under5_rate')
+logVars = logVars[logVars!='ACTs_CHWs_under5_rate']
 for(v in logVars) { 
 	data[, (v):=log(get(v))]
 	data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
