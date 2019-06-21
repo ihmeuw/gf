@@ -31,7 +31,7 @@ rerun_outputs <- FALSE
 rerun_outcomes <- FALSE
 rerun_merge <- FALSE
 rerun_adjust <- FALSE
-rerun_explore <- FALSE
+rerun_explore <- TRUE
 rerun_models <- TRUE
 rerun_analysis <- TRUE
 rerun_post <- FALSE
