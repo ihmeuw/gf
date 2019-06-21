@@ -15,7 +15,7 @@ library(ggplot2)
 # ----------------------------------------------
 # Overview - Files and Directories
 
-run_name = "run_0_001_aggVars_lagsLeads"
+run_name = "run_0_001_noAgg_lagsLeads"
 
 # data directory
 # when run on Unix, data directory needs to be set to /home/j (to run on the cluster), so set this here:
@@ -41,7 +41,7 @@ condensed_imputed_data_hz = paste0("imputedData_", run_name, "_condensed_hz_medi
 # Load imputed data
 dt <- readRDS(paste0(dir, imputed_data))
 
-if(sum(is.na(dt[, inds, with = FALSE])) != 0) stop("Imputation didn't work correctly, or something went wrong afterwards; no values should be missing now")
+if(sum(is.na(dt[, ..inds])) != 0) stop("Imputation didn't work correctly, or something went wrong afterwards; no values should be missing now")
 
 # Set up var vectors for manipulation
 all_vars = c(colnames(dt))

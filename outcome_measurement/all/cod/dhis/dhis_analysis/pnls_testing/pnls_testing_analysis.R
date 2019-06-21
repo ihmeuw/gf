@@ -78,7 +78,7 @@ dt$facility_level = factor(dt$facility_level,
 #------------------------------------------------------------------
 # HIV Testing Visualizations
 
-pdf(paste0(dir, 'outputs/pnls_hiv_testing/pnls_vct_graphs.pdf'), width=12, height=7)
+# pdf(paste0(dir, 'outputs/pnls_hiv_testing/pnls_vct_graphs.pdf'), width=12, height=7)
 
 #----------------------
 # COLOR SCHEMES
@@ -255,12 +255,13 @@ tests$variable = factor(tests$variable,
 
 #----------------------
 # all tests by variable 
-t1 = tests[ ,.(value=sum(value)), by=.(variable, date)]
+t1 = tests[ ,.(value=sum(value)), by=.(variable, date, subpop)]
 
 ggplot(t1, aes(x=date, y=value, color=variable))+
   geom_point() +
   geom_line() +
   theme_bw() +
+  facet_wrap(~subpop, scales='free_y') +
   scale_color_manual(values=brewer.pal(5, 'RdYlBu')) +
   labs(color="", x='Date', y='Count', 
        title='HIV testing variables') +
