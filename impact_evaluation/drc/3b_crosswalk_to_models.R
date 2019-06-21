@@ -85,6 +85,7 @@ for(i in seq(length(modInds))) {
 		
 		# store adjusted values
 		data[health_zone==h, (paste0(m, '_adj')):=get(c) + resids]
+		data[health_zone==h & is.na(get(c)), (paste0(m, '_adj')):=preds + resids]
 		data[health_zone==h & get(paste0(m, '_adj'))<0, (paste0(m, '_adj')):=0]
 		
 		# display progress
