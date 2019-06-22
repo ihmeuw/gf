@@ -207,7 +207,9 @@ while(numFiles<i) {
 # old code to concatenate files - leave as k since i and j are already used
 
 for (k in seq(N)) {
-  tmp = read.fst(paste0(parallelDir, 'quantreg_output_', k, '.fst'), as.data.table=TRUE)
+  file = paste0(parallelDir, 'quantreg_output_', k, '.fst')
+  if (file.exists(file)==TRUE) tmp = read.fst(paste0(parallelDir, 'quantreg_output_', k, '.fst'), as.data.table=TRUE)
+  if (file.exists(file)==FALSE) skip
   if(k==1) fullData = tmp
   if(k>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', k)) }
