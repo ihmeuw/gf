@@ -283,7 +283,7 @@ ggplot(t2, aes(x=variable, y=value, fill=year)) +
   scale_fill_manual(values=rev(brewer.pal(4, 'Blues'))) +
   labs(title = 'HIV testing variables', x="",
        subtitle = 'Counseled and Tested only available for all patients; Counseled and tested only available for key populations*',
-       caption = '*Only Tested and received the results is comparable for all groups',
+       caption = '*Only \\Tested and received the results\\ is comparable for all groups',
        y='Count', fill="Year") +
   theme(text = element_text(size=16))
 
@@ -340,7 +340,6 @@ ggplot(t5[!is.na(sex)], aes(x=date, y=value, color=sex)) +
   theme(text = element_text(size=18)) + 
   theme_bw() + 
   scale_y_continuous(labels = scales::comma)
-
 
 #-----------------------------------
 # # mean patients counseled and tested by facility and by sex
@@ -412,6 +411,25 @@ ggplot(mean_tests_cat[!is.na(facility_level)], aes(x=reorder(facility_level, -me
        subtitle = 'Indicator: for each level and month, mean of total tests/total facilities',
        x='Facility level', y='Mean tests per facility per month', fill="Facility level") +
   theme(text=element_text(size=16), axis.text.x = (element_text(angle=90)))
+
+
+#-------------------------------
+# mean tests performed per facility for each sub population by year
+# 
+# t6 = t5[ ,.(value=sum(value)), by=.(subpop, key_pop, year=year(date))]
+# fac6 = dt[ ,.(facilities=length(unique(org_unit_id))), by=.(year=year(date))]
+# t6 = merge(t6, fac6, by='year')
+# t6[ ,mean_tests:=round(value/facilities, 1), by=.(year, subpop)]
+# 
+# ggplot(t6, aes(x=subpop, y=mean_tests, label=mean_tests, fill=factor(year))) +
+#   geom_bar(stat="identity", position=position_dodge()) +
+#   geom_text(aes(label=mean_tests), vjust=-1, position=position_dodge(0.9)) +
+#   facet_wrap(~key_pop, scales='free') +
+#   theme_bw() +
+#   scale_fill_manual(values = c('#66bd63', '#fee08b')) +
+#   labs(title = 'Mean patients per health facility who were tested and received their results',
+#        y='Tested for HIV', fill="Year", x="") +
+#   theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
 
 #-----------------------------------
 # mean tests per facility per month by level by year
@@ -488,21 +506,23 @@ ggplot(t5_bar, aes(x=subpop, y=value, label=value, fill=factor(year))) +
   theme(text = element_text(size=14), axis.text.x=element_text(size=12, angle=90))
 
 #-------------------------------
+# tests on key populations out of all tests
 
 key = t5[ ,.(value=sum(value)), by=.(date, key_pop)]
 key = dcast(key, date~key_pop)
 setnames(key, c("Date", "pts", "key_pop"))
 key[ ,ratio:=round(100*(key_pop/pts), 1)]
 key = melt(key, id.vars='Date')
-
+key$variable = factor(key$variable, c('pts', 'key_pop', 'ratio'),
+       c('All patients', 'Key population', 'Percent of tests on key pops. (%)'))
 
 ggplot(key, aes(x=Date, y=value, color=variable)) +
  geom_point() +
   geom_line() +
   theme_bw() +
   facet_wrap(~variable, scales='free_y') +
-  labs(title = 'Tested for HIV and received the results by year',
-       y='Tested for HIV', x="Key population", fill="Year") +
+  labs(title = 'Tested for HIV and received the results',
+        x="Date", color="") +
   theme(text = element_text(size=14))
 
 
@@ -520,22 +540,6 @@ ggplot(tf_bar[subpop!='Patients'], aes(x=subpop, y=value, label=value, fill=fact
   theme(text = element_text(size=16), axis.text.x=element_text(size=12, angle=90)) +
   scale_y_continuous(labels = scales::comma)
 
-#-------------------------------
-# mean tests performed per facility for each sub population by year
-
-t6 = t5[ ,.(value=sum(value)), by=.(subpop, key_pop, year=year(date))]
-fac6 = dt[ ,.(facilities=length(unique(org_unit_id))), by=.(year=year(date))]
-t6 = merge(t6, fac6, by='year')
-t6[ ,mean_tests:=round(value/facilities, 1), by=.(year, subpop)]
-
-ggplot(t6[subpop!='Patients'], aes(x=subpop, y=mean_tests, label=mean_tests, fill=factor(year))) +
-  geom_bar(stat="identity", position=position_dodge()) +
-  geom_text(aes(label=mean_tests), vjust=-1, position=position_dodge(0.9)) +
-  theme_bw() +
-  scale_fill_manual(values = c('#66bd63', '#fee08b')) +
-  labs(title = 'Mean patients per health facility who were tested and received their results',
-       y='Tested for HIV', x="Key population", fill="Year") +
-  theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
 
 #-------------------------------
 # mean tests performed per facility for each sub population by funder, year
@@ -575,16 +579,33 @@ cases = dt[variable=='HIV+' | variable=='HIV+ and informed of their results']
         y='HIV+', x="Date", color='Sex') +
    theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
  
+ 
+ # check the cases variable
+ c2 = cases[ ,.(value=sum(value)), by=.(subpop, date, variable)] 
+ 
+ ggplot(c2, aes(x=date, y=value, color=variable)) +
+   geom_point() +
+   geom_line() +
+   facet_wrap(~subpop, scales='free_y') +
+   scale_color_manual(values=bi) +
+   theme_bw() +
+   labs(title = 'Patients who tested HIV+',
+        y='HIV+', x="Date", color='Sex') +
+   theme(text = element_text(size=18), axis.text.x=element_text(size=12, angle=90))
+ 
+ 
+ 
+ 
 # percentage informed of their results
  # this ratio should never be over 100
  
  
  
  
- c2 = dcast(c1, sex+date~variable)
+ c3 = dcast(c1, sex+date~variable)
  setnames(c2, c('HIV+', 'HIV+ and informed of their results'),
           c('hiv_pos', 'informed'))
-c2[ , ratio:=100*round(informed/hiv_pos, 1)]
+c3[ , ratio:=100*round(informed/hiv_pos, 1)]
 c2 = melt(c2, by=c('sex', 'date'))
 
 ggplot(c2, aes(x=date, y=ratio, color=sex)) +
