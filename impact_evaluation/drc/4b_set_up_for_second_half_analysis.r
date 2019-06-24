@@ -82,7 +82,7 @@ for(v in names(data)) {
 		lmFit = lm(form, data[health_zone==h])
 		data[health_zone==h, tmp:=(predict(lmFit, newdata=data[health_zone==h]))]
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
-		data[tmp<0, (v):=0]
+		data[get(v)<0, (v):=0]
 		pct_complete = floor(i/(length(names(data))*length(unique(data$health_zone)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
 		flush.console() 
