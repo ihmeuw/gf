@@ -376,7 +376,6 @@ ggplot(t6, aes(x=date, y=value, color=sex)) +
 #-------------------------------------------------------------
 # NORMALIZED TESTING VARIABLES
 
-
 #-----------------------------------
 # mean tests per facility by level
 mean_tests2 = tests_alt[ , .(value=sum(value), facilities=length(unique(org_unit_id))), by=.(date, facility_level, next_level)]
