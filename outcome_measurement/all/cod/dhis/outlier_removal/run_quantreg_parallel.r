@@ -45,7 +45,7 @@ set = 'pnls'
 # switches
 
 cleanup_start = FALSE # whether or not to delete all files from parallel runs at the beginning
-cleanup_end = FALSE # "" /end; default to FALSE
+cleanup_end = TRUE # "" /end; default to FALSE
 # impute = 'TRUE' # whether or not to impute missing data as part of the qr
 # cat_files = TRUE # whether or not to concatenate all of the files at the end
 agg_to_DPS = FALSE # whether or not to aggregate the data to DPS level before running QR. 
@@ -182,14 +182,14 @@ N = nrow(array_table)
 setwd(paste0('/ihme/code/', user, '/gf/'))
 
 source('./outcome_measurement/all/cod/dhis/outlier_removal/doit.R')
-      
+
 # FOR NEW CLUSTER:
 # run quantregScript for each org_unit (submit one array job, with the array by org_unit)
 if (set == 'sigl'){
   system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs -l m_mem_free=20G -l fthread=1 -l h_rt=02:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.r')) 
 } else {
-  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=20G -l fthread=1 -l h_rt=04:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.r')) 
-}
+  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=20G -l fthread=1 -l h_rt=04:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript2.R')) 
+} # audrey - note this sources an identical but new script, because the naming was messed up on the cluster
 #------------------------------------
 
 #------------------------------------
@@ -207,7 +207,9 @@ while(numFiles<i) {
 # old code to concatenate files - leave as k since i and j are already used
 
 for (k in seq(N)) {
-  tmp = read.fst(paste0(parallelDir, 'quantreg_output', k, '.fst'), as.data.table=TRUE)
+  file = paste0(parallelDir, 'quantreg_output_', k, '.fst')
+  if (file.exists(file)==TRUE) tmp = read.fst(paste0(parallelDir, 'quantreg_output_', k, '.fst'), as.data.table=TRUE)
+  if (file.exists(file)==FALSE) skip
   if(k==1) fullData = tmp
   if(k>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', k)) }

@@ -1,0 +1,18 @@
+---
+title: "Find Unclassified RT Files"
+author: "Emily Linebarger"
+date: "June 21, 2019"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(data.table)
+repo_root = "C:/Users/elineb/Documents/gf"
+setwd(repo_root)
+source("./resource_tracking/prep/_common/set_up_r.r")
+
+#Make a list of all of the files that live in each country's resource tracking universe, 
+# using recursive search functions 
+```
+

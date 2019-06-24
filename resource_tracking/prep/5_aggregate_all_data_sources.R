@@ -241,7 +241,7 @@ check_qtr_sen = check_qtr_sen[duplicated(check_qtr_sen, by = c("start_date", "gr
 check_qtr_sen = merge(check_qtr_sen, final_expenditures_sen[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
 check_qtr_sen = unique(check_qtr_sen)
 if (nrow(check_qtr_sen)!=0){
-  print("Warning: There are overlapping budget quarters in sennda. Review data to prevent double-counting.")
+  print("Warning: There are overlapping budget quarters in Senegal. Review data to prevent double-counting.")
   print(check_qtr_sen)
 }
 #Bind expenditures together
