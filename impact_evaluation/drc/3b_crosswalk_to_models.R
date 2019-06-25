@@ -17,7 +17,6 @@ source('./impact_evaluation/drc/set_up_r.r')
 data = readRDS(outputFile2c)
 
 # apply limits
-data[ITN>1000, ITN:=NA]
 data[SSCACT>50000, SSCACT:=NA]
 data[SSCACT_under5>1000, SSCACT_under5:=NA]
 data[!is.finite(SP_rate), SP_rate:=NA]
