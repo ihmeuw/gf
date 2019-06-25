@@ -52,7 +52,7 @@ pnlp_comp[, health_zone := standardizeHZNames(health_zone)]
 #check unique identifiers
 nrow(unique(dt[, .(dps, health_zone, date, data_set, element, indicator, subpopulation)])) == nrow(dt)
 nrow(unique(snis_comp[, .(dps, health_zone, year, quarter, set)])) == nrow(snis_comp)
-nrow(unique(pnlp_comp[, .(dps, health_zone, date, variable)])) == nrow(pnlp_comp)
+# nrow(unique(pnlp_comp[, .(dps, health_zone, date, variable)])) == nrow(pnlp_comp)
 # ---------------------------------------------------
 
 # ---------------------------------------------------
@@ -60,6 +60,10 @@ nrow(unique(pnlp_comp[, .(dps, health_zone, date, variable)])) == nrow(pnlp_comp
 # ---------------------------------------------------
 dt = dt[ date <= "2019-03-01"]
 dt = convert_date_to_quarter(dt)
+# need to sum together RDTs subpops to match up SNIS and PNLP
+dt[indicator == "RDT_completed", subpopulation := "completed"]
+dt[indicator == "RDT_positive", subpopulation := "positive"]
+dt[indicator %in% c("RDT_completed", "RDT_positive"), indicator := "RDT"]
 # ---------------------------------------------------
 
 # ---------------------------------------------------
