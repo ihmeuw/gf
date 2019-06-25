@@ -12,6 +12,8 @@ drc = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/input
 
 # Read in the previously saved files for resource tracking in 2a
 resource_tracking <- readRDS(outputFile2a)
+resource_tracking[, year:=floor(date)]
+byVars = names(resource_tracking)[!names(resource_tracking)%in%c('date', 'year')]
 
 # Read in the previously saved file for outputs/activities in 2b
 outputs_activities <- readRDS(outputFile2b)
