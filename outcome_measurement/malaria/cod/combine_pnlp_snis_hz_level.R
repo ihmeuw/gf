@@ -33,6 +33,7 @@ out_dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/'
 
 # input files:
 input_dhis_base <- "base/base_prepped_outliers_replaced.rds"
+input_dhis_base_suspectedCases = "base/base_prepped_outliers_replaced_suspectedCases.rds"
 input_dhis_sigl <- "sigl/sigl_prepped_drugs_received.rds"
 after_imputation_pnlp <- "imputedData_run_0_001_aggVars_lagsLeads_condensed_hz_median.rds"
 input_dhis_ssc = "ssc_supervisions_prepped.rds"
@@ -62,6 +63,7 @@ base <- readRDS(paste0(dir_dhis, input_dhis_base))
 sigl <- readRDS(paste0(dir_dhis, input_dhis_sigl))
 ssc = readRDS(paste0(dir_dhis, input_dhis_ssc))
 all_sigl = readRDS(paste0(dir_dhis, all_sigl_data))
+base_suspectedCases = readRDS(paste0(dir_dhis, input_dhis_base_suspectedCases))
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -69,12 +71,15 @@ all_sigl = readRDS(paste0(dir_dhis, all_sigl_data))
 # ----------------------------------------------
 
 # standardize dps names in base (all others are already done)
-  base$dps <- standardizeDPSNames(base$dps)
+  base[, dps := standardizeDPSNames(dps)]
   base[, health_zone := standardizeHZNames(health_zone)]
+  base_suspectedCases[, dps := standardizeDPSNames(dps)]
+  base_suspectedCases[, health_zone := standardizeHZNames(health_zone)]
   all_sigl[, health_zone := standardizeHZNames(health_zone)]
   ssc[, health_zone := standardizeHZNames(health_zone)]
   sigl[, health_zone := standardizeHZNames(health_zone)]
   pnlp[, health_zone := standardizeHZNames(health_zone)]
+  pnlp[, dps := standardizeDPSNames(dps)]
   
   pnlp = pnlp[,.(value = sum(value, na.rm = FALSE)), by = c("date", "dps", "health_zone", "variable")]
   
@@ -84,6 +89,8 @@ all_sigl = readRDS(paste0(dir_dhis, all_sigl_data))
 # trim ws to make sure all of these variables are uniform/match up with what they should
   base$element <- trimws(base$element)
   base$element_eng <- trimws(base$element_eng)
+  base_suspectedCases$element <- trimws(base_suspectedCases$element)
+  base_suspectedCases$element_eng <- trimws(base_suspectedCases$element_eng)
   ssc$element <- trimws(ssc$element)
   ssc$element_eng <- trimws(ssc$element_eng)
   sigl_llin$element <- trimws(sigl_llin$element)
@@ -91,7 +98,8 @@ all_sigl = readRDS(paste0(dir_dhis, all_sigl_data))
   
 # sum base, sigl_llin, and ssc to health zone level:
   base = base[, .(value = sum(value, na.rm = FALSE)), by = c("date", "year", "dps", "health_zone", "data_set", "element", "element_eng", "category")]
-  
+  base_suspectedCases = base_suspectedCases[, .(value = sum(value, na.rm = FALSE)), by = c("date", "dps", "health_zone", "data_set", "element", "element_eng", "category")]
+  base_suspectedCases[ , year := year(date)]
   sigl_llin = sigl_llin[, .(value = sum(value, na.rm = FALSE)),  by = c("date", "dps", "health_zone", "data_set", "element", "element_eng") ]
   sigl_llin[ , year := year(date)]
   
@@ -105,6 +113,7 @@ all_sigl = readRDS(paste0(dir_dhis, all_sigl_data))
 
   # # check unique identifieres in all sets:
   if (nrow(unique(base[, .(date, year, dps, health_zone, element, category)])) != nrow(base) |
+      nrow(unique(base_suspectedCases[, .(date, year, dps, health_zone, element, category)])) != nrow(base_suspectedCases) |
     nrow(unique(sigl[, .(date, year, dps, health_zone, element)])) != nrow(sigl) |
     nrow(unique(sigl_llin[, .(date, year, dps, health_zone, element)])) != nrow(sigl_llin) |
     nrow(unique(pnlp[, .(date, dps, health_zone, variable)])) != nrow(pnlp) |
@@ -115,6 +124,9 @@ all_sigl = readRDS(paste0(dir_dhis, all_sigl_data))
   base = merge(base, variable_matching, by.x = c("data_set", "element"), by.y = c("data_set_dhis", "dhis_indicator"), all.x = TRUE)
   sigl = merge(sigl, variable_matching, by.x = c("data_set", "element"), by.y = c("data_set_dhis", "dhis_indicator"), all.x = TRUE)
   sigl_llin = merge(sigl_llin, variable_matching, by.x = c("data_set", "element"), by.y = c("data_set_dhis", "dhis_indicator"), all.x = TRUE)
+  
+  base_suspectedCases[, indicator := "suspectedMalaria"]
+  base_suspectedCases[, data_set := "base"]
   
 # pnlp - standardize indicator names
   pnlp[,  c("indicator", "subpopulation") := tstrsplit(variable, "_", fixed=TRUE)]
@@ -136,12 +148,20 @@ all_sigl = readRDS(paste0(dir_dhis, all_sigl_data))
   sigl[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
   sigl_llin[, c("indicator", "subpopulation") := tstrsplit(indicator, "_", fixed=TRUE)]
   
+  base[ element == "A 1.4 Cas suspect", indicator := "suspectedMalaria" ]
+  
   base[category == "<5 ans" & indicator != "RDT", subpopulation := "under5"]
   base[category == ">5 ans" & indicator != "RDT", subpopulation := "5andOlder"]
+  base_suspectedCases[category == "<5 ans", subpopulation := "under5"]
+  base_suspectedCases[category == ">5 ans", subpopulation := "5andOlder"]
   
-  # for base, need to sum over "category" for RDTs (to match PNLP with agg vars)
-  base = base[, .(value = sum(value, na.rm = FALSE)), by = c("date", "year", "dps", "health_zone", "data_set", "element", "element_eng", "indicator", "subpopulation")]
-
+  # # for base, need to sum over "category" for RDTs (to match PNLP with agg vars)
+  # base = base[, .(value = sum(value, na.rm = FALSE)), by = c("date", "year", "dps", "health_zone", "data_set", "element", "element_eng", "indicator", "subpopulation")]
+  base[indicator == "RDT" & subpopulation == "completed", indicator := "RDT_completed"]
+  base[indicator == "RDT" & subpopulation == "positive", indicator := "RDT_positive"]
+  base[category == "<5 ans", subpopulation := "under5"]
+  base[category == ">5 ans", subpopulation := "5andOlder"]
+  
 # subset snis data to 2018 on  
   base = base[ year >= "2018", ]
   sigl = sigl[ year >= "2018", ]
@@ -157,6 +177,7 @@ all_sigl = readRDS(paste0(dir_dhis, all_sigl_data))
   
 # check unique identifieres in all sets:
   if (nrow(unique(base[, .(date, year, dps, health_zone, indicator, subpopulation)])) != nrow(base) |
+      nrow(unique(base_suspectedCases[, .(date, year, dps, health_zone, indicator, subpopulation)])) != nrow(base_suspectedCases) |
       nrow(unique(sigl[, .(date, year, dps, health_zone, indicator, subpopulation)])) != nrow(sigl) |
       nrow(unique(sigl_llin[, .(date, year, dps, health_zone, indicator, subpopulation)])) != nrow(sigl_llin) |
       nrow(unique(pnlp[, .(date, dps, health_zone, indicator, subpopulation)])) != nrow(pnlp) |
@@ -166,7 +187,7 @@ all_sigl = readRDS(paste0(dir_dhis, all_sigl_data))
 # ----------------------------------------------
 # combine all data sources together
 # ----------------------------------------------
-  dt <- rbindlist(list(pnlp, base, sigl, ssc, sigl_llin), use.names = TRUE, fill = TRUE)
+  dt <- rbindlist(list(pnlp, base, sigl, ssc, sigl_llin, base_suspectedCases), use.names = TRUE, fill = TRUE)
   
   dt[grepl(data_set, pattern = "Base"), data_set := "base"]
   dt[grepl(data_set, pattern = "SIGL2"), data_set := "sigl2"]

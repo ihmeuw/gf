@@ -6,13 +6,12 @@
 model = '
 
 	# linkage 1 regressions
-	ITN_rate_cumul ~ prior("dgamma(1,1)")*ITN + completeness_ITN_consumed
-	mildMalariaTreated_rate ~ prior("dgamma(1,1)")*mildMalariaTreated + RDT_rate + completeness_totalPatientsTreated
-	severeMalariaTreated_rate ~ prior("dgamma(1,1)")*severeMalariaTreated + RDT_rate + completeness_severeMalariaTreated
-	ACTs_CHWs_rate ~ prior("dgamma(1,1)")*SSCACT + completeness_ACTs_SSC
-	SP_rate ~ prior("dgamma(1,1)")*SP + completeness_SP
-	RDT_rate ~ prior("dgamma(1,1)")*RDT + completeness_RDT_completed
-	
+	ITN_rate_cumul ~ prior("dgamma(1,1)")*ITN + completeness_ITN_consumed + population
+	mildMalariaTreated_rate ~ prior("dgamma(1,1)")*mildMalariaTreated + RDT_rate + completeness_totalPatientsTreated + population
+	severeMalariaTreated_rate ~ prior("dgamma(1,1)")*severeMalariaTreated + RDT_rate + completeness_severeMalariaTreated + population
+	ACTs_CHWs_rate ~ prior("dgamma(1,1)")*SSCACT + completeness_ACTs_SSC + population
+	SP_rate ~ prior("dgamma(1,1)")*SP + completeness_SP + population
+	RDT_rate ~ prior("dgamma(1,1)")*RDT + completeness_RDT_completed + population	
 	# linkage 2 regressions
 	lead_newCasesMalariaMild_rate ~ prior("dnorm(-1,1)")*ITN_rate_cumul + prior("dnorm(-1,1)")*mildMalariaTreated_rate + prior("dnorm(-1,1)")*ACTs_CHWs_rate + prior("dnorm(-1,1)")*SP_rate + completeness_ITN_consumed + completeness_totalPatientsTreated + completeness_ACTs_SSC + completeness_SP
 	

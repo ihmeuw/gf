@@ -4,7 +4,8 @@
 # DATE: Last updated January 2019. 
 # 
 # INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
-# This will execute the whole thing on the cluster: qsub -cwd -N master_run -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/master/ -o /ihme/scratch/users/davidp6/impact_evaluation/master/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/1_master_file.r
+# This will execute the whole thing on the cluster: 
+# qsub -cwd -N master_run -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/master/ -o /ihme/scratch/users/davidp6/impact_evaluation/master/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/1_master_file.r
 # ----------------------------------------------
 
 #-----------------------------------------
@@ -29,9 +30,9 @@ source('./impact_evaluation/drc/set_up_r.r')
 rerun_inputs <- FALSE 
 rerun_outputs <- FALSE
 rerun_outcomes <- FALSE
-rerun_merge <- FALSE
-rerun_adjust <- FALSE
-rerun_explore <- FALSE
+rerun_merge <- TRUE
+rerun_adjust <- TRUE
+rerun_explore <- TRUE
 rerun_models <- TRUE
 rerun_analysis <- TRUE
 rerun_post <- FALSE
@@ -112,7 +113,7 @@ if (rerun_analysis==TRUE) {
 	source('./impact_evaluation/drc/6a_display_sem_results.r')
 	source('./impact_evaluation/drc/6b_efficiency_effectiveness.r')
 	source('./impact_evaluation/drc/6c_impact_analysis.r')
-	# source('./impact_evaluation/drc/6d_effect_sizes_by_hz.r')
+	source('./impact_evaluation/drc/6d_effect_sizes_by_hz.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', ieDir))

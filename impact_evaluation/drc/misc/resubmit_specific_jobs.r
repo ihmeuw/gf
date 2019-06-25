@@ -33,9 +33,9 @@ for(i in seq(T)) {
 
 # manually if you know which jobs failed
 modelVersion = 'drc_malaria_impact4'
-for(i in c(450)) {
+for(i in c(347)) {
 system(paste0('qsub -cwd -N ie2_job_array -t ', i, 
-	' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
+	' -l fthread=2 -l m_mem_free=4G -q all.q -P proj_pce -e ', 
 	clustertmpDireo, ' -o ', clustertmpDireo, 
 	' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
 	modelVersion, ' 2 FALSE'))

@@ -46,7 +46,6 @@ data = data[order(health_zone, date)]
 # for(v in complVars) data[, (v):=na.locf(get(v)), by='health_zone']
 
 # apply limits
-data[ITN>1000, ITN:=NA]
 data[SSCACT>50000, SSCACT:=NA]
 # data[SSCACT_under5>1000, SSCACT_under5:=NA]
 data[!is.finite(SP_rate), SP_rate:=NA]
@@ -82,7 +81,7 @@ for(v in names(data)) {
 		lmFit = lm(form, data[health_zone==h])
 		data[health_zone==h, tmp:=(predict(lmFit, newdata=data[health_zone==h]))]
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
-		data[tmp<0, (v):=0]
+		data[get(v)<0, (v):=0]
 		pct_complete = floor(i/(length(names(data))*length(unique(data$health_zone)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
 		flush.console() 
