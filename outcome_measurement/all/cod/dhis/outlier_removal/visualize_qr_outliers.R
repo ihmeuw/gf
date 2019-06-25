@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'base'
+set = 'pnls'
 
 # user name for sourcing functions
 user_name = Sys.info()[['user']]
@@ -34,7 +34,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 #-----------------------------------
 # output files
 
-if (set=='pnls') outFile = 'pnls_outliers/pnls_outputs/arv_outliers.pdf'
+if (set=='pnls') outFile = 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_outliers_replaced.rds'
 if (set=='base') {outData = 'prepped/base/base_prepped_outliers_replaced.rds'
                   outFile = 'outliers/base/final_base_outliers_06_17_19.pdf'}
 if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_06_17_19.pdf'
@@ -46,7 +46,7 @@ if (set=='pnlp') {outFile = '../prepped_data/PNLP/outliers/figures/pnlp_outliers
 #------------------------------------
 # read in the file
 
-if (set=='pnls') dt = readRDS(paste0(dir, 'pnls_outliers/base/qr_results_full.rds'))
+if (set=='pnls') dt = readRDS(paste0(dir, 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_screened.rds'))
 if (set=='base') dt = readRDS(paste0(dir, 'outliers/base/base_quantreg_results.rds'))
 if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl/prepped_sigl_quantreg_imputation_results.rds'))
 if (set=='pnlp') { dt = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results.rds'))
@@ -61,17 +61,6 @@ if (set=='base') {
   dt[, health_zone := standardizeHZNames(health_zone)]
   dt[is.na(health_zone), health_zone := "mont-ngafula-i"]
 }
-
-#------------------------------------
-# fix the date 
-# if (set != 'pnlp') dt[ , date:=as.Date(date, origin='1970-01-01')]
-
-#------------------------------------
-# merge in the facility names to label the graphs 
-if (set %in% c('pnls')) {
-  facilities = readRDS(paste0(dir, 'meta_data/master_facilities.rds'))
-  facilities = facilities[ ,.(org_unit_id, org_unit)]
-  dt = merge(dt, facilities, by='org_unit_id', all.x=TRUE) }
 
 #------------------------------------
 # identify outliers at various levels/thresholds
@@ -132,12 +121,13 @@ if (set=='sigl'){
 # the value is greater than the limit set above and greater than 10 times the mad of residuals 
 # or less than 10 times the negative mad of the residuals
 if (set %in% c('pnls', 'sigl', 'base')){
-  dt[, outlier := ifelse( (value > limit & ( value > t2_upper )), TRUE, FALSE) ]
+  dt[, outlier :=(value > limit & value > t2_upper )]
   dt[ (value < t2_lower ), outlier :=TRUE ]}
 if (set == 'pnlp') {
   dt[, outlier := ifelse( value > t3_upper, TRUE, FALSE) ]
   dt[ (value < t3_lower ), outlier :=TRUE ]
 }
+
 # number of outliers
 dt[ outlier==TRUE, .N ]  # 9,220 at fitted_value +/- 20 MADs for PNLP; 19,375 for base
 # ( dt[outlier==TRUE, .N]  / dt[!is.na(value), .N] ) * 100 # for sigl = 811; 0.017% of non-missing data; for PNLP, 0.55% of non-missing data
@@ -278,7 +268,7 @@ for (j in 11:100){
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
 #----------------------------
-if (set=='pnls') dt[ , combine:=paste0(org_unit_id, sex, element)]
+if (set=='pnls' | set=='base') dt[ , combine:=paste0(org_unit_id, element)]
 if (set=='base') dt[ , combine:=paste0(org_unit_id, element)]
 if (set=='sigl') dt[ , combine := paste0(org_unit_id, drug)]
 if (set=='pnlp') dt[ , combine := paste0(health_zone, variable)]
@@ -298,8 +288,7 @@ dt[ , combine := NULL]
 #----------------------------
 if (set != 'pnlp'){
   # create a unique identifier to drop out emerging trends
-  if (set=='pnls') out[ , combine2:=paste0(org_unit_id, sex, element, subpop, age)]
-  if (set=='base') out[ , combine2:=paste0(org_unit_id, element, category)]
+  if (set=='pnls' | set=='base') out[ , combine2:=paste0(org_unit_id, element, category)]
   if (set=='sigl') out[ , combine2:=paste0(org_unit_id, drug, variable)]
   
   # subset to only the age categories, subpops with more than one outlier
@@ -331,8 +320,7 @@ if (set != 'pnlp'){
   
   # subset again to only the sexes, facilities, variables with outliers
   # as some outliers have now been changed
-  if (set=='pnls') out[ , combine:=paste0(org_unit_id, sex, element)]
-  if (set=='base') out[ , combine:=paste0(org_unit_id, element)]
+  if (set=='pnls' | set=='base') out[ , combine:=paste0(org_unit_id, element)]
   if (set=='sigl') out[ , combine:=paste0(org_unit_id, drug)]
   
   out_new = out[outlier==T, unique(combine)]
@@ -387,6 +375,11 @@ if (set == "base"){
 # create a palette
 greys = brewer.pal(9, 'Greys')
 
+# choose the pnls set you want to visualize
+pnls_set_vector = 'VCT'
+out = out[pnls_set==pnls_set_vector]
+
+
 # create a list of plots
 list_of_plots = NULL
 i=1
@@ -395,28 +388,28 @@ i=1
 if (set == 'pnls'){
 for (e in unique(out$element)) {
   for (o in unique(out[element==e]$org_unit_id)) {
-    for (s in unique(out[element==e & org_unit_id==o]$sex)) {
+    for (s in unique(out[element==e & org_unit_id==o]$category)) {
       
       # title states variable, sex, facility
-      name = out[org_unit_id==o, unique(facility)]
+      name = out[org_unit_id==o, unique(org_unit)]
       title = paste0(e,' (', s, '): ', name)
       
       # create a subtitle with the outlier and the fitted value to impute
-      out_point = out[element==e & org_unit_id==o & sex==s & outlier==TRUE, unique(value)]
-      fit_point = out[element==e & org_unit_id==o & sex==s & outlier==TRUE, unique(fitted_value)]
+      out_point = out[element==e & org_unit_id==o & category==s & outlier==TRUE, unique(value)]
+      fit_point = out[element==e & org_unit_id==o & category==s & outlier==TRUE, unique(fitted_value)]
       subtitle = paste0('Outlier value=', out_point, '; Fitted value=', round(fit_point, 1))
       
       # create the plot
-      list_of_plots[[i]] = ggplot(out[element==e & org_unit_id==o & sex==s], aes(x=date, y=value, color=age)) +
+      list_of_plots[[i]] = ggplot(out[element==e & org_unit_id==o & category==s], aes(x=date, y=value, color=age)) +
         geom_line() +
-        geom_point(data = out[element==e & org_unit_id==o & sex==s & outlier==TRUE], color='#d73027', size=3, alpha=0.8) +
-        geom_point(data = out[element==e & org_unit_id==o & sex==s & outlier==TRUE], aes(x=date, y=fitted_value), 
+        geom_point(data = out[element==e & org_unit_id==o & category==s & outlier==TRUE], color='#d73027', size=3, alpha=0.8) +
+        geom_point(data = out[element==e & org_unit_id==o & category==s & outlier==TRUE], aes(x=date, y=fitted_value), 
                    color='#4575b4', size=3, alpha=0.8) +
         facet_wrap(~subpop) +
         scale_color_manual(values=greys)+
-        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=t1_lower, ymax=t1_upper), 
+        geom_ribbon(data = out[element==e & org_unit_id==o & category==s], aes(ymin=t1_lower, ymax=t1_upper), 
                     alpha=0.2, fill='#feb24c', color=NA) +
-        geom_ribbon(data = out[element==e & org_unit_id==o & sex==s], aes(ymin=t2_lower, ymax=t2_upper), 
+        geom_ribbon(data = out[element==e & org_unit_id==o & category==s], aes(ymin=t2_lower, ymax=t2_upper), 
                     alpha=0.2, fill='#feb24c', color=NA) +
         labs(title=title, subtitle=subtitle, x='Date', y='Count',
              color='Age') +

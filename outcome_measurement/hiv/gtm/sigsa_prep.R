@@ -20,6 +20,18 @@ library(XLConnect)
 library(tools)
 #---------------------------------------
 # Set up directories 
+
+# Tasks on sigsa
+# Format the geographic information 
+#
+
+
+
+
+
+
+
+
 #----------------------------------------
 
 # detect if operating on windows or on the cluster 
@@ -30,7 +42,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/')
 setwd(paste0(dir, 'sigsa/'))
 
 # to output prepped files
-out_dir = paste0(dir, 'prepped/sigpro/')
+out_dir = paste0(dir, 'prepped/sigsa/')
 
 #-----------------------------------------
 # load in the file 

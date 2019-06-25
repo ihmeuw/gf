@@ -40,91 +40,11 @@ setwd(paste0(dir, 'sigpro/october_transfer_2018/'))
 files = list.files('./', recursive=TRUE)
 
 # import the files into distinct data tables
-f1 = data.table(read.xlsx(files[[1]], sheet=2))
 f2 = data.table(read.xlsx(files[[2]], sheet=2))
 f3 = data.table(read.xlsx(files[[3]], sheet=2))
 f4 = data.table(read.xlsx(files[[4]], sheet=2))
 
-# sole testing set in the february transfer
-# f4 file within the february transfer, name f5 
-f5 = fread(paste0(dir, 'sigpro/february_transfer_2019/sigpro_f4_JanNov2018 - PB_TVC.csv'))
-
 #-----------------------------------------
-# format the first data set 
-
-# rename columns in english
-setnames(f1, c('sr', 'sr_code', 'year', 'month', 'numeroInforme', 
-               'pop', 'result', 'category', 'age', 'total'))
-
-# put the columns into lower case for reformatting
-f1 = f1[ ,lapply(.SD, tolower), .SDcols=c(1:length(f1))]
-
-# format date and value variables
-f1[ ,month:=as.numeric(month)]
-f1[ ,year:=as.numeric(year)]
-f1[ ,total:=as.numeric(as.character(total))] # in case of factor variable
-#-----------------------------------------
-# translate sub-populations 
-
-f1[pop=='hri', pop:='men_at_risk']
-f1[pop=='hsh', pop:='msm']
-f1[pop=='ppl', pop:='prisoners'] # personas privadas de la libertad
-f1[pop=='mts', pop:='fsw']
-f1[pop=='parejas de ppl', pop:='prisoner partners']
-f1[pop=='parejas de mts', pop:='fsw partners']
-f1[pop=='otros', pop:='others']
-f1[pop=='jrs', pop:='at_risk_youth']
-f1[grep('positiva', pop), pop:='family of pregnant women'] 
-f1[pop=='mujeres embarazadas', pop:='pregnant women']
-
-#--------------------------
-# crate a gender category
-
-f1[grep('mujer', category), gender:='Female']
-f1[grep('embarazada', category), gender:='Female']
-f1[grep('nina', category), gender:='Female']
-f1[pop=='fsw', gender:='Female']
-f1[grep('homb', category), gender:='Male']
-f1[grep('nino', category), gender:='Male']
-f1[grep('trans', category), gender:='Trans']
-
-# add a pregnancy binary
-f1[category=='embarazadas', pregnant:=TRUE]
-f1[category!='embarazadas', pregnant:=FALSE]
-
-# change the population of transgender folks away from msm
-f1[gender=='Trans', pop:='trans']
-#--------------------------
-# format age categories 
-
-f1[age=="50-mas", age:='50+']
-f1[age=="  < 1", age:=trimws(age)]
-f1[age=="00-18m", age:='0 - 18 mos']
-f1[age=="00-01", age:='0 - 1 year']
-
-#--------------------------
-# flag the problems
-f1[ , flag:=(12 < month)]
-f1[age=='total' | age=="41913" | age=="43348", flag:=TRUE]
-
-#--------------------------
-# create a date variable based on existing information
-
-f1[year==1, year:=2013]
-f1[year==2, year:=2014]
-f1[year==3, year:=2015]
-f1[month <= 12, date:=as.Date(paste0(year, '-', month, '-01'), format='%Y-%m-%d')]
-#--------------------------
-# drop unknown variable - may add later once clarity on code
-
-f1[ ,c('year', 'month'):=NULL]
-f1[ , set:=files[[1]]]
-
-#--------------------------
-# save the file 
-
-saveRDS(f1, paste0(out_dir, files[[1]], '_prepped.RDS'))
-#--------------------------
 
 #------------------------------------------------------------------
 # prep f2
@@ -358,66 +278,3 @@ f4[, flag:=(is.na(date))]
 saveRDS(f4, paste0(dir, 'prepped/', files[[4]], '_prepped.RDS'))
 #--------------------------
 #---------------------------------------------------------------------------
-
-#-----------------------------------------
-# read in the february 2019 testing data 
-
-# keep only the relevant variables
-f5 = f5[ ,.(referral=refervih, pre_test_completed=prePruebaVIH, test_completed=pruebaVIH,  post_test_completed=postPruebaVIH, 
-                informed_of_result=conoceResultadoVIH, condoms=condonesMasculinos, female_condoms=condonesFemeninos, 
-                flavored_condoms=condonesSabores, lube_packets=lubriSachet, lube_tubes=lubriTubo, impresos, 
-                pop=grupo, subpop=subgrupo, result=resultadoVIH, sr_code=codejecutor,            
-                activity=tipoActividad, date=fechareal,  department=departamento, muni=municode, theme=tema,
-                pqBasico, gender=Gender, age=Age)]
-   
-# put the columns into lower case for reformatting
-f5 = f5[ ,lapply(.SD, tolower), .SDcols=c(1:length(f5))]
-
-#----------------------------
-# format the dates and drop impossible values
-f5[date=='', date:=NA]
-f5[ , date:=ymd(date)]
-
-#----------------------------
-# match the sr codes
-
-f5[ ,sr_code:=gsub("nac0", "", sr_code)]
-#-------------------------------
-# convert yes and no to a logical 
-
-f5[ , referral:=(referral=='s')]
-f5[ , pre_test_completed:=(pre_test_completed=='s')]
-f5[ , test_completed:=(test_completed=='s')]
-f5[ , post_test_completed:=(post_test_completed=='s')]
-f5[ , informed_of_result:=(informed_of_result=='s')]
-
-# format and create a marker for positive tests
-f5[result=='reactivo', result:='reactive']
-f5[result=='no reactivo', result:='nonreactive']
-f5[result=='indeterminado', result:='indeterminate']
-f5[result=='prueba no realizada', result:='test not done']
-
-#-------------------------------
-#  formate the gender category 
-
-f5[gender=='m', gender:='Male']
-f5[gender=='t', gender:='Trans']
-f5[gender=='f', gender:='Female']
-
-# translate populations 
-f5[pop=='hsh', pop:='msm']
-
-#--------------------------
-# label the data set
-f5[ , set:='sigpro_f4_JanNov2018 - PB_TVC.csv'] # f4 file within february transfer
-
-# only a single data entry error
-f5[, flag:=(is.na(date))]
-#--------------------------
-# save the file 
-
-saveRDS(f5, paste0(dir, 'prepped/sigpro_f4_JanNov2018 - PB_TVC.csv_prepped.RDS'))
-
-#---------------------------------------------------
-
-
