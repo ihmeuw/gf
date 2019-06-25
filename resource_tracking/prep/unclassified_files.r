@@ -33,3 +33,42 @@ for (path in base_dirs){
 #--------------------------------------------
 # Now, merge together your documented file lists, and remove these files 
 #-----------------------------------------------------
+cod_files = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/raw_data/cod_budget_filelist.csv")
+gtm_files = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/raw_data/gtm_budget_filelist.csv")
+sen_files = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/sen/raw_data/sen_budget_filelist.csv")
+uga_files = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/uga/raw_data/uga_budget_filelist.csv")
+
+all_files = rbind(cod_files, gtm_files, sen_files, uga_files, fill=T)
+
+#Add full file paths to file names
+dir = "J:/Project/Evaluation/GF/resource_tracking/"
+all_files[, folder:=ifelse(data_source == "pudr", "pudrs", "budgets")]
+all_files[, version:=ifelse(file_iteration == "initial", "iterations", "")]
+all_files[, master_file_dir:=paste0(dir, "_gf_files_gos/", loc_name, "/raw_data/")]
+
+all_files[, file_dir:=paste0(master_file_dir, grant_status, "/", grant, "/", folder, "/")]
+all_files[version!="", file_dir:=paste0(file_dir, version, "/")]
+
+all_files[, inFile:=paste0(file_dir, file_name)]
+
+#Only keep the vector of built up file names; that's all you need. 
+processed_files = all_files$inFile
+
+#Now, drop out the files from the list before that you're processing with resource tracking. 
+file_list = unique(file_list) #Remove duplicate files (?) 
+all_files = unique(all_files) #Remove duplicate files(?)
+before_drop = length(file_list)
+unprocessed_files = file_list[!file_list%in%processed_files]
+
+if (length(unprocessed_files) + length(processed_files) != nrow(all_files)) {
+  print("Some file paths not being filtered correctly - unprocessed + processed does not equal all files.")
+}
+
+#---------------------------------------------
+# Pull some information out of unprocessed file path names to search for 
+#   files you're missing! 
+#--------------------------------------------
+unprocessed_files = data.table(file_name = unprocessed_files)
+unprocessed_files[, country:=tstrsplit(file_name, "/", keep=7)]
+unprocessed_files[, grant:=tstrsplit(file_name, "/", keep=10)]
+unprocessed_files[, data_source:=tstrsplit(file_name, "/", keep=11)]
