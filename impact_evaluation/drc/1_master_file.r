@@ -28,9 +28,9 @@ source('./impact_evaluation/drc/set_up_r.r')
 # ---------------------------------------
 rerun_inputs <- FALSE 
 rerun_outputs <- FALSE
-rerun_outcomes <- FALSE
-rerun_merge <- FALSE
-rerun_adjust <- FALSE
+rerun_outcomes <- TRUE
+rerun_merge <- TRUE
+rerun_adjust <- TRUE
 rerun_explore <- TRUE
 rerun_models <- TRUE
 rerun_analysis <- TRUE
@@ -112,7 +112,7 @@ if (rerun_analysis==TRUE) {
 	source('./impact_evaluation/drc/6a_display_sem_results.r')
 	source('./impact_evaluation/drc/6b_efficiency_effectiveness.r')
 	source('./impact_evaluation/drc/6c_impact_analysis.r')
-	# source('./impact_evaluation/drc/6d_effect_sizes_by_hz.r')
+	source('./impact_evaluation/drc/6d_effect_sizes_by_hz.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', ieDir))
