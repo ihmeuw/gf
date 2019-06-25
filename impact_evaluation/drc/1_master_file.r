@@ -30,9 +30,9 @@ source('./impact_evaluation/drc/set_up_r.r')
 rerun_inputs <- FALSE 
 rerun_outputs <- FALSE
 rerun_outcomes <- FALSE
-rerun_merge <- TRUE
-rerun_adjust <- TRUE
-rerun_explore <- TRUE
+rerun_merge <- FALSE
+rerun_adjust <- FALSE
+rerun_explore <- FALSE
 rerun_models <- TRUE
 rerun_analysis <- TRUE
 rerun_post <- FALSE
