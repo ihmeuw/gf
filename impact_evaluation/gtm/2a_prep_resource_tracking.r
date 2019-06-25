@@ -21,29 +21,26 @@
 #Used to split other_dah and ghe into quarters. 
 n_years <- (2018-1990)+1 #This is the range we have data for. 
 quarters <- data.table(year=rep(1990:2018, 4))[order(year)]
-quarters[, quarter:=rep(1:4, n_years)]
   
   #----------------------------------
   #GLOBAL FUND EXPENDITURES AND GOS 
   #----------------------------------
   expenditures = readRDS(expendituresFile)
-  expenditures = expenditures[loc_name=='gtm', .(year, quarter, gf_module, gf_intervention, code, disease, loc_name, expenditure)] #Will subset by disease in code section below. 
+  expenditures[, year:=year(start_date)]
+  expenditures = expenditures[loc_name=='gtm', .(year, gf_module, gf_intervention, code, disease, loc_name, expenditure)] #Will subset by disease in code section below. 
   setnames(expenditures, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
   
   #----------------------------------
   # FGH DATA (OTHER_DAH)
   #----------------------------------
   fgh <- readRDS(fghFile)
-  fgh = fgh[loc_name=="GTM", .(sda_activity, year, loc_name, disease, code, module_eng, intervention_eng, fin_data_type, financing_source, disbursement)]
-  setnames(fgh, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
+  fgh = fgh[loc_name=="GTM", .(activity_description, year, loc_name, disease, code, gf_module, gf_intervention, financing_source, disbursement)]
+  setnames(fgh, old=c('gf_module', 'gf_intervention'), new=c('module', 'intervention'))
   
   #Pull out other DAH. 
-  other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') , 
-                  .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(year, module, intervention, sda_activity, code, disease, loc_name)]
-  
-  #Split into quarters 
-  other_dah = merge(quarters, other_dah, by='year', all.x = TRUE, allow.cartesian=TRUE)
-  other_dah[, other_dah:=other_dah/4]
+  other_dah = fgh[(financing_source != 'The Global Fund' & financing_source != 'ghe') , 
+                  .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(year, module, intervention, code, disease, loc_name)]
+
   
   #----------------------------------
   # WHO EXPENDITURE DATA 
@@ -55,11 +52,10 @@ quarters[, quarter:=rep(1:4, n_years)]
   #----------------------------------
   sicoin = readRDS(sicoinFile) #EMILY ARE YOU SURE THIS IS ALREADY SUBSET INTO GHE??? 
   
-  #Collapse into quarters - SICOIN data is monthly. 
-  sicoin[, quarter:=quarter(start_date)]
+  #Collapse into years - SICOIN data is monthly. 
   sicoin[, year:=year(start_date)]
   
-  sicoin = sicoin[, .(expenditure=sum(expenditure, na.rm=T)), by=c('year', 'quarter', 'gf_module', 
+  sicoin = sicoin[, .(expenditure=sum(expenditure, na.rm=T)), by=c('year', 'gf_module', 
                                                                    'gf_intervention', 'activity', 'code', 'disease')]
 
 #------------------------------------
@@ -102,7 +98,7 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     expenditures[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
     expenditures[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
     
-    codes_generated = names(expenditures)[!names(expenditures)%in%c('year', 'quarter', 'module', 'intervention', 'code', 'disease', 'loc_name', 'expenditure')]
+    codes_generated = names(expenditures)[!names(expenditures)%in%c('year', 'module', 'intervention', 'code', 'disease', 'loc_name', 'expenditure')]
     if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
     
     #Review what codes each logic condition is matching to visually. 
@@ -110,12 +106,12 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     unique(expenditures[, cols, with=FALSE][order(code)])
     
     #Make summary data tables for each of these codes, and then merge them together. 
-    exp_wide = data.table(year = integer(), quarter=integer())
+    exp_wide = data.table(year = integer())
     for (col in codes_generated){
       assign(col, expenditures[get(col)==TRUE, .(exp=sum(expenditure, na.rm=T)),
-                               by=c('year', 'quarter')])
+                               by=c('year')])
       setnames(get(col), 'exp', paste0('exp_', col))
-      exp_wide = merge(exp_wide, get(col), by=c('year', 'quarter'), all=T)
+      exp_wide = merge(exp_wide, get(col), by=c('year'), all=T)
     }
     
     #---------------------------------------------
@@ -140,20 +136,20 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     other_dah[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
     other_dah[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
     
-    codes_generated = names(other_dah)[!names(other_dah)%in%c('year', 'quarter', 'module', 'intervention', 'code', 'disease', 'loc_name', 'sda_activity', 'other_dah')]
+    codes_generated = names(other_dah)[!names(other_dah)%in%c('year', 'module', 'intervention', 'code', 'disease', 'loc_name', 'sda_activity', 'other_dah')]
     if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
     
     #Review what codes each logic condition is matching to visually. 
-    cols = c(6, 10:ncol(other_dah))
+    cols = c(5, 10:ncol(other_dah))
     unique(other_dah[, cols, with=FALSE][order(code)])
     
     #Make summary data tables for each of these codes, and then merge them together. 
-    dah_wide = data.table(year = integer(), quarter=integer())
+    dah_wide = data.table(year = integer())
     for (col in codes_generated){
       assign(col, other_dah[get(col)==TRUE, .(other_dah=sum(other_dah, na.rm=T)),
-                               by=c('year', 'quarter')])
+                               by=c('year')])
       setnames(get(col), 'other_dah', paste0('other_dah_', col))
-      dah_wide = merge(dah_wide, get(col), by=c('year', 'quarter'), all=T)
+      dah_wide = merge(dah_wide, get(col), by=c('year'), all=T)
     }
     
     #---------------------------------------------
@@ -178,7 +174,7 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     sicoin[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
     sicoin[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
     
-    codes_generated = names(sicoin)[!names(sicoin)%in%c('year', 'quarter', 'gf_module', 'gf_intervention', 'activity', 'expenditure', 'code', 'disease')]
+    codes_generated = names(sicoin)[!names(sicoin)%in%c('year', 'gf_module', 'gf_intervention', 'activity', 'expenditure', 'code', 'disease')]
     if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
     
     #Review what codes each logic condition is matching to visually. 
@@ -186,12 +182,12 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     unique(sicoin[, cols, with=FALSE][order(code)])
     
     #Make summary data tables for each of these codes, and then merge them together. 
-    ghe_wide = data.table(year = integer(), quarter=integer())
+    ghe_wide = data.table(year = integer())
     for (col in codes_generated){
       assign(col, sicoin[get(col)==TRUE, .(ghe=sum(expenditure, na.rm=T)),
-                            by=c('year', 'quarter')])
+                            by=c('year')])
       setnames(get(col), 'ghe', paste0('ghe_', col))
-      ghe_wide = merge(ghe_wide, get(col), by=c('year', 'quarter'), all=T)
+      ghe_wide = merge(ghe_wide, get(col), by=c('year'), all=T)
     }
   
 }
@@ -201,19 +197,9 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
 #------------------------------------
 # Shape data wide and merge.  
 #------------------------------------
-
-#Create date variable
-exp_wide[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-exp_wide[, date:=year+quarter]
-exp_wide = exp_wide[, -c('year', 'quarter')]
-
-dah_wide[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc.
-dah_wide[, date:=year+quarter]
-dah_wide = dah_wide[, -c('year', 'quarter')]
-
-ghe_wide[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc.
-ghe_wide[, date:=year+quarter]
-ghe_wide = ghe_wide[, -c('year', 'quarter')]
+exp_wide$quarter <- NULL
+dah_wide$quarter <- NULL
+ghe_wide$quarter <- NULL
 
 rt_wide <- merge(dah_wide, exp_wide, by=c('date'), all=T)
 rt_wide <- merge(rt_wide, ghe_wide, by=c('date'), all=T)
