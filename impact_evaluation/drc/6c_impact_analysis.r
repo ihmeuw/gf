@@ -166,6 +166,7 @@ setup2LevelSB = function(var='ITN_consumed_cumulative', pcts=TRUE) {
 	out[is.na(label), label:='']
 	if (pcts==TRUE) out[label!='', label:=paste(label, '-', round(est.std*100, 1), '%')]
 	out[rhs==lhs & level==2, label:='']
+	out[rhs=='population', label:=paste('Population Control -', round(est.std*100, 1), '%')]
 	
 	# return
 	return(out)
