@@ -41,7 +41,7 @@ base_2017 = paste0(dir, "prepped/archive/base_services_drc_01_2017_09_2018_prepp
 pati_cases <- "pati_tb/tb_pati_new_tb_cases_relapses_by_age_sex.rds"
 pati_registered <- "pati_tb/tb_pati_cases_registered.rds"
 pati_results <- "pati_tb/tb_pati_case_results.rds"
-base_out <- "base_services_prepped.rds"
+base_out <- "base/base_services_prepped.rds"
 sigl_out <- "sigl/sigl_prepped.rds"
 
 # functions

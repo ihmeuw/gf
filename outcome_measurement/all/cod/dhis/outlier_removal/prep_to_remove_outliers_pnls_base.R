@@ -89,7 +89,7 @@ dt[, element_id:=.GRP, by='element']
 
 # save the prepped file
 if (set=='pnls') {saveRDS(dt, paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))}
-if (set=='base') {saveRDS(dt, paste0(dir, 'outliers/base_to_screen.rds'))}
+if (set=='base') {saveRDS(dt, paste0(dir, 'outliers/base/base_to_screen.rds'))}
 
 # ---------------------------------------
 # save old element ids for merge 
