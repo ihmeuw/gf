@@ -2,7 +2,7 @@
 #------------------------------------
 # Caitlin O'Brien-Carelli / Audrey Batzel
 #
-# 4/1/2019
+# 6/24/2019
 # The current working directory should be the root of this repository
 # This code must be run on the cluster
 #------------------------------------
@@ -209,14 +209,14 @@ while(numFiles<i) {
 for (k in seq(N)) {
   file = paste0(parallelDir, 'quantreg_output_', k, '.fst')
   if (file.exists(file)==TRUE) tmp = read.fst(paste0(parallelDir, 'quantreg_output_', k, '.fst'), as.data.table=TRUE)
-  if (file.exists(file)==FALSE) skip
+  if (file.exists(file)==FALSE) print(paste0("File ", k, " does not exist."))
+  if (file.exists(file)==FALSE) next
   if(k==1) fullData = tmp
   if(k>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', k)) }
 
 # save the resulting file
 saveRDS(fullData, outFile)
-
 #------------------------------------
 
 #------------------------------------
