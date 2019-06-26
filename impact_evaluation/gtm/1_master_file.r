@@ -26,14 +26,14 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # ---------------------------------------
 # Set boolean switches
 # ---------------------------------------
-rerun_inputs <- FALSE 
+rerun_inputs <- FALSE
 rerun_outputs <- FALSE
-rerun_outcomes <- FALSE
+rerun_outcomes <- TRUE
 rerun_merge <- FALSE
 rerun_adjust <- FALSE
-rerun_explore <- TRUE
-rerun_models <- TRUE
-rerun_analysis <- TRUE
+rerun_explore <- FALSE
+rerun_models <- FALSE
+rerun_analysis <- FALSE
 rerun_post <- FALSE
 
 # ---------------------------------------

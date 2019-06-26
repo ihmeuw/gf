@@ -228,11 +228,15 @@ outputs1 = outputs1[, -c('dup')]
 # Merge data 
 #-----------------------------------------------------
 dt_final = merge(activities1, outputs1, by=c('date', 'department'), all=T) #Save dates and departments from both, in case you have data in one and not the other. 
+
+
 #-----------------------------------------------------
 # Save data 
 #-----------------------------------------------------
 saveRDS(dt_final, outputFile2b)
 archive(outputFile2b)
+
+print("Step 2b: Prep activities outputs completed successfully.")
 
 
 
