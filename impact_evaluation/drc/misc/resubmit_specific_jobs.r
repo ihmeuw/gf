@@ -33,7 +33,7 @@ for(i in seq(T)) {
 
 # manually if you know which jobs failed
 modelVersion = 'drc_malaria_impact4'
-for(i in c(347)) {
+for(i in c(90)) {
 system(paste0('qsub -cwd -N ie2_job_array -t ', i, 
 	' -l fthread=2 -l m_mem_free=4G -q all.q -P proj_pce -e ', 
 	clustertmpDireo, ' -o ', clustertmpDireo, 
