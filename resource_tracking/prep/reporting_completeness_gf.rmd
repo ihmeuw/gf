@@ -27,7 +27,7 @@ budgets = unique(budgets[, .(grant, file_name, date, loc_name)])
 #Because final expenditure data is NOT disaggregated into quarters; remerge this data with GOS from the budget_pudr_iterations file in the same wa as 2d_gf_aggregate_files.r
 pudrs = readRDS(paste0(dir, "budget_pudr_iterations.rds"))
 pudrs = pudrs[data_source=="pudr" & file_iteration=="final"]
-gos_data = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/prepped_data/prepped_gos_data.rds")
+gos_data = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/prepped_data/raw_bound_gos.rds")
   
 pudr_subset = pudrs[year>=2015]
 gos_data = gos_data[year<2015]
