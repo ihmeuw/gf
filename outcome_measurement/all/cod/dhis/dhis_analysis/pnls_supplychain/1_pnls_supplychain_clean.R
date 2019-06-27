@@ -24,8 +24,9 @@
 #-------------------------------------------------
 # Read in PNLS and SIGL data, and merge 
 # ------------------------------------------------
-pnls = readRDS(paste0(dir, 'pnls_sets/pnls_drug_2017_01_01_2018_12_01.rds'))
+pnls = readRDS(paste0(dir, 'pnls_sets/pnls_drug_2017_01_01_2019_02_01.rds'))
 pnls = pnls[, -c('subpop', 'maternity', 'case')]
+setnames(pnls, 'element', 'element_eng') #For this data, the translation isn't as important because we don't need to do subpop extraction. Just grepping on drug names. 
 
 pnls[stock_category=='Nbr de jours RS', stock_category:='number_of_days_stocked_out']
 pnls[stock_category=="Stock disponible utilisable", stock_category:='available_usable_stock']
@@ -35,30 +36,19 @@ pnls[stock_category=='Sortie', stock_category:='output']
 
 sigl = readRDS(paste0(dir, 'sigl/sigl_prepped.rds'))
 
-#Make sure there isn't any overlap in facility reporting between two datasets 
-pnls_facs = unique(pnls$org_unit_id)
-sigl_facs = unique(sigl$org_unit_id)
-
-overlap = pnls_facs[pnls_facs%in%sigl_facs]
-sigl_only = sigl_facs[!sigl_facs%in%pnls_facs]
-pnls_only = pnls_facs[!pnls_facs%in%sigl_facs]
-
-print(paste0("There are ", length(overlap), " overlapping facilities, ", length(pnls_only), " reporting only to PNLS, and ", length(sigl_only), " reporting only to SIGL."))
-
-#Subset SIGL to only its unique facilities - we might want to do a more nuanced merge than this, around reporting completeness. 
-sigl = sigl[org_unit_id%in%sigl_only]
-
 #Pull relevant SIGL test kit variables. (Determine, HIV 1+2, and Double-check days out of stock and available usable stock)
 # unique(sigl[grepl("determine", element_eng, ignore.case=T), .(element_eng, element_id)])
 #unique(sigl[grepl("double check", element_eng, ignore.case=T), .(element_eng, element_id)])
 
 sigl_element_ids = c("T4gD1QoPYzK", "VwDtaCYTugc", "Swrsj0VOZ74", "o7edQT2Wizp")
 sigl = sigl[element_id%in%sigl_element_ids]
-unique(sigl[, .(element_eng, element_id)]) #Visual check to make sure this is what you want. 
+unique(sigl[, .(element_eng, element_id)]) #Visual check to make sure this is what you want. NEED TO VERIFY WE DON'T HAVE ANY UNIGOLD IN THE DATASET EMILY 6/18/19
 
 #Drop irrelevant variables before appending, and generate relevant ones. 
-sigl = sigl[, -c('category', 'country', 'data_set', 'coordinates', 'last_update', 'download_number')]
-pnls = pnls[, -c('set', 'sex', 'age', 'tb')]
+sigl = sigl[, -c('category_id', 'category', 'opening_date', 'element', 'country', 'data_set', 'data_set_id', 'year')]
+pnls = pnls[, -c('sex', 'age', 'tb', 'pnls_set')]
+
+setnames(pnls, "facility_level", "level")
 
 sigl[grepl("Days out of stock", element_eng), stock_category:="number_of_days_stocked_out"]
 sigl[grepl("available usable", element_eng), stock_category:="available_usable_stock"]
@@ -85,7 +75,63 @@ sigl[element_id=="Gv1UQdMw5wL", element_eng:="HIV 1 + 2, Determine Complete, 100
 pnls[, source:="PNLS"]
 sigl[, source:="SIGL"]
 
-dt = rbind(pnls, sigl, use.names=T)
+#Make sure there isn't any overlap in facility reporting between two datasets 
+pnls_facs = unique(pnls$org_unit_id)
+sigl_facs = unique(sigl$org_unit_id)
+
+overlap = pnls_facs[pnls_facs%in%sigl_facs]
+sigl_only = sigl_facs[!sigl_facs%in%pnls_facs]
+pnls_only = pnls_facs[!pnls_facs%in%sigl_facs]
+
+print(paste0("There are ", length(overlap), " overlapping facilities, ", length(pnls_only), " reporting only to PNLS, and ", length(sigl_only), " reporting only to SIGL."))
+
+#Do this check at the month-level, to get a better idea if the monthly stockout data agrees between the two sources. 
+
+#Compare available, usable stock and stockouts for overlapping facilities for Determine (first-line testing)
+overlap_dt = rbind(pnls, sigl, use.names=T, fill=T)
+overlap_dt[, concat:=paste0(date, "_", org_unit_id)]
+
+date_frame = data.table(month = seq(1, 12, by=1), expected_days = c(31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31))
+overlap_dt[, month:=month(date)]
+overlap_dt = merge(overlap_dt, date_frame, all.x = TRUE, by = 'month')
+
+overlap_dt[value>expected_days & stock_category == "number_of_days_stocked_out", value:=NA] #Replace impossible days stocked out with NA
+
+
+#What facilities are reporting to both PNLS and SIGL by month for Determine available usable stock? 
+overlap_avail = overlap_dt[stock_category=="available_usable_stock" & element_id=="Gv1UQdMw5wL", .(org_unit_id, source, date)]
+overlap_avail = overlap_avail[, .(facs=.N), by=c('date', 'org_unit_id')]
+stopifnot(overlap_avail$facs%in%c(1, 2)) #There's a problem if you have values other than these! 
+overlap_avail = overlap_avail[facs>1] #When you have more than 1 here, it means you had reporting from both sources. 
+overlap_avail[, concat:=paste0(date, "_", org_unit_id)]
+
+avail_determine = overlap_dt[concat%in%overlap_avail$concat & stock_category=="available_usable_stock" & element_id=="Gv1UQdMw5wL", .(value=sum(value, na.rm=T)), by=c('date', 'source')]
+ggplot(avail_determine, aes(x=date, y=value, color=source))+
+  geom_line() + 
+  theme_bw() + 
+  labs(title="Comparison of 'available, usable stock' for Determine\nin availping PNLS and SIGL facilities", x='Date', y='Available, Usable Stock')
+ggsave("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pnls/supplychain_final_graphs/pnls_sigl_determine_avail.png")
+
+#What facilities are reporting to both PNLS and SIGL by month for Determine available usable stock? 
+overlap_so = overlap_dt[stock_category=="number_of_days_stocked_out" & element_id=="Gv1UQdMw5wL", .(org_unit_id, source, date)]
+overlap_so = overlap_so[, .(facs=.N), by=c('date', 'org_unit_id')]
+stopifnot(overlap_so$facs%in%c(1, 2)) #There's a problem if you have values other than these! 
+overlap_so = overlap_so[facs>1] #When you have more than 1 here, it means you had reporting from both sources. 
+overlap_so[, concat:=paste0(date, "_", org_unit_id)]
+          
+so_determine = overlap_dt[concat%in%overlap_so$concat & stock_category=="number_of_days_stocked_out" & element_id=="Gv1UQdMw5wL", .(value=sum(value, na.rm=T)), by=c('date', 'source')]
+ggplot(so_determine, aes(x=date, y=value, color=source))+
+  geom_line() + 
+  theme_bw() + 
+  labs(title="Comparison of number of days stocked out for Determine\nin overlapping PNLS and SIGL facilities", x='Date', y='Stock-out days')
+ggsave("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pnls/supplychain_final_graphs/pnls_sigl_determine_so.png")
+
+#Save the SIGL dataset at this point in case you want to use it later 
+saveRDS(sigl, "J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/sigl/sigl_for_pnls_supplychain.rds")
+#Subset SIGL to only its unique facilities - we might want to do a more nuanced merge than this, around reporting completeness. 
+sigl_subset = sigl[org_unit_id%in%sigl_only]
+
+dt = rbind(pnls, sigl_subset, use.names=T)
 
 #-------------------------------------------------
 # Read in shapefile 
@@ -173,7 +219,7 @@ dt[element_id =="W7sym5eCc44", regimen:=2]  #"AZT/3TC/NVP(300/150/200 mg) - 60 c
 dt[element_id == "pzMcLYBCPYG", regimen:=2] #AZT/3TC/NVP 60/30/50 mg ces disp - 60 ces
 dt[element_id == "ANTg88cSB09", regimen:=2] #AZT+3TC+EFV
 
-unique(dt[is.na(regimen), .(regimen, element)][order(regimen)])
+unique(dt[is.na(regimen), .(regimen, element_eng)][order(regimen)])
 #Are there any other second-line regimens we can pull here? 
 
 #Save a cleaned data set here so you can run quantile regression 

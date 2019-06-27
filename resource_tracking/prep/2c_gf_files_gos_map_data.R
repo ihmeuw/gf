@@ -543,6 +543,9 @@ if (prep_files){
     stop("Values of pudr_code did not merge correctly.")
   }
   
+  #Make the start date the first start date of the file (i.e., collapse the quarter-level out in the next step)
+  absorption[, start_date:=min(start_date), by=c('grant', 'grant_period', 'semester')]
+  
   #Calculate absorption by module/intervention 
   absorption = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
                           by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'semester', 'code', 'duration_quarters', 'start_date')]

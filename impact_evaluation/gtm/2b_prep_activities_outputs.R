@@ -96,14 +96,53 @@ outputs = outputs[, -c('dup', 'mun_start', 'department_error', 'NA_ERROR')]
 #------------------------
 # Activities
 #------------------------
-#Make a department-level dataset and a municipality-level dataset. 
-dep_level_a = activities[, .(date, department, Total_Drugs_Distributed_value_d, Isoniazid_Distributed_value_d, Number_of_Cases_Screened_for_MDR_value_d, Second_Line_Drugs_Distributed_value_d)]
-names(dep_level_a) = gsub("_d", "", names(dep_level_a))
-dep_level_a = unique(dep_level_a)
+#Run a check to decide which variables are already at the dept. level and which need to be summed. 
+vars = names(activities)[!names(activities)%in%c('date', 'department', 'municipality')]
+dep_vars = c()
+mun_vars = c()
+for (var in vars){
+  dt = unique(activities[, .(date, department, var=get(var))])
+  dt[duplicated(dt, by=c('date', 'department')), dup:=TRUE]
+  if (nrow(dt[dup==TRUE])!=0){
+    mun_vars = c(mun_vars, var)
+  } else {
+    dep_vars = c(dep_vars, var)
+  }
+}
 
-mun_level_a = activities[, .(date, department, PLHIV_Screened_for_TB_value_m, TB_Patients_Tested_for_HIV_value_m)] #Don't need municipality here. 
-mun_level_a = mun_level_a[, .(PLHIV_Screened_for_TB_value=sum(PLHIV_Screened_for_TB_value_m, na.rm=T), TB_Patients_Tested_for_HIV_value=sum(TB_Patients_Tested_for_HIV_value_m, na.rm=T)), 
-          by=c('date', 'department')]
+#Flag cases where variables end in _d but are in the mun-level dataset. 
+dept_level_error = mun_vars[grepl("_d", mun_vars)]
+if (length(dept_level_error)!=0){
+  print("ERROR: Some department-level variables are not uniquely identified by department and date!")
+  print(dept_level_error)
+}
+
+#Take the average of the department-level variables by date and department. 
+dep_level_a = data.table(date=integer(), department=integer())
+for (var in dep_vars){
+  var_subset = activities[, .(var=mean(get(var), na.rm=T)), by=c('date', 'department')]
+  names(var_subset)[3] = var
+  dep_level_a = merge(dep_level_a, var_subset, by=c('date', 'department'), all=T)
+}
+#Check for uniqueness. 
+dep_level_a[duplicated(dep_level_a, by=c('date', 'department')), dup:=TRUE]
+stopifnot(nrow(dep_level_a[dup==TRUE])==0)
+dep_level_a$dup<-NULL
+names(dep_level_a) = gsub("_m|_d", "", names(dep_level_a))
+
+#Take the sum of the municipality-level variables by date and department. 
+mun_level_a = data.table(date=integer(), department=integer())
+for (var in mun_vars){
+  var_subset = activities[, .(var=sum(get(var), na.rm=T)), by=c('date', 'department')]
+  names(var_subset)[3] = var
+  mun_level_a = merge(mun_level_a, var_subset, by=c('date', 'department'), all=T)
+}
+#Check for uniqueness. 
+mun_level_a[duplicated(mun_level_a, by=c('date', 'department')), dup:=TRUE]
+stopifnot(nrow(mun_level_a[dup==TRUE])==0)
+mun_level_a$dup<-NULL
+names(mun_level_a) = gsub("_m|_d", "", names(mun_level_a))
+
 
 activities1 = merge(dep_level_a, mun_level_a, by=c('date', 'department'), all=T)
 #Make sure you've accounted for all columns except municipality. 
@@ -115,19 +154,53 @@ names(activities1)[3:ncol(activities1)] <- new_names
 #------------------------
 # Outputs
 #------------------------
-dep_level_o = outputs[, .(date, department, Cases_Started_on_Treatment_value_d, Cases_Notified_in_Prisons_value, 
-                             MDR_Cases_Notified_value_d, MDR_Cases_Started_Treatment_value_d)]
-names(dep_level_o) = gsub("_d", "", names(dep_level_o))
-dep_level_o = unique(dep_level_o)
-
-mun_level_o = outputs[, .(date, department, Cases_Notified_value_m, Additional_Cases_Detected_via_ACF_value_m, PLHIV_started_on_IPT_value_m,
-                             Children_in_Contact_with_TB_Started_IPT_value_m, `HIV_TB_Cases_Notified_value_m`, Cases_Started_on_Treatment_in_Prisons_value_m)] #Don't need municipality here. 
-mun_vars = names(mun_level_o)[3:ncol(mun_level_o)]
-for (v in mun_vars){
-  mun_level_o[, (v):=sum(get(v), na.rm=T), by=c('date', 'department')]
+#Run a check to decide which variables are already at the dept. level and which need to be summed. 
+vars = names(outputs)[!names(outputs)%in%c('date', 'department', 'municipality')]
+dep_vars = c()
+mun_vars = c()
+for (var in vars){
+  dt = unique(outputs[, .(date, department, var=get(var))])
+  dt[duplicated(dt, by=c('date', 'department')), dup:=TRUE]
+  if (nrow(dt[dup==TRUE])!=0){
+    mun_vars = c(mun_vars, var)
+  } else {
+    dep_vars = c(dep_vars, var)
+  }
 }
-mun_level_o = unique(mun_level_o)
-names(mun_level_o) <- gsub("_m", "", names(mun_level_o))
+
+#Flag cases where variables end in _d but are in the mun-level dataset. 
+dept_level_error = mun_vars[grepl("_d", mun_vars)]
+if (length(dept_level_error)!=0){
+  print("ERROR: Some department-level variables are not uniquely identified by department and date!")
+  print(dept_level_error)
+}
+
+#Take the average of the department-level variables by date and department. 
+dep_level_o = data.table(date=integer(), department=integer())
+for (var in dep_vars){
+  var_subset = outputs[, .(var=mean(get(var), na.rm=T)), by=c('date', 'department')]
+  names(var_subset)[3] = var
+  dep_level_o = merge(dep_level_o, var_subset, by=c('date', 'department'), all=T)
+}
+#Check for uniqueness. 
+dep_level_o[duplicated(dep_level_o, by=c('date', 'department')), dup:=TRUE]
+stopifnot(nrow(dep_level_o[dup==TRUE])==0)
+dep_level_o$dup<-NULL
+names(dep_level_o) = gsub("_m|_d", "", names(dep_level_o))
+
+#Take the sum of the municipality-level variables by date and department. 
+mun_level_o = data.table(date=integer(), department=integer())
+for (var in mun_vars){
+  var_subset = outputs[, .(var=sum(get(var), na.rm=T)), by=c('date', 'department')]
+  names(var_subset)[3] = var
+  mun_level_o = merge(mun_level_o, var_subset, by=c('date', 'department'), all=T)
+}
+#Check for uniqueness. 
+mun_level_o[duplicated(mun_level_o, by=c('date', 'department')), dup:=TRUE]
+stopifnot(nrow(mun_level_o[dup==TRUE])==0)
+mun_level_o$dup<-NULL
+names(mun_level_o) = gsub("_m|_d", "", names(mun_level_o))
+
 
 outputs1 = merge(dep_level_o, mun_level_o, by=c('date', 'department'), all=T)
 #Make sure you've accounted for all columns except municipality. 
@@ -135,32 +208,35 @@ stopifnot(ncol(outputs1) == ncol(outputs)-1)
 new_names = names(outputs1)[3:ncol(outputs1)]  #Resest the names so they're distinguishable from activity variables. 
 new_names = paste0(new_names, "_out")
 names(outputs1)[3:ncol(outputs1)] <- new_names
-
 #-----------------------------------------------------
 # Check to make sure you're still uniquely identifying data 
 #-----------------------------------------------------
-activities[duplicated(activities, by=c('department','date')), dup:=TRUE]
-if (nrow(activities[dup==TRUE])!=0){
-  print(paste0("There are ", nrow(activities[dup==TRUE]), " duplicates in department and date in the activities data. Review."))
+activities1[duplicated(activities1, by=c('department','date')), dup:=TRUE]
+if (nrow(activities1[dup==TRUE])!=0){
+  print(paste0("There are ", nrow(activities1[dup==TRUE]), " duplicates in department and date in the activities data. Review."))
 }
 
-outputs[duplicated(outputs, by=c('department', 'date')), dup:=TRUE]
-if (nrow(outputs[dup==TRUE])!=0){
-  print(paste0("There are ", nrow(outputs[dup==TRUE]), " duplicates in department and date in the outputs data. Review."))
+outputs1[duplicated(outputs1, by=c('department', 'date')), dup:=TRUE]
+if (nrow(outputs1[dup==TRUE])!=0){
+  print(paste0("There are ", nrow(outputs1[dup==TRUE]), " duplicates in department and date in the outputs data. Review."))
 }
 
-activities = activities[, -c('dup')]
-outputs = outputs[, -c('dup')]
+activities1 = activities1[, -c('dup')]
+outputs1 = outputs1[, -c('dup')]
 
 #-----------------------------------------------------
 # Merge data 
 #-----------------------------------------------------
 dt_final = merge(activities1, outputs1, by=c('date', 'department'), all=T) #Save dates and departments from both, in case you have data in one and not the other. 
+
+
 #-----------------------------------------------------
 # Save data 
 #-----------------------------------------------------
 saveRDS(dt_final, outputFile2b)
 archive(outputFile2b)
+
+print("Step 2b: Prep activities outputs completed successfully.")
 
 
 

@@ -4,7 +4,7 @@
 model = '
 
 	# linkage 1 regressions
-	ITN_received_cumulative ~ prior("dgamma(1,1)")*lag_exp_M1_1_cumulative + prior("dgamma(1,1)")*lag_exp_M1_2_cumulative + prior("dgamma(1,1)")*lag_other_dah_M1_1_cumulative + date + prior("dgamma(1,1)")*lag_ghe_cumulative + completeness_ITN_received
+	ITN_received_cumulative ~ prior("dgamma(1,1)")*lag_exp_M1_1_cumulative + prior("dgamma(1,1)")*lag_exp_M1_2_cumulative + prior("dgamma(1,1)")*lag_other_dah_M1_1_cumulative + date + completeness_ITN_received
 	RDT_received_cumulative ~ prior("dgamma(1,1)")*lag_exp_M2_1_cumulative + prior("dgamma(1,1)")*lag_other_dah_M2_cumulative + date + prior("dgamma(1,1)")*lag_ghe_cumulative + completeness_RDT_received
 	ACT_received_cumulative ~ prior("dgamma(1,1)")*lag_exp_M2_1_cumulative + prior("dgamma(1,1)")*lag_other_dah_M2_cumulative + date + prior("dgamma(1,1)")*lag_ghe_cumulative + completeness_ACT_received
 	

@@ -2,7 +2,7 @@
 #------------------------------------
 # Caitlin O'Brien-Carelli / Audrey Batzel
 #
-# 4/1/2019
+# 6/24/2019
 # The current working directory should be the root of this repository
 # This code must be run on the cluster
 #------------------------------------
@@ -25,21 +25,27 @@
 #------------------------------------
 rm(list=ls())
 library(data.table)
-library(quantreg)
-library(fst) # to save data tables as .fst for faster read/write and full random access
 
 # detect the user operating on the cluster
 user = Sys.info()[['user']]
 
+# these libraries must be loaded locally from scratch if using an ide
+library(fst, lib.loc=paste0('/ihme/scratch/users/', user, '/packages'))
+library(SparseM, lib.loc=paste0('/ihme/scratch/users/', user, '/packages')) 
+library(quantreg, lib.loc=paste0('/ihme/scratch/users/', user, '/packages'))
+
+# set the working directory because this is america
+setwd(paste0('/ihme/code/', user, '/gf/'))
+
 # choose the data set you want to load
-set = 'sigl'
+set = 'pnls'
 #------------------------------------
 
 #------------------------------------
 # switches
 
 cleanup_start = FALSE # whether or not to delete all files from parallel runs at the beginning
-cleanup_end = FALSE # "" /end; default to FALSE
+cleanup_end = TRUE # "" /end; default to FALSE
 # impute = 'TRUE' # whether or not to impute missing data as part of the qr
 # cat_files = TRUE # whether or not to concatenate all of the files at the end
 agg_to_DPS = FALSE # whether or not to aggregate the data to DPS level before running QR. 
@@ -87,7 +93,7 @@ arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 if (set=='sigl') {inFile = paste0(dir, 'prepped/sigl/sigl_for_qr.rds') 
 outFile = paste0(dir, 'sigl_quantreg_imputation_results.rds') }
 
-if (set=='base') {inFile = paste0(dir, 'outliers/base_to_screen.rds')
+if (set=='base') {inFile = paste0(dir, 'outliers/base/base_to_screen.rds')
 outFile = paste0(dir, 'outliers/base_quantreg_results.rds')}
 
 if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_for_qr.rds')
@@ -97,18 +103,23 @@ if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement
     outFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_quantreg_results.rds')
   }
 }
+
+if(set=='pnls') inFile = paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2019_04_01.rds')
+if(set=='pnls') outFile = paste0(dir, 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_screened.rds')
 #------------------------------------
 
 #------------------------------------
 # read in and set up the data
 #------------------------------------
 dt = readRDS(inFile)
+dt = data.table(dt)
 
+# format the variable types for the regressions
 dt[ , date:=as.Date(date)] # regression only runs with date as a date variable
-dt[, org_unit_id := as.character(org_unit_id)]
+dt[, org_unit_id:=as.character(org_unit_id)]
 
 # format the pnlp data in the same format as the base data
-# this assigns an element id to each variable and refered to the health zone as an org_unit
+# this assigns an element id to each variable and refers to the health zone as an org_unit for pnlp
 if (set=='pnlp') {dt[, org_unit_id := paste(dps, health_zone, sep = "_")]
                   dt[, element_id:=.GRP, by='variable']}
 if (set=='sigl') {dt[, variable := as.character(variable)]
@@ -116,6 +127,10 @@ if (set=='sigl') {dt[, variable := as.character(variable)]
                   dt[, drug_id:=.GRP, by='drug']
                   dt[, variable_id:=.GRP, by='variable']
                   dt[, completely_missing := NULL]}
+
+if (set=='pnls') setnames(dt, 'element_id', 'id')
+if (set=='pnls') dt[ ,element_id:=.GRP, by='id']
+
 
 # aggregate to DPS level before running (if agg_to_DPS is TRUE)
 if (agg_to_DPS == TRUE){
@@ -129,7 +144,6 @@ if (agg_to_DPS == TRUE){
 }
 
 # check that unique identifiers uniquely identify data:
-if (!set %in% c('base', 'sigl')) {if ( nrow(unique(dt[, .(org_unit_id, date, variable, element_id)])) != nrow(dt)) stop( "check unique identifiers...")}
 if (set == 'base') {if ( nrow(unique(dt[, .(org_unit_id, date, element, element_id, category)])) != nrow(dt)) stop( "check unique identifiers...")}
 if (set == 'sigl') {if ( nrow(unique(dt[, .(org_unit_id, date, variable_id, drug_id)])) != nrow(dt)) stop( "check unique identifiers...")}
 #------------------------------------
@@ -151,9 +165,6 @@ if (set != 'sigl'){
   names(array_table) = c("drug_id", "variable_id")
 }
 
-# for testing, subset to a few rows
-# array_table = array_table[1:10, ]
-
 # save the array table and the data with IDs to /ihme/scratch/users/(user_name)/quantreg/
 write.fst(array_table, arrayFile)
 write.fst(dt, scratchInFile)
@@ -167,16 +178,18 @@ write.fst(dt, scratchInFile)
 # determine the number of rows in the array job
 N = nrow(array_table)
 
-# # run value~date on each org_unit and element
-# system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -N quantreg_jobs -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
+# set the working directory even if david does not want you to
+setwd(paste0('/ihme/code/', user, '/gf/'))
+
+source('./outcome_measurement/all/cod/dhis/outlier_removal/doit.R')
 
 # FOR NEW CLUSTER:
 # run quantregScript for each org_unit (submit one array job, with the array by org_unit)
 if (set == 'sigl'){
   system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs -l m_mem_free=20G -l fthread=1 -l h_rt=02:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript_sigl.r')) 
 } else {
-  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=15G -l fthread=1 -l h_rt=04:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript.R')) 
-}
+  system(paste0('qsub -e ', oeDir, ' -o ', oeDir,' -q all.q -P proj_pce -N quantreg_jobs  -l m_mem_free=20G -l fthread=1 -l h_rt=04:00:00 -cwd -t 1:', N, ' ./core/r_shell.sh ./outcome_measurement/all/cod/dhis/outlier_removal/quantregScript2.R')) 
+} # audrey - note this sources an identical but new script, because the naming was messed up on the cluster
 #------------------------------------
 
 #------------------------------------
@@ -190,29 +203,20 @@ while(numFiles<i) {
   Sys.sleep(5) }
 #------------------------------------
 
-#------------------------------------
-# once all files are done, collect all output into one data table
-#------------------------------------
-# if (cat_files == TRUE){
-# # bind all of the files together to create a single data set
-#   system(paste0('cat /ihme/scratch/users/', user, '/quantreg/parallel_files/* >', scratchDir, 'full_quantreg_results.fst'))
-#   dt = read.fst(paste0(scratchDir, 'full_quantreg_results.fst'))
-#   saveRDS(dt, outFile)
-# }
-
 #---------------------------------------
 # old code to concatenate files - leave as k since i and j are already used
-# this is less efficient - do not use if cat code works
 
 for (k in seq(N)) {
-  tmp = read.fst(paste0(parallelDir, 'quantreg_output', k, '.fst'), as.data.table=TRUE)
+  file = paste0(parallelDir, 'quantreg_output_', k, '.fst')
+  if (file.exists(file)==TRUE) tmp = read.fst(paste0(parallelDir, 'quantreg_output_', k, '.fst'), as.data.table=TRUE)
+  if (file.exists(file)==FALSE) print(paste0("File ", k, " does not exist."))
+  if (file.exists(file)==FALSE) next
   if(k==1) fullData = tmp
   if(k>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', k)) }
 
 # save the resulting file
 saveRDS(fullData, outFile)
-
 #------------------------------------
 
 #------------------------------------

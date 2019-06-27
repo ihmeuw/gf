@@ -63,6 +63,7 @@ for(v in numVars) {
 		data[health_zone==h, tmp:=exp(predict(lmFit, newdata=data[health_zone==h]))]
 		lim = max(data[health_zone==h][[v]], na.rm=T)+sd(data[health_zone==h][[v]], na.rm=T)
 		data[health_zone==h & tmp>lim, tmp:=lim]
+		# ggplot(data[health_zone==h], aes_string(y=v, x='date')) + geom_point() + geom_point(aes(y=tmp),color='red')
 		data[health_zone==h & is.na(get(v)), (v):=tmp]
 		pct_complete = floor(i/(length(numVars)*length(unique(data$health_zone)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
@@ -85,6 +86,7 @@ cumulVars = c(cumulVars, 'value_ITN_received', 'value_RDT_received', 'value_ACT_
 	'value_ITN_consumed', 'value_ACTs_SSC', 'value_RDT_completed', 'value_SP', 
 	'value_severeMalariaTreated', 'value_totalPatientsTreated', 'value_totalPatientsTreated_under5', 
 	'value_ACT_received_under5', 'value_ACTs_SSC_under5','value_severeMalariaTreated_under5')
+cumulVars = cumulVars[!cumulVars %in% c('value_ACTs_SSC_under5')] # drop until we can create this variable
 for(v in cumulVars) { 
 	nv = gsub('value_','',v) 
 	data[, (paste0(nv,'_cumulative')):=cumsum(get(v)), by='health_zone']
@@ -130,8 +132,9 @@ data = na.omit(data)
 test = nrow(data)==nrow(unique(data[,c('health_zone','date'), with=F]))
 if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify rows.'))
 
-# test for collinearity
-
+# test for missingness
+test = nrow(data)==nrow(na.omit(data))
+if(test==FALSE) stop('Something is wrong. There are missing values after GLM imputation')
 # ---------------------------------------------------------------------------------------
 
 

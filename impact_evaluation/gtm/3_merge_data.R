@@ -12,6 +12,8 @@ drc = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/input
 
 # Read in the previously saved files for resource tracking in 2a
 resource_tracking <- readRDS(outputFile2a)
+resource_tracking[, year:=floor(date)]
+byVars = names(resource_tracking)[!names(resource_tracking)%in%c('date', 'year')]
 
 # Read in the previously saved file for outputs/activities in 2b
 outputs_activities <- readRDS(outputFile2b)
@@ -26,11 +28,13 @@ names(outputs_activities) <- gsub("_value", "", names(outputs_activities))
 # rectangularize before merge
 departments = unique(outputs_activities$department)
 departments = departments[!is.na(departments)]
-frame = expand.grid(date = unique(outputs_activities$date), department = departments)
+frame = expand.grid(date = seq(1990, 2018, by=1), department = departments)
 
 resource_tracking_rect = merge(frame, resource_tracking, by='date', all=TRUE) #Do I need to divide resource tracking dollars here? 
-stopifnot(nrow(resource_tracking_rect[is.na(date) | is.na(department)])==0)
+setDT(resource_tracking_rect)
+stopifnot(nrow(resource_tracking_rect[is.na(date) | is.na(department), ])==0)
 outputs_activities_rect = merge(frame, outputs_activities, by=c('department','date'), all=TRUE)
+setDT(outputs_activities_rect)
 stopifnot(nrow(outputs_activities_rect[is.na(date) | is.na(department)])==0)
 
 # Merge rectangularized resource tracking and outputs/activites data 
@@ -102,3 +106,5 @@ saveRDS(merge_file, outputFile3)
 # save a time-stamped version for reproducibility
 archive(outputFile3)
 # ----------------------------------------------------------
+
+print("Step 3: merge data completed successfully.")

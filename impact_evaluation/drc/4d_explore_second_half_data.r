@@ -52,6 +52,10 @@ varGroups = lapply(lhsVars, function(v) {
 long = melt(sample, id.vars=c('health_zone','date'))
 long = merge(long, nodeTable, by='variable', all.x=TRUE)
 long[is.na(label), label:=variable]
+
+# display population in hundred-thousands
+long[variable=='population', value:=value/100000]
+long[variable=='population', label:='population_in_100000s']
 # ----------------------------------------------
 
 

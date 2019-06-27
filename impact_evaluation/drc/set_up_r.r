@@ -156,7 +156,7 @@ outputFile3 = paste0(ieDir, 'inputs_outputs.RDS')
 
 # output files from 3b_correct_to_models.r
 outputFile3b = paste0(ieDir, 'outcomes_impact_corrected.RDS')
-outputFile3bGraphs = paste0(ieDir, '../visualizations/outcomes_impact_correction_results.pdf')
+outputFile3bGraphs = paste0(ieDir, '../visualizations/crosswalking_results.pdf')
 
 # output file from 4a_set_up_for_analysis.r
 outputFile4a = paste0(ieDir, 'first_half_pre_model.rdata')

@@ -19,12 +19,12 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
   ########
 # 
 
-  dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet[i]
-  start_date = file_list$start_date[i]
-  qtr_number = file_list$qtr_number[i]
-  period = file_list$period[i]
+  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date[i]
+  # qtr_number = file_list$qtr_number[i]
+  # period = file_list$period[i]
   # 
   # Load/prep data
   gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name))
@@ -190,7 +190,7 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     gf_data[quarter==4, month:="10"]
     
     gf_data[, start_date:=paste0(month, "-01-", year)]
-    gf_data[, start_date:=as.Date(start_date, "%m-%d-%Y")]
+    gf_data[, start_date:=as.Date(start_date, format="%m-%d-%Y")]
     gf_data[, month:=NULL]
     
     #Make sure you haven't changed any budget/expenditure numbers, and clean up
