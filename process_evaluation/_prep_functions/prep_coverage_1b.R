@@ -8,11 +8,16 @@
 prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   #TROUBLESHOOTING HELP
-  #Uncomment variables below and run line-by-line. 
-  dir = "C:/Users/elineb/Desktop/PUDR_indicator_extraction/"
-  inFile = filelist$file_name[i]
-  sheet_name = filelist$sheet[i]
-  language = filelist$language[i]
+  #Uncomment variables below and run line-by-line.
+  folder = "pudrs"
+  version = ifelse(file_list$file_iteration[i] == "initial", "iterations", "")
+  dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+  if (version != ""){
+    dir = paste0(file_dir, version, "/")
+  }
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet_coverage_1b[i]
+  language = file_list$language_coverage_1b[i]
 
   STOP_COL = 6 #What column starts to have sub-names? (After you've dropped out first 2 columns)
   
@@ -25,14 +30,13 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   # Load/prep data
   gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
-
   
   #------------------------------------------------------
   # 1. Select columns, and fix names 
   #------------------------------------------------------
-  module_col = grep("Module", gf_data)
+  module_col = grep("Module|Módulo", gf_data)
   stopifnot(length(module_col)==1)
-  name_row = grep("Module", gf_data[[module_col]])
+  name_row = grep("Module|Módulo", gf_data[[module_col]])
   stopifnot(length(name_row)==1)
   
   names = gf_data[name_row, ]
@@ -49,9 +53,9 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   # 2. Reset names after subset above. 
   #------------------------------------------------------
   
-  module_col = grep("Module", gf_data)
+  module_col = grep("Module|Módulo", gf_data)
   stopifnot(length(module_col)==1)
-  name_row = grep("Module", gf_data[[module_col]])
+  name_row = grep("Module|Módulo", gf_data[[module_col]])
   stopifnot(length(name_row)==1)
   
   names = gf_data[name_row, ]
@@ -67,16 +71,25 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   # 3. Rename columns 
   #------------------------------------------------------
   
+  #Remove diacritical marks from names to make grepping easier
+  names = fix_diacritics(names)
+  
   if (language == "fr"){
-    reference_col = grep("référence", names)
+    reference_col = grep("reference", names)
     target_col = grep("cible", names)
-    result_col = grep("résultats", names)
+    result_col = grep("resultats", names)
     lfa_result_col = grep("verified result", names)
     gf_result_col = grep("global fund validated result", names) 
   } else if (language == "eng"){
     reference_col = grep("baseline", names) 
     target_col = grep("target", names)
     result_col = grep("result", names) 
+    lfa_result_col = grep("verified result", names)
+    gf_result_col = grep("global fund validated result", names)
+  } else if (language=="esp"){
+    reference_col = grep("linea de base", names) 
+    target_col = grep("meta", names)
+    result_col = grep("resultados", names) 
     lfa_result_col = grep("verified result", names)
     gf_result_col = grep("global fund validated result", names)
   }
