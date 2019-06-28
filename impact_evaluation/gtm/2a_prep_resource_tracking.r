@@ -102,7 +102,7 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
     
     #Review what codes each logic condition is matching to visually. 
-    cols = c(5, 9:ncol(expenditures))
+    cols = c(4, 9:ncol(expenditures))
     unique(expenditures[, cols, with=FALSE][order(code)])
     
     #Make summary data tables for each of these codes, and then merge them together. 
@@ -140,7 +140,7 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
     
     #Review what codes each logic condition is matching to visually. 
-    cols = c(5, 10:ncol(other_dah))
+    cols = c(4, 10:ncol(other_dah))
     unique(other_dah[, cols, with=FALSE][order(code)])
     
     #Make summary data tables for each of these codes, and then merge them together. 
@@ -178,7 +178,7 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     if (length(setdiff(codes_needed, codes_generated))!=0) stop("Missing some codes needed for the model!") 
     
     #Review what codes each logic condition is matching to visually. 
-    cols = c(6, 10:ncol(sicoin))
+    cols = c(5, 10:ncol(sicoin))
     unique(sicoin[, cols, with=FALSE][order(code)])
     
     #Make summary data tables for each of these codes, and then merge them together. 
@@ -197,9 +197,9 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
 #------------------------------------
 # Shape data wide and merge.  
 #------------------------------------
-exp_wide$quarter <- NULL
-dah_wide$quarter <- NULL
-ghe_wide$quarter <- NULL
+setnames(exp_wide, 'year', 'date')
+setnames(dah_wide, 'year', 'date')
+setnames(ghe_wide, 'year', 'date')
 
 rt_wide <- merge(dah_wide, exp_wide, by=c('date'), all=T)
 rt_wide <- merge(rt_wide, ghe_wide, by=c('date'), all=T)
@@ -209,3 +209,4 @@ rt_wide <- merge(rt_wide, ghe_wide, by=c('date'), all=T)
 
 #Save output file
 saveRDS(rt_wide, outputFile2a)
+print("Step 2a: Prep resource tracking completed successfully.")

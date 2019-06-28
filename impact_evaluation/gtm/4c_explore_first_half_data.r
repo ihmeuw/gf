@@ -33,7 +33,7 @@ sample_untr = untransformed[department %in% dpts]
 # Set up to graph
 
 # parse model object
-parsedModel = lavParseModelString(model) #THIS LINE IS CREATING AN ERROR FOR ME - EMILY LINEBARGER 6/10/19
+parsedModel = lavParseModelString(model) 
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 
 # organize completeness variables last, remove date
@@ -53,6 +53,11 @@ long = merge(long, nodeTable, by='variable', all.x=TRUE)
 long[is.na(label), label:=variable]
 # ----------------------------------------------
 
+#----------------------------------------------------
+# Limit graph data to 2012, the year the activities/outputs data starts 
+sample = sample[date>=2012]
+sample_untr = sample_untr[date>=2012]
+long = long[date>=2012]
 
 # -------------------------------------------------------------------
 # Make histograms

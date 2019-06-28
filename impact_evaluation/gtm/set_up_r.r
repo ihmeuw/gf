@@ -98,8 +98,8 @@ impactFile = paste0(ieDir, "impact_6.12.19.csv")
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph
-nodeTableFile1 = './impact_evaluation/drc/visualizations/nodetable_first_half.csv'
-nodeTableFile2 = './impact_evaluation/drc/visualizations/nodetable_second_half.csv'
+nodeTableFile1 = './impact_evaluation/gtm/visualizations/nodetable_first_half.csv'
+nodeTableFile2 = './impact_evaluation/gtm/visualizations/nodetable_second_half.csv'
 # ---------------------------------------------------------------------------------
 
 
@@ -135,8 +135,8 @@ outputFile2c = paste0(preppedIeDir, 'outcomes_impact.rds')
 outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')
 
 # output files from 3b_correct_to_models.r
-outputFile3b = paste0(preppedIeDir, 'outcomes_impact_corrected.RDS')
-outputFile3bGraphs = paste0(visIeDir, 'outcomes_impact_correction_results.pdf')
+outputFile3b = paste0(preppedIeDir, 'outcomes_impact.RDS')
+outputFile3bGraphs = paste0(visIeDir, 'outcomes_impact_results.pdf')
 
 # output file from 4a_set_up_for_analysis.r
 outputFile4a = paste0(preppedIeDir, 'first_half_pre_model.rdata')
