@@ -74,28 +74,28 @@ costs[, output:=ifelse(grepl('output',variable),'output','activity')]
 
 colors = brewer.pal(6, 'Paired')
 
-p1 = ggplot(costs[intervention=='ITNs' & output=='activity'], aes_string(y='value', x=byVar, color='includes_ghe')) + 
-	geom_line(size=1.5, alpha=.75) + 
-	geom_point(size=3) + 
-	scale_color_manual('', values=colors[1:2]) + 
+p1 = ggplot(costs[intervention=='ITNs' & output=='activity' & grepl('not including GHE', includes_ghe)], 
+		aes_string(y='value', x=byVar)) + 
+	geom_smooth(size=1.5, alpha=.75, color=colors[2], se=F) + 
+	geom_point(size=3, color=colors[2]) + 
 	labs(title='Cost per ITN Shipped in USD', 
 		subtitle='With and Without All Malaria Government Health Expenditure (GHE)', 
 		y='Cost per Unit', x='', caption='Estimated as a direct fraction without use of model') + 
 	theme_bw()
 
-p2 = ggplot(costs[intervention=='ACTs' & output=='activity'], aes_string(y='value', x=byVar, color='includes_ghe')) + 
-	geom_line(size=1.5, alpha=.75) + 
-	geom_point(size=3) + 
-	scale_color_manual('', values=colors[3:4]) + 
+p2 = ggplot(costs[intervention=='ACTs' & output=='activity' & grepl('not including GHE', includes_ghe)], 
+		aes_string(y='value', x=byVar)) + 
+	geom_smooth(size=1.5, alpha=.75, color=colors[4], se=F) + 
+	geom_point(size=3, color=colors[4]) +
 	labs(title='Cost per ACT Shipped in USD', 
 		subtitle='With and Without All Malaria Government Health Expenditure (GHE)', 
 		y='Cost per Unit', x='', caption='Estimated as a direct fraction without use of model') + 
 	theme_bw()
 
-p3 = ggplot(costs[intervention=='RDTs' & output=='activity'], aes_string(y='value', x=byVar, color='includes_ghe')) + 
-	geom_line(size=1.5, alpha=.75) + 
-	geom_point(size=3) + 
-	scale_color_manual('', values=colors[5:6]) + 
+p3 = ggplot(costs[intervention=='RDTs' & output=='activity' & grepl('not including GHE', includes_ghe)], 
+		aes_string(y='value', x=byVar)) + 
+	geom_smooth(size=1.5, alpha=.75, color=colors[6], se=F) + 
+	geom_point(size=3, color=colors[6]) +
 	labs(title='Cost per RDT Shipped in USD', 
 		subtitle='With and Without All Malaria Government Health Expenditure (GHE)', 
 		y='Cost per Unit', x='', caption='Estimated as a direct fraction without use of model') + 
