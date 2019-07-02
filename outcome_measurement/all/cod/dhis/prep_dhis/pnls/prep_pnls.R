@@ -31,7 +31,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 #---------------------------------------
 # load the file that represents a subset (no sex or )
 
-dt = readRDS(paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2019_04_01.rds'))
+dt = readRDS(paste0(dir, 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_outliers_replaced.rds'))
 
 #---------------------------------------
 # reporting completeness: diagnostic plot
@@ -83,7 +83,7 @@ dt[ , element1:=fix_diacritics(tolower(element))]
 dt[grepl('client', element1) & !grepl('ps', element1), subpop:='customer']
 
 # run other first in case more specific populations are included
-dt[grep('autres', element1), subpop:='other_groups']
+dt[grepl('autres', element1) & !grepl('alades', element1), subpop:='other_groups']
 dt[grep('prisonniers', element1), subpop:='prisoner']
 dt[grep('udi', element1), subpop:='idu']
 dt[grep('tg', element1), subpop:='trans']
@@ -166,8 +166,11 @@ dt[grep('femme', category1), sex:='Female']
 dt[!is.na(maternity), sex:='Female']
 
 dt[grep('masc', category1), sex:='Male']
-dt[subpop=='msm', sex:='Male']
 dt[subpop=='male_partners', sex:='Male']
+dt[subpop=='msm', sex:='Male']
+
+# missing sex and subpops
+dt[is.na(sex) & grepl("couple", element1), sex:='Couple']
 
 #---------------------
 # old and new cases

@@ -128,6 +128,9 @@ if (set == 'pnlp') {
   dt[ (value < t3_lower ), outlier :=TRUE ]
 }
 
+# confirm no values less than 100 are dropped
+dt[value < 100, outlier:=FALSE]
+
 # number of outliers
 dt[ outlier==TRUE, .N ]  # 9,220 at fitted_value +/- 20 MADs for PNLP; 19,375 for base
 # ( dt[outlier==TRUE, .N]  / dt[!is.na(value), .N] ) * 100 # for sigl = 811; 0.017% of non-missing data; for PNLP, 0.55% of non-missing data
