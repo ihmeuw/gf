@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'pnls'
+set = 'base'
 
 # user name for sourcing functions
 user_name = Sys.info()[['user']]
