@@ -104,10 +104,10 @@ if(reprep_rasters==TRUE) {
 	data[grepl('worldpop',file), indicator:='population']
 
 	# aggregate age groups FIX ME!
-	data = data[, .(value_lbd=sum(value)), by=c('health_zone','year','indicator')]
+	data_est = data[, .(value_lbd=sum(value)), by=c('health_zone','year','indicator')]
 
 	# save here to avoid having to rerun this so much
-	saveRDS(data, outputFile2c_estimates)
+	saveRDS(data_est, outputFile2c_estimates)
 }
 if (reprep_rasters==FALSE) data_est = readRDS(outputFile2c_estimates)
 # ------------------------------------------------------------------
