@@ -17,7 +17,7 @@ library(stringr)
 #------------------------------------
 # choose the data set to run the code on - pnls, base, or sigl
 
-set = 'pnls'
+set = 'base'
 
 # user name for sourcing functions
 user_name = Sys.info()[['user']]
@@ -127,6 +127,9 @@ if (set == 'pnlp') {
   dt[, outlier := ifelse( value > t3_upper, TRUE, FALSE) ]
   dt[ (value < t3_lower ), outlier :=TRUE ]
 }
+
+# confirm no values less than 100 are dropped
+dt[value < 100, outlier:=FALSE]
 
 # number of outliers
 dt[ outlier==TRUE, .N ]  # 9,220 at fitted_value +/- 20 MADs for PNLP; 19,375 for base

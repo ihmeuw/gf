@@ -30,7 +30,7 @@ shapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 # -----------------------------------------------
 
 x='ITN'
-y='ITN_rate_cumul'
+y='ITN_rate'
 
 # x='mildMalariaTreated'
 # y='mildMalariaTreated_rate'
@@ -40,7 +40,7 @@ y='ITN_rate_cumul'
 
 # subset to coefficients of interest
 outputs = c('SSCACT', 'ITN', 'RDT', 'SP', 'mildMalariaTreated', 'severeMalariaTreated')
-subset1 = summaries[op=='~' & rhs %in% outputs]
+subset = summaries[op=='~' & rhs %in% outputs]
 
 # subset to just one arrow for development
 subset = subset[rhs==x & lhs==y]
@@ -56,17 +56,12 @@ subset[, unit := 1+(100/mean_x)]
 subset[, est_100:=((unit^est)-1)*100] # for each 100 bednets...
 subset[, est_1pct:=((1.01^est)-1)*100] # for each 1% more bednets...
 
-# look up the national coverage per 1000 nets
+# look up the national coverage per 10 nets
 total_x = mean(untransformed[,sum(ITN,na.rm=T),by=floor(date)]$V1)
 est = means[op=='~' & rhs==x & lhs==y]$est
 unit = 1+(10/total_x)
 ((unit^est)-1)*sum(untransformed[date==2017]$population)
 ((unit^est)-1)*sum(untransformed[date==2017]$incidence) # for treatment
-
-
-
-# 3 these are turning out too big... this says per 1000 bednets distributed we get 5000 more people sleeping under bednets
-# i.e. 1% increase leads to .15% increase, but .15% of 81million is 127,000 and 1% of 4million is 40,000... must be error
 # -----------------------------------------------
 
 
@@ -112,7 +107,7 @@ mapData = merge(map, subset, by.x='health_zone', by.y='health_zone', all.x=TRUE)
 mapData[lhs=='ITN_rate_cumul', variable:='ITN Coverage']
 
 # titles
-title1 = 'Percent Increase in ITN Coverage\n per 1% Increase in ITNs Distributed'
+title1 = 'Percent Increase in ACT Coverage\n per 1% Increase in ACTs Distributed'
 # -----------------------------------------------
 
 
