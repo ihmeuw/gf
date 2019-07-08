@@ -192,118 +192,63 @@ final_expenditures_gtm = readRDS(paste0(gtm_prepped, "final_expenditures.rds"))
 final_expenditures_uga = readRDS(paste0(uga_prepped, "final_expenditures.rds"))
 final_expenditures_sen = readRDS(paste0(sen_prepped, "final_expenditures.rds"))
 
-#-------------------------------------------
-# Hacky fix for duplicate budget quarters -- 
-# This should be removed and handled in file prep process!! 
-# ------------------------------------------
-
-setDT(final_expenditures_cod)
-check_qtr_cod = final_expenditures_cod[, .(start_date, grant, file_name)]
-check_qtr_cod = unique(check_qtr_cod) #Remove duplicate lines in module, intervention, etc. 
-#Make sure there are no duplicates in start date and grant number that are coming from different files. 
-check_qtr_cod = check_qtr_cod[duplicated(check_qtr_cod, by = c("start_date", "grant")), ]
-check_qtr_cod = merge(check_qtr_cod, final_expenditures_cod[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
-check_qtr_cod = unique(check_qtr_cod)
-if (nrow(check_qtr_cod)!=0){
-  print("Warning: There are overlapping expenditure quarters in DRC. Review data to prevent double-counting.")
-  print(check_qtr_cod)
-}
-
-setDT(final_expenditures_gtm)
-check_qtr_gtm = final_expenditures_gtm[, .(start_date, grant, file_name)]
-check_qtr_gtm = unique(check_qtr_gtm) #Remove duplicate lines in module, intervention, etc. 
-#Make sure there are no duplicates in start date and grant number that are coming from different files. 
-check_qtr_gtm = check_qtr_gtm[duplicated(check_qtr_gtm, by = c("start_date", "grant")), ]
-check_qtr_gtm = merge(check_qtr_gtm, final_expenditures_gtm[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
-check_qtr_gtm = unique(check_qtr_gtm)
-if (nrow(check_qtr_gtm)!=0){
-  print("Warning: There are overlapping expenditure categories in Guatemala. Review data to prevent double-counting.")
-  print(check_qtr_gtm)
-}
-
-setDT(final_expenditures_uga)
-check_qtr_uga = final_expenditures_uga[, .(start_date, grant, file_name)]
-check_qtr_uga = unique(check_qtr_uga) #Remove duplicate lines in module, intervention, etc. 
-#Make sure there are no duplicates in start date and grant number that are coming from different files. 
-check_qtr_uga = check_qtr_uga[duplicated(check_qtr_uga, by = c("start_date", "grant")), ]
-check_qtr_uga = merge(check_qtr_uga, final_expenditures_uga[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
-check_qtr_uga = unique(check_qtr_uga)
-if (nrow(check_qtr_uga)!=0){
-  print("Warning: There are overlapping budget quarters in Uganda. Review data to prevent double-counting.")
-  print(check_qtr_uga)
-}
-
-setDT(final_expenditures_sen)
-check_qtr_sen = final_expenditures_sen[, .(start_date, grant, file_name)]
-check_qtr_sen = unique(check_qtr_sen) #Remove duplicate lines in module, intervention, etc. 
-#Make sure there are no duplicates in start date and grant number that are coming from different files. 
-check_qtr_sen = check_qtr_sen[duplicated(check_qtr_sen, by = c("start_date", "grant")), ]
-check_qtr_sen = merge(check_qtr_sen, final_expenditures_sen[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
-check_qtr_sen = unique(check_qtr_sen)
-if (nrow(check_qtr_sen)!=0){
-  print("Warning: There are overlapping budget quarters in Senegal. Review data to prevent double-counting.")
-  print(check_qtr_sen)
-}
 #Bind expenditures together
 final_expenditures = rbind(final_expenditures_cod, final_expenditures_gtm, final_expenditures_uga, final_expenditures_sen, fill = TRUE) 
+final_expenditures[, data_source:="pudr"]
 
 #Wherever there is a grant quarter in the final budgets that doesn't exist in GOS, take that whole grant for the grant 
 # period and replace the GOS with the final budgets data. 
 gos_data[, start_date:=as.Date(start_date)]
 
 #Bind the files together. 
-gos_prioritized_expenditures = rbind(final_expenditures, gos_data, fill = TRUE) #There are some columns that don't exist in both sources, so fill = TRUE
+gos_prioritized_expenditures = rbind(final_expenditures, gos_data[, -c('file_name')], fill=TRUE) #There are some columns that don't exist in both sources, so fill = TRUE
+
+#Check for overlapping grant periods in recent data. 
+grant_period_mat = unique(gos_prioritized_expenditures[, .(data_source, grant, grant_period, file_name, start_date)])
+grant_period_mat[, min_date:=min(start_date), by=c('file_name', 'grant', 'grant_period', 'data_source')]
+grant_period_mat[, max_date:=max(start_date), by=c('file_name', 'grant', 'grant_period', 'data_source')]
+grant_period_mat = unique(grant_period_mat[, .(min_date, max_date, grant, grant_period, data_source)])
+grant_period_mat = dcast.data.table(grant_period_mat, grant+grant_period~data_source, value.var = c("min_date", "max_date"))
+
+#Reorder this data table. 
+grant_period_mat = grant_period_mat[, .(grant, grant_period, min_date_pudr, max_date_pudr, min_date_gos, max_date_gos)]
+
+#I only care about cases where we have the same data source reporting for the same grant period/grant, so drop NAs. 
+grant_period_mat = grant_period_mat[!(is.na(min_date_pudr) & is.na(max_date_pudr))]
+grant_period_mat = grant_period_mat[!(is.na(min_date_gos) & is.na(max_date_gos))]
+
+#Do these sources conflict? 
+grant_period_mat[max_date_gos>min_date_pudr, conflict:=TRUE]
+grant_period_mat = grant_period_mat[conflict==TRUE]
+if (nrow(grant_period_mat)>0){
+  print("Warning: Duplicate dates present in GOS and final expenditures files.")
+  print(grant_period_mat)
+  
+  #Build up the list of grant quarters you need to drop from GOS
+  drop_gos = data.table()
+  for (i in 1:nrow(grant_period_mat)){
+    quarters = unique(gos_prioritized_expenditures[data_source == 'gos' & grant==grant_period_mat$grant[i] & grant_period==grant_period_mat$grant_period[i] & 
+                                                start_date>=grant_period_mat$min_date_pudr[i], 
+                                              .(grant, grant_period, start_date)])
+    drop_gos = rbind(drop_gos, quarters, fill=TRUE)
+  }
+  print("Dropping the following quarters from GOS data")
+  print(drop_gos)
+  for (i in 1:nrow(drop_gos)){
+    gos_prioritized_expenditures = gos_prioritized_expenditures[!(
+      data_source=='gos' & 
+        grant==drop_gos$grant[i] & 
+        grant_period==drop_gos$grant_period[i] & 
+        start_date==drop_gos$start_date[i]
+    )]
+  }
+  
+}
 
 #See if there are any data gaps or data overlaps in the final file 
 expenditure_overlaps = gos_prioritized_expenditures[, .(start_date, grant, file_name)]
 expenditure_overlaps = unique(expenditure_overlaps) #Remove duplicate lines in module, intervention, etc. 
-#Make sure there are no duplicates in start date and grant number that are coming from different files. 
-expenditure_overlaps = expenditure_overlaps[duplicated(expenditure_overlaps, by = c("start_date", "grant")), ]
-expenditure_overlaps = merge(expenditure_overlaps, gos_prioritized_expenditures[, .(start_date, grant, file_name)], by=c('start_date', 'grant'), all.x=TRUE)
-expenditure_overlaps = unique(expenditure_overlaps)
-if (nrow(expenditure_overlaps)!=0){
-  print("Warning: There are duplicate expenditure quarters for the same grant in 'final_expenditures'. Review raw data to prevent double-counting.")
-  print(expenditure_overlaps[order(grant, start_date)])
-}
 
-#Handle overlaps if they're coming from different data sources - we always want to keep GOS, unless GOS doesn't cover the entire grant period, 
-#in which case we replace all data from that grant period with the detaiiled expenditure. EKL 5/2/19, decision by David Phillips
-# problem_overlaps = unique(gos_prioritized_expenditures[, .(start_date, grant, data_source)]) #Overlaps by data source are not ok. 
-# problem_overlaps = unique(problem_overlaps) #Remove duplicate lines in module, intervention, etc. 
-# #Make sure there are no duplicates in start date and grant number that are coming from different files. 
-# problem_overlaps = problem_overlaps[duplicated(problem_overlaps, by = c("start_date", "grant")), ]
-# problem_overlaps = merge(problem_overlaps, gos_prioritized_expenditures[, .(start_date, grant, data_source)], by=c('start_date', 'grant'), all.x=TRUE)
-# problem_overlaps = unique(problem_overlaps)
-# if (nrow(problem_overlaps)!=0){
-#   print("Warning: There are duplicate problem quarters for the same grant in 'final_problems'. Review raw data to prevent double-counting.")
-#   print(problem_overlaps[order(grant, start_date)])
-#   
-#   #Does GOS cover the entire grant period? 
-#   #Compare what dates you have covered under expenditures vs. GOS
-#   expenditure_coverage = unique(final_expenditures[grant%in%problem_overlaps$grant, .(start_date, grant, file_name)])
-#   expenditure_coverage = expenditure_coverage[order(file_name, start_date)]
-#   
-#   gos_coverage = unique(gos_data[grant%in%problem_overlaps$grant, .(start_date, grant, file_name)])
-#   gos_coverage = gos_coverage[order(file_name, start_date)]
-#   gos_coverage[, in_gos:=TRUE]
-#   gos_coverage = merge(expenditure_coverage, gos_coverage, all.x=TRUE, by=c('start_date', 'grant'))
-#   
-#   #For a given file_name.x in gos_coverage, the condition you need to worry about is when 
-#   # GOS matches for only part of the grant period. Then, drop GOS and keep the expenditure (duplicate grant in 'drop_condition' below.)
-#   drop_condition = unique(gos_coverage[, .(grant, file_name.x, file_name.y, in_gos)])
-#   drop_condition = drop_condition[duplicated(drop_condition, by=c('grant', 'file_name.x'))]
-#   
-#   #Now, grab all the expenditure quarters for that file in GOS, and drop them. 
-#   files_overwriting_gos = unique(drop_condition$file_name.x)
-#   to_drop_gos = unique(gos_coverage[file_name.x%in%files_overwriting_gos, .(grant, start_date)])
-#   if (nrow(to_drop_gos)!=0){
-#     print("There are overlaps in GOS and final expenditures where GOS does not cover the whole grant period - dropping the following rows for GOS")
-#     print(to_drop_gos)
-#     for (i in nrow(to_drop_gos)){
-#       gos_data = gos_data[!(grant==to_drop_gos$grant[i] & start_date==to_drop_gos$start_date[i])]
-#     }
-#   }
-# }
 
 #Look for what might be data gaps between GOS and expenditure data (EMILY - WOULD BE GOOD TO EXPAND THIS CHECK TO LOOK FOR DATA GAPS IN GENERAL)
 gos_in_expenditures = gos_data[grant%in%final_expenditures$grant, .(start_date, grant)] 
