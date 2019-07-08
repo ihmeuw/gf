@@ -117,6 +117,11 @@ if (length(dept_level_error)!=0){
   print(dept_level_error)
 }
 
+#Go ahead and hard code these variables to be department-level, because there is a data prep error. EL 7.8.19
+#This should be removed once new data is sent! 
+dep_vars = c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d", dep_vars)
+mun_vars = mun_vars[!mun_vars%in%c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d")]
+
 #Take the average of the department-level variables by date and department. 
 dep_level_a = data.table(date=integer(), department=integer())
 for (var in dep_vars){
@@ -229,7 +234,11 @@ outputs1 = outputs1[, -c('dup')]
 #-----------------------------------------------------
 dt_final = merge(activities1, outputs1, by=c('date', 'department'), all=T) #Save dates and departments from both, in case you have data in one and not the other. 
 
-
+#Replace NaN and NA with 0 - we can assume these actually mean 0. 
+cols = 3:ncol(dt_final) #Just don't do this for date and department, the first two columns. 
+for (col in cols){
+  dt_final[is.na(dt_final[[col]]), (col):=0]
+}
 #-----------------------------------------------------
 # Save data 
 #-----------------------------------------------------
