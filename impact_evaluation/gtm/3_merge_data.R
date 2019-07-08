@@ -114,6 +114,9 @@ redistribution_mat[code=="T1_7" | code=="T2_1" | code=="T3_2", redist_var:=indic
 stopifnot(nrow(redistribution_mat[is.na(redist_var)])==0)
 
 redistribution_mat = unique(redistribution_mat[, .(code, input_var, redist_var)])
+
+# resource_tracking[, sum(exp_R2_ALL, na.rm=T)]
+# merge_file[, sum(exp_R2_ALL, na.rm=T)]
 # loop over financial variables and redistribute subnationally
 for(i in 1:nrow(redistribution_mat)) {
   print(i)
@@ -121,11 +124,11 @@ for(i in 1:nrow(redistribution_mat)) {
 	a = redistribution_mat[i, redist_var] #Changed from 'indicator' in DRC code EL 7.8.19
 
 	# disallow zeroes
-	min = min(merge_file[[a]], na.rm=TRUE)
+	min = min(merge_file[get(a)>0][[a]], na.rm=TRUE)
 	merge_file[, mean:=mean(get(a), na.rm=TRUE), by=department]
 	merge_file[is.na(mean), mean:=min]
 	
-	# distributeh proportionally
+	# distribute proportionally
 	merge_file[, tmp:=get(a)+min]
 	merge_file[is.na(tmp), tmp:=mean]
 	merge_file[, prop:=tmp/sum(tmp), by=date]
