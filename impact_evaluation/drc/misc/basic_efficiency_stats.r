@@ -79,7 +79,6 @@ p1 = ggplot(costs[intervention=='ITNs' & output=='activity' & grepl('not includi
 	geom_smooth(size=1.5, alpha=.75, color=colors[2], se=F) + 
 	geom_point(size=3, color=colors[2]) + 
 	labs(title='Cost per ITN Shipped in USD', 
-		subtitle='With and Without All Malaria Government Health Expenditure (GHE)', 
 		y='Cost per Unit', x='', caption='Estimated as a direct fraction without use of model') + 
 	theme_bw()
 
@@ -88,7 +87,6 @@ p2 = ggplot(costs[intervention=='ACTs' & output=='activity' & grepl('not includi
 	geom_smooth(size=1.5, alpha=.75, color=colors[4], se=F) + 
 	geom_point(size=3, color=colors[4]) +
 	labs(title='Cost per ACT Shipped in USD', 
-		subtitle='With and Without All Malaria Government Health Expenditure (GHE)', 
 		y='Cost per Unit', x='', caption='Estimated as a direct fraction without use of model') + 
 	theme_bw()
 
@@ -97,7 +95,6 @@ p3 = ggplot(costs[intervention=='RDTs' & output=='activity' & grepl('not includi
 	geom_smooth(size=1.5, alpha=.75, color=colors[6], se=F) + 
 	geom_point(size=3, color=colors[6]) +
 	labs(title='Cost per RDT Shipped in USD', 
-		subtitle='With and Without All Malaria Government Health Expenditure (GHE)', 
 		y='Cost per Unit', x='', caption='Estimated as a direct fraction without use of model') + 
 	theme_bw()
 # --------------------------------------------------
