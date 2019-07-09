@@ -6,45 +6,30 @@ output: pdf_document
 ---
 
 ```{r setup, echo=FALSE, warning=FALSE}
-rm(list=ls())
 library(data.table) 
 library(ggplot2)
 library(knitr)
 
-# Current date 
-current_date = Sys.Date()
-current_year = year(current_date)
-current_quarter = (quarter(current_date)/4)-0.25
-current_date = current_year+current_quarter
+current_year = year(Sys.Date())
+current_quarter = quarter(Sys.Date())
+current_date = current_year + ((current_quarter/4)-0.25)
 
-#Read in data - only need to check budgets and expenditure files for now, alhough it might be nice to add in expenditure (?) EKL 6/12/19
-dir = "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/"
-budgets = readRDS(paste0(dir, "final_budgets.rds"))
-budgets[, quarter:=(quarter/4)-0.25]
-budgets[, date:=year+quarter]
-budgets = unique(budgets[, .(grant, file_name, date, loc_name)])
+#Read in current budget and expenditure files (For absorption we are not trying to make a complete time series, so this check is less relevant, 
+#   but absorption will have all of the same files as expenditure)
+budgets = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_budgets.rds")
+budgets[, date:=year+((quarter/4)-0.25)]
+budgets = unique(budgets[, .(grant, loc_name, date, file_name)])
+pudrs = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures.rds")
+pudrs[, quarter:=quarter(start_date)]
+pudrs[, year:=year(start_date)]
+pudrs[, date:=year+((quarter/4)-0.25)]
+pudrs[, concat:=paste0(grant, "_", grant_period)]
+pudrs = unique(pudrs[, .(grant, loc_name, date, grant_period, concat)])
 
-#Because final expenditure data is NOT disaggregated into quarters; remerge this data with GOS from the budget_pudr_iterations file in the same wa as 2d_gf_aggregate_files.r
-pudrs = readRDS(paste0(dir, "budget_pudr_iterations.rds"))
-pudrs = pudrs[data_source=="pudr" & file_iteration=="final"]
-gos_data = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/prepped_data/raw_bound_gos.rds")
-  
-pudr_subset = pudrs[year>=2015]
-gos_data = gos_data[year<2015]
-pudr_subset = rbind(gos_data, pudr_subset, use.names=T, fill=T)
-
-#Do the same transformations as the budget dataset
-pudr_subset[, quarter:=quarter(start_date)]
-pudr_subset[, year:=year(start_date)]
-pudr_subset[, quarter:=(quarter/4)-0.25]
-pudr_subset[, date:=year+quarter]
-pudr_subset = unique(pudr_subset[ , .(grant, file_name, date, loc_name)])
 
 #Read in Global Fund metadata, and format it to match pudr/budget data above. 
 ip_periods = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv")
-ip_periods = ip_periods[GeographicAreaName%in%c('Congo (Democratic Republic)', 'Guatemala', 'Uganda', 'Senegal'), .(GeographicAreaName, ComponentName, GrantAgreementNumber, 
-                                                                                                                      IsActive, 
-                                                                                                                 ImplementationPeriodStartDate, ImplementationPeriodEndDate)]
+ip_periods = ip_periods[GeographicAreaName%in%c('Congo (Democratic Republic)', 'Guatemala', 'Uganda', 'Senegal'), .(GeographicAreaName, ComponentName, GrantAgreementNumber, IsActive, ImplementationPeriodStartDate, ImplementationPeriodEndDate)]
 names(ip_periods) <- c('loc_name', 'disease', 'grant', 'is_active', 'start_date', 'end_date') #Only need implementation period variables here! 
 date_vars = c('start_date', 'end_date')
 for (var in date_vars){
@@ -88,9 +73,9 @@ for (i in 1:nrow(expected_periods)){
 all_expected = all_expected[date>=2015]
 
 #Append Senegal files that we know we should have, but don't yet. 
-pudr_subset = merge(pudr_subset, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
-pudr_subset[is.na(file_name) & date<current_date, missing_pudr_date:=date]
-missing_pudr_qtrs = unique(pudr_subset[is.na(file_name) & date<=current_date, .(loc_name, grant, date)])
+pudrs = merge(pudrs, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
+pudrs[is.na(concat) & date<current_date, missing_pudr_date:=date]
+missing_pudr_qtrs = unique(pudrs[is.na(concat) & date<=current_date, .(loc_name, grant, date)])
 missing_pudr_qtrs[, quarter:=((date%%1)*4)+1]
 missing_pudr_qtrs[, year:=floor(date)]
 
@@ -100,8 +85,12 @@ missing_budget_qtrs = unique(budgets[is.na(file_name), .(loc_name, grant, date)]
 missing_budget_qtrs[, quarter:=((date%%1)*4)+1]
 missing_budget_qtrs[, year:=floor(date)]
 
+#Save this output data
+write.csv(pudrs, "J:/Project/Evaluation/GF/resource_tracking/other/verification/missing_pudr_coverage.csv", row.names=F)
+write.csv(budgets, "J:/Project/Evaluation/GF/resource_tracking/other/verification/missing_budget_coverage.csv", row.names=F)
+
 pudr_coverage = function(country, country_name){
-  pudr_coverage = ggplot(pudr_subset[loc_name==country]) + 
+  pudr_coverage = ggplot(pudrs[loc_name==country]) + 
   geom_point(aes(x=date, y=grant), shape=19) + 
   geom_point(aes(x=missing_pudr_date, y=grant), color="blue", size=6, alpha=0.5, shape=15) +
   theme_bw() + 
@@ -130,6 +119,10 @@ kable(current_grants)
 
 This list is built from the metadata from the Global Fund's website.  
 
+## Total missing quarters
+The total number of missing budget quarters we have with this version of the database is: `r nrow(budgets[!is.na(missing_budget_date)])`
+The total number of missing PUDR quarters we have with this version of the database is: `r nrow(pudrs[!is.na(missing_pudr_date)])`
+
 ## DRC Missing PUDRs
 ```{r, warning=FALSE, echo=FALSE}
 drc_pudrs = pudr_coverage("cod", "DRC")
@@ -139,8 +132,8 @@ kable(missing_pudr_qtrs[loc_name=="cod", .(grant, year, quarter)])
 
 ## DRC Missing Budgets 
 ```{r, warning=FALSE, echo=FALSE}
-drc_budgets = budget_coverage("cod", "DRC")
-drc_budgets
+drc_budget = budget_coverage("cod", "DRC")
+drc_budget
 kable(missing_budget_qtrs[loc_name=="cod", .(grant, year, quarter)])
 ```
 
@@ -153,8 +146,8 @@ kable(missing_pudr_qtrs[loc_name=="gtm", .(grant, year, quarter)])
 
 ## Guatemala Missing Budgets 
 ```{r, warning=FALSE, echo=FALSE}
-gtm_budgets = budget_coverage("gtm", "Guatemala")
-gtm_budgets
+gtm_budget = budget_coverage("gtm", "Guatemala")
+gtm_budget
 kable(missing_budget_qtrs[loc_name=="gtm", .(grant, year, quarter)])
 ```
 
@@ -167,8 +160,8 @@ kable(missing_pudr_qtrs[loc_name=="sen", .(grant, year, quarter)])
 
 ## Senegal Missing Budgets 
 ```{r, warning=FALSE, echo=FALSE}
-sen_budgets = budget_coverage("sen", "Senegal")
-sen_budgets
+sen_budget = budget_coverage("sen", "Senegal")
+sen_budget
 kable(missing_budget_qtrs[loc_name=="sen", .(grant, year, quarter)])
 ```
 
@@ -181,8 +174,8 @@ kable(missing_pudr_qtrs[loc_name=="uga", .(grant, year, quarter)])
 
 ## Uganda Missing Budgets 
 ```{r, warning=FALSE, echo=FALSE}
-uga_budgets = budget_coverage("uga", "Uganda")
-uga_budgets
+uga_budget = budget_coverage("uga", "Uganda")
+uga_budget
 kable(missing_budget_qtrs[loc_name=="uga", .(grant, year, quarter)])
 ```
 
