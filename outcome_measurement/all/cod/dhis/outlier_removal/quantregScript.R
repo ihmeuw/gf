@@ -51,44 +51,44 @@ combined_qr_results = data.table()
 
 for (o in unique(subset$org_unit_id)) {
   # subset the data further based on loop parameters for qr
-    subset_further = subset[org_unit_id == o,] 
+  subset_further = subset[org_unit_id == o,] 
+  
+  # skip cases that will fail
+  n = nrow(subset_further[!is.na(value), ])
+  #print(n)
+  var = var(subset_further$value, na.rm=T)
+  #print(var)
+  nx = length(unique(subset_further$date))
+  #print(nx)
+  
+  # skip if less than 3 data points or variance is 0
+  if(n>=3 & var!=0 & nx>=2) {  
+    # create formula
+    form = 'value~date'
     
-    # skip cases that will fail
-    n = nrow(subset_further[!is.na(value), ])
-    #print(n)
-    var = var(subset_further$value, na.rm=T)
-    #print(var)
-    nx = length(unique(subset_further$date))
-    #print(nx)
+    # # add fixed effect on group if more than one group exist
+    form = as.formula(form)
     
-    # skip if less than 3 data points or variance is 0
-    if(n>=3 & var!=0 & nx>=2) {  
-      # create formula
-      form = 'value~date'
-      
-      # # add fixed effect on group if more than one group exist
-      form = as.formula(form)
-      
-      # run quantreg
-      quantFit = rq(form, data=subset_further, tau=0.5)
-      summary(quantFit) 
-      
-      # list the residuals and add them to the out file
-      subset_further[, fitted_value:=predict(quantFit, newdata = subset_further)]
-      subset_further[, resid:=(fitted_value - value)]
-      subset_further[, skipped_qr := "no"]
-      
-    } else { 
-      subset_further[, fitted_value:=NA]
-      subset_further[, resid:=NA]
-      subset_further[, skipped_qr := "yes"]
-    }
+    # run quantreg
+    quantFit = rq(form, data=subset_further, tau=0.5)
+    summary(quantFit) 
     
-    if (nrow(combined_qr_results)==0) {
-      combined_qr_results = subset_further 
-    } else { combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) }
-    print(paste0("completed loop for org_unit_id = ", o))
+    # list the residuals and add them to the out file
+    subset_further[, fitted_value:=predict(quantFit, newdata = subset_further)]
+    subset_further[, resid:=(fitted_value - value)]
+    subset_further[, skipped_qr := "no"]
+    
+  } else { 
+    subset_further[, fitted_value:=NA]
+    subset_further[, resid:=NA]
+    subset_further[, skipped_qr := "yes"]
   }
+  
+  if (nrow(combined_qr_results)==0) {
+    combined_qr_results = subset_further 
+  } else { combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) }
+  print(paste0("completed loop for org_unit_id = ", o))
+}
 
 
 #------------------------------------

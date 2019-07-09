@@ -15,7 +15,7 @@ base_dirs = c()
 for (country in countries){
   active = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/active")
   not_active = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/not_active")
-  unclassified = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/unclassified_files_to_review")
+  unclassified = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/unclassified_files_to_review")
 
   base_dirs = c(base_dirs, active, not_active, unclassified)
 } 
@@ -33,12 +33,7 @@ for (path in base_dirs){
 #--------------------------------------------
 # Now, merge together your documented file lists, and remove these files 
 #-----------------------------------------------------
-cod_files = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/raw_data/cod_budget_filelist.csv")
-gtm_files = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/raw_data/gtm_budget_filelist.csv")
-sen_files = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/sen/raw_data/sen_budget_filelist.csv")
-uga_files = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/uga/raw_data/uga_budget_filelist.csv")
-
-all_files = rbind(cod_files, gtm_files, sen_files, uga_files, fill=T)
+all_files = data.table(read.xlsx("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/master_file_list.xlsx"))
 
 #Add full file paths to file names
 dir = "J:/Project/Evaluation/GF/resource_tracking/"
@@ -60,7 +55,7 @@ all_files = unique(all_files) #Remove duplicate files(?)
 before_drop = length(file_list)
 unprocessed_files = file_list[!file_list%in%processed_files]
 
-if (length(unprocessed_files) + length(processed_files) != nrow(all_files)) {
+if (length(unprocessed_files) + length(processed_files) != length(file_list)) {
   print("Some file paths not being filtered correctly - unprocessed + processed does not equal all files.")
 }
 

@@ -157,12 +157,30 @@ for(h in unique(data$health_zone)) {
 }
 
 # make one nice example for slides
+h = 'bilonda'
+tmp = data[health_zone==h]
+tmp[date==2019]$act_coverage_rate=max(tmp$act_coverage_rate, na.rm=T)
+tmp[date%%1!=0, act_coverage_rate:=NA]
+p1 = ggplot(tmp, aes(y=mildMalariaTreated_rate, x=date)) + 
+	geom_point(aes(color='Original Data')) + 
+	geom_line(data=tmp[!is.na(act_coverage_rate)], aes(y=act_coverage_rate, color='LBD/MAP Estimate')) + 
+	geom_point(aes(y=mildMalariaTreated_rate_adj, color='Corrected Data')) +
+	scale_color_manual('', values=colors) + 
+	labs(title='Proportion of New Cases Treated with Artemisinin Combination Therapy', 
+		subtitle='Bilonda Health Zone', y='', x='') + 
+	theme_bw() + 
+	theme(legend.position=c(0.15, 0.875), 
+		legend.box.background=element_rect(colour='black'), 
+		legend.background=element_blank(), 
+		legend.title=element_blank())
+
+# make one nice example for slides
 h = 'libenge'
-p1 = ggplot(data[health_zone=='libenge'], aes(y=RDT_rate, x=date)) + 
+p2 = ggplot(data[health_zone=='libenge'], aes(y=RDT_rate, x=date)) + 
 	geom_point() + 
 	labs(title='RDTs Conducted per Suspected Case',y='', x='') + 
 	theme_bw()
-p2 = ggplot(data[health_zone=='libenge'], aes(y=newCasesMalariaMild_rate, x=date)) + 
+p3 = ggplot(data[health_zone=='libenge'], aes(y=newCasesMalariaMild_rate, x=date)) + 
 	geom_point(aes(color='Original Data')) + 
 	geom_line(aes(y=incidence_rate, color='LBD/MAP Estimate')) + 
 	geom_point(aes(y=newCasesMalariaMild_rate_adj, color='Corrected Data')) +
@@ -182,7 +200,8 @@ saveRDS(data, outputFile3b)
 
 # save graphs
 pdf(outputFile3bGraphs, height=6, width=9)
-grid.arrange(p1, p2, ncol=2, 
+p1
+grid.arrange(p2, p3, ncol=2, 
 	top=textGrob('Example: Libenge Health Zone', gp=gpar(fontsize=18)))
 for(h in names(plots)) { 
 	grid.arrange(plots[[h]][[1]], plots[[h]][[2]], 

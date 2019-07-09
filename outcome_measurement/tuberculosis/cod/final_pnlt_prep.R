@@ -12,7 +12,7 @@ library(data.table)
 library(readxl)
 
 #Mettre en place des répertoires
-raw_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program/aggregated_data/" #Défini sur le chemin de fichier où les deux fichiers de données préparés sont enregistrés
+raw_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program/aggregated_data/" #Défini où les deux fichiers de données préparés sont enregistrés
 save_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program/aggregated_data/" #Où souhaitez-vous sortir les données finalisées?
 
 #----------------------------
@@ -21,7 +21,7 @@ save_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program
 #Lire dans les données
 dt_2018 = data.table(read.xlsx(paste0(raw_dir, "TB DATA 2018.xlsx")))
 
-#1. Corriger les noms
+#1. Corriger les noms de variables
 new_names = c('trimestre', 'zone_sante', 'population_totale', 'population_couverte', 'presumes_tb', 
               'presume_tb_teste_microscope', 'presume_tb_positif_microscope', 'presume_tb_teste_xpert', 'presume_tb_positive_xpert', 
               'frottis_effectue', 'frottis_positif', 'csdt_participe_cq', 'cas_enreg_bac_nouveau', 'cas_enreg_bac_rechute', 
@@ -53,12 +53,11 @@ dt_2018[, department:=substr(trimestre, 1, nchar(trimestre)-8)]
 
 #4. Extraire l'année et le trimestre et créer une variable de date
 dt_2018[, year:=2018]
-dt_2018[, trimestre:=substr(trimestre, nchar(trimestre)-6, nchar(trimestre)-5)]
 
-dt_2018[trimestre=="T1", date:=as.Date("01-01-2018", format="%m-%d-%Y")]
-dt_2018[trimestre=="T2", date:=as.Date("04-01-2018", format="%m-%d-%Y")]
-dt_2018[trimestre=="T3", date:=as.Date("07-01-2018", format="%m-%d-%Y")]
-dt_2018[trimestre=="T4", date:=as.Date("10-01-2018", format="%m-%d-%Y")]
+dt_2018[grepl(trimestre, "T1"), date:=as.Date("01-01-2018", format="%m-%d-%Y")]
+dt_2018[grepl(trimestre, "T2"), date:=as.Date("04-01-2018", format="%m-%d-%Y")]
+dt_2018[grepl(trimestre, "T3"), date:=as.Date("07-01-2018", format="%m-%d-%Y")]
+dt_2018[grepl(trimestre, "T4"), date:=as.Date("10-01-2018", format="%m-%d-%Y")]
 
 #Sauvegarder les données finales
 write.csv(dt_2018, paste0(save_dir, "TB_2018_FINAL.csv"), row.names=F)
@@ -69,7 +68,7 @@ write.csv(dt_2018, paste0(save_dir, "TB_2018_FINAL.csv"), row.names=F)
 #Lire dans les données
 dt_2016_2017 = data.table(read.xlsx(paste0(raw_dir, "TB DATA 2016_2017.xlsx")))
 
-#1. Corriger les noms
+#1. Corriger les noms de variables
 new_names = c('trimestre', 'zone_sante', 'population_totale', 'population_couverte', 'presumes_tb', 
               'frottis_effectue', 'frottis_positif', 'presumes_tb_ziehl', 'presumes_tb_ziehl_positif', 
               'presumes_xpert', 'xpert_mtb_pos_rif_neg', 'xpert_mtb_pos_rif_pos', 'xpert_invalide',
@@ -108,12 +107,11 @@ dt_2016_2017[, department:=substr(trimestre, 1, nchar(trimestre)-8)]
 #4. Extraire l'année et le trimestre et créer une variable de date
 dt_2016_2017[, year:=substr(trimestre, nchar(trimestre)-3, nchar(trimestre))]
 dt_2016_2017[, year:=as.numeric(year)]
-dt_2016_2017[, trimestre:=substr(trimestre, nchar(trimestre)-6, nchar(trimestre)-5)]
 
-dt_2016_2017[trimestre=="T1", date:=as.Date(paste0("01-01-", year), format="%m-%d-%Y")]
-dt_2016_2017[trimestre=="T2", date:=as.Date(paste0("04-01-", year), format="%m-%d-%Y")]
-dt_2016_2017[trimestre=="T3", date:=as.Date(paste0("07-01-", year), format="%m-%d-%Y")]
-dt_2016_2017[trimestre=="T4", date:=as.Date(paste0("10-01-", year), format="%m-%d-%Y")]
+dt_2016_2017[grepl(trimestre, "T1"), date:=as.Date(paste0("01-01-", year), format="%m-%d-%Y")]
+dt_2016_2017[grepl(trimestre, "T2"), date:=as.Date(paste0("04-01-", year), format="%m-%d-%Y")]
+dt_2016_2017[grepl(trimestre, "T3"), date:=as.Date(paste0("07-01-", year), format="%m-%d-%Y")]
+dt_2016_2017[grepl(trimestre, "T4"), date:=as.Date(paste0("10-01-", year), format="%m-%d-%Y")]
 
 #Sauvegarder les données finales
 write.csv(dt_2016_2017, paste0(save_dir, "TB_2016_2017_FINAL.csv"), row.names=F)

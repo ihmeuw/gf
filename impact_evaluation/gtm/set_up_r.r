@@ -47,6 +47,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # directories
 dir = paste0(j, '/Project/Evaluation/GF/')
 ieDir = paste0(dir, 'impact_evaluation/gtm/')
+rawIeDir = paste0(ieDir, 'raw_data/')
 preppedIeDir =  paste0(ieDir, 'prepped_data/')
 visIeDir = paste0(ieDir, 'visualizations/')
 rtDir = paste0(dir, 'resource_tracking/_gf_files_gos/combined_prepped_data/')
@@ -62,7 +63,7 @@ lbdDir = paste0(j, '/WORK/11_geospatial/01_covariates/00_MBG_STANDARD/')
 # Supporting Files
 
 # code-friendly version of indicator map file
-indicatorMapFile = paste0(preppedIeDir, 'GTM Indicator map.xlsx')
+indicatorMapFile = paste0(ieDir, 'GTM Indicator map.xlsx')
 
 # list of interventions and codes
 mfFile = "J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.csv"
@@ -87,12 +88,12 @@ whoFile = paste0(whoDir, 'who_prepped.rds')
 sicoinFile = paste0(sicoinDir, 'prepped_sicoin_data.rds')
 
 # activities/outputs files
-actFile = paste0(ieDir, "activities_6.12.19.csv")
-outputsFile = paste0(ieDir, "outputs_6.12.19.csv")
+actFile = paste0(rawIeDir, "activities_6.12.19.csv")
+outputsFile = paste0(rawIeDir, "outputs_6.12.19.csv")
 
 # outcomes/impact files
-outcomeFile = paste0(ieDir, "outcomes_6.12.19.csv")
-impactFile = paste0(ieDir, "impact_6.12.19.csv")
+outcomeFile = paste0(rawIeDir, "outcomes_6.12.19.csv")
+impactFile = paste0(rawIeDir, "impact_6.12.19.csv")
 
 # shapefiles
 
@@ -151,8 +152,8 @@ if (Sys.info()[1]!='Windows') {
 }
 
 # output file from 4c and 4d_explore_data.r (graphs)
-outputFile4c = paste0(preppedIeDir, 'first_half_exploratory_graphs.pdf')
-outputFile4d = paste0(preppedIeDir, 'second_half_exploratory_graphs.pdf')
+outputFile4c = paste0(visIeDir, 'first_half_exploratory_graphs.pdf')
+outputFile4d = paste0(visIeDir, 'second_half_exploratory_graphs.pdf')
 
 # output file from 5a_run_first_half_analysis.R
 outputFile5a = paste0(preppedIeDir, 'first_half_model_results.rdata')

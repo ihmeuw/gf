@@ -75,6 +75,7 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
 {
   #Subset data into each bundle of codes, and then recombine. 
   codes_needed = unique(indicatorMap$code)
+  codes_needed = codes_needed[codes_needed!="H11_ALL"] #Only capture HIV/TB all under the TB code, T2_ALL. 
 
     #---------------------------------------------
     # GF Expenditures - can we make this a loop? 
@@ -92,10 +93,9 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     #And then for combination categories. 
     expenditures[substr(code, 1, 2)=='R1', R1_ALL:=TRUE]
     expenditures[substr(code, 1, 2)=='R2', R2_ALL:=TRUE]
-    expenditures[substr(code, 1, 2)=='T2', T2_ALL:=TRUE]
+    expenditures[substr(code, 1, 2)=='T2' | substr(code, 1, 2)=="H11", T2_ALL:=TRUE]
     expenditures[substr(code, 1, 2)=='T3', T3_ALL:=TRUE]
     expenditures[disease=='tb', TB_ALL:=TRUE]
-    expenditures[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
     expenditures[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
     
     codes_generated = names(expenditures)[!names(expenditures)%in%c('year', 'module', 'intervention', 'code', 'disease', 'loc_name', 'expenditure')]
@@ -130,10 +130,9 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     #And then for combination categories. 
     other_dah[substr(code, 1, 2)=='R1', R1_ALL:=TRUE]
     other_dah[substr(code, 1, 2)=='R2', R2_ALL:=TRUE]
-    other_dah[substr(code, 1, 2)=='T2', T2_ALL:=TRUE]
+    other_dah[substr(code, 1, 2)=='T2' | substr(code, 1, 2)=="H11", T2_ALL:=TRUE]
     other_dah[substr(code, 1, 2)=='T3', T3_ALL:=TRUE]
     other_dah[disease=='tb', TB_ALL:=TRUE]
-    other_dah[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
     other_dah[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
     
     codes_generated = names(other_dah)[!names(other_dah)%in%c('year', 'module', 'intervention', 'code', 'disease', 'loc_name', 'sda_activity', 'other_dah')]
@@ -168,10 +167,9 @@ indicatorMap = indicatorMap[, .(indicator, type, code)]
     #And then for combination categories. 
     sicoin[substr(code, 1, 2)=='R1', R1_ALL:=TRUE]
     sicoin[substr(code, 1, 2)=='R2', R2_ALL:=TRUE]
-    sicoin[substr(code, 1, 2)=='T2', T2_ALL:=TRUE]
+    sicoin[substr(code, 1, 2)=='T2' | substr(code, 1, 2)=="H11", T2_ALL:=TRUE]
     sicoin[substr(code, 1, 2)=='T3', T3_ALL:=TRUE]
     sicoin[disease=='tb', TB_ALL:=TRUE]
-    sicoin[substr(code, 1, 3)=='H11', H11_ALL:=TRUE]
     sicoin[disease%in%c('tb', 'hiv', 'hiv/tb'), HIV_TB_ALL:=TRUE]
     
     codes_generated = names(sicoin)[!names(sicoin)%in%c('year', 'gf_module', 'gf_intervention', 'activity', 'expenditure', 'code', 'disease')]

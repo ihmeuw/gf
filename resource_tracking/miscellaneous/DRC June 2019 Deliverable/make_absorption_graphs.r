@@ -13,6 +13,11 @@ output_dir = "J:/Project/Evaluation/GF/resource_tracking/visualizations/miscella
 #Read in data 
 absorption = readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/absorption_cod.rds"))
 absorption = absorption[grant_disease=="malaria" & grant_period=="2018-2020"]
+budgets = readRDS(paste0(dir, "_gf_files_gos/combined_prepped_data/final_budgets.rds"))
+budgets = budgets[loc_name=="cod"]
+
+budgets[code%in%c("M2_3", 'R7_1', 'R7_2') & grant_period == "2018-2020" & grant_disease=="malaria", 
+        .(budget = sum(budget, na.rm=T)), by=c('grant', 'gf_module', 'gf_intervention')]
 
 all_ints = fread(paste0(mapping_dir, "all_interventions.csv"))
 all_ints = unique(all_ints[disease%in%c("malaria", "rssh"), .(code, abbrev_mod_eng, abbrev_int_eng)])

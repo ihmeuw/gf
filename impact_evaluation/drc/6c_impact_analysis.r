@@ -227,6 +227,56 @@ sunBursts = lapply(rev(outcomeVars), function(v) {
 # --------------------------------------------------------------------------------------------
 
 
+# --------------------------------------------------------------------------------------------
+# make one more of mortality with the two types of incidence collapsed together
+# prep data
+graphData = setup2LevelSB('lead_malariaDeaths_rate', TRUE)
+
+# collapse
+graphData[, rhs:=gsub('severe','mild',rhs)]
+graphData[, lhs:=gsub('severe','mild',lhs)]
+graphData[, rhs:=gsub('Severe','Mild',rhs)]
+graphData[, lhs:=gsub('Severe','Mild',lhs)]
+graphData[, fill:=gsub('Severe','Mild',fill)]
+graphData[, label:=gsub('\\(severe\\)|\\(mild\\)','',label)]
+graphData[, label:=str_sub(label, 1, -7)]
+graphData[, label:=gsub('-','', label)]
+graphData[, label:=gsub('Tx Cvg','Tx. Cvg', label)]
+graphData[, label:=trimws(label)]
+graphData = graphData[, .(est.std=sum(est.std)), by=c('rhs','lhs','fill','level', 'label')]
+
+# remake labels
+graphData[label!='', label:=paste(label, '-', round(est.std*100, 1), '%')]
+graphData[rhs==lhs & level==2, label:='']
+
+# count necessary colors
+c = length(unique(graphData[level==2]$lhs))
+
+# get label
+l = nodeTable[variable=='lead_malariaDeaths_rate']$label
+l = paste('Declining\n', l)
+
+# label sizes based on the number of labels
+nLabels = length(graphData[label!='']$label)
+if (nLabels<5) s=3.5
+if (nLabels>=5) s=3
+if (nLabels>=10) s=2.5
+if (nLabels>=20) s=2
+
+# graph
+sunBursts = list()
+sunBursts[[length(sunBursts)+1]] = ggplot(graphData, aes(x=as.numeric(level), y=est.std, fill=fill, alpha=level)) +
+	geom_col(width=1, color='gray80', size=0.3, position=position_stack()) +
+	geom_text_repel(aes(label=label, x=as.numeric(level)), size=s, position=position_stack(vjust=0.5), segment.color='black') +
+	annotate('text', 0, 0, label=l, size=5, vjust=1.25) +
+	coord_polar(theta='y') +
+	scale_alpha_manual(values=c('0'=0, '1'=1, '2'=0.65), guide=F) +
+	scale_fill_manual('', values=rev(cols[c(1,3,4)])) +
+	theme_void() + 
+	theme(legend.position='none')
+# --------------------------------------------------------------------------------------------
+
+
 # -----------------------------------------------
 # Save
 print(paste('Saving:', outputFile6c)) 
