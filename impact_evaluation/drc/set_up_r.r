@@ -11,8 +11,8 @@
 # --------------------------------------------
 # Output file labels (set to '' for default) 
 # in case we're running some secondary analysis
-# this only affects files from step 5 onward
-fileLabel = ''
+# this only affects files from step 4c onward
+fileLabel = '_pc'
 # --------------------------------------------
 
 
@@ -118,8 +118,8 @@ admin2ShapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph
-nodeTableFile1 = './impact_evaluation/drc/visualizations/nodetable_first_half.csv'
-nodeTableFile2 = './impact_evaluation/drc/visualizations/nodetable_second_half.csv'
+nodeTableFile1 = './impact_evaluation/drc/visualizations/nodetable_first_half', fileLabel, '.csv'
+nodeTableFile2 = './impact_evaluation/drc/visualizations/nodetable_second_half', fileLabel, '.csv'
 # ---------------------------------------------------------------------------------
 
 
@@ -171,8 +171,8 @@ if (Sys.info()[1]!='Windows') {
 }
 
 # output file from 4c and 4d_explore_data.r (graphs)
-outputFile4c = paste0(ieDir, '../visualizations/first_half_exploratory_graphs.pdf')
-outputFile4d = paste0(ieDir, '../visualizations/second_half_exploratory_graphs.pdf')
+outputFile4c = paste0(ieDir, '../visualizations/first_half_exploratory_graphs', fileLabel, '.pdf')
+outputFile4d = paste0(ieDir, '../visualizations/second_half_exploratory_graphs', fileLabel, '.pdf')
 
 # output file from 5a_run_first_half_analysis.R
 outputFile5a = paste0(ieDir, 'first_half_model_results', fileLabel, '.rdata')

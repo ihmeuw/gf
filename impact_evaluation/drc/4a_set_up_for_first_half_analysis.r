@@ -122,6 +122,16 @@ for(v in lagVars) {
 	untransformed[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='health_zone']
 }
 data = na.omit(data)
+
+# per capita variables of everything in model 1
+pcVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
+pcVars = c(pcVars, 'value_ITN_received', 'value_RDT_received', 'value_ACT_received', 
+	'value_ITN_consumed', 'value_ACTs_SSC', 'value_RDT_completed', 'value_SP', 
+	'value_severeMalariaTreated', 'value_totalPatientsTreated')
+for(v in pcVars) { 
+	data[, (paste0(v, '_pc')):=get(v)/population]
+	untransformed[, (paste0(v, '_pc')):=get(v)/population]
+}
 # -----------------------------------------------------------------------
 
 
