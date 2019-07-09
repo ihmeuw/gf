@@ -35,13 +35,6 @@ resource_tracking_rect = merge(frame, resource_tracking, by='date', all=TRUE) #D
 setDT(resource_tracking_rect)
 stopifnot(nrow(resource_tracking_rect[is.na(date) | is.na(department), ])==0)
 
-# Divide each value by number of departments, because we don't have any geography in RT data. 
-# cols = names(resource_tracking_rect)[!names(resource_tracking_rect)%in%c('date', 'year', 'department')]
-# n_depts = length(departments)
-# for (col in cols){
-#   resource_tracking_rect[, assign(col):=get(col)/n_depts]
-# }
-
 #Outputs/Activities
 outputs_activities_rect = merge(frame, outputs_activities, by=c('department','date'), all=TRUE)
 setDT(outputs_activities_rect)
@@ -115,8 +108,9 @@ stopifnot(nrow(redistribution_mat[is.na(redist_var)])==0)
 
 redistribution_mat = unique(redistribution_mat[, .(code, input_var, redist_var)])
 
-# resource_tracking[, sum(exp_R2_ALL, na.rm=T)]
-# merge_file[, sum(exp_R2_ALL, na.rm=T)]
+#Make a variable for the number of departments for equal distribution if needed. 
+n_depts = length(departments)
+equal_division = 1/n_depts 
 # loop over financial variables and redistribute subnationally
 for(i in 1:nrow(redistribution_mat)) {
   print(i)
@@ -124,17 +118,34 @@ for(i in 1:nrow(redistribution_mat)) {
 	a = redistribution_mat[i, redist_var] #Changed from 'indicator' in DRC code EL 7.8.19
 
 	# disallow zeroes
-	min = min(merge_file[get(a)>0][[a]], na.rm=TRUE)
+	merge_file[get(a)>0, min:=min(get(a), na.rm=TRUE)]
 	merge_file[, mean:=mean(get(a), na.rm=TRUE), by=department]
+	merge_file[is.na(min), min:=0]
 	merge_file[is.na(mean), mean:=min]
 	
-	# distribute proportionally
+	# set up redistribution coefficients
 	merge_file[, tmp:=get(a)+min]
 	merge_file[is.na(tmp), tmp:=mean]
 	merge_file[, prop:=tmp/sum(tmp), by=date]
+	
+	#If there is no data for 'a' for a given year, divide the data equally between departments. 
+	a_zeros = merge_file[, .(total=sum(get(a))), by='date']
+	a_zeros = a_zeros[total==0]
+	if (nrow(a_zeros)!=0){
+	  print("Some input variables are being scaled equally among all departments,\nbecause there is no data for the next activity/output indicator for the following years")
+	  print(a)
+	  print(unique(a_zeros$date))
+	  merge_file[date%in%a_zeros$date, prop:=equal_division]
+	}
+
+	#Check to make sure these redistribution variables sum to 1 by date (over all departments)
+	check = merge_file[, .(prop=sum(prop, na.rm=T)), by='date']
+	stopifnot(unique(check$prop)==1)
+	
+	#Redistribute
 	merge_file[, (v):=get(v)*prop]
 	
-	# test that it worked
+	# test that it worked using original data
 	orig = sum(resource_tracking[[v]], na.rm=TRUE)
 	new = sum(merge_file[[v]], na.rm=TRUE)
 	if (abs(orig-new)>.1) stop(paste0("Orig:", orig, " New:", new, 
