@@ -15,8 +15,8 @@ model = '
   #Outreach_teams_formed - No activities data yet + exp_T1_5 + ghe_T1_5 + other_dah_T1_5 + date
   #Trainings_conducted - No data yet
   Number_of_Cases_Screened_for_MDR_act ~ exp_T3_1 + ghe_T3_1 + other_dah_T3_1 + date
-  PLHIV_Screened_for_TB_act ~ exp_T2_ALL + ghe_T2_ALL + other_dah_T2_ALL + exp_H11_ALL + ghe_H11_ALL + other_dah_H11_ALL + date
-  TB_Patients_Tested_for_HIV_act ~ exp_T2_ALL + ghe_T2_ALL + other_dah_T2_ALL + exp_H11_ALL + ghe_H11_ALL + other_dah_H11_ALL + date
+  PLHIV_Screened_for_TB_act ~ exp_T2_ALL + ghe_T2_ALL + other_dah_T2_ALL + date
+  TB_Patients_Tested_for_HIV_act ~ exp_T2_ALL + ghe_T2_ALL + other_dah_T2_ALL + date
   #Microscopy_tests_done
   #Lab_supplies_distributed ~ #Lab supplies and reagents distributed
 	
@@ -29,7 +29,7 @@ model = '
   MDR_Cases_Started_Treatment_out ~ exp_T3_2 + ghe_T3_2 + other_dah_T3_2 + Number_of_Cases_Screened_for_MDR_act + date
   Additional_Cases_Detected_via_ACF_out ~ exp_T1_5 + ghe_T1_5 + other_dah_T1_5 + date #Change this to Outreach_teams_formed when that is populated
   PLHIV_started_on_IPT_out ~ PLHIV_Screened_for_TB_act + Isoniazid_Distributed_act + date
-  TB_HIV_receiving_ART ~ TB_Patients_Tested_for_HIV_act + date
+  #TB_HIV_receiving_ART ~ TB_Patients_Tested_for_HIV_act + date
   #Children_in_Contact_with_TB_detected ~ exp_T1_7 + ghe_T1_7 + other_dah_T1_7 #Confirm this is an output, Add outreach teams
   Cases_Notified_in_Prisons_out ~ exp_T1_6 + ghe_T1_6 + other_dah_T1_6 + date
 	
