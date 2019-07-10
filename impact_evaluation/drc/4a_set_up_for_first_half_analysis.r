@@ -132,10 +132,16 @@ data = na.omit(data)
 
 # per capita variables of everything in model 1
 if(fileLabel=='_pc') { 
-	pcVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
-	pcVars = c(pcVars, 'value_ITN_received', 'value_RDT_received', 'value_ACT_received', 
-		'value_ITN_consumed', 'value_ACTs_SSC', 'value_RDT_completed', 'value_SP', 
-		'value_severeMalariaTreated', 'value_totalPatientsTreated')
+	pcVars = c("ITN_received_cumulative", "RDT_received_cumulative", 
+		"ACT_received_cumulative", "ITN_consumed_cumulative", 
+		"ACTs_SSC_cumulative", "RDT_completed_cumulative", 
+		"SP_cumulative", "severeMalariaTreated_cumulative", 
+		"totalPatientsTreated_cumulative", "lag_exp_M1_1_cumulative", 
+		"lag_exp_M1_2_cumulative", "lag_exp_M2_1_cumulative", 
+		"lag_other_dah_M2_cumulative", "lag_exp_M2_3_cumulative", 
+		"lag_exp_M3_1_cumulative", "lag_other_dah_M1_1_cumulative", 
+		"lag_ghe_cumulative", "lag_other_dah_M2_3_cumulative", 
+		"lag_exp_M2_6_cumulative")
 	for(v in pcVars) { 
 		data[, (paste0(v, '_pc')):=get(v)/population]
 		untransformed[, (paste0(v, '_pc')):=get(v)/population]
