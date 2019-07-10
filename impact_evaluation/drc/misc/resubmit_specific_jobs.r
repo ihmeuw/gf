@@ -18,7 +18,7 @@ load(outputFile4a)
 hzs = unique(data$health_zone)
 T = length(hzs)
 modelVersion = 'drc_malaria6'
-skip = c(405,406,407) # jobs to manually skip
+skip = c() # jobs to manually skip
 for(i in seq(T)) { 
 	if(file.exists(paste0(clustertmpDir2, 'first_half_summary_', i, '.rds'))) next
 	if(i %in% skip) next
