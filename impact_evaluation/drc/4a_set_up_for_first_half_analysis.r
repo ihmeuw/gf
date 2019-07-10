@@ -15,6 +15,11 @@ source('./impact_evaluation/drc/set_up_r.r')
 # load
 data = readRDS(outputFile3)
 
+# bring in population estimates where possible
+pop = readRDS(outputFile2c)
+pop = pop[,c('health_zone','date','population'), with=F]
+data = merge(data,pop, by=c('health_zone','date'), all.x=TRUE)
+
 # make unique health zone names for convenience
 data[, orig_health_zone:=health_zone]
 data[, health_zone:=paste0(health_zone, '_', dps)]
@@ -124,13 +129,15 @@ for(v in lagVars) {
 data = na.omit(data)
 
 # per capita variables of everything in model 1
-pcVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
-pcVars = c(pcVars, 'value_ITN_received', 'value_RDT_received', 'value_ACT_received', 
-	'value_ITN_consumed', 'value_ACTs_SSC', 'value_RDT_completed', 'value_SP', 
-	'value_severeMalariaTreated', 'value_totalPatientsTreated')
-for(v in pcVars) { 
-	data[, (paste0(v, '_pc')):=get(v)/population]
-	untransformed[, (paste0(v, '_pc')):=get(v)/population]
+if(fileLabel=='_pc') { 
+	pcVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
+	pcVars = c(pcVars, 'value_ITN_received', 'value_RDT_received', 'value_ACT_received', 
+		'value_ITN_consumed', 'value_ACTs_SSC', 'value_RDT_completed', 'value_SP', 
+		'value_severeMalariaTreated', 'value_totalPatientsTreated')
+	for(v in pcVars) { 
+		data[, (paste0(v, '_pc')):=get(v)/population]
+		untransformed[, (paste0(v, '_pc')):=get(v)/population]
+	}
 }
 # -----------------------------------------------------------------------
 
