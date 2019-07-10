@@ -118,8 +118,8 @@ admin2ShapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph
-nodeTableFile1 = './impact_evaluation/drc/visualizations/nodetable_first_half', fileLabel, '.csv'
-nodeTableFile2 = './impact_evaluation/drc/visualizations/nodetable_second_half', fileLabel, '.csv'
+nodeTableFile1 = paste0('./impact_evaluation/drc/visualizations/nodetable_first_half', fileLabel, '.csv')
+nodeTableFile2 = paste0('./impact_evaluation/drc/visualizations/nodetable_second_half', fileLabel, '.csv')
 # ---------------------------------------------------------------------------------
 
 
