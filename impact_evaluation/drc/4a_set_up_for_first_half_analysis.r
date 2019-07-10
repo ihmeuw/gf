@@ -15,10 +15,12 @@ source('./impact_evaluation/drc/set_up_r.r')
 # load
 data = readRDS(outputFile3)
 
-# bring in population estimates where possible
-pop = readRDS(outputFile2c)
-pop = pop[,c('health_zone','date','population'), with=F]
-data = merge(data,pop, by=c('health_zone','date'), all.x=TRUE)
+# bring in population estimates where possible if the model is a per-capita model
+if(fileLabel=='_pc') { 
+	pop = readRDS(outputFile2c)
+	pop = pop[,c('health_zone','date','population'), with=F]
+	data = merge(data,pop, by=c('health_zone','date'), all.x=TRUE)
+}
 
 # make unique health zone names for convenience
 data[, orig_health_zone:=health_zone]
