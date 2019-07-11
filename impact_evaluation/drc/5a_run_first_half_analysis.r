@@ -18,7 +18,7 @@ if(Sys.info()[1]=='Windows') stop('This script is currently only functional on I
 rerunAll = TRUE
 
 # model version to use
-modelVersion = 'drc_malaria6'
+modelVersion = 'drc_malaria6_pc'
 # ---------------------------
 
 

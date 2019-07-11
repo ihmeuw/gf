@@ -15,6 +15,13 @@ source('./impact_evaluation/drc/set_up_r.r')
 # load
 data = readRDS(outputFile3)
 
+# bring in population estimates where possible if the model is a per-capita model
+if(fileLabel=='_pc') { 
+	pop = readRDS(outputFile2c)
+	pop = pop[,c('health_zone','date','population'), with=F]
+	data = merge(data,pop, by=c('health_zone','date'), all.x=TRUE)
+}
+
 # make unique health zone names for convenience
 data[, orig_health_zone:=health_zone]
 data[, health_zone:=paste0(health_zone, '_', dps)]
@@ -122,6 +129,24 @@ for(v in lagVars) {
 	untransformed[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='health_zone']
 }
 data = na.omit(data)
+
+# per capita variables of everything in model 1
+if(fileLabel=='_pc') { 
+	pcVars = c("ITN_received_cumulative", "RDT_received_cumulative", 
+		"ACT_received_cumulative", "ITN_consumed_cumulative", 
+		"ACTs_SSC_cumulative", "RDT_completed_cumulative", 
+		"SP_cumulative", "severeMalariaTreated_cumulative", 
+		"totalPatientsTreated_cumulative", "lag_exp_M1_1_cumulative", 
+		"lag_exp_M1_2_cumulative", "lag_exp_M2_1_cumulative", 
+		"lag_other_dah_M2_cumulative", "lag_exp_M2_3_cumulative", 
+		"lag_exp_M3_1_cumulative", "lag_other_dah_M1_1_cumulative", 
+		"lag_ghe_cumulative", "lag_other_dah_M2_3_cumulative", 
+		"lag_exp_M2_6_cumulative")
+	for(v in pcVars) { 
+		data[, (paste0(v, '_pc')):=get(v)/population]
+		untransformed[, (paste0(v, '_pc')):=get(v)/population]
+	}
+}
 # -----------------------------------------------------------------------
 
 

@@ -32,7 +32,7 @@ rerun_outputs <- FALSE
 rerun_outcomes <- FALSE
 rerun_merge <- FALSE
 rerun_adjust <- FALSE
-rerun_explore <- FALSE
+rerun_explore <- TRUE
 rerun_models <- TRUE
 rerun_analysis <- TRUE
 rerun_post <- FALSE
@@ -92,18 +92,18 @@ if (rerun_adjust==TRUE) {
 # 4a and 4b will be very slow if not on IHME's cluster
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
-	# source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
-	source('./impact_evaluation/drc/4b_set_up_for_second_half_analysis.r')
-	# source('./impact_evaluation/drc/4c_explore_first_half_data.r')
-	source('./impact_evaluation/drc/4d_explore_second_half_data.r')
+	source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
+	# source('./impact_evaluation/drc/4b_set_up_for_second_half_analysis.r')
+	source('./impact_evaluation/drc/4c_explore_first_half_data.r')
+	# source('./impact_evaluation/drc/4d_explore_second_half_data.r')
 }
 
 # ---------------------------------------
 # Run models 
 # ---------------------------------------
 if (rerun_models==TRUE) { 
-	# source('./impact_evaluation/drc/5a_run_first_half_analysis.r')
-	source('./impact_evaluation/drc/5b_run_second_half_analysis.r')
+	source('./impact_evaluation/drc/5a_run_first_half_analysis.r')
+	# source('./impact_evaluation/drc/5b_run_second_half_analysis.r')
 }
 
 # ---------------------------------------
@@ -113,7 +113,7 @@ if (rerun_analysis==TRUE) {
 	source('./impact_evaluation/drc/6a_display_sem_results.r')
 	source('./impact_evaluation/drc/6b_efficiency_effectiveness.r')
 	source('./impact_evaluation/drc/6c_impact_analysis.r')
-	source('./impact_evaluation/drc/6d_effect_sizes_by_hz.r')
+	# source('./impact_evaluation/drc/6d_effect_sizes_by_hz.r')
 }
 
 print(paste('Master script completed. Outputs saved here:', ieDir))
