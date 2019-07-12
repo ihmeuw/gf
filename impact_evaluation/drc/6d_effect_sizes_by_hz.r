@@ -19,14 +19,8 @@ load(outputFile5b)
 # bring in untransformed data
 untransformed = readRDS(outputFile2c)
 
-# load nodeTable for graphing
-# nodeTable = fread('./impact_evaluation/drc/visualizations/nodetable_second_half.csv')
-
 # shape file location
 shapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
-
-# ensure there are no extra variables introducted from nodeTable
-# nodeTable = nodeTable[variable %in% names(data)]
 # -----------------------------------------------
 
 x='ITN'
@@ -35,7 +29,7 @@ y='ITN_rate'
 # x='mildMalariaTreated'
 # y='mildMalariaTreated_rate'
 
-# -----------------------------------------------
+# -------------------------------------------------------------------------------------
 # Set up second half estimates
 
 # subset to coefficients of interest
@@ -44,9 +38,6 @@ subset = summaries[op=='~' & rhs %in% outputs]
 
 # subset to just one arrow for development
 subset = subset[rhs==x & lhs==y]
-
-# reshape outcomes wide
-# subset = dcast(subset, health_zone~lhs, value.var='est')
 
 # exponentiate coefficients on log-transformed variables
 # to make it "per 100 additional nets, x% increase in cvg"
@@ -58,11 +49,11 @@ subset[, est_1pct:=((1.01^est)-1)*100] # for each 1% more bednets...
 
 # look up the national coverage per 10 nets
 total_x = mean(untransformed[,sum(ITN,na.rm=T),by=floor(date)]$V1)
-est = means[op=='~' & rhs==x & lhs==y]$est
+est = means[op=='~' & rhs==x & lhs==y]$est/10
 unit = 1+(10/total_x)
-((unit^est)-1)*sum(untransformed[date==2017]$population)
-((unit^est)-1)*sum(untransformed[date==2017]$incidence) # for treatment
-# -----------------------------------------------
+((unit^est)-1)*sum(untransformed[date==2017]$population) # this displays the estimate for ITNs
+((unit^est)-1)*sum(untransformed[date==2017]$incidence) # this displays the estimate for treatment
+# -------------------------------------------------------------------------------------
 
 
 # ------------------------------------------------------------------------------------------
