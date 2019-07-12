@@ -205,6 +205,16 @@ rt_wide <- merge(rt_wide, ghe_wide, by=c('date'), all=T)
 #Add on GHE and OOP as control variables 
 # Add on OOP. 
 
+#---------------------------------------
+# Transformations 
+#---------------------------------------
+# # compute lags - all financial variables should be lagged 6 months. DP 7.12.19
+lagVars = names(data)
+for(v in lagVars) {
+	data[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='health_zone']
+	untransformed[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='health_zone']
+}
+
 #Save output file
 saveRDS(rt_wide, outputFile2a)
 print("Step 2a: Prep resource tracking completed successfully.")

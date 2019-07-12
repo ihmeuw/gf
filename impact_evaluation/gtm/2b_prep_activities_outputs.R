@@ -20,61 +20,66 @@ names(outputs) = gsub("/", "_", names(outputs))
 #-------------------------------------------------------
 # Before anything is changed, make general variable graphs. 
 #-------------------------------------------------------
-activities_wide = melt(activities, id.vars = c('date', 'department', 'municipality'))
-pdf(paste0(visIeDir, "raw_activities_plots.pdf"), height=5.5, width=9)
-#Municipality level plots - only do where municipality is not NA
-act_muns = unique(activities_wide$municipality, na.rm=T)
-for (m in act_muns){
-  plot = ggplot(activities_wide[municipality==m], aes(y=value, x=date)) + 
-    geom_line() + 
-    facet_wrap(~variable, scales='free') + 
-    labs(title=paste('Time series of all activity vars for municipality ', m), y='Value', x='Date') + 
-    theme_bw()
-  print(plot)
-}
-
-#Department-level plots
-act_depts = unique(activities_wide$department, na.rm=T)
-activities_wide_d = activities_wide[, .(value = sum(value, na.rm=T)), by=c('date', 'department', 'variable')]
-for (d in act_depts){
-  plot = ggplot(activities_wide_d[department==d], aes(y=value, x=date)) + 
-    geom_line() + 
-    facet_wrap(~variable, scales='free') + 
-    labs(title=paste('Time series of all activity vars for department ', d), y='Value', x='Date') + 
-    theme_bw()
-  print(plot)
-}
-dev.off()
-
-outputs_wide = melt(outputs, id.vars = c('date', 'department', 'municipality'))
-pdf(paste0(visIeDir, "raw_outputs_plots.pdf"), height=5.5, width=9)
-#Municipality level plots - only do where municipality is not NA
-out_muns = unique(outputs_wide$municipality, na.rm=T)
-for (m in out_muns){
-  plot = ggplot(outputs_wide[municipality==m], aes(y=value, x=date)) + 
-    geom_line() + 
-    facet_wrap(~variable, scales='free') + 
-    labs(title=paste('Time series of all output vars for municipality ', m), y='Value', x='Date') + 
-    theme_bw()
-  print(plot)
-}
-
-#Department-level plots
-out_depts = unique(outputs_wide$department, na.rm=T)
-outputs_wide_d = outputs_wide[, .(value=sum(value, na.rm=T)), by=c('date', 'department', 'variable')]
-for (d in out_depts){
-  plot = ggplot(outputs_wide_d[department==d], aes(y=value, x=date)) + 
-    geom_line() + 
-    facet_wrap(~variable, scales='free') + 
-    labs(title=paste('Time series of all output vars for department ', d), y='Value', x='Date') + 
-    theme_bw()
-  print(plot)
-}
-dev.off()
+# activities_wide = melt(activities, id.vars = c('date', 'department', 'municipality'))
+# pdf(paste0(visIeDir, "raw_activities_plots.pdf"), height=5.5, width=9)
+# #Municipality level plots - only do where municipality is not NA
+# act_muns = unique(activities_wide$municipality, na.rm=T)
+# for (m in act_muns){
+#   plot = ggplot(activities_wide[municipality==m], aes(y=value, x=date)) + 
+#     geom_line() + 
+#     facet_wrap(~variable, scales='free') + 
+#     labs(title=paste('Time series of all activity vars for municipality ', m), y='Value', x='Date') + 
+#     theme_bw()
+#   print(plot)
+# }
+# 
+# #Department-level plots
+# act_depts = unique(activities_wide$department, na.rm=T)
+# activities_wide_d = activities_wide[, .(value = sum(value, na.rm=T)), by=c('date', 'department', 'variable')]
+# for (d in act_depts){
+#   plot = ggplot(activities_wide_d[department==d], aes(y=value, x=date)) + 
+#     geom_line() + 
+#     facet_wrap(~variable, scales='free') + 
+#     labs(title=paste('Time series of all activity vars for department ', d), y='Value', x='Date') + 
+#     theme_bw()
+#   print(plot)
+# }
+# dev.off()
+# 
+# outputs_wide = melt(outputs, id.vars = c('date', 'department', 'municipality'))
+# pdf(paste0(visIeDir, "raw_outputs_plots.pdf"), height=5.5, width=9)
+# #Municipality level plots - only do where municipality is not NA
+# out_muns = unique(outputs_wide$municipality, na.rm=T)
+# for (m in out_muns){
+#   plot = ggplot(outputs_wide[municipality==m], aes(y=value, x=date)) + 
+#     geom_line() + 
+#     facet_wrap(~variable, scales='free') + 
+#     labs(title=paste('Time series of all output vars for municipality ', m), y='Value', x='Date') + 
+#     theme_bw()
+#   print(plot)
+# }
+# 
+# #Department-level plots
+# out_depts = unique(outputs_wide$department, na.rm=T)
+# outputs_wide_d = outputs_wide[, .(value=sum(value, na.rm=T)), by=c('date', 'department', 'variable')]
+# for (d in out_depts){
+#   plot = ggplot(outputs_wide_d[department==d], aes(y=value, x=date)) + 
+#     geom_line() + 
+#     facet_wrap(~variable, scales='free') + 
+#     labs(title=paste('Time series of all output vars for department ', d), y='Value', x='Date') + 
+#     theme_bw()
+#   print(plot)
+# }
+# dev.off()
 
 #----------------------------------------------------
 # Validate files, and subset data. 
 #----------------------------------------------------
+
+#Drop all 0 departments and municipalities - these are national-level. 
+activities = activities[!(department==0|municipality==0)]
+outputs = outputs[!(department==0 | municipality==0)]
+
 #Make sure that merge below will work - dates.  
 a_dates = unique(activities$date)
 o_dates = unique(outputs$date)
@@ -294,6 +299,8 @@ cols = 3:ncol(dt_final) #Just don't do this for date and department, the first t
 for (col in cols){
   dt_final[is.na(dt_final[[col]]), (col):=0]
 }
+
+
 #-----------------------------------------------------
 # Save data 
 #-----------------------------------------------------

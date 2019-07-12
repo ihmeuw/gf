@@ -9,7 +9,7 @@
 # -----------------------------------------------
 # Load/prep data and functions
 
-source('./impact_evaluation/drc/set_up_r.r')
+source('./impact_evaluation/gtm/set_up_r.r')
 
 # load home-made sem graphing function
 source('./impact_evaluation/_common/graphLavaan.r')

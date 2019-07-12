@@ -2,11 +2,15 @@
 # David Phillips
 # 
 # 1/18/2019
-# This runs the SEM dose-response model
-# qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5a_run_first_half_analysis.r
+# This runs the SEM dose-response model (David presets)
+# qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5a_run_first_half_analysis.r
+# This runs the SEM dose-response model (Emily presets) 
+# qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=6G -q all.q 
+# -P proj_pce -e /ihme/scratch/users/elineb/impact_evaluation/errors_output/ 
+# -o /ihme/scratch/users/elineb/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5a_run_first_half_analysis.r
 # ------------------------------------------------
 
-source('./impact_evaluation/drc/set_up_r.r')
+source('./impact_evaluation/gtm/set_up_r.r')
 
 # ---------------------------
 # Settings
@@ -18,7 +22,7 @@ if(Sys.info()[1]=='Windows') stop('This script is currently only functional on I
 rerunAll = TRUE
 
 # model version to use
-modelVersion = 'drc_malaria6'
+modelVersion = 'gtm_tb_first_half2'
 # ---------------------------
 
 
@@ -33,13 +37,13 @@ load(outputFile4a)
 # Define model object
 # DECISIONS
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
-source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('orig_health_zone','health_zone','date',modelVars)
-data = data[, unique(modelVars), with=FALSE]
+modelVars = c('department','date',modelVars)
+data = data[, unique(modelVars), with=FALSE] #Why do we have this step here? EL 7.12.19
 # ----------------------------------------------
 
 
@@ -50,14 +54,14 @@ data = data[, unique(modelVars), with=FALSE]
 if (rerunAll==TRUE) file.copy(outputFile4a, outputFile4a_scratch, overwrite=TRUE)
 
 # store T (length of array)
-hzs = unique(data$health_zone)
+hzs = unique(data$department)
 T = length(hzs)
 
 # store cluster command to submit array of jobs
 qsubCommand = paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
 		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
-		' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5c_run_single_model.r ', 
 		modelVersion, ' 1 FALSE')
 
 # submit array job if we're re-running everything

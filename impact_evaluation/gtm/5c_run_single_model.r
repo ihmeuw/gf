@@ -11,7 +11,7 @@
 # testRun - (logical) TRUE will run the model with limited MCMC steps, FALSE will run the full thing
 # ------------------------------------------------
 
-source('./impact_evaluation/drc/set_up_r.r')
+source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
 # task_id = 12
@@ -52,20 +52,20 @@ if (Sys.info()[1]!='Windows' & modelStage==2) load(outputFile4b_scratch)
 if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile4b)
 
 # subset to current health zone
-h = unique(data$health_zone)[task_id]
-subData = data[health_zone==h]
+d = unique(data$department)[task_id]
+subData = data[department==d]
 
 # define model object
-source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('health_zone','date',modelVars)
+modelVars = c('department','date',modelVars)
 subData = subData[, unique(modelVars), with=FALSE]
 
 # jitter to avoid perfect collinearity
-for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','date')]) { 
+for(v in names(subData)[!names(subData)%in%c('department','date')]) { 
 	if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
 	if (!all(subData[[v]]>0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
 }
@@ -73,7 +73,7 @@ for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','d
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
 scaling_factors = data.table(date=1)
-numVars = names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','date')]
+numVars = names(subData)[!names(subData)%in%c('department','date')]
 for(v in numVars) {
 	s=1
 	while(var(subData[[v]]/s)>1000) s=s*10
@@ -131,8 +131,8 @@ urFit[, se:=se/(scaling_factor.rhs/scaling_factor.lhs)]
 summary = merge(summary, standardizedSummary, by=c('lhs','op','rhs'))
 
 # label health zone
-urFit[, health_zone:=h]
-summary[, health_zone:=h]
+urFit[, department:=d]
+summary[, department:=d]
 # --------------------------------------------------------------
 
 
