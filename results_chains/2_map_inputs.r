@@ -6,7 +6,7 @@
 #-----------------------------------------------------
 
 #------------------------
-# Map funding landscape - right now only have data through 2016. 
+# Map funding landscape - right now only have data through 2018. 
 #------------------------
 
 
@@ -14,17 +14,17 @@
 # Guatemala 
 # ----------
 #Guatemala TB Funding Landscape
-gtm_tb_landscape_10_16 <- funding_landscape("Guatemala", "tb", 2012, 2016, TRUE)
+gtm_tb_landscape_10_16 <- funding_landscape("Guatemala", "tb", 2012, 2018, TRUE)
 ggsave(paste0(gtm_save, "/funding_landscape_tb.png"), plot = gtm_tb_landscape_10_16, height=6, width=14)
 ggsave(paste0(gtm_save, "/funding_landscape_tb.pdf"), plot = gtm_tb_landscape_10_16, height=6, width=14)
 
 #Guatemala malaria funding landscape 
-gtm_mal_landscape_10_16 <- funding_landscape("Guatemala", "malaria", 2012, 2016, TRUE)
+gtm_mal_landscape_10_16 <- funding_landscape("Guatemala", "malaria", 2012, 2018, TRUE)
 ggsave(paste0(gtm_save, "/funding_landscape_mal.png"), plot = gtm_mal_landscape_10_16, height=6, width=14)
 ggsave(paste0(gtm_save, "/funding_landscape_mal.pdf"), plot = gtm_mal_landscape_10_16, height=6, width=14)
 
 #Guatemala HIV funding landscape 
-gtm_hiv_landscape_10_16 <- funding_landscape("Guatemala", "hiv", 2012, 2016, TRUE)
+gtm_hiv_landscape_10_16 <- funding_landscape("Guatemala", "hiv", 2012, 2018, TRUE)
 ggsave(paste0(gtm_save, "/funding_landscape_hiv.png"), plot = gtm_hiv_landscape_10_16, height=6, width=14)
 ggsave(paste0(gtm_save, "/funding_landscape_hiv.pdf"), plot = gtm_hiv_landscape_10_16, height=6, width=14)
 
@@ -33,17 +33,17 @@ ggsave(paste0(gtm_save, "/funding_landscape_hiv.pdf"), plot = gtm_hiv_landscape_
 #   DRC
 # ----------
 #DRC Malaria Funding Landscape 
-drc_mal_landscape_10_16 <- funding_landscape("DRC", "malaria", 2010, 2016, FALSE)
+drc_mal_landscape_10_16 <- funding_landscape("DRC", "malaria", 2010, 2018, FALSE)
 ggsave(paste0(cod_save, "/funding_landscape_mal.png"), plot = drc_mal_landscape_10_16, height=6, width=14)
 ggsave(paste0(cod_save, "/funding_landscape_mal.pdf"), plot = drc_mal_landscape_10_16, height=6, width=14)
 
 #DRC HIV Funding Landscape 
-drc_hiv_landscape_10_16 <- funding_landscape("DRC", "hiv", 2010, 2016, FALSE)
+drc_hiv_landscape_10_16 <- funding_landscape("DRC", "hiv", 2010, 2018, FALSE)
 ggsave(paste0(cod_save, "/funding_landscape_hiv.png"), plot = drc_hiv_landscape_10_16, height=6, width=14)
 ggsave(paste0(cod_save, "/funding_landscape_hiv.pdf"), plot = drc_hiv_landscape_10_16, height=6, width=14)
 
 #DRC TB Funding Landscape 
-drc_tb_landscape_10_16 <- funding_landscape("DRC", "tb", 2010, 2016, FALSE)
+drc_tb_landscape_10_16 <- funding_landscape("DRC", "tb", 2010, 2018, FALSE)
 ggsave(paste0(cod_save, "/funding_landscape_tb.png"), plot = drc_tb_landscape_10_16, height=6, width=14)
 ggsave(paste0(cod_save, "/funding_landscape_tb.pdf"), plot = drc_tb_landscape_10_16, height=6, width=14)
 
@@ -52,17 +52,17 @@ ggsave(paste0(cod_save, "/funding_landscape_tb.pdf"), plot = drc_tb_landscape_10
 # Uganda
 # ----------
 #Uganda HIV Funding Landscape 
-uga_hiv_landscape_10_16 <- funding_landscape("Uganda", "hiv", 2010, 2016, FALSE)
+uga_hiv_landscape_10_16 <- funding_landscape("Uganda", "hiv", 2010, 2018, FALSE)
 ggsave(paste0(uga_save, "/funding_landscape_hiv.png"), plot = uga_hiv_landscape_10_16, height=6, width=14)
 ggsave(paste0(uga_save, "/funding_landscape_hiv.pdf"), plot = uga_hiv_landscape_10_16, height=6, width=14)
 
 #Uganda TB Funding Landscape 
-uga_tb_landscape_10_16 <- funding_landscape("Uganda", "tb", 2010, 2016, FALSE)
-ggsave(paste0(uga_save, "/funding_landscape_tb.png"), plot = uga_tb_landscape_10_16, height=6, width=14)
-ggsave(paste0(uga_save, "/funding_landscape_tb.pdf"), plot = uga_tb_landscape_10_16, height=6, width=14)
+uga_tb_landscape_10_17 <- funding_landscape("Uganda", "tb", 2010, 2017, FALSE)
+ggsave(paste0(uga_save, "/funding_landscape_tb.png"), plot = uga_tb_landscape_10_17, height=6, width=14)
+ggsave(paste0(uga_save, "/funding_landscape_tb.pdf"), plot = uga_tb_landscape_10_17, height=6, width=14)
 
 #Uganda Malaria Funding Landscape 
-uga_mal_landscape_10_16 <- funding_landscape("Uganda", "malaria", 2010, 2016, FALSE)
+uga_mal_landscape_10_16 <- funding_landscape("Uganda", "malaria", 2010, 2018, FALSE)
 ggsave(paste0(uga_save, "/funding_landscape_mal.png"), plot = uga_mal_landscape_10_16, height=6, width=14)
 ggsave(paste0(uga_save, "/funding_landscape_mal.pdf"), plot = uga_mal_landscape_10_16, height=6, width=14)
 
