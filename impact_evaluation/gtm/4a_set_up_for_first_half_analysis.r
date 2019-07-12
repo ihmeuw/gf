@@ -65,15 +65,13 @@ data$tmp = NULL
 # Data transformations and other fixes for Heywood cases
 
 # # make cumulative variables
-# cumulVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
-# cumulVars = c(cumulVars, 'value_ITN_received', 'value_RDT_received', 'value_ACT_received', 
-# 	'value_ITN_consumed', 'value_ACTs_SSC', 'value_RDT_completed', 'value_SP', 
-# 	'value_severeMalariaTreated', 'value_totalPatientsTreated', 'value_totalPatientsTreated_under5', 
-# 	'value_ACT_received_under5', 'value_ACTs_SSC_under5','value_severeMalariaTreated_under5')
-# for(v in cumulVars) { 
-# 	nv = gsub('value_','',v) 
-# 	data[, (paste0(nv,'_cumulative')):=cumsum(get(v)), by='health_zone']
-# }
+cumulVars = names(data)
+cumulVars = cumulVars[!grepl("total", cumulVars)]
+cumulVars = cumulVars[!cumulVars%in%c('department', 'date', 'year', 'min')]
+for(v in cumulVars) {
+	nv = gsub('value_','',v)
+	data[, (paste0(nv,'_cumulative')):=cumsum(get(v)), by='department']
+}
 # 
 # # split before transformations
 untransformed = copy(data)

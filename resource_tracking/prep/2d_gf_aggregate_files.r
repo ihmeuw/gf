@@ -215,9 +215,11 @@ gos_prioritized_expenditures = rbind(gos_expenditures, final_expenditures, use.n
 
 #Check for overlapping grant periods in recent data - follow the same process for budgets of 
 #   prioritizing PUDRs over GOS when we have both. 
-grant_period_mat = unique(gos_prioritized_expenditures[, .(data_source, grant, grant_period, start_date)])
+grant_period_mat = unique(gos_prioritized_expenditures[, .(data_source, grant, grant_period, start_date, end_date)])
+grant_period_mat[, start_date:=as.Date(start_date, format='%Y-%m-%d')]
+grant_period_mat[, end_date:=as.Date(end_date, format='%Y-%m-%d')]
 grant_period_mat[, min_date:=min(start_date), by=c('grant', 'grant_period', 'data_source')]
-grant_period_mat[, max_date:=max(start_date), by=c('grant', 'grant_period', 'data_source')]
+grant_period_mat[, max_date:=max(end_date), by=c('grant', 'grant_period', 'data_source')] #Have to format this code slightly differently than budgets b/c budgets are at quarter-level!
 grant_period_mat = unique(grant_period_mat[, .(min_date, max_date, grant, grant_period, data_source)])
 grant_period_mat = dcast.data.table(grant_period_mat, grant+grant_period~data_source, value.var = c("min_date", "max_date"))
 
@@ -236,6 +238,8 @@ if (nrow(grant_period_mat)>0){
   print(grant_period_mat)
   
   #Build up the list of grant quarters you need to drop from GOS
+  #GOS is still at the quarter-level even though expenditure data is not, so this check will work
+  # as adapted from budget combination code -EL 7.9.2019
   drop_gos = data.table()
   for (i in 1:nrow(grant_period_mat)){
     quarters = unique(gos_prioritized_expenditures[data_source == 'gos' & grant==grant_period_mat$grant[i] & grant_period==grant_period_mat$grant_period[i] & 

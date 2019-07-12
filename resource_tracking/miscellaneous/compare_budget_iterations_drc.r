@@ -14,11 +14,12 @@ library(gridExtra)
 library(scales)
 options(scipen=20)
 
-
+#ORIGINAL APPROVED BUDGET
 # Read in data 
-orig = data.table(read.xlsx("J:/Project/Evaluation/GF/resource_tracking/visualizations/verification/DRC_budget_overlaps_COD-M-MOH.xlsx",
-                 sheet="original", detectDates = T))
-setnames(orig, c('Module', 'budget'), c('module', 'budget0'))
+orig = data.table(read.xlsx("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/COD-M-MOH budget revisions 7.11.2019.xlsx",
+                 sheet="08.08.2018", detectDates = T))
+orig = orig[, -c('Year.1', 'Year.2', 'Year.3')]
+names(orig) = tolower(names(orig))
 
 #Fix module names 
 orig[module=="Prise en charge", module:="Case management"]
@@ -32,48 +33,99 @@ orig[grepl("ripostes", module), module:="RSSH: Community responses and systems"]
 orig[grepl("suivi et", module), 
      module:="RSSH: HMIS"]
 orig[module=="Gestion des subventions", module:="Program management"]
+orig[module=="Lutte antivectorielle", module:="Vector control"]
+
+orig = melt(orig, id.vars='module', variable.name='quarter', value.name='budget0')
 
 
-update = data.table(read.xlsx("J:/Project/Evaluation/GF/resource_tracking/visualizations/verification/DRC_budget_overlaps_COD-M-MOH.xlsx",
-                 sheet="modified", detectDates = T))
-setnames(update, c('Module', 'budget'), c('module', 'budget1'))
+# SECOND BUDGET
+update1 = data.table(read.xlsx("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/COD-M-MOH budget revisions 7.11.2019.xlsx",
+                            sheet="11.30.2018", detectDates = T))
+update1 = update1[, -c('Year.1', 'Year.2', 'Year.3')]
+names(update1) = tolower(names(update1))
 
 #Fix module names
-update[module=="Prise en charge", module:="Case management"]
-update[grepl("prestation de services", module), 
+update1[module=="Prise en charge", module:="Case management"]
+update1[grepl("prestation de services", module), 
      module:="RSSH: Integrated service delivery and quality improvement"]
-update[grepl("ressources humaines", module), 
+update1[grepl("ressources humaines", module), 
      module:="RSSH: Human resources"]
-update[grepl("gestion des achats", module), 
+update1[grepl("gestion des achats", module), 
      module:="RSSH: Procurement and supply chain management"]
-update[grepl("ripostes", module), module:="RSSH: Community responses and systems"]
-update[grepl("suivi et", module), 
+update1[grepl("ripostes", module), module:="RSSH: Community responses and systems"]
+update1[grepl("suivi et", module), 
      module:="RSSH: HMIS"]
-update[module=="Gestion des subventions", module:="Program management"]
-update[module=="Lutte antivectorielle", module:="Vector control"]
+update1[module=="Gestion des subventions", module:="Program management"]
+update1[module=="Lutte antivectorielle", module:="Vector control"]
 
+update1 = melt(update1, id.vars='module', variable.name='quarter', value.name='budget1')
 
-merge = merge(orig, update, by=c('module', 'date'), all=T)
+# THIRD BUDGET 
+update2 = data.table(read.xlsx("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/COD-M-MOH budget revisions 7.11.2019.xlsx",
+                               sheet="04.08.2019", detectDates = T))
+update2 = update2[, -c('Year.1', 'Year.2', 'Year.3')]
+names(update2) = tolower(names(update2))
+
+#Fix module names
+update2[module=="Prise en charge", module:="Case management"]
+update2[grepl("prestation de services", module), 
+        module:="RSSH: Integrated service delivery and quality improvement"]
+update2[grepl("ressources humaines", module), 
+        module:="RSSH: Human resources"]
+update2[grepl("gestion des achats", module), 
+        module:="RSSH: Procurement and supply chain management"]
+update2[grepl("ripostes", module), module:="RSSH: Community responses and systems"]
+update2[grepl("suivi et", module), 
+        module:="RSSH: HMIS"]
+update2[module=="Gestion des subventions", module:="Program management"]
+update2[module=="Lutte antivectorielle", module:="Vector control"]
+
+update2 = melt(update2, id.vars='module', variable.name='quarter', value.name='budget2')
+
+#--------------------------------
+# MERGE DATA 
+# -------------------------------
+merge = merge(orig, update1, by=c('module', 'quarter'), all=T)
+merge = merge(merge, update2, by=c('module', 'quarter'), all=T)
 setDT(merge)
 
-#What's the difference?
-merge[is.na(budget0), budget0:=0]
-merge[is.na(budget1), budget1:=0]
-merge[, budget_diff:=budget1-budget0]
+# COMPARE FIRST REVISION TO ORIGINAL 
+{
+  merge[, budget_diff1:=budget1-budget0]
+  
+  #Where was less money allocated in the revised budget than in the first budget?
+  merge[budget_diff1<0 ]
+  unique(merge[budget_diff1<0, .(quarter, module)])
+  #All health systems strengthening - HMIS.
+  
+  #Where was more money allocated in the revised budget than in the first budget?
+  merge[budget_diff1>0]
+  unique(merge[budget_diff1>0, .(quarter, module)])
+  
+  
+  #Where has money not changed?
+  merge[budget_diff1==0]
+  unique(merge[budget_diff1==0, .(quarter, module)])
+}
 
-#Where was less money allocated in the revised budget than in the first budget?
-merge[budget_diff<0 ]
-unique(merge[budget_diff<0, .(date, module)])
-#All health systems strengthening - HMIS.
-
-#Where was more money allocated in the revised budget than in the first budget?
-merge[budget_diff>0]
-unique(merge[budget_diff>0, .(date, module)])
-
-
-#Where has money not changed?
-merge[budget_diff==0]
-unique(merge[budget_diff==0, .(date, module)])
+# COMPARE FIRST REVISION TO SECOND REVISION
+{
+  merge[, budget_diff2:=budget2-budget1]
+  
+  #Where was less money allocated in the revised budget than in the first budget?
+  merge[budget_diff2<0 ]
+  unique(merge[budget_diff2<0, .(quarter, module)])
+  #All health systems strengthening - HMIS.
+  
+  #Where was more money allocated in the revised budget than in the first budget?
+  merge[budget_diff2>0]
+  unique(merge[budget_diff2>0, .(quarter, module)])
+  
+  
+  #Where has money not changed?
+  merge[budget_diff2==0]
+  unique(merge[budget_diff2==0, .(quarter, module)])
+}
 
 
 #Make some visualizations for RT presentation 
@@ -88,134 +140,69 @@ blank_theme <- theme_bw()+
     axis.ticks = element_blank(),
     plot.title=element_text(size=14, face="bold")
   )
+pal8 =  c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7")
 
-orig_total = sum(orig$budget0, na.rm=T)
-update_total = sum(update$budget1, na.rm=T)
+original = orig[, .(budget = sum(budget0, na.rm=T)), by=c('module')]
+version1 = update1[, .(budget = sum(budget1, na.rm=T)), by=c('module')]
+version2 = update2[, .(budget = sum(budget2, na.rm=T)), by=c('module')]
 
-orig_collapse = orig[, .(budget0 = sum(budget0, na.rm=T)), by=c('module')]
-update_collapse = update[, .(budget1 = sum(budget1, na.rm=T)), by=c('module')]
+for (dt in c("original", "version1", "version2")){
+  if (dt=="original"){
+    label="Original"
+  } else if (dt == "version1"){
+    label = "Version 1"
+  } else {
+    label = "Version 2"
+  }
+  total = sum(get(dt)$budget)
+  pie = ggplot(get(dt), aes(x="", y=budget, fill=module)) + geom_bar(stat="identity", width=1) + 
+    blank_theme + 
+    coord_polar("y", start=0) + 
+    geom_text(aes(label = paste0(round(budget/total, 2)*100, "%")), position = position_stack(vjust = 0.5)) + 
+    scale_fill_manual(values=pal8) +
+    labs(x=NULL, y=NULL, fill="Module", title=paste0(label, " budget, by module (all years combined)"))
+  pie
+  ggsave(paste0("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/", dt, "_budget_all_years.png"), width=12, height=8)
 
-# Create pie chart for original budget 
-pie1 = ggplot(orig_collapse, aes(x="", y=budget0, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  geom_text(aes(label = paste0(round(budget0/orig_total, 2)*100, "%")), position = position_stack(vjust = 0.5)) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371")) +
-  labs(x=NULL, y=NULL, fill="Module", title="Original budget, by module (all years combined)")
+  
+  pie2 = ggplot(get(dt), aes(x="", y=budget, fill=module)) + geom_bar(stat="identity", width=1) + 
+    blank_theme + 
+    coord_polar("y", start=0) + 
+    geom_text(aes(label = paste0("$", round(budget))), position = position_stack(vjust = 0.5)) + 
+    scale_fill_manual(values=pal8) +
+    labs(x=NULL, y=NULL, fill="Module", title=paste0(label, " budget, by module (all years combined)"))
+  pie2
+  ggsave(paste0("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/", dt, "_budget_all_years1.png"), width=12, height=8)
+  
+}
 
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/original_budget_all_years.png")
+merge[quarter%in%c('q1', 'q2', 'q3', 'q4'), year:=2018]
+merge[quarter%in%c('q5', 'q6', 'q7', 'q8'), year:=2019]
+merge[quarter%in%c('q9', 'q10', 'q11', 'q12'), year:=2020]
 
-# Create pie chart for updated budget
-pie2 = ggplot(update_collapse, aes(x="", y=budget1, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  geom_text(aes(label = paste0(round(budget1/update_total, 2)*100, "%")), position = position_stack(vjust = 0.5)) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371", "#00EE76")) +
-  labs(x=NULL, y=NULL, fill="Module", title="Updated budget, by module (all years combined)")
+merge_collapse = merge[, .(budget0=sum(budget0, na.rm=T), 
+                           budget1=sum(budget1, na.rm=T), 
+                           budget2=sum(budget2, na.rm=T)), by=c('module', 'year')]
+merge_collapse = melt(merge_collapse, id.vars=c('module', 'year'), value.name = 'budget', variable.name='version')
+merge_collapse[version=="budget0", version:="August 8, 2018"]
+merge_collapse[version=='budget1', version:="Version 1"]
+merge_collapse[version=="budget2", version:="April 8, 2019"]
 
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/updated_budget_all_years.png")
+merge_collapse[, version:=as.character(version)]
 
+#Only use original and final version, and only run for 2020. 
+merge_collapse = merge_collapse[version%in%c("August 8, 2018", 'April 8, 2019') & year == 2020]
 
-# Create pie chart for original budget - with dollar amounts as labels 
-pie3 = ggplot(orig_collapse, aes(x="", y=budget0, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  geom_text(aes(label = paste0("$", round(budget0))), position = position_stack(vjust = 0.5)) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371")) +
-  labs(x=NULL, y=NULL, fill="Module", title="Original budget, by module (all years combined)")
-
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/original_budget_all_years1.png")
-
-# Create pie chart for updated budget
-pie4 = ggplot(update_collapse, aes(x="", y=budget1, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371", "#00EE76")) +
-  geom_text(aes(label = paste0("$", round(budget1))), position = position_stack(vjust=0.5)) + 
-  labs(x=NULL, y=NULL, fill="Module", title="Updated budget, by module (all years combined)")
-
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/updated_budget_all_years1.png")
-
-
-# Create pie chart for original budget 
-orig_collapse_2018 = orig[year(date)==2018, .(budget=sum(budget0, na.rm=T)), by=c('module')]
-total = sum(orig_collapse_2018$budget)
-pie = ggplot(orig_collapse_2018, aes(x="", y=budget, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  geom_text(aes(label = paste0(round(budget/total, 2)*100, "%")), position = position_stack(vjust = 0.5)) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371")) +
-  labs(x=NULL, y=NULL, fill="Module", title="Original budget, by module for 2018")
-
-pie
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/original_budget_2018.png")
-
-# Create pie chart for updated budget
-update_collapse_2018 = update[year(date)==2018, .(budget=sum(budget1, na.rm=T)), by=c('module')]
-total = sum(update_collapse_2018$budget)
-pie = ggplot(update_collapse_2018, aes(x="", y=budget, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  geom_text(aes(label = paste0(round(budget/total, 2)*100, "%")), position = position_stack(vjust = 0.5)) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371", "#00EE76")) +
-  labs(x=NULL, y=NULL, fill="Module", title="Updated budget, by module for 2018")
-pie
-
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/updated_budget_2018.png")
-
-
-# Create pie chart for original budget 
-orig_collapse_2019 = orig[year(date)==2019, .(budget=sum(budget0, na.rm=T)), by=c('module')]
-total = sum(orig_collapse_2019$budget)
-pie = ggplot(orig_collapse_2019, aes(x="", y=budget, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  geom_text(aes(label = paste0(round(budget/total, 2)*100, "%")), position = position_stack(vjust = 0.5)) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371")) +
-  labs(x=NULL, y=NULL, fill="Module", title="Original budget, by module for 2019")
-
-pie
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/original_budget_2019.png")
-
-# Create pie chart for updated budget
-update_collapse_2019 = update[year(date)==2019, .(budget=sum(budget1, na.rm=T)), by=c('module')]
-total = sum(update_collapse_2019$budget)
-pie = ggplot(update_collapse_2019, aes(x="", y=budget, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  geom_text(aes(label = paste0(round(budget/total, 2)*100, "%")), position = position_stack(vjust = 0.5)) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371", "#00EE76")) +
-  labs(x=NULL, y=NULL, fill="Module", title="Updated budget, by module for 2019")
-pie
-
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/updated_budget_2019.png")
-
-# Create pie chart for original budget 
-orig_collapse_2020 = orig[year(date)==2020, .(budget=sum(budget0, na.rm=T)), by=c('module')]
-total = sum(orig_collapse_2020$budget)
-pie = ggplot(orig_collapse_2020, aes(x="", y=budget, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  geom_text(aes(label = paste0(round(budget/total, 2)*100, "%")), position = position_stack(vjust = 0.5)) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371")) +
-  labs(x=NULL, y=NULL, fill="Module", title="Original budget, by module for 2020")
-
-pie
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/original_budget_2020.png")
-
-# Create pie chart for updated budget
-update_collapse_2020 = update[year(date)==2020, .(budget=sum(budget1, na.rm=T)), by=c('module')]
-total = sum(update_collapse_2020$budget)
-pie = ggplot(update_collapse_2020, aes(x="", y=budget, fill=module)) + geom_bar(stat="identity", width=1) + 
-  blank_theme + 
-  coord_polar("y", start=0) + 
-  geom_text(aes(label = paste0(round(budget/total, 2)*100, "%")), position = position_stack(vjust = 0.5)) + 
-  scale_fill_manual(values=c("#55DDE0", "#33658A", "#2F4858", "#F6AE2D", "#F26419", "#999999", "#AA4371", "#00EE76")) +
-  labs(x=NULL, y=NULL, fill="Module", title="Updated budget, by module for 2020")
-pie
-
-ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/updated_budget_2020.png")
-
-
-
-
+for (v in unique(merge_collapse$version)){
+  dt = merge_collapse[version==v]
+  pie = ggplot(dt, aes(x="", y=budget, fill=module)) + geom_bar(stat="identity", width=1) + 
+    blank_theme + 
+    coord_polar("y", start=0) + 
+    geom_text(aes(label = paste0("$", round(budget))), position = position_stack(vjust = 0.5)) + 
+    scale_fill_manual(values=pal8) +
+    facet_wrap(~version) + 
+    labs(x=NULL, y=NULL, fill="Module", title=paste0(v, " budget by module for 2020"), caption=paste0("Budget total: $", round(sum(dt$budget))))
+  pie
+  ggsave(paste0("J:/Project/Evaluation/GF/resource_tracking/visualizations/research_team_meetings/", v, "_budget_by_module_2020.png"), width=10, height=7)
+  
+}

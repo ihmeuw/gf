@@ -15,7 +15,7 @@ library(GGally)
 load(outputFile4a)
 
 # load model object
-modelVersion = 'gtm_tb_first_half1'
+modelVersion = 'gtm_tb_first_half2'
 source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 
 # load "node table" for convenient labels

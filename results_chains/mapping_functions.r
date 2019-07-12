@@ -104,7 +104,7 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
 #Accepts a country, a disease, a time period (start and end year, inclusive), and a boolean on whether to include national health expenditure. 
 #Return a graph of the funding landscape for the disease in the country over the time period using Financing Global Health actuals. 
 funding_landscape = function(country_name, disease_name, start_year, end_year, include_ghe){
-  plot_data = fgh_actual[country == country_name & disease == disease_name & (year >=start_year& year <=end_year),
+  plot_data = other_dah[country == country_name & disease == disease_name & (year >=start_year& year <=end_year),
                          .(country, disease, year, financing_source, disbursement)] #Use actual numbers. 
   if (include_ghe == TRUE & country_name == "Guatemala"){ #Need to discuss with David. 
       sicoin_merge <- sicoin[year >= start_year & year <=end_year]
@@ -187,7 +187,7 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
     scale_y_continuous(expand = c(0,0), breaks = seq(0, y_max, by = plot_ticks), labels = scales::dollar) +
     scale_x_continuous(expand = c(0,0))+
     scale_fill_brewer(palette = "RdYlBu") +
-    labs(x = "Year", y = scale_label, title = paste0("Funding landscape in ", country_name, " for ", disease_label, ", ", start_year, "-", end_year))
+    labs(x = "Year", y = scale_label, title = paste0("International funding landscape in ", country_name, " for ", disease_label, ", ", start_year, "-", end_year))
   
   return(funding_landscape)
   

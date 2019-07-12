@@ -25,20 +25,23 @@ source(paste0(repo, "mapping_functions.r"))
 # ---------------------------------------
 # Set filepaths 
 # ---------------------------------------
+main = "J:/Project/Evaluation/GF/results_chains/"
 
-gtm_save <- "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations"
-cod_save <- "J:/Project/Evaluation/GF/impact_evaluation/cod/visualizations"
-uga_save <- "J:/Project/Evaluation/GF/impact_evaluation/uga/visualizations"
+gtm_save <- paste0(main, "gtm/")
+cod_save <- paste0(main, "cod/")
+uga_save <- paste0(main, "uga/")
+sen_save <- paste0(main, "sen/")
 
 # ---------------------------------------
 # Prep key datasets.   
 # ---------------------------------------
 #allRT <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv")
 
-fgh = readRDS("J:/Project/Evaluation/GF/resource_tracking/_fgh/prepped_data/prepped_current_fgh.rds")
-#Change country factors so they look better
-fgh_actual = fgh[fin_data_type == "actual"]#Split FGH between actual numbers and model estimates. 
-fgh_estimates = fgh[fin_data_type != "actual"] 
+other_dah = readRDS("J:/Project/Evaluation/GF/resource_tracking/_fgh/prepped_data/other_dah_actuals_all.rds")
+other_dah[loc_name=='COD', country:='Congo (Democratic Republic)']
+other_dah[loc_name=='GTM', country:='Guatemala']
+other_dah[loc_name=='SEN', country:='Senegal']
+other_dah[loc_name=='UGA', country:='Uganda']
 
 gf_budgets <- fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/final_budgets.csv")
 gf_budgets$budget <- as.numeric(gf_budgets$budget)

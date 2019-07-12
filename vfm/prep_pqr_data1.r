@@ -162,39 +162,46 @@ saveRDS(mal_subset, "prepped_data/mal_pqr.rds")
 saveRDS(tb_subset, "prepped_data/tb_pqr.rds")
 
 
-#-------------------------------------------------------------------
-# Make a specialized Guatemala TB grants file 
-#-------------------------------------------------------------------
-gtm = subset[country_name=="Guatemala" & grant_disease%in%c('tb', 'hiv/tb')]
-gtm = gtm[order(-grant_start_date)]
-saveRDS(gtm, "J:/Project/Evaluation/GF/impact_evaluation/gtm/prepped_data/pqr_data.rds")
 
 
-
-#RMEI code- drop this somewhere else 
-#-----------------------------------------------------------
-# rmei_vars = c('Volume', "Actual Delivery Month", "Actual Delivery Year", "Other Bednet Size (Invoice)", "Strength", "Pack quantity", "Product Name (EN)", 'Country Name')
-# rmei_interest_vars = c(mal_prev, mal_test, mal_treat)
-# 
-# rmei_locs = c("Belize", "Colombia", "Costa Rica", "Dominican Republic", "El Salvador", "Guatemala", "Honduras", "Mexico", "Nicaragua", "Panama")
-# rmei_data = pqr[`Country Name`%in%rmei_locs, rmei_vars, with=FALSE]
-# rmei_data = rmei_data[`Product Name (EN)`%in%rmei_interest_vars]
-# rmei_data = rmei_data[, .(`Product Name (EN)`, `Country Name`, `Actual Delivery Year`)][order(`Country Name`, `Actual Delivery Year`)]
-# names(rmei_data) = c('product', 'country', 'delivery_year')
-# 
-# mal_nets = c("Duranet", "Insecticide-treated net (ITN)", "Long-Lasting Insecticidal Net (LLIN)", "MAGNet", "MiraNet", "Permanet 2.0", "Permanet 3.0", "Netprotect", "Yorkool LN", "Yahe LN", "Royal Sentry", 
-#              "Olyset", "Dawa-Plus 2.0")
-# irs = "zz-Pirimiphos Methyl CS"
-# 
-# rmei_data[product%in%mal_nets, category:="LLIN"]
-# rmei_data[product%in%irs, category:="IRS"]
-# rmei_data[product%in%mal_treat, category:="Treatment"]
-# rmei_data[product%in%mal_test, category:="Testing"]
-# 
-# write.csv(rmei_data, paste0(dir, "/prepped_data/rmei_key_variables.csv"), row.names = FALSE)
 #--------------------------------------------------------------
-
-
-
-
-
+# AUDREY IGNORE CODE BELOW HERE! 
+#--------------------------------------------------------------
+# 
+# 
+# #-------------------------------------------------------------------
+# # Make a specialized Guatemala TB grants file 
+# #-------------------------------------------------------------------
+# gtm = subset[country_name=="Guatemala" & grant_disease%in%c('tb', 'hiv/tb')]
+# gtm = gtm[order(-grant_start_date)]
+# saveRDS(gtm, "J:/Project/Evaluation/GF/impact_evaluation/gtm/prepped_data/pqr_data.rds")
+# 
+# 
+# 
+# #RMEI code- drop this somewhere else 
+# #-----------------------------------------------------------
+# # rmei_vars = c('Volume', "Actual Delivery Month", "Actual Delivery Year", "Other Bednet Size (Invoice)", "Strength", "Pack quantity", "Product Name (EN)", 'Country Name')
+# # rmei_interest_vars = c(mal_prev, mal_test, mal_treat)
+# # 
+# # rmei_locs = c("Belize", "Colombia", "Costa Rica", "Dominican Republic", "El Salvador", "Guatemala", "Honduras", "Mexico", "Nicaragua", "Panama")
+# # rmei_data = pqr[`Country Name`%in%rmei_locs, rmei_vars, with=FALSE]
+# # rmei_data = rmei_data[`Product Name (EN)`%in%rmei_interest_vars]
+# # rmei_data = rmei_data[, .(`Product Name (EN)`, `Country Name`, `Actual Delivery Year`)][order(`Country Name`, `Actual Delivery Year`)]
+# # names(rmei_data) = c('product', 'country', 'delivery_year')
+# # 
+# # mal_nets = c("Duranet", "Insecticide-treated net (ITN)", "Long-Lasting Insecticidal Net (LLIN)", "MAGNet", "MiraNet", "Permanet 2.0", "Permanet 3.0", "Netprotect", "Yorkool LN", "Yahe LN", "Royal Sentry", 
+# #              "Olyset", "Dawa-Plus 2.0")
+# # irs = "zz-Pirimiphos Methyl CS"
+# # 
+# # rmei_data[product%in%mal_nets, category:="LLIN"]
+# # rmei_data[product%in%irs, category:="IRS"]
+# # rmei_data[product%in%mal_treat, category:="Treatment"]
+# # rmei_data[product%in%mal_test, category:="Testing"]
+# # 
+# # write.csv(rmei_data, paste0(dir, "/prepped_data/rmei_key_variables.csv"), row.names = FALSE)
+# #--------------------------------------------------------------
+# 
+# 
+# 
+# 
+# 
