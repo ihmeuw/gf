@@ -5,7 +5,7 @@ library(ggplot2)
 
 # file paths
 run1 = 'J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/first_half_model_results.rdata'
-run2 = 'J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/first_half_model_resultstime_fixed_effect.rdata'
+run2 = 'J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/first_half_model_resultstime_pc.rdata'
 
 # load and rename
 load(run1)
