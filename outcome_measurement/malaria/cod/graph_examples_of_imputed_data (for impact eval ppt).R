@@ -84,24 +84,23 @@ inds = c("ANC_1st", "SP_1st", "ASAQreceived_14yrsAndOlder", "ASAQused_1to5yrs", 
          "newCasesMalariaSevere_5andOlder", "newCasesMalariaMild_pregnantWomen", "ITN_received", "ITN_distAtANC")
 
 for (ind in inds) {
-  outFile = paste0(out_dir, out_folder, "MI_results_examples_", ind, ".pdf")
-  # sample = sample(hzDPS$id, 30)
-  random_subset_hzDPS = copy(hzDPS) #hzDPS[id %in% sample, ]
+  outFile = paste0(out_dir, "mi_examples_for_slides/MI_results_examples_", ind, ".pdf")
+  sample = sample(hzDPS$id, 30)
+  random_subset_hzDPS = hzDPS[id %in% sample, ]
   
   pdf(outFile, height = 9, width = 12)
   for (row in 1:nrow(random_subset_hzDPS)) {
   
     g <- ggplot(pnlp[ health_zone==(random_subset_hzDPS[row, health_zone]) & variable == ind, ], aes(x=date, y=value, color = imputed, shape = imputed)) + 
       theme_bw()+
-      geom_point(size=2) + 
+      geom_point(size=6) + 
       scale_shape_manual(values=c(19, 1), labels = c("no", "yes")) + 
       scale_color_manual(values = c("TRUE" = "tomato3", "FALSE" = "steelblue1"), labels = c("no", "yes")) +
       geom_errorbar( aes(ymin=lower, ymax=upper, width=75), alpha=0.4) + 
       ggtitle(paste0("Multiple imputation for ", ind, " in the health zone ", simpleCap(random_subset_hzDPS[row, health_zone]), " (", simpleCap(random_subset_hzDPS[row, dps]), ")")) +
       labs(shape="Imputed Value", color="Imputed Value", y = "Count", x = "Date (month - year)", caption = "Source: Programme National de Lutte contre le Paludisme (PNLP)") +
-      theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), legend.text =element_text(size=14),
-            plot.title = element_text(size=18), plot.caption = element_text(size=14)) 
-    
+      + theme(axis.text=element_text(size=20),axis.title=element_text(size=21),  legend.title=element_text(size=20), legend.text =element_text(size=18),
+            plot.title = element_text(size=25), plot.caption = element_text(size=18), plot.subtitle = element_text(size=18) ) + theme(legend.title=element_blank())
     print(g)
     
   }
