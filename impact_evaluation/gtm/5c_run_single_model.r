@@ -14,8 +14,8 @@
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 12
-# args = c('drc_malaria_impact4_under5', '2', 'TRUE')
+# task_id = 1
+# args = c('gtm_tb_first_half2', '1', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line
