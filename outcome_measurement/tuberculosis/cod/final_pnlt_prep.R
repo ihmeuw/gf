@@ -9,12 +9,16 @@
 #Configurer l'espace de travail R 
 rm(list=ls())
 library(data.table) 
-library(readxl)
+library(openxlsx)
 
 #Mettre en place des répertoires
 raw_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program/aggregated_data/" #Défini où les deux fichiers de données préparés sont enregistrés
 save_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program/aggregated_data/" #Où souhaitez-vous sortir les données finalisées?
 
+# Set working directory to the folder where your code is stored:
+setwd("C:/local/gf/core/")
+# Souce code to rename health zones
+source('standardizeHZNames.R')
 #----------------------------
 #           2018
 #----------------------------
@@ -22,7 +26,7 @@ save_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program
 dt_2018 = data.table(read.xlsx(paste0(raw_dir, "TB DATA 2018.xlsx")))
 
 #1. Corriger les noms de variables
-new_names = c('trimestre', 'zone_sante', 'population_totale', 'population_couverte', 'presumes_tb', 
+new_names = c('trimestre', 'csdt', 'population_totale', 'population_couverte', 'presumes_tb', 
               'presume_tb_teste_microscope', 'presume_tb_positif_microscope', 'presume_tb_teste_xpert', 'presume_tb_positive_xpert', 
               'frottis_effectue', 'frottis_positif', 'csdt_participe_cq', 'cas_enreg_bac_nouveau', 'cas_enreg_bac_rechute', 
               'cas_enreg_bac_hors_rechutes', 'cas_enreg_bac_enfants', 'cas_enreg_clinique_noveau', 'cas_enreg_clinique_rechute', 
@@ -43,13 +47,16 @@ names(dt_2018) = new_names
 #Supprimez les quatre premières lignes de noms maintenant qu'elles ne sont plus nécessaires.
 dt_2018 = dt_2018[5:nrow(dt_2018), ]
 
-# 2. Supprimer le nombre total de lignes 
-total_rows = grep("total", tolower(dt_2018$zone_sante))
-dt_2018[total_rows, .(zone_sante)] #Review visually 
-dt_2018 = dt_2018[!total_rows]
+# 2. Faire DPS variable
+dt_2018[, DPS:=substr(trimestre, 1, nchar(trimestre)-8)]
 
-#3. Extrait DPS et département
-dt_2018[, department:=substr(trimestre, 1, nchar(trimestre)-8)]
+# 3. Supprimer les lignes contenant les totaux DPS ou de la ZS
+total_rows = grep("cplt", tolower(dt_2018$csdt))
+dt_2018[total_rows, unique(csdt)] #Review visually 
+dt_2018 = dt_2018[!total_rows]
+# copy over column csdt to "zone_sante" to try to separate out which rows are health zone totals
+dt_2018[, zone_sante := tolower(csdt)]
+dt_2018[grepl(zone_sante, pattern = 'zs'), is_zs := TRUE]
 
 #4. Extraire l'année et le trimestre et créer une variable de date
 dt_2018[, year:=2018]
