@@ -48,7 +48,7 @@ names(dt_2018) = new_names
 dt_2018 = dt_2018[5:nrow(dt_2018), ]
 
 # 2. Faire DPS variable
-dt_2018[, DPS:=substr(trimestre, 1, nchar(trimestre)-8)]
+dt_2018[, dps:=substr(trimestre, 1, nchar(trimestre)-8)]
 
 # 3. Supprimer les lignes contenant les totaux DPS ou de la ZS
 total_rows = grep("cplt", tolower(dt_2018$csdt))
@@ -109,7 +109,7 @@ dt_2016_2017[total_rows, .(zone_sante)] #Review visuellement
 dt_2016_2017 = dt_2016_2017[!total_rows]
 
 #3. Extrait DPS et département
-dt_2016_2017[, department:=substr(trimestre, 1, nchar(trimestre)-8)]
+dt_2016_2017[, dps:=substr(trimestre, 1, nchar(trimestre)-8)]
 
 #4. Extraire l'année et le trimestre et créer une variable de date
 dt_2016_2017[, year:=substr(trimestre, nchar(trimestre)-3, nchar(trimestre))]
