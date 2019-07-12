@@ -12,6 +12,7 @@ rm(list=ls())
 library(data.table)
 library(ggplot2)
 library(lubridate)
+library(gridExtra)
 # --------------------  
 
 # ----------------------------------------------
@@ -32,7 +33,9 @@ hzFile = paste0(dir, '/outcome_measurement/cod/prepped_data/Unicef HZ extraction
 # output files
 outFile = "impact_evaluation/cod/visualizations/RDTsCompleted_overSuspectedCases_excludingPartialDPS.pdf"
 outFile2 = "impact_evaluation/cod/visualizations/RDTsCompleted_overFeverCases_sscSpecific_excludingPartialDPS.pdf"
-  
+outFile_final = "impact_evaluation/cod/visualizations/RDTsCompleted_and_RDTsOverSuspCases.pdf"
+outFile_final2 = "impact_evaluation/cod/visualizations/RDTsCompleted_yearly.pdf"
+
 # functions
 source('./core/standardizeHZNames.R')
 source('./core/standardizeDPSNames.R')
@@ -62,67 +65,149 @@ dt = dt[, .(value = sum(value, na.rm = TRUE)), by = .(dps, health_zone, date, ye
 dt = dcast.data.table(dt, dps + health_zone + date + year ~ indicator)
 # ----------------------------------------------
 
+# # ----------------------------------------------
+# # merge on hz list to idenitfy hz's where intervention took place
+# # ----------------------------------------------
+# # subset columns
+# hzList = hzList[,'health_zone']
+# 
+# # check for health zones in the list that aren't in the data 
+# hzList$health_zone[!hzList$health_zone %in% dt$health_zone]
+# 
+# # identify "intervention" health zones in the data
+# hzList[, intervention:=1]
+# dt = merge(dt, hzList, by='health_zone', all.x=TRUE)
+# dt[is.na(intervention), intervention:=0]
+# dt[, intervention_label:=ifelse(intervention==1, '2. Intervention', '1. Control')]
+# 
+# # remake figures - drop hz's from control group in DPS (will have complete intervention group but not complete control group)
+# # take out tshopo, kongo-central, bas-uele, kinshasa, ituri
+# dt[ dps %in% c('tshopo', 'kongo-central', 'bas-uele', 'kinshasa', 'ituri') & intervention == 0, intervention := NA]
+# dt = dt[!is.na(intervention)]
+# # ----------------------------------------------
+
 # ----------------------------------------------
-# merge on hz list to idenitfy hz's where intervention took place
+# graphing
 # ----------------------------------------------
-# subset columns
-hzList = hzList[,'health_zone']
+# # note suspected cases only in PNLP from 2014, on
+# RDT_over_susp= ggplot(dt_natl[ year >= 2014, ], aes(x = date, y = RDT_over_suspCases, color = intervention_label)) + geom_point() + geom_line() +
+#   ggtitle("RDTs completed per suspected case of malaria (all ages, all facilities)") + xlab("Date (month and year)") + ylab("RDTs completed per suspected case") +
+#   theme_bw() + labs(caption = "Source: Programme National de Lutte contre le Paludisme (PNLP) 2015-2017; DHIS2 2018-present") +
+#   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), legend.text =element_text(size=14),
+#         plot.title = element_text(size=18), plot.caption = element_text(size=14)) + theme(legend.title=element_blank())
+# RDT_over_susp
+# 
+# pdf(paste0(dir, outFile), height = 9, width = 11)
+# print(RDT_over_susp)
+# dev.off()
+# 
+# # note SSC data only in pnlp from 2015, on
+# RDT_over_fevers_ssc= ggplot(dt_natl[ year >= 2015, ], aes(x = date, y = SSCRDT_over_fevers, color = intervention_label)) + geom_point() + geom_line() + 
+#   ggtitle("RDTs completed per case of fever at SSC (all ages)") + xlab("Date (month and year)") + ylab("RDTs completed per case of fever") +
+#   theme_bw() + labs(caption = "Source: Programme National de Lutte contre le Paludisme (PNLP) 2015-2017; DHIS2 2018-present") +
+#   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), legend.text =element_text(size=14),
+#         plot.title = element_text(size=18), plot.caption = element_text(size=14)) + theme(legend.title=element_blank())
+# RDT_over_fevers_ssc
+# 
+# pdf(paste0(dir, outFile2), height = 9, width = 11)
+# print(RDT_over_fevers_ssc)
+# dev.off()
+# 
+# # rdt_0s = dt[RDT_completed == 0, .N, by = "date"]
+# # qplot(date, N, data = rdt_0s, geom = "line") 
+# ----------------------------------------------
 
-# check for health zones in the list that aren't in the data 
-hzList$health_zone[!hzList$health_zone %in% dt$health_zone]
+# ----------------------------------------------
+# determine which health zones had all NA or 0s for SSC variables in 2015-2017
+# ----------------------------------------------
+check = pnlp[year %in% 2015:2017, .(dps, health_zone, year, date, SSCRDT_completed, SSCRDT_completed5andOlder, SSCRDT_completedUnder5, SSCACT, SSCACT_5andOlder, SSCACT_under5)]
 
-# identify "intervention" health zones in the data
-hzList[, intervention:=1]
-dt = merge(dt, hzList, by='health_zone', all.x=TRUE)
-dt[is.na(intervention), intervention:=0]
-dt[, intervention_label:=ifelse(intervention==1, '2. Intervention', '1. Control')]
+check = check[ year == 2017, SSCRDT_completed := SSCRDT_completed5andOlder + SSCRDT_completedUnder5]
+check = check[ year == 2017, SSCACT := SSCACT_5andOlder + SSCACT_under5]
+check = check[, .(dps, health_zone, year, date, SSCACT, SSCRDT_completed)]
 
-# remake figures - drop hz's from control group in DPS (will have complete intervention group but not complete control group)
-# take out tshopo, kongo-central, bas-uele, kinshasa, ituri
-dt[ dps %in% c('tshopo', 'kongo-central', 'bas-uele', 'kinshasa', 'ituri') & intervention == 0, intervention := NA]
-dt = dt[!is.na(intervention)]
+sd_cols = c('SSCRDT_completed', 'SSCACT')
+check = check[, lapply(.SD, sum, na.rm = TRUE), by = c("health_zone", "dps", "year"), .SDcols = sd_cols ]
+check[, both_0 := ifelse(SSCRDT_completed == 0 & SSCACT == 0, TRUE, FALSE)]
+check[, all_yrs_0 := ifelse(sum(both_0)==3, TRUE, FALSE), by = c('health_zone', 'dps')]
+hzs = check[all_yrs_0 == TRUE, unique(health_zone)]
 # ----------------------------------------------
 
 # ----------------------------------------------
 # sum to national level (but divided by intervention/control groups)
 # ----------------------------------------------
+dt[ , ssc := ifelse(health_zone %in% hzs, "Health Zones without SSCs", "Health Zones with SSCs")]
 # sum RDT and suspectedMalaria by date and intervention for graphing
 sd_cols = c("SSCRDT_completed", "SSCfevers","RDT_completed", "suspectedMalaria")
-dt_natl = dt[, lapply(.SD, sum, na.rm = TRUE), by = c("date", "year", "intervention", "intervention_label"), .SDcols = sd_cols]
+dt_natl = dt[, lapply(.SD, sum, na.rm = TRUE), by = c("date", "year", "ssc"), .SDcols = sd_cols]
 # calculate RDTs / suspected cases rates at SSC and all facilities
-dt_natl[ , SSCRDT_over_fevers := SSCRDT_completed / SSCfevers]
-dt_natl[ , RDT_over_suspCases := RDT_completed / suspectedMalaria]
+# dt_natl[ , SSCRDT_over_fevers := SSCRDT_completed / SSCfevers]
+dt_natl[ , total_RDTs := RDT_completed + SSCRDT_completed]
+dt_natl[ , RDT_over_suspCases := total_RDTs / suspectedMalaria]
 # ----------------------------------------------
 
 # ----------------------------------------------
-# graphing
+# graph two panels: one showing the numerator over time and a second one with the fraction
 # ----------------------------------------------
-# note suspected cases only in PNLP from 2014, on
-RDT_over_susp= ggplot(dt_natl[ year >= 2014, ], aes(x = date, y = RDT_over_suspCases, color = intervention_label)) + geom_point() + geom_line() +
-  ggtitle("RDTs completed per suspected case of malaria (all ages, all facilities)") + xlab("Date (month and year)") + ylab("RDTs completed per suspected case") +
-  theme_bw() + labs(caption = "Source: Programme National de Lutte contre le Paludisme (PNLP) 2015-2017; DHIS2 2018-present") +
+facet_names <- c(
+  `total_RDTs`="Total RDTs completed",
+  `RDT_over_suspCases`="RDTs completed per suspected case of malaria"
+)
+
+dt_natl = melt.data.table(dt_natl, id.vars = c("date", "year", "ssc"))
+dt_graph = dt_natl[date <= "2019-03-01" & variable %in% c('total_RDTs', 'RDT_over_suspCases'), ]
+dt_graph[variable == 'total_RDTs', value := value/1000000]
+dt_graph[variable == 'RDT_over_suspCases', value := value * 100]
+
+g1= ggplot(dt_graph[variable == 'total_RDTs', ], aes(x = date, y = value, color = ssc)) + geom_point() + geom_line() + xlab("Date") + ylab("") +
+  ggtitle("Total RDTs completed") +
+  theme_bw() + ylab('Number of RDTs completed (in millions)') + 
   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), legend.text =element_text(size=14),
-        plot.title = element_text(size=18), plot.caption = element_text(size=14)) + theme(legend.title=element_blank())
-RDT_over_susp
+        plot.title = element_text(size=18), plot.caption = element_text(size=14), strip.text = element_text(size = 16)) + theme(legend.title=element_blank()) +
+  guides(color=FALSE) # + facet_wrap(~variable, scales = "free", labeller = as_labeller(facet_names))
+g1
 
-pdf(paste0(dir, outFile), height = 9, width = 11)
-print(RDT_over_susp)
-dev.off()
-
-# note SSC data only in pnlp from 2015, on
-RDT_over_fevers_ssc= ggplot(dt_natl[ year >= 2015, ], aes(x = date, y = SSCRDT_over_fevers, color = intervention_label)) + geom_point() + geom_line() + 
-  ggtitle("RDTs completed per case of fever at SSC (all ages)") + xlab("Date (month and year)") + ylab("RDTs completed per case of fever") +
-  theme_bw() + labs(caption = "Source: Programme National de Lutte contre le Paludisme (PNLP) 2015-2017; DHIS2 2018-present") +
+g2= ggplot(dt_graph[variable == 'RDT_over_suspCases', ], aes(x = date, y = value, color = ssc)) + geom_point() + geom_line() + xlab("Date") + ylab("") +
+  ggtitle("Percent of suspected cases of malaria tested with an RDT") + ylab('Percent of suspected cases tested') +
+  theme_bw() + labs(caption = "\nSource: Programme National de Lutte contre le Paludisme (PNLP) 2015-2017; DHIS2 2018-present\nSuspected cases prior to 2014 estimated based on subnational trends.") +
   theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), legend.text =element_text(size=14),
-        plot.title = element_text(size=18), plot.caption = element_text(size=14)) + theme(legend.title=element_blank())
-RDT_over_fevers_ssc
+        plot.title = element_text(size=18), plot.caption = element_text(size=14), strip.text = element_text(size = 16)) + theme(legend.title=element_blank()) +
+  theme(legend.position = c(0.775, 0.075)) #+ 
+  # facet_wrap(~variable, labeller = as_labeller(facet_names))
+g2
 
-pdf(paste0(dir, outFile2), height = 9, width = 11)
-print(RDT_over_fevers_ssc)
+p1 = arrangeGrob(g1, g2, ncol=2)	
+
+sd_cols = c("SSCRDT_completed","RDT_completed")
+dt_g3 = dt[, lapply(.SD, sum, na.rm = TRUE), by = c("year"), .SDcols = sd_cols]
+dt_g3 = melt.data.table(dt_g3, id.vars = c("year"))
+dt_g3[ variable == "SSCRDT_completed" & year <= 2014, value := 0]
+dt_g3 = dt_g3[ year <= "2018"]
+dt_g3[, value := value/1000000]
+dt_g3[, year := as.numeric(year)]
+
+g3= ggplot(dt_g3, aes(x = year, y = value, color = variable)) + geom_point() + geom_line() + xlab("Year") + ylab("Number of RDTs completed (in millions)") +
+  ggtitle("Number of RDTs completed at facilities and at SSCs in DRC") +
+  theme_bw() + labs(caption = "Source: Programme National de Lutte contre le Paludisme (PNLP) 2015-2017; DHIS2 2018-present.") +
+  scale_color_manual(labels = c("RDTs completed at SSCs", "RDTs completed at facilities"), values = c("turquoise3", "coral1")) +
+  theme(axis.text=element_text(size=14),axis.title=element_text(size=16),  legend.title=element_text(size=16), legend.text =element_text(size=14),
+        plot.title = element_text(size=18), plot.caption = element_text(size=14), strip.text = element_text(size = 16)) + theme(legend.title=element_blank()) # +
+  # theme(legend.position = c(0.775, 0.075)) 
+g3
+
+pdf(paste0(dir, outFile_final2), height = 6, width = 9)
+grid.newpage()
+grid.draw(p1)
+print(g3)
 dev.off()
+# ----------------------------------------------
 
-# rdt_0s = dt[RDT_completed == 0, .N, by = "date"]
-# qplot(date, N, data = rdt_0s, geom = "line") 
+# ----------------------------------------------
+# create table of values to include a few basic summary numbers: # tested in 2010, 2015, & 2017, # suspected in 2010, 2015, & 2017
+# ----------------------------------------------
+# sum to yearly values
+dt_natl_yr = dt_natl[, .(value = sum(value)), by = c("year", "variable")]
+subset = dt_natl_yr[ year %in% c(2010, 2015, 2017) & variable %in% c("total_RDTs", "suspectedMalaria")]
 # ----------------------------------------------
 
 # ----------------------------------------------
