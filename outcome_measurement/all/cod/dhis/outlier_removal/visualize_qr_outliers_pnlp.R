@@ -33,6 +33,7 @@ outFile = 'figures/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
 outFile2 = 'figures/pnlp_outliers_figures (do not correspond to DPS level outliers).pdf'
 outFile_dps = 'figures/pnlp_outliers_figures_dpsLevel.pdf'
 outFile_rdts = 'figures/outliers_in_RDTs.pdf'
+outFile_slides_figures = "figures/outliers_for_slides.pdf"
 outData = 'pnlp_outliers_labeled.rds' 
 #------------------------------------
 # read in the file
@@ -164,8 +165,9 @@ i=1
 
 out <- copy(out_hz_w_dps)
 subtitle = "Red points show HZ-level outliers also identified as DPS-level outliers"
+
 # RDTs subset:
-out = out[grepl(variable, pattern = "RDT"), ]
+# out = out[grepl(variable, pattern = "RDT"), ]
 
 # out <- copy(out_hz_wo_dps)
 # subtitle = "Red points show HZ-level outliers NOT identified as DPS-level outliers,\nand therefore not counted as outliers in final data"
@@ -179,9 +181,9 @@ for (e in unique(out$element)) {
     # create the plot
     list_of_plots[[i]] = ggplot(out[element==e & org_unit_id==o], aes(x=date, y=value)) +
       geom_line(alpha = 0.5) +
-      geom_point(alpha = 0.5) +
-      geom_line(data = out[element==e & org_unit_id==o], aes(x=date, y=fitted_value), color='black') +
-      geom_point(data = out[element==e & org_unit_id==o & outlier==TRUE], color='#d73027', size=3) +
+      geom_point(alpha = 0.5, size = 6) +
+      geom_line(data = out[element==e & org_unit_id==o], aes(x=date, y=fitted_value), color='black', size = 2) +
+      geom_point(data = out[element==e & org_unit_id==o & outlier==TRUE], color='#d73027', size=7) +
       geom_point(data = out[element==e & org_unit_id==o & outlier==TRUE], aes(x=date, y=fitted_value), 
                  color='#4575b4', size=2) +
       scale_color_manual(values=greys) +
@@ -194,7 +196,9 @@ for (e in unique(out$element)) {
       geom_ribbon(data = out[element==e & org_unit_id==o], aes(ymin=t4_lower, ymax=t4_upper),
                   alpha=0.2, fill='#feb24c', color=NA) +
       labs(title=paste0(e,': ', o), x='Date', y='Count', subtitle = subtitle) +
-      theme_bw()
+      theme_bw() +
+      theme(axis.text=element_text(size=20),axis.title=element_text(size=21),  legend.title=element_text(size=20), legend.text =element_text(size=18),
+            plot.title = element_text(size=25), plot.caption = element_text(size=18), plot.subtitle = element_text(size=18) ) + theme(legend.title=element_blank())
     i = i + 1
 }}
 
@@ -206,7 +210,7 @@ for (e in unique(out$element)) {
 # pdf(paste0(dir, outFile_dps), height=6, width=10)
 # pdf(paste0(dir, outFile), height=6, width=10)
 # pdf(paste0(dir, outFile2), height=6, width=10)
-pdf(paste0(dir, outFile_rdts), height=6, width=10)
+pdf(paste0(dir, outFile_slides_figures), height=9, width=11)
 
 for(i in seq(length(list_of_plots))) { 
   print(list_of_plots[[i]])
