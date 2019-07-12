@@ -16,7 +16,7 @@ load(outputFile4a)
 
 # load model object
 modelVersion = 'gtm_tb_first_half2'
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
 
 # load "node table" for convenient labels
 nodeTable = fread(nodeTableFile1)
