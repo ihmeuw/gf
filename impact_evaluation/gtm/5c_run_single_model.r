@@ -14,8 +14,8 @@
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 1
-# args = c('gtm_tb_first_half2', '1', 'TRUE')
+task_id = 1
+args = c('gtm_tb_first_half2', '1', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -56,13 +56,21 @@ d = unique(data$department)[task_id]
 subData = data[department==d]
 
 # define model object
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('department','date',modelVars)
 subData = subData[, unique(modelVars), with=FALSE]
+
+# test to see if there are any zero-variance variables in this department
+test = subData[,lapply(.SD,var), .SDcols=modelVars[modelVars!='department']]==0
+if(any(test)) { 
+  print('Some variables have zero variance! The model is going to fail...')
+  print(modelVars[test==TRUE])
+  stop()
+}
 
 # jitter to avoid perfect collinearity
 for(v in names(subData)[!names(subData)%in%c('department','date')]) { 

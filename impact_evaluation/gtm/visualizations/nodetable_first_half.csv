@@ -1,62 +1,62 @@
-variable,label
-other_dah_T1_1,Other DAH case detection
-other_dah_T1_2,Other DAH Tx
-other_dah_T1_5,Other DAH Community care
-other_dah_T1_6,Other DAH Prisoners
-other_dah_T1_7,"Other DAH KP, not prisoners"
-other_dah_T2_1,Other DAH TB/HIV collab
-other_dah_T3_1,Other DAH MDR case detection
-other_dah_T3_2,Other DAH MDR Tx
-other_dah_R1_ALL,Other DAH PSM all
-other_dah_R2_ALL,Other DAH HMIS all
-other_dah_T2_ALL,Other DAH TB/HIV all
-other_dah_T3_ALL,Other DAH MDR all
-other_dah_TB_ALL,Other DAH TB all
-other_dah_H11_ALL,Other DAH TB/HIV all
-other_dah_HIV_TB_ALL,Other DAH TB/HIV all
-exp_T1_1,Exp case detection
-exp_T1_2,Exp Tx
-exp_T1_5,Exp Community care
-exp_T1_6,Exp Prisoners
-exp_T1_7,"Exp KP, not prisoners"
-exp_T2_1,Exp TB/HIV collab
-exp_T3_1,Exp MDR case detection
-exp_T3_2,Exp MDR Tx
-exp_R1_ALL,Exp PSM all
-exp_R2_ALL,Exp HMIS all
-exp_T2_ALL,Exp TB/HIV all
-exp_T3_ALL,Exp MDR all
-exp_TB_ALL,Exp TB all
-exp_H11_ALL,Exp TB/HIV all
-exp_HIV_TB_ALL,Exp TB/HIV all
-ghe_T1_1,GHE case detection
-ghe_T1_2,GHE Tx
-ghe_T1_5,GHE Community care
-ghe_T1_6,GHE Prisoners
-ghe_T1_7,"GHE KP, not prisoners"
-ghe_T2_1,GHE TB/HIV collab
-ghe_T3_1,GHE MDR case detection
-ghe_T3_2,GHE MDR Tx
-ghe_R1_ALL,GHE PSM all
-ghe_R2_ALL,GHE HMIS all
-ghe_T2_ALL,GHE TB/HIV all
-ghe_T3_ALL,GHE MDR all
-ghe_TB_ALL,GHE TB all
-ghe_H11_ALL,GHE TB/HIV all
-ghe_HIV_TB_ALL,GHE TB/HIV all
-Number_of_Cases_Screened_for_MDR_act,Cases screened for MDR
-Second_Line_Drugs_Distributed_act,2nd line drugs dist.
-Total_Drugs_Distributed_act,Total drugs dist. 
-Isoniazid_Distributed_act,Isonaizid dist.
-PLHIV_Screened_for_TB_act,PLHIV screened for TB
-TB_Patients_Tested_for_HIV_act,TB patients tested for HIV
-Cases_Started_on_Treatment_out,Treatment started
-MDR_Cases_Notified_out,MDR cases notified
-MDR_Cases_Started_Treatment_out,MDR cases started Tx
-Cases_Notified_out,Cases notified
-Additional_Cases_Detected_via_ACF_out,Add'l cases via ACF
-PLHIV_started_on_IPT_out,PLHIV started on IPT
-Children_in_Contact_with_TB_Started_IPT_out,TB exposed children started IPT
-Cases_Notified_in_Prisons_out,Case notifications prisons
-Cases_Started_on_Treatment_in_Prisons_out,Prison cases started Tx
-HIV_TB_Cases_Notified_out,HIVTB cases notified
+variable,,,label
+other_dah_T1_1,,,Other DAH case detection
+other_dah_T1_2,,,Other DAH Tx
+other_dah_T1_5,,,Other DAH Community care
+other_dah_T1_6,,,Other DAH Prisoners
+other_dah_T1_7,,,"Other DAH KP, not prisoners"
+other_dah_T2_1,,,Other DAH TB/HIV collab
+other_dah_T3_1,,,Other DAH MDR case detection
+other_dah_T3_2,,,Other DAH MDR Tx
+other_dah_R1_ALL,,,Other DAH PSM all
+other_dah_R2_ALL,,,Other DAH HMIS all
+other_dah_T2_ALL,,,Other DAH TB/HIV all
+other_dah_T3_ALL,,,Other DAH MDR all
+other_dah_TB_ALL,,,Other DAH TB all
+other_dah_H11_ALL,,,Other DAH TB/HIV all
+other_dah_HIV_TB_ALL,,,Other DAH TB/HIV all
+exp_T1_1,,,Exp case detection
+exp_T1_2,,,Exp Tx
+exp_T1_5,,,Exp Community care
+exp_T1_6,,,Exp Prisoners
+exp_T1_7,,,"Exp KP, not prisoners"
+exp_T2_1,,,Exp TB/HIV collab
+exp_T3_1,,,Exp MDR case detection
+exp_T3_2,,,Exp MDR Tx
+exp_R1_ALL,,,Exp PSM all
+exp_R2_ALL,,,Exp HMIS all
+exp_T2_ALL,,,Exp TB/HIV all
+exp_T3_ALL,,,Exp MDR all
+exp_TB_ALL,,,Exp TB all
+exp_H11_ALL,,,Exp TB/HIV all
+exp_HIV_TB_ALL,,,Exp TB/HIV all
+ghe_T1_1,,,GHE case detection
+ghe_T1_2,,,GHE Tx
+ghe_T1_5,,,GHE Community care
+ghe_T1_6,,,GHE Prisoners
+ghe_T1_7,,,"GHE KP, not prisoners"
+ghe_T2_1,,,GHE TB/HIV collab
+ghe_T3_1,,,GHE MDR case detection
+ghe_T3_2,,,GHE MDR Tx
+ghe_R1_ALL,,,GHE PSM all
+ghe_R2_ALL,,,GHE HMIS all
+ghe_T2_ALL,,,GHE TB/HIV all
+ghe_T3_ALL,,,GHE MDR all
+ghe_TB_ALL,,,GHE TB all
+ghe_H11_ALL,,,GHE TB/HIV all
+ghe_HIV_TB_ALL,,,GHE TB/HIV all
+Number_of_Cases_Screened_for_MDR_act,,,Cases screened for MDR
+Second_Line_Drugs_Distributed_act,,,2nd line drugs dist.
+Total_Drugs_Distributed_act,,,Total drugs dist. 
+Isoniazid_Distributed_act,,,Isonaizid dist.
+PLHIV_Screened_for_TB_act,,,PLHIV screened for TB
+TB_Patients_Tested_for_HIV_act,,,TB patients tested for HIV
+Cases_Started_on_Treatment_out,,,Treatment started
+MDR_Cases_Notified_out,,,MDR cases notified
+MDR_Cases_Started_Treatment_out,,,MDR cases started Tx
+Cases_Notified_out,,,Cases notified
+Additional_Cases_Detected_via_ACF_out,,,Add'l cases via ACF
+PLHIV_started_on_IPT_out,,,PLHIV started on IPT
+Children_in_Contact_with_TB_Started_IPT_out,,,TB exposed children started IPT
+Cases_Notified_in_Prisons_out,,,Case notifications prisons
+Cases_Started_on_Treatment_in_Prisons_out,,,Prison cases started Tx
+HIV_TB_Cases_Notified_out,,,HIVTB cases notified
