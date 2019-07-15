@@ -26,8 +26,8 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = FALSE
-prep_gos = TRUE
+prep_files = TRUE
+prep_gos = FALSE
 prep_fgh = FALSE
 prep_ghe = FALSE
 
@@ -64,14 +64,15 @@ if (prep_files | prep_gos){
   source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
   source(paste0(code_dir, "2d_gf_aggregate_files.R"))
   source(paste0(code_dir, "2e_gf_verify_outputs.R"))
+  
   rmarkdown::render(paste0(code_dir, "2f_gf_visualize_data.rmd", 
-                           output_dir="J:/Project/Evaluation/GF/resource_tracking/visualizations/verification", 
+                           output_dir=paste0(dir, "/visualizations/verification"), 
                            output_file="Visual Checks.pdf"))
 }
 
 #Run data gap analysis - optional
 rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"), 
-                  output_dir="J:/Project/Evaluation/GF/resource_tracking/visualizations/verification", 
+                  output_dir=paste0(dir, "/visualizations/verification"), 
                   output_file="Reporting Completeness.pdf")
 # ----------------------------------------------
 # STEP 3: PREP FGH ACTUALS AND ESTIMATES 

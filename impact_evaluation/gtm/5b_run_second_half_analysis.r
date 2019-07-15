@@ -3,10 +3,10 @@
 # 
 # 1/18/2019
 # This runs the SEM dose-response model
-# qsub -l archive=TRUE -cwd -N ie_script_5b -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5b_run_second_half_analysis.r
+# qsub -l archive=TRUE -cwd -N ie_script_5b -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5b_run_second_half_analysis.r
 # ------------------------------------------------
 
-source('./impact_evaluation/drc/set_up_r.r')
+source('./impact_evaluation/gtm/set_up_r.r')
 
 
 # ---------------------------
@@ -19,7 +19,7 @@ if(Sys.info()[1]=='Windows') stop('This script is currently only functional on I
 rerunAll = TRUE
 
 # model version to use
-modelVersion = 'drc_malaria_impact4'
+modelVersion = 'gtm_malaria_impact4'
 # ---------------------------
 
 
@@ -33,7 +33,7 @@ load(outputFile4b)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
@@ -57,7 +57,7 @@ T = length(hzs)
 qsubCommand = paste0('qsub -cwd -N ie2_job_array -t 1:', T, 
 	' -l fthread=1 -l m_mem_free=2G -q all.q -P proj_pce -e ', 
 	clustertmpDireo, ' -o ', clustertmpDireo, 
-	' ./core/r_shell_blavaan.sh ./impact_evaluation/drc/5c_run_single_model.r ', 
+	' ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5c_run_single_model.r ', 
 	modelVersion, ' 2 FALSE')
 
 # submit array job if we're re-running everything

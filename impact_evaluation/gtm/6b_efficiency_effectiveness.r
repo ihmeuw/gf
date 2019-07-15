@@ -9,25 +9,25 @@
 # -----------------------------------------------
 # Load/prep data and functions
 
-source('./impact_evaluation/drc/set_up_r.r')
+source('./impact_evaluation/gtm/set_up_r.r')
 
 # load model results
 load(outputFile5a)
 data1=copy(data)
 means1 = copy(means)
 summaries1 = copy(summaries)
-load(outputFile5b)
-data2=copy(data)
-means2 = copy(means)
-summaries2 = copy(summaries)
+# load(outputFile5b)
+# data2=copy(data)
+# means2 = copy(means)
+# summaries2 = copy(summaries)
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
-nodeTable2 = fread(nodeTableFile2)
+# nodeTable2 = fread(nodeTableFile2)
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable1 = nodeTable1[variable %in% names(data1)]
-nodeTable2 = nodeTable2[variable %in% names(data2)]
+# nodeTable2 = nodeTable2[variable %in% names(data2)]
 # -----------------------------------------------
 
 
@@ -65,7 +65,7 @@ setnames(mediation_means, c('label.x','label.y'), c('label_lhs','label_rhs'))
 # Pools funders together, weighting by investment size
 
 # reshape data long
-long = melt(data1, id.vars=c('orig_health_zone','health_zone','date'))
+long = melt(data1, id.vars=c('department','date'))
 
 # aggregate to total across whole time series (unrescaling not necessary)
 long = long[, .(value=sum(value)), by=variable]
@@ -88,26 +88,26 @@ pooled_means1[, upper:=est+(1.96*se)]
 # -----------------------------------------------
 # Set up second half estimates
 
-# subset to coefficients of interest
-means2 = means2[op=='~' & !grepl('completeness|date',rhs)]
-
-# compute uncertainty intervals
-means2[, lower:=est-(1.96*se)]
-means2[, lower.std:=est.std-(1.96*se.std)]
-means2[, upper:=est+(1.96*se)]
-means2[, upper.std:=est.std+(1.96*se.std)]
-
-# exponentiate
-means2[, est:=1.01^est] # 1.01 to make it "per 1% increase in x"
-means2[, lower:=1.01^lower] # 1.01 to make it "per 1% increase in x"
-means2[, upper:=1.01^upper] # 1.01 to make it "per 1% increase in x"
-
-# pull in labels
-means2 = merge(means2, nodeTable2, by.x='lhs', by.y='variable')
-means2 = merge(means2, nodeTable2, by.x='rhs', by.y='variable')
-setnames(means2, c('label.x','label.y'), c('label_lhs','label_rhs'))
-# -----------------------------------------------
-
+# # subset to coefficients of interest
+# means2 = means2[op=='~' & !grepl('completeness|date',rhs)]
+# 
+# # compute uncertainty intervals
+# means2[, lower:=est-(1.96*se)]
+# means2[, lower.std:=est.std-(1.96*se.std)]
+# means2[, upper:=est+(1.96*se)]
+# means2[, upper.std:=est.std+(1.96*se.std)]
+# 
+# # exponentiate
+# means2[, est:=1.01^est] # 1.01 to make it "per 1% increase in x"
+# means2[, lower:=1.01^lower] # 1.01 to make it "per 1% increase in x"
+# means2[, upper:=1.01^upper] # 1.01 to make it "per 1% increase in x"
+# 
+# # pull in labels
+# means2 = merge(means2, nodeTable2, by.x='lhs', by.y='variable')
+# means2 = merge(means2, nodeTable2, by.x='rhs', by.y='variable')
+# setnames(means2, c('label.x','label.y'), c('label_lhs','label_rhs'))
+# # -----------------------------------------------
+# 
 
 # -----------------------------------------------
 # Display some statistics
