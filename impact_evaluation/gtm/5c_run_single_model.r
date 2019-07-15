@@ -22,6 +22,9 @@ source('./impact_evaluation/gtm/set_up_r.r')
 if (!'task_id' %in% ls()) task_id <- as.integer(Sys.getenv("SGE_TASK_ID"))
 
 # store non-system command arguments
+print(commandArgs())
+print(commandArgs(trailingOnly=TRUE))
+print('args' %in% ls())
 if (!'args' %in% ls()) args = commandArgs(trailingOnly=TRUE)
 print(paste('Command Args:', args))
 print(paste('Task ID:', task_id))
