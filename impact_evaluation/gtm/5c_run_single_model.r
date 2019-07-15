@@ -22,9 +22,9 @@ source('./impact_evaluation/gtm/set_up_r.r')
 if (!'task_id' %in% ls()) task_id <- as.integer(Sys.getenv("SGE_TASK_ID"))
 
 # store non-system command arguments
+if (!'args' %in% ls()) args = commandArgs(trailingOnly=TRUE)
 print(paste('Command Args:', args))
 print(paste('Task ID:', task_id))
-if (!'args' %in% ls()) args = commandArgs(trailingOnly=TRUE)
 # if(length(args)==0) stop('No commandArgs found!') 
 
 # the first argument should be the model version to use
