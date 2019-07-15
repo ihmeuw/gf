@@ -10,7 +10,7 @@
 # modelStage - (numeric) 1 for first half of results chain, 2 for second half (controls input and output file names, must make sense given modelVersion)
 # testRun - (logical) TRUE will run the model with limited MCMC steps, FALSE will run the full thing
 # ------------------------------------------------
-
+print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
