@@ -62,7 +62,7 @@ qsubCommand = paste0('qsub -cwd -N ie1_job_array -t 1:', T,
 		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5c_run_single_model.r ', 
-		modelVersion, ' 1 FALSE')
+		modelVersion, ' 1 FALSE FALSE')
 
 # submit array job if we're re-running everything
 if (rerunAll==TRUE) system(qsubCommand)
