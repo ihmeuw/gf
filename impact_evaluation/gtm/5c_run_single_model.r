@@ -22,22 +22,19 @@ source('./impact_evaluation/gtm/set_up_r.r')
 if (!'task_id' %in% ls()) task_id <- as.integer(Sys.getenv("SGE_TASK_ID"))
 
 # store non-system command arguments
-print(commandArgs())
-print(commandArgs(trailingOnly=TRUE))
-print('args' %in% ls())
-if (!'args' %in% ls()) args = commandArgs(trailingOnly=TRUE)
+if (!'args' %in% ls()) args = commandArgs()
 print(paste('Command Args:', args))
 print(paste('Task ID:', task_id))
-# if(length(args)==0) stop('No commandArgs found!') 
+if(length(args)==0) stop('No commandArgs found!') 
 
 # the first argument should be the model version to use
-modelVersion = args[1]
+modelVersion = args[5]
 
 # the second argument should be the "model stage" (1 or 2)
-modelStage = as.numeric(args[2])
+modelStage = as.numeric(args[6])
 
 # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
-testRun = as.logical(args[3])
+testRun = as.logical(args[7])
 
 # print for log
 print(paste('Model Version:', modelVersion))
