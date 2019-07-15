@@ -23,6 +23,7 @@ if (!'task_id' %in% ls()) task_id <- as.integer(Sys.getenv("SGE_TASK_ID"))
 
 # store non-system command arguments
 print(paste('Command Args:', args))
+print(paste('Task ID:', task_id))
 if (!'args' %in% ls()) args = commandArgs(trailingOnly=TRUE)
 # if(length(args)==0) stop('No commandArgs found!') 
 
@@ -36,7 +37,6 @@ modelStage = as.numeric(args[2])
 testRun = as.logical(args[3])
 
 # print for log
-print(paste('Task ID:', task_id))
 print(paste('Model Version:', modelVersion))
 print(paste('Model Stage:', modelStage))
 print(paste('Test Run:', testRun))
