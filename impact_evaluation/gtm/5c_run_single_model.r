@@ -14,7 +14,7 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 1
+# task_id = 10
 # args = c('gtm_tb_first_half2', '1', 'TRUE')
 
 # ----------------------------------------------
@@ -64,18 +64,18 @@ modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('department','date',modelVars)
 subData = subData[, unique(modelVars), with=FALSE]
 
-# test to see if there are any zero-variance variables in this department
+# jitter to avoid perfect collinearity
+for(v in names(subData)[!names(subData)%in%c('department','date')]) { 
+  if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
+  if (!all(subData[[v]]>0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
+}
+
+# test to see if there are any zero-variance variables in this department (after jittering)
 test = subData[,lapply(.SD,var), .SDcols=modelVars[modelVars!='department']]==0
 if(any(test)) { 
   print('Some variables have zero variance! The model is going to fail...')
   print(modelVars[test==TRUE])
   stop()
-}
-
-# jitter to avoid perfect collinearity
-for(v in names(subData)[!names(subData)%in%c('department','date')]) { 
-	if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
-	if (!all(subData[[v]]>0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
 }
 
 # rescale variables to have similar variance
