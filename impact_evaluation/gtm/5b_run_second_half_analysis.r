@@ -38,7 +38,7 @@ source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('health_zone','date',modelVars)
+modelVars = c('department','date',modelVars)
 data = data[, unique(modelVars), with=FALSE]
 # ----------------------------------------------
 
@@ -50,7 +50,7 @@ data = data[, unique(modelVars), with=FALSE]
 file.copy(outputFile4b, outputFile4b_scratch, overwrite=TRUE)
 
 # store T (length of array)
-hzs = unique(data$health_zone)
+hzs = unique(data$department)
 T = length(hzs)
 
 # store cluster command to submit array of jobs
