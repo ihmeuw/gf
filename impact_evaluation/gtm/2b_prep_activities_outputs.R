@@ -20,63 +20,64 @@ names(outputs) = gsub("/", "_", names(outputs))
 #-------------------------------------------------------
 # Before anything is changed, make general variable graphs. 
 #-------------------------------------------------------
-activities_wide = melt(activities, id.vars = c('date', 'department', 'municipality'))
-pdf(paste0(visIeDir, "raw_activities_plots.pdf"), height=5.5, width=9)
-#Municipality level plots - only do where municipality is not NA
-act_muns = unique(activities_wide$municipality, na.rm=T)
-for (m in act_muns){
-  plot = ggplot(activities_wide[municipality==m], aes(y=value, x=date)) +
-    geom_line() +
-    facet_wrap(~variable, scales='free') +
-    labs(title=paste('Time series of all activity vars for municipality ', m), y='Value', x='Date') +
-    theme_bw()
-  print(plot)
-}
-
-#Department-level plots
-act_depts = unique(activities_wide$department, na.rm=T)
-activities_wide_d = activities_wide[, .(value = sum(value, na.rm=T)), by=c('date', 'department', 'variable')]
-for (d in act_depts){
-  plot = ggplot(activities_wide_d[department==d], aes(y=value, x=date)) +
-    geom_line() +
-    facet_wrap(~variable, scales='free') +
-    labs(title=paste('Time series of all activity vars for department ', d), y='Value', x='Date') +
-    theme_bw()
-  print(plot)
-}
-dev.off()
-
-outputs_wide = melt(outputs, id.vars = c('date', 'department', 'municipality'))
-pdf(paste0(visIeDir, "raw_outputs_plots.pdf"), height=5.5, width=9)
-#Municipality level plots - only do where municipality is not NA
-out_muns = unique(outputs_wide$municipality, na.rm=T)
-for (m in out_muns){
-  plot = ggplot(outputs_wide[municipality==m], aes(y=value, x=date)) +
-    geom_line() +
-    facet_wrap(~variable, scales='free') +
-    labs(title=paste('Time series of all output vars for municipality ', m), y='Value', x='Date') +
-    theme_bw()
-  print(plot)
-}
-
-#Department-level plots
-out_depts = unique(outputs_wide$department, na.rm=T)
-outputs_wide_d = outputs_wide[, .(value=sum(value, na.rm=T)), by=c('date', 'department', 'variable')]
-for (d in out_depts){
-  plot = ggplot(outputs_wide_d[department==d], aes(y=value, x=date)) +
-    geom_line() +
-    facet_wrap(~variable, scales='free') +
-    labs(title=paste('Time series of all output vars for department ', d), y='Value', x='Date') +
-    theme_bw()
-  print(plot)
-}
-dev.off()
+# activities_wide = melt(activities, id.vars = c('date', 'department', 'municipality'))
+# pdf(paste0(visIeDir, "raw_activities_plots.pdf"), height=5.5, width=9)
+# #Municipality level plots - only do where municipality is not NA
+# act_muns = unique(activities_wide$municipality)
+# for (m in act_muns){
+#   plot = ggplot(activities_wide[municipality==m], aes(y=value, x=date)) +
+#     geom_line() +
+#     facet_wrap(~variable, scales='free') +
+#     labs(title=paste('Time series of all activity vars for municipality ', m), y='Value', x='Date') +
+#     theme_bw()
+#   print(plot)
+# }
+# 
+# #Department-level plots
+# act_depts = unique(activities_wide$department)
+# activities_wide_d = activities_wide[, .(value = sum(value)), by=c('date', 'department', 'variable')]
+# for (d in act_depts){
+#   plot = ggplot(activities_wide_d[department==d], aes(y=value, x=date)) +
+#     geom_line() +
+#     facet_wrap(~variable, scales='free') +
+#     labs(title=paste('Time series of all activity vars for department ', d), y='Value', x='Date') +
+#     theme_bw()
+#   print(plot)
+# }
+# dev.off()
+# 
+# outputs_wide = melt(outputs, id.vars = c('date', 'department', 'municipality'))
+# pdf(paste0(visIeDir, "raw_outputs_plots.pdf"), height=5.5, width=9)
+# #Municipality level plots - only do where municipality is not NA
+# out_muns = unique(outputs_wide$municipality)
+# for (m in out_muns){
+#   plot = ggplot(outputs_wide[municipality==m], aes(y=value, x=date)) +
+#     geom_line() +
+#     facet_wrap(~variable, scales='free') +
+#     labs(title=paste('Time series of all output vars for municipality ', m), y='Value', x='Date') +
+#     theme_bw()
+#   print(plot)
+# }
+# 
+# #Department-level plots
+# out_depts = unique(outputs_wide$department)
+# outputs_wide_d = outputs_wide[, .(value=sum(value)), by=c('date', 'department', 'variable')]
+# for (d in out_depts){
+#   plot = ggplot(outputs_wide_d[department==d], aes(y=value, x=date)) +
+#     geom_line() +
+#     facet_wrap(~variable, scales='free') +
+#     labs(title=paste('Time series of all output vars for department ', d), y='Value', x='Date') +
+#     theme_bw()
+#   print(plot)
+# }
+# dev.off()
 
 #----------------------------------------------------
 # Validate files, and subset data. 
 #----------------------------------------------------
 
 #Drop all 0 departments and municipalities - these are national-level. 
+# There are 0 of these cases in the 7.15.19 data - EL 
 activities = activities[!(department==0|municipality==0)]
 outputs = outputs[!(department==0 | municipality==0)]
 
@@ -85,7 +86,7 @@ a_dates = unique(activities$date)
 o_dates = unique(outputs$date)
 
 a_dates[!a_dates%in%o_dates] #Don't have output data for 2018.  
-o_dates[!o_dates%in%a_dates] #Nothing. 
+o_dates[!o_dates%in%a_dates] #2009 only. EL 7.15.19
 
 #Departments
 a_depts = unique(activities$department)
@@ -98,8 +99,8 @@ o_depts[!o_depts%in%a_depts] #None.
 a_mun = unique(activities$municipality)
 o_mun = unique(outputs$municipality)
 
-a_mun[!a_mun%in%o_mun] #Some municipalities aren't matching here. 
-o_mun[!o_mun%in%a_mun] #Some municipalities aren't matching here. 
+a_mun[!a_mun%in%o_mun] #None. 7.15.19 EL 
+o_mun[!o_mun%in%a_mun] #None. 7.15.19 EL 
 
 #Subset data to only department-level, because municipalities aren't matching right now. 
 
@@ -177,15 +178,15 @@ if (length(dept_level_error)!=0){
   print(dept_level_error)
 }
 
-#Go ahead and hard code these variables to be department-level, because there is a data prep error. EL 7.8.19
-#This should be removed once new data is sent! 
-dep_vars = c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d", dep_vars)
-mun_vars = mun_vars[!mun_vars%in%c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d")]
+# #Go ahead and hard code these variables to be department-level, because there is a data prep error. EL 7.8.19
+# #This should be removed once new data is sent! 
+# dep_vars = c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d", dep_vars)
+# mun_vars = mun_vars[!mun_vars%in%c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d")]
 
 #Take the average of the department-level variables by date and department. 
 dep_level_a = data.table(date=integer(), department=integer())
 for (var in dep_vars){
-  var_subset = activities[, .(var=mean(get(var), na.rm=T)), by=c('date', 'department')]
+  var_subset = activities[, .(var=mean(get(var))), by=c('date', 'department')]
   names(var_subset)[3] = var
   dep_level_a = merge(dep_level_a, var_subset, by=c('date', 'department'), all=T)
 }
@@ -198,7 +199,7 @@ names(dep_level_a) = gsub("_m|_d", "", names(dep_level_a))
 #Take the sum of the municipality-level variables by date and department. 
 mun_level_a = data.table(date=integer(), department=integer())
 for (var in mun_vars){
-  var_subset = activities[, .(var=sum(get(var), na.rm=T)), by=c('date', 'department')]
+  var_subset = activities[, .(var=sum(get(var))), by=c('date', 'department')]
   names(var_subset)[3] = var
   mun_level_a = merge(mun_level_a, var_subset, by=c('date', 'department'), all=T)
 }
@@ -243,7 +244,7 @@ if (length(dept_level_error)!=0){
 #Take the average of the department-level variables by date and department. 
 dep_level_o = data.table(date=integer(), department=integer())
 for (var in dep_vars){
-  var_subset = outputs[, .(var=mean(get(var), na.rm=T)), by=c('date', 'department')]
+  var_subset = outputs[, .(var=mean(get(var))), by=c('date', 'department')]
   names(var_subset)[3] = var
   dep_level_o = merge(dep_level_o, var_subset, by=c('date', 'department'), all=T)
 }
@@ -256,7 +257,7 @@ names(dep_level_o) = gsub("_m|_d", "", names(dep_level_o))
 #Take the sum of the municipality-level variables by date and department. 
 mun_level_o = data.table(date=integer(), department=integer())
 for (var in mun_vars){
-  var_subset = outputs[, .(var=sum(get(var), na.rm=T)), by=c('date', 'department')]
+  var_subset = outputs[, .(var=sum(get(var))), by=c('date', 'department')]
   names(var_subset)[3] = var
   mun_level_o = merge(mun_level_o, var_subset, by=c('date', 'department'), all=T)
 }
