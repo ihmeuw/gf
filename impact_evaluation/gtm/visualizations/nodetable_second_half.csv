@@ -1,17 +1,9 @@
 variable,x,y,label
-SSCACT,0,1.5,Pat.'s Tx iCCM (#)
-mildMalariaTreated,0,2.5,Pat.'s Tx (#)
-RDT,0,3.5,RDTs Used (#)
-severeMalariaTreated,0,4.5,Sev. Tx (#)
-ITN,0,0.5,ITNs Dist. (#)
-SP,0,5.5,SP in ANC (#)
-ACTs_CHWs_rate,4,1.5,iCCM Tx. Cvg.
-mildMalariaTreated_rate,6,2.5,Tx Cvg. (mild)
-RDT_rate,2.5,3.5,RDT Cvg.
-severeMalariaTreated_rate,6,4.5,Tx. Cvg. (severe)
-ITN_rate_cumul,4,0.5,ITN Cvg.
-SP_rate,4,5.5,IPTp Cvg.
-lead_newCasesMalariaMild_rate,11,1.5,Lead of Inc. Rate (mild)
-lead_newCasesMalariaSevere_rate,11,4.5,Lead of Inc. Rate (severe)
-lead_malariaDeaths_rate,15,3,Lead of Mortality Rate
-lead_case_fatality,12,3,Lead of Case Fatality
+Cases_Notified_value_outp,-10,3,Cases notified
+Cases_Started_on_Treatment_value_outp,-10,6,Started Treatment
+PLHIV_started_on_IPT_value_outp,-10,9,PLHIV started IPT
+Proportion_of_Patients_Receiving_DST_value_outc,0,3,Patients receiving DST
+Proportion_of_HIV_TB_Cases_Treated_value_outc,0,6,HIV-TB cases treated
+Proportion_of_MDR_Cases_Treated_value_outc,0,9,Prop. MDR cases treated 
+Treatment_Success_Rate_value_imp,10,4,Treatment success
+Mortality_Rate_value_imp,10,7,Mortality rate
