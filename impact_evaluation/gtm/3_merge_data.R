@@ -14,6 +14,8 @@ drc = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/input
 resource_tracking <- readRDS(outputFile2a)
 resource_tracking[, year:=floor(date)]
 byVars = names(resource_tracking)[!names(resource_tracking)%in%c('date', 'year')]
+resource_tracking = resource_tracking[, lapply(.SD, sum), by=year, .SDcols =! 'date']
+setnames(resource_tracking, 'year', 'date')
 
 # Read in the previously saved file for outputs/activities in 2b
 outputs_activities <- readRDS(outputFile2b)
@@ -114,7 +116,8 @@ for(i in 1:nrow(redistribution_mat)) {
 	a = redistribution_mat[i, redist_var] #Changed from 'indicator' in DRC code EL 7.8.19
 
 	# disallow zeroes
-	merge_file[get(a)>0, min:=min(get(a), na.rm=TRUE)]
+	min_calc = merge_file[, min(get(a), na.rm=T)]
+	merge_file[, min:=min_calc]
 	merge_file[, mean:=mean(get(a), na.rm=TRUE), by=department]
 	merge_file[is.na(min), min:=0]
 	merge_file[is.na(mean), mean:=min]

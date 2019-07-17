@@ -42,6 +42,7 @@
   # FGH DATA (OTHER_DAH)
   #----------------------------------
   fgh <- readRDS(fghFile)
+  fgh = fgh[, -c(3)] #There's an extra disease column??? 
   
   #Expand to semester-level, and divide all inputs by 2. 
   semesters = data.table(date=seq(1990.0, 2018.5, by=0.5))
@@ -57,7 +58,7 @@
   
   #Pull out other DAH, and collapse to the semester-level. 
   setnames(fgh, old=c('gf_module', 'gf_intervention'), new=c('module', 'intervention'))
-  other_dah = fgh[(financing_source != 'The Global Fund' & financing_source != 'ghe') & loc_name=="GTM", 
+  other_dah = fgh[(channel_agg != 'The Global Fund' & channel_agg != 'ghe') & loc_name=="GTM", 
                   .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(date, module, intervention, code, disease)]
   
   #---------------------------------

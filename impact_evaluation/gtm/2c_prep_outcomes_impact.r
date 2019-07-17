@@ -244,3 +244,5 @@ for (col in cols){
 saveRDS(dt_final, outputFile2c)
 archive(outputFile2c)
 # --------------------------------
+
+print("Step 2c: Prep outcomes impacts completed successfully.")
