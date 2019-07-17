@@ -34,7 +34,7 @@ prep_ghe = FALSE
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-rerun_filelist = FALSE #Set to TRUE if you want to prep all files in the file list again. 
+rerun_filelist = TRUE #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 test_current_files = TRUE #Set to true if you would like to run unit tests on current database. Set to false if you would like to run tests on archived database. 
 
@@ -61,7 +61,7 @@ if (prep_files | prep_gos){
   } else if (prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
-  # source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
+  source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
   # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
   # source(paste0(code_dir, "2f_gf_verify_outputs.R"))
   # 
