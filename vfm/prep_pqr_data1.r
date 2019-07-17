@@ -8,55 +8,115 @@
 #-------------------------------------------------------------------
 #Set up libraries, and read data 
 #-------------------------------------------------------------------
-
+rm(list = ls())
 library(data.table)
 j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, "/Project/Evaluation/GF/vfm/unit_cost_data")
 setwd(dir)
 
-pqr = fread("download_4.4.19/PQR_ExternalReportingView.csv", stringsAsFactors = FALSE)
-
+full_pqr = fread("download_4.4.19/PQR_ExternalReportingView.csv", stringsAsFactors = FALSE)
+pqr = copy(full_pqr)
 #-------------------------------------------------------------------
 # Drop columns that aren't needed and rename 
 #-------------------------------------------------------------------
-names = names(pqr)
-sort(names(pqr))
-
-#Do we have any more granular information than the 
-
 #Try to create a small subset of usable data, that just has our countries and a few key variables. 
-key_cols = c("Country Name", "Grant Name", "Grant Start Date", "Grant End Date", "IP Start Date", "IP End Date", "Actual Delivery Date", "Actual Delivery Month Name", 
-             "Actual Delivery Month", "Actual Delivery Quarter", "Actual Delivery Week", "Actual Delivery Year", "Product Name (EN)", "Product Code", "Strength Dosage Form (EN)", "Strength",
-             "Supplier", "Tariff Cost (LC)", "Tariff Cost (USD)", "Total Freight & Insurance Cost (USD)", "Total Handling & Agent Cost (USD)", "Total Package Quantity",                                 
-             "Total Product Cost (USD)", "Total Tariff Cost (USD)", "Treatment Dose", "Treatment Frequency", "Unit Cost (USD)", "Unit Cost : Avg Diag",
-             "Unit Cost : Avg detail", "Unit Cost : Avg Diag old", "Purchase Order Date", "Purchase Order Month Name", "Purchase Order Month", "Purchase Order Quarter", "Purchase Order Week", "Purchase Order Year", "Purchase Order Latest Approval Date",                        
-             "Purchase Order Original Approval Date", "Scheduled Delivery Date", "Scheduled Delivery Month Name", "Scheduled Delivery Month", "Scheduled Delivery Quarter", 
-             "Scheduled Delivery Week", "Scheduled Delivery Year", "Product Category", "PR Name", "Prtype", "PR Type Code", "PR Type Name", "PR Sub Type Name",
-             "PR Sub Type Code", "Sub Continent Name", "Sub National Name", "Suom Name")
+key_cols = c("Country Name", "ISO3CodeCountry",
+             'Invoice Amount (USD)', 'Invoice Creation Date', 'Invoice ID', 'Supplier Invoice Number', 'Invoice Date',
+             "Purchase Order Date", "Purchase Order Month Name", "Purchase Order Month", "Purchase Order Quarter", "Purchase Order Week", "Purchase Order Year", "Purchase Order Latest Approval Date", "Purchase Order Original Approval Date",
+             "Product Name (EN)", "Product Code", "Product ID", "Product Pack", "Product Category", "Unit", "Product Description", "Description", 
+             "Strength", "Strength Dosage Form (EN)", "Suom Name (EN)", "Nb of Suom in Pack", "Nb of Suom in Primary Pack",
+             "Pack quantity", "Pack Cost (USD)", "Product pack (USD)", "Total Product Cost (USD)", "Primary Key", "Product Key",
+             "#tests/units", "Total Number of Products", "Unit Cost (USD)", 
+             "PO Median Unit Cost", "PO International Reference Price",
+             "Expected Cost by Median (USD)", "Expected Cost by Reference (USD)", "Cost Above Median (USD)", "Cost above reference (USD)",
+             "Grant Name", "Grant ID", "Grant Start Date", "Grant End Date", "Grant Status", "IP Start Date", "IP End Date", 
+             "PR Name", "PR Type Name", "PR Sub Type Name", "Supplier",
+             "Scheduled Delivery Date", "Scheduled Delivery Month Name", "Scheduled Delivery Month", "Scheduled Delivery Quarter", "Scheduled Delivery Week", "Scheduled Delivery Year", 
+             "Actual Delivery Date", "Actual Delivery Month Name", "Actual Delivery Month", "Actual Delivery Quarter", "Actual Delivery Week", "Actual Delivery Year",
+             "Total Tariff Cost (USD)", "Total Freight & Insurance Cost (USD)", "Total Handling & Agent Cost (USD)",                              
+             "Product Pack Name (EN)", "Secondary Pack Name (EN)",
+             "Treatment Dose", "Treatment Frequency")
 
-#Key cols - country, disease, product, unit, reference price (pull everything related), and pack size, and 
-#Unit, mean, median, and international reference price. 
-cost_cols = names[grep("cost|avg|median|price", tolower(names))]
-cost_cols = c(cost_cols, c("Supplier/Agent/Manufacturer/Intermediatry", "Manufacturer"))
+# # check if the columns in key_cols include all unique ids
+# check_ids = pqr[, key_cols, with = FALSE]
+# check_dups = check_ids[duplicated(check_ids)]
+# check_dups = check_dups[`Country Name`=='Congo (Democratic Republic)']
+# check_dups2 = pqr[`Country Name`== 'Congo (Democratic Republic)' & `Product Name (EN)` == 'Permanet 2.0' & `Total Package Quantity`== 508950 &
+#                     +                     `Total Number of Products`==13 & `Purchase Order Date`== "11/10/2017 12:00:00 AM" & `Actual Delivery Date`== "12/25/2017 12:00:00 AM"]
 
-all_cols = c(key_cols, cost_cols)
-names[!names%in%all_cols] #See what you haven't categorized yet. 
+# #Key cols - country, disease, product, unit, reference price (pull everything related), and pack size, and 
+# #Unit, mean, median, and international reference price. 
+# cost_cols = names[grep("cost|avg|median|price", tolower(names))]
+# cost_cols = c(cost_cols, c("Supplier/Agent/Manufacturer/Intermediatry", "Manufacturer"))
+# 
+# all_cols = c(key_cols, cost_cols)
+# names[!names%in%all_cols] #See what you haven't categorized yet. 
+#
+# #See what's going on with the different categories in the data. 
+# lc_cols = grep("(LC)", names(subset)) #Drop all of the columns in 'local currency'
+# subset = subset[, -lc_cols, with = FALSE]
 
-countries = c("Congo (Democratic Republic)", "Senegal", "Uganda", "Guatemala", "Mozambique", "Sudan", "Myanmar", "Cambodia") #Keep EHG's countries in here as well. 
+country_ids = pqr[`Country Name` %in% c("Congo (Democratic Republic)", "Senegal", "Uganda", "Guatemala", 
+                                        "Mozambique", "Sudan", "Myanmar", "Cambodia"), unique(`ISO3CodeCountry`) ]#Keep EHG's countries in here as well. 
 
-subset = pqr[`Country Name`%in%countries, c(key_cols, cost_cols), with=FALSE]
+pqr = pqr[`ISO3CodeCountry`%in%country_ids, ]
+nrow(unique(pqr)) == nrow(pqr) # at this point all rows are uniquely id'ed
 
-#See what's going on with the different categories in the data. 
-lc_cols = grep("(LC)", names(subset)) #Drop all of the columns in 'local currency'
-subset = subset[, -lc_cols, with = FALSE]
+#Remove duplicated column names
+dup_names = unique(names(pqr)[duplicated(names(pqr))])
+if(length(dup_names) != 0){
+  rm_vars = c()
+  for (var in dup_names){
+    for (i in 2:length(which( colnames(pqr)==var ))){
+      rm_vars = c(rm_vars, which( colnames(pqr)==var )[i])
+    }
+  }
+  pqr = pqr[, -rm_vars, with=FALSE]
+}
+nrow(unique(pqr)) == nrow(pqr) # at this point all rows are still uniquely id'ed
+if( length(names(pqr)[duplicated(names(pqr))]) != 0 ) stop( 'You still have duplicates in column names!' ) #Run the duplicate check again - this data table should have 0 rows.
 
-#Review duplicated variable names 
-dup_names = names(subset)[duplicated(names(subset))]
-dup_names
+# # assess duplicates in rows:
+# dt = pqr[, c(key_cols), with=FALSE] # the data table with vars we want
+# nrow(unique(dt)) == nrow(dt) # at this point rows are NOT all uniquely id'ed
+# 
+# dups = dt[duplicated(dt)] # 174 duplicated rows, but some have multiple duplicates
+# # dups2 = dups[duplicated(dups)] are there multiple duplicates
+# # dups3 = dups2[duplicated(dups2)]
+# 
+# # get all duplicates with all rows 
+# all_dups = merge(dups, pqr, all.x = TRUE, by = names(dups))
+# all_dups = unique(all_dups)
+# 
+# # example of dups but one that's not caught in the above setting :/
+# example = dt[`Product Name (EN)`== 'Permanet 2.0']
+# example = example[`Grant Name`=='COD-M-PSI']
+# setorderv(example, c("Supplier Invoice Number", "Total Product Cost (USD)"))
+# 
+# example = merge(example, pqr, all.x = TRUE)
+# 
+# keep_vars = names(example)[(example[1, ] == example[2, ]) == FALSE]
+# keep_vars = keep_vars[!is.na(keep_vars)]
+# 
+# example_subset = example[, c("Country Name","Product Name (EN)", "Description", "Product Category", "Supplier Invoice Number", 
+#                              "Total Product Cost (USD)", "Purchase Order Date")]
 
-#An ugly way to do this- just force drop these duplicate names 
-subset = subset[, -dup_names, with=FALSE]
-names(subset)[duplicated(names(subset))] #Run the duplicate check again - this data table should have 0 rows. 
+# drop duplicates of orders:
+# try to eliminate duplicates across languages
+pqr = pqr[`Product Category Language`=='en', ]
+unique_ids = c("Country Name", "Grant Name", "Product Name (EN)", "Supplier Invoice Number", "Total Product Cost (USD)", "Purchase Order Date", 
+               "Description", "Product Pack", "Pack quantity", "Scheduled Delivery Date", "Actual Delivery Date", "Product Key", "Primary Key")
+# unique_ids = c("Primary Key")
+# unique_ids = c("Invoice Item ID")
+dt = pqr[, c(unique_ids), with=FALSE]
+
+# further check dt duplicates
+dups = dt[duplicated(dt)] 
+all_dups = merge(dups, pqr, all.x = TRUE, by= names(dups))
+all_dups = unique(all_dups)
+
+# merge dt with pqr data subset to the key cols in order to get all columns we want
+subset = merge(dt, pqr[, ..key_cols], by = names(dt))
 
 #Reset names. 
 old_names = names(subset)
@@ -64,18 +124,24 @@ new_names = tolower(old_names)
 new_names = gsub("\\(", "", new_names)
 new_names = gsub(")", "", new_names)
 new_names = gsub(" ", "_", new_names)
+new_names = gsub("/", "_", new_names)
+new_names = gsub("#tests", "nb_tests", new_names)
+new_names = gsub("&", "and", new_names)
 
 setnames(subset, old_names, new_names)
 
 #-------------------------------------------------------------------
 # Format dates correctly 
 #-------------------------------------------------------------------
-date_vars = c('grant_start_date', 'grant_end_date', 'ip_start_date', 'ip_end_date', 'actual_delivery_date', 'purchase_order_date', 
-              'scheduled_delivery_date')
+date_vars = new_names[ grepl(new_names, pattern = 'date') ]
+
 for (v in date_vars){
   subset[, (v):=substr(get(v), 1, 11)]
   subset[, (v):=as.Date(get(v), format="%m/%d/%Y")]
 }
+
+remove_vars = new_names[ grepl(new_names, pattern = 'month|year|quarter|week')]
+subset = subset[, -remove_vars, with=FALSE]
 
 #-------------------------------------------------------------------
 # Pull a 'grant disease' variable that can be used to flag 
