@@ -13,27 +13,33 @@
 # Read in file list 
 #----------------------------------------------------
 if (prep_files == TRUE){
-  file_list = fread(paste0(master_file_dir, country, "_budget_filelist.csv"), stringsAsFactors = FALSE, encoding="Latin-1")
-  file_list$start_date <- as.Date(file_list$start_date, format = "%m/%d/%Y")
+  file_list = read.xlsx(paste0(dir, "_gf_files_gos/master_file_list.xlsx"), detectDates=T)
+  setDT(file_list)
+  file_list = file_list[loc_name==country]
+  file_list$start_date_financial <- as.Date(file_list$start_date_financial, format = "%Y-%m-%d")
   file_list = file_list[, -c('notes')]
   
   #Validate file list 
-  desired_cols <- c("file_name", "function_type", "sheet", "disease", "loc_id", "data_source", "period", "qtr_number", "grant", "primary_recipient", 
-                    "secondary_recipient", "language", "grant_period", "grant_status", "start_date", "file_iteration", "geography_detail", 
-                    "loc_name", "mod_framework_format", "file_currency", "eur_to_usd_rate", "loc_to_usd_rate", "pudr_semester")
-  stopifnot(colnames(file_list) %in% desired_cols)
+  desired_cols <- c("file_name", "function_financial", "sheet_financial", "disease", "loc_name", "data_source", "period_financial", "qtr_number_financial", "grant", "primary_recipient", 
+                    "secondary_recipient", "language_financial", "grant_period", "grant_status", "start_date_financial", "file_iteration", "geography_detail", 
+                    "loc_name", "mod_framework_format", "file_currency", "pudr_semester")
+  stopifnot(desired_cols%in%names(file_list))
   stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr"))
-  stopifnot((unique(file_list$file_iteration))%in%c("final", "initial"))
+  stopifnot((unique(file_list$file_iteration))%in%c("final", "initial", "revision"))
+  
+  #Only keep inputs with financial information, and make sure you've kept date column before prioritizing GOS. 
+  file_list = file_list[!is.na(sheet_financial)]
+  stopifnot(nrow(file_list[is.na(start_date_financial)])==0)
 
   #Prioritize GOS data where we have it
   file_list = prioritize_gos(file_list)
 
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date', 'data_source', 'pudr_semester')] #EMILY NEED TO RETHINK THIS. 
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date_financial', 'data_source', 'pudr_semester')] #EMILY NEED TO RETHINK THIS. 
   file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
   if ( nrow(file_list[date_dup>0])!=0){
-    print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date)][order(grant, grant_period, start_date)])
+    print(file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date_financial)][order(grant, grant_period, start_date_financial)])
     print("There are duplicates in final files - review file list.")
   }
   
@@ -49,9 +55,9 @@ if (prep_files == TRUE){
 #----------------------------------------------------
 if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
-  pudr_mod_approach_sheets <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B', 'ALF RFR_7')
-  general_detailed_budget_sheets <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
-                                      'DETAIL')
+  pudr_mod_approach_sheet_financials <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B', 'ALF RFR_7')
+  general_detailed_budget_sheet_financials <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
+                                      'DETAIL', 'Detailed _ budget AGYW', 'Detailed Budget _ Human rights')
   
   budget_cols = c("activity_description", "budget", "cost_category", "implementer", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
   pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
@@ -66,66 +72,66 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     }
     
     inFile = paste0(file_dir, file_list$file_name[i])
-    args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$period[i])
+    args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], file_list$period_financial[i])
     
-    if(file_list$function_type[i] == 'detailed' & file_list$sheet[i]%in%general_detailed_budget_sheets){ #Prep standardized detailed budgets. 
-      args[length(args)+1] = file_list$qtr_number[i]
-      args[length(args)+1] = file_list$language[i]
+    if(file_list$function_financial[i] == 'detailed' & file_list$sheet_financial[i]%in%general_detailed_budget_sheet_financials){ #Prep standardized detailed budgets. 
+      args[length(args)+1] = file_list$qtr_number_financial[i]
+      args[length(args)+1] = file_list$language_financial[i]
       tmpData = do.call(prep_general_detailed_budget, args)
       
       stopifnot(sort(names(tmpData)) == budget_cols)
       
-    } else if (file_list$function_type[i] == 'pudr' & file_list$sheet[i]%in%pudr_mod_approach_sheets){ #Prep standardized 'modular approach' PUDRs. 
-      args[length(args)+1] = file_list$qtr_number[i]
+    } else if (file_list$function_financial[i] == 'pudr' & file_list$sheet_financial[i]%in%pudr_mod_approach_sheet_financials){ #Prep standardized 'modular approach' PUDRs. 
+      args[length(args)+1] = file_list$qtr_number_financial[i]
       tmpData = do.call(prep_modular_approach_pudr, args)
       
       stopifnot(pudr_cols%in%names(tmpData))
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
-    } else if (file_list$function_type[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 
-      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i], file_list$period[i])
+    } else if (file_list$function_financial[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet_financial[i]%in%c('INTEGRACION', "LFA EFR_7")){ #Prep more general Guatemala PUDRs. 
+      args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], file_list$qtr_number_financial[i], file_list$period_financial[i])
       tmpData = do.call(prep_pudr_gtm, args)
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
-    } else if (file_list$function_type[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet[i]%in%c('PR EFR_7A')){
-      args[length(args)+1] = file_list$qtr_number[i]
+    } else if (file_list$function_financial[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet_financial[i]%in%c('PR EFR_7A')){
+      args[length(args)+1] = file_list$qtr_number_financial[i]
       tmpData = do.call(prep_gtm_pudr2, args)
       
       stopifnot(sort(names(tmpData)) == pudr_cols)
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
-    } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i] == 'cod'){ #Prep summary budgets from DRC. 
-      args[length(args)+1] = file_list$qtr_number[i]
+    } else if (file_list$function_financial[i] == 'summary' & file_list$loc_name[i] == 'cod'){ #Prep summary budgets from DRC. 
+      args[length(args)+1] = file_list$qtr_number_financial[i]
       tmpData = do.call(prep_summary_budget_cod, args)
       
       stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
       
-    } else if (file_list$function_type[i] == 'summary' & file_list$loc_name[i]=='gtm') {
-      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i])
+    } else if (file_list$function_financial[i] == 'summary' & file_list$loc_name[i]=='gtm') {
+      args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], file_list$qtr_number_financial[i])
       tmpData = do.call(prep_summary_budget_gtm, args)
       
       stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
-    } else if (file_list$function_type[i]=='old_detailed' & file_list$loc_name[i]=="gtm"){ 
-      args = list(file_dir, file_list$file_name[i], file_list$sheet[i], file_list$start_date[i], file_list$qtr_number[i])
+    } else if (file_list$function_financial[i]=='old_detailed' & file_list$loc_name[i]=="gtm"){ 
+      args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], file_list$qtr_number_financial[i])
       tmpData = do.call(prep_other_budget_gtm, args)
       
       stopifnot(sort(names(tmpData)) == c('activity_description', 'budget', "expenditure", 'module', 'quarter', 'start_date', 'year'))
-    } else if (file_list$function_type[i]=='summary' & file_list$loc_name[i]=='uga'){
-      args[length(args)+1] = file_list$qtr_number[i]
+    } else if (file_list$function_financial[i]=='summary' & file_list$loc_name[i]=='uga'){
+      args[length(args)+1] = file_list$qtr_number_financial[i]
       args[length(args)+1] = file_list$grant[i]
       tmpData = do.call(prep_summary_uga_budget, args)
       
       stopifnot(sort(names(tmpData)) == budget_cols)
     } else {
       print(paste0("File not being processed: ", file_list$file_name[i]))
-      print(paste0("Check logic conditions. This file has the function_type: ", file_list$function_type[i],
-            " and the sheet name: ", file_list$sheet[i]))
+      print(paste0("Check logic conditions. This file has the function_financial: ", file_list$function_financial[i],
+            " and the sheet_financial name: ", file_list$sheet_financial[i]))
     }
     
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, secondary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language, eur_to_usd_rate, loc_to_usd_rate, file_currency, pudr_semester, period)]
+                                 mod_framework_format, file_iteration, language_financial, file_currency, pudr_semester, period_financial, update_date)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
     }  
@@ -138,7 +144,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     } else {
       resource_database = rbind(resource_database, tmpData, use.names=TRUE, fill = TRUE)
     }
-    print(paste0(i, " ", file_list$data_source[i], " ", file_list$function_type[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
+    print(paste0(i, " ", file_list$data_source[i], " ", file_list$function_financial[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
   }
   
   saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))

@@ -26,15 +26,15 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = TRUE
+prep_files = FALSE
 prep_gos = FALSE
-prep_fgh = FALSE
-prep_ghe = FALSE
+prep_odah = FALSE
+prep_ghe = TRUE
 
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-rerun_filelist = FALSE #Set to TRUE if you want to prep all files in the file list again. 
+rerun_filelist = TRUE #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 test_current_files = TRUE #Set to true if you would like to run unit tests on current database. Set to false if you would like to run tests on archived database. 
 
@@ -43,7 +43,7 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
-    country = "sen" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+    country = "uga" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
     master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
     export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
   }
@@ -61,23 +61,23 @@ if (prep_files | prep_gos){
   } else if (prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
-  source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
-  source(paste0(code_dir, "2d_gf_aggregate_files.R"))
-  source(paste0(code_dir, "2e_gf_verify_outputs.R"))
-  
-  rmarkdown::render(paste0(code_dir, "2f_gf_visualize_data.rmd", 
-                           output_dir=paste0(dir, "/visualizations/verification"), 
-                           output_file="Visual Checks.pdf"))
+  # source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
+  # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
+  # source(paste0(code_dir, "2f_gf_verify_outputs.R"))
+  # 
+  # rmarkdown::render(paste0(code_dir, "2g_gf_visualize_data.rmd",
+  #                          output_dir=paste0(dir, "/visualizations/verification"),
+  #                          output_file="Visual Checks.pdf"))
 }
 
 #Run data gap analysis - optional
-rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"), 
-                  output_dir=paste0(dir, "/visualizations/verification"), 
-                  output_file="Reporting Completeness.pdf")
+# rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
+#                   output_dir=paste0(dir, "/visualizations/verification"),
+#                   output_file="Reporting Completeness.pdf")
 # ----------------------------------------------
 # STEP 3: PREP FGH ACTUALS AND ESTIMATES 
 # ----------------------------------------------
-if (prep_fgh){
+if (prep_odah){
   #Source document prep functions 
   prep_functions = list.files(paste0(code_dir, "fgh_prep_functions"), full.names=TRUE)
   for (file in prep_functions){

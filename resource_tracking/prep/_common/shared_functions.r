@@ -1,9 +1,7 @@
 # ----------------------------------------------------------------------------------
 # AUTHOR: Emily Linebarger, based on code by Irena Chen
-# PURPOSE: Shared functions for the resource tracking database. All of these functions 
-# perform calculations, for string-prep and file-loading functions 
-# review 'shared_prep_functions'. 
-# DATE: Last updated March 2019. 
+# PURPOSE: Shared functions for the resource tracking database. 
+# DATE: Last updated July 2019 
 #-----------------------------------------------------------------------------------
 
 
@@ -116,10 +114,10 @@ strip_chars <- function(dt){
 prioritize_gos = function(file_list){
   file_list = file_list[!(data_source=="fpm" & file_iteration=="initial")] #Drop out initial budgets, you don't need these. 
   
-  file_list[, qtr_number:=as.numeric(qtr_number)]
-  file_list[, period:=as.numeric(period)]
-  file_list[, days_in_budget:=period*qtr_number]
-  file_list[, end_date:=start_date+days_in_budget]
+  file_list[, qtr_number_financial:=as.numeric(qtr_number_financial)]
+  file_list[, period_financial:=as.numeric(period_financial)]
+  file_list[, days_in_budget:=period_financial*qtr_number_financial]
+  file_list[, end_date:=start_date_financial+days_in_budget]
   
   file_list[, end_year:=year(end_date)]
   file_list = file_list[!end_year<=gos_year] #The variable 'gos_year' is set in global variables. 
@@ -129,54 +127,6 @@ prioritize_gos = function(file_list){
   return(file_list)
 }
 
-#----------------------------------------------
-#Functions to verify budgets, used in step 5. 
-#----------------------------------------------
-#Sums budget by key variables
-check_budgets_pudrs = function(dt){
-  keyVars = c("start_date", "file_name", "grant", "data_source")
-  #Deciding not to split by disease here because we just want the total for the whole quarter. 
-  dt[, budget:=as.numeric(budget)]
-  dt[, expenditure:=as.numeric(expenditure)]
-  
-  dt[is.na(budget), budget:=0]
-  dt[is.na(expenditure), expenditure:=0]
-  #Replacing budget and expenditure as NA 
-  budgets = dt[ , 
-               lapply(.SD, sum), 
-                by = keyVars, 
-               .SDcols = c("budget", "expenditure")]
-  budgets <- unique(budgets)
-  return(budgets)
-}
-
-check_SICOIN_dates = function(dt){
-  # ouptut can be used to compare to "Data Seeking Spreadsheets"
-  dt = dt[data_source == "sicoin"]
-  dt$budget <- as.numeric(dt$budget)
-  dt[,bug_sum := sum(budget, na.rm = TRUE), by = c("start_date", "grant_number", "end_date", "period", "fileName", "grant_period", "disease")]
-  dt$sdaDetail = ifelse(dt$financing_source == 'gf', "Summary", "None")
-  dt$geog = ifelse(dt$adm1 == 100, "National", "Municipality")
-  sicoin_dt = unique(dt[, c("data_source", "financing_source","grant_period", "start_date", "end_date", 'sdaDetail', 'geog', "period", "grant_number", "disease", "fileName", "bug_sum")])
-  sicoin_dt$financing_source = ifelse(sicoin_dt$financing_source == "other_dah", "donacions", sicoin_dt$financing_source)
-  sicoin_dt$data_source = paste0(sicoin_dt$data_source, "-", sicoin_dt$financing_source)
-  sicoin_dt$financing_source = NULL
-  sicoin_dt$grant_period = "none"
-  
-  # files with "Municiaplity" also have "National estimates, removing those for geographic detail purposes
-  dt_muni = sicoin_dt[geog == 'Municipality']
-  dt_national = sicoin_dt[geog == 'National']
-  dt_national <- subset(dt_national, !fileName %in% dt_muni$fileName)
-  sicoin_dt = rbind(dt_muni, dt_national)
-  sicoin_dt$start_date = as.Date(sicoin_dt$start_date)
-  sicoin_dt$end_date = as.Date(sicoin_dt$end_date)
-  return(sicoin_dt)
-}
-
-total_budget_by_grantPeriod = function(dt_g){
-  dt_g[,bug_sum := sum(budget, na.rm = TRUE), by = c('grant_number', "grant_period", "fileName")]
-  return(unique(dt_g[data_source == "fpm", c("grant_number", "grant_period", "bug_sum", "fileName")]))
-}
 
 #-------------------------- 
 # Sum, removing NA's (simple function to add into data tables) 
@@ -188,9 +138,62 @@ sum_na_rm <- function(col){
 
 
 #--------------------------------------------------------------------------------
-# Orders a dataset to be at the quarter-level given a start and an end date. - EMILY WANT TO ADD THIS
+# Orders a dataset to be at the quarter-level given a start and an end date. 
 #--------------------------------------------------------------------------------
-
+expand_to_quarter = function(dt, idVars=NULL, finVars=NULL, startDateVar=NULL, periodVar=NULL){
+  totals_check = dt[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]
+  
+  #Add in date variables 
+  dt[, quarter:=quarter(start_date)]
+  dt[, year:=year(start_date)]
+  
+  dt[, period:=period]
+  dt[, qtr_number:=qtr_number]
+  dt[, qtr_split:=round((period*qtr_number)/90)]
+  dt[, split:=round((period*qtr_number)/90)] #Create this variable twice so you can divide budget/expenditure after expansion
+  
+  #Expand data by the number of days, and generate a variable to iterate over
+  dt <- expandRows(dt, "qtr_split")
+  byVars = names(dt)
+  dt[, seq:=sequence(.N), by=byVars]
+  dt[, seq:=seq-1] #Decrement by 1 because sequence indexes at 1. 
+  
+  #While seq is not 0, go through the loop below.
+  #If seq is greater than or equal to 4, add 1 to year and divide everything by 4. Continue this loop while max(seq) > 4.
+  # If month + seq + 1 equals 12, than
+  dt[, new_qtr:=quarter+seq]
+  max_quarter = max(dt$new_qtr)
+  while (max_quarter>4){
+    dt[new_qtr>4, year:=year+1]
+    dt[new_qtr>4, new_qtr:=new_qtr-4]
+    max_quarter = max(dt$new_qtr)
+  }
+  
+  #Split up budget and expenditure.
+  dt[, budget:=budget/split]
+  dt[, expenditure:=expenditure/split]
+  if (sheet_name!="PR Expenditure_7A"){
+    dt[, lfa_exp_adjustment:=lfa_exp_adjustment/split]
+  }
+  
+  #Make sure you haven't changed any budget/expenditure numbers, and clean up
+  totals_check2 = dt[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]
+  for (i in 1:nrow(totals_check)){
+    stopifnot(totals_check$budget[i]==totals_check2$budget[i] | totals_check$expenditure[i]==totals_check2$expenditure[i])
+  }
+  dt = dt[, -c('period', 'qtr_number', 'split', 'seq', 'quarter')]
+  setnames(dt, 'new_qtr', 'quarter')
+  
+  #Generate new start date variable. 
+  dt[quarter==1, month:="01"]
+  dt[quarter==2, month:="04"]
+  dt[quarter==3, month:="07"]
+  dt[quarter==4, month:="10"]
+  
+  dt[, start_date:=paste0(month, "-01-", year)]
+  dt[, start_date:=as.Date(start_date, "%m-%d-%Y")]
+  dt[, month:=NULL]
+}
 #---------------------------------------------------------------------------------
 # Converts from euros to USD for a given year. 
 # Based off of the FGH team's currency conversion function, but with euros added 
@@ -357,8 +360,10 @@ convert_usd_eur = function(dt, yearVar=NULL){
 }
 
 
-
-#Recursively find the terminal directories within a given filepath. 
+#--------------------------------------------------------------------
+#Recursively find the terminal directories within a given filepath
+#Useful for mapping unclassified files
+#--------------------------------------------------------------------
 get_dirs = function(path, list){
   setwd(path) #Navigate to the given directory. 
   dirs = list.dirs(path, recursive=FALSE) #List the directories in this folder, non-recursively. 

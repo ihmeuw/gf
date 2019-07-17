@@ -109,7 +109,7 @@ final_budgets[grant == 'UGD-708-G13-H', grant:='UGA-708-G13-H']
 gos_data[, start_date:=as.Date(start_date)]
 
 #Drop unneeded variables 
-gos_prioritized_budgets$lfa_exp_adjustment<-NULL
+gos_data$lfa_exp_adjustment<-NULL
 
 #Bind the files together. 
 gos_prioritized_budgets = rbind(final_budgets, gos_data, fill = TRUE) #There are some columns that don't exist in both sources, so fill = TRUE
