@@ -59,7 +59,7 @@ redistribution_mat[is.na(combo_input), code:=substr(input_var, nchar(input_var)-
 	
 # list corresponding variables to define distribution proportions
 names(indicatorMap) = tolower(names(indicatorMap))
-redistribution_mat = merge(redistribution_mat, indicatorMap[, .(indicator, type, code)], by='code', allow.cartesian=T)
+redistribution_mat = merge(redistribution_mat, indicatorMap[, .(indicator, type, code)], by='code', allow.cartesian=T, all=T)
 
 # Fix names where they match with indicator map 
 redistribution_mat[, indicator:=gsub(" ", "_", indicator)]
