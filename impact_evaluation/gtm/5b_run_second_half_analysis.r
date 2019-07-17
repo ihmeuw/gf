@@ -19,7 +19,7 @@ if(Sys.info()[1]=='Windows') stop('This script is currently only functional on I
 rerunAll = TRUE
 
 # model version to use
-modelVersion = 'gtm_malaria_impact4'
+modelVersion = 'gtm_tb_sec_half2'
 # ---------------------------
 
 
@@ -33,12 +33,12 @@ load(outputFile4b)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('health_zone','date',modelVars)
+modelVars = c('department','date',modelVars)
 data = data[, unique(modelVars), with=FALSE]
 # ----------------------------------------------
 
@@ -50,7 +50,7 @@ data = data[, unique(modelVars), with=FALSE]
 file.copy(outputFile4b, outputFile4b_scratch, overwrite=TRUE)
 
 # store T (length of array)
-hzs = unique(data$health_zone)
+hzs = unique(data$department)
 T = length(hzs)
 
 # store cluster command to submit array of jobs
@@ -58,7 +58,7 @@ qsubCommand = paste0('qsub -cwd -N ie2_job_array -t 1:', T,
 	' -l fthread=1 -l m_mem_free=2G -q all.q -P proj_pce -e ', 
 	clustertmpDireo, ' -o ', clustertmpDireo, 
 	' ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5c_run_single_model.r ', 
-	modelVersion, ' 2 FALSE')
+	modelVersion, ' 2 FALSE FALSE') #There is a final argument here that doesn't do anything - it's a hack to get around UNIX vs. DOS EOL characters. EL 7.16.19
 
 # submit array job if we're re-running everything
 if (rerunAll==TRUE) system(qsubCommand)

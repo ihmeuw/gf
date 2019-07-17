@@ -43,7 +43,7 @@
 
 semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_factors=NA, 
 	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, uncertainty=TRUE, 
-	labSize1=5, labSize2=3, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, buffer=c(.25,.25,.25,.25),
+	labSize1=3, labSize2=2.4, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, buffer=c(.25,.25,.25,.25),
 	curved=0, tapered=TRUE) {
 
 	# ------------------------------------------------------
@@ -59,6 +59,8 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	
 	# test any variables not in nodeTable
 	if (!is.null(fitObject)) modelVars = unique(c(fitObject@ParTable$lhs, fitObject@ParTable$rhs))
+	parTable[,lhs:=as.character(lhs)]
+	parTable[,rhs:=as.character(rhs)]
 	if (!is.null(parTable)) modelVars = unique(c(parTable$lhs, parTable$rhs))
 	modelVars = modelVars[modelVars!='']
 	exclVars = modelVars[!modelVars %in% nodeTable$variable]
@@ -252,11 +254,11 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	if (edgeLabels) { 
 		if (curved!=3) { 
 			p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=ymid+(min(edgeTable$ystart)*.25), 
-				label=edge_label), size=labSize2*.8, lwd=0)
+				label=edge_label), size=labSize2, lwd=0)
 		}
 		if (curved==3) { 
 			p = p + geom_text(data=edgeTable[edgeTable$op!='~~'], aes(x=xmid, y=yend, 
-				label=edge_label), size=labSize2*.8, lwd=0)
+				label=edge_label), size=labSize2, lwd=0)
 		}
 	}
 	
@@ -265,7 +267,7 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 		# geom_point(data=nodeTable, aes(y=y, x=x), size=labSize2*5, shape=22, fill='white') + 
 		geom_rect(data=nodeTable, aes(ymin=y-(boxHeight*.5), ymax=y+(boxHeight*.5), xmin=x, xmax=x+boxWidth), 
 			fill='white', color='black') + 
-		geom_text(data=nodeTable, aes(y=y, x=x+(0.05*boxWidth), label=str_wrap(label,19)), size=labSize2, hjust=0) 
+		geom_text(data=nodeTable, aes(y=y, x=x+(0.05*boxWidth), label=str_wrap(label,19)), size=labSize1, hjust=0) 
 	
 	# improve legend
 	p = p + 

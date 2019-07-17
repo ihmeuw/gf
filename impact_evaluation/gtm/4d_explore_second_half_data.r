@@ -15,7 +15,7 @@ library(GGally)
 load(outputFile4b)
 
 # load model object
-modelVersion = 'gtm_tb_sec_half1'
+modelVersion = 'gtm_tb_sec_half2'
 source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 
 # load "node table" for convenient labels
@@ -125,12 +125,12 @@ corPlots = lapply(seq(length(varGroups)), function(g) {
 
 # --------------------------------
 # Save file
-print(paste('Saving:', outputFile4c)) 
+print(paste('Saving:', outputFile4d)) 
 pdf(outputFile4c, height=5.5, width=9)
 for(i in seq(length(tsPlots))) { 
   print(tsPlots[[i]])
 }
-for(i in seq(length(corPlots))) { 
+for(i in seq(length(corPlots))) {
   print(corPlots[[i]])
 }
 for(i in seq(length(histograms))) { 
@@ -140,5 +140,5 @@ for(i in seq(length(histograms))) {
 dev.off()
 
 # save a time-stamped version for reproducibility
-archive(outputFile4c)
+archive(outputFile4d)
 # --------------------------------

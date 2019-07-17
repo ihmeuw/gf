@@ -31,7 +31,7 @@ departments = departments[!is.na(departments)]
 frame = expand.grid(date = seq(1990, 2018, by=1), department = departments)
 
 #Inputs 
-resource_tracking_rect = merge(frame, resource_tracking, by='date', all=TRUE) #Do I need to divide resource tracking dollars here? 
+resource_tracking_rect = merge(frame, resource_tracking, by='date') #Do I need to divide resource tracking dollars here? 
 setDT(resource_tracking_rect)
 stopifnot(nrow(resource_tracking_rect[is.na(date) | is.na(department), ])==0)
 
@@ -46,11 +46,7 @@ setDT(merge_file)
 
 #Check for uniqueness and NAs here. 
 # -----------------------------------------------------------------------------------------------------
-	#Make all NA values 0
-cols = names(merge_file)[!names(merge_file)%in%c('department', 'date', 'year')]
-for (c in cols){
-  merge_file[is.na(get(c)), (c):=0]
-}
+
 
 # --------------------------------------------------------------------------
 # Distribute inputs by department proportionally to activities

@@ -11,7 +11,7 @@
 # Load/prep data
 
 # load
-data = readRDS(outputFile3b)
+data = readRDS(outputFile3a)
 
 # 	
 # 	# set other_dah to NA (not 0) after 2016

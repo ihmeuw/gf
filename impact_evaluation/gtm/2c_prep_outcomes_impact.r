@@ -30,8 +30,8 @@ names(impacts) = gsub("/", "_", names(impacts))
 o_dates = unique(outcomes$date)
 i_dates = unique(impacts$date)
 
-o_dates[!o_dates%in%i_dates] #Nothing. 
-i_dates[!i_dates%in%o_dates] #Nothing. 
+o_dates[!o_dates%in%i_dates] #2018 
+i_dates[!i_dates%in%o_dates] #2009-2011.  
 
 #Departments
 o_depts = unique(outcomes$department)
