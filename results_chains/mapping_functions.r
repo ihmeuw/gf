@@ -105,33 +105,32 @@ modules_over_time = function(country_name, disease_name, start_year, end_year){
 #Return a graph of the funding landscape for the disease in the country over the time period using Financing Global Health actuals. 
 funding_landscape = function(country_name, disease_name, start_year, end_year, include_ghe){
   plot_data = other_dah[country == country_name & disease == disease_name & (year >=start_year& year <=end_year),
-                         .(country, disease, year, financing_source, disbursement)] #Use actual numbers. 
+                         .(country, disease, year, channel_agg, disbursement)] #Use actual numbers. 
   if (include_ghe == TRUE & country_name == "Guatemala"){ #Need to discuss with David. 
       sicoin_merge <- sicoin[year >= start_year & year <=end_year]
       sicoin_merge <- sicoin_merge[disease == disease_name]
-      sicoin_merge <- sicoin_merge[, .(country, disease, year, financing_source, disbursement)]
-      sicoin_merge <- sicoin_merge[, financing_source:="Government Health Expenditure"]
+      sicoin_merge <- sicoin_merge[, .(country, disease, year, channel_agg, disbursement)]
+      sicoin_merge <- sicoin_merge[, channel_agg:="Government Health Expenditure"]
       sicoin_merge$disbursement <- as.numeric(sicoin_merge$disbursement)
       plot_data <- rbind(plot_data, sicoin_merge)
   }
   
   #A hacky fix to change financing source to French for DRC reports
   if (1==2){ #Don't run, just leaving here for documentation
-    plot_data[financing_source == 'Other bilateral assistance', financing_source:='Autre assistance bilatérale']
-    plot_data[financing_source=='NGOs and foundations', financing_source:='ONG et fondations']
-    plot_data[financing_source=="UN agencies, The World Bank and other regional development banks", financing_source:='Organismes onusiens, Banque mondiale et autres banques régionales de développement']
-    plot_data[financing_source=="U.S. bilateral assistance", financing_source:='Assistance bilatérale américaine']
-    plot_data[financing_source=="The Global Fund", financing_source:='Fonds mondial']
+    plot_data[channel_agg == 'Other bilateral assistance', channel_agg:='Autre assistance bilatérale']
+    plot_data[channel_agg=='NGOs and foundations', channel_agg:='ONG et fondations']
+    plot_data[channel_agg=="UN agencies, The World Bank and other regional development banks", channel_agg:='Organismes onusiens, Banque mondiale et autres banques régionales de développement']
+    plot_data[channel_agg=="U.S. bilateral assistance", channel_agg:='Assistance bilatérale américaine']
+    plot_data[channel_agg=="The Global Fund", channel_agg:='Fonds mondial']
   }
   
-  plot_data[, disbursement:=sum(disbursement), by = .(financing_source, year)]
-  plot_data = plot_data[!duplicated(plot_data)]
+  plot_data = plot_data[, .(disbursement=sum(disbursement)), by = .(channel_agg, year)]
   
   #Format variables 
   plot_data$disbursement <- as.numeric(plot_data$disbursement)
   
   #Remove funders with 0 disbursement across time range 
-  plot_data[, sum_funder_db:=sum(disbursement), by = c('financing_source')]
+  plot_data[, sum_funder_db:=sum(disbursement), by = c('channel_agg')]
   plot_data = plot_data[sum_funder_db != 0]
   plot_data[, sum_funder_db:=NULL]
   
@@ -169,19 +168,19 @@ funding_landscape = function(country_name, disease_name, start_year, end_year, i
   }
   
   #Wrap text for expecially long labels
-  plot_data[financing_source == "UN agencies, The World Bank and other regional development banks", 
-            financing_source:= "UN agencies, The World Bank \nand other regional development banks"]
+  plot_data[channel_agg == "UN agencies, The World Bank and other regional development banks", 
+            channel_agg:= "UN agencies, The World Bank \nand other regional development banks"]
   
   #Order plot so global fund is on the bottom. 
-  plot_data$financing_source <- as.factor(plot_data$financing_source)
-  funders <- as.vector(unique(plot_data$financing_source))
+  plot_data$channel_agg <- as.factor(plot_data$channel_agg)
+  funders <- as.vector(unique(plot_data$channel_agg))
   funders = funders[!funders %in% c("The Global Fund")]
   funders = c(funders, "The Global Fund")
-  plot_data$financing_source <- factor(plot_data$financing_source, levels = funders)
-  plot_data = plot_data[order(financing_source)]
+  plot_data$channel_agg <- factor(plot_data$channel_agg, levels = funders)
+  plot_data = plot_data[order(channel_agg)]
   
   #Generate plot 
-  funding_landscape = ggplot(data = plot_data, aes(x = year, y = disbursement, fill = financing_source)) + 
+  funding_landscape = ggplot(data = plot_data, aes(x = year, y = disbursement, fill = channel_agg)) + 
     geom_ribbon(aes(ymin = 0, ymax = disbursement), position = "stack") + 
     theme_bw(base_size = 18) + theme(legend.title = element_blank())+
     scale_y_continuous(expand = c(0,0), breaks = seq(0, y_max, by = plot_ticks), labels = scales::dollar) +

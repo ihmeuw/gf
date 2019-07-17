@@ -62,7 +62,7 @@ ggsave(paste0(uga_save, "/funding_landscape_tb.png"), plot = uga_tb_landscape_10
 ggsave(paste0(uga_save, "/funding_landscape_tb.pdf"), plot = uga_tb_landscape_10_17, height=6, width=14)
 
 #Uganda Malaria Funding Landscape 
-uga_mal_landscape_10_16 <- funding_landscape("Uganda", "malaria", 2010, 2018, FALSE)
+uga_mal_landscape_10_16 <- funding_landscape("Uganda", "malaria", 2010, 2017, FALSE)
 ggsave(paste0(uga_save, "/funding_landscape_mal.png"), plot = uga_mal_landscape_10_16, height=6, width=14)
 ggsave(paste0(uga_save, "/funding_landscape_mal.pdf"), plot = uga_mal_landscape_10_16, height=6, width=14)
 
