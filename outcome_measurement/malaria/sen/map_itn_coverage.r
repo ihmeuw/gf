@@ -42,7 +42,7 @@ shapeData = shapefile(shapeFile)
 
 # clip the raster data to the outline of Senegal
 rasterData = crop(rasterData, extent(shapeData))
-rasterData = mask(rasterData, shapeData_ras)		
+rasterData = mask(rasterData, shapeData)		
 
 # format the raster data as a data.frame
 data = as.data.frame(rasterData, xy=TRUE)
