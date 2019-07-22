@@ -26,7 +26,7 @@ dir = paste0(j, '/Project/Evaluation/GF/')
 inFile = paste0(dir, '/impact_evaluation/cod/prepped_data/second_half_data_pre_model.rdata')
 
 # file listing health zones
-hzFile = paste0(dir, '/outcome_measurement/cod/prepped_data/Unicef HZ extraction_BH.csv')
+hzFile = paste0(dir, '/mapping/cod/ssc_lists/Unicef HZ extraction_BH.csv')
 # ---------------------------------------------------------------------------------------
 
 
