@@ -82,7 +82,7 @@ p1 = ggplot(data[malariaDeaths_under5_rate<cut], aes(x=malariaDeaths_under5_rate
 	geom_vline(data=means, aes(xintercept=malariaDeaths_under5_rate)) + 
 	facet_grid(intervention_label~period_label, scales='free') + 
 	labs(title='Under-5 Malaria Mortality Rates', 
-		subtitle='Comparison between Health Zones with and without Full Package of iCCM Services', 
+		subtitle='Comparison between Health Zones with and without SSCs', 
 		y='Frequency', x='Under-5 Malaria Mortality Rate (per 100,000 population)',
 		caption=paste0('Unit of analysis is health zone-quarters, 2010-2018\n(', 
 		n_trunc1, ' values >', cut, ' not displayed)')) + 
@@ -96,7 +96,7 @@ p2 = ggplot(data[allDeaths_under5_rate<cut], aes(x=allDeaths_under5_rate)) +
 	geom_vline(data=means, aes(xintercept=allDeaths_under5_rate)) + 
 	facet_grid(intervention_label~period_label, scales='free') + 
 	labs(title='Under-5 All-Cause Mortality Rates', 
-		subtitle='Comparison between Health Zones with and without Full Package of iCCM Services', 
+		subtitle='Comparison between Health Zones with and without SSCs', 
 		y='Frequency', x='Under-5 All-Cause Mortality Rate (per 100,000 population)',
 		caption=paste0('Unit of analysis is health zone-quarters, 2010-2018\n(', 
 		n_trunc2, ' values >', cut, ' not displayed)')) + 
@@ -115,7 +115,7 @@ p3 = ggplot(means_ts, aes(y=malariaDeaths_under5_rate, ymin=lower_pctle_malaria,
 	scale_fill_manual(values=c('#33a02c', '#1f78b4')) + 
 	scale_color_manual(values=c('#33a02c', '#1f78b4')) + 
 	labs(title='Malaria Mortality Under 5', 
-		subtitle='Comparing Health Zones with and without Full Package of iCCM Services', 
+		subtitle='Comparing Health Zones with and without SSCs', 
 		y='Under-5 Malaria Mortality Rate (per 10,000 population)', x='Period', 
 		color='Health Zones', fill='Health Zones', 
 		caption='Lines and intervals show median, 20th and 80th percentiles of health zones') + 
@@ -129,7 +129,7 @@ p4 = ggplot(means_ts, aes(y=allDeaths_under5_rate, ymin=lower_pctle_all_cause,
 	scale_fill_manual(values=c('#33a02c', '#1f78b4')) + 
 	scale_color_manual(values=c('#33a02c', '#1f78b4')) + 
 	labs(title='All-Cause Mortality Under 5', 
-		subtitle='Comparing Health Zones with and without Full Package of iCCM Services', 
+		subtitle='Comparing Health Zones with and without SSCs', 
 		y='Under-5 All-Cause Mortality Rate (per 10,000 population)', x='Period', 
 		color='Health Zones', fill='Health Zones', 
 		caption='Lines and intervals show median, 20th and 80th percentiles of health zones') + 
@@ -146,7 +146,8 @@ p5 = ggplot(means, aes(y=fit_malaria, ymin=lwr_malaria, ymax=upr_malaria,
 	geom_pointrange(position=position_dodge(width=.2), size=1) + 
 	geom_line(aes(group=intervention_label), position=position_dodge(width=.2), size=1) + 
 	scale_color_manual(values=c('#33a02c', '#1f78b4')) + 
-	labs(y='Under-5 Malaria Mortality Rate', x='Period', color='Health Zones', 
+	labs(title='Difference-in-Difference Analysis of Health Zones with SSCs', subtitle='Malaria-Specific Mortality', 
+		y='Under-5 Malaria Mortality Rate', x='Period', color='Health Zones', 
 		caption='Points and ranges show midpoint, upper and lower 95% confidence interval from model') + 
 	theme_bw()
 
@@ -156,7 +157,8 @@ p6 = ggplot(means, aes(y=fit_all_cause, ymin=lwr_all_cause, ymax=upr_all_cause,
 	geom_pointrange(position=position_dodge(width=.2), size=1) + 
 	geom_line(aes(group=intervention_label), position=position_dodge(width=.2), size=1) + 
 	scale_color_manual(values=c('#33a02c', '#1f78b4')) + 
-	labs(y='Under-5 Malaria Mortality Rate', x='Period', color='Health Zones', 
+	labs(title='Difference-in-Difference Analysis of Health Zones with SSCs', subtitle='All-Cause Mortality', 
+		y='Under-5 All-Cause Mortality Rate', x='Period', color='Health Zones', 
 		caption='Points and ranges show midpoint, upper and lower 95% confidence interval from model') + 
 	theme_bw()
 # ------------------------------------------------------------------------------
