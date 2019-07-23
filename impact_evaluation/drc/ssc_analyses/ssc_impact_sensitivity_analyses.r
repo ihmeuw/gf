@@ -99,8 +99,8 @@ means[grepl('poisson',variable), model:='Poisson']
 means = dcast.data.table(means, period_label+intervention_label+period+intervention+malariaDeaths_under5_rate+allDeaths_under5_rate+model~est)
 
 # traditional DiD graph for each type of model
-ggplot(means, aes(y=fit, ymin=lwr, ymax=upr, x=period_label, color=intervention_label)) + 
-	geom_pointrange(position=position_dodge(width=.2), size=1) + 
+p1 = ggplot(means, aes(y=fit, ymin=lwr, ymax=upr, x=period_label, color=intervention_label)) + 
+	geom_pointrange(position=position_dodge(width=.2)) + 
 	geom_line(aes(group=intervention_label), position=position_dodge(width=.2), size=1) + 
 	scale_color_manual(values=c('#33a02c', '#1f78b4')) + 
 	facet_wrap(~model) + 
@@ -108,3 +108,11 @@ ggplot(means, aes(y=fit, ymin=lwr, ymax=upr, x=period_label, color=intervention_
 		caption='Points and ranges show midpoint, upper and lower 95% confidence interval from model') + 
 	theme_bw()
 # ------------------------------------------------------------------------------
+
+
+# -----------------------------------
+# Save
+pdf(graphFile, height=5.5, width=8)
+p1
+dev.off()
+# -----------------------------------

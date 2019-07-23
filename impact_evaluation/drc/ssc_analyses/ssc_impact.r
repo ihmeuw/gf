@@ -176,5 +176,6 @@ p6
 dev.off()
 
 # save results
-save(list=ls(), file=outFile)
+dropObjs = c('inFile', 'outFile', 'graphFile')
+save(list=ls()[!ls() %in% dropObjs], file=outFile)
 # -----------------------------------
