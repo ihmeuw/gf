@@ -41,7 +41,7 @@ mapping_dir = paste0(dir, "modular_framework_mapping/")
 
 #Code filepaths 
 code_dir = "./resource_tracking/prep/"
-common_dir = paste0(code_dir, "/_common/")
+common_dir = paste0(code_dir, "_common/")
 
 fgh_raw = paste0(dir, "_fgh/raw_data/")
 fgh_prepped = paste0(dir, "_fgh/prepped_data/")
