@@ -24,11 +24,11 @@ if (prep_files == TRUE){
                     "secondary_recipient", "language_financial", "grant_period", "grant_status", "start_date_financial", "file_iteration", "geography_detail", 
                     "loc_name", "mod_framework_format", "file_currency", "pudr_semester")
   stopifnot(desired_cols%in%names(file_list))
-  stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr"))
-  stopifnot((unique(file_list$file_iteration))%in%c("final", "initial", "revision"))
+  stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr", "performance_framework", "document"))
+  stopifnot(sort(unique(file_list$file_iteration))==c('final', 'initial', 'revision'))
   
   #Only keep inputs with financial information, and make sure you've kept date column before prioritizing GOS. 
-  file_list = file_list[!is.na(sheet_financial)]
+  file_list = file_list[data_source%in%c('fpm', 'pudr') & !is.na(sheet_financial)]
   stopifnot(nrow(file_list[is.na(start_date_financial)])==0)
 
   #Prioritize GOS data where we have it
@@ -63,10 +63,19 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){
+    # Set up file path 
     folder = "budgets"
     folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-    version = ifelse(file_list$file_iteration[i] == "initial", "iterations", "")
-    file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+    if (file_list$file_iteration[i]=="initial"){
+      version = "iterations"
+    } else if (file_list$file_iteration[i]=="revision"){
+      version= "revisions"
+    } else {
+      version = ""
+    }
+    grant_period = file_list$grant_period[i]
+    
+    file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
     if (version != ""){
       file_dir = paste0(file_dir, version, "/")
     }

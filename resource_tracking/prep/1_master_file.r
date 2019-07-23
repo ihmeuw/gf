@@ -43,7 +43,7 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
-    country = "uga" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+    country = "cod" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
     master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
     export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
   }
