@@ -33,13 +33,16 @@ graphFile = paste0(dir, '/impact_evaluation/cod/visualizations/ssc_analyses/DiD_
 # ------------------------------------
 # Load/prep data
 
-# load data produced by ssc_impact.r
+# load data produced by set_up_data.r
 load(inFile)
 # ------------------------------------
 
 
 # ------------------------------------------------------------------------------
 # Run alternative analyses
+
+# difference in differences with OLS on malaria mortality
+lmFit1 = lm(malariaDeaths_under5_rate~intervention*period, data)
 
 # offset log transform
 offset = quantile(data[malariaDeaths_under5_rate>0]$malariaDeaths_under5_rate, .01)
