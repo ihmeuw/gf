@@ -147,6 +147,9 @@ summary[, department:=d]
 # ------------------------------------------------------------------
 # Save model output and clean up
 
+# reassign the temporary output location if the parent script is set to runInParallel FALSE
+if ('runInParallel' %in% ls()) if (runInParallel==FALSE) clustertmpDir2 = tempIeDir
+
 # make unique file name
 if(modelStage==1) outputFile5tmp1 = paste0(clustertmpDir2, 'first_half_semFit_', task_id, '.rds')
 if(modelStage==1) outputFile5tmp2 = paste0(clustertmpDir2, 'first_half_summary_', task_id, '.rds')

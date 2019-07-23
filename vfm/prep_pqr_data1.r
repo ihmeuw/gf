@@ -6,16 +6,23 @@
 #-------------------------------------------------------------------
 
 #-------------------------------------------------------------------
-#Set up libraries, and read data 
+# Set up libraries, directories, files
 #-------------------------------------------------------------------
 rm(list = ls())
 library(data.table)
-j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
-dir = paste0(j, "/Project/Evaluation/GF/vfm/unit_cost_data")
-setwd(dir)
 
-full_pqr = fread("download_4.4.19/PQR_ExternalReportingView.csv", stringsAsFactors = FALSE)
+j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
+dir = paste0(j, "/Project/Evaluation/GF/vfm/unit_cost_data/")
+
+inFile = "download_4.4.19/PQR_ExternalReportingView.csv"
+outFile = "prepped_data/prepped_full_pqr.rds"
+
+#-------------------------------------------------------------------
+# Read in data
+#-------------------------------------------------------------------
+full_pqr = fread(paste0(dir, inFile), stringsAsFactors = FALSE)
 pqr = copy(full_pqr)
+
 #-------------------------------------------------------------------
 # Drop columns that aren't needed and rename 
 #-------------------------------------------------------------------
@@ -176,68 +183,69 @@ stopifnot(unique(subset$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'mala
 #-----------------------------------------------------------------------
 # Fix the 'category' variable so it can be used to make disease subsets
 #-----------------------------------------------------------------------
-subset[product_category%in%c("Pruebas de diagnÃ³stico", "Tests de diagnostic", "Diagnostic test"), product_category:="DIAGNOSTIC TESTS"]
-subset[product_category%in%c("Mosquitero/IRS", "Bednet/IRS", "Moustiquaire/IRS"), product_category:="INSECTICIDE-TREATED NET"]
-subset[product_category%in%c("Anti-Retroviral", "AntirÃ©troviral", "Antirretroviral"), product_category:="ANTI-RETROVIRAL"]
-subset[product_category%in%c("PrÃ©servatif", "Condom", "Preservativo"), product_category:="CONDOM"]
-subset[product_category%in%c("Anti-malaria medicine", "AntipaludÃ©en", "AntimalÃ¡rico"), product_category:="ANTI-MALARIAL MEDICINE"]
-subset[product_category%in%c("Antituberculeux", "Anti-TB medicine", "Antituberculoso"), product_category:="ANTI-TB MEDICINE"]
+subset[, product_category := tolower(product_category)]
+subset[, product_category := gsub('-', '_', product_category)]
+subset[, product_category := gsub('/', '_', product_category)]
+subset[, product_category := gsub(' ', '_', product_category)]
+subset[product_category %in% c('anti_malaria_medicine', 'bednet_irs'), product_disease := 'malaria']
+subset[product_category %in% c('anti_tb_medicine'), product_disease := 'tb']
+subset[product_category %in% c('anti_retroviral', 'condom'), product_disease := 'hiv']
+subset[product_category == 'diagnostic_test' & grepl("HIV", product_name_en), product_disease := 'hiv']
+subset[product_category == 'diagnostic_test' & grepl("Malaria", product_name_en), product_disease := 'malaria']
+subset[product_category == 'diagnostic_test' & grepl("TB", product_name_en), product_disease := 'tb']
 
 #-------------------------------------------------------------------
 # Flag some variables that are disease-specific THESE NEED TO BE VERIFIED BY A CLINICIAN EKL 6/10/19
 #-------------------------------------------------------------------
-hiv_prev = c("Female Condom", "Male Latex Condom")
-hiv_test = c("HIV & hepatitis/syphilis combined tests", "HIV CD4 testing consumables/test kits", "HIV CD4 testing equipment", "HIV RDT and EIA", "HIV Testing Equipment (other than molecular)", "HIV virological testing consumables/test kits", 
-             "HIV virological testing equipment", "Microscopes & accessories")
-hiv_treat = c("Lamivudine (3TC)", "Zidovudine (AZT or ZDV)","Efavirenz (EFV)", "Nevirapine (NVP)", "Tenofovir (TDF)", "Abacavir (ABC)", "Abacavir+Lamivudine - FDC", "Stavudine (d4T)", "Saquinavir (SQV)", "Ritonavir (RTV)", "Raltegravir", 
-              "Lamivudine+Nevirapine+Stavudine - FDC", "Lamivudine+Nevirapine+Zidovudine - FDC", "Lamivudine+Stavudine - FDC", "Lamivudine+Tenofovir - FDC", "Lamivudine+Zidovudine - FDC", "Darunavir (TCM)", "Atazanavir+Ritonavir - FDC", 
-              "Efavirenz+Emtricitabine+Tenofovir - FDC", "Efavirenz+Lamivudine+Tenofovir - FDC", "Emtricitabine+Tenofovir - FDC", "Etravirine (ETV)", "Lopinavir+Ritonavir - FDC", "Dolutegravir (as sodium salt)", "Didanosine (ddI)")
-
-mal_prev = c("Duranet", "Insecticide-treated net (ITN)", "Long-Lasting Insecticidal Net (LLIN)", "MAGNet", "MiraNet", "Permanet 2.0", "Permanet 3.0", "Netprotect", "zz-Pirimiphos Methyl CS", "Yorkool LN", "Yahe LN", "Royal Sentry", 
-             "Olyset", "Dawa-Plus 2.0")
-mal_test = c("Malaria RDT: Pan", "Malaria RDT: P.f./P.v", "Malaria RDT: P.f.", "Microscopes & accessories", "Malaria RDT: P.f/Pan")
-mal_treat = c("Quinine", "Artesunate", "Artesunate + [Sulfadoxine+Pyrimethamine] - Co-blis", "Artesunate + Amodiaquine - Co-blister", "Artesunate + Amodiaquine - FDC", "Artesunate + Mefloquine - Co-blister", "Artesunate + Mefloquine FDC", 
-              "Artesunate+Pyronaridine tetraphosphate", "Artemether", "Artemether+Lumefantrine - FDC", "Sulfadoxine+Pyrimethamine - FDC")
-
-tb_prev = c()
-tb_test = c("TB testing consumables/test kits", "TB molecular diagnostics", "Microscopes & accessories")
-tb_treat = c("Isoniazid", "Rifampicin", "Pyrazinamide", "Streptomycin", "Ethambutol", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", "Ethambutol+Isoniazid+Rifampicin - FDC", 
-             "Amikacin", "Protionamide", "PAS Sodium", "Ofloxacin", "Cycloserine", "Capreomycin", "Bedaquiline", "Amoxicillin+Clavulanate - FDC", "Ethambutol+Isoniazid - FDC", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", 
-             "Ethionamide", "Kanamycin", "Levofloxacin", "Moxifloxacin", "Meropenem", "Linezolid", "Clofazimine")
-  
-
-tb_drugs1 = c("Rifampicin" , "Pyrazinamide", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", "Isoniazid", "Ethambutol+Isoniazid+Rifampicin - FDC", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", "Ethambutol+Isoniazid - FDC")
-tb_drugs2 = c("Capreomycin", "Clofazimine",   "Cycloserine" , "Kanamycin", "Moxifloxacin",  "Bedaquiline", "Ethionamide", "Levofloxacin", "Linezolid". "Protionamide", "Amikacin", "Streptomycin")
-
-#Check that these variables have captured everything 
-classified = c(hiv_prev, hiv_test, hiv_treat, mal_prev, mal_test, mal_treat, tb_prev, tb_test, tb_treat)
-unique(subset[!product_name_en%in%classified, .(product_name_en)][order(product_name_en)])
-
-
-hiv_subset = subset[product_name_en%in%hiv_prev | product_name_en%in%hiv_test | product_name_en%in%hiv_treat]
-mal_subset = subset[product_name_en%in%mal_prev | product_name_en%in%mal_test | product_name_en%in%mal_treat]
-tb_subset = subset[product_name_en%in%tb_prev | product_name_en%in%tb_test | product_name_en%in%tb_treat]
+# hiv_prev = c("Female Condom", "Male Latex Condom")
+# hiv_test = c("HIV & hepatitis/syphilis combined tests", "HIV CD4 testing consumables/test kits", "HIV CD4 testing equipment", "HIV RDT and EIA", "HIV Testing Equipment (other than molecular)", "HIV virological testing consumables/test kits", 
+#              "HIV virological testing equipment", "Microscopes & accessories")
+# hiv_treat = c("Lamivudine (3TC)", "Zidovudine (AZT or ZDV)","Efavirenz (EFV)", "Nevirapine (NVP)", "Tenofovir (TDF)", "Abacavir (ABC)", "Abacavir+Lamivudine - FDC", "Stavudine (d4T)", "Saquinavir (SQV)", "Ritonavir (RTV)", "Raltegravir", 
+#               "Lamivudine+Nevirapine+Stavudine - FDC", "Lamivudine+Nevirapine+Zidovudine - FDC", "Lamivudine+Stavudine - FDC", "Lamivudine+Tenofovir - FDC", "Lamivudine+Zidovudine - FDC", "Darunavir (TCM)", "Atazanavir+Ritonavir - FDC", 
+#               "Efavirenz+Emtricitabine+Tenofovir - FDC", "Efavirenz+Lamivudine+Tenofovir - FDC", "Emtricitabine+Tenofovir - FDC", "Etravirine (ETV)", "Lopinavir+Ritonavir - FDC", "Dolutegravir (as sodium salt)", "Didanosine (ddI)")
+# 
+# mal_prev = c("Duranet", "Insecticide-treated net (ITN)", "Long-Lasting Insecticidal Net (LLIN)", "MAGNet", "MiraNet", "Permanet 2.0", "Permanet 3.0", "Netprotect", "zz-Pirimiphos Methyl CS", "Yorkool LN", "Yahe LN", "Royal Sentry", 
+#              "Olyset", "Dawa-Plus 2.0")
+# mal_test = c("Malaria RDT: Pan", "Malaria RDT: P.f./P.v", "Malaria RDT: P.f.", "Microscopes & accessories", "Malaria RDT: P.f/Pan")
+# mal_treat = c("Quinine", "Artesunate", "Artesunate + [Sulfadoxine+Pyrimethamine] - Co-blis", "Artesunate + Amodiaquine - Co-blister", "Artesunate + Amodiaquine - FDC", "Artesunate + Mefloquine - Co-blister", "Artesunate + Mefloquine FDC", 
+#               "Artesunate+Pyronaridine tetraphosphate", "Artemether", "Artemether+Lumefantrine - FDC", "Sulfadoxine+Pyrimethamine - FDC")
+# 
+# tb_prev = c()
+# tb_test = c("TB testing consumables/test kits", "TB molecular diagnostics", "Microscopes & accessories")
+# tb_treat = c("Isoniazid", "Rifampicin", "Pyrazinamide", "Streptomycin", "Ethambutol", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", "Ethambutol+Isoniazid+Rifampicin - FDC", 
+#              "Amikacin", "Protionamide", "PAS Sodium", "Ofloxacin", "Cycloserine", "Capreomycin", "Bedaquiline", "Amoxicillin+Clavulanate - FDC", "Ethambutol+Isoniazid - FDC", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", 
+#              "Ethionamide", "Kanamycin", "Levofloxacin", "Moxifloxacin", "Meropenem", "Linezolid", "Clofazimine")
+#   
+# 
+# tb_drugs1 = c("Rifampicin" , "Pyrazinamide", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", "Isoniazid", "Ethambutol+Isoniazid+Rifampicin - FDC", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", "Ethambutol+Isoniazid - FDC")
+# tb_drugs2 = c("Capreomycin", "Clofazimine",   "Cycloserine" , "Kanamycin", "Moxifloxacin",  "Bedaquiline", "Ethionamide", "Levofloxacin", "Linezolid". "Protionamide", "Amikacin", "Streptomycin")
+# 
+# #Check that these variables have captured everything 
+# classified = c(hiv_prev, hiv_test, hiv_treat, mal_prev, mal_test, mal_treat, tb_prev, tb_test, tb_treat)
+# unique(subset[!product_name_en%in%classified, .(product_name_en)][order(product_name_en)])
+# 
+# 
+# hiv_subset = subset[product_name_en%in%hiv_prev | product_name_en%in%hiv_test | product_name_en%in%hiv_treat]
+# mal_subset = subset[product_name_en%in%mal_prev | product_name_en%in%mal_test | product_name_en%in%mal_treat]
+# tb_subset = subset[product_name_en%in%tb_prev | product_name_en%in%tb_test | product_name_en%in%tb_treat]
 
 #-------------------------------------------------------------------
 # Save data 
 #-------------------------------------------------------------------
-
-saveRDS(subset, "prepped_data/basic_pqr.rds")
-saveRDS(hiv_subset, "prepped_data/hiv_pqr.rds")
-saveRDS(mal_subset, "prepped_data/mal_pqr.rds")
-saveRDS(tb_subset, "prepped_data/tb_pqr.rds")
-
-
+saveRDS(subset, paste0(dir, outFile))
+# saveRDS(hiv_subset, paste0(dir, "prepped_data/hiv_pqr.rds"))
+# saveRDS(mal_subset, paste0(dir, "prepped_data/mal_pqr.rds"))
+# saveRDS(tb_subset, paste0(dir, "prepped_data/tb_pqr.rds"))
+#-------------------------------------------------------------------
 
 
-#--------------------------------------------------------------
+
+#-------------------------------------------------------------------
 # AUDREY IGNORE CODE BELOW HERE! 
-#--------------------------------------------------------------
-# 
-# 
-# #-------------------------------------------------------------------
+#-------------------------------------------------------------------
+#-------------------------------------------------------------------
 # # Make a specialized Guatemala TB grants file 
-# #-------------------------------------------------------------------
+#-------------------------------------------------------------------
 # gtm = subset[country_name=="Guatemala" & grant_disease%in%c('tb', 'hiv/tb')]
 # gtm = gtm[order(-grant_start_date)]
 # saveRDS(gtm, "J:/Project/Evaluation/GF/impact_evaluation/gtm/prepped_data/pqr_data.rds")

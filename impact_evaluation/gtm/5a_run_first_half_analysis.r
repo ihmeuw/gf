@@ -3,6 +3,7 @@
 # 
 # 1/18/2019
 # This runs the SEM dose-response model (David presets)
+# The current working directory should be the root of this repository
 # qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5a_run_first_half_analysis.r
 # This runs the SEM dose-response model (Emily presets) 
 # qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=6G -q all.q 
@@ -15,11 +16,8 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # ---------------------------
 # Settings
 
-# check operating system
-if(Sys.info()[1]=='Windows') stop('This script is currently only functional on IHME\'s cluster')
-
-# whether to rerun everything or only jobs that don't already have output
-rerunAll = TRUE
+# whether to run each department in parallel or not
+runInParallel = FALSE
 
 # model version to use
 modelVersion = 'gtm_tb_first_half2'
@@ -30,6 +28,10 @@ modelVersion = 'gtm_tb_first_half2'
 # Load data
 set.seed(1)
 load(outputFile4a)
+
+# store T (number of jobs)
+hzs = unique(data$department)
+T = length(hzs)
 # ---------------------------
 
 
@@ -48,39 +50,55 @@ data = data[, unique(modelVars), with=FALSE] #Why do we have this step here? EL 
 
 
 # --------------------------------------------------------------
-# Run model (each health zone in parallel)
+# Run model with each department in parallel (if specified by runInParallel)
+if (runInParallel==TRUE) {
 
-# save copy of input file for jobs
-if (rerunAll==TRUE) file.copy(outputFile4a, outputFile4a_scratch, overwrite=TRUE)
+	# save copy of input file for jobs
+	file.copy(outputFile4a, outputFile4a_scratch, overwrite=TRUE)
 
-# store T (length of array)
-hzs = unique(data$department)
-T = length(hzs)
-
-# store cluster command to submit array of jobs
-qsubCommand = paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
+	# store cluster command to submit array of jobs
+	qsubCommand = paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
 		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5c_run_single_model.r ', 
 		modelVersion, ' 1 FALSE FALSE') #There is a final argument here that doesn't do anything - it's a hack to get around UNIX vs. DOS EOL characters. EL 7.16.19
+			
+	# submit array job to the cluster if we're running this in parallel
+	system(qsubCommand)
 
-# submit array job if we're re-running everything
-if (rerunAll==TRUE) system(qsubCommand)
-
-# submit specific jobs that don't have output files if not re-running everything
-if (rerunAll==FALSE) { 
-	for(i in seq(T)) {
-		tmpFile = paste0(clustertmpDir2, 'first_half_summary_', i, '.rds')
-		if (file.exists(tmpFile)) next
-		system(gsub(paste0('1:',T), i, qsubCommand))
+	# wait for jobs to finish (2 files per job)
+	while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
+		Sys.sleep(5)
+		print(paste(length(list.files(clustertmpDir2, pattern='first_half_summary_')), 'of', T, 'files found...'))
 	}
 }
+# --------------------------------------------------------------
 
-# wait for jobs to finish (2 files per job)
-while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
-	Sys.sleep(5)
-	print(paste(length(list.files(clustertmpDir2, pattern='first_half_summary_')), 'of', T, 'files found...'))
+
+# --------------------------------------------------------------
+# Run model with each department serially (if specified by runInParallel)
+if (runInParallel==FALSE) {
+
+	# reassign the temporary output location
+	clustertmpDir2 = tempIeDir
+	
+	# store arguments needed to run 5c_run_single_model.r 
+	# arguments 1-4 are meaningless system variables, 
+	# 5 is the model object name, 
+	# 6 is whether to run the first or second half, 
+	# 7 is whether to do a test run
+	args = c('a', 'b', 'c', 'd', modelVersion, '1', 'FALSE')
+	
+	# run each iteration sequentially 
+	for(task_id in seq(T)) {
+		source('./impact_evaluation/gtm/5c_run_single_model.r')
+	}	
 }
+# --------------------------------------------------------------
+
+
+# --------------------------------------------------------------
+# Organize results
 
 # collect output (summary and urFit)
 print('Collecting output...')

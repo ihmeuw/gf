@@ -17,7 +17,7 @@ library(RColorBrewer)
 # Files and directories
 
 # output files
-graphFile = paste0(ieDir, '../visualizations/miscellaneous/sem_vs_glm.pdf')
+graphFile = paste0(ieDir, '../visualizations/miscellaneous/sem_vs_glm_pc.pdf')
 # --------------------------------------------------------------------------
 
 
@@ -35,6 +35,10 @@ data2=copy(data)
 means2 = copy(means)
 summaries2 = copy(summaries)
 urFits2 = copy(urFits)
+
+# drop the single mistaken health zone that didn't run as per-capita
+means1 = means1[grepl('_pc', lhs)]
+urFits1 = urFits1[grepl('_pc', lhs)]
 
 # collapse unrelated fits to national level
 # (approximation of standard error, would be better as Monte Carlo simulation)
