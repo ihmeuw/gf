@@ -27,7 +27,7 @@ standardizeHZNames = function(nameVector=NULL) {
 	alternateNames = fread(altNamesFile, header=TRUE)
 	
 	# prep data table
-	alternateNames = unique(alternateNames[, c('health_zone','hz_shp1','hz_shp2', 'hz_snis', 'hz_pnlp', 'hz_snis_cleaned', 'hz_pnlt', 'hz_sv'), with=FALSE])
+	alternateNames = unique(alternateNames[, c('health_zone','hz_shp1','hz_shp2', 'hz_snis', 'hz_pnlp', 'hz_snis_cleaned', 'hz_pnlt', 'hz_sv' ,'other_names'), with=FALSE])
 	alternateNames = melt(alternateNames, id.vars=c('health_zone'), value.name='alternate_name')
 	
 	# make sure standard names are also an option as an input
