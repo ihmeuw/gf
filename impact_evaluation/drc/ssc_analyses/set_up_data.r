@@ -3,6 +3,7 @@
 # 
 # 7/23/2019
 # Set up the data for ssc_impact.r
+# The current working directory should be the root of this repo
 # ------------------------------------------------------------------------------
 
 
@@ -28,6 +29,9 @@ inFile = paste0(dir, '/impact_evaluation/cod/prepped_data/second_half_data_pre_m
 
 # file listing health zones
 hzFile = paste0(dir, '/mapping/cod/ssc_lists/prepped_hz_list.csv')
+
+# file identifying dps's
+dpsFile = './core/hz_renaming_file.csv'
 
 # output files
 outFile = paste0(dir, '/impact_evaluation/cod/prepped_data/ssc_analyses/DiD_input_data.rdata')
@@ -65,7 +69,7 @@ hzList$health_zone[!hzList$health_zone %in% untransformed$health_zone]
 # list health zones that will get counted as the control group
 unique(untransformed$health_zone[!untransformed$health_zone %in% hzList$health_zone])
 
-# identify "intervention" health zones in the data
+# identify 'intervention' health zones in the data
 hzList[, intervention:=1]
 data = merge(data, hzList, by='health_zone', all.x=TRUE)
 data[is.na(intervention), intervention:=0]
@@ -74,6 +78,16 @@ data[, intervention_label:=ifelse(intervention==1, '2. Intervention', '1. Contro
 # identify before/after
 data[, period:=ifelse(date<2017, 0, 1)]
 data[, period_label:=ifelse(period==1, '2. After 2017', '1. Before 2017')]
+
+# subset to only GF DPSs
+dpsList = unique(fread(dpsFile)[dps!='0',c('dps','health_zone'),with=FALSE])
+gfDPS = c('bas-uele', 'equateur', 'haut-uele', 'ituri', 'kinshasa', 'kongo-central', 
+		'kwango', 'kwilu', 'mai-ndombe', 'maniema', 'mongala', 'nord-kivu', 
+		'nord-ubangi', 'sud-ubangi', 'tshopo', 'tshuapa')
+dpsList[dps=='kasai-central' & health_zone=='lubunga', health_zone:='lubunga2'] # this is about to get dropped because PMI
+dpsList[dps=='nord-ubangi' & health_zone=='bili', health_zone:='bili2'] # both "bili" health zones are in the intervention
+data = merge(data, dpsList, by='health_zone', all.x=TRUE)
+data = data[dps %in% gfDPS]
 # ------------------------------------------------------------------------------
 
 

@@ -10,7 +10,6 @@
 # Set up R
 rm(list=ls())
 library(data.table)
-library(lme4)
 library(ggplot2)
 # -------------------
 
