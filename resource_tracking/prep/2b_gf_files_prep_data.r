@@ -81,7 +81,6 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       file_dir = paste0(file_dir, version, "/")
     }
     
-    inFile = paste0(file_dir, file_list$file_name[i])
     args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], file_list$period_financial[i])
     
     if(file_list$function_financial[i] == 'detailed' & file_list$sheet_financial[i]%in%general_detailed_budget_sheet_financials){ #Prep standardized detailed budgets. 

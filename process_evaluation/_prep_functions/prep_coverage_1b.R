@@ -9,15 +9,15 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line.
-  folder = "pudrs"
-  version = ifelse(file_list$file_iteration[i] == "initial", "iterations", "")
-  dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-  if (version != ""){
-    dir = paste0(file_dir, version, "/")
-  }
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet_coverage_1b[i]
-  language = file_list$language_coverage_1b[i]
+  # folder = "pudrs"
+  # version = ifelse(file_list$file_iteration[i] == "initial", "iterations", "")
+  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+  # if (version != ""){
+  #   dir = paste0(file_dir, version, "/")
+  # }
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet_coverage_1b[i]
+  # language = file_list$language_coverage_1b[i]
 
   STOP_COL = 6 #What column starts to have sub-names? (After you've dropped out first 2 columns)
   
