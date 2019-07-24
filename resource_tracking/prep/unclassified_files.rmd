@@ -1,0 +1,138 @@
+---
+title: "Unclassified GF Files"
+author: "Emily Linebarger"
+date: "July 23, 2019"
+output: pdf_document
+classoption: landscape
+---
+
+```{r setup, echo=FALSE, warning=FALSE}
+#------------------------------------------------
+# AUTHOR: Emily Linebarger
+# PURPOSE: ACtively find the files we haven't classified 
+#   for the RT database, and classify as best you can. 
+# DATE: June 2019 
+#-------------------------------------------------
+repo_root = "C:/Users/elineb/Documents/gf/"
+source(paste0(repo_root, "resource_tracking/prep/_common/shared_functions.r"))
+library(data.table)
+library(stringr)
+library(knitr)
+library(openxlsx)
+
+#Make a list of all of the files that live in each country's resource tracking universe, 
+# using recursive search functions 
+countries = c('cod', 'gtm', 'sen', 'uga')
+base_dirs = c()
+for (country in countries){
+  active = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/active")
+  not_active = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/not_active")
+  unclassified = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/unclassified_files_to_review")
+
+  base_dirs = c(base_dirs, active, not_active, unclassified)
+} 
+
+terminal_dirs = character()
+file_list = character() #What columns do you want to have here?
+for (path in base_dirs){
+  new_dirs = get_dirs(path, character())
+  terminal_dirs = append(terminal_dirs, new_dirs)
+  for (dir in terminal_dirs){
+    file_list = append(file_list, get_files(dir))
+  }
+}
+
+file_list = data.table(file_list)
+names(file_list) = "path"
+
+
+#Format this file list a bit more nicely - tag file types, and drop unnecessary ones. 
+file_list[grepl(".pdf", tolower(path)), is_pdf:=TRUE]
+
+file_list = file_list[is.na(is_pdf)]
+
+file_list[, file_ending:=substr(path, nchar(path)-4, nchar(path))]
+file_list[, file_ending:=tolower(file_ending)]
+file_list[tolower(substr(file_ending, 3, 5))=="xls", file_ending:=".xls"]
+file_list[tolower(substr(file_ending, 3, 5))=="png", file_ending:=".png"]
+file_list[tolower(substr(file_ending, 3, 5))=="zip", file_ending:=".zip"]
+file_list[tolower(substr(file_ending, 3, 5))=="csv", file_ending:=".csv"]
+file_list[tolower(substr(file_ending, 3, 5))=="doc", file_ending:=".doc"]
+file_list[tolower(substr(file_ending, 3, 5))=="jpg", file_ending:=".jpg"]
+file_list[tolower(substr(file_ending, 3, 5))=="msg", file_ending:=".msg"]
+
+
+file_endings = c('.xlsx', '.msg', '.xlsb', '.xlsm', '.xls', '.docx', '.jpg', '.doc', '.csv', '.zip', '.png')
+```
+
+*Warning: The following file endings will be dropped. 
+```{r intro2, echo=FALSE, warning=FALSE}
+kable(unique(file_list[!file_ending%in%file_endings, .(file_ending)]))
+
+#Visual check to make sure these aren't real endings, and then drop. 
+file_list = file_list[file_ending%in%file_endings]
+
+#Only worry about .xlsx or .csv extensions for the moment. 
+file_list = file_list[file_ending%in%c('.xlsx', '.xlsb', '.xlsm', '.xls', '.csv')]
+
+#-------------------------------------------------------------------
+# Pull out the file name, and several other pieces of information. 
+# Grab grant, grant period, and data source to start. 
+#-------------------------------------------------------------------
+file_list[, path_length:=str_count(path, "/")]
+file_list[, loc_name:=tstrsplit(path, "/", keep=7)]
+
+# 13 forward slashes in path 
+file_list[path_length==13, file_name:=tstrsplit(path, "/", keep=14)]
+file_list[path_length==13, data_source:=tstrsplit(path, "/", keep=12)]
+file_list[path_length==13, grant_period:=tstrsplit(path, "/", keep=11)]
+file_list[path_length==13, grant:=tstrsplit(path, "/", keep=10)]
+
+#12 slashes 
+file_list[path_length==12, file_name:=tstrsplit(path, "/", keep=13)]
+file_list[path_length==12, data_source:=tstrsplit(path, "/", keep=12)]
+file_list[path_length==12, grant_period:=tstrsplit(path, "/", keep=11)]
+file_list[path_length==12, grant:=tstrsplit(path, "/", keep=10)]
+
+#11 slashes 
+file_list[path_length==11, file_name:=tstrsplit(path, "/", keep=12)]
+file_list[path_length==11, data_source:=tstrsplit(path, "/", keep=11)]
+file_list[path_length==11, grant:=tstrsplit(path, "/", keep=10)]
+
+#10 slashes 
+file_list[path_length==10, file_name:=tstrsplit(path, "/", keep=11)]
+file_list[path_length==10, grant:=tstrsplit(path, "/", keep=10)]
+
+#9 slashes 
+file_list[path_length==9, file_name:=tstrsplit(path, "/", keep=10)]
+file_list[path_length==9, data_source:=tstrsplit(path, "/", keep=9)]
+
+stopifnot(nrow(file_list[is.na(file_name)])==0)
+
+#Make file list unique
+file_list = unique(file_list)
+#--------------------------------------------
+# Now, merge together your documented file lists, and remove these files 
+#-----------------------------------------------------
+master_list = data.table(read.xlsx("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/master_file_list.xlsx"))
+
+file_list[file_name%in%master_list$file_name, classified:=TRUE]
+file_list[is.na(classified), classified:=FALSE]
+
+#Make a count variable to run statistics later. 
+file_list[, count:=1]
+```
+
+# Unclassified Global Fund Files 
+## (*Subset to excels and .csvs)
+
+Out of a total `r nrow(file_list)` files, `r nrow(file_list[classified==FALSE])` are unclassified. 
+Broken down by country, this is: 
+```{r intro, echo=FALSE, warning=FALSE}
+kable(file_list[, .(unclassified=sum(count)), by=c('loc_name')])
+```
+
+The entire list of unclassified files, ordered by grant, grant period, and data source, is: 
+```{r list, echo=FALSE, warning=FALSE}
+kable(file_list[classified==FALSE, .(grant, grant_period, data_source, file_name)][order(grant, grant_period, data_source)])
+```
