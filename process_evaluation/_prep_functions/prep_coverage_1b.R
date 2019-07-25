@@ -9,20 +9,29 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line.
-  # folder = "pudrs"
-  # version = ifelse(file_list$file_iteration[i] == "initial", "iterations", "")
-  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
-  # if (version != ""){
-  #   dir = paste0(file_dir, version, "/")
-  # }
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet_coverage_1b[i]
-  # language = file_list$language_coverage_1b[i]
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  if (file_list$file_iteration[i]=="initial"){
+    version = "iterations"
+  } else if (file_list$file_iteration[i]=="revision"){
+    version= "revisions"
+  } else {
+    version = ""
+  }
+  grant_period = file_list$grant_period[i]
+
+  dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  if (version != ""){
+    dir = paste0(dir, version, "/")
+  }
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet_coverage_1b[i]
+  language = file_list$language_programmatic[i]
 
   STOP_COL = 6 #What column starts to have sub-names? (After you've dropped out first 2 columns)
   
   # Sanity check: Is this sheet name one you've checked before? 
-  verified_sheet_names <- c('Coverage Indicators_1B')
+  verified_sheet_names <- c('Coverage Indicators_1B', 'Indicateurs Couverture_1B')
   if (!sheet_name%in%verified_sheet_names){
     print(sheet_name)
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
@@ -37,6 +46,11 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   module_col = grep("Module|Módulo", gf_data)
   stopifnot(length(module_col)==1)
   name_row = grep("Module|Módulo", gf_data[[module_col]])
+  extra_name_row = grep("Module Name", gf_data[[module_col]])
+  if (length(extra_name_row)>0){
+    gf_data = gf_data[-extra_name_row, ]
+    name_row = name_row[name_row!=extra_name_row]
+  }
   stopifnot(length(name_row)==1)
   
   names = gf_data[name_row, ]
@@ -47,7 +61,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   #Drop out first 2 columns, and comments column. 
   gf_data = gf_data[, !comment_col, with=FALSE] 
-  gf_data = gf_data[, 3:ncol(gf_data)]
+  # gf_data = gf_data[, 3:ncol(gf_data)] #EL Why was this here? 
   
   #------------------------------------------------------
   # 2. Reset names after subset above. 
@@ -73,6 +87,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   #Remove diacritical marks from names to make grepping easier
   names = fix_diacritics(names)
+  names = gsub("\\n", "", names)
   
   if (language == "fr"){
     reference_col = grep("reference", names)
@@ -102,6 +117,8 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   if (length(result_col)>1){ #The word 'result' appears several times for English files, and you just want the first column here. 
     result_col = result_col[1]
   }
+  
+  # Need a way to dynamically pull names. 
   
   #Are you only pulling one observation, and do these match the format of files you've seen before? 
   stopifnot(length(reference_col)==1 & reference_col == 7) 

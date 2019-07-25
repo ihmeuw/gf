@@ -16,8 +16,8 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #Uncomment variables below and run line-by-line. 
   # dir = file_dir
   # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
+  # sheet_name = file_list$sheet_financial[i]
+  # start_date = file_list$start_date_financial[i]
   # period = file_list$period[i]
   # disease = file_list$disease[i]
   # grant = file_list$grant[i]
@@ -47,8 +47,8 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # 1. Subset columns.
   #-------------------------------------
   #Find the correct column indices based on a grep condition.
-  module_col <- grep("Modular Approach - Modules", gf_data)
-  intervention_col <- grep("Modular Approach - Interventions", gf_data)
+  module_col <- grep("Modular Approach - Modules|Démarche modulaire - Modules", gf_data)
+  intervention_col <- grep("Modular Approach - Interventions|Démarche modulaire - Interventions", gf_data)
   budget_col <- grep("Budget for Reporting Period", gf_data)
   expenditure_col <- grep("Actual Expenditure", gf_data)
   lfa_adjustment_col <- grep("Local Fund Agent Adjustment on Expenditures", gf_data)
@@ -136,8 +136,8 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # 2. Subset rows
   #-------------------------------------
   #Select only the section of the excel that's broken up by intervention
-  start_row <- grep("modular approach", tolower(gf_data$module))
-  end_row <- grep("grand total", tolower(gf_data$module))
+  start_row <- grep("modular approach|démarche modulaire", tolower(gf_data$module))
+  end_row <- grep("grand total|total général", tolower(gf_data$module))
   
   if (sheet_name == "ALF RFR_7"){
     start_row = grep("Macrocatégorie", gf_data$module)
