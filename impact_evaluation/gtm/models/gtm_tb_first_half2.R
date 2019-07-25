@@ -34,7 +34,7 @@ model = '
   PLHIV_started_on_IPT_out_cumulative ~ PLHIV_Screened_for_TB_act_cumulative + Isoniazid_Distributed_act_cumulative + date
   Cases_Notified_in_Prisons_out_cumulative ~ exp_T1_6_cumulative + date
 	
-
+  
   #These are all leftover examples from the malaria model that I have not updated yet for TB---------------------------------------------------------------------
 	# latent variables
 	
@@ -47,5 +47,21 @@ model = '
 
 	# fixed covariances
 	# budget_M2_3_cumulative ~~ 0*budget_M3_1_cumulative
+
+  #Linked input variables 
+  exp_T1_2_cumulative~~ghe_T1_2_cumulative
+  exp_T1_2_cumulative~~other_dah_T1_2_cumulative
+  ghe_T1_2_cumulative~~other_dah_T1_2_cumulative
+
+  other_dah_T1_1_cumulative~~exp_T1_1_cumulative
+  other_dah_T1_1_cumulative~~ghe_T1_1_cumulative
+  exp_T1_1_cumulative~~ghe_T1_1_cumulative
+
+  other_dah_T3_1_cumulative~~exp_T3_1_cumulative
+  other_dah_T3_2_cumulative~~exp_T3_2_cumulative
+  other_dah_T3_ALL_cumulative~~exp_T3_ALL_cumulative
+  other_dah_TB_ALL_cumulative~~exp_TB_ALL_cumulative
+  other_dah_HIV_TB_ALL_cumulative~~exp_HIV_TB_ALL_cumulative
+  
 
 '

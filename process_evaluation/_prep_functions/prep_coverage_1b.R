@@ -8,7 +8,7 @@
 prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   #TROUBLESHOOTING HELP
-  #Uncomment variables below and run line-by-line.
+  # #Uncomment variables below and run line-by-line.
   folder = "budgets"
   folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
   if (file_list$file_iteration[i]=="initial"){
@@ -57,11 +57,15 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   names = tolower(names)
   names = gsub("\\.", "_", names)
   
+  #Drop out the comments column, and record ID column. 
+  # If the module column is #3, drop the first two rows. 
   comment_col = grep("comment", names) 
-  
-  #Drop out first 2 columns, and comments column. 
-  gf_data = gf_data[, !comment_col, with=FALSE] 
-  # gf_data = gf_data[, 3:ncol(gf_data)] #EL Why was this here? 
+  record_id_col = grep("record id", tolower(gf_data))
+  stopifnot(length(record_id_col)==1 | is.na(record_id_col)) #Just don't drop more than one column here. 
+  gf_data = gf_data[, !c(comment_col, record_id_col), with=FALSE] 
+  if (module_col==3){
+    gf_data = gf_data[, 3:ncol(gf_data)] #Drop the first two columns in this case, they're unnecessary. 
+  }
   
   #------------------------------------------------------
   # 2. Reset names after subset above. 
@@ -77,9 +81,10 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   names = gsub("\\.", "_", names)
   
   names(gf_data) = names
-  #Drop everything before the name row, because it isn't needed 
+ 
+   #Drop everything before the name row, because it isn't needed 
   gf_data = gf_data[(name_row+1):nrow(gf_data)] #Go ahead and drop out the name row here too because you've already captured it
-  sub_names = gf_data[1, ]
+  sub_names = as.character(gf_data[1, ])
   
   #------------------------------------------------------
   # 3. Rename columns 
@@ -100,7 +105,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
     target_col = grep("target", names)
     result_col = grep("result", names) 
     lfa_result_col = grep("verified result", names)
-    gf_result_col = grep("global fund validated result", names)
+    gf_result_col = grep("global fund validated result|validated result", names)
   } else if (language=="esp"){
     reference_col = grep("linea de base", names) 
     target_col = grep("meta", names)
@@ -108,7 +113,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
     lfa_result_col = grep("verified result", names)
     gf_result_col = grep("global fund validated result", names)
   }
-  reference_col = reference_col[reference_col>STOP_COL]
+  reference_col = reference_col[reference_col>=STOP_COL]
   target_col = target_col[target_col>STOP_COL]
   result_col = result_col[result_col>STOP_COL]
   lfa_result_col = lfa_result_col[lfa_result_col>STOP_COL]
@@ -118,29 +123,120 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
     result_col = result_col[1]
   }
   
-  # Need a way to dynamically pull names. 
+  #Validate that you grabbed exactly 5 columns. 
+  flagged_col_list = c(reference_col, target_col, result_col, lfa_result_col, gf_result_col)
+  stopifnot(length(flagged_col_list)==5)
   
-  #Are you only pulling one observation, and do these match the format of files you've seen before? 
-  stopifnot(length(reference_col)==1 & reference_col == 7) 
-  stopifnot(length(target_col)==1 & target_col==12)
-  stopifnot(length(result_col)==1 & result_col==15)
-  stopifnot(length(lfa_result_col)==1 & lfa_result_col==21)
-  stopifnot(length(gf_result_col)==1 & gf_result_col==28)
+  #------------------------------------------------------------
+  # DYNAMICALLY RE-ASSIGN NAMES (DUE TO MULTIPLE FILE FORMATS)
+  #------------------------------------------------------------
+  #1. Tag the names that you currently have. 
+  #2. Match them from a list of previously tagged names. 
+  #3. Build up a list of correctly named vectors in the order in which it appears. 
+  # 4. Reset names 
   
-  #If so, go ahead and reset names. 
-  new_names = c("Module", "Indicator", "Geography", "Cumulative Target?", "Reverse Indicator?", "Country", "Baseline: N", "Baseline: D", "Baseline: %", 
-            "Baseline: Year", "Baseline: Source", "Target: N", "Target: D", "Target: %", "Result: N", "Result: D", "Result: %", "Result: Source", "Result: Achievement Ratio", 
-            "Result: Data validation", "LFA Verified Result: N", "LFA Verified Result: D", "LFA Verified Result: %", "LFA Verified Result: Source", 
-            "LFA Verified Result: Achievement Ratio", "LFA verification method", "LFA Verified Result: Data validation", "GF Verified Result: N", 
-            "GF Verified Result: D", "GF Verified Result: %", "GF Verified Result: Source", "GF Verified Result: Data Validation")
-  stopifnot(length(new_names) == ncol(gf_data))
-  names(gf_data) <- new_names
+  #---------------------------------------------
+  # MAIN NAMES 
+  #---------------------------------------------
+  
+  #Acceptable raw column names - will be matched to corrected names below. 
+  module_names = c('module')
+  standard_ind_names = c('standard coverage indicator', 'indicateurs')
+  custom_ind_names = c('custom coverage indicator')
+  geography_names = c('geographic area')
+  cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
+  reverse_ind_names = c("reverse indicator?")
+  
+  baseline_names = c('baseline (if applicable)', "reference")
+  target_names = c('target', 'cible')
+  result_names = c('result', 'resultats')
+  lfa_result_names = c('verified result')
+  gf_result_names = c('validated result')
+  
+  #Correct these matched names. 
+  names[which(names%in%module_names)] = "module"
+  names[which(names%in%standard_ind_names)] = "standard_coverage_indicator"
+  names[which(names%in%custom_ind_names)] = "custom_coverage_indicator"
+  names[which(names%in%geography_names)] = "geography"
+  names[which(names%in%cumulative_target_names)] = "cumulative_target"
+  names[which(names%in%reverse_ind_names)] = "reverse_indicator"
+  
+  names[which(names%in%baseline_names)] = "baseline"
+  names[which(names%in%target_names)] = "target"
+  names[which(names%in%result_names)] = "pr_result"
+  names[which(names%in%lfa_result_names)] = "lfa_result"
+  names[which(names%in%gf_result_names)] = "gf_result"
+  
+  
+  #Where 'achievement ratio' exists in the names vector, move to the sub-names vector 
+  achievement_ratio_names = c('achievement ratio', "taux d'accomplissement", "achivement ratio(final one is calculated by gos)")
+  ach_ratio_indices = which(names%in%achievement_ratio_names)
+  stopifnot(is.na(unique(sub_names[ach_ratio_indices])))
+  sub_names[ach_ratio_indices] = "achievement_ratio"
+  names[ach_ratio_indices] = NA
+  
+  #Where 'verification method' exists in the names vector, move to the sub-names vector 
+  verification_method_names = c('verification method')
+  ver_method_indices = which(names%in%verification_method_names)
+  stopifnot(is.na(unique(sub_names[ver_method_indices])))
+  sub_names[ver_method_indices] = "verification_method"
+  names[ver_method_indices] = NA
+  
+  #Make sure you've tagged all names correctly so far. 
+  stopifnot(names%in%c("module", "standard_coverage_indicator", "custom_coverage_indicator", "geography", 
+                       "cumulative_target", "reverse_indicator", "baseline", "target", "pr_result", "lfa_result", "gf_result") | is.na(names))
+  
+  #----------------------------------
+  # SUB-NAMES 
+  #----------------------------------
+  num_names = c("N#")
+  denom_names = c("D#")
+  proportion_names = c("%")
+  year_names = c("Year")
+  verification_source_names = c("Source")
+  
+  sub_names[which(sub_names%in%num_names)] = "n"
+  sub_names[which(sub_names%in%denom_names)] = "d"
+  sub_names[which(sub_names%in%proportion_names)] = "%"
+  sub_names[which(sub_names%in%year_names)] = "year"
+  sub_names[which(sub_names%in%verification_source_names)] = "source"
+  
+  #Certain column names are okay to change to NA here. 
+  na_names = c("If sub-national, please specify under the \"Comments\" Column")
+  sub_names[which(sub_names%in%na_names)] = NA
+  
+  stopifnot(sub_names%in%c('n', 'd', '%', 'year', 'source', 'achievement_ratio', 'verification_method') | is.na(sub_names))
+  
+  #------------------------------------------
+  # REASSIGN NAMES USING CORRECTED VECTORS
+  
+  #First, extend each of the 'flag' column names to cover the whole span. 
+  names[reference_col:target_col-1] = "baseline"
+  names[target_col:result_col-1] = "target"
+  names[result_col:lfa_result_col-1] = "pr_result"
+  names[lfa_result_col:gf_result_col-1] = "lfa_result"
+  names[gf_result_col:length(names)] = "gf_result"
+  stopifnot(!is.na(names))
+  
+  #Second, append names and subnames. 
+  stopifnot(length(names)==length(sub_names))
+  final_names = names
+  for (i in 1:length(sub_names)){
+    if (!is.na(sub_names[i])){
+      final_names[i] = paste0(names[i], "_", sub_names[i])
+    }
+  }
+  
+  #Make sure your name vector still matches the length of the data! 
+  stopifnot(length(final_names)==ncol(gf_data))
+  names(gf_data) = final_names
   #------------------------------------------------------
   # 2. Drop out empty rows 
   #------------------------------------------------------
   
-  #Drop out rows that have NAs 
-  gf_data = gf_data[!(is.na(Module) & is.na(Indicator)), ] 
+  #Drop out rows that have NAs, and drop the sub names column. 
+  gf_data = gf_data[!(is.na(module) & is.na(standard_coverage_indicator)), ] 
+  gf_data = gf_data[-c(1)]
   
   return(gf_data)
 }
