@@ -44,10 +44,23 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   # 1. Select columns, and fix names 
   #------------------------------------------------------
   module_col = grep("Module|Módulo", gf_data)
+  extra_module_col = grep("HIVAIDS_Module", gf_data)
+  if (length(extra_module_col)>0){
+    if (verbose){
+      print("Extra name rows are being dropped.")
+      print(gf_data[[extra_module_col]])
+    }
+    gf_data[[extra_module_col]]<-NULL
+    module_col = module_col[module_col!=extra_module_col]
+  }
   stopifnot(length(module_col)==1)
   name_row = grep("Module|Módulo", gf_data[[module_col]])
   extra_name_row = grep("Module Name", gf_data[[module_col]])
   if (length(extra_name_row)>0){
+    if (verbose){
+      print("Extra name rows are being dropped.")
+      print(gf_data[extra_name_row])
+    }
     gf_data = gf_data[-extra_name_row, ]
     name_row = name_row[name_row!=extra_name_row]
   }
@@ -81,6 +94,10 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   names = gsub("\\.", "_", names)
   
   names(gf_data) = names
+  
+  #Sometimes, there is a row right before the names row that says where the LFA and Global Fund verified sections begin, respectively. 
+  pre_name_row = name_row-1
+  lfa_start_col = grep()
  
    #Drop everything before the name row, because it isn't needed 
   gf_data = gf_data[(name_row+1):nrow(gf_data)] #Go ahead and drop out the name row here too because you've already captured it
@@ -151,7 +168,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   target_names = c('target', 'cible')
   result_names = c('result', 'resultats')
   lfa_result_names = c('verified result')
-  gf_result_names = c('validated result')
+  gf_result_names = c('validated result', "global fund validated result")
   
   #Correct these matched names. 
   names[which(names%in%module_names)] = "module"
@@ -169,20 +186,32 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   
   #Where 'achievement ratio' exists in the names vector, move to the sub-names vector 
-  achievement_ratio_names = c('achievement ratio', "taux d'accomplissement", "achivement ratio(final one is calculated by gos)")
+  achievement_ratio_names = c('achievement ratio', "taux d'accomplissement", "achivement ratio(final one is calculated by gos)", "achivement ratio")
   ach_ratio_indices = which(names%in%achievement_ratio_names)
   stopifnot(is.na(unique(sub_names[ach_ratio_indices])))
   sub_names[ach_ratio_indices] = "achievement_ratio"
   names[ach_ratio_indices] = NA
   
   #Where 'verification method' exists in the names vector, move to the sub-names vector 
-  verification_method_names = c('verification method')
+  verification_method_names = c('verification method', "data validation checks on pr data", "data validation checks on lfa data", "data validation checks on gf data")
   ver_method_indices = which(names%in%verification_method_names)
   stopifnot(is.na(unique(sub_names[ver_method_indices])))
   sub_names[ver_method_indices] = "verification_method"
   names[ver_method_indices] = NA
   
+  #Where 'source' exists in the names vector, move to the sub-names vector 
+  data_source_names = c('source')
+  source_indices = which(names%in%data_source_names)
+  stopifnot(is.na(unique(sub_names[source_indices])))
+  sub_names[source_indices] = "source"
+  names[source_indices] = NA
+  
   #Make sure you've tagged all names correctly so far. 
+  if (verbose){
+    print("These are the variable names that haven't been correctly tagged.")
+    print(names[!names%in%c("module", "standard_coverage_indicator", "custom_coverage_indicator", "geography", 
+                              "cumulative_target", "reverse_indicator", "baseline", "target", "pr_result", "lfa_result", "gf_result", NA)])
+  }
   stopifnot(names%in%c("module", "standard_coverage_indicator", "custom_coverage_indicator", "geography", 
                        "cumulative_target", "reverse_indicator", "baseline", "target", "pr_result", "lfa_result", "gf_result") | is.na(names))
   
@@ -192,8 +221,8 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   num_names = c("N#")
   denom_names = c("D#")
   proportion_names = c("%")
-  year_names = c("Year")
-  verification_source_names = c("Source")
+  year_names = c("Year", "Année")
+  verification_source_names = c("Source", "source")
   
   sub_names[which(sub_names%in%num_names)] = "n"
   sub_names[which(sub_names%in%denom_names)] = "d"
@@ -202,9 +231,13 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   sub_names[which(sub_names%in%verification_source_names)] = "source"
   
   #Certain column names are okay to change to NA here. 
-  na_names = c("If sub-national, please specify under the \"Comments\" Column")
+  na_names = c("If sub-national, please specify under the \"Comments\" Column", "Si infranationale, veuillez préciser dans la colonne des commentaires")
   sub_names[which(sub_names%in%na_names)] = NA
   
+  if (verbose){
+    print("These are the sub-names that haven't been correctly tagged.")
+    print(sub_names[!sub_names%in%c('n', 'd', '%', 'year', 'source', 'achievement_ratio', 'verification_method', NA)])
+  }
   stopifnot(sub_names%in%c('n', 'd', '%', 'year', 'source', 'achievement_ratio', 'verification_method') | is.na(sub_names))
   
   #------------------------------------------
