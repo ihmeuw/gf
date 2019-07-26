@@ -54,7 +54,7 @@ if (prep_1b){
       if (i == 1){
         coverage1B = tmpData
       } else {
-        coverage1B = rbind(tmpData, coverage1B)
+        coverage1B = rbind(tmpData, coverage1B, fill=T) #You won't always have the same column names, and that's ok. 
       }
       print(paste0(i, " ", file_list$grant[i], " ", file_list$grant_period[i])) ## if the code breaks, you know which file it broke on
 

@@ -115,6 +115,9 @@ if (file.exists(clustertmpDir1)!=TRUE) dir.create(clustertmpDir1)
 if (file.exists(clustertmpDir2)!=TRUE) dir.create(clustertmpDir2) 
 if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo) 
 }
+
+#Add a temporary IE dir for when running on a local computer - this should match clustertmpDir2 when running on cluster!
+tempIeDir = paste0('/ihme/scratch/users/', username, '/impact_evaluation/parallel_files/')
 # ---------------------------------------------------------------------------------
 
 

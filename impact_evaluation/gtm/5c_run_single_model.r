@@ -96,8 +96,8 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # Run model
 
 # fit model
-if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
-if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3), fixed.x=F)
+if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3), fixed.x=F)
 
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)
@@ -148,7 +148,7 @@ summary[, department:=d]
 # Save model output and clean up
 
 # reassign the temporary output location if the parent script is set to runInParallel FALSE
-if ('runInParallel' %in% ls()) if (runInParallel==FALSE) clustertmpDir2 = tempIeDir
+if ('runInParallel' %in% ls()) if (runInParallel==FALSE){clustertmpDir2 = tempIeDir}
 
 # make unique file name
 if(modelStage==1) outputFile5tmp1 = paste0(clustertmpDir2, 'first_half_semFit_', task_id, '.rds')
