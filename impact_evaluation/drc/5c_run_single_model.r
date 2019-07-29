@@ -22,6 +22,8 @@ source('./impact_evaluation/drc/set_up_r.r')
 if (!'task_id' %in% ls()) task_id <- as.integer(Sys.getenv("SGE_TASK_ID"))
 
 # store non-system command arguments
+print(commandArgs())
+print(commandArgs(trailingOnly=TRUE))
 if (!'args' %in% ls()) args = commandArgs(trailingOnly=TRUE)
 if(length(args)==0) stop('No commandArgs found!') 
 
