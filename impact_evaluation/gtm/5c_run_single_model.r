@@ -14,8 +14,8 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-task_id = 2
-args = c('TRUE', 'TRUE', 'TRUE', 'TRUE', 'gtm_tb_first_half2', '1', 'TRUE')
+# task_id = 2
+# args = c('TRUE', 'TRUE', 'TRUE', 'TRUE', 'gtm_tb_first_half2', '1', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -28,13 +28,13 @@ print(paste('Task ID:', task_id))
 if(length(args)==0) stop('No commandArgs found!') 
 
 # the first argument should be the model version to use
-modelVersion = args[5]
+modelVersion = args[1]
 
 # the second argument should be the "model stage" (1 or 2)
-modelStage = as.numeric(args[6])
+modelStage = as.numeric(args[2])
 
 # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
-testRun = as.logical(args[7])
+testRun = as.logical(args[3])
 
 # print for log
 print(paste('Model Version:', modelVersion))
