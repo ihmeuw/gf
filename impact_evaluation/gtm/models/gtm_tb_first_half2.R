@@ -19,7 +19,7 @@ model = '
 
   Isoniazid_Distributed_act_cumulative ~ exp_T1_2_cumulative + ghe_T1_2_cumulative + other_dah_T1_2_cumulative + exp_R1_ALL_cumulative + date
   Total_Drugs_Distributed_act_cumulative ~ exp_T1_2_cumulative + exp_R1_ALL_cumulative + other_dah_T1_2_cumulative + ghe_T1_2_cumulative + date
-  Number_of_Cases_Screened_for_MDR_act_cumulative ~ exp_T3_1_cumulative + other_dah_T3_1_cumulative + date
+  Number_of_Cases_Screened_for_MDR_act_cumulative ~ exp_T3_ALL_cumulative + other_dah_T3_1_cumulative + date
   PLHIV_Screened_for_TB_act_cumulative ~ exp_T2_ALL_cumulative + date
   TB_Patients_Tested_for_HIV_act_cumulative ~ exp_T2_ALL_cumulative + date
 	
@@ -29,7 +29,7 @@ model = '
   HIV_TB_Cases_Notified_out_cumulative ~ PLHIV_Screened_for_TB_act_cumulative + TB_Patients_Tested_for_HIV_act_cumulative + date
   MDR_Cases_Notified_out_cumulative ~ Number_of_Cases_Screened_for_MDR_act_cumulative + date
   Cases_Started_on_Treatment_out_cumulative ~ exp_T1_1_cumulative + ghe_T1_1_cumulative + other_dah_T1_1_cumulative + Isoniazid_Distributed_act_cumulative + date #Can add outreach if data come through
-  MDR_Cases_Started_Treatment_out_cumulative ~ exp_T3_2_cumulative + other_dah_T3_2_cumulative + Number_of_Cases_Screened_for_MDR_act_cumulative + date
+  MDR_Cases_Started_Treatment_out_cumulative ~ exp_T3_ALL_cumulative + other_dah_T3_2_cumulative + Number_of_Cases_Screened_for_MDR_act_cumulative + date
   Additional_Cases_Detected_via_ACF_out_cumulative ~ exp_T1_5_cumulative + date #Change this to Outreach_teams_formed when that is populated
   PLHIV_started_on_IPT_out_cumulative ~ PLHIV_Screened_for_TB_act_cumulative + Isoniazid_Distributed_act_cumulative + date
   Cases_Notified_in_Prisons_out_cumulative ~ exp_T1_6_cumulative + date
@@ -57,8 +57,8 @@ model = '
   other_dah_T1_1_cumulative~~ghe_T1_1_cumulative
   exp_T1_1_cumulative~~ghe_T1_1_cumulative
 
-  other_dah_T3_1_cumulative~~exp_T3_1_cumulative
-  other_dah_T3_2_cumulative~~exp_T3_2_cumulative
+  other_dah_T3_1_cumulative~~exp_T3_ALL_cumulative
+  other_dah_T3_2_cumulative~~exp_T3_ALL_cumulative
   other_dah_T3_ALL_cumulative~~exp_T3_ALL_cumulative
   other_dah_TB_ALL_cumulative~~exp_TB_ALL_cumulative
   other_dah_HIV_TB_ALL_cumulative~~exp_HIV_TB_ALL_cumulative
