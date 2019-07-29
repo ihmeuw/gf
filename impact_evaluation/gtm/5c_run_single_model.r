@@ -14,8 +14,8 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 2
-# args = c('TRUE', 'TRUE', 'TRUE', 'TRUE', 'gtm_tb_first_half2', '1', 'TRUE')
+# task_id = 1
+# args = c('gtm_tb_first_half2', '1', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -83,6 +83,7 @@ if(any(warning)) {
   warning('Some variables have nearly-zero variance! The model is going to fail...')
 }
 
+
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
 scaling_factors = data.table(date=1)
@@ -96,13 +97,24 @@ for(v in numVars) {
 for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # ---------------------------------------------------------------------------------------------------
 
+#Test for linear dependence 
+# x = as.matrix(subData)
+# linear_dependence = findDepMat(x, rows=T, tol=1e-12)
+# if (any(linear_dependence)){
+#   stop("There is linear dependence in the model columns - the model will fail.")
+# }
+
+# Test for negative eigenvectors - not possible with a non-symmetric matrix? 
+# x = as.matrix(subData)
+# is.positive.definite(x)
+
 
 # ----------------------------------------------------------------
 # Run model
 
 # fit model
-if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3), fixed.x=T)
-if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3), fixed.x=T)
+if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
+if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)
