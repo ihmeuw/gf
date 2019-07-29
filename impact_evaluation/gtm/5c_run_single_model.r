@@ -14,7 +14,7 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-task_id = 10
+task_id = 2
 args = c('TRUE', 'TRUE', 'TRUE', 'TRUE', 'gtm_tb_first_half2', '1', 'TRUE')
 
 # ----------------------------------------------
@@ -66,8 +66,8 @@ subData = subData[, unique(modelVars), with=FALSE]
 
 # jitter to avoid perfect collinearity
 for(v in names(subData)[!names(subData)%in%c('department','date')]) { 
-  if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
-  if (!all(subData[[v]]>0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
+  if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
+  if (!all(subData[[v]]>=0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
 }
 
 # test to see if there are any zero-variance variables in this department (after jittering)
@@ -79,7 +79,7 @@ if(any(test)) {
   stop()
 }
 if(any(warning)) { 
-  print(modelVars[warning==TRUE])
+  warning(modelVars[warning==TRUE])
   warning('Some variables have nearly-zero variance! The model is going to fail...')
 }
 
