@@ -14,8 +14,8 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 10
-# args = c('gtm_tb_first_half2', '1', 'TRUE')
+task_id = 10
+args = c('TRUE', 'TRUE', 'TRUE', 'TRUE', 'gtm_tb_first_half2', '1', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -72,10 +72,15 @@ for(v in names(subData)[!names(subData)%in%c('department','date')]) {
 
 # test to see if there are any zero-variance variables in this department (after jittering)
 test = subData[,lapply(.SD,var), .SDcols=modelVars[modelVars!='department']]==0
+warning = subData[,lapply(.SD,var), .SDcols=modelVars[modelVars!='department']]<.5
 if(any(test)) { 
   print('Some variables have zero variance! The model is going to fail...')
   print(modelVars[test==TRUE])
   stop()
+}
+if(any(warning)) { 
+  print(modelVars[warning==TRUE])
+  warning('Some variables have nearly-zero variance! The model is going to fail...')
 }
 
 # rescale variables to have similar variance
@@ -96,8 +101,8 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # Run model
 
 # fit model
-if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3), fixed.x=F)
-if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3), fixed.x=F)
+if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3), fixed.x=T)
+if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3), fixed.x=T)
 
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)
