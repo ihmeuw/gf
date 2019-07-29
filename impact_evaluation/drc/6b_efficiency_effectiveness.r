@@ -113,9 +113,9 @@ setnames(means2, c('label.x','label.y'), c('label_lhs','label_rhs'))
 # Display some statistics
 
 # ITN, ACT and RDT shipment costs
+commodity_costs = NULL
 for(c in c('ITN','ACT','RDT')) {
 	output = paste0(c, '_received_cumulative')
-	if (!output %in% pooled_means1$lhs) output = gsub('_cumulative','_cumulative',output) 
 	commodity_cost = pooled_means1[lhs==output,c('label_rhs','est','se'), with=F]
 	commodity_cost = commodity_cost[, .(est=sum(est), se=mean(se))]
 	commodity_cost[, lower:=est+(1.96*se)]
@@ -130,10 +130,11 @@ for(c in c('ITN','ACT','RDT')) {
 	}
 	print(paste0('Overall cost to ship one ', c, ':'))
 	print(commodity_cost)
+	commodity_cost[, commodity:=c]
+	commodity_cost = commodity_cost[,c('commodity','est','lower','upper'), with=FALSE]
+	commodity_cost = commodity_cost[, lapply(.SD, round, 2), by='commodity']
+	commodity_costs = rbind(commodity_costs, commodity_cost)
 }
-
-# pooled, mediated means comparing different types of treatment
-
 # -----------------------------------------------
 
 
@@ -251,6 +252,7 @@ p7 = ggplot(pooled_means1[lhs %in% actVars],
 # Save
 print(paste('Saving:', outputFile6b)) 
 pdf(outputFile6b, height=5.5, width=9)
+grid.table(commodity_costs)
 print(p1)
 print(p2)
 print(p3)
