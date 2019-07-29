@@ -14,8 +14,8 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 1
-# args = c('gtm_tb_second_half2', '2', 'TRUE')
+task_id = 1
+args = c('gtm_tb_sec_half2', '2', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line

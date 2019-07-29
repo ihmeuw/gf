@@ -14,7 +14,7 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # Settings
 
 # whether to run each department in parallel or not
-runInParallel = FALSE
+runInParallel = TRUE
 
 # model version to use
 modelVersion = 'gtm_tb_sec_half2'
@@ -40,7 +40,7 @@ source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('department','date',modelVars)
+modelVars = c('department',modelVars)
 data = data[, unique(modelVars), with=FALSE]
 # ----------------------------------------------
 
