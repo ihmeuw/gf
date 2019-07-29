@@ -28,13 +28,13 @@ print(paste('Task ID:', task_id))
 if(length(args)==0) stop('No commandArgs found!') 
 
 # the first argument should be the model version to use
-modelVersion = args[7]
+modelVersion = args[1]
 
 # the second argument should be the "model stage" (1 or 2)
-modelStage = as.numeric(args[8])
+modelStage = as.numeric(args[2])
 
 # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
-testRun = as.logical(args[9])
+testRun = as.logical(args[3])
 
 # print for log
 print(paste('Model Version:', modelVersion))
