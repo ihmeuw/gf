@@ -40,7 +40,7 @@ source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('department',modelVars)
+modelVars = c('department','date',modelVars)
 data = data[, unique(modelVars), with=FALSE]
 # ----------------------------------------------
 
@@ -63,9 +63,9 @@ if (runInParallel==TRUE) {
 	system(qsubCommand)
 
 	# wait for jobs to finish (2 files per job)
-	while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
+	while(length(list.files(clustertmpDir2, pattern='second_half_summary_'))<(T)) { 
 		Sys.sleep(5)
-		print(paste(length(list.files(clustertmpDir2, pattern='first_half_summary_')), 'of', T, 'files found...'))
+		print(paste(length(list.files(clustertmpDir2, pattern='second_half_summary_')), 'of', T, 'files found...'))
 	}
 }
 # --------------------------------------------------------------
