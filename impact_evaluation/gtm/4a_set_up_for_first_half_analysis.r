@@ -12,8 +12,6 @@
 
 # load
 data = readRDS(outputFile3)
-table(data$exp_T3_1)
-print(data[!is.na(exp_T3_2), c('date','department','exp_T3_2'),with=F], nrow=330)
 # 	
 # 	# set other_dah to NA (not 0) after 2016
 # 	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017 & get(v)==0, (v):=NA]
