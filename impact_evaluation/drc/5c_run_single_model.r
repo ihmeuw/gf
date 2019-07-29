@@ -22,7 +22,8 @@ source('./impact_evaluation/drc/set_up_r.r')
 if (!'task_id' %in% ls()) task_id <- as.integer(Sys.getenv("SGE_TASK_ID"))
 
 # store non-system command arguments
-print('Vanilla commandArgs()...')
+print('Handling arguments...')
+print('Full commandArgs()...')
 print(commandArgs())
 print('commandArgs(trailingOnly=TRUE)...')
 print(commandArgs(trailingOnly=TRUE))
@@ -50,6 +51,7 @@ print(paste('Test Run:', testRun))
 # ---------------------------------------------------------------------------------------------------
 # Load data
 set.seed(1)
+print('Loading data...')
 if (Sys.info()[1]!='Windows' & modelStage==1) load(outputFile4a_scratch)
 if (Sys.info()[1]=='Windows' & modelStage==1) load(outputFile4a)
 if (Sys.info()[1]!='Windows' & modelStage==2) load(outputFile4b_scratch)
@@ -69,6 +71,7 @@ modelVars = c('health_zone','date',modelVars)
 subData = subData[, unique(modelVars), with=FALSE]
 
 # jitter to avoid perfect collinearity
+print('Jittering data...')
 for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','date')]) { 
 	if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
 	if (!all(subData[[v]]>0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
@@ -76,6 +79,7 @@ for(v in names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','d
 
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
+print('Rescaling variables...')
 scaling_factors = data.table(date=1)
 numVars = names(subData)[!names(subData)%in%c('orig_health_zone','health_zone','date')]
 for(v in numVars) {
@@ -92,6 +96,7 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # Run model
 
 # fit model
+print('Fitting model...')
 if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
 if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 
@@ -102,6 +107,7 @@ urFit = lavaanUR(model, subData)
 
 # --------------------------------------------------------------
 # Store coefficient table from model
+print('Handling model output...')
 
 # get standardized solution
 standardizedSummary = data.table(standardizedSolution(semFit, se=TRUE))
@@ -142,6 +148,7 @@ summary[, health_zone:=h]
 
 # ------------------------------------------------------------------
 # Save model output and clean up
+print('Saving output...')
 
 # make unique file name
 if(modelStage==1) outputFile5tmp1 = paste0(clustertmpDir2, 'first_half_semFit_', task_id, '.rds')
