@@ -15,7 +15,7 @@ source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
 # task_id = 1
-# args = c('gtm_tb_first_half2', '1', 'TRUE')
+# args = c('gtm_tb_second_half2', '2', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -27,14 +27,21 @@ print(paste('Command Args:', args))
 print(paste('Task ID:', task_id))
 if(length(args)==0) stop('No commandArgs found!') 
 
-# the first argument should be the model version to use
-modelVersion = args[7]
-
-# the second argument should be the "model stage" (1 or 2)
-modelStage = as.numeric(args[8])
-
-# the third argument should be whether to run a test run (TRUE) or full run (FALSE)
-testRun = as.logical(args[9])
+#Pass arguments to the cluster 
+if (Sys.info()[1]!='Windows'){
+  # the first argument should be the model version to use
+  modelVersion = args[7]
+  
+  # the second argument should be the "model stage" (1 or 2)
+  modelStage = as.numeric(args[8])
+  
+  # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
+  testRun = as.logical(args[9])
+} else { #Pass the test arguments written above. 
+  modelVersion=args[1]
+  modelStage=as.numeric(args[2])
+  testRun = as.logical(args[3])
+}
 
 # print for log
 print(paste('Model Version:', modelVersion))
