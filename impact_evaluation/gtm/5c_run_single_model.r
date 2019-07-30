@@ -15,7 +15,7 @@ source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
 # task_id = 1
-# args = c('gtm_tb_first_half2', '1', 'TRUE')
+# args = c('gtm_tb_sec_half2', '2', 'TRUE')
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -27,6 +27,8 @@ print(paste('Command Args:', args))
 print(paste('Task ID:', task_id))
 if(length(args)==0) stop('No commandArgs found!') 
 
+#Pass arguments to the cluster 
+
 # the first argument should be the model version to use
 modelVersion = args[7]
 
@@ -35,6 +37,7 @@ modelStage = as.numeric(args[8])
 
 # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
 testRun = as.logical(args[9])
+
 
 # print for log
 print(paste('Model Version:', modelVersion))
@@ -114,7 +117,7 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 
 # fit model
 if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
-if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3), fixed.x=T)
 
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)

@@ -1,9 +1,15 @@
 variable,x,y,label
-Cases_Notified_value_outp,-10,3,Cases notified
-Cases_Started_on_Treatment_value_outp,-10,6,Started Treatment
-PLHIV_started_on_IPT_value_outp,-10,9,PLHIV started IPT
-Proportion_of_Patients_Receiving_DST_value_outc,0,3,Patients receiving DST
-Proportion_of_HIV_TB_Cases_Treated_value_outc,0,6,HIV-TB cases treated
-Proportion_of_MDR_Cases_Treated_value_outc,0,9,Prop. MDR cases treated 
-Treatment_Success_Rate_value_imp,10,4,Treatment success
-Mortality_Rate_value_imp,10,7,Mortality rate
+Case_Notification_Rate_value_imp,5,1,Case notification rate
+Proportion_of_HIV_TB_Cases_Treated_value_outc,5,2.75,Prop. HIV/TB treated
+Treatment_Success_Rate_value_imp,5,4.5,Tx. success rate
+HIV_TB_Treatment_Success_Rate_value_imp,5,6.25,HIV/TB Tx. Success Rate
+Proportion_of_MDR_Cases_Treated_value_outc,5,8,Prop. MDR-TB treated
+MDR_Probably_Cured_rate_imp,5,9.75,MDR sputum sample conversion
+Proportion_of_Cases_in_Prisons_Treated_value_outc,5,11.5,Prop. Prison Cases Treated
+Proportion_of_Patients_Receiving_DST_value_outc,5,13.25,Prop. Patients receiving DST
+Cases_Notified_value_outp,-5,1,Cases notified
+HIV_TB_Cases_Notified_value_outp,-5,3,HIV/TB cases notified
+Cases_Started_on_Treatment_value_outp,-5,5,Cases started on Tx. 
+Number_of_Cases_Screened_for_MDR_act,-5,7,# Screened for MDR-TB
+MDR_Cases_Started_Treatment_value_outp,-5,9,MDR cases started Tx. 
+Cases_Started_on_Treatment_in_Prisons_value_outp,-5,11,Cases started on Tx. In prisons
