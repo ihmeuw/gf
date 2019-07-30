@@ -14,8 +14,10 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 1
-# args = c('gtm_tb_sec_half2', '2', 'TRUE')
+task_id = 1
+modelVersion = 'gtm_tb_first_half2'
+modelStage = 1
+testRun = TRUE
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -117,7 +119,7 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 
 # fit model
 if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
-if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3), fixed.x=T)
+if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3), orthogonal=T)
 
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)
