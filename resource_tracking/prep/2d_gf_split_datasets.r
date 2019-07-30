@@ -313,21 +313,22 @@
   revision_flag[, concat:=paste0(grant, "_", grant_period)]
   
   revisions = mapped_data[paste0(grant, "_", grant_period)%in%revision_flag$concat & data_source=="fpm"]
-  
-  #Figure out the order using the 'update_date' variable. 
-  order = unique(revisions[, .(grant, grant_period, update_date ,file_name)][order(grant_period, grant, update_date)])
-  stopifnot(nrow(order[is.na(update_date)])==0)
-  order[, order:=seq(0, 10, by=1), by=c('grant', 'grant_period')]
-  
-  #Reshape this data wide by quarter and year. 
-  revisions = merge(revisions, order, by=c('grant', 'grant_period', 'update_date', 'file_name'), all.x=T)
-  
-  revisions_collapse = revisions[, .(budget=sum(budget, na.rm=T)), by=c('grant', 'grant_period', 'order', 'year', 'quarter')]
-  revisions_collapse[, quarter:=paste0('q', quarter)]
-  revisions_collapse[, order:=paste0('v', order)]
-  
-  #Cast wide 
-  revisions_collapse = dcast(revisions_collapse, grant+grant_period~year+quarter+order, value.var='budget')
-  
-  #Generate year totals (?) 
+  if (nrow(revisions)!=0){ #You won't have budget revisions for every country. 
+    #Figure out the order using the 'update_date' variable. 
+    order = unique(revisions[, .(grant, grant_period, update_date ,file_name)][order(grant_period, grant, update_date)])
+    stopifnot(nrow(order[is.na(update_date)])==0)
+    order[, order:=seq(0, 10, by=1), by=c('grant', 'grant_period')]
+    
+    #Reshape this data wide by quarter and year. 
+    revisions = merge(revisions, order, by=c('grant', 'grant_period', 'update_date', 'file_name'), all.x=T)
+    
+    revisions_collapse = revisions[, .(budget=sum(budget, na.rm=T)), by=c('grant', 'grant_period', 'order', 'year', 'quarter')]
+    revisions_collapse[, quarter:=paste0('q', quarter)]
+    revisions_collapse[, order:=paste0('v', order)]
+    
+    #Cast wide 
+    revisions_collapse = dcast(revisions_collapse, grant+grant_period~year+quarter+order, value.var='budget')
+    
+    #Generate year totals (?) 
+  }
   

@@ -15,6 +15,7 @@
 if (prep_files == TRUE){
   file_list = read.xlsx(paste0(dir, "_gf_files_gos/master_file_list.xlsx"), detectDates=T)
   setDT(file_list)
+  file_list = file_list[order(loc_name, grant_period, grant_period, data_source, file_name)] #So that you always get consistent ordering, even if the excel beneath is filtered. 
   file_list = file_list[loc_name==country]
   file_list$start_date_financial <- as.Date(file_list$start_date_financial, format = "%Y-%m-%d")
   file_list = file_list[, -c('notes')]
@@ -25,7 +26,7 @@ if (prep_files == TRUE){
                     "loc_name", "mod_framework_format", "file_currency", "pudr_semester")
   stopifnot(desired_cols%in%names(file_list))
   stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr", "performance_framework", "document"))
-  stopifnot(sort(unique(file_list$file_iteration))==c('final', 'initial', 'revision'))
+  stopifnot(unique(file_list$file_iteration)%in%c('final', 'initial', 'revision'))
   
   #Only keep inputs with financial information, and make sure you've kept date column before prioritizing GOS. 
   file_list = file_list[data_source%in%c('fpm', 'pudr') & !is.na(sheet_financial)]

@@ -334,13 +334,17 @@ if (prep_files){
   saveRDS(expenditures, paste0(export_dir, "final_expenditures.rds"))
   saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
   saveRDS(absorption, paste0(export_dir, "absorption_", country, ".rds"))
-  saveRDS(revisions_collapse, paste0(export_dir, "budget_revisions.rds"))
+  if (revisions_collapse%in%ls()){ #You won't have budget revisions for every country. 
+    saveRDS(revisions_collapse, paste0(export_dir, "budget_revisions.rds"))
+  }
   
   write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), row.names=FALSE)
   write.csv(expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
   write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"), row.names=FALSE)
   write.csv(absorption, paste0(export_dir, "absorption_", country, ".csv"), row.names=FALSE)
-  write.csv(revisions_collapse, paste0(export_dir, "budget_revisions.csv"), row.names=FALSE)
+  if (revisions_collapse%in%ls()){
+    write.csv(revisions_collapse, paste0(export_dir, "budget_revisions.csv"), row.names=FALSE)
+  }
 }
 
 if (prep_gos == TRUE){
