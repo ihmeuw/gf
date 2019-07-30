@@ -120,6 +120,18 @@ p3 = ggplot(means_ts, aes(y=malariaDeaths_under5_rate, ymin=lower_pctle_malaria,
 		caption='Lines and intervals show median, 20th and 80th percentiles of health zones') + 
 	theme_bw()
 
+# time series graph of the malaria data excluding the control group
+p3b = ggplot(means_ts[intervention==1], aes(y=malariaDeaths_under5_rate, ymin=lower_pctle_malaria, 
+		ymax=upper_pctle_malaria, x=date)) + 
+	geom_ribbon(alpha=.5, fill='#1f78b4') + 
+	geom_line(size=1.25, color='#1f78b4') + 
+	labs(title='Malaria Mortality Under 5', 
+		subtitle='Comparing Health Zones with and without SSCs', 
+		y='Under-5 Malaria Mortality Rate (per 10,000 population)', x='Period', 
+		color='Health Zones', fill='Health Zones', 
+		caption='Lines and intervals show median, 20th and 80th percentiles of health zones') + 
+	theme_bw()
+
 # time series graph of the all-cause data
 p4 = ggplot(means_ts, aes(y=allDeaths_under5_rate, ymin=lower_pctle_all_cause, 
 		ymax=upper_pctle_all_cause, x=date, color=intervention_label, fill=intervention_label)) + 
