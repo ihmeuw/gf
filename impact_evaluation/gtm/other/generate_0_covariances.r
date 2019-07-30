@@ -29,4 +29,6 @@ all_rhs = all_rhs[var1!=var2]
 all_rhs[, label:=paste0(var1, " ~~ 0*", var2)]
 
 
-
+#Pull out just the vector of labels to paste into the model object. 
+all_labels = as.character(all_lhs$label, all_rhs$label)
+write.csv(all_labels, "C:/Users/elineb/Desktop/zero_covariances_2.csv", row.names=F)
