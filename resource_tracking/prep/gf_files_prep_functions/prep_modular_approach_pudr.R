@@ -15,31 +15,31 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
   # Set up file path 
-  folder = "budgets"
-  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  if (file_list$file_iteration[i]=="initial"){
-    version = "iterations"
-  } else if (file_list$file_iteration[i]=="revision"){
-    version= "revisions"
-  } else {
-    version = ""
-  }
-  grant_period = file_list$grant_period[i]
-  
-  file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
-  if (version != ""){
-    file_dir = paste0(file_dir, version, "/")
-  }
-  dir = file_dir
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet_financial[i]
-  start_date = file_list$start_date_financial[i]
-  period = file_list$period[i]
-  disease = file_list$disease[i]
-  grant = file_list$grant[i]
-  recipient = file_list$primary_recipient
-  source = file_list$data_source[i]
-  qtr_number = file_list$qtr_number[i]
+  # folder = "budgets"
+  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  # if (file_list$file_iteration[i]=="initial"){
+  #   version = "iterations"
+  # } else if (file_list$file_iteration[i]=="revision"){
+  #   version= "revisions"
+  # } else {
+  #   version = ""
+  # }
+  # grant_period = file_list$grant_period[i]
+  # 
+  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  # if (version != ""){
+  #   file_dir = paste0(file_dir, version, "/")
+  # }
+  # dir = file_dir
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet_financial[i]
+  # start_date = file_list$start_date_financial[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # grant = file_list$grant[i]
+  # recipient = file_list$primary_recipient
+  # source = file_list$data_source[i]
+  # qtr_number = file_list$qtr_number[i]
 
   # -----------------------------------------------------------------------------
   # Test the inputs to make sure that they are the correct type
@@ -276,8 +276,8 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   verified_0_expenditure <- c("UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", 
                               "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx", 
                               "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx", 
-                              "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx", "Core_SANRU_PU_P3141116.xlsm") #These files have 0 for all expenditure.
-  verified_0_budget <- c("Core_SANRU_PU_P3141116.xlsm") #These files have 0 budgeted - maybe this was a draft file. 
+                              "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx", "Core_SANRU_PU_P3141116.xlsm", "PSI PU NFM S1 2016 09102016.xlsm") #These files have 0 for all expenditure.
+  verified_0_budget <- c("Core_SANRU_PU_P3141116.xlsm", "PSI PU NFM S1 2016 09102016.xlsm") #These files have 0 budgeted - maybe this was a draft file. 
   
   if(!(inFile%in%verified_0_expenditure & inFile%in%verified_0_budget)){ #Check both budget and expenditure 
     stopifnot(check_budgets[, 1]>0 & check_budgets[, 2]>0)
