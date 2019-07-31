@@ -20,7 +20,7 @@ source('./impact_evaluation/gtm/set_up_r.r')
 runInParallel = TRUE
 
 # model version to use
-modelVersion = 'gtm_tb_second_half2'
+modelVersion = 'gtm_tb_first_half2'
 # ---------------------------
 
 
