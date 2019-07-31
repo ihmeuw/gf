@@ -14,10 +14,10 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 1
-# modelVersion = 'gtm_tb_first_half2'
-# modelStage = 1
-# testRun = TRUE
+task_id = 14
+modelVersion = 'gtm_tb_first_half2'
+modelStage = 1
+testRun = TRUE
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -81,6 +81,16 @@ for (v in check_explan_power$var){
 less_than_5 = unique(check_explan_power[unique_values<=5, .(var)])
 less_than_10 = unique(check_explan_power[unique_values<=10, .(var)])
 
+if (length(less_than_5)>0){
+  warning("There are some variables with 5 or less data points in this department.")
+  warning(print(less_than_5))
+}
+
+if (length(less_than_10)>0){
+  warning("There are some variables with 10 or less data points in this department.")
+  warning(print(less_than_10))
+}
+
 
 # jitter to avoid perfect collinearity
 for(v in names(subData)[!names(subData)%in%c('department','date')]) { 
@@ -88,18 +98,19 @@ for(v in names(subData)[!names(subData)%in%c('department','date')]) {
   if (!all(subData[[v]]>=0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
 }
 
-# test to see if there are any zero-variance variables in this department (after jittering)
 test = subData[,lapply(.SD,var), .SDcols=modelVars[modelVars!='department']]==0
+
 warning = subData[,lapply(.SD,var), .SDcols=modelVars[modelVars!='department']]<.5
 if(any(test)) { 
   print('Some variables have zero variance! The model is going to fail...')
   print(modelVars[test==TRUE])
   stop()
 }
-if(any(warning)) { 
-  warning(modelVars[warning==TRUE])
-  warning('Some variables have nearly-zero variance! The model is going to fail...')
-}
+# if(any(warning)) { 
+#   warning(modelVars[warning==TRUE])
+#   warning('Some variables have nearly-zero variance! The model is going to fail...')
+# }
+
 
 
 # rescale variables to have similar variance
