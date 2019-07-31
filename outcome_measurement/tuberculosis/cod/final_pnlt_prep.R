@@ -38,8 +38,9 @@ num_hzs_by_dps[ dps == 'bas-congo', dps := 'kongo-central']
 #                Donn�es 2018 
 #---------------------------------------------------
 # Lire dans les données
-dt_2018_orig = data.table(read.xlsx(paste0(raw_dir, "TB DATA 2018.xlsx")))
-dt_2018_add = data.table(read.xlsx(paste0(raw_dir, "DATA TB 6 dps 2018.xlsx")))
+#dt_2018_orig = data.table(read.xlsx(paste0(raw_dir, "TB DATA 2018.xlsx")))
+#dt_2018_add = data.table(read.xlsx(paste0(raw_dir, "DATA TB 6 dps 2018.xlsx")))
+dt_2018 = data.table(read.xlsx(paste0(raw_dir, 'tb data 2018 all dps with health zone column.xlsx'))) # data Constant updated manually
 
 # Supprimez les quatre premières lignes de noms maintenant qu'elles ne sont plus nécessaires.
 dt_2018_orig = dt_2018_orig[5:nrow(dt_2018_orig), ]
@@ -49,7 +50,7 @@ dt_2018 = rbindlist(list(dt_2018_orig, dt_2018_add), use.names = TRUE)
 
 # Corriger les noms de variables
 #----
-new_names = c('trimestre', 'csdt', 'population_totale', 'population_couverte', 'presumes_tb', 
+new_names = c('trimestre', 'csdt', 'population_totale', 'population_couverte', 'presume_tb_teste_microscope', 
               'presume_tb_teste_microscope', 'presume_tb_positif_microscope', 'presume_tb_teste_xpert', 'presume_tb_positive_xpert', 
               'frottis_effectue', 'frottis_positif', 'csdt_participe_cq', 'cas_enreg_bac_nouveau', 'cas_enreg_bac_rechute', 
               'cas_enreg_bac_hors_rechutes', 'cas_enreg_bac_enfants', 'cas_enreg_clinique_noveau', 'cas_enreg_clinique_rechute', 
@@ -151,6 +152,38 @@ dt_2018[, zone_sante := trimws(zone_sante)]
 # 
 # i = i + 1
 #--------------------------------------------------------
+test = copy(dt_2018)
+# test = test[999:2000, c(1:2, 6)]
+
+ptm <- proc.time()
+for(group in unique(test$trimestre)){ 
+  counter = min(test[, which(trimestre == group)])
+  test[trimestre == group, sum := shift(cumsum(presume_tb_teste_microscope))]
+  if ( nrow(test[trimestre == group & presume_tb_teste_microscope == sum, ]) == 0 ) next
+  while( counter < max(test[, which(trimestre == group)]) ) { 
+    test[c(counter: max(test[, which(trimestre == group)]) ), sum := shift(cumsum(presume_tb_teste_microscope))]
+    counter = (max(which(test$presume_tb_teste_microscope == test$sum))+1)
+    print(counter)
+  }
+  test[, is_zs:=(sum==presume_tb_teste_microscope)]  
+}
+proc.time() - ptm
+
+data = copy(test)
+setnames(data, 'trimestre', 'group')
+setnames(data, 'presume_tb_teste_microscope', 'value')
+
+ptm <- proc.time()
+data[, idx:=seq_len(.N), by=group]
+data[, latest_id:=0]
+n_caught_previously=0
+n_caught=1
+while(n_caught>n_caught_previously) { 
+  data[idx>latest_id, is_total:=(value==shift(cumsum(value)) & !is.na(shift(cumsum(value)))), by=group]
+  data = merge(data[, -'latest_id'], data[is_total==TRUE, .(latest_id=max(idx)), by=group])
+  n_caught_previously = n_caught
+  n_caught = sum(data$is_total, na.rm=TRUE) }
+proc.time() - ptm
 
 # identify which rows are health zones:
 dt_2018[grepl(zone_sante, pattern = 'zs'), is_zs := TRUE]
@@ -218,8 +251,10 @@ dt_2018[is_zs == TRUE & is.na(zone_sante), zone_sante := 'missing'] # to prevent
     # dt_2018[, tmp := sum(is_zs), by= c('dps', 'date')]
     # test = dt_2018[tmp!=0,]
 
-# test = copy(dt_2018)
-# test[, na.locf(zone_sante, fromLast = TRUE), by = c('dps', 'date')]
+test = copy(dt_2018)
+test[nrow(test),zone_sante:='empty']
+test[, new_hz:=na.locf(zone_sante, fromLast = TRUE)]
+test[zone_sante=='empty', zone_sante:=NA]
 
 # then, delete health zone total rows  
   #TO DO - check that totals for non-hz rows equal totals for hz rows (by province)
@@ -235,8 +270,8 @@ write.csv(dt_2018, paste0(save_dir, outFile18), row.names = FALSE)
 dt_2016_2017 = data.table(read.xlsx(paste0(raw_dir, "TB DATA 2016_2017.xlsx")))
 
 #1. Corriger les noms de variables
-new_names = c('trimestre', 'zone_sante', 'population_totale', 'population_couverte', 'presumes_tb', 
-              'frottis_effectue', 'frottis_positif', 'presumes_tb_ziehl', 'presumes_tb_ziehl_positif', 
+new_names = c('trimestre', 'zone_sante', 'population_totale', 'population_couverte', 'presume_tb_teste_microscope', 
+              'frottis_effectue', 'frottis_positif', 'presume_tb_teste_microscope_ziehl', 'presume_tb_teste_microscope_ziehl_positif', 
               'presumes_xpert', 'xpert_mtb_pos_rif_neg', 'xpert_mtb_pos_rif_pos', 'xpert_invalide',
               'tb_bac_nouveau', 'tb_bac_recurrente_rechute', 'tb_bac_recurrente_echec', 'tb_bac_recurrente_perdu', 
               'tb_clinique_nouveau', 'tb_clinique_recurrente_rechute', 'tb_clinique_recurrente_hors_rechute', 
