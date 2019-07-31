@@ -252,19 +252,19 @@ model = '
   other_dah_T1_1_cumulative ~~ 0*exp_T1_5_cumulative
   other_dah_T1_1_cumulative ~~ 0*exp_T1_6_cumulative
   PLHIV_Screened_for_TB_act_cumulative ~~ 0*TB_Patients_Tested_for_HIV_act_cumulative
-  PLHIV_Screened_for_TB_act_cumulative ~~ 0*Number_of_Cases_Screened_for_MDR_act_cumulative
-  PLHIV_Screened_for_TB_act_cumulative ~~ 0*Isoniazid_Distributed_act_cumulative
+  #PLHIV_Screened_for_TB_act_cumulative ~~ 0*Number_of_Cases_Screened_for_MDR_act_cumulative
+  #PLHIV_Screened_for_TB_act_cumulative ~~ 0*Isoniazid_Distributed_act_cumulative
   PLHIV_Screened_for_TB_act_cumulative ~~ 0*exp_T3_2_cumulative
   PLHIV_Screened_for_TB_act_cumulative ~~ 0*other_dah_T3_2_cumulative
   PLHIV_Screened_for_TB_act_cumulative ~~ 0*exp_T1_5_cumulative
   PLHIV_Screened_for_TB_act_cumulative ~~ 0*exp_T1_6_cumulative
-  TB_Patients_Tested_for_HIV_act_cumulative ~~ 0*Number_of_Cases_Screened_for_MDR_act_cumulative
-  TB_Patients_Tested_for_HIV_act_cumulative ~~ 0*Isoniazid_Distributed_act_cumulative
+  #TB_Patients_Tested_for_HIV_act_cumulative ~~ 0*Number_of_Cases_Screened_for_MDR_act_cumulative
+  #TB_Patients_Tested_for_HIV_act_cumulative ~~ 0*Isoniazid_Distributed_act_cumulative
   TB_Patients_Tested_for_HIV_act_cumulative ~~ 0*exp_T3_2_cumulative
   TB_Patients_Tested_for_HIV_act_cumulative ~~ 0*other_dah_T3_2_cumulative
   TB_Patients_Tested_for_HIV_act_cumulative ~~ 0*exp_T1_5_cumulative
   TB_Patients_Tested_for_HIV_act_cumulative ~~ 0*exp_T1_6_cumulative
-  Number_of_Cases_Screened_for_MDR_act_cumulative ~~ 0*Isoniazid_Distributed_act_cumulative
+  #Number_of_Cases_Screened_for_MDR_act_cumulative ~~ 0*Isoniazid_Distributed_act_cumulative
   Number_of_Cases_Screened_for_MDR_act_cumulative ~~ 0*exp_T3_2_cumulative
   Number_of_Cases_Screened_for_MDR_act_cumulative ~~ 0*other_dah_T3_2_cumulative
   Number_of_Cases_Screened_for_MDR_act_cumulative ~~ 0*exp_T1_5_cumulative
