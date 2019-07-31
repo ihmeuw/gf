@@ -235,11 +235,10 @@ impacts1 = impacts1[, -c('dup')]
 #-----------------------------------------------------
 dt_final = merge(outcomes1, impacts1, by=c('date', 'department'), all=T) #Save dates and departments from both, in case you have data in one and not the other. 
 
-#Replace NaN and NA with 0 - we can assume these actually mean 0. 
-cols = 3:ncol(dt_final) #Just don't do this for date and department, the first two columns. 
-for (col in cols){
-  dt_final[is.na(dt_final[[col]]), (col):=0]
-}
+#Pull one variable, # of cases screened for MDR-TB, out of the outputs dataset. 
+dt1 = readRDS(outputFile3)
+dt1 = dt1[, .(date, department, Number_of_Cases_Screened_for_MDR_act)]
+dt_final = merge(dt_final, dt1, by=c('date', 'department'), all=T)
 
 saveRDS(dt_final, outputFile2c)
 archive(outputFile2c)

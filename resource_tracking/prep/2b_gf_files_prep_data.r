@@ -15,6 +15,7 @@
 if (prep_files == TRUE){
   file_list = read.xlsx(paste0(dir, "_gf_files_gos/master_file_list.xlsx"), detectDates=T)
   setDT(file_list)
+  file_list = file_list[order(loc_name, grant_period, grant_period, data_source, file_name)] #So that you always get consistent ordering, even if the excel beneath is filtered. 
   file_list = file_list[loc_name==country]
   file_list$start_date_financial <- as.Date(file_list$start_date_financial, format = "%Y-%m-%d")
   file_list = file_list[, -c('notes')]
@@ -24,11 +25,11 @@ if (prep_files == TRUE){
                     "secondary_recipient", "language_financial", "grant_period", "grant_status", "start_date_financial", "file_iteration", "geography_detail", 
                     "loc_name", "mod_framework_format", "file_currency", "pudr_semester")
   stopifnot(desired_cols%in%names(file_list))
-  stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr"))
-  stopifnot((unique(file_list$file_iteration))%in%c("final", "initial", "revision"))
+  stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr", "performance_framework", "document"))
+  stopifnot(unique(file_list$file_iteration)%in%c('final', 'initial', 'revision'))
   
   #Only keep inputs with financial information, and make sure you've kept date column before prioritizing GOS. 
-  file_list = file_list[!is.na(sheet_financial)]
+  file_list = file_list[data_source%in%c('fpm', 'pudr') & !is.na(sheet_financial)]
   stopifnot(nrow(file_list[is.na(start_date_financial)])==0)
 
   #Prioritize GOS data where we have it
@@ -43,7 +44,8 @@ if (prep_files == TRUE){
     print("There are duplicates in final files - review file list.")
   }
   
-  file_list[data_source=="pudr" & file_iteration=="final", pudr_dup:=seq(0, nrow(file_list), by=1), by=c('grant', 'grant_period', 'pudr_semester')]
+  file_list[data_source=="pudr" & file_iteration=="final", pudr_dup:=sequence(.N), by=c('grant', 'grant_period', 'pudr_semester')]
+  file_list[, pudr_dup:=pudr_dup-1] #This variable indexes at 1.
   if (nrow(file_list[pudr_dup>0 & !is.na(pudr_dup)])>0){
     print(file_list[pudr_dup>0 & !is.na(pudr_dup)])
     stop("There are duplicates in PUDRs between semesters - review file list.")
@@ -63,15 +65,23 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){
+    # Set up file path 
     folder = "budgets"
     folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-    version = ifelse(file_list$file_iteration[i] == "initial", "iterations", "")
-    file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+    if (file_list$file_iteration[i]=="initial"){
+      version = "iterations"
+    } else if (file_list$file_iteration[i]=="revision"){
+      version= "revisions"
+    } else {
+      version = ""
+    }
+    grant_period = file_list$grant_period[i]
+    
+    file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
     if (version != ""){
       file_dir = paste0(file_dir, version, "/")
     }
     
-    inFile = paste0(file_dir, file_list$file_name[i])
     args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], file_list$period_financial[i])
     
     if(file_list$function_financial[i] == 'detailed' & file_list$sheet_financial[i]%in%general_detailed_budget_sheet_financials){ #Prep standardized detailed budgets. 

@@ -28,7 +28,7 @@ combined_data = paste0(dir, "impact_evaluation/cod/prepped_data/base_pnlp_sigl_c
 before_MI_pnlp = paste0(dir, "outcome_measurement/cod/prepped_data/PNLP/PNLP_dt_forMI_updated_6_10_19.rds")
 
 # file listing health zones
-hzFile = paste0(dir, '/outcome_measurement/cod/prepped_data/Unicef HZ extraction_BH.csv')
+hzFile = paste0(dir, '/mapping/cod/ssc_lists/Unicef HZ extraction_BH.csv')
 
 # output files
 outFile = "impact_evaluation/cod/visualizations/RDTsCompleted_overSuspectedCases_excludingPartialDPS.pdf"

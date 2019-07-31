@@ -23,6 +23,12 @@ load(outputFile5b)
 means2 = copy(means)
 data2 = copy(data)
 
+# rename per capita variables temporarily so while loop works
+# FIX ME: DO THIS IN THE MODEL OBJECT
+for(n in names(data1)) setnames(data1, n, gsub('_pc','',n))
+means1[, lhs:=gsub('_pc','', lhs)]
+means1[, rhs:=gsub('_pc','', rhs)]
+
 # put together coefficient tables
 means = rbind(means1, means2)
 
@@ -41,6 +47,10 @@ for(i in seq(length(origVars))) {
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
 nodeTable2 = fread(nodeTableFile2)
+
+# rename per capita variables temporarily so while loop works
+# FIX ME: DO THIS IN THE MODEL OBJECT
+nodeTable1[, variable:=gsub('_pc','', variable)]
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable1 = nodeTable1[variable %in% names(data1)]
@@ -106,7 +116,7 @@ setup2LevelSB = function(var='ITN_consumed_cumulative', pcts=TRUE) {
 	for(i in rev(seq(nLevels))) {
 		if (var %in% get(paste0('level',i))[['lhs']]) tmplevel1 = copy(get(paste0('level',i)))
 	}
-		
+	
 	# subset to given variable
 	tmplevel1 = tmplevel1[lhs==var]
 
@@ -167,7 +177,7 @@ setup2LevelSB = function(var='ITN_consumed_cumulative', pcts=TRUE) {
 	if (pcts==TRUE) out[label!='', label:=paste(label, '-', round(est.std*100, 1), '%')]
 	out[rhs==lhs & level==2, label:='']
 	out[rhs=='population', label:=paste('Population Control -', round(est.std*100, 1), '%')]
-	
+
 	# return
 	return(out)
 }
@@ -264,7 +274,7 @@ if (nLabels>=10) s=2.5
 if (nLabels>=20) s=2
 
 # graph
-sunBursts = list()
+# sunBursts = list()
 sunBursts[[length(sunBursts)+1]] = ggplot(graphData, aes(x=as.numeric(level), y=est.std, fill=fill, alpha=level)) +
 	geom_col(width=1, color='gray80', size=0.3, position=position_stack()) +
 	geom_text_repel(aes(label=label, x=as.numeric(level)), size=s, position=position_stack(vjust=0.5), segment.color='black') +

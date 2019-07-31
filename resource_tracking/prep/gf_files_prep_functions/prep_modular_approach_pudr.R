@@ -14,10 +14,26 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
+  # Set up file path 
+  # folder = "budgets"
+  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  # if (file_list$file_iteration[i]=="initial"){
+  #   version = "iterations"
+  # } else if (file_list$file_iteration[i]=="revision"){
+  #   version= "revisions"
+  # } else {
+  #   version = ""
+  # }
+  # grant_period = file_list$grant_period[i]
+  # 
+  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  # if (version != ""){
+  #   file_dir = paste0(file_dir, version, "/")
+  # }
   # dir = file_dir
   # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
+  # sheet_name = file_list$sheet_financial[i]
+  # start_date = file_list$start_date_financial[i]
   # period = file_list$period[i]
   # disease = file_list$disease[i]
   # grant = file_list$grant[i]
@@ -47,8 +63,8 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # 1. Subset columns.
   #-------------------------------------
   #Find the correct column indices based on a grep condition.
-  module_col <- grep("Modular Approach - Modules", gf_data)
-  intervention_col <- grep("Modular Approach - Interventions", gf_data)
+  module_col <- grep("Modular Approach - Modules|Démarche modulaire - Modules", gf_data)
+  intervention_col <- grep("Modular Approach - Interventions|Démarche modulaire - Interventions", gf_data)
   budget_col <- grep("Budget for Reporting Period", gf_data)
   expenditure_col <- grep("Actual Expenditure", gf_data)
   lfa_adjustment_col <- grep("Local Fund Agent Adjustment on Expenditures", gf_data)
@@ -136,8 +152,8 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # 2. Subset rows
   #-------------------------------------
   #Select only the section of the excel that's broken up by intervention
-  start_row <- grep("modular approach", tolower(gf_data$module))
-  end_row <- grep("grand total", tolower(gf_data$module))
+  start_row <- grep("modular approach|démarche modulaire", tolower(gf_data$module))
+  end_row <- grep("grand total|total général", tolower(gf_data$module))
   
   if (sheet_name == "ALF RFR_7"){
     start_row = grep("Macrocatégorie", gf_data$module)
@@ -260,12 +276,26 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   verified_0_expenditure <- c("UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "UGA-M-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", 
                               "UGA-S-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.xlsx", 
                               "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx", 
-                              "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx") #These files have 0 for all expenditure.
+                              "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx", "Core_SANRU_PU_P3141116.xlsm", "PSI PU NFM S1 2016 09102016.xlsm") #These files have 0 for all expenditure.
+  verified_0_budget <- c("Core_SANRU_PU_P3141116.xlsm", "PSI PU NFM S1 2016 09102016.xlsm") #These files have 0 budgeted - maybe this was a draft file. 
   
-  if(inFile%in%verified_0_expenditure){
-    stopifnot(check_budgets[, 1]>0)
-  } else {
+  if(!(inFile%in%verified_0_expenditure & inFile%in%verified_0_budget)){ #Check both budget and expenditure 
     stopifnot(check_budgets[, 1]>0 & check_budgets[, 2]>0)
+    if (verbose){
+      print("File has verified 0 budget and 0 expenditure.")
+    }
+  } else if (!inFile%in%verified_0_expenditure){ #If expenditure shouldn't be 0, check it. 
+    stopifnot(check_budgets[, 1]>0)
+  } else if (!inFile%in%verified_0_budget){ #If budget shouldn't be 0, check it.  
+    stopifnot(check_budgets[, 2]>0)
+  }
+  
+  if (verbose){
+    if (inFile%in%verified_0_expenditure){
+      print("File has verified 0 expenditure.")
+    } else if (inFile%in%verified_0_budget){
+      print("File has verified 0 budget.")
+    }
   }
 
   # -------------------------------

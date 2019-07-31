@@ -9,10 +9,11 @@
 
 # -----------------------------------------------------------------
 # Load/prep data
+library(faraway) #For viewing collinearity, below. 
 
 # load
 data = readRDS(outputFile3)
-
+modelVersion = 'gtm_tb_first_half2'
 # 	
 # 	# set other_dah to NA (not 0) after 2016
 # 	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017 & get(v)==0, (v):=NA]
@@ -28,6 +29,31 @@ data = readRDS(outputFile3)
 # data = data[date>=2010 & date<2018.75]
 # -----------------------------------------------------------------
 
+#------------------------------------------------------------------
+# Check for linear dependence - added by EL 7/29/2019
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
+
+# reduce the data down to only necessary variables
+parsedModel = lavParseModelString(model)
+modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+#We'll want to use the cumulative vars in the final model, but remove this for this test 
+modelVars = gsub("_cumulative", "", modelVars)
+data = data[, unique(modelVars), with=FALSE]
+
+#Are any variables linear combinations of other variables? 
+firstHalfVars = modelVars[grep("exp|ghe|other_dah", modelVars)]
+secondHalfVars = modelVars[!modelVars%in%firstHalfVars & modelVars!='date']
+
+dataFirstHalf = data[, firstHalfVars, with=F]
+dataSecondHalf = data[, secondHalfVars, with=F]
+
+#Check pairwise collinearity 
+pairs(dataFirstHalf, col = "dodgerblue")
+pairs(dataSecondHalf, col="orangered")
+
+pairs(dataSecondHalf[, .(Isoniazid_Distributed_act, Total_Drugs_Distributed_act)])
+
+#------------------------------------------------------------------
 
 # -----------------------------------------------------------------
 # Ensure all variables have complete time series 

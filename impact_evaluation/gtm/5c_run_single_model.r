@@ -14,8 +14,10 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 10
-# args = c('gtm_tb_first_half2', '1', 'TRUE')
+task_id = 1
+modelVersion = 'gtm_tb_first_half2'
+modelStage = 1
+testRun = TRUE
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -27,14 +29,17 @@ print(paste('Command Args:', args))
 print(paste('Task ID:', task_id))
 if(length(args)==0) stop('No commandArgs found!') 
 
+#Pass arguments to the cluster 
+
 # the first argument should be the model version to use
-modelVersion = args[5]
+# modelVersion = args[7]
+# 
+# # the second argument should be the "model stage" (1 or 2)
+# modelStage = as.numeric(args[8])
+# 
+# # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
+# testRun = as.logical(args[9])
 
-# the second argument should be the "model stage" (1 or 2)
-modelStage = as.numeric(args[6])
-
-# the third argument should be whether to run a test run (TRUE) or full run (FALSE)
-testRun = as.logical(args[7])
 
 # print for log
 print(paste('Model Version:', modelVersion))
@@ -64,19 +69,38 @@ modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('department','date',modelVars)
 subData = subData[, unique(modelVars), with=FALSE]
 
+#Check unique values in data - do any columns have <5 unique values? 
+check_explan_power = data.table(var=names(subData))
+check_explan_power = check_explan_power[!var%in%c('department', 'date')]
+for (v in check_explan_power$var){
+  print(v)
+  length = length(unique(subData[[v]]))
+  print(length)
+  check_explan_power[var==v, unique_values:=length]
+}
+less_than_5 = unique(check_explan_power[unique_values<=5, .(var)])
+less_than_10 = unique(check_explan_power[unique_values<=10, .(var)])
+
+
 # jitter to avoid perfect collinearity
 for(v in names(subData)[!names(subData)%in%c('department','date')]) { 
-  if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
-  if (!all(subData[[v]]>0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
+  if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
+  if (!all(subData[[v]]>=0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
 }
 
 # test to see if there are any zero-variance variables in this department (after jittering)
 test = subData[,lapply(.SD,var), .SDcols=modelVars[modelVars!='department']]==0
+warning = subData[,lapply(.SD,var), .SDcols=modelVars[modelVars!='department']]<.5
 if(any(test)) { 
   print('Some variables have zero variance! The model is going to fail...')
   print(modelVars[test==TRUE])
   stop()
 }
+if(any(warning)) { 
+  warning(modelVars[warning==TRUE])
+  warning('Some variables have nearly-zero variance! The model is going to fail...')
+}
+
 
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
@@ -90,6 +114,23 @@ for(v in numVars) {
 }
 for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # ---------------------------------------------------------------------------------------------------
+
+#Test for linear dependence 
+# library(matlib)
+# x = as.matrix(subData)
+# x = t(x)
+# xe = echelon(x, reduced=F)
+# xe = matrix(xe, 29, 29) #Drop the last four rows of zeros to make a square matrix. 
+# eigen(xe)
+# 
+# library(Smisc)
+# linear_dependence = findDepMat(xe, rows=F)
+# if (any(linear_dependence)){
+#   stop("There is linear dependence in the model columns - the model will fail.")
+# }
+
+#Test for negative eigenvectors - not possible with a non-symmetric matrix?
+# is.positive.definite(xe)
 
 
 # ----------------------------------------------------------------
@@ -148,7 +189,7 @@ summary[, department:=d]
 # Save model output and clean up
 
 # reassign the temporary output location if the parent script is set to runInParallel FALSE
-if ('runInParallel' %in% ls()) if (runInParallel==FALSE) clustertmpDir2 = tempIeDir
+if ('runInParallel' %in% ls()) if (runInParallel==FALSE){clustertmpDir2 = tempIeDir}
 
 # make unique file name
 if(modelStage==1) outputFile5tmp1 = paste0(clustertmpDir2, 'first_half_semFit_', task_id, '.rds')

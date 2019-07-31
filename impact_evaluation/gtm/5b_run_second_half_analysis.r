@@ -14,7 +14,7 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # Settings
 
 # whether to run each department in parallel or not
-runInParallel = FALSE
+runInParallel = TRUE
 
 # model version to use
 modelVersion = 'gtm_tb_sec_half2'
@@ -63,9 +63,9 @@ if (runInParallel==TRUE) {
 	system(qsubCommand)
 
 	# wait for jobs to finish (2 files per job)
-	while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
+	while(length(list.files(clustertmpDir2, pattern='second_half_summary_'))<(T)) { 
 		Sys.sleep(5)
-		print(paste(length(list.files(clustertmpDir2, pattern='first_half_summary_')), 'of', T, 'files found...'))
+		print(paste(length(list.files(clustertmpDir2, pattern='second_half_summary_')), 'of', T, 'files found...'))
 	}
 }
 # --------------------------------------------------------------
