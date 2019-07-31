@@ -8,32 +8,26 @@ library(data.table)
 
 # read in data
 # CSV file encoded in UTF-8 will preserve the accent marks
-DT <- fread("C:\\Users\\frc2\\Documents\\data\\tb\\PANEL PNT TB-MR final_01072019.csv", encoding = "UTF-8")
+DT <- fread("C:\\Users\\frc2\\Documents\\data\\tb\\raw_data\\PANEL PNT TB-MR final_26072019.csv", encoding = "UTF-8")
 
 # ------------------------------
 # remove rows and columns
 # ------------------------------
 
 # remove unecessary columns at end
-DT[,76:261:=NULL]
+DT[,137:319:=NULL]
 
 # remove rows that present summed values
 DT <- DT[ !(DT$Centre %in% c("TOTAL TRIMESTRE", "TOTAL ANNEE")),]
 DT <- DT[ !(DT$REGION %in% c("SENEGAL"))]
 
-# create unique identifier: region_centre_year_quarter
-DT$id <- paste(DT$REGION,DT$Centre,DT$Année,DT$Trimestre, sep="-")
-
-# remove duplicate entries
-DT <- unique(DT, by=c("id"))
-
-# remove any rows in which there is no identifying information
-DT <- DT[ !(DT$id %in% c("--NA-NA"))]
+# remove bottom row which doesn't contain year or quarter
+DT <- na.omit(DT, cols=c(4:5), invert = FALSE)
 
 # ------------------------------
 # rename headers
 # ------------------------------
-codes <- fread("C:\\Users\\frc2\\Documents\\sen_tb_codebook.csv", encoding = "UTF-8")
+codes <- fread("C:\\Users\\frc2\\Documents\\gf\\outcome_measurement\\tuberculosis\\sen\\codebook.csv", encoding = "UTF-8")
 names(DT) <- codes[,Code]
 
 # ------------------------------
@@ -49,10 +43,7 @@ DT[, exstock2 := trimws(exstock2)]
 
 # remove commas (,)
 DT$pop <- gsub(",","",DT$pop)
-DT$tpm_att <- gsub(",","",DT$tpm_att)
-DT$tpm_det <- gsub(",","",DT$tpm_det)
-DT$tpm_taux_det <- gsub(",","",DT$tpm_taux_det)
-DT$tbtot_att <- gsub(",","",DT$tbtot_att)
+DT$tpm_plus_attendus <- gsub(",","",DT$tpm_plus_attendus)
 DT$tbtot_taux_det <- gsub(",","",DT$tbtot_taux_det)
 DT$gueris_total <- gsub(",","",DT$gueris_total)
 DT$trait_pc <- gsub(",","",DT$trait_pc)
@@ -63,13 +54,12 @@ DT$exstock1 <- gsub(",","", DT$exstock1)
 DT$exstock2 <- gsub(",","", DT$exstock2)
 DT$com_cause <- gsub(",","", DT$com_cause)
 DT$vad_tot <- gsub(",", "", DT$vad_tot)
+DT$tbtot_cas_atendu <- gsub(",", "", DT$tbtot_cas_atendu)
+DT$com_nom_touss <- gsub(",", "", DT$com_nom_touss)
 
 # remove dashes (-)
 DT$pop <- gsub("-","",DT$pop)
-DT$tpm_att <- gsub("-","",DT$tpm_att)
-DT$tpm_det <- gsub("-","",DT$tpm_det)
-DT$tpm_taux_det <- gsub("-","",DT$tpm_taux_det)
-DT$tbtot_att <- gsub("-","",DT$tbtot_att)
+DT$tpm_plus_attendus <- gsub("-","",DT$tpm_plus_attendus)
 DT$tbtot_taux_det <- gsub("-","",DT$tbtot_taux_det)
 DT$gueris_total <- gsub("-","",DT$gueris_total)
 DT$trait_pc <- gsub("-","",DT$trait_pc)
@@ -91,10 +81,13 @@ DT$com_enf_ref <- gsub("-", "", DT$com_enf_ref)
 DT$exstock1 <- gsub("-", "", DT$exstock1)
 DT$exstock2 <- gsub("-", "", DT$exstock2)
 DT$vad_tot <- gsub("-", "", DT$vad_tot)
+DT$com_vad_irr <- gsub("-", "", DT$com_vad_irr)
+DT$com_vad_pdv <- gsub("-", "", DT$com_vad_pdv)
+DT$com_det_ttf <- gsub("-", "", DT$com_det_ttf)
+DT$com_suivis <- gsub("-", "", DT$com_suivis)
 
 # remove percent signs
 DT$tbtot_taux_det <- gsub("%","",DT$tbtot_taux_det)
-DT$tpm_taux_det <- gsub("%","",DT$tpm_taux_det)
 DT$trait_pc <- gsub("%", "",DT$trait_pc)
 DT$gueris_taux <- gsub("%", "", DT$gueris_taux)
 DT$deces_pc <- gsub("%", "", DT$deces_pc)
@@ -102,13 +95,13 @@ DT$echec_pc <- gsub("%","", DT$echec_pc)
 DT$pdv_pc <- gsub("%","", DT$pdv_pc)
 DT$eval_pc <- gsub("%", "", DT$eval_pc)
 DT$noneval_pc <- gsub("%", "", DT$eval_pc)
+DT$tpm_plus_tauxdet <- gsub("%", "", DT$tpm_plus_tauxdet)
+DT$perf_lab <- gsub("%", "", DT$perf_lab)
+DT$pauvrety <- gsub("%", "", DT$pauvrety)
 
 # convert values to numeric
 DT[,pop:=as.numeric(pop)]
-DT[,tpm_att:=as.numeric(tpm_att)]
-DT[,tpm_det:=as.numeric(tpm_det)]
-DT[,tpm_taux_det:=as.numeric(tpm_taux_det)]
-DT[,tbtot_att:=as.numeric(tbtot_att)]
+DT[,tpm_plus_attendus:=as.numeric(tpm_plus_attendus)]
 DT[,tbtot_taux_det:=as.numeric(tbtot_taux_det)]
 DT[,gueris_total:=as.numeric(gueris_total)]
 DT[,trait_pc:=as.numeric(trait_pc)]
@@ -138,10 +131,18 @@ DT[, exstock2:=as.numeric(exstock2)]
 DT[, vad_tot:=as.numeric(vad_tot)]
 DT[, tb_diag_rech:=as.numeric(tb_diag_rech)]
 DT[, tb_diag_rech_b:=as.numeric(tb_diag_rech_b)]
+DT[, tpm_plus_tauxdet:=as.numeric(tpm_plus_tauxdet)]
+DT[, com_vad_irr:=as.numeric(com_vad_irr)]
+DT[, com_vad_pdv:=as.numeric(com_vad_pdv)]
+DT[, com_nom_touss:=as.numeric(com_nom_touss)]
+DT[, com_det_ttf:=as.numeric(com_det_ttf)]
+DT[, com_suivis:=as.numeric(com_suivis)]
+DT[, perf_lab:=as.numeric(perf_lab)]
+DT[, pauvrety:=as.numeric(pauvrety)]
+DT[, tbtot_cas_atendu:=as.numeric(tbtot_cas_atendu)]
 
 # convert percent whole numbers to decimals
 DT[, tbtot_taux_det:=tbtot_taux_det/100]
-DT[, tpm_taux_det:=tpm_taux_det/100]
 DT[, trait_pc:=trait_pc/100]
 DT[, gueris_taux:=gueris_taux/100]
 DT[, deces_pc:=deces_pc/100]
@@ -151,9 +152,11 @@ DT[, struct_micros_pc:=struct_micros_pc/100]
 DT[, struct_xray_pc:= struct_xray_pc/100]
 DT[, struct_tbmedprem_pc:= struct_tbmedprem_pc/100]
 DT[, struct_tbstrepto_pc:= struct_tbstrepto_pc/100]
+DT[, tpm_plus_tauxdet:=tpm_plus_tauxdet/100]
+DT[, perf_lab:=perf_lab/100]
+DT[, pauvrety:=pauvrety/100]
 
 # save prepped data in new R object and csv
-setwd("J:/Project/Evaluation/GF/outcome_measurement/sen/prepped_data")
-saveRDS(DT, "sen_tb_indicators.rds")
-write.csv(DT, file="sen_tb_indicators.csv")
-
+setwd("C:/Users/frc2/Documents/data/tb/prepped_data")
+saveRDS(DT, "sen_tb_indicators_2.rds")
+write.csv(DT, file="sen_tb_indicators_2.csv")

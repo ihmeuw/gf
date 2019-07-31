@@ -1,77 +1,193 @@
-code,French,English,sources,period,periodicity,level
+Code,French,English,sources,period,periodicity,level
 region,REGION,region,,,,
-district,District,district,,,,
+centre,Centre,centre,,,,
+type,TYPE,type,,,,
 annee,Année,year,,,,
-trimestre,Trimestre,quarter,PNT,,,
-tpm_nc,Tuberculose Pulmonaire :Frottis positif:Nouveaux cas (NC),Pulmonary TB: Positive Smear: New Cases,PNT,2014-2018,Trimestrielle,National/Region/District
-tpm_tr,Tuberculose Pulmonaire :Frottis positif:Total retraitement,Pulmonary TB: Positive Smear: Total retreated,PNT,2014-2018,Trimestrelle,National/Region/District
-tpm_tfn,Tuberculose Pulmonaire :Frottis Négatifs:Total frottis négatifs,Pulmonary TB: Negative Smear: Total negative smears,PNT,2014-2018,Trimestrelle,National/Region/District
-tpm_fnf,Tuberculose Pulmonaire :Frottis non faits:Total frottis non faits,Pulmonary TB: Smears not made: total smears not made,PNT,2014-2018,Trimestrelle,National/Region/District
-tep_nc,Nouveaux Cas Tuberculose Extra Pulmonaires,New Extra Pulmonary TB Cases,PNT,2014-2018,Trimestrelle,National/Region/District
-tbtot_aut,Total des cas autres,Total other cases,PNT,2014-2018,Trimestrelle,National/Region/District
-tpm_ncr,Nouveaux Cas TPM+ et Rechutes:,New PMT+ Cases and Relapses,PNT,2014-2018,Trimestrelle,National/Region/District
-tbtot_tfc,Total des cas TB toutes formes confondues,Total TB cases in all forms,PNT,2014-2018,Trimestrelle,National/Region/District
-tbtot_m,Total des cas TB toutes formes confondues Masculin,Total TB cases all types Men,PNT,2016-2018,Trimestrielle,National/Region/District
-tbtot_f,Total des cas TB toutes formes confondues Féminin,Total TB cases all forms Women,PNT,2016-2018,Trimestrielle,National/Region/District
-tbtot_enf,Total des cas TB  Enfant,Total TB children,PNT,2016-2018,Trimestrielle,National/Region/District
-tpm_nc_m,Cas nouveaux à frottis positif :Total des cas de TPM+  sexe masculin,New smear-positive cases: Total cases of PMT+ men,PNT,2014-2018,Trimestrielle,National/Region/District
-tpm_ncr_f,Cas nouveaux à frottis positif :Total des cas de TPM+  sexe féminin,New smear-positive cases: Total cases of PMT+ women,PNT,2014-2018,Trimestrielle,National/Region/District
-tpm_tot_nc,Cas nouveaux à frottis positif :Total des cas nouveaux TPM+ ,New smear-positive cases: Total new cases TPM +,PNT,2014-2018,Trimestrielle,National/Region/District
-ntr_rhz,Nombre de cas mis au traitement: Cas au protocole RHZ,Number of cases put to treatment: Case with RHZ protocol,PNT,2014-2015,Trimestrielle,National/Region/District
-ntr_erhz,Nombre de cas mis au traitement:Cas au protocole ERHZ,Number of cases put to treatment: Cases with ERHZ protocol,PNT,2014-2015,Trimestrielle,National/Region/District
-ntr_serhz,Nombre de cas mis au traitement:Cas au protocole SERHZ,Number of cases put to treatment: Case with SERHZ protocol,PNT,2014-2015,Trimestrielle,National/Region/District
-ntr_cpx,Nombre de cas : mis au traitement:chimioprophylaxie,Number of cases: put on treatment: chemoprophylaxis,PNT,2014-2018,Trimestrielle,National/Region/District
-pop,Population,Population,PNT,2014-2018,Trimestrielle,National/Region/District
-tpm_att,Cas TPM+ Attendus,Expected TPM + Case,PNT,2014-2018,Trimestrielle,National/Region/District
-tpm_det,Cas TPM+ Détectés,TPM Cases + Detected,PNT,2014-2018,Trimestrielle,National/Region/District
-tpm_taux_det,Taux de détection TPM+,TPM + detection rate,PNT,2014-2018,Trimestrielle,National/Region/District
-tbtot_cas,Cas toutes formes détectés,Cases all forms detected,PNT,2014-2018,Trimestrielle,National/Region/District
-tbtot_att,Cas attendus toutes formes,Cases expected all forms,PNT,2014-2018,Trimestrielle,National/Region/District
-tbtot_taux_det,Taux de détection toutes formes,Detection rate all forms,PNT,2014-2018,Trimestrielle,National/Region/District
-tpm_nc_ann,Total des Nouveaux Cas de l'année précédente,Total New Cases from the previous year,PNT,2014-2018,Trimestrielle,National/Region/District
-gueris_total,TOTAL Guéris,TOTAL cured,PNT,2014-2018,Trimestrielle,National/Region/District
-gueris_taux,Taux de guérison,Cure rate,PNT,2014-2018,Trimestrielle,National/Region/District
-trait_tot,TOTAL traitement terminé,TOTAL treatment completed,PNT,2014-2018,Trimestrielle,National/Region/District
-trait_pc,Pourcentage de traitement terminé,Percentage of treatment completed,PNT,2014-2018,Trimestrielle,National/Region/District
-deces_total,TOTAL décés,TOTAL died,PNT,2014-2018,Trimestrielle,National/Region/District
-deces_pc,Pourcentage de décès,Percentage died,PNT,2014-2018,Trimestrielle,National/Region/District
-echec_tot,TOTAL Echec ,TOTAL treatment failed,PNT,2014-2018,Trimestrielle,National/Region/District
-echec_pc,Pourcentage d'échec,Percentage of failure,PNT,2014-2018,Trimestrielle,National/Region/District
-abandon_tot,TOTAL Abandon,TOTAL Abandoned,PNT,2014-2018,Trimestrielle,National/Region/District
-pdv_pc,Pourcentage de Perdu de Vue,Percentage of Lost to follow up,PNT,2014-2018,Trimestrielle,National/Region/District
-noneval_tot,TOTAL Non évalués ,TOTAL Not evaluated,PNT,2017-2018,Trimestrielle,National/Region/District
-noneval_pc,Pourcentage de non évalués,Percentage not evaluated,PNT,2017-2018,Trimestrielle,National/Region/District
-eval_tot,TOTAL évalués ,TOTAL evaluated,PNT,2017-2018,Trimestrielle,National/Region/District
-eval_pc,Pourcentage d'évalués,Percentage of evaluated,PNT,2017-2018,Trimestrielle,National/Region/District
-com_cause,Communautaire : Nombre de causeries effectuées,"Community: Number of chats done ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_mobsoc,Communautaire : Nombre de mobilisation sociale réalisées,"Community: Number of social mobilization carried out ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_radio,Communautaire : Nombre d'émissions radio effectuées,"Community: Number of radio programs carried out ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_vad_touss,Communautaire : Nombre de VAD de recherche de tousseurs de +15jrs (cas présumés) effectuées,"Community: Number of home visits looking for coughers of + 15 days (presumed cases) performed ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_vad_irr,Communautaire : VAD de relance d'irregulier,"Community: home visits to contact irregular patients again",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_vad_pdv,Communautaire : VAD de recherche de perdu de vue,"Community: home visits to search for lost to follow up ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_nom_touss,Communautaire : Nombre de toussseurs de +15 jrs orientés,"Community: Number of +15 day coughers oriented ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_tpm_diag,Communautaire : Nombre de TPM+ diagnostiqués,"Community: Number of TPM + diagnosed ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_det_ttf,Communautaire : Contribution sur la détection nationale TTF,"Community: Contribution on national TTF detection ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_enf_ref,Communautaire : Nombre d'enfants contact reférés,"Community: Number of contact children referred ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-com_suivis,Communautaire : Nombre de cas suivis jusqu'à guérison,"Community: Number of cases followed until cured ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
-retr_tarv,Cas de retraitement frottis+_ patients TB séropositifs sous TARV,Cases of retreatement smear + HIV-positive TB patients under ART,DHSI2,2014-2017,Annuelle,National/Region/District
-retr_tbvih,Cas de retraitement frottis+_Nombre de patients TB séropositifs,Cases of retreatement smear + _Number of seropositive TB patients,DHSI2,2014-2017,Annuelle,National/Region/District
-retr_vihantitb,Cas de retraitement frottis+_avec Test dépistage VIH avt ou pdt  le traitement anti TB,Cases of retreatment smear + _ with HIV screening test or with anti TB treatment,DHSI2,2014-2017,Annuelle,National/Region/District
-retr_cotrimox,Cas de retraitement frottis+_patients TB séropositifs sous cotrimoxazole,Cases of retreatment + TB patients with co-trimoxazole,DHSI2,2014-2017,Annuelle,National/Region/District
-tpm_chimio_enf,Chimio prophylaxie_Enfants sains 0 à 5 ans 6 H,Chemo prophylaxis_Children 0 to 5 years 6 H,DHSI2,2014-2017,Annuelle,National/Region/District
-tpm_chimio_pvvih,Chimio prophylaxie_PVVIH 6 H,Chimio prophylaxis_people living with HIV 6 H,DHSI2,2014-2017,Annuelle,National/Region/District
-tb_diag_nc,Diagnostic Nouveaux cas,Diagnosis New cases,DHSI2,2014-2017,Annuelle,National/Region/District
-tb_diag_nc_b,Diagnostic Nouveaux cas (B),Diagnosis New cases (B),DHSI2,2014-2017,Annuelle,National/Region/District
-tb_diag_rech,Diagnostic cas suspects de Rechutes ,Diagnosis suspected cases of Relapse,DHSI2,2014-2017,Annuelle,National/Region/District
-tb_diag_rech_b,Diagnostic cas suspects de Rechutes (B),Diagnosis suspected cases of Relapse (B),DHSI2,2014-2017,Annuelle,National/Region/District
-dur_rupt1,Duree rupture 1,Long term break 1,DHSI2,2014-2016,Annuelle,National/Region/District
-dur_rupt2,Duree rupture 2,Breaking time 2,DHSI2,2014-2016,Annuelle,National/Region/District
-dur_rupt3,Duree rupture 3,Rupture 3,DHSI2,2014-2016,Annuelle,National/Region/District
-exstock1,Existant stock 1,Existing stock 1,DHSI2,2014-2016,Annuelle,National/Region/District
-exstock2,Existant stock 2,Existing stock 2,DHSI2,2014-2016,Annuelle,National/Region/District
-vad_tot,Nbre total de VAD effectuées,Total number of home visits performed,DHSI2,2016-2017,Annuelle,National/Region/District
+trimestre,Trimestre,quarter,,,,
+tpm_fp_nc,Tuberculose Pulmonaire :Frottis positif: Nouveaux cas (NC),Pulmonary TB: Positive Smear: New Cases,PNT,2014-2018,,
+tpm_fp_em,Tuberculose Pulmonaire :Frottis positif: Nouveaux cas (NC) Enfants de Sexe Masculin  ,Pulmonary TB: Positive Smear: New Cases Children Male,PNT,2014-2018,,
+tpm_fp_ef,Tuberculose Pulmonaire :Frottis positif: Nouveaux cas (NC) Enfants de Sexe Féminin,Pulmonary TB: Positive Smear: New Cases Children Female,PNT,2014-2018,,
+tpm_fp_am,Tuberculose Pulmonaire :Frottis positif: Nouveaux cas (NC) Adultes de Sexe Masculin,Pulmonary TB: Positive Smear: New Cases Adult Male,PNT,2014-2018,,
+tpm_fp_af,Tuberculose Pulmonaire :Frottis positif: Nouveaux cas (NC) Adultes de Sexe Féminin,Pulmonary TB: Positive Smear: New Cases Adult Female,PNT,2014-2018,,
+tpm_fp_ nc_m,Tuberculose Pulmonaire :Frottis positif: Nouveaux cas (NC)  Sexe Masculin  ,Pulmonary TB: Positive Smear: New Cases Male,PNT,2014-2018,,
+tpm_fp_nc_f,"Tuberculose Pulmonaire :Frottis positif: Nouveaux cas (NC)  
+Sexe Féminin",Pulmonary TB: Positive Smear: New Cases Female,PNT,2014-2018,,
+tpm_rech,Tuberculose Pulmonaire : Rechultes,Pulmonary TB: Relapses,PNT,2014-2018,,
+tpm_rech_em,"Tuberculose Pulmonaire : Rechultes 
+Enfants sexe masculin",Pulmonary TB: Relapses Children Male,PNT,2014-2018,,
+tpm_rech_ef,"Tuberculose Pulmonaire : Rechultes 
+Enfants sexe féminin",Pulmonary TB: Relapses Children Female,PNT,2014-2018,,
+tpm_rech_am,"Tuberculose Pulmonaire : Rechultes
+ Adultes sexe masculin",Pulmonary TB: Relapses Adult Male,PNT,2014-2018,,
+tpm_rech_af,"Tuberculose Pulmonaire : Rechultes
+ Adultes sexe féminin",Pulmonary TB: Relapses Adult Female,PNT,2014-2018,,
+tpm_rech_m,"Tuberculose Pulmonaire : Rechultes  
+sexe masculin",Pulmonary TB: Relapses Male,PNT,2014-2018,,
+tpm_rech_m2,"Tuberculose Pulmonaire : Rechultes 
+ sexe masculin",Pulmonary TB: Relapses Male,PNT,2014-2018,,
+tpm_ret,Tuberculose Pulmonaire : Retraitements,Pulmonary TB: Retreated,PNT,2014-2018,,
+tpm_ret_em,Tuberculose Pulmonaire : Retraitements Enfants sexe masculin,Pulmonary TB: Retreated Children Male,PNT,2014-2018,,
+tpm_ret_ef,Tuberculose Pulmonaire : Retraitements Enfants sexe féminin,Pulmonary TB: Retreated Children Female,PNT,2014-2018,,
+tpm_ret_am,Tuberculose Pulmonaire : Retraitements Adultes sexe masculin,Pulmonary TB: Retreated Adult Male,PNT,2014-2018,,
+tpm_ret_af,Tuberculose Pulmonaire : Retraitements Adultes sexe féminin,Pulmonary TB: Retreated Adult Female,PNT,2014-2018,,
+tpm_ret_m,Tuberculose Pulmonaire : Retraitements  sexe masculin,Pulmonary TB: Retreated Male,PNT,2014-2018,,
+tpm_ret_f,Tuberculose Pulmonaire : Retraitements  sexe féminin,Pulmonary TB: Retreated Female,PNT,2014-2018,,
+tmp_fn,Tuberculose Pulmonaire : Frotis négatifs,Pulmonary TB: Negative Smear,PNT,2014-2018,,
+tmp_fn_e,Tuberculose Pulmonaire : Frotis négatifs Enfants,Pulmonary TB: Negative Smear Children,PNT,2014-2018,,
+tmp_fn_a,Tuberculose Pulmonaire : Frotis négatifs Adultes,Pulmonary TB: Negative Smear Adults,PNT,2014-2018,,
+tmp_fn_m,"Tuberculose Pulmonaire : Frotis négatifs 
+Sexe Masculin",Pulmonary TB: Negative Smear Male,PNT,2014-2018,,
+tmp_fn_f,"Tuberculose Pulmonaire : Frotis négatifs 
+Sexe Féminin",Pulmonary TB: Negative Smear Female,PNT,2014-2018,,
+tmp_fn_nf,Tuberculose Pulmonaire : Frotis Non Faits,Pulmonary TB: Smears not made,PNT,2014-2018,,
+tmp_fn_nf_e,"Tuberculose Pulmonaire : Frotis Non Faits 
+Enfants",Pulmonary TB: Smears not made children,PNT,2014-2018,,
+tmp_fn_nf_a,"Tuberculose Pulmonaire : Frotis Non Faits 
+Adultes",Pulmonary TB: Smears not made adults,PNT,2014-2018,,
+tmp_fn_nf_m,"Tuberculose Pulmonaire : Frotis Non Faits 
+Sexe Masculin",Pulmonary TB: Smears not made men,PNT,2014-2018,,
+tmp_fn_nf_f,"Tuberculose Pulmonaire : Frotis Non Faits 
+Sexe Féminin",Pulmonary TB: Smears not made women,PNT,2014-2018,,
+tep_nc,Tuberculose Extra Pulmonaire : Nouveaux Cas (NC),Extra-pulmonary TB: new cases,PNT,2014-2018,,
+tep_nc_e,"Tuberculose Extra Pulmonaire : Nouveaux Cas (NC)
+Enfants",Extra-pulmonary TB: new cases children,PNT,2014-2018,,
+tep_nc_a,"Tuberculose Extra Pulmonaire : Nouveaux Cas (NC)
+Adultes",Extra-pulmonary TB: new cases adults,PNT,2014-2018,,
+tep_nc_m,"Tuberculose Extra Pulmonaire : Nouveaux Cas (NC)
+Masculin",Extra-pulmonary TB: new cases male,PNT,2014-2018,,
+tep_nc_f,"Tuberculose Extra Pulmonaire : Nouveaux Cas (NC)
+Féminin",Extra-pulmonary TB: new cases female,PNT,2014-2018,,
+cas_aut,Cas autres,Other cases,PNT,2014-2018,,
+cas_aut_enf,"Cas autres 
+Enfants",Other cases children,PNT,2014-2018,,
+cas_aut_adu,"Cas autres 
+Adultes",Other cases adults,PNT,2014-2018,,
+cas_aut_m,"Cas autres 
+Sexe Masculin",Other cases male,PNT,2014-2018,,
+cas_aut_f,"Cas autres 
+Sexe Féminin",Other cases female,PNT,2014-2018,,
+tb_tfc,Cas TB Toutes Formes Confondues (TFC),Cases TB: all forms detected,PNT,2016-2018,,
+tb_tfc_enf,"TFC
+Enfants",Cases TB: all forms detected children,PNT,2016-2018,,
+tb_tfc_enf_m,"TFC
+Enfants de sexe masculin",Cases TB: all forms detected children male,PNT,2016-2018,,
+tb_tfc_enf_f,"TFC
+Enfants de sexe féminin",Cases TB: all forms detected children female,PNT,2016-2018,,
+tb_tfc_a,"TFC
+Adultes",Cases TB: all forms detected adults,PNT,2016-2018,,
+tb_tfc_am,"TFC
+Adultes de sexe masculin",Cases TB: all forms detected adult male,PNT,2016-2018,,
+tb_tfc_af,"TFC
+Adultes de sexe féminin",Cases TB: all forms detected adult female,PNT,2016-2018,,
+tb_tfc_m,"TFC
+Sexe masculin",Cases TB: all forms detected male,PNT,2016-2018,,
+tb_tfc_f,"TFC
+Sexe féminin",Cases TB: all forms detected female,PNT,2016-2018,,
+tb_vih,Patients TB atteints de VIH (TB_VIH),,PNT,2014-2018,,
+tb_vih_m,"TB_VIH
+Sexe Masculin",TB-HIV Male,PNT,2014-2018,,
+tb_vih_f,"TB_VIH
+Sexe féminin",TB_HIV Female,PNT,2014-2018,,
+vih_tb,PVVIH atteintes de TB (VIH_TB),,PNT,2014-2018,,
+vih_tb_m,"VIH_TB
+Sexe Masculin",HIV-TB Male,PNT,2014-2018,,
+vih_tb_f,"VIH_TB
+Sexe Féminin",HIV-TB Female,PNT,2014-2018,,
+tb_vih2,TB/VIH,TB/VIH,PNT,2014-2018,,
+tb_vih_m2,"TB/VIH
+Masculin",TB/VIH Male,PNT,2014-2018,,
+tb_vih_f2,"TB/VIH
+Féminin",TB/VIH Female,PNT,2014-2018,,
+tb_vih_cotrim,"TB/VIH 
+sous Cotrim",TB/VIH Cotrim,PNT,2014-2018,,
+tb_vih_cotrim_m,"TB/VIH 
+sous Cotrim
+Masculin",TB/VIH Cotrim Male,PNT,2014-2018,,
+tb_vih_contrim_f,"TB/VIH 
+sous Cotrim
+Féminin",TB/VIH Cotrim Female,PNT,2014-2018,,
+tb_vih_arv,"TB/VIH 
+sous ARV",TB/VIH on ARV,PNT,2014-2018,,
+tb_vih_arv_m,"TB/VIH 
+sous ARV
+Masculin",TB/VIH on ARV Male,PNT,2014-2018,,
+tb_vih_arv_f,"TB/VIH 
+sous ARV
+Féminin",TB/VIH on ARV Female,PNT,2014-2018,,
+ntr_rhz,Nombre de cas mis au traitement: Cas au protocole RHZ,Number of cases put to treatment: Case with RHZ protocol,PNT,2014-2018,,
+ntr_erhz,Nombre de cas mis au traitement:Cas au protocole ERHZ,Number of cases put to treatment: Cases with ERHZ protocol,PNT,2014-2018,,
+ntr_serhz,Nombre de cas mis au traitement:Cas au protocole SERHZ,Number of cases put to treatment: Case with SERHZ protocol,PNT,2014-2018,,
+ntr_cpx,Nombre de cas : mis au traitement:chimioprophylaxie,Number of cases: put on treatment: chemoprophylaxis,PNT,2014-2018,,
+cas_enf_genexpert,Nombre de cas enfants soumis au Genexpert,Number of child cases tested with Genexpert,PNT,2014-2018,,
+cas_enf_confirme,Nombre de cas enfants confirmé TB,Number of child cases confirmed with TB,PNT,2014-2018,,
+cas_enf_res,Nombre de cas enfants résistant,Number of child cases resistant,PNT,2014-2018,,
+cas_adul_genexpert,Nombre de cas adultes soumis au Genexpert,Number of adult cases tested with Genexpert,PNT,2014-2018,,
+cas_adul_confirme,Nombre de cas adultes confirmé TB,Number of adult cases confirmed with TB,PNT,2014-2018,,
+cas_adul_res,Nombre de cas adultes résistant,Number of adult cases resistant,PNT,2014-2018,,
+tot_genexpert,Total tests Gen expert réalisés,Total number of Genexpert Tests,PNT,2014-2018,,
+tot_confirme,Total de patients confirmés TB,Total patients confirmed with TB,PNT,2014-2018,,
+tot_res,Total patients  déclarés résistants,Total patients declared resistant,PNT,2014-2018,,
+pop,Population,Population,ANSD,2014-2018,,
+tpm_plus_attendus,Cas TPM+ Attendus,TPM+ Expected,PNT,2014-2018,,
+tpm_plus_tauxdet,Taux de détection TPM+,TPM+ Detection Rate,PNT,2014-2018,,
+tbtot_cas_atendu,Cas attendus toutes formes,Cases Expected: All Forms,PNT,2014-2018,,
+tbtot_taux_det,Taux de détection toutes formes,Detection Rate: All Forms,PNT,2014-2018,,
+tbtot_nc_annee,Total des Nouveaux Cas de l'année précédente,Total New Cases from the previous year,PNT,2014-2018,,
+gueris_total,TOTAL Guéris,TOTAL cured,PNT,2014-2018,,
+gueris_taux,Taux de guérison,Cure rate,PNT,2014-2018,,
+trait_tot,TOTAL traitement terminé,TOTAL treatment completed,PNT,2014-2018,,
+trait_pc,Pourcentage de traitement terminé,Percentage of treatment completed,PNT,2014-2018,,
+deces_total,TOTAL décés,TOTAL died,PNT,2014-2018,,
+deces_pc,Pourcentage de décès,Percentage died,PNT,2014-2018,,
+echec_tot,TOTAL Echec ,TOTAL treatment failed,PNT,2014-2018,,
+echec_pc,Pourcentage d'échec,Percentage of failure,PNT,2014-2018,,
+abandon_tot,TOTAL Abandon,TOTAL Abandoned,PNT,2014-2018,,
+pdv_pc,Pourcentage de Perdu de Vue,Percentage Lost to follow up,PNT,2014-2018,,
+noneval_tot,TOTAL Non évalués ,TOTAL Not evaluated,PNT,2017-2018,,
+noneval_pc,Pourcentage de non évalués,Percentage not evaluated,PNT,2017-2018,,
+eval_tot,TOTAL évalués ,TOTAL evaluated,PNT,2017-2018,,
+eval_pc,Pourcentage d'évalués,Percentage evaluated,PNT,2017-2018,,
+com_cause,"Communautaire : 
+Nombre de causeries effectuées","Community: Number of chats done ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_mobsoc,"Communautaire : 
+Nombre de mobilisation sociale réalisées","Community: Number of social mobilization carried out ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_radio,"Communautaire : 
+Nombre d'émissions radio effectuées","Community: Number of radio programs carried out ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_vad_touss,"Communautaire : 
+Nombre de VAD de recherche de tousseurs de +15jrs (cas présumés) effectuées","Community: Number of home visits looking for coughers of + 15 days (presumed cases) performed ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_vad_irr,"Communautaire : 
+VAD de relance d'irregulier","Community: home visits to contact irregular patients again",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_vad_pdv,"Communautaire : 
+VAD de recherche de perdu de vue","Community: home visits to search for lost to follow up ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_nom_touss,"Communautaire : 
+Nombre de toussseurs de +15 jrs orientés","Community: Number of +15 day coughers oriented ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_tpm_diag,"Communautaire : 
+Nombre de TPM+ diagnostiqués","Community: Number of TPM + diagnosed ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_det_ttf,"Communautaire : 
+Contribution sur la détection nationale TTF","Community: Contribution on national TTF detection ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_enf_ref,"Communautaire : 
+Nombre d'enfants contact reférés","Community: Number of contact children referred ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
+com_suivis,"Communautaire : 
+Nombre de cas suivis jusqu'à guérison","Community: Number of cases followed until cured ",PLAN INTERNATIONAL,2014-2017,Annuelle,National/Region
 struct_micros_pc,Pourcentage des structures ayant une microscopie du crachat,Percentage of facilities with sputum microscopy,SPA,2014-2018,Annuelle,National/Region/Structure
 struct_xray_pc,Pourcentage des structures ayant un Rayon X,Percentage of facilities with X-ray,SPA,2014-2018,Annuelle,National/Region/Structure
 struct_tbmedprem_pc,pourcentages des structures ayant les médicaments suivants pour le traitement de TB : Traitement première intention de TB ,percentages of facilities with the following drugs for TB treatment: Primary treatment of TB,SPA,2014-2018,Annuelle,National/Region/Structure
 struct_tbstrepto_pc,pourcentages des structures ayant les médicaments suivants pour le traitement de TB : Streptomycine Injectable,percentages of facilities having the following drugs for the treatment of TB: Streptomycin Injectable,SPA,2014-2018,Annuelle,National/Region/Structure
-id,REGION-Centre-Annee--Trimestre,Region-Center-Year-Quarter,Composite ID,,,
+perf_lab,Performance Laboratoire,Performance Laboratory,PLAN INTERNATIONAL,,,
+pauvrety,Pauvrety Proxy,Poverty ,PLAN INTERNATIONAL,,,
+retr_tarv,DHIS2 : Cas de retraitement frottis+_ patients TB séropositifs sous TARV,DHIS2: Cases of retreatement smear + HIV-positive TB patients under ART,DHIS2,2014-2017,Annuelle,National/Region/District
+retr_tbvih,DHIS2 : Cas de retraitement frottis+_Nombre de patients TB séropositifs,DHIS2: Cases of retreatement smear + Number of seropositive TB patients,DHIS2,2014-2017,Annuelle,National/Region/District
+retr_vihantitb,DHIS2 : Cas de retraitement frottis+_avec Test dépistage VIH avt ou pdt  le traitement anti TB,DHIS2: Cases of retreatment smear + with HIV screening test or with anti TB treatment,DHIS2,2014-2017,Annuelle,National/Region/District
+retr_cotrimox,DHIS2 : Cas de retraitement frottis+_patients TB séropositifs sous cotrimoxazole,DHIS2: Cases of retreatment + TB patients with co-trimoxazole,DHIS2,2014-2017,Annuelle,National/Region/District
+tpm_chimio_enf,DHIS2 : Chimio prophylaxie_Enfants sains 0 à 5 ans 6 H,DHIS2: Chemo prophylaxis Children 0 to 5 years 6 H,DHIS2,2014-2017,Annuelle,National/Region/District
+tpm_chimio_pvvih,Chimio prophylaxie_PVVIH 6 H,DHIS2: Chemo prophylaxis people living with HIV 6 H,DHIS2,2014-2017,Annuelle,National/Region/District
+tb_diag_nc,DHIS2 : Diagnostic Nouveaux cas,DHIS2: Diagnosed New cases,DHIS2,2014-2017,Annuelle,National/Region/District
+tb_diag_nc_b,DHIS2 : Diagnostic Nouveaux cas (B),DHIS2: Diagnosed New cases (B),DHIS2,2014-2017,Annuelle,National/Region/District
+tb_diag_rech,DHIS2 : Diagnostic cas suspects de Rechutes ,DHIS2: Diagnosis suspected cases of Relapse,DHIS2,2014-2017,Annuelle,National/Region/District
+tb_diag_rech_b,DHIS2 : Diagnostic cas suspects de Rechutes (B),DHIS2: Diagnosis suspected cases of Relapse (B),DHIS2,2014-2017,Annuelle,National/Region/District
+dur_rupt1,DHIS2 : Duree rupture 1,DHIS2: Long term break 1,DHIS2,2014-2016,Annuelle,National/Region/District
+dur_rupt2,DHIS2 : Duree rupture 2,DHIS2: Breaking time 2,DHIS2,2014-2016,Annuelle,National/Region/District
+dur_rupt3,DHIS2 : Duree rupture 3,DHIS2: Rupture 3,DHIS2,2014-2016,Annuelle,National/Region/District
+exstock1,DHIS2 : Existant stock 1,DHIS2: Existing stock 1,DHIS2,2014-2016,Annuelle,National/Region/District
+exstock2,DHIS2 : Existant stock 2,DHIS2: Existing stock 2,DHIS2,2014-2016,Annuelle,National/Region/District
+vad_tot,DHIS2 : Nbre total de VAD effectuées,DHIS2: Total number of home visits performed,DHIS2,2016-2017,Annuelle,National/Region/District
