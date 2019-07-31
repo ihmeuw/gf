@@ -78,6 +78,9 @@ for (v in check_explan_power$var){
   print(length)
   check_explan_power[var==v, unique_values:=length]
 }
+less_than_5 = unique(check_explan_power[unique_values<=5, .(var)])
+less_than_10 = unique(check_explan_power[unique_values<=10, .(var)])
+
 
 # jitter to avoid perfect collinearity
 for(v in names(subData)[!names(subData)%in%c('department','date')]) { 
@@ -113,15 +116,21 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # ---------------------------------------------------------------------------------------------------
 
 #Test for linear dependence 
-# x = as.matrix(subData)
-# linear_dependence = findDepMat(x, rows=T, tol=1e-12)
-# if (any(linear_dependence)){
-#   stop("There is linear dependence in the model columns - the model will fail.")
-# }
+library(matlib)
+x = as.matrix(subData)
+x = t(x)
+xe = echelon(x, reduced=F)
+xe = matrix(xe, 29, 29) #Drop the last four rows of zeros to make a square matrix. 
+eigen(xe)
 
-# Test for negative eigenvectors - not possible with a non-symmetric matrix? 
-# x = as.matrix(subData)
-# is.positive.definite(x)
+library(Smisc)
+linear_dependence = findDepMat(xe, rows=F)
+if (any(linear_dependence)){
+  stop("There is linear dependence in the model columns - the model will fail.")
+}
+
+#Test for negative eigenvectors - not possible with a non-symmetric matrix?
+is.positive.definite(xe)
 
 
 # ----------------------------------------------------------------
