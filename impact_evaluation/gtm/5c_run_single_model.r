@@ -116,21 +116,21 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # ---------------------------------------------------------------------------------------------------
 
 #Test for linear dependence 
-library(matlib)
-x = as.matrix(subData)
-x = t(x)
-xe = echelon(x, reduced=F)
-xe = matrix(xe, 29, 29) #Drop the last four rows of zeros to make a square matrix. 
-eigen(xe)
-
-library(Smisc)
-linear_dependence = findDepMat(xe, rows=F)
-if (any(linear_dependence)){
-  stop("There is linear dependence in the model columns - the model will fail.")
-}
+# library(matlib)
+# x = as.matrix(subData)
+# x = t(x)
+# xe = echelon(x, reduced=F)
+# xe = matrix(xe, 29, 29) #Drop the last four rows of zeros to make a square matrix. 
+# eigen(xe)
+# 
+# library(Smisc)
+# linear_dependence = findDepMat(xe, rows=F)
+# if (any(linear_dependence)){
+#   stop("There is linear dependence in the model columns - the model will fail.")
+# }
 
 #Test for negative eigenvectors - not possible with a non-symmetric matrix?
-is.positive.definite(xe)
+# is.positive.definite(xe)
 
 
 # ----------------------------------------------------------------

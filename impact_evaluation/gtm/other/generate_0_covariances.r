@@ -49,48 +49,42 @@ all_rhs[, label:=paste0(var1, " ~~ 0*", var2)]
 
 all_labels = rbind(all_lhs, all_rhs)
 
-#Remove duplicate sets
-vars = data.table(var1= unique(all_labels$var1))
-vars[, var2:=var1]
-vars[, id1:=seq(1, 28, by=1)]
-vars[, id2:=seq(1, 28, by=1)]
-
-all_labels = merge(all_labels, vars[, .(var1, id1)], by='var1')
-all_labels = merge(all_labels, vars[, .(var2, id2)], by='var2')
-
-dt1 = all_labels[, .(var1, var2, id1)]
-dt2 = all_labels[, .(var1, var2, id2)]
-setnames(dt2, c('var1', 'var2', 'id2'), c('var2', 'var1', 'id1'))
-
-check_dups = merge(dt1, dt2, by=c('var1', 'var2', 'id1'))
-all_labels = all_labels[order(var1)]
-all_labels[, id1:=seq(1, nrow(all_labels), by=1), by='var1']
-all_labels = all_labels[order(var2)]
-all_labels[, id2:=seq(1, nrow(all_labels), by=1), by='var2']
-
-#Pull out just the vector of labels to paste into the model object. 
-all_labels = c(all_lhs$label, all_rhs$label)
-all_labels = unique(all_labels) 
-
 #There are certain input variable relationships we want to keep - drop these 0 lables. 
-to_keep = c("exp_T1_2_cumulative ~~ 0*ghe_T1_2_cumulative", 
-"exp_T1_2_cumulative ~~ 0*other_dah_T1_2_cumulative", 
-"ghe_T1_2_cumulative ~~ 0*other_dah_T1_2_cumulative", 
+#Only flag inputs variables that are tagged to the same module. 
+all_labels[grep("ghe|other_dah|exp", var1), input_var1:=T]
+all_labels[grep("ghe|other_dah|exp", var2), input_var2:=T]
 
-"other_dah_T1_1_cumulative ~~ 0*exp_T1_1_cumulative", 
-"other_dah_T1_1_cumulative ~~ 0*ghe_T1_1_cumulative", 
-"exp_T1_1_cumulative ~~ 0*ghe_T1_1_cumulative", 
+all_labels[grep("other_dah", var1), other_dah1:=T]
+all_labels[grep("other_dah", var2), other_dah2:=T]
 
-"other_dah_T3_1_cumulative ~~ 0*exp_T3_ALL_cumulative", 
-"other_dah_T3_2_cumulative ~~ 0*exp_T3_ALL_cumulative", 
-"other_dah_T3_ALL_cumulative ~~ 0*exp_T3_ALL_cumulative", 
-"other_dah_TB_ALL_cumulative ~~ 0*exp_TB_ALL_cumulative", 
-"other_dah_HIV_TB_ALL_cumulative ~~ 0*exp_HIV_TB_ALL_cumulative")
+all_labels[input_var1==T, module1:=tstrsplit(var1, "_", keep=2)]
+all_labels[other_dah1==T, module1:=tstrsplit(var1, "_", keep=3)]
+all_labels[input_var1==T, intervention1:=tstrsplit(var1, "_", keep=3)]
+all_labels[other_dah1==T, intervention1:=tstrsplit(var1, "_", keep=4)]
 
-length(all_labels)
-all_labels = all_labels[!all_labels%in%to_keep]
-length(all_labels)
+all_labels[input_var2==T, module2:=tstrsplit(var2, "_", keep=2)]
+all_labels[other_dah2==T, module2:=tstrsplit(var2, "_", keep=3)]
+all_labels[input_var2==T, intervention2:=tstrsplit(var2, "_", keep=3)]
+all_labels[other_dah2==T, intervention2:=tstrsplit(var2, "_", keep=4)]
 
+#If you have two inputs matching to the same module/intervention, we actually want them to be linked! 
+#If you have an "ALL" intervention, it should be linked to everything in that module. 
+#Change these labels.
+
+#First, change to NA if modules are the same, so you can see if you haven't correctly changed something at the end. 
+all_labels[input_var1==T & input_var2==T & module1==module2 & intervention1==intervention2, label:=paste0(var1, "~~", var2)]
+all_labels[input_var1==T & input_var2==T & module1==module2 & intervention1==intervention2, relationship:="linked"]
+
+all_labels[input_var1==T & input_var2==T & module1==module2 & intervention1=="ALL", label:=paste0(var1, "~~", var2)]
+all_labels[input_var1==T & input_var2==T & module1==module2 & intervention1=="ALL", relationship:="linked"]
+
+all_labels[input_var1==T & input_var2==T & module1==module2 & intervention2=="ALL", label:=paste0(var1, "~~", var2)]
+all_labels[input_var1==T & input_var2==T & module1==module2 & intervention2=="ALL", relationship:="linked"]
+
+all_labels[is.na(relationship), relationship:="0 covariance"]
+
+#Only keep the variables you need. 
+all_labels = all_labels[, .(var1, var2, relationship, label)]
 
 write.csv(all_labels, "C:/Users/elineb/Desktop/zero_covariances_1.csv", row.names=F)
 
