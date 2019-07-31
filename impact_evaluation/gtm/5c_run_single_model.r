@@ -14,10 +14,10 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 1
-# modelVersion = 'gtm_tb_first_half2'
-# modelStage = 1
-# testRun = TRUE
+task_id = 1
+modelVersion = 'gtm_tb_first_half2'
+modelStage = 1
+testRun = TRUE
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -32,13 +32,13 @@ if(length(args)==0) stop('No commandArgs found!')
 #Pass arguments to the cluster 
 
 # the first argument should be the model version to use
-modelVersion = args[7]
-
-# the second argument should be the "model stage" (1 or 2)
-modelStage = as.numeric(args[8])
-
-# the third argument should be whether to run a test run (TRUE) or full run (FALSE)
-testRun = as.logical(args[9])
+# modelVersion = args[7]
+# 
+# # the second argument should be the "model stage" (1 or 2)
+# modelStage = as.numeric(args[8])
+# 
+# # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
+# testRun = as.logical(args[9])
 
 
 # print for log
@@ -68,6 +68,16 @@ parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('department','date',modelVars)
 subData = subData[, unique(modelVars), with=FALSE]
+
+#Check unique values in data - do any columns have <5 unique values? 
+check_explan_power = data.table(var=names(subData))
+check_explan_power = check_explan_power[!var%in%c('department', 'date')]
+for (v in check_explan_power$var){
+  print(v)
+  length = length(unique(subData[[v]]))
+  print(length)
+  check_explan_power[var==v, unique_values:=length]
+}
 
 # jitter to avoid perfect collinearity
 for(v in names(subData)[!names(subData)%in%c('department','date')]) { 
