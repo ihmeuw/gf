@@ -28,10 +28,14 @@ source('./resource_tracking/prep/_common/shared_functions.r', encoding="UTF-8")
 # Set boolean switches
 # ---------------------------------------
 # What countries do you want to run? 
-countries = c('cod', 'gtm', 'uga', 'sen') #Add country codes to this list to prep them. Possible choices are 'cod', 'gtm', 'sen', and 'uga'. 
-prep_1b = TRUE #Set to true if you want to extract coverage indicators 1B. 
-verbose = FALSE #Set to true if you want to print more detailed error messages. 
+countries = c('cod') #Add country codes to this list to prep them. Possible choices are 'cod', 'gtm', 'sen', and 'uga'. 
 
+prep_1a = TRUE
+prep_1a_disagg = FALSE 
+prep_1b = FALSE #Set to true if you want to extract coverage indicators 1B. 
+prep_1b_disagg = FALSE #Set to true if you want to extract disaggregated coverage indicators 1B. 
+
+verbose = TRUE #Set to true if you want to print more detailed error messages. 
 
 #-----------------------------------------------
 # 1. Prep individual countries 
