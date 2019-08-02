@@ -5,7 +5,7 @@
 # INSTRUCTIONS: Working directory should be the root of your personal repository. 
 # ----------------------------------------------
 
-for (country in c('cod', 'sen')){
+for (country in c('cod', 'sen', 'uga')){
   assign(paste0(country, "_1A"), readRDS(paste0(prepped_dir, country, "_1A.rds")))
   assign(paste0(country, "_1A_disagg"), readRDS(paste0(prepped_dir, country, "_1A_disagg.rds")))
   assign(paste0(country, "_1B"), readRDS(paste0(prepped_dir, country, "_1B.rds")))

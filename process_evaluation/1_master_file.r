@@ -28,7 +28,7 @@ source('./resource_tracking/prep/_common/shared_functions.r', encoding="UTF-8")
 # Set boolean switches
 # ---------------------------------------
 # What countries do you want to run? 
-countries = c('gtm') #Add country codes to this list to prep them. Possible choices are 'cod', 'gtm', 'sen', and 'uga'. 
+countries = c('uga') #Add country codes to this list to prep them. Possible choices are 'cod', 'gtm', 'sen', and 'uga'. 
 
 prep_1a = TRUE #Set to true if you want to extract impact outcome indicators 1A. 
 prep_1a_disagg = TRUE #Set to true if you want to extract disaggregated impact outcome indicators 1A.
@@ -45,7 +45,7 @@ source("./process_evaluation/2_read_filelist.R", encoding="UTF-8")
 #-----------------------------------------------
 # 2. Aggregate and clean data 
 #-----------------------------------------------
-# source("./process_evaluation/3_aggregate_data.r", encoding="UTF-8")
+source("./process_evaluation/3_aggregate_data.r", encoding="UTF-8")
 
 #-----------------------------------------------
 # 3. Validate data
