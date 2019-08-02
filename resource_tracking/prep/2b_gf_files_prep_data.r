@@ -223,7 +223,7 @@ warning1 = (length(unique(file_list$file_name)) == length(rt_files))
 if (!warning1){
   warning("The length of the original file list is not the same as the number of processed files.")
 }
-warning2 = stopifnot(sort(rt_files) == sort(unique(file_list$file_name)))
+warning2 = sort(rt_files) == sort(unique(file_list$file_name))
 if (!warning2){
   warning("The files in the processed data are not the same as the files in the file list.")
 }

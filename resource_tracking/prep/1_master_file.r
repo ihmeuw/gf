@@ -34,7 +34,7 @@ prep_ghe = FALSE
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-rerun_filelist = TRUE #Set to TRUE if you want to prep all files in the file list again. 
+rerun_filelist = FALSE #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 test_current_files = TRUE #Set to true if you would like to run unit tests on current database. Set to false if you would like to run tests on archived database. 
 
@@ -71,9 +71,14 @@ if (prep_files | prep_gos){
 }
 
 #Run data gap analysis - optional
-# rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
-#                   output_dir=paste0(dir, "/visualizations/verification"),
-#                   output_file="Reporting Completeness.pdf")
+rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
+                  output_dir=paste0(dir, "/visualizations/verification"),
+                  output_file="Reporting Completeness.pdf")
+
+#Run data gap analysis - optional
+rmarkdown::render(paste0(code_dir, "unclassified_files.rmd"),
+                  output_dir=paste0(dir, "/visualizations/verification"),
+                  output_file="Unclassified Files.pdf")
 # ----------------------------------------------
 # STEP 3: PREP FGH ACTUALS AND ESTIMATES 
 # ----------------------------------------------

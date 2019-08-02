@@ -121,6 +121,7 @@ file_list[is.na(classified), classified:=FALSE]
 
 #Make a count variable to run statistics later. 
 file_list[, count:=1]
+
 ```
 
 # Unclassified Global Fund Files 
@@ -129,7 +130,7 @@ file_list[, count:=1]
 Out of a total `r nrow(file_list)` files, `r nrow(file_list[classified==FALSE])` are unclassified. 
 Broken down by country, this is: 
 ```{r intro, echo=FALSE, warning=FALSE}
-kable(file_list[, .(unclassified=sum(count)), by=c('loc_name')])
+kable(file_list[classified==F, .(unclassified=sum(count)), by=c('loc_name')])
 ```
 
 The entire list of unclassified files, ordered by grant, grant period, and data source, is: 
