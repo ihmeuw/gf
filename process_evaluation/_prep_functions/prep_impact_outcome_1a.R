@@ -137,7 +137,7 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
   reverse_ind_names = c("reverse indicator?")
   
-  baseline_names = c('baseline (if applicable)', "reference", "reference (le cas echeant)")
+  baseline_names = c('baseline (if applicable)', "baseline _x000d_(if applicable)", "reference", "reference (le cas echeant)")
   target_names = c('target', 'cible')
   target_date_names = c('echeance de rapport', 'report due date')
   result_names = c('result', 'resultats', 'resultat')

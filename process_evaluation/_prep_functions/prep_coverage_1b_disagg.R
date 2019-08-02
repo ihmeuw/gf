@@ -162,7 +162,7 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   
   #Acceptable raw column names - will be matched to corrected names below. 
   module_names = c('module')
-  standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator')
+  standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator', 'indicateurs standard')
   subcat_names = c('ventilation', 'disaggregation')
   category_names = c('categorie')
   geography_names = c('geographic area', 'country')
@@ -176,7 +176,7 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   
   #Correct these matched names. 
   names[which(names%in%module_names)] = "module"
-  names[which(names%in%standard_ind_names)] = "standard_coverage_indicator"
+  names[which(names%in%standard_ind_names)] = "indicator"
   names[which(names%in%category_names)] = "category"
   names[which(names%in%subcat_names)] = "sub-category"
   names[which(names%in%geography_names)] = "geography"
@@ -213,10 +213,10 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   #Make sure you've tagged all names correctly so far. 
   if (verbose){
     print("These are the variable names that haven't been correctly tagged.")
-    print(names[!names%in%c("module", "category", "sub-category", "standard_coverage_indicator", "custom_coverage_indicator", "geography", 
+    print(names[!names%in%c("module", "category", "sub-category", "indicator", "custom_coverage_indicator", "geography", 
                               "cumulative_target", "reverse_indicator", "baseline", "target", "pr_result", "lfa_result", "gf_result", NA)])
   }
-  stopifnot(names%in%c("module", "category", "sub-category", "standard_coverage_indicator", "custom_coverage_indicator", "geography", 
+  stopifnot(names%in%c("module", "category", "sub-category", "indicator", "custom_coverage_indicator", "geography", 
                        "cumulative_target", "reverse_indicator", "baseline", "target", "pr_result", "lfa_result", "gf_result") | is.na(names))
   
   #----------------------------------
@@ -271,7 +271,7 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   #------------------------------------------------------
   
   #Drop out rows that have NAs, and drop the sub names column. 
-  gf_data = gf_data[!(is.na(module) & is.na(standard_coverage_indicator)), ] 
+  gf_data = gf_data[!(is.na(module) & is.na(indicator)), ] 
   gf_data = gf_data[-c(1)]
   
   return(gf_data)
