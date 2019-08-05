@@ -30,47 +30,47 @@ modelVersion = 'gtm_tb_first_half2'
 # -----------------------------------------------------------------
 
 #------------------------------------------------------------------
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
-
-# reduce the data down to only necessary variables
-parsedModel = lavParseModelString(model)
-modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c(modelVars, 'department', 'date')
-modelVars = gsub("_cumulative", "", modelVars)
-reporting = data[, unique(modelVars), with=F]
-
-#What variables are reporting for what years? 
-report_long = melt(reporting, id.vars=c('department', 'date'))
-report_long[!is.na(value), value:=1]
-report_long = report_long[, .(total_by_dept=sum(value, na.rm=TRUE)), by=c('date', 'variable')]
-totalVars=length(unique(report_long$variable))
-report_long[total_by_dept!=0, var_by_year:=1]
-report_long[total_by_dept==0, var_by_year:=0]
-report_long[, vars_available_pct:=(sum(var_by_year)/totalVars)*100, by='date']
-write.csv(unique(report_long[, .(date, vars_available_pct)]), "C:/Users/elineb/Desktop/variables_available_by_year.csv", row.names=F)
-
-#Do the same check, but exclude 0's. 
-report_long2 = melt(reporting, id.vars=c('department', 'date'))
-report_long2[value==0, value:=NA]
-report_long2[!is.na(value), value:=1]
-report_long2 = report_long2[, .(total_by_dept=sum(value, na.rm=TRUE)), by=c('date', 'variable')]
-totalVars=length(unique(report_long2$variable))
-report_long2[total_by_dept!=0, var_by_year:=1]
-report_long2[total_by_dept==0, var_by_year:=0]
-report_long2[, vars_available_pct:=(sum(var_by_year)/totalVars)*100, by='date']
-write.csv(unique(report_long2[, .(date, vars_available_pct)]), "C:/Users/elineb/Desktop/variables_available_by_year_excl_0.csv", row.names=F)
-
+# source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
+# 
+# # reduce the data down to only necessary variables
+# parsedModel = lavParseModelString(model)
+# modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+# modelVars = c(modelVars, 'department', 'date')
+# modelVars = gsub("_cumulative", "", modelVars)
+# reporting = data[, unique(modelVars), with=F]
+# 
+# #What variables are reporting for what years? 
+# report_long = melt(reporting, id.vars=c('department', 'date'))
+# report_long[!is.na(value), value:=1]
+# report_long = report_long[, .(total_by_dept=sum(value, na.rm=TRUE)), by=c('date', 'variable')]
+# totalVars=length(unique(report_long$variable))
+# report_long[total_by_dept!=0, var_by_year:=1]
+# report_long[total_by_dept==0, var_by_year:=0]
+# report_long[, vars_available_pct:=(sum(var_by_year)/totalVars)*100, by='date']
+# write.csv(unique(report_long[, .(date, vars_available_pct)]), "C:/Users/elineb/Desktop/variables_available_by_year.csv", row.names=F)
+# 
+# #Do the same check, but exclude 0's. 
+# report_long2 = melt(reporting, id.vars=c('department', 'date'))
+# report_long2[value==0, value:=NA]
+# report_long2[!is.na(value), value:=1]
+# report_long2 = report_long2[, .(total_by_dept=sum(value, na.rm=TRUE)), by=c('date', 'variable')]
+# totalVars=length(unique(report_long2$variable))
+# report_long2[total_by_dept!=0, var_by_year:=1]
+# report_long2[total_by_dept==0, var_by_year:=0]
+# report_long2[, vars_available_pct:=(sum(var_by_year)/totalVars)*100, by='date']
+# write.csv(unique(report_long2[, .(date, vars_available_pct)]), "C:/Users/elineb/Desktop/variables_available_by_year_excl_0.csv", row.names=F)
+# 
 
 #------------------------------------------------------------------
 # Check for linear dependence - added by EL 7/29/2019
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
-
-# reduce the data down to only necessary variables
-parsedModel = lavParseModelString(model)
-modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-#We'll want to use the cumulative vars in the final model, but remove this for this test 
-modelVars = gsub("_cumulative", "", modelVars)
-data = data[, unique(modelVars), with=FALSE]
+# source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
+# 
+# # reduce the data down to only necessary variables
+# parsedModel = lavParseModelString(model)
+# modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+# #We'll want to use the cumulative vars in the final model, but remove this for this test 
+# modelVars = gsub("_cumulative", "", modelVars)
+# data = data[, unique(modelVars), with=FALSE]
 
 # -----------------------------------------------------------------
 # Ensure all variables have complete time series 

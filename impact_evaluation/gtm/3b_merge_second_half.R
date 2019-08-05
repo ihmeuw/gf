@@ -53,6 +53,9 @@ dt = merge(act_out, out_imp, by=c('department', 'date'), all=T)
 # ----------------------------------------------------------
 # Finish and save 
 
+#Restrict years to 2009 on (EL 8/5/2019) 
+dt = dt[date>=2009]
+
 # save
 saveRDS(dt, outputFile3a)
 

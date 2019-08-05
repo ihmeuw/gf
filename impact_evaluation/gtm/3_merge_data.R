@@ -156,6 +156,9 @@ for(i in 1:nrow(redistribution_mat)) {
 # ----------------------------------------------------------
 # Finish and save 
 
+#Restrict years to 2009 on (EL 8/5/2019)
+merge_file = merge_file[date>=2009]
+
 # drop unnecessary variables
 merge_file = merge_file[, -c('mean','tmp','prop')]
 
