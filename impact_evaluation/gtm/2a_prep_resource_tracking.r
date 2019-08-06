@@ -227,30 +227,30 @@ rt_wide = rt_wide[date>=2004.0]
 rt_wide[, date:=date+0.5]
 
 #Replace NAs with 0's at this point unless we hear differently from Guillermo. 
-cols = names(rt_wide)[!names(rt_wide)=='date']
-for (c in cols) {
-  rt_wide[is.na(get(c)), (c):=0]
-}
+# cols = names(rt_wide)[!names(rt_wide)=='date']
+# for (c in cols) {
+#   rt_wide[is.na(get(c)), (c):=0]
+# }
 
 #------------------------------------
 # Validate data 
 #------------------------------------
 # test to see if there are any zero-variance variables. 
 # Just look at national-level at first, and then we might check by department later. DP 7.12.19. 
-test = rt_wide[,lapply(.SD,var)]==0
-test = data.table(test)
-test[, var:='all']
-test = melt(test, id.vars='var', value.name='bool')
-
-if(any(test$bool)) { 
-  print(test[bool==TRUE, .(variable)])
-  warning("Some modules have zero variance. These will be dropped from the model.")
-}
-
-drop_cols = test[bool==TRUE, .(variable)]
-keep_cols = names(rt_wide)[!names(rt_wide)%in%drop_cols$variable]
-#Drop these variables from the model, and modify in model object code. 
-rt_wide = rt_wide[, keep_cols, with=F]
+# test = rt_wide[,lapply(.SD,var)]==0
+# test = data.table(test)
+# test[, var:='all']
+# test = melt(test, id.vars='var', value.name='bool')
+# 
+# if(any(test$bool)) {
+#   print(test[bool==TRUE, .(variable)])
+#   warning("Some modules have zero variance. These will be dropped from the model.")
+# }
+# 
+# drop_cols = test[bool==TRUE, .(variable)]
+# keep_cols = names(rt_wide)[!names(rt_wide)%in%drop_cols$variable]
+# #Drop these variables from the model, and modify in model object code.
+# rt_wide = rt_wide[, keep_cols, with=F]
 
 #Save output file
 saveRDS(rt_wide, outputFile2a)
