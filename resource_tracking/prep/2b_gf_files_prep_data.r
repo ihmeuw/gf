@@ -26,7 +26,7 @@ if (prep_files == TRUE){
                     "loc_name", "mod_framework_format", "file_currency", "pudr_semester")
   stopifnot(desired_cols%in%names(file_list))
   stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr", "performance_framework", "document"))
-  stopifnot(unique(file_list$file_iteration)%in%c('final', 'initial', 'revision'))
+  stopifnot(unique(file_list$file_iteration)%in%c('final', 'initial', 'revision', NA))
   
   #Only keep inputs with financial information, and make sure you've kept date column before prioritizing GOS. 
   file_list = file_list[data_source%in%c('fpm', 'pudr') & !is.na(sheet_financial)]
