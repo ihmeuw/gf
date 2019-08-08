@@ -31,8 +31,10 @@ sen[disease=="rssh", .(budget=sum(budget, na.rm=T)), by=c('gf_module')][order(-b
 sen[, .(budget=sum(budget, na.rm=T)), by=c('implementer')][order(-budget)]
 
 #Sum of module by implementer
-sen[, .(budget=sum(budget)), by=c('implementer', 'gf_module')][order(implementer, -budget)]
+DT1 <- sen[, .(budget=sum(budget)), by=c('implementer', 'gf_module', 'year')][order(implementer, -budget)]
 
-
+ggplot(data=DT1, aes(x=gf_module, y=budget)) +
+  geom_bar(stat="identity") +
+  facet_wrap(~year)
 
 
