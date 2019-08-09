@@ -6,7 +6,6 @@
 library(data.table)
 library(ggplot2)
 library(scales)
-library(dplyr)
 library(RColorBrewer)
 
 # read data, subset to TB/RSSH Grant, sum and calculate absorption, order dataset
@@ -19,6 +18,9 @@ absorption[order(-absorption)]
 
 # Subset data to only include Semester 1-2 absorption
 absorption = absorption[semester=="Semester 1-2"]
+
+# change names of certain variables
+
 
 # plot a: absorption by module in Semesters 1-2
 
@@ -33,27 +35,28 @@ absorption$gf_module <- factor(absorption$gf_module,
 
 # factor gf_intervention into the order preferred for plotting
 absorption$gf_intervention <- factor(absorption$gf_intervention,
-                                      levels = c("Community TB care delivery",
-                                                 "Case detection and diagnosis",
-                                                 "Treatment",
-                                                 "Prevention",
-                                                 "Key populations (TB care and prevention) - Others",
-                                                 "Engaging all care providers (TB care and prevention)", 
-                                                 "Key populations (TB care and prevention) - Prisoners",
-                                                 "Collaborative activities with other programs and sectors (TB care and prevention)",
-                                                 "Removing human rights- and gender-related barriers to TB care and prevention",
-                                                 "Retention and scale-up of health workers, including for community health workers",
-                                                 "Analysis, review and transparency",
-                                                 "Routine reporting",
-                                                 "Surveys",
-                                                 "Treatment: MDR-TB",
-                                                 "Case detection and diagnosis: MDR-TB",
-                                                 "TB/HIV collaborative interventions",
-                                                 "Collaborative activities with other programs and sectors (TB/HIV)",
-                                                 "Grant management",
-                                                 "Policy, planning, coordination and management of national disease control programs"))
+                                     levels = c("Community TB care delivery",
+                                                "Case detection and diagnosis",
+                                                "Treatment",
+                                                "Prevention",
+                                                "Key populations (TB care and prevention) - Prisoners", # hyphens are not regular - signs
+                                                "Key populations (TB care and prevention) - Others", # hyphens are not regular - signs
+                                                "Engaging all care providers (TB care and prevention)",
+                                                "Collaborative activities with other programs and sectors (TB care and prevention)",
+                                                "Removing human rights- and gender-related barriers to TB care and prevention",
+                                                "Retention and scale-up of health workers, including for community health workers",
+                                                "Analysis, review and transparency",
+                                                "Routine reporting",
+                                                "Surveys",
+                                                "Treatment: MDR-TB",
+                                                "Case detection and diagnosis: MDR-TB",
+                                                "TB/HIV collaborative interventions",
+                                                "Collaborative activities with other programs and sectors (TB/HIV)",
+                                                "Grant management",
+                                                "Policy, planning, coordination and management of national disease control programs"))
 
-a <- ggplot(absorption, aes(y=absorption, x=reorder(gf_intervention,desc(gf_intervention)))) + 
+
+ggplot(absorption, aes(y=absorption, x=reorder(gf_intervention,desc(gf_intervention)))) + 
   geom_bar(stat='identity', aes(fill = gf_module)) + 
   coord_flip() +
   theme_bw() +
@@ -63,14 +66,6 @@ a <- ggplot(absorption, aes(y=absorption, x=reorder(gf_intervention,desc(gf_inte
   scale_fill_brewer(palette = "Accent") +
   labs(title = "2018 TB/RSSH Grant Absorption", caption = "Data source: Expenditure from semester 1-2 PUDRs") +
   theme(legend.position = "bottom")
-
-# save file
-dir <- "C:/Users/frc2/Documents/Deep_dive"
-setwd(dir)
-jpeg("rplot.jpg", width = 975, height = 425, quality = 100)
-a
-dev.off()
-
 
 ##### Visualizing donor spending on TB ######
 
