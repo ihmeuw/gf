@@ -9,6 +9,7 @@ library(scales)
 library(dplyr)
 library(RColorBrewer)
 
+# read data, subset to TB/RSSH Grant, sum and calculate absorption, order dataset
 absorption <- readRDS("C:/Users/frc2/Documents/data/finances/absorption_sen.rds")
 absorption = absorption[grant=="SEN-Z-MOH"]
 absorption = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('gf_module', 'gf_intervention', 'semester')] # Collapse and recalculate absorption 
@@ -16,11 +17,13 @@ absorption[, absorption:=(expenditure/budget)*100]
 absorption = absorption[order(gf_module, gf_intervention, semester)] #Order your dataset nicely
 absorption[order(-absorption)]
 
-# Semester 1-2 absorption
-absorption2 <- absorption[semester=="Semester 1-2"]
+# Subset data to only include Semester 1-2 absorption
+absorption = absorption[semester=="Semester 1-2"]
 
 # plot a: absorption by module in Semesters 1-2
-absorption2$gf_module <- factor(absorption2$gf_module, 
+
+# factor gf_module into the order preferred for plotting
+absorption$gf_module <- factor(absorption$gf_module, 
                                       levels = c("TB care and prevention", 
                                                  "Human resources for health, including community health workers",
                                                  "Health management information system and monitoring and evaluation",
@@ -28,7 +31,8 @@ absorption2$gf_module <- factor(absorption2$gf_module,
                                                  "TB/HIV",
                                                  "Program management"))
 
-absorption2$gf_intervention <- factor(absorption2$gf_intervention,
+# factor gf_intervention into the order preferred for plotting
+absorption$gf_intervention <- factor(absorption$gf_intervention,
                                       levels = c("Community TB care delivery",
                                                  "Case detection and diagnosis",
                                                  "Treatment",
@@ -49,7 +53,7 @@ absorption2$gf_intervention <- factor(absorption2$gf_intervention,
                                                  "Grant management",
                                                  "Policy, planning, coordination and management of national disease control programs"))
 
-a <- ggplot(absorption2, aes(y=absorption, x=reorder(gf_intervention,desc(gf_intervention)))) + 
+a <- ggplot(absorption, aes(y=absorption, x=reorder(gf_intervention,desc(gf_intervention)))) + 
   geom_bar(stat='identity', aes(fill = gf_module)) + 
   coord_flip() +
   theme_bw() +
@@ -57,7 +61,8 @@ a <- ggplot(absorption2, aes(y=absorption, x=reorder(gf_intervention,desc(gf_int
   ylab("Absorption") +
   labs(fill = "Global Fund Module") +
   scale_fill_brewer(palette = "Accent") +
-  labs(title = "2018 TB/RSSH Grant Absorption", caption = "Data source: Expenditure from semester 1-2 PUDRs")
+  labs(title = "2018 TB/RSSH Grant Absorption", caption = "Data source: Expenditure from semester 1-2 PUDRs") +
+  theme(legend.position = "bottom")
 
 # save file
 dir <- "C:/Users/frc2/Documents/Deep_dive"
@@ -157,3 +162,5 @@ d <- ggplot(domesticdataavail, aes(x=year, y=disbursement)) +
   ylab("amount") +
   scale_x_continuous(breaks = seq(2005, 2018, 2)) +
   theme_bw()
+
+
