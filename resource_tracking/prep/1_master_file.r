@@ -43,7 +43,7 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
-    country = "cod" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+    country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
     master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
     export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
   }
@@ -55,13 +55,13 @@ if (prep_files | prep_gos){
   }
   
   # Load and verify mapping, prep data, and map data. 
-  # source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
+  source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
   if (prep_files){
     source(paste0(code_dir, "2b_gf_files_prep_data.r"))
   } else if (prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
-  # source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
+  source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
   # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
   # source(paste0(code_dir, "2f_gf_verify_outputs.R"))
   # # 
@@ -74,8 +74,8 @@ if (prep_files | prep_gos){
 # rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
 #                   output_dir=paste0(dir, "/visualizations/verification"),
 #                   output_file="Reporting Completeness.pdf")
-# 
-# #Run unclassified file analysis - optional
+# # 
+# # #Run unclassified file analysis - optional
 # rmarkdown::render(paste0(code_dir, "unclassified_files.rmd"),
 #                   output_dir=paste0(dir, "/visualizations/verification"),
 #                   output_file="Unclassified Files.pdf")

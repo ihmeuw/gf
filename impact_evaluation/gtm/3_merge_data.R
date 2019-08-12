@@ -139,7 +139,8 @@ for(i in 1:nrow(redistribution_mat)) {
 
 	#Check to make sure these redistribution variables sum to 1 by date (over all departments)
 	check = merge_file[, .(prop=sum(prop, na.rm=T)), by='date']
-	stopifnot(unique(check$prop)==1)
+	print(paste0("Unique values of 'prop': ", unique(check$prop)))
+	stopifnot(unique(check$prop)%in%c(0, 1)) #Changed from stopifnot(unique(check$prop)==1) by EL 8/7/19
 	
 	#Redistribute
 	merge_file[, (v):=get(v)*prop]
@@ -160,7 +161,7 @@ for(i in 1:nrow(redistribution_mat)) {
 merge_file = merge_file[date>=2009]
 
 # drop unnecessary variables
-merge_file = merge_file[, -c('mean','tmp','prop')]
+merge_file = merge_file[, -c('mean','tmp','prop', 'min')] #Also removing 'min' EL 8/7/19
 
 # save
 saveRDS(merge_file, outputFile3)

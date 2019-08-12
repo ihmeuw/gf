@@ -13,11 +13,12 @@
 # Read in file list 
 #----------------------------------------------------
 if (prep_files == TRUE){
-  file_list = read.xlsx(paste0(dir, "_gf_files_gos/master_file_list.xlsx"), detectDates=T)
+  file_list = read_excel(paste0(dir, "_gf_files_gos/master_file_list.xlsx"))
   setDT(file_list)
   file_list = file_list[order(loc_name, grant_period, grant_period, data_source, file_name)] #So that you always get consistent ordering, even if the excel beneath is filtered. 
   file_list = file_list[loc_name==country]
-  file_list$start_date_financial <- as.Date(file_list$start_date_financial, format = "%Y-%m-%d")
+  file_list = file_list[!is.na(start_date_financial)]
+  file_list[, start_date_financial:=excel_numeric_to_date(as.numeric(as.character(start_date_financial)), date_system="modern")] #This is ugly, but I can't find a fix within the readxl package. EL 8/9/2019
   file_list = file_list[, -c('notes')]
   
   #Validate file list 
@@ -26,11 +27,10 @@ if (prep_files == TRUE){
                     "loc_name", "mod_framework_format", "file_currency", "pudr_semester")
   stopifnot(desired_cols%in%names(file_list))
   stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr", "performance_framework", "document"))
-  stopifnot(unique(file_list$file_iteration)%in%c('final', 'initial', 'revision', NA))
+  stopifnot(unique(file_list$file_iteration)%in%c('final', 'initial', 'revision', NA, "NA"))
   
   #Only keep inputs with financial information, and make sure you've kept date column before prioritizing GOS. 
-  file_list = file_list[data_source%in%c('fpm', 'pudr') & !is.na(sheet_financial)]
-  stopifnot(nrow(file_list[is.na(start_date_financial)])==0)
+  file_list = file_list[data_source%in%c('fpm', 'pudr') & !is.na(sheet_financial) & function_financial!='unknown'] #Will only keep files where financial sheet, function, and start date (from above) are available. 
 
   #Prioritize GOS data where we have it
   file_list = prioritize_gos(file_list)
@@ -50,6 +50,12 @@ if (prep_files == TRUE){
     print(file_list[pudr_dup>0 & !is.na(pudr_dup)])
     stop("There are duplicates in PUDRs between semesters - review file list.")
   }
+  
+  #At this moment in time, don't process initial versions of files. EL 8/9/2019 
+  file_list = file_list[file_iteration%in%c('final', 'revision')]
+  
+  #For Guatemala, just limit to the current PUDRs to get a timeline for expenditure. 
+  file_list = file_list[data_source=="pudr"]
 }
 
 #----------------------------------------------------

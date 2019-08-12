@@ -27,14 +27,14 @@ modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('department','date',modelVars)
 data1 = data1[, unique(modelVars), with=FALSE] 
 
-#Jitter to avoid perfect collinearity
-for(v in names(data1)[!names(data1)%in%c('department', 'date')]) { 
-  if (all(data1[[v]]>=0)) data1[, paste0((v)):=get(v)+runif(nrow(data1), min=0, max=1/1000)] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
-  if (!all(data1[[v]]>=0)) data1[, paste0((v)):=get(v)+rnorm(nrow(data1), 0, (sd(data1[[v]])+2)/10)]
+# jitter to avoid perfect collinearity #Commenting this out for the moment, EL 8/6/2019
+for(v in names(subData)[!names(subData)%in%c('department','date')]) {
+  if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
+  if (!all(subData[[v]]>=0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
 }
 
 #Check for zero-vectors, which cause linear dependence. 
-all_zero_vectors = character()  #Review department 20 here. names(subData)[subData[, .SD==0]]
+all_zero_vectors = data.table(variable=character(), count=integer(), department=integer())
 names = names(data1)[!names(data1)%in%c('department', 'date')]
 for (d in unique(data1$department)){
   subData = data1[department==d]
@@ -50,7 +50,8 @@ for (d in unique(data1$department)){
     print(paste0("There are zero vectors for department ", d, ":"))
     print(zero_vectors)
     print("...")
-    all_zero_vectors = c(all_zero_vectors, zero_vectors)
+    zero_vectors_dt = data.table(variable=zero_vectors, count=1, department=d)
+    all_zero_vectors = rbind(all_zero_vectors, zero_vectors_dt)
   }
 }
 

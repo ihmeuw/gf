@@ -19,10 +19,24 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
   ########
 # 
 
-  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", folder, "/")
+  # folder = "budgets"
+  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  # if (file_list$file_iteration[i]=="initial"){
+  #   version = "iterations"
+  # } else if (file_list$file_iteration[i]=="revision"){
+  #   version= "revisions"
+  # } else {
+  #   version = ""
+  # }
+  # grant_period = file_list$grant_period[i]
+  # 
+  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  # if (version != ""){
+  #   dir = paste0(dir, version, "/")
+  # }
   # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date[i]
+  # sheet_name = file_list$sheet_financial[i]
+  # start_date = file_list$start_date_financial[i]
   # qtr_number = file_list$qtr_number[i]
   # period = file_list$period[i]
   # 
@@ -43,7 +57,7 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
   # 1. Decide which category of file this document belongs to. 
   #-------------------------------------------------------------
   cat1 = c("GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xlsx") #Files similar to: "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/raw_data/active/GTM-T-MSPAS/pudrs/GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xls"
-  cat2 = c("GUA-311-G06-H EFR_Form_2016_EFR ENGLISH VERSION.xlsx", "GUA-M-MSPAS EFR FASE II -2016_Ingles_RevALF.xlsm") #Files similar to: J:\Project\Evaluation\GF\resource_tracking\_gf_files_gos\gtm\raw_data\not_active\GUA-311-G06-H\pudrs\GUA-311-G06-H EFR_Form_2016_EFR ENGLISH VERSION.xls
+  cat2 = c("GUA-311-G06-H EFR_Form_2016_EFR ENGLISH VERSION.xlsx", "GUA-M-MSPAS EFR FASE II -2016_Ingles_RevALF.xlsm", "GUA-M-MSPAS EFR FASE II -2016_RevALF - Editable.xlsx") #Files similar to: J:\Project\Evaluation\GF\resource_tracking\_gf_files_gos\gtm\raw_data\not_active\GUA-311-G06-H\pudrs\GUA-311-G06-H EFR_Form_2016_EFR ENGLISH VERSION.xls
   
   #Sanity check: Is this sheet name one you've checked before? 
   if (!inFile%in%c(cat1, cat2)){
