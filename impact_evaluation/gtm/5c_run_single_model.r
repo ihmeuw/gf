@@ -14,7 +14,7 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-task_id = 14
+task_id = 1
 modelVersion = 'gtm_tb_first_half2'
 modelStage = 1
 testRun = TRUE
@@ -92,12 +92,12 @@ if (length(less_than_10)>0){
 }
 
 
-# jitter to avoid perfect collinearity #Commenting this out for the moment, EL 8/6/2019
-# for(v in names(subData)[!names(subData)%in%c('department','date')]) { 
-#   # if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
-#   if (all(subData[[v]]>=0)) subData[, (v):=get(v)+runif(nrow(subData), min=0, max=1)] #Trying a more heavy-handed jitter to try and resolve zero-variance issue EL 8/6/2019
-#   if (!all(subData[[v]]>=0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
-# }
+#jitter to avoid perfect collinearity #Commenting this out for the moment, EL 8/6/2019
+for(v in names(subData)[!names(subData)%in%c('department','date')]) {
+  if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
+  # if (all(subData[[v]]>=0)) subData[, (v):=get(v)+runif(nrow(subData), min=0, max=1)] #Trying a more heavy-handed jitter to try and resolve zero-variance issue EL 8/6/2019
+  if (!all(subData[[v]]>=0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
+}
 
 # jitter to avoid perfect collinearity 
 # for(v in names(subData)[!names(subData)%in%c('department','date')]) { #Need to apply a random jitter to all variables. 
@@ -138,11 +138,11 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 
 #One test to move the jitter after the rescaling. 
 # jitter to avoid perfect collinearity 
-for(v in numVars) { #Need to apply a random jitter to all variables. 
-  print(v)
-  print(sum(subData[[v]]))
-  subData[, (v):=get(v)+runif(nrow(subData), min=0, max=1)]
-}
+# for(v in numVars) { #Need to apply a random jitter to all variables. 
+#   print(v)
+#   print(sum(subData[[v]]))
+#   subData[, (v):=get(v)+runif(nrow(subData), min=0, max=1)]
+# }
 # ---------------------------------------------------------------------------------------------------
 
 #Test for linear dependence 

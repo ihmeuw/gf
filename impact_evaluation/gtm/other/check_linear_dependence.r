@@ -58,7 +58,7 @@ for (d in unique(data1$department)){
 all_zero_vectors = unique(all_zero_vectors) 
 print("These are all of the variables that ever appear as a zero-vector, with both jittering and rounding applied:")
 print(all_zero_vectors)
-print(length(all_zero_vectors))
+print(length(unique(all_zero_vectors$variable)))
 
 #---------------------------------
 # MODEL SECOND HALF
