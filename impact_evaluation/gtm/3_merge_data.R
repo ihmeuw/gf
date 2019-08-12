@@ -44,7 +44,7 @@ stopifnot(nrow(outputs_activities_rect[is.na(date) | is.na(department)])==0)
 
 # Merge rectangularized resource tracking and outputs/activites data 
 merge_file <- merge(resource_tracking_rect, outputs_activities_rect, by=c('department','date'), all=TRUE)
-setDT(merge_file)
+setDT(merge_file) #OK to here. 
 
 #Check for uniqueness and NAs here. 
 # -----------------------------------------------------------------------------------------------------
@@ -116,10 +116,15 @@ for(i in 1:nrow(redistribution_mat)) {
 	a = redistribution_mat[i, redist_var] #Changed from 'indicator' in DRC code EL 7.8.19
 
 	# disallow zeroes
-	min_calc = merge_file[, min(get(a), na.rm=T)]
-	merge_file[, min:=min_calc]
+	# min_calc = merge_file[, min(get(a), na.rm=T)]
+	# merge_file[, min:=min_calc]
+	# merge_file[, mean:=mean(get(a), na.rm=TRUE), by=department]
+	# merge_file[is.na(min), min:=0]
+	# merge_file[is.na(mean), mean:=min]
+	
+	# disallow zeroes #Replaced code above with DRC code on 8/12/19 EL and DP
+	min = min(merge_file[get(a)>0][[a]], na.rm=TRUE)
 	merge_file[, mean:=mean(get(a), na.rm=TRUE), by=department]
-	merge_file[is.na(min), min:=0]
 	merge_file[is.na(mean), mean:=min]
 	
 	# set up redistribution coefficients
@@ -138,7 +143,7 @@ for(i in 1:nrow(redistribution_mat)) {
 	}
 
 	#Check to make sure these redistribution variables sum to 1 by date (over all departments)
-	check = merge_file[, .(prop=sum(prop, na.rm=T)), by='date']
+	check = merge_file[, .(prop=sum(prop, na.rm=TRUE)), by='date']
 	print(paste0("Unique values of 'prop': ", unique(check$prop)))
 	stopifnot(unique(check$prop)%in%c(0, 1)) #Changed from stopifnot(unique(check$prop)==1) by EL 8/7/19
 	

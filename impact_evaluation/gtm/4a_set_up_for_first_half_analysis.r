@@ -76,10 +76,15 @@ modelVersion = 'gtm_tb_first_half2'
 # Ensure all variables have complete time series 
 
 # drop zero-variance variables
-numVars = names(data)[!names(data)%in%c('department','date')]
+# numVars = names(data)[!names(data)%in%c('department','date')]
 for(v in numVars) if (all(is.na(data[[v]]))) data[[v]] = NULL
 
 #EMILY - WE WANT TO ONLY IMPUTE VARIABLES THAT ARE COUNTS. 
+numVars = c("Number_of_Cases_Screened_for_MDR_act", "Second_Line_Drugs_Distributed_act", "Total_Drugs_Distributed_act", "Isoniazid_Distributed_act", "PLHIV_Screened_for_TB_act", "TB_Patients_Tested_for_HIV_act", 
+            "MDR_Cases_Notified_out", "MDR_Cases_Started_Treatment_out", "Cases_Notified_in_Prisons_out", "Children_in_Contact_with_TB_Started_IPT_out", 
+            "Cases_Started_on_Treatment_out", "Cases_Notified_out", "PLHIV_started_on_IPT_out", "Cases_Started_on_Treatment_in_Prisons_out", "HIV_TB_Cases_Notified_out" )
+  #CURRENTLY NOT IMPUTING ADDITIONAL CASES DETECTED VIA ACF BECAUSE WE KNOW IT'S VERY DEPARTMENT SPECIFIC- ANY OTHERS? EL 8/12/19
+names(data)[!names(data)%in%c(numVars, 'date', 'department')]
 # extrapolate where necessary using GLM (better would be to use multiple imputation)
 i=1
 for(v in numVars) {
