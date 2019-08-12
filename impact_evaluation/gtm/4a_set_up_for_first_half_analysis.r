@@ -77,12 +77,12 @@ modelVersion = 'gtm_tb_first_half2'
 
 # drop zero-variance variables
 # numVars = names(data)[!names(data)%in%c('department','date')]
-for(v in numVars) if (all(is.na(data[[v]]))) data[[v]] = NULL
-
 #EMILY - WE WANT TO ONLY IMPUTE VARIABLES THAT ARE COUNTS. 
 numVars = c("Number_of_Cases_Screened_for_MDR_act", "Second_Line_Drugs_Distributed_act", "Total_Drugs_Distributed_act", "Isoniazid_Distributed_act", "PLHIV_Screened_for_TB_act", "TB_Patients_Tested_for_HIV_act", 
             "MDR_Cases_Notified_out", "MDR_Cases_Started_Treatment_out", "Cases_Notified_in_Prisons_out", "Children_in_Contact_with_TB_Started_IPT_out", 
             "Cases_Started_on_Treatment_out", "Cases_Notified_out", "PLHIV_started_on_IPT_out", "Cases_Started_on_Treatment_in_Prisons_out", "HIV_TB_Cases_Notified_out" )
+for(v in numVars) if (all(is.na(data[[v]]))) data[[v]] = NULL
+
   #CURRENTLY NOT IMPUTING ADDITIONAL CASES DETECTED VIA ACF BECAUSE WE KNOW IT'S VERY DEPARTMENT SPECIFIC- ANY OTHERS? EL 8/12/19
 names(data)[!names(data)%in%c(numVars, 'date', 'department')]
 # extrapolate where necessary using GLM (better would be to use multiple imputation)
@@ -113,11 +113,12 @@ data$tmp = NULL
 # -----------------------------------------------------------------------
 # Data transformations and other fixes for Heywood cases
 
-# # make cumulative variables
+# # make cumulative variables, but first, replace NAs with zeros! 
 cumulVars = names(data)
 cumulVars = cumulVars[!grepl("total", cumulVars)]
 cumulVars = cumulVars[!cumulVars%in%c('department', 'date', 'year', 'min')]
 for(v in cumulVars) {
+  data[is.na(get(v)), (v):=0] #Replace NA with 0. 
 	nv = gsub('value_','',v)
 	data[, (paste0(nv,'_cumulative')):=cumsum(get(v)), by='department']
 }
