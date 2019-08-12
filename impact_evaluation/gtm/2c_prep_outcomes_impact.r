@@ -45,7 +45,7 @@ o_mun = unique(outcomes$municipality)
 i_mun = unique(impacts$municipality)
 
 o_mun[!o_mun%in%i_mun] #None.
-i_mun[!i_mun%in%o_mun] #None.
+i_mun[!i_mun%in%o_mun] #None. ==> Changed to municipalities 410 and 514, from none before. 8/7/19 EL
 
 #Subset data to only department-level, because municipalities aren't matching right now. 
 
@@ -115,6 +115,12 @@ for (var in vars){
     dep_vars = c(dep_vars, var)
   }
 }
+
+# #Go ahead and hard code these variables to be department-level, because there is a data prep error. EL 7.8.19
+#This should be removed once new data is sent!
+dep_vars = c("Proportion_of_Cases_in_Prisons_Treated_value_d", dep_vars)
+mun_vars = mun_vars[!mun_vars%in%c("Proportion_of_Cases_in_Prisons_Treated_value_d")]
+
 
 #Flag cases where variables end in _d but are in the mun-level dataset. 
 dept_level_error = mun_vars[grepl("_d", mun_vars)]
@@ -234,6 +240,9 @@ impacts1 = impacts1[, -c('dup')]
 # Merge data 
 #-----------------------------------------------------
 dt_final = merge(outcomes1, impacts1, by=c('date', 'department'), all=T) #Save dates and departments from both, in case you have data in one and not the other. 
+
+#Drop any municipalities and departments that are 0 - this should represent the national-level data. 
+dt_final = dt_final[department==0]
 
 #Pull one variable, # of cases screened for MDR-TB, out of the outputs dataset. 
 dt1 = readRDS(outputFile3)

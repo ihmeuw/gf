@@ -99,3 +99,7 @@ dev.off()
 # save a time-stamped version for reproducibility
 archive(outputFile6a)
 # -----------------------------------
+
+#Save just the SEM diagrams with correlation coefficients as PNGs. 
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p3, height=10, width=13)
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p4, height=10, width=13)
