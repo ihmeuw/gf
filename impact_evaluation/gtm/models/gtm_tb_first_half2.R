@@ -18,7 +18,7 @@ model = '
   # Linkage 1 = relationships between inputs and activities
 
   Isoniazid_Distributed_act_cumulative ~ exp_T1_2_cumulative + ghe_T1_2_cumulative + other_dah_T1_2_cumulative + exp_R1_ALL_cumulative + date #Test commenting this out to see if it resolves linear dependence issue. EL 7/30/2019
-#   Total_Drugs_Distributed_act_cumulative ~ exp_T1_2_cumulative + exp_R1_ALL_cumulative + other_dah_T1_2_cumulative + ghe_T1_2_cumulative + date
+  Total_Drugs_Distributed_act_cumulative ~ exp_T1_2_cumulative + exp_R1_ALL_cumulative + other_dah_T1_2_cumulative + ghe_T1_2_cumulative + date
 #   Number_of_Cases_Screened_for_MDR_act_cumulative ~ exp_T3_ALL + other_dah_T3_1_cumulative + date
 #   PLHIV_Screened_for_TB_act_cumulative ~ exp_T2_ALL_cumulative + date
 #   TB_Patients_Tested_for_HIV_act_cumulative ~ exp_T2_ALL_cumulative + date
