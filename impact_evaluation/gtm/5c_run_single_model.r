@@ -14,10 +14,9 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-task_id = 1
-modelVersion = 'gtm_tb_first_half2'
-modelStage = 1
-testRun = TRUE
+# task_id = 1
+# modelStage = 1
+# testRun = TRUE
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -32,17 +31,17 @@ if(length(args)==0) stop('No commandArgs found!')
 #Pass arguments to the cluster 
 
 # the first argument should be the model version to use
-# modelVersion = args[7]
-# # 
-# # # the second argument should be the "model stage" (1 or 2)
-# modelStage = as.numeric(args[8])
-# # 
-# # # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
-# testRun = as.logical(args[9])
+modelVersion = args[7]
+#
+# # the second argument should be the "model stage" (1 or 2)
+modelStage = as.numeric(args[8])
+#
+# # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
+testRun = as.logical(args[9])
 
 
 # print for log
-print(paste('Model Version:', modelVersion))
+print(paste('Model Version:', modelVersion1))
 print(paste('Model Stage:', modelStage))
 print(paste('Test Run:', testRun))
 # ----------------------------------------------
@@ -61,7 +60,7 @@ d = unique(data$department)[task_id]
 subData = data[department==d]
 
 # define model object
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.R'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
@@ -79,18 +78,11 @@ for (v in check_explan_power$var){
   check_explan_power[var==v, unique_values:=length]
 }
 less_than_5 = unique(check_explan_power[unique_values<=5, .(var)])
-less_than_10 = unique(check_explan_power[unique_values<=10, .(var)])
 
 if (length(less_than_5)>0){
   warning("There are some variables with 5 or less data points in this department.")
   warning(print(less_than_5))
 }
-
-if (length(less_than_10)>0){
-  warning("There are some variables with 10 or less data points in this department.")
-  warning(print(less_than_10))
-}
-
 
 #jitter to avoid perfect collinearity #Commenting this out for the moment, EL 8/6/2019
 for(v in names(subData)[!names(subData)%in%c('department','date')]) {

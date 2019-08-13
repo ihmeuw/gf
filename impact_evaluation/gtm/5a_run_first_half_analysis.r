@@ -19,8 +19,6 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # whether to run each department in parallel or not
 runInParallel = TRUE
 
-# model version to use
-modelVersion = 'gtm_tb_first_half2'
 # ---------------------------
 
 
@@ -39,7 +37,7 @@ T = length(hzs)
 # Define model object
 # DECISIONS
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.R'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
@@ -61,7 +59,7 @@ if (runInParallel==TRUE) {
 		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5c_run_single_model.r ', 
-		modelVersion, ' 1 FALSE FALSE') #There is a final argument here that doesn't do anything - it's a hack to get around UNIX vs. DOS EOL characters. EL 7.16.19
+		modelVersion1, ' 1 TRUE TRUE') #There is a final argument here that doesn't do anything - it's a hack to get around UNIX vs. DOS EOL characters. EL 7.16.19
 			
 	# submit array job to the cluster if we're running this in parallel
 	system(qsubCommand)

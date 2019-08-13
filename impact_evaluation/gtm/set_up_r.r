@@ -37,6 +37,13 @@ library(parallel)
 library(splitstackshape)
 # ------------------
 
+#----------------------------------
+# Current model versions
+
+modelVersion1 = 'gtm_tb_first_half3'
+modelVersion2 = 'gtm_tb_sec_half2'
+
+#-----------------------------------
 
 # ---------------------------------------------------------------------------------
 # Directories

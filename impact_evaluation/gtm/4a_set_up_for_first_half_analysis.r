@@ -13,7 +13,7 @@ library(faraway) #For viewing collinearity, below.
 
 # load
 data = readRDS(outputFile3)
-modelVersion = 'gtm_tb_first_half2'
+
 # 	
 # 	# set other_dah to NA (not 0) after 2016
 # 	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017 & get(v)==0, (v):=NA]
@@ -30,13 +30,13 @@ modelVersion = 'gtm_tb_first_half2'
 # -----------------------------------------------------------------
 
 #------------------------------------------------------------------
-# source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
-# 
-# # reduce the data down to only necessary variables
-# parsedModel = lavParseModelString(model)
-# modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.R'))
+
+# reduce the data down to only necessary variables
+parsedModel = lavParseModelString(model)
+modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 # modelVars = c(modelVars, 'department', 'date')
-# modelVars = gsub("_cumulative", "", modelVars)
+modelVars = gsub("_cumulative", "", modelVars)
 # reporting = data[, unique(modelVars), with=F]
 # 
 # #What variables are reporting for what years? 
@@ -108,6 +108,10 @@ data$tmp = NULL
 # na omit (for health zones that were entirely missing)
 # data = na.omit(data)
 # -----------------------------------------------------------------
+
+#------------------------------------------------------------
+# Drop variables that are not being used in model object before cumulative sum. 
+data = data[, c(modelVars, 'department', 'date'), with=F]
 
 
 # -----------------------------------------------------------------------
