@@ -27,7 +27,7 @@ model = '
   # 
   #   Cases_Notified_out_cumulative ~ exp_T1_1_cumulative + ghe_T1_1_cumulative + other_dah_T1_1_cumulative + date #Can add outreach and training and microscopy tests if data come through
   #   HIV_TB_Cases_Notified_out_cumulative ~ PLHIV_Screened_for_TB_act_cumulative + TB_Patients_Tested_for_HIV_act_cumulative + date
-      MDR_Cases_Notified_out_cumulative ~ Number_of_Cases_Screened_for_MDR_act_cumulative + date
+  #   MDR_Cases_Notified_out_cumulative ~ Number_of_Cases_Screened_for_MDR_act_cumulative + date
   #   Cases_Started_on_Treatment_out_cumulative ~ exp_T1_1_cumulative + ghe_T1_1_cumulative + other_dah_T1_1_cumulative + Isoniazid_Distributed_act_cumulative + date #Can add outreach if data come through
       MDR_Cases_Started_Treatment_out_cumulative ~ exp_T3_ALL + other_dah_T3_2_cumulative + Number_of_Cases_Screened_for_MDR_act_cumulative + date
       Additional_Cases_Detected_via_ACF_out_cumulative ~ exp_T1_5_cumulative + date #Change this to Outreach_teams_formed when that is populated
