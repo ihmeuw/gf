@@ -86,8 +86,8 @@ missing_budget_qtrs[, quarter:=((date%%1)*4)+1]
 missing_budget_qtrs[, year:=floor(date)]
 
 #Save this output data
-write.csv(pudrs, "J:/Project/Evaluation/GF/resource_tracking/other/verification/missing_pudr_coverage.csv", row.names=F)
-write.csv(budgets, "J:/Project/Evaluation/GF/resource_tracking/other/verification/missing_budget_coverage.csv", row.names=F)
+write.csv(pudrs, paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/missing_pudr_coverage_", Sys.Date(), ".csv"), row.names=F)
+write.csv(budgets, paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/missing_budget_coverage_", Sys.Date(), ".csv"), row.names=F)
 
 pudr_coverage = function(country, country_name){
   pudr_coverage = ggplot(pudrs[loc_name==country]) + 

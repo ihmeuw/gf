@@ -180,8 +180,8 @@ if (nrow(all_current_grants)!=expected_current_grants){
 }
 
 # Write data 
-write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets.rds"))
+write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets_", Sys.Date(), ".csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets_", Sys.Date(), ".rds"))
 
 
 #----------------------------------
@@ -272,8 +272,8 @@ if (nrow(date_check)!=0){
 }
 
 # Write data 
-write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rds"))
+write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures_", Sys.Date(), ".csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures_", Sys.Date(), ".rds"))
 
 #----------------------------------
 # 3. ABSORPTION
@@ -302,7 +302,7 @@ all_files = list(all_gf_cod, all_gf_gtm, all_gf_uga, all_gf_sen)
 all_gf_files = rbindlist(all_files, use.names = TRUE, fill = TRUE)
 
 #Write data 
-saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations.rds"))
-write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
+saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations_", Sys.Date(), ".rds"))
+write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations_", Sys.Date(), ".csv"), row.names = FALSE)
 
 print("Step D: Aggregate GF files completed. Files saved in combined_prepped folder.")

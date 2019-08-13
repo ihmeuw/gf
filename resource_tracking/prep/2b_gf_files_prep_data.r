@@ -54,8 +54,6 @@ if (prep_files == TRUE){
   #At this moment in time, don't process initial versions of files. EL 8/9/2019 
   file_list = file_list[file_iteration%in%c('final', 'revision')]
   
-  #For Guatemala, just limit to the current PUDRs to get a timeline for expenditure. 
-  file_list = file_list[data_source=="pudr"]
 }
 
 #----------------------------------------------------
