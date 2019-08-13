@@ -57,6 +57,7 @@ if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile4b)
 
 # subset to current health zone
 d = unique(data$department)[task_id]
+
 subData = data[department==d]
 
 # define model object
@@ -83,6 +84,11 @@ if (length(less_than_5)>0){
   warning("There are some variables with 5 or less data points in this department.")
   warning(print(less_than_5))
 }
+
+#Check for variables that are entirely zero
+print(paste0("Department: ", d))
+vars = names(subData)[!names(subData)%in%c('department', 'date')]
+for (v in vars) if (sum(subData[, get(v)])==0) print(paste0("This variable is zero for all years: ", v))
 
 #jitter to avoid perfect collinearity #Commenting this out for the moment, EL 8/6/2019
 for(v in names(subData)[!names(subData)%in%c('department','date')]) {
