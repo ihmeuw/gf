@@ -186,7 +186,7 @@ if (length(dept_level_error)!=0){
 #Take the average of the department-level variables by date and department. 
 dep_level_a = data.table(date=integer(), department=integer())
 for (var in dep_vars){
-  var_subset = activities[, .(var=mean(get(var))), by=c('date', 'department')]
+  var_subset = activities[, .(var=mean(get(var), na.rm=T)), by=c('date', 'department')]
   names(var_subset)[3] = var
   dep_level_a = merge(dep_level_a, var_subset, by=c('date', 'department'), all=T)
 }
@@ -199,7 +199,7 @@ names(dep_level_a) = gsub("_m|_d", "", names(dep_level_a))
 #Take the sum of the municipality-level variables by date and department. 
 mun_level_a = data.table(date=integer(), department=integer())
 for (var in mun_vars){
-  var_subset = activities[, .(var=sum(get(var))), by=c('date', 'department')]
+  var_subset = activities[, .(var=sum(get(var), na.rm=T)), by=c('date', 'department')]
   names(var_subset)[3] = var
   mun_level_a = merge(mun_level_a, var_subset, by=c('date', 'department'), all=T)
 }
@@ -244,7 +244,7 @@ if (length(dept_level_error)!=0){
 #Take the average of the department-level variables by date and department. 
 dep_level_o = data.table(date=integer(), department=integer())
 for (var in dep_vars){
-  var_subset = outputs[, .(var=mean(get(var))), by=c('date', 'department')]
+  var_subset = outputs[, .(var=mean(get(var), na.rm=T)), by=c('date', 'department')]
   names(var_subset)[3] = var
   dep_level_o = merge(dep_level_o, var_subset, by=c('date', 'department'), all=T)
 }
@@ -257,7 +257,7 @@ names(dep_level_o) = gsub("_m|_d", "", names(dep_level_o))
 #Take the sum of the municipality-level variables by date and department. 
 mun_level_o = data.table(date=integer(), department=integer())
 for (var in mun_vars){
-  var_subset = outputs[, .(var=sum(get(var))), by=c('date', 'department')]
+  var_subset = outputs[, .(var=sum(get(var), na.rm=T)), by=c('date', 'department')]
   names(var_subset)[3] = var
   mun_level_o = merge(mun_level_o, var_subset, by=c('date', 'department'), all=T)
 }
