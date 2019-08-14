@@ -1,4 +1,6 @@
-# prep_outputs_outcomes for Senegal TB Model
+# AUTHOR: Francisco Rios Casas
+# PURPOSE: Merge data to run SEM
+# 3_merge
 
 library(data.table)
 
