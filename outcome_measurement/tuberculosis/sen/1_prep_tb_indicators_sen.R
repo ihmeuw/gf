@@ -157,6 +157,5 @@ DT[, perf_lab:=perf_lab/100]
 DT[, pauvrety:=pauvrety/100]
 
 # save prepped data in new R object and csv
-setwd("C:/Users/frc2/Documents/data/tb/prepped_data")
-saveRDS(DT, "sen_tb_indicators_2.rds")
-write.csv(DT, file="sen_tb_indicators_2.csv")
+setwd("J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data")
+saveRDS(DT, "sen_tb_indicators_08132019.rds")

@@ -14,14 +14,14 @@ data <- readRDS("C:/Users/frc2/Documents/data/tb/prepped_data/sen_tb_indicators_
 codebook <- fread("C:/Users/frc2/Documents/data/tb/prepped_data/codebook2.csv")
 
 # set parameters for graphs
-ylabel = codebook[Code=='tpm_rech']$English
+ylabel = codebook[Code=='perf_lab']$English # label name to be plotted
 data[, date:=annee+((trimestre-1)/4)]
 centre = unique(data$centre)
 plots = list()
 
 i=1
 for(c in centre) {
-plots[[i]] = ggplot(data[centre==c], aes(y=tpm_rech, x=date)) + # y=variable to be plotted
+plots[[i]] = ggplot(data[centre==c], aes(y=perf_lab, x=date)) + # y=variable to be plotted
   geom_point() + 
   geom_line() +
   labs(title=c, y=ylabel, x='') +
@@ -30,7 +30,7 @@ i=i+1
 }
 
 # save a pdf file of graphs
-outputFilePath = "C:/Users/frc2/Documents/data_quality/tb/pulmonary_tb_relapse_outliers.pdf"
+outputFilePath = "J:/Project/Evaluation/GF/impact_evaluation/sen/data_quality_tests/tb/perf_lab.pdf" # change title
 
 pdf(outputFilePath, height=5.5, width=9)
 i=1

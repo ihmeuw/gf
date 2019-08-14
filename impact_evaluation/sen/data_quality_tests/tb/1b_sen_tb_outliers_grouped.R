@@ -17,9 +17,11 @@ codebook <- fread("C:/Users/frc2/Documents/data/tb/prepped_data/codebook2.csv")
 data[, date:=annee+((trimestre-1)/4)] # create a new data variable
 centre = unique(data$centre)
 
+keep <- c('gueris_total', 'gueris_taux', 'trait_tot', 'trait_pc') # choose indicators to keep ###
+
 # to graph certain indciators together on one page
 data = melt(data, id.vars=c('region','centre','type','annee','trimestre','date'))
-data = data[variable %in% c('tpm_fp_nc', 'tpm_fp_em', 'tpm_fp_ef', 'tpm_fp_am')] # choose indicators to keep
+data = data[variable %in% keep] 
 data = merge(data, codebook, by.x='variable', by.y='Code')
 
 plots = list()
@@ -37,7 +39,7 @@ for(c in centre) {
 
 
 # save a pdf file of graphs
-outputFilePath = "C:/Users/frc2/Documents/data_quality/tb/TPM_data_sen.pdf"
+outputFilePath = "J:/Project/Evaluation/GF/impact_evaluation/sen/data_quality_tests/tb/cured_grouped.pdf"
 
 pdf(outputFilePath, height=5.5, width=9)
 i=1
