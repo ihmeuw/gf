@@ -40,7 +40,7 @@ library(splitstackshape)
 #----------------------------------
 # Current model versions
 
-modelVersion1 = 'gtm_tb_first_half3'
+modelVersion1 = 'gtm_tb_first_half4'
 modelVersion2 = 'gtm_tb_sec_half2'
 
 #-----------------------------------
@@ -99,8 +99,8 @@ actFile = paste0(rawIeDir, "activities_8.6.19.csv")
 outputsFile = paste0(rawIeDir, "outputs_8.6.19.csv")
 
 # outcomes/impact files
-outcomeFile = paste0(rawIeDir, "outcomes_8.6.19.csv")
-impactFile = paste0(rawIeDir, "impact_8.6.19.csv")
+outcomeFile = paste0(rawIeDir, "outcomes_7.15.19.csv")
+impactFile = paste0(rawIeDir, "impact_7.15.19.csv")
 
 # shapefiles
 
