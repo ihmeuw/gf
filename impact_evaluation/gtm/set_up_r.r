@@ -41,10 +41,10 @@ library(splitstackshape)
 #Set global variables - pulling to top so easier to read EL 8/15/19
 # Current model versions
 
-modelVersion1 = 'gtm_tb_first_half3'
+modelVersion1 = 'gtm_tb_first_half5'
 modelVersion2 = 'gtm_tb_sec_half2'
 
-START_YEAR = 1990 #If available, what's the earliest year you should model data from? 
+START_YEAR = 2009 #If available, what's the earliest year you should model data from? 
 
 #-----------------------------------
 
