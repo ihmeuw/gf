@@ -1,7 +1,8 @@
-# R file to clean Senegal TB data located in
-# Filename= PANEL PNT TB-MR final_01072019
-# Francisco Rios Casas
-# Updated: August 14 2019
+# ----------------------------------------------------------
+# AUTHOR: Francisco Rios Casas
+# PURPOSE: To clean Senegal TB data (called "PANEL PNT TB-MR final_01072019")
+# DATE: August 14 2019 
+# ----------------------------------------------------------
 
 # set-up
 library(data.table)

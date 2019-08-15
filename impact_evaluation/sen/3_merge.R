@@ -1,6 +1,8 @@
+# ----------------------------------------------------------
 # AUTHOR: Francisco Rios Casas
-# PURPOSE: Merge data to run SEM
-# 3_merge
+# PURPOSE: Merge prepped data for Sen TB Model
+# DATE: Auguts 15, 2019
+# ----------------------------------------------------------
 
 library(data.table)
 

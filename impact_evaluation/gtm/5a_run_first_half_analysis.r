@@ -64,11 +64,18 @@ if (runInParallel==TRUE) {
 	# submit array job to the cluster if we're running this in parallel
 	system(qsubCommand)
 
-	# wait for jobs to finish (2 files per job)
-	while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
-		Sys.sleep(5)
-		print(paste(length(list.files(clustertmpDir2, pattern='first_half_summary_')), 'of', T, 'files found...'))
+	# # wait for jobs to finish (2 files per job)
+	# while(length(list.files(clustertmpDir2, pattern='first_half_summary_'))<(T)) { 
+	# 	Sys.sleep(5)
+	# 	print(paste(length(list.files(clustertmpDir2, pattern='first_half_summary_')), 'of', T, 'files found...'))
+	# }
+	# 
+	#While trying to get GLM model running - changing to look for GLM files. EL 8/15/19
+	while(length(list.files(clustertmpDir2, pattern='first_half_urFit_'))<(T)) { 
+	  Sys.sleep(5)
+	  print(paste(length(list.files(clustertmpDir2, pattern='first_half_urFit_')), 'of', T, 'files found...'))
 	}
+	print("All GLM files found - all departments were run successfully.")
 }
 # --------------------------------------------------------------
 
@@ -79,18 +86,18 @@ if (runInParallel==FALSE) {
 
 	# reassign the temporary output location
 	clustertmpDir2 = tempIeDir
-	
-	# store arguments needed to run 5c_run_single_model.r 
-	# arguments 1-4 are meaningless system variables, 
-	# 5 is the model object name, 
-	# 6 is whether to run the first or second half, 
+
+	# store arguments needed to run 5c_run_single_model.r
+	# arguments 1-4 are meaningless system variables,
+	# 5 is the model object name,
+	# 6 is whether to run the first or second half,
 	# 7 is whether to do a test run
 	args = c('a', 'b', 'c', 'd', modelVersion, '1', 'FALSE')
-	
-	# run each iteration sequentially 
+
+	# run each iteration sequentially
 	for(task_id in seq(T)) {
 		source('./impact_evaluation/gtm/5c_run_single_model.r')
-	}	
+	}
 }
 # --------------------------------------------------------------
 
@@ -100,22 +107,22 @@ if (runInParallel==FALSE) {
 
 # collect output (summary and urFit)
 print('Collecting output...')
-for(i in seq(T)) { 
-	summary = readRDS(paste0(clustertmpDir2, 'first_half_summary_', i, '.rds'))
+for(i in seq(T)) {
+	# summary = readRDS(paste0(clustertmpDir2, 'first_half_summary_', i, '.rds'))
 	urFit = readRDS(paste0(clustertmpDir2, 'first_half_urFit_', i, '.rds'))
-	if (i==1) summaries = copy(summary)
-	if (i>1) summaries = rbind(summaries, summary)
+	# if (i==1) summaries = copy(summary)
+	# if (i>1) summaries = rbind(summaries, summary)
 	if (i==1) urFits = copy(urFit)
 	if (i>1) urFits = rbind(urFits, urFit)
 }
 
 # compute averages (approximation of standard error, would be better as Monte Carlo simulation)
-paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
-summaries[, se_ratio.std:=se.std/est.std]
-summaries[, se_ratio:=se/est]
-means = summaries[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
-means[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
-means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
+# paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
+# summaries[, se_ratio.std:=se.std/est.std]
+# summaries[, se_ratio:=se/est]
+# means = summaries[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
+# means[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
+# means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # --------------------------------------------------------------
 
 
@@ -124,15 +131,17 @@ means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 
 # save all sem fits just in case they're needed
 print(paste('Saving', outputFile5a))
-save(list=c('data','model','summaries','means','urFits'), file=outputFile5a)
+# save(list=c('data','model','summaries','means','urFits'), file=outputFile5a)
+save(list=c('data','model','urFits'), file=outputFile5a)
 
 # save full output for archiving
-outputFile5a_big = gsub('.rdata','_all_semFits.rdata',outputFile5a)
-print(paste('Saving', outputFile5a_big))
-semFits = lapply(seq(T), function(i) {
-	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
-})
-save(list=c('data','model','semFits','summaries','means','urFits'), file=outputFile5a_big)
+# outputFile5a_big = gsub('.rdata','_all_semFits.rdata',outputFile5a)
+# print(paste('Saving', outputFile5a_big))
+# semFits = lapply(seq(T), function(i) {
+# 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
+# })
+# save(list=c('data','model','semFits','summaries','means','urFits'), file=outputFile5a_big)
+save(list=c('data','model','urFits'), file=outputFile5a_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')

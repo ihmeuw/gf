@@ -1,6 +1,8 @@
-# Clean MDR-TB Data
-# Francisco Rios Casas
-# Data from 2014-2018
+# ----------------------------------------------------------
+# AUTHOR: Francisco Rios Casas 
+# PURPOSE: Clean MDR-TB Data from 2014-2018  
+# DATE: Last updated 8/15/2019
+# ----------------------------------------------------------
 
 # set-up
 library(data.table)
