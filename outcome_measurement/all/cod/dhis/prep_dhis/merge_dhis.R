@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
 # Caitlin O'Brien-Carelli
 #
-# 6/17/2019
+# 8/1/2019
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -422,8 +422,8 @@ if (folder=='pnls') {
   dt[ ,c('element_eng', 'drop'):=NULL] 
   
   # save the subsetted data 
-  saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_subset_', min, '_', max, '.rds'))
-  print(paste0("Final PNLS output: ", dir, 'pre_prep/merged/', folder,'_subset_', min, '_', max, '.rds'))
+  saveRDS(dt, paste0(dir, 'merged/', folder,'_subset_', min, '_', max, '.rds'))
+  print(paste0("Final PNLS output: ", dir, 'merged/', folder,'_subset_', min, '_', max, '.rds'))
 }  
 
 #---------------------------------------------------------------------------------------

@@ -243,7 +243,7 @@ dt[ , c('data_set', 'element1','category1'):=NULL]
 # save interim output 
 
 # including ages
-saveRDS(dt, paste0(dir, 'pre_prep/merged/pnls_subset_', min, '_', max, '_subpops_ages.rds'))
+saveRDS(dt, paste0(dir, 'merged/pnls_subset_', min, '_', max, '_subpops_ages.rds'))
 
 #------------------------------------
 # collapse on category
