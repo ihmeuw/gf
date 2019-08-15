@@ -13,7 +13,7 @@ library(faraway) #For viewing collinearity, below.
 
 # load
 data = readRDS(outputFile3)
-modelVersion = 'gtm_tb_first_half2'
+
 # 	
 # 	# set other_dah to NA (not 0) after 2016
 # 	for(v in names(data)[grepl('other_dah',names(data))]) data[date>=2017 & get(v)==0, (v):=NA]
@@ -30,56 +30,61 @@ modelVersion = 'gtm_tb_first_half2'
 # -----------------------------------------------------------------
 
 #------------------------------------------------------------------
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.R'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c(modelVars, 'department', 'date')
+# modelVars = c(modelVars, 'department', 'date')
 modelVars = gsub("_cumulative", "", modelVars)
-reporting = data[, unique(modelVars), with=F]
-
-#What variables are reporting for what years? 
-report_long = melt(reporting, id.vars=c('department', 'date'))
-report_long[!is.na(value), value:=1]
-report_long = report_long[, .(total_by_dept=sum(value, na.rm=TRUE)), by=c('date', 'variable')]
-totalVars=length(unique(report_long$variable))
-report_long[total_by_dept!=0, var_by_year:=1]
-report_long[total_by_dept==0, var_by_year:=0]
-report_long[, vars_available_pct:=(sum(var_by_year)/totalVars)*100, by='date']
-write.csv(unique(report_long[, .(date, vars_available_pct)]), "C:/Users/elineb/Desktop/variables_available_by_year.csv", row.names=F)
-
-#Do the same check, but exclude 0's. 
-report_long2 = melt(reporting, id.vars=c('department', 'date'))
-report_long2[value==0, value:=NA]
-report_long2[!is.na(value), value:=1]
-report_long2 = report_long2[, .(total_by_dept=sum(value, na.rm=TRUE)), by=c('date', 'variable')]
-totalVars=length(unique(report_long2$variable))
-report_long2[total_by_dept!=0, var_by_year:=1]
-report_long2[total_by_dept==0, var_by_year:=0]
-report_long2[, vars_available_pct:=(sum(var_by_year)/totalVars)*100, by='date']
-write.csv(unique(report_long2[, .(date, vars_available_pct)]), "C:/Users/elineb/Desktop/variables_available_by_year_excl_0.csv", row.names=F)
-
+# reporting = data[, unique(modelVars), with=F]
+# 
+# #What variables are reporting for what years? 
+# report_long = melt(reporting, id.vars=c('department', 'date'))
+# report_long[!is.na(value), value:=1]
+# report_long = report_long[, .(total_by_dept=sum(value, na.rm=TRUE)), by=c('date', 'variable')]
+# totalVars=length(unique(report_long$variable))
+# report_long[total_by_dept!=0, var_by_year:=1]
+# report_long[total_by_dept==0, var_by_year:=0]
+# report_long[, vars_available_pct:=(sum(var_by_year)/totalVars)*100, by='date']
+# write.csv(unique(report_long[, .(date, vars_available_pct)]), "C:/Users/elineb/Desktop/variables_available_by_year.csv", row.names=F)
+# 
+# #Do the same check, but exclude 0's. 
+# report_long2 = melt(reporting, id.vars=c('department', 'date'))
+# report_long2[value==0, value:=NA]
+# report_long2[!is.na(value), value:=1]
+# report_long2 = report_long2[, .(total_by_dept=sum(value, na.rm=TRUE)), by=c('date', 'variable')]
+# totalVars=length(unique(report_long2$variable))
+# report_long2[total_by_dept!=0, var_by_year:=1]
+# report_long2[total_by_dept==0, var_by_year:=0]
+# report_long2[, vars_available_pct:=(sum(var_by_year)/totalVars)*100, by='date']
+# write.csv(unique(report_long2[, .(date, vars_available_pct)]), "C:/Users/elineb/Desktop/variables_available_by_year_excl_0.csv", row.names=F)
+# 
 
 #------------------------------------------------------------------
 # Check for linear dependence - added by EL 7/29/2019
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
-
-# reduce the data down to only necessary variables
-parsedModel = lavParseModelString(model)
-modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-#We'll want to use the cumulative vars in the final model, but remove this for this test 
-modelVars = gsub("_cumulative", "", modelVars)
-data = data[, unique(modelVars), with=FALSE]
+# source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
+# 
+# # reduce the data down to only necessary variables
+# parsedModel = lavParseModelString(model)
+# modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+# #We'll want to use the cumulative vars in the final model, but remove this for this test 
+# modelVars = gsub("_cumulative", "", modelVars)
+# data = data[, unique(modelVars), with=FALSE]
 
 # -----------------------------------------------------------------
 # Ensure all variables have complete time series 
 
 # drop zero-variance variables
-numVars = names(data)[!names(data)%in%c('department','date')]
+# numVars = names(data)[!names(data)%in%c('department','date')]
+#EMILY - WE WANT TO ONLY IMPUTE VARIABLES THAT ARE COUNTS. 
+numVars = c("Number_of_Cases_Screened_for_MDR_act", "Second_Line_Drugs_Distributed_act", "Total_Drugs_Distributed_act", "Isoniazid_Distributed_act", "PLHIV_Screened_for_TB_act", "TB_Patients_Tested_for_HIV_act", 
+            "MDR_Cases_Notified_out", "MDR_Cases_Started_Treatment_out", "Cases_Notified_in_Prisons_out", "Children_in_Contact_with_TB_Started_IPT_out", 
+            "Cases_Started_on_Treatment_out", "Cases_Notified_out", "PLHIV_started_on_IPT_out", "Cases_Started_on_Treatment_in_Prisons_out", "HIV_TB_Cases_Notified_out" )
 for(v in numVars) if (all(is.na(data[[v]]))) data[[v]] = NULL
 
-#EMILY - WE WANT TO ONLY IMPUTE VARIABLES THAT ARE COUNTS. 
+  #CURRENTLY NOT IMPUTING ADDITIONAL CASES DETECTED VIA ACF BECAUSE WE KNOW IT'S VERY DEPARTMENT SPECIFIC- ANY OTHERS? EL 8/12/19
+names(data)[!names(data)%in%c(numVars, 'date', 'department')]
 # extrapolate where necessary using GLM (better would be to use multiple imputation)
 i=1
 for(v in numVars) {
@@ -104,15 +109,20 @@ data$tmp = NULL
 # data = na.omit(data)
 # -----------------------------------------------------------------
 
+#------------------------------------------------------------
+# Drop variables that are not being used in model object before cumulative sum. 
+data = data[, c(modelVars, 'department', 'date'), with=F]
+
 
 # -----------------------------------------------------------------------
 # Data transformations and other fixes for Heywood cases
 
-# # make cumulative variables
+# # make cumulative variables, but first, replace NAs with zeros! 
 cumulVars = names(data)
 cumulVars = cumulVars[!grepl("total", cumulVars)]
 cumulVars = cumulVars[!cumulVars%in%c('department', 'date', 'year', 'min')]
 for(v in cumulVars) {
+  data[is.na(get(v)), (v):=0] #Replace NA with 0. 
 	nv = gsub('value_','',v)
 	data[, (paste0(nv,'_cumulative')):=cumsum(get(v)), by='department']
 }

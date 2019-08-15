@@ -26,3 +26,5 @@ prep_functions = list.files(paste0(code_dir, "_prep_functions"), full.names=TRUE
 for (file in prep_functions){
   source(file, encoding="UTF-8")
 }
+
+prepped_dir = paste0(dir, "pudr_indicator_extraction/prepped_data/")

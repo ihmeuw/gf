@@ -15,8 +15,7 @@ library(GGally)
 load(outputFile4a)
 
 # load model object
-modelVersion = 'gtm_tb_first_half2'
-source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.R'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.R'))
 
 # load "node table" for convenient labels
 nodeTable = fread(nodeTableFile1)
@@ -28,7 +27,7 @@ sample = data[department %in% dpts]
 sample_untr = untransformed[department %in% dpts]
 
 #Grab financial variables only, and activity/output variables only to compare separately
-fin_vars = names(data)[grep("other_dah|exp|ghe", names(data))]
+fin_vars = names(data)[grep("dah_|gf_|ghe_", names(data))]
 act_vars = names(data)[grep("_act|_out", names(data))]
 
 fin_vars = c('department', 'date', fin_vars)
@@ -68,12 +67,20 @@ long[is.na(label), label:=variable]
 
 #----------------------------------------------------
 # Limit graph data to 2012, the year the activities/outputs data starts 
-sample = sample[date>=2012]
-sample_untr = sample_untr[date>=2012]
-long = long[date>=2012]
+# and limit variables to only ones currently used by model 
+sample = sample[date>=2009, c(modelVars, 'department', 'date'), with=F]
+sample_untr = sample_untr[date>=2009, c(modelVars, 'department', 'date'), with=F]
+long = long[date>=2009 & variable%in%modelVars]
+fin_data = fin_data[variable%in%modelVars]
+act_data = act_data[variable%in%modelVars]
 
 # -------------------------------------------------------------------
 # Make histograms
+
+#Limit datasets to only variables that are currently in the model
+sample = sample[, c(modelVars, 'date', 'department'), with=F]
+sample_untr = sample_untr[,  c(modelVars, 'date', 'department'), with=F]
+long = long[variable%in%modelVars]
 
 # transformed data as seen by the model
 histograms = lapply(modelVars, function(v) {
@@ -194,10 +201,10 @@ for(i in seq(length(tsPlots))) {
 for(i in seq(length(corPlots))) { 
 	print(corPlots[[i]])
 }
-for(i in seq(length(histograms))) { 
-	print(histograms[[i]])
-	print(histograms_untr[[i]])
-}
+# for(i in seq(length(histograms))) { 
+# 	print(histograms[[i]])
+# 	print(histograms_untr[[i]])
+# }
 dev.off()
 
 # save a time-stamped version for reproducibility
