@@ -59,7 +59,7 @@ if (runInParallel==TRUE) {
 		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
 		' ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5c_run_single_model.r ', 
-		modelVersion1, ' 1 TRUE TRUE') #There is a final argument here that doesn't do anything - it's a hack to get around UNIX vs. DOS EOL characters. EL 7.16.19
+		modelVersion1, ' 1 FALSE FALSE') #There is a final argument here that doesn't do anything - it's a hack to get around UNIX vs. DOS EOL characters. EL 7.16.19
 			
 	# submit array job to the cluster if we're running this in parallel
 	system(qsubCommand)
