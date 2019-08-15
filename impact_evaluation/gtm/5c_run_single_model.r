@@ -218,7 +218,7 @@ print("The GLM model ran successfully.")
 # summary = summary[, c('lhs','op','rhs','est','se'), with=FALSE]
 # 
 # # unrescale SEM coefficients to reflect actual units of x and y variables
-# tmp = unique(melt(scaling_factors, value.name='scaling_factor'))
+tmp = unique(melt(scaling_factors, value.name='scaling_factor'))
 # summary = merge(summary, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
 # summary = merge(summary, tmp, by.x='lhs', by.y='variable', all.x=TRUE, suffixes=c('.rhs','.lhs'))
 # summary[is.na(scaling_factor.rhs), scaling_factor.rhs:=1]
