@@ -242,24 +242,24 @@ subset[ supplier == 'Médecins sans Frontières (MSF)', supplier := 'MSF']
 # Other data fixes/changes
 #-------------------------------------------------------------------
 # remove repetitive vars
-data[, strength := NULL]
-data[, product_pack_usd := NULL]
+subset[, strength := NULL]
+subset[, product_pack_usd := NULL]
 
-data[ supplier == '', supplier:= NA]
+subset[ supplier == '', supplier:= NA]
 
-data[nb_tests_units != pack_quantity * nb_of_suom_in_pack]
+subset[nb_tests_units != pack_quantity * nb_of_suom_in_pack]
 
-setnames(data, 'nb_tests_units', 'total_units_in_order')
-setnames(data, 'pack_quantity', 'nb_packs_ordered')
-setnames(data, 'nb_of_suom_in_pack', 'nb_units_in_pack')
+setnames(subset, 'nb_tests_units', 'total_units_in_order')
+setnames(subset, 'pack_quantity', 'nb_packs_ordered')
+setnames(subset, 'nb_of_suom_in_pack', 'nb_units_in_pack')
 
-data[total_units_in_order != nb_packs_ordered * nb_units_in_pack]
-data[is.na(nb_packs_ordered), nb_packs_ordered := as.integer(total_units_in_order/nb_units_in_pack)]
-data[ , total_cost_order := ifelse(( !is.na(nb_packs_ordered)& !is.na(pack_cost_usd) ), nb_packs_ordered * pack_cost_usd, total_product_cost_usd)]
+subset[total_units_in_order != nb_packs_ordered * nb_units_in_pack]
+subset[is.na(nb_packs_ordered), nb_packs_ordered := as.integer(total_units_in_order/nb_units_in_pack)]
+subset[ , total_cost_order := ifelse(( !is.na(nb_packs_ordered)& !is.na(pack_cost_usd) ), nb_packs_ordered * pack_cost_usd, total_product_cost_usd)]
 
-data[, unit_cost_usd := pack_cost_usd / nb_units_in_pack]
-data[, expected_cost_by_reference := po_international_reference_price * total_units_in_order]
-data[, cost_above_reference := total_cost_order - expected_cost_by_reference]
+subset[, unit_cost_usd := pack_cost_usd / nb_units_in_pack]
+subset[, expected_cost_by_reference := po_international_reference_price * total_units_in_order]
+subset[, cost_above_reference := total_cost_order - expected_cost_by_reference]
 #-------------------------------------------------------------------
 # Save data 
 #-------------------------------------------------------------------

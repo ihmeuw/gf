@@ -17,6 +17,8 @@ library(treemap)
 library(treemapify)
 library(grid)
 library(dplyr)
+library(grid)
+library(gridExtra)
 # --------------------
 
 # ----------------------------------------------
@@ -45,38 +47,83 @@ treemap_overall_spend_by_disease_country =paste0(dir, 'visualizations/treemap_ov
 treemap_purchasing_volume_by_country_category =paste0(dir, 'visualizations/treemap_purchasing_volume_by_country_category.pdf')
 treemap_number_of_orders_by_country_category =paste0(dir, 'visualizations/treemap_number_of_orders_by_country_category.pdf')
 treemap_overall_spend_by_country_category =paste0(dir, 'visualizations/treemap_overall_spend_by_country_category.pdf')
+
+# irp_value_check
+irp_value_check = paste0(dir, 'visualizations/ts_hist_check_irp_values.pdf')
 # ----------------------------------------------
 
 # ----------------------------------------------
 # Load/set up data
 # ----------------------------------------------
-# load
 data = readRDS(inFile)
 data = data[iso3codecountry %in% c('COD', 'GTM', 'SEN', 'UGA')]
+# ----------------------------------------------
 
-# IRP checks
-unique(data[po_international_reference_price < (0.05*unit_cost_usd), .(po_international_reference_price, unit_cost_usd)])
+# ----------------------------------------------
+# IRP checks - make histograms of IRP by commodity, and time series to show if there are duplicates by date/commodity but with different IRPs. 
+# ----------------------------------------------
+data[, purchase_order_year := as.numeric(year(purchase_order_date))]
+data[, purchase_order_month := as.numeric(month(purchase_order_date))]
+check_irp = data[, unique(po_international_reference_price), by = .(product_name_en, purchase_order_year, purchase_order_month)]
+check_irp[, order_date := as.yearmon(paste(check_irp$purchase_order_year, check_irp$purchase_order_month), "%Y%m")]
+check_irp[, order_date := as.Date(order_date)]
 
-tot = data[, .(total_rows = .N), by = .(product_name_en, product_category)]
-na = data[is.na(po_international_reference_price)|po_international_reference_price == 0|(po_international_reference_price > (0.05*unit_cost_usd)), 
-          .(irp_wrong_or_missing = .N), 
-          by = .(product_name_en, product_category)]
+check_irp[, more_than_one_irp := FALSE]
+dups = check_irp[duplicated(check_irp[, .(product_name_en, order_date)]),]
+for( row in 1:nrow(dups) ){
+  product = dups[row, product_name_en]
+  date = dups[row, order_date]
+  check_irp[product_name_en == product & order_date == date, more_than_one_irp := TRUE]
+  if ( check_irp[product_name_en == product & order_date == date & !is.na(V1), .N] <= 1 ) {
+    check_irp[product_name_en == product & order_date == date, more_than_one_irp := FALSE]
+  }
+}
+check_irp[, more_than_one_irp:=as.factor(more_than_one_irp)]
+colors = c('cadetblue3', 'coral2')
+names(colors) = levels(check_irp$more_than_one_irp)
 
-check = merge(tot, na,by = c('product_name_en', 'product_category'), all = TRUE)
-check = check[ !product_category %in% c('bednet', 'diagnostic_test_tb', 'diagnostic_test_other', 'irs')]
-sum(check$irp_wrong_or_missing, na.rm = TRUE) / sum(check$total_rows) # = 14.7% NA outside of the above categories
-check[total_rows == irp_wrong_or_missing, all_irp_wrong_or_missing := TRUE]
+pdf(irp_value_check, height = 9, width = 11)
+for( x in unique(data$product_name_en) ){
+  g1 = ggplot( check_irp[ product_name_en == x, ], aes(x = order_date, y = V1, color = more_than_one_irp) ) +
+        geom_point(size = 3) + theme_bw() + theme(text = element_text(size = 16)) + 
+        labs( title = paste0("Time series of international reference prices for ", x), x= 'Order date (year, month)', y = 'International reference price (USD per unit)') +
+        scale_color_manual(name = 'more_than_one_irp', values = colors) + ylim(0, NA)
+  g2 = ggplot( data[ product_name_en == x, ], aes(x = po_international_reference_price) ) + geom_histogram() + 
+        theme_bw() + theme(text = element_text(size = 16)) + 
+        labs( title = paste0("International reference prices for ", x), x= 'International reference price (USD per unit)')
+  grid.arrange(g1, g2, nrow = 2)
+}
+dev.off()
+
+# unique(data[po_international_reference_price < (0.05*unit_cost_usd), .(po_international_reference_price, unit_cost_usd)])
+# 
+# tot = data[, .(total_rows = .N), by = .(product_name_en, product_category)]
+# na = data[is.na(po_international_reference_price)|po_international_reference_price == 0|(po_international_reference_price > (0.05*unit_cost_usd)), 
+#           .(irp_wrong_or_missing = .N), 
+#           by = .(product_name_en, product_category)]
+# 
+# check = merge(tot, na,by = c('product_name_en', 'product_category'), all = TRUE)
+# check = check[ !product_category %in% c('bednet', 'diagnostic_test_tb', 'diagnostic_test_other', 'irs')]
+# sum(check$irp_wrong_or_missing, na.rm = TRUE) / sum(check$total_rows) # = 14.7% NA outside of the above categories
+# check[total_rows == irp_wrong_or_missing, all_irp_wrong_or_missing := TRUE]
 # ----------------------------------------------
 
 # ----------------------------------------------
 # Narrow down to the most common products by country / disease to about 10 per country / disease
 # Try it using purchasing volume, overall spend, and total number of orders
 # ----------------------------------------------
-# Calculate purchasing volume, overall spend, and number of orders from 2015 on
-# first, David said we don't care about specific brand of bednet, so make it so those will sum over product_name here:
+# David said we don't care about specific brand of bednet, so make it so those will sum over product_name here:
 dt = data[product_category == 'bednet', product_name_en := 'bednet' ]
 
-# then, sum by country, product_category and product_name
+# make a separate 
+
+# make a code book of all commodities, whether or not will use them in analysis, and whether or not they have a ref price
+codebook = unique(dt[, .(product_name_en, product_category, po_international_reference_price)])
+codebook = codebook[, has_irp := !all(is.na(po_international_reference_price)), by = .(product_name_en, product_category)]
+codebook = unique(codebook[,.(product_name_en, product_category, has_irp)])
+                  
+# Calculate purchasing volume, overall spend, and number of orders from 2015 on
+# sum by country, product_category and product_name
 dt = dt[purchase_order_date >= '2015-01-01',.(purchasing_volume = sum(total_units_in_order), 
                                                 overall_spend = sum(total_cost_order), 
                                                 total_number_of_orders = .N ),
