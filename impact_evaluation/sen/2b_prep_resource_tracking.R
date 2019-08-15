@@ -1,6 +1,8 @@
+# ----------------------------------------------------------
 # AUTHOR: Francisco RIos-Casas
 # PURPOSE: To prep resource tracking data to merge with outputs, outcomes
 # DATE: August 14 2019
+# ----------------------------------------------------------
 
 # Set up
 library(data.table)
