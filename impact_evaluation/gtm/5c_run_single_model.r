@@ -203,7 +203,9 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)
 # ----------------------------------------------------------------
-print("The GLM model ran successfully.")
+if ('urFit'%in%ls()){
+  print("The GLM model ran successfully.")
+}
 
 # --------------------------------------------------------------
 # Store coefficient table from model
