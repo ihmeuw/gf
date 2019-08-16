@@ -33,7 +33,7 @@ T = length(hzs)
 # ----------------------------------------------
 # Define model object
 # DECISIONS
-source(paste0('./impact_evaluation/gtm/models/', modelVersion2, '.R'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion2, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
