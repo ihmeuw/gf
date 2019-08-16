@@ -31,7 +31,7 @@ model = '
   Cases_Started_on_Treatment_out_cumulative ~ gf_tb_cumulative + ghe_tb_cumulative + odah_tb_cumulative + Isoniazid_Distributed_act_cumulative + Total_Drugs_Distributed_act_cumulative + date
   MDR_Cases_Started_Treatment_out_cumulative ~ Number_of_Cases_Screened_for_MDR_act_cumulative + date
   HIV_TB_Cases_Notified_out_cumulative ~ TB_Patients_Tested_for_HIV_act_cumulative + date
-   Cases_Notified_out_cumulative ~ HIV_TB_Cases_Notified_out_cumulative + date
+  #Cases_Notified_out_cumulative ~ HIV_TB_Cases_Notified_out_cumulative + date
 
 	# latent variables
 	
