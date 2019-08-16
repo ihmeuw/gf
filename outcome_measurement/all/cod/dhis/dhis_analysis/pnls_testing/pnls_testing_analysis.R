@@ -26,16 +26,16 @@ library(grid)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+# dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+# 
+# # read in the data 
+# dt = readRDS(paste0(dir, 'prepped/pnls_final/pnls_vct_final.rds'))
 
-# read in the data 
-dt = readRDS(paste0(dir, 'prepped/pnls_final/pnls_vct_final.rds'))
-setnames(dt, 'element_eng', 'variable')
+# local directory
+dir = "C:/Users/ccarelli/Documents/pnls_data/"
 
-# ----------------------------------------------------------
-# create a funder binary
-dt[dps=='Haut Katanga' | dps=='Lualaba', funder:='PEPFAR']
-dt[!(dps=='Haut Katanga' | dps=='Lualaba'), funder:='The Global Fund']
+# read in the data locally
+dt = readRDS(paste0(dir, 'pnls_vct_final.rds'))
 
 #------------------------------------
 # minor outlier screen
@@ -61,25 +61,26 @@ dt = dt[date < '2019-01-01']
 
 dt$subpop = factor(dt$subpop, 
                    c("prisoner", "trans", "idu", "trucker",  "uniform", "msm", "csw_customer", 
-                     "fisher", "miner", "other_groups", "couples", "csw", "customer"),    
+                     "fisher", "miner", "other_groups", "couple", "csw", "client", "patient"),    
                    c("Prisoners", "Trans people", "IDUs", "Truckers", "Military personnel",
                      "MSM", "CSW Clients", "Fisher people", "Miners", 
-                     "Other groups", "Couples", "CSWs", "Patients")) 
+                     "Other groups", "Couples", "CSWs", "Clients", "Patients")) 
 
 #----------------------------------
 # equality constraints check on testing and positive
+# if there are more HIV cases reported than tests, remove the value
 
 check = dt[variable=='Tested and received the results' | variable=='HIV+']
-check = check[ ,.(value=sum(value)), by = .(org_unit_id, date, variable, sex, age, subpop, test_type)]
-check = dcast(check, org_unit_id+sex+age+subpop+test_type+date~variable)
-setnames(check, c('org_unit_id', 'sex', 'age', 'subpop', 'test_type', 'date', 'hiv', 'tests'))
+check = check[ ,.(value=sum(value)), by = .(org_unit_id, date, variable, sex, age, subpop)]
+check = dcast(check, org_unit_id+sex+age+subpop+date~variable)
+setnames(check, c('org_unit_id', 'sex', 'age', 'subpop', 'date', 'hiv', 'tests'))
 check[ , eq:=(hiv > tests)]
 check[ , missing_one:=(is.na(hiv) | is.na(tests))]
-check[eq==T]
-check[subpop=='Trans people' & hiv!=0 & ((tests < hiv) | (is.na(tests) & !is.na(hiv) )) ]
+check = check[eq==T]
 
-# this facility constantly reports HIV+ trans people without testing
-dt = dt[!(org_unit_id=='N5sOWnwREXh' & subpop=='Trans people')]
+check[ , check_var:=paste0(org_unit_id, sex, age, subpop, date)]
+dt[ , check_var:=paste0(org_unit_id, sex, age, subpop, date)]
+dt = dt[!(check_var %in% check$check_var)]
 
 #----------------------------------
 # create smaller health facility groupings for graphs 
@@ -98,11 +99,27 @@ dt$facility_level = factor(dt$facility_level,
                     "General Reference Hospital", "Hospital Center", "Medical Center",
                     "Clinic", "Secondary Hospital",  "Dispensary","Polyclinic", "Medical surgical center")))
 
+
+#------------------------------------------------------------------
+# bind in he client variables
+
+dt[variable=='Clients counseled', variable:='Counseled']
+dt[variable=='Clients tested', variable:='Tested'] # only in clients
+dt[variable=='Clients tested and received the results', variable:='Tested and received the results']
+dt[variable=='Clients enrolled in case management', variable:='Enrolled in case managemt'] # only in clients
+
+dt[variable=='Clients HIV+', variable:='Counseled']
+dt[variable=='Clients HIV+ and informed of the results', variable:='HIV+ and informed of the results']
+dt[variable=='Clients with indeterminate status', variable:='Indeterminate status'] # only in clients
+
 #------------------------------------------------------------------
 # HIV Testing Visualizations
 
 # EXPORT AS A PDF
-pdf(paste0(dir, 'outputs/pnls_hiv_testing/pnls_vct_graphs.pdf'), width=12, height=9)
+# pdf(paste0(dir, 'outputs/pnls_hiv_testing/pnls_vct_graphs.pdf'), width=12, height=9)
+
+# export locally as a pdf
+# pdf(paste0(dir, '/pnls_graphs.pdf'), width=14, height=9)
 
 #----------------------
 # COLOR SCHEMES
@@ -125,12 +142,12 @@ op = c('#f1a340', '#998ec3')
 
 # facilities reporting and patients who received a consultation by sex
 fac = dt[ ,.(facilities_reporting=length(unique(org_unit))), by=date]
-pts = dt[variable=="New patients who received a treatment consultation"
+pts = dt[variable=="Clients tested"
          ,.(patients=sum(value)), by=.(sex, date)]
 fac = merge(fac, pts, by='date')
 
 # add in total patients, not by sex
-tot = dt[variable=="New patients who received a treatment consultation", .(total=sum(value)), by=date]
+tot = dt[variable=="Clients tested", .(total=sum(value)), by=date]
 total_pts = sum(tot$total)
 fac = merge(fac, tot, by='date')
 
@@ -161,7 +178,7 @@ ggplot(fac, aes(x=date, y=value, color=sex, group=sex)) +
   scale_color_manual(values=quad_colors) +
   theme_bw() + labs(x='Date', y='Count', color='',
                     title="Reporting completeness: facilities reporting and patients who received a consultation*",
-                    caption='*Indicator: new patients who received a treatment consultation') +
+                    caption='*Indicator: clients tested') +
   theme(text=element_text(size=18), axis.title=element_text(size=18), axis.text=(element_text(size=16)),
         plot.title=element_text(size=20), legend.text =element_text(size=18),
         plot.subtitle=element_text(size=16))
@@ -173,7 +190,7 @@ fac2 = dt[ ,.(facilities_reporting=length(unique(org_unit))), by=.(date, facilit
 fac2[facility_level=='Health Center', hc:='Health centers']
 fac2[facility_level!='Health Center' | is.na(facility_level), hc:='Other types of health facilities']
 
-ggplot(fac2, aes(x=date, y=facilities_reporting, color=facility_level)) +
+ggplot(fac2[!is.na(facility_level)], aes(x=date, y=facilities_reporting, color=facility_level)) +
   geom_point(alpha=0.4) +
   geom_line() +
   facet_wrap(~hc, scales='free_y') +
@@ -272,13 +289,12 @@ ggplot(all, aes(x=date, y=value, color=variable)) +
 #-----------------------------------------------------------------
 # TESTS PERFORMED
 
-tests = dt[variable=='Tested' | variable=='Counseled' | variable=='Counseled and tested' | variable=='Tested and received the results']
+# drop 'counseled and tested' because that variable does not exist for all clients
+tests = dt[variable=='Tested' | variable=='Counseled' | variable=='Tested and received the results']
 
 tests$variable = factor(tests$variable,
-                        c("Counseled", "Tested and received the results", "Tested",
-                          "Counseled and tested"),                        
-                          c("Counseled", "Tested and received the results", "Tested",
-                          "Counseled and tested"))
+                        c("Counseled", "Tested and received the results", "Tested"),                        
+                          c("Counseled", "Tested and received the results", "Tested"))
 
 #----------------------
 # all tests by variable 
@@ -291,7 +307,7 @@ ggplot(t1[!is.na(subpop)], aes(x=date, y=value, color=variable))+
   facet_wrap(~subpop, scales='free_y') +
   scale_color_manual(values=c('#ef8a62', '#67a9cf', '#91cf60', '#998ec3')) +
   labs(color="", x='Date', y='Count', 
-       title='HIV testing variables') +
+       title='HIV testing variables', caption='Note: there is no tested only variable for key pops.') +
   theme(text = element_text(size=18)) +
   scale_y_continuous(labels = scales::comma)
 

@@ -20,17 +20,27 @@ library(openxlsx)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+# dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+
+# local directory
+dir = "C:/Users/ccarelli/Documents/pnls_data"
 
 #---------------------------------------
 # load the file that represents a subset (no sex, age, or support)
-dt = data.table(readRDS(paste0(dir, 'prepped/pnls_sets/pnls_vct_2017_01_01_2019_02_01.rds')))
+# dt = data.table(readRDS(paste0(dir, 'prepped/pnls_sets/pnls_vct_2017_01_01_2019_02_01.rds')))
 
+# load local data table
+dt = data.table(readRDS(paste0(dir, '/pnls_vct_2017_01_01_2019_02_01.rds')))
+
+# set the name of the set to clean
 set_name = dt[ ,tolower(unique(pnls_set))]
-#---------------------------------------
+# #---------------------------------------
+# 
+# # import the translated elements
+# new_elements = data.table(read.xlsx(paste0(dir, 'meta_data/translate/pnls_elements_translations_', set_name, '.xlsx' )))
 
-# import the translated elements
-new_elements = data.table(read.xlsx(paste0(dir, 'meta_data/translate/pnls_elements_translations_', set_name, '.xlsx' )))
+# import the translated elements locally
+new_elements = data.table(read.xlsx(paste0(dir, '/pnls_elements_translations_', set_name, '.xlsx' )))
 
 # drop out french elements for the merge 
 new_elements[ ,element:=NULL]
@@ -89,11 +99,13 @@ setnames(dt, 'element_eng', 'variable')
 dt = dt[ ,.(org_unit_id, org_unit, date, sex, age, subpop, variable, value, 
             facility_level, dps, health_zone, health_area, funder)]
 
+# change the translation of client
+dt[subpop=='customer', subpop:='client']
+
 #---------------------------------------------------------------------
 # export the final data 
 
 saveRDS(dt, paste0(dir, "prepped/pnls_final/pnls_vct_final.rds"))
-
 #---------------------------------------------------------------------
 
 
