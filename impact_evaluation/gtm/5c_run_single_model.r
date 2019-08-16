@@ -14,10 +14,10 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 2
+# task_id = 6
 # modelStage = 1
 # testRun = TRUE
-# modelVersion1 = "gtm_tb_first_half3"
+# modelVersion1 = "gtm_tb_first_half6"
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -126,11 +126,14 @@ subData = subData[, unique(modelVars), with=FALSE]
 scaling_factors = data.table(date=1)
 numVars = names(subData)[!names(subData)%in%c('department','date')]
 for(v in numVars) {
+  print(v)
 	s=1
-	if (var(subData[[v]]/s)>1000){
-	  while(var(subData[[v]]/s)>1000) s=s*10
-	} else {
-	  while(var(subData[[v]]/s)<100) s=s/10
+	if (all(subData[[v]]!=0)){
+  	if (var(subData[[v]]/s)>1000){
+  	  while(var(subData[[v]]/s)>1000) s=s*10
+  	} else {
+  	  while(var(subData[[v]]/s)<100) s=s/10
+  	}
 	}
 	scaling_factors[,(v):=s]
 }
