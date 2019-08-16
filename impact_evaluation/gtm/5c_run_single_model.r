@@ -62,7 +62,7 @@ d = unique(data$department)[task_id]
 subData = data[department==d]
 
 # define model object
-source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.R'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
