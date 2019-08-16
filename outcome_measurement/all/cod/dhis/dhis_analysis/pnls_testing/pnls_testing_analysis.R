@@ -106,10 +106,10 @@ dt$facility_level = factor(dt$facility_level,
 dt[variable=='Clients counseled', variable:='Counseled']
 dt[variable=='Clients tested', variable:='Tested'] # only in clients
 dt[variable=='Clients tested and received the results', variable:='Tested and received the results']
-dt[variable=='Clients enrolled in case management', variable:='Enrolled in case managemt'] # only in clients
+dt[variable=='Clients enrolled in case management', variable:='Enrolled in case management'] # only in clients
 
 dt[variable=='Clients HIV+', variable:='Counseled']
-dt[variable=='Clients HIV+ and informed of the results', variable:='HIV+ and informed of the results']
+dt[variable=='Clients HIV+ and informed of their results', variable:='HIV+ and informed of the results']
 dt[variable=='Clients with indeterminate status', variable:='Indeterminate status'] # only in clients
 
 #------------------------------------------------------------------
