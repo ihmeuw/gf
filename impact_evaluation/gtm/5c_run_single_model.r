@@ -42,7 +42,7 @@ testRun = as.logical(args[9])
 
 
 # print for log
-print(paste('Model Version:', modelVersion1))
+print(paste('Model Version:', modelVersion))
 print(paste('Model Stage:', modelStage))
 print(paste('Test Run:', testRun))
 # ----------------------------------------------
@@ -62,7 +62,7 @@ d = unique(data$department)[task_id]
 subData = data[department==d]
 
 # define model object
-source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.r'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
