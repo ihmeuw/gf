@@ -22,7 +22,12 @@ lavaanUR = function(modelObject=NULL, data=NULL) {
 
 	# extract model info
 	parsedModel = lavParseModelString(modelObject)
-
+  
+	# ignore covariance terms and other operators not possible in GLM
+	parsedModel$lhs = parsedModel$lhs[parsedModel$op=='~']
+	parsedModel$rhs = parsedModel$rhs[parsedModel$op=='~']
+	parsedModel$op = parsedModel$op[parsedModel$op=='~']
+	
 	# construct formulae
 	lhsVars = unique(parsedModel$lhs[parsedModel$op=='~'])
 	formulae = lapply(lhsVars, function(v) { 
