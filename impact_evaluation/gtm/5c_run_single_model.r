@@ -104,15 +104,15 @@ subData = subData[, unique(modelVars), with=FALSE]
 #   }
 # }
 # 
-# for(v in names(subData)[!names(subData)%in%c('department','date')]) {
-#  # if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
-#   if (all(subData[[v]]>=0)){
-#     print(paste0(v, " is falling into the first jitter category, all(subData[[v]]>=0"))
-#     subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed back to poisson after model was restructured EL 8/14/19
-#   } else {
-#     print(paste0(v, " is not being jittered."))
-#   }
-# }
+for(v in names(subData)[!names(subData)%in%c('department','date')]) {
+ # if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
+  if (all(subData[[v]]>=0)){
+    print(paste0(v, " is falling into the first jitter category, all(subData[[v]]>=0"))
+    subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed back to poisson after model was restructured EL 8/14/19
+  } else {
+    print(paste0(v, " is not being jittered."))
+  }
+}
 
 # Original jitter - adding a random exponential 
 #Jitter analysis 1 - just plain jitter. (v:=jitter(get(v))
