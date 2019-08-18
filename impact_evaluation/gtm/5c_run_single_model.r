@@ -14,8 +14,8 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 1
-# modelStage = 2
+# task_id = 4
+# modelStage = 1
 # testRun = TRUE
 # modelVersion = "gtm_tb_first_half6"
 
@@ -105,9 +105,8 @@ subData = subData[, unique(modelVars), with=FALSE]
 # }
 # 
 for(v in names(subData)[!names(subData)%in%c('department','date')]) {
- # if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
-  if (all(subData[[v]]>=0) & !is.na(all(subData[[v]]))){ #There will be NAs here when all values are NA. 
-    print(paste0(v, " is falling into the first jitter category, all(subData[[v]]>=0"))
+  sd = sd(subData[[v]])
+  if (all(subData[[v]]>=0) & sd!=0){
     subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])/100))] # Changed back to poisson after model was restructured EL 8/14/19
   } else {
     subData[, (v):=get(v)+rexp(nrow(subData))]
