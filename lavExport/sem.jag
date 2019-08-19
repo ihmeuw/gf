@@ -1,122 +1,34 @@
 model {
   for(i in 1:N) {
-    Isoniazid_Distributed_act_cumulative[i] ~ dnorm(mu[i,1], 1/psi[1,1,g[i]])
-    Number_of_Cases_Screened_for_MDR_act_cumulative[i] ~ dnorm(mu[i,2], 1/psi[2,2,g[i]])
-    PLHIV_Screened_for_TB_act_cumulative[i] ~ dnorm(mu[i,3], 1/psi[3,3,g[i]])
-    TB_Patients_Tested_for_HIV_act_cumulative[i] ~ dnorm(mu[i,4], 1/psi[4,4,g[i]])
-    Cases_Notified_out_cumulative[i] ~ dnorm(mu[i,5], 1/psistar[5,5,g[i]])
-    HIV_TB_Cases_Notified_out_cumulative[i] ~ dnorm(mu[i,6], 1/psistar[6,6,g[i]])
-    MDR_Cases_Notified_out_cumulative[i] ~ dnorm(mu[i,7], 1/psistar[7,7,g[i]])
-    Cases_Started_on_Treatment_out_cumulative[i] ~ dnorm(mu[i,8], 1/psistar[8,8,g[i]])
-    MDR_Cases_Started_Treatment_out_cumulative[i] ~ dnorm(mu[i,9], 1/psistar[9,9,g[i]])
-    Additional_Cases_Detected_via_ACF_out_cumulative[i] ~ dnorm(mu[i,10], 1/psistar[10,10,g[i]])
-    PLHIV_started_on_IPT_out_cumulative[i] ~ dnorm(mu[i,11], 1/psistar[11,11,g[i]])
-    Cases_Notified_in_Prisons_out_cumulative[i] ~ dnorm(mu[i,12], 1/psistar[12,12,g[i]])
-    exp_T1_2_cumulative[i] ~ dnorm(mu[i,13], 1/psistar[13,13,g[i]])
-    ghe_T1_2_cumulative[i] ~ dnorm(mu[i,14], 1/psistar[14,14,g[i]])
-    other_dah_T1_2_cumulative[i] ~ dnorm(mu[i,15], 1/psistar[15,15,g[i]])
-    exp_R1_ALL_cumulative[i] ~ dnorm(mu[i,16], 1/psistar[16,16,g[i]])
-    date[i] ~ dnorm(mu[i,17], 1/psistar[17,17,g[i]])
-    exp_T3_ALL_cumulative[i] ~ dnorm(mu[i,18], 1/psistar[18,18,g[i]])
-    other_dah_T3_1_cumulative[i] ~ dnorm(mu[i,19], 1/psistar[19,19,g[i]])
-    exp_T2_ALL_cumulative[i] ~ dnorm(mu[i,20], 1/psistar[20,20,g[i]])
-    exp_T1_1_cumulative[i] ~ dnorm(mu[i,21], 1/psistar[21,21,g[i]])
-    ghe_T1_1_cumulative[i] ~ dnorm(mu[i,22], 1/psistar[22,22,g[i]])
-    other_dah_T1_1_cumulative[i] ~ dnorm(mu[i,23], 1/psistar[23,23,g[i]])
-    other_dah_T3_2_cumulative[i] ~ dnorm(mu[i,24], 1/psistar[24,24,g[i]])
-    exp_T1_5_cumulative[i] ~ dnorm(mu[i,25], 1/psistar[25,25,g[i]])
-    exp_T1_6_cumulative[i] ~ dnorm(mu[i,26], 1/psistar[26,26,g[i]])
-    other_dah_TB_ALL_cumulative[i] ~ dnorm(mu[i,27], 1/thetastar[27,27,g[i]])
-    other_dah_HIV_TB_ALL_cumulative[i] ~ dnorm(mu[i,28], 1/thetastar[28,28,g[i]])
-    other_dah_T3_ALL_cumulative[i] ~ dnorm(mu[i,29], 1/psistar[27,27,g[i]])
-    exp_TB_ALL_cumulative[i] ~ dnorm(mu[i,30], 1/thetastar[30,30,g[i]])
-    exp_HIV_TB_ALL_cumulative[i] ~ dnorm(mu[i,31], 1/thetastar[31,31,g[i]])
+    Cases_Notified_out_cumulative[i] ~ dnorm(mu[i,1], 1/psistar[5,5,g[i]])
+    MDR_Cases_Started_Treatment_out_cumulative[i] ~ dnorm(mu[i,2], 1/psistar[7,7,g[i]])
+    Cases_Started_on_Treatment_out_cumulative[i] ~ dnorm(mu[i,3], 1/psistar[6,6,g[i]])
+    HIV_TB_Cases_Notified_out_cumulative[i] ~ dnorm(mu[i,4], 1/psistar[8,8,g[i]])
+    Isoniazid_Distributed_act_cumulative[i] ~ dnorm(mu[i,5], 1/psistar[1,1,g[i]])
+    Total_Drugs_Distributed_act_cumulative[i] ~ dnorm(mu[i,6], 1/psistar[2,2,g[i]])
+    Number_of_Cases_Screened_for_MDR_act_cumulative[i] ~ dnorm(mu[i,7], 1/psi[3,3,g[i]])
+    TB_Patients_Tested_for_HIV_act_cumulative[i] ~ dnorm(mu[i,8], 1/psi[4,4,g[i]])
 
     # lvs
-    eta[i,1] ~ dnorm(mu_eta[i,1], 1/psi[28,28,g[i]])
-    eta[i,2] ~ dnorm(mu_eta[i,2], 1/psi[29,29,g[i]])
-    eta[i,3] ~ dnorm(mu_eta[i,3], 1/psi[30,30,g[i]])
-    eta[i,4] ~ dnorm(mu_eta[i,4], 1/psi[31,31,g[i]])
-    eta[i,5] ~ dnorm(mu_eta[i,5], 1/psi[32,32,g[i]])
-    eta[i,6] ~ dnorm(mu_eta[i,6], 1/psi[33,33,g[i]])
-    eta[i,7] ~ dnorm(mu_eta[i,7], 1/psi[34,34,g[i]])
-    eta[i,8] ~ dnorm(mu_eta[i,8], 1/psi[35,35,g[i]])
-    eta[i,9] ~ dnorm(mu_eta[i,9], 1/psi[36,36,g[i]])
-    eta[i,10] ~ dnorm(mu_eta[i,10], 1/psi[37,37,g[i]])
-    eta[i,11] ~ dnorm(mu_eta[i,11], 1/psi[38,38,g[i]])
-    eta[i,12] ~ dnorm(mu_eta[i,12], 1/psi[39,39,g[i]])
-    eta[i,13] ~ dnorm(mu_eta[i,13], 1/psi[40,40,g[i]])
-    eta[i,14] ~ dnorm(mu_eta[i,14], 1/psi[41,41,g[i]])
-    eta[i,15] ~ dnorm(mu_eta[i,15], 1/psi[42,42,g[i]])
-    eta[i,16] ~ dnorm(mu_eta[i,16], 1/psi[43,43,g[i]])
-    eta[i,17] ~ dnorm(mu_eta[i,17], 1/psi[44,44,g[i]])
-    eta[i,18] ~ dnorm(mu_eta[i,18], 1/psi[45,45,g[i]])
-    eta[i,19] ~ dnorm(mu_eta[i,19], 1/psi[46,46,g[i]])
-    eta[i,20] ~ dnorm(mu_eta[i,20], 1/psi[47,47,g[i]])
-    eta[i,21] ~ dnorm(mu_eta[i,21], 1/psi[48,48,g[i]])
-    eta[i,22] ~ dnorm(mu_eta[i,22], 1/psi[49,49,g[i]])
-    eta[i,23] ~ dnorm(mu_eta[i,23], 1/psi[50,50,g[i]])
-    eta[i,24] ~ dnorm(mu_eta[i,24], 1/psi[51,51,g[i]])
-    eta[i,25] ~ dnorm(mu_eta[i,25], 1/psi[52,52,g[i]])
-    eta[i,26] ~ dnorm(mu_eta[i,26], 1/psi[53,53,g[i]])
-    eta[i,27] ~ dnorm(mu_eta[i,27], 1/psi[54,54,g[i]])
-    eta[i,28] ~ dnorm(mu_eta[i,28], 1/psi[55,55,g[i]])
-    eta[i,29] ~ dnorm(mu_eta[i,29], 1/psi[56,56,g[i]])
-    eta[i,30] ~ dnorm(mu_eta[i,30], 1/psi[57,57,g[i]])
-    eta[i,31] ~ dnorm(mu_eta[i,31], 1/psi[58,58,g[i]])
-    eta[i,32] ~ dnorm(mu_eta[i,32], 1/psi[59,59,g[i]])
-    eta[i,33] ~ dnorm(mu_eta[i,33], 1/psi[60,60,g[i]])
-    eta[i,34] ~ dnorm(mu_eta[i,34], 1/psi[61,61,g[i]])
-    eta[i,35] ~ dnorm(mu_eta[i,35], 1/psi[62,62,g[i]])
-    eta[i,36] ~ dnorm(mu_eta[i,36], 1/psi[63,63,g[i]])
-    eta[i,37] ~ dnorm(mu_eta[i,37], 1/psi[64,64,g[i]])
-    eta[i,38] ~ dnorm(mu_eta[i,38], 1/psi[65,65,g[i]])
-    eta[i,39] ~ dnorm(mu_eta[i,39], 1/psi[66,66,g[i]])
-    eta[i,40] ~ dnorm(mu_eta[i,40], 1/psi[67,67,g[i]])
-    eta[i,41] ~ dnorm(mu_eta[i,41], 1/psi[68,68,g[i]])
-    eta[i,42] ~ dnorm(mu_eta[i,42], 1/psi[69,69,g[i]])
-    eta[i,43] ~ dnorm(mu_eta[i,43], 1/psi[70,70,g[i]])
-    eta[i,44] ~ dnorm(mu_eta[i,44], 1/psi[71,71,g[i]])
-    eta[i,45] ~ dnorm(mu_eta[i,45], 1/psi[72,72,g[i]])
-    eta[i,46] ~ dnorm(mu_eta[i,46], 1/psi[73,73,g[i]])
-    eta[i,47] ~ dnorm(mu_eta[i,47], 1/psi[74,74,g[i]])
-    eta[i,48] ~ dnorm(mu_eta[i,48], 1/psi[75,75,g[i]])
-    eta[i,49] ~ dnorm(mu_eta[i,49], 1/psi[76,76,g[i]])
+    eta[i,1] ~ dnorm(mu_eta[i,1], 1/psi[15,15,g[i]])
+    eta[i,2] ~ dnorm(mu_eta[i,2], 1/psi[16,16,g[i]])
+    eta[i,3] ~ dnorm(mu_eta[i,3], 1/psi[17,17,g[i]])
+    eta[i,4] ~ dnorm(mu_eta[i,4], 1/psi[18,18,g[i]])
+    eta[i,5] ~ dnorm(mu_eta[i,5], 1/psi[19,19,g[i]])
+    eta[i,6] ~ dnorm(mu_eta[i,6], 1/psi[20,20,g[i]])
+    eta[i,7] ~ dnorm(mu_eta[i,7], 1/psi[21,21,g[i]])
   }
 
   # mu definitions
   for(i in 1:N) {
-    mu[i,1] <- alpha[1,1,g[i]] + beta[1,13,g[i]]*exp_T1_2_cumulative[i] + beta[1,14,g[i]]*ghe_T1_2_cumulative[i] + beta[1,15,g[i]]*other_dah_T1_2_cumulative[i] + beta[1,16,g[i]]*exp_R1_ALL_cumulative[i] + beta[1,17,g[i]]*date[i]
-    mu[i,2] <- alpha[2,1,g[i]] + beta[2,18,g[i]]*exp_T3_ALL_cumulative[i] + beta[2,19,g[i]]*other_dah_T3_1_cumulative[i] + beta[2,17,g[i]]*date[i]
-    mu[i,3] <- alpha[3,1,g[i]] + beta[3,20,g[i]]*exp_T2_ALL_cumulative[i] + beta[3,17,g[i]]*date[i]
-    mu[i,4] <- alpha[4,1,g[i]] + beta[4,20,g[i]]*exp_T2_ALL_cumulative[i] + beta[4,17,g[i]]*date[i]
-    mu[i,5] <- alpha[5,1,g[i]] + lambda[5,50,g[i]]*eta[i,12] + lambda[5,52,g[i]]*eta[i,13] + lambda[5,54,g[i]]*eta[i,14] + lambda[5,56,g[i]]*eta[i,15] + lambda[5,58,g[i]]*eta[i,16] + lambda[5,60,g[i]]*eta[i,17] + lambda[5,62,g[i]]*eta[i,18] + beta[5,21,g[i]]*exp_T1_1_cumulative[i] + beta[5,22,g[i]]*ghe_T1_1_cumulative[i] + beta[5,23,g[i]]*other_dah_T1_1_cumulative[i] + beta[5,17,g[i]]*date[i]
-    mu[i,6] <- alpha[6,1,g[i]] + lambda[6,51,g[i]]*eta[i,12] + lambda[6,64,g[i]]*eta[i,19] + lambda[6,66,g[i]]*eta[i,20] + lambda[6,68,g[i]]*eta[i,21] + lambda[6,70,g[i]]*eta[i,22] + lambda[6,72,g[i]]*eta[i,23] + lambda[6,74,g[i]]*eta[i,24] + beta[6,3,g[i]]*PLHIV_Screened_for_TB_act_cumulative[i] + beta[6,4,g[i]]*TB_Patients_Tested_for_HIV_act_cumulative[i] + beta[6,17,g[i]]*date[i]
-    mu[i,7] <- alpha[7,1,g[i]] + lambda[7,53,g[i]]*eta[i,13] + lambda[7,65,g[i]]*eta[i,19] + lambda[7,76,g[i]]*eta[i,25] + lambda[7,78,g[i]]*eta[i,26] + lambda[7,80,g[i]]*eta[i,27] + lambda[7,82,g[i]]*eta[i,28] + lambda[7,84,g[i]]*eta[i,29] + beta[7,2,g[i]]*Number_of_Cases_Screened_for_MDR_act_cumulative[i] + beta[7,17,g[i]]*date[i]
-    mu[i,8] <- alpha[8,1,g[i]] + lambda[8,55,g[i]]*eta[i,14] + lambda[8,67,g[i]]*eta[i,20] + lambda[8,77,g[i]]*eta[i,25] + lambda[8,86,g[i]]*eta[i,30] + lambda[8,88,g[i]]*eta[i,31] + lambda[8,90,g[i]]*eta[i,32] + lambda[8,92,g[i]]*eta[i,33] + beta[8,21,g[i]]*exp_T1_1_cumulative[i] + beta[8,22,g[i]]*ghe_T1_1_cumulative[i] + beta[8,23,g[i]]*other_dah_T1_1_cumulative[i] + beta[8,1,g[i]]*Isoniazid_Distributed_act_cumulative[i] + beta[8,17,g[i]]*date[i]
-    mu[i,9] <- alpha[9,1,g[i]] + lambda[9,57,g[i]]*eta[i,15] + lambda[9,69,g[i]]*eta[i,21] + lambda[9,79,g[i]]*eta[i,26] + lambda[9,87,g[i]]*eta[i,30] + lambda[9,94,g[i]]*eta[i,34] + lambda[9,96,g[i]]*eta[i,35] + lambda[9,98,g[i]]*eta[i,36] + beta[9,18,g[i]]*exp_T3_ALL_cumulative[i] + beta[9,24,g[i]]*other_dah_T3_2_cumulative[i] + beta[9,2,g[i]]*Number_of_Cases_Screened_for_MDR_act_cumulative[i] + beta[9,17,g[i]]*date[i]
-    mu[i,10] <- alpha[10,1,g[i]] + lambda[10,59,g[i]]*eta[i,16] + lambda[10,71,g[i]]*eta[i,22] + lambda[10,81,g[i]]*eta[i,27] + lambda[10,89,g[i]]*eta[i,31] + lambda[10,95,g[i]]*eta[i,34] + lambda[10,100,g[i]]*eta[i,37] + lambda[10,102,g[i]]*eta[i,38] + beta[10,25,g[i]]*exp_T1_5_cumulative[i] + beta[10,17,g[i]]*date[i]
-    mu[i,11] <- alpha[11,1,g[i]] + lambda[11,61,g[i]]*eta[i,17] + lambda[11,73,g[i]]*eta[i,23] + lambda[11,83,g[i]]*eta[i,28] + lambda[11,91,g[i]]*eta[i,32] + lambda[11,97,g[i]]*eta[i,35] + lambda[11,101,g[i]]*eta[i,37] + lambda[11,104,g[i]]*eta[i,39] + beta[11,3,g[i]]*PLHIV_Screened_for_TB_act_cumulative[i] + beta[11,1,g[i]]*Isoniazid_Distributed_act_cumulative[i] + beta[11,17,g[i]]*date[i]
-    mu[i,12] <- alpha[12,1,g[i]] + lambda[12,63,g[i]]*eta[i,18] + lambda[12,75,g[i]]*eta[i,24] + lambda[12,85,g[i]]*eta[i,29] + lambda[12,93,g[i]]*eta[i,33] + lambda[12,99,g[i]]*eta[i,36] + lambda[12,103,g[i]]*eta[i,38] + lambda[12,105,g[i]]*eta[i,39] + beta[12,26,g[i]]*exp_T1_6_cumulative[i] + beta[12,17,g[i]]*date[i]
-    mu[i,13] <- alpha[13,1,g[i]] + lambda[13,28,g[i]]*eta[i,1] + lambda[13,30,g[i]]*eta[i,2]
-    mu[i,14] <- alpha[14,1,g[i]] + lambda[14,29,g[i]]*eta[i,1] + lambda[14,32,g[i]]*eta[i,3]
-    mu[i,15] <- alpha[15,1,g[i]] + lambda[15,31,g[i]]*eta[i,2] + lambda[15,33,g[i]]*eta[i,3]
-    mu[i,16] <- alpha[16,1,g[i]] + lambda[16,106,g[i]]*eta[i,40] + lambda[16,108,g[i]]*eta[i,41] + lambda[16,110,g[i]]*eta[i,42] + lambda[16,112,g[i]]*eta[i,43]
-    mu[i,17] <- alpha[17,1,g[i]] + lambda[17,107,g[i]]*eta[i,40] + lambda[17,114,g[i]]*eta[i,44] + lambda[17,116,g[i]]*eta[i,45] + lambda[17,118,g[i]]*eta[i,46]
-    mu[i,18] <- alpha[18,1,g[i]] + lambda[18,40,g[i]]*eta[i,7] + lambda[18,42,g[i]]*eta[i,8] + lambda[18,44,g[i]]*eta[i,9]
-    mu[i,19] <- alpha[19,1,g[i]] + lambda[19,41,g[i]]*eta[i,7]
-    mu[i,20] <- alpha[20,1,g[i]] + lambda[20,109,g[i]]*eta[i,41] + lambda[20,115,g[i]]*eta[i,44] + lambda[20,120,g[i]]*eta[i,47] + lambda[20,122,g[i]]*eta[i,48]
-    mu[i,21] <- alpha[21,1,g[i]] + lambda[21,34,g[i]]*eta[i,4] + lambda[21,38,g[i]]*eta[i,6]
-    mu[i,22] <- alpha[22,1,g[i]] + lambda[22,36,g[i]]*eta[i,5] + lambda[22,39,g[i]]*eta[i,6]
-    mu[i,23] <- alpha[23,1,g[i]] + lambda[23,35,g[i]]*eta[i,4] + lambda[23,37,g[i]]*eta[i,5]
-    mu[i,24] <- alpha[24,1,g[i]] + lambda[24,43,g[i]]*eta[i,8]
-    mu[i,25] <- alpha[25,1,g[i]] + lambda[25,111,g[i]]*eta[i,42] + lambda[25,117,g[i]]*eta[i,45] + lambda[25,121,g[i]]*eta[i,47] + lambda[25,124,g[i]]*eta[i,49]
-    mu[i,26] <- alpha[26,1,g[i]] + lambda[26,113,g[i]]*eta[i,43] + lambda[26,119,g[i]]*eta[i,46] + lambda[26,123,g[i]]*eta[i,48] + lambda[26,125,g[i]]*eta[i,49]
-    mu[i,27] <- nu[27,1,g[i]] + lambda[27,46,g[i]]*eta[i,10]
-    mu[i,28] <- nu[28,1,g[i]] + lambda[28,48,g[i]]*eta[i,11]
-    mu[i,29] <- alpha[27,1,g[i]] + lambda[29,45,g[i]]*eta[i,9]
-    mu[i,30] <- nu[30,1,g[i]] + lambda[30,47,g[i]]*eta[i,10]
-    mu[i,31] <- nu[31,1,g[i]] + lambda[31,49,g[i]]*eta[i,11]
+    mu[i,1] <- alpha[5,1,g[i]] + lambda[5,15,g[i]]*eta[i,1] + lambda[5,23,g[i]]*eta[i,5] + lambda[5,27,g[i]]*eta[i,7] + beta[5,9,g[i]]*gf_tb_cumulative[i] + beta[5,10,g[i]]*ghe_tb_cumulative[i] + beta[5,11,g[i]]*odah_tb_cumulative[i] + beta[5,12,g[i]]*date[i]
+    mu[i,2] <- alpha[7,1,g[i]] + lambda[7,16,g[i]]*eta[i,1] + lambda[7,18,g[i]]*eta[i,2] + lambda[7,21,g[i]]*eta[i,4] + beta[7,3,g[i]]*Number_of_Cases_Screened_for_MDR_act_cumulative[i] + beta[7,12,g[i]]*date[i]
+    mu[i,3] <- alpha[6,1,g[i]] + lambda[6,17,g[i]]*eta[i,2] + lambda[6,19,g[i]]*eta[i,3] + lambda[6,28,g[i]]*eta[i,7] + beta[6,9,g[i]]*gf_tb_cumulative[i] + beta[6,10,g[i]]*ghe_tb_cumulative[i] + beta[6,11,g[i]]*odah_tb_cumulative[i] + beta[6,1,g[i]]*Isoniazid_Distributed_act_cumulative[i] + beta[6,2,g[i]]*Total_Drugs_Distributed_act_cumulative[i] + beta[6,12,g[i]]*date[i]
+    mu[i,4] <- alpha[8,1,g[i]] + lambda[8,20,g[i]]*eta[i,3] + lambda[8,22,g[i]]*eta[i,4] + lambda[8,24,g[i]]*eta[i,5] + beta[8,4,g[i]]*TB_Patients_Tested_for_HIV_act_cumulative[i] + beta[8,12,g[i]]*date[i]
+    mu[i,5] <- alpha[1,1,g[i]] + lambda[1,25,g[i]]*eta[i,6] + beta[1,9,g[i]]*gf_tb_cumulative[i] + beta[1,10,g[i]]*ghe_tb_cumulative[i] + beta[1,11,g[i]]*odah_tb_cumulative[i] + beta[1,12,g[i]]*date[i]
+    mu[i,6] <- alpha[2,1,g[i]] + lambda[2,26,g[i]]*eta[i,6] + beta[2,9,g[i]]*gf_tb_cumulative[i] + beta[2,10,g[i]]*ghe_tb_cumulative[i] + beta[2,11,g[i]]*odah_tb_cumulative[i] + beta[2,12,g[i]]*date[i]
+    mu[i,7] <- alpha[3,1,g[i]] + beta[3,13,g[i]]*gf_mdrtb_cumulative[i] + beta[3,10,g[i]]*ghe_tb_cumulative[i] + beta[3,11,g[i]]*odah_tb_cumulative[i] + beta[3,12,g[i]]*date[i]
+    mu[i,8] <- alpha[4,1,g[i]] + beta[4,14,g[i]]*gf_tbhiv_cumulative[i] + beta[4,10,g[i]]*ghe_tb_cumulative[i] + beta[4,11,g[i]]*odah_tb_cumulative[i] + beta[4,12,g[i]]*date[i]
 
     mu_eta[i,1] <- 0
     mu_eta[i,2] <- 0
@@ -125,424 +37,110 @@ model {
     mu_eta[i,5] <- 0
     mu_eta[i,6] <- 0
     mu_eta[i,7] <- 0
-    mu_eta[i,8] <- 0
-    mu_eta[i,9] <- 0
-    mu_eta[i,10] <- 0
-    mu_eta[i,11] <- 0
-    mu_eta[i,12] <- 0
-    mu_eta[i,13] <- 0
-    mu_eta[i,14] <- 0
-    mu_eta[i,15] <- 0
-    mu_eta[i,16] <- 0
-    mu_eta[i,17] <- 0
-    mu_eta[i,18] <- 0
-    mu_eta[i,19] <- 0
-    mu_eta[i,20] <- 0
-    mu_eta[i,21] <- 0
-    mu_eta[i,22] <- 0
-    mu_eta[i,23] <- 0
-    mu_eta[i,24] <- 0
-    mu_eta[i,25] <- 0
-    mu_eta[i,26] <- 0
-    mu_eta[i,27] <- 0
-    mu_eta[i,28] <- 0
-    mu_eta[i,29] <- 0
-    mu_eta[i,30] <- 0
-    mu_eta[i,31] <- 0
-    mu_eta[i,32] <- 0
-    mu_eta[i,33] <- 0
-    mu_eta[i,34] <- 0
-    mu_eta[i,35] <- 0
-    mu_eta[i,36] <- 0
-    mu_eta[i,37] <- 0
-    mu_eta[i,38] <- 0
-    mu_eta[i,39] <- 0
-    mu_eta[i,40] <- 0
-    mu_eta[i,41] <- 0
-    mu_eta[i,42] <- 0
-    mu_eta[i,43] <- 0
-    mu_eta[i,44] <- 0
-    mu_eta[i,45] <- 0
-    mu_eta[i,46] <- 0
-    mu_eta[i,47] <- 0
-    mu_eta[i,48] <- 0
-    mu_eta[i,49] <- 0
   }
 
   # Assignments from parameter vector & equality constraints
-  beta[1,13,1] <- parvec[1]
-  beta[1,14,1] <- parvec[2]
-  beta[1,15,1] <- parvec[3]
-  beta[1,16,1] <- parvec[4]
-  beta[1,17,1] <- parvec[5]
-  beta[2,18,1] <- parvec[6]
-  beta[2,19,1] <- parvec[7]
-  beta[2,17,1] <- parvec[8]
-  beta[3,20,1] <- parvec[9]
-  beta[3,17,1] <- parvec[10]
-  beta[4,20,1] <- parvec[11]
-  beta[4,17,1] <- parvec[12]
-  beta[5,21,1] <- parvec[13]
-  beta[5,22,1] <- parvec[14]
-  beta[5,23,1] <- parvec[15]
-  beta[5,17,1] <- parvec[16]
-  beta[6,3,1] <- parvec[17]
-  beta[6,4,1] <- parvec[18]
-  beta[6,17,1] <- parvec[19]
-  beta[7,2,1] <- parvec[20]
-  beta[7,17,1] <- parvec[21]
-  beta[8,21,1] <- parvec[22]
-  beta[8,22,1] <- parvec[23]
-  beta[8,23,1] <- parvec[24]
-  beta[8,1,1] <- parvec[25]
-  beta[8,17,1] <- parvec[26]
-  beta[9,18,1] <- parvec[27]
-  beta[9,24,1] <- parvec[28]
-  beta[9,2,1] <- parvec[29]
-  beta[9,17,1] <- parvec[30]
-  beta[10,25,1] <- parvec[31]
-  beta[10,17,1] <- parvec[32]
-  beta[11,3,1] <- parvec[33]
-  beta[11,1,1] <- parvec[34]
-  beta[11,17,1] <- parvec[35]
-  beta[12,26,1] <- parvec[36]
-  beta[12,17,1] <- parvec[37]
-  lvrho[13,14,1] <- -1 + 2*parvec[38]
-  lvrho[13,15,1] <- -1 + 2*parvec[39]
-  lvrho[14,15,1] <- -1 + 2*parvec[40]
-  lvrho[21,23,1] <- -1 + 2*parvec[41]
-  lvrho[22,23,1] <- -1 + 2*parvec[42]
-  lvrho[21,22,1] <- -1 + 2*parvec[43]
-  lvrho[18,19,1] <- -1 + 2*parvec[44]
-  lvrho[18,24,1] <- -1 + 2*parvec[45]
-  lvrho[18,27,1] <- -1 + 2*parvec[46]
-  rho[27,30,1] <- -1 + 2*parvec[47]
-  rho[28,31,1] <- -1 + 2*parvec[48]
-  psi[1,1,1] <- pow(parvec[49],-1)
-  psi[2,2,1] <- pow(parvec[50],-1)
-  psi[3,3,1] <- pow(parvec[51],-1)
-  psi[4,4,1] <- pow(parvec[52],-1)
-  psistar[5,5,1] <- psi[5,5,1] - (sqrt(abs(lvrho[5,6,1])*psi[5,5,1]))^2 - (sqrt(abs(lvrho[5,7,1])*psi[5,5,1]))^2 - (sqrt(abs(lvrho[5,8,1])*psi[5,5,1]))^2 - (sqrt(abs(lvrho[5,9,1])*psi[5,5,1]))^2 - (sqrt(abs(lvrho[5,10,1])*psi[5,5,1]))^2 - (sqrt(abs(lvrho[5,11,1])*psi[5,5,1]))^2 - (sqrt(abs(lvrho[5,12,1])*psi[5,5,1]))^2
-  psistar[6,6,1] <- psi[6,6,1] - ((-1 + 2*step(lvrho[5,6,1]))*sqrt(abs(lvrho[5,6,1])*psi[6,6,1]))^2 - (sqrt(abs(lvrho[6,7,1])*psi[6,6,1]))^2 - (sqrt(abs(lvrho[6,8,1])*psi[6,6,1]))^2 - (sqrt(abs(lvrho[6,9,1])*psi[6,6,1]))^2 - (sqrt(abs(lvrho[6,10,1])*psi[6,6,1]))^2 - (sqrt(abs(lvrho[6,11,1])*psi[6,6,1]))^2 - (sqrt(abs(lvrho[6,12,1])*psi[6,6,1]))^2
-  psistar[7,7,1] <- psi[7,7,1] - ((-1 + 2*step(lvrho[5,7,1]))*sqrt(abs(lvrho[5,7,1])*psi[7,7,1]))^2 - ((-1 + 2*step(lvrho[6,7,1]))*sqrt(abs(lvrho[6,7,1])*psi[7,7,1]))^2 - (sqrt(abs(lvrho[7,8,1])*psi[7,7,1]))^2 - (sqrt(abs(lvrho[7,9,1])*psi[7,7,1]))^2 - (sqrt(abs(lvrho[7,10,1])*psi[7,7,1]))^2 - (sqrt(abs(lvrho[7,11,1])*psi[7,7,1]))^2 - (sqrt(abs(lvrho[7,12,1])*psi[7,7,1]))^2
-  psistar[8,8,1] <- psi[8,8,1] - ((-1 + 2*step(lvrho[5,8,1]))*sqrt(abs(lvrho[5,8,1])*psi[8,8,1]))^2 - ((-1 + 2*step(lvrho[6,8,1]))*sqrt(abs(lvrho[6,8,1])*psi[8,8,1]))^2 - ((-1 + 2*step(lvrho[7,8,1]))*sqrt(abs(lvrho[7,8,1])*psi[8,8,1]))^2 - (sqrt(abs(lvrho[8,9,1])*psi[8,8,1]))^2 - (sqrt(abs(lvrho[8,10,1])*psi[8,8,1]))^2 - (sqrt(abs(lvrho[8,11,1])*psi[8,8,1]))^2 - (sqrt(abs(lvrho[8,12,1])*psi[8,8,1]))^2
-  psistar[9,9,1] <- psi[9,9,1] - ((-1 + 2*step(lvrho[5,9,1]))*sqrt(abs(lvrho[5,9,1])*psi[9,9,1]))^2 - ((-1 + 2*step(lvrho[6,9,1]))*sqrt(abs(lvrho[6,9,1])*psi[9,9,1]))^2 - ((-1 + 2*step(lvrho[7,9,1]))*sqrt(abs(lvrho[7,9,1])*psi[9,9,1]))^2 - ((-1 + 2*step(lvrho[8,9,1]))*sqrt(abs(lvrho[8,9,1])*psi[9,9,1]))^2 - (sqrt(abs(lvrho[9,10,1])*psi[9,9,1]))^2 - (sqrt(abs(lvrho[9,11,1])*psi[9,9,1]))^2 - (sqrt(abs(lvrho[9,12,1])*psi[9,9,1]))^2
-  psistar[10,10,1] <- psi[10,10,1] - ((-1 + 2*step(lvrho[5,10,1]))*sqrt(abs(lvrho[5,10,1])*psi[10,10,1]))^2 - ((-1 + 2*step(lvrho[6,10,1]))*sqrt(abs(lvrho[6,10,1])*psi[10,10,1]))^2 - ((-1 + 2*step(lvrho[7,10,1]))*sqrt(abs(lvrho[7,10,1])*psi[10,10,1]))^2 - ((-1 + 2*step(lvrho[8,10,1]))*sqrt(abs(lvrho[8,10,1])*psi[10,10,1]))^2 - ((-1 + 2*step(lvrho[9,10,1]))*sqrt(abs(lvrho[9,10,1])*psi[10,10,1]))^2 - (sqrt(abs(lvrho[10,11,1])*psi[10,10,1]))^2 - (sqrt(abs(lvrho[10,12,1])*psi[10,10,1]))^2
-  psistar[11,11,1] <- psi[11,11,1] - ((-1 + 2*step(lvrho[5,11,1]))*sqrt(abs(lvrho[5,11,1])*psi[11,11,1]))^2 - ((-1 + 2*step(lvrho[6,11,1]))*sqrt(abs(lvrho[6,11,1])*psi[11,11,1]))^2 - ((-1 + 2*step(lvrho[7,11,1]))*sqrt(abs(lvrho[7,11,1])*psi[11,11,1]))^2 - ((-1 + 2*step(lvrho[8,11,1]))*sqrt(abs(lvrho[8,11,1])*psi[11,11,1]))^2 - ((-1 + 2*step(lvrho[9,11,1]))*sqrt(abs(lvrho[9,11,1])*psi[11,11,1]))^2 - ((-1 + 2*step(lvrho[10,11,1]))*sqrt(abs(lvrho[10,11,1])*psi[11,11,1]))^2 - (sqrt(abs(lvrho[11,12,1])*psi[11,11,1]))^2
-  psistar[12,12,1] <- psi[12,12,1] - ((-1 + 2*step(lvrho[5,12,1]))*sqrt(abs(lvrho[5,12,1])*psi[12,12,1]))^2 - ((-1 + 2*step(lvrho[6,12,1]))*sqrt(abs(lvrho[6,12,1])*psi[12,12,1]))^2 - ((-1 + 2*step(lvrho[7,12,1]))*sqrt(abs(lvrho[7,12,1])*psi[12,12,1]))^2 - ((-1 + 2*step(lvrho[8,12,1]))*sqrt(abs(lvrho[8,12,1])*psi[12,12,1]))^2 - ((-1 + 2*step(lvrho[9,12,1]))*sqrt(abs(lvrho[9,12,1])*psi[12,12,1]))^2 - ((-1 + 2*step(lvrho[10,12,1]))*sqrt(abs(lvrho[10,12,1])*psi[12,12,1]))^2 - ((-1 + 2*step(lvrho[11,12,1]))*sqrt(abs(lvrho[11,12,1])*psi[12,12,1]))^2
-  psistar[13,13,1] <- psi[13,13,1] - (sqrt(abs(lvrho[13,14,1])*psi[13,13,1]))^2 - (sqrt(abs(lvrho[13,15,1])*psi[13,13,1]))^2
-  psistar[14,14,1] <- psi[14,14,1] - ((-1 + 2*step(lvrho[13,14,1]))*sqrt(abs(lvrho[13,14,1])*psi[14,14,1]))^2 - (sqrt(abs(lvrho[14,15,1])*psi[14,14,1]))^2
-  psistar[15,15,1] <- psi[15,15,1] - ((-1 + 2*step(lvrho[13,15,1]))*sqrt(abs(lvrho[13,15,1])*psi[15,15,1]))^2 - ((-1 + 2*step(lvrho[14,15,1]))*sqrt(abs(lvrho[14,15,1])*psi[15,15,1]))^2
-  psistar[18,18,1] <- psi[18,18,1] - (sqrt(abs(lvrho[18,19,1])*psi[18,18,1]))^2 - (sqrt(abs(lvrho[18,24,1])*psi[18,18,1]))^2 - (sqrt(abs(lvrho[18,27,1])*psi[18,18,1]))^2
-  psistar[19,19,1] <- psi[19,19,1] - ((-1 + 2*step(lvrho[18,19,1]))*sqrt(abs(lvrho[18,19,1])*psi[19,19,1]))^2
-  psistar[21,21,1] <- psi[21,21,1] - (sqrt(abs(lvrho[21,23,1])*psi[21,21,1]))^2 - (sqrt(abs(lvrho[21,22,1])*psi[21,21,1]))^2
-  psistar[22,22,1] <- psi[22,22,1] - (sqrt(abs(lvrho[22,23,1])*psi[22,22,1]))^2 - ((-1 + 2*step(lvrho[21,22,1]))*sqrt(abs(lvrho[21,22,1])*psi[22,22,1]))^2
-  psistar[23,23,1] <- psi[23,23,1] - ((-1 + 2*step(lvrho[21,23,1]))*sqrt(abs(lvrho[21,23,1])*psi[23,23,1]))^2 - ((-1 + 2*step(lvrho[22,23,1]))*sqrt(abs(lvrho[22,23,1])*psi[23,23,1]))^2
-  psistar[24,24,1] <- psi[24,24,1] - ((-1 + 2*step(lvrho[18,24,1]))*sqrt(abs(lvrho[18,24,1])*psi[24,24,1]))^2
-  thetastar[27,27,1] <- theta[27,27,1] - (sqrt(abs(rho[27,30,1])*theta[27,27,1]))^2
-  thetastar[28,28,1] <- theta[28,28,1] - (sqrt(abs(rho[28,31,1])*theta[28,28,1]))^2
-  psistar[27,27,1] <- psi[27,27,1] - ((-1 + 2*step(lvrho[18,27,1]))*sqrt(abs(lvrho[18,27,1])*psi[27,27,1]))^2
-  thetastar[30,30,1] <- theta[30,30,1] - ((-1 + 2*step(rho[27,30,1]))*sqrt(abs(rho[27,30,1])*theta[30,30,1]))^2
-  thetastar[31,31,1] <- theta[31,31,1] - ((-1 + 2*step(rho[28,31,1]))*sqrt(abs(rho[28,31,1])*theta[31,31,1]))^2
-  lvrho[5,6,1] <- -1 + 2*parvec[53]
-  lvrho[5,7,1] <- -1 + 2*parvec[54]
-  lvrho[5,8,1] <- -1 + 2*parvec[55]
-  lvrho[5,9,1] <- -1 + 2*parvec[56]
-  lvrho[5,10,1] <- -1 + 2*parvec[57]
-  lvrho[5,11,1] <- -1 + 2*parvec[58]
-  lvrho[5,12,1] <- -1 + 2*parvec[59]
-  lvrho[6,7,1] <- -1 + 2*parvec[60]
-  lvrho[6,8,1] <- -1 + 2*parvec[61]
-  lvrho[6,9,1] <- -1 + 2*parvec[62]
-  lvrho[6,10,1] <- -1 + 2*parvec[63]
-  lvrho[6,11,1] <- -1 + 2*parvec[64]
-  lvrho[6,12,1] <- -1 + 2*parvec[65]
-  lvrho[7,8,1] <- -1 + 2*parvec[66]
-  lvrho[7,9,1] <- -1 + 2*parvec[67]
-  lvrho[7,10,1] <- -1 + 2*parvec[68]
-  lvrho[7,11,1] <- -1 + 2*parvec[69]
-  lvrho[7,12,1] <- -1 + 2*parvec[70]
-  lvrho[8,9,1] <- -1 + 2*parvec[71]
-  lvrho[8,10,1] <- -1 + 2*parvec[72]
-  lvrho[8,11,1] <- -1 + 2*parvec[73]
-  lvrho[8,12,1] <- -1 + 2*parvec[74]
-  lvrho[9,10,1] <- -1 + 2*parvec[75]
-  lvrho[9,11,1] <- -1 + 2*parvec[76]
-  lvrho[9,12,1] <- -1 + 2*parvec[77]
-  lvrho[10,11,1] <- -1 + 2*parvec[78]
-  lvrho[10,12,1] <- -1 + 2*parvec[79]
-  lvrho[11,12,1] <- -1 + 2*parvec[80]
-  psistar[16,16,1] <- psi[16,16,1] - (sqrt(abs(lvrho[16,17,1])*psi[16,16,1]))^2 - (sqrt(abs(lvrho[16,20,1])*psi[16,16,1]))^2 - (sqrt(abs(lvrho[16,25,1])*psi[16,16,1]))^2 - (sqrt(abs(lvrho[16,26,1])*psi[16,16,1]))^2
-  lvrho[16,17,1] <- -1 + 2*parvec[81]
-  lvrho[16,20,1] <- -1 + 2*parvec[82]
-  lvrho[16,25,1] <- -1 + 2*parvec[83]
-  lvrho[16,26,1] <- -1 + 2*parvec[84]
-  psistar[17,17,1] <- psi[17,17,1] - ((-1 + 2*step(lvrho[16,17,1]))*sqrt(abs(lvrho[16,17,1])*psi[17,17,1]))^2 - (sqrt(abs(lvrho[17,20,1])*psi[17,17,1]))^2 - (sqrt(abs(lvrho[17,25,1])*psi[17,17,1]))^2 - (sqrt(abs(lvrho[17,26,1])*psi[17,17,1]))^2
-  lvrho[17,20,1] <- -1 + 2*parvec[85]
-  lvrho[17,25,1] <- -1 + 2*parvec[86]
-  lvrho[17,26,1] <- -1 + 2*parvec[87]
-  psistar[20,20,1] <- psi[20,20,1] - ((-1 + 2*step(lvrho[16,20,1]))*sqrt(abs(lvrho[16,20,1])*psi[20,20,1]))^2 - ((-1 + 2*step(lvrho[17,20,1]))*sqrt(abs(lvrho[17,20,1])*psi[20,20,1]))^2 - (sqrt(abs(lvrho[20,25,1])*psi[20,20,1]))^2 - (sqrt(abs(lvrho[20,26,1])*psi[20,20,1]))^2
-  lvrho[20,25,1] <- -1 + 2*parvec[88]
-  lvrho[20,26,1] <- -1 + 2*parvec[89]
-  psistar[25,25,1] <- psi[25,25,1] - ((-1 + 2*step(lvrho[16,25,1]))*sqrt(abs(lvrho[16,25,1])*psi[25,25,1]))^2 - ((-1 + 2*step(lvrho[17,25,1]))*sqrt(abs(lvrho[17,25,1])*psi[25,25,1]))^2 - ((-1 + 2*step(lvrho[20,25,1]))*sqrt(abs(lvrho[20,25,1])*psi[25,25,1]))^2 - (sqrt(abs(lvrho[25,26,1])*psi[25,25,1]))^2
-  lvrho[25,26,1] <- -1 + 2*parvec[90]
-  psistar[26,26,1] <- psi[26,26,1] - ((-1 + 2*step(lvrho[16,26,1]))*sqrt(abs(lvrho[16,26,1])*psi[26,26,1]))^2 - ((-1 + 2*step(lvrho[17,26,1]))*sqrt(abs(lvrho[17,26,1])*psi[26,26,1]))^2 - ((-1 + 2*step(lvrho[20,26,1]))*sqrt(abs(lvrho[20,26,1])*psi[26,26,1]))^2 - ((-1 + 2*step(lvrho[25,26,1]))*sqrt(abs(lvrho[25,26,1])*psi[26,26,1]))^2
-  alpha[1,1,1] <- parvec[91]
-  alpha[2,1,1] <- parvec[92]
-  alpha[3,1,1] <- parvec[93]
-  alpha[4,1,1] <- parvec[94]
-  alpha[5,1,1] <- parvec[95]
-  alpha[6,1,1] <- parvec[96]
-  alpha[7,1,1] <- parvec[97]
-  alpha[8,1,1] <- parvec[98]
-  alpha[9,1,1] <- parvec[99]
-  alpha[10,1,1] <- parvec[100]
-  alpha[11,1,1] <- parvec[101]
-  alpha[12,1,1] <- parvec[102]
-  alpha[13,1,1] <- parvec[103]
-  alpha[14,1,1] <- parvec[104]
-  alpha[15,1,1] <- parvec[105]
-  alpha[16,1,1] <- parvec[106]
-  alpha[17,1,1] <- parvec[107]
-  alpha[18,1,1] <- parvec[108]
-  alpha[19,1,1] <- parvec[109]
-  alpha[20,1,1] <- parvec[110]
-  alpha[21,1,1] <- parvec[111]
-  alpha[22,1,1] <- parvec[112]
-  alpha[23,1,1] <- parvec[113]
-  alpha[24,1,1] <- parvec[114]
-  alpha[25,1,1] <- parvec[115]
-  alpha[26,1,1] <- parvec[116]
-  nu[27,1,1] <- parvec[117]
-  nu[28,1,1] <- parvec[118]
-  alpha[27,1,1] <- parvec[119]
-  nu[30,1,1] <- parvec[120]
-  nu[31,1,1] <- parvec[121]
-  lambda[13,28,1] <- sqrt(abs(lvrho[13,14,1])*psi[13,13,1])
-  lambda[14,29,1] <- (-1 + 2*step(lvrho[13,14,1]))*sqrt(abs(lvrho[13,14,1])*psi[14,14,1])
-  psi[28,28,1] <- 1
-  lambda[13,30,1] <- sqrt(abs(lvrho[13,15,1])*psi[13,13,1])
-  lambda[15,31,1] <- (-1 + 2*step(lvrho[13,15,1]))*sqrt(abs(lvrho[13,15,1])*psi[15,15,1])
-  psi[29,29,1] <- 1
-  lambda[14,32,1] <- sqrt(abs(lvrho[14,15,1])*psi[14,14,1])
-  lambda[15,33,1] <- (-1 + 2*step(lvrho[14,15,1]))*sqrt(abs(lvrho[14,15,1])*psi[15,15,1])
-  psi[30,30,1] <- 1
-  lambda[21,34,1] <- sqrt(abs(lvrho[21,23,1])*psi[21,21,1])
-  lambda[23,35,1] <- (-1 + 2*step(lvrho[21,23,1]))*sqrt(abs(lvrho[21,23,1])*psi[23,23,1])
-  psi[31,31,1] <- 1
-  lambda[22,36,1] <- sqrt(abs(lvrho[22,23,1])*psi[22,22,1])
-  lambda[23,37,1] <- (-1 + 2*step(lvrho[22,23,1]))*sqrt(abs(lvrho[22,23,1])*psi[23,23,1])
-  psi[32,32,1] <- 1
-  lambda[21,38,1] <- sqrt(abs(lvrho[21,22,1])*psi[21,21,1])
-  lambda[22,39,1] <- (-1 + 2*step(lvrho[21,22,1]))*sqrt(abs(lvrho[21,22,1])*psi[22,22,1])
-  psi[33,33,1] <- 1
-  lambda[18,40,1] <- sqrt(abs(lvrho[18,19,1])*psi[18,18,1])
-  lambda[19,41,1] <- (-1 + 2*step(lvrho[18,19,1]))*sqrt(abs(lvrho[18,19,1])*psi[19,19,1])
-  psi[34,34,1] <- 1
-  lambda[18,42,1] <- sqrt(abs(lvrho[18,24,1])*psi[18,18,1])
-  lambda[24,43,1] <- (-1 + 2*step(lvrho[18,24,1]))*sqrt(abs(lvrho[18,24,1])*psi[24,24,1])
-  psi[35,35,1] <- 1
-  lambda[18,44,1] <- sqrt(abs(lvrho[18,27,1])*psi[18,18,1])
-  lambda[29,45,1] <- (-1 + 2*step(lvrho[18,27,1]))*sqrt(abs(lvrho[18,27,1])*psi[27,27,1])
-  psi[36,36,1] <- 1
-  lambda[27,46,1] <- sqrt(abs(rho[27,30,1])*theta[27,27,1])
-  lambda[30,47,1] <- (-1 + 2*step(rho[27,30,1]))*sqrt(abs(rho[27,30,1])*theta[30,30,1])
-  psi[37,37,1] <- 1
-  lambda[28,48,1] <- sqrt(abs(rho[28,31,1])*theta[28,28,1])
-  lambda[31,49,1] <- (-1 + 2*step(rho[28,31,1]))*sqrt(abs(rho[28,31,1])*theta[31,31,1])
-  psi[38,38,1] <- 1
-  lambda[5,50,1] <- sqrt(abs(lvrho[5,6,1])*psi[5,5,1])
-  lambda[6,51,1] <- (-1 + 2*step(lvrho[5,6,1]))*sqrt(abs(lvrho[5,6,1])*psi[6,6,1])
-  psi[39,39,1] <- 1
-  lambda[5,52,1] <- sqrt(abs(lvrho[5,7,1])*psi[5,5,1])
-  lambda[7,53,1] <- (-1 + 2*step(lvrho[5,7,1]))*sqrt(abs(lvrho[5,7,1])*psi[7,7,1])
-  psi[40,40,1] <- 1
-  lambda[5,54,1] <- sqrt(abs(lvrho[5,8,1])*psi[5,5,1])
-  lambda[8,55,1] <- (-1 + 2*step(lvrho[5,8,1]))*sqrt(abs(lvrho[5,8,1])*psi[8,8,1])
-  psi[41,41,1] <- 1
-  lambda[5,56,1] <- sqrt(abs(lvrho[5,9,1])*psi[5,5,1])
-  lambda[9,57,1] <- (-1 + 2*step(lvrho[5,9,1]))*sqrt(abs(lvrho[5,9,1])*psi[9,9,1])
-  psi[42,42,1] <- 1
-  lambda[5,58,1] <- sqrt(abs(lvrho[5,10,1])*psi[5,5,1])
-  lambda[10,59,1] <- (-1 + 2*step(lvrho[5,10,1]))*sqrt(abs(lvrho[5,10,1])*psi[10,10,1])
-  psi[43,43,1] <- 1
-  lambda[5,60,1] <- sqrt(abs(lvrho[5,11,1])*psi[5,5,1])
-  lambda[11,61,1] <- (-1 + 2*step(lvrho[5,11,1]))*sqrt(abs(lvrho[5,11,1])*psi[11,11,1])
-  psi[44,44,1] <- 1
-  lambda[5,62,1] <- sqrt(abs(lvrho[5,12,1])*psi[5,5,1])
-  lambda[12,63,1] <- (-1 + 2*step(lvrho[5,12,1]))*sqrt(abs(lvrho[5,12,1])*psi[12,12,1])
-  psi[45,45,1] <- 1
-  lambda[6,64,1] <- sqrt(abs(lvrho[6,7,1])*psi[6,6,1])
-  lambda[7,65,1] <- (-1 + 2*step(lvrho[6,7,1]))*sqrt(abs(lvrho[6,7,1])*psi[7,7,1])
-  psi[46,46,1] <- 1
-  lambda[6,66,1] <- sqrt(abs(lvrho[6,8,1])*psi[6,6,1])
-  lambda[8,67,1] <- (-1 + 2*step(lvrho[6,8,1]))*sqrt(abs(lvrho[6,8,1])*psi[8,8,1])
-  psi[47,47,1] <- 1
-  lambda[6,68,1] <- sqrt(abs(lvrho[6,9,1])*psi[6,6,1])
-  lambda[9,69,1] <- (-1 + 2*step(lvrho[6,9,1]))*sqrt(abs(lvrho[6,9,1])*psi[9,9,1])
-  psi[48,48,1] <- 1
-  lambda[6,70,1] <- sqrt(abs(lvrho[6,10,1])*psi[6,6,1])
-  lambda[10,71,1] <- (-1 + 2*step(lvrho[6,10,1]))*sqrt(abs(lvrho[6,10,1])*psi[10,10,1])
-  psi[49,49,1] <- 1
-  lambda[6,72,1] <- sqrt(abs(lvrho[6,11,1])*psi[6,6,1])
-  lambda[11,73,1] <- (-1 + 2*step(lvrho[6,11,1]))*sqrt(abs(lvrho[6,11,1])*psi[11,11,1])
-  psi[50,50,1] <- 1
-  lambda[6,74,1] <- sqrt(abs(lvrho[6,12,1])*psi[6,6,1])
-  lambda[12,75,1] <- (-1 + 2*step(lvrho[6,12,1]))*sqrt(abs(lvrho[6,12,1])*psi[12,12,1])
-  psi[51,51,1] <- 1
-  lambda[7,76,1] <- sqrt(abs(lvrho[7,8,1])*psi[7,7,1])
-  lambda[8,77,1] <- (-1 + 2*step(lvrho[7,8,1]))*sqrt(abs(lvrho[7,8,1])*psi[8,8,1])
-  psi[52,52,1] <- 1
-  lambda[7,78,1] <- sqrt(abs(lvrho[7,9,1])*psi[7,7,1])
-  lambda[9,79,1] <- (-1 + 2*step(lvrho[7,9,1]))*sqrt(abs(lvrho[7,9,1])*psi[9,9,1])
-  psi[53,53,1] <- 1
-  lambda[7,80,1] <- sqrt(abs(lvrho[7,10,1])*psi[7,7,1])
-  lambda[10,81,1] <- (-1 + 2*step(lvrho[7,10,1]))*sqrt(abs(lvrho[7,10,1])*psi[10,10,1])
-  psi[54,54,1] <- 1
-  lambda[7,82,1] <- sqrt(abs(lvrho[7,11,1])*psi[7,7,1])
-  lambda[11,83,1] <- (-1 + 2*step(lvrho[7,11,1]))*sqrt(abs(lvrho[7,11,1])*psi[11,11,1])
-  psi[55,55,1] <- 1
-  lambda[7,84,1] <- sqrt(abs(lvrho[7,12,1])*psi[7,7,1])
-  lambda[12,85,1] <- (-1 + 2*step(lvrho[7,12,1]))*sqrt(abs(lvrho[7,12,1])*psi[12,12,1])
-  psi[56,56,1] <- 1
-  lambda[8,86,1] <- sqrt(abs(lvrho[8,9,1])*psi[8,8,1])
-  lambda[9,87,1] <- (-1 + 2*step(lvrho[8,9,1]))*sqrt(abs(lvrho[8,9,1])*psi[9,9,1])
-  psi[57,57,1] <- 1
-  lambda[8,88,1] <- sqrt(abs(lvrho[8,10,1])*psi[8,8,1])
-  lambda[10,89,1] <- (-1 + 2*step(lvrho[8,10,1]))*sqrt(abs(lvrho[8,10,1])*psi[10,10,1])
-  psi[58,58,1] <- 1
-  lambda[8,90,1] <- sqrt(abs(lvrho[8,11,1])*psi[8,8,1])
-  lambda[11,91,1] <- (-1 + 2*step(lvrho[8,11,1]))*sqrt(abs(lvrho[8,11,1])*psi[11,11,1])
-  psi[59,59,1] <- 1
-  lambda[8,92,1] <- sqrt(abs(lvrho[8,12,1])*psi[8,8,1])
-  lambda[12,93,1] <- (-1 + 2*step(lvrho[8,12,1]))*sqrt(abs(lvrho[8,12,1])*psi[12,12,1])
-  psi[60,60,1] <- 1
-  lambda[9,94,1] <- sqrt(abs(lvrho[9,10,1])*psi[9,9,1])
-  lambda[10,95,1] <- (-1 + 2*step(lvrho[9,10,1]))*sqrt(abs(lvrho[9,10,1])*psi[10,10,1])
-  psi[61,61,1] <- 1
-  lambda[9,96,1] <- sqrt(abs(lvrho[9,11,1])*psi[9,9,1])
-  lambda[11,97,1] <- (-1 + 2*step(lvrho[9,11,1]))*sqrt(abs(lvrho[9,11,1])*psi[11,11,1])
-  psi[62,62,1] <- 1
-  lambda[9,98,1] <- sqrt(abs(lvrho[9,12,1])*psi[9,9,1])
-  lambda[12,99,1] <- (-1 + 2*step(lvrho[9,12,1]))*sqrt(abs(lvrho[9,12,1])*psi[12,12,1])
-  psi[63,63,1] <- 1
-  lambda[10,100,1] <- sqrt(abs(lvrho[10,11,1])*psi[10,10,1])
-  lambda[11,101,1] <- (-1 + 2*step(lvrho[10,11,1]))*sqrt(abs(lvrho[10,11,1])*psi[11,11,1])
-  psi[64,64,1] <- 1
-  lambda[10,102,1] <- sqrt(abs(lvrho[10,12,1])*psi[10,10,1])
-  lambda[12,103,1] <- (-1 + 2*step(lvrho[10,12,1]))*sqrt(abs(lvrho[10,12,1])*psi[12,12,1])
-  psi[65,65,1] <- 1
-  lambda[11,104,1] <- sqrt(abs(lvrho[11,12,1])*psi[11,11,1])
-  lambda[12,105,1] <- (-1 + 2*step(lvrho[11,12,1]))*sqrt(abs(lvrho[11,12,1])*psi[12,12,1])
-  psi[66,66,1] <- 1
-  lambda[16,106,1] <- sqrt(abs(lvrho[16,17,1])*psi[16,16,1])
-  lambda[17,107,1] <- (-1 + 2*step(lvrho[16,17,1]))*sqrt(abs(lvrho[16,17,1])*psi[17,17,1])
-  psi[67,67,1] <- 1
-  lambda[16,108,1] <- sqrt(abs(lvrho[16,20,1])*psi[16,16,1])
-  lambda[20,109,1] <- (-1 + 2*step(lvrho[16,20,1]))*sqrt(abs(lvrho[16,20,1])*psi[20,20,1])
-  psi[68,68,1] <- 1
-  lambda[16,110,1] <- sqrt(abs(lvrho[16,25,1])*psi[16,16,1])
-  lambda[25,111,1] <- (-1 + 2*step(lvrho[16,25,1]))*sqrt(abs(lvrho[16,25,1])*psi[25,25,1])
-  psi[69,69,1] <- 1
-  lambda[16,112,1] <- sqrt(abs(lvrho[16,26,1])*psi[16,16,1])
-  lambda[26,113,1] <- (-1 + 2*step(lvrho[16,26,1]))*sqrt(abs(lvrho[16,26,1])*psi[26,26,1])
-  psi[70,70,1] <- 1
-  lambda[17,114,1] <- sqrt(abs(lvrho[17,20,1])*psi[17,17,1])
-  lambda[20,115,1] <- (-1 + 2*step(lvrho[17,20,1]))*sqrt(abs(lvrho[17,20,1])*psi[20,20,1])
-  psi[71,71,1] <- 1
-  lambda[17,116,1] <- sqrt(abs(lvrho[17,25,1])*psi[17,17,1])
-  lambda[25,117,1] <- (-1 + 2*step(lvrho[17,25,1]))*sqrt(abs(lvrho[17,25,1])*psi[25,25,1])
-  psi[72,72,1] <- 1
-  lambda[17,118,1] <- sqrt(abs(lvrho[17,26,1])*psi[17,17,1])
-  lambda[26,119,1] <- (-1 + 2*step(lvrho[17,26,1]))*sqrt(abs(lvrho[17,26,1])*psi[26,26,1])
-  psi[73,73,1] <- 1
-  lambda[20,120,1] <- sqrt(abs(lvrho[20,25,1])*psi[20,20,1])
-  lambda[25,121,1] <- (-1 + 2*step(lvrho[20,25,1]))*sqrt(abs(lvrho[20,25,1])*psi[25,25,1])
-  psi[74,74,1] <- 1
-  lambda[20,122,1] <- sqrt(abs(lvrho[20,26,1])*psi[20,20,1])
-  lambda[26,123,1] <- (-1 + 2*step(lvrho[20,26,1]))*sqrt(abs(lvrho[20,26,1])*psi[26,26,1])
-  psi[75,75,1] <- 1
-  lambda[25,124,1] <- sqrt(abs(lvrho[25,26,1])*psi[25,25,1])
-  lambda[26,125,1] <- (-1 + 2*step(lvrho[25,26,1]))*sqrt(abs(lvrho[25,26,1])*psi[26,26,1])
-  psi[76,76,1] <- 1
-  psi[5,5,1] <- pow(parvec[122],-1)
-  psi[6,6,1] <- pow(parvec[123],-1)
-  psi[7,7,1] <- pow(parvec[124],-1)
-  psi[8,8,1] <- pow(parvec[125],-1)
-  psi[9,9,1] <- pow(parvec[126],-1)
-  psi[10,10,1] <- pow(parvec[127],-1)
-  psi[11,11,1] <- pow(parvec[128],-1)
-  psi[12,12,1] <- pow(parvec[129],-1)
-  psi[13,13,1] <- pow(parvec[130],-1)
-  psi[14,14,1] <- pow(parvec[131],-1)
-  psi[15,15,1] <- pow(parvec[132],-1)
-  psi[16,16,1] <- pow(parvec[133],-1)
-  psi[17,17,1] <- pow(parvec[134],-1)
-  psi[18,18,1] <- pow(parvec[135],-1)
-  psi[19,19,1] <- pow(parvec[136],-1)
-  psi[20,20,1] <- pow(parvec[137],-1)
-  psi[21,21,1] <- pow(parvec[138],-1)
-  psi[22,22,1] <- pow(parvec[139],-1)
-  psi[23,23,1] <- pow(parvec[140],-1)
-  psi[24,24,1] <- pow(parvec[141],-1)
-  psi[25,25,1] <- pow(parvec[142],-1)
-  psi[26,26,1] <- pow(parvec[143],-1)
-  theta[27,27,1] <- pow(parvec[144],-1)
-  theta[28,28,1] <- pow(parvec[145],-1)
-  psi[27,27,1] <- pow(parvec[146],-1)
-  theta[30,30,1] <- pow(parvec[147],-1)
-  theta[31,31,1] <- pow(parvec[148],-1)
+  beta[1,9,1] <- parvec[1]
+  beta[1,10,1] <- parvec[2]
+  beta[1,11,1] <- parvec[3]
+  beta[1,12,1] <- parvec[4]
+  beta[2,9,1] <- parvec[5]
+  beta[2,10,1] <- parvec[6]
+  beta[2,11,1] <- parvec[7]
+  beta[2,12,1] <- parvec[8]
+  beta[3,13,1] <- parvec[9]
+  beta[3,10,1] <- parvec[10]
+  beta[3,11,1] <- parvec[11]
+  beta[3,12,1] <- parvec[12]
+  beta[4,14,1] <- parvec[13]
+  beta[4,10,1] <- parvec[14]
+  beta[4,11,1] <- parvec[15]
+  beta[4,12,1] <- parvec[16]
+  beta[5,9,1] <- parvec[17]
+  beta[5,10,1] <- parvec[18]
+  beta[5,11,1] <- parvec[19]
+  beta[5,12,1] <- parvec[20]
+  beta[6,9,1] <- parvec[21]
+  beta[6,10,1] <- parvec[22]
+  beta[6,11,1] <- parvec[23]
+  beta[6,1,1] <- parvec[24]
+  beta[6,2,1] <- parvec[25]
+  beta[6,12,1] <- parvec[26]
+  beta[7,3,1] <- parvec[27]
+  beta[7,12,1] <- parvec[28]
+  beta[8,4,1] <- parvec[29]
+  beta[8,12,1] <- parvec[30]
+  lvrho[5,7,1] <- 0
+  lvrho[6,7,1] <- 0
+  lvrho[6,8,1] <- 0
+  lvrho[7,8,1] <- 0
+  lvrho[5,8,1] <- -1 + 2*parvec[31]
+  lvrho[1,2,1] <- -1 + 2*parvec[32]
+  lvrho[5,6,1] <- -1 + 2*parvec[33]
+  psistar[1,1,1] <- psi[1,1,1] - (sqrt(abs(lvrho[1,2,1])*psi[1,1,1]))^2
+  psistar[2,2,1] <- psi[2,2,1] - ((-1 + 2*step(lvrho[1,2,1]))*sqrt(abs(lvrho[1,2,1])*psi[2,2,1]))^2
+  psi[3,3,1] <- pow(parvec[34],-1)
+  psi[4,4,1] <- pow(parvec[35],-1)
+  psistar[5,5,1] <- psi[5,5,1] - (sqrt(abs(lvrho[5,7,1])*psi[5,5,1]))^2 - (sqrt(abs(lvrho[5,8,1])*psi[5,5,1]))^2 - (sqrt(abs(lvrho[5,6,1])*psi[5,5,1]))^2
+  psistar[6,6,1] <- psi[6,6,1] - (sqrt(abs(lvrho[6,7,1])*psi[6,6,1]))^2 - (sqrt(abs(lvrho[6,8,1])*psi[6,6,1]))^2 - ((-1 + 2*step(lvrho[5,6,1]))*sqrt(abs(lvrho[5,6,1])*psi[6,6,1]))^2
+  psistar[7,7,1] <- psi[7,7,1] - ((-1 + 2*step(lvrho[5,7,1]))*sqrt(abs(lvrho[5,7,1])*psi[7,7,1]))^2 - ((-1 + 2*step(lvrho[6,7,1]))*sqrt(abs(lvrho[6,7,1])*psi[7,7,1]))^2 - (sqrt(abs(lvrho[7,8,1])*psi[7,7,1]))^2
+  psistar[8,8,1] <- psi[8,8,1] - ((-1 + 2*step(lvrho[6,8,1]))*sqrt(abs(lvrho[6,8,1])*psi[8,8,1]))^2 - ((-1 + 2*step(lvrho[7,8,1]))*sqrt(abs(lvrho[7,8,1])*psi[8,8,1]))^2 - ((-1 + 2*step(lvrho[5,8,1]))*sqrt(abs(lvrho[5,8,1])*psi[8,8,1]))^2
+  psi[9,9,1] <- 75.268256526146
+  psi[10,10,1] <- 221.953161047269
+  psi[11,11,1] <- 721.697044821866
+  psi[12,12,1] <- 8.25000721697038
+  psi[13,13,1] <- 116.47575945544
+  psi[14,14,1] <- 73.4049528407502
+  alpha[1,1,1] <- parvec[36]
+  alpha[2,1,1] <- parvec[37]
+  alpha[3,1,1] <- parvec[38]
+  alpha[4,1,1] <- parvec[39]
+  alpha[5,1,1] <- parvec[40]
+  alpha[6,1,1] <- parvec[41]
+  alpha[7,1,1] <- parvec[42]
+  alpha[8,1,1] <- parvec[43]
+  alpha[9,1,1] <- 11.7549112472703
+  alpha[10,1,1] <- 13.9581599599315
+  alpha[11,1,1] <- 67.0985638317542
+  alpha[12,1,1] <- 2013.5
+  alpha[13,1,1] <- 18.3293569581088
+  alpha[14,1,1] <- 22.4989060763384
+  lambda[5,15,1] <- sqrt(abs(lvrho[5,7,1])*psi[5,5,1])
+  lambda[7,16,1] <- (-1 + 2*step(lvrho[5,7,1]))*sqrt(abs(lvrho[5,7,1])*psi[7,7,1])
+  psi[15,15,1] <- 1
+  lambda[6,17,1] <- sqrt(abs(lvrho[6,7,1])*psi[6,6,1])
+  lambda[7,18,1] <- (-1 + 2*step(lvrho[6,7,1]))*sqrt(abs(lvrho[6,7,1])*psi[7,7,1])
+  psi[16,16,1] <- 1
+  lambda[6,19,1] <- sqrt(abs(lvrho[6,8,1])*psi[6,6,1])
+  lambda[8,20,1] <- (-1 + 2*step(lvrho[6,8,1]))*sqrt(abs(lvrho[6,8,1])*psi[8,8,1])
+  psi[17,17,1] <- 1
+  lambda[7,21,1] <- sqrt(abs(lvrho[7,8,1])*psi[7,7,1])
+  lambda[8,22,1] <- (-1 + 2*step(lvrho[7,8,1]))*sqrt(abs(lvrho[7,8,1])*psi[8,8,1])
+  psi[18,18,1] <- 1
+  lambda[5,23,1] <- sqrt(abs(lvrho[5,8,1])*psi[5,5,1])
+  lambda[8,24,1] <- (-1 + 2*step(lvrho[5,8,1]))*sqrt(abs(lvrho[5,8,1])*psi[8,8,1])
+  psi[19,19,1] <- 1
+  lambda[1,25,1] <- sqrt(abs(lvrho[1,2,1])*psi[1,1,1])
+  lambda[2,26,1] <- (-1 + 2*step(lvrho[1,2,1]))*sqrt(abs(lvrho[1,2,1])*psi[2,2,1])
+  psi[20,20,1] <- 1
+  lambda[5,27,1] <- sqrt(abs(lvrho[5,6,1])*psi[5,5,1])
+  lambda[6,28,1] <- (-1 + 2*step(lvrho[5,6,1]))*sqrt(abs(lvrho[5,6,1])*psi[6,6,1])
+  psi[21,21,1] <- 1
+  psi[1,1,1] <- pow(parvec[44],-1)
+  psi[2,2,1] <- pow(parvec[45],-1)
+  psi[5,5,1] <- pow(parvec[46],-1)
+  psi[6,6,1] <- pow(parvec[47],-1)
+  psi[7,7,1] <- pow(parvec[48],-1)
+  psi[8,8,1] <- pow(parvec[49],-1)
 
   # Inferential covariances
-  psi[13,14,1] <- lambda[13,28,1]*lambda[14,29,1]*psi[28,28,1]
-  psi[13,15,1] <- lambda[13,30,1]*lambda[15,31,1]*psi[29,29,1]
-  psi[14,15,1] <- lambda[14,32,1]*lambda[15,33,1]*psi[30,30,1]
-  psi[21,23,1] <- lambda[21,34,1]*lambda[23,35,1]*psi[31,31,1]
-  psi[22,23,1] <- lambda[22,36,1]*lambda[23,37,1]*psi[32,32,1]
-  psi[21,22,1] <- lambda[21,38,1]*lambda[22,39,1]*psi[33,33,1]
-  psi[18,19,1] <- lambda[18,40,1]*lambda[19,41,1]*psi[34,34,1]
-  psi[18,24,1] <- lambda[18,42,1]*lambda[24,43,1]*psi[35,35,1]
-  psi[18,27,1] <- lambda[18,44,1]*lambda[29,45,1]*psi[36,36,1]
-  theta[27,30,1] <- lambda[27,46,1]*lambda[30,47,1]*psi[37,37,1]
-  theta[28,31,1] <- lambda[28,48,1]*lambda[31,49,1]*psi[38,38,1]
-  psi[5,6,1] <- lambda[5,50,1]*lambda[6,51,1]*psi[39,39,1]
-  psi[5,7,1] <- lambda[5,52,1]*lambda[7,53,1]*psi[40,40,1]
-  psi[5,8,1] <- lambda[5,54,1]*lambda[8,55,1]*psi[41,41,1]
-  psi[5,9,1] <- lambda[5,56,1]*lambda[9,57,1]*psi[42,42,1]
-  psi[5,10,1] <- lambda[5,58,1]*lambda[10,59,1]*psi[43,43,1]
-  psi[5,11,1] <- lambda[5,60,1]*lambda[11,61,1]*psi[44,44,1]
-  psi[5,12,1] <- lambda[5,62,1]*lambda[12,63,1]*psi[45,45,1]
-  psi[6,7,1] <- lambda[6,64,1]*lambda[7,65,1]*psi[46,46,1]
-  psi[6,8,1] <- lambda[6,66,1]*lambda[8,67,1]*psi[47,47,1]
-  psi[6,9,1] <- lambda[6,68,1]*lambda[9,69,1]*psi[48,48,1]
-  psi[6,10,1] <- lambda[6,70,1]*lambda[10,71,1]*psi[49,49,1]
-  psi[6,11,1] <- lambda[6,72,1]*lambda[11,73,1]*psi[50,50,1]
-  psi[6,12,1] <- lambda[6,74,1]*lambda[12,75,1]*psi[51,51,1]
-  psi[7,8,1] <- lambda[7,76,1]*lambda[8,77,1]*psi[52,52,1]
-  psi[7,9,1] <- lambda[7,78,1]*lambda[9,79,1]*psi[53,53,1]
-  psi[7,10,1] <- lambda[7,80,1]*lambda[10,81,1]*psi[54,54,1]
-  psi[7,11,1] <- lambda[7,82,1]*lambda[11,83,1]*psi[55,55,1]
-  psi[7,12,1] <- lambda[7,84,1]*lambda[12,85,1]*psi[56,56,1]
-  psi[8,9,1] <- lambda[8,86,1]*lambda[9,87,1]*psi[57,57,1]
-  psi[8,10,1] <- lambda[8,88,1]*lambda[10,89,1]*psi[58,58,1]
-  psi[8,11,1] <- lambda[8,90,1]*lambda[11,91,1]*psi[59,59,1]
-  psi[8,12,1] <- lambda[8,92,1]*lambda[12,93,1]*psi[60,60,1]
-  psi[9,10,1] <- lambda[9,94,1]*lambda[10,95,1]*psi[61,61,1]
-  psi[9,11,1] <- lambda[9,96,1]*lambda[11,97,1]*psi[62,62,1]
-  psi[9,12,1] <- lambda[9,98,1]*lambda[12,99,1]*psi[63,63,1]
-  psi[10,11,1] <- lambda[10,100,1]*lambda[11,101,1]*psi[64,64,1]
-  psi[10,12,1] <- lambda[10,102,1]*lambda[12,103,1]*psi[65,65,1]
-  psi[11,12,1] <- lambda[11,104,1]*lambda[12,105,1]*psi[66,66,1]
-  psi[16,17,1] <- lambda[16,106,1]*lambda[17,107,1]*psi[67,67,1]
-  psi[16,20,1] <- lambda[16,108,1]*lambda[20,109,1]*psi[68,68,1]
-  psi[16,25,1] <- lambda[16,110,1]*lambda[25,111,1]*psi[69,69,1]
-  psi[16,26,1] <- lambda[16,112,1]*lambda[26,113,1]*psi[70,70,1]
-  psi[17,20,1] <- lambda[17,114,1]*lambda[20,115,1]*psi[71,71,1]
-  psi[17,25,1] <- lambda[17,116,1]*lambda[25,117,1]*psi[72,72,1]
-  psi[17,26,1] <- lambda[17,118,1]*lambda[26,119,1]*psi[73,73,1]
-  psi[20,25,1] <- lambda[20,120,1]*lambda[25,121,1]*psi[74,74,1]
-  psi[20,26,1] <- lambda[20,122,1]*lambda[26,123,1]*psi[75,75,1]
-  psi[25,26,1] <- lambda[25,124,1]*lambda[26,125,1]*psi[76,76,1]
+  psi[5,7,1] <- lambda[5,15,1]*lambda[7,16,1]*psi[15,15,1]
+  psi[6,7,1] <- lambda[6,17,1]*lambda[7,18,1]*psi[16,16,1]
+  psi[6,8,1] <- lambda[6,19,1]*lambda[8,20,1]*psi[17,17,1]
+  psi[7,8,1] <- lambda[7,21,1]*lambda[8,22,1]*psi[18,18,1]
+  psi[5,8,1] <- lambda[5,23,1]*lambda[8,24,1]*psi[19,19,1]
+  psi[1,2,1] <- lambda[1,25,1]*lambda[2,26,1]*psi[20,20,1]
+  psi[5,6,1] <- lambda[5,27,1]*lambda[6,28,1]*psi[21,21,1]
 
   # Priors
   parvec[1] ~ dnorm(0,1e-2)
@@ -575,122 +173,23 @@ model {
   parvec[28] ~ dnorm(0,1e-2)
   parvec[29] ~ dnorm(0,1e-2)
   parvec[30] ~ dnorm(0,1e-2)
-  parvec[31] ~ dnorm(0,1e-2)
-  parvec[32] ~ dnorm(0,1e-2)
-  parvec[33] ~ dnorm(0,1e-2)
-  parvec[34] ~ dnorm(0,1e-2)
-  parvec[35] ~ dnorm(0,1e-2)
-  parvec[36] ~ dnorm(0,1e-2)
-  parvec[37] ~ dnorm(0,1e-2)
-  parvec[38] ~ dbeta(1,1)
-  parvec[39] ~ dbeta(1,1)
-  parvec[40] ~ dbeta(1,1)
-  parvec[41] ~ dbeta(1,1)
-  parvec[42] ~ dbeta(1,1)
-  parvec[43] ~ dbeta(1,1)
-  parvec[44] ~ dbeta(1,1)
-  parvec[45] ~ dbeta(1,1)
-  parvec[46] ~ dbeta(1,1)
-  parvec[47] ~ dbeta(1,1)
-  parvec[48] ~ dbeta(1,1)
+  parvec[31] ~ dbeta(1,1)
+  parvec[32] ~ dbeta(1,1)
+  parvec[33] ~ dbeta(1,1)
+  parvec[34] ~ dgamma(1,.5)
+  parvec[35] ~ dgamma(1,.5)
+  parvec[36] ~ dnorm(0,1e-3)
+  parvec[37] ~ dnorm(0,1e-3)
+  parvec[38] ~ dnorm(0,1e-3)
+  parvec[39] ~ dnorm(0,1e-3)
+  parvec[40] ~ dnorm(0,1e-3)
+  parvec[41] ~ dnorm(0,1e-3)
+  parvec[42] ~ dnorm(0,1e-3)
+  parvec[43] ~ dnorm(0,1e-3)
+  parvec[44] ~ dgamma(1,.5)
+  parvec[45] ~ dgamma(1,.5)
+  parvec[46] ~ dgamma(1,.5)
+  parvec[47] ~ dgamma(1,.5)
+  parvec[48] ~ dgamma(1,.5)
   parvec[49] ~ dgamma(1,.5)
-  parvec[50] ~ dgamma(1,.5)
-  parvec[51] ~ dgamma(1,.5)
-  parvec[52] ~ dgamma(1,.5)
-  parvec[53] ~ dbeta(1,1)
-  parvec[54] ~ dbeta(1,1)
-  parvec[55] ~ dbeta(1,1)
-  parvec[56] ~ dbeta(1,1)
-  parvec[57] ~ dbeta(1,1)
-  parvec[58] ~ dbeta(1,1)
-  parvec[59] ~ dbeta(1,1)
-  parvec[60] ~ dbeta(1,1)
-  parvec[61] ~ dbeta(1,1)
-  parvec[62] ~ dbeta(1,1)
-  parvec[63] ~ dbeta(1,1)
-  parvec[64] ~ dbeta(1,1)
-  parvec[65] ~ dbeta(1,1)
-  parvec[66] ~ dbeta(1,1)
-  parvec[67] ~ dbeta(1,1)
-  parvec[68] ~ dbeta(1,1)
-  parvec[69] ~ dbeta(1,1)
-  parvec[70] ~ dbeta(1,1)
-  parvec[71] ~ dbeta(1,1)
-  parvec[72] ~ dbeta(1,1)
-  parvec[73] ~ dbeta(1,1)
-  parvec[74] ~ dbeta(1,1)
-  parvec[75] ~ dbeta(1,1)
-  parvec[76] ~ dbeta(1,1)
-  parvec[77] ~ dbeta(1,1)
-  parvec[78] ~ dbeta(1,1)
-  parvec[79] ~ dbeta(1,1)
-  parvec[80] ~ dbeta(1,1)
-  parvec[81] ~ dbeta(1,1)
-  parvec[82] ~ dbeta(1,1)
-  parvec[83] ~ dbeta(1,1)
-  parvec[84] ~ dbeta(1,1)
-  parvec[85] ~ dbeta(1,1)
-  parvec[86] ~ dbeta(1,1)
-  parvec[87] ~ dbeta(1,1)
-  parvec[88] ~ dbeta(1,1)
-  parvec[89] ~ dbeta(1,1)
-  parvec[90] ~ dbeta(1,1)
-  parvec[91] ~ dnorm(0,1e-3)
-  parvec[92] ~ dnorm(0,1e-3)
-  parvec[93] ~ dnorm(0,1e-3)
-  parvec[94] ~ dnorm(0,1e-3)
-  parvec[95] ~ dnorm(0,1e-3)
-  parvec[96] ~ dnorm(0,1e-3)
-  parvec[97] ~ dnorm(0,1e-3)
-  parvec[98] ~ dnorm(0,1e-3)
-  parvec[99] ~ dnorm(0,1e-3)
-  parvec[100] ~ dnorm(0,1e-3)
-  parvec[101] ~ dnorm(0,1e-3)
-  parvec[102] ~ dnorm(0,1e-3)
-  parvec[103] ~ dnorm(0,1e-3)
-  parvec[104] ~ dnorm(0,1e-3)
-  parvec[105] ~ dnorm(0,1e-3)
-  parvec[106] ~ dnorm(0,1e-3)
-  parvec[107] ~ dnorm(0,1e-3)
-  parvec[108] ~ dnorm(0,1e-3)
-  parvec[109] ~ dnorm(0,1e-3)
-  parvec[110] ~ dnorm(0,1e-3)
-  parvec[111] ~ dnorm(0,1e-3)
-  parvec[112] ~ dnorm(0,1e-3)
-  parvec[113] ~ dnorm(0,1e-3)
-  parvec[114] ~ dnorm(0,1e-3)
-  parvec[115] ~ dnorm(0,1e-3)
-  parvec[116] ~ dnorm(0,1e-3)
-  parvec[117] ~ dnorm(0,1e-3)
-  parvec[118] ~ dnorm(0,1e-3)
-  parvec[119] ~ dnorm(0,1e-3)
-  parvec[120] ~ dnorm(0,1e-3)
-  parvec[121] ~ dnorm(0,1e-3)
-  parvec[122] ~ dgamma(1,.5)
-  parvec[123] ~ dgamma(1,.5)
-  parvec[124] ~ dgamma(1,.5)
-  parvec[125] ~ dgamma(1,.5)
-  parvec[126] ~ dgamma(1,.5)
-  parvec[127] ~ dgamma(1,.5)
-  parvec[128] ~ dgamma(1,.5)
-  parvec[129] ~ dgamma(1,.5)
-  parvec[130] ~ dgamma(1,.5)
-  parvec[131] ~ dgamma(1,.5)
-  parvec[132] ~ dgamma(1,.5)
-  parvec[133] ~ dgamma(1,.5)
-  parvec[134] ~ dgamma(1,.5)
-  parvec[135] ~ dgamma(1,.5)
-  parvec[136] ~ dgamma(1,.5)
-  parvec[137] ~ dgamma(1,.5)
-  parvec[138] ~ dgamma(1,.5)
-  parvec[139] ~ dgamma(1,.5)
-  parvec[140] ~ dgamma(1,.5)
-  parvec[141] ~ dgamma(1,.5)
-  parvec[142] ~ dgamma(1,.5)
-  parvec[143] ~ dgamma(1,.5)
-  parvec[144] ~ dgamma(1,.5)
-  parvec[145] ~ dgamma(1,.5)
-  parvec[146] ~ dgamma(1,.5)
-  parvec[147] ~ dgamma(1,.5)
-  parvec[148] ~ dgamma(1,.5)
 }
