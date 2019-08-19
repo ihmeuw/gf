@@ -109,20 +109,27 @@ data$tmp = NULL
 # data = na.omit(data)
 # -----------------------------------------------------------------
 
+#---------------------------------------------------------------
+# Replace NAs with zeros after back-casting DP 8/16/19 
+allVars = names(data)[!names(data)%in%c('date', 'department')]
+for (v in allVars){
+  data[is.na(get(v)), (v):=0]
+}
+
 #------------------------------------------------------------
 # Drop variables that are not being used in model object before cumulative sum. 
 data = data[, c(modelVars, 'department', 'date'), with=F]
 
 
+
 # -----------------------------------------------------------------------
 # Data transformations and other fixes for Heywood cases
 
-# # make cumulative variables, but first, replace NAs with zeros! 
+# # make cumulative variables - all NAs should be replaced with zeros in step above. 
 cumulVars = names(data)
 cumulVars = cumulVars[!grepl("total", cumulVars)]
 cumulVars = cumulVars[!cumulVars%in%c('department', 'date', 'year', 'min')]
 for(v in cumulVars) {
-  data[is.na(get(v)), (v):=0] #Replace NA with 0. 
 	nv = gsub('value_','',v)
 	data[, (paste0(nv,'_cumulative')):=cumsum(get(v)), by='department']
 }

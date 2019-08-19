@@ -60,6 +60,12 @@ data$tmp = NULL
 # data = na.omit(data)
 # -----------------------------------------------------------------
 
+#---------------------------------------------------------------
+# Replace NAs with zeros after back-casting DP 8/16/19 
+allVars = names(data)[!names(data)%in%c('date', 'department')]
+for (v in allVars){
+  data[is.na(get(v)), (v):=0]
+}
 
 # -----------------------------------------------------------------------
 # Data transformations and other fixes for Heywood cases

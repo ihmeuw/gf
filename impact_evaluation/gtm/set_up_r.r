@@ -42,7 +42,7 @@ library(splitstackshape)
 # Current model versions
 
 modelVersion1 = 'gtm_tb_first_half6'
-modelVersion2 = 'gtm_tb_sec_half2'
+modelVersion2 = 'gtm_tb_sec_half4'
 
 START_YEAR = 2009 #If available, what's the earliest year you should model data from? 
 
