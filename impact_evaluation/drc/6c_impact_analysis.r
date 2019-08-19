@@ -176,7 +176,7 @@ setup2LevelSB = function(var='ITN_consumed_cumulative', pcts=TRUE) {
 	out[is.na(label), label:='']
 	if (pcts==TRUE) out[label!='', label:=paste(label, '-', round(est.std*100, 1), '%')]
 	out[rhs==lhs & level==2, label:='']
-	out[rhs=='population', label:=paste('Population Control -', round(est.std*100, 1), '%')]
+	out[rhs=='population', label:=paste('Population Change -', round(est.std*100, 1), '%')]
 
 	# return
 	return(out)
@@ -274,7 +274,6 @@ if (nLabels>=10) s=2.5
 if (nLabels>=20) s=2
 
 # graph
-# sunBursts = list()
 sunBursts[[length(sunBursts)+1]] = ggplot(graphData, aes(x=as.numeric(level), y=est.std, fill=fill, alpha=level)) +
 	geom_col(width=1, color='gray80', size=0.3, position=position_stack()) +
 	geom_text_repel(aes(label=label, x=as.numeric(level)), size=s, position=position_stack(vjust=0.5), segment.color='black') +

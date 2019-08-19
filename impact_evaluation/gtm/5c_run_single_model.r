@@ -137,21 +137,21 @@ subData = subData[, unique(modelVars), with=FALSE]
 
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
-scaling_factors = data.table()
-numVars = names(subData)[!names(subData)%in%c('department')]
-for(v in numVars) {
-  print(v)
-	s=1
-	if (all(subData[[v]]!=0)){ #Changed from 0 to 0.1 to test new jitter scheme EL 8/19/19
-  	if (var(subData[[v]]/s)>1000){
-  	  while(var(subData[[v]]/s)>1000) s=s*10
-  	} else {
-  	  while(var(subData[[v]]/s)<100) s=s/10
-  	}
-	}
-	scaling_factors[,(v):=s]
-}
-for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
+# scaling_factors = data.table()
+# numVars = names(subData)[!names(subData)%in%c('department')]
+# for(v in numVars) {
+#   print(v)
+# 	s=1
+# 	if (all(subData[[v]]!=0)){ #Changed from 0 to 0.1 to test new jitter scheme EL 8/19/19
+#   	if (var(subData[[v]]/s)>1000){
+#   	  while(var(subData[[v]]/s)>1000) s=s*10
+#   	} else {
+#   	  while(var(subData[[v]]/s)<100) s=s/10
+#   	}
+# 	}
+# 	scaling_factors[,(v):=s]
+# }
+# for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # print(subData[, .(Number_of_Cases_Screened_for_MDR_act_cumulative, TB_Patients_Tested_for_HIV_act_cumulative)])
 # 
 
@@ -220,11 +220,11 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 
 #Make scaling factors data table so you can run this code. - everything should be scaled to 1. 
-# scaling_factors = data.table()
-# numVars = names(subData)[!names(subData)%in%c('department')]
-# for(v in numVars) {
-# 	scaling_factors[,(v):=1]
-# }
+scaling_factors = data.table()
+numVars = names(subData)[!names(subData)%in%c('department')]
+for(v in numVars) {
+	scaling_factors[,(v):=1]
+}
 
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)
