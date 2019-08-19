@@ -98,8 +98,8 @@ whoFile = paste0(whoDir, 'who_prepped.rds')
 sicoinFile = paste0(sicoinDir, 'prepped_sicoin_data.rds')
 
 # activities/outputs files
-actFile = paste0(rawIeDir, "activities_8.6.19.csv")
-outputsFile = paste0(rawIeDir, "outputs_8.6.19.csv")
+actFile = paste0(rawIeDir, "activities_8.9.19.csv")
+outputsFile = paste0(rawIeDir, "outputs_8.9.19.csv")
 
 # outcomes/impact files
 outcomeFile = paste0(rawIeDir, "outcomes_7.15.19.csv")
