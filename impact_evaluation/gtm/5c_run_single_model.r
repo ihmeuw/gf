@@ -17,7 +17,7 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # task_id = 4
 # modelStage = 1
 # testRun = TRUE
-# modelVersion = "gtm_tb_first_half6"
+# modelVersion = "gtm_tb_first_half7"
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -67,7 +67,8 @@ source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('department','date',modelVars)
+#modelVars = c('department','date',modelVars)
+modelVars = c('department', modelVars)
 subData = subData[, unique(modelVars), with=FALSE]
 
 #Check unique values in data - do any columns have <5 unique values? 
@@ -107,23 +108,23 @@ subData = subData[, unique(modelVars), with=FALSE]
 
 #Only jitter values that have zeros for the entire time series- this is the only thing that's breaking the model at this point. 
 # Replace all-zero-vectors with a zero-variance positive vector (0.1). 
-for(v in names(subData)[!names(subData)%in%c('department','date')]){
-  values = as.double(unique(subData[[v]])) #Get a vector of the unique values of the variable. 
-  zero_compare = rep(0, length(values)) #Get an equal length vector of zeros. 
-  if (all(values==zero_compare)){
-    print(paste0(v, " is completely zero for the entire time series - replacing every value with 0.1."))
-    subData[, (v):=0.1]
-  }
-}
-  
-# for(v in names(subData)[!names(subData)%in%c('department','date')]) {
-#   sd = sd(subData[[v]])
-#   if (all(subData[[v]]>=0) & sd!=0){
-#     subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])/100))] # Changed back to poisson after model was restructured EL 8/14/19
-#   } else {
-#     subData[, (v):=get(v)+rexp(nrow(subData))]
+# for(v in names(subData)[!names(subData)%in%c('department','date')]){
+#   values = as.double(unique(subData[[v]])) #Get a vector of the unique values of the variable. 
+#   zero_compare = rep(0, length(values)) #Get an equal length vector of zeros. 
+#   if (all(values==zero_compare)){
+#     print(paste0(v, " is completely zero for the entire time series - applying small jitter between 0 and 1/100"))
+#     subData[, (v):=runif(nrow(subData), min=0, max=0.01)]
 #   }
 # }
+  
+for(v in names(subData)[!names(subData)%in%c('department','date')]) {
+  sd = sd(subData[[v]])
+  if (all(subData[[v]]>=0) & sd!=0){
+    subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])/100))] # Changed back to poisson after model was restructured EL 8/14/19
+  } else {
+    subData[, (v):=get(v)+rexp(nrow(subData))]
+  }
+}
 
 # Original jitter - adding a random exponential 
 #Jitter analysis 1 - just plain jitter. (v:=jitter(get(v))
@@ -134,12 +135,12 @@ for(v in names(subData)[!names(subData)%in%c('department','date')]){
 
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
-scaling_factors = data.table(date=1)
-numVars = names(subData)[!names(subData)%in%c('department','date')]
+scaling_factors = data.table()
+numVars = names(subData)[!names(subData)%in%c('department')]
 for(v in numVars) {
   print(v)
 	s=1
-	if (all(subData[[v]]!=0)){
+	if (all(subData[[v]]!=0)){ #Changed from 0 to 0.1 to test new jitter scheme EL 8/19/19 
   	if (var(subData[[v]]/s)>1000){
   	  while(var(subData[[v]]/s)>1000) s=s*10
   	} else {
