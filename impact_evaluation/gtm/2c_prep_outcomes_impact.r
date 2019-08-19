@@ -242,7 +242,7 @@ impacts1 = impacts1[, -c('dup')]
 dt_final = merge(outcomes1, impacts1, by=c('date', 'department'), all=T) #Save dates and departments from both, in case you have data in one and not the other. 
 
 #Drop any municipalities and departments that are 0 - this should represent the national-level data. 
-dt_final = dt_final[department==0]
+dt_final = dt_final[department!=0]
 
 #Pull one variable, # of cases screened for MDR-TB, out of the outputs dataset. 
 dt1 = readRDS(outputFile3)

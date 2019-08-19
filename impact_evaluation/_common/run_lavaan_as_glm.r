@@ -22,7 +22,12 @@ lavaanUR = function(modelObject=NULL, data=NULL) {
 
 	# extract model info
 	parsedModel = lavParseModelString(modelObject)
-
+  
+	# ignore covariance terms and other operators not possible in GLM
+	parsedModel$lhs = parsedModel$lhs[parsedModel$op=='~']
+	parsedModel$rhs = parsedModel$rhs[parsedModel$op=='~']
+	parsedModel$op = parsedModel$op[parsedModel$op=='~']
+	
 	# construct formulae
 	lhsVars = unique(parsedModel$lhs[parsedModel$op=='~'])
 	formulae = lapply(lhsVars, function(v) { 
@@ -32,7 +37,7 @@ lavaanUR = function(modelObject=NULL, data=NULL) {
 	# standardize data
 	vars = unique(c(parsedModel$lhs, parsedModel$rhs))
 	data.std = copy(data)
-	for(v in vars) data.std[, (v):=(get(v)-mean(get(v)))/sd(get(v))]
+	for(v in vars) data.std[, (v):=(get(v)-mean(get(v)))/ifelse(sd(get(v))>0, sd(get(v)), 1)]
 	
 	# run regressions
 	lmFits = lapply(seq(length(formulae)), function(i) { 

@@ -44,7 +44,7 @@ set = 'pnls'
 #------------------------------------
 # switches
 
-cleanup_start = FALSE # whether or not to delete all files from parallel runs at the beginning
+cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
 cleanup_end = TRUE # "" /end; default to FALSE
 # impute = 'TRUE' # whether or not to impute missing data as part of the qr
 # cat_files = TRUE # whether or not to concatenate all of the files at the end
@@ -104,7 +104,7 @@ if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement
   }
 }
 
-if(set=='pnls') inFile = paste0(dir, 'pre_prep/merged/pnls_subset_2017_01_01_2019_04_01.rds')
+if(set=='pnls') inFile = paste0(dir, 'merged/pnls_subset_2017_01_01_2019_04_01.rds')
 if(set=='pnls') outFile = paste0(dir, 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_screened.rds')
 #------------------------------------
 
@@ -180,8 +180,6 @@ N = nrow(array_table)
 
 # set the working directory even if david does not want you to
 setwd(paste0('/ihme/code/', user, '/gf/'))
-
-source('./outcome_measurement/all/cod/dhis/outlier_removal/doit.R')
 
 # FOR NEW CLUSTER:
 # run quantregScript for each org_unit (submit one array job, with the array by org_unit)

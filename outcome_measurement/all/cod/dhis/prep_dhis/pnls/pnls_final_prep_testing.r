@@ -26,14 +26,6 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 # load the file that represents a subset (no sex, age, or support)
 dt = data.table(readRDS(paste0(dir, 'prepped/pnls_sets/pnls_vct_2017_01_01_2019_02_01.rds')))
 
-# missing sex and subpops
-dt[is.na(sex), sex:='Couple']
-dt[is.na(subpop) & grepl("Couple", element), sex:='Couple']
-
-#---------------------------------------
-
-dt[is.na(subpop) & grepl('Couples', element), subpop:='couples']
-
 #---------------------------------------
 # export the abbreviated elements for translation
 
@@ -82,10 +74,15 @@ dt[grep('CDIV', element), test_type:='provider initiated']
 dt[grep('CDV', element), test_type:='voluntary']
 
 #----------------------------------------
-# final collapse 
+# create a binary for clients and malades
 
-Vars = names(dt)[names(dt)!='value' & names(dt)!='element_id' & names(dt)!='element' & names(dt)!='last_update' & names(dt)!='coordinates']
-dt = dt[,.(value=sum(value)), by=Vars]
+dt[grepl("Client", element) & !(grepl('PS', element)), client:=(grepl("Client", element) & !(grepl('PS', element))]
+
+
+# # final collapse 
+# 
+# Vars = names(dt)[names(dt)!='value' & names(dt)!='element_id' & names(dt)!='element' & names(dt)!='last_update' & names(dt)!='coordinates']
+# dt = dt[,.(value=sum(value)), by=Vars]
 
 #-----------------------------------
 #Save the final file 

@@ -41,16 +41,17 @@ num_hzs_by_dps[ dps == 'bas-congo', dps := 'kongo-central']
 #dt_2018_orig = data.table(read.xlsx(paste0(raw_dir, "TB DATA 2018.xlsx")))
 #dt_2018_add = data.table(read.xlsx(paste0(raw_dir, "DATA TB 6 dps 2018.xlsx")))
 dt_2018 = data.table(read.xlsx(paste0(raw_dir, 'tb data 2018 all dps with health zone column.xlsx'))) # data Constant updated manually
+dt_2018 = dt_2018[5:nrow(dt_2018), ]
 
-# Supprimez les quatre premiÃ¨res lignes de noms maintenant qu'elles ne sont plus nÃ©cessaires.
-dt_2018_orig = dt_2018_orig[5:nrow(dt_2018_orig), ]
-dt_2018_add = dt_2018_add[5:nrow(dt_2018_add), ]
-
-dt_2018 = rbindlist(list(dt_2018_orig, dt_2018_add), use.names = TRUE)
+# # Supprimez les quatre premiÃ¨res lignes de noms maintenant qu'elles ne sont plus nÃ©cessaires.
+# dt_2018_orig = dt_2018_orig[5:nrow(dt_2018_orig), ]
+# dt_2018_add = dt_2018_add[5:nrow(dt_2018_add), ]
+# 
+# dt_2018 = rbindlist(list(dt_2018_orig, dt_2018_add), use.names = TRUE)
 
 # Corriger les noms de variables
 #----
-new_names = c('trimestre', 'csdt', 'population_totale', 'population_couverte', 'presume_tb_teste_microscope', 
+new_names = c('dps', 'trimestre','zs', 'csdt', 'population_totale', 'population_couverte', 'presume_tb_teste_microscope', 
               'presume_tb_teste_microscope', 'presume_tb_positif_microscope', 'presume_tb_teste_xpert', 'presume_tb_positive_xpert', 
               'frottis_effectue', 'frottis_positif', 'csdt_participe_cq', 'cas_enreg_bac_nouveau', 'cas_enreg_bac_rechute', 
               'cas_enreg_bac_hors_rechutes', 'cas_enreg_bac_enfants', 'cas_enreg_clinique_noveau', 'cas_enreg_clinique_rechute', 
@@ -69,10 +70,10 @@ stopifnot(length(new_names)==ncol(dt_2018)) #Le nombre de nouveaux noms est-il i
 
 names(dt_2018) = new_names
 
-# Faire DPS variable
-dt_2018 = dt_2018[trimestre != 'TOTAL  CPLT ',  ] # enlever cette rangée
-dt_2018[, dps:=substr(trimestre, 1, nchar(trimestre)-8)]
-dt_2018[dps == 'EQU', dps := 'EQUATEUR']
+# # Faire DPS variable
+# dt_2018 = dt_2018[trimestre != 'TOTAL  CPLT ',  ] # enlever cette rangée
+# dt_2018[, dps:=substr(trimestre, 1, nchar(trimestre)-8)]
+# dt_2018[dps == 'EQU', dps := 'EQUATEUR']
 if (length(unique(dt_2018$dps)) != 27) stop('Certaines DPS manquent!') #Il y a 27 dps parce que Kongo Cetnral est divisé en Est et Ouest
 
 # Extraire l'annÃ©e et le trimestre et crÃ©er une variable de date
@@ -87,13 +88,13 @@ dt_2018[grepl(trimestre, pattern = "T4"), date:=as.Date("10-01-2018", format="%m
 check = dt_2018[, length(unique(date)), by = 'dps']
 if (length(check[V1 != 4, dps]) != 0) stop("Au moins un quart d'au moins un dps manqueant dans les données")
 
-# Supprimer les lignes contenant les totaux DPS ou de la ZS
-total_rows = grep("cplt", tolower(dt_2018$csdt))
-dt_2018[total_rows, unique(csdt)] # Revoir visuellement
-dt_2018 = dt_2018[!total_rows]
-# Copiez la colonne 'cdst' dans 'zone_sante' afin d'essayer de séparer les lignes correspondant aux totaux de la zone de santé.
-dt_2018[, zone_sante := tolower(csdt)]
-dt_2018[, zone_sante := trimws(zone_sante)]
+# # Supprimer les lignes contenant les totaux DPS ou de la ZS
+# total_rows = grep("cplt", tolower(dt_2018$csdt))
+# dt_2018[total_rows, unique(csdt)] # Revoir visuellement
+# dt_2018 = dt_2018[!total_rows]
+# # Copiez la colonne 'cdst' dans 'zone_sante' afin d'essayer de séparer les lignes correspondant aux totaux de la zone de santé.
+# dt_2018[, zone_sante := tolower(csdt)]
+# dt_2018[, zone_sante := trimws(zone_sante)]
 
 #--------------------------------------------------------
 # CHECKING HZs MANUALLY:
@@ -151,113 +152,167 @@ dt_2018[, zone_sante := trimws(zone_sante)]
 # zs_all[!zs_all %in% zs_pnlt]
 # 
 # i = i + 1
-#--------------------------------------------------------
-test = copy(dt_2018)
-# test = test[999:2000, c(1:2, 6)]
+# #--------------------------------------------------------
+# # Try to remove health zone totals using cumsum()
+# test = copy(dt_2018)
+# # test = test[999:2000, c(1:2, 6)]
+# 
+# ptm <- proc.time()
+# for(group in unique(test$trimestre)){ 
+#   counter = min(test[, which(trimestre == group)])
+#   test[trimestre == group, sum := shift(cumsum(presume_tb_teste_microscope))]
+#   if ( nrow(test[trimestre == group & presume_tb_teste_microscope == sum, ]) == 0 ) next
+#   while( counter < max(test[, which(trimestre == group)]) ) { 
+#     test[c(counter: max(test[, which(trimestre == group)]) ), sum := shift(cumsum(presume_tb_teste_microscope))]
+#     counter = (max(which(test$presume_tb_teste_microscope == test$sum))+1)
+#     print(counter)
+#   }
+#   test[, is_zs:=(sum==presume_tb_teste_microscope)]  
+# }
+# proc.time() - ptm
 
-ptm <- proc.time()
-for(group in unique(test$trimestre)){ 
-  counter = min(test[, which(trimestre == group)])
-  test[trimestre == group, sum := shift(cumsum(presume_tb_teste_microscope))]
-  if ( nrow(test[trimestre == group & presume_tb_teste_microscope == sum, ]) == 0 ) next
-  while( counter < max(test[, which(trimestre == group)]) ) { 
-    test[c(counter: max(test[, which(trimestre == group)]) ), sum := shift(cumsum(presume_tb_teste_microscope))]
-    counter = (max(which(test$presume_tb_teste_microscope == test$sum))+1)
-    print(counter)
-  }
-  test[, is_zs:=(sum==presume_tb_teste_microscope)]  
-}
-proc.time() - ptm
+# David's implementation:
+# data = copy(test)
+# setnames(data, 'trimestre', 'group')
+# setnames(data, 'presume_tb_teste_microscope', 'value')
+# 
+# ptm <- proc.time()
+# data[, idx:=seq_len(.N), by=group]
+# data[, latest_id:=0]
+# n_caught_previously=0
+# n_caught=1
+# while(n_caught>n_caught_previously) { 
+#   data[idx>latest_id, is_total:=(value==shift(cumsum(value)) & !is.na(shift(cumsum(value)))), by=group]
+#   data = merge(data[, -'latest_id'], data[is_total==TRUE, .(latest_id=max(idx)), by=group])
+#   n_caught_previously = n_caught
+#   n_caught = sum(data$is_total, na.rm=TRUE) }
+# proc.time() - ptm
 
-data = copy(test)
-setnames(data, 'trimestre', 'group')
-setnames(data, 'presume_tb_teste_microscope', 'value')
+# # identify which rows are health zones:
+# dt_2018[grepl(zone_sante, pattern = 'zs'), is_zs := TRUE]
 
-ptm <- proc.time()
-data[, idx:=seq_len(.N), by=group]
-data[, latest_id:=0]
-n_caught_previously=0
-n_caught=1
-while(n_caught>n_caught_previously) { 
-  data[idx>latest_id, is_total:=(value==shift(cumsum(value)) & !is.na(shift(cumsum(value)))), by=group]
-  data = merge(data[, -'latest_id'], data[is_total==TRUE, .(latest_id=max(idx)), by=group])
-  n_caught_previously = n_caught
-  n_caught = sum(data$is_total, na.rm=TRUE) }
-proc.time() - ptm
+# remove "de " before health zone names in kinshasa
+dt_2018[ dps == 'KINSHASA', zs := gsub("de ", "", zs, ignore.case = TRUE)]
 
-# identify which rows are health zones:
-dt_2018[grepl(zone_sante, pattern = 'zs'), is_zs := TRUE]
+dt_2018[, dps := tolower(dps)]
+dt_2018[, zs := tolower(zs)]
+dt_2018[, csdt := tolower(csdt)]
 
-# # check number of health zones per province and quarter 
+dt_2018[, dps := trimws(dps)]
+dt_2018[, zs := trimws(zs)]
+dt_2018[, csdt := trimws(csdt)]
+
+dt_2018[, dps := gsub(" ", "_", dps)]
+dt_2018[, zs := gsub(" ", "_", zs)]
+dt_2018[, csdt := gsub(" ", "_", csdt)]
+
+dt_2018[ zs == 'ngiri_-ngiri', zs := 'ngiri_ngiri']
+# check number of health zones per province and quarter
 # check = dt_2018[, sum(is_zs, na.rm = T), by = c('dps', 'date')]
-# check = dcast.data.table(check, dps ~ date )
-# check[, dps := standardizeDPSNames(dps)]
-# check[is.na(dps), dps := 'kongo-central']
-# check = merge(check, num_hzs_by_dps, all = TRUE)
+check = dt_2017[, length(unique(zs)), by = c('dps', 'date')]
+check = dcast.data.table(check, dps ~ date )
+check[, dps := gsub('_', '-', dps)]
+check[, dps := standardizeDPSNames(dps)]
+check[is.na(dps), dps := 'kongo-central']
+check = merge(check, num_hzs_by_dps, all = TRUE)
+check
 
-# specialized rules for different conditions in different province data
-dt_2018[dps == 'KWILU' & !grepl(zone_sante, pattern = 'csdt'), is_zs := TRUE]
-dt_2018[dps == 'KWILU' & zone_sante %in% c('fatunda', 'lukuni', 'misay'), is_zs := NA] # these are in Kikongo, are not health zones. 
-dt_2018[dps == 'MAI NDOMBE' & zone_sante %in% c('banzow', 'bokoro'), is_zs := TRUE] # these are hz rows
-dt_2018[dps == 'MANIEMA' & zone_sante %in% c('samba'), is_zs := TRUE] 
-dt_2018[dps == 'NORD KIVU' & zone_sante %in% c('21. manguredjipa'), is_zs := TRUE]
-dt_2018[dps == 'SUD KIVU' & zone_sante %in% c('bagira', 'ibanda', 'bunyakiri', 'kalonge', 'fizi', 'idjwi', 'kabare', 'katana', 'kalehe', 'miti-murhesa', 'kaziba', 'mwana', 'lemera', 'minova', 'mwenga', 
-                                              'kamituga', 'kitutu', 'nundu', 'minembwe', 'itombwe', 'nyangezi', 'nyantende', 'shabunda', 'kalole', 'lulingu', 'uvira', 'ruzizi', 'hauts plateaux', 
-                                              'walungu', 'mubumbano', 'kaniola', 'kimbilulenge '), is_zs := TRUE]
-sud_kivu_zs = dt_2018[, c(which(dps == 'SUD KIVU' & zone_sante == 'kadutu')[2], which(dps == 'SUD KIVU' & zone_sante == 'mulungu')[2]) ]
-dt_2018[sud_kivu_zs, is_zs := TRUE]
-dt_2018[dps == 'SUD KIVU' & zone_sante == 'kimbilulenge', zone_sante := 'kimbi-lulenge']
+# use 'check' above to identify which date/dps to fill in below, and iterate through this manually:
+fix = dt_2017[date == '2017-01-01' & dps == 'sankuru']
+compare = dt_2017[date == '2017-04-01' & dps == 'sankuru']
 
-dt_2018[dps == 'KASAI ORIENTAL' & zone_sante %in% c('bipemba', 'bonzola', 'dibindi', 'diulu', 'kansele', 'lubilanji', 'lukelenge', 'muya', 'mpokolo', 'bibanga', 'kabeya kamuanga', 'miabi', 'mukumbi', 
-                                                    'tshilenge', 'tshilundu', 'tshitenge', 'tshishimbi'), is_zs := TRUE]
-kasai_ori_zs = dt_2018[, c(which(dps == 'KASAI ORIENTAL' & zone_sante == 'nzaba')[c(2,4,6,8)], which(dps == 'KASAI ORIENTAL' & zone_sante == 'kasansa')[c(2,4,6,8)]) ]
-dt_2018[kasai_ori_zs, is_zs := TRUE]
-dt_2018[dps == 'KINSHASA' & zone_sante %in% c('nsele', 'bandalungwa'), is_zs := TRUE] 
+missing_hz = unique(fix$zs)
+all_hz = unique(compare$zs)
 
-# check number of health zones per province and quarter 
-check_num_hz = dt_2018[, sum(is_zs, na.rm = T), by = c('dps', 'date')]
-check_num_hz = dcast.data.table(check_num_hz, dps ~ date )
-check_num_hz[, dps := standardizeDPSNames(dps)]
-check_num_hz[is.na(dps), dps := 'kongo-central']
-check_num_hz = merge(check_num_hz, num_hzs_by_dps, all = TRUE)
-check_num_hz
+all_hz[!all_hz %in% missing_hz]
+missing_hz[!missing_hz %in% all_hz]
 
-# TO DO - GET MAI NDOMBE DATA FOR Q3 and Q4 - (it was actually Mongala copied over twice)... for now remove it:
-dt_2018[, date := as.character(date)]
-dt_2018 = dt_2018[!(dps == 'MAI NDOMBE' & date %in% c('2018-07-01', '2018-10-01')), ]
-dt_2018[, date := as.Date(date)]
+all_hz = check_hzs[ dps == 'kinshasa', unique(health_zone)]
+all_hz[!all_hz %in% missing_hz]
+missing_hz[!missing_hz %in% all_hz]
 
-# keep only health zone names in the zone sante column
-dt_2018[is.na(is_zs), is_zs := FALSE]
-dt_2018[is_zs == FALSE, zone_sante := NA]  
+dt_2017[zs == 'kikimi', .(dps, trimestre, zs, csdt)]
+fix = dt_2017[date == '2017-01-01' & zs == 'kikimi']
 
-# standardize the health zone names:
-dt_2018[, zone_sante := gsub("zsr", "", zone_sante)]
-dt_2018[, zone_sante := gsub("zs", "", zone_sante)]
-dt_2018[dps == 'KWANGO', zone_sante := gsub("wambaluadi", 'wamba luadi', zone_sante)]
-dt_2018[, zone_sante := gsub("tot ", "", zone_sante)]
-dt_2018[, zone_sante := gsub("total ", "", zone_sante)]
-dt_2018[, zone_sante := gsub("de ", "", zone_sante)]
-dt_2018[dps == 'KASAI CENTRAL', zone_sante := gsub("maswika", 'musuika', zone_sante)]
-dt_2018[, zone_sante := gsub('[0-9]+', '', zone_sante)]
-dt_2018[, zone_sante := gsub('[.]', '', zone_sante)]
-dt_2018[, zone_sante := gsub('/', '', zone_sante)]
-dt_2018[, zone_sante := trimws(zone_sante)]
-dt_2018[, zone_sante := standardizeHZNames(zone_sante) ] # TO DO: figure out what RIBA is supposed to be in ITURI
-dt_2018[is_zs == TRUE & is.na(zone_sante), zone_sante := 'missing'] # to prevent backfilling where it should be something else
+# check number of facilities per health zone with the below code to ID mismatched facilities:
+check_fac = dt_2017[, length(unique(csdt)), by = c('dps', 'date', 'zs')]
+check_fac = dcast.data.table(check_fac, dps + zs ~ date )
+check_fac = transform(check_fac, check = apply(check_fac[, 3:length(check_fac)], 1, function(x) length(unique(x)) != 1))
+check_fac = check_fac[check == TRUE,]
 
-# use the function na.locf to backfill health zone names
-    # test = dt_2018[ !all(is)]
-    # dt_2018[, tmp := sum(is_zs), by= c('dps', 'date')]
-    # test = dt_2018[tmp!=0,]
+# now check by health zone identified in the table above, to see which ones are the problematic facilities:
+check_fac = dt[zs == 'kilwa', unique(csdt), by = 'trimestre']
+check_fac = dcast.data.table(check_fac, V1 ~ trimestre )
+check_fac
 
-test = copy(dt_2018)
-test[nrow(test),zone_sante:='empty']
-test[, new_hz:=na.locf(zone_sante, fromLast = TRUE)]
-test[zone_sante=='empty', zone_sante:=NA]
+# check if the missing facilities are elsewhere in the data:
+dt_2018[csdt == 'mamba']
+dt[grepl(csdt, pattern= '25')]
 
-# then, delete health zone total rows  
-  #TO DO - check that totals for non-hz rows equal totals for hz rows (by province)
+
+# # specialized rules for different conditions in different province data
+# dt_2018[dps == 'KWILU' & !grepl(zone_sante, pattern = 'csdt'), is_zs := TRUE]
+# dt_2018[dps == 'KWILU' & zone_sante %in% c('fatunda', 'lukuni', 'misay'), is_zs := NA] # these are in Kikongo, are not health zones. 
+# dt_2018[dps == 'MAI NDOMBE' & zone_sante %in% c('banzow', 'bokoro'), is_zs := TRUE] # these are hz rows
+# dt_2018[dps == 'MANIEMA' & zone_sante %in% c('samba'), is_zs := TRUE] 
+# dt_2018[dps == 'NORD KIVU' & zone_sante %in% c('21. manguredjipa'), is_zs := TRUE]
+# dt_2018[dps == 'SUD KIVU' & zone_sante %in% c('bagira', 'ibanda', 'bunyakiri', 'kalonge', 'fizi', 'idjwi', 'kabare', 'katana', 'kalehe', 'miti-murhesa', 'kaziba', 'mwana', 'lemera', 'minova', 'mwenga', 
+#                                               'kamituga', 'kitutu', 'nundu', 'minembwe', 'itombwe', 'nyangezi', 'nyantende', 'shabunda', 'kalole', 'lulingu', 'uvira', 'ruzizi', 'hauts plateaux', 
+#                                               'walungu', 'mubumbano', 'kaniola', 'kimbilulenge '), is_zs := TRUE]
+# sud_kivu_zs = dt_2018[, c(which(dps == 'SUD KIVU' & zone_sante == 'kadutu')[2], which(dps == 'SUD KIVU' & zone_sante == 'mulungu')[2]) ]
+# dt_2018[sud_kivu_zs, is_zs := TRUE]
+# dt_2018[dps == 'SUD KIVU' & zone_sante == 'kimbilulenge', zone_sante := 'kimbi-lulenge']
+# 
+# dt_2018[dps == 'KASAI ORIENTAL' & zone_sante %in% c('bipemba', 'bonzola', 'dibindi', 'diulu', 'kansele', 'lubilanji', 'lukelenge', 'muya', 'mpokolo', 'bibanga', 'kabeya kamuanga', 'miabi', 'mukumbi', 
+#                                                     'tshilenge', 'tshilundu', 'tshitenge', 'tshishimbi'), is_zs := TRUE]
+# kasai_ori_zs = dt_2018[, c(which(dps == 'KASAI ORIENTAL' & zone_sante == 'nzaba')[c(2,4,6,8)], which(dps == 'KASAI ORIENTAL' & zone_sante == 'kasansa')[c(2,4,6,8)]) ]
+# dt_2018[kasai_ori_zs, is_zs := TRUE]
+# dt_2018[dps == 'KINSHASA' & zone_sante %in% c('nsele', 'bandalungwa'), is_zs := TRUE] 
+# 
+# # check number of health zones per province and quarter 
+# check_num_hz = dt_2018[, sum(is_zs, na.rm = T), by = c('dps', 'date')]
+# check_num_hz = dcast.data.table(check_num_hz, dps ~ date )
+# check_num_hz[, dps := standardizeDPSNames(dps)]
+# check_num_hz[is.na(dps), dps := 'kongo-central']
+# check_num_hz = merge(check_num_hz, num_hzs_by_dps, all = TRUE)
+# check_num_hz
+# 
+# # TO DO - GET MAI NDOMBE DATA FOR Q3 and Q4 - (it was actually Mongala copied over twice)... for now remove it:
+# dt_2018[, date := as.character(date)]
+# dt_2018 = dt_2018[!(dps == 'MAI NDOMBE' & date %in% c('2018-07-01', '2018-10-01')), ]
+# dt_2018[, date := as.Date(date)]
+# 
+# # keep only health zone names in the zone sante column
+# dt_2018[is.na(is_zs), is_zs := FALSE]
+# dt_2018[is_zs == FALSE, zone_sante := NA]  
+# 
+# # standardize the health zone names:
+# dt_2018[, zone_sante := gsub("zsr", "", zone_sante)]
+# dt_2018[, zone_sante := gsub("zs", "", zone_sante)]
+# dt_2018[dps == 'KWANGO', zone_sante := gsub("wambaluadi", 'wamba luadi', zone_sante)]
+# dt_2018[, zone_sante := gsub("tot ", "", zone_sante)]
+# dt_2018[, zone_sante := gsub("total ", "", zone_sante)]
+# dt_2018[, zone_sante := gsub("de ", "", zone_sante)]
+# dt_2018[dps == 'KASAI CENTRAL', zone_sante := gsub("maswika", 'musuika', zone_sante)]
+# dt_2018[, zone_sante := gsub('[0-9]+', '', zone_sante)]
+# dt_2018[, zone_sante := gsub('[.]', '', zone_sante)]
+# dt_2018[, zone_sante := gsub('/', '', zone_sante)]
+# dt_2018[, zone_sante := trimws(zone_sante)]
+# dt_2018[, zone_sante := standardizeHZNames(zone_sante) ] # TO DO: figure out what RIBA is supposed to be in ITURI
+# dt_2018[is_zs == TRUE & is.na(zone_sante), zone_sante := 'missing'] # to prevent backfilling where it should be something else
+# 
+# # use the function na.locf to backfill health zone names
+#     # test = dt_2018[ !all(is)]
+#     # dt_2018[, tmp := sum(is_zs), by= c('dps', 'date')]
+#     # test = dt_2018[tmp!=0,]
+# 
+# test = copy(dt_2018)
+# test[nrow(test),zone_sante:='empty']
+# test[, new_hz:=na.locf(zone_sante, fromLast = TRUE)]
+# test[zone_sante=='empty', zone_sante:=NA]
+# 
+# # then, delete health zone total rows  
+#   #TO DO - check that totals for non-hz rows equal totals for hz rows (by province)
 
 # Sauvegarder les donnÃ©es finales
 write.csv(dt_2018, paste0(save_dir, outFile18), row.names = FALSE)

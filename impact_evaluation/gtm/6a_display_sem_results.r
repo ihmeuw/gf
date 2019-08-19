@@ -17,13 +17,15 @@ source('./impact_evaluation/_common/graphLavaan.r')
 # load model results
 load(outputFile5a)
 data1=copy(data)
-means1 = copy(means)
-summaries1 = copy(summaries)
+model1=copy(model)
+# means1 = copy(means)
+# summaries1 = copy(summaries)
 urFits1 = copy(urFits)
 load(outputFile5b)
 data2=copy(data)
-means2 = copy(means)
-summaries2 = copy(summaries)
+model2=copy(model)
+# means2 = copy(means)
+# summaries2 = copy(summaries)
 urFits2 = copy(urFits)
 
 # load nodeTable for graphing
@@ -33,6 +35,10 @@ nodeTable2 = fread(nodeTableFile2)
 # ensure there are no extra variables introducted from nodeTable
 nodeTable1 = nodeTable1[variable %in% names(data1)]
 nodeTable2 = nodeTable2[variable %in% names(data2)]
+
+# replace NAs with 0 before computing averages - EL 8/17/19 
+urFits1[is.na(est) & lhs=="Cases_Started_on_Treatment_out_cumulative" & rhs=="Total_Drugs_Distributed_act_cumulative", MANUAL_EDIT:=TRUE]
+urFits1[MANUAL_EDIT==TRUE, c('est', 'se', 'est.std', 'se.std'):=0]
 
 # compute averages (approximation of standard error, would be better as Monte Carlo simulation)
 paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
@@ -49,28 +55,35 @@ urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # -----------------------------------------------
 
 
-# ----------------------------------------------
+#Some visualization code for model run 8/15/19 
+# View(urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Notified_out_cumulative"])
+# urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Notified_out_cumulative", mean(est)] # A very high positive average, but also a lot of variation. 
+# View(urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Started_on_Treatment_out_cumulative"])
+# urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Started_on_Treatment_out_cumulative", mean(est)] # A very low negative average. 
+# # Do these relationships make sense? 
+# 
+# # ----------------------------------------------
 # Display results
 
 # my sem graph function for first half model
-p1 = semGraph(parTable=means1, nodeTable=nodeTable1, 
-	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
-	lineWidth=1.5, curved=0, tapered=FALSE)
-
-# my sem graph function for second half model
-p2 = semGraph(parTable=means2, nodeTable=nodeTable2,
-	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
-	lineWidth=1.5, curved=0, tapered=FALSE)
-
-# my sem graph function for first half model with coefficients
-p3 = semGraph(parTable=means1, nodeTable=nodeTable1, 
-	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE)
-
-# my sem graph function for second half model with coefficients
-p4 = semGraph(parTable=means2, nodeTable=nodeTable2,
-	scaling_factors=NA, standardized=TRUE,
-	lineWidth=1.5, curved=0, tapered=FALSE)
+# p1 = semGraph(parTable=means1, nodeTable=nodeTable1, 
+# 	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
+# 	lineWidth=1.5, curved=0, tapered=FALSE)
+# 
+# # my sem graph function for second half model
+# p2 = semGraph(parTable=means2, nodeTable=nodeTable2,
+# 	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
+# 	lineWidth=1.5, curved=0, tapered=FALSE)
+# 
+# # my sem graph function for first half model with coefficients
+# p3 = semGraph(parTable=means1, nodeTable=nodeTable1, 
+# 	scaling_factors=NA, standardized=TRUE, 
+# 	lineWidth=1.5, curved=0, tapered=FALSE)
+# 
+# # my sem graph function for second half model with coefficients
+# p4 = semGraph(parTable=means2, nodeTable=nodeTable2,
+# 	scaling_factors=NA, standardized=TRUE,
+# 	lineWidth=1.5, curved=0, tapered=FALSE)
 
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
@@ -88,10 +101,10 @@ p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
 # Save output
 print(paste('Saving:', outputFile6a)) 
 pdf(outputFile6a, height=6, width=9)
-print(p1)
-print(p2)
-print(p3)
-print(p4)
+# print(p1)
+# print(p2)
+# print(p3)
+# print(p4)
 print(p5)
 print(p6)
 dev.off()
@@ -99,7 +112,7 @@ dev.off()
 # save a time-stamped version for reproducibility
 archive(outputFile6a)
 # -----------------------------------
-
-#Save just the SEM diagrams with correlation coefficients as PNGs. 
-ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p3, height=10, width=13)
-ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p4, height=10, width=13)
+# 
+# #Save just the SEM diagrams with correlation coefficients as PNGs. 
+# ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p3, height=10, width=13)
+# ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p4, height=10, width=13)

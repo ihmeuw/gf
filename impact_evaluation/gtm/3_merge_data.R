@@ -30,7 +30,7 @@ names(outputs_activities) <- gsub("_value", "", names(outputs_activities))
 # rectangularize before merge
 departments = unique(outputs_activities$department)
 departments = departments[!is.na(departments)]
-frame = expand.grid(date = seq(2009, 2018, by=1), department = departments)
+frame = expand.grid(date = seq(START_YEAR, 2018, by=1), department = departments)
 
 #Inputs 
 resource_tracking_rect = merge(frame, resource_tracking, by='date') #Do I need to divide resource tracking dollars here? 
@@ -125,9 +125,9 @@ for(i in 1:nrow(redistribution_mat)) {
 # ----------------------------------------------------------
 # Finish and save 
 
-#Restrict years to 2009 on (EL 8/5/2019)
+#Restrict years to begin at the global START_YEAR variable, specified in set_up_r
 # This should have already happened back in data prep, but OK to leave here (EL 8/12/19) 
-merge_file = merge_file[date>=2009] 
+merge_file = merge_file[date>=START_YEAR] 
 
 # drop unnecessary variables
 merge_file = merge_file[, -c('mean','tmp','prop', 'min')] #Also removing 'min' EL 8/7/19

@@ -184,6 +184,8 @@ dev.off()
 
 # drop the outliers 
 dt[outlier==TRUE, value:=fitted_value]
+
+# drop unecessary variables
 dt[ , c('thresh_var', 't1_upper', 't2_upper', 't3_upper', 't1_lower', 't2_lower', 't3_lower',
         'fitted_value', 'resid', 'outlier', 'skipped_qr', 'element_id', 'mad_resid'):=NULL]
 setnames(dt, 'id', 'element_id')

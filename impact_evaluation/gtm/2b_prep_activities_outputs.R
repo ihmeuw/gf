@@ -296,10 +296,10 @@ outputs1 = outputs1[, -c('dup')]
 dt_final = merge(activities1, outputs1, by=c('date', 'department'), all=T) #Save dates and departments from both, in case you have data in one and not the other. 
 
 #Replace NaN and NA with 0 - we can assume these actually mean 0. 
-cols = 3:ncol(dt_final) #Just don't do this for date and department, the first two columns. 
-for (col in cols){
-  dt_final[is.na(dt_final[[col]]), (col):=0]
-}
+# cols = 3:ncol(dt_final) #Just don't do this for date and department, the first two columns. 
+# for (col in cols){
+#   dt_final[is.na(dt_final[[col]]), (col):=0]
+# }
 
 
 #-----------------------------------------------------
