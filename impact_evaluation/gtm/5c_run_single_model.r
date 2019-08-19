@@ -104,14 +104,26 @@ subData = subData[, unique(modelVars), with=FALSE]
 #   }
 # }
 # 
-for(v in names(subData)[!names(subData)%in%c('department','date')]) {
-  sd = sd(subData[[v]])
-  if (all(subData[[v]]>=0) & sd!=0){
-    subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])/100))] # Changed back to poisson after model was restructured EL 8/14/19
-  } else {
-    subData[, (v):=get(v)+rexp(nrow(subData))]
+
+#Only jitter values that have zeros for the entire time series- this is the only thing that's breaking the model at this point. 
+# Replace all-zero-vectors with a zero-variance positive vector (0.1). 
+for(v in names(subData)[!names(subData)%in%c('department','date')]){
+  values = as.double(unique(subData[[v]])) #Get a vector of the unique values of the variable. 
+  zero_compare = rep(0, length(values)) #Get an equal length vector of zeros. 
+  if (all(values==zero_compare)){
+    print(paste0(v, " is completely zero for the entire time series - replacing every value with 0.1."))
+    subData[, (v):=0.1]
   }
 }
+  
+# for(v in names(subData)[!names(subData)%in%c('department','date')]) {
+#   sd = sd(subData[[v]])
+#   if (all(subData[[v]]>=0) & sd!=0){
+#     subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])/100))] # Changed back to poisson after model was restructured EL 8/14/19
+#   } else {
+#     subData[, (v):=get(v)+rexp(nrow(subData))]
+#   }
+# }
 
 # Original jitter - adding a random exponential 
 #Jitter analysis 1 - just plain jitter. (v:=jitter(get(v))
