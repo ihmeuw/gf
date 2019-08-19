@@ -90,14 +90,26 @@ i=1
 for(v in numVars) {
 	for(h in unique(data$department)) { 
 		i=i+1
-		if (!any(is.na(data[department==h][[v]]))) next
-		if (!any(!is.na(data[department==h][[v]]))) next
-		form = as.formula(paste0(v,'~date'))
-		lmFit = glm(form, data[department==h], family='poisson')
-		data[department==h, tmp:=exp(predict(lmFit, newdata=data[department==h]))]
-		lim = max(data[department==h][[v]], na.rm=T)+sd(data[department==h][[v]], na.rm=T)
-		data[department==h & tmp>lim, tmp:=lim]
-		data[department==h & is.na(get(v)), (v):=tmp]
+		#First, check whether all values for this department and this variable are zero. 
+		# if they are, don't backcast. 
+		values = unique(data[department==h, as.vector(get(v))]) #Get a vector of the unique values of the variable.
+		values[is.na(values)] = 0
+		zero_compare = rep(0, length(values)) #Get an equal length vector of zeros.
+		if (all(values==zero_compare)){
+		  print(paste0(v, " is completely zero for department", h, " - removing from backcasting list and making 0 for the entire time series"))
+		  numVars = numVars[!v%in%numVars]
+		  data[, (v):=0]
+		} else {
+  		#Backcast if it doesn't fall into this category. 
+  		if (!any(is.na(data[department==h][[v]]))) next
+  		if (!any(!is.na(data[department==h][[v]]))) next
+  		form = as.formula(paste0(v,'~date'))
+  		lmFit = glm(form, data[department==h], family='poisson')
+  		data[department==h, tmp:=exp(predict(lmFit, newdata=data[department==h]))]
+  		lim = max(data[department==h][[v]], na.rm=T)+sd(data[department==h][[v]], na.rm=T)
+  		data[department==h & tmp>lim, tmp:=lim]
+  		data[department==h & is.na(get(v)), (v):=tmp]
+		} 
 		pct_complete = floor(i/(length(numVars)*length(unique(data$department)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
 		flush.console() 

@@ -14,7 +14,7 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 4
+# task_id = 16
 # modelStage = 1
 # testRun = TRUE
 # modelVersion = "gtm_tb_first_half7"
@@ -116,15 +116,17 @@ subData = subData[, unique(modelVars), with=FALSE]
 #     subData[, (v):=runif(nrow(subData), min=0, max=0.01)]
 #   }
 # }
-  
-for(v in names(subData)[!names(subData)%in%c('department','date')]) {
-  sd = sd(subData[[v]])
-  if (all(subData[[v]]>=0) & sd!=0){
-    subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])/100))] # Changed back to poisson after model was restructured EL 8/14/19
-  } else {
-    subData[, (v):=get(v)+rexp(nrow(subData))]
-  }
-}
+#   
+# print(subData[, .(Number_of_Cases_Screened_for_MDR_act_cumulative, TB_Patients_Tested_for_HIV_act_cumulative)])
+# for(v in names(subData)[!names(subData)%in%c('department','date')]) {
+#   sd = sd(subData[[v]])
+#   if (all(subData[[v]]>=0) & sd!=0){
+#     subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])/100))] # Changed back to poisson after model was restructured EL 8/14/19
+#   } else {
+#     subData[, (v):=get(v)+rexp(nrow(subData))]
+#   }
+# }
+# print(subData[, .(Number_of_Cases_Screened_for_MDR_act_cumulative, TB_Patients_Tested_for_HIV_act_cumulative)])
 
 # Original jitter - adding a random exponential 
 #Jitter analysis 1 - just plain jitter. (v:=jitter(get(v))
@@ -140,7 +142,7 @@ numVars = names(subData)[!names(subData)%in%c('department')]
 for(v in numVars) {
   print(v)
 	s=1
-	if (all(subData[[v]]!=0)){ #Changed from 0 to 0.1 to test new jitter scheme EL 8/19/19 
+	if (all(subData[[v]]!=0)){ #Changed from 0 to 0.1 to test new jitter scheme EL 8/19/19
   	if (var(subData[[v]]/s)>1000){
   	  while(var(subData[[v]]/s)>1000) s=s*10
   	} else {
@@ -150,6 +152,8 @@ for(v in numVars) {
 	scaling_factors[,(v):=s]
 }
 for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
+# print(subData[, .(Number_of_Cases_Screened_for_MDR_act_cumulative, TB_Patients_Tested_for_HIV_act_cumulative)])
+# 
 
 # If running on Windows, optional check for correlation coefficients at this point. 
 # Look for correlation coefficients higher than .98. 
@@ -214,6 +218,13 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # fit model
 # if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
 # if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+
+#Make scaling factors data table so you can run this code. - everything should be scaled to 1. 
+# scaling_factors = data.table()
+# numVars = names(subData)[!names(subData)%in%c('department')]
+# for(v in numVars) {
+# 	scaling_factors[,(v):=1]
+# }
 
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)
