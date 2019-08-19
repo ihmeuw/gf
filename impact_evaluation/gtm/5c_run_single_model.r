@@ -14,10 +14,10 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-task_id = 16
-modelStage = 1
-testRun = TRUE
-modelVersion = "gtm_tb_first_half7"
+# task_id = 16
+# modelStage = 1
+# testRun = TRUE
+# modelVersion = "gtm_tb_first_half7"
 
 # ----------------------------------------------
 # Store task ID and other args from command line
