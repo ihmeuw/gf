@@ -20,6 +20,13 @@ library(boot)
 library(betareg)
 # --------------------
 
+# MAKE A VERY BIG CHANGE
+# THIS IS CODE ABOUT LE CHARGE VIRALE
+
+head(iris)
+str(iris)
+
+
 # -----------------------------------------------
 # detect if operating on windows or on the cluster 
 
