@@ -36,20 +36,16 @@ nodeTable2 = fread(nodeTableFile2)
 nodeTable1 = nodeTable1[variable %in% names(data1)]
 nodeTable2 = nodeTable2[variable %in% names(data2)]
 
-# replace NAs with 0 before computing averages - EL 8/17/19 
-urFits1[is.na(est) & lhs=="Cases_Started_on_Treatment_out_cumulative" & rhs=="Total_Drugs_Distributed_act_cumulative", MANUAL_EDIT:=TRUE]
-urFits1[MANUAL_EDIT==TRUE, c('est', 'se', 'est.std', 'se.std'):=0]
-
 # compute averages (approximation of standard error, would be better as Monte Carlo simulation)
 paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
 urFits1[, se_ratio.std:=se.std/est.std]
 urFits1[, se_ratio:=se/est]
-urFit1 = urFits1[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
+urFit1 = urFits1[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
 urFit1[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
 urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 urFits2[, se_ratio.std:=se.std/est.std]
 urFits2[, se_ratio:=se/est]
-urFit2 = urFits2[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
+urFit2 = urFits2[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
 urFit2[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
 urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # -----------------------------------------------
@@ -87,12 +83,12 @@ urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
-	scaling_factors=NA, standardized=FALSE, 
+	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE)
 
 # my sem graph function for second half "unrelated regressions" model
 p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
-	scaling_factors=NA, standardized=FALSE,
+	scaling_factors=NA, standardized=TRUE,
 	lineWidth=1.5, curved=0, tapered=FALSE)
 # ----------------------------------------------
 
@@ -113,6 +109,6 @@ dev.off()
 archive(outputFile6a)
 # -----------------------------------
 # 
-# #Save just the SEM diagrams with correlation coefficients as PNGs. 
-# ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p3, height=10, width=13)
-# ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p4, height=10, width=13)
+# #Save just the GLM diagrams with correlation coefficients as PNGs. 
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p5, height=10, width=13)
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p6, height=10, width=13)
