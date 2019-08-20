@@ -90,14 +90,26 @@ i=1
 for(v in numVars) {
 	for(h in unique(data$department)) { 
 		i=i+1
-		if (!any(is.na(data[department==h][[v]]))) next
-		if (!any(!is.na(data[department==h][[v]]))) next
-		form = as.formula(paste0(v,'~date'))
-		lmFit = glm(form, data[department==h], family='poisson')
-		data[department==h, tmp:=exp(predict(lmFit, newdata=data[department==h]))]
-		lim = max(data[department==h][[v]], na.rm=T)+sd(data[department==h][[v]], na.rm=T)
-		data[department==h & tmp>lim, tmp:=lim]
-		data[department==h & is.na(get(v)), (v):=tmp]
+		#First, check whether all values for this department and this variable are zero. 
+		# if they are, don't backcast. 
+		values = unique(data[department==h, as.vector(get(v))]) #Get a vector of the unique values of the variable.
+		values[is.na(values)] = 0
+		zero_compare = rep(0, length(values)) #Get an equal length vector of zeros.
+		if (all(values==zero_compare)){
+		  print(paste0(v, " is completely zero for department", h, " - removing from backcasting list and making 0 for the entire time series"))
+		  numVars = numVars[!v%in%numVars]
+		  data[, (v):=0]
+		} else {
+  		#Backcast if it doesn't fall into this category. 
+  		if (!any(is.na(data[department==h][[v]]))) next
+  		if (!any(!is.na(data[department==h][[v]]))) next
+  		form = as.formula(paste0(v,'~date'))
+  		lmFit = glm(form, data[department==h], family='poisson')
+  		data[department==h, tmp:=exp(predict(lmFit, newdata=data[department==h]))]
+  		lim = max(data[department==h][[v]], na.rm=T)+sd(data[department==h][[v]], na.rm=T)
+  		data[department==h & tmp>lim, tmp:=lim]
+  		data[department==h & is.na(get(v)), (v):=tmp]
+		} 
 		pct_complete = floor(i/(length(numVars)*length(unique(data$department)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
 		flush.console() 
@@ -109,20 +121,27 @@ data$tmp = NULL
 # data = na.omit(data)
 # -----------------------------------------------------------------
 
+#---------------------------------------------------------------
+# Replace NAs with zeros after back-casting DP 8/16/19 
+allVars = names(data)[!names(data)%in%c('date', 'department')]
+for (v in allVars){
+  data[is.na(get(v)), (v):=0]
+}
+
 #------------------------------------------------------------
 # Drop variables that are not being used in model object before cumulative sum. 
 data = data[, c(modelVars, 'department', 'date'), with=F]
 
 
+
 # -----------------------------------------------------------------------
 # Data transformations and other fixes for Heywood cases
 
-# # make cumulative variables, but first, replace NAs with zeros! 
+# # make cumulative variables - all NAs should be replaced with zeros in step above. 
 cumulVars = names(data)
 cumulVars = cumulVars[!grepl("total", cumulVars)]
 cumulVars = cumulVars[!cumulVars%in%c('department', 'date', 'year', 'min')]
 for(v in cumulVars) {
-  data[is.na(get(v)), (v):=0] #Replace NA with 0. 
 	nv = gsub('value_','',v)
 	data[, (paste0(nv,'_cumulative')):=cumsum(get(v)), by='department']
 }

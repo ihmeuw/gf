@@ -160,3 +160,4 @@ DT[, pauvrety:=pauvrety/100]
 # save prepped data in new R object and csv
 setwd("J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data")
 saveRDS(DT, "prepped_outputs_outcomes.rds")
+write.csv(DT, "prepped_outputs_outcomes.csv")

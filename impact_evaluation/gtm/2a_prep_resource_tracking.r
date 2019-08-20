@@ -114,7 +114,7 @@ rt_wide <- merge(rt_wide, ghe_wide, by=c('date'), all=T)
 #rt_wide = rt_wide[date>=2004.0]
 
 #Restrict data to 2009 onwards - this makes the most theoretical sense given that the majority of variables have started by that time. Jen Ross, implemented by Emily Linebarger, 8.12.19 
-rt_wide = rt_wide[date>=2009.0]
+rt_wide = rt_wide[date>=START_YEAR]
 
 # # compute lags - all financial variables should be lagged 6 months. DP 7.12.19
 rt_wide[, date:=date+0.5]

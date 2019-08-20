@@ -37,7 +37,7 @@ T = length(hzs)
 # Define model object
 # DECISIONS
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
-source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.R'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)

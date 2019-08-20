@@ -14,10 +14,10 @@ print(commandArgs())
 source('./impact_evaluation/gtm/set_up_r.r')
 
 # for testing purposes
-# task_id = 2
+# task_id = 16
 # modelStage = 1
 # testRun = TRUE
-# modelVersion1 = "gtm_tb_first_half3"
+# modelVersion = "gtm_tb_first_half7"
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -42,7 +42,7 @@ testRun = as.logical(args[9])
 
 
 # print for log
-print(paste('Model Version:', modelVersion1))
+print(paste('Model Version:', modelVersion))
 print(paste('Model Stage:', modelStage))
 print(paste('Test Run:', testRun))
 # ----------------------------------------------
@@ -62,12 +62,13 @@ d = unique(data$department)[task_id]
 subData = data[department==d]
 
 # define model object
-source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.R'))
+source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('department','date',modelVars)
+#modelVars = c('department','date',modelVars)
+modelVars = c('department', modelVars)
 subData = subData[, unique(modelVars), with=FALSE]
 
 #Check unique values in data - do any columns have <5 unique values? 
@@ -104,15 +105,28 @@ subData = subData[, unique(modelVars), with=FALSE]
 #   }
 # }
 # 
-# for(v in names(subData)[!names(subData)%in%c('department','date')]) {
-#  # if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
-#   if (all(subData[[v]]>=0)){
-#     print(paste0(v, " is falling into the first jitter category, all(subData[[v]]>=0"))
-#     subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed back to poisson after model was restructured EL 8/14/19
-#   } else {
-#     print(paste0(v, " is not being jittered."))
+
+#Only jitter values that have zeros for the entire time series- this is the only thing that's breaking the model at this point. 
+# Replace all-zero-vectors with a zero-variance positive vector (0.1). 
+# for(v in names(subData)[!names(subData)%in%c('department','date')]){
+#   values = as.double(unique(subData[[v]])) #Get a vector of the unique values of the variable. 
+#   zero_compare = rep(0, length(values)) #Get an equal length vector of zeros. 
+#   if (all(values==zero_compare)){
+#     print(paste0(v, " is completely zero for the entire time series - applying small jitter between 0 and 1/100"))
+#     subData[, (v):=runif(nrow(subData), min=0, max=0.01)]
 #   }
 # }
+#   
+# print(subData[, .(Number_of_Cases_Screened_for_MDR_act_cumulative, TB_Patients_Tested_for_HIV_act_cumulative)])
+# for(v in names(subData)[!names(subData)%in%c('department','date')]) {
+#   sd = sd(subData[[v]])
+#   if (all(subData[[v]]>=0) & sd!=0){
+#     subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])/100))] # Changed back to poisson after model was restructured EL 8/14/19
+#   } else {
+#     subData[, (v):=get(v)+rexp(nrow(subData))]
+#   }
+# }
+# print(subData[, .(Number_of_Cases_Screened_for_MDR_act_cumulative, TB_Patients_Tested_for_HIV_act_cumulative)])
 
 # Original jitter - adding a random exponential 
 #Jitter analysis 1 - just plain jitter. (v:=jitter(get(v))
@@ -123,18 +137,23 @@ subData = subData[, unique(modelVars), with=FALSE]
 
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
-scaling_factors = data.table(date=1)
-numVars = names(subData)[!names(subData)%in%c('department','date')]
-for(v in numVars) {
-	s=1
-	if (var(subData[[v]]/s)>1000){
-	  while(var(subData[[v]]/s)>1000) s=s*10
-	} else {
-	  while(var(subData[[v]]/s)<100) s=s/10
-	}
-	scaling_factors[,(v):=s]
-}
-for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
+# scaling_factors = data.table()
+# numVars = names(subData)[!names(subData)%in%c('department')]
+# for(v in numVars) {
+#   print(v)
+# 	s=1
+# 	if (all(subData[[v]]!=0)){ #Changed from 0 to 0.1 to test new jitter scheme EL 8/19/19
+#   	if (var(subData[[v]]/s)>1000){
+#   	  while(var(subData[[v]]/s)>1000) s=s*10
+#   	} else {
+#   	  while(var(subData[[v]]/s)<100) s=s/10
+#   	}
+# 	}
+# 	scaling_factors[,(v):=s]
+# }
+# for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
+# print(subData[, .(Number_of_Cases_Screened_for_MDR_act_cumulative, TB_Patients_Tested_for_HIV_act_cumulative)])
+# 
 
 # If running on Windows, optional check for correlation coefficients at this point. 
 # Look for correlation coefficients higher than .98. 
@@ -199,6 +218,13 @@ for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # fit model
 # if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
 # if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+
+#Make scaling factors data table so you can run this code. - everything should be scaled to 1. 
+scaling_factors = data.table()
+numVars = names(subData)[!names(subData)%in%c('department')]
+for(v in numVars) {
+	scaling_factors[,(v):=1]
+}
 
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)

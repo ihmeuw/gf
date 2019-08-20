@@ -73,6 +73,7 @@ sample_untr = sample_untr[date>=2009, c(modelVars, 'department', 'date'), with=F
 long = long[date>=2009 & variable%in%modelVars]
 fin_data = fin_data[variable%in%modelVars]
 act_data = act_data[variable%in%modelVars]
+data = data[, c(modelVars, 'department', 'date'), with=F]
 
 # -------------------------------------------------------------------
 # Make histograms
@@ -198,6 +199,8 @@ for(d in unique(act_data$department)){
 for(i in seq(length(tsPlots))) { 
 	print(tsPlots[[i]])
 }
+#Print one ggpairs plot of all variables in the model. 
+print(ggpairs(data[, -c('department', 'date')], title="Correlations between all variables in model for all departments"))
 for(i in seq(length(corPlots))) { 
 	print(corPlots[[i]])
 }
@@ -210,3 +213,13 @@ dev.off()
 # save a time-stamped version for reproducibility
 archive(outputFile4c)
 # --------------------------------
+
+
+#Adding a correlation plot to check Isoniazid Distributed to Total Drugs Distributed, and Cases notified to cases started on treatment and MDR cases started on treatment. 
+pdf("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/check_linear_dependencies.pdf", height=5.5, width=9) 
+for (d in unique(data$department)){
+  subData = data[department==d]
+  print(ggpairs(subData[, .(Isoniazid_Distributed_act_cumulative, Total_Drugs_Distributed_act_cumulative)], title=paste0("Checking correlation coefficients for dept. ", d)))
+  print(ggpairs(subData[, .(Cases_Notified_out_cumulative, Cases_Started_on_Treatment_out_cumulative, MDR_Cases_Started_Treatment_out_cumulative)], title=paste0("Checking correlation coefficients for dept. ", d)))
+}
+dev.off() 

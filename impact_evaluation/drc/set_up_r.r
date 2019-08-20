@@ -12,7 +12,7 @@
 # Output file labels (set to '' for default) 
 # in case we're running some secondary analysis
 # this only affects files from step 4c onward
-fileLabel = '_pc'
+fileLabel = ''
 # --------------------------------------------
 
 

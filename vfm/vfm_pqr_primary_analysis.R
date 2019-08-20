@@ -38,19 +38,6 @@ compare_ref_prices_with_size = paste0(dir, 'visualizations/compare_ref_price_uni
 compare_ref_prices_volume_on_x = paste0(dir, 'visualizations/compare_ref_price_unit_cost_with_volume_on_x_(subset_to_most_common).pdf')
 scatterplot_unit_cost_vs_intl_ref_price = paste0(dir, 'visualizations/scatterplot_unit_cost_vs_intl_ref_price_(subset_to_most_common).pdf')
 hist_ref_price_by_product_category = paste0(dir, 'visualizations/hist_diff_unit_cost_ref_price_by_product_category.pdf')
-
-# for narrowing down commodities
-treemap_purchasing_volume_by_disease_country =paste0(dir, 'visualizations/treemap_purchasing_volume_by_disease_country.pdf')
-treemap_number_of_orders_by_disease_country =paste0(dir, 'visualizations/treemap_number_of_orders_by_disease_country.pdf')
-treemap_overall_spend_by_disease_country =paste0(dir, 'visualizations/treemap_overall_spend_by_disease_country.pdf')
-
-# for narrowing down commodities, by category
-treemap_purchasing_volume_by_country_category =paste0(dir, 'visualizations/treemap_purchasing_volume_by_country_category.pdf')
-treemap_number_of_orders_by_country_category =paste0(dir, 'visualizations/treemap_number_of_orders_by_country_category.pdf')
-treemap_overall_spend_by_country_category =paste0(dir, 'visualizations/treemap_overall_spend_by_country_category.pdf')
-
-# irp_value_check
-irp_value_check = paste0(dir, 'visualizations/ts_hist_check_irp_values.pdf')
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -70,9 +57,9 @@ dt = data[product_category == 'bednet', product_name_en := 'bednet' ]
 # make a separate "product category" for first and second line TB drugs:
 first_line = c("Rifampicin" , "Pyrazinamide", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", "Isoniazid", 
                "Ethambutol+Isoniazid+Rifampicin - FDC", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", 
-               "Ethambutol+Isoniazid - FDC", "Streptomycin", "Ethambutol", "PAS Sodium")
+               "Ethambutol+Isoniazid - FDC", "Ethambutol")
 second_line = c("Ofloxacin", "Levofloxacin", "Moxifloxacin", "Cycloserine", "Protionamide", "Amikacin", "Ethionamide", "Kanamycin",
-                "Capreomycin", "Linezolid", "Bedaquiline", "Meropenem", "Clofazimine", "Amoxicillin+Clavulanate - FDC")
+                "Capreomycin", "Linezolid", "Bedaquiline", "Meropenem", "Clofazimine", "Amoxicillin+Clavulanate - FDC", "Streptomycin", "PAS Sodium")
 other = c("Water for injection")
 
 dt = dt[ product_name_en %in% first_line, sub_product_category := "first_line"]
@@ -80,174 +67,6 @@ dt = dt[ product_name_en %in% second_line, sub_product_category := "second_line"
 dt = dt[ product_name_en %in% other, sub_product_category := "other"]
 
 dt[ product_category == 'anti_tb_medicine', product_category := paste(product_category, sub_product_category, sep = "_") ]
-
-# # make a code book of all commodities, whether or not will use them in analysis, and whether or not they have a ref price
-# codebook = unique(dt[, .(product_name_en, product_category, po_international_reference_price)])
-# codebook = codebook[, has_irp := !all(is.na(po_international_reference_price)), by = .(product_name_en, product_category)]
-# codebook = unique(codebook[,.(product_name_en, product_category, has_irp)])
-# codebook[, included_in_analysis := TRUE]
-# write.csv(codebook, outFile_codebook)
-
-# Calculate purchasing volume, overall spend, and number of orders from 2015 on
-# sum by country, product_category and product_name
-dt = dt[purchase_order_date >= '2015-01-01',.(purchasing_volume = sum(total_units_in_order), 
-                                                overall_spend = sum(total_cost_order), 
-                                                total_number_of_orders = .N ),
-          by = .(product_name_en, product_category, product_disease, iso3codecountry)]
-
-dt[is.na(product_disease), product_disease := 'other']
-dt[, product_disease := as.factor(product_disease)]
-dt[, overall_spend_in_millions := overall_spend/1000000]
-
-# # Subset dt to the top 10 commodities per country/disease:
-# subset = dt[product_disease != 'other']
-# # subset_by_vol = setorder(subset, -purchasing_volume)[, head(.SD, 5L), keyby =c('iso3codecountry', 'product_disease')]
-# # subset_by_orders = setorder(subset, -total_number_of_orders)[, head(.SD, 5L), keyby =c('iso3codecountry', 'product_disease')]
-# # subset_by_spend = setorder(subset, -overall_spend)[, head(.SD, 5L), keyby =c('iso3codecountry', 'product_disease')]
-# subset_by_vol = setorderv(subset, c('iso3codecountry', 'product_disease', 'purchasing_volume'), c(1, 1, -1))[, head(product_name_en, 7L), c('iso3codecountry', 'product_category')]
-# subset_by_spend = setorderv(subset, c('iso3codecountry', 'product_disease', 'overall_spend'), c(1, 1, -1))[, head(product_name_en, 7L), c('iso3codecountry', 'product_category')]
-# # subset_by_orders = setorderv(subset, c('iso3codecountry', 'product_disease', 'total_number_of_orders'), c(1, 1, -1))[, head(product_name_en, 7L), c('iso3codecountry', 'product_category')]
-# 
-# setnames(subset_by_vol, 'V1', 'product_name_en')
-# setnames(subset_by_spend, 'V1', 'product_name_en')
-# # setnames(subset_by_orders, 'V1', 'product_name_en')
-# 
-# subset_by_vol[, by_vol_purchased := TRUE] 
-# subset_by_spend[, by_tot_spend := TRUE] 
-# # subset_by_orders[, by_num_orders := TRUE] 
-# 
-# # subset = merge(subset_by_vol, subset_by_orders, all = TRUE, by = c('iso3codecountry', 'product_disease', 'product_name_en'))
-# subset = merge(subset_by_vol, subset_by_spend, all = TRUE, by = c('iso3codecountry', 'product_category', 'product_name_en'))
-# subset = merge(subset, data, by = c('iso3codecountry', 'product_disease', 'product_name_en'), all.x = TRUE)
-# 
-# dt = dt[!product_category %in% c('irs', 'diagnostic_test_other')]
-# dt[, product_category := as.factor(product_category)]
-# # Make a color palette so colors are the same for disease across different plots (even if some 'levels' are removed - for ex, SEN does not have 'other')
-# colors = brewer.pal(8, 'Set2')
-# names(colors) = levels(dt$product_category)
-# fillScale = scale_fill_manual(name = 'product_category', values = colors)
-# 
-# # Treemap (one per country) showing purchasing volume by disease and product with overall spend as the gradient
-# pdf(treemap_purchasing_volume_by_disease_country, height = 10, width = 15)
-# for ( x in unique(dt$iso3codecountry) ){
-#   g = ggplot(dt[ iso3codecountry == x, ], aes(area = purchasing_volume, fill = product_category, subgroup = product_category, subgroup2 = product_name_en)) + 
-#     geom_treemap(aes(alpha = overall_spend_in_millions)) +
-#     scale_alpha_continuous(range = c(0.2, 1)) + 
-#     geom_treemap_subgroup_border() +
-#     geom_treemap_text(aes(label = product_name_en), fontface = 'italic', place = 'top', 
-#                       reflow = TRUE, padding.x = unit(3, 'mm'), padding.y = unit(3, 'mm')) +
-#     geom_treemap_subgroup2_border(colour = "white", size = 2) +
-#     geom_treemap_subgroup_border(colour = "white", size = 10) +
-#     fillScale +
-#     ggtitle(paste0('Purchasing volume of different commodities by disease ', x, ', 2015 - 2018')) +
-#     guides(fill = guide_legend(title="Disease"), alpha = guide_legend(title = 'Overall Spend (in millions)')) + 
-#     theme( plot.title = element_text(size = 24), legend.title = element_text(size = 18), legend.text = element_text(size = 16)) 
-#   print(g)
-# }
-# dev.off()
-# 
-# # Treemap (one per country) showing number of orders by disease and product with overall spend as the gradient
-# pdf(treemap_number_of_orders_by_disease_country, height = 10, width = 15)
-# for ( x in unique(dt$iso3codecountry) ){
-#   g = ggplot(dt[ iso3codecountry == x, ], aes(area = total_number_of_orders, fill = product_category, subgroup = product_category, subgroup2 = product_name_en)) + 
-#     geom_treemap(aes(alpha = overall_spend_in_millions)) +
-#     scale_alpha_continuous(range = c(0.2, 1)) + 
-#     geom_treemap_subgroup_border() +
-#     geom_treemap_text(aes(label = product_name_en), fontface = 'italic', place = 'top', 
-#                       reflow = TRUE, padding.x = unit(3, 'mm'), padding.y = unit(3, 'mm')) +
-#     geom_treemap_subgroup2_border(colour = "white", size = 2) +
-#     geom_treemap_subgroup_border(colour = "white", size = 10) +
-#     fillScale +
-#     ggtitle(paste0('Total number of orders by commodity and disease in ', x, ', 2015 - 2018')) +
-#     guides(fill = guide_legend(title="Disease"), alpha = guide_legend(title = 'Overall Spend (in millions)')) + 
-#     theme( plot.title = element_text(size = 24), legend.title = element_text(size = 18), legend.text = element_text(size = 16)) 
-#   print(g)
-# }
-# dev.off()
-# 
-# # Treemap (one per country) showing overall spend by disease and product [***should this have a gradient?]
-# pdf(treemap_overall_spend_by_disease_country, height = 10, width = 15)
-# for ( x in unique(dt$iso3codecountry) ){
-#   g = ggplot(dt[ iso3codecountry == x, ], aes(area = overall_spend, fill = product_category, subgroup = product_category, subgroup2 = product_name_en)) + 
-#     geom_treemap(alpha = 0.75) +
-#     scale_alpha_continuous(range = c(0.2, 1)) + 
-#     geom_treemap_subgroup_border() +
-#     geom_treemap_text(aes(label = product_name_en), fontface = 'italic', place = 'top', 
-#                       reflow = TRUE, padding.x = unit(3, 'mm'), padding.y = unit(3, 'mm')) +
-#     geom_treemap_subgroup2_border(colour = "white", size = 2) +
-#     geom_treemap_subgroup_border(colour = "white", size = 10) +
-#     fillScale +
-#     ggtitle(paste0('Overall spend by commodity and disease in ', x, ', 2015 - 2018')) +
-#     guides(fill = guide_legend(title="Disease")) + 
-#     theme( plot.title = element_text(size = 24), legend.title = element_text(size = 18), legend.text = element_text(size = 16)) 
-#   print(g)
-# }
-# dev.off()
-
-# REMAKE TREEMAPS - so there is a page for each product category and the first subgroup is by country. 
-# This can show us within a given product category, which specific products are most common within and among countries 
-# Note: This was orgiinally done before TB drug commodities were reclassified into first- and second-line drugs. 
-
-# Make a color palette so colors are the same for disease across different plots (even if some 'levels' are removed - for ex, SEN does not have 'other')
-dt[, iso3codecountry := as.factor(iso3codecountry)]
-
-colors = brewer.pal(4, 'Set2')
-names(colors) = levels(dt$iso3codecountry)
-fillScale = scale_fill_manual(name = 'iso3codecountry', values = colors)
-
-pdf(treemap_purchasing_volume_by_country_category, height = 10, width = 15)
-for ( x in unique(dt$product_category) ){
-  g = ggplot(dt[ product_category == x, ], aes(area = purchasing_volume, fill = iso3codecountry, subgroup = iso3codecountry, subgroup2 = product_name_en)) + 
-    geom_treemap(aes(alpha = overall_spend_in_millions)) +
-    scale_alpha_continuous(range = c(0.2, 1)) + 
-    geom_treemap_subgroup_border() +
-    geom_treemap_text(aes(label = product_name_en), fontface = 'italic', place = 'top', 
-                      reflow = TRUE, padding.x = unit(3, 'mm'), padding.y = unit(3, 'mm')) +
-    geom_treemap_subgroup2_border(colour = "white", size = 2) +
-    geom_treemap_subgroup_border(colour = "white", size = 10) +
-    fillScale +
-    ggtitle(paste0(x, ': purchasing volume of different commodities by country, 2015 - 2018')) +
-    guides(fill = guide_legend(title="Disease"), alpha = guide_legend(title = 'Overall Spend (in millions)')) + 
-    theme( plot.title = element_text(size = 24), legend.title = element_text(size = 18), legend.text = element_text(size = 16)) 
-  print(g)
-}
-dev.off()
-
-pdf(treemap_number_of_orders_by_country_category, height = 10, width = 15)
-for ( x in unique(dt$product_category) ){
-  g = ggplot(dt[ product_category == x, ], aes(area = total_number_of_orders, fill = iso3codecountry, subgroup = iso3codecountry, subgroup2 = product_name_en)) + 
-    geom_treemap(aes(alpha = overall_spend_in_millions)) +
-    scale_alpha_continuous(range = c(0.2, 1)) + 
-    geom_treemap_subgroup_border() +
-    geom_treemap_text(aes(label = product_name_en), fontface = 'italic', place = 'top', 
-                      reflow = TRUE, padding.x = unit(3, 'mm'), padding.y = unit(3, 'mm')) +
-    geom_treemap_subgroup2_border(colour = "white", size = 2) +
-    geom_treemap_subgroup_border(colour = "white", size = 10) +
-    fillScale +
-    ggtitle(paste0(x, ': total # orders of different commodities by country, 2015 - 2018')) +
-    guides(fill = guide_legend(title="Disease"), alpha = guide_legend(title = 'Overall Spend (in millions)')) + 
-    theme( plot.title = element_text(size = 24), legend.title = element_text(size = 18), legend.text = element_text(size = 16)) 
-  print(g)
-}
-dev.off()
-
-pdf(treemap_overall_spend_by_country_category, height = 10, width = 15)
-for ( x in unique(dt$product_category) ){
-  g = ggplot(dt[ product_category == x, ], aes(area = overall_spend, fill = iso3codecountry, subgroup = iso3codecountry, subgroup2 = product_name_en)) + 
-    geom_treemap(alpha = 0.75) +
-    scale_alpha_continuous(range = c(0.2, 1)) + 
-    geom_treemap_subgroup_border() +
-    geom_treemap_text(aes(label = product_name_en), fontface = 'italic', place = 'top', 
-                      reflow = TRUE, padding.x = unit(3, 'mm'), padding.y = unit(3, 'mm')) +
-    geom_treemap_subgroup2_border(colour = "white", size = 2) +
-    geom_treemap_subgroup_border(colour = "white", size = 10) +
-    fillScale +
-    ggtitle(paste0(x, ': overall spend on different commodities by country, 2015 - 2018')) +
-    guides(fill = guide_legend(title="Disease")) + 
-    theme( plot.title = element_text(size = 24), legend.title = element_text(size = 18), legend.text = element_text(size = 16)) 
-  print(g)
-}
-dev.off()
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -256,44 +75,9 @@ dev.off()
 subset_with_codebook = read.csv(outFile_codebook) # make manual changes to "included_in_analysis" column based on treemaps and then read that back in
 
 products_to_include_in_analysis = subset_with_codebook[ included_in_anlaysis == TRUE, product_name_en ]
-subset = data[ product_name_en %in% products_to_include_in_analysis ]
-# ----------------------------------------------
+subset = data[ product_name_en %in% products_to_include_in_analysis, ]
 
-# ----------------------------------------------
-# IRP checks - make histograms of IRP by commodity, and time series to show if there are duplicates by date/commodity but with different IRPs. 
-# ----------------------------------------------
-data[, purchase_order_year := as.numeric(year(purchase_order_date))]
-data[, purchase_order_month := as.numeric(month(purchase_order_date))]
-check_irp = data[, unique(po_international_reference_price), by = .(product_name_en, purchase_order_year, purchase_order_month)]
-check_irp[, order_date := as.yearmon(paste(check_irp$purchase_order_year, check_irp$purchase_order_month), "%Y%m")]
-check_irp[, order_date := as.Date(order_date)]
-
-check_irp[, more_than_one_irp := FALSE]
-dups = check_irp[duplicated(check_irp[, .(product_name_en, order_date)]),]
-for( row in 1:nrow(dups) ){
-  product = dups[row, product_name_en]
-  date = dups[row, order_date]
-  check_irp[product_name_en == product & order_date == date, more_than_one_irp := TRUE]
-  if ( check_irp[product_name_en == product & order_date == date & !is.na(V1), .N] <= 1 ) {
-    check_irp[product_name_en == product & order_date == date, more_than_one_irp := FALSE]
-  }
-}
-check_irp[, more_than_one_irp:=as.factor(more_than_one_irp)]
-colors = c('cadetblue3', 'coral2')
-names(colors) = levels(check_irp$more_than_one_irp)
-
-pdf(irp_value_check, height = 9, width = 11)
-for( x in unique(data$product_name_en) ){
-  g1 = ggplot( check_irp[ product_name_en == x, ], aes(x = order_date, y = V1, color = more_than_one_irp) ) +
-    geom_point(size = 3) + theme_bw() + theme(text = element_text(size = 16)) + 
-    labs( title = paste0("Time series of international reference prices for ", x), x= 'Order date (year, month)', y = 'International reference price (USD per unit)') +
-    scale_color_manual(name = 'more_than_one_irp', values = colors) + ylim(0, NA)
-  g2 = ggplot( data[ product_name_en == x, ], aes(x = po_international_reference_price) ) + geom_histogram() + 
-    theme_bw() + theme(text = element_text(size = 16)) + 
-    labs( title = paste0("International reference prices for ", x), x= 'International reference price (USD per unit)')
-  grid.arrange(g1, g2, nrow = 2)
-}
-dev.off()
+subset_less_common = data[ !product_name_en %in% products_to_include_in_analysis, ]
 # ----------------------------------------------
 
 # ----------------------------------------------
