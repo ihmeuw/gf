@@ -36,18 +36,7 @@ dir = "C:/Users/ccarelli/Documents/pnls_data/"
 # read in the data 
 dt = readRDS(paste0(dir, 'pnls_vct_final.rds'))
 
-#------------------------------------
-# minor outlier screen
 
-dt = dt[value!=769776 & value!=29841 & value!=10000 & value!=6985 & !(variable=='HIV+' & value==510)]
-
-# outliers noticed
-dt = dt[!(subpop=='msm' & value==2757)] # one wonderful facility keeps reporting 2757 MSM
-
-# round the values to integers
-dt[ ,value:=round(value)]
-
-#------------------------------------
 # COLOR SCHEMES
 
 quad_colors = c('#542788','#66bd63', '#b2182b', '#4575b4')

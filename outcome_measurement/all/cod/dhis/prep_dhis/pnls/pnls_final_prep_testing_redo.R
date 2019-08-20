@@ -23,14 +23,14 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # local directory
-dir = "C:/Users/ccarelli/Documents/pnls_data"
+dir = "C:/Users/ccarelli/Documents/pnls_data/"
 
 #---------------------------------------
 # load the file that represents a subset (no sex, age, or support)
 # dt = data.table(readRDS(paste0(dir, 'prepped/pnls_sets/pnls_vct_2017_01_01_2019_02_01.rds')))
 
 # load local data table
-dt = data.table(readRDS(paste0(dir, '/pnls_vct_2017_01_01_2019_02_01.rds')))
+dt = data.table(readRDS(paste0(dir, 'pnls_vct_2017_01_01_2019_02_01.rds')))
 
 # set the name of the set to clean
 set_name = dt[ ,tolower(unique(pnls_set))]
@@ -40,7 +40,7 @@ set_name = dt[ ,tolower(unique(pnls_set))]
 # new_elements = data.table(read.xlsx(paste0(dir, 'meta_data/translate/pnls_elements_translations_', set_name, '.xlsx' )))
 
 # import the translated elements locally
-new_elements = data.table(read.xlsx(paste0(dir, '/pnls_elements_translations_', set_name, '.xlsx' )))
+new_elements = data.table(read.xlsx(paste0(dir, 'pnls_elements_translations_', set_name, '.xlsx' )))
 
 # drop out french elements for the merge 
 new_elements[ ,element:=NULL]
@@ -59,8 +59,8 @@ dt = merge(dt, new_elements, by='element_id', all.x = TRUE)
 # check the final translations 
 
 # export only the french elements and their translations
-export_file = dt[,.(elements=unique(element)), by=.(element_eng, subpop)]
-write.xlsx(export_file, paste0(dir, 'meta_data/translate/pnls_elements_vct_check_translations.xlsx'))
+# export_file = dt[,.(elements=unique(element)), by=.(element_eng, subpop)]
+# write.xlsx(export_file, paste0(dir, 'meta_data/translate/pnls_elements_vct_check_translations.xlsx'))
 
 #---------------------------------------------------------------------
 # drop the useless element (these two elements have unique ids but identical variable names)
@@ -103,9 +103,30 @@ dt = dt[ ,.(org_unit_id, org_unit, date, sex, age, subpop, variable, value,
 dt[subpop=='customer', subpop:='client']
 
 #---------------------------------------------------------------------
+
+#------------------------------------
+# minor outlier screen
+
+dt = dt[value!=769776 & value!=29841 & value!=10000 & value!=6985 & !(variable=='HIV+' & value==510)]
+
+# outliers noticed
+dt = dt[!(subpop=='msm' & value=='2757')] # one wonderful facility keeps reporting 2757 MSM
+
+# round the values to integers
+dt[ ,value:=round(value)]
+
+# some values are dropped in qr
+dt = dt[!is.na(value)]
+
+# ensure value is numeric
+dt[ ,value:=as.numeric(value)]
+
+#--------------------------------------
+
+#---------------------------------------------------------------------
 # export the final data 
 
-saveRDS(dt, paste0(dir, "prepped/pnls_final/pnls_vct_final.rds"))
+saveRDS(dt, paste0(dir, "pnls_vct_final.rds"))
 #---------------------------------------------------------------------
 
 
