@@ -141,7 +141,7 @@ save(list=c('data','model','urFits'), file=outputFile5a)
 # 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 # })
 # save(list=c('data','model','semFits','summaries','means','urFits'), file=outputFile5a_big)
-save(list=c('data','model','urFits'), file=outputFile5a_big)
+# save(list=c('data','model','urFits'), file=outputFile5a_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
