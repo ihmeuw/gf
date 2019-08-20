@@ -76,6 +76,10 @@ names(outputs) = gsub("/", "_", names(outputs))
 # Validate files, and subset data. 
 #----------------------------------------------------
 
+#Replace unknown municipalities 
+stopifnot(nrow(activities[is.na(municipality) | is.na(department)])==0)
+stopifnot(nrow(outputs[is.na(municipality) | is.na(department)])==0)
+
 #Drop all 0 departments and municipalities - these are national-level. 
 # There are 0 of these cases in the 7.15.19 data - EL 
 activities = activities[!(department==0|municipality==0)]
@@ -86,7 +90,7 @@ a_dates = unique(activities$date)
 o_dates = unique(outputs$date)
 
 a_dates[!a_dates%in%o_dates] #None. EL 8/7/19  
-o_dates[!o_dates%in%a_dates] #2009 and 2012. EL 8/7/19
+o_dates[!o_dates%in%a_dates] #2009 and 2012. EL 8/7/19 2009, EL 8/19/19
 
 #Departments
 a_depts = unique(activities$department)
@@ -100,7 +104,7 @@ a_mun = unique(activities$municipality)
 o_mun = unique(outputs$municipality)
 
 a_mun[!a_mun%in%o_mun] #None. 7.15.19 EL 
-o_mun[!o_mun%in%a_mun] #None. 7.15.19 EL ==> Changed to several, EL 8/7/19
+o_mun[!o_mun%in%a_mun] #None. 7.15.19 EL ==> Changed to several, EL 8/7/19 ==> Changed back to none 8/19/19. 
 
 #Subset data to only department-level, because municipalities aren't matching right now. 
 
@@ -172,9 +176,9 @@ for (var in vars){
 }
 
 # #Go ahead and hard code these variables to be department-level, because there is a data prep error. EL 7.8.19
-#This should be removed once new data is sent!
-dep_vars = c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d", dep_vars)
-mun_vars = mun_vars[!mun_vars%in%c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d")]
+#This should be removed once new data is sent! REMOVED 8/19/19 EL 
+# dep_vars = c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d", dep_vars)
+# mun_vars = mun_vars[!mun_vars%in%c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d")]
 
 #Flag cases where variables end in _d but are in the mun-level dataset. 
 dept_level_error = mun_vars[grepl("_d", mun_vars)]
@@ -212,7 +216,7 @@ names(mun_level_a) = gsub("_m|_d", "", names(mun_level_a))
 
 activities1 = merge(dep_level_a, mun_level_a, by=c('date', 'department'), all=T)
 #Make sure you've accounted for all columns except municipality. 
-stopifnot(ncol(activities1) == ncol(activities)-1)
+stopifnot(ncol(activities1) == (ncol(activities)-1))
 new_names = names(activities1)[3:ncol(activities1)]  #Resest the names so they're distinguishable from activity variables. 
 new_names = paste0(new_names, "_act")
 names(activities1)[3:ncol(activities1)] <- new_names
