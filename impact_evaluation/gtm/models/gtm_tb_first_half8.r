@@ -37,6 +37,8 @@ model = '
   # Cases_Notified_out_cumulative ~ HIV_TB_Cases_Notified_out_cumulative 
   Cases_Notified_in_Prisons_out ~ gf_tb_cumulative + gf_rssh_cumulative + gf_mdrtb_cumulative + gf_tbhiv_cumulative
   Children_in_Contact_with_TB_Started_IPT_out ~ Additional_Cases_Detected_via_ACF_out
+  MDR_Cases_Started_Treatment_out_cumulative ~ Total_Drugs_Distributed_act_cumulative
+  
 
 	# latent variables
 	
