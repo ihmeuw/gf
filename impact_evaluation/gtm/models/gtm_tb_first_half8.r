@@ -23,22 +23,23 @@
 model = '
 
   # Linkage 1 = relationships between inputs and activities
-  Isoniazid_Distributed_act_cumulative ~ gf_tb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative 
-  Total_Drugs_Distributed_act_cumulative ~ gf_tb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative 
+  Firstline_Distributed_act_cumulative ~  ghe_tb_cumulative 
+  Secondline_Distributed_act_cumulative ~ gf_mdrtb_cumulative 
   Number_of_Cases_Screened_for_MDR_act_cumulative ~ gf_mdrtb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative
   TB_Patients_Tested_for_HIV_act_cumulative ~ gf_tbhiv_cumulative +  ghe_tb_cumulative + odah_tb_cumulative 
   Additional_Cases_Detected_via_ACF_out ~ gf_tb_cumulative +  gf_tbhiv_cumulative + gf_mdrtb_cumulative
 
   # Linkage 2 = relationships between activities and outputs or inputs and outputs
   Cases_Notified_out_cumulative  ~ gf_tb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative 
-  Cases_Started_on_Treatment_out_cumulative ~ gf_tb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative + Isoniazid_Distributed_act_cumulative + Total_Drugs_Distributed_act_cumulative 
-  MDR_Cases_Started_Treatment_out_cumulative ~ Number_of_Cases_Screened_for_MDR_act_cumulative 
+  Cases_Started_on_Treatment_out_cumulative ~ gf_tb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative + Firstline_Distributed_act_cumulative 
+  MDR_Cases_Started_Treatment_out_cumulative ~ Number_of_Cases_Screened_for_MDR_act_cumulative + Secondline_Distributed_act_cumulative
   HIV_TB_Cases_Notified_out_cumulative ~ TB_Patients_Tested_for_HIV_act_cumulative 
   # Cases_Notified_out_cumulative ~ HIV_TB_Cases_Notified_out_cumulative 
-  Cases_Notified_in_Prisons_out ~ gf_tb_cumulative +  gf_mdrtb_cumulative + gf_tbhiv_cumulative
+  Cases_Notified_in_Prisons_out ~ gf_tb_cumulative 
+  Cases_Notified_in_Prisons_out ~ Number_of_Cases_Screened_for_MDR_act_cumulative
   # Children_in_Contact_with_TB_Started_IPT_out ~ Additional_Cases_Detected_via_ACF_out # Commenting out this relationship 8/22/19 - EL. Need to verify the output variable here. 
-  MDR_Cases_Started_Treatment_out_cumulative ~ Total_Drugs_Distributed_act_cumulative
   Cases_Notified_out_cumulative ~ Additional_Cases_Detected_via_ACF_out
+  Children_less5_referred_out_cumulative ~ Additional_Cases_Detected_via_ACF_out
   
 
 	# latent variables
