@@ -66,11 +66,11 @@ long[is.na(label), label:=variable]
 # ----------------------------------------------
 
 #----------------------------------------------------
-# Limit graph data to 2012, the year the activities/outputs data starts 
+# Limit graph data to START_YEAR, the year the activities/outputs data starts 
 # and limit variables to only ones currently used by model 
-sample = sample[date>=2009, c(modelVars, 'department', 'date'), with=F]
-sample_untr = sample_untr[date>=2009, c(modelVars, 'department', 'date'), with=F]
-long = long[date>=2009 & variable%in%modelVars]
+sample = sample[date>=START_YEAR, c(modelVars, 'department', 'date'), with=F]
+sample_untr = sample_untr[date>=START_YEAR, c(modelVars, 'department', 'date'), with=F]
+long = long[date>=START_YEAR & variable%in%modelVars]
 fin_data = fin_data[variable%in%modelVars]
 act_data = act_data[variable%in%modelVars]
 data = data[, c(modelVars, 'department', 'date'), with=F]
@@ -166,7 +166,7 @@ act_plot = function(d){
 # Once normal, and once log-transformed. 
 cols = names(data)[!names(data)%in%c('department', 'date', 'year', 'min')]
 cols = cols[!grepl('total', cols)]
-pdf(paste0(visIeDir, 'log_transform_check_all.pdf'), height=5.5, width=9)
+pdf(paste0(visIeDir, 'log_transform_first_half.pdf'), height=5.5, width=9)
 for (c in cols){
   print(c)
   #Normal graph 

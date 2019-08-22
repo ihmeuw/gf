@@ -141,12 +141,12 @@ save(list=c('data','model','urFits'), file=outputFile5a)
 # 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 # })
 # save(list=c('data','model','semFits','summaries','means','urFits'), file=outputFile5a_big)
-save(list=c('data','model','urFits'), file=outputFile5a_big)
+# save(list=c('data','model','urFits'), file=outputFile5a_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
 archive(outputFile5a, 'model_runs')
-archive(outputFile5a_big, 'model_runs')
+# archive(outputFile5a_big, 'model_runs')
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
