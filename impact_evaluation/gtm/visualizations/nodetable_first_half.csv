@@ -1,17 +1,17 @@
 variable,y,x,label
-gf_tbhiv_cumulative,11,-10,GF TB/HIV Exp. 
-gf_mdrtb_cumulative,8.5,-10,GF MDR-TB Exp. 
-gf_tb_cumulative,6,-10,GF TB Exp. 
-ghe_tb_cumulative,3.5,-10,GHE TB Exp. 
 odah_tb_cumulative,1,-10,Other DAH TB Exp. 
-TB_Patients_Tested_for_HIV_act_cumulative,11,0,TB patients tested for HIV
+ghe_tb_cumulative,3.5,-10,GHE TB Exp. 
+gf_tb_cumulative,6,-10,GF TB Exp. 
+gf_mdrtb_cumulative,8.5,-10,GF MDR-TB Exp. 
+gf_tbhiv_cumulative,11,-10,GF TB/HIV Exp. 
+Firstline_Distributed_act_cumulative,1,0,First-line drugs dist.
+Secondline_Distributed_act_cumulative,3,0,Second-line drugs dist.
+Additional_Cases_Detected_via_ACF_out_cumulative,6.5,0,Cases detected via ACF
 Number_of_Cases_Screened_for_MDR_act_cumulative,8.5,0,Genexpert testing for MDR
-Additional_Cases_Detected_via_ACF_out,6,0,Cases detected via ACF
-Total_Drugs_Distributed_act_cumulative,3.5,0,Total Drugs Dist. 
-Isoniazid_Distributed_act_cumulative,1,0,Isoniazid Dist. 
-Cases_Notified_in_Prisons_out,12,10,Cases Notified in Prisons
-HIV_TB_Cases_Notified_out_cumulative,10,10,HIV/TB Cases Notified
-MDR_Cases_Started_Treatment_out_cumulative,8,10,MDR Cases Started Tx. 
-Children_in_Contact_with_TB_Started_IPT_out,6,10,Household contacts <5
+TB_Patients_Tested_for_HIV_act_cumulative,11,0,TB patients tested for HIV
+Cases_Started_on_Treatment_out_cumulative,2,10,Cases Started Tx. 
 Cases_Notified_out_cumulative,4.5,10,Cases Notified
-Cases_Started_on_Treatment_out_cumulative,2.5,10,Cases Started Tx. 
+MDR_Cases_Started_Treatment_out_cumulative,8,10,MDR Cases Started Tx. 
+HIV_TB_Cases_Notified_out_cumulative,10,10,HIV/TB Cases Notified
+Cases_Notified_in_Prisons_out_cumulative,12,10,Cases Notified in Prisons
+Children_less5_referred_out_cumulative,6,10,Children <5 referred

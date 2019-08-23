@@ -128,3 +128,39 @@ ggsave(paste0(save_loc, "ghe_tbhiv_testing_subnational.png"), p3, height=10, wid
 ggsave(paste0(save_loc, "gf_genexpert_testing_subnational.png"), p4, height=10, width=10)
 ggsave(paste0(save_loc, "ghe_genexpert_testing_subnational.png"), p5, height=10, width=10)
 ggsave(paste0(save_loc, "gf_prison_case_notifications_subnational.png"), p6, height=10, width=10)
+
+
+
+#-------------------------------------------------------------
+# RUN SIMPLE LINEAR REGRESSIONS BETWEEN 
+# SECOND LINE DRUGS, GENEXPERT TESTING, AND GF SPENDING ON THESE 
+# MODULES SPECIFICALLY FOR EFFICIENCY ANALYSIS 
+#--------------------------------------------------------------
+
+expenditures = readRDS(expendituresFile)
+
+#Create date variable (collapsed to semester level)
+expenditures[, year:=year(start_date)]
+expenditures[, quarter:=quarter(start_date)]
+expenditures$semester = NULL
+expenditures[quarter%in%c(1, 2), semester:=0.0]
+expenditures[quarter%in%c(3, 4), semester:=0.5]
+expenditures[, date:=year+semester]
+
+#Collapse, and fix names
+expenditures = expenditures[loc_name=='gtm', .(expenditure=sum(expenditure)), by=c("date", "gf_module", "gf_intervention", "code", "disease", "grant_disease")] #Will subset by disease in code section below. 
+setnames(expenditures, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
+
+
+#Run data transformations on this data - backcast if needed, cumulatively sum, redistribute to 
+
+
+
+
+
+
+
+
+
+
+

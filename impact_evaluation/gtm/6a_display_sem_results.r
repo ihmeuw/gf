@@ -86,10 +86,18 @@ p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE)
 
+p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+              scaling_factors=NA, standardized=TRUE, 
+              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE)
+
 # my sem graph function for second half "unrelated regressions" model
 p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
 	scaling_factors=NA, standardized=TRUE,
 	lineWidth=1.5, curved=0, tapered=FALSE)
+
+p6_nolab = semGraph(parTable=urFit2, nodeTable=nodeTable2,
+                    scaling_factors=NA, standardized=TRUE,
+                    lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE)
 # ----------------------------------------------
 
 
@@ -99,22 +107,23 @@ p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
               lineWidth=1.5, curved=0, tapered=FALSE, 
               dim=TRUE, highlight=c("Number_of_Cases_Screened_for_MDR_act_cumulative", "MDR_Cases_Started_Treatment_out_cumulative", 
-                                    "gf_mdrtb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative"))
+                                    "Secondline_Distributed_act_cumulative", "gf_mdrtb_cumulative"))
 
 #Cases notified pathway
 p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
               lineWidth=1.5, curved=0, tapered=FALSE, 
-              dim=TRUE, highlight=c("Cases_Notified_out_cumulative", "gf_tb_cumulative", "gf_tbhiv_cumulative", 
-                                    "gf_mdrtb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative", "Additional_Cases_Detected_via_ACF_out"))
+              dim=TRUE, highlight=c("Cases_Notified_out_cumulative", "Additional_Cases_Detected_via_ACF_out_cumulative", 
+                                    "Children_less5_referred_out_cumulative", "gf_tbhiv_cumulative", "gf_mdrtb_cumulative", 
+                                    "gf_tb_cumulative"))
 
 #GHE pathway 
 p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
               lineWidth=1.5, curved=0, tapered=FALSE, 
-              dim=TRUE, highlight=c("ghe_tb_cumulative", "HIV_TB_Cases_Notified_out_cumulative", "Number_of_Cases_Screened_for_MDR_act_cumulative", 
-                                    "Cases_Notified_out_cumulative", "Cases_Started_on_Treatment_out_cumulative", "Isoniazid_Distributed_act_cumulative", 
-                                    "Total_Drugs_Distributed_act_cumulative"))
+              dim=TRUE, highlight=c("ghe_tb_cumulative", "Number_of_Cases_Screened_for_MDR_act_cumulative", 
+                                    "Cases_Notified_out_cumulative", "Cases_Started_on_Treatment_out_cumulative", "Firstline_Distributed_act_cumulative", 
+                                    "TB_Patients_Tested_for_HIV_act_cumulative"))
 
 # -----------------------------------
 # Save output
@@ -139,7 +148,9 @@ ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_seco
 sep_terg_save = "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/september_terg_presentation/"
 #Save the specific graphics for reports in their own folder. 
 ggsave(paste0(sep_terg_save, "model_first_half_coefficients.png"), p5, height=10, width=13)
+ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nolab, height=10, width=13)
 ggsave(paste0(sep_terg_save, "model_second_half_coefficients.png"), p6, height=10, width=13)
+ggsave(paste0(sep_terg_save, "model_second_half_coefficients_nolab.png"), p6_nolab, height=10, width=13)
 ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
 ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
 ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)

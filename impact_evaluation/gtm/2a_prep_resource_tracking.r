@@ -65,6 +65,7 @@
   #SICOIN DATA 
   #----------------------------------
   sicoin = readRDS(sicoinFile) 
+  depts = read_excel("J:/Project/Evaluation/GF/resource_tracking/_ghe/sicoin_gtm/raw_data/departments_and_municipalities_of_gtm.xlsx")
   
   #Collapse into semesters - SICOIN data is monthly.  
   sicoin[, year:=year(start_date)]
