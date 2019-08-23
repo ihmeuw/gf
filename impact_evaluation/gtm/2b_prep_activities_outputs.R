@@ -278,6 +278,17 @@ stopifnot(ncol(outputs1) == ncol(outputs)-1)
 new_names = names(outputs1)[3:ncol(outputs1)]  #Resest the names so they're distinguishable from activity variables. 
 new_names = paste0(new_names, "_out")
 names(outputs1)[3:ncol(outputs1)] <- new_names
+
+#--------------------------------
+# Add "Children <5 referred for tb evaluation" to ACF pathway EL 8/22/19 
+# Using new extramuros data uploaded from Guillermo
+extramuros = data.table(read_excel("J:/Project/Evaluation/GF/impact_evaluation/gtm/raw_data/TB-Extramuros-2017-2018.xlsx"))
+names(extramuros) = tolower(names(extramuros))
+extramuros = extramuros[variable=="Cantidad  de niños <de 5 años referidos para evaluación a través de ruta diagnostica para descartar tuberculosis", .(Children_less5_referred_out=sum(extramuros)), by=c('department', 'year')]
+setnames(extramuros, 'year', 'date')
+
+#Merge data together
+outputs1 = merge(outputs1, extramuros, by=c('department', 'date'), all=T)
 #-----------------------------------------------------
 # Check to make sure you're still uniquely identifying data 
 #-----------------------------------------------------
@@ -305,6 +316,9 @@ dt_final = merge(activities1, outputs1, by=c('date', 'department'), all=T) #Save
 #   dt_final[is.na(dt_final[[col]]), (col):=0]
 # }
 
+#Generate combined first- and second-line drug activity variables EL 8/22/19 
+dt_final[, Firstline_Distributed_act:=sum(Total_First_Line_Drugs_inusIsonizide__Distributed_value_act, Isoniazid_Distributed_value_act, na.rm=T)]
+dt_final[, Secondline_Distributed_act:=sum(Second_Line_Drugs_Distributed_value_act, Total_MDR_Drugs_Distributed_value_act, na.rm=T)]
 
 #-----------------------------------------------------
 # Save data 
