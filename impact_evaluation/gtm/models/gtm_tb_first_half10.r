@@ -31,24 +31,22 @@ model = '
   Additional_Cases_Detected_via_ACF_out_cumulative ~ gf_tb_cumulative 
 
   # Linkage 2 = relationships between activities and outputs or inputs and outputs
-  Cases_Notified_out_cumulative  ~ gf_tb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative 
+  Cases_Notified_out_cumulative  ~ Additional_Cases_Detected_via_ACF_out_cumulative + gf_tb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative 
   Cases_Started_on_Treatment_out_cumulative ~ gf_tb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative + Firstline_Distributed_act_cumulative 
   MDR_Cases_Started_Treatment_out_cumulative ~ Number_of_Cases_Screened_for_MDR_act_cumulative + Secondline_Distributed_act_cumulative
   HIV_TB_Cases_Notified_out_cumulative ~ TB_Patients_Tested_for_HIV_act_cumulative 
-  Cases_Notified_in_Prisons_out_cumulative ~ gf_tb_cumulative 
-  Cases_Notified_in_Prisons_out_cumulative ~ Number_of_Cases_Screened_for_MDR_act_cumulative
-  Cases_Notified_out_cumulative ~ Additional_Cases_Detected_via_ACF_out_cumulative
+  Cases_Notified_in_Prisons_out_cumulative ~ gf_tb_cumulative + Number_of_Cases_Screened_for_MDR_act_cumulative
   Children_less5_referred_out_cumulative ~ Additional_Cases_Detected_via_ACF_out_cumulative
 
   #Linkage 3 = relationships between outputs and outcomes 
-  Case_Notification_Rate_imp ~ Cases_Notified_out_cumulative + date
-  Proportion_of_HIV_TB_Cases_Treated_out ~ HIV_TB_Cases_Notified_out_cumulative + date
-  Treatment_Success_Rate_imp ~ Cases_Started_on_Treatment_out_cumulative + date
-  HIV_TB_Treatment_Success_Rate_imp ~ HIV_TB_Cases_Notified_out_cumulative + date
-  Proportion_of_MDR_Cases_Treated_out ~ Number_of_Cases_Screened_for_MDR_act_cumulative + date
-  MDR_Probably_Cured_rate_imp ~ MDR_Cases_Started_Treatment_out_cumulative + date
-  Proportion_of_Cases_in_Prisons_Treated_out ~ Cases_Started_on_Treatment_in_Prisons_out + date
-  Proportion_of_Patients_Receiving_DST_out ~ Number_of_Cases_Screened_for_MDR_act_cumulative + date
+  Case_Notification_Rate_imp ~ Cases_Notified_out_cumulative 
+  Proportion_of_HIV_TB_Cases_Treated_out ~ HIV_TB_Cases_Notified_out_cumulative 
+  Treatment_Success_Rate_imp ~ Cases_Started_on_Treatment_out_cumulative 
+  HIV_TB_Treatment_Success_Rate_imp ~ HIV_TB_Cases_Notified_out_cumulative 
+  Proportion_of_MDR_Cases_Treated_out ~ Number_of_Cases_Screened_for_MDR_act_cumulative + MDR_Cases_Started_Treatment_out_cumulative
+  Proportion_of_Cases_in_Prisons_Treated_out ~ Cases_Notified_in_Prisons_out_cumulative
+  Proportion_of_Patients_Receiving_DST_out ~ Number_of_Cases_Screened_for_MDR_act_cumulative 
+  Children_in_Contact_with_TB_Started_IPT_out_cumulative ~ Children_less5_referred_out_cumulative 
     
 
 	# latent variables
