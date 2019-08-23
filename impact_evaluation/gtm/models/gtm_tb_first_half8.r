@@ -27,7 +27,7 @@ model = '
   Secondline_Distributed_act_cumulative ~ gf_mdrtb_cumulative 
   Number_of_Cases_Screened_for_MDR_act_cumulative ~ gf_mdrtb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative
   TB_Patients_Tested_for_HIV_act_cumulative ~ gf_tbhiv_cumulative +  ghe_tb_cumulative + odah_tb_cumulative 
-  Additional_Cases_Detected_via_ACF_out_cumulative ~ gf_tb_cumulative +  gf_tbhiv_cumulative + gf_mdrtb_cumulative
+  Additional_Cases_Detected_via_ACF_out_cumulative ~ gf_tb_cumulative 
 
   # Linkage 2 = relationships between activities and outputs or inputs and outputs
   Cases_Notified_out_cumulative  ~ gf_tb_cumulative +  ghe_tb_cumulative + odah_tb_cumulative 
