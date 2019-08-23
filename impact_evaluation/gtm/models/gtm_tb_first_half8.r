@@ -38,7 +38,7 @@ model = '
   Cases_Notified_in_Prisons_out_cumulative ~ gf_tb_cumulative 
   Cases_Notified_in_Prisons_out_cumulative ~ Number_of_Cases_Screened_for_MDR_act_cumulative
   # Children_in_Contact_with_TB_Started_IPT_out_cumulative ~ Additional_Cases_Detected_via_ACF_out_cumulative # Commenting out this relationship 8/22/19 - EL. Need to verify the output variable here. 
-  Cases_Notified_out_cumulative_cumulative ~ Additional_Cases_Detected_via_ACF_out_cumulative
+  Cases_Notified_out_cumulative ~ Additional_Cases_Detected_via_ACF_out_cumulative
   Children_less5_referred_out_cumulative ~ Additional_Cases_Detected_via_ACF_out_cumulative
   
 
