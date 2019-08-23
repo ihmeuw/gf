@@ -12,7 +12,7 @@
 library(faraway) #For viewing collinearity, below. 
 
 # load
-data = readRDS(outputFile3)
+data = readRDS(outputFile3b)
 
 # 	
 # 	# set other_dah to NA (not 0) after 2016
@@ -131,6 +131,8 @@ for (v in allVars){
 
 #------------------------------------------------------------
 # Drop variables that are not being used in model object before cumulative sum. 
+missingVars = modelVars[!modelVars%in%names(data)]
+if (length(missingVars)!=0) print("There are missing model variables!")
 data = data[, c(modelVars, 'department', 'date'), with=F]
 
 

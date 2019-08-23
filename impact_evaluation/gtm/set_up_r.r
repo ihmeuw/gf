@@ -148,12 +148,8 @@ outputFile2c = paste0(preppedIeDir, 'outcomes_impact.rds')
 # output file from 3_merge_data.R
 outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')
 
-# output file from 3_merge_secon_half.R
-outputFile3a = paste0(preppedIeDir, 'outputs_outcomes_impact.RDS')
-
-# output files from 3b_correct_to_models.r
-outputFile3b = paste0(preppedIeDir, 'outcomes_impact.RDS')
-outputFile3bGraphs = paste0(visIeDir, 'outcomes_impact_results.pdf')
+# output file from 3b_merge_model_halves.R
+outputFile3b = paste0(preppedIeDir, 'combined_halves.RDS')
 
 # output file from 4a_set_up_for_analysis.r
 outputFile4a = paste0(preppedIeDir, 'first_half_pre_model.rdata')
