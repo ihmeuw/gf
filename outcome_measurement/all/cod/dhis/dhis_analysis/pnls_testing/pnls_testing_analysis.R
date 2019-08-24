@@ -2,7 +2,7 @@
 # Final prep file for usable data 
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
-# 8/17/2019
+# 8/24/2019
 # ----------------------------------------------
 
 # --------------------
@@ -18,99 +18,49 @@ library(grid)
 # --------------------
 
 # --------------------
+# run these data for global fund provinces only?
+
+gf_only = TRUE
+
+# --------------------
 # set working directories
 
 # detect if operating on windows or on the cluster 
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
-# set the directory for input and output
+# set the shared directory
 # dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-# 
-# # read in the data 
+
+# read in the data from j
 # dt = readRDS(paste0(dir, 'prepped/pnls_final/pnls_vct_final.rds'))
 
-# local directory
+# set the local directory
 dir = "C:/Users/ccarelli/Documents/pnls_data/"
 
-# read in the data locally
-dt = readRDS(paste0(dir, 'pnls_vct_final.rds'))
+# read in the data from a local directory
+dt = readRDS(paste0(dir, 'pnls_vct_final_labels.rds'))
 
-# ------------------------
-# fix the shared dps
+# ----------------------------------
+# set output directories 
 
-dt[dps=='Kinshasa', funder:='Shared']
+# export locally as a pdf
+if (gf_only==FALSE) outDir = paste0(dir, 'outputs/pnls_graphs_both_funders.pdf')
+if (gf_only==TRUE) outDir = paste0(dir, 'outputs/pnls_graphs_global_fund_only.pdf') 
 
-#------------------------------------
-# factor sub populations for graphs 
+#--------------------------------------
+# determine if the data will be both funders or gf only
 
-dt$subpop = factor(dt$subpop, 
-                   c("prisoner", "trans", "idu", "trucker",  "uniform", "msm", "csw_customer", 
-                     "fisher", "miner", "other_groups", "couple", "csw", "client", "patient"),    
-                   c("Prisoners", "Trans people", "IDUs", "Truckers", "Military personnel",
-                     "MSM", "CSW Clients", "Fisher people", "Miners", 
-                     "Other groups", "Couples", "CSWs", "Clients", "Patients")) 
+# create a copy of the data for comparison graphs regardless of subset
+compare = copy(dt)
 
-#----------------------------------
-# equality constraints check on testing and positive
-# if there are more HIV cases reported than tests, remove the value
-
-check = dt[variable=='Tested and received the results' | variable=='HIV+']
-check = check[ ,.(value=sum(value)), by = .(org_unit_id, date, variable, sex, age, subpop)]
-check = dcast(check, org_unit_id+sex+age+subpop+date~variable)
-setnames(check, c('org_unit_id', 'sex', 'age', 'subpop', 'date', 'hiv', 'tests'))
-check[ , eq:=(hiv > tests)]
-check[ , missing_one:=(is.na(hiv) | is.na(tests))]
-check = check[eq==T]
-
-check[ , check_var:=paste0(org_unit_id, sex, age, subpop, date)]
-dt[ , check_var:=paste0(org_unit_id, sex, age, subpop, date)]
-dt = dt[!(check_var %in% check$check_var)]
-dt[ ,check_var:=NULL]
-
-#----------------------------------
-# create smaller health facility groupings for graphs 
-
-dt[grep('hospital',facility_level), next_level:='Hospitals']
-dt[facility_level=='reference_health_center', next_level:='Reference health centers']
-dt[facility_level=='health_center' | facility_level=='health_post' | facility_level=='dispensary', next_level:='Health centers, posts, and dispensaries']
-dt[is.na(next_level), next_level:='Other types of facilities']
-
-# factor facility level for graphs
-dt$facility_level = factor(dt$facility_level, 
-                  rev(c("health_center", "reference_health_center", "health_post", "hospital", 
-                    "general_reference_hospital", "hospital_center", "medical_center",
-                    "clinic", "secondary_hospital",  "dispensary","polyclinic", "medical_surgical_center")),
-                  rev(c("Health Center", "Reference Health Center", "Health Post", "Hospital", 
-                    "General Reference Hospital", "Hospital Center", "Medical Center",
-                    "Clinic", "Secondary Hospital",  "Dispensary","Polyclinic", "Medical surgical center")))
-
-
-#------------------------------------------------------------------
-# bind in he client variables
-
-dt[variable=='Clients counseled', variable:='Counseled']
-dt[variable=='Clients tested', variable:='Tested'] # only in clients
-dt[variable=='Clients tested and received the results', variable:='Tested and received the results']
-dt[variable=='Clients enrolled in case management', variable:='Enrolled in case management'] # only in clients
-
-dt[variable=='Clients HIV+', variable:='HIV+']
-dt[variable=='Clients HIV+ and informed of the results', variable:='HIV+ and informed of the results']
-dt[variable=='Clients with indeterminate status', variable:='Indeterminate status'] # only in clients
+# subset to only data from global fund provinces
+if (gf_only==TRUE) dt = dt[funder=='The Global Fund']
 
 #------------------------------------------------------------------
 # HIV Testing Visualizations
 
-# EXPORT AS A PDF
-# pdf(paste0(dir, 'outputs/pnls_hiv_testing/pnls_vct_graphs.pdf'), width=12, height=9)
-
-# export locally as a pdf
-if (gf_only==F) outDir = paste0(dir, 'pnls_graphs_2.pdf')
-
-if (gf_only==T) { dt = dt[funder=='The Global Fund']
-outDir = paste0(dir, 'pnls_graphs_gf_only_2.pdf') }
-
-
-pdf(outDir, width=14, height=9)
+# export a pdf
+# pdf(outDir, width=14, height=9)
 
 #----------------------
 # COLOR SCHEMES
@@ -169,10 +119,28 @@ ggplot(fac, aes(x=date, y=value, color=sex, group=sex)) +
   scale_color_manual(values=quad_colors) +
   theme_bw() + labs(x='Date', y='Count', color='',
                     title="Reporting completeness: facilities reporting and patients who received a consultation*",
-                    caption='*Indicator: Clients tested') +
+                    caption='*Indicator: Clients tested; Global Fund health zones only') +
   theme(text=element_text(size=18), axis.title=element_text(size=18), axis.text=(element_text(size=16)),
         plot.title=element_text(size=20), legend.text =element_text(size=18),
-        plot.subtitle=element_text(size=16))
+        plot.subtitle=element_text(size=18))
+
+
+#-----------------
+# graph comparing reporting between pepfar and global fund facilities
+
+facilities_com = compare[ ,.(facilities_reporting=length(unique(org_unit))),
+                          by=.(funder, date)]
+
+ggplot(facilities_com, aes(x=date, y=facilities_reporting, color=funder)) +
+  geom_point(alpha=0.4) +
+  geom_line() +
+  facet_wrap(~funder, scales='free_y') +
+  scale_color_manual(values=quad_colors) +
+  theme_bw() + labs(x='Date', y='Count', color='',
+                    title="Facilities reporting per month by funder") +
+  theme(text=element_text(size=18), axis.title=element_text(size=18), axis.text=(element_text(size=16)),
+        plot.title=element_text(size=20), legend.text =element_text(size=18),
+        plot.subtitle=element_text(size=18))
 
 #-----------------
 # reporting over time by health facility level
@@ -386,7 +354,7 @@ ggplot(t5[!is.na(sex) & sex!='Couple'], aes(x=date, y=value, color=sex)) +
   scale_color_manual(values=sex_colors) +
   labs(color="", x='Date', y='Count', 
        title='HIV testing and counseling',
-       caption = "Note: counseled may not include key populations") +
+       caption = "Note: counseled variable does not list key populations") +
   theme(text = element_text(size=18)) + 
   theme_bw() + 
   scale_y_continuous(labels = scales::comma)
@@ -598,8 +566,22 @@ p2 = ggplot() +
 grid.arrange(p1, p2, nrow=1)
 
 #-------------------------------
-# tests performed by key population and by funder by year
-tf_bar = dt[ ,.(value=sum(value)), by=.(subpop, year=year(date), funder)]
+# tests performed by funder by year
+tf_bar = compare[ ,.(value=sum(value)), by=.(subpop, year=year(date), funder)]
+
+ggplot(tf_bar, aes(x=subpop, y=value, label=value, fill=factor(year))) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  theme_bw() +
+  facet_wrap(~funder, scales='free_y') +
+  scale_fill_manual(values = c('#9ebcda', '#0570b0')) +
+  labs(title = 'Tested for HIV and received the results by funder, year',
+       y='Tested for HIV', x="Key population", fill="Year") +
+  theme(text = element_text(size=16), axis.text.x=element_text(size=12, angle=90)) +
+  scale_y_continuous(labels = scales::comma)
+
+#-------------------------------
+# tests performed by funder by year - key populations only
+tf_bar = compare[ ,.(value=sum(value)), by=.(subpop, year=year(date), funder)]
 
 ggplot(tf_bar[subpop!='Clients'], aes(x=subpop, y=value, label=value, fill=factor(year))) +
   geom_bar(stat="identity", position=position_dodge()) +
@@ -610,7 +592,6 @@ ggplot(tf_bar[subpop!='Clients'], aes(x=subpop, y=value, label=value, fill=facto
        y='Tested for HIV', x="Key population", fill="Year") +
   theme(text = element_text(size=16), axis.text.x=element_text(size=12, angle=90)) +
   scale_y_continuous(labels = scales::comma)
-
 
 #-------------------------------
 # mean tests performed per facility for each sub population by funder, year

@@ -27,18 +27,18 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # dt = readRDS(paste0(dir, 'prepped/pnls_final/pnls_vct_final.rds'))
 
 # local directory
-# dir = "C:/Users/ccarelli/Documents/pnls_data/"
-# 
-# # read in the data locally
-# dt = readRDS(paste0(dir, 'pnls_vct_final.rds'))
+dir = "C:/Users/ccarelli/Documents/pnls_data/"
+
+# read in the data locally
+dt = readRDS(paste0(dir, 'pnls_vct_final.rds'))
 
 # subset the data table to only a single year
 year = 2018
 
 dt = dt[year(date)==year]
 
-# subset to gf only
-dt = dt[dps!='Kinshasa' & funder=='The Global Fund']
+# start with all provinces, then maps for just gf health zones
+
 #---------------------------------------------------
 # import the shape file
 
