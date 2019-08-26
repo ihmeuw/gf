@@ -43,7 +43,7 @@ model = '
   Proportion_of_HIV_TB_Cases_Treated_out ~ HIV_TB_Cases_Notified_out_cumulative 
   Treatment_Success_Rate_imp ~ Cases_Started_on_Treatment_out_cumulative 
   HIV_TB_Treatment_Success_Rate_imp ~ HIV_TB_Cases_Notified_out_cumulative 
-  Proportion_of_MDR_Cases_Treated_out ~ Number_of_Cases_Screened_for_MDR_act_cumulative + MDR_Cases_Started_Treatment_out_cumulative
+  Proportion_of_MDR_Cases_Treated_out ~  MDR_Cases_Started_Treatment_out_cumulative
   Proportion_of_Cases_in_Prisons_Treated_out ~ Cases_Notified_in_Prisons_out_cumulative
   Proportion_of_Patients_Receiving_DST_out ~ Number_of_Cases_Screened_for_MDR_act_cumulative 
   Children_in_Contact_with_TB_Started_IPT_out_cumulative ~ Children_less5_referred_out_cumulative 
