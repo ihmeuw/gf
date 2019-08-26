@@ -42,6 +42,15 @@ library(parallel)
 library(splitstackshape)
 # ------------------
 
+#----------------------------------
+#Set global variables - pulling to top so easier to read EL 8/15/19
+# Current model versions
+
+modelVersion1 = 'sen_tb_model1'
+#modelVersion2 = 'gtm_tb_sec_half4'
+
+START_YEAR = 2012 #If available, what's the earliest year you should model data from? 
+
 
 # ---------------------------------------------------------------------------------
 # Directories
