@@ -14,8 +14,9 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # load model results
 load(outputFile5a)
 data1=copy(data)
-means1 = copy(means)
-summaries1 = copy(summaries)
+# means1 = copy(means)
+# summaries1 = copy(summaries)
+urFits1 = copy(urFits)
 # load(outputFile5b)
 # data2=copy(data)
 # means2 = copy(means)
@@ -35,26 +36,26 @@ nodeTable1 = nodeTable1[variable %in% names(data1)]
 # Set up first half estimates
 
 # subset to coefficients of interest
-means1 = means1[op=='~' & !grepl('completeness|date',rhs)]
+urFits1 = urFits1[op=='~' & !grepl('completeness|date',rhs)]
 
 # compute uncertainty intervals
-means1[, lower:=est-(1.96*se)]
-means1[, lower.std:=est.std-(1.96*se.std)]
-means1[, upper:=est+(1.96*se)]
-means1[, upper.std:=est.std+(1.96*se.std)]
+urFits1[, lower:=est-(1.96*se)]
+urFits1[, lower.std:=est.std-(1.96*se.std)]
+urFits1[, upper:=est+(1.96*se)]
+urFits1[, upper.std:=est.std+(1.96*se.std)]
 
 # estimate the combination of coefficients and their next downstream coefficient (mediation)
 # (uncertainty needs improving)
-mediation_means = merge(means1, means1, by.x='rhs', by.y='lhs')
+mediation_means = merge(urFits1, urFits1, by.x='rhs', by.y='lhs', allow.cartesian=T)
 mediation_means[, est:=est.y*est.std.x]
 mediation_means[, se:=se.y*est.std.x]
 mediation_means[, lower:=est-(1.96*se)]
 mediation_means[, upper:=est+(1.96*se)]
 
 # pull in labels
-means1 = merge(means1, nodeTable1, by.x='lhs', by.y='variable')
-means1 = merge(means1, nodeTable1, by.x='rhs', by.y='variable')
-setnames(means1, c('label.x','label.y'), c('label_lhs','label_rhs'))
+urFits1 = merge(urFits1, nodeTable1, by.x='lhs', by.y='variable')
+urFits1 = merge(urFits1, nodeTable1, by.x='rhs', by.y='variable')
+setnames(urFits1, c('label.x','label.y'), c('label_lhs','label_rhs'))
 mediation_means = merge(mediation_means, nodeTable1, by.x='lhs', by.y='variable')
 mediation_means = merge(mediation_means, nodeTable1, by.x='rhs.y', by.y='variable')
 setnames(mediation_means, c('label.x','label.y'), c('label_lhs','label_rhs'))
@@ -71,7 +72,7 @@ long = melt(data1, id.vars=c('department','date'))
 long = long[, .(value=sum(value)), by=variable]
 
 # merge to means
-pooled_means1 = merge(means1, long, by.x='rhs', by.y='variable', all.x=TRUE)
+pooled_means1 = merge(urFits1, long, by.x='rhs', by.y='variable', all.x=TRUE)
 
 # take the weighted average across funders
 pooled_means1[grepl('\\$',label_rhs), label_rhs:='Pooled Investment']
@@ -112,25 +113,25 @@ pooled_means1[, upper:=est+(1.96*se)]
 # -----------------------------------------------
 # Display some statistics
 
-# ITN, ACT and RDT shipment costs
-for(c in c('ITN','ACT','RDT')) {
-	output = paste0(c, '_received_cumulative')
-	if (!output %in% pooled_means1$lhs) output = gsub('_cumulative','_cumulative',output) 
-	commodity_cost = pooled_means1[lhs==output,c('label_rhs','est','se'), with=F]
-	commodity_cost = commodity_cost[, .(est=sum(est), se=mean(se))]
-	commodity_cost[, lower:=est+(1.96*se)]
-	commodity_cost[, upper:=est-(1.96*se)]
-	commodity_cost$se = NULL
-	commodity_cost[, est:=1/est]
-	commodity_cost[, lower:=1/lower]
-	commodity_cost[, upper:=1/upper]
-	if(any(commodity_cost$upper<0)) {
-		commodity_cost[, upper:=as.character(upper)]
-		commodity_cost[grepl('-',upper), upper:='Negative']
-	}
-	print(paste0('Overall cost to ship one ', c, ':'))
-	print(commodity_cost)
-}
+# ITN, ACT and RDT shipment costs # CAN WE JUST DELETE FOR GTM ? EL 8/19/19
+# for(c in c('ITN','ACT','RDT')) {
+# 	output = paste0(c, '_received_cumulative')
+# 	if (!output %in% pooled_means1$lhs) output = gsub('_cumulative','_cumulative',output) 
+# 	commodity_cost = pooled_means1[lhs==output,c('label_rhs','est','se'), with=F]
+# 	commodity_cost = commodity_cost[, .(est=sum(est), se=mean(se))]
+# 	commodity_cost[, lower:=est+(1.96*se)]
+# 	commodity_cost[, upper:=est-(1.96*se)]
+# 	commodity_cost$se = NULL
+# 	commodity_cost[, est:=1/est]
+# 	commodity_cost[, lower:=1/lower]
+# 	commodity_cost[, upper:=1/upper]
+# 	if(any(commodity_cost$upper<0)) {
+# 		commodity_cost[, upper:=as.character(upper)]
+# 		commodity_cost[grepl('-',upper), upper:='Negative']
+# 	}
+# 	print(paste0('Overall cost to ship one ', c, ':'))
+# 	print(commodity_cost)
+# }
 
 # pooled, mediated means comparing different types of treatment
 
@@ -140,15 +141,11 @@ for(c in c('ITN','ACT','RDT')) {
 # ----------------------------------------------
 # Bottlenecks in efficiency and effectiveness
 
-actVars = c('ITN_received_cumulative', 'ACT_received_cumulative', 'RDT_received_cumulative')
-outVars1 = c('RDT_completed_cumulative', 'severeMalariaTreated_cumulative', 'totalPatientsTreated_cumulative')
-outVars2 = c('ACTs_SSC_cumulative', 'ITN_consumed_cumulative', 'SP_cumulative')
-outVarsTx = c('severeMalariaTreated_cumulative', 'totalPatientsTreated_cumulative', 'ACTs_SSC_cumulative')
-incVars = c('lead_newCasesMalariaMild_rate', 'lead_newCasesMalariaSevere_rate')
-mortVars = c('lead_malariaDeaths_rate', 'lead_case_fatality')
+actVars = names(data)[grep("act", names(data))]
+outVars = names(data)[grep("out", names(data))]
 
 # graph coefficients from inputs to activities
-p1 = ggplot(means1[lhs %in% actVars & rhs!='date'], 
+p1 = ggplot(urFits1[lhs %in% actVars & rhs!='date'], 
 		aes(y=est, ymin=lower, 
 			ymax=upper, x=label_rhs)) + 
 	geom_bar(stat='identity') + 
@@ -160,7 +157,7 @@ p1 = ggplot(means1[lhs %in% actVars & rhs!='date'],
 	coord_flip()
 	
 # graph coefficients from inputs to outputs
-p2 = ggplot(mediation_means[lhs %in% outVars1 & !rhs.y %in% actVars], 
+p2 = ggplot(mediation_means[lhs %in% outVars & !rhs.y %in% actVars], 
 		aes(y=est, ymin=lower, 
 			ymax=upper, x=label_rhs)) + 
 	geom_bar(stat='identity') + 
@@ -170,21 +167,10 @@ p2 = ggplot(mediation_means[lhs %in% outVars1 & !rhs.y %in% actVars],
 		y='Outputs per Additional Dollar Invested',x='Input') + 
 	theme_bw() + 
 	coord_flip()
-	
-# graph coefficients from inputs to outputs
-p3 = ggplot(mediation_means[lhs %in% outVars2 & !rhs.y %in% actVars], 
-		aes(y=est, ymin=lower, 
-			ymax=upper, x=label_rhs)) + 
-	geom_bar(stat='identity') + 
-	geom_errorbar(width=.25) + 
-	facet_wrap(~label_lhs, scales='free', ncol=1) + 
-	labs(title='Efficiency', subtitle='Outputs', 
-		y='Outputs per Additional Dollar Invested',x='Input') + 
-	theme_bw() + 
-	coord_flip()
+
 	
 # graph standardized coefficients from inputs to activities
-p4 = ggplot(means1[lhs %in% actVars & rhs!='date'], 
+p3 = ggplot(urFits1[lhs %in% actVars & rhs!='date'], 
 		aes(y=est.std, ymin=est.std-(1.96*se.std), 
 			ymax=est.std+(1.96*se.std), x=label_rhs)) + 
 	geom_bar(stat='identity') + 
@@ -195,36 +181,9 @@ p4 = ggplot(means1[lhs %in% actVars & rhs!='date'],
 	theme_bw() + 
 	coord_flip()
 	
-# graph coefficients from outcomes to incidence
-p5 = ggplot(means2[lhs %in% incVars], 
-		aes(y=100-est*100, ymin=100-lower*100, 
-			ymax=100-upper*100, x=label_rhs)) + 
-	geom_bar(stat='identity') + 
-	geom_errorbar(width=.25) + 
-	geom_hline(yintercept=0) + 
-	facet_wrap(~label_lhs, scales='free', ncol=1) + 
-	labs(title='Effectiveness', subtitle='Incidence', 
-		y='Percent Reduction in Incidence Rate per 1% Increase of Coverage',
-		x='Outcome') + 
-	theme_bw() + 
-	coord_flip()
-
-# graph coefficients from outcomes to incidence
-p6 = ggplot(means2[lhs %in% mortVars], 
-		aes(y=100-est*100, ymin=100-lower*100, 
-			ymax=100-upper*100, x=label_rhs)) + 
-	geom_bar(stat='identity') + 
-	geom_errorbar(width=.25) + 
-	geom_hline(yintercept=0) + 
-	facet_wrap(~label_lhs, scales='free', ncol=1) + 
-	labs(title='Effectiveness', subtitle='Mortality', 
-		y='Percent Reduction in Mortality Rate or Case Fatality Ratio per 1% Increase of Coverage', 
-		x='Outcome') + 
-	theme_bw() + 
-	coord_flip()
 	
 # graph pooled coefficients from inputs to activities
-p7 = ggplot(pooled_means1[lhs %in% actVars], 
+p4 = ggplot(pooled_means1[lhs %in% actVars], 
 		aes(y=est, ymin=lower, 
 			ymax=upper, x=label_lhs)) + 
 	geom_bar(stat='identity') + 
@@ -255,9 +214,6 @@ print(p1)
 print(p2)
 print(p3)
 print(p4)
-print(p5)
-print(p6)
-print(p7)
 dev.off()
 
 # save a time-stamped version for reproducibility

@@ -1,0 +1,14 @@
+variable,y,x,label
+gf_tb_cumulative,1,-10,GF TB Exp. 
+ghe_tb_cumulative,3.5,-10,GHE TB Exp. 
+odah_tb_cumulative,6,-10,Other DAH TB Exp. 
+gf_mdrtb_cumulative,8.5,-10,GF MDR-TB Exp. 
+gf_tbhiv_cumulative,11,-10,GF TB/HIV Exp. 
+Isoniazid_Distributed_act_cumulative,2,0,Isoniazid Dist. 
+Total_Drugs_Distributed_act_cumulative,5,0,Total Drugs Dist. 
+Number_of_Cases_Screened_for_MDR_act_cumulative,8,0,# Cases screened for MDR
+TB_Patients_Tested_for_HIV_act_cumulative,11,0,TB patients tested for HIV
+Cases_Notified_out_cumulative,2,10,Cases Notified
+Cases_Started_on_Treatment_out_cumulative,5,10,Cases Started Tx. 
+MDR_Cases_Started_Treatment_out_cumulative,8,10,MDR Cases Started Tx. 
+HIV_TB_Cases_Notified_out_cumulative,11,10,HIV/TB Cases Notified

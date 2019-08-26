@@ -8,7 +8,7 @@
 # ----------------------------------------------------------
 # Load data
 
-drc = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/inputs_outputs.RDS") #For comparison
+#drc = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/inputs_outputs.RDS") #For comparison
 
 # Read in the previously saved files for resource tracking in 2a
 resource_tracking <- readRDS(outputFile2a)
@@ -61,13 +61,26 @@ redistribution_mat[, redist_var:=paste0(input_var, "_redist")]
 
 #Calculate redistribution variables in main dataset. 
 #These calculations should be made dynamic if possible!! EL 8/13/19
-merge_file[, gf_tb_redist:=Isoniazid_Distributed_act+Total_Drugs_Distributed_act+Cases_Notified_out+Cases_Started_on_Treatment_out]
-merge_file[, gf_tbhiv_redist:=TB_Patients_Tested_for_HIV_act]
-merge_file[, gf_mdrtb_redist:=Number_of_Cases_Screened_for_MDR_act]
-merge_file[, ghe_tb_redist:=Isoniazid_Distributed_act+Total_Drugs_Distributed_act+Number_of_Cases_Screened_for_MDR_act+TB_Patients_Tested_for_HIV_act+
-             Cases_Notified_out+Cases_Started_on_Treatment_out]
-merge_file[, odah_tb_redist:=Isoniazid_Distributed_act+Total_Drugs_Distributed_act+Number_of_Cases_Screened_for_MDR_act+TB_Patients_Tested_for_HIV_act+
-             Cases_Notified_out+Cases_Started_on_Treatment_out]
+# including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
+source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.r'))
+
+# reduce the data down to only necessary variables
+parsedModel = lavParseModelString(model)
+lhs = parsedModel$lhs
+rhs = parsedModel$rhs
+modelVars = data.table(lhs=lhs, rhs=rhs)
+finVars = unique(redistribution_mat$input_var)
+
+# For each financial variable, get a vector of what variables it's leading to in the model, 
+# and add these together to create a redistribution amount. 
+for (v in finVars){
+  redist_vars = modelVars[rhs==(paste0(v, "_cumulative")), unique(lhs)] 
+  merge_file[, paste0(v, "_redist"):=0]
+  for (x in redist_vars){
+    x = gsub("_cumulative", "", x)
+    merge_file[, paste0(v, "_redist"):=sum(get(paste0(v, "_redist")), get(x), na.rm=T), by=c('date', 'department')]
+  }
+}
 
 #Make a variable for the number of departments for equal distribution if needed. 
 n_depts = length(departments)
@@ -130,7 +143,7 @@ for(i in 1:nrow(redistribution_mat)) {
 merge_file = merge_file[date>=START_YEAR] 
 
 # drop unnecessary variables
-merge_file = merge_file[, -c('mean','tmp','prop', 'min')] #Also removing 'min' EL 8/7/19
+merge_file = merge_file[, -c('mean','tmp','prop')] #Also removing 'min' EL 8/7/19
 
 # save
 saveRDS(merge_file, outputFile3)

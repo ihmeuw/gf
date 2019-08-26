@@ -1,17 +1,26 @@
 # ------------------------------------------------
-# David Phillips
+# Francisco Rios, David Phillips
 # 
-# 1/18/2019
+# 08/23/2019
 # This runs the SEM dose-response model (David presets)
 # The current working directory should be the root of this repository
-# qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5a_run_first_half_analysis.r
+# qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=12G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/sen/5a_run_first_half_analysis.r
+
 # This runs the SEM dose-response model (Emily presets) 
 # qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=6G -q all.q 
 # -P proj_pce -e /ihme/scratch/users/elineb/impact_evaluation/errors_output/ 
-# -o /ihme/scratch/users/elineb/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5a_run_first_half_analysis.r
+# -o /ihme/scratch/users/elineb/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/sen/5a_run_first_half_analysis.r
+
+# This runs the SEM dose-response model (Francisco presets) 
+# qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=6G -q all.q 
+# -P proj_pce -e /ihme/scratch/users/frc2/impact_evaluation/errors_output/ 
+# -o /ihme/scratch/users/elineb/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/sen/5a_run_first_half_analysis.r
+
+# qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=12G -q all.q -P ihme_general -e /ihme/homes/users/frc2/impact_evaluation/errors_output/ -o /ihme/homes/users/frc2/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/sen/5a_run_first_half_analysis.r
+
 # ------------------------------------------------
 
-source('./impact_evaluation/gtm/set_up_r.r')
+source('./impact_evaluation/sen/set_up_r.r')
 
 # ---------------------------
 # Settings
@@ -28,7 +37,7 @@ set.seed(1)
 load(outputFile4a)
 
 # store T (number of jobs)
-hzs = unique(data$department)
+hzs = unique(data$region)
 T = length(hzs)
 # ---------------------------
 
@@ -37,18 +46,18 @@ T = length(hzs)
 # Define model object
 # DECISIONS
 # including date as a control variable in linkage 1 regressions because otherwise all RT variables are positively correlated (when GF and other should be negative)
-source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.r'))
+source(paste0('./impact_evaluation/sen/models/', modelVersion1, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('department','date',modelVars)
+modelVars = c('region','date',modelVars)
 data = data[, unique(modelVars), with=FALSE] 
 # ----------------------------------------------
 
 
 # --------------------------------------------------------------
-# Run model with each department in parallel (if specified by runInParallel)
+# Run model with each region in parallel (if specified by runInParallel)
 if (runInParallel==TRUE) {
 
 	# save copy of input file for jobs
@@ -58,7 +67,7 @@ if (runInParallel==TRUE) {
 	qsubCommand = paste0('qsub -cwd -N ie1_job_array -t 1:', T, 
 		' -l fthread=1 -l m_mem_free=2G -q long.q -P proj_pce -e ', 
 		clustertmpDireo, ' -o ', clustertmpDireo, 
-		' ./core/r_shell_blavaan.sh ./impact_evaluation/gtm/5c_run_single_model.r ', 
+		' ./core/r_shell_blavaan.sh ./impact_evaluation/sen/5c_run_single_model.r ', 
 		modelVersion1, ' 1 FALSE FALSE') #There is a final argument here that doesn't do anything - it's a hack to get around UNIX vs. DOS EOL characters. EL 7.16.19
 			
 	# submit array job to the cluster if we're running this in parallel
@@ -96,7 +105,7 @@ if (runInParallel==FALSE) {
 
 	# run each iteration sequentially
 	for(task_id in seq(T)) {
-		source('./impact_evaluation/gtm/5c_run_single_model.r')
+		source('./impact_evaluation/sen/5c_run_single_model.r')
 	}
 }
 # --------------------------------------------------------------
@@ -141,12 +150,12 @@ save(list=c('data','model','urFits'), file=outputFile5a)
 # 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 # })
 # save(list=c('data','model','semFits','summaries','means','urFits'), file=outputFile5a_big)
-# save(list=c('data','model','urFits'), file=outputFile5a_big)
+save(list=c('data','model','urFits'), file=outputFile5a_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
 archive(outputFile5a, 'model_runs')
-# archive(outputFile5a_big, 'model_runs')
+archive(outputFile5a_big, 'model_runs')
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)

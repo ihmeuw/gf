@@ -104,6 +104,7 @@ final_budgets[grant == 'GTM-T-UPCOMING', grant:='GTM-T-MSPAS']
 final_budgets[grant == 'GTM-M-UPCOMING', grant:='GTM-M-MSPAS']
 final_budgets[grant == 'UGD-708-G13-H', grant:='UGA-708-G13-H']
 
+
 #Wherever there is a grant quarter in the final budgets that doesn't exist in GOS, take that whole grant for the grant 
 # period and replace the GOS with the final budgets data. 
 gos_data[, start_date:=as.Date(start_date)]
@@ -114,7 +115,18 @@ gos_data$lfa_exp_adjustment<-NULL
 #Bind the files together. 
 gos_prioritized_budgets = rbind(final_budgets, gos_data, fill = TRUE) #There are some columns that don't exist in both sources, so fill = TRUE
 
+#---------------------------------------------------------------------------------------
+# Verify that you're using the correct GF grant periods - 
+# both by comparing across grant sources and using the metadata from the GF's website. 
+#---------------------------------------------------------------------------------------
+stopifnot(nrow(gos_prioritized_budgets[is.na(grant_period)])==0)
+metadata = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv")
+
+
+
+#----------------------------------------------------
 #Check for overlapping grant periods in recent data. 
+#----------------------------------------------------
 grant_period_mat = unique(gos_prioritized_budgets[, .(data_source, grant, grant_period, file_name, start_date)])
 grant_period_mat[, min_date:=min(start_date), by=c('file_name', 'grant', 'grant_period', 'data_source')]
 grant_period_mat[, max_date:=max(start_date), by=c('file_name', 'grant', 'grant_period', 'data_source')]
@@ -272,8 +284,11 @@ if (nrow(date_check)!=0){
 }
 
 # Write data 
-write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures_", Sys.Date(), ".csv"), row.names = FALSE)
-saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures_", Sys.Date(), ".rds"))
+write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rds"))
+
+#Archive one version with a date-stamp
+saveRDS(gos_prioritized_expenditures, paste0(final_write, "arhive/final_expenditures_", Sys.Date(), ".rds"))
 
 #----------------------------------
 # 3. ABSORPTION

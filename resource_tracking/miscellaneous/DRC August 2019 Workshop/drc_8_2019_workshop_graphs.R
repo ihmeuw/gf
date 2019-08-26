@@ -11,7 +11,7 @@ library(scales)
 
 # Load data 
 budgets = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_budgets.rds") #Read this in, so you have the GOS appended. 
-budgets = budgets[loc_name=="cod"]
+budgets = budgets[loc_name=="cod" & year<=2020 & year>=2015 & data_source=="fpm"]
 absorption = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/prepped_data/absorption_cod.rds")
 other_dah = readRDS("J:/Project/Evaluation/GF/resource_tracking/_fgh/prepped_data/other_dah_actuals_all_cod.rds")
 
@@ -27,8 +27,10 @@ save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/random/cod
 
 #First, tag all HIV-testing interventions. 
 testing_codes = c('H2_7', 'H3_7', 'H4_6', 'H5_7', 'H6_7', 'H7_3', 'H8_5', 'H14', 'H14_1')
-testing = budgets[code%in%testing_codes] #HIV testing was only split out as a unique module in 2015. I have general interventions for the general population before that. 
+testing = budgets[code%in%testing_codes, .(quarter, year, budget, gf_module, orig_intervention)] #HIV testing was only split out as a unique module in 2015. I have general interventions for the general population before that. 
 
+dt1 = budgets[code%in%testing_codes & grant=="COD-H-SANRU", .(budget=sum(budget)), by=c('year', 'gf_module')][order(year)] #The problem is that when I do this calculation, this is correct, but later on, the HIV testing services for 2016 has changed. 
+#Time series plot
 test1 = testing[, .(budget=sum(budget, na.rm=T)), by=c('quarter', 'year')]
 test1[, date:=((quarter/4)-0.25)+year]
 
@@ -40,34 +42,78 @@ test_plot1 = ggplot(test1, aes(x=date, y=budget)) +
   labs(title="Global Fund investment in HIV Testing, DRC", x="Date", y="Budget", caption="*Specific investments in HIV testing are only traceable from 2015 on")
 ggsave(paste0(save_loc, "testing_time_trend.png"), test_plot1, height=10, width=13)
 
+#Fix one coding error here - this should be corrected back in mapping process. 
+correction = expand.grid(orig_intervention = "Depistage du VIH et conseil dans le cadre des programmes destines aux hommes ayant des rapports sexuels avec des hommes et aux transgenres", 
+                         divide=c(TRUE, FALSE))
+setDT(correction)
+correction[, correction:=TRUE]
+nrow(testing)
+pre_merge = nrow(testing[orig_intervention=="Depistage du VIH et conseil dans le cadre des programmes destines aux hommes ayant des rapports sexuels avec des hommes et aux transgenres"])
+
+testing = merge(testing, correction, by=c('orig_intervention'), allow.cartesian=T, all=T)
+post_merge =  nrow(testing[orig_intervention=="Depistage du VIH et conseil dans le cadre des programmes destines aux hommes ayant des rapports sexuels avec des hommes et aux transgenres"])
+
+stopifnot(pre_merge*2==post_merge) #Validate that you've expanded the right # of rows. 
+nrow(testing) #1184 - pre_merge = 928, so this is correct. 
+
+#Divide money that you've expanded, and correct gf_module. 
+testing[correction==TRUE, budget:=budget/2]
+testing[divide==TRUE, gf_module:="Comprehensive prevention programs for transgender people"]
+
+
 test2 = testing[, .(budget=sum(budget, na.rm=T)), by=c('year', 'gf_module')]
 test2[gf_module=="Comprehensive prevention programs for men who have sex with men", gf_module:="Men who have sex with men"]
 test2[gf_module=="Comprehensive prevention programs for people who inject drugs and their partners", gf_module:="People who inject drugs and their partners"]
 test2[gf_module=="Comprehensive prevention programs for sex workers and their clients", gf_module:="Sex workers and their clients"]
 test2[gf_module=="Comprehensive prevention programs for transgender people", gf_module:="Transgender people"]
 test2[gf_module=="HIV Testing Services", gf_module:="General HIV Testing"]
-mod_by_year = function(date){
-  dt = test2[year==date]
-  dt[, total:=sum(budget)]
-  dt[, prop:=paste0(round((budget/total)*100, 2), "%")]
-  
-  plot = ggplot(dt, aes(x=gf_module, y=budget, fill=gf_module)) + 
-    geom_bar(stat="identity", position="dodge") + 
-    coord_flip() +
-    theme_bw() + 
-    theme(axis.text.y=element_blank(), axis.title.y=element_blank()) + 
-    geom_text(aes(label=prop), vjust=0) + 
-    scale_y_continuous(labels=dollar_format()) + 
-    labs(title=paste0("Global Fund investment in HIV Testing for ", date), y="Budget", fill="Subpopulation", caption="*Specific investments in HIV testing are only traceable from 2015 on")
-  return(plot)
-}
 
-pdf(paste0(save_loc, 'testing_stacked_bar.pdf'), height=6, width=12)
-for (y in sort(unique(test2$year))){
-  plot = mod_by_year(y)
-  print(plot)
-}
-dev.off()
+test2[order(year)]
+# mod_by_year = function(date){
+#   dt = test2[year==date]
+#   dt[, total:=sum(budget)]
+#   dt[, prop:=paste0(round((budget/total)*100, 2), "%")]
+#   
+#   plot = ggplot(dt, aes(x=gf_module, y=budget, fill=gf_module)) + 
+#     geom_bar(stat="identity", position="dodge") + 
+#     coord_flip() +
+#     theme_bw() + 
+#     theme(axis.text.y=element_blank(), axis.title.y=element_blank()) + 
+#     geom_text(aes(label=prop), vjust=0) + 
+#     scale_y_continuous(labels=dollar_format()) + 
+#     labs(title=paste0("Global Fund investment in HIV Testing for ", date), y="Budget", fill="Subpopulation", caption="*Specific investments in HIV testing are only traceable from 2015 on")
+#   return(plot)
+# }
+
+# pdf(paste0(save_loc, 'testing_stacked_bar.pdf'), height=6, width=12)
+# for (y in sort(unique(test2$year))){
+#   plot = mod_by_year(y)
+#   print(plot)
+# }
+# dev.off()
+
+#General stacked bar plot 
+test_plot2 = ggplot() + geom_bar(aes(x=year, y=budget, fill=gf_module), data=test2, stat="identity") + 
+  labs(title=paste0("Global Fund investment in HIV Testing"), x="Year",  y="Budget", fill="Subpopulation", caption="*Specific investments in HIV testing are only traceable from 2015 on") + 
+  theme_bw() + 
+  scale_y_continuous(labels=dollar_format()) 
+ggsave(paste0(save_loc, "testing_stacked_bar1.png"), test_plot2, height=10, width=13)
+
+# test_plot2 = ggplot(data=test2, aes(x=year, y=budget, fill=gf_module)) + geom_bar(stat="identity") + 
+#   labs(title=paste0("Global Fund investment in HIV Testing"), x="Year",  y="Budget", fill="Subpopulation", caption="*Specific investments in HIV testing are only traceable from 2015 on") + 
+#   theme_bw() + 
+#   scale_y_continuous(labels=dollar_format()) + 
+#   geom_text(label=paste0("$", round(test2$budget)), size=4)
+# ggsave(paste0(save_loc, "testing_stacked_bar1_label.png"), test_plot2, height=10, width=13)
+
+#Percentage stacked bar plot 
+test2[, total:=sum(budget), by='year']
+test2[, pct:=round((budget/total)*100, 2)]
+
+test_plot3 = ggplot() + geom_bar(aes(x=year, y=pct, fill=gf_module), data=test2, stat="identity") + 
+  labs(title=paste0("Global Fund investment in HIV Testing"), x="Year",  y="Percentage", fill="Subpopulation", caption="*Specific investments in HIV testing are only traceable from 2015 on") + 
+  theme_bw() + 
+ggsave(paste0(save_loc, "testing_stacked_bar2.png"), test_plot3, height=10, width=13)
 
 #--------------------------------------------------------------------------------------------------
 # •	Do you have the HIV funding landscape by type of activity? I seem to remember you did. 

@@ -41,7 +41,7 @@ library(splitstackshape)
 #Set global variables - pulling to top so easier to read EL 8/15/19
 # Current model versions
 
-modelVersion1 = 'gtm_tb_first_half7'
+modelVersion1 = 'gtm_tb_first_half10'
 modelVersion2 = 'gtm_tb_sec_half4'
 
 START_YEAR = 2009 #If available, what's the earliest year you should model data from? 
@@ -98,7 +98,7 @@ whoFile = paste0(whoDir, 'who_prepped.rds')
 sicoinFile = paste0(sicoinDir, 'prepped_sicoin_data.rds')
 
 # activities/outputs files
-actFile = paste0(rawIeDir, "activities_8.9.19.csv")
+actFile = paste0(rawIeDir, "activities_8.21.19.csv")
 outputsFile = paste0(rawIeDir, "outputs_8.9.19.csv")
 
 # outcomes/impact files
@@ -148,12 +148,8 @@ outputFile2c = paste0(preppedIeDir, 'outcomes_impact.rds')
 # output file from 3_merge_data.R
 outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')
 
-# output file from 3_merge_secon_half.R
-outputFile3a = paste0(preppedIeDir, 'outputs_outcomes_impact.RDS')
-
-# output files from 3b_correct_to_models.r
-outputFile3b = paste0(preppedIeDir, 'outcomes_impact.RDS')
-outputFile3bGraphs = paste0(visIeDir, 'outcomes_impact_results.pdf')
+# output file from 3b_merge_model_halves.R
+outputFile3b = paste0(preppedIeDir, 'combined_halves.RDS')
 
 # output file from 4a_set_up_for_analysis.r
 outputFile4a = paste0(preppedIeDir, 'first_half_pre_model.rdata')

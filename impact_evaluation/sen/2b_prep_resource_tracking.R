@@ -1,20 +1,19 @@
 # ----------------------------------------------------------
 # AUTHOR: Francisco RIos-Casas
-# PURPOSE: To prep resource tracking data to merge with outputs, outcomes
+# PURPOSE: To prep resource tracking data to merge with outputs, outcomes for SENEGAL
 # DATE: August 14 2019
 # ----------------------------------------------------------
 
 # Set up
-library(data.table)
+source('impact_evaluation/sen/set_up_r.R')
 
 #------------------------------------
 #Read in previously prepped datasets 
 #------------------------------------
 
-final_expenditures <- readRDS('J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/sen/prepped_data/final_expenditures.RDS')
-fgh <- readRDS('J:/Project/Evaluation/GF/resource_tracking/_fgh/prepped_data/other_dah_actuals_all_sen.RDS')
+final_expenditures <- readRDS('J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures.rds')
 who <- readRDS('J:/Project/Evaluation/GF/resource_tracking/_ghe/who/prepped_data/who_prepped.RDS')
-
+fgh <- readRDS('J:/Project/Evaluation/GF/resource_tracking/_fgh/prepped_data/other_dah_actuals_all_sen.RDS')
 fgh = fgh[, .(year, loc_name, disease, code, gf_module, gf_intervention, channel_agg, source, disbursement)]
 setnames(fgh, old=c('gf_module', 'gf_intervention'), new=c('module', 'intervention'))
 
@@ -23,13 +22,28 @@ setnames(fgh, old=c('gf_module', 'gf_intervention'), new=c('module', 'interventi
 #------------------------------------
 
 # Subset to only the columns we want from resource tracking database 
-exp_subset = final_expenditures[disease %in% c("rssh", "tb"), .(expenditure, start_date, code, disease, gf_module, gf_intervention)] # kept only TB & RSSH funding
+exp_subset = final_expenditures[grant %in% c("SEN-Z-MOH", "SNG-T-PLAN", "SNG-T-PNT"), .(expenditure, start_date, code, disease, gf_module, gf_intervention)] # kept only Z grant & Tb-spec funding
 setnames(exp_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
 
+# aggregate total expenditure to the modular level with proper code value and variable name
+exp_subset = exp_subset[, c("code_m", "code_i") := tstrsplit(code, "_", fixed=TRUE)]
+exp_subset = exp_subset[, .(expenditure=sum(expenditure, na.rm=TRUE)), by=c('start_date', 'disease', 'module', 'code_m')]
+setnames(exp_subset, old=c('code_m'), new=c('code'))
+
+# subset to only the columns we want from other develoment assistance for health
 other_dah = fgh[(source != 'The Global Fund' & source != 'ghe') & loc_name=='SEN' & (disease == 'tb' | disease == 'hss' | disease == 'rssh'), 
                 .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(year, loc_name, disease, code, module, intervention)]
+
+# aggregate other_dah to the modular level with proper code value and variable name
+other_dah = other_dah[, c("code_m", "code_i") := tstrsplit(code, "_", fixed=TRUE)]
+other_dah = other_dah[, .(other_dah=sum(other_dah, na.rm=TRUE)), by=c('year', 'loc_name', 'disease', 'module', 'code_m')]
+setnames(other_dah, old=c('code_m'), new=c('code'))
+
+# subset domestic ghe expenditure on TB in senegal
 ghe = who[loc_name == 'sen' & indicator=='domestic_ghe_tb', .(ghe = sum(expenditure, na.rm = TRUE)), 
           by = .(year)]
+
+
 
 # Split data into quarters
 n_years <- (2018-1990)+1 #This is the range we have data for. 
@@ -48,12 +62,6 @@ ghe[, date:=year+quarter]
 exp_subset[, quarter:=quarter(start_date)]
 exp_subset[, year:=year(start_date)]
 exp_subset[, start_date:=NULL]
-###############################
-# Limitation: wasn't sure wich variables to keep, .i.e., which are the relevant ones for the model yet
-# also what is the code from the map
-#Match exp and FGH data to codes to only keep relevant modules/interventions (all = TRUE)
-# keep_codes = unique(drc_mal_map$code)
-###############################
 
 #Create date variable
 exp_subset[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
@@ -97,9 +105,8 @@ rt_wide = merge(rt_wide, ghe, by='date', all.x = TRUE)
 #Save output file
 # outputFile2a will eventually move code below to "set-up" file
 
-# switch J for portability to cluster
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j, '/Project/Evaluation/GF/')
-ieDir = paste0(dir, 'impact_evaluation/sen/prepped_data/')
-outputFile2a = paste0(ieDir, 'prepped_resource_tracking.RDS')
+# remove columns we don't want (T4 Program Management, T99 Unspecified TB Spending, R1 Procurement and supply chain management systems, community responses and systems, unspecified RSSH)
+rt_wide = rt_wide[,c("exp_R1", "exp_R7", "other_dah_R99", "exp_T4", "other_dah_T99"):=NULL]
+
+# save
 saveRDS(rt_wide, outputFile2a)
