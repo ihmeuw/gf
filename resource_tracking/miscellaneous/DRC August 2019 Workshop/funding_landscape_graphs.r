@@ -1,3 +1,7 @@
+
+library(data.table) 
+library(ggplot2)
+
 # Make quick DRC funding landscape for malaria only. 
 save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/random/cod/august_2019_workshop/"
 
@@ -45,7 +49,13 @@ ghe_agg = ghe[year>=2003, .(disbursement=sum(value, na.rm=T)), by=c('year')]
 ghe_agg[, channel_agg:='GHE']
 
 merge_file = rbind(odah_agg2, ghe_agg)
-funding_landscape2 = ggplot(data = merge_file, aes(x = year, y = disbursement, fill = channel_agg)) + 
+
+# There is one year that's missing for 2010 for GHE - just fill that year with a 0, so it doesn't bump the graph up at all. 
+merge_file = rbind(merge_file, data.table(year=2010, channel_agg="GHE", disbursement=0))
+order = c("GHE", "Multilateral organizations (GAVI, CEPI)", "NGOs and foundations", "Other bilateral assistance",
+          "U.S. bilateral assistance", "UN agencies, The World Bank and\nother regional development banks", "The Global Fund")
+merge_file[, channel_agg_factor:=factor(channel_agg, order, labels=order)]
+funding_landscape2 = ggplot(data = merge_file, aes(x = year, y = disbursement, fill = channel_agg_factor)) + 
   geom_ribbon(aes(ymin = 0, ymax = disbursement), position = "stack") + 
   theme_bw(base_size = 14) + theme(legend.title = element_blank())+
   scale_y_continuous(labels = scales::dollar) +
