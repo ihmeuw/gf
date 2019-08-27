@@ -110,7 +110,7 @@ DT1$financing_source <- factor(DT1$financing_source, levels = c("Domestic spendi
 
 b <- ggplot(DT1, aes(x=year,y=disbursement, fill=financing_source)) + 
   geom_area(position = 'stack') +
-  labs(title = "TB Spending in Senegal, 2005-2018", 
+  labs(title = "TB Spending in Senegal (USD), 2005-2018", 
        caption = "Data source: FGH disbursement data. \n Note: Government health spending on TB is unavailable for 2007, 2010, 2011, and 2012",
        fill="Financing source") +
   scale_y_continuous(labels=dollar) +
@@ -133,8 +133,8 @@ DT$financing_source <- factor(DT$financing_source, levels = c("Multilateral orga
 
 c <- ggplot(DT, aes(x=year,y=disbursement, fill=financing_source)) + 
   geom_area(position = 'stack') +
-  labs(title = "TB Spending in Senegal, 2005-2018", 
-       caption = "Data source: FGH disbursement data. \n Note: Government health spending on TB for 2013 was 12.46 million USD",
+  labs(title = "TB Spending in Senegal (USD), 2005-2018", 
+       caption = "Data source: FGH disbursement data.",
        fill = "Financing source") +
   scale_y_continuous(labels=dollar) +
   scale_fill_brewer(palette = "Set3") +
@@ -151,8 +151,8 @@ domesticdataavail <- data.table(year=c(2005, 2006, 2008, 2009, 2013),
 d <- ggplot(domesticdataavail, aes(x=year, y=disbursement)) +
   geom_line() +
   geom_point() +
-  labs(title = "Domestic Spending on TB, 2005-2013", 
-       caption = "Data source: IHME FGH  data.") +
+  labs(title = "Domestic Spending on TB (USD), 2005-2013", 
+       caption = "Data source: IHME FGH  data. \n Note: Government health spending on TB for 2013 was 12.46 million USD") +
   scale_y_continuous(labels=dollar) +
   ylab("amount") +
   scale_x_continuous(breaks = seq(2005, 2018, 2)) +

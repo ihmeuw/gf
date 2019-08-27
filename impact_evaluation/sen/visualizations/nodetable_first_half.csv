@@ -1,0 +1,16 @@
+variable,y,x,label
+lag_other_dah_T1_cumulative,13.5,-10,Lag of TB Care and Prev other ($)
+lag_exp_T1_cumulative,8.5,-10,Lag of TB Care and Prev GF ($)
+lag_exp_R2_cumulative,6,-10,"Lag of RSSH: HMIS, ME GF ($)"
+lag_exp_R3_cumulative,4.25,-10,Lag of RSSH: HR for Health GF ($)
+lag_exp_T2_cumulative,1,-10,Lag of TB-HIV GF ($)
+com_radio_cumulative,13,0,Radio broadcasts (#)
+com_cause_cumulative,11.5,0,Community chats (#)
+com_mobsoc_cumulative,10,0,Social mobilizations (#)
+tot_genexpert_cumulative,7.5,0,Genexpert Tests (#)
+com_nom_touss_cumulative,12.5,10,Those with cough screened (#)
+com_enf_ref_cumulative,9.75,10,Child Contacts Ref. (#)
+tb_tfc_cumulative,8,10,TB Cases identified (#)
+perf_lab,6.5,10,Lab Performance
+ntr_rhz_cumulative,5,10,Treated First-line (#)
+tb_vih_arv_cumulative,1,10,TB-HIV Rec. ARV (#)
