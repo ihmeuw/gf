@@ -151,6 +151,7 @@ dt$subpop = factor(dt$subpop,
 #----------------------------------
 # equality constraints check on testing and positive
 # if there are more HIV cases reported than tests, remove the value
+# remove the value if one is missing and the other is not 
 
 check = dt[variable=='Tested and received the results' | variable=='HIV+']
 check = check[ ,.(value=sum(value)), by = .(org_unit_id, date, variable, sex, age, subpop)]
