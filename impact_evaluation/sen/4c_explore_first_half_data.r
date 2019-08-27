@@ -16,7 +16,7 @@ library(GGally)
 load(outputFile4a)
 
 # load model object
-modelVersion = 'sen_tb_model1'
+modelVersion = 'sen_tb_model_first_half'
 source(paste0('./impact_evaluation/sen/models/', modelVersion, '.R'))
 
 # load "node table" for convenient labels
@@ -152,5 +152,5 @@ for(i in seq(length(histograms))) {
 dev.off()
 
 # save a time-stamped version for reproducibility
-archive('J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data/../visualizations/archive/first_half_exploratory_graphs_2019_08_22_16_16_57.pdf')
+archive(outputFile4c)
 # --------------------------------

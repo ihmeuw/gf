@@ -1,5 +1,5 @@
 # ------------------------------------------------
-# Francisco Rios, David Phillips
+# Francisco Rios, adapted from code by David Phillips and Emily Linebarger
 # 
 # 08/23/2019
 # This runs the SEM dose-response model (David presets)
@@ -26,7 +26,7 @@ source('./impact_evaluation/sen/set_up_r.r')
 # Settings
 
 # whether to run each department in parallel or not
-runInParallel = TRUE
+runInParallel = FALSE
 
 # ---------------------------
 
@@ -101,8 +101,8 @@ if (runInParallel==FALSE) {
 	# 5 is the model object name,
 	# 6 is whether to run the first or second half,
 	# 7 is whether to do a test run
-	args = c('a', 'b', 'c', 'd', modelVersion, '1', 'FALSE')
-
+	args = c('a', 'b', 'c', 'd', modelVersion1, '1', 'FALSE')
+	
 	# run each iteration sequentially
 	for(task_id in seq(T)) {
 		source('./impact_evaluation/sen/5c_run_single_model.r')
@@ -150,12 +150,12 @@ save(list=c('data','model','urFits'), file=outputFile5a)
 # 	suppressWarnings(readRDS(paste0(clustertmpDir2, 'first_half_semFit_', i, '.rds')))
 # })
 # save(list=c('data','model','semFits','summaries','means','urFits'), file=outputFile5a_big)
-save(list=c('data','model','urFits'), file=outputFile5a_big)
+#save(list=c('data','model','urFits'), file=outputFile5a_big)
 
 # save a time-stamped version for reproducibility
 print('Archiving files...')
 archive(outputFile5a, 'model_runs')
-archive(outputFile5a_big, 'model_runs')
+#archive(outputFile5a_big, 'model_runs')
 
 # clean up in case jags saved some output
 if(dir.exists('./lavExport/')) unlink('./lavExport', recursive=TRUE)
