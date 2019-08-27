@@ -33,7 +33,9 @@ sub_data = outputs_outcomes[,.(region, centre, date,
                                  ntr_rhz, ntr_erhz, ntr_serhz, ntr_cpx,
                                  tot_genexpert, tot_confirme, tot_res,
                                  tbtot_taux_det,
-                                 gueris_total, gueris_taux, trait_tot, trait_pc, tb_vih_arv)]
+                                 gueris_total, gueris_taux, trait_tot, trait_pc, tb_vih_arv 
+                               #,tpm_chimio_enf, tpm_chimio_pvvih
+                               )]
 
 # aggregate data to the admin1 (Regions in Senegal)
 
@@ -41,7 +43,9 @@ sub_data = outputs_outcomes[,.(region, centre, date,
 summed_data = sub_data[, lapply(.SD, sum), by=c('region','date'), .SDcols=c('tb_tfc',
                                                                             'ntr_rhz', 'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 
                                                                             'tot_genexpert', 'tot_confirme', 'tot_res',
-                                                                            'gueris_total', 'trait_tot', 'tb_vih_arv')]
+                                                                            'gueris_total', 'trait_tot', 'tb_vih_arv'
+                                                                            #, 'tpm_chimio_enf', 'tpm_chimio_pvvih'
+                                                                            )]
 
 
 # VALUES WHICH MUST BE AVERAGED (percents or rates)
@@ -62,41 +66,48 @@ data2 <- merge(data1, divided_data, by = c("region", "date"), all = TRUE)
 
 # first rectangualrize the tb_mdr_data
 # rectangularize before merge
-hzFrame = unique(outputs_outcomes[, c('region')])
-i=1
-for(d in unique(resource_tracking$date)) {
-  hzFrame[, date:=d]
-  if(i==1) frame = copy(hzFrame)
-  if(i>1) frame = rbind(frame, hzFrame)
-  i=i+1
-}
-
-tb_mdr_rect = merge(frame, tb_mdr, by=c('region', 'date'), allow.cartesian=TRUE, all=TRUE)
-
-# Merge rectangularized tb_mdr and outputs/activites data 
-outcome_data <- merge(tb_mdr_rect, data2, by=c('region', 'date'), all=TRUE)
+# hzFrame = unique(outputs_outcomes[, c('region')])
+# i=1
+# for(d in unique(resource_tracking$date)) {
+#   hzFrame[, date:=d]
+#   if(i==1) frame = copy(hzFrame)
+#   if(i>1) frame = rbind(frame, hzFrame)
+#   i=i+1
+# }
+# 
+# tb_mdr_rect = merge(frame, tb_mdr, by=c('region', 'date'), allow.cartesian=TRUE, all=TRUE)
+# 
+# # Merge rectangularized tb_mdr and outputs/activites data 
+# outcome_data <- merge(tb_mdr_rect, data2, by=c('region', 'date'), all=TRUE)
 
 # ----------------------------------------------------------------------
 # Merge rectangularized resource tracking and outputs/activites data 
-merge_file <- merge(outcome_data, resource_tracking, by=c('date'), all=TRUE)
+merge_file <- merge(data2, resource_tracking, by=c('date'), all=TRUE)
 
 # --------------------------------------------------------------------------
 # Distribute inputs by health zone proportionally to activities
 
 # list variables that need redistribution
 # note: these vectors must be the same length and order matters
-inVars = c('other_dah_R3', 'other_dah_T1', 'other_dah_T3',
-           'exp_R2', 'exp_R3', 'exp_T1', 
-           'exp_T2', 'exp_T3','ghe')
+inVars = c('other_dah_R3', 'other_dah_T1', 
+           #'other_dah_T3',
+           'exp_R2', 'exp_T1', 
+           'exp_T2', 
+           #'exp_T3',
+           'ghe')
 
 # list corresponding variables to define distribution proportions
-actVars = c('value_rssh_act','value_detection_act', 'mdr_tb_dx',
-            'value_rssh_act', 'value_rssh_act', 'value_detection_act',
-            'tb_vih_arv', 'mdr_tb_dx', 'ntr_rhz')
+actVars = c('value_rssh_act','value_detection_act', 
+            #'value_mdr',
+            'value_rssh_act', 'value_detection_act',
+            'tb_vih_arv', 
+            #'mdr_tb_dx', '
+            'ntr_rhz')
 
 # create combined variables for redistribution where necessary
-merge_file[, value_detection_act:=com_mobsoc + com_cause + com_radio + tot_genexpert]
 merge_file[, value_rssh_act:=com_enf_ref + com_nom_touss + tb_tfc + perf_lab]
+merge_file[, value_detection_act:=com_mobsoc + com_cause + com_radio + tot_genexpert]
+#merge_file[, value_mdr:=mdr_tb_dx + mdr_tb_tx]
 
 
 # loop over financial variables and redistribute subnationally
@@ -128,6 +139,7 @@ for(i in seq_along(inVars)) {
 
 # drop unnecessary variables
 merge_file = merge_file[, -c('mean','tmp','prop','value_detection_act','value_rssh_act')]
+# need to add merge variables back in
 
 # save
 saveRDS(merge_file, outputFile3)
