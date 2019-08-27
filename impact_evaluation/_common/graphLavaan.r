@@ -48,7 +48,7 @@
 semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_factors=NA, 
 	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, uncertainty=TRUE, 
 	labSize1=3, labSize2=2.4, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, buffer=c(.25,.25,.25,.25),
-	curved=0, tapered=TRUE, dim=FALSE, highlight=NULL, colScaleMin=-0.5, colScaleMax=1) {
+	curved=0, tapered=TRUE, dim=FALSE, highlight=NULL, colScaleMin=-0.5, colScaleMax=1.1) {
 
 	# ------------------------------------------------------
 	# Load functions/parameters

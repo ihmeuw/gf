@@ -12,7 +12,7 @@
 library(faraway) #For viewing collinearity, below. 
 
 # load
-data = readRDS(outputFile3)
+data = readRDS(outputFile3b)
 
 # 	
 # 	# set other_dah to NA (not 0) after 2016
@@ -78,9 +78,11 @@ modelVars = gsub("_cumulative", "", modelVars)
 # drop zero-variance variables
 # numVars = names(data)[!names(data)%in%c('department','date')]
 #EMILY - WE WANT TO ONLY IMPUTE VARIABLES THAT ARE COUNTS. 
-numVars = c("Number_of_Cases_Screened_for_MDR_act", "Second_Line_Drugs_Distributed_act", "Total_Drugs_Distributed_act", "Isoniazid_Distributed_act", "PLHIV_Screened_for_TB_act", "TB_Patients_Tested_for_HIV_act", 
+numVars = c("Number_of_Cases_Screened_for_MDR_act", "Second_Line_Drugs_Distributed_act", "Isoniazid_Distributed_act", "PLHIV_Screened_for_TB_act", 
+            "TB_Patients_Tested_for_HIV_act", 
             "MDR_Cases_Notified_out", "MDR_Cases_Started_Treatment_out", "Cases_Notified_in_Prisons_out", "Children_in_Contact_with_TB_Started_IPT_out", 
-            "Cases_Started_on_Treatment_out", "Cases_Notified_out", "PLHIV_started_on_IPT_out", "Cases_Started_on_Treatment_in_Prisons_out", "HIV_TB_Cases_Notified_out" )
+            "Cases_Started_on_Treatment_out", "Cases_Notified_out", "PLHIV_started_on_IPT_out", "Cases_Started_on_Treatment_in_Prisons_out", "HIV_TB_Cases_Notified_out", 
+            "Firstline_Distributed_act", "Secondline_Distributed_act")
 for(v in numVars) if (all(is.na(data[[v]]))) data[[v]] = NULL
 
   #CURRENTLY NOT IMPUTING ADDITIONAL CASES DETECTED VIA ACF BECAUSE WE KNOW IT'S VERY DEPARTMENT SPECIFIC- ANY OTHERS? EL 8/12/19
@@ -129,6 +131,8 @@ for (v in allVars){
 
 #------------------------------------------------------------
 # Drop variables that are not being used in model object before cumulative sum. 
+missingVars = modelVars[!modelVars%in%names(data)]
+if (length(missingVars)!=0) print("There are missing model variables!")
 data = data[, c(modelVars, 'department', 'date'), with=F]
 
 
