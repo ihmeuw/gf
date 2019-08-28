@@ -2,30 +2,41 @@
 # data prep for Drivers of mortality analysis plan
 # August 8, 2019
 
-# Limitation 1 :TB data is disaggregated by HIV status, so that would need to be combined to get an overall value
-
 # set up
 library(data.table)
 library(ggplot2)
-library(GGally)
-outFile1 = 'J:/Project/Evaluation/GF/impact_evaluation/mortality/prepped_data/tb_pce_data.RDS'
+
+j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
+dir = paste0(j, "/Project/Evaluation/GF/impact_evaluation/mortality/")
+
+inFile = paste0(dir, "gbd_estimates_tb_pce_countries.csv")
+outFile = paste0(dir, "prepped_data/tb_pce_data.RDS")
 
 # read data
-TB <- fread("J:/Project/Evaluation/GF/impact_evaluation/mortality/tb_all_gbd.csv")
+TB = fread(inFile)
 
 # subset data to include:
-TB = TB[cause_name=="Drug-susceptible tuberculosis"]
-TB = TB[metric_name=="Rate"]
-TB = TB[age_name=="Age-standardized"]
+if ( length(unique(TB$metric_name))!= 1 & unique(TB$metric_name) != "Rate" ) TB = TB[metric_name=="Rate"]
+if ( length(unique(TB$age_group_name))!= 1 & unique(TB$age_group_name) != "Age-standardized" ) TB = TB[age_group_name=="Age-standardized"]
 
 # keep columns of interest
-TB = TB[,.(measure_name, cause_name, location_name, year,val)]
+TB = TB[,.(year_id, location_name, cause_name, measure_name, val)]
+names(TB) = c('year', 'country', 'disease', 'measure', 'val')
+
+# sum across TB types
+TB = TB[, .(val = sum(val)), by = .(year, country, measure)]
+TB[, disease := "tb_all_types"]
 
 # reshape the data to be wide
-data = dcast(TB, cause_name + location_name + year ~ measure_name, value.var = "val")
+data = dcast(TB,year + country + disease ~ measure, value.var = "val")
+
+# remove 2018 because right now 2018 not avail
+data = data[year != 2018]
 
 #  compute MI ration
-data$mi_ratio <- data$Deaths/data$Incidence
+data[, mi_ratio := Deaths/Incidence]
 
 # save data for further analysis
-saveRDS(data, outFile1)
+saveRDS(data, outFile)
+
+

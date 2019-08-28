@@ -17,7 +17,7 @@ source('./impact_evaluation/sen/set_up_r.r')
 # task_id = 16
 # modelStage = 1
 # testRun = TRUE
-# modelVersion = "sen_tb_model1"
+# modelVersion1 = "sen_tb_model1"
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -32,17 +32,17 @@ if(length(args)==0) stop('No commandArgs found!')
 #Pass arguments to the cluster 
 
 # the first argument should be the model version to use
-modelVersion = args[7]
+modelVersion = args[5]
 #
 # # the second argument should be the "model stage" (1 or 2)
-modelStage = as.numeric(args[8])
+modelStage = as.numeric(args[6])
 #
 # # the third argument should be whether to run a test run (TRUE) or full run (FALSE)
-testRun = as.logical(args[9])
+testRun = as.logical(args[7])
 
 
 # print for log
-print(paste('Model Version:', modelVersion))
+print(paste('Model Version:', modelVersion1))
 print(paste('Model Stage:', modelStage))
 print(paste('Test Run:', testRun))
 # ----------------------------------------------
@@ -62,7 +62,7 @@ d = unique(data$region)[task_id]
 subData = data[region==d]
 
 # define model object
-source(paste0('./impact_evaluation/sen/models/', modelVersion, '.r'))
+source(paste0('./impact_evaluation/sen/models/', modelVersion1, '.r'))
 
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)

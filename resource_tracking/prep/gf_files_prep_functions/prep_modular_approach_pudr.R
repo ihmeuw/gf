@@ -15,31 +15,31 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
   # Set up file path 
-  # folder = "budgets"
-  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  # if (file_list$file_iteration[i]=="initial"){
-  #   version = "iterations"
-  # } else if (file_list$file_iteration[i]=="revision"){
-  #   version= "revisions"
-  # } else {
-  #   version = ""
-  # }
-  # grant_period = file_list$grant_period[i]
-  # 
-  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
-  # if (version != ""){
-  #   file_dir = paste0(file_dir, version, "/")
-  # }
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet_financial[i]
-  # start_date = file_list$start_date_financial[i]
-  # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # grant = file_list$grant[i]
-  # recipient = file_list$primary_recipient
-  # source = file_list$data_source[i]
-  # qtr_number = file_list$qtr_number[i]
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  if (file_list$file_iteration[i]=="initial"){
+    version = "iterations"
+  } else if (file_list$file_iteration[i]=="revision"){
+    version= "revisions"
+  } else {
+    version = ""
+  }
+  grant_period = file_list$grant_period[i]
+
+  file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  if (version != ""){
+    file_dir = paste0(file_dir, version, "/")
+  }
+  dir = file_dir
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet_financial[i]
+  start_date = file_list$start_date_financial[i]
+  period = file_list$period[i]
+  disease = file_list$disease[i]
+  grant = file_list$grant[i]
+  recipient = file_list$primary_recipient
+  source = file_list$data_source[i]
+  qtr_number = file_list$qtr_number[i]
 
   # -----------------------------------------------------------------------------
   # Test the inputs to make sure that they are the correct type

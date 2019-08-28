@@ -12,8 +12,7 @@ source('./impact_evaluation/sen/set_up_r.r')
 # -----------------------------------------------------------------
 # Load/prep data
 
-# data = readRDS(outputFile3)
-data = readRDS('J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data/inputs_outputs.RDS')
+data = readRDS(outputFile3)
 
 # bring in population estimates where possible if the model is a per-capita model
 #if(fileLabel=='_pc') { 
@@ -93,7 +92,10 @@ cumulVars = names(data)[grepl('exp_|other_dah|ghe|oop', names(data))]
 cumulVars = c(cumulVars, 'tb_tfc', 'ntr_rhz', 'ntr_erhz', 
 	'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 'tot_confirme', 
 	'com_cause', 'com_radio', 'com_enf_ref', 'com_mobsoc', 
-	'com_nom_touss', 'com_enf_ref', 'tb_vih_arv', 'tot_genexpert', 'mdr_tb_dx', 'mdr_tb_tx')
+	'com_nom_touss', 'com_enf_ref', 'tb_vih_arv', 'tot_genexpert'
+	#,'mdr_tb_dx', 'mdr_tb_tx' 
+	#,'tb_vih_arv', 'tpm_chimio_enf', 'tpm_chimio_pvvih'
+	)
 #cumulVars = cumulVars[!cumulVars %in% c('value_ACTs_SSC_under5')] # drop until we can create this variable
 for(v in cumulVars) { 
 	nv = gsub('value_','',v) 
@@ -104,7 +106,7 @@ for(v in cumulVars) {
 untransformed = copy(data)
 
 # update the complVars vector to refer to any proportion variable
-complVars = c('perf_lab')
+complVars = c('perf_lab', 'gueris_taux')
 
 # transform completeness variables using approximation of logit that allows 1's and 0's
 # (Smithson et al 2006 Psychological methods "A better lemon squeezer")

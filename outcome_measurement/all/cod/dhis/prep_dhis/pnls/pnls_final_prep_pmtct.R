@@ -134,7 +134,7 @@ unique(dt[grep("service", element), .(element, element_id)])
 # Collapse the variables 
 print(paste0("There were ", nrow(dt), " rows of data before collapse."))
 
-Vars = names(dt)[names(dt)!='value' & names(dt)!='element_id' & names(dt)!='element' & names(dt)!='last_update' & names(dt)!='coordinates']
+Vars = names(dt)[names(dt)!='value' & names(dt)!='element' & names(dt)!='last_update' & names(dt)!='coordinates'] #These variables will be collapsed out! 
 dt = dt[,.(value=sum(value)), by=Vars]
 
 print(paste0("There are ", nrow(dt), " rows of data after collapse."))

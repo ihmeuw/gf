@@ -1,5 +1,5 @@
 # -----------------------------------
-# David Phillips
+# Francisco Rios, David Phillips
 # 
 # 2/4/2019
 # This visualizes results of the SEM
@@ -9,7 +9,7 @@
 # -----------------------------------------------
 # Load/prep data and functions
 
-source('./impact_evaluation/gtm/set_up_r.r')
+source('./impact_evaluation/sen/set_up_r.r')
 
 # load home-made sem graphing function
 source('./impact_evaluation/_common/graphLavaan.r')
@@ -30,7 +30,7 @@ urFits1 = copy(urFits)
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
-nodeTable2 = fread(nodeTableFile2)
+#nodeTable2 = fread(nodeTableFile2)
 
 names(data1)[!names(data1)%in%nodeTable1$variable]
 
@@ -51,6 +51,7 @@ urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # urFit2[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
 # urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # -----------------------------------------------
+
 
 #Some visualization code for model run 8/15/19 
 # View(urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Notified_out_cumulative"])
@@ -85,12 +86,11 @@ urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
 	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
+	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -2, colScaleMax=4)
 
 p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
               scaling_factors=NA, standardized=TRUE, 
-              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5, 
-              labSize1 = 4, labSize2 = 4)
+              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-2, colScaleMax=4)
 
 # my sem graph function for second half "unrelated regressions" model
 # p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
@@ -107,25 +107,22 @@ p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1,
 #MDR pathway 
 p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
+              lineWidth=1.5, curved=0, tapered=FALSE, 
               dim=TRUE, highlight=c("Number_of_Cases_Screened_for_MDR_act_cumulative", "MDR_Cases_Started_Treatment_out_cumulative", 
-                                    "Secondline_Distributed_act_cumulative", "Proportion_of_MDR_Cases_Treated_out", 
-                                    "Proportion_of_Patients_Receiving_DST_out", 
-                                    "gf_mdrtb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative"))
+                                    "Secondline_Distributed_act_cumulative", "gf_mdrtb_cumulative"))
 
 #Cases notified pathway
 p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
+              lineWidth=1.5, curved=0, tapered=FALSE, 
               dim=TRUE, highlight=c("Cases_Notified_out_cumulative", "Additional_Cases_Detected_via_ACF_out_cumulative", 
                                     "Children_less5_referred_out_cumulative", "gf_tbhiv_cumulative", "gf_mdrtb_cumulative", 
-                                    "Case_Notification_Rate_imp", "Children_in_Contact_with_TB_Started_IPT_out_cumulative", 
-                                    "gf_tb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative"))
+                                    "gf_tb_cumulative"))
 
 #GHE pathway 
 p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
+              lineWidth=1.5, curved=0, tapered=FALSE, 
               dim=TRUE, highlight=c("ghe_tb_cumulative", "Number_of_Cases_Screened_for_MDR_act_cumulative", 
                                     "Cases_Notified_out_cumulative", "Cases_Started_on_Treatment_out_cumulative", "Firstline_Distributed_act_cumulative", 
                                     "TB_Patients_Tested_for_HIV_act_cumulative"))
@@ -138,8 +135,11 @@ pdf(outputFile6a, height=6, width=9)
 # print(p2)
 # print(p3)
 # print(p4)
-print(p5)
-print(p5_nolab)
+#print(p5)
+#print(p5_nolab)
+#print(p7)
+#print(p8)
+#print(p9)
 # print(p6)
 dev.off()
 
@@ -148,15 +148,15 @@ archive(outputFile6a)
 # -----------------------------------
 # 
 # #Save just the GLM diagrams with correlation coefficients as PNGs. 
-ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p5, height=10, width=13)
-# ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p6, height=10, width=13)
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/sen/visualizations/model_first_half.png", p5, height=10, width=13)
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/sen/visualizations/model_second_half.png", p6, height=10, width=13)
 
-sep_terg_save = "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/september_terg_presentation/"
+#sep_terg_save = "J:/Project/Evaluation/GF/impact_evaluation/sen/visualizations/september_terg_presentation/"
 #Save the specific graphics for reports in their own folder. 
-ggsave(paste0(sep_terg_save, "model_first_half_coefficients.png"), p5, height=10, width=13)
-ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nolab, height=10, width=13)
+#ggsave(paste0(sep_terg_save, "model_first_half_coefficients.png"), p5, height=10, width=13)
+#ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nolab, height=10, width=13)
 # ggsave(paste0(sep_terg_save, "model_second_half_coefficients.png"), p6, height=10, width=13)
 # ggsave(paste0(sep_terg_save, "model_second_half_coefficients_nolab.png"), p6_nolab, height=10, width=13)
-ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
-ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
-ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)
+#ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
+#ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
+#ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)

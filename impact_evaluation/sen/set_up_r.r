@@ -12,7 +12,7 @@
 # Output file labels (set to '' for default) 
 # in case we're running some secondary analysis
 # this only affects files from step 4c onward
-fileLabel = ''
+#fileLabel = ''
 # --------------------------------------------
 
 
@@ -46,7 +46,7 @@ library(splitstackshape)
 #Set global variables - pulling to top so easier to read EL 8/15/19
 # Current model versions
 
-modelVersion1 = 'sen_tb_model1'
+modelVersion1 = 'sen_tb_model_first_half'
 #modelVersion2 = 'gtm_tb_sec_half4'
 
 START_YEAR = 2012 #If available, what's the earliest year you should model data from? 
@@ -60,7 +60,10 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # directories
 dir = paste0(j, '/Project/Evaluation/GF/')
-ieDir = paste0(dir, 'impact_evaluation/sen/prepped_data/')
+ieDir = paste0(dir, 'impact_evaluation/sen/')
+rawIeDir = paste0(ieDir, 'raw_data/')
+preppedIeDir =  paste0(ieDir, 'prepped_data/')
+visIeDir = paste0(ieDir, 'visualizations/')
 rtDir = paste0(dir, 'resource_tracking/_gf_files_gos/combined_prepped_data/')
 fghDir = paste0(dir, 'resource_tracking/_fgh/prepped_data/')
 whoDir = paste0(dir, 'resource_tracking/_ghe/who/prepped_data/')
@@ -127,22 +130,26 @@ admin2ShapeFile = paste0(dir, '/mapping/sen/shapefiles/gadm36_SEN_2.shp')
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph
-nodeTableFile1 = paste0('./impact_evaluation/sen/visualizations/nodetable_first_half', fileLabel, '.csv')
-nodeTableFile2 = paste0('./impact_evaluation/sen/visualizations/nodetable_second_half', fileLabel, '.csv')
+nodeTableFile1 = './impact_evaluation/sen/visualizations/nodetable_first_half.csv'
+#nodeTableFile1 = paste0('./impact_evaluation/sen/visualizations/nodetable_first_half', fileLabel, '.csv')
+#nodeTableFile2 = paste0('./impact_evaluation/sen/visualizations/nodetable_second_half', fileLabel, '.csv')
 # ---------------------------------------------------------------------------------
 
 
 # # ---------------------------------------------------------------------------------
 # # Intermediate file locations
-if (Sys.info()[1]!='Windows') {
 username = Sys.info()[['user']]
 clustertmpDir1 = paste0('/ihme/scratch/users/', username, '/impact_evaluation/combined_files/')
 clustertmpDir2 = paste0('/ihme/scratch/users/', username, '/impact_evaluation/parallel_files/')
 clustertmpDireo = paste0('/ihme/scratch/users/', username, '/impact_evaluation/errors_output/')
-if (file.exists(clustertmpDir1)!=TRUE) dir.create(clustertmpDir1) 
-if (file.exists(clustertmpDir2)!=TRUE) dir.create(clustertmpDir2) 
-if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo) 
+if (Sys.info()[1]!='Windows') {
+        if (file.exists(clustertmpDir1)!=TRUE) dir.create(clustertmpDir1) 
+        if (file.exists(clustertmpDir2)!=TRUE) dir.create(clustertmpDir2) 
+        if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo) 
 }
+
+#Add a temporary IE dir for when running on a local computer - this should match clustertmpDir2 when running on cluster!
+tempIeDir = paste0('C:/Users/frc2/Documents/scratch/impact_evaluation/parallel_files/')
 # # ---------------------------------------------------------------------------------
 # 
 # 
@@ -150,7 +157,7 @@ if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo)
 # # Output Files
 # 
 # output file from 2a_prep_resource_tracking.r
- outputFile2a = paste0(ieDir, 'prepped_resource_tracking.RDS')
+ outputFile2a = paste0(preppedIeDir, 'prepped_resource_tracking.RDS')
 # 
 # # output file from 2b_prep_activities_outputs.R
 # outputFile2b = paste0(ieDir, 'outputs_activites_for_pilot.RDS')
@@ -161,37 +168,37 @@ if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo)
 # outputFile2c = paste0(ieDir, 'outcomes_impact.rds')
 # 
 # output file from 3_merge_data.R
-outputFile3 = paste0(ieDir, 'inputs_outputs.RDS')
+outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')
 # 
 # # output files from 3b_correct_to_models.r
 # outputFile3b = paste0(ieDir, 'outcomes_impact_corrected.RDS')
 # outputFile3bGraphs = paste0(ieDir, '../visualizations/crosswalking_results.pdf')
 
 # # output file from 4a_set_up_for_analysis.r
- outputFile4a = paste0(ieDir, 'first_half_pre_model.rdata')
+ outputFile4a = paste0(preppedIeDir, 'first_half_pre_model.rdata')
  if (Sys.info()[1]!='Windows') { 
  outputFile4a_scratch = paste0(clustertmpDir1, 'first_half_data_pre_model.rdata')
 }
 # 
 # # output file from 4b_set_up_for_second_half_analysis.r
-outputFile4b = paste0(ieDir, 'second_half_data_pre_model.rdata')
+outputFile4b = paste0(preppedIeDir, 'second_half_data_pre_model.rdata')
 if (Sys.info()[1]!='Windows') { 
 outputFile4b_scratch = paste0(clustertmpDir1, 'second_half_data_pre_model.rdata')
  }
 
 # output file from 4c and 4d_explore_data.r (graphs)
-outputFile4c = paste0(ieDir, '../visualizations/first_half_exploratory_graphs', fileLabel, '.pdf')
-# outputFile4d = paste0(ieDir, '../visualizations/second_half_exploratory_graphs', fileLabel, '.pdf')
-# 
- # output file from 5a_run_first_half_analysis.R
-outputFile5a = paste0(ieDir, 'first_half_model_results', fileLabel, '.rdata')
+outputFile4c = paste0(visIeDir, 'first_half_exploratory_graphs.pdf')
+outputFile4d = paste0(visIeDir, 'second_half_exploratory_graphs.pdf')
+ 
+# output file from 5a_run_first_half_analysis.R
+outputFile5a = paste0(preppedIeDir, 'first_half_model_results.rdata')
 # 
 # output file from 5b_run_second_half_analysis.r
-outputFile5b = paste0(ieDir, 'second_half_model_results', fileLabel, '.rdata')
-# 
-# # output file from 6_display_results.r
-# outputFile6a = paste0(ieDir, '../visualizations/sem_diagrams', fileLabel, '.pdf')
-# outputFile6b = paste0(ieDir, '../visualizations/efficiency_effectiveness_graphs', fileLabel, '.pdf')
-# outputFile6c = paste0(ieDir, '../visualizations/impact_analysis', fileLabel, '.pdf')
-# outputFile6d = paste0(ieDir, '../visualizations/health_zone_effects', fileLabel, '.pdf')
+outputFile5b = paste0(preppedIeDir, 'second_half_model_results.rdata')
+
+# output file from 6_display_results.r
+outputFile6a = paste0(visIeDir, 'sem_diagrams.pdf')
+outputFile6b = paste0(visIeDir, 'bottleneck_analysis.pdf')
+outputFile6c = paste0(visIeDir, 'impact_analysis.pdf')
+outputFile6d = paste0(visIeDir, 'health_zone_effects.pdf')
 # # -----------------------------------------------------------------------------

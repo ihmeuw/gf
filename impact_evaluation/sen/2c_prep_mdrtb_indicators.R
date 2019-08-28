@@ -6,6 +6,7 @@
 
 # set-up
 library(data.table)
+library(Amelia)
 
 # set directory where data is saved
 dir <- "C:/Users/frc2/Documents/Data/tb/raw_data/tb_mdr"
@@ -123,14 +124,20 @@ dt4$regime[which(dt4$regime=="COURT")] <- "Court"
 dt4$regime[which(dt4$regime=="LONG")] <- "Long"
 #------------------------------------------------
 
+##################################################
+# Impute missing values
+##################################################
+
 
 #------------------------------------------------
-# Get counts using datatable
+# Get counts using datatable of treated and diagnosed
+
 
 # Generate counts of MDR-TB cases diagnoses by region and quarter
 dt4$count <- 1
 mdr_tb_dx <- dt4[,.(region, date_diag, count)]
 mdr_tb_tx <- dt4[,.(region, date_trait, count)]
+
 
 #Split each data set out by quarter
 mdr_tb_dx[, quarter:=quarter(date_diag)]
@@ -152,7 +159,31 @@ mdr_tb_dx <- mdr_tb_dx[,.(mdr_tb_dx=sum(count)), by=c('region', 'date')]
 mdr_tb_tx <- mdr_tb_tx[,.(mdr_tb_tx=sum(count)), by=c('region', 'date')]
 
 # merge data
-tb_mdr_data <- merge(mdr_tb_dx, mdr_tb_tx, by=c("region", "date"), all = TRUE)
+merge1 <- merge(mdr_tb_dx, mdr_tb_tx, by=c("region", "date"), all = TRUE)
+
+# calculate cure rate by year
+# Count how many successfully treated
+dt4$gueris <- NA
+dt4$gueris[which(dt4$resultat=="Gueris")] <- 1
+
+mdr_tb_gueris <- dt4[,.(region, date_trait, count, gueris)]
+
+mdr_tb_gueris[, quarter:=quarter(date_trait)]
+mdr_tb_gueris[, year:=year(date_trait)]
+mdr_tb_gueris[, date_trait:=NULL]
+
+mdr_tb_gueris[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+mdr_tb_gueris[, date:=year+quarter]
+
+mdr_tb_gueris <- mdr_tb_gueris[,.(mdr_tb_gueris=sum(gueris, na.rm = TRUE)), by=c('region', 'date')]
+
+# merge data
+tb_mdr_data <- merge(merge1, mdr_tb_gueris, by=c("region", "date"), all=TRUE)
+
+# calculate cure rate
+tb_mdr_data$taux_gueris <- tb_mdr_data$mdr_tb_gueris/tb_mdr_data$mdr_tb_tx
+
+
 
 # save file
 setwd("J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data")
