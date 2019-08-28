@@ -7,6 +7,10 @@
 #----------------------
 # To do 
 #Want to bring in abbreviated module labels, 
+# Pass a specific intervention to limit to 
+# Split by intervention 
+# show stacked budget/expenditure instead of absorption%
+# Show projected absorption
 #-----------------------
 
 #Function that can provide the absorption landscape of a given country, grant period, and disease.  
@@ -21,6 +25,7 @@
 # yScaleMax - What's the cutoff point for the y-axis labels (absorption as a %?)
 # barColor - specify a color palette or bar color. 
 # trimAbsorption - should absorption be cut off at 150%? 
+#limitModules - pass a character vector of the Global Fund modules to limit the graph to. 
 
 absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, bySemester=FALSE, byModule=FALSE, byGrant=FALSE, 
                                 grantName=NULL, yScaleMax=160, barColor="royalblue", barLabels = FALSE, 
