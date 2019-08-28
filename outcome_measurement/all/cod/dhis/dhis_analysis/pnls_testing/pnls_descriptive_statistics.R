@@ -1,3 +1,6 @@
+
+dir = "C:/Users/ccarelli/Documents/pnls_data/"
+
 # descriptive statistics
 
 
@@ -50,8 +53,6 @@ rate[ , hiv2018:=round(hiv2018)]
 #----------------------------------------------------
 # export the table 
 
-dir = "C:/Users/ccarelli/Documents/pnls_data/"
-
 write.csv(rate, paste0(dir, 'pnls_hiv_testing_table_gf_only.csv'))
 
 
@@ -90,11 +91,46 @@ tests = tests[,.(value=sum(value)),
 
 tests = dcast(tests, key+date~variable)
 
-tests[ ,pos:=round(100*(hiv/tests), 1)
+tests[ ,pos:=round(100*(hiv/tests), 1)]
 
 
 
 dt[variable=='Tested and received the results', sum(value), by=year(date)]
+
+
+
+
+#-----------------------------------
+# PEFAR versus GF table
+
+# tests performed
+keyt = compare[variable=='Tested and received the results' & subpop!='Clients', .(value=sum(value)), by=.(funder, variable)]
+cltt = compare[variable=='Tested and received the results' & subpop=='Clients', .(value=sum(value)), by=.(funder, variable)]
+totalt = compare[variable=='Tested and received the results', .(value=sum(value)), by=.(funder, variable)]
+keyt[ ,subpop:='Key populations']
+cltt[ ,subpop:='Clients']
+totalt[ ,subpop:='Total']
+tested = rbind(keyt, cltt, totalt)
+
+# hiv+
+keyh = compare[variable=='HIV+' & subpop!='Clients', .(value=sum(value)), by=.(funder, variable)]
+clth = compare[variable=='HIV+' & subpop=='Clients', .(value=sum(value)), by=.(funder, variable)]
+totalh = compare[variable=='HIV+', .(value=sum(value)), by=.(funder, variable)]
+keyh[ ,subpop:='Key populations']
+clth[ ,subpop:='Clients']
+totalh[ ,subpop:='Total']
+hiv = rbind(keyh, clth, totalh)
+
+table = rbind(tested, hiv)
+dcast(table, subpop+funder~variable)
+
+
+
+
+
+
+
+
 
 
 
