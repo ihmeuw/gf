@@ -10,14 +10,14 @@ source('./impact_evaluation/sen/set_up_r.r')
 # ----------------------------------------------------------
 # Load data
 
-# Read in the previously saved files for resource tracking in 2a
-resource_tracking <- readRDS('J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data/prepped_resource_tracking.RDS')
+# Read in the previously saved file for outputs/outcomes in 2a
+outputs_outcomes <- readRDS(outputFile2a)
 
-# Read in the previously saved file for outputs/outcomes in 2b
-outputs_outcomes <- readRDS('J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data/prepped_outputs_outcomes.RDS')
+# Read in the previously saved files for resource tracking in 2b
+resource_tracking <- readRDS(outputFile2b)
 
 # Read in the previously saved file for outcomes for tb_mdr in 2c
-tb_mdr <- readRDS('J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data/prepped_tb_mdr_data.RDS')
+#tb_mdr <- readRDS(outputFile2c)
 
 # -----------------------------------------------------------------------------------------------------
 # Prep data on outputs_outcomes
@@ -27,38 +27,43 @@ tb_mdr <- readRDS('J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data/p
 outputs_outcomes = outputs_outcomes[, date:=annee+((trimestre-1)/4)]
 
 # keep only variables that are relevant for the model
-sub_data = outputs_outcomes[,.(region, centre, date, 
+sub_data = outputs_outcomes[,.(region, centre, date, type,
                                  com_mobsoc, com_cause, com_radio, com_enf_ref, com_nom_touss, 
                                  tb_tfc, perf_lab, 
                                  ntr_rhz, ntr_erhz, ntr_serhz, ntr_cpx,
                                  tot_genexpert, tot_confirme, tot_res,
                                  tbtot_taux_det,
-                                 gueris_total, gueris_taux, trait_tot, trait_pc, tb_vih_arv 
-                               #,tpm_chimio_enf, tpm_chimio_pvvih
+                                 gueris_total, gueris_taux, trait_tot, trait_pc, tb_vih_arv,
+                                 tpm_chimio_enf, tpm_chimio_pvvih
                                )]
 
-# aggregate data to the admin1 (Regions in Senegal)
+# aggregate data to the admin1 (Regions in Senegal) ----------------------------------------------------------
 
 # VALUES WHICH CAN BE SUMMED (counts)
-summed_data = sub_data[, lapply(.SD, sum), by=c('region','date'), .SDcols=c('tb_tfc',
+summed_data = sub_data[, lapply(.SD, sum, na.rm=TRUE), by=c('region','date'), .SDcols=c('tb_tfc',
                                                                             'ntr_rhz', 'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 
                                                                             'tot_genexpert', 'tot_confirme', 'tot_res',
-                                                                            'gueris_total', 'trait_tot', 'tb_vih_arv'
-                                                                            #, 'tpm_chimio_enf', 'tpm_chimio_pvvih'
-                                                                            )]
-
+                                                                            'gueris_total', 'trait_tot', 'tb_vih_arv')]
 
 # VALUES WHICH MUST BE AVERAGED (percents or rates)
-averaged_data = sub_data[, lapply(.SD, mean, na.rm=TRUE), by=c('region','date'), .SDcols=c('perf_lab', 'tbtot_taux_det', 'gueris_taux', 'trait_pc')]
-
+averaged_data = sub_data[, lapply(.SD, mean, na.rm=TRUE), by=c('region','date'), .SDcols=c('tbtot_taux_det', 'gueris_taux', 'trait_pc')]
 
 # VALUES WHICH MUST BE DIVIDED EVENLY (data reported in annual totals only)
 divided_data = sub_data[, lapply(.SD, mean, na.rm=TRUE), by=c('region', 'date'), .SDcols=c('com_mobsoc', 'com_cause', 'com_radio', 'com_enf_ref', 'com_nom_touss')]
 divided_data = divided_data[, lapply(.SD, function(x){x*0.25}), by=c('region', 'date'), .SDcols=c('com_mobsoc', 'com_cause', 'com_radio', 'com_enf_ref', 'com_nom_touss')]
 
+# VALUES WHICH ARE NOT REPORTED BY HOSPITALS and MUST BE AVERAGED
+exc_data = sub_data[type!="HOPITAL", lapply(.SD, mean, na.rm=TRUE), by=c('region','date'), .SDcols=c('perf_lab', 'tbtot_taux_det', 'trait_pc')]
+
+# VALUES WHICH ARE NOT REPORTED BY HOSPITALS and can be SUMMED
+exc_summed_data = sub_data[type!="HOPITAL", lapply(.SD, sum, na.rm=TRUE), by=c('region','date'), .SDcols=c('tpm_chimio_enf', 'tpm_chimio_pvvih')]
+
 # merge properly formatted outputs data
 data1 <- merge(summed_data, averaged_data, by = c("region", "date"), all = TRUE)
 data2 <- merge(data1, divided_data, by = c("region", "date"), all = TRUE)
+data3 <- merge(data2, exc_data, by = c("region", "date"), all = TRUE)
+outputs_prepped <- merge(data3, exc_summed_data, by = c("region", "date"), all = TRUE)
+
 
 #----------------------------------------------------------------------------------
 # Merge TB-MDR data to other outcomes data
@@ -82,7 +87,11 @@ data2 <- merge(data1, divided_data, by = c("region", "date"), all = TRUE)
 
 # ----------------------------------------------------------------------
 # Merge rectangularized resource tracking and outputs/activites data 
-merge_file <- merge(data2, resource_tracking, by=c('date'), all=TRUE)
+
+# ------------------------------------------------------
+# merge tb_mdr when it's ready
+# ------------------------------------------------------
+merge_file <- merge(outputs_prepped, resource_tracking, by=c('date'), all=TRUE)
 
 # --------------------------------------------------------------------------
 # Distribute inputs by health zone proportionally to activities
@@ -98,16 +107,15 @@ inVars = c('other_dah_R3', 'other_dah_T1',
 
 # list corresponding variables to define distribution proportions
 actVars = c('value_rssh_act','value_detection_act', 
-            #'value_mdr',
+            #'mdr_tb_dx',
             'value_rssh_act', 'value_detection_act',
             'tb_vih_arv', 
-            #'mdr_tb_dx', '
+            #'mdr_tb_dx',
             'ntr_rhz')
 
 # create combined variables for redistribution where necessary
 merge_file[, value_rssh_act:=com_enf_ref + com_nom_touss + tb_tfc + perf_lab]
 merge_file[, value_detection_act:=com_mobsoc + com_cause + com_radio + tot_genexpert]
-#merge_file[, value_mdr:=mdr_tb_dx + mdr_tb_tx]
 
 
 # loop over financial variables and redistribute subnationally
