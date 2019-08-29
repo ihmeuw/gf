@@ -60,7 +60,7 @@ if (gf_only==TRUE) dt = dt[funder=='The Global Fund']
 # HIV Testing Visualizations
 
 # export a pdf
-# pdf(outDir, width=14, height=9)
+pdf(outDir, width=16, height=9)
 
 #----------------------
 # COLOR SCHEMES
@@ -864,7 +864,7 @@ ggplot(pos_bar_funder[subpop!='Clients'], aes(x=subpop, y=value, label=value, fi
   theme_bw() +
   scale_fill_manual(values = c('#fdae61', '#c2a5cf')) +
   labs(title = 'HIV cases identified by funder and key population',
-       subtitle=paste0('2017 - 2018 (n = ', n_1c, ')'), x='Key Population',
+       subtitle=paste0('2017 - 2018 (key populations n = ', n_1c, ')'), x='Key Population',
        y='Number tested HIV+', fill='Funder') +
   theme(axis.text.x=element_text(size=16, angle=90), axis.text.y=element_text(size=16))
 
@@ -994,8 +994,8 @@ ggplot(cad2, aes(x=date, y=ratio, color=subpop)) +
   facet_wrap(~label, scales='free_y') +
   theme_bw() +
   labs(title = "Test positivity rate by sub-population",
-       x='Date', y='Percent (%)', color="") +
-  theme(text = element_text(size=18), legend.position="none")
+       x='Date', y='Percent positive (%)', color="") +
+  theme(text = element_text(size=18), legend.position="none", axis.text.x=element_text(size=16, angle=90))
 
 #-----------------------------------
 # tests positivity rate by sub-population 
@@ -1017,11 +1017,10 @@ n_tests = cad3[subpop!='Clients' & variable=='tests', sum(value)]
 cad3$variable = factor(cad3$variable, c('hiv', 'tests'), c('HIV+', 'HIV tests performed'))
 test_cols = c('#f1a340', '#998ec3')
 
-ggplot(cad3[subpop!='Clients'], aes(x=subpop, y=value, label=value, fill=variable)) +
+ggplot(cad3[subpop!='Clients'], aes(x=subpop, y=value, fill=variable)) +
   geom_bar(stat="identity") +
   facet_wrap(~year) +
   theme_bw() +
-  geom_text(aes(label=value), vjust=-3, position=position_dodge(0.2)) +
   scale_fill_manual(values=test_cols) +
   labs(title = 'HIV cases identified out of patients tested for key populations',
        subtitle=paste0('2017 - 2018 (n = ', n_tests, ' patients tested)'), x='Key Population',
@@ -1038,7 +1037,7 @@ ggplot(cad3, aes(x=subpop, y=value, label=value, fill=variable)) +
        x='', y = 'Percent', fill="") +
   scale_fill_manual(values = c("#de2d26", "#fcbba1")) +
   theme_bw() +
-  theme(axis.text.x=element_text(angle=90))
+  theme(text=element_text(size=18), axis.text.x=element_text(angle=90))
 
 #-------------------------------------------------------
 # Loop of positive tests by key populations
@@ -1102,6 +1101,20 @@ for (s in unique(pos$subpop)) {
   grid.arrange(p1, p2, p3, p4, nrow=2) }
 
 #-------------------------------------------------------
+# test positivity - all patients, alone
+
+ggplot(pos[subpop=='Clients' & variable=="Percent positive (%)"], aes(x=date, y=value, color=variable)) +
+  geom_point() +
+  geom_line() +
+  theme_bw() +
+  scale_color_manual(values='#d73027') +
+  guides(color=FALSE) +
+  labs(title=paste0('Percentage of HIV tests that were positive: general population'), color="", x='Date', y=" ",
+       subtitle=paste0('Tested for HIV = ', totpts, "; tested HIV+ = ", tothiv)) +
+theme(text=element_text(size=18))
+
+
+#-------------------------------------------------------
 # test positivity for the general population versus key populations
 
 testp = dt[variable=='Tested and received the results' | variable=='HIV+',
@@ -1114,8 +1127,8 @@ testp[variable=='HIV+', variable:='hiv']
 testp = dcast(testp, date+key_pop~variable)
 testp[ ,pos:=round(100*(hiv/tested), 1)]
 
-testp[key_pop==TRUE, key:='Key population']
-testp[key_pop==FALSE, key:='General population']
+testp[key_pop==FALSE, key:='Key population']
+testp[key_pop==TRUE, key:='General population']
 
 ggplot(testp, aes(x=date, y=pos, color=key)) +
   geom_point() +
@@ -1125,6 +1138,33 @@ ggplot(testp, aes(x=date, y=pos, color=key)) +
        title='Test positivity rate by key and priority populations',
        color="")+
   theme(text=element_text(size=18))
+
+#-------------------------------------------------------
+# test positivity for the general population versus key populations, pefar versus gf
+
+testp2 = compare[variable=='Tested and received the results' | variable=='HIV+',
+           .(value=sum(value)), by=.(variable, subpop, date, funder)]
+testp2[ , key_pop:=(subpop=='Clients')]
+testp2 = testp2[ ,.(value=sum(value)), by=.(variable, key_pop, date, funder)]
+
+testp2[variable=='Tested and received the results', variable:='tested']
+testp2[variable=='HIV+', variable:='hiv']
+testp2 = dcast(testp2, date+funder+key_pop~variable)
+testp2[ ,pos:=round(100*(hiv/tested), 1)]
+
+testp2[key_pop==FALSE, key:='Key population']
+testp2[key_pop==TRUE, key:='General population']
+
+ggplot(testp2, aes(x=date, y=pos, color=key)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~funder)+
+  theme_bw() +
+  labs(x='Date', y='Percent HIV+ (%)', 
+       title='Test positivity rate by key and priority populations',
+       color="")+
+  theme(text=element_text(size=18))
+
 
 #----------------------------------------------------
 # time trend of every variable
