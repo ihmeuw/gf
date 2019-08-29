@@ -98,7 +98,7 @@ p1 = ggplot(dt1, aes(x=date, y=value, color=dps)) +
   geom_point() + 
   geom_line() + 
   theme_bw() + 
-  labs(title="Diagnostic plot for 'Tested' by DPS", x="Date", y="Tested", caption="*GF funded districts/health zones only")
+  labs(title="Diagnostic plot for 'Tested' by DPS", x="Date", y="Tested", caption="Note: Represents only Global Fund-supported health zones")
 
 #Total 
 dt2 = gf_only[element_id=="uXM8GDCJbGK", .(value=sum(value, na.rm=T)), by=c('date', 'dps')]
@@ -106,7 +106,7 @@ p2 = ggplot(dt2, aes(x=date, y=value, color=dps)) +
   geom_point() + 
   geom_line() + 
   theme_bw() + 
-  labs(title="Diagnostic plot for 'Total received in the facility' by DPS", x="Date", y="Total received in facility", caption="*GF funded districts/health zones only")
+  labs(title="Diagnostic plot for 'Total received in the facility' by DPS", x="Date", y="Total received in facility", caption="Note: Represents only Global Fund-supported health zones")
 
 #pct 
 dt3 = gf_only[, .(value=sum(value, na.rm=T)), by=c('date', 'dps', 'element_eng')]
@@ -122,7 +122,7 @@ p3 = ggplot(dt3, aes(x=date, y=pct, color=dps)) +
   geom_line() + 
   theme_bw() + 
   scale_y_continuous(breaks=seq(0, 100, by=10), labels=as.character(seq(0, 100, by=10)), limits=c(0, 100)) + 
-  labs(title="Diagnostic plot for percentage of PLW tested/total received by DPS", x="Date", y="Percentage (%)", caption="*GF funded districts/health zones only")
+  labs(title="Diagnostic plot for percentage of pregnant and lactating women\ntested for HIV by DPS", x="Date", y="Percentage (%)", caption="Note: Represents only Global Fund-supported health zones")
 
 #National time trends 
 # Tested 
@@ -133,9 +133,9 @@ p4 = ggplot(dt4, aes(x=date, y=value)) +
   geom_line() + 
   theme_bw() + 
   theme(text = element_text(size=18)) +
-  labs(title="National time trend of pregnant and lactating women tested", x="Date", y="Count of PLW Tested",
+  labs(title="National time trend of pregnant and lactating women tested", x="Date", y="Tested",
        subtitle=paste0("n = ", n_dt4),
-       caption="*GF funded districts/health zones only")
+       caption="Note: Represents only Global Fund-supported health zones")
 
 #Total 
 dt5 = gf_only[element_id=="uXM8GDCJbGK", .(value=sum(value, na.rm=T)), by=c('date')]
@@ -147,7 +147,7 @@ p5 = ggplot(dt5, aes(x=date, y=value)) +
   theme(text = element_text(size=18)) +
   labs(title="National time trend of pregnant and lactating women received in a facility", 
        subtitle = paste0("n = ", n_dt5),
-       x="Date", y="Count of PLW received in facility", caption="*GF funded districts/health zones only")
+       x="Date", y="Received", caption="Note: Represents only Global Fund-supported health zones")
 
 #pct 
 dt6 = gf_only[, .(value=sum(value, na.rm=T)), by=c('date', 'element_eng')]
@@ -161,9 +161,9 @@ p6 = ggplot(dt6, aes(x=date, y=pct)) +
   geom_line() + 
   theme_bw() + 
   theme(text = element_text(size=18)) +
-  labs(title="Percentage of pregnant and lactating women tested/received in facility", x="Date", y="Percentage",
+  labs(title="Percentage of pregnant and lactating women tested for HIV", x="Date", y="Percent (%)",
        subtitle = paste0("n = ", n_dt6),
-       caption="*GF funded districts/health zones only")
+       caption="Note: Represents only Global Fund-supported health zones")
 
 p7 = ggplot(dt6, aes(x=date, y=pct)) + 
   geom_point() + 
@@ -171,9 +171,9 @@ p7 = ggplot(dt6, aes(x=date, y=pct)) +
   theme_bw() + 
   theme(text = element_text(size=18)) +
   scale_y_continuous(breaks=seq(0, 100, by=10), labels=as.character(seq(0, 100, by=10)), limits=c(0, 100)) + 
-  labs(title="Percentage of pregnant and lactating women tested/received in facility", x="Date", y="Percentage",
+  labs(title="Percentage of pregnant and lactating women\n tested for HIV in GF districts", x="Date", y="Percent (%)",
        subtitle = paste0("n = ", n_dt6),
-       caption="*Y-axis scaled from 0:100\n*GF funded districts/health zones only")
+       caption="*Y-axis scaled from 0:100\nNote: Represents only Global Fund-supported health zones")
 
 #Maps 
 # Tested 
@@ -189,19 +189,21 @@ p8 = ggplot(gf_only_map[element_id=="DXz4Zxd4fKq"], aes(x = long, y = lat, group
   geom_polygon(colour="black") +
   theme_void() +
   theme(text = element_text(size=18)) +
-  scale_fill_gradient2(low = "white", high = "darkorchid3") +  
-  labs(title="Count of PLW tested, by DPS, in 2018", fill="# Tested", 
+  scale_fill_gradient2(low = "white", high = "darkorchid3") + 
+  coord_fixed(ratio=1) + 
+  labs(title="Pregnant and lactating women tested for HIV\nby DPS in 2018", fill="Tested", 
        subtitle=paste0("n = ", n_gf_only), 
-       caption="*GF funded districts/health zones only") 
+       caption="Note: Represents only Global Fund-supported health zones") 
 
 p9 = ggplot(gf_only_map[element_id=="uXM8GDCJbGK"], aes(x = long, y = lat, group = group, fill=value)) +
   geom_polygon(colour="black") +
   theme_void() +
   theme(text = element_text(size=18)) +
   scale_fill_gradient2(low = "white", high = "dodgerblue3") + 
-  labs(title="Count of PLW received in a facility, by DPS, in 2018", fill="# Received", 
+  coord_fixed(ratio=1) + 
+  labs(title="Pregnant and lactating women received\nby DPS in 2018", fill="Received", 
        subtitle=paste0("n = ", n_gf_only), 
-       caption="*GF funded districts/health zones only") 
+       caption="Note: Represents only Global Fund-supported health zones") 
 
 gf_map_wide = gf_only[year==2018, .(value=sum(value, na.rm=T)), by=c('id', 'element_eng')]
 gf_map_wide = dcast(gf_map_wide, id~element_eng, value.var='value')
@@ -215,9 +217,10 @@ p10 = ggplot(gf_map_wide, aes(x = long, y = lat, group = group, fill=pct)) +
   theme_void() +
   scale_fill_gradient2(low = "white", high = "firebrick3") + 
   theme(text = element_text(size=18)) +
-  labs(title="Percentage of PLW tested/received in facility, by DPS, in 2018", fill="Percentage", 
+  coord_fixed(ratio=1) + 
+  labs(title="Percentage of pregnant and lactating women tested for HIV in 2018", fill="Percent (%)", 
        subtitle=paste0("n = ", n_gf_wide), 
-       caption="*GF funded districts/health zones only") 
+       caption="Note: Represents only Global Fund-supported health zones") 
 
 
 # One breakdown by age grouping - testing. 
@@ -231,7 +234,7 @@ p11 = ggplot(dt11, aes(x=date, y=value, color=age)) +
   theme(text = element_text(size=18)) +
   labs(title="HIV Testing among pregnant and lactating women by age", x="Date", y="Tested", 
        subtitle=paste0("n = ", n_dt11), 
-       color="Age group", caption="*GF funded districts/health zones only")
+       color="Age group", caption="Note: Represents only Global Fund-supported health zones")
 
 # National time trend of PEPFAR ratio
 pepfar_only = dt[funder=="PEPFAR", .(value=sum(value, na.rm=T)), by=c('date', 'element_eng', 'id')]
@@ -250,9 +253,9 @@ p12 = ggplot(pepfar_wide2, aes(x=date, y=pct)) +
   geom_line() + 
   theme_bw() + 
   theme(text = element_text(size=18)) +
-  labs(title="Percentage of pregnant and lactating women tested/received in facility\nin PEPFAR districts", x="Date",
+  labs(title="Percentage of pregnant and lactating women tested for HIV\nin PEPFAR districts", x="Date",
        subtitle=paste0("n = ", n_pep_total), 
-       y="Percentage (%)", caption="*PEPFAR funded districts/health zones only")
+       y="Percent (%)", caption="Note: Represents only PEPFAR-supported health zones")
 
 
 p13 = ggplot(pepfar_wide2, aes(x=date, y=pct)) + 
@@ -261,9 +264,9 @@ p13 = ggplot(pepfar_wide2, aes(x=date, y=pct)) +
   theme_bw() + 
   theme(text = element_text(size=18)) +
   scale_y_continuous(breaks=seq(0, 100, by=10), labels=as.character(seq(0, 100, by=10)), limits=c(0, 100)) + 
-  labs(title="Percentage of pregnant and lactating women tested/received in facility\nin PEPFAR districts", x="Date",
-       y="Percentage (%)", subtitle=paste0("n = ", n_pep_total), 
-       caption="*Y-axis scaled from 0:100\n*PEPFAR funded districts/health zones only")
+  labs(title="Percentage of pregnant and lactating women\ntested for HIV in PEPFAR districts", x="Date",
+       y="Percent (%)", subtitle=paste0("n = ", n_pep_total), 
+       caption="*Y-axis scaled from 0:100\n*Note: Represents only PEPFAR-supported health zones")
 
 # One testing counts, colored by level. 
 dt14 = dt[element_id=="DXz4Zxd4fKq" & year%in%c(2017, 2018), .(value=sum(value, na.rm=T)), by=c('date', 'level', 'funder')]
@@ -275,10 +278,10 @@ p14 = ggplot(dt14, aes(x=date, y=value, color=level)) +
   geom_line() + 
   theme_bw() + 
   theme(text = element_text(size=18)) +
-  labs(title="National time trend of pregnant and lactating women tested by level", x="Date", 
-       y="Count of PLW Tested", color="Facility level", 
+  labs(title="Pregnant and lactating women tested by facility level", x="Date", 
+       y="Tested", color="Facility level", 
        subtitle=paste0("n = ", n_dt14),
-       caption="*GF funded districts/health zones only")
+       caption="Note: Represents only PEPFAR-supported health zones")
 
 
 # One map comparing PEPFAR to GF ratio in 2018 
@@ -299,7 +302,7 @@ p15 = ggplot(dt15, aes(x = long, y = lat, group = group, fill=pct)) +
   theme(text = element_text(size=18)) +
   facet_wrap(~funder) + 
   coord_fixed(ratio=1) + 
-  labs(title="Percentage of PLW tested/received in facility in 2018 by funder", fill="Percentage", 
+  labs(title="Percentage of pregnant and lactating women tested for HIV\nin 2018 by funder", fill="Percent (%)", 
        subtitle=paste0("n = ", n_dt15)) 
 
 # Run a few analyses on early/late reporters. 
@@ -320,7 +323,7 @@ dt16[, pct:=(num_facs/total_facs)*100]
 p16 = ggplot() + geom_bar(aes(x=date, y=pct, fill=level), data=dt16, stat="identity") + 
   scale_fill_viridis_d(direction=-1) + 
   labs(title="Facility composition by reporting pre- or post-January 2018", x="Date",  
-       y="Percentage", fill="Facility type", 
+       y="Percent (%)", fill="Facility type", 
        caption="*Data restricted to only early reporting facilities before Jan. 2018,\nand only late-reporting facilities after") + 
   theme_bw(base_size=18) 
   
@@ -339,13 +342,13 @@ p17 = ggplot(dt17, aes(x=date, y=pct, color=report_time)) +
   geom_line() + 
   theme_bw() + 
   theme(text = element_text(size=18)) +
-  labs(title="Testing percentage, by early/late reporting facilities", x="Date", y="Percentage", 
+  labs(title="Testing percentage, by early/late reporting facilities", x="Date", y="Percent (%)", 
        color="Report time", caption="*Early reporting defined as reporting prior to Jan. 2018") 
 
 #--------------------------------------------------
 # SAVE GRAPHS 
 #--------------------------------------------------
-pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pmtct/visuals.pdf", height=10, width=12)
+pdf("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pmtct/visuals.pdf", height=10, width=14)
 completeness
 p1
 p2
