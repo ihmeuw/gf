@@ -44,34 +44,6 @@ data = data[iso3codecountry %in% c('COD', 'GTM', 'SEN', 'UGA')]
 # ----------------------------------------------
 # SECONDARY ANALYSES
 # ----------------------------------------------
-# 1.	Cost vs reference price stratified by categorical variables (procurement mechanism mainly, 
-# please explore for other interesting options). Is there a procurement mechanism (or stratum) that consistently
-# outperforms the reference price
-#   a.	If you have time, try running the regression 
-#   `difference_from_reference_cost ~ time + factor(procurement_mechanism)*factor(product_category)` 
-# where the outcome variable is defined as unit_cost - reference_price. You'll get one coefficient per 
-# procurement mechanism and category that tells you whether that combination is significantly different 
-# from the first procurement mechanism/category (alphabetically). You can then make a data frame of the 
-# unique values of the explanatory variables and predict in it to get estimates/CI of the mean cost differences.
-# ----------------------------------------------
-data[, diff_from_ref_cost := unit_cost_usd - po_international_reference_price]
-# hist(data$diff_from_ref_cost, )
-summary(data$diff_from_ref_cost)
-
-plot(data$purchase_order_date, data$diff_from_ref_cost)
-
-model_data = data[!is.na(diff_from_ref_cost)]
-fit1 = glm(diff_from_ref_cost ~ purchase_order_date + factor(product_category)*factor(supplier), data = data_fit, family = gaussian())
-#fit1 = glm(diff_from_ref_cost ~ purchase_order_date + factor(product_category) + factor(supplier), data = model_data, family = gaussian())
-summary(fit1)
-plot(fit1$residuals)
-data_fit <- data.table(model_data, fit=predict(fit1, type="response"), resid=residuals(fit1,type="response"), residSqr=residuals(fit1,type="response")^2)
-
-pred_frame = data.table(expand.grid(model_data$product_category, model_data$supplier))
-
-# fit2 = glm(diff_from_ref_cost ~ purchase_order_date + factor(product_category), data = data_fit, family = gaussian())
-# summary(fit2)
-# anova(fit1, fit2, test = "Chisq")
 
 # ----------------------------------------------
 # 2.	Cost vs budgeted price. Do some countries and product categories budget poorly?
