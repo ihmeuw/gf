@@ -44,14 +44,23 @@ mapping_dir = paste0(dir, "modular_framework_mapping/")
 code_dir = "./resource_tracking/prep/"
 common_dir = paste0(code_dir, "_common/")
 
-fgh_raw = paste0(dir, "_fgh/raw_data/")
-fgh_prepped = paste0(dir, "_fgh/prepped_data/")
-
+#Global fund 
+# Budget and PUDR file paths are built dynamically in read_filelist code
 gos_raw = paste0(dir, "_gf_files_gos/gos/raw_data/")
 gos_prepped = paste0(dir, "_gf_files_gos/gos/prepped_data/")
 
+#J: drive file paths - for storing data
+# Other development assistance for health 
+odah_raw = paste0(dir, "_odah/raw_data/")
+odah_prepped = paste0(dir, "_odah/prepped_data/")
+
+#Government health expenditure 
 fgh_ghe_malaria_raw = paste0(dir, "_ghe/fgh_ghe_actuals_malaria/raw_data/")
 fgh_ghe_malaria_prepped = paste0(dir, "_ghe/fgh_ghe_actuals_malaria/prepped_data/")
+fgh_ghe_tb_raw = paste0(dir, "_ghe/fgh_ghe_actuals_tb/raw_data/")
+fgh_ghe_tb_prepped = paste0(dir, "_ghe/fgh_ghe_actuals_tb/prepped_data/")
+fgh_ghe_hiv_raw = paste0(dir, "_ghe/fgh_ghe_estimates_hiv/raw_data/")
+fgh_ghe_hiv_prepped = paste0(dir, "_ghe/fgh_ghe_estimates_hiv/prepped_data/")
 
 who_raw = paste0(dir, "_ghe/who/raw_data/")
 who_prepped = paste0(dir, "_ghe/who/prepped_data/")
@@ -59,8 +68,10 @@ who_prepped = paste0(dir, "_ghe/who/prepped_data/")
 sicoin_raw = paste0(dir, "_ghe/sicoin_gtm/raw_data/")
 sicoin_prepped = paste0(dir, "_ghe/sicoin_gtm/prepped_data/")
 
-codebook = read.xlsx(paste0(dir, "documentation/RT_Codebook.xlsx"))
+all_ghe_prepped = paste0(dir, "_ghe/combined_prepped_data/")
 
+#Assisting files 
+codebook = read.xlsx(paste0(dir, "documentation/RT_Codebook.xlsx"))
 pudr_labels = read.xlsx(paste0(dir, "documentation/PUDR Semester Labeling.xlsx"))
 
 #Source shared functions

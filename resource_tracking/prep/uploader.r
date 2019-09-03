@@ -7,6 +7,7 @@
 
 # install.packages("httr")
 library(httr) #An R wrapper for JSON code
+library(jsonlite)
 
 #----------------------------------------------
 # STEP 1: OBTAIN OAUTH2 AUTHORIZATION, AND 
@@ -61,15 +62,18 @@ VAULT = "602270806"
 #-----------------------------------------
 
 #Try one example first - create a document in Basecamp. 
-POST(paste0("Authorization: Bearer $", ACCESS_TOKEN, " -H Content-Type: application/json -d '{\"title\":\"New Hire Info\",\"content\":\"<div><strong>Getting started</strong></div>\",\"status\":\"active\"}' \https://3.basecampapi.com/", ACCOUNT_ID, "/buckets/", BUCKET, "/vaults/", VAULT, "/documents.json"))
+test_post = POST(paste0("Authorization: Bearer $", ACCESS_TOKEN, " -H Content-Type: application/json -d '{\"title\":\"New Hire Info\",\"content\":\"<div><strong>Getting started</strong></div>\",\"status\":\"active\"}' https://3.basecampapi.com/", ACCOUNT_ID, "/buckets/", BUCKET, "/vaults/", VAULT, "/documents.json"))
 
 POST(paste0("{\"title\" : \"New Hire Info content\" : \"<div><strong>Getting started</strong></div>\" \"status\":\"active\"}"))
 
 
-POST(paste0("https://3.basecampapi.com/", ACCOUNT_ID, "/buckets/", BUCKET, "/vaults/", VAULT, "/documents.json"))
+test_post = POST(paste0("https://3.basecampapi.com/", ACCOUNT_ID, "/buckets/", BUCKET, "/vaults/", VAULT, "/documents.json"), 
+                 config = (token=ACCESS_TOKEN, 
+                           add_headers("title": "New Hire Info",
+                                      "content": "<div><strong>Getting started</strong></div>",
+                                      "status": "active")))
 
-
-system(paste0("curl -s -H \"Authorization: Bearer $", ACCESS_TOKEN, "\" -H \"Content-Type: application/json\" \ -d '{\"title\":\"New Hire Info\",\"content\":\"<div><strong>Getting started</strong></div>\",\"status\":\"active\"}' \ https://3.basecampapi.com/$", ACCOUNT_ID, "/buckets/", BUCKET, "/vaults/", VAULT, "/documents.json"))
+jsonlite::fromJSON(content(test_post, "text"), simplifyVector = FALSE)
 
 
 
