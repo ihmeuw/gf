@@ -126,33 +126,44 @@ dt4$regime[which(dt4$regime=="LONG")] <- "Long"
 
 ##################################################
 # Impute missing values
+#library(Amelia)
+#missmap(dt4)
+
 ##################################################
 
 
-#------------------------------------------------
+##################################################
 # Get counts using datatable of treated and diagnosed
 
 
 # Generate counts of MDR-TB cases diagnoses by region and quarter
-dt4$count <- 1
-mdr_tb_dx <- dt4[,.(region, date_diag, count)]
-mdr_tb_tx <- dt4[,.(region, date_trait, count)]
+dt5 <- dt4
+dt5$dx_count <- 1
 
+# get count of those that started either treatment
+dt5$tx_count <- NA
+dt5$tx_count[which(dt5$regime=="Long" | dt5$regime=="Court")] <- 1
 
-#Split each data set out by quarter
-mdr_tb_dx[, quarter:=quarter(date_diag)]
-mdr_tb_dx[, year:=year(date_diag)]
-mdr_tb_dx[, date_diag:=NULL]
+# use either the date of treatment or date of diagnosis to assign values
+dt5$date_either <- ifelse(is.na(dt5$date_diag), dt5$date_trait, dt5$date_diag)
 
-mdr_tb_tx[, quarter:=quarter(date_trait)]
-mdr_tb_tx[, year:=year(date_trait)]
-mdr_tb_tx[, date_trait:=NULL]
+View(dt5[,.(date_either, date_diag, date_trait)])
+
+# subset to necessary data
+dt5 <- dt5[,.(region, date_either, dx_count, tx_count)]
+
+dt5[, quarter:=quarter(date_either)]
+dt5[, year:=year(date_either)]
+dt5[, date_trait:=NULL]
 
 #Create date variable
 mdr_tb_dx[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
 mdr_tb_dx[, date:=year+quarter]
 mdr_tb_tx[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
 mdr_tb_tx[, date:=year+quarter]
+
+# Calcuate how many started treatment
+mdr
 
 # sum data
 mdr_tb_dx <- mdr_tb_dx[,.(mdr_tb_dx=sum(count)), by=c('region', 'date')]
@@ -170,7 +181,7 @@ mdr_tb_gueris <- dt4[,.(region, date_trait, count, gueris)]
 
 mdr_tb_gueris[, quarter:=quarter(date_trait)]
 mdr_tb_gueris[, year:=year(date_trait)]
-mdr_tb_gueris[, date_trait:=NULL]
+mdr_tb_gueris[, date_either:=NULL]
 
 mdr_tb_gueris[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
 mdr_tb_gueris[, date:=year+quarter]
@@ -180,8 +191,7 @@ mdr_tb_gueris <- mdr_tb_gueris[,.(mdr_tb_gueris=sum(gueris, na.rm = TRUE)), by=c
 # merge data
 tb_mdr_data <- merge(merge1, mdr_tb_gueris, by=c("region", "date"), all=TRUE)
 
-# calculate cure rate
-tb_mdr_data$taux_gueris <- tb_mdr_data$mdr_tb_gueris/tb_mdr_data$mdr_tb_tx
+# calculate proportion started treatment
 
 
 

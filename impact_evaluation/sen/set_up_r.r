@@ -46,7 +46,7 @@ library(splitstackshape)
 #Set global variables - pulling to top so easier to read EL 8/15/19
 # Current model versions
 
-modelVersion1 = 'sen_tb_model_full'
+modelVersion1 = 'sen_tb_model1'
 
 START_YEAR = 2000 #If available, what's the earliest year you should model data from? 
 
@@ -112,7 +112,7 @@ admin2ShapeFile = paste0(dir, '/mapping/sen/shapefiles/gadm36_SEN_2.shp')
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph
-nodeTableFile1 = './impact_evaluation/sen/visualizations/nodetable_first_half.csv'
+nodeTableFile1 = './impact_evaluation/sen/visualizations/nodetable_full.csv'
 
 # ---------------------------------------------------------------------------------
 

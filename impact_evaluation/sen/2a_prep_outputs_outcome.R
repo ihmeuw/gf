@@ -166,6 +166,9 @@ DT$type[which(DT$centre=='HALD')] <- "HOPITAL"
 DT$type[which(DT$centre=='HOGGY')] <- "HOPITAL"
 DT$type[which(DT$centre=='HPD')] <- "HOPITAL"
 
+# create combined total treatment variable
+DT$ntr_all <- rowSums(DT[,.(ntr_rhz, ntr_erhz, ntr_serhz)], na.rm=TRUE)
+
 #-----------------------------------------------------
 # Check to make sure you're still uniquely identifying data 
 #-----------------------------------------------------
