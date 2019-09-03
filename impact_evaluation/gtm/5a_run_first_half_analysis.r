@@ -17,7 +17,7 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # Settings
 
 # whether to run each department in parallel or not
-runInParallel = TRUE
+runInParallel = FALSE 
 
 # ---------------------------
 
@@ -92,7 +92,7 @@ if (runInParallel==FALSE) {
 	# 5 is the model object name,
 	# 6 is whether to run the first or second half,
 	# 7 is whether to do a test run
-	args = c('a', 'b', 'c', 'd', modelVersion, '1', 'FALSE')
+	args = c('a', 'b', 'c', 'd', 'e', 'f', modelVersion1, '1', 'FALSE')
 
 	# run each iteration sequentially
 	for(task_id in seq(T)) {

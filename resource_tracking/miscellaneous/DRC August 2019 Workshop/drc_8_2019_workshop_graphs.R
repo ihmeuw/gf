@@ -37,7 +37,7 @@ test1[, date:=((quarter/4)-0.25)+year]
 test_plot1 = ggplot(test1, aes(x=date, y=budget)) + 
   geom_point() + 
   geom_line() + 
-  theme_bw() +
+  theme_bw(base_size=18) +
   scale_y_continuous(labels=dollar_format()) + 
   labs(title="Global Fund investment in HIV Testing, DRC", x="Date", y="Budget", caption="*Specific investments in HIV testing are only traceable from 2015 on")
 ggsave(paste0(save_loc, "testing_time_trend.png"), test_plot1, height=10, width=13)
@@ -95,7 +95,7 @@ test2[order(year)]
 #General stacked bar plot 
 test_plot2 = ggplot() + geom_bar(aes(x=year, y=budget, fill=gf_module), data=test2, stat="identity") + 
   labs(title=paste0("Global Fund investment in HIV Testing"), x="Year",  y="Budget", fill="Subpopulation", caption="*Specific investments in HIV testing are only traceable from 2015 on") + 
-  theme_bw() + 
+  theme_bw(base_size=18) + 
   scale_y_continuous(labels=dollar_format()) 
 ggsave(paste0(save_loc, "testing_stacked_bar1.png"), test_plot2, height=10, width=13)
 
@@ -112,7 +112,7 @@ test2[, pct:=round((budget/total)*100, 2)]
 
 test_plot3 = ggplot() + geom_bar(aes(x=year, y=pct, fill=gf_module), data=test2, stat="identity") + 
   labs(title=paste0("Global Fund investment in HIV Testing"), x="Year",  y="Percentage", fill="Subpopulation", caption="*Specific investments in HIV testing are only traceable from 2015 on") + 
-  theme_bw() + 
+  theme_bw(base_size=18) 
 ggsave(paste0(save_loc, "testing_stacked_bar2.png"), test_plot3, height=10, width=13)
 
 #--------------------------------------------------------------------------------------------------

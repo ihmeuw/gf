@@ -48,7 +48,7 @@
 semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_factors=NA, 
 	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, uncertainty=TRUE, 
 	labSize1=3, labSize2=2.4, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, buffer=c(.25,.25,.25,.25),
-	curved=0, tapered=TRUE, dim=FALSE, highlight=NULL, colScaleMin=-0.5, colScaleMax=1) {
+	curved=0, tapered=TRUE, dim=FALSE, highlight=NULL, colScaleMin=-0.5, colScaleMax=1.1, colScaleBreaks=0.5) {
 
 	# ------------------------------------------------------
 	# Load functions/parameters
@@ -302,7 +302,7 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	
 	# improve legend
 	p = p + 
-		scale_color_viridis(direction=-1, breaks=seq(colScaleMin, colScaleMax, by=0.5), labels=as.character(seq(colScaleMin, colScaleMax, by=0.5)), limits=c(colScaleMin, colScaleMax)) 
+		scale_color_viridis(direction=-1, breaks=seq(colScaleMin, colScaleMax, by=colScaleBreaks), labels=as.character(seq(colScaleMin, colScaleMax, by=colScaleBreaks)), limits=c(colScaleMin, colScaleMax)) 
 	
 	# add buffer space to axes
 	ymax = max(nodeTable$y)+(buffer[4]*sd(nodeTable$y))
@@ -320,7 +320,7 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 		labs(color='Effect\nSize', caption=capt)
 	
 	# clean up plot
-	p = p + theme_void() + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'), 
+	p = p + theme_void(base_size=16) + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'), 
 	plot.caption=element_text(size=6))
 	if (curved %in% c(1,2)) p = p + scale_size_continuous(guide = FALSE)
 	

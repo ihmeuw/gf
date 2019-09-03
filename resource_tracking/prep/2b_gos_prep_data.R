@@ -35,8 +35,11 @@ checkFile = paste0(gos_raw, "Grants missing intervention information in new GOS 
                        "total_expenditure_amount_(in_budget_currency)", "component", "grant_number"),
            c('start_date', 'end_date', 'budget', 'expenditure', 'disease', "grant"))
 
+  #Generate grant period 
+  gos_data[, grant_period:=paste0(year(current_ip_start_date), "-", year(current_ip_end_date))]
+  
   #Keep only the columns you need
-  gos_data = gos_data[, .(country, grant, start_date, end_date, year, module, intervention, budget, expenditure, disease)]
+  gos_data = gos_data[, .(country, grant, start_date, end_date, year, module, intervention, budget, expenditure, disease, grant_period)]
 
   #Make budget and expenditure numeric
   gos_data[, budget:=as.numeric(budget)]
@@ -173,6 +176,9 @@ gmsNew <-  c("country","grant", "grant_period_start", "grant_period_end",
 setnames(gms_data, gmsOld, gmsNew) 
 
 gms_data = gms_data[, -c('standard_sda')]
+
+#Generate grant period variable 
+gms_data[, grant_period:=paste0(year(grant_period_start), "-", year(grant_period_end))]
 
 #Relabel disease
 gms_data[, disease:=tolower(disease)]
@@ -389,8 +395,8 @@ write.xlsx(date_check, paste0(dir, "_gf_files_gos/gos/Overlaps within Interventi
 # overlap[, budget_diff:=budget_2-budget_1]
 # overlap[, exp_diff:=expenditure_2-expenditure_1] #David please review this.
 
-totalGos[, grant_period:=paste0(year(grant_period_start), "-", year(grant_period_end))]
-totalGos[grant_period=="NA-NA", grant_period:=NA]
+# totalGos[, grant_period:=paste0(year(grant_period_start), "-", year(grant_period_end))]
+# totalGos[grant_period=="NA-NA", grant_period:=NA]
 
 #Aggregate to the quarter level.
 totalGos_qtr = totalGos[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c(

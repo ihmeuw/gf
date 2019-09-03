@@ -13,6 +13,7 @@ library(raster)
 library(RColorBrewer)
 library(gridExtra)
 library(grid)
+library(ggrepel)
 # --------------------
 
 # --------------------
@@ -27,18 +28,18 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # dt = readRDS(paste0(dir, 'prepped/pnls_final/pnls_vct_final.rds'))
 
 # local directory
-# dir = "C:/Users/ccarelli/Documents/pnls_data/"
-# 
-# # read in the data locally
-# dt = readRDS(paste0(dir, 'pnls_vct_final.rds'))
+dir = "C:/Users/ccarelli/Documents/pnls_data/"
+
+# read in the data locally
+dt = readRDS(paste0(dir, "pnls_vct_final_labels.rds"))
 
 # subset the data table to only a single year
 year = 2018
 
 dt = dt[year(date)==year]
 
-# subset to gf only
-dt = dt[dps!='Kinshasa' & funder=='The Global Fund']
+# start with all provinces, then maps for just gf health zones
+
 #---------------------------------------------------
 # import the shape file
 
@@ -65,76 +66,13 @@ coord[id=="Sud-Ubangi", id:="Sud Ubangi"]
 coord[id=="Kasaï-Oriental", id:="Kasai Oriental"]
 coord[grep("ateur", id), id:="Equateur"]
 coord[id=="Kongo-Central", id:="Kongo Central"]
+coord[id=='Haut-Katanga', id:='Haut Katanga']
 
 names = coord[ ,unique(id)]
 dps = dt[ ,unique(dps)]
 dps[!(dps %in% names)]
-
-
-
-
-#---------------------------------------------------
-# #------------------------------------
-# # factor sub populations for graphs 
-# 
-# dt$subpop = factor(dt$subpop, 
-#                    c("prisoner", "trans", "idu", "trucker",  "uniform", "msm", "csw_customer", 
-#                      "fisher", "miner", "other_groups", "couple", "csw", "client", "patient"),    
-#                    c("Prisoners", "Trans people", "IDUs", "Truckers", "Military personnel",
-#                      "MSM", "CSW Clients", "Fisher people", "Miners", 
-#                      "Other groups", "Couples", "CSWs", "Clients", "Patients")) 
-# 
-# #----------------------------------
-# # equality constraints check on testing and positive
-# # if there are more HIV cases reported than tests, remove the value
-# 
-# check = dt[variable=='Tested and received the results' | variable=='HIV+']
-# check = check[ ,.(value=sum(value)), by = .(org_unit_id, date, variable, sex, age, subpop)]
-# check = dcast(check, org_unit_id+sex+age+subpop+date~variable)
-# setnames(check, c('org_unit_id', 'sex', 'age', 'subpop', 'date', 'hiv', 'tests'))
-# check[ , eq:=(hiv > tests)]
-# check[ , missing_one:=(is.na(hiv) | is.na(tests))]
-# check = check[eq==T]
-# 
-# check[ , check_var:=paste0(org_unit_id, sex, age, subpop, date)]
-# dt[ , check_var:=paste0(org_unit_id, sex, age, subpop, date)]
-# dt = dt[!(check_var %in% check$check_var)]
-# 
-# #----------------------------------
-# # create smaller health facility groupings for graphs 
-# 
-# dt[grep('hospital',facility_level), next_level:='Hospitals']
-# dt[facility_level=='reference_health_center', next_level:='Reference health centers']
-# dt[facility_level=='health_center' | facility_level=='health_post' | facility_level=='dispensary', next_level:='Health centers, posts, and dispensaries']
-# dt[is.na(next_level), next_level:='Other types of facilities']
-# 
-# # factor facility level for graphs
-# dt$facility_level = factor(dt$facility_level, 
-#                            rev(c("health_center", "reference_health_center", "health_post", "hospital", 
-#                                  "general_reference_hospital", "hospital_center", "medical_center",
-#                                  "clinic", "secondary_hospital",  "dispensary","polyclinic", "medical_surgical_center")),
-#                            rev(c("Health Center", "Reference Health Center", "Health Post", "Hospital", 
-#                                  "General Reference Hospital", "Hospital Center", "Medical Center",
-#                                  "Clinic", "Secondary Hospital",  "Dispensary","Polyclinic", "Medical surgical center")))
-# 
-# 
-# #------------------------------------------------------------------
-# # bind in he client variables
-# 
-# dt[variable=='Clients counseled', variable:='Counseled']
-# dt[variable=='Clients tested', variable:='Tested'] # only in clients
-# dt[variable=='Clients tested and received the results', variable:='Tested and received the results']
-# dt[variable=='Clients enrolled in case management', variable:='Enrolled in case management'] # only in clients
-# 
-# dt[variable=='Clients HIV+', variable:='Counseled']
-# dt[variable=='Clients HIV+ and informed of their results', variable:='HIV+ and informed of the results']
-# dt[variable=='Clients with indeterminate status', variable:='Indeterminate status'] # only in clients
-
 #------------------------------------------------------------------
 # HIV Testing Visualizations
-
-# EXPORT AS A PDF
-# pdf(paste0(dir, 'outputs/pnls_hiv_testing/pnls_vct_dps_maps.pdf'), width=12, height=9)
 
 # export locally as a pdf
 # pdf(paste0(dir, '/pnls_dps_maps.pdf'), width=14, height=9)
@@ -160,41 +98,117 @@ key_vars = c('Tested and received the results','HIV+')
 dt[variable %in% key_vars, unique(variable), by=subpop]
 
 # subset
-maps = dt[variable %in% key_vars]
+dt = dt[variable %in% key_vars]
 
 #---------------------------------------------------
-# create a data set with maps only 
+# percent of tests on key populations, gf dps
 
-maps = dt[ ,.(value = sum(value)), by=.(variable, subpop, id = dps)]
+# all tests, all hiv+, and test positivity
+dps = dt[funder=='The Global Fund',.(value=sum(value)), by=.(variable, dps, subpop)]
+dps = dps[variable=='Tested and received the results']
 
-# calculate the percent positivity rate 
-# shape the data wide and calculate
-maps_wide = dcast(maps, id+subpop~variable)
-setnames(maps_wide, c("Tested and received the results", "HIV+"), 
-         c('tested_r', 'hiv'))
-maps_wide[ , percent_pos:=round(100*(hiv/tested_r), 1)]
+# sun to key versus general population
+dps[subpop=='Clients', key:='general']
+dps[subpop!='Clients', key:='key_pop']
+dps = dps[ ,.(value=sum(value)), by=.(dps, key)]
+
+# calculate the ratio of key populations tested
+dps = dcast(dps, dps~key)
+dps[ ,total:=key_pop+general]
+dps[ ,ratio:=round(100*(key_pop/total), 1)]
+setnames(dps, 'dps', 'id')
+
+# replace missing field in equateur with 0
+dps[id=='Equateur', ratio:=0]
+dps[id=='Equateur', total:=0]
+
+# merge with coordinates
+coord_test = merge(dps, coord, by='id', all=T)
+
+#---------------------------------------------------
+# create labels 
+
+# identify centroids and label them
+names = data.table(coordinates(map))
+setnames(names, c('long', 'lat'))
+names[ , id:=unique(coord$id)]
+
+dps[ , label:=paste0(id, ": ", ratio, "%")]
+labels = dps[ ,.(id, label)]
+names = merge(names, labels, by='id', all=T)
+
+#---------------------------------------------------
+# output the map
+
+pdf(paste0(dir, 'outputs/tests_on_key_pops_map.pdf'), width=12, height=9)
+
+ggplot(coord_test, aes(x=long, y=lat, group=group, fill=total)) + 
+  geom_polygon() + 
+  scale_fill_gradientn('Tests', colours=brewer.pal(9, 'YlGn')) + 
+  coord_fixed(ratio=1) + 
+  scale_x_continuous('', breaks = NULL) + 
+  scale_y_continuous('', breaks = NULL) + 
+  labs(title='Total HIV tests performed, 2018',
+       subtitle='Global Fund-supported DPS') + 
+  theme_minimal(base_size=16) + 
+  theme(plot.caption=element_text(size=18))
 
 
-maps2 = maps[variable== ,.(value=sum(value)), by=]
+ggplot(coord_test, aes(x=long, y=lat, group=group, fill=ratio)) + 
+  geom_polygon() + 
+  scale_fill_gradientn('Percent (%)', colours=brewer.pal(9, 'BrBG')) + 
+  coord_fixed(ratio=1) + 
+  scale_x_continuous('', breaks = NULL) + 
+  scale_y_continuous('', breaks = NULL) + 
+  labs(title='Percent of HIV tests performed on key populations, 2018',
+       subtitle='Global Fund-supported DPS') + 
+  theme_minimal(base_size=16) + 
+  theme(plot.caption=element_text(size=18))+
+geom_label_repel(data = names, aes(label = label, x = long, y = lat, group = id), inherit.aes=FALSE, size=5)
 
+dev.off()
 
-coord2 = data.table(rbind(coord, coord, coord, coord, coord, coord, coord, coord))
+#---------------------------------------------------
+# test positivity
 
+# all tests, all hiv+, and test positivity
+pos = dt[funder=='The Global Fund',.(value=sum(value)), by=.(variable, dps)]
+pos[variable=='HIV+', variable:='hiv']
+pos[variable=='Tested and received the results', variable:='tested']
 
+# calculate the ratio of key populations tested
+pos = dcast(pos, dps~variable)
+pos[ ,ratio:=round(100*(hiv/tested), 1)]
+setnames(pos, 'dps', 'id')
 
-merge(coord, maps, by='id', all=T)
+# merge with coordinates
+coord_pos = merge(pos, coord, by='id', all=T)
 
+#---------------------------------------------------
+# create labels 
 
+# identify centroids and label them
+names2 = data.table(coordinates(map))
+setnames(names2, c('long', 'lat'))
+names2[ , id:=unique(coord$id)]
 
+pos[ , label:=paste0(id, ": ", ratio, "%")]
+labels = pos[ ,.(id, label)]
+names2 = merge(names2, labels, by='id', all=T)
 
+pdf(paste0(dir, 'outputs/test_positivity_map.pdf'), width=12, height=9)
 
+ggplot(coord_pos, aes(x=long, y=lat, group=group, fill=ratio)) + 
+  geom_polygon() + 
+  scale_fill_gradientn('Percent (%)', colours=brewer.pal(9, 'Blues')) + 
+  coord_fixed(ratio=1) + 
+  scale_x_continuous('', breaks = NULL) + 
+  scale_y_continuous('', breaks = NULL) + 
+  labs(title='Percent of HIV tests that were positive, 2018',
+       subtitle='Global Fund-supported DPS') + 
+  theme_minimal(base_size=16) + 
+  theme(plot.caption=element_text(size=18))+
+  geom_label_repel(data = names2, aes(label = label, x = long, y = lat, group = id), inherit.aes=FALSE, size=5)
 
-
-
-
-
-
-
-
-
+dev.off()
 

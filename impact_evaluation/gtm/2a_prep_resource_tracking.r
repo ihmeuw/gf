@@ -35,7 +35,7 @@
   expenditures[, date:=year+semester]
   
   #Collapse, and fix names
-  expenditures = expenditures[loc_name=='gtm', .(expenditure=sum(expenditure)), by=c("date", "gf_module", "gf_intervention", "code", "disease", "grant_disease")] #Will subset by disease in code section below. 
+  expenditures = expenditures[loc_name=='gtm', .(expenditure=sum(expenditure), na.rm=T), by=c("date", "gf_module", "gf_intervention", "code", "disease", "grant_disease")] #Will subset by disease in code section below. 
   setnames(expenditures, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
   
   #----------------------------------
@@ -65,6 +65,7 @@
   #SICOIN DATA 
   #----------------------------------
   sicoin = readRDS(sicoinFile) 
+  depts = read_excel("J:/Project/Evaluation/GF/resource_tracking/_ghe/sicoin_gtm/raw_data/departments_and_municipalities_of_gtm.xlsx")
   
   #Collapse into semesters - SICOIN data is monthly.  
   sicoin[, year:=year(start_date)]
@@ -96,21 +97,21 @@
   #Decision 8/20/19 Jen Ross - add in RSSH spent each year as a proportion of GF spending on sub-disease (tb, tb/hiv, and mdr-tb) to each of these variables. 
   gf_proportions = exp_wide[, .(gf_tb=gf_tb/(gf_tb+gf_tbhiv+gf_mdrtb), gf_tbhiv=gf_tbhiv/(gf_tb+gf_tbhiv+gf_mdrtb), gf_mdrtb=gf_mdrtb/(gf_tb+gf_tbhiv+gf_mdrtb)), by='date']
   gf_proportions[, total:=(gf_tb+gf_tbhiv+gf_mdrtb)]
-  #For cases where total isn't one, all spending is NA. 
+  #For cases where total isn't one, all spending is NA.
   gf_proportions[is.na(total), c('gf_tb', 'gf_tbhiv', 'gf_mdrtb'):=1/3]
-  
+
   exp_rssh_wide = expenditures[disease=='rssh' & grant_disease%in%c('hiv/tb', 'tb'), .(rssh=sum(expenditure, na.rm=T)), by='date']
   exp_rssh_wide = merge(exp_rssh_wide, gf_proportions, by='date', all=T)
-  
-  #Multiply rssh by each proportion respectively to get the total RSSH you should add to that variable. 
+
+  #Multiply rssh by each proportion respectively to get the total RSSH you should add to that variable.
   exp_rssh_wide[, gf_tb_rssh:=rssh*gf_tb]
   exp_rssh_wide[, gf_tbhiv_rssh:=rssh*gf_tbhiv]
   exp_rssh_wide[, gf_mdrtb_rssh:=rssh*gf_mdrtb]
   for (c in names(exp_rssh_wide)){
     exp_rssh_wide[is.na(get(c)), (c):=0]
   }
-  
-  #Merge this new rssh expenditure data back onto original GF data and add. 
+
+  #Merge this new rssh expenditure data back onto original GF data and add.
   exp_wide = merge(exp_wide, exp_rssh_wide[, .(date, gf_tb_rssh, gf_tbhiv_rssh, gf_mdrtb_rssh)], by='date', all=T)
   exp_wide[, gf_tb:=gf_tb+gf_tb_rssh]
   exp_wide[, gf_mdrtb:=gf_mdrtb+gf_mdrtb_rssh]

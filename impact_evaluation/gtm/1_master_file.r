@@ -69,14 +69,7 @@ if(rerun_outcomes == TRUE){
 # ---------------------------------------
 if (rerun_merge==TRUE) { 
 	source('./impact_evaluation/gtm/3_merge_data.R')
-  source('./impact_evaluation/gtm/3b_merge_second_half.R')
-}
-
-# ---------------------------------------
-# Correct rates to model estimates
-# ---------------------------------------
-if (rerun_adjust==TRUE) { 
-	source('./impact_evaluation/gtm/3b_correct_to_models.R')
+  source('./impact_evaluation/gtm/3b_merge_model_halves.R')
 }
 
 # ---------------------------------------
