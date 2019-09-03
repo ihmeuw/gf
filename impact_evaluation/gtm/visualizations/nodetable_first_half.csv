@@ -16,11 +16,11 @@ Children_less5_referred_out_cumulative,5.25,3,Children <5 referred for TB screen
 MDR_Cases_Started_Treatment_out_cumulative,7,3,MDR Cases Started Tx. 
 HIV_TB_Cases_Notified_out_cumulative,8.4,3,HIV/TB Cases Notified
 Cases_Notified_in_Prisons_out_cumulative,10.75,3,Cases Notified in Prisons
-Case_Notification_Rate_imp,1.5,10,Case notification rate
+Case_Notification_Rate_imp_log,1.5,10,Case notification rate
 Treatment_Success_Rate_imp,0,10,Tx. success rate
-Proportion_of_HIV_TB_Cases_Treated_out,6,10,Prop. HIV/TB cases treated
+Proportion_of_HIV_TB_Cases_Treated_out_log,6,10,Prop. HIV/TB cases treated
 HIV_TB_Treatment_Success_Rate_imp,7.5,10,HIV/TB tx. Success rate
-Proportion_of_MDR_Cases_Treated_out,4.5,10,Prop. MDR-TB Cases Treated
+Proportion_of_MDR_Cases_Treated_out_log,4.5,10,Prop. MDR-TB Cases Treated
 Children_in_Contact_with_TB_Started_IPT_out_cumulative,3,10,Children <5 started IPT
-Proportion_of_Patients_Receiving_DST_out,9,10,Prop. Patients receiving DST
-Proportion_of_Cases_in_Prisons_Treated_out,10.5,10,Prop. cases in prisons treated
+Proportion_of_Patients_Receiving_DST_out_log,9,10,Prop. Patients receiving DST
+Proportion_of_Cases_in_Prisons_Treated_out_log,10.5,10,Prop. cases in prisons treated

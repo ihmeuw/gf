@@ -30,7 +30,7 @@ urFits1 = copy(urFits)
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
-nodeTable2 = fread(nodeTableFile2)
+# nodeTable2 = fread(nodeTableFile2)
 
 names(data1)[!names(data1)%in%nodeTable1$variable]
 

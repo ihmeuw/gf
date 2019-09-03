@@ -161,8 +161,9 @@ untransformed = copy(data)
 # 
 # log-transform some variables
 for(v in logVars) { #logVars created in 'set_up_r' script. 
-	data[, (v):=log(get(v))]
-	data[!is.finite(get(v)), paste0((v), "_log"):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
+  newName = paste0((v), "_log")
+	data[, (newName):=log(get(v))]
+	data[!is.finite(get(newName)), (newName):=quantile(data[is.finite(get(newName))][[newName]],.01,na.rm=T)]
 }
 
 # 
@@ -175,6 +176,10 @@ for(v in logVars) { #logVars created in 'set_up_r' script.
 # data = na.omit(data)
 # # -----------------------------------------------------------------------
 
+#Only keep variables that will be used in the model. 
+modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+modelVars = c(modelVars, 'department', 'date')
+data = data[, modelVars, with=F]
 
 # ---------------------------------------------------------------------------------------
 # Run final tests

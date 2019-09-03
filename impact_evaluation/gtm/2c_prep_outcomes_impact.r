@@ -244,10 +244,10 @@ dt_final = merge(outcomes1, impacts1, by=c('date', 'department'), all=T) #Save d
 #Drop any municipalities and departments that are 0 - this should represent the national-level data. 
 dt_final = dt_final[department!=0]
 
-#Pull one variable, # of cases screened for MDR-TB, out of the outputs dataset. 
-dt1 = readRDS(outputFile3)
-dt1 = dt1[, .(date, department, Number_of_Cases_Screened_for_MDR_act)]
-dt_final = merge(dt_final, dt1, by=c('date', 'department'), all=T)
+# #Pull one variable, # of cases screened for MDR-TB, out of the outputs dataset. 
+# dt1 = readRDS(outputFile3)
+# dt1 = dt1[, .(date, department, Number_of_Cases_Screened_for_MDR_act)]
+# dt_final = merge(dt_final, dt1, by=c('date', 'department'), all=T)
 
 saveRDS(dt_final, outputFile2c)
 archive(outputFile2c)
