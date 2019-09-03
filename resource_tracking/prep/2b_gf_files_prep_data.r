@@ -36,7 +36,7 @@ if (prep_files == TRUE){
   file_list = prioritize_gos(file_list)
 
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'start_date_financial', 'data_source', 'pudr_semester')] #EMILY NEED TO RETHINK THIS. 
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'sheet_financial', 'start_date_financial', 'data_source', 'pudr_semester')] #EMILY NEED TO RETHINK THIS. 
   file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
   if ( nrow(file_list[date_dup>0])!=0){
@@ -46,13 +46,16 @@ if (prep_files == TRUE){
   
   file_list[data_source=="pudr" & file_iteration=="final", pudr_dup:=sequence(.N), by=c('grant', 'grant_period', 'pudr_semester')]
   file_list[, pudr_dup:=pudr_dup-1] #This variable indexes at 1.
-  if (nrow(file_list[pudr_dup>0 & !is.na(pudr_dup)])>0){
-    print(file_list[pudr_dup>0 & !is.na(pudr_dup)])
-    stop("There are duplicates in PUDRs between semesters - review file list.")
-  }
+  # if (nrow(file_list[pudr_dup>0 & !is.na(pudr_dup)])>0){
+  #   print(file_list[pudr_dup>0 & !is.na(pudr_dup)])
+  #   stop("There are duplicates in PUDRs between semesters - review file list.")
+  # }
   
   #At this moment in time, don't process initial versions of files. EL 8/9/2019 
   file_list = file_list[file_iteration%in%c('final', 'revision')]
+  
+  # Momentary tweak to make revisions datasets for DRC and UGA 
+  file_list = file_list[data_source=="fpm" & grant%in%c('COD-M-MOH', 'UGA-C-TASO')]
   
 }
 

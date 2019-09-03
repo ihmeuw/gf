@@ -4,16 +4,35 @@
 # DATE: Updated May 2019
 #-----------------------------------------
 
+#Read in data 
 dt = readRDS("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/pnls_final/pnls_pmtct.rds")
+
+# make an easy to use element number (can replace element ID if desired) 
 dt = dt[order(element_eng)]
 dt[, element_no:=.GRP, by='element_eng']
 
 #Set up names 
 setnames(dt, 'facility_level', 'level')
 
-#Only limit to 2018 for now.
+#Pull out year variable
 dt[, year:=year(date)]
-dt = dt[year<=2018]
+
+#---------------------------------------------------------------------
+# split kinshasa between funders
+
+# split global fund and pepfar dps
+dt[dps=='Haut Katanga' | dps=='Lualaba', funder:='PEPFAR']
+dt[!(dps=='Haut Katanga' | dps=='Lualaba' | dps=='Kinshasa'), funder:='The Global Fund']
+
+# for kinshasa, split the city by health zone
+gf_zones = c('Barumbu', 'Gombe','Kasa Vubu', 
+             'Kintambo', 'Police', 'Selembao', 'Biyela', 'Bumbu', 
+             'Kalamu 1', 'Kalamu 2', 'Kisenso', 'Lemba', 'Makala', 
+             'Mont Ngafula 2')
+
+# set the funders in kinshasa by health zone
+dt[health_zone %in% gf_zones, funder:='The Global Fund']
+dt[is.na(funder), funder:='PEPFAR']
 
 #Fix DPS names 
 dt[, dps:=standardizeDPSNames(dps)]
@@ -23,23 +42,23 @@ shapefile = shapefile("J:/Project/Evaluation/GF/mapping/cod/gadm36_COD_shp/gadm3
 shapefile@data$NAME_1 = standardizeDPSNames(shapefile@data$NAME_1)
 shapefile@data$dps = shapefile@data$NAME_1
 
-#Pull in ID using shapefile data 
-shape_ids = data.table(unique(shapefile@data[, .(data, id)]))
-shape_ids[, dps:=standardizeDPSNames(dps)]
-dt = merge(dt, shape_ids, by='dps')
-
 # use the fortify function to convert from spatialpolygonsdataframe to data.frame
 coord = data.table(fortify(shapefile)) 
 coord[, id:=as.numeric(id)]
 coord_ann = rbind(coord, coord)
 coord_ann[, year:=rep(2017:2018, each=nrow(coord))] #What years do you have data for? 
 
+#Pull in ID using shapefile data 
+shape_ids = data.table(dps = shapefile@data$dps, id = 0:25)
+shape_ids[, dps:=standardizeDPSNames(dps)]
+dt = merge(dt, shape_ids, by='dps')
+
 #Make a coordinate map for the months you have available in the data. 
 dates_avail = unique(dt[, .(date)][order(date)])
 coord_months = data.table()
 for (i in dates_avail){
   print(i)
-  temp = coord
+  temp = copy(coord)
   temp[, date:=i]
   coord_months = rbind(coord_months, temp)
 }

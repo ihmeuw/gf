@@ -1,12 +1,17 @@
+
+dir = "C:/Users/ccarelli/Documents/pnls_data/"
+
 # descriptive statistics
 
+#-------------------------------------------------
+# MAIN DESCRIPTIVE TABLE
+# compared tests, cases, and test positivity by population 
 
-# main descriptive table
-
+# generate the table
 tab = dt[variable=='Tested and received the results' | variable=='HIV+',.(value=sum(value)), 
          by=.(year=year(date), subpop, variable)][rev(order(variable, value))]
 
-# tests performed
+# calculate tests performed
 tests = tab[variable=='Tested and received the results' & year==2017]
 setnames(tests, 'value', '2017')
 tests[ ,year:=NULL]
@@ -15,7 +20,7 @@ setnames(tests2, 'value', '2018')
 tests2[ ,year:=NULL]
 tests = merge(tests, tests2, by=c('subpop', 'variable'), all=T)
 
-# hiv+
+# calculate hiv+
 hiv = tab[variable=='HIV+' & year==2017]
 setnames(hiv, 'value', '2017')
 hiv[ ,year:=NULL]
@@ -46,55 +51,103 @@ rate[ , tests2018:=round(tests2018)]
 rate[ , hiv2017:=round(hiv2017)]
 rate[ , hiv2018:=round(hiv2018)]
 
+#----------------------------------------------------
+# export the table 
+
+write.csv(rate, paste0(dir, 'pnls_hiv_testing_table_gf_only.csv'))
+
+#----------------------------------------------------
+
+#-----------------------------------
+# PEFAR versus GF table
+
+# tests performed
+keyt = compare[variable=='Tested and received the results' & subpop!='Clients' & year(date)==2018, .(value=sum(value)), by=.(funder, variable)]
+cltt = compare[variable=='Tested and received the results' & subpop=='Clients' & year(date)==2018, .(value=sum(value)), by=.(funder, variable)]
+totalt = compare[variable=='Tested and received the results' & year(date)==2018, .(value=sum(value)), by=.(funder, variable)]
+keyt[ ,subpop:='Key populations']
+cltt[ ,subpop:='Clients']
+totalt[ ,subpop:='Total']
+tested = rbind(keyt, cltt, totalt)
+
+# hiv+
+keyh = compare[variable=='HIV+' & subpop!='Clients' & year(date)==2018, .(value=sum(value)), by=.(funder, variable)]
+clth = compare[variable=='HIV+' & subpop=='Clients' & year(date)==2018, .(value=sum(value)), by=.(funder, variable)]
+totalh = compare[variable=='HIV+' & year(date)==2018, .(value=sum(value)), by=.(funder, variable)]
+keyh[ ,subpop:='Key populations']
+clth[ ,subpop:='Clients']
+totalh[ ,subpop:='Total']
+hiv = rbind(keyh, clth, totalh)
+
+table = rbind(tested, hiv)
+table = dcast(table, subpop+funder~variable)
+
+#-----------------------------------
 
 #----------------------------------------------------
 # export the table 
 
-dir = "C:/Users/ccarelli/Documents/pnls_data/"
+write.csv(table, paste0(dir, 'compare_pepfar_gf_table_2018.csv'))
 
-write.csv(rate, paste0(dir, 'pnls_hiv_testing_table_gf_only.csv'))
+#----------------------------------------------------
+# use to compare pepfar and the gf in kinshasa only, tests and positivity 
+
+compare[variable=='Tested and received the results' & subpop!='Clients' & year(date)==2018 & dps=='Kinshasa', .(value=sum(value)), by=.(funder, variable)]
+compare[variable=='Tested and received the results' & year(date)==2018 & dps=='Kinshasa', .(value=sum(value)), by=.(funder, variable)]
+
+compare[variable=='HIV+' & year(date)==2018 & dps=='Kinshasa', .(value=sum(value)), by=.(funder, variable)]
 
 
 #----------------------------------------------------
+# Descriptive statistics 
 
-tests = dt[variable=='Tested and received the results',.(value=sum(value)),
-           by=.(subpop, date)]
+# testing among the general versus key populations 
+dt[subpop!='Clients' & subpop!='Patients' & subpop!='Couples', key_pop:='Key population']
+dt[subpop=='Clients' & subpop=='Patients', key_pop:='General population']
+dt[subpop=='Couples', key_pop:='Couples']
 
-tests[variable=='Tested and received the results', variable:='tests']
-tests[subpop=='Clients', key:='pts']
-tests[subpop!='Clients', key:='key']
-tot_tests = dt[variable=='Tested and received the results',.(value=sum(value)),
-               by=date]
-tot_tests[, key:='total']
+# total tests 2018
+dt[variable=='Tested and received the results' & year(date)==2018, .(value=sum(value))]
+dt[variable=='Tested and received the results' & year(date)==2018 & key_pop=='Key population', 
+   .(value=sum(value))]
 
-tests = tests[,.(value=sum(value)),by=.(key, date)]
-tests = rbind(tests, tot_tests)
-tests = dcast(tests, date~key)
-
-tests[ ,perc_key:=round(100*(key/total), 1)]
-mean(tests$perc_key)
-min(tests$perc_key)
-max(tests$perc_key)
+x = dt[variable=='Tested and received the results' & year(date)==2018, .(value=sum(value))]
+y = dt[variable=='Tested and received the results' & year(date)==2018 & key_pop=='Key population', 
+   .(value=sum(value))]
+100*y/x
 
 
+z = dt[variable=='Tested and received the results' & year(date)==2018 & dps!='Kinshasa', .(value=sum(value))]
+r = dt[variable=='Tested and received the results' & year(date)==2018 & key_pop=='Key population' & dps!='Kinshasa', 
+       .(value=sum(value))]
+100*r/z
 
-tests = dt[variable=='Tested and received the results' | variable=='HIV+' ,.(value=sum(value)),
-           by=.(subpop, variable, date)]
+#----------------------------------------------------
 
-tests[variable=='Tested and received the results', variable:='tests']
-tests[variable=='HIV+', variable:='hiv']
-tests[ , key:=(subpop=='Clients')]
-tests = tests[,.(value=sum(value)),
-              by=.(key, variable, date)]
+# testing among the general versus key populations by dps
+# total tests 2018
+gen = dt[variable=='Tested and received the results' & , .(gen_value=sum(value)), by=dps]
+keys = dt[variable=='Tested and received the results' & year(date)==2018 & key_pop=='Key population', 
+   .(key_value=sum(value)), by=dps]
+
+gen_keys = merge(gen, keys, by='dps')
+gen_keys = gen_keys[order(dps)]
+gen_keys[ ,total:=gen_value+key_value]
+gen_keys[ , percent_on_keys:=round(100*(key_value/total), 1)]
+gen_keys[order(percent_on_keys)]
 
 
-tests = dcast(tests, key+date~variable)
 
-tests[ ,pos:=round(100*(hiv/tests), 1)
+#----------------------------------------------------
+# export the table 
+
+write.csv(gen_keys, paste0(dir, 'tests_on_key_pops_dps.csv'))
+
+#----------------------------------------------------
 
 
 
-dt[variable=='Tested and received the results', sum(value), by=year(date)]
+
 
 
 

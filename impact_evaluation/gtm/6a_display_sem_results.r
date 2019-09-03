@@ -52,7 +52,6 @@ urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # -----------------------------------------------
 
-
 #Some visualization code for model run 8/15/19 
 # View(urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Notified_out_cumulative"])
 # urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Notified_out_cumulative", mean(est)] # A very high positive average, but also a lot of variation. 
@@ -86,11 +85,12 @@ urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
 	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, colScaleMax=1.5)
+	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
 
 p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
               scaling_factors=NA, standardized=TRUE, 
-              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5)
+              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5, 
+              labSize1 = 4, labSize2 = 4)
 
 # my sem graph function for second half "unrelated regressions" model
 # p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
@@ -107,26 +107,35 @@ p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1,
 #MDR pathway 
 p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, 
+              lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
               dim=TRUE, highlight=c("Number_of_Cases_Screened_for_MDR_act_cumulative", "MDR_Cases_Started_Treatment_out_cumulative", 
-                                    "Secondline_Distributed_act_cumulative", "gf_mdrtb_cumulative"))
+                                    "Secondline_Distributed_act_cumulative", "Proportion_of_MDR_Cases_Treated_out", 
+                                    "Proportion_of_Patients_Receiving_DST_out", 
+                                    "gf_mdrtb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative"))
 
 #Cases notified pathway
 p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, 
+              lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
               dim=TRUE, highlight=c("Cases_Notified_out_cumulative", "Additional_Cases_Detected_via_ACF_out_cumulative", 
                                     "Children_less5_referred_out_cumulative", "gf_tbhiv_cumulative", "gf_mdrtb_cumulative", 
-                                    "gf_tb_cumulative"))
+                                    "Case_Notification_Rate_imp", "Children_in_Contact_with_TB_Started_IPT_out_cumulative", 
+                                    "gf_tb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative"))
 
 #GHE pathway 
 p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, 
+              lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
               dim=TRUE, highlight=c("ghe_tb_cumulative", "Number_of_Cases_Screened_for_MDR_act_cumulative", 
                                     "Cases_Notified_out_cumulative", "Cases_Started_on_Treatment_out_cumulative", "Firstline_Distributed_act_cumulative", 
                                     "TB_Patients_Tested_for_HIV_act_cumulative"))
+#Just visualize outputs to outcomes 
+outcomes_outputs = as.vector(nodeTable1[x%in%c(3, 10), unique(variable)])
 
+p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+               scaling_factors=NA, standardized=TRUE,
+               lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
+               dim=TRUE, highlight=c(outcomes_outputs))
 # -----------------------------------
 # Save output
 print(paste('Saving:', outputFile6a)) 
@@ -146,7 +155,7 @@ archive(outputFile6a)
 # 
 # #Save just the GLM diagrams with correlation coefficients as PNGs. 
 ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p5, height=10, width=13)
-ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p6, height=10, width=13)
+# ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p6, height=10, width=13)
 
 sep_terg_save = "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/september_terg_presentation/"
 #Save the specific graphics for reports in their own folder. 
@@ -157,3 +166,4 @@ ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nola
 ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
 ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
 ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)
+ggsave(paste0(sep_terg_save, "outputs_outcomes_pathway.png"), p10, height=10, width=13)

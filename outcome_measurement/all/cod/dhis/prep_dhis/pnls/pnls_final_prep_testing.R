@@ -167,6 +167,11 @@ dt = dt[!(check_var %in% check$check_var)]
 dt[ ,check_var:=NULL]
 
 #----------------------------------
+# bizarre month where people reported hiv+ trans people but no tests
+
+dt = dt[!(date=='2017-07-01' & subpop=='Trans people' & variable=='HIV+')]
+
+#----------------------------------
 # create smaller health facility groupings for graphs 
 
 dt[grep('hospital',facility_level), next_level:='Hospitals']
