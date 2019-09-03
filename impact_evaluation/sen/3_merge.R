@@ -1,6 +1,6 @@
 # ----------------------------------------------------------
 # AUTHOR: Francisco Rios Casas
-# PURPOSE: Merge prepped data for Sen TB Model
+# PURPOSE: 3. Merge prepped data for Sen TB Model
 # DATE: Auguts 15, 2019
 # INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------------------
@@ -30,6 +30,7 @@ outputs_outcomes = outputs_outcomes[, date:=annee+((trimestre-1)/4)]
 sub_data = outputs_outcomes[,.(region, centre, date, type,
                                  com_mobsoc, com_cause, com_radio, com_enf_ref, com_nom_touss, 
                                  tb_tfc, perf_lab, 
+                                 ntr_all,
                                  ntr_rhz, ntr_erhz, ntr_serhz, ntr_cpx,
                                  tot_genexpert, tot_confirme, tot_res,
                                  tbtot_taux_det,
@@ -40,7 +41,7 @@ sub_data = outputs_outcomes[,.(region, centre, date, type,
 # aggregate data to the admin1 (Regions in Senegal) ----------------------------------------------------------
 
 # VALUES WHICH CAN BE SUMMED (counts)
-summed_data = sub_data[, lapply(.SD, sum, na.rm=TRUE), by=c('region','date'), .SDcols=c('tb_tfc',
+summed_data = sub_data[, lapply(.SD, sum, na.rm=TRUE), by=c('region','date'), .SDcols=c('tb_tfc', 'ntr_all',
                                                                             'ntr_rhz', 'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 
                                                                             'tot_genexpert', 'tot_confirme', 'tot_res',
                                                                             'gueris_total', 'trait_tot', 'tb_vih_arv')]
@@ -98,24 +99,17 @@ merge_file <- merge(outputs_prepped, resource_tracking, by=c('date'), all=TRUE)
 
 # list variables that need redistribution
 # note: these vectors must be the same length and order matters
-inVars = c('other_dah_R3', 'other_dah_T1', 
-           #'other_dah_T3',
-           'exp_R2', 'exp_T1', 
-           'exp_T2', 
-           #'exp_T3',
-           'ghe')
+inVars = c('other_dah_T1',
+           'exp_T1',
+           'exp_T2')
 
 # list corresponding variables to define distribution proportions
-actVars = c('value_rssh_act','value_detection_act', 
-            #'mdr_tb_dx',
-            'value_rssh_act', 'value_detection_act',
-            'tb_vih_arv', 
-            #'mdr_tb_dx',
-            'ntr_rhz')
+actVars = c('value_prev_act',
+            'value_prev_act',
+            'tb_vih_arv')
 
 # create combined variables for redistribution where necessary
-merge_file[, value_rssh_act:=com_enf_ref + com_nom_touss + tb_tfc + perf_lab]
-merge_file[, value_detection_act:=com_mobsoc + com_cause + com_radio + tot_genexpert]
+merge_file[, value_prev_act:=com_mobsoc + com_cause + com_radio + tot_genexpert + ntr_all]
 
 
 # loop over financial variables and redistribute subnationally
@@ -146,7 +140,7 @@ for(i in seq_along(inVars)) {
 # Finish and save 
 
 # drop unnecessary variables
-merge_file = merge_file[, -c('mean','tmp','prop','value_detection_act','value_rssh_act')]
+merge_file = merge_file[, -c('mean','tmp','prop','value_prev_act')]
 # need to add merge variables back in
 
 # save

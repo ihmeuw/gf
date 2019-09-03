@@ -52,7 +52,7 @@ source(paste0('./impact_evaluation/sen/models/', modelVersion1, '.r'))
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c('region','date',modelVars)
-data = data[, unique(modelVars), with=FALSE] 
+data = data[, unique(modelVars), with=FALSE]
 # ----------------------------------------------
 
 
