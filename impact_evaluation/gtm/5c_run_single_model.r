@@ -220,11 +220,9 @@ subData = subData[, unique(modelVars), with=FALSE]
 # if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 
 #Make scaling factors data table so you can run this code. - everything should be scaled to 1. 
-scaling_factors = data.table()
-numVars = names(subData)[!names(subData)%in%c('department')]
-for(v in numVars) {
-	scaling_factors[,(v):=1]
-}
+scaling_factors = data.table(names = numVars, factor=1, id=1)
+scaling_factors = dcast(scaling_factors, id~names, value.var='factor')
+scaling_factors$id <- NULL
 
 # run series of unrelated linear models for comparison
 urFit = lavaanUR(model, subData)

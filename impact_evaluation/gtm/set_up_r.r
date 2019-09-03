@@ -136,7 +136,7 @@ if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo)
 }
 
 #Add a temporary IE dir for when running on a local computer - this should match clustertmpDir2 when running on cluster!
-tempIeDir = paste0('/ihme/scratch/users/', username, '/impact_evaluation/parallel_files/')
+tempIeDir = paste0('C:/Users/elineb/Desktop/tmp_cluster/')
 # ---------------------------------------------------------------------------------
 
 
