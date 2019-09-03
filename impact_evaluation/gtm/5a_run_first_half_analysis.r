@@ -120,9 +120,9 @@ for(i in seq(T)) {
 # paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
 # summaries[, se_ratio.std:=se.std/est.std]
 # summaries[, se_ratio:=se/est]
-# means = summaries[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
-# means[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
-# means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
+means = urFits[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
+means[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
+means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # --------------------------------------------------------------
 
 
@@ -131,7 +131,7 @@ for(i in seq(T)) {
 
 # save all sem fits just in case they're needed
 print(paste('Saving', outputFile5a))
-# save(list=c('data','model','summaries','means','urFits'), file=outputFile5a)
+save(list=c('data','model','means','urFits'), file=outputFile5a)
 save(list=c('data','model','urFits'), file=outputFile5a)
 
 # save full output for archiving
