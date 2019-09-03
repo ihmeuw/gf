@@ -70,7 +70,7 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   
   #Drop out the comments column, and record ID column. 
   # If the module column is #3, drop the first two rows. 
-  comment_col = grep("comment", names) 
+  comment_col = grep("comment|comentario", names) 
   record_id_col = grep("record id", tolower(gf_data))
   stopifnot(length(record_id_col)==1 | is.na(record_id_col)) #Just don't drop more than one column here. 
   gf_data = gf_data[, !c(comment_col, record_id_col), with=FALSE] 
@@ -133,7 +133,7 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
     lfa_result_col = grep("verified result", names)
     gf_result_col = grep("global fund validated result|validated result", names)
   } else if (language=="esp"){
-    reference_col = grep("linea de base", names) 
+    reference_col = grep("linea de base|base de referencia", names) 
     # target_col = grep("meta", names)
     result_col = grep("resultados", names) 
     lfa_result_col = grep("verified result", names)
@@ -161,18 +161,18 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   #---------------------------------------------
   
   #Acceptable raw column names - will be matched to corrected names below. 
-  module_names = c('module')
-  standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator', 'indicateurs standard')
-  subcat_names = c('ventilation', 'disaggregation')
-  category_names = c('categorie')
+  module_names = c('module', "modulo")
+  standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator', 'indicateurs standard', "indicadores")
+  subcat_names = c('ventilation', 'disaggregation', 'desglose')
+  category_names = c('categorie', 'categoria')
   geography_names = c('geographic area', 'country')
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
   reverse_ind_names = c("reverse indicator?")
   
-  baseline_names = c('baseline (if applicable)', "reference")
-  result_names = c('result', 'resultats', 'results')
-  lfa_result_names = c('verified result')
-  gf_result_names = c('validated result', "global fund validated result")
+  baseline_names = c('baseline (if applicable)', "reference", "base de referencia")
+  result_names = c('result', 'resultats', 'results', 'resultados')
+  lfa_result_names = c('verified result', 'verified results')
+  gf_result_names = c('validated result', "global fund validated result", 'validated results')
   
   #Correct these matched names. 
   names[which(names%in%module_names)] = "module"
@@ -204,7 +204,7 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   names[ver_method_indices] = NA
   
   #Where 'source' exists in the names vector, move to the sub-names vector 
-  data_source_names = c('source')
+  data_source_names = c('source', 'fuente')
   source_indices = which(names%in%data_source_names)
   stopifnot(is.na(unique(sub_names[source_indices])))
   sub_names[source_indices] = "source"
@@ -225,8 +225,8 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   num_names = c("N#")
   denom_names = c("D#")
   proportion_names = c("%")
-  year_names = c("Year", "Année")
-  verification_source_names = c("Source", "source")
+  year_names = c("Year", "Année", "Año")
+  verification_source_names = c("Source", "source", "Fuente")
   
   sub_names[which(sub_names%in%num_names)] = "n"
   sub_names[which(sub_names%in%denom_names)] = "d"
@@ -271,8 +271,8 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   #------------------------------------------------------
   
   #Drop out rows that have NAs, and drop the sub names column. 
-  gf_data = gf_data[!(is.na(module) & is.na(indicator)), ] 
   gf_data = gf_data[-c(1)]
+  gf_data = gf_data[!(is.na(module) & is.na(indicator)), ] 
   
   return(gf_data)
 }

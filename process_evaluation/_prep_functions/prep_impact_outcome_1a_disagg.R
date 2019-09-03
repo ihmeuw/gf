@@ -44,6 +44,9 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   impact_col = grep("Impact/Outcome Indicators", gf_data)
   stopifnot(length(impact_col)==1)
   name_row = grep("Impact/Outcome", gf_data[[impact_col]])
+  if (language=="esp"){
+    name_row = grep("Impacto/Resultados", gf_data[[impact_col]])
+  }
   if (length(name_row)>1){
     name_row = name_row[length(name_row)]
   }
@@ -55,7 +58,7 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   
   #Drop out the comments column, and record ID column. 
   # If the impact/outcome column is 2, remove the first column. 
-  comment_col = grep("comment", names) 
+  comment_col = grep("comment|comentario", names) 
   record_id_col = grep("record id", tolower(gf_data))
   stopifnot(length(record_id_col)==1 | is.na(record_id_col)) #Just don't drop more than one column here. 
   gf_data = gf_data[, !c(comment_col, record_id_col), with=FALSE] 
@@ -70,6 +73,9 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   impact_col = grep("Impact/Outcome Indicators", gf_data)
   stopifnot(length(impact_col)==1)
   name_row = grep("Impact/Outcome", gf_data[[impact_col]])
+  if (language=="esp"){
+    name_row = grep("Impacto/Resultados", gf_data[[impact_col]])
+  }
   if (length(name_row)>1){
     name_row = name_row[length(name_row)]
   }
@@ -113,8 +119,10 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
     gf_result_col = grep("global fund validated result", names)
   }
  
-  if (length(result_col)>1){ #The word 'result' appears several times for English files, and you just want the first column here. 
+  if (length(result_col)>1 & language=="eng"){ #The word 'result' appears several times for English files, and you just want the first column here. 
     result_col = result_col[1]
+  } else if (length(result_col)>1 & language=="esp" & 1%in%result_col){ #For some Spanish files, the first column has the word "resultados" in it. 
+    result_col = result_col[2]
   }
   # if (length(target_col)>1){
   #   target_col = target_col[1]
@@ -137,18 +145,18 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   #---------------------------------------------
   
   #Acceptable raw column names - will be matched to corrected names below. 
-  impact_names = c('impact / effet ', "impact / outcome ", "impact/outcome")
-  standard_ind_names = c('indicateurs', "impact/outcome indicator", 'indicateurs standard', "standard impact/outcome indicator")
+  impact_names = c('impact / effet ', "impact / outcome ", "impact/outcome", "impacto/resultados")
+  standard_ind_names = c('indicateurs', "impact/outcome indicator", 'indicateurs standard', "standard impact/outcome indicator", "indicador estandar ")
   geography_names = c('geographic area')
-  subcat_names = c('ventilation', 'disaggregation')
-  category_names = c('categorie', 'categorie ')
+  subcat_names = c('ventilation', 'disaggregation', 'desglose')
+  category_names = c('categorie', 'categorie ', "categoria")
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
   reverse_ind_names = c("reverse indicator?")
   
-  baseline_names = c('baseline (if applicable)', "reference", "reference (le cas echeant)")
+  baseline_names = c('baseline (if applicable)', "reference", "reference (le cas echeant)", "linea de base")
   target_names = c('target', 'cible')
-  disagg_report_year_names = c('ventilation annee de la cible', 'disaggregation report year')
-  result_names = c('result', 'resultats', 'resultat')
+  disagg_report_year_names = c('ventilation annee de la cible', 'disaggregation report year', "fecha de presentacion del informe")
+  result_names = c('result', 'resultats', 'resultat', 'resultados')
   lfa_result_names = c('verified result')
   gf_result_names = c('validated result', "global fund validated result")
   
@@ -206,9 +214,9 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   num_names = c("N#")
   denom_names = c("D#")
   proportion_names = c("%")
-  year_names = c("Year", "Année")
-  verification_source_names = c("Source", "source")
-  value_names = c('Valeur', 'Value')
+  year_names = c("Year", "Année", "Año")
+  verification_source_names = c("Source", "source", "Fuente")
+  value_names = c('Valeur', 'Value', 'Valor')
   
   sub_names[which(sub_names%in%num_names)] = "n"
   sub_names[which(sub_names%in%denom_names)] = "d"
@@ -258,8 +266,8 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   #------------------------------------------------------
   
   #Drop out rows that have NAs, and drop the sub names column. 
-  gf_data = gf_data[!(is.na(indicator_type) & is.na(indicator)), ] 
   gf_data = gf_data[-c(1)] 
+  gf_data = gf_data[!(is.na(indicator_type) & is.na(indicator)), ] 
   
   return(gf_data)
 }

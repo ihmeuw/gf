@@ -4,14 +4,17 @@
 # DATE: Last updated June 2019. 
 # ----------------------------------------------
 
-master_file_list = data.table(read.xlsx("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/master_file_list.xlsx", detectDates=T))
+master_file_list = data.table(read_excel("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/master_file_list.xlsx"))
 master_file_list[, start_date_programmatic:=as.Date(start_date_programmatic, format = "%m/%d/%Y")]
-master_file_list = master_file_list[grant_status == "active"]
+master_file_list = master_file_list[grant_status == "active" & file_iteration=="final"]
 
 # THIS SHOULD BE DELETED WHEN YOU MAKE A MORE GENERAL FUNCTION! EL 7/24/2019
 master_file_list = master_file_list[sheet_coverage_1b%in%c("Indicateurs Couverture_1B", "Coverage Indicators_1B")]
 # ONLY WANT TO PREP CURRENT GRANTS FOR NOW, BUT SHOULD CHANGE THIS LATER! el 8/1/2019
 master_file_list = master_file_list[grant_period%in%c('2018-2020', '2018', '2016-2019')] #This might not be catching everything for Guatemala. 
+
+#Temporary stop - only keeping TB in Guatemala. 
+master_file_list = master_file_list[disease=="tb"]
 
 #-------------------------------------------
 #Prep Coverage 1A sheets 

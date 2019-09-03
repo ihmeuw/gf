@@ -157,16 +157,16 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   #---------------------------------------------
   
   #Acceptable raw column names - will be matched to corrected names below. 
-  module_names = c('module')
-  standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator')
+  module_names = c('module', 'modulo')
+  standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator', 'indicador ')
   custom_ind_names = c('custom coverage indicator')
   geography_names = c('geographic area')
-  cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?", "targets cumulative?_x000d_")
+  cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?", "targets cumulative?_x000d_", "¿metas acumulativas?")
   reverse_ind_names = c("reverse indicator?")
   
-  baseline_names = c('baseline (if applicable)', "reference")
-  target_names = c('target', 'cible')
-  result_names = c('result', 'resultats')
+  baseline_names = c('baseline (if applicable)', "reference", 'linea de base')
+  target_names = c('target', 'cible', 'meta')
+  result_names = c('result', 'resultats', 'resultados')
   lfa_result_names = c('verified result')
   gf_result_names = c('validated result', "global fund validated result")
   
@@ -186,7 +186,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   
   #Where 'achievement ratio' exists in the names vector, move to the sub-names vector 
-  achievement_ratio_names = c('achievement ratio', "taux d'accomplissement", "achivement ratio(final one is calculated by gos)", "achivement ratio")
+  achievement_ratio_names = c('achievement ratio', "taux d'accomplissement", "achivement ratio(final one is calculated by gos)", "achivement ratio", "relacion de logro")
   ach_ratio_indices = which(names%in%achievement_ratio_names)
   stopifnot(is.na(unique(sub_names[ach_ratio_indices])))
   sub_names[ach_ratio_indices] = "achievement_ratio"
@@ -200,7 +200,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   names[ver_method_indices] = NA
   
   #Where 'source' exists in the names vector, move to the sub-names vector 
-  data_source_names = c('source')
+  data_source_names = c('source', 'fuente')
   source_indices = which(names%in%data_source_names)
   stopifnot(is.na(unique(sub_names[source_indices])))
   sub_names[source_indices] = "source"
@@ -221,8 +221,8 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   num_names = c("N#")
   denom_names = c("D#")
   proportion_names = c("%")
-  year_names = c("Year", "Année")
-  verification_source_names = c("Source", "source")
+  year_names = c("Year", "Année", "Año")
+  verification_source_names = c("Source", "source", "Fuente")
   
   sub_names[which(sub_names%in%num_names)] = "n"
   sub_names[which(sub_names%in%denom_names)] = "d"
@@ -231,7 +231,9 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   sub_names[which(sub_names%in%verification_source_names)] = "source"
   
   #Certain column names are okay to change to NA here. 
-  na_names = c("If sub-national, please specify under the \"Comments\" Column", "Si infranationale, veuillez préciser dans la colonne des commentaires")
+  na_names = c("If sub-national, please specify under the \"Comments\" Column", 
+               "Si infranationale, veuillez préciser dans la colonne des commentaires", 
+               "Si es subnacional, especifíquelo en el columna de comentarios")
   sub_names[which(sub_names%in%na_names)] = NA
   
   if (verbose){
@@ -268,8 +270,8 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   #------------------------------------------------------
   
   #Drop out rows that have NAs, and drop the sub names column. 
-  gf_data = gf_data[!(is.na(module) & is.na(indicator)), ] 
   gf_data = gf_data[-c(1)]
+  gf_data = gf_data[!(is.na(module) & is.na(indicator)), ] 
   
   return(gf_data)
 }
