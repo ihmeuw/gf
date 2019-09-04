@@ -143,58 +143,33 @@ dt5$dx_count <- 1
 # get count of those that started either treatment
 dt5$tx_count <- NA
 dt5$tx_count[which(dt5$regime=="Long" | dt5$regime=="Court")] <- 1
+dt5$tx_count[which(dt5$resultat=="Gueris")] <- 1
+dt5$tx_count[which(is.na(dt5$tx_count))] <- 0
 
 # use either the date of treatment or date of diagnosis to assign values
 dt5$date_either <- ifelse(is.na(dt5$date_diag), dt5$date_trait, dt5$date_diag)
 
-View(dt5[,.(date_either, date_diag, date_trait)])
+# restore the date attribute
+class(dt5$date_either) <- class(dt5$date_trait)
 
 # subset to necessary data
-dt5 <- dt5[,.(region, date_either, dx_count, tx_count)]
+dt6 <- dt5[,.(region, date_either, dx_count, tx_count)]
 
-dt5[, quarter:=quarter(date_either)]
-dt5[, year:=year(date_either)]
-dt5[, date_trait:=NULL]
+# add quarter and year information
+dt6[, quarter:=quarter(date_either)]
+dt6[, year:=year(date_either)]
+dt6[, date_either:=NULL]
 
 #Create date variable
-mdr_tb_dx[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-mdr_tb_dx[, date:=year+quarter]
-mdr_tb_tx[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-mdr_tb_tx[, date:=year+quarter]
+dt6[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+dt6[, date:=year+quarter]
 
-# Calcuate how many started treatment
-mdr
+# Calcuate how many diagnosed and how many treated
+dt7 <- dt6[,lapply(.SD, sum), by=c('region', 'date'),.SDcols=c("dx_count", "tx_count")]
 
-# sum data
-mdr_tb_dx <- mdr_tb_dx[,.(mdr_tb_dx=sum(count)), by=c('region', 'date')]
-mdr_tb_tx <- mdr_tb_tx[,.(mdr_tb_tx=sum(count)), by=c('region', 'date')]
-
-# merge data
-merge1 <- merge(mdr_tb_dx, mdr_tb_tx, by=c("region", "date"), all = TRUE)
-
-# calculate cure rate by year
-# Count how many successfully treated
-dt4$gueris <- NA
-dt4$gueris[which(dt4$resultat=="Gueris")] <- 1
-
-mdr_tb_gueris <- dt4[,.(region, date_trait, count, gueris)]
-
-mdr_tb_gueris[, quarter:=quarter(date_trait)]
-mdr_tb_gueris[, year:=year(date_trait)]
-mdr_tb_gueris[, date_either:=NULL]
-
-mdr_tb_gueris[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-mdr_tb_gueris[, date:=year+quarter]
-
-mdr_tb_gueris <- mdr_tb_gueris[,.(mdr_tb_gueris=sum(gueris, na.rm = TRUE)), by=c('region', 'date')]
-
-# merge data
-tb_mdr_data <- merge(merge1, mdr_tb_gueris, by=c("region", "date"), all=TRUE)
-
-# calculate proportion started treatment
-
-
+# calculate treatment rate
+dt7$mdr_tx_rate <- dt7$tx_count/dt7$dx_count
 
 # save file
 setwd("J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data")
-saveRDS(tb_mdr_data, file="prepped_tb_mdr_data.RDS")
+saveRDS(dt7, file="prepped_tb_mdr_data.RDS")
