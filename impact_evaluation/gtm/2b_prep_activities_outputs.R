@@ -317,8 +317,8 @@ dt_final = merge(activities1, outputs1, by=c('date', 'department'), all=T) #Save
 # }
 
 #Generate combined first- and second-line drug activity variables EL 8/22/19 
-dt_final[, Firstline_Distributed_act:=sum(Total_First_Line_Drugs_inusIsonizide__Distributed_value_act, Isoniazid_Distributed_value_act, na.rm=T)]
-dt_final[, Secondline_Distributed_act:=sum(Second_Line_Drugs_Distributed_value_act, Total_MDR_Drugs_Distributed_value_act, na.rm=T)]
+dt_final[, Firstline_Distributed_act:=sum(Total_First_Line_Drugs_inusIsonizide__Distributed_value_act, Isoniazid_Distributed_value_act, na.rm=F), by=c('date', 'department')]
+dt_final[, Secondline_Distributed_act:=sum(Second_Line_Drugs_Distributed_value_act, Total_MDR_Drugs_Distributed_value_act, na.rm=F), by=c('date', 'department')]
 
 #-----------------------------------------------------
 # Save data 
