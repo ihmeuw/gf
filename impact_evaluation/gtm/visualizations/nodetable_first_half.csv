@@ -1,12 +1,12 @@
 variable,y,x,label
-odah_tb_cumulative,1,-12,Other DAH TB Exp. 
+odah_tb_cumulative,1,-12,Other donor TB Exp. 
 ghe_tb_cumulative,3.5,-12,GHE TB Exp. 
 gf_tb_cumulative,6,-12,GF TB Exp. 
 gf_mdrtb_cumulative,8.5,-12,GF MDR-TB Exp. 
 gf_tbhiv_cumulative,11,-12,GF TB/HIV Exp. 
 Firstline_Distributed_act_cumulative,1.5,-3,First-line drugs dist.
 Secondline_Distributed_act_cumulative,6.5,-3,Second-line drugs dist.
-Additional_Cases_Detected_via_ACF_out_cumulative,4.4,-3,Cases detected via ACF
+Additional_Cases_Detected_via_ACF_out_cumulative,4.4,-3,Cases detected via active case finding
 Number_of_Cases_Screened_for_MDR_act_cumulative,9,-3,Genexpert testing for MDR
 TB_Patients_Tested_for_HIV_act_cumulative,11.5,-3,TB patients tested for HIV
 Cases_Started_on_Treatment_in_Prisons_out,0,3,Cases started Tx. In prisons
