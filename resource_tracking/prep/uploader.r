@@ -69,7 +69,7 @@ ACCOUNT_ID = "3769859"
 BUCKET = "3931991"
 VAULT = "602270806"
 
-auth_data = readRDS("./resource_tracking/prep/_common/uploader_auth.rds")
+auth_data = readRDS("./resource_tracking/prep/uploader_auth.rds")
 
 # Get refresh token 
 if (1==2) { # Emily figure out condition to automatically generate this! 
@@ -90,7 +90,6 @@ if (1==2) { # Emily figure out condition to automatically generate this!
   # Parse returned text with fromJSON()
   auth_data = fromJSON(content(REFRESH_TOKEN_NEW, as="text"))
 } 
-
 # ----------------------------------------
 # STEP 2: POST FILES TO BASECAMP
 #-----------------------------------------
@@ -99,12 +98,14 @@ if (1==2) { # Emily figure out condition to automatically generate this!
 base_url =paste0("https://3.basecampapi.com/", ACCOUNT_ID, "/projects.json")
 
 try = GET(base_url, add_headers(Authorization = paste0("Bearer :", auth_data$access_token)))
+
 # Parse response with content()
-content(try2, as = "parsed")
-if (try$status_code==401) print("Get attempt was unsuccessful.")
+content(try, as = "parsed")
 
-
-
+headers1 = headers(try)
+error_headers = auth_data = fromJSON(content(try, as="text"))
+write.csv(error_headers, "C:/Users/elineb/Documents/gf/resource_tracking/prep/error_headers.csv", row.names=F)
+write.csv(all_headers, "C:/Users/elineb/Documents/gf/resource_tracking/prep/all_headers.csv", row.names=F)
 #------------------------------------------
 # Try to get authorization
 auth_url = "https://launchpad.37signals.com/authorization.json"
