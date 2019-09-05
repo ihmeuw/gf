@@ -85,8 +85,8 @@ if (rerun_merge==TRUE) {
 if (rerun_explore==TRUE) { 
 	source('./impact_evaluation/gtm/4a_set_up_for_first_half_analysis.r')
 	source('./impact_evaluation/gtm/4b_set_up_for_second_half_analysis.r')
-	source('./impact_evaluation/gtm/4c_explore_first_half_data.r')
-	source('./impact_evaluation/gtm/4d_explore_second_half_data.r')
+	# source('./impact_evaluation/gtm/4c_explore_first_half_data.r')
+	# source('./impact_evaluation/gtm/4d_explore_second_half_data.r')
 }
 
 # ---------------------------------------
@@ -94,7 +94,7 @@ if (rerun_explore==TRUE) {
 # ---------------------------------------
 if (rerun_models==TRUE) { 
 	source('./impact_evaluation/gtm/5a_run_first_half_analysis.r')
-	source('./impact_evaluation/gtm/5b_run_second_half_analysis.r')
+	# source('./impact_evaluation/gtm/5b_run_second_half_analysis.r')
 }
 
 # ---------------------------------------

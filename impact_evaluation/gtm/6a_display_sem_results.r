@@ -119,8 +119,8 @@ p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
               dim=TRUE, highlight=c("Cases_Notified_out_cumulative", "Additional_Cases_Detected_via_ACF_out_cumulative", 
                                     "Children_less5_referred_out_cumulative", "gf_tbhiv_cumulative", "gf_mdrtb_cumulative", 
-                                    "Case_Notification_Rate_imp", "Children_in_Contact_with_TB_Started_IPT_out_cumulative", 
-                                    "gf_tb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative"))
+                                    "Case_Notification_Rate_imp", 
+                                    "gf_tb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative", "Case_Notification_Rate_imp_log"))
 
 #GHE pathway 
 p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
