@@ -18,11 +18,9 @@ library(RColorBrewer)
 # load model results
 load(outputFile5a)
 data1=copy(data)
-means1 = copy(means)
-summaries1 = copy(summaries)
 
 # put together coefficient tables
-means = copy(means1)
+means = copy(urFits)
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
@@ -39,7 +37,7 @@ nodeTable1 = nodeTable1[variable %in% names(data1)]
 # Compute explained variance
 
 # establish the outcome variable
-outcomeVar = 'lead_malariaDeaths_rate'
+outcomeVar = 'Proportion_of_HIV_TB_Cases_Treated_out_log'
 byVars = c('lhs', 'rhs', 'est.std', 'se.std')
 
 # prep each level of coefficients

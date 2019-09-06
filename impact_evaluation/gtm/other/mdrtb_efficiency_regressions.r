@@ -21,15 +21,14 @@ resource_tracking[, gf_mdrtb_cumulative:=cumsum(gf_mdrtb)] #No NAs here, so don'
 
 #read in already prepped data. - this will be 'data' for the regressions below. 
 load(outputFile4a)
-data = data[, .(department, date, Number_of_Cases_Screened_for_MDR_act_cumulative, Secondline_Distributed_act_cumulative, 
-                MDR_Cases_Started_Treatment_out_cumulative, gf_mdrtb_cumulative, Cases_Notified_out_cumulative, MDR_Cases_Started_Treatment_out)]
+# data = data[, .(department, date, Number_of_Cases_Screened_for_MDR_act_cumulative, Secondline_Distributed_act_cumulative, 
+#                 MDR_Cases_Started_Treatment_out_cumulative, gf_mdrtb_cumulative, Cases_Notified_out_cumulative, MDR_Cases_Started_Treatment_out)]
 
 #Merge national level resource tracking with activity/output variables only. 
-data2 = data[, .(Number_of_Cases_Screened_for_MDR_act_cumulative=sum(Number_of_Cases_Screened_for_MDR_act_cumulative, na.rm=T), 
-                 Secondline_Distributed_act_cumulative=sum(Secondline_Distributed_act_cumulative, na.rm=T), 
-                 MDR_Cases_Started_Treatment_out_cumulative=sum(MDR_Cases_Started_Treatment_out_cumulative, na.rm=T), 
-                 Cases_Notified_out_cumulative=sum(Cases_Notified_out_cumulative, na.rm=T),
-                 MDR_Cases_Started_Treatment_out=sum(MDR_Cases_Started_Treatment_out, na.rm=T)), by='date']
+data2 = data[, .(Number_of_Cases_Screened_for_MDR_act_cumulative=sum(Number_of_Cases_Screened_for_MDR_act_cumulative, na.rm=TRUE), 
+                 Secondline_Distributed_act_cumulative=sum(Secondline_Distributed_act_cumulative, na.rm=TRUE), 
+                 MDR_Cases_Started_Treatment_out_cumulative=sum(MDR_Cases_Started_Treatment_out_cumulative, na.rm=TRUE), 
+                 Cases_Notified_out_cumulative=sum(Cases_Notified_out_cumulative, na.rm=TRUE)), by='date']
 data2 = merge(data2, resource_tracking, by='date', all=T)
 
 #----------------------------------------------------------------------------------------------
@@ -70,7 +69,8 @@ p1 = ggplot(data2, aes(x=date, y=genexpert_ratio)) +
 p2 = ggplot(data2, aes(x=date, y=mdr_treatment_ratio)) + 
   geom_point(color="blue") + 
   geom_smooth(color="blue") + 
-  theme_bw() + 
+  theme_bw(base_size=18) + 
+  scale_x_continuous(breaks=seq(2009, 2018, by=2), labels=as.character(seq(2009, 2018, by=2)), limits=c(2009, 2018)) + 
   labs(title="Cost to Global Fund of each MDR case started on treatment over time", x="Date", y="Cost per unit ($)", 
        caption="*There was a gap in grant spending in 2016")
 
@@ -91,6 +91,6 @@ p5 = grid.arrange(p4, p2, ncol=1)
 #File paths 
 save_loc = "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/september_terg_presentation/"
 ggsave(paste0(save_loc, "genexpert_efficiency.png"), p1, height=10, width=10)
-ggsave(paste0(save_loc, "mdr_treatment_efficiency.png"), p2, height=10, width=10)
+ggsave(paste0(save_loc, "mdr_treatment_efficiency.png"), p2, height=10, width=18)
 ggsave(paste0(save_loc, "secondline_drug_efficiency.png"), p3, height=10, width=10)
 ggsave(paste0(save_loc, "mdr_started_treatment_grid.png"), p5, height=10, width=10)

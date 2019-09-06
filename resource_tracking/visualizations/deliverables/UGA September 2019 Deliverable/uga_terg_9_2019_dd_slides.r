@@ -1,6 +1,9 @@
 # Emily Linebarger 
 # Making UGA GHE graphic, and quick statistics. 
 
+#------------------------------------------
+# TB 
+#------------------------------------------
 
 #Funding landscape graph. 
 odah = readRDS("J:/Project/Evaluation/GF/resource_tracking/_odah/prepped_data/other_dah_actuals_all_uga.rds")
@@ -94,3 +97,49 @@ library(gridExtra)
 grid.arrange(ghe_only2, ghe_only, nrow=1) 
 
 ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/UGA TB Deliverable September 2019/ghe_spending_combined.png", grid.arrange(ghe_only2, ghe_only, nrow=1), height=10, width=15)
+
+
+#------------------------------------------
+# MALARIA 
+#------------------------------------------
+save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/UGA Malaria September 2019/"
+repo_root = "C:/Users/elineb/Documents/gf/"
+setwd(repo_root) 
+library(gridExtra)
+source("./resource_tracking/visualizations/graphing_functions.r", encoding="UTF-8")
+
+#First, run the stacked budget/expenditure graph, with pooled grants. 
+p1 = absorption_by_loc_disease('uga', 'malaria', grantPeriod="2018-2020", stackBudgetExp = TRUE, bySemester=TRUE, trimAbsorption=TRUE, barLabel=TRUE, 
+                               altTitle = "Absorption for malaria in Uganda in 2018-2020, for all grants")
+
+# Then visualize just as absorption bars. 
+p2 = absorption_by_loc_disease('uga', 'malaria', grantPeriod = c('2015-2017', '2018-2020'), bySemester=TRUE, 
+                               trimAbsorption=TRUE, byGrant=TRUE, altTitle='Absorption for malaria in Uganda for 2015-2017 and 2018-2020 for all grants')
+
+  
+# Third, look at specific interventions by grant. start with vector control. 
+p3_taso = absorption_by_loc_disease('uga', 'malaria', grantPeriod='2018-2020', byIntervention=TRUE, limitModules="Vector control", 
+                                    trimAbsorption=TRUE, grantName = "UGA-M-TASO", barColor=ihme_purples[4], barLabels=TRUE, 
+                                    altTitle = "Absorption for malaria in Uganda in 2018-2020\nfor UGA-M-TASO, Vector Control")
+p3_mofped = absorption_by_loc_disease('uga', 'malaria', grantPeriod='2018-2020', byIntervention=TRUE, limitModules="Vector control", 
+                                      trimAbsorption=TRUE, grantName = "UGA-M-MoFPED", barColor=ihme_greens[4], barLabels=TRUE, 
+                                      altTitle = "Absorption for malaria in Uganda in 2018-2020\nfor UGA-M-MoFPED, Vector Control")
+
+# Then, specific prevention interventions. 
+p4_taso = absorption_by_loc_disease('uga', 'malaria', grantPeriod="2018-2020", stackBudgetExp = TRUE, bySemester=TRUE,
+                               limitModules="Specific prevention interventions", grantName = "UGA-M-TASO", trimAbsorption=TRUE, 
+                               barLabels=TRUE, barColor=ihme_purples[4], 
+                               altTitle = "Absorption for malaria in Uganda in 2018-2020\nfor UGA-M-TASO, specific prevention interventions")
+p4_mofped = absorption_by_loc_disease('uga', 'malaria', grantPeriod="2018-2020", stackBudgetExp = TRUE, bySemester=TRUE,
+                               limitModules="Specific prevention interventions", grantName = "UGA-M-MoFPED", trimAbsorption=TRUE, 
+                               barLabels=TRUE,  barColor=ihme_greens[4], 
+                               altTitle = "Absorption for malaria in Uganda in 2018-2020\nfor UGA-M-MoFPED, specific prevention interventions")
+
+
+pdf(paste0(save_loc, "uga_malaria_exploratory_graphs.pdf"), height=10, width=20)
+p1
+p2
+grid.arrange(p3_mofped, p3_taso, nrow=1)
+grid.arrange(p4_mofped, p4_taso, nrow=1)
+
+dev.off()

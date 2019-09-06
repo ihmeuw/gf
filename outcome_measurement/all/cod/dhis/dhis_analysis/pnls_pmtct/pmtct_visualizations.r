@@ -205,12 +205,40 @@ p9 = ggplot(gf_only_map[element_id=="uXM8GDCJbGK"], aes(x = long, y = lat, group
        subtitle=paste0("n = ", n_gf_only), 
        caption="Note: Represents only Global Fund-supported health zones") 
 
-gf_map_wide = gf_only[year==2018, .(value=sum(value, na.rm=T)), by=c('id', 'element_eng')]
-gf_map_wide = dcast(gf_map_wide, id~element_eng, value.var='value')
+gf_map_wide = gf_only[year==2018, .(value=sum(value, na.rm=T)), by=c('id', 'element_eng', 'dps')]
+gf_map_wide = dcast(gf_map_wide, id+dps~element_eng, value.var='value')
 setnames(gf_map_wide, c('Tested', 'Total received in the facility'), c('tested', 'total'))
 n_gf_wide = gf_map_wide[, sum(total)]
 gf_map_wide[, pct:=((tested/total)*100)]
 gf_map_wide = merge(gf_map_wide, coord, by='id', all=T, allow.cartesian=T)
+
+#make the first letter of each DPS capital, as well as the second word when split by "-".
+gf_map_wide[, dps:=paste0(toupper(substr(dps, 1, 1)), substr(dps, 2, length(dps)))]
+gf_map_wide[, dps1:=tstrsplit(dps, "-", keep=1)]
+gf_map_wide[, dps2:=tstrsplit(dps, "-", keep=2)]
+gf_map_wide[!is.na(dps2), dps2:=paste0(toupper(substr(dps2, 1, 1)), substr(dps2, 2, length(dps2)))]
+gf_map_wide[!is.na(dps2), dps:=paste0(dps1, " ", dps2)]
+
+#Add on centroid labels
+#---------------------------------------------
+districts = unique(gf_map_wide$dps)
+districts = districts[!is.na(districts)]
+all_centers = data.table()
+for (district in districts){
+  centers = gf_map_wide[dps==district, .(long, lat)]
+  center = as.data.table(centroid(centers))
+  center[, dps:=district]
+  all_centers = rbind(all_centers, center)
+}
+
+# Generate a labels dataset
+labels = unique(gf_map_wide[, .(id, dps, pct)])
+labels[, label:= paste0(dps, ": ", round(pct, 2), "%")]
+labels = merge(labels, all_centers, by=c('dps'))
+#-----------------------------------------------
+
+#Remove Lualaba and Haut-katanga from labels dataset because they aren't funded by the Global Fund. 
+labels = labels[!(dps=="Haut Katanga" | dps=="Lualaba")]
 
 p10 = ggplot(gf_map_wide, aes(x = long, y = lat, group = group, fill=pct)) +
   geom_polygon(colour="black") +
@@ -220,7 +248,8 @@ p10 = ggplot(gf_map_wide, aes(x = long, y = lat, group = group, fill=pct)) +
   coord_fixed(ratio=1) + 
   labs(title="Percentage of pregnant and lactating women tested for HIV in 2018", fill="Percent (%)", 
        subtitle=paste0("n = ", n_gf_wide), 
-       caption="Note: Represents only Global Fund-supported health zones") 
+       caption="Note: Represents only Global Fund-supported health zones") +
+  geom_label_repel(data = labels, aes(label = label, x = lon, y = lat, group = label), inherit.aes=FALSE, size=3)
 
 
 # One breakdown by age grouping - testing. 
@@ -369,3 +398,5 @@ p15
 p16
 p17
 dev.off()
+
+ggsave("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pmtct/plw_tested_2018_labeled.png", p10, height=10, width=14)
