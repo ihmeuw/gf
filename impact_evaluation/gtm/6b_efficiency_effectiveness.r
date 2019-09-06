@@ -16,7 +16,14 @@ load(outputFile5a)
 data1=copy(data)
 # means1 = copy(means)
 # summaries1 = copy(summaries)
-urFits1 = copy(urFits)
+paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
+urFits[, se_ratio.std:=se.std/est.std]
+urFits[, se_ratio:=se/est]
+means = urFits[, lapply(.SD, mean, na.rm=T), .SDcols=paramVars, by=c('lhs','op','rhs')]
+means[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
+means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
+
+urFits1 = copy(means)
 # load(outputFile5b)
 # data2=copy(data)
 # means2 = copy(means)
@@ -75,10 +82,10 @@ long = long[, .(value=sum(value)), by=variable]
 pooled_means1 = merge(urFits1, long, by.x='rhs', by.y='variable', all.x=TRUE)
 
 # take the weighted average across funders
-pooled_means1[grepl('\\$',label_rhs), label_rhs:='Pooled Investment']
+pooled_means1[grepl('Exp.',label_rhs), label_rhs:='Pooled Investment']
 byVars = c('lhs','label_lhs','label_rhs')
-pooled_means1 = pooled_means1[, .(est=weighted.mean(est, value), 
-	se=weighted.mean(se, value)), by=byVars]
+pooled_means1 = pooled_means1[, .(est=weighted.mean(est, value, na.rm=T), 
+	se=weighted.mean(se, value, na.rm=T)), by=byVars]
 	
 # get uncertainty
 pooled_means1[, lower:=est-(1.96*se)]
@@ -113,25 +120,23 @@ pooled_means1[, upper:=est+(1.96*se)]
 # -----------------------------------------------
 # Display some statistics
 
-# ITN, ACT and RDT shipment costs # CAN WE JUST DELETE FOR GTM ? EL 8/19/19
-# for(c in c('ITN','ACT','RDT')) {
-# 	output = paste0(c, '_received_cumulative')
-# 	if (!output %in% pooled_means1$lhs) output = gsub('_cumulative','_cumulative',output) 
-# 	commodity_cost = pooled_means1[lhs==output,c('label_rhs','est','se'), with=F]
-# 	commodity_cost = commodity_cost[, .(est=sum(est), se=mean(se))]
-# 	commodity_cost[, lower:=est+(1.96*se)]
-# 	commodity_cost[, upper:=est-(1.96*se)]
-# 	commodity_cost$se = NULL
-# 	commodity_cost[, est:=1/est]
-# 	commodity_cost[, lower:=1/lower]
-# 	commodity_cost[, upper:=1/upper]
-# 	if(any(commodity_cost$upper<0)) {
-# 		commodity_cost[, upper:=as.character(upper)]
-# 		commodity_cost[grepl('-',upper), upper:='Negative']
-# 	}
-# 	print(paste0('Overall cost to ship one ', c, ':'))
-# 	print(commodity_cost)
-# }
+# first line, second line, GX tests, ACF cases and HIV tests
+for(c in unique(urFits$lhs)[grepl('act',unique(urFits$lhs))]) {
+	commodity_cost = pooled_means1[lhs==c,c('label_rhs','est','se'), with=F]
+	commodity_cost = commodity_cost[, .(est=sum(est), se=mean(se))]
+	commodity_cost[, lower:=est+(1.96*se)]
+	commodity_cost[, upper:=est-(1.96*se)]
+	commodity_cost$se = NULL
+	commodity_cost[, est:=1/est]
+	commodity_cost[, lower:=1/lower]
+	commodity_cost[, upper:=1/upper]
+	if(any(commodity_cost$upper<0)) {
+		commodity_cost[, upper:=as.character(upper)]
+		commodity_cost[grepl('-',upper), upper:='Negative']
+	}
+	print(paste0('Overall cost per one ', c, ':'))
+	print(commodity_cost)
+}
 
 # pooled, mediated means comparing different types of treatment
 

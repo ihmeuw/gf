@@ -117,9 +117,9 @@ for(i in seq(T)) {
 }
 
 # compute averages (approximation of standard error, would be better as Monte Carlo simulation)
-# paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
-# summaries[, se_ratio.std:=se.std/est.std]
-# summaries[, se_ratio:=se/est]
+paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
+urFits[, se_ratio.std:=se.std/est.std]
+urFits[, se_ratio:=se/est]
 means = urFits[, lapply(.SD, mean), .SDcols=paramVars, by=c('lhs','op','rhs')]
 means[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
 means[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
