@@ -112,7 +112,7 @@ load_master_list = function(purpose=NULL) {
   #--------------------------------------------------------
   # Make sure that hand-entered information matches with GF metadata. 
   #--------------------------------------------------------
-  metadata = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv")
+  metadata = fread(paste0(dir, "_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv"))
   correct_periods = metadata[GeographicAreaCode_ISO3%in%c('COD', 'GTM', 'SEN', 'UGA'), .(GrantAgreementNumber, ImplementationPeriodStartDate, ImplementationPeriodEndDate)]
   names(correct_periods) = c('grant', 'grant_period_start', 'grant_period_end')
   
