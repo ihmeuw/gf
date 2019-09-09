@@ -16,7 +16,7 @@ load_master_list = function(purpose=NULL) {
   stopifnot(purpose%in%c('financial', 'performance indicators'))
   
   #Read in data. 
-  dt = data.table(read_excel("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/master_file_list.xlsx"))
+  dt = data.table(read_excel(paste0(dir, "_gf_files_gos/master_file_list.xlsx")))
   #*** Note that NA's entered by hand in the excel will be imported as strings! ("NA")
   
   #------------------------------------------------
@@ -70,7 +70,7 @@ load_master_list = function(purpose=NULL) {
     keep_cols = c('function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
                   'pudr_semester', 'update_date', 'mod_framework_format')
     keep_cols = c(core_cols, keep_cols)
-    dt = dt[, c(keep_cols, core_cols), with=F]
+    dt = dt[, c(keep_cols), with=F]
     
     for (col in names(dt)[!names(dt)%in%c('start_date_financial', 'update_date', 'pudr_semester')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
       if (verbose){
@@ -94,7 +94,7 @@ load_master_list = function(purpose=NULL) {
     keep_cols = c('function_performance', 'sheet_impact_outcome_1a', 'sheet_impact_outcome_1a_disagg', 'sheet_coverage_1b', 'sheet_coverage_1b_disagg', 
                   'start_date_programmatic', 'end_date_programmatic', 'language_programmatic')
     keep_cols = c(core_cols, keep_cols)
-    dt = dt[, c(keep_cols, core_cols), with=F]
+    dt = dt[, c(keep_cols), with=F]
     
     for (col in names(dt)[!names(dt)%in%c('start_date_programmatic', 'end_date_programmatic')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
       if (verbose){
