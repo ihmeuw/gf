@@ -22,16 +22,24 @@ library(RColorBrewer)
 # Files and directories
 
 # root directory
-dir = 'J:/Project/Evaluation/GF/impact_evaluation/gtm'
+dir = 'J:/Project/Evaluation/GF/impact_evaluation/'
 
 # input file
-inFile = paste0(dir, '/raw_data/impact_7.15.19.csv')
+inFile = paste0(dir, 'gtm/raw_data/impact_7.15.19.csv')
+inFile_GBD = paste0(dir, 'mortality/prepped_data/tb_pce_data.rds')
 
 # population data (worldpop)
 popFile = 'J:/Project/Evaluation/GF/covariates/gtm/worldpop/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv'
 
+# Use GBD estimates or GTM raw program data?
+use_GBD = TRUE
+
 # output file
-outFile = paste0(dir, '/visualizations/mortality_drivers/mortality_explained_variance.pdf')
+if (use_GBD == TRUE){
+  outFile = paste0(dir, 'gtm/visualizations/mortality_drivers/mortality_explained_variance_usingGBDestimates.pdf')
+} else {
+  outFile = paste0(dir, 'gtm/visualizations/mortality_drivers/mortality_explained_variance.pdf')
+}
 # --------------------------------------------------------------------------------------
 
 
@@ -79,7 +87,18 @@ data = data[, .(mortality_rate=weighted.mean(mortality_rate, population),
 				case_notification_rate=weighted.mean(case_notification_rate, population),
 				population=sum(population, na.rm=T)), 
 				by=c('date','department')]
+# -----------------------------------------------------------------------------------------
 
+# -----------------------------------------------------------------------------------------
+# load/prep GBD mortality estimates data:
+gbd = readRDS(inFile_GBD)
+gbd = gbd[country == 'Guatemala']
+# collapse population to natl level and merge
+populations_natl = populations[, .(population = sum(population)), by = 'year']
+gbd = merge(gbd, populations_natl, by = 'year')
+# -----------------------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------------------
 # extrapolate where necessary using GLM (better would be to use multiple imputation)
 i=1
 for(v in c('mortality_rate','case_notification_rate')) {
@@ -129,12 +148,24 @@ smithsonTransform = function(x) {
 	prop_lsqueeze = logit(((x*(N-1))+0.5)/N)
 }
 
+# use GBD data
+if (use_GBD == TRUE) { 
+  gbd[ , department := 'all']
+  setnames(gbd, 'Deaths', 'mortality_rate')
+  setnames(gbd, 'Incidence', 'cases_var')
+  
+  data = copy(gbd)
+  national = copy(gbd)
+}
+
+if (use_GBD != TRUE) setnames(data, 'case_notificaiton_rate', 'cases_var')
+
 # transform
 offset1 = quantile(data[mortality_rate>0]$mortality_rate,.01)
-offset2 = quantile(data[case_notification_rate>0]$case_notification_rate,.01)
+offset2 = quantile(data[cases_var>0]$cases_var,.01)
 offset3 = quantile(data[mi_ratio>0]$mi_ratio,.01)
 data[, log_mortality_rate:=log(mortality_rate+offset1)]
-data[, log_case_notification_rate:=log(case_notification_rate+offset2)]
+data[, log_cases_var:=log(cases_var+offset2)]
 data[, tmp:=mi_ratio]
 # data[tmp==0, tmp:=offset3]
 data[tmp>=1, tmp:=1]
@@ -142,15 +173,16 @@ data[, logit_mi_ratio:=smithsonTransform(tmp)]
 data$tmp=NULL
 
 # graph transformed data
-ggpairs(data[, c('log_mortality_rate','log_case_notification_rate','logit_mi_ratio'), with=F])
+ggpairs_fig = ggpairs(data[, c('log_mortality_rate','log_cases_var','logit_mi_ratio'), with=F])
 # -----------------------------------------------------------------------------------------
 
 
 # ----------------------------------------------------
+
 # Get glm estimate
 
 lmFits = lapply(unique(data$department), function(m) { 
-	lm(mortality_rate ~ log_case_notification_rate + logit_mi_ratio, data[department==m])
+	lm(mortality_rate ~ log_cases_var + logit_mi_ratio, data[department==m])
 })
 afs = lapply(lmFits, anova)
 
@@ -170,7 +202,7 @@ evs_mean
 
 # set up graph data
 graphData = evs_mean
-graphData[variable=='log_case_notification_rate', 
+graphData[variable=='log_cases_var', 
 	label:=paste('Incidence -', round(explained_variance*100, 1),'%')]
 graphData[variable=='logit_mi_ratio', 
 	label:=paste('Case Fatality -', round(explained_variance*100, 1),'%')]
@@ -178,9 +210,15 @@ graphData[variable=='Residuals',
 	label:=paste('Unexplained by Model -', round(explained_variance*100, 1),'%')]
 	
 # set up national
-national = melt(national, id.vars='date')
+if (use_GBD == TRUE) {
+  id_vars = c('year', 'country', 'department', 'disease')
+} else {
+    id_vars = 'date'
+}
+
+national = melt(national, id.vars=id_vars)
 national[variable=='mortality_rate', variable:='TB Mortality Rate (per 100,000)']
-national[variable=='case_notification_rate', variable:='TB Case Notification Rate (per 100,000)']
+national[variable=='cases_var', variable:='TB Case Notification Rate (per 100,000)']
 	
 # colors
 cols = brewer.pal(3, 'Paired')
@@ -194,6 +232,14 @@ cols = c(cols[c(3,2)], '#969696')
 # open pdf
 pdf(outFile, height=5.5, width=8)
 
+print(ggpairs_fig)
+
+if(use_GBD == TRUE){
+  cap ='Case fatality approximated by mortality:incidence ratio\nMortality and incidence rates come from GBD 2017 national estimates'
+} else {
+  cap = 'Case fatality approximated by mortality:incidence ratio\nIncidence approximated by case notification rate'
+}
+
 # graph national EV
 ggplot(graphData, aes(y=explained_variance, x=1, fill=label)) + 
 	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
@@ -202,39 +248,42 @@ ggplot(graphData, aes(y=explained_variance, x=1, fill=label)) +
 	coord_polar(theta='y') + 
 	scale_fill_manual('', values=cols) +
 	labs(title='Impact on Mortality Rate', 
-		caption='Case fatality approximated by mortality:incidence ratio\nIncidence approximated by case notification rate') + 
+		caption=cap) + 
 	theme_void() + 
 	theme(legend.position='none')
 
+
 # graph national trends
-ggplot(national, aes(y=value, x=date)) + 
+x_var = ifelse(use_GBD == TRUE, 'year', 'date')
+ggplot(national, aes(y=value, x=get(x_var))) + 
 	geom_point() +
 	geom_smooth() + 
 	facet_wrap(~variable, scales='free') + 
 	labs(title='National Trends in Reported Mortality and Case Notification', 
 		caption='2017 mortality rate estimated based on trend') + 
 	theme_bw()
-
-# graph example municipalities
-miExamples = unique(evs[variable=='logit_mi_ratio'][order(-explained_variance)]$department)[1:5]
-incExamples = unique(evs[variable=='log_case_notification_rate'][order(-explained_variance)]$department)[1:5]
-for(h in c(miExamples, incExamples)) { 		
-	evmi = round(evs[department==h & variable=='logit_mi_ratio']$explained_variance,3)
-	evinc = round(evs[department==h & variable=='log_case_notification_rate']$explained_variance,3)
-	tmp = melt(data[department==h], id.vars=c('department','date'))
-	tmp = tmp[!grepl('log',variable)]
-	tmp = tmp[variable!='population']
-	p=ggplot(tmp, aes(y=value, x=date)) + 
-		geom_point() + 
-		geom_line() + 
-		facet_wrap(~variable, scales='free_y') + 
-		labs(title=paste('department:', h), 
-			subtitle=paste('Explained Variance by MI Ratio:',evmi,'\nExplained Variance by Incidence Rate:',evinc),
-			x='') + 
-		theme_bw()
-	print(p)
+  
+if (use_GBD != TRUE){  
+  # graph example municipalities
+  miExamples = unique(evs[variable=='logit_mi_ratio'][order(-explained_variance)]$department)[1:5]
+  incExamples = unique(evs[variable=='log_cases_var'][order(-explained_variance)]$department)[1:5]
+  for(h in c(miExamples, incExamples)) { 		
+  	evmi = round(evs[department==h & variable=='logit_mi_ratio']$explained_variance,3)
+  	evinc = round(evs[department==h & variable=='log_cases_var']$explained_variance,3)
+  	tmp = melt(data[department==h], id.vars=c('department','date'))
+  	tmp = tmp[!grepl('log',variable)]
+  	tmp = tmp[variable!='population']
+  	p=ggplot(tmp, aes(y=value, x=date)) + 
+  		geom_point() + 
+  		geom_line() + 
+  		facet_wrap(~variable, scales='free_y') + 
+  		labs(title=paste('department:', h), 
+  			subtitle=paste('Explained Variance by MI Ratio:',evmi,'\nExplained Variance by Incidence Rate:',evinc),
+  			x='') + 
+  		theme_bw()
+  	print(p)
+  }
 }
-
 # close pdf
 dev.off()
 # ----------------------------------------------------
