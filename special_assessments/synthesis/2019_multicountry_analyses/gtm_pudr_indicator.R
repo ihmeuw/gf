@@ -1,6 +1,7 @@
 ###############################
 # Guatemala TB analyses
 # PUDR Performance Indicators Framework
+# set working directory as root of this repo (ctrl+shift+h)
 ###############################
 
 # ------------------------------------
@@ -74,7 +75,8 @@ a <- ggplot(DT1, aes(x=short_name_code, y=ihme_result_achievement_ratio, color=r
   theme_bw()+
   coord_flip()
 
-# save file
+# export as table
+write.csv(DT1, "J:/Project/Evaluation/GF/special_assessments/pudr_framework_indicators/gtm_tb.csv")
 jpeg(filename = "J:/Project/Evaluation/GF/special_assessments/pudr_framework_indicators/gtm_tb.jpeg",
      width = 9, height = 2.5, res= 300, units = "in", pointsize = 12)
 a

@@ -17,7 +17,7 @@ outputs_outcomes <- readRDS(outputFile2a)
 resource_tracking <- readRDS(outputFile2b)
 
 # Read in the previously saved file for outcomes for tb_mdr in 2c
-#tb_mdr <- readRDS(outputFile2c)
+tb_mdr <- readRDS(outputFile2c)
 
 # -----------------------------------------------------------------------------------------------------
 # Prep data on outputs_outcomes
@@ -70,29 +70,24 @@ outputs_prepped <- merge(data3, exc_summed_data, by = c("region", "date"), all =
 # Merge TB-MDR data to other outcomes data
 # --------------------------------------------------------------------------------
 
-# first rectangualrize the tb_mdr_data
-# rectangularize before merge
-# hzFrame = unique(outputs_outcomes[, c('region')])
-# i=1
-# for(d in unique(resource_tracking$date)) {
-#   hzFrame[, date:=d]
-#   if(i==1) frame = copy(hzFrame)
-#   if(i>1) frame = rbind(frame, hzFrame)
-#   i=i+1
-# }
-# 
-# tb_mdr_rect = merge(frame, tb_mdr, by=c('region', 'date'), allow.cartesian=TRUE, all=TRUE)
-# 
+#first rectangualrize the tb_mdr_data
+ hzFrame = unique(outputs_outcomes[, c('region')])
+ i=1
+ for(d in unique(resource_tracking$date)) {
+   hzFrame[, date:=d]
+   if(i==1) frame = copy(hzFrame)
+   if(i>1) frame = rbind(frame, hzFrame)
+   i=i+1
+ }
+ 
+tb_mdr_rect = merge(frame, tb_mdr, by=c('region', 'date'), allow.cartesian=TRUE, all=TRUE)
+ 
 # # Merge rectangularized tb_mdr and outputs/activites data 
-# outcome_data <- merge(tb_mdr_rect, data2, by=c('region', 'date'), all=TRUE)
+outcome_data <- merge(tb_mdr_rect, outputs_prepped, by=c('region', 'date'), all=TRUE)
 
 # ----------------------------------------------------------------------
 # Merge rectangularized resource tracking and outputs/activites data 
-
-# ------------------------------------------------------
-# merge tb_mdr when it's ready
-# ------------------------------------------------------
-merge_file <- merge(outputs_prepped, resource_tracking, by=c('date'), all=TRUE)
+merge_file <- merge(resource_tracking, outcome_data, by=c('date'), all=TRUE)
 
 # --------------------------------------------------------------------------
 # Distribute inputs by health zone proportionally to activities
@@ -101,12 +96,16 @@ merge_file <- merge(outputs_prepped, resource_tracking, by=c('date'), all=TRUE)
 # note: these vectors must be the same length and order matters
 inVars = c('other_dah_T1',
            'exp_T1',
-           'exp_T2')
+           'exp_T2',
+           'exp_T3',
+           'other_dah_T3')
 
 # list corresponding variables to define distribution proportions
 actVars = c('value_prev_act',
             'value_prev_act',
-            'tb_vih_arv')
+            'tb_vih_arv',
+            'dx_count',
+            'other_dah_T3')
 
 # create combined variables for redistribution where necessary
 merge_file[, value_prev_act:=com_mobsoc + com_cause + com_radio + tot_genexpert + ntr_all]

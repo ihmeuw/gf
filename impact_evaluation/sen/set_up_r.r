@@ -107,12 +107,22 @@ raw_data_file = paste0(rawIeDir,'PANEL PNT TB-MR final_26072019.csv')
 # data codebook
 data_codebook = paste0(rawIeDir, 'codebook2.csv')
 
+# mdrtb data
+mdr2014data = paste0(rawIeDir, 'tb_mdr_2014.csv')
+mdr2015data = paste0(rawIeDir, 'tb_mdr_2015.csv')
+mdr2016data = paste0(rawIeDir, 'tb_mdr_2016.csv')
+mdr2017data = paste0(rawIeDir, 'tb_mdr_2017.csv')
+mdr2018data = paste0(rawIeDir, 'tb_mdr_2018.csv')
+
 # shapefiles
 admin2ShapeFile = paste0(dir, '/mapping/sen/shapefiles/gadm36_SEN_2.shp')
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph
 nodeTableFile1 = './impact_evaluation/sen/visualizations/nodetable_full.csv'
+
+# reading in raw mdrtb data
+
 
 # ---------------------------------------------------------------------------------
 
@@ -138,30 +148,23 @@ tempIeDir = paste0('C:/Users/frc2/Documents/scratch/impact_evaluation/parallel_f
 # # Output Files
 # 
 # output file from 2a_prep_outputs_ou.r
- outputFile2a = paste0(preppedIeDir, 'prepped_outcomes_data.RDS')
-# 
-# # output file from 2b_prepped_resource_tracking.R
+outputFile2a = paste0(preppedIeDir, 'prepped_outcomes_data.RDS')
+
+# output file from 2b_prepped_resource_tracking.R
 outputFile2b = paste0(preppedIeDir, 'prepped_resource_tracking.RDS')
-# outputFile2b = paste0(ieDir, 'outputs_activites_for_pilot.RDS')
-# outputFile2b_wide = paste0(ieDir, 'outputs_activities_for_pilot_wide.RDS')
-# 
-# # output file from 2c_prep_outcomes_impact.r
-# outputFile2c_estimates = paste0(ieDir, 'aggregated_rasters.rds')
-# outputFile2c = paste0(ieDir, 'outcomes_impact.rds')
-# 
+
+# output file from 2c_prep_mdrtb_indicators.r
+outputFile2c = paste0(preppedIeDir, 'prepped_tb_mdr_data.RDS')
+ 
 # output file from 3_merge_data.R
 outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')
-# 
-# # output files from 3b_correct_to_models.r
-# outputFile3b = paste0(ieDir, 'outcomes_impact_corrected.RDS')
-# outputFile3bGraphs = paste0(ieDir, '../visualizations/crosswalking_results.pdf')
-
-# # output file from 4a_set_up_for_analysis.r
+ 
+# output file from 4a_set_up_for_analysis.r
  outputFile4a = paste0(preppedIeDir, 'first_half_pre_model.rdata')
  if (Sys.info()[1]!='Windows') { 
  outputFile4a_scratch = paste0(clustertmpDir1, 'first_half_data_pre_model.rdata')
 }
-# 
+
 # # output file from 4b_set_up_for_second_half_analysis.r
 outputFile4b = paste0(preppedIeDir, 'second_half_data_pre_model.rdata')
 if (Sys.info()[1]!='Windows') { 
