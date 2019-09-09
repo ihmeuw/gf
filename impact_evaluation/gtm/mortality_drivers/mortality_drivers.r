@@ -158,7 +158,7 @@ if (use_GBD == TRUE) {
   national = copy(gbd)
 }
 
-if (use_GBD != TRUE) setnames(data, 'case_notificaiton_rate', 'cases_var')
+if (use_GBD != TRUE) setnames(data, 'case_notification_rate', 'cases_var')
 
 # transform
 offset1 = quantile(data[mortality_rate>0]$mortality_rate,.01)
@@ -194,6 +194,9 @@ evs = rbindlist(evs)
 evs_mean = evs[, .(explained_variance=mean(explained_variance)), by='variable']
 options(scipen=999)
 evs_mean
+
+anova(lm(mortality_rate ~ log_cases_var, data = data))
+anova(lm(mortality_rate ~ logit_mi_ratio, data = data))
 # ----------------------------------------------------
 
 
