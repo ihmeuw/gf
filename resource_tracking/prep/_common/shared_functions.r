@@ -212,7 +212,7 @@ convert_eur_usd = function(dt, yearVar=NULL){
   oecd_xrate[, (yearVar):= as.integer(get(yearVar))]
   
   #Re-extracted from the OECD's website to grab 2018 as well. 
-  oecd_xrate2 = fread(paste0(code_dir, "_common/oecd_conversion_rates_2018.csv"))
+  oecd_xrate2 = fread(paste0(dir, "_other_data_sources/multi_country/oecd_currency_conversion/oecd_conversion_rates_2018.csv"))
   oecd_xrate2 = oecd_xrate2[LOCATION == "EA19", .(TIME, Value)]
   setnames(oecd_xrate2, c('TIME','Value'), c(yearVar, 'eur_usd'))
   oecd_xrate2[, (yearVar):= as.integer(get(yearVar))]
@@ -268,7 +268,7 @@ convert_usd_eur = function(dt, yearVar=NULL){
   oecd_xrate[, (yearVar):= as.integer(get(yearVar))]
   
   #Re-extracted from the OECD's website to grab 2018 as well. 
-  oecd_xrate2 = fread(paste0(code_dir, "_common/oecd_conversion_rates_2018.csv"))
+  oecd_xrate2 = fread(paste0(dir, "_other_data_sources/multi_country/oecd_currency_conversion/oecd_conversion_rates_2018.csv"))
   oecd_xrate2 = oecd_xrate2[LOCATION == "EA19", .(TIME, Value)]
   setnames(oecd_xrate2, c('TIME','Value'), c(yearVar, 'eur_usd'))
   oecd_xrate2[, (yearVar):= as.integer(get(yearVar))]
