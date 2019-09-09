@@ -21,6 +21,7 @@ if (Sys.info()[1]=='Windows'){
   setwd("/ihme/homes/elineb/gf/")
 }
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
+source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 
 # ---------------------------------------
 # Boolean logic switches 
@@ -51,7 +52,7 @@ if (prep_files | prep_gos){
   #Source document prep functions 
   doc_prep_functions = list.files(paste0(code_dir, "gf_files_prep_functions"), full.names=TRUE)
   for (file in doc_prep_functions){
-    source(file)
+    source(file, encoding="UTF-8")
   }
   
   # Load and verify mapping, prep data, and map data. 
@@ -84,9 +85,9 @@ if (prep_files | prep_gos){
 # ----------------------------------------------
 if (prep_odah){
   #Source document prep functions 
-  prep_functions = list.files(paste0(code_dir, "fgh_prep_functions"), full.names=TRUE)
+  prep_functions = list.files(paste0(code_dir, "odah_prep_functions"), full.names=TRUE)
   for (file in prep_functions){
-    source(file)
+    source(file, encoding="UTF-8")
   }
   
   #Prep and map actuals and estimates. *Would be good to add in a mapping verification and calculations verification step! 
@@ -102,7 +103,7 @@ if (prep_ghe){
   #Source document prep functions 
   prep_functions = list.files(paste0(code_dir, "ghe_sicoin_prep_functions"), full.names=TRUE)
   for (file in prep_functions){
-    source(file)
+    source(file, encoding="UTF-8")
   }
   
   # Prep and map SICOIN data.*Would be good to add in a mapping verification and calculations verification step!   
