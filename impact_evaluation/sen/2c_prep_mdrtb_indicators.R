@@ -5,20 +5,15 @@
 # ----------------------------------------------------------
 
 # set-up
-library(data.table)
-library(Amelia)
-
-# set directory where data is saved
-dir <- "C:/Users/frc2/Documents/Data/tb/raw_data/tb_mdr"
-setwd(dir)
+source('./impact_evaluation/sen/set_up_r.r')
 
 #---------------------------------------------------
 # load datasets
-mdr2014 <- fread("tb_mdr_2014.csv")
-mdr2015 <- fread("tb_mdr_2015.csv", header = TRUE)
-mdr2016 <- fread("tb_mdr_2016.csv", header = TRUE)
-mdr2017 <- fread("tb_mdr_2017.csv", header = TRUE)
-mdr2018 <- fread("tb_mdr_2018.csv", header = TRUE)
+mdr2014 <- fread(mdr2014data)
+mdr2015 <- fread(mdr2015data, header = TRUE)
+mdr2016 <- fread(mdr2016data, header = TRUE)
+mdr2017 <- fread(mdr2017data, header = TRUE)
+mdr2018 <- fread(mdr2018data, header = TRUE)
 
 # change column names
 setnames(mdr2014, 
@@ -171,5 +166,5 @@ dt7 <- dt6[,lapply(.SD, sum), by=c('region', 'date'),.SDcols=c("dx_count", "tx_c
 dt7$mdr_tx_rate <- dt7$tx_count/dt7$dx_count
 
 # save file
-setwd("J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data")
-saveRDS(dt7, file="prepped_tb_mdr_data.RDS")
+saveRDS(dt7, outputFile2c)
+archive(outputFile2c)

@@ -20,9 +20,9 @@ prep_summary_budget_gtm = function(dir, inFile, sheet, start_date, qtr_num){
 
   
   if(!is.na(sheet)){
-    gf_data <- data.table(read.xlsx(paste0(dir, inFile), sheet=as.character(sheet), detectDates=TRUE))
+    gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet)))
   } else {
-    gf_data <- data.table(read.xlsx(paste0(dir, inFile), detectDates=TRUE))
+    gf_data <- data.table(read_excel(paste0(dir, inFile)))
   }
   
   gf_data <- gf_data[, -1]

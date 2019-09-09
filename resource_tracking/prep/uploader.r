@@ -17,6 +17,8 @@ library(data.table)
 # REFRESH IF NEEDED 
 #----------------------------------------------
 
+#These instructions can be found here: https://github.com/basecamp/bc3-api/issues/48#issuecomment-360248238
+
   # HOW TO GET VERIFICATION CODE: 
   # 1st step
   # Go and create your application for basecamp at integrate.37signals.com. You can set ANY redirect url, it doesn't matter. Keep the client_id, client_secret and redirect url ready for following steps.

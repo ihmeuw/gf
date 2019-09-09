@@ -330,28 +330,28 @@ if (prep_files){
 
 if (prep_files){
   # Save RDS file
-  # saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
-  # saveRDS(expenditures, paste0(export_dir, "final_expenditures.rds"))
-  # saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
-  # saveRDS(absorption, paste0(export_dir, "absorption_", country, ".rds"))
+  saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
+  saveRDS(expenditures, paste0(export_dir, "final_expenditures.rds"))
+  saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
+  saveRDS(absorption, paste0(export_dir, "absorption_", country, ".rds"))
   if ('revisions_collapse'%in%ls()){ #You won't have budget revisions for every country. 
     saveRDS(revisions_collapse, paste0(export_dir, "budget_revisions.rds"))
   }
   
   #Save .csv. 
-  # write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), row.names=FALSE)
-  # write.csv(expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
-  # write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"), row.names=FALSE)
-  # write.csv(absorption, paste0(export_dir, "absorption_", country, ".csv"), row.names=FALSE)
+  write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), row.names=FALSE)
+  write.csv(expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
+  write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"), row.names=FALSE)
+  write.csv(absorption, paste0(export_dir, "absorption_", country, ".csv"), row.names=FALSE)
   if ('revisions_collapse'%in%ls()){
     write.csv(revisions_collapse, paste0(export_dir, "budget_revisions.csv"), row.names=FALSE)
   }
   
   # Save copy for archive. 
-  # saveRDS(final_budgets, paste0(export_dir, "archive/final_budgets_", Sys.Date(), ".rds"))
-  # saveRDS(expenditures, paste0(export_dir, "archive/final_expenditures_", Sys.Date(), ".rds"))
-  # saveRDS(mapped_data, paste0(export_dir, "archive/budget_pudr_iterations_", Sys.Date(), ".rds"))
-  # saveRDS(absorption, paste0(export_dir, "archive/absorption_", country, "_", Sys.Date(), ".rds"))
+  saveRDS(final_budgets, paste0(export_dir, "archive/final_budgets_", Sys.Date(), ".rds"))
+  saveRDS(expenditures, paste0(export_dir, "archive/final_expenditures_", Sys.Date(), ".rds"))
+  saveRDS(mapped_data, paste0(export_dir, "archive/budget_pudr_iterations_", Sys.Date(), ".rds"))
+  saveRDS(absorption, paste0(export_dir, "archive/absorption_", country, "_", Sys.Date(), ".rds"))
   if ('revisions_collapse'%in%ls()){ #You won't have budget revisions for every country. 
     saveRDS(revisions_collapse, paste0(export_dir, "archive/budget_revisions_", Sys.Date(), ".rds"))
   }

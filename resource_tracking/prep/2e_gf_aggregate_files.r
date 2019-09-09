@@ -134,14 +134,14 @@ grant_period_mat = unique(grant_period_mat[, .(min_date, max_date, grant, grant_
 grant_period_mat = dcast.data.table(grant_period_mat, grant+grant_period~data_source, value.var = c("min_date", "max_date"))
 
 #Reorder this data table. 
-grant_period_mat = grant_period_mat[, .(grant, grant_period, min_date_fpm, max_date_fpm, min_date_gos, max_date_gos)]
+grant_period_mat = grant_period_mat[, .(grant, grant_period, min_date_budget, max_date_budget, min_date_gos, max_date_gos)]
 
 #I only care about cases where we have the same data source reporting for the same grant period/grant, so drop NAs. 
-grant_period_mat = grant_period_mat[!(is.na(min_date_fpm) & is.na(max_date_fpm))]
+grant_period_mat = grant_period_mat[!(is.na(min_date_budget) & is.na(max_date_budget))]
 grant_period_mat = grant_period_mat[!(is.na(min_date_gos) & is.na(max_date_gos))]
 
 #Do these sources conflict? 
-grant_period_mat[max_date_gos>min_date_fpm, conflict:=TRUE]
+grant_period_mat[max_date_gos>min_date_budget, conflict:=TRUE]
 grant_period_mat = grant_period_mat[conflict==TRUE]
 if (nrow(grant_period_mat)>0){
   print("Warning: Duplicate dates present in GOS and final budgets files.")
@@ -151,7 +151,7 @@ if (nrow(grant_period_mat)>0){
   drop_gos = data.table()
   for (i in 1:nrow(grant_period_mat)){
     quarters = unique(gos_prioritized_budgets[data_source == 'gos' & grant==grant_period_mat$grant[i] & grant_period==grant_period_mat$grant_period[i] & 
-                                                start_date>=grant_period_mat$min_date_fpm[i], 
+                                                start_date>=grant_period_mat$min_date_budget[i], 
                                 .(grant, grant_period, start_date)])
     drop_gos = rbind(drop_gos, quarters, fill=TRUE)
   }
@@ -170,7 +170,7 @@ if (nrow(grant_period_mat)>0){
 
 #Look for what might be data gaps between GOS and budget data (EMILY - WOULD BE GOOD TO EXPAND THIS CHECK TO LOOK FOR DATA GAPS IN GENERAL)
 gos_in_budgets = gos_prioritized_budgets[data_source=="gos" & grant%in%final_budgets$grant, .(start_date, grant, grant_period)] 
-budget_dates = gos_prioritized_budgets[data_source=="fpm", .(budget_start = min(start_date)), by=c('grant', 'grant_period')]
+budget_dates = gos_prioritized_budgets[data_source=="budget", .(budget_start = min(start_date)), by=c('grant', 'grant_period')]
 gos_in_budgets = gos_in_budgets[, .(gos_end = max(start_date)), by=c('grant', 'grant_period')]
 date_check = merge(gos_in_budgets, budget_dates, by=c('grant', 'grant_period'))
 date_check = date_check[gos_end!=budget_start]

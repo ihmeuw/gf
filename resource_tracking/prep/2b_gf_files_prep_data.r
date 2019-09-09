@@ -13,25 +13,9 @@
 # Read in file list 
 #----------------------------------------------------
 if (prep_files == TRUE){
-  file_list = read_excel(paste0(dir, "_gf_files_gos/master_file_list.xlsx"))
-  setDT(file_list)
-  file_list = file_list[order(loc_name, grant_period, grant_period, data_source, file_name)] #So that you always get consistent ordering, even if the excel beneath is filtered. 
-  file_list = file_list[loc_name==country]
-  file_list = file_list[!is.na(start_date_financial)]
-  file_list[, start_date_financial:=excel_numeric_to_date(as.numeric(as.character(start_date_financial)), date_system="modern")] #This is ugly, but I can't find a fix within the readxl package. EL 8/9/2019
-  file_list = file_list[, -c('notes')]
+  file_list = load_master_list(purpose = "financial") #This function is sourced from the _common folder in master script. 
+  file_list = file_list[loc_name==country] #Just do one country at a time. 
   
-  #Validate file list 
-  desired_cols <- c("file_name", "function_financial", "sheet_financial", "disease", "loc_name", "data_source", "period_financial", "qtr_number_financial", "grant", "primary_recipient", 
-                    "secondary_recipient", "language_financial", "grant_period", "grant_status", "start_date_financial", "file_iteration", "geography_detail", 
-                    "loc_name", "mod_framework_format", "file_currency", "pudr_semester")
-  stopifnot(desired_cols%in%names(file_list))
-  stopifnot((unique(file_list$data_source))%in%c("fpm", "pudr", "performance_framework", "document"))
-  stopifnot(unique(file_list$file_iteration)%in%c('final', 'initial', 'revision', NA, "NA"))
-  
-  #Only keep inputs with financial information, and make sure you've kept date column before prioritizing GOS. 
-  file_list = file_list[data_source%in%c('fpm', 'pudr') & !is.na(sheet_financial) & function_financial!='unknown'] #Will only keep files where financial sheet, function, and start date (from above) are available. 
-
   #Prioritize GOS data where we have it
   file_list = prioritize_gos(file_list)
 
@@ -46,17 +30,13 @@ if (prep_files == TRUE){
   
   file_list[data_source=="pudr" & file_iteration=="final", pudr_dup:=sequence(.N), by=c('grant', 'grant_period', 'pudr_semester')]
   file_list[, pudr_dup:=pudr_dup-1] #This variable indexes at 1.
-  # if (nrow(file_list[pudr_dup>0 & !is.na(pudr_dup)])>0){
-  #   print(file_list[pudr_dup>0 & !is.na(pudr_dup)])
-  #   stop("There are duplicates in PUDRs between semesters - review file list.")
-  # }
+  if (nrow(file_list[pudr_dup>0 & !is.na(pudr_dup)])>0){
+    print(file_list[pudr_dup>0 & !is.na(pudr_dup)])
+    stop("There are duplicates in PUDRs between semesters - review file list.")
+  }
   
   #At this moment in time, don't process initial versions of files. EL 8/9/2019 
   file_list = file_list[file_iteration%in%c('final', 'revision')]
-  
-  # Momentary tweak to make revisions datasets for DRC and UGA 
-  file_list = file_list[data_source=="fpm" & grant%in%c('COD-M-MOH', 'UGA-C-TASO')]
-  
 }
 
 #----------------------------------------------------
@@ -147,7 +127,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     }
     
     #Add indexing data
-    append_cols = file_list[i, .(data_source, grant_period, primary_recipient, secondary_recipient, file_name, grant_status, disease, grant, 
+    append_cols = file_list[i, .(data_source, grant_period, primary_recipient, file_name, grant_status, disease, grant, 
                                  mod_framework_format, file_iteration, language_financial, file_currency, pudr_semester, period_financial, update_date)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
@@ -187,11 +167,11 @@ verify_numeric_budget = verify_numeric_budget[!is.na(budget) & budget != ""]
 stopifnot(nrow(verify_numeric_budget)==0)
 
 # Make sure there are no overlapping quarters for the same grant (duplicate files. )
-fpm_overlap <- duplicated(resource_database[data_source == "fpm" & file_iteration == "final", .(grant, start_date)])
+budget_overlap <- duplicated(resource_database[data_source == "budget" & file_iteration == "final", .(grant, start_date)])
 pudr_overlap <- duplicated(resource_database[data_source == "pudr" & file_iteration == "final", .(grant, start_date)])
-stopifnot(nrow(fpm_overlap)==0 & nrow(pudr_overlap)==0)
+stopifnot(nrow(budget_overlap)==0 & nrow(pudr_overlap)==0)
 
-rm(fpm_overlap, pudr_overlap)
+rm(budget_overlap, pudr_overlap)
 
 #Make sure all budget and expenditure variables are numeric. 
 resource_database$budget <- as.numeric(resource_database$budget)

@@ -18,8 +18,6 @@ DT <- readRDS("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extrac
 
 # change lfa_results_cheivement_ratio to numeric value
 DT$lfa_result_achievement_ratio <- as.numeric(DT$lfa_result_achievement_ratio)
-DT$lfa_result_n <- as.numeric(DT$lfa_result_n)
-DT$target_n <- as.numeric(DT$target_n)
 
 # clean code
 DT$indicator[which(DT$indicator=='M&amp;E-2: Proportion de rapports reçus des formations sanitaires  par rapport aux rapports attendus attendus au cours de la période de rapportage')] <- "M&E-2: Proportion de rapports reçus des formations sanitaires  par rapport aux rapports attendus attendus au cours de la période de rapportage"

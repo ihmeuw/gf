@@ -22,7 +22,7 @@ data = readRDS(outputFile3)
 #}
 
 # subset dates now that cumulative variables are computed
-data = data[date>=2000 & date<2018.75]
+data = data[date>=2010 & date<2018.75]
 # -----------------------------------------------------------------
 
 
@@ -68,7 +68,7 @@ cumulVars = c(cumulVars, 'tb_tfc', 'ntr_rhz', 'ntr_erhz', 'ntr_all',
 	'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 'tot_confirme', 
 	'com_cause', 'com_radio', 'com_enf_ref', 'com_mobsoc', 
 	'com_nom_touss', 'com_enf_ref', 'tb_vih_arv', 'tot_genexpert',
-	'tb_vih_arv', 'tpm_chimio_enf', 'tpm_chimio_pvvih')
+	'tb_vih_arv', 'tpm_chimio_enf', 'tpm_chimio_pvvih', 'dx_count')
 
 for(v in cumulVars) { 
 	nv = gsub('value_','',v) 
@@ -80,7 +80,8 @@ untransformed = copy(data)
 
 # update the complVars vector to refer to any proportion variable
 complVars = c('perf_lab', 
-              'gueris_taux')
+              'gueris_taux',
+              'mdr_tx_rate')
 
 # transform completeness variables using approximation of logit that allows 1's and 0's
 # (Smithson et al 2006 Psychological methods "A better lemon squeezer")
