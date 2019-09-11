@@ -15,6 +15,12 @@ load_master_list = function(purpose=NULL) {
   if (is.null(purpose)) stop("Please specify the 'purpose' option. Options are 'financial' or 'performance indicators'")
   stopifnot(purpose%in%c('financial', 'performance indicators'))
   
+  if (Sys.info()[1]=='Windows'){
+    dir = "J:/Project/Evaluation/GF/resource_tracking/" #Change to the root of your repository
+  } else {
+    dir = "/home/j/Project/Evaluation/GF/resource_tracking/"
+  }
+  
   #Read in data. 
   dt = data.table(read_excel(paste0(dir, "_gf_files_gos/master_file_list.xlsx")))
   #*** Note that NA's entered by hand in the excel will be imported as strings! ("NA")
@@ -27,7 +33,7 @@ load_master_list = function(purpose=NULL) {
                 'file_currency', 'file_iteration') #Note that secondary_recipient and geography_detail aren't included in this list at the moment, 
                                                   # because they aren't really used in the prep pipeline at the moment. EL 9.9.2019
   for (col in core_cols) {
-    if (verbose){
+    if ('verbose'%in%ls() & verbose){
       print(paste0('Checking for NAs in ', col))
     } 
     stopifnot(nrow(dt[is.na(get(col))])==0)
@@ -73,7 +79,7 @@ load_master_list = function(purpose=NULL) {
     dt = dt[, c(keep_cols), with=F]
     
     for (col in names(dt)[!names(dt)%in%c('start_date_financial', 'update_date', 'pudr_semester')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
-      if (verbose){
+      if ('verbose'%in%ls() & verbose){
         print(paste0("Checking for NA values in ", col))
       }
       stopifnot(nrow(dt[get(col)=="NA" | is.na(get(col))])==0)
@@ -97,7 +103,7 @@ load_master_list = function(purpose=NULL) {
     dt = dt[, c(keep_cols), with=F]
     
     for (col in names(dt)[!names(dt)%in%c('start_date_programmatic', 'end_date_programmatic')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
-      if (verbose){
+      if ('verbose'%in%ls() & verbose){
         print(paste0("Checking for NA values in ", col))
       }
       stopifnot(nrow(dt[get(col)=="NA" | is.na(get(col))])==0)
