@@ -1,5 +1,9 @@
-# script that cleans PUDR Indicators Performance Framework Data
-# Note: this assumes that Guatemala-TB is kept in a different file than the other indicators for the rest of the countries which are combined
+# --------------------------------------
+# AUTHOR: Francisco Rios Casas
+# PURPOSE: script that cleans PUDR Indicators Performance Framework Data for analyses
+# DATE: Created 11Sept2019. 
+# NOTE: this assumes that Guatemala-TB data is kept in a different file than the other indicators for the rest of the countries which are combined
+# --------------------------------------
 
 # set up
 library(data.table)
@@ -95,3 +99,6 @@ DT2$`gf_result_%` <- as.numeric(DT2$`gf_result_%`)
 DT2 = DT2[, c("indicator_code", "indicator_description", "indicator_misc") := tstrsplit(indicator, ": ", fixed=TRUE)]
 DT2 = DT2[,c("indicator_description", "indicator_misc"):=NULL]
 
+#------------------------------------------------------
+# SAVE FINAL DATA
+# --------------------------------------
