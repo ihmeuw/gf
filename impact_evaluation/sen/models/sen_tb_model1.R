@@ -28,7 +28,7 @@ model = '
     
     tpm_chimio_enf_cumulative ~ com_enf_ref_cumulative
     
-    gueris_taux ~ com_enf_ref_cumulative + ntr_rhz_cumulative + com_nom_touss_cumulative + ntr_all_cumulative
+    gueris_taux ~ com_enf_ref_cumulative + com_nom_touss_cumulative + ntr_all_cumulative
     
     mdr_tx_rate ~ dx_count_cumulative
     

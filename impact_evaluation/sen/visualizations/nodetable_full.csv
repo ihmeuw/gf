@@ -1,6 +1,6 @@
 variable,y,x,label
-lag_other_dah_T1_cumulative,8.25,-10,Other TB Care and Prev Exp.
-lag_exp_T1_cumulative,10,-10,GF TB Care and Prev Exp.
+lag_other_dah_T1_cumulative,6,-10,Other TB Care and Prev Exp.
+lag_exp_T1_cumulative,11,-10,GF TB Care and Prev Exp.
 lag_exp_T2_cumulative,1,-10,GF TB-HIV Exp.
 lag_other_dah_T3_cumulative,2.5,-10,Other MDR-TB Exp.
 lag_exp_T3_cumulative,3.75,-10,GF MDR-TB Exp.
@@ -11,9 +11,9 @@ tot_genexpert_cumulative,7.75,-3,Genexpert Tests (#)
 com_nom_touss_cumulative,11.25,3,Those with cough screened (#)
 com_enf_ref_cumulative,9.75,3,Child Contacts Ref. (#)
 tb_tfc_cumulative,8,3,TB Cases identified (#)
-ntr_all_cumulative,4.5,3,Treated First-line (#)
+ntr_all_cumulative,5,3,Treated First-line (#)
 dx_count_cumulative,3,3,MDR-TB Cases Diagnosed (#)
-tb_vih_arv_cumulative,0.95,3,TB-HIV Rec. ARV (#)
+tb_vih_arv_cumulative,1,3,TB-HIV Rec. ARV (#)
 tpm_chimio_enf_cumulative,10,10,IPT Medicine for children
 gueris_taux,8,10,Treatment Success Rate: TB
 perf_lab,5,10,Lab Performance

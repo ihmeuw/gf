@@ -47,14 +47,14 @@ summed_data = sub_data[, lapply(.SD, sum, na.rm=TRUE), by=c('region','date'), .S
                                                                             'gueris_total', 'trait_tot', 'tb_vih_arv')]
 
 # VALUES WHICH MUST BE AVERAGED (percents or rates)
-averaged_data = sub_data[, lapply(.SD, mean, na.rm=TRUE), by=c('region','date'), .SDcols=c('tbtot_taux_det', 'gueris_taux', 'trait_pc')]
+averaged_data = sub_data[, lapply(.SD, mean, na.rm=TRUE), by=c('region','date'), .SDcols=c('gueris_taux', 'trait_pc')]
 
 # VALUES WHICH MUST BE DIVIDED EVENLY (data reported in annual totals only)
 divided_data = sub_data[, lapply(.SD, mean, na.rm=TRUE), by=c('region', 'date'), .SDcols=c('com_mobsoc', 'com_cause', 'com_radio', 'com_enf_ref', 'com_nom_touss')]
 divided_data = divided_data[, lapply(.SD, function(x){x*0.25}), by=c('region', 'date'), .SDcols=c('com_mobsoc', 'com_cause', 'com_radio', 'com_enf_ref', 'com_nom_touss')]
 
 # VALUES WHICH ARE NOT REPORTED BY HOSPITALS and MUST BE AVERAGED
-exc_data = sub_data[type!="HOPITAL", lapply(.SD, mean, na.rm=TRUE), by=c('region','date'), .SDcols=c('perf_lab', 'tbtot_taux_det', 'trait_pc')]
+exc_data = sub_data[type!="HOPITAL", lapply(.SD, mean, na.rm=TRUE), by=c('region','date'), .SDcols=c('perf_lab', 'tbtot_taux_det')]
 
 # VALUES WHICH ARE NOT REPORTED BY HOSPITALS and can be SUMMED
 exc_summed_data = sub_data[type!="HOPITAL", lapply(.SD, sum, na.rm=TRUE), by=c('region','date'), .SDcols=c('tpm_chimio_enf', 'tpm_chimio_pvvih')]
