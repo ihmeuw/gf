@@ -52,8 +52,8 @@ DT$`gf_result_%` <- as.numeric(DT$`gf_result_%`)
 # might be done in other stage?
 
 # create variable with indicator code (makes cross--country comparisons easier) can merge short description using this code later
-DT2 = DT2[, c("indicator_code", "indicator_description", "indicator_misc") := tstrsplit(indicator, ": ", fixed=TRUE)]
-DT2 = DT2[,c("indicator_description", "indicator_misc"):=NULL]
+DT = DT[, c("indicator_code", "indicator_description", "indicator_misc") := tstrsplit(indicator, ": ", fixed=TRUE)]
+DT = DT[,c("indicator_description", "indicator_misc"):=NULL]
 
 
 # for GTM - TB --------------------------------
