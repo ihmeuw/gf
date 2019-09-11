@@ -16,7 +16,7 @@ library(GGally)
 load(outputFile4a)
 
 # load model object
-modelVersion = 'sen_tb_model_first_half'
+modelVersion = 'sen_tb_model1'
 source(paste0('./impact_evaluation/sen/models/', modelVersion, '.R'))
 
 # load "node table" for convenient labels
