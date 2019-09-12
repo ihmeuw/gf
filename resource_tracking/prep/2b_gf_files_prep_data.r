@@ -20,7 +20,7 @@ if (prep_files == TRUE){
   file_list = prioritize_gos(file_list)
 
   #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'sheet_financial', 'start_date_financial', 'data_source', 'pudr_semester')] #EMILY NEED TO RETHINK THIS. 
+  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'sheet_financial', 'start_date_financial', 'data_source', 'pudr_semester_financial')] #EMILY NEED TO RETHINK THIS. 
   file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
   if ( nrow(file_list[date_dup>0])!=0){
@@ -28,7 +28,7 @@ if (prep_files == TRUE){
     print("There are duplicates in final files - review file list.")
   }
   
-  file_list[data_source=="pudr" & file_iteration=="final", pudr_dup:=sequence(.N), by=c('grant', 'grant_period', 'pudr_semester')]
+  file_list[data_source=="pudr" & file_iteration=="final", pudr_dup:=sequence(.N), by=c('grant', 'grant_period', 'pudr_semester_financial')]
   file_list[, pudr_dup:=pudr_dup-1] #This variable indexes at 1.
   if (nrow(file_list[pudr_dup>0 & !is.na(pudr_dup)])>0){
     print(file_list[pudr_dup>0 & !is.na(pudr_dup)])
@@ -128,7 +128,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language_financial, file_currency, pudr_semester, period_financial, update_date)]
+                                 mod_framework_format, file_iteration, language_financial, file_currency, pudr_semester_financial, period_financial, update_date)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
     }  
