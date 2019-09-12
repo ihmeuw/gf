@@ -48,12 +48,18 @@ START_YEAR = 2009 #If available, what's the earliest year you should model data 
 
 #-----------------------------------
 #Global variable transformations 
-backCastVars = c("Number_of_Cases_Screened_for_MDR_act", "Second_Line_Drugs_Distributed_act", "Isoniazid_Distributed_act", "PLHIV_Screened_for_TB_act", 
+
+#These variables had to be imputed in step 2b, because they're used to create first-line and second-line drugs. EL 9/6/2019 
+drugComboVars = c("Total_First_Line_Drugs_inusIsonizide__Distributed_value_act", "Isoniazid_Distributed_value_act", 
+                  "Second_Line_Drugs_Distributed_value_act", "Total_MDR_Drugs_Distributed_value_act")
+
+#These variables will be imputed using GLM in step 4a. 
+backCastVars = c("Number_of_Cases_Screened_for_MDR_act", "PLHIV_Screened_for_TB_act", 
                            "TB_Patients_Tested_for_HIV_act", 
                            "MDR_Cases_Notified_out", "MDR_Cases_Started_Treatment_out", "Cases_Notified_in_Prisons_out", "Children_in_Contact_with_TB_Started_IPT_out", 
-                           "Cases_Started_on_Treatment_out", "Cases_Notified_out", "PLHIV_started_on_IPT_out", "Cases_Started_on_Treatment_in_Prisons_out", "HIV_TB_Cases_Notified_out", 
-                           "Firstline_Distributed_act", "Secondline_Distributed_act")
+                           "Cases_Started_on_Treatment_out", "Cases_Notified_out", "PLHIV_started_on_IPT_out", "Cases_Started_on_Treatment_in_Prisons_out", "HIV_TB_Cases_Notified_out")
 
+#These variables will be log-transformed in step 4a. 
 logVars = c("Case_Notification_Rate_imp", "Proportion_of_HIV_TB_Cases_Treated_out", "Proportion_of_MDR_Cases_Treated_out", "Proportion_of_Cases_in_Prisons_Treated_out", 
             "Proportion_of_Patients_Receiving_DST_out")
 

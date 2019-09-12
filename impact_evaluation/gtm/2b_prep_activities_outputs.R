@@ -317,8 +317,50 @@ dt_final = merge(activities1, outputs1, by=c('date', 'department'), all=T) #Save
 # }
 
 #Generate combined first- and second-line drug activity variables EL 8/22/19 
-dt_final[, Firstline_Distributed_act:=sum(Total_First_Line_Drugs_inusIsonizide__Distributed_value_act, Isoniazid_Distributed_value_act, na.rm=F), by=c('date', 'department')]
-dt_final[, Secondline_Distributed_act:=sum(Second_Line_Drugs_Distributed_value_act, Total_MDR_Drugs_Distributed_value_act, na.rm=F), by=c('date', 'department')]
+# EDIT FROM DAVID PHILLIPS 9/6/2019 - we need to impute the combination variables for this step right before creating first and second-line variables. 
+# This imputation code is copied from step 4a. 
+
+#--------------------------------------------------
+# extrapolate where necessary using GLM (better would be to use multiple imputation)
+i=1
+for(v in drugComboVars) {
+  for(h in unique(dt_final$department)) { 
+    i=i+1
+    #First, check whether all values for this department and this variable are zero. 
+    # if they are, don't backcast. 
+    values = unique(dt_final[department==h, as.vector(get(v))]) #Get a vector of the unique values of the variable.
+    values[is.na(values)] = 0
+    zero_compare = rep(0, length(values)) #Get an equal length vector of zeros.
+    if (all(values==zero_compare)){
+      print(paste0(v, " is completely zero for department", h, " - making 0 for the entire time series in this department"))
+      dt_final[department==h, (v):=0]
+    } else {
+      #Backcast if it doesn't fall into this category. 
+      if (!any(is.na(dt_final[department==h][[v]]))) next
+      if (!any(!is.na(dt_final[department==h][[v]]))) next
+      form = as.formula(paste0(v,'~date'))
+      lmFit = glm(form, dt_final[department==h], family='poisson')
+      dt_final[department==h, tmp:=exp(predict(lmFit, newdt_final=dt_final[department==h]))]
+      lim = max(dt_final[department==h][[v]], na.rm=T)+sd(dt_final[department==h][[v]], na.rm=T)
+      dt_final[department==h & tmp>lim, tmp:=lim]
+      dt_final[department==h & is.na(get(v)), (v):=tmp]
+    } 
+    pct_complete = floor(i/(length(drugComboVars)*length(unique(dt_final$department)))*100)
+    cat(paste0('\r', pct_complete, '% Complete'))
+    flush.console() 
+  }
+}
+dt_final$tmp = NULL
+
+
+# Replace NAs with zeros after back-casting DP 8/16/19 
+for (v in drugComboVars){
+  dt_final[is.na(get(v)), (v):=0]
+}
+#-----------------------------------------------------------------------
+
+dt_final[, Firstline_Distributed_act:=sum(Total_First_Line_Drugs_inusIsonizide__Distributed_value_act, Isoniazid_Distributed_value_act, na.rm=T), by=c('date', 'department')]
+dt_final[, Secondline_Distributed_act:=sum(Second_Line_Drugs_Distributed_value_act, Total_MDR_Drugs_Distributed_value_act, na.rm=T), by=c('date', 'department')]
 
 #-----------------------------------------------------
 # Save data 
