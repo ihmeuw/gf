@@ -9,7 +9,7 @@
 #-------------------------------------------
 #1. Budgets 
 #-------------------------------------------
-  final_budgets = mapped_data[file_iteration == "final" & data_source == "fpm"] #Only want the final versions of budgets. 
+  final_budgets = mapped_data[file_iteration == "final" & data_source == "budget"] #Only want the final versions of budgets. 
   final_budgets = final_budgets[, -c('expenditure', 'lfa_exp_adjustment', 'disbursement')]
 
 #---------------------------------------------------------
@@ -309,10 +309,10 @@
 #------------------------------------------------------
 # 4. Budget revisions
 #------------------------------------------------------
-  revision_flag = unique(mapped_data[file_iteration=='revision' & data_source=="fpm", .(grant, grant_period)])
+  revision_flag = unique(mapped_data[file_iteration=='revision' & data_source=="budget", .(grant, grant_period)])
   revision_flag[, concat:=paste0(grant, "_", grant_period)]
   
-  revisions = mapped_data[paste0(grant, "_", grant_period)%in%revision_flag$concat & data_source=="fpm"]
+  revisions = mapped_data[paste0(grant, "_", grant_period)%in%revision_flag$concat & data_source=="budget"]
   if (nrow(revisions)!=0){ #You won't have budget revisions for every country. 
     #Figure out the order using the 'update_date' variable. 
     order = unique(revisions[, .(grant, grant_period, update_date ,file_name)][order(grant_period, grant, update_date)])
