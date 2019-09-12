@@ -43,11 +43,11 @@ load_master_list = function(purpose=NULL) {
   #First, check data source and function columns so they can be used to filter rows. 
   stopifnot(unique(dt$data_source)%in%c('budget', 'pudr', 'document', 'performance_framework'))
   stopifnot(unique(dt$function_financial)%in%c('detailed', 'detailed_other', 'module', 'old_detailed', 'pudr', 'summary', 'unknown', 'NA'))
-  stopifnot(unique(dt$function_performance)%in%c('master', 'unknown', 'NA'))
+  stopifnot(unique(dt$function_programmatic)%in%c('master', 'unknown', 'NA'))
   
   #Then, drop out data types that aren't being processed. 
   if (purpose=="financial") dt = dt[data_source%in%c('budget', 'pudr') & !function_financial%in%c('NA', 'unknown')]
-  if (purpose=="performance indicators") dt = dt[data_source%in%c('pudr', 'performance_framework') & !function_performance%in%c('NA', 'unknown')]
+  if (purpose=="performance indicators") dt = dt[data_source%in%c('pudr', 'performance_framework') & !function_programmatic%in%c('NA', 'unknown')]
   #*** Note that 'unknown' typed into a column means data is there, but there's not a function that can process it yet. 
   # 'NA' typed into a column means that extraction type doesn't apply here. 
   
@@ -58,10 +58,6 @@ load_master_list = function(purpose=NULL) {
   stopifnot(unique(dt$file_currency)%in%c('USD', 'EUR', 'LOC'))
   stopifnot(unique(dt$geography_detail)%in%c('NATIONAL', 'SUBNATIONAL'))
   stopifnot(unique(dt$file_iteration)%in%c('final', 'initial', 'revision'))
-  
-  #Drop out data types that aren't being processed. 
-  if (purpose=="financial") dt = dt[data_source%in%c('budget', 'pudr')]
-  if (purpose=="performance indicators") dt = dt[data_source%in%c('pudr', 'performance_framework')]
   
   #Correct date formats
   dt[, start_date_financial:=as.Date(as.numeric(start_date_financial), origin="1899-12-30")]
@@ -74,11 +70,11 @@ load_master_list = function(purpose=NULL) {
   #-------------------------------
   if (purpose=="financial") {
     keep_cols = c('function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
-                  'pudr_semester', 'update_date', 'mod_framework_format')
+                  'pudr_semester_financial', 'update_date', 'mod_framework_format')
     keep_cols = c(core_cols, keep_cols)
     dt = dt[, c(keep_cols), with=F]
     
-    for (col in names(dt)[!names(dt)%in%c('start_date_financial', 'update_date', 'pudr_semester')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
+    for (col in names(dt)[!names(dt)%in%c('start_date_financial', 'update_date', 'pudr_semester_financial')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
       if ('verbose'%in%ls() & verbose){
         print(paste0("Checking for NA values in ", col))
       }
@@ -88,7 +84,7 @@ load_master_list = function(purpose=NULL) {
     #Check date variables, and special string variables. 
     stopifnot(nrow(dt[is.na(start_date_financial)])==0)
     stopifnot(nrow(dt[is.na(update_date) & file_iteration=="revision"])==0)
-    stopifnot(nrow(dt[data_source=="pudr" & (pudr_semester=="NA" | is.na(pudr_semester))])==0) #Check PUDR semester. 
+    stopifnot(nrow(dt[data_source=="pudr" & (pudr_semester_financial=="NA" | is.na(pudr_semester_financial))])==0) #Check PUDR semester. 
   }
   
   
@@ -97,21 +93,27 @@ load_master_list = function(purpose=NULL) {
   #-------------------------------
   
   if (purpose=="performance indicators") {
-    keep_cols = c('function_performance', 'sheet_impact_outcome_1a', 'sheet_impact_outcome_1a_disagg', 'sheet_coverage_1b', 'sheet_coverage_1b_disagg', 
-                  'start_date_programmatic', 'end_date_programmatic', 'language_programmatic', 'pudr_semester')
+    keep_cols = c('function_programmatic', 'sheet_impact_outcome_1a', 'sheet_impact_outcome_1a_disagg', 'sheet_coverage_1b', 'sheet_coverage_1b_disagg', 
+                  'start_date_programmatic', 'end_date_programmatic', 'language_programmatic', 'pudr_semester_programmatic')
     keep_cols = c(core_cols, keep_cols)
     dt = dt[, c(keep_cols), with=F]
     
-    for (col in names(dt)[!names(dt)%in%c('start_date_programmatic', 'end_date_programmatic')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
+    for (col in names(dt)[!names(dt)%in%c('start_date_programmatic', 'end_date_programmatic', 'sheet_impact_outcome_1a_disagg', 
+                                          'sheet_coverage_1b_disagg')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
       if ('verbose'%in%ls() & verbose){
         print(paste0("Checking for NA values in ", col))
       }
       stopifnot(nrow(dt[get(col)=="NA" | is.na(get(col))])==0)
     }
     
+    #Check that no disaggregated sheet names are NA - "NA" as a string is fine; that was entered intentionally. 
+    stopifnot(nrow(dt[is.na(sheet_impact_outcome_1a_disagg)])==0)
+    stopifnot(nrow(dt[is.na(sheet_coverage_1b_disagg)])==0)
+    
     #Check date variables, and special string variables. 
     stopifnot(nrow(dt[is.na(start_date_programmatic)])==0)
     stopifnot(nrow(dt[is.na(end_date_programmatic)])==0)
+    
   }
   
   
@@ -154,7 +156,7 @@ load_master_list = function(purpose=NULL) {
   correct_periods[, ip_end_year:=year(grant_period_end)]
   
   #Merge files together and compare
-  file_list1 = merge(file_list, correct_periods, all.x=T, by=c('grant', 'grant_period'))
+  dt1 = merge(dt, correct_periods, all.x=T, by=c('grant', 'grant_period'))
   
   #Using these new correct months, figure out what the correct PUDR semesters are. 
   pudr_semesters = correct_periods[, .(grant, grant_period, grant_period_start, grant_period_end)] #Only will care about the PUDRs from 2015 on. 
@@ -162,35 +164,62 @@ load_master_list = function(purpose=NULL) {
   melt = melt[order(grant, grant_period, variable)]
   melt[, concat:=paste0(grant, grant_period)]
   
-  pudr_sequence = c('1-A', '1-B', '2-A', '2-B', '3-A', '3-B', '4-A', '4-B', '5-A', '5-B', '6-A', '6-B', '7-A', '7-B', '8-A', '8-B')
+  pudr_sequence = c('1-A', '1-B', '2-A', '2-B', '3-A', '3-B', '4-A', '4-B', '5-A', '5-B', '6-A', '6-B', '7-A', '7-B', '8-A', '8-B', '9-A', '9-B', '10-A', '10-B')
   
   correct_pudr_sem = data.table()
   for (g in unique(melt$concat)){
-    dt = melt[concat==g]
-    stopifnot(nrow(dt)==2)
-    start = as.Date(dt[variable=="grant_period_start", value])
-    end = as.Date(dt[variable=="grant_period_end", value])
-    frame = data.table(grant=dt$grant, grant_period=dt$grant_period, 
+    subset = melt[concat==g]
+    stopifnot(nrow(subset)==2)
+    start = as.Date(subset[variable=="grant_period_start", value])
+    end = as.Date(subset[variable=="grant_period_end", value])
+    frame = data.table(grant=subset$grant, grant_period=subset$grant_period, 
                        value=seq(start, end, by='6 months'))
     frame[, pudr_semester:=pudr_sequence[1:nrow(frame)]]
-    if (nrow(frame)==2){
-      frame$pudr_semester[2] = "1-A"
-    }
-    
     correct_pudr_sem = rbind(correct_pudr_sem, frame)
   }
+  if ('10-B'%in%unique(correct_pudr_sem$pudr_semester)) stop("Expand PUDR sequence within load_master_list() function! Max has been reached.")
   
   #Check that you've entered the correct PUDR semesters by hand! 
-  pudrs = file_list1[data_source%in%c('pudr') & !is.na(start_date_financial), .(grant, grant_period, start_date_financial, period_financial, pudr_semester)]
-  setnames(pudrs, 'pudr_semester', 'hand_coded_semester')
-  setnames(correct_pudr_sem, 'value', 'start_date_financial')
-  
-  pudrs = merge(pudrs, correct_pudr_sem, by=c('grant', 'grant_period', 'start_date_financial'), all.x=T)
-  
-  #Check. 
-  pudrs[, hand_code_start:=substr(hand_coded_semester, 1, 3)] # If you have a semester like "1-AB", that's ok, just check that it matches 1-A. AKA the start dates are correct. 
-  error = pudrs[hand_code_start!=pudr_semester]
-  stopifnot(nrow(error)==0)
+  if (purpose=="financial") { 
+    pudrs = dt1[data_source%in%c('pudr') & !is.na(start_date_financial), .(grant, grant_period, start_date_financial, period_financial, pudr_semester_financial)]
+    setnames(pudrs, 'pudr_semester_financial', 'hand_coded_semester')
+    setnames(correct_pudr_sem, 'value', 'start_date_financial')
+    
+    pudrs = merge(pudrs, correct_pudr_sem, by=c('grant', 'grant_period', 'start_date_financial'), all.x=T)
+    
+    #Check. 
+    pudrs[, hand_code_start:=substr(hand_coded_semester, 1, 3)] # If you have a semester like "1-AB", that's ok, just check that it matches 1-A. AKA the start dates are correct. 
+    error = pudrs[hand_code_start!=pudr_semester| is.na(hand_code_start) | hand_code_start=="NA"]
+    
+    #Hand-code any unique cases - initial and date. 
+    error = error[!(grant=="GTM-M-MSPAS" & grant_period=="2018-2018" & start_date_financial=="2018-07-01")] #EL 9/12/2019
+    
+    #Print a stop message if errors remain. 
+    if (nrow(error)!=0){
+      print(error) 
+      stop("Some PUDR semesters were entered incorrectly. Review variable 'pudr_semester_financial'.")
+    }
+  } else if (purpose=="performance indicators"){
+    pudrs = dt1[data_source%in%c('pudr') & !is.na(start_date_programmatic), .(grant, grant_period, start_date_programmatic, end_date_programmatic, pudr_semester_programmatic)]
+    setnames(pudrs, 'pudr_semester_programmatic', 'hand_coded_semester')
+    setnames(correct_pudr_sem, 'value', 'start_date_programmatic')
+    
+    pudrs = merge(pudrs, correct_pudr_sem, by=c('grant', 'grant_period', 'start_date_programmatic'), all.x=T)
+    
+    #Check. 
+    pudrs[, hand_code_start:=substr(hand_coded_semester, 1, 3)] # If you have a semester like "1-AB", that's ok, just check that it matches 1-A. AKA the start dates are correct. 
+    error = pudrs[hand_code_start!=pudr_semester | is.na(hand_code_start) | hand_code_start=="NA"]
+    
+    #Hand-code any unique cases - initial and date. 
+    error = error[!(grant=="GTM-M-MSPAS" & grant_period=="2018-2018" & start_date_programmatic=="2018-07-01")] #EL 9/12/2019
+    error = error[!(grant=="GTM-H-HIVOS" & grant_period=="2018-2018" & start_date_programmatic=="2018-07-01")] #EL 9/12/2019
+    
+    #Print a stop message if errors still remain. 
+    if (nrow(error)!=0){
+      print(error) 
+      stop("Some PUDR semesters were entered incorrectly. Review variable 'pudr_semester_programmatic'.")
+    }
+  }
   
   #----------------------------------------------------------------------------------
   #So that you always get consistent ordering, even if the excel beneath is filtered. 
