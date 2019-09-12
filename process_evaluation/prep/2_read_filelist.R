@@ -4,9 +4,7 @@
 # DATE: Last updated June 2019. 
 # ----------------------------------------------
 
-master_file_list = data.table(read_excel("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/master_file_list.xlsx"))
-master_file_list[, start_date_programmatic:=as.Date(start_date_programmatic, format = "%m/%d/%Y")]
-master_file_list = master_file_list[grant_status == "active" & file_iteration=="final"]
+master_file_list = load_master_list(purpose="performance indicators")
 
 # THIS SHOULD BE DELETED WHEN YOU MAKE A MORE GENERAL FUNCTION! EL 7/24/2019
 master_file_list = master_file_list[sheet_coverage_1b%in%c("Indicateurs Couverture_1B", "Coverage Indicators_1B")]
