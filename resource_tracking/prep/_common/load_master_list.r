@@ -98,7 +98,7 @@ load_master_list = function(purpose=NULL) {
   
   if (purpose=="performance indicators") {
     keep_cols = c('function_performance', 'sheet_impact_outcome_1a', 'sheet_impact_outcome_1a_disagg', 'sheet_coverage_1b', 'sheet_coverage_1b_disagg', 
-                  'start_date_programmatic', 'end_date_programmatic', 'language_programmatic')
+                  'start_date_programmatic', 'end_date_programmatic', 'language_programmatic', 'pudr_semester')
     keep_cols = c(core_cols, keep_cols)
     dt = dt[, c(keep_cols), with=F]
     
@@ -129,8 +129,7 @@ load_master_list = function(purpose=NULL) {
   #Extract grant period 
   correct_periods[, grant_period:=paste0(year(grant_period_start), "-", year(grant_period_end))]
   correct_periods[, correct_grant_period:=grant_period]
-  correct_periods = correct_periods[, .(grant, grant_period, correct_grant_period)]
-  
+
   #Merge data together
   our_periods = unique(dt[data_source%in%c('fpm', 'pudr', 'performance_framework'), .(grant, grant_period)])
   #EMILY WE SHOULD FLAG WHEN GRANT PERIODS ARE NA!! 
@@ -147,6 +146,51 @@ load_master_list = function(purpose=NULL) {
     stop("There are grant names that don't match with GF metadata.")
   }
   
+  #------------------------------------------------------------
+  # Make sure that you've entered PUDR semester correctly. 
+  correct_periods[, ip_start_month:=month(grant_period_start)]
+  correct_periods[, ip_end_month:=month(grant_period_end)]
+  correct_periods[, ip_start_year:=year(grant_period_start)]
+  correct_periods[, ip_end_year:=year(grant_period_end)]
+  
+  #Merge files together and compare
+  file_list1 = merge(file_list, correct_periods, all.x=T, by=c('grant', 'grant_period'))
+  
+  #Using these new correct months, figure out what the correct PUDR semesters are. 
+  pudr_semesters = correct_periods[, .(grant, grant_period, grant_period_start, grant_period_end)] #Only will care about the PUDRs from 2015 on. 
+  melt = melt(pudr_semesters, id.vars=c('grant', 'grant_period'), value.var='date')
+  melt = melt[order(grant, grant_period, variable)]
+  melt[, concat:=paste0(grant, grant_period)]
+  
+  pudr_sequence = c('1-A', '1-B', '2-A', '2-B', '3-A', '3-B', '4-A', '4-B', '5-A', '5-B', '6-A', '6-B', '7-A', '7-B', '8-A', '8-B')
+  
+  correct_pudr_sem = data.table()
+  for (g in unique(melt$concat)){
+    dt = melt[concat==g]
+    stopifnot(nrow(dt)==2)
+    start = as.Date(dt[variable=="grant_period_start", value])
+    end = as.Date(dt[variable=="grant_period_end", value])
+    frame = data.table(grant=dt$grant, grant_period=dt$grant_period, 
+                       value=seq(start, end, by='6 months'))
+    frame[, pudr_semester:=pudr_sequence[1:nrow(frame)]]
+    if (nrow(frame)==2){
+      frame$pudr_semester[2] = "1-A"
+    }
+    
+    correct_pudr_sem = rbind(correct_pudr_sem, frame)
+  }
+  
+  #Check that you've entered the correct PUDR semesters by hand! 
+  pudrs = file_list1[data_source%in%c('pudr') & !is.na(start_date_financial), .(grant, grant_period, start_date_financial, period_financial, pudr_semester)]
+  setnames(pudrs, 'pudr_semester', 'hand_coded_semester')
+  setnames(correct_pudr_sem, 'value', 'start_date_financial')
+  
+  pudrs = merge(pudrs, correct_pudr_sem, by=c('grant', 'grant_period', 'start_date_financial'), all.x=T)
+  
+  #Check. 
+  pudrs[, hand_code_start:=substr(hand_coded_semester, 1, 3)] # If you have a semester like "1-AB", that's ok, just check that it matches 1-A. AKA the start dates are correct. 
+  error = pudrs[hand_code_start!=pudr_semester]
+  stopifnot(nrow(error)==0)
   
   #----------------------------------------------------------------------------------
   #So that you always get consistent ordering, even if the excel beneath is filtered. 
