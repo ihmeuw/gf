@@ -44,7 +44,7 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
-    country = "sen" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+    country = "cod" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
     master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
     export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
   }
@@ -56,7 +56,7 @@ if (prep_files | prep_gos){
   }
   
   # Load and verify mapping, prep data, and map data. 
-  source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
+  # source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
   if (prep_files){
     source(paste0(code_dir, "2b_gf_files_prep_data.r"))
   } else if (prep_gos){
