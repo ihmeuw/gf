@@ -24,13 +24,31 @@ DT$indicator[which(DT$indicator=='Nombre et pourcentage de structures de santé (
 DT$indicator[which(DT$indicator=='Number and percentage of health facilities (Integrated health facilities) reporting stock out of malaria rapid diagnostic test (RDT)')] <- "RDT SO: Number and percentage of health facilities (Integrated health facilities) reporting stock out of malaria rapid diagnostic test (RDT)"
 DT$indicator[which(DT$indicator=='GP other-2 Nombre de SVS ayant recu le kit PEP dans les 72h')] <- "GP other-2: Nombre de SVS ayant recu le kit PEP dans les 72h"
 
-# remove percent signs
+# clean special characters, blanks, and NAs
+DT$baseline_value[which(DT$baseline_value=="16,121,172")] <- "16121172"
+DT$baseline_value[which(DT$baseline_value=="N/A")] <- NA
+DT$baseline_value <- gsub(",",".",DT$baseline_value)
 DT$baseline_value <- gsub("%","",DT$baseline_value)
+
+DT$`lfa_result_%`[which(DT$`lfa_result_%`==" ")] <- NA
+DT$`lfa_result_%` <- gsub(",",".",DT$`lfa_result_%`)
+DT$`lfa_result_%` <- gsub("%","",DT$`lfa_result_%`)
+
+DT$pr_result_achievement_ratio[which(DT$pr_result_achievement_ratio==" ")] <- NA
+DT$gf_result_achievement_ratio[which(DT$gf_result_achievement_ratio==" ")] <- NA
+
+DT$pr_result_n[which(DT$pr_result_n=="ND")]<- NA
+DT$pr_result_d[which(DT$pr_result_d=="ND")]<- NA
+DT$`pr_result_%`[which(DT$`pr_result_%`=="ND")]<- NA
+DT$lfa_result_n[which(DT$lfa_result_n=="ND")]<- NA
+DT$lfa_result_d[which(DT$lfa_result_d=="ND")]<- NA
 
 # fix variables' "class"
 DT$baseline_value <- as.numeric(DT$baseline_value)
 
 DT$lfa_result_achievement_ratio <- as.numeric(DT$lfa_result_achievement_ratio)
+DT$pr_result_achievement_ratio <- as.numeric(DT$pr_result_achievement_ratio)
+DT$gf_result_achievement_ratio <- as.numeric(DT$gf_result_achievement_ratio)
 
 DT$target_n <- as.numeric(DT$target_n)
 DT$target_d <- as.numeric(DT$target_d)
@@ -48,6 +66,8 @@ DT$gf_result_n <- as.numeric(DT$gf_result_n)
 DT$gf_result_d <- as.numeric(DT$gf_result_d)
 DT$`gf_result_%` <- as.numeric(DT$`gf_result_%`)
 
+
+
 # fix date variables
 # might be done in other stage?
 
@@ -55,14 +75,12 @@ DT$`gf_result_%` <- as.numeric(DT$`gf_result_%`)
 DT = DT[, c("indicator_code", "indicator_description", "indicator_misc") := tstrsplit(indicator, ": ", fixed=TRUE)]
 DT = DT[,c("indicator_description", "indicator_misc"):=NULL]
 
-
+##########################################################
 # for GTM - TB --------------------------------
-# remove rows that are not necessary
-DT2 <- DT2[indicator!="[Impact Indicator Name]"]
-DT2 <- DT2[indicator!="[Outcome Indicator Name]"]
+##########################################################
 
 # remove duplicated column titled "pr_result_verification_method" 
-DT2 <- DT2[,unique(names(DT)),with=FALSE]
+DT2 <- DT2[,unique(names(DT2)),with=FALSE]
 
 # remove unnecessary rows in the Guatemala data which are mostly blank
 DT2 <- DT2[indicator!="[Impact Indicator Name]"]
@@ -70,6 +88,10 @@ DT2 <- DT2[indicator!="[Outcome Indicator Name]"]
 
 # remove percent signs
 DT2$baseline_value <- gsub("%","",DT2$baseline_value)
+DT2$baseline_value <- gsub("/100,000","",DT2$baseline_value)
+
+# remove special characters and text
+DT2$gf_result_n[which(DT2$gf_result_n=="qu ")] <- NA
 
 # fix variables' "class"
 DT2$baseline_value <- as.numeric(DT2$baseline_value)
@@ -92,8 +114,26 @@ DT2$gf_result_n <- as.numeric(DT2$gf_result_n)
 DT2$gf_result_d <- as.numeric(DT2$gf_result_d)
 DT2$`gf_result_%` <- as.numeric(DT2$`gf_result_%`)
 
+# fix target_year in Guatemala
+DT2$target_year <- as.numeric(DT2$target_year)
+
+# Indicate if it's a reverse indicator
+DT2$reverse_indicator <- NA
+DT2$reverse_indicator[which(DT2$indicator_code=="TB I-2")] <- "Yes"
+DT2$reverse_indicator[which(DT2$indicator_code=="TB I-3(M)")] <- "Yes"
+DT2$reverse_indicator[which(DT2$indicator_code=="TB/HIV I-1")] <- "Yes"
+DT2$reverse_indicator[which(DT2$indicator_code=="TB I-4(M)")] <- "Yes"
+
+# keep only most recent data from 2018 in Guatemala
+DT2 <- DT2[target_year==2018]
+
 # fix date variables
+class(DT2$end_date_programmatic) <- class(DT$end_date_programmatic)
+# this leads to incorrect dates as it is but necessary for rbind to work properly
 # might be done in other stage?
+
+# merge on codebook
+# pending
 
 # create variable with indicator code (makes cross--country comparisons easier) can merge short description using this code later
 DT2 = DT2[, c("indicator_code", "indicator_description", "indicator_misc") := tstrsplit(indicator, ": ", fixed=TRUE)]
@@ -101,4 +141,10 @@ DT2 = DT2[,c("indicator_description", "indicator_misc"):=NULL]
 
 #------------------------------------------------------
 # SAVE FINAL DATA
-# --------------------------------------
+# -----------------------------------------------------
+l = list(DT, DT2)
+merge_file <- rbindlist(l, use.names = TRUE, fill= TRUE)
+
+outputFile4 <- "C:/Users/frc2/Documents/data/pudr/cleaned_data_16Sept2019.rds"
+saveRDS(merge_file, outputFile4)
+

@@ -1,7 +1,7 @@
 # -----------------------------------
 # Francisco Rios, David Phillips
 # 
-# 2/4/2019
+# 9/13/2019
 # This visualizes results of the SEM
 # -----------------------------------
 

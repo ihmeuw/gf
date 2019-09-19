@@ -35,7 +35,7 @@ sub_data = outputs_outcomes[,.(region, centre, date, type,
                                  tot_genexpert, tot_confirme, tot_res,
                                  tbtot_taux_det,
                                  gueris_total, gueris_taux, trait_tot, trait_pc, tb_vih_arv,
-                                 tpm_chimio_enf, tpm_chimio_pvvih
+                                 tpm_chimio_enf, tpm_chimio_pvvih, tbvih_arvtx_rate
                                )]
 
 # aggregate data to the admin1 (Regions in Senegal) ----------------------------------------------------------
@@ -44,7 +44,7 @@ sub_data = outputs_outcomes[,.(region, centre, date, type,
 summed_data = sub_data[, lapply(.SD, sum, na.rm=TRUE), by=c('region','date'), .SDcols=c('tb_tfc', 'ntr_all',
                                                                             'ntr_rhz', 'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 
                                                                             'tot_genexpert', 'tot_confirme', 'tot_res',
-                                                                            'gueris_total', 'trait_tot', 'tb_vih_arv')]
+                                                                            'gueris_total', 'trait_tot', 'tb_vih_arv', 'tbvih_arvtx_rate')]
 
 # VALUES WHICH MUST BE AVERAGED (percents or rates)
 averaged_data = sub_data[, lapply(.SD, mean, na.rm=TRUE), by=c('region','date'), .SDcols=c('gueris_taux', 'trait_pc')]

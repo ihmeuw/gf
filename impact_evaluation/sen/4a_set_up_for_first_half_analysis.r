@@ -81,7 +81,8 @@ untransformed = copy(data)
 # update the complVars vector to refer to any proportion variable
 complVars = c('perf_lab', 
               'gueris_taux',
-              'mdr_tx_rate')
+              'mdr_tx_rate',
+              'tbvih_arvtx_rate')
 
 # transform completeness variables using approximation of logit that allows 1's and 0's
 # (Smithson et al 2006 Psychological methods "A better lemon squeezer")

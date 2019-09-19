@@ -15,7 +15,7 @@ ntr_all_cumulative,5,3,Treated First-line (#)
 dx_count_cumulative,3,3,MDR-TB Cases Diagnosed (#)
 tb_vih_arv_cumulative,1,3,TB-HIV Rec. ARV (#)
 tpm_chimio_enf_cumulative,10,10,IPT Medicine for children
-gueris_taux,8,10,Treatment Success Rate: TB
-perf_lab,5,10,Lab Performance
+gueris_taux,6.75,10,Treatment Success Rate: TB
+perf_lab,5,10,Lab Performance Rate
 mdr_tx_rate,3,10,MDR-TB Started on Treatment (Rate)
-tpm_chimio_pvvih_cumulative,1,10,Proportion of TB/HIV patiens starting treatment
+tbvih_arvtx_rate,1,10,Proportion of TB/HIV patients starting ARV tx.
