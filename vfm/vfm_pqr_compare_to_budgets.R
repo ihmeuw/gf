@@ -26,7 +26,7 @@ inFile_pqr = paste0(dir, 'unit_cost_data/prepped_data/prepped_full_pqr.rds')
 inFile_budget = paste0(dir, 'unit_cost_data/gf_budgets/guatemala_tb_hand_extraction.xlsx')
 
 # output files
-outFile = paste0(dir, 'visualizations/comparison_of_budgeted_cost_and_actual_cost_gtm_tb.pdf')
+outFile = paste0(dir, 'visualizations/PQR/comparison_of_budgeted_cost_and_actual_cost_gtm_tb.pdf')
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -52,7 +52,21 @@ setnames(budget, 'Y3 Cantidad', '2018_budgeted_packQuantity')
 
 subset = names(budget)[grepl(names(budget), pattern = '_')]
 budget = budget[, subset, with = FALSE]
+# dt = copy(budget)
+# dt[ , tot_cost_2016 := `2016_pack_cost` * `2016_budgeted_packQuantity`]
+# dt[ , tot_cost_2017 := `2017_pack_cost` * `2017_budgeted_packQuantity`]
+# dt[ , tot_cost_2018 := `2018_pack_cost` * `2018_budgeted_packQuantity`]
+# 
+# sum(dt$tot_cost_2016, na.rm=TRUE) + sum(dt$tot_cost_2017, na.rm=TRUE) + sum(dt$tot_cost_2018, na.rm=TRUE)
+
 budget = budget[product_name_en != "NA"]
+
+# dt = copy(budget)
+# dt[ , tot_cost_2016 := `2016_pack_cost` * `2016_budgeted_packQuantity`]
+# dt[ , tot_cost_2017 := `2017_pack_cost` * `2017_budgeted_packQuantity`]
+# dt[ , tot_cost_2018 := `2018_pack_cost` * `2018_budgeted_packQuantity`]
+# 
+# sum(dt$tot_cost_2016, na.rm=TRUE) + sum(dt$tot_cost_2017, na.rm=TRUE) + sum(dt$tot_cost_2018, na.rm=TRUE)
 
 budget = melt.data.table(budget, id.vars = c('product_name_en', 'product_dose', 'nb_in_pack'))
 budget[, c('year', 'unit_ordered', 'measure') := tstrsplit(variable, "_")]
@@ -102,7 +116,8 @@ setnames(data, 'total_cost_order', 'order_cost')
 data = data[, .(grant_name, country_name, purchase_order_year, purchase_order_date, product_category, product_name_en, description, 
                 product_pack, nb_units_in_pack, unit_cost_usd, nb_packs_ordered, nb_units_ordered, order_cost)]
 
-add_to_data = data.table(purchase_order_year = , product_name_en, nb_units_in_pack, unit_cost_usd)
+add_to_data = data.table(product_name_en='Genexpert tests', purchase_order_year= 2018, nb_units_in_pack= 50, unit_cost_usd= 9.98, nb_units_ordered= 5000, order_cost= 49900)
+data = rbindlist(list(data, add_to_data), use.names = TRUE, fill = TRUE)
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -111,22 +126,26 @@ add_to_data = data.table(purchase_order_year = , product_name_en, nb_units_in_pa
 merged = merge(data, budget, by.x = c('product_name_en', 'purchase_order_year', 'nb_units_in_pack'), by.y = c('product_name_en', 'year', 'nb_in_pack'))
 
 merged = merged[,.(product_name_en, purchase_order_year, nb_units_in_pack, budgeted_unit_cost, unit_cost_usd, nb_units_ordered, order_cost)]
+
 merged[, diff_cost := unit_cost_usd - budgeted_unit_cost]
 merged[, total_diff_of_order := nb_units_ordered * diff_cost]
 sum(merged$total_diff_of_order)
 merged[, budgeted_cost_full_order := budgeted_unit_cost * nb_units_ordered]
+sum(merged$budgeted_cost_full_order) - sum(merged$order_cost)
 # ----------------------------------------------
 
 # ----------------------------------------------
 # make figure comparing budgeted cost to order unit cost
 # ----------------------------------------------
+# Note: not pictured - $17,000 was budgeted for a Cepheid GeneXpert GX-IV-4 module Instrument in 2016, and one was purchased for $17,000 on 02/14/19
+
 pdf(outFile, height = 9, width = 12)
 ggplot(merged, aes(x=budgeted_unit_cost, y=unit_cost_usd, color=product_name_en)) +
   geom_point(size = 5) +
   geom_abline() + 
   theme_bw()  +
-  theme(text = element_text(size=14)) +
-  labs(title = 'Comparison of budgeted and actual costs for TB medications in the GTM-T-MSPAS grant',
+  theme(text = element_text(size=16)) +
+  labs(title = 'Comparison of budgeted and actual costs for the GTM-T-MSPAS grant',
        x='Budgeted Unit Cost (USD)', y='Order Unit Cost (USD)', color = 'Product Name') +
   theme(legend.position = 'bottom')
 
@@ -134,9 +153,9 @@ ggplot(merged, aes(x=budgeted_unit_cost, y=unit_cost_usd, color=product_name_en)
   geom_point(size = 5) +
   geom_abline() + 
   theme_bw()  +
-  theme(text = element_text(size=14)) +
+  theme(text = element_text(size=16)) +
   facet_wrap( ~purchase_order_year, scales = "free") +
-  labs(title = 'Comparison of budgeted and actual costs for TB medications in the GTM-T-MSPAS grant',
+  labs(title = 'Comparison of budgeted and actual costs for the GTM-T-MSPAS grant',
        x='Budgeted Unit Cost (USD)', y='Order Unit Cost (USD)', color = 'Product Name') +
   theme(legend.position = 'bottom')
 
@@ -144,9 +163,9 @@ ggplot(merged, aes(x=budgeted_unit_cost, y=unit_cost_usd, color=product_name_en)
   geom_point(size = 5) +
   geom_abline() + 
   theme_bw()  +
-  theme(text = element_text(size=14)) +
+  theme(text = element_text(size=16)) +
   facet_wrap( ~purchase_order_year) +
-  labs(title = 'Comparison of budgeted and actual costs for TB medications in the GTM-T-MSPAS grant',
+  labs(title = 'Comparison of budgeted and actual costs for the GTM-T-MSPAS grant',
        x='Budgeted Unit Cost (USD)', y='Order Unit Cost (USD)', color = 'Product Name') +
   theme(legend.position = 'bottom')
 
@@ -155,8 +174,8 @@ ggplot(merged, aes(x=budgeted_cost_full_order, y=order_cost, color=product_name_
   geom_point(size = 5) +
   geom_abline() + 
   theme_bw()  +
-  theme(text = element_text(size=14)) +
-  labs(title = 'Comparison of budgeted and actual costs for TB medications in the GTM-T-MSPAS grant',
+  theme(text = element_text(size=16)) +
+  labs(title = 'Comparison of budgeted and actual costs for the GTM-T-MSPAS grant',
        x='Total Budgeted Cost (USD)', y='Total Order Cost (USD)', color = 'Product Name') +
   theme(legend.position = 'bottom') +
   scale_y_continuous(label = scales::comma) + scale_x_continuous(label = scales::comma)
@@ -165,9 +184,9 @@ ggplot(merged, aes(x=budgeted_cost_full_order, y=order_cost, color=product_name_
   geom_point(size = 5) +
   geom_abline() + 
   theme_bw()  +
-  theme(text = element_text(size=14)) +
+  theme(text = element_text(size=16)) +
   facet_wrap( ~purchase_order_year, scales = "free") +
-  labs(title = 'Comparison of budgeted and actual costs for TB medications in the GTM-T-MSPAS grant',
+  labs(title = 'Comparison of budgeted and actual costs for the GTM-T-MSPAS grant',
        x='Total Budgeted Cost (USD)', y='Total Order Cost (USD)', color = 'Product Name') +
   theme(legend.position = 'bottom') +
   scale_y_continuous(label = scales::comma) + scale_x_continuous(label = scales::comma)
@@ -176,9 +195,9 @@ ggplot(merged, aes(x=budgeted_cost_full_order, y=order_cost, color=product_name_
   geom_point(size = 5) +
   geom_abline() + 
   theme_bw()  +
-  theme(text = element_text(size=14)) +
+  theme(text = element_text(size=16)) +
   facet_wrap( ~purchase_order_year) +
-  labs(title = 'Comparison of budgeted and actual costs for TB medications in the GTM-T-MSPAS grant',
+  labs(title = 'Comparison of budgeted and actual costs for the GTM-T-MSPAS grant',
        x='Total Budgeted Cost (USD)', y='Total Order Cost (USD)', color = 'Product Name') +
   theme(legend.position = 'bottom') +
   scale_y_continuous(label = scales::comma) + scale_x_continuous(label = scales::comma)
