@@ -64,8 +64,8 @@ f2 = f2[ ,lapply(.SD, tolower), .SDcols=c(1:length(f2))]
 
 # format the dates 
 # excel date origin is 1899
-f2[ , date := as.Date(as.numeric(date), origin='1899-12-30')] # checked with Caitlin - the 21 values set to NA are fine to set to NA because they are messed up dates in the original file
-f2[date < "2014-01-01" | date > "2017-12-01", date := NA] # 138 values outside the range we want, so these can also be set to NA
+f2[ , date := as.Date(as.numeric(date), origin='1899-12-30')] # checked with Caitlin - the 22 values set to NA are fine to set to NA because they are messed up dates in the original file
+f2[date < "2014-01-01" | date > "2017-12-31", date := NA] # 138 values outside the range we want, so these can also be set to NA; 2018-07-09 is the max date in f4
 
 # match the sr codes
 f2[ ,sr_code:=gsub("nac0", "", sr_code)]
@@ -117,6 +117,7 @@ f3 = f3[ ,lapply(.SD, tolower), .SDcols=c(1:length(f3))]
 
 # format the dates 
 f3[ ,date:=as.Date(as.numeric(date), origin='1899-12-30')]
+f3[date < "2014-01-01", date := NA] # 5 values
 
 # match the sr codes
 f3[ ,sr_code:=gsub("nac0", "", sr_code)]
@@ -162,7 +163,8 @@ f4 = f4[ ,lapply(.SD, tolower), .SDcols=c(1:length(f4))]
 # format the dates 
 f4[date=='null', date:=NA]
 f4[ ,date:=as.Date(as.numeric(date), origin='1899-12-30')]
-
+# f4[date < "2014-01-01", .N ] # 0 values
+   
 # match the sr codes
 f4[ ,sr_code:=gsub("nac0", "", sr_code)]
 
