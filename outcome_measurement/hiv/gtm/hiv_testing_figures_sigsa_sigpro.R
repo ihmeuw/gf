@@ -45,76 +45,79 @@ dt = readRDS(combined_data)
 #----------------------------------------
 
 #----------------------------------------
-# set up for graphing / additional prep
+# # set up for graphing / additional prep
+# #----------------------------------------
+# dt[, trans := ifelse(gender == "Trans", TRUE, FALSE) ]
+# dt[pop == 'trans', pop := NA]
+# 
+# dt[, hiv_test_comp := as.numeric(hiv_test)]
+# dt[, hiv_confirmatoryTest_comp := as.numeric(hiv_confirmatoryTest)]
+# dt[, hiv_positive := ifelse(hiv_testResult == 'reactive', TRUE, FALSE) ]
+# dt[, hiv_confirmatoryTest_positive := ifelse(hiv_confirmatoryTestResult == '1', TRUE, FALSE) ]
+# #----------------------------------------
+# 
+# #----------------------------------------
+# # data checks / consistency checks:
+# #----------------------------------------
+# # data variable checks:
+# dt[ is.na(date), .N ]
+# dt[ is.na(date), .N, by = .(set) ]
+# dt[ is.na(date) & hiv_test == 1, .N ]
+# dt[ is.na(date) & hiv_test == 1 & hiv_positive == TRUE, .N ]
+# 
+# # hiv testing consistency checks:
+# # where hiv_test is missing:
+# dt[ is.na(hiv_test), .N ]
+# dt[ is.na(hiv_test) & !is.na(hiv_positive), .N, by = .(hiv_testResult)]
+# dt[ is.na(hiv_test) & hiv_positive == TRUE, .N]
+#   # where hiv test was originally NA and hiv_testResult was nonreactive, set hiv_test_comp to 1/TRUE
+#   dt[ is.na(hiv_test) & hiv_testResult == "nonreactive", hiv_test_comp := 1]
+# 
+# # where hiv_test was not completed
+# dt[ hiv_test == 0, .N, by = .(hiv_testResult)]
+#   # where hiv test was originally 0 but hiv_testResult indicated otherwise, set hiv_test_comp to be 1/TRUE
+#   dt[ hiv_test == 0 & hiv_testResult %in% c('reactive', 'nonreactive', 'indeterminate'), hiv_test_comp := 1 ]
+# 
+# # hiv confirmatory testing consistency checks:
+# dt[, unique(hiv_confirmatoryTest), by = .(set)] # only in sigsa data
+# 
+# dt[is.na(hiv_test), .N, by = .(hiv_confirmatoryTest, hiv_confirmatoryTestResult)]
+#   # Fix inconsistencies:
+#   dt[is.na(hiv_test) & hiv_confirmatoryTest == 1 & hiv_confirmatoryTestResult == 1, hiv_positive := TRUE]
+#   dt[is.na(hiv_test) & hiv_confirmatoryTest == 1 & hiv_confirmatoryTestResult == 1, hiv_test_comp := 1]
+# 
+# dt[hiv_test == 0, .N, by = .(hiv_confirmatoryTest, hiv_confirmatoryTestResult)]
+#   # Fix inconsistencies:
+#   dt[hiv_test == 0 & hiv_confirmatoryTest == 1 & hiv_confirmatoryTestResult == 1, hiv_positive := TRUE]
+#   dt[hiv_test == 0 & hiv_confirmatoryTest == 1 & hiv_confirmatoryTestResult == 1, hiv_test_comp := 1]
+# 
+# dt[ hiv_confirmatoryTest == 0 , .N, by = .(hiv_confirmatoryTestResult)]
+# dt[ is.na(hiv_confirmatoryTest), .N, by = .(hiv_confirmatoryTestResult)]
+#   # Fix inconsistencies:
+#   dt[ (hiv_confirmatoryTest == 0 | is.na(hiv_confirmatoryTest)) & hiv_confirmatoryTestResult == 1, hiv_positive := TRUE]
+#   dt[ (hiv_confirmatoryTest == 0 | is.na(hiv_confirmatoryTest)) & hiv_confirmatoryTestResult == 1, hiv_test_comp := 1]
+# 
+# dt[ hiv_confirmatoryTestResult == 0 & hiv_positive == TRUE, .N]
+# dt[ hiv_confirmatoryTestResult == 0 & hiv_positive == TRUE, hiv_positive := FALSE]
+# 
+# # remove missing data for analyses
+# dt = dt[!is.na(date)]
+# dt = dt[!is.na(hiv_test)]
+# dt = dt[ hiv_test != 0 ] # now the data is all of the data for tests completed
+# 
+# dt[ hiv_test == 1, .N ]
+# dt[ hiv_positive == TRUE, .N]
+# (dt[ hiv_positive == TRUE, .N] / dt[ hiv_test == 1, .N ]) * 100
+# 
+# # confirmatory test completion:
+# dt[ hiv_positive == FALSE, .N, by = .(hiv_confirmatoryTest_comp)]
+# dt[ hiv_positive == TRUE, .N, by = .(hiv_confirmatoryTest_comp)]
+# 
+# saveRDS(dt, outFile)
+
+dt = readRDS(outFile)
 #----------------------------------------
-dt[, trans := ifelse(gender == "Trans", TRUE, FALSE) ]
-dt[pop == 'trans', pop := NA]
 
-dt[, hiv_test_comp := as.numeric(hiv_test)]
-dt[, hiv_confirmatoryTest_comp := as.numeric(hiv_confirmatoryTest)]
-dt[, hiv_positive := ifelse(hiv_testResult == 'reactive', TRUE, FALSE) ]
-dt[, hiv_confirmatoryTest_positive := ifelse(hiv_confirmatoryTestResult == '1', TRUE, FALSE) ]
-#----------------------------------------
-
-#----------------------------------------
-# data checks / consistency checks:
-#----------------------------------------
-# data variable checks:
-dt[ is.na(date), .N ]
-dt[ is.na(date), .N, by = .(set) ]
-dt[ is.na(date) & hiv_test == 1, .N ]
-dt[ is.na(date) & hiv_test == 1 & hiv_positive == TRUE, .N ]
-
-# hiv testing consistency checks:
-# where hiv_test is missing:
-dt[ is.na(hiv_test), .N ]
-dt[ is.na(hiv_test) & !is.na(hiv_positive), .N, by = .(hiv_testResult)]
-dt[ is.na(hiv_test) & hiv_positive == TRUE, .N]
-  # where hiv test was originally NA and hiv_testResult was nonreactive, set hiv_test_comp to 1/TRUE
-  dt[ is.na(hiv_test) & hiv_testResult == "nonreactive", hiv_test_comp := 1]
-  
-# where hiv_test was not completed
-dt[ hiv_test == 0, .N, by = .(hiv_testResult)]
-  # where hiv test was originally 0 but hiv_testResult indicated otherwise, set hiv_test_comp to be 1/TRUE
-  dt[ hiv_test == 0 & hiv_testResult %in% c('reactive', 'nonreactive', 'indeterminate'), hiv_test_comp := 1 ]
-
-# hiv confirmatory testing consistency checks:
-dt[, unique(hiv_confirmatoryTest), by = .(set)] # only in sigsa data
-
-dt[is.na(hiv_test), .N, by = .(hiv_confirmatoryTest, hiv_confirmatoryTestResult)]  
-  # Fix inconsistencies:
-  dt[is.na(hiv_test) & hiv_confirmatoryTest == 1 & hiv_confirmatoryTestResult == 1, hiv_positive := TRUE]
-  dt[is.na(hiv_test) & hiv_confirmatoryTest == 1 & hiv_confirmatoryTestResult == 1, hiv_test_comp := 1]
-
-dt[hiv_test == 0, .N, by = .(hiv_confirmatoryTest, hiv_confirmatoryTestResult)]  
-  # Fix inconsistencies:
-  dt[hiv_test == 0 & hiv_confirmatoryTest == 1 & hiv_confirmatoryTestResult == 1, hiv_positive := TRUE]
-  dt[hiv_test == 0 & hiv_confirmatoryTest == 1 & hiv_confirmatoryTestResult == 1, hiv_test_comp := 1]
-
-dt[ hiv_confirmatoryTest == 0 , .N, by = .(hiv_confirmatoryTestResult)]
-dt[ is.na(hiv_confirmatoryTest), .N, by = .(hiv_confirmatoryTestResult)]
-  # Fix inconsistencies:
-  dt[ (hiv_confirmatoryTest == 0 | is.na(hiv_confirmatoryTest)) & hiv_confirmatoryTestResult == 1, hiv_positive := TRUE]
-  dt[ (hiv_confirmatoryTest == 0 | is.na(hiv_confirmatoryTest)) & hiv_confirmatoryTestResult == 1, hiv_test_comp := 1]
-  
-dt[ hiv_confirmatoryTestResult == 0 & hiv_positive == TRUE, .N]
-dt[ hiv_confirmatoryTestResult == 0 & hiv_positive == TRUE, hiv_positive := FALSE]
-
-# remove missing data for analyses
-dt = dt[!is.na(date)]
-dt = dt[!is.na(hiv_test)]
-dt = dt[ hiv_test != 0 ] # now the data is all of the data for tests completed
-
-dt[ hiv_test == 1, .N ] 
-dt[ hiv_positive == TRUE, .N]
-(dt[ hiv_positive == TRUE, .N] / dt[ hiv_test == 1, .N ]) * 100 
-
-# confirmatory test completion:
-dt[ hiv_positive == FALSE, .N, by = .(hiv_confirmatoryTest_comp)]
-dt[ hiv_positive == TRUE, .N, by = .(hiv_confirmatoryTest_comp)]
-
-saveRDS(dt, outFile)
-#----------------------------------------
 
 #----------------------------------------
 # graphing at national level
@@ -224,7 +227,7 @@ dev.off()
 # National time series of tests performed and positivity rate for MSM, transgender persons, sex workers, prisoners, and migrants 
 #-----------------------
 trans = trans[ trans == TRUE, ]
-trans[ , pop := "Transgender persons"]
+trans[ , pop := "Transgender people"]
 
 all_patients[, pop := "All patients"]
 
@@ -272,14 +275,14 @@ for (x in unique(dt[pop != "All patients", pop])) {
   
   p2 = ggplot(dt_long[pop==x & variable!="Percent positive (%)"], aes(x=date, y=value, fill=variable)) +
     geom_bar(position = "fill",stat = "identity") +
-    labs(title=paste0('Percentage of HIV tests that were positive: ', pop_name), x='Date', y = 'Ratio', fill="") +
+    labs(title=paste0('Percentage of HIV tests that were positive: \n', pop_name), x='Date', y = 'Ratio', fill="") +
     scale_fill_manual(values = c('#feb24c', '#fb6a4a')) +
     theme_bw() + theme(axis.text.x=element_text(angle=90))
   
   p3 = ggplot(dt_long[pop==x & variable=="Percent positive (%)"], aes(x=date, y=value, color=variable)) +
     geom_point() + geom_line() + theme_bw() +
     scale_color_manual(values='#8c96c6') + guides(color=FALSE) + guides(fill=FALSE) +
-    labs(title=paste0('Percentage of HIV tests that were positive: ', pop_name), color="", x='Date', y="Percent (%)") 
+    labs(title=paste0('Percentage of HIV tests that were positive: \n', pop_name), color="", x='Date', y="Percent (%)") 
   
   p4 = ggplot(dt_long[pop=='All patients' & variable=="Percent positive (%)"], aes(x=date, y=value, color=variable)) +
     geom_point() + geom_line() + theme_bw() +
