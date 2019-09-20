@@ -36,6 +36,42 @@ dhis_before_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_
 base_before_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/base/base_services_prepped.rds')
 dhis_after_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/base/base_prepped_outliers_replaced.rds')
 
+pnlp_after_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/imputedData_run_0_001_aggVars_lagsLeads_condensed_hz_median.rds')
+pnlp_before_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/PNLP_dt_forMI_updated_6_10_19.rds')
+# --------------------------
+# get 2017 totals
+# --------------------------
+# PNLP
+pnlp_after_qr[, year := year(date)]
+dt = pnlp_after_qr[year == 2017,]
+dt = dt[grepl(variable, pattern = 'mild', ignore.case = TRUE)]
+dt[grepl(variable, pattern = 'treated', ignore.case = TRUE), var := 'conf_cases_treated']
+dt[is.na(var), var := 'conf_cases']
+
+dt[, sum(value), by = 'var']
+
+dt2 = pnlp_before_qr[year == 2017,]
+sum(dt2$newCasesMalariaMild_5andOlder, na.rm = TRUE) + sum(dt2$newCasesMalariaMild_pregnantWomen, na.rm = TRUE) + sum(dt2$newCasesMalariaMild_under5, na.rm = TRUE)
+sum(dt2$mildMalariaTreated_5andOlder, na.rm = TRUE) + sum(dt2$mildMalariaTreated_pregnantWomen, na.rm = TRUE) + sum(dt2$mildMalariaTreated_under5, na.rm = TRUE)
+
+# DHIS2
+dhis_after_qr[, year := year(date)]
+dhis_before_qr[, year := year(date)]
+
+after = dhis_after_qr[ year == 2017, ]
+after = after[grepl(element, pattern = 'simple', ignore.case = TRUE)]
+after[grepl(element, pattern = 'trait', ignore.case = TRUE), var := 'conf_cases_treated']
+after[is.na(var), var := 'conf_cases']
+
+before = dhis_before_qr[ year == 2017, ]
+before = before[grepl(element, pattern = 'simple', ignore.case = TRUE)]
+before[grepl(element, pattern = 'trait', ignore.case = TRUE), var := 'conf_cases_treated']
+before[is.na(var), var := 'conf_cases']
+
+after[, sum(value), by = 'var']
+before[, sum(value), by = 'var']
+# --------------------------
+
 outFile = 'J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/base/malaria_deep_dive_figures.pdf'
 
 before = copy(dhis_before_qr)
