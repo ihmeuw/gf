@@ -173,15 +173,27 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   gf_data = gf_data[start_row:end_row, ]
 
   #Rename data, and remove invalid rows
+  if ('lfa_exp_adjustment'%in%names(gf_data)){
   check_drop <- gf_data[((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
                          & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
-                         & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
+                         & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0) & (is.na(lfa_exp_adjustment) | lfa_exp_adjustment==0)), ]
+  } else { 
+    check_drop <- gf_data[((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
+                           & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+                           & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
+  }
   if (verbose == TRUE){
     print(paste0("Invalid rows currently being dropped: (only module and intervention columns shown) ", check_drop[, c('module', 'intervention')]))
   }
-  gf_data<-  gf_data[!((is.na(module) | module == '0' | module=="Veuillez sélectionner...") 
-                       & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
-                       & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)),]
+  if ('lfa_exp_adjustment'%in%names(gf_data)){
+    gf_data = gf_data[!((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
+                      & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+                      & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0) & (is.na(lfa_exp_adjustment) | lfa_exp_adjustment==0)), ]
+  } else {
+    gf_data = gf_data[!((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
+                        & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+                        & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
+  }
 
   #Some datasets have an extra title row with "[Module]" in the module column.
   #It's easier to find this by grepping the budget column, though.

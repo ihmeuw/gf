@@ -19,19 +19,7 @@ final_budgets = final_budgets[, -c('expenditure', 'lfa_exp_adjustment', 'disburs
 expenditures = mapped_data[data_source=="pudr" & file_iteration=="final"]
 expenditures[, final_expenditure:=expenditure+lfa_exp_adjustment]
 expenditures = expenditures[, -c('expenditure', 'lfa_exp_adjustment')]
-setnames(expenditures, 'final_expenditure', 'expenditure')
-
-#Add in PUDR semester variable. 
-setnames(expenditures, 'pudr_semester_financial', 'pudr_code')
-expenditures = merge(expenditures, pudr_labels, by='pudr_code', all.x=T)
-exp_check1 = expenditures[, .(correct_exp=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'code', 'semester_code', 'pudr_grant_year')]
-setnames(exp_check1, 'semester_code', 'semester')
-
-#Make sure this merge worked. 
-if (nrow(expenditures[is.na(semester)])>0){
-  print(unique(expenditures[is.na(semester), .(pudr_code)]))
-  stop("Values of pudr_code did not merge correctly.")
-}
+setnames(expenditures, c('final_expenditure', 'pudr_semester_financial'), c('expenditure', 'pudr_code'))
 
 #Flag where you would have overlap in files. 
 dup_files = unique(expenditures[, .(file_name, start_date, grant, grant_period)]) #Everything is at the quarter-level, so do you have the same start date for two different files? 
@@ -57,229 +45,90 @@ if(nrow(overlap)>0){
     grant_i = overlap$grant[i]
     grant_period_i = overlap$grant_period[i]
     start_date_i = overlap$start_date[i]
-    expenditures[grant==grant_i & grant_period==grant_period_i & start_date==start_date_i, overlap:=TRUE]
+    expenditures[grant==grant_i & grant_period==grant_period_i, overlap:=TRUE] #Just tag on grant and grant period so that the whole file will be captured, and PUDR semesters can be relabeled correctly. 
+    #The actual subtraction will happen using start_date variable. EL 9/20/2019
   }
   expenditures[is.na(overlap), overlap:=FALSE]
+}
+
+#Separate out overlapping and non-overlapping files. 
+exp_overlap = expenditures[overlap==TRUE]
+exp_no_overlap = expenditures[overlap==FALSE]
+
+#If you have overlapping dates, pull them out and subtract them. 
+if (nrow(exp_overlap)>0){
+  #First, pull out overlapping dates from this list of overlapping grants. 
+  overlap2 = unique(exp_overlap[, .(grant, grant_period, start_date, pudr_code)])
+  overlap2$instance = 1
+  overlap2_wide = dcast(overlap2, grant+grant_period+start_date~instance, value.var='instance', fun.aggregate=length)
+  setnames(overlap2_wide, '1', 'instance')
   
-  # #------------------------------------------------------------------------------------------------------
-  # #Hand-code some PUDRs that shouldn't be subtracted - will need to deal with these cases! 
-  # #EL 9/13/2019
-  # expenditures[grant=="UGA-C-TASO" & grant_period=="2015-2017", overlap:=FALSE]
-  # expenditures[grant=="COD-T-MOH" & grant_period=="2015-2017", overlap:=FALSE]
-  # #------------------------------------------------------------------------------------------------------
-  # 
-  flagged_overlap = unique(expenditures[overlap==TRUE, .(grant, grant_period, file_name, semester_code)][order(grant, grant_period, semester_code)])
-  if(nrow(flagged_overlap)!=0){
-    print("The following PUDRs were flagged as overlapping, and will be subtracted for the expenditure dataset.")
-    print(flagged_overlap)
+  #Subset to only the cases that have 2 or more files reporting. 
+  overlap2_wide = overlap2_wide[instance>=2]
+  
+  for (i in 1:nrow(overlap2_wide)){
+    exp_overlap[grant==overlap2_wide$grant[i] & grant_period==overlap2_wide$grant_period[i] & start_date==overlap2_wide$start_date[i], 
+                overlap2:=TRUE]
   }
+  exp_overlap[is.na(overlap2), overlap2:=FALSE]
   
-  #Pull out data that has overlap, and subtract earlier PUDRs from later PUDRs. 
-  #Sum out the quarter-level
+  #Pull out subtract and no subtract, and then bind them back together. 
+  no_subtract = exp_overlap[overlap2==FALSE, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
+                                              by=c('grant', 'grant_period', 'disease', 'start_date', 'grant_status', 'file_iteration', 'orig_module', 'orig_intervention', 'gf_module', 'gf_intervention', 
+                                                   'code', 'loc_name', 'country', 'includes_rssh', 'current_grant')]
+  subtract = exp_overlap[overlap2==TRUE, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
+                         by=c('grant', 'grant_period', 'disease', 'start_date', 'grant_status', 'file_iteration', 'orig_module', 'orig_intervention', 'gf_module', 'gf_intervention', 
+                              'code', 'loc_name', 'country', 'includes_rssh', 'current_grant', 'pudr_code')]
+  setDT(pudr_labels)
+  subtract = merge(subtract, pudr_labels[, .(pudr_code, semester_code, pudr_order)], by=c('pudr_code'))
+  subtract = subtract[order(grant, grant_period, pudr_order)]
   
-  valueVars = c('budget', 'expenditure', 'disbursement')
-  exp_collapse = expenditures[overlap==TRUE]
-  exp_collapse = exp_collapse[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
-                              by=c('grant', 'grant_period', 'code', 'semester_code', 'pudr_grant_year', 'start_date', 'pudr_order')]
-  
-  #Validate the data that you've pulled - make sure semesters will work with code below. 
-  stopifnot(unique(exp_collapse$semester_code)%in%c('A', 'AB', 'B', 'BA'))
-  
-  #Create a 'sequence' variable to replace PUDR code. 
-  exp_collapse = exp_collapse[order(grant, grant_period, pudr_order)]
-  seq_labels = unique(exp_collapse[, .(grant, grant_period, pudr_grant_year, semester_code, pudr_order)])
-  seq_labels[, pudr_seq:=seq(1, 2, by=1), by=c('grant', 'grant_period')]
+  #Make a 'labels' dataset to make sure the right semesters are getting subtracted. 
+  seq_labels = unique(subtract[, .(grant, grant_period, pudr_order, pudr_code)])
+  seq_labels[, pudr_seq:=seq(1, 5, by=1), by=c('grant', 'grant_period')]
   if (nrow(seq_labels[pudr_seq>2])>0) stop("More than one PUDR is being subtracted for some grants!")
   
-  #Create a new label for PUDR semesters
-  seq_labels[, new_semester_code:=semester_code]
-  seq_labels[pudr_seq==2 & semester_code=="AB", new_semester_code:="B"]
-  seq_labels[pudr_seq==2 & semester_code=="BA", new_semester_code:="A"]
-  stopifnot(unique(seq_labels$new_semester_code)%in%c('A', 'B'))
+  subtract = merge(subtract, seq_labels, by=c('grant', 'grant_period', 'pudr_order', 'pudr_code'), all.x=T)
   
-  exp_collapse = merge(exp_collapse, seq_labels, by=c('grant', 'grant_period', 'pudr_grant_year', 'semester_code', 'pudr_order'))
-  exp_collapse$pudr_order <- NULL #It's okay to drop this variable now that 'pudr_seq' is created. 
-  exp_collapse = dcast(exp_collapse, grant+grant_period+pudr_grant_year+code+start_date~pudr_seq, value.var=valueVars)
-  #EMILY FLAG CASES HERE WHERE WE DON'T HAVE A MODULE/INTERVENTION IN ONE PUDR OR THE OTHER 
+  #Cast wide to subtract. 
+  subtract_wide = dcast(subtract, grant+grant_period+start_date+disease+grant_status+file_iteration+orig_module+orig_intervention+gf_module+gf_intervention+code+loc_name+country+includes_rssh+current_grant~pudr_seq, 
+                       value.var=c('budget', 'expenditure', 'disbursement'))
   
   #Subtract earlier semesters from later semesters 
   #First, replace NAs with 0's. 
-  exp_collapse[is.na(budget_1), budget_1:=0] #EMILY IS THIS THE BEST WAY TO DO THIS??
-  exp_collapse[is.na(budget_2), budget_2:=0]
-  exp_collapse[is.na(expenditure_1), expenditure_1:=0]
-  exp_collapse[is.na(expenditure_2), expenditure_2:=0]
-  exp_collapse[is.na(disbursement_1), disbursement_1:=0]
-  exp_collapse[is.na(disbursement_2), disbursement_2:=0]
+  subtract_wide[is.na(budget_1), budget_1:=0] #EMILY IS THIS THE BEST WAY TO DO THIS??
+  subtract_wide[is.na(budget_2), budget_2:=0]
+  subtract_wide[is.na(expenditure_1), expenditure_1:=0]
+  subtract_wide[is.na(expenditure_2), expenditure_2:=0]
+  subtract_wide[is.na(disbursement_1), disbursement_1:=0]
+  subtract_wide[is.na(disbursement_2), disbursement_2:=0]
   
-  exp_collapse[, budget_2_new:=budget_2-budget_1]
-  exp_collapse[, expenditure_2_new:=expenditure_2-expenditure_1]
-  exp_collapse[, disbursement_2_new:=disbursement_2-disbursement_1]
+  subtract_wide[, budget_2_new:=budget_2-budget_1]
+  subtract_wide[, expenditure_2_new:=expenditure_2-expenditure_1]
+  subtract_wide[, disbursement_2_new:=disbursement_2-disbursement_1]
   
-  negatives = exp_collapse[expenditure_2_new<0]
-  if (nrow(negatives)!=0){
-    print("There were negative values generated for expenditure. Review 'negative'.")
-    write.csv(negatives, paste0(dir, "visualizations/verification/", country, "/", country, "_negative_expenditure.csv"), row.names=FALSE)
-  }
+  # negatives = subtract_wide[expenditure_2_new<0]
+  # if (nrow(negatives)!=0){
+  #   print("There were negative values generated for expenditure. Review 'negative'.")
+  #   write.csv(negatives, paste0(dir, "visualizations/verification/", country, "/", country, "_negative_expenditure.csv"), row.names=FALSE)
+  # }
   
-  exp_collapse = exp_collapse[, -c('budget_2', 'expenditure_2', 'disbursement_2')]
+  subtract_wide = subtract_wide[, -c('budget_2', 'expenditure_2', 'disbursement_2', 'budget_1', 'expenditure_1', 'disbursement_1')]
+  setnames(subtract_wide, c('budget_2_new', 'expenditure_2_new', 'disbursement_2_new'), c('budget', 'expenditure', 'disbursement'))
   
-  #reshape this data back long, and merge back onto the rest of the expenditure dataset. 
-  exp_melt = melt(exp_collapse, id.vars=c('grant', 'grant_period', 'code', 'pudr_grant_year', 'start_date'))
-  
-  # Pull semester labels back in. 
-  exp_melt[, pudr_seq:=tstrsplit(variable, "_", keep=2)]
-  exp_melt[, pudr_seq:=as.integer(pudr_seq)]
-  exp_melt = merge(exp_melt, seq_labels, by=c('grant', 'grant_period', 'pudr_seq', 'pudr_grant_year'))
-  
-  #Correct the semester labels, and reset some names. 
-  setnames(exp_melt, 'new_semester_code', 'semester')
-  exp_melt = exp_melt[, -c('semester_code')] #This was the original one - ok to drop! 
-  stopifnot(unique(exp_melt$semester)%in%c('A', 'B'))
-  exp_melt[, variable:=tstrsplit(variable, "_", keep=1)]
-  stopifnot(unique(exp_melt$variable)%in%c('budget', 'expenditure', 'disbursement'))
-  
-  # Cast back so budget, expenditure, and disbursement are variable names again. 
-  exp_recast = dcast(exp_melt, grant+grant_period+code+pudr_grant_year+semester+pudr_seq+pudr_order+start_date~variable, value.var='value')
-  
-  #Advance start dates. 
-  exp_recast[pudr_seq==2 & semester=="B", start_date:=start_date %m+% months(6)] #Normal situation, where you have "A" and "AB" PUDRs in the same year. 
-  exp_recast[pudr_seq==2 & semester=="A", start_date:=start_date %m+% months(6)] #If your first PUDR is semester "B" in first year, and second is "BA" spanning two years. 
-  exp_recast[pudr_seq==2 & semester=="A", pudr_grant_year:=pudr_grant_year+1] 
-  
-  #Reshape this data back to the quarter-level. 
-  # date_frame = data.table(expand.grid(pudr_grant_year = unique(exp_recast$pudr_grant_year), semester = unique(exp_recast$semester), quarter=c(1, 2)))
-  # date_frame[semester=="B", quarter:=quarter+2]
-  # date_frame = date_frame[order(pudr_grant_year, quarter, semester)]
-  # 
-  # #Expand the data to the quarter-level (should double the # of rows)
-  # nrows0 = nrow(exp_recast)
-  # exp_recast = merge(exp_recast, date_frame, by=c('pudr_grant_year', 'semester'), allow.cartesian=T)
-  # nrows1 = nrow(exp_recast)
-  # stopifnot(nrows0*2==nrows1)
-  # 
-  # #Divide budget and expenditure variables 
-  # exp_recast[, budget:=budget/2]
-  # exp_recast[, expenditure:=expenditure/2]
-  # exp_recast[, disbursement:=disbursement/2]
-  # 
-  # #Generate new start date variable. 
-  # exp_recast[quarter==1, month:="01"]
-  # exp_recast[quarter==2, month:="04"]
-  # exp_recast[quarter==3, month:="07"]
-  # exp_recast[quarter==4, month:="10"]
-  # 
-  # exp_recast[, year:=year(start_date)]
-  # 
-  # exp_recast[, start_date:=paste0(month, "-01-", year)]
-  # exp_recast[, start_date:=as.Date(start_date, "%m-%d-%Y")]
-  # exp_recast[, month:=NULL]
-  # exp_recast[, quarter:=NULL]
-  # exp_recast[, year:=NULL]
-  # 
-  #Merge back onto expenditure data that DIDN'T need subtraction 
-  exp_no_subtract = expenditures[overlap==FALSE, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE), disbursement=sum(disbursement, na.rm=TRUE)), 
-                                 by=c('grant', 'grant_period', 'code', 'pudr_grant_year', 'semester_code', 'start_date')]
-  setnames(exp_no_subtract, 'semester_code', 'semester')
-  
-  #Append datasets
-  exp_recast = exp_recast[, -c('pudr_seq', 'pudr_order')]
-  expenditures = rbind(exp_recast, exp_no_subtract) 
-  
-  #Create date variables 
-  expenditures[, end_date:=(start_date %m+% months(3))-1]
-  
-  #Check duplicates
-  duplicates = expenditures[duplicated(expenditures)] 
-  duplicates = duplicates[!(budget==0 & expenditure==0 & disbursement==0)] #Don't care if numbers are 0. 
-  if(nrow(duplicates)!=0){
-    stop(paste0("There are ", nrow(duplicates), "in expenditures file. Review summing and appending code."))
-  }
-  duplicates <- NULL 
-  
-  # Add on additional variables 
-  before_merge = nrow(expenditures)
-  merge_vars = unique(mapped_data[, .(grant, grant_period, code, #These are your identifying variables in your expenditures dataset. 
-                                      gf_module, gf_intervention, disease)]) #These are identified by code
-  expenditures = merge(expenditures, merge_vars, by=c('grant', 'grant_period', 'code'))
-  after_merge = nrow(expenditures)
-  if (before_merge!=after_merge){
-    stop("The number of rows before and after additional variables were added to expenditure do not match. Check merge condition.")
-  }
-  
-  #Remove extra financial variables. 
-  expenditures = expenditures[, -c('budget', 'disbursement')]
-  
-  #Add in grant disease variable 
-  expenditures[, disease_split:=strsplit(grant, "-")]
-  potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
-  
-  for (i in 1:nrow(expenditures)){
-    if (expenditures$disease_split[[i]][2]%in%potential_diseases){
-      expenditures[i, grant_disease:=sapply(disease_split, "[", 2 )]
-    } else if (expenditures$disease_split[[i]][3]%in%potential_diseases){
-      expenditures[i, grant_disease:=sapply(disease_split, "[", 3 )]
-    } else if (expenditures$disease_split[[i]][4]%in%potential_diseases){
-      expenditures[i, grant_disease:=sapply(disease_split, "[", 4 )]
-    }
-  }
-  
-  expenditures[, disease_split:=NULL]
-  
-  unique(expenditures[!grant_disease%in%potential_diseases, .(grant, grant_disease)]) #Visual check that these all make sense. 
-  
-  expenditures[grant_disease=='C', grant_disease:='hiv/tb']
-  expenditures[grant_disease=='H', grant_disease:='hiv']
-  expenditures[grant_disease=='T', grant_disease:='tb']
-  expenditures[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
-  expenditures[grant_disease=='M', grant_disease:='malaria']
-  expenditures[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
-  
-  stopifnot(unique(expenditures$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
-  
-} else { #If you don't have duplicate files, collapse your dataset to be in the same format. 
-  expenditures[, start_date:=min(start_date), by='file_name']
-  expenditures = expenditures[, .(expenditure=sum(expenditure, na.rm=T)),
-                              by=c('grant', 'grant_period', 'code', 'year', 'pudr_grant_year', 'semester', 'start_date', 'gf_module', 'gf_intervention', 'disease')]
-  #Add in PUDR label value. 
-  expenditures = merge(expenditures, pudr_labels, by=c('semester', 'pudr_grant_year'), all.x=T)
-  if (nrow(expenditures[is.na(semester_code)])>0){
-    stop("Some values of PUDR labels did not merge correctly onto expenditure dataset.")
-  }
-  expenditures = expenditures[, -c('semester', 'pudr_order', 'pudr_code')]
-  setnames(expenditures, 'semester_code', 'semester')
-  
-  #Create date variables 
-  expenditures[, end_date:=(start_date %m+% months(3))-1]
-  expenditures = expenditures[, -c('duration_quarters')]
-  
-  #Add in grant disease variable 
-  expenditures[, disease_split:=strsplit(grant, "-")]
-  potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
-  
-  for (i in 1:nrow(expenditures)){
-    if (expenditures$disease_split[[i]][2]%in%potential_diseases){
-      expenditures[i, grant_disease:=sapply(disease_split, "[", 2 )]
-    } else if (expenditures$disease_split[[i]][3]%in%potential_diseases){
-      expenditures[i, grant_disease:=sapply(disease_split, "[", 3 )]
-    } else if (expenditures$disease_split[[i]][4]%in%potential_diseases){
-      expenditures[i, grant_disease:=sapply(disease_split, "[", 4 )]
-    }
-  }
-  
-  expenditures[, disease_split:=NULL]
-  
-  unique(expenditures[!grant_disease%in%potential_diseases, .(grant, grant_disease)]) #Visual check that these all make sense. 
-  
-  expenditures[grant_disease=='C', grant_disease:='hiv/tb']
-  expenditures[grant_disease=='H', grant_disease:='hiv']
-  expenditures[grant_disease=='T', grant_disease:='tb']
-  expenditures[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
-  expenditures[grant_disease=='M', grant_disease:='malaria']
-  expenditures[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
-  
-  stopifnot(unique(expenditures$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
-  
+  exp_overlap = rbind(subtract_wide, no_subtract)
+
 }
+
+
+#Collapse exp_no_overlap. 
+exp_no_overlap = exp_no_overlap[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), disbursement=sum(disbursement, na.rm=T)), 
+                                by=c('grant', 'grant_period', 'disease', 'start_date', 'grant_status', 'file_iteration', 'orig_module', 'orig_intervention', 'gf_module', 'gf_intervention', 
+                                     'code', 'loc_name', 'country', 'includes_rssh', 'current_grant')]
+#Bind together the two types of files. 
+expenditures = rbind(exp_overlap, exp_no_overlap)
+
+#Add on semester variable 
 
 #-------------------------------------------
 #3. Absorption

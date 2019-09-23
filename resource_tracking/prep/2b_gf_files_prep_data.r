@@ -19,7 +19,7 @@ if (prep_files == TRUE){
   #Prioritize GOS data where we have it
   file_list = prioritize_gos(file_list)
 
-  #Make sure you don't have the same tart date for the same grant (quick check; it would be better )
+  #Make sure you don't have the same start date for the same grant (quick check; it would be better )
   file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'sheet_financial', 'start_date_financial', 'data_source', 'pudr_semester_financial')] #EMILY NEED TO RETHINK THIS. 
   file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
