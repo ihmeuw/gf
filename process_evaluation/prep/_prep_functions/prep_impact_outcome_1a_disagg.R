@@ -9,24 +9,24 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   
   #TROUBLESHOOTING HELP
   # #Uncomment variables below and run line-by-line.
-  # folder = "budgets"
-  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  # if (file_list$file_iteration[i]=="initial"){
-  #   version = "iterations"
-  # } else if (file_list$file_iteration[i]=="revision"){
-  #   version= "revisions"
-  # } else {
-  #   version = ""
-  # }
-  # grant_period = file_list$grant_period[i]
-  # 
-  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
-  # if (version != ""){
-  #   dir = paste0(dir, version, "/")
-  # }
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet_impact_outcome_1a_disagg[i]
-  # language = file_list$language_programmatic[i]
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  if (file_list$file_iteration[i]=="initial"){
+    version = "iterations"
+  } else if (file_list$file_iteration[i]=="revision"){
+    version= "revisions"
+  } else {
+    version = ""
+  }
+  grant_period = file_list$grant_period[i]
+
+  dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  if (version != ""){
+    dir = paste0(dir, version, "/")
+  }
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet_impact_outcome_1a_disagg[i]
+  language = file_list$language_programmatic[i]
 
   # Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Disaggregation_1A', 'Ventilation_1A')

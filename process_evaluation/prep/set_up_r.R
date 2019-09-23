@@ -20,7 +20,7 @@ options(digits=6)
 j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/process_evaluation/')
 
-code_dir = paste0(repo_root, "process_evaluation/")
+code_dir = paste0(repo_root, "process_evaluation/prep/")
 
 prep_functions = list.files(paste0(code_dir, "_prep_functions"), full.names=TRUE)
 for (file in prep_functions){

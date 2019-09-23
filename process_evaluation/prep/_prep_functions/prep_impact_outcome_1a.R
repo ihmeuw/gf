@@ -44,6 +44,8 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   impact_col = grep("Impact/Outcome Indicators", gf_data)
   if (length(impact_col)==0 & language=="esp"){
     impact_col = grep("Impacto/Resultados", gf_data)
+  } else if (length(impact_col)==0 & language=="fr"){
+    impact_col = grep("Impact / Effet", gf_data)
   }
   stopifnot(length(impact_col)==1)
   name_row = grep("Impact / Effet|Impact / Outcome|Impacto/Resultados", gf_data[[impact_col]])
@@ -67,7 +69,7 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   # 2. Reset names after subset above. 
   #------------------------------------------------------
   
-  impact_col = grep("Impact/Outcome Indicators|Impacto/Resultados", gf_data)
+  impact_col = grep("Impact/Outcome Indicators|Impacto/Resultados|Indicateurs d'impact/d'effet|Indicateurs d'impact / d'effet", gf_data)
   stopifnot(length(impact_col)==1)
   name_row = grep("Impact / Effet|Impact / Outcome|Impacto/Resultados", gf_data[[impact_col]])
   stopifnot(length(name_row)==1)
@@ -109,12 +111,17 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
     lfa_result_col = grep("verified result", names)
     gf_result_col = grep("global fund validated result", names)
   }
- 
+  
+  #Fix result col by language
   if (length(result_col)>1 & language=="eng"){ #The word 'result' appears several times for English files, and you just want the first column here. 
     result_col = result_col[1]
   } else if (length(result_col)>1 & language=="esp" & 1%in%result_col){ #For some Spanish files, the first column has the word "resultados" in it. 
     result_col = result_col[2]
+  } else if (length(result_col)>1 & language=="fr"){
+    result_col = result_col[1]
   }
+  
+  #Fix target col
   if (length(target_col)>1){
     target_col = target_col[1]
   }
@@ -145,7 +152,7 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   impact_names = c('impact / effet ', "impact / outcome ", "impacto/resultados")
   standard_ind_names = c('indicateurs', "impact/outcome indicator", "standard impact/outcome indicator", "indicador ")
   custom_ind_names = c("custom impact/outcome indicator", "custom coverage indicator")
-  geography_names = c('geographic area')
+  geography_names = c('geographic area', 'geographie')
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
   reverse_ind_names = c("reverse indicator?")
   
@@ -187,7 +194,8 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   names[source_indices] = NA
   
   #Where 'year' exists in the names vector, move to the sub-names vector 
-  year_names = c('year of target', 'anee du resultat', 'annee du resultat', 'year of result', "aoo de resultado")
+  year_names = c('year of target', 'anee du resultat', 'annee du resultat', 'year of result',
+                 "annee de la cible", "aoo de resultado")
   year_indices = which(names%in%year_names)
   stopifnot(is.na(unique(sub_names[year_indices])))
   sub_names[year_indices] = "year"
