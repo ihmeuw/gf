@@ -21,6 +21,7 @@ library(grid)
 library(gridExtra)
 library(stringr)
 library(ggrepel)
+library(openxlsx)
 # --------------------
 
 # ----------------------------------------------
@@ -38,14 +39,18 @@ subset_commodities = paste0(dir, 'unit_cost_data/prepped_data/subset_commodities
 # output files for figures
 # for primary analyses
 scatterplots_on_all_data = paste0(dir, 'visualizations/scatterplots_unit_cost_vs_ref_price_and_volume.pdf')
-compare_ref_prices_with_size = paste0(dir, 'visualizations/compare_ref_price_unit_cost_with_size_by_volume_(subset_to_most_common).pdf')
+compare_ref_prices_with_size = paste0(dir, 'visualizations/ts_compare_ref_price_unit_cost_with_size_by_volume_(subset_to_most_common).pdf')
 compare_ref_prices_volume_on_x = paste0(dir, 'visualizations/compare_ref_price_unit_cost_with_volume_on_x_(subset_to_most_common).pdf')
 scatterplot_unit_cost_vs_intl_ref_price = paste0(dir, 'visualizations/scatterplot_unit_cost_vs_intl_ref_price_(subset_to_most_common).pdf')
 hist_ref_price_by_product_category = paste0(dir, 'visualizations/hist_diff_unit_cost_ref_price_by_product_category.pdf')
 regr_results_subtract_costs_by_category = paste0(dir, 'visualizations/regr_results_diff_unit_cost_ref_price_by_category.pdf')
 regr_results_divide_costs_by_category = paste0(dir, 'visualizations/regr_results_ratio_unit_cost_ref_price_by_category.pdf')
 regr_results_divide_costs_by_category_log = paste0(dir, 'visualizations/regr_results_ratio_unit_cost_ref_price_by_category_log.pdf')
-ratio_unit_cost_to_ref_price_over_time = paste0(dir, 'visualizations/compare_unit_cost_ref_price_over_time.pdf')
+ratio_unit_cost_to_ref_price_over_time = paste0(dir, 'visualizations/ts_compare_ratio_unit_cost_ref_price_over_time.pdf')
+
+#subset of DRC and UGANDA
+ts_ratio_unit_cost_ref_price_uga_drc = paste0(dir, 'visualizations/PQR/ts_compare_ratio_unit_cost_ref_price_over_time_(uga_drc).pdf')
+ts_compare_unit_cost_ref_price_uga_drc = paste0(dir, 'visualizations/PQR/ts_compare_ref_price_unit_cost_with_size_by_volume_(uga_drc).pdf')
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -79,6 +84,11 @@ data[, diff_from_ref_cost := unit_cost_usd - po_international_reference_price]
 data[, unit_cost_over_ref_price := unit_cost_usd / po_international_reference_price]
 data[, purchase_order_year := year(purchase_order_date)]
 
+# save hiv drc testing data
+drc_hiv_tests = data[iso3codecountry == 'COD' & product_category== 'diagnostic_test_hiv']
+setorderv(drc_hiv_tests, c('purchase_order_date'))
+write.xlsx(drc_hiv_tests, paste0(dir, 'unit_cost_data/prepped_data/drc_hiv_diagnostic_tests.xlsx'))
+
 dt = data[!is.na(po_international_reference_price) & !is.na(unit_cost_usd)]
 # ----------------------------------------------
 
@@ -97,6 +107,7 @@ subset[, product_name_en := as.factor(product_name_en)]
 # plots - Compare unit cost to reference price (ratio) over time
 # ----------------------------------------------
 pdf(ratio_unit_cost_to_ref_price_over_time, height = 9, width = 12)
+# pdf(ts_ratio_unit_cost_ref_price_uga_drc, height = 9, width = 12)
 for (cat in unique(subset$product_category)) {
   
   colors1 = brewer.pal(8, 'Set2')
@@ -105,7 +116,7 @@ for (cat in unique(subset$product_category)) {
   names(colors) = unique(subset[product_category == cat, product_name_en])
   
   for (x in unique(subset$iso3codecountry)){
-    
+  # for (x in c('COD', 'UGA')){    
     country = unique(subset[product_category == cat & iso3codecountry == x, country_name])
     plot_subtitle = subset[product_category == cat & iso3codecountry == x, unique(sub)]
     if(plot_subtitle == 'none') plot_subtitle = ''
@@ -120,7 +131,7 @@ for (cat in unique(subset$product_category)) {
       scale_size_continuous(labels = comma) +
       labs(title = paste0(country, ", ", cat, ": ratio of unit cost to reference price over time"),
            subtitle = plot_subtitle,
-           x='Date', y='Unit Cost / International Reference Price', size = 'Volume Purchased',
+           x='Purchase order date', y='Unit Cost / International Reference Price', size = 'Volume Purchased',
            caption = 'Red line shows a ratio of 1 (cost equal to reference price).'))
       # annotate(geom= 'text', y = 1, x = min(subset[product_category == cat & iso3codecountry == x, purchase_order_date]), 
       #          hjust = -0.05, vjust = -0.5, label = 'Ratio of 1 (cost equal to reference price)'))
@@ -141,71 +152,75 @@ dev.off()
 # # get a subset of the products NOT included in 'subset'
 # # subset_less_common = anti_join(data, subset, by = c('product_name_en', 'description'))
 # # ----------------------------------------------
-# 
-# # ----------------------------------------------
-# # Graphs comparing unit costs and international reference prices
-# # ----------------------------------------------
-# subset[, country_name := as.factor(country_name)]
-# 
-# colors = brewer.pal(4, 'Set1')
-# names(colors) = levels(subset$country_name)
-# 
-# pdf(compare_ref_prices_with_size, height = 9, width = 12)
-# for ( cat in unique(subset$product_category) ){ # loop through category first so they're grouped by category
-#   for ( p in unique(subset[product_category == cat, product_name_en]) ){
-#     print(ggplot(subset[product_name_en == p, ], aes(x=purchase_order_date, y=unit_cost_usd, color=country_name, size = total_units_in_order)) +
-#       geom_point() +
-#       scale_color_manual(name = 'Country Name', values = colors) +
-#       geom_line(aes(x=purchase_order_date, y=po_international_reference_price), color = 'darkgrey', size = 1 ) +
-#       geom_point(aes(x=purchase_order_date, y=po_international_reference_price), color = 'darkgrey', size = 2 ) +
-#       theme_bw() +
-#       theme(text = element_text(size=14)) +
-#       facet_wrap( ~description, scales = "free") +
-#       scale_size_continuous(labels = comma) +
-#       labs(title = paste0(cat, ": Comparison of unit costs and international reference prices for ", p), 
-#            subtitle = '(Gray points represent the international reference price over time)',
-#            x='Date', y='Unit Cost (USD)', size = 'Volume Purchased')) 
-#   }
-# }
-# dev.off()
-# 
-# pdf(compare_ref_prices_volume_on_x, height = 9, width = 12)
-# for ( cat in unique(subset$product_category) ){ # loop through category first so they're grouped by category
-#   for ( p in unique(subset[product_category == cat, product_name_en]) ){
-#     print(ggplot(subset[product_name_en == p, ], aes(x=total_units_in_order, y=unit_cost_usd, color=country_name)) +
-#       geom_point(size = 4.5) +
-#       scale_color_manual(name = 'Country Name', values = colors) +
-#       geom_point(aes(x=total_units_in_order, y=po_international_reference_price), color = 'black', size = 3 ) +
-#       theme_bw() +
-#       theme(text = element_text(size=14)) +
-#       facet_wrap( ~description, scales = "free") +
-#       scale_x_continuous(labels = comma) +
-#       theme(legend.position = 'bottom') + 
-#       labs(title = paste0(cat, ": Comparison of unit costs and international reference prices for ", p), 
-#            subtitle = '(Black points represent the international reference price)',
-#            x='Units Purchased', y='Unit Cost (USD)'))
-#   }
-# }
-# dev.off()
-# 
-# pdf(scatterplot_unit_cost_vs_intl_ref_price, height = 9, width = 12)
-# for ( cat in unique(subset$product_category) ){ # loop through category first so they're grouped by category
-#   for ( p in unique(subset[product_category == cat, product_name_en]) ){
-#     print(ggplot(subset[product_name_en == p, ], aes(x=po_international_reference_price, y=unit_cost_usd, color=country_name, size=total_units_in_order)) +
-#       geom_point() + geom_abline() + 
-#       scale_color_manual(name = 'Country Name', values = colors) +
-#       theme_bw() +
-#       theme(text = element_text(size=14)) +
-#       facet_wrap( ~description) +
-#       scale_size_continuous(labels = comma) +
-#       labs(title = paste0(cat, ": Comparison of unit costs and international reference prices for ", p), 
-#            x='International Reference Price', y='Unit Cost (USD)', size = 'Volume Purchased') +
-#       ylim(0, NA) + xlim(0, NA))
-#   }
-# }
-# dev.off()
-# # ----------------------------------------------
-# 
+
+# ----------------------------------------------
+# Graphs comparing unit costs and international reference prices
+# ----------------------------------------------
+subset[, country_name := as.factor(country_name)]
+
+colors = brewer.pal(4, 'Set1')
+names(colors) = levels(subset$country_name)
+
+pdf(compare_ref_prices_with_size, height = 9, width = 12)
+
+# subset = subset[grepl(product_name_en, pattern = 'artesu|lumefan', ignore.case=TRUE) & iso3codecountry %in% c('COD', 'UGA'), ]
+# pdf(ts_compare_unit_cost_ref_price_uga_drc, height = 9, width = 12)
+
+for ( cat in unique(subset$product_category) ){ # loop through category first so they're grouped by category
+  for ( p in unique(subset[product_category == cat, product_name_en]) ){
+    print(ggplot(subset[product_name_en == p, ], aes(x=purchase_order_date, y=unit_cost_usd, color=country_name, size = total_units_in_order)) +
+      geom_point() +
+      scale_color_manual(name = 'Country Name', values = colors) +
+      geom_line(aes(x=purchase_order_date, y=po_international_reference_price), color = 'darkgrey', size = 1 ) +
+      geom_point(aes(x=purchase_order_date, y=po_international_reference_price), color = 'darkgrey', size = 2 ) +
+      theme_bw() +
+      theme(text = element_text(size=14)) +
+      facet_wrap( ~description, scales = "free") +
+      scale_size_continuous(labels = comma) +
+      labs(title = paste0("Comparison of unit costs and international reference prices for ", p),
+           subtitle = '(Gray points represent the international reference price over time)',
+           x='Purchase order date', y='Unit Cost (USD)', size = 'Volume Purchased'))
+  }
+}
+dev.off()
+
+pdf(compare_ref_prices_volume_on_x, height = 9, width = 12)
+for ( cat in unique(subset$product_category) ){ # loop through category first so they're grouped by category
+  for ( p in unique(subset[product_category == cat, product_name_en]) ){
+    print(ggplot(subset[product_name_en == p, ], aes(x=total_units_in_order, y=unit_cost_usd, color=country_name)) +
+      geom_point(size = 4.5) +
+      scale_color_manual(name = 'Country Name', values = colors) +
+      geom_point(aes(x=total_units_in_order, y=po_international_reference_price), color = 'black', size = 3 ) +
+      theme_bw() +
+      theme(text = element_text(size=14)) +
+      facet_wrap( ~description, scales = "free") +
+      scale_x_continuous(labels = comma) +
+      theme(legend.position = 'bottom') +
+      labs(title = paste0(cat, ": Comparison of unit costs and international reference prices for ", p),
+           subtitle = '(Black points represent the international reference price)',
+           x='Units Purchased', y='Unit Cost (USD)'))
+  }
+}
+dev.off()
+
+pdf(scatterplot_unit_cost_vs_intl_ref_price, height = 9, width = 12)
+for ( cat in unique(subset$product_category) ){ # loop through category first so they're grouped by category
+  for ( p in unique(subset[product_category == cat, product_name_en]) ){
+    print(ggplot(subset[product_name_en == p, ], aes(x=po_international_reference_price, y=unit_cost_usd, color=country_name, size=total_units_in_order)) +
+      geom_point() + geom_abline() +
+      scale_color_manual(name = 'Country Name', values = colors) +
+      theme_bw() +
+      theme(text = element_text(size=14)) +
+      facet_wrap( ~description) +
+      scale_size_continuous(labels = comma) +
+      labs(title = paste0(cat, ": Comparison of unit costs and international reference prices for ", p),
+           x='International Reference Price', y='Unit Cost (USD)', size = 'Volume Purchased') +
+      ylim(0, NA) + xlim(0, NA))
+  }
+}
+dev.off()
+# ----------------------------------------------
+
 # # ----------------------------------------------
 # # Scatterplots and histograms for full data
 # # ----------------------------------------------

@@ -16,6 +16,7 @@ library(rgeos)
 library(maptools)
 library(RColorBrewer)
 library(gridExtra)
+library(openxlsx)
 # ----------------------
 
 #----------------------------------------
@@ -90,6 +91,29 @@ dt[ , migrant := ifelse(grepl(pop, pattern = 'migrant'),TRUE,FALSE)]
 dt[ , military := ifelse(grepl(pop, pattern = 'military'),TRUE,FALSE)]
 dt[, pop := NULL]
 
+# make table of results by pop
+dt_table = dt[year %in% 2015:2017, .(match_dept, year, date, hiv_test_comp, hiv_positive, hiv_confirmatoryTest_comp, hiv_confirmatoryTest_positive, trans, pregnant, msm, csw, prisoner, migrant)]
+dt_table = melt.data.table(dt_table, id.vars = c('match_dept', 'year', 'date', 'hiv_test_comp', 'hiv_positive', 'hiv_confirmatoryTest_comp', 'hiv_confirmatoryTest_positive'), variable.name = 'pop') 
+
+dt_table_output = data.table(pop = character(), `Tests completed`=numeric(), `Tests positive`= numeric()) 
+
+for (p in unique(dt_table$pop)) {
+  add = dt_table[pop == p & value == TRUE, ]
+  add = add[, .(`Tests completed` = sum(hiv_test_comp, na.rm = TRUE),
+               `Tests positive` = sum(hiv_positive, na.rm = TRUE)), 
+            by = 'pop']
+  dt_table_output = rbind(dt_table_output, add)
+}
+dt_table_output_add = data.table(pop = 'All patients', `Tests completed`= sum(dt_table$hiv_test_comp, na.rm = TRUE),
+                                 `Tests positive`= sum(dt_table$hiv_positive, na.rm = TRUE)) 
+
+dt_table_output = rbind(dt_table_output, dt_table_output_add)
+
+dt_table_output[, `Test positivity rate` := (`Tests positive` / `Tests completed`)*100]
+setnames(dt_table_output, 'pop', 'Population')
+
+write.xlsx(dt_table_output, paste0(dir, 'prepped/table_of_key_pop_testing_values.xlsx'))
+
 # sum data by dept and year
 id_vars = c('match_dept', 'year')
 dt = dt[ match_dept %in% coords$id, ]
@@ -121,20 +145,25 @@ mili_long = sum_by_kvp('military')
 #----------------------------------------
 # maps by year and variable
 #----------------------------------------
-list_of_dts = list("All people" = all_patients_long, "Transgender persons" = trans_long, "Migrants" = migr_long, "Prisoners" = pris_long,
+all = data.table( expand.grid( year = unique(dt$year), match_dept = unique(dt$match_dept), variable = c('hiv_test_comp', 'hiv_positive', 'pos_rate') ))
+
+list_of_dts = list("All people" = all_patients_long, "Transgender people" = trans_long, "Migrants" = migr_long, "Prisoners" = pris_long,
                    "MSM" = msm_long, "CSWs" = csw_long, "Pregnant Women" = preg_long, "Military" = mili_long)
 
 pdf(outFile, height = 12, width = 12) 
 for (x in 1:length(list_of_dts)){
   title = names(list_of_dts[x])
   
-  graphData = merge(list_of_dts[[x]], coords, by.x = 'match_dept', by.y = 'id', allow.cartesian = TRUE)
+  dt = list_of_dts[[x]]
+  dt = merge(dt, all, all = TRUE)
+  
+  graphData = merge(dt, coords, by.x = 'match_dept', by.y = 'id', allow.cartesian = TRUE)
   
   map1 = ggplot() + geom_polygon(data=graphData[variable == 'hiv_test_comp'], aes(x=long, y=lat, group=group, fill=value)) + 
     coord_equal() + 
     geom_path(data=graphData, aes(x=long, y=lat, group=group), color="darkgray", size = 0.2) +
     facet_grid(~year) +
-    scale_fill_gradientn(colors=results_colors) + theme_void() +
+    scale_fill_gradientn(colors=results_colors, na.value = "grey70") + theme_void() +
     theme(plot.title = element_text(size = 18, vjust = 7), legend.title=element_text(size=16), legend.text=element_text(size=10), strip.text=element_text(size=14)) +
     labs(title= paste0("Annual HIV tests completed: ", title), fill=paste0('Number of tests completed')) 
   
@@ -142,7 +171,7 @@ for (x in 1:length(list_of_dts)){
     coord_equal() + 
     geom_path(data=graphData, aes(x=long, y=lat, group=group), color="darkgray", size = 0.2) +
     facet_grid(~year) +
-    scale_fill_gradientn(colors=sup_colors) + theme_void() +
+    scale_fill_gradientn(colors=sup_colors, na.value = "grey70") + theme_void() +
     theme(plot.title = element_text(size = 18, vjust = 7), legend.title=element_text(size=16), legend.text=element_text(size=10), strip.text=element_text(size=14)) +
     labs(title= paste0("Annual number of HIV tests positive: ", title), fill=paste0('Number of tests positive')) 
   
@@ -150,7 +179,7 @@ for (x in 1:length(list_of_dts)){
     coord_equal() + 
     geom_path(data=graphData, aes(x=long, y=lat, group=group), color="darkgray", size = 0.2) +
     facet_grid(~year) +
-    scale_fill_gradientn(colors=ratio_colors) + theme_void() +
+    scale_fill_gradientn(colors=ratio_colors, na.value = "grey70") + theme_void() +
     theme(plot.title = element_text(size = 18, vjust = 7), legend.title=element_text(size=16), legend.text=element_text(size=10), strip.text=element_text(size=14)) +
     labs(title= paste0("Annual percentage of HIV tests positive: ", title), fill=paste0('Percentage of tests positive')) 
 
