@@ -53,7 +53,7 @@ if(nrow(unmapped_mods)>0){
 
 #------------------------------------------------------------
 # Remap diseases so they apply at the intervention level, 
-#   not the grant-level (assigned in the file list) 
+#   not the grant-level (assigned in the file list)  #THESE SHOULD BE REMOVED AND RESOLVED USING THE MODULE MAP EL 9/23/2019
 #------------------------------------------------------------
 
 #Correct all tb/hiv to hiv/tb
@@ -66,12 +66,7 @@ raw_data[module=='tbhealthsystemsstrengthening', disease:='tb']
 
 #French corrections 
 raw_data[module == 'priseenchargeetpreventiondelatuberculose' & disease == 'hiv', disease:='tb']
-# 
-# map = copy(module_map)
-# module_map=map
-# #EMILY TO DELETE - DOING A TINY CHECK HERE
-# raw_data = raw_data[module=="atencionyprevenciondetuberculosis" & intervention=="poblacionesclaveafectadas"]
-# module_map = module_map[module=="atencionyprevenciondetuberculosis" & intervention=="poblacionesclaveafectadas"]
+
 #----------------------------------------------------------------------------
 # Merge with module map on module, intervention, and disease to pull in code
 #----------------------------------------------------------------------------

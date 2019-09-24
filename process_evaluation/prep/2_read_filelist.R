@@ -6,13 +6,39 @@
 
 master_file_list = load_master_list(purpose="performance indicators")
 
-# THIS SHOULD BE DELETED WHEN YOU MAKE A MORE GENERAL FUNCTION! EL 7/24/2019
-master_file_list = master_file_list[sheet_coverage_1b%in%c("Indicateurs Couverture_1B", "Coverage Indicators_1B")]
-# ONLY WANT TO PREP CURRENT GRANTS FOR NOW, BUT SHOULD CHANGE THIS LATER! el 8/1/2019
-master_file_list = master_file_list[grant_period%in%c('2018-2020', '2018', '2016-2019')] #This might not be catching everything for Guatemala. 
+#Only want to keep final files (EL 9/12/2019 - what about PUDR revisions?)
+master_file_list = master_file_list[file_iteration=="final"]
 
-#Temporary stop - only keeping TB in Guatemala. 
-master_file_list = master_file_list[disease=="tb"]
+#Flag files where sheets are NA - if they are duplicated with non-NA files, drop these. 
+na_sheets = master_file_list[is.na(sheet_impact_outcome_1a) | sheet_impact_outcome_1a=="NA" |
+                               is.na(sheet_impact_outcome_1a_disagg) | sheet_impact_outcome_1a_disagg=="NA" |
+                               is.na(sheet_coverage_1b) | sheet_coverage_1b=="NA" | 
+                               is.na(sheet_coverage_1b_disagg) | sheet_coverage_1b_disagg=="NA", file_name]
+
+#Make sure you don't have the same start date for the same grant (quick check; it would be better )
+master_file_list[, date_dup:=sequence(.N), by=c('grant', 'grant_period', 'start_date_programmatic', 'pudr_semester_programmatic')] #EMILY NEED TO RETHINK THIS. 
+master_file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
+
+#Drop duplicates that are NA 
+dup_grants = master_file_list[date_dup==1, .(grant, grant_period, pudr_semester_programmatic)]
+dup_grants[, concat:=paste0(grant, grant_period, pudr_semester_programmatic)]
+dup_files = master_file_list[paste0(grant, grant_period, pudr_semester_programmatic)%in%dup_grants$concat, file_name]
+
+master_file_list = master_file_list[!(file_name%in%na_sheets & file_name%in%dup_files)]
+
+#Re-do duplicates check. 
+master_file_list$date_dup = NULL
+master_file_list[, date_dup:=sequence(.N), by=c('grant', 'grant_period', 'start_date_programmatic', 'pudr_semester_programmatic')] #EMILY NEED TO RETHINK THIS. 
+master_file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
+
+if ( nrow(master_file_list[date_dup>0])!=0){
+  print(master_file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date_financial)][order(grant, grant_period, start_date_financial)])
+  print("There are duplicates in final files - review file list.")
+}
+
+#Only extract indicators for current grant periods! EL 9/20/2019 
+current_periods = c('2018-2020', '2016-2019', '2018-2018')
+master_file_list = master_file_list[grant_period%in%current_periods]
 
 #-------------------------------------------
 #Prep Coverage 1A sheets 

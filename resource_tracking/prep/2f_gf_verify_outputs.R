@@ -76,15 +76,15 @@ for (i in 1:length(loc_names)){
   #----------------------------
   # EXPENDITURE
   #----------------------------
-  expenditures1 = expenditures[, .(expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'pudr_grant_year', 'semester')] #Collapse expenditure file. 
-  expenditures1 = merge(expenditures1, expenditure_tests, by=c('grant', 'grant_period', 'pudr_grant_year', 'semester'), all=T)
+  expenditures1 = expenditures[, .(expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'start_date')] #Collapse expenditure file. 
+  expenditures1 = merge(expenditures1, expenditure_tests, by=c('grant', 'grant_period', 'start_date'), all=T)
   expenditures1[, correct_exp:=round(correct_exp)]
   expenditures1[, expenditure:=round(expenditure)]
   
   #Check to make sure all files are being tested. 
-  untested_grants = unique(expenditures1[is.na(correct_exp), .(grant, grant_period, pudr_grant_year, semester)])
-  untested_grants[, concat:=paste0(grant, "_", grant_period, "_", pudr_grant_year, "_", semester)]
-  expenditures1[!is.na(correct_exp), concat:=paste0(grant, "_", grant_period, "_", pudr_grant_year, "_", semester)]
+  untested_grants = unique(expenditures1[is.na(correct_exp), .(grant, grant_period, start_date)])
+  untested_grants[, concat:=paste0(grant, "_", grant_period, "_", start_date)]
+  expenditures1[!is.na(correct_exp), concat:=paste0(grant, "_", grant_period, "_", start_date)]
   untested_grants = untested_grants[!concat%in%expenditures1$concat]
   if (nrow(untested_grants)!=0){
     print(paste0("Some expenditure numbers are not being tested for ", country, "."))

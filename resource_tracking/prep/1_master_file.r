@@ -56,14 +56,14 @@ if (prep_files | prep_gos){
   }
   
   # Load and verify mapping, prep data, and map data. 
-  # source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
+  source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
   if (prep_files){
     source(paste0(code_dir, "2b_gf_files_prep_data.r"))
   } else if (prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
   # source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
-  # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
+  # # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
   # source(paste0(code_dir, "2f_gf_verify_outputs.R"))
   # 
   # rmarkdown::render(paste0(code_dir, "2g_gf_visualize_data.rmd",
@@ -75,8 +75,8 @@ if (prep_files | prep_gos){
 # rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
 #                   output_dir=paste0(dir, "/visualizations/verification"),
 #                   output_file="Reporting Completeness.pdf")
-#
-# # #Run unclassified file analysis - optional
+# #
+# # # #Run unclassified file analysis - optional
 # rmarkdown::render(paste0(code_dir, "unclassified_files.rmd"),
 #                   output_dir=paste0(dir, "/visualizations/verification"),
 #                   output_file="Unclassified Files.pdf")
