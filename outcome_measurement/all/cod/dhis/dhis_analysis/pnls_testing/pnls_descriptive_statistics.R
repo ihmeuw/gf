@@ -1,11 +1,68 @@
+# Visualize the PNLS HIV testing data 
+# Final prep file for usable data 
+# ----------------------------------------------
+# Caitlin O'Brien-Carelli
+# 8/24/2019
+# ----------------------------------------------
 
+# --------------------
+# Set up R
+rm(list=ls())
+library(data.table)
+library(ggplot2)
+library(dplyr)
+library(stringr) 
+library(RColorBrewer)
+library(gridExtra)
+library(grid)
+# --------------------
+
+# --------------------
+# run these data for global fund provinces only?
+
+gf_only = TRUE
+
+# --------------------
+# set working directories
+
+# detect if operating on windows or on the cluster 
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+
+# set the shared directory
+# dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+
+# read in the data from j
+# dt = readRDS(paste0(dir, 'prepped/pnls_final/pnls_vct_final.rds'))
+
+# set the local directory
 dir = "C:/Users/ccarelli/Documents/pnls_data/"
 
-# descriptive statistics
+# read in the data from a local directory
+dt = readRDS(paste0(dir, 'pnls_vct_final_labels.rds'))
 
+# ----------------------------------
+# set output directories 
+
+# export locally as a pdf
+if (gf_only==FALSE) outDir = paste0(dir, 'outputs/pnls_graphs_both_funders.pdf')
+if (gf_only==TRUE) outDir = paste0(dir, 'outputs/pnls_graphs_global_fund_only.pdf') 
+
+#--------------------------------------
+# determine if the data will be both funders or gf only
+
+# create a copy of the data for comparison graphs regardless of subset
+compare = copy(dt)
+
+# subset to only data from global fund provinces
+if (gf_only==TRUE) dt = dt[funder=='The Global Fund']
+
+# create a key population binary
+dt[subpop!='Clients' & subpop!='Couples' & subpop!='Patients', key_pop:='Key population']
+dt[subpop=='Clients' | subpop=='Patients', key_pop:='General population']
+dt[subpop=='Couples', key_pop:='Couples']
 #-------------------------------------------------
 # MAIN DESCRIPTIVE TABLE
-# compared tests, cases, and test positivity by population 
+# compared tests, cases, test positivity, and tests per case by population 
 
 # generate the table
 tab = dt[variable=='Tested and received the results' | variable=='HIV+',.(value=sum(value)), 
@@ -94,7 +151,6 @@ write.csv(table, paste0(dir, 'compare_pepfar_gf_table_2018.csv'))
 
 compare[variable=='Tested and received the results' & subpop!='Clients' & year(date)==2018 & dps=='Kinshasa', .(value=sum(value)), by=.(funder, variable)]
 compare[variable=='Tested and received the results' & year(date)==2018 & dps=='Kinshasa', .(value=sum(value)), by=.(funder, variable)]
-
 compare[variable=='HIV+' & year(date)==2018 & dps=='Kinshasa', .(value=sum(value)), by=.(funder, variable)]
 
 
@@ -126,7 +182,7 @@ r = dt[variable=='Tested and received the results' & year(date)==2018 & key_pop=
 
 # testing among the general versus key populations by dps
 # total tests 2018
-gen = dt[variable=='Tested and received the results' & , .(gen_value=sum(value)), by=dps]
+gen = dt[variable=='Tested and received the results'  , .(gen_value=sum(value)), by=dps]
 keys = dt[variable=='Tested and received the results' & year(date)==2018 & key_pop=='Key population', 
    .(key_value=sum(value)), by=dps]
 
@@ -136,14 +192,48 @@ gen_keys[ ,total:=gen_value+key_value]
 gen_keys[ , percent_on_keys:=round(100*(key_value/total), 1)]
 gen_keys[order(percent_on_keys)]
 
-
-
 #----------------------------------------------------
 # export the table 
 
 write.csv(gen_keys, paste0(dir, 'tests_on_key_pops_dps.csv'))
 
 #----------------------------------------------------
+
+#----------------------------------------------------
+# overview descriptives
+
+dt[year(date)==2018 & variable=='Tested and received the results', .(value=sum(value))]
+dt[year(date)==2018 & variable=='Tested and received the results' & subpop!='Clients',
+   .(value=sum(value))]
+
+
+
+x = dt[year(date)==2018 & variable=='Tested and received the results', .(value=sum(value))]
+y = dt[year(date)==2018 & variable=='Tested and received the results' & subpop!='Clients',
+   .(value=sum(value))]
+100*y/x
+
+
+# mean monthly test positivity
+mon = dt[(variable=='Tested and received the results' | variable=='HIV+') & subpop=='Clients' & funder=='The Global Fund']
+mon = mon[ ,.(value=sum(value)), by=.(date, variable)]
+mon = dcast(mon, date~variable)
+setnames(mon, c('date', 'hiv', 'tests'))
+mon[ ,ratio:=100*(hiv/tests)]
+mon[ ,mean(ratio)]
+
+# mean monthly test positivity
+mon = dt[(variable=='Tested and received the results' | variable=='HIV+') & subpop!='Clients' & funder=='The Global Fund']
+mon = mon[ ,.(value=sum(value)), by=.(date, variable)]
+mon = dcast(mon, date~variable)
+setnames(mon, c('date', 'hiv', 'tests'))
+mon[ ,ratio:=100*(hiv/tests)]
+mon[ ,mean(ratio)]
+
+
+
+
+
 
 
 

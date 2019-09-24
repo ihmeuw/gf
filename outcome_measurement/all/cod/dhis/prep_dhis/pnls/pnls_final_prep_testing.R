@@ -144,7 +144,7 @@ dt = dt[!is.na(value)]
 dt$subpop = factor(dt$subpop, 
                    c("prisoner", "trans", "idu", "trucker",  "uniform", "msm", "csw_customer", 
                      "fisher", "miner", "other_groups", "couple", "csw", "client", "patient"),    
-                   c("Prisoners", "Trans people", "IDUs", "Truckers", "Military personnel",
+                   c("Prisoners", "Trans people", "IDUs", "Truckers", "Uniformed personnel",
                      "MSM", "CSW Clients", "Fisher people", "Miners", 
                      "Other groups", "Couples", "CSWs", "Clients", "Patients")) 
 
