@@ -37,6 +37,7 @@ parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 # modelVars = c(modelVars, 'department', 'date')
 modelVars = gsub("_cumulative", "", modelVars)
+modelVars = gsub("_log", "", modelVars)
 # reporting = data[, unique(modelVars), with=F]
 # 
 # #What variables are reporting for what years? 
@@ -78,18 +79,13 @@ modelVars = gsub("_cumulative", "", modelVars)
 # drop zero-variance variables
 # numVars = names(data)[!names(data)%in%c('department','date')]
 #EMILY - WE WANT TO ONLY IMPUTE VARIABLES THAT ARE COUNTS. 
-numVars = c("Number_of_Cases_Screened_for_MDR_act", "Second_Line_Drugs_Distributed_act", "Isoniazid_Distributed_act", "PLHIV_Screened_for_TB_act", 
-            "TB_Patients_Tested_for_HIV_act", 
-            "MDR_Cases_Notified_out", "MDR_Cases_Started_Treatment_out", "Cases_Notified_in_Prisons_out", "Children_in_Contact_with_TB_Started_IPT_out", 
-            "Cases_Started_on_Treatment_out", "Cases_Notified_out", "PLHIV_started_on_IPT_out", "Cases_Started_on_Treatment_in_Prisons_out", "HIV_TB_Cases_Notified_out", 
-            "Firstline_Distributed_act", "Secondline_Distributed_act")
-for(v in numVars) if (all(is.na(data[[v]]))) data[[v]] = NULL
+for(v in backCastVars) if (all(is.na(data[[v]]))) data[[v]] = NULL #backCastVars is set in the 'set_up_r' script. 
 
   #CURRENTLY NOT IMPUTING ADDITIONAL CASES DETECTED VIA ACF BECAUSE WE KNOW IT'S VERY DEPARTMENT SPECIFIC- ANY OTHERS? EL 8/12/19
-names(data)[!names(data)%in%c(numVars, 'date', 'department')]
+names(data)[!names(data)%in%c(backCastVars, 'date', 'department')]
 # extrapolate where necessary using GLM (better would be to use multiple imputation)
 i=1
-for(v in numVars) {
+for(v in backCastVars) {
 	for(h in unique(data$department)) { 
 		i=i+1
 		#First, check whether all values for this department and this variable are zero. 
@@ -111,7 +107,7 @@ for(v in numVars) {
   		data[department==h & tmp>lim, tmp:=lim]
   		data[department==h & is.na(get(v)), (v):=tmp]
 		} 
-		pct_complete = floor(i/(length(numVars)*length(unique(data$department)))*100)
+		pct_complete = floor(i/(length(backCastVars)*length(unique(data$department)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
 		flush.console() 
 	}
@@ -163,14 +159,13 @@ untransformed = copy(data)
 # 	data[, (v):=smithsonTransform(get(v))]
 # }
 # 
-# # log-transform some variables
-# # logVars = c('ITN_consumed_cumulative','ACTs_SSC_cumulative', 'ACT_received_cumulative', 
-# 	# 'RDT_completed_cumulative','SP_cumulative', 'ITN_received_cumulative', 
-# 	# 'severeMalariaTreated_cumulative','totalPatientsTreated_cumulative')
-# # for(v in logVars) { 
-# 	# data[, (v):=log(get(v))]
-# 	# data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
-# # }
+# log-transform some variables
+for(v in logVars) { #logVars created in 'set_up_r' script. 
+  newName = paste0((v), "_log")
+	data[, (newName):=log(get(v))]
+	data[!is.finite(get(newName)), (newName):=quantile(data[is.finite(get(newName))][[newName]],.01,na.rm=T)]
+}
+
 # 
 # # compute lags
 # lagVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
@@ -181,6 +176,10 @@ untransformed = copy(data)
 # data = na.omit(data)
 # # -----------------------------------------------------------------------
 
+#Only keep variables that will be used in the model. 
+modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+modelVars = c(modelVars, 'department', 'date')
+data = data[, modelVars, with=F]
 
 # ---------------------------------------------------------------------------------------
 # Run final tests

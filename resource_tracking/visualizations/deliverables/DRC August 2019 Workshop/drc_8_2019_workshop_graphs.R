@@ -162,7 +162,7 @@ y1_by_grant[, absorption:=round((expenditure/budget)*100, 2)]
 plot = ggplot(s1_by_mod, aes(x=gf_module, y=absorption, fill=gf_module)) + 
   geom_bar(stat="identity", position="dodge") + 
   coord_flip() +
-  theme_bw() + 
+  theme_bw(base_size=16) + 
   theme(axis.text.y=element_blank(), axis.title.y=element_blank()) + 
   geom_text(aes(label=paste0(absorption, "%"))) + 
   labs(title=paste0("Global Fund HIV testing absorption for COD-C-CORDAID, S1 2018"), y="Absorption (%)", fill="Subpopulation")
@@ -172,10 +172,24 @@ ggsave(paste0(save_loc, "s1_absorption_by_module.png"), plot, height=10, width=1
 plot = ggplot(y1_by_mod, aes(x=gf_module, y=absorption, fill=gf_module)) + 
   geom_bar(stat="identity", position="dodge") + 
   coord_flip() +
-  theme_bw() + 
+  theme_bw(base_size=16) + 
   theme(axis.text.y=element_blank(), axis.title.y=element_blank()) + 
   geom_text(aes(label=paste0(absorption, "%"))) + 
   labs(title=paste0("Global Fund HIV testing absorption for COD-C-CORDAID, S1-S2 2018"), y="Absorption (%)", fill="Subpopulation")
 
 ggsave(paste0(save_loc, "y1_absorption_by_module.png"), plot, height=10, width=13)
+
+
+# Hi Emily, 
+# 
+# Could you re-do the absorption figure on slide 15 to use only the annual PU/DR to compare S1 and S2 and update the text?
+#Same figure, but just using the percentages for S1 and S2 as reported at the end of 2018 in the annual PU/DR. 
+#From what I was seeing in Slack today, not all data may be reported by the end of S1, so the complete comparison of semester-on-semester change would need to come from the annual PU/DR. 
+# 
+# On the same slide, could you also add a bullet point on why we are not including the PNLS PU/DR? Just briefly explaining it
+#– for example “PNLS submitted an S1 PUDR in MONTH of 2018 but did not list any reported expenditures. 
+#We are awaiting the receipt of the approved annual PU/DR” or something like that. I would add this but I’m not familiar with the data requests.
+# 
+# I asked this via Slack, but could you send the updated figure  for slide 14 wide? The version you sent including GHE looks good but is just too small. Thanks! Caitlin 
+
 

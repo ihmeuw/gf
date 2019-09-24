@@ -141,47 +141,81 @@ map_data2 = merge(data1_merge, shp_data, by='id', all=T, allow.cartesian=T)
 # title, subtitle, and caption - all arguments to be passed to "labs" for graph
 # colScaleMin - starting point of the color scale. 
 # colScaleMax - ending point of the color scale. 
-shape_plot = function(data, lhsVar, rhsVar, title="", subtitle="", caption="", colScaleMin=-3, colScaleMax=3.5){
+shape_plot = function(data, lhsVar, rhsVar, title="", subtitle="", caption="", colScaleMin=-3, colScaleMax=3.5, colScaleBreaks=0.5){
   data = map_data1[lhs==lhsVar & rhs==rhsVar]
-  if (any(data$est.std<colScaleMin, na.rm=T) | any(data$est.std>colScaleMax, na.rm=T)) stop("colScaleMin and colScaleMax will drop some values in data - expand your parameters.")
-  p = ggplot(data = data, aes(x = long, y = lat, group = group, fill=est.std)) +
+  if (any(data$est<colScaleMin, na.rm=T) | any(data$est>colScaleMax, na.rm=T)) stop("colScaleMin and colScaleMax will drop some values in data - expand your parameters.")
+  p = ggplot(data = data, aes(x = long, y = lat, group = group, fill=est)) +
     geom_polygon(colour="black") +
     theme_void(base_size=18) +
-    scale_fill_viridis(direction=-1, breaks=seq(colScaleMin, colScaleMax, by=0.5), labels=as.character(seq(colScaleMin, colScaleMax, by=0.5)), limits=c(colScaleMin, colScaleMax)) +
+    scale_fill_viridis(direction=-1, breaks=seq(colScaleMin, colScaleMax, by=colScaleBreaks), labels=as.character(seq(colScaleMin, colScaleMax, by=colScaleBreaks)), limits=c(colScaleMin, colScaleMax)) +
     labs(title=title, subtitle=subtitle, caption=caption, fill="Estimate")
   return(p)
 }
 
 #Create some plots with this function.
 #Cases Notified ~ Additional cases via ACF
-p4 = shape_plot(map_data1, rhsVar="gf_mdrtb_cumulative", lhsVar="Number_of_Cases_Screened_for_MDR_act_cumulative",
+p1 = shape_plot(map_data1, rhsVar="gf_mdrtb_cumulative", lhsVar="Number_of_Cases_Screened_for_MDR_act_cumulative",
                 title="Correlation between GF MDR-TB expenditure and GeneXpert testing", colScaleMin=-0.5, colScaleMax=2)
 
-p5 = shape_plot(map_data1, rhsVar="ghe_tb_cumulative", lhsVar="Number_of_Cases_Screened_for_MDR_act_cumulative",
+p2 = shape_plot(map_data1, rhsVar="ghe_tb_cumulative", lhsVar="Number_of_Cases_Screened_for_MDR_act_cumulative",
                 title="Correlation between GHE TB expenditure and GeneXpert testing", colScaleMin=-0.5, colScaleMax=2)
 
-p6 = shape_plot(map_data1, rhsVar="gf_tb_cumulative", lhsVar="Cases_Notified_in_Prisons_out_cumulative",
+p3 = shape_plot(map_data1, rhsVar="gf_tb_cumulative", lhsVar="Cases_Notified_in_Prisons_out_cumulative",
                 title="Correlation between GF TB expenditure and cases notified in prisons", colScaleMin=-0.5, colScaleMax=2)
 
+p4 = shape_plot(map_data1, lhsVar="Treatment_Success_Rate_imp", rhsVar="Cases_Started_on_Treatment_out_cumulative", 
+                title="Estimated correlation between cases started on treatment\nand treatment success rate", colScaleMin = 0, colScaleMax=0.002, colScaleBreaks=0.001)
 
+p5 = shape_plot(map_data1, lhsVar="Case_Notification_Rate_imp_log", rhsVar="Cases_Notified_out_cumulative", 
+                title="Estimated correlation between cases notified and case notification rate", colScaleMin = 0, colScaleMax=0.008, colScaleBreaks=0.002)
+
+p6 = shape_plot(map_data1, lhsVar="Children_in_Contact_with_TB_Started_IPT_out_cumulative", rhsVar="Children_less5_referred_out_cumulative", 
+                title="Estimated correlation between children referred for TB screening\nand children started IPT", colScaleMin=0, colScaleMax=4.5, colScaleBreaks=1)
+
+p7 = shape_plot(map_data1, lhsVar="Proportion_of_MDR_Cases_Treated_out_log", rhsVar = "MDR_Cases_Started_Treatment_out_cumulative", 
+                colScaleMin=0, colScaleMax=0.03, colScaleBreaks=0.01, 
+                title="Estimated correlation between MDR cases started on treatment\nand proportion of MDR cases treated")
+
+p8 = shape_plot(map_data1, lhsVar="Proportion_of_HIV_TB_Cases_Treated_out_log", rhsVar="HIV_TB_Cases_Notified_out_cumulative", 
+                colScaleMin=-0.04, colScaleMax=0.2, colScaleBreaks=0.05, 
+                title="Estimated correlation between HIV/TB cases notified\nand proportion of HIV/TB cases treated")
+
+p9 = shape_plot(map_data1, lhsVar="HIV_TB_Treatment_Success_Rate_imp", rhsVar="HIV_TB_Cases_Notified_out_cumulative", 
+                colScaleMin=-0.005, colScaleMax=0.05, colScaleBreaks=0.01, 
+                title="Estimated correlation between HIV/TB cases notified\nand HIV/TB treatment success rate")
+
+p10 = shape_plot(map_data1, lhsVar="Proportion_of_Cases_in_Prisons_Treated_out_log", rhsVar="Cases_Notified_in_Prisons_out_cumulative", 
+                 colScaleMin=-0.01, colScaleMax=0.2, colScaleBreaks=0.05, 
+                 title="Estimated correlation between cases notified in prisons\nand proportion of cases in prisons treated")
+
+pdf(paste0(save_loc, "outputs_outcomes_graphs.pdf"), height=10, width=10)
+p4
+p5
+p6
+p7
+p8
+p9
+p10
+dev.off() 
 
 # Save all of these plots
 # ggsave(paste0(save_loc, "acf_subnational.png"), p1, height=10, width=10)
 # ggsave(paste0(save_loc, "gf_tbhiv_testing_subnational.png"), p2, height=10, width=10)
 # ggsave(paste0(save_loc, "ghe_tbhiv_testing_subnational.png"), p3, height=10, width=10)
-ggsave(paste0(save_loc, "gf_genexpert_testing_subnational.png"), p4, height=10, width=10)
-ggsave(paste0(save_loc, "ghe_genexpert_testing_subnational.png"), p5, height=10, width=10)
-ggsave(paste0(save_loc, "gf_prison_case_notifications_subnational.png"), p6, height=10, width=10)
+ggsave(paste0(save_loc, "gf_genexpert_testing_subnational.png"), p1, height=10, width=10)
+ggsave(paste0(save_loc, "ghe_genexpert_testing_subnational.png"), p2, height=10, width=10)
+ggsave(paste0(save_loc, "gf_prison_case_notifications_subnational.png"), p3, height=10, width=10)
 
-
+ggsave(paste0(save_loc, "cases_started_tx_tx_success_rate.png"), p4, height=10, width=10)
+ggsave(paste0(save_loc, "hivtb_cases_started_tx_tx_success_rate.png"), p9, height=10, width=10)
 
 
 # Create a few plots using just the raw data - specifically active case finding. 
 
-p7 = ggplot(map_data2, aes(x = long, y = lat, group = group, fill=Additional_Cases_Detected_via_ACF_out)) +
+base_data = ggplot(map_data2, aes(x = long, y = lat, group = group, fill=Additional_Cases_Detected_via_ACF_out)) +
   geom_polygon(colour="black") + 
   theme_void(base_size=16) + 
   scale_fill_viridis(direction=-1) +  
   labs(title="Prioritized departments for Active Case Finding", fill="Add'l Cases Detected")
-ggsave(paste0(save_loc, "acf_subnational.png"), p7, height=10, width=10)
+ggsave(paste0(save_loc, "acf_subnational.png"), base_data, height=10, width=10)
 

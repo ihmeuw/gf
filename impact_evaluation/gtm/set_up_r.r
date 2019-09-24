@@ -41,12 +41,27 @@ library(splitstackshape)
 #Set global variables - pulling to top so easier to read EL 8/15/19
 # Current model versions
 
-modelVersion1 = 'gtm_tb_first_half10'
+modelVersion1 = 'gtm_tb_first_half11'
 modelVersion2 = 'gtm_tb_sec_half4'
 
 START_YEAR = 2009 #If available, what's the earliest year you should model data from? 
 
 #-----------------------------------
+#Global variable transformations 
+
+#These variables had to be imputed in step 2b, because they're used to create first-line and second-line drugs. EL 9/6/2019 
+drugComboVars = c("Total_First_Line_Drugs_inusIsonizide__Distributed_value_act", "Isoniazid_Distributed_value_act", 
+                  "Second_Line_Drugs_Distributed_value_act", "Total_MDR_Drugs_Distributed_value_act")
+
+#These variables will be imputed using GLM in step 4a. 
+backCastVars = c("Number_of_Cases_Screened_for_MDR_act", "PLHIV_Screened_for_TB_act", 
+                           "TB_Patients_Tested_for_HIV_act", 
+                           "MDR_Cases_Notified_out", "MDR_Cases_Started_Treatment_out", "Cases_Notified_in_Prisons_out", "Children_in_Contact_with_TB_Started_IPT_out", 
+                           "Cases_Started_on_Treatment_out", "Cases_Notified_out", "PLHIV_started_on_IPT_out", "Cases_Started_on_Treatment_in_Prisons_out", "HIV_TB_Cases_Notified_out")
+
+#These variables will be log-transformed in step 4a. 
+logVars = c("Case_Notification_Rate_imp", "Proportion_of_HIV_TB_Cases_Treated_out", "Proportion_of_MDR_Cases_Treated_out", "Proportion_of_Cases_in_Prisons_Treated_out", 
+            "Proportion_of_Patients_Receiving_DST_out")
 
 # ---------------------------------------------------------------------------------
 # Directories
@@ -61,7 +76,7 @@ rawIeDir = paste0(ieDir, 'raw_data/')
 preppedIeDir =  paste0(ieDir, 'prepped_data/')
 visIeDir = paste0(ieDir, 'visualizations/')
 rtDir = paste0(dir, 'resource_tracking/_gf_files_gos/combined_prepped_data/')
-fghDir = paste0(dir, 'resource_tracking/_fgh/prepped_data/')
+fghDir = paste0(dir, 'resource_tracking/_odah/prepped_data/')
 whoDir = paste0(dir, 'resource_tracking/_ghe/who/prepped_data/')
 mapDir = paste0(dir, '/mapping/multi_country/intervention_categories')
 sicoinDir = paste0(dir, 'resource_tracking/_ghe/sicoin_gtm/prepped_data/')
@@ -127,7 +142,7 @@ if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo)
 }
 
 #Add a temporary IE dir for when running on a local computer - this should match clustertmpDir2 when running on cluster!
-tempIeDir = paste0('/ihme/scratch/users/', username, '/impact_evaluation/parallel_files/')
+tempIeDir = paste0('C:/Users/elineb/Desktop/tmp_cluster/')
 # ---------------------------------------------------------------------------------
 
 

@@ -30,7 +30,7 @@ urFits1 = copy(urFits)
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
-nodeTable2 = fread(nodeTableFile2)
+# nodeTable2 = fread(nodeTableFile2)
 
 names(data1)[!names(data1)%in%nodeTable1$variable]
 
@@ -119,8 +119,8 @@ p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
               dim=TRUE, highlight=c("Cases_Notified_out_cumulative", "Additional_Cases_Detected_via_ACF_out_cumulative", 
                                     "Children_less5_referred_out_cumulative", "gf_tbhiv_cumulative", "gf_mdrtb_cumulative", 
-                                    "Case_Notification_Rate_imp", "Children_in_Contact_with_TB_Started_IPT_out_cumulative", 
-                                    "gf_tb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative"))
+                                    "Case_Notification_Rate_imp", 
+                                    "gf_tb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative", "Case_Notification_Rate_imp_log"))
 
 #GHE pathway 
 p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
@@ -129,7 +129,13 @@ p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               dim=TRUE, highlight=c("ghe_tb_cumulative", "Number_of_Cases_Screened_for_MDR_act_cumulative", 
                                     "Cases_Notified_out_cumulative", "Cases_Started_on_Treatment_out_cumulative", "Firstline_Distributed_act_cumulative", 
                                     "TB_Patients_Tested_for_HIV_act_cumulative"))
+#Just visualize outputs to outcomes 
+outcomes_outputs = as.vector(nodeTable1[x%in%c(3, 10), unique(variable)])
 
+p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+               scaling_factors=NA, standardized=TRUE,
+               lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
+               dim=TRUE, highlight=c(outcomes_outputs))
 # -----------------------------------
 # Save output
 print(paste('Saving:', outputFile6a)) 
@@ -160,3 +166,4 @@ ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nola
 ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
 ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
 ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)
+ggsave(paste0(sep_terg_save, "outputs_outcomes_pathway.png"), p10, height=10, width=13)

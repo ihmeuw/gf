@@ -1,15 +1,17 @@
 # ----------------------------------------------------------
 # AUTHOR: Francisco Rios Casas
 # PURPOSE: To clean Senegal TB data (called "PANEL PNT TB-MR final_01072019")
-# DATE: August 14 2019 
+# DATE: August 14 2019
+
+# INSTRUCTIONS: Set working directory to the root of this repo
 # ----------------------------------------------------------
 
 # set-up
-library(data.table)
+source('./impact_evaluation/sen/set_up_r.r')
 
 # read in data
 # CSV file encoded in UTF-8 will preserve the accent marks
-DT <- fread("J:/Project/Evaluation/GF/outcome_measurement/sen/raw_data/PANEL PNT TB-MR final_26072019.csv", encoding = "UTF-8")
+DT <- fread(raw_data_file, encoding = "UTF-8")
 
 # ------------------------------
 # remove rows and columns
@@ -28,7 +30,7 @@ DT <- na.omit(DT, cols=c(4:5), invert = FALSE)
 # ------------------------------
 # rename headers
 # ------------------------------
-codes <- fread("J:/Project/Evaluation/GF/outcome_measurement/sen/raw_data/codebook2.csv", encoding = "UTF-8")
+codes <- fread(data_codebook, encoding = "UTF-8")
 names(DT) <- codes[,Code]
 
 # ------------------------------
@@ -157,7 +159,34 @@ DT[, tpm_plus_tauxdet:=tpm_plus_tauxdet/100]
 DT[, perf_lab:=perf_lab/100]
 DT[, pauvrety:=pauvrety/100]
 
+# fix typo where some hospitals aren't identified as hospitals
+DT$type[which(DT$centre=='HEAR')] <- "HOPITAL"
+DT$type[which(DT$centre=='H,Fann M Infect')] <- "HOPITAL"
+DT$type[which(DT$centre=='HALD')] <- "HOPITAL"
+DT$type[which(DT$centre=='HOGGY')] <- "HOPITAL"
+DT$type[which(DT$centre=='HPD')] <- "HOPITAL"
+
+# create combined total treatment variable
+DT$ntr_all <- rowSums(DT[,.(ntr_rhz, ntr_erhz, ntr_serhz)], na.rm=TRUE)
+
+# create variable of tbvih arv treatment rate
+DT$tbvih_arvtx_rate <- DT$tb_vih_arv/DT$tb_vih2
+DT$tbvih_arvtx_rate[which(DT$tb_vih2==0)]<-NA
+
+#-----------------------------------------------------
+# Check to make sure you're still uniquely identifying data 
+#-----------------------------------------------------
+DT[duplicated(DT, by=c('region','centre', 'annee', 'trimestre')), dup:=TRUE]
+if (nrow(DT[dup==TRUE])!=0){
+  print(paste0("There are ", nrow(DT[dup==TRUE]), " duplicates in region, centre, year, and quarter in the outcomes data. Review."))
+}
+
+DT = DT[, -c('dup')]
+
 # save prepped data in new R object and csv
-setwd("J:/Project/Evaluation/GF/impact_evaluation/sen/prepped_data")
-saveRDS(DT, "prepped_outputs_outcomes.rds")
+saveRDS(DT, outputFile2a)
 write.csv(DT, "prepped_outputs_outcomes.csv")
+archive(outputFile2a)
+
+#---------------
+print("Step 2a: Prep outcomes impacts completed successfully.")

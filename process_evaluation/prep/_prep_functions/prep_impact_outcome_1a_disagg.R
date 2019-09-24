@@ -5,31 +5,31 @@
 # DATE: Last updated June 2019. 
 # ----------------------------------------------
 
-prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
+prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   
   #TROUBLESHOOTING HELP
   # #Uncomment variables below and run line-by-line.
-  # folder = "budgets"
-  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  # if (file_list$file_iteration[i]=="initial"){
-  #   version = "iterations"
-  # } else if (file_list$file_iteration[i]=="revision"){
-  #   version= "revisions"
-  # } else {
-  #   version = ""
-  # }
-  # grant_period = file_list$grant_period[i]
-  # 
-  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
-  # if (version != ""){
-  #   dir = paste0(dir, version, "/")
-  # }
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet_coverage_1b_disagg[i]
-  # language = file_list$language_programmatic[i]
+  folder = "budgets"
+  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  if (file_list$file_iteration[i]=="initial"){
+    version = "iterations"
+  } else if (file_list$file_iteration[i]=="revision"){
+    version= "revisions"
+  } else {
+    version = ""
+  }
+  grant_period = file_list$grant_period[i]
+
+  dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  if (version != ""){
+    dir = paste0(dir, version, "/")
+  }
+  inFile = file_list$file_name[i]
+  sheet_name = file_list$sheet_impact_outcome_1a_disagg[i]
+  language = file_list$language_programmatic[i]
 
   # Sanity check: Is this sheet name one you've checked before? 
-  verified_sheet_names <- c('Disaggregation_1B', 'Ventilation_1B')
+  verified_sheet_names <- c('Disaggregation_1A', 'Ventilation_1A')
   if (!sheet_name%in%verified_sheet_names){
     print(sheet_name)
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
@@ -41,26 +41,14 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   #------------------------------------------------------
   # 1. Select columns, and fix names 
   #------------------------------------------------------
-  module_col = grep("Module|Módulo", gf_data)
-  extra_module_col = grep("HIVAIDS_Module", gf_data)
-  if (length(extra_module_col)>0){
-    if (verbose){
-      print("Extra name rows are being dropped.")
-      print(gf_data[[extra_module_col]])
-    }
-    gf_data[[extra_module_col]]<-NULL
-    module_col = module_col[module_col!=extra_module_col]
+  impact_col = grep("Impact/Outcome Indicators", gf_data)
+  stopifnot(length(impact_col)==1)
+  name_row = grep("Impact/Outcome", gf_data[[impact_col]])
+  if (language=="esp"){
+    name_row = grep("Impacto/Resultados", gf_data[[impact_col]])
   }
-  stopifnot(length(module_col)==1)
-  name_row = grep("Module|Módulo", gf_data[[module_col]])
-  extra_name_row = grep("Module Name", gf_data[[module_col]])
-  if (length(extra_name_row)>0){
-    if (verbose){
-      print("Extra name rows are being dropped.")
-      print(gf_data[extra_name_row])
-    }
-    gf_data = gf_data[-extra_name_row, ]
-    name_row = name_row[name_row!=extra_name_row]
+  if (length(name_row)>1){
+    name_row = name_row[length(name_row)]
   }
   stopifnot(length(name_row)==1)
   
@@ -69,32 +57,28 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   names = gsub("\\.", "_", names)
   
   #Drop out the comments column, and record ID column. 
-  # If the module column is #3, drop the first two rows. 
-  comment_col = grep("comment", names) 
+  # If the impact/outcome column is 2, remove the first column. 
+  comment_col = grep("comment|comentario", names) 
   record_id_col = grep("record id", tolower(gf_data))
   stopifnot(length(record_id_col)==1 | is.na(record_id_col)) #Just don't drop more than one column here. 
   gf_data = gf_data[, !c(comment_col, record_id_col), with=FALSE] 
-  if (module_col==3){
-    gf_data = gf_data[, 3:ncol(gf_data)] #Drop the first two columns in this case, they're unnecessary. 
+  if (impact_col==2){
+    gf_data = gf_data[, 2:ncol(gf_data)] #Drop the first two columns in this case, they're unnecessary. 
   }
   
-  #Reset names 
-  names = gf_data[name_row, ]
-  names = tolower(names)
-  names = gsub("\\.", "_", names)
-  
-  #Drop out column for country
-  country_col = grep("country", names)
-  if (length(country_col)>0){
-    gf_data = gf_data[, !c(country_col), with=F]
-  }
   #------------------------------------------------------
   # 2. Reset names after subset above. 
   #------------------------------------------------------
   
-  module_col = grep("Module|Módulo", gf_data)
-  stopifnot(length(module_col)==1)
-  name_row = grep("Module|Módulo", gf_data[[module_col]])
+  impact_col = grep("Impact/Outcome Indicators", gf_data)
+  stopifnot(length(impact_col)==1)
+  name_row = grep("Impact/Outcome", gf_data[[impact_col]])
+  if (language=="esp"){
+    name_row = grep("Impacto/Resultados", gf_data[[impact_col]])
+  }
+  if (length(name_row)>1){
+    name_row = name_row[length(name_row)]
+  }
   stopifnot(length(name_row)==1)
   
   names = gf_data[name_row, ]
@@ -102,13 +86,8 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   names = gsub("\\.", "_", names)
   
   names(gf_data) = names
-  
-  #Sometimes, there is a row right before the names row that says where the LFA and Global Fund verified sections begin, respectively. 
-  #EMILY KEEP DEBUGGING THIS!! 
-  #pre_name_row = name_row-1
-  # lfa_start_col = grep()
- 
-   #Drop everything before the name row, because it isn't needed 
+
+  #Drop everything before the name row, because it isn't needed 
   gf_data = gf_data[(name_row+1):nrow(gf_data)] #Go ahead and drop out the name row here too because you've already captured it
   sub_names = as.character(gf_data[1, ])
   
@@ -123,7 +102,7 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   if (language == "fr"){
     reference_col = grep("reference", names)
     # target_col = grep("cible", names)
-    result_col = grep("resultats", names)
+    result_col = grep("resultat", names)
     lfa_result_col = grep("verified result", names)
     gf_result_col = grep("global fund validated result", names) 
   } else if (language == "eng"){
@@ -139,10 +118,15 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
     lfa_result_col = grep("verified result", names)
     gf_result_col = grep("global fund validated result", names)
   }
-  
-  if (length(result_col)>1){ #The word 'result' appears several times for English files, and you just want the first column here. 
+ 
+  if (length(result_col)>1 & language=="eng"){ #The word 'result' appears several times for English files, and you just want the first column here. 
     result_col = result_col[1]
+  } else if (length(result_col)>1 & language=="esp" & 1%in%result_col){ #For some Spanish files, the first column has the word "resultados" in it. 
+    result_col = result_col[2]
   }
+  # if (length(target_col)>1){
+  #   target_col = target_col[1]
+  # }
   
   #Validate that you grabbed exactly 5 columns. 
   flagged_col_list = c(reference_col, result_col, lfa_result_col, gf_result_col)
@@ -161,21 +145,23 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   #---------------------------------------------
   
   #Acceptable raw column names - will be matched to corrected names below. 
-  module_names = c('module')
-  standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator', 'indicateurs standard')
-  subcat_names = c('ventilation', 'disaggregation')
-  category_names = c('categorie')
-  geography_names = c('geographic area', 'country')
+  impact_names = c('impact / effet ', "impact / outcome ", "impact/outcome", "impacto/resultados")
+  standard_ind_names = c('indicateurs', "impact/outcome indicator", 'indicateurs standard', "standard impact/outcome indicator", "indicador estandar ")
+  geography_names = c('geographic area')
+  subcat_names = c('ventilation', 'disaggregation', 'desglose')
+  category_names = c('categorie', 'categorie ', "categoria")
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
   reverse_ind_names = c("reverse indicator?")
   
-  baseline_names = c('baseline (if applicable)', "reference")
-  result_names = c('result', 'resultats', 'results')
+  baseline_names = c('baseline (if applicable)', "reference", "reference (le cas echeant)", "linea de base")
+  target_names = c('target', 'cible')
+  disagg_report_year_names = c('ventilation annee de la cible', 'disaggregation report year', "fecha de presentacion del informe")
+  result_names = c('result', 'resultats', 'resultat', 'resultados')
   lfa_result_names = c('verified result')
   gf_result_names = c('validated result', "global fund validated result")
   
   #Correct these matched names. 
-  names[which(names%in%module_names)] = "module"
+  names[which(names%in%impact_names)] = "indicator_type"
   names[which(names%in%standard_ind_names)] = "indicator"
   names[which(names%in%category_names)] = "category"
   names[which(names%in%subcat_names)] = "sub-category"
@@ -184,17 +170,12 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   names[which(names%in%reverse_ind_names)] = "reverse_indicator"
   
   names[which(names%in%baseline_names)] = "baseline"
+  names[which(names%in%target_names)] = "target"
+  names[which(names%in%disagg_report_year_names)] = "report_due_date"
   names[which(names%in%result_names)] = "pr_result"
   names[which(names%in%lfa_result_names)] = "lfa_result"
   names[which(names%in%gf_result_names)] = "gf_result"
   
-  
-  #Where 'achievement ratio' exists in the names vector, move to the sub-names vector 
-  achievement_ratio_names = c('achievement ratio', "taux d'accomplissement", "achivement ratio(final one is calculated by gos)", "achivement ratio")
-  ach_ratio_indices = which(names%in%achievement_ratio_names)
-  stopifnot(is.na(unique(sub_names[ach_ratio_indices])))
-  sub_names[ach_ratio_indices] = "achievement_ratio"
-  names[ach_ratio_indices] = NA
   
   #Where 'verification method' exists in the names vector, move to the sub-names vector 
   verification_method_names = c('verification method', "data validation checks on pr data", "data validation checks on lfa data", "data validation checks on gf data")
@@ -204,20 +185,28 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   names[ver_method_indices] = NA
   
   #Where 'source' exists in the names vector, move to the sub-names vector 
-  data_source_names = c('source')
+  data_source_names = c('source', "source de donnees des resultats")
   source_indices = which(names%in%data_source_names)
   stopifnot(is.na(unique(sub_names[source_indices])))
   sub_names[source_indices] = "source"
   names[source_indices] = NA
   
+  #Where 'year' exists in the names vector, move to the sub-names vector 
+  year_names = c('year of target', 'anee du resultat', 'annee du resultat', 'year of result', "ventilation annee de la cible")
+  year_indices = which(names%in%year_names)
+  stopifnot(is.na(unique(sub_names[year_indices])))
+  sub_names[year_indices] = "year"
+  names[year_indices] = NA
+  
+  names = trimws(names)
   #Make sure you've tagged all names correctly so far. 
+  accepted_names = c("indicator_type", "indicator", "geography", 
+                     "cumulative_target", "reverse_indicator", "baseline", "target", "report_due_date", "pr_result", "lfa_result", "gf_result", 'category', 'sub-category')
   if (verbose){
     print("These are the variable names that haven't been correctly tagged.")
-    print(names[!names%in%c("module", "category", "sub-category", "indicator", "custom_coverage_indicator", "geography", 
-                              "cumulative_target", "reverse_indicator", "baseline", "target", "pr_result", "lfa_result", "gf_result", NA)])
+    print(names[!names%in%c(accepted_names, NA)])
   }
-  stopifnot(names%in%c("module", "category", "sub-category", "indicator", "custom_coverage_indicator", "geography", 
-                       "cumulative_target", "reverse_indicator", "baseline", "target", "pr_result", "lfa_result", "gf_result") | is.na(names))
+  stopifnot(names%in%accepted_names | is.na(names))
   
   #----------------------------------
   # SUB-NAMES 
@@ -225,30 +214,36 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   num_names = c("N#")
   denom_names = c("D#")
   proportion_names = c("%")
-  year_names = c("Year", "Année")
-  verification_source_names = c("Source", "source")
+  year_names = c("Year", "Année", "Año")
+  verification_source_names = c("Source", "source", "Fuente")
+  value_names = c('Valeur', 'Value', 'Valor')
   
   sub_names[which(sub_names%in%num_names)] = "n"
   sub_names[which(sub_names%in%denom_names)] = "d"
   sub_names[which(sub_names%in%proportion_names)] = "%"
   sub_names[which(sub_names%in%year_names)] = "year"
   sub_names[which(sub_names%in%verification_source_names)] = "source"
+  sub_names[which(sub_names%in%value_names)] = "value"
   
   #Certain column names are okay to change to NA here. 
-  na_names = c("If sub-national, please specify under the \"Comments\" Column", "Si infranationale, veuillez préciser dans la colonne des commentaires")
+  na_names = c("If sub-national, please specify under the \"Comments\" Column", "Si infranationale, veuillez préciser dans la colonne des commentaires", "Valeur")
   sub_names[which(sub_names%in%na_names)] = NA
   
+  accepted_sub_names = c('n', 'd', '%', 'year', 'source', 'achievement_ratio', 'verification_method', 'value')
   if (verbose){
     print("These are the sub-names that haven't been correctly tagged.")
-    print(sub_names[!sub_names%in%c('n', 'd', '%', 'year', 'source', 'achievement_ratio', 'verification_method', NA)])
+    print(sub_names[!sub_names%in%c(accepted_sub_names, NA)])
   }
-  stopifnot(sub_names%in%c('n', 'd', '%', 'year', 'source', 'achievement_ratio', 'verification_method') | is.na(sub_names))
+  stopifnot(sub_names%in%accepted_sub_names | is.na(sub_names))
   
   #------------------------------------------
   # REASSIGN NAMES USING CORRECTED VECTORS
   
   #First, extend each of the 'flag' column names to cover the whole span. 
-  names[reference_col:(result_col-1)] = "baseline"
+  report_date_col = grep("report_due_date", names)
+  stopifnot(length(report_date_col)==1)
+  
+  names[reference_col:(report_date_col-1)] = "baseline"
   names[result_col:(lfa_result_col-1)] = "pr_result"
   names[lfa_result_col:(gf_result_col-1)] = "lfa_result"
   names[gf_result_col:length(names)] = "gf_result"
@@ -271,8 +266,8 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   #------------------------------------------------------
   
   #Drop out rows that have NAs, and drop the sub names column. 
-  gf_data = gf_data[!(is.na(module) & is.na(indicator)), ] 
-  gf_data = gf_data[-c(1)]
+  gf_data = gf_data[-c(1)] 
+  gf_data = gf_data[!(is.na(indicator_type) & is.na(indicator)), ] 
   
   return(gf_data)
 }

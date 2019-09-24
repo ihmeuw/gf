@@ -15,31 +15,31 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
   # Set up file path 
-  folder = "budgets"
-  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  if (file_list$file_iteration[i]=="initial"){
-    version = "iterations"
-  } else if (file_list$file_iteration[i]=="revision"){
-    version= "revisions"
-  } else {
-    version = ""
-  }
-  grant_period = file_list$grant_period[i]
-
-  file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
-  if (version != ""){
-    file_dir = paste0(file_dir, version, "/")
-  }
-  dir = file_dir
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet_financial[i]
-  start_date = file_list$start_date_financial[i]
-  period = file_list$period[i]
-  disease = file_list$disease[i]
-  grant = file_list$grant[i]
-  recipient = file_list$primary_recipient
-  source = file_list$data_source[i]
-  qtr_number = file_list$qtr_number[i]
+  # folder = "budgets"
+  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  # if (file_list$file_iteration[i]=="initial"){
+  #   version = "iterations"
+  # } else if (file_list$file_iteration[i]=="revision"){
+  #   version= "revisions"
+  # } else {
+  #   version = ""
+  # }
+  # grant_period = file_list$grant_period[i]
+  # 
+  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  # if (version != ""){
+  #   file_dir = paste0(file_dir, version, "/")
+  # }
+  # dir = file_dir
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet_financial[i]
+  # start_date = file_list$start_date_financial[i]
+  # period = file_list$period[i]
+  # disease = file_list$disease[i]
+  # grant = file_list$grant[i]
+  # recipient = file_list$primary_recipient
+  # source = file_list$data_source[i]
+  # qtr_number = file_list$qtr_number[i]
 
   # -----------------------------------------------------------------------------
   # Test the inputs to make sure that they are the correct type
@@ -173,15 +173,27 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   gf_data = gf_data[start_row:end_row, ]
 
   #Rename data, and remove invalid rows
+  if ('lfa_exp_adjustment'%in%names(gf_data)){
   check_drop <- gf_data[((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
                          & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
-                         & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
+                         & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0) & (is.na(lfa_exp_adjustment) | lfa_exp_adjustment==0)), ]
+  } else { 
+    check_drop <- gf_data[((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
+                           & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+                           & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
+  }
   if (verbose == TRUE){
     print(paste0("Invalid rows currently being dropped: (only module and intervention columns shown) ", check_drop[, c('module', 'intervention')]))
   }
-  gf_data<-  gf_data[!((is.na(module) | module == '0' | module=="Veuillez sélectionner...") 
-                       & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
-                       & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)),]
+  if ('lfa_exp_adjustment'%in%names(gf_data)){
+    gf_data = gf_data[!((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
+                      & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+                      & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0) & (is.na(lfa_exp_adjustment) | lfa_exp_adjustment==0)), ]
+  } else {
+    gf_data = gf_data[!((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
+                        & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+                        & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
+  }
 
   #Some datasets have an extra title row with "[Module]" in the module column.
   #It's easier to find this by grepping the budget column, though.
@@ -210,6 +222,15 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   #-------------------------------------------------------------------------
   # 3. Generate date variables, and expand data to be at the quarter-level. 
   #-------------------------------------------------------------------------
+  #Sum out any duplicates at this point - this should never happen, but it does (example: "LFA_COD-H-MOH_PUDR_2017_v25.05.17_v1_CORRECTIONSLFA_May2018.xlsx") EL 9/24/2019 
+  if ('lfa_exp_adjustment'%in%names(gf_data)){
+    gf_data = gf_data[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), lfa_exp_adjustment=sum(lfa_exp_adjustment, na.rm=T)), 
+                      by=c('module', 'intervention')]
+  } else {
+    gf_data = gf_data[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
+                      by=c('module', 'intervention')]
+  }
+  #Run this check to make sure everything is the same after you divide into quarters. 
   totals_check = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]
   
   #Add in date variables 

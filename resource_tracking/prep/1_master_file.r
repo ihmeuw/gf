@@ -21,6 +21,7 @@ if (Sys.info()[1]=='Windows'){
   setwd("/ihme/homes/elineb/gf/")
 }
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
+source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 
 # ---------------------------------------
 # Boolean logic switches 
@@ -51,7 +52,7 @@ if (prep_files | prep_gos){
   #Source document prep functions 
   doc_prep_functions = list.files(paste0(code_dir, "gf_files_prep_functions"), full.names=TRUE)
   for (file in doc_prep_functions){
-    source(file)
+    source(file, encoding="UTF-8")
   }
   
   # Load and verify mapping, prep data, and map data. 
@@ -62,9 +63,9 @@ if (prep_files | prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
   # source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
-  # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
+  # # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
   # source(paste0(code_dir, "2f_gf_verify_outputs.R"))
-  # # 
+  # 
   # rmarkdown::render(paste0(code_dir, "2g_gf_visualize_data.rmd",
   #                          output_dir=paste0(dir, "/visualizations/verification"),
   #                          output_file="Visual Checks.pdf"))
@@ -74,8 +75,8 @@ if (prep_files | prep_gos){
 # rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
 #                   output_dir=paste0(dir, "/visualizations/verification"),
 #                   output_file="Reporting Completeness.pdf")
-# # 
-# # #Run unclassified file analysis - optional
+# #
+# # # #Run unclassified file analysis - optional
 # rmarkdown::render(paste0(code_dir, "unclassified_files.rmd"),
 #                   output_dir=paste0(dir, "/visualizations/verification"),
 #                   output_file="Unclassified Files.pdf")
@@ -84,9 +85,9 @@ if (prep_files | prep_gos){
 # ----------------------------------------------
 if (prep_odah){
   #Source document prep functions 
-  prep_functions = list.files(paste0(code_dir, "fgh_prep_functions"), full.names=TRUE)
+  prep_functions = list.files(paste0(code_dir, "odah_prep_functions"), full.names=TRUE)
   for (file in prep_functions){
-    source(file)
+    source(file, encoding="UTF-8")
   }
   
   #Prep and map actuals and estimates. *Would be good to add in a mapping verification and calculations verification step! 
@@ -102,7 +103,7 @@ if (prep_ghe){
   #Source document prep functions 
   prep_functions = list.files(paste0(code_dir, "ghe_sicoin_prep_functions"), full.names=TRUE)
   for (file in prep_functions){
-    source(file)
+    source(file, encoding="UTF-8")
   }
   
   # Prep and map SICOIN data.*Would be good to add in a mapping verification and calculations verification step!   

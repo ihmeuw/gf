@@ -96,18 +96,15 @@ if (nrow(check_qtr_sen)!=0){
 }
 
 #Bind budgets together
-final_budgets = rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga, final_budgets_sen, fill=T) 
-final_budgets$start_date = as.Date(final_budgets$start_date, "%Y-%m-%d")
+final_budgets = rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga, final_budgets_sen) 
+if (class(final_budgets$start_date)!='Date') final_budgets$start_date = as.Date(final_budgets$start_date, "%Y-%m-%d")
 
 #Manually edit grant numbers in GOS to match our labeling - EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE. 
-final_budgets[grant == 'GTM-T-UPCOMING', grant:='GTM-T-MSPAS']
-final_budgets[grant == 'GTM-M-UPCOMING', grant:='GTM-M-MSPAS']
 final_budgets[grant == 'UGD-708-G13-H', grant:='UGA-708-G13-H']
-
 
 #Wherever there is a grant quarter in the final budgets that doesn't exist in GOS, take that whole grant for the grant 
 # period and replace the GOS with the final budgets data. 
-gos_data[, start_date:=as.Date(start_date)]
+if (class(gos_data$start_date)!='Date') gos_data[, start_date:=as.Date(start_date)]
 
 #Drop unneeded variables 
 gos_data$lfa_exp_adjustment<-NULL
@@ -115,33 +112,25 @@ gos_data$lfa_exp_adjustment<-NULL
 #Bind the files together. 
 gos_prioritized_budgets = rbind(final_budgets, gos_data, fill = TRUE) #There are some columns that don't exist in both sources, so fill = TRUE
 
-#---------------------------------------------------------------------------------------
-# Verify that you're using the correct GF grant periods - 
-# both by comparing across grant sources and using the metadata from the GF's website. 
-#---------------------------------------------------------------------------------------
-stopifnot(nrow(gos_prioritized_budgets[is.na(grant_period)])==0)
-metadata = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv")
-
-
-
 #----------------------------------------------------
 #Check for overlapping grant periods in recent data. 
 #----------------------------------------------------
-grant_period_mat = unique(gos_prioritized_budgets[, .(data_source, grant, grant_period, file_name, start_date)])
-grant_period_mat[, min_date:=min(start_date), by=c('file_name', 'grant', 'grant_period', 'data_source')]
-grant_period_mat[, max_date:=max(start_date), by=c('file_name', 'grant', 'grant_period', 'data_source')]
+grant_period_mat = unique(gos_prioritized_budgets[, .(data_source, grant, grant_period, start_date)]) #Removing 'file name' here because it's okay to have overlapping periods for the same grant/grant period if the source is budgets EL 9/10/2019 
+grant_period_mat[, min_date:=min(start_date), by=c('grant', 'grant_period', 'data_source')]
+grant_period_mat[, max_date:=max(start_date), by=c('grant', 'grant_period', 'data_source')]
 grant_period_mat = unique(grant_period_mat[, .(min_date, max_date, grant, grant_period, data_source)])
+
 grant_period_mat = dcast.data.table(grant_period_mat, grant+grant_period~data_source, value.var = c("min_date", "max_date"))
 
 #Reorder this data table. 
-grant_period_mat = grant_period_mat[, .(grant, grant_period, min_date_fpm, max_date_fpm, min_date_gos, max_date_gos)]
+grant_period_mat = grant_period_mat[, .(grant, grant_period, min_date_budget, max_date_budget, min_date_gos, max_date_gos)]
 
 #I only care about cases where we have the same data source reporting for the same grant period/grant, so drop NAs. 
-grant_period_mat = grant_period_mat[!(is.na(min_date_fpm) & is.na(max_date_fpm))]
+grant_period_mat = grant_period_mat[!(is.na(min_date_budget) & is.na(max_date_budget))]
 grant_period_mat = grant_period_mat[!(is.na(min_date_gos) & is.na(max_date_gos))]
 
 #Do these sources conflict? 
-grant_period_mat[max_date_gos>min_date_fpm, conflict:=TRUE]
+grant_period_mat[max_date_gos>min_date_budget, conflict:=TRUE]
 grant_period_mat = grant_period_mat[conflict==TRUE]
 if (nrow(grant_period_mat)>0){
   print("Warning: Duplicate dates present in GOS and final budgets files.")
@@ -151,7 +140,7 @@ if (nrow(grant_period_mat)>0){
   drop_gos = data.table()
   for (i in 1:nrow(grant_period_mat)){
     quarters = unique(gos_prioritized_budgets[data_source == 'gos' & grant==grant_period_mat$grant[i] & grant_period==grant_period_mat$grant_period[i] & 
-                                                start_date>=grant_period_mat$min_date_fpm[i], 
+                                                start_date>=grant_period_mat$min_date_budget[i], 
                                 .(grant, grant_period, start_date)])
     drop_gos = rbind(drop_gos, quarters, fill=TRUE)
   }
@@ -170,7 +159,7 @@ if (nrow(grant_period_mat)>0){
 
 #Look for what might be data gaps between GOS and budget data (EMILY - WOULD BE GOOD TO EXPAND THIS CHECK TO LOOK FOR DATA GAPS IN GENERAL)
 gos_in_budgets = gos_prioritized_budgets[data_source=="gos" & grant%in%final_budgets$grant, .(start_date, grant, grant_period)] 
-budget_dates = gos_prioritized_budgets[data_source=="fpm", .(budget_start = min(start_date)), by=c('grant', 'grant_period')]
+budget_dates = gos_prioritized_budgets[data_source=="budget", .(budget_start = min(start_date)), by=c('grant', 'grant_period')]
 gos_in_budgets = gos_in_budgets[, .(gos_end = max(start_date)), by=c('grant', 'grant_period')]
 date_check = merge(gos_in_budgets, budget_dates, by=c('grant', 'grant_period'))
 date_check = date_check[gos_end!=budget_start]
@@ -191,10 +180,23 @@ if (nrow(all_current_grants)!=expected_current_grants){
   print("ERROR: Not all current grants are marked with the 'current_grant' flag in budgets.")
 }
 
-# Write data 
-write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets_", Sys.Date(), ".csv"), row.names = FALSE)
-saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets_", Sys.Date(), ".rds"))
+# Write data, including an archived copy. 
+write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets.rds"))
+saveRDS(gos_prioritized_budgets, paste0(final_write, "archive/final_budgets_", Sys.Date(), ".rds"))
 
+#Write country-specific files (no archive needed; just use aggregate file.)
+write.csv(gos_prioritized_budgets[loc_name=="cod"], paste0(final_write, "final_budgets_cod.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets[loc_name=="cod"], paste0(final_write, "final_budgets_cod.rds"))
+
+write.csv(gos_prioritized_budgets[loc_name=="gtm"], paste0(final_write, "final_budgets_gtm.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets[loc_name=="gtm"], paste0(final_write, "final_budgets_gtm.rds"))
+
+write.csv(gos_prioritized_budgets[loc_name=="sen"], paste0(final_write, "final_budgets_sen.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets[loc_name=="sen"], paste0(final_write, "final_budgets_sen.rds"))
+
+write.csv(gos_prioritized_budgets[loc_name=="uga"], paste0(final_write, "final_budgets_uga.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets[loc_name=="uga"], paste0(final_write, "final_budgets_uga.rds"))
 
 #----------------------------------
 # 2. FINAL GF EXPENDITURES
@@ -288,7 +290,20 @@ write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.
 saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rds"))
 
 #Archive one version with a date-stamp
-saveRDS(gos_prioritized_expenditures, paste0(final_write, "arhive/final_expenditures_", Sys.Date(), ".rds"))
+saveRDS(gos_prioritized_expenditures, paste0(final_write, "archive/final_expenditures_", Sys.Date(), ".rds"))
+
+# Save country-specific files (no archive needed )
+write.csv(gos_prioritized_expenditures[loc_name=="cod"], paste0(final_write, "final_expenditures_cod.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures[loc_name=="cod"], paste0(final_write, "final_expenditures_cod.rds"))
+
+write.csv(gos_prioritized_expenditures[loc_name=="gtm"], paste0(final_write, "final_expenditures_gtm.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures[loc_name=="gtm"], paste0(final_write, "final_expenditures_gtm.rds"))
+
+write.csv(gos_prioritized_expenditures[loc_name=="sen"], paste0(final_write, "final_expenditures_sen.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures[loc_name=="sen"], paste0(final_write, "final_expenditures_sen.rds"))
+
+write.csv(gos_prioritized_expenditures[loc_name=="uga"], paste0(final_write, "final_expenditures_uga.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures[loc_name=="uga"], paste0(final_write, "final_expenditures_uga.rds"))
 
 #----------------------------------
 # 3. ABSORPTION
@@ -317,7 +332,9 @@ all_files = list(all_gf_cod, all_gf_gtm, all_gf_uga, all_gf_sen)
 all_gf_files = rbindlist(all_files, use.names = TRUE, fill = TRUE)
 
 #Write data 
-saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations_", Sys.Date(), ".rds"))
-write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations_", Sys.Date(), ".csv"), row.names = FALSE)
+saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations.rds"))
+write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
+saveRDS(all_gf_files, paste0(final_write, "archive/budget_pudr_iterations_", Sys.Date(), ".rds"))
+
 
 print("Step D: Aggregate GF files completed. Files saved in combined_prepped folder.")

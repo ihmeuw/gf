@@ -121,14 +121,14 @@ grant_period_mat = unique(grant_period_mat[, .(min_date, max_date, grant, grant_
 grant_period_mat = dcast.data.table(grant_period_mat, grant+grant_period~data_source, value.var = c("min_date", "max_date"))
 
 #Reorder this data table. 
-grant_period_mat = grant_period_mat[, .(grant, grant_period, min_date_fpm, max_date_fpm, min_date_gos, max_date_gos)]
+grant_period_mat = grant_period_mat[, .(grant, grant_period, min_date_budget, max_date_budget, min_date_gos, max_date_gos)]
 
 #I only care about cases where we have the same data source reporting for the same grant period/grant, so drop NAs. 
-grant_period_mat = grant_period_mat[!(is.na(min_date_fpm) & is.na(max_date_fpm))]
+grant_period_mat = grant_period_mat[!(is.na(min_date_budget) & is.na(max_date_budget))]
 grant_period_mat = grant_period_mat[!(is.na(min_date_gos) & is.na(max_date_gos))]
 
 #Do these sources conflict? 
-grant_period_mat[max_date_gos>min_date_fpm, conflict:=TRUE]
+grant_period_mat[max_date_gos>min_date_budget, conflict:=TRUE]
 grant_period_mat = grant_period_mat[conflict==TRUE]
 if (nrow(grant_period_mat)>0){
   print("Warning: Duplicate dates present in GOS and final budgets files.")
@@ -138,7 +138,7 @@ if (nrow(grant_period_mat)>0){
   drop_gos = data.table()
   for (i in 1:nrow(grant_period_mat)){
     quarters = unique(gos_prioritized_budgets[data_source == 'gos' & grant==grant_period_mat$grant[i] & grant_period==grant_period_mat$grant_period[i] & 
-                                                start_date>=grant_period_mat$min_date_fpm[i], 
+                                                start_date>=grant_period_mat$min_date_budget[i], 
                                 .(grant, grant_period, start_date)])
     drop_gos = rbind(drop_gos, quarters, fill=TRUE)
   }
@@ -157,7 +157,7 @@ if (nrow(grant_period_mat)>0){
 
 #Look for what might be data gaps between GOS and budget data (EMILY - WOULD BE GOOD TO EXPAND THIS CHECK TO LOOK FOR DATA GAPS IN GENERAL)
 gos_in_budgets = gos_prioritized_budgets[data_source=="gos" & grant%in%final_budgets$grant, .(start_date, grant, grant_period)] 
-budget_dates = gos_prioritized_budgets[data_source=="fpm", .(budget_start = min(start_date)), by=c('grant', 'grant_period')]
+budget_dates = gos_prioritized_budgets[data_source=="budget", .(budget_start = min(start_date)), by=c('grant', 'grant_period')]
 gos_in_budgets = gos_in_budgets[, .(gos_end = max(start_date)), by=c('grant', 'grant_period')]
 date_check = merge(gos_in_budgets, budget_dates, by=c('grant', 'grant_period'))
 date_check = date_check[gos_end!=budget_start]
@@ -351,24 +351,24 @@ write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.n
 # write.csv(totalData, "J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/total_resource_tracking_data.csv", row.names = FALSE)
 # 
 # # --------------------------------------------
-# # This produces a dataset that prioritizes FPM data (drops GOS/PUDR is it overlap)
+# # This produces a dataset that prioritizes budget data (drops GOS/PUDR is it overlap)
 # # --------------------------------------------
 # 
-# ##pudrs overlap with the FPM budgets - drop this so we don't double count 
-# fpmGtm = totalGtm[!(data_source=="pudr")] ##all of the PUDRs we have correspond to available FPM 
-# fpmUga = totalUga[!(data_source=="pudr"&year>2015)] ##we have a lot of recent PUDRs that overlap with FPM 
-# fpmCod =  totalCod[!(data_source=="pudr")] #all of the PUDRs we have correspond to available FPM 
+# ##pudrs overlap with the budget budgets - drop this so we don't double count 
+# budgetGtm = totalGtm[!(data_source=="pudr")] ##all of the PUDRs we have correspond to available budget 
+# budgetUga = totalUga[!(data_source=="pudr"&year>2015)] ##we have a lot of recent PUDRs that overlap with budget 
+# budgetCod =  totalCod[!(data_source=="pudr")] #all of the PUDRs we have correspond to available budget 
 # 
-# cleanData = rbind(fpmGtm, fpmUga, fpmCod)
+# cleanData = rbind(budgetGtm, budgetUga, budgetCod)
 # cleanData[,end_date:=start_date+period-1]
 # 
-# ## some of the FPM data is missing so we'll fill it in w/ the GOS data 
+# ## some of the budget data is missing so we'll fill it in w/ the GOS data 
 # 
 # gos_cod= gos_data[country=="Congo (Democratic Republic)"]
 # gos_uga = gos_data[country=="Uganda"]
 # gos_gtm = gos_data[country=="Guatemala"]
 # 
-# ##as we get more FPM data, make sure to check that these years/diseases are still true: 
+# ##as we get more budget data, make sure to check that these years/diseases are still true: 
 # ## (realistically, we're probably not going to get any historical data - pre 2015) 
 # gos_cod = gos_cod[(disease=="hss")|(disease=="hiv"&year<2012|year%in%c(2013, 2014))|(disease=="malaria"&(year<=2014))|(disease=="tb"&grant!="COD-T-MOH")]
 # gos_uga = gos_uga[(disease=="hiv"&(year<2011|year==2014))|(disease=="malaria"&(year%in%c(2013,2014)|year<2012))|(disease=="tb"&(year<2012|year%in%c(2013,2014)))]

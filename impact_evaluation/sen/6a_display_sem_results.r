@@ -1,7 +1,7 @@
 # -----------------------------------
 # Francisco Rios, David Phillips
 # 
-# 2/4/2019
+# 9/13/2019
 # This visualizes results of the SEM
 # -----------------------------------
 
@@ -45,52 +45,20 @@ urFits1[, se_ratio:=se/est]
 urFit1 = urFits1[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
 urFit1[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
 urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
-# urFits2[, se_ratio.std:=se.std/est.std]
-# urFits2[, se_ratio:=se/est]
-# urFit2 = urFits2[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
-# urFit2[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
-# urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
+
 # -----------------------------------------------
 
-
-#Some visualization code for model run 8/15/19 
-# View(urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Notified_out_cumulative"])
-# urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Notified_out_cumulative", mean(est)] # A very high positive average, but also a lot of variation. 
-# View(urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Started_on_Treatment_out_cumulative"])
-# urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Started_on_Treatment_out_cumulative", mean(est)] # A very low negative average. 
-# # Do these relationships make sense? 
-# 
 # # ----------------------------------------------
 # Display results
-
-# my sem graph function for first half model
-# p1 = semGraph(parTable=means1, nodeTable=nodeTable1, 
-# 	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
-# 
-# # my sem graph function for second half model
-# p2 = semGraph(parTable=means2, nodeTable=nodeTable2,
-# 	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
-# 
-# # my sem graph function for first half model with coefficients
-# p3 = semGraph(parTable=means1, nodeTable=nodeTable1, 
-# 	scaling_factors=NA, standardized=TRUE, 
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
-# 
-# # my sem graph function for second half model with coefficients
-# p4 = semGraph(parTable=means2, nodeTable=nodeTable2,
-# 	scaling_factors=NA, standardized=TRUE,
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
 
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
 	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -2, colScaleMax=4)
+	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -3, colScaleMax=4, colScaleBreaks = 1)
 
 p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
               scaling_factors=NA, standardized=TRUE, 
-              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-2, colScaleMax=4)
+              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-3, colScaleMax=4, colScaleBreaks = 1)
 
 # my sem graph function for second half "unrelated regressions" model
 # p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,

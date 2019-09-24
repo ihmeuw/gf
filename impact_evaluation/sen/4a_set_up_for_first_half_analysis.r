@@ -9,7 +9,7 @@
 
 source('./impact_evaluation/sen/set_up_r.r')
 
-# -----------------------------------------------------------------
+#-----------------------------------------------------------------
 # Load/prep data
 
 data = readRDS(outputFile3)
@@ -21,33 +21,8 @@ data = readRDS(outputFile3)
 #	data = merge(data,pop, by=c('region','date'), all.x=TRUE)
 #}
 
-# make unique health zone names for convenience
-#data[, orig_region:=region]
-#data[, region:=paste0(region, '_', dps)]
-#data$dps = NULL
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # subset dates now that cumulative variables are computed
-data = data[date>=2012 & date<2018.75]
+data = data[date>=2010 & date<2018.75]
 # -----------------------------------------------------------------
 
 
@@ -70,7 +45,7 @@ for(v in numVars) {
 		data[region==h, tmp:=exp(predict(lmFit, newdata=data[region==h]))]
 		lim = max(data[region==h][[v]], na.rm=T)+sd(data[region==h][[v]], na.rm=T)
 		data[region==h & tmp>lim, tmp:=lim]
-		# ggplot(data[health_zone==h], aes_string(y=v, x='date')) + geom_point() + geom_point(aes(y=tmp),color='red')
+		# ggplot(data[region==h], aes_string(y=v, x='date')) + geom_point() + geom_point(aes(y=tmp),color='red')
 		data[region==h & is.na(get(v)), (v):=tmp]
 		pct_complete = floor(i/(length(numVars)*length(unique(data$region)))*100)
 		cat(paste0('\r', pct_complete, '% Complete'))
@@ -79,7 +54,7 @@ for(v in numVars) {
 }
 data$tmp = NULL
 
-# na omit (for health zones that were entirely missing)
+# na omit (for regions that were entirely missing)
 data = na.omit(data)
 # -----------------------------------------------------------------
 
@@ -89,14 +64,12 @@ data = na.omit(data)
 
 # make cumulative variables
 cumulVars = names(data)[grepl('exp_|other_dah|ghe|oop', names(data))]
-cumulVars = c(cumulVars, 'tb_tfc', 'ntr_rhz', 'ntr_erhz', 
+cumulVars = c(cumulVars, 'tb_tfc', 'ntr_rhz', 'ntr_erhz', 'ntr_all', 
 	'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 'tot_confirme', 
 	'com_cause', 'com_radio', 'com_enf_ref', 'com_mobsoc', 
-	'com_nom_touss', 'com_enf_ref', 'tb_vih_arv', 'tot_genexpert'
-	#,'mdr_tb_dx', 'mdr_tb_tx' 
-	#,'tb_vih_arv', 'tpm_chimio_enf', 'tpm_chimio_pvvih'
-	)
-#cumulVars = cumulVars[!cumulVars %in% c('value_ACTs_SSC_under5')] # drop until we can create this variable
+	'com_nom_touss', 'com_enf_ref', 'tb_vih_arv', 'tot_genexpert',
+	'tb_vih_arv', 'tpm_chimio_enf', 'tpm_chimio_pvvih', 'dx_count')
+
 for(v in cumulVars) { 
 	nv = gsub('value_','',v) 
 	data[, (paste0(nv,'_cumulative')):=cumsum(get(v)), by='region']
@@ -106,7 +79,10 @@ for(v in cumulVars) {
 untransformed = copy(data)
 
 # update the complVars vector to refer to any proportion variable
-complVars = c('perf_lab', 'gueris_taux')
+complVars = c('perf_lab', 
+              'gueris_taux',
+              'mdr_tx_rate',
+              'tbvih_arvtx_rate')
 
 # transform completeness variables using approximation of logit that allows 1's and 0's
 # (Smithson et al 2006 Psychological methods "A better lemon squeezer")

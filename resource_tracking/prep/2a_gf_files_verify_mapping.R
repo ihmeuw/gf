@@ -136,6 +136,9 @@ module_map = module_map[!(code=="T99" & module=="unspecified" & intervention=="u
 module_map = module_map[!(code=="M99" & module=="unspecified" & intervention=="unspecified" & coefficient<1)]
 module_map = module_map[!(code=="R99" & module=="unspecified" & intervention=="unspecified" & coefficient<1)]
 
+#9/10/2019 EL 
+module_map = module_map[!(code=="T1_10" & disease=="hiv/tb" & module=="treatmentcareandsupport" & intervention=="treatmentmonitoringdrugresistancesurveillance")]
+
 #--------------------------------------------------------------------------------
 # CLEANING (Check 3) Remove specific mappings to 'na', 'all', or 'other'. 
 #--------------------------------------------------------------------------------

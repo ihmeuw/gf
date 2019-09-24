@@ -12,45 +12,21 @@
 # -----------------------------------------------
 # Load/prep data and functions
 
-source('./impact_evaluation/drc/set_up_r.r')
+source('./impact_evaluation/gtm/set_up_r.r')
 library(RColorBrewer)
 
 # load model results
 load(outputFile5a)
 data1=copy(data)
-means1 = copy(means)
-summaries1 = copy(summaries)
-load(outputFile5b)
-data2=copy(data)
-means2 = copy(means)
-summaries2 = copy(summaries)
 
 # put together coefficient tables
-means = rbind(means1, means2)
-
-# standardize variable names (should be fixed earlier)
-means[lhs=='ITN', lhs:='ITN_consumed_cumulative']
-means[lhs=='SSCACT', lhs:='ACTs_SSC_cumulative']
-means[lhs=='RDT', lhs:='RDT_completed_cumulative']
-means[lhs=='SP', lhs:='SP_cumulative']
-means[lhs=='severeMalariaTreated', lhs:='severeMalariaTreated_cumulative']
-means[lhs=='mildMalariaTreated', lhs:='totalPatientsTreated_cumulative']
-means[rhs=='ITN', rhs:='ITN_consumed_cumulative']
-means[rhs=='SSCACT', rhs:='ACTs_SSC_cumulative']
-means[rhs=='RDT', rhs:='RDT_completed_cumulative']
-means[rhs=='SP', rhs:='SP_cumulative']
-means[rhs=='severeMalariaTreated', rhs:='severeMalariaTreated_cumulative']
-means[rhs=='mildMalariaTreated', rhs:='totalPatientsTreated_cumulative']
+means = copy(urFits)
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
-nodeTable2 = fread(nodeTableFile2)
 
 # ensure there are no extra variables introducted from nodeTable
 nodeTable1 = nodeTable1[variable %in% names(data1)]
-nodeTable2 = nodeTable2[variable %in% names(data2)]
-nodeTable = rbind(nodeTable1, nodeTable2)
-nodeTable[, label:=gsub('Lead of','',label)]
 
 # bring in labels
 
@@ -61,7 +37,7 @@ nodeTable[, label:=gsub('Lead of','',label)]
 # Compute explained variance
 
 # establish the outcome variable
-outcomeVar = 'lead_malariaDeaths_rate'
+outcomeVar = 'Proportion_of_HIV_TB_Cases_Treated_out_log'
 byVars = c('lhs', 'rhs', 'est.std', 'se.std')
 
 # prep each level of coefficients
