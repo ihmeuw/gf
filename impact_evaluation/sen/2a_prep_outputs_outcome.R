@@ -166,12 +166,36 @@ DT$type[which(DT$centre=='HALD')] <- "HOPITAL"
 DT$type[which(DT$centre=='HOGGY')] <- "HOPITAL"
 DT$type[which(DT$centre=='HPD')] <- "HOPITAL"
 
+# add date variable to dataset
+DT = DT[, date:=annee+((trimestre-1)/4)]
+
+# -------------------------------------------------
+# Use imputation to fill in missing values
+# -------------------------------------------------
+library(amelia)
+
+# subest variables to keep for model
+DT <- DT[,.(region, centre, date, type, tb_tfc, ntr_cpx, gueris_total, trait_tot, tb_vih_arv, gueris_taux, trait_pc, tbtot_taux_det,
+   com_mobsoc, com_cause, com_radio, com_enf_ref, com_nom_touss,
+   perf_lab,
+   ntr_rhz, ntr_erhz, ntr_serhz,
+   tot_genexpert, tot_confirme, tot_res,
+   tpm_chimio_enf, tpm_chimio_pvvih)]
+
+a.out <-amelia(DT, m=5, ts='date', idvars = c('region', 'centre', 'type'))
+
+# -------------------------------------------------
+# Create derived variables
+# -------------------------------------------------
+
 # create combined total treatment variable
-DT$ntr_all <- rowSums(DT[,.(ntr_rhz, ntr_erhz, ntr_serhz)], na.rm=TRUE)
+#a.out$ntr_all <- NA  
+#lapply(a.out, function(x) lappy(x, rowSums((ntr_rhz, ntr_erhz, ntr_serhz))
+#rowSums(a.out$imputations$imp1[ntr_rhz, ntr_erhz])
 
 # create variable of tbvih arv treatment rate
-DT$tbvih_arvtx_rate <- DT$tb_vih_arv/DT$tb_vih2
-DT$tbvih_arvtx_rate[which(DT$tb_vih2==0)]<-NA
+#DT$tbvih_arvtx_rate <- DT$tb_vih_arv/DT$tb_vih2
+#DT$tbvih_arvtx_rate[which(DT$tb_vih2==0)]<-NA
 
 #-----------------------------------------------------
 # Check to make sure you're still uniquely identifying data 
@@ -182,6 +206,13 @@ if (nrow(DT[dup==TRUE])!=0){
 }
 
 DT = DT[, -c('dup')]
+
+# -----
+# imputation
+# -----
+library(Amelia)
+a.out <-amelia(DT[,.()], idvars=c('region', 'centre', 'type', 'annee', 'trimestre'))
+
 
 # save prepped data in new R object and csv
 saveRDS(DT, outputFile2a)
