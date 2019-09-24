@@ -11,6 +11,7 @@
 # Set up R
 rm(list=ls())
 library(data.table)
+library(car) # for "Anova" not "anova"
 library(GGally)
 library(gridExtra)
 library(boot)
@@ -172,8 +173,13 @@ data[tmp>=1, tmp:=1]
 data[, logit_mi_ratio:=smithsonTransform(tmp)]
 data$tmp=NULL
 
+# z-standardize
+data[, mortality_rate_std:=(mortality_rate-mean(mortality_rate))/sd(mortality_rate)]
+data[, log_cases_var_std:=(log_cases_var-mean(log_cases_var))/sd(log_cases_var)]
+data[, logit_mi_ratio_std:=(logit_mi_ratio-mean(logit_mi_ratio))/sd(logit_mi_ratio)]
+
 # graph transformed data
-ggpairs_fig = ggpairs(data[, c('log_mortality_rate','log_cases_var','logit_mi_ratio'), with=F])
+ggpairs_fig = ggpairs(data[, c('mortality_rate_std','log_cases_var_std','logit_mi_ratio_std'), with=F])
 # -----------------------------------------------------------------------------------------
 
 
@@ -182,21 +188,30 @@ ggpairs_fig = ggpairs(data[, c('log_mortality_rate','log_cases_var','logit_mi_ra
 # Get glm estimate
 
 lmFits = lapply(unique(data$department), function(m) { 
-	lm(mortality_rate ~ log_cases_var + logit_mi_ratio, data[department==m])
-})
-afs = lapply(lmFits, anova)
-
-evs = lapply(seq(length(afs)), function(x) { 
-	data.table(variable=rownames(afs[[x]]), explained_variance=afs[[x]][['Sum Sq']]/sum(afs[[x]][['Sum Sq']]), department=unique(data$department)[x])
+	lm(mortality_rate_std ~ log_cases_var_std + logit_mi_ratio_std, data[department==m])
 })
 
-evs = rbindlist(evs)
+# loop over runs and compute explained variance
+evs = NULL
+for(i in seq(length(lmFits))) {
+	fitObject = lmFits[[i]]
+	inputData = copy(data[department==unique(data$department)[[i]]])
+	tmp = data.table(variable=names(coef(fitObject))[-1])
+	values = sapply(tmp$variable, function(v) {
+		# test for standardization
+		if (round(mean(inputData[[v]]),5)!=0 | round(sd(inputData[[v]]),5)!=1) stop(paste('Variable', v, 'is not z-standardized'))
+		coef(fitObject)[[v]] * cov(inputData[[v]], fitObject$fitted.values)
+	})
+	tmp[, explained_variance := values]
+	tmp = rbind(tmp, data.table(variable='Residuals', explained_variance=1-sum(values)))
+	tmp[,department:=unique(data$department)[[i]]]
+	if (i==1) evs = copy(tmp)
+	if (i>1) evs = rbind(evs, tmp)
+}
+
 evs_mean = evs[, .(explained_variance=mean(explained_variance)), by='variable']
 options(scipen=999)
 evs_mean
-
-anova(lm(mortality_rate ~ log_cases_var, data = data))
-anova(lm(mortality_rate ~ logit_mi_ratio, data = data))
 # ----------------------------------------------------
 
 
@@ -205,9 +220,9 @@ anova(lm(mortality_rate ~ logit_mi_ratio, data = data))
 
 # set up graph data
 graphData = evs_mean
-graphData[variable=='log_cases_var', 
+graphData[variable=='log_cases_var_std', 
 	label:=paste('Incidence -', round(explained_variance*100, 1),'%')]
-graphData[variable=='logit_mi_ratio', 
+graphData[variable=='logit_mi_ratio_std', 
 	label:=paste('Case Fatality -', round(explained_variance*100, 1),'%')]
 graphData[variable=='Residuals', 
 	label:=paste('Unexplained by Model -', round(explained_variance*100, 1),'%')]
