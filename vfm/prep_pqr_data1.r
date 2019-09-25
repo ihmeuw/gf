@@ -15,14 +15,17 @@ j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, "/Project/Evaluation/GF/vfm/unit_cost_data/")
 
 inFile = "download_4.4.19/PQR_ExternalReportingView.csv"
-outFile = "prepped_data/prepped_full_pqr.rds"
+inFile_compare = "download_9.24.19/PQR_ExternalReportingView.csv"
+outFile = "prepped_data/prepped_full_pqr_updated_09_2019.rds"
 
 #-------------------------------------------------------------------
 # Read in data
 #-------------------------------------------------------------------
 full_pqr = fread(paste0(dir, inFile), stringsAsFactors = FALSE)
-pqr = copy(full_pqr)
 
+pqr_compare = fread(paste0(dir, inFile_compare), stringsAsFactors = FALSE)
+
+pqr = copy(pqr_compare)
 #-------------------------------------------------------------------
 # Drop columns that aren't needed and rename 
 #-------------------------------------------------------------------
@@ -63,11 +66,10 @@ key_cols = c("Country Name", "ISO3CodeCountry",
 # lc_cols = grep("(LC)", names(subset)) #Drop all of the columns in 'local currency'
 # subset = subset[, -lc_cols, with = FALSE]
 
-country_ids = pqr[`Country Name` %in% c("Congo (Democratic Republic)", "Senegal", "Uganda", "Guatemala", 
+country_ids = pqr[`Country/Teritorry` %in% c("Congo (Democratic Republic)", "Senegal", "Uganda", "Guatemala", 
                                         "Mozambique", "Sudan", "Myanmar", "Cambodia"), unique(`ISO3CodeCountry`) ]#Keep EHG's countries in here as well. 
 
 pqr = pqr[`ISO3CodeCountry`%in%country_ids, ]
-nrow(unique(pqr)) == nrow(pqr) # at this point all rows are uniquely id'ed
 
 #Remove duplicated column names
 dup_names = unique(names(pqr)[duplicated(names(pqr))])
@@ -111,29 +113,33 @@ if( length(names(pqr)[duplicated(names(pqr))]) != 0 ) stop( 'You still have dupl
 # drop duplicates of orders:
 # try to eliminate duplicates across languages
 pqr = pqr[`Product Category Language`=='en', ]
-unique_ids = c("Country Name", "Grant Name", "Product Name (EN)", "Supplier Invoice Number", "Total Product Cost (USD)", "Purchase Order Date", 
-               "Description", "Product Pack", "Pack quantity", "Scheduled Delivery Date", "Actual Delivery Date", "Product Key", "Primary Key")
-# unique_ids = c("Primary Key")
-# unique_ids = c("Invoice Item ID")
-dt = pqr[, c(unique_ids), with=FALSE]
+# unique_ids = c("Country Name", "Grant Name", "Product Name (EN)", "Supplier Invoice Number", "Total Product Cost (USD)", "Purchase Order Date", 
+#                "Description", "Product Pack", "Pack quantity", "Scheduled Delivery Date", "Actual Delivery Date", "Product Key", "Primary Key")
+# # unique_ids = c("Primary Key")
+# # unique_ids = c("Invoice Item ID")
+# dt = pqr[, c(unique_ids), with=FALSE]
+# 
+# # further check dt duplicates
+# dups = dt[duplicated(dt)] 
+# all_dups = merge(dups, pqr, all.x = TRUE, by= names(dups))
+# all_dups = unique(all_dups)
+# 
+# # merge dt with pqr data subset to the key cols in order to get all columns we want
+# subset = merge(dt, pqr[, ..key_cols], by = names(dt))
 
-# further check dt duplicates
-dups = dt[duplicated(dt)] 
-all_dups = merge(dups, pqr, all.x = TRUE, by= names(dups))
-all_dups = unique(all_dups)
-
-# merge dt with pqr data subset to the key cols in order to get all columns we want
-subset = merge(dt, pqr[, ..key_cols], by = names(dt))
+subset = copy(pqr)
 
 #Reset names. 
 old_names = names(subset)
 new_names = tolower(old_names)
 new_names = gsub("\\(", "", new_names)
 new_names = gsub(")", "", new_names)
+new_names = gsub("\\*", "", new_names)
 new_names = gsub(" ", "_", new_names)
 new_names = gsub("/", "_", new_names)
 new_names = gsub("#tests", "nb_tests", new_names)
 new_names = gsub("&", "and", new_names)
+new_names = gsub("__", "_", new_names)
 
 setnames(subset, old_names, new_names)
 
@@ -147,8 +153,8 @@ for (v in date_vars){
   subset[, (v):=as.Date(get(v), format="%m/%d/%Y")]
 }
 
-remove_vars = new_names[ grepl(new_names, pattern = 'month|year|quarter|week')]
-subset = subset[, -remove_vars, with=FALSE]
+# remove_vars = new_names[ grepl(new_names, pattern = 'month|year|quarter|week')]
+# subset = subset[, -remove_vars, with=FALSE]
 
 #-------------------------------------------------------------------
 # Pull a 'grant disease' variable that can be used to flag 
@@ -190,9 +196,9 @@ subset[, product_category := gsub(' ', '_', product_category)]
 subset[product_category %in% c('anti_malaria_medicine', 'bednet_irs'), product_disease := 'malaria']
 subset[product_category %in% c('anti_tb_medicine'), product_disease := 'tb']
 subset[product_category %in% c('anti_retroviral', 'condom'), product_disease := 'hiv']
-subset[product_category == 'diagnostic_test' & grepl("HIV", product_name_en), product_disease := 'hiv']
-subset[product_category == 'diagnostic_test' & grepl("Malaria", product_name_en), product_disease := 'malaria']
-subset[product_category == 'diagnostic_test' & grepl("TB", product_name_en), product_disease := 'tb']
+subset[product_category == 'diagnostic_test' & grepl("HIV", product_name), product_disease := 'hiv']
+subset[product_category == 'diagnostic_test' & grepl("Malaria", product_name), product_disease := 'malaria']
+subset[product_category == 'diagnostic_test' & grepl("TB", product_name), product_disease := 'tb']
 
 #-------------------------------------------------------------------
 # Flag some variables that are disease-specific THESE NEED TO BE VERIFIED BY A CLINICIAN EKL 6/10/19
@@ -202,27 +208,34 @@ hiv_test = c("HIV & hepatitis/syphilis combined tests", "HIV CD4 testing consuma
              "HIV virological testing equipment", "Microscopes & accessories")
 hiv_treat = c("Lamivudine (3TC)", "Zidovudine (AZT or ZDV)","Efavirenz (EFV)", "Nevirapine (NVP)", "Tenofovir (TDF)", "Abacavir (ABC)", "Abacavir+Lamivudine - FDC", "Stavudine (d4T)", "Saquinavir (SQV)", "Ritonavir (RTV)", "Raltegravir",
               "Lamivudine+Nevirapine+Stavudine - FDC", "Lamivudine+Nevirapine+Zidovudine - FDC", "Lamivudine+Stavudine - FDC", "Lamivudine+Tenofovir - FDC", "Lamivudine+Zidovudine - FDC", "Darunavir (TCM)", "Atazanavir+Ritonavir - FDC",
-              "Efavirenz+Emtricitabine+Tenofovir - FDC", "Efavirenz+Lamivudine+Tenofovir - FDC", "Emtricitabine+Tenofovir - FDC", "Etravirine (ETV)", "Lopinavir+Ritonavir - FDC", "Dolutegravir (as sodium salt)", "Didanosine (ddI)")
+              "Efavirenz+Emtricitabine+Tenofovir - FDC", "Efavirenz+Lamivudine+Tenofovir - FDC", "Emtricitabine+Tenofovir - FDC", "Etravirine (ETV)", "Lopinavir+Ritonavir - FDC", "Dolutegravir (as sodium salt)", "Didanosine (ddI)",
+              "Abacavir+Lamivudine+Zidovudine - FDC", "Atazanavir (ATV)", "Dolutegravir + Lamivudine + Tenofovir DF - FDC", "Efavirenz + [Lamivudine+Zidovudine] - Co-blister", "Indinavir (IDV)")
 
-mal_prev = c("Duranet", "Insecticide-treated net (ITN)", "Long-Lasting Insecticidal Net (LLIN)", "MAGNet", "MiraNet", "Permanet 2.0", "Permanet 3.0", "Netprotect", "Yorkool LN", "Yahe LN", "Royal Sentry",
+mal_bednet = c("Duranet", "Insecticide-treated net (ITN)", "Long-Lasting Insecticidal Net (LLIN)", "MAGNet", "MiraNet", "Permanet 2.0", "Permanet 3.0", "Netprotect", "Yorkool LN", "Yahe LN", "Royal Sentry",
              "Olyset", "Dawa-Plus 2.0", "SafeNet", "Health Net", "Interceptor")
-mal_test = c("Malaria RDT: Pan", "Malaria RDT: P.f./P.v", "Malaria RDT: P.f.", "Microscopes & accessories", "Malaria RDT: P.f/Pan")
-mal_treat = c("Quinine", "Artesunate", "Artesunate + [Sulfadoxine+Pyrimethamine] - Co-blis", "Artesunate + Amodiaquine - Co-blister", "Artesunate + Amodiaquine - FDC", "Artesunate + Mefloquine - Co-blister", "Artesunate + Mefloquine FDC",
-              "Artesunate+Pyronaridine tetraphosphate", "Artemether", "Artemether+Lumefantrine - FDC", "Sulfadoxine+Pyrimethamine - FDC")
+mal_irs = c("zz-p,p' DDT-WP", "zz-Pirimiphos Methyl CS", "zz-Deltamethrin-WG", "zz-Bendiocarb-WP")
+mal_test = c("Malaria RDT: Pan", "Malaria RDT: P.f./P.v", "Malaria RDT: P.f.", "Microscopes & accessories", "Malaria RDT: P.f/Pan", "Malaria Rapid Diagnostic Test")
+mal_treat = c("Quinine", "Artesunate", "Artesunate + [Sulfadoxine+Pyrimethamine] - Co-blister", "Artesunate + Amodiaquine - Co-blister", "Artesunate + Amodiaquine - FDC", "Artesunate + Mefloquine - Co-blister", "Artesunate + Mefloquine FDC",
+              "Artesunate+Pyronaridine tetraphosphate", "Artemether", "Artemether+Lumefantrine - FDC", "Sulfadoxine+Pyrimethamine - FDC", "Chloroquine", "Chloroquine phosphate",
+              "Dihydroartemisinin+Piperaquine - FDC", "Mefloquine", "Quinine-resorcine", "Primaquine")
 
 tb_prev = c()
-tb_test = c("TB testing consumables/test kits", "TB molecular diagnostics", "Microscopes & accessories")
-tb_treat = c("Isoniazid", "Rifampicin", "Pyrazinamide", "Streptomycin", "Ethambutol", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", "Ethambutol+Isoniazid+Rifampicin - FDC",
-             "Amikacin", "Protionamide", "PAS Sodium", "Ofloxacin", "Cycloserine", "Capreomycin", "Bedaquiline", "Amoxicillin+Clavulanate - FDC", "Ethambutol+Isoniazid - FDC", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE",
-             "Ethionamide", "Kanamycin", "Levofloxacin", "Moxifloxacin", "Meropenem", "Linezolid", "Clofazimine")
+tb_test = c("TB testing consumables/test kits", "TB molecular diagnostics", "Microscopes & accessories", "TB testing equipment (non-molecular)")
+#tb_treat = c("Isoniazid", "Rifampicin", "Pyrazinamide", "Streptomycin", "Ethambutol", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", "Ethambutol+Isoniazid+Rifampicin - FDC",
+             #"Amikacin", "Protionamide", "PAS Sodium", "Ofloxacin", "Cycloserine", "Capreomycin", "Bedaquiline", "Amoxicillin+Clavulanate - FDC", "Ethambutol+Isoniazid - FDC", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE",
+             #"Ethionamide", "Kanamycin", "Levofloxacin", "Moxifloxacin", "Meropenem", "Linezolid", "Clofazimine")
 
+tb_drugs1 = c("Rifampicin" , "Pyrazinamide", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE)- FDC","Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", 
+              "Isoniazid", "Ethambutol+Isoniazid+Rifampicin - FDC", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", "Ethambutol+Isoniazid - FDC",
+              "Ethambutol", "TB Cat. I+III Patient Kit A")
+tb_drugs2 = c("Capreomycin", "Clofazimine", "Cycloserine" , "Kanamycin", "Moxifloxacin",  "Bedaquiline", "Ethionamide", "Levofloxacin", "Linezolid", "Protionamide", "Amikacin", 
+              "Streptomycin", "Delamanid", "PAS Sodium", "Ofloxacin", "Imipenem+Cilastatin inj", "Amoxicillin+Clavulanate - FDC", "Meropenem")
 
-tb_drugs1 = c("Rifampicin" , "Pyrazinamide", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", "Isoniazid", "Ethambutol+Isoniazid+Rifampicin - FDC", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", "Ethambutol+Isoniazid - FDC")
-tb_drugs2 = c("Capreomycin", "Clofazimine", "Cycloserine" , "Kanamycin", "Moxifloxacin",  "Bedaquiline", "Ethionamide", "Levofloxacin", "Linezolid", "Protionamide", "Amikacin", "Streptomycin")
+other = c("Hepatitis B assays", "Hepatitis C assays", "Syphilis tests", "Water for injection", "Sofosbuvir")
 
 #Check that these variables have captured everything
-classified = c(hiv_prev, hiv_test, hiv_treat, mal_prev, mal_test, mal_treat, tb_prev, tb_test, tb_treat)
-unique(subset[!product_name_en%in%classified, .(product_name_en)][order(product_name_en)])
+classified = c(hiv_prev, hiv_test, hiv_treat, mal_bednet, mal_test, mal_treat, mal_irs, tb_prev, tb_test, tb_drugs1, tb_drugs2, other)
+unique(subset[!product_name%in%classified, .(product_name)][order(product_name)])
 
 # hiv_subset = subset[product_name_en%in%hiv_prev | product_name_en%in%hiv_test | product_name_en%in%hiv_treat]
 # mal_subset = subset[product_name_en%in%mal_prev | product_name_en%in%mal_test | product_name_en%in%mal_treat]
@@ -231,8 +244,8 @@ unique(subset[!product_name_en%in%classified, .(product_name_en)][order(product_
 subset[product_category == 'diagnostic_test', product_category := paste(product_category, product_disease, sep= '_')]
 subset[product_category == 'diagnostic_test_NA', product_category := 'diagnostic_test_other']
 
-subset[product_category == 'bednet_irs' & product_name_en %in% mal_prev, product_category := 'bednet']
-subset[product_category == 'bednet_irs' & !product_name_en %in% mal_prev, product_category := 'irs']
+subset[product_category == 'bednet_irs' & product_name %in% mal_bednet, product_category := 'bednet']
+subset[product_category == 'bednet_irs' & product_name %in% mal_irs, product_category := 'irs']
 #-------------------------------------------------------------------
 # Clean supplier variable
 #-------------------------------------------------------------------
@@ -241,11 +254,18 @@ subset[ supplier == 'Médecins sans Frontières (MSF)', supplier := 'MSF']
 #-------------------------------------------------------------------
 # Other data fixes/changes
 #-------------------------------------------------------------------
-# remove repetitive vars
-subset[, strength := NULL]
-subset[, product_pack_usd := NULL]
+# # remove repetitive vars
+# subset[, strength := NULL]
+# subset[, product_pack_usd := NULL]
 
-subset[ supplier == '', supplier:= NA]
+# subset[ supplier == '', supplier:= NA]
+
+remove_vars = names(subset)[ grepl(names(subset), pattern = 'langfilter')]
+subset = subset[, -remove_vars, with=FALSE]
+remove_vars = names(subset)[ grepl(names(subset), pattern = 'language')]
+subset = subset[, -remove_vars, with=FALSE]
+
+setnames(subset, 'country_teritorry', 'country_name')
 
 subset[nb_tests_units != pack_quantity * nb_of_suom_in_pack]
 

@@ -2,7 +2,7 @@
 # Preps ARV Stockout data from CDC Option B+ Dashboard: 
 # http://dashboard.mets.or.ug/jasperserver/slevel/KPIs/107_BPlus_Data_Per_Facility
 # Caitlin O'Brien-Carelli
-# 1/9/2018
+# 9/17/2018
 
 # data are up to date through the final week in 2018
 # ----------------------
@@ -33,19 +33,39 @@ files = list.files('./', recursive=TRUE)
 for (f in files) {
   
   # import the csv and convert to a data table
-  arv_data = data.table(read.csv(paste0(dir, f), skip=1))
+  arv_data = fread(paste0(dir, f), skip=1)
   
+  # ----------------------
+  # check if the anticipated variables are included
+  names = names(arv_data)
+  ant_names = c("Health Facility", "ART Accredited",                                            
+  "V3", "a. Total ANC1\nvisits",                                     
+  "b. Total No of mothers tested at 1st ANC visit\n","c. Total No HIV Tested Positive at 1st ANC visit",          
+  "d. Total no with known HIV+ by the 1st ANC visit", "e. Total initiating Option B+ at 1st ANC visit",            
+  "f. Total no of mothers on ART treatment by 1st ANC visit", "g. Total missed appointments",                              
+  "h. Has Test Kits stockout", "i. Has ARVs stockout",                                      
+  "1. Proportion of ANC1 with unknwon status tested", "2. Proportion of HIV+ women not yet on ART initiated",      
+  "3. Proportion of women tested positive out of those tested")
+  
+  # check if any variable names are not included in the data 
+  if (length(names[!(ant_names %in% names)])!=0) print(paste0("Crap! File ", f, " has some unanticipated variables!")) 
+  
+  # ----------------------
   # create useful variable names 
-  setnames(arv_data, c("Health.Facility", "ART.Accredited", "X", "a..Total.ANC1.visits", 
-                       "h..Has.Test.Kits.stockout", "i..Has.ARVs.stockout"),
-           c("facility", "art", "district", "anc_visits", "test_kits", "arvs"))
+  setnames(arv_data, ant_names,
+           c("facility", "art", "district", "anc_visits", 
+             "mothers_tested_anc1", "hiv_pos_anc1", "known_hiv_anc1", "option_b_pluc_anc1",
+             "moms_on_art_by_anc1", "missed_appts", "tests", "arv", 
+             "prop_anc1_tested", "prop_hiv_pos_not_yet_on_art", "prop_hiv_pos_of_tested"))
   
-  # subset to the relevant variables
-  arv_data = arv_data = arv_data[ ,.(facility=as.character(facility), art=as.character(art), 
-                                     district=as.character(district), anc_visits, tests=as.character(test_kits),
-                                     arv=as.character(arvs))]
-  
+  # ----------------------
   # prep facilities
+  
+  # create a variable for implementing partner
+  arv_data[ , impl_partner:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 2))]
+  arv_data[ , impl_partner:=trimws(gsub(")", "", impl_partner))]
+  
+  # drop out implementing partner
   arv_data[ , facility:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 1))]
   arv_data[ , facility:=trimws(facility, which='right')]
   
@@ -68,16 +88,23 @@ for (f in files) {
   
   # add facility level
   arv_data[ ,facility1:=tolower(facility)]
-  arv_data[(grepl(pattern="clinic", facility1)) , level:='Clinic'] 
+
+  # add all major facility levels
   arv_data[(grepl(pattern="ii", facility1)) & !(grepl(pattern="\\siii", facility1)), level:='HC II'] 
   arv_data[(grepl(pattern="iii", facility1)), level:='HC III'] 
   arv_data[grepl(pattern="\\siv",facility1), level:='HC IV']
-  arv_data[grepl(pattern="taso", facility1), level:='TASO']
   arv_data[grepl(pattern="hospital", facility1) | grepl(pattern="regional ref", facility1) , level:='Hospital']
+  arv_data[grep("national", facility1), level:='Hospital']
+  
+  # add taso clinincs
+  arv_data[grepl(pattern="taso", facility1), level:='TASO']
+
+  # set all other facilities to other
   arv_data[is.na(level), level:='Other']
   arv_data[ ,facility1:=NULL]
   
-  # # convert Y/Ns to T/F
+  # ----------------------
+  # convert Y/Ns to logicals
   arv_data[art=='Y', art_site:=TRUE]
   arv_data[art=='N', art_site:=FALSE]
   
@@ -87,6 +114,9 @@ for (f in files) {
   arv_data[arv=='Y', arvs:=TRUE]
   arv_data[arv=='N', arvs:=FALSE]
   
+  # ----------------------
+
+  # ----------------------
   # create a week variable
   week = strsplit(f, '\\s')[[1]][2]
   if (substr(week, 3, 3)!=')') week = substr(week, 2, 3)
@@ -96,15 +126,16 @@ for (f in files) {
   # add a year variable
   arv_data[ , year:=as.numeric(strsplit(f, '/')[[1]][1])]
 
-  # generate a date 
+  # generate a date for the start date of the week
   arv_data[ , day:=(week*7)-6]
   arv_data[ , date:=strptime(paste(year, day), format="%Y %j")]
+  arv_data[ , date:=as.Date(date)]
   
   # generate a monthly date
   arv_data[ , month:=strsplit(as.character(date), '-')[[1]][2]]
   arv_data[ , month:=as.Date(paste0(year, '-', month, '-01'), format='%Y-%m-%d')]
   
-  # drop week and day
+  # drop week and day, as well as previously used string variables
   arv_data[ ,c('day', 'tests', 'arv', 'art', 'week'):=NULL]
   
   if(i==1) full_data = arv_data
@@ -113,12 +144,13 @@ for (f in files) {
   
 }
 
+
 #---------------------------
 # drop out the 12 facilities that never reported 
 
 missing = full_data[ , .(check=all(is.na(arvs)), check_t=all(is.na(test_kits))), by=facility]
 missing = missing[check==TRUE & check_t==TRUE]
-full_data = full_data[!facility %in% missing$facility]
+full_data = full_data[!(facility %in% missing$facility)]
 
 #------------------------------------
 # merge in the regions
@@ -134,11 +166,21 @@ full_data[is.na(region)]
 # save the output
 
 # get the minimum and maximum year and add to the file name for export
-min_year = full_data[ , min(year)]
-max_year = full_data[ , max(year)]
+min_year = full_data[ , min(year(date))]
+max_year = full_data[ , max(year(date))]
 
-# save as a data table
-saveRDS(full_data, paste0(OutDir, 'arv_stockouts_', min_year, '_', max_year, '.rds'))
+# save the full data as a data table
+saveRDS(full_data, paste0(OutDir, 'arv_stockouts_full_', min_year, '_', max_year, '.rds'))
+
+#-------------------------------------
+# subset to the relevant variables
+
+# subset the data to the variables for regressions and descriptives
+sub_data = full_data[ ,.(facility, level, art_site, impl_partner, district, region,
+                         date, month, year, anc_visits,  test_kits, arvs)]
+
+# save a subset of the data just for stockout analysis 
+saveRDS(sub_data, paste0(OutDir, 'arv_stockouts_', min_year, '_', max_year, '.rds'))
 
 #----------------------------
 
