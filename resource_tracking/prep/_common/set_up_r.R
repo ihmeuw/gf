@@ -44,6 +44,9 @@ mapping_dir = paste0(dir, "modular_framework_mapping/")
 code_dir = "./resource_tracking/prep/"
 common_dir = paste0(code_dir, "_common/")
 
+#Dropbox filepaths - these should be used to source raw files, and to save final prepped files. 
+dropbox = "C:/Users/elineb/New folder/Dropbox/Global Fund Files/"
+
 #Global fund 
 # Budget and PUDR file paths are built dynamically in read_filelist code
 gos_raw = paste0(dir, "_gf_files_gos/gos/raw_data/")
