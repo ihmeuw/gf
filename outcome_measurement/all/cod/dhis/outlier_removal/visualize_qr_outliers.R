@@ -34,11 +34,12 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 #-----------------------------------
 # output files
 
-if (set=='pnls') outFile = 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_outliers_replaced.rds'
-if (set=='base') {outData = 'prepped/base/base_prepped_outliers_replaced.rds'
-                  outFile = 'outliers/base/final_base_outliers_06_17_19.pdf'}
-if (set=='sigl') {outFile = 'outliers/sigl/final_sigl_drugs_qr_outliers_06_17_19.pdf'
-                  outData = 'prepped/sigl/sigl_drugs_prepped_outliers_labeled.rds' }
+if (set=='pnls') outFile = '6_outliers_replaced/pnls/pnls_subset_2017_01_01_2019_04_01_outliers_replaced.rds'
+if (set=='base') {outData = '6_outliers_replaced/base/base_prepped_outliers_replaced.rds'
+                  outFile = '5_qr_results/base/final_base_outliers_06_17_19.pdf'}
+if (set=='sigl') {outFile = '5_qr_results/sigl/final_sigl_drugs_qr_outliers_06_17_19.pdf'
+                  outData = '5_qr_results/sigl/sigl_drugs_prepped_outliers_labeled.rds' }
+
 if (set=='pnlp') {outFile = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
                   outFile2 = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (do not correspond to DPS level outliers)'
                   outFile_dps = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures_dpsLevel'
@@ -46,9 +47,9 @@ if (set=='pnlp') {outFile = '../prepped_data/PNLP/outliers/figures/pnlp_outliers
 #------------------------------------
 # read in the file
 
-if (set=='pnls') dt = readRDS(paste0(dir, 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_screened.rds'))
-if (set=='base') dt = readRDS(paste0(dir, 'outliers/base/base_quantreg_results.rds'))
-if (set=='sigl') dt = readRDS(paste0(dir, 'prepped/sigl/prepped_sigl_quantreg_imputation_results.rds'))
+if (set=='pnls') dt = readRDS(paste0(dir, '5_qr_results/pnls_subset_2017_01_01_2019_04_01_screened.rds'))
+if (set=='base') dt = readRDS(paste0(dir, '5_qr_results/base/base_quantreg_results.rds'))
+if (set=='sigl') dt = readRDS(paste0(dir, '5_qr_results/sigl/prepped_sigl_quantreg_imputation_results.rds'))
 if (set=='pnlp') { dt = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results.rds'))
                    dt_dps = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds'))}
 #------------------------------------
