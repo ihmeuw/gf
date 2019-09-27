@@ -24,18 +24,18 @@ library(tidyr)
 # data directory
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-out_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/')
+out_dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/3_prepped/')
 
 # setwd('C:/local/GF_copy/')
 # dir = "./outcome_measurement/cod/dhis_data/"
 # out_dir  = "./outcome_measurement/cod/dhis_data/prepped/"
 
 # input files
-registered <- paste0(dir, "pre_prep/merged/tb_pati_v_registered_2017_01_01_2018_10_01.rds")
-results <- paste0(dir,"pre_prep/merged/tb_pati_v_result_2016_01_01_2018_10_01.rds")
-base_data <- paste0(dir, "pre_prep/merged/base_2016_01_01_2019_04_01.rds")
-sigl_data <- paste0(dir, "pre_prep/merged/sigl_2016_01_01_2019_04_01.rds")
-base_2017 = paste0(dir, "prepped/archive/base_services_drc_01_2017_09_2018_prepped.rds")
+registered <- paste0(dir, "2_merged_with_metadata/tb_pati_v_registered_2017_01_01_2018_10_01.rds")
+results <- paste0(dir,"2_merged_with_metadata/tb_pati_v_result_2016_01_01_2018_10_01.rds")
+base_data <- paste0(dir, "2_merged_with_metadata/base_2016_01_01_2019_04_01.rds")
+sigl_data <- paste0(dir, "2_merged_with_metadata/sigl_2016_01_01_2019_04_01.rds")
+base_2017 = paste0(dir, "3_prepped/archive/base_services_drc_01_2017_09_2018_prepped.rds")
 
 # output files
 pati_cases <- "pati_tb/tb_pati_new_tb_cases_relapses_by_age_sex.rds"
