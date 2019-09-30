@@ -39,6 +39,12 @@ if (prep_files == TRUE){
   file_list = file_list[file_iteration%in%c('final', 'revision')]
 }
 
+if (only_new_files==TRUE){
+  already_run <- readRDS(paste0(box, country, "/prepped_data/raw_bound_gf_files.RDS"))
+  file_list = file_list[!file_name%in%already_run$file_name]
+  print("Only the following files will be processed.")
+  print(file_list[, unique(file_name)])
+}
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
 #----------------------------------------------------
@@ -144,6 +150,11 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     print(paste0(i, " ", file_list$data_source[i], " ", file_list$function_financial[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
   }
   
+  #If you only prepped new files, bind this together with the already-prepped data. 
+  if (only_new_files==TRUE){
+    resource_database = rbind(resource_database, already_prepped)
+  }
+  
   saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))
   saveRDS(resource_database, paste0(export_dir, "archive/raw_bound_gf_files_", Sys.Date(), ".RDS"))
   
@@ -153,7 +164,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   }
   
 } else {
-  resource_database <- readRDS(paste0(dropbox, country, "/prepped_data/raw_bound_gf_files.RDS"))
+  resource_database <- readRDS(paste0(box, country, "/prepped_data/raw_bound_gf_files.RDS"))
   resource_database = resource_database[file_name%in%file_list$file_name]
 }
 
