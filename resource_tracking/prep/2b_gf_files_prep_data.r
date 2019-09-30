@@ -40,7 +40,7 @@ if (prep_files == TRUE){
 }
 
 if (only_new_files==TRUE){
-  already_run <- readRDS(paste0(box, country, "/prepped_data/raw_bound_gf_files.RDS"))
+  already_run <- readRDS(paste0(export_dir, "raw_bound_gf_files.RDS"))
   file_list = file_list[!file_name%in%already_run$file_name]
   print("Only the following files will be processed.")
   print(file_list[, unique(file_name)])
@@ -164,7 +164,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   }
   
 } else {
-  resource_database <- readRDS(paste0(box, country, "/prepped_data/raw_bound_gf_files.RDS"))
+  resource_database <- readRDS(paste0(export_dir, "raw_bound_gf_files.RDS"))
   resource_database = resource_database[file_name%in%file_list$file_name]
 }
 
