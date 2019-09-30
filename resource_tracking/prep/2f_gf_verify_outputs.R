@@ -115,7 +115,7 @@ for (i in 1:length(loc_names)){
     all_untested_absorption = rbind(all_untested_absorption, untested_grants, fill=T)
   }
   
-  failed_absorption = absorption1[absorption!=correct_absorption]
+  failed_absorption = absorption1[absorption!=correct_absorption | round(expenditure)!=round(correct_expenditure)]
   failed_absorption[, loc:=loc_name]
   all_failed_absorption = rbind(all_failed_absorption, failed_absorption, fill=T)
   
