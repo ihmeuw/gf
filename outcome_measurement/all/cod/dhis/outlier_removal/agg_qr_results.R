@@ -28,8 +28,8 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # files:
-if (set == 'base') outFile = paste0(dir, "outliers/base_quantreg_results.rds")
-if (set == 'sigl') outFile = paste0(dir, 'prepped/sigl/raw_sigl_quantreg_results.rds') # at the very end, once all of the files are aggregated from /ihme/scratch/
+if (set == 'base') outFile = paste0(dir, "5_qr_results/base/base_quantreg_results.rds")
+if (set == 'sigl') outFile = paste0(dir, '5_qr_results/sigl/raw_sigl_quantreg_results.rds') # at the very end, once all of the files are aggregated from /ihme/scratch/
 #------------------------------------
 
 #------------------------------------
