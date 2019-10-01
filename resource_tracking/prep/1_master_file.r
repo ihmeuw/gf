@@ -38,6 +38,7 @@ verbose = FALSE #Set to true if you would like warning messages printed (helpful
 rerun_filelist = TRUE #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 test_current_files = TRUE #Set to true if you would like to run unit tests on current database. Set to false if you would like to run tests on archived database. 
+only_new_files = FALSE # Set to true if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
 
 # ----------------------------------------------
 # STEP 2: PREP GF FILES AND GOS DATA 
@@ -45,8 +46,10 @@ test_current_files = TRUE #Set to true if you would like to run unit tests on cu
 if (prep_files | prep_gos){
   if (prep_files){
     country = "cod" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
-    master_file_dir = paste0(dir, "_gf_files_gos/", country, "/raw_data/")
-    export_dir = paste0(dir, "_gf_files_gos/", country, "/prepped_data/")
+    master_file_dir = ifelse(Sys.info()[1]=='Windows', paste0(box, toupper(country), "/raw_data/"), 
+                             paste0(dir, "_gf_files_gos/", country, "/raw_data/"))
+    export_dir = ifelse(Sys.info()[1]=="Windows", paste0(box, country, "/prepped_data/"),
+                        paste0(dir, "_gf_files_gos/", country, "/prepped_data/"))
   }
   
   #Source document prep functions 
@@ -63,7 +66,7 @@ if (prep_files | prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
   # source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
-  # # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
+  # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
   # source(paste0(code_dir, "2f_gf_verify_outputs.R"))
   # 
   # rmarkdown::render(paste0(code_dir, "2g_gf_visualize_data.rmd",

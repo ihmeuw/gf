@@ -14,7 +14,6 @@
   #ghe_malaria = fread(paste0(j, "/Project/IRH/Malaria/processed_data/all_data_vetted.csv"), stringsAsFactors = FALSE)
   
   ghe_malaria = readRDS(paste0(fgh_ghe_malaria_raw, "ghe_actuals_malaria.rds"))
-  ghe_malaria = ghe_malaria[value_code == 'fs_malaria_domestic_public']
   ghe_malaria = ghe_malaria[tolower(ihme_loc_id)%in%code_lookup_tables$iso_code]
   
   #Make values numeric 
@@ -43,8 +42,16 @@
   setnames(ghe_malaria, c('year_id', 'units_new', 'units_year_new', 'ihme_loc_id'), c('year', 'currency', 'currency_year', 'loc_name'))
   ghe_malaria[, loc_name:=tolower(loc_name)]
   
-  saveRDS(ghe_malaria, paste0(fgh_prepped, "ghe_actuals_malaria.rds"))
-  write.csv(ghe_malaria, paste0(fgh_prepped, "ghe_actuals_malaria.csv"), row.names=FALSE)
+  ghe_only = ghe_malaria[value_code == 'fs_malaria_domestic_public']
+  saveRDS(ghe_only, paste0(fgh_ghe_malaria_prepped, "ghe_actuals_malaria.rds"))
+  write.csv(ghe_only, paste0(fgh_ghe_malaria_prepped, "ghe_actuals_malaria.csv"), row.names=FALSE)
+  saveRDS(ghe_only, paste0(fgh_ghe_malaria_prepped, "archive/ghe_actuals_malaria", Sys.Date(), ".rds"))
+  
+  oop_only = ghe_malaria[value_code == 'fs_malaria_domestic_private_oop']
+  saveRDS(oop_only, paste0(fgh_ghe_malaria_prepped, "oop_actuals_malaria.rds"))
+  write.csv(oop_only, paste0(fgh_ghe_malaria_prepped, "oop_actuals_malaria.csv"), row.names=FALSE)
+  saveRDS(oop_only, paste0(fgh_ghe_malaria_prepped, "archive/oop_actuals_malaria", Sys.Date(), ".rds"))
+  
 } 
 
 #------------------
