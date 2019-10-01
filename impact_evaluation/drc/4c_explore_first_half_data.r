@@ -16,7 +16,7 @@ library(GGally)
 load(outputFile4a)
 
 # load model object
-modelVersion = 'drc_malaria6_pc'
+modelVersion = 'drc_malaria6'
 source(paste0('./impact_evaluation/drc/models/', modelVersion, '.r'))
 
 # load "node table" for convenient labels
