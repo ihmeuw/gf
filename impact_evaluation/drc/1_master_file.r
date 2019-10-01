@@ -93,9 +93,9 @@ if (rerun_adjust==TRUE) {
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
 	source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
-	# source('./impact_evaluation/drc/4b_set_up_for_second_half_analysis.r')
+	source('./impact_evaluation/drc/4b_set_up_for_second_half_analysis.r')
 	source('./impact_evaluation/drc/4c_explore_first_half_data.r')
-	# source('./impact_evaluation/drc/4d_explore_second_half_data.r')
+	source('./impact_evaluation/drc/4d_explore_second_half_data.r')
 }
 
 # ---------------------------------------
