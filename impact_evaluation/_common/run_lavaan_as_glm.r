@@ -36,6 +36,7 @@ lavaanUR = function(modelObject=NULL, data=NULL) {
 	
 	# standardize data
 	vars = unique(c(parsedModel$lhs, parsedModel$rhs))
+	vars = unique(unlist(str_split(vars, ':|\\*')))
 	data.std = copy(data)
 	for(v in vars) data.std[, (v):=(get(v)-mean(get(v)))/ifelse(sd(get(v))>0, sd(get(v)), 1)]
 	
