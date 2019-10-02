@@ -16,7 +16,7 @@
 
 
 #Final Expenditures (includes GOS)
-final_expenditures = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/cod_expenditures.rds")
+final_expenditures = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures_cod.rds")
 
 #------------------------------------
 #Read in previously prepped datasets 
@@ -25,19 +25,16 @@ final_expenditures = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/pre
 #Read in final budget and expenditure data from RT database, and bind together. 
 #final_budgets <- readRDS(budgetFile)
 #final_expenditures <- readRDS(expendituresFile)
-fgh <- readRDS(fghFile)
+odah <- readRDS(odahFile)
 who <- readRDS(whoFile)
-oop <- readRDS(gheMalFile)
+oop <- readRDS(oopMalFile)
 
-fgh = fgh[, .(sda_activity, year, loc_name, disease, code, module_eng, intervention_eng, fin_data_type, financing_source, disbursement)]
-setnames(fgh, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
+odah = odah[, .(activity_description, year, loc_name, disease, code, gf_module, gf_intervention, channel_agg, disbursement)]
+setnames(odah, old=c('gf_module', 'gf_intervention'), new=c('module', 'intervention'))
 
 #For OOP, take only the data from the most recent year of reporting. 
-oop = oop[value_code == "fs_malaria_domestic_private_oop"]
-oop[order(year_id)]
-oop = oop[!((year_id == 2012 & report_year == 2015) | (year_id == 2013 & report_year == 2015) | (year_id == 2014 & report_year == 2016))]
-setnames(oop, old=c('year_id', 'value'), new=c( 'year', 'oop'))
-oop$report_year <- NULL
+oop[order(year)]
+setnames(oop, old=c('value'), new=c('oop'))
 #------------------------------------
 # Validate data 
 #------------------------------------
@@ -59,7 +56,7 @@ oop$report_year <- NULL
 #stopifnot(nrow(duplicate_files)==0)
 
 # quick fixes that shouldn't be necessary once earlier code is fixed
-fgh[sda_activity=='mal_comm_con_dah_17', code:='M2_3']
+odah[activity_description=='mal_comm_con_dah_17', code:='M2_3']
 
 #------------------------------------
 # Subset data and prep for merge
@@ -68,8 +65,8 @@ fgh[sda_activity=='mal_comm_con_dah_17', code:='M2_3']
 #Subset to only the columns we want from resource tracking database and impact evaluation map 
 exp_subset = final_expenditures[, .(expenditure, start_date, code, loc_name, disease, gf_module, gf_intervention)] #This data has already been subset down to DRC malaria in prep. 
 setnames(exp_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
-other_dah = fgh[fin_data_type == 'actual' & (financing_source != 'The Global Fund' & financing_source != 'ghe') & loc_name=='COD' & (disease == 'malaria' | disease == 'hss' | disease == 'rssh'), 
-                .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(sda_activity, year, loc_name, disease, code, module, intervention)]
+other_dah = odah[(channel_agg != 'The Global Fund' & channel_agg != 'GHE') & loc_name=='COD' & (disease == 'malaria' | disease == 'hss' | disease == 'rssh'), 
+                .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(activity_description, year, loc_name, disease, code, module, intervention)]
 ghe = who[loc_name == 'cod' & indicator=='domestic_ghe_malaria', .(ghe = sum(expenditure, na.rm = TRUE)), 
         by = .(year)]
 
@@ -143,3 +140,4 @@ rt_wide = merge(rt_wide, oop, by='date', all.x = TRUE)
 
 #Save output file
 saveRDS(rt_wide, outputFile2a)
+saveRDS(rt_wide, paste0("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/archive/prepped_resource_tracking", Sys.Date(), ".rds"))
