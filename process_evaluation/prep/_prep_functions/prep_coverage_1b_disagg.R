@@ -165,7 +165,7 @@ prep_coverage_1B_disagg =  function(dir, inFile, sheet_name, language) {
   standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator', 'indicateurs standard', "indicadores")
   subcat_names = c('ventilation', 'disaggregation', 'desglose')
   category_names = c('categorie', 'categoria')
-  geography_names = c('geographic area', 'country')
+  geography_names = c('geographic area', 'country', 'geographie')
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
   reverse_ind_names = c("reverse indicator?")
   
