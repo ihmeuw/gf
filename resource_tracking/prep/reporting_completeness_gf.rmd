@@ -16,10 +16,10 @@ current_date = current_year + ((current_quarter/4)-0.25)
 
 #Read in current budget and expenditure files (For absorption we are not trying to make a complete time series, so this check is less relevant, 
 #   but absorption will have all of the same files as expenditure)
-budgets = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_budgets.rds")
+budgets = readRDS(paste0(box, "tableau_data/final_budgets.rds"))
 budgets[, date:=year+((quarter/4)-0.25)]
 budgets = unique(budgets[, .(grant, loc_name, date, file_name)])
-pudrs = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/final_expenditures.rds")
+pudrs = readRDS(paste0(box, "tableau_data/final_expenditures.rds"))
 pudrs[, quarter:=quarter(start_date)]
 pudrs[, year:=year(start_date)]
 pudrs[, date:=year+((quarter/4)-0.25)]
@@ -28,7 +28,7 @@ pudrs = unique(pudrs[, .(grant, loc_name, date, grant_period, concat)])
 
 
 #Read in Global Fund metadata, and format it to match pudr/budget data above. 
-ip_periods = fread("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv")
+ip_periods = fread(paste0(dir, "_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv"))
 ip_periods = ip_periods[GeographicAreaName%in%c('Congo (Democratic Republic)', 'Guatemala', 'Uganda', 'Senegal'), .(GeographicAreaName, ComponentName, GrantAgreementNumber, IsActive, ImplementationPeriodStartDate, ImplementationPeriodEndDate)]
 names(ip_periods) <- c('loc_name', 'disease', 'grant', 'is_active', 'start_date', 'end_date') #Only need implementation period variables here! 
 date_vars = c('start_date', 'end_date')
@@ -86,11 +86,11 @@ missing_budget_qtrs[, quarter:=((date%%1)*4)+1]
 missing_budget_qtrs[, year:=floor(date)]
 
 #Save this output data
-write.csv(pudrs, paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/missing_pudr_coverage.csv"), row.names=F)
-write.csv(budgets, paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/missing_budget_coverage.csv"), row.names=F)
+write.csv(pudrs, paste0(box, "tableau_data/missing_pudr_coverage.csv"), row.names=F)
+write.csv(budgets, paste0(box, "tableau_data/missing_budget_coverage.csv"), row.names=F)
 
-write.csv(pudrs, paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/archive/_missing_pudr_coverage_", Sys.Date(), ".csv"), row.names=F)
-write.csv(budgets, paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/archive/missing_budget_coverage_", Sys.Date(), ".csv"), row.names=F)
+write.csv(pudrs, paste0(box, "tableau_data/archive/_missing_pudr_coverage_", Sys.Date(), ".csv"), row.names=F)
+write.csv(budgets, paste0(box, "tableau_data/archive/missing_budget_coverage_", Sys.Date(), ".csv"), row.names=F)
 
 pudr_coverage = function(country, country_name){
   pudr_coverage = ggplot(pudrs[loc_name==country]) + 
