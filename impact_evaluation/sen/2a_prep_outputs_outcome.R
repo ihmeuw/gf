@@ -166,12 +166,8 @@ DT$type[which(DT$centre=='HALD')] <- "HOPITAL"
 DT$type[which(DT$centre=='HOGGY')] <- "HOPITAL"
 DT$type[which(DT$centre=='HPD')] <- "HOPITAL"
 
-# create combined total treatment variable
-DT$ntr_all <- rowSums(DT[,.(ntr_rhz, ntr_erhz, ntr_serhz)], na.rm=TRUE)
-
-# create variable of tbvih arv treatment rate
-DT$tbvih_arvtx_rate <- DT$tb_vih_arv/DT$tb_vih2
-DT$tbvih_arvtx_rate[which(DT$tb_vih2==0)]<-NA
+# add date variable to dataset
+DT = DT[, date:=annee+((trimestre-1)/4)]
 
 #-----------------------------------------------------
 # Check to make sure you're still uniquely identifying data 
