@@ -17,7 +17,7 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # Settings
 
 # whether to run each department in parallel or not
-runInParallel = FALSE 
+runInParallel = TRUE 
 
 # ---------------------------
 
