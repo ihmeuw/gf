@@ -22,14 +22,35 @@ setnames(fgh, old=c('gf_module', 'gf_intervention'), new=c('module', 'interventi
 # Subset data and prep for merge
 #------------------------------------
 
-# Subset to only the columns we want from resource tracking database 
-exp_subset = final_expenditures[grant %in% c("SEN-Z-MOH", "SNG-T-PLAN", "SNG-T-PNT"), .(expenditure, start_date, code, disease, gf_module, gf_intervention)] # kept only Z grant & Tb-spec funding
+# Subset to only the columns we want from resource tracking database (TB grants in Senegal)
+exp_subset <- final_expenditures[grant %in% c("SEN-Z-MOH", "SNG-T-PLAN", "SNG-T-PNT"), .(expenditure, start_date, code, disease, gf_module, gf_intervention)] # kept only Z grant & Tb-spec funding
 setnames(exp_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
 
+############################## modules ##################
 # aggregate total expenditure to the modular level with proper code value and variable name
-exp_subset = exp_subset[, c("code_m", "code_i") := tstrsplit(code, "_", fixed=TRUE)]
-exp_subset = exp_subset[, .(expenditure=sum(expenditure, na.rm=TRUE)), by=c('start_date', 'disease', 'module', 'code_m')]
-setnames(exp_subset, old=c('code_m'), new=c('code'))
+exp_mod = exp_subset[, c("code_m", "code_i") := tstrsplit(code, "_", fixed=TRUE)]
+exp_mod = exp_mod[, .(expenditure=sum(expenditure, na.rm=TRUE)), by=c('start_date', 'disease', 'module', 'code_m')]
+
+# delete rows TB care and prevention module and keep columns of interest
+exp_mod = exp_mod[module!='TB care and prevention']
+
+# rename code_m to code
+setnames(exp_mod, old=c('code_m'), new = c('code'))
+
+############################ tb care and prevention interventions #############
+# subset intervention on TB care and prevention
+tbcp = exp_subset[module=='TB care and prevention',.(expenditure, start_date, code, disease, intervention)]
+
+# rename columns for merge
+setnames(tbcp, old=c('intervention'), new=c('module'))
+
+# Keep following interventions: "screening and diagnosis of disease", "treatment", "community care for TB"
+tbcp <- tbcp[module %in% c('Community TB care delivery', 'Treatment', 'Case detection and diagnosis')]
+
+# merge the two files together
+exp_subset <- rbind(exp_mod, tbcp)
+
+###### Other Sources of Health expenditure #############
 
 # subset to only the columns we want from other develoment assistance for health
 other_dah = fgh[(source != 'The Global Fund' & source != 'ghe') & loc_name=='SEN' & (disease == 'tb' | disease == 'hss' | disease == 'rssh'), 
@@ -39,6 +60,21 @@ other_dah = fgh[(source != 'The Global Fund' & source != 'ghe') & loc_name=='SEN
 other_dah = other_dah[, c("code_m", "code_i") := tstrsplit(code, "_", fixed=TRUE)]
 other_dah = other_dah[, .(other_dah=sum(other_dah, na.rm=TRUE)), by=c('year', 'loc_name', 'disease', 'module', 'code_m')]
 setnames(other_dah, old=c('code_m'), new=c('code'))
+
+# delete rows TB care and prevention module and keep columns of interest
+other_dah = other_dah[module!='TB care and prevention']
+
+# create seperate dataset where we keep only certain tb care and prevention interventions: 
+other_dah_tbcp = fgh[(source != 'The Global Fund' & source != 'ghe' & module== 'TB care and prevention') & loc_name=='SEN' & (disease == 'tb' | disease == 'hss' | disease == 'rssh'), 
+                     .(other_dah = sum(disbursement, na.rm=TRUE)), by=.(year, loc_name, disease, code, module, intervention)]
+
+# Keep following interventions: "screening and diagnosis of disease", "treatment", "community care for TB"
+other_dah_tbcp <- other_dah_tbcp[intervention %in% c('Treatment', 'Case detection and diagnosis')]
+other_dah_tbcp <- other_dah_tbcp[,.(year, loc_name, disease, code, intervention, other_dah)]
+setnames(other_dah_tbcp, old = c('intervention'), new = c('module'))
+
+# merge together
+other_dah <- rbind(other_dah, other_dah_tbcp)
 
 # subset domestic government health expenditure (fgh) on TB in senegal
 ghe = who[loc_name == 'sen' & indicator=='domestic_ghe_tb', .(ghe = sum(expenditure, na.rm = TRUE)), 

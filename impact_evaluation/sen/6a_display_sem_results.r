@@ -54,38 +54,59 @@ urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
 	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -3, colScaleMax=4, colScaleBreaks = 1)
+	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -0.5, colScaleMax=2, colScaleBreaks = 1)
 
 p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
               scaling_factors=NA, standardized=TRUE, 
-              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-3, colScaleMax=4, colScaleBreaks = 1)
+              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=2, colScaleBreaks = 1)
 
-# my sem graph function for second half "unrelated regressions" model
-# p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
-# 	scaling_factors=NA, standardized=TRUE,
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
-# 
-# p6_nolab = semGraph(parTable=urFit2, nodeTable=nodeTable2,
-#                     scaling_factors=NA, standardized=TRUE,
-#                     lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE)
 # ----------------------------------------------
 
 
 # Adding a few specific pathways to visualize using 'dim' and 'highlight' options. 
 #MDR pathway 
+
 p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
               lineWidth=1.5, curved=0, tapered=FALSE, 
-              dim=TRUE, highlight=c("Number_of_Cases_Screened_for_MDR_act_cumulative", "MDR_Cases_Started_Treatment_out_cumulative", 
-                                    "Secondline_Distributed_act_cumulative", "gf_mdrtb_cumulative"))
+              dim=TRUE, highlight=c('ntr_all_cumulative', 'gueris_taux'))
+
+semGraph(parTable=urFit1, nodeTable=nodeTable1,
+              scaling_factors=NA, standardized=TRUE,
+              lineWidth=1.5, curved=0, tapered=FALSE, colScaleMax = 2,
+              dim=TRUE, highlight=c('com_mobsoc_cumulative', 
+                                    'com_cause_cumulative',
+                                    'com_radio_cumulative',
+                                    'tb_tfc_cumulative'
+                                    ))
+
+# cough orienting pathway
+semGraph(parTable=urFit1, nodeTable=nodeTable1,
+         scaling_factors=NA, standardized=TRUE,
+         lineWidth=1.5, curved=0, tapered=FALSE,
+         dim=TRUE, highlight=c('com_mobsoc_cumulative', 
+                               'com_cause_cumulative',
+                               'com_radio_cumulative',
+                               'com_nom_touss_cumulative'
+         ))
+
+# cough orienting pathway
+semGraph(parTable=urFit1, nodeTable=nodeTable1,
+         scaling_factors=NA, standardized=TRUE,
+         lineWidth=1.5, curved=0, tapered=FALSE,
+         dim=TRUE, highlight=c('tot_genexpert_cumulative',
+                               'lag_exp_T3_cumulative',
+                               'lag_other_dah_T3_cumulative'
+                                ))
 
 #Cases notified pathway
-p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+semGraph(parTable=urFit1, nodeTable=nodeTable1,
               scaling_factors=NA, standardized=TRUE,
               lineWidth=1.5, curved=0, tapered=FALSE, 
-              dim=TRUE, highlight=c("Cases_Notified_out_cumulative", "Additional_Cases_Detected_via_ACF_out_cumulative", 
-                                    "Children_less5_referred_out_cumulative", "gf_tbhiv_cumulative", "gf_mdrtb_cumulative", 
-                                    "gf_tb_cumulative"))
+              dim=TRUE, highlight=c('ntr_all_cumulative',
+                                    'tb_tfc_cumulative',
+                                    'com_enf_ref_cumulative',
+                                    'tpm_chimio_enf_cumulative'))
 
 #GHE pathway 
 p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
