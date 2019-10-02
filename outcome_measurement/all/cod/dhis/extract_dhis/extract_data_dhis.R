@@ -171,7 +171,7 @@ for (i in 1:((length(dates))-1) ){
   
   # save intermediate data - 1st iteration
   extracted_data$download_number = 1
-  saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', set_name,'_0', save_month_start, '_', 
+  saveRDS(extracted_data, paste0(dir, '1_initial_download/', set_name, '/intermediate_data/', set_name,'_0', save_month_start, '_', 
                                  save_year_start, '_0', save_month_end, '_', save_year_end, '_first_download.rds'))
   
   
@@ -195,7 +195,7 @@ for (i in 1:((length(dates))-1) ){
     next
   } else {
     extracted_data2$download_number = 2
-    saveRDS(extracted_data2,  paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', set_name,'_0', save_month_start, '_', 
+    saveRDS(extracted_data2,  paste0(dir, '1_initial_download/', set_name, '/intermediate_data/', set_name,'_0', save_month_start, '_', 
                                      save_year_start, '_0', save_month_end, '_', save_year_end, '_second_download.rds'))
   }
   print(paste0("Loop ", i, " of ", (length(dates)-1), " complete" ))

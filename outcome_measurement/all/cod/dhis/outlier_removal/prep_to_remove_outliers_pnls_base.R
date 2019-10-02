@@ -37,9 +37,9 @@ setwd("C:/Users/ccarelli/local/gf/")
 set = 'base'
 if (set=='base') { qr_disease = 'malaria'}
 
-# read in the data 
-if (set=='pnls') {dt = readRDS(paste0(dir, 'prepped/pnls_arv.rds'))}
-if (set=='base') {dt = readRDS(paste0(dir, 'prepped/base_services_prepped.rds'))}
+# read in the data  
+# if (set=='pnls') {dt = readRDS(paste0(dir, '3_prepped/pnls_arv.rds'))} # <--- FILE PATH NEEDS TO BE UPDATED?!
+if (set=='base') {dt = readRDS(paste0(dir, '3_prepped/base/base_services_prepped.rds'))}
 
 # convert values to numerics 
 dt[ ,value:=as.numeric(as.character(value))]
@@ -88,8 +88,8 @@ setnames(dt, 'element_id', 'old_element_id')
 dt[, element_id:=.GRP, by='element']
 
 # save the prepped file
-if (set=='pnls') {saveRDS(dt, paste0(dir, 'pnls_outliers/arvs_to_screen.rds'))}
-if (set=='base') {saveRDS(dt, paste0(dir, 'outliers/base/base_to_screen.rds'))}
+if (set=='pnls') {saveRDS(dt, paste0(dir, '4_prep_for_qr/pnls/arvs_to_screen.rds'))}
+if (set=='base') {saveRDS(dt, paste0(dir, '4_prep_for_qr/base/base_to_screen.rds'))}
 
 # ---------------------------------------
 # save old element ids for merge 

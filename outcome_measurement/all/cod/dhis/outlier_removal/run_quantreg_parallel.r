@@ -90,11 +90,11 @@ arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 # initial file is read off of j 
 # output file is the aggregate of the files from /ihme/scratch/users/(user_name)/quantreg/parallel_files/
 
-if (set=='sigl') {inFile = paste0(dir, 'prepped/sigl/sigl_for_qr.rds') 
-outFile = paste0(dir, 'sigl_quantreg_imputation_results.rds') }
+if (set=='sigl') {inFile = paste0(dir, '3_prepped/sigl/sigl_for_qr.rds') 
+outFile = paste0(dir, '5_qr_results/sigl/raw_sigl_quantreg_results.rds') }
 
-if (set=='base') {inFile = paste0(dir, 'outliers/base/base_to_screen.rds')
-outFile = paste0(dir, 'outliers/base_quantreg_results.rds')}
+if (set=='base') {inFile = paste0(dir, '4_prep_for_qr/base/base_to_screen.rds')
+outFile = paste0(dir, '5_qr_results/base/base_quantreg_results.rds')}
 
 if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_for_qr.rds')
   if (agg_to_DPS ==TRUE){
@@ -104,8 +104,8 @@ if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement
   }
 }
 
-if(set=='pnls') inFile = paste0(dir, 'merged/pnls_subset_2017_01_01_2019_04_01.rds')
-if(set=='pnls') outFile = paste0(dir, 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_screened.rds')
+if(set=='pnls') inFile = paste0(dir, '2_merged_with_metadata/pnls_subset_2017_01_01_2019_04_01.rds')
+if(set=='pnls') outFile = paste0(dir, '5_qr_results/pnls/pnls_subset_2017_01_01_2019_04_01_screened.rds')
 #------------------------------------
 
 #------------------------------------

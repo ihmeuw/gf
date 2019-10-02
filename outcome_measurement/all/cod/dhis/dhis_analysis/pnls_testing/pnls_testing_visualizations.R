@@ -557,6 +557,18 @@ ggplot(t8_bar, aes(x=subpop, y=value, label=value, fill=factor(year))) +
   theme(text = element_text(size=14), axis.text.x=element_text(size=12, angle=90))+
   scale_y_continuous(labels=scales::comma)
 
+# key populations only
+ggplot(t8_bar[subpop!='Clients'], aes(x=subpop, y=value, label=value, fill=factor(year))) +
+  geom_bar(stat="identity", position=position_dodge()) +
+  geom_text(aes(label=value), vjust=-1, position=position_dodge(0.9)) +
+  theme_bw() +
+  scale_fill_manual(values = c('#d73027', '#fdae61')) +
+  labs(title = 'Tested for HIV and received the results by year',
+       y='Tested for HIV', x="", fill="Year") +
+  theme(text = element_text(size=14), axis.text.x=element_text(size=12, angle=90))+
+  scale_y_continuous(labels=scales::comma)
+
+
 #-------------------------------
 # tests on key populations out of all tests
 

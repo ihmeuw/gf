@@ -35,12 +35,12 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 #-----------------------------------
 # output files
 
-outFile = paste0(dir, 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_outliers_replaced.rds')
-outPDF = paste0(dir, 'pnls_outliers/pnls_', pnlsSet,  '_outliers.pdf')
+outFile = paste0(dir, '6_outliers_replaced/pnls/pnls_subset_2017_01_01_2019_04_01_outliers_replaced.rds')
+outPDF = paste0(dir, '5_qr_results/pnls/pnls_', pnlsSet,  '_outliers.pdf')
   
 #------------------------------------
 # read in the file
-dt = readRDS(paste0(dir, 'outlier_screened/pnls_subset_2017_01_01_2019_04_01_screened.rds'))
+dt = readRDS(paste0(dir, '5_qr_results/pnls/pnls_subset_2017_01_01_2019_04_01_screened.rds'))
 
 #------------------------------------
 # identify outliers at various levels/thresholds

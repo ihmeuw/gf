@@ -41,7 +41,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-dir_pre_prep = paste0(dir, 'pre_prep/', folder, '/')
+dir_pre_prep = paste0(dir, '1_initial_download/', folder, '/')
 
 # source the merge and prep functions from the J Drive
 source(paste0(dir, 'code/merge_functions_for_new_download.R'))
@@ -120,8 +120,8 @@ max_date = dt[ , max(date)]
 max_date = gsub('-', '_', max_date)
 
 # save the raw data before the merge 
-saveRDS(dt, paste0(dir, 'pre_prep/', folder, '/', folder, '_', min_date, '_', max_date, '_full_initial_prep.rds'))
-#dt = readRDS(paste0(dir, 'pre_prep/base/base_2018_01_01_2019_04_01_full_initial_prep.rds'))
+saveRDS(dt, paste0(dir, '1_initial_download/', folder, '/', folder, '_', min_date, '_', max_date, '_full_initial_prep.rds'))
+#dt = readRDS(paste0(dir, '1_initial_download/base/base_2018_01_01_2019_04_01_full_initial_prep.rds'))
 #---------------------------------
 
 #---------------------------------
@@ -293,7 +293,7 @@ max = dt[ , max(date)]
 max = gsub('-', '_', max)
 
 # save a merged rds file 
-saveRDS(dt, paste0(dir, 'pre_prep/merged/', folder,'_', min, '_', max, '.rds' ))
+saveRDS(dt, paste0(dir, '2_merged_with_metadata/', folder,'_', min, '_', max, '.rds' ))
 #---------------------------------
 
 

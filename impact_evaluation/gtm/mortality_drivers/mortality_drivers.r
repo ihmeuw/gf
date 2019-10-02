@@ -200,6 +200,8 @@ for(i in seq(length(lmFits))) {
 	values = sapply(tmp$variable, function(v) {
 		# test for standardization
 		if (round(mean(inputData[[v]]),5)!=0 | round(sd(inputData[[v]]),5)!=1) stop(paste('Variable', v, 'is not z-standardized'))
+		# compute explained variance using pseudo decomposition of r squared
+		# (see Anusar Farooqui 2016. A Natural Decomposition of R2 in Multiple Linear Regression)
 		coef(fitObject)[[v]] * cov(inputData[[v]], fitObject$fitted.values)
 	})
 	tmp[, explained_variance := values]
