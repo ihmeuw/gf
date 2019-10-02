@@ -41,7 +41,7 @@ library(splitstackshape)
 #Set global variables - pulling to top so easier to read EL 8/15/19
 # Current model versions
 
-modelVersion1 = 'gtm_tb_first_half11'
+modelVersion1 = 'gtm_tb_first_half11_rssh_interaction'
 modelVersion2 = 'gtm_tb_sec_half4'
 
 START_YEAR = 2009 #If available, what's the earliest year you should model data from? 
@@ -71,6 +71,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # directories
 dir = paste0(j, '/Project/Evaluation/GF/')
+box = "C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/" #Adding new file path to pull latest files from Box account EL 10/2/2019
 ieDir = paste0(dir, 'impact_evaluation/gtm/')
 rawIeDir = paste0(ieDir, 'raw_data/')
 preppedIeDir =  paste0(ieDir, 'prepped_data/')
@@ -105,8 +106,8 @@ source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 # Inputs files
 
 # resource tracking files with prepped budgets, expenditures, disbursements
-budgetFile = paste0(rtDir, 'final_budgets.rds')
-expendituresFile = paste0(rtDir, 'final_expenditures.rds')
+budgetFile = paste0(box, 'final_budgets_gtm.rds')
+expendituresFile = paste0(box, 'final_expenditures_gtm.rds')
 fghFile = paste0(fghDir, 'other_dah_actuals_all_gtm.rds')
 gheMalFile = paste0(fghDir, 'ghe_actuals_malaria.rds')
 whoFile = paste0(whoDir, 'who_prepped.rds')
