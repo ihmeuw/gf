@@ -69,11 +69,11 @@ rssh_interaction[!is.na(est.std_interaction), est.std:=est.std+est.std_interacti
 rssh_interaction = rssh_interaction[lhs%in%rssh_interaction_table$variable & rhs%in%rssh_interaction_table$variable]
 
 # my sem graph function for first half "unrelated regressions" model
-p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+p5 = semGraph(parTable=urFit, nodeTable=nodeTable, 
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
 
-p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+p5_nolab = semGraph(parTable=urFit, nodeTable=nodeTable, 
               scaling_factors=NA, standardized=TRUE, 
               lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5, 
               labSize1 = 4, labSize2 = 4)
@@ -105,7 +105,7 @@ graph_rssh_interaction_std = semGraph(parTable=rssh_interaction, nodeTable=rssh_
 
 # Adding a few specific pathways to visualize using 'dim' and 'highlight' options. 
 #MDR pathway 
-p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p7 = semGraph(parTable=urFit, nodeTable=nodeTable,
               scaling_factors=NA, standardized=TRUE,
               lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
               dim=TRUE, highlight=c("Number_of_Cases_Screened_for_MDR_act_cumulative", "MDR_Cases_Started_Treatment_out_cumulative", 
@@ -114,7 +114,7 @@ p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                                     "gf_mdrtb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative"))
 
 #Cases notified pathway
-p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p8 = semGraph(parTable=urFit, nodeTable=nodeTable,
               scaling_factors=NA, standardized=TRUE,
               lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
               dim=TRUE, highlight=c("Cases_Notified_out_cumulative", "Additional_Cases_Detected_via_ACF_out_cumulative", 
@@ -123,16 +123,16 @@ p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                                     "gf_tb_cumulative", "ghe_tb_cumulative", "odah_tb_cumulative", "Case_Notification_Rate_imp_log"))
 
 #GHE pathway 
-p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p9 = semGraph(parTable=urFit, nodeTable=nodeTable,
               scaling_factors=NA, standardized=TRUE,
               lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
               dim=TRUE, highlight=c("ghe_tb_cumulative", "Number_of_Cases_Screened_for_MDR_act_cumulative", 
                                     "Cases_Notified_out_cumulative", "Cases_Started_on_Treatment_out_cumulative", "Firstline_Distributed_act_cumulative", 
                                     "TB_Patients_Tested_for_HIV_act_cumulative"))
 #Just visualize outputs to outcomes 
-outcomes_outputs = as.vector(nodeTable1[x%in%c(3, 10), unique(variable)])
+outcomes_outputs = as.vector(nodeTable[x%in%c(3, 10), unique(variable)])
 
-p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p10 = semGraph(parTable=urFit, nodeTable=nodeTable,
                scaling_factors=NA, standardized=TRUE,
                lineWidth=1.5, curved=0, tapered=FALSE, labSize2 = 4, labSize1 = 4,
                dim=TRUE, highlight=c(outcomes_outputs))
@@ -140,17 +140,12 @@ p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
 # Save output
 print(paste('Saving:', outputFile6a)) 
 pdf(outputFile6a, height=6, width=9)
-# print(p1)
-# print(p2)
-# print(p3)
-# print(p4)
 print(p5)
 print(p5_nolab)
 print(graph_no_rssh)
 print(graph_no_rssh_std)
 print(graph_rssh_interaction)
 print(graph_rssh_interaction_std)
-# print(p6)
 dev.off()
 
 # save a time-stamped version for reproducibility
@@ -159,14 +154,11 @@ archive(outputFile6a)
 # 
 # #Save just the GLM diagrams with correlation coefficients as PNGs. 
 ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p5, height=10, width=13)
-# ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p6, height=10, width=13)
 
 sep_terg_save = "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/september_terg_presentation/"
 #Save the specific graphics for reports in their own folder. 
 ggsave(paste0(sep_terg_save, "model_first_half_coefficients.png"), p5, height=10, width=13)
 ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nolab, height=10, width=13)
-# ggsave(paste0(sep_terg_save, "model_second_half_coefficients.png"), p6, height=10, width=13)
-# ggsave(paste0(sep_terg_save, "model_second_half_coefficients_nolab.png"), p6_nolab, height=10, width=13)
 ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
 ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
 ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)
