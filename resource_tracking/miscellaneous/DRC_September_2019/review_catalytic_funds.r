@@ -5,7 +5,6 @@
 # ----------------------------------------------
 
 #Set up 
-
 rm(list=ls())
 # ----------------------------------------------------------------------
 # To do list for this code: 
@@ -80,6 +79,7 @@ file_list = file_list[(grant=="COD-T-MOH" | grant=="COD-C-CORDAID") & grant_peri
 #Only keep the initial files for COD-T-MOH. 
 file_list = file_list[!(file_iteration=="initial" & grant=="COD-C-CORDAID")]
 
+
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
 #----------------------------------------------------
@@ -137,8 +137,6 @@ for(i in 1:nrow(file_list)){
   }
   print(paste0(i, " ", file_list$data_source[i], " ", file_list$function_financial[i], " ", file_list$grant[i])) ## if the code breaks, you know which file it broke on
 }
-
-saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))
 
 #If you don't have lfa_exp_adjustment in any of the files for this country, add it as NA so checks later will work. 
 if (!'lfa_exp_adjustment'%in%names(resource_database)){
@@ -536,31 +534,44 @@ saveRDS(revisions_collapse, paste0(j, "Project/Evaluation/GF/resource_tracking/_
 #What could be seen as a grant revision? Either where 
 #1. The activity description did not exist in the initial file, or 
 #2. More money was allocated to the activity in the final grant than in the initial. 
-# catalytic_funding = revisions_collapse[is.na(initial) | final>initial] 
-# 
-# #However, right now we don't know whether these are specifically catalytic funding, or just additions to the budget between initial - revision, so flag 
-# # some likely activities that are probably catalytic funding for active case detection. 
-# keywords = c('investigation des contacts', 'recherche', 'occasions manquees', 'cas manquants', 'xpert', 'diagnostic de la tb', 'cplt', 'activites communautaires')
-# for (word in keywords){
-#   catalytic_funding[grepl(word, tolower(activity_description)), likely_catalytic:=TRUE]
-# }
-# catalytic_funding[is.na(likely_catalytic), likely_catalytic:=FALSE]
-# 
-# #Review the activity descriptions by hand. 
-# catalytic_funding[likely_catalytic==TRUE, unique(activity_description)]
-# catalytic_funding[likely_catalytic==FALSE, unique(activity_description)]
-# 
-# saveRDS(catalytic_funding, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/prepped_data/tb_catalytic_funding_budgets.rds")
-# 
-# # Pull out just the likely catalytic funds and see what's going on. 
-# # catalytic1 = catalytic_funding[likely_catalytic==TRUE]
-# 
-# #What's the total funding allocated by catalytic funds? (compare with grant documents. )
-# catalytic_funding[, sum(final, na.rm=T)] - catalytic_funding[, sum(initial, na.rm=T)] # $1,852,116
-# 
-# #Break this down by activity description. 
-# catalytic_funding[is.na(initial), initial:=0]
-# catalytic_funding[, addl_funds:=final-initial]
-# 
-# 
-# catalytic_funding[, .(catalytic_funds=sum(addl_funds)), by='activity_description'][order(-catalytic_funds)]
+
+#Rename initial, final, and revision columns for catalytic funding. 
+# COD-T-MOH has initial and final, and COD-C-CORDAID has final and revision. 
+t_moh = revisions_collapse[grant=="COD-T-MOH", .(initial=sum(initial, na.rm=T), final=sum(final, na.rm=T)), by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'orig_module', 'orig_intervention', 'activity_description', 'year', 'quarter')]
+c_cordaid = revisions_collapse[grant=="COD-C-CORDAID", .(initial=sum(final, na.rm=T), final=sum(revision, na.rm=T)), by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'orig_module', 'orig_intervention', 'activity_description', 'year', 'quarter')]
+
+catalytic_funding = rbind(t_moh, c_cordaid)
+catalytic_funding = catalytic_funding[is.na(initial) | final>initial]
+
+#Check modules and interventions - was everything that changed related to TB catalytic funds? 
+unique(catalytic_funding$gf_module) #There are some HIV modules here. 
+catalytic_funding[, .(budget_difference = sum(final)-sum(initial)), by=c('grant', 'gf_module')][order(grant, -budget_difference)]
+
+#However, right now we don't know whether these are specifically catalytic funding, or just additions to the budget between initial - revision, so flag
+# some likely activities that are probably catalytic funding for active case detection.
+keywords = c('investigation des contacts', 'recherche', 'occasions manquees', 'cas manquants', 'xpert', 'diagnostic de la tb', 'cplt', 'activites communautaires')
+for (word in keywords){
+  catalytic_funding[grepl(word, tolower(activity_description)), likely_catalytic:=TRUE]
+}
+catalytic_funding[is.na(likely_catalytic), likely_catalytic:=FALSE]
+
+#Review the activity descriptions by hand.
+catalytic_funding[likely_catalytic==TRUE, unique(activity_description)]
+catalytic_funding[likely_catalytic==FALSE, unique(activity_description)]
+
+saveRDS(catalytic_funding, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/prepped_data/tb_catalytic_funding_budgets_subset.rds")
+
+# Pull out just the likely catalytic funds and see what's going on.
+catalytic1 = catalytic_funding[likely_catalytic==TRUE]
+
+#What's the total funding allocated by catalytic funds? (compare with grant documents. )
+catalytic1[, sum(final, na.rm=T)] - catalytic1[, sum(initial, na.rm=T)] # $9,452,032
+
+
+
+#Break this down by activity description.
+catalytic1[is.na(initial), initial:=0]
+catalytic1[, addl_funds:=final-initial]
+
+
+catalytic1[, .(catalytic_funds=sum(addl_funds)), by=c('activity_description', 'grant')][order(-catalytic_funds)]

@@ -39,16 +39,16 @@ if (prep_files == TRUE){
   file_list = file_list[file_iteration%in%c('final', 'revision')]
 }
 
-if (only_new_files==TRUE){
-  already_run <- readRDS(paste0(export_dir, "raw_bound_gf_files.RDS"))
-  file_list = file_list[!file_name%in%already_run$file_name]
-  print("Only the following files will be processed.")
-  print(file_list[, unique(file_name)])
-}
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
 #----------------------------------------------------
 if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
+  if (only_new_files==TRUE){
+    already_prepped <- readRDS(paste0(export_dir, "raw_bound_gf_files.RDS"))
+    file_list = file_list[!file_name%in%already_prepped$file_name]
+    print("Only the following files will be processed.")
+    print(file_list[, unique(file_name)])
+  }
   
   pudr_mod_approach_sheet_financials <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B', 'ALF RFR_7')
   general_detailed_budget_sheet_financials <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
@@ -152,7 +152,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   #If you only prepped new files, bind this together with the already-prepped data. 
   if (only_new_files==TRUE){
-    resource_database = rbind(resource_database, already_prepped)
+    resource_database = rbind(resource_database, already_prepped, fill=T)
   }
   
   saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))

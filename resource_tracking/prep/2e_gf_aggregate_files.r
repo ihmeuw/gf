@@ -19,13 +19,13 @@
 
 
 #---------------------------------------
+cod_prepped = paste0(box, "COD/prepped_data/")
+gtm_prepped = paste0(box, "GTM/prepped_data/")
+uga_prepped = paste0(box, "UGA/prepped_data/")
+sen_prepped = paste0(box, "SEN/prepped_data/")
 
-cod_prepped = paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/cod/prepped_data/")
-gtm_prepped = paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/prepped_data/")
-uga_prepped = paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/uga/prepped_data/")
-sen_prepped = paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/sen/prepped_data/")
+final_write = paste0(box, "tableau_data/")
 
-final_write = paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/")
 
 # --------------------------------------------
 # Load the prepped GOS data - to be used for both 

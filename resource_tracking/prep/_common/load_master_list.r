@@ -16,13 +16,15 @@ load_master_list = function(purpose=NULL) {
   stopifnot(purpose%in%c('financial', 'performance indicators'))
   
   if (Sys.info()[1]=='Windows'){
-    dir = "J:/Project/Evaluation/GF/resource_tracking/" #Change to the root of your repository
+    dir = paste0(box) #Change to the root of your repository
+    j_dir = "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/" #On windows, you'll want to pull the file list off of Box. 
   } else {
-    dir = "/home/j/Project/Evaluation/GF/resource_tracking/"
+    dir = "/home/j/Project/Evaluation/GF/resource_tracking/_gf_files_gos/"
+    j_dir = copy(dir) #On the cluster, these will be the same 
   }
   
   #Read in data. 
-  dt = data.table(read_excel(paste0(dir, "_gf_files_gos/master_file_list.xlsx")))
+  dt = data.table(read_excel(paste0(dir, "master_file_list.xlsx")))
   #*** Note that NA's entered by hand in the excel will be imported as strings! ("NA")
   
   #------------------------------------------------
@@ -120,7 +122,7 @@ load_master_list = function(purpose=NULL) {
   #--------------------------------------------------------
   # Make sure that hand-entered information matches with GF metadata. 
   #--------------------------------------------------------
-  metadata = fread(paste0(dir, "_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv"))
+  metadata = fread(paste0(j_dir, "metadata/grant_agreement_implementation_periods_dataset_201963.csv"))
   correct_periods = metadata[GeographicAreaCode_ISO3%in%c('COD', 'GTM', 'SEN', 'UGA'), .(GrantAgreementNumber, ImplementationPeriodStartDate, ImplementationPeriodEndDate)]
   names(correct_periods) = c('grant', 'grant_period_start', 'grant_period_end')
   

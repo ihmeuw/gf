@@ -11,20 +11,9 @@
 # - incorporate SICOIN checks again
 #--------------------------
 
-base_dir = "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/"
+base_dir = paste0(box, "tableau_data/")
+unit_test_dir = paste0(dir, "_gf_files_gos/unit_testing/")
 
-if (!test_current_files){
-  print("WARNING: TESTING ARCHIVED DATABASE. REVIEW SWITCH 'test_current_files'")
-  # Old resource tracking database, for comparison. Was archived on Dec 3, 2018
-  file_iterations = fread("J:/Project/Evaluation/GF/resource_tracking/multi_country/mapping/archive/total_resource_tracking_data 12032018.csv")
-  file_iterations$start_date <- as.Date(file_iterations$start_date)
-  file_iterations$budget <- as.numeric(file_iterations$budget)
-  file_iterations$expenditure <- as.numeric(file_iterations$expenditure)
-  gos_data = file_iterations[type == 'gos']
-  setnames(file_iterations, old=c('fileName', 'grant_number'), new=c('file_name', 'grant'))
-  
-  #EMILY DO WE WANT TO KEEP THIS CHECK AROUND? CODE BELOW NO LONGER WORKS. 
-} 
 # -----------------------
 # Country-level tests 
 # -----------------------
@@ -44,13 +33,15 @@ for (i in 1:length(loc_names)){
   print(paste0("TESTING ", country ))
   print("...")
   
-  budgets = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_budgets.rds"))
-  expenditures = readRDS(paste0(base_dir, loc_name, "/prepped_data/final_expenditures.rds"))
-  absorption = readRDS(paste0(base_dir, loc_name, "/prepped_data/absorption_", loc_name, ".rds"))
+  budgets = readRDS(paste0(base_dir, "final_budgets_", loc_name, ".rds"))
+  budgets = budgets[data_source=="budget"] #Drop GOS from these tests. 
+  expenditures = readRDS(paste0(base_dir, "final_expenditures_", loc_name, ".rds"))
+  expenditures = expenditures[data_source=="pudr"]
+  absorption = readRDS(paste0(box, toupper(loc_name), "/prepped_data/absorption_", loc_name, ".rds"))
   
-  budget_tests = read.xlsx(paste0(base_dir, "unit_testing/", loc_name, "_tests.xlsx"), sheet="budget", detectDates=T)
-  expenditure_tests = read.xlsx(paste0(base_dir, "unit_testing/", loc_name, "_tests.xlsx"), sheet="expenditure", detectDates=T)
-  absorption_tests = read.xlsx(paste0(base_dir, "unit_testing/", loc_name, "_tests.xlsx"), sheet="absorption", detectDates=T)
+  budget_tests = read.xlsx(paste0(unit_test_dir, loc_name, "_tests.xlsx"), sheet="budget", detectDates=T)
+  expenditure_tests = read.xlsx(paste0(unit_test_dir, loc_name, "_tests.xlsx"), sheet="expenditure", detectDates=T)
+  absorption_tests = read.xlsx(paste0(unit_test_dir, loc_name, "_tests.xlsx"), sheet="absorption", detectDates=T)
   
   #----------------------------
   # BUDGET

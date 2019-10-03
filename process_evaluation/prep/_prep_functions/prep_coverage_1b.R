@@ -160,7 +160,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   module_names = c('module', 'modulo')
   standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator', 'indicador ')
   custom_ind_names = c('custom coverage indicator')
-  geography_names = c('geographic area')
+  geography_names = c('geographic area', 'geographie')
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?", "targets cumulative?_x000d_", "¿metas acumulativas?")
   reverse_ind_names = c("reverse indicator?")
   

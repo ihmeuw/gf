@@ -9,24 +9,24 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   
   #TROUBLESHOOTING HELP
   # #Uncomment variables below and run line-by-line.
-  folder = "budgets"
-  folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  if (file_list$file_iteration[i]=="initial"){
-    version = "iterations"
-  } else if (file_list$file_iteration[i]=="revision"){
-    version= "revisions"
-  } else {
-    version = ""
-  }
-  grant_period = file_list$grant_period[i]
-
-  dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
-  if (version != ""){
-    dir = paste0(dir, version, "/")
-  }
-  inFile = file_list$file_name[i]
-  sheet_name = file_list$sheet_impact_outcome_1a_disagg[i]
-  language = file_list$language_programmatic[i]
+  # folder = "budgets"
+  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  # if (file_list$file_iteration[i]=="initial"){
+  #   version = "iterations"
+  # } else if (file_list$file_iteration[i]=="revision"){
+  #   version= "revisions"
+  # } else {
+  #   version = ""
+  # }
+  # grant_period = file_list$grant_period[i]
+  # 
+  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  # if (version != ""){
+  #   dir = paste0(dir, version, "/")
+  # }
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet_impact_outcome_1a_disagg[i]
+  # language = file_list$language_programmatic[i]
 
   # Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Disaggregation_1A', 'Ventilation_1A')
@@ -41,11 +41,23 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   #------------------------------------------------------
   # 1. Select columns, and fix names 
   #------------------------------------------------------
-  impact_col = grep("Impact/Outcome Indicators", gf_data)
+  impact_col = grep("Impact/Outcome", gf_data)
+  if (length(impact_col)==0 & language=="esp"){
+    impact_col = grep("Impacto/Resultados", gf_data)
+  } else if (length(impact_col)==0 & language=="fr"){
+    impact_col = grep("Impact / Effet|Impact/Effet", gf_data)
+  } else if (length(impact_col)>1 & language=="eng"){
+    impact_col = impact_col[1] #Pick the first column - in case there is a "standard indicator" column. 
+  }
   stopifnot(length(impact_col)==1)
-  name_row = grep("Impact/Outcome", gf_data[[impact_col]])
+  impact_vector = gf_data[[impact_col]] #Do this split so you can remove spaces. 
+  impact_vector = gsub(" ", "", impact_vector)
+  
+  name_row = grep("Impact/Outcome", impact_vector)
   if (language=="esp"){
-    name_row = grep("Impacto/Resultados", gf_data[[impact_col]])
+    name_row = grep("Impacto/Resultados", impact_vector)
+  } else if (language=="fr" & inFile%in%c("SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm", "SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx")){
+    name_row = grep("Impact/Effet", impact_vector)
   }
   if (length(name_row)>1){
     name_row = name_row[length(name_row)]
@@ -70,11 +82,17 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   # 2. Reset names after subset above. 
   #------------------------------------------------------
   
-  impact_col = grep("Impact/Outcome Indicators", gf_data)
+  impact_col = grep("Impact/Outcome Indicators|Impact/Outcome indicators", gf_data)
   stopifnot(length(impact_col)==1)
-  name_row = grep("Impact/Outcome", gf_data[[impact_col]])
+  
+  impact_vector = gf_data[[impact_col]] #Do this split so you can remove spaces. 
+  impact_vector = gsub(" ", "", impact_vector)
+  
+  name_row = grep("Impact/Outcome", impact_vector)
   if (language=="esp"){
-    name_row = grep("Impacto/Resultados", gf_data[[impact_col]])
+    name_row = grep("Impacto/Resultados", impact_vector)
+  } else if (language=="fr" & inFile%in%c("SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm", "SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx")){
+    name_row = grep("Impact/Effet", impact_vector)
   }
   if (length(name_row)>1){
     name_row = name_row[length(name_row)]
@@ -147,7 +165,7 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   #Acceptable raw column names - will be matched to corrected names below. 
   impact_names = c('impact / effet ', "impact / outcome ", "impact/outcome", "impacto/resultados")
   standard_ind_names = c('indicateurs', "impact/outcome indicator", 'indicateurs standard', "standard impact/outcome indicator", "indicador estandar ")
-  geography_names = c('geographic area')
+  geography_names = c('geographic area', 'geographie')
   subcat_names = c('ventilation', 'disaggregation', 'desglose')
   category_names = c('categorie', 'categorie ', "categoria")
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
