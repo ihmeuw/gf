@@ -33,40 +33,47 @@ urFit = urFits[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','o
 urFit[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
 urFit[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # -----------------------------------------------
+
+
+# -----------------------------------------------
+# Resolve interaction terms
+
+# make a version with no effect modification
+no_rssh=copy(urFit) 
 no_rssh_table = fread(nodeTableFile3)
 no_rssh = no_rssh[lhs%in%no_rssh_table$variable & rhs%in%no_rssh_table$variable]
 
-#This dataset models the interaction term. 
-# DAVID PLEASE REVIEW THIS!!
-rssh_interaction=copy(urFit1)
+# make a version showing the effect of spending, modified by a typical level of RSSH
+rssh_interaction=copy(urFit)
 rssh_interaction_table = fread(nodeTableFile4)
-MEAN_RSSH = mean(data$gf_rssh_cumulative) #Generate global variable for mean RSSH. 
 
-#Wherever there is an interaction term on the right hand side, calculate interaction term. 
-interaction_est = data.table()
-for (v in c('gf_tb_cumulative', 'gf_mdrtb_cumulative', 'gf_tbhiv_cumulative')){
-  #First grab the interaction terms. 
-  subset = rssh_interaction[rhs==paste0(v, ":gf_rssh_cumulative"), .(lhs, est, est.std)] 
-  
-  #Calculate the interaction term for both est and est.std. 
-  subset[, est_interaction:=est*MEAN_RSSH] 
-  subset[, est.std_interaction:=est.std*MEAN_RSSH]
-  
-  #Then, format data before appending.  
-  subset[, rhs:=v]
-  subset = subset[, .(lhs, rhs, est_interaction, est.std_interaction)]
-  interaction_est = rbind(interaction_est, subset)
-} 
+# look up a constant to use as the RSSH level (standardized and unstandardized)
+mean_rssh = mean(data$gf_rssh_cumulative)
+data[, gf_rssh_cumulative_std:=(gf_rssh_cumulative-mean(gf_rssh_cumulative))/ifelse(sd(gf_rssh_cumulative)>0, sd(gf_rssh_cumulative), 1)]
+mean_rssh_std = mean(data$gf_rssh_cumulative_std)
 
-#Merge new interaction terms onto old dataset. 
-rssh_interaction = merge(rssh_interaction, interaction_est, by=c('lhs', 'rhs'), all=T) #Shouldn't need all argument but adding it anyway. 
-  
-#Replace 'est' and 'est.std' with final interaction term where appropriate. 
-rssh_interaction[!is.na(est_interaction), est:=est + est_interaction]
-rssh_interaction[!is.na(est.std_interaction), est.std:=est.std+est.std_interaction]
+# isolate interaction terms and prep to add them to main effects
+interaction_effects = urFit[grepl(':',rhs), c('lhs','op','rhs','est','est.std'), with=FALSE]
+interaction_effects[, rhs:=gsub(':.*','',rhs)]
 
-#Subset down to only the variables you care about. 
-rssh_interaction = rssh_interaction[lhs%in%rssh_interaction_table$variable & rhs%in%rssh_interaction_table$variable]
+# multiply constants by interaction coefficients
+interaction_effects[, est:=est*mean_rssh]
+interaction_effects[, est.std:=est.std*mean_rssh_std]
+setnames(interaction_effects, c('est','est.std'), c('est_em','est.std_em'))
+
+# add effect modifier coefficients to main effects
+rssh_interaction = merge(rssh_interaction, interaction_effects, by=c('lhs','op','rhs'), all.x=TRUE)
+rssh_interaction[!is.na(est_em), est:=est+est_em]
+rssh_interaction[!is.na(est.std_em), est.std:=est.std+est.std_em]
+
+# now drop interaction terms
+no_rssh = no_rssh[!grepl(':', rhs)]
+rssh_interaction = rssh_interaction[!grepl(':', rhs)]
+# -----------------------------------------------
+
+
+# -----------------------------------------------
+# Graph
 
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit, nodeTable=nodeTable, 
