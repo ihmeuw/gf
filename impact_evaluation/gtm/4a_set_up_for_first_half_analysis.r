@@ -126,10 +126,12 @@ for (v in allVars){
 }
 
 #------------------------------------------------------------
-# Drop variables that are not being used in model object before cumulative sum. 
-missingVars = modelVars[!modelVars%in%names(data)]
+# Drop variables that are not being used in model object before cumulative sum. "
+modelVarSubset = modelVars[!modelVars%in%c("gf_mdrtb:gf_rssh", "gf_tbhiv:gf_rssh", "gf_tb:gf_rssh")] #Don't worry about the interaction terms. 
+modelVarSubset = c(modelVarSubset, 'gf_rssh')
+missingVars = modelVarSubset[!modelVarSubset%in%names(data)]
 if (length(missingVars)!=0) print("There are missing model variables!")
-data = data[, c(modelVars, 'department', 'date'), with=F]
+data = data[, c(modelVarSubset, 'department', 'date'), with=F]
 
 
 
@@ -178,8 +180,11 @@ for(v in logVars) { #logVars created in 'set_up_r' script.
 
 #Only keep variables that will be used in the model. 
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c(modelVars, 'department', 'date')
-data = data[, modelVars, with=F]
+modelVarSubset = modelVars[!modelVars%in%c("gf_mdrtb_cumulative:gf_rssh_cumulative", 
+                                           "gf_tbhiv_cumulative:gf_rssh_cumulative", "gf_tb_cumulative:gf_rssh_cumulative")] #Don't worry about the interaction terms. 
+modelVarSubset = c(modelVarSubset, 'gf_rssh_cumulative')
+modelVarSubset = c(modelVarSubset, 'department', 'date')
+data = data[, modelVarSubset, with=F]
 
 # ---------------------------------------------------------------------------------------
 # Run final tests

@@ -30,7 +30,7 @@ names(outputs_activities) <- gsub("_value", "", names(outputs_activities))
 # rectangularize before merge
 departments = unique(outputs_activities$department)
 departments = departments[!is.na(departments)]
-frame = expand.grid(date = seq(START_YEAR, 2018, by=1), department = departments)
+frame = expand.grid(date = seq(START_YEAR-1, 2018, by=1), department = departments) #Because RSSH is lagged one year. 
 
 #Inputs 
 resource_tracking_rect = merge(frame, resource_tracking, by='date') #Do I need to divide resource tracking dollars here? 
@@ -69,6 +69,7 @@ parsedModel = lavParseModelString(model)
 lhs = parsedModel$lhs
 rhs = parsedModel$rhs
 modelVars = data.table(lhs=lhs, rhs=rhs)
+modelVars[grep("gf_rssh_cumulative", rhs), rhs:="gf_rssh_cumulative"]
 finVars = unique(redistribution_mat$input_var)
 
 # For each financial variable, get a vector of what variables it's leading to in the model, 
@@ -140,7 +141,7 @@ for(i in 1:nrow(redistribution_mat)) {
 
 #Restrict years to begin at the global START_YEAR variable, specified in set_up_r
 # This should have already happened back in data prep, but OK to leave here (EL 8/12/19) 
-merge_file = merge_file[date>=START_YEAR] 
+merge_file = merge_file[date>=START_YEAR-1] #Resource tracking RSSH is lagged one year. EL 10/2/2019
 
 # drop unnecessary variables
 merge_file = merge_file[, -c('mean','tmp','prop')] #Also removing 'min' EL 8/7/19
