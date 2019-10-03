@@ -145,7 +145,11 @@ if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo)
 }
 
 #Add a temporary IE dir for when running on a local computer - this should match clustertmpDir2 when running on cluster!
-tempIeDir = paste0('C:/Users/elineb/Desktop/tmp_cluster/')
+if (Sys.info()[1]=='Windows') {
+	if (username=='elineb') tempIeDir = paste0('C:/Users/elineb/Desktop/tmp_cluster/')
+	if (username=='davidp6') tempIeDir = paste0('J:/temp/davidp6/ie_tmpdir')
+}
+if (Sys.info()[1]!='Windows') tempIeDir = clustertmpDir2
 # ---------------------------------------------------------------------------------
 
 
