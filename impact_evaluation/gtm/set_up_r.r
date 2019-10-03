@@ -127,6 +127,8 @@ impactFile = paste0(rawIeDir, "impact_7.15.19.csv")
 # listing names of variables in each model, their labels and coordinates for the SEM graph
 nodeTableFile1 = './impact_evaluation/gtm/visualizations/nodetable_first_half.csv'
 nodeTableFile2 = './impact_evaluation/gtm/visualizations/nodetable_second_half.csv'
+nodeTableFile3 = './impact_evaluation/gtm/visualizations/nodetable_no_rssh.csv'
+nodeTableFile4 = './impact_evaluation/gtm/visualizations/nodetable_rssh_interaction.csv'
 # ---------------------------------------------------------------------------------
 
 

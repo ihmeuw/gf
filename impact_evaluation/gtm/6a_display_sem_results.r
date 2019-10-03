@@ -32,10 +32,10 @@ urFits1 = copy(urFits)
 nodeTable1 = fread(nodeTableFile1)
 # nodeTable2 = fread(nodeTableFile2)
 
-names(data1)[!names(data1)%in%nodeTable1$variable]
+# names(data1)[!names(data1)%in%nodeTable1$variable]
 
 # ensure there are no extra variables introducted from nodeTable
-nodeTable1 = nodeTable1[variable %in% names(data1)]
+# nodeTable1 = nodeTable1[variable %in% names(data1)]
 # nodeTable2 = nodeTable2[variable %in% names(data2)]
 
 # compute averages (approximation of standard error, would be better as Monte Carlo simulation)
@@ -45,42 +45,44 @@ urFits1[, se_ratio:=se/est]
 urFit1 = urFits1[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
 urFit1[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
 urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
-# urFits2[, se_ratio.std:=se.std/est.std]
-# urFits2[, se_ratio:=se/est]
-# urFit2 = urFits2[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
-# urFit2[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
-# urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
-# -----------------------------------------------
 
-#Some visualization code for model run 8/15/19 
-# View(urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Notified_out_cumulative"])
-# urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Notified_out_cumulative", mean(est)] # A very high positive average, but also a lot of variation. 
-# View(urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Started_on_Treatment_out_cumulative"])
-# urFits1[rhs=="MDR_Cases_Started_Treatment_out_cumulative" & lhs=="Cases_Started_on_Treatment_out_cumulative", mean(est)] # A very low negative average. 
-# # Do these relationships make sense? 
-# 
-# # ----------------------------------------------
-# Display results
+#Fiddle with data a bit to tease out the RSSH regression terms - generate the interaction term here. 
+#'no_rssh' just models the term without the RSSH interaction. 
+no_rssh=copy(urFit1) 
+no_rssh_table = fread(nodeTableFile3)
+no_rssh = no_rssh[lhs%in%no_rssh_table$variable & rhs%in%no_rssh_table$variable]
 
-# my sem graph function for first half model
-# p1 = semGraph(parTable=means1, nodeTable=nodeTable1, 
-# 	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
-# 
-# # my sem graph function for second half model
-# p2 = semGraph(parTable=means2, nodeTable=nodeTable2,
-# 	scaling_factors=NA, standardized=TRUE, edgeLabels=FALSE,
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
-# 
-# # my sem graph function for first half model with coefficients
-# p3 = semGraph(parTable=means1, nodeTable=nodeTable1, 
-# 	scaling_factors=NA, standardized=TRUE, 
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
-# 
-# # my sem graph function for second half model with coefficients
-# p4 = semGraph(parTable=means2, nodeTable=nodeTable2,
-# 	scaling_factors=NA, standardized=TRUE,
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
+#This dataset models the interaction term. 
+# DAVID PLEASE REVIEW THIS!!
+rssh_interaction=copy(urFit1)
+rssh_interaction_table = fread(nodeTableFile4)
+MEAN_RSSH = mean(data$gf_rssh_cumulative) #Generate global variable for mean RSSH. 
+
+#Wherever there is an interaction term on the right hand side, calculate interaction term. 
+interaction_est = data.table()
+for (v in c('gf_tb_cumulative', 'gf_mdrtb_cumulative', 'gf_tbhiv_cumulative')){
+  #First grab the interaction terms. 
+  subset = rssh_interaction[rhs==paste0(v, ":gf_rssh_cumulative"), .(lhs, est, est.std)] 
+  
+  #Calculate the interaction term for both est and est.std. 
+  subset[, est_interaction:=est*MEAN_RSSH] 
+  subset[, est.std_interaction:=est.std*MEAN_RSSH]
+  
+  #Then, format data before appending.  
+  subset[, rhs:=v]
+  subset = subset[, .(lhs, rhs, est_interaction, est.std_interaction)]
+  interaction_est = rbind(interaction_est, subset)
+} 
+
+#Merge new interaction terms onto old dataset. 
+rssh_interaction = merge(rssh_interaction, interaction_est, by=c('lhs', 'rhs'), all=T) #Shouldn't need all argument but adding it anyway. 
+  
+#Replace 'est' and 'est.std' with final interaction term where appropriate. 
+rssh_interaction[!is.na(est_interaction), est:=est + est_interaction]
+rssh_interaction[!is.na(est.std_interaction), est.std:=est.std+est.std_interaction]
+
+#Subset down to only the variables you care about. 
+rssh_interaction = rssh_interaction[lhs%in%rssh_interaction_table$variable & rhs%in%rssh_interaction_table$variable]
 
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
@@ -92,14 +94,28 @@ p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1,
               lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5, 
               labSize1 = 4, labSize2 = 4)
 
-# my sem graph function for second half "unrelated regressions" model
-# p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
-# 	scaling_factors=NA, standardized=TRUE,
-# 	lineWidth=1.5, curved=0, tapered=FALSE)
-# 
-# p6_nolab = semGraph(parTable=urFit2, nodeTable=nodeTable2,
-#                     scaling_factors=NA, standardized=TRUE,
-#                     lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE)
+#New SEM graphs for RSSH interaction term datasets - both standardized and not. 
+graph_no_rssh = semGraph(parTable=no_rssh, nodeTable=no_rssh_table, 
+                         scaling_factors=NA, standardized=FALSE, 
+                         lineWidth=1.5, curved=0, tapered=FALSE,
+                         colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
+
+graph_no_rssh_std = semGraph(parTable=no_rssh, nodeTable=no_rssh_table, 
+                         scaling_factors=NA, standardized=TRUE, 
+                         lineWidth=1.5, curved=0, tapered=FALSE,
+                         colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
+
+graph_rssh_interaction = semGraph(parTable=rssh_interaction, nodeTable=rssh_interaction_table, 
+                         scaling_factors=NA, standardized=FALSE, 
+                         lineWidth=1.5, curved=0, tapered=FALSE,
+                         colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
+
+graph_rssh_interaction_std = semGraph(parTable=rssh_interaction, nodeTable=rssh_interaction_table, 
+                             scaling_factors=NA, standardized=TRUE, 
+                             lineWidth=1.5, curved=0, tapered=FALSE,
+                             colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
+
+
 # ----------------------------------------------
 
 
@@ -146,6 +162,10 @@ pdf(outputFile6a, height=6, width=9)
 # print(p4)
 print(p5)
 print(p5_nolab)
+print(graph_no_rssh)
+print(graph_no_rssh_std)
+print(graph_rssh_interaction)
+print(graph_rssh_interaction_std)
 # print(p6)
 dev.off()
 
