@@ -7,7 +7,7 @@
 
 
 # -----------------------------------------------
-# Load/prep data and functions
+# Load data and functions
 
 source('./impact_evaluation/gtm/set_up_r.r')
 
@@ -16,39 +16,23 @@ source('./impact_evaluation/_common/graphLavaan.r')
 
 # load model results
 load(outputFile5a)
-data1=copy(data)
-model1=copy(model)
-# means1 = copy(means)
-# summaries1 = copy(summaries)
-urFits1 = copy(urFits)
-# load(outputFile5b)
-# data2=copy(data)
-# model2=copy(model)
-# means2 = copy(means)
-# summaries2 = copy(summaries)
-#urFits2 = copy(urFits)
 
 # load nodeTable for graphing
-nodeTable1 = fread(nodeTableFile1)
-# nodeTable2 = fread(nodeTableFile2)
+nodeTable = fread(nodeTableFile1)
+# -----------------------------------------------
 
-# names(data1)[!names(data1)%in%nodeTable1$variable]
 
-# ensure there are no extra variables introducted from nodeTable
-# nodeTable1 = nodeTable1[variable %in% names(data1)]
-# nodeTable2 = nodeTable2[variable %in% names(data2)]
+# -----------------------------------------------
+# Aggregate department-level fit objects
 
 # compute averages (approximation of standard error, would be better as Monte Carlo simulation)
 paramVars = c('est.std','est','se_ratio.std', 'se_ratio', 'se.std', 'se')
-urFits1[, se_ratio.std:=se.std/est.std]
-urFits1[, se_ratio:=se/est]
-urFit1 = urFits1[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
-urFit1[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
-urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
-
-#Fiddle with data a bit to tease out the RSSH regression terms - generate the interaction term here. 
-#'no_rssh' just models the term without the RSSH interaction. 
-no_rssh=copy(urFit1) 
+urFits[, se_ratio.std:=se.std/est.std]
+urFits[, se_ratio:=se/est]
+urFit = urFits[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
+urFit[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
+urFit[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
+# -----------------------------------------------
 no_rssh_table = fread(nodeTableFile3)
 no_rssh = no_rssh[lhs%in%no_rssh_table$variable & rhs%in%no_rssh_table$variable]
 
