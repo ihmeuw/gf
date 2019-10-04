@@ -38,7 +38,7 @@ urFit[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # -----------------------------------------------
 # Resolve interaction terms
 
-# make a version with no effect modification
+# make a version with no RSSH effect
 no_rssh=copy(urFit) 
 no_rssh_table = fread(nodeTableFile3)
 no_rssh = no_rssh[lhs%in%no_rssh_table$variable & rhs%in%no_rssh_table$variable]
@@ -52,12 +52,16 @@ mean_rssh = mean(data$gf_rssh_cumulative)
 data[, gf_rssh_cumulative_std:=(gf_rssh_cumulative-mean(gf_rssh_cumulative))/ifelse(sd(gf_rssh_cumulative)>0, sd(gf_rssh_cumulative), 1)]
 mean_rssh_std = mean(data$gf_rssh_cumulative_std)
 
+# look up a minimum to use for the no-RSSH scenario because the standardized data has a mean of zero
+min_rssh_std = min(data$gf_rssh_cumulative_std)
+
 # isolate interaction terms and prep to add them to main effects
 interaction_effects = urFit[grepl(':',rhs), c('lhs','op','rhs','est','est.std'), with=FALSE]
 interaction_effects[, rhs:=gsub(':.*','',rhs)]
 
 # multiply constants by interaction coefficients
 interaction_effects[, est:=est*mean_rssh]
+interaction_effects[, est.std_min_em:=est.std*min_rssh_std]
 interaction_effects[, est.std:=est.std*mean_rssh_std]
 setnames(interaction_effects, c('est','est.std'), c('est_em','est.std_em'))
 
@@ -65,6 +69,10 @@ setnames(interaction_effects, c('est','est.std'), c('est_em','est.std_em'))
 rssh_interaction = merge(rssh_interaction, interaction_effects, by=c('lhs','op','rhs'), all.x=TRUE)
 rssh_interaction[!is.na(est_em), est:=est+est_em]
 rssh_interaction[!is.na(est.std_em), est.std:=est.std+est.std_em]
+
+# adjust-down the no-RSSH scenario using the minimum
+no_rssh = merge(no_rssh, interaction_effects, by=c('lhs','op','rhs'), all.x=TRUE)
+no_rssh[!is.na(est.std_min_em), est.std:=est.std+est.std_min_em]
 
 # now drop interaction terms
 no_rssh = no_rssh[!grepl(':', rhs)]
@@ -147,11 +155,11 @@ p10 = semGraph(parTable=urFit, nodeTable=nodeTable,
 # Save output
 print(paste('Saving:', outputFile6a)) 
 pdf(outputFile6a, height=6, width=9)
-print(p5)
-print(p5_nolab)
-print(graph_no_rssh)
+# print(p5)
+# print(p5_nolab)
+# print(graph_no_rssh)
 print(graph_no_rssh_std)
-print(graph_rssh_interaction)
+# print(graph_rssh_interaction)
 print(graph_rssh_interaction_std)
 dev.off()
 
@@ -159,14 +167,14 @@ dev.off()
 archive(outputFile6a)
 # -----------------------------------
 # 
-# #Save just the GLM diagrams with correlation coefficients as PNGs. 
-ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p5, height=10, width=13)
+# # #Save just the GLM diagrams with correlation coefficients as PNGs. 
+# ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p5, height=10, width=13)
 
-sep_terg_save = "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/september_terg_presentation/"
-#Save the specific graphics for reports in their own folder. 
-ggsave(paste0(sep_terg_save, "model_first_half_coefficients.png"), p5, height=10, width=13)
-ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nolab, height=10, width=13)
-ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
-ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
-ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)
-ggsave(paste0(sep_terg_save, "outputs_outcomes_pathway.png"), p10, height=10, width=13)
+# sep_terg_save = "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/september_terg_presentation/"
+# #Save the specific graphics for reports in their own folder. 
+# ggsave(paste0(sep_terg_save, "model_first_half_coefficients.png"), p5, height=10, width=13)
+# ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nolab, height=10, width=13)
+# ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
+# ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
+# ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)
+# ggsave(paste0(sep_terg_save, "outputs_outcomes_pathway.png"), p10, height=10, width=13)
