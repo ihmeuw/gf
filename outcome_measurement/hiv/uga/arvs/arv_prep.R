@@ -54,9 +54,16 @@ for (f in files) {
   # create useful variable names 
   setnames(arv_data, ant_names,
            c("facility", "art", "district", "anc_visits", 
-             "mothers_tested_anc1", "hiv_pos_anc1", "known_hiv_anc1", "option_b_pluc_anc1",
+             "mothers_tested_anc1", "hiv_pos_anc1", "known_hiv_anc1", "option_b_plus_anc1",
              "moms_on_art_by_anc1", "missed_appts", "tests", "arv", 
              "prop_anc1_tested", "prop_hiv_pos_not_yet_on_art", "prop_hiv_pos_of_tested"))
+  
+  # ----------------------
+  # a number of rows are duplicated identically in 2018/19
+  # 2013 - 2017 data do not contain this error
+  # this appears to be a system error - these entries are IDENTICAL
+  # drop identical entries before dropping entries that are identical except for the partner
+  arv_data = arv_data[!(duplicated(arv_data))]
   
   # ----------------------
   # prep facilities
@@ -65,24 +72,60 @@ for (f in files) {
   arv_data[ , impl_partner:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 2))]
   arv_data[ , impl_partner:=trimws(gsub(")", "", impl_partner))]
   
-  # drop out implementing partner
-  arv_data[ , facility:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 1))]
-  arv_data[ , facility:=trimws(facility, which='right')]
+  # remove the implementing partner from the facility name
+  # some facilities are distinguished by a type in parentheses
+  # for example, there is a "pabbo (govt)" HC III and a "pabbo (NGO)" HC III
+  # these should be left with names intact to distinguish distinct values
+  arv_data[ , facility_new:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 1))]
+  arv_data[ , facility_new:=trimws(facility_new, which='right')]
+  
+  # replace facility names to names without implementing partner in parentheses
+  arv_data[!grepl("II", arv_data$impl_partner) & !grepl("HC", arv_data$impl_partner), facility:=facility_new]
+  arv_data[ ,facility_new:=NULL]
   
   #-----------------------------------
   # create a variable that lists all implementing partners
   # allows you to drop individual rows for each
   
-  arv_data[, partners := paste0(impl_partner, collapse=", "), by="facility"]
+  # for the facilities without an implementing partner, replace with missing
+  arv_data[grepl("II", arv_data$impl_partner) | grepl("HC", arv_data$impl_partner),
+           impl_partner:=NA]
+  
+  # now create a list of implementing partners within a single field
+  arv_data[!is.na(impl_partner), partners:= paste0(impl_partner, collapse=", "), by="facility"]
+  arv_data[ ,impl_partner:=NULL]
+  setnames(arv_data, 'partners', 'impl_partners')
   
   #-----------------------------------
   # drop duplicates
   # duplicates are only because of implementing partners 
-  # there is always the same number of health facilities and art sites
-  arv_data = arv_data[!(duplicated(facility))]
-  arv_data[ ,impl_partner:=NULL]
-  setnames(arv_data, 'partners', 'impl_partner')
+ 
+  # drop duplicate entries a second time (now that implementing partners are removed)
+  arv_data = arv_data[!(duplicated(arv_data))]
   
+  # test code to look for facilities with duplicate entries
+  # some facilities have two entries per facility, but one with all missing values
+  # remove duplicate facility names with all missing values
+  facilities =  arv_data[duplicated(facility), unique(facility)]
+  arv_data = arv_data[!(facility %in% facilities & is.na(anc_visits))]
+  
+  # remove duplicate entries in which the only difference is implementing partner
+  facilities =  arv_data[duplicated(facility), unique(facility)]
+  arv_data = arv_data[!(facility %in% facilities & is.na(impl_partners))] 
+  
+  # there should now not be any duplicate facilities
+  if (arv_data[duplicated(facility), length(unique(facility))]!=0) print(paste("Duplicate facilities in file", f))
+  
+  #-----------------------------------
+  # format the names of facilities to be less silly
+  
+  arv_data[ , facility:=gsub("REGIONAL REF", "Regional Referral Hospital", facility)]
+  arv_data[ , facility:=gsub("HOSPITAL", "Hospital", facility)]
+  arv_data[ , facility:=gsub("CLINIC", "Clinic", facility)]   
+  arv_data[ , facility:=gsub("GOVT", "", facility)]    
+
+  #----------------------------------
+
   #----------------------------------
   # remove 'district' from district names
   arv_data[ , district:=unlist(lapply(strsplit(arv_data$district, '\\s' ), '[', 1))]
@@ -116,6 +159,14 @@ for (f in files) {
   arv_data[is.na(level), level:='Other']
   arv_data[ ,facility1:=NULL]
   
+  # ----------------------  
+  # fix TASO clinic names - some include -NR at the end
+  arv_data[level=='TASO', facility:=gsub('-NR', "", facility)]
+  arv_data[level=='TASO', facility:=gsub('- NR', "", facility)]
+  
+  # check white space is trimmed from all names
+  arv_data[ ,facility:=trimws(facility, which='both')]
+  
   # ----------------------
   # convert Y/Ns to logicals
   # do not do as a ifelse because of missing data and variable types
@@ -142,7 +193,7 @@ for (f in files) {
 
   # generate a date for the start date of the week
   arv_data[ , day:=(week*7)-6]
-  arv_data[ , date:=strptime(paste(year, day), format="%Y %j")]
+  arv_data[ , date:=strptime(paste(year, day), format="%Y %j")] # warnings are ok
   arv_data[ , date:=as.Date(date)]
   
   # generate a monthly date
@@ -152,6 +203,12 @@ for (f in files) {
   # drop week and day, as well as previously used string variables
   arv_data[ ,c('day', 'tests', 'arv', 'art', 'week'):=NULL]
   
+  #-----------------------
+  # final check on duplicate entries and facility names 
+  
+  
+  #-----------------------
+  # bind each week of data to the full data to create a complete data set
   if(i==1) full_data = arv_data
   if(i>1) full_data = rbind(full_data, arv_data)
   i = i+1
