@@ -31,7 +31,7 @@ rerun_inputs <- FALSE
 rerun_outputs <- FALSE
 rerun_outcomes <- FALSE
 rerun_merge <- FALSE
-rerun_adjust <- TRUE
+rerun_adjust <- FALSE
 rerun_explore <- TRUE
 rerun_models <- TRUE
 rerun_analysis <- TRUE
@@ -49,7 +49,7 @@ setDT(drc_mal_map)
 # Prep resource tracking data  
 # ---------------------------------------
 if(rerun_inputs == TRUE){
-  source('./impact_evaluation/drc/2a_prep_drc_expenditures.r')
+  # source('./impact_evaluation/drc/2a_prep_drc_expenditures.r') #This file is depracated! EL 9/24/2019 
   source('./impact_evaluation/drc/2a_prep_resource_tracking.r')
 }
 
@@ -92,10 +92,10 @@ if (rerun_adjust==TRUE) {
 # 4a and 4b will be very slow if not on IHME's cluster
 # ---------------------------------------
 if (rerun_explore==TRUE) { 
-	source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
+	# source('./impact_evaluation/drc/4a_set_up_for_first_half_analysis.r')
 	# source('./impact_evaluation/drc/4b_set_up_for_second_half_analysis.r')
 	source('./impact_evaluation/drc/4c_explore_first_half_data.r')
-	# source('./impact_evaluation/drc/4d_explore_second_half_data.r')
+	source('./impact_evaluation/drc/4d_explore_second_half_data.r')
 }
 
 # ---------------------------------------
@@ -103,7 +103,7 @@ if (rerun_explore==TRUE) {
 # ---------------------------------------
 if (rerun_models==TRUE) { 
 	source('./impact_evaluation/drc/5a_run_first_half_analysis.r')
-	# source('./impact_evaluation/drc/5b_run_second_half_analysis.r')
+	source('./impact_evaluation/drc/5b_run_second_half_analysis.r')
 }
 
 # ---------------------------------------

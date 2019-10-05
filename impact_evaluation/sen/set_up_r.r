@@ -19,6 +19,7 @@
 # ------------------
 # Load packages
 set.seed(1)
+library(Amelia)
 library(data.table)
 library(lubridate)
 library(readxl)
@@ -64,7 +65,7 @@ rawIeDir = paste0(ieDir, 'raw_data/')
 preppedIeDir =  paste0(ieDir, 'prepped_data/')
 visIeDir = paste0(ieDir, 'visualizations/')
 rtDir = paste0(dir, 'resource_tracking/_gf_files_gos/combined_prepped_data/')
-fghDir = paste0(dir, 'resource_tracking/_fgh/prepped_data/')
+fghDir = paste0(dir, 'resource_tracking/_odah/prepped_data/')
 whoDir = paste0(dir, 'resource_tracking/_ghe/who/prepped_data/')
 #mapDir = paste0(dir, '/mapping/multi_country/intervention_categories')
 #pnlpDir = paste0(dir, 'outcome_measurement/sen/prepped_data/PNLP/post_imputation/')
@@ -95,7 +96,7 @@ source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 
 # resource tracking files with prepped budgets, expenditures, disbursements
 #budgetFile = paste0(rtDir, 'final_budgets.rds')
-expendituresFile = paste0(rtDir, 'final_expenditures.rds')
+expendituresFile = paste0(rtDir, 'final_expenditures_sen.RDS')
 fghFile = paste0(fghDir, 'other_dah_actuals_all_sen.RDS')
 
 #gheMalFile = paste0(fghDir, 'ghe_actuals_malaria.rds')
@@ -155,6 +156,9 @@ outputFile2b = paste0(preppedIeDir, 'prepped_resource_tracking.RDS')
 
 # output file from 2c_prep_mdrtb_indicators.r
 outputFile2c = paste0(preppedIeDir, 'prepped_tb_mdr_data.RDS')
+
+# output file from 2d_impute_outputs.r
+outputFile2d = paste0(preppedIeDir, 'imputed_outcomes.RDS')
  
 # output file from 3_merge_data.R
 outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')

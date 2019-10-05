@@ -65,7 +65,7 @@ data = na.omit(data)
 # make cumulative variables
 cumulVars = names(data)[grepl('exp_|other_dah|ghe|oop', names(data))]
 cumulVars = c(cumulVars, 'tb_tfc', 'ntr_rhz', 'ntr_erhz', 'ntr_all', 
-	'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 'tot_confirme', 
+	'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 
 	'com_cause', 'com_radio', 'com_enf_ref', 'com_mobsoc', 
 	'com_nom_touss', 'com_enf_ref', 'tb_vih_arv', 'tot_genexpert',
 	'tb_vih_arv', 'tpm_chimio_enf', 'tpm_chimio_pvvih', 'dx_count')

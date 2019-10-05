@@ -137,6 +137,8 @@ if (prep_1a_disagg){
           file_dir = paste0(file_dir, version, "/")
         }
         
+        print(paste0("Running ", file_list$file_name[i]))
+        
         args = list(file_dir, file_list$file_name[i], file_list$sheet_impact_outcome_1a_disagg[i], file_list$language_programmatic[i])
         tmpData = do.call(prep_impact_outcome_1A_disagg, args) 
         

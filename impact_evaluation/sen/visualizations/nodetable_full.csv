@@ -1,21 +1,24 @@
-variable,y,x,label
-lag_other_dah_T1_cumulative,6,-10,Other TB Care and Prev Exp.
-lag_exp_T1_cumulative,11,-10,GF TB Care and Prev Exp.
-lag_exp_T2_cumulative,1,-10,GF TB-HIV Exp.
-lag_other_dah_T3_cumulative,2.5,-10,Other MDR-TB Exp.
-lag_exp_T3_cumulative,3.75,-10,GF MDR-TB Exp.
-com_radio_cumulative,12,-3,Radio broadcasts (#)
-com_cause_cumulative,10.5,-3,Community chats (#)
-com_mobsoc_cumulative,9,-3,Social mobilizations (#)
-tot_genexpert_cumulative,7.75,-3,Genexpert Tests (#)
-com_nom_touss_cumulative,11.25,3,Those with cough screened (#)
-com_enf_ref_cumulative,9.75,3,Child Contacts Ref. (#)
-tb_tfc_cumulative,8,3,TB Cases identified (#)
-ntr_all_cumulative,5,3,Treated First-line (#)
-dx_count_cumulative,3,3,MDR-TB Cases Diagnosed (#)
-tb_vih_arv_cumulative,1,3,TB-HIV Rec. ARV (#)
-tpm_chimio_enf_cumulative,10,10,IPT Medicine for children
-gueris_taux,6.75,10,Treatment Success Rate: TB
-perf_lab,5,10,Lab Performance Rate
-mdr_tx_rate,3,10,MDR-TB Started on Treatment (Rate)
-tbvih_arvtx_rate,1,10,Proportion of TB/HIV patients starting ARV tx.
+variable,y,x,label,,,
+lag_exp_T1_2_cumulative,18,-15,GF TB Treatment ($),,,
+lag_other_dah_T1_2_cumulative,17,-15,Other TB Treatment ($),,,
+lag_exp_T1_5_cumulative,13,-15,GF TB Community Care,,,
+lag_exp_T1_1_cumulative,8.5,-15,GF Case Detection and Diagnosis ($),,,
+lag_other_dah_T1_1_cumulative,5,-15,Other Case Detection and Diagnosis ($),,,
+lag_exp_T3_cumulative,3,-15,GF MDR-TB Exp.,,,
+lag_other_dah_T3_cumulative,1.5,-15,Other MDR-TB Exp.,,,
+lag_exp_T2_cumulative,0,-15,GF TB-HIV Exp.,,,
+com_mobsoc_cumulative,12.5,-7,Social mobilizations (#),,,
+com_cause_cumulative,11.5,-7,Community chats (#),,,
+com_radio_cumulative,10.5,-7,Radio broadcasts (#),,,
+perf_lab,5.2,0,Lab Performance Rate,,,
+com_enf_ref_cumulative,15.5,0,Child Contacts Ref. (#),,,
+com_nom_touss_cumulative,14,0,People with cough referred (#),,,
+tot_genexpert_cumulative,7.5,-5,Genexpert Tests (#),,,
+ntr_all_cumulative,17.25,5,Treated First-line (#),,,
+tb_tfc_cumulative,8.5,5,TB Cases identified (#),,,
+dx_count_cumulative,1.5,5,MDR-TB Cases Diagnosed (#),,,
+tb_vih_arv_cumulative,0,5,TB-HIV Rec. ARV (#),,,         
+gueris_taux,17.25,10,Treatment Success Rate: TB,,,
+tpm_chimio_enf_cumulative,15.5,10,IPT Medicine for children,,,
+mdr_tx_rate,1.5,10,MDR-TB Started on Treatment (Rate),,,
+tbvih_arvtx_rate,0,10,Proportion of TB/HIV patients starting ARV tx.,,,

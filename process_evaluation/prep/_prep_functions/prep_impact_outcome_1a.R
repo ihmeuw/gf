@@ -41,7 +41,7 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   #------------------------------------------------------
   # 1. Select columns, and fix names 
   #------------------------------------------------------
-  impact_col = grep("Impact/Outcome Indicators", gf_data)
+  impact_col = grep("Impact/Outcome", gf_data)
   if (length(impact_col)==0 & language=="esp"){
     impact_col = grep("Impacto/Resultados", gf_data)
   } else if (length(impact_col)==0 & language=="fr"){

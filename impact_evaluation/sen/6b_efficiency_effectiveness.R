@@ -92,9 +92,14 @@ pooled_means1[, upper:=est+(1.96*se)]
 
 # activties
 activityVars <- c('com_radio_cumulative', 'com_cause_cumulative', 
-                  'com_mobsoc_cumulative', 'tot_genexpert_cumulative', 
+                  'com_enf_ref_cumulative', 'com_nom_touss_cumulative',
+                  'com_mobsoc_cumulative',
+                  'tot_genexpert_cumulative', 
                   'dx_count_cumulative', 'tb_vih_arv_cumulative',
                   'ntr_all_cumulative', 'tb_tfc_cumulative', 'perf_lab')
+
+output <- data.table()
+
 for(c in activityVars) {
 	commodity_cost = pooled_means1[lhs==c,c('label_rhs','est','se'), with=F]
 	commodity_cost = commodity_cost[, .(est=sum(est), se=mean(se))]
@@ -110,90 +115,14 @@ for(c in activityVars) {
 	}
 	print(paste0('Overall cost per one ', c, ':'))
 	print(commodity_cost)
+	output <- rbind(commodity_cost, output, fill=TRUE)
 }
 
-# pooled, mediated means comparing different types of treatment
-
+activities <- data.table(rev(activityVars))
+output <- cbind(output, activities)
 # -----------------------------------------------
 
-
-# ----------------------------------------------
-# Bottlenecks in efficiency and effectiveness
-
-actVars = names(data)[grep("act", names(data))]
-outVars = names(data)[grep("out", names(data))]
-
-# graph coefficients from inputs to activities
-p1 = ggplot(urFits1[lhs %in% actVars & rhs!='date'], 
-		aes(y=est, ymin=lower, 
-			ymax=upper, x=label_rhs)) + 
-	geom_bar(stat='identity') + 
-	geom_errorbar(width=.25) + 
-	facet_wrap(~label_lhs, scales='free', ncol=1) + 
-	labs(title='Efficiency', subtitle='Activities', 
-		y='Activities per Additional Dollar Invested',x='Input') + 
-	theme_bw() + 
-	coord_flip()
-	
-# graph coefficients from inputs to outputs
-p2 = ggplot(mediation_means[lhs %in% outVars & !rhs.y %in% actVars], 
-		aes(y=est, ymin=lower, 
-			ymax=upper, x=label_rhs)) + 
-	geom_bar(stat='identity') + 
-	geom_errorbar(width=.25) + 
-	facet_wrap(~label_lhs, scales='free', ncol=1) + 
-	labs(title='Efficiency', subtitle='Outputs', 
-		y='Outputs per Additional Dollar Invested',x='Input') + 
-	theme_bw() + 
-	coord_flip()
-
-	
-# graph standardized coefficients from inputs to activities
-p3 = ggplot(urFits1[lhs %in% actVars & rhs!='date'], 
-		aes(y=est.std, ymin=est.std-(1.96*se.std), 
-			ymax=est.std+(1.96*se.std), x=label_rhs)) + 
-	geom_bar(stat='identity') + 
-	geom_errorbar(width=.25) + 
-	facet_wrap(~label_lhs, scales='free_y', ncol=1) + 
-	labs(title='Standardized Efficiency', subtitle='Activities', 
-		y='Activities per Additional Dollar Invested',x='Input') + 
-	theme_bw() + 
-	coord_flip()
-	
-	
-# graph pooled coefficients from inputs to activities
-p4 = ggplot(pooled_means1[lhs %in% actVars], 
-		aes(y=est, ymin=lower, 
-			ymax=upper, x=label_lhs)) + 
-	geom_bar(stat='identity') + 
-	geom_errorbar(width=.25) + 
-	labs(title='Efficiency', subtitle='Activities', 
-		y='Activities per Additional Dollar Invested',x='Input') + 
-	theme_bw() + 
-	coord_flip()
-	
-# graph pooled coefficients from inputs to treatment outputs
-# p8 = ggplot(pooled_means1[lhs %in% outVarsTx], 
-		# aes(y=est, ymin=lower, 
-			# ymax=upper, x=label_lhs)) + 
-	# geom_bar(stat='identity') + 
-	# geom_errorbar(width=.25) + 
-	# labs(title='Efficiency', subtitle='Activities', 
-		# y='Activities per Additional Dollar Invested',x='Input') + 
-	# theme_bw() + 
-	# coord_flip()
-# ----------------------------------------------
-
-
-# ----------------------------------------------
-# Save
-print(paste('Saving:', outputFile6b)) 
-pdf(outputFile6b, height=5.5, width=9)
-print(p1)
-print(p2)
-print(p3)
-print(p4)
-dev.off()
+write.csv(output, file = "C:/Users/frc2/Documents/senegal_analyses/tb/modeling/efficiencyestimates.csv")
 
 # save a time-stamped version for reproducibility
 archive(outputFile6b)
