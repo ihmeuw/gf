@@ -1,9 +1,10 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli
 #
-# 4/10/2018
+# 10/1/2019
 # Loop to download data from the Uganda Viral Load Dashboard
 # Run this file, then prep_uvl
+# Runs on the cluster 
 # ----------------------------------------------
 
 # --------------------
@@ -22,7 +23,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # Files and directories
 
 # whether or not to re-download everything (or just new data)
-reload_everything = FALSE
+reload_everything = TRUE
 
 # output directory
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/uga/vl_dashboard')
@@ -44,7 +45,7 @@ src_dir = '/ihme/code/ccarelli/gf/outcome_measurement/hiv/uga/viral_load/extract
 
 # loop over years - can be altered to run years separately
 # do 2015 tomorrow
-y = c('14', '15', '16', '17', '18')
+y = c('14', '15', '16', '17', '18', '19')
 m = c('01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12')
 s = c('m', 'f', 'x')
 a = c('0,1,2,3,4', '5,6,7,8,9', '10,11,12,13,14', 
@@ -72,17 +73,18 @@ a = c('0,1,2,3,4', '5,6,7,8,9', '10,11,12,13,14',
 # calculate the number of downloads
 length(y)*length(m)*length(s)*length(a)
 
-#--------------------
-# to test the loop
+# # --------------------
+# # to test the loop
 # y = '16'
 # m = '01'
 # a = '0,1,2,3,4'
 # s = c('f', 'm')
-#--------------------
+# # --------------------
 
-#--------------------
-# input arguments - if not including tb, drop t
 arguments = expand.grid(y=y, m=m, s=s, a=a)
+
+#--------------------------
+# function
 
 build_url = function(page_specs) {
   
@@ -103,7 +105,8 @@ build_url = function(page_specs) {
     
     url = paste0('https://vldash.cphluganda.org/live/?age_ids=%5B',
                  a, '%5D&districts=%5B%5D&emtct=%5B%5D&fro_date=20', 
-                 y, m,'&genders=%5B%22',s,'%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%5D&to_date=20',y,m)
+                 y, m,'&genders=%5B%22',s,
+                 '%22%5D&hubs=%5B%5D&indications=%5B%5D&lines=%5B%5D&regimens=%5B%5D&tb_status=%5B%5D&to_date=20',y,m)
     
     
     # to determine where errors occur

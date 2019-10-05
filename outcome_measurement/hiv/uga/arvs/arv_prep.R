@@ -2,7 +2,7 @@
 # Preps ARV Stockout data from CDC Option B+ Dashboard: 
 # http://dashboard.mets.or.ug/jasperserver/slevel/KPIs/107_BPlus_Data_Per_Facility
 # Caitlin O'Brien-Carelli
-# 9/17/2018
+# 10/1/2019
 
 # data are up to date through the final week in 2018
 # ----------------------
@@ -69,11 +69,25 @@ for (f in files) {
   arv_data[ , facility:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 1))]
   arv_data[ , facility:=trimws(facility, which='right')]
   
+  #-----------------------------------
+  # create a variable that lists all implementing partners
+  # allows you to drop individual rows for each
+  
+  for (u in unique(arv_data$facility)) {
+    parts = arv_data[facility==u, unique(impl_partner)]
+    parts = paste0(parts, collapse=",")
+    arv_data[facility==u, partners:=parts]
+  }
+  
+  #-----------------------------------
   # drop duplicates
-  # duplicates are only because of international partners 
+  # duplicates are only because of implementing partners 
   # there is always the same number of health facilities and art sites
   arv_data = arv_data[!(duplicated(facility))]
+  arv_data[ ,impl_partner:=NULL]
+  setnames(arv_data, 'partners', 'impl_partner')
   
+  #----------------------------------
   # remove 'district' from district names
   arv_data[ , district:=unlist(lapply(strsplit(arv_data$district, '\\s' ), '[', 1))]
   
@@ -86,6 +100,7 @@ for (f in files) {
   arv_data[district=="Pakwach", district:="Nebbi"]
   arv_data[district=="Sembabule", district:="Ssembabule"]
   
+  # ----------------------
   # add facility level
   arv_data[ ,facility1:=tolower(facility)]
 
@@ -105,6 +120,7 @@ for (f in files) {
   
   # ----------------------
   # convert Y/Ns to logicals
+  # do not do as a ifelse because of missing data and variable types
   arv_data[art=='Y', art_site:=TRUE]
   arv_data[art=='N', art_site:=FALSE]
   
