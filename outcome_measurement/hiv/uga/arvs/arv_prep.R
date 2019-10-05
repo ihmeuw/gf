@@ -68,6 +68,10 @@ for (f in files) {
   # ----------------------
   # prep facilities
   
+  # there is one facility that has the same name in two districts
+  # change the name so they will not be aggregated (they are distinct)
+  arv_data[facility=='Bugaya HC III ( Buvuma )', facility:='Bugaya Buvuma HC III']
+  
   # create a variable for implementing partner
   arv_data[ , impl_partner:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 2))]
   arv_data[ , impl_partner:=trimws(gsub(")", "", impl_partner))]
@@ -96,10 +100,20 @@ for (f in files) {
   arv_data[ ,impl_partner:=NULL]
   setnames(arv_data, 'partners', 'impl_partners')
   
+  #------------------------------------
+  # differences in implementing partners make it challenging to eliminate duplicate entries
+  # all facilities of the same name should have the same list of partners
+  
+  # create a list of unique implementing partners by facility for later use
+  partners = arv_data[!is.na(impl_partners), .(impl_partners2=unique(impl_partners)), by=facility]
+  arv_data = merge(arv_data, partners, by='facility', all.x=TRUE)
+  arv_data[is.na(impl_partners) & !is.na(impl_partners2), impl_partners:=impl_partners2]
+  arv_data[ , impl_partners2:=NULL]
+  
   #-----------------------------------
   # drop duplicates
   # duplicates are only because of implementing partners 
- 
+
   # drop duplicate entries a second time (now that implementing partners are removed)
   arv_data = arv_data[!(duplicated(arv_data))]
   
@@ -107,11 +121,7 @@ for (f in files) {
   # some facilities have two entries per facility, but one with all missing values
   # remove duplicate facility names with all missing values
   facilities =  arv_data[duplicated(facility), unique(facility)]
-  arv_data = arv_data[!(facility %in% facilities & is.na(anc_visits))]
-  
-  # remove duplicate entries in which the only difference is implementing partner
-  facilities =  arv_data[duplicated(facility), unique(facility)]
-  arv_data = arv_data[!(facility %in% facilities & is.na(impl_partners))] 
+  arv_data = arv_data[!(facility %in% facilities & is.na(anc_visits))] 
   
   # there should now not be any duplicate facilities
   if (arv_data[duplicated(facility), length(unique(facility))]!=0) print(paste("Duplicate facilities in file", f))
@@ -165,7 +175,7 @@ for (f in files) {
   arv_data[level=='TASO', facility:=gsub('- NR', "", facility)]
   
   # check white space is trimmed from all names
-  arv_data[ ,facility:=trimws(facility, which='both')]
+  arv_data[ , facility:=trimws(facility, which='both')]
   
   # ----------------------
   # convert Y/Ns to logicals
@@ -205,7 +215,8 @@ for (f in files) {
   
   #-----------------------
   # final check on duplicate entries and facility names 
-  
+  if (nrow(arv_data[duplicated(arv_data)])!=0) print(paste("Duplicate rows in file:", f))
+  if (nrow(arv_data[duplicated(arv_data$facility)])!=0) print(paste("Duplicate facilities in file:", f))
   
   #-----------------------
   # bind each week of data to the full data to create a complete data set
