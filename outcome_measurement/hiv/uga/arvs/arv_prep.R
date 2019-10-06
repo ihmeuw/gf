@@ -1,10 +1,11 @@
 # ARV stockouts by facility - data prep
 # Preps ARV Stockout data from CDC Option B+ Dashboard: 
 # http://dashboard.mets.or.ug/jasperserver/slevel/KPIs/107_BPlus_Data_Per_Facility
+#
 # Caitlin O'Brien-Carelli
 # 10/1/2019
 
-# data are up to date through the final week in 2018
+# Data are updated through September 1, 2019
 # ----------------------
 # Set up R
 rm(list=ls())
@@ -65,16 +66,51 @@ for (f in files) {
   # drop identical entries before dropping entries that are identical except for the partner
   arv_data = arv_data[!(duplicated(arv_data))]
   
+  #----------------------------------
+  # remove 'district' from district names
+  arv_data[ , district:=unlist(lapply(strsplit(arv_data$district, '\\s' ), '[', 1))]
+  
+  # change the names of districts to match the shape file 
+  arv_data[district=="Bunyangabu", district:="Kabarole"]
+  arv_data[district=="Kagadi", district:="Kibaale"]
+  arv_data[district=="Kakumiro", district:="Kibaale"]
+  arv_data[district=="Namisindwa", district:="Manafwa" ]
+  arv_data[district=="Omoro", district:="Gulu"]
+  arv_data[district=="Pakwach", district:="Nebbi"]
+  arv_data[district=="Sembabule", district:="Ssembabule"]
+  arv_data[district=="Kikuube", district:="Hoima"]
+  arv_data[district=="Kwania", district:="Apac"]
+  
+  # ----------------------
+  
   # ----------------------
   # prep facilities
+  
+  # ----------------------
+  # fix facilities in which the names are poorly formatted
   
   # there is one facility that has the same name in two districts
   # change the name so they will not be aggregated (they are distinct)
   arv_data[facility=='Bugaya HC III ( Buvuma )', facility:='Bugaya Buvuma HC III']
   
+  # a few facilities contain details in parentheses - eliminate
+  arv_data[facility=='Ococia (Orungo) St. Clare', facility:='Ococia Orungo St. Clare']
+  arv_data[facility=='Kanyaryeru (Lake Mburo)', facility:='Kanyaryeru Lake Mburo']
+  arv_data[facility=='Mutolere (St. Francis)', facility:='Mutolere St. Francis']
+  
+  # ----------------------
   # create a variable for implementing partner
   arv_data[ , impl_partner:=unlist(lapply(strsplit(arv_data$facility, '\\(' ), '[', 2))]
   arv_data[ , impl_partner:=trimws(gsub(")", "", impl_partner))]
+  
+  # a few facilities do not include the name Reach Out in parentheses
+  arv_data[grepl("Reach Out", facility) & is.na(impl_partner), impl_partner:='Reach Out']
+  arv_data[ , facility:=trimws(gsub("Reach Out - ", "", facility))]
+  
+  # some facilities have the district in parentheses
+  # drop these - they are not implementing partners
+  # there are no repeat facilities distinguished by district
+  arv_data[impl_partner==district, impl_partner:=NA]
   
   # remove the implementing partner from the facility name
   # some facilities are distinguished by a type in parentheses
@@ -135,21 +171,6 @@ for (f in files) {
   arv_data[ , facility:=gsub("GOVT", "", facility)]    
 
   #----------------------------------
-
-  #----------------------------------
-  # remove 'district' from district names
-  arv_data[ , district:=unlist(lapply(strsplit(arv_data$district, '\\s' ), '[', 1))]
-  
-  # change the names of districts to match the shape file 
-  arv_data[district=="Bunyangabu", district:="Kabarole"]
-  arv_data[district=="Kagadi", district:="Kibaale"]
-  arv_data[district=="Kakumiro", district:="Kibaale"]
-  arv_data[district=="Namisindwa", district:="Manafwa" ]
-  arv_data[district=="Omoro", district:="Gulu"]
-  arv_data[district=="Pakwach", district:="Nebbi"]
-  arv_data[district=="Sembabule", district:="Ssembabule"]
-  arv_data[district=="Kikuube", district:="Hoima"]
-  arv_data[district=="Kwania", district:="Apac"]
   
   # ----------------------
   # add facility level
@@ -227,12 +248,7 @@ for (f in files) {
 }
 
 #---------------------------
-# print unique dates by year to check the capture
-
-full_data[ ,.(dates=length(unique(date))), by=year]
-
-#---------------------------
-# drop out the 12 facilities that never reported 
+# drop out the 37 facilities that never reported 
 
 missing = full_data[ , .(check=all(is.na(arvs)), check_t=all(is.na(test_kits))), by=facility]
 missing = missing[check==TRUE & check_t==TRUE]
@@ -241,14 +257,36 @@ full_data = full_data[!(facility %in% missing$facility)]
 #------------------------------------
 # merge in the regions
 regions = fread(paste0(j, "/Project/Evaluation/GF/mapping/uga/uga_geographies_map.csv"))
-regions = regions[ ,.(region = region10_name, district = dist112_name)]
+regions = regions[ ,.(map_region = region10_name, district = dist112_name)]
 regions = regions[!duplicated(district)]
 full_data = merge(full_data, regions, by='district', all.x=T)
 
 # check that every district has a region associated with it
-full_data[is.na(region)]
+full_data[is.na(map_region)]
 
 #-------------------------------------
+# format regions for tables 
+full_data[ ,region:=map_region]
+full_data[ ,region:=gsub("_", " ", region)]
+
+#-------------------------------------
+# final fixes to implemnting partners
+
+# Walter Reed is sometimes cut off
+full_data[impl_partners=='Walter', impl_partners:='Walter Reed']
+
+# test variable to seach for incomplete entries
+full_data[ , test:=paste0(impl_partners, " ")]
+
+# differ only by the -
+full_data[test=='RHITES- ', impl_partners:='RHITES']
+full_data[test=='URC- ', impl_partners:='URC']
+full_data[test=='IDI- ', impl_partners:='IDI']
+full_data[grepl("RHITES- ", test), impl_partners:=gsub("RHITES-", "RHITES", impl_partners)]
+full_data[grepl("RHITES-,", test), impl_partners:=gsub("RHITES-,", "RHITES,", impl_partners)]
+
+#-------------------------------------
+
 # save the output
 
 # get the minimum and maximum year and add to the file name for export
@@ -256,17 +294,18 @@ min_year = full_data[ , min(year(date))]
 max_year = full_data[ , max(year(date))]
 
 # save the full data as a data table
-saveRDS(full_data, paste0(OutDir, 'arv_stockouts_full_', min_year, '_', max_year, '.rds'))
+saveRDS(full_data, paste0(OutDir, 'prepped_data/arv_stockouts_full_', min_year, '_', max_year, '.rds'))
 
 #-------------------------------------
 # subset to the relevant variables
 
 # subset the data to the variables for regressions and descriptives
-sub_data = full_data[ ,.(facility, level, art_site, impl_partner, district, region,
-                         date, month, year, anc_visits,  test_kits, arvs)]
+sub_data = full_data[ ,.(facility, level, art_site,  district, region,
+                         date, month, year, anc_visits, test_kits, arvs,
+                         impl_partner=impl_partners)]
 
 # save a subset of the data just for stockout analysis 
-saveRDS(sub_data, paste0(OutDir, 'arv_stockouts_', min_year, '_', max_year, '.rds'))
+saveRDS(sub_data, paste0(OutDir, 'prepped_data/arv_stockouts_', min_year, '_', max_year, '.rds'))
 
 #----------------------------
 
