@@ -286,6 +286,10 @@ full_data[grepl("RHITES- ", test), impl_partners:=gsub("RHITES-", "RHITES", impl
 full_data[grepl("RHITES-,", test), impl_partners:=gsub("RHITES-,", "RHITES,", impl_partners)]
 
 #-------------------------------------
+# drop the weeks with no reporting
+
+
+#-------------------------------------
 
 # save the output
 
@@ -300,7 +304,7 @@ saveRDS(full_data, paste0(OutDir, 'prepped_data/arv_stockouts_full_', min_year, 
 # subset to the relevant variables
 
 # subset the data to the variables for regressions and descriptives
-sub_data = full_data[ ,.(facility, level, art_site,  district, region,
+sub_data = full_data[ ,.(facility, level, art_site,  district, region, map_region,
                          date, month, year, anc_visits, test_kits, arvs,
                          impl_partner=impl_partners)]
 
