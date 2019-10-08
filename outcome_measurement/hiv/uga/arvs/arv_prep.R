@@ -285,6 +285,9 @@ full_data[test=='IDI- ', impl_partners:='IDI']
 full_data[grepl("RHITES- ", test), impl_partners:=gsub("RHITES-", "RHITES", impl_partners)]
 full_data[grepl("RHITES-,", test), impl_partners:=gsub("RHITES-,", "RHITES,", impl_partners)]
 
+# drop the interim variable
+full_data[ , test:=NULL]
+
 #-------------------------------------
 # drop the weeks with no reporting
 
@@ -295,6 +298,50 @@ missing_weeks = missing_weeks[test==0]$date
 
 # drop out these empty weeks
 full_data = full_data[!(date %in% missing_weeks)]
+#-------------------------------------
+# fix the name of Mulago National Hospital
+
+full_data[facility=='Mulago NATIONAL', facility:='Mulago National Hospital']
+
+#-------------------------------------
+# add duration to the data table
+
+# set the order of the data table
+setorder(full_data, 'facility', 'date')
+
+#---------------
+# loop for test kits
+for (f in unique(full_data$facility)) {
+  
+  # duration of any sequence, then subset to stock outs only
+  full_data[facility==f , tdur:=.N, by=rleid(test_kits)] 
+  full_data[facility==f & test_kits==FALSE, tdur:=NA] 
+  full_data[facility==f & is.na(test_kits), tdur:=NA]
+  
+  # count the stock outs in order
+  full_data[facility==f, group:=rleid(test_kits)]
+  full_data[facility==f & test_kits==FALSE | is.na(test_kits), group:=NA]
+  full_data[facility==f & !is.na(group), tstock:=rleid(group)]
+  full_data[ , group:=NULL]
+}
+
+#---------------
+# duration loop for arvs
+
+for (f in unique(full_data$facility)) {
+  
+  # duration of any sequence, then subset to stock outs only
+  full_data[facility==f , adur:=.N, by=rleid(arvs)] 
+  full_data[facility==f & arvs==FALSE, adur:=NA] 
+  full_data[facility==f & is.na(arvs), adur:=NA]
+  
+  # count the stock outs in order
+  full_data[facility==f, group:=rleid(arvs)]
+  full_data[facility==f & arvs==FALSE | is.na(arvs), group:=NA]
+  full_data[facility==f & !is.na(group), astock:=rleid(group)]
+  full_data[ , group:=NULL]
+}
+
 
 #-------------------------------------
 # save the output
