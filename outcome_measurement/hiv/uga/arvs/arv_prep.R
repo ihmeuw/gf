@@ -270,7 +270,7 @@ full_data[ ,region:=map_region]
 full_data[ ,region:=gsub("_", " ", region)]
 
 #-------------------------------------
-# final fixes to implemnting partners
+# final fixes to implementing partners
 
 # Walter Reed is sometimes cut off
 full_data[impl_partners=='Walter', impl_partners:='Walter Reed']
@@ -310,7 +310,8 @@ full_data[facility=='Mulago NATIONAL', facility:='Mulago National Hospital']
 setorder(full_data, 'facility', 'date')
 
 #---------------
-# loop for test kits
+# duration loop for test kit stock outs 
+
 for (f in unique(full_data$facility)) {
   
   # duration of any sequence, then subset to stock outs only
@@ -326,7 +327,10 @@ for (f in unique(full_data$facility)) {
 }
 
 #---------------
-# duration loop for arvs
+# duration loop for arv stock outs
+
+# set the order of the data table again just in case
+setorder(full_data, 'facility', 'date')
 
 for (f in unique(full_data$facility)) {
   
