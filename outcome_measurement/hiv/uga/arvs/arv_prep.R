@@ -160,7 +160,7 @@ for (f in files) {
   arv_data = arv_data[!(facility %in% facilities & is.na(anc_visits))] 
   
   # there should now not be any duplicate facilities
-  if (arv_data[duplicated(facility), length(unique(facility))]!=0) print(paste("Duplicate facilities in file", f))
+  if (arv_data[duplicated(facility), length(unique(facility))]!=0) print(paste("Duplicate facilities in file:", f))
   
   #-----------------------------------
   # format the names of facilities to be less silly
@@ -288,9 +288,15 @@ full_data[grepl("RHITES-,", test), impl_partners:=gsub("RHITES-,", "RHITES,", im
 #-------------------------------------
 # drop the weeks with no reporting
 
+# some of these are not present on the site
+# just downloaded the template
+missing_weeks = full_data[ ,.(test= sum(anc_visits, na.rm=T)), by=date]
+missing_weeks = missing_weeks[test==0]$date
+
+# drop out these empty weeks
+full_data = full_data[!(date %in% missing_weeks)]
 
 #-------------------------------------
-
 # save the output
 
 # get the minimum and maximum year and add to the file name for export

@@ -249,7 +249,8 @@ g_opener = ggplot(compare, aes(x=date, y=value, color=variable)) +
 # test kits - 16:18
 
 # test kit stockout counts - 16
-g17 = ggplot(test[variable!='Percentage of facilities stocked out of test kits'], aes(x=date, y=value, color=variable, group=variable)) +
+g17 = ggplot(test[variable!='Percentage of facilities reporting that were stocked out of test kits'],
+      aes(x=date, y=value, color=variable, group=variable)) +
   geom_point(size=0.5, alpha=0.5) +
   geom_line() +
   geom_line() +
@@ -258,14 +259,14 @@ g17 = ggplot(test[variable!='Percentage of facilities stocked out of test kits']
        y='Number of facilities', x='Date', color="")
 
 # percentage of facilities that reported that were stocked out of test kits - 17
-g18 = ggplot(test[variable=='Percentage of facilities stocked out of test kits'], aes(x=date, y=value)) +
+g18 = ggplot(test[variable=='Percentage of facilities reporting that were stocked out of test kits'], aes(x=date, y=value)) +
   geom_point(size = 0.5) +
   geom_line() +
   geom_line() +
   theme_bw() +
   facet_wrap(~variable, scales='free_y') +
   labs(title='Percentage of facilities that were stocked out of HIV test kits in a given week', 
-       x='Number of facilities', y='%')
+       x='Date', y='percent (%)')
 
 # comparison of stock outs - arvs and test kits - 18
 g19 = ggplot(compare, aes(x=date, y=value, color=variable)) +

@@ -266,22 +266,14 @@ t_labels_vec = c(tl14, tl15, tl16, tl17, tl18)
 tk_weeks$year = factor(tk_weeks$year, c(2014, 2015, 2016, 2017, 2018), 
                         t_labels_vec)
 
-# same bar graph of stockouts, for comparable time periods
-tk_weeks2 = dt[month(date)!='12', .(weeks=sum(test_kits, na.rm=T)), by=.(year, facility)]
-tk_weeks2 = tk_weeks2[1 < weeks]
-tk_weeks2 = tk_weeks2[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
+# same bar graph of stockouts, 2019 only
 
-# labels 
-t_labels2 = tk_weeks2[ ,.(total=sum(facilities)), by=year]
-tl142 = paste0('2014 (n=', t_labels2[year==2014]$total, ')')
-tl152 = paste0('2015 (n=', t_labels2[year==2015]$total, ')') 
-tl162 = paste0('2016 (n=', t_labels2[year==2016]$total, ')') 
-tl172 = paste0('2017 (n=', t_labels2[year==2017]$total, ')')
-tl182 = paste0('2018 (n=', t_labels2[year==2018]$total, ')') 
-tlabels_vec2 = c(tl142, tl152, tl162, tl172, tl182)
 
-tk_weeks2$year = factor(tk_weeks2$year, c(2014, 2015, 2016, 2017, 2018), 
-                         tlabels_vec2)
+
+
+
+
+
 
 #-----------------------------------
 # TEST KIT STOCKOUT MAPS
