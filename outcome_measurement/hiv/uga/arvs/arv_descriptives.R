@@ -32,6 +32,20 @@ art = dt[art_site==TRUE]
 
 # ----------------------
 
+dt = dt[year==2018 | year==2019]
+
+# calculate the columns
+facilities = dt[ ,.(facility=length(unique(facility))), by=.(region, year)]
+
+
+reports = dt[!is.na(test_kits),.(facility=length(unique(facility))), by=.(region, year)]
+
+
+
+
+
+
+
 
 
 

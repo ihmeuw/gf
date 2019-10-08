@@ -132,13 +132,13 @@ arv_thresh = arv[art_sites_reporting > n]
 arv = melt(arv, id.vars='date')
 arv$variable = factor(arv$variable, c('art_sites_reporting', 'art_stockout', 'ratio'),
                       c('ART sites reporting', 'ART sites with a stockout', 
-                        'Percentage of ART sites reporting that were stocked out of ARVs'))
+                        'Percentage of ART sites stocked out of ARVs'))
 
 # run the same code on the threshold subset
 arv_thresh = melt(arv_thresh, id.vars='date')
 arv_thresh$variable = factor(arv_thresh$variable, c('art_sites_reporting', 'art_stockout', 'ratio'),
                       c('ART sites reporting', 'ART sites with a stockout', 
-                        'Percentage of ART sites reporting that were stocked out of ARVs'))
+                        'Percentage of ART sites stocked out of ARVs'))
 
 #-----------------------------------
 # ARV stockout weeks bar graphs - 6, 7
@@ -190,9 +190,9 @@ arv_weeks3$year = factor(arv_weeks3$year, c(2018, 2019),
 # ARV stockout maps - 8:12
 
 # total facility-weeks of stock outs 
-# exclude the months that are not in all years (e.g. december 2018)
+# exclude 2019
 stockout = dt[art_site==TRUE, .(value=sum(arvs, na.rm=T)), by=.(year, id)]
-arv_map = merge(stockout, coord_ann, by=c('id', 'year'), all.y=TRUE)
+arv_map = merge(stockout, coord_ann, by=c('id', 'year'), all.y=TRUE) # 
 
 # mean weeks stocked out 
 # number of weeks of stockout divided by art sites reporting 
@@ -219,8 +219,20 @@ stock = merge(stock, stock_add, by=c('year', 'id'))
 stock[ , percent_out:=round(100*(weeks_out/total_weeks), 1)]
 stock = merge(stock, coord_ann, by=c('id', 'year'))
 
+#--------------------------
+# categorical stock out map - g11a
 
-#---------------------------------------
+roc_map[change < 0, roc_cat:=2] # less
+roc_map[change == 0, roc_cat:=3]
+roc_map[change > 0, roc_cat:=1]# more
+
+roc_map$roc_cat = factor(roc_map$roc_cat, c(1, 2, 3),
+                         c('More stock outs', 'Less stock outs',
+                           'Same number of stock outs'))
+
+#--------------------------
+
+#--------------------------------------------------------------
 # TEST KITS
 
 # test kit stock out line graphs 16:18
@@ -239,11 +251,11 @@ test[ , stockout:=as.numeric(stockout)]
 test = melt(test, id.vars='date')
 test$variable = factor(test$variable, c('reporting', 'stockout', 'ratio'),
                       c('Health facilities reporting', 'Facilities with a stockout of test kits', 
-                        'Percentage of facilities reporting that were stocked out of test kits'))
+                        'Percentage of facilities stocked out of test kits'))
 
 # comparison of percent stocked out - test kits and arvs
-compare = test[variable == 'Percentage of facilities reporting that were stocked out of test kits']
-compare_add = arv[variable == 'Percentage of ART sites reporting that were stocked out of ARVs']
+compare = test[variable == 'Percentage of facilities stocked out of test kits']
+compare_add = arv[variable == 'Percentage of ART sites stocked out of ARVs']
 compare = rbind(compare, compare_add)
 
 #-----------------------------------
@@ -372,6 +384,7 @@ g8
 g9
 g10
 g11
+g11a
 g12
 g13
 g14

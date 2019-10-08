@@ -51,6 +51,10 @@ g4 = ggplot(arv_thresh[variable!='Percentage of ART sites reporting that were st
        y='Number of facilities', x='Date', color="")
 
 # 5 - percentage of art sites that reported that were stocked out
+# label the range of percentages
+perc_range = arv[variable=='Percentage of ART sites reporting that were stocked out of ARVs' ,range(value)]
+st_range = paste0("Range: ", perc_range[[1]], '-', perc_range[[2]], '%')
+
 g5 = ggplot(arv[variable=='Percentage of ART sites reporting that were stocked out of ARVs'], aes(x=date, y=value)) +
   geom_point(size=0.5) +
   geom_line() +
@@ -58,7 +62,7 @@ g5 = ggplot(arv[variable=='Percentage of ART sites reporting that were stocked o
   theme_bw() +
   facet_wrap(~variable, scales='free_y') +
   labs(title='Percentage of ART sites that were stocked out of ARVs in a given week', 
-       x='Number of facilities', y='Percent (%)')
+       subtitle=st_range, x='Date', y='Percent (%)')
 
 # summary graph 
 g5a = ggplot(arv, aes(x=date, y=value, color=factor(variable))) +
@@ -69,7 +73,7 @@ g5a = ggplot(arv, aes(x=date, y=value, color=factor(variable))) +
   facet_wrap(~variable, scales='free_y') +
   labs(title='Stock outs of ARVs at ART Sites',
        subtitle ='January 2014 - September 2019',
-       x='Number of facilities', y='', color="")
+       x='Date', y='', color="")
 
 #-----------------------------------
 # arv stockout bar graphs
@@ -91,19 +95,22 @@ g7 = ggplot(arv_weeks2, aes(x=weeks, y=facilities, fill='red')) +
   geom_text(data=lab_facilities, aes(label=lab_facilities$facilities), vjust=-0.5)+
   theme_minimal() +
   scale_fill_manual(values=bar_color) +
-  labs(title = "Number of ART sites by total time out of ARVs, January 1 - September 1, 2019", 
+  labs(title = "Number of ART sites by total time out of ARVs", 
+       subtitle = "January 1 - September 1, 2019",
        x='Number of weeks out of stock', 
        y="Number of facilities")+
   guides(fill=FALSE)
 
+# 7a - stacked bar of weeks out of stock by facility level
 g7a = ggplot(arv_weeks2, aes(x=weeks, y=facilities, fill=factor(arv_weeks2$level))) + 
   geom_bar(stat='identity', position='stack') +
   theme_minimal() +
   scale_fill_manual(values=brewer.pal(9, 'Purples')) +
-  labs(title = "ART sites by facility level and total time out of ARVs, 2019", 
-       subtitle = 'January 1 - September 1',
+  labs(title = "ART sites by facility level and total time out of ARVs", 
+       subtitle = 'January 1 - September 1, 2019',
        x='Number of weeks out of stock', 
        y="Number of facilities", fill='Health facility level')
+
 
 g6a = ggplot(arv_weeks3, aes(x=weeks, y=facilities, fill=factor(year))) + 
   geom_bar(stat='identity', position='dodge') +
@@ -128,7 +135,7 @@ g8 = ggplot(arv_map, aes(x=long, y=lat, group=group, fill=value)) +
   theme_void() +
   labs(title="Total facility-weeks of ARV stockouts by district, Uganda", 
        caption="*A facility-week is defined as each week a facility reports", 
-       subtitle='Same time period: January - November',fill="Facility-weeks*") +
+        fill="Facility-weeks*") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
 # mean weeks stocked out per facility - 9
@@ -162,10 +169,24 @@ g11 = ggplot(roc_map_alt, aes(x=long, y=lat, group=group, fill=change)) +
   geom_path(size=0.01) + 
   scale_fill_gradientn(colors=brewer.pal(9, 'Reds')) + 
   theme_void() +
-  labs(title="Districts with more facility-weeks of ARV stockouts in 2018 than 2017 ", caption="The number of ART sites remained the same from 2017 to 2018", 
-       subtitle='Same time period: January - November', fill="Difference in weeks (2018 - 2017)") +
+  labs(title="Districts with more facility-weeks of ARV stockouts in 2018 than 2017 ",
+       caption="The number of ART sites remained the same from 2017 to 2018", 
+        fill="Difference in weeks (2018 - 2017)") +
   theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
 
+#-----------------
+# categorical ROC graph
+
+g11a = ggplot(roc_map, aes(x=long, y=lat, group=group, fill=roc_cat)) + 
+  coord_fixed() +
+  geom_polygon() + 
+  geom_path(size=0.01) + 
+  theme_void() +
+  labs(title="Rate of change: facility-weeks of ARV stockouts in 2018 minus 2017", 
+       fill="Difference in weeks (2018 - 2017)*") +
+  theme(plot.title=element_text(vjust=-1), plot.caption=element_text(vjust=6)) 
+
+#-----------------
 # percentage of weeks stocked out - 12
 g12 = ggplot(stock, aes(x=long, y=lat, group=group, fill=percent_out)) + 
   coord_fixed() +
@@ -205,8 +226,8 @@ g14 = ggplot(stock[year==2017 | year==2018], aes(x=long, y=lat, group=group, fil
         legend.title=element_text(size=14)) 
 
 #---------------------------------------------------
-# 
-# DOES NOT WOR
+# TEST KIT GRAPHS BEGIN 
+
 # number of weeks of stockout divided by facilities reporting, 2017/18 only - 15
 g15 = ggplot(tk_map_norm[year==2017 | year==2018], aes(x=long, y=lat, group=group, fill=mean_weeks)) + 
   coord_fixed() +
@@ -249,7 +270,7 @@ g_opener = ggplot(compare, aes(x=date, y=value, color=variable)) +
 # test kits - 16:18
 
 # test kit stockout counts - 16
-g17 = ggplot(test[variable!='Percentage of facilities reporting that were stocked out of test kits'],
+g17 = ggplot(test[variable!='Percentage of facilities stocked out of test kits'],
       aes(x=date, y=value, color=variable, group=variable)) +
   geom_point(size=0.5, alpha=0.5) +
   geom_line() +
@@ -259,7 +280,7 @@ g17 = ggplot(test[variable!='Percentage of facilities reporting that were stocke
        y='Number of facilities', x='Date', color="")
 
 # percentage of facilities that reported that were stocked out of test kits - 17
-g18 = ggplot(test[variable=='Percentage of facilities reporting that were stocked out of test kits'], aes(x=date, y=value)) +
+g18 = ggplot(test[variable=='Percentage of facilities stocked out of test kits'], aes(x=date, y=value)) +
   geom_point(size = 0.5) +
   geom_line() +
   geom_line() +
@@ -275,7 +296,7 @@ g19 = ggplot(compare, aes(x=date, y=value, color=variable)) +
   geom_line() +
   theme_bw() +
   scale_color_manual(values=two) +
-  labs(title='Percentage of facilities that were stocked out of HIV test kits in a given week', 
+  labs(title='Percentage of facilities stocked out of test kits', 
        x='Date', y='Percent (%)', color="")
 
 #------------------------------
