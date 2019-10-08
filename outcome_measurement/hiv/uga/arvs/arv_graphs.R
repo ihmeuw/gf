@@ -259,7 +259,7 @@ compare_add = arv[variable == 'Percentage of ART sites stocked out of ARVs']
 compare = rbind(compare, compare_add)
 
 #-----------------------------------
-# test kit stockout weeks bar graphs - 15, 16
+# test kit stockout weeks bar graphs - 15, 19
 
 # Number of weeks of stockout by facility
 tk_weeks = dt[ , .(weeks=sum(test_kits, na.rm=T)), by=.(year, facility)]
@@ -278,21 +278,24 @@ t_labels_vec = c(tl14, tl15, tl16, tl17, tl18)
 tk_weeks$year = factor(tk_weeks$year, c(2014, 2015, 2016, 2017, 2018), 
                         t_labels_vec)
 
+#-----------------------------------
 # same bar graph of stockouts, 2019 only
 
+tk2019 = dt[year==2019, .(weeks=sum(test_kits, na.rm=T)), by=.(year, facility)]
+tk2019 = tk2019[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
 
-
-
-
-
-
+# labels 
+tlabels19 = tk2019[ ,.(total=sum(facilities)), by=year]
+tl19 = paste0('2019 (n=', tlabels19$total, ')')
+tk2019[ ,year:=NULL]
+tk2019[, year:=tl19]
 
 #-----------------------------------
 # TEST KIT STOCKOUT MAPS
 
 #--------------------------
 # map of facility-weeks of stock outs 
-tk_stockout = dt[month!='2017-12-01', .(value=sum(test_kits, na.rm=T)), by=.(year, id)]
+tk_stockout = dt[ , .(value=sum(test_kits, na.rm=T)), by=.(year, id)]
 
 # merge with coordinates
 tk_map = merge(tk_stockout, coord_ann, by=c('id', 'year'), all.y=TRUE)
@@ -321,17 +324,38 @@ tk_stock = merge(tk_stock, tk_stock_add, by=c('year', 'id'))
 tk_stock[ , percent_out:=round(100*(weeks_out/total_weeks), 1)]
 tk_stock = merge(tk_stock, coord_ann, by=c('id', 'year'))
 
+#--------------------------
+# categorical stock out map - g26a
+
+tk_roc_map[change < 0, roc_cat:=2] # less
+tk_roc_map[change == 0, roc_cat:=3]
+tk_roc_map[change > 0, roc_cat:=1] # more
+
+tk_roc_map$roc_cat = factor(tk_roc_map$roc_cat, c(1, 2, 3),
+                         c('More stock outs', 'Less stock outs',
+                           'Same number of stock outs'))
+#--------------------------
+
 #-------------------------------------------
 # scatter plots (facility level)
+
+# g21 - scatter plot by year
+scat = dt[ ,.(test_kits=sum(test_kits, na.rm=T)), by=.(facility, year, level)]
 
 dt[ level=='HC II', level2:=2]
 dt[ level=='HC III', level2:=3]
 dt[ level=='HC IV', level2:=4]
 dt[ level=='Hospital', level2:=5]
+dt[ level=='TASO', level2:=6]
 
-scatter = dt[ ,.(arvs=sum(arvs, na.rm=T), test_kits=sum(test_kits, na.rm=T)), by=.(facility, level2, art_site)]
-scatter2 = dt[month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01',.(arvs=sum(arvs, na.rm=T), 
-                                      test_kits=sum(test_kits, na.rm=T)), by=.(facility, level2, year, art_site)]
+dt$level2 = factor(dt$level2, c(2:6), 
+                   c('HC II', 'HC III', 'HC IV', 'Hospital', 'TASO'))
+
+scatter = dt[year==2017 | year==2018,.(arvs=sum(arvs, na.rm=T), test_kits=sum(test_kits, na.rm=T)),
+             by=.(facility, level2, art_site)]
+
+scatter2 = dt[,.(arvs=sum(arvs, na.rm=T), 
+              test_kits=sum(test_kits, na.rm=T)), by=.(facility, level2, year, art_site)]
 
 #---------------------------------------
 # finale maps - categorical arv stockouts 
@@ -359,6 +383,11 @@ final$variable = factor(final$variable, c('no_stock_out', 'one_week_2_mos',
                                           'two_4_mos', 'four_months'),
                                            c('No stock outs reported',
                                           '1 week - 1 month ', '1+ - 2 months ', '2+ months'))
+
+# for graphs with 0 depicted in grey
+final[ ,alter:=value]
+final[alter==0, alter:=NA] 
+
 # ------------------------------------------------------
 # SOURCE THE GRAPH FUNCTION
 # export a pdf of the graphs
@@ -367,7 +396,7 @@ final$variable = factor(final$variable, c('no_stock_out', 'one_week_2_mos',
 source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/arvs/arv_visuals_to_source.R')
 
 # export the maps and graphs as a pdf
-pdf(paste0(dir, 'outputs/stockout_descriptives_2013_2018.pdf'), height=6, width=12)
+pdf(paste0(dir, 'outputs/stockout_descriptives_2013_2019.pdf'), height=6, width=12)
 
 g_opener
 g1
@@ -388,8 +417,8 @@ g11a
 g12
 g13
 g14
+g16 # introduce the test kit slides
 g15
-g16
 g17
 g18
 g19
@@ -400,12 +429,14 @@ g23
 g24
 g25
 g26
+g26a
 g27
 g28
 g29
 g30 
 g31
 g32
+g32a
 g33
 g34
 g35
