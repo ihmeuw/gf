@@ -320,9 +320,9 @@ for (f in unique(full_data$facility)) {
   full_data[facility==f & is.na(test_kits), tdur:=NA]
   
   # count the stock outs in order
-  full_data[facility==f, group:=rleid(test_kits)]
+  full_data[facility==f, group:=rleid(test_kits), by=year]
   full_data[facility==f & test_kits==FALSE | is.na(test_kits), group:=NA]
-  full_data[facility==f & !is.na(group), tstock:=rleid(group)]
+  full_data[facility==f & !is.na(group), tstock:=rleid(group), by=year]
   full_data[ , group:=NULL]
 }
 
@@ -340,9 +340,9 @@ for (f in unique(full_data[art_site==T]$facility)) {
   full_data[art_site==T & facility==f & is.na(arvs), adur:=NA]
   
   # count the stock outs in order
-  full_data[art_site==T & facility==f, group:=rleid(arvs)]
+  full_data[art_site==T & facility==f, group:=rleid(arvs), by=year]
   full_data[art_site==T & facility==f & arvs==FALSE | is.na(arvs), group:=NA]
-  full_data[art_site==T & facility==f & !is.na(group), astock:=rleid(group)]
+  full_data[art_site==T & facility==f & !is.na(group), astock:=rleid(group), by=year]
   full_data[ , group:=NULL]
 }
 
