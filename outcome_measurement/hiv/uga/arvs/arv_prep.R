@@ -362,12 +362,13 @@ saveRDS(full_data, paste0(OutDir, 'prepped_data/arv_stockouts_full_', min_year, 
 # subset the data to the variables for regressions and descriptives
 sub_data = full_data[ ,.(facility, level, art_site,  district, region, map_region,
                          date, month, year, anc_visits, test_kits, arvs,
-                         tdur, tstock, adur, stock,
+                         tdur, tstock, adur, astock,
                          impl_partner=impl_partners)]
 
 # save a subset of the data just for stockout analysis 
 saveRDS(sub_data, paste0(OutDir, 'prepped_data/arv_stockouts_', min_year, '_', max_year, '.rds'))
 
 #----------------------------
+
 
 

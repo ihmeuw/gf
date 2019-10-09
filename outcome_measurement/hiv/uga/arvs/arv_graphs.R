@@ -396,7 +396,7 @@ final[alter==0, alter:=NA]
 source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/arvs/arv_visuals_to_source.R')
 
 # export the maps and graphs as a pdf
-pdf(paste0(dir, 'outputs/stockout_descriptives_2013_2019.pdf'), height=6, width=12)
+pdf(paste0(dir, 'outputs/stockout_descriptives_2013_2019_2.pdf'), height=6, width=12)
 
 g_opener
 g1

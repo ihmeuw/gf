@@ -46,11 +46,12 @@ dt = copy(art) # change to fit outcome of interest
 # ---------------------------------------
 # create tables
 
-# subset to 2018 and 2019
+# subset to 2017 and 2018
 dt = dt[year==2017 | year==2018]
-# 
+
+# for tables showing 2018 and 2019, Jan - Sept (inclusive)
 # dt = dt[year==2018 | year==2019]
-# dt[ month(date)!=10 & month(date)!=11 & month(date)!=12]
+# dt = dt[month(date)!=10 & month(date)!=11 & month(date)!=12]
 
 # ----------------------  
 # calculate the columns
@@ -97,37 +98,9 @@ total_out = merge(facilities, total_out, by=c('year', 'region'))
 total_out[ ,mean_out:=round(out/facilities, 1)]
 
 # -------------------------------------------------
-# calculating duration 
-
 
 #--------------------------------
 # duration of stock outs 
-
-dt = og[year==2018]
-f = '407 Brigade HC III'
-dt = dt[facility==f]
-
-# set the order of the data table
-cols = c('facility', 'date')
-setorderv(dt, cols)
-
-for (f in unique(dt$facility)) {
-  # duration of any sequence, then subset to stock outs only
-  dt[facility==f, duration:=.N, by=rleid(test_kits)] 
-  dt[facility==f & test_kits==FALSE, duration:=NA] 
-  dt[facility==f & is.na(test_kits), duration:=NA]
-  
-  # count the stock outs in order
-  dt[ ,group:=rleid(test_kits)]
-  dt[test_kits==FALSE | is.na(test_kits), group:=NA]
-  dt[!is.na(group), stock_out:=rleid(group)]
-  dt[ ,group:=NULL]
-}
-
-
-
-
-
 
 
 
