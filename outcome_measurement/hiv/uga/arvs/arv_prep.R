@@ -332,20 +332,19 @@ for (f in unique(full_data$facility)) {
 # set the order of the data table again just in case
 setorder(full_data, 'facility', 'date')
 
-for (f in unique(full_data$facility)) {
+for (f in unique(full_data[art_site==T]$facility)) {
   
   # duration of any sequence, then subset to stock outs only
-  full_data[facility==f , adur:=.N, by=rleid(arvs)] 
-  full_data[facility==f & arvs==FALSE, adur:=NA] 
-  full_data[facility==f & is.na(arvs), adur:=NA]
+  full_data[art_site==T & facility==f , adur:=.N, by=rleid(arvs)] 
+  full_data[art_site==T & facility==f & arvs==FALSE, adur:=NA] 
+  full_data[art_site==T & facility==f & is.na(arvs), adur:=NA]
   
   # count the stock outs in order
-  full_data[facility==f, group:=rleid(arvs)]
-  full_data[facility==f & arvs==FALSE | is.na(arvs), group:=NA]
-  full_data[facility==f & !is.na(group), astock:=rleid(group)]
+  full_data[art_site==T & facility==f, group:=rleid(arvs)]
+  full_data[art_site==T & facility==f & arvs==FALSE | is.na(arvs), group:=NA]
+  full_data[art_site==T & facility==f & !is.na(group), astock:=rleid(group)]
   full_data[ , group:=NULL]
 }
-
 
 #-------------------------------------
 # save the output
@@ -363,6 +362,7 @@ saveRDS(full_data, paste0(OutDir, 'prepped_data/arv_stockouts_full_', min_year, 
 # subset the data to the variables for regressions and descriptives
 sub_data = full_data[ ,.(facility, level, art_site,  district, region, map_region,
                          date, month, year, anc_visits, test_kits, arvs,
+                         tdur, tstock, adur, stock,
                          impl_partner=impl_partners)]
 
 # save a subset of the data just for stockout analysis 
