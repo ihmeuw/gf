@@ -1,6 +1,7 @@
 # Descriptive analysis of stock outs for 2019 reports
+# Function for tables but by facility level only 
 # Caitlin O'Brien-Carelli
-# 10/1/2019
+# 10/9/2019
 
 # ----------------------
 # Set up R
@@ -30,13 +31,10 @@ og = og[year!=2013]
 # select arguments 
 
 # type can be equal to 'test' or 'art'
-type = 'art'
+type = 'test'
 
 #if 2017/18 tables, now = FALSE; 2018/19 now = TRUE 
 now = TRUE
-
-# level or region
-strat = 'region'
 
 # ----------------------
 # create a function that reads in the data
@@ -51,16 +49,6 @@ setnames(art, 'arvs', 'value')
 setnames(test, 'test_kits', 'value')
 setnames(art, c('adur', 'astock'), c('dur', 'stock'))
 setnames(test, c('tdur', 'tstock'), c('dur', 'stock'))
-
-# ---------------
-if (strat=='level') {
-  art[ , region:=NULL]
-  test[ , region:=NULL]
-  setnames(art, 'level', 'region')
-  setnames(test, 'level', 'region')
-}
-
-
 # ----------------------  
 # copy in either the art or test kit data
 # art data is susbetted to just the art sites
@@ -89,17 +77,17 @@ if (now == FALSE) {
 # calculate the columns
 
 # number of facilities by year
-facilities = dt[ ,.(facilities=length(unique(facility))), by=.(region, year)]
+facilities = dt[ ,.(facilities=length(unique(facility))), by=.(level, year)]
 
 # percent reporting
-reports = dt[!is.na(value),.(reporting=length(unique(facility))), by=.(region, date, year)]
-reports = merge(reports, facilities, by=c('year', 'region'), all.x=T)
+reports = dt[!is.na(value),.(reporting=length(unique(facility))), by=.(level, date, year)]
+reports = merge(reports, facilities, by=c('year', 'level'), all.x=T)
 reports[ , percent_reporting:=100*(reporting/facilities)]
-reports = reports[ ,.(mean_reports = mean(percent_reporting)), by=.(region, year)]
+reports = reports[ ,.(mean_reports = mean(percent_reporting)), by=.(level, year)]
 reports[ ,mean_reports:=round(mean_reports, 1)]
 
 # merge facilities and reporting
-reports = merge(facilities, reports, by=c('year', 'region'), all=T)
+reports = merge(facilities, reports, by=c('year', 'level'), all=T)
 
 # ----------------------  
 # reshape wide with columns for each separate year
@@ -115,18 +103,18 @@ f1[ ,year:=NULL]
 f2[ ,year:=NULL]
 
 # final merged reshape
-reports = merge(f1, f2, by='region')
+reports = merge(f1, f2, by='level')
 
 # reorder - total facilities and mean weekly percent reporting 
 reports = reports[ ,.(facilities1, facilities2, mean_reports1, mean_reports2),
-                   by=region]
+                   by=level]
 
 # -------------------------------------------------
 # mean weeks out, number of stock outs, and pecent of time out 
 
 # mean weeks out of stock per facility
-total_out = dt[ ,.(out=sum(value, na.rm=T)), by=.(year, region)]
-total_out = merge(facilities, total_out, by=c('year', 'region'))
+total_out = dt[ ,.(out=sum(value, na.rm=T)), by=.(year, level)]
+total_out = merge(facilities, total_out, by=c('year', 'level'))
 total_out[ ,mean_out:=round(out/facilities, 1)]
 
 #--------------------------------
@@ -136,9 +124,10 @@ total_out[ ,mean_out:=round(out/facilities, 1)]
 # mean annual number of stock outs
 # take the maximum value of sequentially counted stock outs per facility
 count = dt[!is.na(stock), .(total_stockouts = max(stock, na.rm=T)), 
-           by=.(facility, year, region)] # max can be 0 if no stock outs
+           by=.(facility, year, level)]
+
 # take the mean of the total count of stock outs per facility
-count = count[ ,.(mean_number_of_stockouts=mean(total_stockouts)), by=.(region, year)]
+count = count[ ,.(mean_number_of_stockouts=mean(total_stockouts)), by=.(level, year)]
 count[ , mean_number_of_stockouts:=round(mean_number_of_stockouts, 1)]
 
 #----------
@@ -146,16 +135,16 @@ count[ , mean_number_of_stockouts:=round(mean_number_of_stockouts, 1)]
 
 # stock out duration for each stock out
 dur = dt[!is.na(dur), .(dur_of_each = max(dur, na.rm=T)),
-         by=.(stock, facility, region, year)]
+         by=.(stock, facility, level, year)]
 
-# mean duration per region
-dur = dur[ ,.(mean_duration=round(mean(dur_of_each), 1)), by=.(region, year)]
+# mean duration per level
+dur = dur[ ,.(mean_duration=round(mean(dur_of_each), 1)), by=.(level, year)]
 
 #----------
 # combine them
 
-count_dur = merge(count, dur, by=c('region', 'year'), all=T)
-count_dur = merge(total_out, count_dur, by=c('region', 'year'), all=T)
+count_dur = merge(count, dur, by=c('level', 'year'), all=T)
+count_dur = merge(total_out, count_dur, by=c('level', 'year'), all=T)
 count_dur[ ,c('facilities', 'out'):=NULL]
 #------------
 # reshape 
@@ -166,32 +155,32 @@ c1[ ,year:=NULL]
 c2[ ,year:=NULL]
 
 # reset the names to reflect the year
-setnames(c1, c("region", "mean_out1", "mean_number_of_stockouts1", "mean_duration1"))
-setnames(c2, c("region", "mean_out2", "mean_number_of_stockouts2", "mean_duration2"))
+setnames(c1, c("level", "mean_out1", "mean_number_of_stockouts1", "mean_duration1"))
+setnames(c2, c("level", "mean_out2", "mean_number_of_stockouts2", "mean_duration2"))
 
 # merge and reorder the columns
-count_dur = merge(c1, c2, by='region', all=T)
+count_dur = merge(c1, c2, by='level', all=T)
 count_dur = count_dur[ ,.(mean_out1, mean_out2, mean_number_of_stockouts1,
                           mean_number_of_stockouts2, mean_duration1, mean_duration2), 
-                       by=region]
+                       by=level]
 
 #-----------------------------------------
 # merge it all together
-final = merge(reports, count_dur, by='region')
+final = merge(reports, count_dur, by='level')
 
 #-----------------------------------------
 # facility-weeks out of stock 
 fac_wks = dt[!is.na(value) ,.(out=sum(value, na.rm=T), 
-          report=length(value)), by=.(year, region)]
+                              report=length(value)), by=.(year, level)]
 fac_wks[ ,perc_wks_out:=round(100*(out/report), 1)]
 fac_wks[ ,c('out', 'report'):=NULL]
 
 # reshape to merge with final table
-fac_wks = dcast(fac_wks, region~year) # warning is ok - correct value var
-setnames(fac_wks, c('region', 'perc_wks_out1', 'perc_wks_out2'))
+fac_wks = dcast(fac_wks, level~year) # warning is ok - correct value var
+setnames(fac_wks, c('level', 'perc_wks_out1', 'perc_wks_out2'))
 
 # merge in the facility-weeks for a completed table
-final = merge(final, fac_wks, by='region', all=T)
+final = merge(final, fac_wks, by='level', all=T)
 
 #-----------------------------------------------------------------
 # create lines of totals and merge in at the end 
@@ -216,13 +205,13 @@ tots[ , out:=NULL]
 # take the maximum value of sequentially counted stock outs per facility
 # then take the mean of those maximums (mean of the total number of stock outs per facility)
 count_tot = dt[!is.na(stock), .(total_stockouts = max(stock, na.rm=T)), 
-           by=.(facility, year)]
+               by=.(facility, year)]
 count_tot = count_tot[ ,.(mean_number_of_stockouts=round(mean(total_stockouts), 1)),
                        by=year]
 
 # mean duration of stock outs
 dur_tot = dt[!is.na(dur), .(dur_of_each = max(dur, na.rm=T)),
-           by=.(stock, facility, year)]
+             by=.(stock, facility, year)]
 dur_tot = dur_tot[ ,.(mean_duration=round(mean(dur_of_each), 1)), by=year]
 
 # merge in the last two metrics
@@ -231,7 +220,7 @@ tots = merge(tots, dur_tot, by='year', all=T)
 
 # facility-weeks out of stock 
 fac_wks_tot = dt[!is.na(value) ,.(out=sum(value, na.rm=T), 
-              report=length(value)), by=year]
+                                  report=length(value)), by=year]
 fac_wks_tot[ ,perc_wks_out:=round(100*(out/report), 1)]
 fac_wks_tot[ ,c('out', 'report'):=NULL]
 
@@ -239,7 +228,7 @@ fac_wks_tot[ ,c('out', 'report'):=NULL]
 tots = merge(tots, fac_wks_tot, by='year', all=T)
 
 #-----------------------------------------
-# reshape the totals to be appended to the region-stratified tables
+# reshape the totals to be appended to the level-stratified tables
 
 # shape wide and merge 
 t1 = tots[year==year1]
@@ -255,15 +244,15 @@ setnames(t2, names2)
 t = cbind(t1, t2)
 
 # add the total and reorder
-t[ , region:='Total']
+t[ , level:='Total']
 t = t[ ,.(facilities1, facilities2, mean_reports1, mean_reports2, 
           mean_out1, mean_out2, mean_number_of_stockouts1, mean_number_of_stockouts2,
           mean_duration1, mean_duration2, perc_wks_out1, perc_wks_out2), 
-          by=region]
+       by=level]
 
 #-----------------------------------------
 # merge the final data table
-# includes all regions and totals calculated separately 
+# includes all levels and totals calculated separately 
 
 final = rbind(final, t)
 
@@ -274,11 +263,7 @@ min_year = dt[ , min(year(date))]
 max_year = dt[ , max(year(date))]
 
 write.csv(final, paste0(dir, 'outputs/', type, 
-                        '_stockout_stats_by_region_', min_year, '_', max_year, '.csv'))
+                        '_stockout_stats_by_level_', min_year, '_', max_year, '.csv'))
 
 #-----------------------------------------
-
-
-
-
 

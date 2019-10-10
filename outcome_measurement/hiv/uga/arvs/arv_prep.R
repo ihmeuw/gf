@@ -347,6 +347,14 @@ for (f in unique(full_data[art_site==T]$facility)) {
 }
 
 #-------------------------------------
+# for no stock out, set frequency to 0
+# this allows us to take the max number of stock outs per facility to get count of stock outs
+# if max is 0, they had no stock outs 
+
+full_data[is.na(tstock) & !is.na(test_kits), tstock:=0]
+full_data[is.na(astock) & !is.na(arvs), astock:=0]
+
+#-------------------------------------
 # save the output
 
 # get the minimum and maximum year and add to the file name for export

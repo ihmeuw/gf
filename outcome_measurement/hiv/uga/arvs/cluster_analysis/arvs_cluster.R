@@ -26,7 +26,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockouts/')
 
 # working directory to aggregate
-dt = readRDS(paste0(dir, 'arv_stockouts_2013_2018.rds'))
+dt = readRDS(paste0(dir, 'prepped_data/arv_stockouts_2013_2019.rds'))
 
 # subset dates to before November 2018
 dt = dt[year!=2013] 
