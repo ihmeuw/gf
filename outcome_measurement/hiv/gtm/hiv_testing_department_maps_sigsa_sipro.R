@@ -112,7 +112,7 @@ dt_table_output = rbind(dt_table_output, dt_table_output_add)
 dt_table_output[, `Test positivity rate` := (`Tests positive` / `Tests completed`)*100]
 setnames(dt_table_output, 'pop', 'Population')
 
-write.xlsx(dt_table_output, paste0(dir, 'prepped/table_of_key_pop_testing_values.xlsx'))
+# write.xlsx(dt_table_output, paste0(dir, 'prepped/table_of_key_pop_testing_values.xlsx'))
 
 # sum data by dept and year
 id_vars = c('match_dept', 'year')
@@ -192,3 +192,11 @@ dev.off()
 #----------------------------------------
 
 
+sd_cols = c('hiv_test_comp', 'hiv_positive')
+dept_year_results = dt[, lapply(.SD, sum, na.rm = TRUE), .SDcols = sd_cols, by = .(match_dept, year)]
+dept_year_results[, test_positivity := (hiv_positive/hiv_test_comp)*100]
+dept_year_results = melt.data.table(dept_year_results, id.vars = c('year', 'match_dept'))
+dept_year_results = dcast.data.table(dept_year_results, match_dept ~ variable + year, value.var = 'value')
+
+natl_year_results = trans_wide[, lapply(.SD, sum, na.rm = TRUE), .SDcols = sd_cols, by = .(year)]
+natl_year_results[, test_positivity := (hiv_positive/hiv_test_comp)*100]
