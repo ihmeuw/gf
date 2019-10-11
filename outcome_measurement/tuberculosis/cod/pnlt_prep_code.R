@@ -8,28 +8,33 @@
 # Set up R workspace
 #---------------------------------------------------
 # Load packages
-install.packages('data.table') # run these two lines of code if you have not
-install.packages('openxlsx')   # already installed these packages
+# install.packages('data.table') # run these two lines of code if you have not
+# install.packages('openxlsx')   # already installed these packages
 library(data.table)
 library(openxlsx)
 
 # Set directories - change these file paths to where you have saved/will save your data
-in_dir = "C:/local/PNLT_data/raw_data/"  # This is the file path where the raw data file(s) are saved on your computer; the input of this R script
-out_dir = "C:/local/PNLT_data/prepped_data/" # This is the file path where you will save the prepped data; the output of this R script
+# in_dir = "C:/local/PNLT_data/raw_data/"  # This is the file path where the raw data file(s) are saved on your computer; the input of this R script
+# out_dir = "C:/local/PNLT_data/prepped_data/" # This is the file path where you will save the prepped data; the output of this R script
+
+j_dir = "J:/Project/Evaluation/GF/outcome_measurement/cod/National_TB_Program/hand_appended_data/"
+out_dir = paste0(j_dir, 'prepped/')
 
 # Input files:
 inFile_2018 = "tb data 2018 all dps with health zone column.xlsx"
 inFile_2017 = "tb data 2017 all dps with health zone column.xlsx"
+inFile_2016 = "tb_data_2016_2017.xlsx"
   
 # Output files:
-outFile = "PNLT_PREPPED_2017_2018_TBHIV.csv" # This will be the name of the output file
+outFile = "all_data_prepped.rds"
+outFile_tbhiv = "PNLT_PREPPED_2017_2018_TBHIV.csv" # This will be the name of the output file
 #---------------------------------------------------
 
 #---------------------------------------------------
 # 2018 data
 #---------------------------------------------------
 # Read in the data
-dt_2018 = read.xlsx(paste0(in_dir, inFile_2018))
+dt_2018 = read.xlsx(paste0(j_dir, inFile_2018))
 # Make the data a "data table" 
 dt_2018 = data.table(dt_2018) 
 # Remove the first four lines of the data - now that the data is in R, we don't want the column names in the rows of data
@@ -148,10 +153,56 @@ dt_2018[ csdt %in% kasongo_fac, zs := 'kasongo']
 #---------------------------------------------------
 
 #---------------------------------------------------
+# 2016 data
+#---------------------------------------------------
+# Read in the data
+dt_2016 = read.xlsx(paste0(j_dir, inFile_2016)) # note, this data has both 2016 and 2017 - we want to subset to just 2016
+# Make the data a "data table" 
+dt_2016 = data.table(dt_2016)
+# For some reason, there are 1000s of columns, we want to just keep the ones with the data; do this first so it doesn't take up too much space (everything is slow/taking forever)
+dt_2016 = dt_2016[, 1:65]
+# Remove the first four lines of the data - now that the data is in R, we don't want the column names in the rows of data
+dt_2016 = dt_2016[5:nrow(dt_2016), ] 
+
+# Change the column names to be easier to use in R: 
+new_names = c('dps', 'trimestre', 'zs', 'csdt', 'population_totale', 'population_couverte', 'presume_tb_teste_microscope', 
+              'frottis_effectue', 'frottis_positif', 'presume_tb_teste_microscope_ziehl', 'presume_tb_teste_microscope_ziehl_positif', 
+              'presumes_xpert', 'xpert_mtb_pos_rif_neg', 'xpert_mtb_pos_rif_pos', 'xpert_invalide',
+              'tb_bac_nouveau', 'tb_bac_recurrente_rechute', 'tb_bac_recurrente_echec', 'tb_bac_recurrente_perdu', 
+              'tb_clinique_nouveau', 'tb_clinique_recurrente_rechute', 'tb_clinique_recurrente_hors_rechute', 
+              'cas_extrapul_nouveau', 'cas_extrapul_rechute', 'cas_extrapul_hors_rechute',
+              'autre_patient_deja_traite', 'total_de_cas_incident', 'total_de_cas', 'cas_oriente_par_communaute', 
+              'cas_recu_soutien_communitaire', 
+              'tb_teste_vih_nouveau', 'tb_vih_positif_nouveau', 'tb_vih_positif_cotri_nouveau', 'tb_vih_positif_tarv_nouveau', 
+              'tb_teste_vih_autres', 'tb_vih_positif_autres', 'tb_vih_positif_cotri_autres', 'tb_vih_positif_tarv_autres', 
+              'pvvih_avec_tb', 'pvvih_sans_tb', 'pvvih_sous_inh', 
+              'tbmr_nouveau_presumes', 'tbmr_nouveau_confirme_tbmr_rr', 'tbmr_nouveau_confirme_tb_xdr', 
+              'tbmr_recurrente1_presumes', 'tbmr_recurrente1_confirme_tbmr_rr', 'tbmr_recurrente1_confirme_xdr',
+              'tbmr_recurrente2_presumes', 'tbmr_recurrente2_confirme_tbmr_rr', 'tbmr_recurrente2_confirme_xdr',
+              'tbmr_traitement_presumes', 'tbmr_traitement_confirme_tbmr_rr', 'tbmr_traitement_confirme_xdr',
+              'tb_sensible_traitement1_zs', 'tb_sensible_traitement1_hzs', 'tb_sensible_traitement1_transfron',
+              'tb_sensible_traitement2_zs', 'tb_sensible_traitement2_hzs', 'tb_sensible_traitement2_transfron',
+              'enfant_0_5_sous_inh', 'prisionniers', 'miniers', 'cas_contact', 'autres', 'populations_speciales_total')
+names(dt_2016) = new_names
+
+# Make a column for the year 
+dt_2016[, year := 2016]
+# Subset to just 2016
+dt_2016 = dt_2016[grepl(trimestre, pattern = '2016|0216')] # there's a typo for date, so include these rows too
+# Make a column for the date from the 'trimestre' variable - this will make graphing the data easier
+dt_2016[grepl(trimestre, pattern = "T1"), date:="2016-01-01"]
+dt_2016[grepl(trimestre, pattern = "T2"), date:="2016-04-01"]
+dt_2016[grepl(trimestre, pattern = "T3"), date:="2016-07-01"]
+dt_2016[grepl(trimestre, pattern = "T4"), date:="2016-10-01"]
+# R has a special variable type for dates, so we want to set our variable called "date", to be the type 'Date'. 
+dt_2016[, date := as.Date(date)]
+#---------------------------------------------------
+
+#---------------------------------------------------
 # 2017 data
 #---------------------------------------------------
 # Read in the data
-dt_2017 = read.xlsx(paste0(in_dir, inFile_2017))
+dt_2017 = read.xlsx(paste0(j_dir, inFile_2017))
 # Make the data a "data table" 
 dt_2017 = data.table(dt_2017)
 # Remove the first four lines of the data - now that the data is in R, we don't want the column names in the rows of data
@@ -260,6 +311,7 @@ dt_2017[zs == 'makiso-_kis', zs := 'makiso_kisangani']
 dt_2017[zs == 'wanierukula', zs := 'wanie_rukula']
 dt_2017[zs == 'total_yakusu', zs := 'yakusu']
 #---------------------------------------------------
+
 
 #---------------------------------------------------
 # Subset the data to only id variables and tb/hiv indicators; then combine years
