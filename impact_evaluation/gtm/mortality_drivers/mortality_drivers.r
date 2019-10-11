@@ -1,11 +1,10 @@
 # ----------------------------------------------------
-# David Phillips
+# David Phillips / Audrey Batzel
 # 
 # 8/23/2019
 # Measure drivers of mortality using program data
 # Alternative to the same using GBD estimates
 # ----------------------------------------------------
-
 
 # ----------------
 # Set up R
@@ -18,6 +17,12 @@ library(boot)
 library(RColorBrewer)
 # ----------------
 
+# --------------------------------------------------------------------------------------
+# set switches
+
+# Use GBD estimates or GTM raw program data? (incidence vs. case notifications)
+use_GBD = TRUE
+# --------------------------------------------------------------------------------------
 
 # --------------------------------------------------------------------------------------
 # Files and directories
@@ -25,29 +30,39 @@ library(RColorBrewer)
 # root directory
 dir = 'J:/Project/Evaluation/GF/impact_evaluation/'
 
-# input file
-inFile = paste0(dir, 'gtm/raw_data/impact_7.15.19.csv')
-inFile_GBD = paste0(dir, 'mortality/prepped_data/tb_pce_data.rds')
-
-# population data (worldpop)
-popFile = 'J:/Project/Evaluation/GF/covariates/gtm/worldpop/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv'
-
-# Use GBD estimates or GTM raw program data?
-use_GBD = TRUE
-
-# output file
+# input files
 if (use_GBD == TRUE){
-  outFile = paste0(dir, 'gtm/visualizations/mortality_drivers/mortality_explained_variance_usingGBDestimates.pdf')
-} else {
-  outFile = paste0(dir, 'gtm/visualizations/mortality_drivers/mortality_explained_variance.pdf')
+  inFile = paste0(dir, 'mortality/prepped_data/tb_malaria_pce_countries_data.rds') 
+} else { # currently only implemented for GTM TB
+  inFile = paste0(dir, 'gtm/raw_data/impact_7.15.19.csv')
+  # population data (worldpop)
+  popFile = 'J:/Project/Evaluation/GF/covariates/gtm/worldpop/Guatemala_Municipios_IGN2017_worldpop2010-2012-2015.csv'
+}
+
+# # output files
+# if (use_GBD == TRUE){
+#   outFile = paste0(dir, 'mortality/visualizations/explained_variance/', country, '_', disease, '_mortality_explained_variance_usingGBDestimates.pdf')
+# } else {
+#   outFile = paste0(dir, 'mortality/visualizations/explained_variance/', country, '_', disease, '_mortality_explained_variance.pdf')
+# }
+# --------------------------------------------------------------------------------------
+
+# --------------------------------------------------------------------------------------
+# functions
+# --------------------------------------------------------------------------------------
+# define smithsonTransform function
+smithsonTransform = function(x) { 
+  N=length( x[!is.na(x)] )
+  prop_lsqueeze = logit(((x*(N-1))+0.5)/N)
 }
 # --------------------------------------------------------------------------------------
 
-
-# -----------------------------------------------------------------------------------------
-# Load/prep populations
-
-# load
+# --------------------------------------------------------------------------------------
+# Load/prep program data if not using GBD estimates
+# --------------------------------------------------------------------------------------
+if (use_GBD == FALSE){
+  
+# load/prep populations
 populations = fread(popFile)
 
 # subset columns
@@ -69,37 +84,21 @@ populations = merge(populations, years, by=c('COD_MUNI__', 'year'), all=TRUE)
 lmFit = lm(log(population)~year*factor(COD_MUNI__), populations)
 populations[, prediction:=exp(predict(lmFit, newdata=populations))]
 populations[, population:=prediction]
-# -----------------------------------------------------------------------------------------
-
-
-# -----------------------------------------------------------------------------------------
-# Load/prep data
-
+# ---------------------------------------------
 # load impact inFile
 data = fread(inFile)
 
 # rename
 data = data[, 1:5, with=FALSE]
 setnames(data, c('date','department','municipality','case_notification_rate','mortality_rate'))
-
+# ---------------------------------------------
 # collapse to department level
 data = merge(data, populations, by.x=c('municipality','date'), by.y=c('COD_MUNI__','year'))
 data = data[, .(mortality_rate=weighted.mean(mortality_rate, population), 
 				case_notification_rate=weighted.mean(case_notification_rate, population),
 				population=sum(population, na.rm=T)), 
 				by=c('date','department')]
-# -----------------------------------------------------------------------------------------
-
-# -----------------------------------------------------------------------------------------
-# load/prep GBD mortality estimates data:
-gbd = readRDS(inFile_GBD)
-gbd = gbd[country == 'Guatemala']
-# collapse population to natl level and merge
-populations_natl = populations[, .(population = sum(population)), by = 'year']
-gbd = merge(gbd, populations_natl, by = 'year')
-# -----------------------------------------------------------------------------------------
-
-# -----------------------------------------------------------------------------------------
+# ---------------------------------------------
 # extrapolate where necessary using GLM (better would be to use multiple imputation)
 i=1
 for(v in c('mortality_rate','case_notification_rate')) {
@@ -116,18 +115,18 @@ for(v in c('mortality_rate','case_notification_rate')) {
   }
 }
 data$tmp = NULL
-
+# ---------------------------------------------
 # collapse to national level
 national = data[, .(mortality_rate=weighted.mean(mortality_rate, population, na.rm=T), 
-				case_notification_rate=weighted.mean(case_notification_rate, population, na.rm=T)), 
-				by=c('date')]
-
+                    case_notification_rate=weighted.mean(case_notification_rate, population, na.rm=T)), 
+                by=c('date')]
+# ---------------------------------------------
 # put rates in per 100,000 population
 national[, mortality_rate:=mortality_rate*100000]
 national[, case_notification_rate:=case_notification_rate*100000]
 data[, mortality_rate:=mortality_rate*100000]
 data[, case_notification_rate:=case_notification_rate*100000]
-
+# ---------------------------------------------
 # compute MI ratio
 # data[mortality_rate>250, mortality_rate:=NA]
 # data = data[date%%1==0 & date<=2015]
@@ -139,29 +138,31 @@ data[, case_notification_rate_sum:=sum(case_notification_rate, na.rm=T), by='dep
 data = data[mortality_rate_sum!=0 & case_notification_rate_sum!=0]
 data$mortality_rate_sum = NULL
 data$case_notification_rate_sum = NULL
-
+# ---------------------------------------------
 # graph data
 # ggpairs(data[, c('mortality_rate','case_notification_rate','mi_ratio'), with=F])
-
-# define smithsonTransform function
-smithsonTransform = function(x) { 
-	N=length( x[!is.na(x)] )
-	prop_lsqueeze = logit(((x*(N-1))+0.5)/N)
+setnames(data, 'case_notification_rate', 'cases_var')
 }
+# --------------------------------------------------------------------------------------
 
-# use GBD data
-if (use_GBD == TRUE) { 
-  gbd[ , department := 'all']
-  setnames(gbd, 'Deaths', 'mortality_rate')
-  setnames(gbd, 'Incidence', 'cases_var')
-  
-  data = copy(gbd)
-  national = copy(gbd)
+# --------------------------------------------------------------------------------------
+# Load/prep GBD estimates 
+# --------------------------------------------------------------------------------------
+if (use_GBD == TRUE){
+# load data:
+data = readRDS(inFile)
+data = data[grepl(country, pattern = 'Guatemala', ignore.case = TRUE), ]
+
+data[ , department := 'all']
+setnames(data, 'Deaths', 'mortality_rate')
+setnames(data, 'Incidence', 'cases_var')
 }
+# --------------------------------------------------------------------------------------
 
-if (use_GBD != TRUE) setnames(data, 'case_notification_rate', 'cases_var')
-
-# transform
+# --------------------------------------------------------------------------------------
+# Set up variables
+# --------------------------------------------------------------------------------------
+# transform variables
 offset1 = quantile(data[mortality_rate>0]$mortality_rate,.01)
 offset2 = quantile(data[cases_var>0]$cases_var,.01)
 offset3 = quantile(data[mi_ratio>0]$mi_ratio,.01)
@@ -180,13 +181,12 @@ data[, logit_mi_ratio_std:=(logit_mi_ratio-mean(logit_mi_ratio))/sd(logit_mi_rat
 
 # graph transformed data
 ggpairs_fig = ggpairs(data[, c('mortality_rate_std','log_cases_var_std','logit_mi_ratio_std'), with=F])
-# -----------------------------------------------------------------------------------------
+# --------------------------------------------------------------------------------------
 
-
-# ----------------------------------------------------
-
+# --------------------------------------------------------------------------------------
+# get estimates and explained variances
+# --------------------------------------------------------------------------------------
 # Get glm estimate
-
 lmFits = lapply(unique(data$department), function(m) { 
 	lm(mortality_rate_std ~ log_cases_var_std + logit_mi_ratio_std, data[department==m])
 })
@@ -214,12 +214,11 @@ for(i in seq(length(lmFits))) {
 evs_mean = evs[, .(explained_variance=mean(explained_variance)), by='variable']
 options(scipen=999)
 evs_mean
-# ----------------------------------------------------
+# --------------------------------------------------------------------------------------
 
-
-# ----------------------------------------------------
+# --------------------------------------------------------------------------------------
 # Set up to graph
-
+# --------------------------------------------------------------------------------------
 # set up graph data
 graphData = evs_mean
 graphData[variable=='log_cases_var_std', 
@@ -243,12 +242,11 @@ national[variable=='cases_var', variable:='TB Case Notification Rate (per 100,00
 # colors
 cols = brewer.pal(3, 'Paired')
 cols = c(cols[c(3,2)], '#969696')
-# ----------------------------------------------------
+# --------------------------------------------------------------------------------------
 
-
-# ----------------------------------------------------
+# --------------------------------------------------------------------------------------
 # Graph
-
+# --------------------------------------------------------------------------------------
 # open pdf
 pdf(outFile, height=5.5, width=8)
 
@@ -271,7 +269,6 @@ ggplot(graphData, aes(y=explained_variance, x=1, fill=label)) +
 		caption=cap) + 
 	theme_void() + 
 	theme(legend.position='none')
-
 
 # graph national trends
 x_var = ifelse(use_GBD == TRUE, 'year', 'date')
@@ -306,5 +303,5 @@ if (use_GBD != TRUE){
 }
 # close pdf
 dev.off()
-# ----------------------------------------------------
+# --------------------------------------------------------------------------------------
 
