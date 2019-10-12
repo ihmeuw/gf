@@ -1,5 +1,5 @@
 #-------------------------------------------------------------------
-# AUTHOR: Emily Linebarger
+# AUTHOR: Emily Linebarger / Audrey Batzel
 # PURPOSE: Prep PQR data from Global Fund's public-facing Tableau dashboard
 #https://public.tableau.com/profile/the.global.fund#!/vizhome/PQRPricelist_English/PriceList
 # DATE: Last updated April 2019
@@ -15,17 +15,17 @@ j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, "/Project/Evaluation/GF/vfm/unit_cost_data/")
 
 inFile = "download_4.4.19/PQR_ExternalReportingView.csv"
-inFile_compare = "download_9.24.19/PQR_ExternalReportingView.csv"
+inFile_new = "download_9.24.19/PQR_ExternalReportingView.csv"
 outFile = "prepped_data/prepped_full_pqr_updated_09_2019.rds"
 
 #-------------------------------------------------------------------
 # Read in data
 #-------------------------------------------------------------------
-full_pqr = fread(paste0(dir, inFile), stringsAsFactors = FALSE)
+pqr_prev = fread(paste0(dir, inFile), stringsAsFactors = FALSE)
 
-pqr_compare = fread(paste0(dir, inFile_compare), stringsAsFactors = FALSE)
+pqr_new = fread(paste0(dir, inFile_new), stringsAsFactors = FALSE)
 
-pqr = copy(pqr_compare)
+pqr = copy(pqr_new)
 #-------------------------------------------------------------------
 # Drop columns that aren't needed and rename 
 #-------------------------------------------------------------------
@@ -69,7 +69,7 @@ key_cols = c("Country Name", "ISO3CodeCountry",
 country_ids = pqr[`Country/Teritorry` %in% c("Congo (Democratic Republic)", "Senegal", "Uganda", "Guatemala", 
                                         "Mozambique", "Sudan", "Myanmar", "Cambodia"), unique(`ISO3CodeCountry`) ]#Keep EHG's countries in here as well. 
 
-pqr = pqr[`ISO3CodeCountry`%in%country_ids, ]
+pqr = pqr[`ISO3CodeCountry`%in% country_ids, ]
 
 #Remove duplicated column names
 dup_names = unique(names(pqr)[duplicated(names(pqr))])
@@ -267,19 +267,20 @@ subset = subset[, -remove_vars, with=FALSE]
 
 setnames(subset, 'country_teritorry', 'country_name')
 
-subset[nb_tests_units != pack_quantity * nb_of_suom_in_pack]
+# subset[nb_tests_units != pack_quantity * nb_of_suom_in_pack]
+# setnames(subset, 'nb_tests_units', 'total_units_in_order')
 
-setnames(subset, 'nb_tests_units', 'total_units_in_order')
 setnames(subset, 'pack_quantity', 'nb_packs_ordered')
 setnames(subset, 'nb_of_suom_in_pack', 'nb_units_in_pack')
+setnames(subset, 'total_number_of_suom', 'total_units_in_order')
 
-subset[total_units_in_order != nb_packs_ordered * nb_units_in_pack]
 subset[is.na(nb_packs_ordered), nb_packs_ordered := as.integer(total_units_in_order/nb_units_in_pack)]
-subset[ , total_cost_order := ifelse(( !is.na(nb_packs_ordered)& !is.na(pack_cost_usd) ), nb_packs_ordered * pack_cost_usd, total_product_cost_usd)]
+subset[ , total_cost_order := ifelse(( !is.na(nb_packs_ordered)& !is.na(pack_cost_usd) ), total_units_in_order * unit_cost_usd, total_product_cost_usd)]
 
-subset[, unit_cost_usd := pack_cost_usd / nb_units_in_pack]
-subset[, expected_cost_by_reference := po_international_reference_price * total_units_in_order]
-subset[, cost_above_reference := total_cost_order - expected_cost_by_reference]
+# # check these against internally calculated vars
+# subset[, unit_cost_usd := pack_cost_usd / nb_units_in_pack]
+# subset[, expected_cost_by_reference := po_international_reference_price * total_units_in_order]
+# subset[, cost_above_reference := total_cost_order - expected_cost_by_reference]
 #-------------------------------------------------------------------
 # Save data 
 #-------------------------------------------------------------------
