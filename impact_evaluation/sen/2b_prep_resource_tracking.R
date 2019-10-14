@@ -149,7 +149,7 @@ rt_wide = merge(rt_wide, ghe, by='date', all.x = TRUE)
 #------------------------------
 
 # remove columns we don't want (R1 Procurement and supply chain management systems, R7 community responses and systems, R99 unspecified RSSH, T4 Program Management, T99 Unspecified TB Spending)
-rt_wide = rt_wide[,c("exp_R1", "exp_R7", "other_dah_R99", "exp_T4", "other_dah_T99"):=NULL]
+rt_wide = rt_wide[,c("exp_R1", "exp_R7", "other_dah_R99", "exp_T4", "other_dah_T99", "exp_R99"):=NULL]
 
 # save
 saveRDS(rt_wide, outputFile2b)
