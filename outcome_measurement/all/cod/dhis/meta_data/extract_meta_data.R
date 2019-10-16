@@ -34,6 +34,9 @@ setwd(dir)
 # set the output directory
 out_dir = paste0(dir, 'meta_data/')
 
+# library for the dhisextractr package
+dirx = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/packages/')
+
 # source functions from J Drive - be sure to update from most recent push
 source (paste0(dir, 'code/dhis_extracting_functions.R'))
 

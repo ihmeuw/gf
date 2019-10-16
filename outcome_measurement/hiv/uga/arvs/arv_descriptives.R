@@ -30,13 +30,13 @@ og = og[year!=2013]
 # select arguments 
 
 # type can be equal to 'test' or 'art'
-type = 'art'
+type = 'test'
 
 #if 2017/18 tables, now = FALSE; 2018/19 now = TRUE 
-now = TRUE
+now = FALSE
 
 # level or region
-strat = 'region'
+strat = 'level'
 
 # ----------------------
 # create a function that reads in the data
@@ -274,11 +274,9 @@ min_year = dt[ , min(year(date))]
 max_year = dt[ , max(year(date))]
 
 write.csv(final, paste0(dir, 'outputs/', type, 
-                        '_stockout_stats_by_region_', min_year, '_', max_year, '.csv'))
+                        '_stockout_stats_by_', strat, '_',
+                        min_year, '_', max_year, '.csv'))
 
 #-----------------------------------------
-
-
-
 
 
