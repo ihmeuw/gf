@@ -196,6 +196,40 @@ dt_2016[grepl(trimestre, pattern = "T3"), date:="2016-07-01"]
 dt_2016[grepl(trimestre, pattern = "T4"), date:="2016-10-01"]
 # R has a special variable type for dates, so we want to set our variable called "date", to be the type 'Date'. 
 dt_2016[, date := as.Date(date)]
+
+# run tolower() and trimws() functions and gsub "_" for " "- on dps, zs, and csdt in order to format them consistently across quarters and years of data
+dt_2016[, dps := tolower(dps)]
+dt_2016[, zs := tolower(zs)]
+dt_2016[, csdt := tolower(csdt)]
+
+dt_2016[, zs := gsub('total', '', zs)]
+dt_2016[, zs := gsub('zs', '', zs)]
+
+dt_2016[, dps := trimws(dps)]
+dt_2016[, zs := trimws(zs)]
+dt_2016[, csdt := trimws(csdt)]
+
+dt_2016[, dps := gsub(" ", "_", dps)]
+dt_2016[, zs := gsub(" ", "_", zs)]
+dt_2016[, csdt := gsub(" ", "_", csdt)]
+
+# change one mistake that resulted form the above: 
+dt_2016[ zs == 'ngiri_-ngiri', zs := 'ngiri_ngiri']
+check_names = unique(dt_2016$zs)
+check_names = gsub('_', '-', check_names)
+standardizeHZNames(check_names)
+#---------------------------------------------------
+
+#---------------------------------------------------
+# 2016 ZS and CSDT fixes
+#---------------------------------------------------
+# Fix where "jiba" facilities were accidentally labeled "kilo" in 2017 all quarters
+# standardize hz names within pnlt data
+dt_2016[zs == 'de_mandima', zs := 'mandima']
+dt_2016[zs == 'moanda_a', zs := 'muanda']
+dt_2016[zs == 'boma_bung', zs := 'boma_bungu']
+dt_2016[zs == 'kyongo', zs := 'kyondo']
+dt_2016[zs == 'makiso-_kis', zs := 'makiso_kisangani']
 #---------------------------------------------------
 
 #---------------------------------------------------
