@@ -245,7 +245,7 @@ if (nrow(revisions)!=0){ #You won't have budget revisions for every country.
   revisions_collapse[, order:=paste0('v', order)]
   
   #Cast wide 
-  revisions_collapse = dcast(revisions_collapse, grant+grant_period+gf_module+gf_intervention~year+quarter+order, value.var='budget')
+  revisions_collapse = dcast(revisions_collapse, grant+grant_period+gf_module+gf_intervention+year+quarter~order, value.var='budget')
   
 }
 
