@@ -123,10 +123,14 @@ for(c in activityVars) {
 
 activities <- data.table(rev(activityVars))
 output <- cbind(output, activities)
+
+# add labels to the efficiency estimates
+finishedFile <- merge(output,nodeTable1, by.x='V1', by.y='variable')
+finishedFile <- finishedFile[,c('V1','V5','V6','V7','y','x'):=NULL]
 # -----------------------------------------------
 
-write.csv(output, file = "C:/Users/frc2/Documents/senegal_analyses/tb/modeling/efficiencyestimates.csv")
+write.csv(finishedFile, file = "C:/Users/frc2/Documents/senegal_analyses/tb/modeling/efficiencyestimates.csv")
 
 # save a time-stamped version for reproducibility
-archive(outputFile6b)
+#archive(outputFile6b)
 # ----------------------------------------------

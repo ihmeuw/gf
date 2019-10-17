@@ -110,12 +110,12 @@ for(v in lagVars) {
 data = na.omit(data)
 
 # compute leads
-#leadVars = names(data)[grepl('exp_|other_dah|ghe|oop', names(data))]
-#for(v in lagVars) { 
-#  data[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='region']
-#  untransformed[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='region']
-#}
-#data = na.omit(data)
+leadVars = c("gueris_taux", "mdr_success_rate", "tpm_chimio_enf_cumulative")
+for(v in leadVars) { 
+  data[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead',n=2), by='region']
+  untransformed[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead',n=2), by='region']
+}
+data = na.omit(data)
 
 # per capita variables of everything in model 1
 #if(fileLabel=='_pc') { 
