@@ -19,6 +19,8 @@ options(digits=6)
 #J:drive filepaths
 j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/process_evaluation/')
+#Box filepaths - these should be used to source raw files, and to save final prepped files. 
+box = "C:/Users/elineb/Box Sync/Global Fund Files/"
 
 code_dir = paste0(repo_root, "process_evaluation/prep/")
 

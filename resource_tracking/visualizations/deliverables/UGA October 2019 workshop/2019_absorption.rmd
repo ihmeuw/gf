@@ -1,0 +1,646 @@
+---
+title: "Uganda 2019 Absorption"
+author: "Emily Linebarger"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+classoption: landscape
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, fig.dim=c(10, 7))
+
+library(data.table) 
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(Hmisc)
+library(wesanderson)
+library(gridExtra)
+library(scales)
+
+dt = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/absorption_uga.rds")
+dt = dt[grant_period=="2018-2020"]
+
+#Assign each grant a distinct color from the "Zissou" palette. 
+grants = unique(dt$grant) 
+for (i in 1:length(grants)){
+  g = grants[i]
+  dt[grant==g, grant_color:=wes_palette("Zissou1")[i]]
+}
+
+#Add abbreviated module names. 
+all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
+setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
+all_mods = all_mods[, .(gf_module, gf_intervention, disease, abbrev_mod, abbrev_int)]
+dt = merge(dt, all_mods, by=c('gf_module', 'gf_intervention', 'disease'), allow.cartesian=TRUE)
+
+#make sure this merge worked correctly. 
+stopifnot(nrow(dt[is.na(abbrev_int)])==0)
+
+#Break out into smaller datasets. 
+by_grant = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_disease', 'start_date', 'semester', 'grant_color')]
+by_grant[, absorption:=(expenditure/budget)*100]
+by_grant[, label1:=paste0(round(absorption, 1), "%")]
+by_grant[absorption>200, absorption:=200] # Cap absorption at 200%
+by_grant[, label2:=paste0(grant_disease)]
+
+by_module = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant', 'gf_module', 'abbrev_mod', 'start_date', 'semester', 'grant_color')]
+by_module[, absorption:=(expenditure/budget)*100]
+by_module[, label1:=paste0(round(absorption, 1), "%")]
+by_module[absorption>200, absorption:=200] # Cap absorption at 200%
+by_module[, label2:=dollar(expenditure)]
+
+by_intervention = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int', 'start_date', 'semester', 'grant_color')]
+by_intervention[, absorption:=(expenditure/budget)*100]
+by_intervention[, label1:=paste0(round(absorption, 1), "%")]
+by_intervention[absorption>200, absorption:=200] # Cap absorption at 200%
+```
+
+\newpage
+# Overview of 2019 absorption
+\newpage
+```{r overview} 
+ggplot(by_grant, aes(x=grant, y=absorption, fill=semester, label=label1))+ 
+  geom_bar(stat="identity", position="dodge") + 
+  geom_text(stat="identity", position = position_dodge(width = 1), vjust=-0.5, size=4) + 
+  theme_bw(base_size=16) + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  theme(axis.text.x=element_text(angle=30, vjust=0.5)) + 
+   scale_fill_manual(values=wes_palette("GrandBudapest2")) + 
+  labs(title="Comparison of 2018-2020 absorption rates by semester", x="Grant", y="Absorption (%)", fill="Grant Semester", caption="*Semester 1 is Q1-Q2 2018, Semester 1-2 is Q1-Q4 2018, and Semester 3 is Q1-Q2 2019\n*Bar height limited to 200%")
+
+```
+
+```{r cumulative}
+cumulative = by_grant[, .(grant, grant_disease, semester, budget, expenditure)]
+cumulative = melt(cumulative, id.vars=c('grant', 'grant_disease', 'semester'))
+cumulative = dcast(cumulative, grant+grant_disease+variable~semester)
+
+#Calculate cumulative budget and expenditure, and then absorption percentage. 
+cumulative[!is.na(`Semester 2`), cumulative:=sum(`Semester 1`, `Semester 2`, `Semester 3`), by=c('grant', 'grant_disease', 'variable')]
+cumulative[!is.na(`Semester 1-2`), cumulative:=sum(`Semester 1-2`, `Semester 3`), by=c('grant', 'grant_disease', 'variable')]
+stopifnot(nrow(cumulative[is.na(cumulative)])==0)
+
+#Subset this so it's easier to work with, and then graph. 
+cumulative_by_grant = cumulative[, .(grant, grant_disease, variable, cumulative)]
+cumulative_by_grant = dcast(cumulative_by_grant, grant+grant_disease~variable)
+cumulative_by_grant[, absorption:=(expenditure/budget)*100]
+cumulative_by_grant[, label1:=paste0(round(absorption, 1), "%")]
+cumulative_by_grant[absorption>200, absorption:=200] # Cap absorption at 200%
+cumulative_by_grant[, label2:=paste0(grant_disease)]
+
+ggplot(cumulative_by_grant, aes(x=grant, y=absorption, label=label1))+ 
+  geom_bar(stat="identity", fill="indianred3") + 
+  geom_text(stat="identity", vjust=-0.5, size=4) + 
+  theme_bw(base_size=16) + 
+  theme(legend.position = "none") +
+  scale_y_continuous(limits=c(0, 100)) + 
+  theme(axis.text.x=element_text(angle=30, vjust=0.5)) + 
+   scale_fill_manual(values=wes_palette("GrandBudapest2")) + 
+  labs(title="Cumulative 2018-2020 absorption rates", x="Grant", y="Absorption (%)", subtitle="(Semesters 1-3)")
+
+#Show cumulative budget and expenditure bars
+  cumulative_melt = cumulative_by_grant[, .(grant, budget, expenditure)]
+  cumulative_melt = melt(cumulative_melt, id.vars=c('grant'), variable.name='variable', value.name='amount')
+  cumulative_melt[variable=="expenditure", label1:=dollar(amount)] #Don't display the expenditure amount on the budget bar. 
+  cumulative_melt[is.na(label1), label1:=""]
+  
+  #Fix budget and expenditure so they display nicely 
+  cumulative_melt[variable=="budget", variable:="Budget"]
+  cumulative_melt[variable=="expenditure", variable:="Expenditure"]
+  
+ggplot(cumulative_melt, aes(x=grant, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label1), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_fill_manual(values=c('plum2', 'chocolate2')) + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Cumulative budget and expenditure, by grant"), x="Grant", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+
+
+```
+
+\newpage 
+# Supporting data for grant-level absorption
+```{r supporting_data1} 
+kable(by_grant[, .(grant, grant_disease, start_date, semester, budget, expenditure, absorption)][order(grant, grant_disease, start_date)], col.names=c('Grant', 'Disease', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="c")
+```
+
+\newpage 
+
+# 2019 absorption by module/grant 
+
+\newpage
+
+```{r by_module, results='asis'}
+i = 0
+for(g in unique(by_module$grant)){
+
+  subset = by_module[grant==g & start_date=="2019-01-01"]
+  
+  p1 = ggplot(subset, aes(x=abbrev_mod, y=absorption, label=label1))+ 
+  geom_bar(stat="identity", fill=unique(subset$grant_color)) + 
+  geom_text(hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title=paste0("Absorption for ", g, " by module"), subtitle="Labels show uncapped absorption percentage", x="Module", y="Absorption (%)", caption="*Max bar height set at 200%")
+  print(p1) 
+  if (i<4){cat("\n\n\\pagebreak\n")} 
+  
+  subset_melt = subset[, .(abbrev_mod, label2, budget, expenditure)]
+  subset_melt = melt(subset_melt, id.vars=c('abbrev_mod', 'label2'), variable.name='variable', value.name='amount')
+  subset_melt[variable=="budget", label2:=""] #Don't display the expenditure amount on the budget bar. 
+  
+  #Fix budget and expenditure so they display nicely 
+  subset_melt[variable=="budget", variable:="Budget"]
+  subset_melt[variable=="expenditure", variable:="Expenditure"]
+  
+  p2 = ggplot(subset_melt, aes(x=abbrev_mod, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label2), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Budget and expenditure for ", g, "\nby module"), x="Module", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+  print(p2) 
+  if (i<4){cat("\n\n\\pagebreak\n")} 
+  
+ cumulative = by_module[grant==g, .(grant, semester, budget, expenditure, abbrev_mod)]
+cumulative = melt(cumulative, id.vars=c('grant', 'semester', 'abbrev_mod'))
+cumulative = dcast(cumulative, grant+abbrev_mod+variable~semester)
+
+#Calculate cumulative budget and expenditure, and then absorption percentage. 
+if ("Semester 2"%in%names(cumulative)){
+  cumulative[, cumulative:=sum(`Semester 1`, `Semester 2`, `Semester 3`, na.rm=T), by=c('grant', 'abbrev_mod', 'variable')]
+} else { 
+  cumulative[, cumulative:=sum(`Semester 1-2`, `Semester 3`, na.rm=T), by=c('grant', 'abbrev_mod', 'variable')]
+}
+stopifnot(nrow(cumulative[is.na(cumulative)])==0)
+
+#Subset this so it's easier to work with, and then graph. 
+cumulative_by_module = cumulative[, .(grant, abbrev_mod, variable, cumulative)]
+cumulative_by_module = dcast(cumulative_by_module, grant+abbrev_mod~variable)
+cumulative_by_module[, absorption:=(expenditure/budget)*100]
+cumulative_by_module[, label1:=paste0(round(absorption, 1), "%")]
+cumulative_by_module[absorption>200, absorption:=200] # Cap absorption at 200%
+cumulative_by_module[, label2:=paste0(abbrev_mod)]
+
+p3 = ggplot(cumulative_by_module, aes(x=abbrev_mod, y=absorption, label=label1))+ 
+  geom_bar(stat="identity", fill="indianred3") + 
+  geom_text(hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title=paste0("Cumulative absorption for ", g, "\nby module (Semesters 1-3)"), subtitle="Labels show uncapped absorption percentage", x="Module", y="Absorption (%)", caption="*Max bar height set at 200%")
+print(p3)
+ if (i<4){cat("\n\n\\pagebreak\n")} 
+
+melt = cumulative_by_module[, .(abbrev_mod, budget, expenditure)]
+  melt = melt(melt, id.vars=c('abbrev_mod'), variable.name='variable', value.name='amount')
+  melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  melt[variable=="expenditure", label:=dollar(amount)]
+  
+  #Fix budget and expenditure so they display nicely 
+  melt[variable=="budget", variable:="Budget"]
+  melt[variable=="expenditure", variable:="Expenditure"]
+  
+ p4 =  ggplot(melt, aes(x=abbrev_mod, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_fill_manual(values=c('plum2', 'chocolate2')) + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Cumulative budget and expenditure for \n", g), x="Module", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+ print(p4)
+ if (i<4){cat("\n\n\\pagebreak\n")} 
+
+
+  i = i+1
+}
+
+```
+
+\newpage
+# Supporting data for graphs by grant and module (1/3) 
+```{r supporting_data_mod1} 
+kable(by_module[1:36, .(grant, abbrev_mod, start_date, semester, budget, expenditure, absorption)][order(grant, start_date, semester, abbrev_mod)], col.names=c('Grant', 'Module', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
+  kable_styling(font_size=8)
+```
+
+\newpage
+# Supporting data for graphs by grant and module (2/3) 
+```{r supporting_data_mod2} 
+kable(by_module[37:73, .(grant, abbrev_mod, start_date, semester, budget, expenditure, absorption)][order(grant, start_date, semester, abbrev_mod)], col.names=c('Grant', 'Module', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
+  kable_styling(font_size=8)
+```
+
+\newpage
+# Supporting data for graphs by grant and module (3/3) 
+```{r supporting_data_mod3} 
+stopifnot(nrow(by_module)==108)
+kable(by_module[74:108, .(grant, abbrev_mod, start_date, semester, budget, expenditure, absorption)][order(grant, start_date, semester, abbrev_mod)], col.names=c('Grant', 'Module', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
+  kable_styling(font_size=8)
+```
+
+\newpage
+# Absorption by module, pooled by disease
+\newpage 
+
+```{r by_module_combined1, results="asis"}
+subset_hiv = dt[grant_disease%in%c('hiv', 'hiv/tb'), .(expenditure=sum(expenditure, na.rm=T), budget=sum(budget, na.rm=T)), by=c('semester', 'start_date', 'abbrev_mod')]
+subset_hiv[, absorption:=(expenditure/budget)*100]
+subset_hiv[, label1:=paste0(round(absorption, 1), "%")]
+subset_hiv[absorption>200, absorption:=200] # Cap absorption at 200%
+subset_hiv[, label2:=dollar(expenditure)]
+
+ggplot(subset_hiv[start_date=="2019-01-01"], aes(x=abbrev_mod, y=absorption, label=label1))+ 
+  geom_bar(stat="identity", fill="chartreuse4") + 
+  geom_text(size=4, hjust=0) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title=paste0("Absorption by module, for HIV and HIV/TB grants"), x="Module",
+       subtitle="Labels show uncapped absorption", y="Absorption (%)", caption="*Max bar height set at 200%")
+cat("\n\n\\pagebreak\n")
+
+ subset_hiv_melt = subset_hiv[start_date=="2019-01-01", .(abbrev_mod, label2, budget, expenditure)]
+  subset_hiv_melt = melt(subset_hiv_melt, id.vars=c('abbrev_mod', 'label2'), variable.name='variable', value.name='amount')
+  subset_hiv_melt[variable=="budget", label2:=""] #Don't display the expenditure amount on the budget bar. 
+  
+  #Fix budget and expenditure so they display nicely 
+  subset_hiv_melt[variable=="budget", variable:="Budget"]
+  subset_hiv_melt[variable=="expenditure", variable:="Expenditure"]
+  
+  ggplot(subset_hiv_melt, aes(x=abbrev_mod, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label2), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Budget and expenditure for \nHIV and HIV/TB grants by module"), x="Module", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+  cat("\n\n\\pagebreak\n")
+  
+  cumulative = subset_hiv[, .(abbrev_mod, semester, budget, expenditure)]
+  cumulative = melt(cumulative, id.vars=c('abbrev_mod', 'semester'))
+  cumulative = dcast(cumulative, abbrev_mod+variable~semester)
+  
+  #Calculate cumulative budget and expenditure, and then absorption percentage. 
+  cumulative[!is.na(`Semester 2`), cumulative:=sum(`Semester 1`, `Semester 2`, `Semester 3`), by=c('abbrev_mod', 'variable')]
+  cumulative[!is.na(`Semester 1-2`), cumulative:=sum(`Semester 1-2`, `Semester 3`), by=c('abbrev_mod', 'variable')]
+  stopifnot(nrow(cumulative[is.na(cumulative)])==0)
+  
+  #Subset this so it's easier to work with, and then graph. 
+  cumulative_by_disease = cumulative[, .(abbrev_mod, variable, cumulative)]
+  cumulative_by_disease = dcast(cumulative_by_disease, abbrev_mod~variable)
+  cumulative_by_disease[, absorption:=(expenditure/budget)*100]
+  cumulative_by_disease[, label1:=paste0(round(absorption, 1), "%")]
+  cumulative_by_disease[absorption>200, absorption:=200] # Cap absorption at 200%
+  cumulative_by_disease[, label2:=paste0(abbrev_mod)]
+  
+  ggplot(cumulative_by_disease, aes(x=abbrev_mod, y=absorption, label=label1))+ 
+  geom_bar(stat="identity", fill="indianred3") + 
+  geom_text(hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title=paste0("Cumulative absorption for HIV, HIV/TB grants \nby module (Semesters 1-3)"), subtitle="Labels show uncapped absorption percentage", x="Module", y="Absorption (%)", caption="*Max bar height set at 200%")
+  cat("\n\n\\pagebreak\n")
+  
+  melt = cumulative_by_disease[, .(abbrev_mod, budget, expenditure)]
+  melt = melt(melt, id.vars=c('abbrev_mod'), variable.name='variable', value.name='amount')
+  melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  melt[variable=="expenditure", label:=dollar(amount)]
+  
+  #Fix budget and expenditure so they display nicely 
+  melt[variable=="budget", variable:="Budget"]
+  melt[variable=="expenditure", variable:="Expenditure"]
+  
+  ggplot(melt, aes(x=abbrev_mod, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_fill_manual(values=c('plum2', 'chocolate2')) + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Cumulative budget and expenditure for S1 2019"), x="Module", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+
+```
+
+\newpage 
+# Supporting data for pooled HIV/TB & HIV graphs
+```{r supporting_data} 
+kable(subset_hiv[, .(abbrev_mod, start_date, semester, budget, expenditure, absorption)], col.names=c('Module', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
+  kable_styling(font_size=8)
+```
+\newpage 
+
+```{r by_module_combined2, results="asis"} 
+subset_malaria = dt[grant_disease%in%c('malaria'), .(expenditure=sum(expenditure, na.rm=T), budget=sum(budget, na.rm=T)), by=c('semester', 'start_date', 'abbrev_mod')]
+subset_malaria[, absorption:=(expenditure/budget)*100]
+subset_malaria[, label1:=paste0(round(absorption, 1), "%")]
+subset_malaria[absorption>200, absorption:=200] # Cap absorption at 200%
+subset_malaria[, label2:=dollar(expenditure)]
+
+ggplot(subset_malaria[start_date=="2019-01-01"], aes(x=abbrev_mod, y=absorption, label=label1))+ 
+  geom_bar(stat="identity", fill="darkorange1") + 
+  geom_text(size=4, hjust=0) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title=paste0("Absorption by module, for malaria grants"), x="Module", y="Absorption (%)", caption="*Max bar height set at 200%", subtitle="Labels show uncapped absorption")
+cat("\n\n\\pagebreak\n")
+
+ subset_malaria_melt = subset_malaria[start_date=="2019-01-01", .(abbrev_mod, label2, budget, expenditure)]
+  subset_malaria_melt = melt(subset_malaria_melt, id.vars=c('abbrev_mod', 'label2'), variable.name='variable', value.name='amount')
+  subset_malaria_melt[variable=="budget", label2:=""] #Don't display the expenditure amount on the budget bar. 
+  
+  #Fix budget and expenditure so they display nicely 
+  subset_malaria_melt[variable=="budget", variable:="Budget"]
+  subset_malaria_melt[variable=="expenditure", variable:="Expenditure"]
+  
+  ggplot(subset_malaria_melt, aes(x=abbrev_mod, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label2), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Budget and expenditure for \nmalaria grants by module"), x="Module", y="Amount ($)", fill="", subtitle="Labels show expenditure amounts")
+  cat("\n\n\\pagebreak\n")
+  
+    
+  cumulative = subset_malaria[, .(abbrev_mod, semester, budget, expenditure)]
+  cumulative = melt(cumulative, id.vars=c('abbrev_mod', 'semester'))
+  cumulative = dcast(cumulative, abbrev_mod+variable~semester)
+  
+  #Calculate cumulative budget and expenditure, and then absorption percentage. 
+  cumulative[!is.na(`Semester 2`), cumulative:=sum(`Semester 1`, `Semester 2`, `Semester 3`, na.rm=T), by=c('abbrev_mod', 'variable')]
+  cumulative[!is.na(`Semester 1-2`), cumulative:=sum(`Semester 1-2`, `Semester 3`, na.rm=T), by=c('abbrev_mod', 'variable')]
+  stopifnot(nrow(cumulative[is.na(cumulative)])==0)
+  
+  #Subset this so it's easier to work with, and then graph. 
+  cumulative_by_disease = cumulative[, .(abbrev_mod, variable, cumulative)]
+  cumulative_by_disease = dcast(cumulative_by_disease, abbrev_mod~variable)
+  cumulative_by_disease[, absorption:=(expenditure/budget)*100]
+  cumulative_by_disease[, label1:=paste0(round(absorption, 1), "%")]
+  cumulative_by_disease[absorption>200, absorption:=200] # Cap absorption at 200%
+  cumulative_by_disease[, label2:=paste0(abbrev_mod)]
+  
+  ggplot(cumulative_by_disease, aes(x=abbrev_mod, y=absorption, label=label1))+ 
+  geom_bar(stat="identity", fill="indianred3") + 
+  geom_text(hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title=paste0("Cumulative absorption for malaria grants \nby module (Semesters 1-3)"), subtitle="Labels show uncapped absorption percentage", x="Module", y="Absorption (%)", caption="*Max bar height set at 200%")
+  cat("\n\n\\pagebreak\n")
+  
+    melt = cumulative_by_disease[, .(abbrev_mod, budget, expenditure)]
+  melt = melt(melt, id.vars=c('abbrev_mod'), variable.name='variable', value.name='amount')
+  melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  melt[variable=="expenditure", label:=dollar(amount)]
+  
+  #Fix budget and expenditure so they display nicely 
+  melt[variable=="budget", variable:="Budget"]
+  melt[variable=="expenditure", variable:="Expenditure"]
+  
+  ggplot(melt, aes(x=abbrev_mod, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_fill_manual(values=c('plum2', 'chocolate2')) + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Cumulative budget and expenditure for S1 2019"), x="Module", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+```
+
+\newpage 
+# Supporting data for pooled malaria graphs
+```{r supporting_data_mal} 
+kable(subset_malaria[, .(abbrev_mod, start_date, semester, budget, expenditure, absorption)], col.names=c('Module', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
+  kable_styling(font_size=8)
+```
+\newpage 
+
+```{r by_module_combined3, results="asis"} 
+subset_tb = dt[grant_disease%in%c('tb'), .(expenditure=sum(expenditure, na.rm=T), budget=sum(budget, na.rm=T)), by=c('semester', 'start_date', 'abbrev_mod')]
+subset_tb[, absorption:=(expenditure/budget)*100]
+subset_tb[, label1:=paste0(round(absorption, 1), "%")]
+subset_tb[absorption>200, absorption:=200] # Cap absorption at 200%
+subset_tb[, label2:=dollar(expenditure)]
+
+ggplot(subset_tb[start_date=="2019-01-01"], aes(x=abbrev_mod, y=absorption, label=label1))+ 
+  geom_bar(stat="identity", fill="slateblue2") + 
+  geom_text(size=4, hjust=0) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title=paste0("Absorption by module, for TB grants"), x="Module", y="Absorption (%)", caption="*Max bar height set at 200%", subtitle="Labels show uncapped absorption")
+cat("\n\n\\pagebreak\n")
+
+ subset_tb_melt = subset_tb[start_date=="2019-01-01", .(abbrev_mod, label2, budget, expenditure)]
+  subset_tb_melt = melt(subset_tb_melt, id.vars=c('abbrev_mod', 'label2'), variable.name='variable', value.name='amount')
+  subset_tb_melt[variable=="budget", label2:=""] #Don't display the expenditure amount on the budget bar. 
+  
+  #Fix budget and expenditure so they display nicely 
+  subset_tb_melt[variable=="budget", variable:="Budget"]
+  subset_tb_melt[variable=="expenditure", variable:="Expenditure"]
+  
+  ggplot(subset_tb_melt, aes(x=abbrev_mod, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label2), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  theme(axis.text.x=element_text(angle=30, vjust=0.5)) + 
+  scale_y_continuous(labels = scales::dollar, limits=c(0, 6000000)) + 
+  labs(title=paste0("Budget and expenditure for TB grants by module"), x="Module", y="Amount ($)", fill="", subtitle="Labels show expenditure amounts")
+  cat("\n\n\\pagebreak\n")
+    
+  cumulative = subset_tb[, .(abbrev_mod, semester, budget, expenditure)]
+  cumulative = melt(cumulative, id.vars=c('abbrev_mod', 'semester'))
+  cumulative = dcast(cumulative, abbrev_mod+variable~semester)
+  
+  #Calculate cumulative budget and expenditure, and then absorption percentage. 
+  cumulative[, cumulative:=sum(`Semester 1`, `Semester 2`, `Semester 3`, na.rm=T), by=c('abbrev_mod', 'variable')]
+  stopifnot(nrow(cumulative[is.na(cumulative)])==0)
+  
+  #Subset this so it's easier to work with, and then graph. 
+  cumulative_by_disease = cumulative[, .(abbrev_mod, variable, cumulative)]
+  cumulative_by_disease = dcast(cumulative_by_disease, abbrev_mod~variable)
+  cumulative_by_disease[, absorption:=(expenditure/budget)*100]
+  cumulative_by_disease[, label1:=paste0(round(absorption, 1), "%")]
+  cumulative_by_disease[absorption>200, absorption:=200] # Cap absorption at 200%
+  cumulative_by_disease[, label2:=paste0(abbrev_mod)]
+  
+  ggplot(cumulative_by_disease, aes(x=abbrev_mod, y=absorption, label=label1))+ 
+  geom_bar(stat="identity", fill="indianred3") + 
+  geom_text(hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title=paste0("Cumulative absorption for TB grants \nby module (Semesters 1-3)"), subtitle="Labels show uncapped absorption percentage", x="Module", y="Absorption (%)", caption="*Max bar height set at 200%")
+  cat("\n\n\\pagebreak\n")
+  
+    melt = cumulative_by_disease[, .(abbrev_mod, budget, expenditure)]
+  melt = melt(melt, id.vars=c('abbrev_mod'), variable.name='variable', value.name='amount')
+  melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  melt[variable=="expenditure", label:=dollar(amount)]
+  
+  #Fix budget and expenditure so they display nicely 
+  melt[variable=="budget", variable:="Budget"]
+  melt[variable=="expenditure", variable:="Expenditure"]
+  
+  ggplot(melt, aes(x=abbrev_mod, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_fill_manual(values=c('plum2', 'chocolate2')) + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Cumulative budget and expenditure for S1 2019"), x="Module", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+```
+
+\newpage 
+# Supporting data for pooled TB graphs
+```{r supporting_data_tb} 
+kable(subset_tb[, .(abbrev_mod, start_date, semester, budget, expenditure, absorption)], col.names=c('Module', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
+  kable_styling(font_size=8)
+```
+\newpage 
+
+```{r by_module_counts, include=FALSE}
+labels = by_module[start_date=="2019-01-01", .(num_grants=.N), by=c('abbrev_mod')]
+subset = merge(subset, labels, by='abbrev_mod')
+subset[, num_grants:=as.character(num_grants)] #Turn this into a label. 
+
+ggplot(subset[start_date=="2019-01-01"], aes(x=abbrev_mod, y=absorption, label=num_grants))+ 
+  geom_bar(stat="identity", fill="mediumorchid1") + 
+  geom_text(hjust=-0.5, size=6) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title=paste0("Absorption by module, all grants"), x="Module", y="Absorption (%)", caption="*Max bar height set at 200%")
+```
+
+
+\newpage 
+
+# RSSH and program management absorption across grants 
+
+\newpage
+```{r rssh}
+rssh_mods = c('Community systems', 'Financial systems', "Info systems & M&E", "HR & health workers", "Service delivery", "Nat. health strategies", "Program mgmt")
+
+rssh_by_int = dt[abbrev_mod%in%rssh_mods & start_date=="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'abbrev_int', 'start_date')]
+rssh_by_int[, absorption:=(expenditure/budget)*100]
+rssh_by_int[, label1:=paste0(round(absorption, 1), "%")]
+rssh_by_int[absorption>200, absorption:=200] # Cap absorption at 200%
+
+#Shorten a few intervention names. 
+rssh_by_int[abbrev_int=="Supportive policy and programmatic environment", abbrev_int:="Supportive policy environment"]
+
+#Sort the graph by module 
+rssh_by_int[, module_num:=.GRP, by='abbrev_mod']
+rssh_by_int[, int_num:=.GRP, by=c('abbrev_mod', 'abbrev_int')]
+rssh_by_int[, rssh_factor:=paste0(module_num, int_num)]
+
+rssh_by_int$int_factor = factor(rssh_by_int$rssh_factor, unique(rssh_by_int$rssh_factor), unique(rssh_by_int$abbrev_int))
+
+ggplot(rssh_by_int, aes(x=int_factor, y=absorption, fill=abbrev_mod, label=label1))+ 
+  geom_bar(stat="identity", position="dodge") + 
+  geom_text(hjust=-0.5, size=4) + 
+  theme_bw(base_size=14) + 
+  scale_fill_manual(values=wes_palette(7, name="Rushmore1", type='continuous')) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title="2019 RSSH absorption by intervention, all grants", subtitle="Interventions grouped by module", x="Intervention", y="Absorption (%)",   fill="Module", caption="*Max bar height set at 200%")
+```
+
+```{r cumulative_rssh}
+
+#Show cumulative RSSH absorption
+  cumulative_rssh = dt[abbrev_mod%in%rssh_mods, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'abbrev_mod', 'abbrev_int', 'semester')]
+  cumulative_rssh = melt(cumulative_rssh, id.vars=c('grant', 'abbrev_mod', 'abbrev_int', 'semester'))
+  cumulative_rssh = dcast(cumulative_rssh, grant+abbrev_mod+abbrev_int+variable~semester) #Need to collapse to the grant-level first, so you can get cumulative variable calculated right for different PUDR reporting schemes. Then collapse to intervention level. 
+  
+  #Calculate cumulative budget and expenditure, and then absorption percentage. 
+  cumulative_rssh[!is.na(`Semester 2`), cumulative:=sum(`Semester 1`, `Semester 2`, `Semester 3`, na.rm=T), by=c('abbrev_mod', 'abbrev_int', 'variable', 'grant')]
+  cumulative_rssh[!is.na(`Semester 1-2`), cumulative:=sum(`Semester 1-2`, `Semester 3`, na.rm=T), by=c('abbrev_mod', 'abbrev_int', 'variable', 'grant')]
+  cumulative_rssh[grant=="UGA-M-MoFPED", cumulative:=sum(`Semester 1`, `Semester 2`, `Semester 3`, na.rm=T), by=c('abbrev_mod', 'abbrev_int', 'variable', 'grant')] #This grant had some new interventions added in Semester 3. 
+  stopifnot(nrow(cumulative_rssh[is.na(cumulative)])==0)
+  
+  #Subset this so it's easier to work with, and then graph. 
+  cumulative_rssh = cumulative_rssh[, .(cumulative=sum(cumulative, na.rm=T)), by=c('abbrev_mod', 'abbrev_int', 'variable')] #Collapse grant out
+  cumulative_rssh = dcast(cumulative_rssh, abbrev_mod+abbrev_int~variable)
+  cumulative_rssh[, absorption:=(expenditure/budget)*100]
+  cumulative_rssh[, label1:=paste0(round(absorption, 1), "%")]
+  cumulative_rssh[absorption>200, absorption:=200] # Cap absorption at 200%
+  cumulative_rssh[, label2:=paste0(abbrev_mod)]
+  
+  #Shorten a few intervention names. 
+  cumulative_rssh[abbrev_int=="Supportive policy and programmatic environment", abbrev_int:="Supportive policy environment"]
+  
+  #Sort the graph by module 
+  cumulative_rssh[, module_num:=.GRP, by='abbrev_mod']
+  cumulative_rssh[, int_num:=.GRP, by=c('abbrev_mod', 'abbrev_int')]
+  cumulative_rssh[, rssh_factor:=paste0(module_num, int_num)]
+  
+  cumulative_rssh$int_factor = factor(cumulative_rssh$rssh_factor, unique(cumulative_rssh$rssh_factor), unique(cumulative_rssh$abbrev_int))
+  
+  ggplot(cumulative_rssh, aes(x=int_factor, y=absorption, fill=abbrev_mod, label=label1))+ 
+  geom_bar(stat="identity", position="dodge") + 
+  geom_text(hjust=-0.5, size=4) + 
+  theme_bw(base_size=14) + 
+  scale_fill_manual(values=wes_palette(7, name="Rushmore1", type='continuous')) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 220)) + 
+  labs(title="Cumulative RSSH absorption by intervention, all grants", subtitle="(Semesters 1-3) \nInterventions grouped by module", x="Intervention", y="Absorption (%)",   fill="Module", caption="*Max bar height set at 200%")
+
+melt = cumulative_rssh[, .(abbrev_mod, abbrev_int, int_factor, budget, expenditure)]
+  melt = melt(melt, id.vars=c('abbrev_mod', 'abbrev_int', 'int_factor'), variable.name='variable', value.name='amount')
+  melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  melt[variable=="expenditure", label:=dollar(amount)]
+  
+  #Fix budget and expenditure so they display nicely 
+  melt[variable=="budget", variable:="Budget"]
+  melt[variable=="expenditure", variable:="Expenditure"]
+  
+  ggplot(melt, aes(x=int_factor, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  scale_fill_manual(values=c('plum2', 'chocolate2')) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Cumulative RSSH budget and expenditure \nfor S1 2019"), x="Module", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+```
+
+
+# Supporting data for RSSH graphs (1/2)
+```{r supporting_data_rssh1} 
+ kable_data = dt[abbrev_mod%in%rssh_mods, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'abbrev_int', 'start_date', 'semester')]
+kable_data[, absorption:=(expenditure/budget)*100]
+
+kable(kable_data[1:30, .(abbrev_mod, abbrev_int, start_date, semester, budget, expenditure, absorption)][order(abbrev_mod, abbrev_int, start_date, semester)], col.names=c('Module', 'Intervention', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
+  kable_styling(font_size=8)
+```
+
+# Supporting data for RSSH graphs (2/2)
+```{r supporting_data_rssh2} 
+ kable_data = dt[abbrev_mod%in%rssh_mods, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'abbrev_int', 'start_date', 'semester')]
+kable_data[, absorption:=(expenditure/budget)*100]
+
+stopifnot(nrow(kable_data)==48)
+kable(kable_data[31:48, .(abbrev_mod, abbrev_int, start_date, semester, budget, expenditure, absorption)][order(abbrev_mod, abbrev_int, start_date, semester)], col.names=c('Module', 'Intervention', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
+  kable_styling(font_size=8)
+```

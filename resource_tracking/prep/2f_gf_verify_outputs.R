@@ -92,7 +92,10 @@ for (i in 1:length(loc_names)){
   absorption1 = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')] #Collapse absorption file. 
   absorption1[, absorption:=(expenditure/budget)*100]
   absorption1 = merge(absorption1, absorption_tests, by=c('grant', 'grant_period', 'semester'), all=T)
-  for (var in c('budget', 'expenditure', 'absorption', 'correct_budget', 'correct_expenditure', 'correct_absorption')){
+  for (var in c('budget', 'expenditure', 'correct_budget', 'correct_expenditure')){
+    absorption1[, (var):=round(get(var))]
+  }
+  for (var in c('absorption', 'correct_absorption')){
     absorption1[, (var):=round(get(var), 2)]
   }
   

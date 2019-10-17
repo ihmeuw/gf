@@ -35,6 +35,12 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
   }
   
+  #Set a global variable for certain french files that have different formatting. 
+  #Sometimes files have "Impact/Outcome" in column 2, and sometimes "Impact/Effet" for DRC and SEN. These have "Impact/Effet". 
+  IE_FRENCH_FILES = c("SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm", "SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx", 
+                      "CORDAID_PUDR_S1 2019_not verified.xlsx", "Copy of LFA_COD-T-MOH_Progress Report_30Jun2019_CCF_Final_10092019.xlsx", 
+                      "HIV_MOH_PUDR_S1 2019_not verified.xlsx", "Malaria_MOH_PUDR_S1 2019_LFA verified.xlsx", "Malaria_SANRU_PUDR S1 2019_LFA verified.xlsx")
+  
   # Load/prep data
   gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
   
@@ -56,7 +62,7 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   name_row = grep("Impact/Outcome", impact_vector)
   if (language=="esp"){
     name_row = grep("Impacto/Resultados", impact_vector)
-  } else if (language=="fr" & inFile%in%c("SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm", "SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx")){
+  } else if (language=="fr" & inFile%in%IE_FRENCH_FILES){
     name_row = grep("Impact/Effet", impact_vector)
   }
   if (length(name_row)>1){
@@ -73,7 +79,7 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   comment_col = grep("comment|comentario", names) 
   record_id_col = grep("record id", tolower(gf_data))
   stopifnot(length(record_id_col)==1 | is.na(record_id_col)) #Just don't drop more than one column here. 
-  gf_data = gf_data[, !c(comment_col, record_id_col), with=FALSE] 
+  if (length(c(comment_col, record_id_col))!=0) gf_data = gf_data[, !c(comment_col, record_id_col), with=FALSE] 
   if (impact_col==2){
     gf_data = gf_data[, 2:ncol(gf_data)] #Drop the first two columns in this case, they're unnecessary. 
   }
@@ -91,7 +97,7 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   name_row = grep("Impact/Outcome", impact_vector)
   if (language=="esp"){
     name_row = grep("Impacto/Resultados", impact_vector)
-  } else if (language=="fr" & inFile%in%c("SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm", "SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx")){
+  } else if (language=="fr" & inFile%in%IE_FRENCH_FILES){
     name_row = grep("Impact/Effet", impact_vector)
   }
   if (length(name_row)>1){
