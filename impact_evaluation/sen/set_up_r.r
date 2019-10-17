@@ -181,12 +181,10 @@ outputFile4d = paste0(visIeDir, 'second_half_exploratory_graphs.pdf')
  
 # output file from 5a_run_first_half_analysis.R
 outputFile5a = paste0(preppedIeDir, 'first_half_model_results.rdata')
-# 
 
 
 # output file from 6_display_results.r
 outputFile6a = paste0(visIeDir, 'sem_diagrams.pdf')
 outputFile6b = paste0(visIeDir, 'bottleneck_analysis.pdf')
-outputFile6c = paste0(visIeDir, 'impact_analysis.pdf')
-outputFile6d = paste0(visIeDir, 'health_zone_effects.pdf')
+outputFile6c = paste0(visIeDir, 'health_zone_effects.pdf')
 # # -----------------------------------------------------------------------------

@@ -47,7 +47,7 @@ absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stac
   if (stackBudgetExp & (byModule | byIntervention)) stop("stackBudgetExp option currenly only available with bySemester.")
   
   #Read in data 
-  dir = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", countryName, "/prepped_data/")
+  dir = paste0("C:/Users/elineb/Box Sync/Global Fund Files/", toupper(countryName), "/prepped_data/")
   dt = readRDS(paste0(dir, "absorption_", countryName, ".rds"))
   
   #Merge on abbreviated module names. 

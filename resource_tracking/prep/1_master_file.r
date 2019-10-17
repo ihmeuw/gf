@@ -44,7 +44,7 @@ only_new_files = TRUE # Set to true if, when you re-run file list, you only want
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
-    country = "uga" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+    country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
     master_file_dir = ifelse(Sys.info()[1]=='Windows', paste0(box, toupper(country), "/raw_data/"), 
                              paste0(dir, "_gf_files_gos/", country, "/raw_data/"))
     export_dir = ifelse(Sys.info()[1]=="Windows", paste0(box, country, "/prepped_data/"),

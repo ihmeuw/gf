@@ -1,4 +1,4 @@
-Module,Type of Indicator,Indicator Code,Indicator Description,short_name,short_name_code
+module,type,indicator_code,description,name,name_code
 Impact Indicators (all modules),Impact,TB I-1,"TB prevalence rate per 100,000 population","TB prevalence rate per 100,000 population","TB prevalence rate per 100,000 population (TB I-1)"
 Impact Indicators (all modules),Impact,TB I-2,"TB incidence rate per 100,000 population","TB incidence rate per 100,000 population","TB incidence rate per 100,000 population (TB I-2)"
 Impact Indicators (all modules),Impact,TB I-3(M),"TB mortality rate per 100,000 population","TB mortality rate per 100,000 population","TB mortality rate per 100,000 population (TB I-3(M))"
