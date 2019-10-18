@@ -209,7 +209,7 @@ dt_2018[, csdt := gsub(" ", "_", csdt)]
 dt_2018[ zs == 'ngiri_-ngiri', zs := 'ngiri_ngiri']
 # check number of health zones per province and quarter
 # check = dt_2018[, sum(is_zs, na.rm = T), by = c('dps', 'date')]
-check = dt_2017[, length(unique(zs)), by = c('dps', 'date')]
+check = dt_2016[, length(unique(zs)), by = c('dps', 'date')]
 check = dcast.data.table(check, dps ~ date )
 check[, dps := gsub('_', '-', dps)]
 check[, dps := standardizeDPSNames(dps)]
@@ -235,19 +235,21 @@ dt_2017[zs == 'kikimi', .(dps, trimestre, zs, csdt)]
 fix = dt_2017[date == '2017-01-01' & zs == 'kikimi']
 
 # check number of facilities per health zone with the below code to ID mismatched facilities:
-check_fac = dt_2017[, length(unique(csdt)), by = c('dps', 'date', 'zs')]
+check_fac = dt_all[, length(unique(csdt)), by = c('dps', 'date', 'zs')]
 check_fac = dcast.data.table(check_fac, dps + zs ~ date )
+# check facilities where each date not the same number of facby health zone
 check_fac = transform(check_fac, check = apply(check_fac[, 3:length(check_fac)], 1, function(x) length(unique(x)) != 1))
 check_fac = check_fac[check == TRUE,]
-
-# now check by health zone identified in the table above, to see which ones are the problematic facilities:
-check_fac = dt[zs == 'kilwa', unique(csdt), by = 'trimestre']
-check_fac = dcast.data.table(check_fac, V1 ~ trimestre )
 check_fac
 
+# now check by health zone identified in the table above, to see which ones are the problematic facilities:
+check_fac2 = dt_all[zs == 'bikoro', unique(csdt), by = 'date']
+check_fac2 = dcast.data.table(check_fac2, V1 ~ date )
+check_fac2
+
 # check if the missing facilities are elsewhere in the data:
-dt_2018[csdt == 'mamba']
-dt[grepl(csdt, pattern= '25')]
+dt_2016[grepl('mukongo', csdt)]
+dt_2016[csdt == 'csdt_itotela']
 
 
 # # specialized rules for different conditions in different province data
