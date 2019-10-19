@@ -5,19 +5,40 @@ date: "10/15/2019"
 output: html_document
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 
 library(data.table)
 library(ggplot2)
-
+library(knitr)
+library(dplyr)
+library(kableExtra)
 
 country= "sen"
 
 # load data
-DT <- readRDS("C:/Users/frc2/Documents/Data/cleaned_pfi.RDS")
+DT <- readRDS("J:/Project/Evaluation/GF/special_assessments/pudr_framework_indicators/cleaned_pfi.RDS")
 # subset as appropriate
 DT = DT[loc_name==country]
+```
+
+```{r}
+# attach cleaned data source name
+
+DT <- readRDS("J:/Project/Evaluation/GF/special_assessments/pudr_framework_indicators/cleaned_pfi.RDS")
+codebook <- fread("C:/Users/frc2/Documents/gf/special_assessments/synthesis/2019_multicountry_analyses/data_source_codebook.csv", header = TRUE)
+
+data <- merge(DT, codebook, by.x="baseline_source", by.y = "source_original")
+data1 <- data[,baseline_source_code:=source_code]
+data1 <- data1[,c("source_code"):=NULL]
+
+data2 <- merge(data1, codebook, by.x="pr_result_source", by.y = "source_original")
+data3 <- data2[,pr_result_source_code:=source_code]
+data3 <- data3[,source_code:=NULL]
+
+#data3 is the datasource that is cleaned, need to add back to the original data cleaning file
+
 
 ```
 
@@ -26,19 +47,79 @@ DT = DT[loc_name==country]
 
 #### 2. Data Completeness
 ```{r}
-# What percentage of targets to they report on? 
+# Emily's code on {PUDR} Completeness
+# What percentage of targets to they report on?
+
 # Which targets do they report on? 
+
+# subset the data 
+datacomp <- data3[loc_name=='sen' & pudr_sheet %in% c('impact_outcome_indicators_main', 'coverage_indicators_main')]
+# to most recent pudrs
+datacomp <- datacomp[file_name %in% c('SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx', 
+                                   'SEN-M-PNLP_Progress Report_S1 2019 Version finale du 15 Aout 2019.xlsx',
+                                   'PU-SEN-H-CNLS-S1-2019_15082019_finale.xlsx', 'SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm')]
+
+completeDT1 <- datacomp[,list(indicators_chosen=length((indicator_code))), by=c('grant')]
+completeDT2 <- datacomp[,list(targets_not_set=sum(is.na(target_n))), by=c('grant')]
+completeDT3 <- datacomp[,list(results_not_reported=sum(is.na(pr_result_n))),by=c('grant')]
+
+datacomple <- merge(completeDT1, completeDT2, by='grant')
+datacomple2 <- merge(datacomple, completeDT3, by='grant')
+
+datacomple3 <- datacomple2[,targets_set:=indicators_chosen-targets_not_set]
+datacomple4 <- datacomple3[,results_reported:=indicators_chosen-results_not_reported]
+datacomple5 <- datacomple4[,c('targets_not_set', 'results_not_reported'):=NULL]
+
+kable(datacomple5, col.names = c("Grant", "Indicators Chosen", "Targets Set", "Results Reported"))
 ```
 
 
 #### 3. Data Sources
 ```{r}
 # What sources are used to report by disease, and how does this change depending on target, result and verification?
-# 
+# load and merge data on source codes
+
+# subset data to plot
+sourcestb <- data3[grant=="SEN-Z-MOH" & pudr_sheet %in% c('impact_outcome_indicators_main','coverage_indicators_main')]
+sourcestbtable <- sourcestb[,.(indicator_code, baseline_source_code, baseline_year, start_date_programmatic, end_date_programmatic, pr_result_source_code)]
+
+sourcestbtable %>%
+  mutate(pr_result_source_code = cell_spec(pr_result_source_code, "html", color = ifelse(pr_result_source_code %in% baseline_source_code, "green", "red"))) %>%
+  kable(format = "html", escape = F, col.names = c('Indicator', 'Baseline Source', 'Baseline Year', 'PUDR Start Date', 'PUDR End Date', 'PR Result Source')) %>%
+  kable_styling("striped", full_width = F)
+
+```
+
+```{r}
+# subset data to plot
+sourcesmalaria <- data3[grant=="SEN-M-PNLP" & pudr_sheet %in% c('impact_outcome_indicators_main','coverage_indicators_main')]
+sourcesmalariatable <- sourcesmalaria[,.(indicator_code, baseline_source_code, baseline_year, start_date_programmatic, end_date_programmatic, pr_result_source_code)]
+
+sourcesmalariatable %>%
+  mutate(pr_result_source_code = cell_spec(pr_result_source_code, "html", color = ifelse(pr_result_source_code %in% baseline_source_code, "green", "red"))) %>%
+  kable(format = "html", escape = F, col.names = c('Indicator', 'Baseline Source', 'Baseline Year', 'PUDR Start Date', 'PUDR End Date', 'PR Result Source')) %>%
+  kable_styling("striped", full_width = F)
+```
+
+```{r}
+# subset data to plot
+sourceshiv <- data3[grant %in% c('SEN-H-ANCS','SEN-H-CNLS') & pudr_sheet %in% c('impact_outcome_indicators_main','coverage_indicators_main')]
+sourceshivtable <- sourceshiv[,.(indicator_code, baseline_source_code, baseline_year, start_date_programmatic, end_date_programmatic, pr_result_source_code, grant)]
+sourceshivtable <- sourceshivtable[order(grant, indicator_code, baseline_year)]
+
+highlight_rows = which(sourceshivtable$baseline_source_code!=sourceshivtable$pr_result_source_code)
+
+kable(sourceshivtable) %>%
+  row_spec(highlight_rows, background="#D7261E")
+
+sourceshivtable %>%
+  mutate(pr_result_source_code = cell_spec(pr_result_source_code, "html", color = ifelse(pr_result_source_code %in% baseline_source_code, "green", "red"))) %>%
+  kable(format = "html", escape = F, col.names = c('Indicator', 'Baseline Source', 'Baseline Year', 'PUDR Start Date', 'PUDR End Date', 'PR Result Source', 'Grant')) %>%
+  kable_styling("striped", full_width = F)
 ```
 
 
-#### 4. Grants
+#### 4. Grant Results based on most recent PUDRs
 
 ##### TB
 ```{r}
@@ -97,5 +178,10 @@ ggplot(DT3, aes(x=indicator_code, y=any_achievement_ratio)) +
   labs(y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT3$file_name)))+
   ylim(0,1.5)
 
+```
+
+#### Improvements over time
+```{r}
+# re-shape the data
 ```
 
