@@ -118,12 +118,15 @@ dt[ , tests_scale:=((percent_arvs - mean(percent_arvs))/sd(percent_arvs))]
 # create a matrix for cluster analysis
 
 dt_k = dt[ ,.(test_slope_scale, arv_slope_scale, tests_scale, arvs_scale)]
+
 #----------------------------------------
 # calculate elbow plots and silhouette widths and plot
 
 # calculate using sourced functions
 elbow = elbow_fun(dt_k, 2, 10)
 sil = sil_fun(dt_k, 2, 10)
+
+
 
 # ----------------------
 # plot the elbow plot
@@ -212,6 +215,37 @@ for (x in c(2:10)) {
     theme(text=element_text(size=18))
   
   i = i+1 }
+
+
+
+
+
+
+ah = full_data[total_clusters==5]
+ah = ah[kcluster==2 | kcluster==5]
+
+
+ggplot(ah[kcluster==2 | kcluster==5], 
+       aes(x=test_slope_scale, y=arv_slope_scale, color=factor(kcluster)))+
+  geom_jitter(alpha=0.2)+
+  theme_bw()+
+  labs(x = "Slope of change in test kit stock outs",
+       y = "Slope of change in ARV stock outs", color='Clusters',
+       title="Change in stock out percent of time stocked out, 2014 - 2019",
+       subtitle=paste0('Number of clusters = ', 5))+
+  theme(text=element_text(size=18))
+
+
+ah_k = ah[ ,.(test_slope_scale, arv_slope_scale, tests_scale, arvs_scale)]
+
+pamah = pam(ah_k, k=5)
+
+pamah$silinfo
+
+sil = sil_fun(ah_k, 5, 5)
+
+silhouette(ah_k, )
+
 #----------------------------
 # print a pdt of plots
 

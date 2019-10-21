@@ -43,24 +43,33 @@ dt_new = dt[ ,.(test_kits = sum(test_kits, na.rm=T),
             arvs = sum(arvs, na.rm=T)), by=.(facility, year)]
 
 # shape long
-dt_long = melt(dt_new, id.vars=c('month', 'facility'))
+dt_long = melt(dt_new, id.vars=c('year', 'facility'))
 
 # print the monthly plots
 list_of_plots = NULL
 i = 1
 
+dt[art_site==T, site :='ART site']
+dt[art_site==F, site :='Not an ART site']
+
  for (f in unique(dt_long$facility)) {
-   list_of_plots[[i]] = ggplot(dt_long[facility==f], aes(x=month, y=value, color=variable))+
+   
+   facility_name = f
+   facility_level = dt[facility==f, unique(level)]
+   f_site = dt[facility==f, unique(site)]
+   
+  list_of_plots[[i]] = ggplot(dt_long[facility==f], aes(x=year, y=value, color=variable))+
   geom_point()+
   geom_line()+ 
   facet_wrap(~variable)+
+  labs(title=paste0(f, ': ', facility_level, "; ", f_site))+
   theme_bw()
   
   i = i+1
   }
 
 i = 1
-pdf(paste0(dir, 'k_means_outputs/annual_stockouts_all_facilities_loop.pdf'),height=9, width=18)
+pdf(paste0(dir, 'k_means_outputs/annual_stockouts_all_facilities_loop_labeled.pdf'),height=9, width=18)
 
 for(i in seq(length(list_of_plots))) {
   print(list_of_plots[[i]])
@@ -68,6 +77,7 @@ for(i in seq(length(list_of_plots))) {
 }
 
 dev.off()
+
 #--------------------------
 
 
