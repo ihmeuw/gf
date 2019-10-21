@@ -23,10 +23,8 @@ DT <- readRDS("J:/Project/Evaluation/GF/special_assessments/pudr_framework_indic
 DT = DT[loc_name==country]
 ```
 
-```{r}
+```{r merge_data_source}
 # attach cleaned data source name
-
-DT <- readRDS("J:/Project/Evaluation/GF/special_assessments/pudr_framework_indicators/cleaned_pfi.RDS")
 codebook <- fread("C:/Users/frc2/Documents/gf/special_assessments/synthesis/2019_multicountry_analyses/data_source_codebook.csv", header = TRUE)
 
 data <- merge(DT, codebook, by.x="baseline_source", by.y = "source_original")
@@ -37,6 +35,7 @@ data2 <- merge(data1, codebook, by.x="pr_result_source", by.y = "source_original
 data3 <- data2[,pr_result_source_code:=source_code]
 data3 <- data3[,source_code:=NULL]
 
+
 #data3 is the datasource that is cleaned, need to add back to the original data cleaning file
 
 
@@ -46,7 +45,7 @@ data3 <- data3[,source_code:=NULL]
 
 
 #### 2. Data Completeness
-```{r}
+```{r completeness_fix}
 # Emily's code on {PUDR} Completeness
 # What percentage of targets to they report on?
 
@@ -70,11 +69,31 @@ datacomple3 <- datacomple2[,targets_set:=indicators_chosen-targets_not_set]
 datacomple4 <- datacomple3[,results_reported:=indicators_chosen-results_not_reported]
 datacomple5 <- datacomple4[,c('targets_not_set', 'results_not_reported'):=NULL]
 
-kable(datacomple5, col.names = c("Grant", "Indicators Chosen", "Targets Set", "Results Reported"))
+# these are not necessarily accurate
+kable(datacomple5, col.names = c("Grant", "Indicators", "Targets", "Results"))
+
+
 ```
 
 
 #### 3. Data Sources
+
+```{r}
+# create indicator variable of when result and target source differ
+data3$sources_different <- NA
+data3$sources_different[which(data3$baseline_source_code!=data3$pr_result_source_code)] <- 1
+
+# subset data for checking changing indicators
+data3 <- data3[pudr_sheet %in% c('impact_outcome_indicators_main','coverage_indicators_main') & file_name %in% c('SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx', 'SEN-M-PNLP_Progress Report_S1 2019 Version finale du 15 Aout 2019.xlsx', 'PU-SEN-H-CNLS-S1-2019_15082019_finale.xlsx', 'SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm')]
+
+table3 <-data3[,list(indicators=length(indicator_code), total_different=sum(sources_different, na.rm = TRUE)), by=c('grant')]
+
+kable(table3, col.names = c("Grant", "Indicators", "Differing Sources"))
+
+kable()
+```
+
+
 ```{r}
 # What sources are used to report by disease, and how does this change depending on target, result and verification?
 # load and merge data on source codes
