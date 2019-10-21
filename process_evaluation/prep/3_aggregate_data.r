@@ -5,7 +5,7 @@
 # INSTRUCTIONS: Working directory should be the root of your personal repository. 
 # ----------------------------------------------
 
-for (country in c('cod', 'sen', 'uga')){
+for (country in c('cod', 'sen', 'uga', 'gtm')){
   assign(paste0(country, "_1A"), readRDS(paste0(prepped_dir, country, "_1A.rds")))
   assign(paste0(country, "_1A_disagg"), readRDS(paste0(prepped_dir, country, "_1A_disagg.rds")))
   assign(paste0(country, "_1B"), readRDS(paste0(prepped_dir, country, "_1B.rds")))
@@ -53,3 +53,6 @@ if (any(dup_names)){
 #---------------------------------------------
 saveRDS(all_data, paste0(prepped_dir, "all_prepped_data.rds"))
 write.csv(all_data, paste0(prepped_dir, "all_prepped_data.csv"), row.names=F)
+
+#Archive a copy. 
+saveRDS(all_data, paste0(prepped_dir, "archive/all_prepped_data_", Sys.Date(), ".rds"))

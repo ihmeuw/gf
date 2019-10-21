@@ -110,21 +110,6 @@ DTall$`lfa_result_%` <- as.numeric(DTall$`lfa_result_%`)
 DTall$target_n <- as.numeric(DTall$target_n)
 DTall$`target_%` <- as.numeric(DTall$`target_%`)
 
-############################################################
-# generate our own ihme target and performance results and ratio
-############################################################
-
-DTall$ihme_target_n <- NA
-DTall$ihme_target_n <- ifelse(is.na(DTall$`target_%`), DTall$target_n, DTall$`target_%`)
-
-DTall$ihme_result_n <- NA
-DTall$ihme_result_n <- ifelse(is.na(DTall$`lfa_result_%`), DTall$lfa_result_n, DTall$`lfa_result_%`)
-
-# calculate ihme_results_achievement_ratio
-DTall$ihme_result_achievement_ratio <-NA
-DTall$ihme_target_n <- as.numeric(DTall$ihme_target_n)
-DTall$ihme_result_n <- as.numeric(DTall$ihme_result_n)
-DTall$ihme_result_achievement_ratio <- DTall$ihme_result_n/DTall$ihme_target_n
 
 #######################
 # Make plots

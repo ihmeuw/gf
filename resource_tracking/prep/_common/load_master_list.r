@@ -66,6 +66,16 @@ load_master_list = function(purpose=NULL) {
   dt[, start_date_programmatic:=as.Date(as.numeric(start_date_programmatic), origin="1899-12-30")]
   dt[, end_date_programmatic:=as.Date(as.numeric(end_date_programmatic), origin="1899-12-30")]
   
+  #Check for duplicate sheet names in files. 
+  if (purpose=="financial"){
+    sheet_check = unique(dt[, .(file_name, sheet_financial)])
+    names(sheet_check) = c('file_name', 'sheet')
+  } else {
+    sheet_check = unique(dt[, .(file_name, sheet_programmatic)])
+    names(sheet_check) = c('file_name', 'sheet')
+  }
+  sheet_check = sheet_check[, .N, by=c('file_name', 'sheet')]
+  stopifnot(nrow(sheet_check[N>1])==0)
   #Validate columns based on the type of extraction you're doing. 
   #-------------------------------
   # Financial 
@@ -135,7 +145,13 @@ load_master_list = function(purpose=NULL) {
   correct_periods[, correct_grant_period:=grant_period]
 
   #Merge data together
-  our_periods = unique(dt[data_source%in%c('fpm', 'pudr', 'performance_framework'), .(grant, grant_period)])
+  if (purpose=="financial"){
+    our_periods = unique(dt[data_source%in%c('fpm', 'pudr', 'performance_framework'), .(grant, grant_period, start_date_financial)])
+  } else {
+    our_periods = unique(dt[data_source%in%c('fpm', 'pudr', 'performance_framework'), .(grant, grant_period, start_date_programmatic)])
+  }
+  names(our_periods) = c('grant', 'grant_period', 'ihme_start_date')
+  
   #EMILY WE SHOULD FLAG WHEN GRANT PERIODS ARE NA!! 
   our_periods = our_periods[!is.na(grant_period)]
   check = merge(our_periods, correct_periods, by=c('grant', 'grant_period'), all.x=T)
@@ -195,12 +211,13 @@ load_master_list = function(purpose=NULL) {
     
     #Hand-code any unique cases - initial and date. 
     error = error[!(grant=="GTM-M-MSPAS" & grant_period=="2018-2018" & start_date_financial=="2018-07-01")] #EL 9/12/2019
-    
+
     #Print a stop message if errors remain. 
     if (nrow(error)!=0){
       print(error) 
       stop("Some PUDR semesters were entered incorrectly. Review variable 'pudr_semester_financial'.")
     }
+    
   } else if (purpose=="performance indicators"){
     pudrs = dt1[data_source%in%c('pudr') & !is.na(start_date_programmatic), .(grant, grant_period, start_date_programmatic, end_date_programmatic, pudr_semester_programmatic)]
     setnames(pudrs, 'pudr_semester_programmatic', 'hand_coded_semester')
@@ -215,13 +232,15 @@ load_master_list = function(purpose=NULL) {
     #Hand-code any unique cases - initial and date. 
     error = error[!(grant=="GTM-M-MSPAS" & grant_period=="2018-2018" & start_date_programmatic=="2018-07-01")] #EL 9/12/2019
     error = error[!(grant=="GTM-H-HIVOS" & grant_period=="2018-2018" & start_date_programmatic=="2018-07-01")] #EL 9/12/2019
-    
+
     #Print a stop message if errors still remain. 
     if (nrow(error)!=0){
       print(error) 
       stop("Some PUDR semesters were entered incorrectly. Review variable 'pudr_semester_programmatic'.")
     }
   }
+  
+  
   
   #----------------------------------------------------------------------------------
   #So that you always get consistent ordering, even if the excel beneath is filtered. 

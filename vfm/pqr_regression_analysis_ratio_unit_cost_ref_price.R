@@ -41,6 +41,9 @@ subset_commodities = paste0(dir, 'unit_cost_data/prepped_data/subset_commodities
 regr_results_ratio_costs_by_category_log = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_category_log.pdf')
 regr_results_ratio_costs_by_categoryAndCountry_log = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_categoryAndCountry_log.pdf')
 regr_results_ratio_costs_by_procurement_mechanism = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_procurementMechanism_log.pdf')
+
+frequency_table_supplier =  paste0(dir, 'unit_cost_data/prepped_data/frequency_table_supplier_product_category.csv')
+bar_plots = paste0(dir, 'visualizations/PQR/bar_plot_number_of_orders_procurement_mechanism_by_category.pdf')
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -79,6 +82,76 @@ data[, purchase_order_year := year(purchase_order_date)]
 
 # subset to where intl ref price and unit cost are both not missing
 dt = data[!is.na(po_international_reference_price) & !is.na(unit_cost_usd)]
+
+freq_table = dt[,.N, by = .(supplier, product_category)]
+setorderv(freq_table, c('product_category', 'supplier'))
+write.csv(freq_table, frequency_table_supplier)
+# ----------------------------------------------
+
+# ----------------------------------------------
+# regression by procurement mechanism across all countries and product categories
+# ----------------------------------------------
+pdf(regr_results_ratio_costs_by_procurement_mechanism, height = 9, width = 12)
+data_subset = copy(dt)
+# get the log of the ratio of unit cost to reference price
+data_subset[, log_ratio := log(unit_cost_over_ref_price)]
+
+fit = glm(log_ratio ~ purchase_order_date + supplier, data = data_subset, family = gaussian())
+
+dt2 = unique(dt[,.(supplier)])
+dt2 = as.data.table(dt2)
+dt2[, purchase_order_date := mean(data_subset$purchase_order_date)]
+dt2[, purchase_order_date := as.Date(purchase_order_date)]
+
+dt2[, unit_cost_over_ref_price := predict(fit, newdata = dt2)]
+dt2[, std_error := predict(fit, newdata=dt2, se.fit = TRUE)$se.fit]  
+dt2[, lower:= unit_cost_over_ref_price - (1.96*std_error)]
+dt2[, upper:= unit_cost_over_ref_price + (1.96*std_error)]
+
+dt2[, unit_cost_over_ref_price := exp(unit_cost_over_ref_price)]
+dt2[, lower := exp(lower)]
+dt2[, upper := exp(upper)]
+
+g = ggplot(dt2[!is.na(supplier)], aes(x = supplier, y = unit_cost_over_ref_price, color = supplier)) +
+  geom_point(shape = 1, size = 3) + 
+  theme_bw() + geom_hline(yintercept = 1, linetype = 'dashed', color = 'red') +
+  geom_errorbar(aes(ymin = lower, ymax = upper), width = .2 ) +
+  theme(strip.text = element_blank()) +
+  labs(y = 'Ratio of unit cost to reference price', x = '', 
+       title = paste0('Prediction intervals from regression results\n     ratio_unit_cost_to_ref_price ~ purchase_order_date + procurement_mechanism')) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1), text = element_text(size = 14)) + guides(color = FALSE)
+print(g)
+
+data_subset[, supplier := as.factor(supplier)]
+data_subset[ unit_cost_over_ref_price>=10, unit_cost_over_ref_price := 10 ]
+
+print(ggplot(data_subset, aes(x = unit_cost_over_ref_price, color = supplier)) + geom_density() + theme_bw() + 
+        theme(legend.position = 'bottom', text = element_text(size = 14)) +
+        geom_vline(xintercept = 1, linetype = 'dashed', color = 'red') +
+        labs(y = 'Density', x = 'Ratio unit cost:reference price', 
+             caption = 'Note: values over 10 are set to 10 for the purpose of visualization \n10 represents >=10',
+             title = paste0('Distribution of ratio of unit cost to reference price \nby procurement mechanism')))
+
+freq_table[ supplier == 'PPM, through Partnership for Supply Chain Management (PFSCM)', supplier := 'PPM, through PFSCM']
+freq_table[ supplier == 'Partnership for Supply Chain Management Inc (PFSCM)', supplier := 'PFSCM']
+
+dev.off()
+
+pdf(bar_plots, height = 9, width = 15)
+print(ggplot(freq_table, aes(x = supplier, y = N, fill = product_category)) + theme_bw() + 
+        geom_bar(stat="identity") +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), text = element_text(size = 14), legend.position = 'bottom') +
+        labs(y = 'Number of orders', x = 'Procurement Mechanism', 
+             title = '', fill = 'Product category') +
+        coord_flip())
+
+print(ggplot(freq_table[!is.na(supplier)], aes(x = supplier, y = N, fill = product_category)) + theme_bw() + 
+        geom_bar(stat="identity") +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), text = element_text(size = 14), legend.position = 'bottom') +
+        labs(y = 'Number of orders', x = 'Procurement Mechanism', 
+             title = '', fill = 'Product category') +
+        coord_flip())
+dev.off()
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -221,52 +294,5 @@ for (cat in unique(dt$product_category)){
                title = paste0(country, ', ', cat, ': distribution of ratio of unit cost to reference price by product')))
 
 }}
-dev.off()
-# ----------------------------------------------
-
-# ----------------------------------------------
-# regression by procurement mechanism across all countries and product categories
-# ----------------------------------------------
-pdf(regr_results_ratio_costs_by_procurement_mechanism, height = 9, width = 12)
-  data_subset = copy(dt)
-  # get the log of the ratio of unit cost to reference price
-  data_subset[, log_ratio := log(unit_cost_over_ref_price)]
-  
-  fit = glm(log_ratio ~ purchase_order_date + supplier, data = data_subset, family = gaussian())
-  
-  dt2 = unique(dt[,.(supplier)])
-  dt2 = as.data.table(dt2)
-  dt2[, purchase_order_date := mean(data_subset$purchase_order_date)]
-  dt2[, purchase_order_date := as.Date(purchase_order_date)]
-  
-  dt2[, unit_cost_over_ref_price := predict(fit, newdata = dt2)]
-  dt2[, std_error := predict(fit, newdata=dt2, se.fit = TRUE)$se.fit]  
-  dt2[, lower:= unit_cost_over_ref_price - (1.96*std_error)]
-  dt2[, upper:= unit_cost_over_ref_price + (1.96*std_error)]
-  
-  dt2[, unit_cost_over_ref_price := exp(unit_cost_over_ref_price)]
-  dt2[, lower := exp(lower)]
-  dt2[, upper := exp(upper)]
-  
-  g = ggplot(dt2, aes(x = supplier, y = unit_cost_over_ref_price, color = supplier)) +
-    geom_point(shape = 1, size = 3) + 
-    theme_bw() + geom_hline(yintercept = 1, linetype = 'dashed', color = 'red') +
-    geom_errorbar(aes(ymin = lower, ymax = upper), width = .2 ) +
-    theme(strip.text = element_blank()) +
-    labs(y = 'Ratio of unit cost to reference price', x = '', 
-         title = paste0(cat, ': prediction intervals from regression results\n     ratio_unit_cost_to_ref_price ~ purchase_order_date + procurement_mechanism')) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1), text = element_text(size = 14)) + guides(color = FALSE)
-  print(g)
-  
-  data_subset[, supplier := as.factor(supplier)]
-  data_subset[ unit_cost_over_ref_price>=10, unit_cost_over_ref_price := 10 ]
-  
-  print(ggplot(data_subset, aes(x = unit_cost_over_ref_price, color = supplier)) + geom_density() + theme_bw() + 
-          theme(legend.position = 'bottom', text = element_text(size = 14)) +
-          geom_vline(xintercept = 1, linetype = 'dashed', color = 'red') +
-          labs(y = 'Density', x = 'Ratio unit cost:reference price', 
-               caption = 'Note: values over 10 are set to 10 for the purpose of visualization \n10 represents >=10',
-               title = paste0(cat, ': distribution of ratio of unit cost to reference price \nby procurement mechanism')))
-
 dev.off()
 # ----------------------------------------------

@@ -51,7 +51,7 @@ if (prep_1a){
     
     #Just force-change all of the sheet names for now - will want to make sure this is right EKL 6/25/19 
     #country_dir = ? 
-    master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/")
+    master_file_dir = paste0(box, toupper(country), "/raw_data/")
     
     # Validate file list 
     if (nrow(file_list)>0){ #Do you have files for this country to process? 
@@ -97,6 +97,9 @@ if (prep_1a){
       saveRDS(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1A.rds"))
       write.csv(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1A.csv"), row.names=F)
       
+      #Archive a copy 
+      saveRDS(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/archive/", country, "_1A_", Sys.Date(), ".rds"))
+      
     } else {
       print(paste0("No applicable Coverage 1A files for ", country))
     }
@@ -115,7 +118,7 @@ if (prep_1a_disagg){
     
     #Just force-change all of the sheet names for now - will want to make sure this is right EKL 6/25/19 
     #country_dir = ? 
-    master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/")
+    master_file_dir = paste0(box, toupper(country), "/raw_data/")
     
     # Validate file list 
     if (nrow(file_list)>0){ #Do you have files for this country to process? 
@@ -136,8 +139,6 @@ if (prep_1a_disagg){
         if (version != ""){
           file_dir = paste0(file_dir, version, "/")
         }
-        
-        print(paste0("Running ", file_list$file_name[i]))
         
         args = list(file_dir, file_list$file_name[i], file_list$sheet_impact_outcome_1a_disagg[i], file_list$language_programmatic[i])
         tmpData = do.call(prep_impact_outcome_1A_disagg, args) 
@@ -163,6 +164,9 @@ if (prep_1a_disagg){
       saveRDS(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1A_disagg.rds"))
       write.csv(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1A_disagg.csv"), row.names=F)
       
+      #Archive a copy 
+      saveRDS(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/archive/", country, "_1A_disagg_", Sys.Date(), ".rds"))
+      
     } else {
       print(paste0("No applicable Coverage 1A disaggregated files for ", country))
     }
@@ -181,7 +185,7 @@ if (prep_1b){
     
     #Just force-change all of the sheet names for now - will want to make sure this is right EKL 6/25/19 
     #country_dir = ? 
-    master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/")
+    master_file_dir = paste0(box, toupper(country), "/raw_data/")
     
     # Validate file list 
     if (nrow(file_list)>0){ #Do you have files for this country to process? 
@@ -227,6 +231,9 @@ if (prep_1b){
     saveRDS(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1B.rds"))
     write.csv(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1B.csv"), row.names=F)
     
+    #Archive a copy 
+    saveRDS(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/archive/", country, "_1B_", Sys.Date(), ".rds"))
+    
     } else {
       print(paste0("No applicable Coverage 1B files for ", country))
     }
@@ -245,7 +252,7 @@ if (prep_1b_disagg){
     
     #Just force-change all of the sheet names for now - will want to make sure this is right EKL 6/25/19 
     #country_dir = ? 
-    master_file_dir = paste0("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/", country, "/raw_data/")
+    master_file_dir = paste0(box, toupper(country), "/raw_data/")
     
     # Validate file list 
     if (nrow(file_list)>0){ #Do you have files for this country to process? 
@@ -290,6 +297,9 @@ if (prep_1b_disagg){
       #Save the country-level file 
       saveRDS(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1B_disagg.rds"))
       write.csv(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1B_disagg.csv"), row.names=F)
+      
+      #Archive a copy 
+      saveRDS(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/archive/", country, "_1B_disagg_", Sys.Date(), ".rds"))
       
     } else {
       print(paste0("No applicable Coverage 1B disaggregated files for ", country))

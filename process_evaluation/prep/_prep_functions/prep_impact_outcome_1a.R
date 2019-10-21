@@ -47,6 +47,9 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   } else if (length(impact_col)==0 & language=="fr"){
     impact_col = grep("Impact / Effet", gf_data)
   }
+  if (length(impact_col)>1){
+    impact_col = impact_col[1]
+  }
   stopifnot(length(impact_col)==1)
   name_row = grep("Impact / Effet|Impact / Outcome|Impacto/Resultados", gf_data[[impact_col]])
   stopifnot(length(name_row)==1)

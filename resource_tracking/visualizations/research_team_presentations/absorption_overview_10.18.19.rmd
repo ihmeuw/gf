@@ -1,0 +1,43 @@
+---
+title: "Absorption Overview"
+author: "Emily Linebarger"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+classoption: landscape
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, fig.dim=c(10, 7))
+
+library(data.table) 
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(Hmisc)
+library(wesanderson)
+library(gridExtra)
+library(scales)
+
+cod = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/absorption_cod.rds")
+gtm = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/GTM/prepped_data/absorption_gtm.rds")
+sen = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/SEN/prepped_data/absorption_sen.rds")
+uga = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/absorption_uga.rds")
+
+dt = rbindlist(list(cod, gtm, sen, uga), use.names=T, fill=T)
+
+#Add abbreviated module names. 
+nrow_start = nrow(dt) 
+all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
+setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
+all_mods = unique(all_mods[, .(gf_module, gf_intervention, disease, abbrev_mod, abbrev_int)]) 
+dt = merge(dt, all_mods, by=c('gf_module', 'gf_intervention', 'disease'))
+nrow_end = nrow(dt) 
+stopifnot(nrow_start==nrow_end)
+
+#make sure this merge worked correctly. 
+stopifnot(nrow(dt[is.na(abbrev_int)])==0)
+
+
+```
+
+

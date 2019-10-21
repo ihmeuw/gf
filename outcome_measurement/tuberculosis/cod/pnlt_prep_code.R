@@ -24,10 +24,17 @@ out_dir = paste0(j_dir, 'prepped/')
 inFile_2018 = "tb data 2018 all dps with health zone column.xlsx"
 inFile_2017 = "tb data 2017 all dps with health zone column.xlsx"
 inFile_2016 = "tb_data_2016_2017.xlsx"
-  
+
 # Output files:
-outFile = "all_data_prepped.rds"
-outFile_tbhiv = "PNLT_PREPPED_2017_2018_TBHIV.csv" # This will be the name of the output file
+outFile = "PNLT_2016_to_2018_all_data_prepped.csv"
+outFile_tbhiv = "PNLT_2016_to_2018_TBHIV_prepped.csv" 
+
+# Définissez le répertoire de travail dans le dossier où vous avez enregistré le fichier de code appelé 'standardizeHZNames.R'
+setwd("C:/local/gf/")
+
+# Source le code à renommer les zones de santé
+source('./core/standardizeHZNames.R')
+source('./core/standardizeDPSNames.R')
 #---------------------------------------------------
 
 #---------------------------------------------------
@@ -41,19 +48,20 @@ dt_2018 = data.table(dt_2018)
 dt_2018 = dt_2018[5:nrow(dt_2018), ] 
 
 # Change the column names to be easier to use in R: 
-new_names = c('dps', 'trimestre','zs', 'csdt', 'population_totale', 'population_couverte', 'presume_tb_teste_microscope', 
-              'presume_tb_teste_microscope', 'presume_tb_positif_microscope', 'presume_tb_teste_xpert', 'presume_tb_positive_xpert', 
-              'frottis_effectue', 'frottis_positif', 'csdt_participe_cq', 'cas_enreg_bac_nouveau', 'cas_enreg_bac_rechute', 
-              'cas_enreg_bac_hors_rechutes', 'cas_enreg_bac_enfants', 'cas_enreg_clinique_noveau', 'cas_enreg_clinique_rechute', 
-              'cas_enreg_clinique_hors_rechutes', 'cas_enreg_clinique_enfants', 'cas_extrapul_enreg_nouveau', 
-              'cas_extrapul_enreg_rechute', 'cas_extrapul_enreg_hors_rechute', 'cas_extrapul_enreg_enfants', 
-              'autre_patient_deja_traite', 'total_de_cas_incident', 'total_de_cas', 
-              'tb_teste_vih', 'tb_vih_positif', 
-              'tb_vih_positif_cotri', 'tb_vih_positif_tarv', 'pvvih_avec_tb', 'pvvih_sans_tb', 'pvvih_sous_inh', 
+new_names = c('dps', 'trimestre','zs', 'csdt', 'population_totale', 'population_couverte', 
+              'presumes_tb', 'presumes_tb_teste_microscope', 'presumes_tb_positif_microscope', 'presumes_tb_teste_xpert', 'presumes_tb_positif_xpert', 
+              'frottis_effectue', 'frottis_positif', 'csdt_participe_cq', 
+              'cas_tb_bac_nouveau', 'cas_tb_bac_rechute', 'cas_tb_bac_horsRechutes', 'cas_tb_bac_enfants', 
+              'cas_tb_clinique_noveau', 'cas_tb_clinique_rechute', 'cas_tb_clinique_horsRechutes', 'cas_tb_clinique_enfants', 
+              'cas_tb_extrapul_nouveau', 'cas_tb_extrapul_rechute', 'cas_tb_extrapul_horsRechute', 'cas_tb_extrapul_enfants', 
+              'autre_patient_deja_traite', 'total_cas_incident', 'total_cas', 
+              'tb_teste_vih', 'tb_vih_positif', 'tb_vih_positif_cotri', 'tb_vih_positif_tarv', 
+              'pvvih_avec_tb', 'pvvih_sans_tb', 'pvvih_sous_inh', 
               'enfant_0_5_vivant_maison_avec_tb', 'enfant_0_5_teste_tb', 'enfant_0_5_positif_tb', 'enfant_0_5_sous_inh', 
-              'prisionniers_positif_tb', 'prisionniers_traite_tb', 'mineurs_positif_tb', 'mineurs_traite_tb', 'cas_contact_positif_tb', 
-              'cas_contact_traite_tb', 'cas_oriente_reco_oac', 'cas_recu_soutien_reco_oac', 'sous_traitement_initial_enfant', 
-              'sous_traitement_initial_adulte', 'sous_retraitement_enfant', 'sous_retraitement_adulte', 'csdt_rupture_7_jour')
+              'prisionniers_positif_tb', 'prisionniers_traite_tb', 'mineurs_positif_tb', 'mineurs_traite_tb', 'cas_contact_positif_tb', 'cas_contact_traite_tb', 
+              'cas_oriente_reco_oac', 'cas_recu_soutien_reco_oac', 
+              'sous_traitement_initial_enfant', 'sous_traitement_initial_adulte', 'sous_retraitement_enfant', 'sous_retraitement_adulte', 
+              'csdt_rupture_7_jour')
 names(dt_2018) = new_names
 
 # Make a column for the year
@@ -165,24 +173,24 @@ dt_2016 = dt_2016[, 1:65]
 dt_2016 = dt_2016[5:nrow(dt_2016), ] 
 
 # Change the column names to be easier to use in R: 
-new_names = c('dps', 'trimestre', 'zs', 'csdt', 'population_totale', 'population_couverte', 'presume_tb_teste_microscope', 
-              'frottis_effectue', 'frottis_positif', 'presume_tb_teste_microscope_ziehl', 'presume_tb_teste_microscope_ziehl_positif', 
-              'presumes_xpert', 'xpert_mtb_pos_rif_neg', 'xpert_mtb_pos_rif_pos', 'xpert_invalide',
-              'tb_bac_nouveau', 'tb_bac_recurrente_rechute', 'tb_bac_recurrente_echec', 'tb_bac_recurrente_perdu', 
-              'tb_clinique_nouveau', 'tb_clinique_recurrente_rechute', 'tb_clinique_recurrente_hors_rechute', 
-              'cas_extrapul_nouveau', 'cas_extrapul_rechute', 'cas_extrapul_hors_rechute',
-              'autre_patient_deja_traite', 'total_de_cas_incident', 'total_de_cas', 'cas_oriente_par_communaute', 
-              'cas_recu_soutien_communitaire', 
+new_names = c('dps', 'trimestre', 'zs', 'csdt', 'population_totale', 'population_couverte', 
+              'presumes_tb', 'frottis_effectue', 'frottis_positif', 'microscope_teste', 'microscope_positif', 'xpert_teste', 'xpert_positif', 'xpert_positif_resistance', 'xpert_invalide',
+              'cas_tb_bac_nouveau', 'cas_tb_bac_rechute', 'cas_tb_bac_apresEchec', 'cas_tb_bac_apresPerduDeVue', 
+              'cas_tb_clinique_noveau', 'cas_tb_clinique_rechute', 'cas_tb_clinique_horsRechutes', 
+              'cas_tb_extrapul_nouveau', 'cas_tb_extrapul_rechute', 'cas_tb_extrapul_horsRechute',
+              'autre_patient_deja_traite', 'total_cas_incident', 'total_cas', 
+              'cas_oriente_par_communaute', 'cas_recu_soutien_communitaire', 
               'tb_teste_vih_nouveau', 'tb_vih_positif_nouveau', 'tb_vih_positif_cotri_nouveau', 'tb_vih_positif_tarv_nouveau', 
               'tb_teste_vih_autres', 'tb_vih_positif_autres', 'tb_vih_positif_cotri_autres', 'tb_vih_positif_tarv_autres', 
               'pvvih_avec_tb', 'pvvih_sans_tb', 'pvvih_sous_inh', 
-              'tbmr_nouveau_presumes', 'tbmr_nouveau_confirme_tbmr_rr', 'tbmr_nouveau_confirme_tb_xdr', 
-              'tbmr_recurrente1_presumes', 'tbmr_recurrente1_confirme_tbmr_rr', 'tbmr_recurrente1_confirme_xdr',
-              'tbmr_recurrente2_presumes', 'tbmr_recurrente2_confirme_tbmr_rr', 'tbmr_recurrente2_confirme_xdr',
-              'tbmr_traitement_presumes', 'tbmr_traitement_confirme_tbmr_rr', 'tbmr_traitement_confirme_xdr',
+              'tbmr_nouveau_presumes', 'tbmr_nouveau_confirme', 'tbmr_nouveau_confirme_xdr', 
+              'tbmr_dejaTraitePremiere_presumes', 'tbmr_dejaTraitePremiere_confirme', 'tbmr_dejaTraitePremiere_confirme_xdr',
+              'tbmr_dejaTraiteDeuxieme_presumes', 'tbmr_dejaTraiteDeuxieme_confirme', 'tbmr_dejaTraiteDeuxieme_confirme_xdr',
+              'tbmr_traitement_presumes', 'tbmr_traitement_confirme', 'tbmr_traitement_confirme_xdr',
               'tb_sensible_traitement1_zs', 'tb_sensible_traitement1_hzs', 'tb_sensible_traitement1_transfron',
               'tb_sensible_traitement2_zs', 'tb_sensible_traitement2_hzs', 'tb_sensible_traitement2_transfron',
-              'enfant_0_5_sous_inh', 'prisionniers', 'miniers', 'cas_contact', 'autres', 'populations_speciales_total')
+              'enfant_0_5_sous_inh', 'prisionniers_positif_tb', 'mineurs_positif_tb', 'cas_contact_positif_tb', 'populations_speciales_autres', 'populations_speciales_total')
+
 names(dt_2016) = new_names
 
 # Make a column for the year 
@@ -215,21 +223,21 @@ dt_2016[, csdt := gsub(" ", "_", csdt)]
 
 # change one mistake that resulted form the above: 
 dt_2016[ zs == 'ngiri_-ngiri', zs := 'ngiri_ngiri']
-check_names = unique(dt_2016$zs)
-check_names = gsub('_', '-', check_names)
-standardizeHZNames(check_names)
 #---------------------------------------------------
 
 #---------------------------------------------------
 # 2016 ZS and CSDT fixes
 #---------------------------------------------------
-# Fix where "jiba" facilities were accidentally labeled "kilo" in 2017 all quarters
 # standardize hz names within pnlt data
 dt_2016[zs == 'de_mandima', zs := 'mandima']
 dt_2016[zs == 'moanda_a', zs := 'muanda']
 dt_2016[zs == 'boma_bung', zs := 'boma_bungu']
 dt_2016[zs == 'kyongo', zs := 'kyondo']
 dt_2016[zs == 'makiso-_kis', zs := 'makiso_kisangani']
+dt_2016[zs == 'mufunga', zs := 'mufunga_sampwe']
+dt_2016[zs == 'maswika', zs := 'masuika']
+dt_2016[zs == 'wambaluadi', zs := 'wamba_luadi']
+dt_2016[zs == 'kimbilulenge', zs := 'lulenge']
 #---------------------------------------------------
 
 #---------------------------------------------------
@@ -243,24 +251,24 @@ dt_2017 = data.table(dt_2017)
 dt_2017 = dt_2017[5:nrow(dt_2017), ]
 
 # Change the column names to be easier to use in R: 
-new_names = c('dps', 'trimestre', 'zs', 'csdt', 'population_totale', 'population_couverte', 'presume_tb_teste_microscope', 
-              'frottis_effectue', 'frottis_positif', 'presume_tb_teste_microscope_ziehl', 'presume_tb_teste_microscope_ziehl_positif', 
-              'presumes_xpert', 'xpert_mtb_pos_rif_neg', 'xpert_mtb_pos_rif_pos', 'xpert_invalide',
-              'tb_bac_nouveau', 'tb_bac_recurrente_rechute', 'tb_bac_recurrente_echec', 'tb_bac_recurrente_perdu', 
-              'tb_clinique_nouveau', 'tb_clinique_recurrente_rechute', 'tb_clinique_recurrente_hors_rechute', 
-              'cas_extrapul_nouveau', 'cas_extrapul_rechute', 'cas_extrapul_hors_rechute',
-              'autre_patient_deja_traite', 'total_de_cas_incident', 'total_de_cas', 'cas_oriente_par_communaute', 
-              'cas_recu_soutien_communitaire', 
+new_names = c('dps', 'trimestre', 'zs', 'csdt', 'population_totale', 'population_couverte', 
+              'presumes_tb', 'frottis_effectue', 'frottis_positif', 'microscope_teste', 'microscope_positif', 'xpert_teste', 'xpert_positif', 'xpert_positif_resistance', 'xpert_invalide',
+              'cas_tb_bac_nouveau', 'cas_tb_bac_rechute', 'cas_tb_bac_apresEchec', 'cas_tb_bac_apresPerduDeVue', 
+              'cas_tb_clinique_noveau', 'cas_tb_clinique_rechute', 'cas_tb_clinique_horsRechutes', 
+              'cas_tb_extrapul_nouveau', 'cas_tb_extrapul_rechute', 'cas_tb_extrapul_horsRechute',
+              'autre_patient_deja_traite', 'total_cas_incident', 'total_cas', 
+              'cas_oriente_par_communaute', 'cas_recu_soutien_communitaire', 
               'tb_teste_vih_nouveau', 'tb_vih_positif_nouveau', 'tb_vih_positif_cotri_nouveau', 'tb_vih_positif_tarv_nouveau', 
               'tb_teste_vih_autres', 'tb_vih_positif_autres', 'tb_vih_positif_cotri_autres', 'tb_vih_positif_tarv_autres', 
               'pvvih_avec_tb', 'pvvih_sans_tb', 'pvvih_sous_inh', 
-              'tbmr_nouveau_presumes', 'tbmr_nouveau_confirme_tbmr_rr', 'tbmr_nouveau_confirme_tb_xdr', 
-              'tbmr_recurrente1_presumes', 'tbmr_recurrente1_confirme_tbmr_rr', 'tbmr_recurrente1_confirme_xdr',
-              'tbmr_recurrente2_presumes', 'tbmr_recurrente2_confirme_tbmr_rr', 'tbmr_recurrente2_confirme_xdr',
-              'tbmr_traitement_presumes', 'tbmr_traitement_confirme_tbmr_rr', 'tbmr_traitement_confirme_xdr',
+              'tbmr_nouveau_presumes', 'tbmr_nouveau_confirme', 'tbmr_nouveau_confirme_xdr', 
+              'tbmr_dejaTraitePremiere_presumes', 'tbmr_dejaTraitePremiere_confirme', 'tbmr_dejaTraitePremiere_confirme_xdr',
+              'tbmr_dejaTraiteDeuxieme_presumes', 'tbmr_dejaTraiteDeuxieme_confirme', 'tbmr_dejaTraiteDeuxieme_confirme_xdr',
+              'tbmr_traitement_presumes', 'tbmr_traitement_confirme', 'tbmr_traitement_confirme_xdr',
               'tb_sensible_traitement1_zs', 'tb_sensible_traitement1_hzs', 'tb_sensible_traitement1_transfron',
               'tb_sensible_traitement2_zs', 'tb_sensible_traitement2_hzs', 'tb_sensible_traitement2_transfron',
-              'enfant_0_5_sous_inh', 'prisionniers', 'miniers', 'cas_contact', 'autres', 'populations_speciales_total')
+              'enfant_0_5_sous_inh', 'prisionniers_positif_tb', 'mineurs_positif_tb', 'cas_contact_positif_tb', 'populations_speciales_autres', 'populations_speciales_total')
+
 names(dt_2017) = new_names
 
 # Make a column for the year 
@@ -346,46 +354,68 @@ dt_2017[zs == 'wanierukula', zs := 'wanie_rukula']
 dt_2017[zs == 'total_yakusu', zs := 'yakusu']
 #---------------------------------------------------
 
+#---------------------------------------------------
+# Combine all years of data where columns are the same
+#---------------------------------------------------
+# first, combine 2016 and 2017:
+dt = rbindlist(list(dt_2016, dt_2017), use.names = TRUE, fill = TRUE)
 
-#---------------------------------------------------
-# Subset the data to only id variables and tb/hiv indicators; then combine years
-#---------------------------------------------------
 # Make all of the tb/hiv indicator variables the 'numeric' type in R:
-dt_2017[, total_de_cas_incident := as.numeric(total_de_cas_incident)]
-dt_2017[, total_de_cas := as.numeric(total_de_cas)]
-dt_2017[, pvvih_sous_inh := as.numeric(pvvih_sous_inh)]
-dt_2017[, tb_teste_vih_nouveau := as.numeric(tb_teste_vih_nouveau)]
-dt_2017[, tb_teste_vih_autres := as.numeric(tb_teste_vih_autres)]
-dt_2017[, tb_vih_positif_nouveau := as.numeric(tb_vih_positif_nouveau)]
-dt_2017[, tb_vih_positif_autres := as.numeric(tb_vih_positif_autres)]
-dt_2017[, tb_vih_positif_tarv_nouveau := as.numeric(tb_vih_positif_tarv_nouveau)]
-dt_2017[, tb_vih_positif_tarv_autres := as.numeric(tb_vih_positif_tarv_autres)]
+dt[, total_cas_incident := as.numeric(total_cas_incident)]
+dt[, total_cas := as.numeric(total_cas)]
+dt[, pvvih_sous_inh := as.numeric(pvvih_sous_inh)]
+dt[, tb_teste_vih_nouveau := as.numeric(tb_teste_vih_nouveau)]
+dt[, tb_teste_vih_autres := as.numeric(tb_teste_vih_autres)]
+dt[, tb_vih_positif_nouveau := as.numeric(tb_vih_positif_nouveau)]
+dt[, tb_vih_positif_autres := as.numeric(tb_vih_positif_autres)]
+dt[, tb_vih_positif_tarv_nouveau := as.numeric(tb_vih_positif_tarv_nouveau)]
+dt[, tb_vih_positif_tarv_autres := as.numeric(tb_vih_positif_tarv_autres)]
+dt[, tb_vih_positif_cotri_nouveau := as.numeric(tb_vih_positif_cotri_nouveau)]
+dt[, tb_vih_positif_cotri_autres := as.numeric(tb_vih_positif_cotri_autres)]
+dt[, cas_tb_bac_apresEchec := as.numeric(cas_tb_bac_apresEchec)]
+dt[, cas_tb_bac_apresPerduDeVue := as.numeric(cas_tb_bac_apresPerduDeVue)]
 
-dt_2018[, total_de_cas_incident := as.numeric(total_de_cas_incident)]
-dt_2018[, total_de_cas := as.numeric(total_de_cas)]
+# Combine some columns for 2016/2017 to get the 2018 equivalent
+dt[, tb_teste_vih := tb_teste_vih_nouveau + tb_teste_vih_autres]
+dt[, tb_vih_positif := tb_vih_positif_nouveau + tb_vih_positif_autres]
+dt[, tb_vih_positif_tarv := tb_vih_positif_tarv_nouveau + tb_vih_positif_tarv_autres]
+dt[, tb_vih_positif_cotri := tb_vih_positif_cotri_nouveau + tb_vih_positif_cotri_autres]
+dt[, cas_tb_bac_horsRechutes := cas_tb_bac_apresEchec + cas_tb_bac_apresPerduDeVue]
+
+dt_2018[, total_cas_incident := as.numeric(total_cas_incident)]
+dt_2018[, total_cas := as.numeric(total_cas)]
 dt_2018[, tb_teste_vih := as.numeric(tb_teste_vih)]
 dt_2018[, tb_vih_positif := as.numeric(tb_vih_positif)]
 dt_2018[, tb_vih_positif_tarv := as.numeric(tb_vih_positif_tarv)]
 dt_2018[, pvvih_sous_inh := as.numeric(pvvih_sous_inh)]
+dt_2018[, cas_tb_bac_horsRechutes := as.numeric(cas_tb_bac_horsRechutes)]
+dt_2018[, tb_vih_positif_cotri := as.numeric(tb_vih_positif_cotri)]
 
-# Combine variables to make 2017 and 2018 equivalent for tb/hiv indicators - (I need to confirm with Constant that this is correct to do)
-dt_2017[, tb_teste_vih := tb_teste_vih_nouveau + tb_teste_vih_autres]
-dt_2017[, tb_vih_positif := tb_vih_positif_nouveau + tb_vih_positif_autres]
-dt_2017[, tb_vih_positif_tarv := tb_vih_positif_tarv_nouveau + tb_vih_positif_tarv_autres]
+keep_vars = names(dt)[names(dt) %in% names(dt_2018)]
+dt = dt[, keep_vars, with = FALSE]
+dt_2018 = dt_2018[, keep_vars, with = FALSE]
+dt_all = rbindlist(list(dt, dt_2018), use.names = TRUE, fill = TRUE)
 
+dt_all[, zs:=gsub('_', '-', zs)]
+dt_all[zs == 'mufunga', zs := 'mufunga-sampwe']
+dt_all[zs == 'maswika', zs := 'masuika']
+dt_all[zs == 'wambaluadi', zs := 'wamba-luadi']
+dt_all[zs == 'kimbilulenge', zs := 'lulenge']
+dt_all[, zs:=standardizeHZNames(zs)]
+
+# save the full time series
+write.csv(dt_all, paste0(out_dir, outFile), row.names=F)
+#---------------------------------------------------
+
+#---------------------------------------------------
+# subset to TB/HIV indicators
+#---------------------------------------------------
 # Subset the data to include only the id variables and tb/hiv indicators
 id_vars = c('year', 'date', 'dps', 'trimestre','zs', 'csdt', 'population_totale', 'population_couverte')
-tb_hiv_vars = c('total_de_cas_incident', 'total_de_cas', 'tb_teste_vih', 'tb_vih_positif', 'tb_vih_positif_tarv', 'pvvih_sous_inh') 
+tb_hiv_vars = c('total_cas_incident', 'total_cas', 'tb_teste_vih', 'tb_vih_positif', 'tb_vih_positif_tarv', 'pvvih_sous_inh') 
 
-dt_2017 = dt_2017[, c(id_vars, tb_hiv_vars), with = FALSE]
-dt_2018 = dt_2018[, c(id_vars, tb_hiv_vars), with = FALSE]
-
-# Combine data from both years into one data table
-dt = rbind(dt_2018, dt_2017)
-
-dt[, zs:=gsub('-', '_', zs)]
-dt[, zs:=gsub('__', '_', zs)]
+dt = dt_all[, c(id_vars, tb_hiv_vars), with = FALSE]
 
 # Save the final data as a .csv file 
-write.csv(dt, paste0(out_dir, outFile), row.names=F)
+write.csv(dt, paste0(out_dir, outFile_tbhiv), row.names=F)
 #---------------------------------------------------

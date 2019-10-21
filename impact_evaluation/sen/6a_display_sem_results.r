@@ -106,6 +106,14 @@ p11 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                                      'tot_genexpert_cumulative'
                ))
 
+p12 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+               scaling_factors=NA, standardized=TRUE,
+               lineWidth=1.5, curved=0, tapered=FALSE,
+               dim=TRUE, highlight=c('perf_lab',
+                                     'tb_cas_id_cumulative',
+                                     'tot_genexpert_cumulative'
+               ))
+
 #p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
 #              scaling_factors=NA, standardized=TRUE, 
 #              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=2, colScaleBreaks = 1)
@@ -123,6 +131,7 @@ print(p8)
 print(p9)
 print(p10)
 print(p11)
+print(p12)
 
 dev.off()
 

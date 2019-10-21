@@ -80,6 +80,6 @@ pudr_labels = read.xlsx(paste0(dir, "documentation/PUDR Semester Labeling.xlsx")
 #Source shared functions
 source(paste0(common_dir, "global_variables.R"))
 source(paste0(common_dir, "shared_functions.r"), encoding="UTF-8")
-source(paste0(j, '/Project/IRH/HIV/code/currency_conversion.R')) #FGH team's currency conversion function. 
+# source(paste0(j, '/Project/IRH/HIV/code/currency_conversion.R')) #FGH team's currency conversion function. #Not sourcing as of 10/3/2019 EL
 
 
