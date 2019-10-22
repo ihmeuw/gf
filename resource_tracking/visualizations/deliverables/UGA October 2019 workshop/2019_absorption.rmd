@@ -17,6 +17,7 @@ library(Hmisc)
 library(wesanderson)
 library(gridExtra)
 library(scales)
+library(RColorBrewer)
 
 dt = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/absorption_uga.rds")
 dt = dt[grant_period=="2018-2020"]
@@ -534,11 +535,11 @@ ggplot(subset[start_date=="2019-01-01"], aes(x=abbrev_mod, y=absorption, label=n
 
 \newpage 
 
-# RSSH and program management absorption across grants 
+# RSSH absorption across grants 
 
 \newpage
 ```{r rssh}
-rssh_mods = c('Community systems', 'Financial systems', "Info systems & M&E", "HR & health workers", "Service delivery", "Nat. health strategies", "Program mgmt")
+rssh_mods = c('Community systems', 'Financial systems', "Info systems & M&E", "HR & health workers", "Service delivery", "Nat. health strategies")
 
 rssh_by_int = dt[abbrev_mod%in%rssh_mods & start_date=="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'abbrev_int', 'start_date')]
 rssh_by_int[, absorption:=(expenditure/budget)*100]
@@ -559,7 +560,7 @@ ggplot(rssh_by_int, aes(x=int_factor, y=absorption, fill=abbrev_mod, label=label
   geom_bar(stat="identity", position="dodge") + 
   geom_text(hjust=-0.5, size=4) + 
   theme_bw(base_size=14) + 
-  scale_fill_manual(values=wes_palette(7, name="Rushmore1", type='continuous')) + 
+  scale_fill_brewer(palette="Set2") + 
   coord_flip() + 
   scale_y_continuous(limits=c(0, 220)) + 
   labs(title="2019 RSSH absorption by intervention, all grants", subtitle="Interventions grouped by module", x="Intervention", y="Absorption (%)",   fill="Module", caption="*Max bar height set at 200%")
@@ -600,7 +601,7 @@ ggplot(rssh_by_int, aes(x=int_factor, y=absorption, fill=abbrev_mod, label=label
   geom_bar(stat="identity", position="dodge") + 
   geom_text(hjust=-0.5, size=4) + 
   theme_bw(base_size=14) + 
-  scale_fill_manual(values=wes_palette(7, name="Rushmore1", type='continuous')) + 
+  scale_fill_brewer(palette="Set2") + 
   coord_flip() + 
   scale_y_continuous(limits=c(0, 220)) + 
   labs(title="Cumulative RSSH absorption by intervention, all grants", subtitle="(Semesters 1-3) \nInterventions grouped by module", x="Intervention", y="Absorption (%)",   fill="Module", caption="*Max bar height set at 200%")
@@ -621,7 +622,7 @@ melt = cumulative_rssh[, .(abbrev_mod, abbrev_int, int_factor, budget, expenditu
   scale_fill_manual(values=c('plum2', 'chocolate2')) + 
   coord_flip() + 
   scale_y_continuous(labels = scales::dollar) + 
-  labs(title=paste0("Cumulative RSSH budget and expenditure \nfor S1 2019"), x="Module", y="Amount ($)", fill="", 
+  labs(title=paste0("Cumulative RSSH budget and expenditure"), x="Module", y="Amount ($)", fill="", 
        subtitle="Labels show expenditure amounts")
 ```
 
@@ -637,10 +638,7 @@ kable(kable_data[1:30, .(abbrev_mod, abbrev_int, start_date, semester, budget, e
 
 # Supporting data for RSSH graphs (2/2)
 ```{r supporting_data_rssh2} 
- kable_data = dt[abbrev_mod%in%rssh_mods, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'abbrev_int', 'start_date', 'semester')]
-kable_data[, absorption:=(expenditure/budget)*100]
-
-stopifnot(nrow(kable_data)==48)
-kable(kable_data[31:48, .(abbrev_mod, abbrev_int, start_date, semester, budget, expenditure, absorption)][order(abbrev_mod, abbrev_int, start_date, semester)], col.names=c('Module', 'Intervention', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
+stopifnot(nrow(kable_data)==42)
+kable(kable_data[31:42, .(abbrev_mod, abbrev_int, start_date, semester, budget, expenditure, absorption)][order(abbrev_mod, abbrev_int, start_date, semester)], col.names=c('Module', 'Intervention', 'Date', 'Semester', 'Budget', 'Expenditure', 'Absorption'), align="l") %>%
   kable_styling(font_size=8)
 ```

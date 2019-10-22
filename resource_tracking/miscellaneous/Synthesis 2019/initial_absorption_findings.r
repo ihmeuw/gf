@@ -1,6 +1,7 @@
 #-----------------------------------------------------
 # Initial absorption finding statements
 # For synthesis report  - September 2019 
+# This was used to fill in the Synthesis Mad-libs table. 
 #-----------------------------------------------------
 
 rm(list=ls())
@@ -65,7 +66,13 @@ sen_tb[order(-absorption), .(gf_intervention, absorption)]
 sen_hivtb[order(-absorption), .(gf_intervention, absorption)]
 
 # UGA 
-uga_hiv[order(-absorption), .(gf_intervention, absorption)]
+uga_malaria[order(-absorption)][1:10, .(gf_intervention, absorption)]
+uga_hiv[order(-absorption)][1:10, .(gf_intervention, absorption)]
+uga_tb[order(-absorption)][1:10, .(gf_intervention, absorption)]
+uga_hivtb[order(-absorption)][1:10, .(gf_intervention, absorption)]
+
+# GTM 
+gtm_hiv[order(-absorption)][1:10, .(gf_intervention, absorption)]
 
 #------------------------------------------------------------
 #Is RSSH absorption higher or lower than the PUDR average ?
@@ -154,7 +161,14 @@ cod_budgets_malaria[grant=="COD-M-SANRU", .(grant, gf_module, gf_intervention, b
 
 #UGA 
 uga_budgets_hiv = uga_budgets[grant_period=="2018-2020" & grant_disease=="hiv", .(budget=sum(budget, na.rm=T)), by=c('grant', 'gf_module', 'gf_intervention')]
+uga_budgets_tb = uga_budgets[grant_period=="2018-2020" & grant_disease=="tb", .(budget=sum(budget, na.rm=T)), by=c('grant', 'gf_module', 'gf_intervention')]
+uga_budgets_malaria = uga_budgets[grant_period=="2018-2020" & grant_disease=="malaria", .(budget=sum(budget, na.rm=T)), by=c('grant', 'gf_module', 'gf_intervention')]
+uga_budgets_hivtb = uga_budgets[grant_period=="2018-2020" & grant_disease=="hiv/tb", .(budget=sum(budget, na.rm=T)), by=c('grant', 'gf_module', 'gf_intervention')]
+
 uga_budgets_hiv[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
+uga_budgets_malaria[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
+uga_budgets_tb[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
+uga_budgets_hivtb[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
 
 
 #SEN 
@@ -168,7 +182,14 @@ sen_budgets_hiv[grant=="SEN-H-ANCS", .(grant, gf_module, gf_intervention, budget
 sen_budgets_tb[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
 sen_budgets_malaria[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
 
+#GTM budgets HIV 
+gtm_budgets_hiv = gtm_budgets[grant_period=="2018-2020" & grant_disease=="hiv", .(budget=sum(budget, na.rm=T)), by=c('grant', 'gf_module', 'gf_intervention')]
+gtm_budgets_tb = gtm_budgets[grant_period=="2019-2022" & grant_disease=="tb", .(budget=sum(budget, na.rm=T)), by=c('grant', 'gf_module', 'gf_intervention')]
+gtm_budgets_malaria = gtm_budgets[grant_period=="2019-2021" & grant_disease=="malaria", .(budget=sum(budget, na.rm=T)), by=c('grant', 'gf_module', 'gf_intervention')]
 
+gtm_budgets_hiv[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
+gtm_budgets_malaria[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
+gtm_budgets_tb[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
 #---------------------------------------------
 # REVIEW RSSH IN THE BUDGETS 
 #---------------------------------------------
