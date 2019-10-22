@@ -9,12 +9,10 @@
 rm(list=ls())
 library(ggplot2)
 library(rgdal)
-library(tibble)
 library(dplyr)
 library(RColorBrewer)
 library(plyr)
 library(data.table)
-library(dummies)
 library(dendextend)
 library(purrr)
 library(cluster)
@@ -30,7 +28,7 @@ dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockouts/'
 dt = readRDS(paste0(dir, 'prepped_data/arv_stockouts_2013_2019.rds'))
 
 # subset dates to before November 2018
-dt = dt[year!=2013] 
+# dt = dt[year!=2013] 
 
 # turn off scientific notation
 options(scipen=999)
@@ -43,7 +41,7 @@ source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/arvs/cluster_anal
 # ---------------------------------------------------
 # CLUSTERING TOTAL TEST KIT AND TOTAL ARV STOCK OUTS
 
-# total arv and total test kit stock outs among all health facilitird
+# total arv and total test kit stock outs among all health facilities
 # 2014 - 2018 (max 2018 weeks out)
 both = dt[ ,.(test_kits=sum(test_kits, na.rm=T), 
               arvs=sum(arvs, na.rm=T)), 
@@ -110,8 +108,8 @@ interim_data[ , total_clusters:=x]
 if (i ==1) full_data = interim_data
 if (1 < i) full_data = rbind(full_data, interim_data)
 
+#----------------------------
 # create the plots
-
 list_of_plots[[i]] = ggplot(full_data[total_clusters==x], 
                   aes(x=test_kits, y=arvs, color=factor(kcluster)))+
                   geom_jitter(alpha=0.6)+
@@ -121,17 +119,15 @@ list_of_plots[[i]] = ggplot(full_data[total_clusters==x],
                            label=full_data[total_clusters==x]$label)+
                   labs(x = "Number of weeks out of test kits", 
                   y = "Number of weeks out of ARVs", color='Clusters',
-         title="Total weeks out of test kits and ARVs, 2014 - 2018",
+         title="Total weeks out of test kits and ARVs, 2013 - 2019",
          subtitle =paste0('Number of clusters = ', x))+
     theme(text=element_text(size=18))
   
 i = i+1 }
-
-#----------------------------------
 #----------------------------
 # print a pdf of plots 
 
-pdf(paste0(dir, 'k_means_outputs/k_total_arv_total_test_2014_2018.pdf'),height=9, width=18)
+pdf(paste0(dir, 'k_means_outputs/k_total_arv_total_test_2013_2019.pdf'),height=9, width=18)
 
 grid.arrange(elbow_both, sil_both, nrow=1)
 for(i in seq(length(list_of_plots))) { 
@@ -217,6 +213,9 @@ interim_data[ , total_clusters:=x]
 if (i ==1) full_data = interim_data
 if (1 < i) full_data = rbind(full_data, interim_data)
 
+#----------------------------
+# create the plots
+
 list_of_plots[[i]] = ggplot(full_data[total_clusters==x], aes(x=total_stockouts, y=mean_duration, 
                     color=factor(kcluster)))+
     geom_jitter(alpha=0.6)+
@@ -231,7 +230,6 @@ list_of_plots[[i]] = ggplot(full_data[total_clusters==x], aes(x=total_stockouts,
 i = i + 1
 
 }
-# ----------------------
 #----------------------------
 # print a pdf of plots 
 
@@ -247,7 +245,7 @@ dev.off()
 
 #----------------------------
 #--------------------------------------------
-# time stocked out and mean duration - ARVS 
+# TIME STOCKED OUT AND MEAN DURATION - ARVS
 
 # mean annual number of stock outs
 # take the maximum value of sequentially counted stock outs per facility
@@ -357,6 +355,123 @@ dev.off()
 #----------------------------
 #--------------------------------------------------
 # final model 
+
+# ---------------------------------------------------
+# FACILITTY WEEKS REPORTED
+
+# percent of facility-weeks stocked out
+
+# calculate if the facility reported 
+dt[!is.na(test_kits), reported_tests:=TRUE]
+dt[is.na(reported_tests), reported_tests:=FALSE]
+dt[!is.na(arvs), reported_arvs:=TRUE]
+dt[is.na(reported_arvs), reported_arvs:=FALSE]
+
+df = dt[ ,.(test_kits=sum(test_kits, na.rm=T), 
+              arvs=sum(arvs, na.rm=T), reported_tests=sum(reported_tests),
+            reported_arvs=sum(reported_arvs)), 
+           by=.(facility, level, district, region)]
+
+
+# calculate percent of time 
+df[ , percent_tests:=round(100*(test_kits/reported_tests), 1)]
+df[ , percent_arvs:=round(100*(arvs/reported_arvs), 1)]
+
+# create a matrix for cluster analysis
+df_k = df[ ,.(percent_tests, percent_arvs)]
+
+# ----------------------
+# create elbow plots and silhouette widths
+
+df_elbow = elbow_fun(df_k, 2, 10)
+df_sil = sil_fun(df_k, 2, 10)
+
+# ----------------------
+# plot the elbow plot 
+
+elbow_df = ggplot(df_elbow, aes(x=k, y=tot_withinss))+
+  geom_point()+
+  geom_line()+
+  theme_bw()+
+  labs(y = "Total within-cluster sum of squares", x = "K Clusters",
+       title='Elbow plot to empirically determine k clusters',
+       subtitle='Variables: % of reporting weeks out of ARVs,
+       % of reporting weeks out of tests (2014 - 2018)')+
+  theme(text=element_text(size=18))
+
+# ----------------------
+# plot the silhouette plot
+
+sil_df = ggplot(df_sil, aes(x=k, y=sil_width))+
+  geom_point()+
+  geom_line()+
+  theme_bw() +
+  labs(x='K Clusters', y='Average silhouette width', 
+       title='Silhouette Width to determine k clusters')+
+  theme(text=element_text(size=18))
+
+#------------------------------------
+# determine the number of ideal clusters and plot
+# in this case, elbow plot indicates three
+# or the sw indicated 2, 4, 3, 9, 10, 8 (order of widths)
+
+# sequence of clusters to evaluate
+clusts_df = c(2, 3, 4, 5, 9, 10)
+
+#----------------------
+# create plots for each 
+list_of_plots_perc = NULL
+i = 1
+
+# function to run the calculations for every cluster 
+for (x in clusts_df) {
+  # run a test cluster
+  k_clust = kmeans(df_k, centers = x)
+  df[ , kcluster:=k_clust$cluster]
+  
+  # mark the centroids for labeling 
+  df[ ,centroid_x:=mean(percent_tests, na.rm=T), by=kcluster]
+  df[ ,centroid_y:=mean(percent_arvs, na.rm=T), by=kcluster]
+  df[ ,label:=paste0(round(centroid_x), ", ", round(centroid_y)), by=kcluster]
+  
+  interim_data = copy(df)
+  interim_data[ , total_clusters:=x]
+  if (i ==1) full_data = interim_data
+  if (1 < i) full_data = rbind(full_data, interim_data)
+  
+  #----------------------------
+  # create the plots
+  list_of_plots_perc[[i]] = ggplot(full_data[total_clusters==x], 
+                              aes(x=percent_tests, y=percent_arvs, color=factor(kcluster)))+
+    geom_jitter(alpha=0.6)+
+    theme_bw()+
+    annotate("text", x=full_data[total_clusters==x]$centroid_x,
+             y=full_data[total_clusters==x]$centroid_y, 
+             label=full_data[total_clusters==x]$label)+
+    labs(x = "Percent of weeks out of test kits", 
+         y = "Percent of weeks out of ARVs", color='Clusters',
+         title="Percent of reporting weeks out of test kits and ARVs, 2014 - 2018",
+         caption = "Percentage is equal to total weeks out/total weeks reported per facility",
+         subtitle=paste0('Number of clusters = ', x))+
+    theme(text=element_text(size=18))
+  
+  i = i+1 }
+#----------------------------
+# print a pdf of plots 
+
+pdf(paste0(dir, 'k_means_outputs/percent_out_arv_tests_2014_2018.pdf'),height=9, width=18)
+
+grid.arrange(elbow_df, sil_df, nrow=1)
+for(i in seq(length(list_of_plots_perc))) { 
+  p = list_of_plots_perc[[i]]
+  grid.arrange(p, sil_df, nrow=1)
+} 
+
+dev.off()
+
+#----------------------------
+
+
 
 
 

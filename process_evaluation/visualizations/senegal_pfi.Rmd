@@ -5,62 +5,144 @@ date: "10/15/2019"
 output: html_document
 ---
 
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
 
 library(data.table)
 library(ggplot2)
-
+library(knitr)
+library(dplyr)
+library(kableExtra)
+library(scales)
 
 country= "sen"
 
 # load data
-DT <- readRDS("C:/Users/frc2/Documents/Data/cleaned_pfi.RDS")
+DT <- readRDS("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/cleaned_data/merged_pfi_data.RDS")
 # subset as appropriate
 DT = DT[loc_name==country]
-
+DT = DT[pudr_sheet %in% c('impact_outcome_indicators_main', 'coverage_indicators_main')]
 ```
+
 
 #### 1. Introduction
 
 
+This descriptive analysis highlights the data completeness, data sources, and improvements over time for the grants in Senegal.
+
+
+
 #### 2. Data Completeness
-```{r}
-# What percentage of targets to they report on? 
-# Which targets do they report on? 
+Comparing what data is available for each grant (Baseline, Target, and Result are different components of the performance indicator rating). 
+
+```{r completeness_fix}
+# Emily's code on {PUDR} Completeness
+
+# Data
+# What percentage of targets to they report on?
+
+# Which targets do they report on?
+
+DT$target_value <- ifelse(is.na(DT$`target_%`),DT$target_n, DT$`target_%`)
+DT$pr_result_value <- ifelse(is.na(DT$`pr_result_%`), DT$target_n, DT$`target_%`)
+
+# create rating for each indicator
+DT$completeness_rating <- NA
+
+DT$completeness_rating[which(is.na(DT$baseline_value) &  is.na(DT$target_value) &  is.na(DT$pr_result_value))] <- 1
+DT$completeness_rating[which(is.na(DT$baseline_value) &  is.na(DT$target_value) & !is.na(DT$pr_result_value))] <- 2
+DT$completeness_rating[which(is.na(DT$baseline_value) & !is.na(DT$target_value) & !is.na(DT$pr_result_value))] <- 3
+DT$completeness_rating[which(!is.na(DT$baseline_value) & is.na(DT$target_value) &  !is.na(DT$pr_result_value))] <- 4
+DT$completeness_rating[which(!is.na(DT$baseline_value) & !is.na(DT$target_value) &  !is.na(DT$pr_result_value))] <- 5
+DT$completeness_rating[which(!is.na(DT$baseline_value) & !is.na(DT$target_value) &  is.na(DT$pr_result_value))] <- 6
+DT$completeness_rating[which(!is.na(DT$baseline_value) & is.na(DT$target_value) &  is.na(DT$pr_result_value))] <- 7
+DT$completeness_rating[which(is.na(DT$baseline_value) & !is.na(DT$target_value) &  is.na(DT$pr_result_value))] <- 8
+DT$completeness_rating[which(!is.na(DT$baseline_value) & is.na(DT$target_value) &  is.na(DT$pr_result_value))] <- 9
+
+DT$completeness_rating <- factor(DT$completeness_rating)
+levels(DT$completeness_rating) <- c("No Basline Value, Only Target and Result Reported",
+                                    "Baseline, Target, and Result All Reported",
+                                    "Baseline and Target Reported, No Result Reported", 
+                                    "Only Target Reported, No Baseline or Result Reported",
+                                    "Only Baseline Reported, No Target or Result Reported")
+
+
+# subset data to the most recent PUDR
+barcompl <- DT[file_name %in% c('SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx', 'SEN-M-PNLP_Progress Report_S1 2019 Version finale du 15 Aout 2019.xlsx', 'PU-SEN-H-CNLS-S1-2019_15082019_finale.xlsx', 'SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm')]
+
+ggplot(barcompl, aes(x = grant, fill = completeness_rating)) +
+    geom_bar(position = "fill") +
+  labs(title="Completeness of Indicators according to grants", caption="Source: latest PUDRs for each grant")+
+  theme_bw(base_size = 10)
 ```
+
 
 
 #### 3. Data Sources
+
+
+
 ```{r}
-# What sources are used to report by disease, and how does this change depending on target, result and verification?
-# 
+# create indicator variable of when result and target source differ
+data3 <- DT
+
+data3$sources_different <- NA
+data3$sources_different[which(data3$baseline_source_code!=data3$pr_result_source_code)] <- 1
+data3$sources_different[which(data3$baseline_source_code==data3$pr_result_source_code)] <- 0
+
+# subset data for checking changing indicators
+data3 <- data3[pudr_sheet %in% c('impact_outcome_indicators_main','coverage_indicators_main') & file_name %in% c('SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx', 'SEN-M-PNLP_Progress Report_S1 2019 Version finale du 15 Aout 2019.xlsx', 'PU-SEN-H-CNLS-S1-2019_15082019_finale.xlsx', 'SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm')]
+
+table3 <-data3[,list(indicators=length(indicator_code), total_different=sum(sources_different, na.rm = TRUE)), by=c('grant')]
+
+kable(table3, col.names = c("Grant", "Total Indic.", "Srcs diff."))
+
 ```
 
 
-#### 4. Grants
 
-##### TB
+Data sources changed most often in the CNLS grant, the baseline values were reported using the National Program data, while the progress results were from unspecified reports.
+
+```{r}
+# subset data for checking changing indicators
+data3b <- DT
+data3b <- data3b[grant=="SEN-H-CNLS" & pudr_sheet %in% c('impact_outcome_indicators_main','coverage_indicators_main') & file_name=='PU-SEN-H-CNLS-S1-2019_15082019_finale.xlsx']
+
+table3b <-data3b[,.(indicator_code, brief_description, baseline_source_code, pr_result_source_code)]
+
+kable(table3b, col.names = c("Indicator", "Descr.", "Baseline Source", "Result source"))
+```
+
+
+
+#### 4. Grant Results based on most recent PUDRs
+
+
+##### 4.1. TB
+
+
 ```{r}
 DT1 <- DT[grant=="SEN-Z-MOH"]
 DT1 <- DT1[pudr_sheet %in% c('impact_outcome_indicators_main', 'coverage_indicators_main')]
 DT1 <- DT1[file_name =="SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx"]
 
 # plot of TB Data in Senegal-Most recent grant period
-ggplot(DT1, aes(x=indicator_code, y=any_achievement_ratio)) +
+ggplot(DT1, aes(x=brief_description, y=any_achievement_ratio)) +
   geom_point() +
   labs(title="TB performance in Senegal") +
   geom_hline(yintercept = 1) +
   theme_bw()+
   coord_flip()+
   labs(y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT1$file_name)))+
-  ylim(0,1.5)
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")
   
   
 ```
 
 
-##### Malaria
+##### 4.2. Malaria
 
 ```{r}
 DT2 <- DT[grant=="SEN-M-PNLP"]
@@ -68,34 +150,105 @@ DT2 <- DT2[pudr_sheet %in% c('impact_outcome_indicators_main', 'coverage_indicat
 DT2 <- DT2[file_name =="SEN-M-PNLP_Progress Report_S1 2019 Version finale du 15 Aout 2019.xlsx"]
 
 # plot of TB Data in Senegal-Most recent grant period
-ggplot(DT2, aes(x=indicator_code, y=any_achievement_ratio)) +
+ggplot(DT2, aes(x=brief_description, y=any_achievement_ratio)) +
   geom_point() +
   labs(title="Malaria performance in Senegal") +
   geom_hline(yintercept = 1) +
   theme_bw()+
   coord_flip()+
   labs(y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT2$file_name)))+
-  ylim(0,1.5)
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")
 
 ```
 
 
-##### HIV
+
+##### 4.3. HIV
 
 ```{r}
-DT3 <- DT[grant %in% c("SEN-H-CNLS", "SEN-H-ANCS")]
+DT3 <- DT[grant %in% c("SEN-H-CNLS")]
 DT3 <- DT3[pudr_sheet %in% c('impact_outcome_indicators_main', 'coverage_indicators_main')]
-DT3 <- DT3[file_name %in% c('PU-SEN-H-CNLS-S1-2019_15082019_finale.xlsx', 'SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm')]
+DT3 <- DT3[file_name %in% c('PU-SEN-H-CNLS-S1-2019_15082019_finale.xlsx')]
 
 # plot of TB Data in Senegal-Most recent grant period
-ggplot(DT3, aes(x=indicator_code, y=any_achievement_ratio)) +
-  geom_point(aes(color=grant)) +
-  labs(title="HIV performance in Senegal") +
+ggplot(DT3, aes(x=brief_description, y=any_achievement_ratio)) +
+  geom_point() +
+  labs(title="HIV performance in Senegal (CNLS Grant)") +
   geom_hline(yintercept = 1) +
   theme_bw()+
   coord_flip()+
   labs(y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT3$file_name)))+
-  ylim(0,1.5)
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")
+
+DT4 <- DT[grant %in% c("SEN-H-ANCS")]
+DT4 <- DT4[pudr_sheet %in% c('impact_outcome_indicators_main', 'coverage_indicators_main')]
+DT4 <- DT4[file_name %in% c('SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm')]
+
+# plot of TB Data in Senegal-Most recent grant period
+ggplot(DT4, aes(x=brief_description, y=any_achievement_ratio)) +
+  geom_point() +
+  labs(title="HIV performance in Senegal (ANCS Grant)") +
+  geom_hline(yintercept = 1) +
+  theme_bw()+
+  coord_flip()+
+  labs(y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT4$file_name)))+
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")
+
+```
+
+
+#### 5. Achievement over time
+
+```{r ratio_over_time, message=FALSE, warning=FALSE}
+# re-shape the data
+data5 <- melt(DT, id.vars = c("indicator_code", "grant", "grant_period", "target_year","start_date_programmatic", "end_date_programmatic", "brief_description"))
+data5 <- data5[variable %in% c("pr_result_achievement_ratio", "lfa_result_achievement_ratio")]
+
+data5$value <- as.numeric(data5$value)
+
+ggplot(data5[grant=="SEN-Z-MOH"], aes(y=value, x=end_date_programmatic, col = brief_description))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~variable)+
+  theme_bw()+
+  scale_x_date(date_breaks = "6 month", 
+                 labels=date_format("%b-%Y"))+
+   labs(x="Date of PUDR", y="PR Achievement Ratio", title="SEN-Z-MOH Performance Over Time")
+
+ggplot(data5[grant=="SEN-M-PNLP"], aes(y=value, x=end_date_programmatic, col = brief_description))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~variable)+
+  theme_bw()+
+  scale_x_date(date_breaks = "6 month", 
+                 labels=date_format("%b-%Y"))+
+  labs(x="Date of PUDR", y="PR Achievement Ratio", title="SEN-M-PNLP Performance Over Time")
+
+ggplot(data5[grant=="SEN-H-ANCS"], aes(y=value, x=end_date_programmatic, col=brief_description ))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~variable)+
+  theme_bw()+
+  scale_x_date(date_breaks = "6 month", 
+                 labels=date_format("%b-%Y"))+
+    labs(x="Date of PUDR", y="PR Achievement Ratio", title="SEN-H-ANCS Performance Over Time")
+
+ggplot(data5[grant=="SEN-H-CNLS"], aes(y=value, x=end_date_programmatic, col = indicator_code))+
+  geom_point()+
+  geom_line()+
+  facet_wrap(~variable)+
+  theme_bw()+
+  scale_x_date(date_breaks = "6 month", 
+                 labels=date_format("%b-%Y"))+
+   labs(x="Date of PUDR", y="PR Achievement Ratio", title="SEN-H-CNLS Performance Over Time")+
+  theme(legend.position = "bottom")
+
+```
+
+
 
 ```
 
