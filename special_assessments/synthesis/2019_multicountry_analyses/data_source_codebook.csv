@@ -1,101 +1,85 @@
-,source_original,code
-1,NMCP Annual Report,National Program
-2,HMIS,HMIS
-3,NA,NA
-4,M&amp;E Dashboard Malaria Information System,
-5,SANRU PUDR,
-6,"Grants Report 
-SANRU PUDR",
-7,Surveys/Activity Reports,Survey
-8,PUDR Report SANRU,
-9,Grants Reports (SANRU PUDR),
-10,Survey,
-11,Activity reports,
-12,Surveys,Survey
-13,n/a,NA
-14,"R&amp;R TB system, quarterly report",
-15,"R&R TB system, quarterly report",
-16,"R&amp;R TB system, yearly management report",
-17,"R&R TB system, yearly management report",
-18,Pentitentiary system,
-19,NATIONAL HEALTH INFORMATION SYSTEM (NHIS),NHIS
-20,NHIS,NHIS
-21,National Surveillance Survey,Survey
-22,Combined Study - MSM,
-23,Rate of Survival Report,
-24,Combined Survey - MSM,
-25,National Surveillance  Survey,
-26,UDSEN Report,
-27,PROGRESS UPDATE AND DISBURSEMENT REQUEST (PUDR),
-28,DHIS 2,DHIS2
-29,"Reports from MARPI sites, as reported in the July-Dec 2016 PUDR",
-30,Programmatic report HIVOS,
-31,ANCS report,
-32,CNLS report,
-33,HMIS Report,
-34,NTCP Report,
-35,PUDR,
-36,NTCP,
-37,"Tuberculosis Reporting and Reporting System, Quarterly Reports",
-38,NTP Database,
-39,MDR-TB patient registries and quarterly reports and annual report,
-40,TB Annual,
-41,NMCP Report 2016,
-42,N/A,
-43,"Nominal database, HMIS (SIGSA)",
-44,Investigation of cases report,
-45,DHS 2013/2014,
-46,UDHS,
-47,DGS report,
-48,"TB Reporting and Reporting System, Quarterly Reports",
-49,National TB program,National Program
-50,National AIDS program,National Program
-51,UNAIDS,UNAIDS
-52,NATIONAL TUBERCULOSIS CONTROL PROGRAM (NTCP) REPORT,National Program
-53,NTCP REPORT,National Program
-54,"TB reporting form, quarterly reports",
-55,Registers of patients with tuberculosis,
-56,"Tuberculosis Reporting and Reporting System, Quality Assessment Reports of the Microscopy Network",
-57,"Quarterly Order Form for Drugs and Laboratory Inputs, Drug Inventory Tracking Form and Laboratory Input Form",
-58,Tuberculosis investigation in a prison environment,
-59,"Tuberculosis Reporting and Reporting System, Quarterly Reports, Community Database",
-60,Survivial rate report,
-61,PUDR Report PSI,
-62,Mass campaign report,
-63,LMIS Reports,
-64,No data available,
-65,HMIS,HMIS
-66,"Other survey, specify",
-67,NA,NA
-68,"Specify- Reports, Surveys, Questionnaires etc.",
-69,Reports (specify),
-70,TB patient register,
-71,"R&R TB system, quarterly reports",
-72,Patient records,
-73,Specific surveys and research (specify),
-74,DHS/DHS+ (Demographic and Health Survey),
-75,IBBS,
-76,Modelled,Modelled Data
-77,ANCS report,
-78,TB laboratory register,
-79,MICS (Multiple Indicator Cluster Survey),
-80,Vital and disease-specific registry,
-81,"R&R TB system, yearly management report ",
-82,Training records,
-83,HMIS,HMIS
-84,Reports (specify),
-85,NA,
-86,TB patient register,
-87,Patient records,
-88,BSS (Behavioral Surveillance Survey),
-89,Surveillance systems,
-90,Modelled,
-91,Vital and disease-specific registry,
-92,Report,
-93,AIS (AIDS Indicator Survey),
-94,"R&R TB system, yearly management report ",
-95,"R&R TB system, quarterly reports",
-96,TB laboratory register,
-97,MICS (Multiple Indicator Cluster Survey),
-98,MIS (Malaria Indicator Survey),
-99,IBBS,
+source_original,source_code
+NMCP Annual Report,National Program
+HMIS,HMIS
+NA,NA
+M&amp;E Dashboard Malaria Information System,HMIS
+SANRU PUDR,PUDR
+"Grants Report 
+SANRU PUDR",Management Report
+Surveys/Activity Reports,Survey
+PUDR Report SANRU,PUDR
+Grants Reports (SANRU PUDR),PUDR
+Survey,Survey
+Activity reports,Management Report
+Surveys,Survey
+n/a,NA
+"R&amp;R TB system, quarterly report",Management Report
+"R&R TB system, quarterly report",Management Report
+"R&amp;R TB system, yearly management report",Management Report
+"R&R TB system, yearly management report",Management Report
+Pentitentiary system,Other: Penitentiary System
+NATIONAL HEALTH INFORMATION SYSTEM (NHIS),HMIS
+NHIS,HMIS
+National Surveillance Survey,Survey
+Combined Study - MSM,Survey
+Rate of Survival Report,Report
+Combined Survey - MSM,Survey
+National Surveillance  Survey,Survey
+UDSEN Report,Report
+PROGRESS UPDATE AND DISBURSEMENT REQUEST (PUDR),PUDR
+DHIS 2,HMIS
+"Reports from MARPI sites, as reported in the July-Dec 2016 PUDR",PUDR
+Programmatic report HIVOS,Report
+ANCS report,National Program
+CNLS report,National Program
+HMIS Report,National Program
+NTCP Report,National Program
+PUDR,PUDR
+NTCP,National Program
+"Tuberculosis Reporting and Reporting System, Quarterly Reports",Management Report
+NTP Database,National Program
+MDR-TB patient registries and quarterly reports and annual report,Patient Registry
+TB Annual,National Program
+NMCP Report 2016,National Program
+N/A,NA
+"Nominal database, HMIS (SIGSA)",HMIS
+Investigation of cases report,Patient Registry
+DHS 2013/2014,Survey
+UDHS,Survey
+DGS report,Management Report
+"TB Reporting and Reporting System, Quarterly Reports",Management Report
+National TB program,National Program
+National AIDS program,National Program
+UNAIDS,UNAIDS
+NATIONAL TUBERCULOSIS CONTROL PROGRAM (NTCP) REPORT,National Program
+"TB reporting form, quarterly reports",Management Report
+Registers of patients with tuberculosis,Patient Registry
+"Tuberculosis Reporting and Reporting System, Quality Assessment Reports of the Microscopy Network",Management Report
+"Quarterly Order Form for Drugs and Laboratory Inputs, Drug Inventory Tracking Form and Laboratory Input Form",Management Report
+Tuberculosis investigation in a prison environment,Survey
+"Tuberculosis Reporting and Reporting System, Quarterly Reports, Community Database",Management Report
+Survivial rate report,Report
+PUDR Report PSI,PUDR
+Mass campaign report,Report
+LMIS Reports,Report
+No data available,NA
+"Other survey, specify",Survey
+"Specify- Reports, Surveys, Questionnaires etc.",Report
+Reports (specify),Report
+TB patient register,Patient Registry
+"R&R TB system, quarterly reports",Management Report
+Patient records,Patient Registry
+Specific surveys and research (specify),Survey
+DHS/DHS+ (Demographic and Health Survey),Survey
+IBBS,Survey
+Modelled,Modelled Data
+TB laboratory register,Management Report
+MICS (Multiple Indicator Cluster Survey),Survey
+Vital and disease-specific registry,Patient Registry
+"R&R TB system, yearly management report ",Management Report
+Training records,Management Report
+BSS (Behavioral Surveillance Survey),Survey
+Surveillance systems,Survey
+Report,Report
+AIS (AIDS Indicator Survey),Survey
+MIS (Malaria Indicator Survey),Survey
