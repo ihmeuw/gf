@@ -1,5 +1,5 @@
 # K-means cluster analysis
-# Final model for use in analysis
+# Final three potential models for use in analysis
 # Plots to determine number of clusters and variables to use
 
 # Caitlin O'Brien-Carelli
@@ -441,7 +441,7 @@ for (x in c(2:10)) {
 #----------------------------
 # print a pdt of plots
 
-pdf(paste0(dir, 'k_means_outputs/final/total_percent_arv_tests_2014_2019.pdf'),height=9, width=18)
+pdf(paste0(dir, 'k_means_outputs/final/total_percent_slope_arv_tests_all_scaled_2014_2019.pdf'),height=9, width=18)
 
 grid.arrange(elbow_df, sil_df, nrow=1)
 for(i in seq(length(list_of_plots))) {
@@ -453,14 +453,25 @@ for(i in seq(length(list_of_plots))) {
 dev.off()
 
 #----------------------------
-# create a 3d graph for visualization 
+# create a 3d graph for visualization - scaled
 
 plot_ly(full_data[total_clusters==4],
-        x = ~percent_tests, y = ~percent_arvs, z = ~test_kits, color = ~factor(kcluster),
+        x = ~arvs_scaled, y = ~tests_scaled, z = ~tests_slope_scaled, color = ~factor(kcluster),
         colors = brewer.pal(9, 'RdYlBu')) %>%
   add_markers() %>%
-  layout(scene = list(xaxis = list(title = '% Test kits'),
-                      yaxis = list(title = '% ARVs'),
-                      zaxis = list(title = 'Weeks out of tests')))
+  layout(scene = list(xaxis = list(title = 'Test kits, scaled'),
+                      yaxis = list(title = 'ARVs, scaled'),
+                      zaxis = list(title = 'Test kit slope, scaled')))
+
+#----------------------------
+# create a 3d graph for visualization - percentages and slops
+
+plot_ly(full_data[total_clusters==4],
+        x = ~per_arvs_scaled, y = ~per_tests_scaled, z = ~tests_slope_scaled, color = ~factor(kcluster),
+        colors = brewer.pal(9, 'RdYlBu')) %>%
+  add_markers() %>%
+  layout(scene = list(xaxis = list(title = '% out of test kits, scaled'),
+                      yaxis = list(title = '% out of ARVs, scaled'),
+                      zaxis = list(title = 'Test kit slope, scaled')))
 
 #----------------------------
