@@ -11,9 +11,11 @@ library(ggplot2)
 library(knitr)
 library(kableExtra)
 library(Hmisc)
+library(memisc)
 library(wesanderson)
 library(gridExtra)
 library(scales)
+library(pander)
 
 options(scipen=15)
 
@@ -168,15 +170,182 @@ kable(by_module[absorption_rating=="BELOW_AVERAGE", .N, by='abbrev_mod'][1:10, ]
 ```
 HMIS and human resources for health had lower absorption than the PUDR average for five grants. Integrated service delivery reported low absorption for four. This puts several RSSH modules at the top of the "low performing absorption" list. Following this are several modules related to key populations.
 
+# What are the highest absorbing modules across countries?
+```{r high-performing_mods} 
+# Take the 5 highest performing modules per grant on absorption 
+# Then, give each of them a value of 1, and collapse to country-level, and to consortia-level. 
+# What are the highest performing modules? 
+high_performers = data.table() 
+for (g in unique(by_module$grant)){
+  subset = by_module[order(grant, -absorption)][grant==g, .(loc_name, grant, abbrev_mod, absorption)]
+  subset = subset[1:5]
+  high_performers = rbind(high_performers, subset)
+}
+
+high_performers[, count:=1]
+high_performers_by_loc = high_performers[, .(count=sum(count)), by=c('abbrev_mod', 'loc_name')][order(-count)]
+high_performers_by_loc[, label:=as.character(count)]
+high_performers_all = high_performers[, .(count=sum(count)), by=c('abbrev_mod')][order(-count)]
+high_performers_all[, label:=as.character(count)]
+
+ggplot(high_performers_all[!is.na(abbrev_mod)], aes(x=reorder(abbrev_mod, count), y=count, label=label)) + 
+  geom_point() + 
+  geom_text(size=4, hjust=-0.5) + 
+  coord_flip() + 
+  theme_bw(base_size=16) + 
+  scale_y_continuous(breaks=seq(0, 20, by=2), labels=seq(0, 20, by=2)) + 
+  labs(title="What are the highest-performing modules across grants?", y="Number of grants with this module in top 5 highest-absorbing modules", x="Module")
+```
+
+# What are the highest absorbing modules, by grant? 
+```{r high_performers_by_loc} 
+
+ggplot(high_performers_by_loc[!is.na(abbrev_mod)], aes(x=reorder(abbrev_mod, count), y=count, label=label)) + 
+  geom_point() + 
+  geom_text(size=4, hjust=-0.5) + 
+  coord_flip() + 
+  theme_bw(base_size=16) +
+  facet_wrap(~loc_name) + 
+  labs(title="What are the highest-performing modules across grants?", y="Number of grants with this module in top 5 highest-absorbing modules", x="Module")
+```
+
+# What are the highest absorbing interventions across countries?
+```{r high_performing_ints} 
+# Take the 5 highest performing interventions per grant on absorption 
+# Then, give each of them a value of 1, and collapse to country-level, and to consortia-level. 
+# What are the highest performing modules? 
+high_performers = data.table() 
+for (g in unique(by_intervention$grant)){
+  subset = by_intervention[order(grant, -absorption)][grant==g, .(loc_name, grant, abbrev_int, absorption)]
+  subset = subset[1:5]
+  high_performers = rbind(high_performers, subset)
+}
+
+high_performers[, count:=1]
+high_performers_all = high_performers[, .(count=sum(count)), by=c('abbrev_int')][order(-count)]
+high_performers_all[, label:=as.character(count)]
+
+ggplot(high_performers_all[!is.na(abbrev_int) & count>1], aes(x=reorder(abbrev_int, count), y=count, label=label)) + 
+  geom_point() + 
+  geom_text(size=4, hjust=-0.5) + 
+  coord_flip() + 
+  theme_bw(base_size=16) + 
+  scale_y_continuous(breaks=seq(0, 20, by=2), labels=seq(0, 20, by=2)) + 
+  labs(title="What are the highest-performing interventions across grants?", y="Number of grants with this interventions in top 5 highest-absorbing interventions", x="Interventions", caption="*Only showing interventions with counts>1")
+```
+
+# Are there any correlations between the number of activities and absorption? 
+```{r num_activities} 
+#Merge absorption data with budget data to get activity and SR data. 
+budgets = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/final_budgets.rds")
+
+activities_by_int = unique(budgets[, .(grant, grant_period, gf_module, gf_intervention, activity_description)])
+activities_by_int[, count:=1]
+activities_by_int = activities_by_int[, .(num_activities=sum(count)), by=c('grant', 'gf_module', 'gf_intervention')]
+start_rows = nrow(activities_by_int)
+activities_by_int = merge(activities_by_int, by_intervention, by=c('grant', 'gf_module', 'gf_intervention'), all=T) #Absorption is getting inflated here because you're merging on activities - 
+stopifnot(nrow(activities_by_int)!=start_rows)
+
+# Cap absorption to max 1000%. 
+activities_by_int[absorption>1000, absorption:=1000]
+
+# Pull unique observations - you should not recalculate absorption here! 
+activities_by_int = unique(activities_by_int[, .(grant, abbrev_mod, abbrev_int, num_activities, loc_name, absorption)])
+
+ggplot(activities_by_int[!is.na(abbrev_int)], aes(x=num_activities, y=absorption)) + 
+  geom_point() + 
+  theme_bw(base_size=16) + 
+  labs(title="Absorption vs. Number of Activities for each Intervention", caption="*Dataset created from merged budgets and PUDRs\n*Absorption capped at 1000%", x="Number of activities", y="Absorption (%)")
+
+
+
+```
+
+# Is there a correlation between the number of SRs and absorption? 
+```{r num_srs}
+srs_by_int = unique(budgets[grant_period=="2018-2020", .(grant, gf_module, gf_intervention, implementer)])
+srs_by_int[, count:=1]
+srs_by_int = srs_by_int[, .(num_implementers=sum(count)), by=c('grant', 'gf_module', 'gf_intervention')]
+start_rows = nrow(srs_by_int)
+srs_by_int = merge(srs_by_int, by_intervention, by=c('grant', 'gf_module', 'gf_intervention'), all=T) #Absorption is getting inflated here because you're merging on SRs - 
+stopifnot(nrow(srs_by_int)!=start_rows)
+
+# Cap absorption to max 1000%. 
+srs_by_int[absorption>1000, absorption:=1000]
+
+# Pull unique observations - you should not recalculate absorption here! 
+srs_by_int = unique(srs_by_int[, .(grant, abbrev_mod, abbrev_int, num_implementers, loc_name, absorption)])
+
+ggplot(srs_by_int, aes(x=num_implementers, y=absorption)) + 
+  geom_point() + 
+  theme_bw() + 
+  labs(title="Absorption vs. Number of Implementers for each Intervention", caption="*Dataset created from merged budgets and PUDRs\n*Absorption capped at 1000%", x="Number of implementers", y="Absorption (%)")
+
+```
+
+# Which interventions have more than 20 implementers? 
+```{r high_num_implementers}
+kable(srs_by_int[num_implementers>20, .(grant, abbrev_mod, abbrev_int, num_implementers, absorption)], col.names=c('Grant', 'Module', 'Intervention', '# Implementers', "Absorption")) %>%
+  kable_styling(font_size=6)
+```
+
+In the SANRU grant in DRC, there are several interventions that have more than 20 implementers. 
+
+# Does a highly-commoditized grant correspond with higher absorption? 
+```{r commodities}
+```
+
+
+# What are the biggest predictors of high absorption? 
+```{r absorption_regression}
+regression_data = by_intervention[, .(grant, gf_module, gf_intervention, absorption)]
+
+srs_by_int = unique(budgets[grant_period=="2018-2020", .(grant, gf_module, gf_intervention, implementer)])
+srs_by_int[, count:=1]
+srs_by_int = srs_by_int[, .(num_implementers=sum(count)), by=c('grant', 'gf_module', 'gf_intervention')]
+
+activities_by_int = unique(budgets[grant_period=="2018-2020", .(grant, gf_module, gf_intervention, activity_description)])
+activities_by_int[, count:=1]
+activities_by_int = activities_by_int[, .(num_activities=sum(count)), by=c('grant', 'gf_module', 'gf_intervention')]
+
+#Merge all of this together 
+regression_data = merge(regression_data, srs_by_int, by=c('grant', 'gf_module', 'gf_intervention'), all.x=T)
+regression_data = merge(regression_data, activities_by_int, by=c('grant', 'gf_module', 'gf_intervention'), all.x=T)
+
+#Flag commodity interventions
+commodity_ints = c("Condom programming for MSM", "Condom programming for CSW", "Condom programming for IDU", "Condom programming for the general population", "Condom programming for transgender people", "Differentiated antiretroviral therapy service delivery", "Differentiated HIV testing services", "HIV testing adolescents and youth", "HIV testing CSW", "HIV testing for transgender people", "HIV testing IDU", "HIV testing MSM", "HIV testing other KVP", "LLIN: Continuous distribution", "LLIN: Mass campaign") #THESE SHOULD BE REVIEWED
+
+regression_data = merge(regression_data, unique(all_mods), by=c('gf_module', 'gf_intervention'), all=T)
+regression_data[abbrev_int%in%commodity_ints, commodity:=TRUE]
+regression_data[is.na(commodity), commodity:=FALSE]
+
+#Is the PR a government body or not? 
+government = c('SEN-H-CNLS', 'SEN-M-PNLP', 'COD-M-MOH', 'UGA-M-MoFPED', 'COD-H-MOH', 'UGA-H-MoFPED', 'COD-T-MOH', 'SEN-Z-MOH', 'UGA-T-MoFPED')
+community = c('COD-M-SANRU', 'UGA-M-TASO', 'UGA-C-TASO', 'SEN-H-ANCS', 'COD-C-CORDAID')
+
+regression_data[grant%in%government, government_pr:=TRUE]
+regression_data[grant%in%community, government_pr:=FALSE]
+regression_data = regression_data[!is.na(grant)] #How are we even getting these?? 
+stopifnot(nrow(regression_data[is.na(government_pr)])==0)
+
+#Drop out NAs in absorption, and cap absorption to 1000%. 
+regression_data = regression_data[!is.na(absorption)]
+max_absorption = regression_data[!is.infinite(absorption), max(absorption)]
+regression_data[is.infinite(absorption), absorption:=max_absorption]
+```
+
+```{r regression, echo=TRUE}
+model1 = lm(absorption ~ num_implementers + num_activities + commodity + government_pr, data=regression_data)
+mtable1 = mtable('Model 1' = model1, summary.stats = c('R-squared','F','p','N'))
+pander(mtable1)
+
+```
+
 # Finding statements for research question #1
 * In all countries, tuberculosis grants reported the highest absorption numbers. They also have the lowest overall budgets. 
 * Several grants are reporting high absorption numbers for health management information systems. However, 
 * Several grants are reporting low absorption numbers for HMIS and for human resources for health. This means that several RSSH modules are reporting low absorption percentages across grants. 
 * Prevention programs for injectable drug users and commercial sex workers also had low absorption across several grants. 
-
-# Additional analyses for this section: 
-* Is there a pattern in cross-country module-level absorption? 
-* Try visualizing these graphs as a jittered scatterplot, with the vertical axis being modules, and color by grant disease. 
 
 # Research questions 
 Using 2019 PUDRs, we wanted to know: 

@@ -212,7 +212,7 @@ absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stac
   
   # Options 
   if (barLabels) {
-    p = p + geom_text(aes(label=barLabel), data=collapse, vjust=0, size=5, nudge_y=3)  
+    p = p + geom_text(aes(label=barLabel), data=collapse, vjust=0, hjust=0, size=5, nudge_y=3)  
   } 
   if (trimAbsorption){
     baseCaption = paste0(baseCaption, "*Absorption capped at 150%\n")
