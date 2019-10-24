@@ -252,11 +252,12 @@ absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stac
 # endYear: What date would you like to end data at? 
 # 
 
-funding_landscape = function(countryName, diseaseName, startYear, endYear, includeGHE=FALSE, altCaption=NULL, altTitle=NULL, altSubtitle=NULL){
+funding_landscape = function(graphType, countryName, diseaseName, startYear, endYear, includeGHE=FALSE, altCaption=NULL, altTitle=NULL, altSubtitle=NULL){
   require(data.table) 
   require(ggplot2)
   
   #Validation checks
+  stopifnot(graphType%in%c('proportion', 'ribbon'))
   stopifnot(countryName%in%c('cod', 'gtm', 'sen', 'uga'))
   stopifnot(diseaseName%in%c('hiv', 'tb', 'malaria'))
   stopifnot(is.numeric(startYear) & is.numeric(endYear))
@@ -309,12 +310,21 @@ funding_landscape = function(countryName, diseaseName, startYear, endYear, inclu
   } 
   
   #Generate plot 
-  funding_landscape = ggplot(data = collapse, aes(x = year, y = disbursement, fill = channel_agg)) + 
-    geom_ribbon(aes(ymin = 0, ymax = disbursement), position = "stack") + 
-    theme_bw(base_size = 18) + theme(legend.title = element_blank())+
-    scale_y_continuous(labels = scales::dollar) +
-    scale_fill_brewer(palette = "RdYlBu") +
-    labs(x = "Year", y = "Disbursement", title = altTitle, subtitle=altSubtitle, caption=altCaption)
+  if (graphType=='ribbon'){
+    funding_landscape = ggplot(data = collapse, aes(x = year, y = disbursement, fill = channel_agg)) + 
+      geom_ribbon(aes(ymin = 0, ymax = disbursement), position = "stack") + 
+      theme_bw(base_size = 18) + theme(legend.title = element_blank())+
+      scale_y_continuous(labels = scales::dollar) +
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(x = "Year", y = "Disbursement", title = altTitle, subtitle=altSubtitle, caption=altCaption)
+  } else if (graphType=='proportion'){
+    funding_landscape = ggplot(data = collapse, aes(x = year, y = disbursement, fill = channel_agg)) + 
+      geom_bar(stat="identity", position="fill") + 
+      theme_bw(base_size = 18) + theme(legend.title = element_blank())+
+      scale_y_continuous(labels=scales::percent) +
+      scale_fill_brewer(palette = "RdYlBu") +
+      labs(x = "Year", y = "Percentage of annual disbursement", title = altTitle, subtitle=altSubtitle, caption=altCaption)
+  }
   
   return(funding_landscape)
   

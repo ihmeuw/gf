@@ -20,6 +20,9 @@ options(scipen=15)
 
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
 
+#Source graphing functions
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
+
 #Read in absorption data 
 gtm = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/GTM/prepped_data/absorption_gtm.rds")
 gtm = gtm[grant_period%in%c('2018-2018', '2018-2020') | (grant=="GTM-T-MSPAS" & grant_period=="2016-2019" & semester=="Semester 5")]
@@ -207,21 +210,29 @@ p1 = ggplot(rssh_by_int, aes(x=int_factor, y=absorption, fill=abbrev_mod, label=
 \newpage
 # 2. Analyses to support deep dives
 ## TB laboratory systems and case diagnosis spending 
-```{r tb_deep_dive} 
-subset = by_intervention[grant=="GTM-T-MSPAS (2016-2019)" & abbrev_mod=="MDR-TB"]
+```{r tb_deep_dive, fig.height=13} 
+plot_data = budgets[grant_disease=="tb" & abbrev_int=="Case detection and diagnosis", .(budget=sum(budget, na.rm=T)), by=c('abbrev_mod', 'start_date')]
+plot_data[abbrev_mod=="Care and prevention", abbrev_mod:="TB care and prevention"]
+p1 = ggplot(plot_data, aes(x=start_date, y=budget, color=abbrev_mod)) + 
+  geom_point() + 
+  geom_line() + 
+  theme_bw() + 
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Funding for case detection and diagnosis over time", x="Date", y="Module", color="Module")
+
+subset = by_intervention[grant=="GTM-T-MSPAS (2016-2019)" & abbrev_int=="Case detection and diagnosis"]
 subset[, label2:=dollar(budget)]
-ggplot(subset, aes(x=abbrev_int, y=budget, label=label2)) + 
+p2 = ggplot(subset, aes(x=abbrev_mod, y=budget, label=label2)) + 
   geom_bar(stat="identity", fill=unique(subset$grant_color)) + 
   theme_bw(base_size=16) + 
   geom_text(size=4, hjust=0) + 
   scale_y_continuous(labels=scales::dollar, limits=c(0, 175000)) + 
-  labs(title="MDR-TB budget for GTM-T-MSPAS in most recent PUDR", x="Intervention", y="Budget", caption="*Expenditure was $0 for all modules during this period") + 
+  labs(title="Case detection and diagnosis budget for GTM-T-MSPAS \nin most recent PUDR", x="Intervention", y="Budget", caption="*Expenditure was $0 for all modules during this period") + 
   coord_flip() 
+
+grid.arrange(p1, p2, ncol=1)
 ```
 
-The TB grant hasn't recorded any expenditure yet, so we can't report on any absorption numbers. However, in the PUDR budget, there is some money allocated to MDR-TB. 
-
-The next step here would be to review the activities in the budget under this module. 
 
 \newpage 
 ## Malaria spending, both on bednets and otherwise
@@ -238,7 +249,7 @@ p1 = ggplot(mal_budgets, aes(x=abbrev_int, y=budget, label=label)) +
   labs(title="Budget for malaria interventions from 2014-2021", x="Intervention", y="Budget", caption="*Totals show budget for entire grant period") 
 ```
 
-```{r bednets_over_time, fig.height=15} 
+```{r bednets_over_time, fig.height=14} 
 bednet_ints = c("LLIN: Continuous distribution", "LLIN: Mass campaign") 
 bednet_budgets = budgets[abbrev_int%in%bednet_ints, .(budget=sum(budget, na.rm=T)), by='start_date']
 
@@ -254,10 +265,8 @@ grid.arrange(p1, p2, ncol=1)
 
 ## HIV Testing Absorption - to support SIGSA/SIGPRO analyses 
 ```{r sigsa1} 
-source("C:/Users/elineb/Documents/gf/resource_tracking/visualizations/graphing_functions.r")
-
 #Make funding landscape graph 
-funding_landscape("gtm", "hiv", 2010, 2017, altCaption = "*Other DAH data only available until 2017", includeGHE=TRUE)
+funding_landscape("ribbon", "gtm", "hiv", 2010, 2017, altCaption = "*Other DAH data only available until 2017", includeGHE=TRUE)
 ```
 
 ```{r sigsa2}
@@ -265,7 +274,7 @@ funding_landscape("gtm", "hiv", 2010, 2017, altCaption = "*Other DAH data only a
 p2 = absorption_by_loc_disease("gtm", "hiv", "2018-2020", byModule=TRUE, grantName="GTM-H-INCAP", barLabels=TRUE)
 ```
 
-```{r sigsa3, fig.height=15}
+```{r sigsa3, fig.height=13}
 #Within key populations, what % went to testing? 
 dt = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/GTM/prepped_data/absorption_gtm.rds")
 testing_codes = c("H2_7", "H3_7", "H4_6", "H5_7", "H6_7", "H7_3", "H8_5", "H14", "H14_1")
@@ -289,3 +298,22 @@ p3 = ggplot(test_data, aes(x=gf_intervention, y=absorption, fill=grant, label=pa
 grid.arrange(p2, p3, ncol=1)
 
 ```
+
+One finding here is that even though there is funding for several key populations in the INCAP grant, not all of them are being targeted for HIV testing. INCAP only budgeted for MSM- and transgender people-specific testing, and they've only spent money on testing for men who have sex with men so far. 
+
+## Funding landscape graphs - can support STC conclusions in Enrique's financial analysis
+```{r funding_landscape1} 
+funding_landscape("proportion", "gtm", "hiv", 2010, 2017, altCaption = "*Other DAH data only available until 2017", includeGHE=TRUE)
+```
+
+```{r funding_landscape2} 
+p1 = funding_landscape("proportion", "gtm", "tb", 2010, 2017, altCaption = "*Other DAH data only available until 2017", includeGHE=TRUE)
+```
+
+```{r funding_landscape3, fig.height=14} 
+p2 = funding_landscape("proportion", "gtm", "malaria", 2010, 2017, altCaption = "*Other DAH data only available until 2017", includeGHE=TRUE)
+
+grid.arrange(p1, p2, ncol=1)
+```
+
+For all three diseases, it's clear that government health expenditure makes up the majority of funding, and that this amount has been increasing over time. This conclusion is especially pronounced for TB and malaria, where the Global Fund and the government are the only major donors. 
