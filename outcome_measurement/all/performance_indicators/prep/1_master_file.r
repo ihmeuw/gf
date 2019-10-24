@@ -21,7 +21,7 @@ rm(list=ls())
 # run setup code (load file paths and packages)
 repo_root = "C:/Users/elineb/Documents/gf/" #Change to your repository
 setwd(repo_root)
-source('./process_evaluation/prep/set_up_r.r')
+source('./outcome_measurement/all/performance_indicators/prep/set_up_r.r')
 source('./resource_tracking/prep/_common/shared_functions.r', encoding="UTF-8")
 source('./resource_tracking/prep/_common/load_master_list.r', encoding="UTF-8")
 
@@ -36,7 +36,7 @@ prep_1a_disagg = TRUE #Set to true if you want to extract disaggregated impact o
 prep_1b = TRUE #Set to true if you want to extract coverage indicators 1B. 
 prep_1b_disagg = TRUE #Set to true if you want to extract disaggregated coverage indicators 1B. 
 
-verbose = FALSE #Set to true if you want to print more detailed error messages. 
+verbose = TRUE #Set to true if you want to print more detailed error messages. 
 
 #-----------------------------------------------
 # 1. Prep individual countries 
