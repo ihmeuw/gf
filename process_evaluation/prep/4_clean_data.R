@@ -104,36 +104,19 @@ DT$gf_result_n <- as.numeric(DT$gf_result_n)
 DT$gf_result_d <- as.numeric(DT$gf_result_d)
 DT$`gf_result_%` <- as.numeric(DT$`gf_result_%`)
 
-# gather any_achievement_ratio
-DT$any_achievement_ratio <- NA
-DT$any_achievement_ratio <-ifelse(is.na(DT$gf_result_achievement_ratio),
-                                  ifelse(is.na(DT$lfa_result_achievement_ratio), 
-                                         ifelse(is.na(DT$pr_result_achievement_ratio), NA, 
-                                                DT$pr_result_achievement_ratio), 
-                                         DT$lfa_result_achievement_ratio),
-                                  DT$gf_result_achievement_ratio)
-
-# verify achievement_ratios
-DT$ihme_target_n <- NA
-DT$ihme_target_n <- ifelse(is.na(DT$`target_%`), DT$target_n, DT$`target_%`) #EMILY does the % symbol not allow you to type it as a variable name without ticks? That's an easy fix
-
-DT$ihme_result_n <- NA
-DT$ihme_result_n <- ifelse(is.na(DT$`lfa_result_%`), DT$lfa_result_n, DT$`lfa_result_%`)
-
-# calculate ihme_results_achievement_ratio
-DT$ihme_result_achievement_ratio <-NA
-DT$ihme_target_n <- as.numeric(DT$ihme_target_n)
-DT$ihme_result_n <- as.numeric(DT$ihme_result_n)
-DT$ihme_result_achievement_ratio <- DT$ihme_result_n/DT$ihme_target_n
+#EMILY does the % symbol not allow you to type it as a variable name without ticks? That's an easy fix
+# FRANCISCO deleted a few lines of code which I needed to expand on--those are in a seperate script for now
 
 # create variable with indicator code (makes cross--country comparisons easier) can merge short description using this code later
 DT = DT[, c("indicator_code", "indicator_description", "indicator_misc", "indicator_misc2") := tstrsplit(indicator, ": ", fixed=TRUE)]
 DT = DT[,c("indicator_description", "indicator_misc", "indicator_misc2"):=NULL]
 
 # read and merge codebook to standardize names
-codebook <- fread("C:/Users/frc2/Documents/gf/special_assessments/synthesis/2019_multicountry_analyses/indicators_codebook.csv") 
+# codebook <- fread("C:/Users/frc2/Documents/gf/special_assessments/synthesis/2019_multicountry_analyses/indicators_codebook.csv") 
 # EMILY use a path built up from global variables. 
-DT1 <- merge(DT, codebook, by="indicator_code", all.x = TRUE)
+#DT1 <- merge(DT, codebook, by="indicator_code", all.x = TRUE)
+
+# FRANCISCO - created a seperate script to merge the two codebooks that are used for this dataset
 
 # clean and standardize data source names across PUDRs
 # create spreadsheet of data source names to standardize

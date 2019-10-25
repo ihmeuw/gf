@@ -1,0 +1,9 @@
+Variable,Description
+brief_description,"Short description of variable names, helpful for plotting"
+any_result_value,"Gathers any available result in order of GF, LFA, PR, or NA"
+ihme_result_achievement_ratio,Re-calculates achievement ratio to be: any_result_value/target_value
+target_value,"Is the same as % target reported, unless indicator is not a proportion or only the numerator reported"
+pr_result_value,"Is the same as % result reported, unless indicator is not a proportion or only the numerator reported"
+lfa_result_value,"Is the same as % lfa result reported, unless indicator is not a proportion or only the numerator reported"
+gf_result_value,"Is the same as % gf reported, unless indicator is not a proportion or only the numerator reported"
+completeness_rating,Indicates how much data is available for each indicator
