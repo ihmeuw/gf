@@ -366,11 +366,12 @@ stopifnot(ncol(dt1) == (ncol(dt)-3))
 
 #Assign name suffixes - all variables in outcomes data are proportions, and all variables in impact data are rates. 
 old_names1 = names(dt1)[grepl("proportion", tolower(names(dt1)))]
-new_names1 = paste0(old_names1, "_outc")
+new_names1 = paste0(old_names1, "_out")
 old_names2 = names(dt1)[grepl("rate", tolower(names(dt1)))]
-new_names2 = paste0(old_names1, "_imp")
+new_names2 = paste0(old_names2, "_imp")
 
-setnames(dt1, c(old_names1, old_names2), c(new_names1, new_names2)) 
+setnames(dt1, old_names1, new_names1)
+setnames(dt1, old_names2, new_names2)
 #-----------------------------------------------------
 # Check to make sure you're still uniquely identifying data 
 #-----------------------------------------------------

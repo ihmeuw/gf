@@ -127,7 +127,7 @@ for (v in allVars){
 
 #------------------------------------------------------------
 # Drop variables that are not being used in model object before cumulative sum. "
-modelVarSubset = modelVars[!modelVars%in%c("gf_mdrtb:gf_rssh", "gf_tbhiv:gf_rssh", "gf_tb:gf_rssh")] #Don't worry about the interaction terms. 
+modelVarSubset = modelVars[!modelVars%in%c("gf_mdrtb*gf_rssh", "gf_tbhiv*gf_rssh", "gf_tb*gf_rssh")] #Don't worry about the interaction terms. 
 modelVarSubset = c(modelVarSubset, 'gf_rssh')
 missingVars = modelVarSubset[!modelVarSubset%in%names(data)]
 if (length(missingVars)!=0) print("There are missing model variables!")

@@ -69,7 +69,6 @@ parsedModel = lavParseModelString(model)
 lhs = parsedModel$lhs
 rhs = parsedModel$rhs
 modelVars = data.table(lhs=lhs, rhs=rhs)
-modelVars[grep("gf_rssh_cumulative", rhs), rhs:="gf_rssh_cumulative"]
 finVars = unique(redistribution_mat$input_var)
 
 # For each financial variable, get a vector of what variables it's leading to in the model, 
@@ -128,7 +127,7 @@ for(i in 1:nrow(redistribution_mat)) {
 	merge_file[, (v):=get(v)*prop]
 	
 	# test that it worked using original data
-	orig = sum(resource_tracking[[v]], na.rm=TRUE)
+	orig = sum(resource_tracking[date<=2018][[v]], na.rm=TRUE) #Need to limit this to 2018, because RSSH is now going through 2019! 
 	new = sum(merge_file[[v]], na.rm=TRUE)
 	if (abs(orig-new)>.1) stop(paste0("Orig:", orig, " New:", new, 
 	                                  " are not close for variable ", v, " (index ", i, ")")) 
