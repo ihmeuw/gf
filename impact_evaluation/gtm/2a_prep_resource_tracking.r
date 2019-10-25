@@ -143,15 +143,12 @@ rt_wide <- merge(rt_wide, ghe_wide, by=c('date'), all=T)
 rt_wide = rt_wide[date>=START_YEAR]
 
 # # compute lags - all financial variables should be lagged 6 months. DP 7.12.19
-rt_wide[, date:=date-0.5]
-
 #EL 10/2/2019 - all RSSH variables should be lagged a total of one year, so lag this variable another 6 months. 
 rssh = rt_wide[, .(date, gf_rssh)]
-rssh[, date:=date-0.5]
+rssh[, date:=date+0.5]
 rt_wide = rt_wide[, -c('gf_rssh')] #Drop this variable, and re-merge it in after it's lagged. 
 
 rt_wide = merge(rt_wide, rssh, by='date', all=T)
-
 #Replace NAs with 0's at this point unless we hear differently from Guillermo. 
 # cols = names(rt_wide)[!names(rt_wide)=='date']
 # for (c in cols) {

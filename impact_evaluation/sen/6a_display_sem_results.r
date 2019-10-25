@@ -56,96 +56,159 @@ p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -0.5, colScaleMax=2, colScaleBreaks = 1)
 
-p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+p6 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
               scaling_factors=NA, standardized=TRUE, 
-              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=2, colScaleBreaks = 1)
+              lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -100, colScaleMax=100, colScaleBreaks = 50)
 
-# ----------------------------------------------
-
-
-# Adding a few specific pathways to visualize using 'dim' and 'highlight' options. 
-#MDR pathway 
-
+# community activities pathways
 p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
-              scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, 
-              dim=TRUE, highlight=c('ntr_all_cumulative', 'gueris_taux'))
-
-semGraph(parTable=urFit1, nodeTable=nodeTable1,
-              scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, colScaleMax = 2,
-              dim=TRUE, highlight=c('com_mobsoc_cumulative', 
-                                    'com_cause_cumulative',
-                                    'com_radio_cumulative',
-                                    'tb_tfc_cumulative'
-                                    ))
-
-# cough orienting pathway
-semGraph(parTable=urFit1, nodeTable=nodeTable1,
          scaling_factors=NA, standardized=TRUE,
          lineWidth=1.5, curved=0, tapered=FALSE,
          dim=TRUE, highlight=c('com_mobsoc_cumulative', 
                                'com_cause_cumulative',
                                'com_radio_cumulative',
+                               'com_nom_touss_cumulative',
+                               'com_vad_touss_cumulative',
+                               'gueris_taux'
+         ))
+
+p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+         scaling_factors=NA, standardized=TRUE,
+         lineWidth=1.5, curved=0, tapered=FALSE,
+         dim=TRUE, highlight=c('com_mobsoc_cumulative', 
+                               'com_cause_cumulative',
+                               'com_radio_cumulative',
+                               'com_vad_touss_cumulative',
+                               'tb_cas_id_cumulative'
+         ))
+
+p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+         scaling_factors=NA, standardized=TRUE,
+         lineWidth=1.5, curved=0, tapered=FALSE,
+         dim=TRUE, highlight=c('com_cause_cumulative',
+                               'com_vad_touss_cumulative',
                                'com_nom_touss_cumulative'
          ))
 
-# cough orienting pathway
-semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
          scaling_factors=NA, standardized=TRUE,
          lineWidth=1.5, curved=0, tapered=FALSE,
-         dim=TRUE, highlight=c('tot_genexpert_cumulative',
-                               'lag_exp_T3_cumulative',
-                               'lag_other_dah_T3_cumulative'
-                                ))
+         dim=TRUE, highlight=c('com_cause_cumulative',
+                               'com_vad_touss_cumulative',
+                               'com_enf_ref_cumulative'
+         ))
 
-#Cases notified pathway
-semGraph(parTable=urFit1, nodeTable=nodeTable1,
-              scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, 
-              dim=TRUE, highlight=c('ntr_all_cumulative',
-                                    'tb_tfc_cumulative',
-                                    'com_enf_ref_cumulative',
-                                    'tpm_chimio_enf_cumulative'))
+p11 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+               scaling_factors=NA, standardized=TRUE,
+               lineWidth=1.5, curved=0, tapered=FALSE,
+               dim=TRUE, highlight=c('tb_tfc_cumulative',
+                                     'tb_cas_id_cumulative',
+                                     'tot_genexpert_cumulative'
+               ))
 
-#GHE pathway 
-p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
-              scaling_factors=NA, standardized=TRUE,
-              lineWidth=1.5, curved=0, tapered=FALSE, 
-              dim=TRUE, highlight=c("ghe_tb_cumulative", "Number_of_Cases_Screened_for_MDR_act_cumulative", 
-                                    "Cases_Notified_out_cumulative", "Cases_Started_on_Treatment_out_cumulative", "Firstline_Distributed_act_cumulative", 
-                                    "TB_Patients_Tested_for_HIV_act_cumulative"))
+p12 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+               scaling_factors=NA, standardized=TRUE,
+               lineWidth=1.5, curved=0, tapered=FALSE,
+               dim=TRUE, highlight=c('perf_lab',
+                                     'tb_cas_id_cumulative',
+                                     'tot_genexpert_cumulative'
+               ))
 
+#p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+#              scaling_factors=NA, standardized=TRUE, 
+#              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=2, colScaleBreaks = 1)
+
+# ----------------------------------------------
 # -----------------------------------
 # Save output
 print(paste('Saving:', outputFile6a)) 
 pdf(outputFile6a, height=6, width=9)
-# print(p1)
-# print(p2)
-# print(p3)
-# print(p4)
-#print(p5)
-#print(p5_nolab)
-#print(p7)
-#print(p8)
-#print(p9)
-# print(p6)
+
+print(p5)
+print(p6)
+print(p7)
+print(p8)
+print(p9)
+print(p10)
+print(p11)
+print(p12)
+
 dev.off()
 
 # save a time-stamped version for reproducibility
 archive(outputFile6a)
-# -----------------------------------
-# 
-# #Save just the GLM diagrams with correlation coefficients as PNGs. 
-ggsave("J:/Project/Evaluation/GF/impact_evaluation/sen/visualizations/model_first_half.png", p5, height=10, width=13)
-ggsave("J:/Project/Evaluation/GF/impact_evaluation/sen/visualizations/model_second_half.png", p6, height=10, width=13)
 
-#sep_terg_save = "J:/Project/Evaluation/GF/impact_evaluation/sen/visualizations/september_terg_presentation/"
-#Save the specific graphics for reports in their own folder. 
-#ggsave(paste0(sep_terg_save, "model_first_half_coefficients.png"), p5, height=10, width=13)
-#ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nolab, height=10, width=13)
-# ggsave(paste0(sep_terg_save, "model_second_half_coefficients.png"), p6, height=10, width=13)
-# ggsave(paste0(sep_terg_save, "model_second_half_coefficients_nolab.png"), p6_nolab, height=10, width=13)
-#ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
-#ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
-#ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)
+# Adding a few specific pathways to visualize using 'dim' and 'highlight' options. 
+##MDR pathway 
+#
+#p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+#              scaling_factors=NA, standardized=TRUE,
+#              lineWidth=1.5, curved=0, tapered=FALSE, 
+#              dim=TRUE, highlight=c('ntr_all_cumulative', 'gueris_taux'))
+#
+#semGraph(parTable=urFit1, nodeTable=nodeTable1,
+#              scaling_factors=NA, standardized=TRUE,
+#              lineWidth=1.5, curved=0, tapered=FALSE, colScaleMax = 2,
+#              dim=TRUE, highlight=c('com_mobsoc_cumulative', 
+#                                    'com_cause_cumulative',
+#                                    'com_radio_cumulative',
+#                                    'tb_tfc_cumulative'
+#                                    ))
+#
+## cough orienting pathway
+#semGraph(parTable=urFit1, nodeTable=nodeTable1,
+#         scaling_factors=NA, standardized=TRUE,
+#         lineWidth=1.5, curved=0, tapered=FALSE,
+#         dim=TRUE, highlight=c('com_mobsoc_cumulative', 
+#                               'com_cause_cumulative',
+#                               'com_radio_cumulative',
+#                               'com_nom_touss_cumulative'
+#         ))
+#
+## cough orienting pathway
+#semGraph(parTable=urFit1, nodeTable=nodeTable1,
+#         scaling_factors=NA, standardized=TRUE,
+#         lineWidth=1.5, curved=0, tapered=FALSE,
+#         dim=TRUE, highlight=c('tot_genexpert_cumulative',
+#                               'lag_exp_T3_cumulative',
+#                               'lag_other_dah_T3_cumulative'
+#                                ))
+#
+##Cases notified pathway
+#semGraph(parTable=urFit1, nodeTable=nodeTable1,
+#              scaling_factors=NA, standardized=TRUE,
+#              lineWidth=1.5, curved=0, tapered=FALSE, 
+#              dim=TRUE, highlight=c('ntr_all_cumulative',
+#                                    'tb_tfc_cumulative',
+#                                    'com_enf_ref_cumulative',
+#                                    'tpm_chimio_enf_cumulative'))
+#
+##GHE pathway 
+#p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+#              scaling_factors=NA, standardized=TRUE,
+#              lineWidth=1.5, curved=0, tapered=FALSE, 
+#              dim=TRUE, highlight=c("ghe_tb_cumulative", "Number_of_Cases_Screened_for_MDR_act_cumulative", 
+#                                    "Cases_Notified_out_cumulative", "Cases_Started_on_Treatment_out_cumulative", "Firstline_Distributed_act_cumulative", 
+#                                    "TB_Patients_Tested_for_HIV_act_cumulative"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

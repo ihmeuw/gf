@@ -82,7 +82,7 @@ pooled_means[, upper:=est+(1.96*se)]
 # ITN, ACT and RDT shipment costs
 commodity_costs = NULL
 for(c in c('ITN','RDT','ACT')) {
-	output = paste0(c, '_received_cumulative_pc')
+	output = paste0(c, '_received_cumulative')
 	commodity_cost = pooled_means[lhs==output,c('label_rhs','est','se'), with=F]
 	commodity_cost = commodity_cost[, .(est=sum(est), se=mean(se))]
 	commodity_cost[, lower:=est+(1.96*se)]

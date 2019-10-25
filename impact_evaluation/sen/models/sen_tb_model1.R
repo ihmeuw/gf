@@ -4,30 +4,32 @@
 model = '
     # linkage 1 regressions
     
+    tb_vih_cumulative ~ lag_exp_T2_cumulative
+    
     com_mobsoc_cumulative ~ lag_exp_T1_5_cumulative
     com_cause_cumulative ~ lag_exp_T1_5_cumulative
+    com_vad_touss_cumulative ~ lag_exp_T1_5_cumulative
     com_radio_cumulative ~ lag_exp_T1_5_cumulative
-    tot_genexpert_cumulative ~ lag_other_dah_T1_1_cumulative + lag_exp_T1_1_cumulative + lag_other_dah_T3_cumulative + lag_exp_T3_cumulative
     
-    # linkage 2 regresions
-    
-    com_enf_ref_cumulative ~ lag_exp_T1_5_cumulative
-    com_nom_touss_cumulative ~ lag_exp_T1_5_cumulative + com_mobsoc_cumulative + com_cause_cumulative + com_radio_cumulative
     perf_lab ~ lag_other_dah_T1_1_cumulative + lag_exp_T1_1_cumulative
+
+    # linkage 2 regresions
+    tb_vih_arv_cumulative ~ tb_vih_cumulative
+    com_enf_ref_cumulative ~ com_cause_cumulative + com_vad_touss_cumulative
+    com_nom_touss_cumulative ~ com_cause_cumulative  + com_vad_touss_cumulative
+    tb_cas_id_cumulative ~ com_mobsoc_cumulative + com_cause_cumulative + com_vad_touss_cumulative + com_radio_cumulative + perf_lab + lag_other_dah_T1_1_cumulative + lag_exp_T1_1_cumulative + com_nom_touss_cumulative
+    tot_genexpert_cumulative ~ com_nom_touss_cumulative + lag_other_dah_T1_1_cumulative + lag_exp_T1_1_cumulative + lag_other_dah_T3_cumulative + lag_exp_T3_cumulative + perf_lab
+    dx_count_cumulative ~ lag_exp_T3_cumulative + lag_other_dah_T3_cumulative + tot_genexpert_cumulative
     
     # linkage 3 regressions
     
-    ntr_all_cumulative ~ tb_tfc_cumulative + lag_other_dah_T1_2_cumulative + lag_exp_T1_2_cumulative
-    tb_tfc_cumulative ~ com_mobsoc_cumulative + com_cause_cumulative + com_radio_cumulative + com_nom_touss_cumulative+ lag_other_dah_T1_1_cumulative + lag_exp_T1_1_cumulative + perf_lab+ tot_genexpert_cumulative
-    dx_count_cumulative ~ lag_exp_T3_cumulative + lag_other_dah_T3_cumulative + tot_genexpert_cumulative + lag_other_dah_T1_1_cumulative + lag_exp_T1_1_cumulative
-    tb_vih_arv_cumulative ~ lag_exp_T2_cumulative
-
+    tb_tfc_cumulative ~ tb_cas_id_cumulative + tot_genexpert_cumulative
+    
     # linkage 4 regressions
     
-    gueris_taux ~ ntr_all_cumulative
-    tpm_chimio_enf_cumulative ~ com_enf_ref_cumulative
-    mdr_tx_rate ~ dx_count_cumulative
-    tbvih_arvtx_rate ~ tb_vih_arv_cumulative
+    lead_gueris_taux ~ tb_tfc_cumulative + tb_vih_arv_cumulative + com_mobsoc_cumulative + com_cause_cumulative + com_vad_touss_cumulative + com_radio_cumulative
+    lead_tpm_chimio_enf_cumulative ~ com_enf_ref_cumulative
+    lead_mdr_success_rate ~ dx_count_cumulative
     
     # fixed variances
     
@@ -35,5 +37,3 @@ model = '
 
     # latent variable
 '
-
-

@@ -68,16 +68,12 @@ dt4$age <- gsub("ans","",dt4$age)
 dt4$age <- gsub('a', '', dt4$age)
 dt4$age <- gsub("1ns", "", dt4$age)
 dt4$age[which(dt4$age=="11 mois")] <- 1
+
 # remove whitespace from numbers
 dt4[, age:= trimws(age)]
 
 # change values to numeric
 dt4[, age:=as.numeric(dt4$age)]
-
-# change values to date
-dt4[,date_diag:=as.Date(dt4$date_diag, "%m/%d/%Y")]
-dt4[,date_trait:=as.Date(dt4$date_trait, "%m/%d/%Y")]
-dt4[,sexe:=factor(dt4$sexe)]
 
 # make region names consistent
 dt4$region[which(dt4$region=="Dakar")] <- "DAKAR"
@@ -117,54 +113,60 @@ dt4$regime[which(dt4$regime=="long")] <- "Long"
 dt4$regime[which(dt4$regime=="court")] <- "Court"
 dt4$regime[which(dt4$regime=="COURT")] <- "Court"
 dt4$regime[which(dt4$regime=="LONG")] <- "Long"
-#------------------------------------------------
 
-##################################################
-# Impute missing values
-#library(Amelia)
-#missmap(dt4)
+# clean up text in date columns
+dt4$date_diag[which(dt4$date_diag=="NP")] <-NA
+dt4$date_diag[which(dt4$date_diag=="NF")] <-NA
+dt4$date_trait <- gsub("x/", "", dt4$date_trait)
+dt4$date_trait <- gsub("X/", "", dt4$date_trait)
+dt4$date_trait <- gsub("20141", "2014", dt4$date_trait)
+dt4$date_trait <- gsub("07/2018", "07/01/2018", dt4$date_trait)
+dt4$date_trait <- gsub("01/2016", "01/01/2018", dt4$date_trait)
+dt4$date_trait <- gsub("1-Aug-17", "08/01/2018", dt4$date_trait)
+dt4$date_trait <- gsub("1-août-18", "08/01/2018", dt4$date_trait)
+dt4$date_trait <- gsub("17 fev 2017", "02/17/2017", dt4$date_trait)
+dt4$date_trait <- gsub("3 fev 2017", "02/03/2017", dt4$date_trait)
+dt4$date_trait <- gsub("3 fev 2017", "02/03/2017", dt4$date_trait)
+dt4$date_trait <- gsub("31/08/208	", "08/31/2018", dt4$date_trait)
+dt4$date_trait <- gsub("14-Apr-17", "04/17/2017", dt4$date_trait)
+dt4$date_trait <- gsub("11-May-17", "05/11/2017", dt4$date_trait)
+dt4$date_trait <- gsub("15-juil.-18", "07/15/2018", dt4$date_trait)
+dt4$date_trait <- gsub("16-mars-18", "03/16/2018", dt4$date_trait)
+dt4$date_trait <- gsub("16 fev 2017", "02/16/2018", dt4$date_trait)
+dt4$date_trait <- gsub("16 fev 2017", "02/16/2018", dt4$date_trait)
+dt4$date_trait <- gsub("16/072018", "16/07/2018", dt4$date_trait)
+dt4$date_trait <- gsub("17-Mar-17", "03/17/2017", dt4$date_trait)
+dt4$date_trait <- gsub("17-May-17", "05/17/2017", dt4$date_trait)
+dt4$date_trait <- gsub("17 fev 2017", "02/17/2017", dt4$date_trait)
+dt4$date_trait <- gsub("18-juil.-18", "07/18/2018", dt4$date_trait)
+dt4$date_trait <- gsub("18-Sep-17", "09/18/2017", dt4$date_trait)
+dt4$date_trait <- gsub("19-juil.-18", "07/19/2018", dt4$date_trait)
+dt4$date_trait <- gsub("7-Mar-17", "03/07/2017", dt4$date_trait)
+dt4$date_trait <- gsub("7-Jan-17", "07/07/2017", dt4$date_trait)
+dt4$date_trait <- gsub("4-May-17", "07/07/2017", dt4$date_trait)
+dt4$date_trait <- gsub("30-Jun-17", "07/07/2017", dt4$date_trait)
+dt4$date_trait <- gsub("3-Mar-17", "03/03/2017", dt4$date_trait)
+dt4$date_trait <- gsub("29-Aug-17", "08/29/2017", dt4$date_trait)
+dt4$date_trait <- gsub("26/12 2015", "12/26/2015", dt4$date_trait)
+dt4$date_trait <- gsub("26-juil.-18", "07/26/2018", dt4$date_trait)
+dt4$date_trait <- gsub("25-May-17", "05/25/2017", dt4$date_trait)
+dt4$date_trait <- gsub("24-Mar-17", "03/24/2017", dt4$date_trait)
+dt4$date_trait <- gsub("24-juil.-18", "07/24/2018", dt4$date_trait)
+dt4$date_trait <- gsub("23-Jan-17", "01/23/2017", dt4$date_trait)
+dt4$date_trait <- gsub("22 fev 2017", "02/22/2017", dt4$date_trait)
+dt4$date_trait <- gsub("22-May-17", "05/22/2017", dt4$date_trait)
+dt4$date_trait <- gsub("202/03/2017", "02/03/2017", dt4$date_trait)
+dt4$date_trait <- gsub("20-Mar-17", "03/20/2017", dt4$date_trait)
+dt4$date_trait <- gsub("16/07/2018", "07/16/2018", dt4$date_trait)
+dt4$date_trait <- gsub("11/004/2018", "11/04/2018", dt4$date_trait)
+dt4$date_trait <- gsub("22-Jun-17", "06/22/2017", dt4$date_trait)
+dt4$date_trait <- gsub("25-Aug-17", "08/25/2017", dt4$date_trait)
+dt4$date_trait <- gsub("28-Aug-17", "08/28/2017", dt4$date_trait)
+dt4$date_trait <- gsub(" ", "", dt4$date_trait)
 
-##################################################
-
-
-##################################################
-# Get counts using datatable of treated and diagnosed
-
-
-# Generate counts of MDR-TB cases diagnoses by region and quarter
-dt5 <- dt4
-dt5$dx_count <- 1
-
-# get count of those that started either treatment
-dt5$tx_count <- NA
-dt5$tx_count[which(dt5$regime=="Long" | dt5$regime=="Court")] <- 1
-dt5$tx_count[which(dt5$resultat=="Gueris")] <- 1
-dt5$tx_count[which(is.na(dt5$tx_count))] <- 0
-
-# use either the date of treatment or date of diagnosis to assign values
-dt5$date_either <- ifelse(is.na(dt5$date_diag), dt5$date_trait, dt5$date_diag)
-
-# restore the date attribute
-class(dt5$date_either) <- class(dt5$date_trait)
-
-# subset to necessary data
-dt6 <- dt5[,.(region, date_either, dx_count, tx_count)]
-
-# add quarter and year information
-dt6[, quarter:=quarter(date_either)]
-dt6[, year:=year(date_either)]
-dt6[, date_either:=NULL]
-
-#Create date variable
-dt6[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-dt6[, date:=year+quarter]
-
-# Calcuate how many diagnosed and how many treated
-dt7 <- dt6[,lapply(.SD, sum), by=c('region', 'date'),.SDcols=c("dx_count", "tx_count")]
-
-# calculate treatment rate
-dt7$mdr_tx_rate <- dt7$tx_count/dt7$dx_count
+# remove unnessary variables
+dt4 <- dt4[,patient:=NULL]
 
 # save file
-saveRDS(dt7, outputFile2c)
+saveRDS(dt4, outputFile2c)
 archive(outputFile2c)

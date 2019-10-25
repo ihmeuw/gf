@@ -91,12 +91,15 @@ pooled_means1[, upper:=est+(1.96*se)]
 # Display some statistics
 
 # activties
-activityVars <- c('com_radio_cumulative', 'com_cause_cumulative', 
-                  'com_enf_ref_cumulative', 'com_nom_touss_cumulative',
+activityVars <- c('tb_vih_cumulative', 
+                  'com_radio_cumulative', 
+                  'com_cause_cumulative', 
                   'com_mobsoc_cumulative',
+                  'com_vad_touss_cumulative',
                   'tot_genexpert_cumulative', 
-                  'dx_count_cumulative', 'tb_vih_arv_cumulative',
-                  'ntr_all_cumulative', 'tb_tfc_cumulative', 'perf_lab')
+                  'perf_lab',
+                  'dx_count_cumulative',
+                  'tb_cas_id_cumulative')
 
 output <- data.table()
 
@@ -120,10 +123,14 @@ for(c in activityVars) {
 
 activities <- data.table(rev(activityVars))
 output <- cbind(output, activities)
+
+# add labels to the efficiency estimates
+finishedFile <- merge(output,nodeTable1, by.x='V1', by.y='variable')
+finishedFile <- finishedFile[,c('V1','V5','V6','V7','y','x'):=NULL]
 # -----------------------------------------------
 
-write.csv(output, file = "C:/Users/frc2/Documents/senegal_analyses/tb/modeling/efficiencyestimates.csv")
+write.csv(finishedFile, file = "C:/Users/frc2/Documents/senegal_analyses/tb/modeling/efficiencyestimates.csv")
 
 # save a time-stamped version for reproducibility
-archive(outputFile6b)
+#archive(outputFile6b)
 # ----------------------------------------------

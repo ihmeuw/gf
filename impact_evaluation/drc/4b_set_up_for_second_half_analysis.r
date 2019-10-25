@@ -5,6 +5,7 @@
 # Final pre-processing for "second-half" impact evaluation model
 # This is built for the pilot dataset
 # The current working directory should be the root of this repo (set manually by user)
+# qsub -l archive=TRUE -cwd -N ie_script_4b -l fthread=4 -l m_mem_free=4G -q all.q -P proj_pce -e /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ -o /ihme/scratch/users/davidp6/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/drc/4b_set_up_for_second_half_analysis.r
 # ------------------------------------------------
 
 

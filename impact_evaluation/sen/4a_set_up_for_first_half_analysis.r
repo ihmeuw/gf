@@ -22,7 +22,7 @@ data = readRDS(outputFile3)
 #}
 
 # subset dates now that cumulative variables are computed
-data = data[date>=2010 & date<2018.75]
+data = data[date>=2014 & date<2018.75]
 # -----------------------------------------------------------------
 
 
@@ -64,11 +64,9 @@ data = na.omit(data)
 
 # make cumulative variables
 cumulVars = names(data)[grepl('exp_|other_dah|ghe|oop', names(data))]
-cumulVars = c(cumulVars, 'tb_tfc', 'ntr_rhz', 'ntr_erhz', 'ntr_all', 
-	'ntr_erhz', 'ntr_serhz', 'ntr_cpx', 
-	'com_cause', 'com_radio', 'com_enf_ref', 'com_mobsoc', 
-	'com_nom_touss', 'com_enf_ref', 'tb_vih_arv', 'tot_genexpert',
-	'tb_vih_arv', 'tpm_chimio_enf', 'tpm_chimio_pvvih', 'dx_count')
+cumulVars = c(cumulVars, 'tb_tfc', 'com_cause', 'com_radio', 'com_enf_ref', 'com_mobsoc', 'com_vad_touss',
+	'com_nom_touss', 'com_enf_ref', 'tb_vih', 'tot_genexpert',
+	'tb_vih_arv', 'tpm_chimio_enf', 'tb_cas_id', 'dx_count')
 
 for(v in cumulVars) { 
 	nv = gsub('value_','',v) 
@@ -81,8 +79,7 @@ untransformed = copy(data)
 # update the complVars vector to refer to any proportion variable
 complVars = c('perf_lab', 
               'gueris_taux',
-              'mdr_tx_rate',
-              'tbvih_arvtx_rate')
+              'mdr_success_rate')
 
 # transform completeness variables using approximation of logit that allows 1's and 0's
 # (Smithson et al 2006 Psychological methods "A better lemon squeezer")
@@ -109,6 +106,14 @@ lagVars = names(data)[grepl('exp_|other_dah|ghe|oop', names(data))]
 for(v in lagVars) { 
 	data[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='region']
 	untransformed[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='region']
+}
+data = na.omit(data)
+
+# compute leads
+leadVars = c("gueris_taux", "mdr_success_rate", "tpm_chimio_enf_cumulative")
+for(v in leadVars) { 
+  data[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead',n=2), by='region']
+  untransformed[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead',n=2), by='region']
 }
 data = na.omit(data)
 

@@ -49,7 +49,7 @@ library(splitstackshape)
 
 modelVersion1 = 'sen_tb_model1'
 
-START_YEAR = 2000 #If available, what's the earliest year you should model data from? 
+START_YEAR = 2014 #If available, what's the earliest year you should model data from? 
 
 
 # ---------------------------------------------------------------------------------
@@ -157,8 +157,14 @@ outputFile2b = paste0(preppedIeDir, 'prepped_resource_tracking.RDS')
 # output file from 2c_prep_mdrtb_indicators.r
 outputFile2c = paste0(preppedIeDir, 'prepped_tb_mdr_data.RDS')
 
-# output file from 2d_impute_outputs.r
+# output file from 2d_impute_outcomes.r
 outputFile2d = paste0(preppedIeDir, 'imputed_outcomes.RDS')
+
+# output file from 2e_imputations_mdrtb.r
+outputFile2e = paste0(preppedIeDir, 'imputed_mdrtb.RDS')
+
+# output file from 2f_final_data_prep.r
+outputFile2f = paste0(preppedIeDir, 'prepped_outputs.RDS')
  
 # output file from 3_merge_data.R
 outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')
@@ -169,25 +175,16 @@ outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')
  outputFile4a_scratch = paste0(clustertmpDir1, 'first_half_data_pre_model.rdata')
 }
 
-# # output file from 4b_set_up_for_second_half_analysis.r
-outputFile4b = paste0(preppedIeDir, 'second_half_data_pre_model.rdata')
-if (Sys.info()[1]!='Windows') { 
-outputFile4b_scratch = paste0(clustertmpDir1, 'second_half_data_pre_model.rdata')
- }
-
 # output file from 4c and 4d_explore_data.r (graphs)
 outputFile4c = paste0(visIeDir, 'first_half_exploratory_graphs.pdf')
 outputFile4d = paste0(visIeDir, 'second_half_exploratory_graphs.pdf')
  
 # output file from 5a_run_first_half_analysis.R
 outputFile5a = paste0(preppedIeDir, 'first_half_model_results.rdata')
-# 
-# output file from 5b_run_second_half_analysis.r
-outputFile5b = paste0(preppedIeDir, 'second_half_model_results.rdata')
+
 
 # output file from 6_display_results.r
 outputFile6a = paste0(visIeDir, 'sem_diagrams.pdf')
 outputFile6b = paste0(visIeDir, 'bottleneck_analysis.pdf')
-outputFile6c = paste0(visIeDir, 'impact_analysis.pdf')
-outputFile6d = paste0(visIeDir, 'health_zone_effects.pdf')
+outputFile6c = paste0(visIeDir, 'health_zone_effects.pdf')
 # # -----------------------------------------------------------------------------

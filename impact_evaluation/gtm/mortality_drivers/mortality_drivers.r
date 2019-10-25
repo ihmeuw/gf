@@ -85,9 +85,9 @@ setnames(data, c('date','department','municipality','case_notification_rate','mo
 # collapse to department level
 data = merge(data, populations, by.x=c('municipality','date'), by.y=c('COD_MUNI__','year'))
 data = data[, .(mortality_rate=weighted.mean(mortality_rate, population), 
-				case_notification_rate=weighted.mean(case_notification_rate, population),
-				population=sum(population, na.rm=T)), 
-				by=c('date','department')]
+                case_notification_rate=weighted.mean(case_notification_rate, population),
+                population=sum(population, na.rm=T)), 
+            by=c('date','department')]
 # -----------------------------------------------------------------------------------------
 
 # -----------------------------------------------------------------------------------------
@@ -119,8 +119,8 @@ data$tmp = NULL
 
 # collapse to national level
 national = data[, .(mortality_rate=weighted.mean(mortality_rate, population, na.rm=T), 
-				case_notification_rate=weighted.mean(case_notification_rate, population, na.rm=T)), 
-				by=c('date')]
+                    case_notification_rate=weighted.mean(case_notification_rate, population, na.rm=T)), 
+                by=c('date')]
 
 # put rates in per 100,000 population
 national[, mortality_rate:=mortality_rate*100000]
@@ -145,8 +145,8 @@ data$case_notification_rate_sum = NULL
 
 # define smithsonTransform function
 smithsonTransform = function(x) { 
-	N=length( x[!is.na(x)] )
-	prop_lsqueeze = logit(((x*(N-1))+0.5)/N)
+  N=length( x[!is.na(x)] )
+  prop_lsqueeze = logit(((x*(N-1))+0.5)/N)
 }
 
 # use GBD data
@@ -188,27 +188,27 @@ ggpairs_fig = ggpairs(data[, c('mortality_rate_std','log_cases_var_std','logit_m
 # Get glm estimate
 
 lmFits = lapply(unique(data$department), function(m) { 
-	lm(mortality_rate_std ~ log_cases_var_std + logit_mi_ratio_std, data[department==m])
+  lm(mortality_rate_std ~ log_cases_var_std + logit_mi_ratio_std, data[department==m])
 })
 
 # loop over runs and compute explained variance
 evs = NULL
 for(i in seq(length(lmFits))) {
-	fitObject = lmFits[[i]]
-	inputData = copy(data[department==unique(data$department)[[i]]])
-	tmp = data.table(variable=names(coef(fitObject))[-1])
-	values = sapply(tmp$variable, function(v) {
-		# test for standardization
-		if (round(mean(inputData[[v]]),5)!=0 | round(sd(inputData[[v]]),5)!=1) stop(paste('Variable', v, 'is not z-standardized'))
-		# compute explained variance using pseudo decomposition of r squared
-		# (see Anusar Farooqui 2016. A Natural Decomposition of R2 in Multiple Linear Regression)
-		coef(fitObject)[[v]] * cov(inputData[[v]], fitObject$fitted.values)
-	})
-	tmp[, explained_variance := values]
-	tmp = rbind(tmp, data.table(variable='Residuals', explained_variance=1-sum(values)))
-	tmp[,department:=unique(data$department)[[i]]]
-	if (i==1) evs = copy(tmp)
-	if (i>1) evs = rbind(evs, tmp)
+  fitObject = lmFits[[i]]
+  inputData = copy(data[department==unique(data$department)[[i]]])
+  tmp = data.table(variable=names(coef(fitObject))[-1])
+  values = sapply(tmp$variable, function(v) {
+    # test for standardization
+    if (round(mean(inputData[[v]]),5)!=0 | round(sd(inputData[[v]]),5)!=1) stop(paste('Variable', v, 'is not z-standardized'))
+    # compute explained variance using pseudo decomposition of r squared
+    # (see Anusar Farooqui 2016. A Natural Decomposition of R2 in Multiple Linear Regression)
+    coef(fitObject)[[v]] * cov(inputData[[v]], fitObject$fitted.values)
+  })
+  tmp[, explained_variance := values]
+  tmp = rbind(tmp, data.table(variable='Residuals', explained_variance=1-sum(values)))
+  tmp[,department:=unique(data$department)[[i]]]
+  if (i==1) evs = copy(tmp)
+  if (i>1) evs = rbind(evs, tmp)
 }
 
 evs_mean = evs[, .(explained_variance=mean(explained_variance)), by='variable']
@@ -223,23 +223,23 @@ evs_mean
 # set up graph data
 graphData = evs_mean
 graphData[variable=='log_cases_var_std', 
-	label:=paste('Incidence -', round(explained_variance*100, 1),'%')]
+          label:=paste('Incidence -', round(explained_variance*100, 1),'%')]
 graphData[variable=='logit_mi_ratio_std', 
-	label:=paste('Case Fatality -', round(explained_variance*100, 1),'%')]
+          label:=paste('Case Fatality -', round(explained_variance*100, 1),'%')]
 graphData[variable=='Residuals', 
-	label:=paste('Unexplained by Model -', round(explained_variance*100, 1),'%')]
-	
+          label:=paste('Unexplained by Model -', round(explained_variance*100, 1),'%')]
+
 # set up national
 if (use_GBD == TRUE) {
   id_vars = c('year', 'country', 'department', 'disease')
 } else {
-    id_vars = 'date'
+  id_vars = 'date'
 }
 
 national = melt(national, id.vars=id_vars)
 national[variable=='mortality_rate', variable:='TB Mortality Rate (per 100,000)']
 national[variable=='cases_var', variable:='TB Case Notification Rate (per 100,000)']
-	
+
 # colors
 cols = brewer.pal(3, 'Paired')
 cols = c(cols[c(3,2)], '#969696')
@@ -262,49 +262,48 @@ if(use_GBD == TRUE){
 
 # graph national EV
 ggplot(graphData, aes(y=explained_variance, x=1, fill=label)) + 
-	geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
-	geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
-	annotate('text', label='Declining\nMortality\nRates', y=0, x=-0.5, size=5) +
-	coord_polar(theta='y') + 
-	scale_fill_manual('', values=cols) +
-	labs(title='Impact on Mortality Rate', 
-		caption=cap) + 
-	theme_void() + 
-	theme(legend.position='none')
+  geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
+  geom_text(aes(label=label), size=3, position=position_stack(vjust=.5)) +
+  annotate('text', label='Declining\nMortality\nRates', y=0, x=-0.5, size=5) +
+  coord_polar(theta='y') + 
+  scale_fill_manual('', values=cols) +
+  labs(title='Impact on Mortality Rate', 
+       caption=cap) + 
+  theme_void() + 
+  theme(legend.position='none')
 
 
 # graph national trends
 x_var = ifelse(use_GBD == TRUE, 'year', 'date')
 ggplot(national, aes(y=value, x=get(x_var))) + 
-	geom_point() +
-	geom_smooth() + 
-	facet_wrap(~variable, scales='free') + 
-	labs(title='National Trends in Reported Mortality and Case Notification', 
-		caption='2017 mortality rate estimated based on trend') + 
-	theme_bw()
-  
+  geom_point() +
+  geom_smooth() + 
+  facet_wrap(~variable, scales='free') + 
+  labs(title='National Trends in Reported Mortality and Case Notification', 
+       caption='2017 mortality rate estimated based on trend') + 
+  theme_bw()
+
 if (use_GBD != TRUE){  
   # graph example municipalities
   miExamples = unique(evs[variable=='logit_mi_ratio'][order(-explained_variance)]$department)[1:5]
   incExamples = unique(evs[variable=='log_cases_var'][order(-explained_variance)]$department)[1:5]
   for(h in c(miExamples, incExamples)) { 		
-  	evmi = round(evs[department==h & variable=='logit_mi_ratio']$explained_variance,3)
-  	evinc = round(evs[department==h & variable=='log_cases_var']$explained_variance,3)
-  	tmp = melt(data[department==h], id.vars=c('department','date'))
-  	tmp = tmp[!grepl('log',variable)]
-  	tmp = tmp[variable!='population']
-  	p=ggplot(tmp, aes(y=value, x=date)) + 
-  		geom_point() + 
-  		geom_line() + 
-  		facet_wrap(~variable, scales='free_y') + 
-  		labs(title=paste('department:', h), 
-  			subtitle=paste('Explained Variance by MI Ratio:',evmi,'\nExplained Variance by Incidence Rate:',evinc),
-  			x='') + 
-  		theme_bw()
-  	print(p)
+    evmi = round(evs[department==h & variable=='logit_mi_ratio']$explained_variance,3)
+    evinc = round(evs[department==h & variable=='log_cases_var']$explained_variance,3)
+    tmp = melt(data[department==h], id.vars=c('department','date'))
+    tmp = tmp[!grepl('log',variable)]
+    tmp = tmp[variable!='population']
+    p=ggplot(tmp, aes(y=value, x=date)) + 
+      geom_point() + 
+      geom_line() + 
+      facet_wrap(~variable, scales='free_y') + 
+      labs(title=paste('department:', h), 
+           subtitle=paste('Explained Variance by MI Ratio:',evmi,'\nExplained Variance by Incidence Rate:',evinc),
+           x='') + 
+      theme_bw()
+    print(p)
   }
 }
 # close pdf
 dev.off()
 # ----------------------------------------------------
-

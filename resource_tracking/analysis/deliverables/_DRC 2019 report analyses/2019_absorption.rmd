@@ -1,0 +1,90 @@
+---
+title: "DRC 2019 Absorption"
+author: "Emily Linebarger"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+classoption: landscape
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, fig.dim=c(10, 7))
+
+library(data.table) 
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(Hmisc)
+library(wesanderson)
+library(gridExtra)
+library(scales)
+
+dt = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/absorption_cod.rds")
+dt = dt[grant_period=="2018-2020"]
+
+#Assign each grant a distinct color from the "Zissou" palette. 
+grants = unique(dt$grant) 
+for (i in 1:length(grants)){
+  g = grants[i]
+  dt[grant==g, grant_color:=wes_palette("Zissou1")[i]]
+}
+
+#Add abbreviated module names. 
+all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
+setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
+all_mods = all_mods[, .(gf_module, gf_intervention, disease, abbrev_mod, abbrev_int)]
+dt = merge(dt, all_mods, by=c('gf_module', 'gf_intervention', 'disease'), allow.cartesian=TRUE)
+
+#make sure this merge worked correctly. 
+stopifnot(nrow(dt[is.na(abbrev_int)])==0)
+
+#Break out into smaller datasets. 
+by_grant = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_disease', 'start_date', 'semester', 'grant_color')]
+by_grant[, absorption:=(expenditure/budget)*100]
+by_grant[, label1:=paste0(round(absorption, 1), "%")]
+by_grant[absorption>200, absorption:=200] # Cap absorption at 200%
+by_grant[, label2:=paste0(grant_disease)]
+
+by_module = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant', 'gf_module', 'abbrev_mod', 'start_date', 'semester', 'grant_color')]
+by_module[, absorption:=(expenditure/budget)*100]
+by_module[, label1:=paste0(round(absorption, 1), "%")]
+by_module[absorption>200, absorption:=200] # Cap absorption at 200%
+by_module[, label2:=dollar(expenditure)]
+
+by_intervention = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int', 'start_date', 'semester', 'grant_color')]
+by_intervention[, absorption:=(expenditure/budget)*100]
+by_intervention[, label1:=paste0(round(absorption, 1), "%")]
+by_intervention[absorption>200, absorption:=200] # Cap absorption at 200%
+```
+
+# Overall absorption over time, by grant disease 
+```{r absorption_by_disease} 
+
+ggplot(by_grant, aes(x=semester, y=absorption, color=grant, group=grant)) + 
+  geom_point() + 
+  geom_line() + 
+  theme_bw(base_size=16) + 
+  labs(title="Absorption by grant over time", x="Grant semester", y="Absorption (%)", color="Grant")
+  
+```
+
+# Absorption over time, by grant
+
+```{r absorption_over_time, results="asis"} 
+
+by_module$semester <- factor(by_module$semester, levels=c('Semester 3', 'Semester 1-2', 'Semester 1'), labels=c('Semester 3', 'Semester 1-2', 'Semester 1'))
+for (g in unique(by_module$grant)){
+  subset = by_module[grant==g]
+  
+  p = ggplot(subset, aes(x=abbrev_mod, y=absorption, fill=semester, label=label1)) + 
+    geom_bar(stat="identity", position="dodge") + 
+    coord_flip() +
+    theme_bw(base_size=16) + 
+    geom_text( hjust=-0.5, position=position_dodge(width=1), size=4) + 
+    labs(title=paste0("Absorption by semester and module \n for ", g), x="Module", y="Absorption (%)", fill="Grant semester")
+  print(p)
+  
+  cat("\n\n\\pagebreak\n")
+}
+
+```
+

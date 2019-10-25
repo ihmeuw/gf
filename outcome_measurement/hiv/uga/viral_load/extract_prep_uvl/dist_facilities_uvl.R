@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # David, Phillips, Caitlin O'Brien-Carelli
 #
-# 4/10/2019
+# 10/1/2019
 # Source from webscrape_uvl.R
 # To extract a list of districts and facilities 
 # Facilities and districts are stored in separate urls

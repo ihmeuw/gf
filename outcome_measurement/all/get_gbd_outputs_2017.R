@@ -31,6 +31,7 @@ source("/home/j/temp/central_comp/libraries/current/r/get_population.R")
 
 # Outfile:
 outFile = paste0(j_head, ("Project/Evaluation/GF/impact_evaluation/mortality/gbd_estimates_tb_pce_countries.csv"))
+outFile2 = paste0(j_head, "Project/Evaluation/GF/impact_evaluation/mortality/gbd_estimates_malaria_pce_countries.csv")
 #--------------------------------------------
 
 #--------------------------------------------
@@ -48,7 +49,7 @@ outFile = paste0(j_head, ("Project/Evaluation/GF/impact_evaluation/mortality/gbd
 # age_id = 27 for age standardized
 #        = 22 for all ages
 # sex_id = 3 for both
-# cause_id = 298 for HIV/AIDS 
+# cause_id = 298 for HIV/AIDS; 345 for malaria
 
 
 #Cause IDs are for HIV with drug-susceptible, MDR, and XDR TB respectively

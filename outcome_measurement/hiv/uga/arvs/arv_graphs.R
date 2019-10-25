@@ -1,7 +1,8 @@
-# ARV stockouts by facility - visualize the data 
+# ARV and test kit stockouts by facility - visualize the data 
 # create data tables for distinct graphs
+#
 # Caitlin O'Brien-Carelli
-# 12/14/2018
+# 10/7/2019
 # ----------------------
 # Set up R
 rm(list=ls())
@@ -23,7 +24,10 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j,  '/Project/Evaluation/GF/outcome_measurement/uga/arv_stockouts/')
 
 # working directory to aggregate
-dt = readRDS(paste0(dir, 'arv_stockouts_2013_2018.rds'))
+dt = readRDS(paste0(dir, 'prepped_data/arv_stockouts_2013_2019.rds'))
+
+# save the main data set in memory
+full = copy(dt)
 
 # subset dates to before November 2018
 dt = dt[year!=2013] 
@@ -51,6 +55,31 @@ coord[, id:=as.numeric(id)]
 coord_ann = rbind(coord, coord, coord, coord, coord)
 coord_ann[, year:=rep(2014:2018, each=nrow(coord))]
 
+# coordinates by year for faceting 
+coord_ann_full = rbind(coord, coord, coord, coord, coord, coord)
+coord_ann_full[, year:=rep(2014:2019, each=nrow(coord))]
+
+#---------------------------------
+
+# ------------------------------------------------------
+# color palettes
+
+two = c('#91bfdb', '#bd0026')
+ratio_colors = brewer.pal(8, 'Spectral')
+results_colors = brewer.pal(6, 'Blues')
+sup_colors = brewer.pal(6, 'Reds')
+ladies = brewer.pal(11, 'RdYlBu')
+gents = brewer.pal(9, 'Purples')
+
+graph_colors = c('#bd0026', '#fecc5c', '#74c476','#3182bd', '#8856a7')
+tri_sex = c('#bd0026', '#74c476', '#3182bd')
+wrap_colors = c('#3182bd', '#fecc5c', '#bd0026', '#74c476', '#8856a7', '#f768a1')
+sex_colors = c('#bd0026', '#3182bd', '#74c476', '#8856a7') # colors by sex plus one for facilities
+single_red = '#bd0026'
+bar_color = brewer.pal(5, 'RdYlBu') 
+
+# ------------------------------------------------------
+
 #---------------------------------
 # reporting completeness data prep - graphs 1, 2
 
@@ -73,7 +102,7 @@ report = report[ ,lapply(.SD, round, 1), .SDcols = 6:7,
 
 # shape long
 report = melt(report, id.vars='date')
-report[variable=='art_sites' | variable=='arvs' | variable=='arv_ratio', indicator:='ART reporting']
+report[variable=='art_sites' | variable=='arvs' | variable=='arv_ratio', indicator:='ART reporting*']
 report[variable=='facilities' | variable=='test_kits'| variable=='test_ratio', indicator:='HIV test kit reporting']
 report[grep('ratio', variable), ratio:=TRUE]
 report[!grep('ratio', variable), ratio:=FALSE]
@@ -81,16 +110,18 @@ report[!grep('ratio', variable), ratio:=FALSE]
 # label the variables
 report$variable = factor(report$variable, c('art_sites', 'arvs', 'facilities',  'test_kits',
                                              'test_ratio', 'arv_ratio'), 
-                         c('Total ART sites', 'Reported about ART stock', 'Total health facilities', 'Reported about HIV test kit stock',
-                           '% of facilities reporting', '% of ART sites reporting'))
+                         c('Total ART sites', 'Reported about ART stock',
+                           'Total health facilities', 'Reported about HIV test kit stock',
+                           '% of all health facilities reporting', '% of ART sites reporting'))
 
 #-----------------------------
 # stock outs of ARVs - 3, 4, 5
 
-arv = dt[ , .(date=(unique(date)))]
+# expand to all dates
+arv_dates = dt[ , .(date=(unique(date)))]
 arv2 = dt[art_site==TRUE & !is.na(arvs), .(art_sites_reporting=as.numeric(length(unique(facility))), 
                                            art_stockout=as.numeric(sum(arvs, na.rm=T))), by=date]  
-arv = merge(arv, arv2, by='date', all=T)
+arv = merge(arv_dates, arv2, by='date', all=T)
 arv[is.na(art_sites_reporting), art_sites_reporting:=0]
 arv[ ,ratio:=round(100*(art_stockout/art_sites_reporting), 2)]
 
@@ -113,7 +144,7 @@ arv_thresh$variable = factor(arv_thresh$variable, c('art_sites_reporting', 'art_
 # ARV stockout weeks bar graphs - 6, 7
 
 # Number of weeks of stockout by facility
-arv_weeks = dt[art_site==TRUE, .(weeks=sum(arvs, na.rm=T)), by=.(year, facility)]
+arv_weeks = dt[art_site==TRUE & year!=2019, .(weeks=sum(arvs, na.rm=T)), by=.(year, facility)]
 arv_weeks = arv_weeks[1 < weeks]
 arv_weeks = arv_weeks[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
 
@@ -129,30 +160,39 @@ labels_vec = c(l14, l15, l16, l17, l18)
 arv_weeks$year = factor(arv_weeks$year, c(2014, 2015, 2016, 2017, 2018), 
                        labels_vec)
 
-# same bar graph of stockouts, comparable time periods
-arv_weeks2 = dt[month(date)!='12' & art_site==TRUE, .(weeks=sum(arvs, na.rm=T)), by=.(year, facility)]
-arv_weeks2 = arv_weeks2[1 < weeks]
-arv_weeks2 = arv_weeks2[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
+#-------------
+# same bar graph of stockouts for 2019 only
+arv_weeks2 = dt[year==2019 & art_site==TRUE, .(weeks=sum(arvs, na.rm=T)), by=.(facility, level)]
+arv_weeks2 = arv_weeks2[ ,.(facilities=length(unique(facility))), by=.(weeks, level)]
+
+# label the totals for each bar
+lab_facilities = arv_weeks2[ ,.(facilities=sum(facilities)), by=weeks]
+
+# for the color
+arv_weeks2[ , year:=2019]
+#------------
+# g6b - comparing 2018 and 2019, same time period
+bad_months = c(9:12)
+arv_weeks3 = dt[(year==2019 | year==2018) & !(month(date) %in% bad_months) & art_site==T]
+arv_weeks3 = arv_weeks3[ , .(weeks=sum(arvs, na.rm=T)), by=.(year, facility)]
+arv_weeks3 = arv_weeks3[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
 
 # labels 
-labels2 = arv_weeks2[ ,.(total=sum(facilities)), by=year]
-l142 = paste0('2014 (n=', labels2[year==2014]$total, ')')
-l152 = paste0('2015 (n=', labels2[year==2015]$total, ')') 
-l162 = paste0('2016 (n=', labels2[year==2016]$total, ')') 
-l172 = paste0('2017 (n=', labels2[year==2017]$total, ')')
-l182 = paste0('2018 (n=', labels2[year==2018]$total, ')') 
-labels_vec2 = c(l142, l152, l162, l172, l182)
+labels3 = arv_weeks3[ ,.(total=sum(facilities)), by=year]
+l183 = paste0('2018 (n=', labels3[year==2018]$total, ')')
+l193 = paste0('2019 (n=', labels3[year==2019]$total, ')')
+labels_vec3 = c(l183, l193)
 
-arv_weeks2$year = factor(arv_weeks2$year, c(2014, 2015, 2016, 2017, 2018), 
-                        labels_vec2)
+arv_weeks3$year = factor(arv_weeks3$year, c(2018, 2019), 
+                        labels_vec3)
 
 #---------------------------------------
 # ARV stockout maps - 8:12
 
 # total facility-weeks of stock outs 
-# exclude the months that are not in all years (e.g. december 2018)
-stockout = dt[month(date)!=12 &  art_site==TRUE, .(value=sum(arvs, na.rm=T)), by=.(year, id)]
-arv_map = merge(stockout, coord_ann, by=c('id', 'year'), all.y=TRUE)
+# exclude 2019
+stockout = dt[art_site==TRUE, .(value=sum(arvs, na.rm=T)), by=.(year, id)]
+arv_map = merge(stockout, coord_ann, by=c('id', 'year'), all.y=TRUE) # 
 
 # mean weeks stocked out 
 # number of weeks of stockout divided by art sites reporting 
@@ -179,11 +219,23 @@ stock = merge(stock, stock_add, by=c('year', 'id'))
 stock[ , percent_out:=round(100*(weeks_out/total_weeks), 1)]
 stock = merge(stock, coord_ann, by=c('id', 'year'))
 
+#--------------------------
+# categorical stock out map - g11a
 
-#---------------------------------------
+roc_map[change < 0, roc_cat:=2] # less
+roc_map[change == 0, roc_cat:=3]
+roc_map[change > 0, roc_cat:=1]# more
+
+roc_map$roc_cat = factor(roc_map$roc_cat, c(1, 2, 3),
+                         c('More stock outs', 'Less stock outs',
+                           'Same number of stock outs'))
+
+#--------------------------
+
+#--------------------------------------------------------------
 # TEST KITS
 
-# test kit stock out line graphs 13:15
+# test kit stock out line graphs 16:18
 
 # test kit stockouts
 test = dt[ , .(date=(unique(date)))]
@@ -207,7 +259,7 @@ compare_add = arv[variable == 'Percentage of ART sites stocked out of ARVs']
 compare = rbind(compare, compare_add)
 
 #-----------------------------------
-# test kit stockout weeks bar graphs - 16, 17
+# test kit stockout weeks bar graphs - 15, 19
 
 # Number of weeks of stockout by facility
 tk_weeks = dt[ , .(weeks=sum(test_kits, na.rm=T)), by=.(year, facility)]
@@ -226,29 +278,24 @@ t_labels_vec = c(tl14, tl15, tl16, tl17, tl18)
 tk_weeks$year = factor(tk_weeks$year, c(2014, 2015, 2016, 2017, 2018), 
                         t_labels_vec)
 
-# same bar graph of stockouts, for comparable time periods
-tk_weeks2 = dt[month(date)!='12', .(weeks=sum(test_kits, na.rm=T)), by=.(year, facility)]
-tk_weeks2 = tk_weeks2[1 < weeks]
-tk_weeks2 = tk_weeks2[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
+#-----------------------------------
+# same bar graph of stockouts, 2019 only
+
+tk2019 = dt[year==2019, .(weeks=sum(test_kits, na.rm=T)), by=.(year, facility)]
+tk2019 = tk2019[ ,.(facilities=length(unique(facility))), by=.(weeks, year)]
 
 # labels 
-t_labels2 = tk_weeks2[ ,.(total=sum(facilities)), by=year]
-tl142 = paste0('2014 (n=', t_labels2[year==2014]$total, ')')
-tl152 = paste0('2015 (n=', t_labels2[year==2015]$total, ')') 
-tl162 = paste0('2016 (n=', t_labels2[year==2016]$total, ')') 
-tl172 = paste0('2017 (n=', t_labels2[year==2017]$total, ')')
-tl182 = paste0('2018 (n=', t_labels2[year==2018]$total, ')') 
-tlabels_vec2 = c(tl142, tl152, tl162, tl172, tl182)
-
-tk_weeks2$year = factor(tk_weeks2$year, c(2014, 2015, 2016, 2017, 2018), 
-                         tlabels_vec2)
+tlabels19 = tk2019[ ,.(total=sum(facilities)), by=year]
+tl19 = paste0('2019 (n=', tlabels19$total, ')')
+tk2019[ ,year:=NULL]
+tk2019[, year:=tl19]
 
 #-----------------------------------
 # TEST KIT STOCKOUT MAPS
 
 #--------------------------
 # map of facility-weeks of stock outs 
-tk_stockout = dt[month!='2017-12-01', .(value=sum(test_kits, na.rm=T)), by=.(year, id)]
+tk_stockout = dt[ , .(value=sum(test_kits, na.rm=T)), by=.(year, id)]
 
 # merge with coordinates
 tk_map = merge(tk_stockout, coord_ann, by=c('id', 'year'), all.y=TRUE)
@@ -277,17 +324,38 @@ tk_stock = merge(tk_stock, tk_stock_add, by=c('year', 'id'))
 tk_stock[ , percent_out:=round(100*(weeks_out/total_weeks), 1)]
 tk_stock = merge(tk_stock, coord_ann, by=c('id', 'year'))
 
+#--------------------------
+# categorical stock out map - g26a
+
+tk_roc_map[change < 0, roc_cat:=2] # less
+tk_roc_map[change == 0, roc_cat:=3]
+tk_roc_map[change > 0, roc_cat:=1] # more
+
+tk_roc_map$roc_cat = factor(tk_roc_map$roc_cat, c(1, 2, 3),
+                         c('More stock outs', 'Less stock outs',
+                           'Same number of stock outs'))
+#--------------------------
+
 #-------------------------------------------
 # scatter plots (facility level)
+
+# g21 - scatter plot by year
+scat = dt[ ,.(test_kits=sum(test_kits, na.rm=T)), by=.(facility, year, level)]
 
 dt[ level=='HC II', level2:=2]
 dt[ level=='HC III', level2:=3]
 dt[ level=='HC IV', level2:=4]
 dt[ level=='Hospital', level2:=5]
+dt[ level=='TASO', level2:=6]
 
-scatter = dt[ ,.(arvs=sum(arvs, na.rm=T), test_kits=sum(test_kits, na.rm=T)), by=.(facility, level2, art_site)]
-scatter2 = dt[month!='2017-10-01' & month!='2017-11-01' & month!='2017-12-01',.(arvs=sum(arvs, na.rm=T), 
-                                      test_kits=sum(test_kits, na.rm=T)), by=.(facility, level2, year, art_site)]
+dt$level2 = factor(dt$level2, c(2:6), 
+                   c('HC II', 'HC III', 'HC IV', 'Hospital', 'TASO'))
+
+scatter = dt[year==2017 | year==2018,.(arvs=sum(arvs, na.rm=T), test_kits=sum(test_kits, na.rm=T)),
+             by=.(facility, level2, art_site)]
+
+scatter2 = dt[,.(arvs=sum(arvs, na.rm=T), 
+              test_kits=sum(test_kits, na.rm=T)), by=.(facility, level2, year, art_site)]
 
 #---------------------------------------
 # finale maps - categorical arv stockouts 
@@ -316,21 +384,9 @@ final$variable = factor(final$variable, c('no_stock_out', 'one_week_2_mos',
                                            c('No stock outs reported',
                                           '1 week - 1 month ', '1+ - 2 months ', '2+ months'))
 
-# ------------------------------------------------------
-# color palettes
-
-two = c('#91bfdb', '#bd0026')
-ratio_colors = brewer.pal(8, 'Spectral')
-results_colors = brewer.pal(6, 'Blues')
-sup_colors = brewer.pal(6, 'Reds')
-ladies = brewer.pal(11, 'RdYlBu')
-gents = brewer.pal(9, 'Purples')
-
-graph_colors = c('#bd0026', '#fecc5c', '#74c476','#3182bd', '#8856a7')
-tri_sex = c('#bd0026', '#74c476', '#3182bd')
-wrap_colors = c('#3182bd', '#fecc5c', '#bd0026', '#74c476', '#8856a7', '#f768a1')
-sex_colors = c('#bd0026', '#3182bd', '#74c476', '#8856a7') # colors by sex plus one for facilities
-single_red = '#bd0026'
+# for graphs with 0 depicted in grey
+final[ ,alter:=value]
+final[alter==0, alter:=NA] 
 
 # ------------------------------------------------------
 # SOURCE THE GRAPH FUNCTION
@@ -340,24 +396,29 @@ single_red = '#bd0026'
 source('C:/Users/ccarelli/local/gf/outcome_measurement/hiv/uga/arvs/arv_visuals_to_source.R')
 
 # export the maps and graphs as a pdf
-pdf(paste0(dir, 'outputs/stockout_descriptives_2013_2018.pdf'), height=6, width=12)
+pdf(paste0(dir, 'outputs/stockout_descriptives_2013_2019.pdf'), height=6, width=12)
 
+g_opener
 g1
 g2
 g3
 g4
 g5
+g5a
 g6
 g7
+g7a
+g6a
 g8
 g9
 g10
 g11
+g11a
 g12
 g13
 g14
+g16 # introduce the test kit slides
 g15
-g16
 g17
 g18
 g19
@@ -368,12 +429,14 @@ g23
 g24
 g25
 g26
+g26a
 g27
 g28
 g29
 g30 
 g31
 g32
+g32a
 g33
 g34
 g35

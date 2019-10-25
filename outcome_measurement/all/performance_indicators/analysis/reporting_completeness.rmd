@@ -1,0 +1,149 @@
+---
+title: "PUDR Performance Indicator Data Gaps"
+author: "Emily Linebarger"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+---
+
+```{r setup, echo=FALSE, warning=FALSE}
+library(data.table) 
+library(ggplot2)
+library(knitr)
+
+current_year = year(Sys.Date())
+current_quarter = quarter(Sys.Date())
+current_date = current_year + ((current_quarter/4)-0.25)
+
+dir = "J:/Project/Evaluation/GF/resource_tracking/"
+#Read in current budget and expenditure files (For absorption we are not trying to make a complete time series, so this check is less relevant, 
+#   but absorption will have all of the same files as expenditure)
+pudrs = readRDS("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/all_prepped_data.rds")
+setnames(pudrs, c('start_date_programmatic', 'end_date_programmatic'), c('start_date', 'end_date'))
+pudrs[, concat:=paste0(grant, "_", grant_period)]
+pudrs = unique(pudrs[, .(grant, loc_name, start_date, end_date, grant_period, concat)])
+
+#Split data into quarters - or decide if this visual is better by semester. 
+pudrs[, period:=end_date-start_date] 
+stopifnot(unique(pudrs$period%in%c(180, 183))) #Everything is at the semester-level right now. 
+
+#Go ahead and melt to the quarter-level, because that's the way GF metadata is formatted. 
+pudrs = melt(pudrs, id.vars=c('loc_name', 'grant', 'grant_period', 'concat', 'period'), value.name='date')
+pudrs = pudrs[variable!="end_date" & date>="2018-01-01"] #Because we've verified that everything is at the semester-level, we don't need to keep the end date. And we only care about data from 2018 and on. 
+
+date_frame = data.table(date = c("2018-01-01", "2018-01-01", "2018-07-01", "2018-07-01", 
+                                "2019-01-01", "2019-01-01"), year=c(2018, 2018, 2018, 2018, 2019, 2019), quarter=c(1, 2, 3, 4, 1, 2))
+date_frame[, date:=as.Date(date, format="%Y-%m-%d")]
+
+pudrs = merge(pudrs, date_frame, all.x=T, by=c('date'), allow.cartesian=T)
+
+#Reformat date variable 
+pudrs$date <- NULL
+pudrs[, date:=year+((quarter/4)-0.25)]
+
+#Read in Global Fund metadata, and format it to match pudr/budget data above. 
+ip_periods = fread(paste0(dir, "_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv"))
+ip_periods = ip_periods[GeographicAreaName%in%c('Congo (Democratic Republic)', 'Guatemala', 'Uganda', 'Senegal'), .(GeographicAreaName, ComponentName, GrantAgreementNumber, IsActive, ImplementationPeriodStartDate, ImplementationPeriodEndDate)]
+names(ip_periods) <- c('loc_name', 'disease', 'grant', 'is_active', 'start_date', 'end_date') #Only need implementation period variables here! 
+date_vars = c('start_date', 'end_date')
+for (var in date_vars){
+  ip_periods[nchar(get(var))==20, (var):=substr(get(var), 1, 8)]
+  ip_periods[nchar(get(var))==21, (var):=substr(get(var), 1, 9)]
+  ip_periods[nchar(get(var))==22, (var):=substr(get(var), 1, 10)]
+  
+  ip_periods[, (var):=as.Date(get(var), format="%m/%d/%Y")]
+}
+
+ip_periods[loc_name=="Congo (Democratic Republic)", loc_name:='cod']
+ip_periods[loc_name=="Guatemala", loc_name:='gtm']
+ip_periods[loc_name=="Senegal", loc_name:='sen']
+ip_periods[loc_name=="Uganda", loc_name:='uga']
+
+current_grants = ip_periods[is_active==TRUE]
+
+# Need a dataset of expected grants and grant periods. 
+expected_periods = ip_periods[, .(loc_name, grant, start_date, end_date)]
+
+#Add variables. 
+expected_periods[, start_year:=year(start_date)]
+expected_periods[, end_year:=year(end_date)]
+expected_periods[, start_quarter:=(quarter(start_date)/4)-0.25] 
+expected_periods[, end_quarter:=(quarter(end_date)/4)-0.25] 
+expected_periods[, start_decimal:=start_year+start_quarter]
+expected_periods[, end_decimal:=end_year+end_quarter]
+
+all_expected = data.table()
+for (i in 1:nrow(expected_periods)){
+  seq = seq(expected_periods[i, start_decimal], expected_periods[i, end_decimal], by=0.25)
+  seq_table = data.table(date=seq)
+  append_cols = expected_periods[i, .(grant, loc_name, start_year, end_year, start_quarter, end_quarter)]
+    for (col in names(append_cols)){
+      seq_table[, (col):=append_cols[, get(col)]]
+    }  
+  all_expected = rbind(all_expected, seq_table, fill=TRUE)
+}
+
+#Only worry about files from 2018 onwards, that's all we're reviewing at this point. EL 10/8/2019 
+all_expected = all_expected[date>=2018]
+
+#Append Senegal files that we know we should have, but don't yet. 
+pudrs = merge(pudrs, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
+pudrs[is.na(concat) & date<current_date, missing_pudr_date:=date]
+missing_pudr_qtrs = unique(pudrs[is.na(concat) & date<=current_date, .(loc_name, grant, date)])
+missing_pudr_qtrs[, quarter:=((date%%1)*4)+1]
+missing_pudr_qtrs[, year:=floor(date)]
+
+#Save this output data
+write.csv(pudrs, "J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/missing_pudr_coverage.csv", row.names=F)
+write.csv(pudrs, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/archive/missing_pudr_coverage_", Sys.Date(), ".csv"), row.names=F)
+
+pudr_coverage = function(country, country_name){
+  pudr_coverage = ggplot(pudrs[loc_name==country]) + 
+  geom_point(aes(x=date, y=grant), shape=19) + 
+  geom_point(aes(x=missing_pudr_date, y=grant), color="blue", size=6, alpha=0.5, shape=15) +
+  theme_bw() + 
+  labs(title=paste0("PUDR coverage for ", country_name), subtitle="Black circles show expected grant quarters,\nand colored squares show missing data", x="Date", y="Grant", caption="*Only for grants active during 2015-2020")
+  return(pudr_coverage)
+}
+
+```
+
+This report verifies that we have budget and PUDR files for all grants in the years between 2015-2020.  
+
+The list of grants in this time period is:  
+```{r, echo=FALSE, warning=FALSE}
+kable(current_grants)
+```
+
+This list is built from the metadata from the Global Fund's website.  
+
+## Total missing quarters
+The total number of missing PUDR quarters we have with this version of the database is: `r nrow(pudrs[!is.na(missing_pudr_date)])`
+
+## DRC Missing PUDRs
+```{r, warning=FALSE, echo=FALSE}
+drc_pudrs = pudr_coverage("cod", "DRC")
+drc_pudrs
+kable(missing_pudr_qtrs[loc_name=="cod", .(grant, year, quarter)])
+```
+
+## Guatemala Missing PUDRs
+```{r, warning=FALSE, echo=FALSE}
+gtm_pudrs = pudr_coverage("gtm", "Guatemala")
+gtm_pudrs
+kable(missing_pudr_qtrs[loc_name=="gtm", .(grant, year, quarter)])
+```
+
+## Senegal Missing PUDRs
+```{r, warning=FALSE, echo=FALSE}
+sen_pudrs = pudr_coverage("sen", "Senegal")
+sen_pudrs
+kable(missing_pudr_qtrs[loc_name=="sen", .(grant, year, quarter)])
+```
+
+## Uganda Missing PUDRs
+```{r, warning=FALSE, echo=FALSE}
+uga_pudrs = pudr_coverage("uga", "Uganda")
+uga_pudrs
+kable(missing_pudr_qtrs[loc_name=="uga", .(grant, year, quarter)])
+```
+
