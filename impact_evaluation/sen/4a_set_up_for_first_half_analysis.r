@@ -22,7 +22,7 @@ data = readRDS(outputFile3)
 #}
 
 # subset dates now that cumulative variables are computed
-data = data[date>=2014 & date<2018.75]
+data = data[date>=2012 & date<2018.75]
 # -----------------------------------------------------------------
 
 
@@ -110,7 +110,7 @@ for(v in lagVars) {
 data = na.omit(data)
 
 # compute leads
-leadVars = c("gueris_taux", "mdr_success_rate", "tpm_chimio_enf_cumulative")
+leadVars = c("gueris_taux", "tpm_chimio_enf_cumulative")
 for(v in leadVars) { 
   data[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead',n=2), by='region']
   untransformed[, (paste0('lead_',v)):=data.table::shift(get(v),type='lead',n=2), by='region']

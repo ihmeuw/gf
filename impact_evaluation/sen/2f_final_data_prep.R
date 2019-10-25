@@ -13,15 +13,24 @@ source('./impact_evaluation/sen/set_up_r.r')
 
 # subset data into the different datasets
 all.data <- readRDS(outputFile2d)
-hospital.data <- all.data[type=='HOPITAL']
-district.data <- all.data[type=='DISTRICT']
-community.data <- all.data[type=='COMMUNITY']
+
+hospital.data <- all.data$Hospital
+district.data <- all.data$District
+community.data <- all.data$Community
 tb_mdr <- readRDS(outputFile2e)
 
 # prep each variable according to data source and level reported
 
-# HOSPITAL AND DISTRICT variables WHICH CAN BE SUMMED (counts)
-datatemp1 = all.data[, lapply(.SD, sum, na.rm=TRUE), 
+# HOSPITAL variables WHICH CAN BE SUMMED (counts)
+datatemp1a = hospital.data[,.(region, date, tb_tfc, tot_genexpert, tot_res, gueris_total, tb_vih_arv, tb_vih)]
+
+# DISTRICT variables WHICH CAN BE SUMMED (counts)
+datatemp1b = district.data[,.(region, date, tb_tfc, tot_genexpert, tot_res, gueris_total, tb_vih_arv, tb_vih)]
+
+# combine the hospital and district data and then sum together 
+datatemp1 = rbind(datatemp1a, datatemp1b)
+
+datatemp1 = datatemp1[, lapply(.SD, sum, na.rm=TRUE), 
                           by=c('region','date'), 
                           .SDcols=c('tb_tfc', 'tot_genexpert','tot_res','gueris_total','tb_vih_arv', 'tb_vih')]
 
@@ -63,7 +72,11 @@ combind3[,date:=quarter+annee]
 datatemp5 = combind3[,c("annee","quarter"):=NULL]
 
 # DISTRICT AND HOSPITAL VALUES WHICH MUST BE AVERAGED (percents or rates)
-datatemp6 = all.data[, lapply(.SD, mean, na.rm=TRUE), 
+datatemp6a = hospital.data[,.(region, date, gueris_taux)]
+datatemp6b = district.data[,.(region, date, gueris_taux)]
+
+datatemp6 <- rbind(datatemp6a, datatemp6b)
+datatemp6 = datatemp6[, lapply(.SD, mean, na.rm=TRUE), 
                           by=c('region','date'), 
                           .SDcols=c('gueris_taux')]
 
@@ -80,41 +93,41 @@ DT1 <- merge(merge3, datatemp6, by = c("region", "date"), all = TRUE)
 # Get counts using datatable of treated and diagnosed
 # change values to date
 
-datatemp6 <- tb_mdr[,date_dx:=as.Date(tb_mdr$date_diag, "%m/%d/%Y")]
-datatemp6 <- datatemp6[,date_tx:=as.Date(tb_mdr$date_trait, "%m/%d/%Y")]
+datatemp7 <- tb_mdr[,date_dx:=as.Date(tb_mdr$date_diag, "%m/%d/%Y")]
+datatemp7 <- datatemp7[,date_tx:=as.Date(tb_mdr$date_trait, "%m/%d/%Y")]
 
 # Generate counts of MDR-TB cases diagnoses by region and quarter
-datatemp6$dx_count <- 1
+datatemp7$dx_count <- 1
 
 # use either the date of treatment or date of diagnosis to assign values
-datatemp6$date_either <- ifelse(is.na(datatemp6$date_dx), datatemp6$date_tx, datatemp6$date_dx)
+datatemp7$date_either <- ifelse(is.na(datatemp7$date_dx), datatemp7$date_tx, datatemp7$date_dx)
 
 # restore the date attribute
-class(datatemp6$date_either) <- class(datatemp6$date_tx)
+class(datatemp7$date_either) <- class(datatemp7$date_tx)
 
 # count how many cured
-datatemp6$mdr_success <- 0
-datatemp6$mdr_success[which(datatemp6$resultat=="Gueris")] <- 1
+datatemp7$mdr_success <- 0
+datatemp7$mdr_success[which(datatemp7$resultat=="Gueris")] <- 1
 
 # subset to necessary data
-datatemp6 <- datatemp6[,.(region, date_either, dx_count, mdr_success)]
+datatemp7 <- datatemp7[,.(region, date_either, dx_count, mdr_success)]
 
 # add quarter and year information
-datatemp6[, quarter:=quarter(date_either)]
-datatemp6[, year:=year(date_either)]
-datatemp6[, date_either:=NULL]
+datatemp7[, quarter:=quarter(date_either)]
+datatemp7[, year:=year(date_either)]
+datatemp7[, date_either:=NULL]
 
 #Create date variable
-datatemp6[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
-datatemp6[, date:=year+quarter]
+datatemp7[, quarter:=(quarter/4)-0.25] #Q1 should be .00, Q2 should be .25, etc. 
+datatemp7[, date:=year+quarter]
 
 # Calcuate how many diagnosed and how many cured
-datatemp6 <- datatemp6[,lapply(.SD, sum), by=c('region', 'date'),.SDcols=c("dx_count", "mdr_success")]
+datatemp7 <- datatemp7[,lapply(.SD, sum), by=c('region', 'date'),.SDcols=c("dx_count", "mdr_success")]
 
 # add in data for kedougou region
-datatemp7 <- datatemp6[region=="TAMBACOUNDA"]
-datatemp7$region[which(datatemp7$region=="TAMBACOUNDA")] <- "KEDOUGOU"
-DT2 <- rbind(datatemp6, datatemp7)
+datatemp8 <- datatemp7[region=="TAMBACOUNDA"]
+datatemp8$region[which(datatemp8$region=="TAMBACOUNDA")] <- "KEDOUGOU"
+DT2 <- rbind(datatemp7, datatemp8)
 
 # merge tb_mdr_data to other outputs data
 outputs_prepped <- merge(DT1, DT2, by=c('region', 'date'), all=TRUE)

@@ -52,16 +52,16 @@ urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # Display results
 
 # my sem graph function for first half "unrelated regressions" model
-p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+p1 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -0.5, colScaleMax=2, colScaleBreaks = 1)
 
-p6 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+p2 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
               scaling_factors=NA, standardized=TRUE, 
               lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -100, colScaleMax=100, colScaleBreaks = 50)
 
 # community activities pathways
-p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p3 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
          scaling_factors=NA, standardized=TRUE,
          lineWidth=1.5, curved=0, tapered=FALSE,
          dim=TRUE, highlight=c('com_mobsoc_cumulative', 
@@ -69,10 +69,10 @@ p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                                'com_radio_cumulative',
                                'com_nom_touss_cumulative',
                                'com_vad_touss_cumulative',
-                               'gueris_taux'
+                               'lead_gueris_taux'
          ))
 
-p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p4 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
          scaling_factors=NA, standardized=TRUE,
          lineWidth=1.5, curved=0, tapered=FALSE,
          dim=TRUE, highlight=c('com_mobsoc_cumulative', 
@@ -82,7 +82,7 @@ p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                                'tb_cas_id_cumulative'
          ))
 
-p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
          scaling_factors=NA, standardized=TRUE,
          lineWidth=1.5, curved=0, tapered=FALSE,
          dim=TRUE, highlight=c('com_cause_cumulative',
@@ -90,15 +90,16 @@ p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                                'com_nom_touss_cumulative'
          ))
 
-p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p6 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
          scaling_factors=NA, standardized=TRUE,
          lineWidth=1.5, curved=0, tapered=FALSE,
          dim=TRUE, highlight=c('com_cause_cumulative',
                                'com_vad_touss_cumulative',
-                               'com_enf_ref_cumulative'
+                               'com_enf_ref_cumulative',
+                               'lead_tpm_chimio_enf_cumulative'
          ))
 
-p11 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p7 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                scaling_factors=NA, standardized=TRUE,
                lineWidth=1.5, curved=0, tapered=FALSE,
                dim=TRUE, highlight=c('tb_tfc_cumulative',
@@ -106,12 +107,30 @@ p11 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                                      'tot_genexpert_cumulative'
                ))
 
-p12 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+p8 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                scaling_factors=NA, standardized=TRUE,
                lineWidth=1.5, curved=0, tapered=FALSE,
                dim=TRUE, highlight=c('perf_lab',
                                      'tb_cas_id_cumulative',
                                      'tot_genexpert_cumulative'
+               ))
+
+p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+               scaling_factors=NA, standardized=TRUE,
+               lineWidth=1.5, curved=0, tapered=FALSE,
+               dim=TRUE, highlight=c('lag_exp_T3_cumulative',
+                                     'lag_other_dah_T3_cumulative',
+                                     'tot_genexpert_cumulative',
+                                     'mdr_success_rate'
+               ))
+
+p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+               scaling_factors=NA, standardized=TRUE,
+               lineWidth=1.5, curved=0, tapered=FALSE,
+               dim=TRUE, highlight=c('lag_exp_T3_cumulative',
+                                     'lag_other_dah_T3_cumulative',
+                                     'dx_count_cumulative',
+                                     'mdr_success_rate'
                ))
 
 #p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
@@ -124,14 +143,16 @@ p12 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
 print(paste('Saving:', outputFile6a)) 
 pdf(outputFile6a, height=6, width=9)
 
+print(p1)
+print(p2)
+print(p3)
+print(p4)
 print(p5)
 print(p6)
 print(p7)
 print(p8)
 print(p9)
 print(p10)
-print(p11)
-print(p12)
 
 dev.off()
 
