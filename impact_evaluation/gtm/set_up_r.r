@@ -50,8 +50,8 @@ START_YEAR = 2009 #If available, what's the earliest year you should model data 
 #Global variable transformations 
 
 #These variables had to be imputed in step 2b, because they're used to create first-line and second-line drugs. EL 9/6/2019 
-drugComboVars = c("Total_First_Line_Drugs_inusIsonizide__Distributed_value_act", "Isoniazid_Distributed_value_act", 
-                  "Second_Line_Drugs_Distributed_value_act", "Total_MDR_Drugs_Distributed_value_act")
+drugComboVars = c("Total_First_Line_Drugs_inusIsonizide__Distributed_act", "Isoniazid_Distributed_act", 
+                  "Second_Line_Drugs_Distributed_act", "Total_MDR_Drugs_Distributed_act")
 
 #These variables will be imputed using GLM in step 4a. 
 backCastVars = c("Number_of_Cases_Screened_for_MDR_act", "PLHIV_Screened_for_TB_act", 
@@ -114,12 +114,12 @@ whoFile = paste0(whoDir, 'who_prepped.rds')
 sicoinFile = paste0(sicoinDir, 'prepped_sicoin_data.rds')
 
 # activities/outputs files
-actFile = paste0(rawIeDir, "activities_8.21.19.csv")
-outputsFile = paste0(rawIeDir, "outputs_8.9.19.csv")
+actFile = paste0(rawIeDir, "activities_10.23.19.csv")
+outputsFile = paste0(rawIeDir, "outputs_10.23.19.csv")
 
 # outcomes/impact files
-outcomeFile = paste0(rawIeDir, "outcomes_7.15.19.csv")
-impactFile = paste0(rawIeDir, "impact_7.15.19.csv")
+outcomeFile = paste0(rawIeDir, "outcomes_10.23.19.csv")
+impactFile = paste0(rawIeDir, "impact_10.23.19.csv")
 
 # shapefiles
 

@@ -28,11 +28,8 @@
   
   #Create date variable (collapsed to semester level)
   expenditures[, year:=year(start_date)]
-  expenditures[, quarter:=quarter(start_date)]
-  expenditures$semester = NULL
-  expenditures[quarter%in%c(1, 2), semester:=0.0]
-  expenditures[quarter%in%c(3, 4), semester:=0.5]
-  expenditures[, date:=year+semester]
+  expenditures[, quarter:=((quarter(start_date)/4)-0.25)]
+  expenditures[, date:=year+quarter]
   
   #Collapse, and fix names
   expenditures = expenditures[loc_name=='gtm', .(expenditure=sum(expenditure), na.rm=T), by=c("date", "gf_module", "gf_intervention", "code", "disease", "grant_disease")] #Will subset by disease in code section below. 
@@ -45,15 +42,15 @@
   fgh = fgh[, -c(3)] #There's an extra disease column??? 
   
   #Expand to semester-level, and divide all inputs by 2. 
-  semesters = data.table(date=seq(1990.0, 2018.5, by=0.5))
+  semesters = data.table(date=seq(1990.0, 2019.0, by=0.25))
   semesters[, year:=floor(date)]
   
   rows_before = nrow(fgh)
   sum_before = sum(fgh$disbursement, na.rm=T)
   fgh = merge(fgh, semesters, by='year', allow.cartesian=T)
-  fgh[, disbursement:=disbursement/2]
+  fgh[, disbursement:=disbursement/4]
   #Check that this expansion worked 
-  stopifnot(nrow(fgh)==rows_before*2)
+  stopifnot(nrow(fgh)==rows_before*4)
   stopifnot(sum(fgh$disbursement, na.rm=T)==sum_before)
   
   #Pull out other DAH, and collapse to the semester-level. 
@@ -69,10 +66,8 @@
   
   #Collapse into semesters - SICOIN data is monthly.  
   sicoin[, year:=year(start_date)]
-  sicoin[, quarter:=quarter(start_date)]
-  sicoin[quarter%in%c(1, 2), semester:=0.0]
-  sicoin[quarter%in%c(3, 4), semester:=0.5]
-  sicoin[, date:=year+semester]
+  sicoin[, quarter:=((quarter(start_date)/4)-0.25)]
+  sicoin[, date:=year+quarter]
   
   sicoin = sicoin[, .(expenditure=sum(expenditure, na.rm=T)), by=c('date', 'gf_module', 
                                                                    'gf_intervention', 'activity', 'code', 'disease')]

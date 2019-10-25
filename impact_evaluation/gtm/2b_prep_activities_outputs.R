@@ -11,6 +11,13 @@ drc = readRDS("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/outpu
 activities = fread(actFile)
 outputs = fread(outputsFile)
 
+#Change year and quarter to date 
+activities[, quarter:=(quarter/4)-0.25]
+activities[, date:=year+quarter]
+
+outputs[, quarter:=(quarter/4)-0.25]
+outputs[, date:=year+quarter]
+
 #Add _ to names of data. 
 names(activities) = gsub(" ", "_", names(activities))
 names(outputs) = gsub(" ", "_", names(outputs))
@@ -175,6 +182,13 @@ for (var in vars){
   }
 }
 
+#Find out which variables are at the year and quarter level. 
+year_vars = vars[grepl("yearly", vars)]
+year_vars = c(year_vars, "Second_Line_Drugs_Distributed_value_d") #Hard-code second line drugs. EL 10.24.2019
+
+quarter_vars = vars[grepl("quarterly", vars)]
+stopifnot(length(year_vars)+length(quarter_vars)==length(vars)-2) #Subtract 2 because year and quarter are still in the data. 
+
 # #Go ahead and hard code these variables to be department-level, because there is a data prep error. EL 7.8.19
 #This should be removed once new data is sent! REMOVED 8/19/19 EL 
 # dep_vars = c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d", dep_vars)
@@ -187,36 +201,116 @@ if (length(dept_level_error)!=0){
   print(dept_level_error)
 }
 
+#-------------------------------------------------------------------------------------------------------------
+# Handle 4 unique cases: department + year, department + quarter, municipality + year, municipality + quarter 
+
+case1 = names(activities)[names(activities)%in%dep_vars & names(activities)%in%year_vars]
+case2 = names(activities)[names(activities)%in%dep_vars & names(activities)%in%quarter_vars]
+case3 = names(activities)[names(activities)%in%mun_vars & names(activities)%in%year_vars]
+case4 = names(activities)[names(activities)%in%mun_vars & names(activities)%in%quarter_vars]
+
+date_frame = data.table(expand.grid(year=seq(2009, 2018, by=1), quarter=seq(0.0, 0.75, by=0.25)))
+date_frame[, date:=year+quarter]
+date_frame$quarter = NULL
+
+#-------------------------------
+# Case 1 - department and year 
+
 #Take the average of the department-level variables by date and department. 
-dep_level_a = data.table(date=integer(), department=integer())
-for (var in dep_vars){
+dt_case1 = data.table(year=integer(), department=integer())
+for (var in case1){
+  var_subset = activities[, .(var=mean(get(var), na.rm=T)), by=c('year', 'department')]
+  names(var_subset)[3] = var
+  dt_case1 = merge(dt_case1, var_subset, by=c('year', 'department'), all=T)
+}
+#Check for uniqueness. 
+dt_case1[duplicated(dt_case1, by=c('year', 'department')), dup:=TRUE]
+stopifnot(nrow(dt_case1[dup==TRUE])==0)
+dt_case1$dup<-NULL
+
+# Divide into quarters. 
+start_row = nrow(dt_case1)
+dt_case1 = merge(dt_case1, date_frame, by='year', all.x=T, allow.cartesian=T)
+for (var in case1){
+  dt_case1[, (var):=get(var)/4] #Divide each variable to the quarter-level. This assumes everything is counts! 
+}
+stopifnot(nrow(dt_case1) == start_row*4)
+
+#Fix names, and drop unneeded columns. 
+names(dt_case1) = gsub("_m|_d|_yearly|_quarterly|_value", "", names(dt_case1))
+dt_case1$year <- NULL
+
+#-------------------------------
+# Case 2 - department and quarter
+
+#Take the average of the department-level variables by date and department. 
+dt_case2 = data.table(date=integer(), department=integer())
+for (var in case2){
   var_subset = activities[, .(var=mean(get(var), na.rm=T)), by=c('date', 'department')]
   names(var_subset)[3] = var
-  dep_level_a = merge(dep_level_a, var_subset, by=c('date', 'department'), all=T)
+  dt_case2 = merge(dt_case2, var_subset, by=c('date', 'department'), all=T)
 }
 #Check for uniqueness. 
-dep_level_a[duplicated(dep_level_a, by=c('date', 'department')), dup:=TRUE]
-stopifnot(nrow(dep_level_a[dup==TRUE])==0)
-dep_level_a$dup<-NULL
-names(dep_level_a) = gsub("_m|_d", "", names(dep_level_a))
+dt_case2[duplicated(dt_case2, by=c('date', 'department')), dup:=TRUE]
+stopifnot(nrow(dt_case2[dup==TRUE])==0)
+dt_case2$dup<-NULL
 
-#Take the sum of the municipality-level variables by date and department. 
-mun_level_a = data.table(date=integer(), department=integer())
-for (var in mun_vars){
+#Fix names. 
+names(dt_case2) = gsub("_m|_d|_yearly|_quarterly|_value", "", names(dt_case2))
+
+#-------------------------------
+# Case 3 - municipality and year
+
+#Take the sum of municipality-level variables by date and department. 
+dt_case3 = data.table(year=integer(), department=integer())
+for (var in case3){
+  var_subset = activities[, .(var=sum(get(var), na.rm=T)), by=c('year', 'department')]
+  names(var_subset)[3] = var
+  dt_case3 = merge(dt_case3, var_subset, by=c('year', 'department'), all=T)
+}
+#Check for uniqueness. 
+dt_case3[duplicated(dt_case3, by=c('year', 'department')), dup:=TRUE]
+stopifnot(nrow(dt_case3[dup==TRUE])==0)
+dt_case3$dup<-NULL
+
+# Divide into quarters. 
+start_row = nrow(dt_case3)
+dt_case3 = merge(dt_case3, date_frame, by='year', all.x=T, allow.cartesian=T)
+for (var in case3){
+  dt_case3[, (var):=get(var)/4] #Divide each variable to the quarter-level. This assumes everything is counts! 
+}
+stopifnot(nrow(dt_case3) == start_row*4)
+
+#Fix names, and drop unneeded columns. 
+names(dt_case3) = gsub("_m|_d|_yearly|_quarterly|_value", "", names(dt_case3))
+dt_case3$year <- NULL
+
+#-------------------------------
+# Case 4 - municipality and quarter
+
+#Take the sum of municipality-level variables by date and department. 
+dt_case4 = data.table(date=integer(), department=integer())
+for (var in case4){
   var_subset = activities[, .(var=sum(get(var), na.rm=T)), by=c('date', 'department')]
   names(var_subset)[3] = var
-  mun_level_a = merge(mun_level_a, var_subset, by=c('date', 'department'), all=T)
+  dt_case4 = merge(dt_case4, var_subset, by=c('date', 'department'), all=T)
 }
 #Check for uniqueness. 
-mun_level_a[duplicated(mun_level_a, by=c('date', 'department')), dup:=TRUE]
-stopifnot(nrow(mun_level_a[dup==TRUE])==0)
-mun_level_a$dup<-NULL
-names(mun_level_a) = gsub("_m|_d", "", names(mun_level_a))
+dt_case4[duplicated(dt_case4, by=c('date', 'department')), dup:=TRUE]
+stopifnot(nrow(dt_case4[dup==TRUE])==0)
+dt_case4$dup<-NULL
 
+#Fix names. 
+names(dt_case4) = gsub("_m|_d|_yearly|_quarterly|_value", "", names(dt_case4))
 
-activities1 = merge(dep_level_a, mun_level_a, by=c('date', 'department'), all=T)
-#Make sure you've accounted for all columns except municipality. 
-stopifnot(ncol(activities1) == (ncol(activities)-1))
+#-----------------------------------------
+# Merge all of this data together. 
+activities1 = merge(dt_case1, dt_case2, by=c('date', 'department'), all=T)
+activities1 = merge(activities1, dt_case3, by=c('date', 'department'), all=T)
+activities1 = merge(activities1, dt_case4, by=c('date', 'department'), all=T)
+
+#Make sure you've accounted for all columns except municipality, year, and quarter
+stopifnot(ncol(activities1) == (ncol(activities)-3))
 new_names = names(activities1)[3:ncol(activities1)]  #Resest the names so they're distinguishable from activity variables. 
 new_names = paste0(new_names, "_act")
 names(activities1)[3:ncol(activities1)] <- new_names
@@ -238,6 +332,16 @@ for (var in vars){
   }
 }
 
+#Find out which variables are at the year and quarter level. 
+year_vars = vars[grepl("yearly", vars)]
+quarter_vars = vars[grepl("quarterly", vars)]
+stopifnot(length(year_vars)+length(quarter_vars)==length(vars)-2) #Subtract 2 because year and quarter are still in the data. 
+
+# #Go ahead and hard code these variables to be department-level, because there is a data prep error. EL 7.8.19
+#This should be removed once new data is sent! REMOVED 8/19/19 EL 
+# dep_vars = c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d", dep_vars)
+# mun_vars = mun_vars[!mun_vars%in%c("Total_Drugs_Distributed_value_d", "Isoniazid_Distributed_value_d")]
+
 #Flag cases where variables end in _d but are in the mun-level dataset. 
 dept_level_error = mun_vars[grepl("_d", mun_vars)]
 if (length(dept_level_error)!=0){
@@ -245,36 +349,116 @@ if (length(dept_level_error)!=0){
   print(dept_level_error)
 }
 
+#-------------------------------------------------------------------------------------------------------------
+# Handle 4 unique cases: department + year, department + quarter, municipality + year, municipality + quarter 
+
+case1 = names(outputs)[names(outputs)%in%dep_vars & names(outputs)%in%year_vars]
+case2 = names(outputs)[names(outputs)%in%dep_vars & names(outputs)%in%quarter_vars]
+case3 = names(outputs)[names(outputs)%in%mun_vars & names(outputs)%in%year_vars]
+case4 = names(outputs)[names(outputs)%in%mun_vars & names(outputs)%in%quarter_vars]
+
+date_frame = data.table(expand.grid(year=seq(2009, 2018, by=1), quarter=seq(0.0, 0.75, by=0.25)))
+date_frame[, date:=year+quarter]
+date_frame$quarter = NULL
+
+#-------------------------------
+# Case 1 - department and year 
+
 #Take the average of the department-level variables by date and department. 
-dep_level_o = data.table(date=integer(), department=integer())
-for (var in dep_vars){
+dt_case1 = data.table(year=integer(), department=integer())
+for (var in case1){
+  var_subset = outputs[, .(var=mean(get(var), na.rm=T)), by=c('year', 'department')]
+  names(var_subset)[3] = var
+  dt_case1 = merge(dt_case1, var_subset, by=c('year', 'department'), all=T)
+}
+#Check for uniqueness. 
+dt_case1[duplicated(dt_case1, by=c('year', 'department')), dup:=TRUE]
+stopifnot(nrow(dt_case1[dup==TRUE])==0)
+dt_case1$dup<-NULL
+
+# Divide into quarters. 
+start_row = nrow(dt_case1)
+dt_case1 = merge(dt_case1, date_frame, by='year', all.x=T, allow.cartesian=T)
+for (var in case1){
+  dt_case1[, (var):=get(var)/4] #Divide each variable to the quarter-level. This assumes everything is counts! 
+}
+stopifnot(nrow(dt_case1) == start_row*4)
+
+#Fix names, and drop unneeded columns. 
+names(dt_case1) = gsub("_m|_d|_yearly|_quarterly|_value", "", names(dt_case1))
+dt_case1$year <- NULL
+
+#-------------------------------
+# Case 2 - department and quarter
+
+#Take the average of the department-level variables by date and department. 
+dt_case2 = data.table(date=integer(), department=integer())
+for (var in case2){
   var_subset = outputs[, .(var=mean(get(var), na.rm=T)), by=c('date', 'department')]
   names(var_subset)[3] = var
-  dep_level_o = merge(dep_level_o, var_subset, by=c('date', 'department'), all=T)
+  dt_case2 = merge(dt_case2, var_subset, by=c('date', 'department'), all=T)
 }
 #Check for uniqueness. 
-dep_level_o[duplicated(dep_level_o, by=c('date', 'department')), dup:=TRUE]
-stopifnot(nrow(dep_level_o[dup==TRUE])==0)
-dep_level_o$dup<-NULL
-names(dep_level_o) = gsub("_m|_d", "", names(dep_level_o))
+dt_case2[duplicated(dt_case2, by=c('date', 'department')), dup:=TRUE]
+stopifnot(nrow(dt_case2[dup==TRUE])==0)
+dt_case2$dup<-NULL
 
-#Take the sum of the municipality-level variables by date and department. 
-mun_level_o = data.table(date=integer(), department=integer())
-for (var in mun_vars){
+#Fix names. 
+names(dt_case2) = gsub("_m|_d|_yearly|_quarterly|_value", "", names(dt_case2))
+
+#-------------------------------
+# Case 3 - municipality and year
+
+#Take the sum of municipality-level variables by date and department. 
+dt_case3 = data.table(year=integer(), department=integer())
+for (var in case3){
+  var_subset = outputs[, .(var=sum(get(var), na.rm=T)), by=c('year', 'department')]
+  names(var_subset)[3] = var
+  dt_case3 = merge(dt_case3, var_subset, by=c('year', 'department'), all=T)
+}
+#Check for uniqueness. 
+dt_case3[duplicated(dt_case3, by=c('year', 'department')), dup:=TRUE]
+stopifnot(nrow(dt_case3[dup==TRUE])==0)
+dt_case3$dup<-NULL
+
+# Divide into quarters. 
+start_row = nrow(dt_case3)
+dt_case3 = merge(dt_case3, date_frame, by='year', all.x=T, allow.cartesian=T)
+for (var in case3){
+  dt_case3[, (var):=get(var)/4] #Divide each variable to the quarter-level. This assumes everything is counts! 
+}
+stopifnot(nrow(dt_case3) == start_row*4)
+
+#Fix names, and drop unneeded columns. 
+names(dt_case3) = gsub("_m|_d|_yearly|_quarterly|_value", "", names(dt_case3))
+dt_case3$year <- NULL
+
+#-------------------------------
+# Case 4 - municipality and quarter
+
+#Take the sum of municipality-level variables by date and department. 
+dt_case4 = data.table(date=integer(), department=integer())
+for (var in case4){
   var_subset = outputs[, .(var=sum(get(var), na.rm=T)), by=c('date', 'department')]
   names(var_subset)[3] = var
-  mun_level_o = merge(mun_level_o, var_subset, by=c('date', 'department'), all=T)
+  dt_case4 = merge(dt_case4, var_subset, by=c('date', 'department'), all=T)
 }
 #Check for uniqueness. 
-mun_level_o[duplicated(mun_level_o, by=c('date', 'department')), dup:=TRUE]
-stopifnot(nrow(mun_level_o[dup==TRUE])==0)
-mun_level_o$dup<-NULL
-names(mun_level_o) = gsub("_m|_d", "", names(mun_level_o))
+dt_case4[duplicated(dt_case4, by=c('date', 'department')), dup:=TRUE]
+stopifnot(nrow(dt_case4[dup==TRUE])==0)
+dt_case4$dup<-NULL
 
+#Fix names. 
+names(dt_case4) = gsub("_m|_d|_yearly|_quarterly|_value", "", names(dt_case4))
 
-outputs1 = merge(dep_level_o, mun_level_o, by=c('date', 'department'), all=T)
-#Make sure you've accounted for all columns except municipality. 
-stopifnot(ncol(outputs1) == ncol(outputs)-1)
+#-----------------------------------------
+# Merge all of this data together. 
+outputs1 = merge(dt_case1, dt_case2, by=c('date', 'department'), all=T)
+outputs1 = merge(outputs1, dt_case3, by=c('date', 'department'), all=T)
+outputs1 = merge(outputs1, dt_case4, by=c('date', 'department'), all=T)
+
+#Make sure you've accounted for all columns except municipality, year, and quarter
+stopifnot(ncol(outputs1) == (ncol(outputs)-3))
 new_names = names(outputs1)[3:ncol(outputs1)]  #Resest the names so they're distinguishable from activity variables. 
 new_names = paste0(new_names, "_out")
 names(outputs1)[3:ncol(outputs1)] <- new_names
@@ -340,7 +524,7 @@ for(v in drugComboVars) {
       if (!any(!is.na(dt_final[department==h][[v]]))) next
       form = as.formula(paste0(v,'~date'))
       lmFit = glm(form, dt_final[department==h], family='poisson')
-      dt_final[department==h, tmp:=exp(predict(lmFit, newdt_final=dt_final[department==h]))]
+      dt_final[department==h, tmp:=exp(predict(lmFit, newdata=dt_final[department==h]))]
       lim = max(dt_final[department==h][[v]], na.rm=T)+sd(dt_final[department==h][[v]], na.rm=T)
       dt_final[department==h & tmp>lim, tmp:=lim]
       dt_final[department==h & is.na(get(v)), (v):=tmp]
@@ -359,8 +543,8 @@ for (v in drugComboVars){
 }
 #-----------------------------------------------------------------------
 
-dt_final[, Firstline_Distributed_act:=sum(Total_First_Line_Drugs_inusIsonizide__Distributed_value_act, Isoniazid_Distributed_value_act, na.rm=T), by=c('date', 'department')]
-dt_final[, Secondline_Distributed_act:=sum(Second_Line_Drugs_Distributed_value_act, Total_MDR_Drugs_Distributed_value_act, na.rm=T), by=c('date', 'department')]
+dt_final[, Firstline_Distributed_act:=sum(Total_First_Line_Drugs_inusIsonizide__Distributed_act, Isoniazid_Distributed_act, na.rm=T), by=c('date', 'department')]
+dt_final[, Secondline_Distributed_act:=sum(Second_Line_Drugs_Distributed_act, Total_MDR_Drugs_Distributed_act, na.rm=T), by=c('date', 'department')]
 
 #-----------------------------------------------------
 # Save data 
