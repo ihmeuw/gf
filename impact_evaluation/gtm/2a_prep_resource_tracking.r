@@ -85,39 +85,38 @@
   expenditures[short_code=="T1", gf_tb:=sum(expenditure, na.rm=T), by=c('short_code', 'date')]
   expenditures[short_code=="T2", gf_tbhiv:=sum(expenditure, na.rm=T), by=c('short_code', 'date')]
   expenditures[short_code=="T3", gf_mdrtb:=sum(expenditure, na.rm=T), by=c('short_code', 'date')]
-  expenditures[disease=="rssh", gf_rssh:=sum(expenditure, na.rm=T), by=c('disease', 'date')]
-  
-  exp_wide = expenditures[, .(date, gf_tb, gf_tbhiv, gf_mdrtb, gf_rssh)]
+
+  exp_wide = expenditures[, .(date, gf_tb, gf_tbhiv, gf_mdrtb)]
   exp_wide = expenditures[, .(gf_tb=sum(gf_tb, na.rm=T), gf_tbhiv=sum(gf_tbhiv, na.rm=T),
-                              gf_mdrtb=sum(gf_mdrtb, na.rm=T), gf_rssh=sum(gf_rssh, na.rm=T)), by='date']
+                              gf_mdrtb=sum(gf_mdrtb, na.rm=T)), by='date']
   
   #---------------------------------------------------------------
   #Decision 8/20/19 Jen Ross - add in RSSH spent each year as a proportion of GF spending on sub-disease (tb, tb/hiv, and mdr-tb) to each of these variables. 
   #Decision 10/2/2019 David Phillips and Jen Ross - want to code RSSH in a more sophisticated way, as an interaction term. 
   # Need to comment this section out. 
-  # gf_proportions = exp_wide[, .(gf_tb=gf_tb/(gf_tb+gf_tbhiv+gf_mdrtb), gf_tbhiv=gf_tbhiv/(gf_tb+gf_tbhiv+gf_mdrtb), gf_mdrtb=gf_mdrtb/(gf_tb+gf_tbhiv+gf_mdrtb)), by='date']
-  # gf_proportions[, total:=(gf_tb+gf_tbhiv+gf_mdrtb)]
-  # #For cases where total isn't one, all spending is NA.
-  # gf_proportions[is.na(total), c('gf_tb', 'gf_tbhiv', 'gf_mdrtb'):=1/3]
-  # 
-  # exp_rssh_wide = expenditures[disease=='rssh' & grant_disease%in%c('hiv/tb', 'tb'), .(rssh=sum(expenditure, na.rm=T)), by='date']
-  # exp_rssh_wide = merge(exp_rssh_wide, gf_proportions, by='date', all=T)
-  # 
-  # #Multiply rssh by each proportion respectively to get the total RSSH you should add to that variable.
-  # exp_rssh_wide[, gf_tb_rssh:=rssh*gf_tb]
-  # exp_rssh_wide[, gf_tbhiv_rssh:=rssh*gf_tbhiv]
-  # exp_rssh_wide[, gf_mdrtb_rssh:=rssh*gf_mdrtb]
-  # for (c in names(exp_rssh_wide)){
-  #   exp_rssh_wide[is.na(get(c)), (c):=0]
-  # }
-  # 
-  # #Merge this new rssh expenditure data back onto original GF data and add.
-  # exp_wide = merge(exp_wide, exp_rssh_wide[, .(date, gf_tb_rssh, gf_tbhiv_rssh, gf_mdrtb_rssh)], by='date', all=T)
-  # exp_wide[, gf_tb:=gf_tb+gf_tb_rssh]
-  # exp_wide[, gf_mdrtb:=gf_mdrtb+gf_mdrtb_rssh]
-  # exp_wide[, gf_tbhiv:=gf_tbhiv+gf_tbhiv_rssh]
+  gf_proportions = exp_wide[, .(gf_tb=gf_tb/(gf_tb+gf_tbhiv+gf_mdrtb), gf_tbhiv=gf_tbhiv/(gf_tb+gf_tbhiv+gf_mdrtb), gf_mdrtb=gf_mdrtb/(gf_tb+gf_tbhiv+gf_mdrtb)), by='date']
+  gf_proportions[, total:=(gf_tb+gf_tbhiv+gf_mdrtb)]
+  #For cases where total isn't one, all spending is NA.
+  gf_proportions[is.na(total), c('gf_tb', 'gf_tbhiv', 'gf_mdrtb'):=1/3]
+
+  exp_rssh_wide = expenditures[disease=='rssh' & grant_disease%in%c('hiv/tb', 'tb'), .(rssh=sum(expenditure, na.rm=T)), by='date']
+  exp_rssh_wide = merge(exp_rssh_wide, gf_proportions, by='date', all=T)
+
+  #Multiply rssh by each proportion respectively to get the total RSSH you should add to that variable.
+  exp_rssh_wide[, gf_tb_rssh:=rssh*gf_tb]
+  exp_rssh_wide[, gf_tbhiv_rssh:=rssh*gf_tbhiv]
+  exp_rssh_wide[, gf_mdrtb_rssh:=rssh*gf_mdrtb]
+  for (c in names(exp_rssh_wide)){
+    exp_rssh_wide[is.na(get(c)), (c):=0]
+  }
+
+  #Merge this new rssh expenditure data back onto original GF data and add.
+  exp_wide = merge(exp_wide, exp_rssh_wide[, .(date, gf_tb_rssh, gf_tbhiv_rssh, gf_mdrtb_rssh)], by='date', all=T)
+  exp_wide[, gf_tb:=gf_tb+gf_tb_rssh]
+  exp_wide[, gf_mdrtb:=gf_mdrtb+gf_mdrtb_rssh]
+  exp_wide[, gf_tbhiv:=gf_tbhiv+gf_tbhiv_rssh]
   #--------------------------------------------------------
-  exp_wide = exp_wide[, .(date, gf_tb, gf_tbhiv, gf_mdrtb, gf_rssh)]
+  exp_wide = exp_wide[, .(date, gf_tb, gf_tbhiv, gf_mdrtb)]
   
   # GHE - just want one variable for all TB spending. 
   ghe_wide = sicoin[disease=="tb", .(ghe_tb=sum(expenditure, na.rm=T)), by=c('date')]
@@ -144,9 +143,10 @@ rt_wide = rt_wide[date>=START_YEAR]
 
 # # compute lags - all financial variables should be lagged 6 months. DP 7.12.19
 #EL 10/2/2019 - all RSSH variables should be lagged a total of one year, so lag this variable another 6 months. 
-rssh = rt_wide[, .(date, gf_rssh)]
-rssh[, date:=date+0.5]
-rt_wide = rt_wide[, -c('gf_rssh')] #Drop this variable, and re-merge it in after it's lagged. 
+#EL 10/28/2019 - in model presented at September TERG, we didn't have RSSH lags. 
+# rssh = rt_wide[, .(date, gf_rssh)]
+# rssh[, date:=date+0.5]
+# rt_wide = rt_wide[, -c('gf_rssh')] #Drop this variable, and re-merge it in after it's lagged. 
 
 rt_wide = merge(rt_wide, rssh, by='date', all=T)
 #Replace NAs with 0's at this point unless we hear differently from Guillermo. 

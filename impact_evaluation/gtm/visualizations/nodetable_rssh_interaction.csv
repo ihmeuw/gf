@@ -10,9 +10,8 @@ Secondline_Distributed_act_cumulative,6.5,-3,Second-line drugs dist.
 Additional_Cases_Detected_via_ACF_out_cumulative,4.4,-3,Cases detected via active case finding
 Number_of_Cases_Screened_for_MDR_act_cumulative,9,-3,Genexpert testing for MDR
 TB_Patients_Tested_for_HIV_act_cumulative,11.5,-3,TB patients tested for HIV
-Cases_Started_on_Treatment_in_Prisons_out,0,3,Cases started Tx. In prisons
-Cases_Started_on_Treatment_out_cumulative,1.75,3,Cases Started Tx. 
-Cases_Notified_out_cumulative,3.5,3,Cases Notified
+Cases_Started_on_Treatment_out_cumulative,0,3,Cases Started Tx. 
+Cases_Notified_out_cumulative,3,3,Cases Notified
 Children_less5_referred_out_cumulative,5.25,3,Children <5 referred for TB screening
 MDR_Cases_Started_Treatment_out_cumulative,7,3,MDR Cases Started Tx. 
 HIV_TB_Cases_Notified_out_cumulative,8.4,3,HIV/TB Cases Notified
