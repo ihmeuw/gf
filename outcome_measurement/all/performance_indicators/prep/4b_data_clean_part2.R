@@ -8,7 +8,7 @@ library(data.table)
 
 # load code book and PUDR PFI Database
 DT <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/cleaned_pfi.RDS") # this is the data that has already been somewhat cleaned based on part 1 of the data_cleaning script
-codebook <- fread("C:/Users/frc2/Documents/gf/special_assessments/synthesis/codebooks_pudr_indicators/data_source_codebook.csv", header = TRUE) # code book which describes names of the data sources in a standardized way
+codebook <- fread("C:/Users/frc2/Documents/gf/outcome_measurement/all/performance_indicators/codebooks/data_source_codebook.csv", header = TRUE) # code book which describes names of the data sources in a standardized way
 
 
 # Merge and replace the Baselice source code 
@@ -28,7 +28,7 @@ data5 <- data4[,source_code:=NULL]
 
 # merge on new codebook with all indicator names
 # read and merge codebook to standardize names - should add 73 variables ()
-codebook_names <- fread("C:/Users/frc2/Documents/gf/special_assessments/synthesis/codebooks_pudr_indicators/indicators_codebook_full.csv") 
+codebook_names <- fread("C:/Users/frc2/Documents/gf/outcome_measurement/all/performance_indicators/codebooks/indicators_codebook.csv") 
 data6 <- merge(data5, codebook_names, by="indicator_code", all.x = TRUE)
 
 
