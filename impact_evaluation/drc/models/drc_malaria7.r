@@ -32,7 +32,6 @@ model = '
 	lag_exp_M1_1_cumulative ~~ lag_other_dah_M1_1_cumulative
 	lag_exp_M1_2_cumulative ~~ lag_other_dah_M1_1_cumulative
 	lag_exp_M2_1_cumulative ~~ lag_other_dah_M2_cumulative
-	lag_exp_M2_1_cumulative ~~ lag_other_dah_M2_cumulative
 	lag_exp_M2_6_cumulative ~~ lag_other_dah_M2_cumulative
 	lag_exp_M2_3_cumulative ~~ lag_other_dah_M2_3_cumulative
 	
@@ -62,11 +61,6 @@ model = '
 	SP_cumulative ~~ 0*severeMalariaTreated_cumulative
 	SP_cumulative ~~ 0*totalPatientsTreated_cumulative
 	
-	ITN_consumed_cumulative ~~ 0*totalPatientsTreated_cumulative
-	ITN_consumed_cumulative ~~ 0*severeMalariaTreated_cumulative
-	ITN_consumed_cumulative ~~ 0*ACTs_SSC_cumulative
-	ITN_consumed_cumulative ~~ 0*SP_cumulative
-	ITN_consumed_cumulative ~~ 0*RDT_completed_cumulative
 	totalPatientsTreated_cumulative ~~ 0*RDT_completed_cumulative
 	totalPatientsTreated_cumulative ~~ 0*severeMalariaTreated_cumulative
 '
