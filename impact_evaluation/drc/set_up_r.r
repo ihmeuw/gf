@@ -119,6 +119,7 @@ admin2ShapeFile = paste0(dir, '/mapping/cod/health_zones_who/health2.shp')
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph
+nodeTableFile = paste0('./impact_evaluation/drc/visualizations/nodetable', fileLabel, '.csv')
 nodeTableFile1 = paste0('./impact_evaluation/drc/visualizations/nodetable_first_half', fileLabel, '.csv')
 nodeTableFile2 = paste0('./impact_evaluation/drc/visualizations/nodetable_second_half', fileLabel, '.csv')
 # ---------------------------------------------------------------------------------
@@ -180,6 +181,7 @@ if (Sys.info()[1]!='Windows') {
 # output file from 4c and 4d_explore_data.r (graphs)
 outputFile4c = paste0(ieDir, '../visualizations/first_half_exploratory_graphs', fileLabel, '.pdf')
 outputFile4d = paste0(ieDir, '../visualizations/second_half_exploratory_graphs', fileLabel, '.pdf')
+outputFile4e = paste0(ieDir, '../visualizations/exploratory_graphs', fileLabel, '.pdf')
 
 # output file from 5a_run_first_half_analysis.R
 outputFile5a = paste0(ieDir, 'first_half_model_results', fileLabel, '.rdata')
