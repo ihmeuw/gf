@@ -7,7 +7,7 @@
 # The current working directory should be the root of this repo
 # Command-Line Arguments:
 # modelVersion - (character) name of the model script to loaded (not including the file extension)
-# modelStage - (numeric) 1 for first half of results chain, 2 for second half (controls input and output file names, must make sense given modelVersion)
+# modelStage - (numeric) 1 for first half of results chain, 2 for second half (controls input and output file names, must make sense given modelVersion), 0 for full
 # testRun - (logical) TRUE will run the model with limited MCMC steps, FALSE will run the full thing
 # ------------------------------------------------
 
@@ -52,6 +52,8 @@ print(paste('Test Run:', testRun))
 # Load data
 set.seed(1)
 print('Loading data...')
+if (Sys.info()[1]!='Windows' & modelStage==0) load(outputFile4_scratch)
+if (Sys.info()[1]=='Windows' & modelStage==0) load(outputFile4)
 if (Sys.info()[1]!='Windows' & modelStage==1) load(outputFile4a_scratch)
 if (Sys.info()[1]=='Windows' & modelStage==1) load(outputFile4a)
 if (Sys.info()[1]!='Windows' & modelStage==2) load(outputFile4b_scratch)
@@ -151,6 +153,8 @@ summary[, health_zone:=h]
 print('Saving output...')
 
 # make unique file name
+if(modelStage==0) outputFile5tmp1 = paste0(clustertmpDir2, 'semFit_', task_id, '.rds')
+if(modelStage==0) outputFile5tmp2 = paste0(clustertmpDir2, 'summary_', task_id, '.rds')
 if(modelStage==1) outputFile5tmp1 = paste0(clustertmpDir2, 'first_half_semFit_', task_id, '.rds')
 if(modelStage==1) outputFile5tmp2 = paste0(clustertmpDir2, 'first_half_summary_', task_id, '.rds')
 if(modelStage==1) outputFile5tmp3 = paste0(clustertmpDir2, 'first_half_urFit_', task_id, '.rds')
