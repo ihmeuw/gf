@@ -67,7 +67,6 @@ p3 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
          dim=TRUE, highlight=c('com_mobsoc_cumulative', 
                                'com_cause_cumulative',
                                'com_radio_cumulative',
-                               'com_nom_touss_cumulative',
                                'com_vad_touss_cumulative',
                                'lead_gueris_taux'
          ))
@@ -81,6 +80,7 @@ p4 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                                'com_vad_touss_cumulative',
                                'tb_cas_id_cumulative'
          ))
+
 
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
          scaling_factors=NA, standardized=TRUE,
@@ -121,7 +121,8 @@ p9 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                dim=TRUE, highlight=c('lag_exp_T3_cumulative',
                                      'lag_other_dah_T3_cumulative',
                                      'tot_genexpert_cumulative',
-                                     'mdr_success_rate'
+                                     'mdr_success_rate',
+                                     'patients_prop_genexpert_cumulative'
                ))
 
 p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
@@ -129,6 +130,7 @@ p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                lineWidth=1.5, curved=0, tapered=FALSE,
                dim=TRUE, highlight=c('lag_exp_T3_cumulative',
                                      'lag_other_dah_T3_cumulative',
+                                     'patients_prop_genexpert_cumulative',
                                      'dx_count_cumulative',
                                      'mdr_success_rate'
                ))

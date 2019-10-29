@@ -11,6 +11,7 @@ library(ggplot2)
 library(knitr)
 library(kableExtra)
 library(Hmisc)
+library(glue)
 library(memisc)
 library(wesanderson)
 library(gridExtra)
@@ -20,6 +21,7 @@ library(pander)
 options(scipen=15)
 
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
+png_save = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/Synthesis 2019/"
 
 #Read in absorption data 
 cod = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/absorption_cod.rds")
@@ -44,13 +46,13 @@ all_absorption = merge(all_absorption, all_mods, by=c('gf_module', 'gf_intervent
 stopifnot(nrow(all_absorption[is.na(abbrev_int)])==0)
 
 #Break out into smaller datasets. 
-by_country = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant_disease')]
+by_country = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant_disease')]
 by_country[, absorption:=(expenditure/budget)*100]
 by_country[, label:=paste0(round(absorption, 1), "%")]
-by_module = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant', 'gf_module', 'abbrev_mod')]
+by_module = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant', 'gf_module', 'abbrev_mod')]
 by_module[, absorption:=(expenditure/budget)*100]
 by_module[, label:=paste0(round(absorption, 1), "%")]
-by_intervention = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int')]
+by_intervention = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int')]
 by_intervention[, absorption:=(expenditure/budget)*100]
 by_intervention[, label:=paste0(round(absorption, 1), "%")]
 
@@ -135,8 +137,8 @@ ggplot(by_country, aes(x=loc_name, y=absorption, fill=grant_disease))+
 # Across grants, which modules have higher absorption than the PUDR average in 2019? 
 
 ```{r slide2, include=FALSE}
-by_module[, total_budget:=sum(budget, na.rm=T), by='grant']
-by_module[, total_expenditure:=sum(expenditure, na.rm=T), by='grant']
+by_module[, total_budget:=sum(budget, na.rm=TRUE), by='grant']
+by_module[, total_expenditure:=sum(expenditure, na.rm=TRUE), by='grant']
 by_module[, total_absorption:=(total_expenditure/total_budget)*100]
 
 by_module[absorption>=total_absorption, absorption_rating:="ABOVE_AVERAGE"]
@@ -286,13 +288,22 @@ ggplot(srs_by_int, aes(x=num_implementers, y=absorption)) +
 # Which interventions have more than 20 implementers? 
 ```{r high_num_implementers}
 kable(srs_by_int[num_implementers>20, .(grant, abbrev_mod, abbrev_int, num_implementers, absorption)], col.names=c('Grant', 'Module', 'Intervention', '# Implementers', "Absorption")) %>%
-  kable_styling(font_size=6)
+  kable_styling(font_size=4)
 ```
 
 In the SANRU grant in DRC, there are several interventions that have more than 20 implementers. 
 
 # Does a highly-commoditized grant correspond with higher absorption? 
 ```{r commodities}
+
+# EMILY START HERE. I THINK AN EASIER WAY TO DO THIS WOULD BE TO LOOK AT THE SUMMARY BUDGETS. 
+#Try using keywords to tag commodities at the budget-level. 
+commodity_words = c('arvs', 'llin', 'mosquitaire', 'genexpert', 'preservatif', 'condon', 'condom', ' xpert ', 'xpertmtb', 'tablets', 'artesunate', 'pruebas rapidas')
+commodities = budgets[, .(budget=sum(budget)), by=c('loc_name', 'grant', 'disease', 'grant_period', 'gf_module', 'gf_intervention', 'code','activity_description')]
+commodities[grepl(collapse(commodity_words, "|"), tolower(activity_description)), commodity:=TRUE]
+commodities[is.na(commodity), commodity:=FALSE]
+
+write.csv(unique(commodities[, .(activity_description, commodity)]), "C:/Users/elineb/Desktop/commodities.csv", row.names=F)
 ```
 
 
@@ -357,17 +368,17 @@ Using 2019 PUDRs, we wanted to know:
 
 # Have absorption rates increased since the start of the grant?
 ```{r compare_absorption, include=FALSE}
-s1_2018 = all_absorption[start_date=="2018-01-01" & end_date=="2018-07-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant_disease')]
+s1_2018 = all_absorption[start_date=="2018-01-01" & end_date=="2018-07-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant_disease')]
 s1_2018[, absorption:=(expenditure/budget)*100]
 s1_2018[, label:=paste0(round(absorption, 1), "%")]
 s1_2018[absorption>200, absorption:=200]
 
-s1_2016 = all_absorption[start_date=="2016-01-01" & end_date=="2016-07-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant_disease')]
+s1_2016 = all_absorption[start_date=="2016-01-01" & end_date=="2016-07-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant_disease')]
 s1_2016[, absorption:=(expenditure/budget)*100]
 s1_2016[, label:=paste0(round(absorption, 1), "%")]
 s1_2016[absorption>200, absorption:=200]
 
-s2_2018 = all_absorption[grant_period=="2018-2020" & semester%in%c('Semester 1-2', 'Semester 2'), .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant_disease')]
+s2_2018 = all_absorption[grant_period=="2018-2020" & semester%in%c('Semester 1-2', 'Semester 2'), .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant_disease')]
 s2_2018[, absorption:=(expenditure/budget)*100]
 s2_2018[, label:=paste0(round(absorption, 1), "%")]
 s2_2018[absorption>200, absorption:=200]
@@ -412,7 +423,7 @@ grid.arrange(p1, p2, p3, ncol=3, nrow=1)
 ```
 
 ```{r compare_absorption1} 
-comp_absorption = all_absorption[grant_period=="2018-2020", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant_disease', 'semester')]
+comp_absorption = all_absorption[grant_period=="2018-2020", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant_disease', 'semester')]
 comp_absorption[, absorption:=(expenditure/budget)*100]
 comp_absorption[, label:=paste0(round(absorption, 1), "%")]
 comp_absorption[absorption>200, absorption:=200]
@@ -486,7 +497,7 @@ rssh_mods = c('Health management information system and monitoring and evaluatio
               "Community responses and systems", "National health strategies", "Integrated service delivery and quality improvement", 
               "Procurement and supply chain management systems")
 
-plot_data = all_absorption[gf_module%in%rssh_mods & grant_period=="2018-2020" & start_date=="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod')] #Collapse across grants
+plot_data = all_absorption[gf_module%in%rssh_mods & grant_period=="2018-2020" & start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod')] #Collapse across grants
 plot_data[, absorption:=round((expenditure/budget)*100, 2)]
 plot_data[, label1:=paste0(absorption, "%")]
 plot_data[absorption>200, absorption:=200]
@@ -532,7 +543,7 @@ ggplot(plot_data, aes(x=abbrev_mod, y=absorption)) +
 
 kp_mods = c("Comprehensive prevention programs for men who have sex with men", "Comprehensive prevention programs for people who inject drugs and their partners", "Comprehensive prevention programs for sex workers and their clients", "Comprehensive prevention programs for transgender people", "Prevention programs for adolescents and youth, in and out of school", "Prevention programs for other vulnerable populations")
 
-plot_data = all_absorption[gf_module%in%kp_mods & grant_period=="2018-2020" & start_date=="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'gf_module')]
+plot_data = all_absorption[gf_module%in%kp_mods & grant_period=="2018-2020" & start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod', 'gf_module')]
 plot_data[, absorption:=round((expenditure/budget)*100, 2)]
 plot_data[, label:=paste0(absorption, "%")]
 
@@ -578,7 +589,7 @@ ggplot(plot_data, aes(x=key_population, y=absorption)) +
 # Does a higher budget always correlate with lower absorption? 
 
 ```{r budget_to_absorption} 
-budget_v_absorption = all_absorption[grant_period=="2018-2020", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'abbrev_mod', 'semester', 'loc_name')]
+budget_v_absorption = all_absorption[grant_period=="2018-2020", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'abbrev_mod', 'semester', 'loc_name')]
 budget_v_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 
 ggplot(budget_v_absorption, aes(x=budget, y=absorption, color=loc_name)) + 

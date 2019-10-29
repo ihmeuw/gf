@@ -1,0 +1,659 @@
+\PassOptionsToPackage{unicode=true}{hyperref} % options for packages loaded elsewhere
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[ignorenonframetext,]{beamer}
+\usepackage{pgfpages}
+\setbeamertemplate{caption}[numbered]
+\setbeamertemplate{caption label separator}{: }
+\setbeamercolor{caption name}{fg=normal text.fg}
+\beamertemplatenavigationsymbolsempty
+% Prevent slide breaks in the middle of a paragraph:
+\widowpenalties 1 10000
+\raggedbottom
+\setbeamertemplate{part page}{
+\centering
+\begin{beamercolorbox}[sep=16pt,center]{part title}
+  \usebeamerfont{part title}\insertpart\par
+\end{beamercolorbox}
+}
+\setbeamertemplate{section page}{
+\centering
+\begin{beamercolorbox}[sep=12pt,center]{part title}
+  \usebeamerfont{section title}\insertsection\par
+\end{beamercolorbox}
+}
+\setbeamertemplate{subsection page}{
+\centering
+\begin{beamercolorbox}[sep=8pt,center]{part title}
+  \usebeamerfont{subsection title}\insertsubsection\par
+\end{beamercolorbox}
+}
+\AtBeginPart{
+  \frame{\partpage}
+}
+\AtBeginSection{
+  \ifbibliography
+  \else
+    \frame{\sectionpage}
+  \fi
+}
+\AtBeginSubsection{
+  \frame{\subsectionpage}
+}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\usepackage{fixltx2e} % provides \textsubscript
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provides euro and other symbols
+\else % if luatex or xelatex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
+\fi
+% use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+% use microtype if available
+\IfFileExists{microtype.sty}{%
+\usepackage[]{microtype}
+\UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\IfFileExists{parskip.sty}{%
+\usepackage{parskip}
+}{% else
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}
+}
+\usepackage{hyperref}
+\hypersetup{
+            pdftitle={Absorption Data Overview},
+            pdfauthor={Emily Linebarger},
+            pdfborder={0 0 0},
+            breaklinks=true}
+\urlstyle{same}  % don't use monospace font for urls
+\newif\ifbibliography
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+\setlength{\emergencystretch}{3em}  % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{0}
+
+% set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+
+
+\title{Absorption Data Overview}
+\author{Emily Linebarger}
+\date{25 October, 2019}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Research questions}
+\protect\hypertarget{research-questions}{}
+
+Using 2019 PUDRs, we wanted to know:
+
+\begin{enumerate}
+\tightlist
+\item
+  Are there any trends in the 2019 absorption so far?
+\item
+  Has absorption changed since the beginning of the grants?
+\item
+  How does it compare to this semester in the 2015-2017 cycle?
+\item
+  Are there specific findings for RSSH or key populations?
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{List of current grants}
+\protect\hypertarget{list-of-current-grants}{}
+
+\begin{table}[H]
+\centering\begingroup\fontsize{6}{8}\selectfont
+
+\begin{tabular}{l|l|l|l}
+\hline
+Country & Grant Period & Grant & Disease\\
+\hline
+COD & 2018-2020 & COD-H-MOH & HIV\\
+\hline
+COD & 2018-2020 & COD-C-CORDAID & HIV/TB\\
+\hline
+COD & 2018-2020 & COD-M-MOH & Malaria\\
+\hline
+COD & 2018-2020 & COD-M-SANRU & Malaria\\
+\hline
+COD & 2018-2020 & COD-T-MOH & TB\\
+\hline
+GTM & 2018-2020 & GTM-H-INCAP & HIV\\
+\hline
+GTM & 2016-2019 & GTM-T-MSPAS & TB\\
+\hline
+SEN & 2018-2020 & SEN-H-ANCS & HIV\\
+\hline
+SEN & 2018-2020 & SEN-H-CNLS & HIV\\
+\hline
+SEN & 2018-2020 & SEN-M-PNLP & Malaria\\
+\hline
+SEN & 2018-2020 & SEN-Z-MOH & TB\\
+\hline
+UGA & 2018-2020 & UGA-H-MoFPED & HIV\\
+\hline
+UGA & 2018-2020 & UGA-C-TASO & HIV/TB\\
+\hline
+UGA & 2018-2020 & UGA-M-MoFPED & Malaria\\
+\hline
+UGA & 2018-2020 & UGA-M-TASO & Malaria\\
+\hline
+UGA & 2018-2020 & UGA-T-MoFPED & TB\\
+\hline
+\end{tabular}\endgroup{}
+\end{table}
+
+DRC, Senegal, and Uganda are all on the same grant cycle, and their
+grants will span from 2018-2020. Guatemala is on a slightly different
+schedule, and their current grant period is 2016-2019. Guatemala also
+had several year-long grants in 2018, and they are starting new grants
+in 2019.
+
+\end{frame}
+
+\begin{frame}{Reporting completeness}
+\protect\hypertarget{reporting-completeness}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/reporting-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Research questions}
+\protect\hypertarget{research-questions-1}{}
+
+Using 2019 PUDRs, we wanted to know:
+
+\begin{enumerate}
+\tightlist
+\item
+  \textbf{Are there any trends in the 2019 absorption so far?}
+\item
+  Has absorption changed since the beginning of the grants?
+\item
+  How does it compare to this semester in the 2015-2017 cycle?
+\item
+  Are there specific findings for RSSH or key populations?
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Absorption overview by country for S1 2019}
+\protect\hypertarget{absorption-overview-by-country-for-s1-2019}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/slide1-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Budget/Expenditure by country for S1 2019}
+\protect\hypertarget{budgetexpenditure-by-country-for-s1-2019}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/budget_exp_country-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Across grants, which modules have higher absorption than
+the PUDR average in 2019?}
+\protect\hypertarget{across-grants-which-modules-have-higher-absorption-than-the-pudr-average-in-2019}{}
+
+\begin{table}[H]
+\centering\begingroup\fontsize{8}{10}\selectfont
+
+\begin{tabular}{l|l}
+\hline
+Module & Grants\\
+\hline
+Info systems \& M\&E & 6\\
+\hline
+Case management & 3\\
+\hline
+Nat. health strategies & 3\\
+\hline
+Prevention programs for MSM & 1\\
+\hline
+Prevention programs for IJU & 1\\
+\hline
+Prevention programs for transgender & 1\\
+\hline
+Financial systems & 1\\
+\hline
+Service delivery & 1\\
+\hline
+MDR-TB & 1\\
+\hline
+PMTCT & 1\\
+\hline
+\end{tabular}\endgroup{}
+\end{table}
+
+Four grants had higher absorption within the information systems module
+(HMIS) than for the PUDR as a whole.
+
+\end{frame}
+
+\begin{frame}{Which were below the PUDR average in 2019?}
+\protect\hypertarget{which-were-below-the-pudr-average-in-2019}{}
+
+\begin{table}[H]
+\centering\begingroup\fontsize{9}{11}\selectfont
+
+\begin{tabular}{l|l}
+\hline
+Module & Grants\\
+\hline
+HR \& health workers & 6\\
+\hline
+Community systems & 5\\
+\hline
+Info systems \& M\&E & 5\\
+\hline
+Service delivery & 4\\
+\hline
+Prevention programs for IJU & 3\\
+\hline
+Prevention programs for CSW \& clients & 3\\
+\hline
+Case management & 2\\
+\hline
+Prevention programs for MSM & 2\\
+\hline
+Prevention programs for transgender & 1\\
+\hline
+HIV Testing Services & 1\\
+\hline
+\end{tabular}\endgroup{}
+\end{table}
+
+HMIS and human resources for health had lower absorption than the PUDR
+average for five grants. Integrated service delivery reported low
+absorption for four. This puts several RSSH modules at the top of the
+``low performing absorption'' list. Following this are several modules
+related to key populations.
+
+\end{frame}
+
+\begin{frame}{What are the highest absorbing modules across countries?}
+\protect\hypertarget{what-are-the-highest-absorbing-modules-across-countries}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/high-performing_mods-1.pdf}
+
+\end{frame}
+
+\begin{frame}{What are the highest absorbing modules, by grant?}
+\protect\hypertarget{what-are-the-highest-absorbing-modules-by-grant}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/high_performers_by_loc-1.pdf}
+
+\end{frame}
+
+\begin{frame}{What are the highest absorbing interventions across
+countries?}
+\protect\hypertarget{what-are-the-highest-absorbing-interventions-across-countries}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/high_performing_ints-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Are there any correlations between the number of
+activities and absorption?}
+\protect\hypertarget{are-there-any-correlations-between-the-number-of-activities-and-absorption}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/num_activities-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Is there a correlation between the number of SRs and
+absorption?}
+\protect\hypertarget{is-there-a-correlation-between-the-number-of-srs-and-absorption}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/num_srs-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Which interventions have more than 20 implementers?}
+\protect\hypertarget{which-interventions-have-more-than-20-implementers}{}
+
+\begin{table}[H]
+\centering\begingroup\fontsize{4}{6}\selectfont
+
+\begin{tabular}{l|l|l|r|r}
+\hline
+Grant & Module & Intervention & \# Implementers & Absorption\\
+\hline
+COD-M-SANRU & Info systems \& M\&E & Analysis, review and transparency & 21 & 46.63765\\
+\hline
+COD-M-SANRU & Info systems \& M\&E & Routine reporting & 24 & 50.74823\\
+\hline
+COD-M-SANRU & Program mgmt & Grant management & 27 & 76.80904\\
+\hline
+COD-M-SANRU & Program mgmt & Policy, planning, and coordination & 21 & 73.47702\\
+\hline
+COD-M-SANRU & Vector control & LLIN: Continuous distribution & 21 & 31.13385\\
+\hline
+\end{tabular}\endgroup{}
+\end{table}
+
+In the SANRU grant in DRC, there are several interventions that have
+more than 20 implementers.
+
+\end{frame}
+
+\begin{frame}{Does a highly-commoditized grant correspond with higher
+absorption?}
+\protect\hypertarget{does-a-highly-commoditized-grant-correspond-with-higher-absorption}{}
+
+\end{frame}
+
+\begin{frame}[fragile]{What are the biggest predictors of high
+absorption?}
+\protect\hypertarget{what-are-the-biggest-predictors-of-high-absorption}{}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{model1 =}\StringTok{ }\KeywordTok{lm}\NormalTok{(absorption }\OperatorTok{~}\StringTok{ }\NormalTok{num_implementers }\OperatorTok{+}\StringTok{ }\NormalTok{num_activities }\OperatorTok{+}\StringTok{ }\NormalTok{commodity }\OperatorTok{+}\StringTok{ }\NormalTok{government_pr, }\DataTypeTok{data=}\NormalTok{regression_data)}
+\NormalTok{mtable1 =}\StringTok{ }\KeywordTok{mtable}\NormalTok{(}\StringTok{'Model 1'}\NormalTok{ =}\StringTok{ }\NormalTok{model1, }\DataTypeTok{summary.stats =} \KeywordTok{c}\NormalTok{(}\StringTok{'R-squared'}\NormalTok{,}\StringTok{'F'}\NormalTok{,}\StringTok{'p'}\NormalTok{,}\StringTok{'N'}\NormalTok{))}
+\KeywordTok{pander}\NormalTok{(mtable1)}
+\end{Highlighting}
+\end{Shaded}
+
+Quitting from lines 349-353 (absorption\_for\_synthesis.rmd) Error in
+x{[}{[}i{]}{]} : subscript out of bounds Calls: \ldots{} capture.output
+-\textgreater{} evalVis -\textgreater{} withVisible -\textgreater{} eval
+-\textgreater{} eval -\textgreater{} pander In addition: Warning
+messages: 1: Removed 45 rows containing missing values (geom\_point). 2:
+Removed 5 rows containing missing values (geom\_point). 3: Removed 60
+rows containing missing values (geom\_point). 4: Removed 86 rows
+containing missing values (geom\_point). 5: `collapse' is deprecated.
+Use `glue\_collapse' instead. See help(``Deprecated'') and
+help(``glue-deprecated''). 6: In pander.default(mtable1) : No
+pander.method for ``memisc\_mtable'', reverting to default.
+
+\end{frame}
+
+\begin{frame}{Finding statements for research question \#1}
+\protect\hypertarget{finding-statements-for-research-question-1}{}
+
+\begin{itemize}
+\tightlist
+\item
+  In all countries, tuberculosis grants reported the highest absorption
+  numbers. They also have the lowest overall budgets.
+\item
+  Several grants are reporting high absorption numbers for health
+  management information systems. However,
+\item
+  Several grants are reporting low absorption numbers for HMIS and for
+  human resources for health. This means that several RSSH modules are
+  reporting low absorption percentages across grants.
+\item
+  Prevention programs for injectable drug users and commercial sex
+  workers also had low absorption across several grants.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Research questions}
+\protect\hypertarget{research-questions-2}{}
+
+Using 2019 PUDRs, we wanted to know:
+
+\begin{enumerate}
+\tightlist
+\item
+  Are there any trends in the 2019 absorption so far?
+\item
+  \textbf{Has absorption changed since the beginning of the grants?}
+\item
+  How does it compare to this semester in the 2015-2017 cycle?
+\item
+  Are there specific findings for RSSH or key populations?
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Have absorption rates increased since the start of the
+grant?}
+\protect\hypertarget{have-absorption-rates-increased-since-the-start-of-the-grant}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/compare_absorption1-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Finding statements for research question \#2}
+\protect\hypertarget{finding-statements-for-research-question-2}{}
+
+\begin{itemize}
+\tightlist
+\item
+  Absorption has steadily increased for DRC and Senegal since the
+  beginning of the grant cycle. Absorption in Uganda has been more
+  mixed.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Additional analyses for this section}
+\protect\hypertarget{additional-analyses-for-this-section}{}
+
+\begin{itemize}
+\tightlist
+\item
+  Add budget/expenditure stacked bar plots by grant disease/country
+\item
+  Add a cumulative version of this graph (Semester 1, Semester 1-2, and
+  Semester 1-3 as the panels)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Research questions}
+\protect\hypertarget{research-questions-3}{}
+
+Using 2019 PUDRs, we wanted to know:
+
+\begin{enumerate}
+\tightlist
+\item
+  Are there any trends in the 2019 absorption so far?
+\item
+  Has absorption changed since the beginning of the grants?
+\item
+  \textbf{How does it compare to this semester in the 2015-2017 cycle?}
+\item
+  Are there specific findings for RSSH or key populations?
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Finding statements for research question \#3}
+\protect\hypertarget{finding-statements-for-research-question-3}{}
+
+\end{frame}
+
+\begin{frame}{Additional analyses for this section}
+\protect\hypertarget{additional-analyses-for-this-section-1}{}
+
+\begin{itemize}
+\tightlist
+\item
+  Have not yet begun making graphs for this section; am planning on
+  comparing S3 2015-2017 with S3 2018-2020.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Research questions}
+\protect\hypertarget{research-questions-4}{}
+
+Using 2019 PUDRs, we wanted to know:
+
+\begin{enumerate}
+\tightlist
+\item
+  Are there any trends in the 2019 absorption so far?
+\item
+  Has absorption changed since the beginning of the grants?
+\item
+  How does it compare to this semester in the 2015-2017 cycle?
+\item
+  \textbf{Are there specific findings for RSSH or key populations?}
+\end{enumerate}
+
+\end{frame}
+
+\begin{frame}{Within RSSH modules, which have the highest absorption?}
+\protect\hypertarget{within-rssh-modules-which-have-the-highest-absorption}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/slide4-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Budget/Expenditure for RSSH modules}
+\protect\hypertarget{budgetexpenditure-for-rssh-modules}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/budget_exp_rssh-1.pdf}
+
+\end{frame}
+
+\begin{frame}{For grants with a focus on KPs, which have consistently
+higher absorption?}
+\protect\hypertarget{for-grants-with-a-focus-on-kps-which-have-consistently-higher-absorption}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/key_populations-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Budget/Expenditure for key populations}
+\protect\hypertarget{budgetexpenditure-for-key-populations}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/budget_exp_kp-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Does a higher budget always correlate with lower
+absorption?}
+\protect\hypertarget{does-a-higher-budget-always-correlate-with-lower-absorption}{}
+
+\includegraphics{absorption_for_synthesis_files/figure-beamer/budget_to_absorption-1.pdf}
+
+\end{frame}
+
+\begin{frame}{Finding statements for research question \#4}
+\protect\hypertarget{finding-statements-for-research-question-4}{}
+
+\begin{itemize}
+\tightlist
+\item
+  For both RSSH and key populations, the modules that have the lowest
+  overall budget are reporting the best absorption numbers.
+\item
+  Many of the biggest RSSH and key population-focused modules are still
+  reporting absorption at or below 50\% (HMIS, human rights and health
+  workers, prevention programs for adolescents and youth)
+\item
+  Follow-up question: Can the high absorption among different key
+  populations be explained by SR budgets (is just one SR targeting
+  programs for transgender people, for example?)
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Additional analyses for this section}
+\protect\hypertarget{additional-analyses-for-this-section-2}{}
+
+\begin{itemize}
+\tightlist
+\item
+  Show how many grants are reporting for each KP and RSSH module
+\item
+  Can we prove that commodity-heavy activities are the main driver of
+  high absorption (it isn't just high overall budget; another factor?)
+\item
+  Break out RSSH and KP by module/grant/disease. Is there a multi-modal
+  trend here?
+\item
+  Try running a simple regression on absorption\textasciitilde{}budget.
+\item
+  Other variables to explore as drivers of absorption - number of SRs
+  implementing each module, highly commoditized grant.
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}{Further analyses for this presentation}
+\protect\hypertarget{further-analyses-for-this-presentation}{}
+
+\begin{itemize}
+\tightlist
+\item
+  Include projected absorption - start by just looking at absorption
+  compared to overall historical average by module
+\item
+  Add these findings to synthesis mad-libs
+\item
+  Add meta-statistics on how many documents we've analyzed so far
+\end{itemize}
+
+\end{frame}
+
+\end{document}

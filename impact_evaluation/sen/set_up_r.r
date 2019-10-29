@@ -165,6 +165,9 @@ outputFile2e = paste0(preppedIeDir, 'imputed_mdrtb.RDS')
 
 # output file from 2f_final_data_prep.r
 outputFile2f = paste0(preppedIeDir, 'prepped_outputs.RDS')
+
+# output file from 2g_additional_mdrtb_data.r
+outputFile2g = paste0(preppedIeDir, 'prepped_pat_prop_genexpert.RDS')
  
 # output file from 3_merge_data.R
 outputFile3 = paste0(preppedIeDir, 'inputs_outputs.RDS')
