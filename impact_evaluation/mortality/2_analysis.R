@@ -43,9 +43,6 @@ data = readRDS(inFile)
 # rename
 setnames(data, 'Deaths', 'mortality_rate')
 setnames(data, 'Incidence', 'incidence_rate')
-
-# drop malaria in guatemala because there's nearly zero mortality
-data = data[!which(country=='gtm' & disease=='malaria')]
 # --------------------------------------------
 
 
@@ -162,7 +159,7 @@ pdf(outFile1, height=5.5, width=8)
 # graph EV by country/disease
 for(c in unique(data$country)) { 
 	for(d in unique(data$disease)) { 
-		if (nrow(data[country==c & disease==d])==0) next
+		if (c=='gtm' & d=='malaria') next
 		p = ggplot(graphData[country==c & disease==d], 
 			aes(y=explained_variance, x=1, fill=label)) + 
 		  geom_bar(width=1, color='gray90', stat='identity', position='stack') + 
@@ -192,7 +189,7 @@ pdf(outFile2, height=5.5, width=8)
 vars = c('mortality_rate_std','log_incidence_rate_std','logit_mi_ratio_std')
 for(c in unique(data$country)) { 
 	for(d in unique(data$disease)) { 
-		if (nrow(data[country==c & disease==d])==0) next
+		if (c=='gtm' & d=='malaria') next
 		p = ggpairs(data[country==c & disease==d, vars, with=F], 
 			title=paste(toupper(c), toupper(d)))
 		print(p)
@@ -214,7 +211,6 @@ pdf(outFile3, height=5.5, width=8)
 vars = c('mortality_rate','incidence_rate')
 for(c in unique(data$country)) { 
 	for(d in unique(data$disease)) { 
-		if (nrow(data[country==c & disease==d])==0) next
 		# subset data for convenience
 		tmpData = data[country==c & disease==d]
 	
