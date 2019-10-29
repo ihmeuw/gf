@@ -9,10 +9,11 @@
 # TO-DO list for this code: 
 # - Need to reshape wide based off of the most "final" indicator (PR, LFA, GF)
 # - systematically test for strange data formats. 
+# - address "NAs introduced by cleaning code error" warning
 #----------------------------------------------
 
 #  Read in data, and correct names 
-dt = readRDS(paste0(prepped_dir, "all_prepped_data.rds")) 
+dt = readRDS(paste0(prepped_dir, "all_prepped_data.rds"))
 #Make sure that nothing is a factor. 
 names(dt) = gsub("%", "pct", names(dt)) #EMILY THIS SHOULD BE CORRECTED IN PREP CODE
 
@@ -72,7 +73,7 @@ for (var in numVars) {
         print("These are the values that will be divided using new numerators and denominators.")
         print(unique(dt[grepl("/", get(var)), .(variable=get(var), num, clean_num, denom, clean_denom)]))
       }
-    dt[grepl("/", get(var)), (var):=clean_num/clean_denom]
+    dt[grepl("/", get(var)), (var):=clean_num/clean_denom] # this piece of code seems to lead to a warning message
   } 
   
   #REPLACE COMMAS WITH PERIODS. 
@@ -109,21 +110,51 @@ for (var in numVars) {
 }
 
 # Calculate an internal verified achievement ratio.
-dt[, ihme_achievement_ratio:=gf_result_achievement_ratio]
-dt[is.na(ihme_achievement_ratio), ihme_achievement_ratio:=lfa_result_achievement_ratio]
-dt[is.na(ihme_achievement_ratio), ihme_achievement_ratio:=pr_result_achievement_ratio]
+dt[, any_achievement_ratio:=gf_result_achievement_ratio]
+dt[is.na(any_achievement_ratio), any_achievement_ratio:=lfa_result_achievement_ratio]
+dt[is.na(any_achievement_ratio), any_achievement_ratio:=pr_result_achievement_ratio]
 
 # Are there any cases where your calculation of the indicator ratio would be different than the actual? 
+#yes, in that case we calculate our own
+# achievement ratio using the best numerator and denominator
 
-# create variable with indicator code (makes cross--country comparisons easier) can merge short description using this code later
-dt = dt[, indicator_code:=tstrsplit(indicator, ":", keep=1)]
+# calculate '_value' variables which are either the percent reported or the numerator (if indicator is not a proportion or percent)
+# this is done for the one target value reported and the three sources of result values (PR, LFA, and GF)
+dt$target_value <- ifelse(is.na(dt$target_pct),dt$target_n, dt$target_pct)
+dt$pr_result_value <- ifelse(is.na(dt$pr_result_pct), dt$target_n, dt$pr_result_pct)
+dt$lfa_result_value <- ifelse(is.na(dt$lfa_result_pct), dt$lfa_result_n, dt$lfa_result_pct)
+dt$gf_result_value <- ifelse(is.na(dt$gf_result_pct), dt$gf_result_n, dt$gf_result_pct)
 
-# read and merge codebook to standardize names
-codebook <- fread(paste0(code_dir, "indicators_codebook.csv"))
+# create the any_result_value which is will gather any available result value reported by any of the three sources
+dt$any_result_value <- NA
+dt$any_result_value <- ifelse(is.na(dt$gf_result_value),
+                                 ifelse(is.na(dt$lfa_result_value), 
+                                        ifelse(is.na(dt$pr_result_value), NA, 
+                                               dt$pr_result_value), 
+                                        dt$lfa_result_value),
+                                 dt$gf_result_value)
 
-# EMILY use a path built up from global variables. 
-merged_dt <- merge(dt, codebook, by="indicator_code", all.x = TRUE)
+# create completeness rating for target and result value
+dt$completeness_rating <- NA
 
+dt$completeness_rating[which(   is.na(dt$target_value)  &  is.na(dt$any_result_value))] <- 1
+dt$completeness_rating[which(   is.na(dt$target_value)  & !is.na(dt$any_result_value))] <- 2
+dt$completeness_rating[which(  !is.na(dt$target_value)  &  is.na(dt$any_result_value))] <- 3
+dt$completeness_rating[which(  !is.na(dt$target_value)  & !is.na(dt$any_result_value))] <- 4
+
+# create factor variable and assign names
+dt$completeness_rating <- factor(dt$completeness_rating)
+
+levels(dt$completeness_rating) <- c("No data avail.", "Only Result avail.", "Only Target avail.", "Both available")
+
+# calculate ihme_results_achievement_ratio
+dt$ihme_result_achievement_ratio <-NA
+dt$ihme_result_achievement_ratio <- dt$any_result_value/dt$target_value
+
+# calculate if the sources differ between the baseline value and the pr reported value
+dt$sources_different <- NA
+dt$sources_different[which(dt$baseline_source_code!=dt$pr_result_source_code)] <- 1
+dt$sources_different[which(dt$baseline_source_code==dt$pr_result_source_code)] <- 0
 
 #-----------------------------------------------------
 # Map indicator codes 
@@ -132,23 +163,27 @@ merged_dt <- merge(dt, codebook, by="indicator_code", all.x = TRUE)
 #Clean indicators before merging with codebook.  
 dt[, indicator:=gsub("&amp;", "&", indicator)]
 
-# load code book and PUDR PFI Database
-codebook = fread(paste0(code_dir, "special_assessments/synthesis/2019_multicountry_analyses/data_source_codebook.csv"), header = TRUE)
+# create variable with indicator code (makes cross--country comparisons easier) can merge short description using this code later
+dt = dt[, indicator_code:=tstrsplit(indicator, ":", keep=1)]
 
-# Merge and replace the Baselice source code 
-data <- merge(dt, codebook, by.x="baseline_source", by.y = "source_original", all.x=TRUE)
-data1 <- data[,baseline_source_code:=source_code]
-data1 <- data1[,c("source_code"):=NULL]
+# load code book on data sources
+codebook_sources = fread(paste0(book_dir, "data_source_codebook.csv"), header = TRUE)
+
+# Merge and replace the Baseline source code 
+dt1 <- merge(dt, codebook_sources, by.x="baseline_source", by.y = "source_original", all.x=TRUE)
+dt2 <- dt1[,baseline_source_code:=source_code]
+dt2 <- dt2[,c("source_code"):=NULL]
 
 # Merge and replace the pr result source code
-data2 <- merge(data1, codebook, by.x="pr_result_source", by.y = "source_original", all.x = TRUE)
-data3 <- data2[,pr_result_source_code:=source_code]
-data3 <- data3[,source_code:=NULL]
+dt2 <- merge(dt1, codebook_sources, by.x="pr_result_source", by.y = "source_original", all.x = TRUE)
+dt3 <- dt2[,pr_result_source_code:=source_code]
+dt3 <- dt3[,source_code:=NULL]
 
-# merge on new codebook with all indicator names
 # read and merge codebook to standardize names
-codebook_names <- fread("C:/Users/frc2/Documents/gf/special_assessments/synthesis/2019_multicountry_analyses/indicators_codebook_full.csv") 
-data4 <- merge(data3, codebook_names, by="indicator_code", all.x = TRUE)
+codebook_stdnames <- fread(paste0(book_dir, "indicators_codebook.csv"))
+
+# read and merge codebook to map indicator code names
+merged_dt <- merge(dt3, codebook_stdnames, by="indicator_code", all.x = TRUE)
 
 #------------------------------------------------------
 # SAVE FINAL DATA
