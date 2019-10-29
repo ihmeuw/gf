@@ -62,8 +62,7 @@ model = '
 	SP_cumulative ~~ 0*severeMalariaTreated_cumulative
 	SP_cumulative ~~ 0*totalPatientsTreated_cumulative
 	
-	severeMalariaTreated_cumulative ~~ 0*totalPatientsTreated_cumulative
-	
+
 	ITN_consumed_cumulative ~~ 0*totalPatientsTreated_cumulative
 	ITN_consumed_cumulative ~~ 0*severeMalariaTreated_cumulative
 	ITN_consumed_cumulative ~~ 0*ACTs_SSC_cumulative
