@@ -194,6 +194,7 @@ gtm_budgets_tb[, .(grant, gf_module, gf_intervention, budget)][order(-budget)]
 # REVIEW RSSH IN THE BUDGETS 
 #---------------------------------------------
 all_budgets = rbindlist(list(cod_budgets, gtm_budgets, sen_budgets, uga_budgets), use.names=TRUE)
+all_budgets = all_budgets[grant_period%in%c("2018-2020", '2019-2021', '2016-2019', '2019-2022')]
 all_budgets = all_budgets[current_grant==TRUE]
 
 #Which RSSH modules have had the biggest spend by grant? 
@@ -230,3 +231,29 @@ ggplot(current_by_country, aes(x=semester, y=absorption, color=loc_name)) +
   facet_wrap(~loc_name) + 
   theme_bw() + 
   labs(title="Trends in absorption from 2018-present", subtitle="Each point represents one grant", x="PUDR semester", y="Absorption (%)")
+
+
+#-------------------------------------------------------
+# How much of each budget has been program management? 
+#-------------------------------------------------------
+pm = all_budgets[, .(budget=sum(budget, na.rm=T)), by=c('loc_name', 'grant_disease', 'gf_module')]
+pm[gf_module=="Program management", pm:=TRUE]
+pm[is.na(pm), pm:=FALSE]
+
+#We just want the % of PM versus everything else. 
+pm[, total:=sum(budget), by=c('loc_name', 'grant_disease')]
+pm[, pct:=round((budget/total)*100, 1)]
+pm = pm[pm==TRUE]
+
+#Does a larger budget correlate with higher program management costs? 
+ggplot(pm, aes(x=total, y=pct)) + 
+  geom_point() + 
+  theme_bw() + 
+  labs(title="Does a bigger grant correlate with a higher percentage of program management?")
+
+
+# Is the size of the budget per intervention a good predictor of absorption? 
+absorption_plot = all_absorption[absorption>200, absorption:=200]
+ggplot(all_absorption_plot, aes(x=budget, y=absorption)) + 
+  geom_point() + 
+  theme_bw() 
