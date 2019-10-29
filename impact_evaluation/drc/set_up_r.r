@@ -159,8 +159,14 @@ outputFile3 = paste0(ieDir, 'inputs_outputs.RDS')
 outputFile3b = paste0(ieDir, 'outcomes_impact_corrected.RDS')
 outputFile3bGraphs = paste0(ieDir, '../visualizations/crosswalking_results.pdf')
 
+# output file from 4_set_up_for_analysis.r
+outputFile4 = paste0(ieDir, 'data_pre_model.rdata')
+if (Sys.info()[1]!='Windows') { 
+	outputFile4_scratch = paste0(clustertmpDir1, 'data_pre_model.rdata')
+}
+
 # output file from 4a_set_up_for_analysis.r
-outputFile4a = paste0(ieDir, 'first_half_pre_model.rdata')
+outputFile4a = paste0(ieDir, 'first_half_data_pre_model.rdata')
 if (Sys.info()[1]!='Windows') { 
 	outputFile4a_scratch = paste0(clustertmpDir1, 'first_half_data_pre_model.rdata')
 }
