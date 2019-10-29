@@ -1,7 +1,7 @@
 ---
-title: "Senegal Key Performance Indicators"
+title: "Senegal Performance Indicators"
 author: "Francisco Rios Casas"
-date: "10/15/2019"
+date: "10/28/2019"
 output:
   pdf_document: default
   html_document: default
@@ -38,13 +38,18 @@ DT = DT[file_name %in% recent_pudrs]
 
 ### 1. Introduction  
 
-This document highlights the data completeness, data sources, and changes over time for select Key Performance Indicators (KPIs) in Senegal. Data for KPIs all came from the latest available Progress Update and Disbursement Request forms (PUDRs) for each grant unless indicated otherwise. Global Fund investment in Senegal include one TB (SEN-Z-MOH), one malaria (SEN-M-PNLP), and two HIV grants (SEN-H-ANCS, SEN-H-CNLS).
+This document highlights the data completeness, data sources, and changes over time for select Outcome Indicators in Senegal. Data for indicators all came from the latest available Progress Update and Disbursement Request forms (PUDRs) for each grant unless indicated otherwise. Global Fund investment in Senegal include one TB (SEN-Z-MOH), one malaria (SEN-M-PNLP), and two HIV grants (SEN-H-ANCS, SEN-H-CNLS).
+
+```{r toc}
+
+```
+
 
 
 ### 2. Data Completeness  
-For each Key Performance Indicator (KPI), the grant Principal Recipient (PR) *usually* must establish an indicator "Baseline Value". This value--when available--can serve as a benchmark for progress reported in subsequent time periods. **However, in the Senegal grants, the use of the baseline value seems to be inconsistently applied as typically around 50% and 75% of indicators in a given PUDR do not include a Baseline Value.**
+For each Outcome Indicator, the grant Principal Recipient (PR) *usually* must establish an indicator "Baseline Value". This value--when available--can serve as a benchmark for progress reported in subsequent time periods. **However, in the Senegal grants, the use of the baseline value seems to be inconsistently applied as typically around 50% and 75% of indicators in a given PUDR do not include a Baseline Value.**
 
-```{r completeness_fix}
+```{r completeness}
 # Emily's code on {PUDR} Completeness
 
 # Data
@@ -65,9 +70,9 @@ ggplot(DT, aes(x=grant, fill=plot_baseline))+
   scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))
 ```
 
-In order to calculate the achievement of a KPI for a given grant, it is necessary to have information on (1) the target that was originally set and (2) the result. Only the malaria (SEN-M-PNLP) and tuberculosis grant (SEN-Z-MOH) in Senegal provide sufficient data to understand how well the grants are meeting the goals that were originally established.  
+In order to calculate the achievement of an Outcome Indicator for a given grant, it is necessary to have information on (1) the target that was originally set and (2) the result. Only the malaria (SEN-M-PNLP) and tuberculosis grant (SEN-Z-MOH) in Senegal provide sufficient data to understand how well the grants are meeting the goals that were originally established.  
 
-```{r}
+```{r completeness2}
 # create completeness indicator for baseline seperately from target and result
 
 ggplot(DT, aes(x = grant, fill = completeness_rating)) +
@@ -85,7 +90,7 @@ ggplot(DT, aes(x = grant, fill = completeness_rating)) +
 In some cases, the source of information used to establish the target of a goal is different from the source used to provide updates on progress. **In Senegal, the HIV grant to the National HIV Program (CNLS) had indicator sources change the most often: 12 of the 18 indicators in the grant changed sources.**  
 
 
-```{r}
+```{r sources}
 # create indicator variable of when result and target source differ
 # subset data for checking changing indicators
 table3 <-DT[,list(indicators=length(indicator_code), total_different=sum(sources_different, na.rm = TRUE)), by=c('grant')]
@@ -101,7 +106,7 @@ kable(table3, col.names = c("Grant", "Indicators", "Different Sources between Ba
 **In the CNLS grant, the Baseline Values were established using reports from the National HIV Program, while the Result Values were obtained from a combination of DHIS2 data, indicators reported directly from the clinics providing services, and from other reports created by the Ministry of Health.**   
 
 
-```{r, include=FALSE}
+```{r sources_appendix1, include=FALSE}
 # subset data for checking changing indicators
 table3b <-DT[grant=="SEN-H-CNLS",.(indicator_code, brief_description_code, baseline_source, pr_result_source)]
 
@@ -110,7 +115,7 @@ kable(table3b, col.names = c("Indicator", "Description", "Baseline Source", "Res
 
 ```
 
-```{r, include=FALSE}
+```{r sources_appendix2, include=FALSE}
 table3c <-DT[grant=="SEN-Z-MOH",.(indicator_code, brief_description_code, baseline_source_code, pr_result_source_code, sources_different)]
 
 kable(table3c, col.names = c("Indicator", "Description", "Baseline Source", "Result source", "indicx"))
@@ -121,11 +126,11 @@ kable(table3c, col.names = c("Indicator", "Description", "Baseline Source", "Res
 ### 4. Grant Results based on most recent PUDRs  
 
 
-The "Achievement Ratio" is calculated in the PUDR to understand how close to the original target the KPI result is. A value of 1.0 or greater means that the KPI goal has been met or exceeded.
+The "Achievement Ratio" is calculated in the PUDR to understand how close to the original target the Outcome Indicator result is. A value of 1.0 or greater means that the Indicators goal has been met or exceeded.
 
 
 #### 4.1. TB
-```{r}
+```{r plot_results}
 # plots grant performance in a loop for all grants in country
 grants = unique(DT$grant)
 plots = list()
@@ -149,7 +154,7 @@ plots[[4]]
 ```
 
 
-**In the most recent PUDR, the TB grant has reported the lowest performance in the number of reporting units that had no stock-outs of anti-TB drugs. Number of MDR-TB patients that began second line treatment and health district coverage with TB services are the next indicators with the worst performance. Community referrals has also been an area where the indicator results reported have not been meeting the targets set. Section 6 below includes information on progress over time for some of these KPIs.** 
+**In the most recent PUDR, the TB grant has reported the lowest performance in the number of reporting units that had no stock-outs of anti-TB drugs. Number of MDR-TB patients that began second line treatment and health district coverage with TB services are the next indicators with the worst performance. Community referrals has also been an area where the indicator results reported have not been meeting the targets set. Section 6 below includes information on progress over time for some of these Indicators.** 
 
 
 #### 4.2. Malaria
@@ -173,18 +178,18 @@ plots[[3]]
 ```
 
 
-**The HIV ANCS grant has been performing lower than its targets with regards to sex workers. There are also a few KPIs with no updates available.**
+**The HIV ANCS grant has been performing lower than its targets with regards to sex workers. There are also a few Indicators with no updates available.**
 
-**The majority of KPIs between the two HIV grants are different, but in some cases--such as KP-3d(M) testing for HIV among people who inject drugs--both the CNLS and ANCS report different results for the same indicator. The PUDRs for each of the grants also list different targets: while the ANCS grant reports a higher value it also lists a higher target and the CNLS grant lists a lower result but also a much lower target leading to a much higher achievement ratio. Currently, only the ANCS PUDR is LFA-verified however.**  
+**The majority of Indicators between the two HIV grants are different, but in some cases--such as KP-3d(M) testing for HIV among people who inject drugs--both the CNLS and ANCS report different results for the same indicator. The PUDRs for each of the grants also list different targets: while the ANCS grant reports a higher value it also lists a higher target and the CNLS grant lists a lower result but also a much lower target leading to a much higher achievement ratio. Currently, only the ANCS PUDR is LFA-verified however.**  
 
 
 ### 5. Agreement between PR, LFA
 
-After each PUDR is submitted by the PR, the LFA will verify the results reported on the KPIs. In many cases they revise the original values provided by the PR.
+After each PUDR is submitted by the PR, the LFA will verify the results reported on the Indicators. In many cases they revise the original values provided by the PR.
 
-```{r}
+```{r lfa_agreement}
 
-LFA_verified_grants = c("SEN-H-ANCS")
+LFA_verified_grants = c("SEN-H-ANCS") # file names of LFA-verified grants
 bplots = list()
 i=1
 for(l in LFA_verified_grants) {
@@ -204,8 +209,8 @@ bplots[[1]]
 
 ### 6. Special Analyses  
 
-There are data from three of the most recent PUDRs available for this analysis corresponding to the past 3 semesters that the grants have been implemented. The table below highlights how KPIs for certain indicators of interest in the TB grant have changed over time. 
-```{r}
+There are data from three of the most recent PUDRs available for this analysis corresponding to the past 3 semesters that the grants have been implemented. The table below highlights how certain indicators of interest in the TB grant have changed over time. 
+```{r special_analyses}
 # ggplot(DT[grant=="SEN-Z-MOH"], aes(x=lfa_result_value, y=pr_result_value))+
 #  geom_point()
 # re-shape the data
@@ -247,3 +252,39 @@ ggplot(data2, aes(x=end_date_programmatic, y=value, group=brief_description_code
 **Although there has been less data available to monitor progress on the treatment and notification of MDR-TB it has been on-track as of the last data available.** 
 
 **TB cases identified through community referrals is also an important area of investment in Senegal; this indicator has remained just under-target in the most recent PUDRs.**  
+
+```{r}
+#reshape data to get results for change over time
+data3 <- melt(data, id.vars = c("indicator_code", "grant", "brief_description_code", "end_date_programmatic", "file_name", "type", "pudr_sheet", "loc_name"))
+data3 <- data3[variable %in% c("target_n", "target_d", "target_%", "target_value", "ihme_result_n")]
+
+data3$value <- as.numeric(data3$value)
+
+# specificy aspects of data to plot
+country = "sen"
+main_indicators = c('impact_outcome_indicators_main', 'coverage_indicators_main')
+variables <- c("target_value", "ihme_result_n")
+
+data3 <- data3[loc_name==country & pudr_sheet %in% main_indicators & variable %in% variables]
+
+# add caption with data source and change proper title of graphs
+
+grants = unique(data3$grant)
+plots = list()
+i=1
+for(g in grants) {
+plots[[i]] = ggplot(data3[grant==g], aes(x=end_date_programmatic, y=value, group=brief_description_code, col=indicator_code))+
+  geom_point()+
+  geom_path()+
+  theme_bw()+
+  facet_wrap(~variable)+
+  scale_x_date(date_breaks = "6 month", 
+                 labels=date_format("%b-%Y"))+
+   labs(x="Date of PUDR", y="Target Value", title="SEN-Z-MOH Target-setting Over Time")+
+  scale_colour_discrete(name  ="Key Performance Indicator")
+  
+i=i+1
+}
+```
+Have targets changes between semesters?
+

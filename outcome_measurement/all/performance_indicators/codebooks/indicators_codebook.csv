@@ -51,7 +51,7 @@ HIV O-9,Percentage of people who inject drugs reporting condom use at the last s
 HIV O-7,Percentage of other vulnerable populations who report the use of a condom at last sexual intercourse,% other vulnerable pop. who report use of condom at last sex. intercourse - HIV O-7
 HIV O-11,Percentage of (estimated) people living with HIV who have been tested HIV-positive,% (estimated) PLHIV who have been tested HIV-positive - HIV O-11
 HIV O-12,Percentage of people living with HIV and on antiretroviral therapy who are virologically suppressed (among all those currently on treatment who received a viral load measurement regardless of when they started antiretroviral therapy),% PLHIV and on ART who are virologically suppressed - HIV O-12
-HIV O-13,Proportion of ever-married or partnered women aged 15-49 who experienced physical or sexual violence from a male intimate partner in the past 12 months,"Prop. ever-married or partnered W, 15-49 who experienced physical or sexual violence from a male intimate partner in past 12 mos. - HIV O-13"
+HIV O-13,Proportion of ever-married or partnered women aged 15-49 who experienced physical or sexual violence from a male intimate partner in the past 12 months,"Prop. ever-married/partnered Wom, 15-49, who exp. IPV (physical or sexual) in past 12 mos. - HIV O-13"
 HIV O-14,Percentage of women and men aged 15–49 who report discriminatory attitudes towards people living with HIV,% W andMaged 15–49 who report discriminatory attitudes towards PLHIV - HIV O-14
 HIV O-15,Percentage of people living with HIV who experienced recent discrimination at health care facilities,% PLHIV who experienced recent discrimination at health care facilities - HIV O-15
 GP-5,Number of medical male circumcisions performed according to national standards,No. medical male circumcisions performed according to national standards - GP-5
@@ -142,7 +142,7 @@ CM-3c,Proportion of malaria cases (presumed and confirmed) that received first-l
 CM-4,Proportion of health facilities without stock-outs of key commodities during the reporting period,Prop. health facilities w/out stock-outs key commodities dur. report period - CM-4
 CM-5(M),Percentage of confirmed cases fully investigated and classified,% conf. cas.  fully investigated and classified - CM-5(M)
 CM-6(M),Percentage of malaria foci fully investigated and classified,% malaria foci fully investigated and classified - CM-6(M)
-SPI-1,Proportion of pregnant women attending antenatal clinics who received three or more doses of intermittent preventive treatment for malaria,Prop. pregnant W attending antenat. clinics who received >3 doses IPT - SPI-1
+SPI-1,Proportion of pregnant women attending antenatal clinics who received three or more doses of intermittent preventive treatment for malaria,Prop. pregnant W attending antenat. clinics who received >3 doses IPTp - SPI-1
 SPI-2,Percentage of children aged 3–59 months who received the full number  of courses of seasonal malaria chemoprevention (3 or 4) per transmission season in the targeted areas,% child. aged 3–59 mos. who received the full number seasonal prevention tx - SPI-2
 M&E-2,Proportion of facility reports received over the reports expected during the reporting period,Prop. facility reports received over the reports expected dur. rep. period - M&E-2
 HSS I-1,"Under-5 mortality rate per 1,000 live births","Under-5 mortality rate per 1,000 live births - HSS I-1"
@@ -164,3 +164,13 @@ SD-3,Number of outpatient department visits per person per year,No. outpatient d
 HF-1,Government expenditure on health as percentage of general government expenditure,Government expenditure on health as % general government expenditure - HF-1
 SSRP-other 1,Percentage of Health Districts targetted which have reached an 80% coverage with the integrated package of services (PIS),% Health Districts targetted w/ 80% cov. integrated package of services - SSRP-other 1
 SSRP-other 2,Percentage of new bacteriologically confirmed TB cases managed according to national standards among the cases notified the previous year (measures quality of service delivery),% of new bacteriol-conf. TB mngd to natl standards - SSRP-other 2
+RDT SO,Number and percentage of health facilities (Integrated Health Centers) reporting a shortage of rapid diagnostic tests (RDTs) malaria,No/% of health facilities (IHCs) rep. shortage of RDTs - RDT SO
+GP other-1,Number of new cases (survivors of sexual violence),Number of new cases (survivors of sexual violence) - GP other-1
+GP other-2,Number of survivors of sexual violence recd. PREP w/in 72 hrs,Number of survivors of sexual violence recd. PREP w/in 72 hrs - GP other-2
+TCP other-2,Number and percentage of CSDT reporting no stock-outs of drugs for the treatment of susceptible TB - TCP other-2,No./% of health centers (Screening and Treatment Ctrs) rep. no stock-outs of drugs for DS TB - TCP other-2
+TCP other-1,Percentage of all forms of TB that received adherence support from community workers or volunteers who were successfully treated (completed treatment and cured) in the course of one year. given period,% of TB cases that recd. Support from CHW who were successfully treated in given year - TCP other-1
+TCS- other 1,Percentage of ART sites that reported no stock-out of any antiretroviral drugs during the reporting period,% ART sites w/ no stock-out of ARVs dur. report per. - TCS-other 1
+TCS other-2,Percentage of children living with HIV currently receiving antiretroviral therapy,% of children LHIV currently rec ART - TCS other-2
+TCS other-3,Number and percentage of health facilities (Screening and Treatment Centers) reporting a stock-out of HIV tests,No./% of health centers (Screening and Treatment Ctrs) rep.stock-outs of HIV tests - TCS other-3
+TB O-5 (M),TB treatment coverage: Percentage of new and relapse cases that were notified and treated among the estimated number of incident TB cases in the same year (all forms of TB – bacteriologically confirmed plus clinically diagnosed),TB tx. coverage - TB O-5(M)
+TCS other- 1,Percentage of ART sites that reported no stock-out of any antiretroviral drugs during the reporting period,% ART sites w/ no stock-out of ARVs dur. report per. - TCS-other 1
