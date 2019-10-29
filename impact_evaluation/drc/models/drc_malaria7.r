@@ -62,7 +62,6 @@ model = '
 	SP_cumulative ~~ 0*severeMalariaTreated_cumulative
 	SP_cumulative ~~ 0*totalPatientsTreated_cumulative
 	
-
 	ITN_consumed_cumulative ~~ 0*totalPatientsTreated_cumulative
 	ITN_consumed_cumulative ~~ 0*severeMalariaTreated_cumulative
 	ITN_consumed_cumulative ~~ 0*ACTs_SSC_cumulative
@@ -70,12 +69,4 @@ model = '
 	ITN_consumed_cumulative ~~ 0*RDT_completed_cumulative
 	totalPatientsTreated_cumulative ~~ 0*RDT_completed_cumulative
 	totalPatientsTreated_cumulative ~~ 0*severeMalariaTreated_cumulative
-	totalPatientsTreated_cumulative ~~ 0*ACTs_SSC_cumulative
-	totalPatientsTreated_cumulative ~~ 0*SP_cumulative
-	severeMalariaTreated_cumulative ~~ 0*RDT_completed_cumulative
-	severeMalariaTreated_cumulative ~~ 0*ACTs_SSC_cumulative
-	severeMalariaTreated_cumulative ~~ 0*SP_cumulative
-	RDT_completed_cumulative ~~ 0*ACTs_SSC_cumulative
-	RDT_completed_cumulative ~~ 0*SP_cumulative
-	RDT_completed_cumulative ~~ 0*SP_cumulative
 '
