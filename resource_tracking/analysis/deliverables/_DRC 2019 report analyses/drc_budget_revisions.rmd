@@ -13,6 +13,7 @@ library(readxl)
 library(scales)
 options(scipen=100)
 
+save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_DRC 2019 annual report/"
 dt = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/budget_revisions.rds") #This is at the intervention, year, quarter level. 
 merge1 = dt[, sum(v0, na.rm=T)]
 rows1 = nrow(dt)
@@ -66,32 +67,37 @@ kable(file_list[, 4:5])
 
 ## COH-M-MOH
 ```{r M_MOH1, echo=FALSE, warning=FALSE}
-ggplot(by_module[grant=="COD-M-MOH"], aes(x=abbrev_mod_eng, y=budget, fill=version)) + 
+p = ggplot(by_module[grant=="COD-M-MOH"], aes(x=abbrev_mod_eng, y=budget, fill=version)) + 
   geom_bar(stat="identity", position="dodge") + 
   # geom_text(data=by_module, aes(x=abbrev_mod_eng, y=budget, label=label), vjust=0) + 
   theme_bw() + 
   coord_flip() + 
   labs(title=paste0("COD-M-MOH budget revisions, by module"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+
+ggsave(paste0(save_loc, "m-moh1.png"), p, height=8, width=12)
 ```
 
 For the MoH malaria grant, vector control had the most noticeable additions. The next page shows the changes to each intevention under the vector control module.  
 
 ```{r M_MOH2, echo=FALSE, warning=FALSE}
-ggplot(by_intervention[grant=="COD-M-MOH" & abbrev_mod_eng=="Vector control"], aes(x=abbrev_int_eng, y=budget, fill=version)) + 
+p = ggplot(by_intervention[grant=="COD-M-MOH" & abbrev_mod_eng=="Vector control"], aes(x=abbrev_int_eng, y=budget, fill=version)) + 
   geom_bar(stat="identity", position="dodge") + 
   # geom_text(data=by_module, aes(x=abbrev_mod_eng, y=budget, label=label), vjust=0) + 
   theme_bw() + 
   coord_flip() + 
   labs(title=paste0("COD-M-MOH vector control budget revisions"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+
+ggsave(paste0(save_loc, "m-moh2.png"), p, height=8, width=12)
+
 ```
 
 For vector control, there was an additional $8.3 million allocated to LLIN mass campaigns. 
 
 ## COH-M-SANRU
 ```{r M_SANRU1, echo=FALSE, warning=FALSE}
-ggplot(by_module[grant=="COD-M-SANRU"], aes(x=abbrev_mod_eng, y=budget, fill=version)) + 
+p = ggplot(by_module[grant=="COD-M-SANRU"], aes(x=abbrev_mod_eng, y=budget, fill=version)) + 
   geom_bar(stat="identity", position="dodge") + 
   # geom_text(data=by_module, aes(x=abbrev_mod_eng, y=budget, label=label), vjust=0) + 
   theme_bw() + 
@@ -99,24 +105,30 @@ ggplot(by_module[grant=="COD-M-SANRU"], aes(x=abbrev_mod_eng, y=budget, fill=ver
   coord_flip() + 
   labs(title=paste0("COD-M-SANRU budget revisions, by module"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+
+ggsave(paste0(save_loc, "m-sanru1.png"), p, height=8, width=12)
+
 ```
 
 For COD-M-SANRU, some money was taken away from vector control and then re-added. The next page shows this data at the intervention-level. 
 
 ```{r M_SANRU2, echo=FALSE, warning=FALSE}
-ggplot(by_intervention[grant=="COD-M-SANRU" & abbrev_mod_eng=="Vector control"], aes(x=abbrev_int_eng, y=budget, fill=version)) + 
+p = ggplot(by_intervention[grant=="COD-M-SANRU" & abbrev_mod_eng=="Vector control"], aes(x=abbrev_int_eng, y=budget, fill=version)) + 
   geom_bar(stat="identity", position="dodge") + 
   # geom_text(data=by_module, aes(x=abbrev_mod_eng, y=budget, label=label), vjust=0) + 
   theme_bw() + 
   coord_flip() + 
   labs(title=paste0("COD-M-SANRU vector control budget revisions"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+
+ggsave(paste0(save_loc, "m-sanru2.png"), p, height=8, width=12)
+
 ```
 Notably, IECC/BCC Vector control was added as an intervention in the first and second revisions of the grant. 
 
 ## COD-C-CORDAID
 ```{r C_CORDAID1, echo=FALSE, warning=FALSE}
-ggplot(by_module[grant=="COD-C-CORDAID"], aes(x=abbrev_mod_eng, y=budget, fill=version)) + 
+p = ggplot(by_module[grant=="COD-C-CORDAID"], aes(x=abbrev_mod_eng, y=budget, fill=version)) + 
   geom_bar(stat="identity", position="dodge") + 
   # geom_text(data=by_module, aes(x=abbrev_mod_eng, y=budget, label=label), vjust=0) + 
   theme_bw() + 
@@ -124,17 +136,23 @@ ggplot(by_module[grant=="COD-C-CORDAID"], aes(x=abbrev_mod_eng, y=budget, fill=v
   coord_flip() + 
   labs(title=paste0("COD-C-CORDAID budget revisions, by module"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+
+ggsave(paste0(save_loc, "c-cordaid1.png"), p, height=8, width=12)
+
 ```
 
 Under the CORDAID grant, the most noticeable change is an increased allocation towards program management (grant management). 
 
 ## Revisions to CORDAID grant under the "Program management" module
 ```{r C_CORDAID2, echo=FALSE, warning=FALSE}
-ggplot(by_intervention[grant=="COD-C-CORDAID" & abbrev_mod_eng=="Program mgmt"], aes(x=abbrev_int_eng, y=budget, fill=version)) + 
+p = ggplot(by_intervention[grant=="COD-C-CORDAID" & abbrev_mod_eng=="Program mgmt"], aes(x=abbrev_int_eng, y=budget, fill=version)) + 
   geom_bar(stat="identity", position="dodge") + 
   # geom_text(data=by_module, aes(x=abbrev_mod_eng, y=budget, label=label), vjust=0) + 
   theme_bw() + 
   coord_flip() + 
   labs(title=paste0("COD-C-CORDAID program management\nbudget revisions"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+
+ggsave(paste0(save_loc, "c-cordaid2.png"), p, height=8, width=12)
+
 ```
