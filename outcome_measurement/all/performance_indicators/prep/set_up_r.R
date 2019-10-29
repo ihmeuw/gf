@@ -31,3 +31,4 @@ for (file in prep_functions){
 }
 
 prepped_dir = paste0(dir, "pudr_indicator_extraction/prepped_data/")
+book_dir = paste0(repo_root, "outcome_measurement/all/performance_indicators/codebooks/") # repository for storing codebooks
