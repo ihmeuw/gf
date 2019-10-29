@@ -173,14 +173,14 @@ for(v in complVars) {
 	data[, (v):=smithsonTransform(get(v))]
 }
 
-# log-transform some variables
-# logVars = c('ITN_consumed_cumulative','ACTs_SSC_cumulative', 'ACT_received_cumulative', 
-	# 'RDT_completed_cumulative','SP_cumulative', 'ITN_received_cumulative', 
-	# 'severeMalariaTreated_cumulative','totalPatientsTreated_cumulative')
-# for(v in logVars) { 
-	# data[, (v):=log(get(v))]
-	# data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
-# }
+# log-transform
+logVars = c('RDT_rate','SP_rate','ACTs_CHWs_rate','ACTs_CHWs_under5_rate',
+		'ITN_rate','ITN_rate_cumul')
+logVars = logVars[!logVars %in% c('ACTs_CHWs_under5_rate','SSCACT_under5')]
+for(v in logVars) { 
+	data[, (v):=log(get(v))]
+	data[!is.finite(get(v)), (v):=quantile(data[is.finite(get(v))][[v]],.01,na.rm=T)]
+}
 
 # compute lags
 lagVars = names(data)[grepl('exp|other_dah|ghe|oop', names(data))]
