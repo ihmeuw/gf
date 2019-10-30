@@ -95,7 +95,7 @@ absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stac
   if (bySemester) {
     if (is.null(grantName)) warning("Using the bySemester option without specifying grantName will pool grants by semester.")
     collapse = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'semester')]
-    collapse[, absorption:=round((expenditure/budget)*100, 2)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
+    collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
     collapse[, barLabel:=paste0(absorption, "%")]
  
     #Trim absorption if specified, and flag values greater than yScale limits. 
@@ -105,7 +105,7 @@ absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stac
     # Base plot 
     if (stackBudgetExp) {
       collapse = collapse[, .(grant_period, semester, budget, expenditure)]
-      collapse[, absorption:=round((expenditure/budget)*100, 2)]
+      collapse[, absorption:=round((expenditure/budget)*100, 1)]
       setnames(collapse, c('budget', 'expenditure'), c('Budget', 'Expenditure'))
       collapse = melt(collapse, id.vars=c('grant_period', 'semester', 'absorption'), value.var='variable')
       
@@ -147,10 +147,10 @@ absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stac
     #Pool semesters if option is specified. 
     if (!is.null(poolSemester)){
       collapse = dt[semester%in%poolSemester, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'abbrev_mod_eng')]
-      collapse[, absorption:=round((expenditure/budget)*100, 2)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
+      collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
     } else {
       collapse = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'semester', 'abbrev_mod_eng')]
-      collapse[, absorption:=round((expenditure/budget)*100, 2)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
+      collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
     } 
     
     #Trim absorption if specified, and flag values greater than yScale limits. 
@@ -182,10 +182,10 @@ absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stac
     #Pool by semester if option is specified. 
     if (!is.null(poolSemester)){
       collapse = dt[semester%in%poolSemester, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'abbrev_int_eng')]
-      collapse[, absorption:=round((expenditure/budget)*100, 2)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
+      collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
     } else {
       collapse = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'semester', 'abbrev_int_eng')]
-      collapse[, absorption:=round((expenditure/budget)*100, 2)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
+      collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
     }
     
     #Trim absorption if specified, and flag values greater than yScale limits. 
