@@ -65,11 +65,13 @@ long = merge(long, nodeTable, by='variable', all.x=TRUE)
 long[is.na(label), label:=variable]
 # ----------------------------------------------
 
+modelVars_untr = gsub("_log", "", modelVars)
+
 #----------------------------------------------------
 # Limit graph data to START_YEAR, the year the activities/outputs data starts 
 # and limit variables to only ones currently used by model 
 sample = sample[date>=START_YEAR, c(modelVars, 'department', 'date'), with=F]
-sample_untr = sample_untr[date>=START_YEAR, c(modelVars, 'department', 'date'), with=F]
+sample_untr = sample_untr[date>=START_YEAR, c(modelVars_untr, 'department', 'date'), with=F]
 long = long[date>=START_YEAR & variable%in%modelVars]
 fin_data = fin_data[variable%in%modelVars]
 act_data = act_data[variable%in%modelVars]
@@ -80,7 +82,7 @@ data = data[, c(modelVars, 'department', 'date'), with=F]
 
 #Limit datasets to only variables that are currently in the model
 sample = sample[, c(modelVars, 'date', 'department'), with=F]
-sample_untr = sample_untr[,  c(modelVars, 'date', 'department'), with=F]
+sample_untr = sample_untr[,  c(modelVars_untr, 'date', 'department'), with=F]
 long = long[variable%in%modelVars]
 
 # transformed data as seen by the model
