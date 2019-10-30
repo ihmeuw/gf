@@ -20,6 +20,7 @@ options(scipen=15)
 
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
 
+save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_GTM 2019 annual report/"
 #Source graphing functions
 source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
 
@@ -96,7 +97,7 @@ I've set up this analysis to include only the most recent PUDR for each grant, b
 
 # 1. Overview of 2018-2019 absorption
 ```{r overview} 
-ggplot(by_grant, aes(x=grant, y=absorption, fill=date_range, label=label1))+ 
+p = ggplot(by_grant, aes(x=grant, y=absorption, fill=date_range, label=label1))+ 
   geom_bar(stat="identity", position="dodge") + 
   geom_text(stat="identity", position = position_dodge(width = 1), vjust=-0.5, size=4) + 
   theme_bw(base_size=16) + 
@@ -104,7 +105,8 @@ ggplot(by_grant, aes(x=grant, y=absorption, fill=date_range, label=label1))+
   theme(axis.text.x=element_text(angle=30, vjust=0.5)) + 
    scale_fill_manual(values=wes_palette("GrandBudapest2")) + 
   labs(title="Comparison of absorption rates by grant (2018-2019)", x="Grant", y="Absorption (%)", fill="PUDR date range", caption="*Bar height limited to 200%")
-
+print(p)
+ggsave(paste0(save_loc, "absorption_by_grant.png"), p, height=8, width=12)
 ```
 
 ## Absorption by module for each grant
@@ -140,6 +142,8 @@ for (g in unique(by_module$grant)){
        subtitle="Labels show expenditure amounts")
   # print(p2)
   grid.arrange(p, p2, ncol=1, nrow=2)
+  
+  ggsave(paste0(save_loc, g, ".png"), grid.arrange(p, p2, ncol=1, nrow=2), height=15, width=10)
   if (i<3){cat("\n\n\\pagebreak\n")}
   i = i+1
 } 
@@ -200,6 +204,7 @@ p1 = ggplot(rssh_by_int, aes(x=int_factor, y=absorption, fill=abbrev_mod, label=
        subtitle="Labels show expenditure amounts")
 
   grid.arrange(p1, p2, ncol=1)
+  ggsave(paste0(save_loc, "rssh.png"), grid.arrange(p1, p2, ncol=1), fig.height=15, fig.width=10)
 
 ```
 
