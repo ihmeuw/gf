@@ -51,7 +51,45 @@ bar_plots = paste0(dir, 'visualizations/PQR/bar_plot_number_of_orders_procuremen
 # ----------------------------------------------
 data = readRDS(inFile)
 data = data[iso3codecountry %in% c('COD', 'GTM', 'SEN', 'UGA')]
+data = data[, .(country_name, iso3codecountry, grant_name, grant_id, grant_start_date, grant_end_date, 
+                purchase_order_date, scheduled_delivery_date, actual_delivery_date,
+                product_name_en, product_category, product_pack, description, product_description,
+                nb_packs_ordered, nb_units_in_pack, total_units_in_order,
+                total_product_cost_usd, total_cost_order, pack_cost_usd, unit_cost_usd,
+                po_median_unit_cost, po_international_reference_price, 
+                supplier, pr_name, pr_type_name, primary_key, data_source = 'april_download')]
 
+# add in new data from the most recent download.
+data2 = readRDS(inFile_new_pqr)
+data2 = data2[iso3codecountry %in% c('COD', 'GTM', 'SEN', 'UGA')]
+data2 = data2[, .(country_name, iso3codecountry, grant_name, 
+                purchase_order_date, scheduled_delivery_date, actual_delivery_date,
+                'product_name_en'=product_name, product_category, product_pack, description, product_description, 
+                nb_packs_ordered, nb_units_in_pack, total_units_in_order,
+                total_product_cost_usd, total_cost_order, pack_cost_usd, unit_cost_usd,
+                supplier, supplier_agent_manufacturer_intermediatry, primary_key, data_source = 'sept_download')]
+
+# get the orders in the new data that were not in the old data - note some of these are not just after the last date in the
+# old data... the oldest new order is from 2014?! so, add in the new orders using priamry key!
+rm_from_data2 = unique(data$primary_key)
+add_data = data2[ !primary_key %in% rm_from_data2 ]
+
+# add the datasets together with rbind() to get all orders
+data = rbindlist(list(data, add_data), use.names = TRUE, fill = TRUE)
+
+# use primary key to add back in the this variable? - it seems to be a more complete version of the supplier/procurement mechanism variable!
+data[, supplier_agent_manufacturer_intermediatry := NULL]
+supplier_data = unique(data2[, .(primary_key, supplier_agent_manufacturer_intermediatry)])
+data = merge(data, supplier_data, by = 'primary_key', all = TRUE)
+
+# the new orders don't have reference price - if there is an order without reference price, lookup if there is a
+# reference price for the same product/description/pack size from a previous order - if there is, take the most recent
+# reference price to when that order was purchased (max date that is less than the given order's date) and make that the
+# reference price.  Otherwise, leave it NA. 
+for (key in unique(data[data_source == 'sept_download', primary_key])) {
+  
+}
+# ----------------------------------------------
 # David said we don't care about specific brand of bednet, so make it so those will sum over product_name here:
 data[product_category == 'bednet', product_name_en := 'bednet' ]
 
@@ -67,7 +105,7 @@ data[ product_name_en %in% first_line, sub_product_category := "first_line"]
 data[ product_name_en %in% second_line, sub_product_category := "second_line"]
 data[ product_name_en %in% other, sub_product_category := "other"]
 
-data[ product_category == 'anti_tb_medicine', product_category := paste(product_category, sub_product_category, sep = "_") ]
+data[ product_category  == 'anti_tb_medicine', product_category := paste(product_category, sub_product_category, sep = "_") ]
 
 # adjust IRPs and unit costs that are wrong:
 data[unit_cost_usd == 0, unit_cost_usd := NA]
@@ -76,9 +114,6 @@ data[po_international_reference_price == 0, po_international_reference_price := 
 data[, diff_from_ref_cost := unit_cost_usd - po_international_reference_price]
 data[, unit_cost_over_ref_price := unit_cost_usd / po_international_reference_price]
 data[, purchase_order_year := year(purchase_order_date)]
-
-# # combine data sources --- COME BACK TO THIS LATER AND ADD IN NEW DATA
-# data2 = readRDS(inFile_new_pqr)
 
 # subset to where intl ref price and unit cost are both not missing
 dt = data[!is.na(po_international_reference_price) & !is.na(unit_cost_usd)]
