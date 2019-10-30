@@ -32,8 +32,7 @@ j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/vfm/')
 
 # input files
-inFile = paste0(dir, 'unit_cost_data/prepped_data/prepped_full_pqr.rds')
-inFile_new_pqr = paste0(dir, 'unit_cost_data/prepped_data/prepped_full_pqr_updated_09_2019.rds')
+inFile = paste0(dir, 'unit_cost_data/prepped_data/prepped_full_pqr_with_sept_download_data.rds')
 
 subset_commodities = paste0(dir, 'unit_cost_data/prepped_data/subset_commodities.csv')
 
@@ -50,35 +49,6 @@ bar_plots = paste0(dir, 'visualizations/PQR/bar_plot_number_of_orders_procuremen
 # Load/set up data
 # ----------------------------------------------
 data = readRDS(inFile)
-data = data[iso3codecountry %in% c('COD', 'GTM', 'SEN', 'UGA')]
-
-# David said we don't care about specific brand of bednet, so make it so those will sum over product_name here:
-data[product_category == 'bednet', product_name_en := 'bednet' ]
-
-# make a separate "product category" for first and second line TB drugs:
-first_line = c("Rifampicin" , "Pyrazinamide", "Ethambutol+Isoniazid+Pyrazinamide+Rifampicin (RHZE", "Isoniazid", 
-               "Ethambutol+Isoniazid+Rifampicin - FDC", "Isoniazid+Pyrazinamide+Rifampicin - FDC", "Isoniazid+Rifampicin - FDC", 
-               "Ethambutol+Isoniazid - FDC", "Ethambutol")
-second_line = c("Ofloxacin", "Levofloxacin", "Moxifloxacin", "Cycloserine", "Protionamide", "Amikacin", "Ethionamide", "Kanamycin",
-                "Capreomycin", "Linezolid", "Bedaquiline", "Meropenem", "Clofazimine", "Amoxicillin+Clavulanate - FDC", "Streptomycin", "PAS Sodium")
-other = c("Water for injection")
-
-data[ product_name_en %in% first_line, sub_product_category := "first_line"]
-data[ product_name_en %in% second_line, sub_product_category := "second_line"]
-data[ product_name_en %in% other, sub_product_category := "other"]
-
-data[ product_category == 'anti_tb_medicine', product_category := paste(product_category, sub_product_category, sep = "_") ]
-
-# adjust IRPs and unit costs that are wrong:
-data[unit_cost_usd == 0, unit_cost_usd := NA]
-data[po_international_reference_price == 0, po_international_reference_price := NA ]
-
-data[, diff_from_ref_cost := unit_cost_usd - po_international_reference_price]
-data[, unit_cost_over_ref_price := unit_cost_usd / po_international_reference_price]
-data[, purchase_order_year := year(purchase_order_date)]
-
-# # combine data sources --- COME BACK TO THIS LATER AND ADD IN NEW DATA
-# data2 = readRDS(inFile_new_pqr)
 
 # subset to where intl ref price and unit cost are both not missing
 dt = data[!is.na(po_international_reference_price) & !is.na(unit_cost_usd)]
