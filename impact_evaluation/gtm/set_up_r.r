@@ -63,6 +63,9 @@ backCastVars = c("Number_of_Cases_Screened_for_MDR_act", "PLHIV_Screened_for_TB_
 logVars = c("Case_Notification_Rate_imp", "Proportion_of_HIV_TB_Cases_Treated_out", "Proportion_of_MDR_Cases_Treated_out", "Proportion_of_Cases_in_Prisons_Treated_out", 
             "Proportion_of_Patients_Receiving_DST_out")
 
+# A lead of six months will be applied to these variables in step 2c. 
+txSuccessVars = c("MDR_Probably_Cured_rate_imp", "Treatment_Success_Rate_imp", "HIV_TB_Treatment_Success_Rate_imp")
+
 # ---------------------------------------------------------------------------------
 # Directories
 
