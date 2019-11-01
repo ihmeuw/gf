@@ -572,7 +572,7 @@ ggplot(plot_data, aes(x=abbrev_int, y=absorption)) +
 
 # Finding statements for research question #4 (RSSH)
 * For RSSH, the modules that have the lowest overall budget are reporting the best absorption numbers. 
-* Many of the biggest RSSH  modules are still reporting absorption at or below 60% (HMIS, human rights and health workers, service delivery)
+* Many of the biggest RSSH  modules are still reporting absorption at or below 60% (HMIS, human resources and health workers, service delivery)
 * Community systems is an outlier, because even though it has a small budget it's reporting low absorption numbers. 
 * The main module to watch here is HMIS - it has the highest overall budget, and 11 of the 14 grants represented in this graph included it in their budgets. 
 * There has been a significant HMIS investment in "program and data quality" and "analysis, review and transparency".  
