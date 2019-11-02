@@ -1,19 +1,18 @@
-# -------------------------------------------
+# -----------------------------------------------------------
 # David Phillips
 #
-# 12/11/2017
-# Analyze correlates of absorption
-# -------------------------------------------
+# 11/2/2019
+# Set up data to estimate projected absorption
+# Intended to be called by 2_estimate_projected_absorption.r 
+# -----------------------------------------------------------
 
 
 # ------------------
 # Set up R
 rm(list=ls())
-library(boot)
-library(readxl)
 library(data.table)
+library(boot)
 library(stringr)
-library(ggplot2)
 # ------------------
 
 
@@ -21,16 +20,13 @@ library(ggplot2)
 # Files and directories
 
 # root directory for input/output
-dir = 'J:/Project/Evaluation/GF/resource_tracking/multi_country/'
+dir = 'J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data'
 
 # input data
-inFile = paste0(dir, 'mapping/prepped_gos_data.csv')
+inFile = paste0(dir, '/final_expenditures.rds')
 
-# place to store the regression output
-regOutFile = paste0(dir, '../../vfm/outputs/absorption_correlates_model_fit.rdata')
-
-# output graphs
-outFile = paste0(dir, '../../vfm/visualizations/absorption_correlates.pdf')
+# output file
+outFile = paste0(dir, '/projected_absorption_input.rds')
 # -----------------------------------------------------------------
 
 
@@ -38,28 +34,51 @@ outFile = paste0(dir, '../../vfm/visualizations/absorption_correlates.pdf')
 # Load/prep data
 
 # load
-allData = fread(inFile)
+data = readRDS(inFile)
 
-# identify quarters
-allData[, quarter:=quarter(start_date)]
+# subset to previous grants only
+data = data[is.na(grant_status) | grant_status!='active']
 
 # collapse to module-quarter level
-byVars = c('disease','country','grant_number','year','quarter','abbrev_module')
-data = allData[, list('budget'=sum(budget,na.rm=TRUE), 
+byVars = c('disease','grant','grant_period','start_date','end_date', 'gf_module')
+data = data[, .('budget'=sum(budget,na.rm=TRUE), 
 			'expenditure'=sum(expenditure,na.rm=TRUE)), by=byVars]
 
 # compute absorption
 data[, absorption:=expenditure/budget]
+
+# identify the midpoint of the reporting period (assume quarterly if no end date)
+data[, report_midpoint:=start_date+((end_date-start_date)/2)]
+data[is.na(report_midpoint), report_midpoint:=start_date + floor(365/8)]
+
+# compute days until end of grant
+data[, end_of_grant:=as.Date(paste0(str_sub(grant_period, -4, -1), '-12-31'))]
+data[, days_until_end:=as.numeric(end_of_grant-report_midpoint)]
+
+# number of modules within grant
+data[, num_modules:=length(unique(gf_module)), by='grant']
+# ----------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------
+# Clean variables for analysis
+
+# absorption of Inf won't work
+data = data[is.finite(absorption)]
+
+# replace absorption outliers
+p95 = quantile(data$absorption, .95)
+p96 = quantile(data$absorption, .96)
+data[absorption>p95, absorption:=p96]
+
+# disallow reports past the end of grant
+# data[days_until_end<0, days_until_end:=1]
 
 # define lemon squeeze function (store N to global environment for later use)
 # citation: Smithson M, Verkuilen J. A better lemon squeezer? Maximum-likelihood regression with beta-distributed dependent variables. Psychological methods. 2006 Mar;11(1):54.
 lemonSqueeze = function(x) { 
 	N <<- length(x[!is.na(x)])
 	return(logit(((x*(N-1))+0.5)/N))
-}
-reverseLemonSqueeze = function(x) { 
-	N = length(x[!is.na(x)])
-	return(((inv.logit(x)*N)-0.5)/(N-1))
 }
 
 # handle 1's and 0's so logit doesn't drop them
@@ -69,20 +88,7 @@ data[, absorption:=lemonSqueeze(absorption)]
 # ----------------------------------------------------------------------
 
 
-# ----------------------------------------------------------------------
-# Generate extra predictor variables
-
-# year within grant and years from end of grant
-data[, grant_year:=as.numeric(as.factor(year)), by='grant_number']
-data[, years_from_end:=max(grant_year)-grant_year+1, by='grant_number']
-data[, yearid:=as.numeric(as.factor(year)), by='grant_number']
-data[, quarterid:=(((yearid-1)*4))+quarter]
-data[, quarters_from_end:=max(quarterid)-quarterid+1, by='grant_number']
-
-# total budget of the grant
-data[, total_budget:=sum(budget,na.rm=TRUE), by='grant_number']
-
-# number of modules within grant
-data[, num_modules:=length(unique(abbrev_module)), by='grant_number']
-# ----------------------------------------------------------------------
-
+# --------------------
+# Save
+saveRDS(data, outFile)
+# --------------------

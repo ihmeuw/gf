@@ -1,19 +1,17 @@
-# -------------------------------------------
+# ------------------------------------------------------
 # David Phillips
 #
-# 12/11/2017
-# Analyze correlates of absorption
-# -------------------------------------------
+# 11/2/2019
+# Estimate projected absorption based on historical data
+# ------------------------------------------------------
 
 
 # ------------------
 # Set up R
 rm(list=ls())
-library(boot)
-library(readxl)
 library(data.table)
-library(stringr)
 library(ggplot2)
+library(GGally)
 # ------------------
 
 
@@ -21,68 +19,71 @@ library(ggplot2)
 # Files and directories
 
 # root directory for input/output
-dir = 'J:/Project/Evaluation/GF/resource_tracking/multi_country/'
+dir = 'J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data'
 
 # input data
-inFile = paste0(dir, 'mapping/prepped_gos_data.csv')
+inFile = paste0(dir, '/projected_absorption_input.rds')
 
-# place to store the regression output
-regOutFile = paste0(dir, '../../vfm/outputs/absorption_correlates_model_fit.rdata')
-
-# output graphs
-outFile = paste0(dir, '../../vfm/visualizations/absorption_correlates.pdf')
+# output file
+outFile = paste0(dir, '/projected_absorption_estimates.csv')
 # -----------------------------------------------------------------
 
 
-# ----------------------------------------------------------------------
+# --------------------
 # Load/prep data
+data = readRDS(inFile)
+# --------------------
 
-# load
-allData = fread(inFile)
 
-# identify quarters
-allData[, quarter:=quarter(start_date)]
+# ----------------------------------------------------------------------------
+# Estimate projected absorption
 
-# collapse to module-quarter level
-byVars = c('disease','country','grant_number','year','quarter','abbrev_module')
-data = allData[, list('budget'=sum(budget,na.rm=TRUE), 
-			'expenditure'=sum(expenditure,na.rm=TRUE)), by=byVars]
+# fit regression
+# PAFit = lm(absorption ~ gf_module*days_until_end + budget + num_modules, data)
+PAFit = lm(absorption ~ gf_module*days_until_end, data)
 
-# compute absorption
-data[, absorption:=expenditure/budget]
-
-# define lemon squeeze function (store N to global environment for later use)
-# citation: Smithson M, Verkuilen J. A better lemon squeezer? Maximum-likelihood regression with beta-distributed dependent variables. Psychological methods. 2006 Mar;11(1):54.
-lemonSqueeze = function(x) { 
-	N <<- length(x[!is.na(x)])
-	return(logit(((x*(N-1))+0.5)/N))
-}
+# define reverse lemon squeeze function
 reverseLemonSqueeze = function(x) { 
 	N = length(x[!is.na(x)])
 	return(((inv.logit(x)*N)-0.5)/(N-1))
 }
 
-# handle 1's and 0's so logit doesn't drop them
-data = data[is.finite(absorption) & absorption>=0]
-data[absorption>1, absorption:=1] 
-data[, absorption:=lemonSqueeze(absorption)]
-# ----------------------------------------------------------------------
+# extract results
+modules = unique(data$gf_module)
+days = seq(0, 365*3, by=10)
+prediction_frame = data.table(expand.grid(modules, days))
+setnames(prediction_frame, c('gf_module', 'days_until_end'))
+prediction_frame[, projected_absorption:=predict(PAFit, newdata=prediction_frame)]
+prediction_frame[, projected_absorption:=reverseLemonSqueeze(projected_absorption)]
+p05 = quantile(prediction_frame$projected_absorption, .05)
+p95 = quantile(prediction_frame$projected_absorption, .95)
+prediction_frame[projected_absorption<p05, projected_absorption:=p05]
+prediction_frame[projected_absorption>p95, projected_absorption:=p95]
+# ----------------------------------------------------------------------------
 
 
 # ----------------------------------------------------------------------
-# Generate extra predictor variables
+# Display data
 
-# year within grant and years from end of grant
-data[, grant_year:=as.numeric(as.factor(year)), by='grant_number']
-data[, years_from_end:=max(grant_year)-grant_year+1, by='grant_number']
-data[, yearid:=as.numeric(as.factor(year)), by='grant_number']
-data[, quarterid:=(((yearid-1)*4))+quarter]
-data[, quarters_from_end:=max(quarterid)-quarterid+1, by='grant_number']
+# pairwise plot of continuous explanatory variables
+numVars = c('absorption','days_until_end','budget','num_modules')
+p1 = ggpairs(data[, numVars, with=FALSE])
 
-# total budget of the grant
-data[, total_budget:=sum(budget,na.rm=TRUE), by='grant_number']
-
-# number of modules within grant
-data[, num_modules:=length(unique(abbrev_module)), by='grant_number']
+# graph of categorical explanatory variables
+p2 = ggplot(data, aes(y=absorption, x=gf_module)) + 
+	geom_jitter(height=0, width=.1) + 
+	theme_bw() + 
+	theme(axis.text.x=element_text(angle=315, hjust=0))
+	
+# confirm that projected absorption has appropriate patterns
+p3 = ggplot(prediction_frame, aes(y=projected_absorption, x=days_until_end)) + 
+	geom_point() + 
+	geom_smooth()
 # ----------------------------------------------------------------------
+
+
+# --------------------------------------------------
+# Save regression fit
+write.csv(prediction_frame, outFile, rownames=FALSE)
+# --------------------------------------------------
 
