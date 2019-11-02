@@ -184,6 +184,11 @@ checkFile = paste0(gos_raw, "Grants missing intervention information in new GOS 
   for (col in c('grant_period_start', 'start_date', 'end_date')) gos_data[, (col):=as.Date(get(col), format="%Y-%d-%m")]
   for (col in c('grant_period_start', 'grant_period_end', 'start_date', 'end_date')) stopifnot(class(gos_data[[col]])=="Date")
   
+  # Not necessary to keep, just a data quality note - what are the time periods of start/end date? Are they comparable to PUDRs? 
+  diff = unique(gos_data$end_date-gos_data$start_date)
+  range(diff)
+  print(diff)
+  
   #Add variables for GOS merge. 
   gos_data[, grant_period:=paste0(year(grant_period_start), "-", year(grant_period_end))]
   gos_data[, year:=year(start_date)]

@@ -128,17 +128,30 @@ ggsave(paste0(save_loc, "historical_absorption.png"), p, height=8, width=12)
 
 ```{r catalytic_funding} 
 
+#Fix a few interventions
+dt_current[abbrev_int=="Sensitization of lawmakers and law enforcement agents", abbrev_int:="Sensitization of lawmakers"]
+dt_current[abbrev_int=="Improving laws related to HIV and HIV/TB", abbrev_int:="Improving laws"]
+
 #Make a data table for this section that has cumulative funding since Jan. 2018 
 dt_cumulative = dt_current[start_date>="2018-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'abbrev_int', 'gf_module', 'gf_intervention')]
 dt_cumulative[, absorption:=(expenditure/budget)*100]
 dt_cumulative[, label:=paste0(round(absorption, 1), "%")]
 dt_cumulative[absorption>200, absorption:=200]
 
+dt_cumulative_wide = melt(dt_cumulative, id.vars=c('abbrev_mod', 'abbrev_int', 'gf_module', 'gf_intervention', 'absorption', 'label'))
+dt_cumulative_wide[variable=="budget", variable:="Budget"]
+dt_cumulative_wide[variable=="expenditure", variable:="Expenditure"]
+dt_cumulative_wide[variable=="Expenditure", label:=paste0(dollar(value), " (", round(absorption, 1), "%)")]
+dt_cumulative_wide[variable=="Budget", label:=""]
+dt_cumulative_wide[is.na(label), label:=""]
+dt_cumulative_wide[, value:=as.numeric(value)]
+
 dt_2019_wide = dt_current[start_date=="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('disease', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int')]
-dt_2019_wide = melt(dt_2019_wide, id.vars=c('disease', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
+dt_2019_wide[, absorption:=(expenditure/budget)*100]
+dt_2019_wide = melt(dt_2019_wide, id.vars=c('disease', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int', 'absorption'))
 dt_2019_wide[variable=="budget", variable:="Budget"]
 dt_2019_wide[variable=="expenditure", variable:="Expenditure"]
-dt_2019_wide[variable=="Expenditure", label:=dollar(value)]
+dt_2019_wide[variable=="Expenditure", label:=paste0(dollar(value), " (", round(absorption, 1), "%)")]
 dt_2019_wide[is.na(label), label:=""]
 dt_2019_wide[, value:=as.numeric(value)]
 
@@ -148,18 +161,19 @@ p = ggplot(dt_current[abbrev_mod=="Human rights barriers" & start_date=="2019-01
   theme_bw(base_size=16) + 
   geom_text(hjust=0) + 
   coord_flip() +
+  scale_fill_manual(values=c('green3', 'chocolate2')) + 
   facet_wrap(~grant) + 
   scale_y_continuous(limits=c(0, 250)) + 
   labs(title="Human rights absorption for S1 2019", y="Absorption (%)", x="Intervention", fill="", caption="*Absorption capped at 200%")
   
 ggsave(paste0(save_loc, "human_rights.png"), p, height=8, width=12)
 
-p = ggplot(dt_cumulative[abbrev_mod=="Human rights barriers"], aes(x=abbrev_int, y=absorption,  label=label)) + 
-  geom_bar(stat="identity", fill="goldenrod3") + 
+p = ggplot(dt_cumulative_wide[abbrev_mod=="Human rights barriers"], aes(x=abbrev_int, y=value, fill=variable, label=label)) + 
+  geom_bar(stat="identity", position="identity") + 
   theme_bw(base_size=16) + 
   geom_text(hjust=0) + 
   coord_flip() +
-  scale_y_continuous(limits=c(0, 250)) + 
+  scale_y_continuous(labels=scales::dollar, limits=c(0, 600000)) + 
   labs(title="Cumulative human rights absorption since Jan. 2018", y="Absorption (%)", x="Intervention", fill="", caption="*Absorption capped at 200%")
 ggsave(paste0(save_loc, "human_rights_cumulative.png"), p, height=8, width=12)
 
@@ -168,7 +182,8 @@ p = ggplot(dt_2019_wide[abbrev_mod=="Human rights barriers"], aes(x=abbrev_int, 
   theme_bw(base_size=16) + 
   geom_text(hjust=0) + 
   coord_flip() +
-  scale_y_continuous(labels=scales::dollar, limits=c(0, 500000)) + 
+  scale_fill_manual(values=c('green3', 'chocolate2')) + 
+  scale_y_continuous(labels=scales::dollar, limits=c(0, 800000)) + 
   labs(title="Human rights budget/expenditure for S1 2019", y="", x="Intervention", fill="")
   
 ggsave(paste0(save_loc, "human_rights_budget.png"), p, height=8, width=12)
@@ -187,23 +202,24 @@ p = ggplot(dt_current[gf_intervention%in%tb_screening_ints & start_date=="2019-0
   facet_wrap(~grant) + 
   geom_text(hjust=0) + 
   coord_flip() +
+  scale_fill_manual(values=c('green3', 'chocolate2')) + 
   scale_y_continuous(limits=c(0, 250)) + 
   labs(title="TB screening/community care delivery \nfor S1 2019", y="Absorption (%)", x="Intervention", fill="", caption="*Absorption capped at 200%")
 
 ggsave(paste0(save_loc, "tb_screening.png"), p, height=8, width=12)
 
-dt_cumulative[abbrev_mod=="MDR-TB" & abbrev_int=="Case detection and diagnosis", abbrev_int:="MDR-TB: Case detection"]
-dt_cumulative[abbrev_mod=="MDR-TB" & abbrev_int=="Community care delivery", abbrev_int:="MDR-TB: Community care delivery"]
-dt_cumulative[abbrev_mod=="Care & prevention" & abbrev_int=="Case detection and diagnosis", abbrev_int:="TB: Case detection"]
-dt_cumulative[abbrev_mod=="Care & prevention" & abbrev_int=="Community TB care delivery", abbrev_int:="TB: Community care delivery"]
+dt_cumulative_wide[abbrev_mod=="MDR-TB" & abbrev_int=="Case detection and diagnosis", abbrev_int:="MDR-TB: Case detection"]
+dt_cumulative_wide[abbrev_mod=="MDR-TB" & abbrev_int=="Community care delivery", abbrev_int:="MDR-TB: Community care delivery"]
+dt_cumulative_wide[abbrev_mod=="Care & prevention" & abbrev_int=="Case detection and diagnosis", abbrev_int:="TB: Case detection"]
+dt_cumulative_wide[abbrev_mod=="Care & prevention" & abbrev_int=="Community TB care delivery", abbrev_int:="TB: Community care delivery"]
 
-p = ggplot(dt_cumulative[gf_intervention%in%tb_screening_ints], aes(x=abbrev_int, y=absorption,  label=label)) + 
-  geom_bar(stat="identity", fill="goldenrod3") + 
+p = ggplot(dt_cumulative_wide[gf_intervention%in%tb_screening_ints], aes(x=abbrev_int, y=value, fill=variable, label=label)) + 
+  geom_bar(stat="identity", position="identity") + 
   theme_bw(base_size=16) + 
   geom_text(hjust=0) + 
   coord_flip() +
-  scale_y_continuous(limits=c(0, 250)) + 
-  labs(title="Cumulative TB screening/community care delivery", y="Absorption (%)", x="Intervention", fill="", caption="*Absorption capped at 200%")
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Cumulative TB screening absorption since Jan. 2018", y="Absorption (%)", x="Intervention", fill="", caption="*Absorption capped at 200%")
 
 ggsave(paste0(save_loc, "tb_screening_cumulative.png"), p, height=8, width=12)
 
@@ -212,6 +228,7 @@ p = ggplot(dt_2019_wide[gf_intervention%in%tb_screening_ints], aes(x=abbrev_int,
   theme_bw(base_size=16) + 
   geom_text(hjust=0) + 
   coord_flip() +
+  scale_fill_manual(values=c('green3', 'chocolate2')) + 
   scale_y_continuous(labels=scales::dollar) + 
   labs(title="TB screening budget/expenditure for S1 2019", y="", x="Intervention", fill="", caption="*Absorption capped at 200%")
   
@@ -227,6 +244,20 @@ rssh[, module_num:=.GRP, by='abbrev_mod']
 rssh[, int_num:=.GRP, by=c('abbrev_mod', 'abbrev_int')]
 rssh[, rssh_factor:=paste0(module_num, int_num)]
 rssh$int_factor = factor(rssh$rssh_factor, unique(rssh$rssh_factor), unique(rssh$abbrev_int))
+
+rssh_cumulative = dt_current[disease=="rssh" & start_date>="2018-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
+                             by=c('abbrev_mod', 'abbrev_int')]
+rssh_cumulative[, absorption:=(expenditure/budget)*100]
+rssh_cumulative[, label:=paste0(round(absorption, 1), "%")]
+
+rssh_cumulative_wide = rssh_cumulative[, .(budget, expenditure, abbrev_mod, abbrev_int, label)]
+rssh_cumulative_wide = melt(rssh_cumulative_wide, id.vars=c('abbrev_mod', 'abbrev_int', 'label'))
+rssh_cumulative_wide[variable=="budget", variable:="Budget"]
+rssh_cumulative_wide[variable=="expenditure", variable:="Expenditure"]
+rssh_cumulative_wide[variable=="Expenditure", label:=paste0(dollar(value), " (", label, ")")]
+rssh_cumulative_wide[variable=="Budget", label:=""]
+rssh_cumulative_wide[is.na(label), label:=""]
+rssh_cumulative_wide[, value:=as.numeric(value)]
   
 p = ggplot(rssh, aes(x=int_factor, y=absorption, label=label, fill=abbrev_mod)) + 
   geom_bar(stat="identity") + 
@@ -243,16 +274,47 @@ p = ggplot(dt_2019_wide[disease=="rssh"], aes(x=abbrev_int, y=value, fill=variab
   theme_bw(base_size=16) + 
   geom_text(hjust=0) + 
   coord_flip() +
+  scale_fill_manual(values=c('green3', 'chocolate2')) + 
   scale_y_continuous(labels=scales::dollar) + 
   labs(title="RSSH budget/expenditure for S1 2019", y="", x="Intervention", fill="", caption="*Absorption capped at 200%")
   
 ggsave(paste0(save_loc, "rssh_budget.png"), p, height=8, width=12)
 
+p = ggplot(rssh_cumulative_wide, aes(x=abbrev_int, y=value, fill=variable, label=label)) + 
+  geom_bar(stat="identity", position="identity") + 
+  theme_bw(base_size=16) + 
+  geom_text(hjust=0) + 
+  coord_flip() +
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Cumulative RSSH absorption since Jan. 2018", y="Absorption (%)", x="Intervention", fill="", caption="*Absorption capped at 200%")
+
+ggsave(paste0(save_loc, "rssh_cumulative.png"), p, height=8, width=12)
+
+#What are the interventions under "community responses and systems?" 
+p = ggplot(rssh_cumulative_wide[abbrev_mod=="Community systems"], aes(x=abbrev_int, y=value, fill=variable, label=label)) + 
+  geom_bar(stat="identity", position="identity") + 
+  theme_bw(base_size=16) + 
+  geom_text(hjust=0) + 
+  coord_flip() +
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Cumulative absorption for 'community responses and systems' \nsince Jan. 2018", y="Absorption (%)", x="Intervention", fill="", caption="*Absorption capped at 200%")
+
+ggsave(paste0(save_loc, "community_responses_cumulative.png"), p, height=8, width=12)
+
 #Historical investment in HMIS 
-hmis = dt[abbrev_mod=="Info systems & M&E", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'start_date')]
+hmis = dt[abbrev_mod=="Info systems & M&E", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'abbrev_int', 'start_date')]
 hmis[, absorption:=(expenditure/budget)*100]
 hmis[, label:=paste0(round(absorption, 1), "%")]
 hmis[absorption>200, absorption:=200]
+
+hmis_cumulative_wide = hmis[start_date>="2018-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'abbrev_int')]
+hmis_cumulative_wide[, absorption:=(expenditure/budget)*100]
+hmis_cumulative_wide = melt(hmis_cumulative_wide, id.vars=c('abbrev_mod', 'abbrev_int', 'absorption'))
+hmis_cumulative_wide[variable=="budget", variable:="Budget"]
+hmis_cumulative_wide[variable=="expenditure", variable:="Expenditure"]
+hmis_cumulative_wide[variable=="Expenditure", label:=paste0(dollar(value), " (", round(absorption, 1), "%)")]
+hmis_cumulative_wide[is.na(label), label:=""]
+hmis_cumulative_wide[, value:=as.numeric(value)]
 
 p1 = ggplot(hmis, aes(x=start_date, y=budget, label=label)) + 
   geom_bar(stat="identity", fill="darkorchid3") + 
@@ -260,15 +322,36 @@ p1 = ggplot(hmis, aes(x=start_date, y=budget, label=label)) +
   scale_y_continuous(labels=scales::dollar) + 
   labs(title="Investment in HMIS over time", x="Date", y="Budget")
 
-p2 = ggplot(hmis, aes(x=start_date, y=absorption, label=label)) + 
-  geom_point() + geom_line()+ 
+hmis_collapse = hmis[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('start_date')]
+hmis_collapse[, absorption:=(expenditure/budget)*100]
+hmis_collapse = melt(hmis_collapse, id.vars=c('start_date', 'absorption'))
+hmis_collapse[variable=="budget", variable:="Budget"]
+hmis_collapse[variable=="expenditure", variable:="Expenditure"]
+hmis_collapse[variable=="Expenditure", label:=paste0(dollar(value), " (", round(absorption, 1), "%)")]
+hmis_collapse[variable=="Budget", label:=""]
+hmis_collapse[is.na(label), label:=""]
+hmis_collapse[, value:=as.numeric(value)]
+
+p2 = ggplot(hmis_collapse, aes(x=start_date, y=value, fill=variable, label=label)) + 
+  geom_bar(position="identity", stat="identity") + 
   theme_bw(base_size=16) + 
-  labs(title="Investment in HMIS over time", x="Date", y="Absorption (%)")
+  geom_text() + 
+  scale_fill_manual(values=c('darkorchid2', 'goldenrod3')) + 
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Investment in HMIS over time", x="Date", y="Absorption (%)", fill="")
 
-ggsave(paste0(save_loc, "hmis_budget.png"), p1, height=8, width=12)
+ggsave(paste0(save_loc, "hmis_budget_over_time.png"), p2, height=8, width=12)
 
+p = ggplot(hmis_cumulative_wide, aes(x=abbrev_int, y=value, fill=variable, label=label)) + 
+  geom_bar(stat="identity", position="identity") + 
+  theme_bw(base_size=16) + 
+  geom_text(hjust=0) + 
+  coord_flip() +
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Cumulative HMIS absorption since Jan. 2018", y="Absorption (%)", x="Intervention", fill="", caption="*Absorption capped at 200%")
 
-  
+ggsave(paste0(save_loc, "hmis_cumulative.png"), p, height=8, width=12)
+
 ```
 
 ```{r absorption_by_grant_disease} 
@@ -277,11 +360,11 @@ disease_cumulative[, absorption:=(expenditure/budget)*100]
 disease_cumulative[, label:=paste0(round(absorption, 1), "%")]
 disease_cumulative[absorption>200, absorption:=200]
 
-disease_cumulative_wide = disease_cumulative[, .(abbrev_mod, disease, budget, expenditure)]
-disease_cumulative_wide = melt(disease_cumulative_wide, id.vars=c('disease', 'abbrev_mod'))
+disease_cumulative_wide = disease_cumulative[, .(abbrev_mod, disease, budget, expenditure, absorption)]
+disease_cumulative_wide = melt(disease_cumulative_wide, id.vars=c('disease', 'abbrev_mod', 'absorption'))
 disease_cumulative_wide[variable=="budget", variable:="Budget"]
 disease_cumulative_wide[variable=="expenditure", variable:="Expenditure"]
-disease_cumulative_wide[variable=="Expenditure", label:=dollar(value)]
+disease_cumulative_wide[variable=="Expenditure", label:=paste0(dollar(value), " (", round(absorption, 1), "%)")]
 disease_cumulative_wide[is.na(label), label:=""]
 
 #HIV 
@@ -302,7 +385,7 @@ p = ggplot(disease_cumulative_wide[disease=="hiv"],
   geom_text(hjust=0) + 
   coord_flip() +
   scale_y_continuous(labels=scales::dollar) + 
-  labs(title="Budget/Expenditure for HIV modules since Jan. 2018", y="", x="Module", fill="")
+  labs(title="Budget/Expenditure for HIV modules since Jan. 2018", y="", x="Module", fill="", caption="*Labels show expenditure amounts and absorption percentages")
 
 ggsave(paste0(save_loc, "hiv_modules_budget.png"), p, height=8, width=12)
 
@@ -323,7 +406,7 @@ p = ggplot(disease_cumulative_wide[disease=="tb"],
   geom_text(hjust=0) + 
   coord_flip() +
   scale_y_continuous(labels=scales::dollar) + 
-  labs(title="Budget/Expenditure for TB modules since Jan. 2018", y="", x="Module", fill="")
+  labs(title="Budget/Expenditure for TB modules since Jan. 2018", y="", x="Module", fill="", caption="*Labels show expenditure amounts and absorption percentages")
 
 ggsave(paste0(save_loc, "tb_modules_budget.png"), p, height=8, width=12)
 
@@ -344,7 +427,7 @@ p = ggplot(disease_cumulative_wide[disease=="malaria"],
   geom_text(hjust=0) + 
   coord_flip() +
   scale_y_continuous(labels=scales::dollar) + 
-  labs(title="Budget/Expenditure for malaria modules since Jan. 2018", y="", x="Module", fill="")
+  labs(title="Budget/Expenditure for malaria modules since Jan. 2018", y="", x="Module", fill="", caption="*Labels show expenditure amounts and absorption percentages")
 
 ggsave(paste0(save_loc, "mal_modules_budget.png"), p, height=8, width=12)
 
@@ -365,7 +448,7 @@ p = ggplot(disease_cumulative_wide[disease=="rssh"],
   geom_text(hjust=0) + 
   coord_flip() +
   scale_y_continuous(labels=scales::dollar) + 
-  labs(title="Budget/Expenditure for RSSH modules since Jan. 2018", y="", x="Module", fill="")
+  labs(title="Budget/Expenditure for RSSH modules since Jan. 2018", y="", x="Module", fill="", caption="*Labels show expenditure amounts and absorption percentages \n*Absorption capped at 200%")
 
 ggsave(paste0(save_loc, "rssh_modules_budget.png"), p, height=8, width=12)
 

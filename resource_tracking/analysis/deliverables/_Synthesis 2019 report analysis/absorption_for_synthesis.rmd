@@ -17,10 +17,12 @@ library(wesanderson)
 library(gridExtra)
 library(scales)
 library(pander)
+library(RColorBrewer)
 
 options(scipen=15)
 
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
 png_save = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/Synthesis 2019/"
 
 #Read in absorption data 
@@ -68,7 +70,12 @@ Using 2019 PUDRs, we wanted to know:
 
 # List of current grants 
 ```{r current_grants} 
-kable(unique(all_absorption[grant_period%in%c('2016-2019', '2018-2020'), .(loc_name, grant_period, grant, grant_disease)][order(loc_name, grant_disease)]), col.names=c('Country', 'Grant Period', 'Grant', 'Disease'), align="l") %>%
+kable_data = unique(all_absorption[grant_period%in%c('2016-2019', '2018-2020', '2019-2021', '2019-2022'), .(loc_name, grant_period, grant, grant_disease)])
+gtm_grants = data.table(loc_name=rep("GTM", 2), grant_period=c('2019-2021', '2019-2022'), grant=c('GTM-M-MSPAS', 'GTM-T-MSPAS'), grant_disease=c('Malaria', 'TB'))
+kable_data = rbind(kable_data, gtm_grants)
+kable_data = kable_data[order(loc_name, grant_disease)]
+
+kable(kable_data, col.names=c('Country', 'Grant Period', 'Grant', 'Disease'), align="l") %>%
   kable_styling(font_size=6)
 ```
 
@@ -79,6 +86,7 @@ DRC, Senegal, and Uganda are all on the same grant cycle, and their grants will 
 reporting = fread("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/missing_pudr_coverage.csv")
 #Only look at 2019 reporting 
 reporting = reporting[date>=2019.0 & date<=2019.75]
+reporting[grant=="GTM-H-INCAP" & missing_pudr_date<2019.50, missing_pudr_date:=NA] # I just haven't been able to re-run the expenditure data yet so this is wrong, but I do have this PUDR. 
 reporting[, date:=factor(date, levels=c(2019.00, 2019.25, 2019.50, 2019.75), labels=c("Q1 2019", "Q2 2019", "Q3 2019", "Q4 2019"))]
 reporting[, missing_pudr_date:=factor(missing_pudr_date, levels=c(2019.00, 2019.25, 2019.50, 2019.75), labels=c("Q1 2019", "Q2 2019", "Q3 2019", "Q4 2019"))]
 
@@ -102,10 +110,10 @@ Using 2019 PUDRs, we wanted to know:
 ggplot(by_country, aes(x=loc_name, y=absorption, fill=grant_disease))+ 
   geom_bar(stat="identity", position="dodge") + 
   theme_bw(base_size=18) + 
-  scale_fill_manual(values=wes_palette("GrandBudapest2")) + 
+  scale_fill_brewer(palette="Set2") + 
   scale_y_continuous(limits=c(0, 175)) + 
   geom_text(data=by_country, aes(x=loc_name, y=absorption, label=label), vjust=-0.5, position=position_dodge(width=1), size=4) + 
-  labs(title="2019 absorption by country and disease", x="Country", y="Absorption (%)", fill="Disease")
+  labs(title="2019 absorption by country and disease", x="Country", y="Absorption (%)", fill="Disease", caption="*We have no PUDRs in Guatemala that started after Jan. 2019")
 
 ```
 
@@ -135,109 +143,59 @@ ggplot(by_country, aes(x=loc_name, y=absorption, fill=grant_disease))+
 ```
 
 # Across grants, which modules have higher absorption than the PUDR average in 2019? 
+This is based on the 14 PUDRs from DRC, Senegal, and Uganda.
 
 ```{r slide2, include=FALSE}
-by_module[, total_budget:=sum(budget, na.rm=TRUE), by='grant']
-by_module[, total_expenditure:=sum(expenditure, na.rm=TRUE), by='grant']
-by_module[, total_absorption:=(total_expenditure/total_budget)*100]
-
-by_module[absorption>=total_absorption, absorption_rating:="ABOVE_AVERAGE"]
-by_module[absorption<total_absorption, absorption_rating:="BELOW_AVERAGE"]
-
-by_module[, residual:=absorption-total_absorption]
-by_module[residual>500, residual:=500]
-
-#Make a lollipop chart of these absorption residuals. 
-ggplot(by_module, aes(x=abbrev_mod, y=residual)) +
-  geom_point() + 
-  #geom_segment( aes(x=abbrev_mod, xend=abbrev_mod, y=0, yend=residual)) + 
-  theme(legend.position="none") + 
-  theme_bw() + 
-  labs(title="Mapped residuals between module-level absorption and PUDR average")
+high_low_absorption = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'semester', 'grant_disease', 'abbrev_mod')]
+high_low_absorption[, absorption:=round((expenditure/budget)*100, 1)]
+high_low_absorption[absorption>200, absorption:=200]
+high_low_absorption[is.na(absorption), absorption:=0] #This is only happening where budget and expenditure are 0. 
+high_low_absorption[, mean_absorption:=(mean(expenditure, na.rm=T)/mean(budget, na.rm=T))*100,  by=c('grant', 'semester', 'grant_disease')]
+high_low_absorption[absorption>=mean_absorption, absorption_rating:="ABOVE_AVERAGE"]
+high_low_absorption[absorption<mean_absorption, absorption_rating:="BELOW_AVERAGE"]
 ```
 
-```{r high_absorption_list}
-by_module[absorption>=total_absorption, absorption_rating:="ABOVE_AVERAGE"]
-by_module[absorption<total_absorption, absorption_rating:="BELOW_AVERAGE"]
-kable(by_module[absorption_rating=="ABOVE_AVERAGE", .N, by='abbrev_mod'][1:10, ][order(-N)], col.names=c('Module', 'Grants'), align="l") %>%
+# Absorption for HIV, HIV/TB grants (page 1/2)
+```{r high_absorption_hiv}
+kable(high_low_absorption[grant_disease%in%c('HIV', 'HIV/TB') & !is.na(absorption_rating), .N, by=c('abbrev_mod', 'absorption_rating')][order(abbrev_mod, absorption_rating)][1:20, ], col.names=c('Module', 'Absorption Rating', 'Grants'), align="l") %>%
   kable_styling(font_size=8)
-
-``` 
-Four grants had higher absorption within the information systems module (HMIS) than for the PUDR as a whole. 
-
-# Which were below the PUDR average in 2019? 
-```{r slide3}
-kable(by_module[absorption_rating=="BELOW_AVERAGE", .N, by='abbrev_mod'][1:10, ][order(-N)], col.names=c('Module', 'Grants'), align="l") %>%
-  kable_styling(font_size=9)
-```
-HMIS and human resources for health had lower absorption than the PUDR average for five grants. Integrated service delivery reported low absorption for four. This puts several RSSH modules at the top of the "low performing absorption" list. Following this are several modules related to key populations.
-
-# What are the highest absorbing modules across countries?
-```{r high-performing_mods} 
-# Take the 5 highest performing modules per grant on absorption 
-# Then, give each of them a value of 1, and collapse to country-level, and to consortia-level. 
-# What are the highest performing modules? 
-high_performers = data.table() 
-for (g in unique(by_module$grant)){
-  subset = by_module[order(grant, -absorption)][grant==g, .(loc_name, grant, abbrev_mod, absorption)]
-  subset = subset[1:5]
-  high_performers = rbind(high_performers, subset)
-}
-
-high_performers[, count:=1]
-high_performers_by_loc = high_performers[, .(count=sum(count)), by=c('abbrev_mod', 'loc_name')][order(-count)]
-high_performers_by_loc[, label:=as.character(count)]
-high_performers_all = high_performers[, .(count=sum(count)), by=c('abbrev_mod')][order(-count)]
-high_performers_all[, label:=as.character(count)]
-
-ggplot(high_performers_all[!is.na(abbrev_mod)], aes(x=reorder(abbrev_mod, count), y=count, label=label)) + 
-  geom_point() + 
-  geom_text(size=4, hjust=-0.5) + 
-  coord_flip() + 
-  theme_bw(base_size=16) + 
-  scale_y_continuous(breaks=seq(0, 20, by=2), labels=seq(0, 20, by=2)) + 
-  labs(title="What are the highest-performing modules across grants?", y="Number of grants with this module in top 5 highest-absorbing modules", x="Module")
 ```
 
-# What are the highest absorbing modules, by grant? 
-```{r high_performers_by_loc} 
-
-ggplot(high_performers_by_loc[!is.na(abbrev_mod)], aes(x=reorder(abbrev_mod, count), y=count, label=label)) + 
-  geom_point() + 
-  geom_text(size=4, hjust=-0.5) + 
-  coord_flip() + 
-  theme_bw(base_size=16) +
-  facet_wrap(~loc_name) + 
-  labs(title="What are the highest-performing modules across grants?", y="Number of grants with this module in top 5 highest-absorbing modules", x="Module")
+# Absorption for HIV, HIV/TB grants (page 2/2)
+```{r high_absorption_hiv2}
+kable(high_low_absorption[grant_disease%in%c('HIV', 'HIV/TB') & !is.na(absorption_rating), .N, by=c('abbrev_mod', 'absorption_rating')][order(abbrev_mod, absorption_rating)][21:27, ], col.names=c('Module', 'Absorption Rating', 'Grants'), align="l") %>%
+  kable_styling(font_size=8)
 ```
 
-# What are the highest absorbing interventions across countries?
-```{r high_performing_ints} 
-# Take the 5 highest performing interventions per grant on absorption 
-# Then, give each of them a value of 1, and collapse to country-level, and to consortia-level. 
-# What are the highest performing modules? 
-high_performers = data.table() 
-for (g in unique(by_intervention$grant)){
-  subset = by_intervention[order(grant, -absorption)][grant==g, .(loc_name, grant, abbrev_int, absorption)]
-  subset = subset[1:5]
-  high_performers = rbind(high_performers, subset)
-}
-
-high_performers[, count:=1]
-high_performers_all = high_performers[, .(count=sum(count)), by=c('abbrev_int')][order(-count)]
-high_performers_all[, label:=as.character(count)]
-
-ggplot(high_performers_all[!is.na(abbrev_int) & count>1], aes(x=reorder(abbrev_int, count), y=count, label=label)) + 
-  geom_point() + 
-  geom_text(size=4, hjust=-0.5) + 
-  coord_flip() + 
-  theme_bw(base_size=16) + 
-  scale_y_continuous(breaks=seq(0, 20, by=2), labels=seq(0, 20, by=2)) + 
-  labs(title="What are the highest-performing interventions across grants?", y="Number of grants with this interventions in top 5 highest-absorbing interventions", x="Interventions", caption="*Only showing interventions with counts>1")
+# Absorption for TB grants
+```{r high_absorption_tb}
+kable(high_low_absorption[grant_disease=="TB" & !is.na(absorption_rating), .N, by=c('abbrev_mod', 'absorption_rating')][order(abbrev_mod, absorption_rating)], col.names=c('Module', 'Absorption Rating', 'Grants'), align="l") %>%
+  kable_styling(font_size=8)
 ```
 
+# Absorption for malaria grants
+```{r high_absorption_malaria}
+kable(high_low_absorption[grant_disease=="Malaria" & !is.na(absorption_rating), .N, by=c('abbrev_mod', 'absorption_rating')][order(abbrev_mod, absorption_rating)], col.names=c('Module', 'Absorption Rating', 'Grants'), align="l") %>%
+  kable_styling(font_size=8)
+```
+
+# How has RSSH performed overall for 2019 PUDRs? 
+```{r rssh_high_low}
+rssh_high_low = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'semester', 'grant_disease', 'disease', 'abbrev_mod')]
+rssh_high_low[, absorption:=round((expenditure/budget)*100, 1)]
+rssh_high_low[absorption>200, absorption:=200]
+rssh_high_low[, mean_absorption:=(mean(expenditure, na.rm=T)/mean(budget, na.rm=T))*100,  by=c('grant', 'semester', 'grant_disease', 'disease')]
+rssh_high_low[absorption>=mean_absorption, absorption_rating:="ABOVE_AVERAGE"]
+rssh_high_low[absorption<mean_absorption, absorption_rating:="BELOW_AVERAGE"]
+rssh_high_low = rssh_high_low[disease=="rssh"]
+kable(rssh_high_low[!is.na(absorption_rating), .N, by=c('abbrev_mod', 'absorption_rating')][order(abbrev_mod, absorption_rating, -N)], col.names=c('Module', 'Absorption Rating', 'Grants'), align="l") %>%
+  kable_styling(font_size=8)
+```
+
+12 of the 14 grants we have 2019 PUDRs for include RSSH.
+
+```{r num_activities, include=FALSE} 
 # Are there any correlations between the number of activities and absorption? 
-```{r num_activities} 
 #Merge absorption data with budget data to get activity and SR data. 
 budgets = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/final_budgets.rds")
 
@@ -263,8 +221,8 @@ ggplot(activities_by_int[!is.na(abbrev_int)], aes(x=num_activities, y=absorption
 
 ```
 
+```{r num_srs, include=FALSE}
 # Is there a correlation between the number of SRs and absorption? 
-```{r num_srs}
 srs_by_int = unique(budgets[grant_period=="2018-2020", .(grant, gf_module, gf_intervention, implementer)])
 srs_by_int[, count:=1]
 srs_by_int = srs_by_int[, .(num_implementers=sum(count)), by=c('grant', 'gf_module', 'gf_intervention')]
@@ -285,16 +243,17 @@ ggplot(srs_by_int, aes(x=num_implementers, y=absorption)) +
 
 ```
 
+```{r high_num_implementers, include=FALSE}
 # Which interventions have more than 20 implementers? 
-```{r high_num_implementers}
 kable(srs_by_int[num_implementers>20, .(grant, abbrev_mod, abbrev_int, num_implementers, absorption)], col.names=c('Grant', 'Module', 'Intervention', '# Implementers', "Absorption")) %>%
   kable_styling(font_size=4)
 ```
 
-In the SANRU grant in DRC, there are several interventions that have more than 20 implementers. 
+
+```{r commodities, include=FALSE}
+#In the SANRU grant in DRC, there are several interventions that have more than 20 implementers. 
 
 # Does a highly-commoditized grant correspond with higher absorption? 
-```{r commodities}
 
 # EMILY START HERE. I THINK AN EASIER WAY TO DO THIS WOULD BE TO LOOK AT THE SUMMARY BUDGETS. 
 #Try using keywords to tag commodities at the budget-level. 
@@ -307,8 +266,8 @@ write.csv(unique(commodities[, .(activity_description, commodity)]), "C:/Users/e
 ```
 
 
+```{r absorption_regression, include=FALSE}
 # What are the biggest predictors of high absorption? 
-```{r absorption_regression}
 regression_data = by_intervention[, .(grant, gf_module, gf_intervention, absorption)]
 
 srs_by_int = unique(budgets[grant_period=="2018-2020", .(grant, gf_module, gf_intervention, implementer)])
@@ -345,7 +304,7 @@ max_absorption = regression_data[!is.infinite(absorption), max(absorption)]
 regression_data[is.infinite(absorption), absorption:=max_absorption]
 ```
 
-```{r regression, echo=TRUE}
+```{r regression, echo=TRUE, include=FALSE}
 model1 = lm(absorption ~ num_implementers + num_activities + commodity + government_pr, data=regression_data)
 mtable1 = mtable('Model 1' = model1, summary.stats = c('R-squared','F','p','N'))
 pander(mtable1)
@@ -354,9 +313,11 @@ pander(mtable1)
 
 # Finding statements for research question #1
 * In all countries, tuberculosis grants reported the highest absorption numbers. They also have the lowest overall budgets. 
-* Several grants are reporting high absorption numbers for health management information systems. However, 
-* Several grants are reporting low absorption numbers for HMIS and for human resources for health. This means that several RSSH modules are reporting low absorption percentages across grants. 
-* Prevention programs for injectable drug users and commercial sex workers also had low absorption across several grants. 
+* For HIV and HIV/TB grants, absorption for PMTCT, sex workers, adolescents/youth and people who inject drugs were consistently below average, while program management and HMIS (RSSH) were consistently above average. 
+* For TB grants, general care and prevention, TB/HIV, and program management are performing above vaerge, while HR & health workers (RSSH), HMIS (RSSH), and MDR-TB are performing below average. 
+* For malaria grants, program management and national health strategies (RSSH) are performing above average, while HR & health workers (RSSH), community systems (RSSH), service delivery (RSSH), and vector control are performing below average. 
+* Within RSSH modules, it's a mixed picture, except for community systems and service delivery, which have more grants below the average.
+* Note that many grants (11 out of 14) have some money budgeted for info systems and M&E.
 
 # Research questions 
 Using 2019 PUDRs, we wanted to know: 
@@ -410,14 +371,6 @@ p2 = ggplot(s2_2018, aes(x=loc_name, y=absorption, fill=grant_disease))+
   scale_y_continuous(limits=c(0, 220)) + 
   labs(title="2018 S1-2 \nor S2 absorption", x="Country", y="Absorption (%)", fill="Disease")
 
-# p4 = ggplot(s1_2016, aes(x=loc_name, y=absorption, fill=grant_disease))+ 
-#   geom_bar(stat="identity", position="dodge") + 
-#   theme_bw(base_size=18) + 
-#   scale_fill_manual(values=wes_palette("GrandBudapest2")) + 
-#   scale_y_continuous(limits=c(0, 175)) + 
-#   geom_text(data=s1_2016, aes(x=loc_name, y=absorption, label=label), vjust=-0.5, position=position_dodge(width=1), size=4) + 
-#   labs(title="2016 S1 absorption", x="Country", y="Absorption (%)", fill="Disease")
-
 #Just do P1 for right now because we have very few S1 2016 PUDRs. El 10/8/2019. 
 grid.arrange(p1, p2, p3, ncol=3, nrow=1)
 ```
@@ -464,11 +417,7 @@ comp_melt = comp_absorption[, .(loc_name, grant_disease, semester, budget, expen
 
 ```
 # Finding statements for research question #2
-* Absorption has steadily increased for DRC and Senegal since the beginning of the grant cycle. Absorption in Uganda has been more mixed.  
-
-# Additional analyses for this section
-* Add budget/expenditure stacked bar plots by grant disease/country
-* Add a cumulative version of this graph (Semester 1, Semester 1-2, and Semester 1-3 as the panels) 
+* Absorption has steadily increased for DRC and Senegal since the beginning of the grant cycle. Absorption in Uganda has been more mixed, although the spike in Semester 1-2 may have been from catalytic funding. In Guatemala, we don't have enough data to draw a time trend.  
 
 # Research questions 
 Using 2019 PUDRs, we wanted to know: 
@@ -478,10 +427,58 @@ Using 2019 PUDRs, we wanted to know:
 3. __How does it compare to this semester in the 2015-2017 cycle?__
 4. Are there specific findings for RSSH or key populations?
 
-# Finding statements for research question #3
 
-# Additional analyses for this section
-* Have not yet begun making graphs for this section; am planning on comparing S3 2015-2017 with S3 2018-2020.  
+# Historical absorption, all countries pooled
+```{r rq3_1} 
+historical_avg = all_absorption[start_date!="2019-01-01", .(hist_budget=sum(budget, na.rm=T), hist_expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod')]
+historical_avg[, hist_absorption:=(hist_expenditure/hist_budget)*100]
+historical_avg[hist_absorption>200, hist_absorption:=200]
+
+only_2019 =all_absorption[start_date=="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod')]
+only_2019[, absorption:=(expenditure/budget)*100]
+only_2019[absorption>200, absorption:=200]
+
+compare_2019 = merge(historical_avg, only_2019, by=c('abbrev_mod'))
+compare_2019[, diff:=absorption-hist_absorption]
+
+ggplot(compare_2019[!is.na(diff)], aes(x=reorder(abbrev_mod, diff), y=diff, fill=diff)) + 
+  geom_bar(stat="identity") + 
+  theme_bw(base_size=16) + 
+  coord_flip()+ 
+  theme(legend.position="none") + 
+  scale_fill_gradient2(low="red", high="green", midpoint=0, na.value="grey50") + 
+  labs(title="2019 absorption, compared to historical average", x="Module", y="Difference between 2019 and historical absorption", 
+       caption="*Historical absorption calculated from Jan 2015-Jan 2019")
+```
+
+# Historical absorption, by country 
+```{r rq3} 
+historical_avg = all_absorption[start_date!="2019-01-01", .(hist_budget=sum(budget, na.rm=T), hist_expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'loc_name')]
+historical_avg[, hist_absorption:=(hist_expenditure/hist_budget)*100]
+historical_avg[hist_absorption>200, hist_absorption:=200]
+
+only_2019 =all_absorption[start_date=="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'loc_name')]
+only_2019[, absorption:=(expenditure/budget)*100]
+only_2019[absorption>200, absorption:=200]
+
+compare_2019 = merge(historical_avg, only_2019, by=c('abbrev_mod', 'loc_name'))
+compare_2019[, diff:=absorption-hist_absorption]
+
+ggplot(compare_2019, aes(x=reorder(abbrev_mod, diff), y=diff, fill=diff)) + 
+  geom_bar(stat="identity") + 
+  theme_bw(base_size=16) + 
+  coord_flip()+ 
+  facet_wrap(~loc_name) +
+  theme(legend.position="none") + 
+  scale_fill_gradient2(low="red", high="green", midpoint=0, na.value="grey50") + 
+  labs(title="2019 absorption, compared to historical average", x="Module", y="Difference between 2019 and historical absorption", 
+       caption="*Historical absorption calculated since 2015")
+```
+
+# Finding statements for research question #3
+* National health strategies (RSSH), TB/HIV, and financial systems (RSSH) have performed better in S1 2019 than the average from January 2015-January 2019, but this has mainly been driven by improvements in a single country (Uganda, DRC, and Uganda, respectively). 
+* HIV prevention modules are generally performing worse in 2019 than the historical average, specifically programs for the general population, other KVP, CSW, IJU, and MSM. 
+* Vector control and HIV testing are also performing more poorly, but this is mainly due to trends in Uganda. 
 
 # Research questions 
 Using 2019 PUDRs, we wanted to know: 
@@ -498,7 +495,7 @@ rssh_mods = c('Health management information system and monitoring and evaluatio
               "Procurement and supply chain management systems")
 
 plot_data = all_absorption[gf_module%in%rssh_mods & grant_period=="2018-2020" & start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod')] #Collapse across grants
-plot_data[, absorption:=round((expenditure/budget)*100, 2)]
+plot_data[, absorption:=round((expenditure/budget)*100, 1)]
 plot_data[, label1:=paste0(absorption, "%")]
 plot_data[absorption>200, absorption:=200]
 
@@ -536,36 +533,80 @@ ggplot(plot_data, aes(x=abbrev_mod, y=absorption)) +
 
 ```
 
-# For grants with a focus on KPs, which have consistently higher absorption? 
+# HMIS absorption 
+```{r hmis} 
+plot_data = all_absorption[gf_module=='Health management information system and monitoring and evaluation' & grant_period=="2018-2020" & start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_int')] #Collapse across grants
+plot_data[, absorption:=round((expenditure/budget)*100, 1)]
+plot_data[, label1:=paste0(absorption, "%")]
+plot_data[absorption>200, absorption:=200]
 
-```{r key_populations, results="asis"}
+ggplot(plot_data, aes(x=abbrev_int, y=absorption)) + 
+  geom_bar(stat="identity", fill="darkgreen") + 
+  theme_bw(base_size=18) + 
+  geom_text(aes(label=label1), hjust=0, size=4) +
+  coord_flip() + 
+  scale_fill_manual(values=wes_palette("Zissou1")) + 
+  labs(title="Absorption for HMIS interventions for S1 2019", x="Intervention", y="Absorption (%)", fill="Semester", subtitle="Pooled across all grants", caption="*Bar height capped at 200%")
+```
+
+# HMIS budget and expenditure
+```{r hmis_budget}
+  hmis_melt = plot_data[, .(abbrev_int, budget, expenditure)]
+  hmis_melt = melt(hmis_melt, id.vars=c('abbrev_int'), variable.name='variable', value.name='amount')
+  hmis_melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  hmis_melt[variable=="expenditure", label:=dollar(amount)]
+  
+  #Fix budget and expenditure so they display nicely 
+  hmis_melt[variable=="budget", variable:="Budget"]
+  hmis_melt[variable=="expenditure", variable:="Expenditure"] 
+  
+  ggplot(hmis_melt, aes(x=abbrev_int, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("HMIS budget and expenditure"), x="Intervention", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+```
+
+# Finding statements for research question #4 (RSSH)
+* For RSSH, the modules that have the lowest overall budget are reporting the best absorption numbers. 
+* Many of the biggest RSSH  modules are still reporting absorption at or below 60% (HMIS, human resources and health workers, service delivery)
+* Community systems is an outlier, because even though it has a small budget it's reporting low absorption numbers. 
+* The main module to watch here is HMIS - it has the highest overall budget, and 11 of the 14 grants represented in this graph included it in their budgets. 
+* There has been a significant HMIS investment in "program and data quality" and "analysis, review and transparency".  
+
+# Are there trends in absorption for HIV key populations? 
+
+```{r key_populations_hiv, results="asis"}
 # Look at KP absorption for all HIV and HIV/TB grants. 
 
 kp_mods = c("Comprehensive prevention programs for men who have sex with men", "Comprehensive prevention programs for people who inject drugs and their partners", "Comprehensive prevention programs for sex workers and their clients", "Comprehensive prevention programs for transgender people", "Prevention programs for adolescents and youth, in and out of school", "Prevention programs for other vulnerable populations")
 
-plot_data = all_absorption[gf_module%in%kp_mods & grant_period=="2018-2020" & start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod', 'gf_module')]
-plot_data[, absorption:=round((expenditure/budget)*100, 2)]
-plot_data[, label:=paste0(absorption, "%")]
+hiv_kp_data = all_absorption[gf_module%in%kp_mods & start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod', 'gf_module')]
+hiv_kp_data[, absorption:=round((expenditure/budget)*100, 1)]
+hiv_kp_data[, label:=paste0(absorption, "%")]
 
-plot_data[, key_population:=gsub("Comprehensive prevention programs for |Prevention programs for ", "", gf_module)]
-plot_data[, key_population:=capitalize(key_population)]
-plot_data[key_population=="People who inject drugs and their partners", key_population:="People who inject drugs"]
-plot_data[key_population=="Adolescents and youth, in and out of school", key_population:="Adolescents and youth"]
+hiv_kp_data[, key_population:=gsub("Comprehensive prevention programs for |Prevention programs for ", "", gf_module)]
+hiv_kp_data[, key_population:=capitalize(key_population)]
+hiv_kp_data[key_population=="People who inject drugs and their partners", key_population:="People who inject drugs"]
+hiv_kp_data[key_population=="Adolescents and youth, in and out of school", key_population:="Adolescents and youth"]
 
-ggplot(plot_data, aes(x=key_population, y=absorption)) + 
+ggplot(hiv_kp_data, aes(x=key_population, y=absorption)) + 
   geom_bar(stat="identity", fill="darkslategray2") + 
   theme_bw(base_size=18) + 
   geom_text(aes(label=label), hjust=0, size=4) +
   coord_flip() + 
   scale_fill_manual(values=wes_palette("Zissou1")) + 
-  labs(title="Absorption for KP modules in S1 2019", subtitle="Pooled across all grants", x="Module", y="Absorption") 
+  labs(title="Absorption for HIV KP modules in S1 2019", subtitle="Pooled across all grants", x="Module", y="Absorption") 
 ```
 
 # Budget/Expenditure for key populations
 
-```{r budget_exp_kp} 
+```{r budget_exp_kp_hiv} 
 
- kp_melt = plot_data[, .(key_population, budget, expenditure)]
+ kp_melt = hiv_kp_data[, .(key_population, budget, expenditure)]
   kp_melt = melt(kp_melt, id.vars=c('key_population'), variable.name='variable', value.name='amount')
   kp_melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
   kp_melt[variable=="expenditure", label:=dollar(amount)]
@@ -580,15 +621,62 @@ ggplot(plot_data, aes(x=key_population, y=absorption)) +
   theme_bw(base_size=16) + 
   coord_flip() + 
   scale_y_continuous(labels = scales::dollar) + 
-  labs(title=paste0("Budget and expenditure for key populations"), x="Module", y="Amount ($)", fill="", 
+  labs(title=paste0("Budget and expenditure for HIV key populations"), x="Module", y="Amount ($)", fill="", 
        subtitle="Labels show expenditure amounts")
 
 # How many grants have budget recorded for key populations? 
 ```
 
-# Does a higher budget always correlate with lower absorption? 
+# Absorption for TB key populations 
 
-```{r budget_to_absorption} 
+```{r key_populations_tb, results="asis"}
+# Look at KP absorption for all HIV and HIV/TB grants. 
+kp_ints = unique(all_absorption$gf_intervention[grep("key populations", tolower(all_absorption$gf_intervention))])
+
+tb_kp_data = all_absorption[gf_intervention%in%kp_ints & start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_int', 'abbrev_mod')]
+tb_kp_data[, absorption:=round((expenditure/budget)*100, 1)]
+tb_kp_data[, label:=paste0(absorption, "%")]
+
+tb_kp_data[, key_population:=paste0(abbrev_mod, ": ", abbrev_int)]
+tb_kp_data[, kep_population:=gsub("Key populations - ", "", key_population)]
+
+ggplot(tb_kp_data, aes(x=key_population, y=absorption)) + 
+  geom_bar(stat="identity", fill="darkslategray2") + 
+  theme_bw(base_size=18) + 
+  geom_text(aes(label=label), hjust=0, size=4) +
+  coord_flip() + 
+  scale_fill_manual(values=wes_palette("Zissou1")) + 
+  labs(title="Absorption for TB KP modules in S1 2019", subtitle="Pooled across all grants", x="Module", y="Absorption") 
+```
+
+# Budget/Expenditure for key populations
+
+```{r budget_exp_kp_tb} 
+
+ kp_melt = tb_kp_data[, .(key_population, budget, expenditure)]
+  kp_melt = melt(kp_melt, id.vars=c('key_population'), variable.name='variable', value.name='amount')
+  kp_melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  kp_melt[variable=="expenditure", label:=dollar(amount)]
+  
+  #Fix budget and expenditure so they display nicely 
+  kp_melt[variable=="budget", variable:="Budget"]
+  kp_melt[variable=="expenditure", variable:="Expenditure"] 
+  
+  ggplot(kp_melt, aes(x=key_population, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Budget and expenditure for tb key populations"), x="Module", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+
+# How many grants have budget recorded for key populations? 
+```
+
+
+```{r budget_to_absorption, include=FALSE} 
+# Does a higher budget always correlate with lower absorption? 
 budget_v_absorption = all_absorption[grant_period=="2018-2020", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'abbrev_mod', 'semester', 'loc_name')]
 budget_v_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 
@@ -600,19 +688,97 @@ ggplot(budget_v_absorption, aes(x=budget, y=absorption, color=loc_name)) +
 
 ```
 
-# Finding statements for research question #4
-* For both RSSH and key populations, the modules that have the lowest overall budget are reporting the best absorption numbers. 
-* Many of the biggest RSSH and key population-focused modules are still reporting absorption at or below 50% (HMIS, human rights and health workers, prevention programs for adolescents and youth)
-* Follow-up question: Can the high absorption among different key populations be explained by SR budgets (is just one SR targeting programs for transgender people, for example?)
+# Are there differences in absorption for KPs by type of PR? 
+```{r kp_by_sr}
 
-# Additional analyses for this section
-* Show how many grants are reporting for each KP and RSSH module
-* Can we prove that commodity-heavy activities are the main driver of high absorption (it isn't just high overall budget; another factor?)
-* Break out RSSH and KP by module/grant/disease. Is there a multi-modal trend here? 
-* Try running a simple regression on absorption~budget. 
-* Other variables to explore as drivers of absorption - number of SRs implementing each module, highly commoditized grant. 
+#Tag governmental and non-governmental PRs. 
+all_absorption[grant%in%c('COD-C-CORDAID', 'SEN-H-ANCS', 'UGA-C-TASO', 'GTM-H-INCAP'), pr_type:='Civil Society']
+all_absorption[grant%in%c('COD-H-MOH', 'SEN-H-CNLS', 'UGA-H-MoFPED'), pr_type:='Governmental']
 
-# Further analyses for this presentation
-* Include projected absorption - start by just looking at absorption compared to overall historical average by module
-* Add these findings to synthesis mad-libs 
-* Add meta-statistics on how many documents we've analyzed so far
+hiv_kp_data2 = all_absorption[gf_module%in%kp_mods & start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod', 'gf_module', 'pr_type')]
+hiv_kp_data2[, absorption:=round((expenditure/budget)*100, 1)]
+hiv_kp_data2[, label:=paste0(absorption, "%")]
+
+hiv_kp_data2[, key_population:=gsub("Comprehensive prevention programs for |Prevention programs for ", "", gf_module)]
+hiv_kp_data2[, key_population:=capitalize(key_population)]
+hiv_kp_data2[key_population=="People who inject drugs and their partners", key_population:="People who inject drugs"]
+hiv_kp_data2[key_population=="Adolescents and youth, in and out of school", key_population:="Adolescents and youth"]
+
+ggplot(hiv_kp_data2, aes(x=key_population, y=absorption)) + 
+  geom_bar(stat="identity", fill="darkorange3") + 
+  theme_bw(base_size=18) + 
+  geom_text(aes(label=label), hjust=0, size=4) +
+  coord_flip() + 
+  facet_wrap(~pr_type) + 
+  scale_fill_manual(values=wes_palette("Zissou1")) + 
+  labs(title="Absorption for HIV KP modules in S1 2019", subtitle="Faceted by PR type", x="Module", y="Absorption") 
+```
+
+# Finding statements for research question #4 (key populations)
+* Again, the modules that have the lowest overall budget are reporting the best absorption numbers, specifically for transgender people and people who inject drugs under HIV and other key populations under TB.
+* Non-governmental PRs are reporting better absorption numbers in S1 2019 than governmental PRs. 
+
+# Additional analyses using financial data 
+* Sustainability, transition, and co-financing
+
+# DRC HIV
+```{r cod_stc_hiv} 
+funding_landscape("proportion", "cod", "hiv", 2010, 2017, includeGHE=TRUE)
+```
+
+# DRC TB
+```{r cod_stc_tb} 
+funding_landscape("proportion", "cod", "tb", 2010, 2017, includeGHE=TRUE)
+```
+
+# DRC malaria
+```{r cod_stc_mal} 
+funding_landscape("proportion", "cod", "malaria", 2010, 2017, includeGHE=TRUE)
+```
+
+# Guatemala HIV
+```{r gtm_stc_hiv} 
+funding_landscape("proportion", "gtm", "hiv", 2010, 2017, includeGHE=TRUE)
+```
+
+# Guatemala TB
+```{r gtm_stc_tb} 
+funding_landscape("proportion", "gtm", "tb", 2010, 2017, includeGHE=TRUE)
+```
+
+# Guatemala malaria
+```{r gtm_stc_mal} 
+funding_landscape("proportion", "gtm", "malaria", 2010, 2017, includeGHE=TRUE)
+```
+
+# Senegal HIV
+```{r sen_stc_hiv} 
+funding_landscape("proportion", "sen", "hiv", 2010, 2017, includeGHE=TRUE)
+```
+
+# Senegal TB
+```{r sen_stc_tb} 
+funding_landscape("proportion", "sen", "tb", 2010, 2017, includeGHE=TRUE)
+```
+
+# Senegal malaria
+```{r sen_stc_mal} 
+funding_landscape("proportion", "sen", "malaria", 2010, 2017, includeGHE=TRUE)
+```
+
+# Uganda HIV
+```{r uga_stc_hiv} 
+funding_landscape("proportion", "uga", "hiv", 2010, 2017, includeGHE=TRUE)
+```
+
+# Uganda TB
+```{r uga_stc_tb} 
+funding_landscape("proportion", "uga", "tb", 2010, 2017, includeGHE=TRUE)
+```
+
+# Uganda malaria
+```{r uga_stc_mal} 
+funding_landscape("proportion", "uga", "malaria", 2010, 2017, includeGHE=TRUE)
+```
+
+

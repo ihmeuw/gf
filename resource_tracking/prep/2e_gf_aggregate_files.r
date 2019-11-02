@@ -308,17 +308,29 @@ saveRDS(gos_prioritized_expenditures[loc_name=="uga"], paste0(final_write, "fina
 #----------------------------------
 # 3. ABSORPTION
 #----------------------------------
-# absorption_cod = readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/absorption_cod.rds"))
-# absorption_uga = readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/absorption_uga.rds"))  
-# absorption_gtm = readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/absorption_gtm.rds"))
-# absorption_sen = readRDS(paste0(dir, "_gf_files_gos/sen/prepped_data/absorption_sen.rds"))
-# 
-# all_files = list(absorption_cod, absorption_gtm, absorption_uga, absorption_sen)
-# absorption_files = rbindlist(all_files, use.names = TRUE, fill = TRUE)
-# 
-# #Write data 
-# saveRDS(absorption_files, paste0(final_write, "absorption.rds"))
-# write.csv(absorption_files, paste0(final_write, "absorption.csv"), row.names = FALSE)
+# Make a dataset that can be used to calculate absorption, both for current grant periods and historically. 
+#You can use the "gos_in_expenditures" data that is prepped in the step above. 
+absorption_cod = readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/absorption_cod.rds"))
+absorption_uga = readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/absorption_uga.rds"))
+absorption_gtm = readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/absorption_gtm.rds"))
+absorption_sen = readRDS(paste0(dir, "_gf_files_gos/sen/prepped_data/absorption_sen.rds"))
+
+all_files = list(absorption_cod, absorption_gtm, absorption_uga, absorption_sen)
+absorption_files = rbindlist(all_files, use.names = TRUE, fill = TRUE)
+
+#You can use the "gos_prioritized_expenditures" data that is prepped in the step above to prevent overlap in the absorption and GOS data. 
+keep_cols = names(gos_prioritized_expenditures)%in%names(absorption_files)
+gos_absorption = gos_prioritized_expenditures[, keep_cols, with=F]
+
+absorption_files = rbind(absorption_files, gos_absorption, use.names=T, fill=T)
+
+#Generate "historical absorption" that's just the absorption by module for all start dates before 1-1-2018
+absorption_files[start_date<"2018-01-01", hist_absorption:=round(sum(budget, na.rm=T)/sum(expenditure, na.rm=T)*100, 1), by='gf_module']
+
+#Write data
+saveRDS(absorption_files, paste0(final_write, "absorption.rds"))
+write.csv(absorption_files, paste0(final_write, "absorption.csv"), row.names = FALSE)
+saveRDS(absorption_files, paste0(final_write, "archive/absorption_", Sys.Date(), ".rds"))
 
 #----------------------------------
 # 4. GF FILE ITERATIONS
