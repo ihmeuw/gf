@@ -19,11 +19,11 @@ data = data[date>=2014 & date<2018.75]
 # set parameters for graphs
 regions = unique(data$region)
 
-keep <- c('ntr_all', 'gueris_taux', 'tpm_chimio_enf') # choose indicators to keep ###
+keep <- c('gueris_taux', 'mdr_success_rate') # choose indicators to keep ###
 
 # to graph certain indicators together on one page
 data = melt(data, id.vars=c('region','date'))
-data = data[variable %in% keep] 
+data = data[variable %in% keep]
 data = merge(data, codebook, by.x='variable', by.y='Code', keep=TRUE)
 
 plots = list()
@@ -33,15 +33,17 @@ for(r in regions) {
   plots[[i]] = ggplot(data[region==r], aes(y=value, x=date)) +
     geom_point() +
     geom_line() +
-    facet_wrap(~English, scales='free') +
+    facet_wrap(~French, scales='free') +
     labs(title=r, y='', x='') +
-    theme_bw()
+    theme_bw()+
+    scale_y_continuous(limits = c(0, 1), breaks = seq(0, 1, by = .20))
   i=i+1
 }
 
 
+
 # save a pdf file of graphs
-outputFilePath = "J:/Project/Evaluation/GF/impact_evaluation/sen/data_quality_tests/tb/treatment_by_region.pdf"
+outputFilePath = "J:/Project/Evaluation/GF/impact_evaluation/sen/data_quality_tests/tb/treat_by_reg_mdr2.pdf"
 
 pdf(outputFilePath, height=5.5, width=9)
 i=1
