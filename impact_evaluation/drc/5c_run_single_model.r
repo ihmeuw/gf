@@ -7,7 +7,7 @@
 # The current working directory should be the root of this repo
 # Command-Line Arguments:
 # modelVersion - (character) name of the model script to loaded (not including the file extension)
-# modelStage - (numeric) 1 for first half of results chain, 2 for second half (controls input and output file names, must make sense given modelVersion), 0 for full
+# modelStage - (numeric) 1 for first half of results chain, 2 for second half (controls input and output file names, must make sense given modelVersion)
 # testRun - (logical) TRUE will run the model with limited MCMC steps, FALSE will run the full thing
 # ------------------------------------------------
 
