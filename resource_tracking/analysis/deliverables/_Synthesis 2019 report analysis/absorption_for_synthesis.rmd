@@ -47,6 +47,14 @@ all_absorption = merge(all_absorption, all_mods, by=c('gf_module', 'gf_intervent
 #make sure this merge worked correctly. 
 stopifnot(nrow(all_absorption[is.na(abbrev_int)])==0)
 
+#Add in PR type 
+governmental = c('COD-M-MOH', 'GTM-M-MSPAS', 'UGA-M-MoFPED', 'UGA-T-MoFPED', 'COD-H-MOH', 'UGA-H-MoFPED', 'COD-T-MOH', 
+                 'GTM-T-MSPAS', 'SEN-Z-MOH', 'SEN-S-MOH', 'UGA-S-MoFPED')
+civil_society = c('COD-M-SANRU', 'UGA-M-TASO', 'UGA-C-TASO', 'COD-H-CORDAID', 'COD-C-CORDAID', 'GTM-H-HIVOS', 'GTM-H-INCAP', 'COD-H-SANRU', 'COD-T-CARITAS') 
+all_absorption[grant%in%governmental, pr_type:="Governmental"]
+all_absorption[grant%in%civil_society, pr_type:="Civil Society"]
+all_absorption[is.na(pr_type), pr_type:="Unknown"]
+
 #Break out into smaller datasets. 
 by_country = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant_disease')]
 by_country[, absorption:=(expenditure/budget)*100]
@@ -146,11 +154,11 @@ ggplot(by_country, aes(x=loc_name, y=absorption, fill=grant_disease))+
 This is based on the 14 PUDRs from DRC, Senegal, and Uganda.
 
 ```{r slide2, include=FALSE}
-high_low_absorption = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'semester', 'grant_disease', 'abbrev_mod')]
+high_low_absorption = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'semester', 'grant_disease', 'abbrev_mod')]
 high_low_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 high_low_absorption[absorption>200, absorption:=200]
 high_low_absorption[is.na(absorption), absorption:=0] #This is only happening where budget and expenditure are 0. 
-high_low_absorption[, mean_absorption:=(mean(expenditure, na.rm=T)/mean(budget, na.rm=T))*100,  by=c('grant', 'semester', 'grant_disease')]
+high_low_absorption[, mean_absorption:=(mean(expenditure, na.rm=TRUE)/mean(budget, na.rm=TRUE))*100,  by=c('grant', 'semester', 'grant_disease')]
 high_low_absorption[absorption>=mean_absorption, absorption_rating:="ABOVE_AVERAGE"]
 high_low_absorption[absorption<mean_absorption, absorption_rating:="BELOW_AVERAGE"]
 ```
@@ -181,10 +189,10 @@ kable(high_low_absorption[grant_disease=="Malaria" & !is.na(absorption_rating), 
 
 # How has RSSH performed overall for 2019 PUDRs? 
 ```{r rssh_high_low}
-rssh_high_low = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'semester', 'grant_disease', 'disease', 'abbrev_mod')]
+rssh_high_low = all_absorption[start_date>="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'semester', 'grant_disease', 'disease', 'abbrev_mod')]
 rssh_high_low[, absorption:=round((expenditure/budget)*100, 1)]
 rssh_high_low[absorption>200, absorption:=200]
-rssh_high_low[, mean_absorption:=(mean(expenditure, na.rm=T)/mean(budget, na.rm=T))*100,  by=c('grant', 'semester', 'grant_disease', 'disease')]
+rssh_high_low[, mean_absorption:=(mean(expenditure, na.rm=TRUE)/mean(budget, na.rm=TRUE))*100,  by=c('grant', 'semester', 'grant_disease', 'disease')]
 rssh_high_low[absorption>=mean_absorption, absorption_rating:="ABOVE_AVERAGE"]
 rssh_high_low[absorption<mean_absorption, absorption_rating:="BELOW_AVERAGE"]
 rssh_high_low = rssh_high_low[disease=="rssh"]
@@ -430,11 +438,11 @@ Using 2019 PUDRs, we wanted to know:
 
 # Historical absorption, all countries pooled
 ```{r rq3_1} 
-historical_avg = all_absorption[start_date!="2019-01-01", .(hist_budget=sum(budget, na.rm=T), hist_expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod')]
+historical_avg = all_absorption[start_date!="2019-01-01", .(hist_budget=sum(budget, na.rm=TRUE), hist_expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod')]
 historical_avg[, hist_absorption:=(hist_expenditure/hist_budget)*100]
 historical_avg[hist_absorption>200, hist_absorption:=200]
 
-only_2019 =all_absorption[start_date=="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod')]
+only_2019 =all_absorption[start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod')]
 only_2019[, absorption:=(expenditure/budget)*100]
 only_2019[absorption>200, absorption:=200]
 
@@ -453,11 +461,11 @@ ggplot(compare_2019[!is.na(diff)], aes(x=reorder(abbrev_mod, diff), y=diff, fill
 
 # Historical absorption, by country 
 ```{r rq3} 
-historical_avg = all_absorption[start_date!="2019-01-01", .(hist_budget=sum(budget, na.rm=T), hist_expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'loc_name')]
+historical_avg = all_absorption[start_date!="2019-01-01", .(hist_budget=sum(budget, na.rm=TRUE), hist_expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod', 'loc_name')]
 historical_avg[, hist_absorption:=(hist_expenditure/hist_budget)*100]
 historical_avg[hist_absorption>200, hist_absorption:=200]
 
-only_2019 =all_absorption[start_date=="2019-01-01", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'loc_name')]
+only_2019 =all_absorption[start_date=="2019-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod', 'loc_name')]
 only_2019[, absorption:=(expenditure/budget)*100]
 only_2019[absorption>200, absorption:=200]
 
@@ -568,6 +576,39 @@ ggplot(plot_data, aes(x=abbrev_int, y=absorption)) +
   scale_y_continuous(labels = scales::dollar) + 
   labs(title=paste0("HMIS budget and expenditure"), x="Intervention", y="Amount ($)", fill="", 
        subtitle="Labels show expenditure amounts")
+```
+
+# Program management costs 
+
+```{r pm1}
+pm1 = all_absorption[abbrev_mod=="Program mgmt" & start_date>="2018-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_int')] #Collapse across grants
+pm1[, absorption:=round((expenditure/budget)*100, 1)]
+pm1[, label1:=paste0(absorption, "%")]
+pm1[absorption>200, absorption:=200]
+
+pm2 = all_absorption[abbrev_mod=="Program mgmt" & start_date>="2018-01-01", .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_int', 'grant', 'loc_name')] #Collapse across grants
+pm2[, absorption:=round((expenditure/budget)*100, 1)]
+pm2[, label1:=paste0(absorption, "%")]
+pm2[absorption>200, absorption:=200]
+
+ pm1_melt = pm1[, .(abbrev_int, budget, expenditure, label1)]
+  pm1_melt = melt(pm1_melt, id.vars=c('abbrev_int', 'label1'), variable.name='variable', value.name='amount')
+  pm1_melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  pm1_melt[variable=="expenditure", label:=paste0(dollar(amount), " (", label1, ")")]
+  
+  #Fix budget and expenditure so they display nicely 
+  pm1_melt[variable=="budget", variable:="Budget"]
+  pm1_melt[variable=="expenditure", variable:="Expenditure"] 
+  
+   ggplot(pm1_melt, aes(x=abbrev_int, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Program management budget and expenditure"), x="Intervention", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts and absorption percentages")
+  
 ```
 
 # Finding statements for research question #4 (RSSH)

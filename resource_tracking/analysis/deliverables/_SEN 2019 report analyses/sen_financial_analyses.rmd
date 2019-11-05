@@ -1,0 +1,97 @@
+---
+title: "Senegal Financial Analyses"
+author: "Emily Linebarger"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: beamer_presentation
+---
+
+```{r setup, warning=FALSE, echo=FALSE, message=FALSE} 
+# Senegal financial analyses for 2019 report 
+# Emily Linebarger, started November 4, 2019 
+
+rm(list=ls()) 
+library(data.table) 
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(Hmisc)
+library(wesanderson)
+library(gridExtra)
+library(scales)
+
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE, fig.dim=c(10, 7))
+options(scipen=15)
+
+budgets = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/final_budgets_sen.rds")
+absorption = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/SEN/prepped_data/absorption_sen.rds")
+```
+
+# Review matching funds
+```{r matching_funds} 
+# I did a little more digging and according to the TRP review, the matching funds request met the conditions 
+#for being catalytic (at the time of the funding request review). 
+#I think the question is whether the funding levels for KP and HR that were approved in the final budgets
+#(after grant negotiation) respect the original levels proposed in the funding request.  
+#Since we know that a lot can change during grant negotiation between the PRs and GF, 
+#it would be interesting to double check what was approved in the final grant budgets.  
+#According to the table below, I would expect that for the CNLS and ANCS budgets combined, the budget levels should be at least:
+# •	EUR 2,970,625 for HIV: Key Populations (1,990,417 + 980,208)
+# •	EUR 2,290,132 for HIV: Programs to remove HR barriers to services (1,199,357 + 1,090,775)
+
+kp_mods = c("Comprehensive prevention programs for men who have sex with men", "Comprehensive prevention programs for people who inject drugs and their partners",
+            "Comprehensive prevention programs for sex workers and their clients", "Prevention of mother-to-child transmission", 
+            "Prevention programs for adolescents and youth, in and out of school", "Comprehensive prevention programs for transgender people")
+budgets[gf_module%in%kp_mods, is_hiv_key_pop:=TRUE]
+budgets[is.na(is_hiv_key_pop), is_hiv_key_pop:=FALSE]
+analysis1 = budgets[grant%in%c("SEN-H-ANCS", "SEN-H-CNLS") & grant_period=="2018-2020", .(budget=sum(budget, na.rm=T)), by=c('is_hiv_key_pop', 'gf_module')][order(is_hiv_key_pop)]
+
+analysis1[, total_key_pop:=sum(budget), by='is_hiv_key_pop']
+```
+There is a total of `r dollar(unique(analysis1[is_hiv_key_pop==TRUE, total_key_pop]))`, or `r round((unique(analysis1[is_hiv_key_pop==TRUE, total_key_pop]))*0.847186, 2)` euros allocated to HIV key populations between the ANCS and CNLS grants. (*Based on 2018 OECD conversion rates) Given that the funding request was for EUR 2,970,625 during this period, it looks like this catalytic funding did make it into the final budget. 
+
+According to the final budget files I have, $0 was budgeted for human rights interventions in the 2018-2020 grant period, even though 2.2 million EUR was requested under matching funds.  
+
+# HIV budget by module in current grants 
+```{r kable_hiv} 
+kable(analysis1[, .(gf_module, dollar(budget))], col.names=c('Module', 'Budget')) %>%
+  kable_styling(font_size=6)
+```
+
+# Over time, how have HIV allocations changed? 
+```{r compare_hiv_allocations}
+prevention_mods = c("Comprehensive prevention programs for men who have sex with men", "Comprehensive prevention programs for people who inject drugs and their partners", "Comprehensive prevention programs for sex workers and their clients", "Prevention of mother-to-child transmission", 
+                    "Prevention programs for other vulnerable populations", "Prevention programs for general population", "Comprehensive prevention programs for transgender people")
+treatment_mods = c("Treatment, care and support")
+
+budgets[gf_module%in%prevention_mods, category:="Prevention"]
+budgets[gf_module%in%treatment_mods, category:="Treatment"]
+budgets[is.na(category), category:="Other"]
+
+all_hiv = budgets[disease=="hiv", .(budget=sum(budget, na.rm=T)), by=c('start_date', 'category')]
+all_hiv = all_hiv[category!="Other"]
+
+all_hiv[, label:=dollar(budget)]
+
+p = ggplot(all_hiv, aes(x=start_date, y=budget, color=category, group=category, label=label)) + 
+  geom_point() + 
+  geom_line() + 
+  # geom_text(vjust=-0.5, size=5) + 
+  theme_bw(base_size=18) + 
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Comparison of HIV prevention and treatment activities", x="Date", y="Budget", color="", subtitle="2003-2020", caption="*Using GOS data until 2018, and final approved budgets from 2018-2020")
+
+print(p) 
+```
+
+# How have HIV allocations changed form 2014 on? 
+```{r compare_hiv_allocations2} 
+p = ggplot(all_hiv[year(start_date)>=2014], aes(x=start_date, y=budget, color=category, group=category, label=label)) + 
+  geom_point() + 
+  geom_line() + 
+  # geom_text(vjust=-0.5, size=5) + 
+  theme_bw(base_size=18) + 
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Comparison of HIV prevention and treatment activities", x="Date", y="Budget", color="", subtitle="2014-2020", caption="*Using GOS data until 2018, and final approved budgets from 2018-2020")
+
+print(p) 
+```
