@@ -1,0 +1,373 @@
+---
+title: "Guatemala Performance Indicators"
+author: "Francisco Rios Casas"
+date: "10/30/2019"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+library(data.table)
+library(ggplot2)
+library(knitr)
+library(dplyr)
+library(kableExtra)
+library(scales)
+
+# set parameters of data to be analyzed
+country = "gtm"
+main_indicators = c('impact_outcome_indicators_main', 'coverage_indicators_main')
+recent_pudrs = c("GTM-H-HIVOS_Progress Report_31Dec2018_RV_SO_YAV_120219_LFA REVIEW Reviewed FS.xlsx",
+                 "GTM-M-MSPAS_PU_FINAL_fuentes_indi_corregidos.xlsx",
+                 "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx")
+LFA_verified_grants = c("GTM-H-HIVOS_Progress Report_31Dec2018_RV_SO_YAV_120219_LFA REVIEW Reviewed FS.xlsx",
+                        "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx") # file names of most-recent LFA-verified grants
+
+# load data
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses.RDS")
+
+# subset as appropriate
+DT <- data
+DT = DT[loc_name==country]
+DT = DT[pudr_sheet %in% main_indicators]
+DT = DT[file_name %in% recent_pudrs]
+```
+
+
+## 1. Introduction  
+
+This document highlights the data completeness, data sources, and changes over time for Outcome Indicators in Guatemala. Data for indicators all came from the latest available Progress Update and Disbursement Request forms (PUDRs) indicated below:  
+
+
+```{r toc}
+kable(recent_pudrs, col.names = c("Most Recent PUDRs available")) %>%
+  kable_styling(bootstrap_options = "striped", position = "center")
+```
+**All of these correspond to the second semester of 2018, the most recent time period for which data was available.**
+
+
+## 2. Data Completeness  
+
+For each Outcome Indicator, the grant Principal Recipient (PR) *usually* must establish an indicator "Baseline Value". This value--when available--can serve as a benchmark for progress reported in subsequent time periods. 
+
+```{r completeness}
+# Emily's code on {PUDR} Completeness
+
+# Data
+# What percentage of targets do they report on?
+# Convert NAs to "Unknown"
+
+
+# Convert NAs to "Unknown"
+DT$plot_baseline <-NA
+DT$plot_baseline[is.na(DT$baseline_value)] <- "Baseline Not Reported"
+DT$plot_baseline[!is.na(DT$baseline_value)] <- "Baseline Value Reported"
+
+ggplot(DT, aes(x=grant, fill=plot_baseline))+
+  geom_bar(position = "fill")+
+  labs(title="Proportion of PUDRs that report on baseline values", y="")+
+  theme_bw(base_size = 8)+
+  theme(legend.title=element_blank())+
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))
+```
+
+
+
+**The baseline value was not consistently provided in the different PUDRS. In some instances no baseline values were provided and in others more than half of the indicators had a baseline value included.**
+
+
+In order to calculate the achievement of an Outcome Indicator for a given grant, it is necessary to have information on (1) the target that was originally set and (2) the result.
+
+```{r completeness2}
+# create completeness indicator for baseline seperately from target and result
+
+ggplot(DT, aes(x = grant, fill = completeness_rating)) +
+  geom_bar(position = "fill")+
+  labs(title="Completeness of Indicators according to grants", y="")+
+  theme_bw(base_size = 8)+
+  scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))+
+  theme(legend.title=element_blank())
+```
+
+**Data was widely available on targets and results for all of the indicators in the grants. **  
+ 
+ 
+## 3. Data Sources  
+
+"Data Sources" are listed in the PUDR to indicate where information reported to the global fund came from. Examples of data sources include reports from the disease-specific National Programs, surveys such as the Demographic Health Survey (DHS), and Health Management Information systems such as DHIS2.  
+
+In some cases, the source of information used to establish the target of a goal is different from the source used to provide updates on progress. **Only the GTM-M-MSPAS seemed to have sources that differed between baseline and results.**  
+
+
+```{r sources}
+# create indicator variable of when result and target source differ
+# subset data for checking changing indicators
+table3 <-DT[,list(indicators=length(indicator_code), total_different=sum(sources_different, na.rm = TRUE)), by=c('grant')]
+
+kable(table3, col.names = c("Grant", "Indicators", "Different Sources between Baseline and Result")) %>%
+  column_spec(2, width = "10em") %>%
+  column_spec(3, width = "10em") %>%
+  kable_styling(bootstrap_options = "striped", position = "center")
+
+```
+
+  
+**The Malaria Dashboard/Information System was used to establish the baseline values, but various Reports and Surveys were used to provide updates.**   
+
+
+```{r sources_appendix1, include=FALSE}
+# subset data for checking changing indicators
+table3b <-DT[grant=="GTM-M-MSPAS",.(indicator_code, brief_description_code, baseline_source, pr_result_source)]
+
+kable(table3b, col.names = c("Indicator", "Description", "Baseline Source", "Result source"))
+
+
+```
+
+```{r sources_appendix2, include=FALSE}
+table3c <-DT[grant=="COD-H-MOH",.(indicator_code, brief_description_code, baseline_source_code, pr_result_source_code, sources_different)]
+
+kable(table3c, col.names = c("Indicator", "Description", "Baseline Source", "Result source", "indicx"))
+
+```
+  
+
+## 4. Grant Results based on most recent PUDRs  
+
+
+The "Achievement Ratio" is calculated in the PUDR to understand how close to the original target the Outcome Indicator result is. A value of 1.0 or greater means that the Indicator's goal has been met or exceeded.
+
+
+```{r plot_results}
+# plots grant performance in a loop for all grants in country
+grants = unique(DT$grant)
+plots = list()
+i=1
+for(g in grants) {
+plots[[i]] = ggplot(DT[grant==g], aes(x=brief_description_code, y=ihme_result_achievement_ratio)) +
+  geom_point() +
+  labs(title="", y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT[grant==g]$file_name))) +
+  geom_hline(yintercept = 1) +
+  theme_bw()+
+  coord_flip()+
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")+
+  theme_bw()
+i=i+1
+}
+```
+
+### 4.1 Malaria Grant
+
+```{r}
+plots[[1]]
+```
+
+**The majority of indicators are close to the expected targets in the GTM-M-MSPAS Grant. Among the furthest from the targets is proportion of facilities without stock-outs of key commodities.**
+
+```{r}
+
+```
+
+
+### 4.2 TB Grant
+```{r}
+plots[[2]]
+```
+
+**Indicators related to TB and TB/HIV mortality, TB incidence, and case notifications are on-track. The indicator furthest from its expected target concerns children in contact with TB patients who began isonizid preventive therapy. Additionally, it seems that in general, indicators that concern MDR-TB are also below the expected targets.**
+
+
+```{r, include=FALSE}
+ggplot(DT[grant=="GTM-T-MSPAS"], aes(x=indicator_code, y=ihme_result_achievement_ratio)) +
+  geom_point() +
+  labs(title="", y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT[grant==g]$file_name))) +
+  geom_hline(yintercept = 1) +
+  theme_bw()+
+  coord_flip()+
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")+
+  theme_bw()
+```
+
+### 4.3 HIV Grant
+```{r}
+plots[[3]]
+```
+
+**The majority of indicators in the GTM-H-HIVOS grant are meeting their pre-set targets, except for the indicator on proportion of newly diagnosed patients that are linked to HIV care which is under-target compared to the rest of the indicators. ** 
+
+## 5. Agreement between PR, LFA
+
+After each PUDR is submitted by the PR, the LFA will verify the results reported on the Indicators. In some cases they may revise the original values provided by the PR.
+
+The most recent LFA-verified PUDRs for this analysis include the following:
+
+
+```{r}
+kable(LFA_verified_grants, col.names = c("LFA Verified PUDR Files")) %>%
+  kable_styling(bootstrap_options = "striped", position = "center")
+```
+
+**They both refer to PUDRs sent in at the end of the second semester of 2018.**
+
+
+```{r lfa_agreement}
+
+data.agreement <- data[file_name%in%LFA_verified_grants & lfa_result_value<=200 & pr_result_value <=200] # scale to make sure outliers don't disrupt the rest of the graph
+
+ggplot(data.agreement, aes(x=pr_result_value, y=lfa_result_value, color=grant))+
+  geom_point()+
+  labs(x="PR Reported Value", y="LFA Verified Values", title = paste0("Agreement between PR and LFA in grants"))+
+  geom_abline(slope = 1, intercept = 0)+
+  theme_bw()+
+  scale_colour_discrete(name="Grants")
+  #+ geom_text(data=data.agreement[pr_result_value>60 & lfa_result_value<50], aes(label=indicator_code), hjust="right", check_overlap = TRUE)
+
+```
+
+
+**There was a high level of agreement between the values reported by the PR and those verified by the GF LFA. In instances where the LFA did change the values they usually lowered the reported figures.**
+
+
+## 6. Results Over Time  
+
+The tables below highlights how a few indicators available in the three most recent PUDRs have changed over time for each of the grants.
+```{r}
+# subset data
+
+# subset parameters
+variables_to_plot = c("ihme_result_achievement_ratio")
+longi_tb_grants = c("GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx",
+              "GTM-T-MSPAS_Progress Report Disbursement_30Jun2018_v4_Condiciones_26092018.xlsx",
+              "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.XLSX")
+# subset to most recent pudrs and main_indicators
+data2 <- data[loc_name==country & pudr_sheet%in%main_indicators & file_name%in%longi_tb_grants]
+
+# re-shape the data
+data2 <- melt(data2, id.vars = c("indicator_code", "grant", "brief_description_code", "end_date_programmatic", "file_name", "type", "pudr_sheet"))
+data2 <- data2[variable %in% variables_to_plot]
+
+# add facet wrap indicator variable
+data2$categories <- NA
+data2$categories[which(data2$indicator_code=="DOTS-1b")] <- "one"
+data2$categories[which(data2$indicator_code=="DOTS-2b")] <- "one"
+data2$categories[which(data2$indicator_code=="DOTS-6")] <- "one"
+
+data2$categories[which(data2$indicator_code=="MDR TB-1")] <- "two"
+data2$categories[which(data2$indicator_code=="MDR TB-2(M)")] <- "two"
+data2$categories[which(data2$indicator_code=="MDR TB-3(M)")] <- "two"
+data2$categories[which(data2$indicator_code=="MDR TB-4")] <- "two"
+
+data2$categories[which(data2$indicator_code=="TB I-2")] <-  "three" 
+data2$categories[which(data2$indicator_code=="TB I-3(M)")] <-  "three" 
+data2$categories[which(data2$indicator_code=="TB I-4(M)")] <-  "three" 
+data2$categories[which(data2$indicator_code=="TB O-1a")] <-  "three" 
+data2$categories[which(data2$indicator_code=="TB O-1b")] <-  "three" 
+data2$categories[which(data2$indicator_code=="TB O-2a")] <-  "three" 
+data2$categories[which(data2$indicator_code=="TB O-2b")] <-  "three" 
+data2$categories[which(data2$indicator_code=="TB O-4(M)")] <-  "three" 
+
+data2$categories[which(data2$indicator_code=="TB/HIV I-1")] <- "four"
+data2$categories[which(data2$indicator_code=="TB/HIV-1")] <- "four"
+data2$categories[which(data2$indicator_code=="TB/HIV-2")] <- "four"
+data2$categories[which(data2$indicator_code=="TB/HIV-4")] <- "four"
+
+data2$categories[which(data2$indicator_code=="TCP-1(M)")] <- "one"
+data2$categories[which(data2$indicator_code=="TCP-2(M)")] <- "one"
+data2$categories[which(data2$indicator_code=="TCP-3")] <- "one"
+data2$categories[which(data2$indicator_code=="TCP-5")] <- "one"
+
+
+# change format
+data2$value <- as.numeric(data2$value)
+data2 <- data2[!is.na(data2$value),]
+
+# subset data to only those indicators with three time points per grant
+# keep <- data2[,.N,by=indicator_code] #keep indicators with 3 time points
+# indicators <- keep[N>=2,indicator_code] # create vector of indicators with 3 time point stop
+#data2 <- data2[indicator_code %in% indicators]
+
+# plot the data
+# write a loop to make plots for each grant
+category = unique(data2$categories)
+dplots = list()
+i=1
+for(c in category) {
+dplots[[i]] = ggplot(data2[categories==c], aes(x=end_date_programmatic, y=value, group=brief_description_code, color=brief_description_code))+
+  geom_point()+
+  geom_path()+
+  theme_bw()+
+  scale_x_date(date_breaks = "6 month", 
+                 labels=date_format("%b-%Y"))+
+   labs(x="Date of PUDR", y="Achievement Ratio", title=paste0("Performance Over Time"))+
+  scale_colour_discrete(name="")+
+  geom_hline(yintercept=1, linetype="dashed", color = "gray")+
+  ylim(0, 1.5)+
+  theme(legend.position="bottom", legend.text=element_text(size=6))+
+  guides(col=guide_legend(ncol=2, keywidth = ))
+
+i=i+1
+}
+```
+
+```{r}
+dplots[[1]]
+```
+
+**There has been improvement in several of the impact and outcome indicators over time, although preventive treatment for children in contact with TB patients has been below target as of the most recent PUDR.**
+
+```{r}
+dplots[[2]]
+```
+
+**MDR TB indicators were below target as of the most recent PUDR. They have all shown some progress since the first semester of 2018, however.**
+
+```{r, include=FALSE}
+# target-setting over time
+
+# subset parameters
+trg_variables_to_plot = c("target_value")
+
+# subset to most recent pudrs and main_indicators
+data3 <- data[loc_name==country & pudr_sheet%in%main_indicators]
+
+# re-shape the data
+data3 <- melt(data3, id.vars = c("indicator_code", "grant", "brief_description_code", "end_date_programmatic", "file_name", "type", "pudr_sheet"))
+data3 <- data3[variable %in% trg_variables_to_plot]
+
+# change format
+data3$value <- as.numeric(data3$value)
+data3 <- data3[!is.na(data3$value),]
+
+# subset data to only those indicators with three time points per grant
+keeps <- data3[,.N,by=indicator_code] #keep indicators with 3 time points
+trg_indicators <- keeps[N==2,indicator_code] # create vector of indicators with 3 time point stop
+data3 <- data3[indicator_code %in% trg_indicators]
+
+grants = unique(data3$grant)
+
+cplots = list()
+i=1
+for(g in grants) {
+cplots[[i]] = ggplot(data3[grant==g], aes(x=end_date_programmatic, y=value, group=brief_description_code, col=brief_description_code))+
+  geom_point()+
+  geom_line()+
+  theme_bw()+
+  facet_wrap(~variable)+
+  scale_x_date(date_breaks = "6 month", 
+                 labels=date_format("%b-%Y"))+
+   labs(x="Date of PUDR", y="Target Value", title=paste0(g, "\n", "Target-setting Over Time"), caption = paste0("Data source: ", unique(data3$file_name)))+
+  scale_colour_discrete(name="")+
+  theme(legend.position="bottom")+
+  guides(col=guide_legend(ncol=1))
+  
+i=i+1
+}
+
+```

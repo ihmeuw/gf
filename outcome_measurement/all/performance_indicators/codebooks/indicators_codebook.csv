@@ -13,7 +13,7 @@ TCP-1(M),Number of notified cases of all forms of TB (i.e. bacteriologically con
 TCP-2(M),"Treatment success rate – all forms: Percentage of TB cases, all forms (bacteriologically confirmed plus clinically diagnosed) successfully treated (cured plus treatment completed) among all TB cases registered for treatment during a specified period, new and relapse cases.",tx. success rate – all forms - TCP-2(M)
 TCP-3,Percentage of laboratories showing adequate performance in external quality assurance for smear microscopy among the total number of laboratories that undertake smear microscopy during the reporting period,% labs showing adequate performance - TCP-3
 TCP-4,Percentage of reporting units reporting no stock-outs of anti-TB drugs on the last day of the quarter,% units reporting no stock-outs TB drugs - TCP-4
-TCP-5,Number of children under 5 in contact with TB patients who began isoniazid preventive therapy,No. child. <5 in contact w/ TB patients who began isoniazid preventive therapy - TCP-5
+TCP-5,Number of children under 5 in contact with TB patients who began isoniazid preventive therapy,No. child. <5 in contact w/ TB patients who began IPT - TCP-5
 TCP-6a,Number of TB cases (all forms) notified among prisoners,No. TB cas. notif. among prisoners - TCP-6a
 TCP-6b,Number of TB cases (all forms) notified among key populations/high-risk groups (other than prisoners),No. TB cas. notif. among KVPs (not prisoners) - TCP-6b
 TCP-7a,Number of notified TB cases (all forms) contributed by non-national TB program providers – private/non-governmental facilities,"No. noti. TB cas. , private/non-governmental facilities - TCP-7a"
@@ -30,6 +30,7 @@ MDR TB-8,Number of cases of XDR-TB enrolled on treatment,No. cas.  XDR-TB enroll
 TB/HIV-5,Percentage of registered new and relapse TB patients with documented HIV status,% registered new and relapse TB patients w/ documented HIV status - TB/HIV-5
 TB/HIV-6(M),Percentage of HIV-positive new and relapse TB patients on antiretroviral therapy during TB treatment,% HIV-positive new and relapse TB pat. on ART dur. TB tx. - TB/HIV-6(M)
 TB/HIV-3.1,Percentage of people living with HIV in care (including PMTCT) who are screened for TB in HIV care or treatment settings,% PLHIV in care (inc. PMTCT) screen. for TB in HIV care or tx. settings - TB/HIV-3.1
+TB/HIV-4,Percentage of new seropositive patients who have started preventive treatment with isoniazid (IPT) during the reporting period,% of new seropos. pat. started on IPT during report per. - TB/HIV-4
 TB/HIV-4.1,Percentage of people living with HIV newly enrolled in HIV care started on TB preventive therapy,% PLHIV newly enrolled in HIV care started on TB preventive therapy - TB/HIV-4.1
 M&E-1,Percentage of HMIS or other routine reporting units submitting timely reports according to national guidelines,% HMIS or other report units submitting timely reports according to natl guide - M&E-1
 HIV I-13,Number and percentage of people living with HIV,Number and % PLHIV - HIV I-13
@@ -42,16 +43,16 @@ HIV I-10(M),Percentage of sex workers who are living with HIV,% SW who are LHIV 
 HIV I-11(M),Percentage of people who inject drugs who are living with HIV,% people who inject drugs LHIV - HIV I-11(M)
 HIV I-12,Percentage of other vulnerable populations (specify) who are living with HIV,% other vulnerable pops (specify) LHIV - HIV I-12
 HIV O-1(M),Percentage of adults and children with HIV known to be on treatment 12 months after initiation of antiretroviral therapy,% adults and child. w/ HIV known to be on tx. 12 mos. after init. ART - HIV O-1(M)
-HIV O-10,Percentage of women and men with non-regular partner in the past 12 months who report the use of a condom during their last intercourse,% W & M w/ non-regular partner in past 12 mos. report using condom dur. last intercourse - HIV O-10
-HIV O-4a(M),Percentage of men reporting the use of a condom the last time they had anal sex with a male partner,%M reporting use condom the last time they had anal sex w/ a male partner - HIV O-4a(M)
-HIV O-4.1b(M),Percentage of transgender people reporting the use of a condom the last time they had sex with a partner,% transgender people reporting use condom the last time they had sex w/ partner - HIV O-4.1b(M)
+HIV O-10,Percentage of women and men with non-regular partner in the past 12 months who report the use of a condom during their last intercourse,% W & M w/ non-reg. partner in past yr rep. condom use dur. last intercourse - HIV O-10
+HIV O-4a(M),Percentage of men reporting the use of a condom the last time they had anal sex with a male partner,%M rep. condom use the last time they had anal sex w/ M partner - HIV O-4a(M)
+HIV O-4.1b(M),Percentage of transgender people reporting the use of a condom the last time they had sex with a partner,% transgender people rep. condom use the last time they had sex w/ partner - HIV O-4.1b(M)
 HIV O-5(M),Percentage of sex workers reporting the use of a condom with their most recent client,% SW reporting use a condom w/ most recent client - HIV O-5(M)
 HIV O-6(M),Percentage of people who inject drugs reporting the use of sterile injecting equipment the last time they injected,% PWID reporting use of sterile injecting equipment last time they injected - HIV O-6(M)
 HIV O-9,Percentage of people who inject drugs reporting condom use at the last sexual intercourse,% PWID reporting condom use at the last sexual intercourse - HIV O-9
 HIV O-7,Percentage of other vulnerable populations who report the use of a condom at last sexual intercourse,% other vulnerable pop. who report use of condom at last sex. intercourse - HIV O-7
 HIV O-11,Percentage of (estimated) people living with HIV who have been tested HIV-positive,% (estimated) PLHIV who have been tested HIV-positive - HIV O-11
 HIV O-12,Percentage of people living with HIV and on antiretroviral therapy who are virologically suppressed (among all those currently on treatment who received a viral load measurement regardless of when they started antiretroviral therapy),% PLHIV and on ART who are virologically suppressed - HIV O-12
-HIV O-13,Proportion of ever-married or partnered women aged 15-49 who experienced physical or sexual violence from a male intimate partner in the past 12 months,"Prop. ever-married/partnered Wom, 15-49, who exp. IPV (physical or sexual) in past 12 mos. - HIV O-13"
+HIV O-13,Proportion of ever-married or partnered women aged 15-49 who experienced physical or sexual violence from a male intimate partner in the past 12 months,"% ever-married/partnered W., 15-49, expd. IPV in past yr. - HIV O-13"
 HIV O-14,Percentage of women and men aged 15–49 who report discriminatory attitudes towards people living with HIV,% W andMaged 15–49 who report discriminatory attitudes towards PLHIV - HIV O-14
 HIV O-15,Percentage of people living with HIV who experienced recent discrimination at health care facilities,% PLHIV who experienced recent discrimination at health care facilities - HIV O-15
 GP-5,Number of medical male circumcisions performed according to national standards,No. medical male circumcisions performed according to national standards - GP-5
@@ -144,7 +145,8 @@ CM-5(M),Percentage of confirmed cases fully investigated and classified,% conf. 
 CM-6(M),Percentage of malaria foci fully investigated and classified,% malaria foci fully investigated and classified - CM-6(M)
 SPI-1,Proportion of pregnant women attending antenatal clinics who received three or more doses of intermittent preventive treatment for malaria,Prop. pregnant W attending antenat. clinics who received >3 doses IPTp - SPI-1
 SPI-2,Percentage of children aged 3–59 months who received the full number  of courses of seasonal malaria chemoprevention (3 or 4) per transmission season in the targeted areas,% child. aged 3–59 mos. who received the full number seasonal prevention tx - SPI-2
-M&E-2,Proportion of facility reports received over the reports expected during the reporting period,Prop. facility reports received over the reports expected dur. rep. period - M&E-2
+M&E-2,Proportion of facility reports received over the reports expected during the reporting period,Prop. facility reports recd. / reports expec. dur. rep. period - M&E-2
+ME-2,Proportion of facility reports received over the reports expected during the reporting period,Prop. facility reports recd. / reports expec. dur. rep. period - M&E-2
 HSS I-1,"Under-5 mortality rate per 1,000 live births","Under-5 mortality rate per 1,000 live births - HSS I-1"
 HSS I-2,"Neonatal mortality rate per 100,000 population",Neonatal mortality rate pop. - HSS I-2
 HSS I-3,"Maternal mortality ratio per 100,000 population",Maternal mortality ratio pop. - HSS I-3
@@ -167,10 +169,18 @@ SSRP-other 2,Percentage of new bacteriologically confirmed TB cases managed acco
 RDT SO,Number and percentage of health facilities (Integrated Health Centers) reporting a shortage of rapid diagnostic tests (RDTs) malaria,No/% of health facilities (IHCs) rep. shortage of RDTs - RDT SO
 GP other-1,Number of new cases (survivors of sexual violence),Number of new cases (survivors of sexual violence) - GP other-1
 GP other-2,Number of survivors of sexual violence recd. PREP w/in 72 hrs,Number of survivors of sexual violence recd. PREP w/in 72 hrs - GP other-2
-TCP other-2,Number and percentage of CSDT reporting no stock-outs of drugs for the treatment of susceptible TB - TCP other-2,No./% of health centers (Screening and Treatment Ctrs) rep. no stock-outs of drugs for DS TB - TCP other-2
-TCP other-1,Percentage of all forms of TB that received adherence support from community workers or volunteers who were successfully treated (completed treatment and cured) in the course of one year. given period,% of TB cases that recd. Support from CHW who were successfully treated in given year - TCP other-1
+TCP other-2,Number and percentage of CSDT reporting no stock-outs of drugs for the treatment of susceptible TB - TCP other-2,No./% of health ctrs. rep. no stock-outs of DS-TB drugs- TCP other-2
+TCP other-1,Percentage of all forms of TB that received adherence support from community workers or volunteers who were successfully treated (completed treatment and cured) in the course of one year. given period,% of TB cas. recd. support from CHW successfully txd.in year - TCP other-1
 TCS- other 1,Percentage of ART sites that reported no stock-out of any antiretroviral drugs during the reporting period,% ART sites w/ no stock-out of ARVs dur. report per. - TCS-other 1
 TCS other-2,Percentage of children living with HIV currently receiving antiretroviral therapy,% of children LHIV currently rec ART - TCS other-2
-TCS other-3,Number and percentage of health facilities (Screening and Treatment Centers) reporting a stock-out of HIV tests,No./% of health centers (Screening and Treatment Ctrs) rep.stock-outs of HIV tests - TCS other-3
+TCS other-3,Number and percentage of health facilities (Screening and Treatment Centers) reporting a stock-out of HIV tests,No./% of health ctrs rep.stock-outs of HIV tests - TCS other-3
 TB O-5 (M),TB treatment coverage: Percentage of new and relapse cases that were notified and treated among the estimated number of incident TB cases in the same year (all forms of TB – bacteriologically confirmed plus clinically diagnosed),TB tx. coverage - TB O-5(M)
 TCS other- 1,Percentage of ART sites that reported no stock-out of any antiretroviral drugs during the reporting period,% ART sites w/ no stock-out of ARVs dur. report per. - TCS-other 1
+DOTS-6,Number of tuberculosis cases (all forms) reported among key populations or risk groups affected,No. of TB cas. rep. among key pops or risk groups affected - DOTS-6
+DOTS-1b,"Number of notified cases of bacteriologically confirmed TB, new and relapses",No. cas. notif. bacteriologically conf. TB - DOTS-1b
+TB/HIV-2,Percentage of registered seropositive patients with tuberculosis who have received antiretroviral treatment during tuberculosis treatment,% of reg. seropositive patients w/ TB who recd. ART during TB tx. - TB/HIV-2
+ TB O-2b  ,Treatment success rate - bacteriologically confirmed TB cases,Tx. success rate - bacteriologically conf. TB cas. - TB O-2b
+TB O-1b,"Case notification rate per 100,000 population- bacteriologically-confirmed TB, new and relapse ","Cas. Not. rate per 100,000 population- bacteriologically-conf. TB - TB O-1b"
+MDR TB-1,Percentage of previously treated TB patients receiving DST (bacteriologically positive cases only) ,% prev. treated TB patients receiving DST (bacteriologically pos. cas. only) - MDR TB-1
+TB/HIV-1,Percentage of TB patients who had an HIV test result recorded in the TB register ,% TB patients w/ HIV test result recorded in TB register - TB/HIV-1
+DOTS-2b,Percentage of bacteriologically confirmed TB cases successfully treated (cured plus completed treatment) among the bacteriologically confirmed TB cases registered during a specified period,% bacteriologically conf. TB cases successfully tx. (cured plus completed treatment - DOTS-2b

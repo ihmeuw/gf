@@ -28,7 +28,7 @@ model = '
     
     # linkage 4 regressions
     
-    lead_gueris_taux ~ tb_tfc_cumulative + tb_vih_arv_cumulative + com_mobsoc_cumulative + com_cause_cumulative + com_vad_touss_cumulative + com_radio_cumulative
+    lead_gueris_taux ~ tb_vih_arv_cumulative + com_mobsoc_cumulative + com_cause_cumulative + com_vad_touss_cumulative + com_radio_cumulative
     lead_tpm_chimio_enf_cumulative ~ com_enf_ref_cumulative
     mdr_success_rate ~ dx_count_cumulative
     

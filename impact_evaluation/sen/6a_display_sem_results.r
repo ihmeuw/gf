@@ -68,7 +68,9 @@ p3 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                                'com_cause_cumulative',
                                'com_radio_cumulative',
                                'com_vad_touss_cumulative',
-                               'lead_gueris_taux'
+                               'lead_gueris_taux',
+                               'tb_tfc_cumulative',
+                               'tb_vih_arv_cumulative'
          ))
 
 p4 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
