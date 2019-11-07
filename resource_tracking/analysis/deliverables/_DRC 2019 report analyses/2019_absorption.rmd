@@ -454,3 +454,33 @@ ggsave(paste0(save_loc, "rssh_modules_budget.png"), p, height=8, width=12)
 
 
 ``` 
+
+# HMIS matching funds as a time trend 
+```{r hmis_trend} 
+hmis = dt[abbrev_mod=="Info systems & M&E" & grant_period=="2018-2020", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('semester', 'grant')]
+hmis[, absorption:=round((expenditure/budget)*100, 1)]
+p = ggplot(hmis, aes(x=semester, y=absorption, color=grant, group=grant)) + 
+  geom_point() + 
+  geom_line() + 
+  theme_bw(base_size=18) + 
+  scale_y_continuous(limits=c(0, 100)) + 
+  labs(title="Health management information systems absorption", subtitle="January 2018-June 2019", x="PUDR Semester", y="Absorption (%)", color="Grant")
+
+ggsave(paste0(save_loc, "hmis_by_grant_over_time.png"), p, height=8, width=12)
+
+hmis2 = dt[abbrev_mod=="Info systems & M&E" & grant_period=="2018-2020", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('semester', 'abbrev_mod')]
+hmis2[, absorption:=round((expenditure/budget)*100, 1)]
+hmis2[, label:=paste0(absorption, "%")]
+p = ggplot(hmis2, aes(x=semester, y=absorption, color=abbrev_mod, group=abbrev_mod, label=label)) + 
+  geom_point() + 
+  geom_line() + 
+  geom_text(vjust=-0.5, color='black', size=4) + 
+  theme_bw(base_size=18) + 
+  theme(legend.position="none") + 
+  scale_y_continuous(limits=c(0, 100)) + 
+  labs(title="Health management information systems absorption", subtitle="January 2018-June 2019", x="PUDR Semester", y="Absorption (%)")
+
+ggsave(paste0(save_loc, "hmis_over_time.png"), p, height=8, width=12)
+
+
+```

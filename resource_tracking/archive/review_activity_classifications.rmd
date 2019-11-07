@@ -1,10 +1,10 @@
 ---
-title: "Activity Classification Review"
-author: "Emily Linebarger"
-date: "July 23, 2019"
+title: "Monitoring and Evaluation Annex"
+author: "IHME Prospective Country Evaluation"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 classoption: landscape
-fontsize: 10pt
+fontsize: 11pt
 ---
 
 ```{r setup, echo=FALSE, warning=FALSE}
@@ -22,8 +22,8 @@ library(kableExtra)
 library(openxlsx)
 
 #Read in file 
-dt = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/combined_prepped_data/budget_pudr_iterations.rds")
-dt = dt[data_source=="fpm"]
+dt = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/budget_pudr_iterations.rds")
+dt = dt[data_source=="budget"]
 
 #Do some fancy NLP string splitting - create a dictionary. 
 
@@ -68,9 +68,9 @@ hr = dt[gf_module=="Programs to reduce human rights-related barriers to HIV serv
 hr = unique(hr[, .(grant, grant_period, orig_module, orig_intervention, gf_module, gf_intervention, activity_description)])
 
 #Read in hand-processed sheet of these results 
-hr_error = read.xlsx("I:/RTs_and_Projects/Evaluations/Global Fund PCE/Resource Tracking/NLP Examples 7.24.19.xlsx", sheet = "Example 3")
-setDT(hr_error)
-hr_error = hr_error[belongs==FALSE]
+# hr_error = read.xlsx("I:/RTs_and_Projects/Evaluations/Global Fund PCE/Resource Tracking/NLP Examples 7.24.19.xlsx", sheet = "Example 3")
+# setDT(hr_error)
+# hr_error = hr_error[belongs==FALSE]
 
 #--------------------------------
 # Human Rights 
@@ -98,6 +98,17 @@ art = unique(art[, .(grant, grant_period, orig_module, orig_intervention, gf_mod
 
 ```
 
+# INTRODUCTION 
+
+# ISSUES WITH MODULAR FRAMEWORK AND GRANT TRACKING SYSTEM 
+
+ One issue that’s become more apparent during this period of grant implementation is that the Global Fund’s system for monitoring absorption is not adequately set-up to track catalytic and matching funds. In the PUDRs, there is no way to separate out catalytic or matching funds, and so for the PCE the best we could do was to report on modules that were targeted for matching funds. 
+
+(Are there specific performance indicators for catalytic, matching funds?) 
+
+The PCE has also noticed inconsistencies with the performance indicator structure. For example, the stockout performance indicator for ARVs is a reverse indicator but the stockout indicator for TB meds isn't.
+
+# ISSUES WITH APPLICATION OF MODULAR FRAMEWORK
 
 ## Finding 1: Classifications for similar activity descriptions are inconsistent among and between PRs. 
 Activity descriptions that mentioned "GeneXpert" were classified in multiple different ways among PRs during different grant periods. 
@@ -128,13 +139,13 @@ kable(xpert[, .(gf_module, activity_description)][order(gf_module)], booktabs=T,
 
 The following table is a hand-reviewed selection of activity descriptions that were classified under the module "Programs to reduce human rights-related barriers to HIV services". These are cases I feel are questionably classified under this module. The highlighted items are cases where the activity might be better classified under a key populations module. 
 
-```{r ex2, echo=FALSE}
-kable(hr_error[, .(orig_module, orig_intervention, activity_description)], booktabs=T, longtable=T)%>%
-  column_spec(1:2, width="10em") %>%
-  column_spec(3, width="40em") %>%
-  kable_styling(latex_options = c("hold_position", "repeat_header"), font_size=8)%>%
-  row_spec(c(6:8, 9, 12, 13:15, 16), bold = T, background = "yellow") %>%
-  row_spec(c(10, 11), bold = T, background = "orange")
+```{r ex2, echo=FALSE, include=FALSE}
+# kable(hr_error[, .(orig_module, orig_intervention, activity_description)], booktabs=T, longtable=T)%>%
+#   column_spec(1:2, width="10em") %>%
+#   column_spec(3, width="40em") %>%
+#   kable_styling(latex_options = c("hold_position", "repeat_header"), font_size=8)%>%
+#   row_spec(c(6:8, 9, 12, 13:15, 16), bold = T, background = "yellow") %>%
+#   row_spec(c(10, 11), bold = T, background = "orange")
 
 ```
 
@@ -166,3 +177,14 @@ kable(salary[, .(orig_module, orig_intervention, activity_description)], booktab
 
 
 ## Finding 6: Subpopulations are not neatly split in activity descriptions *** 
+
+## Finding 7: PRs still don’t understand how to apply the modular framework (often picking and choosing an intervention to go with a module, instead of only choosing an intervention within a given module) 
+
+## Finding 8: There’s no drop-down menu for choosing a module and intervention, so we get a lot of modules that are listed slightly differently than each other. 
+
+# OTHER ISSUES WITH FINANCIAL REPORTING 
+
+Strange PUDR reporting structure - Semester 1, and Semester 1-2. We’ve had instances of negative absorption, and it’s also impossible to track the budget denominators with all of the revisions going on. 
+There is no consistent naming scheme for budget files - sometimes we get information about a file being LFA reviewed and the last date it was reviewed from the budget name, and sometimes we don’t. Would be very good to include the date the file was last reviewed in the file itself, probably on the cover page. 
+
+

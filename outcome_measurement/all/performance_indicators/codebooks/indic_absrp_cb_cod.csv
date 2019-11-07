@@ -1,0 +1,186 @@
+"","indicator_code","full_description","brief_description_code","in2019s1","in2018s2","in2018s1","included"
+"1","CM-1a(M)","Proportion of suspected malaria cases that receive a parasitological test at public sector health facilities","Prop. susp. malaria cas.  recd. a parasitological test, public health facil. - CM-1a(M)",1,1,1,1
+"2","CM-1b(M)","Proportion of suspected malaria cases that receive a parasitological test in the community","Prop. susp. malaria cas.  recd. a parasitological test in the community - CM-1b(M)",1,1,1,1
+"3","CM-1c(M)","Proportion of suspected malaria cases that receive a parasitological test at private sector sites","Prop. susp. malaria cas.  recd. a parasitological test, private sec sites - CM-1c(M)",1,1,1,1
+"4","CM-2a(M)","Proportion of confirmed malaria cases that received first-line antimalarial treatment at public sector health facilities","Prop. conf. malaria cas.  that recd. 1st line antimal. tx., public health facil. - CM-2a(M)",1,1,1,1
+"5","CM-2b(M)","Proportion of confirmed malaria cases that received first-line antimalarial treatment in the community","Prop. conf. malaria cas.  that recd. 1st line antimal. tx. in the community - CM-2b(M)",1,1,0,1
+"6","CM-2c(M)","Proportion of confirmed malaria cases that received first-line antimalarial treatment at private sector sites","Prop. conf. malaria cas.  that recd. 1st line antimal. tx., private sec sites - CM-2c(M)",1,1,1,1
+"7","CM-3a","Proportion of malaria cases (presumed and confirmed) that received first line antimalarial treatment at public sector health facilities","Prop. malaria cas.  recd. 1st line antimal. tx., public health facilities - CM-3a",0,1,1,1
+"8","CM-3b","Proportion of malaria cases (presumed and confirmed) that received first line antimalarial treatment in the community","Prop. malaria cas.  recd. 1st line antimal. tx. in the community - CM-3b",0,0,0,0
+"9","CM-3c","Proportion of malaria cases (presumed and confirmed) that received first-line antimalarial treatment at private sector health facilities","Prop. malaria cas.  recd. 1st line antimal. tx., private health facilities - CM-3c",0,0,0,0
+"10","CM-4","Proportion of health facilities without stock-outs of key commodities during the reporting period","Prop. health facilities w/out stock-outs key commodities dur. report period - CM-4",1,1,1,1
+"11","CM-5(M)","Percentage of confirmed cases fully investigated and classified","% conf. cas.  fully investigated and classified - CM-5(M)",0,0,0,0
+"12","CM-6(M)","Percentage of malaria foci fully investigated and classified","% malaria foci fully investigated and classified - CM-6(M)",0,0,0,0
+"13","DOTS-1b","Number of notified cases of bacteriologically confirmed TB, new and relapses","No. cas. notif. bacteriologically conf. TB - DOTS-1b",0,0,0,0
+"14","DOTS-2b","Percentage of bacteriologically confirmed TB cases successfully treated (cured plus completed treatment) among the bacteriologically confirmed TB cases registered during a specified period","% bacteriologically conf. TB cases successfully tx. (cured plus completed treatment - DOTS-2b",0,0,0,0
+"15","DOTS-6","Number of tuberculosis cases (all forms) reported among key populations or risk groups affected","No. of TB cas. rep. among key pops or risk groups affected - DOTS-6",0,0,0,0
+"16","GP other-1","Number of new cases (survivors of sexual violence)","Number of new cases (survivors of sexual violence) - GP other-1",1,1,1,1
+"17","GP other-2","Number of survivors of sexual violence recd. PREP w/in 72 hrs","Number of survivors of sexual violence recd. PREP w/in 72 hrs - GP other-2",1,1,1,1
+"18","GP-10-PCE","Percentage of people who have heard of HIV and know how HIV can be prevented","% people who have heard HIV and know how HIV can be prevented - GP-10-PCE",0,0,0,0
+"19","GP-11-PCE","Number of people receiving post-exposure prophylaxis per 100,000","No. people receiving post-exposure prophylaxis  - GP-11-PCE",0,0,0,0
+"20","GP-12-PCE","Number of sexual partners in previous year per 100,000 person-years","No. sexual partners in previous yr  - GP-12-PCE",0,0,0,0
+"21","GP-13-PCE","Number of women who regularly use female contraceptives per 100,000","No. W who regularly use female contraceptives  - GP-13-PCE",0,0,0,0
+"22","GP-14-PCE","Frequency of commercial sex work patronage per 100,000 person-years","Frequency commercial sex work patronage  - GP-14-PCE",0,0,0,0
+"23","GP-15-PCE","Women's participation in household decisions","W's participation in household decisions - GP-15-PCE",0,0,0,0
+"24","GP-5","Number of medical male circumcisions performed according to national standards","No. medical male circumcisions performed according to national standards - GP-5",0,0,0,0
+"25","GP-6","Percentage of orphaned and other vulnerable children aged 0–17 years whose households received free basic external support in caring for the child according to national guidelines","% orphaned and other vulnerable child., 0–17, whose HH recd. free basic external support in caring for the child accord. to natl guide - GP-6",0,0,0,0
+"26","GP-7-PCE","Number of condoms distributed","No. condoms distributed - GP-7-PCE",0,0,0,0
+"27","GP-8-PCE","Number of serodiscordant couples counseled","No. serodiscordant couples counseled - GP-8-PCE",0,0,0,0
+"28","GP-9-PCE","Number of post-exposure prophylaxis ARV doses administered","No. post-exposure prophylaxis ARV doses administered - GP-9-PCE",0,0,0,0
+"29","HF-1","Government expenditure on health as percentage of general government expenditure","Government expenditure on health as % general government expenditure - HF-1",0,0,0,0
+"30","HIV I-10(M)","Percentage of sex workers who are living with HIV","% SW who are LHIV - HIV I-10(M)",1,1,1,1
+"31","HIV I-11(M)","Percentage of people who inject drugs who are living with HIV","% people who inject drugs LHIV - HIV I-11(M)",1,1,0,1
+"32","HIV I-12","Percentage of other vulnerable populations (specify) who are living with HIV","% other vulnerable pops (specify) LHIV - HIV I-12",0,0,0,0
+"33","HIV I-13","Number and percentage of people living with HIV","Number and % PLHIV - HIV I-13",1,1,1,1
+"34","HIV I-14","Number of new HIV infections per 1,000 uninfected population","No. new HIV infections per 1000 uninf. - HIV I-14",0,0,0,0
+"35","HIV I-15-PCE","Fraction of All Deaths due to HIV/AIDS","Fraction All Deaths due to HIV/AIDS - HIV I-15-PCE",0,0,0,0
+"36","HIV I-16-PCE","Case-fatality per HIV case","Case-fatality per HIV case - HIV I-16-PCE",0,0,0,0
+"37","HIV I-4","Number of AIDS-related deaths per 100,000 population","No. AIDS-related deaths pop. - HIV I-4",1,0,0,1
+"38","HIV I-6","Estimated percentage of child HIV infections from HIV-positive women delivering in the past 12 months","Estimated % child HIV infections from HIV-positive W delivering in past yr - HIV I-6",0,1,1,1
+"39","HIV I-9a(M)","Percentage of men who have sex with men who are living with HIV","% MSM who are LHIV - HIV I-9a(M)",1,1,0,1
+"40","HIV I-9b(M)","Percentage of transgender people who are living with HIV","% transgender people LHIV - HIV I-9b(M)",0,0,0,0
+"41","HIV O-1(M)","Percentage of adults and children with HIV known to be on treatment 12 months after initiation of antiretroviral therapy","% adults and child. w/ HIV known to be on tx. 12 mos. after init. ART - HIV O-1(M)",1,1,1,1
+"42","HIV O-10","Percentage of women and men with non-regular partner in the past 12 months who report the use of a condom during their last intercourse","% W & M w/ non-reg. partner in past yr rep. condom use dur. last intercourse - HIV O-10",1,1,1,1
+"43","HIV O-11","Percentage of (estimated) people living with HIV who have been tested HIV-positive","% (estimated) PLHIV who have been tested HIV-positive - HIV O-11",0,0,0,0
+"44","HIV O-12","Percentage of people living with HIV and on antiretroviral therapy who are virologically suppressed (among all those currently on treatment who received a viral load measurement regardless of when they started antiretroviral therapy)","% PLHIV and on ART who are virologically suppressed - HIV O-12",0,0,0,0
+"45","HIV O-13","Proportion of ever-married or partnered women aged 15-49 who experienced physical or sexual violence from a male intimate partner in the past 12 months","% ever-married/partnered W., 15-49, expd. IPV in past yr. - HIV O-13",1,1,1,1
+"46","HIV O-14","Percentage of women and men aged 15–49 who report discriminatory attitudes towards people living with HIV","% W andMaged 15–49 who report discriminatory attitudes towards PLHIV - HIV O-14",0,0,0,0
+"47","HIV O-15","Percentage of people living with HIV who experienced recent discrimination at health care facilities","% PLHIV who experienced recent discrimination at health care facilities - HIV O-15",0,0,0,0
+"48","HIV O-4.1b(M)","Percentage of transgender people reporting the use of a condom the last time they had sex with a partner","% transgender people rep. condom use the last time they had sex w/ partner - HIV O-4.1b(M)",0,0,0,0
+"49","HIV O-4a(M)","Percentage of men reporting the use of a condom the last time they had anal sex with a male partner","%M rep. condom use the last time they had anal sex w/ M partner - HIV O-4a(M)",1,1,0,1
+"50","HIV O-5(M)","Percentage of sex workers reporting the use of a condom with their most recent client","% SW reporting use a condom w/ most recent client - HIV O-5(M)",1,1,0,1
+"51","HIV O-6(M)","Percentage of people who inject drugs reporting the use of sterile injecting equipment the last time they injected","% PWID reporting use of sterile injecting equipment last time they injected - HIV O-6(M)",1,1,1,1
+"52","HIV O-7","Percentage of other vulnerable populations who report the use of a condom at last sexual intercourse","% other vulnerable pop. who report use of condom at last sex. intercourse - HIV O-7",0,0,0,0
+"53","HIV O-9","Percentage of people who inject drugs reporting condom use at the last sexual intercourse","% PWID reporting condom use at the last sexual intercourse - HIV O-9",0,0,0,0
+"54","HSS I-1","Under-5 mortality rate per 1,000 live births","Under-5 mortality rate per 1,000 live births - HSS I-1",0,0,0,0
+"55","HSS I-2","Neonatal mortality rate per 100,000 population","Neonatal mortality rate pop. - HSS I-2",0,0,0,0
+"56","HSS I-3","Maternal mortality ratio per 100,000 population","Maternal mortality ratio pop. - HSS I-3",0,0,0,0
+"57","HSS O-1","Percentage of women attending antenatal care","% W attending antenatal care - HSS O-1",0,0,0,0
+"58","HSS O-2","Percentage of births attended by skilled health professional","% births attended by skilled health pressional - HSS O-2",0,0,0,0
+"59","HSS O-3","Ratio of household out-of-pocket payments for health to total expenditure on health","Ratio household out--pocket payments to total expenditure on health - HSS O-3",0,0,0,0
+"60","HTS-1","Number of people who were tested for HIV and received their results during the reporting period","No. people who were tested for HIV and recd. results dur. report period - HTS-1",1,1,1,1
+"61","HTS-2-PCE","Number of patients in need reached through community health network (patients on ART lost to follow-up) that are not reached through the health facility defaulter tracking mechanism","No. pat. in need reached via community health net. (patients on ART LTFU) & not reached via health facil. defaulter tracking mech. - HTS-2-PCE",0,0,0,0
+"62","HTS-3-PCE","Percentage of HIV health facilities with diagnostic capabilities","% HIV health facilities w/ dx. capabilities - HTS-3-PCE",0,0,0,0
+"63","HW-1","Number of health workers per 10,000 population (report on community health workers as applicable)","No. HW per 10,000 pop. - HW-1",0,0,0,0
+"64","HW-2","Distribution of health workers","Distribution health workers (HWs) - HW-2",0,0,0,0
+"65","HW-3","Number of health workers newly recruited at primary health care facilities in the past 12 months, expressed as a percentage of planned recruitment targets","No. HWs newly recruited at prim. health care facil in past 12 mos (as a % planned recruitment) - HW-3",0,0,0,0
+"66","HW-4","Annual rate of retention of service providers at primary health care facilities","Annual rate retention service providers at primary health care facilities - HW-4",0,0,0,0
+"67","HW-5","Number of graduates from health workforce training institutions during the last academic year per 1,000 population","No. graduates from health workforce training instit. dur. last academic yr per 1,000 - HW-5",0,0,0,0
+"68","KP-1a(M)","Percentage of men who have sex with men reached with HIV prevention programs- defined package of services","% MSM reached w/ HIV prevention programs - KP-1a(M)",1,1,1,1
+"69","KP-1b(M)","Percentage of transgender people reached with HIV prevention programs- defined package of services","% transgender people reached w/ HIV prevention programs - KP-1b(M)",0,0,0,0
+"70","KP-1c(M)","Percentage of sex workers reached with HIV prevention programs- defined package of services","% SW reached w/ HIV prevention programs - KP-1c(M)",1,1,1,1
+"71","KP-1d(M)","Percentage of people who inject drugs reached with HIV prevention programs- defined package of services","%PWID reached w/ HIV prevention programs - KP-1d(M)",1,1,1,1
+"72","KP-1e","Percentage of other vulnerable populations reached with HIV prevention programs- defined package of services","% other vulnerable pop.s reached w/ HIV prevention programs - KP-1e",0,0,0,0
+"73","KP-3a(M)","Percentage of men who have sex with men that have received an HIV test during the reporting period and know their results","% MSM that have received an HIV test dur. the period and know results - KP-3a(M)",1,1,1,1
+"74","KP-3b(M)","Percentage of transgender people that have received an HIV test during the reporting period and know their results","% transgender people that recd. HIV test dur. report period & know result - KP-3b(M)",0,0,0,0
+"75","KP-3c(M)","Percentage of sex workers that have received an HIV test during the reporting period and know their results","% SW that have recd. HIV test dur. report period & know result - KP-3c(M)",1,1,1,1
+"76","KP-3d(M)","Percentage of people who inject drugs that have received an HIV test during the reporting period and know their results","% PWID that recd. HIV test dur. report period & know result - KP-3d(M)",1,1,1,1
+"77","KP-3e","Percentage of other vulnerable populations that have received an HIV test during the reporting period and know their results","% other vulnerable pops that recd. HIV test dur. report period & know results - KP-3e",0,0,0,0
+"78","KP-4","Number of needles and syringes distributed per person who injects drugs per year by needle and syringe programs","No. needles, syringes distributed per PWID per yr by needle, syringe programs - KP-4",0,0,0,0
+"79","KP-5","Percentage of individuals receiving opioid substitution therapy who received treatment for at least six months","% individuals receiving OST who received tx. for at least 6 mos. - KP-5",0,0,0,0
+"80","KP-6a","Percentage of men who have sex with men using pre-exposure prophylaxis in priority men who have sex with men pre-exposure prophylaxis populations","% MSM using PrEP in priority MSM PrEP pops - KP-6a",0,0,0,0
+"81","KP-6b","Percentage of transgender people using pre-exposure prophylaxis in priority transgender people pre-exposure prophylaxis populations","% transgender people using PrEP in priority transgender people PrEP pops - KP-6b",0,0,0,0
+"82","KP-6c","Percentage of sex workers using pre-exposure prophylaxis in priority sex worker pre-exposure prophylaxis populations","% SW using PrEP in priority sex worker PrEP pop.s - KP-6c",0,0,0,0
+"83","KP-7-PCE","Number of community outreach sessions performed","No. community outreach sessions performed - KP-7-PCE",0,0,0,0
+"84","KP-8-PCE","Number of pre-exposure prophylaxis ARV doses administered","No. pre-exposure prophylaxis ARV doses administered - KP-8-PCE",0,0,0,0
+"85","M&E-1","Percentage of HMIS or other routine reporting units submitting timely reports according to national guidelines","% HMIS or other report units submitting timely reports according to natl guide - M&E-1",0,0,0,0
+"86","M&E-2","Proportion of facility reports received over the reports expected during the reporting period","Prop. facility reports recd. / reports expec. dur. rep. period - M&E-2",1,1,1,1
+"87","M&E-3","Percentage of deaths registered (as reported by civil or sample registration systems, hospitals, community-based reporting systems) among the total estimated deaths for the same period and geographical region","% deaths registered among the total estimated deaths in period and region - M&E-3",0,0,0,0
+"88","MDR TB-1","Percentage of previously treated TB patients receiving DST (bacteriologically positive cases only)","% prev. treated TB patients receiving DST (bacteriologically pos. cas. only) - MDR TB-1",0,0,0,0
+"89","MDR TB-2(M)","Number of TB cases with Rifampicin-resistant TB (RR-TB) and/or MDR-TB notified","No. MDR-TB noti. - MDR TB-2(M)",1,1,1,1
+"90","MDR TB-3(M)","Number of cases with RR-TB and/or MDR-TB that began second-line treatment","No. MDR-TB cas.  that began second-line tx. - MDR TB-3(M)",1,1,1,1
+"91","MDR TB-4","Percentage of cases with RR-TB and/or MDR-TB started on treatment for MDR-TB who were lost to follow-up during the first six months of treatment","% cas.  w/ MDR-TB started on tx. who were LTFU dur. the first 6 mos. tx. - MDR TB-4",0,0,0,0
+"92","MDR TB-5","Percentage of drug susceptibility testing laboratories showing adequate performance on external quality assurance","% drug susceptibility testing labs w/ adeq perf. - MDR TB-5",0,0,0,0
+"93","MDR TB-6","Percentage of TB patients with DST result for at least Rifampicin among the total number of notified (new and retreatment) cases in the same year","% TB patients w/ DST result for at least Rifampicin among the total cas.  - MDR TB-6",0,0,0,0
+"94","MDR TB-7","Percentage of confirmed MDR-TB cases tested for susceptibility to any fluoroquinolone and any second-line injectable drug","% MDR-TB tested for susceptibility to FLQ & 2nd-line injectable drugs - MDR TB-7",0,0,0,0
+"95","MDR TB-8","Number of cases of XDR-TB enrolled on treatment","No. cas.  XDR-TB enrolled on tx. - MDR TB-8",0,0,0,0
+"96","ME-2","Proportion of facility reports received over the reports expected during the reporting period","Prop. facility reports recd. / reports expec. dur. rep. period - M&E-2",0,0,0,0
+"97","Malaria I-1(M)","Reported malaria cases (presumed and confirmed)","Reported malaria cas.   - Malaria I-1(M)",1,1,1,1
+"98","Malaria I-10(M)","Annual parasite incidence: Confirmed malaria cases (microscopy or rapid diagnostic test): rate per 1,000 persons per year (Elimination settings)","Annual parasite inc.: conf. malaria cas.  per 1,000 persons per yr - Malaria I-10(M)",0,0,0,0
+"99","Malaria I-2.1","Confirmed malaria cases (microscopy or RDT): rate per 1,000 persons per year","conf. malaria cas.  (microscopy or RDT): rate per 1,000 persons per yr - Malaria I-2.1",1,0,0,1
+"100","Malaria I-3.1(M)","Inpatient malaria deaths: rate per 100,000 persons per year","Inpatient malaria deaths: rate persons per yr - Malaria I-3.1(M)",1,0,0,1
+"101","Malaria I-4","Malaria test positivity rate","Malaria test positivity rate - Malaria I-4",1,1,1,1
+"102","Malaria I-5","Malaria parasite prevalence: Proportion of children aged 6-59 months with malaria infection","Malaria parasite prev.: Prop. child. aged 6-59 mos. w/ malaria infection - Malaria I-5",1,1,0,1
+"103","Malaria I-6","All-cause under-5 mortality rate per 1,000 live births","All-cause under-5 mortality rate per 1,000 live births - Malaria I-6",0,1,1,1
+"104","Malaria I-9(M)","Number of active foci of malaria","No. active foci malaria - Malaria I-9(M)",0,0,0,0
+"105","Malaria O-1a","Proportion of population that slept under an insecticide-treated net the previous night","Prop. pop. that slept under an ITN the previous night - Malaria O-1a",0,0,0,0
+"106","Malaria O-1b","Proportion of children under 5 who slept under an insecticide-treated net the previous night","Prop. child. under 5 who slept under an ITN the previous night - Malaria O-1b",0,0,0,0
+"107","Malaria O-1c","Proportion of pregnant women who slept under an insecticide-treated net the previous night","Prop. pregnant W who slept under an ITN the previous night - Malaria O-1c",0,0,0,0
+"108","Malaria O-2","Proportion of population with access to an insecticide-treated net within their household","Prop. pop. w/ access to an ITN w/in household - Malaria O-2",0,0,0,0
+"109","Malaria O-3","Proportion of population using an insecticide-treated net among those with access to an insecticide-treated net","Prop. pop. using an ITN among those w/ access to an ITN - Malaria O-3",0,0,0,0
+"110","Malaria O-4","Proportion of households with at least one insecticide-treated net for every two people and/or sprayed by indoor residual spraying within the last 12 months","Prop. HH w/ 1 ITN for every 2 people &/or sprayed by IRS in last 12 mos. - Malaria O-4",0,0,0,0
+"111","Malaria O-6","Proportion of households with at least one insecticide-treated net for every two people","Prop. HH w/ at least 1 ITN for every 2 people - Malaria O-6",0,0,0,0
+"112","Malaria O-7(M)","Percentage of existing insecticide-treated nets used the previous night","% existing ITNs used the previous night - Malaria O-7(M)",0,0,0,0
+"113","Malaria O-8","Proportion of households sprayed by indoor residual spraying within the last 12 months","Prop. HH sprayed by IRS w/in the last 12 mos. - Malaria O-8",0,0,0,0
+"114","Malaria O-9(M)","Annual blood examination rate: per 100 population per year (Elimination settings)","Annual blood exam. rate: per 100 pop. per yr (Elimination settings) - Malaria O-9(M)",0,0,0,0
+"115","PMTCT-1","Percentage of pregnant women who know their HIV status","% pregnant W who know HIV status - PMTCT-1",1,1,1,1
+"116","PMTCT-2.1","Percentage of HIV-positive pregnant women who received antiretroviral therapy during pregnancy","% HIV-positive pregnant W who received ART dur. pregnancy - PMTCT-2.1",1,1,1,1
+"117","PMTCT-3.1","Percentage of HIV-exposed infants receiving a virological test for HIV within two months of birth","% HIV-exposed infants receiving a virological test for HIV w/in2mos. birth - PMTCT-3.1",1,1,1,1
+"118","PMTCT-4-PCE","Percentage of women who have heard of HIV and know how to prevent mother-to-child transmission","% W who have heard of HIV and know how to prev. mother-to-child transm. - PMTCT-4-PCE",0,0,0,0
+"119","PMTCT-5-PCE","Number of pregnant women tested for HIV","No. pregnant W tested for HIV - PMTCT-5-PCE",0,0,0,0
+"120","PSM-2","Percentage of health facilities with essential medicines and lifesaving commodities in stock","% health facilities w/ essential medicines and lifesaving commodities in stock - PSM-2",0,0,0,0
+"121","PSM-3","Percentage of facilities providing diagnostic services with tracer items on the day of the assessment","% facilities providing dx. services w/ tracer items on the day the assessment - PSM-3",0,0,0,0
+"122","RDT SO","Number and percentage of health facilities (Integrated Health Centers) reporting a shortage of rapid diagnostic tests (RDTs) malaria","No/% of health facilities (IHCs) rep. shortage of RDTs - RDT SO",1,1,1,1
+"123","SD-1","Number of health facilities per 10,000 population","No. health facilities per 10,000 pop. - SD-1",0,0,0,0
+"124","SD-3","Number of outpatient department visits per person per year","No. outpatient department visits per person per yr - SD-3",0,0,0,0
+"125","SPI-1","Proportion of pregnant women attending antenatal clinics who received three or more doses of intermittent preventive treatment for malaria","Prop. pregnant W attending antenat. clinics who received >3 doses IPTp - SPI-1",1,1,1,1
+"126","SPI-2","Percentage of children aged 3–59 months who received the full number  of courses of seasonal malaria chemoprevention (3 or 4) per transmission season in the targeted areas","% child. aged 3–59 mos. who received the full number seasonal prevention tx - SPI-2",0,0,0,0
+"127","SSRP-other 1","Percentage of Health Districts targetted which have reached an 80% coverage with the integrated package of services (PIS)","% Health Districts targetted w/ 80% cov. integrated package of services - SSRP-other 1",0,0,0,0
+"128","SSRP-other 2","Percentage of new bacteriologically confirmed TB cases managed according to national standards among the cases notified the previous year (measures quality of service delivery)","% of new bacteriol-conf. TB mngd to natl standards - SSRP-other 2",0,0,0,0
+"129","TB I-1","TB prevalence rate per 100,000 population","TB prev - TB I-1",1,0,0,1
+"130","TB I-2","TB incidence rate per 100,000 population","TB inc. - TB I-2",0,1,1,1
+"131","TB I-3(M)","TB mortality rate per 100,000 population","TB mortality - TB I-3(M)",0,1,1,1
+"132","TB I-4(M)","RR-TB and/or MDR-TB prevalence among new TB patients: Proportion of new TB cases with RR-TB and/or MDR-TB","MDR-TB prev, new TB Pts. - TB I-4(M)",0,0,0,0
+"133","TB O-1a","Case notification rate of all forms of TB per 100,000 population – bacteriologically confirmed plus clinically diagnosed, new and relapse cases","Case notification rate - TB O-1a",1,1,1,1
+"134","TB O-1b","Case notification rate per 100,000 population- bacteriologically-confirmed TB, new and relapse ","Cas. Not. rate per 100,000 population- bacteriologically-conf. TB - TB O-1b",0,0,0,0
+"135","TB O-2a","Treatment success rate of all forms of TB – bacteriologically confirmed plus clinically diagnosed, new and relapse cases","tx. success rate - TB O-2a",1,1,1,1
+"136","TB O-2b","Treatment success rate - bacteriologically confirmed TB cases","Tx. success rate - bacteriologically conf. TB cas. - TB O-2b",0,0,0,0
+"137","TB O-4(M)","Treatment success rate of RR TB and/or MDR-TB: Percentage of cases with RR and/or MDR-TB successfully treated","tx. success rate MDR-TB - TB O-4(M)",1,1,1,1
+"138","TB O-5 (M)","TB treatment coverage: Percentage of new and relapse cases that were notified and treated among the estimated number of incident TB cases in the same year (all forms of TB – bacteriologically confirmed plus clinically diagnosed)","TB tx. coverage - TB O-5(M)",1,1,1,1
+"139","TB O-5(M)","TB treatment coverage: Percentage of new and relapse cases that were notified and treated among the estimated number of incident TB cases in the same year (all forms of TB – bacteriologically confirmed plus clinically diagnosed)","TB tx. coverage - TB O-5(M)",1,0,0,1
+"140","TB O-6","Notification of RR-TB and/or MDR-TB cases – Percentage of notified cases of bacteriologically confirmed, drug resistant RR-TB and/or MDR-TB as a proportion of all estimated Rifampicin-resistant TB and/or MDR-TB cases","% of all MDR-TB notified - TB O-6",1,1,1,1
+"141","TB/HIV I-1","TB/HIV mortality rate per 100,000 population","TB/HIV mortality - TB/HIV I-1",0,1,1,1
+"142","TB/HIV-1","Percentage of TB patients who had an HIV test result recorded in the TB register","% TB patients w/ HIV test result recorded in TB register - TB/HIV-1",0,0,0,0
+"143","TB/HIV-2","Percentage of registered seropositive patients with tuberculosis who have received antiretroviral treatment during tuberculosis treatment","% of reg. seropositive patients w/ TB who recd. ART during TB tx. - TB/HIV-2",0,0,0,0
+"144","TB/HIV-3.1","Percentage of people living with HIV in care (including PMTCT) who are screened for TB in HIV care or treatment settings","% PLHIV in care (inc. PMTCT) screen. for TB in HIV care or tx. settings - TB/HIV-3.1",1,1,1,1
+"145","TB/HIV-4","Percentage of new seropositive patients who have started preventive treatment with isoniazid (IPT) during the reporting period","% of new seropos. pat. started on IPT during report per. - TB/HIV-4",0,0,0,0
+"146","TB/HIV-4.1","Percentage of people living with HIV newly enrolled in HIV care started on TB preventive therapy","% PLHIV newly enrolled in HIV care started on TB preventive therapy - TB/HIV-4.1",1,1,1,1
+"147","TB/HIV-4.2-PCE","Percentage of people living with HIV diagnosed with TB in care and treatment settings","% PLHIV diagnosed w/ TB in care and tx. settings - TB/HIV-4.2-PCE",0,0,0,0
+"148","TB/HIV-5","Percentage of registered new and relapse TB patients with documented HIV status","% registered new and relapse TB patients w/ documented HIV status - TB/HIV-5",1,1,1,1
+"149","TB/HIV-6","Percentage of HIV-positive new and relapse TB patients on antiretroviral therapy during TB treatment","% HIV-positive new and relapse TB patients on ART dur. TB tx. - TB/HIV-6",0,0,0,0
+"150","TB/HIV-6(M)","Percentage of HIV-positive new and relapse TB patients on antiretroviral therapy during TB treatment","% HIV-positive new and relapse TB pat. on ART dur. TB tx. - TB/HIV-6(M)",1,1,1,1
+"151","TCP other-1","Percentage of all forms of TB that received adherence support from community workers or volunteers who were successfully treated (completed treatment and cured) in the course of one year. given period","% of TB cas. recd. support from CHW successfully txd.in year - TCP other-1",1,1,1,1
+"152","TCP other-2","Number and percentage of CSDT reporting no stock-outs of drugs for the treatment of susceptible TB - TCP other-2","No./% of health ctrs. rep. no stock-outs of DS-TB drugs- TCP other-2",1,1,1,1
+"153","TCP-1(M)","Number of notified cases of all forms of TB (i.e. bacteriologically confirmed + clinically diagnosed) Includes new and relapse cases","No. noti. cas.  (all forms) - TCP-1(M)",1,1,1,1
+"154","TCP-2(M)","Treatment success rate – all forms: Percentage of TB cases, all forms (bacteriologically confirmed plus clinically diagnosed) successfully treated (cured plus treatment completed) among all TB cases registered for treatment during a specified period, new and relapse cases.","tx. success rate – all forms - TCP-2(M)",1,1,1,1
+"155","TCP-3","Percentage of laboratories showing adequate performance in external quality assurance for smear microscopy among the total number of laboratories that undertake smear microscopy during the reporting period","% labs showing adequate performance - TCP-3",1,1,1,1
+"156","TCP-4","Percentage of reporting units reporting no stock-outs of anti-TB drugs on the last day of the quarter","% units reporting no stock-outs TB drugs - TCP-4",0,0,0,0
+"157","TCP-5","Number of children under 5 in contact with TB patients who began isoniazid preventive therapy","No. child. <5 in contact w/ TB patients who began IPT - TCP-5",1,1,1,1
+"158","TCP-6a","Number of TB cases (all forms) notified among prisoners","No. TB cas. notif. among prisoners - TCP-6a",1,1,1,1
+"159","TCP-6b","Number of TB cases (all forms) notified among key populations/high-risk groups (other than prisoners)","No. TB cas. notif. among KVPs (not prisoners) - TCP-6b",0,0,0,0
+"160","TCP-7a","Number of notified TB cases (all forms) contributed by non-national TB program providers – private/non-governmental facilities","No. noti. TB cas. , private/non-governmental facilities - TCP-7a",0,0,0,0
+"161","TCP-7b","Number of notified TB cases (all forms) contributed by non-national TB program providers – public sector","No. noti. TB cas. , public sector - TCP-7b",0,0,0,0
+"162","TCP-7c","Number of notified TB cases (all forms) contributed by non-national TB program providers – community referrals","No. noti. TB cas. , community referrals - TCP-7c",1,1,1,1
+"163","TCP-8","Percentage of new and relapse TB patients tested using WHO- recommended rapid tests at the time of diagnosis","% new TB patients tested using WHO-recommended rapid tests at the time dx. - TCP-8",0,0,0,0
+"164","TCS other- 1","Percentage of ART sites that reported no stock-out of any antiretroviral drugs during the reporting period","% ART sites w/ no stock-out of ARVs dur. report per. - TCS-other 1",1,1,1,1
+"165","TCS other-2","Percentage of children living with HIV currently receiving antiretroviral therapy","% of children LHIV currently rec ART - TCS other-2",1,1,1,1
+"166","TCS other-3","Number and percentage of health facilities (Screening and Treatment Centers) reporting a stock-out of HIV tests","No./% of health ctrs rep.stock-outs of HIV tests - TCS other-3",1,1,1,1
+"167","TCS- other 1","Percentage of ART sites that reported no stock-out of any antiretroviral drugs during the reporting period","% ART sites w/ no stock-out of ARVs dur. report per. - TCS-other 1",0,0,0,0
+"168","TCS-1(M)","Percentage of people living with HIV currently receiving antiretroviral therapy","% PLHIV currently receiving ART - TCS-1(M)",1,1,1,1
+"169","TCS-10-PCE","Number of individuals counseled","No. individuals counseled - TCS-10-PCE",0,0,0,0
+"170","TCS-11-PCE","Percentage of PLHIV from key and vulnerable populations currently receiving ART","% PLHIV from key and vulnerable pop.s currently receiving ART - TCS-11-PCE",0,0,0,0
+"171","TCS-2","Percentage of people living with HIV that initiated antiretroviral therapy with a CD4 count of <200 cells/mm3","% PLHIV that initiated ART w/ a CD4 count <200 cells/mm3 - TCS-2",0,0,0,0
+"172","TCS-3.1","Percentage of people living with HIV and on antiretroviral therapy who have a suppressed viral load at 12 months (<1000 copies/ml)","% PLHIV and on ART w/ suppressed viral load at 12 mos. (<1000 copies/ml) - TCS-3.1",1,1,1,1
+"173","TCS-6","Percentage of ART sites that had a stock-out of any antiretroviral drugs during the reporting period","% ART sites that had a stock-out any ARV drugs dur. the reporting period - TCS-6",1,1,1,1
+"174","TCS-7","Percentage of newly diagnosed people linked to HIV care (individual linkage)","% newly diagnosed people linked to HIV care (individual linkage) - TCS-7",0,0,0,0
+"175","TCS-8-PCE","Percentage of newly diagnosed PLHIV initiating ART","% newly diagnosed PLHIV initiating ART - TCS-8-PCE",0,0,0,0
+"176","TCS-9-PCE","Number of ARV doses administered","No. ARV doses administered - TCS-9-PCE",0,0,0,0
+"177","TCS-other 1","Percentage of ART sites that reported no stock-out of any antiretroviral drugs during the reporting period","% ART sites w/ no stock-out of ARVs dur. report per. - TCS-other 1",0,0,0,0
+"178","VC-1(M)","Number of long-lasting insecticidal nets distributed to at-risk populations through mass campaigns","No. LLIN distributed to at-risk pop.s through mass campaigns - VC-1(M)",1,1,1,1
+"179","VC-3(M)","Number of long-lasting insecticidal nets distributed to targeted risk groups through continuous distribution","No. LLIN distributed to targeted risk groups through continuous distribution - VC-3(M)",1,1,1,1
+"180","VC-5","Proportion of households in targeted areas that received indoor residual spraying during the reporting period","Prop. HH in targeted areas recd. IRS dur report period - VC-5",0,0,0,0
+"181","VC-6.1","Proportion of population protected by indoor residual spraying within the last 12 months in areas targeted for indoor residual spraying","Prop. pop. protected by IRS w/in the last 12 mos. in areas targeted for IRS - VC-6.1",0,0,0,0
+"182","YP-1","Percentage of young people aged 10–24 years reached by life skills–based HIV education in schools","% young people, 10–24 yrs reached by life skills–based HIV education in schools - YP-1",0,0,0,0
+"183","YP-2","Percentage of adolescent girls and young women reached with HIV prevention programs- defined package of services","% AGYW reached w/ HIV prevention programs - YP-2",0,0,0,0
+"184","YP-3","Number of adolescent girls and young women who were tested for HIV and received their results during the reporting period","No. AGYW tested for HIV and received results dur. the reporting period - YP-3",0,0,0,0
+"185","YP-4","Percentage of adolescent girls and young women using pre-exposure prophylaxis","% AGYW using PrEP - YP-4",0,0,0,0

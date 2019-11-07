@@ -10,6 +10,9 @@ library(data.table)
 DT <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/cleaned_pfi.RDS") # this is the data that has already been somewhat cleaned based on part 1 of the data_cleaning script
 codebook <- fread("C:/Users/frc2/Documents/gf/outcome_measurement/all/performance_indicators/codebooks/data_source_codebook.csv", header = TRUE) # code book which describes names of the data sources in a standardized way
 
+# fixed one last final mistake in code name
+DT$indicator <- gsub("&amp;", "&", DT$indicator)
+DT$indicator_code <- gsub("&amp;", "&", DT$indicator_code)
 
 # Merge and replace the Baselice source code 
 data <- merge(DT, codebook, by.x="baseline_source", by.y = "source_original", all.x=TRUE)
