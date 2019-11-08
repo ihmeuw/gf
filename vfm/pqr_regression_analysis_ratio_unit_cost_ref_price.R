@@ -603,9 +603,9 @@ for (cat in unique(dt$product_category)){
   findings_table_1b = rbind(findings_table_1b, add_to_findings)
 
   g = ggplot(dt2, aes(x = product_name_en, y = unit_cost_over_ref_price, color = product_name_en)) +
-    geom_point(shape = 1, size = 3) + 
+    geom_point(shape = 1, size = 5) + 
     theme_bw() + geom_hline(yintercept = 1, linetype = 'dashed', color = 'red', size = 1) +
-    geom_errorbar(aes(ymin = lower, ymax = upper), width = .2, size = 1 ) +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = .2, size = 1.5 ) +
     theme(strip.text = element_blank()) +
     scale_color_manual(name = '', values = colors) +
     labs(y = 'Ratio of unit cost to reference price', x = '', title = paste0(country, ', ', cat, ': prediction intervals from regression results\n     ratio_unit_cost_to_ref_price ~ purchase_order_date + product_name_en')) +

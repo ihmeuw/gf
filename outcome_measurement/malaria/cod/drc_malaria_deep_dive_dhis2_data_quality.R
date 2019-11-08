@@ -32,9 +32,10 @@ library(ggplot2)
 library(scales)
 
 # read in data
-dhis_before_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outliers/base/base_to_screen.rds')
+dhis_before_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/4_prep_for_qr/base/base_to_screen.rds')
 base_before_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/base/base_services_prepped.rds')
-dhis_after_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/base/base_prepped_outliers_replaced.rds')
+dhis_after_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/6_outliers_replaced/base/base_prepped_outliers_replaced.rds')
+# base = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/5_qr_results/base/base_quantreg_results.rds')
 
 pnlp_after_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/post_imputation/imputedData_run_0_001_aggVars_lagsLeads_condensed_hz_median.rds')
 pnlp_before_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/PNLP_dt_forMI_updated_6_10_19.rds')
