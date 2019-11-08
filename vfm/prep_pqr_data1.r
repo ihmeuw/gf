@@ -66,10 +66,10 @@ key_cols = c("Country Name", "ISO3CodeCountry",
 # lc_cols = grep("(LC)", names(subset)) #Drop all of the columns in 'local currency'
 # subset = subset[, -lc_cols, with = FALSE]
 
-country_ids = pqr[`Country/Teritorry` %in% c("Congo (Democratic Republic)", "Senegal", "Uganda", "Guatemala", 
-                                        "Mozambique", "Sudan", "Myanmar", "Cambodia"), unique(`ISO3CodeCountry`) ]#Keep EHG's countries in here as well. 
-
-pqr = pqr[`ISO3CodeCountry`%in% country_ids, ]
+# country_ids = pqr[`Country/Teritorry` %in% c("Congo (Democratic Republic)", "Senegal", "Uganda", "Guatemala", 
+#                                         "Mozambique", "Sudan", "Myanmar", "Cambodia"), unique(`ISO3CodeCountry`) ]#Keep EHG's countries in here as well. 
+# 
+# pqr = pqr[`ISO3CodeCountry`%in% country_ids, ]
 
 #Remove duplicated column names
 dup_names = unique(names(pqr)[duplicated(names(pqr))])
@@ -288,6 +288,8 @@ saveRDS(subset, paste0(dir, outFile))
 # saveRDS(hiv_subset, paste0(dir, "prepped_data/hiv_pqr.rds"))
 # saveRDS(mal_subset, paste0(dir, "prepped_data/mal_pqr.rds"))
 # saveRDS(tb_subset, paste0(dir, "prepped_data/tb_pqr.rds"))
+# saveRDS(subset, paste0(dir, 'pqr_all_countries.rds'))
+# write.csv(subset, paste0(dir, 'pqr_all_countries.rds'))
 #-------------------------------------------------------------------
 
 
