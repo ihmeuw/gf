@@ -26,7 +26,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   # }
   # inFile = file_list$file_name[i]
   # sheet_name = file_list$sheet_coverage_1b[i]
-  # language = file_list$language_programmatic[i]
+  # language = file_list$language_1b[i]
 
   STOP_COL = 6 #What column starts to have sub-names? (After you've dropped out first 2 columns)
   
@@ -72,7 +72,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   
   #Drop out the comments column, and record ID column. 
   # If the module column is #3, drop the first two rows. 
-  comment_col = grep("comment", names) 
+  comment_col = grep("comment|causas de la variación programática", names) 
   record_id_col = grep("record id", tolower(gf_data))
   stopifnot(length(record_id_col)==1 | is.na(record_id_col)) #Just don't drop more than one column here. 
   gf_data = gf_data[, !c(comment_col, record_id_col), with=FALSE] 
@@ -139,6 +139,9 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   if (length(result_col)>1){ #The word 'result' appears several times for English files, and you just want the first column here. 
     result_col = result_col[1]
   }
+  if (length(target_col)>1) { #There is an extra "meta" mentioned in column 20 for some Guatemala files 
+    target_col = target_col[1]
+  }
   
   #Validate that you grabbed exactly 5 columns. 
   flagged_col_list = c(reference_col, target_col, result_col, lfa_result_col, gf_result_col)
@@ -160,7 +163,7 @@ prep_coverage_1B =  function(dir, inFile, sheet_name, language) {
   module_names = c('module', 'modulo')
   standard_ind_names = c('standard coverage indicator', 'indicateurs', 'coverage indicator', 'indicador ')
   custom_ind_names = c('custom coverage indicator')
-  geography_names = c('geographic area', 'geographie')
+  geography_names = c('geographic area', 'geographie', 'geografia')
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?", "targets cumulative?_x000d_", "¿metas acumulativas?")
   reverse_ind_names = c("reverse indicator?")
   

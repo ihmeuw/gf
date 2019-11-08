@@ -76,7 +76,7 @@ data6$sources_different[which(data6$baseline_source_code!=data6$pr_result_source
 data6$sources_different[which(data6$baseline_source_code==data6$pr_result_source_code)] <- 0
 
 # add reverse indicator variable
-reverse_codebook <- fread("C:/Users/frc2/Documents/gf/outcome_measurement/all/performance_indicators/codebooks/indicators_codebook_reverse.csv")
+reverse_codebook <- fread(paste0(repo_root, "outcome_measurement/all/performance_indicators/codebooks/indicators_codebook_reverse.csv"))
 reverse_codebook = reverse_codebook[,.(indicator_code, reverse_indicator_final)]
 data7 <- merge(data6, reverse_codebook, by.x="indicator_code", by.y = "indicator_code", all.x = TRUE, all.y = FALSE)
 

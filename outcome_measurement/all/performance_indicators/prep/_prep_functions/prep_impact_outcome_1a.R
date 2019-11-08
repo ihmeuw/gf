@@ -155,7 +155,7 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   impact_names = c('impact / effet ', "impact / outcome ", "impacto/resultados")
   standard_ind_names = c('indicateurs', "impact/outcome indicator", "standard impact/outcome indicator", "indicador ")
   custom_ind_names = c("custom impact/outcome indicator", "custom coverage indicator")
-  geography_names = c('geographic area', 'geographie')
+  geography_names = c('geographic area', 'geographie', 'geografia')
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
   reverse_ind_names = c("reverse indicator?")
   
@@ -198,7 +198,7 @@ prep_impact_outcome_1A =  function(dir, inFile, sheet_name, language) {
   
   #Where 'year' exists in the names vector, move to the sub-names vector 
   year_names = c('year of target', 'anee du resultat', 'annee du resultat', 'year of result',
-                 "annee de la cible", "aoo de resultado")
+                 "annee de la cible", "aoo de resultado", "aoo de meta")
   year_indices = which(names%in%year_names)
   stopifnot(is.na(unique(sub_names[year_indices])))
   sub_names[year_indices] = "year"

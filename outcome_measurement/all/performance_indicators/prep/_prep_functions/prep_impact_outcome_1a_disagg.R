@@ -173,7 +173,7 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   #Acceptable raw column names - will be matched to corrected names below. 
   impact_names = c('impact / effet ', "impact / outcome ", "impact/outcome", "impacto/resultados")
   standard_ind_names = c('indicateurs', "impact/outcome indicator", 'indicateurs standard', "standard impact/outcome indicator", "indicador estandar ")
-  geography_names = c('geographic area', 'geographie')
+  geography_names = c('geographic area', 'geographie', 'geografia')
   subcat_names = c('ventilation', 'disaggregation', 'desglose')
   category_names = c('categorie', 'categorie ', "categoria")
   cumulative_target_names = c('targets cumulative?', "cibles cumulatives ?")
