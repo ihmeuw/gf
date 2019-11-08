@@ -48,7 +48,7 @@ folder = 'pnls'
 # create a vector of variables to subset the larger data sets 
 
 if (folder=='base' | folder=='sigl') {
-  keep_vars = read.xlsx(paste0(dir, 'catalogues/data_elements_cod.xlsx'))
+  keep_vars = read.xlsx(paste0(dir, '/meta_data/catalogues/data_elements_cod.xlsx'))
   keep_vars = data.table(keep_vars)
   keep_vars[ , keep:=as.numeric(keep)]
   keep_vars = keep_vars[keep==1, element_id]

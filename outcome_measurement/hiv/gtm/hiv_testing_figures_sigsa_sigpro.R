@@ -95,6 +95,27 @@ write.csv(table_wide2, table_totals_both_sets)
 #----------------------------------------
 # get national level data:
 #-----------------------
+dt[, msm := ifelse(grepl(pop, pattern = 'msm'), TRUE, FALSE) ]
+dt[, csw := ifelse(grepl(pop, pattern = 'csw'), TRUE, FALSE) ]
+dt[, prisoner := ifelse(grepl(pop, pattern = 'prisoner'), TRUE, FALSE) ]
+dt[, migrant := ifelse(grepl(pop, pattern = 'migrant'), TRUE, FALSE) ]
+
+loop_thru = c('trans', 'msm', 'csw', 'prisoner', 'migrant', 'pregnant', 'all')
+table = data.table(Population = loop_thru, `HIV tests completed` = integer(), `HIV+` = integer())
+for (x in loop_thru){
+  data = dt[ date >= '2018-01-01' & date <= "2018-12-31" & muni == 'guatemala', ]
+  if (x == 'all') {
+    num_tests = data[, sum(hiv_test_comp)]
+    num_pos = data[, sum(hiv_positive, na.rm = TRUE)]
+  } else {
+    num_tests = data[ get(x) == TRUE, sum(hiv_test_comp)]
+    num_pos = data[ get(x) == TRUE, sum(hiv_positive, na.rm = TRUE)]
+  }
+  table[ Population == x, `HIV tests completed`:= num_tests]
+  table[ Population == x, `HIV+`:= num_pos]
+  table[, `Test positivity rate (%)`:= ((`HIV+`/`HIV tests completed`)*100)]
+}
+
 natl = dt[ ,.(hiv_test_comp=sum(hiv_test_comp, na.rm = TRUE),
               hiv_positive=sum(hiv_positive, na.rm = TRUE)), 
            by=.(date, pop, trans)]

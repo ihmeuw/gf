@@ -177,7 +177,7 @@ dev.off()
 # ----------------------------------------------
 findings_table_2a = data.table()
 
-pdf(regr_results_ratio_costs_by_procurement_mechanism, height = 9, width = 12)
+pdf(regr_results_ratio_costs_by_procurement_mechanism, height = 9, width = 15)
 data_subset = copy(dt)
 # get the log of the ratio of unit cost to reference price
 data_subset[, log_ratio := log(unit_cost_over_ref_price)]
@@ -214,10 +214,11 @@ g = ggplot(dt2[!is.na(procurement_mech)], aes(x = procurement_mech, y = unit_cos
   scale_color_manual(name = '', values = colors) +
   labs(y = 'Ratio of unit cost to reference price', x = 'Procurement Mechanism', 
        title = paste0('Prediction intervals from regression results\n     ratio_unit_cost_to_ref_price ~ purchase_order_date + procurement_mechanism')) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1), text = element_text(size = 16)) + guides(color = FALSE)
+  theme(text = element_text(size = 16), axis.text.x = element_text(angle = 55, hjust = 1, size = 12)) + guides(color = FALSE)
 print(g)
 
 data_subset[ unit_cost_over_ref_price>=10, unit_cost_over_ref_price := 10 ]
+pm = unique(data_subset$procurement_mech)
 
 print(ggplot(data_subset[procurement_mech %in% pm[1:7], ], aes(x = unit_cost_over_ref_price, color = procurement_mech)) + geom_density(size = 1) + theme_bw() + 
         theme(legend.position = 'bottom', text = element_text(size = 16)) +
@@ -262,6 +263,7 @@ dev.off()
 
 # ----------------------------------------------
 # regression of procurement mechanism BY CATEGORY across all countries and products, controlling for date and volume
+# ----------------------------------------------
 pm = unique(dt$procurement_mech)
 colors = colors[1: length(pm)]
 
@@ -391,7 +393,7 @@ for (cat in unique(dt$product_category)){
 }
 dev.off()
 
-write.xlsx(findings_table_2a, findings_2a)
+write.xlsx(findings_table_2b, findings_2b)
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -399,13 +401,32 @@ write.xlsx(findings_table_2a, findings_2a)
 # ----------------------------------------------
 pdf(scatterplot_ratio_vs_volume, height = 9, width = 11)
 # scatterplot by volume, all data:
-print(ggplot(dt, aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
+print(ggplot(dt[], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
         theme_bw() + 
         theme(legend.position = 'bottom', text = element_text(size = 16)) +
         geom_point() +
         geom_smooth(method='lm') +
         labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
-             title = paste0('Relationship between the number of units purchased and the ratio of cost to reference price')))
+             title = paste0('Relationship between the number of units purchased and the ratio of cost to \nreference price')))
+
+print(ggplot(dt[product_category != 'anti_malaria_medicine'], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
+        theme_bw() + 
+        theme(legend.position = 'bottom', text = element_text(size = 16)) +
+        geom_point() +
+        geom_smooth(method='lm') +
+        labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
+             title = paste0('Relationship between the number of units purchased and the ratio of cost to \nreference price'),
+             subtitle = '(Excluding antimalarial medications)'))
+
+for(p in unique(dt$product_category)){
+  print(ggplot(dt[product_category == p,], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
+          theme_bw() + 
+          theme(legend.position = 'bottom', text = element_text(size = 16)) +
+          geom_point() +
+          geom_smooth(method='lm') +
+          labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
+               title = paste0(p, ': Relationship between the number of units purchased and the ratio of \ncost to reference price')))
+}
 
 for(p in unique(dt$procurement_mech)){
   print(ggplot(dt[procurement_mech == p,], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
@@ -414,7 +435,7 @@ for(p in unique(dt$procurement_mech)){
           geom_point() +
           geom_smooth(method='lm') +
           labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
-               title = paste0(p, ': Relationship between the number of units \npurchased and the ratio of cost to reference price')))
+               title = paste0(p, ': Relationship between the number of units purchased and the ratio of \ncost to reference price')))
 }
 
 # scatterplot by delivery time, all data:
@@ -468,7 +489,8 @@ plot(dt$purchase_order_date, dt$diff_from_ref_cost)
 # ----------------------------------------------
 # loop through product categories across all countries 
 # ----------------------------------------------
-pdf(regr_results_ratio_costs_by_category_log, height = 9, width = 12)
+findings_table_1a = data.table()
+pdf(regr_results_ratio_costs_by_category_log, height = 10, width = 14)
 for (cat in unique(dt$product_category)){
   # subset to each category
   data_subset = dt[product_category == cat, ]
@@ -496,13 +518,22 @@ for (cat in unique(dt$product_category)){
   dt2[, lower := exp(lower)]
   dt2[, upper := exp(upper)]
   
+  # add to the findings table
+  add_to_findings = copy(dt2)
+  add_to_findings[lower > 1, result:='costs higher than reference price']
+  add_to_findings[upper < 1, result:='costs lower than reference price']
+  add_to_findings[lower < 1 & upper >1, result:='not significant']
+  add_to_findings = add_to_findings[, .(product_category, product_name_en, result)]
+  findings_table_1a = rbind(findings_table_1a, add_to_findings)
+  
   g = ggplot(dt2, aes(x = product_name_en, y = unit_cost_over_ref_price, color = product_name_en)) +
-    geom_point(shape = 1, size = 3) + 
-    theme_bw() + geom_hline(yintercept = 1, linetype = 'dashed', color = 'red') +
-    geom_errorbar(aes(ymin = lower, ymax = upper), width = .2 ) +
+    geom_point(shape = 1, size = 5) + 
+    theme_bw() + geom_hline(yintercept = 1, linetype = 'dashed', color = 'red', size = 1) +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = .2, size = 1 ) +
     theme(strip.text = element_blank()) +
-    labs(y = 'Ratio of unit cost to reference price', x = '', title = paste0(cat, ': prediction intervals from regression results\n     ratio_unit_cost_to_ref_price ~ purchase_order_date + product_name_en')) +
-    theme(axis.text.x = element_text(angle = 45, hjust = 1), text = element_text(size = 16)) + guides(color = FALSE)
+    labs(y = 'Ratio of unit cost to reference price', x = '', title = paste0(cat, ': prediction intervals from regression results'), 
+         subtitle = '        ratio_unit_cost_to_ref_price ~ purchase_order_date + product_name_en') +
+    theme(text = element_text(size = 16), axis.text.x = element_text(angle = 50, hjust = 1, size = 12)) + guides(color = FALSE)
   print(g)
   
   data_subset[, product_name_en := as.factor(product_name_en)]
@@ -510,19 +541,31 @@ for (cat in unique(dt$product_category)){
   
   print(ggplot(data_subset, aes(x = unit_cost_over_ref_price, color = product_name_en)) + geom_density(size = 1) + theme_bw() + 
     theme(legend.position = 'bottom', text = element_text(size = 16)) +
-    geom_vline(xintercept = 1, linetype = 'dashed', color = 'red') +
+    geom_vline(xintercept = 1, linetype = 'dashed', color = 'red', size = 1) +
     labs(y = 'Density', x = 'Ratio unit cost:reference price', color = 'Product:',
          caption = 'Note: values over 10 are set to 10 for the purpose of visualization; 10 represents >=10',
          title = paste0(cat, ': distribution of ratio of unit cost to reference price by product')))
 }
 dev.off()
+
+write.xlsx(findings_table_1a, findings_1a)
 # ----------------------------------------------
 
 # ----------------------------------------------
 # loop through product categories AND country individually
 # ----------------------------------------------
+findings_table_1b = data.table()
+
 pdf(regr_results_ratio_costs_by_categoryAndCountry_log, height = 9, width = 12)
 for (cat in unique(dt$product_category)){
+  # set colors for products
+  products = unique(dt[product_category == cat, product_name_en])
+  colors1 = brewer.pal(8, 'Set2')
+  colors2 = brewer.pal(8, 'Set1')
+  colors = c(colors1, colors2)
+  colors = colors[!colors %in% c('#FFFF33', '#A6D854')]
+  names(colors) = products
+  
   for (country in unique(dt$country_name)){
   # subset to each category
   data_subset = dt[product_category == cat & country_name == country, ]
@@ -549,12 +592,22 @@ for (cat in unique(dt$product_category)){
   dt2[, unit_cost_over_ref_price := exp(unit_cost_over_ref_price)]
   dt2[, lower := exp(lower)]
   dt2[, upper := exp(upper)]
+  
+  # add to the findings table
+  add_to_findings = copy(dt2)
+  add_to_findings[lower > 1, result:='costs higher than reference price']
+  add_to_findings[upper < 1, result:='costs lower than reference price']
+  add_to_findings[lower < 1 & upper >1, result:='not significant']
+  add_to_findings[, country := country]
+  add_to_findings = add_to_findings[, .(country, product_category, product_name_en, result)]
+  findings_table_1b = rbind(findings_table_1b, add_to_findings)
 
   g = ggplot(dt2, aes(x = product_name_en, y = unit_cost_over_ref_price, color = product_name_en)) +
-    geom_point(shape = 1, size = 3) + 
-    theme_bw() + geom_hline(yintercept = 1, linetype = 'dashed', color = 'red') +
-    geom_errorbar(aes(ymin = lower, ymax = upper), width = .2 ) +
+    geom_point(shape = 1, size = 5) + 
+    theme_bw() + geom_hline(yintercept = 1, linetype = 'dashed', color = 'red', size = 1) +
+    geom_errorbar(aes(ymin = lower, ymax = upper), width = .2, size = 1.5 ) +
     theme(strip.text = element_blank()) +
+    scale_color_manual(name = '', values = colors) +
     labs(y = 'Ratio of unit cost to reference price', x = '', title = paste0(country, ', ', cat, ': prediction intervals from regression results\n     ratio_unit_cost_to_ref_price ~ purchase_order_date + product_name_en')) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1), text = element_text(size = 16)) + guides(color = FALSE)
   print(g)
@@ -564,11 +617,14 @@ for (cat in unique(dt$product_category)){
   
   print(ggplot(data_subset, aes(x = unit_cost_over_ref_price, color = product_name_en)) + geom_density(size = 1) + theme_bw() + 
           theme(legend.position = 'bottom', text = element_text(size = 16)) +
-          geom_vline(xintercept = 1, linetype = 'dashed', color = 'red') +
+          scale_color_manual(name = 'Product:', values = colors) +
+          geom_vline(xintercept = 1, linetype = 'dashed', color = 'red', size = 1) +
           labs(y = 'Density', x = 'Ratio unit cost:reference price', color = 'Product:',
                caption = 'Note: values over 10 are set to 10 for the purpose of visualization; 10 represents >=10',
                title = paste0(country, ', ', cat, ': distribution of ratio of unit cost to reference price by product')))
 
 }}
 dev.off()
+
+write.xlsx(findings_table_1b, findings_1b)
 # ----------------------------------------------
