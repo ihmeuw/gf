@@ -11,7 +11,7 @@
 # --------------------------------------------
 # Output file labels (set to '' for default) 
 # in case we're running some secondary analysis
-# this only affects files from step 4c onward
+# this only affects files from step 4a onward
 fileLabel = ''
 # --------------------------------------------
 
@@ -167,15 +167,15 @@ if (Sys.info()[1]!='Windows') {
 }
 
 # output file from 4a_set_up_for_analysis.r
-outputFile4a = paste0(ieDir, 'first_half_data_pre_model.rdata')
+outputFile4a = paste0(ieDir, 'first_half_data_pre_model', fileLabel, '.rdata')
 if (Sys.info()[1]!='Windows') { 
-	outputFile4a_scratch = paste0(clustertmpDir1, 'first_half_data_pre_model.rdata')
+	outputFile4a_scratch = paste0(clustertmpDir1, 'first_half_data_pre_model', fileLabel, '.rdata')
 }
 
 # output file from 4b_set_up_for_second_half_analysis.r
-outputFile4b = paste0(ieDir, 'second_half_data_pre_model.rdata')
+outputFile4b = paste0(ieDir, 'second_half_data_pre_model', fileLabel, '.rdata')
 if (Sys.info()[1]!='Windows') { 
-	outputFile4b_scratch = paste0(clustertmpDir1, 'second_half_data_pre_model.rdata')
+	outputFile4b_scratch = paste0(clustertmpDir1, 'second_half_data_pre_model', fileLabel, '.rdata')
 }
 
 # output file from 4c and 4d_explore_data.r (graphs)

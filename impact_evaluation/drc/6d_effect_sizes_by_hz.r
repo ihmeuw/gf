@@ -48,11 +48,21 @@ subset[, est_100:=((unit^est)-1)*100] # for each 100 bednets...
 subset[, est_1pct:=((1.01^est)-1)*100] # for each 1% more bednets...
 
 # look up the national coverage per 10 nets
-total_x = mean(untransformed[,sum(ITN,na.rm=T),by=floor(date)]$V1)
+total_x = mean(untransformed[,sum(get(x),na.rm=T),by=floor(date)]$V1)
 est = means[op=='~' & rhs==x & lhs==y]$est/10
+lower = (means[op=='~' & rhs==x & lhs==y]$est-(1.96*means[op=='~' & rhs==x & lhs==y]$se))/10
+upper = (means[op=='~' & rhs==x & lhs==y]$est+(1.96*means[op=='~' & rhs==x & lhs==y]$se))/10
 unit = 1+(10/total_x)
+if(x=='ITN') { 
 ((unit^est)-1)*sum(untransformed[date==2017]$population) # this displays the estimate for ITNs
-((unit^est)-1)*sum(untransformed[date==2017]$incidence) # this displays the estimate for treatment
+((unit^lower)-1)*sum(untransformed[date==2017]$population) # this displays the estimate for ITNs
+((unit^upper)-1)*sum(untransformed[date==2017]$population) # this displays the estimate for ITNs
+}
+# if(x=='mildMalariaTreated') {
+# ((unit^est)-1)*sum(untransformed[date==2017]$incidence) # this displays the estimate for treatment
+# ((unit^lower)-1)*sum(untransformed[date==2017]$incidence) # this displays the estimate for treatment
+# ((unit^upper)-1)*sum(untransformed[date==2017]$incidence) # this displays the estimate for treatment
+# }
 # -------------------------------------------------------------------------------------
 
 
