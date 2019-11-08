@@ -75,5 +75,17 @@ data6$sources_different <- NA
 data6$sources_different[which(data6$baseline_source_code!=data6$pr_result_source_code)] <- 1
 data6$sources_different[which(data6$baseline_source_code==data6$pr_result_source_code)] <- 0
 
+# add reverse indicator variable
+reverse_codebook <- fread("C:/Users/frc2/Documents/gf/outcome_measurement/all/performance_indicators/codebooks/indicators_codebook_reverse.csv")
+reverse_codebook = reverse_codebook[,.(indicator_code, reverse_indicator_final)]
+data7 <- merge(data6, reverse_codebook, by.x="indicator_code", by.y = "indicator_code", all.x = TRUE, all.y = FALSE)
+
+# create new variable to indicate whether target is being met
+data7$target_met <- NA
+data7$target_met[which(data7$reverse_indicator_final=="no" & data7$any_result_value >= data7$target_value)] <- "yes"
+data7$target_met[which(data7$reverse_indicator_final=="no" & data7$any_result_value < data7$target_value)] <- "no"
+data7$target_met[which(data7$reverse_indicator_final=="yes" & data7$any_result_value <= data7$target_value)] <- "yes"
+data7$target_met[which(data7$reverse_indicator_final=="yes" & data7$any_result_value > data7$target_value)] <- "no"
+
 # save output
-saveRDS(data6, "J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses.RDS")
+saveRDS(data7, "J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses.RDS")
