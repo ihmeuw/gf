@@ -9,6 +9,7 @@ output: pdf_document
 library(data.table) 
 library(ggplot2)
 library(knitr)
+library(kableExtra) 
 
 current_year = year(Sys.Date())
 current_quarter = quarter(Sys.Date())
@@ -117,7 +118,8 @@ This report verifies that we have budget and PUDR files for all grants in the ye
 
 The list of grants in this time period is:  
 ```{r, echo=FALSE, warning=FALSE}
-kable(current_grants)
+kable(current_grants) %>%
+  kable_styling(font_size=9)
 ```
 
 This list is built from the metadata from the Global Fund's website.  
@@ -130,56 +132,64 @@ The total number of missing PUDR quarters we have with this version of the datab
 ```{r, warning=FALSE, echo=FALSE}
 drc_pudrs = pudr_coverage("cod", "DRC")
 drc_pudrs
-kable(missing_pudr_qtrs[loc_name=="cod", .(grant, year, quarter)])
+kable(missing_pudr_qtrs[loc_name=="cod", .(grant, year, quarter)]) %>%
+  kable_styling(font_size=9)
 ```
 
 ## DRC Missing Budgets 
 ```{r, warning=FALSE, echo=FALSE}
 drc_budget = budget_coverage("cod", "DRC")
 drc_budget
-kable(missing_budget_qtrs[loc_name=="cod", .(grant, year, quarter)])
+kable(missing_budget_qtrs[loc_name=="cod", .(grant, year, quarter)]) %>%
+  kable_styling(font_size=9)
 ```
 
 ## Guatemala Missing PUDRs
 ```{r, warning=FALSE, echo=FALSE}
 gtm_pudrs = pudr_coverage("gtm", "Guatemala")
 gtm_pudrs
-kable(missing_pudr_qtrs[loc_name=="gtm", .(grant, year, quarter)])
+kable(missing_pudr_qtrs[loc_name=="gtm", .(grant, year, quarter)]) %>%
+  kable_styling(font_size=9)
 ```
 
 ## Guatemala Missing Budgets 
 ```{r, warning=FALSE, echo=FALSE}
 gtm_budget = budget_coverage("gtm", "Guatemala")
 gtm_budget
-kable(missing_budget_qtrs[loc_name=="gtm", .(grant, year, quarter)])
+kable(missing_budget_qtrs[loc_name=="gtm", .(grant, year, quarter)]) %>%
+  kable_styling(font_size=9)
 ```
 
 ## Senegal Missing PUDRs
 ```{r, warning=FALSE, echo=FALSE}
 sen_pudrs = pudr_coverage("sen", "Senegal")
 sen_pudrs
-kable(missing_pudr_qtrs[loc_name=="sen", .(grant, year, quarter)])
+kable(missing_pudr_qtrs[loc_name=="sen", .(grant, year, quarter)]) %>%
+  kable_styling(font_size=9)
 ```
 
 ## Senegal Missing Budgets 
 ```{r, warning=FALSE, echo=FALSE}
 sen_budget = budget_coverage("sen", "Senegal")
 sen_budget
-kable(missing_budget_qtrs[loc_name=="sen", .(grant, year, quarter)])
+kable(missing_budget_qtrs[loc_name=="sen", .(grant, year, quarter)]) %>%
+  kable_styling(font_size=9)
 ```
 
 ## Uganda Missing PUDRs
 ```{r, warning=FALSE, echo=FALSE}
 uga_pudrs = pudr_coverage("uga", "Uganda")
 uga_pudrs
-kable(missing_pudr_qtrs[loc_name=="uga", .(grant, year, quarter)])
+kable(missing_pudr_qtrs[loc_name=="uga", .(grant, year, quarter)]) %>%
+  kable_styling(font_size=9)
 ```
 
 ## Uganda Missing Budgets 
 ```{r, warning=FALSE, echo=FALSE}
 uga_budget = budget_coverage("uga", "Uganda")
 uga_budget
-kable(missing_budget_qtrs[loc_name=="uga", .(grant, year, quarter)])
+kable(missing_budget_qtrs[loc_name=="uga", .(grant, year, quarter)]) %>%
+  kable_styling(font_size=9)
 ```
 
 

@@ -7,6 +7,7 @@
 #Read in packages 
 library(data.table)
 library(openxlsx)
+library(readxl)
 library(stringr)
 
 #Set options 

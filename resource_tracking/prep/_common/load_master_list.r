@@ -71,7 +71,7 @@ load_master_list = function(purpose=NULL) {
     sheet_check = unique(dt[, .(file_name, sheet_financial)])
     names(sheet_check) = c('file_name', 'sheet')
   } else {
-    sheet_check = unique(dt[, .(file_name, sheet_programmatic)])
+    sheet_check = unique(dt[, .(file_name, sheet_impact_outcome_1a)])
     names(sheet_check) = c('file_name', 'sheet')
   }
   sheet_check = sheet_check[, .N, by=c('file_name', 'sheet')]
@@ -106,7 +106,7 @@ load_master_list = function(purpose=NULL) {
   
   if (purpose=="performance indicators") {
     keep_cols = c('function_programmatic', 'sheet_impact_outcome_1a', 'sheet_impact_outcome_1a_disagg', 'sheet_coverage_1b', 'sheet_coverage_1b_disagg', 
-                  'start_date_programmatic', 'end_date_programmatic', 'language_programmatic', 'pudr_semester_programmatic')
+                  'start_date_programmatic', 'end_date_programmatic', 'language_1a', 'language_1a_disagg', 'language_1b', 'language_1b_disagg', 'pudr_semester_programmatic')
     keep_cols = c(core_cols, keep_cols)
     dt = dt[, c(keep_cols), with=F]
     
