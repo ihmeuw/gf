@@ -44,7 +44,7 @@ only_new_files = FALSE # Set to true if, when you re-run file list, you only wan
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
-    country = "sen" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+    country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
     master_file_dir = ifelse(Sys.info()[1]=='Windows', paste0(box, toupper(country), "/raw_data/"), 
                              paste0(dir, "_gf_files_gos/", country, "/raw_data/"))
     export_dir = ifelse(Sys.info()[1]=="Windows", paste0(box, country, "/prepped_data/"),
@@ -65,8 +65,8 @@ if (prep_files | prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
   source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
-  # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
-  # source(paste0(code_dir, "2f_gf_verify_outputs.R"))
+  source(paste0(code_dir, "2e_gf_aggregate_files.R"))
+  source(paste0(code_dir, "2f_gf_verify_outputs.R"))
   # 
   # rmarkdown::render(paste0(code_dir, "2g_gf_visualize_data.rmd",
   #                          output_dir=paste0(dir, "/visualizations/verification"),
