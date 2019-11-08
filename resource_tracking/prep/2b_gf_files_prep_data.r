@@ -153,6 +153,14 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   #If you only prepped new files, bind this together with the already-prepped data. 
   if (only_new_files==TRUE){
     resource_database = rbind(resource_database, already_prepped, fill=T)
+    
+    #Check to make sure there aren't duplicates in final files. 
+    dup_files = unique(resource_database[file_iteration=="final", .(grant, grant_period, data_source, start_date, period_financial, file_name)])[order(grant, grant_period, data_source, start_date, period_financial)]
+    dup_files[, dup:=.N, by=c('grant', 'grant_period', 'data_source', 'start_date', 'period_financial')]
+    if (nrow(dup_files[dup>=2])>0) {
+      print(dup_files[dup>=2])
+      stop("There are duplicate files tagged 'final'.")
+    }
   }
   
   saveRDS(resource_database, paste0(export_dir, "raw_bound_gf_files.RDS"))
@@ -200,7 +208,7 @@ verified_0_expenditure <- c("UGA-C-TASO_PU_PEJune2017_LFA_30Nov17.xlsx", "UGA-M-
                             "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx", 
                             "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx", "Core_SANRU_PU_P3141116.xlsm", "PSI PU NFM S1 2016 09102016.xlsm", 
                             "Core_PUDR_P30_HivosGT_231116_ LFA Signed.xlsx", "Core_PUDR_MALARIA_P12_03-03-17_Revisado ALF.xlsx",  
-                            "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.XLSX") #These files have 0 for all expenditure.
+                            "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.XLSX", "GTM-M-MSPAS_Progress Report_30Jun2019_REV LFA.XLSX") #These files have 0 for all expenditure.
 
 #Make sure that no files have a total sum of 0; this would indicate an error in the prep code. 
 check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by=.(file_name)]

@@ -217,7 +217,7 @@ final_expenditures[, year:=year(start_date)]
 final_expenditures[, data_source:='pudr']
 
 #Drop unneeded variables, and generate a few needed ones
-gos_expenditures = gos_data[, -c('activity_description', 'budget', 'country', 'current_grant', 'file_name', 'includes_rssh', 'orig_module',
+gos_expenditures = gos_data[, -c('activity_description', 'country', 'current_grant', 'file_name', 'includes_rssh', 'orig_module',
                                  'orig_intervention', 'quarter', 'year', 'lfa_exp_adjustment')]
 gos_expenditures[, data_source:='gos']
 gos_expenditures[, end_date:=(start_date%m+%months(3))-1] #All of the GOS data is at the quarter-level. 
@@ -335,10 +335,10 @@ saveRDS(absorption_files, paste0(final_write, "archive/absorption_", Sys.Date(),
 #----------------------------------
 # 4. GF FILE ITERATIONS
 #----------------------------------
-all_gf_cod = readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/budget_pudr_iterations.rds"))
-all_gf_uga = readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/budget_pudr_iterations.rds"))  
-all_gf_gtm = readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/budget_pudr_iterations.rds"))
-all_gf_sen = readRDS(paste0(dir, "_gf_files_gos/sen/prepped_data/budget_pudr_iterations.rds"))
+all_gf_cod = readRDS(paste0(cod_prepped, "budget_pudr_iterations.rds"))
+all_gf_uga = readRDS(paste0(uga_prepped, "budget_pudr_iterations.rds"))  
+all_gf_gtm = readRDS(paste0(gtm_prepped, "budget_pudr_iterations.rds"))
+all_gf_sen = readRDS(paste0(sen_prepped, "budget_pudr_iterations.rds"))
 
 all_files = list(all_gf_cod, all_gf_gtm, all_gf_uga, all_gf_sen)
 all_gf_files = rbindlist(all_files, use.names = TRUE, fill = TRUE)

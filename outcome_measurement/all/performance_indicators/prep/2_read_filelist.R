@@ -73,7 +73,7 @@ if (prep_1a){
           file_dir = paste0(file_dir, version, "/")
         }
         
-        args = list(file_dir, file_list$file_name[i], file_list$sheet_impact_outcome_1a[i], file_list$language_programmatic[i])
+        args = list(file_dir, file_list$file_name[i], file_list$sheet_impact_outcome_1a[i], file_list$language_1a[i])
         tmpData = do.call(prep_impact_outcome_1A, args) 
         
         #Append important columns from the file list 
@@ -94,11 +94,11 @@ if (prep_1a){
       }
       
       #Save the country-level file 
-      saveRDS(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1A.rds"))
-      write.csv(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1A.csv"), row.names=F)
+      saveRDS(impact_outcome1A, paste0(prepped_dir, country, "_1A.rds"))
+      write.csv(impact_outcome1A, paste0(prepped_dir, country, "_1A.csv"), row.names=F)
       
       #Archive a copy 
-      saveRDS(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/archive/", country, "_1A_", Sys.Date(), ".rds"))
+      saveRDS(impact_outcome1A, paste0(prepped_dir, "archive/", country, "_1A_", Sys.Date(), ".rds"))
       
     } else {
       print(paste0("No applicable Coverage 1A files for ", country))
@@ -140,7 +140,7 @@ if (prep_1a_disagg){
           file_dir = paste0(file_dir, version, "/")
         }
         
-        args = list(file_dir, file_list$file_name[i], file_list$sheet_impact_outcome_1a_disagg[i], file_list$language_programmatic[i])
+        args = list(file_dir, file_list$file_name[i], file_list$sheet_impact_outcome_1a_disagg[i], file_list$language_1a_disagg[i])
         tmpData = do.call(prep_impact_outcome_1A_disagg, args) 
         
         #Append important columns from the file list 
@@ -161,11 +161,11 @@ if (prep_1a_disagg){
       }
       
       #Save the country-level file 
-      saveRDS(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1A_disagg.rds"))
-      write.csv(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1A_disagg.csv"), row.names=F)
+      saveRDS(impact_outcome1A, paste0(prepped_dir, country, "_1A_disagg.rds"))
+      write.csv(impact_outcome1A, paste0(prepped_dir, country, "_1A_disagg.csv"), row.names=F)
       
       #Archive a copy 
-      saveRDS(impact_outcome1A, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/archive/", country, "_1A_disagg_", Sys.Date(), ".rds"))
+      saveRDS(impact_outcome1A, paste0(prepped_dir, "archive/", country, "_1A_disagg_", Sys.Date(), ".rds"))
       
     } else {
       print(paste0("No applicable Coverage 1A disaggregated files for ", country))
@@ -207,7 +207,7 @@ if (prep_1b){
         file_dir = paste0(file_dir, version, "/")
       }
       
-      args = list(file_dir, file_list$file_name[i], file_list$sheet_coverage_1b[i], file_list$language_programmatic[i])
+      args = list(file_dir, file_list$file_name[i], file_list$sheet_coverage_1b[i], file_list$language_1b[i])
       tmpData = do.call(prep_coverage_1B, args) 
       
       #Append important columns from the file list 
@@ -228,11 +228,11 @@ if (prep_1b){
     }
     
     #Save the country-level file 
-    saveRDS(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1B.rds"))
-    write.csv(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1B.csv"), row.names=F)
+    saveRDS(coverage1B, paste0(prepped_dir, country, "_1B.rds"))
+    write.csv(coverage1B, paste0(prepped_dir, country, "_1B.csv"), row.names=F)
     
     #Archive a copy 
-    saveRDS(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/archive/", country, "_1B_", Sys.Date(), ".rds"))
+    saveRDS(coverage1B, paste0(prepped_dir, "archive/", country, "_1B_", Sys.Date(), ".rds"))
     
     } else {
       print(paste0("No applicable Coverage 1B files for ", country))
@@ -274,7 +274,7 @@ if (prep_1b_disagg){
           file_dir = paste0(file_dir, version, "/")
         }
         
-        args = list(file_dir, file_list$file_name[i], file_list$sheet_coverage_1b_disagg[i], file_list$language_programmatic[i])
+        args = list(file_dir, file_list$file_name[i], file_list$sheet_coverage_1b_disagg[i], file_list$language_1b_disagg[i])
         tmpData = do.call(prep_coverage_1B_disagg, args) 
         
         #Append important columns from the file list 
@@ -295,11 +295,11 @@ if (prep_1b_disagg){
       }
       
       #Save the country-level file 
-      saveRDS(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1B_disagg.rds"))
-      write.csv(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/", country, "_1B_disagg.csv"), row.names=F)
+      saveRDS(coverage1B, paste0(prepped_dir, country, "_1B_disagg.rds"))
+      write.csv(coverage1B, paste0(prepped_dir, country, "_1B_disagg.csv"), row.names=F)
       
       #Archive a copy 
-      saveRDS(coverage1B, paste0("J:/Project/Evaluation/GF/process_evaluation/pudr_indicator_extraction/prepped_data/archive/", country, "_1B_disagg_", Sys.Date(), ".rds"))
+      saveRDS(coverage1B, paste0(prepped_dir, "archive/", country, "_1B_disagg_", Sys.Date(), ".rds"))
       
     } else {
       print(paste0("No applicable Coverage 1B disaggregated files for ", country))
