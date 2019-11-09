@@ -20,6 +20,15 @@ uga = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/absor
 #   assign(loc, get(loc)[start_date=="2019-01-01"])
 # }
 
+# Make tables for cross-country synthesis google doc 
+all_absorption = rbindlist(list(cod, gtm, sen, uga))
+synthesis_table = all_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'grant', 'semester', 'gf_module', 'gf_intervention')]
+synthesis_table[, absorption:=round((expenditure/budget)*100, 1)]
+synthesis_table = synthesis_table[, .(grant, grant_period, semester, gf_module, gf_intervention, absorption, expenditure, budget)][order(grant, grant_period, semester, gf_module)]
+
+current_grants = c('2018-2020', '2018-2018', '2019-2021', '2016-2019', '2019-2022')
+synthesis_table = synthesis_table[grant_period%in%current_grants]
+write.csv(synthesis_table, "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/synthesis_google_sheet_ihme.csv", row.names=F)
 
 #Malaria 
 for (loc in c('cod', 'gtm', 'sen', 'uga')){ 

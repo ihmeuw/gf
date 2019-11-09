@@ -31,16 +31,16 @@ rows2 = nrow(dt)
 stopifnot(merge1==merge2 & rows1==rows2)
 
 #Collapse to module level. 
-by_module = dt[, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T)), by=c('grant', 'grant_period', 'abbrev_mod_eng')]
+by_module = dt[, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T), v3=sum(v3, na.rm=T)), by=c('grant', 'grant_period', 'abbrev_mod_eng')]
 by_module = melt(by_module, id.vars=c('grant', 'grant_period', 'abbrev_mod_eng'), value.name="budget", variable.name="version")
 by_module[, label:=paste0("$", round(budget))]
-by_module[, version:=factor(version, levels=c('v2', 'v1', 'v0'), labels=c('v2', 'v1', 'v0'))] #Reverse this factoring so it shows up on the graph in the right order. 
+by_module[, version:=factor(version, levels=c('v3', 'v2', 'v1', 'v0'), labels=c('v3', 'v2', 'v1', 'v0'))] #Reverse this factoring so it shows up on the graph in the right order. 
 
 #Collapse by intervention. 
-by_intervention = dt[, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T)), by=c('grant', 'grant_period', 'abbrev_mod_eng', 'abbrev_int_eng')]
+by_intervention = dt[, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T), v3=sum(v3, na.rm=T)), by=c('grant', 'grant_period', 'abbrev_mod_eng', 'abbrev_int_eng')]
 by_intervention = melt(by_intervention, id.vars=c('grant', 'grant_period', 'abbrev_mod_eng', 'abbrev_int_eng'), value.name="budget", variable.name="version")
 by_intervention[, label:=paste0("$", round(budget))]
-by_intervention[, version:=factor(version, levels=c('v2', 'v1', 'v0'), labels=c('v2', 'v1', 'v0'))] #Reverse this factoring so it shows up on the graph in the right order. 
+by_intervention[, version:=factor(version, levels=c('v3', 'v2', 'v1', 'v0'), labels=c('v3', 'v2', 'v1', 'v0'))] #Reverse this factoring so it shows up on the graph in the right order. 
 
 #Read in the master file list to pull the names of the file revisions. 
 file_list = data.table(read_excel("C:/Users/elineb/Box Sync/Global Fund Files/master_file_list.xlsx"))

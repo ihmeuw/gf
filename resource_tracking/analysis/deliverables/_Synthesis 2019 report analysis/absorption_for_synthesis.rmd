@@ -274,6 +274,27 @@ ggplot(catalytic, aes(x=concat, y=absorption, fill=grant, label=label)) +
 
 ```
 
+# Budget/expenditure for catalytic/matching funds 
+```{r catalytic2}
+ catalytic_melt = catalytic[, .(concat, budget, expenditure, label)]
+  catalytic_melt = melt(catalytic_melt, id.vars=c('concat', 'label'), variable.name='variable', value.name='amount')
+  catalytic_melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  catalytic_melt[variable=="expenditure", label:=paste0(dollar(amount), " (", label, ")")]
+  
+  #Fix budget and expenditure so they display nicely 
+  catalytic_melt[variable=="budget", variable:="Budget"]
+  catalytic_melt[variable=="expenditure", variable:="Expenditure"] 
+  
+  ggplot(catalytic_melt, aes(x=concat, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Budget/Expenditure for modules that have\nreceived catalytic/matching funds"), subtitle="January 2018-January 2019", x="Module", y="Amount ($)", fill="", 
+       caption="Labels show expenditure amounts and absorption percentages")
+```
+
 # Across grants, which modules have higher absorption than the PUDR average in 2019? 
 This is based on the 14 PUDRs from DRC, Senegal, and Uganda, and is calculated by comparing the absorption for a given module to the absorption performance of the rest of the PUDR. So, for example, if a module performs below the 25th-percentile of absorption within a given PUDR, it will be given an absorption performance rating of "Very low". 
 
@@ -548,7 +569,7 @@ Using 2018-2020 PUDRs, we wanted to know:
 ```{r rssh_counts} 
 rssh_mods = c('Health management information system and monitoring and evaluation', "Human resources for health, including community health workers", 
               "Community responses and systems", "National health strategies", "Integrated service delivery and quality improvement", 
-              "Procurement and supply chain management systems")
+              "Procurement and supply chain management systems", "Financial management systems")
 
 kable_data = unique(cumulative_absorption[gf_module%in%rssh_mods, .(grant, abbrev_mod)])
 kable_data = kable_data[, .(count=.N), by=c('abbrev_mod')]
@@ -562,7 +583,7 @@ kable(kable_data[order(-count)], col.names=c('Module', 'Number of Grants')) %>%
 ```{r slide4, results="asis"}
 rssh_mods = c('Health management information system and monitoring and evaluation', "Human resources for health, including community health workers", 
               "Community responses and systems", "National health strategies", "Integrated service delivery and quality improvement", 
-              "Procurement and supply chain management systems")
+              "Procurement and supply chain management systems", "Financial management systems")
 
 plot_data = cumulative_absorption[gf_module%in%rssh_mods, .(budget=sum(cumulative_budget, na.rm=TRUE), expenditure=sum(cumulative_expenditure, na.rm=TRUE)), by=c('abbrev_mod')] #Collapse across grants
 plot_data[, absorption:=round((expenditure/budget)*100, 1)]

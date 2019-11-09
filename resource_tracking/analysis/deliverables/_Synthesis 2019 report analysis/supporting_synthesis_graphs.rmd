@@ -1,0 +1,107 @@
+---
+title: "Supporting synthesis graphs"
+author: "IHME/PATH Consortium"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: beamer_presentation
+---
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(data.table) 
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(Hmisc)
+library(glue)
+library(memisc)
+library(wesanderson)
+library(gridExtra)
+library(scales)
+library(pander)
+library(RColorBrewer)
+
+options(scipen=15)
+
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
+png_save = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/Synthesis 2019/"
+
+#Final budgets 
+final_budgets = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/final_budgets.rds")
+
+# Budget revisions
+drc_revisions = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/budget_revisions.rds")
+gtm_revisions = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/GTM/prepped_data/budget_revisions.rds")
+sen_revisions = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/SEN/prepped_data/budget_revisions.rds")
+uga_revisions = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/budget_revisions.rds")
+
+all_revisions = rbindlist(list(drc_revisions, gtm_revisions, sen_revisions, uga_revisions), fill=T, use.names=T)
+
+#Tag key populations for HIV and TB
+hiv_kp_mods = c("Comprehensive prevention programs for men who have sex with men", "Comprehensive prevention programs for people who inject drugs and their partners", "Comprehensive prevention programs for sex workers and their clients", "Comprehensive prevention programs for transgender people", "Prevention programs for adolescents and youth, in and out of school", "Prevention programs for other vulnerable populations", "Programs to reduce human rights-related barriers to HIV services")
+tb_kp_ints = unique(final_budgets$gf_intervention[grep("key populations", tolower(final_budgets$gf_intervention))])
+
+final_budgets[gf_module%in%hiv_kp_mods, hiv_kp:=TRUE]
+final_budgets[is.na(hiv_kp), hiv_kp:=FALSE]
+final_budgets[gf_intervention%in%tb_kp_ints, tb_kp:=TRUE]
+final_budgets[is.na(tb_kp), tb_kp:=FALSE]
+
+all_revisions[gf_module%in%hiv_kp_mods, hiv_kp:=TRUE]
+all_revisions[is.na(hiv_kp), hiv_kp:=FALSE]
+all_revisions[gf_intervention%in%tb_kp_ints, tb_kp:=TRUE]
+all_revisions[is.na(tb_kp), tb_kp:=FALSE]
+
+#What are the current grant periods? 
+current_periods = c('2016-2019', '2018-2020', '2019-2021', '2019-2022')
+```
+
+# What percentage of each budget is going to HIV key populations and human rights? 
+```{r total_budget_kp_hiv} 
+hiv_plot_data = final_budgets[grant_period%in%current_periods, .(key_populations=sum(budget, na.rm=T)), by=c('grant', 'grant_period', 'hiv_kp')]
+
+all_grants = expand.grid(grant=unique(hiv_plot_data$grant), hiv_kp=c(TRUE, FALSE))
+hiv_plot_data = merge(hiv_plot_data, all_grants, by=c('grant', 'hiv_kp'), all=T)
+hiv_plot_data[is.na(key_populations), key_populations:=0]
+
+hiv_plot_data[, total:=sum(key_populations, na.rm=T), by=c('grant', 'grant_period')]
+hiv_plot_data[, percentage:=round((key_populations/total)*100, 1)]
+hiv_plot_data[is.na(percentage), percentage:=0]
+
+hiv_plot_data = hiv_plot_data[hiv_kp==TRUE]
+
+ggplot(hiv_plot_data, aes(x=grant, y=percentage, label=paste0(percentage, "%"))) + 
+  geom_bar(stat="identity", fill="blueviolet") +
+  geom_text() + 
+  theme_bw() + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 100))
+  labs(title="Percentage of each budget going to HIV KPs", x="Grant", y="Absorption (%)")
+```
+
+# What percentage of each budget is going to HIV key populations and human rights? 
+```{r total_budget_kp_hiv} 
+hiv_melt = hiv_plot_data[, .(grant, key_populations, total, percentage)]
+hiv_melt = melt(hiv_melt, id.vars=c('grant', 'percentage'))
+hiv_melt[, label:=paste0(dollar(value), " (", percentage, "%)")]
+hiv_melt[variable=="total", label:=""]
+
+ggplot(hiv_melt[variable=="total"], aes(x=grant, y=value, fill="gray87")) + 
+  geom_bar(data=hiv_melt[variable=="total"], aes(x=grant, y=value, alpha=0.3, fill="gray87", guide=FALSE), stat="identity", position="identity") +
+  geom_bar(data=hiv_melt[variable=="key_populations"], aes(x=grant, y=value, fill="green3"), stat="identity", position="identity") +
+  geom_text(data=hiv_melt[variable=="key_populations"], aes(x=grant, y=value, label=label), hjust=0) + 
+  theme_bw() + 
+  coord_flip() + 
+  scale_y_continuous(labels=scales::dollar) + 
+  theme(legend.position="none") + 
+  labs(title="Budget going to HIV KPs out of total", x="Grant", y="Budget (USD)")
+```
+
+# What percentage of each budget is going to TB key populations?
+```{r total_budget_kp_tb} 
+tb_plot_data = final_budgets[grant_period%in%current_periods, .(budget=sum(budget, na.rm=T)), by=c('grant', 'grant_period', 'hiv_kp')]
+tb_plot_data[, total:=sum(budget), by=c('grant', 'grant_period')]
+
+```
+
+# How has the funding for key populations and human rights changed through grant revision?
+
+# When there are budget revisions, do they mainly go towards 
