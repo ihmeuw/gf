@@ -12,7 +12,7 @@ source('impact_evaluation/sen/set_up_r.R')
 # Read in previously prepped datasets 
 #------------------------------------
 
-final_expenditures <- readRDS(expendituresFile)
+expenditures <- readRDS(expendituresFile)
 who <- readRDS(whoFile)
 fgh <- readRDS(fghFile)
 fgh = fgh[, .(year, loc_name, disease, code, gf_module, gf_intervention, channel_agg, source, disbursement)]
@@ -23,7 +23,7 @@ setnames(fgh, old=c('gf_module', 'gf_intervention'), new=c('module', 'interventi
 #------------------------------------
 
 # Subset to only the columns we want from resource tracking database (TB grants in Senegal)
-exp_subset <- final_expenditures[grant %in% c("SEN-Z-MOH", "SNG-T-PLAN", "SNG-T-PNT"), .(expenditure, start_date, code, disease, gf_module, gf_intervention)] # kept only Z grant & Tb-spec funding
+exp_subset <- expenditures[grant %in% c("SEN-Z-MOH", "SNG-T-PLAN", "SNG-T-PNT"), .(expenditure, start_date, code, disease, gf_module, gf_intervention)] # kept only Z grant & Tb-spec funding
 setnames(exp_subset, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
 
 ############################## modules ##################
@@ -143,6 +143,51 @@ ghe = ghe[, .(date, ghe)]
 rt_wide = merge(rt_wide, ghe, by='date', all.x = TRUE)
 # oop = oop[, .(date, oop)]
 # rt_wide = merge(rt_wide, oop, by='date', all.x = TRUE)
+
+####################################################
+# Additoinal RSSH prep based on 
+# Decision 8/20/19 Jen Ross - add in RSSH spent each year as a proportion of GF spending on sub-disease (tb community care, tb/hiv, mdr-tb, case detection and diagnosis) to each of these variables. 
+######################################################
+# Expenditures - code that start with T2 is HIV/TB, and T3 is MDR-TB. T1_5 is TB community care, T1_1 is case detection and diagnosis
+expenditures[, short_code:=substr(code, 1, 2)]
+unique(expenditures$short_code)
+
+expenditures[code=="T1_5", gf_tbcare:=sum(expenditure, na.rm=T), by=c('code', 'date')]
+expenditures[code=="T1_1", gf_detect:=sum(expenditure, na.rm=T), by=c('code', 'date')]
+expenditures[short_code=="T2", gf_tbhiv:=sum(expenditure, na.rm=T), by=c('short_code', 'date')]
+expenditures[short_code=="T3", gf_mdrtb:=sum(expenditure, na.rm=T), by=c('short_code', 'date')]
+
+exp_wide = expenditures[, .(date, gf_tbcare, gf_detect, gf_tbhiv, gf_mdrtb)]
+exp_wide = expenditures[, .(gf_tbcare=sum(gf_tbcare, na.rm=T), gf_detect(gf_detect, na.rm=T), gf_tbhiv=sum(gf_tbhiv, na.rm=T), gf_mdrtb=sum(gf_mdrtb, na.rm=T)), by='date']
+
+
+gf_proportions = rt_wide[, .(gf_tbcare=gf_tbcare/(gf_tbcare+gf_tbhiv+gf_mdrtb+gf_detect), 
+                              gf_tbhiv=gf_tbhiv/(gf_tbcare+gf_tbhiv+gf_mdrtb+gf_detect), 
+                              gf_mdrtb=gf_mdrtb/(gf_tbcare+gf_tbhiv+gf_mdrtb+gf_detect),
+                          gf_screen=gf_detect/(gf_tbcare+gf_tbhiv+gf_mdrtb+gf_detect)),by='date']
+
+gf_proportions[, total:=(gf_tbcare+gf_tbhiv+gf_mdrtb+gf_detect)]
+
+#For cases where total isn't one, all spending is NA.
+gf_proportions[is.na(total), c('gf_tbcare', 'gf_tbhiv', 'gf_mdrtb', 'gf_detect'):=1/4]
+
+exp_rssh_wide = expenditures[disease=='rssh' & grant_disease%in%c('hiv/tb', 'tb'), .(rssh=sum(expenditure, na.rm=T)), by='date']
+exp_rssh_wide = merge(exp_rssh_wide, gf_proportions, by='date', all=T)
+
+#Multiply rssh by each proportion respectively to get the total RSSH you should add to that variable.
+exp_rssh_wide[, gf_tb_rssh:=rssh*gf_tb]
+exp_rssh_wide[, gf_tbhiv_rssh:=rssh*gf_tbhiv]
+exp_rssh_wide[, gf_mdrtb_rssh:=rssh*gf_mdrtb]
+for (c in names(exp_rssh_wide)){
+  exp_rssh_wide[is.na(get(c)), (c):=0]
+}
+
+#Merge this new rssh expenditure data back onto original GF data and add.
+exp_wide = merge(exp_wide, exp_rssh_wide[, .(date, gf_tb_rssh, gf_tbhiv_rssh, gf_mdrtb_rssh)], by='date', all=T)
+exp_wide[, gf_tb:=gf_tb+gf_tb_rssh]
+exp_wide[, gf_mdrtb:=gf_mdrtb+gf_mdrtb_rssh]
+exp_wide[, gf_tbhiv:=gf_tbhiv+gf_tbhiv_rssh]
+exp_wide = exp_wide[, .(date, gf_tb, gf_tbhiv, gf_mdrtb)]
 
 #------------------------------
 # Save output file

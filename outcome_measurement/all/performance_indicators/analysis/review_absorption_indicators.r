@@ -37,6 +37,18 @@ dt[, loc_name:=toupper(loc_name)]
 #-----------------------------------
 pdf("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/visualizations/absorption_indicators_comparison3.pdf", width=10, height=8)
 #First, run a scatter plot of achivement ratio vs. absorption percentage. 
+ggplot(dt[start_date>="2019-01-01"], aes(x=absorption, y=ihme_result_achievement_ratio)) + 
+  geom_point() + 
+  theme_bw(base_size=18) +
+  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
+  geom_smooth(method = "lm")
+
+ggplot(dt[start_date>="2019-01-01"], aes(x=absorption, y=ihme_result_achievement_ratio, color=disease)) + 
+  geom_point() + 
+  theme_bw(base_size=18)+
+  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
+  geom_smooth(method = "lm", se=FALSE)
+
 ggplot(dt[start_date>="2018-01-01"], aes(x=absorption, y=ihme_result_achievement_ratio)) + 
   geom_point() + 
   theme_bw(base_size=18) + 

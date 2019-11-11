@@ -1,0 +1,127 @@
+---
+title: "DRC Performance Indicators"
+author: "Francisco Rios Casas"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+library(data.table)
+library(ggplot2)
+library(knitr)
+library(dplyr)
+library(kableExtra)
+library(scales)
+
+# load data
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.RDS")
+
+# set parameters of data to be analyzed
+country = "cod"
+main_indicators = c('impact_outcome_indicators_main', 'coverage_indicators_main')
+beginning = "2019-01-01"
+end = "2019-06-30"
+ 
+# recent_pudrs = c('Malaria_MOH_PUDR_S1 2019_LFA verified.xlsx',
+#                  'Malaria_SANRU_PUDR S1 2019_LFA verified.xlsx',
+#                  'CORDAID_PUDR_S1 2019_not verified.xlsx',
+#                  'HIV_MOH_PUDR_S1 2019_not verified.xlsx',
+#                  'Copy of LFA_COD-T-MOH_Progress Report_30Jun2019_CCF_Final_10092019.xlsx')
+LFA_verified_grants = c('Malaria_MOH_PUDR_S1 2019_LFA verified.xlsx',
+                 'Malaria_SANRU_PUDR S1 2019_LFA verified.xlsx',
+                 'LFA_Review_COD-C-CORDAID_PU 30 June 2018_Sent_27092018_OK.xlsx',
+                 'LFA Review_COD-H-MOH_Progress  Report_30Jun2018_07092018 ok_Sent 01102018.OK.xlsx',
+                 'Copy of LFA_COD-T-MOH_Progress Report_30Jun2019_CCF_Final_10092019.xlsx') # file names of most-recent LFA-verified grants
+
+
+# subset as appropriate
+DT <- data
+DT = DT[loc_name==country & pudr_sheet %in% main_indicators & start_date_programmatic==beginning & end_date_programmatic==end]
+```
+
+
+## 1. Introduction  
+
+This document highlights the results for Performance Indicators in DRC. Data for indicators all came from the latest available Progress Update and Disbursement Request forms (PUDRs) indicated below:  
+
+
+```{r toc}
+
+recent_pudrs = unique(DT[,.(file_name, start_date_programmatic, end_date_programmatic)])
+kable(recent_pudrs, col.names=c("File", "Start of Reporting Period", "End of Reporting Period")) %>%
+  column_spec(c(2,3),width = "10em")
+```
+
+
+## 2. Grant Results based on most recent PUDRs  
+
+
+The "Achievement Ratio" is calculated in the PUDR to understand how close to the original target the Outcome Indicator result is. A value of 1.0 or greater means that the Indicators goal has been met or exceeded. There are some exceptions in which a value further below 1.0 means that the goal has been exceeded.
+
+
+
+```{r plot_results}
+# plots grant performance in a loop for all grants in country
+# Where achievement ratio is above 2, cap at 2. 
+DT[ihme_result_achievement_ratio>2.0, ihme_result_achievement_ratio:=2.0]
+grants = unique(DT$grant)
+plots = list()
+i=1
+for(g in grants) {
+plots[[i]] = ggplot(DT[grant==g], aes(x=brief_description_code, y=ihme_result_achievement_ratio, col=target_met)) +
+  geom_point() +
+  labs(col= "Target Met", title="", y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT[grant==g]$file_name))) +
+  geom_hline(yintercept = 1) +
+  theme_bw()+
+  coord_flip()+
+  ylim(0,2)+
+  theme(legend.position = "bottom")+
+  theme_bw()
+i=i+1
+}
+```
+
+### Malaria Grants
+
+```{r}
+plots[[1]]
+```
+
+**The lowest performing indicator is the number of LLIN distributed through mass campaigns.**
+
+```{r}
+plots[[2]]
+```
+
+
+**The SANRU Malaria grant reported similar results as the MOH Malaria grant for the lowest performing indicator (Number of LLIN distributed through mass campaign). Proportion of facilities without stock outs was the other indicator showing the lowest performance. The rest of the indicators for this grant appear to be close to the planned targets.**
+
+
+### TB Grants
+```{r}
+plots[[5]]
+```
+
+**Although several general population-wide TB targets are being met such as treatment success rate, several indicators relating to TB/HIV such as preventive therapy, screening, and treatment are not reaching the intended targets.**
+
+### HIV Grants
+```{r}
+plots[[4]]
+```
+
+**Indicators with the lowest achievement ratios included people living with HIV who were screened for TB and HIV-exposed infants receiving a virological test for HIV shortly after birth. However, the rest of the grant's indicators were close to target.** 
+
+### Combined TB/HIV Grant
+
+```{r}
+plots[[3]]
+```
+
+**Several indicators related to key and vulnerable populations including people who inject drugs (PWID), sex workers (SW) and men who have sex with men (MSM) were close to or exceeding their targets. However, facility-level indicators on drugs such as stock-outs for anti-TB medications and ARV drugs were not meeting expected targets.**
+
