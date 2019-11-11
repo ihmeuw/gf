@@ -3,6 +3,8 @@ title: "DRC Performance Indicators"
 author: "Francisco Rios Casas"
 date: "10/29/2019"
 output:
+  html_document:
+    df_print: paged
   pdf_document: default
   word_document: default
 ---
@@ -17,28 +19,30 @@ library(dplyr)
 library(kableExtra)
 library(scales)
 
+# load data
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.RDS")
+
 # set parameters of data to be analyzed
 country = "cod"
 main_indicators = c('impact_outcome_indicators_main', 'coverage_indicators_main')
-recent_pudrs = c('Malaria_MOH_PUDR_S1 2019_LFA verified.xlsx',
-                 'Malaria_SANRU_PUDR S1 2019_LFA verified.xlsx',
-                 'CORDAID_PUDR_S1 2019_not verified.xlsx',
-                 'HIV_MOH_PUDR_S1 2019_not verified.xlsx',
-                 'Copy of LFA_COD-T-MOH_Progress Report_30Jun2019_CCF_Final_10092019.xlsx')
+beginning = "2019-01-01"
+end = "2019-06-30"
+ 
+# recent_pudrs = c('Malaria_MOH_PUDR_S1 2019_LFA verified.xlsx',
+#                  'Malaria_SANRU_PUDR S1 2019_LFA verified.xlsx',
+#                  'CORDAID_PUDR_S1 2019_not verified.xlsx',
+#                  'HIV_MOH_PUDR_S1 2019_not verified.xlsx',
+#                  'Copy of LFA_COD-T-MOH_Progress Report_30Jun2019_CCF_Final_10092019.xlsx')
 LFA_verified_grants = c('Malaria_MOH_PUDR_S1 2019_LFA verified.xlsx',
                  'Malaria_SANRU_PUDR S1 2019_LFA verified.xlsx',
                  'LFA_Review_COD-C-CORDAID_PU 30 June 2018_Sent_27092018_OK.xlsx',
                  'LFA Review_COD-H-MOH_Progress  Report_30Jun2018_07092018 ok_Sent 01102018.OK.xlsx',
                  'Copy of LFA_COD-T-MOH_Progress Report_30Jun2019_CCF_Final_10092019.xlsx') # file names of most-recent LFA-verified grants
 
-# load data
-data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses.RDS")
 
 # subset as appropriate
 DT <- data
-DT = DT[loc_name==country]
-DT = DT[pudr_sheet %in% main_indicators]
-DT = DT[file_name %in% recent_pudrs]
+DT = DT[loc_name==country & pudr_sheet %in% main_indicators & start_date_programmatic==beginning & end_date_programmatic==end]
 ```
 
 
@@ -48,6 +52,8 @@ This document highlights the data completeness, data sources, and changes over t
 
 
 ```{r toc}
+
+recent_pudrs = unique(DT$file_name)
 kable(recent_pudrs, col.names = c("Most Recent PUDRs available")) %>%
   kable_styling(bootstrap_options = "striped", position = "center")
 ```
@@ -93,6 +99,7 @@ ggplot(DT, aes(x = grant, fill = completeness_rating)) +
   scale_fill_manual(values=c("#999999", "#E69F00", "#56B4E9"))+
   theme(legend.title=element_blank())
 ```
+ 
  **Only the Tuberculosis grant (COD-T-MOH) provided the full data necessary to calculate progress on indicators. The two malaria grants also had a high level of data completeness (around 80%).**  
  
  
@@ -144,17 +151,19 @@ The "Achievement Ratio" is calculated in the PUDR to understand how close to the
 
 ```{r plot_results}
 # plots grant performance in a loop for all grants in country
+# Where achievement ratio is above 2, cap at 2. 
+DT[ihme_result_achievement_ratio>2.0, ihme_result_achievement_ratio:=2.0]
 grants = unique(DT$grant)
 plots = list()
 i=1
 for(g in grants) {
-plots[[i]] = ggplot(DT[grant==g], aes(x=brief_description_code, y=ihme_result_achievement_ratio)) +
+plots[[i]] = ggplot(DT[grant==g], aes(x=brief_description_code, y=ihme_result_achievement_ratio, col=target_met)) +
   geom_point() +
-  labs(title="", y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT[grant==g]$file_name))) +
+  labs(col= "Target Met", title="", y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT[grant==g]$file_name))) +
   geom_hline(yintercept = 1) +
   theme_bw()+
   coord_flip()+
-  ylim(0,1.5)+
+  ylim(0,2)+
   theme(legend.position = "bottom")+
   theme_bw()
 i=i+1
@@ -173,6 +182,7 @@ plots[[1]]
 plots[[2]]
 ```
 
+
 **The SANRU Malaria grant reported similar results as the MOH Malaria grant for the lowest performing indicator (Number of LLIN distributed through mass campaign). Proportion of facilities without stock outs was the other indicator showing the lowest performance. The rest of the indicators for this grant appear to be close to the planned targets.**
 
 
@@ -180,12 +190,14 @@ plots[[2]]
 ```{r}
 plots[[5]]
 ```
+
 **Although several general population-wide TB targets are being met such as treatment success rate, several indicators relating to TB/HIV preventive therapy, screening, and treatment are not reaching the intended targets.**
 
 ### 4.3 HIV
 ```{r}
 plots[[4]]
 ```
+
 **Indicators with the lowest achievement ratios included people living with HIV who were screened for TB and HIV-exposed infants receiving a virological test for HIV shortly after birth. However, the rest of the grant's indicators were close to target.** 
 
 ### 4.4 Combined HIV/TB Grant
@@ -193,6 +205,7 @@ plots[[4]]
 ```{r}
 plots[[3]]
 ```
+
 **Several indicators related to key and vulnerable populations including people who inject drugs (PWID), sex workers (SW) and men who have sex with men (MSM) were close to or exceeding their targets. However, facility-level indicators on drugs such as stock-outs for anti-TB medications and ARV drugs were not meeting expected targets.**
 
 ## 5. Agreement between PR, LFA
@@ -278,6 +291,7 @@ i=i+1
 ```{r}
 dplots[[1]]
 ```
+
 **There has been relatively little change in the Malaria grant MOH indicators (among those indicators with multiple time-points of data available).**
 
 
@@ -290,6 +304,7 @@ dplots[[2]]
 ```{r}
 dplots[[3]]
 ```
+
 **The majority of indicators started out far below targets in the first half 2018, however they have shown great improvement. Community referrals of TB and health facilities  without stock-outs started out above target and appear to be slightly trending downward.**
 
 ```{r}

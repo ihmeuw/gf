@@ -8,7 +8,7 @@
 absorption = readRDS(paste0(box, "tableau_data/absorption.rds"))
 
 # Read in prepped indicator data 
-indicators = readRDS(paste0(dir, 'pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses.rds'))
+indicators = readRDS(paste0(dir, 'pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.rds'))
 
 #Read in map 
 map = data.table(read_excel(paste0(dir, "Indicators to Interventions Map.xlsx")))
@@ -21,7 +21,7 @@ map = unique(map[, .(indicator_code, code)])
 unique(map[!indicator_code%in%indicators$indicator_code, .(indicator_code)]) #Make sure all the codes in the map exist in the data (this would be a typo otherwise) 
 indicators = merge(indicators, map, by='indicator_code') #Only want instances that exist in both, so don't specify an 'all' condition.
 indicators = indicators[, .(loc_name, grant, grant_period, start_date_programmatic, disease, indicator_code, indicator, baseline_value, 
-                            ihme_target_n, ihme_result_n, ihme_result_achievement_ratio, code)]
+                            target_value, any_result_value, ihme_result_achievement_ratio, code, reverse_indicator_final)]
 setnames(indicators, 'start_date_programmatic', 'start_date')
 
 #Then, limit absorption to only the codes that are kept after this merge, and merge on as well. 

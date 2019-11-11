@@ -22,7 +22,7 @@ options(digits=6)
 j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/')
 #Box filepaths - these should be used to source raw files, and to save final prepped files. 
-box = "C:/Users/elineb/Box Sync/Global Fund Files/"
+box = "C:/Users/frc2/Box Sync/Global Fund Files/"
 
 code_dir = paste0(repo_root, "outcome_measurement/all/performance_indicators/prep/")
 

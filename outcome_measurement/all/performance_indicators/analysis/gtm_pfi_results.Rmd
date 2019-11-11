@@ -1,0 +1,140 @@
+---
+title: "Guatemala Performance Indicators"
+author: "Francisco Rios Casas"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+library(data.table)
+library(ggplot2)
+library(knitr)
+library(dplyr)
+library(kableExtra)
+library(scales)
+
+# set parameters of data to be analyzed
+country = "gtm"
+
+main_indicators = c('impact_outcome_indicators_main', 'coverage_indicators_main')
+end = "2019-06-30"
+
+
+#recent_pudrs = c("GTM-H-HIVOS_Progress Report_31Dec2018_RV_SO_YAV_120219_LFA REVIEW Reviewed FS.xlsx",
+#                 "GTM-M-MSPAS_PU_FINAL_fuentes_indi_corregidos.xlsx",
+#                 "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx")
+
+LFA_verified_grants = c("GTM-H-HIVOS_Progress Report_31Dec2018_RV_SO_YAV_120219_LFA REVIEW Reviewed FS.xlsx",
+                        "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx") # file names of most-recent LFA-verified grants
+
+# load data
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.RDS")
+
+# subset as appropriate
+DT <- data
+DT = DT[loc_name==country & pudr_sheet %in% main_indicators & end_date_programmatic==end]
+```
+
+
+## 1. Introduction  
+
+This document highlights the results of Performance Indicators in Guatemala. Data for indicators all came from the latest available Progress Update and Disbursement Request forms (PUDRs) indicated below:  
+
+
+```{r toc}
+recent_pudrs = unique(DT[,.(file_name, start_date_programmatic, end_date_programmatic)])
+kable(recent_pudrs, col.names=c("File", "Start of Reporting Period", "End of Reporting Period")) %>%
+  column_spec(c(2,3),width = "10em")
+```
+
+**There are two grants reporting for the most recent time period S1 2019.**
+
+
+## 2. Grant Results based on most recent PUDRs  
+
+
+The "Achievement Ratio" is calculated in the PUDR to understand how close to the original target the Outcome Indicator result is. A value of 1.0 or greater means that the Indicator's goal has been met or exceeded.
+
+
+```{r plot_results}
+# plots grant performance in a loop for all grants in country
+DT[ihme_result_achievement_ratio>2.0, ihme_result_achievement_ratio:=2.0]
+grants = unique(DT$grant)
+plots = list()
+i=1
+for(g in grants) {
+plots[[i]] = ggplot(DT[grant==g], aes(x=brief_description_code, y=ihme_result_achievement_ratio, col=target_met)) +
+  geom_point() +
+  labs(col="Target Met", title="", y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT[grant==g]$file_name))) +
+  geom_hline(yintercept = 1) +
+  theme_bw()+
+  coord_flip()+
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")+
+  theme_bw()
+i=i+1
+}
+```
+
+### TB Grant
+
+```{r}
+plots[[1]]
+```
+
+**Indicators related to TB and TB/HIV mortality, TB incidence, and case notifications are on-track. The indicator furthest from its expected target concerns children in contact with TB patients who began isonizid preventive therapy. Additionally, it seems that in general, indicators that concern MDR-TB are also below the expected targets.**
+
+
+### HIV Grants
+```{r}
+plots[[2]]
+```
+
+**The indicators furthest from their targets relate to linkage to care for people newly diagnosed with HIV and HIV testing and prevention programs for Sex workers and MSM.**
+
+```{r}
+# subset as appropriate
+DT2 <- data
+country = "gtm"
+
+DT2 = DT2[loc_name==country & pudr_sheet %in% main_indicators & start_date_programmatic=="2018-07-01" & end_date_programmatic=="2018-12-31"]
+
+DT2[ihme_result_achievement_ratio>2.0, ihme_result_achievement_ratio:=2.0]
+grants2 = unique(DT2$grant)
+bplots = list()
+i=1
+for(g in grants2) {
+bplots[[i]] = ggplot(DT2[grant==g], aes(x=brief_description_code, y=ihme_result_achievement_ratio, col=target_met)) +
+  geom_point() +
+  labs(col="Target Met", title="", y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT2[grant==g]$file_name))) +
+  geom_hline(yintercept = 1) +
+  theme_bw()+
+  coord_flip()+
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")+
+  theme_bw()
+i=i+1
+}
+```
+
+```{r}
+bplots[[3]]
+```
+
+**Results available for S2 2018.**
+
+### Malaria Grant
+
+```{r}
+bplots[[1]]
+```
+
+**Majority of indicators are close even if they are not meeting their targets. Stock-out of key commodities is the indicator that is furthest from target.**
+
+**Results available for S2 2018.**
