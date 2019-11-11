@@ -17,6 +17,7 @@ library(wesanderson)
 library(gridExtra)
 library(scales)
 library(pander)
+library(plyr)
 library(RColorBrewer)
 
 options(scipen=15)
@@ -35,6 +36,11 @@ sen_revisions = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/SEN/prepped_
 uga_revisions = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/budget_revisions.rds")
 
 all_revisions = rbindlist(list(drc_revisions, gtm_revisions, sen_revisions, uga_revisions), fill=T, use.names=T)
+
+all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
+setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
+all_mods = unique(all_mods[, .(gf_module, gf_intervention, abbrev_mod, abbrev_int)])
+all_revisions = merge(all_revisions, all_mods, by=c('gf_module', 'gf_intervention'), allow.cartesian=TRUE)
 
 #Tag key populations for HIV and TB
 hiv_kp_mods = c("Comprehensive prevention programs for men who have sex with men", "Comprehensive prevention programs for people who inject drugs and their partners", "Comprehensive prevention programs for sex workers and their clients", "Comprehensive prevention programs for transgender people", "Prevention programs for adolescents and youth, in and out of school", "Prevention programs for other vulnerable populations", "Programs to reduce human rights-related barriers to HIV services")
@@ -56,7 +62,7 @@ current_periods = c('2016-2019', '2018-2020', '2019-2021', '2019-2022')
 
 # What percentage of each budget is going to HIV key populations and human rights? 
 ```{r total_budget_kp_hiv} 
-hiv_plot_data = final_budgets[grant_period%in%current_periods, .(key_populations=sum(budget, na.rm=T)), by=c('grant', 'grant_period', 'hiv_kp')]
+hiv_plot_data = final_budgets[grant_period%in%current_periods & grant_disease%in%c('hiv', 'hiv/tb'), .(key_populations=sum(budget, na.rm=T)), by=c('grant', 'grant_period', 'hiv_kp')]
 
 all_grants = expand.grid(grant=unique(hiv_plot_data$grant), hiv_kp=c(TRUE, FALSE))
 hiv_plot_data = merge(hiv_plot_data, all_grants, by=c('grant', 'hiv_kp'), all=T)
@@ -70,15 +76,15 @@ hiv_plot_data = hiv_plot_data[hiv_kp==TRUE]
 
 ggplot(hiv_plot_data, aes(x=grant, y=percentage, label=paste0(percentage, "%"))) + 
   geom_bar(stat="identity", fill="blueviolet") +
-  geom_text() + 
-  theme_bw() + 
+  geom_text(size=4, hjust=0) + 
+  theme_bw(base_size=18) + 
   coord_flip() + 
-  scale_y_continuous(limits=c(0, 100))
+  scale_y_continuous(limits=c(0, 100)) + 
   labs(title="Percentage of each budget going to HIV KPs", x="Grant", y="Absorption (%)")
 ```
 
 # What percentage of each budget is going to HIV key populations and human rights? 
-```{r total_budget_kp_hiv} 
+```{r total_budget_kp_hiv2} 
 hiv_melt = hiv_plot_data[, .(grant, key_populations, total, percentage)]
 hiv_melt = melt(hiv_melt, id.vars=c('grant', 'percentage'))
 hiv_melt[, label:=paste0(dollar(value), " (", percentage, "%)")]
@@ -87,8 +93,8 @@ hiv_melt[variable=="total", label:=""]
 ggplot(hiv_melt[variable=="total"], aes(x=grant, y=value, fill="gray87")) + 
   geom_bar(data=hiv_melt[variable=="total"], aes(x=grant, y=value, alpha=0.3, fill="gray87", guide=FALSE), stat="identity", position="identity") +
   geom_bar(data=hiv_melt[variable=="key_populations"], aes(x=grant, y=value, fill="green3"), stat="identity", position="identity") +
-  geom_text(data=hiv_melt[variable=="key_populations"], aes(x=grant, y=value, label=label), hjust=0) + 
-  theme_bw() + 
+  geom_text(data=hiv_melt[variable=="key_populations"], aes(x=grant, y=value, label=label), hjust=0, size=4) + 
+  theme_bw(base_size=18) + 
   coord_flip() + 
   scale_y_continuous(labels=scales::dollar) + 
   theme(legend.position="none") + 
@@ -96,12 +102,155 @@ ggplot(hiv_melt[variable=="total"], aes(x=grant, y=value, fill="gray87")) +
 ```
 
 # What percentage of each budget is going to TB key populations?
-```{r total_budget_kp_tb} 
-tb_plot_data = final_budgets[grant_period%in%current_periods, .(budget=sum(budget, na.rm=T)), by=c('grant', 'grant_period', 'hiv_kp')]
-tb_plot_data[, total:=sum(budget), by=c('grant', 'grant_period')]
+```{r total_budget_kp_tb2} 
+tb_plot_data = final_budgets[grant_period%in%current_periods & grant_disease%in%c('tb', 'hiv/tb'), .(key_populations=sum(budget, na.rm=T)), by=c('grant', 'grant_period', 'tb_kp')]
+tb_plot_data[grant=="GTM-T-MSPAS", grant:=paste0(grant, ", ", grant_period)]
+
+all_grants = expand.grid(grant=unique(tb_plot_data$grant), tb_kp=c(TRUE, FALSE))
+tb_plot_data = merge(tb_plot_data, all_grants, by=c('grant', 'tb_kp'), all=T)
+tb_plot_data[is.na(key_populations), key_populations:=0]
+
+tb_plot_data[, total:=sum(key_populations, na.rm=T), by=c('grant', 'grant_period')]
+tb_plot_data[, percentage:=round((key_populations/total)*100, 1)]
+tb_plot_data[is.na(percentage), percentage:=0]
+
+tb_plot_data = tb_plot_data[tb_kp==TRUE]
+
+ggplot(tb_plot_data, aes(x=grant, y=percentage, label=paste0(percentage, "%"))) + 
+  geom_bar(stat="identity", fill="blueviolet") +
+  geom_text(size=4, hjust=0) + 
+  theme_bw(base_size=18) + 
+  coord_flip() + 
+  scale_y_continuous(limits=c(0, 100)) + 
+  labs(title="Percentage of each budget going to TB KPs", x="Grant", y="Absorption (%)")
 
 ```
 
-# How has the funding for key populations and human rights changed through grant revision?
+# What percentage of each budget is going to TB key populations? 
+```{r total_budget_kp_tb} 
+tb_melt = tb_plot_data[, .(grant, key_populations, total, percentage)]
+tb_melt = melt(tb_melt, id.vars=c('grant', 'percentage'))
+tb_melt[, label:=paste0(dollar(value), " (", percentage, "%)")]
+tb_melt[variable=="total", label:=""]
 
-# When there are budget revisions, do they mainly go towards 
+ggplot(tb_melt[variable=="total"], aes(x=grant, y=value, fill="gray87")) + 
+  geom_bar(data=tb_melt[variable=="total"], aes(x=grant, y=value, alpha=0.3, fill="gray87", guide=FALSE), stat="identity", position="identity") +
+  geom_bar(data=tb_melt[variable=="key_populations"], aes(x=grant, y=value, fill="green3"), stat="identity", position="identity") +
+  geom_text(data=tb_melt[variable=="key_populations"], aes(x=grant, y=value, label=label), hjust=0, size=4) + 
+  theme_bw(base_size=18) + 
+  coord_flip() + 
+  scale_y_continuous(labels=scales::dollar) + 
+  theme(legend.position="none") + 
+  labs(title="Budget going to TB KPs out of total", x="Grant", y="Budget (USD)")
+```
+
+# How has the funding for HIV key populations and human rights changed through grant revision?
+```{r hiv_kp_changes}
+hiv_kp_grants = all_revisions[hiv_kp==TRUE, unique(grant)]
+plot_data = all_revisions[grant%in%hiv_kp_grants, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T), v3=sum(v3, na.rm=T)), by=c('grant', 'hiv_kp')] 
+plot_data = melt(plot_data, id.vars=c('grant', 'hiv_kp'), variable.name='version')
+#Drop versions where value is 0 - this means that this file didn't exist. 
+plot_data = plot_data[value!=0]
+
+plot_data$version = factor(plot_data$version, levels=c('v3', 'v2', 'v1', 'v0'), labels=c('Third version', 'Second version', 'First version', 'Final, approved'))
+plot_data[, version_total:=sum(value), by=c('grant', 'version')]
+plot_data = plot_data[hiv_kp==TRUE][order(grant, version, hiv_kp)]
+plot_data[, label:=paste0(dollar(value), " (", round((value/version_total)*100, 1), "%)")]
+plot_data[is.na(value) | is.na(version_total), label:=""]
+
+plot_data[, concat:=paste0(grant, ": ", version)]
+vector = unique(plot_data$concat) 
+plot_data$concat = factor(plot_data$concat, levels=vector, labels=vector)
+
+ggplot(plot_data, aes(x=concat, y=value, label=label, fill=grant)) + 
+  geom_bar(stat="identity") + 
+  geom_bar(data=plot_data, aes(x=concat, y=version_total, fill=grant, alpha=0.1), stat="identity") + 
+  geom_text(hjust=0, size=4) + 
+  coord_flip() + 
+  theme_bw(base_size=18) + 
+  theme(legend.position="none") + 
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(subtitle="Labels show amount and percentage of each budget version\ndedicated to KP/HR", x="Budget version", y="Budget (USD)", fill="Grant")
+```
+
+# How has the funding for TB key populations changed through grant revision?
+```{r tb_kp_changes}
+tb_kp_grants = all_revisions[tb_kp==TRUE, unique(grant)]
+plot_data = all_revisions[grant%in%tb_kp_grants, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T), v3=sum(v3, na.rm=T)), by=c('grant', 'tb_kp')] 
+plot_data = melt(plot_data, id.vars=c('grant', 'tb_kp'), variable.name='version')
+#Drop versions where value is 0 - this means that this file didn't exist. 
+plot_data = plot_data[value!=0]
+
+plot_data$version = factor(plot_data$version, levels=c('v3', 'v2', 'v1', 'v0'), labels=c('Third version', 'Second version', 'First version', 'Final, approved'))
+plot_data[, version_total:=sum(value), by=c('grant', 'version')]
+plot_data = plot_data[tb_kp==TRUE][order(grant, version, tb_kp)]
+plot_data[, label:=paste0(dollar(value), " (", round((value/version_total)*100, 1), "%)")]
+plot_data[is.na(value) | is.na(version_total), label:=""]
+
+plot_data[, concat:=paste0(grant, ": ", version)]
+vector = unique(plot_data$concat) 
+plot_data$concat = factor(plot_data$concat, levels=vector, labels=vector)
+
+ggplot(plot_data, aes(x=concat, y=value, label=label, fill=grant)) + 
+  geom_bar(stat="identity") + 
+  geom_bar(data=plot_data, aes(x=concat, y=version_total, fill=grant, alpha=0.1), stat="identity") + 
+  geom_text(hjust=0) + 
+  coord_flip() + 
+  theme_bw(base_size=18) + 
+  theme(legend.position="none") + 
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(subtitle="Labels show amount and percentage of each budget version\ndedicated to KP", x="Budget version", y="Budget (USD)", fill="Grant")
+```
+
+# When there are budget revisions, do they mainly go towards commodities?
+```{r revision_commodities} 
+plot_data = all_revisions[, .(v0=sum(v0), v1=sum(v1), v2=sum(v2), v3=sum(v3)), by=c('grant', 'abbrev_mod')] #Don't remove NAs
+plot_data[(v0!=v1 & !is.na(v1)) | (v1!=v2 & !is.na(v1) & !is.na(v2)) | (v2!=v3 & !is.na(v2) & !is.na(v3)), any_diff:=TRUE]
+plot_data[is.na(v0), any_diff:=TRUE]
+plot_data[is.na(v0) & is.na(v1) & is.na(v2) & is.na(v3), any_diff:=NA]
+
+# Only keep modules that have had a change, either positive or negative. 
+plot_data = plot_data[any_diff==TRUE]
+
+
+#When comparing the final, approved budget to the most recent budget version, has the absolute change been positive or negative? 
+plot_data[!is.na(v3), module_diff:=round(v3-v0)]
+plot_data[is.na(v3) & !is.na(v2), module_diff:=round(v2-v0)]
+plot_data[is.na(v3) & is.na(v2) & !is.na(v1), module_diff:=round(v1-v0)]
+
+#there are a few cases where v0 is NA, but V1 and/or v2 are not. (new funds added). 
+plot_data[is.na(v0) & !is.na(v2), module_diff:=round(v2)]
+plot_data[is.na(v0) & is.na(v2) & !is.na(v1), module_diff:=round(v1)]
+stopifnot(nrow(plot_data[is.na(module_diff)])==0)
+
+plot_data[module_diff<0, change:="DECREASE"]
+plot_data[module_diff>0, change:="INCREASE"]
+
+plot_data = plot_data[, .(grant, abbrev_mod, module_diff, change)]
+
+#Count how many of each module increased or decreased. 
+plot_data[, num_modules_with_rating:=.N, by=c('abbrev_mod', 'change')]
+wide = unique(plot_data[, .(abbrev_mod, change, num_modules_with_rating)])
+wide = dcast(wide, abbrev_mod~change)
+wide[is.na(INCREASE), INCREASE:=0]
+wide[is.na(DECREASE), DECREASE:=0]
+wide[, absolute_change:=(INCREASE-DECREASE), by=c('abbrev_mod')]
+wide = wide[, .(abbrev_mod, absolute_change)]
+plot_data = unique(plot_data[, .(abbrev_mod, change, num_modules_with_rating)])
+plot_data = merge(plot_data, wide, by=c('abbrev_mod'))
+
+#Change "DECREASE" to be in the negative direction
+plot_data[change=="DECREASE", num_modules_with_rating:=-num_modules_with_rating]
+
+plot_data[absolute_change<=0, label:=as.character(absolute_change)]
+plot_data[absolute_change>0, label:=paste0("+", absolute_change)]
+
+ggplot(plot_data[!is.na(change)], aes(x = reorder(abbrev_mod, absolute_change), y = num_modules_with_rating, fill = change, label=label)) + 
+  geom_bar(subset = .(change == "INCREASE"), stat = "identity") + 
+  geom_bar(subset = .(change == "DECREASE"), stat = "identity") + 
+    geom_text(aes(x=reorder(abbrev_mod, absolute_change), y=0), size=6) + 
+  scale_y_continuous(breaks=seq(-5, 5, by=1), labels=as.character(seq(-5, 5, by=1)), limits=c(-5, 5)) + 
+  coord_flip() + 
+  theme_bw(base_size=18) + 
+  labs(y="How many grants increased or decreased funding for this module?", x="", fill="Budget change", subtitle="*Labels show absolute change in the number of grants")
+```

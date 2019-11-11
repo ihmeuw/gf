@@ -212,7 +212,7 @@ grid.arrange(p1, p2, ncol=2, nrow=1)
   
   p1 = ggplot(country_melt, aes(x=loc_name, y=amount, fill=variable))+ 
   geom_bar(stat="identity", position="identity") + 
-  geom_text(aes(label=label), hjust=0, size=4) + 
+  geom_text(aes(label=label, y=45000000), size=4) + 
   theme_bw(base_size=16) + 
   coord_flip() + 
   facet_wrap(~disease)+
@@ -232,7 +232,7 @@ grid.arrange(p1, p2, ncol=2, nrow=1)
   
   p2 = ggplot(cumulative_melt, aes(x=loc_name, y=amount, fill=variable))+ 
   geom_bar(stat="identity", position="identity") + 
-  geom_text(aes(label=label), hjust=0, size=4) + 
+  geom_text(aes(label=label, y=100000000), size=4) + 
   theme_bw(base_size=16) + 
   coord_flip() + 
   facet_wrap(~disease)+
@@ -290,6 +290,7 @@ ggplot(catalytic, aes(x=concat, y=absorption, fill=grant, label=label)) +
   geom_text(aes(label=label), hjust=0, size=4) + 
   theme_bw(base_size=16) + 
   coord_flip() + 
+  theme(axis.text.x=element_text(angle=30, vjust=0.5)) + 
   scale_y_continuous(labels = scales::dollar) + 
   labs(title=paste0("Budget/Expenditure for modules that have\nreceived catalytic/matching funds"), subtitle="January 2018-January 2019", x="Module", y="Amount ($)", fill="", 
        caption="Labels show expenditure amounts and absorption percentages")
@@ -422,10 +423,11 @@ ggplot(high_low_absorption_loc[disease=="rssh"], aes(x=performance, y=reorder(ab
 # Finding statements for research question #1
 * Overall, tuberculosis grants reported the highest absorption numbers, both in Semester 1 2019 and over the first 18 months of the grants. They also have much lower grant budgets when compared to HIV and malaria.  
 * For HIV and HIV/TB grants, absorption for PMTCT, sex workers, adolescents/youth and people who inject drugs were consistently below average, while program management was consistently above average. 
-* For TB grants, general care and prevention, TB/HIV, and program management are performing above averge, while MDR-TB is performing below average.
+* For TB grants, general care and prevention, TB/HIV, and program management are performing above average, while MDR-TB is performing below average.
 * For malaria grants, performance across all modules is mixed. 
 
 # Finding statements for research question #1 (continued) 
+* When looking at the first 18 months of absorption, RSSH is performing the poorest when compared to HIV, TB, and malaria, but not by much in DRC and Senegal. The gap is more pronounced in Uganda.
 * Within RSSH modules, many grants are both investing in and reporting high absorption for HMIS (Info systems and M&E). 11 out of 14 grants have some money budgeted for this module. 
 * Community responses and systems is performing below average. 
 * A majority (6/10) of modules targeted for catalytic funding are reporting below 50% absorption. 
@@ -478,8 +480,8 @@ kable(unique(nfm1_data[, .(grant, grant_period, semester)])[order(grant, grant_p
 
 The following slides compare PUDRs from 2015-2017 with the same period in 2018-2020. There are two data limitations, first, that we have a limited number of PUDRs from S1-S3 2015-2017, which are listed above, and second, we only conducted this analysis for modules that we have data for in both time periods. 
 
+```{r rq3_1, include=FALSE} 
 # Historical absorption, all countries pooled
-```{r rq3_1} 
 nfm1_data = all_absorption[grant_period=="2015-2017" & semester%in%c('Semester 1', 'Semester 1-2', 'Semester 2', 'Semester 3')]
 # unique(nfm1_data[, .(grant, grant_period, semester)])[order(grant, grant_period, semester)]
 
@@ -516,10 +518,10 @@ only_2019 =cumulative_absorption[, .(budget=sum(cumulative_budget, na.rm=TRUE), 
 only_2019[, absorption:=(expenditure/budget)*100]
 only_2019[absorption>200, absorption:=200]
 
-compare_2019 = merge(nfm1_data, only_2019, by=c('abbrev_mod', 'loc_name'))
-compare_2019[, diff:=absorption-hist_absorption]
+compare_2019_2 = merge(nfm1_data, only_2019, by=c('abbrev_mod', 'loc_name'))
+compare_2019_2[, diff:=absorption-hist_absorption]
 
-ggplot(compare_2019, aes(x=reorder(abbrev_mod, diff), y=diff, fill=diff)) + 
+ggplot(compare_2019_2, aes(x=reorder(abbrev_mod, diff), y=diff, fill=diff)) + 
   geom_bar(stat="identity") + 
   theme_bw(base_size=16) + 
   coord_flip()+ 
@@ -553,8 +555,8 @@ ggplot(plot_data[!is.na(projected_absorption)], aes(x=abbrev_mod, y=cumulative_a
 ```
 
 # Finding statements for research question #3
-* The 2015-2017 comparison is mainly using data from DRC. In the first two graphs, we can see that prevention programs for key populations are performing worse in the current grant cycle than in the former one, and community responses and systems is performing better. 
-* When comparing the first 18 months of 2018-2020 absorption to the historical module average, a more nuanced picture emerges. There are large variations between countries, particularly for community responses and systems, PMTCT, and prevention programs for the general population. 
+* The 2015-2017 comparison is mainly using data from DRC. In the first graph, the main takeaway is that prevention programs for key populations are performing worse in the current grant cycle than in the former one.
+* When comparing the first 18 months of 2018-2020 absorption to the historical module average, we can see that there are large variations between countries. In particular, the modules for community responses and systems, PMTCT, and prevention programs for the general population stand out. 
 * Notably, there are also several modules where absorption is keeping up with historical averages across countries, namely program management, or is performing markedly worse than average, as for national health strategies. 
 
 # Research questions 
@@ -863,6 +865,22 @@ kp_melt = hiv_kp_data[, .(key_population, budget, expenditure, absorption, pr_ty
   scale_y_continuous(labels = scales::dollar) + 
   labs(title=paste0("Cumulative budget and expenditure for HIV key populations\n displayed by PR type"), subtitle="January 2018-June 2019", x="Module", y="Amount ($)", fill="", 
        caption="Labels show expenditure amounts and absorption percentages")
+```
+
+# What kind of interventions are being funded by each PR type? 
+```{r hiv_kp3} 
+plot_data = cumulative_absorption[gf_module%in%kp_mods, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('pr_type', 'abbrev_mod', 'abbrev_int')]
+
+#Order this graph by module 
+plot_data[, concat:=paste0(abbrev_mod, ", ", abbrev_int)]
+plot_data$concat = factor(plot_data$concat, levels=plot_data$concat, label=plot_data$abbrev_int) 
+
+ggplot(plot_data, aes(x=concat, y=budget, fill=pr_type)) + 
+  geom_bar(stat="identity", position="fill") + 
+  theme_bw() + 
+  coord_flip() + 
+  scale_fill_manual(values=c('yellow', 'blueviolet')) + 
+  labs(title="Proportion of funding budgeted for each intervention\nby PR type", x="Intervention", y="Budget", subtitle="January 2018-June 2019", fill="PR Type")
 ```
 
 # Review absorption for HIV testing among key populations
