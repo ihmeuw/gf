@@ -84,28 +84,14 @@ rssh_interaction = rssh_interaction[!grepl(':', rhs)]
 # Graph
 
 # my sem graph function for first half "unrelated regressions" model
-<<<<<<< Updated upstream
 p5 = semGraph(parTable=urFit, nodeTable=nodeTable, 
-=======
-p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
-
-p5_nolab = semGraph(parTable=urFit, nodeTable=nodeTable, 
-              scaling_factors=NA, standardized=TRUE, 
-              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5, 
-              labSize1 = 4, labSize2 = 4)
-=======
               scaling_factors=NA, standardized=TRUE, 
               lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
 
-p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+p5_nolab = semGraph(parTable=urFit, nodeTable=nodeTable, 
                     scaling_factors=NA, standardized=TRUE, 
                     lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5, 
                     labSize1 = 4, labSize2 = 4)
->>>>>>> Stashed changes
 
 #New SEM graphs for RSSH interaction term datasets - both standardized and not. 
 graph_no_rssh = semGraph(parTable=no_rssh, nodeTable=no_rssh_table, 
