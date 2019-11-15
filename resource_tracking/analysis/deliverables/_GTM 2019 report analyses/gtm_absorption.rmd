@@ -26,7 +26,7 @@ source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functio
 
 #Read in absorption data 
 gtm = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/GTM/prepped_data/absorption_gtm.rds")
-gtm = gtm[grant_period%in%c('2018-2018', '2018-2020') | (grant=="GTM-T-MSPAS" & grant_period=="2016-2019" & semester=="Semester 5")]
+gtm = gtm[grant_period%in%c('2018-2018', '2018-2020', '2019-2021') | (grant=="GTM-T-MSPAS" & grant_period=="2016-2019" & semester=="Semester 5")]
 
 #Paste the grant period on each grant name for viewing purposes 
 gtm[, grant:=paste0(grant, " (", grant_period, ")")]
@@ -52,19 +52,19 @@ gtm = merge(gtm, all_mods, by=c('gf_module', 'gf_intervention', 'disease'))
 stopifnot(nrow(gtm[is.na(abbrev_int)])==0)
 
 #Break out into smaller datasets. 
-by_grant = gtm[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_disease', 'start_date', 'date_range', 'grant_color')]
+by_grant = gtm[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('grant', 'grant_disease', 'start_date', 'date_range', 'grant_color')]
 by_grant[, absorption:=(expenditure/budget)*100]
 by_grant[, label1:=paste0(round(absorption, 1), "%")]
 by_grant[absorption>200, absorption:=200] # Cap absorption at 200%
 by_grant[, label2:=paste0(grant_disease)]
 
-by_module = gtm[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant', 'gf_module', 'abbrev_mod', 'start_date', 'date_range', 'grant_color')]
+by_module = gtm[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant', 'gf_module', 'abbrev_mod', 'start_date', 'date_range', 'grant_color')]
 by_module[, absorption:=(expenditure/budget)*100]
 by_module[, label1:=paste0(round(absorption, 1), "%")]
 by_module[absorption>200, absorption:=200] # Cap absorption at 200%
 by_module[, label2:=dollar(expenditure)]
 
-by_intervention = gtm[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'grant', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int', 'start_date', 'date_range', 'grant_color')]
+by_intervention = gtm[, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('loc_name', 'grant', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int', 'start_date', 'date_range', 'grant_color')]
 by_intervention[, absorption:=(expenditure/budget)*100]
 by_intervention[, label1:=paste0(round(absorption, 1), "%")]
 by_intervention[absorption>200, absorption:=200] # Cap absorption at 200%
@@ -93,20 +93,38 @@ kable(by_grant[, .(grant, grant_disease, date_range)], col.names=c('Grant', 'Dis
   kable_styling(font_size=12)
 ```
 
-I've set up this analysis to include only the most recent PUDR for each grant, because the grant implementation periods vary in Guatemala. The PUDRs in this dataset have start dates between January 2018-April 2019.  
+I've set up this analysis to include only the most recent PUDR for each grant, because the grant implementation periods vary in Guatemala.   
 
 # 1. Overview of 2018-2019 absorption
-```{r overview} 
+```{r overview, fig.height=15} 
 p = ggplot(by_grant, aes(x=grant, y=absorption, fill=date_range, label=label1))+ 
   geom_bar(stat="identity", position="dodge") + 
-  geom_text(stat="identity", position = position_dodge(width = 1), vjust=-0.5, size=4) + 
+  geom_text(stat="identity", hjust=0, size=4) + 
   theme_bw(base_size=16) + 
   scale_y_continuous(limits=c(0, 220)) + 
-  theme(axis.text.x=element_text(angle=30, vjust=0.5)) + 
+  #theme(axis.text.x=element_text(angle=30, vjust=0.5)) + 
+  coord_flip() + 
    scale_fill_manual(values=wes_palette("GrandBudapest2")) + 
   labs(title="Comparison of absorption rates by grant (2018-2019)", x="Grant", y="Absorption (%)", fill="PUDR date range", caption="*Bar height limited to 200%")
-print(p)
+
 ggsave(paste0(save_loc, "absorption_by_grant.png"), p, height=8, width=12)
+
+melt = by_grant[, .(grant, budget, expenditure, label1)]
+melt = melt(melt, id.vars=c('grant', 'label1'))
+melt[variable=="budget", label1:=""]
+melt[variable=="budget", variable:="Budget"]
+melt[variable=="expenditure", variable:="Expenditure"]
+
+p2 = ggplot(melt, aes(x=grant, y=value, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label1), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Budget and expenditure by grant"), x="", y="Amount ($)", fill="", 
+       subtitle="Labels show expenditure amounts")
+
+grid.arrange(p, p2, ncol=1, nrow=2)
 ```
 
 ## Absorption by module for each grant
@@ -154,12 +172,18 @@ Overall, we see a very high proportion of the budget and expenditure for each gr
 
 Other than this, one trend we're seeing across countries is that modules with the smallest budget are reporting the highest absorption, and this seems to be the case in Guatemala as well. It's interesting that program management deviates strongly from this trend (grants report both high budget and high absorption under this module). 
 
+Within the HIV grants, we see that human rigths was one of the smaller modules in the HIVOS grant, but it was absorbed at a high level (93.6%). HIVOS also spent most of the money for men who have sex with men and transgender people. On the other hand, the INCAP grant has had trouble spending money for human rights, and absorption for key populations has been mixed. 
+
+We do see high absorption under the "financial management systems" module in the INCAP grant, but there was very little money allocated to this module in the first place. 
+
+Finally, it's important to not that the T-MSPAS and M-MSPAS grants haven't reported any expenditure yet. 
+
 ## RSSH absorption across grants 
 
 ```{r rssh}
 rssh_mods = c('Community systems', 'Financial systems', "Info systems & M&E", "HR & health workers", "Service delivery", "Nat. health strategies")
 
-rssh_by_int = gtm[abbrev_mod%in%rssh_mods, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('abbrev_mod', 'abbrev_int')]
+rssh_by_int = gtm[abbrev_mod%in%rssh_mods, .(budget=sum(budget, na.rm=TRUE), expenditure=sum(expenditure, na.rm=TRUE)), by=c('abbrev_mod', 'abbrev_int')]
 rssh_by_int[, absorption:=(expenditure/budget)*100]
 rssh_by_int[, label1:=paste0(round(absorption, 1), "%")]
 rssh_by_int[absorption>200, absorption:=200] # Cap absorption at 200%
@@ -204,19 +228,19 @@ p1 = ggplot(rssh_by_int, aes(x=int_factor, y=absorption, fill=abbrev_mod, label=
        subtitle="Labels show expenditure amounts")
 
   grid.arrange(p1, p2, ncol=1)
-  ggsave(paste0(save_loc, "rssh.png"), grid.arrange(p1, p2, ncol=1), fig.height=15, fig.width=10)
+  ggsave(paste0(save_loc, "rssh.png"), grid.arrange(p1, p2, ncol=1), height=15, width=10)
 
 ```
 
 \newpage 
 ## Findings 
-"Financial management" and "program and data quality" stand out as the modules with the highest absorption, and it's notable that program and data quality was able to achieve this even with a large budget allocation. Several important RSSH interventions have not yet recorded any expenditure, namely laboratory systems, surveys, and other HMIS interventions. 
+"Financial management" and "program and data quality" stand out as the modules with the highest absorption, and it's notable that program and data quality was able to achieve this even with a large budget allocation. *Note that "Program and data quality" is part of HMIS. Several important RSSH interventions have not yet recorded any expenditure, namely laboratory systems, surveys, and other HMIS interventions. 
 
 \newpage
 # 2. Analyses to support deep dives
 ## TB laboratory systems and case diagnosis spending 
 ```{r tb_deep_dive, fig.height=13} 
-plot_data = budgets[grant_disease=="tb" & abbrev_int=="Case detection and diagnosis", .(budget=sum(budget, na.rm=T)), by=c('abbrev_mod', 'start_date')]
+plot_data = budgets[grant_disease=="tb" & abbrev_int=="Case detection and diagnosis", .(budget=sum(budget, na.rm=TRUE)), by=c('abbrev_mod', 'start_date')]
 plot_data[abbrev_mod=="Care and prevention", abbrev_mod:="TB care and prevention"]
 p1 = ggplot(plot_data, aes(x=start_date, y=budget, color=abbrev_mod)) + 
   geom_point() + 
@@ -256,7 +280,7 @@ p1 = ggplot(mal_budgets, aes(x=abbrev_int, y=budget, label=label)) +
 
 ```{r bednets_over_time, fig.height=14} 
 bednet_ints = c("LLIN: Continuous distribution", "LLIN: Mass campaign") 
-bednet_budgets = budgets[abbrev_int%in%bednet_ints, .(budget=sum(budget, na.rm=T)), by='start_date']
+bednet_budgets = budgets[abbrev_int%in%bednet_ints, .(budget=sum(budget, na.rm=TRUE)), by='start_date']
 
 p2 = ggplot(bednet_budgets, aes(x=start_date, y=budget)) + 
   geom_point(color="hotpink4") + 
