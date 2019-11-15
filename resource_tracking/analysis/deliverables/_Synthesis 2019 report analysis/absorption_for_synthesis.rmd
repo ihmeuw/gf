@@ -23,7 +23,7 @@ options(scipen=15)
 
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
 source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
-png_save = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/Synthesis 2019/"
+png_save = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/"
 
 #Read in absorption data 
 cod = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/absorption_cod.rds")
@@ -292,7 +292,7 @@ ggplot(catalytic, aes(x=concat, y=absorption, fill=grant, label=label)) +
   coord_flip() + 
   theme(axis.text.x=element_text(angle=30, vjust=0.5)) + 
   scale_y_continuous(labels = scales::dollar) + 
-  labs(title=paste0("Budget/Expenditure for modules that have\nreceived catalytic/matching funds"), subtitle="January 2018-January 2019", x="Module", y="Amount ($)", fill="", 
+  labs(title=paste0("Budget/Expenditure for modules that have\nreceived catalytic/matching funds"), subtitle="January 2018-June 2019", x="Module", y="Amount ($)", fill="", 
        caption="Labels show expenditure amounts and absorption percentages")
 ```
 
@@ -607,7 +607,7 @@ plot_data[absorption>200, absorption:=200]
   theme_bw(base_size=16) + 
   coord_flip() + 
   scale_y_continuous(labels = scales::dollar) + 
-  labs(title=paste0("RSSH absorption"), subtitle="January 2018-January 2019", x="Module", y="Amount ($)", fill="", 
+  labs(title=paste0("RSSH absorption"), subtitle="January 2018-June 2019", x="Module", y="Amount ($)", fill="", 
        caption="Labels show expenditure amounts and absorption percentages \n*These numbers represent direct RSSH")
 ```
 
@@ -635,7 +635,7 @@ plot_data[absorption>200, absorption:=200]
   facet_wrap(~loc_name) + 
   theme(axis.text.x=element_text(angle=30, vjust=0.5)) +
   scale_y_continuous(labels = scales::dollar) + 
-  labs(title=paste0("RSSH absorption, by country"), subtitle="January 2018-January 2019", x="Module", y="Amount ($)", fill="", 
+  labs(title=paste0("RSSH absorption, by country"), subtitle="January 2018-June 2019", x="Module", y="Amount ($)", fill="", 
        caption="Labels show expenditure amounts and absorption percentages \n*These numbers represent direct RSSH")
 ```
 
@@ -832,6 +832,73 @@ kp_melt = hiv_kp_data[, .(key_population, loc_name, budget, expenditure, absorpt
        caption="Labels show expenditure amounts and absorption percentages")
 ```
 
+# HIV key population absorption, by country 
+```{r hiv_kp_collapse} 
+hiv_kp_data = cumulative_absorption[gf_module%in%kp_mods, .(budget=sum(cumulative_budget, na.rm=TRUE), expenditure=sum(cumulative_expenditure, na.rm=TRUE)), by=c('loc_name')]
+hiv_kp_data[, absorption:=round((expenditure/budget)*100, 1)]
+hiv_kp_data[, label:=paste0(absorption, "%")]
+
+kp_melt = hiv_kp_data[, .(loc_name, budget, expenditure, absorption)]
+  kp_melt = melt(kp_melt, id.vars=c('absorption', 'loc_name'), variable.name='variable', value.name='amount')
+  kp_melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  kp_melt[variable=="expenditure", label:=paste0(dollar(amount), " (", absorption, "%)")]
+  
+  #Fix budget and expenditure so they display nicely 
+  kp_melt[variable=="budget", variable:="Budget"]
+  kp_melt[variable=="expenditure", variable:="Expenditure"] 
+  
+  p = ggplot(kp_melt, aes(x=loc_name, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Cumulative budget and expenditure for HIV key populations\nand human rights"), subtitle="January 2018-June 2019", x="Country", y="Amount ($)", fill="", 
+       caption="Labels show expenditure amounts and absorption percentages")
+  print(p) 
+  
+  ggsave(paste0(png_save, "budget_hiv_kp_country.png"), p, height=8, width=11)
+  
+```
+
+# HIV key population and human rights absorption, by country 
+```{r hiv_kp_collapse2} 
+kp_mods1 = kp_mods = c("Comprehensive prevention programs for men who have sex with men", "Comprehensive prevention programs for people who inject drugs and their partners", "Comprehensive prevention programs for sex workers and their clients", "Comprehensive prevention programs for transgender people", "Prevention programs for adolescents and youth, in and out of school", "Prevention programs for other vulnerable populations")
+hiv_kp_data = copy(cumulative_absorption) 
+hiv_kp_data[gf_module%in%kp_mods, funding_type:="Key populations"]
+hiv_kp_data[gf_module=="Programs to reduce human rights-related barriers to HIV services", funding_type:="Human rights"]
+
+#Now sum budget and expenditure over these new categories. 
+hiv_kp_data = hiv_kp_data[!is.na(funding_type), .(budget=sum(cumulative_budget, na.rm=TRUE), expenditure=sum(cumulative_expenditure, na.rm=TRUE)), by=c('loc_name', 'funding_type')]
+hiv_kp_data[, absorption:=round((expenditure/budget)*100, 1)]
+hiv_kp_data[, label:=paste0(absorption, "%")]
+
+kp_melt = hiv_kp_data[, .(loc_name, funding_type, budget, expenditure, absorption)]
+  kp_melt = melt(kp_melt, id.vars=c('absorption', 'loc_name', 'funding_type'), variable.name='variable', value.name='amount')
+  kp_melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  kp_melt[variable=="expenditure", label:=paste0(dollar(amount), " (", absorption, "%)")]
+  
+  #Fix budget and expenditure so they display nicely 
+  kp_melt[variable=="budget", variable:="Budget"]
+  kp_melt[variable=="expenditure", variable:="Expenditure"] 
+  
+  kp_melt[, concat:=paste0(funding_type, ": ", variable)]
+  
+  p = ggplot(kp_melt, aes(x=loc_name, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+    facet_wrap(~funding_type) + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Cumulative budget and expenditure for HIV key populations\nand human rights"), subtitle="January 2018-June 2019", x="Country", y="Amount ($)", fill="", 
+       caption="Labels show expenditure amounts and absorption percentages")
+  print(p) 
+  
+  ggsave(paste0(png_save, "budget_kp_hr_country.png"), p, height=8, width=11)
+  
+```
+
 # HIV key populations absorption, shown by PR type
 ```{r hiv_kp2} 
 kp_mods = c("Comprehensive prevention programs for men who have sex with men", "Comprehensive prevention programs for people who inject drugs and their partners", "Comprehensive prevention programs for sex workers and their clients", "Comprehensive prevention programs for transgender people", "Prevention programs for adolescents and youth, in and out of school", "Prevention programs for other vulnerable populations", "Programs to reduce human rights-related barriers to HIV services")
@@ -958,6 +1025,34 @@ kp_melt = tb_kp_data[, .(key_population, loc_name, budget, expenditure, absorpti
   scale_y_continuous(labels = scales::dollar) + 
   labs(title=paste0("Cumulative budget and expenditure for TB key populations"), subtitle="January 2018-June 2019", x="Module", y="Amount ($)", fill="", 
        caption="Labels show expenditure amounts and absorption percentages")
+```
+
+# Absorption for TB KPs, pooled to country-level 
+```{r tb_kp_collapse} 
+tb_kp_data = cumulative_absorption[gf_intervention%in%kp_ints, .(budget=sum(cumulative_budget, na.rm=TRUE), expenditure=sum(cumulative_expenditure, na.rm=TRUE)), by=c('loc_name')]
+tb_kp_data[, absorption:=round((expenditure/budget)*100, 1)]
+tb_kp_data[, label:=paste0(absorption, "%")]
+
+kp_melt = tb_kp_data[, .(loc_name, budget, expenditure, absorption)]
+  kp_melt = melt(kp_melt, id.vars=c('loc_name', 'absorption'), variable.name='variable', value.name='amount')
+  kp_melt[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
+  kp_melt[variable=="expenditure", label:=paste0(dollar(amount), " (", absorption, "%)")]
+  
+  #Fix budget and expenditure so they display nicely 
+  kp_melt[variable=="budget", variable:="Budget"]
+  kp_melt[variable=="expenditure", variable:="Expenditure"] 
+  
+  p = ggplot(kp_melt, aes(x=loc_name, y=amount, fill=variable))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(aes(label=label), hjust=0, size=4) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Cumulative budget and expenditure for TB key populations"), subtitle="January 2018-June 2019", x="Module", y="Amount ($)", fill="", 
+       caption="Labels show expenditure amounts and absorption percentages")
+  print(p) 
+  
+  ggsave(paste0(png_save, "budget_tb_kp_country.png"), p, height=8, width=11)
 ```
 
 # Finding statements for research question #4 (key populations)

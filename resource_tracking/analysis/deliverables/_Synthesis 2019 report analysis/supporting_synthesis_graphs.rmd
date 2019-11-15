@@ -58,6 +58,8 @@ all_revisions[is.na(tb_kp), tb_kp:=FALSE]
 
 #What are the current grant periods? 
 current_periods = c('2016-2019', '2018-2020', '2019-2021', '2019-2022')
+
+absorption = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/absorption.rds")
 ```
 
 # What percentage of each budget is going to HIV key populations and human rights? 

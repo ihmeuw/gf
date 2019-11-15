@@ -1,0 +1,191 @@
+---
+title: "Monitoring and Evaluation Annex"
+author: "IHME Prospective Country Evaluation"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: pdf_document
+classoption: landscape
+fontsize: 11pt
+---
+
+```{r setup, echo=FALSE, warning=FALSE}
+# --------------------------------------------
+# AUTHOR: Emily Linebarger
+# PURPOSE: Review a few key examples of activity classifications 
+# That aren't mapped correctly to GF modular framework. 
+# DATE: July 22, 2019 
+#----------------------------------------------
+
+rm(list=ls())
+library(data.table) 
+library(knitr)
+library(kableExtra)
+library(openxlsx)
+
+#Read in file 
+dt = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/budget_pudr_iterations.rds")
+dt = dt[data_source=="budget"]
+
+#Do some fancy NLP string splitting - create a dictionary. 
+
+
+# ---------------------------
+# KVP 
+#----------------------------
+msm = dt[grep("msm|hsh", tolower(activity_description)), .(grant, grant_period, activity_description, orig_module, orig_intervention, gf_module, gf_intervention)]
+msm = unique(msm)
+#Search for errors by excluding the MSM module 
+msm = msm[gf_module!="Comprehensive prevention programs for men who have sex with men"]
+msm[, count:=1]
+
+# ---------------------------
+# GeneXpert
+#----------------------------
+
+xpert = dt[grep("xpert", tolower(activity_description)), .(grant, grant_period, orig_module, orig_intervention, gf_module, gf_intervention, activity_description, grant_disease)]
+xpert = xpert[grant_disease%in%c('tb', 'rssh')]
+xpert = unique(xpert)
+xpert[, count:=1]
+
+# ---------------------------
+# Salaries 
+#----------------------------
+salary = dt[grep("salaire|salario|salary", tolower(activity_description))]
+salary = unique(salary[, .(grant, grant_period, orig_module, orig_intervention, gf_module, gf_intervention, activity_description)])
+salary = salary[gf_module!="Program management"]
+#View(salaries[grant=="GTM-H-HIVOS", .(orig_module, orig_intervention, activity_description)])
+
+#-----------------------------
+# Program management - kind of a dead end so far. 
+#-----------------------------
+management = dt[grep("gestion|management|gestión", tolower(activity_description))]
+management = unique(management[, .(grant, grant_period, orig_module, orig_intervention, gf_module, gf_intervention, activity_description)])
+management = management[gf_module!="Program management"]
+
+#--------------------------------
+# Human Rights 
+#--------------------------------
+hr = dt[gf_module=="Programs to reduce human rights-related barriers to HIV services"]
+hr = unique(hr[, .(grant, grant_period, orig_module, orig_intervention, gf_module, gf_intervention, activity_description)])
+
+#Read in hand-processed sheet of these results 
+hr_error = read.xlsx("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/NLP Examples 7.24.19.xlsx", sheet = "Example 3")
+setDT(hr_error)
+hr_error = hr_error[belongs==FALSE]
+
+#--------------------------------
+# Human Rights 
+#--------------------------------
+crs = dt[gf_module == "Community responses and systems"]
+crs = unique(crs[, .(grant, grant_period, orig_module, orig_intervention, gf_module, gf_intervention, activity_description)])
+
+#Can you go at this another way? Search for 'rights' and see what you turn up? EMILY 
+
+#-----------------------------------------
+# What are dead giveaway keywords?
+#-----------------------------------------
+# Surveys - DONE 
+surveys = dt[grep("survey|enquete|encuesta", tolower(activity_description))]
+surveys = unique(surveys[, .(grant, grant_period, orig_module, orig_intervention, gf_module, gf_intervention, activity_description)])
+surveys = surveys[gf_intervention!="Surveys"]
+
+#-----------------------------------------
+# Can you easily classify drug-buying? 
+#-----------------------------------------
+art = dt[grep("art|antiretroviral|anti-retroviral", tolower(activity_description))]
+art = unique(art[, .(grant, grant_period, orig_module, orig_intervention, gf_module, gf_intervention, activity_description)])
+
+
+
+```
+
+# INTRODUCTION 
+
+# ISSUES WITH MODULAR FRAMEWORK AND GRANT TRACKING SYSTEM 
+
+One issue that’s become more apparent during this period of grant implementation is that the Global Fund’s system for monitoring absorption is not adequately set-up to track catalytic and matching funds. In the PUDRs, there is no way to separate out catalytic or matching funds, and so for the PCE the best we could do was to report on modules that were targeted for matching funds. 
+
+The PCE has also noticed inconsistencies with the performance indicator structure. For example, the stockout performance indicator for ARVs is a reverse indicator but the stockout indicator for TB meds isn't.
+
+Strange PUDR reporting structure - Semester 1, and Semester 1-2. We’ve had instances of negative absorption, and it’s also impossible to track the budget denominators with all of the revisions going on. 
+There is no consistent naming scheme for budget files - sometimes we get information about a file being LFA reviewed and the last date it was reviewed from the budget name, and sometimes we don’t. Would be very good to include the date the file was last reviewed in the file itself, probably on the cover page. 
+
+# ISSUES WITH APPLICATION OF MODULAR FRAMEWORK
+
+## Finding 1: Classifications for similar activity descriptions are inconsistent among and between PRs. 
+Activity descriptions that mentioned "GeneXpert" were classified in multiple different ways among PRs during different grant periods. 
+By grant, grant period, and module: 
+
+```{r ex1, echo=F}
+kable(xpert[, .(classifications=sum(count)), by=c('grant', 'grant_period', 'gf_module')], booktab=T, col.names=c('Grant', 'Grant period', 'Module', 'Classifications')) 
+```
+
+By module alone: 
+
+```{r ex1.1, echo=F}
+kable(xpert[, .(classifications=sum(count)), by=c('gf_module')], booktab=T, col.names=c('Module', 'Classifications'))
+```
+
+
+There was a mix of classifications between MDR-TB, general TB Care and Prevention, and TB/HIV. However, when reviewing the activity descriptions, it's unclear why these distinctions were made. 
+
+The following is a table of the specific activity descriptions that mentioned "GeneXpert", and the module they were classified under. 
+
+```{r ex1.2, echo=F}
+subset = xpert[, .(gf_module, activity_description)][order(gf_module)]
+subset = subset[c(5, 6, 7, 41, 47:48, 58:60), ]
+kable(subset, booktabs=T, longtable=T, col.names=c('Module', 'Activity description')) %>%
+  column_spec(1, width="10em")%>%
+  column_spec(2, width="50em") %>%
+  kable_styling(latex_options = c("hold_position", "repeat_header"), font_size=8) 
+```
+
+## Finding 2: Human rights is questionably applied as a module, especially through mixing human rights and key populations. 
+
+The following table is a hand-reviewed selection of activity descriptions that were classified under the module "Programs to reduce human rights-related barriers to HIV services". These are cases I feel are questionably classified under this module. The highlighted items are cases where the activity might be better classified under a key populations module. 
+
+```{r ex2, echo=FALSE}
+subset = hr_error[, .(orig_module, orig_intervention, activity_description)]
+subsest = subset[c(6:8, 9, 10:13, 15:16)]
+kable(subset, booktabs=T, longtable=T)%>%
+  column_spec(1:2, width="10em") %>%
+  column_spec(3, width="40em") %>%
+  kable_styling(latex_options = c("hold_position", "repeat_header"), font_size=8)
+
+```
+
+## Finding 3: RSSH classifications are inconsistent between grants 
+
+One example is how surveys of various kinds are classified. This table represents all activity descriptions with the word "survey" (in English, French, or Spanish) that were not classified under the RSSH module "Health management information system and monitoring and evaluation" and the intervention "Surveys".
+
+```{r ex3, echo=FALSE}
+subset = surveys[, .(orig_module, orig_intervention, activity_description)]
+subset = subset[c(9, 11, 12, 20, 21)]
+kable(subset, booktabs=T, longtable=T)%>%
+  column_spec(1:2, width="10em") %>%
+  column_spec(3, width="40em") %>%
+  kable_styling(latex_options = c("hold_position", "repeat_header"), font_size=8)
+```
+
+## Finding 4: Program management and salary costs may be incorrectly labeled as disease-specific modules, skewing perceptions of funding. 
+
+The table below represents all cases where "salary" was mentioned (in English, French, and Spanish) in an activity descrition, but the module was NOT marked as program management. 
+
+```{r ex4, echo=FALSE}
+kable(salary[, .(orig_module, orig_intervention, activity_description)], booktabs=T, longtable=T)%>%
+  column_spec(1:2, width="10em") %>%
+  column_spec(3, width="40em") %>%
+  kable_styling(latex_options = c("hold_position", "repeat_header"), font_size=8)
+```
+
+# FINDING STATEMENTS IN PROGRESS
+
+## Finding 5: Module and intervention categories are not well structured to capture the true intention of activity funding (“breadth” of an intervention is too large) ***
+
+## Finding 6: Subpopulations are not neatly split in activity descriptions *** THIS ISSUE MAY BE RESOLVED WITH THE NEW MODULAR FRAMEWORK
+
+## Finding 7: PRs still don’t understand how to apply the modular framework (often picking and choosing an intervention to go with a module, instead of only choosing an intervention within a given module) 
+
+## Finding 8: There’s no drop-down menu for choosing a module and intervention, so we get a lot of modules that are listed slightly differently than each other. 
+
+
+

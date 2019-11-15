@@ -74,6 +74,7 @@ p = ggplot(by_module[grant=="COD-M-MOH"], aes(x=abbrev_mod_eng, y=budget, fill=v
   coord_flip() + 
   labs(title=paste0("COD-M-MOH budget revisions, by module"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+print(p) 
 
 ggsave(paste0(save_loc, "m-moh1.png"), p, height=8, width=12)
 ```
@@ -88,6 +89,7 @@ p = ggplot(by_intervention[grant=="COD-M-MOH" & abbrev_mod_eng=="Vector control"
   coord_flip() + 
   labs(title=paste0("COD-M-MOH vector control budget revisions"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+print(p) 
 
 ggsave(paste0(save_loc, "m-moh2.png"), p, height=8, width=12)
 
@@ -105,6 +107,7 @@ p = ggplot(by_module[grant=="COD-M-SANRU"], aes(x=abbrev_mod_eng, y=budget, fill
   coord_flip() + 
   labs(title=paste0("COD-M-SANRU budget revisions, by module"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+print(p)
 
 ggsave(paste0(save_loc, "m-sanru1.png"), p, height=8, width=12)
 
@@ -120,6 +123,7 @@ p = ggplot(by_intervention[grant=="COD-M-SANRU" & abbrev_mod_eng=="Vector contro
   coord_flip() + 
   labs(title=paste0("COD-M-SANRU vector control budget revisions"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+print(p)
 
 ggsave(paste0(save_loc, "m-sanru2.png"), p, height=8, width=12)
 
@@ -136,6 +140,7 @@ p = ggplot(by_module[grant=="COD-C-CORDAID"], aes(x=abbrev_mod_eng, y=budget, fi
   coord_flip() + 
   labs(title=paste0("COD-C-CORDAID budget revisions, by module"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+print(p)
 
 ggsave(paste0(save_loc, "c-cordaid1.png"), p, height=8, width=12)
 
@@ -152,6 +157,7 @@ p = ggplot(by_intervention[grant=="COD-C-CORDAID" & abbrev_mod_eng=="Program mgm
   coord_flip() + 
   labs(title=paste0("COD-C-CORDAID program management\nbudget revisions"), x="Module", y="Budget", fill="Version") + 
   scale_y_continuous(labels = scales::dollar)
+print(p)
 
 ggsave(paste0(save_loc, "c-cordaid2.png"), p, height=8, width=12)
 
