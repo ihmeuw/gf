@@ -19,7 +19,7 @@
 rm(list=ls())
 
 # run setup code (load file paths and packages)
-repo_root = "C:/Users/frc2/Documents/gf/" #Change to your repository
+repo_root = "C:/Users/elineb/Documents/gf/" #Change to your repository
 setwd(repo_root)
 source('./outcome_measurement/all/performance_indicators/prep/set_up_r.r')
 source('./resource_tracking/prep/_common/shared_functions.r', encoding="UTF-8")
