@@ -7,6 +7,7 @@
 # INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------
 
+#Model version 5 is run on quarterly data, proportionally divides up RSSH, and applies a lead of 6 months to Tx. success rates. 
 #-----------------------------------------
 # TO-DO: 
 

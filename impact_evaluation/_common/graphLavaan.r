@@ -20,6 +20,7 @@
 # highlight (character) what boxes and the relationships between them should be highlighted? Best if used with 'dim' option. 
 #colScaleMin is the minimum value to show on viridis map scale 
 #colScaleMax is the maximum value to show on viridis map scale 
+#baseSize is the base size of the graph, set in the "theme" option
 # Returns: a graph
 # Rquires: data.table, ggplot2, stringr
 
@@ -48,7 +49,7 @@
 semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_factors=NA, 
 	edgeLabels=TRUE, variances=TRUE, standardized=FALSE, uncertainty=TRUE, 
 	labSize1=3, labSize2=2.4, boxWidth=4, boxHeight=1, lineWidth=3, midpoint=.5, buffer=c(.25,.25,.25,.25),
-	curved=0, tapered=TRUE, dim=FALSE, highlight=NULL, colScaleMin=-0.5, colScaleMax=1.1, colScaleBreaks=0.5) {
+	curved=0, tapered=TRUE, dim=FALSE, highlight=NULL, colScaleMin=-0.5, colScaleMax=1.1, colScaleBreaks=0.5, baseSize=16) {
 
 	# ------------------------------------------------------
 	# Load functions/parameters
@@ -320,7 +321,7 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 		labs(color='Effect\nSize', caption=capt)
 	
 	# clean up plot
-	p = p + theme_void(base_size=16) + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'), 
+	p = p + theme_void(base_size=baseSize) + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'), 
 	plot.caption=element_text(size=6))
 	if (curved %in% c(1,2)) p = p + scale_size_continuous(guide = FALSE)
 	

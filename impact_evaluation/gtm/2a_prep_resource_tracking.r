@@ -148,7 +148,6 @@ rt_wide = rt_wide[date>=START_YEAR]
 # rssh[, date:=date+0.5]
 # rt_wide = rt_wide[, -c('gf_rssh')] #Drop this variable, and re-merge it in after it's lagged. 
 
-rt_wide = merge(rt_wide, rssh, by='date', all=T)
 #Replace NAs with 0's at this point unless we hear differently from Guillermo. 
 # cols = names(rt_wide)[!names(rt_wide)=='date']
 # for (c in cols) {

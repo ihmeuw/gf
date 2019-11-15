@@ -383,10 +383,17 @@ if (nrow(dt1[dup==TRUE])!=0){
 #Drop any municipalities and departments that are 0 - this should represent the national-level data. 
 dt1 = dt1[department!=0]
 
-# #Pull one variable, # of cases screened for MDR-TB, out of the outputs dataset. 
-# dt1 = readRDS(outputFile3)
-# dt1 = dt1[, .(date, department, Number_of_Cases_Screened_for_MDR_act)]
-# dt_final = merge(dt_final, dt1, by=c('date', 'department'), all=T)
+#------------------------------------------------
+# For model version 5, apply a lead of 6 months to all of the treatment success rate variables. 
+# txSuccessVars is defined in 'set_up_r.r'. 
+tx_success = dt1[, c(txSuccessVars, 'date', 'department'), with=F]
+not_tx_success = dt1[, -txSuccessVars, with=F]
+
+#Apply 6-month lead (data is at quarter-level)
+tx_success[, date:=date+0.5]
+
+#Merge back together. 
+dt1 = merge(tx_success, not_tx_success, by=c('date', 'department'), all=T)
 
 saveRDS(dt1, outputFile2c)
 archive(outputFile2c)
