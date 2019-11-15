@@ -32,9 +32,18 @@
   expenditures[, date:=year+quarter]
   
   #Collapse, and fix names
-  expenditures = expenditures[loc_name=='gtm', .(expenditure=sum(expenditure), na.rm=T), by=c("date", "gf_module", "gf_intervention", "code", "disease", "grant_disease")] #Will subset by disease in code section below. 
+  expenditures = expenditures[loc_name=='gtm', .(expenditure=sum(expenditure, na.rm=TRUE)), by=c("date", "gf_module", "gf_intervention", "code", "disease", "grant_disease")] #Will subset by disease in code section below. 
   setnames(expenditures, old=c("gf_module","gf_intervention"), new=c("module", "intervention"))
   
+  # Explore how much has been spent on each RSSH module from 2009-2018
+  plot_data = expenditures[date>=2009.0 & disease=="rssh", .(expenditure=sum(expenditure)), by=c('module', 'date')]
+  p = ggplot(plot_data, aes(x=date, y=expenditure, fill=module)) + 
+    geom_ribbon(aes(ymin = 0, ymax = max(plot_data$expenditure)), position = "stack") +  
+    theme_bw(base_size=16) + 
+    scale_y_continuous(labels=scales::dollar) + 
+    labs(title="RSSH spending in Guatemala over time", x="Date", y="Expenditure", fill="Module")
+  
+  ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/rssh_over_time.png", p, height=8, width=11)
   #----------------------------------
   # FGH DATA (OTHER_DAH)
   #----------------------------------

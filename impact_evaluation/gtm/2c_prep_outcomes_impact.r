@@ -390,10 +390,13 @@ tx_success = dt1[, c(txSuccessVars, 'date', 'department'), with=F]
 not_tx_success = dt1[, -txSuccessVars, with=F]
 
 #Apply 6-month lead (data is at quarter-level)
-tx_success[, date:=date+0.5]
+tx_success[, date:=date-0.5]
 
 #Merge back together. 
 dt1 = merge(tx_success, not_tx_success, by=c('date', 'department'), all=T)
+
+#Cut off dates that are before 2009 - you just artificially created these. 
+dt1 = dt1[date>=2009.0]
 
 saveRDS(dt1, outputFile2c)
 archive(outputFile2c)
