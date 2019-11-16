@@ -188,4 +188,19 @@ kable(salary[, .(orig_module, orig_intervention, activity_description)], booktab
 ## Finding 8: There’s no drop-down menu for choosing a module and intervention, so we get a lot of modules that are listed slightly differently than each other. 
 
 
+Modular framework feedback: 
+* Not as many interventions under "other vulnerable populations" 
+* "Survivors of sexual violence" not a KP, but is mentioned in performance indicators
+* malaria - testing and treatment are all under case management. 
+* kids 0-5 should be a key population for malaria. 
+* Break out community testing and community treatment for TB. 
+* What is HIV care vs. differentiated ART? 
+* Human rights is not listed under malaria and TB
+* It's very hard to track key populations under TB and malaria. 
+
+* Note - last GTM malaria budget didn't put bednets under vector control. 
+MICS survey in Guatemala filed under community systems. 
+GTM had an anthropological survey filed under information systems (malaria). 
+DRC counts procuring test kits under HR/KVP modules. 
+
 
