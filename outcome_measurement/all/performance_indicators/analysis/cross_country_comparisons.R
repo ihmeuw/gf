@@ -54,12 +54,12 @@ DT <- DT[,.(loc_name, grant, disease, module_code, indicator_code, brief_descrip
 # re-code variables that are reverse indicators
 DT$ihme_result_achievement_ratio <- ifelse(DT$reverse_indicator_final=="yes", DT$target_value/DT$any_result_value, DT$ihme_result_achievement_ratio)
 
-dt_subset <- DT[, .(module_code, indicator_code, ihme_result_achievement_ratio)]
+dt_subset <- DT[, .(module_code, indicator_code, ihme_result_achievement_ratio, brief_description_code)]
 dt_subset <- dt_subset[!is.na(ihme_result_achievement_ratio)]
 dt_subset <- dt_subset[, .(avg_ach_ratio= mean(ihme_result_achievement_ratio),
                            max_ach_ratio= max(ihme_result_achievement_ratio),
                            min_ach_ratio= min(ihme_result_achievement_ratio)),
-                       by=c("module_code", "indicator_code")]
+                       by=c("module_code", "indicator_code", "brief_description_code")]
 dt_subset[max_ach_ratio>2, max_ach_ratio := 2]
 dt_subset[avg_ach_ratio>2, avg_ach_ratio := 2]
 dt_subset[min_ach_ratio>2, min_ach_ratio := 2]

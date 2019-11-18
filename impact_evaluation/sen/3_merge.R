@@ -40,11 +40,11 @@ merge_file <- merge(resource_tracking, outcome_data, by=c('date'), all=TRUE)
 
 # list variables that need redistribution
 # note: these vectors must be the same length and order matters
-inVars = c('exp_T2',
-           'exp_T1_5',
-           'exp_T1_1',
+inVars = c('gf_tbhiv',
+           'gf_tbcare',
+           'gf_detect',
            'other_dah_T1_1',
-           'exp_T3',
+           'gf_mdrtb',
            'other_dah_T3')
 
 # list corresponding variables to define distribution proportions
@@ -56,7 +56,7 @@ actVars = c('tb_vih',
             'patients_prop_genexpert')
 
 # create combined variables for redistribution where necessary
-merge_file[, value_com_act:=com_mobsoc + com_cause + com_radio + com_vad_touss]
+merge_file[, value_com_act:=com_mobsoc + com_radio + com_vad_touss]
 merge_file[, value_screen_act:=tot_genexpert + perf_lab + tb_cas_id]
 
 # loop over financial variables and redistribute subnationally

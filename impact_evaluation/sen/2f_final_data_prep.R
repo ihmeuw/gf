@@ -22,13 +22,13 @@ tb_mdr <- readRDS(outputFile2e)
 # prep each variable according to data source and level reported
 
 # HOSPITAL variables WHICH CAN BE SUMMED (counts)
-datatemp1a = hospital.data[,.(region, date, tb_tfc, tot_genexpert, tot_res, gueris_total, tb_vih_arv, tb_vih)]
+datatemp1a = hospital.data[,.(region, date, tb_tfc, tot_genexpert, gueris_total, tb_vih_arv, tb_vih)]
 
 # DISTRICT variables WHICH CAN BE SUMMED (counts)
 datatemp1b = district.data[,.(region, date, tb_tfc, tot_genexpert, tot_res, gueris_total, tb_vih_arv, tb_vih)]
 
 # combine the hospital and district data and then sum together 
-datatemp1 = rbind(datatemp1a, datatemp1b)
+datatemp1 = rbind(datatemp1a, datatemp1b, fill=TRUE)
 
 datatemp1 = datatemp1[, lapply(.SD, sum, na.rm=TRUE), 
                           by=c('region','date'), 
@@ -47,7 +47,7 @@ datatemp3 = district.data[, lapply(.SD, mean, na.rm=TRUE),
 # COMMUNITY DATA (WHICH is Reported in annual totals) and must be divided by 4
 datatemp4 = community.data[, lapply(.SD, function(x){x*0.25}), 
                       by=c('region', 'annee'), 
-                      .SDcols=c('com_mobsoc', 'com_cause', 'com_radio', 'com_enf_ref', 'com_nom_touss', 'com_vad_touss')]
+                      .SDcols=c('com_mobsoc', 'com_radio', 'com_enf_ref', 'com_nom_touss', 'com_vad_touss')]
 
 # create four dataframes one for each quarter
 datatemp41 <- datatemp4

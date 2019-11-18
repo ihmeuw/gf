@@ -63,8 +63,8 @@ data = na.omit(data)
 # Data transformations
 
 # make cumulative variables
-cumulVars = names(data)[grepl('exp_|other_dah|ghe|oop', names(data))]
-cumulVars = c(cumulVars, 'tb_tfc', 'com_cause', 'com_radio', 'com_enf_ref', 'com_mobsoc', 'com_vad_touss',
+cumulVars = names(data)[grepl('gf_|other_dah|ghe|oop', names(data))]
+cumulVars = c(cumulVars, 'tb_tfc', 'com_radio', 'com_enf_ref', 'com_mobsoc', 'com_vad_touss',
 	'com_nom_touss', 'com_enf_ref', 'tb_vih', 'tot_genexpert',
 	'tb_vih_arv', 'tpm_chimio_enf', 'tb_cas_id', 'dx_count', 'patients_prop_genexpert')
 
@@ -102,7 +102,7 @@ complVars = c('perf_lab',
 # }
 
 # compute lags
-lagVars = names(data)[grepl('exp_|other_dah|ghe|oop', names(data))]
+lagVars = names(data)[grepl('gf_|exp_|other_dah|ghe|oop', names(data))]
 for(v in lagVars) { 
 	data[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='region']
 	untransformed[, (paste0('lag_',v)):=data.table::shift(get(v),type='lag',n=2), by='region']

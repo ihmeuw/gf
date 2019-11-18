@@ -158,9 +158,14 @@ outputFile2b = paste0(preppedIeDir, 'prepped_resource_tracking.RDS')
 outputFile2c = paste0(preppedIeDir, 'prepped_tb_mdr_data.RDS')
 
 # output file from 2d_impute_outcomes.r
-outputFile2d = paste0(preppedIeDir, 'imputed_outcomes.RDS')
+hospitaloutputFile2d = paste0(preppedIeDir, 'imputed_outcomes_hospital')
+districtoutputFile2d = paste0(preppedIeDir, 'imputed_outcomes_district')
+communityoutputFile2d = paste0(preppedIeDir, 'imputed_outcomes_community')
+
+outputFile2d = paste0(preppedIeDir, 'imputed_outcomes_community.RDS') # aggregated imputed data
 
 # output file from 2e_imputations_mdrtb.r
+mdroutputFile2e = paste0(preppedIeDir, 'imputed_mdrtb')
 outputFile2e = paste0(preppedIeDir, 'imputed_mdrtb.RDS')
 
 # output file from 2f_final_data_prep.r
@@ -187,7 +192,7 @@ outputFile5a = paste0(preppedIeDir, 'first_half_model_results.rdata')
 
 
 # output file from 6_display_results.r
-outputFile6a = paste0(visIeDir, 'sem_diagrams.pdf')
+outputFile6a = paste0(visIeDir, 'model_diagrams.pdf')
 outputFile6b = paste0(visIeDir, 'bottleneck_analysis.pdf')
 outputFile6c = paste0(visIeDir, 'health_zone_effects.pdf')
 # # -----------------------------------------------------------------------------
