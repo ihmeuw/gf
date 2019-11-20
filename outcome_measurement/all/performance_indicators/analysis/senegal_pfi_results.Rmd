@@ -1,0 +1,120 @@
+---
+title: "Senegal Performance Indicators"
+author: "Francisco Rios Casas"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+library(data.table)
+library(ggplot2)
+library(knitr)
+library(dplyr)
+library(kableExtra)
+library(scales)
+
+# set parameters of data to be analyzed
+country = "sen"
+main_indicators = c('impact_outcome_indicators_main', 'coverage_indicators_main')
+beginning = "2019-01-01"
+end = "2019-06-30"
+
+##recent_pudrs = c('SEN-Z-MOH_Progress  Report_30Jun2019   02 09 2019.xlsx', 
+#              'SEN-M-PNLP_Progress Report_S1 2019 Version finale du 15 Aout 2019.xlsx', 
+#              'PU-SEN-H-CNLS-S1-2019_15082019_finale.xlsx', 
+#              'SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm')
+LFA_verified_grants = c("SEN-Z-MOH PUDR (Juil-Dec18) LFA 19Avr19 MAJ 25apr19.xlsx",
+                        "SEN M PNLP PUDR (Juil-Dec18) LFA, 10Mai19.xlsx",
+                        "SEN H ANCS PU (Jan-Juin19), LFA 5Sept19.xlsm",
+                        "SEN-H-CNLS PUDR (Juil-Dec18) LFA, 9Avr19.xlsx") # file names of most-recent LFA-verified grants
+
+# load data
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.RDS")
+
+# subset as appropriate
+DT <- data
+DT = DT[loc_name==country & pudr_sheet %in% main_indicators & start_date_programmatic==beginning & end_date_programmatic==end]
+```
+
+
+## 1. Introduction  
+
+This document highlights the results for Performance Indicators in Senegal. Data for indicators all came from the latest available Progress Update and Disbursement Request forms (PUDRs) indicated below:  
+
+
+```{r toc}
+recent_pudrs = unique(DT[,.(file_name, start_date_programmatic, end_date_programmatic)])
+kable(recent_pudrs, col.names=c("File", "Start of Reporting Period", "End of Reporting Period")) %>%
+  column_spec(c(2,3),width = "10em")
+```
+
+
+
+## 2. Grant Results based on most recent PUDRs  
+
+
+The "Achievement Ratio" is calculated in the PUDR to understand how close to the original target the Outcome Indicator result is. A value of 1.0 or greater means that the Indicators goal has been met or exceeded. There are some exceptions in which a value further below 1.0 means that the goal has been exceeded.
+
+
+### TB Grant
+```{r plot_results}
+# plots grant performance in a loop for all grants in country
+DT[ihme_result_achievement_ratio>2.0, ihme_result_achievement_ratio:=2.0]
+grants = unique(DT$grant)
+plots = list()
+i=1
+for(g in grants) {
+plots[[i]] = ggplot(DT[grant==g], aes(x=brief_description_code, y=ihme_result_achievement_ratio, col=target_met)) +
+  geom_point() +
+  labs(col="Target Met", title=paste0(g, "\n performance"), y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT[grant==g]$file_name))) +
+  geom_hline(yintercept = 1) +
+  theme_bw()+
+  coord_flip()+
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")+
+  theme_bw()
+i=i+1
+}
+```
+
+```{r}
+plots[[4]]
+```
+
+
+**In the most recent PUDR, the TB grant has reported the lowest performance in the number of reporting units that had no stock-outs of anti-TB drugs. Number of MDR-TB patients that began second line treatment and health district coverage with TB services are the next indicators with the worst performance. Community referrals has also been an area where the indicator results reported have not been meeting the targets set.** 
+
+
+### Malaria Grant
+
+```{r}
+plots[[1]]
+```
+
+
+**The Malaria grant has been meeting or close to meeting all of its targets except with regards to the proportion of pregnant women who received at least three doses of intermittent preventive treatment (IPTp).**
+
+
+
+### HIV Grants
+
+```{r}
+plots[[2]]
+```
+
+
+**The HIV ANCS grant has been performing lower than its targets in indicators that relate to sex workers. Testing for other vulnerable populations have been close to meeting their targets as well. **
+
+```{r}
+plots[[3]]
+```
+
+**The CNLS grant appears to have more indicators that are lower performing than the ANCS (Civil Society) grant. These include several indicators relating to HIV testing for infants and ART for other vulnerable populations such as pregnant women and testing for other vulnerable populations.**
+
+**The majority of Indicators between the two HIV grants are different, but in some cases--such as KP-3d(M) testing for HIV among people who inject drugs--both the CNLS and ANCS report different results for the same indicator. The PUDRs for each of the grants also list different targets: while the ANCS grant reports a higher value it also lists a higher target and the CNLS grant lists a lower result but also a much lower target leading to a much higher achievement ratio. Currently, only the ANCS PUDR is LFA-verified however.**  

@@ -41,7 +41,6 @@ NTP Database,National Program
 MDR-TB patient registries and quarterly reports and annual report,Patient Registry
 TB Annual,National Program
 NMCP Report 2016,National Program
-N/A,NA
 "Nominal database, HMIS (SIGSA)",HMIS
 Investigation of cases report,Patient Registry
 DHS 2013/2014,Survey
@@ -83,3 +82,12 @@ Surveillance systems,Survey
 Report,Report
 AIS (AIDS Indicator Survey),Survey
 MIS (Malaria Indicator Survey),Survey
+Spectrum Model 2016,Modelled Data
+"Sentinel Surveillance, VICITS 2016",Survey
+"HIVOS. Global Fund, Tephinet (2017). Measuring HIV/AIDS prevalence, behavior, attitudes and practices in most-at-risk populations in Guatemala.",
+"HIVOS. Global Fund. Tephinet (2017). Measuring HIV/AIDS prevalence, behavior, attitudes and practices in most-at-risk populations in Guatemala.",
+MANGUA,
+Hivos Integrated Project Management System (SIGPRO) and MSPAS field monitoring teams report,
+SIGSA-SIDA 1.2 Annex C. HIV National program Information System.,HMIS
+MANGUA (MSPAS). Data from the Spectrum 2017 model produced by MSPAS.,
+"Source: SIAL, MANGUA (MSPAS), San José Hospice and Military Hospital",

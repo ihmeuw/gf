@@ -25,22 +25,22 @@ all_mods = unique(all_mods[, .(module_eng, intervention_eng, abbrev_mod_eng, abb
 all_mods[, concat1:=paste0(module_eng, intervention_eng)]
 all_mods[, concat2:=paste0(abbrev_mod_eng, abbrev_int_eng)]
 all_mods[, grp1:=seq(0, 2, by=1), by='concat1']
-dt = merge(dt, all_mods, by=c('module_eng', 'intervention_eng'))
+dt = merge(dt, all_mods, by=c('module_eng', 'intervention_eng'), all.x=T)
 merge2 = dt[, sum(v0, na.rm=T)]
 rows2 = nrow(dt)
 stopifnot(merge1==merge2 & rows1==rows2)
 
 #Collapse to module level. 
-by_module = dt[, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T)), by=c('grant', 'grant_period', 'abbrev_mod_eng')]
+by_module = dt[, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T), v3=sum(v3, na.rm=T)), by=c('grant', 'grant_period', 'abbrev_mod_eng')]
 by_module = melt(by_module, id.vars=c('grant', 'grant_period', 'abbrev_mod_eng'), value.name="budget", variable.name="version")
 by_module[, label:=paste0("$", round(budget))]
-by_module[, version:=factor(version, levels=c('v2', 'v1', 'v0'), labels=c('v2', 'v1', 'v0'))] #Reverse this factoring so it shows up on the graph in the right order. 
+by_module[, version:=factor(version, levels=c('v3', 'v2', 'v1', 'v0'), labels=c('v3', 'v2', 'v1', 'v0'))] #Reverse this factoring so it shows up on the graph in the right order. 
 
 #Collapse by intervention. 
-by_intervention = dt[, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T)), by=c('grant', 'grant_period', 'abbrev_mod_eng', 'abbrev_int_eng')]
+by_intervention = dt[, .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T), v3=sum(v3, na.rm=T)), by=c('grant', 'grant_period', 'abbrev_mod_eng', 'abbrev_int_eng')]
 by_intervention = melt(by_intervention, id.vars=c('grant', 'grant_period', 'abbrev_mod_eng', 'abbrev_int_eng'), value.name="budget", variable.name="version")
 by_intervention[, label:=paste0("$", round(budget))]
-by_intervention[, version:=factor(version, levels=c('v2', 'v1', 'v0'), labels=c('v2', 'v1', 'v0'))] #Reverse this factoring so it shows up on the graph in the right order. 
+by_intervention[, version:=factor(version, levels=c('v3', 'v2', 'v1', 'v0'), labels=c('v3', 'v2', 'v1', 'v0'))] #Reverse this factoring so it shows up on the graph in the right order. 
 
 #Read in the master file list to pull the names of the file revisions. 
 file_list = data.table(read_excel("C:/Users/elineb/Box Sync/Global Fund Files/master_file_list.xlsx"))
@@ -65,19 +65,18 @@ kable(file_list[, 4:5])
 
 ## GTM-M-MSPAS
 ```{r module_graphs1, echo=FALSE, warning=FALSE}
-for (g in unique(by_module$grant)){
-  p = ggplot(by_module[grant==g], aes(x=abbrev_mod_eng, y=budget, fill=version)) + 
+p = ggplot(by_module[grant=="GTM-M-MSPAS"], aes(x=abbrev_mod_eng, y=budget, fill=version)) + 
     geom_bar(stat="identity", position="dodge") + 
     # geom_text(data=by_module, aes(x=abbrev_mod_eng, y=budget, label=label), vjust=0) + 
     theme_bw() + 
     coord_flip() + 
-    labs(title=paste0(g, " budget revisions, by module"), x="Module", y="Budget", fill="Version") + 
+    labs(title=paste0("GTM-M-MSPAS budget revisions, by module"), x="Module", y="Budget", fill="Version") + 
     scale_y_continuous(labels = scales::dollar)
   print(p)
-}
+
 ```
 
-So far, the only grant we've received updated budgets for is GTM-M-MSPAS. Overall, it looks like the shifts within modules have been minimal, but the largest ones have been within procurement and supply chain management, info systems & M&E, and case management. 
+Under the GTM-M-MSPAS grant, it looks like the shifts within modules have been minimal, but the largest ones have been within procurement and supply chain management, info systems & M&E, and case management. 
 
 ## Procurement and supply chain management budget revisions
 ```{r by_int1, echo=FALSE, warning=FALSE}
@@ -117,3 +116,19 @@ ggplot(by_intervention[abbrev_mod_eng=="Case management"], aes(x=abbrev_int_eng,
 ```
 
 This slide is a breakdown of the interventions under the module "Case management."All case management interventions have decreased slightly, except for IECC/BCC case management, which has increased. 
+
+## GTM-H-INCAP
+```{r module_graphs2, echo=FALSE, warning=FALSE}
+subset = by_module[grant=="GTM-H-INCAP" & version%in%c('v0', 'v1') & !is.na(abbrev_mod_eng)]
+p = ggplot(subset, aes(x=abbrev_mod_eng, y=budget, fill=version)) + 
+    geom_bar(stat="identity", position="dodge") + 
+    # geom_text(data=by_module, aes(x=abbrev_mod_eng, y=budget, label=label), vjust=0) + 
+    theme_bw() + 
+    coord_flip() + 
+    labs(title=paste0("GTM-H-INCAP budget revisions, by module"), x="Module", y="Budget", fill="Version") + 
+    scale_y_continuous(labels = scales::dollar)
+  print(p)
+
+```
+
+For the INCAP grant, prevention programs for all key populations have declined in the first budget revision, as well as the overall budget for human rights. Treatment, care and support funding has increased. On the other hand, PMTCT funding has increased, as has funding for program management, HMIS, and service delivery (RSSH). 

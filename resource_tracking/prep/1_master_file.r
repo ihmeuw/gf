@@ -64,9 +64,9 @@ if (prep_files | prep_gos){
   } else if (prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
-  source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
-  source(paste0(code_dir, "2e_gf_aggregate_files.R"))
-  source(paste0(code_dir, "2f_gf_verify_outputs.R"))
+  # source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
+  # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
+  # source(paste0(code_dir, "2f_gf_verify_outputs.R"))
   # 
   # rmarkdown::render(paste0(code_dir, "2g_gf_visualize_data.rmd",
   #                          output_dir=paste0(dir, "/visualizations/verification"),

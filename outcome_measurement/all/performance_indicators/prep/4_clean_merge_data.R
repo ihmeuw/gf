@@ -126,13 +126,9 @@ dt$lfa_result_value <- ifelse(is.na(dt$lfa_result_pct), dt$lfa_result_n, dt$lfa_
 dt$gf_result_value <- ifelse(is.na(dt$gf_result_pct), dt$gf_result_n, dt$gf_result_pct)
 
 # create the any_result_value which is will gather any available result value reported by any of the three sources
-dt$any_result_value <- NA
-dt$any_result_value <- ifelse(is.na(dt$gf_result_value),
-                                 ifelse(is.na(dt$lfa_result_value), 
-                                        ifelse(is.na(dt$pr_result_value), NA, 
-                                               dt$pr_result_value), 
-                                        dt$lfa_result_value),
-                                 dt$gf_result_value)
+dt[, any_result_value:=gf_result_value]
+dt[is.na(any_result_value), any_result_value:=lfa_result_value]
+dt[is.na(any_result_value), any_result_value:=pr_result_value]
 
 # create completeness rating for target and result value
 dt$completeness_rating <- NA
@@ -145,11 +141,7 @@ dt$completeness_rating[which(  !is.na(dt$target_value)  & !is.na(dt$any_result_v
 # create factor variable and assign names
 dt$completeness_rating <- factor(dt$completeness_rating)
 
-levels(dt$completeness_rating) <- c("No data avail.", "Only Result avail.", "Only Target avail.", "Both available")
-
-# calculate ihme_results_achievement_ratio
-dt$ihme_result_achievement_ratio <-NA
-dt$ihme_result_achievement_ratio <- dt$any_result_value/dt$target_value
+levels(dt$completeness_rating) <-  c("No data", "Only Result", "Only Target", "Both available")
 
 # calculate if the sources differ between the baseline value and the pr reported value
 dt$sources_different <- NA

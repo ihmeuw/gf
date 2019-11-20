@@ -111,7 +111,7 @@ ggplot(sex_tot, aes(x=date, y=percent)) +
 ggplot(coordinates, aes(x=long, y=lat, group=group, fill=suppression_ratio)) + 
   geom_polygon() + 
   geom_path(size=0.01, color="#636363") + 
-  scale_fill_gradientn(colors=ratio_colors) + 
+  scale_fill_gradientn(colors=ratio_colors, na.value='white') + 
   theme_void() + 
   labs(title="Percent virally suppressed by district, Uganda", subtitle=" August 2014 - February 2018",
        caption="Source: Uganda Viral Load Dashboard", fill="% virally suppressed") +

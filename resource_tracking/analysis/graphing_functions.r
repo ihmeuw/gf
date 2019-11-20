@@ -6,9 +6,7 @@
 
 #----------------------
 # To do 
-#Want to bring in abbreviated module labels, 
-# Pass a specific intervention to limit to 
-# show stacked budget/expenditure instead of absorption%
+
 # Show projected absorption
 #-----------------------
 
@@ -17,42 +15,37 @@
 # countryName - the country to subset to: options are 'cod', 'gtm', 'sen', or 'uga'. 
 # diseaseName - the disease to subset to: options are 'hiv', 'tb', 'malaria', 'hiv/tb', or 'rssh'. 
 # grantPeriod - the grant period in the absorption data to subset to. 
-# byModule - show one bar for each module? Incompatible with bySemester.
-# byModule - show one bar for each intervention? Incompatible with byModule or bySemester, and requires limitModules. 
-# bySemester - show one bar for each semester? Incompatible with byModule. 
-# byGrant - facet wrap by grant? 
+# xVar - what should the x-axis be? (Will show as y-axis with coord_flip) 
+# facetVar - should you facet wrap by any variables? 
 # grantName - subset to one particular grant? Pass the name of the grant desired. 
 # yScaleMax - What's the cutoff point for the y-axis labels (absorption as a %?)
-# barColor - specify a color palette or bar color. 
 # trimAbsorption - should absorption be cut off at 150%? 
-#limitModules - pass a character vector of the Global Fund modules to limit the graph to. 
-#facetSemester - do you want to facet wrap by semester? Default is TRUE. 
-#poolSemester - do you want to pool groups of semesters? Pass a character vector.
+# angleText - should y-axis labels be angled at 30 degrees? 
+# altTitle, altSubtitle, altCaption - pass strings as alternate options to the "labs" argument in ggplot
 
-absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stackBudgetExp = FALSE, bySemester=FALSE, byModule=FALSE, byIntervention=FALSE, 
-                                     byGrant=FALSE, grantName=NULL, yScaleMax=160, barColor=ihme_purples[4], baseSize=16,
-                                     barLabels = FALSE, trimAbsorption=FALSE, limitModules=NULL, facetSemester=TRUE, poolSemester=NULL, 
+budget_exp_bar = function(countryName, diseaseName, grantPeriod=NULL, xVar=c('abbrev_mod_eng'), facetVar=NULL,
+                                     grantName=NULL, yScaleMax=160, baseSize=16, barLabels = TRUE, 
+                                     trimAbsorption=FALSE, angleText=FALSE,
                                      altTitle=NULL, altSubtitle=NULL, altCaption=NULL){
   require(data.table) 
   require(ggplot2) 
+  require(scales)
   options(scipen=100)
   
   #Validation checks
   stopifnot(countryName%in%c('cod', 'gtm', 'sen', 'uga'))
   stopifnot(diseaseName%in%c('hiv', 'tb', 'malaria', 'hiv/tb', 'rssh'))
-  if (bySemester==byModule & bySemester==byIntervention) stop("You must specify a formatting option - either bySemester or byModule/byIntervention, but not both.")
-  if (byModule & byIntervention) stop("You must set either byModule or byIntervention to TRUE, but not both.")
-  if (byIntervention & is.null(limitModules)) stop("byIntervention argument requires that limitModules is specified. Use get_modules() to see available modules.")
-  if (!is.null(poolSemester) & !is.character(poolSemester)) stop("Specify a list of semesters as characters to the 'poolSemester' argument.")
-  if (stackBudgetExp & (byModule | byIntervention)) stop("stackBudgetExp option currenly only available with bySemester.")
-  
+  if (is.null(grantPeriod)) print("WARNING: Grant period is null. This will pool data from all grant periods. Subset your data first.")
+  stopifnot(length(xVar)==1)
+  stopifnot(length(facetVar)<=1)
+
   #Read in data 
   dir = paste0("C:/Users/elineb/Box Sync/Global Fund Files/", toupper(countryName), "/prepped_data/")
   dt = readRDS(paste0(dir, "absorption_", countryName, ".rds"))
   
   #Merge on abbreviated module names. 
   all_interventions = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
-  all_interventions = all_interventions[, .(code, abbrev_mod_eng, abbrev_int_eng)]
+  all_interventions = unique(all_interventions[, .(code, abbrev_mod_eng, abbrev_int_eng)])
   dt = merge(dt, all_interventions, by='code')
   stopifnot(nrow(dt[is.na(abbrev_mod_eng) | is.na(abbrev_int_eng)])==0)
   
@@ -68,9 +61,6 @@ absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stac
   if (!is.null(grantName)){
     dt = dt[grant==grantName]
   }
-  if (!is.null(limitModules)){
-    dt = dt[gf_module%in%limitModules]
-  }
   
   #Formatting 
   if (countryName == "cod") countryLabel = "DRC"
@@ -84,135 +74,57 @@ absorption_by_loc_disease = function(countryName, diseaseName, grantPeriod, stac
   if (diseaseName == "hiv/tb") diseaseLabel = "HIV/TB"
   if (diseaseName == "rssh") diseaseLabel = "RSSH"
   
+  if (xVar=="abbrev_mod_eng") xLabel="Module"
+  if (xVar=="abbrev_int_eng") xLabel="Intervention"
+  if (xVar=="grant") xLabel="Grant"
+  if (xVar=="grant_period") xLabel="Grant Period"
+  
   #Set these options so they can be dynamically filled. 
   baseTitle = NULL
   baseSubtitle = NULL
   baseCaption = NULL
   
   #------------------------------------------------------------
-  # BY SEMESTER GRAPH 
+  # Collapse data, and set by variables. 
   # -----------------------------------------------------------
-  if (bySemester) {
-    if (is.null(grantName)) warning("Using the bySemester option without specifying grantName will pool grants by semester.")
-    collapse = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'semester')]
-    collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
-    collapse[, barLabel:=paste0(absorption, "%")]
- 
-    #Trim absorption if specified, and flag values greater than yScale limits. 
-    if (trimAbsorption) collapse[absorption>150, absorption:=150]
-    if (max(collapse$absorption)>yScaleMax) stop(paste0("Increase yScaleMax value - absorption values will be cut off. Max absorption is ", max(collapse$absorption)))
-    
-    # Base plot 
-    if (stackBudgetExp) {
-      collapse = collapse[, .(grant_period, semester, budget, expenditure)]
-      collapse[, absorption:=round((expenditure/budget)*100, 1)]
-      setnames(collapse, c('budget', 'expenditure'), c('Budget', 'Expenditure'))
-      collapse = melt(collapse, id.vars=c('grant_period', 'semester', 'absorption'), value.var='variable')
-      
-      if (trimAbsorption) collapse[absorption>150, absorption:=150]
-      
-      collapse[, barLabel:=paste0(absorption, "%")] 
-      collapse[variable=="Budget", barLabel:=""]
-      
-      p = ggplot(collapse, aes(x=semester, y=value, fill=variable, label=barLabel)) + 
-        geom_bar(stat="identity", position="identity") + 
-        theme_bw(base_size=baseSize) + 
-        scale_y_continuous(labels = scales::dollar) + 
-        labs(x="Semester", y="", fill="")
-      
-      baseTitle = paste0("Absorption for ", diseaseLabel, " in ", countryLabel, " in ", grantPeriod, "\n")
-    } else {
-      p = ggplot(collapse, aes(x=semester, y=absorption, label=barLabel)) + 
-        geom_bar(stat="identity", fill=barColor) + 
-        theme_bw(base_size=baseSize) + 
-        scale_y_continuous(limits=c(0, yScaleMax)) + 
-        labs(x="Semester", y="Absorption")
-      baseTitle = paste0("Absorption for ", diseaseLabel, " in ", countryLabel, " in ", grantPeriod, "\n")
-    } 
-    
-    #Options
-    if (length(grantPeriod)!=1){
-      p = p + facet_wrap(~grant_period)
-    }
+  collapseVars = c(xVar, facetVar)
+  
+  plot_data = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=collapseVars]
+  plot_data[, absorption:=round((expenditure/budget)*100, 1)]
+  
+  #Trim absorption if specified, and flag values greater than yScale limits. 
+  if (trimAbsorption) plot_data[absorption>150, absorption:=150]
+  if (max(plot_data$absorption, na.rm=T)>yScaleMax) stop(paste0("Increase yScaleMax value - absorption values will be cut off. Max absorption is ", max(plot_data$absorption)))
+  
+  #Add labels 
+  plot_data[, barLabel:=paste0(dollar(expenditure), " (", absorption, ")%")]
+  
+  # Melt data 
+  plot_data = melt(plot_data, id.vars=c(collapseVars, 'absorption', 'barLabel'))
+  plot_data[variable=="budget", barLabel:=""]
+  plot_data[variable=="budget", variable:="Budget"]
+  plot_data[variable=="expenditure", variable:="Expenditure"]
+  
+  #Base plot
+  p = ggplot(plot_data, aes(x=get(xVar), y=value, fill=variable, label=barLabel)) + 
+    geom_bar(stat="identity", position="identity") + 
+    theme_bw(base_size=baseSize) + 
+    coord_flip() + 
+    scale_y_continuous(labels = scales::dollar) + 
+    labs(x=xLabel, y="", fill="")
+  
+  if (!is.null(facetVar)) {
+    p = p + facet_wrap(~get(facetVar)) 
   } 
   
-  #------------------------------------------------------------
-  # BY MODULE GRAPH
-  # -----------------------------------------------------------
-  
-  if (byModule) {
-    if (length(grantPeriod)>1) stop("byModule option only available for one grant period at once.")
-    if (!is.null(poolSemester) & facetSemester) stop("You must set facetSemester to false if you pool semesters.")
-    
-    #Pool semesters if option is specified. 
-    if (!is.null(poolSemester)){
-      collapse = dt[semester%in%poolSemester, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'abbrev_mod_eng')]
-      collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
-    } else {
-      collapse = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'semester', 'abbrev_mod_eng')]
-      collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
-    } 
-    
-    #Trim absorption if specified, and flag values greater than yScale limits. 
-    if (trimAbsorption) collapse[absorption>150, absorption:=150]
-    if (max(collapse$absorption, na.rm=T)>yScaleMax) stop(paste0("Increase yScaleMax value - absorption values will be cut off. Max absorption is ", max(collapse$absorption)))
-    
-    #Add labels 
-    collapse[, barLabel:=paste0(absorption, "%")]
-    
-    #Base plot
-    p = ggplot(collapse, aes(x=abbrev_mod_eng, y=absorption, label=barLabel)) + 
-      geom_bar(stat="identity", fill=barColor) + 
-      theme_bw(base_size=baseSize) + 
-      scale_y_continuous(limits=c(0, yScaleMax)) + 
-      coord_flip() + 
-      labs(x="Module", y="Absorption")
-    baseTitle = paste0("Absorption for ", diseaseLabel, " in ", countryLabel, " in ", grantPeriod, "\n")
-    
-    if (facetSemester) {
-      p = p + facet_wrap(~semester) 
-    } 
-    
-  } 
-  
-  if (byIntervention) {
-    if (length(grantPeriod)>1) stop("byIntervention option only available for one grant period at once.")
-    if (!is.null(poolSemester) & facetSemester) stop("You must set facetSemester to false if you pool semesters.")
-    
-    #Pool by semester if option is specified. 
-    if (!is.null(poolSemester)){
-      collapse = dt[semester%in%poolSemester, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'abbrev_int_eng')]
-      collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
-    } else {
-      collapse = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant_period', 'semester', 'abbrev_int_eng')]
-      collapse[, absorption:=round((expenditure/budget)*100, 1)] #Editorial decision to round here; can be revisited but this seems to be the preference. 
-    }
-    
-    #Trim absorption if specified, and flag values greater than yScale limits. 
-    if (trimAbsorption) collapse[absorption>150, absorption:=150]
-    if (max(collapse$absorption, na.rm=T)>yScaleMax) stop(paste0("Increase yScaleMax value - absorption values will be cut off. Max absorption is ", max(collapse$absorption)))
-    
-    #Add labels 
-    collapse[, barLabel:=paste0(absorption, "%")]
-    
-    # Base plot 
-    p = ggplot(collapse, aes(x=abbrev_int_eng, y=absorption, label=barLabel)) + 
-      geom_bar(stat="identity", fill=barColor) + 
-      theme_bw(base_size=baseSize) + 
-      scale_y_continuous(limits=c(0, yScaleMax)) + 
-      coord_flip() + 
-      labs(x="Intervention", y="Absorption")
-    baseCaption=paste0("*Modules limited to ", limitModules, "\n")
-    baseTitle = paste0("Absorption for ", diseaseLabel, " in ", countryLabel, " in ", grantPeriod, "\n")
-    if (facetSemester) {
-      p = p + facet_wrap(~semester) 
-    } 
-    
-  } 
-  
+  #------------------------------------------  
   # Options 
+  #------------------------------------------  
   if (barLabels) {
-    p = p + geom_text(aes(label=barLabel), data=collapse, vjust=0, hjust=0, size=5, nudge_y=3)  
+    p = p + geom_text(hjust=0)  
+    if (angleText){
+      p = p + theme(axis.text.x=element_text(angle=30, vjust=0.5))
+    }
   } 
   if (trimAbsorption){
     baseCaption = paste0(baseCaption, "*Absorption capped at 150%\n")

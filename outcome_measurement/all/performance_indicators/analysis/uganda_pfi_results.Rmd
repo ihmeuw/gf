@@ -1,0 +1,122 @@
+---
+title: "Uganda Performance Indicators"
+author: "Francisco Rios Casas"
+date: '`r format(Sys.Date(), "%B %d, %Y")`'
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE)
+
+library(data.table)
+library(ggplot2)
+library(knitr)
+library(dplyr)
+library(kableExtra)
+library(scales)
+
+# set parameters of data to be analyzed
+country = "uga"
+main_indicators = c('impact_outcome_indicators_main', 'coverage_indicators_main')
+beginning = "2019-01-01"
+end = "2019-06-30"
+# recent_pudrs = c("Final LFA reviewed UGA-M-MoFPED PUDR.xlsx",
+#                  "UGA-M-TASO PUDR Jul-Dec18.xlsx",
+#                  "UGA-H-MoFPED Progress Update Report Jan-Jun 2019.xlsx",
+#                  "LFA Reviewed UGA-C-TASO PE 31Dec18.xlsx",
+#                  "LFA Reviewed UGA-T-MOFPED PE 31 Dec 2019 (10 May 2019).xlsx"
+#                  )
+# LFA_verified_grants = c("Final LFA reviewed UGA-M-MoFPED PUDR.xlsx",
+#                         "Final LFA reviewed UGA-M-TASO PUDR 2 Oct 2018.xlsx",
+#                         "LFA Reviewed UGA-H-MoFPED PUDR PE 31 Dec 18  (10 May 19).xlsx",
+#                         "LFA Reviewed UGA-C-TASO PE 31Dec18.xlsx",
+#                         "LFA Reviewed UGA-T-MOFPED PE 31 Dec 2019 (10 May 2019).xlsx") # file names of most-recent LFA-verified grants
+
+
+
+# load data
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.RDS")
+
+# subset as appropriate
+# subset as appropriate
+DT <- data
+DT = DT[loc_name==country & pudr_sheet %in% main_indicators & start_date_programmatic==beginning & end_date_programmatic==end]
+```
+
+
+## 1. Introduction  
+
+This document highlights the results for Performance Indicators in Uganda. Data for indicators all came from the latest available Progress Update and Disbursement Request forms (PUDRs) indicated below:  
+
+
+```{r toc}
+recent_pudrs = unique(DT[,.(file_name, start_date_programmatic, end_date_programmatic)])
+kable(recent_pudrs, col.names=c("File", "Start of Reporting Period", "End of Reporting Period")) %>%
+  column_spec(c(2,3),width = "10em")
+```
+
+## 2. Grant Results based on most recent PUDRs  
+
+
+The "Achievement Ratio" is calculated in the PUDR to understand how close to the original target the Outcome Indicator result is. A value of 1.0 or greater means that the Indicator's goal has been met or exceeded.
+
+
+```{r plot_results}
+# plots grant performance in a loop for all grants in country
+DT[ihme_result_achievement_ratio>2.0, ihme_result_achievement_ratio:=2.0]
+grants = unique(DT$grant)
+plots = list()
+i=1
+for(g in grants) {
+plots[[i]] = ggplot(DT[grant==g], aes(x=brief_description_code, y=ihme_result_achievement_ratio, col=target_met)) +
+  geom_point() +
+  labs(col="Target Met", title="", y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT[grant==g]$file_name))) +
+  geom_hline(yintercept = 1) +
+  theme_bw()+
+  coord_flip()+
+  ylim(0,1.5)+
+  theme(legend.position = "bottom")+
+  theme_bw()
+i=i+1
+}
+```
+
+### Malaria Grants
+
+```{r}
+plots[[1]]
+```
+
+**The indicators further from their original goals are the number of long-lasting insecticidal treated nets (LLIN) distributed, and children who slept under an ITN in the previous night, and the proportion of women attending antenatal care.**
+
+```{r}
+plots[[2]]
+```
+
+**The majority of indicators in the UGA-M-TASO grant are close to meeting their targets. The lowest-achieving indicators in the grant are related to antimalarial treatment in private sector sites and the timely reporting of HMIS-reporting sites.**
+
+
+### HIV Grants
+```{r}
+plots[[3]]
+```
+
+**Around half of the UGA-H-MoFPED indicators are meeting or exceeding their targets. The indicator furthest from its target relates to TB preventive therapy for people living with HIV and testing for HIV.**
+
+### Combined TB/HIV Grant
+```{r}
+plots[[4]]
+```
+
+**There are mixed results relating to key populations in the UGA-C-TASO grant. While testing for MSM and prevention programs for AGYW have been reaching their targets, indicators for prevention programs for Sex Workers (SWs) and MSM have been far below target.** 
+
+### TB Grant
+```{r}
+plots[[5]]
+```
+
+**Most of the indicators reported for the UGA-T-MoFPED grant are close to or exceeding their targets. Treatment for MDR-TB and Rifampicin drug-susceptibility testing were the furthest from their goals.**

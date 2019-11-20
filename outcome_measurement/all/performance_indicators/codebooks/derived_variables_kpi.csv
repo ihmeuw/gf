@@ -8,3 +8,5 @@ lfa_result_value,"Is the same as % lfa result reported, unless indicator is not 
 gf_result_value,"Is the same as % gf reported, unless indicator is not a proportion or only the numerator reported"
 completeness_rating,Indicates how much data is available for each indicator
 any_achievement_ratio,"calculates the best available achievement ratio in order of GF, LFA, PR"
+reverse_indicator_final,indicates whether indicators should be considered reverse
+target_met,indicates whether indicator's target has been met or exceeded
