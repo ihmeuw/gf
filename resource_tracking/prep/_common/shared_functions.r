@@ -200,19 +200,22 @@ expand_to_quarter = function(dt, idVars=NULL, finVars=NULL, startDateVar=NULL, p
 # (and much simpler). 
 #---------------------------------------------------------------------------------
 
-convert_eur_usd = function(dt, yearVar=NULL){
+convert_currency = function(dt, yearVar=NULL, convertFrom, convertTo, finVars = c('budget', 'expenditure', 'disbursement')){
   if (is.null(yearVar)) stop("year argument is NULL")
   if (class(yearVar)!='character') stop("year must be a character")
   if (!yearVar %in% names(dt)) stop("year argument is not a variable in data table")
+  if (!convertFrom%in%c('EUR', 'USD')) stop("convertFrom must be either EUR or USD")
+  if (!convertTo%in%c('EUR', 'USD')) stop("convertTo must be either EUR or USD")
+  if (!any(finVars%in%names(dt))) stop("Financial variables to convert are not in data. Modify the 'finVars' option.")
   
   #Pulled out from FGH team's currency conversion function - Emily Linebarger, 5/7/19 
-  oecd_xrate = fread(paste0(j, "/Project/IRH/HIV/01_data/raw_data/xrates_oecd_121118.csv")) #This data includes 1995-2017. 
+  oecd_xrate = fread("J:/Project/IRH/HIV/01_data/raw_data/xrates_oecd_121118.csv") #This data includes 1995-2017. 
   oecd_xrate = oecd_xrate[LOCATION == "EA19", .(TIME, Value)]
   setnames(oecd_xrate, c('TIME','Value'), c(yearVar, 'eur_usd'))
   oecd_xrate[, (yearVar):= as.integer(get(yearVar))]
   
   #Re-extracted from the OECD's website to grab 2018 as well. 
-  oecd_xrate2 = fread(paste0(dir, "_other_data_sources/multi_country/oecd_currency_conversion/oecd_conversion_rates_2018.csv"))
+  oecd_xrate2 = fread("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/oecd_currency_conversion/oecd_conversion_rates_2018.csv")
   oecd_xrate2 = oecd_xrate2[LOCATION == "EA19", .(TIME, Value)]
   setnames(oecd_xrate2, c('TIME','Value'), c(yearVar, 'eur_usd'))
   oecd_xrate2[, (yearVar):= as.integer(get(yearVar))]
@@ -231,84 +234,29 @@ convert_eur_usd = function(dt, yearVar=NULL){
   oecd_xrate[, eur_usd:=round(eur_usd, 6)]
   
   #Merge data 
-  converted_to_USD <- merge(dt, oecd_xrate, 
+  dt_converted <- merge(dt, oecd_xrate, 
                             by = yearVar, 
                             all.x = T)
   #Validate data 
-  stopifnot(nrow(converted_to_USD[is.na(yearVar)])==0)
-  stopifnot(nrow(converted_to_USD[is.na(eur_usd)])==0)
+  stopifnot(nrow(dt_converted[is.na(yearVar)])==0)
+  stopifnot(nrow(dt_converted[is.na(eur_usd)])==0)
   
   #Convert financial variables. 
-  converted_to_USD[is.na(budget), budget:=0]
-  converted_to_USD[is.na(expenditure), expenditure:=0]
-  converted_to_USD[is.na(lfa_exp_adjustment), lfa_exp_adjustment:=0]
-  converted_to_USD[is.na(disbursement), disbursement:=0]
+  for (var in finVars){
+    dt_converted[is.na(get(var)), (var):=0]
+    if (convertTo=="USD"){
+      dt_converted[, (var):=get(var)/eur_usd]
+      dt_converted[, file_currency:="USD"]
+    } else if (convertTo=="EUR"){
+      dt_converted[, (var):=get(var)*eur_usd]
+      dt_converted[, file_currency:="EUR"]
+    }
+  } 
   
-  converted_to_USD[, budget_new:=budget/eur_usd]
-  converted_to_USD[, expenditure_new:=expenditure/eur_usd]
-  converted_to_USD[, lfa_exp_adjustment_new:=lfa_exp_adjustment/eur_usd]
-  converted_to_USD[, disbursement_new:=disbursement/eur_usd]
+  dt_converted$eur_usd <- NULL #Drop the conversion rate
   
-  converted_to_USD[, orig_currency:= 'EUR']
-  
-  return(converted_to_USD)
-
+  return(dt_converted)
 }
-
-
-convert_usd_eur = function(dt, yearVar=NULL){
-  if (is.null(yearVar)) stop("year argument is NULL")
-  if (class(yearVar)!='character') stop("year must be a character")
-  if (!yearVar %in% names(dt)) stop("year argument is not a variable in data table")
-  
-  #Pulled out from FGH team's currency conversion function - Emily Linebarger, 5/7/19 
-  oecd_xrate = fread(paste0(j, "/Project/IRH/HIV/01_data/raw_data/xrates_oecd_121118.csv")) #This data includes 1995-2017. 
-  oecd_xrate = oecd_xrate[LOCATION == "EA19", .(TIME, Value)]
-  setnames(oecd_xrate, c('TIME','Value'), c(yearVar, 'eur_usd'))
-  oecd_xrate[, (yearVar):= as.integer(get(yearVar))]
-  
-  #Re-extracted from the OECD's website to grab 2018 as well. 
-  oecd_xrate2 = fread(paste0(dir, "_other_data_sources/multi_country/oecd_currency_conversion/oecd_conversion_rates_2018.csv"))
-  oecd_xrate2 = oecd_xrate2[LOCATION == "EA19", .(TIME, Value)]
-  setnames(oecd_xrate2, c('TIME','Value'), c(yearVar, 'eur_usd'))
-  oecd_xrate2[, (yearVar):= as.integer(get(yearVar))]
-  
-  #Bind these two time series together. 
-  oecd_xrate = rbind(oecd_xrate, oecd_xrate2)
-  
-  #Create one more data table that has several years into the future, with the latest exchange rate available. 
-  #This is a temporary patch until more data (or a better method) becomes available! 
-  latest_rate = oecd_xrate[get(yearVar)==max(get(yearVar)), .(eur_usd)]
-  xrate_extension = data.table(year = seq(2019, 2023, by=1), eur_usd = rep(latest_rate, 5)) #Extend 5 years into the future - this should catch all of our current data. 
-  oecd_xrate = rbind(oecd_xrate, xrate_extension)
-  
-  #Round OECD exchange rates to 6 significant figures 
-  oecd_xrate[, eur_usd:=as.numeric(eur_usd)]
-  oecd_xrate[, eur_usd:=round(eur_usd, 6)]
-  
-  #Merge data 
-  converted_to_USD <- merge(dt, oecd_xrate, 
-                            by = yearVar, 
-                            all.x = T)
-  #Validate data 
-  stopifnot(nrow(converted_to_USD[is.na(yearVar)])==0)
-  stopifnot(nrow(converted_to_USD[is.na(eur_usd)])==0)
-  
-  #Convert financial variables. 
-  converted_to_USD[is.na(budget_new), budget_new:=0]
-  converted_to_USD[is.na(expenditure_new), expenditure_new:=0]
-  converted_to_USD[is.na(disbursement_new), disbursement_new:=0]
-  
-  converted_to_USD[, budget:=budget_new*eur_usd]
-  converted_to_USD[, expenditure:=expenditure_new*eur_usd]
-  converted_to_USD[, disbursement:=disbursement_new*eur_usd]
-  
-  converted_to_USD[, orig_currency:= 'USD']
-  
-  return(converted_to_USD)
-  
-}
-
 
 #Attempts to use FGH team's currency function - these were unsuccessful. If we can debug this function it would be better to return to it. 
 # The common function was returning all budget and expenditure values as NA.

@@ -164,7 +164,9 @@ expenditures = rbind(exp_recast, exp_no_overlap)
 #-------------------------------------------
 #3. Absorption
 #-------------------------------------------
-absorption = mapped_data[data_source=="pudr" & file_iteration=="final", .(grant, grant_period, code, gf_module, gf_intervention, budget, expenditure, lfa_exp_adjustment, pudr_semester_financial, start_date)]
+absorption = mapped_data[data_source=="pudr" & file_iteration=="final", .(grant, grant_period, code, gf_module, gf_intervention, 
+                                                                          budget, expenditure, lfa_exp_adjustment, pudr_semester_financial, start_date,
+                                                                          cumulative_budget, cumulative_expenditure)]
 absorption[, expenditure:=expenditure+lfa_exp_adjustment] #Calculate final expenditure. 
 absorption = absorption[, -c('lfa_exp_adjustment')]
 setnames(absorption, 'pudr_semester_financial', 'pudr_code')
@@ -178,7 +180,8 @@ if (nrow(absorption[is.na(semester)])>0){
 absorption[, start_date:=min(start_date), by=c('grant', 'grant_period', 'semester')]
 
 #Calculate absorption by module/intervention 
-absorption = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
+absorption = absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), 
+                            cumulative_budget=sum(cumulative_budget, na.rm=T), cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), 
                         by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'semester', 'code', 'duration_quarters', 'start_date')]
 absorption[, absorption:=(expenditure/budget)*100]
 
