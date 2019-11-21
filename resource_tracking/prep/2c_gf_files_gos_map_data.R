@@ -232,45 +232,14 @@ stopifnot(unique(mapped_data$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 
 # --------------------------------------------------------
 # Convert currencies to USD 
 # --------------------------------------------------------
-orig_rows = nrow(mapped_data)
-stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD"))
+stopifnot(mapped_data$file_currency%in%c("LOC","EUR","USD")) #After visual review, even local currencies (LOC) are actually Euros or USD. EL 11/19/2019. 
 
 needs_conversion = mapped_data[file_currency!='USD']
 if (nrow(needs_conversion)!=0){
-  #Do a check before and after converting to make sure you've got the same totals. 
-  pre_conversion_check = mapped_data[, .(pre_budget=sum(budget, na.rm=T), pre_expenditure=sum(expenditure, na.rm=T), 
-                                         pre_lfa_exp=sum(lfa_exp_adjustment, na.rm=T)), by='file_name']
-  
-  #Pull apart the files that are in Euros vs. USD, and convert Euros. 
-  valueVars = c('budget', 'expenditure', 'disbursement', 'lfa_exp_adjustment')
-  in_USD = copy(mapped_data)
-  in_USD = in_USD[file_currency=='USD']
-  in_USD[, budget_new:=budget]
-  in_USD[, expenditure_new:=expenditure]
-  in_USD[, lfa_exp_adjustment_new:=lfa_exp_adjustment]
-  in_USD[, disbursement_new:=disbursement]
-  
-  stopifnot(needs_conversion$file_currency%in%c("LOC", "EUR")) #These are the only currencies the function supports. 
-  converted_to_USD = convert_eur_usd(needs_conversion, 'year')
-  mapped_data = rbind(in_USD, converted_to_USD, fill=TRUE, use.names=TRUE) #You're not losing any rows here. 
-  stopifnot(nrow(mapped_data)==orig_rows)
-  
-  # #Post-check. 
-  # mapped_data$eur_usd <- NULL
-  # post_conversion_check = convert_usd_eur(mapped_data, 'year')
-  # post_conversion_check = post_conversion_check[, .(post_budget=sum(budget, na.rm=T), post_expenditure=sum(expenditure, na.rm=T)), by='file_name']
-  # 
-  # conversion_check = merge(pre_conversion_check, post_conversion_check, by='file_name', all=T)
-  # conversion_check = conversion_check[, lapply(.SD, round), .SDcols = 2:5, by='file_name'][, lapply(.SD, as.integer), .SDcols = 2:5, by='file_name']
-  # if (nrow(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])==0){
-  #   View(conversion_check[pre_budget!=post_budget | pre_expenditure!= post_expenditure])
-  #   stop("Errors in currency conversion - review 'conversion_check'." )
-  # }
-  
-  #If the check above works, then you're okay to rename budget and expenditure 
-  mapped_data = mapped_data[, -c('budget', 'expenditure', 'disbursement', 'lfa_exp_adjustment')]
-  setnames(mapped_data, c('budget_new', 'expenditure_new', 'disbursement_new', 'lfa_exp_adjustment_new'), 
-           c('budget', 'expenditure', 'disbursement', 'lfa_exp_adjustment'))
+  in_USD = mapped_data[file_currency=="USD"]
+  converted_to_USD = convert_currency(needs_conversion, 'year', convertFrom="EUR", convertTo="USD", 
+                                      finVars=c('budget', 'expenditure', 'disbursement', 'lfa_exp_adjustment'))
+  mapped_data = rbind(in_USD, converted_to_USD, use.names=TRUE)
 }
 
 # --------------------------------------------------------

@@ -10,36 +10,36 @@
 #Sheet names that don't work so far: "LFA EFR_7", "LFA_Annex-SR Financials", "LFA_Total PR Cash Outflow_3", "LFA_Total PR Cash Outflow_3A"
 
 # start function
-prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, period, qtr_number) {
+prep_cost_category =  function(dir, inFile, sheet_name, start_date, period, qtr_number) {
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
   # Set up file path 
   # folder = "budgets"
-  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
-  # if (file_list$file_iteration[i]=="initial"){
+  # folder = ifelse (file_list_subset$data_source[i] == "pudr", "pudrs", folder)
+  # if (file_list_subset$file_iteration[i]=="initial"){
   #   version = "iterations"
-  # } else if (file_list$file_iteration[i]=="revision"){
+  # } else if (file_list_subset$file_iteration[i]=="revision"){
   #   version= "revisions"
   # } else {
   #   version = ""
   # }
-  # grant_period = file_list$grant_period[i]
+  # grant_period = file_list_subset$grant_period[i]
   # 
-  # file_dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  # file_dir = paste0(master_file_dir, file_list_subset$grant_status[i], "/", file_list_subset$grant[i], "/", grant_period, "/", folder, "/")
   # if (version != ""){
   #   file_dir = paste0(file_dir, version, "/")
   # }
   # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet_financial[i]
-  # start_date = file_list$start_date_financial[i]
-  # period = file_list$period[i]
-  # disease = file_list$disease[i]
-  # grant = file_list$grant[i]
-  # recipient = file_list$primary_recipient
-  # source = file_list$data_source[i]
-  # qtr_number = file_list$qtr_number[i]
+  # inFile = file_list_subset$file_name[i]
+  # sheet_name = file_list_subset$sheet_financial[i]
+  # start_date = file_list_subset$start_date_financial[i]
+  # period = file_list_subset$period[i]
+  # disease = file_list_subset$disease[i]
+  # grant = file_list_subset$grant[i]
+  # recipient = file_list_subset$primary_recipient
+  # source = file_list_subset$data_source[i]
+  # qtr_number = file_list_subset$qtr_number[i]
 
   # -----------------------------------------------------------------------------
   # Test the inputs to make sure that they are the correct type
@@ -63,33 +63,13 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # 1. Subset columns.
   #-------------------------------------
   #Find the correct column indices based on a grep condition.
-  module_col <- grep("Modular Approach - Modules|Démarche modulaire - Modules", gf_data)
-  intervention_col <- grep("Modular Approach - Interventions|Démarche modulaire - Interventions", gf_data)
+  cost_grouping_col = grep("cost grouping", tolower(gf_data))
   budget_col <- grep("Budget for Reporting Period", gf_data)
   expenditure_col <- grep("Actual Expenditure", gf_data)
   lfa_adjustment_col <- grep("Local Fund Agent Adjustment on Expenditures", gf_data)
   cumulative_budget_col = grep("Cumulative Budget", gf_data)
   cumulative_expenditure_col = grep("Cumulative Expenditure|Cumulative Actual Expenditure", gf_data)
   
-  if (sheet_name == "ALF RFR_7"){
-    module_col = grep("Macrocatégorie", gf_data)
-    intervention_col = grep("Domaine de prestation de services", gf_data)
-    budget_col = grep("Budget", gf_data) 
-    budget_col = budget_col[1] #Just want the first observation of budget. 
-    if (intervention_col+1 != budget_col){
-      stop("This file has a different format than ones reviewed before. Review raw data")
-    }
-    lfa_adjustment_col = grep("Ajustement au budget par l'ALF", gf_data)
-    expenditure_col = grep("Dépenses", gf_data)
-    expenditure_col = expenditure_col[2] #You want the second observation here, to skip LFA adjustment column. 
-    if (inFile == "Plan TB PUDR 2016.xlsx"){
-      expenditure_col = 7
-    }
-    if (is.na(lfa_adjustment_col) | is.na(expenditure_col)) stop("Expenditure or LFA adjustment columns are NA")
-    if ((lfa_adjustment_col+1) != expenditure_col){
-      stop("This file has a different format than ones reviewed before. Review raw data")
-    }
-  }
 
   #Remove the 'cumulative expenditure' and 'cumulative budget' columns.
   if (length(expenditure_col)!=1){
@@ -119,20 +99,14 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
     colnames(gf_data)[lfa_adjustment_col] <- "lfa_exp_adjustment"
   }
 
-  #Check to see if this file has module and intervention.
-  if (is.na(module_col)){
-    gf_data$module <- "Unspecified"
-  } else {
-    stopifnot(length(module_col)==1)
-    colnames(gf_data)[module_col] <- "module"
+  #Check to see if you grabbed cost category correctly
+  if (length(cost_grouping_col)>1){
+    comments_col = grep("comments", tolower(gf_data))
+    cost_grouping_col = cost_grouping_col[!cost_grouping_col%in%comments_col]
   }
-
-  if (is.na(intervention_col)){
-    gf_data$intervention <- "Unspecified"
-  } else {
-    stopifnot(length(intervention_col)==1)
-    colnames(gf_data)[intervention_col] <- "intervention"
-  }
+  stopifnot(length(cost_grouping_col)==1)
+  colnames(gf_data)[cost_grouping_col] <- "cost_category"
+  
   
   #Validate cumulative columns 
   if (length(cumulative_budget_col)>1) cumulative_budget_col = cumulative_budget_col[1]
@@ -144,9 +118,9 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   
   #Subset to only these columns.
   if (sheet_name!="PR Expenditure_7A"){
-    gf_data = gf_data[, .(module, intervention, budget, expenditure, lfa_exp_adjustment, cumulative_budget, cumulative_expenditure)]
+    gf_data = gf_data[, .(cost_category, budget, expenditure, lfa_exp_adjustment, cumulative_budget, cumulative_expenditure)]
   } else {
-    gf_data = gf_data[, .(module, intervention, budget, expenditure, cumulative_budget, cumulative_expenditure)]
+    gf_data = gf_data[, .(cost_category, budget, expenditure, cumulative_budget, cumulative_expenditure)]
   }
   
   #Make budget and expenditure numeric, and make LFA expenditure adjustment column 0 if NA (for subtraction later). 
@@ -163,15 +137,8 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   # 2. Subset rows
   #-------------------------------------
   #Select only the section of the excel that's broken up by intervention
-  start_row <- grep("modular approach|démarche modulaire", tolower(gf_data$module))
-  end_row <- grep("grand total|total général", tolower(gf_data$module))
-  
-  if (sheet_name == "ALF RFR_7"){
-    start_row = grep("Macrocatégorie", gf_data$module)
-    end_row1 = grep("Veuillez sélectionner...", gf_data$module)
-    end_row2 = grep("Veuillez sélectionner...", gf_data$intervention)
-    end_row = end_row1[end_row1%in%end_row2]
-  }
+  start_row <- grep("costing dimension", tolower(gf_data$cost_category))
+  end_row <- grep("grand total|total général", tolower(gf_data$cost_category))
 
   x = 1
   while (end_row[x] < start_row){
@@ -185,40 +152,35 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
 
   #Rename data, and remove invalid rows
   if ('lfa_exp_adjustment'%in%names(gf_data)){
-  check_drop <- gf_data[((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
-                         & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+  check_drop <- gf_data[((is.na(cost_category) | cost_category == '0' | cost_category=="Veuillez sélectionner..." ) 
                          & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0) & (is.na(lfa_exp_adjustment) | lfa_exp_adjustment==0)), ]
   } else { 
-    check_drop <- gf_data[((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
-                           & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
+    check_drop <- gf_data[((is.na(cost_category) | cost_category == '0' | cost_category=="Veuillez sélectionner..." ) 
                            & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
   }
   if (verbose == TRUE){
-    print(paste0("Invalid rows currently being dropped: (only module and intervention columns shown) ", check_drop[, c('module', 'intervention')]))
+    print(paste0("Invalid rows currently being dropped: (only module and intervention columns shown) ", check_drop[, c('cost_category')]))
   }
   if ('lfa_exp_adjustment'%in%names(gf_data)){
-    gf_data = gf_data[!((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
-                      & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
-                      & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0) & (is.na(lfa_exp_adjustment) | lfa_exp_adjustment==0)), ]
+    gf_data =  gf_data[!((is.na(cost_category) | cost_category == '0' | cost_category=="Veuillez sélectionner..." ) 
+                        & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0) & (is.na(lfa_exp_adjustment) | lfa_exp_adjustment==0)), ]
   } else {
-    gf_data = gf_data[!((is.na(module) | module == '0' | module=="Veuillez sélectionner..." ) 
-                        & (is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...") 
-                        & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
+    gf_data = gf_data[!((is.na(cost_category) | cost_category == '0' | cost_category=="Veuillez sélectionner..." ) 
+                       & (is.na(budget)|budget==0) & (is.na(expenditure)|expenditure==0)), ]
   }
 
   #Some datasets have an extra title row with "[Module]" in the module column.
   #It's easier to find this by grepping the budget column, though.
-  extra_module_row <- grep("budget for reporting period", tolower(gf_data$budget))
-  extra_module_row = c(extra_module_row, grep("module|macrocatégorie", tolower(gf_data$module)))
-  if (length(extra_module_row) > 0){
+  extra_category_row <- grep("costing dimension", tolower(gf_data$cost_category))
+  if (length(extra_category_row) > 0){
     if (verbose == TRUE){
-      print(paste0("Extra rows being dropped in GTM PU/DR prep function. First column: ", gf_data[extra_module_row, 1]))
+      print(paste0("Extra rows being dropped in cost category prep function. First column: ", gf_data[extra_category_row, 1]))
     }
-    gf_data <- gf_data[-extra_module_row, ,drop = FALSE]
+    gf_data <- gf_data[-extra_category_row, ,drop = FALSE]
   }
 
   #Remove 'total' and 'grand total' rows
-  total_rows <- grep("total", tolower(gf_data$module))
+  total_rows <- grep("total", tolower(gf_data$cost_category))
   if (length(total_rows) > 0){
     if (verbose == TRUE){
       print(paste0("Total rows being dropped in GTM PU/DR prep function. First column: ", gf_data[total_rows, 1]))
@@ -227,8 +189,7 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
   }
 
   #Replace any modules or interventions that didn't have a pair with "Unspecified".
-  gf_data[is.na(module) | module == '0' | module == "Veuillez sélectionner..." , module:="Unspecified"]
-  gf_data[is.na(intervention) | intervention == '0' | intervention == "Veuillez sélectionner...", intervention:="Unspecified"]
+  gf_data[is.na(cost_category) | cost_category == '0' | cost_category == "Veuillez sélectionner..." , cost_category:="Unspecified"]
 
   #-------------------------------------------------------------------------
   # 3. Generate date variables, and expand data to be at the quarter-level. 
@@ -238,11 +199,11 @@ prep_modular_approach_pudr =  function(dir, inFile, sheet_name, start_date, peri
     gf_data = gf_data[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T),
                           lfa_exp_adjustment=sum(lfa_exp_adjustment, na.rm=T), cumulative_budget=sum(cumulative_budget, na.rm=T), 
                           cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), 
-                      by=c('module', 'intervention')]
+                      by=c('cost_category')]
   } else {
     gf_data = gf_data[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T), cumulative_budget=sum(cumulative_budget, na.rm=T), 
                           cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), 
-                      by=c('module', 'intervention')]
+                      by=c('cost_category')]
   }
   #Run this check to make sure everything is the same after you divide into quarters. 
   totals_check = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))]

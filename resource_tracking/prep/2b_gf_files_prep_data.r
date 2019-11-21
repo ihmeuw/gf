@@ -18,6 +18,9 @@ if (prep_files == TRUE){
   
   #Prioritize GOS data where we have it
   file_list = prioritize_gos(file_list)
+  
+  #Drop cases where grant is unknown (some subnational budgets in DRC are like this)
+  file_list = file_list[grant!="unknown"]
 
   #Make sure you don't have the same start date for the same grant (quick check; it would be better )
   file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'sheet_financial', 'start_date_financial', 'data_source', 'pudr_semester_financial')] #EMILY NEED TO RETHINK THIS. 
@@ -55,7 +58,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
                                       'DETAIL', 'Detailed _ budget AGYW', 'Detailed Budget _ Human rights')
   
   budget_cols = c("activity_description", "budget", "cost_category", "implementer", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
-  pudr_cols = c("budget", "expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
+  pudr_cols = c("budget", "expenditure", "cumulative_budget", "cumulative_expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
   
   for(i in 1:nrow(file_list)){
     # Set up file path 
@@ -95,14 +98,14 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], file_list$qtr_number_financial[i], file_list$period_financial[i])
       tmpData = do.call(prep_pudr_gtm, args)
       
-      stopifnot(sort(names(tmpData)) == pudr_cols)
+      stopifnot(sort(names(tmpData))%in%pudr_cols) # Want to check if these have cumulative budget/expenditure. EL 11/20/2019
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
     } else if (file_list$function_financial[i]=='pudr' & file_list$loc_name=="gtm" & file_list$sheet_financial[i]%in%c('PR EFR_7A')){
       args[length(args)+1] = file_list$qtr_number_financial[i]
       tmpData = do.call(prep_gtm_pudr2, args)
       
-      stopifnot(sort(names(tmpData)) == pudr_cols)
+      stopifnot(sort(names(tmpData))%in%pudr_cols) # Want to check if these have cumulative budget/expenditure. EL 11/20/2019
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
     } else if (file_list$function_financial[i] == 'summary' & file_list$loc_name[i] == 'cod'){ #Prep summary budgets from DRC. 
       args[length(args)+1] = file_list$qtr_number_financial[i]
@@ -155,7 +158,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     resource_database = rbind(resource_database, already_prepped, fill=T)
     
     #Check to make sure there aren't duplicates in final files. 
-    dup_files = unique(resource_database[file_iteration=="final", .(grant, grant_period, data_source, start_date, period_financial, file_name)])[order(grant, grant_period, data_source, start_date, period_financial)]
+    dup_files = unique(resource_database[file_iteration=="final" & grant!="unknown", .(grant, grant_period, data_source, start_date, period_financial, file_name)])[order(grant, grant_period, data_source, start_date, period_financial)]
     dup_files[, dup:=.N, by=c('grant', 'grant_period', 'data_source', 'start_date', 'period_financial')]
     if (nrow(dup_files[dup>=2])>0) {
       print(dup_files[dup>=2])

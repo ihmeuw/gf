@@ -182,6 +182,19 @@ if (nrow(all_current_grants)!=expected_current_grants){
 write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
 saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets.rds"))
 
+# Save country-level versions of the files
+saveRDS(gos_prioritized_budgets[loc_name=="COD"], paste0(final_write, "final_budgets_cod.rds"))
+saveRDS(gos_prioritized_budgets[loc_name=="GTM"], paste0(final_write, "final_budgets_gtm.rds"))
+saveRDS(gos_prioritized_budgets[loc_name=="SEN"], paste0(final_write, "final_budgets_sen.rds"))
+saveRDS(gos_prioritized_budgets[loc_name=="UGA"], paste0(final_write, "final_budgets_uga.rds"))
+
+# Save a version of the Senegal data that has data in Euros. 
+to_convert = gos_prioritized_budgets[loc_name=="SEN"]
+senegal_budgets_euros = convert_currency(to_convert, yearVar="year", convertFrom="USD", convertTo="EUR", 
+                                         finVars=c('budget', 'expenditure', 'lfa_exp_adjustment'))
+saveRDS(senegal_budgets_euros, paste0(final_write, "final_budgets_sen_euro.rds"))
+
+
 
 #----------------------------------
 # 2. FINAL GF EXPENDITURES
@@ -275,6 +288,19 @@ if (nrow(all_current_grants)!=expected_current_grants){
 # Write data 
 # write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
 saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rds"))
+
+# Save country-level versions of the files
+saveRDS(gos_prioritized_expenditures[loc_name=="COD"], paste0(final_write, "final_expenditures_cod.rds"))
+saveRDS(gos_prioritized_expenditures[loc_name=="GTM"], paste0(final_write, "final_expenditures_gtm.rds"))
+saveRDS(gos_prioritized_expenditures[loc_name=="SEN"], paste0(final_write, "final_expenditures_sen.rds"))
+saveRDS(gos_prioritized_expenditures[loc_name=="UGA"], paste0(final_write, "final_expenditures_uga.rds"))
+
+# Save a version of the Senegal data that has data in Euros. 
+to_convert = gos_prioritized_expenditures[loc_name=="SEN"]
+senegal_expenditures_euros = convert_currency(to_convert, yearVar="year", convertFrom="USD", convertTo="EUR", 
+                                         finVars=c('budget', 'expenditure', 'lfa_exp_adjustment'))
+saveRDS(senegal_expenditures_euros, paste0(final_write, "final_expenditures_sen_euro.rds"))
+
 
 #----------------------------------
 # 3. GF FILE ITERATIONS
