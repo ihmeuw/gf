@@ -33,12 +33,9 @@ sigl = readRDS(siglFile)
 
 # list element IDs of interest
 rdtStockoutElement = 'o3S4pDMPNoO'
-alStockoutElement = 'vA9TrUHkDoP'
-asaqStockoutElement = 'o3S4pDMPNoO'
 utilizationElement = 'CIzQAR8IWH1'
 suspectedElement ='aZwnLALknnj'
 confirmedElement = 'rfeqp2kdOGi'
-treatedElement = 'pMbC0FJPkcm'
 presumedElement = 'aK0QXqm8Zxn'
 # ------------------------------------
 
@@ -47,7 +44,7 @@ presumedElement = 'aK0QXqm8Zxn'
 # Prep data
 
 # subset rows
-data = base[element_id %in% c(utilizationElement, suspectedElement, confirmedElement, treatedElement, presumedElement)]
+data = base[element_id %in% c(utilizationElement, suspectedElement, confirmedElement, presumedElement)]
 stockouts = sigl[element_id == rdtStockoutElement]
 
 # rbind data sets together
@@ -63,7 +60,6 @@ data[element_id==rdtStockoutElement, variable:='days_out_of_stock']
 data[element_id==utilizationElement, variable:='rdts_performed']
 data[element_id==suspectedElement, variable:='suspected_cases']
 data[element_id==confirmedElement, variable:='confirmed_cases']
-data[element_id==treatedElement, variable:='confirmed_cases_treated']
 data[element_id==presumedElement, variable:='presumed_cases_treated']
 
 # reshape wide
@@ -120,11 +116,9 @@ grid.arrange(p2, p1)
 # compute proportion of suspected cases tested, confirmed and treated
 data[, prop_tested:=rdts_performed/suspected_cases]
 data[, prop_confirmed:=confirmed_cases/suspected_cases]
-# data[, prop_treated:=confirmed_cases_treated/suspected_cases]
 data[, prop_presumed:=presumed_cases_treated/suspected_cases]
 data[prop_tested>1, prop_tested:=NA]
 data[prop_confirmed>1, prop_confirmed:=NA]
-# data[prop_treated>1, prop_treated:=NA]
 data[prop_presumed>1, prop_presumed:=NA]
 
 # check validity. the S1 PUDR says 24% of facilities had any stockouts of RDTs
@@ -139,27 +133,6 @@ data[, any_stockouts_lag:=prop_stocked_out_lag>0]
 
 # --------------------------------------------------------------------------
 # Run analysis
-
-# view a sample of facilities
-# sample = sample(unique(data[days_out_of_stock!=0 & !is.na(prop_tested)]$org_unit), 9)
-# ggplot(data[org_unit %in% sample], aes(y=prop_tested, x=date)) + 
-	# geom_line() + 
-	# geom_line(aes(y=prop_stocked_out), color='red') + 
-	# facet_wrap(~org_unit) + 
-	# theme_bw()
-
-# check if having any stockouts correlates with lower testing coverage
-# this makes less sense because testing coverage is only RDT testing coverage
-# agg1 = data[, .(rdts_performed=sum(rdts_performed, na.rm=T), 
-				# suspected_cases=sum(suspected_cases,na.rm=T)), by=any_stockouts]
-# agg1[, prop_tested:=rdts_performed/suspected_cases]
-# agg1
-
-# check if having any stockouts in the previous month correlates with lower testing coverage
-# agg1_lag = data[, .(rdts_performed=sum(rdts_performed, na.rm=T), 
-					# suspected_cases=sum(suspected_cases,na.rm=T)), by=any_stockouts_lag]
-# agg1_lag[, prop_tested:=rdts_performed/suspected_cases]
-# agg1_lag
 
 # check if having any stockouts correlates with lower confirmation rate
 agg2 = data[, .(confirmed_cases=sum(confirmed_cases, na.rm=T), 
