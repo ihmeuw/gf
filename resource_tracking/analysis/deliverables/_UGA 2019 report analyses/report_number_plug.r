@@ -1,5 +1,6 @@
 # Emily Linebarger 
 # Calculate numbers to plug into UGA report 
+library(data.table)
 
 budgets = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/final_budgets.rds")
 revisions = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/budget_revisions.rds")
@@ -34,4 +35,16 @@ mofped_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 
 c_taso_absorption = absorption[grant=="UGA-C-TASO" & grant_period=="2018-2020" & semester=="Semester 3", 
                                .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T))]
+c_taso_absorption[, absorption:=round((expenditure/budget)*100, 1)]
+
+# Do the same analyses by module 
+mofped_absorption = absorption[grant=="UGA-H-MoFPED" & grant_period=="2018-2020" & semester=="Semester 3", 
+                               .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), 
+                               by='gf_module']
+mofped_absorption[, absorption:=round((expenditure/budget)*100, 1)]
+
+
+c_taso_absorption = absorption[grant=="UGA-C-TASO" & grant_period=="2018-2020" & semester=="Semester 3", 
+                               .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), 
+                               by='gf_module']
 c_taso_absorption[, absorption:=round((expenditure/budget)*100, 1)]
