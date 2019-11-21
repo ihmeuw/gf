@@ -1,0 +1,54 @@
+---
+title: "Review cost category data"
+author: "Emily Linebarger"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: beamer_presentation
+---
+
+```{r setup, include=FALSE}
+library(data.table) 
+library(ggplot2)
+library(knitr)
+library(kableExtra)
+library(wesanderson)
+library(gridExtra)
+library(scales)
+library(RColorBrewer)
+library(readxl)
+
+options(scipen=15)
+
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
+
+dt = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/all_cost_categories.rds")
+map = data.table(read_xlsx("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/cost_category_mapping.xlsx"))
+dt = merge(dt, map, by='cleaned_cost_category', all.x=T)
+stopifnot(nrow(dt[is.na(parent_category)])==0)
+```
+
+# What is the cumulative absorption for each cost category? 
+```{r pooled_cumulative}
+pooled_cumulative = dt[grant_period=="2018-2020" & pudr_semester_financial=="2-A", .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('parent_category')]
+pooled_cumulative[, absorption:=round((expenditure/budget)*100, 1)]
+pooled_cumulative[, label:=paste0(dollar(expenditure), " (", absorption, "%)")]
+
+melt = melt(pooled_cumulative, id.vars=c('parent_category', 'absorption', 'label'))
+melt[variable=="budget", label:=""]
+melt[variable=="budget", variable:="Budget"]
+melt[variable=="expenditure", variable:="Expenditure"]
+
+ggplot(melt, aes(x=parent_category, y=value, fill=variable, label=label))+ 
+  geom_bar(stat="identity", position="identity") + 
+  geom_text(hjust=0) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels = scales::dollar) + 
+  labs(title=paste0("Absorption by cost category"), x="Cost Category", y="Amount ($)", fill="", subtitle="January 2018-June 2019", caption="*Labels show expenditure amounts and absorption percentages")
+```
+
+
+
+
+
+
+

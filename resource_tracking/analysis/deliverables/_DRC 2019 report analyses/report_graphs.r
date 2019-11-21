@@ -91,46 +91,41 @@ p1 = ggplot(by_grant, aes(x=grant, y=amount, fill=variable, label=label)) +
   
 
 # 2. Show absorption by grant over the last 18 months compared to the full 3-year grant budget (most recent version) 
-budget_collapse = revisions[grant_period=="2018-2020", .(budget=sum(v2, na.rm=T)), by=c('grant', 'gf_module')]
-absorption_collapse = cumulative_absorption[, .(pudr_expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('grant', 'gf_module', 'abbrev_mod')]
-plot_data = merge(budget_collapse, absorption_collapse, by=c('grant', 'gf_module'))
-plot_data[, absorption:=round((pudr_expenditure/budget)*100, 1)]
+plot_data = cumulative_absorption[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('grant', 'gf_module', 'abbrev_mod')]
+plot_data[, absorption:=round((expenditure/budget)*100, 1)]
 
 melt = melt(plot_data, id.vars=c('grant', 'gf_module', 'abbrev_mod', 'absorption'))
-melt[variable=="pudr_expenditure", label:=paste0(dollar(value), " (", absorption, "%)")]
+melt[variable=="expenditure", label:=paste0(dollar(value), " (", absorption, "%)")]
 melt[is.na(label), label:=""]
 melt[variable=="budget", variable:="Budget"]
-melt[variable=="pudr_expenditure", variable:="PUDR Expenditure"]
+melt[variable=="expenditure", variable:="Expenditure"]
 
 p2 = ggplot(melt[grant=='COD-C-CORDAID'], aes(x=abbrev_mod, y=value, fill=variable, label=label)) + 
   geom_bar(stat="identity", position="identity") + 
   geom_text(hjust=0) + 
   theme_bw(base_size=18) + 
   coord_flip() + 
-  facet_wrap(~grant) + 
   scale_y_continuous(labels=scales::dollar) + 
-  labs(title="Expenditure for COD-C-CORDAID,\ncompared to original budget totals", x="Module", y="Budget (USD)", 
-       fill="")
+  labs(title="Cumulative absorption for COD-C-CORDAID", subtitle="Jan 2018-June 2019", x="Module", y="Budget (USD)", 
+       fill="", caption="*Labels show expenditure amounts and absorption percentages")
 
 p3 = ggplot(melt[grant=='COD-M-MOH'], aes(x=abbrev_mod, y=value, fill=variable, label=label)) + 
   geom_bar(stat="identity", position="identity") + 
   geom_text(hjust=0) + 
   theme_bw(base_size=18) + 
   coord_flip() + 
-  facet_wrap(~grant) + 
   scale_y_continuous(labels=scales::dollar) + 
-  labs(title="Expenditure for COD-M-MOH,\ncompared to original budget totals", x="Module", y="Budget (USD)", 
-       fill="")
+  labs(title="Cumulative absorption for COD-M-MOH", subtitle="Jan 2018-June 2019", x="Module", y="Budget (USD)", 
+       fill="", caption="*Labels show expenditure amounts and absorption percentages")
 
 p4 = ggplot(melt[grant=='COD-M-SANRU'], aes(x=abbrev_mod, y=value, fill=variable, label=label)) + 
   geom_bar(stat="identity", position="identity") + 
   geom_text(hjust=0) + 
   theme_bw(base_size=18) + 
   coord_flip() + 
-  facet_wrap(~grant) + 
   scale_y_continuous(labels=scales::dollar) + 
-  labs(title="Expenditure for COD-M-SANRU,\ncompared to original budget totals", x="Module", y="Budget (USD)", 
-       fill="")
+  labs(title="Cumulative absorption for COD-M-SANRU", subtitle="Jan 2018-June 2019", x="Module", y="Budget (USD)", 
+       fill="", caption="*Labels show expenditure amounts and absorption percentages")
 
 
 

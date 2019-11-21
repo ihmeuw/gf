@@ -159,6 +159,8 @@ for (g in unique(by_module$grant)){
   labs(title=paste0("Budget and expenditure for ", g, "\nby module"), x="Module", y="Amount ($)", fill="", 
        subtitle="Labels show expenditure amounts")
   # print(p2)
+  
+  ggsave(paste0(save_loc, "budget_exp_", g, ".png"), p2, height=8, width=11)
   grid.arrange(p, p2, ncol=1, nrow=2)
   
   ggsave(paste0(save_loc, g, ".png"), grid.arrange(p, p2, ncol=1, nrow=2), height=15, width=10)
