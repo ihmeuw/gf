@@ -106,6 +106,8 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	}
 	
 	# identify start and end locations
+	edgeTable[, rhs:=trimws(rhs)]
+	edgeTable[, lhs:=trimws(lhs)]
 	edgeTable = merge(edgeTable, nodeTable, by.x='rhs', by.y='variable')
 	setnames(edgeTable, c('x','y','label'), c('xstart','ystart','labelstart'))
 	edgeTable = merge(edgeTable, nodeTable, by.x='lhs', by.y='variable')
@@ -318,7 +320,8 @@ semGraph = function(fitObject=NULL, parTable=NULL, nodeTable=NULL, scaling_facto
 	capt = str_wrap(capt, 100)
 	if (length(exclVars)==0) capt='' 
 	p = p + 
-		labs(color='Effect\nSize', caption=capt)
+	  labs(color='Effect\nSize')
+		#labs(color='Effect\nSize', caption=capt) #Removing captions for now because there are a lot of control variables in GTM! EL 11/21/2019
 	
 	# clean up plot
 	p = p + theme_void(base_size=baseSize) + theme(legend.position=c(0.5, 0), legend.direction='horizontal', plot.margin=unit(c(t=-.5,r=.75,b=.25,l=-1.5), 'cm'), 

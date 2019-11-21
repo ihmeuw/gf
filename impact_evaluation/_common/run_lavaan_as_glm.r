@@ -20,19 +20,20 @@
 # Define function
 lavaanUR = function(modelObject=NULL, data=NULL) {
 
+  # parse formulas
+  formulae = unlist(str_split(model, '\n'))
+  formulae = trimws(formulae)
+  
 	# extract model info
 	parsedModel = lavParseModelString(modelObject)
   
 	# ignore covariance terms and other operators not possible in GLM
 	parsedModel$lhs = parsedModel$lhs[parsedModel$op=='~']
 	parsedModel$rhs = parsedModel$rhs[parsedModel$op=='~']
-	parsedModel$op = parsedModel$op[parsedModel$op=='~']
-	
-	# construct formulae
-	lhsVars = unique(parsedModel$lhs[parsedModel$op=='~'])
-	formulae = lapply(lhsVars, function(v) { 
-		paste0(v, '~', paste0(parsedModel$rhs[parsedModel$lhs==v], collapse='+'))
-	})
+
+	# drop meaningless lines from parsed formulae
+	formulae = formulae[!grepl("#", formulae)] #Drop comments
+	formulae = formulae[grepl('~', formulae)] #Only keep lines that have actual formulas in them. 
 	
 	# standardize data
 	vars = unique(c(parsedModel$lhs, parsedModel$rhs))
@@ -44,7 +45,8 @@ lavaanUR = function(modelObject=NULL, data=NULL) {
 	lmFits = lapply(seq(length(formulae)), function(i) { 
 		fit = lm(formulae[[i]], data)
 		fit.std = lm(formulae[[i]], data.std)
-		data.table(lhs=lhsVars[i], op='~', rhs=names(coef(fit)), 
+		lhsVar = tstrsplit(formulae[[i]], "~", keep=1)
+		data.table(lhs=unlist(lhsVar), op='~', rhs=names(coef(fit)), 
 			est=coef(fit), se=sqrt(diag(vcov(fit))), 
 			est.std=coef(fit.std), se.std=sqrt(diag(vcov(fit.std))))
 	})
