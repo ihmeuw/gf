@@ -51,11 +51,13 @@ inc = dt[measure=='Incidence']
 #-------------------------
 # source table 
 
+# works on caitlin's computer - change to relevant directory
 source("C:/Users/ccarelli/local/gf/impact_evaluation/gbd_epidemiology/mort_inc_all_pce_countries_table.R")
 
 #-----------------------------------------------------
 # MORTALITY GRAPHS
 
+pdf(paste0(dir, 'outputs/mortality_pce_countries.pdf'), height=9, width=12)
 # HIV/AIDS
 #----------------------
 # rates 
@@ -107,7 +109,7 @@ ggplot(deaths[cause=='HIV/AIDS' & metric=='Number' & sex=='Both' & 1999 < year],
   facet_wrap(~location, scales='free_y') +
   geom_line() +
   theme_bw() +
-  labs(title='HIV/AIDS-related , PCE countries, 2000 - 2017',
+  labs(title='HIV/AIDS-related deaths, PCE countries, 2000 - 2017',
        subtitle = 'Includes HIV/TB mortality', caption = 'Source: IHME Global Burden of Disease',
        x='Year', y='Number of deaths')
 
@@ -135,7 +137,7 @@ ggplot(deaths[cause=='Tuberculosis' & metric=='Rate' & sex=='Both' & 1999 < year
   facet_wrap(~location, scales='free_y') +
   geom_line() +
   theme_bw() +
-  labs(title='Tuberculosis-related deaths per 100,000 population, PCE countries, 2000 - 2017',
+  labs(title='Tuberculosis deaths per 100,000 population, PCE countries, 2000 - 2017',
        caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
        x='Year', y='Deaths per 100,000 population')
 
@@ -148,7 +150,7 @@ ggplot(deaths[cause=='Tuberculosis' & metric=='Rate' & sex=='Both' & 1999 < year
   facet_wrap(~label, scales='free_y') +
   geom_line() +
   theme_bw() +
-  labs(title='Tuberulosis-related deaths per 100,000 population, PCE countries, 2000 - 2017',
+  labs(title='Tuberulosis deaths per 100,000 population, PCE countries, 2000 - 2017',
        subtitle = 'Annualized rates of change in parentheses', 
        caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
        x='Year', y='Deaths per 100,000 population')
@@ -161,40 +163,317 @@ ggplot(deaths[cause=='Tuberculosis' & metric=='Rate' & sex!='Both' & 1999 < year
   facet_wrap(~location, scales='free_y') +
   geom_line() +
   theme_bw() +
-  labs(title='HIV/AIDS-related deaths per 100,000 population, PCE countries, 2000 - 2017 by sex',
-       subtitle = 'Includes HIV/TB mortality', caption = 'Source: IHME Global Burden of Disease',
+  labs(title='Tuberculosis deaths per 100,000 population, PCE countries, 2000 - 2017 by sex',
+       caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
        color='Sex', x='Year', y='deaths per 100,000 population')
 
 #----------------------
 # counts
 
 # total deaths as an absolute number 
-ggplot(deaths[cause=='HIV/AIDS' & metric=='Number' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+ggplot(deaths[cause=='Tuberculosis' & metric=='Number' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
   geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
   geom_point() + 
   facet_wrap(~location, scales='free_y') +
   geom_line() +
   theme_bw() +
-  labs(title='HIV/AIDS-related , PCE countries, 2000 - 2017',
-       subtitle = 'Includes HIV/TB mortality', caption = 'Source: IHME Global Burden of Disease',
+  labs(title='Tuberculosis deaths, PCE countries, 2000 - 2017',
+       caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
        x='Year', y='Number of deaths')
 
 # total deaths by sex as an absolute number 
-ggplot(deaths[cause=='HIV/AIDS' & metric=='Number' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
+ggplot(deaths[cause=='Tuberculosis' & metric=='Number' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
   geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5, fill='#f0f0f0', linetype=0)+
   geom_point() + 
   facet_wrap(~location, scales='free_y') +
   geom_line() +
   theme_bw() +
-  labs(title='HIV/AIDS-related deaths, PCE countries, 2000 - 2017 by sex',
-       subtitle = 'Includes HIV/TB mortality', caption = 'Source: IHME Global Burden of Disease',
+  labs(title='Tuberculosis deaths, PCE countries, 2000 - 2017 by sex',
+       caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
        color='Sex', x='Year', y='Number of deaths')
 
+#--------------------------------------
+# MALARIA 
+
+#----------------------
+# rates 
+
+# total deaths as a rate
+ggplot(deaths[cause=='Malaria' & metric=='Rate' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria deaths per 100,000 population, PCE countries, 2000 - 2017',
+       caption = 'Source: IHME Global Burden of Disease',
+       x='Year', y='Deaths per 100,000 population')
+
+#-------------------------------
+# total deaths as a rate with annualized rates of change
+
+ggplot(deaths[cause=='Malaria' & metric=='Rate' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~label, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria deaths per 100,000 population, PCE countries, 2000 - 2017',
+       subtitle = 'Annualized rates of change in parentheses', 
+       caption = 'Source: IHME Global Burden of Disease',
+       x='Year', y='Deaths per 100,000 population')
+
+#-------------------------------
+# total deaths by sex as a rate
+ggplot(deaths[cause=='Malaria' & metric=='Rate' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5, fill='#f0f0f0', linetype=0)+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria deaths per 100,000 population, PCE countries, 2000 - 2017 by sex',
+       caption = 'Source: IHME Global Burden of Disease',
+       color='Sex', x='Year', y='deaths per 100,000 population')
+
+#----------------------
+# counts
+
+# total deaths as an absolute number 
+ggplot(deaths[cause=='Malaria' & metric=='Number' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria deaths, PCE countries, 2000 - 2017',
+       caption = 'Source: IHME Global Burden of Disease',
+       x='Year', y='Number of deaths')
+
+# total deaths by sex as an absolute number 
+ggplot(deaths[cause=='Malaria' & metric=='Number' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5, fill='#f0f0f0', linetype=0)+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria deaths, PCE countries, 2000 - 2017 by sex',
+       caption = 'Source: IHME Global Burden of Disease',
+       color='Sex', x='Year', y='Number of deaths')
+
+dev.off()
+
+#-----------------------------------------------------------------
 
 
+#-----------------------------------------------------
+# INCIDENCE GRAPHS
 
+pdf(paste0(dir, 'outputs/incidence_pce_countries.pdf'), height=9, width=12)
 
+# HIV/AIDS
+#----------------------
+# rates 
 
+# total incidence as a rate
+ggplot(inc[cause=='HIV/AIDS' & metric=='Rate' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='HIV incidence per 100,000 population, PCE countries, 2000 - 2017',
+      caption = 'Source: IHME Global Burden of Disease',
+       x='Year', y='Incidence per 100,000 population')
+
+#-------------------------------
+# total incidence as a rate with annualized rates of change
+
+ggplot(inc[cause=='HIV/AIDS' & metric=='Rate' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~label, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='HIV incidence per 100,000 population, PCE countries, 2000 - 2017',
+       subtitle = 'Annualized rates of change in parentheses', 
+       caption = 'Source: IHME Global Burden of Disease',
+       x='Year', y='Incidence per 100,000 population')
+
+#-------------------------------
+# total incidence by sex as a rate
+
+ggplot(inc[cause=='HIV/AIDS' & metric=='Rate' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5, fill='#f0f0f0', linetype=0)+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='HIV incidence per 100,000 population, PCE countries, 2000 - 2017 by sex',
+       caption = 'Source: IHME Global Burden of Disease',
+       color='Sex', x='Year', y='Incidence per 100,000 population')
+
+#----------------------
+# counts
+
+# total incidence as an absolute number 
+ggplot(inc[cause=='HIV/AIDS' & metric=='Number' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='HIV incident cases, PCE countries, 2000 - 2017',
+     caption = 'Source: IHME Global Burden of Disease',
+       x='Year', y='Number of new cases')
+
+# total inc by sex as an absolute number 
+ggplot(inc[cause=='HIV/AIDS' & metric=='Number' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5, fill='#f0f0f0', linetype=0)+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='HIV incident cases, PCE countries, 2000 - 2017 by sex',
+    caption = 'Source: IHME Global Burden of Disease',
+       color='Sex', x='Year', y='Number of new cases')
+
+#------------------------------------------
+# TUBERCULOSIS
+
+#----------------------
+# rates 
+
+# total incidence as a rate
+ggplot(inc[cause=='Tuberculosis' & metric=='Rate' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Tuberculosis incidence per 100,000 population, PCE countries, 2000 - 2017',
+       caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
+       x='Year', y='Incidence per 100,000 population')
+
+#-------------------------------
+# total incidence as a rate with annualized rates of change
+
+ggplot(inc[cause=='Tuberculosis' & metric=='Rate' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~label, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Tuberulosis incidence per 100,000 population, PCE countries, 2000 - 2017',
+       subtitle = 'Annualized rates of change in parentheses', 
+       caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
+       x='Year', y='Incidence per 100,000 population')
+
+#-------------------------------
+# total incidence by sex as a rate
+ggplot(inc[cause=='Tuberculosis' & metric=='Rate' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5, fill='#f0f0f0', linetype=0)+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Tuberculosis incidence per 100,000 population, PCE countries, 2000 - 2017 by sex',
+       caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
+       color='Sex', x='Year', y='Incidence per 100,000 population')
+
+#----------------------
+# counts
+
+# total incidence as an absolute number 
+ggplot(inc[cause=='Tuberculosis' & metric=='Number' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Tuberculosis incidence, PCE countries, 2000 - 2017',
+       caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
+       x='Year', y='Number of new cases')
+
+# total incidence by sex as an absolute number 
+ggplot(inc[cause=='Tuberculosis' & metric=='Number' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5, fill='#f0f0f0', linetype=0)+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Tuberculosis incidence, PCE countries, 2000 - 2017 by sex',
+       caption = 'Source: IHME Global Burden of Disease; includes drug suscpetible and drug resistant TB',
+       color='Sex', x='Year', y='Number of inc')
+
+#--------------------------------------
+# MALARIA 
+
+#----------------------
+# rates 
+
+# total inc as a rate
+ggplot(inc[cause=='Malaria' & metric=='Rate' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria incidence per 100,000 population, PCE countries, 2000 - 2017',
+       caption = 'Source: IHME Global Burden of Disease',
+       x='Year', y='Incidence per 100,000 population')
+
+#-------------------------------
+# total inc as a rate with annualized rates of change
+
+ggplot(inc[cause=='Malaria' & metric=='Rate' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~label, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria incidence per 100,000 population, PCE countries, 2000 - 2017',
+       subtitle = 'Annualized rates of change in parentheses', 
+       caption = 'Source: IHME Global Burden of Disease',
+       x='Year', y='Incidence per 100,000 population')
+
+#-------------------------------
+# total inc by sex as a rate
+ggplot(inc[cause=='Malaria' & metric=='Rate' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5, fill='#f0f0f0', linetype=0)+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria incidence per 100,000 population, PCE countries, 2000 - 2017 by sex',
+       caption = 'Source: IHME Global Burden of Disease',
+       color='Sex', x='Year', y='Incidence per 100,000 population')
+
+#----------------------
+# counts
+
+# total incidence as an absolute number 
+ggplot(inc[cause=='Malaria' & metric=='Number' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria incidence, PCE countries, 2000 - 2017',
+       caption = 'Source: IHME Global Burden of Disease',
+       x='Year', y='Number of new cases')
+
+# total incidence by sex as an absolute number 
+ggplot(inc[cause=='Malaria' & metric=='Number' & sex!='Both' & 1999 < year], aes(x=year, y=val, color=sex))+
+  geom_ribbon(aes(ymin=lower, ymax=upper), alpha=0.5, fill='#f0f0f0', linetype=0)+
+  geom_point() + 
+  facet_wrap(~location, scales='free_y') +
+  geom_line() +
+  theme_bw() +
+  labs(title='Malaria incidence, PCE countries, 2000 - 2017 by sex',
+       caption = 'Source: IHME Global Burden of Disease',
+       color='Sex', x='Year', y='Number of new cases')
+
+dev.off()
 
 
 
