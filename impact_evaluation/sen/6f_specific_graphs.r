@@ -79,7 +79,7 @@ library(rgdal)
 library(geosphere)
 shp <- readOGR("J:/Project/Evaluation/GF/mapping/sen/shapefiles/gadm36_SEN_1.shp")
 shp_data = data.table(fortify(shp)) 
-shp_data[, id:=as.numeric(id)+1]# NEED TO VERIFY THIS WITH GUILLERMO 
+shp_data[, id:=as.numeric(id)+1]
 
 
 #----------------------
@@ -109,9 +109,9 @@ id_labeled_map = ggplot(shp_data, aes(x=long, y=lat, group=group)) +
 #Create mapping data set. 
 urFits1 = urFits1[rhs!='date' & op=="~"]
 map_data1 = merge(urFits1, shp_data, by='id', all=T, allow.cartesian=T)
-data1_merge = data1[date>=2014, .(com_vad_touss=sum(com_vad_touss)), by=c('id')]
-data1_merge[com_vad_touss==0, com_vad_touss:=NA] #In these cases, we know there wasn't ACF in these departments and this change is a remnant of the model cleaning code. 
-map_data2 = merge(data1_merge, shp_data, by='id', all=T, allow.cartesian=T)
+#data1_merge = data1[date>=2014, .(com_vad_touss=sum(com_vad_touss)), by=c('id')]
+#data1_merge[com_vad_touss==0, com_vad_touss:=NA] #In these cases, we know there wasn't ACF in these departments and this change is a remnant of the model cleaning code. 
+#map_data2 = merge(data1_merge, shp_data, by='id', all=T, allow.cartesian=T)
 
 #Create a general function. 
 # Parameters: 
@@ -134,11 +134,13 @@ shape_plot = function(data, lhsVar, rhsVar, title="", subtitle="", caption="", c
 
 #Create some plots with this function.
 #Cases Notified ~ Additional cases via ACF
-p1 = shape_plot(map_data1, rhsVar="com_vad_touss_cumulative", lhsVar="gueris_taux",
-                title="Correlation between Home Visits and Treatment Success Rate", colScaleMin=-0.5, colScaleMax=0.5)
+p1 = shape_plot(map_data1, rhsVar="com_vad_touss_cumulative", lhsVar="lead_gueris_taux",
+                title="Correlation between Home Visits and Treatment Success Rate", colScaleMin=-0.028, colScaleMax=0.0128, colScaleBreaks = 0.01)
 
-p2 = shape_plot(map_data1, rhsVar="ghe_tb_cumulative", lhsVar="Number_of_Cases_Screened_for_MDR_act_cumulative",
-                title="Correlation between GHE TB expenditure and GeneXpert testing", colScaleMin=-0.5, colScaleMax=2)
+# summary(map_data1[lhs=="lead_gueris_taux" & rhs=="com_vad_touss_cumulative"])
+
+p2 = shape_plot(map_data1, rhsVar="com_enf_ref_cumulative", lhsVar="lead_tpm_chimio_enf_cumulative",
+                title="Correlation between Child Contacts referred and Preventive Medicine for Children", colScaleMin=-200, colScaleMax=400, colScaleBreaks = 200)
 
 p3 = shape_plot(map_data1, rhsVar="gf_tb_cumulative", lhsVar="Cases_Notified_in_Prisons_out_cumulative",
                 title="Correlation between GF TB expenditure and cases notified in prisons", colScaleMin=-0.5, colScaleMax=2)
