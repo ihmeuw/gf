@@ -60,7 +60,8 @@ min_rssh_std = min(data$gf_rssh_cumulative_std)
 
 # isolate interaction terms and prep to add them to main effects
 interaction_effects = urFit[grepl('\\:|\\*',rhs), c('lhs','op','rhs','est','est.std'), with=FALSE] #This isn't working?? 
-interaction_effects[, rhs:=gsub(':.*','',rhs)]
+interaction_effects[, rhs:=gsub(':gf_rssh_cumulative','',rhs)]
+interaction_effects[, rhs:=gsub('gf_rssh_cumulative:','',rhs)]
 
 # multiply constants by interaction coefficients
 interaction_effects[, est:=est*mean_rssh]
@@ -80,6 +81,12 @@ no_rssh[!is.na(est.std_min_em), est.std:=est.std+est.std_min_em]
 # now drop interaction terms
 no_rssh = no_rssh[!grepl(':', rhs)]
 rssh_interaction = rssh_interaction[!grepl(':', rhs)]
+
+# Note: at this point, the coefficients related to rhs=='gf_rssh_cumulative' are the
+# main effect of RSSH NOT including the interaction term held at its mean (the above 
+# implements main effects of other variables holding RSSH at its mean). To implement 
+# main effects of RSSH, we would need to resolve equations with multiple interaction
+# terms. That has not been done yet. (David 11/22/2019)
 # -----------------------------------------------
 
 
