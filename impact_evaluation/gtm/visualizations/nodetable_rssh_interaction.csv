@@ -1,10 +1,9 @@
 variable,y,x,label
 odah_tb_cumulative,1,-12,"Other donor TB Exp., modified with RSSH"
-ghe_tb_cumulative,3,-12,"GHE TB Exp., modified with RSSH"
-gf_tb_cumulative,5,-12,"GF TB Exp., modified with RSSH"
-gf_mdrtb_cumulative,7,-12,"GF MDR-TB Exp., modified with RSSH"
-gf_tbhiv_cumulative,9,-12,"GF TB/HIV Exp., modified with RSSH"
-gf_rssh_cumulative,11,-12,GF RSSH
+ghe_tb_cumulative,3.5,-12,"GHE TB Exp., modified with RSSH"
+gf_tb_cumulative,6,-12,"GF TB Exp., modified with RSSH"
+gf_mdrtb_cumulative,8.5,-12,"GF MDR-TB Exp., modified with RSSH"
+gf_tbhiv_cumulative,11,-12,"GF TB/HIV Exp., modified with RSSH"
 Firstline_Distributed_act_cumulative,1.5,-3,First-line drugs dist.
 Secondline_Distributed_act_cumulative,6.5,-3,Second-line drugs dist.
 Additional_Cases_Detected_via_ACF_out_cumulative,4.4,-3,Cases detected via active case finding
