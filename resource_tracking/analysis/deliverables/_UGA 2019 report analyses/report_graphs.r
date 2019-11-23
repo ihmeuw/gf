@@ -31,3 +31,13 @@ p2 = budget_exp_bar(taso_cumulative, trimAbsorption=TRUE, yScaleMax=200, angleTe
 ggsave(paste0(save_loc, "hiv_absorption.png"), grid.arrange(p1, p2, ncol=2, nrow=1), height=8, width=15)
 
 # TB 
+mofped_cumulative = get_cumulative_absorption(byVars = c('abbrev_mod'), grantSubset="UGA-T-MoFPED", currency="USD")
+p1 = budget_exp_bar(mofped_cumulative, trimAbsorption=TRUE, yScaleMax=200, angleText=TRUE, 
+                    altTitle="Absorption by module\nfor UGA-T-MoFPED", altSubtitle="January 2018-June 2019")
+
+taso_cumulative = get_cumulative_absorption(byVars = c('abbrev_mod'), grantSubset="UGA-C-TASO", currency="USD")
+p2 = budget_exp_bar(taso_cumulative, trimAbsorption=TRUE, yScaleMax=200, angleText=TRUE, 
+                    altTitle="Absorption by module\nfor UGA-C-TASO", altSubtitle="January 2018-June 2019")
+
+ggsave(paste0(save_loc, "tb_absorption.png"), grid.arrange(p1, p2, ncol=2, nrow=1), height=8, width=15)
+

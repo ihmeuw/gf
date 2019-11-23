@@ -56,7 +56,7 @@ mofped_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 
 c_taso_absorption = absorption[grant=="UGA-C-TASO" & grant_period=="2018-2020" & semester=="Semester 3", 
                                .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), 
-                               by='gf_module']
+                               by=c('gf_module', 'gf_intervention')]
 c_taso_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 
 #-------------
@@ -72,6 +72,10 @@ c_taso_tb = all_files[file_name=="UGA-C-TASO_IL1_Catalytic Funding_DetailedBudge
 c_taso_tb = c_taso_tb[, .(budget=sum(budget, na.rm=TRUE)), by='gf_module']
 c_taso_tb[, total:=sum(budget)]
 c_taso_tb[, mod_percent:=round((budget/total)*100, 1)]
+
+# How much money was budgeted for Genexpert cartridges? 
+cartridges = budgets[grant=="UGA-T-MoFPED" & grant_period=="2018-2020"]
+cartridges = cartridges[grep("cartridge", tolower(activity_description))] #Have visually reviewed these activities. EL 11/22/2019
 #-------------
 # MALARIA
 #-------------
