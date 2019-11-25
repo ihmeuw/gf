@@ -27,10 +27,11 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = TRUE
+prep_files = FALSE
 prep_gos = FALSE
 prep_odah = FALSE
 prep_ghe = FALSE
+prep_cost_categories = TRUE
 
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
@@ -71,17 +72,18 @@ if (prep_files | prep_gos){
   # rmarkdown::render(paste0(code_dir, "2g_gf_visualize_data.rmd",
   #                          output_dir=paste0(dir, "/visualizations/verification"),
   #                          output_file="Visual Checks.pdf"))
+  
+  #Run data gap analysis - optional
+  rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
+                    output_dir=paste0(dir, "/visualizations/verification"),
+                    output_file="Reporting Completeness.pdf")
+  
+  # # #Run unclassified file analysis - optional
+  # rmarkdown::render(paste0(code_dir, "unclassified_files.rmd"),
+  #                   output_dir=paste0(dir, "/visualizations/verification"),
+  #                   output_file="Unclassified Files.pdf")
 }
 
-#Run data gap analysis - optional
-rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
-                  output_dir=paste0(dir, "/visualizations/verification"),
-                  output_file="Reporting Completeness.pdf")
-
-# # #Run unclassified file analysis - optional
-# rmarkdown::render(paste0(code_dir, "unclassified_files.rmd"),
-#                   output_dir=paste0(dir, "/visualizations/verification"),
-#                   output_file="Unclassified Files.pdf")
 # ----------------------------------------------
 # STEP 3: PREP FGH ACTUALS AND ESTIMATES 
 # ----------------------------------------------
@@ -109,7 +111,7 @@ if (prep_ghe){
   }
   
   # Prep and map SICOIN data.*Would be good to add in a mapping verification and calculations verification step!   
-  source(paste0(code_dir, "4a_ghe_sicoin_prep_data"))
+  source(paste0(code_dir, "4a_ghe_sicoin_prep_data.r"))
 } 
 
 # ----------------------------------------------
@@ -118,3 +120,14 @@ if (prep_ghe){
 
 #Open in Spyder, and run: "C:/Users/user/Documents/gf/resource_tracking/prep/6_basecamp_upload.py"
 
+#---------------------------------------------------
+# STEP 7: PREP COST CATEGORY PUDR DATA 
+#---------------------------------------------------
+if (prep_cost_categories) {
+  countries = c('cod', 'gtm', 'sen', 'uga') # Options are 'cod', 'gtm', 'sen', 'uga'. 
+  
+  source(paste0(code_dir, "gf_files_prep_functions/prep_cost_category_pudr.r"))
+  source(paste0(code_dir, "7a_cost_categories_prep_data.r"))
+  source(paste0(code_dir, "7b_cost_categories_clean_data.r"))
+  
+}

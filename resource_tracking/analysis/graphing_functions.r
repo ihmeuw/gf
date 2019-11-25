@@ -10,8 +10,78 @@
 # Show projected absorption
 #-----------------------
 
+# Function to calculate cumulative absorption data 
+get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL, 
+                                    diseaseSubset=NULL, moduleSubset=NULL, currency=NULL){
+  require(data.table) 
+  
+  #Validate arguments 
+  if (!is.null(countrySubset)) stopifnot(countrySubset%in%c('COD', 'SEN', 'UGA'))
+  if (!is.null(currency)) stopifnot(currency%in%c('USD', 'EUR'))
+  
+  #Read in absorption data 
+  cod = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/absorption_cod.rds")
+  sen = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/SEN/prepped_data/absorption_sen.rds")
+  uga = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/absorption_uga.rds")
+  
+  all_absorption = rbindlist(list(cod, sen, uga))
+  all_absorption[, loc_name:=toupper(loc_name)]
+  
+  #Fix disease names 
+  all_absorption[, grant_disease:=toupper(grant_disease)]
+  all_absorption[grant_disease=="MALARIA", grant_disease:="Malaria"]
+  
+  #Add abbreviated module names. 
+  all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
+  setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
+  all_mods = unique(all_mods[, .(gf_module, gf_intervention, disease, abbrev_mod, abbrev_int)])
+  all_absorption = merge(all_absorption, all_mods, by=c('gf_module', 'gf_intervention', 'disease'), allow.cartesian=TRUE)
+  
+  #make sure this merge worked correctly. 
+  stopifnot(nrow(all_absorption[is.na(abbrev_int)])==0)
+  
+  #Add in PR type 
+  governmental = c('COD-M-MOH', 'GTM-M-MSPAS', 'UGA-M-MoFPED', 'UGA-T-MoFPED', 'COD-H-MOH', 'UGA-H-MoFPED', 'COD-T-MOH', 
+                   'GTM-T-MSPAS', 'SEN-Z-MOH', 'SEN-S-MOH', 'UGA-S-MoFPED', 'SEN-M-PNLP', 'GUA-311-G06-H', 'SEN-H-CNLS', 'SNG-T-PNT')
+  civil_society = c('COD-M-SANRU', 'UGA-M-TASO', 'UGA-C-TASO', 'COD-H-CORDAID', 'COD-C-CORDAID', 'GTM-H-HIVOS', 'GTM-H-INCAP', 'COD-H-SANRU', 'COD-T-CARITAS', 'COD-M-PSI', 'GUA-311-G05-H', 'SEN-H-ANCS', 'SNG-T-PLAN', 'SEN-M-IntraH', 'UGA-S-TASO') 
+  all_absorption[grant%in%governmental, pr_type:="Governmental"]
+  all_absorption[grant%in%civil_society, pr_type:="Civil Society"]
+  all_absorption[is.na(pr_type), pr_type:="Unknown"]
+  stopifnot(nrow(all_absorption[pr_type=="Unknown"])==0)
+  
+  # Limit dataset if desired. 
+  if (!is.null(countrySubset)){
+    all_absorption = all_absorption[loc_name==countrySubset]
+  }
+  if (!is.null(grantSubset)){
+    all_absorption = all_absorption[grant==grantSubset]
+  }
+  if (!is.null(diseaseSubset)){
+    all_absorption = all_absorption[disease==diseaseSubset]
+  }
+  if (!is.null(moduleSubset)){
+    all_absorption = all_absorption[gf_module%in%moduleSubset]
+  }
+  if (!is.null(currency) & currency=="EUR"){
+    source("C:/Users/elineb/Documents/gf/resource_tracking/prep/_common/shared_functions.r")
+    all_absorption[, year:=2018]
+    all_absorption = convert_currency(all_absorption, yearVar="year", convertFrom="USD", convertTo="EUR", 
+                                             finVars=c('cumulative_budget', 'cumulative_expenditure'))
+  }
+  
+  #Make sure you can do the collapse correctly. 
+  if (!any(byVars%in%names(all_absorption))) stop("Some byVars are not in absorption data.")
+  
+  cumulative_absorption = all_absorption[grant_period=="2018-2020" & semester=="Semester 3", .(budget = sum(cumulative_budget, na.rm=T), 
+                                             expenditure=sum(cumulative_expenditure, na.rm=T)), 
+                                         by=byVars]
+    
+  return(cumulative_absorption) 
+} 
+
 #Function that can provide the absorption landscape of a given country, grant period, and disease.  
 # Options: 
+# dt - the data you'd like to graph.
 # countryName - the country to subset to: options are 'cod', 'gtm', 'sen', or 'uga'. 
 # diseaseName - the disease to subset to: options are 'hiv', 'tb', 'malaria', 'hiv/tb', or 'rssh'. 
 # grantPeriod - the grant period in the absorption data to subset to. 
@@ -23,61 +93,18 @@
 # angleText - should y-axis labels be angled at 30 degrees? 
 # altTitle, altSubtitle, altCaption - pass strings as alternate options to the "labs" argument in ggplot
 
-budget_exp_bar = function(countryName, diseaseName, grantPeriod=NULL, xVar=c('abbrev_mod_eng'), facetVar=NULL,
-                                     grantName=NULL, yScaleMax=160, baseSize=16, barLabels = TRUE, 
+budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
+                                     yScaleMax=160, baseSize=16, barLabels = TRUE, 
                                      trimAbsorption=FALSE, angleText=FALSE,
-                                     altTitle=NULL, altSubtitle=NULL, altCaption=NULL){
+                                     altTitle=NULL, altSubtitle=NULL, altCaption=NULL, xLabel=""){
   require(data.table) 
   require(ggplot2) 
   require(scales)
   options(scipen=100)
   
   #Validation checks
-  stopifnot(countryName%in%c('cod', 'gtm', 'sen', 'uga'))
-  stopifnot(diseaseName%in%c('hiv', 'tb', 'malaria', 'hiv/tb', 'rssh'))
-  if (is.null(grantPeriod)) print("WARNING: Grant period is null. This will pool data from all grant periods. Subset your data first.")
   stopifnot(length(xVar)==1)
   stopifnot(length(facetVar)<=1)
-
-  #Read in data 
-  dir = paste0("C:/Users/elineb/Box Sync/Global Fund Files/", toupper(countryName), "/prepped_data/")
-  dt = readRDS(paste0(dir, "absorption_", countryName, ".rds"))
-  
-  #Merge on abbreviated module names. 
-  all_interventions = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
-  all_interventions = unique(all_interventions[, .(code, abbrev_mod_eng, abbrev_int_eng)])
-  dt = merge(dt, all_interventions, by='code')
-  stopifnot(nrow(dt[is.na(abbrev_mod_eng) | is.na(abbrev_int_eng)])==0)
-  
-  for (x in unique(grantPeriod)){
-    if (!x%in%dt$grant_period) stop("grantPeriod incorrectly specified.") #Keep debugging this EMILY 
-  } 
-  
-  # Limit data if options are specified. 
-  dt = dt[grant_disease==diseaseName] #making editorial decision to limit by grant disease, not intervention-level disease - 
-                                  # will want to seek feedback on this decision EL 8/28/19 
-  dt = dt[grant_period%in%grantPeriod] #A list may be specified. 
-  
-  if (!is.null(grantName)){
-    dt = dt[grant==grantName]
-  }
-  
-  #Formatting 
-  if (countryName == "cod") countryLabel = "DRC"
-  if (countryName == "gtm") countryLabel = "Guatemala"
-  if (countryName == "sen") countryLabel = "Senegal"
-  if (countryName == "uga") countryLabel = "Uganda"
-  
-  if (diseaseName == "hiv") diseaseLabel = "HIV"
-  if (diseaseName =="tb") diseaseLabel = "tuberculosis"
-  if (diseaseName == "malaria") diseaseLabel = "malaria"
-  if (diseaseName == "hiv/tb") diseaseLabel = "HIV/TB"
-  if (diseaseName == "rssh") diseaseLabel = "RSSH"
-  
-  if (xVar=="abbrev_mod_eng") xLabel="Module"
-  if (xVar=="abbrev_int_eng") xLabel="Intervention"
-  if (xVar=="grant") xLabel="Grant"
-  if (xVar=="grant_period") xLabel="Grant Period"
   
   #Set these options so they can be dynamically filled. 
   baseTitle = NULL
@@ -88,6 +115,7 @@ budget_exp_bar = function(countryName, diseaseName, grantPeriod=NULL, xVar=c('ab
   # Collapse data, and set by variables. 
   # -----------------------------------------------------------
   collapseVars = c(xVar, facetVar)
+  stopifnot(c(collapseVars, 'budget', 'expenditure')%in%names(dt))
   
   plot_data = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=collapseVars]
   plot_data[, absorption:=round((expenditure/budget)*100, 1)]
@@ -129,15 +157,6 @@ budget_exp_bar = function(countryName, diseaseName, grantPeriod=NULL, xVar=c('ab
   if (trimAbsorption){
     baseCaption = paste0(baseCaption, "*Absorption capped at 150%\n")
   } 
-  if (!is.null(grantName)){
-    baseTitle = paste0(baseTitle, "for ", grantName, "\n")
-  }
-  if (!is.null(limitModules)){
-    baseTitle=paste0(baseTitle, " ", limitModules, "\n")
-  }
-  if (!is.null(poolSemester)){
-    baseCaption = paste0(baseCaption, "*Semesters have been pooled across grant period\n")
-  }
   
   #Add all modified labels at once
   #Remove the last "\n" from each label 

@@ -14,7 +14,7 @@ library(data.table)
 library(GGally)
 library(gridExtra)
 library(boot)
-library(RColorBrewer)
+library(viridis)
 # --------------------
 
 
@@ -192,54 +192,6 @@ for(c in unique(data$country)) {
 		if (c=='gtm' & d=='malaria') next
 		p = ggpairs(data[country==c & disease==d, vars, with=F], 
 			title=paste(toupper(c), toupper(d)))
-		print(p)
-	}
-}
-
-# close pdf
-dev.off()
-# ----------------------------------------------------
-
-
-# ----------------------------------------------------
-# Graph Gbd estimates
-
-# open pdf
-pdf(outFile3, height=5.5, width=8)
-
-# graph national trends
-vars = c('mortality_rate','incidence_rate')
-for(c in unique(data$country)) { 
-	for(d in unique(data$disease)) { 
-		# subset data for convenience
-		tmpData = data[country==c & disease==d]
-	
-		# compute % change for each variable
-		startY = min(tmpData$year)
-		endY = max(tmpData$year)
-		startI = tmpData[year==startY]$incidence_rate
-		endI = tmpData[year==endY]$incidence_rate
-		startM = tmpData[year==startY]$mortality_rate
-		endM = tmpData[year==endY]$mortality_rate
-		dI = log(endI/startI)/(endY-startY)
-		dM = log(endM/startM)/(endY-startY)
-		
-		# add % change to data
-		long[country==c & disease==d & variable=='incidence_rate', change:=dI]
-		long[country==c & disease==d & variable=='mortality_rate', change:=dM]
-		long[change<0, change_lab:=paste0(round(-change*100, 1), '% decrease\nper year')]
-		long[change>=0, change_lab:=paste0(round(change*100, 1), '% increase\nper year')]
-		
-		p = ggplot(long[country==c & disease==d & variable %in% vars], 
-			aes(y=value, x=year)) + 
-		  geom_line(size=1.5, color='#33A02C') + 
-		  geom_text(y=Inf, x=Inf, aes(label=change_lab), vjust=1.5, hjust=1.1) + 
-		  facet_wrap(~label, scales='free_y') + 
-		  scale_x_continuous(breaks=seq(startY, endY, by=2)) + 
-		  labs(title='National Trends in Mortality and Incidence', 
-			subtitle=paste(toupper(c), toupper(d)), y='Rate per 100,000 Population',
-			x='', caption='Source: GBD 2018\nRates are Age-Standardized') + 
-		  theme_bw(base_size=16)
 		print(p)
 	}
 }

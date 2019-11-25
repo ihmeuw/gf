@@ -527,7 +527,7 @@ ggplot(subset[start_date=="2019-01-01"], aes(x=abbrev_mod, y=absorption, label=n
   geom_bar(stat="identity", fill="mediumorchid1") + 
   geom_text(hjust=-0.5, size=6) + 
   theme_bw(base_size=16) + 
-  coord_flip() + 
+  coord_flip() + e
   scale_y_continuous(limits=c(0, 220)) + 
   labs(title=paste0("Absorption by module, all grants"), x="Module", y="Absorption (%)", caption="*Max bar height set at 200%")
 ```
