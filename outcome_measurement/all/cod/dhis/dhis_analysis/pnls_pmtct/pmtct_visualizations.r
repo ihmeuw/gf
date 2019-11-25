@@ -233,7 +233,7 @@ for (district in districts){
 
 # Generate a labels dataset
 labels = unique(gf_map_wide[, .(id, dps, pct)])
-labels[, label:= paste0(dps, ": ", round(pct, 2), "%")]
+labels[, label:= paste0(dps, ": ", format(round(pct, digits=1), nsmall=1), "%")]
 labels = merge(labels, all_centers, by=c('dps'))
 #-----------------------------------------------
 
@@ -251,6 +251,8 @@ p10 = ggplot(gf_map_wide, aes(x = long, y = lat, group = group, fill=pct)) +
        caption="Note: Represents only Global Fund-supported health zones") +
   geom_label_repel(data = labels, aes(label = label, x = lon, y = lat, group = label), inherit.aes=FALSE, size=3)
 
+# Save this graph for DRC final report 
+ggsave("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/outputs/pmtct/plw_2018_final_report.png", p10, height=8, width=11)
 
 # One breakdown by age grouping - testing. 
 dt11 = gf_only[element_id=="DXz4Zxd4fKq", .(value=sum(value, na.rm=T)), by=c('date', 'age')]

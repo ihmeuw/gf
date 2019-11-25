@@ -10,19 +10,32 @@
 # Show projected absorption
 #-----------------------
 
+# Returns cumulative absorption for the 2018-2020 grant period based on a set of subset conditions. 
+#byVars - variables to collapse data by. 
+#countrySubset - country to subset to. 
+# grantSubset - grant to subset to. 
+# diseaseSubset - disease to subset to. 
+# moduleSubset - Global Fund module to subset to. 
+# currency - what currency would you like to return the data in? Options are USD or EUR. 
+# repoRoot - If your repository isn't stored in your documents folder, provide a file path to the 'gf' folder. 
+
 # Function to calculate cumulative absorption data 
 get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL, 
-                                    diseaseSubset=NULL, moduleSubset=NULL, currency=NULL){
+                                    diseaseSubset=NULL, moduleSubset=NULL, currency=NULL, repoRoot=NULL){
   require(data.table) 
   
   #Validate arguments 
   if (!is.null(countrySubset)) stopifnot(countrySubset%in%c('COD', 'SEN', 'UGA'))
   if (!is.null(currency)) stopifnot(currency%in%c('USD', 'EUR'))
   
+  user = Sys.info()[[7]]
+  box = paste0("C:/Users/", user, "/Box Sync/Global Fund Files/")
+  if(is.null(repoRoot)) repoRoot = paste0("C:/Users/", user, "/Documents/gf/")
+  
   #Read in absorption data 
-  cod = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/absorption_cod.rds")
-  sen = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/SEN/prepped_data/absorption_sen.rds")
-  uga = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/absorption_uga.rds")
+  cod = readRDS(paste0(box, "COD/prepped_data/absorption_cod.rds"))
+  sen = readRDS(paste0(box, "SEN/prepped_data/absorption_sen.rds"))
+  uga = readRDS(paste0(box, "UGA/prepped_data/absorption_uga.rds"))
   
   all_absorption = rbindlist(list(cod, sen, uga))
   all_absorption[, loc_name:=toupper(loc_name)]
@@ -63,7 +76,7 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
     all_absorption = all_absorption[gf_module%in%moduleSubset]
   }
   if (!is.null(currency) & currency=="EUR"){
-    source("C:/Users/elineb/Documents/gf/resource_tracking/prep/_common/shared_functions.r")
+    source(paste0(repo_root, "prep/_common/shared_functions.r"))
     all_absorption[, year:=2018]
     all_absorption = convert_currency(all_absorption, yearVar="year", convertFrom="USD", convertTo="EUR", 
                                              finVars=c('cumulative_budget', 'cumulative_expenditure'))
@@ -75,6 +88,7 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   cumulative_absorption = all_absorption[grant_period=="2018-2020" & semester=="Semester 3", .(budget = sum(cumulative_budget, na.rm=T), 
                                              expenditure=sum(cumulative_expenditure, na.rm=T)), 
                                          by=byVars]
+  cumulative_absorption[, absorption:=round((expenditure/budget)*100, 1)]
     
   return(cumulative_absorption) 
 } 
@@ -177,6 +191,7 @@ budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
 
 #Return a graph of the funding landscape for the disease in the country over the time period using Financing Global Health actuals. 
 # Options: 
+# graphType - one of either 'proportion' or 'ribbon'. 
 # countryName: Country name. options are 'cod', 'gtm', 'sen', or 'uga'. 
 # diseaseName: Disease name. Options are 'hiv', 'tb', or 'malaria'. 
 # startYear: What date would you like to start data at? 

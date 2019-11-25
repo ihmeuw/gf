@@ -9,6 +9,7 @@ revisions = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data
 all_files = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/budget_pudr_iterations.rds")
 absorption = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/absorption_uga.rds")
 
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
 #-------------
 # HIV
 #-------------
@@ -79,10 +80,76 @@ cartridges = cartridges[grep("cartridge", tolower(activity_description))] #Have 
 #-------------
 # MALARIA
 #-------------
+#What was total budgeted for malaria? 
+budgets[grant_disease=="malaria" & grant_period=="2018-2020" & loc_name=="uga", .(b=sum(budget, na.rm=TRUE)), by='grant']
+
+#What was module breakdown by budget years? 
+check = budgets[grant_disease=="malaria" & grant_period=="2018-2020" & loc_name=="uga", .(b=sum(budget, na.rm=TRUE)), by=c('year', 'gf_module')]
+check[, year_total:=sum(b), by='year']
+check[, mod_pct:=b/year_total]
+
+# What were the biggest components of vector control? 
+budgets[grant_disease=="malaria" & grant_period=="2018-2020" & loc_name=="uga" & gf_module=="Vector control", 
+        .(b=sum(budget, na.rm=TRUE)), by=c('gf_intervention')]
 
 #Review cumulative absorption by module 
-cumulative_absorption = absorption[grant_period=="2018-2020" & semester=="Semester 3", .(c_budget=sum(cumulative_budget, na.rm=T), c_expenditure=sum(cumulative_expenditure, na.rm=T)), 
+cumulative_absorption = absorption[grant_period=="2018-2020" & semester=="Semester 3" & grant_disease=="malaria", .(c_budget=sum(cumulative_budget, na.rm=T), c_expenditure=sum(cumulative_expenditure, na.rm=T)), 
                                    by=c('grant', 'gf_module')]
 cumulative_absorption[, c_absorption:=round((c_expenditure/c_budget)*100, 1)]
 cumulative_absorption[, c_expenditure:=dollar(c_expenditure)]
 cumulative_absorption[, c_budget:=dollar(c_budget)]
+
+# What's the overall cumulative absorption for MoFPED?
+cumulative_absorption = absorption[grant_period=="2018-2020" & semester=="Semester 3" & grant=="UGA-M-MoFPED", .(c_budget=sum(cumulative_budget, na.rm=T), c_expenditure=sum(cumulative_expenditure, na.rm=T))]
+cumulative_absorption[, c_expenditure/c_budget]
+absorption_mal = absorption[grant_period=="2018-2020" & semester=="Semester 3" & grant=="UGA-M-MoFPED", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T))]
+absorption_mal[, expenditure/budget]
+
+# What's the overall cumulative absorption for TASO?
+cumulative_absorption = absorption[grant_period=="2018-2020" & semester=="Semester 3" & grant=="UGA-M-TASO", .(c_budget=sum(cumulative_budget, na.rm=T), c_expenditure=sum(cumulative_expenditure, na.rm=T))]
+cumulative_absorption[, c_expenditure/c_budget]
+absorption_mal = absorption[grant_period=="2018-2020" & semester=="Semester 3" & grant=="UGA-M-TASO", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T))]
+absorption_mal[, expenditure/budget]
+
+# What's the cumulative absorption for ALL UGA grants, and is MoFPED malaria the lowest? 
+all_cumulative = get_cumulative_absorption(byVars=c('grant'), countrySubset="UGA", currency="USD")
+all_cumulative[, absorption:=expenditure/budget]
+
+# What is the absorption for RSSH modules (cumulatively) for both malaria PRs? 
+rssh_mal = absorption[grant_disease=="malaria" & disease=="rssh" & loc_name=="uga" & grant_period=="2018-2020", .(b=sum(budget, na.rm=T), e=sum(expenditure, na.rm=T))]
+rssh_mal[, e/b]
+
+#-------------
+# RSSH
+#-------------
+#What was the total amount budgeted for RSSH across the portfolio? 
+budgets[grant_period=="2018-2020" & disease=="rssh", sum(budget, na.rm=T)]
+budgets[grant_period=="2018-2020", sum(budget, na.rm=T)]
+
+# Split RSSH budget among grants 
+rssh = budgets[grant_period=="2018-2020" & disease=="rssh", .(rssh_budget=sum(budget, na.rm=T)), by='grant']
+rssh[, total_budget:=sum(rssh_budget)]
+rssh[, rssh_pct:=rssh_budget/total_budget]
+
+# What was 2018 absorption for all UGA grants? 
+full_year = absorption[grant_period=="2018-2020" & grant%in%c('UGA-C-TASO', 'UGA-M-TASO') & semester=="Semester 1-2", .(b=sum(budget, na.rm=T), e=sum(expenditure, na.rm=T))]
+semesters = absorption[grant_period=="2018-2020" & grant%in%c('UGA-C-TASO', 'UGA-M-TASO') & semester%in%c('Semester 1', 'Semester 2'), .(b=sum(budget, na.rm=T), e=sum(expenditure, na.rm=T))]
+total_budget = full_year$b + semesters$b
+total_expenditure = full_year$e + semesters$e
+total_expenditure/total_budget
+
+#What was the budget for national health strategies? 
+rssh = budgets[grant_period=="2018-2020" & disease=="rssh", .(rssh_budget=sum(budget, na.rm=T)), by='gf_module']
+rssh[, total_budget:=sum(rssh_budget)]
+rssh[, rssh_pct:=rssh_budget/total_budget]
+
+# What's absorption for RSSH national health strategies? 
+rssh = get_cumulative_absorption(byVars=c('abbrev_mod'), countrySubset="UGA", diseaseSubset="rssh", currency="USD")
+rssh[, absorption:=expenditure/budget]
+
+# What's absorption for RSSH community systems by int? 
+rssh = get_cumulative_absorption(byVars=c('abbrev_int'), countrySubset="UGA", diseaseSubset="rssh", moduleSubset="Community responses and systems", currency="USD")
+
+#-------------
+# GENERAL
+#-------------

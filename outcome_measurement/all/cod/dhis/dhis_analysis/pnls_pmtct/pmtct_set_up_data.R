@@ -5,7 +5,7 @@
 #-----------------------------------------
 
 #Read in data 
-dt = readRDS("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/prepped/pnls_final/pnls_pmtct.rds")
+dt = readRDS("J:/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/3_prepped/pnls_final/pnls_pmtct.rds")
 
 # make an easy to use element number (can replace element ID if desired) 
 dt = dt[order(element_eng)]

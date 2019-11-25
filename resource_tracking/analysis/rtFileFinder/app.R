@@ -13,7 +13,7 @@ library(shiny)
 ui <- fluidPage(
   
   # Application title
-  titlePanel("RT File Finder"),
+  titlePanel("Resource Tracking File Finder"),
   
   selectInput("country", "Country:", c("All"="All", "DRC"="cod", "Guatemala"="gtm", "Senegal"="sen", "Uganda"="uga")),
   
