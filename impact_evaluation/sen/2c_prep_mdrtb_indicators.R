@@ -164,6 +164,10 @@ dt4$date_trait <- gsub("25-Aug-17", "08/25/2017", dt4$date_trait)
 dt4$date_trait <- gsub("28-Aug-17", "08/28/2017", dt4$date_trait)
 dt4$date_trait <- gsub(" ", "", dt4$date_trait)
 
+# add in variables that are missing
+dt4$date_trait[which(dt4$annee==2015 & dt4$id==37 & dt4$sexe=="M" & dt4$age ==49)] <- "11/20/2015"
+dt4$date_trait[which(dt4$annee==2016 & dt4$id==27 & dt4$sexe=="M" & dt4$age ==39)] <- "06/22/2016"
+
 # remove unnessary variables
 dt4 <- dt4[,patient:=NULL]
 
