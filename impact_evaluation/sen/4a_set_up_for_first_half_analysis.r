@@ -14,6 +14,9 @@ source('./impact_evaluation/sen/set_up_r.r')
 
 data = readRDS(outputFile3)
 
+# subset dates now that cumulative variables are computed
+data = data[date>=2014 & date<2018.75]
+
 # bring in population estimates where possible if the model is a per-capita model
 #if(fileLabel=='_pc') { 
 #	pop = readRDS(outputFile2c)
@@ -21,8 +24,7 @@ data = readRDS(outputFile3)
 #	data = merge(data,pop, by=c('region','date'), all.x=TRUE)
 #}
 
-# subset dates now that cumulative variables are computed
-data = data[date>=2014 & date<2018.75]
+
 # -----------------------------------------------------------------
 
 
@@ -36,25 +38,26 @@ for(v in numVars) if (all(is.na(data[[v]]))) data[[v]] = NULL
 # extrapolate where necessary using GLM (better would be to use multiple imputation)
 i=1
 for(v in numVars) {
-	for(h in unique(data$region)) { 
-		i=i+1
-		if (!any(is.na(data[region==h][[v]]))) next
-		if (!any(!is.na(data[region==h][[v]]))) next
-		form = as.formula(paste0(v,'~date'))
-		lmFit = glm(form, data[region==h], family='poisson')
-		data[region==h, tmp:=exp(predict(lmFit, newdata=data[region==h]))]
-		lim = max(data[region==h][[v]], na.rm=T)+sd(data[region==h][[v]], na.rm=T)
-		data[region==h & tmp>lim, tmp:=lim]
-		# ggplot(data[region==h], aes_string(y=v, x='date')) + geom_point() + geom_point(aes(y=tmp),color='red')
-		data[region==h & is.na(get(v)), (v):=tmp]
-		pct_complete = floor(i/(length(numVars)*length(unique(data$region)))*100)
-		cat(paste0('\r', pct_complete, '% Complete'))
-		flush.console() 
-	}
+  for(h in unique(data$region)) { 
+    i=i+1
+    if (!any(is.na(data[region==h][[v]]))) next
+    if (!any(!is.na(data[region==h][[v]]))) next
+    form = as.formula(paste0(v,'~date'))
+    lmFit = glm(form, data[region==h], family='poisson')
+    data[region==h, tmp:=exp(predict(lmFit, newdata=data[region==h]))]
+    lim = max(data[region==h][[v]], na.rm=T)+sd(data[region==h][[v]], na.rm=T)
+    data[region==h & tmp>lim, tmp:=lim]
+    # ggplot(data[region==h], aes_string(y=v, x='date')) + geom_point() + geom_point(aes(y=tmp),color='red')
+    data[region==h & is.na(get(v)), (v):=tmp]
+    pct_complete = floor(i/(length(numVars)*length(unique(data$region)))*100)
+    cat(paste0('\r', pct_complete, '% Complete'))
+    flush.console() 
+  }
 }
 data$tmp = NULL
 
-# na omit (for regions that were entirely missing)
+# na omit (for regions that were entirely missing) except for mdr_success_rate which will have missing success rate
+#col2keep = names(data)[!names(data)%in%c('mdr_success_rate')]
 data = na.omit(data)
 # -----------------------------------------------------------------
 
@@ -66,7 +69,7 @@ data = na.omit(data)
 cumulVars = names(data)[grepl('gf_|other_dah|ghe|oop', names(data))]
 cumulVars = c(cumulVars, 'tb_tfc', 'com_radio', 'com_enf_ref', 'com_mobsoc', 'com_vad_touss',
 	'com_nom_touss', 'com_enf_ref', 'tb_vih', 'tot_genexpert',
-	'tb_vih_arv', 'tpm_chimio_enf', 'tb_cas_id', 'dx_count', 'patients_prop_genexpert')
+	'tb_vih_arv', 'tpm_chimio_enf', 'tb_cas_id', 'dx_count', 'mdr_success', 'patients_prop_genexpert', 'gueris_total')
 
 for(v in cumulVars) { 
 	nv = gsub('value_','',v) 
@@ -78,8 +81,7 @@ untransformed = copy(data)
 
 # update the complVars vector to refer to any proportion variable
 complVars = c('perf_lab', 
-              'gueris_taux',
-              'mdr_success_rate')
+              'gueris_taux')
 
 # transform completeness variables using approximation of logit that allows 1's and 0's
 # (Smithson et al 2006 Psychological methods "A better lemon squeezer")
@@ -142,11 +144,13 @@ data = na.omit(data)
 
 # test unique identifiers
 test = nrow(data)==nrow(unique(data[,c('region','date'), with=F]))
-if (test==FALSE) stop(paste('Something is wrong. date does not uniquely identify rows.'))
+if (test==FALSE) stop(paste('Something is wrong. region and date does not uniquely identify rows.'))
 
 # test for missingness
 test = nrow(data)==nrow(na.omit(data))
 if(test==FALSE) stop('Something is wrong. There are missing values after GLM imputation')
+
+# will leave in some missingness because of regions where no values were reported (for KEDOUGOU and treatment success rate)
 # ---------------------------------------------------------------------------------------
 
 

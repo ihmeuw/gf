@@ -7,11 +7,16 @@
 library(data.table)
 library(ggplot2)
 
+# parameters to edit
+graphic_name = "cross_country_comparisons_ihmepath.jpeg"
+codebook_name = "module_code_map.csv"
+
 # read data
 data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.RDS")
 
 # merge with the correct module code and the correct indicator type
-codebook <- fread("C:/Users/frc2/Documents/gf/outcome_measurement/all/performance_indicators/codebooks/module_code_map.csv")
+
+codebook <- fread(paste0("C:/Users/frc2/Documents/gf/outcome_measurement/all/performance_indicators/codebooks/", codebook_name))
 data <- merge(data, codebook, by.x='indicator_code', by.y="indicator_code", all.x = TRUE, all.y=FALSE)
 
 # add reverse indicator variable
@@ -84,7 +89,7 @@ ggplot(dt_subset[], aes(x=module_code, y=avg_ach_ratio, color=module_code, size 
         axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
   geom_hline(yintercept=1, linetype="dashed", color="grey", alpha=0.6, size=2)
 
-outputFile = "J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\visualizations\\cross_country_comparisons.jpeg"
+outputFile = paste0("J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\visualizations\\",graphic_name)
 ggsave(outputFile, height = 8, width = 11)
 
 
