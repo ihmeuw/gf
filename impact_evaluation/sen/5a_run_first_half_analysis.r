@@ -140,7 +140,7 @@ for(i in seq(T)) {
 
 # save all sem fits just in case they're needed
 print(paste('Saving', outputFile5a))
-# save(list=c('data','model','summaries','means','urFits'), file=outputFile5a)
+save(list=c('data','model','summaries','means','urFits'), file=outputFile5a)
 save(list=c('data','model','urFits'), file=outputFile5a)
 
 # save full output for archiving
