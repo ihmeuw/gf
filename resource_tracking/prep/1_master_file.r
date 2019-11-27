@@ -27,11 +27,11 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = FALSE
+prep_files = TRUE
 prep_gos = FALSE
 prep_odah = FALSE
 prep_ghe = FALSE
-prep_cost_categories = TRUE
+prep_cost_categories = FALSE
 
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
@@ -45,7 +45,7 @@ only_new_files = FALSE # Set to true if, when you re-run file list, you only wan
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
-    country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+    country = "cod" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
     master_file_dir = ifelse(Sys.info()[1]=='Windows', paste0(box, toupper(country), "/raw_data/"), 
                              paste0(dir, "_gf_files_gos/", country, "/raw_data/"))
     export_dir = ifelse(Sys.info()[1]=="Windows", paste0(box, country, "/prepped_data/"),
@@ -59,7 +59,7 @@ if (prep_files | prep_gos){
   }
   
   # Load and verify mapping, prep data, and map data. 
-  source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
+  # source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
   if (prep_files){
     source(paste0(code_dir, "2b_gf_files_prep_data.r"))
   } else if (prep_gos){
@@ -74,9 +74,9 @@ if (prep_files | prep_gos){
   #                          output_file="Visual Checks.pdf"))
   
   #Run data gap analysis - optional
-  rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
-                    output_dir=paste0(dir, "/visualizations/verification"),
-                    output_file="Reporting Completeness.pdf")
+  # rmarkdown::render(paste0(code_dir, "reporting_completeness_gf.rmd"),
+  #                   output_dir=paste0(dir, "/visualizations/verification"),
+  #                   output_file="Reporting Completeness.pdf")
   
   # # #Run unclassified file analysis - optional
   # rmarkdown::render(paste0(code_dir, "unclassified_files.rmd"),

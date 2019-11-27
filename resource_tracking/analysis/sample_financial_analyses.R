@@ -92,7 +92,7 @@ all_revisions = rbindlist(list(cod, gtm, sen, uga), fill=T)
 
 # How has the budget for human rights changed in the UGA-C-TASO grant? 
 all_revisions[grant_period=="2018-2020" & grant=="UGA-C-TASO" & gf_module=="Programs to reduce human rights-related barriers to HIV services", 
-              .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2, na.rm=T), v3=sum(v3, na.rm=T))]
+              .(v0=sum(v0, na.rm=T), v1=sum(v1, na.rm=T), v2=sum(v2), v3=sum(v3))]
 # If a total is zero here, it means that we don't have that number of revisions, and the columns will be NA in the original dataset. 
 # You can check the Shiny app to make sure. 
 

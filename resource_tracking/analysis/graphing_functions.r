@@ -27,6 +27,7 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   #Validate arguments 
   if (!is.null(countrySubset)) stopifnot(countrySubset%in%c('COD', 'SEN', 'UGA'))
   if (!is.null(currency)) stopifnot(currency%in%c('USD', 'EUR'))
+  if (!is.null(diseaseSubset)) stopifnot(diseaseSubset%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
   
   user = Sys.info()[[7]]
   box = paste0("C:/Users/", user, "/Box Sync/Global Fund Files/")
@@ -39,6 +40,10 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   
   all_absorption = rbindlist(list(cod, sen, uga))
   all_absorption[, loc_name:=toupper(loc_name)]
+  
+  # Validate a few more columns using this data set 
+  if (!is.null(grantSubset)) stopifnot(grantSubset%in%unique(all_absorption$grant))
+  if (!is.null(moduleSubset)) stopifnot(moduleSubset%in%unique(all_absorption$gf_module))
   
   #Fix disease names 
   all_absorption[, grant_disease:=toupper(grant_disease)]
@@ -75,20 +80,76 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   if (!is.null(moduleSubset)){
     all_absorption = all_absorption[gf_module%in%moduleSubset]
   }
-  if (!is.null(currency) & currency=="EUR"){
-    source(paste0(repo_root, "prep/_common/shared_functions.r"))
-    all_absorption[, year:=2018]
-    all_absorption = convert_currency(all_absorption, yearVar="year", convertFrom="USD", convertTo="EUR", 
-                                             finVars=c('cumulative_budget', 'cumulative_expenditure'))
+  if (!is.null(currency)){
+    if (currency=="EUR"){
+      source(paste0(repo_root, "prep/_common/shared_functions.r"))
+      all_absorption[, year:=2018]
+      all_absorption = convert_currency(all_absorption, yearVar="year", convertFrom="USD", convertTo="EUR", 
+                                            finVars=c('cumulative_budget', 'cumulative_expenditure'))
+    }
   }
   
   #Make sure you can do the collapse correctly. 
-  if (!any(byVars%in%names(all_absorption))) stop("Some byVars are not in absorption data.")
+  if (!any(byVars%in%names(all_absorption))){
+    print("Some byVars are not in absorption data.")
+    print("Available variables to collapse by are: ")
+    print(sort(names(all_absorption)[!names(all_absorption)%in%c('budget', 'expenditure', 'cumulative_budget', 'cumulative_expenditure', 'absorption')]))
+    stop()  
+  } 
   
-  cumulative_absorption = all_absorption[grant_period=="2018-2020" & semester=="Semester 3", .(budget = sum(cumulative_budget, na.rm=T), 
-                                             expenditure=sum(cumulative_expenditure, na.rm=T)), 
-                                         by=byVars]
-  cumulative_absorption[, absorption:=round((expenditure/budget)*100, 1)]
+  #Flag the different ways to pull cumulative expenditure. 
+  # Was it entered in the PUDRs, or do we need to sum old PUDRs? 
+  check_exp = all_absorption[grant_period=="2018-2020" & semester=="Semester 3", .(budget = sum(cumulative_budget, na.rm=T), 
+                                                                                   expenditure=sum(cumulative_expenditure, na.rm=T)), by='grant']
+  check_exp = check_exp[expenditure==0, method:='calculated']
+  check_exp = check_exp[expenditure!=0, method:='reported_in_pudr']
+  
+  check_exp = check_exp[, .(grant, method)]
+  all_absorption = merge(all_absorption, check_exp, by='grant')
+  
+  # Now, run these two methods separately. 
+  # First, reported in PUDR. 
+  cumulative_absorption1 = all_absorption[grant_period=="2018-2020" & semester=="Semester 3" & method=="reported_in_pudr",
+                                         .(cumulative_budget = sum(cumulative_budget, na.rm=T), 
+                                             cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), 
+                                         by=c(byVars, 'method')]
+  # Then, calculate using previous PUDRs. 
+  
+  # In cases where cumulative expenditure isn't reported, calculate it from the previous PUDRs. 
+  calculate = all_absorption[grant_period=="2018-2020" & semester=="Semester 3" & method=="calculated"]
+  cumulative_absorption2 = data.table()
+  if (nrow(calculate)!=0){
+    for (g in unique(calculate$grant)){
+      subset = calculate[grant==g]
+      semesters = unique(all_absorption$semester)
+      if ('Semester 1-2'%in%semesters){ #These are the only two types of reporting we've seen - a full-year PUDR in 2018 or a S2 2018 PUDR. 
+        subset = subset[semester%in%c('Semester 1-2', 'Semester 3'), .(cumulative_budget = sum(budget, na.rm=T), 
+                                                                       cumulative_expenditure=sum(expenditure, na.rm=T)), by=c(byVars, 'method')]
+      } else if ('Semester 2'%in%semesters){
+        subset = subset[semester%in%c('Semester 1', 'Semester 2', 'Semester 3'), .(cumulative_budget = sum(budget, na.rm=T), 
+                                                                                   cumulative_expenditure=sum(expenditure, na.rm=T)), by=c(byVars, 'method')]      }
+      cumulative_absorption2 = rbind(cumulative_absorption2, subset, fill=T)
+    } 
+    #Collapse the grant-level out after summing by semester. 
+    cumulative_absorption2 = cumulative_absorption2[, .(cumulative_budget = sum(cumulative_budget, na.rm=T), 
+                                                        cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), by=c(byVars, 'method')]
+  } 
+   
+  # ***How can you verify that you've captured the whole time series? 
+  
+  # Bind the data together 
+  if ('cumulative_absorption1'%in%ls() & 'cumulative_absorption2'%in%ls()){
+    cumulative_absorption = rbind(cumulative_absorption1, cumulative_absorption2)
+  } else if ('cumulative_absorption1'%in%ls()){
+    cumulative_absorption = cumulative_absorption1
+  } else {
+    cumulative_absorption = cumulative_absorption2
+  }
+  
+  # Finally, collapse out the calculation method. 
+  cumulative_absorption = cumulative_absorption[, .(cumulative_budget = sum(cumulative_budget, na.rm=T), 
+                                                    cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), by=c(byVars)]
+  cumulative_absorption[, cumulative_absorption:=round((cumulative_expenditure/cumulative_budget)*100, 1)]
     
   return(cumulative_absorption) 
 } 
