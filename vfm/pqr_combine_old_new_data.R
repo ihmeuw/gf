@@ -148,4 +148,9 @@ data[, purchase_order_year := year(purchase_order_date)]
 # save data 
 # ----------------------------------------------
 saveRDS(data, outFile)
+
+#save GTM data as a .csv
+dt = readRDS(outFile)
+gtm = dt[ iso3codecountry == 'GTM' ]
+write.csv(gtm, paste0(dir, 'unit_cost_data/prepped_data/PQR_data_GTM.csv'))
 # ----------------------------------------------

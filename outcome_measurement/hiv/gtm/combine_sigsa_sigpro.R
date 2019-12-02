@@ -170,8 +170,8 @@ non_testing_vars = c('condoms_delivered', 'female_condoms_delivered', 'lube_tube
                      'condoms', 'female_condoms', 'flavored_condoms', 'lube_packets', 'lube_tubes', 'sif_result', 'referral')
 dt[ , c(non_testing_vars) := NULL]
 
-# don't need date by day, we can make figures by month
-setnames(dt, 'month_date', 'date')
+# # don't need date by day, we can make figures by month
+# setnames(dt, 'month_date', 'date')
 
 saveRDS(dt, outFile)
 #----------------------------------------
