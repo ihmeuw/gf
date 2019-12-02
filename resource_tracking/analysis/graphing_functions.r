@@ -50,7 +50,7 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   all_absorption[grant_disease=="MALARIA", grant_disease:="Malaria"]
   
   #Add abbreviated module names. 
-  all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
+  all_mods = readRDS("C:/Users/elineb/Desktop/all_interventions.rds") #THIS SHOULD BE CHANGED BACK 
   setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
   all_mods = unique(all_mods[, .(gf_module, gf_intervention, disease, abbrev_mod, abbrev_int)])
   all_absorption = merge(all_absorption, all_mods, by=c('gf_module', 'gf_intervention', 'disease'), allow.cartesian=TRUE)
@@ -147,10 +147,11 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   }
   
   # Finally, collapse out the calculation method. 
-  cumulative_absorption = cumulative_absorption[, .(cumulative_budget = sum(cumulative_budget, na.rm=T), 
-                                                    cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), by=c(byVars)]
-  cumulative_absorption[, cumulative_absorption:=round((cumulative_expenditure/cumulative_budget)*100, 1)]
+  cumulative_absorption = cumulative_absorption[, .(budget = sum(cumulative_budget, na.rm=T), 
+                                                    expenditure=sum(cumulative_expenditure, na.rm=T)), by=c(byVars)]
+  cumulative_absorption[, absorption:=round((expenditure/budget)*100, 1)]
     
+  # In order to make this function work more nicely with budget_exp_bar graphing function, renaming columns to just 'budget'/'expenditure'
   return(cumulative_absorption) 
 } 
 

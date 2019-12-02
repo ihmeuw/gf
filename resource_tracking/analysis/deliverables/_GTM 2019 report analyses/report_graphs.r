@@ -193,3 +193,27 @@ p2 = ggplot(full_budget_period[!is.na(abbrev_mod)], aes(x=abbrev_mod, y=budget, 
 ggsave(paste0(save_loc, "INCAP_budget_revision1.png"), p1, height=8, width=11)
 ggsave(paste0(save_loc, "INCAP_budget_revision2.png"), p2, height=8, width=11)
 
+ #--------------------------------------
+# COMPARE SICOIN 
+#---------------------------------------
+pudr_expenditures = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/final_expenditures_gtm.rds")
+pudr_expenditures[, year:=year(start_date)]
+pudr_expenditures = pudr_expenditures[, .(budget=sum(budget, na.rm=T)), by=c('disease', 'year')]
+pudr_expenditures[, type:="PUDR"]
+
+sicoin = readRDS("J:/Project/Evaluation/GF/resource_tracking/_ghe/sicoin_gtm/prepped_data/raw_bound_files.rds")
+sicoin[, year:=year(start_date)]
+sicoin = sicoin[, .(budget=sum(budget, na.rm=T)), by=c('disease', 'year')]
+sicoin[, type:="SICOIN"]
+
+plot_data = rbind(pudr_expenditures, sicoin, use.names=T)
+plot_data[, disease:=toupper(disease)]
+plot_data[disease=="MALARIA", disease:="Malaria"]
+
+p = ggplot(plot_data, aes(x=year, y=budget, fill=type)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  theme_bw(base_size=16) + 
+  facet_wrap(~disease) +
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Budget from PUDRs vs. SICOIN", y="Budget (USD)", x="Year", fill="")
+  

@@ -38,7 +38,7 @@ include_stops = TRUE #Set to true if you would like scripts to stop when errors 
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
 rerun_filelist = TRUE #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
-only_new_files = FALSE # Set to true if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
+only_new_files = TRUE # Set to true if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
 
 # ----------------------------------------------
 # STEP 2: PREP GF FILES AND GOS DATA 
@@ -59,14 +59,14 @@ if (prep_files | prep_gos){
   }
   
   # Load and verify mapping, prep data, and map data. 
-  # source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
+  source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
   if (prep_files){
     source(paste0(code_dir, "2b_gf_files_prep_data.r"))
   } else if (prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
-  # source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
-  # source(paste0(code_dir, "2e_gf_aggregate_files.R"))
+  source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
+  source(paste0(code_dir, "2e_gf_aggregate_files.R"))
   # source(paste0(code_dir, "2f_gf_verify_outputs.R"))
   # 
   # rmarkdown::render(paste0(code_dir, "2g_gf_visualize_data.rmd",

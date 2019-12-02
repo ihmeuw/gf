@@ -26,6 +26,11 @@ mofped_hiv[grep("test kits|tesk kits", tolower(activity_description)), testing:=
 View(unique(mofped_hiv[testing==TRUE, .(gf_module, gf_intervention, activity_description)]))
 mofped_hiv[, .(budget=sum(budget, na.rm=T)), by=c('testing')]
 
+# How much of the UGA-H-MoFPED grant went to condom procurement? 
+mofped_hiv= all_files[file_name=="UGA-H-MoFPED_IL2_SB2_Optimization_7March19.xlsx"]
+mofped_hiv[grepl("Condom", gf_intervention), condoms:=TRUE]
+mofped_hiv[, sum(budget, na.rm=T), by='condoms']
+
 #How much of the C-TASO budget is devoted to human rights? 
 c_taso = all_files[file_name=="UGA-C-TASO_IL1_Catalytic Funding_DetailedBudget_IMPP2_26April18.xlsx"]
 taso1 = c_taso[, .(budget=sum(budget, na.rm=T)), by='gf_module']
@@ -37,6 +42,12 @@ h_mofped = all_files[file_name=="UGA-H-MoFPED_IL2_SB2_Optimization_7March19.xlsx
 h_mofped = h_mofped[, .(budget=sum(budget, na.rm=TRUE)), by='gf_module']
 h_mofped[, total:=sum(budget)]
 h_mofped[, mod_percent:=round((budget/total)*100, 1)]
+
+# How much of the C-TASO budget is devoted to each module? 
+c_taso = all_files[file_name=="UGA-C-TASO_IL1_Catalytic Funding_DetailedBudget_IMPP2_26April18.xlsx"]
+c_taso = c_taso[, .(budget=sum(budget, na.rm=TRUE)), by='gf_module']
+c_taso[, total:=sum(budget)]
+c_taso[, mod_percent:=round((budget/total)*100, 1)]
 
 # Calculate overall grant-level absorption percentage, using cumulative 18-month data. 
 mofped_absorption = absorption[grant=="UGA-H-MoFPED" & grant_period=="2018-2020" & semester=="Semester 3", 
@@ -57,9 +68,13 @@ mofped_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 
 c_taso_absorption = absorption[grant=="UGA-C-TASO" & grant_period=="2018-2020" & semester=="Semester 3", 
                                .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), 
-                               by=c('gf_module', 'gf_intervention')]
+                               by=c('gf_module')]
 c_taso_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 
+# What has TASO's absorption been for the first 18 months, excluding TB modules? 
+c_taso_absorption = absorption[grant=="UGA-C-TASO" & grant_period=="2018-2020" & semester=="Semester 3" & disease!="tb", 
+                               .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T))]
+c_taso_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 #-------------
 # TB
 #-------------
