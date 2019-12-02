@@ -28,6 +28,12 @@ HIV KP,Coverage,KP-6b
 HIV KP,Coverage,KP-6c
 HIV KP,Coverage,KP-7-PCE
 HIV KP,Coverage,KP-8-PCE
+HIV KP,Coverage,KP Other-1
+HIV KP,Coverage,KP-Other 1
+HIV KP,Coverage,KP-Other 2
+HIV KP,Coverage,KP-other1
+HIV KP,Coverage,KP-other2
+HIV KP,Coverage,KP Other -2
 HIV Outcome,Outcome,HIV O-1(M)
 HIV Outcome,Outcome,HIV O-10
 HIV Outcome,Outcome,HIV O-4a(M)
@@ -65,6 +71,7 @@ HIV Prevention,Coverage,YP-2
 HIV Prevention,Coverage,YP-3
 HIV Prevention,Coverage,YP-4
 HIV TCS,,TCS other- 1
+HIV TCS,,TCS-Other (1)
 HIV TCS,,TCS other-2
 HIV TCS,,TCS other-3
 HIV TCS,,TCS-other 1

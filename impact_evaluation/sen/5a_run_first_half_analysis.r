@@ -14,7 +14,7 @@
 # This runs the SEM dose-response model (Francisco presets) 
 # qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=6G -q all.q 
 # -P proj_pce -e /ihme/scratch/users/frc2/impact_evaluation/errors_output/ 
-# -o /ihme/scratch/users/elineb/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/sen/5a_run_first_half_analysis.r
+# -o /ihme/scratch/users/frc2/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/sen/5a_run_first_half_analysis.r
 
 # qsub -l archive=TRUE -cwd -N ie_script_5a -l fthread=12 -l m_mem_free=12G -q all.q -P ihme_general -e /ihme/homes/users/frc2/impact_evaluation/errors_output/ -o /ihme/homes/users/frc2/impact_evaluation/errors_output/ ./core/r_shell_blavaan.sh ./impact_evaluation/sen/5a_run_first_half_analysis.r
 
