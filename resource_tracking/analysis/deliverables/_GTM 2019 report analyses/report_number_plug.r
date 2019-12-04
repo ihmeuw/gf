@@ -5,6 +5,7 @@
 # PREP DATA 
 #-----------------------
 rm(list=ls())
+library(data.table) 
 
 save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_GTM 2019 annual report/"
 

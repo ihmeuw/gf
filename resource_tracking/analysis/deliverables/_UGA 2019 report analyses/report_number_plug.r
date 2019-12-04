@@ -20,11 +20,15 @@ mofped_hiv[grep("arv|third line art", tolower(activity_description)), arv_procur
 View(unique(mofped_hiv[arv_procurement==TRUE, .(gf_module, gf_intervention, activity_description)]))
 mofped_hiv[, .(budget=sum(budget, na.rm=T)), by=c('arv_procurement')]
 
-#How much of the UGA-H-MoFPED grant went to HIV testing? 
+#How much of the UGA-H-MoFPED grant went to HIV test kits? 
 mofped_hiv= all_files[file_name=="UGA-H-MoFPED_IL2_SB2_Optimization_7March19.xlsx"]
 mofped_hiv[grep("test kits|tesk kits", tolower(activity_description)), testing:=TRUE]
 View(unique(mofped_hiv[testing==TRUE, .(gf_module, gf_intervention, activity_description)]))
 mofped_hiv[, .(budget=sum(budget, na.rm=T)), by=c('testing')]
+
+# How much money went to HIV testing? 
+mofped_hiv= all_files[file_name=="UGA-H-MoFPED_IL2_SB2_Optimization_7March19.xlsx"]
+mofped_hiv[grepl("tes")]
 
 # How much of the UGA-H-MoFPED grant went to condom procurement? 
 mofped_hiv= all_files[file_name=="UGA-H-MoFPED_IL2_SB2_Optimization_7March19.xlsx"]
@@ -75,6 +79,18 @@ c_taso_absorption[, absorption:=round((expenditure/budget)*100, 1)]
 c_taso_absorption = absorption[grant=="UGA-C-TASO" & grant_period=="2018-2020" & semester=="Semester 3" & disease!="tb", 
                                .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T))]
 c_taso_absorption[, absorption:=round((expenditure/budget)*100, 1)]
+
+# What's the overall budget/expenditure for the H-MoFPED grant? 
+absorption_all_grants = get_cumulative_absorption(byVars='grant', countrySubset="UGA")
+
+
+# What's absorption for S1 2018 vs. S1 2019 for the H-MoFPED grant? 
+h_mofped = absorption[grant=="UGA-H-MoFPED" & grant_period=="2018-2020", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('semester', 'gf_module')]
+h_mofped[, absorption:=round((expenditure/budget)*100, 1)]     
+
+# Calculate S1 2019 absorption by module for C-TASO 
+s1_2019_taso = absorption[start_date=="2019-01-01" & grant=="UGA-C-TASO", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by='gf_module']
+s1_2019_taso[, absorption:=round((expenditure/budget)*100, 1)] 
 #-------------
 # TB
 #-------------
@@ -165,6 +181,15 @@ rssh[, absorption:=expenditure/budget]
 # What's absorption for RSSH community systems by int? 
 rssh = get_cumulative_absorption(byVars=c('abbrev_int'), countrySubset="UGA", diseaseSubset="rssh", moduleSubset="Community responses and systems", currency="USD")
 
+# What was the total RSSH absorption for all UGA grants? 
+rssh = get_cumulative_absorption(byVars='loc_name', countrySubset="UGA", diseaseSubset="rssh")
+
+# How has RSSH absorption been changing over time? 
+rssh_semesters = absorption[disease=="rssh" & grant_period=="2018-2020", .(budget=sum(budget), expenditure=sum(expenditure)), by=c('semester')]
+rssh_semesters[, absorption:=round((expenditure/budget)*100, 1)]
+rssh_semesters[, budget:=dollar(budget)]
+rssh_semesters[, expenditure:=dollar(expenditure)]
 #-------------
 # GENERAL
 #-------------
+overall_absorption = get_cumulative_absorption(byVars='loc_name', countrySubset="UGA")

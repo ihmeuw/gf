@@ -69,13 +69,13 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   
   # Limit dataset if desired. 
   if (!is.null(countrySubset)){
-    all_absorption = all_absorption[loc_name==countrySubset]
+    all_absorption = all_absorption[loc_name%in%countrySubset]
   }
   if (!is.null(grantSubset)){
-    all_absorption = all_absorption[grant==grantSubset]
+    all_absorption = all_absorption[grant%in%grantSubset]
   }
   if (!is.null(diseaseSubset)){
-    all_absorption = all_absorption[disease==diseaseSubset]
+    all_absorption = all_absorption[disease%in%diseaseSubset]
   }
   if (!is.null(moduleSubset)){
     all_absorption = all_absorption[gf_module%in%moduleSubset]
@@ -170,7 +170,7 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
 # altTitle, altSubtitle, altCaption - pass strings as alternate options to the "labs" argument in ggplot
 
 budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
-                                     yScaleMax=160, baseSize=16, barLabels = TRUE, 
+                                     yScaleMax=NULL, baseSize=16, barLabels = TRUE, 
                                      trimAbsorption=FALSE, angleText=FALSE,
                                      altTitle=NULL, altSubtitle=NULL, altCaption=NULL, xLabel=""){
   require(data.table) 
@@ -198,10 +198,9 @@ budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
   
   #Trim absorption if specified, and flag values greater than yScale limits. 
   if (trimAbsorption) plot_data[absorption>150, absorption:=150]
-  if (max(plot_data$absorption, na.rm=T)>yScaleMax) stop(paste0("Increase yScaleMax value - absorption values will be cut off. Max absorption is ", max(plot_data$absorption)))
-  
+
   #Add labels 
-  plot_data[, barLabel:=paste0(dollar(expenditure), " (", absorption, ")%")]
+  plot_data[, barLabel:=paste0(dollar(expenditure), " (", format(absorption, nsmall=1), "%)")]
   
   # Melt data 
   plot_data = melt(plot_data, id.vars=c(collapseVars, 'absorption', 'barLabel'))
@@ -216,6 +215,10 @@ budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
     coord_flip() + 
     scale_y_continuous(labels = scales::dollar) + 
     labs(x=xLabel, y="", fill="")
+  
+  if (!is.null(yScaleMax)) {
+    p = p + scale_y_continuous(labels=scales::dollar, limits=c(0, yScaleMax))
+  }
   
   if (!is.null(facetVar)) {
     p = p + facet_wrap(~get(facetVar)) 
