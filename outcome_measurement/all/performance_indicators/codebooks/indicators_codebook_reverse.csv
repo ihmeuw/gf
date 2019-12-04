@@ -191,3 +191,13 @@ Number and percentage of health facilities (Integrated health facilities) report
 HIV O-other 1,Percentage of other vulnerable populations who report the use of a condom at last sexual intercourse,% other vulnerable pop. who report use of condom at last sex. intercourse - HIV O-7,no
 GP other-2 Nombre de SVS ayant recu le kit PEP dans les 72h,Number of survivors of sexual violence recd. PREP w/in 72 hrs,Number of survivors of sexual violence recd. PREP w/in 72 hrs - GP other-2,no
  GP other-2 Nombre de SVS ayant recu le kit PEP dans les 72h,Number of survivors of sexual violence recd. PREP w/in 72 hrs,Number of survivors of sexual violence recd. PREP w/in 72 hrs - GP other-2,no
+HIV I-3b,Percentage of men who have sex with men with active syphilis ,Percentage of men who have sex with men with active syphilis - HIV I-3b,yes
+HIV I-3c,Percentage of sex workers with active syphilis ,Percentage of sex workers with active syphilis - HIV I-3c,no
+KP Other -2,Percentage of newly diagnosed MSM linked to HIV care (individual linkage) ,Percentage of newly diagnosed MSM linked to HIV care (individual linkage) - KP Other -2,no
+KP Other-1,Percentage of newly diagnosed sex workers linked to HIV care (individual linkage) ,Percentage of newly diagnosed sex workers linked to HIV care (individual linkage) - KP Other-1,no
+KP-Other 1,Percentage of female entertainment workers reached with HIV prevention programs - defined package of services ,Percentage of female entertainment workers reached with HIV prevention programs - defined package of services - KP-Other 1,no
+KP-Other 2,Percentage of female entertainment workers that have received an HIV test during the reporting period and know their results ,Percentage of female entertainment workers that have received an HIV test during the reporting period and know their results - KP-Other 2,no
+KP-other1,Number and Percentage of PWIDs on opioid substitution therapy ,Number and Percentage of PWIDs on opioid substitution therapy - KP-other2,no
+KP-other2,Number  of prisoners that have received an HIV test during the reporting period and know their results ,Number  of prisoners that have received an HIV test during the reporting period and know their results - KP-other2,no
+TCS-Other (1),Number of patiets in need reached through community health network (patients on ART lost to follow-up) that are not reached through the health facility defaulter tracing mechanism ,Number of patiets in need reached through community health network (patients on ART lost to follow-up) that are not reached through the health facility defaulter tracing mechanism - TCS-Other (1),no
+,,,

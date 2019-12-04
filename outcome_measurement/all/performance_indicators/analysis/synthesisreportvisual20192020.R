@@ -2,8 +2,9 @@
 
 # read in data
 library(data.table)
+library(ggplot2)
 
-data <-fread("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/data_for_analysis/cross_consortia_for_synthesis_pf_indicators_22Nov2019.csv")
+data <-fread("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/data_for_analysis/cross_consortia_for_synthesis_pf_indicators_25Nov2019.csv")
 
 # rename column names
 setnames(data, 
@@ -11,14 +12,13 @@ setnames(data,
          new = c('loc_name', 'grant', 'indicator_long', 'achievement_ratio', 'reporting_period'))
 
 # parameters to edit
-graphic_name = "cross_country_comparisons_20192020_synthesis_report.jpeg"
+graphic_name = "cross_country_comparisons_20192020_synthesis_report.png"
 codebook_name = "module_code_map.csv"
 
 # split data indicator codes
 data = data[, indicator_code:=tstrsplit(indicator_long, ":", keep=1)]
 
 # merge with the correct module code and the correct indicator type
-
 codebook <- fread(paste0("C:/Users/frc2/Documents/gf/outcome_measurement/all/performance_indicators/codebooks/", codebook_name))
 data <- merge(data, codebook, by.x='indicator_code', by.y="indicator_code", all.x = TRUE, all.y=FALSE)
 
@@ -57,7 +57,7 @@ no_country_per_indicator <- no_country_per_indicator[, .(no_observ = .N), by=c("
 
 dt_subset <- merge(dt_subset, no_country_per_indicator, by=c("module_code", "indicator_code"))
 
-ggplot(dt_subset[no_observ>1], aes(x=module_code, y=avg_ach_ratio, color=module_code, size = no_observ)) + theme_bw()+
+ggplot(dt_subset[], aes(x=module_code, y=avg_ach_ratio, color=module_code, size = no_observ)) + theme_bw()+
   geom_pointrange( aes(ymin= min_ach_ratio, ymax= max_ach_ratio), position= position_jitter(width = 0.40), shape = 21, fill = "white") + guides(color=FALSE) +
   scale_size_continuous(breaks= c(1, 2, 3, 4, 5, 6, 7, 8), range=c(0.5,1.5), name = "Number of \ncountries reporting") + 
   ggtitle(paste0("Average achievement ratios of performance indicators by module")) +
