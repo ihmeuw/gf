@@ -12,7 +12,7 @@ library(scales)
 
 modules = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_modules.rds")
 cost_categories = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_cost_categories.rds")
-
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
 save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/"
 #------------------------------
 # Analyses 
@@ -152,3 +152,16 @@ p = ggplot(plot_data1, aes(x=grant, y=commodity_pct, label=paste0(commodity_pct,
   coord_flip() + 
   labs(title="Percentage of each grant that is commodities", subtitle="Showing budget for January 2018-June 2019", 
        caption="*Commodities defined as cost categories 4 & 5", x="", y="Budget Percentage that is Commodities")
+
+# What is the absorption level for each grant? 
+plot_data1 = plot_data[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by=c('loc_name', 'grant', 'type')]
+plot_data1[, grant:=paste0(loc_name, ", ", grant)]
+plot_data1[, absorption:=round((expenditure/budget)*100, 1)]
+plot_data1 = plot_data1[, .(grant, budget, expenditure)]
+p2 = budget_exp_bar(plot_data1, xVar='grant', altTitle="Absorption by grant")
+
+pdf(paste0(save_loc, "commodity_absorption.pdf"), height=8, width=13)
+p
+p2
+dev.off() 
+
