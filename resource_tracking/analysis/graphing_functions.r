@@ -83,7 +83,7 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   }
   if (!is.null(currency)){
     if (currency=="EUR"){
-      source(paste0(repo_root, "prep/_common/shared_functions.r"))
+      source(paste0(repoRoot, "resource_tracking/prep/_common/shared_functions.r"))
       all_absorption[, year:=2018]
       all_absorption = convert_currency(all_absorption, yearVar="year", convertFrom="USD", convertTo="EUR", 
                                             finVars=c('cumulative_budget', 'cumulative_expenditure'))

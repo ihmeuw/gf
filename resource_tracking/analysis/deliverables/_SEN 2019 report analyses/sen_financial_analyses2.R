@@ -21,7 +21,7 @@ absorption = merge(absorption, all_mods, by=c('gf_module', 'gf_intervention', 'd
 stopifnot(nrow(absorption[is.na(abbrev_int)])==0)
 
 #Get cumulative absorption dataset
-cumulative_absorption = get_cumulative_absorption("SEN", "EUR")
+cumulative_absorption = get_cumulative_absorption(byVars=c('abbrev_mod'), countrySubset=c("SEN"), currency=c("EUR"))
 
 #------------------------------------------
 # PLOT DATA 
@@ -41,7 +41,7 @@ p1 = ggplot(by_grant, aes(x=semester, y=absorption, color=grant, group=grant)) +
   labs(title="Absorption by grant for 2018-2020 grant period", x="Grant semester", y="Absorption (%)", color="Grant")
 
 # 2. Bar graph that shows 18-month cumulative absorption by grant. 
-cumulative_by_grant = cumulative_absorption[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), 
+cumulative_by_grant = cumulative_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
                                  by=c('grant')]
 cumulative_by_grant[, absorption:=round((expenditure/budget)*100, 1)]
 cumulative_by_grant = melt(cumulative_by_grant, id.vars=c('grant', 'absorption'), value.name="amount")

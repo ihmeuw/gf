@@ -121,3 +121,34 @@ p2
 p4
 
 dev.off() 
+
+#--------------------------------
+# How commoditized are the grants, and do more commoditized grants have higher absorption? 
+
+#Map the parent categories 
+parent_categories = data.table(read_xlsx("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/cost_category_mapping.xlsx"))
+plot_data = copy(cost_categories)
+plot_data[, category_code:=tstrsplit(cost_category, " ", keep=1)][, category_code:=as.numeric(category_code)]
+
+parent_categories = parent_categories[, .(category_code, parent_category)]
+plot_data = merge(plot_data, parent_categories, all.x=T)
+stopifnot(nrow(plot_data[is.na(parent_category)])==0)
+
+# What is the commoditization levels in the grants? 
+plot_data[parent_category%in%c("Health Products - Pharmaceutical Products (HPPP)", "Health Products - Non-Pharmaceuticals (HPNP)"), 
+          type:="Commodities"]
+plot_data[is.na(type), type:="Non-commodities"]
+
+plot_data1 = plot_data[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by=c('loc_name', 'grant', 'type')]
+plot_data1[, grant:=paste0(loc_name, ", ", grant)]
+plot_data1[, total_budget:=sum(budget), by=c('grant')]
+plot_data1[, commodity_pct:=round((budget/total_budget)*100, 1)]
+plot_data1 = plot_data1[type=="Commodities"]
+
+p = ggplot(plot_data1, aes(x=grant, y=commodity_pct, label=paste0(commodity_pct, "%"))) + 
+  geom_bar(stat="identity", fill="blue") + 
+  geom_text(hjust=0) + 
+  theme_bw() + 
+  coord_flip() + 
+  labs(title="Percentage of each grant that is commodities", subtitle="Showing budget for January 2018-June 2019", 
+       caption="*Commodities defined as cost categories 4 & 5", x="", y="Budget Percentage that is Commodities")

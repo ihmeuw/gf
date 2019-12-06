@@ -8,8 +8,11 @@ rm(list=ls())
 
 library(data.table)
 library(ggplot2)
+library(grid)
+library(gridExtra)
 library(scales)
 library(readxl)
+library(openxlsx)
 
 #-------------
 #Read in data 
@@ -133,6 +136,17 @@ plot_data = rssh[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_e
                  by=c('abbrev_mod')]
 p = budget_exp_bar(plot_data, xVar='abbrev_mod', altTitle="RSSH absorption across all PCE countries", altSubtitle="January 2018-June 2019")
 ggsave(paste0(save_loc, "rssh_overview.png"), p, height=8, width=11)
+
+# Look at what absorption has been like by country and module. Maybe as a table? 
+plot_data = rssh[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), 
+                 by=c('abbrev_mod', 'loc_name')]
+plot_data[, absorption:=round((expenditure/budget)*100, 1)]
+plot_data = plot_data[, .(abbrev_mod, loc_name, absorption)]
+plot_data = dcast(plot_data, abbrev_mod~loc_name, value.var='absorption')
+setnames(plot_data, 'abbrev_mod', 'Module')
+
+# R doesn't have a really good way of formatting tables, so I'm just exporting this as an Excel and adding a heat map. 
+#write.xlsx(plot_data, paste0(save_loc, "rssh_absorption_countries.xlsx"))
 #--------------------
 # SO3 analyses
 #--------------------
