@@ -13,6 +13,7 @@ library(scales)
 modules = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_modules.rds")
 cost_categories = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_cost_categories.rds")
 
+save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/"
 #------------------------------
 # Analyses 
 #------------------------------
@@ -49,20 +50,74 @@ plot_data[, date:=year+((quarter/4)-0.25)]
 zero_variance = plot_data[value==0]
 plot_data2 = zero_variance[, .(num_quarters=.N), by=c('disease', 'date')]
 
-ggplot(plot_data2, aes(x=date, y=num_quarters, fill=disease)) + 
+plot_data2[, disease:=toupper(disease)]
+plot_data2[disease=="MALARIA", disease:="Malaria"]
+
+p1 = ggplot(plot_data2, aes(x=date, y=num_quarters, fill=disease)) + 
   geom_bar(stat="identity", position="dodge") + 
   theme_bw(base_size=16) + 
-  labs(title="Number of grants whose budget did not change from one quarter to the next, by disease", x="Date", y="Number of grants with zero variance", fill="")
+  labs(title="Number of grants whose budget did not change from one quarter to the next", x="Budget quarter",
+       y="Number of grants with zero variance between budget quarters", fill="")
 
 #-----------------------------------------------------------------------------------
 # Is there a movement of funds away from RSSH activities towards disease-specific activities through grant revision? 
+plot_data = modules[, .(loc_name, grant, abbrev_mod, cumulative_budget, original_budget)]
+plot_data[, diff:=cumulative_budget-original_budget]
+plot_data[diff>0 & !is.na(diff), change:="Additional funds allocated"]
+plot_data[diff<0 & !is.na(diff), change:="Funds removed"]
+
+plot_data = plot_data[, .(num_grants=.N), by=c('abbrev_mod', 'change')]
+plot_data = plot_data[!is.na(change)] #Remove NAs at this point; you don't have to have every module in every grant. 
+plot_data[, label:=paste0(num_grants)]
+plot_data[change=="Funds removed", num_grants:=-num_grants]
+
+#Get the absolute count of what's changed to order the graph. 
+metadata = plot_data[, .(abbrev_mod, change, num_grants)]
+metadata = dcast(plot_data, abbrev_mod~change, value.var=c('num_grants'))
+metadata[is.na(`Additional funds allocated`), `Additional funds allocated`:=0]
+metadata[is.na(`Funds removed`), `Funds removed`:=0]
+metadata[, absolute_change:=`Additional funds allocated` + `Funds removed`]
+metadata = metadata[, .(abbrev_mod, absolute_change)]
+
+plot_data = merge(plot_data, metadata, by=c('abbrev_mod'), all.x=T)
+
+p2 = ggplot(plot_data, aes(x=reorder(abbrev_mod, absolute_change), y=num_grants, fill=change, label=label)) + 
+  geom_bar(stat="identity") + 
+  geom_text(hjust=0) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  labs(title="PUDR cumulative budget compared to original budget", x="", 
+       y="Number of grants with funds allocated or removed", fill="")
 
 #-----------------------------------------------------------------------------------
 # Program management - explore activities/cost categories and see what kind of things are happening under this module. 
 
+# This will be difficult to do across consortia with the data we have. 
+
 #-----------------------------------------------------------------------------------
 # Has higher program management absorption led to higher overall grant absorption? 
 
+# Just do two bars, one with program management absorption for each grant and one with overall absorption. 
+pm = modules[abbrev_mod=="Program mgmt", .(cumulative_budget=sum(cumulative_budget), cumulative_expenditure=sum(cumulative_expenditure)), 
+             by=c('loc_name', 'grant')]
+pm[, pm_absorption:=round((cumulative_expenditure/cumulative_budget)*100, 1)]
 
+all = modules[, .(cumulative_budget=sum(cumulative_budget), cumulative_expenditure=sum(cumulative_expenditure)), 
+             by=c('loc_name', 'grant')]
+all[, overall_absorption:=round((cumulative_expenditure/cumulative_budget)*100, 1)]
 
+plot_data = merge(pm, all, by=c('loc_name', 'grant'), all=T)
 
+p4 = ggplot(plot_data, aes(x=pm_absorption, y=overall_absorption)) + 
+  geom_point() + 
+  geom_smooth() + 
+  theme_bw(base_size=16) + 
+  labs(title="Does high program management correlate with /nhigher overall absorption?", x="Program management absorption (%)", 
+       y="Overall grant absorption (%)", subtitle="Absorption calculated over the period Jan. 2018-June 2019")
+
+pdf("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/extra_synthesis_analyses.pdf", height=8, width=11)
+p1
+p2
+p4
+
+dev.off() 

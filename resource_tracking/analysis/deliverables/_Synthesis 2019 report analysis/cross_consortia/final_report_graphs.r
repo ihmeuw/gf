@@ -9,6 +9,7 @@ rm(list=ls())
 library(data.table)
 library(ggplot2)
 library(scales)
+library(readxl)
 
 #-------------
 #Read in data 
@@ -118,8 +119,20 @@ p = ggplot(plot_data, aes(x=abbrev_mod, y=y_proportion, fill=performance, label=
 
 ggsave(paste0(save_loc, "absorption_by_mod1.png"), p, height=8, width=11)
 
-  
-  
+#--------------------
+# SO2 analyses
+#--------------------
+save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/SO2/"
+# Just make a general graph of RSSH modules 
+rssh_mods = c('Health management information system and monitoring and evaluation', "Human resources for health, including community health workers", 
+              "Community responses and systems", "National health strategies", "Integrated service delivery and quality improvement", 
+              "Procurement and supply chain management systems", "Financial management systems")
+rssh = all_modules[gf_module%in%rssh_mods]
+
+plot_data = rssh[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), 
+                 by=c('abbrev_mod')]
+p = budget_exp_bar(plot_data, xVar='abbrev_mod', altTitle="RSSH absorption across all PCE countries", altSubtitle="January 2018-June 2019")
+ggsave(paste0(save_loc, "rssh_overview.png"), p, height=8, width=11)
 #--------------------
 # SO3 analyses
 #--------------------
@@ -141,7 +154,7 @@ plot_data[gf_module=="Prevention programs for adolescents and youth, in and out 
 plot_data[is.na(category), category:="Other"]
 
 plot_data = plot_data[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('category', 'loc_name')]
-plot_data[, label:=paste0(dollar(expenditure), " (", round((expenditure/budget)*100, 1), "%)")] #Add label that shows expenditure amount and absorption percentage. 
+plot_data[, label:=paste0(dollar(expenditure), " (", round((expenditure/budget)*100), "%)")] #Add label that shows expenditure amount and absorption percentage. 
 plot_data = melt(plot_data, id.vars=c('category', 'loc_name', 'label'))
 plot_data[variable=="budget", label:=""]
 plot_data[variable=="budget", variable:="Budget"]
@@ -155,10 +168,36 @@ p = ggplot(plot_data, aes(x=loc_name, y=value, fill=variable, label=label)) +
   facet_wrap(~category) + 
   theme(axis.text.x=element_text(angle=20, vjust=0.5)) + 
   scale_y_continuous(labels=scales::dollar) + 
-  labs(title="Absorption for KP, HR, and AGYW", subtitle="January 2018-June 2019", x="Country", y="Budget/Expenditure (USD)", fill="")
-ggsave(paste0(save_loc, "absorption_kp_hr_agyw.png"), p, height=8, width=11)
+  labs(title="HIV absorption for KP, HR, and AGYW", subtitle="January 2018-June 2019", x="Country", y="Budget/Expenditure (USD)", fill="")
+ggsave(paste0(save_loc, "absorption_kp_hr_agyw.png"), p, height=8, width=14)
 
-# Remake percent of TB budgets devoted to KP modules - distinguish the three. 
-plot_data = copy(all_modules) 
-plot_data[grepl("Key populations", gf_intervention), tb_kp:=TRUE]
+# Remake percent of TB budgets devoted to KP modules.
+# First, re-prep our data and bind with intervention-level data from EHG. 
+ihme = get_cumulative_absorption(byVars=c('gf_module', 'gf_intervention', 'loc_name'), diseaseSubset="tb")
+ehg = data.table(read_xlsx("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/Absorption for synthesis v3.xlsx", 
+                           sheet="TB KVPs"))
+names(ehg) = c('loc_name', 'grant', 'grant_period', 'semester', 'gf_module', 'gf_intervention', 'absorption', 'expenditure', 'budget', 'original_budget', 
+               'expenditure_with_commitments')
+ehg = ehg[, .(gf_module, gf_intervention, loc_name, budget, expenditure, absorption)]
+
+ihme = ihme[grepl("Key populations", gf_intervention)]
+
+plot_data = rbind(ihme, ehg, use.names=T)
+
+# Clean data 
+plot_data[grep("Others", gf_intervention), gf_intervention:="Others"]
+plot_data[grep("Prisoners", gf_intervention), gf_intervention:="Prisoners"]
+plot_data[, gf_module:=gsub(" care and prevention", "", gf_module)]
+
+plot_data[loc_name=="COD", loc_name:="DRC"]
+plot_data[loc_name=="SEN", loc_name:="Senegal"]
+plot_data[loc_name=="UGA", loc_name:="Uganda"]
+
+plot_data[, abbrev_int:=paste0(gf_module, ": ", gf_intervention)]
+
+# Collapse data one more time. 
+plot_data = plot_data[, .(budget=sum(budget), expenditure=sum(expenditure, na.rm=T)), by=c('loc_name', 'abbrev_int')]
+p = budget_exp_bar(plot_data, xVar='loc_name', facetVar='abbrev_int', yScaleMax=700000, altTitle = "Absorption for TB key populations", altSubtitle="January 2018-January 2019")
+ggsave(paste0(save_loc, "absorption_kp_tb.png"), p, height=8, width=18)
+
 # Fill in interventions table 

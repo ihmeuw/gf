@@ -1,7 +1,7 @@
 #--------------------------------------------------------
 # AUTHOR: Emily Linebarger 
 # PURPOSE: Combine 
-# DATE: Last updated November 25, 2019 
+# DATE: Last updated December 4, 2019 
 #---------------------------------------------------------
 
 rm(list=ls()) 
@@ -16,7 +16,7 @@ source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functio
 #---------------------------------------
 #Read in IHME data and format
 #---------------------------------------
-ihme_cc = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/all_cost_categories.rds")
+ihme_cc = readRDS(paste0(box, "tableau_data/all_cost_categories.rds"))
 ihme_cc$cost_category <- NULL
 setnames(ihme_cc, c('cleaned_cost_category', 'pudr_semester_financial'), c('cost_category', 'semester'))
 
@@ -24,7 +24,8 @@ setnames(ihme_cc, c('cleaned_cost_category', 'pudr_semester_financial'), c('cost
 ihme_cc = ihme_cc[grant_period=="2018-2020" & semester=="2-A"]
 
 #Collapse
-ihme_mi = get_cumulative_absorption(byVars=c('loc_name', 'grant', 'grant_period', 'semester', 'gf_module'))
+ihme_mi = get_cumulative_absorption(byVars=c('loc_name', 'grant', 'grant_period', 'gf_module'))
+setnames(ihme_mi, c('budget', 'expenditure'), c('cumulative_budget', 'cumulative_expenditure'))
 
 ihme_cc = ihme_cc[, .(cumulative_budget=sum(cumulative_budget), 
                     cumulative_expenditure=sum(cumulative_expenditure)), 
@@ -40,6 +41,12 @@ ihme_mi[loc_name=="UGA", loc_name:="Uganda"]
 ihme_cc[loc_name=="cod", loc_name:="DRC"]
 ihme_cc[loc_name=="sen", loc_name:="Senegal"]
 ihme_cc[loc_name=="uga", loc_name:="Uganda"]
+
+# Merge in original budgets (NOT including revisions)
+budgets = readRDS(paste0(box, "tableau_data/final_budgets.rds"))
+budgets = budgets[grant_period=="2018-2020" & start_date>="2018-01-01" & start_date<"2019-07-01", .(original_budget=sum(budget)), by=c('grant', 'grant_period', 'gf_module')] #Only want cumulative budget through first 18 months! 
+
+ihme_mi = merge(ihme_mi, budgets, by=c('grant', 'grant_period', 'gf_module'), all.x=T)
 
 #-----------------------------------------------
 #Read in EHG data and format 

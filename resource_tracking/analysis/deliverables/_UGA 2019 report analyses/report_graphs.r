@@ -26,7 +26,7 @@ mofped_cumulative = get_cumulative_absorption(byVars = c('abbrev_mod', 'grant'),
 p1 = budget_exp_bar(mofped_cumulative, xVar='abbrev_mod', facetVar='grant', trimAbsorption=TRUE, 
                     altTitle="Absorption by module\nUGA-H-MoFPED and UGA-C-TASO", altSubtitle="January 2018-June 2019")
 
-ggsave(paste0(save_loc, "hiv_absorption.png"), p1, height=8, width=11)
+ggsave(paste0(save_loc, "hiv_absorption.png"), p1, height=8, width=14)
 
 # What was absorption for AGYW interventions in S1 2019, facet-wrapped by grant? 
 plot_data = absorption[gf_module=="Prevention programs for adolescents and youth, in and out of school" & grant_period=="2018-2020" & start_date=="2019-01-01", 
@@ -37,10 +37,10 @@ write.csv(plot_data, "C:/Users/elineb/Desktop/uga_agyw_ints.csv", row.names=F)
 p = budget_exp_bar(plot_data, xVar=c('gf_intervention'), facetVar='grant')
 
 # TB 
-mofped_cumulative = get_cumulative_absorption(byVars = c('abbrev_mod', 'grant'), grantSubset=c("UGA-T-MoFPED", "UGA-C-TASO"), 
+mofped_cumulative = get_cumulative_absorption(byVars = c('abbrev_mod', 'grant'), grantSubset=c("UGA-T-MoFPED"), 
                                               currency="USD")
-p1 = budget_exp_bar(mofped_cumulative, xVar='abbrev_mod', facetVar='grant', trimAbsorption=TRUE, yScaleMax=25000000, angleText=TRUE,
-                    altTitle="Absorption by module\nUGA-T-MoFPED and UGA-C-TASO", altSubtitle="January 2018-June 2019")
+p1 = budget_exp_bar(mofped_cumulative, xVar='abbrev_mod', trimAbsorption=TRUE, yScaleMax=15000000,
+                    altTitle="Absorption by module for UGA-T-MoFPED", altSubtitle="January 2018-June 2019")
 
 ggsave(paste0(save_loc, "tb_absorption.png"), p1, height=8, width=11)
 

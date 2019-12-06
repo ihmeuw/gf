@@ -91,6 +91,9 @@ h_mofped[, absorption:=round((expenditure/budget)*100, 1)]
 # Calculate S1 2019 absorption by module for C-TASO 
 s1_2019_taso = absorption[start_date=="2019-01-01" & grant=="UGA-C-TASO", .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by='gf_module']
 s1_2019_taso[, absorption:=round((expenditure/budget)*100, 1)] 
+
+# What's the absorption for the "Keeping girls in school" intervention for both TASO and MoFPED? 
+girls_school = get_cumulative_absorption(byVars=c('abbrev_int'), grantSubset=c('UGA-C-TASO', 'UGA-H-MoFPED'), moduleSubset="Prevention programs for adolescents and youth, in and out of school")
 #-------------
 # TB
 #-------------
@@ -108,6 +111,12 @@ c_taso_tb[, mod_percent:=round((budget/total)*100, 1)]
 # How much money was budgeted for Genexpert cartridges? 
 cartridges = budgets[grant=="UGA-T-MoFPED" & grant_period=="2018-2020"]
 cartridges = cartridges[grep("cartridge", tolower(activity_description))] #Have visually reviewed these activities. EL 11/22/2019
+
+# How much was budgeted in most recent revision for TB case detection and diagnosis 
+t_mofped = all_files[file_name=="Budget_UGA-T-MoFPED_DB_ IMPP4_IL1_May2019.xlsx"]
+t_mofped[gf_module=="TB care and prevention" & gf_intervention=="Case detection and diagnosis", .(budget=sum(budget, na.rm=T))]
+# Is it the highest amount? 
+t_mofped[gf_module=="TB care and prevention", .(budget=dollar(sum(budget, na.rm=T))), by='gf_intervention']
 #-------------
 # MALARIA
 #-------------

@@ -21,7 +21,8 @@
 
 # Function to calculate cumulative absorption data 
 get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL, 
-                                    diseaseSubset=NULL, moduleSubset=NULL, currency=NULL, repoRoot=NULL){
+                                    diseaseSubset=NULL, moduleSubset=NULL, currency=NULL, repoRoot=NULL, 
+                                    dollarFormat=FALSE){
   require(data.table) 
   
   #Validate arguments 
@@ -116,12 +117,12 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   # Then, calculate using previous PUDRs. 
   
   # In cases where cumulative expenditure isn't reported, calculate it from the previous PUDRs. 
-  calculate = all_absorption[grant_period=="2018-2020" & semester=="Semester 3" & method=="calculated"]
+  calculate = all_absorption[grant_period=="2018-2020" & method=="calculated"]
   cumulative_absorption2 = data.table()
   if (nrow(calculate)!=0){
     for (g in unique(calculate$grant)){
       subset = calculate[grant==g]
-      semesters = unique(all_absorption$semester)
+      semesters = unique(all_absorption[grant==g & grant_period=="2018-2020", semester])
       if ('Semester 1-2'%in%semesters){ #These are the only two types of reporting we've seen - a full-year PUDR in 2018 or a S2 2018 PUDR. 
         subset = subset[semester%in%c('Semester 1-2', 'Semester 3'), .(cumulative_budget = sum(budget, na.rm=T), 
                                                                        cumulative_expenditure=sum(expenditure, na.rm=T)), by=c(byVars, 'method')]
@@ -150,6 +151,11 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   cumulative_absorption = cumulative_absorption[, .(budget = sum(cumulative_budget, na.rm=T), 
                                                     expenditure=sum(cumulative_expenditure, na.rm=T)), by=c(byVars)]
   cumulative_absorption[, absorption:=round((expenditure/budget)*100, 1)]
+  
+  if (dollarFormat){
+    cumulative_absorption[, budget:=dollar(budget)]
+    cumulative_absorption[, expenditure:=dollar(expenditure)]
+  }
     
   # In order to make this function work more nicely with budget_exp_bar graphing function, renaming columns to just 'budget'/'expenditure'
   return(cumulative_absorption) 
@@ -194,13 +200,12 @@ budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
   stopifnot(c(collapseVars, 'budget', 'expenditure')%in%names(dt))
   
   plot_data = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=collapseVars]
-  plot_data[, absorption:=round((expenditure/budget)*100, 1)]
+  plot_data[, absorption:=(expenditure/budget)*100]
   
-  #Trim absorption if specified, and flag values greater than yScale limits. 
-  if (trimAbsorption) plot_data[absorption>150, absorption:=150]
-
-  #Add labels 
-  plot_data[, barLabel:=paste0(dollar(expenditure), " (", format(absorption, nsmall=1), "%)")]
+  # Trim absorption if specified. 
+  if (trimAbsorption) plot_data[absorption>150.0, absorption:=150.0]
+  plot_data[, absorption:=round(absorption)]
+  plot_data[, barLabel:=paste0(dollar(expenditure), " (", absorption, "%)")]
   
   # Melt data 
   plot_data = melt(plot_data, id.vars=c(collapseVars, 'absorption', 'barLabel'))
@@ -263,9 +268,11 @@ budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
 # endYear: What date would you like to end data at? 
 # 
 
-funding_landscape = function(graphType, countryName, diseaseName, startYear, endYear, includeGHE=FALSE, altCaption=NULL, altTitle=NULL, altSubtitle=NULL){
+funding_landscape = function(graphType, countryName, diseaseName, startYear, endYear, includeGHE=FALSE, altCaption=NULL, altTitle=NULL, altSubtitle=NULL, 
+                             labelBars=FALSE){
   require(data.table) 
   require(ggplot2)
+  require(scales)
   
   #Validation checks
   stopifnot(graphType%in%c('proportion', 'ribbon'))
@@ -322,19 +329,23 @@ funding_landscape = function(graphType, countryName, diseaseName, startYear, end
   
   #Generate plot 
   if (graphType=='ribbon'){
-    funding_landscape = ggplot(data = collapse, aes(x = year, y = disbursement, fill = channel_agg)) + 
+    funding_landscape = ggplot(data = collapse, aes(x = year, y = disbursement, fill = channel_agg, label=dollar(disbursement))) + 
       geom_ribbon(aes(ymin = 0, ymax = disbursement), position = "stack") + 
       theme_bw(base_size = 18) + theme(legend.title = element_blank())+
       scale_y_continuous(labels = scales::dollar) +
       scale_fill_brewer(palette = "RdYlBu") +
       labs(x = "Year", y = "Disbursement", title = altTitle, subtitle=altSubtitle, caption=altCaption)
   } else if (graphType=='proportion'){
-    funding_landscape = ggplot(data = collapse, aes(x = year, y = disbursement, fill = channel_agg)) + 
+    funding_landscape = ggplot(data = collapse, aes(x = year, y = disbursement, fill = channel_agg, label=dollar(disbursement))) + 
       geom_bar(stat="identity", position="fill") + 
       theme_bw(base_size = 18) + theme(legend.title = element_blank())+
       scale_y_continuous(labels=scales::percent) +
       scale_fill_brewer(palette = "RdYlBu") +
       labs(x = "Year", y = "Percentage of annual disbursement", title = altTitle, subtitle=altSubtitle, caption=altCaption)
+  }
+  if (labelBars==TRUE){
+    funding_landscape = funding_landscape + 
+      geom_text(position=position_fill(vjust = 0.5))
   }
   
   return(funding_landscape)
