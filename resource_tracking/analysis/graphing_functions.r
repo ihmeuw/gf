@@ -51,7 +51,7 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
   all_absorption[grant_disease=="MALARIA", grant_disease:="Malaria"]
   
   #Add abbreviated module names. 
-  all_mods = readRDS("C:/Users/elineb/Desktop/all_interventions.rds") #THIS SHOULD BE CHANGED BACK 
+  all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds") #THIS SHOULD BE CHANGED BACK 
   setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
   all_mods = unique(all_mods[, .(gf_module, gf_intervention, disease, abbrev_mod, abbrev_int)])
   all_absorption = merge(all_absorption, all_mods, by=c('gf_module', 'gf_intervention', 'disease'), allow.cartesian=TRUE)
