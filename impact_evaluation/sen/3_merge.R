@@ -14,10 +14,7 @@ source('./impact_evaluation/sen/set_up_r.r')
 resource_tracking <- readRDS(outputFile2b)
 
 # read in the previously saved files for outputs_outcomes in 2f
-outputs_outcomes_1 <- readRDS(outputFile2f) # this datatable contains all of the data
-outputs_outcomes_2 <- readRDS(outputFile2g) # this datatable just contains one variable
-
-outputs_outcomes <- merge(outputs_outcomes_1, outputs_outcomes_2, by=c('region', 'date'), all.x=TRUE)
+outputs_outcomes <- readRDS(outputFile2f) # this datatable contains all of the data
 
 #first rectangualrize the data
  hzFrame = unique(outputs_outcomes[, c('region')])
@@ -57,7 +54,7 @@ actVars = c('tb_vih',
 
 # create combined variables for redistribution where necessary
 merge_file[, value_com_act:=com_mobsoc + com_radio + com_vad_touss]
-merge_file[, value_screen_act:=tot_genexpert + perf_lab + tb_cas_id]
+merge_file[, value_screen_act:=tot_genexpert + perf_lab + tb_cas_id + patients_prop_genexpert]
 
 # loop over financial variables and redistribute subnationally
 for(i in seq_along(inVars)) {

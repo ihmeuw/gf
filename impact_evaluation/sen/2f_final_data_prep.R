@@ -125,8 +125,11 @@ datatemp7[, date:=year+quarter]
 datatemp7 <- datatemp7[,lapply(.SD, sum), by=c('region', 'date'),.SDcols=c("dx_count", "mdr_success")]
 
 # add in data for kedougou region
-datatemp8 <- datatemp7[region=="TAMBACOUNDA"]
-datatemp8$region[which(datatemp8$region=="TAMBACOUNDA")] <- "KEDOUGOU"
+datatemp8 <- data.table(region=c("KEDOUGOU", "KEDOUGOU", "KEDOUGOU", "KEDOUGOU", "KEDOUGOU"),
+                        date=c(2014.0, 2015.0, 2016.0, 2017.0, 2017.75),
+                        dx_count=c(0,0,0,0,0),
+                        mdr_success=c(0, 0, 0, 0, 0))
+
 DT2 <- rbind(datatemp7, datatemp8)
 
 # merge tb_mdr_data to other outputs data
@@ -136,17 +139,28 @@ outputs_prepped <- merge(DT1, DT2, by=c('region', 'date'), all=TRUE)
 # Create derived variables on new dataset
 # -------------------------------------------------
 
+# remove NAs with 0s because zero have actually been observed
+outputs_prepped$dx_count[which(is.na(outputs_prepped$dx_count))] <- 0
+outputs_prepped$mdr_success[which(is.na(outputs_prepped$mdr_success))] <- 0
+
 # create variable of cases identified by other means
 outputs_prepped$tb_cas_id <- outputs_prepped$tb_tfc - outputs_prepped$tot_genexpert
 outputs_prepped$tb_cas_id[which(outputs_prepped$tb_cas_id<0)] <- 0
 
 # create variable of mdr-tb treatment success rate
-outputs_prepped$mdr_success_rate <- outputs_prepped$mdr_success / outputs_prepped$dx_count
-
+#outputs_prepped$mdr_success_rate <- outputs_prepped$mdr_success / outputs_prepped$dx_count
+#outputs_prepped$mdr_success_rate[which(outputs_prepped$dx_count==0)] <- NA
 # ----------------------------------------------------------
 
 outputs_prepped = na.omit(outputs_prepped, cols=c('region', 'date'))
-outputs_prepped$tb_tfc <- as.numeric(outputs_prepped$tb_tfc)
+
+# add one additional variable
+outputs_outcomes_2 <- readRDS(outputFile2g) # this datatable just contains one variable
+
+outputs_prepped <- merge(outputs_prepped, outputs_outcomes_2, by=c('region', 'date'), all.x=TRUE)
+
+# replace missing with 0
+outputs_prepped$patients_prop_genexpert[which(is.na(outputs_prepped$patients_prop_genexpert))] <- 0
 
 # Finish and save 
 

@@ -11,6 +11,10 @@ library(scales)
 save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_GTM 2019 annual report/"
 #Source graphing functions
 source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
+all_files = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/GTM/prepped_data/budget_pudr_iterations.rds")
+
+revised_budgets = all_files[file_name%in%c("Copia de GTM-H-INCAP_DB_11.10. Final_For PR.XLSX", "DB-GTM-M-MSPAS_28.10.19.xlsx", "1d_GTM-T-MSPAS Detailed budget_FINAL_01062016.xlsx", 
+                                           "GTM_T_Full_Budget_9Sept2018.xlsx")]
 
 #Read in absorption data 
 gtm = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/GTM/prepped_data/absorption_gtm.rds")
@@ -193,3 +197,77 @@ p2 = ggplot(full_budget_period[!is.na(abbrev_mod)], aes(x=abbrev_mod, y=budget, 
 ggsave(paste0(save_loc, "INCAP_budget_revision1.png"), p1, height=8, width=11)
 ggsave(paste0(save_loc, "INCAP_budget_revision2.png"), p2, height=8, width=11)
 
+#--------------------------------------
+# COMPARE SICOIN 
+#---------------------------------------
+pudr_expenditures = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/final_expenditures_gtm.rds")
+pudr_expenditures[, year:=year(start_date)]
+pudr_expenditures = pudr_expenditures[, .(budget=sum(budget, na.rm=T)), by=c('disease', 'year')]
+pudr_expenditures[, type:="PUDR"]
+
+sicoin = readRDS("J:/Project/Evaluation/GF/resource_tracking/_ghe/sicoin_gtm/prepped_data/raw_bound_files.rds")
+sicoin[, year:=year(start_date)]
+sicoin = sicoin[, .(budget=sum(budget, na.rm=T)), by=c('disease', 'year')]
+sicoin[, type:="SICOIN"]
+
+plot_data = rbind(pudr_expenditures, sicoin, use.names=T)
+plot_data[, disease:=toupper(disease)]
+plot_data[disease=="MALARIA", disease:="Malaria"]
+
+p = ggplot(plot_data, aes(x=year, y=budget, fill=type)) + 
+  geom_bar(stat="identity", position="dodge") + 
+  theme_bw(base_size=16) + 
+  facet_wrap(~disease) +
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Budget from PUDRs vs. SICOIN", y="Budget (USD)", x="Year", fill="")
+
+
+#--------------------
+# TB
+#---------------------
+tb = revised_budgets[grant=="GTM-T-MSPAS" & grant_period=="2019-2022", .(budget=sum(budget)), by='gf_module']
+tb[, total:=sum(budget)]
+tb[, mod_pct:=round((budget/total)*100, 1)]
+#tb[, label:=paste0(dollar(budget), " (", mod_pct, "%)")]
+tb[, label:=paste0(mod_pct, "%")]
+
+tb[gf_module=="Health management information system and monitoring and evaluation", gf_module:="RSSH: HMIS/M&E"]
+tb[gf_module=="Procurement and supply chain management systems", gf_module:="RSSH: PSM"]
+tb[gf_module=="Community responses and systems", gf_module:="RSSH: Community responses and systems"]
+
+tb[, gf_module:=paste0(gf_module, " (", mod_pct, "%)")]
+
+bp<- ggplot(tb, aes(x="", y=budget, fill=gf_module, label=label))+
+  geom_bar(width = 1, stat = "identity") + 
+  # geom_text(position="jitter") + 
+  coord_polar("y", start=0) + 
+  theme_bw(base_size=16) + 
+  theme(axis.text.x=element_blank()) + 
+  labs(title="GTM-T-MSPAS budget 2019-2022", y="Budget (USD)", x = "", fill="")
+ggsave(paste0(save_loc, "gtm-t-mspas_budget.png"), bp, height=8, width=14)
+
+
+#--------------------
+# Malaria 
+#---------------------
+malaria = revised_budgets[grant=="GTM-M-MSPAS" & grant_period=="2019-2021", .(budget=sum(budget)), by='gf_module']
+malaria[, total:=sum(budget)]
+malaria[, mod_pct:=round((budget/total)*100, 1)]
+#malaria[, label:=paste0(dollar(budget), " (", mod_pct, "%)")]
+malaria[, label:=paste0(mod_pct, "%")]
+
+malaria[gf_module=="Health management information system and monitoring and evaluation", gf_module:="RSSH: HMIS/M&E"]
+malaria[gf_module=="Procurement and supply chain management systems", gf_module:="RSSH: PSM"]
+malaria[gf_module=="Community responses and systems", gf_module:="RSSH: Community responses and systems"]
+malaria[gf_module=="Integrated service delivery and quality improvement", gf_module:="RSSH: Integrated service delivery"]
+
+malaria[, gf_module:=paste0(gf_module, " (", mod_pct, "%)")]
+
+bp<- ggplot(malaria, aes(x="", y=budget, fill=gf_module, label=label))+
+  geom_bar(width = 1, stat = "identity") + 
+  # geom_text(position="jitter") + 
+  coord_polar("y", start=0) + 
+  theme_bw(base_size=16) + 
+  theme(axis.text.x=element_blank()) + 
+  labs(title="GTM-M-MSPAS budget 2019-2022", y="Budget (USD)", x = "", fill="")
+ggsave(paste0(save_loc, "gtm-m-mspas_budget.png"), bp, height=8, width=14)

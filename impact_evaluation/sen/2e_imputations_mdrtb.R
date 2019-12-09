@@ -41,7 +41,7 @@ DTmi$resultat <- as.factor(DTmi$resultat)
 levels(DTmi$resultat) <- c("Abandon", "Deces", "Echec", "Gueris")
 
 # save
-saveRDS(DTm, outputFile2e)
+saveRDS(DTmi, outputFile2e)
 
 # save a time-stamped version for reproducibility
 archive(outputFile2e)

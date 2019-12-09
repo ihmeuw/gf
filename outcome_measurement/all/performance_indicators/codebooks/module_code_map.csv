@@ -1,187 +1,194 @@
 module_code,type_desc,indicator_code
-HIV,Impact,HIV I-13
-HIV,Impact,HIV I-14
-HIV,Impact,HIV I-4
-HIV,Impact,HIV I-6
-HIV,Impact,HIV I-9a(M)
-HIV,Impact,HIV I-9b(M)
-HIV,Impact,HIV I-10(M)
-HIV,Impact,HIV I-11(M)
-HIV,Impact,HIV I-12
-TB/HIV,Impact,TB/HIV I-1
-HIV,Outcome,HIV O-1(M)
-HIV,Outcome,HIV O-10
-HIV,Outcome,HIV O-4a(M)
-HIV,Outcome,HIV O-4.1b(M)
-HIV,Outcome,HIV O-5(M)
-HIV,Outcome,HIV O-6(M)
-HIV,Outcome,HIV O-9
-HIV,Outcome,HIV O-7
-HIV,Outcome,HIV O-11
-HIV,Outcome,HIV O-12
-HIV,Outcome,HIV O-13
-HIV,Outcome,HIV O-14
-HIV,Outcome,HIV O-15
-"Prevention, gen pop",Coverage,GP-5
-"Prevention, gen pop",Coverage,GP-6
-KP,Coverage,KP-1a(M)
-KP,Coverage,KP-1b(M)
-KP,Coverage,KP-1c(M)
-KP,Coverage,KP-1d(M)
-KP,Coverage,KP-1e
-KP,Coverage,KP-3a(M)
-KP,Coverage,KP-3b(M)
-KP,Coverage,KP-3c(M)
-KP,Coverage,KP-3d(M)
-KP,Coverage,KP-3e
-KP,Coverage,KP-4
-KP,Coverage,KP-5
-KP,Coverage,KP-6a
-KP,Coverage,KP-6b
-KP,Coverage,KP-6c
-"Prevention, youth",Coverage,YP-1
-"Prevention, youth",Coverage,YP-2
-"Prevention, youth",Coverage,YP-3
-"Prevention, youth",Coverage,YP-4
-PMTCT,Coverage,PMTCT-1
-PMTCT,Coverage,PMTCT-2.1
-PMTCT,Coverage,PMTCT-3.1
+FMS,Coverage,HF-1
+HIV Impact,Impact,HIV I-13
+HIV Impact,Impact,HIV I-14
+HIV Impact,Impact,HIV I-4
+HIV Impact,Impact,HIV I-6
+HIV Impact,Impact,HIV I-9a(M)
+HIV Impact,Impact,HIV I-9b(M)
+HIV Impact,Impact,HIV I-10(M)
+HIV Impact,Impact,HIV I-11(M)
+HIV Impact,Impact,HIV I-12
+HIV Impact,Impact,HIV I-15-PCE
+HIV Impact,Impact,HIV I-16-PCE
+HIV KP,Coverage,KP-1a(M)
+HIV KP,Coverage,KP-1b(M)
+HIV KP,Coverage,KP-1c(M)
+HIV KP,Coverage,KP-1d(M)
+HIV KP,Coverage,KP-1e
+HIV KP,Coverage,KP-3a(M)
+HIV KP,Coverage,KP-3b(M)
+HIV KP,Coverage,KP-3c(M)
+HIV KP,Coverage,KP-3d(M)
+HIV KP,Coverage,KP-3e
+HIV KP,Coverage,KP-4
+HIV KP,Coverage,KP-5
+HIV KP,Coverage,KP-6a
+HIV KP,Coverage,KP-6b
+HIV KP,Coverage,KP-6c
+HIV KP,Coverage,KP-7-PCE
+HIV KP,Coverage,KP-8-PCE
+HIV KP,Coverage,KP Other-1
+HIV KP,Coverage,KP-Other 1
+HIV KP,Coverage,KP-Other 2
+HIV KP,Coverage,KP-other1
+HIV KP,Coverage,KP-other2
+HIV KP,Coverage,KP Other -2
+HIV Outcome,Outcome,HIV O-1(M)
+HIV Outcome,Outcome,HIV O-10
+HIV Outcome,Outcome,HIV O-4a(M)
+HIV Outcome,Outcome,HIV O-4.1b(M)
+HIV Outcome,Outcome,HIV O-5(M)
+HIV Outcome,Outcome,HIV O-6(M)
+HIV Outcome,Outcome,HIV O-9
+HIV Outcome,Outcome,HIV O-7
+HIV Outcome,Outcome,HIV O-11
+HIV Outcome,Outcome,HIV O-12
+HIV Outcome,Outcome,HIV O-13
+HIV Outcome,Outcome,HIV O-14
+HIV Outcome,Outcome,HIV O-15
+HIV Outcome,Outcome,HIV O-other 1
+HIV PMTCT,Coverage,PMTCT-1
+HIV PMTCT,Coverage,PMTCT-2.1
+HIV PMTCT,Coverage,PMTCT-3.1
+HIV PMTCT,Coverage,PMTCT-4-PCE
+HIV PMTCT,Coverage,PMTCT-5-PCE
+HIV Prevention,Coverage,GP-5
+HIV Prevention,Coverage,GP-6
+HIV Prevention,Coverage,GP-7-PCE
+HIV Prevention,Coverage,GP-8-PCE
+HIV Prevention,Coverage,GP-9-PCE
+HIV Prevention,Coverage,GP-10-PCE
+HIV Prevention,Coverage,GP-11-PCE
+HIV Prevention,Coverage,GP-12-PCE
+HIV Prevention,Coverage,GP-13-PCE
+HIV Prevention,Coverage,GP-14-PCE
+HIV Prevention,Coverage,GP-15-PCE
+HIV Prevention,,GP other-1
+HIV Prevention,,GP other-2
+HIV Prevention,Coverage,YP-1
+HIV Prevention,Coverage,YP-2
+HIV Prevention,Coverage,YP-3
+HIV Prevention,Coverage,YP-4
+HIV TCS,,TCS other- 1
+HIV TCS,,TCS-Other (1)
+HIV TCS,,TCS other-2
+HIV TCS,,TCS other-3
+HIV TCS,,TCS-other 1
+HIV TCS,Coverage,TCS-7
+HIV TCS,Coverage,TCS-1(M)
+HIV TCS,Coverage,TCS-2
+HIV TCS,Coverage,TCS-3.1
+HIV TCS,Coverage,TCS-6
+HIV TCS,Coverage,TCS-8-PCE
+HIV TCS,Coverage,TCS-9-PCE
+HIV TCS,Coverage,TCS-10-PCE
+HIV TCS,Coverage,TCS-11-PCE
 HIV testing service,Coverage,HTS-1
-TCS,Coverage,TCS-7
-TCS,Coverage,TCS-1(M)
-TCS,Coverage,TCS-2
-TCS,Coverage,TCS-3.1
-TCS,Coverage,TCS-6
+HIV testing service,Coverage,HTS-2-PCE
+HIV testing service,Coverage,HTS-3-PCE
+Malaria CM,Coverage,CM-1a(M)
+Malaria CM,Coverage,CM-1b(M)
+Malaria CM,Coverage,CM-1c(M)
+Malaria CM,Coverage,CM-2a(M)
+Malaria CM,Coverage,CM-2b(M)
+Malaria CM,Coverage,CM-2c(M)
+Malaria CM,Coverage,CM-3a
+Malaria CM,Coverage,CM-3b
+Malaria CM,Coverage,CM-3c
+Malaria CM,Coverage,CM-4
+Malaria CM,Coverage,CM-5(M)
+Malaria CM,Coverage,CM-6(M)
+Malaria Impact,Impact,Malaria I-1(M)
+Malaria Impact,Impact,Malaria I-2.1
+Malaria Impact,Impact,Malaria I-3.1(M)
+Malaria Impact,Impact,Malaria I-4
+Malaria Impact,Impact,Malaria I-5
+Malaria Impact,Impact,Malaria I-6
+Malaria Impact,Impact,Malaria I-9(M)
+Malaria Impact,Impact,Malaria I-10(M)
+Malaria Outcome,Outcome,Malaria O-1a
+Malaria Outcome,Outcome,Malaria O-1b
+Malaria Outcome,Outcome,Malaria O-1c
+Malaria Outcome,Outcome,Malaria O-2
+Malaria Outcome,Outcome,Malaria O-3
+Malaria Outcome,Outcome,Malaria O-4
+Malaria Outcome,Outcome,Malaria O-6
+Malaria Outcome,Outcome,Malaria O-7(M)
+Malaria Outcome,Outcome,Malaria O-8
+Malaria Outcome,Outcome,Malaria O-9(M)
+Malaria Vector control,Coverage,VC-1(M)
+Malaria Vector control,Coverage,VC-3(M)
+Malaria Vector control,Coverage,VC-5
+Malaria Vector control,Coverage,VC-6.1
+PSM,Coverage,PSM-2
+PSM,Coverage,PSM-3
+RDT,,RDT SO
+"RSSH HMIS, M&E",Coverage,M&E-1
+"RSSH HMIS, M&E",Coverage,M&E-2
+"RSSH HMIS, M&E",Coverage,M&E-3
+"RSSH HMIS, M&E",,ME-2
+RSSH HR/CHW,Coverage,HW-1
+RSSH HR/CHW,Coverage,HW-2
+RSSH HR/CHW,Coverage,HW-3
+RSSH HR/CHW,Coverage,HW-4
+RSSH HR/CHW,Coverage,HW-5
+RSSH HR/CHW,,Numero y porcentaje de colvols abastecidos con el paquete completo de insumos para diagnostico y tratamiento de malaria en Alta Verapaz y Escuintla
+RSSH Impact,Impact,HSS I-1
+RSSH Impact,Impact,HSS I-2
+RSSH Impact,Impact,HSS I-3
+RSSH Outcome,Outcome,HSS O-1
+RSSH Outcome,Outcome,HSS O-2
+RSSH Outcome,Outcome,HSS O-3
+RSSH Service Delivery,Coverage,SD-1
+RSSH Service Delivery,Coverage,SD-3
+Malaria SPI,Coverage,SPI-1
+Malaria SPI,Coverage,SPI-2
+SSRP,,SSRP-other 1
+SSRP,,SSRP-other 2
+TB DOTS,,DOTS-1b
+TB DOTS,,DOTS-2b
+TB DOTS,,DOTS-6
+TB Impact,Impact,TB I-1
+TB Impact,Impact,TB I-2
+TB Impact,Impact,TB I-3(M)
+TB Impact,Impact,TB I-4(M)
+TB MDR-TB,Coverage,MDR TB-2(M)
+TB MDR-TB,Coverage,MDR TB-3(M)
+TB MDR-TB,Coverage,MDR TB-4
+TB MDR-TB,Coverage,MDR TB-5
+TB MDR-TB,Coverage,MDR TB-6
+TB MDR-TB,Coverage,MDR TB-7
+TB MDR-TB,Coverage,MDR TB-8
+TB MDR-TB,,MDR TB-1
+TB Outcome,Outcome,TB O-1a
+TB Outcome,Outcome,TB O-2a
+TB Outcome,Outcome,TB O-6
+TB Outcome,Outcome,TB O-4(M)
+TB Outcome,Outcome,TB O-5(M)
+TB Outcome,Outcome,TB O-1b
+TB Outcome,Outcome,TB O-2b
+TB Outcome,Outcome,TB O-5 (M)
+TB TCP,Coverage,TCP-1(M)
+TB TCP,Coverage,TCP-2(M)
+TB TCP,Coverage,TCP-3
+TB TCP,Coverage,TCP-4
+TB TCP,Coverage,TCP-5
+TB TCP,Coverage,TCP-6a
+TB TCP,Coverage,TCP-6b
+TB TCP,Coverage,TCP-7a
+TB TCP,Coverage,TCP-7b
+TB TCP,Coverage,TCP-7c
+TB TCP,Coverage,TCP-8
+TB TCP,,TCP other-1
+TB TCP,,TCP other-2
 TB/HIV,Coverage,TB/HIV-5
 TB/HIV,Coverage,TB/HIV-6
 TB/HIV,Coverage,TB/HIV-3.1
 TB/HIV,Coverage,TB/HIV-4.1
-"HMIS, M&E",Coverage,M&E-1
-HIV testing service,Coverage,HTS-2-PCE
-TCS,Coverage,TCS-8-PCE
-TCS,Coverage,TCS-9-PCE
-TCS,Coverage,TCS-10-PCE
-"Prevention, gen pop",Coverage,GP-7-PCE
-"Prevention, gen pop",Coverage,GP-8-PCE
-KP,Coverage,KP-7-PCE
-KP,Coverage,KP-8-PCE
-"Prevention, gen pop",Coverage,GP-9-PCE
-"Prevention, gen pop",Coverage,GP-10-PCE
-PMTCT,Coverage,PMTCT-4-PCE
-TCS,Coverage,TCS-11-PCE
-"Prevention, gen pop",Coverage,GP-11-PCE
-"Prevention, gen pop",Coverage,GP-12-PCE
-"Prevention, gen pop",Coverage,GP-13-PCE
-"Prevention, gen pop",Coverage,GP-14-PCE
-"Prevention, gen pop",Coverage,GP-15-PCE
-HIV,Impact,HIV I-15-PCE
-HIV,Impact,HIV I-16-PCE
-PMTCT,Coverage,PMTCT-5-PCE
-HIV testing service,Coverage,HTS-3-PCE
 TB/HIV,Coverage,TB/HIV-4.2-PCE
-TB,Impact,TB I-1
-TB,Impact,TB I-2
-TB,Impact,TB I-3(M)
-TB,Impact,TB I-4(M)
-TB,Outcome,TB O-1a
-TB,Outcome,TB O-2a
-TB,Outcome,TB O-6
-TB,Outcome,TB O-4(M)
-TB,Outcome,TB O-5(M)
-TB care and prev,Coverage,TCP-1(M)
-TB care and prev,Coverage,TCP-2(M)
-TB care and prev,Coverage,TCP-3
-TB care and prev,Coverage,TCP-4
-TB care and prev,Coverage,TCP-5
-TB care and prev,Coverage,TCP-6a
-TB care and prev,Coverage,TCP-6b
-TB care and prev,Coverage,TCP-7a
-TB care and prev,Coverage,TCP-7b
-TB care and prev,Coverage,TCP-7c
-TB care and prev,Coverage,TCP-8
-MDR-TB,Coverage,MDR TB-2(M)
-MDR-TB,Coverage,MDR TB-3(M)
-MDR-TB,Coverage,MDR TB-4
-MDR-TB,Coverage,MDR TB-5
-MDR-TB,Coverage,MDR TB-6
-MDR-TB,Coverage,MDR TB-7
-MDR-TB,Coverage,MDR TB-8
 TB/HIV,Coverage,TB/HIV-6(M)
-Malaria,Impact,Malaria I-1(M)
-Malaria,Impact,Malaria I-2.1
-Malaria,Impact,Malaria I-3.1(M)
-Malaria,Impact,Malaria I-4
-Malaria,Impact,Malaria I-5
-Malaria,Impact,Malaria I-6
-Malaria,Impact,Malaria I-9(M)
-Malaria,Impact,Malaria I-10(M)
-Malaria,Outcome,Malaria O-1a
-Malaria,Outcome,Malaria O-1b
-Malaria,Outcome,Malaria O-1c
-Malaria,Outcome,Malaria O-2
-Malaria,Outcome,Malaria O-3
-Malaria,Outcome,Malaria O-4
-Malaria,Outcome,Malaria O-6
-Malaria,Outcome,Malaria O-7(M)
-Malaria,Outcome,Malaria O-8
-Malaria,Outcome,Malaria O-9(M)
-Vector control,Coverage,VC-1(M)
-Vector control,Coverage,VC-3(M)
-Vector control,Coverage,VC-5
-Vector control,Coverage,VC-6.1
-Case management,Coverage,CM-1a(M)
-Case management,Coverage,CM-1b(M)
-Case management,Coverage,CM-1c(M)
-Case management,Coverage,CM-2a(M)
-Case management,Coverage,CM-2b(M)
-Case management,Coverage,CM-2c(M)
-Case management,Coverage,CM-3a
-Case management,Coverage,CM-3b
-Case management,Coverage,CM-3c
-Case management,Coverage,CM-4
-Case management,Coverage,CM-5(M)
-Case management,Coverage,CM-6(M)
-Specific prev interv,Coverage,SPI-1
-Specific prev interv,Coverage,SPI-2
-"HMIS, M&E",Coverage,M&E-2
-HSS,Impact,HSS I-1
-HSS,Impact,HSS I-2
-HSS,Impact,HSS I-3
-HSS,Outcome,HSS O-1
-HSS,Outcome,HSS O-2
-HSS,Outcome,HSS O-3
-PSM,Coverage,PSM-2
-PSM,Coverage,PSM-3
-"HMIS, M&E",Coverage,M&E-3
-HW,Coverage,HW-1
-HW,Coverage,HW-2
-HW,Coverage,HW-3
-HW,Coverage,HW-4
-HW,Coverage,HW-5
-SD,Coverage,SD-1
-SD,Coverage,SD-3
-FMS,Coverage,HF-1
-DOTS,,DOTS-1b
-DOTS,,DOTS-2b
-DOTS,,DOTS-6
-"Prev, GP",,GP other-1
-"Prev, GP",,GP other-2
-HIV,Outcome,HIV O-other 1
-MDR-TB,,MDR TB-1
-"HMIS, M&E",,ME-2
-Other,,Numero y porcentaje de colvols abastecidos con el paquete completo de insumos para diagnostico y tratamiento de malaria en Alta Verapaz y Escuintla
-RDT,,RDT SO
-SSRP,,SSRP-other 1
-SSRP,,SSRP-other 2
-TB,Outcome,TB O-1b
-TB,Outcome,TB O-2b
-TB,Outcome,TB O-5 (M)
 TB/HIV,,TB/HIV-1
 TB/HIV,,TB/HIV-2
 TB/HIV,,TB/HIV-4
-TB care and prev,,TCP other-1
-TB care and prev,,TCP other-2
-TCS,,TCS other- 1
-TCS,,TCS other-2
-TCS,,TCS other-3
-TCS,,TCS-other 1
+TB/HIV,Impact,TB/HIV I-1

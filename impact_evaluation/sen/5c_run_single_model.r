@@ -10,7 +10,7 @@
 # modelStage - (numeric) 1 for first half of results chain, 2 for second half (controls input and output file names, must make sense given modelVersion)
 # testRun - (logical) TRUE will run the model with limited MCMC steps, FALSE will run the full thing
 # ------------------------------------------------
-print(commandArgs())
+
 source('./impact_evaluation/sen/set_up_r.r')
 
 # for testing purposes
@@ -51,7 +51,8 @@ print(paste('Test Run:', testRun))
 # ---------------------------------------------------------------------------------------------------
 # Load data
 set.seed(1)
-if (Sys.info()[1]!='Windows' & modelStage==1) load(outputFile4a)
+print('Loading data...')
+if (Sys.info()[1]!='Windows' & modelStage==1) load(outputFile4a_scratch)
 if (Sys.info()[1]=='Windows' & modelStage==1) load(outputFile4a)
 if (Sys.info()[1]!='Windows' & modelStage==2) load(outputFile4b_scratch)
 if (Sys.info()[1]=='Windows' & modelStage==2) load(outputFile4b)
@@ -67,8 +68,7 @@ source(paste0('./impact_evaluation/sen/models/', modelVersion1, '.r'))
 # reduce the data down to only necessary variables
 parsedModel = lavParseModelString(model)
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-#modelVars = c('region','date',modelVars)
-modelVars = c('region', modelVars)
+modelVars = c('region','date', modelVars)
 subData = subData[, unique(modelVars), with=FALSE]
 
 #Check unique values in data - do any columns have <5 unique values? 
@@ -91,20 +91,27 @@ subData = subData[, unique(modelVars), with=FALSE]
 # print("Checking for variables that are completely zero...")
 # vars = names(subData)[!names(subData)%in%c('region', 'date')]
 # for (v in vars) if (sum(subData[, get(v)])==0) print(paste0("This variable is zero for all years: ", v))
-
 #jitter to avoid perfect collinearity #Commenting this out for the moment, EL 8/6/2019
-# for(v in names(subData)[!names(subData)%in%c('region','date')]) {
-#  # if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
-#   if (all(subData[[v]]>=0)){
-#     print(paste0(v, " is falling into the first jitter category, all(subData[[v]]>=0"))
-#     subData[, paste0((v), "_jitter"):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed back to poisson after model was restructured EL 8/14/19 
-#   } 
-#   if (!all(subData[[v]]>=0)){
-#     print(paste0(v, " is falling into the first jitter category, all(subData[[v]]>=0"))
-#     subData[, paste0((v), "_jitter"):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
-#   }
-# }
-# 
+#print('Jittering data...')
+#  for(v in names(subData)[!names(subData)%in%c('region','date')]) {
+#    if (all(subData[[v]]>=0)) subData[, (v):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed from poisson to exponential distribution to handle low-variance (high # of zeros) in many variables DP & EL 7/29/2019
+#    if (all(subData[[v]]>=0)){
+#      print(paste0(v, " is falling into the first jitter category, all(subData[[v]]>=0"))
+#      subData[, paste0((v), "_jitter"):=get(v)+rexp(nrow(subData), (sd(subData[[v]])+2))] # Changed back to poisson after model was restructured EL 8/14/19 
+#    } 
+#    if (!all(subData[[v]]>=0)){
+#      print(paste0(v, " is falling into the first jitter category, all(subData[[v]]>=0"))
+#      subData[, paste0((v), "_jitter"):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
+#    }
+#  }
+
+# jitter to avoid perfect collinearity
+# this is the original jitter code in David's DRC model
+print('Jittering data...')
+for(v in names(subData)[!names(subData)%in%c('region','date')]) { 
+  if (all(subData[[v]]>0)) subData[, (v):=get(v)+rpois(nrow(subData), (sd(subData[[v]])+2)/10)]
+  if (!all(subData[[v]]>0)) subData[, (v):=get(v)+rnorm(nrow(subData), 0, (sd(subData[[v]])+2)/10)]
+}
 
 #Only jitter values that have zeros for the entire time series- this is the only thing that's breaking the model at this point. 
 # Replace all-zero-vectors with a zero-variance positive vector (0.1). 
@@ -137,6 +144,19 @@ subData = subData[, unique(modelVars), with=FALSE]
 
 # rescale variables to have similar variance
 # see Kline Principles and Practice of SEM (2011) page 67
+print('Rescaling variables...')
+scaling_factors = data.table(date=1)
+numVars = names(subData)[!names(subData)%in%c('region','date')]
+for(v in numVars) {
+  s=1
+  while(var(subData[[v]]/s)>1000) s=s*10
+  while(var(subData[[v]]/s)<100) s=s/10
+  scaling_factors[,(v):=s]
+}
+for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
+
+# rescale variables to have similar variance
+# see Kline Principles and Practice of SEM (2011) page 67
 # scaling_factors = data.table()
 # numVars = names(subData)[!names(subData)%in%c('region')]
 # for(v in numVars) {
@@ -153,7 +173,7 @@ subData = subData[, unique(modelVars), with=FALSE]
 # }
 # for(v in names(scaling_factors)) subData[, (v):=get(v)/scaling_factors[[v]]]
 # print(subData[, .(Number_of_Cases_Screened_for_MDR_act_cumulative, TB_Patients_Tested_for_HIV_act_cumulative)])
-# 
+ 
 
 # If running on Windows, optional check for correlation coefficients at this point. 
 # Look for correlation coefficients higher than .98. 
@@ -216,8 +236,9 @@ subData = subData[, unique(modelVars), with=FALSE]
 # Run model
 
 # fit model
-# if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
-# if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
+print('Fitting model...')
+if (testRun==TRUE) semFit = bsem(model, subData, adapt=50, burnin=10, sample=10, bcontrol=list(thin=3))
+if (testRun==FALSE) semFit = bsem(model, subData, adapt=5000, burnin=10000, sample=1000, bcontrol=list(thin=3))
 
 #Make scaling factors data table so you can run this code. - everything should be scaled to 1. 
 scaling_factors = data.table()
@@ -237,23 +258,23 @@ if ('urFit'%in%ls()){
 # Store coefficient table from model
 
 # get standardized solution
-# standardizedSummary = data.table(standardizedSolution(semFit, se=TRUE))
-# setnames(standardizedSummary, 'se', 'se.std')
-# standardizedSummary = standardizedSummary[, -c('ci.lower', 'ci.upper')]
+standardizedSummary = data.table(standardizedSolution(semFit, se=TRUE))
+setnames(standardizedSummary, 'se', 'se.std')
+standardizedSummary = standardizedSummary[, -c('ci.lower', 'ci.upper')]
 # 
 # # get unstandardized parameter values
-# summary = data.table(parTable(semFit))
-# summary = summary[, c('lhs','op','rhs','est','se'), with=FALSE]
+summary = data.table(parTable(semFit))
+summary = summary[, c('lhs','op','rhs','est','se'), with=FALSE]
 # 
 # # unrescale SEM coefficients to reflect actual units of x and y variables
 tmp = unique(melt(scaling_factors, value.name='scaling_factor'))
-# summary = merge(summary, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
-# summary = merge(summary, tmp, by.x='lhs', by.y='variable', all.x=TRUE, suffixes=c('.rhs','.lhs'))
-# summary[is.na(scaling_factor.rhs), scaling_factor.rhs:=1]
-# summary[is.na(scaling_factor.lhs), scaling_factor.lhs:=1]
-# summary[, est_raw:=est] # just to be able to see the rescaled value
-# summary[, est:=est/(scaling_factor.rhs/scaling_factor.lhs)]
-# summary[, se:=se/(scaling_factor.rhs/scaling_factor.lhs)]
+summary = merge(summary, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
+summary = merge(summary, tmp, by.x='lhs', by.y='variable', all.x=TRUE, suffixes=c('.rhs','.lhs'))
+summary[is.na(scaling_factor.rhs), scaling_factor.rhs:=1]
+summary[is.na(scaling_factor.lhs), scaling_factor.lhs:=1]
+summary[, est_raw:=est] # just to be able to see the rescaled value
+summary[, est:=est/(scaling_factor.rhs/scaling_factor.lhs)]
+summary[, se:=se/(scaling_factor.rhs/scaling_factor.lhs)]
 
 # unrescale UR coefficients to reflect actual units of x and y variables
 urFit = merge(urFit, tmp, by.x='rhs', by.y='variable', all.x=TRUE)
@@ -265,16 +286,17 @@ urFit[, est:=est/(scaling_factor.rhs/scaling_factor.lhs)]
 urFit[, se:=se/(scaling_factor.rhs/scaling_factor.lhs)]
 
 # add standardized coefficients to summary
-# summary = merge(summary, standardizedSummary, by=c('lhs','op','rhs'))
+summary = merge(summary, standardizedSummary, by=c('lhs','op','rhs'))
 
 # label health zone
 urFit[, region:=d]
-# summary[, region:=d]
+summary[, region:=d]
 # --------------------------------------------------------------
 
 
 # ------------------------------------------------------------------
 # Save model output and clean up
+print('Saving output...')
 
 # reassign the temporary output location if the parent script is set to runInParallel FALSE
 if ('runInParallel' %in% ls()) if (runInParallel==FALSE){clustertmpDir2 = tempIeDir}
@@ -288,11 +310,11 @@ if(modelStage==2) outputFile5tmp2 = paste0(clustertmpDir2, 'second_half_summary_
 if(modelStage==2) outputFile5tmp3 = paste0(clustertmpDir2, 'second_half_urFit_', task_id, '.rds')
 
 # save
-# print(paste('Saving:', outputFile5tmp1))
-# saveRDS(semFit, file=outputFile5tmp1)
+print(paste('Saving:', outputFile5tmp1))
+saveRDS(semFit, file=outputFile5tmp1)
 # 
-# print(paste('Saving:', outputFile5tmp2))
-# saveRDS(summary, file=outputFile5tmp2)
+print(paste('Saving:', outputFile5tmp2))
+saveRDS(summary, file=outputFile5tmp2)
 
 print(paste('Saving:', outputFile5tmp3))
 saveRDS(urFit, file=outputFile5tmp3)

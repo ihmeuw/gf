@@ -76,7 +76,7 @@ plots[[i]] = ggplot(DT[grant==g], aes(x=brief_description_code, y=ihme_result_ac
   geom_point() +
   labs(col="Target Met", title="", y="Achievement Ratio", x="Indicator", caption=paste0("Source: ", unique(DT[grant==g]$file_name))) +
   geom_hline(yintercept = 1) +
-  theme_bw()+
+  theme_bw(base_size = 18)+
   coord_flip()+
   ylim(0,1.5)+
   theme(legend.position = "bottom")+

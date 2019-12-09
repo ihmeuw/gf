@@ -4,13 +4,15 @@
 rm(list=ls())
 library(data.table) 
 library(scales)
+library(ggplot2)
 
-source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
+source("C:/Users/frc2/Documents/gf/resource_tracking/analysis/graphing_functions.r")
+user='frc2'
 
 #------------------------------------------
 #Read in data 
 #------------------------------------------
-absorption = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/SEN/prepped_data/absorption_sen_euro.rds")
+absorption = readRDS("C:/Users/frc2/Box Sync/Global Fund Files/SEN/prepped_data/absorption_sen_euro.rds")
 
 all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
 setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
@@ -21,7 +23,7 @@ absorption = merge(absorption, all_mods, by=c('gf_module', 'gf_intervention', 'd
 stopifnot(nrow(absorption[is.na(abbrev_int)])==0)
 
 #Get cumulative absorption dataset
-cumulative_absorption = get_cumulative_absorption("SEN", "EUR")
+cumulative_absorption = get_cumulative_absorption(byVars=c('abbrev_mod', 'grant'), countrySubset=c("SEN"), currency=c("EUR"))
 
 #------------------------------------------
 # PLOT DATA 
@@ -41,7 +43,7 @@ p1 = ggplot(by_grant, aes(x=semester, y=absorption, color=grant, group=grant)) +
   labs(title="Absorption by grant for 2018-2020 grant period", x="Grant semester", y="Absorption (%)", color="Grant")
 
 # 2. Bar graph that shows 18-month cumulative absorption by grant. 
-cumulative_by_grant = cumulative_absorption[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), 
+cumulative_by_grant = cumulative_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
                                  by=c('grant')]
 cumulative_by_grant[, absorption:=round((expenditure/budget)*100, 1)]
 cumulative_by_grant = melt(cumulative_by_grant, id.vars=c('grant', 'absorption'), value.name="amount")
@@ -70,6 +72,7 @@ rssh=c("Community systems", "Info systems & M&E", "HR & health workers", "Servic
        "Nat. health strategies", "PSM")
 vector_control = c("Specific prev. interventions", "Vector control")
 tb_care = c("MDR-TB", "Care & prevention")
+pm = c("Program mgmt")
 
 plot_data = copy(cumulative_absorption)
 plot_data[abbrev_mod%in%kvp_mods, module_cat:="Prevention programs for KVP"]
@@ -82,10 +85,9 @@ plot_data[abbrev_mod%in%tb_care, module_cat:="TB care and prevention"]
 plot_data[abbrev_mod=="TB/HIV", module_cat:="TB/HIV co-infection"]
 
 plot_data[is.na(module_cat), module_cat:=abbrev_mod]
-plot_data[module_cat=="Program mgmt", module_cat:="Program management"]
 
 # Plot data 
-plot_data = plot_data[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), 
+plot_data = plot_data[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
                                             by=c('module_cat')]
 plot_data[, absorption:=round((expenditure/budget)*100, 1)]
 plot_data = melt(plot_data, id.vars=c('module_cat', 'absorption'), value.name="amount")

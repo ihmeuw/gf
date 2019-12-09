@@ -52,6 +52,10 @@ urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # Display results
 
 # my sem graph function for first half "unrelated regressions" model
+p0 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
+                            scaling_factors=NA, standardized=TRUE, 
+                            lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-1.5, colScaleMax=1.5, colScaleBreaks = 1)
+
 p1 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
 	scaling_factors=NA, standardized=TRUE, 
 	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin= -1.5, colScaleMax=1.5, colScaleBreaks = 1)
@@ -64,7 +68,8 @@ p2 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
 p3 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
          scaling_factors=NA, standardized=TRUE,
          lineWidth=1.5, curved=0, tapered=FALSE,
-         dim=TRUE, highlight=c('com_mobsoc_cumulative',
+         dim=TRUE, colScaleMin = -1.5,
+         highlight=c('com_mobsoc_cumulative',
                                'com_radio_cumulative',
                                'com_vad_touss_cumulative',
                                'lead_gueris_taux',
@@ -144,13 +149,30 @@ p10 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
 p11 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
                scaling_factors=NA, standardized=TRUE,
                lineWidth=1.5, curved=0, tapered=FALSE,
-               dim=TRUE, highlight=c('lag_gf_mdrtb_cumulative',
+               dim=TRUE, 
+               colScaleMin = -1.5, colScaleMax = 0.8,
+               highlight=c('lag_gf_mdrtb_cumulative',
                                      'lag_other_dah_T3_cumulative',
                                      'tot_genexpert_cumulative',
-                                     'mdr_success_rate',
+                                     'mdr_success_cumulative',
                                      'patients_prop_genexpert_cumulative',
-                                     'dx_count_cumulative'
+                                     'dx_count_cumulative',
+                           'lag_other_dah_T1_1_cumulative', 'lag_gf_detect_cumulative'
+                           
                ))
+p12 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
+                     scaling_factors=NA, standardized=TRUE,
+                     lineWidth=1.5, curved=0, tapered=FALSE,
+                     dim=TRUE, colScaleMin = 0,
+               highlight=c('perf_lab',
+                                           'tb_cas_id_cumulative',
+                                           'tot_genexpert_cumulative',
+                                           'lag_gf_detect_cumulative',
+                                           'lag_gf_tbcare_cumulative', 
+                                           'com_vad_touss_cumulative',
+                                           'com_radio_cumulative',
+                                           'com_mobsoc_cumulative',
+                                           'tb_tfc_cumulative'                     ))
 
 
 #p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
@@ -161,8 +183,8 @@ p11 = semGraph(parTable=urFit1, nodeTable=nodeTable1,
 # -----------------------------------
 # Save output
 print(paste('Saving:', outputFile6a)) 
-pdf(outputFile6a, height=6, width=9)
-
+pdf(outputFile6a, height=9, width=12)
+print(p0)
 print(p1)
 print(p2)
 print(p3)
@@ -174,7 +196,7 @@ print(p8)
 print(p9)
 print(p10)
 print(p11)
-
+print(p12)
 dev.off()
 
 # save a time-stamped version for reproducibility
