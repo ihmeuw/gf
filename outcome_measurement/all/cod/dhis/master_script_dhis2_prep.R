@@ -24,12 +24,6 @@ rerun_metadata_extraction = FALSE
 step1_extract_data = TRUE
 step2_prep_data = TRUE
 step3_remove_outliers = TRUE
-
-# get current date for versioning 
-current_date = Sys.Date()
-current_month = month(current_date)
-current_year = year(current_date)
-
 #---------------------------------------------
 
 #---------------------------------------------
