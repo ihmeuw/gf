@@ -8,13 +8,10 @@
 #---------------------------------------------
 # Files and directories
 #---------------------------------------------
-library(data.table)
-library(lubridate)
-
 # clone the ihme gf repo to your H drive
 user = Sys.info()[['user']]
 setwd(paste0('/homes/', user))
-code_dir = ('./outcome_measurement/all/cod/dhis/')
+code_dir = ('./local/gf/outcome_measurement/all/cod/dhis/')
 #---------------------------------------------
 
 #---------------------------------------------
@@ -32,6 +29,7 @@ step3_remove_outliers = TRUE
 current_date = Sys.Date()
 current_month = month(current_date)
 current_year = year(current_date)
+
 #---------------------------------------------
 
 #---------------------------------------------
