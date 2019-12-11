@@ -103,7 +103,6 @@ run_extraction_tool = function(start_year = '2019', end_year = '2019',
   #----------------------------------
   # source the necessary functions to download the data 
   # change the location of the sourced file to your home directory or source from J
-  dirx = paste0(dir, "packages/")
   source(paste0(dir, 'code/dhis_extracting_functions.R')) 
   
   # check to make sure the package loaded by viewing a help file
