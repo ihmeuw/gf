@@ -12,6 +12,9 @@ library(RColorBrewer)
 library(stringr)
 options(scipen=999)
 # --------------------
+# detect the user 
+
+user = Sys.info()[['user']]
 
 #--------------------------------
 # set directories
@@ -22,10 +25,24 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/impact_over_time_gbd/')
 
+code_dir = paste0('C:/Users/', user, '/local/gf/impact_evaluation/gbd_epidemiology/')
+
 #--------------------------------
 # upload the data sets
 
-dt = fread(paste0(dir, 'ihme_gbd_incidence_deaths.csv'))
+dt = fread(paste0(dir, 'ihme_age_standardized_2017.csv'))
+
+#--------
+# subset to age standardized rates and all ages counts
+dt = dt[!(metric=='Rate' & age=='All Ages')]
+
+# reset the order for facet wrapped graphs
+dt$location = factor(dt$location, c("Cambodia", "Democratic Republic of the Congo",
+      "Guatemala", "Mozambique", "Myanmar", "Senegal", "Sudan", "Uganda", "Global"), 
+      c("Cambodia", "DRC", "Guatemala", "Mozambique", "Myanmar", "Senegal", 
+        "Sudan", "Uganda", "Global Trend"))
+                        
+#--------
 
 #-------------------------
 # calculate annualized rates of change - 2000 to 2017
@@ -34,13 +51,14 @@ rates = dt[sex=='Both' & metric=='Rate' & (year==2000 | year==2017),.(measure, l
 rates = dcast(rates, measure+location+cause~year)
 setnames(rates, c('2000', '2017'), c('y2000', 'y2017'))
 rates[ , roc:=round((log(y2017/y2000)/17), 3)]
+rates[ ,roc:=roc*100]
 rates[ ,c('y2000', 'y2017'):=NULL]
 
 # merge in annualized roc
 dt = merge(dt, rates, by=c('measure', 'location', 'cause'), all=T)
 
 # label the locations with associated rates of change
-dt[ , label:=paste0(location, ' (', roc, ')')]
+dt[ , label:=paste0(location, ' (', roc, '%)')]
 
 #-------------------------
 # divide into incidence and deaths 
@@ -49,15 +67,19 @@ deaths = dt[measure =='Deaths']
 inc = dt[measure=='Incidence']
 
 #-------------------------
-# source table 
+# source outside code for tables and figures
 
 # works on caitlin's computer - change to relevant directory
-source("C:/Users/ccarelli/local/gf/impact_evaluation/gbd_epidemiology/mort_inc_all_pce_countries_table.R")
+source(paste0(code_dir, 'mort_inc_all_pce_countries_table.R'))
+
+# works on caitlin's computer - change to relevant directory
+source(paste0(code_dir, "trend_figures_synthesis.R"))
 
 #-----------------------------------------------------
 # MORTALITY GRAPHS
 
 pdf(paste0(dir, 'outputs/mortality_pce_countries.pdf'), height=9, width=12)
+
 # HIV/AIDS
 #----------------------
 # rates 
@@ -474,7 +496,3 @@ ggplot(inc[cause=='Malaria' & metric=='Number' & sex!='Both' & 1999 < year], aes
        color='Sex', x='Year', y='Number of new cases')
 
 dev.off()
-
-
-
-
