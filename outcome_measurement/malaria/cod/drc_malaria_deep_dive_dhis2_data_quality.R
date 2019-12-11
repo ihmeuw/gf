@@ -44,10 +44,21 @@ pnlp_before_qr = readRDS('J:/Project/Evaluation/GF/outcome_measurement/cod/prepp
 # --------------------------
 # PNLP
 pnlp_after_qr[, year := year(date)]
-dt = pnlp_after_qr[year == 2017,]
-dt = dt[grepl(variable, pattern = 'mild', ignore.case = TRUE)]
-dt[grepl(variable, pattern = 'treated', ignore.case = TRUE), var := 'conf_cases_treated']
-dt[is.na(var), var := 'conf_cases']
+# dt = pnlp_after_qr[year == 2017,]
+dt = pnlp_after_qr[grepl(variable, pattern = 'stockoutRDT|healthFacilities', ignore.case = TRUE)]
+dt = dt[ ! variable %in% c("RDT_positive", "RDT_received", "SSCRDT_completed", "SSCRDT_positive", "stockOutRDT")]
+dt[, c('indicator', 'sub'):=tstrsplit(variable, "_")]
+
+natl = dt[, .(value = sum(value)), by = .(date, variable)]
+natl = dcast.data.table(natl, date ~ variable)
+natl[, stockOut_per_fac := stockOutRDT/healthFacilities_total]
+# natl[, year := year(date)]
+natl[, avg_stockout_by_year := mean(stockOut_per_fac), by = .(year(date))]
+# natl[, rdt_per_susp := RDT/suspectedMalaria]
+# natl[, prop_conf_treated := mildMalariaTreated/newCasesMalariaMild]
+
+# dt[grepl(variable, pattern = 'treated', ignore.case = TRUE), var := 'conf_cases_treated']
+# dt[is.na(var), var := 'conf_cases']
 
 dt[, sum(value), by = 'var']
 
