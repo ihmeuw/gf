@@ -18,7 +18,7 @@ dt = readRDS(paste0(prepped_dir, "all_prepped_data.rds"))
 names(dt) = gsub("%", "pct", names(dt)) #EMILY THIS SHOULD BE CORRECTED IN PREP CODE
 
 #--------------------------------------------------
-# Remove unnecessary rows - #EMILY this may be a data extraction issue. 
+# Remove unnecessary rows - #EMILY this may be a data extraction issue. Mostly they are hidden rows in GTM PU/DRs
 #--------------------------------------------------
 dt <- dt[indicator!="[Impact Indicator Name]"]
 dt <- dt[indicator!="[Outcome Indicator Name]"]
@@ -108,6 +108,15 @@ for (var in numVars) {
     stop("Numeric information was lost during cleaning process!")
   }
 }
+
+
+# Cleaning up uganda target_pct column in which some values are incorrectly typed into the PUDRs
+
+dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==1)] <- 100
+dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==0.5)] <- 50
+dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==0.85)] <- 85
+dt$target_pct[which(dt$loc_name=="uga" & dt$baseline_year==2014 & dt$baseline_value==19 & dt$indicator_type=="Impact")] <- 6.7
+
 
 # Calculate an internal verified achievement ratio.
 dt[, any_achievement_ratio:=gf_result_achievement_ratio]

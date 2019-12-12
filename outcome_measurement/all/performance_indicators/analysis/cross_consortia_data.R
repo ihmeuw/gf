@@ -7,7 +7,7 @@ library(reshape2)
 library(data.table)
 
 # load data
-data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.RDS")
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/data_for_analysis/kpi_data_for_analyses2.RDS")
 
 # subset as appropriate
 main_indicators = c('impact_outcome_indicators_main', 'coverage_indicators_main')
@@ -85,5 +85,5 @@ DT4 <- rbind(DT2, DT3)
 DT4 = na.omit(DT4)
 
 # save file for export
-outputFile = "J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\visualizations\\cross_consortia_data_22Nov2019.csv"
+outputFile = "J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\visualizations\\cross_consortia_data_9Dec2019.csv"
 write.csv(DT4, outputFile)
