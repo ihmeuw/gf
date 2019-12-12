@@ -118,7 +118,7 @@ p = ggplot(plot_data, aes(x=abbrev_mod, y=y_proportion, fill=performance, label=
   theme(axis.text.x=element_blank()) + 
   labs(title="Absorption by module for PCE countries", subtitle="January 2018-June 2019", x="Module",
        y="Number of countries with this performance rating", fill="Meeting absorptive\ncapacity target (75%)?", 
-       caption="Numbers shown out of 8 possible countries,\nnot including Guatemala data and\nincluding CAM/MYN regional grant")
+       caption="Numbers shown out of 8 possible countries,\nnot including Guatemala data and\nincluding RAI2E malaria regional grant")
 
 ggsave(paste0(save_loc, "absorption_by_mod1.png"), p, height=8, width=11)
 
