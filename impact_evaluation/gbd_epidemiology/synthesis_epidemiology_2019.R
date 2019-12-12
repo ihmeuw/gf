@@ -44,6 +44,15 @@ dt$location = factor(dt$location, c("Cambodia", "Democratic Republic of the Cong
                         
 #--------
 
+
+# rates = dt[sex=='Both' & metric=='Rate' & (year==2010 | year==2017),.(measure, location, cause, year, val)]
+# rates = dcast(rates, measure+location+cause~year)
+# setnames(rates, c('2010', '2017'), c('y2010', 'y2017'))
+# rates[ , roc:=round((log(y2017/y2010)/17), 3)]
+# rates[ ,roc:=roc*100]
+# rates[ ,c('y2010', 'y2017'):=NULL]
+
+
 #-------------------------
 # calculate annualized rates of change - 2000 to 2017
 
