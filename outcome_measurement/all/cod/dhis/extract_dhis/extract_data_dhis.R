@@ -24,6 +24,7 @@
 # qsub -terse -N rst_ide_19_05_14_160329 -q long.q -l fthread=2 -l m_mem_free=60G -l h_rt=85:00:00 -l archive=TRUE -P proj_pce /ihme/code/jpy_rstudio/jpy_rstudio_shell.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -t rstudio -p 7513 -o 1 -G r
 #----------------------------------
 # Set up R
+rm(list=ls())
 library(data.table)
 library(jsonlite)
 library(httr)
@@ -92,7 +93,7 @@ library(lubridate)
 run_extraction_tool = function(start_year = '2019', end_year = '2019', 
                                start_month = '01', end_month = '12', 
                                update_year = '2009', 
-                               set = '1', set_name = 'base') {
+                               set = 1, set_name = 'base') {
   
   # Set the directory to download the data
   # detect if operating on windows or on the cluster 
@@ -151,7 +152,7 @@ run_extraction_tool = function(start_year = '2019', end_year = '2019',
     # extract month of data
     extracted_data = extract_all_data(base_url = base_url, 
                                       data_sets = data_sets[set, ],
-                                      org_units = org_units, 
+                                      org_units = org_units[1:40], 
                                       deb_period = start_current_loop,
                                       end_period = end_current_loop,
                                       userID = userID, 
@@ -167,7 +168,8 @@ run_extraction_tool = function(start_year = '2019', end_year = '2019',
     # save intermediate data - 1st iteration
     extracted_data$download_number = 1
     print(paste0('Downloading ', save_month_start, '/', save_year_start, ' now...'))
-    saveRDS(extracted_data, paste0(dir, '1_initial_download/', set_name, '/intermediate_data_', current_year, '_', current_month, '/', set_name,'_0', save_month_start, '_', 
+    saveRDS(extracted_data, paste0(dir, '1_initial_download/', set_name, '/intermediate_data_', current_year, '_', 
+                                   current_month, '/', set_name,'_0', save_month_start, '_', 
                                    save_year_start, '_0', save_month_end, '_', save_year_end, '_first_download.rds'))
     print(paste0('The month ', save_month_start, '/', save_year_start, ' is downloaded and saved.'))
     
