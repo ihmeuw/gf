@@ -52,7 +52,7 @@ for (g in unique(absorption$grant)){
 }
 
 # Read in prepped indicator data 
-indicators = readRDS(paste0(dir, 'pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.rds'))
+indicators = readRDS(paste0(dir, 'pudr_indicator_extraction/prepped_data/cleaned_pfi.rds'))
 
 #Read in map 
 map = data.table(read_excel(paste0(dir, "Indicators to Interventions Map.xlsx")))

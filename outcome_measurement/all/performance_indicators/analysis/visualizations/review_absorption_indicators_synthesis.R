@@ -1,14 +1,15 @@
 # ------------------------------------------------------
-# AUTHOR: Emily Linebarger 
-# PURPOSE: Review absorption/indicator data 
-# DATE: Last updated November 2019 
+# AUTHOR: Emily Linebarger , Francisco Rios Casas
+# PURPOSE: Review absorption/indicator data INC. EHG countries
+# DATE: Last updated December 2019 for synthesis Report
 # ------------------------------------------------------
 
 library(data.table) 
 library(ggplot2) 
 library(scales) 
+library(ggpubr)
 
-dt = readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/absorption_indicators_combined.rds")
+dt = readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/subset_data/absorption_indicators_combined_synthesis.rds")
 
 #----------------------------------------------------
 # DATA QUALITY CORRECTIONS 
@@ -18,45 +19,52 @@ dt[absorption>200, absorption:=200]
 #Where absorption is below 0, replace with 0. 
 dt[absorption<0, absorption:=0]
 # Where achievement ratio is above 2, cap at 2. 
-dt[ihme_result_achievement_ratio>2, ihme_result_achievement_ratio:=2]
+dt[achievement_ratio>2, achievement_ratio:=2]
 
-dt = dt[!is.na(ihme_result_achievement_ratio) & !is.na(absorption)]
+dt = dt[!is.na(achievement_ratio) & !is.na(absorption)]
+
+# fix reverse coding as well
+
 
 #Fix disease labeling 
-dt[disease=="hiv", disease:="HIV"]
-dt[disease=="tb", disease:="TB"]
-dt[disease=="malaria", disease:="Malaria"]
+#dt[disease=="hiv", disease:="HIV"]
+#dt[disease=="tb", disease:="TB"]
+#dt[disease=="malaria", disease:="Malaria"]
 
 #Fix country labeling 
-dt[loc_name=="cod", loc_name:="DRC"]
-dt[, loc_name:=toupper(loc_name)]
+#dt[loc_name=="cod", loc_name:="DRC"]
+#dt[, loc_name:=toupper(loc_name)]
 
 
 #-----------------------------------
 # PLOTS 
 #-----------------------------------
-pdf("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/visualizations/absorption_indicators_comparison3.pdf", width=10, height=8)
+pdf("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/visualizations/absorption_indicators_comparison3.pdf", width=10, height=8)
 #First, run a scatter plot of achivement ratio vs. absorption percentage. 
-ggplot(dt[start_date>="2019-01-01"], aes(x=absorption, y=ihme_result_achievement_ratio)) + 
+ggplot(dt[], aes(x=absorption, y=achievement_ratio)) + 
   geom_point() + 
   theme_bw(base_size=18) +
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm")+
+  stat_cor()
 
-ggplot(dt[start_date>="2019-01-01"], aes(x=absorption, y=ihme_result_achievement_ratio, color=disease)) + 
+# stratify by disease
+ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=grant_disease)) + 
+  geom_point() + 
+  theme_bw(base_size=18)+
+  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
+  geom_smooth(method = "lm", se=FALSE)+
+  stat_cor()
+
+# include outcome indicators
+ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=loc_name)) + 
   geom_point() + 
   theme_bw(base_size=18)+
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
   geom_smooth(method = "lm", se=FALSE)
 
-ggplot(dt[start_date>="2018-01-01"], aes(x=absorption, y=ihme_result_achievement_ratio)) + 
-  geom_point() + 
-  theme_bw(base_size=18) + 
-  facet_wrap(~start_date) + 
-  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
-  geom_smooth(method = "lm")
-
-ggplot(dt[start_date>="2018-01-01"], aes(x=absorption, y=ihme_result_achievement_ratio, color=disease)) + 
+# 
+ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=disease)) + 
   geom_point() + 
   theme_bw(base_size=18) + 
   facet_wrap(~start_date) + 
@@ -78,7 +86,7 @@ for (c in c('DRC', 'SEN', 'UGA')){
   for (d in unique(dt$disease)) {
     subset = dt[start_date>="2018-01-01" & disease==d & loc_name==c]
     if (nrow(subset)>0){
-      p = ggplot(subset, aes(x=absorption, y=ihme_result_achievement_ratio)) + 
+      p = ggplot(subset, aes(x=absorption, y=achievement_ratio)) + 
         geom_point() + 
         theme_bw(base_size=18) + 
         facet_wrap(~start_date) + 

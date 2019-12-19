@@ -89,10 +89,9 @@ for (var in numVars) {
   }
   dt[str_count(get(var), "\\.")>1, (var):=gsub("\\.", "", get(var))] 
   
-  #REMOVE PUNCTUATION
+  #REMOVE PUNCTUATION # line 93 changes depending on the encoding of this file and results in not all of the punctuation getting properly cleaned.
   dt[, (var):=gsub("?|%|â|°|‰", "", get(var))] # There's probably some fancy way to do this with excluding characters from [[:punct:]] ? 
-# dt[, (var):=gsub("([.])|[[:punct:]]", "\\1", get(var))] # this way will exclude characters using ::punct:: but it didn't remove the Per mille (1/1000) sign (‰)
-  
+# dt[, (var):=gsub("([.])|[[:punct:]]", "\\1", get(var))] # this way will exclude characters using ::punct:: but it didn't remove the Per mille (1/1000) sign (â°)
   # REMOVE SPACE BETWEEN NUMBERS
   dt[, (var):=gsub("[[:space:]]", "", get(var))] 
   
@@ -147,8 +146,19 @@ dt <- dt[,source_code:=NULL]
 # add reverse indicator variable
 dt <- merge(dt, reverse_cb, by.x="indicator_code", by.y = "indicator_code", all.x = TRUE, all.y = FALSE)
 
+
+#########################################################
+## TYPOS
+#########################################################
+
+# verified by looking in Uganda PU/DRs--PR filled out the percetage sheet incorrectly, resulting in decimals in the wrong place
+dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==1)] <- 100
+dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==0.5)] <- 50
+dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==0.85)] <- 85
+dt$target_pct[which(dt$loc_name=="uga" & dt$baseline_year==2014 & dt$baseline_value==19 & dt$indicator_type=="Impact")] <- 6.7
+
 #----------------------------------------------------
-# Calculate new variables
+# Derive new variables
 #----------------------------------------------------
 
 # Calculate an internal verified achievement ratio.
@@ -172,15 +182,33 @@ dt[, any_result_value:=gf_result_value]
 dt[is.na(any_result_value), any_result_value:=lfa_result_value]
 dt[is.na(any_result_value), any_result_value:=pr_result_value]
 
-###
+# create completeness rating for target and result value
+dt$completeness_rating <- NA
+
+dt$completeness_rating[which(   is.na(dt$target_value)  &  is.na(dt$any_result_value))] <- 1
+dt$completeness_rating[which(   is.na(dt$target_value)  & !is.na(dt$any_result_value))] <- 2
+dt$completeness_rating[which(  !is.na(dt$target_value)  &  is.na(dt$any_result_value))] <- 3
+dt$completeness_rating[which(  !is.na(dt$target_value)  & !is.na(dt$any_result_value))] <- 4
+
+# create factor variable and assign names
+dt$completeness_rating <- factor(dt$completeness_rating)
+levels(dt$completeness_rating) <-  c("No data", "Only Result", "Only Target", "Both available")
+
+# calculate if the sources differ between the baseline value and the pr reported value
+dt$sources_different <- NA
+dt$sources_different[which(dt$baseline_source_code!=dt$pr_result_source_code)] <- 1
+dt$sources_different[which(dt$baseline_source_code==dt$pr_result_source_code)] <- 0
+
+# calculate ihme_results_achievement_ratio
+dt$ihme_result_achievement_ratio <-NA
+dt$ihme_result_achievement_ratio <- dt$any_result_value/dt$target_value
+
 # create new variable to indicate whether target is being met
-#data7$target_met <- NA
-#data7$target_met[which(data7$reverse_indicator_final=="no" & data7$any_result_value >= data7$target_value)] <- "yes"
-#data7$target_met[which(data7$reverse_indicator_final=="no" & data7$any_result_value < data7$target_value)] <- "no"
-#data7$target_met[which(data7$reverse_indicator_final=="yes" & data7$any_result_value <= data7$target_value)] <- "yes"
-#data7$target_met[which(data7$reverse_indicator_final=="yes" & data7$any_result_value > data7$target_value)] <- "no"
-
-
+dt$target_met <- NA
+dt$target_met[which(dt$reverse_indicator_final=="no" & dt$any_result_value >= dt$target_value)] <- "yes"
+dt$target_met[which(dt$reverse_indicator_final=="no" & dt$any_result_value < dt$target_value)] <- "no"
+dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value <= dt$target_value)] <- "yes"
+dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value > dt$target_value)] <- "no"
 
 #------------------------------------------------------
 # SAVE FINAL DATA

@@ -24,7 +24,7 @@ LFA_verified_grants = c('Malaria_MOH_PUDR_S1 2019_LFA verified.xlsx',
                         'Copy of LFA_COD-T-MOH_Progress Report_30Jun2019_CCF_Final_10092019.xlsx') # file names of most-recent LFA-verified grants
 
 # load data
-data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses.RDS")
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/prepped_data/cleaned_pfi.RDS")
 
 
 # subset as appropriate

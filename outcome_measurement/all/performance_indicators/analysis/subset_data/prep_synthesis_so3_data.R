@@ -1,10 +1,14 @@
-# synthesis report visual for SO1
+# this is the data that was used for synthesis sections SO3
+# only difference between this and SO1 data is the formatting and this one does not remove duplicates when same value is reported by two PRs
 
 # read in data
 library(data.table)
 library(ggplot2)
 
-data <-fread("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/data_for_analysis/cross_consortia_for_synthesis_pf_indicators_9Dec2019.csv")
+data <-fread("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/subset_data/cross_consortia_data_13Dec2019.csv")
+
+# delete first column
+data[,V1:=NULL]
 
 # rename column names
 setnames(data, 
@@ -71,52 +75,52 @@ DT1 <- unique(DT, by=c("loc_name", "indicator_code", "achievement_ratio")) # the
 ########################
 
 
-DT2 <- DT[module_code=="HIV KP"]
-
-# visualize targets, results, goals
-grants = unique(DT2$grant)
-aplots = list()
-i=1
-for(g in grants) {
-  aplots[[i]] = ggplot(DT2[grant==g], aes(x=indicator_long, y=achievement_ratio, fill=target_met)) +
-    geom_bar(stat="identity") + 
-    labs(fill= "Target Met", title=paste0("HIV KP Indicators in ", DT2[grant==g]$grant), y="Ratio", x="Indicator") +
-    theme_bw()+
-    coord_flip()+
-    theme(legend.position = "bottom")+
-    theme_bw(base_size = 10)+
-    scale_fill_discrete(labels=c("No", "Yes"))+
-    guides(fill=guide_legend(reverse=TRUE))+
-    geom_hline(yintercept = 1)
-    # a tick mark is shown on every 5
-   # scale_y_continuous(breaks=seq(0,1,10))
-  i=i+1
-}
-
-aplots[[1]]
-
-
-
-pdf("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/visualizations/synthesis_hiv_kp_only.pdf", height = 10, width = 18)
-aplots[[1]]
-aplots[[2]]
-aplots[[3]]
-aplots[[4]]
-aplots[[5]]
-aplots[[6]]
-aplots[[7]]
-aplots[[8]]
-aplots[[9]]
-aplots[[10]]
-
-dev.off()
+# DT2 <- DT[module_code=="HIV KP"]
+# 
+# # visualize targets, results, goals
+# grants = unique(DT2$grant)
+# aplots = list()
+# i=1
+# for(g in grants) {
+#   aplots[[i]] = ggplot(DT2[grant==g], aes(x=indicator_long, y=achievement_ratio, fill=target_met)) +
+#     geom_bar(stat="identity") + 
+#     labs(fill= "Target Met", title=paste0("HIV KP Indicators in ", DT2[grant==g]$grant), y="Ratio", x="Indicator") +
+#     theme_bw()+
+#     coord_flip()+
+#     theme(legend.position = "bottom")+
+#     theme_bw(base_size = 10)+
+#     scale_fill_discrete(labels=c("No", "Yes"))+
+#     guides(fill=guide_legend(reverse=TRUE))+
+#     geom_hline(yintercept = 1)
+#     # a tick mark is shown on every 5
+#    # scale_y_continuous(breaks=seq(0,1,10))
+#   i=i+1
+# }
+# 
+# aplots[[1]]
+# 
+# 
+# 
+# pdf("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/visualizations/synthesis_hiv_kp_only.pdf", height = 10, width = 18)
+# aplots[[1]]
+# aplots[[2]]
+# aplots[[3]]
+# aplots[[4]]
+# aplots[[5]]
+# aplots[[6]]
+# aplots[[7]]
+# aplots[[8]]
+# aplots[[9]]
+# aplots[[10]]
+# 
+# dev.off()
 
 #######################
 #### save data-set used
 ######################
-outFile <- "J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/prepped_data/synthesis_so3_data.csv"
+outFile <- "J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/subset_data/synthesis_so3_data.csv"
 write.csv(DT, outFile)
 
-write.csv(DT, "C:/Users/frc2/Desktop/synthesis_so3_data_12Dec2019.csv")
-write.csv(DT1, "C:/Users/frc2/Desktop/synthesis_so1_data.csv")
+#write.csv(DT, "C:/Users/frc2/Desktop/synthesis_so3_data_12Dec2019.csv")
+#write.csv(DT1, "C:/Users/frc2/Desktop/synthesis_so1_data.csv")
 

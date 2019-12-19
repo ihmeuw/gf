@@ -1,4 +1,4 @@
-# make visualizations on each of the grant performance indicators
+# make datatable for select grant performance indicators
 # for DRC
 # while creating a summary visual 
 # OCt 28, 2019
@@ -12,7 +12,7 @@ library(kableExtra)
 library(scales)
 
 # load data
-data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses.RDS")
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/prepped_data/cleaned_pfi.RDS")
 
 # set parameters of data to be analyzed
 country = "cod"
@@ -54,5 +54,5 @@ cols <- names(table6)[2:4]
 table6[,(cols) := round(.SD,2), .SDcols=cols]
          
 
-outputFile = "J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\visualizations\\cod_report_table.csv"
+outputFile = "J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\analysis\\visualizations\\drc_semester_target_achievement_table.csv"
 write.csv(table6, outputFile)
