@@ -24,7 +24,8 @@ dt[achievement_ratio>2, achievement_ratio:=2]
 dt = dt[!is.na(achievement_ratio) & !is.na(absorption)]
 
 # fix reverse coding as well
-
+#dt$achievement_ratio <- NA
+#dt$achievement_ratio_final <- ifelse(dt$reverse_indicator_final=="no", dt$achievement_ratio, 1/dt$achievement_ratio)
 
 #Fix disease labeling 
 #dt[disease=="hiv", disease:="HIV"]
@@ -47,6 +48,15 @@ ggplot(dt[], aes(x=absorption, y=achievement_ratio)) +
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
   geom_smooth(method = "lm")+
   stat_cor()
+
+# add labels to the points
+ggplot(dt[], aes(x=absorption, y=achievement_ratio)) + 
+  geom_point() + 
+  theme_bw(base_size=18) +
+  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
+  geom_smooth(method = "lm")+
+  stat_cor()+
+  geom_text(aes(label=paste(indicator_code," ",grant)))
 
 # stratify by disease
 ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=grant_disease)) + 

@@ -4,6 +4,8 @@
 # DATE: Last updated November 2019 
 # ------------------------------------------------------
 
+library(data.table)
+
 # Read in prepped absorption data 
 # absorption = readRDS(paste0(box, "tableau_data/absorption.rds"))
 absorption = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_modules.rds")
@@ -80,7 +82,7 @@ indicators$loc_name[which(indicators$loc_name=="GTM")] <- "Guatemala"
 absorption[, absorption:=round((cumulative_expenditure/cumulative_budget)*100, 1)]
 
 # merge on variables that are common in both
-dt = merge(indicators, absorption, by=c('loc_name', 'grant', 'module'), all=T) # these should be the same in both\
+dt = merge(indicators, absorption, by=c('loc_name', 'module'), all=T) # these should be the same in both\
 # the resource tracking file post_2017_map.RDS could be the solution to adding in codes that will map onto
 
 #One known issue here is that the start date/end date of the financial data don't always correspond with the start/
