@@ -23,6 +23,18 @@ dt[achievement_ratio>2, achievement_ratio:=2]
 
 dt = dt[!is.na(achievement_ratio) & !is.na(absorption)]
 
+
+### Additional changes to fix:
+# * stratify by data quality ???? [subset to those that are most complete??? or just ihme-path vs EHG]
+# * wrap by semester 1, 2, 3 ** this can be done for IHME grants only
+# * add a delay on the budget period
+# * can regional grants be added to this?
+# * stratify by country --in case one is ruining the overall pattern
+# * subset to countries or indicators where effect would be immediate 
+# * scale the points by size of the budget
+# * include outcome indicators
+
+
 # fix reverse coding as well
 #dt$achievement_ratio <- NA
 #dt$achievement_ratio_final <- ifelse(dt$reverse_indicator_final=="no", dt$achievement_ratio, 1/dt$achievement_ratio)
@@ -40,7 +52,7 @@ dt = dt[!is.na(achievement_ratio) & !is.na(absorption)]
 #-----------------------------------
 # PLOTS 
 #-----------------------------------
-pdf("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/visualizations/absorption_indicators_comparison3.pdf", width=10, height=8)
+pdf("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/visualizations/absorption_indicators_comparison_synthesis.pdf", width=10, height=8)
 #First, run a scatter plot of achivement ratio vs. absorption percentage. 
 ggplot(dt[], aes(x=absorption, y=achievement_ratio)) + 
   geom_point() + 
@@ -49,61 +61,59 @@ ggplot(dt[], aes(x=absorption, y=achievement_ratio)) +
   geom_smooth(method = "lm")+
   stat_cor()
 
-# add labels to the points
+# plot one without the tb outcome indicators
 ggplot(dt[], aes(x=absorption, y=achievement_ratio)) + 
   geom_point() + 
   theme_bw(base_size=18) +
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
   geom_smooth(method = "lm")+
+  stat_cor()
+
+#First, run a scatter plot of achivement ratio vs. absorption percentage. scale the point sizes 
+ggplot(dt[], aes(x=absorption, y=achievement_ratio, size=cumulative_budget)) + 
+  geom_point() + 
+  theme_bw(base_size=18) +
+  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
+  geom_smooth(method = "lm")+
   stat_cor()+
-  geom_text(aes(label=paste(indicator_code," ",grant)))
+  scale_size("Budget Total")
+
+# add labels to the points and scale size of points
+ggplot(dt[], aes(x=absorption, y=achievement_ratio, size=cumulative_budget)) + 
+  geom_point() + 
+  theme_bw(base_size=18) +
+  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
+  geom_smooth(method = "lm")+
+  stat_cor(label.x=125, label.y = 1.75)+
+  geom_text(nudge_y = .01,size=2.25, aes(label=ifelse(achievement_ratio>1.5 | achievement_ratio<0.5 | absorption > 99,paste(indicator_code," ",loc_name),"")))+
+  scale_size("Budget Total")
 
 # stratify by disease
-ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=grant_disease)) + 
+ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=disease)) + 
   geom_point() + 
   theme_bw(base_size=18)+
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
   geom_smooth(method = "lm", se=FALSE)+
   stat_cor()
 
-# include outcome indicators
+# stratify by budget category
+ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=abbrev_mod)) + 
+  geom_point() + 
+  theme_bw(base_size=18)+
+  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
+  geom_smooth(method = "lm", se=FALSE)+
+  stat_cor()
+
+# stratify by country
 ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=loc_name)) + 
   geom_point() + 
   theme_bw(base_size=18)+
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
-  geom_smooth(method = "lm", se=FALSE)
+  geom_smooth(method = "lm", se=FALSE)+
+  stat_cor()
 
-# 
-ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=disease)) + 
-  geom_point() + 
-  theme_bw(base_size=18) + 
-  facet_wrap(~start_date) + 
-  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
-  geom_smooth(method = "lm", se=FALSE)
-
-#Now, look at how targets have changed over time for the same indicator code. 
-dt[, grant_code:=paste0(grant, grant_period, indicator_code)]
-ggplot(dt[start_date>="2018-01-01" & ihme_target_n<100], aes(x=start_date, y=ihme_target_n, group=grant_code, color=grant_code)) + 
-  geom_point() + 
-  geom_line() + 
-  theme_bw(base_size=18) + 
-  theme(legend.position = "none") + 
-  labs(title="Change in targets over time", x="Date", y="Target", caption="*Each color represents a given grant and indicator code")
-#Setting target less than 100 based on the median, which is 89. 
-
-#Now, run for each disease, with panels representing country. 
-for (c in c('DRC', 'SEN', 'UGA')){
-  for (d in unique(dt$disease)) {
-    subset = dt[start_date>="2018-01-01" & disease==d & loc_name==c]
-    if (nrow(subset)>0){
-      p = ggplot(subset, aes(x=absorption, y=achievement_ratio)) + 
-        geom_point() + 
-        theme_bw(base_size=18) + 
-        facet_wrap(~start_date) + 
-        labs(title=paste0("Absorption vs. Achievement Ratio for ", c, " ", d), x="Absorption (%)", y="Achievement Ratio", color="")
-      print(p) 
-    } 
-  } 
-} 
+# subset only to modules that might see an effect more quickly than others
 
 dev.off() 
+
+write.csv(dt, "C:/Users/frc2/Desktop/indic_absorb.csv")

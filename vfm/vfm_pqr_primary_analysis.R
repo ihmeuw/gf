@@ -58,7 +58,42 @@ ts_compare_unit_cost_ref_price_uga_drc = paste0(dir, 'visualizations/PQR/ts_comp
 # Load/set up data
 # ----------------------------------------------
 data = readRDS(inFile)
-dt = data[!is.na(po_international_reference_price) & !is.na(unit_cost_usd)]
+# dt = data[!is.na(po_international_reference_price) & !is.na(unit_cost_usd)]
+# ----------------------------------------------
+
+# ----------------------------------------------
+# unit cost - focused analysis - calculate percent change in unit cost over time.
+# ----------------------------------------------
+# calculate mean unit cost across countries by product for first half of time series and second half, weighted by purchase volume
+data = data[!unit_cost_usd == Inf,]
+data = data[!is.na(unit_cost_usd),]
+
+# use product_description, nb_units_in_pack instead of description, product_pack
+data[, t:=ifelse(purchase_order_year > 2014, 'after', 'before.inclusive')]
+dt = data[, .(weightedMean = weighted.mean(unit_cost_usd, total_units_in_order, na.rm = TRUE)), by = .(t, product_name_en, nb_units_in_pack, product_description, product_category)]
+avg_unit_cost = dcast.data.table(dt, product_category + product_name_en + nb_units_in_pack + product_description ~ t, value.var = 'weightedMean')
+
+# calculate percent change 
+avg_unit_cost[, percent_change := round(((after - before.inclusive)/before.inclusive)*100, 2) ]
+avg_unit_cost = avg_unit_cost[, .(product_category, product_name_en, nb_units_in_pack, product_description, before.inclusive=round(before.inclusive, 2), after=round(after, 2), percent_change)]
+vol = data[, .(total_volume_purchased= sum(total_units_in_order)), .(product_category, product_name_en, nb_units_in_pack, product_description)]
+avg_unit_cost = merge(avg_unit_cost, vol, by = c('product_category', 'product_name_en', 'nb_units_in_pack', 'product_description'))
+
+avg_unit_cost_subset = avg_unit_cost[!is.na(percent_change), ]
+hist(avg_unit_cost_subset[percent_change <= 100, percent_change])
+avg_unit_cost_subset[ percent_change >= 5, change:='increase']
+avg_unit_cost_subset[ percent_change <= -5, change:='decrease']
+avg_unit_cost_subset[ is.na(change), change:='no_change']
+avg_unit_cost_subset[, .N, by = .(change)]
+prod_cat = avg_unit_cost_subset[, .N, by = .(product_category, change)]
+prod_cat = dcast.data.table(prod_cat, product_category ~ change)
+prod_cat[ is.na(increase), increase := 0]
+prod_cat[ is.na(decrease), decrease := 0]
+prod_cat[ is.na(no_change), no_change := 0]
+prod_cat_tot = avg_unit_cost_subset[, .N, by = .(product_category)]
+prod_cat = merge(prod_cat, prod_cat_tot)
+prod_cat[, percent_that_decreased := decrease/N * 100]
+prod_cat[, percent_decrease_or_no_change := (decrease+no_change)/N * 100]
 # ----------------------------------------------
 
 # ----------------------------------------------

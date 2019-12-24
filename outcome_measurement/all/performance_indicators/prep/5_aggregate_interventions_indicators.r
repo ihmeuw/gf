@@ -79,5 +79,5 @@ dt = merge(indicators, absorption, by=c('loc_name', 'grant', 'grant_period', 'st
 #end date of the programmatic data for the same PUDR. 
 
 #Save data, and archive a version. 
-saveRDS(dt, paste0(dir, "pudr_indicator_extraction/cleaned_data/absorption_indicators_combined.rds"))
-saveRDS(dt, paste0(dir, "pudr_indicator_extraction/cleaned_data/archive/absorption_indicators_combined_", Sys.Date(), ".rds"))
+saveRDS(dt, paste0(dir, "pudr_indicator_extraction/prepped_data/absorption_indicators_combined.rds"))
+saveRDS(dt, paste0(dir, "pudr_indicator_extraction/prepped_data/archive/absorption_indicators_combined_", Sys.Date(), ".rds"))
