@@ -8,7 +8,7 @@ library(data.table)
 library(ggplot2) 
 library(scales) 
 
-dt = readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/absorption_indicators_combined.rds")
+dt = readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/prepped_data/absorption_indicators_combined.rds")
 
 #----------------------------------------------------
 # DATA QUALITY CORRECTIONS 
@@ -35,7 +35,7 @@ dt[, loc_name:=toupper(loc_name)]
 #-----------------------------------
 # PLOTS 
 #-----------------------------------
-pdf("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/visualizations/absorption_indicators_comparison3.pdf", width=10, height=8)
+pdf("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/visualizations/absorption_indicators_comparison_23Dec2019.pdf", width=10, height=8)
 #First, run a scatter plot of achivement ratio vs. absorption percentage. 
 ggplot(dt[start_date>="2019-01-01"], aes(x=absorption, y=ihme_result_achievement_ratio)) + 
   geom_point() + 
@@ -54,14 +54,16 @@ ggplot(dt[start_date>="2018-01-01"], aes(x=absorption, y=ihme_result_achievement
   theme_bw(base_size=18) + 
   facet_wrap(~start_date) + 
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
-  geom_smooth(method = "lm")
+  geom_smooth(method = "lm")+
+  stat_cor()
 
 ggplot(dt[start_date>="2018-01-01"], aes(x=absorption, y=ihme_result_achievement_ratio, color=disease)) + 
   geom_point() + 
   theme_bw(base_size=18) + 
   facet_wrap(~start_date) + 
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
-  geom_smooth(method = "lm", se=FALSE)
+  geom_smooth(method = "lm", se=FALSE)+
+  stat_cor()
 
 #Now, look at how targets have changed over time for the same indicator code. 
 dt[, grant_code:=paste0(grant, grant_period, indicator_code)]
