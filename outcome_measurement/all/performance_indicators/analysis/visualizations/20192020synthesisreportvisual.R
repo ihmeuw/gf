@@ -1,69 +1,7 @@
-# synthesis report visual for SO1
+# synthesis report visuals on performance achievement
 
 # read in data
-library(data.table)
-library(ggplot2)
-
-data <-fread("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/data_for_analysis/cross_consortia_for_synthesis_pf_indicators_9Dec2019.csv")
-
-#library(googledrive)
-#drive_find(n_max=30)
-
-#ccdata <- drive_get(as_id("1yIO1dNH_OppKlVNB9ceNoJBklHCLwH7K"))
-
-#drive_download("cross consortia financial analyses for synthesis.xlsx", type="csv")
-
-# rename column names
-setnames(data, 
-         old = names(data),
-         new = c('loc_name', 'grant', 'indicator_long', 'achievement_ratio', 'reporting_period'))
-
-# parameters to edit
-graphic_name = "20192020_synthesis_report.pdf"
-codebook_name = "module_code_map.csv"
-
-# split data indicator codes
-data = data[, indicator_code:=tstrsplit(indicator_long, ":", keep=1)]
-
-# merge with the correct module code and the correct indicator type
-codebook <- fread(paste0("C:/Users/frc2/Documents/gf/outcome_measurement/all/performance_indicators/codebooks/", codebook_name))
-data <- merge(data, codebook, by.x='indicator_code', by.y="indicator_code", all.x = TRUE, all.y=FALSE)
-
-# merge on information on whether this is a reverse indicator
-reverse_codebook <- fread("C:\\Users\\frc2\\Documents\\gf\\outcome_measurement\\all\\performance_indicators\\codebooks\\indicators_codebook_reverse.csv")
-data <- merge(data, reverse_codebook, by.x='indicator_code', by.y='indicator_code', all.x = TRUE, all.y = FALSE)
-
-
-# merge properly cleaned name
-clean_codebook <- fread("C:\\Users\\frc2\\Documents\\gf\\outcome_measurement\\all\\performance_indicators\\codebooks\\indicators_codebook.csv")
-data <- merge(data, clean_codebook, by.x='indicator_code', by.y='indicator_code', all.x = TRUE, all.y = FALSE)
-
-# set parameters of data to be analyzed
-date = c('s1_2019')
-
-# subset as appropriate
-DT <- data
-#DT <- DT[reporting_period==date]
-DT <- DT[,.(loc_name, grant, indicator_code, full_description, achievement_ratio, reverse_indicator_final, module_code, type_desc)]
-# change name of full_description to indicator_long
-setnames(DT, old=c('full_description'),
-         new = "indicator_long")
-
-############################
-#### Data cleaning
-#############################
-
-# delete specific rows
-DT$achievement_ratio[which(DT$grant=="COD-C-CORDAID" & DT$indicator_code=="TB O-6")] <- 2.229 # removing the cordaid value which is incorrect and duplicated in the COD-T-MOH grant PUDR --verified by reding comments in the PUDR
-
-######## find duplicated values that are the same ############
-DT <- unique.data.frame(DT) # there are three values that are duplicated across grant, PRs, and achievement ratio
-
-### instances where different PRs report the same value--keep the first
-DT <- unique(DT, by=c("loc_name", "indicator_code", "achievement_ratio")) # there are 47 rows which have duplicated values (same value reported by both PRs in the country)
-# View(unique(DT, by=c("loc_name", "indicator_code"))) # there are 43 indicators which the two PRs reported different values
-
-####### fixing errors in the data--would be better to create a script for this in the data prep stage
+data <- 
 
 
 #####################################################################
@@ -196,7 +134,7 @@ p8 <- ggplot(dt_subset[module_code%in%c("HIV Impact", "Malaria Impact", "TB Impa
         axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
   geom_hline(yintercept=1, linetype="dashed", color="grey", alpha=0.6, size=2)
 
-#outputFile = paste0("J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\visualizations\\",graphic_name)
+#outputFile = paste0("J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\analysis\\visualizations\\",graphic_name)
 outputFile1 = paste0("C:/Users/frc2/Desktop/",graphic_name)
 
 #ggsave(outputFile1, height = 8, width = 11)

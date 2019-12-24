@@ -12,7 +12,7 @@ library(kableExtra)
 library(scales)
 
 # load data
-data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.RDS")
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/prepped_data/cleaned_pfi.RDS")
 
 # set parameters of data to be analyzed
 main_indicators = c('impact_outcome_indicators_main', 'coverage_indicators_main')
@@ -72,7 +72,7 @@ p1 = ggplot(data=table4, aes(x=reporting_period, y=percent_met_reported, color=d
         legend.text =element_text(size=14), plot.title = element_text(size=20), plot.caption = element_text(size=12),
         axis.text.x = element_text(vjust=1, hjust=1))
 
-outputFile = "J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\visualizations\\cross_country_comparison_over_time.jpeg"
+outputFile = "J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\analysis\\visualizations\\cross_country_comparison_over_time.jpeg"
 ggsave(outputFile, plot=p1, height=9, width=11)
 
 # change names to french

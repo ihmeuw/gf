@@ -132,6 +132,9 @@ shape_plot = function(data, lhsVar, rhsVar, title="", subtitle="", caption="", c
   return(p)
 }
 
+# find specific regions values
+# summary(map_data1[region=="DIOURBEL" & rhs=="tb_tfc_cumulative" & lhs=="lead_gueris_taux"]$est.std)
+
 #Create some plots with this function.
 p1 = shape_plot(map_data1, rhsVar="com_vad_touss_cumulative", lhsVar="lead_gueris_taux",
                 title="Std. coeff. between No. home visits \n and TB Tx Success Rate", colScaleMin=-400, colScaleMax=100, colScaleBreaks = 100)

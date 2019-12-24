@@ -52,7 +52,7 @@ for (g in unique(absorption$grant)){
 }
 
 # Read in prepped indicator data 
-indicators = readRDS(paste0(dir, 'pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses2.rds'))
+indicators = readRDS(paste0(dir, 'pudr_indicator_extraction/prepped_data/cleaned_pfi.rds'))
 
 #Read in map 
 map = data.table(read_excel(paste0(dir, "Indicators to Interventions Map.xlsx")))
@@ -79,5 +79,5 @@ dt = merge(indicators, absorption, by=c('loc_name', 'grant', 'grant_period', 'st
 #end date of the programmatic data for the same PUDR. 
 
 #Save data, and archive a version. 
-saveRDS(dt, paste0(dir, "pudr_indicator_extraction/cleaned_data/absorption_indicators_combined.rds"))
-saveRDS(dt, paste0(dir, "pudr_indicator_extraction/cleaned_data/archive/absorption_indicators_combined_", Sys.Date(), ".rds"))
+saveRDS(dt, paste0(dir, "pudr_indicator_extraction/prepped_data/absorption_indicators_combined.rds"))
+saveRDS(dt, paste0(dir, "pudr_indicator_extraction/prepped_data/archive/absorption_indicators_combined_", Sys.Date(), ".rds"))
