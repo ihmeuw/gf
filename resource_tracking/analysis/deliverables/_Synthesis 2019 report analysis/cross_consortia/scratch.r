@@ -9,6 +9,7 @@ rm(list=ls())
 library(data.table) 
 library(ggplot2) 
 library(scales) 
+library(readxl)
 
 modules = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_modules.rds")
 cost_categories = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_cost_categories.rds")
@@ -53,8 +54,9 @@ plot_data2 = zero_variance[, .(num_quarters=.N), by=c('disease', 'date')]
 plot_data2[, disease:=toupper(disease)]
 plot_data2[disease=="MALARIA", disease:="Malaria"]
 
-p1 = ggplot(plot_data2, aes(x=date, y=num_quarters, fill=disease)) + 
+p1 = ggplot(plot_data2, aes(x=date, y=num_quarters, fill=disease, label=num_quarters)) + 
   geom_bar(stat="identity", position="dodge") + 
+  geom_text(vjust=0, position=position_dodge(width=0.2)) + 
   theme_bw(base_size=16) + 
   labs(title="Number of grants whose budget did not change from one quarter to the next", x="Budget quarter",
        y="Number of grants with zero variance between budget quarters", fill="")
@@ -98,27 +100,47 @@ p2 = ggplot(plot_data, aes(x=reorder(abbrev_mod, absolute_change), y=num_grants,
 # Has higher program management absorption led to higher overall grant absorption? 
 
 # Just do two bars, one with program management absorption for each grant and one with overall absorption. 
-pm = modules[abbrev_mod=="Program mgmt", .(cumulative_budget=sum(cumulative_budget), cumulative_expenditure=sum(cumulative_expenditure)), 
+pm = modules[abbrev_mod=="Program mgmt", .(cumulative_budget=sum(cumulative_budget), 
+                                           cumulative_expenditure=sum(cumulative_expenditure), 
+                                           original_budget_pm=sum(original_budget)), 
              by=c('loc_name', 'grant')]
 pm[, pm_absorption:=round((cumulative_expenditure/cumulative_budget)*100, 1)]
 
-all = modules[, .(cumulative_budget=sum(cumulative_budget), cumulative_expenditure=sum(cumulative_expenditure)), 
+all = modules[, .(cumulative_budget=sum(cumulative_budget), 
+                  cumulative_expenditure=sum(cumulative_expenditure), 
+                  original_budget_all=sum(original_budget)), 
              by=c('loc_name', 'grant')]
 all[, overall_absorption:=round((cumulative_expenditure/cumulative_budget)*100, 1)]
 
 plot_data = merge(pm, all, by=c('loc_name', 'grant'), all=T)
+plot_data[, pm_pct_of_budget:=round((original_budget_pm/original_budget_all)*100, 1)]
 
 p4 = ggplot(plot_data, aes(x=pm_absorption, y=overall_absorption)) + 
   geom_point() + 
   geom_smooth() + 
   theme_bw(base_size=16) + 
-  labs(title="Does high program management correlate with /nhigher overall absorption?", x="Program management absorption (%)", 
-       y="Overall grant absorption (%)", subtitle="Absorption calculated over the period Jan. 2018-June 2019")
+  labs(title="Does high program management absorption \ncorrelate with higher overall absorption?", x="Program management absorption (%)", 
+       y="Overall grant absorption (%)", subtitle="Absorption calculated over the period Jan. 2018-June 2019", 
+       caption="*Each point represents one grant", size="Percentage of budget that is \nprogram management")
+
+ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/program_mgmt_vs_absorption.png", p4, height=8, width=11)
+
+
+# Review if a higher percentage of budget devoted to PM correlates to higher absorption overall. 
+p5 = ggplot(plot_data, aes(x=pm_pct_of_budget, y=overall_absorption)) + 
+  geom_point() + 
+  geom_smooth() + 
+  theme_bw(base_size=16) + 
+  labs(title="Does a higher budget percentage for program management\ncorrelate with higher overall absorption?",
+       x="Percentage of budget given to program management (%)", 
+       y="Overall grant absorption (%)", subtitle="Absorption calculated over the period Jan. 2018-June 2019", 
+       caption="*Each point represents one grant", size="Percentage of budget that is \nprogram management")
 
 pdf("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/extra_synthesis_analyses.pdf", height=8, width=11)
 p1
 p2
 p4
+p5
 
 dev.off() 
 

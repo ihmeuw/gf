@@ -96,18 +96,20 @@ all_modules = rbind(ehg_mi, ihme_mi, fill=T)
 
 # Fix global fund modules 
 all_modules[, gf_module:=gsub("RSSH: ", "", gf_module)]
-all_modules[, gf_module:=gsub("Comprehensive prevention", "Prevention", gf_module)]
 all_modules[gf_module=="Specific prevention interventions (SPI)", gf_module:="Specific prevention interventions"]
 all_modules[gf_module=="PMTCT", gf_module:="Prevention of mother-to-child transmission"]
 all_modules[gf_module=="Prevention programs for people who inject drugs (PWID) and their partners", 
-            gf_module:="Prevention programs for people who inject drugs and their partners"]
-all_modules[gf_module=="Prevention programs for TGs", gf_module:="Prevention programs for transgender people"]
-all_modules[gf_module=="Prevention programs for MSM", gf_module:="Prevention programs for men who have sex with men"]
+            gf_module:="Comprehensive prevention programs for people who inject drugs and their partners"]
+all_modules[gf_module=="Prevention programs for TGs", gf_module:="Comprehensive prevention programs for transgender people"]
+all_modules[gf_module=="Prevention programs for MSM", gf_module:="Comprehensive prevention programs for men who have sex with men"]
 all_modules[gf_module=="Human resources for health (HRH), including community health workers", 
             gf_module:="Human resources for health, including community health workers"]
 all_modules[gf_module=="MDR-TB", gf_module:="Multidrug-resistant TB"]
 all_modules[gf_module=="Health management information systems and M&E", gf_module:="Health management information system and monitoring and evaluation"]
-
+all_modules[gf_module=="Comprehensive prevention programs for MSM", gf_module:="Comprehensive prevention programs for men who have sex with men"]
+all_modules[gf_module=="Comprehensive prevention programs for TGs", gf_module:="Comprehensive prevention programs for transgender people"]
+all_modules[gf_module=="Comprehensive prevention programs for people who inject drugs (PWID) and their partners", 
+            gf_module:="Comprehensive prevention programs for people who inject drugs and their partners"]
 all_modules = all_modules[!is.na(cumulative_budget) & !is.na(cumulative_expenditure)]
 
 
@@ -177,7 +179,7 @@ all_modules[grant=="TB", grant_disease:="tb"]
 all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
 setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
 all_mods = unique(all_mods[, .(gf_module, abbrev_mod)])
-all_modules = merge(all_modules, all_mods, by=c('gf_module'))
+all_modules = merge(all_modules, all_mods, by=c('gf_module'), all.x=T)
 stopifnot(nrow(all_modules[is.na(abbrev_mod)])==0)
 
 
