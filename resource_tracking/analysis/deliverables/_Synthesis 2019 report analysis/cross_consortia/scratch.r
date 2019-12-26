@@ -61,6 +61,8 @@ p1 = ggplot(plot_data2, aes(x=date, y=num_quarters, fill=disease, label=num_quar
   labs(title="Number of grants whose budget did not change from one quarter to the next", x="Budget quarter",
        y="Number of grants with zero variance between budget quarters", fill="")
 
+ggsave(paste0(save_loc, "zero_variance.png"), p1, height=8, width=15)
+
 #-----------------------------------------------------------------------------------
 # Is there a movement of funds away from RSSH activities towards disease-specific activities through grant revision? 
 plot_data = modules[, .(loc_name, grant, abbrev_mod, cumulative_budget, original_budget)]
@@ -187,3 +189,27 @@ p
 p2
 dev.off() 
 
+# How many activities are in each of our 2018-2020 grant budgets? 
+budgets = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/final_budgets.rds")
+budgets = budgets[current_grant==TRUE]
+
+acts_by_grant = unique(budgets[, .(grant, grant_period, activity_description)])
+acts_by_grant = acts_by_grant[, .N, by=c('grant', 'grant_period')]
+acts_by_disease = unique(budgets[, .(grant, grant_period, activity_description, disease)])
+acts_by_disease = acts_by_disease[, .N, by=c('grant', 'grant_period', 'disease')]
+
+# Can you plot the breakdown by disease graphically? 
+plot_data = copy(acts_by_disease) 
+plot_data[disease=="rssh", category:="RSSH"]
+plot_data[is.na(category), category:="Not RSSH"]
+plot_data = plot_data[, .(count=sum(N)), by=c('grant', 'grant_period', 'category')]
+
+# merge_data = expand.grid(grant=unique(plot_data$grant), category=c('Not RSSH', 'RSSH'))
+# plot_data = merge(plot_data, merge_data, by=c('grant', 'category'), all=T)
+p = ggplot(plot_data, aes(x=paste0(grant, ", ", grant_period), y=count, fill=category)) + 
+  geom_bar(stat="identity", position='dodge') + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  labs(title="Count of activity descriptions by grant", x="", y="Number of activities", fill="")
+
+ggsave(paste0(save_loc, "count_of_activities.png"), p, height=8, width=11)
