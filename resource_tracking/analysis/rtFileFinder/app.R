@@ -51,6 +51,8 @@ server <- function(input, output, session) {
       updateSelectInput(session, "grant",
                         choices = file_list[loc_name%in%input$country & 
                                               grant_period%in%input$grant_period, grant])
+    }) 
+    observe({
       updateSelectInput(session, "grant_period", 
                         choices=file_list[loc_name%in%input$country & 
                                             grant%in%input$grant, grant_period])
