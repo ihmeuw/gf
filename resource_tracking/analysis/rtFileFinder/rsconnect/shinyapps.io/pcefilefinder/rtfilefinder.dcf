@@ -1,0 +1,10 @@
+name: rtfilefinder
+title:
+username:
+account: pcefilefinder
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1619723
+bundleId: 2692886
+url: https://pcefilefinder.shinyapps.io/rtfilefinder/
+when: 1577403212.81955

@@ -254,3 +254,15 @@ p = budget_exp_bar(plot_data, xVar='loc_name', facetVar='abbrev_int', yScaleMax=
 ggsave(paste0(save_loc, "absorption_kp_tb.png"), p, height=8, width=18)
 
 # Fill in interventions table 
+
+
+# Export two annex tables 
+# 1. Module, country, budget, expenditure, absorption 
+table1 = all_modules[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by=c('gf_module', 'loc_name')]
+table1[, absorption:=round((expenditure/budget)*100, 1)]
+write.csv(table1, "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/absorption_annex1.csv", row.names=F)
+# 2. Module, budget, expenditure, absorption
+table2 = all_modules[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by=c('gf_module')]
+table2[, absorption:=round((expenditure/budget)*100, 1)]
+write.csv(table2, "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/absorption_annex2.csv", row.names=F)
+

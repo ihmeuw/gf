@@ -42,9 +42,7 @@ ui <- fluidPage(
 server <- function(input, output, session) {
     require(data.table)
     require(readxl)
-    info = data.table(Sys.info())
-    user = as.character(info[7])
-    file_list = data.table(read_xlsx(paste0("C:/Users/", user, "/Box Sync/Global Fund Files/master_file_list.xlsx")))
+    file_list = fread("file_list.csv")
     
     # Dynamically change menu options 
     # observe({
