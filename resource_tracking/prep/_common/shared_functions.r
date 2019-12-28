@@ -209,7 +209,7 @@ convert_currency = function(dt, yearVar=NULL, convertFrom, convertTo, finVars = 
   if (!any(finVars%in%names(dt))) stop("Financial variables to convert are not in data. Modify the 'finVars' option.")
   
   #Pulled out from FGH team's currency conversion function - Emily Linebarger, 5/7/19 
-  oecd_xrate = fread("J:/Project/IRH/HIV/01_data/raw_data/xrates_oecd_121118.csv") #This data includes 1995-2017. 
+  oecd_xrate = fread("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/oecd_currency_conversion/xrates_oecd_121118.csv") #This data includes 1995-2017. 
   oecd_xrate = oecd_xrate[LOCATION == "EA19", .(TIME, Value)]
   setnames(oecd_xrate, c('TIME','Value'), c(yearVar, 'eur_usd'))
   oecd_xrate[, (yearVar):= as.integer(get(yearVar))]
