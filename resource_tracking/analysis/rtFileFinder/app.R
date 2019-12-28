@@ -97,8 +97,8 @@ server <- function(input, output, session) {
   output$finalApproved <- DT::renderDataTable({
     table = display()
     table = table[file_iteration=="final" & data_source=="budget"]
-    names(table) = c('Country', 'Grant', 'Grant Period', 'File', 'Excel Sheet', 'Data Source', 'File Iteration', 'Start Date', 
-                     'PUDR Semester', 'Update Date')
+    table = table[, .(grant, grant_period, file_name, sheet_financial, update_date)]
+    names(table) = c('Grant', 'Grant Period', 'File', 'Excel Sheet', 'Update Date')
     table
   })
   
@@ -111,8 +111,9 @@ server <- function(input, output, session) {
     stopifnot(any(table$seq)<10)
     table = table[seq==0]
     table$seq <- NULL
-    names(table) = c('Country', 'Grant', 'Grant Period', 'File', 'Excel Sheet', 'Data Source', 'File Iteration', 'Start Date', 
-                       'PUDR Semester', 'Update Date')
+    
+    table = table[, .(grant, grant_period, file_name, sheet_financial, update_date)]
+    names(table) = c('Grant', 'Grant Period', 'File', 'Excel Sheet', 'Update Date')
     table
   })
 }
