@@ -72,12 +72,13 @@ urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
               scaling_factors=NA, standardized=TRUE, 
-              lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
+              lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, 
+              colScaleMax=1.5, labSize1 = 3, labSize2 = 3, boxHeight=1.5)
 
 p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
                     scaling_factors=NA, standardized=TRUE, 
                     lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5, 
-                    labSize1 = 4, labSize2 = 4)
+                    labSize1 = 3, labSize2 = 3, boxHeight=1.5)
 
 # my sem graph function for second half "unrelated regressions" model
 # p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
@@ -140,3 +141,9 @@ dev.off()
 archive(outputFile6a)
 # -----------------------------------
 # 
+
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p5, height=8, width=11)
+archive("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png")
+
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half_nolab.png", p5_nolab, height=8, width=11)
+archive("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half_nolab.png")
