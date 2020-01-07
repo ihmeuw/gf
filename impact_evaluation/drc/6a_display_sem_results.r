@@ -15,7 +15,8 @@ source('./impact_evaluation/drc/set_up_r.r')
 source('./impact_evaluation/_common/graphLavaan.r')
 
 # load model results
-load(outputFile5a)
+# load(outputFile5a)
+load("J:/Project/Evaluation/GF/impact_evaluation/cod/prepped_data/model_runs/first_half_model_results_pc_2019_07_30_11_01_04.rdata") # this is the confirmed "best model"
 data1=copy(data)
 means1 = copy(means)
 summaries1 = copy(summaries)

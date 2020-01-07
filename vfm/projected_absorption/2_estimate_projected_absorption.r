@@ -79,6 +79,20 @@ p2 = ggplot(data, aes(y=absorption, x=gf_module)) +
 p3 = ggplot(prediction_frame, aes(y=projected_absorption, x=days_until_end)) + 
 	geom_point() + 
 	geom_smooth()
+	
+# graph absorption over the life of a grant
+data[, disease:=toupper(disease)]
+data[disease=='MALARIA', disease:='Malaria']
+ggplot(data[raw_absorption<5], aes(y=raw_absorption*100, x=days_since_start)) + 
+	geom_jitter(height=0, width=50) + 
+	geom_hline(yintercept=100, color='black') + 
+	geom_smooth() + 
+	facet_wrap(~disease, scales='free') + 
+	labs(title='', y='Absorption (%)', x='Days Since Start of Grant', 
+		caption='Data Source: All available PUDRs from DRC, Guatemala, Senegal and Uganda, 2013-2019\n
+				Values greater than 500% absorption not displayed\n
+				Data points jittered to avoid overlap') +
+	theme_bw()
 # ----------------------------------------------------------------------
 
 

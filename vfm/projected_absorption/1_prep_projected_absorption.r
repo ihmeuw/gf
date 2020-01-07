@@ -37,7 +37,7 @@ outFile = paste0(dir, '/projected_absorption_input.rds')
 data = readRDS(inFile)
 
 # subset to previous grants only
-data = data[is.na(grant_status) | grant_status!='active']
+# data = data[is.na(grant_status) | grant_status!='active']
 
 # collapse to module-quarter level
 byVars = c('disease','grant','grant_period','start_date','end_date', 'gf_module')
@@ -55,6 +55,10 @@ data[is.na(report_midpoint), report_midpoint:=start_date + floor(365/8)]
 data[, end_of_grant:=as.Date(paste0(str_sub(grant_period, -4, -1), '-12-31'))]
 data[, days_until_end:=as.numeric(end_of_grant-report_midpoint)]
 
+# compute days since start of grant
+data[, start_of_grant:=as.Date(paste0(str_sub(grant_period, 1, 4), '-01-01'))]
+data[, days_since_start:=as.numeric(report_midpoint-start_of_grant)]
+
 # number of modules within grant
 data[, num_modules:=length(unique(gf_module)), by='grant']
 # ----------------------------------------------------------------------
@@ -65,6 +69,9 @@ data[, num_modules:=length(unique(gf_module)), by='grant']
 
 # absorption of Inf won't work
 data = data[is.finite(absorption)]
+
+# capture original values
+data[, raw_absorption:=absorption]
 
 # replace absorption outliers
 p95 = quantile(data$absorption, .95)
