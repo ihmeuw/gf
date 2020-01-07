@@ -198,6 +198,10 @@ acts_by_grant = acts_by_grant[, .N, by=c('grant', 'grant_period')]
 acts_by_disease = unique(budgets[, .(grant, grant_period, activity_description, disease)])
 acts_by_disease = acts_by_disease[, .N, by=c('grant', 'grant_period', 'disease')]
 
+# What's the average number of activities per grant? 
+mean_activities = acts_by_disease[, .(activities = sum(N)), by=c('grant', 'grant_period')]
+mean_activities[, mean(activities)]
+
 # Can you plot the breakdown by disease graphically? 
 plot_data = copy(acts_by_disease) 
 plot_data[disease=="rssh", category:="RSSH"]

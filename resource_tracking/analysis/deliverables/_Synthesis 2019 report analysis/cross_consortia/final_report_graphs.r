@@ -152,6 +152,11 @@ p = budget_exp_bar(plot_data, xVar='loc_name', facetVar='category', angleText=TR
                    altCaption="*Not possible to calculate absorption for missing TB cases", 
                    altTitle="Absorption for strategic priority areas")
 ggsave(paste0(save_loc, "strategic_area_absorption.png"), p, height=8, width=14)
+
+# Fill in the sentence "a total of $X million has gone unspent within the first 18 months of grant implementation." 
+total_budget = sum(all_modules$cumulative_budget, na.rm=T)
+total_expenditure =sum(all_modules$cumulative_expenditure, na.rm=T)
+dollar(total_budget - total_expenditure) 
 #--------------------
 # SO2 analyses
 #--------------------

@@ -51,7 +51,7 @@ ihme_mi = merge(ihme_mi, budgets, by=c('grant', 'grant_period', 'gf_module'), al
 #-----------------------------------------------
 #Read in EHG data and format 
 #-----------------------------------------------
-ehg_data = data.table(read_xlsx("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/ehg_2019_absorption_synthesis.xlsx"))
+ehg_data = data.table(read_xlsx("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/Absorption for synthesis v3.xlsx", sheet = "Module-cost cat"))
 
 names(ehg_data) = c('loc_name', 'grant', 'grant_period', 'semester', 'module_cost_category', 'intervention', 'cumulative_absorption', 
                     'cumulative_expenditure', 'cumulative_budget', 'original_approved_budget', 
