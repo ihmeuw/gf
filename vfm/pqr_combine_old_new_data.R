@@ -43,7 +43,7 @@ outFile = paste0(dir, 'unit_cost_data/prepped_data/prepped_full_pqr_with_sept_do
 # Load/set up data
 # ----------------------------------------------
 data = readRDS(inFile)
-data = data[iso3codecountry %in% c('COD', 'GTM', 'SEN', 'UGA')]
+ # data = data[iso3codecountry %in% c('COD', 'GTM', 'SEN', 'UGA')]
 data = data[, .(country_name, iso3codecountry, grant_name, grant_id, grant_start_date, grant_end_date, 
                 purchase_order_date, scheduled_delivery_date, actual_delivery_date,
                 product_name_en, product_category, product_pack, description, product_description,
@@ -54,7 +54,7 @@ data = data[, .(country_name, iso3codecountry, grant_name, grant_id, grant_start
 
 # add in new data from the most recent download.
 data2 = readRDS(inFile_new_pqr)
-data2 = data2[iso3codecountry %in% c('COD', 'GTM', 'SEN', 'UGA')]
+ # data2 = data2[iso3codecountry %in% c('COD', 'GTM', 'SEN', 'UGA')]
 data2 = data2[, .(country_name, iso3codecountry, grant_name, 
                   purchase_order_date, scheduled_delivery_date, actual_delivery_date,
                   'product_name_en'=product_name, product_category, product_pack, description, product_description, 
@@ -101,13 +101,18 @@ for (key in unique(data[data_source == 'sept_download', primary_key])) {
   if(nrow(all_potential_data)==1) next 
   
   if(all(is.na(all_potential_data$po_international_reference_price))) next
-
-  max_date = all_potential_data[ !is.na(po_international_reference_price), max(purchase_order_date)]
+  
+  print(key)
+  max_date = all_potential_data[ !is.na(po_international_reference_price) & purchase_order_date <= date, max(purchase_order_date)]
   set_irp = all_potential_data[ purchase_order_date == max_date, po_international_reference_price]
   if(length(set_irp) > 1) {
     #print(set_irp)
     set_irp = set_irp[!is.na(set_irp)]
     #print(set_irp)
+    if(length(unique(set_irp))==1) {
+      set_irp = set_irp[1] } else {
+        print('More than 1 unique reference price for this data - something is likely wrong...')
+      }
   }
   data[primary_key == key, po_international_reference_price := set_irp]
   print(counter)

@@ -1,7 +1,7 @@
 #--------------------------------------------------------
 # AUTHOR: Emily Linebarger 
 # PURPOSE: Combine 
-# DATE: Last updated November 25, 2019 
+# DATE: Last updated December 4, 2019 
 #---------------------------------------------------------
 
 rm(list=ls()) 
@@ -16,7 +16,7 @@ source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functio
 #---------------------------------------
 #Read in IHME data and format
 #---------------------------------------
-ihme_cc = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/all_cost_categories.rds")
+ihme_cc = readRDS(paste0(box, "tableau_data/all_cost_categories.rds"))
 ihme_cc$cost_category <- NULL
 setnames(ihme_cc, c('cleaned_cost_category', 'pudr_semester_financial'), c('cost_category', 'semester'))
 
@@ -24,7 +24,8 @@ setnames(ihme_cc, c('cleaned_cost_category', 'pudr_semester_financial'), c('cost
 ihme_cc = ihme_cc[grant_period=="2018-2020" & semester=="2-A"]
 
 #Collapse
-ihme_mi = get_cumulative_absorption(byVars=c('loc_name', 'grant', 'grant_period', 'semester', 'gf_module'))
+ihme_mi = get_cumulative_absorption(byVars=c('loc_name', 'grant', 'grant_period', 'gf_module'))
+setnames(ihme_mi, c('budget', 'expenditure'), c('cumulative_budget', 'cumulative_expenditure'))
 
 ihme_cc = ihme_cc[, .(cumulative_budget=sum(cumulative_budget), 
                     cumulative_expenditure=sum(cumulative_expenditure)), 
@@ -41,10 +42,16 @@ ihme_cc[loc_name=="cod", loc_name:="DRC"]
 ihme_cc[loc_name=="sen", loc_name:="Senegal"]
 ihme_cc[loc_name=="uga", loc_name:="Uganda"]
 
+# Merge in original budgets (NOT including revisions)
+budgets = readRDS(paste0(box, "tableau_data/final_budgets.rds"))
+budgets = budgets[grant_period=="2018-2020" & start_date>="2018-01-01" & start_date<"2019-07-01", .(original_budget=sum(budget)), by=c('grant', 'grant_period', 'gf_module')] #Only want cumulative budget through first 18 months! 
+
+ihme_mi = merge(ihme_mi, budgets, by=c('grant', 'grant_period', 'gf_module'), all.x=T)
+
 #-----------------------------------------------
 #Read in EHG data and format 
 #-----------------------------------------------
-ehg_data = data.table(read_xlsx("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/ehg_2019_absorption_synthesis.xlsx"))
+ehg_data = data.table(read_xlsx("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/Absorption for synthesis v3.xlsx", sheet = "Module-cost cat"))
 
 names(ehg_data) = c('loc_name', 'grant', 'grant_period', 'semester', 'module_cost_category', 'intervention', 'cumulative_absorption', 
                     'cumulative_expenditure', 'cumulative_budget', 'original_approved_budget', 
@@ -89,18 +96,20 @@ all_modules = rbind(ehg_mi, ihme_mi, fill=T)
 
 # Fix global fund modules 
 all_modules[, gf_module:=gsub("RSSH: ", "", gf_module)]
-all_modules[, gf_module:=gsub("Comprehensive prevention", "Prevention", gf_module)]
 all_modules[gf_module=="Specific prevention interventions (SPI)", gf_module:="Specific prevention interventions"]
 all_modules[gf_module=="PMTCT", gf_module:="Prevention of mother-to-child transmission"]
 all_modules[gf_module=="Prevention programs for people who inject drugs (PWID) and their partners", 
-            gf_module:="Prevention programs for people who inject drugs and their partners"]
-all_modules[gf_module=="Prevention programs for TGs", gf_module:="Prevention programs for transgender people"]
-all_modules[gf_module=="Prevention programs for MSM", gf_module:="Prevention programs for men who have sex with men"]
+            gf_module:="Comprehensive prevention programs for people who inject drugs and their partners"]
+all_modules[gf_module=="Prevention programs for TGs", gf_module:="Comprehensive prevention programs for transgender people"]
+all_modules[gf_module=="Prevention programs for MSM", gf_module:="Comprehensive prevention programs for men who have sex with men"]
 all_modules[gf_module=="Human resources for health (HRH), including community health workers", 
             gf_module:="Human resources for health, including community health workers"]
 all_modules[gf_module=="MDR-TB", gf_module:="Multidrug-resistant TB"]
 all_modules[gf_module=="Health management information systems and M&E", gf_module:="Health management information system and monitoring and evaluation"]
-
+all_modules[gf_module=="Comprehensive prevention programs for MSM", gf_module:="Comprehensive prevention programs for men who have sex with men"]
+all_modules[gf_module=="Comprehensive prevention programs for TGs", gf_module:="Comprehensive prevention programs for transgender people"]
+all_modules[gf_module=="Comprehensive prevention programs for people who inject drugs (PWID) and their partners", 
+            gf_module:="Comprehensive prevention programs for people who inject drugs and their partners"]
 all_modules = all_modules[!is.na(cumulative_budget) & !is.na(cumulative_expenditure)]
 
 
@@ -170,7 +179,7 @@ all_modules[grant=="TB", grant_disease:="tb"]
 all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
 setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
 all_mods = unique(all_mods[, .(gf_module, abbrev_mod)])
-all_modules = merge(all_modules, all_mods, by=c('gf_module'))
+all_modules = merge(all_modules, all_mods, by=c('gf_module'), all.x=T)
 stopifnot(nrow(all_modules[is.na(abbrev_mod)])==0)
 
 

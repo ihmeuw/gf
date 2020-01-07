@@ -36,3 +36,14 @@ budgets[grant_period=="2018-2020" & grant_disease=="malaria" & gf_intervention==
 budgets[grant_period=="2018-2020" & grant_disease=="malaria" & gf_module=="Integrated service delivery and quality improvement", .(b=dollar(sum(budget, na.rm=T)))]
 budgets[grant_period=="2018-2020" & gf_module=="Integrated service delivery and quality improvement", .(b=dollar(sum(budget, na.rm=T)))]
 
+
+#----------------------------------
+# RSSH
+#----------------------------------
+
+cumulative_rssh = get_cumulative_absorption(byVars=c('abbrev_mod'), diseaseSubset='rssh', countrySubset="COD")
+
+# What were two interventions with low absorption under HMIS? 
+cumulative_rssh1 = get_cumulative_absorption(byVars=c('abbrev_int'), moduleSubset="Health management information system and monitoring and evaluation", 
+                                             countrySubset="COD", dollarFormat=T)
+

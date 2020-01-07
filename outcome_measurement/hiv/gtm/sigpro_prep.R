@@ -26,7 +26,7 @@ library(XLConnect)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set working and output directories
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/raw_data/')
 
 # to output prepped files
 out_dir = paste0(dir, 'prepped/intermediate_prepped/sigpro/')
@@ -190,6 +190,7 @@ f4 = f4[ ,.(cui=codigounico, referral=refervih, pre_test_completed=prePruebaVIH,
 f4 = f4[ ,lapply(.SD, tolower), .SDcols=c(1:length(f4))]
    
 f4[date == '', date := NA]
+f4[, date := as.Date(date)]
 
 # match the sr codes
 f4[ ,sr_code:=gsub("nac0", "", sr_code)]

@@ -12,6 +12,7 @@ library(scales)
 
 options(scipen=100)
 
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
 #Read in data 
 revisions = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/budget_revisions.rds")
 absorption = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/COD/prepped_data/absorption_cod.rds")
@@ -21,57 +22,15 @@ setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev
 all_mods = unique(all_mods[, .(gf_module, gf_intervention, disease, abbrev_mod, abbrev_int)])
 absorption = merge(absorption, all_mods, by=c('gf_module', 'gf_intervention', 'disease'), allow.cartesian=TRUE)
 
+save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_DRC 2019 annual report/"
 #make sure this merge worked correctly. 
 stopifnot(nrow(absorption[is.na(abbrev_int)])==0)
 
 #Create a cumulative dataset
-# Flag cases where you don't have a complete time series. A complete time series is either S1, S2, and S3 or S1-2 and S3. 
-cumulative_absorption = data.table()
-for (g in unique(absorption$grant)){ 
-  subset = absorption[grant_period=="2018-2020" & grant==g]
-  if (nrow(subset)!=0) {
-    sequence = sort(unique(subset$semester))
-    if ("Semester 1-2"%in%sequence & "Semester 3"%in%sequence) {
-      subset[, full_time_series:=TRUE]
-      subset = subset[semester%in%c('Semester 1-2', 'Semester 3'), .(loc_name, grant, grant_disease, gf_module, gf_intervention, abbrev_mod, abbrev_int, disease, full_time_series, semester, budget, expenditure)]
-      subset = melt(subset, id.vars=c('loc_name', 'grant', 'grant_disease', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int', 'disease', 'full_time_series', 'semester'))
-      subset_wide = dcast(subset, loc_name+grant+grant_disease+gf_module+gf_intervention+abbrev_mod+abbrev_int+disease+full_time_series~semester+variable, fun.aggregate=sum)
-      
-      subset_wide[, cumulative_budget:=sum(`Semester 1-2_budget`, `Semester 3_budget`), by=c('loc_name', 'grant', 'grant_disease', 'disease', 'full_time_series', 'abbrev_mod', 'abbrev_int', 'gf_module', 'gf_intervention')]
-      subset_wide[, cumulative_expenditure:=sum(`Semester 1-2_expenditure`, `Semester 3_expenditure`), by=c('loc_name', 'grant', 'grant_disease', 'disease', 'full_time_series', 'abbrev_mod', 'abbrev_int', 'gf_module', 'gf_intervention')]
-      subset_wide = subset_wide[, .(loc_name, grant,  grant_disease, gf_module, gf_intervention, abbrev_mod, abbrev_int, disease, full_time_series, cumulative_budget, cumulative_expenditure)]
-      
-    } else if ("Semester 1"%in%sequence & "Semester 2"%in%sequence & "Semester 3"%in%sequence) { 
-      subset[, full_time_series:=TRUE]
-      subset = subset[semester%in%c('Semester 1', 'Semester 2', 'Semester 3')]
-      
-      subset = subset[semester%in%c('Semester 1', 'Semester 2', 'Semester 3'), .(loc_name, grant, grant_disease, gf_module, gf_intervention, abbrev_mod, abbrev_int, disease, pr_type, full_time_series, semester, budget, expenditure)]
-      subset = melt(subset, id.vars=c('loc_name', 'grant', 'grant_disease', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int', 'disease', 'pr_type', 'full_time_series', 'semester'))
-      subset_wide = dcast(subset, loc_name+grant+pr_type+grant_disease+gf_module+gf_intervention+abbrev_mod+abbrev_int+disease+full_time_series~semester+variable, fun.aggregate=sum)
-      
-      subset_wide[, cumulative_budget:=sum(`Semester 1_budget`, `Semester 2_budget`, `Semester 3_budget`), by=c('loc_name', 'grant', 'grant_disease', 'disease', 'full_time_series', 'abbrev_mod', 'abbrev_int', 'gf_module', 'gf_intervention')]
-      subset_wide[, cumulative_expenditure:=sum(`Semester 1_expenditure`, `Semester 2_expenditure`, `Semester 3_expenditure`), by=c('loc_name', 'grant', 'grant_disease', 'disease', 'full_time_series', 'abbrev_mod', 'abbrev_int', 'gf_module', 'gf_intervention')]
-      subset_wide = subset_wide[, .(loc_name, grant, grant_disease, gf_module, gf_intervention, abbrev_mod, abbrev_int, disease, full_time_series, cumulative_budget, cumulative_expenditure)]
-      
-    } else {
-      subset[, full_time_series:=FALSE]
-      subset = subset[, .(loc_name, grant, grant_disease, gf_module, gf_intervention, abbrev_mod, abbrev_int, disease, full_time_series, budget, expenditure)]
-      subset = melt(subset, id.vars=c('loc_name', 'grant', 'grant_disease', 'gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int', 'disease', 'full_time_series'))
-      subset_wide = dcast(subset, loc_name+grant+grant_disease+gf_module+gf_intervention+abbrev_mod+abbrev_int+disease+full_time_series~variable, fun.aggregate=sum)
-      
-      subset_wide[, cumulative_budget:=sum(budget, na.rm=T), by=c('loc_name', 'grant', 'grant_disease', 'disease', 'full_time_series', 'abbrev_mod', 'abbrev_int', 'gf_module', 'gf_intervention')]
-      subset_wide[, cumulative_expenditure:=sum(expenditure, na.rm=T), by=c('loc_name', 'grant', 'grant_disease', 'disease', 'full_time_series', 'abbrev_mod', 'abbrev_int', 'gf_module', 'gf_intervention')] 
-      subset_wide = subset_wide[, .(loc_name, grant, grant_disease, gf_module, gf_intervention, abbrev_mod, abbrev_int, disease, full_time_series, cumulative_budget, cumulative_expenditure)]
-      
-    }
-    cumulative_absorption = rbind(cumulative_absorption, subset_wide, use.names=TRUE)
-  } 
-}
+
 
 # 1. Bar graph that shows 18-month cumulative absorption by grant. 
-by_grant = cumulative_absorption[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), 
-                                 by=c('grant')]
-by_grant[, absorption:=round((expenditure/budget)*100, 1)]
+by_grant = get_cumulative_absorption(countrySubset="COD", byVars='grant')
 by_grant = melt(by_grant, id.vars=c('grant', 'absorption'), value.name="amount")
 
 by_grant[variable=="budget", label:=""] #Don't display the expenditure amount on the budget bar. 
@@ -89,6 +48,7 @@ p1 = ggplot(by_grant, aes(x=grant, y=amount, fill=variable, label=label)) +
   labs(title="Absorption by grant", subtitle="January 2018-June 2019", x="Grant", 
        y="Absorption (%)", fill="", caption="*Labels show expenditure amounts and absorption percentages")
   
+ggsave(paste0(save_loc, "absorption_by_grant.png"), p1, height=8, width=11)
 
 # 2. Show absorption by grant over the last 18 months compared to the full 3-year grant budget (most recent version) 
 plot_data = cumulative_absorption[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('grant', 'gf_module', 'abbrev_mod')]

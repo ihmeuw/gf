@@ -23,35 +23,44 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set working and output directories
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/gtm/hiv/prepped/')
 
-sigpro_files = list.files(paste0(dir, 'sigpro/'), recursive=TRUE)
-sigsa_files  = list.files(paste0(dir, 'sigsa/'), recursive=TRUE)
+sigpro_files = list.files(paste0(dir, 'intermediate_prepped/sigpro/'), recursive=TRUE)
+sigsa_files  = list.files(paste0(dir, 'intermediate_prepped/sigsa/'), recursive=TRUE)
 
-outFile = paste0(dir, "combined_sigsa_sigpro.rds")
+outFile = paste0(dir, "combined_sigsa_sigpro_updated_12_03_19.rds")
 #----------------------------------------
 
 #----------------------------------------
 # read in the data 
 #----------------------------------------
 # list existing files
-sigsa = readRDS(paste0(dir, 'sigsa/', sigsa_files[[1]]))
+sigsa = readRDS(paste0(dir, 'intermediate_prepped/sigsa/', sigsa_files[[1]]))
 
 # import the files into distinct data tables
-f2 = readRDS(paste0(dir, 'sigpro/', sigpro_files[[1]]))
-f3 = readRDS(paste0(dir, 'sigpro/', sigpro_files[[2]]))
-f4 = readRDS(paste0(dir, 'sigpro/', sigpro_files[[3]]))
+f2 = readRDS(paste0(dir, 'intermediate_prepped/sigpro/', sigpro_files[[1]]))
+f3 = readRDS(paste0(dir, 'intermediate_prepped/sigpro/', sigpro_files[[2]]))
+f4 = readRDS(paste0(dir, 'intermediate_prepped/sigpro/', sigpro_files[[3]]))
 
 #combine sigpro files
 sigpro = rbindlist(list(f2, f3, f4), use.names = TRUE, fill = TRUE)
+
+# like Guillermo said to do - remove where servicio tipo is Global Fund in sigsa
+sigsa[, id := .I]
+rm = sigsa[ service_type %in% c('Fondo Global SIDA (FGS)', 'Fondo Global SIDA'), ]
+rm = rm[ date %in% sigpro$date, ]
+nrow(rm)/nrow(sigsa)*100
+sigsa = sigsa[!id %in% rm$id, ]
+sigsa[, id := NULL]
 #----------------------------------------
 
 #----------------------------------------
 # update kvp specifications in the sigpro data
 #----------------------------------------
 # create a gender category
-sigpro[, gender:=str_sub(cui, 1, 1)]
+sigpro[set %in% c("sigpro_f2_completo 2018.xlsx", "sigpro_f3_completo 2018.xlsx"), gender:=str_sub(cui, 1, 1)]
 sigpro[gender=='m', gender:='Male']
 sigpro[gender=='f', gender:='Female']
 sigpro[gender=='t', gender:='Trans']
+sigpro[is.na(gender), gender:='unknown']
 
 # translate populations 
 sigpro[pop=='hsh', pop:='msm']
@@ -74,7 +83,8 @@ sigpro[subpop %in% c('trans trabajadora sexual', 'trans trabajadoras sexuales'),
 sigpro[gender == "Female" & pop == "msm", gender := "Trans"]
 # other specific risk groups...?
 sigpro[ subpop=='hsh trabajador sexual' & pop=='msm', pop := 'msm_csw']
-sigpro[grepl(subpop, pattern = "trans migrant"), pop := "trans_migrant"]
+sigpro[grepl(subpop, pattern = "trans migrant"), gender := "Trans"]
+sigpro[grepl(subpop, pattern = "trans migrant"), pop := "migrant"]
 
 check = setorderv( unique(sigpro[, .(pop, subpop, gender)]), 'pop')
 #----------------------------------------
@@ -86,6 +96,7 @@ unique(sigsa$risk_condition)
 sigsa[ risk_condition == 'Trabajador Sexual', pop := 'csw']
 sigsa[ risk_condition == 'Uniformado', pop := 'military']
 sigsa[ risk_condition == 'Migrante ', pop := 'migrant']
+sigsa[ risk_condition == 'Migrante', pop := 'migrant']
 sigsa[ risk_condition == 'Privado de Libertad', pop := 'prisoner']
 
 # where sexual orientation == trans, change gender to trans
@@ -161,10 +172,10 @@ setnames(sigpro, "test_completed", "hiv_test")
 sigpro[ referral == 'n', referred := '0']
 sigpro[ referral == 's', referred := '1']
 
-names(sigsa)[names(sigsa) %in% names(sigpro)]
+names(sigpro)[!names(sigpro) %in% names(sigsa)]
 
 dt = rbindlist(list(sigsa, sigpro), use.names = TRUE, fill = TRUE)
-drop_vars = c('test_done', 'pre_test', 'pre_test_completed', 'date', 'year', 'month')
+drop_vars = c('test_done', 'pre_test', 'pre_test_completed', 'year', 'month')
 dt[ , c(drop_vars) := NULL]
 non_testing_vars = c('condoms_delivered', 'female_condoms_delivered', 'lube_tubes_delivered', 'lube_packets_delivered', 'pamphlets_delivered', 'informed_of_sif_result',
                      'condoms', 'female_condoms', 'flavored_condoms', 'lube_packets', 'lube_tubes', 'sif_result', 'referral')

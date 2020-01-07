@@ -2,7 +2,7 @@
 
 library(data.table)
 
-data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/cleaned_data/kpi_data_for_analyses.RDS")
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/prepped_data/cleaned_pfi.RDS")
 
 # set subsetting parameters
 country = "cod"
@@ -20,5 +20,5 @@ DT <- DT[,.(indicator_code,full_description, loc_name, grant, disease, start_dat
             file_name)]
 
 
-outFile <- "J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/prepped_data/hmis_targets_cod.RDS"
+outFile <- "J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/subset_data/hmis_targets_cod.RDS"
 saveRDS(DT, outFile)

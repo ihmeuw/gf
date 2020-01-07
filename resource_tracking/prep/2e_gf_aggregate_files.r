@@ -96,7 +96,7 @@ if (nrow(check_qtr_sen)!=0){
 }
 
 #Bind budgets together
-final_budgets = rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga, final_budgets_sen) 
+final_budgets = rbind(final_budgets_cod, final_budgets_gtm, final_budgets_uga, final_budgets_sen, fill=T) 
 if (class(final_budgets$start_date)!='Date') final_budgets$start_date = as.Date(final_budgets$start_date, "%Y-%m-%d")
 
 #Manually edit grant numbers in GOS to match our labeling - EMILY THIS SHOULD BE DONE BACK IN THE PREP CODE. 

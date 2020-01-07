@@ -2,7 +2,7 @@
 title: "Monitoring and Evaluation Annex"
 author: "IHME Prospective Country Evaluation"
 date: "`r format(Sys.time(), '%d %B, %Y')`"
-output: pdf_document
+output: html_document
 classoption: landscape
 fontsize: 11pt
 ---

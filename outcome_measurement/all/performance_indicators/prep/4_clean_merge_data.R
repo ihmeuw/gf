@@ -9,7 +9,6 @@
 # TO-DO list for this code: 
 # - Need to reshape wide based off of the most "final" indicator (PR, LFA, GF)
 # - systematically test for strange data formats. 
-# - address "NAs introduced by cleaning code error" warning
 #----------------------------------------------
 
 #  Read in data, and correct names 
@@ -18,7 +17,7 @@ dt = readRDS(paste0(prepped_dir, "all_prepped_data.rds"))
 names(dt) = gsub("%", "pct", names(dt)) #EMILY THIS SHOULD BE CORRECTED IN PREP CODE
 
 #--------------------------------------------------
-# Remove unnecessary rows - #EMILY this may be a data extraction issue. 
+# Remove unnecessary rows - #EMILY this may be a data extraction issue. Mostly they are hidden rows in GTM PU/DRs
 #--------------------------------------------------
 dt <- dt[indicator!="[Impact Indicator Name]"]
 dt <- dt[indicator!="[Outcome Indicator Name]"]
@@ -28,14 +27,14 @@ dt <- dt[indicator!="0"]
 # clean special characters, blanks, and NAs # EMILY- how are you systematically testing for this? 
 #---------------------------------------------
 numVars = names(dt)[grepl("_value|_year|_n|_d|_pct|_achievement_ratio", names(dt))]
-numVars = numVars[!numVars%in%c('start_date_programmatic', 'end_date_programmatic', 'report_due_date')]
+numVars = numVars[!numVars%in%c('start_date_programmatic', 'end_date_programmatic', 'report_due_date', 'loc_name', 'file_name')]
 
 for (var in numVars) { 
   if (verbose){print(var)}
   #Do an overall check - how many rows have at least one digit for this value (numeric information?) Is it the same at the end? 
   start_numeric = nrow(dt[grepl("[[:digit:]]", get(var))])
   # REMOVE NAs
-  dt[get(var)=="N/A" | get(var)=="ND" | get(var)==" ", (var):=NA]
+  dt[get(var)=="N/A" | get(var)=="ND" | get(var)==" " | get(var)=="No disaggregation" | get(var)=="No disagregation" | get(var)=="qu " | get(var)=="i" | get(var)=="The PR did not report any result" | get(var)=="Sin dato" | get(var)=="Not reported", (var):=NA]
   start_nas = nrow(dt[is.na(get(var))]) #Make sure that this numeric conversion doesn't accidentally introduce any NAs after this point.
   
   # LOOK FOR "E-" AND CONVERT SCIENTIFIC NOTATION
@@ -90,10 +89,13 @@ for (var in numVars) {
   }
   dt[str_count(get(var), "\\.")>1, (var):=gsub("\\.", "", get(var))] 
   
-  #REMOVE PUNCTUATION
-  dt[, (var):=gsub("?|%|‰", "", get(var))] # There's probably some fancy way to do this with excluding characters from [[:punct:]] ? 
+  #REMOVE PUNCTUATION # line 93 changes depending on the encoding of this file and results in not all of the punctuation getting properly cleaned.
+  dt[, (var):=gsub("?|%|â|°|‰", "", get(var))] # There's probably some fancy way to do this with excluding characters from [[:punct:]] ? 
+# dt[, (var):=gsub("([.])|[[:punct:]]", "\\1", get(var))] # this way will exclude characters using ::punct:: but it didn't remove the Per mille (1/1000) sign (â°)
+  # REMOVE SPACE BETWEEN NUMBERS
+  dt[, (var):=gsub("[[:space:]]", "", get(var))] 
   
-  #Turn all of these variables numeric. 
+  #Turn all of these variables numeric.
   dt[, (var):=as.numeric(get(var))]
   
   end_nas = nrow(dt[is.na(get(var))]) #Make sure you didn't accidentally introduce any NAs. 
@@ -108,6 +110,56 @@ for (var in numVars) {
     stop("Numeric information was lost during cleaning process!")
   }
 }
+
+#-----------------------------------------------------
+# Merge/map additional values
+#-----------------------------------------------------
+stdnames_cb <- fread(paste0(book_dir, "indicators_codebook.csv")) # adds standardized names
+sources_cb <- fread(paste0(book_dir, "data_source_codebook.csv"), header = TRUE) # lists data sources
+reverse_cb <- fread(paste0(book_dir, "indicators_codebook_reverse.csv")) # reverse indicator variable
+
+
+dt[, indicator:=gsub("&amp;", "&", indicator)] #Clean indicators before merging with codebook 
+dt = dt[, indicator_code:=tstrsplit(indicator, ":", keep=1)] # create variable with indicator code for merging
+
+#-------------------------------------
+# add standardized name variables
+dt <- merge(dt, stdnames_cb, by="indicator_code", all.x = TRUE)
+
+#-------------------------------------
+# Merge and replace the Baseline source code 
+dt <- merge(dt, sources_cb, by.x="baseline_source", by.y = "source_original", all.x=TRUE)
+dt <- dt[,baseline_source_code:=source_code]
+dt <- dt[,c("source_code"):=NULL]
+
+# Merge and replace the PR result source code
+dt <- merge(dt, sources_cb, by.x="pr_result_source", by.y = "source_original", all.x = TRUE)
+dt <- dt[,pr_result_source_code:=source_code]
+dt <- dt[,source_code:=NULL]
+
+# Merge and replace the LFA result source code
+dt <- merge(dt, sources_cb, by.x="lfa_result_source", by.y = "source_original", all.x = TRUE)
+dt <- dt[,lfa_result_source_code:=source_code]
+dt <- dt[,source_code:=NULL]
+
+#----------------------------------------------
+# add reverse indicator variable
+dt <- merge(dt, reverse_cb, by.x="indicator_code", by.y = "indicator_code", all.x = TRUE, all.y = FALSE)
+
+
+#########################################################
+## TYPOS
+#########################################################
+
+# verified by looking in Uganda PU/DRs--PR filled out the percetage sheet incorrectly, resulting in decimals in the wrong place
+dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==1)] <- 100
+dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==0.5)] <- 50
+dt$target_pct[which(dt$loc_name=="uga" & dt$target_pct==0.85)] <- 85
+dt$target_pct[which(dt$loc_name=="uga" & dt$baseline_year==2014 & dt$baseline_value==19 & dt$indicator_type=="Impact")] <- 6.7
+
+#----------------------------------------------------
+# Derive new variables
+#----------------------------------------------------
 
 # Calculate an internal verified achievement ratio.
 dt[, any_achievement_ratio:=gf_result_achievement_ratio]
@@ -140,7 +192,6 @@ dt$completeness_rating[which(  !is.na(dt$target_value)  & !is.na(dt$any_result_v
 
 # create factor variable and assign names
 dt$completeness_rating <- factor(dt$completeness_rating)
-
 levels(dt$completeness_rating) <-  c("No data", "Only Result", "Only Target", "Both available")
 
 # calculate if the sources differ between the baseline value and the pr reported value
@@ -148,37 +199,19 @@ dt$sources_different <- NA
 dt$sources_different[which(dt$baseline_source_code!=dt$pr_result_source_code)] <- 1
 dt$sources_different[which(dt$baseline_source_code==dt$pr_result_source_code)] <- 0
 
-#-----------------------------------------------------
-# Map indicator codes 
-#-----------------------------------------------------
+# calculate ihme_results_achievement_ratio
+dt$ihme_result_achievement_ratio <-NA
+dt$ihme_result_achievement_ratio <- dt$any_result_value/dt$target_value
 
-#Clean indicators before merging with codebook.  
-dt[, indicator:=gsub("&amp;", "&", indicator)]
-
-# create variable with indicator code (makes cross--country comparisons easier) can merge short description using this code later
-dt = dt[, indicator_code:=tstrsplit(indicator, ":", keep=1)]
-
-# load code book on data sources
-codebook_sources = fread(paste0(book_dir, "data_source_codebook.csv"), header = TRUE)
-
-# Merge and replace the Baseline source code 
-dt1 <- merge(dt, codebook_sources, by.x="baseline_source", by.y = "source_original", all.x=TRUE)
-dt2 <- dt1[,baseline_source_code:=source_code]
-dt2 <- dt2[,c("source_code"):=NULL]
-
-# Merge and replace the pr result source code
-dt2 <- merge(dt1, codebook_sources, by.x="pr_result_source", by.y = "source_original", all.x = TRUE)
-dt3 <- dt2[,pr_result_source_code:=source_code]
-dt3 <- dt3[,source_code:=NULL]
-
-# read and merge codebook to standardize names
-codebook_stdnames <- fread(paste0(book_dir, "indicators_codebook.csv"))
-
-# read and merge codebook to map indicator code names
-merged_dt <- merge(dt3, codebook_stdnames, by="indicator_code", all.x = TRUE)
+# create new variable to indicate whether target is being met
+dt$target_met <- NA
+dt$target_met[which(dt$reverse_indicator_final=="no" & dt$any_result_value >= dt$target_value)] <- "yes"
+dt$target_met[which(dt$reverse_indicator_final=="no" & dt$any_result_value < dt$target_value)] <- "no"
+dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value <= dt$target_value)] <- "yes"
+dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value > dt$target_value)] <- "no"
 
 #------------------------------------------------------
 # SAVE FINAL DATA
 # -----------------------------------------------------
-saveRDS(merged_dt, paste0(prepped_dir, "cleaned_pfi.rds"))
-saveRDS(merged_dt, paste0(prepped_dir, "archive/cleaned_pfi_", Sys.Date(), ".rds"))
+saveRDS(dt, paste0(prepped_dir, "cleaned_pfi.rds"))
+saveRDS(dt, paste0(prepped_dir, "archive/cleaned_pfi_", Sys.Date(), ".rds"))
