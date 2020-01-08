@@ -23,7 +23,6 @@
 # sh /ihme/code/jpy_rstudio/jpy_rstudio_qsub_script.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -l m_mem_free=50G -l fthread=20 -P proj_pce -q all -t rstudio -l archive=TRUE -l h_rt=72:00:00
 #---------------------------
 # Set up R
-rm(list=ls())
 library(data.table)
 library(jsonlite)
 library(httr)
@@ -42,25 +41,24 @@ root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # define main directory
 
 dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-setwd(dir)
 #---------------------------
 
 #---------------------------
 # Set these to the correct values for the extraction:
 
 # select the start year and end year for the download
-start_year = '2017'
-end_year = '2018'
+start_year = '2018'
+end_year = '2019'
 start_month = '01'
-end_month = '01' # start month is inclusive, end month is exclusive
+end_month = '12' # start month is inclusive, end month is exclusive
 
 # change set_name to the name of the data set you are downloading 
 # set_name will change the file names for saving the data
-set_name = 'pnls'
+set_name = 'secondary'
 
 #------------------------
 # read in all files and rbind together to save one file of data
-files = list.files( paste0('./pre_prep/', set_name, '/intermediate_data/'), recursive=TRUE)
+files = list.files( paste0(dir, '/1_initial_download/', set_name, '/intermediate_data/'), recursive=TRUE)
 
 # if (set_name=='base' | set_name=='sigl') {
 #   keep_vars = read.xlsx(paste0(dir, 'catalogues/data_elements_cod.xlsx'))
@@ -75,7 +73,7 @@ i = 1
 for(f in files) {
   #load the RDs file
   vec = f
-  current_data = data.table(readRDS(paste0(dir, 'pre_prep/', set_name, '/intermediate_data/', f)))
+  current_data = data.table(readRDS(paste0(dir, '/1_initial_download/', set_name, '/intermediate_data/', f)))
   current_data[ , file:=vec ]
   
   # # subset to only the variables needed for large data sets
@@ -89,8 +87,10 @@ for(f in files) {
   if(i>1)  dt = rbind(dt, current_data)
   i = i+1 }
 
+if(length(unique(dt$file))!=length(files)) stop('Check the data table, at least one file did not append correctly')
+
 # save the data table in its individual folder in 'pre_prep' for merge and prep:
-saveRDS(extracted_data, paste0(dir, 'pre_prep/', set_name, '/', set_name, '_', 
+saveRDS(dt, paste0(dir, '/1_initial_download/', set_name, '/', set_name, '_', 
                                start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
 
 #-------------------------
