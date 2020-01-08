@@ -121,9 +121,9 @@ p4 = ggplot(plot_data, aes(x=pm_absorption, y=overall_absorption)) +
   geom_point() + 
   geom_smooth() + 
   theme_bw(base_size=16) + 
-  labs(title="Does high program management absorption \ncorrelate with higher overall absorption?", x="Program management absorption (%)", 
+  labs(title="Does high program management absorption /ncorrelate with higher overall absorption?", x="Program management absorption (%)", 
        y="Overall grant absorption (%)", subtitle="Absorption calculated over the period Jan. 2018-June 2019", 
-       caption="*Each point represents one grant", size="Percentage of budget that is \nprogram management")
+       caption="*Each point represents one grant", size="Percentage of budget that is /nprogram management")
 
 ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/program_mgmt_vs_absorption.png", p4, height=8, width=11)
 
@@ -133,10 +133,10 @@ p5 = ggplot(plot_data, aes(x=pm_pct_of_budget, y=overall_absorption)) +
   geom_point() + 
   geom_smooth() + 
   theme_bw(base_size=16) + 
-  labs(title="Does a higher budget percentage for program management\ncorrelate with higher overall absorption?",
+  labs(title="Does a higher budget percentage for program management/ncorrelate with higher overall absorption?",
        x="Percentage of budget given to program management (%)", 
        y="Overall grant absorption (%)", subtitle="Absorption calculated over the period Jan. 2018-June 2019", 
-       caption="*Each point represents one grant", size="Percentage of budget that is \nprogram management")
+       caption="*Each point represents one grant", size="Percentage of budget that is /nprogram management")
 
 pdf("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/extra_synthesis_analyses.pdf", height=8, width=11)
 p1
@@ -217,3 +217,53 @@ p = ggplot(plot_data, aes(x=paste0(grant, ", ", grant_period), y=count, fill=cat
   labs(title="Count of activity descriptions by grant", x="", y="Number of activities", fill="")
 
 ggsave(paste0(save_loc, "count_of_activities.png"), p, height=8, width=11)
+
+
+#---------------------------------------------------------------
+# How does absorption look now as compared to earlier in the grants? 
+consortia_2018 = readRDS("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/Synthesis 2018/prepped_2018_data.rds")
+consortia_2019 = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_modules.rds")
+
+# NAs and 0s aren't delineated in the 2018 cross consortia data. So, if budget is entered for a grant but all absorption is NA, assume it's 0. 
+# EL 1/8/2020
+check = consortia_2018[, .(budget=sum(budget, na.rm=T), absorption=sum(absorption, na.rm=T)), by='grant']
+check = check[absorption==0] # Review these cases in the main dataset by hand. 
+View(consortia_2018[grant%in%c('SEN-M-PNLP', 'GTM-H-HIVOS (Q1-Q2 2018)', 'SDN-H-UNDP (Q1-Q2 2018)', 'GTM-T-MSPAS (Q3 2017)', 'SEN-Z-MOH')])
+# Everything BUT SEN-H-UNDP has reported budget. 
+consortia_2018[grant%in%c('SEN-M-PNLP', 'GTM-H-HIVOS (Q1-Q2 2018)', 'GTM-T-MSPAS (Q3 2017)', 'SEN-Z-MOH'), absorption:=0]
+
+# Calculate expenditure number for 2018 data so it can be collapsed. 
+consortia_2018[, budget:=as.numeric(budget)]
+consortia_2018[, absorption:=as.numeric(absorption)]
+consortia_2018[, expenditure:=budget*absorption]
+
+# Tag RSSH specifically. 
+rssh_mods = c("Community responses and systems", "Financial management systems", "Health management information system and monitoring and evaluation", 
+              "Human resources for health, including community health workers", "Integrated service delivery and quality improvement", "National health strategies", 
+              "Procurement and supply chain management systems")
+consortia_2018[, disease:=tolower(grant_disease)]
+consortia_2019[, disease:=tolower(grant_disease)]
+consortia_2018[gf_module%in%rssh_mods, disease:='rssh']
+consortia_2019[gf_module%in%rssh_mods, disease:='rssh']
+
+# Also separate HIV/TB. 
+hiv_mods = c("HIV Testing Services", "Programs to reduce human rights-related barriers to HIV services", 
+             "Prevention of mother-to-child transmission", "Comprehensive prevention programs for sex workers and their clients", 
+             "Comprehensive prevention programs for people who inject drugs and their partners", "Prevention programs for general population", 
+             "Comprehensive prevention programs for transgender people", "Prevention programs for adolescents and youth, in and out of school", 
+             "Program management", "TB/HIV", "Treatment, care & support", "Comprehensive prevention programs for men who have sex with men", 
+             "Prevention programs for other vulnerable populations", "Treatment, care and support")
+tb_mods = c('TB care and prevention', "Multidrug-resistant TB", "Comprehensive programs for people in prisons and other closed settings")
+consortia_2018[gf_module%in%hiv_mods, disease:='hiv']
+consortia_2019[gf_module%in%hiv_mods, disease:='hiv']
+consortia_2018[gf_module%in%tb_mods, disease:='tb']
+consortia_2019[gf_module%in%tb_mods, disease:='tb']
+
+unique(consortia_2018$disease)
+unique(consortia_2019$disease)
+
+# What has the absorption by disease area been overall? 
+collapse_2018 = consortia_2018[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('disease')]
+collapse_2018[, absorption:=round((expenditure/budget)*100, 1)]
+collapse_2019 = consortia_2019[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('disease')]
+collapse_2019[, absorption:=round((expenditure/budget)*100, 1)]
