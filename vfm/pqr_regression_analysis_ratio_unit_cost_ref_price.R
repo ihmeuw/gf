@@ -32,14 +32,16 @@ j = ifelse(Sys.info()[1]=='Windows','J:','/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/vfm/')
 
 # input files
-inFile = paste0(dir, 'unit_cost_data/prepped_data/prepped_full_pqr_with_sept_download_data.rds')
-# inFile = paste0(dir, 'unit_cost_data/prepped_data/prepped_full_pqr.rds')
-subset_commodities = paste0(dir, 'unit_cost_data/prepped_data/subset_commodities.csv')
+inFile = paste0(dir, 'unit_cost_data/prepped_data/prepped_pqr_arvs_with_ppm_ref_prices.rds')
+# subset_commodities = paste0(dir, 'unit_cost_data/prepped_data/subset_commodities.csv')
 
 # output files 
+ts_unit_cost_ppm_ref_prices = paste0(dir,  'visualizations/PQR/ts_arvs_unit_cost_ppm_ref_prices.pdf')
+ts_RATIO_unit_cost_ppm_ref_prices = paste0(dir,  'visualizations/PQR/ts_RATIO_arvs_unit_cost_ppm_ref_prices.pdf')
+
 regr_results_ratio_costs_by_category_log = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_category_log.pdf')
 regr_results_ratio_costs_by_categoryAndCountry_log = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_categoryAndCountry_log.pdf')
-regr_results_ratio_costs_by_procurement_mechanism = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_procurementMechanism_log_updated_10_31.pdf')
+regr_results_ratio_costs_by_procurement_mechanism = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_procurementMechanism_log.pdf')
 regr_results_ratio_costs_by_procurement_mechanism_AND_category =  paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_procurementMechanism_log_byProductCategory.pdf')
 regr_results_ratio_costs_by_procurement_mechanism_AND_category_withDeliveryTime = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_procurementMechanism_log_byProductCategory_withDeliveryTime.pdf')
 
@@ -59,19 +61,82 @@ findings_2b = paste0(dir, 'unit_cost_data/prepped_data/results_productCat_procur
 # Load/set up data
 # ----------------------------------------------
 data = readRDS(inFile)
+data[, po_international_reference_price := NULL]
+# subset to where pp, ref price and unit cost are both not missing
+dt = data[!is.na(ppm_ref_price) & !is.na(unit_cost_usd)]
 
-# subset to where intl ref price and unit cost are both not missing
-dt = data[!is.na(po_international_reference_price) & !is.na(unit_cost_usd)]
 setnames(dt, 'supplier_agent_manufacturer_intermediatry', 'procurement_mech')
 dt[is.na(procurement_mech), procurement_mech := supplier]
 dt[procurement_mech == 'Other n/s', .N]
 dt[procurement_mech == 'United Nations Population Fund (UNFPA)', procurement_mech := 'UN Population Fund']
 dt[ procurement_mech == 'PPM, through Partnership for Supply Chain Management (PFSCM)', procurement_mech := 'PPM, through PFSCM']
 dt[ procurement_mech == 'Partnership for Supply Chain Management Inc (PFSCM)', procurement_mech := 'PFSCM']
+dt[ grepl('MSF', procurement_mech), procurement_mech := 'MSF']
 
 freq_table = dt[,.N, by = .(procurement_mech, product_category)]
-setorderv(freq_table, c('procurement_mech', 'product_category'))
+setorderv(freq_table, c('N'), c(-1))
 # write.csv(freq_table, frequency_table_procurement_mech)
+
+# first make a date variable by month/year
+dt[, month := month(purchase_order_date)]
+dt[, year := year(purchase_order_date)]
+dt[, date_for_figures := as.Date(paste0(year,'-', month, '-01'))]
+
+dt[, ppm_ref_price := as.numeric(ppm_ref_price)]
+dt = dt[!is.na(ppm_ref_price)]
+
+dt[, ppm_ref_price_per_unit := ppm_ref_price/pack_size]
+dt[, unit_cost_over_ref_price := unit_cost_usd / ppm_ref_price_per_unit]
+
+dt[, full_desc_var := paste0(dose, '_', pack_size, '_', description)]
+# ----------------------------------------------
+
+# ----------------------------------------------
+# time series figures for new ppm ref prices
+# ----------------------------------------------
+dt[, country_name := as.factor(country_name)]
+
+colors1 = brewer.pal(8, 'Set1')
+colors2 = brewer.pal(8, 'Set2')
+colors = c(colors1, colors2)
+colors = colors[!colors %in% c('#FFFF33')]
+names(colors) = levels(dt$country_name)
+
+pdf(ts_unit_cost_ppm_ref_prices, height = 9, width = 12)
+for ( cat in unique(dt$product_category) ){ # loop through category first so they're grouped by category
+  for ( p in unique(dt[product_category == cat, product_name]) ){
+    print(ggplot(dt[product_name == p, ], aes(x=purchase_order_date, y=unit_cost_usd, color=country_name, size = total_units_in_order)) +
+            scale_color_manual(name = 'Country Name', values = colors) +
+            geom_line(aes(x=purchase_order_date, y=ppm_ref_price_per_unit), color = 'darkgrey', size = 1 ) +
+            geom_point(aes(x=purchase_order_date, y=ppm_ref_price_per_unit), color = 'darkgrey', size = 2 ) +
+            geom_point() +
+            theme_bw() +
+            theme(text = element_text(size=14)) +
+            facet_wrap( ~full_desc_var, scales = "free") +
+            scale_size_continuous(labels = comma) +
+            labs(title = paste0("Comparison of unit costs and PPM reference prices for ", p),
+                 subtitle = '(Gray points show the PPM reference price)',
+                 x='Purchase order date', y='Unit Cost (USD)', size = 'Volume Purchased'))
+  }
+}
+dev.off()
+
+# time series for unit cost/reference price
+pdf(ts_RATIO_unit_cost_ppm_ref_prices, height = 9, width = 12)
+for ( cat in unique(dt$product_category) ){ # loop through category first so they're grouped by category
+  for ( p in unique(dt[product_category == cat, product_name]) ){
+    print(ggplot(dt[product_name == p, ], aes(x=purchase_order_date, y=unit_cost_over_ref_price, color=country_name, size = total_units_in_order)) +
+            scale_color_manual(name = 'Country Name', values = colors) +
+            geom_point() +
+            theme_bw() +
+            theme(text = element_text(size=14)) +
+            facet_wrap( ~full_desc_var, scales = "free") +
+            scale_size_continuous(labels = comma) +
+            labs(title = paste0("Ratio of unit costs to PPM reference prices over time for ", p),
+                 x='Purchase order date', y='Ratio of unit cost to reference price', size = 'Volume Purchased'))
+  }
+}
+dev.off()
 # ----------------------------------------------
 
 # ----------------------------------------------
@@ -88,11 +153,6 @@ names(colors) = pm
 # ----------------------------------------------
 # time series figures by procurement mechanism
 # ----------------------------------------------
-# first make a date variable by month/year
-dt[, month := month(purchase_order_date)]
-dt[, year := year(purchase_order_date)]
-dt[, date_for_figures := as.Date(paste0(year,'-', month, '-01'))]
-
 # then get the mean/median of ratio of unit cost to ref price, as well as sum of units purchased for those orders,
 # at a given time point across products within product category by procurement mech
 graph_dt = dt[, .(mean_ratio = mean(unit_cost_over_ref_price),
@@ -104,12 +164,12 @@ pdf(ts_mean_median_ratio_by_procurement_mech, height = 9, width = 12)
 # loop through product category to make figures:
 for ( cat in unique(graph_dt$product_category) ){
   pm =  dt[product_category == cat, (unique(procurement_mech))]
-  
+
   if ( length(pm) > 4 ){
     pm2 = pm[5:length(pm)]
     pm = pm[!pm %in% pm2]
   }
-  
+
   # graph orders as individual points - **could try faceting by product? or procurement mech?
   print(ggplot(dt[product_category == cat & unit_cost_over_ref_price < 8 , ], aes(x=purchase_order_date, y=unit_cost_over_ref_price, color=procurement_mech, size = total_units_in_order/1000000)) +
           geom_point() +
@@ -120,7 +180,7 @@ for ( cat in unique(graph_dt$product_category) ){
           labs(title = paste0("Ratio of unit cost to reference price over time for ", cat, " products, by \nprocurement mechanism"),
                x='Purchase order date', y='Ratio of unit cost to reference price', color = 'Procurement Mechanism',
                size = 'Volume Purchased (in millions)'))
-  
+
   # graph orders as individual points - **could try faceting by product? or procurement mech?
   print(ggplot(dt[product_category == cat & unit_cost_over_ref_price < 8 & procurement_mech %in% pm, ], aes(x=purchase_order_date, y=unit_cost_over_ref_price, color=procurement_mech, size = total_units_in_order/1000000)) +
           geom_point() +
@@ -134,7 +194,7 @@ for ( cat in unique(graph_dt$product_category) ){
                x='Purchase order date', y='Ratio of unit cost to reference price', color = 'Procurement Mechanism',
                  size = 'Volume Purchased (in millions)') +
           facet_wrap(~procurement_mech, scales = 'free'))
-  
+
   if(exists('pm2')){
   print(ggplot(dt[product_category == cat & unit_cost_over_ref_price < 8 & procurement_mech %in% pm2, ], aes(x=purchase_order_date, y=unit_cost_over_ref_price, color=procurement_mech, size = total_units_in_order/1000000)) +
           geom_point() +
@@ -159,7 +219,7 @@ for ( cat in unique(graph_dt$product_category) ){
           scale_color_manual(name = 'Procurement Mechanism', values = colors) +
           labs(title = paste0("Mean of ratio of unit cost to reference price over time for ", cat, " products, by \nprocurement mechanism"),
                x='Purchase order date (year, month)', y='Mean of ratio of unit cost to reference price', size = 'Volume purchased (in millions)'))
-  
+
   # graph median
   print(ggplot(graph_dt[product_category == cat, ], aes(x=date_for_figures, y=median_ratio, color=procurement_mech)) +
           geom_point(aes(size = sum_units_purchased/1000000)) + geom_line(size = 1) + theme_bw() +
@@ -266,8 +326,6 @@ dev.off()
 # ----------------------------------------------
 pm = unique(dt$procurement_mech)
 colors = colors[1: length(pm)]
-
-dt[, delivery_time := as.integer(scheduled_delivery_date - purchase_order_date)]
 
 findings_table_2b = data.table()
 
@@ -396,78 +454,78 @@ dev.off()
 write.xlsx(findings_table_2b, findings_2b)
 # ----------------------------------------------
 
-# ----------------------------------------------
-# Scatterplots with all data
-# ----------------------------------------------
-pdf(scatterplot_ratio_vs_volume, height = 9, width = 11)
-# scatterplot by volume, all data:
-print(ggplot(dt[], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
-        theme_bw() + 
-        theme(legend.position = 'bottom', text = element_text(size = 16)) +
-        geom_point() +
-        geom_smooth(method='lm') +
-        labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
-             title = paste0('Relationship between the number of units purchased and the ratio of cost to \nreference price')))
+# # ----------------------------------------------
+# # Scatterplots with all data
+# # ----------------------------------------------
+# pdf(scatterplot_ratio_vs_volume, height = 9, width = 11)
+# # scatterplot by volume, all data:
+# print(ggplot(dt[], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
+#         theme_bw() + 
+#         theme(legend.position = 'bottom', text = element_text(size = 16)) +
+#         geom_point() +
+#         geom_smooth(method='lm') +
+#         labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
+#              title = paste0('Relationship between the number of units purchased and the ratio of cost to \nreference price')))
+# 
+# print(ggplot(dt[product_category != 'anti_malaria_medicine'], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
+#         theme_bw() + 
+#         theme(legend.position = 'bottom', text = element_text(size = 16)) +
+#         geom_point() +
+#         geom_smooth(method='lm') +
+#         labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
+#              title = paste0('Relationship between the number of units purchased and the ratio of cost to \nreference price'),
+#              subtitle = '(Excluding antimalarial medications)'))
+# 
+# for(p in unique(dt$product_category)){
+#   print(ggplot(dt[product_category == p,], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
+#           theme_bw() + 
+#           theme(legend.position = 'bottom', text = element_text(size = 16)) +
+#           geom_point() +
+#           geom_smooth(method='lm') +
+#           labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
+#                title = paste0(p, ': Relationship between the number of units purchased and the ratio of \ncost to reference price')))
+# }
+# 
+# for(p in unique(dt$procurement_mech)){
+#   print(ggplot(dt[procurement_mech == p,], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
+#           theme_bw() + 
+#           theme(legend.position = 'bottom', text = element_text(size = 16)) +
+#           geom_point() +
+#           geom_smooth(method='lm') +
+#           labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
+#                title = paste0(p, ': Relationship between the number of units purchased and the ratio of \ncost to reference price')))
+# }
+# 
+# # scatterplot by delivery time, all data:
+# print(ggplot(dt, aes(x = delivery_time, y = unit_cost_over_ref_price)) + 
+#         theme_bw() + 
+#         theme(legend.position = 'bottom', text = element_text(size = 16)) +
+#         geom_point() +
+#         geom_smooth(method='lm') +
+#         labs(y = 'Ratio of unit cost:reference price', x = 'Time between order date and delivery date (days)', 
+#              title = paste0('Relationship between the time for delivery and the ratio of cost to reference price')))
+# dev.off()
+# # ----------------------------------------------
 
-print(ggplot(dt[product_category != 'anti_malaria_medicine'], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
-        theme_bw() + 
-        theme(legend.position = 'bottom', text = element_text(size = 16)) +
-        geom_point() +
-        geom_smooth(method='lm') +
-        labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
-             title = paste0('Relationship between the number of units purchased and the ratio of cost to \nreference price'),
-             subtitle = '(Excluding antimalarial medications)'))
-
-for(p in unique(dt$product_category)){
-  print(ggplot(dt[product_category == p,], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
-          theme_bw() + 
-          theme(legend.position = 'bottom', text = element_text(size = 16)) +
-          geom_point() +
-          geom_smooth(method='lm') +
-          labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
-               title = paste0(p, ': Relationship between the number of units purchased and the ratio of \ncost to reference price')))
-}
-
-for(p in unique(dt$procurement_mech)){
-  print(ggplot(dt[procurement_mech == p,], aes(x = log(total_units_in_order), y = unit_cost_over_ref_price)) + 
-          theme_bw() + 
-          theme(legend.position = 'bottom', text = element_text(size = 16)) +
-          geom_point() +
-          geom_smooth(method='lm') +
-          labs(y = 'Ratio of unit cost:reference price', x = 'Volume purchased (total units in order, log space)', 
-               title = paste0(p, ': Relationship between the number of units purchased and the ratio of \ncost to reference price')))
-}
-
-# scatterplot by delivery time, all data:
-print(ggplot(dt, aes(x = delivery_time, y = unit_cost_over_ref_price)) + 
-        theme_bw() + 
-        theme(legend.position = 'bottom', text = element_text(size = 16)) +
-        geom_point() +
-        geom_smooth(method='lm') +
-        labs(y = 'Ratio of unit cost:reference price', x = 'Time between order date and delivery date (days)', 
-             title = paste0('Relationship between the time for delivery and the ratio of cost to reference price')))
-dev.off()
-# ----------------------------------------------
-
-# ----------------------------------------------
-# subset to 'first line' products based on country guidelines
-# ----------------------------------------------
-subset_by = as.data.table(read.csv(subset_commodities))
-subset_by = subset_by[ keep == TRUE, ]
-
-subset = merge(dt, subset_by, by = c('iso3codecountry', 'product_category', 'product_name_en', 'description'))
-subset = subset[, c('X', 'keep') := NULL]
-subset[, product_name_en := as.factor(product_name_en)]
-dt = copy(subset)
-
-dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'etermin', ignore.case = TRUE), product_name_en := 'Determine']
-dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'gold', ignore.case = TRUE), product_name_en := 'Uni-Gold']
-dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'stat', ignore.case = TRUE), product_name_en := 'Stat-Pak']
-dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'oraq', ignore.case = TRUE), product_name_en := 'OraQuick']
-dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'immunocomb', ignore.case = TRUE), product_name_en := 'ImmunoComb']
-
-n_for_regr = dt[, .N, by = c('iso3codecountry', 'product_category', 'product_name_en')]
-# ----------------------------------------------
+# # ----------------------------------------------
+# # subset to 'first line' products based on country guidelines
+# # ----------------------------------------------
+# subset_by = as.data.table(read.csv(subset_commodities))
+# subset_by = subset_by[ keep == TRUE, ]
+# 
+# subset = merge(dt, subset_by, by = c('iso3codecountry', 'product_category', 'product_name', 'description'))
+# subset = subset[, c('X', 'keep') := NULL]
+# subset[, product_name := as.factor(product_name)]
+# dt = copy(subset)
+# 
+# dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'etermin', ignore.case = TRUE), product_name := 'Determine']
+# dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'gold', ignore.case = TRUE), product_name := 'Uni-Gold']
+# dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'stat', ignore.case = TRUE), product_name := 'Stat-Pak']
+# dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'oraq', ignore.case = TRUE), product_name := 'OraQuick']
+# dt[product_category == 'diagnostic_test_hiv' & grepl(description, pattern = 'immunocomb', ignore.case = TRUE), product_name := 'ImmunoComb']
+# 
+# n_for_regr = dt[, .N, by = c('iso3codecountry', 'product_category', 'product_name')]
+# # ----------------------------------------------
 
 # ----------------------------------------------
 # 1.	Cost vs reference price stratified by categorical variables (procurement mechanism mainly, 
@@ -480,9 +538,9 @@ n_for_regr = dt[, .N, by = c('iso3codecountry', 'product_category', 'product_nam
 # from the first procurement mechanism/category (alphabetically). You can then make a data frame of the 
 # unique values of the explanatory variables and predict in it to get estimates/CI of the mean cost differences.
 # ----------------------------------------------
-ggplot(dt, aes(x = diff_from_ref_cost)) + geom_histogram(binwidth = 0.5) + theme_bw()
-summary(dt$diff_from_ref_cost)
-plot(dt$purchase_order_date, dt$diff_from_ref_cost)
+ggplot(dt, aes(x = unit_cost_over_ref_price)) + geom_histogram(binwidth = 0.05) + theme_bw()
+summary(dt$unit_cost_over_ref_price)
+plot(dt$purchase_order_date, dt$unit_cost_over_ref_price)
 # dt = dt[ purchase_order_date >= '2015-01-01', ]
 # ----------------------------------------------
 
@@ -499,12 +557,12 @@ for (cat in unique(dt$product_category)){
   
   if(nrow(data_subset)<=1) next
   
-  if (length(unique(data_subset$product_name_en))==1) form = as.formula('log_ratio ~ purchase_order_date')
-  if (length(unique(data_subset$product_name_en))>1) form = as.formula('log_ratio ~ purchase_order_date + product_name_en')
+  if (length(unique(data_subset$product_name))==1) form = as.formula('log_ratio ~ purchase_order_date')
+  if (length(unique(data_subset$product_name))>1) form = as.formula('log_ratio ~ purchase_order_date + product_name')
   
   fit = glm(form, data = data_subset, family = gaussian())
   
-  dt2 = unique(dt[product_category == cat,.(product_category, product_name_en)])
+  dt2 = unique(dt[product_category == cat,.(product_category, product_name)])
   dt2 = as.data.table(dt2)
   dt2[, purchase_order_date := mean(data_subset$purchase_order_date)]
   dt2[, purchase_order_date := as.Date(purchase_order_date)]
@@ -523,23 +581,23 @@ for (cat in unique(dt$product_category)){
   add_to_findings[lower > 1, result:='costs higher than reference price']
   add_to_findings[upper < 1, result:='costs lower than reference price']
   add_to_findings[lower < 1 & upper >1, result:='not significant']
-  add_to_findings = add_to_findings[, .(product_category, product_name_en, result)]
+  add_to_findings = add_to_findings[, .(product_category, product_name, result)]
   findings_table_1a = rbind(findings_table_1a, add_to_findings)
   
-  g = ggplot(dt2, aes(x = product_name_en, y = unit_cost_over_ref_price, color = product_name_en)) +
+  g = ggplot(dt2, aes(x = product_name, y = unit_cost_over_ref_price, color = product_name)) +
     geom_point(shape = 1, size = 5) + 
     theme_bw() + geom_hline(yintercept = 1, linetype = 'dashed', color = 'red', size = 1) +
     geom_errorbar(aes(ymin = lower, ymax = upper), width = .2, size = 1 ) +
     theme(strip.text = element_blank()) +
     labs(y = 'Ratio of unit cost to reference price', x = '', title = paste0(cat, ': prediction intervals from regression results'), 
-         subtitle = '        ratio_unit_cost_to_ref_price ~ purchase_order_date + product_name_en') +
+         subtitle = '        ratio_unit_cost_to_ref_price ~ purchase_order_date + product_name') +
     theme(text = element_text(size = 16), axis.text.x = element_text(angle = 50, hjust = 1, size = 12)) + guides(color = FALSE)
   print(g)
   
-  data_subset[, product_name_en := as.factor(product_name_en)]
+  data_subset[, product_name := as.factor(product_name)]
   data_subset[ unit_cost_over_ref_price>=10, unit_cost_over_ref_price := 10 ]
   
-  print(ggplot(data_subset, aes(x = unit_cost_over_ref_price, color = product_name_en)) + geom_density(size = 1) + theme_bw() + 
+  print(ggplot(data_subset, aes(x = unit_cost_over_ref_price, color = product_name)) + geom_density(size = 1) + theme_bw() + 
     theme(legend.position = 'bottom', text = element_text(size = 16)) +
     geom_vline(xintercept = 1, linetype = 'dashed', color = 'red', size = 1) +
     labs(y = 'Density', x = 'Ratio unit cost:reference price', color = 'Product:',
@@ -559,10 +617,11 @@ findings_table_1b = data.table()
 pdf(regr_results_ratio_costs_by_categoryAndCountry_log, height = 9, width = 12)
 for (cat in unique(dt$product_category)){
   # set colors for products
-  products = unique(dt[product_category == cat, product_name_en])
+  products = unique(dt[product_category == cat, product_name])
   colors1 = brewer.pal(8, 'Set2')
   colors2 = brewer.pal(8, 'Set1')
-  colors = c(colors1, colors2)
+  colors3 = brewer.pal(8, 'Set3')
+  colors = c(colors1, colors2, colors3)
   colors = colors[!colors %in% c('#FFFF33', '#A6D854')]
   names(colors) = products
   
@@ -574,12 +633,12 @@ for (cat in unique(dt$product_category)){
   
   if(nrow(data_subset)<=1) next
 
-  if (length(unique(data_subset$product_name_en))==1) form = as.formula('log_ratio ~ purchase_order_date')
-  if (length(unique(data_subset$product_name_en))>1) form = as.formula('log_ratio ~ purchase_order_date + product_name_en')
+  if (length(unique(data_subset$product_name))==1) form = as.formula('log_ratio ~ purchase_order_date')
+  if (length(unique(data_subset$product_name))>1) form = as.formula('log_ratio ~ purchase_order_date + product_name')
  
   fit = glm(form, data = data_subset, family = gaussian())
 
-  dt2 = unique(dt[product_category == cat & country_name == country,.(product_category, product_name_en)])
+  dt2 = unique(dt[product_category == cat & country_name == country,.(product_category, product_name)])
   dt2 = as.data.table(dt2)
   dt2[, purchase_order_date := mean(data_subset$purchase_order_date)]
   dt2[, purchase_order_date := as.Date(purchase_order_date)]
@@ -599,23 +658,23 @@ for (cat in unique(dt$product_category)){
   add_to_findings[upper < 1, result:='costs lower than reference price']
   add_to_findings[lower < 1 & upper >1, result:='not significant']
   add_to_findings[, country := country]
-  add_to_findings = add_to_findings[, .(country, product_category, product_name_en, result)]
+  add_to_findings = add_to_findings[, .(country, product_category, product_name, result)]
   findings_table_1b = rbind(findings_table_1b, add_to_findings)
 
-  g = ggplot(dt2, aes(x = product_name_en, y = unit_cost_over_ref_price, color = product_name_en)) +
+  g = ggplot(dt2, aes(x = product_name, y = unit_cost_over_ref_price, color = product_name)) +
     geom_point(shape = 1, size = 5) + 
     theme_bw() + geom_hline(yintercept = 1, linetype = 'dashed', color = 'red', size = 1) +
     geom_errorbar(aes(ymin = lower, ymax = upper), width = .2, size = 1.5 ) +
     theme(strip.text = element_blank()) +
     scale_color_manual(name = '', values = colors) +
-    labs(y = 'Ratio of unit cost to reference price', x = '', title = paste0(country, ', ', cat, ': prediction intervals from regression results\n     ratio_unit_cost_to_ref_price ~ purchase_order_date + product_name_en')) +
+    labs(y = 'Ratio of unit cost to reference price', x = '', title = paste0(country, ', ', cat, ': prediction intervals from regression results\n     ratio_unit_cost_to_ref_price ~ purchase_order_date + product_name')) +
     theme(axis.text.x = element_text(angle = 45, hjust = 1), text = element_text(size = 16)) + guides(color = FALSE)
   print(g)
   
-  data_subset[, product_name_en := as.factor(product_name_en)]
+  data_subset[, product_name := as.factor(product_name)]
   data_subset[ unit_cost_over_ref_price>=10, unit_cost_over_ref_price := 10 ]
   
-  print(ggplot(data_subset, aes(x = unit_cost_over_ref_price, color = product_name_en)) + geom_density(size = 1) + theme_bw() + 
+  print(ggplot(data_subset, aes(x = unit_cost_over_ref_price, color = product_name)) + geom_density(size = 1) + theme_bw() + 
           theme(legend.position = 'bottom', text = element_text(size = 16)) +
           scale_color_manual(name = 'Product:', values = colors) +
           geom_vline(xintercept = 1, linetype = 'dashed', color = 'red', size = 1) +

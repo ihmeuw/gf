@@ -178,12 +178,15 @@ dt[product_name == 'Darunavir' & reference_price_date == '2017-03-01', ppm_ref_p
 dt = unique(dt)
 
 merged_dt = data.table()
-for (i in 1:length(unique(dt$reference_price_date))) {
-  current_date = unique(dt$reference_price_date)[i]
-  if (i == length(unique(dt$reference_price_date))){ 
+ordered_dates = unique(dt$reference_price_date)
+ordered_dates = sort(ordered_dates)
+
+for (i in 1:length(ordered_dates)) {
+  current_date = ordered_dates[i]
+  if (i == length(ordered_dates)){ 
     next_date = max(pqr_arvs$purchase_order_date) + 1
   } else {
-    next_date = unique(dt$reference_price_date)[i+1]
+    next_date = ordered_dates[i+1]
   }
   
   subset_dt = dt[reference_price_date == current_date,]
@@ -191,13 +194,17 @@ for (i in 1:length(unique(dt$reference_price_date))) {
   
   if (nrow(subset_pqr)==0) next
   
-  current = merge(subset_dt, subset_pqr, all.y = TRUE, by = c('product_name', 'dose', 'pack_size', 'dispersible', 'description'))
-  if (nrow(merged_dt)==0) merged_dt = current
-  if (nrow(merged_dt)!=0) merged_dt = rbind(merged_dt, current)
+  current = merge(subset_pqr, subset_dt, all.x = TRUE, by = c('product_name', 'dose', 'pack_size', 'dispersible', 'description'))
+  if ( nrow(current[duplicated(current[,.(primary_key)])]) != 0 ) stop( 'Something went wrong with the merge... check it' )
+  
+  if (nrow(merged_dt)==0) {
+    merged_dt = current
+  } else {
+    merged_dt = rbind(merged_dt, current) 
+  }
+  
+  if ( nrow(merged_dt[duplicated(merged_dt[,.(primary_key)])]) != 0 ) stop( 'Primary key now duplicated in merged data... check it' )
 }
 
-pqr_arvs[duplicated(pqr_arvs[, c('purchase_order_date', 'product_name', 'dose', 'pack_size', 'dispersible', 'description')])]
-
-check = merged_dt[duplicated(merged_dt[,.(primary_key)])]
-check = rbind(check, merged_dt[duplicated(merged_dt[,.(primary_key)], fromLast = TRUE)])
+saveRDS(merged_dt, 'J:/Project/Evaluation/GF/vfm/unit_cost_data/prepped_data/prepped_pqr_arvs_with_ppm_ref_prices.rds')
 # ----------------------------------------------
