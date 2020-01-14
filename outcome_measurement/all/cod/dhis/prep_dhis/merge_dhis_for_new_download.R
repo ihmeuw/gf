@@ -1,7 +1,7 @@
 # Merge the Base Services, SIGL, and PNLS data downloaded from DHIS2 DRC (SNIS)
 # Audrey Batzel from Caitlin's code
 #
-# updated 06/05/2019
+# updated 01/13/20
 #
 # Upload the RDS data from DHIS2 and merge with the meta data 
 # prep the data sets for analysis and the Tableau Dashboard
@@ -17,7 +17,6 @@ library(dplyr)
 library(stringr) 
 library(openxlsx)
 library(lubridate)
-
 # --------------------
 
 #---------------------------------
@@ -25,12 +24,12 @@ library(lubridate)
 # files take a long time to load - merge in a cluster IDE
 
 # script to open a long-lasting large IDE
-# qsub -terse -N rst_ide -q all.q -l fthread=10 -l m_mem_free=30G -l h_rt=70:00:00 -l archive=TRUE -P proj_pce /ihme/code/jpy_rstudio/jpy_rstudio_shell.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -t rstudio -p 1247 -o 1 -G r
+# qsub -terse -N rst_ide_19_05_14_160329 -q long.q -l fthread=2 -l m_mem_free=60G -l h_rt=85:00:00 -l archive=TRUE -P proj_pce /ihme/code/jpy_rstudio/jpy_rstudio_shell.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -t rstudio -p 7513 -o 1 -G r
 
 # change the folder to the name of the data set you want to merge
 # this is the only argument to change 
 
-folder = 'sigl'
+set = 'base'
 #---------------------------------
 
 # --------------------------------
@@ -41,36 +40,47 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-dir_pre_prep = paste0(dir, '1_initial_download/', folder, '/')
+dir_download = paste0(dir, '1_initial_download/', set, '/')
 
 # source the merge and prep functions from the J Drive
 source(paste0(dir, 'code/merge_functions_for_new_download.R'))
 #---------------------------------
 
 #---------------------------------
-# read in the file
+# read in the most recently downloaded file
 #---------------------------------
 # list the files in the working directory
-files = list.files(dir_pre_prep, recursive=TRUE)
-file = files[grepl("combined", files)]
-file = file[!grepl("archive", file)]
+files = list.files(dir_download, recursive=TRUE)
+files = files[grepl("aggregated", files, fixed = TRUE)]
+
+# keep just the most recently downloaded file:
+years = lapply(files, function (x) { str_split(x, '_')[[1]][5] })
+years = as.numeric(years)
+months = lapply(files, function (x) { str_split(x, '_')[[1]][4] })
+months = as.numeric(months)
+
+max_yr = as.character(max(years))
+max_mo = as.character(max(months))
+
+files = files[lapply(files, function (x) { str_split(x, '_')[[1]][5] }) == max_yr]
+file = files[lapply(files, function (x) { str_split(x, '_')[[1]][4] }) == max_mo]
 
 # read in the file
-dt = data.table(readRDS(paste0(dir_pre_prep, file)))
+dt = data.table(readRDS(paste0(dir_download, file)))
 #---------------------------------
 
 #---------------------------------
 # create a vector of variables to subset the larger data sets
 #---------------------------------
-if (folder=='base' | folder=='sigl') {
-  keep_vars = read.xlsx(paste0(dir, 'catalogues/data_elements_cod.xlsx'))
+if (set == 'base' | set == 'sigl') {
+  keep_vars = read.xlsx(paste0(dir, 'meta_data/catalogues/data_elements_cod.xlsx'))
   keep_vars = data.table(keep_vars)
   keep_vars[ , keep:=as.numeric(keep)]
   keep_vars = keep_vars[keep==1, element_id]
 }
 
 # subset to only the variables needed since they are large data sets
-if (folder=='base' | folder=='sigl') {
+if (set=='base' | set=='sigl') {
   dt[ , data_element_ID:=as.character(data_element_ID)]
   dt = dt[data_element_ID %in% keep_vars]
 }
@@ -81,11 +91,11 @@ if (folder=='base' | folder=='sigl') {
 # sourcing this function on the cluster fails 
 #---------------------------------
 fix_diacritics = function(x) {
-  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', 'À'='A', 'Á'='A', 'Â'='A', 'Ã'='A', 'Ä'='A', 'Å'='A', 'Æ'='A', 'Ç'='C', 'È'='E', 'É'='E',
-                           'Ê'='E', 'Ë'='E', 'Ì'='I', 'Í'='I', 'Î'='I', 'Ï'='I', 'Ñ'='N', 'Ò'='O', 'Ó'='O', 'Ô'='O', 'Õ'='O', 'Ö'='O', 'Ø'='O', 'Ù'='U',
-                           'Ú'='U', 'Û'='U', 'Ü'='U', 'Ý'='Y', 'Þ'='B', 'ß'='Ss', 'à'='a', 'á'='a', 'â'='a', 'ã'='a', 'ä'='a', 'å'='a', 'æ'='a', 'ç'='c',
-                           'è'='e', 'é'='e', 'ê'='e', 'ë'='e', 'ì'='i', 'í'='i', 'î'='i', 'ï'='i', 'ð'='o', 'ñ'='n', 'ò'='o', 'ó'='o', 'ô'='o', 'õ'='o',
-                           'ö'='o', 'ø'='o', 'ù'='u', 'ú'='u', 'û'='u', 'ý'='y', 'ý'='y', 'þ'='b', 'ÿ'='y')
+  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='C', '?'='E', '?'='E',
+                           '?'='E', '?'='E', '?'='I', '?'='I', '?'='I', '?'='I', '?'='N', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='U',
+                           '?'='U', '?'='U', '?'='U', '?'='Y', '?'='B', '?'='Ss', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='c',
+                           '?'='e', '?'='e', '?'='e', '?'='e', '?'='i', '?'='i', '?'='i', '?'='i', '?'='o', '?'='n', '?'='o', '?'='o', '?'='o', '?'='o',
+                           '?'='o', '?'='o', '?'='u', '?'='u', '?'='u', '?'='y', '?'='y', '?'='b', '?'='y')
   
   replace_me = paste(names(replacement_chars), collapse='')
   replace_with = paste(replacement_chars, collapse = '')
@@ -120,7 +130,7 @@ max_date = dt[ , max(date)]
 max_date = gsub('-', '_', max_date)
 
 # save the raw data before the merge 
-saveRDS(dt, paste0(dir, '1_initial_download/', folder, '/', folder, '_', min_date, '_', max_date, '_full_initial_prep.rds'))
+saveRDS(dt, paste0(dir, '1_initial_download/', set, '/', set, '_', min_date, '_', max_date, '_subset.rds'))
 #dt = readRDS(paste0(dir, '1_initial_download/base/base_2018_01_01_2019_04_01_full_initial_prep.rds'))
 #---------------------------------
 
@@ -151,7 +161,7 @@ if (folder == "base"){
   dt2 = readRDS(paste0( dir_pre_prep, 'sigl_01_2016_01_2019.rds'))
   
   dt2 = as.data.table(dt2)
-  dt2[ , data_element_ID:=as.character(data_element_ID)]
+  dt[ , data_element_ID:=as.character(data_element_ID)]
   dt2 = dt2[data_element_ID %in% keep_vars]
   dt2[ , date:=ymd(paste0(as.character(period), '01'))]
   
@@ -159,10 +169,10 @@ if (folder == "base"){
   
 }
 
-dt2[ , value:=as.character(value)]
-dt2[ , value:=as.numeric(value)]
-dt2[ , last_update:=as.character(last_update)]
-dt2[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
+dt[ , value:=as.character(value)]
+dt[ , value:=as.numeric(value)]
+dt[ , last_update:=as.character(last_update)]
+dt[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
 
 vars = names(dt2)
 dt = dt[, vars, with = FALSE]

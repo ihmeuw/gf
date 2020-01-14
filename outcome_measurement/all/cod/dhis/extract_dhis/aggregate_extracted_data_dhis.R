@@ -89,8 +89,8 @@ for(f in files) {
 
 if(length(unique(dt$file))!=length(files)) stop('Check the data table, at least one file did not append correctly')
 
-# save the data table in its individual folder in 'pre_prep' for merge and prep:
+# save the aggregated data
 saveRDS(dt, paste0(dir, '/1_initial_download/', set_name, '/', set_name, '_', 
-                               start_month, '_', start_year, '_', end_month, '_', end_year, '.rds'))
+                               start_month, '_', start_year, '_', end_month, '_', end_year, '_aggregated.rds'))
 
 #-------------------------
