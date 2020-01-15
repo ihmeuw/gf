@@ -8,10 +8,10 @@
 #---------------------------------------------
 # Files and directories
 #---------------------------------------------
-# clone the ihme gf repo to your H drive
+# set up: clone the ihme gf repo to your H drive to run on the cluster
 user = Sys.info()[['user']]
-setwd(paste0('/homes/', user))
-code_dir = ('./local/gf/outcome_measurement/all/cod/dhis/')
+setwd(paste0('/homes/', user, '/local/')) # set wd to root of the repo
+code_dir = ('./gf/outcome_measurement/all/cod/dhis/')
 #---------------------------------------------
 
 #---------------------------------------------
@@ -26,6 +26,14 @@ step2_prep_data = TRUE
 step3_remove_outliers = TRUE
 
 set = 'base'
+#---------------------------------------------
+
+#---------------------------------------------
+# Meta data extraction
+#---------------------------------------------
+if (rerun_metadata_extraction){
+  
+}
 #---------------------------------------------
 
 #---------------------------------------------
@@ -48,10 +56,13 @@ if (step1_extract_data) {
 #---------------------------------------------
 if (step2_prep_data) { 
   # Step 2a - merge meta data
-  
+  source(paste0(code_dir, 'prep_dhis/merge_dhis_for_new_download.rds'))
   # Step 2b - run prep code
-  
+  if (set == 'base' | set == 'sigl'){
+    source(paste0(code_dir, 'prep_dhis/additional_prep.rds'))
+  }
   # Step 2c - run checks on the download
+  source(paste0(code_dir, 'prep_dhis/run_checks_on_new_download.rds'))
 }
 #---------------------------------------------
 
