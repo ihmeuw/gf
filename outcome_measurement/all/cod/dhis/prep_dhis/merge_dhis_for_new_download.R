@@ -10,7 +10,6 @@
 # --------------------
 # Set up R
 # --------------------
-rm(list=ls())
 library(data.table)
 library(ggplot2)
 library(dplyr)
@@ -41,9 +40,6 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 dir_download = paste0(dir, '1_initial_download/', set, '/')
-
-# source the merge and prep functions from the J Drive
-source(paste0(dir, 'code/merge_functions_for_new_download.R'))
 #---------------------------------
 
 #---------------------------------
@@ -137,48 +133,14 @@ saveRDS(dt, paste0(dir, '1_initial_download/', set, '/', set, '_', min_date, '_'
 #---------------------------------
 # check unique identifiers:
 #---------------------------------
-byVars = names(dt)[! names(dt) %in% c('download_number', 'file', 'value')]
+# byVars = names(dt)[! names(dt) %in% c('download_number', 'file', 'value')]
+byVars = c('data_element_ID', 'org_unit_ID', 'category', 'date')
 if( nrow(unique(dt[, byVars, with = FALSE])) != nrow(dt)) stop( 'Unique identifiers do not uniquely identify the data...')
 #---------------------------------
 
 #---------------------------------
-# merge data before 2017 from previous download (will need to check this data later 
-# because the data in the same folder might be from before the download was fixed...)
+# merge the meta data.
 #---------------------------------
-if (folder == "base"){
-  # instead of using the overlap() function, just do this manually
-  dt2 = readRDS(paste0( dir_pre_prep, 'base_01_2016_01_2019.rds'))
-  
-  dt2 = as.data.table(dt2)
-  dt2[ , data_element_ID:=as.character(data_element_ID)]
-  dt2 = dt2[data_element_ID %in% keep_vars]
-  dt2[ , date:=ymd(paste0(as.character(period), '01'))]
-  
-  dt2 = dt2[date <= "2017-12-01", ]
-  
-} else if (folder == "sigl"){
-  # instead of using the overlap() function, just do this manually
-  dt2 = readRDS(paste0( dir_pre_prep, 'sigl_01_2016_01_2019.rds'))
-  
-  dt2 = as.data.table(dt2)
-  dt[ , data_element_ID:=as.character(data_element_ID)]
-  dt2 = dt2[data_element_ID %in% keep_vars]
-  dt2[ , date:=ymd(paste0(as.character(period), '01'))]
-  
-  dt2 = dt2[date <= "2016-12-01", ]
-  
-}
-
-dt[ , value:=as.character(value)]
-dt[ , value:=as.numeric(value)]
-dt[ , last_update:=as.character(last_update)]
-dt[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
-
-vars = names(dt2)
-dt = dt[, vars, with = FALSE]
-
-dt = rbind(dt2, dt)
-
 # # do still need this part of overlap():
 # if(folder=='pnlt' | folder=='tb_pati_v_registered' | folder=='tb_pati_v_result') {
 #   # pnlt data is quarterly - create date from qurter (start month)
@@ -192,16 +154,10 @@ dt = rbind(dt2, dt)
 #   x[ , date:=as.Date(paste(year, month, '01', sep='-'), '%Y-%m-%d')]
 #   x[ , c('period', 'year', 'month'):=NULL]
 # } 
-#---------------------------------
 
-#---------------------------------
-# merge in the meta data 
-# includes english translations
-
-# dt = merge_meta_data(dt)
+# merge in the meta data - includes english translations
 x = copy(dt)
-
-# this used to be in the meta data function, but it isn't working so I'm running it step by step:
+# this used to be in the merge_meta_data() function, but it isn't working so I'm running it step by step:
 #------------------
 # import the meta data for the merge
 
@@ -218,38 +174,40 @@ categories[ , url_list:=NULL]
 setnames(x, 'category', 'category_id')
 setnames(x, 'org_unit_ID', 'org_unit_id')
 setnames(x, 'data_element_ID', 'data_element_id')
-
 # change the names of vars in meta data so they match with dt
 setnames(categories, 'ID', 'category_id')
 setnames(categories, 'displayName', 'category')
 setnames(data_elements, 'datasets_ID', 'data_set_id')
 
 x[ , group:=NULL]
-x[ , data_element_id:=as.character(data_element_id)]
 x[ , category_id:=as.character(category_id)]
 x[ , org_unit_id :=as.character(org_unit_id)]
-x[ , last_update:=as.character(last_update)]
+x[ , period :=as.character(period)]
+x[ , last_update:=as.Date(last_update)]
+
 data_elements[, data_set_id:=as.character(data_set_id)]
 data_elements[, data_element_id:=as.character(data_element_id)]
+data_elements[, data_element_name:=as.character(data_element_name)]
+data_elements[, datasets_name:=as.character(datasets_name)]
+
+categories[, category_id:=as.character(category_id)]
+categories[, category:=as.character(category)]
 
 # merge in the facilities meta data 
 y = merge(x, facilities, by='org_unit_id', all.x=TRUE)
 
 # merge in the data elements
 # some data elements contain duplicate ids - set if statements for these sets
-if (folder=='pnls') {
+if (set=='pnls') {
   y[ , data_set_id:='wIMw0dzITTs']
   y = merge(y, data_elements, by=c('data_set_id', 'data_element_id'), all.x=TRUE)
-} else if (folder=='base') { 
+} else if (set=='base') { 
   y[ , data_set_id:='pMbC0FJPkcm']
   y = merge(y, data_elements, by=c('data_set_id', 'data_element_id'), all.x=TRUE)
 } else { y = merge(y, data_elements, by='data_element_id', all.x=TRUE) }
 
 # merge in the categories
 y = merge(y, categories, by='category_id', all.x=TRUE)
-
-# change last update to be a data variable
-y[ , last_update:=as.Date(last_update)]
 
 # rename variables and place in an intuitive order 
 # check if the data table contains quarterly data 
@@ -260,16 +218,11 @@ setnames(y, "data_element_name", "element")
 y[, c("period", "data_set_id") := NULL]
 
 dt = copy(y)
+
+rm(list = c('categories', 'facilities', 'data_elements', 'x', 'y'))
 #---------------------------------
 
 #---------------------------------
-# # run the prep function to prepare some variables for use
-# dt = prep_dhis(dt)
-
-# setwd("/ihme/code/abatzel/gf/")
-# source("./core/standardizeDPSNames.r")
-# source("./core/standardizeHZNames.R") # can't run on the cluster with accented characters
-
 # this used to be in the prep_dhis function, but it isn't working so I'm running it step by step:
 # replace the dps/hz with just the name, excluding the code and word 'province'
 # some health zones and provinces have two names before 'province'
