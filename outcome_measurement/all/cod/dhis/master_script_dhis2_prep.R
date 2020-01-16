@@ -3,6 +3,8 @@
 
 # Master script to (hopefully) organize the DHIS2 prep process
 # Run on the cluster
+library(data.table)
+library(lubridate)
 #---------------------------------------------
 
 #---------------------------------------------
@@ -26,6 +28,13 @@ step2_prep_data = TRUE
 step3_remove_outliers = TRUE
 
 set = 'base'
+
+# note: start month and year are inclusive/end month is exclusive
+start_month = '01'
+start_year = '2017'
+end_month = as.character(month(Sys.Date()))
+if (nchar(end_month)==1) end_month = paste0('0', end_month)
+end_year = as.character(year(Sys.Date()))
 #---------------------------------------------
 
 #---------------------------------------------
@@ -42,9 +51,6 @@ if (rerun_metadata_extraction){
 if (step1_extract_data) { 
   # Step 1a - download data
   source(paste0(code_dir, 'extract_dhis/extract_data_dhis.R'))
-  
-  run_extraction_tool(start_year = '2018', end_year = '2019', start_month = '01', end_month = '12', 
-                      set = '1', set_name = set)
 
   # Step 1b - combine intermediate data files
   source(paste0(code_dir, 'extract_dhis/aggregate_extracted_data_dhis.R'))
@@ -56,14 +62,16 @@ if (step1_extract_data) {
 #---------------------------------------------
 if (step2_prep_data) { 
   # Step 2a - merge meta data
-  source(paste0(code_dir, 'prep_dhis/merge_dhis_for_new_download.rds'))
-  # Step 2b - run prep code
-  if (set == 'base' | set == 'sigl'){
-    source(paste0(code_dir, 'prep_dhis/additional_prep.rds'))
-  }
-  # Step 2c - run checks on the download
-  source(paste0(code_dir, 'prep_dhis/run_checks_on_new_download.rds'))
+  source(paste0(code_dir, 'prep_dhis/merge_dhis_for_new_download.R'))
+  
 }
+# Switch to local computer - renaming function doesn't work on the cluster. 
+# Step 2b - run prep code - RUN THIS PART LOCALLY, not on the cluster***
+  if (set %in% c('base', 'sigl', 'secondary')){
+    source(paste0(code_dir, 'prep_dhis/additional_prep.R'))
+  # Step 2c - run checks on the download
+  source(paste0(code_dir, 'prep_dhis/run_checks_on_new_download.R'))
+  }
 #---------------------------------------------
 
 #---------------------------------------------
@@ -71,10 +79,12 @@ if (step2_prep_data) {
 #---------------------------------------------
 if (step3_remove_outliers) { 
   # Step 3a - run QR to detect outliers
-  
+  source(paste0(code_dir, 'outlier_removel/run_quantreg_parallel.R'))
+  source(paste0(code_dir, 'outlier_removel/agg_qr_results.R'))
   # Step 3b - run code to create outlier graphs
-  
+  source(paste0(code_dir, 'outlier_removel/visualize_qr_outliers.R'))
   # Steb 3c remove outliers/replace with fitted values
+  # source(paste0(code_dir, 'outlier_removel/'))
 }
 #---------------------------------------------
 
