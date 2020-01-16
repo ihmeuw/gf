@@ -28,7 +28,8 @@ library(lubridate)
 # change the folder to the name of the data set you want to merge
 # this is the only argument to change 
 
-set = 'base'
+# NOTE: set variable passed in from master script:
+# set = 'secondary'
 #---------------------------------
 
 # --------------------------------
@@ -68,7 +69,7 @@ dt = data.table(readRDS(paste0(dir_download, file)))
 #---------------------------------
 # create a vector of variables to subset the larger data sets
 #---------------------------------
-if (set == 'base' | set == 'sigl') {
+if (set == 'base' | set == 'sigl' | set == 'secondary') {
   keep_vars = read.xlsx(paste0(dir, 'meta_data/catalogues/data_elements_cod.xlsx'))
   keep_vars = data.table(keep_vars)
   keep_vars[ , keep:=as.numeric(keep)]
@@ -76,7 +77,7 @@ if (set == 'base' | set == 'sigl') {
 }
 
 # subset to only the variables needed since they are large data sets
-if (set=='base' | set=='sigl') {
+if (set=='base' | set=='sigl' | set == 'secondary') {
   dt[ , data_element_ID:=as.character(data_element_ID)]
   dt = dt[data_element_ID %in% keep_vars]
 }
@@ -86,17 +87,17 @@ if (set=='base' | set=='sigl') {
 # drop diacritical marks
 # sourcing this function on the cluster fails 
 #---------------------------------
-fix_diacritics = function(x) {
-  replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='C', '?'='E', '?'='E',
-                           '?'='E', '?'='E', '?'='I', '?'='I', '?'='I', '?'='I', '?'='N', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='U',
-                           '?'='U', '?'='U', '?'='U', '?'='Y', '?'='B', '?'='Ss', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='c',
-                           '?'='e', '?'='e', '?'='e', '?'='e', '?'='i', '?'='i', '?'='i', '?'='i', '?'='o', '?'='n', '?'='o', '?'='o', '?'='o', '?'='o',
-                           '?'='o', '?'='o', '?'='u', '?'='u', '?'='u', '?'='y', '?'='y', '?'='b', '?'='y')
-  
-  replace_me = paste(names(replacement_chars), collapse='')
-  replace_with = paste(replacement_chars, collapse = '')
-  return(chartr(replace_me, replace_with, x))
-}
+# fix_diacritics = function(x) {
+#   replacement_chars = list('S'='S', 's'='s', 'Z'='Z', 'z'='z', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='A', '?'='C', '?'='E', '?'='E',
+#                            '?'='E', '?'='E', '?'='I', '?'='I', '?'='I', '?'='I', '?'='N', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='O', '?'='U',
+#                            '?'='U', '?'='U', '?'='U', '?'='Y', '?'='B', '?'='Ss', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='a', '?'='c',
+#                            '?'='e', '?'='e', '?'='e', '?'='e', '?'='i', '?'='i', '?'='i', '?'='i', '?'='o', '?'='n', '?'='o', '?'='o', '?'='o', '?'='o',
+#                            '?'='o', '?'='o', '?'='u', '?'='u', '?'='u', '?'='y', '?'='y', '?'='b', '?'='y')
+#   
+#   replace_me = paste(names(replacement_chars), collapse='')
+#   replace_with = paste(replacement_chars, collapse = '')
+#   return(chartr(replace_me, replace_with, x))
+# }
 #---------------------------------
 
 #---------------------------------
@@ -107,11 +108,12 @@ fix_diacritics = function(x) {
 dt[ , value:=as.character(value)]
 dt[ , value:=as.numeric(value)]
 print(paste0("There are ", nrow(dt[is.na(value), ]), " missing values in the raw data."))
-
+dt = dt[!is.na(value)]
+  
 # add a date variable
 dt[ , date:=ymd(paste0(as.character(period), '01'))]
 
-# create a date variable based on last update 
+# make last updated a date variable
 dt[ , last_update:=as.character(last_update)]
 dt[ , last_update:=sapply(str_split(last_update, 'T'), '[', 1)]
 #---------------------------------
@@ -127,13 +129,11 @@ max_date = gsub('-', '_', max_date)
 
 # save the raw data before the merge 
 saveRDS(dt, paste0(dir, '1_initial_download/', set, '/', set, '_', min_date, '_', max_date, '_subset.rds'))
-#dt = readRDS(paste0(dir, '1_initial_download/base/base_2018_01_01_2019_04_01_full_initial_prep.rds'))
 #---------------------------------
 
 #---------------------------------
 # check unique identifiers:
 #---------------------------------
-# byVars = names(dt)[! names(dt) %in% c('download_number', 'file', 'value')]
 byVars = c('data_element_ID', 'org_unit_ID', 'category', 'date')
 if( nrow(unique(dt[, byVars, with = FALSE])) != nrow(dt)) stop( 'Unique identifiers do not uniquely identify the data...')
 #---------------------------------
@@ -256,7 +256,7 @@ max = dt[ , max(date)]
 max = gsub('-', '_', max)
 
 # save a merged rds file 
-saveRDS(dt, paste0(dir, '2_merged_with_metadata/', folder,'_', min, '_', max, '.rds' ))
+saveRDS(dt, paste0(dir, '2_merged_with_metadata/', set, '/', set ,'_', min, '_', max, '.rds' ))
 #---------------------------------
 
 
