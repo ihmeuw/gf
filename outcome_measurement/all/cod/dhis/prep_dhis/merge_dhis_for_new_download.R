@@ -29,7 +29,6 @@ library(lubridate)
 # this is the only argument to change 
 
 # NOTE: set variable passed in from master script:
-# set = 'secondary'
 #---------------------------------
 
 # --------------------------------
