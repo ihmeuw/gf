@@ -50,15 +50,12 @@ files = list.files(dir_download, recursive=TRUE)
 files = files[grepl("aggregated", files, fixed = TRUE)]
 
 # keep just the most recently downloaded file:
-years = lapply(files, function (x) { str_split(x, '_')[[1]][5] })
-years = as.numeric(years)
-months = lapply(files, function (x) { str_split(x, '_')[[1]][4] })
-months = as.numeric(months)
+max_yr = lapply(files, function (x) { str_split(x, '_')[[1]][5] }) %>% as.numeric() %>% max() %>% as.character()
 
-max_yr = as.character(max(years))
-max_mo = as.character(max(months))
+files = files[unlist(lapply(files, function (x) { str_split(x, '_')[[1]][5]==max_yr }))]
+max_mo = lapply(files, function (x) { str_split(x, '_')[[1]][4] }) %>% as.numeric() %>% max() %>% as.character()
+if(nchar(max_mo)==1) max_mo = paste0('0', max_mo)
 
-files = files[lapply(files, function (x) { str_split(x, '_')[[1]][5] }) == max_yr]
 file = files[lapply(files, function (x) { str_split(x, '_')[[1]][4] }) == max_mo]
 
 # read in the file

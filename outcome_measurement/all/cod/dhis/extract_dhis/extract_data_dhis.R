@@ -24,7 +24,6 @@
 # qsub -terse -N rst_ide_19_05_14_160329 -q long.q -l fthread=2 -l m_mem_free=60G -l h_rt=85:00:00 -l archive=TRUE -P proj_pce /ihme/code/jpy_rstudio/jpy_rstudio_shell.sh -i /ihme/singularity-images/rstudio/ihme_rstudio_3501.img -t rstudio -p 7513 -o 1 -G r
 #----------------------------------
 # Set up R
-rm(list=ls())
 library(data.table)
 library(jsonlite)
 library(httr)
@@ -44,7 +43,7 @@ library(lubridate)
 # start month is inclusive, end month is exclusive
 # update_year =  the update year should be before the data begins - default is 2009
 
-# set = identify the data set(s) you want to download by number (list below)
+# set_subset = identify the data set(s) you want to download by number (list below)
 
 # set_name = change set_name to the name of the data set you are downloading 
 # it will determine which folder the data is saved within
@@ -62,23 +61,23 @@ library(lubridate)
 # 7: oTgCLoG5OkY C- SIGL FOSA
 # 8: YYIBtkA3LbT  Data PF h
 # 9: EbG2JnCIPKD  DQI Bureau central de la Zone - Trimestriel 
-# 10: ycHbewznGao DQI Centre de Santé - Trimestriel 
-# 11: cKVdn82G240 DQI Hôpital - Trimestriel 
+# 10: ycHbewznGao DQI Centre de Sant? - Trimestriel 
+# 11: cKVdn82G240 DQI H?pital - Trimestriel 
 # 12: OeWrFwkFMvf D- Service Hopital 
 # 13: uGr4KMkDzav E- Banque de Sang et Transfusion 
 # 14: CUa7hLcHtia Export Data TB 
 # 15: LmME0nSMLMz Export Data TB Precedent 
 # 16: ktBWTI6yjTB F- Activites BCZ 
 # 17: iriO2vCt72x G- Hygiene aux frontieres 
-# 18: Fo5ux0Ja21i H- Relevé Epidémiologique Hebdomadaire 
+# 18: Fo5ux0Ja21i H- Relev? Epid?miologique Hebdomadaire 
 # 19: hGTha9836Lk I-Surveillance EBOLA 
-# 20: LBXxOUxWLQe I-Surveillance Journalière EBOLA 
+# 20: LBXxOUxWLQe I-Surveillance Journali?re EBOLA 
 # 21: q2LW2KL8h8O MILD_Denombrement 
 # 22: dUg9MGucvYg MILD_Distribution 
 # 23: p9OV146elYx OSQD Bureau Central de la ZS 
-# 24: dmtwHoZEHpS OSQD Centre de Santé 
-# 25: uhUlD7EQo5Y OSQD Hôpital 
-# 26: aWLL9odsL7p OSQD Vérification - Audit 
+# 24: dmtwHoZEHpS OSQD Centre de Sant? 
+# 25: uhUlD7EQo5Y OSQD H?pital 
+# 26: aWLL9odsL7p OSQD V?rification - Audit 
 # 27: E39d4kc5aPR PepfarConnect 
 # 28: FLATAfhyaHb PNLP CS Site Sentinelle 
 # 29: z6oEr8JcJ57 PNLP HGR Site Sentinelle 
@@ -90,10 +89,21 @@ library(lubridate)
 #-----------------------------------------------
 # extract the data and save 
 #-----------------------------------------------
-run_extraction_tool = function(start_year = '2019', end_year = '2019', 
-                               start_month = '01', end_month = '12', 
-                               update_year = '2009', 
-                               set = 1, set_name = 'base') {
+run_extraction_tool = function(start_year = '2019', end_year = as.character(year(Sys.Date())), 
+                               start_month = '01', end_month = as.character(month(Sys.Date())), 
+                               set_name = set) {
+
+  update_year = '2009'
+  
+  if (set == 'base') {
+    set_subset = 1
+  } else if (set == 'sigl'){
+    set_subset = c(3:4)
+  } else if (set == 'secondary'){
+    set_subset = 2
+  } else {
+    print('This master script is not yet implemented for your chosen data set!')
+  }
   
   # Set the directory to download the data
   # detect if operating on windows or on the cluster 
@@ -101,13 +111,12 @@ run_extraction_tool = function(start_year = '2019', end_year = '2019',
   # define main directory
   dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
   
-  #----------------------------------
-  # source the necessary functions to download the data 
-  # change the location of the sourced file to your home directory or source from J
-  source(paste0(dir, 'code/dhis_extracting_functions.R')) 
-  
-  # check to make sure the package loaded by viewing a help file
-  ?extract_all_data
+  # create a folder to save the download in under the current month/year (date of this download)
+  current_year = as.character(year(Sys.Date()))
+  current_month = as.character(month(Sys.Date()))
+  if(nchar(current_month)==1) current_month = paste0('0', current_month)
+  save_dir = paste0(dir, '1_initial_download/', set_name, '/', 'intermediate_data_', current_year, '_', current_month, '/')
+  if (!file.exists(save_dir)) dir.create(save_dir)
   
   #----------------------------------
   # set the country, base_url, username, and password 
@@ -127,8 +136,6 @@ run_extraction_tool = function(start_year = '2019', end_year = '2019',
   # extract the data set and export as a RDS
   # click 'plots' tab to watch download progress
   # extract_all_data is a function in the dhisextractr package
-  current_month = month(Sys.Date())
-  current_year = year(Sys.Date())
   
   # loop through months to extract data
   start_date = paste0(start_year, '-', start_month, "-01")
@@ -137,10 +144,7 @@ run_extraction_tool = function(start_year = '2019', end_year = '2019',
   end_date = as.Date(end_date)
   
   dates = seq(start_date,end_date, by = 'month')
-  
-  # NOTE: make sure there is an "intermediate_data" folder within the data set folder to save the data too.  I have set older versions to be "intermediate_data_archive"
-  # and then created a new "intermediate_data" folder, otherwise it will still work but will overwrite old files (maybe this is okay because we have the combined file from intermediate ones still?)
-  # TO DO: someday will make this all happen through the code...
+
   #----------------------------------
   # EXTRACTION LOOP------------------
   #----------------------------------
@@ -151,8 +155,8 @@ run_extraction_tool = function(start_year = '2019', end_year = '2019',
     
     # extract month of data
     extracted_data = extract_all_data(base_url = base_url, 
-                                      data_sets = data_sets[set, ],
-                                      org_units = org_units[1:40], 
+                                      data_sets = data_sets[set_subset, ],
+                                      org_units = org_units, 
                                       deb_period = start_current_loop,
                                       end_period = end_current_loop,
                                       userID = userID, 
@@ -165,21 +169,26 @@ run_extraction_tool = function(start_year = '2019', end_year = '2019',
     save_month_end = month(end_current_loop)
     save_year_end = year(end_current_loop)
     
+    save_file = paste0(save_dir, set_name,'_0', save_month_start, '_', save_year_start, '_0', save_month_end, '_', save_year_end) 
+    
     # save intermediate data - 1st iteration
-    extracted_data$download_number = 1
-    print(paste0('Downloading ', save_month_start, '/', save_year_start, ' now...'))
-    saveRDS(extracted_data, paste0(dir, '1_initial_download/', set_name, '/intermediate_data_', current_year, '_', 
-                                   current_month, '/', set_name,'_0', save_month_start, '_', 
-                                   save_year_start, '_0', save_month_end, '_', save_year_end, '_first_download.rds'))
-    print(paste0('The month ', save_month_start, '/', save_year_start, ' is downloaded and saved.'))
+    if (nrow(extracted_data)==0){
+      print(paste0('No data extracted for ', save_month_start, '/', save_year_start, '!'))
+      next
+    } else {
+      extracted_data$download_number = 1
+    }
+    
+    saveRDS(extracted_data, paste0(save_file, '_first_download.rds'))
+    print(paste0('The first download attempt of ', save_month_start, '/', save_year_start, ' is downloaded and saved.'))
     
     # extract month again on subset of org_units
     extracted_fac = unique(extracted_data$org_unit_ID) %>% as.character
-    org_units = org_units[!org_unit_ID %in% extracted_fac]
+    org_units_to_try_again = org_units[!org_unit_ID %in% extracted_fac]
     
     extracted_data2 = extract_all_data(base_url = base_url, 
-                                       data_sets = data_sets[set, ],
-                                       org_units = org_units, 
+                                       data_sets = data_sets[set_subset, ],
+                                       org_units = org_units_to_try_again, 
                                        deb_period = start_current_loop,
                                        end_period = end_current_loop,
                                        userID = userID, 
@@ -193,8 +202,8 @@ run_extraction_tool = function(start_year = '2019', end_year = '2019',
       next
     } else {
       extracted_data2$download_number = 2
-      saveRDS(extracted_data2, paste0(dir, '1_initial_download/', set_name, '/intermediate_data_', current_year, '_', current_month, '/', set_name,'_0', save_month_start, '_', 
-                                       save_year_start, '_0', save_month_end, '_', save_year_end, '_second_download.rds'))
+      saveRDS(extracted_data2, paste0(save_file, '_second_download.rds'))
+      print(paste0('The second download attempt of ', save_month_start, '/', save_year_start, ' is downloaded and saved.'))
     }
     print(paste0("Loop ", i, " of ", (length(dates)-1), " complete" ))
   }

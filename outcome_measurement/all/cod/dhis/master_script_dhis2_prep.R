@@ -15,17 +15,11 @@ library(lubridate)
 rerun_metadata_extraction = FALSE
 
 step1_extract_data = FALSE
-step2_prep_data = TRUE
+step2_merge_metadata = FALSE
 step3_remove_outliers = FALSE
+step4_addtiional_prep = FALSE
 
-set = 'secondary'
-
-# note: start month and year are inclusive/end month is exclusive
-start_month = '01'
-start_year = '2017'
-end_month = as.character(month(Sys.Date()))
-if (nchar(end_month)==1) end_month = paste0('0', end_month)
-end_year = as.character(year(Sys.Date()))
+set = 'base'
 #---------------------------------------------
 
 #---------------------------------------------
@@ -50,27 +44,31 @@ if (rerun_metadata_extraction){
 #---------------------------------------------
 if (step1_extract_data) { 
   # Step 1a - download data
-  source(paste0(code_dir, 'extract_dhis/extract_data_dhis.R'))
-
+    # define main directory
+      root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+      dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+    # source the necessary functions to download the data 
+      source(paste0(dir, 'code/dhis_extracting_functions.R')) 
+    # check to make sure the package loaded by viewing a help file
+      ?extract_all_data
+  
+    source(paste0(code_dir, 'extract_dhis/extract_data_dhis.R'))
+  
+    run_extraction_tool(start_year = '2019', end_year = as.character(year(Sys.Date())), 
+                        start_month = '11', end_month = as.character(month(Sys.Date())), 
+                        set_name = set)
+  
   # Step 1b - combine intermediate data files
-  source(paste0(code_dir, 'extract_dhis/aggregate_extracted_data_dhis.R'))
+    source(paste0(code_dir, 'extract_dhis/aggregate_extracted_data_dhis.R'))
 }
 #---------------------------------------------
 
 #---------------------------------------------
-# Step 2 - prep data
+# Step 2 - merge metadata
 #---------------------------------------------
-if (step2_prep_data) { 
-  # Step 2a - merge meta data
+if (step2_merge_metadata) { 
   source(paste0(code_dir, 'prep_dhis/merge_dhis_for_new_download.R'))
 }
-# Switch to local computer - renaming function doesn't work on the cluster. 
-# ***Step 2b - run prep code - RUN THIS PART LOCALLY, not on the cluster***
-  if (set %in% c('base', 'sigl', 'secondary')){
-    source(paste0(code_dir, 'prep_dhis/additional_prep.R'))
-  # Step 2c - run checks on the download
-  source(paste0(code_dir, 'prep_dhis/run_checks_on_new_download.R'))
-  }
 #---------------------------------------------
 
 #---------------------------------------------
@@ -78,12 +76,25 @@ if (step2_prep_data) {
 #---------------------------------------------
 if (step3_remove_outliers) { 
   # Step 3a - run QR to detect outliers
-  source(paste0(code_dir, 'outlier_removel/run_quantreg_parallel.R'))
-  source(paste0(code_dir, 'outlier_removel/agg_qr_results.R'))
+    source(paste0(code_dir, 'outlier_removel/run_quantreg_parallel.R'))
+    source(paste0(code_dir, 'outlier_removel/agg_qr_results.R'))
   # Step 3b - run code to create outlier graphs
-  source(paste0(code_dir, 'outlier_removel/visualize_qr_outliers.R'))
+    source(paste0(code_dir, 'outlier_removel/visualize_qr_outliers.R'))
   # Steb 3c remove outliers/replace with fitted values
-  # source(paste0(code_dir, 'outlier_removel/'))
+    # source(paste0(code_dir, 'outlier_removel/'))
+}
+#---------------------------------------------
+
+#---------------------------------------------
+# Step 4 - additional prep 
+#---------------------------------------------
+# Switch to local computer - renaming function doesn't work on the cluster. 
+# ***Step 2b - run prep code - RUN THIS PART LOCALLY, not on the cluster***
+if (set %in% c('base', 'sigl', 'secondary')){
+  if (step4_addtiional_prep){
+    source(paste0(code_dir, 'prep_dhis/additional_prep.R'))
+    source(paste0(code_dir, 'prep_dhis/run_checks_on_new_download.R'))
+  }
 }
 #---------------------------------------------
 
