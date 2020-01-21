@@ -2,7 +2,7 @@
 # Audrey Batzel
 #
 # 1/23/19
-# Prep PATI TB, base services, and SIGL data sets from SNIS
+# Prep data sets, specifically health zone/dps names 
 setwd('C:/local/gf/')
 # ----------------------------------------------
 
