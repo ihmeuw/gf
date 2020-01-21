@@ -6,13 +6,13 @@ library(data.table)
 library(scales)
 library(ggplot2)
 
-source("C:/Users/frc2/Documents/gf/resource_tracking/analysis/graphing_functions.r")
-user='frc2'
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
+user='elineb'
 
 #------------------------------------------
 #Read in data 
 #------------------------------------------
-absorption = readRDS("C:/Users/frc2/Box Sync/Global Fund Files/SEN/prepped_data/absorption_sen_euro.rds")
+absorption = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/SEN/prepped_data/absorption_sen_euro.rds")
 
 all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
 setnames(all_mods, c('module_eng', 'intervention_eng', 'abbrev_mod_eng', 'abbrev_int_eng'), c('gf_module', 'gf_intervention', 'abbrev_mod', 'abbrev_int'))
@@ -111,3 +111,36 @@ p1
 p2
 p3
 dev.off() 
+
+#-----------------------------------------------------------------
+# Two requests after first submission: 
+# 1. Show budget/expenditure for 2015-2017 reporting period 
+# 2. show funding landscape for malaria
+# Emily Linebarger 1/13
+# 
+# 
+# budgets = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/final_budgets_sen.rds")
+# expenditures = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/final_expenditures_sen.rds")
+
+# What are the budgets/expenditures for each year in the 2015-2017 range? 
+# This will probably be better to do with absorption. 
+absorption = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/prepped_data/prepped_gos_data.rds")
+absorption = absorption[loc_name=="sen"]
+completeness_check = unique(absorption[start_date>="2015-01-01" & start_date < "2018-01-01", 
+                                       .(grant, grant_period, start_date)][order(grant, grant_period, start_date)])
+completeness_check[, id:=.GRP, by=c('grant', 'grant_period')]
+ggplot(completeness_check, aes(x=start_date, y=id, color=paste0(grant, "_", grant_period))) + 
+  geom_line() + 
+  geom_point() 
+# Yes, this data looks complete, and the GOS data is at the quarter-level, so no need to worry about overlaps. 
+absorption[, year:=year(start_date)]
+output = absorption[start_date>="2015-01-01" & start_date<"2018-01-01", .(budget=sum(budget), expenditure=sum(expenditure)), 
+           by=c('disease', 'year')][order(year, disease)]
+output = dcast(output, disease~year, value.var=c('budget', 'expenditure'))
+output = output[, .(disease, budget_2015, expenditure_2015, budget_2016, expenditure_2016, budget_2017, expenditure_2017)]
+write.csv(output, "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_SEN 2019 annual report/budget_expenditure.csv", row.names=F)
+
+#Funding landscape
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
+landscape = funding_landscape('ribbon', 'sen', 'malaria', 2010, 2017, includeGHE = TRUE)
+ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_SEN 2019 annual report/funding_landscape.png", landscape, height=8, width=12 )

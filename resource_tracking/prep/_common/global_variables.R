@@ -46,3 +46,11 @@ gen_ihme_country_code = function(dt, iso_col){
 #-----------------------------------------------------------------------------------
 gos_year = 2015
 
+#----------------------------------
+# Other global variables 
+#----------------------------------
+rssh_abbrev_mods = c("Info systems & M&E", "Financial systems", "HR & health workers", "Service delivery", "Nat. health strategies", 
+                                 "PSM", "Community systems")
+rssh_gf_mods = c("Community responses and systems", "Financial management systems", "Health management information system and monitoring and evaluation", 
+                 "Human resources for health, including community health workers", "Integrated service delivery and quality improvement", 
+                 "National health strategies",  "Procurement and supply chain management systems")

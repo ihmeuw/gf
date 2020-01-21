@@ -178,7 +178,7 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
 budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
                                      yScaleMax=NULL, baseSize=16, barLabels = TRUE, 
                                      trimAbsorption=FALSE, angleText=FALSE,
-                                     altTitle=NULL, altSubtitle=NULL, altCaption=NULL, xLabel=""){
+                                     altTitle=NULL, altSubtitle=NULL, altCaption=NULL, xLabel="", orderVar=NULL){
   require(data.table) 
   require(ggplot2) 
   require(scales)
@@ -196,11 +196,22 @@ budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
   #------------------------------------------------------------
   # Collapse data, and set by variables. 
   # -----------------------------------------------------------
-  collapseVars = c(xVar, facetVar)
-  stopifnot(c(collapseVars, 'budget', 'expenditure')%in%names(dt))
+  if (!is.null(orderVar)){
+    if (orderVar=="absorption"){
+      collapseVars = c(xVar, facetVar)
+    } else {
+      collapseVars=c(xVar, facetVar, orderVar)
+    }
+  } else {
+    collapseVars=c(xVar, facetVar, orderVar)
+  } 
   
   plot_data = dt[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=collapseVars]
   plot_data[, absorption:=(expenditure/budget)*100]
+  collapseVars=c(xVar, facetVar, orderVar)
+  
+  #Validate
+  stopifnot(c(collapseVars, 'budget', 'expenditure')%in%names(plot_data))
   
   # Trim absorption if specified. 
   if (trimAbsorption) plot_data[absorption>150.0, absorption:=150.0]
@@ -214,7 +225,12 @@ budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
   plot_data[variable=="expenditure", variable:="Expenditure"]
   
   #Base plot
-  p = ggplot(plot_data, aes(x=get(xVar), y=value, fill=variable, label=barLabel)) + 
+  if (is.null(orderVar)){
+    p = ggplot(plot_data, aes(x=get(xVar), y=value, fill=variable, label=barLabel))
+  } else {
+    p = ggplot(plot_data, aes(x=reorder(get(xVar), get(orderVar)), y=value, fill=variable, label=barLabel))
+  }
+  p = p + 
     geom_bar(stat="identity", position="identity") + 
     theme_bw(base_size=baseSize) + 
     coord_flip() + 
