@@ -68,9 +68,17 @@ data = readRDS(inFile)
 data = data[!unit_cost_usd == Inf,]
 data = data[!is.na(unit_cost_usd),]
 
-# use product_description, nb_units_in_pack instead of description, product_pack
-data[, t:=ifelse(purchase_order_year > 2014, 'after', 'before.inclusive')]
-dt = data[, .(weightedMean = weighted.mean(unit_cost_usd, total_units_in_order, na.rm = TRUE)), by = .(t, product_name_en, nb_units_in_pack, product_description, product_category)]
+
+data = data[product_category == 'anti_retroviral']
+
+# # use product_description, nb_units_in_pack instead of description, product_pack
+# data[, t:=ifelse(purchase_order_year > 2014, 'after', 'before.inclusive')]
+# dt = data[, .(weightedMean = weighted.mean(unit_cost_usd, total_units_in_order, na.rm = TRUE)), by = .(t, product_name_en, nb_units_in_pack, product_description, product_category)]
+# avg_unit_cost = dcast.data.table(dt, product_category + product_name_en + nb_units_in_pack + product_description ~ t, value.var = 'weightedMean')
+
+# get weighted mean for each year
+dt = data[, .(weightedMean = weighted.mean(unit_cost_usd, total_units_in_order, na.rm = TRUE)), by = .(purchase_order_year, product_name_en, nb_units_in_pack, product_description, product_category)]
+
 avg_unit_cost = dcast.data.table(dt, product_category + product_name_en + nb_units_in_pack + product_description ~ t, value.var = 'weightedMean')
 
 # calculate percent change 

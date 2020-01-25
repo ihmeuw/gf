@@ -38,6 +38,9 @@ inFile = paste0(dir, 'unit_cost_data/prepped_data/prepped_pqr_arvs_with_ppm_ref_
 # output files 
 ts_unit_cost_ppm_ref_prices = paste0(dir,  'visualizations/PQR/ts_arvs_unit_cost_ppm_ref_prices.pdf')
 ts_RATIO_unit_cost_ppm_ref_prices = paste0(dir,  'visualizations/PQR/ts_RATIO_arvs_unit_cost_ppm_ref_prices.pdf')
+ts_RATIO_unit_cost_ppm_ref_prices_forSynthesisReport = paste0(dir, 'visualizations/PQR/ts_RATIO_arvs_unit_cost_ppm_ref_prices_subsetForSynthesisReport.pdf')
+avg_cost_ratios_forSynthesisReport = paste0(dir, 'visualizations/PQR/avg_cost_ratios_forSynthesisReport.pdf')
+ts_unit_cost_ppm_ref_prices_mostCommon_forSynthesisReport = paste0(dir,  'visualizations/PQR/ts_arvs_unit_cost_ppm_ref_prices_mostCommon_forSynthesisReport.pdf')
 
 regr_results_ratio_costs_by_category_log = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_category_log.pdf')
 regr_results_ratio_costs_by_categoryAndCountry_log = paste0(dir, 'visualizations/PQR/regr_results_ratio_costs_by_categoryAndCountry_log.pdf')
@@ -121,22 +124,139 @@ for ( cat in unique(dt$product_category) ){ # loop through category first so the
 }
 dev.off()
 
+# Subset to most common ARVs for synthesis report succinct analyses
+most_common = dt[, .(purchasing_volume = sum(total_units_in_order),
+                     total_cost = sum(total_cost_order)), by = product_name]
+setorderv(most_common, c('purchasing_volume'), c(-1))
+most_common[, volume_rank := .I]
+setorderv(most_common, c('total_cost'), c(-1))
+most_common[, cost_rank := .I]
+most_common[, rank := volume_rank + cost_rank]
+setorderv(most_common, c('rank'), c(1))
+
+most_common_arvs = most_common[1:5, product_name]
+# most_common_arvs = c(most_common_arvs, 'Dolutegravir', 'Dolutegravir+Lamivudine+Tenofovir')
+
+dt_for_ts_graphs = dt[product_name %in% most_common_arvs, ]
+dt_for_ts_graphs = dt_for_ts_graphs[product_name == 'Efavirenz+Lamivudine+Tenofovir' & full_desc_var != '600mg+300mg+300mg_30_tablet', full_desc_var := NA]
+dt_for_ts_graphs = dt_for_ts_graphs[!is.na(full_desc_var)]
+
+pdf(ts_unit_cost_ppm_ref_prices_mostCommon_forSynthesisReport, height = 9, width = 12)
+for ( cat in unique(dt_for_ts_graphs$product_category) ){ # loop through category first so they're grouped by category
+  for ( p in unique(dt_for_ts_graphs[product_category == cat, product_name]) ){
+    print(ggplot(dt_for_ts_graphs[product_name == p, ], aes(x=purchase_order_date, y=unit_cost_usd, color=country_name, size = total_units_in_order)) +
+            scale_color_manual(name = 'Country Name', values = colors) +
+            geom_line(aes(x=purchase_order_date, y=ppm_ref_price_per_unit), color = 'darkgrey', size = 1 ) +
+            geom_point(aes(x=purchase_order_date, y=ppm_ref_price_per_unit), color = 'darkgrey', size = 2 ) +
+            geom_point() +
+            theme_bw() +
+            theme(text = element_text(size=14)) +
+            facet_wrap( ~full_desc_var, scales = "free") +
+            scale_size_continuous(labels = comma) +
+            labs(title = paste0("Comparison of unit costs and PPM reference prices for ", p),
+                 subtitle = '(Gray points show the PPM reference price)',
+                 x='Purchase order date', y='Unit Cost (USD)', size = 'Volume Purchased'))
+  }
+}
+dev.off()
+
 # time series for unit cost/reference price
 pdf(ts_RATIO_unit_cost_ppm_ref_prices, height = 9, width = 12)
 for ( cat in unique(dt$product_category) ){ # loop through category first so they're grouped by category
   for ( p in unique(dt[product_category == cat, product_name]) ){
     print(ggplot(dt[product_name == p, ], aes(x=purchase_order_date, y=unit_cost_over_ref_price, color=country_name, size = total_units_in_order)) +
             scale_color_manual(name = 'Country Name', values = colors) +
+            geom_smooth(data = dt[product_name == p, ],  aes(x=purchase_order_date, y=unit_cost_over_ref_price), inherit.aes = FALSE, color = 'grey25', alpha = 0.25) +
             geom_point() +
             theme_bw() +
             theme(text = element_text(size=14)) +
             facet_wrap( ~full_desc_var, scales = "free") +
             scale_size_continuous(labels = comma) +
             labs(title = paste0("Ratio of unit costs to PPM reference prices over time for ", p),
-                 x='Purchase order date', y='Ratio of unit cost to reference price', size = 'Volume Purchased'))
+                 subtitle = 'Dotted red line represents where prices are equal',
+                 x='Purchase order date', y='Ratio of unit cost to reference price', size = 'Volume Purchased') +
+            geom_hline(yintercept = 1.0, color = 'red', linetype = 'dashed')
+          )
   }
 }
 dev.off()
+
+
+graph_data = dt[,.(total_units_in_order = sum(total_units_in_order)),
+                by = .(product_category, product_name, country_name, full_desc_var, unit_cost_over_ref_price, date_for_figures)]
+
+avgs_graph_data = dt[, .(avg_ratio = mean(unit_cost_over_ref_price),
+                         min_ratio = min(unit_cost_over_ref_price),
+                         max_ratio = max(unit_cost_over_ref_price),
+                         units_purchased = sum(total_units_in_order)),
+                     by = .(product_category, product_name, country_name )]
+
+pdf(ts_RATIO_unit_cost_ppm_ref_prices_forSynthesisReport, height = 9, width = 12)
+print(ggplot(graph_data[product_name %in% most_common_arvs & unit_cost_over_ref_price<4, ], aes(x=date_for_figures, y=unit_cost_over_ref_price, color=country_name, size = total_units_in_order)) +
+        scale_color_manual(name = 'Country Name', values = colors) +
+        geom_smooth(data = graph_data[product_name %in% most_common_arvs, ],  aes(x=date_for_figures, y=unit_cost_over_ref_price), inherit.aes = FALSE, color = 'grey25', alpha = 0.25) +
+        geom_point() +
+        theme_bw() +
+        theme(text = element_text(size=14)) +
+        scale_size_continuous(labels = comma) +
+        labs(title = paste0("Ratio of unit costs to PPM reference prices over time for most commonly purchased ARVS"),
+             subtitle = 'Dotted red line represents where prices are equal',
+             x='Purchase order date', y='Ratio of unit cost to reference price', size = 'Volume Purchased') +
+        geom_hline(yintercept = 1.0, color = 'red', linetype = 'dashed') +
+        facet_wrap( ~ product_name)+
+        theme(axis.text.x=element_text(angle=45, hjust = 1)))
+
+graph_data = dt[,.(total_units_in_order = sum(total_units_in_order)),
+                by = .(product_category, product_name, country_name, full_desc_var, unit_cost_over_ref_price, purchase_order_date)]
+
+for ( cat in unique(graph_data$product_category) ){ # loop through category first so they're grouped by category
+  for ( p in unique(graph_data[product_category == cat, product_name]) ){
+    print(ggplot(graph_data[product_name == p, ], aes(x=purchase_order_date, y=unit_cost_over_ref_price, color=country_name, size = total_units_in_order)) +
+            scale_color_manual(name = 'Country Name', values = colors) +
+            geom_smooth(data = graph_data[product_name == p, ],  aes(x=purchase_order_date, y=unit_cost_over_ref_price), inherit.aes = FALSE, color = 'grey25', alpha = 0.25) +
+            geom_point() +
+            theme_bw() +
+            theme(text = element_text(size=14)) +
+                      scale_size_continuous(labels = comma) +
+            labs(title = paste0("Ratio of unit costs to PPM reference prices over time for ", p),
+                 subtitle = 'Dotted red line represents where prices are equal',
+                 x='Purchase order date', y='Ratio of unit cost to reference price', size = 'Volume Purchased') +
+            geom_hline(yintercept = 1.0, color = 'red', linetype = 'dashed')
+    )
+  }
+}
+dev.off()
+
+avgs_graph_data[ max_ratio >2, max_ratio := 2]
+
+pdf(avg_cost_ratios_forSynthesisReport, height = 9, width = 12)
+  print(ggplot(avgs_graph_data[product_name %in% most_common_arvs], aes(x=product_name, y=avg_ratio, ymin = min_ratio, ymax = max_ratio, color=country_name, size = units_purchased)) +
+          scale_color_manual(name = 'Country Name', values = colors) +
+          scale_size_continuous(labels = comma) +
+          geom_pointrange(alpha = 0.75, position = position_jitterdodge(), shape = 1) +
+          theme_bw() +
+          theme(text = element_text(size=14)) +
+          labs(title = paste0("Average, max, and min ratios of unit costs to PPM reference prices over time for ARV products"),
+               subtitle = 'Dotted red line represents where prices are equal',
+               x='', y='Ratio of unit cost to reference price', size = 'Units\nPurchased') +
+          geom_hline(yintercept = 1.0, color = 'red', linetype = 'dashed') +
+          theme(axis.text.x=element_text(angle=45, hjust=1)) +
+          theme(legend.position = 'bottom'))
+  
+  print(ggplot(avgs_graph_data[product_name %in% most_common_arvs], aes(x=product_name, y=avg_ratio, ymin = min_ratio, ymax = max_ratio, color=country_name)) +
+          scale_color_manual(name = 'Country Name', values = colors) +
+          geom_pointrange(alpha = 0.75, position = position_jitterdodge(), shape = 1, size = 2) +
+          theme_bw() +
+          theme(text = element_text(size=14)) +
+          labs(title = paste0("Average, max, and min ratios of unit costs to PPM reference prices over time for ARV products"),
+               subtitle = 'Dotted red line represents where prices are equal',
+               x='', y='Ratio of unit cost to reference price') +
+          geom_hline(yintercept = 1.0, color = 'red', linetype = 'dashed') +
+          theme(axis.text.x=element_text(angle=45, hjust=1)) +
+          theme(legend.position = 'bottom'))
+  
+dev.off()
+
 # ----------------------------------------------
 
 # ----------------------------------------------
