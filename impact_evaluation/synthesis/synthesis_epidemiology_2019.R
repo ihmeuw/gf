@@ -1,6 +1,7 @@
 # ----------------------------------------------
 # Caitlin O'Brien-Carelli 
-# Estimates of mortality and incidence from GBD
+# Estimates of mortality and incidence from GBD/WHO/UNAIDS
+# Set function arguments to determine which data sources
 # ----------------------------------------------
 
 # --------------------
@@ -23,16 +24,25 @@ user = Sys.info()[['user']]
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set the directory for input and output
-dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/impact_over_time_gbd/')
+dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/synthesis_epidemiology/')
 
 code_dir = paste0('C:/Users/', user, '/local/gf/impact_evaluation/gbd_epidemiology/')
 
 #--------------------------------
+# determine if the data set is gbd or who/unaids
+
+# select 'gbd' or 'who_unaids' as the data set to visualize 
+set = 'gbd'
+
+#set = 'who_unaids'
+#--------------------------------
 # upload the data sets
 
-dt = fread(paste0(dir, 'ihme_age_standardized_2017.csv'))
+#--------------------
+# using gbd data 
 
-#--------
+if (set == 'gbd') { dt = fread(paste0(dir, 'ihme_age_standardized_2017.csv'))
+
 # subset to age standardized rates and all ages counts
 dt = dt[!(metric=='Rate' & age=='All Ages')]
 
@@ -41,6 +51,23 @@ dt$location = factor(dt$location, c("Cambodia", "Democratic Republic of the Cong
       "Guatemala", "Mozambique", "Myanmar", "Senegal", "Sudan", "Uganda", "Global"), 
       c("Cambodia", "DRC", "Guatemala", "Mozambique", "Myanmar", "Senegal", 
         "Sudan", "Uganda", "Global Trend"))
+
+# set the caption to determine which output
+cap = 'All estimates from the IHME Global Burden of Disease Study'} 
+
+#--------------------
+# using who/unaids data 
+
+if (set == 'who_unaids') {
+
+}
+          
+          
+     
+
+#--------
+
+
                         
 #--------
 
@@ -75,18 +102,18 @@ deaths = dt[measure =='Deaths']
 inc = dt[measure=='Incidence']
 
 #-------------------------
-# source outside code for tables and figures
-
-# works on caitlin's computer - change to relevant directory
-source(paste0(code_dir, 'mort_inc_all_pce_countries_table.R'))
-
-# works on caitlin's computer - change to relevant directory
-source(paste0(code_dir, "trend_figures_synthesis.R"))
-
-#-----------------------------------------------------
+# # source outside code for tables and figures
+# 
+# # works on caitlin's computer - change to relevant directory
+# source(paste0(code_dir, 'mort_inc_all_pce_countries_table.R'))
+# 
+# # works on caitlin's computer - change to relevant directory
+# source(paste0(code_dir, "trend_figures_synthesis.R"))
+# 
+# #-----------------------------------------------------
 # MORTALITY GRAPHS
 
-pdf(paste0(dir, 'outputs/mortality_pce_countries.pdf'), height=9, width=12)
+pdf(paste0(dir, 'outputs/mortality_pce_countries_', set, '.pdf'), height=9, width=12)
 
 # HIV/AIDS
 #----------------------
@@ -298,7 +325,7 @@ dev.off()
 #-----------------------------------------------------
 # INCIDENCE GRAPHS
 
-pdf(paste0(dir, 'outputs/incidence_pce_countries.pdf'), height=9, width=12)
+pdf(paste0(dir, 'outputs/incidence_pce_countries', set, '.pdf'), height=9, width=12)
 
 # HIV/AIDS
 #----------------------
