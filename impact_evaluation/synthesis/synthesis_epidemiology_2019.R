@@ -34,7 +34,6 @@ code_dir = paste0('C:/Users/', user, '/local/gf/impact_evaluation/gbd_epidemiolo
 # select 'gbd' or 'who_unaids' as the data set to visualize 
 set = 'gbd'
 
-#set = 'who_unaids'
 #--------------------------------
 # upload the data sets
 
@@ -325,7 +324,7 @@ dev.off()
 #-----------------------------------------------------
 # INCIDENCE GRAPHS
 
-pdf(paste0(dir, 'outputs/incidence_pce_countries', set, '.pdf'), height=9, width=12)
+pdf(paste0(dir, 'outputs/incidence_pce_countries_', set, '.pdf'), height=9, width=12)
 
 # HIV/AIDS
 #----------------------
