@@ -30,10 +30,6 @@ code_dir = paste0('C:/Users/', user, '/local/gf/impact_evaluation/gbd_epidemiolo
 
 outDir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/synthesis_epidemiology/')
 
-#--------------------------------
-
-dt = fread(paste0(dir, 'raw_data/gbd/ihme_age_standardized_2017.csv'))
-
 #-----------------------------------------------------------------
 # read in who tb 
 tb = fread(paste0(dir, 'raw_data/who_tb/TB_burden_countries_2020-01-21.csv'))
@@ -44,6 +40,13 @@ countries = c("Cambodia", "Democratic Republic of the Congo",
 
 # subset to relevant countries, does not include global estimates
 tb = tb[country %in% countries]
+
+# --------------------------------------
+# extract population data and use later
+
+pop = tb[ ,.(population = e_pop_num), by = .(country, year)]
+setnames(pop, 'country', 'location')
+# --------------------------------------
 
 
 # drop unecessary variables and shape long
@@ -124,7 +127,8 @@ hiv2[ , measure:='Deaths']
 hiv2[ , metric:='Number']
 
 hiv = rbind(hiv, hiv2)
-hiv[ ,age:='All Ages']
+hiv[metric=='Number', age:='All Ages']
+hiv[metric=='Rate', age:='Age-standardized']# check if age standardized
 
 # shape wide 
 hiv[grepl('upper', variable), bound:='upper']
@@ -159,39 +163,108 @@ hiv = rbind(hiv, hiv3)
 #--------------------------------------------------
 # final formatting of numbers for the merge
 
+# if the estimate is listed as "less than," delete from the data
+hiv[grep('<', val)][order(location, year)]
+hiv = hiv[!grepl('<', val)]
 
-hiv[ ,val:=gsub(' ', '', val)]
-hiv[ ,lower:=gsub(' ', '', lower)]
-hiv[ ,upper:=gsub(' ', '', upper)]
+# only one estimate for cambodia has a less than, in 1990
+hiv = hiv[!grepl('<', upper)]
 
+# if the lower bound is listed as less than 1,000, estimate as 0
+hiv[grepl('<', lower), lower:=0]
 
+# trim the spaces from the values
+hiv[ ,val:=as.numeric(gsub(' ', '', val))]
+hiv[ ,lower:=as.numeric(gsub(' ', '', lower))]
+hiv[ ,upper:=as.numeric(gsub(' ', '', upper))]
 
+# add the cause
+hiv[ ,cause:='HIV/AIDS']
+hiv[ ,sex:='Both']
 
+# confirm year is a numeric
+hiv[, year:=as.numeric(as.character(year))]
+#--------------------------------------------------
+# calculate mortality rates
 
-# designate mortality and incidence, rates and counts
-tb[grepl('mort', variable), measure:='Deaths']
-tb[grepl('inc', variable), measure:='Incidence']
-tb[grepl('100k', variable), metric:='Rate']
-tb[!grepl('100k', variable), metric:='Number']
+death_rates = hiv[measure=='Deaths' & 2000 <= year]
+death_rates = merge(death_rates, pop, by=c('location','year'))
 
-tb[!grepl('100k', variable), metric:='Number']
+# create rates
+death_rates[ ,population:=(population/100000)]
+death_rates[ ,val:=val/population]
+death_rates[ ,lower:=lower/population]
+death_rates[ ,upper:=upper/population]
 
-# add age
-tb[metric=='Number', age:='All ages']
-tb[metric=='Rate', age:='Age-standardized']
+death_rates[ ,metric:='Rate']
+death_rates[ ,age:='Age-standardized']
+death_rates[ ,population:=NULL]
 
+# bind death rates into the data 
+hiv = rbind(hiv, death_rates)
 
+#--------------------------------------------------
+# save the data set and bind tb and hiv together
 
+# output prepped hiv data 
+saveRDS(hiv, paste0(outDir, 'prepped_data/unaids_hiv_2000_2018_prepped.rds'))
 
-
+# bind the data sets together
+tb_hiv = rbind(tb, hiv)
 
 #-------------------------------------------------------
-
-
 # prep malaria data 
 
-mal = readRDS(paste0(dir, 'who_malaria/estimated_malaria_cases_and_deaths_2010_2018.rds'))
+mal = readRDS(paste0(dir, 'raw_data/who_malaria/estimated_malaria_cases_and_deaths_2010_2018.rds'))
 
-setnames(mal, c('country'),
-         c('location'))
+# format the data and shape long
+setnames(mal, 'country', 'location')
 mal[ ,sex:='Both']
+mal[ ,population_at_risk:=NULL]
+mal = melt(mal, id.vars=c('location', 'year', 'sex'))
+
+# format to match
+mal[grepl('upper', variable), bound:='upper']
+mal[grepl('lower', variable), bound:='lower']
+mal[grepl('point', variable), bound:='val']
+
+# designate mortality and incidence, rates and counts
+mal[grepl('deaths', variable) | grepl('mortality', variable) , measure:='Deaths']
+mal[grepl('inc', variable) | grepl('cases', variable), measure:='Incidence']
+
+mal[grepl('inc', variable) | grepl('mortality', variable), metric:='Rate']
+mal[grepl('deaths', variable) | grepl('cases', variable), metric:='Number']
+
+# add age
+mal[metric=='Number', age:='All Ages']
+mal[metric=='Rate', age:='Age-standardized']
+
+# add variables not included in the data
+mal[ ,sex:='Both']
+mal[ ,cause:='Malaria']
+mal[ ,variable:=NULL]
+
+# shape wide
+mal = dcast(mal, measure+location+sex+age+cause+metric+year~bound)
+
+# match locations in other data
+mal[location=='DRC', location:='Democratic Republic of the Congo']
+
+#--------------------------------------------------
+# save the data set and bind tb and hiv together
+
+# output prepped hiv data 
+saveRDS(mal, paste0(outDir, 'prepped_data/who_malaria_2010_2018_prepped.rds'))
+
+# bind the data sets together
+dt = rbind(tb_hiv,mal)
+
+# ensure year is not a factor
+dt[ ,year:=as.numeric(as.character(year))]
+#------------------------------------------------
+# save the final product
+
+saveRDS(dt, paste0(outDir, 'prepped_data/who_unaids_prepped.rds'))
+
+#------------------------------------------------
+ 
