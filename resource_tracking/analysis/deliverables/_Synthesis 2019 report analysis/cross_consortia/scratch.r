@@ -228,8 +228,9 @@ p = ggplot(plot_data, aes(x=paste0(grant, ", ", grant_period), y=count, fill=cat
 ggsave(paste0(save_loc, "count_of_activities.png"), p, height=8, width=12)
 
 # Can you count how many times an activity's budget DOES NOT CHANGE AT ALL over the whole budget? 
-acts_by_grant = unique(budgets[, .(grant, grant_period, activity_description, gf_module, gf_intervention, disease, budget, start_date)])
-acts_by_grant = acts_by_grant[grant_period=="2018-2020"]
+acts_by_grant = budgets[current_grant==TRUE & file_iteration=="final", .(budget=sum(budget)), by=c('grant', 'grant_period', 'activity_description', 'gf_module', 
+                                                      'gf_intervention', 'disease', 'start_date')]
+acts_by_grant = acts_by_grant[grant_period!="2016-2019"] # Drop the previous GTM grants because we have the new budget now.  
 
 #Exclude all activities that have a sum total of $0 budgeted. 
 acts_by_grant[, check:=sum(budget, na.rm=T), by=c('grant', 'grant_period', 'activity_description', 'gf_module', 
@@ -237,31 +238,67 @@ acts_by_grant[, check:=sum(budget, na.rm=T), by=c('grant', 'grant_period', 'acti
 acts_by_grant = acts_by_grant[check!=0]
 acts_by_grant$check <- NULL
 
-acts_wide = dcast(acts_by_grant, grant+grant_period+activity_description+gf_module+gf_intervention+disease~start_date, value.var='budget', fun.aggregate=sum)
-acts_wide[abs(`2018-04-01`-`2018-01-01`)!=0 | 
-            abs(`2018-07-01`-`2018-04-01`)!=0 |
-            abs(`2018-10-01`-`2018-07-01`)!=0 |
-            abs(`2019-01-01`-`2018-10-01`)!=0 |
-            abs(`2019-04-01`-`2019-01-01`)!=0 |
-            abs(`2019-07-01`-`2019-04-01`)!=0 |
-            abs(`2019-10-01`-`2019-07-01`)!=0 |
-            abs(`2020-01-01`-`2019-10-01`)!=0 |
-            abs(`2020-04-01`-`2020-01-01`)!=0 |
-            abs(`2020-07-01`-`2020-04-01`)!=0 |
-            abs(`2020-10-01`-`2020-07-01`)!=0, diff:=TRUE]
-acts_wide[is.na(diff), diff:=FALSE]
+# Strangely, there are often more quarters listed in the detailed budgets than is planned for the grants. 
+# Drop these extra quarters to calculate variance correctly. 
+acts_by_grant = acts_by_grant[order(grant, grant_period, disease, gf_module, gf_intervention, activity_description, start_date)]
+acts_by_grant[, num_quarters:=seq(1, 20, by=1), by=c('grant', 'grant_period', 'disease', 'gf_module', 'gf_intervention', 'activity_description')]
+unique(acts_by_grant[, .(grant_period, max(num_quarters))])
+acts_by_grant = acts_by_grant[!(grant_period%in%c('2018-2020', '2019-2021') & num_quarters>12)] # We should have max 12 quarters for these grant periods. 
 
-#Sum these up.
-any_change = acts_wide[, .(count=.N), by=c('grant', 'grant_period', 'disease', 'gf_module', 'gf_intervention', 'diff')]
-any_change[, country:=substr(grant, 1, 3)]
-#review. 
-by_disease_change = any_change[, .(count=sum(count)), by=c('disease', 'diff')][order(disease, diff)]
-by_disease_change[, sum:=sum(count), by=c('disease')]
-by_disease_change[, pct:=count/sum]
+# Calculate the variance across start dates. 
+acts_by_grant[, variance:=var(budget), by=c('grant', 'grant_period', 'activity_description', 'gf_module', 'gf_intervention', 'disease')]
+acts_by_grant[variance!=0, any_change:=TRUE]
+acts_by_grant[variance==0, any_change:=FALSE]
 
-by_country_change = any_change[, .(count=sum(count)), by=c('disease', 'country', 'diff')][order(country, disease, diff)]
-by_country_change[, sum:=sum(count), by=c('disease', 'country')]
-by_country_change[, pct:=count/sum]
+#Make plot data.  
+acts_by_grant[, country:=substr(grant, 1, 3)]
+no_diff_pct = acts_by_grant[, .(count=.N), by=c('grant', 'country', 'any_change')][order(country, grant, any_change)]
+no_diff_pct[, sum:=sum(count), by=c('grant', 'country')]
+no_diff_pct[, pct:=round((count/sum)*100, 1)]
+no_diff_pct = no_diff_pct[any_change==FALSE | pct==100] # The Guatemala grants always show variance. 
+no_diff_pct[any_change==TRUE & pct==100, pct:=0]
+
+# Graph by disease and country. 
+p = ggplot(no_diff_pct, aes(x=reorder(grant, pct), y = pct, fill=country, label=paste0(pct, "%"))) + 
+  geom_bar(stat="identity", position="dodge") + 
+  geom_text(position = position_dodge(width=0), size=5, vjust=-0.5) + 
+  theme_bw(base_size=16) + 
+  theme(axis.text.x = element_text(angle = 35, hjust = 1)) +  
+  scale_y_continuous(lim=c(0, 100)) + 
+  scale_fill_viridis_d() + 
+  labs(title="Percentage of activities that had no change in budget for 3-year grant period", 
+       y="Percentage of activities (%)", fill="", x="", caption="*GTM-T-MSPAS had a 4-year grant period, from 2019-2022")
+
+ggsave(paste0(save_loc, "no_change_3_year.png"), p, height=8, width=14)
+
+#-----------------------------------------------------------
+# How many activities are added but have $0 (or NA) budgeted? 
+acts_by_grant = budgets[current_grant==TRUE & file_iteration=="final", .(budget=sum(budget, na.rm=T)), by=c('grant', 'grant_period', 'activity_description')]
+acts_by_grant = acts_by_grant[!is.na(activity_description) | activity_description==""] # Only count cases that actually have data in them. 
+acts_by_grant = acts_by_grant[grant_period!="2016-2019"] # Drop the previous GTM grants because we have the new budget now.  
+acts_by_grant[budget==0, zero_budget:=TRUE]
+acts_by_grant[budget!=0, zero_budget:=FALSE]
+
+#Calculate percentage. 
+acts_by_grant[, country:=substr(grant, 1, 3)]
+zero_pct = acts_by_grant[, .(count=.N), by=c('grant', 'grant_period', 'country', 'zero_budget')][order(country, grant, zero_budget)]
+zero_pct[, sum:=sum(count), by=c('grant', 'country')]
+zero_pct[, pct:=round((count/sum)*100, 1)]
+zero_pct = zero_pct[zero_budget==TRUE | pct==100]
+zero_pct[zero_budget==FALSE & pct==100, pct:=0]
+
+p = ggplot(zero_pct, aes(x=reorder(grant, pct), y = pct, fill=country, label=paste0(pct, "%"))) + 
+  geom_bar(stat="identity", position="dodge") + 
+  geom_text(position = position_dodge(width=0), size=5, vjust=-0.5) + 
+  theme_bw(base_size=16) + 
+  theme(axis.text.x = element_text(angle = 35, hjust = 1)) +  
+  scale_y_continuous(lim=c(0, 100)) + 
+  scale_fill_viridis_d() + 
+  labs(title="Percentage of activities with zero budget allocations for 3-year grant period", 
+       y="Percentage of activities (%)", fill="", x="", caption="*GTM-T-MSPAS had a 4-year grant period, from 2019-2022")
+
+ggsave(paste0(save_loc, "zero_budget_3_year.png"), p, height=8, width=14)
+
 #---------------------------------------------------------------
 # How does absorption look now as compared to earlier in the grants? 
 consortia_2018 = readRDS("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/Synthesis 2018/prepped_2018_data.rds")
@@ -321,3 +358,68 @@ collapse_2019[, absorption:=round((expenditure/budget)*100, 1)]
 
 collapse_2019 = consortia_2019[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('grant')]
 collapse_2019[, absorption:=round((expenditure/budget)*100, 1)]
+
+
+#--------------------------------
+# PROGRAM MANAGEMENT 
+#---------------------------------
+plot_data = copy(cost_categories) 
+plot_data[, category_code:=tstrsplit(cost_category, " ", keep=1)]
+plot_data[, category_code:=as.numeric(category_code)]
+category_map = data.table(read_xlsx("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/cost_category_mapping.xlsx"))
+
+plot_data = merge(plot_data, category_map, by='category_code', all=TRUE)
+stopifnot(nrow(plot_data[is.na(parent_category)])==0)
+
+# I think a better way to visualize this will be with cost categories, rather than with interventions under the "program management" module. 
+# Copying visualization code from SO1 graph. 
+plot_data = plot_data[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by=c('parent_category', 'loc_name')]
+# Make disease label. 
+
+#Collapse data 
+plot_data[, absorption:=round((expenditure/budget)*100, 1)]
+plot_data[absorption>=75.0, performance:="Excellent (>75%)"]
+plot_data[absorption>=50.0 & absorption<75.0, performance:="Average (50-75%)"]
+plot_data[absorption<50.0, performance:="Poor (<50%)"]
+print(plot_data[is.na(performance)]) #Visual review. 
+plot_data[is.na(performance), performance:="Data Unavailable"] # Verify that this is always true. 
+plot_data[, num_countries_per_category:=.N, by=c('parent_category', 'performance')]
+plot_data = unique(plot_data[, .(parent_category, performance, num_countries_per_category)])
+
+# ***** DROPPING AREAS WHERE DATA IS UNAVAILABLE FOR NOW 
+plot_data = plot_data[performance!="Data Unavailable"]
+
+# Calculate the absolute difference to use as a sorting variable. 
+merge_data = dcast(plot_data, parent_category~performance, value.var='num_countries_per_category')
+merge_data[is.na(`Average (50-75%)`), `Average (50-75%)`:=0]
+merge_data[is.na(`Excellent (>75%)`), `Excellent (>75%)`:=0]
+merge_data[is.na(`Poor (<50%)`), `Poor (<50%)`:=0]
+
+merge_data[, difference:=`Excellent (>75%)`-(`Average (50-75%)`+`Poor (<50%)`)]
+merge_data = merge_data[, .(parent_category, difference)]
+plot_data = merge(plot_data, merge_data, by=c('parent_category'))
+
+
+plot_data[, total_countries_reporting:=sum(num_countries_per_category), by='parent_category']
+plot_data[, y_proportion:=num_countries_per_category/total_countries_reporting]
+plot_data[, label:=copy(as.character(num_countries_per_category))]
+
+# Show as a bimodal distribution, with under capacity target showing as "negative". 
+plot_data[performance%in%c('Average (50-75%)', 'Poor (<50%)'), num_countries_per_category:=-num_countries_per_category]
+
+# Factor for grant ordering 
+plot_data$performance <- factor(plot_data$performance, levels=c("Excellent (>75%)", "Poor (<50%)", "Average (50-75%)")) # Poor needs to come first because when 'average' and 'poor' are made negative, we want them to be in order still. 
+
+# Try a bimodal distribution. 
+p = ggplot(plot_data, aes(x=reorder(parent_category, difference), y=num_countries_per_category, fill=performance, label=label)) + 
+  geom_bar(stat="identity") + 
+  geom_text(size=4, position = position_stack(vjust=0.5)) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_fill_manual(values=c('lightgreen', 'coral2', 'khaki1')) + 
+  theme(axis.text.x=element_blank()) + 
+  labs(title="Absorption by cost-category for PCE countries", subtitle="January 2018-June 2019", x="",
+       y="Number of countries with this performance rating", fill="Meeting absorptive\ncapacity target (75%)?", 
+       caption="Numbers shown out of 7 possible countries and\na multicountry RAI2E regional grant")
+
+ggsave(paste0(save_loc, "absorption_by_cc.png"), p, height=8, width=14)

@@ -110,7 +110,7 @@ plot_data[, label:=copy(as.character(num_countries_per_category))]
 plot_data[performance%in%c('Average (50-75%)', 'Poor (<50%)'), num_countries_per_category:=-num_countries_per_category]
 
 # Factor for grant ordering 
-plot_data$performance <- factor(plot_data$performance, levels=c("Excellent (>75%)", "Average (50-75%)", "Poor (<50%)")) # Poor needs to come first because when 'average' and 'poor' are made negative, we want them to be in order still. 
+plot_data$performance <- factor(plot_data$performance, levels=c("Excellent (>75%)", "Poor (<50%)", "Average (50-75%)")) # Poor needs to come first because when 'average' and 'poor' are made negative, we want them to be in order still. 
 
 # Want to order by disease AND difference, so need to make new levels. 
 plot_data[disease=="hiv", order:=400+difference]
@@ -119,13 +119,16 @@ plot_data[disease=="malaria", order:=200+difference]
 plot_data[disease=="rssh", order:=100+difference]
 plot_data[disease=="all", order:=difference]
 
+# Change CSW to SW 
+plot_data[, abbrev_mod:=gsub("CSW", "SW", abbrev_mod)]
+
 # Try a bimodal distribution. 
 p = ggplot(plot_data, aes(x=reorder(abbrev_mod, order), y=num_countries_per_category, fill=performance, label=label)) + 
   geom_bar(stat="identity") + 
   geom_text(size=4, position = position_stack(vjust=0.5)) + 
   theme_bw(base_size=16) + 
   coord_flip() + 
-  scale_fill_manual(values=c('lightgreen', 'khaki1', 'coral2')) + 
+  scale_fill_manual(values=c('lightgreen', 'coral2', 'khaki1')) + 
   theme(axis.text.x=element_blank()) + 
   labs(title="Absorption by module for PCE countries", subtitle="January 2018-June 2019", x="Module",
        y="Number of countries with this performance rating", fill="Meeting absorptive\ncapacity target (75%)?", 

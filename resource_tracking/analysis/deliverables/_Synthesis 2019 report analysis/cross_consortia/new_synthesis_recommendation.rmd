@@ -9,16 +9,27 @@ output: beamer_presentation
 library(data.table) 
 library(knitr)
 library(ggplot2) 
+library(scales)
 knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
 dt = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_modules.rds")
 source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
 ```
 
-## Hypothesis 1
+## 1. Budget for TB grants is much lower than HIV or malaria grants.
+```{r grant_budget} 
+plot_data = dt[, .(budget=sum(original_budget, na.rm=T)), by=c('grant_disease')]
+plot_data[, grant_disease:=toupper(grant_disease)]
+plot_data[grant_disease=="MALARIA", grant_disease:="Malaria"]
+ggplot(plot_data, aes(x=grant_disease, y=budget, label=dollar(budget))) + 
+  geom_bar(stat="identity", fill="forestgreen") + 
+  geom_text(size=5) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels=scales::dollar, limits=c(0, 600000000)) + 
+  labs(title="Original budget by grant disease", x="Grant disease", y="Budget", subtitle="All PCE countries pooled")
+``` 
 
-Prevention programs for the general population, AGYW, and MSM are absorbing more poorly than other KP interventions. 
-
-## Key population absorption, pooled across countries
+## 2. HIV key populations finding: "Prevention programs for the general population" has the largest budget and worst absorption
 ```{r kp, echo=FALSE, results='hide', fig.keep='all', fig.height=7, fig.width=11}
 hiv_absorption = dt[grant_disease%in%c("hiv", 'hiv/tb'), .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by='abbrev_mod']
 hiv_absorption[grepl("prevention", tolower(abbrev_mod)), keep:=TRUE]
@@ -29,70 +40,60 @@ plot = budget_exp_bar(hiv_absorption, altTitle="Absorption for KP mods and PMTCT
 plot
 ```
 
-## Absorption by module and country
+## 2a. Absorption for this module also has poor performance by country
 ![](absorption_by_mod1_edited.png)
 
-## Conclusion for hypothesis 1
-Mixed evidence.
-Evidence is mixed depending on how data is prepared. There is much variation between countries.  
-
-## Hypothesis 2
-KP absorption seems to correlate with size of budget allocation. 
-
-## Absorption for KP mods over first 18 months
-```{r kp1, echo=FALSE, results='hide', fig.keep='all'}
+## 2b. However, this is mainly being driven by Uganda, which has spent practically none of its $18.8 million dollar budget. 
+```{r gp_by_country, echo=FALSE, results='hide', fig.keep='all'} 
+plot_data = dt[abbrev_mod=="Prevention programs for general pop.", .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('loc_name')]
+plot = budget_exp_bar(plot_data, xVar='loc_name', altTitle="Absorption for KP mods and PMTCT, by country", orderVar='absorption')
 plot
+
 ```
 
-## Conclusion for hypothesis 2
-Confirmed. Although there is some variance, the evidence seems conclusive here, and the relationship between size of budget and absorption percentage has been observed across many parts of the grants. 
-
-## Hypothesis 3
-"Preventing human rights barriers to HIV services" has been absorbing poorly
-
-## Absorption for human rights module, by country
+## 3. There is poor absorption under the "preventing human rights barriers" module 
 ```{r human_rights}
 plot_data = dt[abbrev_mod=="Human rights barriers", .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by=c('abbrev_mod', 'loc_name')]
 print(budget_exp_bar(plot_data, xVar='loc_name', altTitle="Human rights absorption (HIV) by country"))
 ```
 
-## Absorption by module and country
+## 3a. 5/7 countries have "poor" performance for the human rights module
 ![](absorption_by_mod1_edited.png)
 
-## Conclusion for hypothesis 3 
-Conclusive. "Prevention of human rights barriers" has low absorption whether pooled by module, or by country and module. 
-
-## Hypothesis 4 
-RSSH is absorbing more poorly overall than other diseases.
-
-## Absorption by disease area
-```{r rssh}
-rssh_mods = c("Info systems & M&E", "Financial systems", "HR & health workers", "Service delivery", "Nat. health strategies", "PSM", "Community systems")
-hiv_mods = c("Prevention programs for MSM", "Prevention programs for PWID", "Prevention programs for CSW & clients", "Prevention programs for transgender", "Prevention programs for prisoners", "HIV Testing Services", "PMTCT", "Prevention programs for youth/adol.", "Prevention programs for general pop.", "Prevention programs for other KVP", "Human rights barriers", "Treatment, care & support")
-malaria_mods = c("Case management", "Specific prev. interventions", "Vector control") 
-tb_mods = c("MDR-TB", "Care & prevention", "TB/HIV")
-pm_mods = c('Program mgmt')
-
-plot_data = copy(dt)
-plot_data[abbrev_mod%in%hiv_mods, disease:="HIV"]
-plot_data[abbrev_mod%in%tb_mods, disease:="TB"]
-plot_data[abbrev_mod%in%malaria_mods, disease:="Malaria"]
-plot_data[abbrev_mod%in%rssh_mods, disease:="RSSH"]
-plot_data[abbrev_mod%in%pm_mods, disease:="Program management"]
-plot_data[is.na(disease) & abbrev_mod=="Unspecified", disease:="Unspecified"]
-
-plot_data = plot_data[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by=c('disease')]
-print(budget_exp_bar(plot_data, xVar='disease', altTitle="Absorption by disease area"))
+## 4. Malaria: Vector control has the largest planned budget... 
+```{r malaria}
+plot_data = dt[grant_disease=="malaria", .(budget=sum(original_budget, na.rm=T)), by='abbrev_mod']
+ggplot(plot_data, aes(x=abbrev_mod, y=budget, label=dollar(budget))) + 
+  geom_bar(stat="identity", fill="forestgreen") + 
+  geom_text(size=5) + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Original budget for malaria modules", x="Module", y="Budget", subtitle="All PCE countries pooled")
 ```
 
-## Conclusion for hypothesis 4 
-Disproven. Although RSSH does have low absorption at 53%, malaria overall is absorbing at 52%. However, it is worth noting that malaria has a much higher budget than RSSH, which normally correlates with higher absorption. 
+## 4a. ...yet many non-RSSH malaria interventions have better absorption performance. 
+```{r malaria2} 
+plot_data = dt[grant_disease=="malaria", .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by='abbrev_mod']
+print(budget_exp_bar(plot_data, xVar='abbrev_mod', altTitle="Absorption for malaria modules"))
+```
 
-## Hypothesis 5 
-Information systems and M+E has average absorption, despite having the largest budget of the RSSH interventions. 
+## 5. RSSH: There are many more resources committed to "information systems and M+E" than to "financial management systems" or "community responses and systems".  
+```{r rssh2, results='hide', fig.keep='all', fig.height=7, fig.width=13} 
+rssh_mods = c("Info systems & M&E", "Financial systems", "HR & health workers", "Service delivery", "Nat. health strategies", "PSM", "Community systems")
+plot_data = dt[abbrev_mod%in%rssh_mods, .(budget=sum(original_budget, na.rm=T)), by=c('abbrev_mod')]
+ggplot(plot_data, aes(x=abbrev_mod, y=budget, label=dollar(budget))) + 
+  geom_bar(stat="identity", fill="forestgreen") + 
+  geom_text() + 
+  theme_bw(base_size=16) + 
+  coord_flip() + 
+  scale_y_continuous(labels=scales::dollar) + 
+  labs(title="Original budget for RSSH modules", x="Module", y="Budget", subtitle="All PCE countries pooled")
 
-## RSSH absorption, pooled across countries
-```{r rssh2, results='hide', fig.keep='all', fig.height=7, fig.width=11} 
+```
+
+## 5a. RSSH: Absorption for smaller RSSH modules is high, which may suggest more absorptive capacity in these areas
+```{r rssh3, results='hide', fig.keep='all', fig.height=7, fig.width=11} 
 rssh_mods = c("Info systems & M&E", "Financial systems", "HR & health workers", "Service delivery", "Nat. health strategies", "PSM", "Community systems")
 plot_data = dt[abbrev_mod%in%rssh_mods, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), 
                by=c('abbrev_mod')]
@@ -100,62 +101,11 @@ budget_exp_bar(plot_data, altTitle="Absorption for RSSH modules", altSubtitle="A
 
 ```
 
-## Conclusion for hypothesis 5 
-Confirmed. 
-
-## Hypothesis 6
-The "integrated service delivery and quality improvement" module has the lowest absorption of RSSH modules. 
-
-## RSSH absorption, pooled across countries
-```{r rssh3, results='hide', fig.keep='all', fig.height=7, fig.width=11} 
-budget_exp_bar(plot_data, altTitle="Absorption for RSSH modules", altSubtitle="All contries pooled", orderVar='absorption')
-```
-
-## Conclusion for hypothesis 6
-Confirmed. 
-
-## Hypothesis 7 
-Program management has high absorption across countries and grants. 
-
-## Program management absorption, by country 
+## 6. Program managment shows high absorption across countries
 ```{r pm} 
 plot_data = dt[abbrev_mod=="Program mgmt", .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by=c('loc_name')]
 print(budget_exp_bar(plot_data, xVar=c('loc_name'), altTitle="Program management absorption, by country"))
 ```
 
-## Absorption by module and country
+## 6a. All countries have average program management absorption above 50%. 
 ![](absorption_by_mod1_edited.png)
-
-## Conclusion for hypothesis 7 
-Confirmed. Whether pooling by country or country/module, program management has high absorption. 
-
-## Hypothesis 8 
-Program management makes up a high percentage of the country-level portfolio. 
-
-## Program management as a percentage of the original budget
-```{r pm2, fig.height=7, fig.width=12} 
-plot_data = copy(dt)
-
-plot_data[abbrev_mod=="Program mgmt", category:="Program management"]
-plot_data[abbrev_mod%in%rssh_mods, category:="RSSH"]
-plot_data[abbrev_mod%in%hiv_mods, category:="HIV: General"]
-plot_data[abbrev_mod%in%malaria_mods, category:="Malaria: General"]
-plot_data[abbrev_mod%in%tb_mods, category:="TB"]
-plot_data[abbrev_mod=="Vector control", category:="Malaria: Vector control"]
-plot_data[abbrev_mod=="Treatment, care & support", category:="HIV: Treatment, care and support"]
-plot_data = plot_data[, .(budget=sum(original_budget, na.rm=T)), by=c('loc_name', 'category')]
-plot_data = plot_data[budget!=0] #Data for Mozambique and CAM/MYM isn't showing up here - we don't have original budget data for them. 
-plot_data[, total:=sum(budget), by='loc_name']
-plot_data[, pct:=round((budget/total)*100, 1)]
-plot_data[, label:=paste0(pct, "%")]
-
-p = ggplot(plot_data, aes(x=loc_name, y=pct, fill=category, label=label)) + 
-  geom_bar(stat="identity", position="stack") + 
-  geom_text(position=position_stack(vjust=0.5), size=4) + 
-  theme_bw() + 
-  coord_flip() + 
-  labs(title="Percentage of each budget that is program management", fill="", y="Percentage of proposed budget for first 18 months", x="")
-p
-```
-
-## Conclusion for hypothesis 8 
