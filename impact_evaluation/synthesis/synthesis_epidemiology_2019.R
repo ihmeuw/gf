@@ -32,7 +32,7 @@ code_dir = paste0('C:/Users/', user, '/local/gf/impact_evaluation/gbd_epidemiolo
 # determine if the data set is gbd or who/unaids
 
 # select 'gbd' or 'who_unaids' as the data set to visualize 
-set = 'who_unaids'
+set = 'gbd'
 
 #--------------------------------
 # upload the data set
@@ -384,7 +384,7 @@ ggplot(inc[cause=='HIV/AIDS' & metric=='Rate' & sex=='Both' & 1999 < year], aes(
   theme_bw() +
   labs(title=paste0('HIV incidence per 100,000 population, PCE countries,  ', years),
        subtitle = 'Annualized rates of change in parentheses', 
-       caption = cap,
+       caption = hiv_cap,
        x='Year', y='Incidence per 100,000 population')
 
 #-------------------------------
