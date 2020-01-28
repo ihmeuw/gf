@@ -34,6 +34,32 @@ outDir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/synthesis_epidemiol
 # read in who tb 
 tb = fread(paste0(dir, 'raw_data/who_tb/TB_burden_countries_2020-01-21.csv'))
 
+#---------------------------------
+# before subsetting, get a global population estimate
+global_pop = tb[ ,.(population = sum(e_pop_num)), by=year]
+global_pop[ ,location:='Global'] # use for hiv estimates
+
+#---------------------------------
+# calculate global incidence and mortality for tb 
+# merge in later
+
+# sum everything to the global level, shape long and subset
+glob_tb = tb[ ,lapply(.SD, sum, na.rm=T), .SDcols=7:50, by=year]
+glob_tb = melt(glob_tb, id.vars='year')
+
+keep_glob =  c('year', 'e_pop_num', 'e_inc_num', 'e_inc_num_hi', 'e_inc_num_lo',
+               'e_mort_num', 'e_mort_num_hi', 'e_mort_num_lo')
+glob_tb = glob_tb[variable %in% keep_glob]
+
+
+# shape wide and calculate
+glob_tb = dcast(glob_tb, year~variable)
+glob_tb[ ,pop_factor:=e_pop_num/100000]
+
+glob_tb = glob_tb[ ,lapply(.SD, function(x) x = x/pop_factor), .SDcols=3:8, by=.(year, pop_factor)]
+
+#--------------------------------
+
 # subset and rename variables
 countries = c("Cambodia", "Democratic Republic of the Congo",
   "Guatemala", "Mozambique", "Myanmar", "Senegal", "Sudan", "Uganda", "Global")
@@ -42,12 +68,14 @@ countries = c("Cambodia", "Democratic Republic of the Congo",
 tb = tb[country %in% countries]
 
 # --------------------------------------
-# extract population data and use later
+# extract population data and use later to calculate hiv mortality rates
 
 pop = tb[ ,.(population = e_pop_num), by = .(country, year)]
 setnames(pop, 'country', 'location')
-# --------------------------------------
+pop = rbind(pop, global_pop)
 
+# --------------------------------------
+# PREP TB DATA 
 
 # drop unecessary variables and shape long
 tb[ ,c('iso2', 'iso3', 'iso_numeric', 'g_whoregion'):=NULL]
@@ -91,6 +119,7 @@ saveRDS(tb, paste0(outDir, 'prepped_data/who_tb_2000_2018_prepped.rds'))
 #---------------------
 
 #-------------------------------------------------------
+# PREP HIV DATA 
 
 #------------------------
 # upload and prep unaids data 
@@ -125,6 +154,14 @@ hiv[ ,measure:='Incidence']
 hiv[ , metric:='Rate']
 hiv2[ , measure:='Deaths']
 hiv2[ , metric:='Number']
+
+
+#--------------------------
+# hiv rates are per 1,000 - convert to rate per 100k
+
+hiv[ , value:=100*value]
+
+#--------------------------
 
 hiv = rbind(hiv, hiv2)
 hiv[metric=='Number', age:='All Ages']
@@ -184,6 +221,8 @@ hiv[ ,sex:='Both']
 
 # confirm year is a numeric
 hiv[, year:=as.numeric(as.character(year))]
+
+
 #--------------------------------------------------
 # calculate mortality rates
 
