@@ -36,6 +36,7 @@ tb = fread(paste0(dir, 'raw_data/who_tb/TB_burden_countries_2020-01-21.csv'))
 
 #---------------------------------
 # before subsetting, get a global population estimate
+
 global_pop = tb[ ,.(population = sum(e_pop_num)), by=year]
 global_pop[ ,location:='Global'] # use for hiv estimates
 
@@ -167,12 +168,6 @@ hiv[ , metric:='Rate']
 hiv2[ , measure:='Deaths']
 hiv2[ , metric:='Number']
 
-
-#--------------------------
-# hiv rates are per 1,000 - convert to rate per 100k
-
-hiv[ , value:=100*value]
-
 #--------------------------
 
 hiv = rbind(hiv, hiv2)
@@ -234,6 +229,11 @@ hiv[ ,sex:='Both']
 # confirm year is a numeric
 hiv[, year:=as.numeric(as.character(year))]
 
+#--------------------------
+# hiv rates are per 1,000 - convert to rate per 100k
+
+hiv[metric == 'Rate' , value:=100*value]
+
 #--------------------------------------------------
 # calculate mortality rates
 
@@ -266,6 +266,7 @@ tb_hiv = rbind(tb, hiv)
 # prep malaria data 
 
 mal = readRDS(paste0(dir, 'raw_data/who_malaria/estimated_malaria_cases_and_deaths_2010_2018.rds'))
+mal = mal[country!='South Sudan']
 
 # format the data and shape long
 setnames(mal, 'country', 'location')

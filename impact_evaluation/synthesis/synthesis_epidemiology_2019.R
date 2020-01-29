@@ -32,7 +32,7 @@ code_dir = paste0('C:/Users/', user, '/local/gf/impact_evaluation/gbd_epidemiolo
 # determine if the data set is gbd or who/unaids
 
 # select 'gbd' or 'who_unaids' as the data set to visualize 
-set = 'gbd'
+set = 'who_unaids'
 
 #--------------------------------
 # upload the data set
@@ -105,7 +105,7 @@ rates[ ,c('y2000', 'y2017'):=NULL]
 dt = merge(dt, rates, by=c('measure', 'location', 'cause'), all=T)
 
 # label the locations with associated rates of change
-dt[!is.na(roc), label:=paste0(location, ' (', roc, '%)')] 
+dt[ , label:=paste0(location, ' (', roc, '%)')] 
 
 #-------------------------
 # reset the order for facet wrapped graphs
@@ -121,10 +121,9 @@ deaths = dt[measure =='Deaths']
 inc = dt[measure=='Incidence']
 
 #-------------------------
-# # source outside code for tables and figures
-# 
-# # works on caitlin's computer - change to relevant directory
-# source(paste0(code_dir, 'mort_inc_all_pce_countries_table.R'))
+# source outside code for tables and figures
+
+source(paste0(code_dir, 'mort_inc_all_pce_countries_table.R'))
 # 
 # # works on caitlin's computer - change to relevant directory
 # source(paste0(code_dir, "trend_figures_synthesis.R"))

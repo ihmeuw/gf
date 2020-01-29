@@ -8,7 +8,8 @@
 causes = c('HIV/AIDS', 'Malaria', 'Tuberculosis')
 
 # get 2017 incidence rates
-incidence = dt[measure=='Incidence' & year==2017 & metric=='Rate' & cause %in% causes & sex=='Both', .(val = round(val, 1)), by=.(location, cause)]
+incidence = dt[measure=='Incidence' & year==2017 & metric=='Rate' & cause %in% causes & sex=='Both',
+               .(val = round(val, 1)), by=.(location, cause)]
 incidence = dcast(incidence, location~cause)
 
 # get 2017 incidence rates
