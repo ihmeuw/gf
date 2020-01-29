@@ -51,13 +51,22 @@ keep_glob =  c('year', 'e_pop_num', 'e_inc_num', 'e_inc_num_hi', 'e_inc_num_lo',
                'e_mort_num', 'e_mort_num_hi', 'e_mort_num_lo')
 glob_tb = glob_tb[variable %in% keep_glob]
 
-
 # shape wide and calculate
 glob_tb = dcast(glob_tb, year~variable)
 glob_tb[ ,pop_factor:=e_pop_num/100000]
+glob_tb_rates = glob_tb[ ,lapply(.SD, function(x) x = x/pop_factor), .SDcols=3:8, by=.(year, pop_factor)]
+glob_tb_rates[ ,pop_factor:=NULL]
+glob_tb[ ,c('pop_factor', 'e_pop_num'):=NULL]
 
-glob_tb = glob_tb[ ,lapply(.SD, function(x) x = x/pop_factor), .SDcols=3:8, by=.(year, pop_factor)]
+# keep mortality and incidence rates and counts
+setnames(glob_tb_rates, c("year", "e_inc_num", "e_inc_num_lo",
+            "e_inc_num_hi", "e_mort_num", "e_mort_num_lo", "e_mort_num_hi"), 
+           c('year', 'e_inc_100k', 'e_inc_100k_lo', 'e_inc_100k_hi',
+            'e_mort_100k', 'e_mort_100k_lo', 'e_mort_100k_hi'))
 
+glob_tb = merge(glob_tb, glob_tb_rates)
+glob_tb = melt(glob_tb, id.vars = 'year')
+glob_tb[ ,location:='Global']
 #--------------------------------
 
 # subset and rename variables
@@ -89,6 +98,9 @@ keep = c('country', 'year', 'e_inc_100k', 'e_inc_100k_hi', 'e_inc_100k_lo',
 
 tb = tb[variable %in% keep]
 setnames(tb, 'country', 'location')
+
+# add in global data 
+tb = rbind(tb, glob_tb)
 
 # format to match
 tb[grepl('hi', variable), bound:='upper']
@@ -222,7 +234,6 @@ hiv[ ,sex:='Both']
 # confirm year is a numeric
 hiv[, year:=as.numeric(as.character(year))]
 
-
 #--------------------------------------------------
 # calculate mortality rates
 
@@ -287,7 +298,7 @@ mal[ ,variable:=NULL]
 mal = dcast(mal, measure+location+sex+age+cause+metric+year~bound)
 
 # match locations in other data
-mal[location=='DRC', location:='Democratic Republic of the Congo']
+mal[location=='DRC', location:='Democratic Republic of the Congo'] 
 
 #--------------------------------------------------
 # save the data set and bind tb and hiv together
@@ -296,7 +307,7 @@ mal[location=='DRC', location:='Democratic Republic of the Congo']
 saveRDS(mal, paste0(outDir, 'prepped_data/who_malaria_2010_2018_prepped.rds'))
 
 # bind the data sets together
-dt = rbind(tb_hiv,mal)
+dt = rbind(tb_hiv, mal)
 
 # ensure year is not a factor
 dt[ ,year:=as.numeric(as.character(year))]

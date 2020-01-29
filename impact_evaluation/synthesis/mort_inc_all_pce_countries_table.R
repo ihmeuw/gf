@@ -22,7 +22,8 @@ incidence = merge(incidence, incidence_roc, by='location')
 # get 2017 mortality rates
 
 # get 2017 incidence rates
-mort = dt[measure=='Deaths' & year==2017 & metric=='Rate' & cause %in% causes & sex=='Both', .(val = round(val, 1)), by=.(location, cause)]
+mort = dt[measure=='Deaths' & year==2017 & metric=='Rate' & cause %in% causes & sex=='Both',
+          .(val = round(val, 1)), by=.(location, cause)]
 mort = dcast(mort, location~cause)
 
 # get 2017 incidence rates
@@ -42,13 +43,14 @@ synth_table = rbind(incidence, mort)
 #--------------------------
 # export to copy into report
 
-write.csv(synth_table, paste0(dir, 'outputs/incidence_mortality_table_all_pce_countries.csv'))
+write.csv(synth_table, paste0(dir, 'outputs/', set, '_incidence_mortality_table_all_pce_countries.csv'))
 
 #------------------------------------------------------
 # hiv only table - compare to just hiv without hiv/tb
 # incidence rates are identical - only include mortality
 
-hiv_dt = fread(paste0(dir, 'ihme_age_standardized_2017_hiv_only.csv'))
+if (set=='gbd') {
+hiv_dt = fread(paste0(dir, 'raw_data/gbd/ihme_age_standardized_2017_hiv_only.csv'))
 hiv_dt = hiv_dt[age=='Age-standardized' & metric=='Rate' & measure=='Deaths']
 
 #-------------------
@@ -76,7 +78,7 @@ hdeath[ ,roc:=100*roc]
 #---------------------------
 # export HIV mortality separately from tb
 
-write.csv(hdeath, paste0(dir, 'outputs/hiv_only_mortality_table_all_pce_countries.csv'))
+write.csv(hdeath, paste0(dir, 'outputs/', set, '_hiv_only_mortality_table_all_pce_countries.csv')) }
 
 #-----------------------------------------------
 
