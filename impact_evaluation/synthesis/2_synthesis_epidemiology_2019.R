@@ -4,6 +4,11 @@
 # Set function arguments to determine which data sources
 # ----------------------------------------------
 
+# this is a master script that does three things:
+# 1 - sources a script that creates an incidence and mortality table
+# 2 - sources a script that creates figures for synthesis
+# 3 - creates visuals of incidence and mortality for all countries
+
 # --------------------
 # Set up R
 rm(list=ls())
