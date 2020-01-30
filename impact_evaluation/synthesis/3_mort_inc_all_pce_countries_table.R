@@ -83,5 +83,6 @@ write.csv(hdeath, paste0(dir, 'outputs/', set, '_hiv_only_mortality_table_all_pc
 
 #-----------------------------------------------
 
+print("All done, kid!")
 
 

@@ -129,7 +129,8 @@ inc = dt[measure=='Incidence']
 #-------------------------
 # source outside code for tables and figures for the report
 
-source(paste0(code_dir, 'mort_inc_all_pce_countries_table.R'))
+# creates tables of incidence, mortality, rocs for comparison
+source(paste0(code_dir, '3_mort_inc_all_pce_countries_table.R'))
 
 # works on caitlin's computer - change to relevant directory
 # source(paste0(code_dir, "trend_figures_synthesis.R"))
