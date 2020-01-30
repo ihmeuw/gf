@@ -232,8 +232,9 @@ hiv[, year:=as.numeric(as.character(year))]
 #--------------------------
 # hiv rates are per 1,000 - convert to rate per 100k
 
-hiv[metric == 'Rate' , value:=100*value]
-
+hiv[metric == 'Rate' , val:=100*val]
+hiv[metric == 'Rate' , lower:=100*lower]
+hiv[metric == 'Rate' , upper:=100*upper]
 #--------------------------------------------------
 # calculate mortality rates
 

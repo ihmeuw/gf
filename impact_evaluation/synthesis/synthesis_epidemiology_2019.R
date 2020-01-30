@@ -26,7 +26,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # set the directory for input and output
 dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/synthesis_epidemiology/')
 
-code_dir = paste0('C:/Users/', user, '/local/gf/impact_evaluation/gbd_epidemiology/')
+code_dir = paste0('C:/Users/', user, '/local/gf/impact_evaluation/synthesis/')
 
 #--------------------------------
 # determine if the data set is gbd or who/unaids
@@ -68,20 +68,21 @@ mal_years = years
 #--------
 # calculate annualzied rates of change 2010 to 2017
 if (set=='who_unaids') {
-rates = dt[sex=='Both' & metric=='Rate' & location!='Sudan' & (year==2010 | year==2017), .(measure, location, cause, year, val)]
+rates = dt[sex=='Both' & metric=='Rate' & location!='Sudan' & (year==2010 | year==2018), .(measure, location, cause, year, val)]
 rates = dcast(rates, measure+location+cause~year)
-setnames(rates, c('2010', '2017'), c('y2010', 'y2017'))
-rates[ , roc:=round((log(y2017/y2010)/17), 3)]
+setnames(rates, c('2010', '2018'), c('y2010', 'y2018'))
+rates[ , roc:=round((log(y2018/y2010)/8), 3)]
 rates[ ,roc:=roc*100]
-rates[ ,c('y2010', 'y2017'):=NULL] 
+rates[ ,c('y2010', 'y2018'):=NULL] 
 
 # rates for sudan - only 2011 to present
-s_rates = dt[sex=='Both' & metric=='Rate' & location=='Sudan' & (year==2011 | year==2017), .(measure, location, cause, year, val)]
+s_rates = dt[sex=='Both' & metric=='Rate' & location=='Sudan' & (year==2011 | year==2018), 
+             .(measure, location, cause, year, val)]
 s_rates = dcast(s_rates, measure+location+cause~year)
-setnames(s_rates, c('2011', '2017'), c('y2011', 'y2017'))
-s_rates[ , roc:=round((log(y2017/y2011)/16), 3)]
+setnames(s_rates, c('2011', '2018'), c('y2011', 'y2018'))
+s_rates[ , roc:=round((log(y2018/y2011)/7), 3)]
 s_rates[ ,roc:=roc*100]
-s_rates[ ,c('y2011', 'y2017'):=NULL] 
+s_rates[ ,c('y2011', 'y2018'):=NULL] 
 
 # bind in the sudanese rates
 rates = rbind(rates, s_rates)
@@ -121,11 +122,11 @@ deaths = dt[measure =='Deaths']
 inc = dt[measure=='Incidence']
 
 #-------------------------
-# source outside code for tables and figures
+# source outside code for tables and figures for the report
 
 source(paste0(code_dir, 'mort_inc_all_pce_countries_table.R'))
-# 
-# # works on caitlin's computer - change to relevant directory
+
+# works on caitlin's computer - change to relevant directory
 # source(paste0(code_dir, "trend_figures_synthesis.R"))
 # 
 # #-----------------------------------------------------
