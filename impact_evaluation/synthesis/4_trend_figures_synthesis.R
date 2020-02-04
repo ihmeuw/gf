@@ -87,7 +87,9 @@ for (m in unique(data$measure)) {
   
   if (set=='gbd') years = '2000 - 2017'
   if (set=='who_unaids') years = '2010 - 2018'
-  if (set=='who_unaids') cap = 'Source: WHO (TB/malaria); UNAIDS (HIV/AIDS)'
+  if (set=='who_unaids' & m=='Incidence') {
+     cap = 'Source: WHO (TB/malaria); UNAIDS (HIV/AIDS)\n*Malaria incidence rate displayed per 1,000 population' 
+  } else { cap = 'Source: WHO (TB/malaria); UNAIDS (HIV/AIDS)'}
   
   m_lite = tolower(m)
 
