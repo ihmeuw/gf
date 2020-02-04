@@ -82,11 +82,12 @@ pdf(outFile_report, height=5.5, width=9)
 for (m in unique(data$measure)) {
 
   if (m=='Incidence') {ytitle='Rate per 100,000 Population*'
-  cap = c1} else { ytitle='Rate per 100,000 Population'
+    cap = c1} else { ytitle='Rate per 100,000 Population'
     cap = c2 }
   
   if (set=='gbd') years = '2000 - 2017'
   if (set=='who_unaids') years = '2010 - 2018'
+  
   if (set=='who_unaids' & m=='Incidence') {
      cap = 'Source: WHO (TB/malaria); UNAIDS (HIV/AIDS)\n*Malaria incidence rate displayed per 1,000 population' 
   } else { cap = 'Source: WHO (TB/malaria); UNAIDS (HIV/AIDS)'}
