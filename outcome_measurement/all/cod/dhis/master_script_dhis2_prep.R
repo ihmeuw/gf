@@ -19,7 +19,7 @@ step2_merge_metadata = FALSE
 step3_remove_outliers = FALSE
 step4_addtiional_prep = FALSE
 
-set = 'base'
+set = 'sigl'
 #---------------------------------------------
 
 #---------------------------------------------
@@ -68,20 +68,24 @@ if (step1_extract_data) {
 #---------------------------------------------
 if (step2_merge_metadata) { 
   source(paste0(code_dir, 'prep_dhis/merge_dhis_for_new_download.R'))
+  source(paste0(code_dir, 'prep_dhis/combine_data_downloads.R'))
 }
 #---------------------------------------------
 
 #---------------------------------------------
 # Step 3 - outlier removal
 #---------------------------------------------
-if (step3_remove_outliers) { 
-  # Step 3a - run QR to detect outliers
-    source(paste0(code_dir, 'outlier_removel/run_quantreg_parallel.R'))
-    source(paste0(code_dir, 'outlier_removel/agg_qr_results.R'))
-  # Step 3b - run code to create outlier graphs
-    source(paste0(code_dir, 'outlier_removel/visualize_qr_outliers.R'))
-  # Steb 3c remove outliers/replace with fitted values
-    # source(paste0(code_dir, 'outlier_removel/'))
+if (set != 'sigl') {  # note: SIGL data on stockouts is outlier-screened differently since stockouts are in # of days per month... so we just 
+  # screen out values >31. 
+  if (step3_remove_outliers) { 
+    # Step 3a - run QR to detect outliers
+      source(paste0(code_dir, 'outlier_removel/run_quantreg_parallel.R'))
+      source(paste0(code_dir, 'outlier_removel/agg_qr_results.R'))
+    # Step 3b - run code to create outlier graphs
+      source(paste0(code_dir, 'outlier_removel/visualize_qr_outliers.R'))
+    # Steb 3c remove outliers/replace with fitted values
+      # source(paste0(code_dir, 'outlier_removel/'))
+  }
 }
 #---------------------------------------------
 
