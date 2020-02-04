@@ -1,0 +1,8 @@
+Loading required package: sp
+
+Attaching package: ‘data.table’
+
+The following object is masked from ‘package:raster’:
+
+    shift
+
