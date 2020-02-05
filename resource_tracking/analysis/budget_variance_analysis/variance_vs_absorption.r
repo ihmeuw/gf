@@ -24,7 +24,8 @@ inFile =  paste0(dir, '/_gf_files_gos/combined_prepped_data/budget_exp_wide.rds'
 
 # output file
 outDir = paste0(dir, '/visualizations/budget_variance_analysis/')
-outFile = paste0(outDir, 'variance_vs_absorption.pdf')
+graphFile = paste0(outDir, 'variance_vs_absorption.pdf')
+outFile = paste0(outDir, 'module_budget_variance.csv')
 # -------------------------------------------------------------------
 
 
@@ -34,30 +35,38 @@ outFile = paste0(outDir, 'variance_vs_absorption.pdf')
 # load
 data = readRDS(inFile)
 
-# generate new variables
-data[, variance_S3:=budget_S3-original_budget_S3]
-data[, variance_S2:=budget_S2-original_budget_S2]
-data[, variance_S1:=budget_S1-original_budget_S1]
+# melt semesters long
+idVars = c('loc_name','grant','grant_period','disease','gf_module')
+data = melt(data, id.vars=idVars, 
+	measure=patterns('budget_S*', 'original_budget_S*', 'expenditure_S*'), 
+	variable.name='semester')
+setnames(data, paste0('value',seq(3)), c('budget', 'original_budget', 'expenditure'))
 
-data[, absorption_S3:=expenditure_S3/budget_S3]
-data[, absorption_S2:=expenditure_S2/budget_S2]
-data[, absorption_S1:=expenditure_S1/budget_S1]
+# generate new variables
+data[, variance:=budget-original_budget]
+data[, variance_normalized:=(budget-original_budget)/original_budget]
+data[, absorption:=expenditure/budget]
+
+# save here
+write.csv(data[, -'variance_normalized', with=FALSE], outFile)
 
 # transform data
-vars = names(data)[grepl('absorption|variance', names(data))]
-for(v in vars) data[, (paste0(v, '_transformed')):=get(v)]
+data[, absorption_transformed:=absorption]
+data[, variance_transformed:=variance]
+data[, variance_normalized_transformed:=variance_normalized]
+data[absorption>9 | absorption<0, absorption_transformed:=NA]
+data[variance>3e6 | variance < -4e6, variance_transformed:=NA]
 
-data[absorption_S1>10, absorption_S1_transformed:=NA]
-data[absorption_S2>10, absorption_S2_transformed:=NA]
-data[absorption_S3>10, absorption_S3_transformed:=NA]
+# lags
+data[, lag_absorption:=shift(absorption), by=idVars]
+data[, lag_absorption_transformed:=shift(absorption_transformed), by=idVars]
+data[, lag_variance:=shift(variance), by=idVars]
+data[, lag_variance_transformed:=shift(variance_transformed), by=idVars]
+data[, lag_variance_normalized_transformed:=shift(variance_normalized_transformed), by=idVars]
 
-data[variance_S1>1e7 | variance_S1< -2e7, variance_S1_transformed:=NA]
-data[variance_S2>1e7 | variance_S2< -2e7, variance_S2_transformed:=NA]
-data[variance_S3>1e7 | variance_S3< -2e7, variance_S3_transformed:=NA]
-
-# melt semesters long
-long = melt(data, id.vars=c('loc_name','grant','grant_period','disease','gf_module'), 
-	measure.vars=c('budget_S', 'original_budget_S', 'expenditure_S', 'variance_S', 'absorption_S'))
+# absolute values
+data[, lag_variance_transformed_abs:=abs(lag_variance_transformed)]
+data[, lag_variance_normalized_transformed_abs:=abs(lag_variance_normalized_transformed)]
 # -------------------------------------------------------------------
 
 
@@ -65,16 +74,56 @@ long = melt(data, id.vars=c('loc_name','grant','grant_period','disease','gf_modu
 # Analysis
 
 # correlate S3 variance with S2 absorption
-lm(variance_S3_transformed ~ absorption_S2_transformed)
+# lm(variance_S3_transformed ~ absorption_S2_transformed)
 # -------------------------------------------------------------------
 
 
 # -------------------------------------------------------------------
 # Graph
-ggplot(data, aes(y=variance_S3_transformed, x=absorption_S2_transformed)) + 
+
+# are they moving moving away from low-absorbing modules?
+graphData = na.omit(data[,c('variance_normalized_transformed','lag_absorption_transformed')])
+p1 = ggplot(graphData, aes(y=variance_normalized_transformed, x=lag_absorption_transformed*100)) + 
 	geom_point() +
 	geom_smooth(method='lm') + 
+	labs(title='Do PRs Tend to Reallocate Resources Away from Low-Absorbing Modules?', 
+		y='Budget Variance as a Proportion of Original Budget\n(Semesters 2-3)', 
+		x='Absorption Percentage\n(Semester 1-2)', 
+		caption='Values >900% and <0% absorption not displayed\n
+				Points represent grant-module-semesters.\n
+				Semester-1 absorption is compared to semester-2 variance etc.') + 
 	theme_bw()
 
+# does variance (in either direction) help them absorb later?
+graphData = na.omit(data[,c('lag_variance_transformed_abs','absorption_transformed')])
+p2 = ggplot(graphData, aes(y=absorption_transformed*100, x=lag_variance_transformed_abs)) + 
+	geom_point() +
+	geom_smooth(method='lm') + 
+	labs(title='Does Budget Variance Correspond with Higher Absorption in the Next Semester?', 
+		x='Budget Variance (absolute value in dollars)\n(Semesters 1-2)', 
+		y='Absorption Percentage\n(Semester 2-3)', 
+		caption='Values >900% and <0% absorption not displayed\n
+				Points represent grant-module-semesters.\n
+				Semester-1 variance is compared to semester-2 absorption etc.') + 
+	theme_bw()
+
+# does variance (in either direction normalized by budget size) help them absorb later?
+graphData = na.omit(data[,c('lag_variance_normalized_transformed_abs','absorption_transformed')])
+p3 = ggplot(graphData, aes(y=absorption_transformed*100, x=lag_variance_normalized_transformed_abs)) + 
+	geom_point() +
+	geom_smooth(method='lm') + 
+	labs(title='Does Budget Variance Correspond with Higher Absorption in the Next Semester?', 
+		x='Budget Variance as a Proportion of Original Budget\n(Semesters 1-2)', 
+		y='Absorption Percentage\n(Semester 2-3)', 
+		caption='Values >900% and <0% absorption not displayed\n
+				Points represent grant-module-semesters.\n
+				Semester-1 variance is compared to semester-2 absorption etc.') + 
+	theme_bw()
+	
+pdf(outFile, height=5.5, width=8)
+p1
+p2
+p3
+dev.off()
 # -------------------------------------------------------------------
 
