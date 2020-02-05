@@ -18,6 +18,8 @@ library(colormap)
 
 outFile_report = paste0(dir, 'outputs/', set, '_inc_mort_for_synthesis.pdf')
 outFile_report2 = paste0(dir, 'outputs/', set, '_inc_mort_all_pce_countries.pdf')
+outFile_report3 = paste0(dir, 'outputs/', set, '_coverage_all_pce_countries.pdf')
+
 # ---------------------------------------
 # load/prep GBD mortality estimates data
 
@@ -140,3 +142,46 @@ for(c in countries) {
 
 
 dev.off()
+
+#------------------------------
+# coverage figure
+
+cov = readRDS(paste0(dir, 
+      'prepped_data/', set, '_coverage_prepped.rds'))
+
+# set the years depending on the data set
+if (set=='gbd') years = '2000 - 2017'
+if (set=='who_unaids') years = '2010 - 2018'
+if (set=='who_unaids') cov = cov[2010 <= year]
+if (set=='who_unaids') cov_cap = 'Sources: WHO (TB); UNAIDS (HIV/AIDS); IHME (malaria)'
+cov[location=="Democratic Republic of the Congo", location:='DRC']
+
+# drop global as we only have it for one disease
+cov = cov[location!='Global']
+
+pdf(outFile_report3, height=5.5, width=9)
+
+ggplot(cov, aes(y=mean, x=year, ymin=lower, 
+                ymax=upper, color=cause, fill=cause)) + 
+    geom_ribbon(alpha=.2, colour=NA) + 
+    geom_line(size=0.8) + 
+    facet_wrap(~location, scales='free_y') +
+    scale_y_continuous(limits=c(0,NA)) + 
+    scale_color_manual('', values=colors) + 
+    scale_fill_manual('', values=colors) + 
+    labs(title=paste0('National trends in treatment coverage',
+                      ', ', years),
+         y='Percent (%)', x='', caption=cov_cap) + 
+    theme_minimal(base_size=14) + 
+    theme(panel.grid.major.x = element_blank(), panel.grid.minor.x = element_blank(), 
+          plot.title=element_text(size=14), plot.subtitle=element_text(size=11), 
+          axis.title.y=element_text(size=11), plot.caption=element_text(size=8)) 
+
+dev.off()
+
+#-------------------------------------
+
+
+
+
+
