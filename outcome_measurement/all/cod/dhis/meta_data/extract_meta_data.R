@@ -1,9 +1,18 @@
 # DHIS Extraction for DRC  - Metadata extraction
 # Caitlin O'Brien-Carelli
-# 1/18/19
+# Meta data extraction code for the DHIS Extraction tool
+# 2/3/2020
+
+#---------------------
+# This code can be run locally or on the cluster
 
 # Calls the extracting functions (dhis_extracting_functions.R)
 # Extracts all meta data to run the extraction 
+
+#--------------------
+# Acts as a single function extract_dhis_content:
+# this function runs multiple functions to extract:
+#
 
 # --------------------
 # Set up R
@@ -23,19 +32,26 @@ library(openxlsx)
 
 # sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1349 -s 10 -P dhis_download
 
+# --------------------
+# detect the user 
+
+user = Sys.info()[['user']]
+
 #----------------------
+# set the working directories and source functions 
+
 # determine if the code is being run on the cluster or on home computer
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # set working directory 
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
 # set the output directory
 out_dir = paste0(dir, 'meta_data/')
 
 # library for the dhisextractr package
-dirx = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/packages/')
+dirx = paste0(dir, 'packages/')
 
 # source functions from J Drive - be sure to update from most recent push
 source (paste0(dir, 'code/dhis_extracting_functions.R'))
@@ -149,7 +165,8 @@ extract_dhis_content = function(base_url, userID, password) {
 #-------------------------------------------------------------------
 
 #------------------------
-# run the extraction :)
+# RUN THE META DATA EXTRACTION
+# the main function outputs a list item 
 
 DRC_extraction = extract_dhis_content(base_url = base_url, userID = userID, password = password)
 
@@ -157,54 +174,55 @@ DRC_extraction = extract_dhis_content(base_url = base_url, userID = userID, pass
 # save the data 
 
 # extract data tables from the large list of meta data 
-data_sets = DRC_extraction[1][[1]]
-updated_data_elements = DRC_extraction[2][[1]]
-categories = DRC_extraction[3][[1]]
-org_units = DRC_extraction[4][[1]]
+data_sets = DRC_extraction[1][[1]] # sets where the data live
+updated_data_elements = DRC_extraction[2][[1]] # variable names 
+categories = DRC_extraction[3][[1]] # age, sex, and inventory categories
+org_units = DRC_extraction[4][[1]] # health facility names 
 
 # save all the RDS files to the J Drive
+
 saveRDS(data_sets, paste0(out_dir, 'data_sets.rds'))
 saveRDS(updated_data_elements, paste0(out_dir, 'updated_data_elements.rds'))
 saveRDS(categories, paste0(out_dir, 'data_elements_categories.rds'))
 saveRDS(org_units, paste0(out_dir, 'org_units.rds'))
-
-#------------------------------
-# translations of the data elements
-
-# export the data elements and translate w google translate
-data_elements = data.table(updated_data_elements)
-setnames(data_elements, c("data_element_id",  "data_element_name", "datasets_ID", 
-           "datasets_name", "datasets_url", "data_element_url"),
-         c("element_id",  "element", "data_set_id",
-           "data_sets", "data_set_url", "element_url"))
-
-# create a subset to translate (less variables makes translator work better)
-sub_elements = data_elements[ ,.(data_set_id, element_id, element)]
-
-# doc translater only works on shorter lists - divide into three sets
-rows = nrow(sub_elements)
-sub_elements_1 = sub_elements[1:1500]
-sub_elements_2 = sub_elements[1501:3000]
-sub_elements_3 = sub_elements[3001:rows]
-write.xlsx(sub_elements_1, paste0(out_dir, 'translate/data_elements_to_translate_1.xlsx'))
-write.xlsx(sub_elements_2, paste0(out_dir, 'translate/data_elements_to_translate_2.xlsx'))
-write.xlsx(sub_elements_3, paste0(out_dir, 'translate/data_elements_to_translate_3.xlsx'))
-
-# translate using online document translator - onlinedoctranslator.com
-# save translations at file paths below 
-
-# read in the translations and rbind together
-trans_elements_1 = read.xlsx(paste0(out_dir, 'translate/data_elements_translations_1.xlsx'))
-trans_elements_2 = read.xlsx(paste0(out_dir, 'translate/data_elements_translations_2.xlsx'))
-trans_elements_3 = read.xlsx(paste0(out_dir, 'translate/data_elements_translations_3.xlsx'))
-trans_elements = rbind(trans_elements_1, trans_elements_2, trans_elements_3)
-setnames(trans_elements, 'element', 'element_eng')
-
-# merge in the translations to the original variables list
-data_elements = merge(data_elements, trans_elements, by=c('data_set_id', 'element_id'), all=T)
-
-# save the data elements with associated translations
-saveRDS(data_elements, paste0(out_dir, 'data_elements.rds'))
+# 
+# #-------------------------------------------------
+# # translations of the data elements
+# 
+# # export the data elements and translate w google translate
+# data_elements = data.table(updated_data_elements)
+# setnames(data_elements, c("data_element_id",  "data_element_name", "datasets_ID", 
+#            "datasets_name", "datasets_url", "data_element_url"),
+#          c("element_id",  "element", "data_set_id",
+#            "data_sets", "data_set_url", "element_url"))
+# 
+# # create a subset to translate (less variables makes translator work better)
+# sub_elements = data_elements[ ,.(data_set_id, element_id, element)]
+# 
+# # doc translater only works on shorter lists - divide into three sets
+# rows = nrow(sub_elements)
+# sub_elements_1 = sub_elements[1:1500]
+# sub_elements_2 = sub_elements[1501:3000]
+# sub_elements_3 = sub_elements[3001:rows]
+# write.xlsx(sub_elements_1, paste0(out_dir, 'translate/data_elements_to_translate_1.xlsx'))
+# write.xlsx(sub_elements_2, paste0(out_dir, 'translate/data_elements_to_translate_2.xlsx'))
+# write.xlsx(sub_elements_3, paste0(out_dir, 'translate/data_elements_to_translate_3.xlsx'))
+# 
+# # translate using online document translator - onlinedoctranslator.com
+# # save translations at file paths below 
+# 
+# # read in the translations and rbind together
+# trans_elements_1 = read.xlsx(paste0(out_dir, 'translate/data_elements_translations_1.xlsx'))
+# trans_elements_2 = read.xlsx(paste0(out_dir, 'translate/data_elements_translations_2.xlsx'))
+# trans_elements_3 = read.xlsx(paste0(out_dir, 'translate/data_elements_translations_3.xlsx'))
+# trans_elements = rbind(trans_elements_1, trans_elements_2, trans_elements_3)
+# setnames(trans_elements, 'element', 'element_eng')
+# 
+# # merge in the translations to the original variables list
+# data_elements = merge(data_elements, trans_elements, by=c('data_set_id', 'element_id'), all=T)
+# 
+# # save the data elements with associated translations
+# saveRDS(data_elements, paste0(out_dir, 'data_elements.rds'))
 
 #------------------------------
 

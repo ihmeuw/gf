@@ -1,0 +1,43 @@
+---
+title: "Cross-consortia data review 2019"
+author: "Emily Linebarger"
+date: "January 14, 2020"
+output: beamer_presentation
+---
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+library(data.table) 
+library(ggplot2)
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
+dt = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_modules.rds")
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
+```
+
+## Is absorption lower for PMTCT, sex workers, and PWID than for MSM and transgender people? 
+```{r kp_absorption} 
+hiv_absorption = dt[grant_disease%in%c("hiv", 'hiv/tb'), .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by='abbrev_mod']
+hiv_absorption[grepl("prevention", tolower(abbrev_mod)), keep:=TRUE]
+hiv_absorption[abbrev_mod=="PMTCT", keep:=TRUE]
+hiv_absorption[abbrev_mod=="Care & prevention", keep:=FALSE]
+hiv_absorption = hiv_absorption[keep==TRUE]
+plot = budget_exp_bar(hiv_absorption, altTitle="Absorption for KP mods and PMTCT")
+print(plot) 
+``` 
+
+## MDR-TB is absorbing more poorly than general TB. 
+```{r tb} 
+tb_absorption = dt[gf_module%in%c('TB care and prevention', 'TB/HIV', 'Multidrug-resistant TB'), .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by='gf_module']
+print(budget_exp_bar(tb_absorption, xVar='gf_module', altTitle="TB vs. MDR absorption"))
+```
+
+## TB grants are absorbing better than HIV and malaria grants in general. 
+```{r tb_all} 
+tb_absorption = dt[, .(budget=sum(cumulative_budget), expenditure=sum(cumulative_expenditure)), by='grant_disease']
+print(budget_exp_bar(tb_absorption, xVar='grant_disease', altTitle="Absorption by grant disease"))
+```
+
+## Absorption for financial systems (RSSH) was strong.
+
+## Community responses and systems has had low absorption across grants. 
+
+## 
