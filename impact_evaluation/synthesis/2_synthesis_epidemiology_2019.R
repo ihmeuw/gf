@@ -133,8 +133,8 @@ inc = dt[measure=='Incidence']
 source(paste0(code_dir, '3_mort_inc_all_pce_countries_table.R'))
 
 # works on caitlin's computer - change to relevant directory
-# source(paste0(code_dir, "trend_figures_synthesis.R"))
-# 
+source(paste0(code_dir, "4_trend_figures_synthesis.R"))
+
 # #-----------------------------------------------------
 # MORTALITY GRAPHS
 
@@ -551,7 +551,6 @@ ggplot(inc[cause=='Malaria' & metric=='Rate' & sex!='Both' & 1999 < year], aes(x
 # counts
 
 # total incidence as an absolute number 
-if (set=='gbd') {
 ggplot(inc[cause=='Malaria' & metric=='Number' & sex=='Both' & 1999 < year], aes(x=year, y=val))+
   geom_ribbon(aes(ymin=lower, ymax=upper), fill='#f0f0f0')+
   geom_point() + 
@@ -560,7 +559,7 @@ ggplot(inc[cause=='Malaria' & metric=='Number' & sex=='Both' & 1999 < year], aes
   theme_bw() +
   labs(title='Malaria incidence, PCE countries, 2000 - 2017',
        caption = cap,
-       x='Year', y='Number of new cases') }
+       x='Year', y='Number of new cases') 
 
 # total incidence by sex as an absolute number 
 if (set=='gbd') {
