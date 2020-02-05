@@ -23,32 +23,17 @@
 #------------------------------------
 # Set up R
 #------------------------------------
-rm(list=ls())
 library(data.table)
 
-# detect the user operating on the cluster
-user = Sys.info()[['user']]
+# detect if operating on windows or on the cluster 
+root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+# define main directory
+dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 # these libraries must be loaded locally from scratch if using an ide
-library(fst, lib.loc=paste0('/ihme/scratch/users/', user, '/packages'))
-library(SparseM, lib.loc=paste0('/ihme/scratch/users/', user, '/packages')) 
-library(quantreg, lib.loc=paste0('/ihme/scratch/users/', user, '/packages'))
-
-# set the working directory because this is america
-setwd(paste0('/ihme/code/', user, '/gf/'))
-
-# choose the data set you want to load
-set = 'pnls'
-#------------------------------------
-
-#------------------------------------
-# switches
-
-cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
-cleanup_end = TRUE # "" /end; default to FALSE
-# impute = 'TRUE' # whether or not to impute missing data as part of the qr
-# cat_files = TRUE # whether or not to concatenate all of the files at the end
-agg_to_DPS = FALSE # whether or not to aggregate the data to DPS level before running QR. 
+library(fst, lib.loc=paste0(dir, 'packages/'))
+library(SparseM, lib.loc=paste0(dir, 'packages/')) 
+library(quantreg, lib.loc=paste0(dir, 'packages/'))
 #------------------------------------
 
 #------------------------------------
@@ -64,13 +49,8 @@ if (cleanup_start == TRUE){
 #------------------------------------
 # set directories, switchs, arguments  
 #------------------------------------
-# detect if operating on windows or on the cluster 
-j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-
-# set the directory for input and output
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
-parallelDir = paste0(scratchDir, 'parallel_files/')
+parallelDir = paste0(scratchDir, 'qr_output/')
 if (!file.exists(scratchDir)) dir.create(scratchDir)
 if (!file.exists(parallelDir)) dir.create(parallelDir)
 
@@ -90,22 +70,19 @@ arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
 # initial file is read off of j 
 # output file is the aggregate of the files from /ihme/scratch/users/(user_name)/quantreg/parallel_files/
 
-if (set=='sigl') {inFile = paste0(dir, '3_prepped/sigl/sigl_for_qr.rds') 
-outFile = paste0(dir, '5_qr_results/sigl/raw_sigl_quantreg_results.rds') }
+inFile = paste0(dir, '3_prepped/', set, '/', set, '_prepped.rds') 
+outFile = paste0(dir, '4_qr_results/', set, '/', 'raw_', set, '_quantreg_results.rds')
 
-if (set=='base') {inFile = paste0(dir, '4_prep_for_qr/base/base_to_screen.rds')
-outFile = paste0(dir, '5_qr_results/base/base_quantreg_results.rds')}
-
-if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_for_qr.rds')
-  if (agg_to_DPS ==TRUE){
-    outFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds')
-  } else {
-    outFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_quantreg_results.rds')
-  }
-}
-
-if(set=='pnls') inFile = paste0(dir, '2_merged_with_metadata/pnls_subset_2017_01_01_2019_04_01.rds')
-if(set=='pnls') outFile = paste0(dir, '5_qr_results/pnls/pnls_subset_2017_01_01_2019_04_01_screened.rds')
+# if (set=='pnlp') {inFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_for_qr.rds')
+#   if (agg_to_DPS ==TRUE){
+#     outFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds')
+#   } else {
+#     outFile = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/prepped_data/PNLP/outliers/pnlp_quantreg_results.rds')
+#   }
+# }
+# 
+# if(set=='pnls') inFile = paste0(dir, '2_merged_with_metadata/pnls_subset_2017_01_01_2019_04_01.rds')
+# if(set=='pnls') outFile = paste0(dir, '5_qr_results/pnls/pnls_subset_2017_01_01_2019_04_01_screened.rds')
 #------------------------------------
 
 #------------------------------------
@@ -115,37 +92,37 @@ dt = readRDS(inFile)
 dt = data.table(dt)
 
 # format the variable types for the regressions
-dt[ , date:=as.Date(date)] # regression only runs with date as a date variable
+dt[, date:=as.Date(date)] # regression only runs with date as a date variable
 dt[, org_unit_id:=as.character(org_unit_id)]
+dt[, element_id :=as.character(element_id)]
 
-# format the pnlp data in the same format as the base data
-# this assigns an element id to each variable and refers to the health zone as an org_unit for pnlp
-if (set=='pnlp') {dt[, org_unit_id := paste(dps, health_zone, sep = "_")]
-                  dt[, element_id:=.GRP, by='variable']}
-if (set=='sigl') {dt[, variable := as.character(variable)]
-                  dt[, drug := as.character(drug)]
-                  dt[, drug_id:=.GRP, by='drug']
-                  dt[, variable_id:=.GRP, by='variable']
-                  dt[, completely_missing := NULL]}
+# # format the pnlp data in the same format as the base data
+# # this assigns an element id to each variable and refers to the health zone as an org_unit for pnlp
+# if (set=='pnlp') {dt[, org_unit_id := paste(dps, health_zone, sep = "_")]
+#                   dt[, element_id:=.GRP, by='variable']}
+# if (set=='sigl') {dt[, variable := as.character(variable)]
+#                   dt[, drug := as.character(drug)]
+#                   dt[, drug_id:=.GRP, by='drug']
+#                   dt[, variable_id:=.GRP, by='variable']
+#                   dt[, completely_missing := NULL]}
+# if (set=='pnls') setnames(dt, 'element_id', 'id')
+# if (set=='pnls') dt[ ,element_id:=.GRP, by='id']
 
-if (set=='pnls') setnames(dt, 'element_id', 'id')
-if (set=='pnls') dt[ ,element_id:=.GRP, by='id']
-
-
-# aggregate to DPS level before running (if agg_to_DPS is TRUE)
-if (agg_to_DPS == TRUE){
-  # if all hzs at a particular date (within DPS and variable) are NA we want it to be NA (not 0, like what happens with na.rm = TRUE)
-  # dt_dps = dt[, .(value = sum(value, na.rm=TRUE)), by = .(dps, date, variable, element_id )]
-  
-  dt[, value_dps := ifelse(!all(is.na(value)), sum(value, na.rm=TRUE), sum(value)), by = .(dps, date, variable, element_id )]
-  dt = unique(dt[, .(dps, date, variable, element_id, value_dps)])
-  setnames(dt, "dps", "org_unit_id")
-  setnames(dt, "value_dps", "value")
-}
+# # aggregate to DPS level before running (if agg_to_DPS is TRUE)
+# if (agg_to_DPS == TRUE){
+#   # if all hzs at a particular date (within DPS and variable) are NA we want it to be NA (not 0, like what happens with na.rm = TRUE)
+#   # dt_dps = dt[, .(value = sum(value, na.rm=TRUE)), by = .(dps, date, variable, element_id )]
+#   
+#   dt[, value_dps := ifelse(!all(is.na(value)), sum(value, na.rm=TRUE), sum(value)), by = .(dps, date, variable, element_id )]
+#   dt = unique(dt[, .(dps, date, variable, element_id, value_dps)])
+#   setnames(dt, "dps", "org_unit_id")
+#   setnames(dt, "value_dps", "value")
+# }
 
 # check that unique identifiers uniquely identify data:
-if (set == 'base') {if ( nrow(unique(dt[, .(org_unit_id, date, element, element_id, category)])) != nrow(dt)) stop( "check unique identifiers...")}
 if (set == 'sigl') {if ( nrow(unique(dt[, .(org_unit_id, date, variable_id, drug_id)])) != nrow(dt)) stop( "check unique identifiers...")}
+
+if ( nrow(unique(dt[, .(org_unit_id, date, element_id, element, category)])) != nrow(dt)) stop( "check unique identifiers...")
 #------------------------------------
 
 #------------------------------------
@@ -173,13 +150,8 @@ write.fst(dt, scratchInFile)
 #------------------------------------
 # run quantregScript.r as separate qsubs
 #------------------------------------
-# file pathways are now relative to the root of the repository
-
 # determine the number of rows in the array job
 N = nrow(array_table)
-
-# set the working directory even if david does not want you to
-setwd(paste0('/ihme/code/', user, '/gf/'))
 
 # FOR NEW CLUSTER:
 # run quantregScript for each org_unit (submit one array job, with the array by org_unit)
@@ -196,19 +168,20 @@ if (set == 'sigl'){
 i = N-1
 numFiles = length(list.files(parallelDir))
 while(numFiles<i) {
-  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 5 seconds...'))
+  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 15 seconds...'))
   numFiles = length(list.files(parallelDir))
-  Sys.sleep(5) }
+  Sys.sleep(15) }
+print(paste0( length(list.files(parallelDir)), 'jobs complete. QR finished.'))
 #------------------------------------
 
 #---------------------------------------
 # old code to concatenate files - leave as k since i and j are already used
-
 for (k in seq(N)) {
   file = paste0(parallelDir, 'quantreg_output_', k, '.fst')
   if (file.exists(file)==TRUE) tmp = read.fst(paste0(parallelDir, 'quantreg_output_', k, '.fst'), as.data.table=TRUE)
-  if (file.exists(file)==FALSE) print(paste0("File ", k, " does not exist."))
-  if (file.exists(file)==FALSE) next
+  
+  if (file.exists(file)==FALSE) stop(paste0("File ", k, " does not exist."))
+
   if(k==1) fullData = tmp
   if(k>1) fullData = rbind(fullData, tmp)
   cat(paste0('\r', k)) }
