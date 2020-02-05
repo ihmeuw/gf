@@ -24,7 +24,6 @@
 # Set up R
 #------------------------------------
 library(data.table)
-
 # detect if operating on windows or on the cluster 
 root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 # define main directory
