@@ -93,6 +93,7 @@ cv = readRDS(paste0(dir, 'prepped_data/',
 cv = cv[year==2010 | year==2017, .(value = mean),
         by=.(cause, location, year)]
 cv[ , variable:=paste0(cause, year)]
+cv = cv[location!='Global']
 
 # shape wide 
 cv = dcast(cv, location~variable)
