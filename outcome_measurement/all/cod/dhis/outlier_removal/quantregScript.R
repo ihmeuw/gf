@@ -3,7 +3,6 @@
 # source from the cluster
 # runs quantile regression on all data sets from DHIS
 #------------------------------------
-rm(list=ls())
 library(data.table)
 library(quantreg)
 library(fst) 
@@ -13,7 +12,6 @@ user = Sys.info()[['user']]
 #------------------------------------
 # handle arguments
 #------------------------------------
-
 # get the task_id to index the array table
 i = as.integer(Sys.getenv("SGE_TASK_ID"))
 print(i)
@@ -22,23 +20,22 @@ print(i)
 scratchDir = paste0('/ihme/scratch/users/', user, '/quantreg/')
 scratchInFile = paste0(scratchDir, 'data_for_qr.fst')
 arrayFile = paste0(scratchDir, 'array_table_for_qr.fst')
-parallelDir = paste0(scratchDir, 'parallel_files/')
+parallelDir = paste0(scratchDir, 'qr_output/')
 outFile = paste0(parallelDir, 'quantreg_output_', i, '.fst')
 
 # read in the array table 
 array_table = read.fst(arrayFile)
 array_table = data.table(array_table)
+array_table$element_id = as.character(array_table$element_id)
 
 # read org unit from the array table
-# o = array_table[i]$org_unit_id # unique facility id
-e = array_table[i]$element_id # unique facility id
+e = array_table[i, element_id] # element id
 print(e)
 #------------------------------------
 
 #-----------------------------------
 # load the data & subset to task_id/org_unit
 #------------------------------------
-
 dt = read.fst(scratchInFile)
 dt = data.table(dt)
 subset = dt[element_id==e, ] 
@@ -87,7 +84,7 @@ for (o in unique(subset$org_unit_id)) {
   if (nrow(combined_qr_results)==0) {
     combined_qr_results = subset_further 
   } else { combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) }
-  print(paste0("completed loop for org_unit_id = ", o))
+  # print(paste0("completed loop for org_unit_id = ", o))
 }
 
 

@@ -171,12 +171,12 @@ dt$location = factor(dt$location, c("Cambodia", "Democratic Republic of the Cong
 #-------------------------
 # calculate annualized rates of change - 2000 to 2017
 #EL 1/21/2020 - we have through 2017 for all of these data sources, so updating this to be 2010-2017
-rates = dt[metric=='Rate' & (year==2010 | year==2017),.(measure, location, cause, year, val)]
+rates = dt[metric=='Rate' & (year==2010 | year==2018),.(measure, location, cause, year, val)]
 rates = dcast(rates, measure+location+cause~year)
-setnames(rates, c('2010', '2017'), c('y2010', 'y2017'))
-rates[ , roc:=round((log(y2017/y2010)/17), 3)]
+setnames(rates, c('2010', '2018'), c('y2010', 'y2018'))
+rates[ , roc:=round((log(y2018/y2010)/8), 3)]
 rates[ ,roc:=roc*100]
-rates[ ,c('y2010', 'y2017'):=NULL]
+rates[ ,c('y2010', 'y2018'):=NULL]
 
 # merge in annualized roc
 dt = merge(dt, rates, by=c('measure', 'location', 'cause'), all=T)
