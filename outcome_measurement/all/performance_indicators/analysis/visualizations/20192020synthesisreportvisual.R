@@ -1,7 +1,7 @@
 # synthesis report visuals on performance achievement
 
 # read in data
-data <- 
+DT <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/analysis/subset_data/prepped_cross_consortia_pfi_2019.RDS")
 
 
 #####################################################################
@@ -83,7 +83,7 @@ p4 <- ggplot(dt_subset[type_desc%in%c("Coverage","Outcome") & module_code!="HIV 
         axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
   geom_hline(yintercept=1, linetype="dashed", color="grey", alpha=0.6, size=2)
 
-### this is  for coverage indicators and not including RSSH
+### this is  for coverage indicators and not including RSSH--
 p5 <- ggplot(dt_subset[type_desc%in%c("Coverage") & module_code!="RSSH HMIS, M&E" & module_code!="SSRP" & module_code!="PSM"], aes(x=module_code, y=avg_ach_ratio, color=module_code, size = no_observ)) + theme_bw()+
   geom_pointrange( aes(ymin= min_ach_ratio, ymax= max_ach_ratio), position= position_jitter(width = 0.40), shape = 21, fill = "white") + guides(color=FALSE) +
   scale_size_continuous(breaks= c(1, 2, 3, 4, 5, 6, 7, 8), range=c(0.5,1.5), name = "Number of \ncountries reporting") + 
@@ -134,8 +134,9 @@ p8 <- ggplot(dt_subset[module_code%in%c("HIV Impact", "Malaria Impact", "TB Impa
         axis.text.x = element_text(angle=45, vjust=1, hjust=1)) +
   geom_hline(yintercept=1, linetype="dashed", color="grey", alpha=0.6, size=2)
 
-#outputFile = paste0("J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\analysis\\visualizations\\",graphic_name)
-outputFile1 = paste0("C:/Users/frc2/Desktop/",graphic_name)
+graphic_name = "2019_2020_synthesis_visual_01_08_20.pdf"
+outputFile1 = paste0("J:\\Project\\Evaluation\\GF\\outcome_measurement\\multi_country\\performance_indicators\\pudr_indicator_extraction\\analysis\\visualizations\\",graphic_name)
+# outputFile1 = paste0("C:/Users/frc2/Desktop/",graphic_name)
 
 #ggsave(outputFile1, height = 8, width = 11)
 
