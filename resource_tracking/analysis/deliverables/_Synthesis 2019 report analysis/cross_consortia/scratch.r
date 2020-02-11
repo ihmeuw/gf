@@ -264,7 +264,7 @@ p = ggplot(no_diff_pct, aes(x=reorder(grant, pct), y = pct, fill=country, label=
   geom_text(position = position_dodge(width=0), size=5, vjust=-0.5) + 
   theme_bw(base_size=16) + 
   theme(axis.text.x = element_text(angle = 35, hjust = 1)) +  
-  scale_y_continuous(lim=c(0, 100)) + 
+  scale_y_continuous(lim=c(0, 50)) + 
   scale_fill_viridis_d() + 
   labs(title="Percentage of activities that had no change in budget for 3-year grant period", 
        y="Percentage of activities (%)", fill="", x="", caption="*GTM-T-MSPAS had a 4-year grant period, from 2019-2022")
