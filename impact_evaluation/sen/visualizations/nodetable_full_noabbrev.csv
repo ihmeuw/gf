@@ -1,0 +1,23 @@
+variable,y,x,label
+lag_gf_tbhiv_cumulative,15.5,-20,GF TB-HIV expenditure
+lag_gf_tbcare_cumulative,12,-20,GF TB community care expenditure
+lag_gf_detect_cumulative,7,-20,GF case detection and diagnosis expenditure
+lag_other_dah_T1_1_cumulative,4.75,-20,Other case detection and diagnosis expenditure
+lag_gf_mdrtb_cumulative,3,-20,GF MDR-TB expenditure
+lag_other_dah_T3_cumulative,1.5,-20,Other MDR-TB expenditure
+tb_vih_cumulative,15.5,-12,Number TB patients with HIV
+com_mobsoc_cumulative,13.5,-12,Number of social mobilizations
+com_vad_touss_cumulative,12,-12,Number of home visits
+com_radio_cumulative,10.5,-12,Number of radio broadcasts
+perf_lab,4,-12,Lab performance rate
+patients_prop_genexpert_cumulative,1.5,-12,Number of GeneXpert tests
+tb_vih_arv_cumulative,15.5,-4,Number of TB-HIV on ARV
+com_enf_ref_cumulative,12,-4,Number of children referred
+com_nom_touss_cumulative,10,-4,Number of people with cough referred
+tb_cas_id_cumulative,7,-4,Number of TB diagnosed in other ways
+tot_genexpert_cumulative,4.75,3,Number of TB diagnosed by GeneXpert
+dx_count_cumulative,1.5,12,Number of MDR-TB cases diagnosed
+tb_tfc_cumulative,7,12,"Number Tx, first-line"
+lead_gueris_taux,15.5,20,TB Tx success rate
+lead_tpm_chimio_enf_cumulative,12,20,Number of children on preventive therapy
+mdr_success_cumulative,1.5,20,Number of MDR-TB cured
