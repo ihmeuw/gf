@@ -29,9 +29,7 @@ dt = dt[!is.na(achievement_ratio) & !is.na(absorption)]
 # * wrap by semester 1, 2, 3 ** this can be done for IHME grants only
 # * add a delay on the budget period
 # * can regional grants be added to this?
-# * stratify by country --in case one is ruining the overall pattern
 # * subset to countries or indicators where effect would be immediate 
-# * scale the points by size of the budget
 # * include outcome indicators
 
 
@@ -61,8 +59,8 @@ ggplot(dt[], aes(x=absorption, y=achievement_ratio)) +
   geom_smooth(method = "lm")+
   stat_cor()
 
-# plot one without the tb outcome indicators
-ggplot(dt[], aes(x=absorption, y=achievement_ratio)) + 
+# plot one without the outcome indicators
+ggplot(dt[type_desc=="Coverage"], aes(x=absorption, y=achievement_ratio)) + 
   geom_point() + 
   theme_bw(base_size=18) +
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
@@ -104,15 +102,21 @@ ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=abbrev_mod)) +
   geom_smooth(method = "lm", se=FALSE)+
   stat_cor()
 
-# stratify by country
-ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=loc_name)) + 
+# stratify by type of variable (outcome, coverage, impact)
+ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=type_desc)) + 
   geom_point() + 
   theme_bw(base_size=18)+
   labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
   geom_smooth(method = "lm", se=FALSE)+
   stat_cor()
 
-# subset only to modules that might see an effect more quickly than others
+# stratify by budget category
+ggplot(dt[], aes(x=absorption, y=achievement_ratio, color=abbrev_mod)) + 
+  geom_point() + 
+  theme_bw(base_size=18)+
+  labs(title="Absorption vs. Achievement Ratio", x="Absorption (%)", y="Achievement Ratio", color="")+
+  geom_smooth(method = "lm", se=FALSE)+
+  stat_cor()# subset only to modules that might see an effect more quickly than others
 
 dev.off() 
 

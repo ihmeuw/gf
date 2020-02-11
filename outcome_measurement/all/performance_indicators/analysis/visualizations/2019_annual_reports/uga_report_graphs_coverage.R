@@ -13,7 +13,7 @@ library(kableExtra)
 library(scales)
 
 # load data
-data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/data_for_analysis/kpi_data_for_analyses2.RDS")
+data <- readRDS("J:/Project/Evaluation/GF/outcome_measurement/multi_country/performance_indicators/pudr_indicator_extraction/prepped_data/cleaned_pfi.rds")
 
 # set parameters of data to be analyzed
 country = "uga"

@@ -120,7 +120,7 @@ admin2ShapeFile = paste0(dir, '/mapping/sen/shapefiles/gadm36_SEN_2.shp')
 
 # "nodetables" aka "nodetables" 
 # listing names of variables in each model, their labels and coordinates for the SEM graph
-nodeTableFile1 = './impact_evaluation/sen/visualizations/nodetable_full.csv'
+nodeTableFile1 = './impact_evaluation/sen/visualizations/nodetable_full_noabbrev.csv'
 
 # reading in raw mdrtb data
 
