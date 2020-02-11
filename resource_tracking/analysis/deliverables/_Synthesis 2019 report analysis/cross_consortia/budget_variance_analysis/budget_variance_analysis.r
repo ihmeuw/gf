@@ -107,6 +107,55 @@ c = 'Values compare the budget as reported in semester 3 PUDRs
 # --------------------------------------------------
 
 
+#------------------------------------------------
+# Alternate figure for the synthesis report, created by Emily Linebarger 
+plotData = moduleData[, .(gf_module, disease_group, grant, loc_name, grant_period, cumulative_budget, original_budget)]
+
+# Pull in abbreviated modules 
+abbrev_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/all_interventions.rds")
+abbrev_mods = unique(abbrev_mods[, .(module_eng, abbrev_mod_eng)])
+setnames(abbrev_mods, c('module_eng', 'abbrev_mod_eng'), c('gf_module', 'abbrev_mod'))
+plotData = merge(plotData, abbrev_mods, by='gf_module', all.x=T)
+
+#Tag abbrev_mod with its disease. 
+plotData[, abbrev_mod:=paste0(disease_group, ": ",  abbrev_mod)]
+
+# Generate a normalized variance.
+plotData[, variance_normalized:=round(((cumulative_budget-original_budget)/original_budget)*100, 1)]
+
+# Generate ranges for variance to fall into, to make graph easier to interpret.
+plotData[variance_normalized==0, variance_category:="No difference"]
+plotData[variance_normalized<0 & variance_normalized>-25, variance_category:="Small reduction (0-25% of original budget)"]
+plotData[variance_normalized<=-25, variance_category:="Large reduction (>25% of original budget)"]
+plotData[variance_normalized>0 & variance_normalized<25, variance_category:="Small increase (0-25% of original budget)"]
+plotData[variance_normalized>25, variance_category:="Large increase (>25% of original budget)"]
+
+plotData[, num_grants_per_cat:=.N, by=c('gf_module', 'variance_category')]
+plotData = unique(plotData[, .(abbrev_mod, variance_category, num_grants_per_cat)])
+
+plotData[variance_category%in%c("Small reduction (0-25% of original budget)", "Large reduction (>25% of original budget)"), num_grants_per_cat:=-num_grants_per_cat]
+
+# Drop unnecessary categories 
+plotData = plotData[!variance_category%in%c(NA, 'No difference')]
+
+# Calculate overall change, and sort by this
+plotData[, overall_diff:=sum(num_grants_per_cat), by='abbrev_mod']
+
+# Factor plot data 
+plotData$variance_category <- factor(plotData$variance_category, 
+                                     levels=c("Large reduction (>25% of original budget)",
+                                              "Small reduction (0-25% of original budget)", 
+                                              "Small increase (0-25% of original budget)", 
+                                              "Large increase (>25% of original budget)"))
+
+p = ggplot(plotData, aes(x=reorder(abbrev_mod, overall_diff), y=num_grants_per_cat, fill=variance_category, label=abs(num_grants_per_cat))) + 
+  geom_bar(stat="identity", position="stack") + 
+  geom_text(position = position_stack(vjust=0.5), size=6) + 
+  theme_bw(base_size=20) + 
+  coord_flip() + 
+  scale_fill_manual(values=c("coral2", "khaki1", "lightgreen", "green4")) + 
+  scale_y_continuous(limits=c(-8, 8), breaks=seq(-8, 8, by=2)) + 
+  labs(title="Budget variance by module", x="Module", y="Number of grants in each category", fill="Category")
 # --------------------------------------------------
 # Graph
 pdf(outFile, height=5.5, width=9)

@@ -423,3 +423,84 @@ p = ggplot(plot_data, aes(x=reorder(parent_category, difference), y=num_countrie
        caption="Numbers shown out of 7 possible countries and\na multicountry RAI2E regional grant")
 
 ggsave(paste0(save_loc, "absorption_by_cc.png"), p, height=8, width=14)
+
+# ------------------------------------------
+# Request after Feb. 2020 TERG meeting 
+# How does absorption at 18 months in during this grant cycle compare with the same period during the last grant cycle? 
+
+dt = data.table(read_xlsx("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/raw_data/Expenditure_at_InterventionSDA_Level_23_08_IHME.xlsx"))
+names(dt) = c('department', 'region', 'country', 'grant', 'grant_name', 'grant_period_start', 'grant_period_end',
+              'start_date', 'end_date', 'module', 'intervention', 'budget', 'expenditure')
+
+dt = dt[, .(country, grant, grant_period_start, grant_period_end, start_date, end_date, module, intervention, budget, expenditure)]
+
+dt[, start_year:=substr(grant_period_start, 1, 4)]
+dt[, start_year:=as.integer(start_year)]
+dt[, end_year:=substr(grant_period_end, 1, 4)]
+dt[, end_year:=as.integer(end_year)]
+
+dt_15_17 = dt[start_year==2015 & end_year==2017]
+dt_15_17[, start_date:=as.Date(start_date)]
+dt_15_17[, end_date:=as.Date(end_date)]
+dt_15_17[, days_in_period:=end_date-start_date]
+
+# Add in grant disease 
+dt_15_17[, disease_split:=strsplit(grant, "-")]
+potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
+
+for (i in 1:nrow(dt_15_17)){
+  if (dt_15_17$disease_split[[i]][2]%in%potential_diseases){
+    dt_15_17[i, grant_disease:=sapply(disease_split, "[", 2 )]
+  } else if (dt_15_17$disease_split[[i]][3]%in%potential_diseases){
+    dt_15_17[i, grant_disease:=sapply(disease_split, "[", 3 )]
+  } else if (dt_15_17$disease_split[[i]][4]%in%potential_diseases){
+    dt_15_17[i, grant_disease:=sapply(disease_split, "[", 4 )]
+  }
+}
+
+dt_15_17[, disease_split:=NULL]
+
+unique(dt_15_17[!grant_disease%in%potential_diseases, .(grant, grant_disease)]) #Visual check that these all make sense. 
+
+dt_15_17[grant_disease=='C', grant_disease:='HIV/TB']
+dt_15_17[grant_disease=='H', grant_disease:='HIV']
+dt_15_17[grant_disease=='T', grant_disease:='TB']
+dt_15_17[grant_disease=='S' | grant_disease=='R', grant_disease:='RSSH']
+dt_15_17[grant_disease=='M', grant_disease:='Malaria']
+dt_15_17[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #oNLY ONE CASE OF THIS. 
+
+stopifnot(unique(dt_15_17$grant_disease)%in%c('HIV', 'TB', 'HIV/TB', 'RSSH', 'Malaria'))
+
+# tag diseases by module 
+dt_15_17[grepl("RSSH|HSS", module), disease:="RSSH"]
+dt_15_17[grepl("prevention programs|hiv", tolower(module)), disease:="HIV"] #This includes TB/HIV
+dt_15_17[module%in%c('Vector control', 'Case management', 'Specific prevention interventions (SPI)'), disease:="Malaria"]
+dt_15_17[module%in%c('PMTCT', 'Treatment, care and support', 'Removing legal barriers to access'), disease:="HIV"]
+dt_15_17[module%in%c('MDR-TB', 'TB care and prevention'), disease:="TB"]
+
+#Visual checks
+unique(dt_15_17[, .(disease, module)][order(disease)]) #Only program management, other, and PBF left. 
+mods_by_grant_disease = unique(dt_15_17[is.na(disease), module])
+
+# label these modules that can be in any grant by their grant disease 
+dt_15_17[module%in%mods_by_grant_disease, disease:=grant_disease]
+dt_15_17[disease=="HIV/TB", disease:="HIV"] #Call all of these HIV for simplicity. 
+
+#-------------------------------
+# Analysis 
+
+#How many grants can you make a perfect 18 month timeline for? 
+reporting_matrix = unique(dt_15_17[, .(grant, grant_period_start, start_date)][order(grant, grant_period_start, start_date)])
+reporting_matrix[, period_id:=paste0("period", seq(0, 25, by=1)), by=c('grant', 'grant_period_start')]
+reporting_matrix = dcast(reporting_matrix, grant+grant_period_start~period_id, value.var=c('start_date'))
+
+# How many unique lines by grant and disease are reporting for each period? 
+collapse = dt_15_17[grant_period_start == start_date] # Make sure that you're getting the FIRST 18 months. 
+collapse = dt_15_17[, .(budget=sum(budget), expenditure=sum(expenditure)), by=c('grant', 'country', 'start_date', 'end_date', 'disease', 'days_in_period')]
+collapse[, .N, by=c('days_in_period')][order(days_in_period)]
+
+# If you just subset to 540 days (18 months), what is the average absorption by disease? 
+collapse[days_in_period==540, .(absorption=round((sum(expenditure, na.rm=T)/sum(budget, na.rm=T))*100, 1)), by='disease']
+
+# How about 540 - 724 (18 months to 24 months?)
+collapse[days_in_period>=540 & days_in_period<=724, .(absorption=round((sum(expenditure, na.rm=T)/sum(budget, na.rm=T))*100, 1)), by='disease']
