@@ -38,6 +38,8 @@ print(e)
 #------------------------------------
 dt = read.fst(scratchInFile)
 dt = data.table(dt)
+dt[, element := as.character(element)]
+
 subset = dt[element_id==e, ] 
 #------------------------------------
 
@@ -51,15 +53,17 @@ for (o in unique(subset$org_unit_id)) {
   subset_further = subset[org_unit_id == o,] 
   
   # skip cases that will fail
-  n = nrow(subset_further[!is.na(value), ])
+  n = subset_further[value != 0 & !is.na(value), .N]
   #print(n)
   var = var(subset_further$value, na.rm=T)
   #print(var)
   nx = length(unique(subset_further$date))
   #print(nx)
   
+  current_element = unique(subset_further$element)
+  
   # skip if less than 3 data points or variance is 0
-  if(n>=3 & var!=0 & nx>=2) {  
+  if(n>=4 & var!=0 & nx>=2 & !grepl(current_element, pattern = 'rupture', ignore.case = TRUE)) {  # skip stockout days for QR
     # create formula
     form = 'value~date'
     
@@ -84,7 +88,7 @@ for (o in unique(subset$org_unit_id)) {
   if (nrow(combined_qr_results)==0) {
     combined_qr_results = subset_further 
   } else { combined_qr_results = rbindlist(list(combined_qr_results, subset_further), use.names=TRUE, fill = TRUE) }
-  # print(paste0("completed loop for org_unit_id = ", o))
+  print(paste0("completed loop for org_unit_id = ", o))
 }
 
 

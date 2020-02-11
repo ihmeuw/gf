@@ -164,13 +164,13 @@ if (set == 'sigl'){
 #------------------------------------
 # wait for files to be done
 #------------------------------------
-i = N-1
+i = N
 numFiles = length(list.files(parallelDir))
-while(numFiles<i) {
-  print(paste0(numFiles, ' of ', i, ' jobs complete, waiting 15 seconds...'))
+while(numFiles!=i) {
+  print(paste0(numFiles, ' of ', i , ' jobs complete, waiting 15 seconds...'))
   numFiles = length(list.files(parallelDir))
   Sys.sleep(15) }
-print(paste0( length(list.files(parallelDir)), 'jobs complete. QR finished.'))
+print(paste0( length(list.files(parallelDir)), ' jobs complete. QR finished.'))
 #------------------------------------
 
 #---------------------------------------

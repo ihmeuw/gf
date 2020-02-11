@@ -19,7 +19,7 @@ step2_merge_metadata = FALSE
 step3_remove_outliers = FALSE
 step4_addtiional_prep = FALSE
 
-set = 'base'
+set = 'sigl'
 #---------------------------------------------
 
 #---------------------------------------------
@@ -75,23 +75,22 @@ if (step2_merge_metadata) {
 #---------------------------------------------
 # Step 3 - outlier removal
 #---------------------------------------------
-if (set != 'sigl') {  # note: SIGL data on stockouts is outlier-screened differently since stockouts are in # of days per month... so we just screen out values >31. 
-  if (step3_remove_outliers) { 
-    # Step 3a - run QR to detect outliers
-      #------------------------------------
-      # switches
-      cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
-      cleanup_end = FALSE # "" /end; default to FALSE
-      agg_to_DPS = FALSE # whether or not to aggregate the data to DPS level before running QR. 
-      #------------------------------------
-      source(paste0(code_dir, 'outlier_removel/run_quantreg_parallel.R'))
-      
-    # Step 3b - run code to create outlier graphs
-      source(paste0(code_dir, 'outlier_removel/visualize_qr_outliers.R'))
-      
-    # Steb 3c remove outliers/replace with fitted values
-      # source(paste0(code_dir, 'outlier_removel/'))
-  }
+# note: SIGL data on stockouts is outlier-screened differently since stockouts are in # of days per month... so we just screen out values >31. 
+if (step3_remove_outliers) { 
+  # Step 3a - run QR to detect outliers
+    #------------------------------------
+    # switches
+    cleanup_start = TRUE # whether or not to delete all files from parallel runs at the beginning
+    cleanup_end = FALSE # "" /end; default to FALSE
+    agg_to_DPS = FALSE # whether or not to aggregate the data to DPS level before running QR. 
+    #------------------------------------
+    source(paste0(code_dir, 'outlier_removal/run_quantreg_parallel.r'))
+    
+  # Step 3b - run code to create outlier graphs
+    source(paste0(code_dir, 'outlier_removal/visualize_qr_outliers.R'))
+    
+  # Steb 3c remove outliers/replace with fitted values
+    # source(paste0(code_dir, 'outlier_removal/'))
 }
 #---------------------------------------------
 
