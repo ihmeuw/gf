@@ -20,11 +20,14 @@
 #This is the previous version of the FGH data, which only had information through 2016. 
 # fgh_data <- fread(paste0(fgh_raw, "archive/ihme_dah_cod_uga_gtm_1990_2016.csv"))
 
+# Data archived as of 2/11/2020 - Emily Linebarger 
+#fgh_data = readRDS(paste0(fgh_raw, "FGH_EZ_2018.rds"))
+
 # ----------------------------------------------
 # OTHER DAH ACTUALS 
 # ----------------------------------------------
 
-fgh_data = readRDS(paste0(fgh_raw, "FGH_EZ_2018.rds"))
+fgh_data = readRDS(paste0(odah_raw, "FGH_EZ_2019_8countries.rds")) # This data was received on February 11, 2020 from Emilie Madison (comment written by Emily Linebarger)
 
 #Read in the mapping documents 
 fgh_mapping <- fread(paste0(mapping_dir, "fgh_mapping.csv"), stringsAsFactors = FALSE)
@@ -50,7 +53,7 @@ keep_cols =c(id_vars, disease_vars)
 fgh_data = fgh_data[, .SD, .SDcols=keep_cols]
 
 #Drop 'total' columns 
-fgh_data = fgh_data[, -c('hiv_dah_18', 'mal_dah_18', 'tb_dah_18', 'swap_hss_total_dah_18')]
+fgh_data = fgh_data[, -c('hiv_dah_19', 'mal_dah_19', 'tb_dah_19', 'swap_hss_total_dah_19')]
 
 ## "melt" the data: 
 fghData <-  melt(fgh_data, id=c("year", "loc_name", "channel_agg", 'channel', 'source'), variable.name = "activity_description", value.name="disbursement")
@@ -92,12 +95,12 @@ pre_check = fghData[, .(pre_check = sum(disbursement, na.rm=T)), by='activity_de
 #Map this data to global fund modules and interventions. 
 fgh_to_codes <- merge(fghData, fgh_mapping, by='activity_description', all.x = TRUE, allow.cartesian=T)
 if (nrow(fgh_to_codes[is.na(coefficient) | is.na(code)])!=0){
-  print(fgh_to_codes[is.na(coefficient) | is.na(code), .(activity_description)])
+  print(unique(fgh_to_codes[is.na(coefficient) | is.na(code), .(activity_description)]))
   stop("FGH codes did not merge correctly!")
 }
 fgh_mapped <- merge(fgh_to_codes, final_mapping, by='code', all.x = TRUE, allow.cartesian=T)
 if (nrow(fgh_mapped[is.na(module_eng)])!=0){
-  print(fgh_mapped[is.na(module_eng), .(activity_description)])
+  print(unique(fgh_mapped[is.na(module_eng), .(activity_description)]))
   print("FGH modules/interventions did not merge correctly!")
 }
 
@@ -142,21 +145,21 @@ fgh_mapped = fgh_mapped[order(loc_name, year, channel_agg, disease, activity_des
 # ----------------------------------------------
 
 #Save the full dataset 
-write.csv(fgh_mapped, paste0(fgh_prepped, "other_dah_actuals_all.csv"), row.names=FALSE)
-saveRDS(fgh_mapped, paste0(fgh_prepped, "other_dah_actuals_all.rds"))
+write.csv(fgh_mapped, paste0(odah_prepped, "other_dah_actuals_all.csv"), row.names=FALSE)
+saveRDS(fgh_mapped, paste0(odah_prepped, "other_dah_actuals_all.rds"))
 
 #Save a version for each country
-write.csv(fgh_mapped[loc_name=="COD"], paste0(fgh_prepped, "other_dah_actuals_all_cod.csv"), row.names=FALSE)
-saveRDS(fgh_mapped[loc_name=="COD"], paste0(fgh_prepped, "other_dah_actuals_all_cod.rds"))
+write.csv(fgh_mapped[loc_name=="COD"], paste0(odah_prepped, "other_dah_actuals_all_cod.csv"), row.names=FALSE)
+saveRDS(fgh_mapped[loc_name=="COD"], paste0(odah_prepped, "other_dah_actuals_all_cod.rds"))
 
-write.csv(fgh_mapped[loc_name=="GTM"], paste0(fgh_prepped, "other_dah_actuals_all_gtm.csv"), row.names=FALSE)
-saveRDS(fgh_mapped[loc_name=="GTM"], paste0(fgh_prepped, "other_dah_actuals_all_gtm.rds"))
+write.csv(fgh_mapped[loc_name=="GTM"], paste0(odah_prepped, "other_dah_actuals_all_gtm.csv"), row.names=FALSE)
+saveRDS(fgh_mapped[loc_name=="GTM"], paste0(odah_prepped, "other_dah_actuals_all_gtm.rds"))
 
-write.csv(fgh_mapped[loc_name=="SEN"], paste0(fgh_prepped, "other_dah_actuals_all_sen.csv"), row.names=FALSE)
-saveRDS(fgh_mapped[loc_name=="SEN"], paste0(fgh_prepped, "other_dah_actuals_all_sen.rds"))
+write.csv(fgh_mapped[loc_name=="SEN"], paste0(odah_prepped, "other_dah_actuals_all_sen.csv"), row.names=FALSE)
+saveRDS(fgh_mapped[loc_name=="SEN"], paste0(odah_prepped, "other_dah_actuals_all_sen.rds"))
 
-write.csv(fgh_mapped[loc_name=="UGA"], paste0(fgh_prepped, "other_dah_actuals_all_uga.csv"), row.names=FALSE)
-saveRDS(fgh_mapped[loc_name=="UGA"], paste0(fgh_prepped, "other_dah_actuals_all_uga.rds"))
+write.csv(fgh_mapped[loc_name=="UGA"], paste0(odah_prepped, "other_dah_actuals_all_uga.csv"), row.names=FALSE)
+saveRDS(fgh_mapped[loc_name=="UGA"], paste0(odah_prepped, "other_dah_actuals_all_uga.rds"))
 
 
 

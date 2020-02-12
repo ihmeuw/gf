@@ -4,6 +4,7 @@ library(ggplot2)
 library(scales) 
 library(readxl)
 
+modules = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_modules.rds")
 cost_categories = readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_cost_categories.rds")
 source("./gf/resource_tracking/analysis/graphing_functions.r") #Change to your repo location
 save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_Synthesis 2019/"
@@ -55,16 +56,23 @@ plot_data1 = plot_data1[type=="Commodities"]
 plot_data1[, absorption:=round((expenditure/budget)*100, 1)]
 
 p3 = ggplot(plot_data1, aes(x=commodity_pct, y=absorption)) + 
-  geom_point(size = 3) +
+  geom_point(size = 3, color="purple") +
   theme_bw() + 
-  labs(title="", subtitle="", 
-       caption="*Commodities defined as cost categories 4 & 5", 
+  labs(title="Percentage of grant that is commodities vs. absorption", subtitle="January 2018-June 2019", 
+       caption="*Commodities defined as cost categories 4 & 5\n*Each point represents one grant", 
        x="Budget Percentage that is Commodities", y="Absorption by Grant") +
   coord_fixed() +
   ylim(0, 100) + xlim(0, 100) + theme(text = element_text(size = 18)) 
-p3
+
+# Show what the absorption is for one commodity-based module, vector control, by country. 
+plot_data = modules[abbrev_mod=="Vector control", .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('loc_name')]
+p4 = budget_exp_bar(plot_data, xVar='loc_name', altTitle="Absorption for vector control interventions, by country", 
+               altSubtitle="January 2018-June 2019")
+
 
 pdf(paste0(save_loc, "commodity_absorption.pdf"), height=8, width=13)
 p
 p2
+p3
+p4
 dev.off() 
