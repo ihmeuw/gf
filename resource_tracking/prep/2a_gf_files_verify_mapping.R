@@ -12,6 +12,7 @@
 # map to be used for mapping modules and interventions. 
 # ---------------------------------------------
 
+# Read in most common raw mappings from 2018-2020 files. 
 post_2017_map = readRDS(paste0(mapping_dir, "post_2017_map.rds"))
 post_2017_map[, module:=as.character(module)]
 post_2017_map[, intervention:=as.character(intervention)]
@@ -21,22 +22,37 @@ post_2017_map[, lang:=as.character(lang)]
 
 post_2017_map = post_2017_map[, .(code, module, intervention, coefficient, disease)]
 
-all_interventions = fread(paste0(mapping_dir, "all_interventions.csv"), encoding = "Latin-1")
-all_eng = all_interventions[, .(code, module_eng, intervention_eng, disease)]
-setnames(all_eng, old=c('module_eng', 'intervention_eng'), new=c('module', 'intervention'))
-# all_fr = all_interventions[, .(code, module_fr, intervention_fr, disease)]
-# setnames(all_fr, old=c('module_fr', 'intervention_fr'), new=c('module', 'intervention'))
-# all_esp = all_interventions[, .(code, module_esp, intervention_esp, disease)]
-# setnames(all_esp, old=c('module_esp', 'intervention_esp'), new=c('module', 'intervention'))
+# Merge the 2018-2020 module map onto the module/intervention pairs pulled from raw data. 
+# This code never needs to be rerun (unless the framework changes!), just leaving for documentation. Emily Linebarger 2/12/2020 
+# map_18_20_hiv = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="HIV Interventions"))
+# map_18_20_hiv[, disease:="hiv"]
+# map_18_20_tb = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="TB Interventions"))
+# map_18_20_tb[, disease:="tb"]
+# map_18_20_malaria = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="Malaria Interventions"))
+# map_18_20_malaria[, disease:="malaria"]
+# map_18_20_rssh = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="RSSH Interventions"))
+# map_18_20_rssh[, disease:="rssh"]
 # 
-all_langs = list(all_eng)
-all_langs = rbindlist(all_langs)
+# map_18_20 = rbindlist(list(map_18_20_hiv, map_18_20_tb, map_18_20_malaria, map_18_20_rssh))
+# saveRDS(map_18_20, paste0(mapping_dir, "2018_2020_MF.rds"))
+
+map_18_20 = readRDS(paste0(mapping_dir, "2018_2020_MF.rds"))
+
+# Take the full list of interventions, strip the diacritics and spaces, and add these onto the map as valid raw options. 
+all_eng = map_18_20[, .(code, gf_module, gf_intervention, disease)]
+setnames(all_eng, old=c('gf_module', 'gf_intervention'), new=c('module', 'intervention'))
+all_fr = map_18_20[, .(code, gf_module_fr, gf_intervention_fr, disease)]
+setnames(all_fr, old=c('gf_module_fr', 'gf_intervention_fr'), new=c('module', 'intervention'))
+all_esp = map_18_20[, .(code, gf_module_esp, gf_intervention_esp, disease)]
+setnames(all_esp, old=c('gf_module_esp', 'gf_intervention_esp'), new=c('module', 'intervention'))
+
+all_langs = rbindlist(list(all_eng, all_fr, all_esp))
 all_langs[, coefficient:=1]
 all_langs = strip_chars(all_langs)
 all_langs = all_langs[, -c('orig_module', 'orig_intervention')]
 
 module_map = rbind(post_2017_map, all_langs)
-module_map = unique(module_map)
+module_map = unique(module_map) # This is your new 'Master' list for 2018-2020 raw extracted module/intervention pairs. 
   
 # -------------------------------
 #       FORMAT DATA 

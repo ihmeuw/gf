@@ -264,7 +264,7 @@ p = ggplot(no_diff_pct, aes(x=reorder(grant, pct), y = pct, fill=country, label=
   geom_text(position = position_dodge(width=0), size=5, vjust=-0.5) + 
   theme_bw(base_size=16) + 
   theme(axis.text.x = element_text(angle = 35, hjust = 1)) +  
-  scale_y_continuous(lim=c(0, 100)) + 
+  scale_y_continuous(lim=c(0, 50)) + 
   scale_fill_viridis_d() + 
   labs(title="Percentage of activities that had no change in budget for 3-year grant period", 
        y="Percentage of activities (%)", fill="", x="", caption="*GTM-T-MSPAS had a 4-year grant period, from 2019-2022")
@@ -434,15 +434,20 @@ names(dt) = c('department', 'region', 'country', 'grant', 'grant_name', 'grant_p
 
 dt = dt[, .(country, grant, grant_period_start, grant_period_end, start_date, end_date, module, intervention, budget, expenditure)]
 
+# Fix start and end date formats. 
+dt[, start_date:=as.Date(start_date, format="%Y-%m-%d")]
+dt[, end_date:=as.Date(end_date, format="%Y-%m-%d")]
+dt[, days_in_period:=end_date-start_date]
+dt[, grant_period_start:=as.Date(grant_period_start, format="%Y-%d-%m")]
+dt[, grant_period_end:=as.Date(grant_period_end, format="%Y-%m-%d")]
+
 dt[, start_year:=substr(grant_period_start, 1, 4)]
 dt[, start_year:=as.integer(start_year)]
 dt[, end_year:=substr(grant_period_end, 1, 4)]
 dt[, end_year:=as.integer(end_year)]
 
+# Only keep 2015-2017 data 
 dt_15_17 = dt[start_year==2015 & end_year==2017]
-dt_15_17[, start_date:=as.Date(start_date)]
-dt_15_17[, end_date:=as.Date(end_date)]
-dt_15_17[, days_in_period:=end_date-start_date]
 
 # Add in grant disease 
 dt_15_17[, disease_split:=strsplit(grant, "-")]
@@ -486,21 +491,53 @@ mods_by_grant_disease = unique(dt_15_17[is.na(disease), module])
 dt_15_17[module%in%mods_by_grant_disease, disease:=grant_disease]
 dt_15_17[disease=="HIV/TB", disease:="HIV"] #Call all of these HIV for simplicity. 
 
+dt_15_17[, days_in_period:=as.integer(days_in_period)]
+
 #-------------------------------
 # Analysis 
+# Set globals that can be changed easily 
+min_days = 360 
+max_days = 730
 
 #How many grants can you make a perfect 18 month timeline for? 
-reporting_matrix = unique(dt_15_17[, .(grant, grant_period_start, start_date)][order(grant, grant_period_start, start_date)])
-reporting_matrix[, period_id:=paste0("period", seq(0, 25, by=1)), by=c('grant', 'grant_period_start')]
-reporting_matrix = dcast(reporting_matrix, grant+grant_period_start~period_id, value.var=c('start_date'))
+reporting_matrix = unique(dt_15_17[, .(grant, grant_period_start, start_date, days_in_period)][order(grant, grant_period_start, start_date)])
+reporting_matrix[, total_reporting_days:=cumsum(days_in_period), by=c('grant', 'grant_period_start')]
 
-# How many unique lines by grant and disease are reporting for each period? 
-collapse = dt_15_17[grant_period_start == start_date] # Make sure that you're getting the FIRST 18 months. 
-collapse = dt_15_17[, .(budget=sum(budget), expenditure=sum(expenditure)), by=c('grant', 'country', 'start_date', 'end_date', 'disease', 'days_in_period')]
-collapse[, .N, by=c('days_in_period')][order(days_in_period)]
+# For the next calculation, only keep grants that you can sum up to AT LEAST the minimum days. 
+keep_grants = unique(reporting_matrix[total_reporting_days>=min_days, paste0(grant, grant_period_start)])
+subset = dt_15_17[paste0(grant, grant_period_start)%in%keep_grants] # Only keep the observations that cover AT LEAST this reporting period. 
 
-# If you just subset to 540 days (18 months), what is the average absorption by disease? 
-collapse[days_in_period==540, .(absorption=round((sum(expenditure, na.rm=T)/sum(budget, na.rm=T))*100, 1)), by='disease']
+# drop observations that are past the maximum days threshold.
+drop_above_max = unique(reporting_matrix[total_reporting_days>=max_days, paste0(grant, grant_period_start, start_date)])
+subset = merge(subset, reporting_matrix, by=c('grant', 'grant_period_start', 'start_date', 'days_in_period'), all.x=T)
+unique(subset[grant=="SEN-M-IntraH", .(start_date, end_date, days_in_period, total_reporting_days)])
+subset = subset[total_reporting_days<=max_days]
 
-# How about 540 - 724 (18 months to 24 months?)
-collapse[days_in_period>=540 & days_in_period<=724, .(absorption=round((sum(expenditure, na.rm=T)/sum(budget, na.rm=T))*100, 1)), by='disease']
+subset[, .N, by=c('days_in_period')][order(days_in_period)] # How many unique lines by grant and disease are reporting for each period? 
+subset[, length(unique(grant)), by='disease'] # How many grants are reporting for each disease? 
+subset[, unique(grant), by='disease']
+
+# How many reporting periods do you have for each disease? 
+# Answer this a different way - for all the reporting periods for each disease, what percentage of them are greater than 18 months? 
+reporting_freq = unique(subset[, .(total_reporting_days, grant, disease)])
+reporting_freq[total_reporting_days >=540, greater_than_18_mo:=TRUE]
+reporting_freq[total_reporting_days <540, greater_than_18_mo:=FALSE]
+reporting_freq = reporting_freq[, .(count=.N), by=c('disease', 'greater_than_18_mo')][order(disease, greater_than_18_mo)]
+reporting_freq[, total_unique_periods:=sum(count), by='disease']
+reporting_freq[, pct:=round((count/total_unique_periods)*100, 1)]
+
+# Calculate the absorption by disease for this subset of data, which represents all data with a start date in 2015, 
+# and between 12-24 months of cumulative reporting. 
+subset[, .(absorption=round((sum(expenditure, na.rm=T)/sum(budget, na.rm=T))*100)), by='disease']
+
+# Run a few spot checks to make sure that the numbers above are right. 
+unique(subset[grant=="SEN-M-IntraH", .(start_date, end_date, days_in_period, total_reporting_days)])
+subset[grant=="SEN-M-IntraH", .(absorption=round((sum(expenditure, na.rm=T)/sum(budget, na.rm=T))*100))]# Should be 11519090/13388749, or 86.0%
+
+
+# ---------------------------------------------
+# Check Emily C.'s analysis of absorption for KPs
+mods = c("Comprehensive programs for people in prisons and other closed settings", "Programs to reduce human rights-related barriers to HIV services", 
+         "Prevention programs for adolescents and youth, in and out of school", "Prevention programs for other vulnerable populations")
+modules[gf_module%in%mods, .(absorption=round((sum(cumulative_expenditure, na.rm=T)/sum(cumulative_budget, na.rm=T))*100)), by=c('gf_module', 'loc_name')]
+

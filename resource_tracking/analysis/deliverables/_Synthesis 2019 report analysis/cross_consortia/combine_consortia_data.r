@@ -16,20 +16,53 @@ source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functio
 #---------------------------------------
 #Read in IHME data and format
 #---------------------------------------
+ccByVars = c('loc_name', 'grant', 'grant_period', 'semester', 'cost_category')
 ihme_cc = readRDS(paste0(box, "tableau_data/all_cost_categories.rds"))
 ihme_cc$cost_category <- NULL
 setnames(ihme_cc, c('cleaned_cost_category', 'pudr_semester_financial'), c('cost_category', 'semester'))
 
-# limit time period
-ihme_cc = ihme_cc[grant_period=="2018-2020" & semester=="2-A"]
+# There are some grants that didn't report cumulative expenditure - check which fall into this category, and sum up the expenditure separately. 
+check_exp = ihme_cc[grant_period=="2018-2020" & semester=="2-A", .(budget = sum(cumulative_budget, na.rm=T), 
+                                                                                 expenditure=sum(cumulative_expenditure, na.rm=T)), by='grant']
+check_exp = check_exp[expenditure==0, method:='calculated']
+check_exp = check_exp[expenditure!=0, method:='reported_in_pudr']
+
+check_exp = check_exp[, .(grant, method)]
+ihme_cc = merge(ihme_cc, check_exp, by='grant')
+
+# Now, run these two methods separately. 
+# First, reported in PUDR. 
+cumulative_absorption1 = ihme_cc[grant_period=="2018-2020" & semester=="2-A" & method=="reported_in_pudr",
+                                        .(cumulative_budget = sum(cumulative_budget, na.rm=T), 
+                                          cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), 
+                                        by=c(ccByVars, 'method')]
+# Then, calculate using previous PUDRs. 
+# In cases where cumulative expenditure isn't reported, calculate it from the previous PUDRs. 
+calculate = ihme_cc[grant_period=="2018-2020" & method=="calculated"]
+cumulative_absorption2 = data.table()
+if (nrow(calculate)!=0){
+  for (g in unique(calculate$grant)){
+    subset = calculate[grant==g]
+    semesters = unique(ihme_cc[grant==g & grant_period=="2018-2020", semester])
+    if ('1-AB'%in%semesters){ #These are the only two types of reporting we've seen - a full-year PUDR in 2018 or a S2 2018 PUDR. 
+      subset = subset[semester%in%c('1-AB', '2-A'), .(cumulative_budget = sum(budget, na.rm=T), 
+                                                                     cumulative_expenditure=sum(expenditure, na.rm=T)), by=c(ccByVars, 'method')]
+    } else if ('1-B'%in%semesters){
+      subset = subset[semester%in%c('1-A', '1-B', '2-A'), .(cumulative_budget = sum(budget, na.rm=T), 
+                                                                                 cumulative_expenditure=sum(expenditure, na.rm=T)), by=c(ccByVars, 'method')]      }
+    cumulative_absorption2 = rbind(cumulative_absorption2, subset, fill=T)
+  } 
+} 
+#Collapse the grant-level out after summing by semester. 
+cumulative_absorption2 = cumulative_absorption2[, .(cumulative_budget = sum(cumulative_budget, na.rm=T), 
+                                                    cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), by=c(ccByVars, 'method')]
+
+# Bind the data together 
+ihme_cc = rbind(cumulative_absorption1, cumulative_absorption2)
 
 #Collapse
 ihme_mi = get_cumulative_absorption(byVars=c('loc_name', 'grant', 'grant_period', 'gf_module'))
 setnames(ihme_mi, c('budget', 'expenditure'), c('cumulative_budget', 'cumulative_expenditure'))
-
-ihme_cc = ihme_cc[, .(cumulative_budget=sum(cumulative_budget), 
-                    cumulative_expenditure=sum(cumulative_expenditure)), 
-                by=c('loc_name', 'grant', 'grant_period', 'semester', 'cost_category')]
 
 ihme_cc[cost_category=="13.1 Payment for Results", cost_category:="13.0 Payment for results"]
 

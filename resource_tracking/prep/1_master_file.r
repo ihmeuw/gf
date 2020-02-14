@@ -1,7 +1,7 @@
 # ----------------------------------------------
 # AUTHOR: Emily Linebarger 
 # PURPOSE: Master file for updating resource tracking database. 
-# DATE: Last updated July 2019
+# DATE: Last updated February 2020 
 # 
 # The current working directory should be the root of this repository
 # ----------------------------------------------
@@ -86,22 +86,7 @@ if (prep_files | prep_gos){
 }
 
 # ----------------------------------------------
-# STEP 3: PREP FGH ACTUALS AND ESTIMATES 
-# ----------------------------------------------
-if (prep_odah){
-  #Source document prep functions 
-  prep_functions = list.files(paste0(code_dir, "odah_prep_functions"), full.names=TRUE)
-  for (file in prep_functions){
-    source(file, encoding="UTF-8")
-  }
-  
-  #Prep and map actuals and estimates. *Would be good to add in a mapping verification and calculations verification step! 
-  source(paste0(code_dir, "3a_fgh_actuals_prep_data.R"))
-  # source(paste0(code_dir, "3b_fgh_estimates_prep_data.R"))
-  source(paste0(code_dir, "3c_fgh_validate_data.r"))
-} 
-# ----------------------------------------------
-# STEP 4: PREP GHE (CURRENTLY ONLY SICOIN)
+# STEP 3: PREP GHE 
 # ----------------------------------------------
 if (prep_ghe){
   source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
@@ -112,19 +97,42 @@ if (prep_ghe){
   }
   
   # Prep and map SICOIN data.*Would be good to add in a mapping verification and calculations verification step!   
-  source(paste0(code_dir, "4a_ghe_sicoin_prep_data.r"))
+  source(paste0(code_dir, "3a_ghe_fgh_actuals_prep_data.r"))
+  source(paste0(code_dir, "3b_ghe_fgh_estimates_prep_data.r"))
+  source(paste0(code_dir, "3c_ghe_sicoin_prep_data.r"))
+  # source(paste0(code_dir, "3d_ghe_who_prep_data.r")) # Currently not prepping this data - Emily Linebarger 2/12/2020
+  source(paste0(code_dir, "3e_ghe_map_sicoin.r"))
+  #source(paste0(code_dir, "3f_ghe_validate_data.r")) # CURRENTLY NOT RUNNING EMILY LINEBARGER 2/12/2020 
+  source(paste0(code_dir, "3g_ghe_aggregate_data.r"))
+} 
+
+# ---------------------------------------------------------
+# STEP 3: PREP OTHER DEVELOPMENT ASSISTANCE FOR HEALTH
+# ---------------------------------------------------------
+if (prep_odah){
+  #Source document prep functions 
+  prep_functions = list.files(paste0(code_dir, "odah_prep_functions"), full.names=TRUE)
+  for (file in prep_functions){
+    source(file, encoding="UTF-8")
+  }
+  #Prep other development assistance for health data from the financing global health team. 
+  source(paste0(code_dir, "4a_other_dah_prep_data.r"))
+  # *Would be good to add in a mapping verification and calculations verification step! Emily Linebarger 2/12/2020 
 } 
 
 # ----------------------------------------------
 # STEP 5: AGGREGATE ACROSS DATA SOURCES
 # ----------------------------------------------
 
+# This data is currently not running! Emily Linebarger 2/12/2020 
+#source(paste0(code_dir, "5_aggregate_all_data_sources.r"))
 
 # ----------------------------------------------
-# STEP 6: UPLOAD TO BASECAMP 
+# STEP 6: VALIDATE DATA AND RELEASE TO PARTNERS - * Should probably be moved to end of pipeline. 
 # ----------------------------------------------
 
-#Open in Spyder, and run: "C:/Users/user/Documents/gf/resource_tracking/prep/6_basecamp_upload.py"
+# This code is not running 2/12/2020 Emily Linebarger 
+#source(paste0(code_dir, "6_validate_and_upload.r")) 
 
 #---------------------------------------------------
 # STEP 7: PREP COST CATEGORY PUDR DATA 
