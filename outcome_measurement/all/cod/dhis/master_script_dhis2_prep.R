@@ -19,7 +19,7 @@ step2_merge_metadata = FALSE
 step3_remove_outliers = FALSE
 step4_addtiional_prep = FALSE
 
-set = 'sigl'
+set = 'base'
 #---------------------------------------------
 
 #---------------------------------------------
@@ -54,8 +54,8 @@ if (step1_extract_data) {
   
     source(paste0(code_dir, 'extract_dhis/extract_data_dhis.R'))
   
-    run_extraction_tool(start_year = '2019', end_year = as.character(year(Sys.Date())), 
-                        start_month = '11', end_month = as.character(month(Sys.Date())), 
+    run_extraction_tool(start_year = '2018', end_year = as.character(year(Sys.Date())), 
+                        start_month = '01', end_month = as.character(month(Sys.Date())), 
                         set_name = set)
   
   # Step 1b - combine intermediate data files
