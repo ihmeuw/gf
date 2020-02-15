@@ -11,17 +11,22 @@ library(stringr)
 library(colormap)
 #-----------------------
 # set the directories
+# set directories
 
-dir = 'J:/Project/Evaluation/GF/outcome_measurement/multi_country/coverage/'
+# detect if operating on windows or on the cluster 
+j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
+
+# set the directory for input and output
+dir = paste0(j, '/Project/Evaluation/GF/impact_evaluation/synthesis_epidemiology/')
 
 # load the malaria data 
-dt = fread(paste0(dir, "raw_data/anti_malaria_1131.csv"))
+dt = fread(paste0(dir, "raw_data/coverage/anti_malaria_1131.csv"))
 
 # load the art data 
-art = fread(paste0(dir, "raw_data/art_coverage_2000_2017.csv"))
+art = fread(paste0(dir, "raw_data/coverage/art_coverage_2000_2017_ihme.csv"))
 
 # load the tb data 
-tb = fread(paste0(dir,"raw_data/tb_tx_coverage.csv"))
+tb = fread(paste0(dir,"raw_data/coverage/tb_tx_coverage.csv"))
 
 #--------------------------------------
 # prep the data 
@@ -177,6 +182,13 @@ ggplot(dt, aes(x=year, y=mean, color=indicator))+
 
 dev.off()
 
+
+
+#--------------------------------------
+# export the prepped coverage data set
+
+saveRDS(dt, paste0(dir, 'prepped_data/gbd_coverage_estimates.rds'))
+
 #------------------------------------------------------
 # table calculating rate changes
 
@@ -211,7 +223,7 @@ setnames(roc, c('Indicator', 'Country', '2000', '2010', '2017',
 #--------------------------
 # export to copy into report
 
-write.csv(roc, paste0(dir, 'rocs_table.csv'))
+write.csv(roc, paste0(dir, 'outputs/rocs_table.csv'))
 
 #--------------------------
 
