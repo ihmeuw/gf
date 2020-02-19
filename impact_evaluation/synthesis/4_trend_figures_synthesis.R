@@ -37,7 +37,7 @@ data = data[sex=='Both']
 data = data[measure %in% c('Incidence','Deaths')]
 
 # subset to 2000+
-if (set=='gbd') data = data[year>=2000]
+if (set=='gbd') data = data[year>=2010]
 if (set=='who_unaids') data = data[year>=2010]
 
 # relabel "deaths" to "mortality"
@@ -87,12 +87,12 @@ for (m in unique(data$measure)) {
     cap = c1} else { ytitle='Rate per 100,000 Population'
     cap = c2 }
   
-  if (set=='gbd') years = '2000 - 2017'
+  if (set=='gbd') years = '2010 - 2017'
   if (set=='who_unaids') years = '2010 - 2018'
   
   if (set=='who_unaids' & m=='Incidence') {
      cap = 'Source: WHO (TB/malaria); UNAIDS (HIV/AIDS)\n*Malaria incidence rate displayed per 1,000 population' 
-  } else { cap = 'Source: WHO (TB/malaria); UNAIDS (HIV/AIDS)'}
+  } 
   
   m_lite = tolower(m)
 
@@ -147,7 +147,7 @@ dev.off()
 # coverage figure
 
 cov = readRDS(paste0(dir, 
-      'prepped_data/', set, '_coverage_prepped.rds'))
+      'prepped_data/', set, '_coverage_estimates.rds'))
 
 # set the years depending on the data set
 if (set=='gbd') years = '2000 - 2017'

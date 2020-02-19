@@ -8,12 +8,12 @@
 causes = c('HIV/AIDS', 'Malaria', 'Tuberculosis')
 
 # get 2017 incidence rates
-incidence = dt[measure=='Incidence' & year==2018 & metric=='Rate' & cause %in% causes & sex=='Both',
+incidence = dt[measure=='Incidence' & year==2017 & metric=='Rate' & cause %in% causes & sex=='Both',
                .(val = round(val, 1)), by=.(location, cause)]
 incidence = dcast(incidence, location~cause)
 
 # get 2017 incidence rates
-incidence_roc = dt[measure=='Incidence' & year==2018 & metric=='Rate' & cause %in% causes & sex=='Both',
+incidence_roc = dt[measure=='Incidence' & year==2017 & metric=='Rate' & cause %in% causes & sex=='Both',
                    .(roc = roc), by=.(location, cause)]
 incidence_roc = dcast(incidence_roc, location~cause)
 setnames(incidence_roc, c('location', 'hiv_roc', 'mal_roc', 'tb_roc'))
@@ -69,11 +69,11 @@ hiv_dt$location = factor(hiv_dt$location, c("Cambodia", "Democratic Republic of 
 hdeath = hiv_dt[measure=='Deaths' & metric=='Rate' & cause=="HIV/AIDS resulting in other diseases" & sex=='Both' & (year==2000 | year==2017), 
                 .(value = val), by=.(location, year)]
 hdeath = dcast(hdeath, location~year)
-setnames(hdeath, c('location', 'y2000', 'y2017'))
-hdeath[ ,roc:=round((log(y2017/y2000)/17), 2)]
+setnames(hdeath, c('location', 'y2010', 'y2017'))
+hdeath[ ,roc:=round((log(y2017/y2010)/7), 2)]
 
 # merge and format
-hdeath[ ,y2000:=round(y2000, 1)]
+hdeath[ ,y2000:=round(y2010, 1)]
 hdeath[ ,y2017:=round(y2017, 1)]
 hdeath[ ,roc:=100*roc]
  
