@@ -214,8 +214,8 @@ convert_currency = function(dt, yearVar=NULL, convertFrom, convertTo, finVars = 
   setnames(oecd_xrate, c('TIME','Value'), c(yearVar, 'eur_usd'))
   oecd_xrate[, (yearVar):= as.integer(get(yearVar))]
   
-  #Re-extracted from the OECD's website to grab 2018 as well. 
-  oecd_xrate2 = fread("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/oecd_currency_conversion/oecd_conversion_rates_2018.csv")
+  #Re-extracted from the OECD's website to grab 2018 and 2019 as well, last downloaded on 2/13/2020 by Emily Linebarger 
+  oecd_xrate2 = fread("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/oecd_currency_conversion/oecd_conversion_rates_2019.csv")
   oecd_xrate2 = oecd_xrate2[LOCATION == "EA19", .(TIME, Value)]
   setnames(oecd_xrate2, c('TIME','Value'), c(yearVar, 'eur_usd'))
   oecd_xrate2[, (yearVar):= as.integer(get(yearVar))]
@@ -226,7 +226,7 @@ convert_currency = function(dt, yearVar=NULL, convertFrom, convertTo, finVars = 
   #Create one more data table that has several years into the future, with the latest exchange rate available. 
   #This is a temporary patch until more data (or a better method) becomes available! 
   latest_rate = oecd_xrate[get(yearVar)==max(get(yearVar)), .(eur_usd)]
-  xrate_extension = data.table(year = seq(2019, 2023, by=1), eur_usd = rep(latest_rate, 5)) #Extend 5 years into the future - this should catch all of our current data. 
+  xrate_extension = data.table(year = seq(2020, 2024, by=1), eur_usd = rep(latest_rate, 5)) #Extend 5 years into the future - this should catch all of our current data. 
   oecd_xrate = rbind(oecd_xrate, xrate_extension)
   
   #Round OECD exchange rates to 6 significant figures 
