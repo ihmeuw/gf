@@ -140,7 +140,7 @@ p5 = ggplot(plot_data, aes(x=pm_pct_of_budget, y=overall_absorption)) +
   geom_point() + 
   geom_smooth(method='lm') + 
   theme_bw(base_size=16) + 
-  labs(title="Does a higher budget percentage for program management/ncorrelate with higher overall absorption?",
+  labs(title="Does a higher budget percentage for program management \ncorrelate with higher overall absorption?",
        x="Percentage of budget given to program management (%)", 
        y="Overall grant absorption (%)", subtitle="Absorption calculated over the period Jan. 2018-June 2019", 
        caption="*Each point represents one grant", size="Percentage of budget that is /nprogram management")
@@ -541,3 +541,8 @@ mods = c("Comprehensive programs for people in prisons and other closed settings
          "Prevention programs for adolescents and youth, in and out of school", "Prevention programs for other vulnerable populations")
 modules[gf_module%in%mods, .(absorption=round((sum(cumulative_expenditure, na.rm=T)/sum(cumulative_budget, na.rm=T))*100)), by=c('gf_module', 'loc_name')]
 
+# -----------------------------------------------
+# Check aggregate statements in absorption section
+dt <- readRDS("J:/Project/Evaluation/GF/resource_tracking/_other_data_sources/multi_country/2019-2020_synthesis/all_modules.rds")
+check = dt[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('gf_module')]
+check[, absorption:=round((expenditure/budget)*100)]
