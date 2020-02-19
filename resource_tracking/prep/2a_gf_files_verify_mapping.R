@@ -1,6 +1,6 @@
 # ----------------------------------------------
 # AUTHOR: Emily Linebarger, elineb@uw.edu 
-# LAST UPDATED: November 2018 
+# LAST UPDATED: February 2020 
 # PURPOSE: Clean module mapping file from original version created by Naomi Provost/Irena Chen, 
 #           archived on October 30, 2018. This cleaned version will have no duplicates between 
 #           module, intervention, and disease that could lead to duplicate mappings, and 
@@ -24,17 +24,17 @@ post_2017_map = post_2017_map[, .(code, module, intervention, coefficient, disea
 
 # Merge the 2018-2020 module map onto the module/intervention pairs pulled from raw data. 
 # This code never needs to be rerun (unless the framework changes!), just leaving for documentation. Emily Linebarger 2/12/2020 
-# map_18_20_hiv = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="HIV Interventions"))
-# map_18_20_hiv[, disease:="hiv"]
-# map_18_20_tb = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="TB Interventions"))
-# map_18_20_tb[, disease:="tb"]
-# map_18_20_malaria = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="Malaria Interventions"))
-# map_18_20_malaria[, disease:="malaria"]
-# map_18_20_rssh = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="RSSH Interventions"))
-# map_18_20_rssh[, disease:="rssh"]
-# 
-# map_18_20 = rbindlist(list(map_18_20_hiv, map_18_20_tb, map_18_20_malaria, map_18_20_rssh))
-# saveRDS(map_18_20, paste0(mapping_dir, "2018_2020_MF.rds"))
+map_18_20_hiv = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="HIV Interventions"))
+map_18_20_hiv[, disease:="hiv"]
+map_18_20_tb = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="TB Interventions"))
+map_18_20_tb[, disease:="tb"]
+map_18_20_malaria = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="Malaria Interventions"))
+map_18_20_malaria[, disease:="malaria"]
+map_18_20_rssh = data.table(read_xlsx(paste0(mapping_dir, "2018-2020 Modular Framework.xlsx"), sheet="RSSH Interventions"))
+map_18_20_rssh[, disease:="rssh"]
+
+map_18_20 = rbindlist(list(map_18_20_hiv, map_18_20_tb, map_18_20_malaria, map_18_20_rssh))
+saveRDS(map_18_20, paste0(mapping_dir, "2018_2020_MF.rds"))
 
 map_18_20 = readRDS(paste0(mapping_dir, "2018_2020_MF.rds"))
 
@@ -58,10 +58,6 @@ module_map = unique(module_map) # This is your new 'Master' list for 2018-2020 r
 #       FORMAT DATA 
 #--------------------------------
   
-  all_interventions = fread(paste0(mapping_dir, "all_interventions.csv"))
-  setnames(all_interventions, old=c('module_eng', 'intervention_eng', 'module_fr', 'intervention_fr', 'abbrev_mod_eng'), 
-           new=c('gf_module', 'gf_intervention', 'gf_module_fr', 'gf_intervention_fr', 'abbreviated_module'))
-
   original_map <- copy(module_map) #Save an original copy for comparison later 
   new_rows <- fread(paste0(mapping_dir, "gf_mapping_additions.csv")) #Add in new rows to previously approved map
   new_rows = new_rows[, .(module, intervention, code, coefficient, disease)]
@@ -113,7 +109,7 @@ module_map = unique(module_map) # This is your new 'Master' list for 2018-2020 r
   
   #Remove whitespace from 'code' column before doing checks below
   module_map[, code:=trimws(code)]
-  all_interventions[, code:=trimws(code)]
+  map_18_20[, code:=trimws(code)]
   
   #Drop out French, Spanish, and abbreviated modules for now.  
   #module_map = module_map[, -c('gf_intervention_fr', 'gf_module_fr', 'module_esp', 'intervention_esp', 'abbreviated_module')]
@@ -205,10 +201,10 @@ module_map = unique(module_map) #Ok to here.
 # 1. Make sure you don't have any coefficients across unique 
 #   observations of module, intervention, and disease that sum to 1.
 #--------------------------------------------------------------------------------
-duplicates_check <- module_map[duplicated(module_map, by = keyVars) == TRUE, ]
+duplicates_check <- module_map[duplicated(module_map, by = keyVars), ]
 duplicates_coeff_one <- duplicates_check[coefficient == 1]
-duplicates_coeff_one <- merge(duplicates_coeff_one, module_map, by = keyVars) #Merge back onto module_map because some duplicates don't have coefficients of 1. 
-duplicates_coeff_one <- duplicates_coeff_one[order(module, intervention)]
+duplicates_coeff_one <- merge(duplicates_coeff_one, module_map, by = c(keyVars, 'coefficient', 'abbreviated_module')) #Merge back onto module_map because some duplicates don't have coefficients of 1. 
+duplicates_coeff_one <- duplicates_coeff_one[order(module, intervention, disease)]
 
 # Check
 if (nrow(duplicates_coeff_one) != 0 & include_stops == TRUE){
@@ -407,8 +403,8 @@ error2 = unspecified[code%in%other_codes] #These were reviewed by hand by EKL 5/
 # Merge mapped codes to final mappings 
 #--------------------------------------------------------------------------------
     module_map = module_map[, .(code, module, intervention, coefficient, disease)] #Ok to here. 
-    all_interventions = unique(all_interventions[, .(gf_module, gf_intervention, code)]) #Drop out French, Spanish, and the abbreviations for now. 
-    module_map = merge(module_map, all_interventions, by='code', all.x = TRUE)
+    map_18_20 = unique(map_18_20)
+    module_map = merge(module_map, map_18_20, by=c('code', 'disease'), all.x = TRUE)
     
     stopifnot(nrow(module_map[is.na(gf_module)])==0) 
 #--------------------------------------------------------------------------------
