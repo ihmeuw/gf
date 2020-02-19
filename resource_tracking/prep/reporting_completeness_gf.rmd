@@ -18,6 +18,7 @@ current_date = current_year + ((current_quarter/4)-0.25)
 #Read in current budget and expenditure files (For absorption we are not trying to make a complete time series, so this check is less relevant, 
 #   but absorption will have all of the same files as expenditure)
 budgets = readRDS(paste0(box, "tableau_data/final_budgets.rds"))
+#budgets = budgets[data_source=="budget"] # For check below to see whether we have all detailed budgets; should be commented out! EL 2/14/2020
 budgets[, date:=year+((quarter/4)-0.25)]
 budgets = unique(budgets[, .(grant, loc_name, date, file_name)])
 pudrs = readRDS(paste0(box, "tableau_data/final_expenditures.rds"))
@@ -71,7 +72,7 @@ for (i in 1:nrow(expected_periods)){
 }
 
 #Only worry about files from 2015 onwards; we have GMS data before then. 
-all_expected = all_expected[date>=2015]
+#all_expected = all_expected[date>=2015]
 
 #Append Senegal files that we know we should have, but don't yet. 
 pudrs = merge(pudrs, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
@@ -81,6 +82,21 @@ missing_pudr_qtrs[, quarter:=((date%%1)*4)+1]
 missing_pudr_qtrs[, year:=floor(date)]
 
 budgets = merge(budgets, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
+
+# Create a full list of all of the detailed budgets we're missing (left in for documentation) EL 2/14/2020 
+# budgets[file_name=="Expenditures from GMS and GOS for PCE IHME countries.xlsx", file_name:=NA] # Don't count GOS for this check. 
+# budgets[is.na(file_name), we_have_detailed_budget:=FALSE]
+# budgets[is.na(we_have_detailed_budget), we_have_detailed_budget:=TRUE]
+# budgets[, grant_period:=paste0(start_year, "-", end_year)]
+# budgets = unique(budgets[, .(loc_name, grant, grant_period, we_have_detailed_budget)])[order(loc_name, grant, grant_period)]
+# budgets[, count:=.N, by=c('loc_name', 'grant', 'grant_period')]
+# 
+# # If you have more than one value (TRUE/FALSE) for grant + grant_period, review these by hand. 
+# budgets = budgets[!(count==2 & we_have_detailed_budget==FALSE)]
+# budgets[grant=="COD-H-SANRU" & grant_period=="2012-2015", we_have_detailed_budget:=FALSE]
+# # stopifnot(nrow(budgets[count==2])==0) # You should only have one value per grant/grant_period, either TRUE or FALSE.
+# write.csv(budgets, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/metadata/available_detailed_budgets_2020_02_14.csv", row.names=F)
+
 budgets[is.na(file_name) & date<current_date, missing_budget_date:=date]
 missing_budget_qtrs = unique(budgets[is.na(file_name), .(loc_name, grant, date)])
 missing_budget_qtrs[, quarter:=((date%%1)*4)+1]
