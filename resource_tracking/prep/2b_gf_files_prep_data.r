@@ -40,6 +40,8 @@ if (prep_files == TRUE){
   
   #At this moment in time, don't process initial versions of files. EL 8/9/2019 
   file_list = file_list[file_iteration%in%c('final', 'revision')]
+  
+  file_list = file_list[1:5, ] # Subsetting for training on 2/19/2020 - can be deleted! 
 }
 
 #----------------------------------------------------
