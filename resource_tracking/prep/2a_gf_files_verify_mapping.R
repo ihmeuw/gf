@@ -404,7 +404,8 @@ error2 = unspecified[code%in%other_codes] #These were reviewed by hand by EKL 5/
 #--------------------------------------------------------------------------------
     module_map = module_map[, .(code, module, intervention, coefficient, disease)] #Ok to here. 
     map_18_20 = unique(map_18_20)
-    module_map = merge(module_map, map_18_20, by=c('code', 'disease'), all.x = TRUE)
+    map_18_20$disease <- NULL # Don't need this, because it actually represents the disease of the grant, not the disease of the intervention. 
+    module_map = merge(module_map, map_18_20, by=c('code'), all.x = TRUE)
     
     stopifnot(nrow(module_map[is.na(gf_module)])==0) 
 #--------------------------------------------------------------------------------
@@ -430,7 +431,7 @@ error2 = unspecified[code%in%other_codes] #These were reviewed by hand by EKL 5/
   saveRDS(module_map, paste0(mapping_dir, "gf_mapping.rds"))
 
   #Write a "diff" file to repository to make comparing changes easier. 
-  module_map = module_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention)]
+  #module_map = module_map[, .(code, module, intervention, coefficient, disease, gf_module, gf_intervention)]
   # removed_rows = anti_join(original_map, module_map)
   # write.csv(removed_rows, paste0(code_dir, "proposed_deletions_mod_map.csv"))
   # 

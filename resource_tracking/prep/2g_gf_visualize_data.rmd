@@ -2,21 +2,20 @@
 title: "Resource Tracking Descriptive Verification"
 author: "Emily Linebarger"
 date: "April 12, 2019"
-output: html_document
+output: pdf_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-setwd("C:/Users/elineb/Documents/gf/") #Change to the root of your repository
-source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 
-budgets = readRDS(paste0(combined_output_dir, "final_budgets.rds"))
-expenditures = readRDS(paste0(combined_output_dir, "final_expenditures.rds"))
+budgets = readRDS(paste0(box, "tableau_data/final_budgets.rds"))
+expenditures = readRDS(paste0(box, "tableau_data/final_expenditures.rds"))
 
-sen_absorption = readRDS(paste0(dir, "_gf_files_gos/sen/prepped_data/absorption_sen.rds"))
-cod_absorption = readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/absorption_cod.rds"))
-gtm_absorption = readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/absorption_gtm.rds"))
-uga_absorption = readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/absorption_uga.rds"))
+absorption = readRDS(paste0(box, "tableau_data/absorption.rds"))
+sen_absorption = absorption[loc_name=="sen"]
+cod_absorption = absorption[loc_name=="cod"]
+gtm_absorption = absorption[loc_name=="gtm"]
+uga_absorption = absorption[loc_name=="uga"]
 
 ```
 

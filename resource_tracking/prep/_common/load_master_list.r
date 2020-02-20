@@ -58,7 +58,7 @@ load_master_list = function(purpose=NULL) {
   stopifnot(unique(dt$grant_status)%in%c('active', 'not_active'))
   stopifnot(unique(dt$disease%in%c('hiv', 'tb', 'malaria', 'rssh', 'hiv/tb')))
   stopifnot(unique(dt$file_currency)%in%c('USD', 'EUR', 'LOC'))
-  stopifnot(unique(dt$geography_detail)%in%c('NATIONAL', 'SUBNATIONAL'))
+  stopifnot(unique(dt$geography_detail)%in%c('NATIONAL', 'SUBNATIONAL', 'NA'))
   stopifnot(unique(dt$file_iteration)%in%c('final', 'initial', 'revision'))
   
   #Correct date formats
