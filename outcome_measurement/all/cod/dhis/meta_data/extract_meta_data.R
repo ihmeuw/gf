@@ -1,7 +1,8 @@
-# DHIS Extraction for DRC  - Metadata extraction
+# DHIS Extraction for DRC: Meta data extractopm
 # Caitlin O'Brien-Carelli
 # Meta data extraction code for the DHIS Extraction tool
-# 2/3/2020
+# Extracts the names of variables, age/sex categories, data sets, facilities
+# 2/20/2020
 
 #---------------------
 # This code can be run locally or on the cluster
@@ -16,7 +17,6 @@
 
 # --------------------
 # Set up R
-rm(list=ls())
 library(data.table)
 library(ggplot2)
 library(dplyr)
@@ -24,13 +24,9 @@ library(stringr)
 library(reshape)
 library(RCurl)
 library(XML)
+library(profvis)
 library(plyr)
 library(openxlsx)
-
-# --------------------
-# shell script to run on the cluster 
-
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1349 -s 10 -P dhis_download
 
 # --------------------
 # detect the user 
@@ -48,7 +44,7 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 setwd(dir)
 
 # set the output directory
-out_dir = paste0(dir, 'meta_data/')
+out_dir = paste0(dir, '0_meta_data/')
 
 # library for the dhisextractr package
 dirx = paste0(dir, 'packages/')
@@ -140,6 +136,8 @@ extract_dhis_content = function(base_url, userID, password) {
   
   #-----------------------
   # organisational units extraction
+  # this extracts the list of health facilities, but not their associated geographic information 
+
   print('Extracting Organisation Units List')
   org_units_list = extract_orgunits_list(as.character(urls$org_units_url),
                                            userID, password)
@@ -170,6 +168,9 @@ extract_dhis_content = function(base_url, userID, password) {
 
 DRC_extraction = extract_dhis_content(base_url = base_url, userID = userID, password = password)
 
+
+#-----------------------------
+
 #------------------------------
 # save the data 
 
@@ -185,48 +186,5 @@ saveRDS(data_sets, paste0(out_dir, 'data_sets.rds'))
 saveRDS(updated_data_elements, paste0(out_dir, 'updated_data_elements.rds'))
 saveRDS(categories, paste0(out_dir, 'data_elements_categories.rds'))
 saveRDS(org_units, paste0(out_dir, 'org_units.rds'))
-# 
-# #-------------------------------------------------
-# # translations of the data elements
-# 
-# # export the data elements and translate w google translate
-# data_elements = data.table(updated_data_elements)
-# setnames(data_elements, c("data_element_id",  "data_element_name", "datasets_ID", 
-#            "datasets_name", "datasets_url", "data_element_url"),
-#          c("element_id",  "element", "data_set_id",
-#            "data_sets", "data_set_url", "element_url"))
-# 
-# # create a subset to translate (less variables makes translator work better)
-# sub_elements = data_elements[ ,.(data_set_id, element_id, element)]
-# 
-# # doc translater only works on shorter lists - divide into three sets
-# rows = nrow(sub_elements)
-# sub_elements_1 = sub_elements[1:1500]
-# sub_elements_2 = sub_elements[1501:3000]
-# sub_elements_3 = sub_elements[3001:rows]
-# write.xlsx(sub_elements_1, paste0(out_dir, 'translate/data_elements_to_translate_1.xlsx'))
-# write.xlsx(sub_elements_2, paste0(out_dir, 'translate/data_elements_to_translate_2.xlsx'))
-# write.xlsx(sub_elements_3, paste0(out_dir, 'translate/data_elements_to_translate_3.xlsx'))
-# 
-# # translate using online document translator - onlinedoctranslator.com
-# # save translations at file paths below 
-# 
-# # read in the translations and rbind together
-# trans_elements_1 = read.xlsx(paste0(out_dir, 'translate/data_elements_translations_1.xlsx'))
-# trans_elements_2 = read.xlsx(paste0(out_dir, 'translate/data_elements_translations_2.xlsx'))
-# trans_elements_3 = read.xlsx(paste0(out_dir, 'translate/data_elements_translations_3.xlsx'))
-# trans_elements = rbind(trans_elements_1, trans_elements_2, trans_elements_3)
-# setnames(trans_elements, 'element', 'element_eng')
-# 
-# # merge in the translations to the original variables list
-# data_elements = merge(data_elements, trans_elements, by=c('data_set_id', 'element_id'), all=T)
-# 
-# # save the data elements with associated translations
-# saveRDS(data_elements, paste0(out_dir, 'data_elements.rds'))
 
-#------------------------------
-
-
-
-
-
+#--------------------------

@@ -1,32 +1,12 @@
 # DHIS Extraction - extract the meta data for org units
-# Provides a list of health facilities and their locations 
-# Includes both source functions and download script
+# runs as a function of extract_meta_data.R
+# extracts associated geographic information for health facilities
+# Includes both the source functions and download script
 
 # Caitlin O'Brien-Carelli
 # 1/1/19
 
 # --------------------
-# Set up R
-rm(list=ls())
-library(data.table)
-library(ggplot2)
-library(stringr) 
-library(RCurl)
-library(XML)
-library(profvis)
-library(plyr)
-# --------------------
-# shell script to run on the cluster 
-
-# sh /share/singularity-images/rstudio/shells/rstudio_qsub_script.sh -p 1349 -s 10 -P dhis_download
-
-#----------------------
-# determine if the code is being run on the cluster or on home computer
-root = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-
-# set working directory 
-dir = paste0(root, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
-setwd(dir)
 
 #------------------------------
 # source the prep function
@@ -39,17 +19,10 @@ setwd(dir)
 
 #------------------------------
 # read in the organisational unit urls to extract
+
 org_units = readRDS(paste0(dir, 'meta_data/org_units.rds' ))
 
 #---------------------------------------------
-
-#--------------------------------------
-# arguments for the function - login information for SNIS 
-
-country = 'drc'
-base_url = 'https://www.snisrdc.com'
-userID = 'Bethany_Huntley'
-password = 'Snisrdcongo1'
 
 #--------------------------------------------
 # website for bug fixes (use ancestors for higher level units):
