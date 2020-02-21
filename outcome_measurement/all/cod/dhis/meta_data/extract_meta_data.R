@@ -17,6 +17,7 @@
 
 # --------------------
 # Set up R
+library(profvis)
 library(data.table)
 library(ggplot2)
 library(dplyr)
@@ -168,7 +169,6 @@ extract_dhis_content = function(base_url, userID, password) {
 
 DRC_extraction = extract_dhis_content(base_url = base_url, userID = userID, password = password)
 
-
 #-----------------------------
 
 #------------------------------
@@ -179,6 +179,15 @@ data_sets = DRC_extraction[1][[1]] # sets where the data live
 updated_data_elements = DRC_extraction[2][[1]] # variable names 
 categories = DRC_extraction[3][[1]] # age, sex, and inventory categories
 org_units = DRC_extraction[4][[1]] # health facility names 
+
+#-----------------------------
+# determine whether to extract the geographic information for the facilities
+
+if (extract_units_data == TRUE) print ("Extracting geographic information for the facilities. This will takw greater than one hour.")
+if (extract_units_data == TRUE) source(paste0(dir, '/code/extract_facilities_meta_data.R')) 
+
+#-----------------------------
+
 
 # save all the RDS files to the J Drive
 
