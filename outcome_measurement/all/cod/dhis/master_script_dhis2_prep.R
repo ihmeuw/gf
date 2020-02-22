@@ -84,11 +84,8 @@ if (step3_remove_outliers) {
     #------------------------------------
     source(paste0(code_dir, 'outlier_removal/run_quantreg_parallel.r'))
     
-  # Step 3b - run code to create outlier graphs
+  # Step 3b - run code to create outlier graphs and replace outliers
     source(paste0(code_dir, 'outlier_removal/visualize_qr_outliers.R'))
-    
-  # Steb 3c remove outliers/replace with fitted values
-    # source(paste0(code_dir, 'outlier_removal/'))
 }
 #---------------------------------------------
 
@@ -97,9 +94,8 @@ if (step3_remove_outliers) {
 #---------------------------------------------
 #***Switch to local computer*** - renaming function doesn't work on the cluster. 
 if (set %in% c('base', 'sigl', 'secondary')){
-  if (step4_addtiional_prep){
+  if (step4_addtiional_prep) {
     source(paste0(code_dir, 'prep_dhis/additional_prep.R'))
-    source(paste0(code_dir, 'prep_dhis/run_checks_on_new_download.R'))
   }
 }
 #---------------------------------------------

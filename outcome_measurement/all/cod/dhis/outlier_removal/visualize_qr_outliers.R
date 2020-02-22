@@ -6,21 +6,12 @@
 
 # --------------------
 # Set up R
-rm(list=ls())
 library(data.table)
 library(quantreg)
 library(ggplot2)
 library(RColorBrewer)
 library(stringr)
 # --------------------
-
-#------------------------------------
-# choose the data set to run the code on - pnls, base, or sigl
-
-set = 'base'
-
-# user name for sourcing functions
-user_name = Sys.info()[['user']]
 
 #------------------------------------
 # set directories
@@ -33,12 +24,8 @@ dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
 
 #-----------------------------------
 # output files
-
-if (set=='pnls') outFile = '6_outliers_replaced/pnls/pnls_subset_2017_01_01_2019_04_01_outliers_replaced.rds'
-if (set=='base') {outData = '6_outliers_replaced/base/base_prepped_outliers_replaced.rds'
-                  outFile = '5_qr_results/base/final_base_outliers_06_17_19.pdf'}
-if (set=='sigl') {outFile = '5_qr_results/sigl/final_sigl_drugs_qr_outliers_06_17_19.pdf'
-                  outData = '5_qr_results/sigl/sigl_drugs_prepped_outliers_labeled.rds' }
+outFile = paste0(dir, '4_qr_results/', set, '/', set, '_visualize_outlier_thresholds.pdf')
+outData = paste0(dir, '5_outliers_replaced/', set, '/', set, '_prepped_outliers_replaced.rds')
 
 if (set=='pnlp') {outFile = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (correspond to DPS level outliers).pdf'
                   outFile2 = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_figures (do not correspond to DPS level outliers)'
@@ -46,34 +33,21 @@ if (set=='pnlp') {outFile = '../prepped_data/PNLP/outliers/figures/pnlp_outliers
                   outData = '../prepped_data/PNLP/outliers/figures/pnlp_outliers_labeled.rds' }
 #------------------------------------
 # read in the file
+dt = readRDS(paste0(dir, '4_qr_results/', set, '/', 'raw_', set, '_quantreg_results.rds' ))
 
-if (set=='pnls') dt = readRDS(paste0(dir, '5_qr_results/pnls_subset_2017_01_01_2019_04_01_screened.rds'))
-if (set=='base') dt = readRDS(paste0(dir, '5_qr_results/base/base_quantreg_results.rds'))
-if (set=='sigl') dt = readRDS(paste0(dir, '5_qr_results/sigl/prepped_sigl_quantreg_imputation_results.rds'))
 if (set=='pnlp') { dt = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results.rds'))
                    dt_dps = readRDS(paste0(dir, '../prepped_data/PNLP/outliers/pnlp_quantreg_results_dpsLevel.rds'))}
 #------------------------------------
 
-#-----------------------------------
-# hacky base function - i will get rid of this
-if (set=='base') {
-  # functions
-  source('./core/standardizeHZNames.R')
-  dt[, health_zone := standardizeHZNames(health_zone)]
-  dt[is.na(health_zone), health_zone := "mont-ngafula-i"]
-}
-
 #------------------------------------
 # identify outliers at various levels/thresholds
-if (set=='pnls') idVars = c('org_unit_id', 'element')
-if (set=='base') idVars = c('org_unit_id', 'element')
+if (set %in% c('pnls', 'base')) idVars = c('org_unit_id', 'element_id')
 if (set=='sigl') idVars = c('org_unit_id', 'drug', 'variable') 
 if (set=='pnlp') idVars = c('org_unit_id', 'variable')
 
 #------------------------------------
 # identify outliers where the residuals are larger than +/- 10 MADS of the fitted values
 # set threshold for different data sets:
-
 if (set=='pnls') {
   t1 = 5
   t2 = 10  } else if (set=='sigl'){
@@ -112,8 +86,12 @@ if (set == 'pnlp'){
 
 # select outliers
 # set minimum value to be considered an outlier based on the 99.5 percentile of the variable 
-if (set=='pnls' | set == 'base'){
+if (set=='pnls'){
   limit = 100}
+if (set == 'base'){
+  quantiles = dt[ , .( limit = quantile(value, 0.995, na.rm = TRUE), quantile = rep( 0.995)), by = c("element_id","level")]
+  dt = merge(dt, quantiles, by = c("element_id", "level"))
+}
 if (set=='sigl'){
   quantiles = dt[ , .( limit = quantile(value, 0.995, na.rm = TRUE), quantile = rep( 0.995)), by = c("variable","level", "drug")]
   dt = merge(dt, quantiles, by = c("variable", "level", "drug"))
@@ -122,15 +100,12 @@ if (set=='sigl'){
 # the value is greater than the limit set above and greater than 10 times the mad of residuals 
 # or less than 10 times the negative mad of the residuals
 if (set %in% c('pnls', 'sigl', 'base')){
-  dt[, outlier :=(value > limit & value > t2_upper )]
-  dt[ (value < t2_lower ), outlier :=TRUE ]}
+  dt[, outlier :=((value > limit) & (value > t2_upper ))]
+}
 if (set == 'pnlp') {
   dt[, outlier := ifelse( value > t3_upper, TRUE, FALSE) ]
-  dt[ (value < t3_lower ), outlier :=TRUE ]
+  # dt[ (value < t3_lower ), outlier :=TRUE ]
 }
-
-# confirm no values less than 100 are dropped
-dt[value < 100, outlier:=FALSE]
 
 # number of outliers
 dt[ outlier==TRUE, .N ]  # 9,220 at fitted_value +/- 20 MADs for PNLP; 19,375 for base
@@ -264,16 +239,10 @@ for (j in 11:100){
 }
 #---------------------------------------------
 
-#---------------------------------------------
-# remove the dps code from the facility name for the graph titles
-
-# dt[ , facility:=word(org_unit, 2, -1)]
-
 #----------------------------------------------
 # subset to the health facilities and elements that contain outliers
 #----------------------------
 if (set=='pnls' | set=='base') dt[ , combine:=paste0(org_unit_id, element)]
-if (set=='base') dt[ , combine:=paste0(org_unit_id, element)]
 if (set=='sigl') dt[ , combine := paste0(org_unit_id, drug)]
 if (set=='pnlp') dt[ , combine := paste0(health_zone, variable)]
 
@@ -360,16 +329,14 @@ if (set == "base"){
   merged_dt[ outlier.y == FALSE, outlier.x := FALSE]
   merged_dt[, outlier.y := NULL]
   setnames(merged_dt, "outlier.x", "outlier")
-  
+
+  merged_dt[, orig_value := value]
   merged_dt[outlier==TRUE, value := fitted_value]
   merged_dt[outlier==TRUE & value < 0, value := 0]
   
-  merged_dt[ ,c('resid', 'thresh_var', 't2_upper', 't2_lower', 't1_upper', 't1_lower', 'stat_used', 'skipped_qr', 'element_id', 'fitted_value', 'outlier'):=NULL]
-  
-  # fix to include correct element ids 
-  setnames(merged_dt, 'old_element_id', 'element_id')
+  merged_dt[ ,c('thresh_var', 't2_upper', 't2_lower', 't1_upper', 't1_lower'):=NULL]
 
-  saveRDS(merged_dt, paste0(dir, outData))
+  saveRDS(merged_dt, outData)
 }
 #----------------------------
 
@@ -379,17 +346,17 @@ if (set == "base"){
 # create a palette
 greys = brewer.pal(9, 'Greys')
 
-# choose the pnls set you want to visualize
-pnls_set_vector = 'VCT'
-out = out[pnls_set==pnls_set_vector]
-
-
 # create a list of plots
 list_of_plots = NULL
 i=1
 #----------------------------
 # loop through the graphs 
 if (set == 'pnls'){
+  
+  # choose the pnls set you want to visualize
+  pnls_set_vector = 'VCT'
+  out = out[pnls_set==pnls_set_vector]
+  
 for (e in unique(out$element)) {
   for (o in unique(out[element==e]$org_unit_id)) {
     for (s in unique(out[element==e & org_unit_id==o]$category)) {
@@ -543,7 +510,7 @@ if (set=='pnlp') {
 #--------------------------------
 # print out the list of plots into a pdf
 #--------------------------------
-pdf(paste0(dir, outFile), height=6, width=10)
+pdf(outFile, height=6, width=10)
 
 for(i in seq(length(list_of_plots))) { 
   print(list_of_plots[[i]])

@@ -18,17 +18,16 @@ library(ggplot2)
 # Files and directories
 # (suspected cases for 2017 is in base, suspected cases after 2017 is in its own file for some reason)
 j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
-dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/3_prepped/')
-baseFile = paste0(dir, 'base/base_services_prepped.rds')
-suspectFile = paste0(dir, 'base/base_services_prepped_suspectedCases.RDS')
-siglFile = paste0(dir, 'sigl/sigl_prepped.rds')
+dir = paste0(j, '/Project/Evaluation/GF/outcome_measurement/cod/dhis_data/')
+
+baseFile = paste0(dir, '6_final_prepped/base/baseFile.rds')
+siglFile = paste0(dir, '3_prepped/sigl/sigl_prepped.rds')
 # --------------------------------------------------------------------------
 
 
 # ------------------------------------
 # Load data
 base = readRDS(baseFile)
-suspectedCases = readRDS(suspectFile)
 sigl = readRDS(siglFile)
 
 # list element IDs of interest
@@ -49,7 +48,6 @@ stockouts = sigl[element_id == rdtStockoutElement]
 
 # rbind data sets together
 data = rbind(data, stockouts, fill=TRUE)
-data = rbind(data, suspectedCases, fill=TRUE)
 
 # collapse out subpopulations and subset columns
 byVars = c('dps','health_zone','org_unit','org_unit_id','date','element_id')
@@ -71,7 +69,7 @@ data[month(date) %in% c(4, 6, 9, 11) & days_out_of_stock>30, days_out_of_stock:=
 data[! month(date) %in% c(2, 4, 6, 9, 11) & days_out_of_stock>31, days_out_of_stock:=NA]
 
 # exclude health zones from org list (because this brings the S1 2019 % down to 24 from 26, in agreement with the PUDR)
-data = data[!grepl('Zone de Santé', org_unit)]
+data = data[!grepl('Zone de Sant', org_unit)]
 
 # get proportion of time stocked out
 data[month(date)==2, prop_stocked_out:=days_out_of_stock/28]
