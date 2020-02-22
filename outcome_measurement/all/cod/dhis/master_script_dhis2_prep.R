@@ -19,7 +19,7 @@ step2_merge_metadata = FALSE
 step3_remove_outliers = FALSE
 step4_addtiional_prep = FALSE
 
-set = 'base'
+set = 'pnls'
 #---------------------------------------------
 
 #---------------------------------------------
@@ -35,7 +35,7 @@ code_dir = ('./outcome_measurement/all/cod/dhis/')
 # Meta data extraction
 #---------------------------------------------
 if (rerun_metadata_extraction){
-  
+  source() #Caitlin's code path
 }
 #---------------------------------------------
 
@@ -54,9 +54,7 @@ if (step1_extract_data) {
   
     source(paste0(code_dir, 'extract_dhis/extract_data_dhis.R'))
   
-    run_extraction_tool(start_year = '2018', end_year = as.character(year(Sys.Date())), 
-                        start_month = '01', end_month = as.character(month(Sys.Date())), 
-                        set_name = set)
+    run_extraction_tool(start_year = '2019', start_month = '12') #you can override the default arguments here
   
   # Step 1b - combine intermediate data files
     source(paste0(code_dir, 'extract_dhis/aggregate_extracted_data_dhis.R'))
