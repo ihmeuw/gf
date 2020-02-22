@@ -69,10 +69,11 @@ grants = read.csv(paste0(dir, 'unit_cost_data/current_and_previous_grants_for_su
 data = data[!unit_cost_usd == Inf,]
 data = data[!is.na(unit_cost_usd),]
 
-data = data[purchase_order_date >= '2018-01-01',]
+#data = data[purchase_order_date >= '2018-01-01',]
+#data = data[ purchase_order_date >= '2019-01-01' | purchase_order_date < '2018-07-01',]
 # days_diff = as.numeric(max(data$purchase_order_date) - min(data$purchase_order_date))
 # use product_description, nb_units_in_pack instead of description, product_pack
-data[, t:=ifelse(purchase_order_year == '2019', 'after', 'before')] #this is the halfway point in the data
+data[, t:=ifelse(purchase_order_year >= '2015', 'after', 'before')] #this is the halfway point in the data
 dt = data[, .(weightedMean = weighted.mean(unit_cost_usd, total_units_in_order, na.rm = TRUE)), by = .(t, product_name_en, nb_units_in_pack, product_description, product_category)]
 avg_unit_cost = dcast.data.table(dt, product_category + product_name_en + nb_units_in_pack + product_description ~ t, value.var = 'weightedMean')
 
@@ -98,10 +99,10 @@ prod_cat[ is.na(decrease), decrease := 0]
 prod_cat[ is.na(no_change), no_change := 0]
 prod_cat_tot = avg_unit_cost_subset[, .N, by = .(product_category)]
 prod_cat = merge(prod_cat, prod_cat_tot)
-prod_cat[, percent_that_decreased := round((decrease/N * 100), 2)]
-prod_cat[, percent_decrease_or_no_change := round(((decrease+no_change)/N * 100), 2)]
-prod_cat[, percent_that_increased := round((increase/N * 100), 2)]
-write.csv(prod_cat, paste0(dir, 'unit_cost_data/change in unit costs over time for the current grant period, by product cat.csv'))
+prod_cat[, percent_that_decreased := round((decrease/N * 100), 1)]
+prod_cat[, percent_decrease_or_no_change := round(((decrease+no_change)/N * 100), 1)]
+prod_cat[, percent_that_increased := round((increase/N * 100), 1)]
+write.csv(prod_cat, paste0(dir, 'unit_cost_data/change in unit costs over time for the full data set, by product cat.csv'))
 # ----------------------------------------------
 
 # ----------------------------------------------
