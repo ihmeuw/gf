@@ -735,8 +735,8 @@ write.xlsx(findings_table_1a, findings_1a)
 # ----------------------------------------------
 findings_table_1b = data.table()
 
-dt_most_common = dt[product_name %in% most_common_arvs,]
-
+#dt_most_common = dt[product_name %in% most_common_arvs,]
+dt_most_common = copy(dt)
 pdf(regr_results_ratio_costs_by_categoryAndCountry_log, height = 12, width = 15)
 for (cat in unique(dt_most_common$product_category)){
   # set colors for products
@@ -745,7 +745,7 @@ for (cat in unique(dt_most_common$product_category)){
   colors2 = brewer.pal(8, 'Set1')
   colors3 = brewer.pal(8, 'Set3')
   colors = c(colors1, colors2, colors3)
-  colors = colors[!colors %in% c('#FFFF33', '#A6D854')]
+  colors = colors[!colors %in% c('#FFFF33', '#A6D854', "#FFFFB3")]
   names(colors) = products
   
   for (country in unique(dt_most_common$country_name)){
