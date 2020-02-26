@@ -54,6 +54,7 @@ hzList = fread(hzFile)
 
 # add extra health zones to full-package list
 # (list emailed to us by Eugene Nsambu July 29, 2019)
+# (these were manually updated in the spreadsheet as of 2/25/2020)
 extraHZs = c('basoko','isangi','yabahondo','yaleko','yakusu','aketi','buta')
 hzList[, full_package:=unicef_supported]
 hzList[health_zone %in% extraHZs, full_package:=1]
