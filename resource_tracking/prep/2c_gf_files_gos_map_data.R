@@ -242,6 +242,14 @@ if (nrow(needs_conversion)!=0){
   mapped_data = rbind(in_USD, converted_to_USD, use.names=TRUE)
 }
 
+#-----------------------------------------------
+# Add in a variable for PR type 
+#-----------------------------------------------
+mapped_data[grant%in%governmental_prs, pr_type:="Governmental"] # The variables 'governmental_prs' and 'civil_society_prs' are set in the global variables script. 
+mapped_data[grant%in%civil_society_prs, pr_type:="Civil Society"]
+mapped_data[is.na(pr_type), pr_type:="Unknown"]
+stopifnot(nrow(mapped_data[pr_type=="Unknown"])==0)
+
 # --------------------------------------------------------
 #Validate the columns in final data and the storage types  
 # --------------------------------------------------------

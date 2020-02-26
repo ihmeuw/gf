@@ -43,7 +43,8 @@ load_master_list = function(purpose=NULL) {
   
   #Certain columns should only have specific values. 
   #First, check data source and function columns so they can be used to filter rows. 
-  stopifnot(unique(dt$data_source)%in%c('budget', 'pudr', 'document', 'performance_framework'))
+  stopifnot(unique(dt$data_source)%in%c('budget', 'pudr', 'document', 'performance_framework', 
+                                        'funding_request', 'funding_landscape', 'paar', 'programmatic_gap_table'))
   stopifnot(unique(dt$function_financial)%in%c('detailed', 'detailed_other', 'module', 'old_detailed', 'pudr', 'summary', 'unknown', 'NA'))
   stopifnot(unique(dt$function_programmatic)%in%c('master', 'unknown', 'NA'))
   

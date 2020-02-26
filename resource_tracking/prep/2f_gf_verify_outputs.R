@@ -12,7 +12,7 @@
 #--------------------------
 
 base_dir = paste0(box, "tableau_data/")
-unit_test_dir = paste0(dir, "_gf_files_gos/unit_testing/")
+unit_test_dir = paste0(paste0(j, "/Project/Evaluation/GF/resource_tracking/_gf_files_gos/unit_testing/"))
 
 # -----------------------
 # Country-level tests 

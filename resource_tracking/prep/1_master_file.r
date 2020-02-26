@@ -15,11 +15,19 @@ rm(list=ls())
 # ----------------------------------------------
 # STEP 1: SET UP R
 # ----------------------------------------------
+<<<<<<< HEAD
 user=as.character(Sys.info()[7])
 if (Sys.info()[1]=='Windows'){
   setwd(paste0("C:/Users/",user,"/Documents/gf/")) #Change to the root of your repository
 } else {
   setwd(paste0("/ihme/homes/",user,"/gf/"))
+=======
+user = Sys.info()[7]
+if (Sys.info()[1]=='Windows'){
+  setwd(paste0("C:/Users/", user, "/Documents/gf/")) #Change to the root of your repository
+} else {
+  setwd("/ihme/homes/", user, "/gf/")
+>>>>>>> 960c92f3337c55b805a71b1b3bbc58531be25c8a
 }
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
@@ -47,7 +55,11 @@ only_new_files = TRUE # Set to true if, when you re-run file list, you only want
 # ----------------------------------------------
 if (prep_files | prep_gos){
   if (prep_files){
+<<<<<<< HEAD
     country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+=======
+    country = "uga" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga".  
+>>>>>>> 960c92f3337c55b805a71b1b3bbc58531be25c8a
     master_file_dir = ifelse(Sys.info()[1]=='Windows', paste0(box, toupper(country), "/raw_data/"), 
                              paste0(dir, "_gf_files_gos/", country, "/raw_data/"))
     export_dir = ifelse(Sys.info()[1]=="Windows", paste0(box, country, "/prepped_data/"),
@@ -67,7 +79,7 @@ if (prep_files | prep_gos){
   } else if (prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
-  source(paste0(code_dir, "2c_gf_files_gos_map_data.R"))
+  source(paste0(code_dir, "2c_gf_files_gos_map_data.R")) # Step 2d is sourced in step 2c. 
   source(paste0(code_dir, "2e_gf_aggregate_files.R"))
   source(paste0(code_dir, "2f_gf_verify_outputs.R"))
    

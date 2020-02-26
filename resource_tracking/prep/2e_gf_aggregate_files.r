@@ -166,7 +166,7 @@ date_check = date_check[gos_end!=budget_start]
 if (nrow(date_check)!=0){
   print("Warning: There are potential reporting gaps between GOS and final budgets. Review output 'Gaps between budgets and GOS' in GOS folder.")
   print("This check depends on accurate entry of 'grant_period' variable.")
-  write.csv(date_check, paste0(dir, "_gf_files_gos/gos/Gaps between budgets and GOS.csv"), row.names=FALSE)
+  write.csv(date_check, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/Gaps between budgets and GOS.csv", row.names=FALSE)
 }
 
 # Verify data 
@@ -282,7 +282,7 @@ date_check = date_check[gos_end!=expenditure_start]
 if (nrow(date_check)!=0){
   print("Warning: There are potential reporting gaps between GOS and final expenditures. Review output 'Gaps between expenditures and GOS' in GOS folder.")
   print("This check depends on accurate entry of 'grant_period' variable.")
-  write.csv(date_check, paste0(dir, "_gf_files_gos/gos/Gaps between expenditures and GOS.csv"), row.names=FALSE)
+  write.csv(date_check, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/Gaps between expenditures and GOS.csv", row.names=FALSE)
 }
 
 # Write data 
@@ -310,10 +310,10 @@ saveRDS(gos_prioritized_expenditures[loc_name=="uga"], paste0(final_write, "fina
 #----------------------------------
 # Make a dataset that can be used to calculate absorption, both for current grant periods and historically. 
 #You can use the "gos_in_expenditures" data that is prepped in the step above. 
-absorption_cod = readRDS(paste0(dir, "_gf_files_gos/cod/prepped_data/absorption_cod.rds"))
-absorption_uga = readRDS(paste0(dir, "_gf_files_gos/uga/prepped_data/absorption_uga.rds"))
-absorption_gtm = readRDS(paste0(dir, "_gf_files_gos/gtm/prepped_data/absorption_gtm.rds"))
-absorption_sen = readRDS(paste0(dir, "_gf_files_gos/sen/prepped_data/absorption_sen.rds"))
+absorption_cod = readRDS(paste0(cod_prepped, "absorption_cod.rds"))
+absorption_uga = readRDS(paste0(uga_prepped, "absorption_uga.rds"))
+absorption_gtm = readRDS(paste0(gtm_prepped, "absorption_gtm.rds"))
+absorption_sen = readRDS(paste0(sen_prepped, "absorption_sen.rds"))
 
 all_files = list(absorption_cod, absorption_gtm, absorption_uga, absorption_sen)
 absorption_files = rbindlist(all_files, use.names = TRUE, fill = TRUE)
@@ -349,4 +349,4 @@ write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.n
 saveRDS(all_gf_files, paste0(final_write, "archive/budget_pudr_iterations_", Sys.Date(), ".rds"))
 
 
-print("Step D: Aggregate GF files completed. Files saved in combined_prepped folder.")
+print("Step E: Aggregate GF files completed. Files saved in combined_prepped folder.")

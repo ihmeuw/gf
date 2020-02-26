@@ -38,9 +38,8 @@ if (prep_files == TRUE){
     stop("There are duplicates in PUDRs between semesters - review file list.")
   }
   
-  #At this moment in time, don't process initial versions of files. EL 8/9/2019 
-  file_list = file_list[file_iteration%in%c('final', 'revision')]
-  }
+
+}
 
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files

@@ -54,3 +54,8 @@ rssh_abbrev_mods = c("Info systems & M&E", "Financial systems", "HR & health wor
 rssh_gf_mods = c("Community responses and systems", "Financial management systems", "Health management information system and monitoring and evaluation", 
                  "Human resources for health, including community health workers", "Integrated service delivery and quality improvement", 
                  "National health strategies",  "Procurement and supply chain management systems")
+
+governmental_prs = c('COD-M-MOH', 'GTM-M-MSPAS', 'UGA-M-MoFPED', 'UGA-T-MoFPED', 'COD-H-MOH', 'UGA-H-MoFPED', 'COD-T-MOH', 
+                 'GTM-T-MSPAS', 'SEN-Z-MOH', 'SEN-S-MOH', 'UGA-S-MoFPED', 'SEN-M-PNLP', 'GUA-311-G06-H', 'SEN-H-CNLS', 'SNG-T-PNT')
+civil_society_prs = c('COD-M-SANRU', 'UGA-M-TASO', 'UGA-C-TASO', 'COD-H-CORDAID', 'COD-C-CORDAID', 'GTM-H-HIVOS', 'GTM-H-INCAP', 'COD-H-SANRU',
+                  'COD-T-CARITAS', 'COD-M-PSI', 'GUA-311-G05-H', 'SEN-H-ANCS', 'SNG-T-PLAN', 'SEN-M-IntraH', 'UGA-S-TASO') 

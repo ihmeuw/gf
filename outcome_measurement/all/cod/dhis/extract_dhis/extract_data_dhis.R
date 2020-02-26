@@ -100,7 +100,9 @@ run_extraction_tool = function(start_year = '2019', end_year = as.character(year
   } else if (set == 'sigl'){
     set_subset = c(3:4)
   } else if (set == 'secondary'){
-    set_subset = 2
+    set_subset = 2 
+  } else if (set == 'pnls'){
+    set_subset = 30 
   } else {
     print('This master script is not yet implemented for your chosen data set!')
   }
