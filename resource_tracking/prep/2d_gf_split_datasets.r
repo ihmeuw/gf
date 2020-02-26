@@ -238,7 +238,7 @@ if (nrow(revisions)!=0){ #You won't have budget revisions for every country.
   #Figure out the order using the 'update_date' variable. 
   order = unique(revisions[, .(grant, grant_period, update_date ,file_name)][order(grant_period, grant, update_date)])
   stopifnot(nrow(order[is.na(update_date)])==0)
-  order[, order:=seq(0, 10, by=1), by=c('grant', 'grant_period')]
+  order[, order:=1:.N, by=c('grant', 'grant_period')]
   
   #Reshape this data wide by quarter and year. 
   revisions = merge(revisions, order, by=c('grant', 'grant_period', 'update_date', 'file_name'), all.x=T)

@@ -45,7 +45,7 @@ code_dir = "./resource_tracking/prep/"
 common_dir = paste0(code_dir, "_common/")
 
 #Box filepaths - these should be used to source raw files, and to save final prepped files. 
-box = "C:/Users/elineb/Box Sync/Global Fund Files/"
+box = paste0("C:/Users/",user,"/Box Sync/Global Fund Files/")
 
 #Global fund 
 # Budget and PUDR file paths are built dynamically in read_filelist code
