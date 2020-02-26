@@ -17,15 +17,15 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   ### uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
-
-  # dir = file_dir
-  # inFile = file_list$file_name[i]
-  # sheet_name = file_list$sheet[i]
-  # start_date = file_list$start_date_financial[i]
-  # period = file_list$period_financial[i]
-  # disease = file_list$disease[i]
-  # qtr_num = file_list$qtr_number[i]
-  # language = file_list$language_financial[i]
+# 
+#   dir = file_dir
+#   inFile = file_list$file_name[i]
+#   sheet_name = file_list$sheet[i]
+#   start_date = file_list$start_date_financial[i]
+#   period = file_list$period_financial[i]
+#   disease = file_list$disease[i]
+#   qtr_num = file_list$qtr_number[i]
+#   language = file_list$language_financial[i]
   # -------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', 'Detailed Budget Revise',
