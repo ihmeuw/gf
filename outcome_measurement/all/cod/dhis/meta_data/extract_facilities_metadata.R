@@ -71,11 +71,12 @@ next_group = as.numeric(group_number)+1
 
 # extract the meta data and save as a RDS
 units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
+pause(20) # not sure why this helps, but it does
 saveRDS(units, paste0(UnitDir, 'extracted_org_units_',group_number, '.rds'))
 print(paste0("Saved ", group_number, " of ", total_groups, " groups!"))
 
 # pause and notify that a new group is starting
-pause(90)
+pause(90) # like kicking a vending machine
 print(paste0("Starting group ", next_group, " of ", total_groups, " groups!"))
 
 if (i == total_groups) print ("All done!")

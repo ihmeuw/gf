@@ -206,7 +206,7 @@ if (0 < nrow(missing_units)) source(paste0(dir, '/code/extract_facilities_meta_d
 
 #-------------------------------------------------
 # print statement to show completion
-print("All meta data extracted!")
+print("All metadata extracted!")
 #-------------------------------------------------
 
 
