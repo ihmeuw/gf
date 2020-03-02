@@ -13,8 +13,6 @@
 #--------------------
 # Acts as a single function extract_dhis_content:
 # this function runs multiple functions to extract:
-#
-
 # --------------------
 # Set up R
 library(profvis)
@@ -51,7 +49,10 @@ out_dir = paste0(dir, '0_meta_data/')
 dirx = paste0(dir, 'packages/')
 
 # source functions from J Drive - be sure to update from most recent push
-source (paste0(dir, 'code/dhis_extracting_functions.R'))
+source(paste0(dir, 'code/dhis_extracting_functions.R'))
+
+# source the prep function for the facilities
+source(paste0(dir, 'code/prep_master_facilities_function.R'))
 
 #---------------------------------------------
 #'Extract content information from DHIS
@@ -180,20 +181,39 @@ updated_data_elements = DRC_extraction[2][[1]] # variable names
 categories = DRC_extraction[3][[1]] # age, sex, and inventory categories
 org_units = DRC_extraction[4][[1]] # health facility names 
 
-#-----------------------------
-# determine whether to extract the geographic information for the facilities
-
-if (extract_units_data == TRUE) print ("Extracting geographic information for the facilities. This will takw greater than one hour.")
-if (extract_units_data == TRUE) source(paste0(dir, '/code/extract_facilities_meta_data.R')) 
-
-#-----------------------------
-
-
+#--------------
 # save all the RDS files to the J Drive
 
 saveRDS(data_sets, paste0(out_dir, 'data_sets.rds'))
 saveRDS(updated_data_elements, paste0(out_dir, 'updated_data_elements.rds'))
 saveRDS(categories, paste0(out_dir, 'data_elements_categories.rds'))
 saveRDS(org_units, paste0(out_dir, 'org_units.rds'))
-
 #--------------------------
+
+#------------------------------------------
+# extract additional geographic information for health facilities
+# this code extracts the dps, hz, and health area for each facility
+
+# read in the previous geographic information from the last extraction
+master = readRDS(paste0(dir, '0_meta_data/master_facilities.RDS'))
+
+# determine if any information is missing
+missing_units = org_units[!(org_unit_ID %in% master$org_unit_id)]
+
+# if any units are missing geographic info, extract it 
+if (0 < nrow(missing_units)) source(paste0(dir, '/code/extract_facilities_meta_data.R')) 
+
+#-------------------------------------------------
+
+
+
+
+# print statement to show completion
+print("All meta data extracted!")
+#-------------------------------------------------
+
+
+
+
+
+
