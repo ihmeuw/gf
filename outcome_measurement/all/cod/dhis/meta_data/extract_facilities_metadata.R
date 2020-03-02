@@ -11,13 +11,14 @@
 # website for bug fixes (use ancestors for higher level units):
 # https://www.snisrdc.com/api/organisationUnits/pCfpKXoGBF8.xml
 
-# to test when not sourcing 
-
-org_units = readRDS(paste0(dir, "/0_meta_data/org_units.rds"))
-extract_all_ancestors = F
+#------------------------------
+# testing purposes
+extract_all_ancestors = T
+org_units = readRDS(paste0(dir, '0_meta_data/org_units.rds'))
 
 #-------------------------------
 # do you want to extract only missing geographic info, or re-extract all?
+# if extracting all ancestors, be sure to archive contents of 'units' folder
 
 if (extract_all_ancestors==T) UnitDir = paste0(dir,'0_meta_data/units/')
 if (extract_all_ancestors==F) UnitDir = paste0(dir,'0_meta_data/new_units/')
@@ -88,7 +89,7 @@ i = i+1
 # rbind the groups together and save
 
 # list files that were extracted
-setwd(UnitDir)
+setwd(UnitDir) # either units for all files or new units for new files
 files = list.files('./', recursive=TRUE)
 length(files)
 
@@ -154,18 +155,21 @@ full_data = full_data[ ,.(org_unit_id = id, opening_date, coordinates, org_unit,
                           org_unit_type = type, level)]
 
 #---------------------------------
-
-
-#---------------------------------
 # save the output
 
-# if only missing facilities were extracted, merge with existing
+# if only missing facilities were extracted, merge with existing facility meta data 
 if (extract_all_ancestors==F) master = rbind(master, full_data)
 if (extract_all_ancestors==F) saveRDS(master, paste0(dir, '0_meta_data/master_facilities.rds'))
+
+# if extracted all facilities, new list of facilities meta data
 if (extract_all_ancestors==T) saveRDS(full_data, paste0(dir, '0_meta_data/master_facilities.rds'))
 
 #-------------------------------
+# delete files in the units or new units folder
+# do not delete for all units in case you need the files
+if (extract_all_ancestors==F) {
+    setwd(UnitDir)
+    for (f in files) {
+       unlink(f)}}
 
-
-
-
+#-------------------------------

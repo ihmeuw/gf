@@ -201,13 +201,10 @@ master = readRDS(paste0(dir, '0_meta_data/master_facilities.RDS'))
 missing_units = org_units[!(org_unit_ID %in% master$org_unit_id)]
 
 # if any units are missing geographic info, extract it 
+# if no units are missing info, no need to redo any part of the extraction
 if (0 < nrow(missing_units)) source(paste0(dir, '/code/extract_facilities_meta_data.R')) 
 
 #-------------------------------------------------
-
-
-
-
 # print statement to show completion
 print("All meta data extracted!")
 #-------------------------------------------------
