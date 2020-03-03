@@ -6,6 +6,8 @@ library(data.table)
 library(ggplot2)
 library(scales)
 
+source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
+
 #---------------------------------
 # ABSORPTION 
 #---------------------------------
@@ -20,6 +22,18 @@ tb[, absorption:=round((expenditure/budget)*100, 1)]
 tb = dt[grant_period=="2016-2019" & grant=="GTM-T-MSPAS" & start_date == "2018-07-01"]
 tb = tb[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by='semester']
 tb[, absorption:=round((expenditure/budget)*100, 1)]
+
+# How much has the Global Fund contributed to LLINs from 2015 - present? Only look at non-overlapping PUDRs (most recent). 
+malaria = dt[grant=="GTM-M-MSPAS"]
+
+# Also look at GOS
+gos = readRDS("J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/prepped_data/prepped_gos_data.rds")
+gos_malaria = gos[disease=="malaria" & loc_name=="gtm"]
+gos_malaria[, .(budget=sum(budget, na.rm=T)), by=c('year')][order(year)]
+
+gos_malaria[year>=2015 & year<=2017, .(budget=sum(budget, na.rm=T))]
+
+gos_malaria[gf_intervention%in%c("Long lasting insecticidal nets: Mass campaign", "Long lasting insecticidal nets: Continuous distribution") & year>=2015 & year<=2017, sum(budget, na.rm=T)]
 
 #---------------------------------
 # BUDGETS
@@ -43,6 +57,14 @@ write.csv(malaria, "J:/Project/Evaluation/GF/resource_tracking/visualizations/de
 
 # Just check the 2019-2021 grant
 malaria = dt[grant=="GTM-M-MSPAS" & grant_period=="2019-2021", .(budget=sum(budget, na.rm=T)), by=c('gf_module')]
+malaria[, total:=sum(budget)]
+malaria[, pct:=round((budget/total)*100, 1)]
+malaria[, budget:=dollar(budget)]
+
+# Are there additional resources for community health workers at the intervention-level? 
+malaria = dt[grant=="GTM-M-MSPAS" & grant_period=="2019-2021", .(budget=sum(budget, na.rm=T)), by=c('gf_module', 'gf_intervention')]
+malaria[, total:=sum(budget)]
+malaria[, pct:=round((budget/total)*100, 1)]
 malaria[, budget:=dollar(budget)]
 
 # Check the numbers in the 2019-2022 TB grant breakdown graph.
@@ -66,3 +88,13 @@ p = ggplot(tb2, aes(x=gf_module, y=budget, fill=grant_period, label=dollar(budge
   
 ggsave("J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_GTM 2019 annual report/compare_tb_budgets.png", p, height=8, width=12)
 
+# What was the HMIS + M&E investment as a percentage of the RSSH total in the INCAP grant? 
+incap = dt[grant=="GTM-H-INCAP" & grant_period=="2018-2020" & disease=="rssh", .(budget=sum(budget, na.rm=T)), by=c('gf_module')]
+incap[, total:=sum(budget)]
+incap[, pct:=round((budget/total)*100, 1)]
+incap[, budget:=dollar(budget)]
+
+# What's the HMIS percentage of RSSH in each grant? 
+current_rssh = dt[current_grant==TRUE & disease=="rssh", .(budget=sum(budget, na.rm=TRUE)), by=c('gf_module', 'grant', 'grant_period')]
+current_rssh[, total:=sum(budget), by=c('grant', 'grant_period')]
+current_rssh[, pct:=round((budget/total)*100, 1)]
