@@ -39,7 +39,7 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
   # start_date = file_list$start_date_financial[i]
   # qtr_number = file_list$qtr_number[i]
   # period = file_list$period[i]
-  # 
+  # # 
   # Load/prep data
   gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name))
   
