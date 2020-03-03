@@ -126,7 +126,7 @@ if (nrow(exp_overlap)>0){
   #Correct start dates, and reshape to quarter level. 
   frame = unique(expenditures[, .(grant, grant_period, start_date, pudr_code)])
   frame = frame[order(grant, grant_period, start_date, pudr_code)]
-  frame[, dup:=seq(0, 1, by=1), by=c('grant', 'grant_period', 'start_date')] #Drop out the second PUDR if they are duplicated. 
+  frame[, dup:=1:.N, by=c('grant', 'grant_period', 'start_date')] #Drop out the second PUDR if they are duplicated. 
   frame = frame[dup==0]#Tricky step to make sure you don't double-count dates. 
  
   frame[, count:=1]
