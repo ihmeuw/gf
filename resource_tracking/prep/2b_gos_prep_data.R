@@ -23,37 +23,37 @@ checkFile = paste0(gos_raw, "Grants missing intervention information in new GOS 
 
 #PREP OLD GOS 2015-2017 FILE 
 {
-  gos_data  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
-                                     sheet=as.character('GOS Mod-Interv - Extract')))
-  ## reset column names
-  oldNames <- names(gos_data)
-  newNames = tolower(oldNames)
-  newNames = gsub(" ", "_", newNames)
-
-  setnames(gos_data, oldNames, newNames)
-  setnames(gos_data, c('financial_reporting_period_start_date', 'financial_reporting_period_end_date', 'total_budget_amount_(in_budget_currency)',
-                       'total_expenditure_amount_(in_budget_currency)', 'component', 'grant_number'),
-           c('start_date', 'end_date', 'budget', 'expenditure', 'disease', 'grant'))
-
-  #Generate grant period
-  gos_data[, grant_period:=paste0(year(current_ip__start_date), "-", year(current_ip__end_date))]
-
-  #Keep only the columns you need
-  gos_data = gos_data[, .(country, grant, start_date, end_date, year, module, intervention, budget, expenditure, disease, grant_period)]
-
-  #Make budget and expenditure numeric
-  gos_data[, budget:=as.numeric(budget)]
-  gos_data[, expenditure:=as.numeric(expenditure)]
-
-  #Fix disease column
-  gos_data[disease=="HIV/AIDS", disease:='hiv']
-  gos_data[disease=="Malaria", disease:="malaria"]
-  gos_data[disease=="Tuberculosis", disease:="tb"]
-  gos_data[disease=="Health Systems Strengthening", disease:="rssh"]
-
-  #Add file name
-  gos_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
-  saveRDS(gos_data, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/raw_data/raw_prepped_gos1.rds")
+  # gos_data  <- data.table(read_excel(paste0(gos_raw, 'Expenditures from GMS and GOS for PCE IHME countries.xlsx'),
+  #                                    sheet=as.character('GOS Mod-Interv - Extract')))
+  # ## reset column names
+  # oldNames <- names(gos_data)
+  # newNames = tolower(oldNames)
+  # newNames = gsub(" ", "_", newNames)
+  # 
+  # setnames(gos_data, oldNames, newNames)
+  # setnames(gos_data, c('financial_reporting_period_start_date', 'financial_reporting_period_end_date', 'total_budget_amount_(in_budget_currency)',
+  #                      'total_expenditure_amount_(in_budget_currency)', 'component', 'grant_number'),
+  #          c('start_date', 'end_date', 'budget', 'expenditure', 'disease', 'grant'))
+  # 
+  # #Generate grant period
+  # gos_data[, grant_period:=paste0(year(current_ip__start_date), "-", year(current_ip__end_date))]
+  # 
+  # #Keep only the columns you need
+  # gos_data = gos_data[, .(country, grant, start_date, end_date, year, module, intervention, budget, expenditure, disease, grant_period)]
+  # 
+  # #Make budget and expenditure numeric
+  # gos_data[, budget:=as.numeric(budget)]
+  # gos_data[, expenditure:=as.numeric(expenditure)]
+  # 
+  # #Fix disease column
+  # gos_data[disease=="HIV/AIDS", disease:='hiv']
+  # gos_data[disease=="Malaria", disease:="malaria"]
+  # gos_data[disease=="Tuberculosis", disease:="tb"]
+  # gos_data[disease=="Health Systems Strengthening", disease:="rssh"]
+  # 
+  # #Add file name
+  # gos_data$file_name = "Expenditures from GMS and GOS for PCE IHME countries.xlsx"
+  # saveRDS(gos_data, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gos/raw_data/raw_prepped_gos1.rds")
 
   # EMILY - DO WE WANT TO SEE IF WE HAVE OTHER DATA QUALITY ISSUES IN THIS FILE?
 
@@ -167,7 +167,36 @@ checkFile = paste0(gos_raw, "Grants missing intervention information in new GOS 
 
 {
   #Read in data, and reset column names. 
-  gos_data = data.table(read_excel(paste0(gos_raw, "Expenditure_at_InterventionSDA_Level_23_08.xlsx")))
+  
+  #--------------------------------------------------------------
+  # Emily Linebarger 3/2/2020 - 
+  # There are some strange formats in the date columns in the raw file "Expenditure_at_InterventionSDA_Level_23_08.xlsx"
+  # First, sometimes the data are stored in YYYY-DD-MM format, and sometimes in DD/MM/YYYY format. 
+  # Second, it seems like months and days may be switched even within the same column. I determined this by checking the time difference between 
+  # the start and end dates - sometimes it was negative. 
+  
+  # gos_data = data.table(read_excel(paste0(gos_raw, "Expenditure_at_InterventionSDA_Level_23_08.xlsx")))
+  # 
+  # # Change names 
+  # gosOld = names(gos_data) 
+  # gosNew = c('department', 'region', 'country', 'grant', 'ip_name', 'grant_period_start', 'grant_period_end', 'start_date', 
+  #            'end_date', 'module', 'intervention', 'budget', 'expenditure')
+  # setnames(gos_data, gosOld, gosNew)
+  # 
+  # # Format columns as date 
+  # gos_data[, grant_period_end:=as.Date(grant_period_end, format="%d/%m/%Y")]
+  # for (col in c('grant_period_start', 'start_date', 'end_date')) gos_data[, (col):=as.Date(get(col), format="%Y-%d-%m")]
+  # for (col in c('grant_period_start', 'grant_period_end', 'start_date', 'end_date')) stopifnot(class(gos_data[[col]])=="Date")
+  # 
+  # # Look at the differences between start and end dates
+  # gos_data[, gp_diff:=grant_period_end-grant_period_start]
+  # gos_data[, period_diff:=end_date-start_date]
+  # gos_data[period_diff<0 | gp_diff<0]
+  
+  # So, the date fields of this file were reviewed by hand, and re-saved as a file of the same name with "_IHME" as a suffix. 
+  #--------------------------------------------------------------
+  
+  gos_data = data.table(read_excel(paste0(gos_raw, "Expenditure_at_InterventionSDA_Level_23_08_IHME.xlsx")))
   gosOld = names(gos_data) 
   gosNew = c('department', 'region', 'country', 'grant', 'ip_name', 'grant_period_start', 'grant_period_end', 'start_date', 
              'end_date', 'module', 'intervention', 'budget', 'expenditure')

@@ -47,6 +47,15 @@ for (i in 1:nrow(overlap)){
 }
 overlapping_files = unique(overlapping_files)
 
+#-------------------------------------------
+# Emily Linebarger, 2/26/2020 
+# There are two really problematic overlapping PUDRs for Guatemala, for the grant GUA-311-G06-H. One has the PUDR period 3-B:4-A, and 
+# the other has 4-AB:5-A. After looking at the raw data and determining that they only overlap for one quarter, it's reasonable to assume that this is a valid 
+# overlap caused by implementation delays, and that subtracting these two files would lead to more skewed data because they don't overlap fully. 
+
+# I'm removing these two files from the overlapping list and just summing together the total for the overlapping quarter (2016-10-01). 
+overlapping_files = overlapping_files[!overlapping_files%in%c('GUA-311-G06-H EFR_Form_2016_EFR ENGLISH VERSION.xlsx', 'GUA-311-G06-H_July_Dec17_PU 1_RevALF240518.xlsm')]
+#-------------------------------------------
 exp_overlap = expenditures[file_name%in%overlapping_files]
 exp_no_overlap = expenditures[!file_name%in%overlapping_files]
 
@@ -64,15 +73,15 @@ if (nrow(exp_overlap)>0){
   
   #Then, make sure you have uniqueness by grant and grant period
   subtract_order[, pudr_start:=tstrsplit(pudr_code, "-", keep=1)]
-  subtract_order[, count:=1]
-  subtract_order[, check_unique:=sum(count), by=c('pudr_start')]
-  subtract_order = subtract_order[check_unique>=2] #Don't need to tag years that aren't overlapping. - EMILY THIS DOESN'T WORK FOR GUATEMALA - FIND ANOTHER WAY TO DO THIS!!
-  
+  subtract_order[, check_unique:=.N, by=c('pudr_start', 'grant', 'grant_period')]
+ # You have a simple reporting structure where there are 2 PUDRs reporting for every grant in every year. Remove years that don't actually overlap. 
+  subtract_order = subtract_order[check_unique>=2] 
+
   subtract_order = merge(subtract_order, pudr_labels, by=c('pudr_code'), all.x=T)
   stopifnot(nrow(subtract_order[is.na(pudr_order)])==0)
   
   subtract_order = subtract_order[order(grant, grant_period, pudr_code)]
-  subtract_order[, seq:=seq(1, 2, by=1), by=c('grant', 'grant_period', 'pudr_start')] #You should only have two files at this point because of the check above. 
+  subtract_order[, seq:=1:.N, by=c('grant', 'grant_period', 'pudr_start')] #You should only have two files at this point because of the check above. 
   subtract_order = subtract_order[, .(grant, grant_period, pudr_code, pudr_start, seq)]
   
   if (verbose==TRUE){
