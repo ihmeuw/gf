@@ -3,7 +3,7 @@
 # Extracts associated geographic information for health facilities
 #
 # Caitlin O'Brien-Carelli
-# 2/20/2020
+# 3/1/2020
 #-------------------------------
 
 #--------------------------------------------
@@ -11,10 +11,19 @@
 # website for bug fixes (use ancestors for higher level units):
 # https://www.snisrdc.com/api/organisationUnits/pCfpKXoGBF8.xml
 
-#-------------------------------
+#------------------------------
+# testing purposes
+extract_all_ancestors = T
+org_units = readRDS(paste0(dir, '0_meta_data/org_units.rds'))
 
 #-------------------------------
+# do you want to extract only missing geographic info, or re-extract all?
+# if extracting all ancestors, be sure to archive contents of 'units' folder
 
+if (extract_all_ancestors==T) UnitDir = paste0(dir,'0_meta_data/units/')
+if (extract_all_ancestors==F) UnitDir = paste0(dir,'0_meta_data/new_units/')
+
+#-------------------------------
 #extract_dhis_content function
 extract_dhis_units = function(base_url, userID, password) {
   print('Making DHIS urls')
@@ -29,19 +38,23 @@ extract_dhis_units = function(base_url, userID, password) {
 }
 
 #-------------------------------
+# to extract only the missing information
+
+# preserve original org_units for the reshape
+original_units = copy(org_units)
+
+# subset the org units to just the ones missing metadata
+if (extract_all_ancestors==F) org_units = missing_units
 
 #-------------------------------
 # this code mysteriously breaks if you run it all at once
 # however, it does not break as a loop with a pause
 
 # separate the massive facilities list into groups of 1,000
-length_units = c(1:round(nrow(org_units)/1000, 0))
+length_units = c(1:round(nrow(org_units)/500, 0))
 
 # repeat each group number 1,000 times (label the groups)
-org_units$extraction_group =  rep(length_units, each = 1000, length.out = nrow(org_units))
-
-# preserve original org_units just in case
-original_units = copy(org_units)
+org_units$extraction_group =  rep(length_units, each = 500, length.out = nrow(org_units))
 
 #-------------------------------
 # run the extraction 
@@ -54,14 +67,17 @@ for (g in length_units) {
 # arguments for the file name and print statement
 total_groups = length(unique(org_units$extraction_group))
 group_number = as.character(g)
+next_group = as.numeric(group_number)+1
 
 # extract the meta data and save as a RDS
 units = extract_dhis_units(base_url = base_url, userID = userID, password = password)
-saveRDS(units, paste0(dir,'0_meta_data/units/extracted_org_units_',group_number, '.rds'))
+pause(20) # not sure why this helps, but it does
+saveRDS(units, paste0(UnitDir, 'extracted_org_units_',group_number, '.rds'))
+print(paste0("Saved ", group_number, " of ", total_groups, " groups!"))
 
 # pause and notify that a new group is starting
-pause(60)
-print(paste0("Starting group ", group_number, " of ", total_groups, " group!"))
+pause(90) # like kicking a vending machine
+print(paste0("Starting group ", next_group, " of ", total_groups, " groups!"))
 
 if (i == total_groups) print ("All done!")
 i = i+1
@@ -73,12 +89,12 @@ i = i+1
 #-------------------------------
 # rbind the groups together and save
 
-setwd(paste0(dir, '/0_meta_data/units/'))
-
-# list existing files
+# list files that were extracted
+setwd(UnitDir) # either units for all files or new units for new files
 files = list.files('./', recursive=TRUE)
 length(files)
 
+# bind the files together
 i = 1
 for(f in files) {
   #load the RDs file
@@ -92,22 +108,24 @@ for(f in files) {
   i = i+1
 }
 
-# reset variable names for the merge
+# ensure the ancestors did not download as a list
 full_data[ , ancestors:=unlist(full_data$ancestors)] # ancestors output a list
+
+#---------------------------------
+# the full data is a list of ancestors
+# add the facility names
+
 setnames(full_data, 'name', 'org_unit')
 
 #---------------------------------
 # use the list of org_units to name the ancestors
 
-# list of org_units
+# subset to the names of ancestors - full list, as you need all units
+# ancestor names occur in the full list
 names = original_units[ ,.(ancestors = org_unit_ID, ancestor_name = org_unit_name)]
 
 # merge in the units information
 full_data = merge(full_data, names, by='ancestors', all.x=T)
-
-# check that every unit is included in full data
-missing_units = original_units[!(original_units$org_unit_ID %in% full_data$id)]
-if (0 < length(missing_units )) print("Houston, some ancestors did not extract.")
 
 #---------------------------------
 # set ancestor types 
@@ -117,10 +135,6 @@ full_data[grep(pattern="Province", ancestor_name), type:='dps']
 full_data[grep(pattern="Zone", ancestor_name), type:='health_zone']
 full_data[grep(pattern="Aire", ancestor_name), type:='health_area']
 
-# units with typos in the names - check these
-# full_data[id=='RKN8w566BvC' & ancestors=='U333OaNPIrk', type:='health_area']
-# full_data[id=='MvZV4WrjmVW' & ancestors=='o22J1nmzywE', type:='health_area']
-
 # drop ancestor id to shape long
 full_data[ , ancestors:=NULL]
 
@@ -129,8 +143,6 @@ full_data[ , ancestors:=NULL]
 full_data = dcast(full_data, id+opening_date+coordinates+org_unit~type, value.var='ancestor_name')
 
 #---------------------------------
-# run checks to determine if the data are processing correctly
-
 
 #---------------------------------
 # run the prep function 
@@ -145,10 +157,20 @@ full_data = full_data[ ,.(org_unit_id = id, opening_date, coordinates, org_unit,
 
 #---------------------------------
 # save the output
-saveRDS(full_data, paste0(dir, 'meta_data/master_facilities.rds'))
+
+# if only missing facilities were extracted, merge with existing facility meta data 
+if (extract_all_ancestors==F) master = rbind(master, full_data)
+if (extract_all_ancestors==F) saveRDS(master, paste0(dir, '0_meta_data/master_facilities.rds'))
+
+# if extracted all facilities, new list of facilities meta data
+if (extract_all_ancestors==T) saveRDS(full_data, paste0(dir, '0_meta_data/master_facilities.rds'))
 
 #-------------------------------
+# delete files in the units or new units folder
+# do not delete for all units in case you need the files
+if (extract_all_ancestors==F) {
+    setwd(UnitDir)
+    for (f in files) {
+       unlink(f)}}
 
-
-
-
+#-------------------------------
