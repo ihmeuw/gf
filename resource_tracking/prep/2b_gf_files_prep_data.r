@@ -54,7 +54,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
   
   pudr_mod_approach_sheet_financials <- c('LFA Expenditure_7B', 'LFA AFR_7B', 'PR Expenditure_7A', 'RFA ALF_7B', 'ALF RFR_7')
   general_detailed_budget_sheet_financials <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', "Detailed Budget Revise",
-                                      'DETAIL', 'Detailed _ budget AGYW', 'Detailed Budget _ Human rights')
+                                      'DETAIL', 'Detailed _ budget AGYW', 'Detailed Budget _ Human rights', 'DETAIL BUDGET V2')
   
   budget_cols = c("activity_description", "budget", "cost_category", "implementer", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a budget function. 
   pudr_cols = c("budget", "expenditure", "cumulative_budget", "cumulative_expenditure", "intervention", "module", "quarter", "start_date", "year") #These are the only columns that should be returned from a pudr function. 
@@ -110,7 +110,10 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       args[length(args)+1] = file_list$qtr_number_financial[i]
       tmpData = do.call(prep_summary_budget_cod, args)
       
-      stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
+      if (!file_list$file_name[i]%in%c("COD-H-SANRU_Summay_Budget.xlsx","COD-M-SANRU_SB2.xlsx", "BUDGET SANRUGF CONSOLIDE  ROUTINE CAMPAGNE.xlsx")) {
+        stopifnot(sort(names(tmpData)) == c('budget', 'intervention', 'module', 'quarter', 'start_date', 'year'))
+        
+      }
       
     } else if (file_list$function_financial[i] == 'summary' & file_list$loc_name[i]=='gtm') {
       args = list(file_dir, file_list$file_name[i], file_list$sheet_financial[i], file_list$start_date_financial[i], file_list$qtr_number_financial[i])

@@ -17,19 +17,19 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   ### uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
-# 
-#   dir = file_dir
-#   inFile = file_list$file_name[i]
-#   sheet_name = file_list$sheet[i]
-#   start_date = file_list$start_date_financial[i]
-#   period = file_list$period_financial[i]
-#   disease = file_list$disease[i]
-#   qtr_num = file_list$qtr_number[i]
-#   language = file_list$language_financial[i]
+# #
+  # dir = file_dir
+  # inFile = file_list$file_name[i]
+  # sheet_name = file_list$sheet[i]
+  # start_date = file_list$start_date_financial[i]
+  # period = file_list$period_financial[i]
+  # disease = file_list$disease[i]
+  # qtr_num = file_list$qtr_number[i]
+  # language = file_list$language_financial[i]
   # -------------------------------------
   #Sanity check: Is this sheet name one you've checked before? 
   verified_sheet_names <- c('Detailed Budget', 'Detailed budget', 'DetailedBudget', 'Recomm_Detailed Budget', '1.Detailed Budget', 'Detailed Budget Revise',
-                            'DETAIL', 'Detailed Budget _ Human rights', 'Detailed _ budget AGYW')
+                            'DETAIL', 'Detailed Budget _ Human rights', 'Detailed _ budget AGYW', 'DETAIL BUDGET V2' )
   if (!sheet_name%in%verified_sheet_names){
     print(paste0("Sheet name: '", sheet_name, "'"))
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
@@ -65,7 +65,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   if (!TRUE%in%correctly_named){
     #Find the row that has the column names in it
     name_row = 1 
-    while(is.na(gf_data[name_row, 2])){
+    while(is.na(gf_data[name_row, 2]) | is.na(gf_data[name_row, 6]) ){
       name_row = name_row + 1
     }
     
@@ -90,6 +90,10 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   
   module_col = module_col[!module_col%in%mod_id_col]
   intervention_col = intervention_col[!intervention_col%in%intervention_id_col & !intervention_col%in%cat_budget_col] 
+  if (inFile=="COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){
+    module_col <- 5
+    intervention_col <- 9
+  }
   
   stopifnot(length(module_col)==1 & length(intervention_col)==1)
   
@@ -111,7 +115,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   
   #Grab implementer column 
   if (language=="eng" | language == "fr"){
-    implementer_col = grep("implementer", names)
+    implementer_col = grep("implementer|entite de mise en", names)
     if (length(implementer_col)==0){
       implementer_col = grep("recipient", names)
     }
@@ -134,7 +138,11 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   names(gf_data) = names
   #Do a sanity check here. 
   if (language == 'eng' | language == 'fr'){
-    stopifnot(names(gf_data[, 1]) == 'module' & names(gf_data[, 2]) == 'intervention')
+    if (inFile == "COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){
+      stopifnot(names(gf_data[, 1]) == 'module' & names(gf_data[, 2]) == 'intervention revise')
+    }else{
+      stopifnot(names(gf_data[, 1]) == 'module' & names(gf_data[, 2]) == 'intervention')
+    }
   } else if (language == 'esp'){
     stopifnot(names(gf_data[, 1]) == 'modulo' & names(gf_data[, 2]) == 'intervencion')
   }
@@ -143,7 +151,7 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
   budget_periods = names[KEEP_COLS:length(names)]
   budget_periods = gsub(qtr_text, "", budget_periods)
   
-  if (language == "eng" | language == "esp"){
+  if (language == "eng" | language == "esp"){ 
     quarter_cols = grep("q", names(gf_data))
   } else if (language == 'fr'){
     quarter_cols = budget_periods[nchar(budget_periods)<=4] #Don't grab any total rows 
@@ -155,6 +163,10 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
 
   second_subset = c(1:KEEP_COLS, quarter_cols) #Only keep module, intervention, activity description, and the budget columns by quarter
   gf_data = gf_data[, second_subset, with = FALSE]
+  
+  if (inFile=="COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){ # drop extra columns at the end of this file --Francisco 02.28.2020
+    gf_data[,c("sorties de tresorerie t1  a t3 2018", "sorties de tresorerie t3 2018"):=NULL]
+  }
   
   #Reset names for the whole thing 
   quarters = ncol(gf_data)-KEEP_COLS
@@ -181,7 +193,10 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
       new_names = c('activity_description', 'cost_category', new_qtr_names)
     }
   } else if (language == "fr") {
-    if ("recipiendaire"%in%names){
+    if (inFile == "COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){ # added in to check specific file
+      old_names = c("intervention revise", "description de l'activite", "element de cout", "entite de mise en œuvre", old_qtr_names)
+      new_names = c("intervention", "activity_description", "cost_category", "implementer", new_qtr_names)
+    } else if ("recipiendaire"%in%names){
       old_names = c("description de l'activite", "element de cout", "recipiendaire", old_qtr_names)
       new_names = c('activity_description', 'cost_category', "implementer", new_qtr_names)
     } else {
@@ -198,9 +213,14 @@ prep_general_detailed_budget = function(dir, inFile, sheet_name, start_date, per
     }
   }
   
+
   #If there is any whitespace in column names, remove it. 
   names(gf_data) = trimws(names(gf_data))
-  setnames(gf_data, old=old_names, new=new_names)
+  if (inFile=="COD_M_SANRU NMF2 ANNEXE FINANCES  FORECAST  budget revisé 2018.xlsx"){
+    names(gf_data) <- c("module", new_names) # this is because there are duplicate names in this specific file --Francisco 02.27.2020
+  } else {
+    setnames(gf_data, old=old_names, new=new_names)
+  }
   
   #-------------------------------------
   # 2. Subset rows
