@@ -1,8 +1,8 @@
-# Prep UGA budget iterations to revisions 
+# Prep DRC budget iterations to revisions 
 
 library(data.table) 
 
-dt = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/budget_pudr_iterations.rds")
+dt = readRDS("C:/Users/frc2/Box Sync/Global Fund Files/COD/prepped_data/budget_pudr_iterations.rds")
 dt = dt[grant_period=="2018-2020" & data_source=="budget"]
 
 # Determine the 'version' of each file 
@@ -22,7 +22,7 @@ dt = merge(dt, order, by=c('file_name', 'grant', 'update_date'), all.x=T)
 
 byVars=c('file_name', 'grant', 'disease', 'gf_module', 'gf_intervention', 'start_date', 'version', 'update_date')
 collapse = dt[, .(budget=sum(budget, na.rm=T)), by=byVars][order(grant, version, start_date)]
-write.csv(collapse, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/uga/prepped_data/budget_version_comparison.csv", row.names=F)
+write.csv(collapse, "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/DRC dissemination workshop Feb 2020/budget_version_comparison.csv", row.names=F)
 
 
 # how does this compare to the funding requests? 
