@@ -181,22 +181,22 @@ if (nrow(all_current_grants)!=expected_current_grants){
 }
 
 # Write data, including an archived copy. 
-write.csv(gos_prioritized_budgets, paste0(final_write, "final_budgets.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_budgets, paste0(final_write, "final_budgets.rds"))
+write.csv(gos_prioritized_budgets, paste0(final_write, "final_approved_budgets/final_budgets.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets, paste0(final_write, "final_approved_budgets/final_budgets.rds"))
 saveRDS(gos_prioritized_budgets, paste0(final_write, "archive/final_budgets_", Sys.Date(), ".rds"))
 
 #Write country-specific files (no archive needed; just use aggregate file.)
-write.csv(gos_prioritized_budgets[loc_name=="cod"], paste0(final_write, "final_budgets_cod.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_budgets[loc_name=="cod"], paste0(final_write, "final_budgets_cod.rds"))
+write.csv(gos_prioritized_budgets[loc_name=="cod"], paste0(final_write, "final_approved_budgets/final_budgets_cod.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets[loc_name=="cod"], paste0(final_write, "final_approved_budgets/final_budgets_cod.rds"))
 
-write.csv(gos_prioritized_budgets[loc_name=="gtm"], paste0(final_write, "final_budgets_gtm.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_budgets[loc_name=="gtm"], paste0(final_write, "final_budgets_gtm.rds"))
+write.csv(gos_prioritized_budgets[loc_name=="gtm"], paste0(final_write, "final_approved_budgets/final_budgets_gtm.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets[loc_name=="gtm"], paste0(final_write, "final_approved_budgets/final_budgets_gtm.rds"))
 
-write.csv(gos_prioritized_budgets[loc_name=="sen"], paste0(final_write, "final_budgets_sen.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_budgets[loc_name=="sen"], paste0(final_write, "final_budgets_sen.rds"))
+write.csv(gos_prioritized_budgets[loc_name=="sen"], paste0(final_write, "final_approved_budgets/final_budgets_sen.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets[loc_name=="sen"], paste0(final_write, "final_approved_budgets/final_budgets_sen.rds"))
 
-write.csv(gos_prioritized_budgets[loc_name=="uga"], paste0(final_write, "final_budgets_uga.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_budgets[loc_name=="uga"], paste0(final_write, "final_budgets_uga.rds"))
+write.csv(gos_prioritized_budgets[loc_name=="uga"], paste0(final_write, "final_approved_budgets/final_budgets_uga.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_budgets[loc_name=="uga"], paste0(final_write, "final_approved_budgets/final_budgets_uga.rds"))
 
 #----------------------------------
 # 2. FINAL GF EXPENDITURES
@@ -286,24 +286,24 @@ if (nrow(date_check)!=0){
 }
 
 # Write data 
-write.csv(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_expenditures, paste0(final_write, "final_expenditures.rds"))
+write.csv(gos_prioritized_expenditures, paste0(final_write, "absorption_per_semester/final_expenditures.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures, paste0(final_write, "absorption_per_semester/final_expenditures.rds"))
 
 #Archive one version with a date-stamp
 saveRDS(gos_prioritized_expenditures, paste0(final_write, "archive/final_expenditures_", Sys.Date(), ".rds"))
 
 # Save country-specific files (no archive needed )
-write.csv(gos_prioritized_expenditures[loc_name=="cod"], paste0(final_write, "final_expenditures_cod.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_expenditures[loc_name=="cod"], paste0(final_write, "final_expenditures_cod.rds"))
+write.csv(gos_prioritized_expenditures[loc_name=="cod"], paste0(final_write, "absorption_per_semester/final_expenditures_cod.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures[loc_name=="cod"], paste0(final_write, "absorption_per_semester/final_expenditures_cod.rds"))
 
-write.csv(gos_prioritized_expenditures[loc_name=="gtm"], paste0(final_write, "final_expenditures_gtm.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_expenditures[loc_name=="gtm"], paste0(final_write, "final_expenditures_gtm.rds"))
+write.csv(gos_prioritized_expenditures[loc_name=="gtm"], paste0(final_write, "absorption_per_semester/final_expenditures_gtm.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures[loc_name=="gtm"], paste0(final_write, "absorption_per_semester/final_expenditures_gtm.rds"))
 
-write.csv(gos_prioritized_expenditures[loc_name=="sen"], paste0(final_write, "final_expenditures_sen.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_expenditures[loc_name=="sen"], paste0(final_write, "final_expenditures_sen.rds"))
+write.csv(gos_prioritized_expenditures[loc_name=="sen"], paste0(final_write, "absorption_per_semester/final_expenditures_sen.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures[loc_name=="sen"], paste0(final_write, "absorption_per_semester/final_expenditures_sen.rds"))
 
-write.csv(gos_prioritized_expenditures[loc_name=="uga"], paste0(final_write, "final_expenditures_uga.csv"), row.names = FALSE)
-saveRDS(gos_prioritized_expenditures[loc_name=="uga"], paste0(final_write, "final_expenditures_uga.rds"))
+write.csv(gos_prioritized_expenditures[loc_name=="uga"], paste0(final_write, "absorption_per_semester/final_expenditures_uga.csv"), row.names = FALSE)
+saveRDS(gos_prioritized_expenditures[loc_name=="uga"], paste0(final_write, "absorption_per_semester/final_expenditures_uga.rds"))
 
 #----------------------------------
 # 3. ABSORPTION
@@ -328,8 +328,8 @@ absorption_files = rbind(absorption_files, gos_absorption, use.names=T, fill=T)
 absorption_files[start_date<"2018-01-01", hist_absorption:=round(sum(budget, na.rm=T)/sum(expenditure, na.rm=T)*100, 1), by='gf_module']
 
 #Write data
-saveRDS(absorption_files, paste0(final_write, "absorption.rds"))
-write.csv(absorption_files, paste0(final_write, "absorption.csv"), row.names = FALSE)
+saveRDS(absorption_files, paste0(final_write, "absorption_cumulative/absorption.rds"))
+write.csv(absorption_files, paste0(final_write, "absorption_cumulative/absorption.csv"), row.names = FALSE)
 saveRDS(absorption_files, paste0(final_write, "archive/absorption_", Sys.Date(), ".rds"))
 
 #----------------------------------
@@ -344,8 +344,8 @@ all_files = list(all_gf_cod, all_gf_gtm, all_gf_uga, all_gf_sen)
 all_gf_files = rbindlist(all_files, use.names = TRUE, fill = TRUE)
 
 #Write data 
-saveRDS(all_gf_files, paste0(final_write, "budget_pudr_iterations.rds"))
-write.csv(all_gf_files, paste0(final_write, "budget_pudr_iterations.csv"), row.names = FALSE)
+saveRDS(all_gf_files, paste0(final_write, "budget_revisions/budget_pudr_iterations.rds"))
+write.csv(all_gf_files, paste0(final_write, "budget_revisions/budget_pudr_iterations.csv"), row.names = FALSE)
 saveRDS(all_gf_files, paste0(final_write, "archive/budget_pudr_iterations_", Sys.Date(), ".rds"))
 
 
