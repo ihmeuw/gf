@@ -15,19 +15,11 @@ rm(list=ls())
 # ----------------------------------------------
 # STEP 1: SET UP R
 # ----------------------------------------------
-<<<<<<< HEAD
 user=as.character(Sys.info()[7])
 if (Sys.info()[1]=='Windows'){
   setwd(paste0("C:/Users/",user,"/Documents/gf/")) #Change to the root of your repository
 } else {
   setwd(paste0("/ihme/homes/",user,"/gf/"))
-=======
-user = Sys.info()[7]
-if (Sys.info()[1]=='Windows'){
-  setwd(paste0("C:/Users/", user, "/Documents/gf/")) #Change to the root of your repository
-} else {
-  setwd("/ihme/homes/", user, "/gf/")
->>>>>>> 747a1c518b3996772228c9cf853870cbba9dfb7e
 }
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
@@ -36,8 +28,8 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = FALSE
-prep_gos = TRUE
+prep_files = TRUE
+prep_gos = FALSE
 prep_odah = FALSE
 prep_ghe = FALSE
 prep_cost_categories = FALSE
