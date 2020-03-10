@@ -22,14 +22,14 @@ if (interactive()){
         selectInput("grant_period", "Grant Period", c('All', "2018-2020", '2006-2011', '2008-2013', '2009-2010', '2010-2012',
                                                       '2010-2014', '2011-2014', '2011-2015', '2012-2014', '2012-2015',
                                                       '2013-2017', '2014-2015', '2014-2017', '2014-2018', '2015-2017',
-                                                      '2016-2017', '2016-2019', '2018-2018', '2019-2021', '2019-2022', 'NA')),
+                                                      '2016-2017', '2016-2019', '2018-2018', '2019-2021', '2019-2022', 'NA'), selected="All"),
         checkboxGroupInput("grant", "Grant:",
                     c('All', 'COD-C-CORDAID', 'COD-H-CORDAID', 'COD-H-MOH', 'COD-H-SANRU', 'COD-M-MOH', 'COD-M-PSI',
                       'COD-M-SANRU', 'COD-T-CARITAS', 'COD-T-MOH', 'GTM-610-G04-T', 'GTM-H-HIVOS', 'GTM-H-INCAP', 'GTM-M-MSPAS', 
                       'GTM-T-MSPAS', 'GUA-311-G05-H', 'GUA-311-G06-H', 'NA', 'SEN-H-ANCS', 'SEN-H-CNLS', 'SEN-M-IntraH', 'SEN-M-PNLP',
                       'SEN-S-MOH', 'SEN-Z-MOH', 'SNG-T-PLAN', 'SNG-T-PNT', 'UGA-011-G09-S', 'UGA-708-G13-H', 'UGA-C-TASO', 'UGA-H-MoFPED',
                       'UGA-M-MoFPED', 'UGA-M-TASO', 'UGA-S-MoFPED', 'UGA-S-TASO', 'UGA-T-MoFPED', 'UGD-011-G10-S', 'UGD-011-G11-M', 'UGD-011-G12-M',
-                      'UGD-708-G07-H', 'UGD-708-G08-M', 'ZAR-506-G04-T', 'ZAR-708-G06-H', 'ZAR-809-G10-H', "unknown")), 
+                      'UGD-708-G07-H', 'UGD-708-G08-M', 'ZAR-506-G04-T', 'ZAR-708-G06-H', 'ZAR-809-G10-H', "unknown"), selected="All"), 
         selectInput("grant_status", "Grant Status:", c("All"="All", "Active"="active", "Not Active"="not_active")),
         selectInput("data_source", "Data Source:", c("All"="All", 'Budget'="budget", 'PUDR'="pudr"), selected="All"),
         selectInput("file_iteration", "File Iteration:", c("All"="All", "Initial (during grant-making)"="initial", "Final, approved"="final",
@@ -57,11 +57,13 @@ if (interactive()){
       # # Dynamically change menu options 
       shortFileList = copy(file_list)
       if (!input$country=="All") shortFileList = shortFileList[loc_name%in%input$country]
+      if (!input$grant=="All") shortFileList = shortFileList[grant%in%input$grant]
+      
       updateCheckboxGroupInput(session, "country",
                                choices = unique(shortFileList$country), 
                                selected = unique(shortFileList$country))
-      # updateSelectInput(session, "grant",
-      #                    choices = unique(shortFileList$grant), selected="All")
+      updateSelectInput(session, "grant",
+                        choices = unique(shortFileList$grant))
       # updateCheckboxGroupInput(session, "grant_period",
       #                   choices=unique(shortFileList$grant_period),
       #                   selected=unique(shortFileList$grant_period))
