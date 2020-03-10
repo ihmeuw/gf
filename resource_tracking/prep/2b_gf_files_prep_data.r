@@ -23,7 +23,7 @@ if (prep_files == TRUE){
   file_list = file_list[grant!="unknown"]
 
   #Make sure you don't have the same start date for the same grant (quick check; it would be better )
-  file_list[file_iteration=='final', date_dup:=sequence(.N), by=c('grant', 'sheet_financial', 'start_date_financial', 'data_source', 'pudr_semester_financial')] #EMILY NEED TO RETHINK THIS. 
+  file_list[file_iteration=='approved_gm', date_dup:=sequence(.N), by=c('grant', 'sheet_financial', 'start_date_financial', 'data_source', 'pudr_semester_financial')] #EMILY NEED TO RETHINK THIS. 
   file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to decrement it
 
   if ( nrow(file_list[date_dup>0])!=0){
@@ -31,7 +31,7 @@ if (prep_files == TRUE){
     print("There are duplicates in final files - review file list.")
   }
   
-  file_list[data_source=="pudr" & file_iteration=="final", pudr_dup:=sequence(.N), by=c('grant', 'grant_period', 'pudr_semester_financial')]
+  file_list[data_source=="pudr" & file_iteration=='approved_gm', pudr_dup:=sequence(.N), by=c('grant', 'grant_period', 'pudr_semester_financial')]
   file_list[, pudr_dup:=pudr_dup-1] #This variable indexes at 1.
   if (nrow(file_list[pudr_dup>0 & !is.na(pudr_dup)])>0){
     print(file_list[pudr_dup>0 & !is.na(pudr_dup)])
@@ -160,11 +160,11 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     resource_database = rbind(resource_database, already_prepped, fill=T)
     
     #Check to make sure there aren't duplicates in final files. 
-    dup_files = unique(resource_database[file_iteration=="final" & grant!="unknown", .(grant, grant_period, data_source, start_date, period_financial, file_name)])[order(grant, grant_period, data_source, start_date, period_financial)]
+    dup_files = unique(resource_database[file_iteration=='approved_gm' & grant!="unknown", .(grant, grant_period, data_source, start_date, period_financial, file_name)])[order(grant, grant_period, data_source, start_date, period_financial)]
     dup_files[, dup:=.N, by=c('grant', 'grant_period', 'data_source', 'start_date', 'period_financial')]
     if (nrow(dup_files[dup>=2])>0) {
       print(dup_files[dup>=2])
-      stop("There are duplicate files tagged 'final'.")
+      stop("There are duplicate files tagged 'approved_gm'.")
     }
   }
   
@@ -192,8 +192,8 @@ verify_numeric_budget = verify_numeric_budget[!is.na(budget) & budget != ""]
 stopifnot(nrow(verify_numeric_budget)==0)
 
 # Make sure there are no overlapping quarters for the same grant (duplicate files. )
-budget_overlap <- duplicated(resource_database[data_source == "budget" & file_iteration == "final", .(grant, start_date)])
-pudr_overlap <- duplicated(resource_database[data_source == "pudr" & file_iteration == "final", .(grant, start_date)])
+budget_overlap <- duplicated(resource_database[data_source == "budget" & file_iteration == 'approved_gm', .(grant, start_date)])
+pudr_overlap <- duplicated(resource_database[data_source == "pudr" & file_iteration == 'approved_gm', .(grant, start_date)])
 stopifnot(nrow(budget_overlap)==0 & nrow(pudr_overlap)==0)
 
 rm(budget_overlap, pudr_overlap)

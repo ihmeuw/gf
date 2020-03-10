@@ -305,21 +305,21 @@ if (prep_files){
   
   # (GEP and CEP files are exactly the same, except GEP files have additional variables saved in the data for more advanced visualization)
   # Save user-facing files (for CEPs and PATH) on Box as .csvs
-  write.csv(final_budgets_cep, paste0(export_dir, "final_budgets_", country, ".csv"), row.names=F)
+  write.csv(approved_budgets_cep, paste0(export_dir, "approved_budgets_", country, ".csv"), row.names=F)
   write.csv(most_recent_revisions_cep, paste0(export_dir, "most_recent_budgets_", country, ".csv"), row.names=F)
   write.csv(revisions_cep, paste0(export_dir, "all_budget_revisions_", country, ".csv"), row.names=F)
   write.csv(absorption_cep, paste0(export_dir, "most_recent_absorption_", country, ".csv"), row.names=F)
   write.csv(cumulative_absorption_cep, paste0(export_dir, "cumulative_absorption_", country, ".csv"), row.names=F)
   
   # Save admin-level files on J. 
-  saveRDS(final_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/final_budgets_", country, ".rds"))
+  saveRDS(approved_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/approved_budgets_", country, ".rds"))
   saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_budgets_", country, ".rds"))
   saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_budget_revisions_", country, ".rds"))
   saveRDS(absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_absorption_", country, ".rds"))
   saveRDS(cumulative_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/cumulative_absorption_", country, ".rds"))
   
   # Save copy for archive.
-  saveRDS(final_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/final_budgets_", country, Sys.Date(), ".rds"))
+  saveRDS(approved_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/approved_budgets_", country, Sys.Date(), ".rds"))
   saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/most_recent_budgets_", country, Sys.Date(), ".rds"))
   saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/all_budget_revisions_", country, Sys.Date(), ".rds"))
   saveRDS(absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/most_recent_absorption_", country, Sys.Date(), ".rds"))

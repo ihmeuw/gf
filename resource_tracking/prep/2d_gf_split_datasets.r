@@ -9,12 +9,12 @@ gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
              'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date')
-final_budgets = mapped_data[file_iteration == "final" & data_source == "budget" & current_grant==TRUE] #Only want the final versions of budgets. 
-final_budgets = final_budgets[, -c('expenditure', 'lfa_exp_adjustment', 'disbursement')]
+approved_budgets = mapped_data[file_iteration == 'approved_gm' & data_source == "budget" & current_grant==TRUE] #Only want the final versions of budgets. 
+approved_budgets = approved_budgets[, -c('expenditure', 'lfa_exp_adjustment', 'disbursement')]
 
 # Subset columns to GEP and CEP variables. 
-final_budgets_gep = final_budgets[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
-final_budgets_cep = final_budgets[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
+approved_budgets_gep = approved_budgets[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
+approved_budgets_cep = approved_budgets[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
 #----------------------------------------------
 # 2. Most recent revision of budgets
 #----------------------------------------------
@@ -24,9 +24,9 @@ gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date')
 
 # Order final and revised budgets by the update date of the file
-revision_order = unique(mapped_data[data_source=="budget" & file_iteration%in%c('final', 'revision') & current_grant==TRUE,
+revision_order = unique(mapped_data[data_source=="budget" & file_iteration%in%c('approved_gm', 'revision') & current_grant==TRUE,
                                     .(grant, grant_period, update_date, file_iteration)])[order(grant, grant_period, file_iteration, update_date)]
-stopifnot(nrow(revision_order[file_iteration=="revision" & is.na(update_date)])==0) # It's okay for 'final' budgets to not have an update date, because 
+stopifnot(nrow(revision_order[file_iteration=="revision" & is.na(update_date)])==0) # It's okay for 'approved_gm' budgets to not have an update date, because 
                                                                                     # they always come first, but revised budgets need one so they'll be sorted correctly. 
 revision_order[, budget_version:=1:.N, by=c('grant', 'grant_period')]
 
@@ -54,6 +54,7 @@ revision_flag = unique(mapped_data[file_iteration=='revision' & data_source=="bu
 revision_flag[, concat:=paste0(grant, "_", grant_period)]
 
 revisions = mapped_data[paste0(grant, "_", grant_period)%in%revision_flag$concat & data_source=="budget"]
+stopifnot(nrow(revisions[is.na(cumul_exp_start_date)])==0) # Need to have this variable to know when the reporting period started. Should be found in raw file and entered in master file list. 
 if (nrow(revisions)!=0){ #You won't have budget revisions for every country. 
   #Figure out the order using the 'update_date' variable. 
   order = unique(revisions[, .(grant, grant_period, update_date, file_name, file_iteration)][order(grant_period, grant, update_date)])
@@ -62,7 +63,7 @@ if (nrow(revisions)!=0){ #You won't have budget revisions for every country.
   
   # Add in a clean label for mapping
   order[file_iteration=="initial", budget_version:=paste0("Grantmaking draft ", order)]
-  order[file_iteration=="final", budget_version:="Approved from grantmaking"]
+  order[file_iteration=='approved_gm', budget_version:="Approved from grantmaking"]
   order[file_iteration=="revision", budget_version:=paste0("Revision ", order)]
   order$order <- NULL 
   
@@ -78,7 +79,7 @@ if (nrow(revisions)!=0){ #You won't have budget revisions for every country.
 #-------------------------------------------------------------
 # Flag most recent PUDRs - this will be used in steps 4 and 5. 
 #-------------------------------------------------------------
-most_recent_pudrs = unique(mapped_data[data_source=="pudr" & file_iteration=="final" & current_grant==TRUE,
+most_recent_pudrs = unique(mapped_data[data_source=="pudr" & file_iteration=='approved_gm' & current_grant==TRUE,
                                        .(grant, grant_period, file_name, pudr_semester_financial)])
 # Merge on PUDR code to get an easy numeric sorting.
 setDT(pudr_labels)
@@ -210,7 +211,7 @@ calculate[, concat:=paste0(grant, grant_period)]
 cumulative_absorption2 = data.table()
 if (nrow(calculate)!=0){
   for (c in unique(calculate$concat)){
-    time_series = unique(mapped_data[data_source=="pudr" & file_iteration=="final" & paste0(grant, grant_period)==c & current_grant==TRUE, .(file_name, pudr_semester_financial, start_date)])
+    time_series = unique(mapped_data[data_source=="pudr" & file_iteration=='approved_gm' & paste0(grant, grant_period)==c & current_grant==TRUE, .(file_name, pudr_semester_financial, start_date)])
     time_series = time_series[order(start_date, -pudr_semester_financial)] # Want to put "AB" before "A" so year-long is prioritized. 
     
     # Flag duplicate reporting by date and file name, and keep year-long PUDRs over semester-long ones. 
@@ -259,7 +260,7 @@ cumulative_absorption_cep = cumulative_absorption[, .(grant, grant_period, gf_mo
 #   generate 'final expenditure' variable. 
 # EL 3/5/2020 - these data are not currently being released to partners, just saved internally. 
 #---------------------------------------------------------
-expenditures = mapped_data[data_source=="pudr" & file_iteration=="final"]
+expenditures = mapped_data[data_source=="pudr" & file_iteration=='approved_gm']
 expenditures[, final_expenditure:=expenditure+lfa_exp_adjustment]
 expenditures = expenditures[, -c('expenditure', 'lfa_exp_adjustment')]
 setnames(expenditures, c('final_expenditure', 'pudr_semester_financial'), c('expenditure', 'pudr_code'))
