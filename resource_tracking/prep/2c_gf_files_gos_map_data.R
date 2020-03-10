@@ -300,33 +300,31 @@ if (prep_files){
 # Write the prepped data as .csvs
 # ---------------------------------------------
 
+# Save these files in a country-specific directory
 if (prep_files){
-  # Save RDS file
-  saveRDS(final_budgets, paste0(export_dir, "final_budgets.rds"))
-  saveRDS(expenditures, paste0(export_dir, "final_expenditures.rds"))
-  saveRDS(mapped_data, paste0(export_dir, "budget_pudr_iterations.rds"))
-  saveRDS(absorption, paste0(export_dir, "absorption_", country, ".rds"))
-  if ('revisions_collapse'%in%ls()){ #You won't have budget revisions for every country.
-    saveRDS(revisions_collapse, paste0(export_dir, "budget_revisions.rds"))
-  }
-
-  #Save .csv.
-  write.csv(final_budgets, paste0(export_dir, "final_budgets.csv"), row.names=FALSE)
-  write.csv(expenditures, paste0(export_dir, "final_expenditures.csv"), row.names=FALSE)
-  write.csv(mapped_data, paste0(export_dir, "budget_pudr_iterations.csv"), row.names=FALSE)
-  write.csv(absorption, paste0(export_dir, "absorption_", country, ".csv"), row.names=FALSE)
-  if ('revisions_collapse'%in%ls()){
-    write.csv(revisions_collapse, paste0(export_dir, "budget_revisions.csv"), row.names=FALSE)
-  }
-
+  
+  # (GEP and CEP files are exactly the same, except GEP files have additional variables saved in the data for more advanced visualization)
+  # Save user-facing files (for CEPs and PATH) on Box as .csvs
+  write.csv(final_budgets_cep, paste0(export_dir, "final_budgets_", country, ".csv"), row.names=F)
+  write.csv(most_recent_revisions_cep, paste0(export_dir, "most_recent_budgets_", country, ".csv"), row.names=F)
+  write.csv(revisions_cep, paste0(export_dir, "all_budget_revisions_", country, ".csv"), row.names=F)
+  write.csv(absorption_cep, paste0(export_dir, "most_recent_absorption_", country, ".csv"), row.names=F)
+  write.csv(cumulative_absorption_cep, paste0(export_dir, "cumulative_absorption_", country, ".csv"), row.names=F)
+  
+  # Save admin-level files on J. 
+  saveRDS(final_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/final_budgets_", country, ".rds"))
+  saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_budgets_", country, ".rds"))
+  saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_budget_revisions_", country, ".rds"))
+  saveRDS(absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_absorption_", country, ".rds"))
+  saveRDS(cumulative_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/cumulative_absorption_", country, ".rds"))
+  
   # Save copy for archive.
-  saveRDS(final_budgets, paste0(export_dir, "archive/final_budgets_", Sys.Date(), ".rds"))
-  saveRDS(expenditures, paste0(export_dir, "archive/final_expenditures_", Sys.Date(), ".rds"))
-  saveRDS(mapped_data, paste0(export_dir, "archive/budget_pudr_iterations_", Sys.Date(), ".rds"))
-  saveRDS(absorption, paste0(export_dir, "archive/absorption_", country, "_", Sys.Date(), ".rds"))
-  if ('revisions_collapse'%in%ls()){ #You won't have budget revisions for every country.
-    saveRDS(revisions_collapse, paste0(export_dir, "archive/budget_revisions_", Sys.Date(), ".rds"))
-  }
+  saveRDS(final_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/final_budgets_", country, Sys.Date(), ".rds"))
+  saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/most_recent_budgets_", country, Sys.Date(), ".rds"))
+  saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/all_budget_revisions_", country, Sys.Date(), ".rds"))
+  saveRDS(absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/most_recent_absorption_", country, Sys.Date(), ".rds"))
+  saveRDS(cumulative_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/cumulative_absorption_", country, Sys.Date(), ".rds"))
+  
 }
 
 if (prep_gos == TRUE){
