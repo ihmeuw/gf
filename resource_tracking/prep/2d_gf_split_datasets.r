@@ -221,7 +221,8 @@ if (nrow(calculate)!=0){
       print(paste0("These are the files that are being summed together to create a full time series for ", c))
       print(time_series[, .(file_name, pudr_semester_financial, start_date)])
     }
-    subset = merge(time_series, mapped_data, by=c('file_name', 'pudr_semester_financial', 'start_date'), all.x=T)
+    subset = merge(time_series, mapped_data, by=c('file_name', 'pudr_semester_financial'), all.x=T)
+    setnames(subset, c('cumul_exp_start_date', 'cumul_exp_end_date'), c('start_date', 'end_date'))
     subset$cumul_abs_method <- 'calculated'
     subset = subset[, .(cumulative_budget = sum(cumulative_budget, na.rm=T), 
                                cumulative_expenditure=sum(cumulative_expenditure, na.rm=T)), by=c(byVars)]
