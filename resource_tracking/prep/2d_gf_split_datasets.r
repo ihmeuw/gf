@@ -54,7 +54,6 @@ revision_flag = unique(mapped_data[file_iteration=='revision' & data_source=="bu
 revision_flag[, concat:=paste0(grant, "_", grant_period)]
 
 revisions = mapped_data[paste0(grant, "_", grant_period)%in%revision_flag$concat & data_source=="budget"]
-stopifnot(nrow(revisions[is.na(cumul_exp_start_date)])==0) # Need to have this variable to know when the reporting period started. Should be found in raw file and entered in master file list. 
 if (nrow(revisions)!=0){ #You won't have budget revisions for every country. 
   #Figure out the order using the 'update_date' variable. 
   order = unique(revisions[, .(grant, grant_period, update_date, file_name, file_iteration)][order(grant_period, grant, update_date)])
@@ -176,15 +175,13 @@ absorption_cep = absorption[, .(grant, grant_period, gf_module, gf_intervention,
 # EL 3/10/2020 - note that file name is not going to work well here, because we have some calculated cumulative absorption, 
 # and this has to be summed across files. 
 gep_cols = c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'cumulative_budget', 'cumulative_expenditure', 'cumulative_absorption',
-             'start_date', 'budget_version',
-             'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date', 'cumul_abs_method')
-cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 
+             'start_date', 'end_date', 'cumul_abs_method')
+cep_cols = c('grant', 'grant_period', 'gf_module', 'gf_intervention', 
              'disease', 'cumulative_budget', 'cumulative_expenditure', 'cumulative_absorption',
-             'start_date', 'budget_version', 'cumul_abs_method')
+             'start_date', 'end_date', 'cumul_abs_method')
 
 byVars = c('grant', 'grant_period', 'code', 'gf_module', 'gf_intervention', 
-           'pudr_semester_financial', 'start_date', 'disease', 'cumul_abs_method')
+           'pudr_semester_financial', 'start_date', 'end_date', 'disease', 'cumul_abs_method')
 #Flag the different ways to pull cumulative expenditure. 
 # Was it entered in the PUDRs, or do we need to sum old PUDRs? 
 check_exp = mapped_data[file_name%in%most_recent_pudrs$file_name, .(budget = sum(cumulative_budget, na.rm=T), 
@@ -194,8 +191,10 @@ check_exp = check_exp[expenditure!=0, cumul_abs_method:='reported_in_pudr']
 
 check_exp = check_exp[, .(file_name, cumul_abs_method)]
 all_absorption = mapped_data[file_name%in%most_recent_pudrs$file_name, .(grant, grant_period, file_name, code, gf_module, gf_intervention, disease,
-                                                                         cumulative_budget, cumulative_expenditure, lfa_exp_adjustment, pudr_semester_financial, start_date)]
+                                                                         cumulative_budget, cumulative_expenditure, lfa_exp_adjustment, 
+                                                                         pudr_semester_financial, cumul_exp_start_date, cumul_exp_end_date)]
 all_absorption = merge(all_absorption, check_exp, by='file_name', all.x=T)
+setnames(all_absorption, c('cumul_exp_start_date', 'cumul_exp_end_date'), c('start_date', 'end_date'))
 
 # Now, run these two cumul_abs_methods separately. 
 # First, reported in PUDR. 
@@ -251,10 +250,8 @@ cumulative_absorption = cumulative_absorption[, .(cumulative_budget = sum(cumula
 cumulative_absorption[, cumulative_absorption:=round((cumulative_expenditure/cumulative_budget)*100, 1)]
 
 # Subset columns to GEP and CEP variables. 
-cumulative_absorption_gep = copy(cumulative_absorption) # Leaving this in this format for now EL 3/9/20 
-cumulative_absorption_cep = cumulative_absorption[, .(grant, grant_period, gf_module, gf_intervention, disease, start_date,  
-                                cumulative_budget, cumulative_expenditure, cumulative_absorption, cumul_abs_method)]
-
+cumulative_absorption_gep = cumulative_absorption[, gep_cols, with=FALSE]
+cumulative_absorption_cep = cumulative_absorption[, cep_cols, with=FALSE]
 #---------------------------------------------------------
 # 6. Expenditures - pull out expenditures file, and 
 #   generate 'final expenditure' variable. 

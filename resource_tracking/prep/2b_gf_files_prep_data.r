@@ -139,7 +139,8 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
     
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language_financial, file_currency, pudr_semester_financial, period_financial, update_date)]
+                                 mod_framework_format, file_iteration, language_financial, file_currency, 
+                                 pudr_semester_financial, period_financial, update_date, cumul_exp_start_date, cumul_exp_end_date, lfa_verified)]
     for (col in names(append_cols)){
       tmpData[, (col):=append_cols[, get(col)]]
     }  
