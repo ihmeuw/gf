@@ -17,7 +17,6 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
   ### with information from line where the code breaks, and then uncomment by "ctrl + shift + c" and run code line-by-line
   ### look at gf_data and find what is being droped where.
   ########
-# 
 
   # folder = "budgets"
   # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
@@ -57,7 +56,7 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
   # 1. Decide which category of file this document belongs to. 
   #-------------------------------------------------------------
   cat1 = c("GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xlsx") #Files similar to: "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/gtm/raw_data/active/GTM-T-MSPAS/pudrs/GASTOS SUBVENCION DE TUBERCULOSIS JULIO A DICIEMBRE 2016_RevALF.xls"
-  cat2 = c("GUA-311-G06-H EFR_Form_2016_EFR ENGLISH VERSION.xlsx", "GUA-M-MSPAS EFR FASE II -2016_Ingles_RevALF.xlsm", "GUA-M-MSPAS EFR FASE II -2016_RevALF - Editable.xlsx") #Files similar to: J:\Project\Evaluation\GF\resource_tracking\_gf_files_gos\gtm\raw_data\not_active\GUA-311-G06-H\pudrs\GUA-311-G06-H EFR_Form_2016_EFR ENGLISH VERSION.xls
+  cat2 = c("GUA-311-G06-H EFR_Form_2016_EFR SPANISH VERSION.xlsx", "GUA-311-G06-H EFR_Form_2016_EFR ENGLISH VERSION.xlsx", "GUA-M-MSPAS EFR FASE II -2016_Ingles_RevALF.xlsm", "GUA-M-MSPAS EFR FASE II -2016_RevALF - Editable.xlsx") #Files similar to: J:\Project\Evaluation\GF\resource_tracking\_gf_files_gos\gtm\raw_data\not_active\GUA-311-G06-H\pudrs\GUA-311-G06-H EFR_Form_2016_EFR ENGLISH VERSION.xls
   
   #Sanity check: Is this sheet name one you've checked before? 
   if (!inFile%in%c(cat1, cat2)){
@@ -101,31 +100,23 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     split = strsplit(gf_data$intervention, "-")
     gf_data[, module:=sapply(split,`[`,1)]
     gf_data[, intervention:=sapply(split,`[`,2)]
+
+    gf_data[, expenditure := as.numeric(expenditure)]
+    gf_data[, expenditure_q3 := expenditure/2]
+    gf_data[, expenditure_q4 := expenditure/2]
+    gf_data[, expenditure := NULL]
+    gf_data[, budget_q3 := as.numeric(budget_q3)]
+    gf_data[, budget_q4 := as.numeric(budget_q4)]
     
-    budget_dataset = melt(gf_data, id.vars=c('module', 'intervention'), measure.vars=c('budget_q3', 'budget_q4', 'expenditure'))
-    budget_dataset[variable%in%c('budget_q3', 'budget_q4'), split:=1]
-    budget_dataset[variable=='expenditure', split:=2]
+    budget_dataset = melt(gf_data, id.vars=c('module', 'intervention'))
+    budget_dataset[, c('var', 'quarter') := tstrsplit(variable, '_')]
+    budget_dataset[, quarter:=as.numeric(gsub('q', '', quarter))]
+    budget_dataset[, variable:=NULL]
     
-    budget_dataset <- expandRows(budget_dataset, "split")
-    
-    #Divide expenditure by 2 because you've expanded rows to the quarter-level. 
-    budget_dataset[, value:=as.numeric(value)]
-    budget_dataset[variable=='expenditure', value:=value/2]
-    
-    #Assign a quarter variable to budget and expenditure
-    budget_dataset[, quarter:=seq(3, 4, by=1), by=c('module', 'intervention', 'variable', 'value')]
-    budget_dataset[variable=='budget_q3', quarter:=3]
-    budget_dataset[variable=='budget_q4', quarter:=4]
+    budget_dataset = dcast.data.table(budget_dataset, module + intervention + quarter ~ var)
     budget_dataset[, year:=year(start_date)]
     
-    #Rename the budget values, and then reshape 
-    budget_dataset[variable=='budget_q3'|variable=='budget_q4', variable:='budget']
-    
-    budget_dataset = dcast(budget_dataset, module+intervention+quarter+year~variable, value.var="value", fun.aggregate=sum_na_rm)
-    
     #Add 'start date' variable
-    budget_dataset[quarter==1, month:="01"]
-    budget_dataset[quarter==2, month:="04"]
     budget_dataset[quarter==3, month:="07"]
     budget_dataset[quarter==4, month:="10"]
     
@@ -151,18 +142,33 @@ prep_pudr_gtm = function(dir, inFile, sheet_name, start_date, qtr_number, period
     start_row <- grep("Macrocategor", gf_data[[module_col]])
     end_row <- grep("TOTAL", gf_data[[1]])
     
-    #Subset to this section, and fix names
-    gf_data = gf_data[start_row:end_row, c(module_col, intervention_col, budget_col, expenditure_col), with=FALSE]
+    #Subset columns and fix names
+    gf_data = gf_data[, c(module_col, intervention_col, budget_col, expenditure_col), with=FALSE]
     names(gf_data) <- c('module', 'intervention', 'budget', 'expenditure')
+    gf_data[ end_row, module := 'TOTAL']
+    gf_data[ end_row, intervention := 'TOTAL']
+    
+    #Subset rows
+    gf_data = gf_data[start_row:end_row,]
     
     #Drop extra rows that don't have module specified, and drop title row
-    gf_data = gf_data[!module=="Seleccione…", ]
-    gf_data = gf_data[!is.na(module) & !is.na(intervention)]
+    gf_data = gf_data[!module %in% "Seleccione…", ]
     gf_data = gf_data[!module=="Macrocategoría"|module=="macrocategoria" | module=="Macrocategoria"]
     
     #Make budget and expenditure numeric
     gf_data[, budget:=as.numeric(budget)]
     gf_data[, expenditure:=as.numeric(expenditure)]
+    
+    # check that values add up to totals
+    tot_row <- grep("TOTAL", gf_data[, module])
+    
+    if(!all(gf_data[!tot_row, lapply(.SD, function(x){round(sum())}), .SDcols = c('budget', 'expenditure')] == gf_data[tot_row, lapply(.SD,function(x){round(sum())}), .SDcols = c('budget', 'expenditure')])){
+      stop('Values for budget and expenditure are not summing to the same as the total row, rounded to the nearest whole number')
+    }
+    
+    # delete total row 
+    gf_data = gf_data[!tot_row]
+    gf_data = gf_data[!is.na(module) & !is.na(intervention) & !is.na(budget) & !is.na(expenditure),]
     
     #Reshape to the quarter-level. 
     totals_check = gf_data[, .(budget=sum(budget, na.rm = TRUE), expenditure=sum(expenditure, na.rm=TRUE))] #Add a totals check for later. 

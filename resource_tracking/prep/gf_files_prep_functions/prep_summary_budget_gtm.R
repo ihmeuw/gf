@@ -18,11 +18,16 @@ prep_summary_budget_gtm = function(dir, inFile, sheet, start_date, qtr_num){
   # start_date = file_list$start_date[i]
   # qtr_num = file_list$qtr_number[i]
 
+  verified_files = c('GUA-311-G05-H IL6_Cumulative_RCC2_SBb.xlsx')
+  if (!inFile%in%verified_files){
+    print(inFile)
+    stop("This file has not been run with this function before - Are you sure you want this function? Add file name to verified list within function to proceed. Also, update the code while you're at it! ;)")
+  }
   
   if(!is.na(sheet)){
-    gf_data <- data.table(read_excel(paste0(dir, inFile), sheet=as.character(sheet)))
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile), sheet=as.character(sheet)))
   } else {
-    gf_data <- data.table(read_excel(paste0(dir, inFile)))
+    gf_data <- data.table(read.xlsx(paste0(dir, inFile)))
   }
   
   gf_data <- gf_data[, -1]
