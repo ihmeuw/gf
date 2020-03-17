@@ -28,10 +28,10 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = TRUE
+prep_files = FALSE
 prep_gos = FALSE
 prep_odah = FALSE
-prep_ghe = FALSE
+prep_ghe = TRUE
 prep_cost_categories = FALSE
 prep_commitments = FALSE
 
