@@ -1,12 +1,17 @@
 ---
 title: "Resource Tracking Descriptive Verification"
 author: "Emily Linebarger"
-date: "April 12, 2019"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, warning=FALSE, echo=FALSE, message=FALSE}
+library(knitr)
+library(data.table)
+library(ggplot2)
+library(lubridate)
+
+knitr::opts_chunk$set(echo=FALSE, warning=FALSE, message=FALSE, fig.width=11, fig.height=8)
 
 budgets = readRDS(paste0(box, "tableau_data/final_budgets.rds"))
 expenditures = readRDS(paste0(box, "tableau_data/final_expenditures.rds"))
@@ -24,7 +29,7 @@ uga_absorption = absorption[loc_name=="uga"]
 ## Plot data
 Visualize the budget data by grant and year. 
 Focus only on current grant first. 
-```{r, echo=FALSE}
+```{r plot1}
 sum_current_grants = budgets[, .(budget=sum(budget, na.rm = TRUE)), by=.(grant, year, loc_name)]
 grants = unique(current_uga_grants)
 for (grant_number in grants){
@@ -60,7 +65,7 @@ print(sum_current_grants[grant==grant_number])
 ```
 
 ## Visualize by disease and country 
-```{r, echo=FALSE}
+```{r plot2}
 sum_by_country_disease = budgets[, .(budget=sum(budget, na.rm=TRUE)), by=c('country', 'year', 'disease')]
 countries = unique(budgets$country)
 for (loc in countries){
@@ -90,13 +95,13 @@ print(rssh)
 ## Review variables 
 
 Are the formats of the variables what you expect? 
-```{r, echo=FALSE}
+```{r plot3}
 # str(budgets)
 # str(expenditures)
 ```
 
 Check specific variable values 
-```{r, echo=FALSE}
+```{r plot4}
 
 disease_flag_b = (unique(budgets$disease)%in%c('hiv', 'malaria', 'rssh', 'tb'))
 disease_flag_p = (unique(expenditures$disease)%in%c('hiv', 'malaria', 'rssh', 'tb'))
@@ -123,39 +128,39 @@ Is your start date variable a date in PUDRs? `r sdate_flag_p`
 What about your end date variable? `r edate_flag_p`
 What's the range of start date? `r range(expenditures$start_date)`
 
-What's the range of years in your budgets dataset? `r range(budgets$year)`
-What's the range of years in your expenditures dataset? `r range(expenditures$year)`
+What's the range of years in your budgets dataset? $`r range(budgets$year)`$
+What's the range of years in your expenditures dataset? $`r range(expenditures$year)`$
 
 What values do you have for language, loc_name, and country?
 For budgets: 
-```{r, echo=FALSE}
+```{r plot5}
 unique(budgets$language)
 unique(budgets$loc_name)
 unique(budgets$country)
 ```
 For expenditures: 
-```{r, echo=FALSE}
+```{r plot6}
 unique(expenditures$language)
 unique(expenditures$loc_name)
 unique(expenditures$country)
 ```
 
 Is the 'current grant' flag working correctly? Make sure all files are sorted by this boolean correctly. 
-```{r, echo=FALSE}
+```{r plot7}
 unique(budgets[current_grant==TRUE, .(current_grant, grant, grant_period)][order(grant, grant_period)])
 unique(budgets[current_grant==FALSE, .(current_grant, grant, grant_period)][order(grant, grant_period)])
 ```
 
 Is the 'grant_disease' flag working correctly? Make sure that the disease makes sense for the name of the grant. 
 First showing budget and then expenditure. 
-```{r, echo=FALSE}
+```{r plot8}
 unique(budgets[, .(grant, grant_disease)])
 unique(expenditures[, .(grant, grant_disease)])
 ```
 
 # ABSORPTION GRAPHS
 
-```{r cod_absorption, echo=FALSE, warning=FALSE} 
+```{r cod_absorption} 
 absorption_by_country = cod_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')]
 absorption_by_country[, absorption:=(expenditure/budget)*100]
 
@@ -172,7 +177,7 @@ by_grant
 
 ```
 
-```{r gtm_absorption, echo=FALSE, warning=FALSE} 
+```{r gtm_absorption} 
 absorption_by_country = gtm_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')]
 absorption_by_country[, absorption:=(expenditure/budget)*100]
 
@@ -189,7 +194,7 @@ by_grant
 
 ```
 
-```{r sen_absorption, echo=FALSE, warning=FALSE} 
+```{r sen_absorption} 
 absorption_by_country = sen_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')]
 absorption_by_country[, absorption:=(expenditure/budget)*100]
 
@@ -206,7 +211,7 @@ by_grant
 
 ```
 
-```{r uga_absorption, echo=FALSE, warning=FALSE} 
+```{r uga_absorption} 
 absorption_by_country = uga_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), by=c('grant', 'grant_period', 'semester')]
 absorption_by_country[, absorption:=(expenditure/budget)*100]
 

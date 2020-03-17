@@ -220,6 +220,10 @@ convert_currency = function(dt, yearVar=NULL, convertFrom, convertTo, finVars = 
   setnames(oecd_xrate2, c('TIME','Value'), c(yearVar, 'eur_usd'))
   oecd_xrate2[, (yearVar):= as.integer(get(yearVar))]
   
+  # Only keep 2018 and 2019 from the second OECD x-rate table. EL 3/11/2019
+  max_year = max(oecd_xrate$year)
+  oecd_xrate2 = oecd_xrate2[year>max_year]
+  
   #Bind these two time series together. 
   oecd_xrate = rbind(oecd_xrate, oecd_xrate2)
   

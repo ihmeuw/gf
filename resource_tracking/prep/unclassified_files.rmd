@@ -1,7 +1,7 @@
 ---
 title: "Unclassified GF Files"
 author: "Emily Linebarger"
-date: "July 23, 2019"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output: pdf_document
 classoption: landscape
 ---
