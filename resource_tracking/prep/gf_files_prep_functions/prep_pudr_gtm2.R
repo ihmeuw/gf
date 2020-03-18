@@ -14,7 +14,21 @@ prep_gtm_pudr2 =  function(dir, inFile, sheet_name, start_date, period, qtr_numb
   
   #TROUBLESHOOTING HELP
   #Uncomment variables below and run line-by-line. 
-  # dir = file_dir
+  # folder = "budgets"
+  # folder = ifelse (file_list$data_source[i] == "pudr", "pudrs", folder)
+  # if (file_list$file_iteration[i]=="initial"){
+  #   version = "iterations"
+  # } else if (file_list$file_iteration[i]=="revision"){
+  #   version= "revisions"
+  # } else {
+  #   version = ""
+  # }
+  # grant_period = file_list$grant_period[i]
+  # 
+  # dir = paste0(master_file_dir, file_list$grant_status[i], "/", file_list$grant[i], "/", grant_period, "/", folder, "/")
+  # if (version != ""){
+  #   dir = paste0(file_dir, version, "/")
+  # }
   # inFile = file_list$file_name[i]
   # sheet_name = file_list$sheet[i]
   # start_date = file_list$start_date[i]
@@ -33,7 +47,7 @@ prep_gtm_pudr2 =  function(dir, inFile, sheet_name, start_date, period, qtr_numb
   # Files and directories
   
   #Sanity check: Is this sheet name one you've checked before? 
-  verified_sheet_names <- c('PR EFR_7A', 'LFA Expenditure_7B')
+  verified_sheet_names <- c('PR EFR_7A', 'LFA Expenditure_7B', 'LFA EFR_7B English Version')
   if (!sheet_name%in%verified_sheet_names){
     print(sheet_name)
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")

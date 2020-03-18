@@ -117,7 +117,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       stopifnot(sort(names(tmpData))%in%pudr_cols) # Want to check if these have cumulative budget/expenditure. EL 11/20/2019
       tmpData$currency = file_list[i]$currency # Want to add currency columnn from file list ONLY for PUDRs. For budgets, this is extracted from file. 
       
-    } else if (file_list$function_financial[i]=='pudr' & file_list$loc_name[i]=="gtm" & file_list$sheet_financial[i]%in%c('PR EFR_7A')){
+    } else if (file_list$function_financial[i]=='pudr' & file_list$loc_name[i]=="gtm" & file_list$sheet_financial[i]%in%c('PR EFR_7A', 'LFA EFR_7B English Version')){
       args[length(args)+1] = file_list$qtr_number_financial[i]
       tmpData = do.call(prep_gtm_pudr2, args)
       
