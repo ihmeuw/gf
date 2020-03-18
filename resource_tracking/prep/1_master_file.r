@@ -28,16 +28,16 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 # Boolean logic switches 
 # ---------------------------------------
 #What datasets do you want to run? 
-prep_files = FALSE
+prep_files = TRUE
 prep_gos = FALSE
 prep_odah = FALSE
-prep_ghe = TRUE
+prep_ghe = FALSE
 prep_cost_categories = FALSE
 prep_commitments = FALSE
 
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
-verbose = TRUE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
+verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
 rerun_filelist = TRUE  #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 only_new_files = FALSE # Set to true if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 

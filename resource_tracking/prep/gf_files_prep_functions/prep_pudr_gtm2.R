@@ -33,7 +33,7 @@ prep_gtm_pudr2 =  function(dir, inFile, sheet_name, start_date, period, qtr_numb
   # Files and directories
   
   #Sanity check: Is this sheet name one you've checked before? 
-  verified_sheet_names <- c('PR EFR_7A')
+  verified_sheet_names <- c('PR EFR_7A', 'LFA Expenditure_7B')
   if (!sheet_name%in%verified_sheet_names){
     print(sheet_name)
     stop("This sheet name has not been run with this function before - Are you sure you want this function? Add sheet name to verified list within function to proceed.")
@@ -47,12 +47,21 @@ prep_gtm_pudr2 =  function(dir, inFile, sheet_name, start_date, period, qtr_numb
   # 1. Subset columns.
   #-------------------------------------
   #Find the correct column indices based on a grep condition.
-  module_col <- grep("Macro-category", gf_data)
-  sda_col <- grep("Service Delivery Area", gf_data)
-  budget_col <- grep("Budget", gf_data)
-  expenditure_col <- grep("Expenditures", gf_data)
+  if (inFile == "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx"){
+     module_col <- grep("Modules", gf_data)
+  }  else module_col <- grep("Macro-category", gf_data)
   
-  #Remove extraneous budget cols. 
+  if (inFile == "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx") {
+    sda_col <- grep("Interventions", gf_data)
+  } else sda_col <- grep("Service Delivery Area", gf_data)
+  
+  budget_col <- grep("Budget", gf_data)
+  
+  if (inFile == "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx") {
+    expenditure_col <- 6 # this is the column with actual expenditures--even though it is all zeros
+  } else expenditure_col <- grep("Expenditures", gf_data)
+  
+  #Remove extraneous budget cols.
   budget_col = budget_col[budget_col>module_col & budget_col<expenditure_col]
   stopifnot(length(module_col)==1 & length(sda_col==1) & length(budget_col)==1 & length(expenditure_col)==1)
 
@@ -67,8 +76,13 @@ prep_gtm_pudr2 =  function(dir, inFile, sheet_name, start_date, period, qtr_numb
   # 2. Subset rows
   #-------------------------------------
   #Select only the section of the excel that's broken up by intervention
-  start_row <- grep("macro-category", tolower(gf_data$module))
-  end_row <- grep("pr/sr", tolower(gf_data$module))
+  if (inFile == "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx") {
+    start_row <- grep("modular approach", tolower(gf_data$module))
+  } else start_row <- grep("macro-category", tolower(gf_data$module))
+  
+  if (inFile == "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx") {
+    end_row <- grep("breakdown by implementing", tolower(gf_data$module))
+  } else end_row <- grep("pr/sr", tolower(gf_data$module))
 
   #Validate that these are correct
   stopifnot(length(start_row)==1 & length(end_row)==1)
@@ -77,6 +91,25 @@ prep_gtm_pudr2 =  function(dir, inFile, sheet_name, start_date, period, qtr_numb
   #Remove invalid rows (NA in module and intervention, or is a header or total row)
   gf_data = gf_data[!(is.na(module)&is.na(intervention))]
   gf_data = gf_data[budget!=" \nBudget"]
+  
+  #Remove 'total' and 'grand total' rows
+  total_rows <- grep("total", tolower(gf_data$module))
+  if (length(total_rows) > 0){
+    if (verbose == TRUE){
+      print(paste0("Total rows being dropped in GTM PU/DR prep function. First column: ", gf_data[total_rows, 1]))
+    }
+    gf_data <- gf_data[-total_rows, ,drop = FALSE]
+  }
+  
+  #Some datasets have an extra title row with "[Module]" in the module column.
+  #It's easier to find this by grepping the budget column, though.
+  extra_module_row <- grep("module", tolower(gf_data$module))
+  if (length(extra_module_row) > 0){
+    if (verbose == TRUE){
+      print(paste0("Extra rows being dropped in GTM PU/DR prep function. First column: ", gf_data[extra_module_row, 1]))
+    }
+    gf_data <- gf_data[-extra_module_row, ,drop = FALSE]
+  }
   
   #Make budget and expenditure numeric. 
   gf_data[, budget:=as.numeric(budget)]
@@ -99,7 +132,7 @@ prep_gtm_pudr2 =  function(dir, inFile, sheet_name, start_date, period, qtr_numb
   #Expand data by the number of days, and generate a variable to iterate over
   gf_data <- expandRows(gf_data, "qtr_split")
   byVars = names(gf_data)
-  gf_data[, seq:=sequence(.N), by=byVars]
+  gf_data[, seq:=1:.N, by=byVars]
   gf_data[, seq:=seq-1] #Decrement by 1 because sequence indexes at 1. 
   
   #While seq is not 0, go through the loop below.
@@ -144,8 +177,9 @@ prep_gtm_pudr2 =  function(dir, inFile, sheet_name, start_date, period, qtr_numb
   check_budgets = budget_dataset[ ,
                   lapply(.SD, sum, na.rm = TRUE),
                   .SDcols = c("budget", "expenditure")]
-
-  stopifnot(check_budgets[, 1]>0 & check_budgets[, 2]>0)
+if (inFile == "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx"){
+  stopifnot(check_budgets[,1]>0) # here the expenditure was all 0; might be able to update using object titled: verified_0_expenditure
+  } else stopifnot(check_budgets[, 1]>0 & check_budgets[, 2]>0)
 
   # -------------------------------
 
