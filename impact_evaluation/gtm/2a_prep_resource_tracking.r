@@ -28,11 +28,8 @@
   
   #Create date variable (collapsed to semester level)
   expenditures[, year:=year(start_date)]
-  expenditures[, quarter:=quarter(start_date)]
-  expenditures$semester = NULL
-  expenditures[quarter%in%c(1, 2), semester:=0.0]
-  expenditures[quarter%in%c(3, 4), semester:=0.5]
-  expenditures[, date:=year+semester]
+  expenditures[, quarter:=((quarter(start_date)/4)-0.25)]
+  expenditures[, date:=year+quarter]
   
   #Collapse, and fix names
   expenditures = expenditures[loc_name=='gtm', .(expenditure=sum(expenditure), na.rm=T), by=c("date", "gf_module", "gf_intervention", "code", "disease", "grant_disease")] #Will subset by disease in code section below. 
@@ -45,15 +42,15 @@
   fgh = fgh[, -c(3)] #There's an extra disease column??? 
   
   #Expand to semester-level, and divide all inputs by 2. 
-  semesters = data.table(date=seq(1990.0, 2018.5, by=0.5))
+  semesters = data.table(date=seq(1990.0, 2019.0, by=0.25))
   semesters[, year:=floor(date)]
   
   rows_before = nrow(fgh)
   sum_before = sum(fgh$disbursement, na.rm=T)
   fgh = merge(fgh, semesters, by='year', allow.cartesian=T)
-  fgh[, disbursement:=disbursement/2]
+  fgh[, disbursement:=disbursement/4]
   #Check that this expansion worked 
-  stopifnot(nrow(fgh)==rows_before*2)
+  stopifnot(nrow(fgh)==rows_before*4)
   stopifnot(sum(fgh$disbursement, na.rm=T)==sum_before)
   
   #Pull out other DAH, and collapse to the semester-level. 
@@ -69,10 +66,8 @@
   
   #Collapse into semesters - SICOIN data is monthly.  
   sicoin[, year:=year(start_date)]
-  sicoin[, quarter:=quarter(start_date)]
-  sicoin[quarter%in%c(1, 2), semester:=0.0]
-  sicoin[quarter%in%c(3, 4), semester:=0.5]
-  sicoin[, date:=year+semester]
+  sicoin[, quarter:=((quarter(start_date)/4)-0.25)]
+  sicoin[, date:=year+quarter]
   
   sicoin = sicoin[, .(expenditure=sum(expenditure, na.rm=T)), by=c('date', 'gf_module', 
                                                                    'gf_intervention', 'activity', 'code', 'disease')]
@@ -90,11 +85,15 @@
   expenditures[short_code=="T1", gf_tb:=sum(expenditure, na.rm=T), by=c('short_code', 'date')]
   expenditures[short_code=="T2", gf_tbhiv:=sum(expenditure, na.rm=T), by=c('short_code', 'date')]
   expenditures[short_code=="T3", gf_mdrtb:=sum(expenditure, na.rm=T), by=c('short_code', 'date')]
-  
+
   exp_wide = expenditures[, .(date, gf_tb, gf_tbhiv, gf_mdrtb)]
-  exp_wide = expenditures[, .(gf_tb=sum(gf_tb, na.rm=T), gf_tbhiv=sum(gf_tbhiv, na.rm=T), gf_mdrtb=sum(gf_mdrtb, na.rm=T)), by='date']
+  exp_wide = expenditures[, .(gf_tb=sum(gf_tb, na.rm=T), gf_tbhiv=sum(gf_tbhiv, na.rm=T),
+                              gf_mdrtb=sum(gf_mdrtb, na.rm=T)), by='date']
   
+  #---------------------------------------------------------------
   #Decision 8/20/19 Jen Ross - add in RSSH spent each year as a proportion of GF spending on sub-disease (tb, tb/hiv, and mdr-tb) to each of these variables. 
+  #Decision 10/2/2019 David Phillips and Jen Ross - want to code RSSH in a more sophisticated way, as an interaction term. 
+  # Need to comment this section out. 
   gf_proportions = exp_wide[, .(gf_tb=gf_tb/(gf_tb+gf_tbhiv+gf_mdrtb), gf_tbhiv=gf_tbhiv/(gf_tb+gf_tbhiv+gf_mdrtb), gf_mdrtb=gf_mdrtb/(gf_tb+gf_tbhiv+gf_mdrtb)), by='date']
   gf_proportions[, total:=(gf_tb+gf_tbhiv+gf_mdrtb)]
   #For cases where total isn't one, all spending is NA.
@@ -116,6 +115,7 @@
   exp_wide[, gf_tb:=gf_tb+gf_tb_rssh]
   exp_wide[, gf_mdrtb:=gf_mdrtb+gf_mdrtb_rssh]
   exp_wide[, gf_tbhiv:=gf_tbhiv+gf_tbhiv_rssh]
+  #--------------------------------------------------------
   exp_wide = exp_wide[, .(date, gf_tb, gf_tbhiv, gf_mdrtb)]
   
   # GHE - just want one variable for all TB spending. 
@@ -142,18 +142,13 @@ rt_wide <- merge(rt_wide, ghe_wide, by=c('date'), all=T)
 rt_wide = rt_wide[date>=START_YEAR]
 
 # # compute lags - all financial variables should be lagged 6 months. DP 7.12.19
-rt_wide[, date:=date+0.5]
-<<<<<<< Updated upstream
-=======
-
 #EL 10/2/2019 - all RSSH variables should be lagged a total of one year, so lag this variable another 6 months. 
-rssh = rt_wide[, .(date, gf_rssh)]
-rssh[, date:=date+0.5]
-rt_wide = rt_wide[, -c('gf_rssh')] #Drop this variable, and re-merge it in after it's lagged. 
+#EL 10/28/2019 - in model presented at September TERG, we didn't have RSSH lags. 
+# rssh = rt_wide[, .(date, gf_rssh)]
+# rssh[, date:=date+0.5]
+# rt_wide = rt_wide[, -c('gf_rssh')] #Drop this variable, and re-merge it in after it's lagged. 
 
-rt_wide = merge(rt_wide, rssh, by='date', all=T)
->>>>>>> Stashed changes
-
+# rt_wide = merge(rt_wide, rssh, by='date', all=T)
 #Replace NAs with 0's at this point unless we hear differently from Guillermo. 
 # cols = names(rt_wide)[!names(rt_wide)=='date']
 # for (c in cols) {
@@ -182,4 +177,5 @@ rt_wide = merge(rt_wide, rssh, by='date', all=T)
 
 #Save output file
 saveRDS(rt_wide, outputFile2a)
+saveRDS(rt_wide, paste0("J:/Project/Evaluation/GF/impact_evaluation/gtm/prepped_data/archive/", Sys.Date(), "prepped_resource_tracking.rds"))
 print("Step 2a: Prep resource tracking completed successfully.")
