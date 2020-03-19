@@ -10,24 +10,44 @@ library(data.table)
 library(ggplot2)
 library(knitr)
 library(kableExtra) 
+library(zoo)
 
 current_year = year(Sys.Date())
 current_quarter = quarter(Sys.Date())
 current_date = current_year + ((current_quarter/4)-0.25)
 
-#Read in current budget and expenditure files (For absorption we are not trying to make a complete time series, so this check is less relevant, 
-#   but absorption will have all of the same files as expenditure)
-budgets = readRDS(paste0(box, "tableau_data/final_budgets.rds"))
-#budgets = budgets[data_source=="budget"] # For check below to see whether we have all detailed budgets; should be commented out! EL 2/14/2020
+#Read in current budget files and format 
+budgets = fread(paste0(box, "tableau_data/approved_budgets.csv"))
+budgets = unique(budgets[, .(grant, start_date)])
+budgets[, start_date:=as.Date(start_date, format="%Y-%m-%d")]
+budgets[, quarter:=quarter(start_date)]
+budgets[, year:=year(start_date)]
 budgets[, date:=year+((quarter/4)-0.25)]
-budgets = unique(budgets[, .(grant, loc_name, date, file_name)])
-pudrs = readRDS(paste0(box, "tableau_data/final_expenditures.rds"))
-pudrs[, quarter:=quarter(start_date)]
-pudrs[, year:=year(start_date)]
-pudrs[, date:=year+((quarter/4)-0.25)]
-pudrs[, concat:=paste0(grant, "_", grant_period)]
-pudrs = unique(pudrs[, .(grant, loc_name, date, grant_period, concat)])
 
+# Read in current PUDR files and format
+pudrs = fread(paste0(box, "tableau_data/most_recent_absorption.csv"))
+pudrs[, start_date:=as.Date(start_date, format="%Y-%m-%d")]
+pudrs[, end_date:=as.Date(end_date, format="%Y-%m-%d")]
+pudrs[, start_quarter:=quarter(start_date)]
+pudrs[, start_year:=year(start_date)]
+pudrs[, start_decimal:=start_year+((start_quarter/4)-0.25)]
+pudrs[, end_quarter:=quarter(end_date)]
+pudrs[, end_year:=year(end_date)]
+pudrs[, end_decimal:=end_year+((end_quarter/4)-0.25)]
+pudrs = unique(pudrs[, .(grant, grant_period, start_decimal, end_decimal)])
+
+# Read in cumulative absorption and format
+cumul_pudrs = fread(paste0(box, "tableau_data/cumulative_absorption.csv"))
+cumul_pudrs[, start_date:=as.Date(start_date, format="%Y-%m-%d")]
+cumul_pudrs[, end_date:=as.Date(end_date, format="%Y-%m-%d")]
+cumul_pudrs[, start_quarter:=quarter(start_date)]
+cumul_pudrs[, start_year:=year(start_date)]
+cumul_pudrs[, start_decimal:=start_year+((start_quarter/4)-0.25)]
+cumul_pudrs[, end_quarter:=quarter(end_date)]
+cumul_pudrs[, end_year:=year(end_date)]
+cumul_pudrs[, end_decimal:=end_year+((end_quarter/4)-0.25)]
+cumul_pudrs = unique(cumul_pudrs[, .(grant, grant_period, start_decimal, end_decimal)])
+setnames(cumul_pudrs, c('start_decimal', 'end_decimal'), c('cumul_start_decimal', 'cumul_end_decimal'))
 
 #Read in Global Fund metadata, and format it to match pudr/budget data above. 
 ip_periods = fread(paste0(dir, "_gf_files_gos/metadata/grant_agreement_implementation_periods_dataset_201963.csv"))
@@ -42,15 +62,10 @@ for (var in date_vars){
   ip_periods[, (var):=as.Date(get(var), format="%m/%d/%Y")]
 }
 
-ip_periods[loc_name=="Congo (Democratic Republic)", loc_name:='cod']
-ip_periods[loc_name=="Guatemala", loc_name:='gtm']
-ip_periods[loc_name=="Senegal", loc_name:='sen']
-ip_periods[loc_name=="Uganda", loc_name:='uga']
-
 current_grants = ip_periods[is_active==TRUE]
 
 # Need a dataset of expected grants and grant periods. 
-expected_periods = ip_periods[, .(loc_name, grant, start_date, end_date)]
+expected_periods = ip_periods[, .(grant, start_date, end_date)]
 
 #Add variables. 
 expected_periods[, start_year:=year(start_date)]
@@ -64,7 +79,7 @@ all_expected = data.table()
 for (i in 1:nrow(expected_periods)){
   seq = seq(expected_periods[i, start_decimal], expected_periods[i, end_decimal], by=0.25)
   seq_table = data.table(date=seq)
-  append_cols = expected_periods[i, .(grant, loc_name, start_year, end_year, start_quarter, end_quarter)]
+  append_cols = expected_periods[i, .(grant, start_year, end_year, start_quarter, end_quarter)]
     for (col in names(append_cols)){
       seq_table[, (col):=append_cols[, get(col)]]
     }  
@@ -74,14 +89,7 @@ for (i in 1:nrow(expected_periods)){
 #Only worry about files from 2015 onwards; we have GMS data before then. 
 #all_expected = all_expected[date>=2015]
 
-#Append Senegal files that we know we should have, but don't yet. 
-pudrs = merge(pudrs, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
-pudrs[is.na(concat) & date<current_date, missing_pudr_date:=date]
-missing_pudr_qtrs = unique(pudrs[is.na(concat) & date<=current_date, .(loc_name, grant, date)])
-missing_pudr_qtrs[, quarter:=((date%%1)*4)+1]
-missing_pudr_qtrs[, year:=floor(date)]
-
-budgets = merge(budgets, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'))
+budgets = merge(budgets, all_expected, all.y=T, by=c('grant', 'date'))
 
 # Create a full list of all of the detailed budgets we're missing (left in for documentation) EL 2/14/2020 
 # budgets[file_name=="Expenditures from GMS and GOS for PCE IHME countries.xlsx", file_name:=NA] # Don't count GOS for this check. 
@@ -97,17 +105,31 @@ budgets = merge(budgets, all_expected, all.y=T, by=c('loc_name', 'grant', 'date'
 # # stopifnot(nrow(budgets[count==2])==0) # You should only have one value per grant/grant_period, either TRUE or FALSE.
 # write.csv(budgets, "J:/Project/Evaluation/GF/resource_tracking/_gf_files_gos/metadata/available_detailed_budgets_2020_02_14.csv", row.names=F)
 
-budgets[is.na(file_name) & date<current_date, missing_budget_date:=date]
+budgets[is.na(quarter) & date<current_date, missing_budget_date:=date]
 missing_budget_qtrs = unique(budgets[is.na(file_name), .(loc_name, grant, date)])
 missing_budget_qtrs[, quarter:=((date%%1)*4)+1]
 missing_budget_qtrs[, year:=floor(date)]
 
-#Save this output data
-write.csv(pudrs, paste0(box, "tableau_data/missing_pudr_coverage.csv"), row.names=F)
-write.csv(budgets, paste0(box, "tableau_data/missing_budget_coverage.csv"), row.names=F)
+#---------------------------------------------
+# Create a combined PUDR reporting dataset 
+#---------------------------------------------
+pudr_completeness = merge(pudrs, cumul_pudrs, by=c('grant', 'grant_period'), all=T) 
+pudr_completeness = melt(pudr_completeness, id.vars=c('grant', 'grant_period'), value.name='date')
+pudr_completeness[, concat:=paste0(grant, grant_period)]
 
-write.csv(pudrs, paste0(box, "tableau_data/archive/_missing_pudr_coverage_", Sys.Date(), ".csv"), row.names=F)
-write.csv(budgets, paste0(box, "tableau_data/archive/missing_budget_coverage_", Sys.Date(), ".csv"), row.names=F)
+# Create a list of all possible dates (start in 2016, because there is one grant in Guatemala that starts in 2016), and merge the data together. 
+date_grid = expand.grid(date=seq(2016.0, 2020.0, by=0.25), concat=unique(pudr_completeness$concat))
+pudr_completeness = merge(pudr_completeness, date_grid, by=c('concat', 'date'), all.y=T)
+pudr_completeness = pudr_completeness[order(concat, date)]
+
+#-------------------------------------
+#Save this output data
+#-------------------------------------
+write.csv(pudr_completeness, paste0(box, "tableau_data/missing_pudr_coverage.csv"), row.names=F)
+#write.csv(budgets, paste0(box, "tableau_data/missing_budget_coverage.csv"), row.names=F)
+
+write.csv(pudr_completeness, paste0(box, "tableau_data/archive/_missing_pudr_coverage_", Sys.Date(), ".csv"), row.names=F)
+#write.csv(budgets, paste0(box, "tableau_data/archive/missing_budget_coverage_", Sys.Date(), ".csv"), row.names=F)
 
 pudr_coverage = function(country, country_name){
   pudr_coverage = ggplot(pudrs[loc_name==country]) + 
