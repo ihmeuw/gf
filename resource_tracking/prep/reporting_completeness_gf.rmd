@@ -122,6 +122,12 @@ date_grid = expand.grid(date=seq(2016.0, 2020.0, by=0.25), concat=unique(pudr_co
 pudr_completeness = merge(pudr_completeness, date_grid, by=c('concat', 'date'), all.y=T)
 pudr_completeness = pudr_completeness[order(concat, date)]
 
+# Format nicely for Tableau viz
+pudr_completeness = pudr_completeness[!is.na(grant)]
+pudr_completeness$concat <- NULL 
+pudr_completeness$variable <- factor(pudr_completeness$variable, levels=c('start_decimal', 'end_decimal', 'cumul_start_decimal', 'cumul_end_decimal'), 
+                                     labels=c('Absorption start date', 'Absorption end date', 'Cumulative absorption start', 'Cumulative absorption end date'))
+
 #-------------------------------------
 #Save this output data
 #-------------------------------------
