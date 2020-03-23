@@ -9,10 +9,10 @@
 # Read in the version of the data you want to map (logic variables set in master file)
 #----------------------------------------------------------------------------
 if (prep_gos == TRUE){
-  raw_data = totalGos_qtr
+  raw_data = copy(totalGos_qtr)
   raw_data[, lfa_exp_adjustment:=0] #There is no LFA expenditure adjustment in GOS data; but add it to make code run. 
 } else if (prep_files == TRUE){
-  raw_data = resource_database
+  raw_data = copy(resource_database)
 }
 
 #-------------------------------------------------------
@@ -46,7 +46,7 @@ rt_concat <- paste0(raw_data$module, raw_data$intervention)
 unmapped_mods <- raw_data[!rt_concat%in%gf_concat]
 
 if(nrow(unmapped_mods)>0){
-  print(unique(unmapped_mods[, c("module", "intervention"), with= FALSE]))
+  print(unique(unmapped_mods[, c("module", "intervention", "disease"), with= FALSE]))
   print(unique(unmapped_mods$fileName)) #For documentation in the comments above. 
   stop("You have unmapped original modules/interventions!")
 }
