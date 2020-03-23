@@ -30,7 +30,7 @@ names(outputs_activities) <- gsub("_value", "", names(outputs_activities))
 # rectangularize before merge
 departments = unique(outputs_activities$department)
 departments = departments[!is.na(departments)]
-frame = expand.grid(date = seq(START_YEAR, 2018, by=1), department = departments)
+frame = expand.grid(date = seq(START_YEAR-1, 2018, by=1), department = departments) #Because RSSH is lagged one year. 
 
 #Inputs 
 resource_tracking_rect = merge(frame, resource_tracking, by='date') #Do I need to divide resource tracking dollars here? 
@@ -127,7 +127,7 @@ for(i in 1:nrow(redistribution_mat)) {
 	merge_file[, (v):=get(v)*prop]
 	
 	# test that it worked using original data
-	orig = sum(resource_tracking[[v]], na.rm=TRUE)
+	orig = sum(resource_tracking[date<=2018][[v]], na.rm=TRUE) #Need to limit this to 2018, because RSSH is now going through 2019! 
 	new = sum(merge_file[[v]], na.rm=TRUE)
 	if (abs(orig-new)>.1) stop(paste0("Orig:", orig, " New:", new, 
 	                                  " are not close for variable ", v, " (index ", i, ")")) 
@@ -140,7 +140,7 @@ for(i in 1:nrow(redistribution_mat)) {
 
 #Restrict years to begin at the global START_YEAR variable, specified in set_up_r
 # This should have already happened back in data prep, but OK to leave here (EL 8/12/19) 
-merge_file = merge_file[date>=START_YEAR] 
+merge_file = merge_file[date>=START_YEAR-1] #Resource tracking RSSH is lagged one year. EL 10/2/2019
 
 # drop unnecessary variables
 merge_file = merge_file[, -c('mean','tmp','prop')] #Also removing 'min' EL 8/7/19

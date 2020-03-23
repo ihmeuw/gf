@@ -17,7 +17,7 @@ source('./impact_evaluation/gtm/set_up_r.r')
 # task_id = 16
 # modelStage = 1
 # testRun = TRUE
-# modelVersion = "gtm_tb_first_half7"
+# modelVersion = "gtm_tb_first_half11_rssh_interaction"
 
 # ----------------------------------------------
 # Store task ID and other args from command line
@@ -65,11 +65,11 @@ subData = data[department==d]
 source(paste0('./impact_evaluation/gtm/models/', modelVersion, '.r'))
 
 # reduce the data down to only necessary variables
-parsedModel = lavParseModelString(model)
-modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-#modelVars = c('department','date',modelVars)
-modelVars = c('department', modelVars)
-subData = subData[, unique(modelVars), with=FALSE]
+# parsedModel = lavParseModelString(model)
+# modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+# #modelVars = c('department','date',modelVars)
+# modelVars = c('department', modelVars)
+# subData = subData[, unique(modelVars), with=FALSE]
 
 #Check unique values in data - do any columns have <5 unique values? 
 # check_explan_power = data.table(var=names(subData))

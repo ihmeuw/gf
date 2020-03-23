@@ -50,8 +50,8 @@ START_YEAR = 2009 #If available, what's the earliest year you should model data 
 #Global variable transformations 
 
 #These variables had to be imputed in step 2b, because they're used to create first-line and second-line drugs. EL 9/6/2019 
-drugComboVars = c("Total_First_Line_Drugs_inusIsonizide__Distributed_value_act", "Isoniazid_Distributed_value_act", 
-                  "Second_Line_Drugs_Distributed_value_act", "Total_MDR_Drugs_Distributed_value_act")
+drugComboVars = c("Total_First_Line_Drugs_inusIsonizide__Distributed_act", "Isoniazid_Distributed_act", 
+                  "Second_Line_Drugs_Distributed_act", "Total_MDR_Drugs_Distributed_act")
 
 #These variables will be imputed using GLM in step 4a. 
 backCastVars = c("Number_of_Cases_Screened_for_MDR_act", "PLHIV_Screened_for_TB_act", 
@@ -63,6 +63,9 @@ backCastVars = c("Number_of_Cases_Screened_for_MDR_act", "PLHIV_Screened_for_TB_
 logVars = c("Case_Notification_Rate_imp", "Proportion_of_HIV_TB_Cases_Treated_out", "Proportion_of_MDR_Cases_Treated_out", "Proportion_of_Cases_in_Prisons_Treated_out", 
             "Proportion_of_Patients_Receiving_DST_out")
 
+# A lead of six months will be applied to these variables in step 2c. 
+txSuccessVars = c("MDR_Probably_Cured_rate_imp", "Treatment_Success_Rate_imp", "HIV_TB_Treatment_Success_Rate_imp")
+
 # ---------------------------------------------------------------------------------
 # Directories
 
@@ -71,6 +74,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 
 # directories
 dir = paste0(j, '/Project/Evaluation/GF/')
+box = "C:/Users/elineb/Box Sync/Global Fund Files/tableau_data/" #Adding new file path to pull latest files from Box account EL 10/2/2019
 ieDir = paste0(dir, 'impact_evaluation/gtm/')
 rawIeDir = paste0(ieDir, 'raw_data/')
 preppedIeDir =  paste0(ieDir, 'prepped_data/')
@@ -105,20 +109,20 @@ source('./impact_evaluation/_common/run_lavaan_as_glm.r')
 # Inputs files
 
 # resource tracking files with prepped budgets, expenditures, disbursements
-budgetFile = paste0(rtDir, 'final_budgets.rds')
-expendituresFile = paste0(rtDir, 'final_expenditures.rds')
+budgetFile = paste0(box, 'final_budgets_gtm.rds')
+expendituresFile = paste0(box, 'final_expenditures_gtm.rds')
 fghFile = paste0(fghDir, 'other_dah_actuals_all_gtm.rds')
 gheMalFile = paste0(fghDir, 'ghe_actuals_malaria.rds')
 whoFile = paste0(whoDir, 'who_prepped.rds')
 sicoinFile = paste0(sicoinDir, 'prepped_sicoin_data.rds')
 
 # activities/outputs files
-actFile = paste0(rawIeDir, "activities_8.21.19.csv")
-outputsFile = paste0(rawIeDir, "outputs_8.9.19.csv")
+actFile = paste0(rawIeDir, "activities_10.23.19.csv")
+outputsFile = paste0(rawIeDir, "outputs_10.23.19.csv")
 
 # outcomes/impact files
-outcomeFile = paste0(rawIeDir, "outcomes_7.15.19.csv")
-impactFile = paste0(rawIeDir, "impact_7.15.19.csv")
+outcomeFile = paste0(rawIeDir, "outcomes_10.23.19.csv")
+impactFile = paste0(rawIeDir, "impact_10.23.19.csv")
 
 # shapefiles
 
@@ -126,6 +130,8 @@ impactFile = paste0(rawIeDir, "impact_7.15.19.csv")
 # listing names of variables in each model, their labels and coordinates for the SEM graph
 nodeTableFile1 = './impact_evaluation/gtm/visualizations/nodetable_first_half.csv'
 nodeTableFile2 = './impact_evaluation/gtm/visualizations/nodetable_second_half.csv'
+nodeTableFile3 = './impact_evaluation/gtm/visualizations/nodetable_no_rssh.csv'
+nodeTableFile4 = './impact_evaluation/gtm/visualizations/nodetable_rssh_interaction.csv'
 # ---------------------------------------------------------------------------------
 
 
@@ -142,7 +148,11 @@ if (file.exists(clustertmpDireo)!=TRUE) dir.create(clustertmpDireo)
 }
 
 #Add a temporary IE dir for when running on a local computer - this should match clustertmpDir2 when running on cluster!
-tempIeDir = paste0('C:/Users/elineb/Desktop/tmp_cluster/')
+if (Sys.info()[1]=='Windows') {
+	if (username=='elineb') tempIeDir = paste0('C:/Users/elineb/Desktop/tmp_cluster/')
+	if (username=='davidp6') tempIeDir = paste0('J:/temp/davidp6/ie_tmpdir')
+}
+if (Sys.info()[1]!='Windows') tempIeDir = clustertmpDir2
 # ---------------------------------------------------------------------------------
 
 

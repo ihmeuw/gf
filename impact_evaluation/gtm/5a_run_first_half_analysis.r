@@ -40,11 +40,11 @@ T = length(hzs)
 source(paste0('./impact_evaluation/gtm/models/', modelVersion1, '.r'))
 
 # reduce the data down to only necessary variables
-parsedModel = lavParseModelString(model)
-modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
-modelVars = c('department','date',modelVars)
-data = data[, unique(modelVars), with=FALSE] 
-# ----------------------------------------------
+# parsedModel = lavParseModelString(model)
+# modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
+# modelVars = c('department','date',modelVars)
+# data = data[, unique(modelVars), with=FALSE] 
+# # ----------------------------------------------
 
 
 # --------------------------------------------------------------

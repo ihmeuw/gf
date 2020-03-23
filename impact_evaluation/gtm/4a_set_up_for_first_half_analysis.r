@@ -126,7 +126,7 @@ for (v in allVars){
 }
 
 #------------------------------------------------------------
-# Drop variables that are not being used in model object before cumulative sum. 
+# Drop variables that are not being used in model object before cumulative sum. "
 missingVars = modelVars[!modelVars%in%names(data)]
 if (length(missingVars)!=0) print("There are missing model variables!")
 data = data[, c(modelVars, 'department', 'date'), with=F]
@@ -179,6 +179,8 @@ for(v in logVars) { #logVars created in 'set_up_r' script.
 #Only keep variables that will be used in the model. 
 modelVars = unique(c(parsedModel$lhs, parsedModel$rhs))
 modelVars = c(modelVars, 'department', 'date')
+missingVars = modelVars[!modelVars%in%names(data)]
+if (length(missingVars)!=0) print("There are missing model variables!")
 data = data[, modelVars, with=F]
 
 # ---------------------------------------------------------------------------------------

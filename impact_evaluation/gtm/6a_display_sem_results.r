@@ -18,15 +18,7 @@ source('./impact_evaluation/_common/graphLavaan.r')
 load(outputFile5a)
 data1=copy(data)
 model1=copy(model)
-# means1 = copy(means)
-# summaries1 = copy(summaries)
 urFits1 = copy(urFits)
-# load(outputFile5b)
-# data2=copy(data)
-# model2=copy(model)
-# means2 = copy(means)
-# summaries2 = copy(summaries)
-#urFits2 = copy(urFits)
 
 # load nodeTable for graphing
 nodeTable1 = fread(nodeTableFile1)
@@ -45,11 +37,6 @@ urFits1[, se_ratio:=se/est]
 urFit1 = urFits1[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
 urFit1[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
 urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
-# urFits2[, se_ratio.std:=se.std/est.std]
-# urFits2[, se_ratio:=se/est]
-# urFit2 = urFits2[, lapply(.SD, mean, na.rm=TRUE), .SDcols=paramVars, by=c('lhs','op','rhs')]
-# urFit2[se.std>abs(se_ratio.std*est.std), se.std:=abs(se_ratio.std*est.std)]
-# urFit2[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 # -----------------------------------------------
 
 #Some visualization code for model run 8/15/19 
@@ -84,13 +71,14 @@ urFit1[se>abs(se_ratio*est), se:=abs(se_ratio*est)]
 
 # my sem graph function for first half "unrelated regressions" model
 p5 = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
-	scaling_factors=NA, standardized=TRUE, 
-	lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, colScaleMax=1.5, labSize1 = 4, labSize2 = 4)
+              scaling_factors=NA, standardized=TRUE, 
+              lineWidth=1.5, curved=0, tapered=FALSE, colScaleMin=-0.5, 
+              colScaleMax=1.5, labSize1 = 3, labSize2 = 3, boxHeight=1.5)
 
 p5_nolab = semGraph(parTable=urFit1, nodeTable=nodeTable1, 
-              scaling_factors=NA, standardized=TRUE, 
-              lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5, 
-              labSize1 = 4, labSize2 = 4)
+                    scaling_factors=NA, standardized=TRUE, 
+                    lineWidth=1.5, curved=0, tapered=FALSE, edgeLabels=FALSE, colScaleMin=-0.5, colScaleMax=1.5, 
+                    labSize1 = 3, labSize2 = 3, boxHeight=1.5)
 
 # my sem graph function for second half "unrelated regressions" model
 # p6 = semGraph(parTable=urFit2, nodeTable=nodeTable2,
@@ -153,17 +141,9 @@ dev.off()
 archive(outputFile6a)
 # -----------------------------------
 # 
-# #Save just the GLM diagrams with correlation coefficients as PNGs. 
-ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p5, height=10, width=13)
-# ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_second_half.png", p6, height=10, width=13)
 
-sep_terg_save = "J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/september_terg_presentation/"
-#Save the specific graphics for reports in their own folder. 
-ggsave(paste0(sep_terg_save, "model_first_half_coefficients.png"), p5, height=10, width=13)
-ggsave(paste0(sep_terg_save, "model_first_half_coefficients_nolab.png"), p5_nolab, height=10, width=13)
-# ggsave(paste0(sep_terg_save, "model_second_half_coefficients.png"), p6, height=10, width=13)
-# ggsave(paste0(sep_terg_save, "model_second_half_coefficients_nolab.png"), p6_nolab, height=10, width=13)
-ggsave(paste0(sep_terg_save, "mdr_pathway.png"), p7, height=10, width=13)
-ggsave(paste0(sep_terg_save, "cases_notified_pathway.png"), p8, height=10, width=13)
-ggsave(paste0(sep_terg_save, "ghe_pathway.png"), p9, height=10, width=13)
-ggsave(paste0(sep_terg_save, "outputs_outcomes_pathway.png"), p10, height=10, width=13)
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png", p5, height=8, width=11)
+archive("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half.png")
+
+ggsave("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half_nolab.png", p5_nolab, height=8, width=11)
+archive("J:/Project/Evaluation/GF/impact_evaluation/gtm/visualizations/model_first_half_nolab.png")
