@@ -177,7 +177,7 @@ get_cumulative_absorption= function(byVars, countrySubset=NULL, grantSubset=NULL
 # altTitle, altSubtitle, altCaption - pass strings as alternate options to the "labs" argument in ggplot
 
 budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
-                                     yScaleMax=NULL, baseSize=16, barLabels = TRUE, 
+                                     yScaleMax=NULL, baseSize=16, labelSize=6, barLabels = TRUE, 
                                      trimAbsorption=FALSE, angleText=FALSE,
                                      altTitle=NULL, altSubtitle=NULL, altCaption=NULL, xLabel="", orderVar=NULL){
   require(data.table) 
@@ -250,9 +250,9 @@ budget_exp_bar = function(dt, xVar=c('abbrev_mod'), facetVar=NULL,
   # Options 
   #------------------------------------------  
   if (barLabels) {
-    p = p + geom_text(hjust=0)  
+    p = p + geom_text(hjust=0, size=labelSize) 
     if (angleText){
-      p = p + theme(axis.text.x=element_text(angle=30, vjust=0.5))
+      p = p + theme(axis.text.x=element_text(angle=30, vjust=0.5, size=baseSize))
     }
   } 
   if (trimAbsorption){

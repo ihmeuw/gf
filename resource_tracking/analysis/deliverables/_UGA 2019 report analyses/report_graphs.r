@@ -1,5 +1,6 @@
 # Graphs for Uganda report 
 # Emily Linebarger 11/19/2019 
+# updated by Emily Linebarger 3/20/2020 
 
 rm(list=ls())
 library(data.table) 
@@ -8,14 +9,21 @@ library(ggplot2)
 
 source("C:/Users/elineb/Documents/gf/resource_tracking/analysis/graphing_functions.r")
 save_loc = "J:/Project/Evaluation/GF/resource_tracking/visualizations/deliverables/_UGA 2019 annual report/"
-absorption = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/absorption_uga.rds")
+#absorption = readRDS("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/absorption_uga.rds")
+absorption = fread("C:/Users/elineb/Box Sync/Global Fund Files/UGA/prepped_data/cumulative_absorption_uga.csv")
+all_mods = readRDS("J:/Project/Evaluation/GF/resource_tracking/modular_framework_mapping/archive/all_interventions.rds")
+all_mods = unique(all_mods[, .(module_eng, abbrev_mod_eng)])
+setnames(all_mods, c('module_eng', 'abbrev_mod_eng'), c('gf_module', 'abbrev_mod'))
+absorption = merge(absorption, all_mods, all.x=T, by='gf_module')
+stopifnot(nrow(absorption[is.na(abbrev_mod)])==0)
 
 # Malaria
-mofped_cumulative = get_cumulative_absorption(byVars = c('abbrev_mod', 'grant'), grantSubset=c("UGA-M-MoFPED", "UGA-M-TASO"), currency="USD")
+mofped_cumulative = absorption[grant%in%c('UGA-M-MoFPED', 'UGA-M-TASO'), .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), 
+                               by=c('abbrev_mod', 'grant')]
 p1 = budget_exp_bar(mofped_cumulative, xVar='abbrev_mod', facetVar='grant', trimAbsorption=TRUE, angleText=TRUE, 
-                    altTitle="Absorption by module\nUGA-M-MoFPED and UGA-M-TASO", altSubtitle="January 2018-June 2019")
+                    altTitle="Absorption by module\nUGA-M-MoFPED and UGA-M-TASO", altSubtitle="January 2018-June 2019", baseSize=18, labelSize=6)
 
-ggsave(paste0(save_loc, "malaria_absorption.png"), p1, height=8, width=11)
+ggsave(paste0(save_loc, "malaria_absorption.png"), p1, height=8, width=14)
 
 # What was absorption for AGYW interventions in S1 2019, facet-wrapped by grant? 
 p = absorption[gf_module=="Prevention programs for adolescents and youth, in and out of school" & grant_period=="2018-2020" & start_date=="2019-01-01", 
@@ -74,16 +82,17 @@ ggsave(paste0(save_loc, "tb_absorption.png"), p1, height=8, width=11)
 #   labs(title="Cumulative RSSH absorption by intervention, all grants", subtitle="Jan. 2018-June 2019\nInterventions grouped by module", x="Intervention", y="Absorption (%)",   fill="Module", caption="*Max bar height set at 200%")
 # ggsave(paste0(save_loc, "cumulative_rssh.png"), p, height=8, width=11)
 
-cumulative_rssh = get_cumulative_absorption(byVars=c('abbrev_mod'), countrySubset="UGA", diseaseSubset="rssh", currency="USD")
-p = budget_exp_bar(dt=cumulative_rssh, xVar='abbrev_mod', altTitle="Absorption for RSSH modules", altSubtitle="January 2018-June 2019")
+#cumulative_rssh = get_cumulative_absorption(byVars=c('abbrev_mod'), countrySubset="UGA", diseaseSubset="rssh", currency="USD")
+cumulative_rssh = absorption[disease=="rssh", .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('abbrev_mod')]
+p = budget_exp_bar(dt=cumulative_rssh, xVar='abbrev_mod', altTitle="Absorption for RSSH modules", altSubtitle="January 2018-June 2019", baseSize=20)
 ggsave(paste0(save_loc, "cumulative_rssh.png"), p, height=8, width=11)
 #------------------------------
 # GENERAL 
 # ------------------------------
 
 # Show cumulative absorption by grant 
-all_absorption = get_cumulative_absorption(byVars=c('grant'), countrySubset="UGA")
-p = budget_exp_bar(dt = all_absorption, xVar='grant', altTitle="Absorption for 2018-2020 grants", altSubtitle="January 2018-June 2019")
+all_absorption =  absorption[, .(budget=sum(cumulative_budget, na.rm=T), expenditure=sum(cumulative_expenditure, na.rm=T)), by=c('grant')]
+p = budget_exp_bar(dt = all_absorption, xVar='grant', altTitle="Absorption for 2018-2020 grants", altSubtitle="January 2018-June 2019", baseSize=20)
 ggsave(paste0(save_loc, "absorption_overview.png"), p, height=8, width=11)
 # Are there any broad patterns in absorption by grant, PR type, or commoditization level? 
 
