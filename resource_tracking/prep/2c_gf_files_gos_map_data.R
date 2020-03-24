@@ -303,10 +303,10 @@ if (prep_files){
 # Save these files in a country-specific directory
 if (prep_files){
   
-  # First, delete the currently saved files (these are all archived so we don't need these copies) 
-  saved_files = list.files(export_dir, full.names=TRUE, pattern=".csv") # Only find the .csv files - these are the prepped data files. As of 3/18/20, there is one RDS 'raw bound files' from step 2B. EL 
-  stopifnot(length(saved_files)==5) # There should be exactly 5 files you're going to delete. 
-  sapply(saved_files, unlink) # Delete the five files in this folder. 
+  # First, delete the currently saved files (these are all archived so we don't need these copies)
+  saved_files = list.files(export_dir, full.names=TRUE, pattern=".csv") # Only find the .csv files - these are the prepped data files. As of 3/18/20, there is one RDS 'raw bound files' from step 2B. EL
+  stopifnot(length(saved_files)==5) # There should be exactly 5 files you're going to delete.
+  sapply(saved_files, unlink) # Delete the five files in this folder.
   
   # (GEP and CEP files are exactly the same, except GEP files have additional variables saved in the data for more advanced visualization)
   # Save user-facing files (for CEPs and PATH) on Box as .csvs
