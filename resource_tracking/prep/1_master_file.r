@@ -38,11 +38,11 @@ prep_commitments = FALSE
 #Processing options 
 include_stops = TRUE #Set to true if you would like scripts to stop when errors are found (specifically, module mapping) Recommended to always leave as TRUE. 
 verbose = FALSE #Set to true if you would like warning messages printed (helpful for debugging functions). Urgent messages will always be flagged regardless of this switch. 
-rerun_filelist = FALSE  #Set to TRUE if you want to prep all files in the file list again. 
+rerun_filelist = TRUE  #Set to TRUE if you want to prep all files in the file list again. 
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
-only_new_files = TRUE # Set to true if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
+only_new_files = FALSE # Set to true if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
 
-country = "cod" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
+country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
 # ----------------------------------------------
 # STEP 2: PREP GF FILES AND GOS DATA 
 # ----------------------------------------------
