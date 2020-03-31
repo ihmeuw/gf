@@ -37,7 +37,7 @@ cumulative_absorption = fread(paste0(base_dir, "cumulative_absorption.csv"))
 cumulative_absorption = cumulative_absorption[, .(cumulative_budget=round(sum(cumulative_budget, na.rm=T)), 
                                                   cumulative_expenditure=round(sum(cumulative_expenditure, na.rm=T))), 
                                               by=c('grant', 'grant_period', 'start_date', 'end_date')]
-cumulative_absorption[, cumulative_absorption:=round((cumulative_expenditure/cumulative_budget))]
+cumulative_absorption[, cumulative_absorption:=round((cumulative_expenditure/cumulative_budget)*100)]
 cumulative_absorption[, start_date:=as.Date(start_date, fmt="%Y-%m-%d")]
 cumulative_absorption[, end_date:=as.Date(end_date, fmt="%Y-%m-%d")]
 
@@ -48,7 +48,7 @@ gtm_budget_tests = data.table(read_xlsx(paste0(unit_test_dir, "gtm_tests.xlsx"),
 uga_budget_tests = data.table(read_xlsx(paste0(unit_test_dir, "uga_tests.xlsx"), sheet="budget"))
 sen_budget_tests = data.table(read_xlsx(paste0(unit_test_dir, "sen_tests.xlsx"), sheet="budget"))
 
-budget_tests = rbindlist(list(cod_budget_tests, gtm_budget_tests, uga_budget_tests, sen_budget_tests))
+budget_tests = rbindlist(list(cod_budget_tests, gtm_budget_tests, uga_budget_tests, sen_budget_tests), fill=TRUE)
 budget_tests[, start_date:=as.Date(start_date)]
 budget_tests[, correct_bug_sum:=round(correct_bug_sum)]
 
@@ -72,6 +72,7 @@ uga_cumulative_absorption_tests = data.table(read_xlsx(paste0(unit_test_dir, "ug
 sen_cumulative_absorption_tests = data.table(read_xlsx(paste0(unit_test_dir, "sen_tests.xlsx"), sheet="cumulative_absorption"))
 
 cumulative_absorption_tests = rbindlist(list(cod_cumulative_absorption_tests, gtm_cumulative_absorption_tests, uga_cumulative_absorption_tests, sen_cumulative_absorption_tests), fill=T)
+
 cumulative_absorption_tests[, start_date:=as.Date(start_date)]
 cumulative_absorption_tests[, end_date:=as.Date(end_date)]
 cumulative_absorption_tests[, correct_cumulative_budget:=round(correct_cumulative_budget)]
@@ -105,7 +106,7 @@ merged_absorption = merge(most_recent_absorption, absorption_tests, by=c('grant'
 
 #Check to make sure all files are being tested. 
 all_untested_absorption = unique(merged_absorption[is.na(correct_budget), .(grant, grant_period, start_date, end_date)])
-if (length(all_untested_absorption)!=0){
+if (nrow(all_untested_absorption)!=0){
   print("ERROR: There are untested absorption numbers. Review 'all_untested_absorption'.")
 }
 
@@ -122,7 +123,7 @@ merged_cumul_absorption = merge(cumulative_absorption, cumulative_absorption_tes
 
 #Check to make sure all files are being tested. 
 all_untested_cumul_absorption = unique(merged_cumul_absorption[is.na(correct_cumulative_budget), .(grant, grant_period, start_date, end_date)])
-if (length(all_untested_cumul_absorption)!=0){
+if (nrow(all_untested_cumul_absorption)!=0){
   print("ERROR: There are untested absorption numbers. Review 'all_untested_cumul_absorption'.")
 }
 
