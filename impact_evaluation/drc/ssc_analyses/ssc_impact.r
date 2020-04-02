@@ -25,7 +25,7 @@ j = ifelse(Sys.info()[1]=='Windows', 'J:', '/home/j')
 dir = paste0(j, '/Project/Evaluation/GF/')
 
 # input file
-inFile = paste0(dir, '/impact_evaluation/cod/prepped_data/ssc_analyses/DiD_input_data.rdata')
+inFile = paste0(dir, 'impact_evaluation/cod/prepped_data/ssc_analyses/DiD_input_data.rdata')
 if(fullpackageOnly) inFile = gsub('.rdata', '_full_package_HZs_only.rdata', inFile)
 
 # file listing health zones

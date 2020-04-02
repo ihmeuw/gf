@@ -83,10 +83,10 @@ data[, any_stockouts:=prop_stocked_out>0]
 national = data[, .(days_out_of_stock=sum(days_out_of_stock,na.rm=T), 
 		mean_days_out_of_stock=mean(days_out_of_stock,na.rm=T),
 		prop_facilities_with_any_stockouts=mean(any_stockouts,na.rm=T),
-		rdts_performed=sum(rdts_performed,na.rm=T), 
-		suspected_cases=sum(suspected_cases,na.rm=T), 
-		confirmed_cases=sum(confirmed_cases,na.rm=T), 
-		presumed_cases_treated=sum(presumed_cases_treated,na.rm=T), 
+		rdts_performed=sum(rdts_performed,na.rm=T),
+		suspected_cases=sum(suspected_cases,na.rm=T),
+		confirmed_cases=sum(confirmed_cases,na.rm=T),
+		presumed_cases_treated=sum(presumed_cases_treated,na.rm=T),
 		n_facilities=.N), by=date]
 national
 ggplot(national, aes(y=days_out_of_stock, x=date)) + geom_point() + geom_smooth()

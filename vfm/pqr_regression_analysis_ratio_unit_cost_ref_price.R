@@ -76,6 +76,10 @@ dt[ procurement_mech == 'PPM, through Partnership for Supply Chain Management (P
 dt[ procurement_mech == 'Partnership for Supply Chain Management Inc (PFSCM)', procurement_mech := 'PFSCM']
 dt[ grepl('MSF', procurement_mech), procurement_mech := 'MSF']
 
+dt[ procurement_mech == 'PFSCM', procurement_mech := 'PPM, through PFSCM']
+dt[ procurement_mech == 'Central Medical Stores'|procurement_mech == 'Direct from Mfg', procurement_mech := 'National procurement channel']
+dt[ procurement_mech == 'PPM, through PFSCM', procurement_mech := 'PFSCM and/or PPM, through PFSCM']
+
 freq_table = dt[,.N, by = .(procurement_mech, product_category)]
 setorderv(freq_table, c('N'), c(-1))
 # write.csv(freq_table, frequency_table_procurement_mech)
@@ -99,10 +103,13 @@ dt[, full_desc_var := paste0(dose, '_', pack_size, '_', description)]
 # ----------------------------------------------
 dt[, country_name := as.factor(country_name)]
 
-colors1 = brewer.pal(8, 'Set1')
-colors2 = brewer.pal(8, 'Set2')
-colors = c(colors1, colors2)
-colors = colors[!colors %in% c('#FFFF33')]
+#colors1 = brewer.pal(8, 'Set1')
+#colors2 = brewer.pal(8, 'Set2')
+#colors = c(colors1, colors2)
+#colors = colors[!colors %in% c('#FFFF33')]
+
+# colorblindness-friendly colors 
+colors = c('#565656', '#DEAE43', '#F0E442', '#56B4E9', '#009E73', '#0072B2', '#D55E00', '#C378A2')
 names(colors) = levels(dt$country_name)
 
 pdf(ts_unit_cost_ppm_ref_prices, height = 9, width = 12)
