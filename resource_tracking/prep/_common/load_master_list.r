@@ -64,7 +64,7 @@ load_master_list = function(purpose=NULL) {
   stopifnot(unique(dt$lfa_verified)%in%c('NA', 'TRUE', 'FALSE', 'UNKNOWN'))
   
   #Correct date formats
-  dt[, start_date_financial:=as.Date(as.numeric(start_date_financial), origin="1899-12-30")]
+  dt[, start_date_financial:=as.Date(as.numeric(start_date_financial), origin="1899-12-30")] #NA's introduced here are ok because some of the documents don't have a start date finacial
   dt[, start_date_programmatic:=as.Date(as.numeric(start_date_programmatic), origin="1899-12-30")]
   dt[, end_date_programmatic:=as.Date(as.numeric(end_date_programmatic), origin="1899-12-30")]
   dt[, cumul_exp_start_date:=as.Date(as.numeric(cumul_exp_start_date), origin="1899-12-30")]

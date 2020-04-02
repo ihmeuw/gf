@@ -41,7 +41,7 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
                       "CORDAID_PUDR_S1 2019_not verified.xlsx", "Copy of LFA_COD-T-MOH_Progress Report_30Jun2019_CCF_Final_10092019.xlsx", 
                       "HIV_MOH_PUDR_S1 2019_not verified.xlsx", "Malaria_MOH_PUDR_S1 2019_LFA verified.xlsx", "Malaria_SANRU_PUDR S1 2019_LFA verified.xlsx", 
                       "COD-C-CORDAID_Progress Report_S1 2019_31082019_BrK.XLSX", "COD-M-SANRU_PU S1 2019 NMF2_Revue LFA_04Sep19_CTreview_25sept2019.xlsx", 
-                      "LFA_COD-H-MOH_Progress Report_30Jun2019_20190918-BrK.XLSX")
+                      "LFA_COD-H-MOH_Progress Report_30Jun2019_20190918-BrK.XLSX", "28 02 COD-C-CORDAID_Progress Report Disbursement_31Dec2019_v2.xlsx")
   
   # Load/prep data
   gf_data <-data.table(read.xlsx(paste0(dir,inFile), sheet=sheet_name, detectDates=TRUE))
@@ -240,7 +240,7 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   num_names = c("N#")
   denom_names = c("D#")
   proportion_names = c("%")
-  year_names = c("Year", "Année", "Año")
+  year_names = c("Year", "Année", "Año", "Ann�e")
   verification_source_names = c("Source", "source", "Fuente")
   value_names = c('Valeur', 'Value', 'Valor')
   

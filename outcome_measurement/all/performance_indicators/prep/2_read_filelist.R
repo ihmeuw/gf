@@ -6,8 +6,8 @@
 
 master_file_list = load_master_list(purpose="performance indicators")
 
-#Only want to keep final files (EL 9/12/2019 - what about PUDR revisions?)
-master_file_list = master_file_list[file_iteration=="final"]
+#Only want to keep approved_gm files (EL 9/12/2019 - what about PUDR revisions?)
+master_file_list = master_file_list[file_iteration=="approved_gm"]
 
 #Flag files where sheets are NA - if they are duplicated with non-NA files, drop these. 
 na_sheets = master_file_list[is.na(sheet_impact_outcome_1a) | sheet_impact_outcome_1a=="NA" |
@@ -33,11 +33,11 @@ master_file_list[, date_dup:=date_dup-1]#This indexes at one, so you need to dec
 
 if ( nrow(master_file_list[date_dup>0])!=0){
   print(master_file_list[date_dup > 0, .(file_name, file_iteration, grant, grant_period, start_date_financial)][order(grant, grant_period, start_date_financial)])
-  print("There are duplicates in final files - review file list.")
+  print("There are duplicates in approved_gm files - review file list.")
 }
 
 #Only extract indicators for current grant periods! EL 9/20/2019 
-current_periods = c('2018-2020', '2016-2019', '2018-2018')
+current_periods = c('2018-2020', '2016-2019', '2019-2021', '2019-2022')
 master_file_list = master_file_list[grant_period%in%current_periods]
 
 #-------------------------------------------
@@ -47,7 +47,7 @@ if (prep_1a){
   print("Prepping 1A sheets...")
   for (country in countries){
     print(paste0("Processing country: ", country))
-    file_list = master_file_list[loc_name==country & file_iteration=="final" & !is.na(sheet_impact_outcome_1a)] 
+    file_list = master_file_list[loc_name==country & file_iteration=="approved_gm" & !is.na(sheet_impact_outcome_1a)] 
     
     #Just force-change all of the sheet names for now - will want to make sure this is right EKL 6/25/19 
     #country_dir = ? 
@@ -114,7 +114,7 @@ if (prep_1a_disagg){
   print("Prepping 1A disaggregated sheets...")
   for (country in countries){
     print(paste0("Processing country: ", country))
-    file_list = master_file_list[loc_name==country & file_iteration=="final" & !is.na(sheet_impact_outcome_1a_disagg)] 
+    file_list = master_file_list[loc_name==country & file_iteration=="approved_gm" & !is.na(sheet_impact_outcome_1a_disagg)] 
     
     #Just force-change all of the sheet names for now - will want to make sure this is right EKL 6/25/19 
     #country_dir = ? 
@@ -181,7 +181,7 @@ if (prep_1b){
   print("Prepping 1B sheets...")
   for (country in countries){
     print(paste0("Processing country: ", country))
-    file_list = master_file_list[loc_name==country & file_iteration=="final" & !is.na(sheet_coverage_1b)] 
+    file_list = master_file_list[loc_name==country & file_iteration=="approved_gm" & !is.na(sheet_coverage_1b)] 
     
     #Just force-change all of the sheet names for now - will want to make sure this is right EKL 6/25/19 
     #country_dir = ? 
@@ -248,7 +248,7 @@ if (prep_1b_disagg){
   print("Prepping 1B disaggregated sheets...")
   for (country in countries){
     print(paste0("Processing country: ", country))
-    file_list = master_file_list[loc_name==country & file_iteration=="final" & !is.na(sheet_coverage_1b_disagg)] 
+    file_list = master_file_list[loc_name==country & file_iteration=="approved_gm" & !is.na(sheet_coverage_1b_disagg)] 
     
     #Just force-change all of the sheet names for now - will want to make sure this is right EKL 6/25/19 
     #country_dir = ? 
