@@ -18,7 +18,7 @@ if (rerun_filelist==TRUE){
       tmpData = prep_detailed_sicoin(file_list$file_name[i])
     } else {
       print("Function hasn't been verified yet.")
-    }
+    } # here add in the new funtion called detailed2 (or some better name) and then leave the else statement that the other funciton hasn't been verified yet
     
     #Still need to modify these functions! 
     #   else if (file_list$function_type[i]=="summary"){

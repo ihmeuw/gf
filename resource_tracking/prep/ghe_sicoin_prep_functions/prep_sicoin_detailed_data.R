@@ -17,6 +17,7 @@
 prep_detailed_sicoin = function(inFile) {
   
   #Inputs for debugging
+  # inFile = paste0(file_list$file_name[i])
   # inFile = paste0(sicoinDir, file_list$file_path[i], file_list$file_name[i])
 
   # --------------------
