@@ -37,6 +37,7 @@ revision_order = revision_order[budget_version==last_revision]
 #Now, subset the whole dataset
 revision_order[, -c('budget_version', 'last_revision')]
 most_recent_revisions = merge(mapped_data, revision_order, by=c('grant', 'grant_period', 'update_date', 'file_iteration'), all.y=T) # Only keep the most recent revisions you've flagged. 
+most_recent_revisions = most_recent_revisions[data_source=="budget"]
 
 # Subset columns to GEP and CEP variables. 
 most_recent_revisions_gep = most_recent_revisions[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
