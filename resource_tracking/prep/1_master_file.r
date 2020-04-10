@@ -31,7 +31,7 @@ source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8")
 prep_files = TRUE
 prep_gos = FALSE
 prep_odah = FALSE
-prep_ghe = TRUE
+prep_ghe = FALSE
 prep_cost_categories = FALSE
 prep_commitments = FALSE
 
@@ -42,7 +42,7 @@ rerun_filelist = TRUE  #Set to TRUE if you want to prep all files in the file li
 limit_filelist = TRUE #Set to TRUE if you want to only run files that will be saved in final budgets and expenditures. 
 only_new_files = FALSE # Set to true if, when you re-run file list, you only want to process files that are additional. TRUE is the default. 
 
-country = "gtm" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
+country = "uga" #Change to the country you want to update. Options are "cod", "gtm", "sen", or "uga". 
 # ----------------------------------------------
 # STEP 2: PREP GF FILES AND GOS DATA 
 # ----------------------------------------------

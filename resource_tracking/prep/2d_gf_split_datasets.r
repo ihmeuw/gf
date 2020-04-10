@@ -9,6 +9,8 @@ gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
              'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date')
+
+# subset to just the approved budgets 
 approved_budgets = mapped_data[file_iteration == 'approved_gm' & data_source == "budget" & current_grant==TRUE] #Only want the final versions of budgets. 
 approved_budgets = approved_budgets[, -c('expenditure', 'lfa_exp_adjustment', 'disbursement')]
 
@@ -51,18 +53,16 @@ gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
              'file_iteration', 'budget_version')
 
-revision_flag = unique(mapped_data[file_iteration=='revision' & data_source=="budget" & current_grant==TRUE, .(grant, grant_period)])
-revision_flag[, concat:=paste0(grant, "_", grant_period)]
-
-revisions = mapped_data[paste0(grant, "_", grant_period)%in%revision_flag$concat & data_source=="budget"]
+revisions = mapped_data[current_grant==TRUE & data_source=="budget"]
 if (nrow(revisions)!=0){ #You won't have budget revisions for every country. 
   #Figure out the order using the 'update_date' variable. 
   order = unique(revisions[, .(grant, grant_period, update_date, file_name, file_iteration)][order(grant_period, grant, update_date)])
-  stopifnot(nrow(order[is.na(update_date)])==0)
+  if(nrow(order[is.na(update_date)])!=0) print('Warning: There are NAs in update_date, which is being used to determine the order of revisions')
+  
   order[, order:=1:.N, by=c('grant', 'grant_period', 'file_iteration')]
   
   # Add in a clean label for mapping
-  order[file_iteration=="initial", budget_version:=paste0("Grantmaking draft ", order)]
+  order[file_iteration=="initial", budget_version:=paste0("Grantmaking iteration ", order)]
   order[file_iteration=='approved_gm', budget_version:="Approved from grantmaking"]
   order[file_iteration=="revision", budget_version:=paste0("Revision ", order)]
   order$order <- NULL 
