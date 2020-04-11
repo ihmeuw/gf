@@ -71,7 +71,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
                               "GTM-T-MSPAS_Progress Report jul _31Dec2018_v2  rev LFA.xlsx", "GTM-H-HIVOS_Progress Report_31Dec2018_v1.xlsx", 
                               "GTM-T-MSPAS_Progress Report_LFA18Mar19.xlsx", "Core_SANRU_PU_P3141116.xlsm", "PSI PU NFM S1 2016 09102016.xlsm", 
                               "Core_PUDR_P30_HivosGT_231116_ LFA Signed.xlsx", "Core_PUDR_MALARIA_P12_03-03-17_Revisado ALF.xlsx",  
-                              "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.XLSX", "GTM-M-MSPAS_Progress Report_30Jun2019_REV LFA.XLSX",
+                              "GTM-T-MSPAS_Progress Report_31Dec2017 LFA REVIEW.XLSX", "GTM-M-MSPAS_Progress Report_30Jun2019_REV LFA.xlsx",
                               "Informe PUDR P-30 Noviembre 2016_Rev ALF FINAL.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx", 
                               "GTM-T-MSPAS_Progress Report_31Dec2019_v Rev ALF_02032020.xlsx") #These files have 0 for all expenditure.
   
