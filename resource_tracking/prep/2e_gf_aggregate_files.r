@@ -21,6 +21,11 @@ sen_prepped = paste0(box, "SEN/prepped_data/")
 
 final_write = paste0(box, "tableau_data/")
 
+# load spreadsheet to merge onto data to identify topic areas
+topic_areas = as.data.table(read.xlsx(paste0(dir, 'modular_framework_mapping/identifyTopicAreas_PCE2020_forSubsetting.xlsx')))
+# checks on topic areas manual entry
+if(nrow(topic_areas[isTopicArea == TRUE & is.na(topicAreaDesc) ])!=0) stop('You need to enter a value for topicAreaDesc where isTopicArea = TRUE.')
+if(nrow(topic_areas[isTopicArea == FALSE & !is.na(topicAreaDesc) ])!=0) stop('You should not have value for topicAreaDesc where isTopicArea = FALSE.')
 #---------------------------------------------
 # 1. APPROVED BUDGETS 
 #---------------------------------------------
@@ -34,6 +39,8 @@ sen1 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="approved_budge
 sen1[, loc_name:="Senegal"]
 
 approved_budgets = rbindlist(list(cod1, gtm1, uga1, sen1))
+approved_budgets = merge(approved_budgets, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+
 write.csv(approved_budgets, paste0(final_write, "approved_budgets.csv"), row.names=F)
 #---------------------------------------------
 # 2. MOST RECENT BUDGET REVISION
@@ -48,8 +55,9 @@ sen2 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="most_recent_bu
 sen2[, loc_name:="Senegal"]
 
 most_recent_budgets = rbindlist(list(cod2, gtm2, uga2, sen2))
-write.csv(most_recent_budgets, paste0(final_write, "most_recent_budgets.csv"), row.names=F)
+most_recent_budgets = merge(most_recent_budgets, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
+write.csv(most_recent_budgets, paste0(final_write, "most_recent_budgets.csv"), row.names=F)
 #---------------------------------------------
 # 3. ALL BUDGET REVISIONS
 #---------------------------------------------
@@ -62,9 +70,10 @@ uga3[, loc_name:="Uganda"]
 sen3 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="all_budget_revisions")))
 sen3[, loc_name:="Senegal"]
 
-all_budget_revisions = rbindlist(list(cod3, gtm3, uga3, sen3))
-write.csv(all_budget_revisions, paste0(final_write, "all_budget_revisions.csv"), row.names=F)
+all_budget_revisions = rbindlist(list(cod3, gtm3, uga3, sen3), use.names = TRUE, fill = TRUE)
+all_budget_revisions = merge(all_budget_revisions, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
+write.csv(all_budget_revisions, paste0(final_write, "all_budget_revisions.csv"), row.names=F)
 #---------------------------------------------
 # 4. CURRENT ABSORPTION 
 #---------------------------------------------

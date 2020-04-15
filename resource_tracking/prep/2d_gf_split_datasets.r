@@ -49,11 +49,47 @@ most_recent_revisions_cep = most_recent_revisions[, .(budget=sum(budget, na.rm=T
 #------------------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 'budget_version',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date')
+             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date',
+             'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
-             'file_iteration', 'budget_version')
+             'file_iteration', 'budget_version', 'update_date', 'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion')
 
 revisions = mapped_data[current_grant==TRUE & data_source=="budget"]
+
+#----------------- adding this -Audrey 4/14/20
+# demarcate isMostRecentRevision
+# subset to just the budget revisions data
+last_revisions = unique(mapped_data[data_source=="budget" & file_iteration%in%c('revision') & current_grant==TRUE,
+                                    .(grant, grant_period, update_date, file_iteration, file_name)])[order(grant, grant_period, file_iteration, update_date)]
+stopifnot(nrow(last_revisions[file_iteration=="revision" & is.na(update_date)])==0) # It's okay for 'approved_gm' budgets to not have an update date, because 
+# they always come first, but revised budgets need one so they'll be sorted correctly. 
+last_revisions[, budget_version:=1:.N, by=c('grant', 'grant_period')]
+
+# Keep just the last revision:
+last_revisions[, last_revision:=max(budget_version), by=c('grant', 'grant_period')]
+last_revisions = last_revisions[budget_version==last_revision, .(grant, grant_period, update_date, file_iteration, file_name)]
+
+# Use this data table to create isMostRecentRevision column in all budget revisions dataset
+last_revisions[, isMostRecentRevision := TRUE]
+revisions = merge(revisions, last_revisions, all = TRUE, by = c('grant', 'grant_period', 'update_date', 'file_iteration', 'file_name'))
+revisions[is.na(isMostRecentRevision), isMostRecentRevision := FALSE]
+
+# demarcate isApprovedBudget
+revisions[, isApprovedBudget := ifelse(file_iteration == 'approved_gm', TRUE, FALSE)]
+
+# demarcate isWorkingVersion 
+# use the most recent revision, or, if there aren't any revisions yet, use the approved version
+revisions[, isWorkingVersion := ifelse(isMostRecentRevision == TRUE, TRUE, FALSE)]
+
+all_current_grants = unique(revisions[, grant])
+grants_with_revisions = unique(revisions[isMostRecentRevision==TRUE, grant])
+grants_without_revisions = all_current_grants[!all_current_grants %in% grants_with_revisions]
+
+revisions[grant %in% grants_without_revisions & file_iteration == "approved_gm", isWorkingVersion := TRUE ]
+
+# make sure there is only one file marked as the working version per grant!
+stopifnot(nrow(unique(revisions[isWorkingVersion==TRUE, .(file_name, grant)]))==nrow(unique(revisions[, .(grant)])))
+#-----------------
 if (nrow(revisions)!=0){ #You won't have budget revisions for every country. 
   #Figure out the order using the 'update_date' variable. 
   order = unique(revisions[, .(grant, grant_period, update_date, file_name, file_iteration)][order(grant_period, grant, update_date)])
