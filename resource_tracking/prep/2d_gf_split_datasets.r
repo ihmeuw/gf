@@ -50,9 +50,10 @@ most_recent_revisions_cep = most_recent_revisions[, .(budget=sum(budget, na.rm=T
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 'budget_version',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
              'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date',
-             'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion')
+             'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
-             'file_iteration', 'budget_version', 'update_date', 'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion')
+             'file_iteration', 'budget_version', 'update_date', 'isMostRecentRevision', 'isApprovedBudget', 
+             'isWorkingVersion', 'isApprovedORMostRecent')
 
 revisions = mapped_data[current_grant==TRUE & data_source=="budget"]
 
@@ -89,6 +90,8 @@ revisions[grant %in% grants_without_revisions & file_iteration == "approved_gm",
 
 # make sure there is only one file marked as the working version per grant!
 stopifnot(nrow(unique(revisions[isWorkingVersion==TRUE, .(file_name, grant)]))==nrow(unique(revisions[, .(grant)])))
+
+revisions[, isApprovedORMostRecent := ifelse((isApprovedBudget == TRUE | isMostRecentRevision==TRUE), TRUE, FALSE)]
 #-----------------
 if (nrow(revisions)!=0){ #You won't have budget revisions for every country. 
   #Figure out the order using the 'update_date' variable. 
