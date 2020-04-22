@@ -7,8 +7,9 @@
 #-------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date')
-cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date')
+             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date')
+cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
+             'kp', 'rssh', 'equity')
 
 # subset to just the approved budgets 
 approved_budgets = mapped_data[file_iteration == 'approved_gm' & data_source == "budget" & current_grant==TRUE] #Only want the final versions of budgets. 
@@ -22,8 +23,9 @@ approved_budgets_cep = approved_budgets[, .(budget=sum(budget, na.rm=T)), by=cep
 #----------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date')
-cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date')
+             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date')
+cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
+             'kp', 'rssh', 'equity')
 
 # Order final and revised budgets by the update date of the file
 revision_order = unique(mapped_data[data_source=="budget" & file_iteration%in%c('approved_gm', 'revision') & current_grant==TRUE,
@@ -49,11 +51,11 @@ most_recent_revisions_cep = most_recent_revisions[, .(budget=sum(budget, na.rm=T
 #------------------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 'budget_version',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date',
+             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date',
              'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
-             'file_iteration', 'budget_version', 'update_date', 'isMostRecentRevision', 'isApprovedBudget', 
-             'isWorkingVersion', 'isApprovedORMostRecent')
+             'file_iteration', 'budget_version', 'isMostRecentRevision', 'isApprovedBudget', 
+             'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date')
 
 revisions = mapped_data[current_grant==TRUE & data_source=="budget"]
 
@@ -140,8 +142,9 @@ most_recent_pudrs = most_recent_pudrs[pudr_order==latest_reporting]
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'budget', 'expenditure', 'absorption',
              'start_date', 'budget_version',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'update_date')
-cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'budget', 'expenditure', 'absorption', 'start_date', 'budget_version')
+             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date')
+cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'budget', 'expenditure', 'absorption', 
+             'start_date', 'budget_version', 'kp', 'rssh', 'equity')
 
 absorption = mapped_data[file_name%in%most_recent_pudrs$file_name, .(grant, grant_period, code, gf_module, gf_intervention, 
                                                                           budget, expenditure, lfa_exp_adjustment, pudr_semester_financial, start_date)]
