@@ -38,7 +38,7 @@ uga1[, loc_name:="Uganda"]
 sen1 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="approved_budgets")))
 sen1[, loc_name:="Senegal"]
 
-approved_budgets = rbindlist(list(cod1, gtm1, uga1, sen1))
+approved_budgets = rbindlist(list(cod1, gtm1, uga1, sen1), use.names = TRUE, fill = TRUE)
 approved_budgets = merge(approved_budgets, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
 write.csv(approved_budgets, paste0(final_write, "approved_budgets.csv"), row.names=F)
@@ -54,7 +54,7 @@ uga2[, loc_name:="Uganda"]
 sen2 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="most_recent_budgets")))
 sen2[, loc_name:="Senegal"]
 
-most_recent_budgets = rbindlist(list(cod2, gtm2, uga2, sen2))
+most_recent_budgets = rbindlist(list(cod2, gtm2, uga2, sen2), use.names = TRUE, fill = TRUE)
 most_recent_budgets = merge(most_recent_budgets, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
 write.csv(most_recent_budgets, paste0(final_write, "most_recent_budgets.csv"), row.names=F)

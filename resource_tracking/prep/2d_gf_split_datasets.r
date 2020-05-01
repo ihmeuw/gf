@@ -2,14 +2,24 @@
 # Create datasets to release to partners
 # ---------------------------------------------------------------------------
 
+# ---- adding columns to use in Tableau for SOs: RSSH & Equity - AB 4/23
+mapped_data[, isStrategicObjective := ifelse((equity == TRUE | rssh == TRUE), TRUE, FALSE)]
+mapped_data[, SO := '']
+mapped_data[rssh == TRUE, SO := paste0(SO, 'rssh')]
+mapped_data[equity == TRUE, SO := paste0(SO, 'equity')] 
+# doing it this weird way would make it so if something was BOTH RSSH and equity, it would have both, and not simply overwrite 
+# one with the other.
+mapped_data[SO == '', SO := NA]
+#------------------------------------------
+
 #-------------------------------------------
 # 1. Final, approved budgets 
 #-------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date')
+             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date', 'isStrategicObjective', 'SO')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
-             'kp', 'rssh', 'equity')
+             'kp', 'rssh', 'equity', 'isStrategicObjective', 'SO')
 
 # subset to just the approved budgets 
 approved_budgets = mapped_data[file_iteration == 'approved_gm' & data_source == "budget" & current_grant==TRUE] #Only want the final versions of budgets. 
@@ -23,9 +33,9 @@ approved_budgets_cep = approved_budgets[, .(budget=sum(budget, na.rm=T)), by=cep
 #----------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date')
+             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date', 'isStrategicObjective', 'SO')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
-             'kp', 'rssh', 'equity')
+             'kp', 'rssh', 'equity', 'isStrategicObjective', 'SO')
 
 # Order final and revised budgets by the update date of the file
 revision_order = unique(mapped_data[data_source=="budget" & file_iteration%in%c('approved_gm', 'revision') & current_grant==TRUE,
@@ -52,10 +62,10 @@ most_recent_revisions_cep = most_recent_revisions[, .(budget=sum(budget, na.rm=T
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 'budget_version',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
              'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date',
-             'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent')
+             'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'isStrategicObjective', 'SO')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
              'file_iteration', 'budget_version', 'isMostRecentRevision', 'isApprovedBudget', 
-             'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date')
+             'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date', 'isStrategicObjective', 'SO')
 
 revisions = mapped_data[current_grant==TRUE & data_source=="budget"]
 
