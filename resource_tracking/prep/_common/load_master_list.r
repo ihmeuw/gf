@@ -60,7 +60,7 @@ load_master_list = function(purpose=NULL) {
   stopifnot(unique(dt$disease%in%c('hiv', 'tb', 'malaria', 'rssh', 'hiv/tb')))
   stopifnot(unique(dt$file_currency)%in%c('USD', 'EUR', 'LOC'))
   stopifnot(unique(dt$geography_detail)%in%c('NATIONAL', 'SUBNATIONAL', 'NA'))
-  stopifnot(unique(dt$file_iteration)%in%c("approved_gm", 'initial', 'revision'))
+  stopifnot(unique(dt$file_iteration)%in%c("approved_gm", 'initial', 'revision', 'unclear'))
   stopifnot(unique(dt$lfa_verified)%in%c('NA', 'TRUE', 'FALSE', 'UNKNOWN'))
   
   #Correct date formats
@@ -85,12 +85,12 @@ load_master_list = function(purpose=NULL) {
   # Financial 
   #-------------------------------
   if (purpose=="financial") {
-    keep_cols = c('function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
+    keep_cols = c('budget_version', 'revision_type', 'function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
                   'pudr_semester_financial', 'update_date', 'mod_framework_format', 'cumul_exp_start_date', 'cumul_exp_end_date', 'lfa_verified')
     keep_cols = c(core_cols, keep_cols)
     dt = dt[, c(keep_cols), with=F]
     
-    for (col in names(dt)[!names(dt)%in%c('start_date_financial', 'update_date', 'pudr_semester_financial', 
+    for (col in names(dt)[!names(dt)%in%c('budget_version', 'revision_type', 'start_date_financial', 'update_date', 'pudr_semester_financial', 
                                           'cumul_exp_start_date', 'cumul_exp_end_date', 'lfa_verified')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
       if ('verbose'%in%ls() & verbose){
         print(paste0("Checking for NA values in ", col))

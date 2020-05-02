@@ -22,7 +22,7 @@ cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention
              'kp', 'rssh', 'equity', 'isStrategicObjective', 'SO')
 
 # subset to just the approved budgets 
-approved_budgets = mapped_data[file_iteration == 'approved_gm' & data_source == "budget" & current_grant==TRUE] #Only want the final versions of budgets. 
+approved_budgets = mapped_data[budget_version == 'approved' & data_source == "budget" & current_grant==TRUE] #Only want the final versions of budgets. 
 approved_budgets = approved_budgets[, -c('expenditure', 'lfa_exp_adjustment', 'disbursement')]
 
 # Subset columns to GEP and CEP variables. 
@@ -33,99 +33,63 @@ approved_budgets_cep = approved_budgets[, .(budget=sum(budget, na.rm=T)), by=cep
 #----------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date', 'isStrategicObjective', 'SO')
+             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date', 'isStrategicObjective', 'SO', 'budget_version')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
-             'kp', 'rssh', 'equity', 'isStrategicObjective', 'SO')
+             'kp', 'rssh', 'equity', 'isStrategicObjective', 'SO', 'budget_version')
 
 # Order final and revised budgets by the update date of the file
-revision_order = unique(mapped_data[data_source=="budget" & file_iteration%in%c('approved_gm', 'revision') & current_grant==TRUE,
-                                    .(grant, grant_period, update_date, file_iteration)])[order(grant, grant_period, file_iteration, update_date)]
-stopifnot(nrow(revision_order[file_iteration=="revision" & is.na(update_date)])==0) # It's okay for 'approved_gm' budgets to not have an update date, because 
-                                                                                    # they always come first, but revised budgets need one so they'll be sorted correctly. 
-revision_order[, budget_version:=1:.N, by=c('grant', 'grant_period')]
+revisions = mapped_data[grepl(budget_version, pattern= 'revision'), ]
 
 # For this dataset, we only want to keep the last revision, so we need to find the maximum value of 'budget_version'. 
-revision_order[, last_revision:=max(budget_version), by=c('grant', 'grant_period')]
-revision_order = revision_order[budget_version==last_revision]
+revisions[, rev_num := gsub('revision', '', budget_version)]
+revisions[, most_recent_rev:=max(rev_num), by=c('grant', 'grant_period')]
+revisions = revisions[rev_num==most_recent_rev]
 
 #Now, subset the whole dataset
-revision_order[, -c('budget_version', 'last_revision')]
-most_recent_revisions = merge(mapped_data, revision_order, by=c('grant', 'grant_period', 'update_date', 'file_iteration'), all.y=T) # Only keep the most recent revisions you've flagged. 
-most_recent_revisions = most_recent_revisions[data_source=="budget"]
+revisions = revisions[, -c('rev_num', 'most_recent_rev')]
 
 # Subset columns to GEP and CEP variables. 
-most_recent_revisions_gep = most_recent_revisions[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
-most_recent_revisions_cep = most_recent_revisions[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
+most_recent_revisions_gep = revisions[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
+most_recent_revisions_cep = revisions[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
 #------------------------------------------------------
-# 3. Budget revisions
+# 3. ALl budgets for current grants
 #------------------------------------------------------
-gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 'budget_version',
-             'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
+gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
+             'current_grant', 'data_source', 'file_iteration', 'budget_version', 'revision_type', 'abbrev_mod', 'code',
              'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date',
              'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'isStrategicObjective', 'SO')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
-             'file_iteration', 'budget_version', 'isMostRecentRevision', 'isApprovedBudget', 
+             'file_iteration', 'budget_version', 'revision_type',  'isMostRecentRevision', 'isApprovedBudget', 
              'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date', 'isStrategicObjective', 'SO')
 
-revisions = mapped_data[current_grant==TRUE & data_source=="budget"]
+all_budgets = mapped_data[current_grant==TRUE & data_source=="budget"]
 
 #----------------- adding this -Audrey 4/14/20
 # demarcate isMostRecentRevision
-# subset to just the budget revisions data
-last_revisions = unique(mapped_data[data_source=="budget" & file_iteration%in%c('revision') & current_grant==TRUE,
-                                    .(grant, grant_period, update_date, file_iteration, file_name)])[order(grant, grant_period, file_iteration, update_date)]
-stopifnot(nrow(last_revisions[file_iteration=="revision" & is.na(update_date)])==0) # It's okay for 'approved_gm' budgets to not have an update date, because 
-# they always come first, but revised budgets need one so they'll be sorted correctly. 
-last_revisions[, budget_version:=1:.N, by=c('grant', 'grant_period')]
-
-# Keep just the last revision:
-last_revisions[, last_revision:=max(budget_version), by=c('grant', 'grant_period')]
-last_revisions = last_revisions[budget_version==last_revision, .(grant, grant_period, update_date, file_iteration, file_name)]
-
-# Use this data table to create isMostRecentRevision column in all budget revisions dataset
-last_revisions[, isMostRecentRevision := TRUE]
-revisions = merge(revisions, last_revisions, all = TRUE, by = c('grant', 'grant_period', 'update_date', 'file_iteration', 'file_name'))
-revisions[is.na(isMostRecentRevision), isMostRecentRevision := FALSE]
-
+most_recent_revisions_files = unique(most_recent_revisions_cep$file_name)
+all_budgets[file_name %in% most_recent_revisions_files, isMostRecentRevision := TRUE]
+all_budgets[is.na(isMostRecentRevision), isMostRecentRevision := FALSE]
 # demarcate isApprovedBudget
-revisions[, isApprovedBudget := ifelse(file_iteration == 'approved_gm', TRUE, FALSE)]
-
+all_budgets[, isApprovedBudget := ifelse(file_iteration == 'approved_gm', TRUE, FALSE)]
 # demarcate isWorkingVersion 
 # use the most recent revision, or, if there aren't any revisions yet, use the approved version
-revisions[, isWorkingVersion := ifelse(isMostRecentRevision == TRUE, TRUE, FALSE)]
+all_budgets[, isWorkingVersion := ifelse(isMostRecentRevision == TRUE, TRUE, FALSE)]
 
-all_current_grants = unique(revisions[, grant])
-grants_with_revisions = unique(revisions[isMostRecentRevision==TRUE, grant])
+all_current_grants = unique(all_budgets[, grant])
+grants_with_revisions = unique(all_budgets[isMostRecentRevision==TRUE, grant])
 grants_without_revisions = all_current_grants[!all_current_grants %in% grants_with_revisions]
 
-revisions[grant %in% grants_without_revisions & file_iteration == "approved_gm", isWorkingVersion := TRUE ]
+all_budgets[grant %in% grants_without_revisions & budget_version == "approved", isWorkingVersion := TRUE ]
 
 # make sure there is only one file marked as the working version per grant!
-stopifnot(nrow(unique(revisions[isWorkingVersion==TRUE, .(file_name, grant)]))==nrow(unique(revisions[, .(grant)])))
+stopifnot(nrow(unique(all_budgets[isWorkingVersion==TRUE, .(file_name, grant)]))==nrow(unique(all_budgets[, .(grant)])))
 
-revisions[, isApprovedORMostRecent := ifelse((isApprovedBudget == TRUE | isMostRecentRevision==TRUE), TRUE, FALSE)]
+all_budgets[, isApprovedORMostRecent := ifelse((isApprovedBudget == TRUE | isMostRecentRevision==TRUE), TRUE, FALSE)]
 #-----------------
-if (nrow(revisions)!=0){ #You won't have budget revisions for every country. 
-  #Figure out the order using the 'update_date' variable. 
-  order = unique(revisions[, .(grant, grant_period, update_date, file_name, file_iteration)][order(grant_period, grant, update_date)])
-  if(nrow(order[is.na(update_date)])!=0) print('Warning: There are NAs in update_date, which is being used to determine the order of revisions')
-  
-  order[, order:=1:.N, by=c('grant', 'grant_period', 'file_iteration')]
-  
-  # Add in a clean label for mapping
-  order[file_iteration=="initial", budget_version:=paste0("Grantmaking iteration ", order)]
-  order[file_iteration=='approved_gm', budget_version:="Approved from grantmaking"]
-  order[file_iteration=="revision", budget_version:=paste0("Revision ", order)]
-  order$order <- NULL 
-  
-  #Reshape this data wide by quarter and year. 
-  revisions = merge(revisions, order, by=c('grant', 'grant_period', 'update_date', 'file_name', 'file_iteration'), all.x=T)
-  
-  # Subset columns to GEP and CEP variables. 
-  revisions_gep = revisions[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
-  revisions_cep = revisions[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
-  
-}
+
+# Subset columns to GEP and CEP variables. 
+revisions_gep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
+revisions_cep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
 
 #-------------------------------------------------------------
 # Flag most recent PUDRs - this will be used in steps 4 and 5. 

@@ -39,9 +39,9 @@ if (prep_files == TRUE){
   }
 }
 
-# we are only prepping final/approved and revisions of all files, but for initial files we are only prepping budgets
+# we are only prepping final/approved and revisions of all files, but for "initial" files we are only prepping budgets
 # not also pu/drs - AB EL 3/12/20 (note: it is fine if there aren't pu/dr revisions)
-file_list = file_list[data_source == 'budget' | (data_source =='pudr' & file_iteration %in% c('approved_gm', 'revision')),]
+file_list = file_list[(data_source == 'budget' | (data_source =='pudr' & file_iteration %in% c('approved_gm', 'revision'))) & file_iteration != 'unclear',]
 
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
@@ -157,7 +157,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
 
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language_financial, file_currency, 
+                                 mod_framework_format, file_iteration, budget_version, revision_type, language_financial, file_currency, 
                                  pudr_semester_financial, period_financial, update_date, cumul_exp_start_date, cumul_exp_end_date, lfa_verified)]
     
     stopifnot(nrow(append_cols)==1)
