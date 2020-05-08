@@ -64,7 +64,7 @@ if (prep_files | prep_gos){
   # Load and verify mapping, prep data, and map data. 
   source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
   if (prep_files){
-    source(paste0(code_dir, "2b_gf_files_prep_data.r"))
+ 
   } else if (prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }

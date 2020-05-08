@@ -1,15 +1,15 @@
 # ----------------------------------------------
-# AUTHOR: Audrey Batzel, Emily Linebarger, 
+# AUTHOR: Francisco Rios Casas, adapted from code created by Audrey Batzel, Emily Linebarger, 
 # David Phillips, and Jen Ross
-# PURPOSE: Master file for preparing impact evaluation dataset. 
-# DATE: Last updated May 2019. 
+# PURPOSE: Master file for preparing impact evaluation dataset. Reformatted for Senegal
+# DATE: Last updated May 2020. 
 # 
 # INSTRUCTIONS: The current working directory should be the root of this repo (set manually by user)
 # ----------------------------------------------
 
 #-----------------------------------------
 # TO-DO: 
-
+# * update to run for senegal
 
 #-----------------------------------------
 
