@@ -39,9 +39,9 @@ if (prep_files == TRUE){
   }
 }
 
-# we are only prepping final/approved and revisions of all files, but for initial files we are only prepping budgets
+# we are only prepping final/approved and revisions of all files, but for "initial" files we are only prepping budgets
 # not also pu/drs - AB EL 3/12/20 (note: it is fine if there aren't pu/dr revisions)
-file_list = file_list[data_source == 'budget' | (data_source =='pudr' & file_iteration %in% c('approved_gm', 'revision')),]
+file_list = file_list[(data_source == 'budget' | (data_source =='pudr' & file_iteration %in% c('approved_gm', 'revision'))) & file_iteration != 'unclear',]
 
 #----------------------------------------------------
 # 1. Rerun prep functions, or read in prepped files
@@ -154,16 +154,28 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
       print(paste0("Check logic conditions. This file has the function_financial: ", file_list$function_financial[i],
             " and the sheet_financial name: ", file_list$sheet_financial[i]))
     }
-    
+
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, language_financial, file_currency, 
+                                 mod_framework_format, file_iteration, budget_version, revision_type, language_financial, file_currency, 
                                  pudr_semester_financial, period_financial, update_date, cumul_exp_start_date, cumul_exp_end_date, lfa_verified)]
-    for (col in names(append_cols)){
-      tmpData[, (col):=append_cols[, get(col)]]
-    }  
+    
+    stopifnot(nrow(append_cols)==1)
+    
+    tmpData = cbind(tmpData, append_cols)
+    
     tmpData$year <- year(tmpData$start_date)
     tmpData[, file_start_date:=min(start_date), by='file_name']
+    
+    # need to split out by implementer for UGA file: FR188-UGA-C_DB_14Mar17  Revised 06 April 2017-1.xlsx
+    if (unique(tmpData$file_name) == 'FR188-UGA-C_DB_14Mar17  Revised 06 April 2017-1.xlsx'){
+      tmpData_TASO = tmpData[implementer == 'The AIDS Support Organisation (Uganda) Limited', ]
+      tmpData_MoFPED = tmpData[implementer == 'Ministry of Finance, Planning and Economic Development of the Government of the Republic of Uganda']
+      tmpData_MoFPED[, grant := 'UGA-H-MoFPED']
+      tmpData_MoFPED[, primary_recipient := 'MoFPED']
+      tmpData_MoFPED[, disease := 'hiv']
+      tmpData = rbind(tmpData_MoFPED, tmpData_TASO)
+    }
     
     #Bind data together 
     if(i==1){
