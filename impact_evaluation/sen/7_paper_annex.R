@@ -72,13 +72,15 @@ setnames(paper_file, "label", "independent variable (x)")
 paper_file$lower <- paper_file$est - (1.96*paper_file$se)
 paper_file$upper <- paper_file$est + (1.96*paper_file$se)
 
-# keep only dependent variable, independent variable, est, lower, upper
-paper_file[,c("rhs", "lhs", "op", "est.std", "se_ratio.std", "se_ratio", "se.std", "se"):=NULL]
+# variables to keep for final paper annex:
+# dependent variable, independent variable, unstandardized estimate, lower, upper, standardized est
+paper_file[,c("rhs", "lhs", "op", "se_ratio.std", "se_ratio", "se.std", "se"):=NULL]
 
 # round numbers to two significant figures
 paper_file[, est:=signif(est, 2)]
 paper_file[, lower:=signif(lower, 2)]
 paper_file[, upper:=signif(upper, 2)]
+paper_file[, est.std:=signif(est.std, 2)]
 
 
 # round numbers to two decimal places
@@ -90,7 +92,11 @@ paper_file[, upper:=signif(upper, 2)]
 paper_file$Model <- "Senegal TB"
 
 # set order of column names
-setcolorder(paper_file, c("Model", "dependent variable (y)", "independent variable (x)", "est", "lower", "upper"))
+setcolorder(paper_file, c("Model", "dependent variable (y)", "independent variable (x)", "est", "lower", "upper", "est.std"))
 
-write.csv(paper_file, "G:/My Drive/IHME/PCE/Pubs/Senegal_model_annex.csv")
-write.csv(paper_file, "J:/Project/Evaluation/GF/impact_evaluation/sen/special_output/Senegal_model_annex.csv")
+# change name of column headers
+setnames(paper_file, old = names(paper_file), new = c("Model", "Dependent variable (y)", "Independent variable (x)", "Estimate", "Lower CI", "Upper CI", "Estimate (standardized)"))
+
+# save files
+write.csv(paper_file, "G:/My Drive/IHME/PCE/Pubs/Senegal_model_annex_13May2020.csv")
+write.csv(paper_file, "J:/Project/Evaluation/GF/impact_evaluation/sen/special_output/Senegal_model_annex_13May2020.csv")
