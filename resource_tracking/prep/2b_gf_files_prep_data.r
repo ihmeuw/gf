@@ -157,7 +157,7 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
 
     #Add indexing data
     append_cols = file_list[i, .(data_source, grant_period, primary_recipient, file_name, grant_status, disease, grant, 
-                                 mod_framework_format, file_iteration, budget_version, revision_type, language_financial, file_currency, 
+                                 mod_framework_format, file_iteration, budget_version, revision_type, gf_revision_type, version_date, language_financial, file_currency, 
                                  pudr_semester_financial, period_financial, update_date, cumul_exp_start_date, cumul_exp_end_date, lfa_verified)]
     
     stopifnot(nrow(append_cols)==1)
