@@ -10,6 +10,7 @@ rm(list=ls())
 # ----------------------------------------------------------------------
 # To do list for this code: 
 # - add in an option to only rework one file (make database append-only)
+# - the step run in file 2f is not working
 # ---------------------------------------------------------------------
 
 # ----------------------------------------------
@@ -64,13 +65,13 @@ if (prep_files | prep_gos){
   # Load and verify mapping, prep data, and map data. 
   source(paste0(code_dir, "2a_gf_files_verify_mapping.R"))
   if (prep_files){
- 
+    source(paste0(code_dir, "2b_gf_files_prep_data.R"))
   } else if (prep_gos){
     source(paste0(code_dir, "2b_gos_prep_data.R"))
   }
   source(paste0(code_dir, "2c_gf_files_gos_map_data.R")) # Step 2d is sourced in step 2c. 
   source(paste0(code_dir, "2e_gf_aggregate_files.R"))
-  source(paste0(code_dir, "2f_gf_verify_outputs.R"))
+  source(paste0(code_dir, "2f_gf_verify_outputs.R")) 
    
   rmarkdown::render(input=paste0(code_dir, "2g_gf_visualize_data.rmd"),
                            output_dir=paste0(dir, "/visualizations/verification/"),

@@ -1,15 +1,16 @@
 # ----------------------------------------------
 # AUTHOR: Emily Linebarger, based on code from Irena Chen 
 # PURPOSE: Binds together resource tracking prepped data 
-#   into five key datasets.
+#   into six key datasets.
 #   1. Approved budgets from grantmaking 
 #   2. Most recent revision of budgets 
 #   3. All budget revisions
 #   4. Most recently reported semester of absorption 
 #   5. Cumulative absorption 
+#   6. All absorption data (budget, expenditure, absorption from all PUDRs in each country) **added by FRC on 5/18/2020
 #
 # These data can then be used to conduct analysis. 
-# DATE: Last updated March 2020
+# DATE: Last updated May 2020
 # ----------------------------------------------
 
 
@@ -102,6 +103,22 @@ sen5[, loc_name:="Senegal"]
 
 cumulative_absorption = rbindlist(list(cod5, gtm5, uga5, sen5))
 write.csv(cumulative_absorption, paste0(final_write, "cumulative_absorption.csv"), row.names=F)
+#---------------------------------------------
+# 6. ALL ABSORPTION (historica data from past PUDRs) --Added by FRC on 5/18/2020
+#---------------------------------------------
+cod6 = fread(paste0(cod_prepped, list.files(cod_prepped, pattern="all_absorption")))
+cod6[, loc_name:="DRC"]
+gtm6 = fread(paste0(gtm_prepped, list.files(gtm_prepped, pattern="all_absorption")))
+gtm6[, loc_name:="Guatemala"]
+uga6 = fread(paste0(uga_prepped, list.files(uga_prepped, pattern="all_absorption")))
+uga6[, loc_name:="Uganda"]
+sen6 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="all_absorption")))
+sen6[, loc_name:="Senegal"]
+
+all_absorption = rbindlist(list(cod6, gtm6, uga6, sen6))
+all_absorption = merge(all_absorption, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
+
+write.csv(all_absorption, paste0(final_write, "all_absorption.csv"), row.names=F)
 
 
 print("Step E: Aggregate GF files completed. Files saved in combined_prepped folder.")

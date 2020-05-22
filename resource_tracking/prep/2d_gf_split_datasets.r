@@ -270,6 +270,88 @@ cumulative_absorption[, cumulative_absorption:=round((cumulative_expenditure/cum
 # Subset columns to GEP and CEP variables. 
 cumulative_absorption_gep = cumulative_absorption[, gep_cols, with=FALSE]
 cumulative_absorption_cep = cumulative_absorption[, cep_cols, with=FALSE]
+
+#---------------------------------------------------------
+# 6. Absorption --save all PUDR data (budget, expenditure, absorption) available from the PUDRs we have received 
+# FRC 5/28/2020 - I added this code to save a more extensive version of this data. Previously only saving most recent pudr data
+#----------------------------------------------------------------------
+# gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'budget', 'expenditure', 'absorption',
+#              'start_date', 'budget_version',
+#              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
+#              'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date')
+# cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'budget', 'expenditure', 'absorption', 
+#              'start_date', 'budget_version', 'kp', 'rssh', 'equity')
+
+# not sure if these columns are necessary FRC 5/19/2020
+
+all_absorption = mapped_data[grant_status=="active" & data_source=="pudr", .(grant, grant_period, code, gf_module, gf_intervention, 
+                                                                     budget, expenditure, lfa_exp_adjustment, pudr_semester_financial, start_date,
+                                 file_name, loc_name, kp, rssh, equity)] # added these variables to keep
+
+all_absorption[, expenditure:=expenditure+lfa_exp_adjustment] #Calculate final expenditure. 
+all_absorption = all_absorption[, -c('lfa_exp_adjustment')]
+setnames(all_absorption, 'pudr_semester_financial', 'pudr_code')
+all_absorption = merge(all_absorption, pudr_labels, by=c('pudr_code'), all.x=T)
+if (nrow(all_absorption[is.na(semester)])>0){ # this part of the code is breaking--as I'm not sure what it intended to do
+  print(unique(all_absorption[is.na(semester), .(pudr_code)]))
+  stop("Values of pudr_code did not merge correctly.")
+}
+
+#Make the start date the first start date of the file (i.e., collapse the quarter-level out in the next step)
+all_absorption[, start_date:=min(start_date), by=c('grant', 'grant_period', 'semester')]
+
+#Calculate absorption by module/intervention 
+all_absorption = all_absorption[, .(budget=sum(budget, na.rm=T), expenditure=sum(expenditure, na.rm=T)), 
+                        by=c('grant', 'grant_period', 'gf_module', 'gf_intervention', 'semester', 'code', 'duration_quarters', 'start_date', 'file_name', 'loc_name', 'kp', 'rssh', 'equity')]
+all_absorption[, absorption:=(expenditure/budget)*100]
+
+#Add additional variables 
+all_absorption[, end_date:=start_date %m+% months((duration_quarters*3))]
+all_absorption = all_absorption[, -c('duration_quarters')] # couldn't find the duration quarters variable for some reason
+all_absorption[, loc_name:=country]
+
+all_absorption[, disease:=substr(code, 1, 1)]
+all_absorption[disease=='H', disease:='hiv']
+all_absorption[disease=='T', disease:='tb']
+all_absorption[disease=='M', disease:='malaria']
+all_absorption[disease=='R', disease:='rssh']
+
+#Add in grant disease variable 
+all_absorption[, disease_split:=strsplit(grant, "-")]
+potential_diseases = c('C', 'H', 'T', 'M', 'S', 'R', 'Z')
+
+for (i in 1:nrow(all_absorption)){
+  if (all_absorption$disease_split[[i]][2]%in%potential_diseases){
+    all_absorption[i, grant_disease:=sapply(disease_split, "[", 2 )]
+  } else if (all_absorption$disease_split[[i]][3]%in%potential_diseases){
+    all_absorption[i, grant_disease:=sapply(disease_split, "[", 3 )]
+  } else if (all_absorption$disease_split[[i]][4]%in%potential_diseases){
+    all_absorption[i, grant_disease:=sapply(disease_split, "[", 4 )]
+  }
+}
+
+all_absorption[, disease_split:=NULL]
+
+unique(all_absorption[!grant_disease%in%potential_diseases, .(grant, grant_disease)]) #Visual check that these all make sense. 
+
+all_absorption[grant_disease=='C', grant_disease:='hiv/tb']
+all_absorption[grant_disease=='H', grant_disease:='hiv']
+all_absorption[grant_disease=='T', grant_disease:='tb']
+all_absorption[grant_disease=='S' | grant_disease=='R', grant_disease:='rssh']
+all_absorption[grant_disease=='M', grant_disease:='malaria']
+all_absorption[grant_disease=='Z' & grant=='SEN-Z-MOH', grant_disease:='tb'] #ONLY ONE CASE OF THIS. 
+
+stopifnot(unique(all_absorption$grant_disease)%in%c('hiv', 'tb', 'hiv/tb', 'rssh', 'malaria'))
+
+#Make Nan, Infinity all NA 
+all_absorption[is.nan(absorption), absorption:=NA] # FRC not sure if the last variable refers to name of column or name of datable (should perhaps stay as 'absorption:=NA')
+all_absorption[!is.finite(absorption), absorption:=NA]
+
+# Subset columns to GEP and CEP variables. 
+all_absorption_gep = copy(all_absorption) # Leaving this in this format for now EL 3/9/20 
+all_absorption_cep = all_absorption[, .(grant, grant_period, gf_module, gf_intervention, disease, start_date, end_date, 
+                                budget, expenditure, absorption, file_name, loc_name, kp, rssh, equity)]
+
 #---------------------------------------------------------
 # 6. Expenditures - pull out expenditures file, and 
 #   generate 'final expenditure' variable. 
