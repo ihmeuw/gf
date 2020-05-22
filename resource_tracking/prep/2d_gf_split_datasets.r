@@ -33,9 +33,10 @@ approved_budgets_cep = approved_budgets[, .(budget=sum(budget, na.rm=T)), by=cep
 #----------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
              'current_grant', 'data_source', 'file_iteration','abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date', 'isStrategicObjective', 'SO', 'budget_version')
+             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date', 'isStrategicObjective', 'SO', 
+             'budget_version', 'revision_type', 'gf_revision_type', 'version_date')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
-             'kp', 'rssh', 'equity', 'isStrategicObjective', 'SO', 'budget_version')
+             'kp', 'rssh', 'equity', 'isStrategicObjective', 'SO', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date')
 
 # Order final and revised budgets by the update date of the file
 revisions = mapped_data[grepl(budget_version, pattern= 'revision'), ]
@@ -55,12 +56,13 @@ most_recent_revisions_cep = revisions[, .(budget=sum(budget, na.rm=T)), by=cep_c
 # 3. ALl budgets for current grants
 #------------------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
-             'current_grant', 'data_source', 'file_iteration', 'budget_version', 'revision_type', 'abbrev_mod', 'code',
-             'grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date',
+             'current_grant', 'data_source', 'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date',
+             'abbrev_mod', 'code','grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date',
              'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'isStrategicObjective', 'SO')
 cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date', 
-             'file_iteration', 'budget_version', 'revision_type',  'isMostRecentRevision', 'isApprovedBudget', 
-             'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date', 'isStrategicObjective', 'SO')
+             'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'isMostRecentRevision', 
+             'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date',
+             'isStrategicObjective', 'SO')
 
 all_budgets = mapped_data[current_grant==TRUE & data_source=="budget"]
 

@@ -69,6 +69,7 @@ load_master_list = function(purpose=NULL) {
   dt[, end_date_programmatic:=as.Date(as.numeric(end_date_programmatic), origin="1899-12-30")]
   dt[, cumul_exp_start_date:=as.Date(as.numeric(cumul_exp_start_date), origin="1899-12-30")]
   dt[, cumul_exp_end_date:=as.Date(as.numeric(cumul_exp_end_date), origin="1899-12-30")]
+  dt[, version_date:=as.Date(version_date)]
   
   #Check for duplicate sheet names in files. 
   if (purpose=="financial"){
@@ -85,12 +86,12 @@ load_master_list = function(purpose=NULL) {
   # Financial 
   #-------------------------------
   if (purpose=="financial") {
-    keep_cols = c('budget_version', 'revision_type', 'function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
+    keep_cols = c('budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'function_financial', 'sheet_financial', 'start_date_financial', 'period_financial', 'qtr_number_financial', 'language_financial', 
                   'pudr_semester_financial', 'update_date', 'mod_framework_format', 'cumul_exp_start_date', 'cumul_exp_end_date', 'lfa_verified')
     keep_cols = c(core_cols, keep_cols)
     dt = dt[, c(keep_cols), with=F]
     
-    for (col in names(dt)[!names(dt)%in%c('budget_version', 'revision_type', 'start_date_financial', 'update_date', 'pudr_semester_financial', 
+    for (col in names(dt)[!names(dt)%in%c('budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'start_date_financial', 'update_date', 'pudr_semester_financial', 
                                           'cumul_exp_start_date', 'cumul_exp_end_date', 'lfa_verified')]){ #Check all applicable string columns. PUDR semester is OK to be NA if the line-item is a budget.  
       if ('verbose'%in%ls() & verbose){
         print(paste0("Checking for NA values in ", col))
