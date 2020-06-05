@@ -72,6 +72,12 @@ sen3 = fread(paste0(sen_prepped, list.files(sen_prepped, pattern="all_budget_rev
 sen3[, loc_name:="Senegal"]
 
 all_budget_revisions = rbindlist(list(cod3, gtm3, uga3, sen3), use.names = TRUE, fill = TRUE)
+
+# # added this code below in order to have clearer undrestanding of which modules are added in between revisions *FRC 6/4/2020
+# all_budget_revisions_long = all_budget_revisions[,.(grant, grant_period, gf_module, gf_intervention, disease, start_date, budget, budget_version, loc_name)] # subset to key variables
+# dcast(all_budget_revisions_long, grant + grant_period + gf_module + gf_intervention + disease + start_date + loc_name ~ budget_version, value.var = "budget" ) # cast wide
+
+
 all_budget_revisions = merge(all_budget_revisions, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
 write.csv(all_budget_revisions, paste0(final_write, "all_budget_revisions.csv"), row.names=F)
@@ -119,6 +125,5 @@ all_absorption = rbindlist(list(cod6, gtm6, uga6, sen6))
 all_absorption = merge(all_absorption, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
 write.csv(all_absorption, paste0(final_write, "all_absorption.csv"), row.names=F)
-
 
 print("Step E: Aggregate GF files completed. Files saved in combined_prepped folder.")
