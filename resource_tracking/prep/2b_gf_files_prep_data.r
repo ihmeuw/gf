@@ -75,8 +75,13 @@ if (rerun_filelist == TRUE){ #Save the prepped files, but only if all are run
                               "Informe PUDR P-30 Noviembre 2016_Rev ALF FINAL.xlsx", "GTM-T-MSPAS_Progress Report_31Dec2019_v4.xlsx", 
                               "GTM-T-MSPAS_Progress Report_31Dec2019_v Rev ALF_02032020.xlsx") #These files have 0 for all expenditure.
   
-  # file_list = file_list[!file_name %in% c(verified_0_expenditure, verified_0_budget)] # this part of the code removes PUDRs with zero budgetary and expenditure
-  file_list = file_list[!file_name %in% c(verified_0_budget)]
+  # this part of the code includes PUDRs with zero expenditure, or else removes both PUDRs and Budgets with zero expenditure. Added by FRC on 6/8/2020
+  if (include_zero_pudrs ==TRUE) {
+    file_list = file_list[!file_name %in% c(verified_0_budget)]
+  }
+  else { 
+    file_list = file_list[!file_name %in% c(verified_0_expenditure, verified_0_budget)]
+  }
   
   for(i in 1:nrow(file_list)){
     # Set up file path 
@@ -240,7 +245,13 @@ check_0_budgets <- resource_database[, .(budget = sum(budget, na.rm = TRUE)), by
 check_0_budgets = check_0_budgets[budget == 0]
 check_0_expenditure <- resource_database[data_source == 'pudr', .(expenditure = sum(expenditure, na.rm = TRUE)), by=.(file_name)]
 check_0_expenditure <- check_0_expenditure[expenditure == 0]
-stopifnot(nrow(check_0_budgets)==0 & nrow(!check_0_expenditure$file_name%in%verified_0_expenditure)==0)
+
+# stop to make sure pudrs with zero expenditure are those which we have verified
+if (include_zero_pudrs == TRUE) {
+  stopifnot(nrow(check_0_budgets)==0 & nrow(!check_0_expenditure$file_name%in%verified_0_expenditure)==0)
+} else {
+  stopifnot(nrow(check_0_budgets)==0 & nrow(check_0_expenditure)==0)
+}
 
 #Hacky fix - this should be fixed earlier in the prep functions, but remove anything at this point that has NAs for module, intervention, and budget OR expenditure. 
 resource_database[module=='all', module:='unspecified']
