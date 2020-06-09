@@ -90,8 +90,8 @@ for (var in numVars) {
   dt[str_count(get(var), "\\.")>1, (var):=gsub("\\.", "", get(var))] 
   
   #REMOVE PUNCTUATION # line 93 changes depending on the encoding of this file and results in not all of the punctuation getting properly cleaned.
-  dt[, (var):=gsub("?|%|â|°|‰", "", get(var))] # There's probably some fancy way to do this with excluding characters from [[:punct:]] ? 
-# dt[, (var):=gsub("([.])|[[:punct:]]", "\\1", get(var))] # this way will exclude characters using ::punct:: but it didn't remove the Per mille (1/1000) sign (â°)
+  dt[, (var):=gsub("?|%|â|°|‰", "", get(var))]
+  
   # REMOVE SPACE BETWEEN NUMBERS
   dt[, (var):=gsub("[[:space:]]", "", get(var))] 
   
@@ -214,4 +214,7 @@ dt$target_met[which(dt$reverse_indicator_final=="yes" & dt$any_result_value > dt
 # SAVE FINAL DATA
 # -----------------------------------------------------
 saveRDS(dt, paste0(prepped_dir, "cleaned_pfi.rds"))
+write.csv(dt, paste0(box,"tableau_data/all_performance_indicators.csv"))
 saveRDS(dt, paste0(prepped_dir, "archive/cleaned_pfi_", Sys.Date(), ".rds"))
+
+print("Step 3: Clean and validated data completed. Validated data saved as cleaned_pfi.RDS in prepped_data folder.")

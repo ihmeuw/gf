@@ -240,7 +240,7 @@ prep_impact_outcome_1A_disagg =  function(dir, inFile, sheet_name, language) {
   num_names = c("N#")
   denom_names = c("D#")
   proportion_names = c("%")
-  year_names = c("Year", "Année", "Año", "Ann�e")
+  year_names = c("Year", "Année", "Año", "Année")
   verification_source_names = c("Source", "source", "Fuente")
   value_names = c('Valeur', 'Value', 'Valor')
   

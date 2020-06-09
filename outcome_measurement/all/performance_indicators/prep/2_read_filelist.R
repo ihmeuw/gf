@@ -307,3 +307,5 @@ if (prep_1b_disagg){
     
   }
 }
+
+print("Step 1: Prep indivdual countries completed.")

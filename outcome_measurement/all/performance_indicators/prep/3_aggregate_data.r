@@ -56,3 +56,5 @@ write.csv(all_data, paste0(prepped_dir, "all_prepped_data.csv"), row.names=F)
 
 #Archive a copy. 
 saveRDS(all_data, paste0(prepped_dir, "archive/all_prepped_data_", Sys.Date(), ".rds"))
+
+print("Step 2: Aggregate and clean data completed. Outputs saved in prepped data folder.")

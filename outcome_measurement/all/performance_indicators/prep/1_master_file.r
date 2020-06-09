@@ -19,9 +19,15 @@
 rm(list=ls())
 
 # run setup code (load file paths and packages)
-repo_root = "C:/local/gf/" # "C:/Users/frc2/Documents/gf/" #Change to your repository
-setwd(repo_root)
-source('./outcome_measurement/all/performance_indicators/prep/set_up_r.r')
+user=as.character(Sys.info()[7])
+if (Sys.info()[1]=='Windows'){
+  repo_root = paste0("C:/Users/", user, "/Documents/gf/") #Change to the root of your repository
+  setwd(repo_root)
+} else {
+  setwd(paste0("/ihme/homes/",user,"/gf/"))
+}
+
+source('./outcome_measurement/all/performance_indicators/prep/set_up_r.r', encoding="UTF-8")
 source('./resource_tracking/prep/_common/shared_functions.r', encoding="UTF-8")
 source('./resource_tracking/prep/_common/load_master_list.r', encoding="UTF-8")
 
@@ -51,4 +57,4 @@ source("./outcome_measurement/all/performance_indicators/prep/3_aggregate_data.r
 #-----------------------------------------------
 # 3. Clean and validate data 
 #-----------------------------------------------
-source("./process_evaluation/prep/4_clean_merge_data.r", encoding="UTF-8")
+source("./outcome_measurement/all/performance_indicators/prep/4_clean_merge_data.R", encoding="UTF-8")
