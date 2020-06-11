@@ -28,6 +28,8 @@ approved_budgets = approved_budgets[, -c('expenditure', 'lfa_exp_adjustment', 'd
 # Subset columns to GEP and CEP variables. 
 approved_budgets_gep = approved_budgets[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
 approved_budgets_cep = approved_budgets[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
+#------------------------------------------------------
+
 #----------------------------------------------
 # 2. Most recent revision of budgets
 #----------------------------------------------
@@ -53,7 +55,9 @@ revisions = revisions[, -c('rev_num', 'most_recent_rev')]
 most_recent_revisions_gep = revisions[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
 most_recent_revisions_cep = revisions[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
 #------------------------------------------------------
-# 3. ALl budgets for current grants
+
+#------------------------------------------------------
+# 3a. ALl budgets for current grants
 #------------------------------------------------------
 gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'disease', 'start_date',
              'current_grant', 'data_source', 'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date',
@@ -92,6 +96,25 @@ all_budgets[, isApprovedORMostRecent := ifelse((isApprovedBudget == TRUE | isMos
 # Subset columns to GEP and CEP variables. 
 revisions_gep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
 revisions_cep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
+#------------------------------------------------------
+
+#------------------------------------------------------
+# 3b. same as all budget revisions, but at the activity level.
+# added 6/8 
+#------------------------------------------------------
+gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'activity_description', 'disease', 'start_date',
+             'current_grant', 'data_source', 'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date',
+             'abbrev_mod', 'code','grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date',
+             'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'isStrategicObjective', 'SO')
+cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'activity_description', 'disease', 'start_date', 
+             'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'isMostRecentRevision', 
+             'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date',
+             'isStrategicObjective', 'SO')
+
+# Subset columns to GEP and CEP variables. 
+activity_revisions_gep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=gep_cols]
+activity_revisions_cep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
+#------------------------------------------------------
 
 #-------------------------------------------------------------
 # Flag most recent PUDRs - this will be used in steps 4 and 5. 
