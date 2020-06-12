@@ -96,6 +96,8 @@ all_budget_revisions_act = rbindlist(list(cod3_act, gtm3_act, uga3_act, sen3_act
 
 all_budget_revisions_act = merge(all_budget_revisions_act, topic_areas, all.x = TRUE, by = c('loc_name', 'disease', 'gf_module', 'gf_intervention'))
 
+all_budget_revisions_act = add_fr_es_to_dt(all_budget_revisions_act)
+
 write.csv(all_budget_revisions_act, paste0(final_write, "all_budget_revisions_activityLevel.csv"), row.names=F)
 #---------------------------------------------
 # 4. CURRENT ABSORPTION 

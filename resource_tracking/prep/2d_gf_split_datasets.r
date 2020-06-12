@@ -99,14 +99,14 @@ revisions_cep = all_budgets[, .(budget=sum(budget, na.rm=T)), by=cep_cols]
 #------------------------------------------------------
 
 #------------------------------------------------------
-# 3b. same as all budget revisions, but at the activity level.
+# 3b. same as all budget revisions, but at the activity and cost input level
 # added 6/8 
 #------------------------------------------------------
-gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'activity_description', 'disease', 'start_date',
+gep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'activity_description', 'cost_category', 'disease',
              'current_grant', 'data_source', 'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date',
              'abbrev_mod', 'code','grant_disease', 'loc_name', 'includes_rssh', 'kp', 'rssh', 'equity', 'update_date',
              'isMostRecentRevision', 'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'isStrategicObjective', 'SO')
-cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'activity_description', 'disease', 'start_date', 
+cep_cols = c('file_name', 'grant', 'grant_period', 'gf_module', 'gf_intervention', 'activity_description', 'cost_category', 'disease', 
              'file_iteration', 'budget_version', 'revision_type', 'gf_revision_type', 'version_date', 'isMostRecentRevision', 
              'isApprovedBudget', 'isWorkingVersion', 'isApprovedORMostRecent', 'kp', 'rssh', 'equity', 'update_date',
              'isStrategicObjective', 'SO')
