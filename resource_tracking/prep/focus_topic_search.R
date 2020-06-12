@@ -22,6 +22,9 @@ if (Sys.info()[1]=='Windows'){
 source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 # source("./resource_tracking/prep/_common/load_master_list.r", encoding="UTF-8") # not sure if we will need this one
 
+# -----------------------------------------------
+# FUNCTION
+# -----------------------------------------------
 
 # Function to read in detailed budgets and search through activities for keywords, could be saved in common_functions folder later on
 id_focus_topics <- function(country, topic_area) {
@@ -60,8 +63,16 @@ id_focus_topics <- function(country, topic_area) {
   # insert print statement
   print(paste0("There were ",length(unique(tabletest$gf_intervention)),  " additional interventions in final approved budgets marked as focus topics through keyword search." ))
   
-  # save data in new folder to visualize
+  # save data in new folder
+  write.csv(data, file = paste0(dir, "_gf_files_gos/tableau_data/test_senegal_focus_topic_search.csv"))
+  print("Data saved on J drive")
+  
   # save data on box or prepped data folder in J?
 }
+
+
+# -----
+# TEST USING SENEGAL DATA
+# ----
 
  id_focus_topics("Senegal", "diagnostic")
