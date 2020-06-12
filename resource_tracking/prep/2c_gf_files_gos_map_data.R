@@ -305,7 +305,7 @@ if (prep_files){
   
   # # First, delete the currently saved files (these are all archived so we don't need these copies)
   saved_files = list.files(export_dir, full.names=TRUE, pattern=".csv") # Only find the .csv files - these are the prepped data files. As of 3/18/20, there is one RDS 'raw bound files' from step 2B. EL
-  stopifnot(length(saved_files)==6) # There should be exactly 6 files you're going to delete. FRC 5/20/2020 added one in
+  stopifnot(length(saved_files)==7) # There should be exactly 6 files you're going to delete. FRC 5/20/2020 added one in
   sapply(saved_files, unlink) # Delete the five files in this folder.
   
   # (GEP and CEP files are exactly the same, except GEP files have additional variables saved in the data for more advanced visualization)
@@ -313,15 +313,19 @@ if (prep_files){
   write.csv(approved_budgets_cep, paste0(export_dir, "approved_budgets_", country, "_", Sys.Date(), ".csv"), row.names=F)
   write.csv(most_recent_revisions_cep, paste0(export_dir, "most_recent_budgets_", country, "_", Sys.Date(), ".csv"), row.names=F)
   write.csv(revisions_cep, paste0(export_dir, "all_budget_revisions_", country, "_", Sys.Date(), ".csv"), row.names=F)
+  write.csv(activity_revisions_cep, paste0(export_dir, "all_budget_revisions_activityLevel_", country, "_", Sys.Date(), ".csv"), row.names=F)
+  
   write.csv(absorption_cep, paste0(export_dir, "most_recent_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
   write.csv(cumulative_absorption_cep, paste0(export_dir, "cumulative_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
   write.csv(all_absorption, paste0(export_dir, "all_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
-  
+  write.csv(all_absorption, paste0(export_dir, "all_absorption_", country, "_", Sys.Date(), ".csv"), row.names=F)
   
   # Save admin-level files on J. 
   saveRDS(approved_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/approved_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_budget_revisions_", country, "_", Sys.Date(), ".rds"))
+  saveRDS(activity_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_budget_revisions_activityLevel_", country, "_", Sys.Date(), ".rds"))
+  
   saveRDS(absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/most_recent_absorption_", country, "_", Sys.Date(), ".rds"))
   saveRDS(cumulative_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/cumulative_absorption_", country, "_", Sys.Date(), ".rds"))
   saveRDS(all_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/", country, "/all_absorption_", country, "_", Sys.Date(), ".rds"))
@@ -330,6 +334,8 @@ if (prep_files){
   saveRDS(approved_budgets_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/approved_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(most_recent_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/most_recent_budgets_", country, "_", Sys.Date(), ".rds"))
   saveRDS(revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/all_budget_revisions_", country, "_", Sys.Date(), ".rds"))
+  saveRDS(activity_revisions_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/all_budget_revisions_activityLevel_", country, "_", Sys.Date(), ".rds"))
+  
   saveRDS(absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/most_recent_absorption_", country, "_", Sys.Date(), ".rds"))
   saveRDS(cumulative_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/cumulative_absorption_", country, "_", Sys.Date(), ".rds"))
   saveRDS(all_absorption_gep, paste0(dir, "_gf_files_gos/tableau_data/archive/all_absorption_", country, "_", Sys.Date(), ".rds"))
