@@ -4,6 +4,10 @@
 
 # The current working directory should be the root of this repository
 
+
+# pending issues
+# add option to specify budget_version?
+
 # ----------------------------------------------
 # STEP 1: SET UP R
 # ----------------------------------------------
@@ -20,37 +24,44 @@ source("./resource_tracking/prep/_common/set_up_r.R", encoding="UTF-8")
 
 
 # Function to read in detailed budgets and search through activities for keywords, could be saved in common_functions folder later on
-
-id_focus_topics <- function(inFile, country, topic_area) {
+id_focus_topics <- function(country, topic_area) {
   
-  #example - can uncomment to troubleshoot
-  inFile <- 'senegal_detailed_budgets.csv'
-  country <- 'sen'
-  topic_area <- 'diagnostic'
+  # #example - can uncomment two lines below to troubleshoot/test
+  # country <- 'Senegal'
+  # topic_area <- 'diagnostic'
   
   # step 0: make sure inputs are currect
-  # countries <- c('sen', 'uga', 'gtm', 'cod')
-  # if () stop("Error: country must be either 'sen', 'uga', 'gtm', or 'cod'")
+  # if () stop("Error: country must be either 'sen', 'uga', 'gtm', or 'cod'") or (Senegal, Uganda, Guatemala, DRC)
   # if (class(inFile)!='character') stop('Error: inFile argument must be a string!')
   # if (class(year)=='character') stop('Error: year argument must be a number!')
   # -----------------------------------------------------------------------------
   
   # step 1: read in data
-  data <- fread(paste0(mapping_dir, "keyword_search/", inFile)) #make sure this can access the correct data source
+  data <- fread(paste0(box, "tableau_data/all_budget_revisions_activityLevel.csv")) #make sure this can access the correct data source
+  data <- data[loc_name==country]
   
   # step 2: read in keywords for each focus topic
   key_words_file <- fread(paste0(mapping_dir, "focus_topic_keyword_search_log.csv"))
   key_words <- key_words_file[loc_name==country & focus_topic==topic_area, keyword] ##these are the key words we settle on for a certain topic area in a given country.
   
-  
   # step 3: loop through specific columns to use to search for hits
-  hits <- Reduce(`|`, lapply(key_words, function(x) grepl(x, tolower(data$`Activity Description`)))) ## this produces a vector of TRUE/FALSE for every row in ‘data’ where a key word was identified in character column of activity descriptions, the `|` function makes sure that each key word is looked for indepently (as opposed to `&`, where it looks for the unity)
-  data[hits,ta_diagnostic:=1] #creating an indicator variable in the original data wherever a key word was identified
-  data[!hits,ta_diagnostic:=0] #creating an indicator variable in the original data wherever a key word was identified
+  hits <- Reduce(`|`, lapply(key_words, function(x) grepl(x, tolower(data$activity_description)))) ## this produces a vector of TRUE/FALSE for every row in ‘data’ where a key word was identified in character column of activity descriptions, the `|` function makes sure that each key word is looked for indepently (as opposed to `&`, where it looks for the unity)
+  data[hits,paste0("ta_", topic_area):=1]
+  data[!hits,paste0("ta_", topic_area):=0]
   
   # which module/intervention pairs were identified that are also not currently being hand coded?
-  data_test <- fread(paste0(box,"tableau_data/", inFile))
+  # insert code here
+  ta_indic <- as.name(paste0("ta_", topic_area))
+  tabletest <- data[isTopicArea==FALSE & budget_version=="approved" & eval(ta_indic)==1] # need to change name of variable in subsetting dynamically
   
+  # create table to visualize
+  # print((unique(tabletest[,.(gf_module, gf_intervention, activity_description, budget_version)])))
+  
+  # insert print statement
+  print(paste0("There were ",length(unique(tabletest$gf_intervention)),  " additional interventions in final approved budgets marked as focus topics through keyword search." ))
+  
+  # save data in new folder to visualize
+  # save data on box or prepped data folder in J?
 }
 
- 
+ id_focus_topics("Senegal", "diagnostic")
