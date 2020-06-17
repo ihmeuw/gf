@@ -75,7 +75,7 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
   data[, topicAreaDesc := trimws(topicAreaDesc)]
   
   # save data in new folder - save a separate file for now on J
-  write.csv(data, file = paste0(dir, "/modular_framework_mapping/keyword_search/test_", tolower(country), "_focus_topic_search.csv", row.names = FALSE))
+  write.csv(data, file = paste0(dir, "/modular_framework_mapping/keyword_search/test_", tolower(country), "_focus_topic_search.csv"), row.names = FALSE)
   print("Data saved on J drive")
   
   # Step 4: check out the results compare to what the CEPs have ID'ed previously
