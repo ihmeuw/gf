@@ -47,7 +47,7 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
   data[, keyword_topic_area := FALSE]
   
   # step 2: read in keywords for each focus topic
-  key_words_file <- fread(paste0(mapping_dir, "focus_topic_keyword_search_log.csv"))
+  key_words_file <- fread(paste0(mapping_dir, "keyword_search/focus_topic_keyword_search_log.csv"))
   topic_areas = key_words_file[loc_name==country, unique(focus_topic)]
   
   # use activity description or the combination of module/intervention/activity to search for key words
@@ -91,6 +91,7 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
   # Are any of the previously ID'ed activities now NOT ID'ed? 
   missing_ids = data[cep_topic_area == TRUE & keyword_topic_area == FALSE,]
   
+  # curious how many different interventions those activities are found in...
   # create table to visualize
   # print(unique(missing_ids[,.(gf_module, gf_intervention, activity_description)]))
   
@@ -105,3 +106,5 @@ id_focus_topics <- function(country, include_module_intervention = FALSE) {
 id_focus_topics("Senegal")
 
 id_focus_topics('Uganda', include_module_intervention = TRUE)
+
+id_focus_topics('Guatemala', include_module_intervention = FALSE)
